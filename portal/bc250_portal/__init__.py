@@ -3,7 +3,7 @@
 
 APP_NAME = "BC250 Bazzite Suite"
 APP_ID = "bc250-bazzite-suite"
-__version__ = "9.0.0"
+__version__ = "9.0.1"
 # The suite's stage, shown beside the version in the header and in a portal release's notes; "" when it leaves
 # active development. The README's badge and the wiki's home page say the same (tools/tests/test_stage.py).
 STAGE = "Beta"
