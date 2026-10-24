@@ -1,3 +1,7 @@
+Changelog: 24-10-2026 23:39:29
+
+Release 9.0.0. Pins check-v0.13.0, upscaler-v0.12.0, overlay-v0.11.0, bios-v0.11.0, ace-v0.11.0, mesh-v0.12.0, vram-v0.11.0, fan-v0.10.0, wdriver-v0.10.0, cec-v0.11.0, sftp-v0.12.0, ips35-v0.4.0, hdcam-v0.6.0, hdcontrol-v0.6.0, package-v1.1.0, ncgui-v0.11.0, rpcs3-v1.1.0, consoles-v1.11.0, clb-v0.6.0, shadps4-v1.0.0, decky-v0.12.0, datstation-v1.8.0, ppsspp-v0.11.0, pcsx2-v1.2.0, vita3k-v0.10.0, xenia-v0.6.0.
+
 Changelog: 24-10-2026 21:26:45
 
 Release 8.0.1. Pins check-v0.12.1, upscaler-v0.11.1, overlay-v0.10.1, bios-v0.10.1, ace-v0.10.1, mesh-v0.11.1, vram-v0.10.1, fan-v0.9.1, wdriver-v0.9.1, cec-v0.10.1, sftp-v0.11.1, ips35-v0.3.1, hdcam-v0.5.1, hdcontrol-v0.5.1, package-v1.0.1, ncgui-v0.10.1, rpcs3-v1.0.1, consoles-v1.10.1, clb-v0.5.1, shadps4-v0.11.1, decky-v0.11.1, datstation-v1.7.1, ppsspp-v0.10.1, pcsx2-v1.1.1, vita3k-v0.9.1, xenia-v0.5.1.
