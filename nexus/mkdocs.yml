@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Nexus, the repository's own page: what the name means, how the suites are built and how they relate. It takes the
+# theme, colours and Markdown of the BC250 Bazzite Suite's wiki (../mkdocs.yml) and is published at the root of the
+# site, each suite's wiki in a folder of its own (.github/workflows/docs.yml).
+
+INHERIT: ../mkdocs.yml
+site_name: Nexus
+site_description: The home of the suites
+site_url: https://robertotorino.github.io/nexus/
+edit_uri: edit/main/nexus/docs/
+docs_dir: docs
+plugins:
+  - privacy
+hooks:
+  - hooks.py
+theme:
+  custom_dir: overrides
+nav:
+  - Home: index.md

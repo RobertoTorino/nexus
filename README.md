@@ -85,7 +85,7 @@ By category, as the portal's tabs list them.
 - <img src="portal/images/apps/suite.webp" width="20" height="20" alt=""/> **[BC250 Suite Releases](apps/suite)**: The release front end: versions, pins and the board checks of a release. Runs from a checkout of this repository.
 - <img src="portal/images/apps/installer-tests.webp" width="20" height="20" alt=""/> **[BC-250 Installer Tests](tools/installer-tests/gui)**: Run the suite's installer tests one at a time, with their output live in the window. Runs from a checkout of this repository.
 
-How to install and use them: **[the manual](https://robertotorino.github.io/nexus/)**.
+How to install and use them: **[the manual](https://robertotorino.github.io/nexus/bc250-bazzite-suite/)**.
 
 ## License
 

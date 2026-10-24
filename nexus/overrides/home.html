@@ -1,0 +1,43 @@
+{#- SPDX-License-Identifier: GPL-3.0-or-later -#}
+{#- The Nexus page: nexus/docs/index.md in full-width sections, as the wiki's home page, and a footer of links. -#}
+{% extends "main.html" %}
+
+{% block site_nav %}{% endblock %}
+
+{% block container %}
+  <div class="md-content home" data-md-component="content">
+    <article class="md-typeset home__article">
+      {{ page.content }}
+    </article>
+  </div>
+{% endblock %}
+
+{% block footer %}
+  <footer class="md-footer home-footer">
+    <div class="home-footer__inner md-grid">
+      <a class="home-footer__brand" href="{{ '.' | url }}">
+        <img src="{{ 'images/wiki-icon.webp' | url }}" alt="" width="48" height="48">
+        <span>{{ config.site_name }}</span>
+      </a>
+      <nav class="home-footer__columns" aria-label="Footer">
+        <div>
+          <h4>Repository</h4>
+          <a href="{{ config.repo_url }}">GitHub</a>
+          <a href="{{ config.repo_url }}/issues">Issues</a>
+        </div>
+        <div>
+          <h4>Suites</h4>
+          <a href="{{ 'bc250-bazzite-suite/' | url }}">BC250 Bazzite Suite</a>
+        </div>
+      </nav>
+    </div>
+    <div class="md-footer-meta md-typeset">
+      <div class="md-footer-meta__inner md-grid">
+        <div class="md-copyright">
+          Nexus is not affiliated with AMD, Universal Blue or Sony Interactive Entertainment.
+          All trademarks are the property of their owners.
+        </div>
+      </div>
+    </div>
+  </footer>
+{% endblock %}

@@ -2,7 +2,7 @@
 
 site_name: BC250 Bazzite Suite
 site_description: Tools for the AMD BC-250 running Bazzite
-site_url: https://robertotorino.github.io/nexus/
+site_url: https://robertotorino.github.io/nexus/bc250-bazzite-suite/
 repo_url: https://github.com/RobertoTorino/nexus
 repo_name: RobertoTorino/nexus
 edit_uri: edit/main/docs/

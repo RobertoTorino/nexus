@@ -1,0 +1,15 @@
+{#- SPDX-License-Identifier: GPL-3.0-or-later -#}
+{#- The Nexus page's header, as the wiki's: the icon and name on the left, GitHub and the suites on the right. -#}
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="{{ lang.t('header') }}">
+    <a href="{{ nav.homepage.url | url }}" title="{{ config.site_name | e }}" class="md-header__button md-logo" aria-label="{{ config.site_name }}" data-md-component="logo">
+      {% include "partials/logo.html" %}
+    </a>
+    <a href="{{ nav.homepage.url | url }}" class="md-header__name">{{ config.site_name | e }}</a>
+    <div class="md-header__spacer"></div>
+    <div class="md-header__links">
+      <a class="md-header__link" href="{{ config.repo_url }}">GitHub</a>
+      <a class="md-header__link" href="{{ '.' | url }}#the-suites">Suites</a>
+    </div>
+  </nav>
+</header>

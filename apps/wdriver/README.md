@@ -7,7 +7,7 @@ The driver for **AIC8800D80 USB Wi-Fi sticks** (the UGREEN AX900 and others) on 
 system service that loads it at every boot, switches the stick out of its storage mode, and builds it again after a
 kernel update.
 
-How to install and use it: [BC-250 USB Wi-Fi in the manual](https://robertotorino.github.io/nexus/apps/wdriver/).
+How to install and use it: [BC-250 USB Wi-Fi in the manual](https://robertotorino.github.io/nexus/bc250-bazzite-suite/apps/wdriver/).
 
 ## License
 

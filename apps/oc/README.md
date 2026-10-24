@@ -4,7 +4,7 @@
 
 Finds your **AMD BC-250's** (Cyan Skillfish, gfx1013) safe **GPU overclock and undervolt**, one step at a time.
 
-How to install and use it: [BC-250 GPU OC Bisect in the manual](https://robertotorino.github.io/nexus/apps/oc/).
+How to install and use it: [BC-250 GPU OC Bisect in the manual](https://robertotorino.github.io/nexus/bc250-bazzite-suite/apps/oc/).
 
 ## License
 

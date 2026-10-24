@@ -1,3 +1,12 @@
+Changelog: 25-10-2026 01:12:22
+
+Nexus gets a page of its own at robertotorino.github.io/nexus/ (nexus/: what the name means, how the suites are
+built and how they relate, and a link to each suite's wiki), and the BC250 Bazzite Suite's wiki moves to
+robertotorino.github.io/nexus/bc250-bazzite-suite/ (owner, 25-10-2026: the wiki belongs to a suite, not to the
+umbrella). docs.yml builds both, the Nexus page first; CI's docs job checks both. The links in the READMEs, the wiki
+and the apps follow; the wiki's home page footer links to the Nexus page. The wiki's addresses directly under
+/nexus/ end.
+
 Changelog: 25-10-2026 00:51:24
 
 The repository is renamed Nexus by the owner (RobertoTorino/nexus, 25-10-2026), the umbrella for the suites; the

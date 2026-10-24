@@ -1,3 +1,8 @@
+Changelog: 25-10-2026 01:12:22
+
+Fixed. appinfo: SUITE_MANUAL_URL is the suite's own wiki, robertotorino.github.io/nexus/bc250-bazzite-suite/ (owner,
+25-10-2026); robertotorino.github.io/nexus/ is now the Nexus page.
+
 Changelog: 25-10-2026 00:51:24
 
 Fixed. appinfo: SUITE_REPO_URL and SUITE_MANUAL_URL use the suite's new name, Nexus (RobertoTorino/nexus, renamed

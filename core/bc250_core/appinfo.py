@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 SUITE_REPO_URL = "https://github.com/RobertoTorino/nexus"
-SUITE_MANUAL_URL = "https://robertotorino.github.io/nexus/"     # one chapter per app: apps/<key>/
+SUITE_MANUAL_URL = "https://robertotorino.github.io/nexus/bc250-bazzite-suite/"     # one chapter per app: apps/<key>/
 
 
 

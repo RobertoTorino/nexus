@@ -6,7 +6,7 @@ Shows the temperatures and fans of the **AMD BC-250** on **Bazzite**, and runs a
 that watches the GPU and the CPU, also when no app is open, and warns, turns the fans to full speed and performance
 mode off, and at a critical temperature shuts the board down cleanly.
 
-How to install and use it: [BC-250 Fan Control in the manual](https://robertotorino.github.io/nexus/apps/fan/).
+How to install and use it: [BC-250 Fan Control in the manual](https://robertotorino.github.io/nexus/bc250-bazzite-suite/apps/fan/).
 
 ## License
 

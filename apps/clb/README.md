@@ -5,7 +5,7 @@
 Console LinkB streams Xbox games to the **AMD BC-250** on **Bazzite**: sign in with your Microsoft account, wake your
 Xbox and play it on the board (Remote Play), or play games from Xbox Cloud Gaming.
 
-How to install and use it: [Console LinkB in the manual](https://robertotorino.github.io/nexus/apps/clb/).
+How to install and use it: [Console LinkB in the manual](https://robertotorino.github.io/nexus/bc250-bazzite-suite/apps/clb/).
 
 ## Disclaimer
 

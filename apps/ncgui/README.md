@@ -8,7 +8,7 @@ A graphical netcat (`nc`) for **Bazzite**: connect to a host or listen on a port
 per tab, type what to send and see what comes back; hex view, pipes to files and between tabs, recordings that
 replay. The Python + Qt port of the C++/Qt tool [NetcatGUI](https://github.com/shinnok/netcatgui) by Shinnok.
 
-How to install and use it: [Bazzite NetcatGUI in the manual](https://robertotorino.github.io/nexus/apps/ncgui/).
+How to install and use it: [Bazzite NetcatGUI in the manual](https://robertotorino.github.io/nexus/bc250-bazzite-suite/apps/ncgui/).
 
 ## License
 

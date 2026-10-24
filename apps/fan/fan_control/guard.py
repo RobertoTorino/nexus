@@ -34,7 +34,7 @@ from typing import Callable
 SYSTEM_PYTHON = "/usr/bin/python3"
 FOLDER = "bc250-fan-control"                    # in /etc and /run
 UNIT = "bc250-fan-control-guard.service"
-MANUAL_URL = "https://robertotorino.github.io/nexus/apps/fan/"
+MANUAL_URL = "https://robertotorino.github.io/nexus/bc250-bazzite-suite/apps/fan/"
 APP_NAME = "BC-250 Fan Control"
 STEP_S = 2.0
 REARM_C = 5                                     # as the Governor's alerts (alerts.HYSTERESIS_C)

@@ -956,12 +956,16 @@ behaviour and dependencies. Decided (owner, 25-10-2026):
   its first release on the new URL. Order: the owner renames the repository on GitHub (Settings, General, Repository
   name: the same repository, so history, tags, releases and the redirect stay); then the change to the new name (the
   56 files, CLAUDE.md, `site_url`); its push redeploys the wiki at `/nexus/`.
-- **Rename, done (25-10-2026):** the owner renamed the repository; the API answers 301 at the old name, and Pages
-  serves the wiki at `/nexus/`. The change to the new name is in the working tree (every link in code, READMEs,
-  wiki, tools, .github, CLAUDE.md; CHANGELOG entries for core and the apps whose code links). Open (owner): the
-  push, `git remote set-url origin https://github.com/RobertoTorino/nexus.git` on both machines, then on the board
-  the installed portal's update check and an app's Updates line; every app needs a release on the new core before
-  its wiki link works again.
+- **Rename, done (25-10-2026):** the owner renamed the repository and pushed the change to the new name with the
+  apps' releases (fe7a514); the API answers 301 at the old name. Open (owner): `git remote set-url` on the Windows
+  machine if not done, and on the board the installed portal's update check and an app's Updates line.
+- **The wiki belongs to a suite (owner, 25-10-2026).** The Nexus page (`nexus/`, its own small MkDocs site on the
+  wiki's theme) is at `robertotorino.github.io/nexus/`: the name, the structure, how the suites relate, a link to
+  each suite's wiki; a suite that exists gets its card there. The BC250 Bazzite Suite's wiki moves to
+  `/nexus/bc250-bazzite-suite/`, the Windows Portable Suite's will sit beside it. In the working tree; the releases
+  of fe7a514 link to `/nexus/` and `/nexus/apps/<key>/`, which end with the push, until each app's next release
+  (core, cec, fan, wdriver, package; every app through core). No redirect pages, as for the rename. Open (owner): an
+  icon of Nexus's own (the page shows the suite's wiki icon).
 - **The name: Windows Portable Suite**, for any Windows handheld, not the Ally alone. It sits beside the current
   tree in its own folder, `windows-portable/` (OS and device, as the suite names: `portable/` alone would clash with
   a second portable suite; proposed 25-10-2026, the owner may still change it) with its own `portal/apps.toml`,

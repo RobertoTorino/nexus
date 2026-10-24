@@ -12,6 +12,8 @@ The repository is **Nexus**, `github.com/RobertoTorino/nexus` (branch `main`; un
 `bc250-bazzite-suite`, which GitHub redirects: never make a repository of that name again, it would end the
 redirect that installed portals update through). It is the umbrella over the suites; the **Windows Portable Suite**
 (Windows handhelds, in `windows-portable/`) is planned in MIGRATION.md.
+`nexus/` is the Nexus page (robertotorino.github.io/nexus/): the name, the structure and the suites; each suite's
+wiki has a folder of its own beside it (the BC250 Bazzite Suite's: `/nexus/bc250-bazzite-suite/`).
 
 The **BC250 Bazzite Suite** (exactly that name): tools for the AMD BC-250 on Bazzite, at the repository's root,
 where its paths and tag names stay. A **portal** installs and starts the apps listed in
@@ -169,6 +171,7 @@ shellcheck -S warning apps/decky/install.sh apps/ncgui/install.sh \
   apps/datstation/install.sh
 for t in tools/installer-tests/*.sh; do [ "${t##*/}" = shims.sh ] || bash "$t"; done   # every installer test
 mkdocs build --strict                               # from the venv
+mkdocs build --strict -f nexus/mkdocs.yml          # the Nexus page
 ```
 
 Every app (and every `portal/apps.toml` entry) has an installer test, `tools/installer-tests/<name>.sh`, and CI runs

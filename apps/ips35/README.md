@@ -8,7 +8,7 @@ screen needs no driver on Linux; the app gives your user its port once and draws
 date and the weather if you want them, in six themes or your own colours. It saves what the screen shows as a picture,
 and every value as a report.
 
-How to install and use it: [USB IPS3.5 in the manual](https://robertotorino.github.io/nexus/apps/ips35/).
+How to install and use it: [USB IPS3.5 in the manual](https://robertotorino.github.io/nexus/bc250-bazzite-suite/apps/ips35/).
 
 ## License
 

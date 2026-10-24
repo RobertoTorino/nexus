@@ -15,6 +15,7 @@ _python/
 
 # MkDocs output, and the cache of its privacy plugin (the fonts it downloads at build time)
 /site/
+/nexus/site/
 /.cache/
 
 # Planning notes, kept local

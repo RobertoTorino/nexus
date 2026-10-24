@@ -9,7 +9,7 @@ firmware by itself whenever the camera is plugged in. Linux then sees an ordinar
 or any other app. The window shows the camera's state and its picture in every mode it reports, one camera or both
 side by side. A PS4 Camera on Sony's adapter works the same way, with its own firmware.
 
-How to install and use it: [USB HD Cam in the manual](https://robertotorino.github.io/nexus/apps/hdcam/).
+How to install and use it: [USB HD Cam in the manual](https://robertotorino.github.io/nexus/bc250-bazzite-suite/apps/hdcam/).
 
 ## License
 

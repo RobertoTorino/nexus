@@ -306,6 +306,7 @@ jobs:
           python -m pip install -q -r portal/requirements.txt
           QT_QPA_PLATFORM=offscreen python tools/portal_screenshot.py
       - run: mkdocs build --strict
+      - run: mkdocs build --strict -f nexus/mkdocs.yml
 
   windows-exe:
     # The Windows executables of the release workflow, built here too so a broken build shows before a tag.
