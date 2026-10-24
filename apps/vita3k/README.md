@@ -6,7 +6,7 @@ Plays PS Vita games on the **AMD BC-250** on **Bazzite** with [Vita3K](https://v
 it was tried with, installs your PS Vita firmware and your games through Vita3K and adds the games to Steam for Game
 Mode.
 
-How to install and use it: [Vita3K Manager in the manual](https://robertotorino.github.io/bc250-bazzite-suite/apps/vita3k/).
+How to install and use it: [Vita3K Manager in the manual](https://robertotorino.github.io/nexus/apps/vita3k/).
 
 ## Disclaimer
 

@@ -928,6 +928,77 @@ by the test for a few minutes and is unmuted again (checked in the file). A core
 releases are the owner's. Open (owner): whether the app should watch for the mute coming back, to find what sets it
 (a log line when stream-properties changes to muted, with the time and what was running).
 
+## Windows Portable Suite (owner, 25-10-2026)
+
+A second suite for Windows handhelds, first the owner's ASUS ROG Xbox Ally X (RC73XA), built on the blueprint of
+this one: the same app layout, core, portal with a manifest, installer tests and CHANGELOG rules, with Windows' own
+behaviour and dependencies. Decided (owner, 25-10-2026):
+
+- **One repository, renamed: Nexus**, `RobertoTorino/nexus` (lowercase, as before; the display name Nexus; the owner
+  renamed an older project of the same name, 25-10-2026). It becomes the umbrella over the suites. The BC250 Bazzite
+  Suite keeps its paths and tag names: installed portals fetch `portal/apps.toml` at a portal tag
+  (`portal_update.py`) and find releases by the repository URL and `<app>-v<x.y.z>` tags, so moving the tree would
+  cut them off from updates. About 56 files name the repository (docs, mkdocs.yml, .github, app `__init__`s,
+  scripts); they move to the new name in one change after the rename.
+- **The redirect, checked (25-10-2026)** on the board with the portal's own code (`latest_release` with a tag
+  prefix, `fetch_text`, `http_download`, all urllib GETs that follow redirects) against two renamed public
+  repositories (PyCQA/pep8 to pycodestyle, atom/electron to electron/electron): the API answers 301 and the release
+  list comes through with its query; raw.githubusercontent.com serves a file at a tag under the old name directly; a
+  release asset under the old name downloads through a 301, its size matching the API's. So installed portals and
+  apps keep finding updates after the rename. Two conditions: no repository named `bc250-bazzite-suite` may ever be
+  made again under the account (it ends the redirect), and the local clones (Bazzite and Windows) get `git remote
+  set-url origin` to the new URL. After the rename: the installed portal's update check and an app's Updates line,
+  on the board.
+- **The wiki does not move with it.** GitHub Pages does not redirect a renamed repository:
+  `robertotorino.github.io/bc250-bazzite-suite/` ends, and the released apps link there (`SUITE_MANUAL_URL` in core,
+  and `MANUAL_URL`/`DOCS_URL` in cec, fan, wdriver and package). A redirect site (a user site with a `404.html`) was
+  proposed and not taken (owner, 25-10-2026): the old links end at the rename, an app's wiki link works again from
+  its first release on the new URL. Order: the owner renames the repository on GitHub (Settings, General, Repository
+  name: the same repository, so history, tags, releases and the redirect stay); then the change to the new name (the
+  56 files, CLAUDE.md, `site_url`); its push redeploys the wiki at `/nexus/`.
+- **Rename, done (25-10-2026):** the owner renamed the repository; the API answers 301 at the old name, and Pages
+  serves the wiki at `/nexus/`. The change to the new name is in the working tree (every link in code, READMEs,
+  wiki, tools, .github, CLAUDE.md; CHANGELOG entries for core and the apps whose code links). Open (owner): the
+  push, `git remote set-url origin https://github.com/RobertoTorino/nexus.git` on both machines, then on the board
+  the installed portal's update check and an app's Updates line; every app needs a release on the new core before
+  its wiki link works again.
+- **The name: Windows Portable Suite**, for any Windows handheld, not the Ally alone. It sits beside the current
+  tree in its own folder, `windows-portable/` (OS and device, as the suite names: `portable/` alone would clash with
+  a second portable suite; proposed 25-10-2026, the owner may still change it) with its own `portal/apps.toml`,
+  `apps/<name>/` in the same layout, and its own tag prefix so the two suites' tags never mix.
+- **The first app is the test app**, as here: the only fixed app, always installed and first, and the base for
+  getting to know the device (diagnostics, stress test, benchmarks for the handheld): **Windows Portable Test**,
+  with the OS in the name as in BC-250 Bazzite Test, so a test for another OS fits beside it. Then the PCSX2
+  Manager, the blueprint of the managers.
+- **Own tuning apps** (TDP, fans, and the like) for the handheld, later: the board's tuning apps do not port (sysfs,
+  GRUB, RADV), but the same kinds of apps on both give comparison data between the BC-250 and the handheld.
+
+The scan (25-10-2026), what each BC-250 app means for Windows:
+
+- Not ported (Linux, the board or Bazzite does the work): gpu, compute, cores, oc, acpi, vram, ace, mesh, bios,
+  wdriver, decky, cec (no CEC on the handheld itself; a dock at most), clb (dropped by the owner, 25-10-2026: the
+  Xbox app on the handheld already streams from an Xbox and from Xbox Cloud). Their place is taken by the handheld's
+  own tuning apps above.
+- Ported (the logic stays, the OS layer changes): the six emulator managers (Windows builds exist; Game Mode becomes
+  a Steam shortcut, which `steam.py` already writes), consoles (PS4/PS5 Remote Play on the handheld), hdcontrol (HID
+  through hidapi instead of hidraw), ips35 (serial), overlay (new sensor code: hwmon has no Windows counterpart),
+  upscaler.
+- Nearly as they are: ncgui (its tests pass on Windows), datstation, package (a Windows list of tools, no Bazzite
+  update state), mtool. To find out first: hdcam (the camera's driver path on Windows).
+- Core: theme, widgets, text, help, appinfo, applog, settings, instance, updates, upstream, covers, steam_art and
+  most of steam are OS-neutral; platform, sensors, wifi and sound are Linux. Core gets a platform layer with a Linux
+  and a Windows side (open a file or URL, a command in a visible window, sensors, data folders: XDG against
+  `%LOCALAPPDATA%`, the launcher and menu entry: `~/.local/bin` and `.desktop` against a Start-menu shortcut), still
+  bundled per app. The installers are the largest change (no `install.sh`); CI gets a Windows job for the new suite.
+
+A Bazzite handheld (owner, 25-10-2026): most of the current suite runs on any Bazzite machine, but the board apps
+are made for the BC-250's motherboard, CPU and GPU, so a handheld never gets a 1:1 copy; what differs is the
+interesting part: comparison, fine-tuning and test results between the devices. A Bazzite portable suite would get
+its own folder and test app the same way (OS and device in the name).
+
+Earlier items that wait for a handheld version: the Steam release of Console Link (under its plan above), and
+streaming BC-250 games to the Ally.
+
 ## Done
 
 | Step | What | State |
@@ -1742,7 +1813,8 @@ the app needs its own IFR parser for the binary forms.
 
 Fresh history; the portal first, with its own tag; per-app tags; root-owned `/opt` for code that runs as root and
 one shared venv for PyQt6; `bc250_core` bundled per app release; one shared `BisectLauncher` but three bisect
-apps; MkDocs for the manual; the repository is `RobertoTorino/bc250-bazzite-suite`.
+apps; MkDocs for the manual; the repository is `RobertoTorino/bc250-bazzite-suite`
+(renamed `RobertoTorino/nexus` by the owner, 25-10-2026).
 
 Names (owner's decision, 14-10-2026, with an eye to other devices such as the ROG Ally X): the apps tied to the
 board keep "BC-250" in their names (bazzite-test, governor, cu-bisect, cores-bisect, gpu-oc-bisect, persistent-acpi,

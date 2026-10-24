@@ -10,7 +10,7 @@ stays on the board, in your home folder. The few things that go over the network
 whom.
 
 Everything about the suite itself is public: the code, the plans and the issues are on
-[GitHub](https://github.com/RobertoTorino/bc250-bazzite-suite). Personal data is the exception, and the apps keep
+[GitHub](https://github.com/RobertoTorino/nexus). Personal data is the exception, and the apps keep
 it out of what they show and save where they can.
 
 ## What goes over the network
@@ -86,6 +86,6 @@ search, in your browser's session storage, which stays in your browser and is go
 
 An app release with a privacy problem is withdrawn: the portal stops offering it and removes it from the boards
 (see [the portal](portal.md)). To report one, open an issue on
-[GitHub](https://github.com/RobertoTorino/bc250-bazzite-suite/issues), or, when it should not be public before it
+[GitHub](https://github.com/RobertoTorino/nexus/issues), or, when it should not be public before it
 is fixed, use **Security → Report a vulnerability** as the [security policy](SECURITY.md) says. Leave personal
 data out of the report.

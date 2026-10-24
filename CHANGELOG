@@ -1,3 +1,11 @@
+Changelog: 25-10-2026 00:51:24
+
+The repository is renamed Nexus by the owner (RobertoTorino/nexus, 25-10-2026), the umbrella for the suites; the
+BC250 Bazzite Suite keeps its paths and tag names, so installed portals keep updating through GitHub's redirect of
+the old name. Every link to the repository and the wiki moves to the new name: the READMEs, the wiki (site_url,
+repo_url, repo_name in mkdocs.yml), .github, the release and backlog tools, and CLAUDE.md. The wiki is published at
+robertotorino.github.io/nexus/; the old wiki address is not redirected.
+
 Changelog: 24-10-2026 19:31:59
 
 The SwanStation, mGBA and SameBoy Managers are dropped (owner, 24-10-2026): their folders under apps/, their wiki

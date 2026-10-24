@@ -6,7 +6,7 @@ A standalone Qt app for recording BC250 Bazzite Suite installation demos on Bazz
 suite's category icons in a checkout. The suite portal lists it on its Development tab. It uses its own Python
 environment.
 
-How to install and use it: [Media Tool in the manual](https://robertotorino.github.io/bc250-bazzite-suite/other-tools/media-tool/).
+How to install and use it: [Media Tool in the manual](https://robertotorino.github.io/nexus/other-tools/media-tool/).
 
 ## License
 

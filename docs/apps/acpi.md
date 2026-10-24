@@ -122,4 +122,4 @@ To rebuild from source instead, see the upstream `Makefile` (needs `acpica`/`ias
 
 ## License
 
-MIT — see [LICENSE](https://github.com/RobertoTorino/bc250-bazzite-suite/blob/main/apps/acpi/LICENSE). Vendored tables are MIT-licensed by their upstream authors.
+MIT — see [LICENSE](https://github.com/RobertoTorino/nexus/blob/main/apps/acpi/LICENSE). Vendored tables are MIT-licensed by their upstream authors.

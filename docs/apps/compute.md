@@ -554,7 +554,7 @@ between runs.
 ## Releases
 
 Releases are tagged `compute-v<x.y.z>` in the suite repository and published on its
-[releases](https://github.com/RobertoTorino/bc250-bazzite-suite/releases) page as `compute-v<x.y.z>.tar.gz`
+[releases](https://github.com/RobertoTorino/nexus/releases) page as `compute-v<x.y.z>.tar.gz`
 with a `SHA256SUMS` file. The tarball holds the whole toolset (`bc250-cu-bisect.sh`, `bc250-cu-unlock.sh`, both
 GUIs, `packaging/`, images and docs). Download and extract it on the board instead of cloning the repository if you
 just want to run the scripts or the GUIs; the portal installs it for you too.
@@ -570,6 +570,6 @@ Bazzite. Its test number 21 reads the live CU masks from the same registers (rea
 
 ## License
 
-GNU GPLv3, see [LICENSE](https://github.com/RobertoTorino/bc250-bazzite-suite/blob/main/apps/compute/LICENSE). This keeps the project (and any forks or redistributions of it) free
+GNU GPLv3, see [LICENSE](https://github.com/RobertoTorino/nexus/blob/main/apps/compute/LICENSE). This keeps the project (and any forks or redistributions of it) free
 and open source: anyone can use, study, and modify it, but a closed-source/proprietary fork isn't
 allowed — derivatives must stay under the same license and keep their source available too.

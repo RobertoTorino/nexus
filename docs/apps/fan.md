@@ -94,5 +94,5 @@ stops and removes the guard (with `sudo`).
 
 ## License
 
-GPL-3.0-or-later. See [LICENSE](https://github.com/RobertoTorino/bc250-bazzite-suite/blob/main/apps/fan/LICENSE).
+GPL-3.0-or-later. See [LICENSE](https://github.com/RobertoTorino/nexus/blob/main/apps/fan/LICENSE).
 Where the fan headers are comes from [mothenjoyer69/bc250-documentation](https://github.com/mothenjoyer69/bc250-documentation).

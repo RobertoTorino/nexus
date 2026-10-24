@@ -75,7 +75,7 @@ Each card has one status, the most urgent that applies. The boxes at the top cou
 ## Install
 
 In the [portal](../portal.md), open the **Development** tab and click the Install button beside its icon. Or by hand:
-from the suite's [Releases](https://github.com/RobertoTorino/bc250-bazzite-suite/releases) page, download the
+from the suite's [Releases](https://github.com/RobertoTorino/nexus/releases) page, download the
 `package-v<version>.tar.gz` release and extract it. Run `install.sh` as your own user:
 
 ```shell

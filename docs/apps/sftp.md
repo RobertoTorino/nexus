@@ -98,7 +98,7 @@ default keys.
 ## On Windows
 
 SFTP Tools also comes as a program for Windows, for connecting to the board from a Windows computer. It is not
-installed by the portal. On the [releases page](https://github.com/RobertoTorino/bc250-bazzite-suite/releases),
+installed by the portal. On the [releases page](https://github.com/RobertoTorino/nexus/releases),
 open the latest `sftp` release and download `bc250-bazzite-sftp-tools-<version>-windows.zip` and its
 `.sha256` file. Check the download (`certutil -hashfile <zip> SHA256` must print the number in the `.sha256`
 file), unzip it, and start `BC250-SFTP-Tools.exe`. It needs no Python.

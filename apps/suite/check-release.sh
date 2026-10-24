@@ -15,7 +15,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 REPO=$PWD
-URL=${BC250_RELEASE_URL:-https://github.com/RobertoTorino/bc250-bazzite-suite/releases/download}
+URL=${BC250_RELEASE_URL:-https://github.com/RobertoTorino/nexus/releases/download}
 CACHE="${XDG_CACHE_HOME:-$HOME/.cache}/bc250-release-check"
 PORTAL="$HOME/.local/bin/bc250-bazzite-suite"
 

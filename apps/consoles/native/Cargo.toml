@@ -4,7 +4,7 @@
 # "python" feature (pyproject.toml).
 [package]
 name = "bc250-console-link-core"
-version = "1.11.0"
+version = "1.11.1"
 edition = "2021"
 license = "AGPL-3.0-only"
 publish = false

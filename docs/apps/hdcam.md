@@ -236,5 +236,5 @@ and the camera's USB description come from [prosperodev/hdcamera](https://github
 
 ## License
 
-GPL-3.0-or-later — see [LICENSE](https://github.com/RobertoTorino/bc250-bazzite-suite/blob/main/apps/hdcam/LICENSE).
+GPL-3.0-or-later — see [LICENSE](https://github.com/RobertoTorino/nexus/blob/main/apps/hdcam/LICENSE).
 The camera's firmware is Sony's and is not part of the app.

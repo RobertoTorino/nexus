@@ -2,7 +2,7 @@
 name: Manual
 
 # Builds the manual (MkDocs Material) from main and publishes it on GitHub Pages:
-# https://robertotorino.github.io/bc250-bazzite-suite/ (Settings -> Pages -> Source: GitHub Actions).
+# https://robertotorino.github.io/nexus/ (Settings -> Pages -> Source: GitHub Actions).
 
 on:
   push:

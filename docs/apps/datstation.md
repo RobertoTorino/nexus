@@ -23,7 +23,7 @@ The app does not change how the board runs. Nothing is installed system-wide and
 ## Install
 
 In the [portal](../portal.md), click the Install button beside its icon. Or by hand: from the suite's
-[Releases](https://github.com/RobertoTorino/bc250-bazzite-suite/releases) page, download the
+[Releases](https://github.com/RobertoTorino/nexus/releases) page, download the
 `datstation-v<version>.tar.gz` release and extract it. Run `install.sh` as your own user, without `sudo`:
 
 ```shell

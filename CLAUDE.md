@@ -8,8 +8,13 @@ talks to Claude on both, so this file, not a local memory, carries the standing 
 BC250
 ## What this is
 
-The **BC250 Bazzite Suite** (exactly that name): tools for the AMD BC-250 on Bazzite, in one repository,
-`github.com/RobertoTorino/bc250-bazzite-suite` (branch `main`). A **portal** installs and starts the apps listed in
+The repository is **Nexus**, `github.com/RobertoTorino/nexus` (branch `main`; until 25-10-2026
+`bc250-bazzite-suite`, which GitHub redirects: never make a repository of that name again, it would end the
+redirect that installed portals update through). It is the umbrella over the suites; the **Windows Portable Suite**
+(Windows handhelds, in `windows-portable/`) is planned in MIGRATION.md.
+
+The **BC250 Bazzite Suite** (exactly that name): tools for the AMD BC-250 on Bazzite, at the repository's root,
+where its paths and tag names stay. A **portal** installs and starts the apps listed in
 its manifest. **check** (BC-250 Bazzite Test) is always installed and always listed first; every other listed app is an optional
 tile. Standalone apps may live under `apps/` without appearing in the portal.
 
@@ -172,7 +177,7 @@ Tests lists the scripts in that folder by itself. The installer tests need `fake
 `/home/linuxbrew/.linuxbrew/bin` may need adding to PATH in a non-interactive shell. CI also checks the layout rules above: no CRLF in the index, every
 `.sh` is 100755, every former repo folder has its four files, workflows only in the root `.github/`. CI results
 can be read without `gh` through the public API:
-`curl -s https://api.github.com/repos/RobertoTorino/bc250-bazzite-suite/actions/runs?per_page=3`.
+`curl -s https://api.github.com/repos/RobertoTorino/nexus/actions/runs?per_page=3`.
 
 ## Releases
 

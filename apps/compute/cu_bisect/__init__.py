@@ -6,14 +6,14 @@ still happens in bc250-cu-bisect.sh itself, exactly as if typed by hand."""
 
 APP_NAME = "BC-250 CU Bisect"
 APP_ID = "bc250-cu-bisect-gui"
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 LOGO_PATH = ROOT / "images" / "bc250-cu-bisect.webp"
 WINDOW_ICON_PATH = LOGO_PATH
-REPO_URL = "https://github.com/RobertoTorino/bc250-bazzite-suite/tree/main/apps/compute"
+REPO_URL = "https://github.com/RobertoTorino/nexus/tree/main/apps/compute"
 
 
 def window_title(part: str) -> str:

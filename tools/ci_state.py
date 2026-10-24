@@ -23,7 +23,7 @@ import time
 import urllib.error
 import urllib.request
 
-REPO = "RobertoTorino/bc250-bazzite-suite"
+REPO = "RobertoTorino/nexus"
 RUNS_URL = "https://api.github.com/repos/{repo}/actions/workflows/ci.yml/runs?head_sha={sha}&per_page=50"
 OK = ("success", "skipped", "neutral")
 POLL_S = 30

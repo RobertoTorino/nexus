@@ -4,7 +4,7 @@
 
 Tells **bad CUs** apart from an **unstable CU unlock** on the AMD BC-250 (Cyan Skillfish, gfx1013).
 
-How to install and use it: [BC-250 CU Bisect in the manual](https://robertotorino.github.io/bc250-bazzite-suite/apps/compute/).
+How to install and use it: [BC-250 CU Bisect in the manual](https://robertotorino.github.io/nexus/apps/compute/).
 
 ## License
 

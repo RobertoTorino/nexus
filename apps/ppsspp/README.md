@@ -5,7 +5,7 @@
 Plays PSP games on the **AMD BC-250** on **Bazzite** with [PPSSPP](https://www.ppsspp.org): installs the PPSSPP
 release it was tried with, finds your games and adds them to Steam for Game Mode.
 
-How to install and use it: [PPSSPP Manager in the manual](https://robertotorino.github.io/bc250-bazzite-suite/apps/ppsspp/).
+How to install and use it: [PPSSPP Manager in the manual](https://robertotorino.github.io/nexus/apps/ppsspp/).
 
 ## Disclaimer
 

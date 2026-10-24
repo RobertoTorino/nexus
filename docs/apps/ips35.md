@@ -162,4 +162,4 @@ It installs:
 
 ## License
 
-GPL-3.0-or-later — see [LICENSE](https://github.com/RobertoTorino/bc250-bazzite-suite/blob/main/apps/ips35/LICENSE).
+GPL-3.0-or-later — see [LICENSE](https://github.com/RobertoTorino/nexus/blob/main/apps/ips35/LICENSE).

@@ -5,7 +5,7 @@
 PyQt6 front-end for **cyan-skillfish-governor-smu**, the GPU governor of an **AMD BC-250** board (Cyan
 Skillfish APU, `gfx1013`) running **Bazzite** (Fedora Atomic / rpm-ostree).
 
-How to install and use it: [BC-250 GPU Governor Manager in the manual](https://robertotorino.github.io/bc250-bazzite-suite/apps/gpu/).
+How to install and use it: [BC-250 GPU Governor Manager in the manual](https://robertotorino.github.io/nexus/apps/gpu/).
 
 ## License
 

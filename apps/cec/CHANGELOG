@@ -1,3 +1,12 @@
+Changelog: 25-10-2026 01:00:04
+
+Release 0.11.1.
+
+Changelog: 25-10-2026 00:51:24
+
+Fixed. The links to the suite's wiki and repository point to its new name, Nexus (RobertoTorino/nexus, renamed
+25-10-2026): GitHub redirects the repository's old address but not the wiki's, which ended with the rename.
+
 Changelog: 24-10-2026 23:29:22
 
 Release 0.11.0.

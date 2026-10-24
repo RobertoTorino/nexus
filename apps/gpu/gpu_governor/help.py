@@ -105,7 +105,7 @@ frequencies, voltage never dropping as frequency rises) and the hard rails share
 (700–1100 mV, up to 2500 MHz). Above 2000 MHz or 1000 mV, or when a change raises the top frequency or lowers an
 existing voltage, you get a warning: an unstable point freezes the board under load. Apply makes a backup and
 asks for your password; finding a board's own ceiling safely is the job of
-<a href="https://github.com/RobertoTorino/bc250-bazzite-suite/tree/main/apps/oc">bc250-gpu-oc-bisect</a>.</p>
+<a href="https://github.com/RobertoTorino/nexus/tree/main/apps/oc">bc250-gpu-oc-bisect</a>.</p>
 <p><b>Test a point before saving it</b> uses the governor's root-only <code>TestMode</code> D-Bus interface
 (one <code>pkexec</code> prompt): the GPU is pinned to the frequency and voltage you enter and the automatic
 scaling stops, while thermal throttling stays active. Nothing is written to <code>config.toml</code>. The

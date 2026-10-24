@@ -7,7 +7,7 @@ The PlayStation knowledge part of the [DatStation](https://github.com/RobertoTor
 PlayStation console, every system software release, the region codes explained, Sony's user guides and the latest
 PlayStation news, and keeps your quiz scores and trophies.
 
-How to install and use it: [Bazzite DatStation in the manual](https://robertotorino.github.io/bc250-bazzite-suite/apps/datstation/).
+How to install and use it: [Bazzite DatStation in the manual](https://robertotorino.github.io/nexus/apps/datstation/).
 
 ## License
 

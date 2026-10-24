@@ -84,7 +84,7 @@ The PyQt6 wheels bundle Qt; nothing is layered with `rpm-ostree`.
 ## Install on Bazzite
 
 Install it from the BC250 Bazzite Suite portal. Or download `gpu-v<version>.tar.gz` from the suite's
-[releases](https://github.com/RobertoTorino/bc250-bazzite-suite/releases), unpack it and run the installer:
+[releases](https://github.com/RobertoTorino/nexus/releases), unpack it and run the installer:
 
 ```shell
 tar -xzf gpu-v*.tar.gz
@@ -103,7 +103,7 @@ settings, profiles and start-at-login entry. The governor's `config.toml` and it
 ## Run from the repository
 
 ```shell
-git clone https://github.com/RobertoTorino/bc250-bazzite-suite.git
+git clone https://github.com/RobertoTorino/nexus.git
 cd bc250-bazzite-suite/apps/gpu
 python3 -m venv python && python/bin/pip install -r requirements.txt && python/bin/python -m gpu_governor
 ```
@@ -296,7 +296,7 @@ added behind the same protocol.
 
 ## License
 
-GPL-3.0-or-later, see [LICENSE](https://github.com/RobertoTorino/bc250-bazzite-suite/blob/main/apps/gpu/LICENSE). The bundled Inter font is under the SIL Open Font License
+GPL-3.0-or-later, see [LICENSE](https://github.com/RobertoTorino/nexus/blob/main/apps/gpu/LICENSE). The bundled Inter font is under the SIL Open Font License
 (`gpu_governor/fonts/Inter-LICENSE.txt`).
 
 ## Hardware verification checklist

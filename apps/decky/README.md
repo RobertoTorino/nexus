@@ -6,7 +6,7 @@ Brings [Decky Loader](https://github.com/SteamDeckHomebrew/decky-loader), the pl
 the **AMD BC-250** on **Bazzite**: installs the Decky release it was tried with as a system service, shows whether it
 runs and which plugins it has, and links `/home/deck` for plugins written for the Steam Deck.
 
-How to install and use it: [Decky Loader Manager in the manual](https://robertotorino.github.io/bc250-bazzite-suite/apps/decky/).
+How to install and use it: [Decky Loader Manager in the manual](https://robertotorino.github.io/nexus/apps/decky/).
 
 ## License
 

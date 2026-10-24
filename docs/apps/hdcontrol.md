@@ -241,6 +241,6 @@ layout and writing of the Edge's profiles from
 
 ## License
 
-GPL-3.0-or-later — see [LICENSE](https://github.com/RobertoTorino/bc250-bazzite-suite/blob/main/apps/hdcontrol/LICENSE).
+GPL-3.0-or-later — see [LICENSE](https://github.com/RobertoTorino/nexus/blob/main/apps/hdcontrol/LICENSE).
 The code ported from the two projects above is MIT; the app's README keeps their notice. The controllers' firmware
 is Sony's and is not part of the app.

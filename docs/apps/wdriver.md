@@ -146,7 +146,7 @@ also unloads and removes the driver (with `sudo`).
 
 ## License
 
-GPL-3.0-or-later. See [LICENSE](https://github.com/RobertoTorino/bc250-bazzite-suite/blob/main/apps/wdriver/LICENSE).
+GPL-3.0-or-later. See [LICENSE](https://github.com/RobertoTorino/nexus/blob/main/apps/wdriver/LICENSE).
 The driver it builds is [shenmintao/aic8800d80](https://github.com/shenmintao/aic8800d80), GPL-2.0-only, fetched
 at a pinned commit from the suite's mirror [RobertoTorino/aic8800d80](https://github.com/RobertoTorino/aic8800d80)
 or from the original; the firmware files in it are AICSemi's.

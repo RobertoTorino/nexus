@@ -56,12 +56,12 @@
 #   -V, --version         show the version
 #   -h, --help            show this help
 #
-# https://github.com/RobertoTorino/bc250-bazzite-suite/tree/main/apps/cores-bisect
+# https://github.com/RobertoTorino/nexus/tree/main/apps/cores
 
 set -u
 if (( BASH_VERSINFO[0] < 4 )); then echo "bash 4 or newer is needed." >&2; exit 1; fi
 
-VERSION="0.2.0"
+VERSION="0.2.1"
 STRESS_SECS="" ROUNDS_OPT="" SAME_BOOT=0 AUTO=0 MODE=run
 LOAD_TOOL_OPT="" MPRIME_BIN_OPT="" RAS_OPT=""
 LOAD_TOOL=stress-ng MPRIME_BIN="" STRESS_BIN="" RAS=0 MPRIME_DIR=""

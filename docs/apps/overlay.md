@@ -74,4 +74,4 @@ Settings are kept in `~/.config/bc250-system-overlay/bc250-system-overlay.ini`.
 
 ## License
 
-GPL-3.0-or-later — see [LICENSE](https://github.com/RobertoTorino/bc250-bazzite-suite/blob/main/apps/overlay/LICENSE).
+GPL-3.0-or-later — see [LICENSE](https://github.com/RobertoTorino/nexus/blob/main/apps/overlay/LICENSE).

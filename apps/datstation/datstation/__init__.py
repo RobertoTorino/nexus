@@ -6,7 +6,7 @@ BC250 Bazzite Suite builds its apps (bc250_core, the same installer and launcher
 
 APP_NAME = "Bazzite DatStation"
 APP_ID = "bazzite-datstation"
-__version__ = "1.8.0"
+__version__ = "1.8.1"
 
 from pathlib import Path  # noqa: E402  (constants first, as the suite's apps do)
 
@@ -17,7 +17,7 @@ ROOT = PACKAGE_DIR.parent
 LOGO_PATH = ROOT / "images" / f"{APP_ID}.webp"
 DATA_DIR = PACKAGE_DIR / "data"                 # the questions and the system software versions, as JSON
 SOUNDS_DIR = PACKAGE_DIR / "sounds"             # the quiz music
-REPO_URL = "https://github.com/RobertoTorino/bc250-bazzite-suite"
+REPO_URL = "https://github.com/RobertoTorino/nexus"
 
 # Settings in ~/.config/bazzite-datstation/bazzite-datstation.ini; scores in ~/.local/share/bazzite-datstation/.
 INFO = AppInfo(app_id=APP_ID, name=APP_NAME, version=__version__, logo=LOGO_PATH,

@@ -158,4 +158,4 @@ Install it from the BC250 Bazzite Suite portal, or from a clone or release folde
 
 ## License
 
-GPL-3.0-or-later. See [LICENSE](https://github.com/RobertoTorino/bc250-bazzite-suite/blob/main/apps/bios/LICENSE).
+GPL-3.0-or-later. See [LICENSE](https://github.com/RobertoTorino/nexus/blob/main/apps/bios/LICENSE).

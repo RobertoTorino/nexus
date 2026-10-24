@@ -7,7 +7,7 @@ battery and firmware, updates its firmware from the official update server over 
 on a PS5 and in an app for Windows), and shows the DualSense Edge's four profiles, creates and edits them, with a backup of them. A small service
 switches a controller on Bluetooth off when it is not used, as a PS5 does. Linux's own driver keeps driving the controller; the app needs no root.
 
-How to install and use it: [USB HD Control in the manual](https://robertotorino.github.io/bc250-bazzite-suite/apps/hdcontrol/).
+How to install and use it: [USB HD Control in the manual](https://robertotorino.github.io/nexus/apps/hdcontrol/).
 
 ## License
 

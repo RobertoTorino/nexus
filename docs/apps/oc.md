@@ -162,4 +162,4 @@ governor config. `--status` (and a finished run) writes a readable report to you
 
 ## License
 
-GPL-3.0 - see [LICENSE](https://github.com/RobertoTorino/bc250-bazzite-suite/blob/main/apps/oc/LICENSE).
+GPL-3.0 - see [LICENSE](https://github.com/RobertoTorino/nexus/blob/main/apps/oc/LICENSE).

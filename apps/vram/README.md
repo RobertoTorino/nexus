@@ -6,7 +6,7 @@ Sets the VRAM split of the **AMD BC-250** on **Bazzite** in the board's CMOS, an
 system RAM and the swap layout that go with it. The split changes only when you apply one, and takes effect after a
 reboot.
 
-How to install and use it: [BC-250 Memory Manager in the manual](https://robertotorino.github.io/bc250-bazzite-suite/apps/vram/).
+How to install and use it: [BC-250 Memory Manager in the manual](https://robertotorino.github.io/nexus/apps/vram/).
 
 ## License
 

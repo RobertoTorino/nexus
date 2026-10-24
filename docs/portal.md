@@ -56,7 +56,7 @@ checkout uses its own checkout.
   for the sudo password and print what they do. The portal watches for the result and refreshes.
 - Apps that change how the board runs (CU/core unlocks, the GPU governor, GPU overclocking, the ACPI override, the VRAM
   split, a patched GPU driver) are marked **changes the board**. The portal warns before installing or opening them.
-- Each portal release pins one tested release of every app in [`apps.toml`](https://github.com/RobertoTorino/bc250-bazzite-suite/blob/main/portal/apps.toml). The portal downloads
+- Each portal release pins one tested release of every app in [`apps.toml`](https://github.com/RobertoTorino/nexus/blob/main/portal/apps.toml). The portal downloads
   exactly those tarballs from the suite's GitHub releases and checks each against the SHA-256 pinned there, or
   against the release's `SHA256SUMS` until one is pinned. Then it unpacks the tarball without ever writing
   outside its folder.
@@ -135,7 +135,7 @@ checkout uses its own checkout.
 
 ## Install
 
-From the [latest portal release](https://github.com/RobertoTorino/bc250-bazzite-suite/releases/latest), download
+From the [latest portal release](https://github.com/RobertoTorino/nexus/releases/latest), download
 `portal-v<version>.tar.gz` and `SHA256SUMS`, then:
 
 ```shell
@@ -237,8 +237,8 @@ checkout too, so keep the checkout where it is.
 
 ## apps.toml and releases
 
-The comment at the top of [`apps.toml`](https://github.com/RobertoTorino/bc250-bazzite-suite/blob/main/portal/apps.toml) describes its fields. The rules, checked in CI by
-[`tools/check_manifest.py`](https://github.com/RobertoTorino/bc250-bazzite-suite/blob/main/tools/check_manifest.py):
+The comment at the top of [`apps.toml`](https://github.com/RobertoTorino/nexus/blob/main/portal/apps.toml) describes its fields. The rules, checked in CI by
+[`tools/check_manifest.py`](https://github.com/RobertoTorino/nexus/blob/main/tools/check_manifest.py):
 
 - **Pinned tags.** Every pinned tag must exist when the portal is released. On `main`, a tag may also be the
   next release, which means its version equals that app's `VERSION`.
@@ -252,8 +252,8 @@ Releasing an app and pinning it in the portal:
 
 1. Bump `apps/<app>/VERSION` (and the copies that `tools/check_versions.py` lists), and update its CHANGELOG.
 2. Commit and push, then tag with `tools/tag-release.sh <app>-v<x.y.z>` (it waits until CI passed on that
-   commit); [`release.yml`](https://github.com/RobertoTorino/bc250-bazzite-suite/blob/main/.github/workflows/release.yml) builds
-   `<tag>.tar.gz` and `SHA256SUMS` with [`tools/build_release.py`](https://github.com/RobertoTorino/bc250-bazzite-suite/blob/main/tools/build_release.py).
+   commit); [`release.yml`](https://github.com/RobertoTorino/nexus/blob/main/.github/workflows/release.yml) builds
+   `<tag>.tar.gz` and `SHA256SUMS` with [`tools/build_release.py`](https://github.com/RobertoTorino/nexus/blob/main/tools/build_release.py).
    An app with a Windows executable (SFTP Tools) also gets a Windows job on its tag, which adds
    `<app-id>-<version>-windows.zip` and its `.sha256` to the release; the portal ignores them.
 3. `python3 tools/pin_app.py <tag>`: this sets the tag and checksum in `apps.toml`.
@@ -475,7 +475,7 @@ older Bazzite Test releases recorded the clock, and there only that line differs
 ```bash
 git archive <tag> | tar -x -C /tmp/src
 SOURCE_DATE_EPOCH=$(git log -1 --format=%ct <tag>) python3 /tmp/src/tools/build_release.py <tag> /tmp/local
-curl -LO https://github.com/RobertoTorino/bc250-bazzite-suite/releases/download/<tag>/<tag>.tar.gz
+curl -LO https://github.com/RobertoTorino/nexus/releases/download/<tag>/<tag>.tar.gz
 mkdir -p /tmp/a /tmp/b && tar -xzf <tag>.tar.gz -C /tmp/a && tar -xzf /tmp/local/<tag>.tar.gz -C /tmp/b
 diff -r /tmp/a /tmp/b
 ```

@@ -385,4 +385,4 @@ methodology, crash-safe multi-boot state, and reversible persistence.
 
 ## License
 
-GNU GPLv3, see [LICENSE](https://github.com/RobertoTorino/bc250-bazzite-suite/blob/main/apps/cores/LICENSE).
+GNU GPLv3, see [LICENSE](https://github.com/RobertoTorino/nexus/blob/main/apps/cores/LICENSE).

@@ -42,7 +42,7 @@ def test_body_groups_by_section_and_links_the_lines():
     text = backlog.body(backlog.items(SAMPLE))
     assert text.startswith("3 items on hold in MIGRATION.md.")
     assert "### Open" in text and "### Candidates" in text
-    assert "- [Board test](https://github.com/RobertoTorino/bc250-bazzite-suite/blob/main/MIGRATION.md#L6) (line 6)" \
+    assert "- [Board test](https://github.com/RobertoTorino/nexus/blob/main/MIGRATION.md#L6) (line 6)" \
         in text
     assert "\n\n\n" not in text
 

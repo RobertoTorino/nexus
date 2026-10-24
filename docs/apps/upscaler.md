@@ -111,7 +111,7 @@ the network files built by its `helixsr-setup.sh`; see the
 
 Install it from the BC250 Bazzite Suite portal, where it is under Gaming. Or download
 `upscaler-v<version>.tar.gz` from the suite's
-[releases](https://github.com/RobertoTorino/bc250-bazzite-suite/releases), unpack it and run the installer:
+[releases](https://github.com/RobertoTorino/nexus/releases), unpack it and run the installer:
 
 ```shell
 tar -xzf upscaler-v*.tar.gz
@@ -132,7 +132,7 @@ over: its payload, settings and list of deployed games move to the new folders, 
 ## Run from the repository
 
 ```shell
-git clone https://github.com/RobertoTorino/bc250-bazzite-suite.git
+git clone https://github.com/RobertoTorino/nexus.git
 cd bc250-bazzite-suite/apps/upscaler
 python3 -m venv python && python/bin/pip install -r requirements.txt
 PYTHONPATH=../../core python/bin/python -m upscaler
@@ -201,6 +201,6 @@ The backend has no Qt dependency so it can be exercised from the command line or
 
 ## License
 
-GPL-3.0-or-later, see [LICENSE](https://github.com/RobertoTorino/bc250-bazzite-suite/blob/main/apps/upscaler/LICENSE). The bundled Inter font is under the SIL Open Font License
+GPL-3.0-or-later, see [LICENSE](https://github.com/RobertoTorino/nexus/blob/main/apps/upscaler/LICENSE). The bundled Inter font is under the SIL Open Font License
 (`upscaler/fonts/Inter-LICENSE.txt`). HelixSR is a separate project under its own license; its
 network files are derived from NVIDIA's DLSS and are never distributed by this app.

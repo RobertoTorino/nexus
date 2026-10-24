@@ -6,14 +6,14 @@ sweeping still happens in bc250-gpu-oc-bisect.sh itself, exactly as if typed by 
 
 APP_NAME = "BC-250 GPU OC Bisect"
 APP_ID = "bc250-gpu-oc-bisect-gui"
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 LOGO_PATH = ROOT / "images" / "bc250-gpu-oc-bisect.webp"
 WINDOW_ICON_PATH = LOGO_PATH
-REPO_URL = "https://github.com/RobertoTorino/bc250-bazzite-suite/tree/main/apps/oc"
+REPO_URL = "https://github.com/RobertoTorino/nexus/tree/main/apps/oc"
 
 
 def window_title(part: str) -> str:

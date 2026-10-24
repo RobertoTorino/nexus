@@ -9,7 +9,7 @@ APP_ID = "bc250-cores-unlock"
 ROOT = Path(__file__).resolve().parent.parent
 LOGO_PATH = ROOT / "images" / "bc250-cores-unlock.webp"
 WINDOW_ICON_PATH = LOGO_PATH
-REPO_URL = "https://github.com/RobertoTorino/bc250-bazzite-suite/tree/main/apps/cores"
+REPO_URL = "https://github.com/RobertoTorino/nexus/tree/main/apps/cores"
 
 
 def _read_version() -> str:

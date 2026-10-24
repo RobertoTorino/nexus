@@ -3,4 +3,4 @@
 
 APP_NAME = "Media Tool"
 APP_ID = "media-tool"
-__version__ = "0.3.0"
+__version__ = "0.3.1"

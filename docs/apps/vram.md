@@ -94,5 +94,5 @@ change the split in CMOS.
 
 ## License
 
-GPL-3.0-or-later. See [LICENSE](https://github.com/RobertoTorino/bc250-bazzite-suite/blob/main/apps/vram/LICENSE).
+GPL-3.0-or-later. See [LICENSE](https://github.com/RobertoTorino/nexus/blob/main/apps/vram/LICENSE).
 The CMOS layout comes from [fanoush/bc250_memcfg](https://github.com/fanoush/bc250_memcfg) (MIT).

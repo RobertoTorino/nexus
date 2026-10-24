@@ -15,9 +15,9 @@ writes one temporary file and removes it.
 
 ## Download and install
 
-BC-250 Bazzite Test is part of the [BC250 Bazzite Suite](https://github.com/RobertoTorino/bc250-bazzite-suite) and is always installed with it: install
+BC-250 Bazzite Test is part of the [BC250 Bazzite Suite](https://github.com/RobertoTorino/nexus) and is always installed with it: install
 the suite's **portal** (see [Install](../install.md)), and this app comes along. It can also be installed on its own from
-its release on the suite's [Releases](https://github.com/RobertoTorino/bc250-bazzite-suite/releases) page: `check-v<version>.tar.gz` with a
+its release on the suite's [Releases](https://github.com/RobertoTorino/nexus/releases) page: `check-v<version>.tar.gz` with a
 `SHA256SUMS` file. To be notified of new releases, click **Watch → Custom → Releases** on the suite page.
 
 Nothing is layered with `rpm-ostree` for the app itself: the test engine goes to `/opt`, the GUI's
@@ -72,7 +72,7 @@ It replaces the old version; your settings and the history are kept — they liv
 
 ## Reporting problems
 
-Open an [issue](https://github.com/RobertoTorino/bc250-bazzite-suite/issues/new/choose) (app: check) and add the
+Open an [issue](https://github.com/RobertoTorino/nexus/issues/new/choose) (app: check) and add the
 app version (*Settings → About*) and the full report of the run (*Show Logs*). The report contains details
 about your system: read it before you post it. Security problems: see [SECURITY.md](../SECURITY.md).
 
@@ -881,7 +881,7 @@ ujust regenerate-grub   # then reboot
 ```
 
 Or use the guided installer from
-[acpi](https://github.com/RobertoTorino/bc250-bazzite-suite/tree/main/apps/acpi) (a suite app, installed from the portal):
+[acpi](https://github.com/RobertoTorino/nexus/tree/main/apps/acpi) (a suite app, installed from the portal):
 it bundles the tables, checks for a BC-250 and a modded BIOS, installs idempotently and has an
 uninstaller. The fix is persistent — the blscfg GRUB module applies the early initrd to every
 BLS boot entry, so it survives kernel and rpm-ostree image updates.
@@ -900,7 +900,7 @@ Verify with `sudo dmesg | grep -iE 'ACPI.*(SSDT|Table Upgrade)'` — or just rer
 - Known side effect: `pp_dpm_sclk` reports nonsense clocks afterwards — tests 19/40 would
   flag that.
 
-Or use [BC-250 Cores Bisect](https://github.com/RobertoTorino/bc250-bazzite-suite/tree/main/apps/cores) (a suite app),
+Or use [BC-250 Cores Bisect](https://github.com/RobertoTorino/nexus/tree/main/apps/cores) (a suite app),
 which does its own unlock and also makes it **persistent**:
 
 1. **Test first:** `bc250-cores-bisect.sh` runs a control on the stock cores, unlocks, then tests each
@@ -913,7 +913,7 @@ which does its own unlock and also makes it **persistent**:
 3. **Undo:** `sudo ./bc250-cores-unlock.sh --uninstall`, then a full power off: stock 6C/12T returns.
 
 **For the extra CUs without flashing:**
-[BC-250 CU Bisect](https://github.com/RobertoTorino/bc250-bazzite-suite/tree/main/apps/compute) (a suite app) unlocks CUs at runtime
+[BC-250 CU Bisect](https://github.com/RobertoTorino/nexus/tree/main/apps/compute) (a suite app) unlocks CUs at runtime
 by writing the GPU's WGP mask registers with `umr`, and keeps a validated unlock across reboots:
 
 1. **Test first:** `bc250-cu-bisect.sh` tests every locked WGP (2 CUs) on its own over several rounds and
@@ -952,7 +952,7 @@ Minor caveats, not performance losses:
 - A CMOS reset/battery pull would revert the `bc250_memcfg` split — just rerun it.
 - Validate cores/CUs with the bisect tools first; silicon quality is per board, independent of BIOS.
 
-Going beyond stock: [BC-250 GPU OC Bisect](https://github.com/RobertoTorino/bc250-bazzite-suite/tree/main/apps/oc) (a suite app)
+Going beyond stock: [BC-250 GPU OC Bisect](https://github.com/RobertoTorino/nexus/tree/main/apps/oc) (a suite app)
 sweeps the governor's top GPU safe-point (clock up, voltage down) the same bisect way, to find the
 safe overclock or undervolt for your specific board — no BIOS involved either.
 

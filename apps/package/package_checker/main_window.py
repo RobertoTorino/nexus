@@ -29,7 +29,7 @@ from .dependencies import (
 )
 
 
-DOCS_URL = "https://robertotorino.github.io/bc250-bazzite-suite/apps/{app}/"
+DOCS_URL = "https://robertotorino.github.io/nexus/apps/{app}/"
 CARD_STYLE = "QFrame#dependencyCard { border:1px solid palette(mid); border-radius:8px; }"
 NEEDS_ROOT = f"<span style='color:{ORANGE}; font-weight:700;'>Needs root.</span>"
 CVE_OK = f"<span style='color:{GREEN}; font-weight:700;'>✓ CVE</span>"

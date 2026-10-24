@@ -28,12 +28,12 @@
 #        ./bc250-cores-unlock.sh --status       show the mask, threads, service and guard state
 #        ./bc250-cores-unlock.sh --help
 #
-# https://github.com/RobertoTorino/bc250-bazzite-suite/tree/main/apps/cores
+# https://github.com/RobertoTorino/nexus/tree/main/apps/cores
 
 set -u
 if (( BASH_VERSINFO[0] < 4 )); then echo "bash 4 or newer is needed." >&2; exit 1; fi
 
-VERSION="0.2.0"
+VERSION="0.2.1"
 SELF=$(readlink -f -- "$0")
 # --install copies the script here so the boot service never executes a user-owned file as root.
 INSTALL_BIN=/usr/local/sbin/bc250-cores-unlock.sh

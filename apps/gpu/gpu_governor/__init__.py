@@ -3,7 +3,7 @@
 
 APP_NAME = "BC-250 GPU Governor Manager"
 APP_ID = "bc250-governor-manager"
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 
 from pathlib import Path
 
@@ -12,7 +12,7 @@ LOGO_PATH = ROOT / "images" / f"{APP_ID}.webp"
 WINDOW_ICON_PATH = LOGO_PATH
 FONT_DIR = Path(__file__).resolve().parent / "fonts"
 DISPLAY_NAME = f"{APP_NAME} {__version__}"
-REPO_URL = "https://github.com/RobertoTorino/bc250-bazzite-suite/tree/main/apps/gpu"
+REPO_URL = "https://github.com/RobertoTorino/nexus/tree/main/apps/gpu"
 GOVERNOR_URL = "https://github.com/filippor/cyan-skillfish-governor/tree/smu"
 
 

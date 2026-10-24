@@ -6,7 +6,7 @@
 
 Install the portal, not the apps one by one: it installs, updates and removes the apps for you. Download
 `portal-v<version>.tar.gz` and `SHA256SUMS` from the
-[latest portal release](https://github.com/RobertoTorino/bc250-bazzite-suite/releases/latest), then:
+[latest portal release](https://github.com/RobertoTorino/nexus/releases/latest), then:
 
 ```bash
 sha256sum --check --ignore-missing SHA256SUMS

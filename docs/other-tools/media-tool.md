@@ -35,7 +35,7 @@ stay there; new ones go to `~/MediaToolRecordings`.
    password if OBS authentication is enabled. On a successful connection, the tool sets OBS's recording folder
    to `~/MediaToolRecordings`. This needs OBS WebSocket 5.3 or newer.
 3. Download the portal tarball and `SHA256SUMS` from the suite's
-   [Releases page](https://github.com/RobertoTorino/bc250-bazzite-suite/releases), verify it with
+   [Releases page](https://github.com/RobertoTorino/nexus/releases), verify it with
    `sha256sum --check --ignore-missing SHA256SUMS`, and extract it into your Downloads folder. Media Tool
    automatically selects the newest extracted portal release there. Use **Find in Downloads** to rescan, or
    **Choose folder…** if you extracted it elsewhere. For local development, choose the suite repository folder

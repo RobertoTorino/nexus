@@ -1,6 +1,6 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 
-[![CI](https://github.com/RobertoTorino/bc250-bazzite-suite/actions/workflows/ci.yml/badge.svg)](https://github.com/RobertoTorino/bc250-bazzite-suite/actions/workflows/ci.yml)
+[![CI](https://github.com/RobertoTorino/nexus/actions/workflows/ci.yml/badge.svg)](https://github.com/RobertoTorino/nexus/actions/workflows/ci.yml)
 ![Status: Beta](https://img.shields.io/badge/status-Beta-8b4fd8)
 [![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
 
@@ -18,7 +18,7 @@ and removes them: BC-250 Bazzite Test is always installed, every other app is op
 **Install the portal, not the apps one by one.** It installs, updates and removes every app below for you, and
 checks each download against its checksum.
 
-1. Open the **[latest portal release](https://github.com/RobertoTorino/bc250-bazzite-suite/releases/latest)** and
+1. Open the **[latest portal release](https://github.com/RobertoTorino/nexus/releases/latest)** and
    download `portal-v<version>.tar.gz` and `SHA256SUMS`.
 2. In a terminal, in the folder you downloaded them to:
 
@@ -85,7 +85,7 @@ By category, as the portal's tabs list them.
 - <img src="portal/images/apps/suite.webp" width="20" height="20" alt=""/> **[BC250 Suite Releases](apps/suite)**: The release front end: versions, pins and the board checks of a release. Runs from a checkout of this repository.
 - <img src="portal/images/apps/installer-tests.webp" width="20" height="20" alt=""/> **[BC-250 Installer Tests](tools/installer-tests/gui)**: Run the suite's installer tests one at a time, with their output live in the window. Runs from a checkout of this repository.
 
-How to install and use them: **[the manual](https://robertotorino.github.io/bc250-bazzite-suite/)**.
+How to install and use them: **[the manual](https://robertotorino.github.io/nexus/)**.
 
 ## License
 

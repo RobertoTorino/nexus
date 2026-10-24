@@ -17,7 +17,7 @@ from .backends.base import PerformanceState, SafePoint
 from .stress import NO_TOOL, available_tools
 from .widgets import ACCENT, BLUE, ORANGE, RED, accent_button, hint_label, page_header
 
-BISECT_URL = "https://github.com/RobertoTorino/bc250-bazzite-suite/tree/main/apps/oc"
+BISECT_URL = "https://github.com/RobertoTorino/nexus/tree/main/apps/oc"
 
 
 # Hard rails, the same as bc250-gpu-oc-bisect: community reports of hard-locks above ~2000 MHz and one bricked

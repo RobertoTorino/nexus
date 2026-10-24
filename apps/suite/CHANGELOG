@@ -1,3 +1,8 @@
+Changelog: 25-10-2026 00:51:24
+
+Fixed. check-release.sh downloads the release assets from the suite's new name, Nexus (RobertoTorino/nexus, renamed
+25-10-2026); GitHub redirects the old address.
+
 Changelog: 23-10-2026 07:13:18
 
 Fixed. The confirmation before tagging no longer mentions an approval on GitHub: the release workflow asks for none.

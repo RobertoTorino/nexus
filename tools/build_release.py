@@ -34,7 +34,7 @@ from pathlib import Path
 SUITE = Path(__file__).resolve().parent.parent
 MANIFEST = SUITE / "portal" / "apps.toml"
 # release.yml marks only portal releases as GitHub's "Latest", so this always opens the newest portal.
-LATEST_PORTAL_URL = "https://github.com/RobertoTorino/bc250-bazzite-suite/releases/latest"
+LATEST_PORTAL_URL = "https://github.com/RobertoTorino/nexus/releases/latest"
 _TAG = re.compile(r"^(?P<app>[a-z0-9-]+)-v(?P<version>\d+\.\d+\.\d+)$")
 # The app's folder for the wheel of its native core (Rust with FFmpeg inside), which release.yml builds before this
 # runs: users install it with pip and need no compiler. Its version is the app's.

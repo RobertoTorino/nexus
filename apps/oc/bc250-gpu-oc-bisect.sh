@@ -45,12 +45,12 @@
 #   -V, --version        show the version
 #   -h, --help           show this help
 #
-# https://github.com/RobertoTorino/bc250-bazzite-suite/tree/main/apps/oc
+# https://github.com/RobertoTorino/nexus/tree/main/apps/oc
 
 set -u
 if (( BASH_VERSINFO[0] < 4 )); then echo "bash 4 or newer is needed." >&2; exit 1; fi
 
-VERSION="0.2.0"
+VERSION="0.2.1"
 STRESS_SECS="" ROUNDS_OPT="" MODE=run SWEEP="" PER_BOOT=0
 MAX_FREQ=2200 MIN_VOLT=850 OC_VOLT_OPT="" FREQ_STEP=50 VOLT_STEP=25
 

@@ -53,7 +53,7 @@ from .workflow import (
     validate_release,
 )
 
-RELEASES_URL = "https://github.com/RobertoTorino/bc250-bazzite-suite/releases"
+RELEASES_URL = "https://github.com/RobertoTorino/nexus/releases"
 IMAGE_DIR = Path(__file__).resolve().parent.parent / "images"
 
 

@@ -21,7 +21,7 @@ from pathlib import Path
 
 SUITE = Path(__file__).resolve().parents[1]
 SOURCE = SUITE / "MIGRATION.md"
-BLOB_URL = "https://github.com/RobertoTorino/bc250-bazzite-suite/blob/main/MIGRATION.md#L{line}"
+BLOB_URL = "https://github.com/RobertoTorino/nexus/blob/main/MIGRATION.md#L{line}"
 ON_HOLD = re.compile(r"\bon hold\b", re.IGNORECASE)
 START = re.compile(r"^\s*(?:- |\d+\. )")
 TITLE = re.compile(r"^\s*(?:- |\d+\. )?\*\*(.+?)\*\*")

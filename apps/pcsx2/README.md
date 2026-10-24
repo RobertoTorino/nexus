@@ -8,7 +8,7 @@ straight away, on the desktop or from Steam's Big Picture Mode. Everything about
 PCSX2's own window: its settings, each game's screen, and the memory cards (import, export, copy, delete, new
 cards, format, check and the slot each is in). A log keeps what the app did.
 
-How to install and use it: [PCSX2 Manager in the manual](https://robertotorino.github.io/bc250-bazzite-suite/apps/pcsx2/).
+How to install and use it: [PCSX2 Manager in the manual](https://robertotorino.github.io/nexus/apps/pcsx2/).
 
 ## Disclaimer
 

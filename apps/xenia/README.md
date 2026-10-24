@@ -5,7 +5,7 @@
 Plays Xbox 360 games on the **AMD BC-250** on **Bazzite** with [Xenia](https://xenia.jp), in its Xenia Canary
 builds: installs a tested build, finds your games and adds them to Steam for Game Mode.
 
-How to install and use it: [Xenia Manager in the manual](https://robertotorino.github.io/bc250-bazzite-suite/apps/xenia/).
+How to install and use it: [Xenia Manager in the manual](https://robertotorino.github.io/nexus/apps/xenia/).
 
 ## Disclaimer
 

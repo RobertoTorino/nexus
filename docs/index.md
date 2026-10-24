@@ -96,7 +96,7 @@ marked, and the portal asks before it installs or opens them.
 Ready to set up your BC-250 board? Download the latest portal release on the board, check it with SHA256 and run its
 installer. It installs BC-250 Bazzite Test with it, every other app installs from the portal.
 
-[:material-download: Download](https://github.com/RobertoTorino/bc250-bazzite-suite/releases/latest){ .md-button .md-button--primary }
+[:material-download: Download](https://github.com/RobertoTorino/nexus/releases/latest){ .md-button .md-button--primary }
 [Install steps](install.md){ .md-button }
 </div>
 </section>
@@ -138,7 +138,7 @@ install. See the [security policy](SECURITY.md#verifying-a-download).
 
 ### Is it open source?
 
-Yes. The code of every app is on [GitHub](https://github.com/RobertoTorino/bc250-bazzite-suite), under the licenses
+Yes. The code of every app is on [GitHub](https://github.com/RobertoTorino/nexus), under the licenses
 below.
 
 ### What does the suite know about me?
@@ -148,7 +148,7 @@ Nothing it sends anywhere: no accounts, statistics or crash reports. What goes o
 
 ### Where do I get help?
 
-Open an issue on [GitHub](https://github.com/RobertoTorino/bc250-bazzite-suite/issues). For a security problem,
+Open an issue on [GitHub](https://github.com/RobertoTorino/nexus/issues). For a security problem,
 use **Security → Report a vulnerability** instead, as the [security policy](SECURITY.md) says.
 
 ## License

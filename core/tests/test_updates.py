@@ -9,7 +9,7 @@ from PyQt6.QtCore import QEventLoop, QTimer
 
 from bc250_core.updates import ReleaseInfo, UpdateChecker, UpdateStatus, latest_release, repo_slug, version_tuple
 
-REPO = "RobertoTorino/bc250-bazzite-suite"
+REPO = "RobertoTorino/nexus"
 
 
 def _rel(tag, *, draft=False, pre=False, date="2026-10-01", assets=()):
@@ -18,7 +18,7 @@ def _rel(tag, *, draft=False, pre=False, date="2026-10-01", assets=()):
 
 
 def test_repo_slug():
-    assert repo_slug("https://github.com/RobertoTorino/bc250-bazzite-suite/") == REPO
+    assert repo_slug("https://github.com/RobertoTorino/nexus/") == REPO
     assert repo_slug("https://github.com/a/b.git") == "a/b"
 
 

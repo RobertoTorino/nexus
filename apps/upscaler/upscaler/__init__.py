@@ -3,7 +3,7 @@
 
 APP_NAME = "BC-250 Upscaler Manager"
 APP_ID = "bc250-upscaler"
-__version__ = "0.12.0"
+__version__ = "0.12.1"
 
 import os
 from pathlib import Path
@@ -14,7 +14,7 @@ WINDOW_ICON_PATH = LOGO_PATH
 FONT_DIR = Path(__file__).resolve().parent / "fonts"
 DISPLAY_NAME = f"{APP_NAME} {__version__}"
 # The app lives in the BC250 Bazzite Suite repository; its releases are tagged upscaler-v<x.y.z> there.
-SUITE_URL = "https://github.com/RobertoTorino/bc250-bazzite-suite"
+SUITE_URL = "https://github.com/RobertoTorino/nexus"
 REPO_URL = f"{SUITE_URL}/tree/main/apps/upscaler"
 HELIXSR_URL = "https://github.com/lonewolf0622/HelixSR"
 HELIXSR_RELEASES_URL = f"{HELIXSR_URL}/releases"
