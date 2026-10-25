@@ -1,31 +1,65 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-# Nexus, the repository's own page: what the name means, how the suites are built and how they relate. It takes the
-# layout and Markdown of the BC250 Bazzite Suite's wiki (../mkdocs.yml) with colours of its own (Bazzite's purple is
-# the suite's) and is published at the root of the site, each suite's wiki in a folder of its own
+# Nexus, the repository's own page: what the name means, how the suites are built and how they relate. It stands on
+# its own: no INHERIT and no file of another wiki, so its design (overrides/, docs/stylesheets/nexus.css) changes
+# nothing elsewhere. It is published at the root of the site, each suite's wiki in a folder of its own
 # (.github/workflows/docs.yml).
 
-INHERIT: ../mkdocs.yml
 site_name: Nexus
 site_description: The home of the suites
 site_url: https://robertotorino.github.io/nexus/
+repo_url: https://github.com/RobertoTorino/nexus
+repo_name: RobertoTorino/nexus
 edit_uri: edit/main/nexus/docs/
 docs_dir: docs
+strict: true
 plugins:
-  - privacy
+  - privacy                    # fonts and other external assets downloaded at build time and served from the page
+                               # itself, so a visit sends nothing to Google Fonts
 hooks:
-  - hooks.py
-  - ../tools/mkdocs/design_panel.py   # the wiki's design panel, only while `mkdocs serve` runs
-watch:
-  - ../docs/stylesheets              # the wiki's stylesheet, which hooks.py shares: saving it reloads this page too
+  - ../tools/mkdocs/design_panel.py   # the design panel, only while `mkdocs serve` runs
 theme:
+  name: material
   custom_dir: overrides
-  logo: ""                     # no icon of its own yet: Material's hub, not the suite's board
+  logo: ""                     # no icon of its own yet: Material's hub
   icon:
     logo: material/hub
   favicon: assets/images/favicon.png
+  font:
+    text: Inter
+    code: JetBrains Mono
+  palette:                     # dark only, without a switch
+    scheme: slate
+    primary: custom
+    accent: custom
+  features:
+    - navigation.sections
+    - navigation.top
+    - navigation.indexes
+    - toc.follow
+    - search.highlight
+    - content.code.copy
 extra_css:
-  - stylesheets/suite.css
   - stylesheets/nexus.css
+extra:
+  generator: false             # no "Made with Material for MkDocs" in the footer
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+      slugify: !!python/object/apply:pymdownx.slugs.slugify {kwds: {case: lower}}   # GitHub's anchors
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+validation:
+  links:
+    anchors: warn
 nav:
   - Home: index.md
   - Design: design.md

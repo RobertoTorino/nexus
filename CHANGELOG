@@ -1,3 +1,28 @@
+Changelog: 25-10-2026 15:11:46
+
+Every colour in the wikis' stylesheets is now a variable the design panel shows, in both wikis: new groups Buttons
+(the shadow under a button), Tables (the headings' background and text), The home page (the words at the top, the
+dark sections' background, text, links and buttons, and on the BC250 Bazzite Suite's wiki the shadow under the
+pictures and the stage pill) and The home page's footer (background, text, the notice's strip), and in Header the
+fill behind a link under the pointer. The shadows and fills written as rgb() are the same colours as #rrggbbaa, so
+the panel gives them a colour picker; both wikis look the same as before, pixel for pixel.
+tools/tests/test_wiki_designs.py fails on a colour written outside a variable. The Nexus page's Design chapter lists
+the new groups.
+
+Changelog: 25-10-2026 14:55:40
+
+Each wiki has a design of its own and shares nothing with another: nexus/mkdocs.yml no longer inherits the BC250
+Bazzite Suite's mkdocs.yml, nexus/hooks.py (which put suite.css in the Nexus page) is removed, and nexus.css is a
+complete stylesheet with its own --nexus-* variables, so a change in one wiki's design panel or stylesheet reaches
+no other. Both wikis look the same as before, pixel for pixel. Both stylesheets begin with labelled groups (the
+suite's colours, corners, header, Material's main and hover colours, the page), and the header's background and
+text have variables of their own (--suite-header-bg and --suite-header-fg, --nexus-header-bg and --nexus-header-fg):
+the header text was a fixed white the panel could not change. The design panel names each group and row by the
+stylesheet's comments, shows the variable's name below and where it is used on hover, gives a colour picker to a
+variable that refers to a colour, and names the wiki it changes and the file Copy CSS belongs in.
+tools/tests/test_wiki_designs.py checks that no wiki inherits or shares another's files and that every variable is
+labelled. The Nexus page's Design chapter describes the groups.
+
 Changelog: 25-10-2026 14:14:59
 
 The Nexus page's Design chapter names both stylesheets (suite.css, the wiki's layout; nexus.css, the Nexus

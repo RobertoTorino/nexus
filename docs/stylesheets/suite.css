@@ -1,40 +1,88 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
-/* The apps' look: Bazzite purple, and Inter with heavy titles like the apps' header_font(). */
+/* The BC250 Bazzite Suite's wiki: Bazzite purple, and Inter with heavy titles like the apps' header_font(). Only this
+   wiki loads this file; every other wiki has a stylesheet of its own. The design panel (mkdocs serve) shows the
+   variables below: the comment before a rule names its group, the comment after a variable says what it colours. */
+
+/* The suite's colours: the rest of the design is made from these. */
 :root {
-  --suite-primary: #5835CE;
-  --suite-secondary: #8A2BE2;
-  --suite-ink: #120c22;
-  --suite-deep: #1e1340;
-  --suite-soft: #a98bff;
-  --suite-mist: #c9bfee;
-  --suite-radius-small: 6px;
-  --suite-radius-medium: 8px;
-  --suite-radius-large: 12px;
+  --suite-primary: #5835CE;     /* Main colour: table headings, page icons, the home page's gradient */
+  --suite-secondary: #8A2BE2;   /* Second colour: hover on links and buttons, the home page's gradients */
+  --suite-ink: #120c22;         /* Darkest: the home page's dark sections and its footer */
+  --suite-deep: #1e1340;        /* Deep: the header, the top of the home page, the Download button */
+  --suite-soft: #a98bff;        /* Light: links, the icons on the home page's cards, footer headings */
+  --suite-mist: #c9bfee;        /* Pale: text on the home page's cards, footer links */
 }
 
+/* Corners. */
+:root {
+  --suite-radius-small: 6px;    /* Small corners (not in use yet) */
+  --suite-radius-medium: 8px;   /* Notes, code blocks, tables, pictures, search results */
+  --suite-radius-large: 12px;   /* An app's icon at the top of its chapter */
+}
+
+/* Header: the bar at the top of every page. */
+:root {
+  --suite-header-bg: var(--suite-deep);   /* Header background */
+  --suite-header-fg: #ffffff;             /* Header text: the suite's name and the links */
+  --suite-header-hover-bg: #ffffff1f;         /* Behind a link in the header under the pointer */
+}
+
+/* Material's main colour. */
 [data-md-color-primary="custom"] {
-  --md-primary-fg-color: var(--suite-primary);
-  --md-primary-fg-color--light: #7a5ce0;
-  --md-primary-fg-color--dark: #4426a8;
-  --md-primary-bg-color: #ffffff;
-  --md-primary-bg-color--light: #ffffffb3;
+  --md-primary-fg-color: var(--suite-primary);   /* Buttons and Material's highlights */
+  --md-primary-fg-color--light: #7a5ce0;         /* Lighter main colour */
+  --md-primary-fg-color--dark: #4426a8;          /* Darker main colour */
+  --md-primary-bg-color: #ffffff;                /* Text on the main colour */
+  --md-primary-bg-color--light: #ffffffb3;       /* Dimmed text on the main colour: the search field's hint */
 }
 
+/* Material's hover colour. */
 [data-md-color-accent="custom"] {
-  --md-accent-fg-color: var(--suite-secondary);
-  --md-accent-fg-color--transparent: #8a2be21a;
-  --md-accent-bg-color: #ffffff;
-  --md-accent-bg-color--light: #ffffffb3;
+  --md-accent-fg-color: var(--suite-secondary);  /* Links and buttons under the pointer, the outline on pictures */
+  --md-accent-fg-color--transparent: #8a2be21a;  /* A faint fill behind what is under the pointer */
+  --md-accent-bg-color: #ffffff;                 /* Text on the hover colour */
+  --md-accent-bg-color--light: #ffffffb3;        /* Dimmed text on the hover colour */
 }
 
+/* The page. */
 [data-md-color-scheme="slate"] {
-  --md-typeset-a-color: var(--suite-soft);
-  --md-default-bg-color: #17141f;
+  --md-typeset-a-color: var(--suite-soft);       /* Links in the text */
+  --md-default-bg-color: #17141f;                /* Page background */
 }
 
-/* The header in the deepest purple. */
+/* Buttons. */
+:root {
+  --suite-button-shadow: #00000040;           /* The shadow under a button under the pointer */
+}
+
+/* Tables. */
+:root {
+  --suite-table-head-bg: var(--suite-primary);    /* Background of a table's headings */
+  --suite-table-head-fg: #ffffff;             /* Text of a table's headings */
+}
+
+/* The home page. */
+:root {
+  --suite-hero-fg: #ffffff;                   /* The words under the pictures at the top: the name and the claim */
+  --suite-hero-shadow: #120c2273;             /* The shadow under the board and the controller at the top */
+  --suite-stage-bg: #8b4fd8;                  /* The stage pill under the claim */
+  --suite-stage-fg: #ffffff;                  /* Text in the stage pill */
+  --suite-section-bg: var(--suite-ink);           /* Background of the dark sections */
+  --suite-section-fg: #ffffff;                /* Text, card titles and links in the dark and the coloured sections */
+  --suite-section-button: #ffffff;            /* Buttons there: outline and text, the fill under the pointer */
+}
+
+/* The home page's footer. */
+:root {
+  --suite-footer-bg: var(--suite-ink);            /* Footer background */
+  --suite-footer-fg: #ffffff;                 /* The name, and a link under the pointer */
+  --suite-footer-notice-bg: #00000059;        /* The strip with the notice at the bottom, over the footer */
+}
+
+
 .md-header, .md-tabs {
-  background: var(--suite-deep);
+  background: var(--suite-header-bg);
+  color: var(--suite-header-fg);
 }
 
 /* Buttons as pills. */
@@ -47,7 +95,7 @@
 
 .md-typeset .md-button:hover,
 .md-typeset .md-button:focus {
-  box-shadow: 0 0.5em 1em rgb(0 0 0 / 0.25);
+  box-shadow: 0 0.5em 1em var(--suite-button-shadow);
 }
 
 .md-search__form {
@@ -182,8 +230,8 @@
 }
 
 .md-typeset table:not([class]) th {
-  background-color: var(--suite-primary);
-  color: #ffffff;
+  background-color: var(--suite-table-head-bg);
+  color: var(--suite-table-head-fg);
 }
 
 /* The suite icon in the header, large like the logo in the apps' own headers. */
@@ -204,14 +252,14 @@
   overflow: hidden;
   font-size: 1rem;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--suite-header-fg);
   white-space: nowrap;
   text-overflow: ellipsis;
 }
 
 .md-header__name:hover,
 .md-header__name:focus {
-  color: #ffffff;
+  color: var(--suite-header-fg);
 }
 
 @media screen and (max-width: 44.9375em) {
@@ -237,14 +285,14 @@
   border-radius: 2em;
   font-size: 0.8rem;
   font-weight: 600;
-  color: #ffffff;
+  color: var(--suite-header-fg);
   transition: background-color 150ms ease;
 }
 
 .md-header__link:hover,
 .md-header__link:focus {
-  color: #ffffff;
-  background-color: rgb(255 255 255 / 0.12);
+  color: var(--suite-header-fg);
+  background-color: var(--suite-header-hover-bg);
 }
 
 /* The home page (docs/index.md on tools/mkdocs/overrides/home.html): full-width sections, as on a product page. */
@@ -301,13 +349,13 @@
 
 .md-typeset .home-hero__board {
   width: 66%;
-  filter: drop-shadow(0 1.5rem 2rem rgb(18 12 34 / 0.45));
+  filter: drop-shadow(0 1.5rem 2rem var(--suite-hero-shadow));
 }
 
 .md-typeset .home-hero__controller {
   width: 34%;
   margin-left: -4%;
-  filter: drop-shadow(0 1.5rem 2rem rgb(18 12 34 / 0.45));
+  filter: drop-shadow(0 1.5rem 2rem var(--suite-hero-shadow));
 }
 
 .home-hero__text {
@@ -318,7 +366,7 @@
 }
 
 .md-typeset .home-hero__text {
-  color: #ffffff;
+  color: var(--suite-hero-fg);
 }
 
 .md-typeset .home-hero__lead {
@@ -338,8 +386,8 @@
 }
 
 .md-typeset .home-hero__stage strong {
-  background: #8b4fd8;
-  color: #ffffff;
+  background: var(--suite-stage-bg);
+  color: var(--suite-stage-fg);
   border-radius: 6px;
   padding: 0.1rem 0.5rem;
   margin-right: 0.5rem;
@@ -347,8 +395,8 @@
 
 /* Lots in the suite: a dark section with a grid of cards, the app names in white. */
 .home-section--dark {
-  background: var(--suite-ink);
-  color: #ffffff;
+  background: var(--suite-section-bg);
+  color: var(--suite-section-fg);
 }
 
 .home-grid {
@@ -365,7 +413,7 @@
   margin: 0 0 0.4rem;
   font-size: 1.1rem;
   font-weight: 800;
-  color: #ffffff;
+  color: var(--suite-section-fg);
 }
 
 .md-typeset .home-card h4 .twemoji svg {
@@ -381,7 +429,7 @@
 
 .md-typeset .home-section--dark a:not(.md-button),
 .md-typeset .home-section--accent a:not(.md-button) {
-  color: #ffffff;
+  color: var(--suite-section-fg);
   font-weight: 600;
 }
 
@@ -391,14 +439,14 @@
 
 .md-typeset .home-section--dark .md-button,
 .md-typeset .home-section--accent .md-button {
-  color: #ffffff;
-  border-color: #ffffff;
+  color: var(--suite-section-button);
+  border-color: var(--suite-section-button);
 }
 
 .md-typeset .home-section--dark .md-button:hover,
 .md-typeset .home-section--accent .md-button:hover {
-  background-color: #ffffff;
-  border-color: #ffffff;
+  background-color: var(--suite-section-button);
+  border-color: var(--suite-section-button);
   color: var(--suite-deep);
 }
 
@@ -428,7 +476,7 @@
 /* Get started: the suite's gradient, with a deep purple Download button. */
 .home-section--accent {
   background: linear-gradient(135deg, var(--suite-primary), var(--suite-secondary));
-  color: #ffffff;
+  color: var(--suite-section-fg);
 }
 
 .md-typeset .home-section--accent .md-button--primary {
@@ -470,8 +518,8 @@
 
 /* The home page's footer: the suite on the left, columns of links on the right. */
 .home-footer {
-  background: var(--suite-ink);
-  color: #ffffff;
+  background: var(--suite-footer-bg);
+  color: var(--suite-footer-fg);
 }
 
 .home-footer__inner {
@@ -488,7 +536,7 @@
   gap: 0.6rem;
   font-weight: 800;
   font-size: 0.9rem;
-  color: #ffffff;
+  color: var(--suite-footer-fg);
 }
 
 .home-footer__columns {
@@ -514,7 +562,7 @@
 }
 
 .home-footer__columns a:hover {
-  color: #ffffff;
+  color: var(--suite-footer-fg);
 }
 
 @media screen and (max-width: 44.9375em) {
@@ -524,5 +572,5 @@
 }
 
 .home-footer .md-footer-meta {
-  background: rgb(0 0 0 / 0.35);
+  background: var(--suite-footer-notice-bg);
 }

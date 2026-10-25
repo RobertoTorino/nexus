@@ -17,7 +17,8 @@ panel = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(panel)
 
 PAGE = "<html><body><p>Page</p></body></html>"
-CONFIG = SimpleNamespace(extra_css=["stylesheets/suite.css"])
+CONFIG = SimpleNamespace(site_name="BC250 Bazzite Suite", docs_dir=str(SUITE / "docs"),
+                         extra_css=["stylesheets/suite.css"])
 
 
 def test_only_while_serving():
@@ -31,6 +32,14 @@ def test_only_while_serving():
         panel.on_startup("build", dirty=False)
     assert output.index("window.__designPanel") < output.index("</body>")
     assert '"endpoint": "../__design__"' in output and '"sheets": ["stylesheets/suite.css"]' in output
+    assert '"site": "BC250 Bazzite Suite"' in output and '"files": ["docs/stylesheets/suite.css"]' in output
+
+
+def test_the_panel_names_the_files_of_each_wiki():
+    """Copy CSS goes to the wiki's own stylesheet: the panel says which, as a path in the checkout."""
+    nexus = SimpleNamespace(docs_dir=str(SUITE / "nexus" / "docs"), extra_css=["stylesheets/nexus.css"])
+    assert panel.source_files(nexus) == ["nexus/docs/stylesheets/nexus.css"]
+    assert panel.source_files(CONFIG) == ["docs/stylesheets/suite.css"]
 
 
 def test_the_address_is_relative_to_the_page():

@@ -26,11 +26,15 @@ mkdocs serve -f nexus/mkdocs.yml    # the Nexus page
 ```
 
 Open the address it prints. Each time you save a page, a stylesheet or a template (`tools/mkdocs/overrides/`,
-`nexus/overrides/`), the site is built again and the browser reloads. The stylesheets:
+`nexus/overrides/`), the site is built again and the browser reloads.
 
-- `docs/stylesheets/suite.css`: the wiki's layout and the BC250 Bazzite Suite's colours. The Nexus page takes its
-  layout too.
-- `nexus/docs/stylesheets/nexus.css`: the Nexus page's own colours, over that layout.
+Each wiki has a design of its own and shares no stylesheet, template or setting with another, so a change to one
+never reaches the others:
+
+| Wiki | Settings | Stylesheet | Templates |
+| --- | --- | --- | --- |
+| BC250 Bazzite Suite | `mkdocs.yml` | `docs/stylesheets/suite.css` | `tools/mkdocs/overrides/` |
+| Nexus | `nexus/mkdocs.yml` | `nexus/docs/stylesheets/nexus.css` | `nexus/overrides/` |
 
 Without a terminal: in BC250 Suite Releases, on **Test on this board** under **Test local apps**, the last icons are
 the wikis, one for each `mkdocs.yml` in the checkout. A click serves that wiki and opens it with the design panel
@@ -61,9 +65,28 @@ Serve on a network you trust only: everyone on it can open the pages and change 
 ### The design panel
 
 While `mkdocs serve` runs, every page has a **Design** button in its bottom left corner. It opens a panel with the
-CSS variables of the site's own stylesheets (`extra_css` in its `mkdocs.yml`), grouped by the rule that defines them,
-and the theme's fonts. Where two stylesheets set the same variable, the panel shows the one the page uses: the
-later one, such as `nexus.css` over `suite.css`. Add `?design` to an address to open the page with the panel open.
+CSS variables of that wiki's own stylesheet, and the theme's fonts. Its first line names the wiki it changes and the
+file the changes belong in. Add `?design` to an address to open the page with the panel open.
+
+Each group is a part of the design, and each row says what it colours or sizes, with the variable's name below.
+Hover over a row to see where the stylesheet uses the variable. The groups, the same in every wiki:
+
+| Group | What it changes |
+| --- | --- |
+| The suite's colours (Nexus's colours on the Nexus page) | The few colours the rest of the design is made from. A change here changes every place that uses the colour. |
+| Corners | How round notes, code blocks, tables and pictures are. |
+| Header | The bar at the top: its background, the colour of the name and the links in it, and the fill behind a link under the pointer. |
+| Material's main colour | Buttons and Material's highlights, and the text on them. |
+| Material's hover colour | Links and buttons under the pointer. |
+| The page | The page background and the links in the text. |
+| Buttons | The shadow under a button under the pointer. |
+| Tables | The background and text of a table's headings. |
+| The home page | The words at the top, the dark sections (background, text, links and buttons) and, on the BC250 Bazzite Suite's wiki, the shadow under the pictures and the stage pill. |
+| The home page's footer | Its background, the name and a link under the pointer, and the strip with the notice. |
+| Fonts | The theme's fonts, set in `mkdocs.yml`. |
+
+To change only the header, use **Header**. A change to a colour under **The suite's colours** changes the header too
+when the header uses that colour (it uses the deep colour until you set its background).
 
 - A colour has a colour picker; a colour with an opacity keeps it.
 - A size (`px`, `rem`, `em`) has a slider.
@@ -75,8 +98,9 @@ A change shows at once, and goes to every page open on the same server within a 
 TV all show the same mock. The panel's top line says **shared with every device**, or **this device only** when the
 server cannot be reached; the changes then stay in that browser.
 
-**Copy CSS** copies the changed variables, under the rules that define them, to paste into the stylesheet: for the
-Nexus page's colours that is `nexus.css`, for the BC250 Bazzite Suite's wiki `suite.css`. Over
+**Copy CSS** copies the changed variables, under the rules that define them, to paste into the stylesheet the
+panel's first line names: `nexus/docs/stylesheets/nexus.css` for the Nexus page, `docs/stylesheets/suite.css` for the
+BC250 Bazzite Suite's wiki. Over
 `http://` from another device the browser has no clipboard for it: the CSS below the buttons is then selected, to
 copy by hand.
 
@@ -104,5 +128,6 @@ changes where it would on that screen; the browser's own bars take a little of t
 Tick the sizes to show, or add one as `1600x900`. Type another page's address in **Page** to show that one. The
 pages follow the mock and reload when the site is built again, so a saved stylesheet shows on every size at once.
 
-Only what the stylesheet gives a variable can be changed in the panel. To make a colour or a size adjustable, give
-it a variable in the stylesheet and use that.
+Every colour in the stylesheets is a variable, so every colour can be changed in the panel; sizes are variables
+where the panel lists them. To make another size adjustable, give it a variable in the stylesheet and use that. Put a comment before its rule (the group's name) and one after the
+variable on its line (what it does): the panel shows them, and the tests ask for them.

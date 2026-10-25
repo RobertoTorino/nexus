@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // The design panel (tools/mkdocs/design_panel.py puts it on every page while `mkdocs serve` runs): every CSS variable
-// the site's own stylesheets define, with a colour picker, a slider or a text field each. A change shows at once and
-// goes to the server, which every open page asks once a second, so all devices show the same mock.
+// this wiki's own stylesheets define, with a colour picker, a slider or a text field each. The groups and labels are
+// the stylesheet's own comments. A change shows at once and goes to the server, which every open page asks once a
+// second, so all devices show the same mock.
 (() => {
   "use strict";
   const config = window.__designPanel;
@@ -15,31 +16,69 @@
   const read = (key, fallback) => { try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; } };
   const write = (key, value) => { try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* private window */ } };
 
-  // The variables: each rule of the site's own stylesheets (extra_css) that defines one, and the theme's fonts.
-  function variables() {
-    const found = new Map();
+  // The rules at the top level of a stylesheet's text: the comment just before each, its selector, and its body with
+  // the comments blanked out (same length, so positions in it are positions in the text).
+  function topRules(text) {
+    const code = text.replace(/\/\*[\s\S]*?\*\//g, c => " ".repeat(c.length));
+    const comments = [...text.matchAll(/\/\*([\s\S]*?)\*\//g)].map(m => ({end: m.index + m[0].length, text: m[1]}));
+    const rules = [];
+    let depth = 0, start = 0, open = 0;
+    for (let i = 0; i < code.length; i++) {
+      if (code[i] === "{" && depth++ === 0) open = i;
+      else if (code[i] === "}" && --depth === 0) {
+        const before = comments.filter(c => c.end > start && c.end <= open).pop();
+        rules.push({title: before ? before.text.replace(/\s+/g, " ").trim() : "",
+                    selector: code.slice(start, open).replace(/\s+/g, " ").trim(),
+                    bodyStart: open + 1, body: code.slice(open + 1, i)});
+        start = i + 1;
+      }
+    }
+    return {rules, text};
+  }
+
+  // The variables: each rule of this wiki's own stylesheets (extra_css) that defines one, in the order of the file,
+  // and the theme's fonts. A variable's label is the comment after it on its line; uses lists the rules that read it.
+  async function variables() {
     const own = sheet => sheet.href && config.sheets.some(s => new URL(sheet.href).pathname.endsWith("/" + s));
-    for (const sheet of document.styleSheets) {
-      if (!own(sheet)) continue;
-      let rules;
-      try { rules = sheet.cssRules; } catch { continue; }
-      for (const rule of rules) {
-        if (!(rule instanceof CSSStyleRule)) continue;
-        for (const name of rule.style) {
-          if (name.startsWith("--")) {
-            found.set(rule.selectorText + "|" + name,
-                      {selector: rule.selectorText, name, value: rule.style.getPropertyValue(name).trim()});
-          }
+    const groups = [], found = new Map(), uses = new Map();
+    for (const sheet of [...document.styleSheets].filter(own)) {
+      let parsed;
+      try { parsed = topRules(await (await fetch(sheet.href, {cache: "no-store"})).text()); } catch { continue; }
+      for (const rule of parsed.rules) {
+        for (const m of rule.body.matchAll(/var\((--[\w-]+)/g)) {
+          if (!uses.has(m[1])) uses.set(m[1], new Set());
+          uses.get(m[1]).add(rule.selector.startsWith("@") ? rule.selector + " …" : rule.selector);
         }
+        if (rule.selector.startsWith("@")) continue;
+        const group = {title: rule.title, selector: rule.selector, keys: []};
+        for (const m of rule.body.matchAll(/(--[\w-]+)\s*:([^;]*);?/g)) {
+          const end = rule.bodyStart + m.index + m[0].length;
+          const eol = parsed.text.indexOf("\n", end);
+          const label = (parsed.text.slice(end, eol < 0 ? undefined : eol).match(/^\s*\/\*(.*?)\*\//) || [])[1];
+          const key = rule.selector + "|" + m[1];
+          for (const g of groups) g.keys = g.keys.filter(k => k !== key);      // a later stylesheet wins
+          found.set(key, {selector: rule.selector, name: m[1], value: m[2].trim(), label: label ? label.trim() : ""});
+          group.keys.push(key);
+        }
+        if (group.keys.length) groups.push(group);
       }
     }
     const root = getComputedStyle(document.documentElement);
-    for (const name of ["--md-text-font", "--md-code-font"]) {
+    const fonts = {title: "Fonts: the theme's, from mkdocs.yml", selector: ":root", keys: []};
+    for (const [name, label] of [["--md-text-font", "Text"], ["--md-code-font", "Code"]]) {
       const value = root.getPropertyValue(name).trim();
-      if (value && !found.has(":root|" + name)) found.set(":root|" + name, {selector: ":root", name, value});
+      if (value && !found.has(":root|" + name)) {
+        found.set(":root|" + name, {selector: ":root", name, value, label});
+        fonts.keys.push(":root|" + name);
+      }
     }
-    return [...found.entries()];
+    groups.push(fonts);
+    for (const variable of found.values()) variable.uses = [...(uses.get(variable.name) || [])];
+    return {groups: groups.filter(g => g.keys.length), found};
   }
+
+  // A variable's value as the page has it now, var() resolved (Material's variables are set on <body>).
+  const current = name => getComputedStyle(document.body).getPropertyValue(name).trim();
 
   const isColour = v => /^#([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(v);
   const isLength = v => /^-?\d*\.?\d+(px|rem|em)$/.test(v);
@@ -104,6 +143,7 @@
     <button class="dp-toggle" type="button" title="Design panel">Design</button>
     <div class="dp-body" hidden>
       <div class="dp-head"><strong>Design</strong><span class="dp-status"></span></div>
+      <div class="dp-site"></div>
       <div class="dp-rows"></div>
       <div class="dp-actions">
         <button type="button" data-action="copy">Copy CSS</button>
@@ -130,18 +170,25 @@
     el.className = "dp-row";
     const name = document.createElement("span");
     name.className = "dp-name";
-    name.textContent = variable.name;
-    name.title = `${variable.selector}\n${variable.name}: ${variable.value}`;
+    name.textContent = variable.label || variable.name;
+    if (variable.label) {
+      const code = document.createElement("code");
+      code.textContent = variable.name;
+      name.append(code);
+    }
+    name.title = `${variable.selector} { ${variable.name}: ${variable.value} }\n` +
+      (variable.uses.length ? `Used by: ${variable.uses.join("; ")}` : "Not used by any rule");
     const text = document.createElement("input");
     text.type = "text";
     text.spellcheck = false;
     let picker = null, slider = null;
-    if (isColour(variable.value)) {
+    if (isColour(variable.value) || isColour(current(variable.name))) {      // var(--x) of a colour too
       picker = document.createElement("input");
       picker.type = "color";
       picker.addEventListener("input", () => {
-        const current = mock.values[key] ?? variable.value;
-        const alpha = current.length === 9 ? current.slice(7) : "";      // the picker has no alpha: keep it
+        const value = mock.values[key] ?? variable.value;
+        const now = isColour(value) ? value : current(variable.name);
+        const alpha = now.length === 9 ? now.slice(7) : "";              // the picker has no alpha: keep it
         change(key, picker.value + alpha, variable.value);
       });
     } else if (isLength(variable.value)) {
@@ -167,7 +214,8 @@
     rows.set(key, {sync() {
       const value = mock.values[key] ?? variable.value;
       if (document.activeElement !== text) text.value = value;
-      if (picker && isColour(value)) picker.value = hex6(value);
+      const shown = isColour(value) ? value : current(variable.name);     // var(--x): the colour it gives
+      if (picker && isColour(shown)) picker.value = hex6(shown);
       if (slider) slider.value = parseFloat(value);
       el.classList.toggle("dp-changed", key in mock.values);
     }});
@@ -178,17 +226,21 @@
   fonts.innerHTML = FONTS.map(f => `<option value='"${f}"'>`).join("");
   panel.appendChild(fonts);
 
-  let lastSelector = null, group = null;
-  for (const [key, variable] of variables()) {
-    if (variable.selector !== lastSelector) {
-      group = document.createElement("fieldset");
+  // What the panel changes: this wiki only, and the file a change belongs in.
+  panel.querySelector(".dp-site").textContent =
+    `Changes ${config.site} only. Copy CSS into ${config.files.join(" or ")}.`;
+
+  // A group per rule, named by the comment before it (the selector where it has none).
+  function build({groups, found}) {
+    for (const g of groups) {
+      const group = document.createElement("fieldset");
       const legend = document.createElement("legend");
-      legend.textContent = variable.selector;
+      legend.textContent = g.title || g.selector;
+      legend.title = g.selector;
       group.appendChild(legend);
       list.appendChild(group);
-      lastSelector = variable.selector;
+      for (const key of g.keys) row(key, found.get(key), group);
     }
-    row(key, variable, group);
   }
 
   panel.querySelector(".dp-toggle").addEventListener("click", () => {
@@ -221,6 +273,10 @@
   mock = read(STORE, mock);
   setShared(false);
   apply();
-  poll();
-  setInterval(poll, 1000);
+  variables().then(found => {
+    build(found);
+    apply();
+    poll();
+    setInterval(poll, 1000);
+  });
 })();

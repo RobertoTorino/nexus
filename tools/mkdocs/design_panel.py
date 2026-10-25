@@ -2,7 +2,10 @@
 """MkDocs hook: a design panel on every page while `mkdocs serve` runs, never in a build.
 
 The panel (design_panel.js and .css, put in each page) lists every CSS variable the site's own stylesheets
-(extra_css) define, with a colour picker, a slider or a text field, and shows a change at once. The server keeps the
+(extra_css) define, with a colour picker, a slider or a text field, and shows a change at once. Its groups and labels
+are the stylesheet's comments: the one before a rule names the group, the one after a variable on its line says what
+it does. Each wiki has stylesheets of its own, so a change is to that wiki alone; the panel names the wiki and the
+files its changes go in. The server keeps the
 mock at <the config's folder>/.design-mock.json (git ignores it) and answers at <the site's path>/__design__: a POST
 stores it, a GET returns it. Every open page asks once a second, so a phone, the board and the TV on the same server
 all show the same mock. Copy CSS gives the changed variables to paste into the stylesheet. Screens opens
@@ -16,6 +19,7 @@ import threading
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
+ROOT = HERE.parents[1]
 ENDPOINT = "__design__"
 MOCK_FILE = ".design-mock.json"
 MAX_BODY = 256 * 1024                   # a mock is a few hundred variables at most
@@ -41,9 +45,21 @@ def endpoint_for(page_url: str) -> str:
     return "../" * page_url.count("/") + ENDPOINT
 
 
-def snippet(page_url: str, sheets: list[str]) -> str:
+def source_files(config) -> list[str]:
+    """The site's stylesheets as paths in the checkout (docs/stylesheets/suite.css): where a change is pasted."""
+    docs = Path(config.docs_dir).resolve()
+    paths = []
+    for sheet in config.extra_css:
+        path = docs / str(sheet)
+        paths.append(path.relative_to(ROOT).as_posix() if path.is_relative_to(ROOT) else str(sheet))
+    return paths
+
+
+def snippet(page_url: str, config) -> str:
     """The panel's style, settings and script, for the end of a page's <body>."""
-    settings = json.dumps({"endpoint": endpoint_for(page_url), "sheets": [str(s) for s in sheets]}).replace("</", "<\\/")
+    settings = json.dumps({"endpoint": endpoint_for(page_url), "site": config.site_name,
+                           "sheets": [str(s) for s in config.extra_css], "files": source_files(config)})
+    settings = settings.replace("</", "<\\/")
     css = (HERE / "design_panel.css").read_text(encoding="utf-8")
     js = (HERE / "design_panel.js").read_text(encoding="utf-8")
     return f"<style>{css}</style>\n<script>window.__designPanel = {settings};</script>\n<script>{js}</script>\n"
@@ -53,7 +69,7 @@ def on_post_page(output, page, config):
     if not _serving or "</body>" not in output:
         return output
     head, _, tail = output.rpartition("</body>")
-    return head + snippet(page.url, list(config.extra_css)) + "</body>" + tail
+    return head + snippet(page.url, config) + "</body>" + tail
 
 
 def load(path: Path) -> dict:

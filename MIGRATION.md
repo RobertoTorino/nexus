@@ -967,7 +967,11 @@ behaviour and dependencies. Decided (owner, 25-10-2026):
   for the rename. Its colours are its own (owner, 25-10-2026: the wiki's design is Bazzite's, not for Nexus or
   another project that is not Bazzite): graphite with teal in `nexus/docs/stylesheets/nexus.css`, a proposal; each
   suite's wiki has the colours of its own system. Open (owner): the colours, and an icon of Nexus's own (Material's
-  hub stands in).
+  hub stands in). Separated (owner, 25-10-2026: every suite has its own design, a change in one wiki must not reach
+  another): `nexus/mkdocs.yml` no longer inherits `../mkdocs.yml`, `nexus/hooks.py` (which shared `suite.css`) is
+  gone, and `nexus.css` is a complete stylesheet of its own with `--nexus-*` variables (the layout rules it uses,
+  copied; pixel-identical before and after on both wikis). `tools/tests/test_wiki_designs.py` keeps every wiki
+  apart and every design variable labelled for the design panel.
 - **The name: Windows Portable Suite**, for any Windows handheld, not the Ally alone. It sits beside the current
   tree in its own folder, `windows-portable/` (OS and device, as the suite names: `portable/` alone would clash with
   a second portable suite; proposed 25-10-2026, the owner may still change it) with its own `portal/apps.toml`,
