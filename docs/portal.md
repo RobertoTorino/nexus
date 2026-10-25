@@ -334,7 +334,12 @@ apps/suite/install.sh --uninstall             # remove them; the checkout stays
   development venv has MkDocs) and opens it in the browser at `http://127.0.0.1:8765/nexus/bc250-bazzite-suite/`, with
   its design panel open; **Nexus wiki (local)** does the same for the Nexus page, at port 8766. Each rebuilds on
   every save; its log is `mkdocs-<wiki>-local.log` there. When one is already running, a click only opens the page
-  again. With **Wikis on the network** ticked, the icons serve the wikis on every address of the computer, at
+  again. The wikis, like the apps, keep running when you close the window, and Suite Releases has no button that
+  stops them. A wiki started before the checkout changed (after a pull, or a change to its `mkdocs.yml` or the
+  design panel) can still show the old setup: stop it, then click its icon again. `pkill -f "mkdocs serve"` stops
+  every wiki on Linux; on Windows, in PowerShell:
+  `Get-CimInstance Win32_Process -Filter "Name='python.exe'" | Where-Object { $_.CommandLine -like '*mkdocs serve*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }`.
+  With **Wikis on the network** ticked, the icons serve the wikis on every address of the computer, at
   ports 8785 and 8786, so a handheld, a laptop or the TV opens them too: the addresses for those devices show on
   the page once a wiki started. The computer's firewall has to let them in (see the Nexus page's
   [Design](https://robertotorino.github.io/nexus/design/) chapter).

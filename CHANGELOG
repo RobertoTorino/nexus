@@ -1,3 +1,9 @@
+Changelog: 25-10-2026 16:55:53
+
+The wiki (Portal, Suite Releases) and the Nexus page's Design chapter (a new section, Stop a wiki) say how to stop
+the wikis Suite Releases serves: they keep running when it closes, and one started before the checkout changed can
+still show the old setup.
+
 Changelog: 25-10-2026 15:11:46
 
 Every colour in the wikis' stylesheets is now a variable the design panel shows, in both wikis: new groups Buttons

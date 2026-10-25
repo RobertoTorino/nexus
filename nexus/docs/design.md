@@ -40,6 +40,27 @@ Without a terminal: in BC250 Suite Releases, on **Test on this board** under **T
 the wikis, one for each `mkdocs.yml` in the checkout. A click serves that wiki and opens it with the design panel
 open; a second click only opens the page again.
 
+### Stop a wiki
+
+`mkdocs serve` in a terminal stops with Ctrl+C. A wiki Suite Releases started keeps running when you close Suite
+Releases, and a click on its icon only opens the page again, so a wiki started before the checkout changed (after a
+pull, or a change to its `mkdocs.yml` or the design panel) can still show the old setup. Stop it, then click its
+icon again. On Linux:
+
+```bash
+pkill -f "mkdocs serve"
+```
+
+On Windows, in PowerShell:
+
+```powershell
+Get-CimInstance Win32_Process -Filter "Name='python.exe'" |
+  Where-Object { $_.CommandLine -like '*mkdocs serve*' } |
+  ForEach-Object { Stop-Process -Id $_.ProcessId -Force }
+```
+
+Both stop every wiki that `mkdocs serve` serves on the computer.
+
 ### On other devices
 
 To see the same pages on a phone, a handheld, the board or the TV, serve them on your network:
