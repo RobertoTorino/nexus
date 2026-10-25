@@ -1084,6 +1084,21 @@ streaming BC-250 games to the Ally.
   file has the same video endpoint as the PS5's); the camera back as 05a9:058a with its modes and controls (PS Move
   API: 1280x800 at 60, 640x400 at 120, 320x192 at 240); whether a CUH-ZEY1 takes the same file as a CUH-ZEY2; the
   other PS4 firmware versions; the udev rule's power line for 058a.
+- **One design per suite (on hold, owner 25-10-2026: a later iteration).** Within a suite the design is to be
+  consistent; each new suite may have a design of its own. DESIGN.md (the colours) and ICONS.md (the icons) list
+  what is in use now: besides the theme, many apps have colours of their own (the gaming apps' blue, DatStation's
+  PlayStation blue, the Upscaler's copper and teal, Bazzite Test's own greys and log colours), and the icons mix
+  pictures, drawn symbols, the desktop style's icons and characters of the font. The refactor brings each suite
+  back to one set, and the two files then describe it. With it, one design file per suite (owner, 25-10-2026): the
+  suite's colours, radii and fonts in one place, from which the Qt theme, the wiki's CSS and DESIGN.md are made; a
+  mock is a copy of that file, and the wiki's design panel and Nexus Design Preview both read it. It also gives the
+  Nexus page (its design is a placeholder, owner 25-10-2026) and later suites a design of their own.
+- **Nexus Design Preview (owner, 25-10-2026: next, after the wiki's design panel).** `apps/dpreview/design_preview/`,
+  checkout-only like Suite Releases (`.checkout-only`, `[checkout.dpreview]`, the Development tab), with its
+  installer test. A gallery of every widget the suite's apps use (the 96 px header, buttons, tabs, tables, status
+  tiles, pills, logs) on the theme, a colour picker for each theme colour that updates it live, mocks saved as files
+  and switched between; run from the checkout on Windows and Bazzite, to see a mock with each system's fonts,
+  scaling and style. The Nexus page's Design chapter describes it once it exists.
 
 - **Descriptions for the games in Steam (on hold, owner 22-10-2026: after the release of the covers).** A non-Steam
   game's page shows Steam's fixed notice where a Steam game has its description, developer and release date:

@@ -1,9 +1,22 @@
-Changelog: 25-10-2026 01:35:37
+Changelog: 25-10-2026 11:21:51
 
-The Nexus page gets colours of its own (owner, 25-10-2026: the wiki's design is Bazzite's, for the BC250 Bazzite
-Suite only, not for Nexus or another project that is not Bazzite): nexus/docs/stylesheets/nexus.css sets graphite
-with teal over the wiki's layout, and Material's hub icon stands in for the suite's board icon until Nexus has an
-icon of its own.
+The Nexus page has a Design chapter (nexus/docs/design.md, Design in its header): one design per suite, the
+listings DESIGN.md and ICONS.md, and how to try a design in the wiki: mkdocs serve, on other devices, and the
+design panel. The panel (tools/mkdocs/design_panel.py, .js and .css, a hook of both the wiki and the Nexus page)
+is on every page while mkdocs serve runs, never in a build: the stylesheet's CSS variables with a colour
+picker, a slider or a text field each, a change shown at once on every device on the same server, and Copy
+CSS for the stylesheet. The mock is kept in .design-mock.json beside the mkdocs.yml, which git ignores. The
+Nexus page's server also watches the wiki's stylesheet it shares. The panel's Screens (design_screens.html) shows
+the page at PC, laptop and handheld sizes, the ASUS ROG Xbox Ally X's 1280 x 720 (1920 x 1080 at 150 %) first,
+each a real page of that size scaled down to fit.
+
+Changelog: 25-10-2026 10:22:56
+
+DESIGN.md lists the suite's colours: the three themes, the state colours, the wiki's and the apps' own,
+each with what it is for; a text colour shows a sample sentence, a background colour a block, as SVG files in
+docs/design/colors/. ICONS.md lists the icons per suite (the BC250 Bazzite Suite) and where each is used; the
+icons drawn in code are rendered to docs/design/icons/. tools/make_design.py and tools/make_icons.py write them
+from their listings, --check says whether they are up to date, and tools/tests checks it.
 
 Changelog: 25-10-2026 01:12:22
 

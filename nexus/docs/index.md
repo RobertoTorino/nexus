@@ -17,8 +17,7 @@ hide:
 <div class="home-section__inner" markdown>
 ## The name
 
-A nexus is a connection, and the centre where things meet. Here it is where the suites meet: one repository that
-holds every suite, the code they share and the rules they are built by.
+A nexus is a hub, the center every part leads back to. Nexus is where the suites connect: one repository holding every suite, the code they share, and the rules they’re built by.
 
 </div>
 </section>

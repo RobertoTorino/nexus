@@ -1,3 +1,11 @@
+Changelog: 25-10-2026 11:56:16
+
+Added. Test local apps has an icon for each wiki in the checkout (each mkdocs.yml: the BC250 Bazzite Suite's,
+the Nexus page's) in place of Manual (local), each served on a port of its own (8765, 8766) with a log of its
+own, and opened with its design panel. Wikis on the network serves them on every address of the computer, at
+ports of their own (8785, 8786), so the other devices on the network open them too; the page shows their
+addresses.
+
 Changelog: 25-10-2026 00:51:24
 
 Fixed. check-release.sh downloads the release assets from the suite's new name, Nexus (RobertoTorino/nexus, renamed

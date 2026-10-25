@@ -828,16 +828,36 @@ def test_instance_running_sees_a_listening_app_and_does_not_disturb_it():
     assert not main_window.instance_running("suite-test-instance")
 
 
-def test_docs_target(repo):
-    assert rp.docs_target(repo) is None                                       # no mkdocs.yml
+def test_docs_targets(repo):
+    assert rp.docs_targets(repo) == []                                        # no mkdocs.yml
     write(repo / "mkdocs.yml", "site_name: S\nsite_url: https://example.invalid/suite/\n")
-    docs = rp.docs_target(repo)
-    assert (docs.module, docs.folder, docs.label) == ("mkdocs", repo, "Manual (local)")
-    assert docs.url == f"http://{rp.DOCS_ADDRESS}/suite/"                      # the path of site_url
+    write(repo / "nexus/mkdocs.yml", "INHERIT: ../mkdocs.yml\nsite_name: Nexus\nsite_url: https://example.invalid/\n")
+    docs, nexus = rp.docs_targets(repo)
+    assert (docs.module, docs.folder, docs.label) == ("mkdocs", repo, "S wiki (local)")
+    assert docs.url == f"http://127.0.0.1:{rp.DOCS_PORT}/suite/?design"       # site_url's path, the design panel open
     command, _ = rp.launch_command(repo, docs, python="/venv/python")
-    assert command == ["/venv/python", "-m", "mkdocs", "serve", "--dev-addr", rp.DOCS_ADDRESS]
+    assert command == ["/venv/python", "-m", "mkdocs", "serve", "-f", "mkdocs.yml",
+                       "--dev-addr", f"127.0.0.1:{rp.DOCS_PORT}"]
+    assert nexus.label == "Nexus wiki (local)" and nexus.url == f"http://127.0.0.1:{rp.DOCS_PORT + 1}/?design"
+    assert nexus.args[:3] == ("serve", "-f", "nexus/mkdocs.yml") and docs.log_name != nexus.log_name
+    assert not docs.note
     write(repo / "mkdocs.yml", "site_name: S\n")
-    assert rp.docs_target(repo).url == f"http://{rp.DOCS_ADDRESS}/"
+    assert rp.docs_targets(repo)[0].url == f"http://127.0.0.1:{rp.DOCS_PORT}/?design"
+
+
+def test_docs_targets_on_the_network(repo):
+    write(repo / "mkdocs.yml", "site_name: S\nsite_url: https://example.invalid/suite/\n")
+    (docs,) = rp.docs_targets(repo, network=True, addresses=["192.0.2.7"])
+    port = rp.NETWORK_PORT                                                    # not the local one: both can run
+    assert docs.label == "S wiki (network)" and docs.args[-1] == f"0.0.0.0:{port}"
+    assert docs.url == f"http://127.0.0.1:{port}/suite/?design"               # this computer's browser
+    assert docs.note == f"On the other devices: http://192.0.2.7:{port}/suite/"
+    assert docs.log_name != rp.docs_targets(repo)[0].log_name
+    assert "no network address" in rp.docs_targets(repo, network=True, addresses=[])[0].note
+
+
+def test_network_addresses_leave_out_loopback():
+    assert all(not a.startswith("127.") for a in rp.network_addresses())
 
 
 def test_window_serves_the_manual(window, repo, tmp_path, monkeypatch):
@@ -852,17 +872,37 @@ def test_window_serves_the_manual(window, repo, tmp_path, monkeypatch):
     page = window.run_page
     items = [page.apps.item(i) for i in range(page.apps.count())]
     docs = items[-1]                                                          # after the apps
-    assert docs.text() == "Manual (local)"
+    assert docs.text() == "S wiki (local)"
     page.apps.itemClicked.emit(docs)
-    assert started == [([sys.executable, "-m", "mkdocs", "serve", "--dev-addr", rp.DOCS_ADDRESS], repo)]
+    assert started == [([sys.executable, "-m", "mkdocs", "serve", "-f", "mkdocs.yml",
+                         "--dev-addr", f"127.0.0.1:{rp.DOCS_PORT}"], repo)]
     page.poll()
     assert opened == []                                                       # not up yet
     up[0] = True
     page.poll()
     page.poll()
-    assert opened == [f"http://{rp.DOCS_ADDRESS}/suite/"]                       # once
+    assert opened == [f"http://127.0.0.1:{rp.DOCS_PORT}/suite/?design"]       # once
     page.apps.itemClicked.emit(docs)                                          # already up: only the page again
     assert len(started) == 1 and len(opened) == 2
+
+
+def test_window_serves_the_wikis_on_the_network(window, repo, tmp_path, monkeypatch):
+    from suite_releases import main_window
+    write(repo / "mkdocs.yml", "site_name: S\n")
+    monkeypatch.setattr(main_window, "LOG_DIR", tmp_path / "logs")
+    monkeypatch.setattr(rp, "network_addresses", lambda: ["192.0.2.7"])
+    monkeypatch.setattr(main_window, "answers", lambda url: False)
+    started = []
+    window.start = lambda command, env, cwd, log: started.append((command, log)) or FakeProcess()
+    window.reload()
+    page = window.run_page
+    page.network_box.setChecked(True)                                         # the icons follow
+    docs = page.apps.item(page.apps.count() - 1)
+    assert docs.text() == "S wiki (network)"
+    page.apps.itemClicked.emit(docs)
+    assert started[0][0][-1] == f"0.0.0.0:{rp.NETWORK_PORT}"
+    assert started[0][1].name == "mkdocs-root-network.log"
+    assert f"http://192.0.2.7:{rp.NETWORK_PORT}/" in page.output.toPlainText()
 
 
 class FakeProcess:

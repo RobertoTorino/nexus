@@ -1,0 +1,150 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<!-- The design panel's Screens page (tools/mkdocs/design_panel.py serves it at __design__/screens?page=<path>): one
+     page at the sizes of PC, laptop and handheld screens, each a real frame of that size scaled down to fit, so the
+     page's own breakpoints see the width they would. The frames follow the mock and reload when the site does. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Screens</title>
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; background: #14161c; color: #e6e6e6; font: 13px/1.4 system-ui, "Segoe UI", sans-serif; }
+  header { position: sticky; top: 0; z-index: 1; display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center;
+           padding: 10px 16px; background: #1e1f24; border-bottom: 1px solid #3a3f4a; }
+  header strong { font-size: 15px; }
+  header label { white-space: nowrap; }
+  input, select, button { font: inherit; color: inherit; background: #111418; border: 1px solid #3a3f4a;
+                          border-radius: 4px; padding: 3px 6px; }
+  button { background: #2a2d36; cursor: pointer; }
+  #page { width: 22em; }
+  #size { width: 7em; }
+  main { padding: 16px; display: flex; flex-direction: column; gap: 24px; }
+  figure { margin: 0; }
+  figcaption { margin-bottom: 6px; color: #9aa0a6; }
+  figcaption b { color: #e6e6e6; }
+  .frame { overflow: hidden; border: 1px solid #3a3f4a; border-radius: 6px; background: #000; }
+  iframe { border: 0; transform-origin: 0 0; display: block; }
+</style>
+</head>
+<body>
+<header>
+  <strong>Screens</strong>
+  <label>Page <input id="page" spellcheck="false"></label>
+  <span id="choices"></span>
+  <label>Add <input id="size" placeholder="1600x900" spellcheck="false"></label>
+  <label>Scale <select id="scale"><option value="fit">fit the window</option><option value="1">100 %</option>
+    <option value="0.5">50 %</option></select></label>
+  <button id="reload" type="button">Reload all</button>
+</header>
+<main id="frames"></main>
+<script>
+(() => {
+  "use strict";
+  // The sizes a web page gets: the screen's pixels divided by the system's display scaling.
+  const SCREENS = [
+    {key: "allyx", name: "ASUS ROG Xbox Ally X", w: 1280, h: 720, note: "7-inch 1920 × 1080 at 150 % scaling"},
+    {key: "laptop-hd", name: "Laptop", w: 1366, h: 768, note: "1366 × 768"},
+    {key: "laptop-fhd", name: "Laptop", w: 1536, h: 864, note: "1920 × 1080 at 125 % scaling"},
+    {key: "laptop-16-10", name: "Laptop", w: 1440, h: 900, note: "16:10, 2880 × 1800 at 200 % scaling"},
+    {key: "desktop-fhd", name: "Desktop", w: 1920, h: 1080, note: "Full HD"},
+    {key: "desktop-qhd", name: "Desktop", w: 2560, h: 1440, note: "QHD"},
+    {key: "desktop-uhd", name: "Desktop", w: 3840, h: 2160, note: "4K UHD at 100 % scaling"},
+  ];
+  const STORE = "design-screens";
+  const read = () => { try { return JSON.parse(localStorage.getItem(STORE)) || {}; } catch { return {}; } };
+  const save = s => { try { localStorage.setItem(STORE, JSON.stringify(s)); } catch { /* private window */ } };
+  const state = Object.assign({on: SCREENS.map(s => s.key), extra: [], scale: "fit"}, read());
+
+  const params = new URLSearchParams(location.search);
+  const site = new URL("..", location.href).pathname;            // the site's root: __design__/.. is it
+  const pageInput = document.getElementById("page");
+  const safe = p => p.startsWith(site) && !p.startsWith("//") ? p : site;
+  pageInput.value = safe(params.get("page") || site);
+
+  const screens = () => [...SCREENS, ...state.extra.map(([w, h]) => ({key: `${w}x${h}`, name: "Custom", w, h,
+                                                                      note: `${w} × ${h}`, extra: true}))];
+
+  function choices() {
+    const box = document.getElementById("choices");
+    box.replaceChildren();
+    for (const s of screens()) {
+      const label = document.createElement("label");
+      const check = document.createElement("input");
+      check.type = "checkbox";
+      check.checked = state.on.includes(s.key);
+      check.addEventListener("change", () => {
+        state.on = check.checked ? [...state.on, s.key] : state.on.filter(k => k !== s.key);
+        save(state); frames();
+      });
+      label.append(check, ` ${s.name === "Custom" ? "" : s.name + " "}${s.w}×${s.h} `);
+      box.append(label);
+    }
+  }
+
+  function frames() {
+    const main = document.getElementById("frames");
+    main.replaceChildren();
+    for (const s of screens().filter(s => state.on.includes(s.key))) {
+      const figure = document.createElement("figure");
+      const caption = document.createElement("figcaption");
+      const name = document.createElement("b");
+      name.textContent = `${s.name} · ${s.w} × ${s.h}`;
+      caption.append(name, ` (${s.note})`);
+      const box = document.createElement("div");
+      box.className = "frame";
+      const frame = document.createElement("iframe");
+      frame.width = s.w;
+      frame.height = s.h;
+      frame.src = safe(pageInput.value);
+      frame.title = `${s.name}, ${s.w} × ${s.h}`;
+      box.dataset.w = s.w;
+      box.dataset.h = s.h;
+      box.append(frame);
+      figure.append(caption, box);
+      main.append(figure);
+    }
+    fit();
+  }
+
+  function fit() {
+    const main = document.getElementById("frames");
+    const style = getComputedStyle(main);
+    const room = main.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight) - 2;   // 2: borders
+    for (const box of document.querySelectorAll(".frame")) {
+      const w = +box.dataset.w, h = +box.dataset.h;
+      const scale = state.scale === "fit" ? Math.min(1, room / w) : +state.scale;
+      box.firstChild.style.transform = `scale(${scale})`;
+      box.style.width = `${w * scale}px`;
+      box.style.height = `${h * scale}px`;
+    }
+  }
+
+  pageInput.addEventListener("change", () => {
+    pageInput.value = safe(pageInput.value.trim());
+    history.replaceState(null, "", "?page=" + encodeURIComponent(pageInput.value));
+    frames();
+  });
+  document.getElementById("size").addEventListener("change", e => {
+    const m = e.target.value.match(/^\s*(\d{3,4})\s*[x×]\s*(\d{3,4})\s*$/i);
+    if (!m) return;
+    const size = [+m[1], +m[2]];
+    if (!state.extra.some(([w, h]) => w === size[0] && h === size[1])) state.extra.push(size);
+    state.on.push(`${size[0]}x${size[1]}`);
+    e.target.value = "";
+    save(state); choices(); frames();
+  });
+  const scale = document.getElementById("scale");
+  scale.value = state.scale;
+  scale.addEventListener("change", () => { state.scale = scale.value; save(state); fit(); });
+  document.getElementById("reload").addEventListener("click", () => {
+    for (const f of document.querySelectorAll("iframe")) f.contentWindow.location.reload();
+  });
+  addEventListener("resize", fit);
+  choices();
+  frames();
+})();
+</script>
+</body>
+</html>

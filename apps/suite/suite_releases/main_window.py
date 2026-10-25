@@ -23,8 +23,9 @@ apps from their releases, Test Portal release installs the published portal rele
 terminal); Installer tests opens BC-250 Installer Tests; Record portal tour records the portal's video tour
 from this checkout (tools/record-tour.sh) into ~/Videos and opens it; Close issues lists the open GitHub issues,
 and closes the ticked ones with gh issue close in the Commands tab. Test local apps: click an app's icon to start it from this
-checkout, to try it before its release (the portal is the first icon); the Manual icon serves the manual from the checkout (mkdocs serve) and opens
-it in the browser.
+checkout, to try it before its release (the portal is the first icon); a wiki's icon (one per mkdocs.yml) serves it
+from the checkout (mkdocs serve, a port each) and opens it with its design panel; Wikis on the network serves them
+for the other devices too.
 The Commands tab is a command line in the checkout (command_line.py), where the git buttons run too; its Commands
 menu offers the ones the last step showed."""
 
@@ -656,6 +657,11 @@ class RunPage(QWidget):
         self.apps.setMovement(QListView.Movement.Static)
         self.apps.setWordWrap(True)
         self.apps.itemClicked.connect(lambda item: self.run(item.data(Qt.ItemDataRole.UserRole)))
+        self.network_box = QCheckBox("Wikis on the network")
+        self.network_box.setToolTip("Serve the wikis on every address of this computer, on ports of their own, so "
+                                    "the other devices on the network (a handheld, a laptop, the TV) open them too; "
+                                    "their addresses show below once a wiki started")
+        self.network_box.toggled.connect(lambda _on: self.release_window.reload())
         self.output = Terminal()                 # the window shows it under the steps, beside the command line
         checks = QHBoxLayout()
         for button in (self.local_button, self.release_button, self.withdraw_button, self.installer_button,
@@ -664,6 +670,10 @@ class RunPage(QWidget):
         checks.addStretch(1)
         local = QLabel("Test local apps")
         local.setStyleSheet("font-weight:700;")
+        local_row = QHBoxLayout()
+        local_row.addWidget(local)
+        local_row.addStretch(1)
+        local_row.addWidget(self.network_box)
         lay = QVBoxLayout(self)
         lay.addWidget(hint_label(
             "The tests of a release, on a BC-250. <b>Test app updates</b> (step 2, before the portal's push): the "
@@ -676,14 +686,17 @@ class RunPage(QWidget):
             "you tick once they are handled."))
         lay.addLayout(checks)
         lay.addSpacing(8)
-        lay.addWidget(local)
+        lay.addLayout(local_row)
         lay.addWidget(hint_label(
             "Click an app to start it from this checkout, to try it before its release: <code>python -m</code> with "
             "this venv and the checkout's core, as <code>run.sh</code> starts this app. An app that changes how the "
             "board runs (an orange <b>!</b> on its icon) asks first; it uses the scripts in the checkout. Each app "
             f"writes its output to <code>{LOG_DIR}</code>; when it stops with an error, the end of that log shows below. "
-            "The portal is the first icon; when a portal is already open it warns instead, as a second one would only show the open one. <b>Manual (local)</b> serves the manual from the checkout with <code>mkdocs serve</code> and opens it in "
-            "the browser; it rebuilds on every save."))
+            "The portal is the first icon; when a portal is already open it warns instead, as a second one would only "
+            "show the open one. The last icons are the wikis in the checkout (each <code>mkdocs.yml</code>): each is "
+            "served with <code>mkdocs serve</code> on a port of its own and opens in the browser with its design "
+            "panel; it rebuilds on every save. With <b>Wikis on the network</b> they are served for the other devices "
+            "too, on ports of their own; the addresses show below."))
         lay.addWidget(self.apps, 2)
         self.running: list[tuple[rp.Launch, subprocess.Popen, Path]] = []
         self.waiting: list[str] = []            # servers started, whose page opens once they answer
@@ -800,10 +813,11 @@ class RunPage(QWidget):
         if target.url and answers(target.url):
             # Already up (started here or before): mkdocs would only fail on the taken port.
             open_url(target.url)
-            self.output.appendPlainText(f"{target.label} is already running: opened {target.url}")
+            self.output.appendPlainText(f"{target.label} is already running: opened {target.url}" +
+                                        (f"\n{target.note}" if target.note else ""))
             return
         command, env = rp.launch_command(self.release_window.root, target)
-        log = LOG_DIR / f"{target.module}.log"
+        log = LOG_DIR / target.log_name
         try:
             process = self.release_window.start(command, env, target.folder, log)
         except OSError as exc:
@@ -814,7 +828,8 @@ class RunPage(QWidget):
             self.waiting.append(target.url)
         self.timer.start()
         self.output.appendPlainText(f"{target.label} started from {target.folder} (log: {log})" +
-                                    (f"; {target.url} opens once it is up" if target.url else ""))
+                                    (f"; {target.url} opens once it is up" if target.url else "") +
+                                    (f"\n{target.note}" if target.note else ""))
 
     def poll(self) -> None:
         for entry in list(self.running):
@@ -1417,8 +1432,9 @@ class ReleaseWindow(QMainWindow):
         self.apps_page.fill(units)
         self.portal_page.fill(units)
         self.withdraw_page.fill(units)
-        portal, docs = rp.portal_target(self.root), rp.docs_target(self.root)
-        self.run_page.fill(([portal] if portal else []) + rp.launch_targets(self.root) + ([docs] if docs else []))
+        portal = rp.portal_target(self.root)
+        docs = rp.docs_targets(self.root, network=self.run_page.network_box.isChecked())
+        self.run_page.fill(([portal] if portal else []) + rp.launch_targets(self.root) + docs)
         problems = rp.bad_tags(self.root, units)
         self.bad_tags.setText("\n".join(
             f"\u26a0 {p}: release.yml cannot build it. Delete it (git tag -d {p.split()[0]} && git push origin "
