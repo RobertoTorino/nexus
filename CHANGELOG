@@ -1,3 +1,11 @@
+Changelog: 25-10-2026 14:14:59
+
+The Nexus page's Design chapter names both stylesheets (suite.css, the wiki's layout; nexus.css, the Nexus
+page's own colours), says which one the panel shows where both set a variable and where Copy CSS belongs, and
+gives Suite Releases' network ports. The CHANGELOG entry of 25-10-2026 01:35:37, lost in a merge, is back.
+CLAUDE.md gives the CHANGELOG time with Python's zoneinfo: TZ=Europe/Amsterdam date gives UTC in Git Bash on
+Windows, so the entries of 25-10-2026 10:22:56 and 11:21:51 here and 11:56:16 in apps/suite are an hour early.
+
 Changelog: 25-10-2026 11:21:51
 
 The Nexus page has a Design chapter (nexus/docs/design.md, Design in its header): one design per suite, the
@@ -17,6 +25,13 @@ each with what it is for; a text colour shows a sample sentence, a background co
 docs/design/colors/. ICONS.md lists the icons per suite (the BC250 Bazzite Suite) and where each is used; the
 icons drawn in code are rendered to docs/design/icons/. tools/make_design.py and tools/make_icons.py write them
 from their listings, --check says whether they are up to date, and tools/tests checks it.
+
+Changelog: 25-10-2026 01:35:37
+
+The Nexus page gets colours of its own (owner, 25-10-2026: the wiki's design is Bazzite's, for the BC250 Bazzite
+Suite only, not for Nexus or another project that is not Bazzite): nexus/docs/stylesheets/nexus.css sets graphite
+with teal over the wiki's layout, and Material's hub icon stands in for the suite's board icon until Nexus has an
+icon of its own.
 
 Changelog: 25-10-2026 01:12:22
 

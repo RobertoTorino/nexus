@@ -25,13 +25,16 @@ mkdocs serve                        # the BC250 Bazzite Suite's wiki
 mkdocs serve -f nexus/mkdocs.yml    # the Nexus page
 ```
 
-Open the address it prints. Each time you save a page, the stylesheet (`docs/stylesheets/suite.css`) or a template
-(`tools/mkdocs/overrides/`, `nexus/overrides/`), the site is built again and the browser reloads.
+Open the address it prints. Each time you save a page, a stylesheet or a template (`tools/mkdocs/overrides/`,
+`nexus/overrides/`), the site is built again and the browser reloads. The stylesheets:
+
+- `docs/stylesheets/suite.css`: the wiki's layout and the BC250 Bazzite Suite's colours. The Nexus page takes its
+  layout too.
+- `nexus/docs/stylesheets/nexus.css`: the Nexus page's own colours, over that layout.
 
 Without a terminal: in BC250 Suite Releases, on **Test on this board** under **Test local apps**, the last icons are
-the wikis, one for each
-`mkdocs.yml` in the checkout. A click serves that wiki and opens it with the design panel open; a second click only
-opens the page again.
+the wikis, one for each `mkdocs.yml` in the checkout. A click serves that wiki and opens it with the design panel
+open; a second click only opens the page again.
 
 ### On other devices
 
@@ -43,21 +46,24 @@ mkdocs serve -f nexus/mkdocs.yml -a 0.0.0.0:8000
 
 Then open `http://<the computer's address>:8000` on each device. `ipconfig` (Windows) or `hostname -I` (Linux) shows
 the address. In Suite Releases, tick **Wikis on the network** before clicking a wiki's icon: it serves the wiki that
-way, on a port of its own, and shows the addresses for the other devices. Every device shows the live version, so you see a design in real browsers, on real screens and at real
-sizes at once.
+way, on a port of its own (8785 for the BC250 Bazzite Suite's wiki, 8786 for the Nexus page), and shows the
+addresses for the other devices. Every device shows the live version, so you see a design in real browsers, on real
+screens and at real sizes at once.
 
 The computer's firewall has to let the devices in:
 
 - Windows asks the first time Python listens on the network: allow it on private networks.
-- On Bazzite, open the port until the next boot with `sudo firewall-cmd --add-port=8000/tcp`.
+- On Bazzite, open the port until the next boot with `sudo firewall-cmd --add-port=8000/tcp` (or `8785-8786/tcp`
+  for Suite Releases' ports).
 
 Serve on a network you trust only: everyone on it can open the pages and change the mock.
 
 ### The design panel
 
 While `mkdocs serve` runs, every page has a **Design** button in its bottom left corner. It opens a panel with the
-CSS variables of the site's own stylesheet, grouped by the rule that defines them, and the theme's fonts. Add
-`?design` to an address to open the page with the panel open.
+CSS variables of the site's own stylesheets (`extra_css` in its `mkdocs.yml`), grouped by the rule that defines them,
+and the theme's fonts. Where two stylesheets set the same variable, the panel shows the one the page uses: the
+later one, such as `nexus.css` over `suite.css`. Add `?design` to an address to open the page with the panel open.
 
 - A colour has a colour picker; a colour with an opacity keeps it.
 - A size (`px`, `rem`, `em`) has a slider.
@@ -69,7 +75,8 @@ A change shows at once, and goes to every page open on the same server within a 
 TV all show the same mock. The panel's top line says **shared with every device**, or **this device only** when the
 server cannot be reached; the changes then stay in that browser.
 
-**Copy CSS** copies the changed variables, under the rules that define them, to paste into the stylesheet. Over
+**Copy CSS** copies the changed variables, under the rules that define them, to paste into the stylesheet: for the
+Nexus page's colours that is `nexus.css`, for the BC250 Bazzite Suite's wiki `suite.css`. Over
 `http://` from another device the browser has no clipboard for it: the CSS below the buttons is then selected, to
 copy by hand.
 

@@ -66,7 +66,9 @@ tile. Standalone apps may live under `apps/` without appearing in the portal.
 - **CHANGELOG for every change:** the root CHANGELOG for suite-wide changes, the app's (or core's, or portal's)
   for its own. Format: a `Changelog: DD-MM-YYYY HH:MM:SS` line, a blank line, then plain sentences; newest first.
   The time is Europe/Amsterdam (CET/CEST) on both systems, whatever the machine's own zone:
-  `TZ=Europe/Amsterdam date '+%d-%m-%Y %H:%M:%S'`.
+  `python3 -c "import datetime, zoneinfo; print(datetime.datetime.now(zoneinfo.ZoneInfo('Europe/Amsterdam')).strftime('%d-%m-%Y %H:%M:%S'))"`
+  (on Windows with `.venv-windows/Scripts/python.exe`). Not `TZ=Europe/Amsterdam date`: Git Bash on Windows has no
+  time zone data and silently gives UTC, an hour or two early.
 - **Semantic versioning** (owner, 15-10-2026): in an app's, core's or the portal's CHANGELOG, every entry starts
   with its kind: `Breaking.` (removed, or no longer working as before: major), `Added.` (a new feature: minor) or
   `Fixed.` (a bug or security fix: patch). 0.x apps too: a feature takes 0.1.4 to 0.2.0. Suite Releases offers the
