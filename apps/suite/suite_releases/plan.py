@@ -554,10 +554,16 @@ class Launch:
     args: tuple[str, ...] = ()          # after `python -m <module>`
     url: str = ""                       # a server: the page to open once it answers
     app_id: str = ""                    # an app that runs once per user: a second launch only shows the first
+    log_stem: str = ""                  # its log's name, when the module does not tell it apart (two wikis)
+    note: str = ""                      # said once it started (a wiki on the network: its addresses)
 
     @property
     def label(self) -> str:
         return f"{self.name} {self.version}".strip()
+
+    @property
+    def log_name(self) -> str:
+        return f"{self.log_stem or self.module}.log"
 
 
 _CONSTANT = re.compile(r'^(APP_NAME|APP_ID)\s*=\s*"([^"]+)"', re.M)
@@ -625,23 +631,66 @@ def installer_tests_target(root: Path = SUITE) -> Launch | None:
                   version, False, icon if icon.is_file() else None)
 
 
-DOCS_ADDRESS = "127.0.0.1:8765"         # not mkdocs' default 8000, which other dev servers like to take
+DOCS_HOST = "127.0.0.1"
+DOCS_PORT = 8765                        # not mkdocs' default 8000, which other dev servers like to take
+NETWORK_HOST = "0.0.0.0"                # every address of this computer, for the other devices
+NETWORK_PORT = 8785                     # ports of their own, so a wiki can be served both ways at once
 
 
-def docs_target(root: Path = SUITE) -> Launch | None:
-    """The manual, served from the checkout with `mkdocs serve` (the dev venv has it): it rebuilds on every save.
-    The page is under the path of site_url, as on GitHub Pages. None without a mkdocs.yml."""
-    config = root / "mkdocs.yml"
+def network_addresses() -> list[str]:
+    """This computer's IPv4 addresses that other devices can reach (no loopback), the one with the default route
+    first. Read from the system; nothing is sent."""
+    import socket
+    found = []
     try:
-        text = config.read_text(encoding="utf-8")
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as probe:
+            probe.connect(("192.0.2.1", 9))         # TEST-NET-1: a UDP connect picks the route, sends nothing
+            found.append(probe.getsockname()[0])
     except OSError:
-        return None
-    site = re.search(r"^site_url:\s*(\S+)", text, re.M)
-    path = urlparse(site[1]).path.strip("/") if site else ""
-    path = f"/{path}/" if path else "/"
-    icon = root / "portal" / "images" / "bc250-bazzite-suite.webp"
-    return Launch("docs", "mkdocs", "Manual (local)", root, "", False, icon if icon.is_file() else None,
-                  ("serve", "--dev-addr", DOCS_ADDRESS), f"http://{DOCS_ADDRESS}{path}")
+        pass
+    try:
+        found += [info[4][0] for info in socket.getaddrinfo(socket.gethostname(), None, socket.AF_INET)]
+    except OSError:
+        pass
+    return [a for i, a in enumerate(found) if not a.startswith("127.") and a != "0.0.0.0" and a not in found[:i]]
+
+
+def wiki_configs(root: Path = SUITE) -> list[Path]:
+    """Each wiki in the checkout: mkdocs.yml at the root (the BC250 Bazzite Suite's), then one in a folder directly
+    below it (nexus/, and a new suite's), by folder name."""
+    return [p for p in (root / "mkdocs.yml", *sorted(root.glob("*/mkdocs.yml"))) if p.is_file()]
+
+
+def docs_targets(root: Path = SUITE, network: bool = False,
+                 addresses: list[str] | None = None) -> list[Launch]:
+    """Each wiki, served from the checkout with `mkdocs serve` (the dev venv has it), each on a port of its own: it
+    rebuilds on every save, and its page opens with the design panel. The page is under the path of site_url, as on
+    GitHub Pages. With *network* it is served on every address of this computer, for the other devices on the
+    network; the browser here still opens it at 127.0.0.1."""
+    found = []
+    for number, config in enumerate(wiki_configs(root)):
+        text = config.read_text(encoding="utf-8")
+        name = re.search(r"^site_name:\s*(.+?)\s*$", text, re.M)
+        site = re.search(r"^site_url:\s*(\S+)", text, re.M)
+        path = urlparse(site[1]).path.strip("/") if site else ""
+        path = f"/{path}/" if path else "/"
+        port = (NETWORK_PORT if network else DOCS_PORT) + number
+        folder = config.parent.relative_to(root).as_posix()
+        where = "network" if network else "local"
+        note = ""
+        if network:
+            reach = [f"http://{a}:{port}{path}" for a in (network_addresses() if addresses is None else addresses)]
+            note = ("On the other devices: " + ", ".join(reach)) if reach else \
+                "This computer has no network address the other devices can reach."
+        icon = root / "portal" / "images" / "bc250-bazzite-suite.webp"
+        found.append(Launch("docs" if folder == "." else f"docs-{folder}", "mkdocs",
+                            f"{name[1] if name else folder} wiki ({where})", root, "", False,
+                            icon if icon.is_file() else None,
+                            ("serve", "-f", config.relative_to(root).as_posix(),
+                             "--dev-addr", f"{NETWORK_HOST if network else DOCS_HOST}:{port}"),
+                            f"http://{DOCS_HOST}:{port}{path}?design",
+                            log_stem=f"mkdocs-{'root' if folder == '.' else folder}-{where}", note=note))
+    return found
 
 
 def launch_command(root: Path, target: Launch, python: str = sys.executable) -> tuple[list[str], dict[str, str]]:

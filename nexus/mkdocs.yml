@@ -13,7 +13,11 @@ plugins:
   - privacy
 hooks:
   - hooks.py
+  - ../tools/mkdocs/design_panel.py   # the wiki's design panel, only while `mkdocs serve` runs
+watch:
+  - ../docs/stylesheets              # the wiki's stylesheet, which hooks.py shares: saving it reloads this page too
 theme:
   custom_dir: overrides
 nav:
   - Home: index.md
+  - Design: design.md

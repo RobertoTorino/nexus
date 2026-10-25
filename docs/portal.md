@@ -329,10 +329,15 @@ apps/suite/install.sh --uninstall             # remove them; the checkout stays
   starts Suite Releases. An app that changes how the board runs asks first, as in the portal; started from the
   checkout it uses the scripts in the checkout. Each app writes its output to
   `~/.cache/bc250-release/run/<package>.log`. When an app stops with an error, the end of its log shows on the page.
-  The apps keep running when you close the window. The last icon, **Manual (local)**, serves this manual from the
-  checkout with `mkdocs serve` (the development venv has MkDocs) and opens it in the browser at
-  `http://127.0.0.1:8765/bc250-bazzite-suite/`. It rebuilds on every save; its log is `mkdocs.log` there. When it
-  is already running, a click only opens the page again.
+  The apps keep running when you close the window. The last icons are the wikis in the checkout, one for each
+  `mkdocs.yml`: **BC250 Bazzite Suite wiki (local)** serves this wiki from the checkout with `mkdocs serve` (the
+  development venv has MkDocs) and opens it in the browser at `http://127.0.0.1:8765/nexus/bc250-bazzite-suite/`, with
+  its design panel open; **Nexus wiki (local)** does the same for the Nexus page, at port 8766. Each rebuilds on
+  every save; its log is `mkdocs-<wiki>-local.log` there. When one is already running, a click only opens the page
+  again. With **Wikis on the network** ticked, the icons serve the wikis on every address of the computer, at
+  ports 8785 and 8786, so a handheld, a laptop or the TV opens them too: the addresses for those devices show on
+  the page once a wiki started. The computer's firewall has to let them in (see the Nexus page's
+  [Design](https://robertotorino.github.io/nexus/design/) chapter).
 - **Logs** shows the log of the step last open, the whole window wide: what Apply, Pin, Bump portal, Retract
   or a test on this board wrote. A step that writes its log opens Logs; open the step again to go on.
 - **git add**, **git commit**, **git push** and **git tag**, under the tabs, commit, push and tag without typing a command, with

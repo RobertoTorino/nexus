@@ -17,6 +17,8 @@ _python/
 /site/
 /nexus/site/
 /.cache/
+# The design panel's mock while `mkdocs serve` runs (tools/mkdocs/design_panel.py)
+.design-mock.json
 
 # Planning notes, kept local
 /bc250-suite-proposal.md

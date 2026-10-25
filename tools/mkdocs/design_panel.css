@@ -1,0 +1,151 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+/* The design panel (design_panel.js): colours of its own, none of the site's variables, so a mock never hides it;
+   sizes in px, as the page's root font size (Material's 125 %) would scale rem. */
+.dp {
+  position: fixed;
+  left: 10px;
+  bottom: 10px;
+  z-index: 10000;
+  font: 13px/1.35 system-ui, "Segoe UI", sans-serif;
+  color: #e6e6e6;
+}
+
+.dp button,
+.dp input,
+.dp textarea {
+  font: inherit;
+  color: inherit;
+}
+
+.dp-toggle {
+  padding: 6px 13px;
+  border: 1px solid #555;
+  border-radius: 2em;
+  background: #1e1f24;
+  cursor: pointer;
+  box-shadow: 0 5px 13px rgb(0 0 0 / 0.4);
+}
+
+.dp-body {
+  position: absolute;
+  left: 0;
+  bottom: 42px;
+  width: min(340px, calc(100vw - 20px));
+  max-height: min(580px, calc(100vh - 80px));
+  overflow: hidden auto;
+  box-sizing: border-box;
+  padding: 10px;
+  border: 1px solid #555;
+  border-radius: 8px;
+  background: #1e1f24;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.5);
+}
+
+.dp-body[hidden] {
+  display: none;
+}
+
+.dp-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 6px;
+}
+
+.dp-status {
+  font-size: 11px;
+  color: #9aa0a6;
+}
+
+.dp fieldset {
+  margin: 0 0 8px;
+  padding: 5px 6px;
+  border: 1px solid #3a3f4a;
+  border-radius: 6px;
+}
+
+.dp legend {
+  padding: 0 5px;
+  font-size: 11px;
+  color: #9aa0a6;
+  word-break: break-all;
+}
+
+.dp-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 60px 100px 18px;      /* name, picker or slider, value, reset */
+  align-items: center;
+  gap: 5px;
+  margin: 2px 0;
+}
+
+.dp-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dp-changed .dp-name {
+  color: #b388ff;
+  font-weight: 600;
+}
+
+.dp input[type="text"] {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: 2px 5px;
+  border: 1px solid #3a3f4a;
+  border-radius: 4px;
+  background: #111418;
+}
+
+.dp input[type="color"] {
+  width: 29px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid #3a3f4a;
+  border-radius: 4px;
+  background: none;
+}
+
+.dp input[type="range"] {
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0;
+}
+
+.dp-reset {
+  padding: 0 5px;
+  border: none;
+  background: none;
+  color: #9aa0a6;
+  cursor: pointer;
+}
+
+.dp-actions {
+  display: flex;
+  gap: 6px;
+  margin: 6px 0;
+}
+
+.dp-actions button {
+  flex: 1;
+  padding: 5px;
+  border: 1px solid #555;
+  border-radius: 6px;
+  background: #2a2d36;
+  cursor: pointer;
+}
+
+.dp-output {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 5px;
+  border: 1px solid #3a3f4a;
+  border-radius: 4px;
+  background: #111418;
+  font: 12px/1.3 ui-monospace, "JetBrains Mono", monospace;
+  resize: vertical;
+}

@@ -14,6 +14,7 @@ plugins:
                                # wiki itself, so a visit sends nothing to Google Fonts
 hooks:
   - tools/mkdocs/hooks.py
+  - tools/mkdocs/design_panel.py   # a design panel on every page, only while `mkdocs serve` runs
 theme:
   name: material
   custom_dir: tools/mkdocs/overrides
