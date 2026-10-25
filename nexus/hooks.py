@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""MkDocs hook: the Nexus page takes the wiki's stylesheet and icon from where they live (docs/), without copies."""
+"""MkDocs hook: the Nexus page takes the wiki's stylesheet (its layout) from where it lives (docs/), without a copy."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from pathlib import Path
 from mkdocs.structure.files import File
 
 WIKI_DOCS = Path(__file__).resolve().parents[1] / "docs"
-SHARED = ["stylesheets/suite.css", "images/wiki-icon.webp", "images/wiki-icon.png"]
+SHARED = ["stylesheets/suite.css"]
 
 
 def on_files(files, config):

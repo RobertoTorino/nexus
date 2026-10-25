@@ -962,10 +962,12 @@ behaviour and dependencies. Decided (owner, 25-10-2026):
 - **The wiki belongs to a suite (owner, 25-10-2026).** The Nexus page (`nexus/`, its own small MkDocs site on the
   wiki's theme) is at `robertotorino.github.io/nexus/`: the name, the structure, how the suites relate, a link to
   each suite's wiki; a suite that exists gets its card there. The BC250 Bazzite Suite's wiki moves to
-  `/nexus/bc250-bazzite-suite/`, the Windows Portable Suite's will sit beside it. In the working tree; the releases
-  of fe7a514 link to `/nexus/` and `/nexus/apps/<key>/`, which end with the push, until each app's next release
-  (core, cec, fan, wdriver, package; every app through core). No redirect pages, as for the rename. Open (owner): an
-  icon of Nexus's own (the page shows the suite's wiki icon).
+  `/nexus/bc250-bazzite-suite/`, the Windows Portable Suite's will sit beside it. Released with the apps and
+  portal-v9.0.1 (25-10-2026); the addresses of the releases before it (fe7a514) ended, without redirect pages, as
+  for the rename. Its colours are its own (owner, 25-10-2026: the wiki's design is Bazzite's, not for Nexus or
+  another project that is not Bazzite): graphite with teal in `nexus/docs/stylesheets/nexus.css`, a proposal; each
+  suite's wiki has the colours of its own system. Open (owner): the colours, and an icon of Nexus's own (Material's
+  hub stands in).
 - **The name: Windows Portable Suite**, for any Windows handheld, not the Ally alone. It sits beside the current
   tree in its own folder, `windows-portable/` (OS and device, as the suite names: `portable/` alone would clash with
   a second portable suite; proposed 25-10-2026, the owner may still change it) with its own `portal/apps.toml`,
@@ -974,6 +976,20 @@ behaviour and dependencies. Decided (owner, 25-10-2026):
   getting to know the device (diagnostics, stress test, benchmarks for the handheld): **Windows Portable Test**,
   with the OS in the name as in BC-250 Bazzite Test, so a test for another OS fits beside it. Then the PCSX2
   Manager, the blueprint of the managers.
+- **A design of its own, with the weight on UX and UI** (owner, 25-10-2026): the Bazzite suites keep the Bazzite
+  design, the Windows suites get their own, Nexus has its own. The portable apps are made for a 7-inch screen held
+  in the hands (the Ally X: 1920x1080, with Windows' display scaling, read from the device rather than assumed),
+  used by touch and by controller, often without a keyboard: large targets, a visible focus that the D-pad and A/B
+  move and confirm, one task per screen rather than many controls side by side, and text sized for the distance. The
+  board apps' window (the 96 px icon line, status boxes) is the starting point to adapt, not to copy: the portable
+  window is designed first, on the device, before the first app (Windows Portable Test) is built on it. Mock-ups
+  (25-10-2026), outside the repository in `~/nexus-mockups/` with the script that renders them (PyQt6 offscreen,
+  1280x720 at a scale of 1.5, so 1920x1080): three directions, each the portal and Windows Portable Test. A Fluent
+  (a side rail, a grid of rows, cobalt), B Console (LB/RB tabs, a row of large tiles, the focused one lifted,
+  amber), C Cards (LB/RB tabs, one column of cards with a detail pane, lime). Recommended: C, perhaps with B's
+  lifted focus (one column for the D-pad, the pane shows what A does). Open (owner): the direction, judged on the
+  Ally at full screen, then its refinement; the design (colours, type, the window) and the suite's wiki follow from
+  it.
 - **Own tuning apps** (TDP, fans, and the like) for the handheld, later: the board's tuning apps do not port (sysfs,
   GRUB, RADV), but the same kinds of apps on both give comparison data between the BC-250 and the handheld.
 

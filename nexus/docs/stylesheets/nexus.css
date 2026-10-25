@@ -1,0 +1,33 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+/* Nexus's own colours over the wiki's layout (suite.css, which is the BC250 Bazzite Suite's: Bazzite purple):
+   graphite with teal. suite.css takes every colour from these tokens and Material's variables. */
+:root {
+  --suite-primary: #0d9488;
+  --suite-secondary: #0891b2;
+  --suite-ink: #0c1214;
+  --suite-deep: #10201f;
+  --suite-soft: #5eead4;
+  --suite-mist: #b9ddd8;
+}
+
+[data-md-color-primary="custom"] {
+  --md-primary-fg-color: var(--suite-primary);
+  --md-primary-fg-color--light: #2bb3a6;
+  --md-primary-fg-color--dark: #0a6f66;
+}
+
+[data-md-color-accent="custom"] {
+  --md-accent-fg-color: var(--suite-secondary);
+  --md-accent-fg-color--transparent: #0891b21a;
+}
+
+[data-md-color-scheme="slate"] {
+  --md-default-bg-color: #131819;
+}
+
+/* The placeholder icon (Material's hub) in the footer, at the size of the wiki's icon there. */
+.home-footer__brand svg {
+  width: 48px;
+  height: 48px;
+  fill: var(--suite-soft);
+}

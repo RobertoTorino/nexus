@@ -1,7 +1,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Nexus, the repository's own page: what the name means, how the suites are built and how they relate. It takes the
-# theme, colours and Markdown of the BC250 Bazzite Suite's wiki (../mkdocs.yml) and is published at the root of the
-# site, each suite's wiki in a folder of its own (.github/workflows/docs.yml).
+# layout and Markdown of the BC250 Bazzite Suite's wiki (../mkdocs.yml) with colours of its own (Bazzite's purple is
+# the suite's) and is published at the root of the site, each suite's wiki in a folder of its own
+# (.github/workflows/docs.yml).
 
 INHERIT: ../mkdocs.yml
 site_name: Nexus
@@ -15,5 +16,12 @@ hooks:
   - hooks.py
 theme:
   custom_dir: overrides
+  logo: ""                     # no icon of its own yet: Material's hub, not the suite's board
+  icon:
+    logo: material/hub
+  favicon: assets/images/favicon.png
+extra_css:
+  - stylesheets/suite.css
+  - stylesheets/nexus.css
 nav:
   - Home: index.md

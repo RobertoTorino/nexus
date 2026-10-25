@@ -95,6 +95,11 @@ tile. Standalone apps may live under `apps/` without appearing in the portal.
     second line below it (status boxes or the app's main controls).
   A new app copies the structure of an existing one; any deviation is the owner's decision. The manual's
   [Architecture and consistency](docs/development/architecture.md) describes it all, with the steps for a new app.
+- **A design per system** (owner, 25-10-2026): the Bazzite suites keep the Bazzite design (purple, the apps' theme and
+  the wiki's), the Windows suites get a design of their own, and Nexus has its own
+  (`nexus/docs/stylesheets/nexus.css`). Never carry one system's design over to another. The Windows Portable Suite's
+  apps put far more weight on UX and UI than the board's: a small screen held in the hands, touch and a controller
+  instead of a mouse and keyboard.
 - **Scope is the suite, not Bazzite.** We answer for the portal and its apps, not for Bazzite itself. A system-wide
   Bazzite package is in scope only where one of our apps uses it (the Dependency Checker lists it then); its
   updates and security fixes are Bazzite's. Our own code, and the Python packages in our apps' environments, are

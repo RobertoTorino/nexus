@@ -1,3 +1,10 @@
+Changelog: 25-10-2026 01:35:37
+
+The Nexus page gets colours of its own (owner, 25-10-2026: the wiki's design is Bazzite's, for the BC250 Bazzite
+Suite only, not for Nexus or another project that is not Bazzite): nexus/docs/stylesheets/nexus.css sets graphite
+with teal over the wiki's layout, and Material's hub icon stands in for the suite's board icon until Nexus has an
+icon of its own.
+
 Changelog: 25-10-2026 01:12:22
 
 Nexus gets a page of its own at robertotorino.github.io/nexus/ (nexus/: what the name means, how the suites are
