@@ -189,5 +189,5 @@ def test_one_file_dll(game, payload, tmp_path):
     standalone = backend.Deployment(str(folder), backend.MODE_FOLDER, "g", helixsr_version="1.8.0")
     assert backend.deployment_state(standalone, payload) == ("ok", "In place")
     (payload / backend.HELIXSR_DLL).write_bytes(embedded_dll(b"MZ-helixsr-1.8.1"))  # the payload moved on
-    backend.remove_folder(folder, payload)                                       # still recognised as HelixSR
+    backend.remove_folder(folder, payload)                                       # still recognized as HelixSR
     assert not folder.exists()

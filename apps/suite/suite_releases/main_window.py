@@ -1098,7 +1098,7 @@ class BuildIndicator(Pill):
 
 class GitHubStatusIndicator(Pill):
     """GitHub status: green while githubstatus.com reports every part of GitHub working, red while it
-    reports a problem (a build that waits in "queued" may be GitHub's), grey while it is not known. Looks every 5
+    reports a problem (a build that waits in "queued" may be GitHub's), gray while it is not known. Looks every 5
     minutes; a click opens the status page."""
 
     def __init__(self, source):

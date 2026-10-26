@@ -20,7 +20,7 @@ APP_NAME="BC-250 CU Bisect"
 DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}"
 CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}"
 STATE_DIR="$DATA_DIR/bc250-cu-bisect"                # the bisect script's runs, logs and results
-SETTINGS_DIR="$CONFIG_DIR/bc250-cu-bisect"            # both GUIs' settings (QSettings organisation)
+SETTINGS_DIR="$CONFIG_DIR/bc250-cu-bisect"            # both GUIs' settings (QSettings organization)
 AUTO_UNIT="$CONFIG_DIR/systemd/user/bc250-cu-bisect-auto.service"
 WATCH_ENTRY="$CONFIG_DIR/autostart/bc250-cu-bisect-watch.desktop"
 

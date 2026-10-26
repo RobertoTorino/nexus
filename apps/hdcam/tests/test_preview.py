@@ -12,7 +12,7 @@ from usb_hdcam.modes import Mode
 
 
 def yuyv(width: int, height: int, y: int) -> bytes:
-    """A flat grey YUYV frame of luma *y* (no colour: U and V at 128)."""
+    """A flat gray YUYV frame of luma *y* (no color: U and V at 128)."""
     return bytes([y, 128, y, 128]) * (width * height // 2)
 
 

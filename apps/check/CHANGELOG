@@ -1,3 +1,16 @@
+Changelog: 26-10-2026 02:14:35
+
+Release 0.14.0.
+
+Changelog: 26-10-2026 01:04:02
+
+Fixed. The app's colors follow the suite's color families (DESIGN.md, owner, 26-10-2026): the log's success,
+warning and error lines, the in-game checks' ok, warning and error, the history's better result and the score
+texts use the suite's one text tint per hue (#81c784, #ffb74d, #e57373) instead of second and third tints; the
+Show in log link, the in-game accent and the overlay's border use the purple tint #ce93d8; a score's warning
+uses the running yellow #fdd835; the GPU score box the info blue #1565c0; Clean up logs is the suite's red
+button (#c62828, #b71c1c under the pointer and pressed, the neutral gray #3a3f4b disabled).
+
 Changelog: 25-10-2026 01:16:49
 
 Release 0.13.1.
@@ -48,8 +61,8 @@ Release 0.7.0.
 
 Changelog: 19-10-2026 23:41:01
 
-Added. The suite's theme, chosen in the portal. The counters at the top are the theme's surface with their colour as
-a left edge and the text in the theme's colour; the results card keeps its own colours.
+Added. The suite's theme, chosen in the portal. The counters at the top are the theme's surface with their color as
+a left edge and the text in the theme's color; the results card keeps its own colors.
 
 Changelog: 19-10-2026 19:29:03
 
@@ -122,7 +135,7 @@ daemon (cecd, a user service) when enabled; HDMI CEC Manager's background servic
 service (bc250-hdmi-cec-boot, with its udev rule) when installed; Bazzite's dGPU CEC services when enabled. A service
 that is installed or enabled but not running, or failed, is a warning with the journalctl command to read why; one
 that is not installed is only reported, and so is a stopped cecd or boot service without a CEC adapter. Without a
-desktop session the user services' state is reported as unknown. In the catalogue and both chapters of the manual.
+desktop session the user services' state is reported as unknown. In the catalog and both chapters of the manual.
 
 Changelog: 16-10-2026 06:02:49
 
@@ -226,7 +239,7 @@ Test 51: a poll counts as answered when cec-ctl prints no "Tx, ..." failure line
 
 Changelog: 11-10-2026 20:21:41
 
-Test 51, HDMI-CEC (GPU and graphics): the CEC adapters (/dev/cec*: driver, connector, physical address, read with cec-ctl), a poll of the TV when the adapter is configured and sees a display, and Bazzite's CEC mode (native, dGPU or disabled). No adapter, no display or no answer are notes, not warnings: the picture does not need CEC. In the catalogue and both chapters of the manual.
+Test 51, HDMI-CEC (GPU and graphics): the CEC adapters (/dev/cec*: driver, connector, physical address, read with cec-ctl), a poll of the TV when the adapter is configured and sees a display, and Bazzite's CEC mode (native, dGPU or disabled). No adapter, no display or no answer are notes, not warnings: the picture does not need CEC. In the catalog and both chapters of the manual.
 
 Changelog: 11-10-2026 19:25:11
 
@@ -388,7 +401,7 @@ The ⚠ sign behind an item in the System score pop-up is now yellow (#FFD600) i
 
 Changelog: 06-10-2026 23:42:00
 
-Base System and Extended System boxes swap their colours: #F8FAFC background with #222222 text, in
+Base System and Extended System boxes swap their colors: #F8FAFC background with #222222 text, in
 the stats row and on the Print results card. README and help page now call them light.
 The Print results card goes back to its dark background (#14161C, footer text #9AA0A6).
 
@@ -412,13 +425,13 @@ Print results card follows the new header: the Base System and Extended System s
 are two large tiles under the title, with the nine other boxes as the 3x3 grid below (about 404x297
 px). Settings note and README updated.
 
-New colours for the system score boxes: both Base System and Extended System are dark #222222 with
+New colors for the system score boxes: both Base System and Extended System are dark #222222 with
 #F8FAFC text, in the stats row and on the Print results card.
-The Print results card itself gets a grey background (#6B7280, footer text #E5E7EB) so the dark
+The Print results card itself gets a gray background (#6B7280, footer text #E5E7EB) so the dark
 system tiles stand out.
 
-Show Logs now colours a stored log like the live terminal (test headers bold, SUCCESS green, INFO blue,
-WARNING orange, ERROR red, HINT purple, NOTE grey); CSVs and configs stay plain. The Warnings, Failures
+Show Logs now colors a stored log like the live terminal (test headers bold, SUCCESS green, INFO blue,
+WARNING orange, ERROR red, HINT purple, NOTE gray); CSVs and configs stay plain. The Warnings, Failures
 and Info / hints pop-ups get a "Show in log" link per test, next to the log path: it opens that run log
 scrolled to the test's [TEST NN] header. Clicking the test name still opens its page.
 
@@ -436,7 +449,7 @@ cores, +25% of the weight per doubling for drive speed, capacity and link), so t
 capped at 100 and is rounded down - an older BIOS can never reach 100. Clicking a box opens a
 pop-up with a score ring and a per-item breakdown; items not measured yet score 0 and are listed
 with the test to run. Settings > System overview gets a "BIOS version" box (DMI, with vendor and date
-in the tooltip), completing a 3x3 grid. Both scores show a grey "—" until something is measured.
+in the tooltip), completing a 3x3 grid. Both scores show a gray "—" until something is measured.
 
 The network default stays at 1 Gbit/s, the onboard port's maximum, so a stock board's Extended score
 equals its Base score. The fastest wired link counts, so a USB 2.5/5 GbE adapter raises the Extended
@@ -453,7 +466,7 @@ Changelog: 06-10-2026 13:10:00
 New "Print results" in Settings > General (Share section): saves a compact shareable
 "BC-250 Bazzite Test Results" card as a PNG - the logo and title on top, the nine header boxes
 (tests/finished/passed, warnings/failures/info, health/CPU/GPU score) as a readable 3x3 grid in
-their live colours, and the app version plus date in the footer. A save dialog defaults to
+their live colors, and the app version plus date in the footer. A save dialog defaults to
 ~/Downloads/results.png; the card is about 404x231 px, made for comparing results with other
 BC-250 users.
 
@@ -498,7 +511,7 @@ and report-copy options.
 
 Changelog: 06-10-2026 12:15:00
 
-Performance page: the "Save as baseline" checkbox is now greyed out when a baseline already
+Performance page: the "Save as baseline" checkbox is now grayed out when a baseline already
 exists (bench-baseline.json), so the stock-board baseline cannot be overwritten by accident.
 The tooltip explains that deleting the baseline file re-enables it. The checkbox state is
 refreshed after every benchmark run.
@@ -613,9 +626,9 @@ live in the home directory and survive updates.
 Changelog: 06-10-2026 03:00:00
 
 MangoHud style: the FPS row label and the logging indicator dot are white instead of black (the
-previous trick of matching them to the background failed because MangoHud draws its colours fully
+previous trick of matching them to the background failed because MangoHud draws its colors fully
 opaque over the translucent box). The dot cannot be hidden or made transparent at all: MangoHud
-forces every configured colour opaque and has no setting for the indicator, which appears whenever
+forces every configured color opaque and has no setting for the indicator, which appears whenever
 logging runs — and logging stays on so FPS reaches the graphs.
 
 Changelog: 06-10-2026 02:36:00
@@ -628,7 +641,7 @@ Changelog: 06-10-2026 02:30:00
 
 MangoHud style: all text is now white, and the purple dot in the top right corner of the box is
 hidden. The dot is MangoHud's logging indicator (always on here because the FPS graphs need the
-log); it is painted with engine_color, so the style sets engine_color to the background colour,
+log); it is painted with engine_color, so the style sets engine_color to the background color,
 which hides the dot and the FPS row label — the small white "FPS" next to the number remains.
 Reapply with "Style MangoHud like the overlay".
 
@@ -639,7 +652,7 @@ defaults and presets merging back in). "Style MangoHud like the overlay" now wri
 config file owned by the app (~/.config/bc250-bazzite-test/MangoHud.conf) and the game wrapper
 passes it to MangoHud directly (MANGOHUD_CONFIGFILE), so nothing else can mix into the look and the
 user's own MangoHud.conf is left alone (an older appended block is cleaned up). The layout is a
-narrow two-column box: FPS (labelled "FPS" instead of the engine name), GPU, clock, temperature,
+narrow two-column box: FPS (labeled "FPS" instead of the engine name), GPU, clock, temperature,
 power, CPU, VRAM — as close to one metric per line as MangoHud allows. Background lightened to 0.5
 so it is translucent instead of near-black. FPS logging for the graphs is always on in this file.
 
@@ -704,7 +717,7 @@ Changelog: 06-10-2026 01:10:00
 
 Fix: the overlay could stay invisible. On Wayland (Bazzite's KDE desktop) a normal window cannot be
 positioned or kept on top, so the overlay now runs on XWayland (xcb, with wayland as fallback) where
-KWin honours both. It also places itself on the game's screen, re-raises itself every few seconds (a
+KWin honors both. It also places itself on the game's screen, re-raises itself every few seconds (a
 game that goes fullscreen later would otherwise cover it) and its errors now reach Steam's game log
 ("gamemon: overlay started (pid …)" confirms it launched). Game mode (gamescope) still cannot show
 external windows — use the desktop session to see the overlay.
@@ -828,7 +841,7 @@ Fixes from the iteration 11 observations (part 1):
 Changelog: 04-10-2026 15:40:00
 
 Settings > System overview: new "Package count" box with the total from the latest test 45 run; the tooltip
-shows the run date, number of sources, layered packages and Flatpak apps (system/user). Grey with a hint
+shows the run date, number of sources, layered packages and Flatpak apps (system/user). Gray with a hint
 until test 45 has run. The history now stores pkg.total, pkg.sources, pkg.layered and pkg.flatpak_* per run.
 
 Changelog: 04-10-2026 14:15:00
@@ -838,7 +851,7 @@ per source: RPMs in the image, packages layered on it (rpm-ostree install) and r
 Flatpak apps (system and user) and runtimes, Homebrew formulae and casks, AppImages in ~/AppImages and
 ~/Applications, and Distrobox/Toolbox containers (count only). Names and versions go to the report; no paths,
 user names, container names or settings. Hint at 10+ layered/overridden packages (slower updates, conflicts).
-Catalogue, simulator, README tables and the privacy note in Settings updated.
+Catalog, simulator, README tables and the privacy note in Settings updated.
 
 Changelog: 04-10-2026 01:30:00
 
@@ -856,13 +869,13 @@ DEVELOPMENT.md: bc250-cu-bisect is GPL v3 too.
 
 Changelog: 04-10-2026 01:00:00
 
-Licence changed from MIT to GPL-3.0-or-later (PyQt6 is GPL v3, so the distributed app has to be GPL):
-- LICENSE is the GPL v3 text; every source file starts with an SPDX licence line.
-- Settings → About: licence with the no-warranty notice, where the source code is, third-party licences.
-- README_APP.md: new Licence section (copyright, GPL, no warranty, source archive per release, third party).
+License changed from MIT to GPL-3.0-or-later (PyQt6 is GPL v3, so the distributed app has to be GPL):
+- LICENSE is the GPL v3 text; every source file starts with an SPDX license line.
+- Settings → About: license with the no-warranty notice, where the source code is, third-party licenses.
+- README_APP.md: new License section (copyright, GPL, no warranty, source archive per release, third party).
 - release/INSTALL.md: each release gets bc250-bazzite-test-<version>-source.tar.gz; GitHub's automatic
   "Source code" links only contain the public page.
-- DEVELOPMENT.md: the licence and how releases meet it.
+- DEVELOPMENT.md: the license and how releases meet it.
 
 Changelog: 04-10-2026 00:45:00
 
@@ -872,7 +885,7 @@ Public releases repository: https://github.com/RobertoTorino/bc250-bazzite-test-
 - release/: the public repository's install section, SECURITY.md and issue templates (bug report with app
   version, Bazzite version, board configuration, report and a privacy check; idea; private security reports).
 - tools/sync_release_repo.py builds the public README.md from README_APP.md + release/INSTALL.md and copies
-  the files, licence and icon into a checkout of the public repository.
+  the files, license and icon into a checkout of the public repository.
 - DEVELOPMENT.md: the public repository and the sync tool.
 
 Changelog: 03-10-2026 23:10:00
@@ -901,7 +914,7 @@ No more dependencies on an external CU manager:
   when its SPI bit is set and its CC inactive bit is clear. Without root or umr it falls back to the kernel
   probe value and RADV, with a hint. Its state file, boot table and dashboard cache are no
   longer read; the benchmark's CU count uses test 21's value or the kernel value.
-- Its install/update section and other mentions removed from README.md, README_APP.md, TEST.md and the test catalogue.
+- Its install/update section and other mentions removed from README.md, README_APP.md, TEST.md and the test catalog.
 
 Changelog: 03-10-2026 14:20:00
 
@@ -953,9 +966,9 @@ Script + GUI v0.9.6 (preparing for release packages):
 Changelog: 03-10-2026 13:50:00
 
 GUI v0.9.5:
-- Settings › System overview: every box has its own colour (CUs purple, cores magenta, threads teal,
-  download blue, upload indigo, NVMe size brown, free space green); grey still means no data yet.
-  Only the free space changes colour: red below 10% free. Whether CUs/cores/threads are unlocked,
+- Settings › System overview: every box has its own color (CUs purple, cores magenta, threads teal,
+  download blue, upload indigo, NVMe size brown, free space green); gray still means no data yet.
+  Only the free space changes color: red below 10% free. Whether CUs/cores/threads are unlocked,
   stock or below stock is now in the tooltip.
 - Warnings, Failures and Info / hints boxes: purple outline on hover (was white), like the other
   purple borders.
@@ -977,14 +990,14 @@ Changelog: 03-10-2026 12:45:00
 GUI v0.9.3:
 - Settings close button: drawn ✕ (no font glyph, so it no longer looks stretched or thin on Linux); on
   hover a purple circle (#8b4fd8), like the selected navigation item.
-- Settings › System overview: coloured boxes for unlocked CUs (e.g. 36/40), CPU cores (6/8) and threads
+- Settings › System overview: colored boxes for unlocked CUs (e.g. 36/40), CPU cores (6/8) and threads
   (12/16), the latest speed test download and upload, the NVMe size and the free space (free/total).
   Cores and threads are read live from sysfs; CUs and the speed test come from the test history (speed
   test history CSV as fallback). Read only when the page is opened (about 1 ms), nothing in the background.
-  Colours: green above stock (unlock), purple stock, blue speed; free space green ≥ 20%, orange ≥ 10%, red below.
+  Colors: green above stock (unlock), purple stock, blue speed; free space green ≥ 20%, orange ≥ 10%, red below.
 - Status bar: live network traffic (↓ download, ↑ upload) over the physical interfaces (Ethernet, Wi-Fi;
   lo, bridges, VPN and container links skipped), from /proc/net/dev in the existing 2 s sample.
-- History: also recognises "Active Compute Units: N of 40" for the CU count.
+- History: also recognizes "Active Compute Units: N of 40" for the CU count.
 
 Changelog: 03-10-2026 09:15:00
 
@@ -1030,7 +1043,7 @@ GUI v0.9.0 — Settings:
     id, speed test ISP and result URL). Admin privileges: explanation that passwords are never shown,
     saved or logged; run with/without sudo; "Forget sudo authentication now" (sudo -k).
   - General: language (English; es, fr, de, zh, ja, it, pl, ru listed as coming soon) and the help.
-  - About: name, version, build date, repository link, licence, runtime versions.
+  - About: name, version, build date, repository link, license, runtime versions.
 - Help moved from the logo to Settings › General; the logo is no longer clickable.
 - The history stores paths with the home folder as ~ (no user name in the database).
 - Preferences: ~/.config/bc250-bazzite-test/bc250-bazzite-test.ini.
@@ -1051,7 +1064,7 @@ GUI v0.8.0 — test history:
   cores/threads, mitigations), per-test results and hints, and metrics (benchmark, stress, disk and
   internet speed numbers) for the run comparison planned next.
 - The Ran/Passed/Warnings/Failures/Info/Health counters now show the latest result of every test over
-  all runs and survive a restart; test buttons get their last colour back with the date in the tooltip.
+  all runs and survive a restart; test buttons get their last color back with the date in the tooltip.
 - Reports of command-line runs of the script are imported at startup (once per report).
 - "Clean up logs…" on the Overview: remove logs older than N days (default 30; results stay in the
   history) or all logs plus the history. Root-owned reports use the masked sudo prompt. The benchmark
@@ -1113,7 +1126,7 @@ Changelog: 30-09-2026 12:00:00
 TEST 10 — NVMe Devices (extended):
 - PCIe link: current speed/width vs. the drive's and the slot's maximum; warns when the link trained
   below what both support (bad contact), notes when the slot is the limit, shows the bandwidth ceiling.
-- DRAM cache: DRAM-less drives are recognised by their Host Memory Buffer request (nvme id-ctrl HMPRE)
+- DRAM cache: DRAM-less drives are recognized by their Host Memory Buffer request (nvme id-ctrl HMPRE)
   and the kernel's "allocated N MiB host memory buffer"; warns when HMB is requested but not given.
 - SMART health (nvme-cli JSON, else smartctl JSON, else hwmon temperature): critical warning bits,
   media errors, spare vs threshold, wear %, TB written, temperature vs the drive's own threshold,
@@ -1139,7 +1152,7 @@ GUI v0.5.0 — graphs:
 - Window/taskbar icon restored to the original purple logo (the white version is removed).
 - "Show graph" next to the stress settings plots the latest stress telemetry CSV (test 41): clocks,
   temperatures, GPU busy, GPU power, GPU memory, fan, GPU voltage and load average, with the peaks
-  summarised on top. Older stress runs can be picked in the window.
+  summarized on top. Older stress runs can be picked in the window.
 - "Show graph" on the Performance page shows the benchmark history (test 42) as bar charts per run:
   scores against the baseline, GPU FP32, CPU multi/single-thread, VRAM bandwidth, GPU clock.
 - Show Logs: a "Show graph" button appears when the selected file is a CSV (falls back to the
@@ -1158,7 +1171,7 @@ GUI v0.4.0 — live status bar:
   tree) and its FPS from MangoHud's live CSV log (output_folder + autostart_log, see Help).
 - Display refresh rate from Qt (no helper program).
 - Low cost: plain file reads, a sample every 2 s (~1 ms), full process scan every 10 s, paused
-  while minimised, automatic back-off when a sample takes >30 ms, "Live" switch to turn it off.
+  while minimized, automatic back-off when a sample takes >30 ms, "Live" switch to turn it off.
   Sampling cost is shown in the tooltip.
 
 Changelog: 30-09-2026 10:30:00
@@ -1296,7 +1309,7 @@ Changelog: 29-09-2026 18:00:00
 GUI 0.2.0 (iteration 2), based on the first run on a real BC-250:
 - Stats toolbar: tests / ran / passed / warnings / failures / info+hints boxes and a
   health score (passed+info 100%, warnings 50%, failures 0%).
-- Help button (dialog) and Help page: every action, colours, score, sudo, logs,
+- Help button (dialog) and Help page: every action, colors, score, sudo, logs,
   stress test and the full test list.
 - App icon (images/bc250-bazzite-test.png, converted from the .ico).
 - NOTE lines are shown as hints (info icon); wrapped HINT/NOTE lines become one hint.
@@ -1320,7 +1333,7 @@ test-bazzite.sh — selectable tests (needed by the GUI):
   copy the report to the Desktop).
 
 New: PyQt6 GUI (bc250_gui/), iteration 1:
-- Category navigation, per-test buttons coloured by result, run all / run
+- Category navigation, per-test buttons colored by result, run all / run
   category / run single test, stress duration and interval inputs.
 - Per-page terminal output and hints panel; masked sudo prompt (never stored).
 - Every run is logged to ~/.local/share/bc250-bazzite-test/logs/ and can be
@@ -1429,7 +1442,7 @@ Journal noise filters (TESTs 15/16), all verified against a real run:
 - "ACPI BIOS Warning" (FADT Pm2ControlBlock).
 
 TEST 21:
-- 25-39 CUs is now a SUCCESS labelled as an intentional partial unlock,
+- 25-39 CUs is now a SUCCESS labeled as an intentional partial unlock,
   with a note on why partial unlocks are normal, instead of
   an ambiguous "partial unlock, or unhealthy CUs have been masked".
 
@@ -1458,7 +1471,7 @@ Changelog: 28-09-2026 19:29:00
 Changes to TEST 21
 1. New system-wide check: reads the CU manager's config (mask popcount × 2 = 28) and verifies its service is enabled — matches your setup exactly.
 2. Fixed cache path/parser: correct Data/ location, parses the authoritative CUs active & routed : X / 40 line plus Boot sync : current table saved.
-3. Corrected messaging: kernel/RADV labelled probe-time; RADV mismatch downgraded from WARNING to an explanatory INFO (harmless, dispatch uses all routed CUs).
+3. Corrected messaging: kernel/RADV labeled probe-time; RADV mismatch downgraded from WARNING to an explanatory INFO (harmless, dispatch uses all routed CUs).
 
 Changelog: 28-09-2026 19:01:00
 
@@ -1469,7 +1482,7 @@ TEST 21 now, in priority order:
 
 - The CU manager's live state file → live cu_active_cus, plus whether cu_boot_saved is set (warns if the change is live-only and will be lost on cold boot).
 - Its per-user dashboard cache as a fallback.
-- Kernel log — now explicitly labelled as the boot-time value, reported alongside rather than overriding the live one.
+- Kernel log — now explicitly labeled as the boot-time value, reported alongside rather than overriding the live one.
 - If only 24 is found from the kernel, it now prints a NOTE explaining the live/boot distinction instead of silently claiming stock.
 
 The RADV mismatch warning now explains itself too: Mesa caches the CU count when it opens the device, so anything already running keeps the old value until restarted.

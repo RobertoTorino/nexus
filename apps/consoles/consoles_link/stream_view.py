@@ -76,7 +76,7 @@ class RendererError(Exception):
 
 def letterbox(picture: tuple[int, int], area: tuple[int, int], screen: str = "fit") -> tuple[int, int, int, int]:
     """The viewport (x, y, width, height; y from the bottom, as OpenGL counts) for a picture of that size in the
-    area, centred: whole at its own aspect ratio (fit), the whole area (stretch), or the whole area at its own
+    area, centered: whole at its own aspect ratio (fit), the whole area (stretch), or the whole area at its own
     aspect ratio with the edges outside it (fill: the viewport is larger than the area)."""
     pw, ph = picture
     aw, ah = area

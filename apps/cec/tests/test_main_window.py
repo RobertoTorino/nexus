@@ -88,7 +88,7 @@ class FakeBoard:
 
 
 class FakeRoot:
-    """pkexec with boot.py: does what boot.main would, in the test's /etc; cancel=True is a cancelled password."""
+    """pkexec with boot.py: does what boot.main would, in the test's /etc; cancel=True is a canceled password."""
 
     def __init__(self, etc_root, cancel=False):
         self.paths, self.cancel = boot.Paths(etc_root), cancel
@@ -279,7 +279,7 @@ def test_restart_installs_the_watcher(make, tmp_path):
     w.picture_buttons["restart"].click()
     unit = tmp_path / "config/systemd/user/bc250-hdmi-cec-watch.service"
     assert board.watching and unit.is_file() and "-m hdmi_cec.watcher --restart-picture" in unit.read_text()
-    assert board.output["maxBpc"] == 0                                          # full colour again
+    assert board.output["maxBpc"] == 0                                          # full color again
     assert ["systemctl", "--user", "restart", "bc250-hdmi-cec-watch.service"] in board.calls
     w.close()
     assert make(board).picture_buttons["restart"].isChecked()
@@ -469,7 +469,7 @@ def test_a_cancelled_password_changes_nothing(make, etc_root, answer):
     w = make(FakeBoard(), run_root=FakeRoot(etc_root, cancel=True))
     w.boot_box.setChecked(True)
     assert not w.boot_box.isChecked() and boot.installed(boot.Paths(etc_root)) is None
-    assert "Not authorised" in answer["asked"][-1]
+    assert "Not authorized" in answer["asked"][-1]
 
 
 def test_another_version_or_name_offers_update(make, etc_root, tmp_path):
@@ -525,7 +525,7 @@ def test_no_horizontal_scrollbar(make, qapp):
 
 
 def test_buttons_keep_the_desktops_look(make):
-    """Plain buttons in the desktop's own grey; Turn TV on has no outline of its own."""
+    """Plain buttons in the desktop's own gray; Turn TV on has no outline of its own."""
     from PyQt6.QtWidgets import QPushButton
     w = make(FakeBoard())
     assert w.centralWidget().widget().styleSheet() == "" and w.on_button.styleSheet() == ""

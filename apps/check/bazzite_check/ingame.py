@@ -31,9 +31,9 @@ from . import gamecfg, gamecheck, steamlines
 from .graph import show_graph
 
 MUTED = "#9aa0a6"
-ACCENT = "#8b4fd8"
-# Session checks (gamecheck): one colour and one mark per verdict level.
-CHECK_COLORS = {"ok": "#6ec46e", "info": MUTED, "warn": "#e0a53a", "error": "#e06c6c"}
+ACCENT = "#ce93d8"
+# Session checks (gamecheck): one color and one mark per verdict level.
+CHECK_COLORS = {"ok": "#81c784", "info": MUTED, "warn": "#ffb74d", "error": "#e57373"}
 CHECK_MARKS = {"ok": "✔", "info": "•", "warn": "!", "error": "✖"}
 
 
@@ -212,7 +212,7 @@ gpu_color=FFFFFF
 cpu_color=FFFFFF
 vram_color=FFFFFF
 # engine_color paints the FPS row label and the logging indicator dot in the top right corner.
-# The dot cannot be hidden: MangoHud forces colours fully opaque and has no option to disable the
+# The dot cannot be hidden: MangoHud forces colors fully opaque and has no option to disable the
 # indicator, which shows whenever logging is active — and logging stays on for the FPS graphs.
 engine_color=FFFFFF
 autostart_log=1

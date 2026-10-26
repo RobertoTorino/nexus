@@ -1,12 +1,13 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The window: the suite's header with three states, the SFTP Client and the Server Manager in tabs."""
+"""The window: the suite's header with three states and the Connect pill, the SFTP Client and the Server Manager in
+tabs."""
 
 from __future__ import annotations
 
 from pathlib import Path
 
 from bc250_core.theme import BLUE, GREEN, GREY, ORANGE, PURPLE, RED
-from bc250_core.widgets import AppHeader, MetricBox
+from bc250_core.widgets import AppHeader, MetricBox, Pill
 from PyQt6.QtGui import QCloseEvent
 from PyQt6.QtWidgets import QLabel, QMainWindow, QMessageBox, QTabWidget, QVBoxLayout, QWidget
 
@@ -18,7 +19,7 @@ from .server_tab import ServerManagerTab
 from .settings import current_settings, log_file
 from .settings_dialog import SettingsDialog
 
-# The tabs report their state as one of these tones; the header box takes its colour.
+# The tabs report their state as one of these tones; the header box takes its color.
 TONE_COLOURS = {"neutral": GREY, "info": BLUE, "success": GREEN, "warning": ORANGE, "error": RED}
 
 
@@ -44,6 +45,14 @@ class MainWindow(QMainWindow):
         self.server_box = MetricBox("Bazzite SSH")
         for box in (self.local_box, self.sftp_box, self.server_box):
             header.add_second(box)
+        # Connect is a pill beside the states (owner, 26-10-2026): it connects the SFTP Client with the fields in its
+        # tab, and reads Disconnect while connected.
+        self.connect_pill = Pill("Connect", "SFTP client",
+                                 "Connect to the host filled in under SFTP Client; click again to disconnect.")
+        self.connect_pill.setSizePolicy(self.sftp_box.sizePolicy())        # as wide as the boxes beside it
+        header.add_second(self.connect_pill)
+        self.connect_pill.clicked.connect(self.sftp_tab.toggle_connection)
+        self.sftp_tab.connect_changed.connect(self._show_connect)
         self.sftp_tab.status_changed.connect(lambda value, tone: set_state(self.sftp_box, value, tone))
         self.server_tab.status_changed.connect(lambda value, tone: set_state(self.server_box, value, tone))
         set_state(self.sftp_box, "Disconnected", "neutral")
@@ -62,6 +71,10 @@ class MainWindow(QMainWindow):
         self.speed_label = QLabel("Idle")
         self.statusBar().addPermanentWidget(self.speed_label)
         self.sftp_tab.queue.speed_changed.connect(self.speed_label.setText)
+
+    def _show_connect(self, text: str, enabled: bool) -> None:
+        self.connect_pill.set_value(text, self.connect_pill.toolTip())
+        self.connect_pill.setEnabled(enabled)
 
     def open_settings(self) -> None:
         hidden_files = current_settings().view_hidden_files

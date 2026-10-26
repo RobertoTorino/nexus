@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Every wiki (each mkdocs.yml) has a design of its own: no INHERIT, stylesheets only from its own docs folder, none
-shared with another wiki, and every variable its stylesheets define labelled for the design panel (a comment before
+shared with another wiki, and every variable its stylesheets define labeled for the design panel (a comment before
 the rule names its group, a comment after the variable says what it does)."""
 
 from __future__ import annotations
@@ -110,7 +110,7 @@ def test_every_variable_is_labelled(wiki):
 
 @pytest.mark.parametrize("wiki", WIKIS, ids=lambda p: p.relative_to(SUITE).as_posix())
 def test_every_colour_is_a_variable(wiki):
-    """A colour written anywhere but in a variable could not be changed in the design panel."""
+    """A color written anywhere but in a variable could not be changed in the design panel."""
     for sheet in stylesheets(wiki):
         code = re.sub(r"/\*.*?\*/", "", sheet.read_text(encoding="utf-8"), flags=re.S)
         for m in re.finditer(r"([^{}]+)\{([^{}]*)\}", code):
@@ -121,12 +121,13 @@ def test_every_colour_is_a_variable(wiki):
 
 
 def test_the_header_has_variables_of_its_own():
-    """The header's background and text are what the panel changes for the header, in each wiki."""
+    """The header's background and text are what the panel changes for the header, in each wiki: the text is the
+    name beside the icon (the wiki) or the links alone (the Nexus page, whose icon carries the name)."""
     for wiki in WIKIS:
         css = "\n".join(s.read_text(encoding="utf-8") for s in stylesheets(wiki))
         bg = re.search(r"(--[\w]+-header-bg)\s*:", css)
         fg = re.search(r"(--[\w]+-header-fg)\s*:", css)
         assert bg and fg, wiki
         assert re.search(rf"\.md-header[^{{]*\{{[^}}]*background: var\({bg.group(1)}\)", css)
-        assert re.search(rf"\.md-header__name \{{[^}}]*color: var\({fg.group(1)}\)", css)
-        assert not re.search(r"\.md-header__(name|link)[^{]*\{[^}]*color: #", css), "a fixed colour in the header"
+        assert re.search(rf"\.md-header__(name|link) \{{[^}}]*color: var\({fg.group(1)}\)", css)
+        assert not re.search(r"\.md-header__(name|link)[^{]*\{[^}]*color: #", css), "a fixed color in the header"

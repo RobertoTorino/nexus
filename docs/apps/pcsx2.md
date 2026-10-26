@@ -63,7 +63,7 @@ The table lists every game found:
   those formats, so the row has no Id. PCSX2 plays them the same.
 - **File name** is the image's name; its folder is in the tooltip.
 
-A PS2 disc carries no title of its own. The app takes it from PCSX2's own catalogue of PS2 games, by the serial,
+A PS2 disc carries no title of its own. The app takes it from PCSX2's own catalog of PS2 games, by the serial,
 and a game PCSX2 does not know gets its file's name, without a serial in it: `SLUS_215.53.Lumines Plus.iso` is
 **Lumines Plus**.
 
@@ -85,7 +85,7 @@ look into it, so it does not know the game's settings file.
 Tick the games you want in Steam and press **Update Steam**. The app adds them to Steam as non-Steam games
 and takes out the games you unticked and games it no longer finds. Steam keeps these files in memory, so it closes
 for the change and starts again in the background. The pictures on the tiles are drawn from the app's icon, with the
-game's title, on a background in the icon's colour, and the icon is the logo on the banner: a PS2 disc gives no
+game's title, on a background in the icon's color, and the icon is the logo on the banner: a PS2 disc gives no
 pictures of its own.
 
 In Steam each game's name starts with its system, for example **[PS2] Lumines Plus**, so it stands apart from the
@@ -275,7 +275,7 @@ through X11 already.
 | PCSX2 | `~/.local/share/bc250-pcsx2-manager/emulator` |
 | PCSX2's BIOS, memory cards, saves, settings | `~/.config/PCSX2` (PCSX2's own folder) |
 | Each game's screen | `~/.config/PCSX2/gamesettings/<serial>_<CRC>.ini`, PCSX2's own settings per game |
-| PCSX2's catalogue (titles, patches) | Beside PCSX2, in `~/.local/share/bc250-pcsx2-manager/emulator` |
+| PCSX2's catalog (titles, patches) | Beside PCSX2, in `~/.local/share/bc250-pcsx2-manager/emulator` |
 | The memory cards' backups | Beside each card, in PCSX2's memory card folder |
 | The app's settings, with the game folders | `~/.config/bc250-pcsx2-manager` |
 | The app's log | `~/.local/share/bc250-pcsx2-manager/bc250-pcsx2-manager.log` |

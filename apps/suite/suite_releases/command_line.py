@@ -40,7 +40,7 @@ _ANSI = re.compile(r"\x1b\[[0-?]*[ -/]*[@-~]|\x1b\][^\x07]*\x07|\x1b[@-Z\\-_]")
 
 
 def plain(text: str) -> str:
-    """Output as plain text: colour and cursor codes removed, a carriage return (a progress line) as a new line."""
+    """Output as plain text: color and cursor codes removed, a carriage return (a progress line) as a new line."""
     return _ANSI.sub("", text).replace("\r\n", "\n").replace("\r", "\n")
 
 

@@ -1,3 +1,12 @@
+Changelog: 26-10-2026 02:14:35
+
+Release 0.12.0.
+
+Changelog: 26-10-2026 01:04:02
+
+Fixed. The adapter box is the suite's info blue #1565c0 (DESIGN.md's color families, owner, 26-10-2026), not a
+blue of its own.
+
 Changelog: 25-10-2026 01:16:49
 
 Release 0.11.1.
@@ -58,7 +67,7 @@ Release 0.5.0.
 
 Changelog: 19-10-2026 23:41:01
 
-Added. The suite's theme, chosen in the portal; the four boxes keep their colours as a left edge on the theme's
+Added. The suite's theme, chosen in the portal; the four boxes keep their colors as a left edge on the theme's
 surface.
 
 Changelog: 19-10-2026 03:41:48
@@ -151,15 +160,15 @@ The window has the suite's header: the icon at 96 px beside the title with the v
 
 Changelog: 12-10-2026 07:09:17
 
-The buttons are plain buttons in the desktop's own grey again, greyed out while they cannot be used. Green buttons (while clicked, then as on/off buttons) were tried and dropped: the colour could not show the state of the TV. Turn TV on keeps no purple outline.
+The buttons are plain buttons in the desktop's own gray again, grayed out while they cannot be used. Green buttons (while clicked, then as on/off buttons) were tried and dropped: the color could not show the state of the TV. Turn TV on keeps no purple outline.
 
 Changelog: 12-10-2026 07:07:24
 
-Every button of the window is an on/off button (checkable): grey, a click turns it green, the next click grey again. It still does its action on every click; the colour only shows how it was last switched, not the state of the TV.
+Every button of the window is an on/off button (checkable): gray, a click turns it green, the next click gray again. It still does its action on every click; the color only shows how it was last switched, not the state of the TV.
 
 Changelog: 12-10-2026 07:03:21
 
-The Display box is black with white text instead of off-white. The buttons are grey in the desktop's own button colour and turn green only while they are clicked; a button that cannot be used is fainter, with grey text.
+The Display box is black with white text instead of off-white. The buttons are gray in the desktop's own button color and turn green only while they are clicked; a button that cannot be used is fainter, with gray text.
 
 Changelog: 12-10-2026 06:51:13
 
@@ -167,11 +176,11 @@ Release 0.1.5. UI improvements
 
 Changelog: 12-10-2026 06:49:44
 
-The four boxes at the top each have their own colour, left to right: dark blue (CEC adapter), orange (physical address), off-white with dark text and a thin border (display), purple (TV power). Display and TV power were both grey.
+The four boxes at the top each have their own color, left to right: dark blue (CEC adapter), orange (physical address), off-white with dark text and a thin border (display), purple (TV power). Display and TV power were both gray.
 
 Changelog: 12-10-2026 06:41:42
 
-The window had a horizontal scrollbar with KDE's font (Noto Sans 10): the line at the bottom needed 899 of the 880 pixels. It is three lines now, and a test checks that the window fits at 11 points. Every button of the window is green while it can be used and greyed out while it cannot; Turn TV on has no purple outline of its own any more. The At boot note showed &quot; and &#x27; for quotes: it was escaped as HTML but shown as plain text.
+The window had a horizontal scrollbar with KDE's font (Noto Sans 10): the line at the bottom needed 899 of the 880 pixels. It is three lines now, and a test checks that the window fits at 11 points. Every button of the window is green while it can be used and grayed out while it cannot; Turn TV on has no purple outline of its own any more. The At boot note showed &quot; and &#x27; for quotes: it was escaped as HTML but shown as plain text.
 
 Changelog: 12-10-2026 06:14:55
 
@@ -187,7 +196,7 @@ The TV power box shows the state with a capital, "On" and "Standby" instead of "
 
 Changelog: 12-10-2026 05:45:27
 
-At boot, before you log in: a system service (boot.py) that gives the TV the board's name and, when chosen, turns it on and switches it to the board, before the login screen. Until now nothing of the app ran before login: on the owner's board (12-10-2026) the TV showed "Playback" after every boot, and nothing turned it on. Only Bazzite's cec-control did sometimes, from a udev rule for the Bluetooth adapter: it ran before /dev/cec0 existed and failed, the login screen came up with the TV off, and when the TV was turned on later the converter gave no picture (the login screen keeps its own display settings, so not the 8 bits per colour). A udev rule starts the service once per boot when a CEC adapter appears. It waits for a display, names the adapter, sends Image View On and Active Source with wake on, and is ordered before the display manager, which waits at most 8 s for it. For a minute it keeps the name when something configures the adapter again (Bazzite's cec-control names it "Playback"), and it leaves the name to Valve's CEC daemon when that runs. The app installs, changes and removes it as root through pkexec, with the system python3 in isolated mode. The files are in /etc (bc250-hdmi-cec/boot.py and boot.json, the unit and the rule), so nothing at boot depends on /var. A new name on the TV updates the service, and Update installs this version when the installed copy differs. Display settings to the login screen… copies the user's kwinoutputconfig.json to the login screen's user (Plasma Login or SDDM), as KDE's Apply Plasma Settings does, so 8 bits per colour applies there too. install.sh --uninstall removes the service with sudo; install.sh itself still needs no root and says when the installed service is from another version.
+At boot, before you log in: a system service (boot.py) that gives the TV the board's name and, when chosen, turns it on and switches it to the board, before the login screen. Until now nothing of the app ran before login: on the owner's board (12-10-2026) the TV showed "Playback" after every boot, and nothing turned it on. Only Bazzite's cec-control did sometimes, from a udev rule for the Bluetooth adapter: it ran before /dev/cec0 existed and failed, the login screen came up with the TV off, and when the TV was turned on later the converter gave no picture (the login screen keeps its own display settings, so not the 8 bits per color). A udev rule starts the service once per boot when a CEC adapter appears. It waits for a display, names the adapter, sends Image View On and Active Source with wake on, and is ordered before the display manager, which waits at most 8 s for it. For a minute it keeps the name when something configures the adapter again (Bazzite's cec-control names it "Playback"), and it leaves the name to Valve's CEC daemon when that runs. The app installs, changes and removes it as root through pkexec, with the system python3 in isolated mode. The files are in /etc (bc250-hdmi-cec/boot.py and boot.json, the unit and the rule), so nothing at boot depends on /var. A new name on the TV updates the service, and Update installs this version when the installed copy differs. Display settings to the login screen… copies the user's kwinoutputconfig.json to the login screen's user (Plasma Login or SDDM), as KDE's Apply Plasma Settings does, so 8 bits per color applies there too. install.sh --uninstall removes the service with sudo; install.sh itself still needs no root and says when the installed service is from another version.
 
 Changelog: 12-10-2026 00:00:26
 
@@ -219,7 +228,7 @@ A message the TV took but answered with Feature Abort ("Tx, OK, Rx, OK, Feature 
 
 Changelog: 11-10-2026 22:10:55
 
-Picture after the TV was off: with some DP-to-HDMI converters (the owner's UGreen cable) the TV stays black after a longer standby, although it is on and the board runs on. The converter keeps the DisplayPort side up, so the board is never told, and it does not redo HDMI scrambling with the TV (1080p120 at 12 bits per colour is about 445 MHz, above the 340 MHz limit); only a different signal brings the picture back. Found with four standby tests on the owner's board on 11-10-2026: at 12 bits the TV stayed black until the refresh rate or HDR changed; at 8 bits the picture came back by itself. A new group lets the user choose: leave it as it is (TV standby then asks first), 8 bits per colour (display.py, kscreen-doctor maxbpc; nothing runs in the background), or restart the picture when the TV turns on (watcher.py: a user service, bc250-hdmi-cec-watch.service from service.py, asks the TV's power every 5 s and, when it comes back on, switches the output to another refresh rate for 4 s and back). Each choice undoes the others; a colour depth set by the user in Display settings is left alone. install.sh restarts the service on an update and removes it on uninstall. The window scrolls instead of cutting off text when it is smaller than its contents. Tests for display.py, service.py, the watcher and the window, on the board's real kscreen-doctor output; the installer test shims systemctl.
+Picture after the TV was off: with some DP-to-HDMI converters (the owner's UGreen cable) the TV stays black after a longer standby, although it is on and the board runs on. The converter keeps the DisplayPort side up, so the board is never told, and it does not redo HDMI scrambling with the TV (1080p120 at 12 bits per color is about 445 MHz, above the 340 MHz limit); only a different signal brings the picture back. Found with four standby tests on the owner's board on 11-10-2026: at 12 bits the TV stayed black until the refresh rate or HDR changed; at 8 bits the picture came back by itself. A new group lets the user choose: leave it as it is (TV standby then asks first), 8 bits per color (display.py, kscreen-doctor maxbpc; nothing runs in the background), or restart the picture when the TV turns on (watcher.py: a user service, bc250-hdmi-cec-watch.service from service.py, asks the TV's power every 5 s and, when it comes back on, switches the output to another refresh rate for 4 s and back). Each choice undoes the others; a color depth set by the user in Display settings is left alone. install.sh restarts the service on an update and removes it on uninstall. The window scrolls instead of cutting off text when it is smaller than its contents. Tests for display.py, service.py, the watcher and the window, on the board's real kscreen-doctor output; the installer test shims systemctl.
 
 Changelog: 11-10-2026 20:43:41
 

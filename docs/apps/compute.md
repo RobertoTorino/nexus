@@ -113,7 +113,7 @@ under a different game or a hotter room.
 > **Prefer clicking over typing?** There are two optional GUIs that do exactly the same thing:
 > [BC Bisect GUI](#bc-bisect-gui-initial-setup-launcher) for steps 2–4 and
 > [BC Unlock GUI](#bc-unlock-gui) for steps 5–7. The Unlock GUI shows a green **ACCEPTED** banner only
-> once your results actually justify the mask, and greys out **Install** otherwise.
+> once your results actually justify the mask, and grays out **Install** otherwise.
 
 ## How it works
 

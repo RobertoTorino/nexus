@@ -1,3 +1,12 @@
+Changelog: 26-10-2026 02:14:35
+
+Release 0.3.0.
+
+Changelog: 26-10-2026 01:04:02
+
+Fixed. The error label uses the suite's red text tint #e57373 (DESIGN.md's color families, owner, 26-10-2026),
+not a second red of its own.
+
 Changelog: 25-10-2026 01:16:49
 
 Release 0.2.1.
@@ -18,7 +27,7 @@ Release 0.2.0.
 Changelog: 19-10-2026 23:41:01
 
 Added. The suite's theme (a copy of core's theme.py), chosen in the portal; the status banner is the theme's surface
-with its state as a coloured left edge.
+with its state as a colored left edge.
 
 Changelog: 19-10-2026 16:58:45
 

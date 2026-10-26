@@ -1,3 +1,7 @@
+Changelog: 26-10-2026 01:04:02
+
+Fixed. A passed test shows the suite's green #2e7d32 (DESIGN.md's color families, owner, 26-10-2026).
+
 Changelog: 19-10-2026 23:41:01
 
 Added. The suite's theme (a copy of core's theme.py), chosen in the portal, on Fusion.

@@ -101,7 +101,7 @@ QToolTip {{ background: {CARD}; color: {TEXT}; border: 1px solid {LINK}; }}
 QStatusBar {{ color: {MUTED}; }}
 """
 
-# The text colours of the HTML pages (QTextBrowser does not take them from the style sheet).
+# The text colors of the HTML pages (QTextBrowser does not take them from the style sheet).
 HTML_CSS = f"""
 body {{ color: {TEXT}; font-size: 14px; }}
 h2 {{ color: {TEXT}; font-size: 20px; margin-bottom: 4px; }}
@@ -127,7 +127,7 @@ def apply_theme(app: QApplication) -> None:
 
 
 def html_page(body: str) -> str:
-    """A page for a QTextBrowser, with the app's text colours."""
+    """A page for a QTextBrowser, with the app's text colors."""
     return f"<html><head><style>{HTML_CSS}</style></head><body>{body}</body></html>"
 
 

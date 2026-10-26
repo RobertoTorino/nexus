@@ -31,7 +31,7 @@ apps/<name>/
 │   ├── __init__.py            APP_NAME, APP_ID, __version__, ROOT, LOGO_PATH, INFO
 │   ├── __main__.py            start-up: python -m <package>
 │   ├── main_window.py         the window
-│   └── ...                    the app's own modules, and data it reads (a catalogue, tables)
+│   └── ...                    the app's own modules, and data it reads (a catalog, tables)
 ├── images/                    <app-id>.webp (512 px) and <app-id>-128.png for the menu entry
 ├── native/                    only an app with a native core (consoles): a Rust crate, see below
 ├── tests/                     conftest.py and test_*.py
@@ -138,22 +138,22 @@ layout.addLayout(header)
 ```
 
 Apps that are not on core yet build the same layout in their own code, with the same sizes: a 96 px icon, a 24 px
-bold title with the version in grey at 14 px, and 6 px between the rows.
+bold title with the version in gray at 14 px, and 6 px between the rows.
 
 Below the header, the rest of the window uses core's widgets: `MetricBox` for figures, `StatusPill` and
-`StatusText` for states (`ok`, `warn`, `bad`, `info`, `neutral`, in the theme's colours), `hint_label()` for
+`StatusText` for states (`ok`, `warn`, `bad`, `info`, `neutral`, in the theme's colors), `hint_label()` for
 explanations, `accent_button()` for the page's main action. Secondary windows are titled with `window_title()`.
 
 Every app has the suite's theme: gunmetal (the default), silver or warm, one choice for all the apps, made in the
 portal and kept in `~/.config/bc250-bazzite-suite/theme`. `create_app()` applies it (an app not on core calls
 `apply_theme()` from its copy of `theme.py`). The theme gives the window, the buttons, the tabs and the fields
-their colours. A status box, pill or banner is the theme's surface with its state or colour as a thick left edge
+their colors. A status box, pill or banner is the theme's surface with its state or color as a thick left edge
 (`MetricBox.set_colour()`, `surface_style()`), never a filled box with white text, so it reads in a light and a
-dark theme alike. Text takes the theme's colours (`THEME.text`, `muted()`), not white or a fixed grey.
+dark theme alike. Text takes the theme's colors (`THEME.text`, `muted()`), not white or a fixed gray.
 
-An app may have its own colour, taken from its icon, in a `style.py` beside its window (the shadPS4 Manager's is
+An app may have its own color, taken from its icon, in a `style.py` beside its window (the shadPS4 Manager's is
 the pattern): the main buttons, the table headers, the selection and the links take it, over the theme. White text
-on the colour reads at 4.5:1 or more, links on a dark window use a lighter shade of it, and the colour stays easy on
+on the color reads at 4.5:1 or more, links on a dark window use a lighter shade of it, and the color stays easy on
 the eye. Without a `style.py` the app takes the theme's accent.
 
 ### Icons
@@ -213,8 +213,8 @@ Where the pictures come from depends on what the app has:
 | Vita3K Manager | The game's own pictures (`icon0.png`, `pic0.png`), its icon as the logo |
 
 `steam_art.draw_icon_art()` is for an app with no pictures of its own: the background is near black in the icon's
-own colour with a glow of it, the portrait and the wide picture show the icon with a title and a line under it, the
-banner shows the title centred, and the icon file itself is the logo. A new icon changes the cards by itself. The
+own color with a glow of it, the portrait and the wide picture show the icon with a title and a line under it, the
+banner shows the title centered, and the icon file itself is the logo. A new icon changes the cards by itself. The
 emulator managers keep the games' own pictures and draw only what a game lacks.
 
 ## Inside an app, and code style
@@ -344,13 +344,13 @@ not run one.
    `.github/workflows/ci.yml`. Write `tools/installer-tests/<name>.sh` and add its step to the same file.
 6. Add the app to `portal/apps.toml` (name, summary, `changes_board`, `category` (its icon's: the portal's tab for
    it), install, uninstall, detect, launch).
-7. Add the app to the Dependency Checker's catalogue (`[app.<name>]` with its launchers), its Python packages and
+7. Add the app to the Dependency Checker's catalog (`[app.<name>]` with its launchers), its Python packages and
    the external tools it runs (`apps/package/package_checker/dependencies.toml`).
 8. Write its manual chapter, `docs/apps/<name>.md`, add it to `mkdocs.yml`, and give it a row in the apps overview,
    `docs/apps/index.md`.
 9. Run the checks from [Development](index.md) and every installer test.
 
-The tests in step 9 tell you what you missed: an app without an installer test, a catalogue that does not match
+The tests in step 9 tell you what you missed: an app without an installer test, a catalog that does not match
 the requirements files, a version copy that does not match `VERSION`, a package in a wrapper folder.
 
 ## The checks at a glance
@@ -364,7 +364,7 @@ the requirements files, a version copy that does not match `VERSION`, a package 
 | Version copies equal `VERSION` | `tools/check_versions.py` |
 | Every app and portal entry has an installer test, and CI runs it | `tools/tests/test_installer_tests.py` |
 | Copies of `instance.py` equal core's | `tools/tests/test_instance_copies.py` |
-| The Dependency Checker's catalogue matches the requirements files, the portal's apps, and the tools the apps use | `apps/package/tests/test_dependencies.py` |
+| The Dependency Checker's catalog matches the requirements files, the portal's apps, and the tools the apps use | `apps/package/tests/test_dependencies.py` |
 | `portal/apps.toml` rules and version bumps | `tools/check_manifest.py` |
 | A CHANGELOG keeps every entry it had at the last push | `tools/check_changelogs.py` |
 | The manual builds with no broken link | `mkdocs build --strict` |

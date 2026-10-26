@@ -4,7 +4,7 @@
 #
 #   bc250-vita3k-run --frontend sdl -r PCSB00245              a game alone, quits with it (Game Mode, Play)
 #   bc250-vita3k-run --firmware /path/to/PSP2UPDAT.PUP        install a part of the PS Vita firmware, no window
-#   bc250-vita3k-run --pkg /path/to/game.pkg --zrif KEY      install a game from its package and licence, no window
+#   bc250-vita3k-run --pkg /path/to/game.pkg --zrif KEY      install a game from its package and license, no window
 #   bc250-vita3k-run /path/to/game.vpk                        install a game (.vpk, .zip or a folder) and start it
 #   bc250-vita3k-run                                          Vita3K's own window, for its settings
 #

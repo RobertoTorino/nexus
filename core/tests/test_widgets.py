@@ -13,14 +13,14 @@ from bc250_core.widgets import (
 
 
 def test_status_pill_colours(qapp):
-    """The theme's surface; the state a coloured left edge, the edge's colour for neutral."""
+    """The theme's surface; the state a colored left edge, the edge's color for neutral."""
     pill = StatusPill()
     assert pill.text() == "Unknown"
     assert f"border-left:4px solid {theme.THEME.edge}" in pill.styleSheet()
     pill.set_status("Active", "ok", "tip")
     assert (pill.text(), pill.toolTip()) == ("Active", "tip")
     assert f"border-left:4px solid {theme.GREEN}" in pill.styleSheet()
-    assert "white" not in pill.styleSheet()                                     # the theme's text colour
+    assert "white" not in pill.styleSheet()                                     # the theme's text color
     pill.set_status("?", "no-such-kind")
     assert f"border-left:4px solid {theme.THEME.edge}" in pill.styleSheet()
 
@@ -43,13 +43,13 @@ def test_metric_box(qapp):
     box.set_value("1800 MHz", "now")
     assert (box.value.text(), box.caption.text(), box.toolTip()) == ("1800 MHz", "GPU clock", "now")
     centre = Qt.AlignmentFlag.AlignHCenter
-    assert box.value.alignment() & centre and box.caption.alignment() & centre        # centred by default
+    assert box.value.alignment() & centre and box.caption.alignment() & centre        # centered by default
     left = MetricBox("GPU clock", theme.PURPLE, centred=False)
     assert not left.value.alignment() & centre
     assert f"border-left:4px solid {theme.PURPLE}" in box.styleSheet()
     box.set_colour(theme.RED)
     assert f"border-left:4px solid {theme.RED}" in box.styleSheet() and theme.PURPLE not in box.styleSheet()
-    assert f"border-left:4px solid {theme.THEME.edge}" in MetricBox("Neutral").styleSheet()   # GREY: no colour
+    assert f"border-left:4px solid {theme.THEME.edge}" in MetricBox("Neutral").styleSheet()   # GRAY: no color
 
 
 def test_pill_is_a_metric_box_that_clicks(qapp):
@@ -65,7 +65,7 @@ def test_pill_is_a_metric_box_that_clicks(qapp):
     for key in (Qt.Key.Key_Space, Qt.Key.Key_Return):
         pill.keyPressEvent(QKeyEvent(QEvent.Type.KeyPress, key, Qt.KeyboardModifier.NoModifier))
     assert clicks == [1, 1, 1]
-    pill.set_colour(theme.RED)                                  # the edge colour and the hover both stay
+    pill.set_colour(theme.RED)                                  # the edge color and the hover both stay
     assert theme.RED in pill.styleSheet() and "#pill:hover" in pill.styleSheet()
 
 
@@ -89,7 +89,7 @@ def test_a_pill_that_cannot_be_clicked_looks_muted(qapp):
     qapp.processEvents()
     assert _text_lightness(disabled) < _text_lightness(enabled)
     disabled.setEnabled(True)
-    disabled.set_colour(theme.RED)                              # the rule survives a new colour
+    disabled.set_colour(theme.RED)                              # the rule survives a new color
     qapp.processEvents()
     assert _text_lightness(disabled) == _text_lightness(enabled)
     disabled.setEnabled(False)

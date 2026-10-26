@@ -192,7 +192,7 @@ def test_allow_access_runs_the_helper_as_root(make, monkeypatch):
     link.state_changed.emit(State("no-access", FOUND))
     window.access_button.click()
     assert calls[0][0] == "pkexec" and calls[0][-2:][1] == "install"
-    assert warnings and "cancelled" in warnings[0]
+    assert warnings and "canceled" in warnings[0]
 
 
 def test_look(make, tmp_path):
@@ -211,7 +211,7 @@ def test_look(make, tmp_path):
     window2, _ = make()
     assert window2.theme.currentText() == "Light" and window2.title.text() == "My board"
     assert window2.picture is not None
-    picture.unlink()                                                  # moved away: the theme's colour, said so
+    picture.unlink()                                                  # moved away: the theme's color, said so
     window3, _ = make()
     assert window3.picture is None and "cannot be read" in window3.picture_label.text()
     window3.set_picture("")
@@ -349,5 +349,5 @@ def test_save_picture_and_report(make, tmp_path, monkeypatch):
     text = report.read_text(encoding="utf-8")
     assert text.startswith(render.TITLE + "\n") and "CPU                    10 %" in text
     assert "Network (enp4s0 (Ethernet))" in text
-    monkeypatch.setattr(QFileDialog, "getSaveFileName", lambda *args: ("", ""))       # cancelled
+    monkeypatch.setattr(QFileDialog, "getSaveFileName", lambda *args: ("", ""))       # canceled
     window.save_report()

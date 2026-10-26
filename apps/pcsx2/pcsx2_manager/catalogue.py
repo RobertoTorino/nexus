@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""PCSX2's own catalogue, out of the AppImage it comes in: GameIndex.yaml, every PS2 game PCSX2 knows by its serial
+"""PCSX2's own catalog, out of the AppImage it comes in: GameIndex.yaml, every PS2 game PCSX2 knows by its serial
 with its title, and patches.zip, the patches PCSX2 brings, one file per game named <serial>_<CRC>.pnach (or <CRC>.pnach)
 with a widescreen patch under [Widescreen 16:9]. A PS2 disc carries no title, so these give a game its name in the
 app and in Steam, and say whether it has a widescreen patch.

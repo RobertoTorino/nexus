@@ -144,7 +144,7 @@ def gtt_text(memory: Memory, usage: Usage | None) -> tuple[str, str]:
 
 
 def swap_rows(memory: Memory, usage: Usage | None) -> list[tuple[str, str, float, float, str]]:
-    """One row per swap: (text, colour, stored share, RAM share, tooltip); the shares are of the bar's width.
+    """One row per swap: (text, color, stored share, RAM share, tooltip); the shares are of the bar's width.
     A row with no bar (shares 0) is a line of text only."""
     rows = []
     for z in (usage.zram if usage else ()):
@@ -266,7 +266,7 @@ class MemoryMap(QWidget):
         return out
 
     def _legend(self, p: QPainter, y: float, parts: list[Part]) -> None:
-        """A colour square, name and size for each part the bar had no room to label."""
+        """A color square, name and size for each part the bar had no room to label."""
         metrics = QFontMetrics(self.font())
         p.setFont(self.font())
         x = 0.0

@@ -1,3 +1,54 @@
+Changelog: 26-10-2026 01:41:33
+
+The Nexus page's header shows the icon without the name beside it (owner, 26-10-2026): the icon carries the name.
+
+Changelog: 26-10-2026 01:19:38
+
+A link in the Nexus page's header dims under the pointer (--nexus-header-hover-fg, #808080) instead of getting a
+box behind it (owner, 26-10-2026); --nexus-header-hover-bg is gone. The BC250 Bazzite Suite's wiki keeps its fill.
+
+Changelog: 26-10-2026 01:05:18
+
+The suite's colors are unified (owner, 26-10-2026) as DESIGN.md's color families say: one state family, one text
+tint per hue, brand and hardware colors kept. In the apps, each with its own Fixed. entry: the check app's log,
+in-game checks, history, scores, purples, GPU score box and Clean up logs; the error label of ACPI, CU Unlock and
+Cores Unlock; SFTP Tools' errors button and password colors; NetcatGUI's session lines; HDMI CEC's adapter box;
+Installer Tests' passed; and DatStation's symbols take the PlayStation face-button colors USB HD Control draws
+(the owner's choice), so both PlayStation apps share one set. DESIGN.md's families show no deviation now, and
+its MIGRATION.md item is done. Node.js is a development tool of the checkout (brew install node, CLAUDE.md):
+tools/tests/test_design_panel.py runs the design panel's own merge in Node.js on the fixture the Python merge is
+tested with and asserts the same file, so Copy stylesheet in the browser and tools/apply_design.py agree; the test
+skips where Node.js is missing.
+
+Changelog: 26-10-2026 00:13:31
+
+The design panel's Copy CSS gives the changed variables alone, a few lines beside a stylesheet of hundreds, so a
+new design could not be copied over nexus.css (owner, 25-10-2026). Copy stylesheet, beside it, gives the whole
+stylesheet with the changes written in place, comments and all, to paste over the file; tools/apply_design.py does
+the same from the mock file (.design-mock.json beside a wiki's mkdocs.yml) and then empties the mock. The Nexus page
+has its icon: the owner's drawing in nexus/images/ (1024, 512, 256 and 128 px), copied at 256 px to
+nexus/docs/images/nexus.webp (the header logo and the home page's footer) and nexus.png (the favicon), in place of
+Material's hub. DESIGN.md lists the Nexus page's colors (nexus.css) and the wiki's newer ones (the shadows, the
+header's hover fill and the dimmed text that the entry of 25-10-2026 15:11:46 made variables, which it lacked);
+tools/make_design.py --check and tools/tests compare each wiki's stylesheet with its listing, so a color added to
+a wiki fails the tests until DESIGN.md lists it. ICONS.md has a Nexus section, the icon's files and the Material
+icons on the Nexus page, and tools/tests checks that every Material icon a wiki's pages use and every file of the
+Nexus icon is listed. The Nexus page's Design chapter describes Copy stylesheet, the tool and the checks.
+The owner's new design for the Nexus page (26-10-2026, made in the design panel) is written into nexus.css with
+tools/apply_design.py from the mock the running server held: ink #010101, silver #c0c0c0 and the icon's teal
+#17b6a7; the two translucent fills (behind a header link and the faint hover fill) keep their opacity. DESIGN.md
+opens with the rules of each design (what makes the BC250 Bazzite Suite and Nexus recognizable: the identity, one
+theme, one state family, one text tint per hue, brand and hardware colors kept) and the color families: every
+tint of each hue, marked family, text tint, brand, hardware or deviation, with why it is there; the deviations
+(the check app's second and third tints, SFTP Tools', NetcatGUI's, Installer Tests', HDMI CEC's, and two sets of
+PlayStation face-button colors) are listed for the owner in MIGRATION.md with the mapping to unify them.
+The project's text is American English (owner, 26-10-2026): color, gray, center, canceled, license, catalog,
+labeled and the rest, in the wiki, the READMEs, CLAUDE.md, MIGRATION.md, the CHANGELOGs, comments, docstrings and
+the apps' messages; identifiers, settings keys, file names and recorded data keep their spelling, so nothing
+stored or parsed changes. The tests that checked those messages follow.
+requirements-dev.txt takes in sftp's and mtool's dev requirements: a venv made from it lacked paramiko and
+dbus-next, so ./test.sh failed in those two apps (seen 26-10-2026 on a fresh checkout).
+
 Changelog: 25-10-2026 16:55:53
 
 The wiki (Portal, Suite Releases) and the Nexus page's Design chapter (a new section, Stop a wiki) say how to stop
@@ -6,13 +57,13 @@ still show the old setup.
 
 Changelog: 25-10-2026 15:11:46
 
-Every colour in the wikis' stylesheets is now a variable the design panel shows, in both wikis: new groups Buttons
+Every color in the wikis' stylesheets is now a variable the design panel shows, in both wikis: new groups Buttons
 (the shadow under a button), Tables (the headings' background and text), The home page (the words at the top, the
 dark sections' background, text, links and buttons, and on the BC250 Bazzite Suite's wiki the shadow under the
 pictures and the stage pill) and The home page's footer (background, text, the notice's strip), and in Header the
-fill behind a link under the pointer. The shadows and fills written as rgb() are the same colours as #rrggbbaa, so
-the panel gives them a colour picker; both wikis look the same as before, pixel for pixel.
-tools/tests/test_wiki_designs.py fails on a colour written outside a variable. The Nexus page's Design chapter lists
+fill behind a link under the pointer. The shadows and fills written as rgb() are the same colors as #rrggbbaa, so
+the panel gives them a color picker; both wikis look the same as before, pixel for pixel.
+tools/tests/test_wiki_designs.py fails on a color written outside a variable. The Nexus page's Design chapter lists
 the new groups.
 
 Changelog: 25-10-2026 14:55:40
@@ -20,19 +71,19 @@ Changelog: 25-10-2026 14:55:40
 Each wiki has a design of its own and shares nothing with another: nexus/mkdocs.yml no longer inherits the BC250
 Bazzite Suite's mkdocs.yml, nexus/hooks.py (which put suite.css in the Nexus page) is removed, and nexus.css is a
 complete stylesheet with its own --nexus-* variables, so a change in one wiki's design panel or stylesheet reaches
-no other. Both wikis look the same as before, pixel for pixel. Both stylesheets begin with labelled groups (the
-suite's colours, corners, header, Material's main and hover colours, the page), and the header's background and
+no other. Both wikis look the same as before, pixel for pixel. Both stylesheets begin with labeled groups (the
+suite's colors, corners, header, Material's main and hover colors, the page), and the header's background and
 text have variables of their own (--suite-header-bg and --suite-header-fg, --nexus-header-bg and --nexus-header-fg):
 the header text was a fixed white the panel could not change. The design panel names each group and row by the
-stylesheet's comments, shows the variable's name below and where it is used on hover, gives a colour picker to a
-variable that refers to a colour, and names the wiki it changes and the file Copy CSS belongs in.
+stylesheet's comments, shows the variable's name below and where it is used on hover, gives a color picker to a
+variable that refers to a color, and names the wiki it changes and the file Copy CSS belongs in.
 tools/tests/test_wiki_designs.py checks that no wiki inherits or shares another's files and that every variable is
-labelled. The Nexus page's Design chapter describes the groups.
+labeled. The Nexus page's Design chapter describes the groups.
 
 Changelog: 25-10-2026 14:14:59
 
 The Nexus page's Design chapter names both stylesheets (suite.css, the wiki's layout; nexus.css, the Nexus
-page's own colours), says which one the panel shows where both set a variable and where Copy CSS belongs, and
+page's own colors), says which one the panel shows where both set a variable and where Copy CSS belongs, and
 gives Suite Releases' network ports. The CHANGELOG entry of 25-10-2026 01:35:37, lost in a merge, is back.
 CLAUDE.md gives the CHANGELOG time with Python's zoneinfo: TZ=Europe/Amsterdam date gives UTC in Git Bash on
 Windows, so the entries of 25-10-2026 10:22:56 and 11:21:51 here and 11:56:16 in apps/suite are an hour early.
@@ -42,7 +93,7 @@ Changelog: 25-10-2026 11:21:51
 The Nexus page has a Design chapter (nexus/docs/design.md, Design in its header): one design per suite, the
 listings DESIGN.md and ICONS.md, and how to try a design in the wiki: mkdocs serve, on other devices, and the
 design panel. The panel (tools/mkdocs/design_panel.py, .js and .css, a hook of both the wiki and the Nexus page)
-is on every page while mkdocs serve runs, never in a build: the stylesheet's CSS variables with a colour
+is on every page while mkdocs serve runs, never in a build: the stylesheet's CSS variables with a color
 picker, a slider or a text field each, a change shown at once on every device on the same server, and Copy
 CSS for the stylesheet. The mock is kept in .design-mock.json beside the mkdocs.yml, which git ignores. The
 Nexus page's server also watches the wiki's stylesheet it shares. The panel's Screens (design_screens.html) shows
@@ -51,15 +102,15 @@ each a real page of that size scaled down to fit.
 
 Changelog: 25-10-2026 10:22:56
 
-DESIGN.md lists the suite's colours: the three themes, the state colours, the wiki's and the apps' own,
-each with what it is for; a text colour shows a sample sentence, a background colour a block, as SVG files in
+DESIGN.md lists the suite's colors: the three themes, the state colors, the wiki's and the apps' own,
+each with what it is for; a text color shows a sample sentence, a background color a block, as SVG files in
 docs/design/colors/. ICONS.md lists the icons per suite (the BC250 Bazzite Suite) and where each is used; the
 icons drawn in code are rendered to docs/design/icons/. tools/make_design.py and tools/make_icons.py write them
 from their listings, --check says whether they are up to date, and tools/tests checks it.
 
 Changelog: 25-10-2026 01:35:37
 
-The Nexus page gets colours of its own (owner, 25-10-2026: the wiki's design is Bazzite's, for the BC250 Bazzite
+The Nexus page gets colors of its own (owner, 25-10-2026: the wiki's design is Bazzite's, for the BC250 Bazzite
 Suite only, not for Nexus or another project that is not Bazzite): nexus/docs/stylesheets/nexus.css sets graphite
 with teal over the wiki's layout, and Material's hub icon stands in for the suite's board icon until Nexus has an
 icon of its own.
@@ -118,7 +169,7 @@ Changelog: 23-10-2026 06:12:27
 
 Added. USB HD Control (apps/hdcontrol, Utilities; owner, 23-10-2026, who chose the name): Sony's DualSense and
 DualSense Edge on Bazzite, their battery, the firmware update Sony offers only for Windows and the PS5, and the Edge's
-profiles. Its icon, installer test, CI jobs, wiki chapter and entries in the Dependency Checker's catalogue and the
+profiles. Its icon, installer test, CI jobs, wiki chapter and entries in the Dependency Checker's catalog and the
 portal's manifest; CLAUDE.md lists it and its shellcheck line. The portal's Utilities tab, the wiki's categories page,
 its home page and the README name it. The wiki's privacy page lists its requests to Sony's update server.
 
@@ -145,7 +196,7 @@ Changelog: 23-10-2026 01:38:04
 
 Added. USB HD Cam (apps/hdcam, Utilities; owner, 23-10-2026): the PS5 HD Camera (CFI-ZEY1) as a
 webcam, by loading its firmware at every plug-in. Its icon, installer test, CI jobs, wiki chapter and entries in the
-Dependency Checker's catalogue and the portal's manifest; CLAUDE.md lists it and its shellcheck line. The portal's
+Dependency Checker's catalog and the portal's manifest; CLAUDE.md lists it and its shellcheck line. The portal's
 Utilities tab, the wiki's categories page and its home page name it. The wiki's privacy page lists its firmware
 download from GitHub, the app's only network use.
 
@@ -153,7 +204,7 @@ Changelog: 22-10-2026 21:45:34
 
 Added. USB IPS3.5 (apps/ips35, Utilities; owner, 22-10-2026): the board's live values on a Turzx USB IPS screen,
 the Turing Smart Screen 3.5" and its family. Its icon, installer test, CI jobs, wiki chapter and entries in the
-Dependency Checker's catalogue and the portal's manifest; CLAUDE.md lists it and its shellcheck line. System Overlay's
+Dependency Checker's catalog and the portal's manifest; CLAUDE.md lists it and its shellcheck line. System Overlay's
 sensors moved to core (bc250_core.sensors) so that both apps read the same; the development chapter lists the module.
 The Utilities tab's text and the wiki's categories page name the USB stats screen. The wiki's privacy page lists its
 weather lookup at Open-Meteo, the app's only network use.
@@ -213,7 +264,7 @@ Changelog: 21-10-2026 23:13:19
 
 Added. Console LinkB (apps/clb): Xbox Remote Play and Xbox Cloud Gaming on the board, a separate app beside Console
 Link (owner, 21-10-2026). Its icon, installer test, CI jobs, wiki chapter, and entries in the Dependency Checker's
-catalogue, the portal's manifest, the README, the wiki's app lists and its privacy page. The root
+catalog, the portal's manifest, the README, the wiki's app lists and its privacy page. The root
 requirements-dev.txt takes the app's requirements (aiortc, pygame-ce). CLAUDE.md lists the app, its license and its
 shellcheck line.
 
@@ -221,7 +272,7 @@ Changelog: 21-10-2026 13:46:48
 
 Added. mGBA Manager (apps/mgba, Game Boy Advance), SameBoy Manager (apps/sameboy, Game Boy and Game Boy Color) and Xenia
 Manager (apps/xenia, Xbox 360), after SwanStation Manager the emulator managers the owner asked for (21-10-2026): their
-installer tests, CI jobs, wiki chapters and entries in the Dependency Checker's catalogue and the portal's manifest.
+installer tests, CI jobs, wiki chapters and entries in the Dependency Checker's catalog and the portal's manifest.
 tools/check_upstream.py checks the mGBA pin weekly, as it does PPSSPP's. CLAUDE.md lists SwanStation and the three new
 apps and their shellcheck lines; the wiki's portal chapter and the development chapter name their pins; the disclaimer
 of the README and the wiki's home page names Nintendo and Microsoft.
@@ -229,7 +280,7 @@ of the README and the wiki's home page names Nintendo and Microsoft.
 Changelog: 21-10-2026 12:44:22
 
 Added. SwanStation Manager (apps/swanstation), the PS1 game manager: its icon, installer test, CI jobs, manual chapter
-and entries in the Dependency Checker's catalogue and the portal's manifest.
+and entries in the Dependency Checker's catalog and the portal's manifest.
 
 Changelog: 21-10-2026 11:31:43
 
@@ -268,7 +319,7 @@ Changelog: 21-10-2026 01:54:13
 
 The HelixSR Manager is BC-250 Upscaler Manager (owner, 21-10-2026): apps/helixsr is apps/upscaler with the
 package upscaler, the portal key, the tags (upscaler-v), the wiki chapter, the installer test, the tile icon, the CI
-matrix and installer step, the dependency catalogue, the bug report form and CLAUDE.md follow; the installed name is
+matrix and installer step, the dependency catalog, the bug report form and CLAUDE.md follow; the installed name is
 bc250-upscaler, and the installer takes over a copy under the old one.
 
 Changelog: 20-10-2026 21:25:05
@@ -291,12 +342,12 @@ release front end's new names and Test on this board tab, and Console Link's new
 
 Changelog: 19-10-2026 23:41:01
 
-The suite has a theme, one choice for every app: gunmetal (dark, cool blue-grey, the default), silver (light) or
-warm (dark warm grey with a bronze accent), made in the portal and kept in ~/.config/bc250-bazzite-suite/theme.
+The suite has a theme, one choice for every app: gunmetal (dark, cool blue-gray, the default), silver (light) or
+warm (dark warm gray with a bronze accent), made in the portal and kept in ~/.config/bc250-bazzite-suite/theme.
 core's theme.py holds the three (it replaces the titanium variants tried locally); the apps not on core carry a copy
 of it, which tools/tests/test_instance_copies.py keeps equal. Status boxes, pills and banners are the theme's
-surface with their state as a coloured left edge, instead of a filled box with white text. The emulator managers
-and DatStation keep their blue as the accent over the theme; BIOS Reader's screen keeps its BIOS colours. Wiki:
+surface with their state as a colored left edge, instead of a filled box with white text. The emulator managers
+and DatStation keep their blue as the accent over the theme; BIOS Reader's screen keeps its BIOS colors. Wiki:
 the Portal page, the architecture and core pages.
 
 The portal has the owner's new icon (portal/images, the portal's tile and the wiki's logo and favicon), WebP with
@@ -322,7 +373,7 @@ Simple Demo Tool is Media Tool, in apps/mtool with the package media_tool (was a
 installed name media-tool (was simple-demo-tool), the owner's names. With it the portal key and tile icon, the
 installer test (which now checks that an install and an uninstall remove a copy under the old name and keep its
 recordings), the wiki chapter other-tools/media-tool.md and its nav entry, CI's matrix, step and shellcheck line,
-icons/categories.toml, the dependency catalogue and its tests, the release, manifest and portal tests that use the
+icons/categories.toml, the dependency catalog and its tests, the release, manifest and portal tests that use the
 tool as their example, a test in Suite Releases, and CLAUDE.md's list and shellcheck line. The portal moves the
 record of an installed copy to the new key; its summary mentions the icon converter.
 
@@ -357,7 +408,7 @@ Changelog: 19-10-2026 00:13:22
 
 The portal's picture on the wiki's home page follows the portal: tools/portal_screenshot.py opens the portal's window
 offscreen on the checkout's apps.toml and icons, in a home folder of its own, with a fixed demo state (every app
-installed but two, one update, the Sustainable tab open, Breeze Dark's colours), and saves it as
+installed but two, one update, the Sustainable tab open, Breeze Dark's colors), and saves it as
 docs/images/home/portal.webp. The wiki's workflow (docs.yml) runs it before every build, with Noto Sans as on
 Bazzite; CI's docs job runs it too, so a broken script shows before main. portal/tests/test_wiki_picture.py tests it.
 The committed picture is taken with it.
@@ -405,7 +456,7 @@ Changelog: 17-10-2026 14:10:30
 The naming convention applied to System Overlay: apps/system-overlay is apps/overlay with the package
 system_overlay (was bc250_overlay). With it the portal key, the wiki chapter (docs/apps/overlay.md), the installer
 test, the portal's tile icon, CI's matrix, steps and shellcheck line, the bug report template, the root
-requirements-dev.txt, the dependency catalogue, the key Simple Demo Tool picks first and its tests, the portal's
+requirements-dev.txt, the dependency catalog, the key Simple Demo Tool picks first and its tests, the portal's
 installer test and window tests, the links to the chapter in the wiki, and CLAUDE.md's list and shellcheck line.
 The portal moves the record of an installed copy to the new key. With this every app follows the convention.
 
@@ -413,7 +464,7 @@ Changelog: 17-10-2026 14:05:45
 
 The naming convention applied to BC-250 USB Wi-Fi: apps/usb-wifi is apps/wdriver with the package usb_wifidriver
 (was bc250_usb_wifi). With it the portal key, the wiki chapter (docs/apps/wdriver.md), the installer test, the
-portal's tile icon, CI's matrix, steps and shellcheck line, the dependency catalogue, the links to the chapter in
+portal's tile icon, CI's matrix, steps and shellcheck line, the dependency catalog, the links to the chapter in
 the wiki and the app, and CLAUDE.md's list and board-change rule. The portal moves the record of an installed copy
 to the new key.
 
@@ -431,7 +482,7 @@ Changelog: 17-10-2026 13:56:22
 The naming convention applied to Bazzite SFTP Tools: apps/sftp-tools is apps/sftp with the package sftp_tools (was
 bc250_sftp_tools). With it the portal key, the wiki chapter (docs/apps/sftp.md), the installer test, the portal's
 tile icon, CI's matrix, steps, shellcheck line and Windows build, the release workflow's Windows job (it now runs
-for sftp-v tags), tools/build_windows_exe.py and its tests, the dependency catalogue and its tests, the links to
+for sftp-v tags), tools/build_windows_exe.py and its tests, the dependency catalog and its tests, the links to
 the chapter in the wiki, and CLAUDE.md's list and shellcheck line. The portal moves the record of an installed copy
 to the new key.
 
@@ -440,7 +491,7 @@ Changelog: 17-10-2026 13:46:57
 The naming convention applied to BC-250 Persistent ACPI: apps/persistent-acpi is apps/acpi with the package
 locked_acpi (was bc250_acpi_gui). With it the portal key, the wiki chapter (docs/apps/acpi.md), the installer test,
 the portal's tile icon, CI's matrix, steps and shellcheck line, the bug report template, the root
-requirements-dev.txt, the dependency catalogue, the links to the chapter in the wiki, the portal and tools tests
+requirements-dev.txt, the dependency catalog, the links to the chapter in the wiki, the portal and tools tests
 that name the key or the package, and CLAUDE.md's list and shellcheck line. The portal moves the record of an
 installed copy to the new key.
 
@@ -450,7 +501,7 @@ The naming convention applied to the Dependency Checker: apps/dependency-checker
 package_checker (was bc250_dependency_checker). With it the portal key, the wiki chapter (docs/apps/package.md),
 the installer test, the portal's tile icon (now package.png, the key's name, so the portal's exception for its old
 file name is gone), CI's steps and shellcheck line, the links to the chapter in the wiki, the architecture
-chapter's path to the catalogue, and CLAUDE.md's list. The portal moves the record of an installed copy to the new
+chapter's path to the catalog, and CLAUDE.md's list. The portal moves the record of an installed copy to the new
 key.
 
 Changelog: 17-10-2026 13:17:20
@@ -458,7 +509,7 @@ Changelog: 17-10-2026 13:17:20
 The naming convention applied to Simple Demo Tool: apps/demo-tool is apps/dtool with the package demo_tool (was
 simple_demo_tool). With it the portal key, the installer test (which now also checks that an install removes the
 package folder under its old name), the portal's tile icon, the assets path in its wiki chapter (which stays under
-Other tools), CI's steps and shellcheck line, the dependency catalogue and its tests, the release and manifest
+Other tools), CI's steps and shellcheck line, the dependency catalog and its tests, the release and manifest
 tests that use the tool as their example, a test in Suite Releases, and CLAUDE.md's list and shellcheck line. The
 portal moves the record of an installed copy to the new key.
 
@@ -466,7 +517,7 @@ Changelog: 17-10-2026 13:10:58
 
 The naming convention applied to Vita3K Manager: apps/vita3k-manager is apps/vita3k with the package vita3k_manager
 (was bc250_vita3k_manager). With it the portal key, the wiki chapter (docs/apps/vita3k.md), the installer test, the
-portal's tile icon, CI's steps and shellcheck line, the dependency catalogue, the development chapter's path to the
+portal's tile icon, CI's steps and shellcheck line, the dependency catalog, the development chapter's path to the
 Vita3K pin, and CLAUDE.md's list and shellcheck lines. The portal moves the record of an installed copy to the new
 key.
 
@@ -475,35 +526,35 @@ Changelog: 17-10-2026 13:05:02
 The naming convention applied to shadPS4 Manager: apps/shadps4-manager is apps/shadps4 with the package
 shadps4_manager (was bc250_shadps4_manager). With it the portal key, the wiki chapter (docs/apps/shadps4.md), the
 installer test, the portal's tile icon, CI's steps and shellcheck line, the upstream workflow's step name,
-tools/check_upstream.py's path to the shadPS4 pin, the root requirements-dev.txt, the dependency catalogue, and
+tools/check_upstream.py's path to the shadPS4 pin, the root requirements-dev.txt, the dependency catalog, and
 CLAUDE.md's list and shellcheck line. The portal moves the record of an installed copy to the new key.
 
 Changelog: 17-10-2026 13:00:58
 
 The naming convention applied to RPCS3 Manager: apps/rpcs3-manager is apps/rpcs3 with the package rpcs3_manager
 (was bc250_rpcs3_manager). With it the portal key, the wiki chapter (docs/apps/rpcs3.md), the installer test, the
-portal's tile icon, CI's steps and shellcheck line, the dependency catalogue, and CLAUDE.md's list and shellcheck
+portal's tile icon, CI's steps and shellcheck line, the dependency catalog, and CLAUDE.md's list and shellcheck
 line. The portal moves the record of an installed copy to the new key.
 
 Changelog: 17-10-2026 12:58:02
 
 The naming convention applied to PPSSPP Manager: apps/ppsspp-manager is apps/ppsspp with the package
 ppsspp_manager (was bc250_ppsspp_manager). With it the portal key, the wiki chapter (docs/apps/ppsspp.md), the
-installer test, the portal's tile icon, CI's steps and shellcheck line, the dependency catalogue, and CLAUDE.md's
+installer test, the portal's tile icon, CI's steps and shellcheck line, the dependency catalog, and CLAUDE.md's
 list and shellcheck line. The portal moves the record of an installed copy to the new key.
 
 Changelog: 17-10-2026 12:35:30
 
 The naming convention applied to PCSX2 Manager: apps/pcsx2-manager is apps/pcsx2 with the package pcsx2_manager
 (was bc250_pcsx2_manager). With it the portal key, the wiki chapter (docs/apps/pcsx2.md), the installer test, the
-portal's tile icon, CI's steps and shellcheck line, the dependency catalogue, and CLAUDE.md's list and shellcheck
+portal's tile icon, CI's steps and shellcheck line, the dependency catalog, and CLAUDE.md's list and shellcheck
 line. The portal moves the record of an installed copy to the new key.
 
 Changelog: 17-10-2026 12:32:49
 
 The naming convention applied to BC-250 Mesh Shaders: apps/mesh-shaders is apps/mesh with the package mesh_shaders
 (was bc250_mesh_shaders). With it the portal key, the wiki chapter (docs/apps/mesh.md), the installer test, the
-portal's tile icon, CI's steps and shellcheck lines, the dependency catalogue, and CLAUDE.md's list, shellcheck
+portal's tile icon, CI's steps and shellcheck lines, the dependency catalog, and CLAUDE.md's list, shellcheck
 lines and board-changes sentence. The portal moves the record of an installed copy to the new key.
 
 Changelog: 17-10-2026 12:29:59
@@ -511,7 +562,7 @@ Changelog: 17-10-2026 12:29:59
 The naming convention applied to BC-250 Memory Manager: apps/memory-manager is apps/vram with the package
 vram_manager (was bc250_memory_manager). With it the portal key, the wiki chapter (docs/apps/vram.md; the
 development chapter Memory Manager internals keeps its file name), the installer test, the portal's tile icon, CI's
-steps and shellcheck line, the dependency catalogue, CLAUDE.md's list, shellcheck line and board-changes sentence,
+steps and shellcheck line, the dependency catalog, CLAUDE.md's list, shellcheck line and board-changes sentence,
 and a comment in Decky Loader Manager that names the app. The portal moves the record of an installed copy to the
 new key.
 
@@ -529,14 +580,14 @@ Changelog: 17-10-2026 12:21:59
 The naming convention applied to HDMI CEC Manager: apps/hdmi-cec is apps/cec with the package hdmi_cec (was
 bc250_hdmi_cec). With it the portal key, the wiki chapter (docs/apps/cec.md), the installer test (which now also
 checks that an install moves an older watcher unit to the new module), the portal's tile icon, CI's steps and
-shellcheck line, the dependency catalogue, CLAUDE.md's list and shellcheck line, and a comment in the CI-local
+shellcheck line, the dependency catalog, CLAUDE.md's list and shellcheck line, and a comment in the CI-local
 Containerfile. The portal moves the record of an installed copy to the new key.
 
 Changelog: 17-10-2026 12:18:12
 
 The naming convention applied to BC-250 GPU OC Bisect: apps/gpu-oc-bisect is apps/oc with the package oc_bisect
 (was bc250_gpu_oc_gui). With it the portal key, the wiki chapter (docs/apps/oc.md), the installer test, the
-portal's tile icon, CI's steps and shellcheck line, the issue template, the dependency catalogue, CLAUDE.md's list
+portal's tile icon, CI's steps and shellcheck line, the issue template, the dependency catalog, CLAUDE.md's list
 and shellcheck line, and the links to the app from the GPU Governor Manager and the Bazzite Test chapter. The
 portal moves the record of an installed copy to the new key.
 
@@ -544,7 +595,7 @@ Changelog: 17-10-2026 12:09:45
 
 The naming convention applied to BC-250 GPU Governor Manager: apps/governor is apps/gpu with the package
 gpu_governor (was bc250_governor). With it the portal key, the wiki chapter (docs/apps/gpu.md), the installer test,
-the portal's tile icon, CI's steps, the issue template, the dependency catalogue, the root requirements-dev.txt,
+the portal's tile icon, CI's steps, the issue template, the dependency catalog, the root requirements-dev.txt,
 CLAUDE.md's list, and the tool tests and comments that used the governor as their example of an app. The portal
 moves the record of an installed copy to the new key.
 
@@ -552,7 +603,7 @@ Changelog: 17-10-2026 12:04:59
 
 The naming convention applied to BC-250 Fan Control: apps/fan-control is apps/fan with the package fan_control
 (was bc250_fan_control). With it the portal key, the wiki chapter (docs/apps/fan.md), the installer test, the
-portal's tile icon, CI's steps, the dependency catalogue and CLAUDE.md's list and shellcheck line. The portal moves
+portal's tile icon, CI's steps, the dependency catalog and CLAUDE.md's list and shellcheck line. The portal moves
 the record of an installed copy to the new key.
 
 Changelog: 17-10-2026 12:01:38
@@ -560,7 +611,7 @@ Changelog: 17-10-2026 12:01:38
 The naming convention applied to Decky Loader Manager: apps/decky-manager is apps/decky with the package
 decky_manager (was bc250_decky_manager). With it the portal key, the wiki chapter (docs/apps/decky.md), the installer
 test, the portal's tile icon, CI's steps, the upstream workflow's step name, tools/check_upstream.py's path to the
-Decky pin, the dependency catalogue and CLAUDE.md's list. The portal moves the record of an installed copy to the
+Decky pin, the dependency catalog and CLAUDE.md's list. The portal moves the record of an installed copy to the
 new key.
 
 Changelog: 17-10-2026 11:56:42
@@ -568,28 +619,28 @@ Changelog: 17-10-2026 11:56:42
 The naming convention applied to BC-250 CU Bisect: apps/cu-bisect is apps/compute with the packages cu_bisect (was
 bc250_bisect_gui) and cu_unlock (was bc250_unlock_gui). With it the portal key, the wiki chapter
 (docs/apps/compute.md), the installer test, the portal's tile icon, CI's steps, the issue template, the dependency
-catalogue and CLAUDE.md's list. The portal moves the record of an installed copy to the new key.
+catalog and CLAUDE.md's list. The portal moves the record of an installed copy to the new key.
 
 Changelog: 17-10-2026 11:02:44
 
 The naming convention applied to BC-250 Cores Bisect: apps/cores-bisect is apps/cores with the packages
 cores_bisect (was bc250_cores_bisect_gui) and cores_unlock (was bc250_cores_gui). With it the portal key, the wiki
 chapter (docs/apps/cores.md), the installer test, the portal's tile icon, CI's steps, the issue template, the
-dependency catalogue and CLAUDE.md's list. The portal moves the record of an installed copy to the new key.
+dependency catalog and CLAUDE.md's list. The portal moves the record of an installed copy to the new key.
 
 Changelog: 17-10-2026 10:54:05
 
 The naming convention applied to Console Link: apps/console-link is apps/consoles with the package consoles_link
 (was bc250_console_link). With it the portal key, the wiki chapter (docs/apps/consoles.md), the installer test,
 the portal's tile icon, CI's steps and native job, the release workflow's native wheel step (consoles-v tags),
-tools/build_release.py's wheel table, the dependency catalogue and CLAUDE.md's list. The native core keeps its
+tools/build_release.py's wheel table, the dependency catalog and CLAUDE.md's list. The native core keeps its
 name. The portal moves the record of an installed copy to the new key.
 
 Changelog: 17-10-2026 10:05:20
 
 The naming convention applied to BC-250 BIOS Reader: apps/bios-reader is apps/bios with the package bios_reader
 (was bc250_bios_reader). With it the portal key, the wiki chapter (docs/apps/bios.md), the installer test, the
-portal's tile icon, CI's steps, the dependency catalogue and CLAUDE.md's list. The portal moves the record of an
+portal's tile icon, CI's steps, the dependency catalog and CLAUDE.md's list. The portal moves the record of an
 installed copy to the new key.
 
 Changelog: 17-10-2026 09:27:13
@@ -598,7 +649,7 @@ The naming convention applied to BC-250 Bazzite Test: apps/bazzite-test is apps/
 bazzite_check (was bc250_gui); the owner's short name is check, not test, so that no folder under apps/ is called
 test. With it the portal key (the required app), the wiki chapter (docs/apps/check.md), the installer test, the
 portal's tile icon, CI's steps, the release workflow's and tools/build_release.py's bundling of the pinned release
-into a portal release, the portal's install.sh, the dependency catalogue, the issue template, CLAUDE.md's list
+into a portal release, the portal's install.sh, the dependency catalog, the issue template, CLAUDE.md's list
 and the wiki's Architecture page. The portal moves the record of an installed copy to the new key.
 
 Changelog: 17-10-2026 08:47:31
@@ -606,7 +657,7 @@ Changelog: 17-10-2026 08:47:31
 The naming convention applied to Bazzite DatStation: apps/bazzite-datstation is apps/datstation with the package
 datstation (the owner's choice, 17-10-2026: where the app's name without its prefix is the short name itself, the
 package takes that same word); with it the portal key, the wiki chapter (docs/apps/datstation.md), the installer
-test, the portal's tile icon, CI's steps, the dependency catalogue, CLAUDE.md's list and the wiki's Architecture
+test, the portal's tile icon, CI's steps, the dependency catalog, CLAUDE.md's list and the wiki's Architecture
 page. The portal moves the record of an installed copy to the new key.
 
 Changelog: 17-10-2026 08:22:18
@@ -623,7 +674,7 @@ The naming convention for the apps (owner, 17-10-2026), applied to the first two
 a short name and its package is the app's name without its BC-250 or Bazzite prefix. apps/ace-queues is apps/ace
 with the package ace_queues, apps/bazzite-netcatgui is apps/ncgui with the package netcat_gui; with them the
 portal keys, the wiki chapters (docs/apps/ace.md, ncgui.md), the installer tests, the portal's tile icons, CI's
-steps, the dependency catalogue, CLAUDE.md's lists and the wiki's Architecture page. The portal moves the record
+steps, the dependency catalog, CLAUDE.md's lists and the wiki's Architecture page. The portal moves the record
 of an installed copy to the new key. The other apps follow one at a time.
 
 Changelog: 17-10-2026 06:29:57
@@ -639,7 +690,7 @@ Bazzite's kernel lacks, built on the board for the running kernel from pinned so
 branch chosen from the chip's answer in the kernel log) and installed as a system service that loads it at every
 boot, switches the stick out of storage mode and rebuilds it after a kernel update. CI runs its tests, its
 shellcheck and its installer test (tools/installer-tests/usb-wifi.sh); the Dependency Checker (its launcher and
-PyQt6, and the tools gcc, make, git, kmod, eject and udevadm, new in the catalogue), the portal (apps.toml), the
+PyQt6, and the tools gcc, make, git, kmod, eject and udevadm, new in the catalog), the portal (apps.toml), the
 wiki (its chapter, the apps overview and the Home page), the README and CLAUDE.md list it; the portal's tile icon
 is a placeholder in the suite's purple until the owner draws it. Decided by the owner on 17-10-2026 after the
 driver was proven by hand on the board: the modules live under /var and load with insmod, so no reboot is ever
@@ -699,11 +750,11 @@ down cleanly at a critical temperature, to protect the hardware; the limits are 
 Changelog: 16-10-2026 17:13:29
 
 tools/icons/ draws the suite's icon family: one frame per class in tools/icons/frames (the owner's art, 512 px, the
-same dark centre in each), per app a glowing symbol in the class colour in that centre. make_icons.py lists each of
-the 29 apps with its frame, colour, symbol and outputs (none yet: `--sheet PATH` draws them all on one review picture
+same dark center in each), per app a glowing symbol in the class color in that center. make_icons.py lists each of
+the 29 apps with its frame, color, symbol and outputs (none yet: `--sheet PATH` draws them all on one review picture
 first). The emulators' labels (PS3, PSP, VITA) are drawn as strokes, not from a font, so they come out the same on
 every machine. The portal keeps its purple board icon, which the wiki shows too. tools/tests/test_icon_family.py
-checks that every frame has the same centre and that each icon is its frame with only the centre filled.
+checks that every frame has the same center and that each icon is its frame with only the center filled.
 
 Changelog: 16-10-2026 12:10:30
 
@@ -735,8 +786,8 @@ Changelog: 16-10-2026 09:27:04
 MIGRATION.md: new app candidates from a look for apps to port to Bazzite or the BC-250, none built yet: a
 Vita3K manager (PS Vita), fan control with a thermal guard for the board (the NCT6686 SuperIO and which driver could
 set its fans), a port of mymc++ for PS2 memory cards into the PCSX2 Manager, and an lsfg-vk manager beside HelixSR.
-The owner's order: mymc++ first (started), then Vita3K, fan control last; lsfg-vk dropped (its licence), and a PS1
-manager with DuckStation recorded as investigated and not built: its licence rules it out (owner).
+The owner's order: mymc++ first (started), then Vita3K, fan control last; lsfg-vk dropped (its license), and a PS1
+manager with DuckStation recorded as investigated and not built: its license rules it out (owner).
 
 Changelog: 16-10-2026 06:38:26
 
@@ -780,7 +831,7 @@ Changelog: 16-10-2026 02:18:54
 Wiki pages: the Portal page shows the portal's icon beside its heading, as the app chapters show theirs
 (tools/mkdocs/hooks.py now also serves portal/images/ as assets/portal/), and the Install page shows an install
 symbol there (arrow into a tray, as on the portal's Install button). The app icons in the tables of the Apps page
-are larger (2.6em instead of 1.6em), centred beside the name, which stays on one line on a wide screen.
+are larger (2.6em instead of 1.6em), centered beside the name, which stays on one line on a wide screen.
 
 Changelog: 16-10-2026 02:06:15
 
@@ -850,7 +901,7 @@ Changelog: 15-10-2026 21:28:55
 Bazzite pkgxtractor is absorbed into the shadPS4 Manager (Extract PKG; owner's decision 15-10-2026) and dropped as a
 standalone app: apps/bazzite-pkgxtractor went, with its portal entry and icon, manual chapter (now the Extract PKG
 section of the shadPS4 Manager's), nav, overview and README rows, CI jobs (pytest, shellcheck, installer test) and
-catalogue entries. The shadPS4 Manager has its own venv with PyQt6 and cryptography, so the shared venv stays
+catalog entries. The shadPS4 Manager has its own venv with PyQt6 and cryptography, so the shared venv stays
 PyQt6-only; its installer removes an installed standalone. The root requirements-dev.txt takes the shadPS4 Manager's
 in place of pkgxtractor's. The shadPS4 Manager's summary (portal, README, the wiki's apps overview) mentions the .pkg
 files. The architecture chapter's examples of an app that takes paths name the shadPS4 Manager. CLAUDE.md no longer
@@ -870,7 +921,7 @@ Changelog: 15-10-2026 19:18:30
 
 Bazzite UMD File Renamer is absorbed into PPSSPP Manager (its Rename files window; owner's decision 15-10-2026) and
 dropped as a standalone app: apps/bazzite-umd-file-renamer went, with its portal entry, manual chapter, nav row,
-overview and README rows, CI jobs (pytest, shellcheck, installer test) and catalogue entries; PPSSPP Manager's
+overview and README rows, CI jobs (pytest, shellcheck, installer test) and catalog entries; PPSSPP Manager's
 installer removes an installed standalone and the app adopts its saved naming template. The architecture chapter's
 launcher example now names Bazzite pkgxtractor alone.
 
@@ -897,7 +948,7 @@ the apps overview, the portal chapter and its own chapter. CLAUDE.md lists both.
 Changelog: 15-10-2026 14:18:46
 
 MIGRATION.md: a Windows candidate on hold, a cut-down portal on the Nagi driver for Windows 11 on the BC-250: what
-Nagi does already, which apps would fit a Windows edition, what the portal would need, its licence, and what it waits
+Nagi does already, which apps would fit a Windows edition, what the portal would need, its license, and what it waits
 for (a tester's review, a stable driver) before a proof of concept on the second board.
 
 Changelog: 15-10-2026 13:45:06
@@ -920,7 +971,7 @@ Changelog: 15-10-2026 06:59:56
 
 The wiki's GitHub settings page has a section on the GitHub CLI (gh) with the commands a release needs: the runs of a
 push or of one commit (--commit needs the full SHA), whether CI passed (tools/ci_state.py), the log of a failed or
-hung job, cancelling and running a run again, running every stopped release on a commit again at once, and reading a
+hung job, canceling and running a run again, running every stopped release on a commit again at once, and reading a
 release's files.
 
 Changelog: 15-10-2026 06:49:07
@@ -1023,7 +1074,7 @@ controller and portal pictures (3.6 MB of PNG, now 295 KB) and the icon in the h
 Changelog: 15-10-2026 03:01:59
 
 The wiki's "What is BC-250" page shows the board (owner's pictures and clip): a section The board with photos of the
-top and the back side by side (each a link to its large version) and the two sides as labelled illustrations, and a
+top and the back side by side (each a link to its large version) and the two sides as labeled illustrations, and a
 section In motion with an 8-second animation with sound. The pictures are WebP in docs/images/bc250/ (640 KB together,
 from 7.6 MB of PNG; the photos keep their transparent background), the clip is docs/videos/bc250-clip.mp4 (H.264 720p
 with AAC sound, 1.9 MB from 18 MB, its first frame as the poster). docs/stylesheets/suite.css: .board-photos (two
@@ -1100,7 +1151,7 @@ Changelog: 14-10-2026 23:09:49
 
 The manual's header follows the decky.xyz layout on every page: the suite's icon on the left and the links GitHub (the
 repository) and Wiki (the manual itself, from its Install page; the manual is called the wiki from now on, and the
-footer's Manual column is now Wiki) on the right, with no site name, no repository box and no colour switch. The
+footer's Manual column is now Wiki) on the right, with no site name, no repository box and no color switch. The
 manual is dark only. Home has no search field; the other pages keep theirs before the two links. The header is
 tools/mkdocs/overrides/partials/header.html.
 
@@ -1125,7 +1176,7 @@ New app rpcs3-manager (BC-250 RPCS3 Manager), under Development only in the port
 built like BC-250 shadPS4 Manager (see its CHANGELOG). CI runs its tests and its installer test (tools/installer-
 tests/rpcs3-manager.sh) and shellchecks install.sh and bc250-rpcs3-run at warning level; the manual has its chapter
 (docs/apps/rpcs3-manager.md), the apps overview, the READMEs and the home page list it, the Dependency Checker's
-catalogue has it, and CLAUDE.md names it with its shellcheck line.
+catalog has it, and CLAUDE.md names it with its shellcheck line.
 
 Changelog: 14-10-2026 16:15:38
 
@@ -1170,7 +1221,7 @@ Changelog: 14-10-2026 10:45:26
 
 apps/shadps4 is apps/shadps4-manager (package bc250_shadps4_manager): the manifest key, the installer test
 (tools/installer-tests/shadps4-manager.sh), the manual chapter (docs/apps/shadps4-manager.md), the portal icon, CI,
-the Dependency Checker's catalogue and CLAUDE.md follow. BC-250 shadPS4 Manager moves from "Development only" to
+the Dependency Checker's catalog and CLAUDE.md follow. BC-250 shadPS4 Manager moves from "Development only" to
 "Gaming" in the portal, the README, the manual's overview and the portal chapter. The app finds games dumped with
 their update in them, and has a look of its own in #006FCD (see its CHANGELOG).
 
@@ -1293,7 +1344,7 @@ Changelog: 12-10-2026 21:32:31
 New app in the suite: BC250 Bazzite SFTP Tools (apps/sftp-tools, key sftp-tools, version 0.1.0): an SFTP client and an
 SSH server manager, a tile in the portal. It has its own installer test (tools/installer-tests/sftp-tools.sh, a CI
 step), its entry in the CI pytest matrix and the shellcheck step, a manual chapter (docs/apps/sftp-tools.md), its card
-icon (portal/images/apps/sftp-tools.png) and its place in the Dependency Checker's catalogue (paramiko and paplay).
+icon (portal/images/apps/sftp-tools.png) and its place in the Dependency Checker's catalog (paramiko and paplay).
 Not yet released: the version, the tag and the pin in portal/apps.toml are the owner's.
 
 Changelog: 12-10-2026 08:23:31
@@ -1348,8 +1399,8 @@ reports, and tests cover other setups too.
 
 Changelog: 11-10-2026 20:58:28
 
-The header boxes (value and caption) are centred in every app, as Bazzite Test's and HelixSR's were: core's MetricBox
-centres by default (centred=False for left-aligned), and so do the copies in governor and helixsr. HDMI CEC and Memory
+The header boxes (value and caption) are centered in every app, as Bazzite Test's and HelixSR's were: core's MetricBox
+centers by default (centered=False for left-aligned), and so do the copies in governor and helixsr. HDMI CEC and Memory
 Manager get it through the core they bundle, at their next release.
 
 Changelog: 11-10-2026 20:21:41
@@ -1741,7 +1792,7 @@ Migration step 2: bc250_core, the code the apps share (see core/CHANGELOG).
 
 Migration step 1: the suite repository.
 - The seven apps moved in under apps/, each with its own VERSION (all 0.1.0), LICENSE, .gitignore and
-  CHANGELOG. Their old per-repo GitHub workflows were removed in favour of the root .github/.
+  CHANGELOG. Their old per-repo GitHub workflows were removed in favor of the root .github/.
 - LF line endings everywhere, also on Windows (.gitattributes). Scripts are executable in git
   (tools/fix-modes.sh, checked in CI).
 - tools/check_versions.py (CI) keeps every hard-coded version equal to its VERSION file.

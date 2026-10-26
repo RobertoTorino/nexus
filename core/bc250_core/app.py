@@ -30,7 +30,7 @@ def create_app(info: AppInfo, qt_args: Sequence[str] = (), stylesheet: str = "")
     """The QApplication with the app's names, style and theme (*stylesheet* after the theme's), rounded tooltips
     and window icon. Also makes
     *info* the current AppInfo. The org/app names match open_settings(), so bare QSettings() find the same file.
-    The organisation is only set when the app declares one (the bisect/unlock GUIs), as before the move to core."""
+    The organization is only set when the app declares one (the bisect/unlock GUIs), as before the move to core."""
     appinfo.set_current(info)
     app = QApplication.instance() or QApplication([sys.argv[0], *qt_args])
     if info.settings_org:

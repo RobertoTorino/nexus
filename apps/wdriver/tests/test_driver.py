@@ -240,7 +240,7 @@ def test_command_and_answer(tmp_path):
     assert cmd[0] == "pkexec" and cmd[2:] == ["-I", str(tmp_path / "driver.py"), "install", "--branch", "main"]
     assert driver.answer(0, '{"ok": true}\n') == ""
     assert driver.answer(1, '{"ok": false, "error": "No build"}\n') == "No build"
-    assert driver.answer(126, "") == "Not authorised: the password dialog was cancelled or refused."
+    assert driver.answer(126, "") == "Not authorized: the password dialog was canceled or refused."
     assert "exit code 3" in driver.answer(3, "boom")
 
 

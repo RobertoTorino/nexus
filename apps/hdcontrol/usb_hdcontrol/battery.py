@@ -96,7 +96,7 @@ class BatteryIcon(QWidget):
             if index < lit:
                 p.setBrush(fill)
                 p.drawRoundedRect(cell, 2, 2)
-        # The percentage inside, on two lines and centred both ways (owner, 23-10-2026); white with a dark shadow,
+        # The percentage inside, on two lines and centered both ways (owner, 23-10-2026); white with a dark shadow,
         # so it reads on the green modules and on the empty ones alike.
         font = p.font()
         font.setPixelSize(20)

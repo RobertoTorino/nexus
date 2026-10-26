@@ -146,7 +146,7 @@ def test_save_log(window, dialogs, tmp_path, monkeypatch):
 
     monkeypatch.setattr(QFileDialog, "getSaveFileName", lambda *a, **k: ("", ""))
     window.save_log()
-    assert dialogs.titles()[-1] == "Log saved successfully"    # cancelled: nothing new shown
+    assert dialogs.titles()[-1] == "Log saved successfully"    # canceled: nothing new shown
 
     monkeypatch.setattr(QFileDialog, "getSaveFileName", lambda *a, **k: (str(tmp_path / "missing" / "x.txt"), ""))
     window.save_log()

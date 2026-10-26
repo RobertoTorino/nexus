@@ -91,7 +91,7 @@ install_speedtest() {
         say "speedtest is already on PATH: $(command -v speedtest)"
         return
     fi
-    say "Downloading Ookla speedtest CLI ${SPEEDTEST_VERSION} (running it accepts Ookla's licence and GDPR terms)"
+    say "Downloading Ookla speedtest CLI ${SPEEDTEST_VERSION} (running it accepts Ookla's license and GDPR terms)"
     local tmp
     tmp=$(mktemp -d)
     curl -fsSL -o "$tmp/speedtest.tgz" \

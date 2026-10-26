@@ -32,9 +32,9 @@ def command(args: list[str]) -> list[str]:
 
 
 def parse(code: int, stdout: str) -> Result:
-    """The helper prints one JSON object; pkexec exits with 126 or 127 when the password dialog is cancelled."""
+    """The helper prints one JSON object; pkexec exits with 126 or 127 when the password dialog is canceled."""
     if code in (126, 127):
-        return Result(False, {}, "Not authorised: the password dialog was cancelled or refused.")
+        return Result(False, {}, "Not authorized: the password dialog was canceled or refused.")
     for line in reversed(stdout.strip().splitlines()):
         try:
             data = json.loads(line)

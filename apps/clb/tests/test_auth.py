@@ -63,7 +63,7 @@ def test_wait_for_sign_in_ends_when_the_code_runs_out_or_is_cancelled():
     clock = Clock()
     with pytest.raises(AuthError, match="expired"):
         auth.wait_for_sign_in(Client(transport), DeviceCode("A", "DC", "u", 12, 5), sleep=clock.sleep, clock=clock)
-    with pytest.raises(AuthError, match="cancelled"):
+    with pytest.raises(AuthError, match="canceled"):
         auth.wait_for_sign_in(Client(transport), DeviceCode("A", "DC", "u", 900, 5), lambda: True)
 
 

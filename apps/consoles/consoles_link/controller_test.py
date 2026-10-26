@@ -41,7 +41,7 @@ def stick_text(x: int, y: int) -> str:
 
 
 class StickView(QWidget):
-    """A stick: its round range, the centre's dead area of 10 % and where the stick is."""
+    """A stick: its round range, the center's dead area of 10 % and where the stick is."""
 
     def __init__(self):
         super().__init__()

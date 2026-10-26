@@ -183,7 +183,7 @@ def test_cancelling_the_sign_in(qapp, tmp_path):
     wait(qapp, window, lambda: window.code is not None)
     window.on_sign_in()                                 # Cancel
     wait(qapp, window, lambda: window.code is None, 5)
-    assert not window.account.signed_in and "cancelled" in window.running.text()
+    assert not window.account.signed_in and "canceled" in window.running.text()
     assert window.sign_in_button.text() == "Sign in"
     window.close()
 

@@ -31,7 +31,7 @@ choice ("Icons on Desktop", desktop_icons.py). The first start asks when app ico
 removes them at start and after each install (the installers write one), on, it adds one for every installed app.
 
 Wallpaper: none until the user chooses one, the portal's example picture or one of their own, behind the window (wallpaper.py), under a veil of
-the theme's window colour so the text stays readable. A slider in the Wallpaper pill's menu sets the veil, the
+the theme's window color so the text stays readable. A slider in the Wallpaper pill's menu sets the veil, the
 picture's transparency (owner, 20-10-2026): a dark picture can take a stronger one, so the icons on it stand out.
 
 Sound and Suite Big Picture Mode (owner, 21-10-2026): a swoosh plays when the portal opens, and the Sound pill turns
@@ -90,7 +90,7 @@ DESKTOP_ICONS_KEY = "portal/desktop_icons"
 SOUND_KEY = "portal/sound"
 MODE_KEY = "portal/mode"                # "desktop" or "bigpicture": the mode the portal opens in
 VALUE_PX = 300                  # a value in the Sys info window wraps beyond this width
-SYSINFO_OPACITY = 85            # % of the window colour behind the Sys info text: what lies behind shows through
+SYSINFO_OPACITY = 85            # % of the window color behind the Sys info text: what lies behind shows through
 PILL_COLOUR = BLUE              # the header pills' left edge, as the apps' status boxes (owner, 20-10-2026)
 LAUNCH_ICON_FILES = {("compute", "Unlock"): "cu-unlock", ("cores", "Unlock"): "cores-unlock"}  # else the app's
 # What each tab holds, at its top (docs/apps/categories.md says the same).
@@ -154,7 +154,7 @@ def short_name(name: str) -> str:
 
 
 def placeholder_icon(name: str) -> QPixmap:
-    """For an app without an icon file: its initial on a grey tile."""
+    """For an app without an icon file: its initial on a gray tile."""
     pixmap = QPixmap(ICON_PX, ICON_PX)
     pixmap.fill(Qt.GlobalColor.transparent)
     painter = QPainter(pixmap)
@@ -173,7 +173,7 @@ def placeholder_icon(name: str) -> QPixmap:
 
 
 def still_icon(pixmap: QPixmap) -> QIcon:
-    """An icon that looks the same on a disabled button: the tile chooses itself when it is greyed."""
+    """An icon that looks the same on a disabled button: the tile chooses itself when it is grayed."""
     icon = QIcon()
     for mode in (QIcon.Mode.Normal, QIcon.Mode.Disabled, QIcon.Mode.Active):
         icon.addPixmap(pixmap, mode)
@@ -181,7 +181,7 @@ def still_icon(pixmap: QPixmap) -> QIcon:
 
 
 class AppTile(QFrame):
-    """One app, compact: its short name, its icon (click: open; hover: what it does; grey: not installed; red dot:
+    """One app, compact: its short name, its icon (click: open; hover: what it does; gray: not installed; red dot:
     an update; red circular arrow: a reinstall is needed), "changes the board" under it when so, and beside it the
     symbol buttons: Install and Uninstall, or only Install (which reinstalls it) for check."""
 
@@ -223,7 +223,7 @@ class AppTile(QFrame):
         self.icon.setAutoRaise(True)
         # The icon alone, at its full size: no face, no padding (the theme gives every tool button both). Under the
         # mouse it dims a little, no border (owner, 20-10-2026); a press nudges the icon down-right, as a real button
-        # sinks, with no colour behind it (owner, 20-10-2026: no purple flash on a click).
+        # sinks, with no color behind it (owner, 20-10-2026: no purple flash on a click).
         self.icon.setStyleSheet("QToolButton { background:transparent; border:2px solid transparent;"
                                 " border-radius:18px; padding:0; }"
                                 "QToolButton:hover { background:transparent; border-color:transparent; }"
@@ -419,7 +419,7 @@ class PillTabBar(QTabBar):
 class SysInfoDialog(QDialog):
     """What the system reports about the board (sysinfo.py): a section per part in two columns of about the same
     length, the names muted, the values selectable; Copy puts it all on the clipboard as plain text. Its background
-    is the window colour at SYSINFO_OPACITY (owner, 20-10-2026); the text stays opaque, so it reads as well."""
+    is the window color at SYSINFO_OPACITY (owner, 20-10-2026); the text stays opaque, so it reads as well."""
 
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
@@ -1003,7 +1003,7 @@ class MainWindow(QMainWindow):
                                       "or to set its transparency. " + wallpaper.RULES)
 
     def transparency(self) -> int:
-        """The wallpaper's transparency in %: how much of the theme's window colour lies over it."""
+        """The wallpaper's transparency in %: how much of the theme's window color lies over it."""
         value = self.settings.value(VEIL_KEY, VEIL, type=int)
         return min(max(value, 0), VEIL_MAX)
 
@@ -1027,7 +1027,7 @@ class MainWindow(QMainWindow):
         slider.setTickPosition(QSlider.TickPosition.TicksBelow)
         slider.setMinimumWidth(160)
         slider.setValue(self.backdrop.veil)
-        slider.setToolTip("More: the theme's colour over the picture, for a dark or busy one. Less: more of the "
+        slider.setToolTip("More: the theme's color over the picture, for a dark or busy one. Less: more of the "
                           "picture.")
         shown = QLabel(f"{slider.value()} %")
         shown.setMinimumWidth(shown.fontMetrics().horizontalAdvance("100 %"))
@@ -1060,7 +1060,7 @@ class MainWindow(QMainWindow):
 
     def wallpaper_menu(self) -> QMenu:
         """The Wallpaper pill's menu: choose a picture, the example, none, or one of those used before (newest
-        first, under "Used before"): the current one ticked, one no longer where it was greyed out."""
+        first, under "Used before"): the current one ticked, one no longer where it was grayed out."""
         menu = QMenu(self)
         menu.addAction("Choose a picture…", self.choose_wallpaper)
         example = menu.addAction("Example wallpaper", self.example_wallpaper)

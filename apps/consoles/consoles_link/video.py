@@ -1,10 +1,10 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
-"""The decoded pictures as the view shows them: their planes and the colour matrix that turns Y'CbCr into RGB.
+"""The decoded pictures as the view shows them: their planes and the color matrix that turns Y'CbCr into RGB.
 Without Qt, so the arithmetic is tested on its own; the view (stream_view.py) uploads the planes as textures and
 applies the matrix in a shader.
 
 A picture comes from the native decoder: yuv420p in software (three planes: Y at full size, Cb and Cr at half the
-width and height), nv12 from VA-API (Y, then Cb and Cr interleaved at half size). Its colour matrix is the one the
+width and height), nv12 from VA-API (Y, then Cb and Cr interleaved at half size). Its color matrix is the one the
 stream names (BT.709, BT.601 or BT.2020); a stream that names none gets BT.709 from 720 lines up and BT.601 below,
 as FFmpeg's players assume. Limited range (16 to 235 for Y, 16 to 240 for Cb and Cr) unless it says full range."""
 

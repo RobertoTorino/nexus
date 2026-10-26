@@ -150,7 +150,7 @@ def is_bc250(sys_root: Path) -> bool:
 
 
 def temperature(folder: Path, label: str) -> float | None:
-    """The temperature labelled *label* in a hwmon folder (temp1 when nothing has that label), in °C."""
+    """The temperature labeled *label* in a hwmon folder (temp1 when nothing has that label), in °C."""
     inputs = sorted(folder.glob("temp*_input"))
     chosen = next((p for p in inputs if read_text(p.with_name(p.name.replace("_input", "_label"))) == label),
                   folder / "temp1_input")
@@ -336,9 +336,9 @@ def command(args: list[str], own: Path = Path(__file__)) -> list[str]:
 
 def answer(code: int, out: str) -> str:
     """What went wrong ("" when nothing did): main() prints one JSON line; pkexec exits with 126 or 127 when the
-    password dialog is cancelled."""
+    password dialog is canceled."""
     if code in (126, 127):
-        return "Not authorised: the password dialog was cancelled or refused."
+        return "Not authorized: the password dialog was canceled or refused."
     for line in reversed(out.strip().splitlines()):
         try:
             data = json.loads(line)

@@ -365,7 +365,7 @@ def _set_box_colour(box: MetricBox, colour: str) -> None:
 
 
 def _text_icon(icon: QIcon, size: int) -> QIcon:
-    """The icon in the theme's text colour, like the text of the boxes, whatever the desktop theme."""
+    """The icon in the theme's text color, like the text of the boxes, whatever the desktop theme."""
     pixmap = icon.pixmap(size, size)
     painter = QPainter(pixmap)
     painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceIn)

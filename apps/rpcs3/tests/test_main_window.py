@@ -619,7 +619,7 @@ def test_the_blue_look(qapp, folders):
     assert all(p.value.styleSheet() == window.refresh_pill.value.styleSheet() for p in window.actions)  # same type
     assert "QTabBar::tab" in window.styleSheet() and "QComboBox" in window.styleSheet()
     # The Refresh pill has the keyboard focus when the window opens; it looks as the boxes beside it all the same
-    # (owner, 24-10-2026: it showed another background colour).
+    # (owner, 24-10-2026: it showed another background color).
     window.show()
     qapp.processEvents()
     assert window.focusWidget() is window.refresh_pill

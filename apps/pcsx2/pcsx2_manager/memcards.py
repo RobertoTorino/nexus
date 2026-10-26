@@ -303,7 +303,7 @@ def _change(card: Path, change: Callable[[ps2mc.ps2mc], None]) -> Path:
 # --- Changes --------------------------------------------------------------------------------------------------
 
 def _load(file: Path) -> ps2save.PS2SaveFile:
-    """A save file in any of the formats mymc++ imports, recognised by its contents."""
+    """A save file in any of the formats mymc++ imports, recognized by its contents."""
     save = ps2save.PS2SaveFile()
     try:
         with open(file, "rb") as f:

@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The still picture of a save's 3D icon (memcard_icon.py): Rez's icon from mymc++'s test card against the picture
-mymc++'s own OpenGL viewer draws of it, and a small icon made here for the colours, the back faces and the
+mymc++'s own OpenGL viewer draws of it, and a small icon made here for the colors, the back faces and the
 mipmaps.
 
 fixtures/rez-icon-opengl.png is mymc++'s IconRenderer at the pinned commit (its shaders and matrices, unchanged)
@@ -44,15 +44,15 @@ def test_rez_as_mymcs_opengl_viewer_draws_it(qapp, cards):
 
 def _icon_sys(ambient: float = 1.0) -> IconSys:
     """icon.sys with no background and no lights, only ambient light."""
-    data = struct.pack("<4sHHII", b"PS2D", 0, 0, 0, 0) + b"\0" * 64             # background colours
-    data += struct.pack("<12f", *[0.0] * 12) + struct.pack("<12f", *[0.0] * 12)   # light directions, colours
+    data = struct.pack("<4sHHII", b"PS2D", 0, 0, 0, 0) + b"\0" * 64             # background colors
+    data += struct.pack("<12f", *[0.0] * 12) + struct.pack("<12f", *[0.0] * 12)   # light directions, colors
     data += struct.pack("<4f", ambient, ambient, ambient, 0.0)
     data += b"Test".ljust(68, b"\0") + b"icon.ico".ljust(64, b"\0") * 3 + b"\0" * 512
     return IconSys(data)
 
 
 def _icon(corners: list[tuple[float, float]], colour: tuple[int, int, int], texture: bytes | None = None) -> Icon:
-    """One triangle at the depth of the model's centre, given as (x, y) on the screen with y up, -1 to 1 the
+    """One triangle at the depth of the model's center, given as (x, y) on the screen with y up, -1 to 1 the
     model's units; facing the camera."""
     data = struct.pack("<IIIII", 0x010000, 1, 0x07 if texture else 0x03, 0, 3)
     for (x, y), (u, v) in zip(corners, [(0, 0), (4096, 0), (0, 4096)]):
@@ -67,7 +67,7 @@ FRONT = [(-1.0, -1.0), (1.0, -1.0), (0.0, 1.0)]         # counter-clockwise with
 
 def test_vertex_colours_and_light(qapp):
     image = memcard_icon.render(_icon_sys(), _icon(FRONT, (255, 0, 0)))
-    assert image.pixel(64, 70) & 0xFFFFFF == 0xFF0000                 # inside: the colour, at full light
+    assert image.pixel(64, 70) & 0xFFFFFF == 0xFF0000                 # inside: the color, at full light
     assert image.pixel(5, 5) & 0xFFFFFF == 0x000000                    # outside: the background (black here)
     dim = memcard_icon.render(_icon_sys(0.5), _icon(FRONT, (255, 0, 0)))
     assert (dim.pixel(64, 70) >> 16) & 255 in (127, 128)               # half the light, half the red
@@ -80,11 +80,11 @@ def test_back_faces_are_left_out(qapp):
 
 
 def test_the_texture_and_its_mipmaps(qapp):
-    green = struct.pack("<H", 31 << 5) * (128 * 128)                    # 5 bits a colour: all green
+    green = struct.pack("<H", 31 << 5) * (128 * 128)                    # 5 bits a color: all green
     image = memcard_icon.render(_icon_sys(), _icon(FRONT, (255, 255, 255), green))
     assert image.pixel(64, 70) & 0xFFFFFF == 0x00FF00
     texels = memcard_icon._texels(struct.pack("<H", 31) * (128 * 64) + b"\0\0" * (128 * 64))   # red over black
     levels = memcard_icon._mipmaps(texels)
     assert [len(level) for level in levels] == [4 ** (7 - n) for n in range(8)]                   # 128 to 1
     assert levels[-1][0] == (0.5, 0.0, 0.0)                              # the whole texture's mean
-    assert memcard_icon._texels([0xFFFF]) is None                       # an icon without one: its colours
+    assert memcard_icon._texels([0xFFFF]) is None                       # an icon without one: its colors

@@ -4,7 +4,7 @@ layout that go with it. The board changes only when you apply a split, and only 
 
 APP_NAME = "BC-250 Memory Manager"
 APP_ID = "bc250-memory-manager"
-__version__ = "0.11.1"
+__version__ = "0.12.0"
 
 from pathlib import Path
 

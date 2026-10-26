@@ -37,7 +37,7 @@ class GamesPage(QWidget):
         layout.addLayout(header)
         layout.addWidget(hint_label(
             "Every Steam game on this PC. HelixSR goes in place of a game's AMD FSR 3.1 DLL, so only the games that "
-            "ship one can use it: they come first, the others are greyed out. <b>Run with HelixSR</b> (or a "
+            "ship one can use it: they come first, the others are grayed out. <b>Run with HelixSR</b> (or a "
             "double-click) puts HelixSR in when it is not there yet, again after a game update put the game's own "
             "DLL back, or when the payload has a newer build, then starts the game through Steam. Choose <b>AMD "
             "FSR</b> in the game's graphics settings."))
@@ -111,7 +111,7 @@ class GamesPage(QWidget):
             items = (_item(game.name), _item(state), _item(dlls), _item(str(game)))
             usable = scan is not None and scan.usable
             for column, item in enumerate(items):
-                if not usable:                  # greyed out: no Run, but the Deploy page (OptiScaler) is open to it
+                if not usable:                  # grayed out: no Run, but the Deploy page (OptiScaler) is open to it
                     item.setForeground(self.palette().color(QPalette.ColorGroup.Disabled, QPalette.ColorRole.Text))
                 self.table.setItem(row, column, item)
             if usable:

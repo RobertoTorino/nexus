@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
-"""stream_view.py: the shader's colours, the plane layout and the orientation, drawn into an offscreen framebuffer
+"""stream_view.py: the shader's colors, the plane layout and the orientation, drawn into an offscreen framebuffer
 and read back (skipped where no OpenGL context opens, as on CI's runners without a GPU); the letterbox; the
 window's handling of pictures, full screen and closing; the pointer hiding over the picture."""
 
@@ -36,7 +36,7 @@ def gl(qapp):
 
 
 def halves(fmt: str, width: int, height: int, top=TOP, bottom=BOTTOM, **kw) -> Picture:
-    """A picture whose top half is one colour and bottom half another."""
+    """A picture whose top half is one color and bottom half another."""
     cw, ch = width // 2, height // 2
     y = bytes([top[0]] * width * (height // 2) + [bottom[0]] * width * (height // 2))
     rows = lambda value: [value] * cw * (ch // 2)                                 # noqa: E731

@@ -6,7 +6,7 @@ sweeping still happens in bc250-gpu-oc-bisect.sh itself, exactly as if typed by 
 
 APP_NAME = "BC-250 GPU OC Bisect"
 APP_ID = "bc250-gpu-oc-bisect-gui"
-__version__ = "0.2.1"
+__version__ = "0.2.2"
 
 from pathlib import Path
 

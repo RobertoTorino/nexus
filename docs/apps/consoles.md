@@ -83,7 +83,7 @@ again.
 
 The console hands the board its keys, and the console appears under **Registered consoles**, with its name, model,
 address, Remote Play version and whether a login passcode is set. Click it to select the console; the buttons of
-steps 3 and 4 and the ones under the lists stay greyed out until one is selected, then act on it. A double click
+steps 3 and 4 and the ones under the lists stay grayed out until one is selected, then act on it. A double click
 on it starts **Stream**. A wrong PIN or a wrong account ID is reported in the log at the bottom.
 
 **The buttons for the selected console** (under the lists, and in steps 3 and 4):
@@ -114,7 +114,7 @@ on it starts **Stream**. A wrong PIN or a wrong account ID is reported in the lo
   button, switch that off with **Steam comes to the front on the PS button** in **Settings** (see
   [When it does not work](#when-it-does-not-work)). The motion sensors play too, on a controller
   that has them (a DualShock 4 or DualSense): games that steer or aim by tilting the controller see the tilt. The
-  other way, the controllers rumble when the game makes them, and the light bar takes the colour the console gives
+  other way, the controllers rumble when the game makes them, and the light bar takes the color the console gives
   it (on a controller with motors and a light bar). A DualSense's adaptive triggers do not work yet. Without a
   controller, the console sees one lying still with nothing pressed. Closing the window ends the
   stream; the log then has the same counts as Test stream, and how many controller packets went out.

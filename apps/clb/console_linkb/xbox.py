@@ -4,7 +4,7 @@
 # License section.
 """What the account has: its Xbox consoles (Xbox Live's console list, xccs.xboxlive.com), the wake command for one,
 and the games of Xbox Cloud Gaming it may play (the streaming service's title list, named by the Game Pass
-catalogue)."""
+catalog)."""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ from .net import Client
 
 XCCS = "https://xccs.xboxlive.com"
 CATALOG = "https://catalog.gamepass.com/v3/products"
-CATALOG_BATCH = 20                          # product IDs per catalogue call, as the reference asks them
+CATALOG_BATCH = 20                          # product IDs per catalog call, as the reference asks them
 CONSOLE_TYPES = {"XboxOne": "Xbox One", "XboxOneS": "Xbox One S", "XboxOneX": "Xbox One X",
                  "XboxSeriesS": "Xbox Series S", "XboxSeriesX": "Xbox Series X", "XboxOneSDigital": "Xbox One S "
                  "All-Digital"}
@@ -102,7 +102,7 @@ def _product_name(product: dict) -> str:
 
 
 def name_titles(client: Client, cloud: StreamToken, titles: list[CloudTitle], language: str = "en-US") -> None:
-    """Fills in the titles' names from the Game Pass catalogue; a title it does not know keeps its title ID."""
+    """Fills in the titles' names from the Game Pass catalog; a title it does not know keeps its title ID."""
     market = cloud.market or "US"
     ids = sorted({t.product_id for t in titles if t.product_id})
     names: dict[str, str] = {}

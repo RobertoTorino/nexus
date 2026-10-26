@@ -47,7 +47,7 @@ XBOX_HEADERS = {"x-xbl-contract-version": "1", "Cache-Control": "no-cache", "Ori
 
 
 class AuthError(Exception):
-    """Signing in failed or was cancelled."""
+    """Signing in failed or was canceled."""
 
 
 class SignedOut(AuthError):
@@ -199,14 +199,14 @@ def start_sign_in(client: Client) -> DeviceCode:
 
 def wait_for_sign_in(client: Client, code: DeviceCode, cancelled: Callable[[], bool] = lambda: False,
                      sleep: Callable[[float], None] = time.sleep, clock: Callable[[], float] = time.time) -> UserToken:
-    """Asks Microsoft every few seconds whether the code was entered, until it was, it expired or *cancelled*."""
+    """Asks Microsoft every few seconds whether the code was entered, until it was, it expired or *canceled*."""
     interval = code.interval
     end = clock() + code.expires_in
     form = {"grant_type": "urn:ietf:params:oauth:grant-type:device_code", "client_id": CLIENT_ID,
             "device_code": code.device_code}
     while True:
         if cancelled():
-            raise AuthError("signing in was cancelled")
+            raise AuthError("signing in was canceled")
         if clock() >= end:
             raise AuthError("the code expired before it was entered: sign in again for a new one")
         try:

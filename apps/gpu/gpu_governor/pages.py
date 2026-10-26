@@ -173,7 +173,7 @@ class OverviewPage(QWidget):
             series.attachAxis(self.axis_x)
             series.attachAxis(axis)
             self.series[key] = series
-        # Reference lines: same colours, dashed and thinner, under the live ones, hidden until a file is loaded.
+        # Reference lines: same colors, dashed and thinner, under the live ones, hidden until a file is loaded.
         self.ref_series: dict[str, QLineSeries] = {}
         for key, name, colour, axis in (("load", "Load % (ref)", ACCENT, self.axis_y),
                                         ("temp", "Temperature °C (ref)", ORANGE, self.axis_y),

@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Artwork for a Steam shortcut drawn from an app's icon, for apps with no pictures of their own (owner, 16-10-2026):
-the four images of steam.ART as PNG bytes. The background is near black in the icon's own colour (the mean of its
-bright, saturated pixels), lighter towards the middle, with a glow of that colour; the portrait and the wide picture
-have the icon with a title and a line under it, the banner the title and its own line centred, as a game's banner has
+the four images of steam.ART as PNG bytes. The background is near black in the icon's own color (the mean of its
+bright, saturated pixels), lighter towards the middle, with a glow of that color; the portrait and the wide picture
+have the icon with a title and a line under it, the banner the title and its own line centered, as a game's banner has
 its title; the logo Steam lays over the banner (bottom left) is the icon file itself (as PNG). So the artwork follows
 the icon when the icon changes. Without the icon: a dark blue background and the title as the logo.
 
@@ -14,7 +14,7 @@ from pathlib import Path
 
 from .steam import ART
 
-FALLBACK = "#1d4f91"                    # the accent without an icon, or with one that has no bright colour
+FALLBACK = "#1d4f91"                    # the accent without an icon, or with one that has no bright color
 
 
 def draw_icon_art(icon: Path, title: str, subtitle: str = "", hero_subtitle: str | None = None) -> dict[str, bytes]:
@@ -60,7 +60,7 @@ def draw_icon_art(icon: Path, title: str, subtitle: str = "", hero_subtitle: str
 
 
 def accent_colour(icon):
-    """The icon's own colour: the mean of its bright, saturated pixels (a sample of them); FALLBACK without one."""
+    """The icon's own color: the mean of its bright, saturated pixels (a sample of them); FALLBACK without one."""
     from PyQt6.QtGui import QColor
     if icon.isNull():
         return QColor(FALLBACK)
@@ -97,7 +97,7 @@ def _background(painter, width: int, height: int, accent, cx: float, cy: float) 
 
 
 def _fitted_text(painter, box, text: str, size: int, bold: bool, colour) -> None:
-    """*text* centred in *box*, wrapped at word breaks, at *size* px or smaller until it fits."""
+    """*text* centered in *box*, wrapped at word breaks, at *size* px or smaller until it fits."""
     from PyQt6.QtCore import Qt
     from PyQt6.QtGui import QFont, QFontMetricsF
     flags = Qt.AlignmentFlag.AlignCenter | Qt.TextFlag.TextWordWrap

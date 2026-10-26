@@ -86,7 +86,7 @@ mkdir -p "$D/bc250-bazzite-suite/portal/releases/overlay-v0.0.1"   # an older re
 printf 'y\nc\n' | BC250_INTERACTIVE=1 bash "$SUITE/install.sh" --uninstall >> "$T/log5" 2>&1; rc=$?
 check "cancel: exit 1" "[ $rc -eq 1 ]"
 check "cancel: nothing removed" "installed bc250-system-overlay && installed bc250-bios-reader && installed bc250-bazzite-suite && installed bc250-bazzite-test"
-check "cancel: says so" "grep -q 'Cancelled: nothing was uninstalled.' $T/log5"
+check "cancel: says so" "grep -q 'Canceled: nothing was uninstalled.' $T/log5"
 printf 'x\ns\ny\n' | BC250_INTERACTIVE=1 bash "$SUITE/install.sh" --uninstall >> "$T/log5" 2>&1; rc=$?
 check "exit 0" "[ $rc -eq 0 ]"
 check "asked about both (twice: the cancel run too), again after an unknown answer" "[ \$(grep -o 'Uninstall System Overlay?' $T/log5 | wc -l) -eq 3 ] && [ \$(grep -o 'Uninstall BC-250 BIOS Reader?' $T/log5 | wc -l) -eq 2 ]"

@@ -26,7 +26,7 @@ _TAG_LEVEL = {"SUCCESS": SUCCESS, "INFO": INFO, "WARNING": WARNING,
 
 
 def line_level(raw: str) -> str:
-    """The colour level of a stored log line, as in the live terminal: "header", a result level, "hint",
+    """The color level of a stored log line, as in the live terminal: "header", a result level, "hint",
     "note" or ""."""
     body = _TS_PREFIX.sub("", raw)
     if _HEADER.match(body):
@@ -62,7 +62,7 @@ class TestRunner(QObject):
     hint = pyqtSignal(str, str, str)            # test id, text, severity ("note" or the test's status so far)
     test_started = pyqtSignal(str)
     test_finished = pyqtSignal(str, str)        # test id, final status
-    run_finished = pyqtSignal(int, bool)        # exit code, cancelled
+    run_finished = pyqtSignal(int, bool)        # exit code, canceled
     auth_failed = pyqtSignal(str)
     bench_result = pyqtSignal(dict)             # key=value pairs of the script's "BENCH:" line
 
@@ -234,7 +234,7 @@ class TestRunner(QObject):
             self._handle_line(self._buf)
             self._buf = ""
         if self._current is not None and self._cancelled:
-            # A cancelled test never reached a verdict.
+            # A canceled test never reached a verdict.
             self._status[self._current] = IDLE
         self._close_current()
         self._finish(code)

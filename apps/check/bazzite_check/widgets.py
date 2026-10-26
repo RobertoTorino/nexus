@@ -32,7 +32,7 @@ STATE_COLORS = {
     INFO: ("#1565c0", "#ffffff"),
 }
 LINE_COLORS = {
-    SUCCESS: "#66bb6a", INFO: "#64b5f6", WARNING: "#ffa726", ERROR: "#ef5350",
+    SUCCESS: "#81c784", INFO: "#64b5f6", WARNING: "#ffb74d", ERROR: "#e57373",
     "hint": "#ce93d8", "note": "#90a4ae", "header": "#ffffff",
 }
 STATE_LABEL = {IDLE: "", RUNNING: "running…", SUCCESS: "OK", WARNING: "warning", ERROR: "error", INFO: "info"}
@@ -92,7 +92,7 @@ class Terminal(QPlainTextEdit):
 
 
 class LogHighlighter(QSyntaxHighlighter):
-    """Colours a stored log like the live terminal: headers, SUCCESS/INFO/WARNING/ERROR, HINT and NOTE lines."""
+    """Colors a stored log like the live terminal: headers, SUCCESS/INFO/WARNING/ERROR, HINT and NOTE lines."""
 
     def __init__(self, document) -> None:
         super().__init__(document)
@@ -150,7 +150,7 @@ class SudoDialog(QDialog):
         layout.addWidget(text)
         if message:
             err = QLabel(message)
-            err.setStyleSheet("color:#ef5350; font-weight:600;")
+            err.setStyleSheet("color:#e57373; font-weight:600;")
             layout.addWidget(err)
         self.edit = QLineEdit()
         self.edit.setEchoMode(QLineEdit.EchoMode.Password)
@@ -269,7 +269,7 @@ class LogsDialog(QDialog):
 
     def _show_file(self, path: Path) -> None:
         self.path_label.setText(str(path))
-        # CSVs and configs are shown as they are; only logs are coloured.
+        # CSVs and configs are shown as they are; only logs are colored.
         self._highlighter.setDocument(self.viewer.document() if path.suffix.lower() == ".log" else None)
         self.viewer.setPlainText(read_for_view(path))
         self._csv = None

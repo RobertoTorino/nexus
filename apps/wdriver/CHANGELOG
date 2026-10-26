@@ -1,3 +1,7 @@
+Changelog: 26-10-2026 02:14:35
+
+Release 0.11.0.
+
 Changelog: 25-10-2026 01:16:49
 
 Release 0.10.1.
@@ -63,7 +67,7 @@ Release 0.4.0.
 Changelog: 19-10-2026 23:41:01
 
 Added. The suite's theme, chosen in the portal; the status boxes are the theme's surface with their state as a
-coloured left edge.
+colored left edge.
 
 Changelog: 19-10-2026 03:41:49
 
@@ -109,7 +113,7 @@ Changelog: 17-10-2026 10:24:01
 
 Fixed. The wiki chapter has a section Compatibility: the driver is for the AIC8800 family (the USB IDs its match
 tables claim, under both of AICSemi's vendor IDs and Tenda's and UGREEN's), the app installs the AIC8800D80
-firmware only, the window recognises the a69c storage, loader and Wi-Fi IDs and the eject rule covers vendor a69c,
+firmware only, the window recognizes the a69c storage, loader and Wi-Fi IDs and the eject rule covers vendor a69c,
 the modules follow the running kernel, and what was tested (the UGREEN AX900 on the BC-250).
 
 Changelog: 17-10-2026 05:35:56

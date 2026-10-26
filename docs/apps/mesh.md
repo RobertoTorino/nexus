@@ -60,9 +60,9 @@ The driver is for the games you give the launch options; there is no switch to m
 
 ## The test
 
-The test draws a grid of 256 coloured tiles four ways: with a task shader and a mesh shader, with a mesh shader alone
+The test draws a grid of 256 colored tiles four ways: with a task shader and a mesh shader, with a mesh shader alone
 at the largest size a mesh shader may have (the driver has to split it on this chip), and both again from an
-indirect draw. It compares every pixel with the colour its tile must have.
+indirect draw. It compares every pixel with the color its tile must have.
 
 Meanwhile the BC-250's compute queues (the ACE), which DirectMesh opens, work beside the draws: each copies an image
 through the driver's own copy shaders and runs dispatches whose last workgroup is a partial one, and the results are

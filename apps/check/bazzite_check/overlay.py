@@ -29,7 +29,7 @@ from PyQt6.QtCore import QObject, QPoint, Qt, QTimer, pyqtSignal
 from PyQt6.QtGui import QColor, QFontDatabase, QPainter, QPainterPath
 from PyQt6.QtWidgets import QApplication, QGridLayout, QLabel, QWidget
 
-ACCENT = "#b388ff"       # thin purple border, matches the hint colour family of the GUI
+ACCENT = "#ce93d8"       # thin purple border: the suite's purple text tint, as the hints in the GUI
 BACKGROUND = QColor(17, 20, 24, 208)   # the terminal's #111418, mostly opaque
 MUTED = "#9aa0a6"
 VALUE = "#e6e6e6"

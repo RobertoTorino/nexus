@@ -135,7 +135,7 @@ uninstall_other_apps() {
                 case "${answer,,}" in
                     y|yes) chosen+=("$key"); break ;;
                     s|skip) break ;;
-                    c|cancel) rm -rf "$staging"; info "Cancelled: nothing was uninstalled."; exit 1 ;;
+                    c|cancel) rm -rf "$staging"; info "Canceled: nothing was uninstalled."; exit 1 ;;
                 esac
             done
         done 3<<<"$list"

@@ -70,7 +70,7 @@ def help_html(payload_dir: str, deployments_file: str,
          ' then open an issue at <a href="{helixsr_url}/issues">HelixSR</a> with the <code>helixsr.log</code> from '
          'the game folder). Switching builds the network files for that version and replaces the payload; deploy '
          'again per game afterwards (the Overview marks them <i>Older build</i> or <i>Newer build</i>). The '
-         "<code>{ini}</code> page greys out the settings the payload's HelixSR version does not read.</p>"),
+         "<code>{ini}</code> page grays out the settings the payload's HelixSR version does not read.</p>"),
         ("<p>From HelixSR 1.8.0 on, the setup builds the network into HelixSR's DLL: there are no separate "
          '<code>{weights}</code> and <code>{kernels}</code>, and Deploy copies only the DLL (and the ini). '
          'Network files left next to it by an older release are removed.</p>'),
@@ -92,7 +92,7 @@ def help_html(payload_dir: str, deployments_file: str,
         '<h2>Games</h2>',
         ('<p>Every Steam game on this PC, each looked through in the background for an AMD FSR 3.1 DLL. The games '
          'that have one come first: <i>Not installed</i>, <i>HelixSR x.y.z installed</i>, an older build with '
-         '<i>is available</i>, or <i>The game put its own DLL back</i>. The others are greyed out; games that only '
+         '<i>is available</i>, or <i>The game put its own DLL back</i>. The others are grayed out; games that only '
          'offer DLSS, XeSS or FSR 2 can still use HelixSR through OptiScaler: <b>Open on Deploy page</b>.</p>'),
         ('<p><b>Run with HelixSR</b> (or a double-click) puts HelixSR into the game when it is not there, again '
          "after a game update put the game's own DLL back, or when the payload has a newer build, then starts the "

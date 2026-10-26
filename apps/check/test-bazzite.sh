@@ -115,7 +115,7 @@ if [ -n "$ONLY" ]; then
         echo "--only must be a comma-separated list of test numbers, e.g. --only=04,17."
         exit 1
     fi
-    # Normalise to two digits (10# avoids 08/09 being read as octal).
+    # Normalize to two digits (10# avoids 08/09 being read as octal).
     _norm=""
     IFS=',' read -ra _ids <<<"$ONLY"
     for _id in "${_ids[@]}"; do _norm+="$(printf '%02d' "$((10#$_id))"),"; done
@@ -278,7 +278,7 @@ LOG_ADVICE=(
   "Activation request for '[^']+' failed|Could not activate remote peer"
   "A D-Bus service (UDisks2, UPower, RealtimeKit, a portal) was asked for while it was stopping, usually at logout or shutdown. Harmless if disks, power and sound work."
   "pam_unix.*(auth|conversation failed)|Authentication failure|ERROR_AUTHENTICATION"
-  "A wrong or cancelled password at the login screen or sudo; harmless unless it was not you."
+  "A wrong or canceled password at the login screen or sudo; harmless unless it was not you."
   "plasmalogin.*(Process crashed|ERROR_INTERNAL)"
   "The login screen process ended with an error, usually when it closes at login or shutdown. Look into it only if the login screen fails to appear."
   "\.qml(:[0-9]+)?:|TypeError: Cannot read property"
@@ -2067,7 +2067,7 @@ if [ -n "$TTM_LIMIT" ] && [ "$TTM_LIMIT" -gt 0 ] && [ "$GTT_MIB" -gt 0 ] && [ $(
     log_result "INFO: ttm.pages_limit is $((TTM_LIMIT / 256)) MiB, more than the RAM: amdgpu caps GTT at the RAM, so a higher limit has no effect."
 fi
 if [ "$VRAM_SPLIT_MIB" -le 1024 ]; then
-    log_result "INFO: This is a small (dynamic-friendly) split, which maximises regular RAM."
+    log_result "INFO: This is a small (dynamic-friendly) split, which maximizes regular RAM."
     if ! grep -q "ttm.pages_limit" /proc/cmdline 2>/dev/null; then
         log_result "WARNING: A small split without ttm.pages_limit caps total VRAM at $((VRAM_SPLIT_MIB + GTT_MIB)) MiB (the split plus half the RAM)."
         log_result "HINT: rpm-ostree kargs --append-if-missing=ttm.pages_limit=3014656   # ~11.5 GiB"
@@ -3223,14 +3223,14 @@ if [ -n "$ST_IFACE" ]; then
     [ "${ST_LINK:-0}" -gt 0 ] 2>/dev/null || ST_LINK=""
     log_result "INFO: Traffic goes through $ST_IFACE ($ST_KIND${ST_LINK:+, link ${ST_LINK} Mbit/s})."
 fi
-# Run as the desktop user so the tool's config/licence file lands in their home, not root's, and so
+# Run as the desktop user so the tool's config/license file lands in their home, not root's, and so
 # a speedtest in the user's ~/.local/bin is never run as root.
 st_run() {
     if [ -n "$GAME_USER" ] && [ "$GAME_USER" != root ]; then sudo -u "$GAME_USER" -H "$@"; else "$@"; fi
 }
 if st_run "$ST_BIN" --version 2>/dev/null | grep -qi ookla; then
     ST_KINDTOOL=ookla
-    log_result "Running Ookla speedtest (about 30 s; by running it you accept Ookla's licence and GDPR terms)"
+    log_result "Running Ookla speedtest (about 30 s; by running it you accept Ookla's license and GDPR terms)"
     ST_OUT=$(st_run timeout 180 "$ST_BIN" --accept-license --accept-gdpr -f json 2>>"$LOG_FILE")
 else
     ST_KINDTOOL=speedtest-cli
@@ -3459,7 +3459,7 @@ else
         esac
         [ "$MH_ANALYSED" -ge 3 ] && break
     done <<<"$MH_FILES"
-    [ "$MH_ANALYSED" -gt 0 ] && log_result "INFO: Analysed the $MH_ANALYSED most recent session(s). Delete old logs to focus the verdict."
+    [ "$MH_ANALYSED" -gt 0 ] && log_result "INFO: Analyzed the $MH_ANALYSED most recent session(s). Delete old logs to focus the verdict."
 fi
 echo
 fi  # TEST 48

@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The front page: one tile per feature, in a grid of four by four; the slots no feature fills yet hold a greyed-out
+"""The front page: one tile per feature, in a grid of four by four; the slots no feature fills yet hold a grayed-out
 Coming Soon tile, which takes no focus and opens nothing. A tile is a button with the feature's symbol (the shapes of
 the controller's buttons for the first four) beside its name, and a few lines on what it opens. The arrow keys move between
 the tiles, so a controller through Steam Input (a D-pad as arrow keys, A as Enter) works as well as a mouse.
@@ -21,7 +21,7 @@ from .style import TEXT, label
 
 COLUMNS, ROWS = 4, 4
 TILE_MIN_WIDTH, TILE_HEIGHT = 200, 118          # the tiles share the width of the row
-TRIANGLE, CIRCLE, CROSS, SQUARE = "#48B67E", "#E24C4C", "#5AA0FF", "#E07AB8"
+TRIANGLE, CIRCLE, CROSS, SQUARE = "#3dbf9c", "#e8505b", "#6f9fe8", "#e48fc0"   # as USB HD Control draws them
 
 
 @dataclass(frozen=True)
@@ -89,7 +89,7 @@ class Tile(QPushButton):
 
 
 class ComingSoon(QPushButton):
-    """An empty slot of the grid: a tile's frame with "Coming Soon", disabled, so it is greyed out."""
+    """An empty slot of the grid: a tile's frame with "Coming Soon", disabled, so it is grayed out."""
 
     def __init__(self, parent: QWidget | None = None):
         super().__init__("Coming Soon", parent)

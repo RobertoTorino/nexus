@@ -9,7 +9,7 @@ hide:
 <section class="home-hero" markdown>
 <div class="home-hero__pictures" markdown>
 ![A BC-250 board](images/home/bc250-board.webp){ .home-hero__board }
-![A steel grey controller](images/home/controllers/ds4.webp){ .home-hero__controller }
+![A steel gray controller](images/home/controllers/ds4.webp){ .home-hero__controller }
 </div>
 <div class="home-hero__text" markdown>
 # Tools for every part of the board. { .home-hero__lead }

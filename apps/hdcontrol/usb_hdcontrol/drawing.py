@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The controller as a drawing of the app's own (no Sony artwork), in the theme's colours with the gaming apps' blue
+"""The controller as a drawing of the app's own (no Sony artwork), in the theme's colors with the gaming apps' blue
 for what is lit. It shows the controller live: each button lights while it is pressed, the sticks move and the
-triggers fill, and the light bar takes the colour the controller has. A page can light whole parts (the sticks, the
+triggers fill, and the light bar takes the color the controller has. A page can light whole parts (the sticks, the
 Edge's back buttons) to show what it is about. It also draws a USB-C cable going into the port (the page that asks
 to connect), data flowing down that cable with the touchpad filling (a firmware update), and a shake (the vibration
 test).
@@ -35,7 +35,7 @@ PART_BUTTONS = {
 }
 PARTS = tuple(PART_BUTTONS)
 BUTTONS = tuple(button for buttons in PART_BUTTONS.values() for button in buttons) + ("mute",)
-# The face buttons' symbols in the colours of the first PlayStation pads.
+# The face buttons' symbols in the colors of the first PlayStation pads.
 FACE_COLOURS = {"triangle": "#3dbf9c", "circle": "#e8505b", "cross": "#6f9fe8", "square": "#e48fc0"}
 CABLE_PERIOD_MS = 2400
 FRAME_MS = 33
@@ -144,7 +144,7 @@ class ControllerView(QWidget):
         self.pressed: set[str] = set()                  # BUTTONS held down now
         self.sticks = (0.0, 0.0, 0.0, 0.0)              # left x, y, right x, y: -1 to 1
         self.triggers = (0.0, 0.0)                      # L2, R2: 0 to 1
-        self.light: QColor | None = None                # the light bar's colour; None: unknown, drawn dark
+        self.light: QColor | None = None                # the light bar's color; None: unknown, drawn dark
         self.players: tuple[bool, ...] | None = None    # the five player lights, left to right; None: unknown
         self.cable_phase: float | None = None
         self.data_progress: float | None = None         # 0 to 1 while an update sends the firmware
@@ -365,7 +365,7 @@ class ControllerView(QWidget):
                 p.restore()
 
     def _draw_lightbar(self, p: QPainter) -> None:
-        """Two strips along the touchpad, in the light bar's colour (dark while it is not known)."""
+        """Two strips along the touchpad, in the light bar's color (dark while it is not known)."""
         if "lightbar" in self.lit_parts:
             colour = QColor(style.BLUE_LIGHT)
         elif self.light is not None:

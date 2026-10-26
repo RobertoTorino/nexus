@@ -8,7 +8,7 @@ it was tried with and nothing else.)
 It goes to ~/.local/share/bc250-pcsx2-manager/emulator/<version>/pcsx2.AppImage, with "current" pointing to it and
 the build's size beside it (.size), so replaced() knows the expected size. The run wrapper
 (~/.local/bin/bc250-pcsx2-run) starts "current", so the Steam shortcuts keep working when the version changes.
-Install also takes PCSX2's catalogue out of the AppImage, beside it (catalogue.py). PCSX2's own window offers its
+Install also takes PCSX2's catalog out of the AppImage, beside it (catalogue.py). PCSX2's own window offers its
 updates when it opens, and replaces the AppImage with another build when asked to; the app then says so
 (replaced()), and Install puts the pinned release back."""
 
@@ -83,7 +83,7 @@ def replaced(home: Path) -> bool:
 
 
 def take_catalogue(home: Path) -> bool:
-    """PCSX2's catalogue (game titles, patches) out of the installed AppImage, beside it (catalogue.py); whether it
+    """PCSX2's catalog (game titles, patches) out of the installed AppImage, beside it (catalogue.py); whether it
     is there afterwards. Without it the app goes on with the files' names."""
     image = appimage(home)
     try:

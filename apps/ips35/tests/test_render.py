@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The tiles' texts, the clock, the user's colours, the weather's icon, the report, the picture's size and turn, and
+"""The tiles' texts, the clock, the user's colors, the weather's icon, the report, the picture's size and turn, and
 the screen's pixel format."""
 
 from __future__ import annotations

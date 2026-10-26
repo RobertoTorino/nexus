@@ -16,7 +16,7 @@ LINK_ON_DARK = "#3FC8CF"                # the bright cyan as link text on a dark
 
 
 def accent_button(text: str, tooltip: str = "") -> QPushButton:
-    """The page's main action, outlined in the cyan (widgets.accent_button in the app's colour)."""
+    """The page's main action, outlined in the cyan (widgets.accent_button in the app's color)."""
     button = QPushButton(text)
     button.setToolTip(tooltip)
     button.setMinimumHeight(36)
@@ -28,7 +28,7 @@ def accent_button(text: str, tooltip: str = "") -> QPushButton:
 
 
 def set_link_colour(app: QApplication) -> None:
-    """Links in the cyan. On the application's palette: rich text takes its link colour from there when the HTML is
+    """Links in the cyan. On the application's palette: rich text takes its link color from there when the HTML is
     loaded, not from the widget's palette."""
     palette = app.palette()
     dark = palette.color(QPalette.ColorRole.Window).lightness() < 128

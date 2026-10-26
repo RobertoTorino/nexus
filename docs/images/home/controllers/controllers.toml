@@ -5,7 +5,7 @@
 
 [[controller]]
 file = "ds4.webp"
-alt = "A steel grey controller"
+alt = "A steel gray controller"
 
 [[controller]]
 file = "clear-red.webp"
@@ -37,4 +37,4 @@ alt = "A black controller"
 
 [[controller]]
 file = "titanium.webp"
-alt = "A titanium grey controller"
+alt = "A titanium gray controller"

@@ -16,7 +16,7 @@ from PyQt6.QtWidgets import (
 
 from . import FONT_DIR, plain_tooltip, window_title
 
-# The suite's theme and colours (a copy of core's theme.py): result colours, the logo's purple, the theme's accent.
+# The suite's theme and colors (a copy of core's theme.py): result colors, the logo's purple, the theme's accent.
 from .theme import ACCENT, BLUE, GREEN, GREY, ORANGE, PURPLE, RED, STATE_COLORS, surface_style
 
 
@@ -35,8 +35,8 @@ def header_font() -> str:
 
 
 class StatusPill(QLabel):
-    """A short state word on the theme's surface, its state as a coloured left edge: Active, Not mounted, ...
-    Neutral has no colour."""
+    """A short state word on the theme's surface, its state as a colored left edge: Active, Not mounted, ...
+    Neutral has no color."""
 
     def __init__(self, text: str | None = None, parent: QWidget | None = None):
         super().__init__(text or "", parent)
@@ -53,8 +53,8 @@ class StatusPill(QLabel):
 
 
 class MetricBox(QFrame):
-    """One box of the header row: a big value with a caption, centred like the stats boxes of bc250-bazzite-test
-    (centred=False: left-aligned)."""
+    """One box of the header row: a big value with a caption, centered like the stats boxes of bc250-bazzite-test
+    (centered=False: left-aligned)."""
 
     def __init__(self, caption: str, colour: str = GREY, parent: QWidget | None = None, centred: bool = True):
         super().__init__(parent)
@@ -77,7 +77,7 @@ class MetricBox(QFrame):
         self.setToolTip(tooltip)
 
     def set_colour(self, colour: str) -> None:
-        """The box's state or category colour, its left edge; GREY (neutral) has none."""
+        """The box's state or category color, its left edge; GRAY (neutral) has none."""
         self.setStyleSheet(surface_style(None if colour == GREY else colour)
                            + "QLabel { background:transparent; border:none; }")
 
@@ -162,7 +162,7 @@ def set_button_active(button: QPushButton, active: bool) -> None:
     button.setProperty("activeRed", active)
     if active:
         # Setting the border makes the stylesheet paint the whole button, so the fill is solid instead of being
-        # blended over the native gradient. No font change, so the text weight matches the neighbours.
+        # blended over the native gradient. No font change, so the text weight matches the neighbors.
         button.setStyleSheet("QPushButton { background:#8b0000; color:white; border:1px solid #8b0000; "
                              "border-radius:3px; }"
                              "QPushButton:hover { background:#a00000; border-color:#a00000; }")
@@ -171,7 +171,7 @@ def set_button_active(button: QPushButton, active: bool) -> None:
 
 
 def accent_button(text: str, tooltip: str = "") -> QPushButton:
-    """The page's main action, outlined in the accent colour like the selected nav item."""
+    """The page's main action, outlined in the accent color like the selected nav item."""
     button = QPushButton(text)
     button.setToolTip(tooltip)
     button.setMinimumHeight(36)

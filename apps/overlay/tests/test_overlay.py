@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The overlay window on a fake board: the rows, the formatting, temperature colours and the menu settings."""
+"""The overlay window on a fake board: the rows, the formatting, temperature colors and the menu settings."""
 
 from __future__ import annotations
 

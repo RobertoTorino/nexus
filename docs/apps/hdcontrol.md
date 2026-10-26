@@ -56,8 +56,8 @@ for 10 seconds) before plugging it in does the same.
 
 ## The controller box
 
-The drawing is the app's own, not the official artwork, with the face buttons in the colours of the first PlayStation
-pads. The colour buttons for the light bar are under it; to its right, the light bar's colour now, and
+The drawing is the app's own, not the official artwork, with the face buttons in the colors of the first PlayStation
+pads. The color buttons for the light bar are under it; to its right, the light bar's color now, and
 **Test vibration**. It follows your controller live: a button lights while you press it (the Edge's Fn and back buttons too), the
 sticks move and the triggers fill as far as you pull them. Hover over a part to see its name (Cross, L2 trigger, Left back button, Light bar).
 
@@ -69,8 +69,8 @@ R2 stop sliders, the RELEASE latch, the reset button, the headset jack, the char
 speaker. The plain DualSense has no specifications in the app yet: only facts from an official source go in. During a firmware update the drawing shows the cable plugged in, data flowing
 down it and the touchpad filling as the firmware goes in.
 
-- **Light bar**: the circles under the drawing: Blue, Red, Green, Purple, White, Off, or the colour wheel for any
-  colour. The colour is set at once and
+- **Light bar**: the circles under the drawing: Blue, Red, Green, Purple, White, Off, or the color wheel for any
+  color. The color is set at once and
   again each time the controller connects while the app is open; the drawing shows it. The controller does not keep
   it: it forgets it when it disconnects, and Steam or a game may set another. **Off** saves some battery.
 - **Turn Bluetooth off** switches a controller on Bluetooth off by ending its connection; the PS button switches it on again.
@@ -172,7 +172,7 @@ Under each card, with the controller on the USB cable:
 - **Clear** removes it from the controller, after asking.
 
 The default profile (Fn + Triangle) has none of these: the app never changes it. Over Bluetooth, and during a firmware
-update, the buttons are greyed out.
+update, the buttons are grayed out.
 
 The editor sets:
 

@@ -27,7 +27,7 @@ from .updates import Release, is_newer, latest_release
 MANUAL_URL = f"{SUITE_MANUAL_URL}apps/mesh/"
 CHECK_AT_START = "updates/check_on_start"
 CHECK_LINK = "#check"
-NOT_AUTHORISED = (126, 127)             # pkexec: the password dialog was cancelled or refused
+NOT_AUTHORISED = (126, 127)             # pkexec: the password dialog was canceled or refused
 
 # What runs, by action: (arguments, needs root, text while it runs)
 ACTIONS = {
@@ -106,7 +106,7 @@ class MainWindow(QMainWindow):
                 ("2. Install", self.install_state, [self.install_button, self.remove_button]),
                 ("3. Test", self.test_state, [self.test_button]),
                 ("4. Use", self.use_state, [self.copy_button, self.switches_button])]
-        # One line per step: name, state and its buttons centred on the row. Every button has the size of the
+        # One line per step: name, state and its buttons centered on the row. Every button has the size of the
         # widest plain one (Build too), in two columns on the right (a single button in the right one), so they
         # line up.
         everything = [b for _, _, buttons in rows for b in buttons]
@@ -116,7 +116,7 @@ class MainWindow(QMainWindow):
         for row, (name, state, buttons) in enumerate(rows):
             label = QLabel(name)
             label.setStyleSheet("font-weight:700;")
-            # The labels fill their cell and centre their own text: a word-wrapped label added with an alignment
+            # The labels fill their cell and center their own text: a word-wrapped label added with an alignment
             # gets no height for its second line.
             for text in (label, state):
                 text.setAlignment(Qt.AlignmentFlag.AlignLeft | centre)
@@ -354,7 +354,7 @@ class MainWindow(QMainWindow):
         if code == 0:
             self.running.setText("Done.")
         elif root and code in NOT_AUTHORISED:
-            self.running.setText("Not authorised: the password dialog was cancelled or refused.")
+            self.running.setText("Not authorized: the password dialog was canceled or refused.")
         else:
             self.running.setText(f"Stopped with exit code {code}; see the output.")
         self.process = None

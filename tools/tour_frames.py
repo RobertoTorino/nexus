@@ -185,7 +185,7 @@ class Recorder:
             self.emit(image)
 
     def card(self, title: str, lines: list[str]):
-        """A title card in the theme's colours, with the logo."""
+        """A title card in the theme's colors, with the logo."""
         from PyQt6.QtCore import QRectF, Qt
         from PyQt6.QtGui import QColor, QFont, QImage, QPainter, QPalette, QPixmap
 

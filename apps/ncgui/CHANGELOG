@@ -1,3 +1,12 @@
+Changelog: 26-10-2026 02:14:35
+
+Release 0.12.0.
+
+Changelog: 26-10-2026 01:04:02
+
+Fixed. The session's success and error lines use the suite's text tints #81c784 and #e57373 (DESIGN.md's color
+families, owner, 26-10-2026); the tab palette stays the tool's own.
+
 Changelog: 25-10-2026 01:16:49
 
 Release 0.11.1.
@@ -122,7 +131,7 @@ Release 0.1.0.
 
 Changelog: 15-10-2026 02:01:27
 
-The app is on bc250_core (owner's decision, for consistency with the suite's apps): INFO (AppInfo) in __init__, core's create_app and exec_app in __main__ (the same names, Fusion style, icon and SIGTERM handling; core's rounded tooltips and the Inter title font are new), core's single instance, the first line built with AppHeader, and the settings opened with open_settings (the same ~/.config/bazzite-netcatgui/bazzite-netcatgui.ini). The grey subtitle under the title went: the header has the title row and one row of controls, the buttons. A second launch with a host and port or -l port opens that tab in the open window (own_arguments and open_tab in __main__, also used at start-up). install.sh bundles bc250_core from the suite checkout like the other core apps; a release has it bundled. --version names the core. Tests: the arguments a second launch hands over, and the tab they open.
+The app is on bc250_core (owner's decision, for consistency with the suite's apps): INFO (AppInfo) in __init__, core's create_app and exec_app in __main__ (the same names, Fusion style, icon and SIGTERM handling; core's rounded tooltips and the Inter title font are new), core's single instance, the first line built with AppHeader, and the settings opened with open_settings (the same ~/.config/bazzite-netcatgui/bazzite-netcatgui.ini). The gray subtitle under the title went: the header has the title row and one row of controls, the buttons. A second launch with a host and port or -l port opens that tab in the open window (own_arguments and open_tab in __main__, also used at start-up). install.sh bundles bc250_core from the suite checkout like the other core apps; a release has it bundled. --version names the core. Tests: the arguments a second launch hands over, and the tab they open.
 
 Changelog: 15-10-2026 01:18:28
 

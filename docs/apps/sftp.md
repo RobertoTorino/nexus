@@ -30,7 +30,7 @@ and asks before it saves.
 
 1. Fill in the host, the port (22), your user name and either a password or the path of a private key. A key is
    the better choice; with a key, the password field holds the key's passphrase.
-2. Press **Connect**. The first time, the app shows the server's fingerprint and asks whether you trust it. Yes
+2. Press **Connect** in the window's header. The first time, the app shows the server's fingerprint and asks whether you trust it. Yes
    adds it to `~/.ssh/known_hosts`; no makes no connection.
 3. Double-click folders to open them, or type a path. Select files or folders and press **Upload →** or
    **← Download**, or use the right-click menu. Ctrl-click and Shift-click select more than one. The right-click
@@ -41,7 +41,8 @@ and asks before it saves.
    are queued or running asks first, because it cancels them.
 
 The window's header shows three states: your own system, the SFTP connection and the state of `sshd` on the host
-the Server Manager is connected to. A red dot at the right of the title appears after an error was logged; click
+the Server Manager is connected to; beside them, **Connect** connects the SFTP Client (and disconnects it again).
+The password rules stand at the right of the password field and show, as you type, what is still missing. A red dot at the right of the title appears after an error was logged; click
 it to open the log.
 
 **Profiles.** *Save profile* keeps the host, port, user name and key path under a name. Passwords and key

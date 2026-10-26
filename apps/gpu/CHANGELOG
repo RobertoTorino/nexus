@@ -1,3 +1,7 @@
+Changelog: 26-10-2026 02:14:35
+
+Release 0.3.0.
+
 Changelog: 25-10-2026 01:16:49
 
 Release 0.2.1.
@@ -18,7 +22,7 @@ Release 0.2.0.
 Changelog: 19-10-2026 23:41:01
 
 Added. The suite's theme (a copy of core's theme.py), chosen in the portal. The status boxes and pills are the
-theme's surface with their state as a coloured left edge, as core's.
+theme's surface with their state as a colored left edge, as core's.
 
 Changelog: 19-10-2026 16:58:45
 
@@ -82,7 +86,7 @@ The Governor Manager no longer crashes when it quits on SIGTERM (at logout, or w
 
 Changelog: 15-10-2026 02:31:31
 
-No translations (owner's decision): the app is English only, Qt's own dialog buttons included. Gone: translations/ (.ts and .qm), tools/i18n (build.py and the JSON catalogues), tests/test_translations.py, --lang, the translator set-up in __main__ and TRANSLATIONS_DIR; every tr()/translate()/QT_TRANSLATE_NOOP is its English text, unchanged. A saved language setting is ignored.
+No translations (owner's decision): the app is English only, Qt's own dialog buttons included. Gone: translations/ (.ts and .qm), tools/i18n (build.py and the JSON catalogs), tests/test_translations.py, --lang, the translator set-up in __main__ and TRANSLATIONS_DIR; every tr()/translate()/QT_TRANSLATE_NOOP is its English text, unchanged. A saved language setting is ignored.
 
 Changelog: 15-10-2026 02:10:51
 
@@ -110,7 +114,7 @@ Release 0.1.4.
 
 Changelog: 11-10-2026 20:58:28
 
-The header boxes (GPU load, clock, temperature, power, performance mode, governor) are centred, like the other apps of the suite: MetricBox has core's centred option, on by default.
+The header boxes (GPU load, clock, temperature, power, performance mode, governor) are centered, like the other apps of the suite: MetricBox has core's centered option, on by default.
 
 Changelog: 11-10-2026 20:43:41
 
@@ -139,7 +143,7 @@ Release 0.1.1.
 
 Changelog: 11-10-2026 16:52:00
 
-A new app icon in colour (images/bc250-governor-manager.png, 512 px), for the app menu entry, the Desktop icon
+A new app icon in color (images/bc250-governor-manager.png, 512 px), for the app menu entry, the Desktop icon
 and the window.
 
 Changelog: 10-10-2026 20:56:48
@@ -159,7 +163,7 @@ governor-v<x.y.z>; the badge shows the suite's CI. They pointed at the old stand
 Changelog: 09-10-2026 18:20:11
 
 Links to the app's own repository and to gpu-oc-bisect pointed at the old stand-alone repositories, which no longer
-exist; they now open the apps' folders in the BC250 Bazzite Suite repository, in every language (catalogues in
+exist; they now open the apps' folders in the BC250 Bazzite Suite repository, in every language (catalogs in
 tools/i18n updated, translations rebuilt with tools/i18n/build.py, which reproduces the previous files). en.ts also
 picks up the line numbers of the earlier gpu_metrics change.
 
@@ -225,7 +229,7 @@ are read with currentData()/findData() instead of their shown text, the nav look
 page map instead of the label, and the journal view tracks "following" with a flag instead of matching the label.
 New tools/i18n/: build.py collects the strings with pylupdate6, expands each class context to its subclasses
 (PyQt resolves self.tr() with the context of the instance's class, so an inherited call looks up the subclass
-name), writes bc250_governor/translations/bc250_governor_<lang>.ts from the flat per-language catalogue
+name), writes bc250_governor/translations/bc250_governor_<lang>.ts from the flat per-language catalog
 tools/i18n/<lang>.json and compiles the .qm files; --check reports missing, unused or broken placeholders.
 Compiling needs lrelease (Qt) or pyside6-lrelease (pip install PySide6-Essentials) at build time only.
 README has a new "Languages" section.
@@ -263,10 +267,10 @@ Changelog: 07-10-2026 06:45:00
 
 Overview: compare the live session with an earlier CSV export. New "Compare…" button loads a file written by
 "Export CSV…" (history.read_csv, tolerant to blank cells and missing optional columns, refuses foreign files)
-and draws its load, temperature and clock as dashed, thinner lines in the same colours behind the live ones,
+and draws its load, temperature and clock as dashed, thinner lines in the same colors behind the live ones,
 right-aligned like the live window and following the Window combo; the note under the chart shows the
 reference's duration, average load/clock/temperature/power and peaks next to the same figures for the live
-window (history.Summary/summarise). "Clear" removes the reference. Help, README and the hardware checklist
+window (history.Summary/summarize). "Clear" removes the reference. Help, README and the hardware checklist
 updated; 3 new tests (CSV round-trip and summary, bad-file handling, overlay/notes/clear).
 
 Changelog: 07-10-2026 06:35:00

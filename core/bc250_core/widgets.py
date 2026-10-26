@@ -21,8 +21,8 @@ from .theme import ACCENT, ACTIVE_RED, ACTIVE_RED_HOVER, GREY, STATE_COLORS, hea
 
 
 class StatusPill(QLabel):
-    """A short state word on the theme's surface, its state as a coloured left edge: Active, Not mounted, ...
-    Neutral has no colour."""
+    """A short state word on the theme's surface, its state as a colored left edge: Active, Not mounted, ...
+    Neutral has no color."""
 
     def __init__(self, text: str = "", parent: QWidget | None = None):
         text = text or "Unknown"
@@ -40,8 +40,8 @@ class StatusPill(QLabel):
 
 
 class StatusText(QWidget):
-    """A state next to an app's title: a coloured dot and the state in bold, in the colour of its kind, the same
-    set_status() as StatusPill. Lighter than a pill in a header; neutral uses the normal text colour."""
+    """A state next to an app's title: a colored dot and the state in bold, in the color of its kind, the same
+    set_status() as StatusPill. Lighter than a pill in a header; neutral uses the normal text color."""
 
     def __init__(self, text: str = "", parent: QWidget | None = None):
         super().__init__(parent)
@@ -69,8 +69,8 @@ class StatusText(QWidget):
 
 
 class MetricBox(QFrame):
-    """One box of a header row: a big value with a caption, centred like the stats boxes of bc250-bazzite-test
-    (centred=False: left-aligned). On the theme's surface, *colour* as its left edge (GREY: none)."""
+    """One box of a header row: a big value with a caption, centered like the stats boxes of bc250-bazzite-test
+    (centered=False: left-aligned). On the theme's surface, *color* as its left edge (GRAY: none)."""
 
     MIN_WIDTH = 120
 
@@ -98,7 +98,7 @@ class MetricBox(QFrame):
             _even(self.peers)
 
     def set_colour(self, colour: str) -> None:
-        """The box's state or category colour, its left edge; GREY (neutral) has none."""
+        """The box's state or category color, its left edge; GRAY (neutral) has none."""
         self.setStyleSheet(surface_style(None if colour == GREY else colour)
                            + "QLabel { background:transparent; border:none; }")
 
@@ -305,7 +305,7 @@ def set_button_active(button: QPushButton, active: bool) -> None:
     button.setProperty("activeRed", active)
     if active:
         # Setting the border makes the stylesheet paint the whole button, so the fill is solid instead of being
-        # blended over the native gradient. No font change, so the text weight matches the neighbours.
+        # blended over the native gradient. No font change, so the text weight matches the neighbors.
         button.setStyleSheet(f"QPushButton {{ background:{ACTIVE_RED}; color:white; border:1px solid {ACTIVE_RED}; "
                              "border-radius:3px; }"
                              f"QPushButton:hover {{ background:{ACTIVE_RED_HOVER}; border-color:{ACTIVE_RED_HOVER}; }}")
@@ -314,7 +314,7 @@ def set_button_active(button: QPushButton, active: bool) -> None:
 
 
 def accent_button(text: str, tooltip: str = "") -> QPushButton:
-    """The page's main action, outlined in the accent colour like the selected nav item."""
+    """The page's main action, outlined in the accent color like the selected nav item."""
     button = QPushButton(text)
     button.setToolTip(tooltip)
     button.setMinimumHeight(36)

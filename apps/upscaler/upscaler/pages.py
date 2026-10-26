@@ -713,12 +713,12 @@ class IniPage(QWidget):
         return spin
 
     def set_helixsr_version(self, version: str) -> None:
-        """Grey out what the payload's HelixSR version does not read; the values stay in the file for other versions."""
+        """Gray out what the payload's HelixSR version does not read; the values stay in the file for other versions."""
         ignored = ini_ignored_fields(version)
         for name in ("sharpening_mode", "sharpener", "sharpness", "motion_adaptive", "motion_threshold", "motion_limit",
                      "motion_reduction", "use_game_slider", "network"):
             getattr(self, name).setEnabled(name not in ignored)
-        self.ignored_hint.setText(("HelixSR {0} does not read the greyed-out settings; they are kept in the file "
+        self.ignored_hint.setText(("HelixSR {0} does not read the grayed-out settings; they are kept in the file "
                                    "for other versions.").format(version) if ignored else "")
         self.ignored_hint.setVisible(bool(ignored))
 

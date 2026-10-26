@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""PCSX2's catalogue (catalogue.py): the titles read out of a GameIndex.yaml as PCSX2 writes it, the widescreen
+"""PCSX2's catalog (catalogue.py): the titles read out of a GameIndex.yaml as PCSX2 writes it, the widescreen
 patches looked up as PCSX2 does, and the files taken out of the AppImage."""
 
 from __future__ import annotations

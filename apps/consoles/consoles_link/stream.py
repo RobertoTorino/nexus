@@ -8,7 +8,7 @@
    controller and announce the microphone; from then on video and audio flow, and a heartbeat goes every second.
    The native core sends the controller's state from then on, at least every 200 ms (idle until set_controller:
    without it a PS4 pauses the stream). The console sends the controller's rumble and pad info (the light bar's
-   colour, the player number, a request to reset the motion), which go to on_controller.
+   color, the player number, a request to reset the motion), which go to on_controller.
    The native core puts the video frames together (FEC rebuilds lost units), names the frames that never came or
    could not be rebuilt, which go to the console as CORRUPTFRAME, and sends the congestion reports. The frames go
    to the video decoder (FFmpeg in the native core): the resolution's header from STREAMINFO first, then each frame.
@@ -245,8 +245,8 @@ class StreamConnection:
 
     def _on_pad_info(self, data: bytes) -> None:
         """The reference's two layouts: 25 bytes (the sequence number of the feedback packet it answers, a
-        timestamp, then the player number at 8, the colour at 9 and the motion reset at 12) and 17 bytes (the player
-        number, the colour and the motion reset from the start). A PS4 also sends 7 bytes (00 00 00 40 01 00 00 on the
+        timestamp, then the player number at 8, the color at 9 and the motion reset at 12) and 17 bytes (the player
+        number, the color and the motion reset from the start). A PS4 also sends 7 bytes (00 00 00 40 01 00 00 on the
         owner's PS4 Pro, 13-10-2026) at the stream's start and when a PS press hands it a controller; their meaning is
         not known, so they are counted and noted once."""
         self._raw("pad info", data)

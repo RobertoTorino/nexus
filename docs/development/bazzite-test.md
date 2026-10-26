@@ -110,7 +110,7 @@ reports the overall verdict.
 | 05 | DNS Resolution         | Resolves a known hostname.                                                |
 | 06 | Public Internet Access | Fetches a URL over HTTPS.                                                 |
 | 07 | Open Ports             | Lists listening TCP/UDP sockets.                                          |
-| 08 | NTP Synchronization    | Confirms the clock is synchronised.                                       |
+| 08 | NTP Synchronization    | Confirms the clock is synchronized.                                       |
 | 30 | SSH Service            | Reports `sshd.service` / `sshd.socket` state (off by default on Bazzite). |
 | 53 | Wi-Fi Adapter          | Every Wi-Fi adapter, its driver and firmware, rfkill and its connection; BC-250 USB Wi-Fi's service. |
 | 44 | Internet Speed         | **Opt-in** (`--speedtest`). See below.                                    |
@@ -127,7 +127,7 @@ reports the overall verdict.
 * A VPN in the path is noted, because then the VPN is measured, not the line.
 * Every run is appended to `bc250-speedtest-history.csv`; the GUI's **Show graph** compares all runs.
 * Install Ookla's CLI: download the Linux x86_64 `.tgz` from <https://www.speedtest.net/apps/cli> and put the
-  `speedtest` binary in `~/.local/bin`. Running it accepts Ookla's licence and GDPR terms.
+  `speedtest` binary in `~/.local/bin`. Running it accepts Ookla's license and GDPR terms.
 
 Test 53 runs `bc250_core.wifi` with the system `python3 -I -B` (standard library only, no bytecode written as
 root): from the `bc250_core` bundled next to the script, or `core/` in the suite checkout. It reads `/sys`, the

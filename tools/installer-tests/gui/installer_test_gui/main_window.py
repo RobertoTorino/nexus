@@ -186,11 +186,11 @@ class MainWindow(QMainWindow):
 
     def _test_finished(self, name: str, exit_code: int, cancelled: bool) -> None:
         _item, title, _checkbox, status = self._items[name]
-        result = "CANCELLED" if cancelled else "PASS" if exit_code == 0 else f"FAIL ({exit_code})"
+        result = "CANCELED" if cancelled else "PASS" if exit_code == 0 else f"FAIL ({exit_code})"
         if not cancelled:
             if exit_code == 0:
                 status.setText("✓")
-                status.setStyleSheet("color: #16803c; font-weight: bold;")
+                status.setStyleSheet("color: #2e7d32; font-weight: bold;")
                 status.setToolTip(f"{title}: passed")
             else:
                 status.setText("✗")
@@ -202,7 +202,7 @@ class MainWindow(QMainWindow):
         self.run_selected_button.setEnabled(True)
         self.run_all_button.setEnabled(True)
         self.stop_button.setEnabled(False)
-        self.statusBar().showMessage("Run cancelled." if cancelled else "Run complete.")
+        self.statusBar().showMessage("Run canceled." if cancelled else "Run complete.")
 
     def closeEvent(self, event: QCloseEvent) -> None:
         if self.runner.busy:

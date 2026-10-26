@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The suite's look: the theme, state colours, the bundled Inter font and shared style sheets.
+"""The suite's look: the theme, state colors, the bundled Inter font and shared style sheets.
 
 These values were hard-coded in every app; they live here now and nowhere else.
 
@@ -76,7 +76,7 @@ def save_theme_name(name: str, path: Path | None = None) -> None:
 
 THEME = THEMES[theme_name()]
 
-# Result colours and the logo's purple. A state shows as a coloured edge or dot on the theme's surfaces.
+# Result colors and the logo's purple. A state shows as a colored edge or dot on the theme's surfaces.
 GREEN, ORANGE, RED, BLUE, GREY = "#2e7d32", "#ef6c00", "#c62828", "#1565c0", "#3a3f4b"
 PURPLE = "#6a1b9a"
 ACCENT = THEME.accent
@@ -103,15 +103,15 @@ def _sheen(theme: Theme, reverse: bool = False) -> str:
 
 def surface_style(colour: str | None = None, selector: str = "QFrame", radius: int = 8,
                   theme: Theme = THEME) -> str:
-    """A status tile or pill on the theme: its surface and edge, and *colour* (a state, a category) as a thick
-    left edge, in the edge's colour for a neutral one. The text keeps the theme's colour. The border takes
+    """A status tile or pill on the theme: its surface and edge, and *color* (a state, a category) as a thick
+    left edge, in the edge's color for a neutral one. The text keeps the theme's color. The border takes
     SURFACE_BORDER of the room inside: a tile or pill gives that back from its margins or padding."""
     return (f"{selector} {{ background:{_sheen(theme)}; border:1px solid {theme.edge}; "
             f"border-left:4px solid {colour or theme.edge}; border-radius:{radius}px; color:{theme.text}; }}")
 
 
 def muted(theme: Theme = THEME) -> str:
-    """Secondary text (a version, a hint): the text colour toned down towards the window."""
+    """Secondary text (a version, a hint): the text color toned down towards the window."""
     text, window = QColor(theme.text), QColor(theme.window)
     return QColor.fromRgbF(*((a + b) / 2 for a, b in zip(text.getRgbF()[:3], window.getRgbF()[:3]))).name()
 

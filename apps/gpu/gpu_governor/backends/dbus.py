@@ -119,5 +119,5 @@ class GovernorBus:
         result = _run(["pkexec", "busctl", "--system", "call", BUS_NAME, OBJECT_PATH, TEST_IFACE, "SetTestMode",
                        "uu", str(int(mhz)), str(int(millivolts))], timeout=120)
         if result.returncode == 126:
-            return False, "Authentication was cancelled."
+            return False, "Authentication was canceled."
         return result.returncode == 0, "" if result.returncode == 0 else _error(result)

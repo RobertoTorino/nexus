@@ -2,7 +2,7 @@
 """The main window: the board's CEC adapter and the TV behind it, buttons for the TV and what it tells about itself
 (tvinfo.py), the board's name on the TV, what happens when the TV turns off and on (the picture: display.py; media:
 media.py; both through the watcher service), what happens at boot before anyone logs in (boot.py, a system service
-installed through pkexec), the automatic behaviour of Valve's CEC daemon (cecd) with the remote's buttons (keys.py),
+installed through pkexec), the automatic behavior of Valve's CEC daemon (cecd) with the remote's buttons (keys.py),
 and a tester for the remote's keys.
 
 The buttons send their messages with cec-ctl, so they work whichever CEC mode Bazzite is in. The automatic part
@@ -45,18 +45,18 @@ AUTOMATIC = (
     ("uinput", "Use the TV remote as a keyboard (arrows, OK, back, play/pause)"),
     ("allow_standby", "Put the board to sleep when the TV goes to standby"),
 )
-# The four boxes at the top, left to right, each its own colour: dark blue, orange, black, purple.
-DARK_BLUE = "#0d47a1"
+# The four boxes at the top, left to right, each its own color: the info blue, orange, black, purple.
+DARK_BLUE = "#1565c0"
 BLACK = "#000000"
 # What to do for the picture after the TV was off (display.py): key, label, explanation.
 PICTURE = (
     ("nothing", "Leave it as it is",
      "Fine with most TVs and adapters. With some DP-to-HDMI converters the TV stays black after standby until the "
      "picture changes."),
-    ("8bit", "8 bits per colour: the picture comes back by itself",
-     "Keeps the signal below the speed where HDMI needs the handshake the converter forgets. Colours are slightly "
+    ("8bit", "8 bits per color: the picture comes back by itself",
+     "Keeps the signal below the speed where HDMI needs the handshake the converter forgets. Colors are slightly "
      "less fine; there is no flicker and nothing runs in the background."),
-    ("restart", "Restart the picture when the TV turns on: full colour, one short flicker",
+    ("restart", "Restart the picture when the TV turns on: full color, one short flicker",
      "A small background service asks the TV every 5 seconds whether it is on. When it comes back, the screen "
      "switches to another refresh rate for 4 seconds and back, so the converter handshakes again. KDE desktop only."),
 )
@@ -578,7 +578,7 @@ class MainWindow(QMainWindow):
     # --- Picture after the TV was off ----------------------------------------------------------------------
 
     def choose_picture(self) -> None:
-        """Applies the choice: 8-bit colour, the watcher service, or neither. Each undoes the others."""
+        """Applies the choice: 8-bit color, the watcher service, or neither. Each undoes the others."""
         output = self.output()
         choice = next(k for k, b in self.picture_buttons.items() if b.isChecked())
         if output is None:
@@ -617,7 +617,7 @@ class MainWindow(QMainWindow):
         greeter = boot.greeter_user(self.boot_paths)
         self.greeter_button.setEnabled(bool(greeter) and self.kwin_outputs().is_file())
         self.greeter_button.setToolTip(
-            "Copy this desktop's display settings (resolution, refresh rate, colour depth) to the login screen"
+            "Copy this desktop's display settings (resolution, refresh rate, color depth) to the login screen"
             if greeter else "Only for KDE's login screen (Plasma Login or SDDM); this system has another one")
         if at_boot is None:
             text = ("Off: until you log in, nothing gives the TV the board's name (it may show \"Playback\") or "
@@ -630,13 +630,13 @@ class MainWindow(QMainWindow):
                 text += (" It was installed by another version of the app or with another name: Update installs "
                          "this one.")
         self.boot_note.setText(f"{text} The login screen has its own display settings: with 8 bits per "
-                               "colour chosen above, copy them to it, so the picture also comes back there.")
+                               "color chosen above, copy them to it, so the picture also comes back there.")
 
     def kwin_outputs(self) -> Path:
         return self.config_dir / boot.KWIN_OUTPUTS
 
     def as_root(self, args: list[str], title: str) -> bool:
-        """Runs boot.py as root; a cancelled password or a failure shows a message and changes nothing here."""
+        """Runs boot.py as root; a canceled password or a failure shows a message and changes nothing here."""
         result = self.run_root(boot.command(args))
         problem = boot.answer(result.code, result.out)
         if problem:
@@ -651,7 +651,7 @@ class MainWindow(QMainWindow):
             self.install_boot(self.osd_name(), self.wake_box.isChecked())
         else:
             self.as_root(["uninstall"], "At boot")
-        self.refresh_boot()                         # as installed: unchanged when the password was cancelled
+        self.refresh_boot()                         # as installed: unchanged when the password was canceled
 
     def choose_wake(self, on: bool) -> None:
         at_boot = boot.installed(self.boot_paths)
@@ -667,9 +667,9 @@ class MainWindow(QMainWindow):
     def copy_display_to_greeter(self) -> None:
         answer = QMessageBox.question(
             self, window_title("Login screen"),
-            "Use this desktop's display settings on the login screen too?\n\nThe resolution, refresh rate and colour "
+            "Use this desktop's display settings on the login screen too?\n\nThe resolution, refresh rate and color "
             "depth you have now are copied to the login screen, as KDE's Apply Plasma Settings (System Settings, "
-            "Login Screen) does. With 8 bits per colour, a TV that is turned on while the login screen shows then "
+            "Login Screen) does. With 8 bits per color, a TV that is turned on while the login screen shows then "
             "gets its picture too. It asks for your password.")
         if answer != QMessageBox.StandardButton.Yes:
             return

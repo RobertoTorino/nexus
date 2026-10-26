@@ -53,7 +53,7 @@ class LiveStatus(QWidget):
         self.enabled.setChecked(self.sampler.available)
         self.enabled.setEnabled(self.sampler.available)
         self.enabled.setToolTip("Live CPU/GPU load, network speed, running game and refresh rate (Linux only). "
-                                "Paused while the window is minimised.")
+                                "Paused while the window is minimized.")
         self.enabled.toggled.connect(self._apply_state)
         for w in (self.game, self.cpu, self.gpu, self.net, self.hz, self.enabled):
             row.addWidget(w)

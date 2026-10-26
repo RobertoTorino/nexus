@@ -12,11 +12,11 @@ from PyQt6.QtCore import QObject, QProcess, pyqtSignal
 
 _SUDO_AUTH_FAIL = ("incorrect password", "Sorry, try again", "no password was provided",
                    "a password is required")
-_ANSI = re.compile(r"\x1b\[[0-9;]*m")    # the script colours its [INFO]/[WARN]/[ERROR] tags
+_ANSI = re.compile(r"\x1b\[[0-9;]*m")    # the script colors its [INFO]/[WARN]/[ERROR] tags
 
 
 class ScriptRunner(QObject):
-    line = pyqtSignal(str)           # one line of output, colour codes removed
+    line = pyqtSignal(str)           # one line of output, color codes removed
     finished = pyqtSignal(int)       # exit code (0 = success)
     auth_failed = pyqtSignal()
 

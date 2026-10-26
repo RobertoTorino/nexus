@@ -166,9 +166,9 @@ window) gives it back.
 ## Picture settings
 
 Beside the preview, **Picture settings** shows the camera's own settings, as it reports them: on the PS5 HD Camera
-brightness, contrast, saturation, hue, gain and sharpness (0 to 8, hue 0 to 11), automatic white balance or a colour
+brightness, contrast, saturation, hue, gain and sharpness (0 to 8, hue 0 to 11), automatic white balance or a color
 temperature, the power line frequency (50 or 60 Hz, against flicker under lamps) and the exposure (Auto, or Shutter
-Priority, the camera's default). A setting that another one decides is greyed: the colour temperature while the white
+Priority, the camera's default). A setting that another one decides is grayed: the color temperature while the white
 balance is automatic. **Defaults** puts every setting back.
 
 The app sets **Auto Exposure** to **Auto Mode** unless you choose otherwise: in its own default mode, Shutter
@@ -185,7 +185,7 @@ frame, 0 to 255):
 | Shutter Priority, brightness 8 | 112 | 0 % | 1 % |
 
 Gain changes the picture only in Auto Mode. The camera reports an exposure time, but it cannot be used, so the app
-shows it greyed, for completeness. The camera has no manual exposure: it marks the exposure time as set by its
+shows it grayed, for completeness. The camera has no manual exposure: it marks the exposure time as set by its
 automatic exposure in both of its modes, Linux's driver therefore refuses it, and a value sent to the camera directly
 is put back to 1000 when the picture starts. Besides these, the camera has one vendor control of its own (an
 extension unit, 3 bytes) that nothing documents; the app leaves it alone.

@@ -78,7 +78,7 @@ and DLN); the app installs the **AIC8800D80** set only, in the two MCU revisions
 D80N, DC or DLN chip binds to the driver but needs a firmware set the app does not install, so it gets no
 `wlan0`; its chip line in the kernel log says which chip it is.
 
-What the window recognises is narrower than the driver: the stick box knows the storage-mode IDs `a69c:5721`
+What the window recognizes is narrower than the driver: the stick box knows the storage-mode IDs `a69c:5721`
 to `a69c:572c`, the loader ID `a69c:8d80` and the Wi-Fi ID `a69c:8d81`, and shows any other ID as unknown mode.
 The udev rule that ejects the virtual disk is written for vendor `a69c`, so a `368b` stick in storage mode is not
 switched by the rule; `eject` on its disk does it by hand. Both vendor IDs count as a stick for the rest of the

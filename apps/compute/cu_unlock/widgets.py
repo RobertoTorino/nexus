@@ -26,7 +26,7 @@ class SudoDialog(QDialog):
         layout.addWidget(text)
         if message:
             err = QLabel(message)
-            err.setStyleSheet("color:#ef5350; font-weight:600;")
+            err.setStyleSheet("color:#e57373; font-weight:600;")
             err.setWordWrap(True)
             layout.addWidget(err)
         self.edit = QLineEdit()

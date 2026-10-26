@@ -429,7 +429,7 @@ class MainWindow(QMainWindow):
         if plan.root_files and not self.runner.sudo_ready():
             password = SudoDialog.ask(self, "Removing the full reports in /var/log needs root.")
             if password is None:
-                self.statusBar().showMessage("Cleanup cancelled — no password entered.")
+                self.statusBar().showMessage("Cleanup canceled — no password entered.")
                 return
         removed, errors = execute_cleanup(plan, password)
         del password
@@ -553,7 +553,7 @@ class MainWindow(QMainWindow):
         text = ("The internet speed test downloads and uploads for about 30 s. On a fast connection that is "
                 "about 1 GB of data, so skip it on a metered or mobile connection. Pause Steam downloads and "
                 "streams first, they skew the result.\n\nWith Ookla's speedtest, running it accepts Ookla's "
-                "licence and GDPR terms (https://www.speedtest.net/about/eula).")
+                "license and GDPR terms (https://www.speedtest.net/about/eula).")
         answer = QMessageBox.question(self, "Internet speed test", text + "\n\nContinue?")
         return answer == QMessageBox.StandardButton.Yes
 
@@ -595,7 +595,7 @@ class MainWindow(QMainWindow):
         if not self.runner.sudo_ready():
             password = SudoDialog.ask(self, message)
             if password is None:
-                self.statusBar().showMessage("Cancelled — no password entered.")
+                self.statusBar().showMessage("Canceled — no password entered.")
                 return
         self.runner.start(req, password)
         del password
@@ -760,7 +760,7 @@ class MainWindow(QMainWindow):
             else:
                 self._run_info.meta.setdefault("kernel", platform.release())
                 self.history.finish_run(self._run_id, self._run_info, code, cancelled)
-                # Tests that never finished (cancelled) show their previous result again.
+                # Tests that never finished (canceled) show their previous result again.
                 latest = self.history.latest_results()
                 for tid in (self.runner.request.test_ids or list(TESTS)) if self.runner.request else []:
                     if self._button(tid).state == IDLE and tid in latest:

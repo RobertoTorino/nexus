@@ -3,7 +3,7 @@
 
 Built to cost next to nothing, so it can stay on during gameplay:
 - only plain file reads from /proc and sysfs, no helper programs;
-- one sample every 2 s, and none while the window is minimised;
+- one sample every 2 s, and none while the window is minimized;
 - the full process scan (which processes hold the GPU, which one is the game) runs every 10 s,
   the samples in between only re-read the handful of files that scan found;
 - a sample that takes too long doubles the interval; the cost is shown in the tooltip.

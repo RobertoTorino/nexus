@@ -12,7 +12,7 @@
 #             Skipped entirely with --control-only (e.g. to re-validate a combined mask whose
 #             WGPs were already bisected, without re-testing already-known-bad ones).
 #
-# Every item runs several rounds (interleaved, so heat and time of day don't favour one item).
+# Every item runs several rounds (interleaved, so heat and time of day don't favor one item).
 # By default each attempt gets its own boot, so it starts from the clean driver state. Masks are
 # only written while the GPU is idle, they are read back to check they took, and they are read
 # again during the load to see if they drift. memtest_vulkan checks for wrong results, not only
@@ -48,7 +48,7 @@
 set -u
 if (( BASH_VERSINFO[0] < 4 )); then echo "bash 4 or newer is needed." >&2; exit 1; fi
 
-VERSION="0.2.1"
+VERSION="0.3.0"
 STRESS_SECS="" ROUNDS_OPT="" BASE_OPT="" SAME_BOOT=0 AUTO=0 WATCH=1 MODE=run CONTROL_ONLY_OPT=""
 
 say()  { printf '%s\n' "$*"; }

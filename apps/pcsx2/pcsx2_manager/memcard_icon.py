@@ -2,7 +2,7 @@
 """A save's 3D icon as a still picture, drawn in Python without OpenGL: what mymc++'s icon viewer shows when it
 opens (its icon_renderer.py), the first shape of the model unanimated. The same camera (5 units back, 80 degrees,
 the model lowered by 2.5), the icon's own lighting from icon.sys (ambient light and three lights, Lambert), its
-background (the four corner colours over black) and its texture (128 x 128, 5 bits a colour) with mipmaps, with
+background (the four corner colors over black) and its texture (128 x 128, 5 bits a color) with mipmaps, with
 back faces left out and a depth buffer as OpenGL has them.
 
 The mipmaps matter: many icons draw their outlines with a texture's border (Rez: black with an orange edge), which
@@ -31,7 +31,7 @@ Colour = tuple[float, float, float]
 
 
 def _texels(texture) -> list[Colour] | None:
-    """The texture as (r, g, b) from 0 to 1, row by row; None for an icon without one (its colours alone)."""
+    """The texture as (r, g, b) from 0 to 1, row by row; None for an icon without one (its colors alone)."""
     if not isinstance(texture, (bytes, bytearray)) or len(texture) < TEXTURE * TEXTURE * 2:
         return None
     out = []
@@ -63,7 +63,7 @@ def _normalised(v: tuple[float, float, float]) -> tuple[float, float, float]:
 
 
 def _background(icon_sys: IconSys, size: int) -> list[list[float]]:
-    """The four corner colours (0x80 is full), blended over black with the icon's background alpha, as a
+    """The four corner colors (0x80 is full), blended over black with the icon's background alpha, as a
     gradient: the first top left, the second top right, the third bottom left, the fourth bottom right, as
     mymc++ lays them out."""
     alpha = min(icon_sys.background_transparency / 0x80, 1.0)
@@ -106,7 +106,7 @@ def _draw(icon_sys: IconSys, icon: ps2icon.Icon, count: int, size: int, pixels: 
     blend = icon.enable_alpha
     v, nuv, colours = icon.vertex_data, icon.normal_uv_data, icon.color_data
 
-    # Each vertex: screen x and y, 1/w, its lit colour, alpha, and its texture coordinates.
+    # Each vertex: screen x and y, 1/w, its lit color, alpha, and its texture coordinates.
     points = []
     for i in range(count):
         x = v[3 * i] / FIXED
@@ -166,7 +166,7 @@ def _triangle(p0, p1, p2, area: float, size: int, pixels: list[list[float]], dep
     if x0 > x1 or y0 > y1:
         return
     side = int(math.sqrt(len(texture))) if texture is not None else 0
-    # Per vertex, over w (for perspective): the lit colour, alpha and texture coordinates; and 1/w itself.
+    # Per vertex, over w (for perspective): the lit color, alpha and texture coordinates; and 1/w itself.
     q = [[p[2]] + [p[k] * p[2] for k in range(3, 9)] for p in (p0, p1, p2)]
     inv = 1.0 / area
     for y in range(y0, y1 + 1):

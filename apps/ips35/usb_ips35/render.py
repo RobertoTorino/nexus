@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The picture on the screen: the chosen values as tiles under a header (the user's text, the time and, if wanted,
-the time zone and the date), drawn with QPainter at the screen's size in the chosen theme and colours, on an optional
+the time zone and the date), drawn with QPainter at the screen's size in the chosen theme and colors, on an optional
 picture of the user's own, and turned to the chosen orientation, then converted to the screen's RGB565. Tiles fill
 one column standing up and two lying down, and everything scales with the screen, so the 5" and 7" models get the
 same layout, larger."""
@@ -75,13 +75,13 @@ THEMES = {
 }
 DEFAULT_THEME = "Dark"
 TILE_ALPHA = 215                         # the tiles over a picture: the picture shows through a little
-# The theme's colours the user may change: the Theme field for each.
+# The theme's colors the user may change: the Theme field for each.
 COLOURS = {"text": "text", "tiles": "surface", "accent": "accent", "background": "background"}
 SUN, DROP, BOLT = QColor(250, 196, 60), QColor(80, 160, 240), QColor(250, 210, 70)
 
 
 def with_colours(theme: Theme, colours: dict[str, str]) -> Theme:
-    """*theme* with the user's own colours (COLOURS' keys, as #rrggbb); an empty or unreadable one keeps the theme's."""
+    """*theme* with the user's own colors (COLORS' keys, as #rrggbb); an empty or unreadable one keeps the theme's."""
     own = {COLOURS[key]: QColor(value) for key, value in colours.items()
            if key in COLOURS and value and QColor(value).isValid()}
     return replace(theme, **own)

@@ -15,6 +15,6 @@ def test_command_runs_the_helper_isolated():
 def test_parse():
     assert privileged.parse(0, 'noise\n{"ok": true, "message": "Done."}\n') == privileged.Result(True, "Done.")
     assert privileged.parse(1, '{"ok": false, "error": "No."}') == privileged.Result(False, "No.")
-    assert "cancelled" in privileged.parse(126, "").message
+    assert "canceled" in privileged.parse(126, "").message
     result = privileged.parse(2, "Traceback")
     assert not result.ok and "exit code 2" in result.message and "Traceback" in result.message

@@ -104,7 +104,7 @@ for t in $TESTS; do
             log "INFO: (uses about 1 GB of data on a fast connection)."
         else
             log "INFO: Traffic goes through enp4s0 (Ethernet, link 1000 Mbit/s)."
-            log "Running Ookla speedtest (about 30 s; by running it you accept Ookla's licence and GDPR terms)"
+            log "Running Ookla speedtest (about 30 s; by running it you accept Ookla's license and GDPR terms)"
             sleep 1
             log "INFO: Server: MIRHosting - Amsterdam; ISP: Zscaler"
             log "SUCCESS: Download: 611.16 Mbps (603.10 MB used), latency while downloading 42.38 ms"
@@ -145,7 +145,7 @@ for t in $TESTS; do
         echo; continue
     fi
     echo "  raw command output for test $t"
-    # Deterministic mix of outcomes so every button colour shows up.
+    # Deterministic mix of outcomes so every button color shows up.
     case $((10#$t % 7)) in
         0) log "ERROR: Simulated failure in test $t."
            log "HINT: This is what a fix suggestion looks like."; ERRORS=$((ERRORS + 1)) ;;

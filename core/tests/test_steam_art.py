@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""steam_art.py: the artwork drawn from an app's icon, at Steam's sizes, in the icon's colour, the icon as the logo,
+"""steam_art.py: the artwork drawn from an app's icon, at Steam's sizes, in the icon's color, the icon as the logo,
 a long title, and no icon."""
 
 from __future__ import annotations
@@ -45,7 +45,7 @@ def test_the_background_takes_the_icons_colour(qapp, tmp_path):
         assert corner.value() < 60 and (corner.red() > corner.blue()) == warm, colour
     grey = QImage(64, 64, QImage.Format.Format_ARGB32)
     grey.fill(QColor("#808080"))
-    assert steam_art.accent_colour(grey).name() == steam_art.FALLBACK         # no bright colour to take
+    assert steam_art.accent_colour(grey).name() == steam_art.FALLBACK         # no bright color to take
 
 
 def test_a_long_title_fits(qapp, tmp_path):

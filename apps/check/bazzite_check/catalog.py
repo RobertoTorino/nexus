@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Test catalogue, grouped the same way as the categories in the manual."""
+"""Test catalog, grouped the same way as the categories in the manual."""
 
 from __future__ import annotations
 
@@ -46,7 +46,7 @@ CATEGORIES: list[Category] = [
         TestDef("05", "DNS Resolution", "Resolves a known hostname."),
         TestDef("06", "Public Internet Access", "Fetches a URL over HTTPS."),
         TestDef("07", "Open Ports", "Lists listening TCP/UDP sockets."),
-        TestDef("08", "NTP Synchronization", "Confirms the clock is synchronised."),
+        TestDef("08", "NTP Synchronization", "Confirms the clock is synchronized."),
         TestDef("30", "SSH Service", "Reports sshd.service / sshd.socket state (off by default on Bazzite)."),
         TestDef("53", "Wi-Fi Adapter",
                 "Every Wi-Fi adapter (USB or PCIe), whether the running kernel has a driver and firmware for it, "

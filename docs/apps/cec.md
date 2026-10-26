@@ -64,24 +64,24 @@ the name in their input list after switching inputs or turning the TV off and on
 With some DP-to-HDMI converters the TV stays black after standby, although it is on and the board runs on. The
 converter keeps the DisplayPort side up while the TV is off, so the board never learns that the TV went away. At
 high speeds HDMI needs a handshake with the TV (scrambling, above 340 MHz: 1080p at 120 Hz with 10 or 12 bits per
-colour). When the TV comes back, some converters do not redo that handshake, and the TV gets no picture until the
+color). When the TV comes back, some converters do not redo that handshake, and the TV gets no picture until the
 signal changes.
 
 Choose what the app does about it:
 
 - **Leave it as it is:** nothing changes. Fine with most TVs and adapters. With this choice, **TV standby** asks first,
   because the picture may not come back.
-- **8 bits per colour:** the picture comes back by itself. 1080p at 120 Hz then stays below the speed where the
-  handshake is needed. Colours are slightly less fine; nothing runs in the background and nothing flickers. Larger
+- **8 bits per color:** the picture comes back by itself. 1080p at 120 Hz then stays below the speed where the
+  handshake is needed. Colors are slightly less fine; nothing runs in the background and nothing flickers. Larger
   modes, such as 1440p at 120 Hz or 4K at 60 Hz, need the handshake even at 8 bits: there only the next choice
   helps.
-- **Restart the picture when the TV turns on:** full colour. A small background service asks the TV every 5 seconds
+- **Restart the picture when the TV turns on:** full color. A small background service asks the TV every 5 seconds
   whether it is on. When the TV comes back, the screen switches to another refresh rate for 4 seconds and back: one
   short flicker, and the converter handshakes again. It starts with your desktop session.
 
 Under the choices the app says what the current mode means: whether 8 bits is enough, or whether the signal is so
 slow that the handshake never happens (1080p at 60 Hz, for example), so a black TV has another cause. Both fixes use
-KDE's display settings, so they work on the KDE desktop and not in Game Mode. The colour depth is the
+KDE's display settings, so they work on the KDE desktop and not in Game Mode. The color depth is the
 same setting as **Color resolution** in KDE's Display settings. If the TV stays black and neither fix is on, changing
 the refresh rate in Display settings (when you can see it) or a restart brings the picture back.
 
@@ -116,7 +116,7 @@ goes wrong in three ways:
 - **It gives the adapter no name.** The TV then lists the board as "Playback", also after the app named it, because
   the script runs again whenever the Bluetooth adapter appears.
 - **The login screen has its own display settings.** When the TV is off while the login screen starts, and is
-  turned on later, some converters give no picture (see [The picture](#the-picture)). The 8 bits per colour you
+  turned on later, some converters give no picture (see [The picture](#the-picture)). The 8 bits per color you
   chose for your desktop do not apply to the login screen.
 
 The service of the app starts on the CEC adapter itself, at whatever moment it appears. It uses your name for the
@@ -144,9 +144,9 @@ moment: it names the board and switches the TV to it, but the login screen is al
 
 ### The login screen's picture
 
-The login screen does not use the colour depth you chose under **When the TV turns off and on**. **Display settings to the login screen…** copies your desktop's display settings (resolution,
-refresh rate, colour depth) to it, as KDE's **Apply Plasma Settings** under System Settings → Login Screen does.
-With **8 bits per colour** chosen, a TV turned on while the login screen shows then gets its picture too. It works
+The login screen does not use the color depth you chose under **When the TV turns off and on**. **Display settings to the login screen…** copies your desktop's display settings (resolution,
+refresh rate, color depth) to it, as KDE's **Apply Plasma Settings** under System Settings → Login Screen does.
+With **8 bits per color** chosen, a TV turned on while the login screen shows then gets its picture too. It works
 with KDE's login screens (Plasma Login and SDDM), and asks for your password.
 
 To see what the service did at the last boot: `journalctl -b -u bc250-hdmi-cec-boot`.
@@ -170,7 +170,7 @@ defaults (`98-bazzite-cec-mode.toml`). Where SteamOS Manager runs, its own setti
 over the app's.
 
 **Remote buttons…** chooses the key each button of the TV remote gives. The buttons most TVs pass on come first:
-OK, the arrows, back, the media buttons, the four coloured buttons, info and the channel buttons. After them come all
+OK, the arrows, back, the media buttons, the four colored buttons, info and the channel buttons. After them come all
 the others the daemon knows (numbers, menus, guide, …); which of those arrive depends on the TV. Each button can
 keep the daemon's **Default**, give one key (for example **F12** for a Steam screenshot, **Super** for the app
 launcher, **Play/pause**), or do **Nothing**. A button gives one key, not a combination.

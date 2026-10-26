@@ -9,7 +9,7 @@ The user is the one pkexec names (PKEXEC_UID), never one given on the command li
 The layout is Decky's own, as its installer makes it, so Decky's updater (in its settings in Game Mode), Bazzite's
 `ujust setup-decky` and the plugins all find what they expect:
  * ~/homebrew/services/PluginLoader: the binary, from the pinned release, checked against its SHA-256 here, as root,
-   whatever the app checked before. Labelled bin_t for SELinux, as Decky's installer does, or systemd may not start
+   whatever the app checked before. Labeled bin_t for SELinux, as Decky's installer does, or systemd may not start
    it from a home folder.
  * ~/homebrew/services/.loader.version: the release tag, which Decky's updater also writes.
  * ~/homebrew/plugins: the plugins, and ~/homebrew/settings, logs and data, which Decky makes itself.

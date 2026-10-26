@@ -59,7 +59,7 @@ class _JobThread(QThread):
 
     def _progress(self, delta: int) -> None:
         if self.cancelled:
-            raise InterruptedError("Transfer cancelled")
+            raise InterruptedError("Transfer canceled")
         self.progressed.emit(delta)
         limit = self.job.limit_kbps * 1024
         if limit > 0:
@@ -67,7 +67,7 @@ class _JobThread(QThread):
             due = self._started + self._sent / limit
             while (wait := due - time.monotonic()) > 0:
                 if self.cancelled:
-                    raise InterruptedError("Transfer cancelled")
+                    raise InterruptedError("Transfer canceled")
                 time.sleep(min(wait, 0.1))
 
     def run(self) -> None:

@@ -1210,7 +1210,7 @@ def test_window_tells_when_a_release_is_ready_to_pin(repo, tmp_path):
     build.checked((rp.parse_runs({"workflow_runs": [run("Release", "portal-v0.1.0", "in_progress", n=3),
                                                     run(n=2)]}), "e4"))
     assert "building its release" in page.portal_state.text()
-    assert main_window.ORANGE in page.portal_state.styleSheet()                # the warning colour, as the others
+    assert main_window.ORANGE in page.portal_state.styleSheet()                # the warning color, as the others
     build.checked((rp.parse_runs({"workflow_runs": [run("Release", "portal-v0.1.0", n=3), run(n=2)]}), "e5"))
     assert notes[-1] == ("portal-v0.1.0 is ready", "GitHub published it. Test Portal release installs it on this board "
                                                    "(step 2).")

@@ -443,8 +443,8 @@ class MainWindow(QWidget):
             "in; other apps get the same picture.")
 
     def _show_controls(self, listed: list[controls.Control]) -> None:
-        """Values and what may be changed: a setting the camera does not let be changed is greyed, the whole row
-        (an automatic setting greys the one it decides; the PS5 HD Camera's exposure time stays greyed, as it keeps
+        """Values and what may be changed: a setting the camera does not let be changed is grayed, the whole row
+        (an automatic setting grays the one it decides; the PS5 HD Camera's exposure time stays grayed, as it keeps
         it at 1000 in either exposure mode)."""
         for control in listed:
             if control.id not in self.control_rows:

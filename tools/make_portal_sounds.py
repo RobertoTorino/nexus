@@ -5,7 +5,7 @@ original work; replace them with any WAV of the same name to change the sound):
 
     python3 tools/make_portal_sounds.py            # write swoosh.wav and bigpicture.wav
 
-swoosh.wav        the start-up swoosh: band-passed noise whose centre rises and falls, about 0.9 s.
+swoosh.wav        the start-up swoosh: band-passed noise whose center rises and falls, about 0.9 s.
 bigpicture.wav    the Suite Big Picture Mode intro: a low thump, a rising sweep and a bell arpeggio, about 2 s."""
 
 from __future__ import annotations
@@ -29,7 +29,7 @@ def _smooth(x: float) -> float:
 
 
 def swoosh() -> list[tuple[float, float]]:
-    """A low, soft swoosh: noise through a band-pass whose centre rises from 70 Hz to about 900 Hz and falls again,
+    """A low, soft swoosh: noise through a band-pass whose center rises from 70 Hz to about 900 Hz and falls again,
     then a low-pass, so there is little above 2 kHz; under it a sine sliding down from 140 to 70 Hz, for the weight (low
     enough to be bass, high enough for a laptop or a handheld speaker)."""
     rng = random.Random(250)

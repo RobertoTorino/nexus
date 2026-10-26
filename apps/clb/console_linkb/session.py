@@ -120,7 +120,7 @@ class Session:
                          clock: Callable[[], float] = time.monotonic) -> None:
         """Follows the session's state until it is Provisioned: answers ReadyToConnect once with the transfer
         token, and reports every state (with the queue's wait) to *on_state*. Raises SessionError when it
-        Failed, timed out or was *cancelled*."""
+        Failed, timed out or was *canceled*."""
         end = clock() + READY_TIMEOUT_S
         connected = False
         wait = None

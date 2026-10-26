@@ -8,7 +8,7 @@ back is Share, start Options, guide the PS button, as in the reference. The trig
 as they are, the touchpad's fingers scaled to the console's touchpad (1920 × 942 on a PS4, 1919 × 1079 on a PS5;
 the reference scales a gamepad's fingers to 1920 × 1079 for both). With several controllers connected, their
 states are combined as the reference combines them: buttons together, the larger trigger, the stick further from the
-centre, the motion of the first one that moves.
+center, the motion of the first one that moves.
 
 The motion: SDL switches on each controller's gyro and accelerometer where it has them and delivers every sample as
 an event with the controller's own clock. Each sample goes to that controller's orientation tracker (the native
@@ -17,7 +17,7 @@ reference's GUI feeds it. One difference: the reference's GUI times the samples 
 timed to the microsecond.
 
 The other way, from the console (output()): the rumble goes to every controller's motors (SDL's rumble, 0 to 255
-scaled to 16 bits, for 5 s unless the console renews or stops it, as in the reference), the light bar's colour and
+scaled to 16 bits, for 5 s unless the console renews or stops it, as in the reference), the light bar's color and
 the player number to every controller that has them, including one connected later, and a motion reset makes the
 controller's current position the new rest position.
 

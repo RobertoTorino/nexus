@@ -334,7 +334,7 @@ class MainWindow(QMainWindow):
     def on_sign_in(self) -> None:
         if self.code is not None:
             self.cancel_sign_in = True
-            self.say("Cancelling the sign-in…")
+            self.say("Canceling the sign-in…")
             return
         account = self.account
 

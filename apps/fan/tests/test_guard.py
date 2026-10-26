@@ -318,5 +318,5 @@ def test_command_and_answer():
     assert cmd[0] == "pkexec" and cmd[2] == "-I" and cmd[3].endswith("guard.py") and cmd[-1] == "uninstall"
     assert guard.answer(0, '{"ok": true}\n') == ""
     assert guard.answer(1, 'noise\n{"ok": false, "error": "nope"}\n') == "nope"
-    assert "cancelled" in guard.answer(126, "")
+    assert "canceled" in guard.answer(126, "")
     assert "without an answer" in guard.answer(1, "Traceback")

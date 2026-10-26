@@ -343,7 +343,7 @@ class MainWindow(QMainWindow):
         self.output.appendPlainText(f"{stamp} {'INFO' if ok else 'ERROR'} {text}")
 
     def log_session(self, titles: dict[str, str]) -> None:
-        """PCSX2's last run, as its own log tells it, into the app's log once: the game (named as the catalogue
+        """PCSX2's last run, as its own log tells it, into the app's log once: the game (named as the catalog
         names it), how long it was played, until when, and with which controller. PCSX2 writes its log over at
         every start, so a run is lost when another follows before the window looks."""
         session = userdata.last_session(self.pcsx2_home)

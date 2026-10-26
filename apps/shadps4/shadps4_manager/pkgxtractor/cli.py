@@ -6,7 +6,7 @@ Usage::
     bc250-shadps4-pkg-cli <PKG_FILE> [OUTPUT_FOLDER] [--salvage] [--preview-only]
 
 Files are written to ``<OUTPUT_FOLDER>/<TITLE_ID>/`` (the output folder
-defaults to the folder containing the PKG), matching the GUI behaviour.
+defaults to the folder containing the PKG), matching the GUI behavior.
 """
 
 from __future__ import annotations

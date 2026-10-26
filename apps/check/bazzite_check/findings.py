@@ -123,7 +123,7 @@ def render(kind: str, entries: list[Entry]) -> tuple[str, int]:
         parts.append("<ul style='margin-top:0;'>" + "".join(rows) + "</ul>")
         parts.append(f"<p style='color:#9aa0a6; font-size:small; margin-top:-6px;'>From "
                      f"{html.escape(str(path))} · <a href='log:{e.test_id}:{quote(str(path))}' "
-                     f"style='color:#b39ddb;'>Show in log</a></p>")
+                     f"style='color:#ce93d8;'>Show in log</a></p>")
     return "".join(parts), len(shown)
 
 

@@ -1,3 +1,7 @@
+Changelog: 26-10-2026 02:14:35
+
+Release 1.2.0.
+
 Changelog: 25-10-2026 01:16:49
 
 Release 1.1.1.
@@ -232,7 +236,7 @@ file; images/bc250-rpcs3-manager-128.png is scaled from it.
 
 Changelog: 17-10-2026 01:11:56
 
-Fixed. The app's colour follows its new icon (owner, 17-10-2026): the icon's blue, #0A55B0, with links in #5B93DA on a
+Fixed. The app's color follows its new icon (owner, 17-10-2026): the icon's blue, #0A55B0, with links in #5B93DA on a
 dark window, in place of the indigo of RPCS3's own logo (#4F34C9). White text on it reads at 7:1. The style is the
 shadPS4 Manager's, which has the same blue.
 

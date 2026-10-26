@@ -1,12 +1,12 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """What the app sends to the controller besides a firmware update: the vibration test, through the kernel's force
 feedback on the controller's input device (hid-playstation turns a rumble into the two motors: strong is the left,
-weak the right), and the light bar's colour, as an output report on the hidraw node in the layout hid-playstation
+weak the right), and the light bar's color, as an output report on the hidraw node in the layout hid-playstation
 sends it (struct dualsense_output_report_common: valid flag 1 bit 0x04 enables the light bar, its red, green and
 blue at bytes 44 to 46 of the common part). Over USB that is report 0x02 (63 bytes); over Bluetooth report 0x31 (78
 bytes), with a sequence number and the CRC-32 of 0xA2 and the report in its last four bytes.
 
-The light bar keeps the colour while the controller is connected, until the kernel's driver, Steam or a game sets
+The light bar keeps the color while the controller is connected, until the kernel's driver, Steam or a game sets
 another; the controller forgets it when it disconnects."""
 
 from __future__ import annotations
@@ -91,7 +91,7 @@ def set_lightbar(node: Path, bus: str, rgb: tuple[int, int, int], sequence: int 
 
 
 def parse_colour(text: str) -> tuple[int, int, int] | None:
-    """"#rrggbb" -> (r, g, b); None for anything else (no colour chosen)."""
+    """"#rrggbb" -> (r, g, b); None for anything else (no color chosen)."""
     if len(text) == 7 and text.startswith("#"):
         try:
             return tuple(bytes.fromhex(text[1:]))

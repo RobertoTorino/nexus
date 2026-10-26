@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Settings > System overview: the board's configuration and latest measurements as coloured boxes.
+"""Settings > System overview: the board's configuration and latest measurements as colored boxes.
 
 Everything is read when the page is opened, never in the background: a few sysfs files, one statvfs
 call and two small history queries, well under a millisecond in total.
@@ -120,7 +120,7 @@ def _latest_speedtest_csv() -> dict[str, str] | None:
     return None
 
 
-# Every box has its own colour; grey means "no data yet". Only the free space turns red (below 10% free).
+# Every box has its own color; gray means "no data yet". Only the free space turns red (below 10% free).
 BOX_COLOR = {"cus": PURPLE, "cores": "#ad1457", "threads": "#00796b", "down": BLUE, "up": "#3949ab",
              "nvme": "#6d4c41", "free": GREEN, "pkgs": "#5e35b1", "bios": "#00838f"}
 BIOS_BOX_CHARS = 10
@@ -131,7 +131,7 @@ def _vs_stock(value: int, stock: int) -> str:
 
 
 def collect(history: History | None, home: Path = Path.home(), sys_root: Path = Path("/sys")) -> dict[str, Item]:
-    """Everything shown on the page, as (value, colour, tooltip) per box."""
+    """Everything shown on the page, as (value, color, tooltip) per box."""
     items: dict[str, Item] = {}
 
     bios = bios_info(sys_root)

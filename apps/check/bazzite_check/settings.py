@@ -142,7 +142,7 @@ class PrivacyPage(QWidget):
 
         self.keep_history = QCheckBox("Keep a test history")
         layout.addWidget(self.keep_history)
-        layout.addWidget(_note("The counters and button colours then survive a restart. Off: results are kept "
+        layout.addWidget(_note("The counters and button colors then survive a restart. Off: results are kept "
                                "for this session only and nothing is added to the database."))
         self.system_details = QCheckBox("Store the kernel version and CPU mitigation state in the history")
         layout.addWidget(self.system_details)
@@ -249,9 +249,9 @@ class AboutPage(QWidget):
             f"<tr><td><b>Core</b></td><td>{CORE_VERSION} (the suite's shared code, bundled with this app)</td></tr>"
             f"<tr><td><b>Build date</b></td><td>{build_date()}</td></tr>"
             f"<tr><td><b>Repository</b></td><td><a href='{REPO_URL}'>{REPO_URL}</a></td></tr>"
-            "<tr><td><b>Licence</b></td><td><a href='https://www.gnu.org/licenses/gpl-3.0.html'>GNU GPL v3</a> or later."
+            "<tr><td><b>License</b></td><td><a href='https://www.gnu.org/licenses/gpl-3.0.html'>GNU GPL v3</a> or later."
             " This program comes with ABSOLUTELY NO WARRANTY. It is free software: you may redistribute and change it"
-            " under the terms of that licence.</td></tr>"
+            " under the terms of that license.</td></tr>"
             f"<tr><td><b>Source code</b></td><td>Attached to every release on <a href='{REPO_URL}/releases'>"
             "GitHub releases</a>.</td></tr>"
             "<tr><td><b>Third party</b></td><td>Qt 6 (LGPL v3), PyQt6 (GPL v3), header font Inter"
@@ -288,9 +288,9 @@ class LogsPage(QWidget):
         self.button.setStyleSheet(       # red: it deletes data
             f"QPushButton {{ background:{RED}; color:white; font-weight:600; border:none; border-radius:6px; "
             "padding:6px 14px; }"
-            "QPushButton:hover { background:#e53935; }"
-            "QPushButton:pressed { background:#a31515; }"
-            "QPushButton:disabled { background:#7a4a4a; color:#d0d0d0; }")
+            "QPushButton:hover { background:#b71c1c; }"
+            "QPushButton:pressed { background:#b71c1c; }"
+            "QPushButton:disabled { background:#3a3f4b; color:#d0d0d0; }")
         row.addWidget(self.button)
         row.addStretch(1)
         layout.addLayout(row)

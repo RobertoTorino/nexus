@@ -57,7 +57,7 @@ def test_the_light_bar_over_bluetooth_with_its_crc():
     assert int.from_bytes(report[-4:], "little") == zlib.crc32(b"\xa2" + report[:-4])
 
 
-@pytest.mark.parametrize("text, colour", [("#ff2020", (255, 32, 32)), ("#000000", (0, 0, 0)), ("", None),
+@pytest.mark.parametrize("text, color", [("#ff2020", (255, 32, 32)), ("#000000", (0, 0, 0)), ("", None),
                                           ("red", None), ("#zzzzzz", None)])
-def test_parse_colour(text, colour):
-    assert feedback.parse_colour(text) == colour
+def test_parse_colour(text, color):
+    assert feedback.parse_colour(text) == color

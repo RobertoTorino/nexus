@@ -116,7 +116,7 @@ def test_an_outdated_rule_is_offered_again(make, tmp_path):
 def test_allow_access_cancelled(make):
     window = make(rule=False, run_root=lambda argv: runner.Result(126, ""))
     window.allow_access()
-    assert "cancelled" in window.warnings[0] and window.access_box.isVisibleTo(window)
+    assert "canceled" in window.warnings[0] and window.access_box.isVisibleTo(window)
 
 
 def test_boot_mode_needs_its_firmware(make, tmp_path):

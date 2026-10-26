@@ -125,7 +125,7 @@ def test_window_shows_green_check_and_red_cross_at_row_end() -> None:
     window._test_finished(failed_name, 1, False)
 
     assert passed_status.text() == "✓"
-    assert "color: #16803c" in passed_status.styleSheet()
+    assert "color: #2e7d32" in passed_status.styleSheet()
     assert passed_status.toolTip().endswith("passed")
     assert failed_status.text() == "✗"
     assert "color: #c62828" in failed_status.styleSheet()

@@ -114,7 +114,7 @@ async def _run() -> None:
         response_waiters,
     )
     if code != 0:
-        raise RuntimeError("The desktop cancelled creation of the global-shortcut session.")
+        raise RuntimeError("The desktop canceled creation of the global-shortcut session.")
     session_handle = results["session_handle"].value
 
     code, results = await _request(
@@ -139,7 +139,7 @@ async def _run() -> None:
         response_waiters,
     )
     if code != 0:
-        raise RuntimeError("The desktop cancelled registration of Ctrl+Alt+F12.")
+        raise RuntimeError("The desktop canceled registration of Ctrl+Alt+F12.")
     shortcuts_variant = results.get("shortcuts")
     if not isinstance(shortcuts_variant, Variant):
         raise RuntimeError("The desktop did not confirm which shortcut it registered.")

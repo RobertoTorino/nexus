@@ -105,7 +105,7 @@ Paste and Select All act on the log or, when it has the focus, on the message bo
 `GET /` or `HEAD /` with the tab's hostname filled in, SMTP `EHLO`, POP3 `CAPA`, IMAP `CAPABILITY`, FTP
 `USER anonymous`, IRC `NICK` and `USER`, Redis `PING`, memcached `stats`. The tab is switched to "End Messages
 with Newline" and CRLF, which they all expect; press Enter to send. **Highlight Protocol Lines** (Session menu,
-on by default) colours the lines text protocols produce: requests and commands green, status and reply lines
+on by default) colors the lines text protocols produce: requests and commands green, status and reply lines
 orange, error replies (HTTP 4xx and 5xx, SMTP and FTP 4xx and 5xx, `-ERR`, `ERROR`) red, header names blue.
 Plain data stays as it is.
 
@@ -145,8 +145,8 @@ host. Files sent with Send File are part of the recording.
 Right-click a tab handle for **New Connect Tab**, **New Listen Tab**, **Rename Tab…**, **Tab Color**, **Close
 Tab**, **Close Other Tabs** and **Close All Tabs**; the empty part of the tab bar offers the two New entries. The
 same lives in the Tabs menu. **Rename Tab…** (F2) gives a tab a title of your own that stays while the session
-connects and disconnects; an empty title brings the session's own name back. **Tab Color** colours the title, to
-group tabs by eye; None removes it. Titles and colours are not saved between runs.
+connects and disconnects; an empty title brings the session's own name back. **Tab Color** colors the title, to
+group tabs by eye; None removes it. Titles and colors are not saved between runs.
 
 ### Keyboard shortcuts
 

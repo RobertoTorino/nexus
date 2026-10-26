@@ -280,7 +280,7 @@ Release 5.0.1.
 
 Changelog: 20-10-2026 23:29:27
 
-Added. The Sys info window is semi-transparent (owner, 20-10-2026): its background is the theme's window colour at
+Added. The Sys info window is semi-transparent (owner, 20-10-2026): its background is the theme's window color at
 85 %, so what lies behind shows through a little, while the text stays opaque and as readable as before. The header
 pills have a blue left edge, as the apps' status boxes do; until now they had none.
 
@@ -311,7 +311,7 @@ Release 4.2.1. HelixSR 2.0 fix implemented
 Changelog: 20-10-2026 21:16:14
 
 Added. The wallpaper's transparency (owner, 20-10-2026): a slider in the Wallpaper pill's menu sets how much of the
-theme's colour lies over the picture, from 0 to 90 % in steps of 5, and the window changes while it moves. A dark or
+theme's color lies over the picture, from 0 to 90 % in steps of 5, and the window changes while it moves. A dark or
 busy picture can take more, so the icons on it stand out. It starts at 60 %, the veil until now, and is kept in the
 portal's settings (portal/wallpaper_transparency); the pill's tooltip names it. Without a wallpaper the slider is off.
 Tests: tests/test_window.py.
@@ -341,7 +341,7 @@ Release 4.1.0. Pins wdriver-v0.4.1, consoles-v1.5.0, decky-v0.5.1.
 Changelog: 20-10-2026 11:34:30
 
 Added. The Wallpaper pill's menu lists the last 10 wallpapers chosen, newest first and each once, under Used before
-(owner, 20-10-2026): a click uses one again, the current one is ticked, one moved or deleted since is greyed out as
+(owner, 20-10-2026): a click uses one again, the current one is ticked, one moved or deleted since is grayed out as
 not found. The portal keeps only where each came from, in wallpapers.json in its state folder
 (bc250_portal/wallpaper.py). Tests: tests/test_window.py.
 
@@ -357,7 +357,7 @@ tiles' icons (128 px), beside it the name with the version and where the apps in
 Refresh, Icons on Desktop (Yes or No; a click switches, was the App icons on the Desktop check box), Theme switcher
 (the theme's name; a click takes the next theme, was a drop-down box) and Wallpaper. Under the mouse an app's icon
 dims a little instead of getting a border. Wallpaper: a picture of the user's own behind the window, under a veil of
-the theme's colour; it must be PNG, JPEG or WebP, at least 1920 x 1080 and 16:9, else the portal refuses it and says
+the theme's color; it must be PNG, JPEG or WebP, at least 1920 x 1080 and 16:9, else the portal refuses it and says
 why. The portal keeps a copy in its state folder (bc250_portal/wallpaper.py), which --purge removes. Tests:
 tests/test_window.py.
 
@@ -1200,7 +1200,7 @@ checker and hdmi-cec
 Changelog: 12-10-2026 06:12:01
 
 A portal installed from a release installs the checkout-only apps (Suite Releases, BC-250 Installer Tests) too,
-instead of showing them greyed with "Needs a checkout". The first time one is installed or removed, it asks for the
+instead of showing them grayed with "Needs a checkout". The first time one is installed or removed, it asks for the
 suite checkout folder, checks that it is one (apps/, core/, tools/stage_app.py), and remembers it in its state folder
 (suite-checkout); a folder that stops being a checkout is forgotten. Sources.apps_checkout is that folder: only the
 checkout-only apps use it, so the released apps still install from their pinned releases and the portal is not a local
@@ -1264,7 +1264,7 @@ starting the portal again only brings that window to the front, so close it firs
 Changelog: 11-10-2026 18:48:14
 
 The checkout-only tools (BC250 Suite Releases, BC-250 Installer Tests) are always listed under Development only. A
-portal without a checkout (installed from a release) shows them greyed, with Install and Uninstall off and a hint to
+portal without a checkout (installed from a release) shows them grayed, with Install and Uninstall off and a hint to
 install the portal from the checkout (./install.sh in the repository); one installed earlier from a checkout still
 opens. Until now such a portal did not list them at all.
 
@@ -1306,13 +1306,13 @@ The Portal dependency checker's tile has its new icon (images/apps/portal-depend
 Changelog: 11-10-2026 16:32:48
 
 A compact window. Each app is a tile with its name without the BC-250 prefix, its icon (click to open the app, hover
-for what it does, grey while it is not installed, a red dot in it for an update), "changes the board" in orange under
+for what it does, gray while it is not installed, a red dot in it for an update), "changes the board" in orange under
 the icon, and symbol buttons beside it: Install and Uninstall, or only Reinstall for Bazzite Test. The tiles flow
 left to right, as many to a row as fit. The symbols are drawn in code (glyphs.py). A new "Development only" section,
 closed until opened and remembered, lists Simple Demo Tool and Portal dependency checker (apps.toml development =
 true) and, in a portal that runs from a checkout, BC250 Suite Releases from the new [checkout.<name>] table of
 apps.toml, which installs and runs in its own folder of the checkout. Icons for demo-tool and suite-releases, and the
-Governor's new colour icon (128 px). The Bisect/Unlock menu of CU Bisect and Cores Bisect shows each window's icon
+Governor's new color icon (128 px). The Bisect/Unlock menu of CU Bisect and Cores Bisect shows each window's icon
 (cu-unlock.png, and the new cores-unlock.png).
 
 Changelog: 11-10-2026 12:37:32

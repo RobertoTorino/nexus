@@ -214,7 +214,7 @@ def test_reader_drives_the_controllers():
         assert _wait(lambda: len(sdl.outputs) == 3)
         assert sdl.outputs == [("rumble", "PS4 Controller", (0x8000, 0xff00, 5000)),
                                ("led", "PS4 Controller", (0, 0, 64)), ("player", "PS4 Controller", 2)]
-        # One connected later gets the colour and the player number at once.
+        # One connected later gets the color and the player number at once.
         with sdl.lock:
             sdl.pads[2] = FakePad("DualSense Wireless Controller")
         assert _wait(lambda: len(sdl.outputs) == 5)

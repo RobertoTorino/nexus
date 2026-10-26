@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Stats toolbar: one coloured box per counter plus the system health score."""
+"""Stats toolbar: one colored box per counter plus the system health score."""
 
 from __future__ import annotations
 
@@ -18,8 +18,8 @@ from . import plain_tooltip
 from .runner import ERROR, INFO, SUCCESS, WARNING
 
 # Performance scores are relative to a stock board, not good/bad: CPU keeps the logo's purple,
-# the GPU box gets its own blue so the two are easy to tell apart at a glance.
-GPU_BLUE = "#2828F6"
+# the GPU box gets the suite's info blue so the two are easy to tell apart at a glance.
+GPU_BLUE = "#1565c0"
 # System scores: bright, but calm enough to look at, and unlike any other box.
 BASE_SYSTEM = EXTENDED_SYSTEM = "#f8fafc"
 SYSTEM_TEXT = "#222222"
@@ -78,7 +78,7 @@ class StatBox(QFrame):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(8, 7, 11, 7)         # 12, 8, 12, 8 inside the border, as before
         layout.setSpacing(0)
-        # On screen in the theme's text colour; text_color is the results card's (results_card()).
+        # On screen in the theme's text color; text_color is the results card's (results_card()).
         self.value = QLabel("0")
         self.value.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.value.setStyleSheet(header_font() + f"font-size:24px; font-weight:800; color:{THEME.text}; "
@@ -94,7 +94,7 @@ class StatBox(QFrame):
         self.set_color(color)
 
     def set_color(self, color: str) -> None:
-        """The theme's surface, *color* its left edge (GREY: none); outlined in the accent on hover."""
+        """The theme's surface, *color* its left edge (GRAY: none); outlined in the accent on hover."""
         self.color = color
         hover = f"StatBox:hover {{ border-color:{ACCENT}; }}" if self.clickable else ""
         self.setStyleSheet(surface_style(None if color == GREY else color, "StatBox") + hover)

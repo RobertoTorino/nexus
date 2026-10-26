@@ -1,12 +1,12 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
 /* The BC250 Bazzite Suite's wiki: Bazzite purple, and Inter with heavy titles like the apps' header_font(). Only this
    wiki loads this file; every other wiki has a stylesheet of its own. The design panel (mkdocs serve) shows the
-   variables below: the comment before a rule names its group, the comment after a variable says what it colours. */
+   variables below: the comment before a rule names its group, the comment after a variable says what it colors. */
 
-/* The suite's colours: the rest of the design is made from these. */
+/* The suite's colors: the rest of the design is made from these. */
 :root {
-  --suite-primary: #5835CE;     /* Main colour: table headings, page icons, the home page's gradient */
-  --suite-secondary: #8A2BE2;   /* Second colour: hover on links and buttons, the home page's gradients */
+  --suite-primary: #5835CE;     /* Main color: table headings, page icons, the home page's gradient */
+  --suite-secondary: #8A2BE2;   /* Second color: hover on links and buttons, the home page's gradients */
   --suite-ink: #120c22;         /* Darkest: the home page's dark sections and its footer */
   --suite-deep: #1e1340;        /* Deep: the header, the top of the home page, the Download button */
   --suite-soft: #a98bff;        /* Light: links, the icons on the home page's cards, footer headings */
@@ -27,21 +27,21 @@
   --suite-header-hover-bg: #ffffff1f;         /* Behind a link in the header under the pointer */
 }
 
-/* Material's main colour. */
+/* Material's main color. */
 [data-md-color-primary="custom"] {
   --md-primary-fg-color: var(--suite-primary);   /* Buttons and Material's highlights */
-  --md-primary-fg-color--light: #7a5ce0;         /* Lighter main colour */
-  --md-primary-fg-color--dark: #4426a8;          /* Darker main colour */
-  --md-primary-bg-color: #ffffff;                /* Text on the main colour */
-  --md-primary-bg-color--light: #ffffffb3;       /* Dimmed text on the main colour: the search field's hint */
+  --md-primary-fg-color--light: #7a5ce0;         /* Lighter main color */
+  --md-primary-fg-color--dark: #4426a8;          /* Darker main color */
+  --md-primary-bg-color: #ffffff;                /* Text on the main color */
+  --md-primary-bg-color--light: #ffffffb3;       /* Dimmed text on the main color: the search field's hint */
 }
 
-/* Material's hover colour. */
+/* Material's hover color. */
 [data-md-color-accent="custom"] {
   --md-accent-fg-color: var(--suite-secondary);  /* Links and buttons under the pointer, the outline on pictures */
   --md-accent-fg-color--transparent: #8a2be21a;  /* A faint fill behind what is under the pointer */
-  --md-accent-bg-color: #ffffff;                 /* Text on the hover colour */
-  --md-accent-bg-color--light: #ffffffb3;        /* Dimmed text on the hover colour */
+  --md-accent-bg-color: #ffffff;                 /* Text on the hover color */
+  --md-accent-bg-color--light: #ffffffb3;        /* Dimmed text on the hover color */
 }
 
 /* The page. */
@@ -68,7 +68,7 @@
   --suite-stage-bg: #8b4fd8;                  /* The stage pill under the claim */
   --suite-stage-fg: #ffffff;                  /* Text in the stage pill */
   --suite-section-bg: var(--suite-ink);           /* Background of the dark sections */
-  --suite-section-fg: #ffffff;                /* Text, card titles and links in the dark and the coloured sections */
+  --suite-section-fg: #ffffff;                /* Text, card titles and links in the dark and the colored sections */
   --suite-section-button: #ffffff;            /* Buttons there: outline and text, the fill under the pointer */
 }
 
@@ -204,7 +204,7 @@
   margin: 0;
 }
 
-/* A page's own icon where an app chapter has the app's logo: a symbol in the suite's colour, as large. */
+/* A page's own icon where an app chapter has the app's logo: a symbol in the suite's color, as large. */
 .md-typeset .page-icon {
   float: right;
   margin: 0 0 1em 1em;
@@ -331,7 +331,7 @@
   color: inherit;
 }
 
-/* The hero: deepest purple to the suite's two colours, fading into the page; the pictures on top, the words below. */
+/* The hero: deepest purple to the suite's two colors, fading into the page; the pictures on top, the words below. */
 .home-hero__pictures {
   background: linear-gradient(180deg, var(--suite-deep) 0%, var(--suite-primary) 55%, var(--suite-secondary) 80%,
     transparent 97%);

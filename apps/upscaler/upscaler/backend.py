@@ -360,7 +360,7 @@ def find_game_dlls(game_dir: Path, payload_dir: Path, max_depth: int = MAX_SCAN_
                    cancelled: Callable[[], bool] | None = None) -> list[GameDll]:
     """Every amd_fidelityfx_upscaler_dx12.dll / amd_fidelityfx_dx12.dll under the game folder (Unreal games keep
     it under Engine/Plugins/.../ThirdParty/Win64), shallowest first. *.original.dll backups are not listed.
-    *cancelled* stops the walk early (what was found so far is returned)."""
+    *canceled* stops the walk early (what was found so far is returned)."""
     names = {name.lower() for name in GAME_DLLS}
     found: list[Path] = []
     base_depth = len(game_dir.parts)

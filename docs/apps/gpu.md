@@ -352,7 +352,7 @@ watch -n1 busctl --system introspect com.cyanskillfish.Governor /com/cyanskillfi
 
 ### 4. Profiles
 
-- [ ] "Save current as…" with a name containing spaces/slashes → sanitised name stored in
+- [ ] "Save current as…" with a name containing spaces/slashes → sanitized name stored in
       `~/.config/bc250-governor-manager/profiles.json`.
 - [ ] "Load into forms" marks the page dirty (Apply enabled) without touching the file.
 - [ ] "Apply now" writes the file and restarts the service; tray "Apply profile" submenu lists the same names and
@@ -367,7 +367,7 @@ watch -n1 busctl --system introspect com.cyanskillfish.Governor /com/cyanskillfi
 
 ### 5. Performance page
 
-- [ ] Enable/disable performance mode: `Enabled` property flips, fixed frequency / range are honoured by the
+- [ ] Enable/disable performance mode: `Enabled` property flips, fixed frequency / range are honored by the
       clock trace on the Overview.
 - [ ] "Set load target": `busctl … get-property … LoadTarget*` shows the new pair; forms do not reset while
       editing but refill when the governor reports different values.
@@ -411,7 +411,7 @@ watch -n1 busctl --system introspect com.cyanskillfish.Governor /com/cyanskillfi
 
 - [ ] Close to tray, restore, quit from tray: no "QProcess destroyed while running" in the terminal, load tool
       and TestMode released.
-- [ ] Launch options (autostart, start minimised) behave as labelled.
+- [ ] Launch options (autostart, start minimized) behave as labeled.
 - [ ] Update check reports the running version as current right after a release.
 
 ### Result

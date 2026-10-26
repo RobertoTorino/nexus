@@ -1,3 +1,7 @@
+Changelog: 26-10-2026 02:14:35
+
+Release 1.1.0.
+
 Changelog: 25-10-2026 01:16:49
 
 Release 1.0.1.
@@ -187,7 +191,7 @@ Release 0.2.0.
 Changelog: 16-10-2026 05:03:33
 
 Added. The app's blue is the blue of its icon (owner, 16-10-2026): #0A55B0 in place of #006FCD, with its hover,
-pressed, tint and outline shades and a lighter link colour on a dark window (#5B93DA) to match.
+pressed, tint and outline shades and a lighter link color on a dark window (#5B93DA) to match.
 
 Changelog: 16-10-2026 04:11:04
 

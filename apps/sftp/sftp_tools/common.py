@@ -4,6 +4,7 @@ tables and the profile stores."""
 
 from __future__ import annotations
 
+import textwrap
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
@@ -28,6 +29,8 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+
+from bc250_core.theme import muted
 
 from .app_logging import ErrorCallbackHandler, get_logger
 from .connection import UnknownHostKeyError, save_trusted_host_key, validate_password_requirements
@@ -116,7 +119,7 @@ class ErrorIndicator(QPushButton):
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setToolTip("Errors found check the logs")
         self.setStyleSheet(
-            "QPushButton { background-color: #e5484d; border: none;"
+            "QPushButton { background-color: #c62828; border: none;"
             " border-radius: 8px; }"
         )
         self.hide()
@@ -151,9 +154,17 @@ class TaskRunner(QThread):
             self.failed.emit(str(error))
 
 
+PASSWORD_RULES = ("Password rules: 8 characters, 1 uppercase letter, 1 number, 1 special character "
+                  "(!@#$%^&*()_+-=[]{}|;:,.<>?.)")
+RULES_WIDTH = 58                # the rules, and what is missing, on two lines
+
+
 class ConnectionFields(QGroupBox):
-    def __init__(self, title: str = "SSH connection") -> None:
+    def __init__(self, title: str = "SSH connection", rules_beside: bool = False) -> None:
+        """rules_beside: the password rules always show, in a column at the right of the form (the tab places them
+        with rules_beside()); else they are a row under the password, shown while one is typed."""
         super().__init__(title)
+        self._rules_beside = rules_beside
         self.profile = QComboBox()
         self.profile.setEditable(True)
         self.profile.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
@@ -169,13 +180,14 @@ class ConnectionFields(QGroupBox):
         self.password_warning = QLabel(
             "⚠ Password login is less secure. An SSH key is preferred."
         )
-        self.password_warning.setStyleSheet("color: #e5a400;")
+        self.password_warning.setStyleSheet("color: #ffb74d;")
         self.password_warning.setTextFormat(Qt.TextFormat.PlainText)
         self.password_warning.hide()
-        self.password_requirements = QLabel("")
-        self.password_requirements.setStyleSheet("color: #e74c3c;")
+        self.password_requirements = QLabel()
         self.password_requirements.setTextFormat(Qt.TextFormat.PlainText)
-        self.password_requirements.hide()
+        self.password_requirements.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
+        self.password_requirements.setWordWrap(True)        # may shrink: it takes no width from the form
+        self._update_password_requirements()
         self.password.setToolTip(
             "Password login is less secure. Use an SSH key where possible; "
             "with a key, this field is only its passphrase."
@@ -184,6 +196,7 @@ class ConnectionFields(QGroupBox):
         self.password.textChanged.connect(self._update_password_requirements)
         self.key_filename = QLineEdit()
         self.key_filename.textChanged.connect(self._update_password_warning)
+        self.key_filename.textChanged.connect(self._update_password_requirements)   # a passphrase has no rules
         self.key_filename.setPlaceholderText("Optional; uses SSH agent/default keys if blank")
         browse_key = QPushButton("Browse…")
         browse_key.clicked.connect(self.select_key)
@@ -204,7 +217,8 @@ class ConnectionFields(QGroupBox):
         form.addRow("User", self.username)
         form.addRow("Password / key passphrase", self.password)
         form.addRow("", self.password_warning)
-        form.addRow("", self.password_requirements)
+        if not rules_beside:
+            form.addRow("", self.password_requirements)
         form.addRow("Private key", key_row)
         self.profile.currentIndexChanged.connect(self._load_selected_profile)
 
@@ -214,20 +228,30 @@ class ConnectionFields(QGroupBox):
             bool(self.password.text()) and not self.key_filename.text().strip()
         )
 
+    def rules_beside(self, column: QVBoxLayout) -> None:
+        """The password rules into the tab's column at the right of the form (rules_beside=True)."""
+        assert self._rules_beside
+        column.addWidget(self.password_requirements)
+
+    def _show_rules(self, text: str, colour: str) -> None:
+        self.password_requirements.setText(textwrap.fill(text, RULES_WIDTH))     # two lines, the column widens to them
+        self.password_requirements.setStyleSheet(f"color: {colour};")
+
     def _update_password_requirements(self) -> None:
-        # Show password requirement violations when a password is being used.
+        # Beside the form: the rules in the theme's muted text until a password is typed without a key, then what
+        # is missing in red or a check in green. Under the password: the same, but nothing until one is typed.
         password = self.password.text()
         if password and not self.key_filename.text().strip():
-            is_valid, error_msg = validate_password_requirements(password)
-            if error_msg:
-                self.password_requirements.setText(f"✗ {error_msg}")
-                self.password_requirements.show()
+            _is_valid, error_msg = validate_password_requirements(password)
+            if error_msg:       # "Password must have: at least 8 characters, at least 1 number": the list alone
+                missing = error_msg.removeprefix("Password must have: ").replace("at least ", "")
+                self._show_rules(f"✗ Missing: {missing}", "#e57373")
             else:
-                self.password_requirements.setText("✓ Password meets security requirements")
-                self.password_requirements.setStyleSheet("color: #27ae60;")
-                self.password_requirements.show()
+                self._show_rules("✓ The password meets the rules", "#81c784")
+            self.password_requirements.show()
         else:
-            self.password_requirements.hide()
+            self._show_rules(PASSWORD_RULES, muted())
+            self.password_requirements.setVisible(self._rules_beside)
 
     def bind_profiles(self, store: ConnectionProfileStore) -> None:
         self.profile_store = store
@@ -351,10 +375,12 @@ def add_file_row(table: QTableWidget, name: str, kind: str, size: str, path: str
     table.setItem(row, 3, QTableWidgetItem(modified))
 
 
-def connection_header(connection: QWidget, controls: QVBoxLayout) -> QHBoxLayout:
-    """Connection form at half width, controls beside it, spare room on the right."""
+def connection_header(connection: QWidget, controls: QVBoxLayout, wide: bool = False) -> QHBoxLayout:
+    """Connection form at half width, controls beside it, spare room on the right (wide: the controls take the
+    spare room too, for the password rules on two lines)."""
     row = QHBoxLayout()
     row.addWidget(connection, 2)
-    row.addLayout(controls, 1)
-    row.addStretch(1)
+    row.addLayout(controls, 2 if wide else 1)
+    if not wide:
+        row.addStretch(1)
     return row

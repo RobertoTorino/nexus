@@ -715,7 +715,7 @@ class BuildRun:
     workflow: str                       # "CI"
     ref: str                            # "main", "governor-v0.1.1"
     status: str                         # "queued", "in_progress", "completed", ...
-    conclusion: str                     # "success", "failure", "cancelled", ...; "" until it is completed
+    conclusion: str                     # "success", "failure", "canceled", ...; "" until it is completed
     url: str                            # its page; also what tells two runs apart
     sha: str
     title: str                          # the commit message's first line

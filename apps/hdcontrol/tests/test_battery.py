@@ -13,11 +13,11 @@ def test_modules(capacity, lit):
     assert battery.modules(capacity) == lit
 
 
-@pytest.mark.parametrize("capacity, status, colour", [(80, "Discharging", GREEN), (20, "Discharging", ORANGE),
+@pytest.mark.parametrize("capacity, status, color", [(80, "Discharging", GREEN), (20, "Discharging", ORANGE),
                                                       (10, "Discharging", RED), (10, "Charging", GREEN),
                                                       (100, "Full", GREEN)])
-def test_colour(capacity, status, colour):
-    assert battery.colour(capacity, status) == colour
+def test_colour(capacity, status, color):
+    assert battery.colour(capacity, status) == color
 
 
 def count(icon, colour: str) -> int:

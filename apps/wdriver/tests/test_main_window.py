@@ -211,13 +211,13 @@ def test_install_update_and_remove(qapp, sys_root, proc_root, usr_root, paths, t
 
 
 def test_a_helper_error_is_shown(qapp, sys_root, proc_root, usr_root, paths, tmp_path, yes):
-    w = window(qapp, sys_root, proc_root, usr_root, paths, tmp_path, helper=Helper(paths, "Not authorised"))
+    w = window(qapp, sys_root, proc_root, usr_root, paths, tmp_path, helper=Helper(paths, "Not authorized"))
     layout = w.layout_for("legacy-mcu1")
     fake_build(layout.output)
     fake_source(layout.source)
     w.refresh()
     w.install()
-    assert yes == ["Not authorised"] and driver.installed(paths) is None
+    assert yes == ["Not authorized"] and driver.installed(paths) is None
 
 
 def test_installed_states(qapp, sys_root, proc_root, usr_root, paths, tmp_path, yes):

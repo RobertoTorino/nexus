@@ -1,9 +1,9 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The window: the screen's state in the header, a preview of what it shows (saved as a picture or a report of every
 value), and its settings in tabs (the screen: brightness and orientation; the values and the network interface; the
-look: theme, colours, header text, a picture behind the tiles; the clock: hours, time zone and date; the weather's
+look: theme, colors, header text, a picture behind the tiles; the clock: hours, time zone and date; the weather's
 place; start and quit). Every second it reads the sensors, draws the picture and hands it to the link, which sends what
-changed to the screen. A theme or colour being tried shows in the preview only, until it is chosen. The weather is
+changed to the screen. A theme or color being tried shows in the preview only, until it is chosen. The weather is
 fetched off the GUI thread, only while its tile is shown and a place is chosen."""
 
 from __future__ import annotations
@@ -34,7 +34,7 @@ PREVIEW_MAX = 480                               # the preview is the screen's ow
 TITLE_CHARS = 24
 ALL_INTERFACES = "All interfaces"
 PICTURES = "Pictures (*.png *.jpg *.jpeg *.webp *.bmp)"
-# The look's settings a trial may override in the preview; the colours are "" for the theme's own or #rrggbb.
+# The look's settings a trial may override in the preview; the colors are "" for the theme's own or #rrggbb.
 LOOK = ("theme", *(f"colour_{key}" for key in render.COLOURS))
 COLOUR_NAMES = {"text": "Text", "tiles": "Tiles", "accent": "Accent", "background": "Background"}
 HOURS = {24: "24-hour", 12: "12-hour (AM/PM)"}
@@ -239,7 +239,7 @@ class MainWindow(QWidget):
         self.theme.currentTextChanged.connect(self.set_theme)
         self.theme.highlighted.connect(lambda n: self.try_look("theme", self.theme.itemText(n)))
         self.theme.popup_closed.connect(self.end_trial)
-        self.theme.setToolTip("Dark takes the suite's accent colour; the others have their own. Moving through the "
+        self.theme.setToolTip("Dark takes the suite's accent color; the others have their own. Moving through the "
                               "list shows each theme in the preview; the screen changes when you choose one.")
         grid.addWidget(QLabel("Theme"), 0, 0)
         grid.addWidget(self.theme, 0, 1, 1, 2)
@@ -248,16 +248,16 @@ class MainWindow(QWidget):
         for key, name in COLOUR_NAMES.items():
             button = QPushButton(name)
             button.setToolTip(f"Your own colour for the {name.lower()}, instead of the theme's. The preview shows "
-                              "each colour you try; the screen changes when you choose OK.")
+                              "each color you try; the screen changes when you choose OK.")
             button.clicked.connect(partial(self.choose_colour, key))
             colours.addWidget(button)
             self.colour_buttons[key] = button
         self.colours_clear = QPushButton("Theme's")
-        self.colours_clear.setToolTip("Back to the theme's own colours.")
+        self.colours_clear.setToolTip("Back to the theme's own colors.")
         self.colours_clear.clicked.connect(self.clear_colours)
         colours.addWidget(self.colours_clear)
         colours.addStretch(1)
-        grid.addWidget(QLabel("Colours"), 1, 0)
+        grid.addWidget(QLabel("Colors"), 1, 0)
         grid.addLayout(colours, 1, 1, 1, 2)
         self._show_colours()
         self.title = QLineEdit(self.settings.get("title"))
@@ -385,7 +385,7 @@ class MainWindow(QWidget):
         return round(w * scale), round(h * scale)
 
     def theme_of(self, trial: dict[str, str] | None = None) -> render.Theme:
-        """The chosen theme with the chosen colours, or with what *trial* tries instead."""
+        """The chosen theme with the chosen colors, or with what *trial* tries instead."""
         look = {key: self.settings.get(key) for key in LOOK} | (trial or {})
         theme = render.THEMES.get(look["theme"], render.THEMES[render.DEFAULT_THEME])
         return render.with_colours(theme, {key: look[f"colour_{key}"] for key in render.COLOURS})
@@ -455,7 +455,7 @@ class MainWindow(QWidget):
         self.end_trial()
 
     def _show_colours(self) -> None:
-        """A swatch on each button whose colour is the user's own."""
+        """A swatch on each button whose color is the user's own."""
         own = False
         for key, button in self.colour_buttons.items():
             value = self.settings.get(f"colour_{key}")
@@ -491,7 +491,7 @@ class MainWindow(QWidget):
         image = QImage(path) if path else None
         self.picture = image if image is not None and not image.isNull() else None
         if not path:
-            self.picture_label.setText("None: the theme's colour")
+            self.picture_label.setText("None: the theme's color")
         elif self.picture is None:
             self.picture_label.setText(f"{path} cannot be read (moved or removed?): the theme's colour for now")
         else:

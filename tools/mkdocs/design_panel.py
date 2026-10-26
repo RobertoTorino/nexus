@@ -2,19 +2,21 @@
 """MkDocs hook: a design panel on every page while `mkdocs serve` runs, never in a build.
 
 The panel (design_panel.js and .css, put in each page) lists every CSS variable the site's own stylesheets
-(extra_css) define, with a colour picker, a slider or a text field, and shows a change at once. Its groups and labels
+(extra_css) define, with a color picker, a slider or a text field, and shows a change at once. Its groups and labels
 are the stylesheet's comments: the one before a rule names the group, the one after a variable on its line says what
 it does. Each wiki has stylesheets of its own, so a change is to that wiki alone; the panel names the wiki and the
 files its changes go in. The server keeps the
 mock at <the config's folder>/.design-mock.json (git ignores it) and answers at <the site's path>/__design__: a POST
 stores it, a GET returns it. Every open page asks once a second, so a phone, the board and the TV on the same server
-all show the same mock. Copy CSS gives the changed variables to paste into the stylesheet. Screens opens
-<the site's path>/__design__/screens (design_screens.html): the page at the sizes of PC, laptop and handheld screens,
-where the panel only applies the mock."""
+all show the same mock. Copy CSS gives the changed variables to paste into the stylesheet; Copy stylesheet gives the
+whole stylesheet with the changes written in, to paste over the file (merge() below does the same for
+tools/apply_design.py). Screens opens <the site's path>/__design__/screens (design_screens.html): the page at the
+sizes of PC, laptop and handheld screens, where the panel only applies the mock."""
 
 from __future__ import annotations
 
 import json
+import re
 import threading
 from pathlib import Path
 
@@ -38,6 +40,45 @@ def on_config(config):
     global _mock_path
     _mock_path = Path(config.config_file_path).resolve().parent / MOCK_FILE
     return config
+
+
+VARIABLE = re.compile(r"(--[\w-]+)\s*:([^;]*);?")
+
+
+def rules(css: str) -> list[tuple[str, int, str]]:
+    """The top-level rules of a stylesheet, as the panel reads them: (selector, where its body starts, the body with
+    the comments blanked out, so a position in it is a position in the text)."""
+    code = re.sub(r"/\*.*?\*/", lambda m: " " * len(m.group()), css, flags=re.S)
+    out, depth, start, opened = [], 0, 0, 0
+    for i, ch in enumerate(code):
+        if ch == "{":
+            depth += 1
+            if depth == 1:
+                opened = i
+        elif ch == "}":
+            depth -= 1
+            if depth == 0:
+                out.append((" ".join(code[start:opened].split()), opened + 1, code[opened + 1:i]))
+                start = i + 1
+    return out
+
+
+def merge(css: str, values: dict[str, str]) -> tuple[str, set[str]]:
+    """*css* with the mock's *values* ("selector|--name": value) written in place of the variables' own: the file
+    as it is, comments and all, only those values changed. Also returns the keys the stylesheet defines."""
+    edits, defined = [], set()
+    for selector, body_start, body in rules(css):
+        if selector.startswith("@"):
+            continue
+        for m in VARIABLE.finditer(body):
+            key = f"{selector}|{m.group(1)}"
+            defined.add(key)
+            if key in values:                       # the value only, not the blank after it (a comment, the line's end)
+                end = body_start + m.start(2) + len(m.group(2).rstrip())
+                edits.append((body_start + m.start(2), end, " " + values[key]))
+    for start, end, text in sorted(edits, reverse=True):
+        css = css[:start] + text + css[end:]
+    return css, defined
 
 
 def endpoint_for(page_url: str) -> str:

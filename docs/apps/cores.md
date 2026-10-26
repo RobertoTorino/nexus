@@ -65,7 +65,7 @@ The test plan, same philosophy as the CU bisect:
 
 - **Control first:** the unlock is only offered after the stock cores pass every control round. A
   failing control means nothing can be concluded about the new cores.
-- **Rounds:** every item runs several times (default 3), interleaved, so heat and time don't favour one.
+- **Rounds:** every item runs several times (default 3), interleaved, so heat and time don't favor one.
 - **One attempt per boot** (default): warm reboots preserve the unlock, so isolation costs nothing.
 - **State machine across boots:** control → unlock → verify the cores actually came up → bisect →
   verdict. A cold boot mid-run is detected (mask back to `0x77`) and handled.

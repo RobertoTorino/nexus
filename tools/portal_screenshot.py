@@ -24,7 +24,7 @@ SIZE = (1000, 780)              # the window, in logical pixels
 SCALE = 1.6                     # the picture is this much larger, for sharp text on high-DPI screens
 TAB = "sustainable"             # the tab that is open
 UPDATED = "gpu"                 # the app with an update
-NOT_INSTALLED = {"oc", "acpi"}  # grey on the open tab, as an app that is not installed looks
+NOT_INSTALLED = {"oc", "acpi"}  # gray on the open tab, as an app that is not installed looks
 WEBP_QUALITY = 85
 
 sys.path[:0] = [str(SUITE / "portal"), str(SUITE / "core")]
@@ -38,7 +38,7 @@ def older(version: str) -> str:
 
 
 def dark_palette():
-    """Breeze Dark's colours, as Bazzite's desktop shows the portal; offscreen Qt has no desktop theme."""
+    """Breeze Dark's colors, as Bazzite's desktop shows the portal; offscreen Qt has no desktop theme."""
     from PyQt6.QtGui import QColor, QPalette
     roles = QPalette.ColorRole
     palette = QPalette()

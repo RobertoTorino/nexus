@@ -317,7 +317,7 @@ class BigPicture(Backdrop):
             tile.setToolTip(card.icon.toolTip())
 
     def art(self, category: str, key: str, installed: bool) -> QPixmap:
-        """The app's picture, from its category's 512 px icon (else the app's own 256 px tile), grey when not
+        """The app's picture, from its category's 512 px icon (else the app's own 256 px tile), gray when not
         installed; kept, as it is the same for every app of a category."""
         name = (category, installed)
         if name not in self._art:

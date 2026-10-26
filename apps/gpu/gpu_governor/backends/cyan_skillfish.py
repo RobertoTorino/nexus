@@ -343,7 +343,7 @@ class CyanSkillfishBackend:
             temp_path.unlink(missing_ok=True)
         if result.returncode != 0:
             if result.returncode == 126:
-                raise RuntimeError("Authentication was cancelled.")
+                raise RuntimeError("Authentication was canceled.")
             raise RuntimeError((result.stderr or result.stdout).strip() or fmt(
                 "pkexec failed (%1)",
                 str(result.returncode)))
@@ -462,7 +462,7 @@ class CyanSkillfishBackend:
                                  repr(action)))
         result = _run(["pkexec", "systemctl", action, self.service_name], timeout=120)
         if result.returncode == 126:
-            return False, "Authentication was cancelled."
+            return False, "Authentication was canceled."
         return result.returncode == 0, (result.stderr or result.stdout).strip()
 
     # ------------------------------------------------------------------ sensors

@@ -17,7 +17,7 @@ isolated mode (-I) to install or remove the boot part, and the installed copy ru
    It steps aside when Valve's CEC daemon runs: that one names the adapter from its own setting.
  * /etc/bc250-hdmi-cec/boot.json holds the name and whether to wake the TV; boot.py next to it is the copy that runs.
 
-KDE's login screen has its own display settings, not the user's: at 1080p120 with more than 8 bits per colour the
+KDE's login screen has its own display settings, not the user's: at 1080p120 with more than 8 bits per color the
 converter may leave a TV that comes on later black there (display.py). greeter-display copies the user's
 kwinoutputconfig.json to the login screen's user, as KDE's Apply Plasma Settings (System Settings, Login Screen) does.
 
@@ -258,9 +258,9 @@ def command(args: list[str], own: Path = Path(__file__)) -> list[str]:
 
 def answer(code: int, out: str) -> str:
     """What went wrong ("" when nothing did): main() prints one JSON line; pkexec exits with 126 or 127 when the
-    password dialog is cancelled."""
+    password dialog is canceled."""
     if code in (126, 127):
-        return "Not authorised: the password dialog was cancelled or refused."
+        return "Not authorized: the password dialog was canceled or refused."
     for line in reversed(out.strip().splitlines()):
         try:
             data = json.loads(line)

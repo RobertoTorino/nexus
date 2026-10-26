@@ -448,9 +448,9 @@ def command(args: list[str], own: Path = Path(__file__)) -> list[str]:
 
 def answer(code: int, out: str) -> str:
     """What went wrong ("" when nothing did): main() prints one JSON line; pkexec exits with 126 or 127 when the
-    password dialog is cancelled."""
+    password dialog is canceled."""
     if code in (126, 127):
-        return "Not authorised: the password dialog was cancelled or refused."
+        return "Not authorized: the password dialog was canceled or refused."
     for line in reversed(out.strip().splitlines()):
         try:
             data = json.loads(line)

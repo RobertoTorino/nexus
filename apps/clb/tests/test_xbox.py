@@ -60,7 +60,7 @@ def test_cloud_titles_and_their_names_in_batches():
     assert len(titles) == 25 and not titles[3].entitled
     xbox.name_titles(Client(transport), CLOUD, titles)
     assert titles[0].name == "Game 0" and titles[24].name == "Game 24"
-    assert titles[7].name == "T7"                          # not in the catalogue: its title ID
+    assert titles[7].name == "T7"                          # not in the catalog: its title ID
     batches = transport.sent("POST", xbox.CATALOG)
     assert [len(b["Products"]) for b in batches] == [20, 5]
     url = [u for m, u, _h, _b in transport.calls if u.startswith(xbox.CATALOG)][0]

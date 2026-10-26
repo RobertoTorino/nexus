@@ -44,7 +44,7 @@ The window has four rows, then the list of plugins.
 The table lists the plugins in `~/homebrew/plugins`: name, version, author, and whether Decky has them switched
 off. **Open plugins folder** opens that folder.
 
-Steps that need your password are greyed out in Game Mode, which has no password dialog. Use Desktop Mode for them.
+Steps that need your password are grayed out in Game Mode, which has no password dialog. Use Desktop Mode for them.
 
 After installing, start Steam again, or switch to Game Mode, and Decky appears in the Quick Access menu (**Ctrl + 2**).
 

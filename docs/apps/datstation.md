@@ -50,7 +50,7 @@ Mode; from Game Mode the app asks you to switch. **Remove from Steam** takes it 
 
 The first line shows the logo, the name and version, whether the app is in Steam, and the **Menu** (Add to Steam,
 Remove from Steam, Scores & Trophies, the project page, About). Under it the front page: four rows of four tiles,
-one per feature; the others say Coming Soon and are greyed out. A tile opens its page; **Back** or Escape returns
+one per feature; the others say Coming Soon and are grayed out. A tile opens its page; **Back** or Escape returns
 to the tiles.
 
 With a controller in Game Mode, Steam Input's default desktop layout does the work: the D-pad or the left stick
@@ -88,7 +88,7 @@ list, for pictures of it on the web, in your browser.
 ### System Version History
 
 The systems on the left, the versions of the chosen one on the right: every system software release with its
-release date, its notes and, where the data has them, its region, model, colour, size and hardware facts. The
+release date, its notes and, where the data has them, its region, model, color, size and hardware facts. The
 PlayStation 6 entry is a placeholder until there is one.
 
 ### Region Codes Explained

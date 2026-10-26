@@ -32,11 +32,11 @@ from PyQt6.QtWidgets import (
 
 from .app_logging import get_logger
 from .common import (
+    connection_header,
     ConnectionFields,
     PlainMessageBox,
     TaskRunner,
     add_file_row,
-    connection_header,
     default_profile_store,
     make_file_table,
     trust_unknown_host,
@@ -51,6 +51,7 @@ from .transfers import delete_local, delete_remote, remote_exists
 
 class SftpClientTab(QWidget):
     status_changed = pyqtSignal(str, str)
+    connect_changed = pyqtSignal(str, bool)      # the Connect pill's text (Connect, Disconnect) and whether it can be clicked
 
     def __init__(self) -> None:
         super().__init__()
@@ -61,9 +62,8 @@ class SftpClientTab(QWidget):
         self.queue.preserve_timestamps = current_settings().preserve_timestamps
         self.queue.job_finished.connect(self._transfer_finished)
         self.queue.beep_requested.connect(self._play_completion_beep)
-        self.connection = ConnectionFields()
+        self.connection = ConnectionFields(rules_beside=True)
         self.connection.bind_profiles(default_profile_store())
-        self.connect_button = QPushButton("Connect")
         self.status = QLabel("Not connected")
         self.status.setWordWrap(True)
         self.local_path = QLineEdit(
@@ -82,11 +82,6 @@ class SftpClientTab(QWidget):
         self._sftp: paramiko.SFTPClient | None = None
         self._worker: TaskRunner | None = None
         self._workers: set[TaskRunner] = set()
-
-        controls = QVBoxLayout()
-        controls.addWidget(self.connect_button)
-        controls.addStretch()
-        connection_row = connection_header(self.connection, controls)
 
         local_group = QGroupBox("Local")
         local_layout = QVBoxLayout(local_group)
@@ -125,10 +120,12 @@ class SftpClientTab(QWidget):
         splitter.setSizes([480, 140])
 
         layout = QVBoxLayout(self)
-        layout.addLayout(connection_row)
+        beside = QVBoxLayout()                  # the column where Connect was: the password rules, always shown
+        self.connection.rules_beside(beside)
+        beside.addStretch()
+        layout.addLayout(connection_header(self.connection, beside, wide=True))
         layout.addWidget(splitter, 1)
 
-        self.connect_button.clicked.connect(self.toggle_connection)
         self.local_path.editingFinished.connect(self.refresh_local)
         self.remote_path.editingFinished.connect(self.refresh_remote)
         self.local_table.cellDoubleClicked.connect(self.open_local_directory)
@@ -183,7 +180,7 @@ class SftpClientTab(QWidget):
 
     def _show_task_error(self, message: str) -> None:
         self._worker = None
-        self.connect_button.setEnabled(True)
+        self.connect_changed.emit("Disconnect" if self._ssh is not None else "Connect", True)
         self.status.setText("Operation failed")
         self.status_changed.emit("Connection/operation error", "error")
         if (
@@ -252,7 +249,7 @@ class SftpClientTab(QWidget):
                 client.close()
                 raise
 
-        self.connect_button.setEnabled(False)
+        self.connect_changed.emit("Connecting…", False)
         self.status.setText("Connecting…")
         self.status_changed.emit("Connecting…", "warning")
         self._pending_connection_error = None
@@ -263,8 +260,7 @@ class SftpClientTab(QWidget):
     ) -> None:
         self._ssh, self._sftp = result
         self.queue.set_sftp(self._sftp)
-        self.connect_button.setText("Disconnect")
-        self.connect_button.setEnabled(True)
+        self.connect_changed.emit("Disconnect", True)
         self.status.setText("Connected")
         get_logger().info("SFTP connected")
         self.status_changed.emit("Connected", "success")
@@ -291,8 +287,7 @@ class SftpClientTab(QWidget):
             self._ssh.close()
         self._sftp = None
         self._ssh = None
-        self.connect_button.setText("Connect")
-        self.connect_button.setEnabled(True)
+        self.connect_changed.emit("Connect", True)
         self.status.setText("Not connected")
         self.status_changed.emit("Disconnected", "neutral")
         self.remote_table.accept_files = False

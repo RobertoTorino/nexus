@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
-"""video.py: the planes of a picture, its colour matrix and the slot between the stream and the view."""
+"""video.py: the planes of a picture, its color matrix and the slot between the stream and the view."""
 
 from __future__ import annotations
 

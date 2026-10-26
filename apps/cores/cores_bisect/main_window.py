@@ -101,7 +101,7 @@ class MainWindow(QWidget):
         self.rounds_spin = QSpinBox()
         self.rounds_spin.setRange(MIN_ROUNDS, MAX_ROUNDS)
         self.rounds_spin.setValue(DEFAULT_ROUNDS)
-        self.rounds_spin.setToolTip(("Attempts per item (-r), interleaved so heat/time-of-day don't favour one item. "
+        self.rounds_spin.setToolTip(("Attempts per item (-r), interleaved so heat/time-of-day don't favor one item. "
                                      "A single round cannot tell a genuinely bad core from a random failure."))
         self.rounds_spin.valueChanged.connect(self._update_hint)
         grid.addWidget(self.rounds_spin, row, 1)

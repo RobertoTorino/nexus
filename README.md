@@ -69,7 +69,7 @@ By category, as the portal's tabs list them.
 **Utilities**: handy tools around the board.
 
 - <img src="portal/images/apps/overlay.webp" width="20" height="20" alt=""/> **[System Overlay](apps/overlay)**: CPU, GPU, refresh rate, fan and temperatures in a small window that stays on top.
-- <img src="portal/images/apps/ips35.webp" width="20" height="20" alt=""/> **[USB IPS3.5](apps/ips35)**: CPU, GPU, memory, fan and temperatures on a Turzx USB IPS screen (Turing Smart Screen 3.5"), with the time, the date and the weather, in your own theme and colours.
+- <img src="portal/images/apps/ips35.webp" width="20" height="20" alt=""/> **[USB IPS3.5](apps/ips35)**: CPU, GPU, memory, fan and temperatures on a Turzx USB IPS screen (Turing Smart Screen 3.5"), with the time, the date and the weather, in your own theme and colors.
 - <img src="portal/images/apps/hdcam.webp" width="20" height="20" alt=""/> **[USB HD Cam](apps/hdcam)**: the PS5 HD Camera (CFI-ZEY1) as a webcam: loads its firmware at every plug-in and shows its picture, one camera or both side by side.
 - <img src="portal/images/apps/hdcontrol.webp" width="20" height="20" alt=""/> **[USB HD Control](apps/hdcontrol)**: the DualSense and DualSense Edge: battery, firmware updates from the official server over USB, and the Edge's profiles with a backup.
 - <img src="portal/images/apps/bios.webp" width="20" height="20" alt=""/> **[BC-250 BIOS Reader](apps/bios)**: The BIOS settings as the setup screen shows them, hidden menus included. Stock or modded BIOS. Read-only.

@@ -56,7 +56,7 @@ tile. Standalone apps may live under `apps/` without appearing in the portal.
   thermal guard shuts the board down cleanly at a critical temperature, to protect the hardware; the limits are
   the owner's. A new reboot anywhere else is the owner's decision.
 - **The current releases are the baseline.** They were tested extensively on two boards. Moving code must not
-  change behaviour; a finding in existing code is "a code path to check", not a known failure. Prove "unchanged"
+  change behavior; a finding in existing code is "a code path to check", not a known failure. Prove "unchanged"
   (diffs, pixel comparisons, the installer tests) rather than assume it.
 - **READMEs and docs/ hold no status, plans, step numbers or decision notes.** Those go in MIGRATION.md, which
   neither links to. The backlog is what MIGRATION.md says is "on hold" (write it so, with the owner's date):
@@ -87,7 +87,7 @@ tile. Standalone apps may live under `apps/` without appearing in the portal.
     `<name>` a short name and `<package>` the app's name without its BC-250 or Bazzite prefix
     (`apps/ace/ace_queues/`, `apps/ncgui/netcat_gui/`; owner, 17-10-2026, the apps move to it one at a time,
     MIGRATION.md says which did; a renamed app's old key goes in `RENAMED` in the portal's manifest.py),
-    `images/`, `tests/`, `install.sh` and the four files; data the package reads (a catalogue, tables) sits in
+    `images/`, `tests/`, `install.sh` and the four files; data the package reads (a catalog, tables) sits in
     the package or beside it in the app folder. `tools/tests/test_layout.py` checks the layout. An app's icons are
     copies of its category's icon: `icons/categories.toml` assigns them, `tools/sync_icons.py` writes them.
   - Code: shared code comes from `bc250_core` (bundled per app); the installer writes a launcher in
@@ -183,7 +183,8 @@ mkdocs build --strict -f nexus/mkdocs.yml          # the Nexus page
 
 Every app (and every `portal/apps.toml` entry) has an installer test, `tools/installer-tests/<name>.sh`, and CI runs
 each one in its own step; a new app adds both (`tools/tests/test_installer_tests.py` checks it). BC-250 Installer
-Tests lists the scripts in that folder by itself. The installer tests need `fakeroot` (Linux). On Bazzite, `brew install shellcheck fakeroot`; brew's folder
+Tests lists the scripts in that folder by itself. The installer tests need `fakeroot` (Linux). On Bazzite, `brew install shellcheck fakeroot node` (Node.js runs the design panel's script in
+`tools/tests/test_design_panel.py`; the test skips without it); brew's folder
 `/home/linuxbrew/.linuxbrew/bin` may need adding to PATH in a non-interactive shell. CI also checks the layout rules above: no CRLF in the index, every
 `.sh` is 100755, every former repo folder has its four files, workflows only in the root `.github/`. CI results
 can be read without `gh` through the public API:
@@ -217,6 +218,13 @@ handover says which app and why; the owner decides the number.
 
 Code reads like the code around it: the same comment density, naming and idiom. Docs are plain, short sentences,
 written for the person using the tool.
+
+**American English** (owner, 26-10-2026) in everything written: color, gray, center, canceled, license, catalog,
+labeled. Identifiers, settings keys, file names and recorded data keep the spelling they have.
+
+**Missing tooling is installed, not worked around** (owner, 26-10-2026): when a check needs a tool the machine
+lacks (Node.js for the design panel's script, shellcheck, fakeroot, podman), get it (`brew install` on Bazzite)
+and run the check, rather than reviewing by eye.
 
 The manual (`docs/`, built with MkDocs) is called **the wiki** in user-facing text: the header link and the Home
 page's footer say Wiki. There is no GitHub wiki; the repository's own wiki stays unused.

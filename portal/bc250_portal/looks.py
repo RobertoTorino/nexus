@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """How the portal draws its pictures, shared by the desktop window and Suite Big Picture Mode: the wallpaper behind
-the window, and an app's icon greyed (not installed) or dimmed (under the mouse)."""
+the window, and an app's icon grayed (not installed) or dimmed (under the mouse)."""
 
 from __future__ import annotations
 
@@ -11,11 +11,11 @@ from PyQt6.QtGui import QColor, QImage, QPainter, QPalette, QPixmap
 from PyQt6.QtWidgets import QWidget
 
 HOVER_OPACITY = 0.75            # an app icon under the mouse is dimmed this much: no border
-VEIL = 60                       # % of the theme's window colour over the wallpaper, so the text on it stays readable
+VEIL = 60                       # % of the theme's window color over the wallpaper, so the text on it stays readable
 
 
 def greyed(pixmap: QPixmap) -> QPixmap:
-    """The icon of an app that is not installed: grey and faded, with its own transparency kept."""
+    """The icon of an app that is not installed: gray and faded, with its own transparency kept."""
     image = pixmap.toImage().convertToFormat(QImage.Format.Format_ARGB32)
     grey = image.convertToFormat(QImage.Format.Format_Grayscale8).convertToFormat(QImage.Format.Format_ARGB32)
     grey.setAlphaChannel(image.convertToFormat(QImage.Format.Format_Alpha8))
@@ -29,7 +29,7 @@ def greyed(pixmap: QPixmap) -> QPixmap:
 
 
 def dimmed(pixmap: QPixmap, opacity: float = HOVER_OPACITY) -> QPixmap:
-    """The icon under the mouse: a little fainter, so the window's colour shows through."""
+    """The icon under the mouse: a little fainter, so the window's color shows through."""
     out = QPixmap(pixmap.size())
     out.fill(Qt.GlobalColor.transparent)
     painter = QPainter(out)
@@ -41,7 +41,7 @@ def dimmed(pixmap: QPixmap, opacity: float = HOVER_OPACITY) -> QPixmap:
 
 class Backdrop(QWidget):
     """The window's background: the wallpaper, scaled to fill and cropped in the middle, under a veil of the theme's
-    window colour (*veil*, 0 to 100 %); without one, the window colour."""
+    window color (*veil*, 0 to 100 %); without one, the window color."""
 
     def __init__(self):
         super().__init__()

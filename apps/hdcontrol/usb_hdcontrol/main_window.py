@@ -39,7 +39,7 @@ from .settings import ControlSettings
 INTERVAL_MS = 1000
 CHECK_AGE_S = 24 * 3600             # the window asks Sony's server again after a day
 RETURN_S = 15.0                     # after an update the controller restarts: the main page waits this long for it
-# The light bar's colours to choose from; Off saves the battery.
+# The light bar's colors to choose from; Off saves the battery.
 ON_BLUETOOTH = ("The controller is plugged in, but Linux kept its Bluetooth connection: the cable only charges it. Use "
                 "the cable disconnects Bluetooth; then unplug the cable and plug it in again.")
 CABLE_AGAIN = ("The controller is on the cable, but Linux did not take it while it was on Bluetooth. Unplug the "
@@ -291,7 +291,7 @@ class MainWindow(QWidget):
         if not restore_geometry(self, self.settings.qsettings):
             self.resize(1000, 720)
         self.refresh()
-        # The window keeps the focus at start: a focused pill draws the blue focus border over its state's colour,
+        # The window keeps the focus at start: a focused pill draws the blue focus border over its state's color,
         # which hid the orange of a waiting update.
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.setFocus()
@@ -299,8 +299,8 @@ class MainWindow(QWidget):
             self.check_latest()
 
     def _controller_box(self) -> Section:
-        """The drawing, live, on the left with the light bar's colours under it; on its right the light bar's
-        colour now, what the drawing does and the vibration test (owner, 23-10-2026)."""
+        """The drawing, live, on the left with the light bar's colors under it; on its right the light bar's
+        color now, what the drawing does and the vibration test (owner, 23-10-2026)."""
         box = Section("Controller")
         layout = QGridLayout()
         box.body.addLayout(layout)
@@ -317,7 +317,7 @@ class MainWindow(QWidget):
                                        "font-weight:800; font-style:italic; font-family:serif; padding:0; }")
         self.info_button.clicked.connect(self.show_info)
         layout.addWidget(self.info_button, 0, 0, Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
-        # The colours from the drawn controller's left edge to its right, spread out (owner, 23-10-2026): the
+        # The colors from the drawn controller's left edge to its right, spread out (owner, 23-10-2026): the
         # row's margins follow the drawing as it is resized.
         self.lights_row = QWidget()
         lights = QHBoxLayout(self.lights_row)
@@ -333,14 +333,14 @@ class MainWindow(QWidget):
             lights.addWidget(button)
             lights.addStretch(1)
             self.light_buttons.append(button)
-        # Any colour: a colour wheel, round like the others, so all seven fit across the drawing.
+        # Any color: a color wheel, round like the others, so all seven fit across the drawing.
         self.other_light = QPushButton()
         self.other_light.setFixedSize(26, 26)
         self.other_light.setStyleSheet(
             "QPushButton { border:1px solid palette(mid); border-radius:13px; background:qconicalgradient(cx:0.5, "
             "cy:0.5, angle:0, stop:0 #ff0000, stop:0.17 #ffff00, stop:0.33 #00ff00, stop:0.5 #00ffff, "
             "stop:0.67 #0000ff, stop:0.83 #ff00ff, stop:1 #ff0000); }")
-        self.other_light.setToolTip("Light bar in any colour you choose.")
+        self.other_light.setToolTip("Light bar in any color you choose.")
         self.other_light.clicked.connect(self.pick_light)
         lights.addWidget(self.other_light)
         # Its margins must not widen the box: the row takes the drawing's width, not the other way round.
@@ -353,7 +353,7 @@ class MainWindow(QWidget):
         light_row.setSpacing(6)
         light_row.addWidget(QLabel("Light bar"))
         self.light_chip = QLabel()
-        self.light_chip.setToolTip("The colour the app gives the light bar, chosen under the drawing. The app sets it "
+        self.light_chip.setToolTip("The color the app gives the light bar, chosen under the drawing. The app sets it "
                                    "at once and again each time the controller connects while the app is open; the "
                                    "controller forgets it when it disconnects.")
         self.light_chip.setFixedSize(16, 16)
@@ -404,7 +404,7 @@ class MainWindow(QWidget):
         return box
 
     def _align_lights(self) -> None:
-        """The colour row's margins: from where the drawn body starts to where it ends, within the drawing."""
+        """The color row's margins: from where the drawn body starts to where it ends, within the drawing."""
         left, right = self.view.body_span()
         offset = self.view.x() - self.lights_row.x()
         self.lights_row.layout().setContentsMargins(max(0, round(offset + left)), 0,
@@ -715,7 +715,7 @@ class MainWindow(QWidget):
                 self.controller_text.setText(f"The light bar could not be set: {_error(exc)}.")
             return
         if not quiet:
-            self.controller_text.setText("The light bar keeps this colour until the controller disconnects, or "
+            self.controller_text.setText("The light bar keeps this color until the controller disconnects, or "
                                          "Steam or a game sets another. The app sets it again when the controller "
                                          "connects while the app is open.")
 
@@ -755,8 +755,8 @@ class MainWindow(QWidget):
 
     def _show_update(self, found: Controller | None, latest: int | None) -> None:
         """The Latest firmware pill: Sony's latest version, orange when an update can start (a click starts it),
-        otherwise grey, and a click asks Sony's server again. It stays clickable while there is a controller, so it
-        is not greyed while the controller is up to date."""
+        otherwise gray, and a click asks Sony's server again. It stays clickable while there is a controller, so it
+        is not grayed while the controller is up to date."""
         can = self._can_update(found, latest)
         self.latest_pill.set_value(firmware.version_text(latest) if latest is not None and found is not None else "—")
         self.latest_pill.set_colour(STATE_COLORS["warn"] if can else GREY)

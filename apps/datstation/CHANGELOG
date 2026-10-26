@@ -1,3 +1,12 @@
+Changelog: 26-10-2026 02:14:35
+
+Release 1.9.0.
+
+Changelog: 26-10-2026 01:04:02
+
+Fixed. The front page's symbols use the PlayStation face-button colors USB HD Control draws (triangle #3dbf9c,
+circle #e8505b, cross #6f9fe8, square #e48fc0; owner, 26-10-2026), so both PlayStation apps share one set.
+
 Changelog: 25-10-2026 01:16:49
 
 Release 1.8.1.
@@ -54,7 +63,7 @@ Release 1.2.0.
 Changelog: 19-10-2026 23:41:01
 
 Added. The suite's theme, chosen in the portal, with the PlayStation blue as its accent: the primary buttons, the
-selection, the focus and the progress bars. The window, the cards and the other buttons take the theme's colours.
+selection, the focus and the progress bars. The window, the cards and the other buttons take the theme's colors.
 
 Changelog: 19-10-2026 03:41:49
 
@@ -87,7 +96,7 @@ Release 0.2.1.
 Changelog: 17-10-2026 09:04:09
 
 Fixed. The quiz questions are the owner's revised set (17-10-2026): 25 questions dropped, 110 reworded, 43 answers
-or answer options corrected, and the true/false options spelt True and False throughout; 1,436 questions in the
+or answer options corrected, and the true/false options spelled True and False throughout; 1,436 questions in the
 same 11 categories, 230 of them true/false. The quiz tile on the front page counts the shipped questions instead
 of naming a number, so it stays right when the file changes; the test of the shipped questions expects the new
 count.
@@ -122,8 +131,8 @@ Release 0.2.0.
 Changelog: 16-10-2026 04:52:58
 
 Added. The app's Steam artwork is drawn from its icon by core's steam_art (owner, 16-10-2026), where it was the
-logo on a fixed PlayStation blue background: a background in the icon's colour, the icon with the app's name and
-"PlayStation" on the portrait and the wide picture, the name centred on the banner, and the icon as the logo, as
+logo on a fixed PlayStation blue background: a background in the icon's color, the icon with the app's name and
+"PlayStation" on the portrait and the wide picture, the name centered on the banner, and the icon as the logo, as
 before.
 
 Changelog: 16-10-2026 03:52:51
@@ -144,7 +153,7 @@ from the 512 px file; the portal's tile shows it.
 Changelog: 16-10-2026 00:18:19
 
 Fixed. The front page is a grid of four by four: four tiles on a row that share the window's width, so no gap is
-left on the right, and the slots without a feature yet hold a greyed-out Coming Soon tile, which takes no focus. A
+left on the right, and the slots without a feature yet hold a grayed-out Coming Soon tile, which takes no focus. A
 tile has its symbol beside its name, so the four rows fit the window; the grid scrolls in a lower window, and the
 window's least width is 1040 px. The Menu button has the look of the pages' Back button (transparent, a white
 border). The Steam state stands on the baseline of the app's title.

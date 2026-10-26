@@ -180,7 +180,7 @@ def parse_hex(text: str) -> bytes:
 
 
 class ProtocolHighlighter(QSyntaxHighlighter):
-    """Colours the lines text protocols produce: requests and commands, status and reply lines, header names,
+    """Colors the lines text protocols produce: requests and commands, status and reply lines, header names,
     error replies, and the direction markers of the hex view. Plain data stays as it is."""
 
     def __init__(self, document: QTextDocument) -> None:
@@ -197,16 +197,16 @@ class ProtocolHighlighter(QSyntaxHighlighter):
         self.rules: list[tuple[QRegularExpression, int, QTextCharFormat]] = [
             # HTTP requests and the commands of SMTP, POP3, IMAP, FTP, IRC, Redis, memcached.
             (QRegularExpression(r"^(GET|POST|PUT|DELETE|HEAD|OPTIONS|PATCH|CONNECT|TRACE) \S+ HTTP/\d(\.\d)?$"),
-             0, fmt("#2e9e5b", True)),
+             0, fmt("#81c784", True)),
             (QRegularExpression(r"^(EHLO|HELO|MAIL FROM|RCPT TO|DATA|QUIT|USER|PASS|STAT|LIST|RETR|CAPA|NICK|JOIN|"
                                 r"PRIVMSG|PING|PONG|STATS|SET|\w+ (CAPABILITY|LOGIN|SELECT|FETCH|LOGOUT))\b.*$",
-                                QRegularExpression.PatternOption.CaseInsensitiveOption), 0, fmt("#2e9e5b")),
+                                QRegularExpression.PatternOption.CaseInsensitiveOption), 0, fmt("#81c784")),
             # Status lines: HTTP, and the three-digit replies of SMTP, FTP, IRC and friends.
             (QRegularExpression(r"^HTTP/\d(\.\d)? [123]\d\d\b.*$"), 0, fmt("#d2691e", True)),
             (QRegularExpression(r"^[123]\d\d[ -].*$"), 0, fmt("#d2691e")),
             # Errors: HTTP 4xx/5xx, SMTP/FTP 4xx/5xx, POP3 -ERR, Redis -ERR, memcached ERROR.
             (QRegularExpression(r"^(HTTP/\d(\.\d)? [45]\d\d\b.*|[45]\d\d[ -].*|-ERR.*|ERROR.*|-.*)$"),
-             0, fmt("#d04545", True)),
+             0, fmt("#e57373", True)),
             # Replies that start with + (POP3 +OK, Redis +PONG) and header names.
             (QRegularExpression(r"^\+.*$"), 0, fmt("#d2691e")),
             (QRegularExpression(r"^([A-Za-z][A-Za-z0-9-]*):\s"), 1, fmt("#3c7dd9", True)),
@@ -249,7 +249,7 @@ class SessionWidget(QWidget):
         self._session_name = ""
         self._status = "Disconnected"
         self.custom_title = ""                         # Rename Tab; empty means the session's own name
-        self.tab_color = ""                            # Tab Color, a colour name or empty
+        self.tab_color = ""                            # Tab Color, a color name or empty
         self.hex_view = False                          # the log as a hexdump instead of text
         self.hex_input = False                         # the message box holds hex digits instead of text
         self.pipe_target: Optional["SessionWidget"] = None   # received data is sent on through this tab

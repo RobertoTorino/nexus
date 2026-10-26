@@ -93,7 +93,7 @@ class MainWindow(QWidget):
         self.rounds_spin = QSpinBox()
         self.rounds_spin.setRange(2, 9)
         self.rounds_spin.setValue(3)
-        self.rounds_spin.setToolTip(("Attempts per item (-r), interleaved so heat/time-of-day don't favour one item. "
+        self.rounds_spin.setToolTip(("Attempts per item (-r), interleaved so heat/time-of-day don't favor one item. "
                                      "Minimum 2 (control-only runs may use 1)."))
         grid.addWidget(self.rounds_spin, row, 1)
         row += 1

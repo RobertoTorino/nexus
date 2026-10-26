@@ -249,7 +249,7 @@ extracted.
   before and after a change in the extractor, and tells per count what went up or down and which files were fixed
   or are new; the text goes to the log and to `<after report>_delta.txt` next to the after report.
 
-While an extraction runs, the buttons are greyed out and the window stays open until it has finished. When the window
+While an extraction runs, the buttons are grayed out and the window stays open until it has finished. When the window
 opens and finds that an earlier one did not end cleanly (the app stopped while it was open), it says so, with the
 last file it was extracting; a partial `TITLE_ID` folder from then is refused by the empty-folder check: delete it.
 

@@ -248,7 +248,7 @@ def test_pcsx2_is_set_up_once_installed(qapp, folders, tmp_path):
 
 
 def test_pcsx2s_titles_name_the_games(qapp, folders, tmp_path):
-    """With PCSX2's catalogue beside the AppImage, a game is named as PCSX2 names it, in the table and in Steam; a
+    """With PCSX2's catalog beside the AppImage, a game is named as PCSX2 names it, in the table and in Steam; a
     game PCSX2 does not know keeps its file's name, without the serial in it."""
     _install(folders["home"])
     current = emulator.appimage(folders["home"]).parent
@@ -452,7 +452,7 @@ def test_the_blue_look(qapp, folders):
         assert style.HOVER_SHEEN in sheet and style.BLUE_TINT not in sheet
     assert all(p.value.styleSheet() == window.refresh_pill.value.styleSheet() for p in window.actions)  # same type
     # The Refresh pill has the keyboard focus when the window opens; it looks as the boxes beside it all the same
-    # (owner, 24-10-2026: it showed another background colour).
+    # (owner, 24-10-2026: it showed another background color).
     window.show()
     qapp.processEvents()
     assert window.focusWidget() is window.refresh_pill

@@ -100,7 +100,7 @@ def test_running_guard_and_its_events(qapp, sys_root, paths, yes):
     w.refresh()
     assert w.badge.text() == "Hot" and w.guard_box.value.text() == "Hot"
     assert "GPU is at 87 °C" in w.events_view.toPlainText()
-    assert "orange" not in w.gpu_box.styleSheet()               # a colour code, not a word
+    assert "orange" not in w.gpu_box.styleSheet()               # a color code, not a word
     assert "#ef6c00" in w.gpu_box.styleSheet()
 
 
@@ -132,9 +132,9 @@ def test_turn_off(qapp, sys_root, paths, yes):
 
 
 def test_helper_error_is_shown(qapp, sys_root, paths, yes):
-    w = window(qapp, sys_root, paths, Helper(paths, "Not authorised: the password dialog was cancelled or refused."))
+    w = window(qapp, sys_root, paths, Helper(paths, "Not authorized: the password dialog was canceled or refused."))
     w.apply()
-    assert yes == ["Not authorised: the password dialog was cancelled or refused."]
+    assert yes == ["Not authorized: the password dialog was canceled or refused."]
     assert w.badge.text() == "Guard off"
 
 

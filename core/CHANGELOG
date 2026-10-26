@@ -57,7 +57,7 @@ Test: tests/test_applog.py.
 Changelog: 23-10-2026 07:00:42
 
 Fixed. widgets: a Pill that cannot be clicked (setEnabled(False)) shows its value and caption in the theme's muted
-text colour, as a disabled button does; before, it looked the same as one that can be clicked. The rule is on the
+text color, as a disabled button does; before, it looked the same as one that can be clicked. The rule is on the
 labels' own disabled state, as Qt ignores an ancestor's pseudo-state in a selector. No other app disables a pill, so
 only USB HD Control's Update pill changes. Test: tests/test_widgets.py.
 
@@ -98,7 +98,7 @@ calls it, with the app's own sheet after the theme's. ACCENT is the theme's acce
 an app the theme's surfaces and secondary text. Self-contained, so an app not on core carries a copy.
 
 Added. widgets: StatusPill, MetricBox and AppHeader follow the theme: a pill or box is the theme's surface with its
-state or colour as a thick left edge, the text in the theme's colour; MetricBox.set_colour() changes it. The room
+state or color as a thick left edge, the text in the theme's color; MetricBox.set_colour() changes it. The room
 inside stays as it was. The tooltip's border is the theme's accent.
 
 Changelog: 19-10-2026 03:24:21
@@ -124,12 +124,12 @@ PNG when the icon is not one, since Steam's grid files are PNG.
 Changelog: 16-10-2026 04:52:58
 
 Added. steam_art.draw_icon_art(): the four pictures of a Steam shortcut drawn from an app's icon, for apps with no
-pictures of their own. The background is near black in the icon's own colour (the mean of its bright, saturated
-pixels), lighter towards the middle, with a glow of that colour; the portrait and the wide picture have the icon, a
-title and a line under it, the banner the title and its own line centred, and the icon file itself is the logo. A
+pictures of their own. The background is near black in the icon's own color (the mean of its bright, saturated
+pixels), lighter towards the middle, with a glow of that color; the portrait and the wide picture have the icon, a
+title and a line under it, the banner the title and its own line centered, and the icon file itself is the logo. A
 long title wraps and shrinks to fit. Without the icon the background is dark blue and the title is the logo. Moved
 from Console Link, which drew it first; Console Link, the PCSX2 Manager and Bazzite DatStation use it. Tests: Steam's
-sizes, the icon as the logo, the colour taken from the icon, a long title and no icon.
+sizes, the icon as the logo, the color taken from the icon, a long title and no icon.
 
 Changelog: 15-10-2026 22:35:35
 
@@ -171,7 +171,7 @@ AppHeader in widgets: the first line of every app window, the icon at 96 px span
 
 Changelog: 11-10-2026 20:58:28
 
-MetricBox centres its value and caption by default, like Bazzite Test's stats boxes; centred=False keeps them left-aligned. test_widgets checks the default; test_parity compares centred and left-aligned boxes with both governor's and helixsr's copies.
+MetricBox centers its value and caption by default, like Bazzite Test's stats boxes; centered=False keeps them left-aligned. test_widgets checks the default; test_parity compares centered and left-aligned boxes with both governor's and helixsr's copies.
 
 Changelog: 11-10-2026 19:02:46
 
@@ -188,7 +188,7 @@ Version 0.1.2. Shared UI improvements
 
 Changelog: 11-10-2026 01:05:44
 
-Header status widget StatusText: a coloured dot and the state in bold, in the colour of its kind (red bad, orange warn, green ok, blue info, the normal text colour for neutral), with the same set_status() and text() as StatusPill. For a state next to an app's title, where a pill is too heavy; StatusPill stays for cards.
+Header status widget StatusText: a colored dot and the state in bold, in the color of its kind (red bad, orange warn, green ok, blue info, the normal text color for neutral), with the same set_status() and text() as StatusPill. For a state next to an app's title, where a pill is too heavy; StatusPill stays for cards.
 
 Changelog: 10-10-2026 20:56:48
 
@@ -200,8 +200,8 @@ SUITE_MANUAL_URL: the address of the suite manual on GitHub Pages. README: short
 
 Changelog: 09-10-2026 18:22:39
 
-MetricBox has an optional centred=True that centres the value and caption (helixsr's header uses it); the default
-renders as before. The parity test covers the centred box against helixsr's copy.
+MetricBox has an optional centered=True that centers the value and caption (helixsr's header uses it); the default
+renders as before. The parity test covers the centered box against helixsr's copy.
 
 tests/test_instance.py deletes its server and window explicitly: left to Python's collection at exit, they made the
 interpreter crash after the last test in about half of the runs (the tests themselves passed).

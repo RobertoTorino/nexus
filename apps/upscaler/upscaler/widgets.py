@@ -17,7 +17,7 @@ from PyQt6.QtWidgets import (
 
 from . import FONT_DIR, plain_tooltip, window_title
 
-# The suite's theme and colours (a copy of core's theme.py): result colours, the logo's purple, the theme's accent.
+# The suite's theme and colors (a copy of core's theme.py): result colors, the logo's purple, the theme's accent.
 from .theme import ACCENT, BLUE, GREEN, GREY, ORANGE, PURPLE, RED, STATE_COLORS, surface_style
 
 
@@ -36,8 +36,8 @@ def header_font() -> str:
 
 
 class StatusPill(QLabel):
-    """A short state word on the theme's surface, its state as a coloured left edge: Active, Not mounted, ...
-    Neutral has no colour."""
+    """A short state word on the theme's surface, its state as a colored left edge: Active, Not mounted, ...
+    Neutral has no color."""
 
     def __init__(self, text: str = "", parent: QWidget | None = None):
         text = text or "Unknown"
@@ -78,7 +78,7 @@ class MetricBox(QFrame):
         self.setToolTip(tooltip)
 
     def set_colour(self, colour: str) -> None:
-        """The box's state or category colour, its left edge; GREY (neutral) has none."""
+        """The box's state or category color, its left edge; GRAY (neutral) has none."""
         self.setStyleSheet(surface_style(None if colour == GREY else colour)
                            + "QLabel { background:transparent; border:none; }")
 
@@ -154,7 +154,7 @@ def hint_label(text: str) -> QLabel:
 
 
 def accent_button(text: str, tooltip: str = "") -> QPushButton:
-    """The page's main action, outlined in the accent colour like the selected nav item."""
+    """The page's main action, outlined in the accent color like the selected nav item."""
     button = QPushButton(text)
     button.setToolTip(tooltip)
     button.setMinimumHeight(36)

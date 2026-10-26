@@ -1,3 +1,7 @@
+Changelog: 26-10-2026 02:14:35
+
+Release 0.2.2.
+
 Changelog: 25-10-2026 01:16:49
 
 Release 0.2.1.
@@ -147,7 +151,7 @@ Changelog: 08-10-2026 22:26:29
 Moved into the BC250 Bazzite Suite: version 0.1.0, released on the suite's own gpu-oc-bisect-v* tags.
 
 bc250-gpu-oc-bisect.sh: two `local x="$(date …)"` lines are now a declaration plus an assignment (shellcheck
-SC2155), so a failing date is no longer hidden. Behaviour is otherwise unchanged.
+SC2155), so a failing date is no longer hidden. Behavior is otherwise unchanged.
 
 Changelog: 06-10-2026 07:49:53
 

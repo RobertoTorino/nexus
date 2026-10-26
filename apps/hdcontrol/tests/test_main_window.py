@@ -432,7 +432,7 @@ def test_choose_a_light_bar_colour(make, tmp_path):
     window.light_buttons[1].click()                     # red
     assert window.lights == [("hidraw2", "usb", (255, 32, 32))]
     assert main_window.ControlSettings(main_window.INFO).get("lightbar") == "#ff2020"
-    assert window.view.light.name() == "#ff2020" and "keeps this colour" in window.controller_text.text()
+    assert window.view.light.name() == "#ff2020" and "keeps this color" in window.controller_text.text()
     assert window.light_name.text() == "Red"
     unplug(tmp_path / "sys")
     window.refresh()

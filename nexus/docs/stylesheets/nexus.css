@@ -1,16 +1,16 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
 /* The Nexus page: graphite with teal, and Inter with heavy titles. Only the Nexus page loads this file, and it loads
    no other stylesheet of the repository: every wiki has a design of its own. The design panel (mkdocs serve) shows the
-   variables below: the comment before a rule names its group, the comment after a variable says what it colours. */
+   variables below: the comment before a rule names its group, the comment after a variable says what it colors. */
 
-/* Nexus's colours: the rest of the design is made from these. */
+/* Nexus's colors: the rest of the design is made from these. */
 :root {
-  --nexus-primary: #0d9488;     /* Main colour: table headings */
-  --nexus-secondary: #0891b2;   /* Second colour: hover on links and buttons */
-  --nexus-ink: #0c1214;         /* Darkest: the home page's dark sections and its footer */
-  --nexus-deep: #10201f;        /* Deep: the header, text on a hovered button in a dark section */
-  --nexus-soft: #5eead4;        /* Light: links, the icons on the home page's cards, footer headings and icon */
-  --nexus-mist: #b9ddd8;        /* Pale: text on the home page's cards, footer links */
+  --nexus-primary: #0f0f0f;     /* Main color: table headings */
+  --nexus-secondary: #17b6a7;   /* Second color: hover on links and buttons */
+  --nexus-ink: #010101;         /* Darkest: the home page's dark sections and its footer */
+  --nexus-deep: #010101;        /* Deep: the header, text on a hovered button in a dark section */
+  --nexus-soft: #17b6a7;        /* Light: links, the icons on the home page's cards, footer headings and icon */
+  --nexus-mist: #c0c0c0;        /* Pale: text on the home page's cards, footer links */
 }
 
 /* Corners. */
@@ -21,31 +21,31 @@
 /* Header: the bar at the top of every page. */
 :root {
   --nexus-header-bg: var(--nexus-deep);   /* Header background */
-  --nexus-header-fg: #ffffff;             /* Header text: the name and the links */
-  --nexus-header-hover-bg: #ffffff1f;         /* Behind a link in the header under the pointer */
+  --nexus-header-fg: #c0c0c0;             /* Header text: the links */
+  --nexus-header-hover-fg: #808080;       /* A link in the header under the pointer: dimmed, no box */
 }
 
-/* Material's main colour. */
+/* Material's main color. */
 [data-md-color-primary="custom"] {
   --md-primary-fg-color: var(--nexus-primary);   /* Buttons and Material's highlights */
-  --md-primary-fg-color--light: #2bb3a6;         /* Lighter main colour */
-  --md-primary-fg-color--dark: #0a6f66;          /* Darker main colour */
-  --md-primary-bg-color: #ffffff;                /* Text on the main colour */
-  --md-primary-bg-color--light: #ffffffb3;       /* Dimmed text on the main colour: the search field's hint */
+  --md-primary-fg-color--light: #ffffff;         /* Lighter main color */
+  --md-primary-fg-color--dark: #ffffff;          /* Darker main color */
+  --md-primary-bg-color: #c0c0c0;                /* Text on the main color */
+  --md-primary-bg-color--light: #c0c0c0;       /* Dimmed text on the main color: the search field's hint */
 }
 
-/* Material's hover colour. */
+/* Material's hover color. */
 [data-md-color-accent="custom"] {
   --md-accent-fg-color: var(--nexus-secondary);  /* Links and buttons under the pointer, the outline on pictures */
-  --md-accent-fg-color--transparent: #0891b21a;  /* A faint fill behind what is under the pointer */
-  --md-accent-bg-color: #ffffff;                 /* Text on the hover colour */
-  --md-accent-bg-color--light: #ffffffb3;        /* Dimmed text on the hover colour */
+  --md-accent-fg-color--transparent: #8080801a;  /* A faint fill behind what is under the pointer */
+  --md-accent-bg-color: #808080;                 /* Text on the hover color */
+  --md-accent-bg-color--light: #808080;        /* Dimmed text on the hover color */
 }
 
 /* The page. */
 [data-md-color-scheme="slate"] {
   --md-typeset-a-color: var(--nexus-soft);       /* Links in the text */
-  --md-default-bg-color: #131819;                /* Page background */
+  --md-default-bg-color: #010101;                /* Page background */
 }
 
 /* Buttons. */
@@ -56,22 +56,22 @@
 /* Tables. */
 :root {
   --nexus-table-head-bg: var(--nexus-primary);    /* Background of a table's headings */
-  --nexus-table-head-fg: #ffffff;             /* Text of a table's headings */
+  --nexus-table-head-fg: #c0c0c0;             /* Text of a table's headings */
 }
 
 /* The home page. */
 :root {
-  --nexus-hero-fg: #ffffff;                   /* The words at the top: the name and the claim */
+  --nexus-hero-fg: #17b6a7;                   /* The words at the top: the name and the claim */
   --nexus-section-bg: var(--nexus-ink);           /* Background of the dark sections */
-  --nexus-section-fg: #ffffff;                /* Text, card titles and links in the dark sections */
-  --nexus-section-button: #ffffff;            /* Buttons there: outline and text, the fill under the pointer */
+  --nexus-section-fg: #c0c0c0;                /* Text, card titles and links in the dark sections */
+  --nexus-section-button: #c0c0c0;            /* Buttons there: outline and text, the fill under the pointer */
 }
 
 /* The home page's footer. */
 :root {
   --nexus-footer-bg: var(--nexus-ink);            /* Footer background */
-  --nexus-footer-fg: #ffffff;                 /* The name, and a link under the pointer */
-  --nexus-footer-notice-bg: #00000059;        /* The strip with the notice at the bottom, over the footer */
+  --nexus-footer-fg: #17b6a7;                 /* The name, and a link under the pointer */
+  --nexus-footer-notice-bg: #010101;        /* The strip with the notice at the bottom, over the footer */
 }
 
 
@@ -162,29 +162,7 @@
   padding: 0.1rem;
 }
 
-/* The name beside the icon; on a narrow screen smaller, and cut off before it pushes the links away. */
-.md-header__name {
-  margin-left: 0.4rem;
-  overflow: hidden;
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--nexus-header-fg);
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.md-header__name:hover,
-.md-header__name:focus {
-  color: var(--nexus-header-fg);
-}
-
-@media screen and (max-width: 44.9375em) {
-  .md-header__name {
-    font-size: 0.8rem;
-  }
-}
-
-/* The links on the right of the header, as plain words. */
+/* The links on the right of the header, as plain words; under the pointer the word dims, nothing else. */
 .md-header__spacer {
   flex-grow: 1;
 }
@@ -202,13 +180,12 @@
   font-size: 0.8rem;
   font-weight: 600;
   color: var(--nexus-header-fg);
-  transition: background-color 150ms ease;
+  transition: color 150ms ease;
 }
 
 .md-header__link:hover,
 .md-header__link:focus {
-  color: var(--nexus-header-fg);
-  background-color: var(--nexus-header-hover-bg);
+  color: var(--nexus-header-hover-fg);
 }
 
 /* The home page (docs/index.md on overrides/home.html): full-width sections, as on a product page. */
@@ -379,11 +356,4 @@
 
 .home-footer .md-footer-meta {
   background: var(--nexus-footer-notice-bg);
-}
-
-/* The placeholder icon (Material's hub) in the footer, at the size of the wiki's icon there. */
-.home-footer__brand svg {
-  width: 48px;
-  height: 48px;
-  fill: var(--nexus-soft);
 }

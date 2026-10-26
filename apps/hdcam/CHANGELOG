@@ -1,3 +1,7 @@
+Changelog: 26-10-2026 02:14:35
+
+Release 0.7.0.
+
 Changelog: 25-10-2026 01:16:49
 
 Release 0.6.1.
@@ -88,12 +92,12 @@ the port's USB speed (the video needs USB 3; a slower port is flagged), the firm
 frame whole or either half, and saves what it shows as a PNG; it holds the camera only while it runs. Picture
 settings beside it offers every control the camera reports (V4L2 control ioctls with the standard library; on the
 owner's board brightness, contrast, saturation, hue, gain, sharpness, automatic white balance and its
-temperature, power line frequency, and the exposure: Auto or Shutter Priority), greys one that another decides,
+temperature, power line frequency, and the exposure: Auto or Shutter Priority), grays one that another decides,
 and has Defaults; the values the user changed are kept and set again each time the camera is ready, by the window
 and by the load service, as the camera forgets them unplugged. Measured on the owner's board (23-10-2026, 1280x800,
 a well-lit room): mean luma 48 in the camera's default Shutter Priority (24 % near black), 111 in Auto Mode, 136
 with gain 8, 166 with brightness 8; Shutter Priority with brightness 8 gives 112 with less clipped white; gain does
-nothing in Shutter Priority, and the exposure time stays at 1000 whatever is set (its whole row shows greyed, as
+nothing in Shutter Priority, and the exposure time stays at 1000 whatever is set (its whole row shows grayed, as
 does any control the camera does not let be changed). Auto Mode is the app's default (the owner's choice, 23-10-2026),
 set at every plug-in unless the user chose otherwise; Defaults keeps it. The camera's one vendor control (extension
 unit 4, 3 bytes, undocumented) is left alone. The udev rule also keeps the camera with its firmware out of USB

@@ -51,7 +51,7 @@ def ours(item: dict) -> bool:
 
 
 def for_game(game: Game):
-    """Recognises the game's shortcut, whatever its name now."""
+    """Recognizes the game's shortcut, whatever its name now."""
     return lambda item: _eboot(item) == str(game.eboot)
 
 

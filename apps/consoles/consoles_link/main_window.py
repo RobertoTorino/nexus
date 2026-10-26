@@ -659,7 +659,7 @@ class MainWindow(QMainWindow):
         self._show_console_box()
 
     def ask_redirect(self) -> str | None:
-        """The address the PlayStation sign-in ended on, or None when cancelled."""
+        """The address the PlayStation sign-in ended on, or None when canceled."""
         dialog = AccountDialog(self)
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return None

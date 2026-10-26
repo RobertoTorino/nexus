@@ -96,17 +96,17 @@ Under the picture:
 
 **Look**
 
-- **Theme:** Dark (with the suite's accent colour), Light, Midnight, Ember, Forest or Mono. Moving through the
+- **Theme:** Dark (with the suite's accent color), Light, Midnight, Ember, Forest or Mono. Moving through the
   list shows each theme in the window's picture; the screen changes only when you choose one.
-- **Colours:** your own colour for the **Text**, the **Tiles**, the **Accent** (the tiles' edge and bars) or the
-  **Background**, over the theme. The window's picture shows each colour you try in the colour dialog; the screen
-  changes when you choose OK. A button with your own colour shows it; **Theme's** puts back the theme's colours.
+- **Colors:** your own color for the **Text**, the **Tiles**, the **Accent** (the tiles' edge and bars) or the
+  **Background**, over the theme. The window's picture shows each color you try in the color dialog; the screen
+  changes when you choose OK. A button with your own color shows it; **Theme's** puts back the theme's colors.
   The warm and hot temperatures stay orange and red.
 - **Header text:** your own text, up to 24 characters: the board's name, its CPU, anything. Empty leaves only the
   time.
 - **Background:** a picture of your own behind the tiles, cut to the screen's shape; the tiles let it show through
   a little. The app remembers where the picture is and does not copy it: if you move or remove it, the theme's
-  colour comes back, and the tab says so.
+  color comes back, and the tab says so.
 
 **Clock**
 

@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-2.0-only
 """The features from the C++ tool's TODO: pipes between tabs, file pipes, automatic reconnect, TLS, the message
 history, the hex view and hex input, the protocol highlighter and templates, recordings and their replay, and the
-tab bar's rename, colour and context menu."""
+tab bar's rename, color and context menu."""
 
 from __future__ import annotations
 
@@ -391,7 +391,7 @@ def test_window_recording_menu(qapp, dialogs, free_port, pump, tmp_path, monkeyp
     window.close()
 
 
-# -- tab rename, colour and context menu -----------------------------------------------------------------------
+# -- tab rename, color and context menu -----------------------------------------------------------------------
 
 def test_rename_color_and_context_menu(qapp, dialogs, monkeypatch):
     window = MainWindow()

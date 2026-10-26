@@ -67,7 +67,7 @@ def video_units(frame: bytes, unit_size: int = UNIT_SIZE, fec_units: int = FEC_U
 
 @dataclass
 class StreamConsole:
-    """target and the session crypto's nonce and RP-Key, to read the launch spec. Behaviour switches: silent (no
+    """target and the session crypto's nonce and RP-Key, to read the launch spec. Behavior switches: silent (no
     INIT_ACK), refuse_version, early_streaminfo (sent before BANG), wrong_signature (BANG's key signed with another
     key), disconnect_after (heartbeats before it sends DISCONNECT). Frames are numbered from 1; lose_units
     (frame, unit) and lose_frames stand in for the network, late_units (frame, unit) for packets that come late."""

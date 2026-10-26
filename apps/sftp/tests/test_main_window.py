@@ -291,3 +291,49 @@ def test_existing_targets_ask_once_when_the_answer_holds_for_the_rest(qapp, monk
 
     assert asked == [("a", True)]
     assert [(job.source, job.skip_existing) for job in enqueued] == [("b", True)]
+
+
+def test_connect_is_a_pill_in_the_header(qapp, monkeypatch) -> None:
+    """Connect sits beside the states as a pill (owner, 26-10-2026): a click connects the SFTP Client, and the
+    pill reads what the tab says (Connecting…, Disconnect) and cannot be clicked while it connects."""
+    window = MainWindow()
+    toggled = []
+    monkeypatch.setattr(window.sftp_tab, "toggle_connection", lambda: toggled.append(True))
+    window.connect_pill.clicked.disconnect()
+    window.connect_pill.clicked.connect(window.sftp_tab.toggle_connection)
+    assert window.connect_pill.value.text() == "Connect" and window.connect_pill.caption.text() == "SFTP client"
+    assert window.connect_pill.sizePolicy() == window.sftp_box.sizePolicy()      # as wide as the boxes beside it
+    assert not hasattr(window.sftp_tab, "connect_button")
+    window.connect_pill.click()
+    assert toggled == [True]
+    window.sftp_tab.connect_changed.emit("Connecting…", False)
+    assert window.connect_pill.value.text() == "Connecting…" and not window.connect_pill.isEnabled()
+    window.sftp_tab._close_connection()
+    assert window.connect_pill.value.text() == "Connect" and window.connect_pill.isEnabled()
+    window.close()
+
+
+def test_the_password_rules_always_show_at_the_right(qapp) -> None:
+    """In the SFTP Client the rules sit at the right of the form from the start, in muted text, and turn into what
+    is missing (red) or a check (green) as a password is typed; the warning shows and hides as before. The Server
+    Manager's form keeps the rules under the password, shown while one is typed."""
+    server = common.ConnectionFields()
+    assert server.password_requirements.parent() is server and not server.password_requirements.isVisibleTo(server)
+    server.password.setText("abc")
+    assert server.password_requirements.isVisibleTo(server) and server.password_requirements.text().startswith("✗")
+    server.close()
+    fields = common.ConnectionFields(rules_beside=True)
+    rules, warning = fields.password_requirements, fields.password_warning
+    assert rules.text().startswith("Password rules:") and rules.text().count("\n") == 1
+    assert rules.parent() is None and not warning.isVisibleTo(fields)      # the tab places the rules beside the form
+    tab = client_tab.SftpClientTab()
+    assert tab.connection.password_requirements.parent() is tab and tab.connection.password_requirements.isVisibleTo(tab)
+    tab.close()
+    fields.password.setText("abc")
+    assert rules.text().startswith("✗ Missing: 8 characters, 1 uppercase") and "#e57373" in rules.styleSheet()
+    assert rules.text().count("\n") == 1 and warning.isVisibleTo(fields)
+    fields.password.setText("Abcdefg1!")
+    assert rules.text().startswith("✓") and "#81c784" in rules.styleSheet()
+    fields.key_filename.setText("/home/user/.ssh/id_ed25519")
+    assert rules.text().startswith("Password rules:") and not warning.isVisibleTo(fields)
+    fields.close()

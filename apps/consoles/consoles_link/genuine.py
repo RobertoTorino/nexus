@@ -9,7 +9,7 @@ The check reads these reports through the controller's hidraw device (reading on
 whether they make sense: a build date of the controller's era, versions that are not empty, a calibration that is
 there and symmetric (a sensor's plus and minus about as large).
 
-The check is built from genuine controllers' answers; what fakes answer is to be learnt from a fake on the owner's
+The check is built from genuine controllers' answers; what fakes answer is to be learned from a fake on the owner's
 board. A real proof would be the console's own challenge, which a genuine controller signs with Sony's key; that is
 not done here."""
 

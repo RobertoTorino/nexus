@@ -1,3 +1,7 @@
+Changelog: 26-10-2026 02:14:35
+
+Release 0.7.0.
+
 Changelog: 25-10-2026 01:16:49
 
 Release 0.6.1.
@@ -139,25 +143,25 @@ Changelog: 23-10-2026 08:16:14
 Added. The drawing follows the controller live and does more (owner, 23-10-2026). It reads the input reports from the
 hidraw node beside hid-playstation (inputs.py: report 0x01 over USB, 0x31 over Bluetooth): each button lights while
 pressed, the Edge's Fn and back buttons too, the sticks move and the triggers fill. A Controller box holds it, with
-the light bar's colour (Blue, Red, Green, Purple, White, Off or any colour; set as hid-playstation's output report
+the light bar's color (Blue, Red, Green, Purple, White, Off or any color; set as hid-playstation's output report
 0x02 over USB, 0x31 with its CRC-32 over Bluetooth, again each time the controller connects while the app is open;
 the drawing shows it) and Test vibration (the kernel's force feedback on the controller's input device: the left
 motor, then the right, the drawing shaking on that side). During a firmware update the drawing shows data flowing
 down the plugged-in cable and the touchpad filling. Redrawn: 85 % of its width at the same height, a larger d-pad and
-face buttons, the face buttons' symbols in the first PlayStation pads' colours, a light bar along the touchpad, and
+face buttons, the face buttons' symbols in the first PlayStation pads' colors, a light bar along the touchpad, and
 the gaming apps' blue (#0A55B0, #5B93DA on dark) for what is lit and the chosen profile instead of the theme's
 accent. Read on the owner's Edge (23-10-2026, USB): the input report at rest parses as no button pressed, the hat at
 8, the sticks within 3 % of the middle; the controller's own input device is the one without a suffix in its name
 (event11), which the user may write to.
 Then (owner, 23-10-2026, after every button and both motors worked on the owner's Edge): the d-pad's arms are white
 with a black border and a gap between them; the turning with the mouse is gone (it did not look 3D); the drawing
-stands on the left with the light bar's colours under it, and the light bar's colour now, the hint and Test vibration
+stands on the left with the light bar's colors under it, and the light bar's color now, the hint and Test vibration
 on its right; and the header has the battery as a phone shows it, upright, right of the boxes, instead of the Battery
 box (battery.py: five modules from the bottom up, green, orange at 20 % or less, red at 10 % or less; while charging,
 the modules above the level fill one after another, upwards). The firmware is one pill (owner, 23-10-2026: there were
 two for it): the version the controller runs, "Current version", green when it is the latest; orange, "Update to" the
 latest version, when an update can start, which a click starts; otherwise a click asks Sony's server again. It stays
-clickable, so core's muted look of a disabled pill does not grey it while the controller is up to date, and the
+clickable, so core's muted look of a disabled pill does not gray it while the controller is up to date, and the
 window keeps the focus at start (a focused pill's blue border hid the orange). The battery is twice as wide, the same
 height. The controller's top runs nearly straight out to small corners, so the bumpers and triggers sit on the body.
 A controller plugged in while still connected over Bluetooth stays on Bluetooth (owner's board, 23-10-2026: hid-
@@ -174,16 +178,16 @@ would not show there. The firmware is two again (owner, 23-10-2026, now that the
 firmware, green or orange as before, and Latest firmware, the pill that turns orange and starts the update; every box
 as wide as Bluetooth needs, so none changes width with the connection. The header's boxes and pills and the profile
 cards have the sections' soft white edge (style.soften over core's surface style, in the app only). A neutral box,
-pill or card has one even 1 px soft edge; a state's colour keeps its 4 px left edge (owner, 23-10-2026). The window,
+pill or card has one even 1 px soft edge; a state's color keeps its 4 px left edge (owner, 23-10-2026). The window,
 the introduction, the menu entry and the portal's summary no longer name the maker (owner, 23-10-2026): "the official
 update server", "the official app for Windows", "the firmware's signature"; the wiki's privacy page and the license
 note still do, as they must. The header's boxes are 5 % wider (owner, 23-10-2026: they looked cramped), and the
-battery stands at the header's right end with its percentage inside, the number and "%" on two lines, centred. Every
+battery stands at the header's right end with its percentage inside, the number and "%" on two lines, centered. Every
 button has a tooltip, the checkbox, the intro's Back and Next, the profile cards and the drawing too (owner,
 23-10-2026; a test checks it). The Firmware box names the kept file of the latest version with its SHA-256 check, as
 USB HD Cam does (owner, 23-10-2026): a green tick and "it is the known file" for a file the app knows, an orange !
-for one it does not, with the hash; hashed once per file. The colour buttons' and profile cards' tooltips each say
-their own thing (they repeated one sentence): the colour's name, the slot and its profile, or how to create one in an
+for one it does not, with the hash; hashed once per file. The color buttons' and profile cards' tooltips each say
+their own thing (they repeated one sentence): the color's name, the slot and its profile, or how to create one in an
 empty slot. The drawing names the part under the mouse in its tooltip (owner, 23-10-2026: one text for the whole
 drawing said the same everywhere): every button, the sticks, triggers, touchpad, light bar and USB port, the Edge's
 Fn and back buttons, from shapes that match the drawn ones (drawing.regions). An i at the top left of the drawing
@@ -198,13 +202,13 @@ in blocks (owner, 23-10-2026): its three sentences one a line, a blank line, the
 firmware and build date (the target, hardware version and build are in the spec sheet), whether it is the latest, the
 kept file's check and its SHA-256 on one line each, a blank line and the buttons; the text keeps the height of all
 its lines (the SHA-256 line was cut off). The Controller and Firmware boxes are equally wide (owner, 23-10-2026), and
-the light bar's circles run from the drawn controller's left edge to its right, spread out, with a colour wheel for
-any colour in place of Other….
+the light bar's circles run from the drawn controller's left edge to its right, spread out, with a color wheel for
+any color in place of Other….
 
 Changelog: 23-10-2026 07:43:46
 
 Added. Pages after Sony's app for Windows (owner, 23-10-2026), with a drawing of the controller of the app's own
-(drawing.py, QPainter in the theme's colours; no Sony artwork): Connect your controller while none is connected, a
+(drawing.py, QPainter in the theme's colors; no Sony artwork): Connect your controller while none is connected, a
 USB-C cable going into the drawn controller's port again and again; an introduction of three pages after the first
 controller connects (what the app does, the firmware update, the Edge's profiles or a DualSense's battery), each
 lighting the parts it is about, once (Skip, and Show the introduction brings it back); and the main page with the
@@ -222,7 +226,7 @@ Changelog: 23-10-2026 06:54:24
 Fixed. The header's boxes are narrower: Controller says Edge or DualSense and Connection USB or Bluetooth (the full
 names in their tooltips), so the widest value no longer widens them all. The update starts from an Update pill
 (Firmware) in the same row instead of a small button beside the title (owner, 23-10-2026); it is orange when an update
-can start, greyed (core's muted text for a pill that cannot be clicked) when it cannot, and its tooltip says
+can start, grayed (core's muted text for a pill that cannot be clicked) when it cannot, and its tooltip says
 why.
 
 Changelog: 23-10-2026 06:30:17

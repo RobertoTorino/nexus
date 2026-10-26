@@ -1,3 +1,7 @@
+Changelog: 26-10-2026 02:14:35
+
+Release 1.2.0.
+
 Changelog: 25-10-2026 01:16:49
 
 Release 1.1.1.
@@ -52,7 +56,7 @@ Release 0.18.0.
 
 Changelog: 23-10-2026 15:17:04
 
-Added. The catalogue lists what USB HD Control's idle service uses: systemctl (required, to enable the user service)
+Added. The catalog lists what USB HD Control's idle service uses: systemctl (required, to enable the user service)
 and notify-send (optional, its word on the desktop), and bluetoothctl now also for Turn Bluetooth off and the idle
 switch-off.
 
@@ -70,7 +74,7 @@ Release 0.17.0.
 
 Changelog: 23-10-2026 08:25:26
 
-Added. The catalogue lists bluetoothctl for USB HD Control (optional): Use the cable disconnects a controller
+Added. The catalog lists bluetoothctl for USB HD Control (optional): Use the cable disconnects a controller
 that stayed on Bluetooth while plugged in.
 
 Changelog: 23-10-2026 07:16:27
@@ -83,7 +87,7 @@ Release 0.16.0.
 
 Changelog: 23-10-2026 06:12:27
 
-Added. The catalogue lists USB HD Control and its PyQt6 requirement; it runs no external tool.
+Added. The catalog lists USB HD Control and its PyQt6 requirement; it runs no external tool.
 
 Changelog: 23-10-2026 03:20:11
 
@@ -91,7 +95,7 @@ Release 0.15.0.
 
 Changelog: 23-10-2026 01:38:04
 
-Added. The catalogue lists USB HD Cam: its PyQt6 requirement, pkexec and udevadm for the udev rule that gives the
+Added. The catalog lists USB HD Cam: its PyQt6 requirement, pkexec and udevadm for the udev rule that gives the
 user the camera's boot loader, and systemctl for its load service.
 
 Changelog: 22-10-2026 23:28:29
@@ -100,7 +104,7 @@ Release 0.14.0.
 
 Changelog: 22-10-2026 21:45:34
 
-Added. The catalogue lists USB IPS3.5: its PyQt6 requirement, and pkexec and udevadm for the udev rule that gives
+Added. The catalog lists USB IPS3.5: its PyQt6 requirement, and pkexec and udevadm for the udev rule that gives
 the user the screen's port.
 
 Changelog: 22-10-2026 19:31:16
@@ -113,7 +117,7 @@ Release 0.12.0.
 
 Changelog: 21-10-2026 23:09:47
 
-Added. The catalogue lists Console LinkB: its PyQt6 and pygame-ce requirements, and a new Python package, aiortc.
+Added. The catalog lists Console LinkB: its PyQt6 and pygame-ce requirements, and a new Python package, aiortc.
 
 Changelog: 21-10-2026 14:25:29
 
@@ -121,12 +125,12 @@ Release 0.11.0.
 
 Changelog: 21-10-2026 13:46:48
 
-Added. The catalogue lists mGBA Manager, SameBoy Manager and Xenia Manager: their PyQt6 requirement and the Steam
+Added. The catalog lists mGBA Manager, SameBoy Manager and Xenia Manager: their PyQt6 requirement and the Steam
 shutdown they use; flatpak for SameBoy Manager (RetroArch), FUSE 2 for mGBA's AppImage and fusermount for Xenia's.
 
 Changelog: 21-10-2026 12:44:22
 
-Added. The catalogue lists SwanStation Manager, its PyQt6 requirement, the Steam shutdown it uses and a new tool, flatpak
+Added. The catalog lists SwanStation Manager, its PyQt6 requirement, the Steam shutdown it uses and a new tool, flatpak
 (RetroArch is a Flatpak).
 
 Changelog: 21-10-2026 12:07:02
@@ -135,7 +139,7 @@ Release 0.10.0.
 
 Changelog: 21-10-2026 10:55:32
 
-Added. pygame-ce is in the catalogue, used by the portal (the controller of Suite Big Picture Mode).
+Added. pygame-ce is in the catalog, used by the portal (the controller of Suite Big Picture Mode).
 
 Changelog: 21-10-2026 02:13:00
 
@@ -143,7 +147,7 @@ Release 0.9.1.
 
 Changelog: 21-10-2026 01:54:13
 
-Fixed. The HelixSR Manager is BC-250 Upscaler Manager (owner, 21-10-2026): its catalogue entry is [app.upscaler]
+Fixed. The HelixSR Manager is BC-250 Upscaler Manager (owner, 21-10-2026): its catalog entry is [app.upscaler]
 with the launcher ~/.local/bin/bc250-upscaler.
 
 Changelog: 20-10-2026 20:38:28
@@ -157,7 +161,7 @@ Release 0.8.0.
 Changelog: 19-10-2026 23:41:01
 
 Added. The suite's theme, chosen in the portal. The status boxes and the Check again button are the theme's surface;
-the icon takes the theme's text colour.
+the icon takes the theme's text color.
 
 Changelog: 19-10-2026 16:58:45
 
@@ -165,13 +169,13 @@ Release 0.7.0.
 
 Changelog: 19-10-2026 16:36:08
 
-Fixed. The catalogue lists Media Tool (was Simple Demo Tool) as [app.mtool] (was [app.dtool]) with its launcher
+Fixed. The catalog lists Media Tool (was Simple Demo Tool) as [app.mtool] (was [app.dtool]) with its launcher
 ~/.local/bin/media-tool, after the tool's rename and move to apps/mtool; its sources (OBS and the Python packages)
 name that owner.
 
 Changelog: 19-10-2026 16:16:56
 
-Added. The catalogue lists pillow, which Simple Demo Tool now installs in its own environment to convert the
+Added. The catalog lists pillow, which Simple Demo Tool now installs in its own environment to convert the
 suite's icons.
 
 Changelog: 19-10-2026 03:41:49
@@ -192,23 +196,23 @@ Release 0.4.7.
 
 Changelog: 17-10-2026 14:10:30
 
-Fixed. The catalogue lists System Overlay as [app.overlay] (was [app.system-overlay]), its key in the portal after
+Fixed. The catalog lists System Overlay as [app.overlay] (was [app.system-overlay]), its key in the portal after
 the app's move to apps/overlay; its sources name that owner.
 
 Changelog: 17-10-2026 14:05:45
 
-Fixed. The catalogue lists BC-250 USB Wi-Fi as [app.wdriver] (was [app.usb-wifi]), its key in the portal after the
+Fixed. The catalog lists BC-250 USB Wi-Fi as [app.wdriver] (was [app.usb-wifi]), its key in the portal after the
 app's move to apps/wdriver; its sources (the build tools, kmod, eject, udevadm and the Python packages) name that
 owner.
 
 Changelog: 17-10-2026 13:56:22
 
-Fixed. The catalogue lists Bazzite SFTP Tools as [app.sftp] (was [app.sftp-tools]), its key in the portal after the
+Fixed. The catalog lists Bazzite SFTP Tools as [app.sftp] (was [app.sftp-tools]), its key in the portal after the
 app's move to apps/sftp; its sources (paramiko and the other Python packages) name that owner.
 
 Changelog: 17-10-2026 13:46:57
 
-Fixed. The catalogue lists BC-250 Persistent ACPI as [app.acpi] (was [app.persistent-acpi]), its key in the portal
+Fixed. The catalog lists BC-250 Persistent ACPI as [app.acpi] (was [app.persistent-acpi]), its key in the portal
 after the app's move to apps/acpi; its sources name that owner.
 
 Changelog: 17-10-2026 13:24:38
@@ -221,34 +225,34 @@ Fixed. The app's folder in the suite is apps/package (was apps/dependency-checke
 package_checker (was bc250_dependency_checker): the suite's naming convention (owner, 17-10-2026), a short folder
 name and the package named after what the app checks, without the BC-250 prefix; both names are the owner's. With
 the folder go its key in the portal, its chapter of the wiki (apps/package/), its installer test and its release
-tags: package-v<x.y.z> from the next release on, which the app's update check follows. The catalogue lists the app
+tags: package-v<x.y.z> from the next release on, which the app's update check follows. The catalog lists the app
 itself as [app.package] (was [app.dependency-checker]). The installed app keeps its name, its launcher
 bc250-portal-dependency-checker, its folder under ~/.local/share, its settings, and the Bazzite update reminder's
 timer, which starts the launcher; the portal moves its record of the installed copy to the new key.
 
 Changelog: 17-10-2026 13:17:20
 
-Fixed. The catalogue lists Simple Demo Tool as [app.dtool] (was [app.demo-tool]), its key in the portal after the
+Fixed. The catalog lists Simple Demo Tool as [app.dtool] (was [app.demo-tool]), its key in the portal after the
 tool's move to apps/dtool; its sources (OBS and the Python packages) name that owner.
 
 Changelog: 17-10-2026 13:10:58
 
-Fixed. The catalogue lists Vita3K Manager as [app.vita3k] (was [app.vita3k-manager]), its key in the portal after
+Fixed. The catalog lists Vita3K Manager as [app.vita3k] (was [app.vita3k-manager]), its key in the portal after
 the app's move to apps/vita3k; its sources (the emulator's needs and the Python packages) name that owner.
 
 Changelog: 17-10-2026 13:05:02
 
-Fixed. The catalogue lists shadPS4 Manager as [app.shadps4] (was [app.shadps4-manager]), its key in the portal after
+Fixed. The catalog lists shadPS4 Manager as [app.shadps4] (was [app.shadps4-manager]), its key in the portal after
 the app's move to apps/shadps4; its sources (the emulator's needs and the Python packages) name that owner.
 
 Changelog: 17-10-2026 13:00:58
 
-Fixed. The catalogue lists RPCS3 Manager as [app.rpcs3] (was [app.rpcs3-manager]), its key in the portal after the
+Fixed. The catalog lists RPCS3 Manager as [app.rpcs3] (was [app.rpcs3-manager]), its key in the portal after the
 app's move to apps/rpcs3; its sources (the emulator's needs and the Python packages) name that owner.
 
 Changelog: 17-10-2026 12:58:02
 
-Fixed. The catalogue lists PPSSPP Manager as [app.ppsspp] (was [app.ppsspp-manager]), its key in the portal after
+Fixed. The catalog lists PPSSPP Manager as [app.ppsspp] (was [app.ppsspp-manager]), its key in the portal after
 the app's move to apps/ppsspp; its sources (the emulator's needs and the Python packages) name that owner.
 
 Changelog: 17-10-2026 12:45:18
@@ -257,50 +261,50 @@ Release 0.4.6.
 
 Changelog: 17-10-2026 12:35:30
 
-Fixed. The catalogue lists PCSX2 Manager as [app.pcsx2] (was [app.pcsx2-manager]), its key in the portal after the
+Fixed. The catalog lists PCSX2 Manager as [app.pcsx2] (was [app.pcsx2-manager]), its key in the portal after the
 app's move to apps/pcsx2; its sources (the emulator's needs and the Python packages) name that owner.
 
 Changelog: 17-10-2026 12:32:49
 
-Fixed. The catalogue lists BC-250 Mesh Shaders as [app.mesh] (was [app.mesh-shaders]), its key in the portal after
+Fixed. The catalog lists BC-250 Mesh Shaders as [app.mesh] (was [app.mesh-shaders]), its key in the portal after
 the app's move to apps/mesh; its sources (podman, the Vulkan tools and the Python packages) name that owner.
 
 Changelog: 17-10-2026 12:29:59
 
-Fixed. The catalogue lists BC-250 Memory Manager as [app.vram] (was [app.memory-manager]), its key in the portal
+Fixed. The catalog lists BC-250 Memory Manager as [app.vram] (was [app.memory-manager]), its key in the portal
 after the app's move to apps/vram; its sources (pkexec and the Python packages) name that owner.
 
 Changelog: 17-10-2026 12:21:59
 
-Fixed. The catalogue lists HDMI CEC Manager as [app.cec] (was [app.hdmi-cec]), its key in the portal after the
+Fixed. The catalog lists HDMI CEC Manager as [app.cec] (was [app.hdmi-cec]), its key in the portal after the
 app's move to apps/cec; its sources (the CEC tools and the Python packages) name that owner.
 
 Changelog: 17-10-2026 12:18:12
 
-Fixed. The catalogue lists BC-250 GPU OC Bisect as [app.oc] (was [app.gpu-oc-bisect]), its key in the portal after
+Fixed. The catalog lists BC-250 GPU OC Bisect as [app.oc] (was [app.gpu-oc-bisect]), its key in the portal after
 the app's move to apps/oc; its sources (the governor package, the load tools the sweep uses, and the Python
 packages) name that owner.
 
 Changelog: 17-10-2026 12:09:45
 
-Fixed. The catalogue lists BC-250 GPU Governor Manager as [app.gpu] (was [app.governor]), its key in the portal
+Fixed. The catalog lists BC-250 GPU Governor Manager as [app.gpu] (was [app.governor]), its key in the portal
 after the app's move to apps/gpu; its sources (the governor package, the stress and metrics tools, and the Python
 packages) name that owner.
 
 Changelog: 17-10-2026 12:04:59
 
-Fixed. The catalogue lists BC-250 Fan Control as [app.fan] (was [app.fan-control]), its key in the portal after the
+Fixed. The catalog lists BC-250 Fan Control as [app.fan] (was [app.fan-control]), its key in the portal after the
 app's move to apps/fan; its sources (the sensors and the tools the guard uses, and the Python packages) name that
 owner.
 
 Changelog: 17-10-2026 12:01:38
 
-Fixed. The catalogue lists Decky Loader Manager as [app.decky] (was [app.decky-manager]), its key in the portal after
+Fixed. The catalog lists Decky Loader Manager as [app.decky] (was [app.decky-manager]), its key in the portal after
 the app's move to apps/decky; its sources (the tools Decky's install uses, and the Python packages) name that owner.
 
 Changelog: 17-10-2026 11:56:42
 
-Fixed. The catalogue lists BC-250 CU Bisect as [app.compute] (was [app.cu-bisect]), its key in the portal after the
+Fixed. The catalog lists BC-250 CU Bisect as [app.compute] (was [app.cu-bisect]), its key in the portal after the
 app's move to apps/compute; its sources (umr and the other tools the bisect and the unlock use, and the Python
 packages) name that owner.
 
@@ -310,13 +314,13 @@ Release 0.4.5.
 
 Changelog: 17-10-2026 11:02:44
 
-Fixed. The catalogue lists BC-250 Cores Bisect as [app.cores] (was [app.cores-bisect]), its key in the portal after
+Fixed. The catalog lists BC-250 Cores Bisect as [app.cores] (was [app.cores-bisect]), its key in the portal after
 the app's move to apps/cores; its sources (stress-ng and the other tools the bisect uses, and the Python packages)
 name that owner.
 
 Changelog: 17-10-2026 10:54:05
 
-Fixed. The catalogue lists Console Link as [app.consoles] (was [app.console-link]), its key in the portal after
+Fixed. The catalog lists Console Link as [app.consoles] (was [app.console-link]), its key in the portal after
 the app's move to apps/consoles; its sources (FFmpeg, libva, SDL3, Steam, Rust and the Python packages) name that
 owner. The FFmpeg probe still asks the app's environment for bc250_console_link_core, which keeps its name.
 
@@ -326,7 +330,7 @@ Release 0.4.4.
 
 Changelog: 17-10-2026 10:05:20
 
-Fixed. The catalogue lists BC-250 BIOS Reader as [app.bios] (was [app.bios-reader]), its key in the portal after
+Fixed. The catalog lists BC-250 BIOS Reader as [app.bios] (was [app.bios-reader]), its key in the portal after
 the app's move to apps/bios; its sources (flashrom, pkexec and the Python packages) name that owner.
 
 Changelog: 17-10-2026 09:41:48
@@ -335,7 +339,7 @@ Release 0.4.3.
 
 Changelog: 17-10-2026 09:27:13
 
-Fixed. The catalogue lists BC-250 Bazzite Test as [app.check] (was [app.bazzite-test]), its key in the portal
+Fixed. The catalog lists BC-250 Bazzite Test as [app.check] (was [app.bazzite-test]), its key in the portal
 after the app's move to apps/check; its sources name that owner, and its wiki links go to apps/check/.
 
 Changelog: 17-10-2026 09:05:54
@@ -348,7 +352,7 @@ Release 0.4.2.
 
 Changelog: 17-10-2026 08:47:31
 
-Fixed. The catalogue lists Bazzite DatStation as [app.datstation] (was [app.bazzite-datstation]), its key in the
+Fixed. The catalog lists Bazzite DatStation as [app.datstation] (was [app.bazzite-datstation]), its key in the
 portal after the app's move to apps/datstation; its sources name that owner, and its wiki links go to
 apps/datstation/.
 
@@ -358,7 +362,7 @@ Release 0.4.1.
 
 Changelog: 17-10-2026 07:30:38
 
-Fixed. The catalogue lists BC-250 ACE Queues as [app.ace] (was [app.ace-queues]) and Bazzite NetcatGUI as
+Fixed. The catalog lists BC-250 ACE Queues as [app.ace] (was [app.ace-queues]) and Bazzite NetcatGUI as
 [app.ncgui] (was [app.bazzite-netcatgui]), their keys in the portal after the apps' moves to apps/ace and
 apps/ncgui; their sources name those owners, and their wiki links go to apps/ace/ and apps/ncgui/.
 
@@ -368,14 +372,14 @@ Release 0.4.0.
 
 Changelog: 17-10-2026 05:34:01
 
-Added. The catalogue lists BC-250 USB Wi-Fi: its launcher, its PyQt6, and its use of pkexec, systemctl, journalctl
-and notify-send, plus six tools new to the catalogue, which the app and its service run: gcc, make, git (building
+Added. The catalog lists BC-250 USB Wi-Fi: its launcher, its PyQt6, and its use of pkexec, systemctl, journalctl
+and notify-send, plus six tools new to the catalog, which the app and its service run: gcc, make, git (building
 and fetching the Wi-Fi driver), kmod (insmod, modprobe, rmmod: loading it), eject (switching the stick out of
 storage mode) and udevadm (reloading the stick's rule).
 
 Changelog: 16-10-2026 18:43:14
 
-Added. The catalogue lists BC-250 Fan Control: its launcher, its PyQt6, and its use of pkexec and systemctl (the
+Added. The catalog lists BC-250 Fan Control: its launcher, its PyQt6, and its use of pkexec and systemctl (the
 thermal guard's service), busctl (performance mode off) and notify-send (the guard's warnings on the desktop).
 
 Changelog: 16-10-2026 11:41:27
@@ -388,7 +392,7 @@ Release 0.3.0.
 
 Changelog: 16-10-2026 11:20:26
 
-Added. The catalogue lists the Vita3K Manager: its launcher, its PyQt6, and its use of Steam (Update Game Mode)
+Added. The catalog lists the Vita3K Manager: its launcher, its PyQt6, and its use of Steam (Update Game Mode)
 and fusermount (Vita3K's AppImage).
 
 Changelog: 16-10-2026 06:02:49
@@ -436,7 +440,7 @@ in test_window.py; the installer test covers the units, enabling with and withou
 
 Changelog: 15-10-2026 21:28:55
 
-The catalogue no longer lists Bazzite pkgxtractor: the app is absorbed into the shadPS4 Manager, which now uses
+The catalog no longer lists Bazzite pkgxtractor: the app is absorbed into the shadPS4 Manager, which now uses
 cryptography (Extract PKG decrypts packages with it), in its own venv.
 
 Changelog: 15-10-2026 21:03:51
@@ -446,17 +450,17 @@ scaled from the 512 px file; the portal's tile shows it.
 
 Changelog: 15-10-2026 19:18:30
 
-The catalogue no longer lists Bazzite UMD File Renamer: the app is absorbed into PPSSPP Manager, which the catalogue
+The catalog no longer lists Bazzite UMD File Renamer: the app is absorbed into PPSSPP Manager, which the catalog
 already covers.
 
 Changelog: 15-10-2026 17:54:45
 
-The catalogue lists the PPSSPP Manager and the PCSX2 Manager: their launchers, their PyQt6, and their use of Steam
+The catalog lists the PPSSPP Manager and the PCSX2 Manager: their launchers, their PyQt6, and their use of Steam
 (Update Game Mode) and fusermount (the AppImages mount themselves with it).
 
 Changelog: 15-10-2026 16:02:21
 
-The catalogue lists Bazzite DatStation: its launcher, PyQt6 (>=6.11,<7) and Steam (optional, for Add to Steam and
+The catalog lists Bazzite DatStation: its launcher, PyQt6 (>=6.11,<7) and Steam (optional, for Add to Steam and
 Remove from Steam).
 
 Changelog: 15-10-2026 05:52:00
@@ -491,27 +495,27 @@ Release 0.1.17.
 
 Changelog: 15-10-2026 01:26:23
 
-The catalogue has Bazzite UMD File Renamer: its launcher and its PyQt6. PPSSPP, which the app can start a game with,
-is not a catalogue tool: the app finds it as a Flatpak first, which a lookup on the PATH does not see.
+The catalog has Bazzite UMD File Renamer: its launcher and its PyQt6. PPSSPP, which the app can start a game with,
+is not a catalog tool: the app finds it as a Flatpak first, which a lookup on the PATH does not see.
 
 Changelog: 15-10-2026 01:18:28
 
-The catalogue has Bazzite NetcatGUI: its launcher and its PyQt6.
+The catalog has Bazzite NetcatGUI: its launcher and its PyQt6.
 
 Changelog: 14-10-2026 18:22:56
 
-The catalogue names the apps that are not tied to the board without the BC-250 or BC250 prefix: HelixSR Manager,
+The catalog names the apps that are not tied to the board without the BC-250 or BC250 prefix: HelixSR Manager,
 System Overlay, HDMI CEC Manager, Bazzite SFTP Tools, Console Link, shadPS4 Manager, RPCS3 Manager and Decky Loader
 Manager.
 
 Changelog: 14-10-2026 17:35:13
 
-The catalogue has BC-250 RPCS3 Manager: its launcher, its PyQt6, Steam (Update Game Mode) and a new tool, fusermount
+The catalog has BC-250 RPCS3 Manager: its launcher, its PyQt6, Steam (Update Game Mode) and a new tool, fusermount
 (fusermount3 or fusermount), with which RPCS3's AppImage mounts itself.
 
 Changelog: 14-10-2026 16:15:38
 
-The catalogue has Bazzite pkgxtractor: its launcher (the window's; the terminal extractor runs in the same venv), and
+The catalog has Bazzite pkgxtractor: its launcher (the window's; the terminal extractor runs in the same venv), and
 its PyQt6 and cryptography; the cryptography description says what it uses it for.
 
 Changelog: 14-10-2026 15:12:03
@@ -520,7 +524,7 @@ Release 0.1.16.
 
 Changelog: 14-10-2026 11:52:39
 
-The Check again button looks like the boxes beside it: the same grey, rounded corners with the same radius, no border,
+The Check again button looks like the boxes beside it: the same gray, rounded corners with the same radius, no border,
 and a white icon whatever the desktop theme.
 
 Changelog: 14-10-2026 11:22:29
@@ -529,7 +533,7 @@ Release 0.1.15.
 
 Changelog: 14-10-2026 11:12:20
 
-The catalogue lists BC-250 Decky Loader Manager (decky-manager): its launcher, PyQt6, and the tools it runs: pkexec
+The catalog lists BC-250 Decky Loader Manager (decky-manager): its launcher, PyQt6, and the tools it runs: pkexec
 and systemctl (required) and journalctl (optional).
 
 Changelog: 14-10-2026 10:56:03
@@ -538,7 +542,7 @@ Release 0.1.14.
 
 Changelog: 14-10-2026 10:45:26
 
-The catalogue names BC-250 shadPS4 Manager by its new key, shadps4-manager (its app, its PyQt6 and the tools it uses).
+The catalog names BC-250 shadPS4 Manager by its new key, shadps4-manager (its app, its PyQt6 and the tools it uses).
 
 Changelog: 14-10-2026 10:19:37
 
@@ -551,7 +555,7 @@ Release 0.1.13.
 
 Changelog: 14-10-2026 00:45:15
 
-The catalogue lists BC-250 shadPS4 Manager: its launcher, PyQt6, Steam (optional: Update Game Mode closes and restarts
+The catalog lists BC-250 shadPS4 Manager: its launcher, PyQt6, Steam (optional: Update Game Mode closes and restarts
 it) and FUSE 2 (libfuse.so.2, optional: shadPS4 is an AppImage, which unpacks itself on every start without it).
 
 Changelog: 14-10-2026 00:37:33
@@ -564,7 +568,7 @@ Release 0.1.11.
 
 Changelog: 13-10-2026 22:02:36
 
-The catalogue knows BC-250 Mesh Shaders: its launcher, PyQt6 in its environment, and the tools it uses (pkexec, curl,
+The catalog knows BC-250 Mesh Shaders: its launcher, PyQt6 in its environment, and the tools it uses (pkexec, curl,
 podman).
 
 Changelog: 13-10-2026 15:53:27
@@ -605,7 +609,7 @@ Release 0.1.9.
 
 Changelog: 13-10-2026 09:40:13
 
-SDL3 in the catalogue, checked by its library file: BC250 Console Link reads the board's controllers with it
+SDL3 in the catalog, checked by its library file: BC250 Console Link reads the board's controllers with it
 (optional; without it the console sees a controller lying still).
 
 Changelog: 13-10-2026 01:27:26
@@ -623,11 +627,11 @@ Release 0.1.7.
 
 Changelog: 12-10-2026 21:51:19
 
-The catalogue lists BC250 Remote Play: its launcher, PyQt6 and cryptography (its own venv).
+The catalog lists BC250 Remote Play: its launcher, PyQt6 and cryptography (its own venv).
 
 Changelog: 12-10-2026 21:32:31
 
-The catalogue lists BC250 Bazzite SFTP Tools: its launcher, paramiko (its own venv) and paplay (optional, for the
+The catalog lists BC250 Bazzite SFTP Tools: its launcher, paramiko (its own venv) and paplay (optional, for the
 sound at the end of a transfer).
 
 Changelog: 12-10-2026 09:19:23
@@ -663,7 +667,7 @@ missing from an app's environment "Missing", and a version outside the app's req
 also looked for in ~/.local/bin and Homebrew, like Bazzite Test does, and speedtest and speedtest-cli are one entry
 (Bazzite Test needs one of them). Each tool's use per app is marked required or optional; a missing optional tool
 shows "Not installed", a missing required one "Missing", one no installed app uses "Not needed". Tools that work only
-as root (flashrom, umr, smartctl, fio, setpci, ras-mc-ctl, grub2-mkconfig) say "Needs root." in orange. The catalogue
+as root (flashrom, umr, smartctl, fio, setpci, ras-mc-ctl, grub2-mkconfig) say "Needs root." in orange. The catalog
 was checked against the apps: mangohud, vainfo, clinfo, rocminfo (Bazzite Test), ujust (HDMI CEC, Persistent ACPI) and
 grub2-mkconfig (Persistent ACPI) were missing. Every package and tool has a description, shown by the information
 button beside its name. The summary names the missing tools instead of counting them. The window has the header of the
@@ -690,7 +694,7 @@ Release 0.1.3.
 
 Changelog: 11-10-2026 20:21:41
 
-BC250 HDMI CEC in the catalogue: its PyQt6, cec-ctl (also Bazzite Test's test 51), cecd, and systemctl; and its label.
+BC250 HDMI CEC in the catalog: its PyQt6, cec-ctl (also Bazzite Test's test 51), cecd, and systemctl; and its label.
 
 Changelog: 11-10-2026 19:25:11
 

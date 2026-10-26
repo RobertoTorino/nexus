@@ -3,7 +3,7 @@
 (bc250-console-link --stream <the console's host id>), with artwork of its own.
 
 The file, the shortcut's number and where its artwork goes are core's (bc250_core.steam). The artwork is drawn here
-from the app's icon by core's steam_art (owner, 16-10-2026): a background in the icon's colour, the icon, the
+from the app's icon by core's steam_art (owner, 16-10-2026): a background in the icon's color, the icon, the
 console's name and its model, not the console maker's images; the icon is the logo Steam lays over the banner.
 
 Steam reads and rewrites these files itself, so add_shortcut() changes them with Steam closed

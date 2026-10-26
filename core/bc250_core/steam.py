@@ -224,7 +224,7 @@ Match = Callable[[dict], bool]
 
 
 def put_shortcut(values: dict, new: dict, ours: Match) -> dict:
-    """The file's contents with *new* added, or replacing the shortcut *ours* recognises (its play time kept); the
+    """The file's contents with *new* added, or replacing the shortcut *ours* recognizes (its play time kept); the
     other shortcuts stay, numbered 0, 1, ... in their order."""
     shortcuts = list(values.get("shortcuts", {}).values())
     for n, item in enumerate(shortcuts):
@@ -260,7 +260,7 @@ def has_shortcut(steam: Path, ours: Match) -> bool:
 
 @dataclass(frozen=True)
 class Change:
-    """One shortcut to add (or bring up to date) or, with *remove*, to take out. *ours* recognises the one made
+    """One shortcut to add (or bring up to date) or, with *remove*, to take out. *ours* recognizes the one made
     before, whatever its name now; *art* holds the images by their suffix in ART, as PNG bytes."""
     entry: dict
     ours: Match

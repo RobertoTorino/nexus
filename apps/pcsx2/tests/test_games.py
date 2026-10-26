@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The game scan (games.py): SYSTEM.CNF read out of an ISO, the serial as PCSX2 shows it, the boot program's CRC as
-PCSX2 computes it, the title from PCSX2's catalogue or the file's name without a serial, the compressed formats under
+PCSX2 computes it, the title from PCSX2's catalog or the file's name without a serial, the compressed formats under
 their own name, a game found twice, and depth."""
 
 from __future__ import annotations

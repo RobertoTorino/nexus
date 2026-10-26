@@ -2,7 +2,7 @@
 """PKG container parsing and extraction.
 
 Port of ``src/core/file_format/pkg.cpp`` (and the bits of ``pfs.h`` it uses).
-The structure of the original is kept on purpose so behaviour, edge cases and
+The structure of the original is kept on purpose so behavior, edge cases and
 error messages match the C++ tool.
 """
 

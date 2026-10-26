@@ -1,3 +1,7 @@
+Changelog: 26-10-2026 02:14:35
+
+Release 0.13.0.
+
 Changelog: 25-10-2026 01:16:49
 
 Release 0.12.1.
@@ -105,7 +109,7 @@ Release 0.6.0.
 Changelog: 19-10-2026 23:41:01
 
 Added. The suite's theme (a copy of core's theme.py), chosen in the portal. The status boxes and pills are the
-theme's surface with their state as a coloured left edge, as core's.
+theme's surface with their state as a colored left edge, as core's.
 
 Changelog: 19-10-2026 21:45:21
 
@@ -115,7 +119,7 @@ Changelog: 19-10-2026 20:53:49
 
 Added. A Games page: every Steam game on this PC (Steam's own Proton, runtime and redistributable folders left out),
 each looked through in the background for an AMD FSR 3.1 DLL; the games that have one come first with HelixSR's
-state (not installed, installed, an older build, or the game's own DLL back), the others are greyed out and Open on
+state (not installed, installed, an older build, or the game's own DLL back), the others are grayed out and Open on
 Deploy page takes them to OptiScaler. Run with HelixSR (or a double-click) puts HelixSR in where it is missing,
 older or replaced by the game's own DLL, keeping the game's helixsr.ini and backup, then starts the game through
 Steam (steam://rungameid/<AppID>, the AppID from the library's appmanifest); it asks before the first install into a
@@ -273,7 +277,7 @@ Release 0.2.3.
 
 Changelog: 11-10-2026 20:58:28
 
-MetricBox centres by default, as core's does; the app already asked for centred boxes, so it looks the same.
+MetricBox centers by default, as core's does; the app already asked for centered boxes, so it looks the same.
 
 Changelog: 11-10-2026 19:25:11
 
@@ -342,7 +346,7 @@ writes is deleted after the build, like manual-install.
 
 helixsr.ini page: HelixSR 1.8 reads sharpening again, through Sharpener (off, nvidia, rcas), Sharpness and
 UseGameSlider instead of Mode. The page edits the two new keys and writes them only when they are set, so files for
-older versions stay as they were. It greys out per field what the payload's version does not read: Sharpener and
+older versions stay as they were. It grays out per field what the payload's version does not read: Sharpener and
 UseGameSlider before 1.8, all of [Sharpening] and [ModelE] Network in 1.7, Mode and Network from 1.8 on.
 
 The Setup page no longer checks this app's own release ("This app" with its release page link), and the status bar
@@ -373,11 +377,11 @@ update to install.
 Deployments: after switching back to an older release, games deployed with a newer one show Newer build instead of
 Older build. Stand-alone OptiScaler folders now also show Older or Newer build when their DLL is not the payload's.
 
-helixsr.ini page: with HelixSR 1.7.0 or newer as the payload, [Sharpening] and the [ModelE] Network setting are greyed
+helixsr.ini page: with HelixSR 1.7.0 or newer as the payload, [Sharpening] and the [ModelE] Network setting are grayed
 out with a note, because those versions ignore them. Their values stay in the file for 1.4.3.
 
 Help and the manual describe the version choice; all languages updated. Tests: the setup script gets no input and
-manual-install is removed, the fallback looks up its tag, Newer build, the greyed-out ini settings and the saved
+manual-install is removed, the fallback looks up its tag, Newer build, the grayed-out ini settings and the saved
 version choice. The test fixtures now keep QSettings in a temporary folder, so the tests no longer write to the
 user's own settings (or to the Windows registry).
 
@@ -406,7 +410,7 @@ repository, and the README's install steps use the suite's releases and reposito
 Build time: the network build takes about 5-6 minutes on a BC-250 (HelixSR's setup compiles its shaders for both wave
 sizes), not 2-3: the Setup page, Help and README say so, and the Setup page's stage line shows the elapsed time
 while a job runs and how long it took afterwards. The header boxes (payload, network files, deployments, Steam
-games) centre their text. All languages updated; the .qm files are rebuilt with tools/compile_translations.py,
+games) center their text. All languages updated; the .qm files are rebuilt with tools/compile_translations.py,
 which reproduces the previous ones byte for byte.
 
 Changelog: 09-10-2026 17:51:51

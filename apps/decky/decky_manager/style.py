@@ -15,7 +15,7 @@ BLUE_PRESSED = "#08448D"
 BLUE_TINT = "#1A0A55B0"                 # #AARRGGBB: 10 % blue, for hover and every other table row
 BLUE_LINE = "#590A55B0"                 # 35 % blue, for outlines
 LINK_ON_DARK = "#5B93DA"                # #0A55B0 is too dark to read as a link on a dark window
-DISABLED = "#80808080"                  # 50 % grey: a disabled button, readable as such on light and dark
+DISABLED = "#80808080"                  # 50 % gray: a disabled button, readable as such on light and dark
 
 STYLESHEET = f"""
 QPushButton {{ border:1px solid {BLUE_LINE}; border-radius:6px; padding:5px 14px; background:palette(button); }}
@@ -39,7 +39,7 @@ QPlainTextEdit {{ border:1px solid {BLUE_LINE}; border-radius:6px; }}
 
 
 def apply(window: QWidget) -> None:
-    """The style sheet, and the blue as the window's selection colour."""
+    """The style sheet, and the blue as the window's selection color."""
     window.setStyleSheet(STYLESHEET)
     palette = window.palette()
     palette.setColor(QPalette.ColorRole.Highlight, QColor(BLUE))
@@ -48,7 +48,7 @@ def apply(window: QWidget) -> None:
 
 
 def link(widget: QWidget, url: str, text: str) -> str:
-    """A link in rich text, in the blue (lighter on a dark window). Coloured in the HTML: a QLabel under a style
+    """A link in rich text, in the blue (lighter on a dark window). Colored in the HTML: a QLabel under a style
     sheet draws links in the default blue, whatever its palette says."""
     dark = widget.palette().color(QPalette.ColorRole.Window).lightness() < 128
     return f"<a href='{url}' style='color:{LINK_ON_DARK if dark else BLUE};'>{text}</a>"

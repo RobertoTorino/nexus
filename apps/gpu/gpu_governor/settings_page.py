@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Settings page: tray and login-autostart behaviour of the app itself (not of the governor)."""
+"""Settings page: tray and login-autostart behavior of the app itself (not of the governor)."""
 
 from __future__ import annotations
 

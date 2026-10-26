@@ -49,7 +49,7 @@ option; the app sets that one too (see below).
   a build the app offers to update them; *Update older games* on the Overview does the same, for older builds and
   for games whose own DLL is back, keeping their `helixsr.ini`. *Download and build* needs about 1.5 GB free.
 - **Games** – every Steam game, each looked through in the background for an AMD FSR 3.1 DLL: the games that have
-  one first, with HelixSR's state in each; the others greyed out (*Open on Deploy page* still takes them to
+  one first, with HelixSR's state in each; the others grayed out (*Open on Deploy page* still takes them to
   OptiScaler). *Run with HelixSR* (or a double-click) puts HelixSR in when it is missing, older, or replaced by
   the game's own DLL after an update, then starts the game through Steam (`steam://rungameid/<AppID>`). It
   asks before the first install into a game and does nothing while the game runs.
@@ -85,7 +85,7 @@ option; the app sets that one too (see below).
     OptiScaler's FFX Upscaler menu lists its upscalers after HelixSR.
 - **helixsr.ini** – a form over every key HelixSR reads (`[Sharpening]`, `[ModelE]`, `[Log]`, `[Forwarding]`)
   with validation and a live preview that keeps the upstream comments. Save it as the default for new
-  deployments or push it to an existing one. The page greys out what the payload's HelixSR version does not
+  deployments or push it to an existing one. The page grays out what the payload's HelixSR version does not
   read: HelixSR 1.7 ignores `[Sharpening]` and `[ModelE] Network`; 1.8 reads sharpening again through
   `Sharpener` (`off`, `nvidia` or `rcas`), `Sharpness` and `UseGameSlider` instead of `Mode`.
 

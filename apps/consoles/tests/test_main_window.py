@@ -347,7 +347,7 @@ def test_find_account_id_fills_the_field(window, monkeypatch):
     monkeypatch.setattr(window, "ask_redirect", lambda: "nonsense")
     window.account_button.click()
     assert window.account_edit.value() == "AQIDBAUGBwg=" and "no code" in window.log.toPlainText()
-    monkeypatch.setattr(window, "ask_redirect", lambda: None)                 # cancelled: nothing happens
+    monkeypatch.setattr(window, "ask_redirect", lambda: None)                 # canceled: nothing happens
     calls = len(window.ops_fake.calls)
     window.account_button.click()
     assert len(window.ops_fake.calls) == calls

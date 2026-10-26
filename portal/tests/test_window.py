@@ -109,7 +109,7 @@ def test_the_header_shows_the_suite_stage(window):
 
 
 def test_the_tiles_icon_hover_and_press(window, home):
-    """Under the mouse the icon dims a little, with no border (owner, 20-10-2026); pressed, it sinks, with no colour
+    """Under the mouse the icon dims a little, with no border (owner, 20-10-2026); pressed, it sinks, with no color
     behind it (no purple flash on a click)."""
     from PyQt6.QtCore import QEvent
     card = window.cards["gpu"]
@@ -227,7 +227,7 @@ def test_board_change_needs_confirmation(window, launched, monkeypatch):
     monkeypatch.setattr(QMessageBox, "warning", lambda *a, **k: (asked.append(a[2]), CANCEL)[1])
     window.install(next(e for e in window.entries if e.key == "acpi"))
     assert asked and "changes how your BC-250 runs" in asked[0]
-    assert window.sources.prepared == [] and launched == []                 # cancelled: nothing happens
+    assert window.sources.prepared == [] and launched == []                 # canceled: nothing happens
 
 
 def test_no_warning_for_bazzite_test(window, launched, monkeypatch):
@@ -350,7 +350,7 @@ def test_install_all_updates_one_after_the_other(window, launched, monkeypatch, 
     monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: (asked.append(a[2]), CANCEL)[1])
     pill.click()
     assert "Install these 3 updates" in asked[0] and "change how your BC-250 runs" in asked[0]   # acpi
-    assert window.batch is None and launched == []                          # cancelled: nothing happens
+    assert window.batch is None and launched == []                          # canceled: nothing happens
     monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: YES)
     monkeypatch.setattr(QMessageBox, "warning", lambda *a, **k: pytest.fail("one question only"))
     pill.click()
@@ -985,7 +985,7 @@ def test_the_example_wallpaper(window):
 
 def test_the_wallpapers_used_before(window, tmp_path):
     """The portal remembers where the last 10 wallpapers came from, newest first and each once, and offers them again
-    in the Wallpaper pill's menu (owner, 20-10-2026): the current one ticked, one moved or deleted greyed out."""
+    in the Wallpaper pill's menu (owner, 20-10-2026): the current one ticked, one moved or deleted grayed out."""
     from PyQt6.QtGui import QColor, QImage
     from bc250_portal import state_dir, wallpaper
 
@@ -1021,7 +1021,7 @@ def test_the_wallpapers_used_before(window, tmp_path):
 
 
 def test_the_wallpapers_transparency(window):
-    """A slider in the Wallpaper pill's menu sets how much of the theme's colour lies over the picture, while it moves
+    """A slider in the Wallpaper pill's menu sets how much of the theme's color lies over the picture, while it moves
     and for the next start (owner, 20-10-2026): 60 % at first, as before, up to 90 %; off without a wallpaper."""
     from PyQt6.QtGui import QColor, QPalette
 
@@ -1045,7 +1045,7 @@ def test_the_wallpapers_transparency(window):
     before = distance()
     window.transparency_slider.setValue(88)                 # rounded to the step
     assert window.backdrop.veil == 90 and window.settings.value(mw.VEIL_KEY, type=int) == 90
-    assert distance() < before                              # nearer the theme's own colour
+    assert distance() < before                              # nearer the theme's own color
     assert "Transparency 90 %" in window.wallpaper_pill.toolTip()
     window.settings.setValue(mw.VEIL_KEY, 250)              # a value from elsewhere: kept within the slider's range
     assert window.transparency() == 90

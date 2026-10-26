@@ -221,7 +221,7 @@ class ReadDialog(QDialog):
             self.status.setText("Done: both reads finished.")
             self.accept()
         elif code in (126, 127):
-            self.status.setText("Not authorised: the password dialog was cancelled or refused.")
+            self.status.setText("Not authorized: the password dialog was canceled or refused.")
         else:
             self.status.setText(f"flashrom stopped with exit code {code}; see its output above.")
 

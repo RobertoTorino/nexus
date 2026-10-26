@@ -2,7 +2,7 @@
 """The PS2 games: disc images in the chosen folders. An ISO (plain ISO 9660, as a PS2 DVD is laid out) is read for
 its serial and version: SYSTEM.CNF in the disc's root says which program the console boots
 (BOOT2 = cdrom0:\\SLUS_123.45;1), and that name is the game's serial. A PS2 disc carries no title or pictures the
-way a PSP or PS3 disc does: the title comes from PCSX2's own catalogue by the serial (catalogue.py), else from the
+way a PSP or PS3 disc does: the title comes from PCSX2's own catalog by the serial (catalogue.py), else from the
 file's name without a serial in it ("SLUS_215.53.Lumines Plus" is "Lumines Plus"). The boot program is read too,
 for its CRC as PCSX2 computes it (every 32-bit word of the file XORed): with the serial it names the game's own
 settings and patches in PCSX2. A CHD, CSO, ZSO or GZ holds the same disc compressed; the app does not look into

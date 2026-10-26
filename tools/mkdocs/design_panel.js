@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // The design panel (tools/mkdocs/design_panel.py puts it on every page while `mkdocs serve` runs): every CSS variable
-// this wiki's own stylesheets define, with a colour picker, a slider or a text field each. The groups and labels are
+// this wiki's own stylesheets define, with a color picker, a slider or a text field each. The groups and labels are
 // the stylesheet's own comments. A change shows at once and goes to the server, which every open page asks once a
 // second, so all devices show the same mock.
 (() => {
@@ -12,6 +12,7 @@
                  "JetBrains Mono", "Fira Code", "monospace", "sans-serif", "serif"];
   let mock = {version: 0, values: {}};        // "selector|--name" -> value
   let shared = false, synced = false, editedAt = 0, sendTimer = 0;
+  const sheets = [];                          // this wiki's own stylesheets: {file, text, rules}
 
   const read = (key, fallback) => { try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; } };
   const write = (key, value) => { try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* private window */ } };
@@ -44,6 +45,8 @@
     for (const sheet of [...document.styleSheets].filter(own)) {
       let parsed;
       try { parsed = topRules(await (await fetch(sheet.href, {cache: "no-store"})).text()); } catch { continue; }
+      const index = config.sheets.findIndex(s => new URL(sheet.href).pathname.endsWith("/" + s));
+      sheets.push({file: config.files[index] || config.sheets[index], ...parsed});
       for (const rule of parsed.rules) {
         for (const m of rule.body.matchAll(/var\((--[\w-]+)/g)) {
           if (!uses.has(m[1])) uses.set(m[1], new Set());
@@ -96,6 +99,24 @@
     return [...rules].map(([selector, lines]) => `${selector} {\n${lines.join("\n")}\n}`).join("\n\n");
   }
 
+  // A stylesheet with the mock's values written in place of the variables' own (tools/apply_design.py does the
+  // same from the mock file): the file as it is, comments and all, to paste over it.
+  function merged(sheet) {
+    const edits = [];
+    for (const rule of sheet.rules) {
+      if (rule.selector.startsWith("@")) continue;
+      for (const m of rule.body.matchAll(/(--[\w-]+)\s*:([^;]*);?/g)) {
+        const value = mock.values[rule.selector + "|" + m[1]];
+        if (value === undefined) continue;
+        const start = rule.bodyStart + m.index + m[0].length - m[2].length - (m[0].endsWith(";") ? 1 : 0);
+        edits.push({start, end: start + m[2].trimEnd().length, text: " " + value});   // the value only
+      }
+    }
+    let text = sheet.text;
+    for (const e of edits.sort((a, b) => b.start - a.start)) text = text.slice(0, e.start) + e.text + text.slice(e.end);
+    return text;
+  }
+
   const style = document.createElement("style");
   style.id = "design-panel-mock";
   function apply() {
@@ -136,7 +157,7 @@
       }).catch(() => setShared(false));
   }
 
-  // The panel, in colours of its own, so it stays readable whatever the mock does to the page.
+  // The panel, in colors of its own, so it stays readable whatever the mock does to the page.
   const panel = document.createElement("aside");
   panel.className = "dp";
   panel.innerHTML = `
@@ -146,7 +167,8 @@
       <div class="dp-site"></div>
       <div class="dp-rows"></div>
       <div class="dp-actions">
-        <button type="button" data-action="copy">Copy CSS</button>
+        <button type="button" data-action="copy" title="The changed variables only">Copy CSS</button>
+        <button type="button" data-action="copy-sheet" title="The whole stylesheet with the changes written in, to paste over the file">Copy stylesheet</button>
         <button type="button" data-action="screens" title="This page at the sizes of PC, laptop and handheld screens">Screens</button>
         <button type="button" data-action="reset">Reset all</button>
       </div>
@@ -182,7 +204,7 @@
     text.type = "text";
     text.spellcheck = false;
     let picker = null, slider = null;
-    if (isColour(variable.value) || isColour(current(variable.name))) {      // var(--x) of a colour too
+    if (isColour(variable.value) || isColour(current(variable.name))) {      // var(--x) of a color too
       picker = document.createElement("input");
       picker.type = "color";
       picker.addEventListener("input", () => {
@@ -214,7 +236,7 @@
     rows.set(key, {sync() {
       const value = mock.values[key] ?? variable.value;
       if (document.activeElement !== text) text.value = value;
-      const shown = isColour(value) ? value : current(variable.name);     // var(--x): the colour it gives
+      const shown = isColour(value) ? value : current(variable.name);     // var(--x): the color it gives
       if (picker && isColour(shown)) picker.value = hex6(shown);
       if (slider) slider.value = parseFloat(value);
       el.classList.toggle("dp-changed", key in mock.values);
@@ -258,14 +280,23 @@
     here.searchParams.delete("design");
     window.open(`${endpoint}/screens?page=${encodeURIComponent(here.pathname + here.search + here.hash)}`, "_blank");
   });
-  panel.querySelector('[data-action="copy"]').addEventListener("click", e => {
-    const done = () => { e.target.textContent = "Copied"; setTimeout(() => { e.target.textContent = "Copy CSS"; }, 1200); };
+  // Copy CSS copies the changes shown below the buttons; Copy stylesheet puts the whole stylesheet there (more
+  // than one: each after a line naming its file) and copies that.
+  function copy(button, text) {
+    const label = button.textContent;
+    const done = () => { button.textContent = "Copied"; setTimeout(() => { button.textContent = label; }, 1200); };
+    output.value = text;
     if (navigator.clipboard && window.isSecureContext) {
-      navigator.clipboard.writeText(output.value).then(done);
+      navigator.clipboard.writeText(text).then(done);
     } else {                                      // http:// from another device: no clipboard API
       output.select();
       try { if (document.execCommand("copy")) done(); } catch { /* select it by hand */ }
     }
+  }
+  panel.querySelector('[data-action="copy"]').addEventListener("click", e => copy(e.target, output.value));
+  panel.querySelector('[data-action="copy-sheet"]').addEventListener("click", e => {
+    const texts = sheets.map(s => sheets.length > 1 ? `/* ${s.file} */\n${merged(s)}` : merged(s));
+    copy(e.target, texts.join("\n"));
   });
 
   body.hidden = !(read("design-panel:open", false) || new URLSearchParams(location.search).has("design"));

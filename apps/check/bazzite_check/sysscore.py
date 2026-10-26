@@ -35,8 +35,8 @@ RECOMMENDED_VRAM_MIB = 6144       # manual: the split with a documented fix for 
 VRAM_TOLERANCE_MIB = 64
 OTHER_VRAM_SHARE = 0.5            # another split works, but is not the recommended one
 LOG_BONUS = 0.25                  # Extended: +25% of the weight per doubling above the default
-TEXT_GREEN, TEXT_ORANGE, TEXT_RED, TEXT_GREY = "#66bb6a", "#ffb74d", "#e57373", "#9aa0a6"
-TEXT_YELLOW = "#ffd600"
+TEXT_GREEN, TEXT_ORANGE, TEXT_RED, TEXT_GREY = "#81c784", "#ffb74d", "#e57373", "#9aa0a6"
+TEXT_YELLOW = "#fdd835"
 HARDWARE, CONFIGURATION = "Hardware", "Configuration"
 
 
@@ -423,7 +423,7 @@ class SystemScoreDialog(QDialog):
             pts = f"{f.extended:.1f}" + (f"  (+{bonus:.1f})" if bonus > 0.05 else "")
         else:
             pts = f"{f.base:.1f} / {f.weight}"
-        # U+FE0E keeps the sign a text glyph, so it takes the colour instead of rendering as an emoji.
+        # U+FE0E keeps the sign a text glyph, so it takes the color instead of rendering as an emoji.
         name_lbl = QLabel(f.label + (f" <span style='color:{TEXT_YELLOW};'>⚠\ufe0e</span>" if f.warning else ""))
         name_lbl.setStyleSheet("font-weight:700;")
         name_lbl.setToolTip(plain_tooltip("\n".join(filter(None, (f.note, f.warning)))))

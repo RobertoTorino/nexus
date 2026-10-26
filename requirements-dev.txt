@@ -12,6 +12,8 @@
 -r apps/consoles/requirements-dev.txt
 -r apps/shadps4/requirements-dev.txt
 -r apps/clb/requirements-dev.txt
+-r apps/sftp/requirements-dev.txt     # paramiko: its tests import it
+-r apps/mtool/requirements-dev.txt    # dbus-next: its tests import it
 mkdocs-material
 mkdocs>=1.6,<2                  # MkDocs 2.0 drops the plugin and theme system Material needs
 pillow>=12,<13                  # the wiki's WebP copies of the app pictures (tools/mkdocs/hooks.py)

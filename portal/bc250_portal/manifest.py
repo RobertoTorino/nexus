@@ -158,7 +158,7 @@ def parse(text: str) -> list[AppEntry]:
 
 def parse_checkout(text: str) -> list[AppEntry]:
     """The checkout-only apps ([checkout.<key>]), in file order: never released, so never pinned; only a portal
-    that runs from a suite checkout can install them (without one their tiles are greyed)."""
+    that runs from a suite checkout can install them (without one their tiles are grayed)."""
     apps = _load_toml(text).get("checkout", {})
     if not isinstance(apps, dict):
         raise ManifestError("apps.toml: checkout must hold [checkout.<name>] tables")

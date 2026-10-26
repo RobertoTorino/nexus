@@ -41,7 +41,7 @@ def test_fetch_steps_take_the_pinned_commit_from_the_mirror_with_upstream_as_fal
     assert fetch.fallback == ["git", "-C", src, "fetch", "-q", "--depth", "1", "upstream", pin]
     assert "did not answer" in fetch.note and builder.UPSTREAM in fetch.note
     assert all(s.fallback is None for s in steps if s is not fetch)
-    # A folder that already is a repository is fetched into, not initialised again.
+    # A folder that already is a repository is fetched into, not initialized again.
     (lay.source / ".git").mkdir(parents=True)
     again = builder.fetch_steps(lay)
     assert len(again) == 2 and again[0].argv[1:4] == ["-C", src, "fetch"]

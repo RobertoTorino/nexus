@@ -1,3 +1,7 @@
+Changelog: 26-10-2026 02:14:35
+
+Release 0.11.0.
+
 Changelog: 25-10-2026 01:16:49
 
 Release 0.10.1.
@@ -95,7 +99,7 @@ file; images/bc250-vita3k-manager-128.png is scaled from it.
 
 Changelog: 17-10-2026 01:11:56
 
-Fixed. The app's colour follows its new icon (owner, 17-10-2026): the icon's blue, #0A55B0, with links in #5B93DA on a
+Fixed. The app's color follows its new icon (owner, 17-10-2026): the icon's blue, #0A55B0, with links in #5B93DA on a
 dark window, in place of the gold of its old icon (#94721A). White text on it reads at 7:1. The style is the shadPS4
 Manager's, which has the same blue.
 
@@ -107,7 +111,7 @@ window, the menu entry, the Desktop icon and the Steam artwork of the games use 
 
 Changelog: 16-10-2026 13:22:03
 
-Fixed. The app's colour is the gold of its icon (#94721A, links #E6C65A on a dark window) in place of the crimson
+Fixed. The app's color is the gold of its icon (#94721A, links #E6C65A on a dark window) in place of the crimson
 #BD1550: the header boxes, buttons, step numbers and table. The background of the Steam art made for a game is dark
 gold in place of dark red.
 
@@ -137,7 +141,7 @@ firmware as Vita3K counts them (the system software in vs0, the font package in 
 in pd0), with links to the official firmware page and Sony's two other files, and Install firmware… has Vita3K
 install the user's own PSP2UPDAT.PUP without a window (--firmware), then says which part it filled; the app never
 downloads the firmware. Install game… (owner, 16-10-2026: in the app) installs the user's own dumps: a .pkg with its
-zRIF licence key through Vita3K without a window (--pkg, --zrif), a .vpk, .zip or dumped folder handed to Vita3K,
+zRIF license key through Vita3K without a window (--pkg, --zrif), a .vpk, .zip or dumped folder handed to Vita3K,
 which installs it and starts it in its own window, the list following once the game is in ux0/app. The games are
 those in the storage's ux0/app with eboot.bin and sce_sys/param.sfo (title, ID and version as Vita3K shows them).
 Play starts a game alone (--frontend sdl -r <ID>), Vita3K settings opens Vita3K's own window. Update Game Mode adds

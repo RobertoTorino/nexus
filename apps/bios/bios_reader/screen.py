@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The setup screen: a tab row, the items of the open form on the left (prompt and [value]), help on the right and
-a key legend at the bottom, in the blue and grey of a classic BIOS setup screen. Read-only: Enter opens a submenu,
+a key legend at the bottom, in the blue and gray of a classic BIOS setup screen. Read-only: Enter opens a submenu,
 Esc goes back, Left/Right switch tabs; nothing can be changed."""
 
 from __future__ import annotations

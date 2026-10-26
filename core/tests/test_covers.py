@@ -73,7 +73,7 @@ def test_the_key_dialog(tmp_path, qapp, monkeypatch):
     assert covers.edit_key(path=path) and covers.read_key(path) == KEY
     assert not covers.edit_key(path=path)                                       # unchanged
     monkeypatch.setattr(QInputDialog, "exec", lambda self: 0)
-    assert not covers.edit_key(path=path) and covers.read_key(path) == KEY     # cancelled
+    assert not covers.edit_key(path=path) and covers.read_key(path) == KEY     # canceled
     # The text names the app's button for Steam and wraps (owner, 24-10-2026: one line was as wide as the screen).
     from PyQt6.QtWidgets import QLabel
     seen = []                                           # (text, wraps) while the dialog is there

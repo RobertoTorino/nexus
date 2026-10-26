@@ -6,7 +6,7 @@
     python3 tools/make_icons.py --check    # only say whether ICONS.md is up to date; exit 1 when it is not
 
 Pictures are shown from their own files. The icons drawn in code (the portal's symbols, the desktop style's icons)
-are rendered with PyQt6 to PNGs in docs/design/icons/, on Gunmetal's window colour. The listing is the data below:
+are rendered with PyQt6 to PNGs in docs/design/icons/, on Gunmetal's window color. The listing is the data below:
 change it here and run the script, not ICONS.md itself. --check needs no Qt."""
 
 from __future__ import annotations
@@ -36,7 +36,7 @@ SUITE_ICON = [
      "The wiki's header logo, its home page's footer and its favicon."),
 ]
 
-# name, the glyph function, its colour ("ink" is the theme's text, "red" the update red), a red circle behind it
+# name, the glyph function, its color ("ink" is the theme's text, "red" the update red), a red circle behind it
 GLYPHS = [
     ("portal-install", "install", "ink", False, "Install", "An app's install button: an arrow down into a tray."),
     ("portal-install-update", "install", "red", False, "Install, update",
@@ -78,6 +78,20 @@ MATERIAL = [
     ("eye-off-outline", "The page icon of Privacy."),
     ("shield-lock-outline", "The page icon of Security."),
     ("github", "The page icon of GitHub settings."),
+]
+
+NEXUS_ICON = [
+    ("nexus/images/nexus-256.png", "`nexus/images/nexus-<size>.png` (1024, 512, 256 and 128 px)",
+     "The icon of Nexus, the owner's drawing (25-10-2026): the set the copies are made from."),
+    ("nexus/docs/images/nexus.webp", "`nexus/docs/images/nexus.webp`, `.png` (256 px)",
+     "The Nexus page's header logo and its home page's footer (`.webp`), and its favicon (`.png`)."),
+]
+
+NEXUS_MATERIAL = [
+    ("file-tree", "Home: the card \"Nexus\"."),
+    ("view-grid", "Home: the card \"A suite\"."),
+    ("application", "Home: the card \"An app\"."),
+    ("chip", "Home: the card \"BC250 Bazzite Suite\"."),
 ]
 
 SYMBOLS = [
@@ -153,7 +167,7 @@ def build(root: Path = ROOT) -> str:
         (img(f"icons/{category}/{category}-128.png", 64), category.title(),
          "<br>".join(f"{names.get(k, k)} (`{k}`)" for k in keys)) for category, keys in sorted(by_category.items())))
     out += ["### The portal's symbols", "",
-            "Drawn with QPainter in `portal/bc250_portal/glyphs.py`, in the theme's text colour (shown here on "
+            "Drawn with QPainter in `portal/bc250_portal/glyphs.py`, in the theme's text color (shown here on "
             "Gunmetal) or red.", ""]
     out += table("Icon,Name,Used for", ((img(rendered(name)), title, use) for name, *_, title, use in GLYPHS))
     out += ["### Icons in the apps", ""]
@@ -162,16 +176,21 @@ def build(root: Path = ROOT) -> str:
             "Icons the apps take from the desktop's style or icon theme, so they look different on every desktop; "
             "shown here as\nQt's Fusion style draws them.", ""]
     out += table("Icon,Name,Used for", ((img(rendered(name)), shown, use) for name, _, _, shown, use in STANDARD))
-    out += ["### Material Design icons in the wiki", "", "Drawn by MkDocs Material in the wiki's colours.", ""]
+    out += ["### Material Design icons in the wiki", "", "Drawn by MkDocs Material in the wiki's colors.", ""]
     out += table("Icon,Name,Used for", ((img(f"{MDI}/{name}.svg", 24), f"`material-{name}`", use)
                                         for name, use in MATERIAL))
     out += ["### Symbols in text", "", "Characters of the font, used as icons in labels and buttons.", ""]
     out += table("Symbol,App,Used for", SYMBOLS)
+    out += ["## Nexus", "", "### The Nexus icon", ""]
+    out += table("Icon,File,Used for", ((img(path), file, use) for path, file, use in NEXUS_ICON))
+    out += ["### Material Design icons on the Nexus page", "", "Drawn by MkDocs Material in the page's colors.", ""]
+    out += table("Icon,Name,Used for", ((img(f"{MDI}/{name}.svg", 24), f"`material-{name}`", use)
+                                        for name, use in NEXUS_MATERIAL))
     return "\n".join(out).rstrip("\n") + "\n"
 
 
 def render(root: Path = ROOT) -> list[Path]:
-    """The drawn icons as PNGs in docs/design/icons/, each 48 px on a rounded square of Gunmetal's window colour."""
+    """The drawn icons as PNGs in docs/design/icons/, each 48 px on a rounded square of Gunmetal's window color."""
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
     sys.path[:0] = [str(root / "portal"), str(root / "core")]
     from PyQt6.QtCore import QRectF, Qt

@@ -13,7 +13,7 @@ shows what others found.
 
 ## What you need
 
-- **Your games**, dumped from your own PS Vita: a `.vpk` or `.zip`, a `.pkg` with its zRIF licence key, or a dumped
+- **Your games**, dumped from your own PS Vita: a `.vpk` or `.zip`, a `.pkg` with its zRIF license key, or a dumped
   game folder. The app never downloads games.
 - **The PS Vita's firmware**, the PS Vita's system software. Vita3K needs it, and its font package, to start most
   games. The app cannot ship them; each is a file named `PSP2UPDAT.PUP`:
@@ -45,7 +45,7 @@ The window has three steps, then the list of games.
    without a window; the step then says which part it was.
 3. **Games**: how many games Vita3K has installed. **Install game…** installs one of yours:
     - **From a file**: a `.vpk` or `.zip` is handed to Vita3K, which installs it and then starts it in its own
-      window; a `.pkg` asks for the game's zRIF licence key, and Vita3K installs it without a window.
+      window; a `.pkg` asks for the game's zRIF license key, and Vita3K installs it without a window.
     - **From a dumped folder**: Vita3K installs the folder's game and starts it in its own window.
 
     The list shows the game once it is installed.
@@ -97,7 +97,7 @@ keep working when a newer version of the app brings a newer Vita3K.
 ```bash
 bc250-vita3k-run --frontend sdl -r PCSB00245                   # a game alone, by its ID; Vita3K quits with it
 bc250-vita3k-run --firmware "/path/to/PSP2UPDAT.PUP"           # install a part of the firmware
-bc250-vita3k-run --pkg "/path/to/game.pkg" --zrif KO5i...      # install a game from its package and licence
+bc250-vita3k-run --pkg "/path/to/game.pkg" --zrif KO5i...      # install a game from its package and license
 bc250-vita3k-run "/path/to/game.vpk"                           # install a game and start it
 bc250-vita3k-run                                               # Vita3K's own window
 ```

@@ -99,4 +99,4 @@ def test_not_authorised(window):
     window.action = "install"
     window.process = object()
     window._finished(126)
-    assert window.running.text().startswith("Not authorised")
+    assert window.running.text().startswith("Not authorized")

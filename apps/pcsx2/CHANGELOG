@@ -1,3 +1,7 @@
+Changelog: 26-10-2026 02:14:35
+
+Release 1.3.0.
+
 Changelog: 25-10-2026 01:16:49
 
 Release 1.2.1.
@@ -47,7 +51,7 @@ reading the file.
 
 Changelog: 24-10-2026 15:22:00
 
-Fixed. The Refresh pill had another background colour than the boxes beside it when the window opened (owner,
+Fixed. The Refresh pill had another background color than the boxes beside it when the window opened (owner,
 24-10-2026): it holds the keyboard focus then, and the pill's focus style painted a translucent blue tint over the
 window instead of the pill's sheen. The keyboard focus now changes nothing, and the tint under the mouse is the
 pill's own sheen with the blue mixed in, so it stays a sheen. Test: the focused Refresh pill's pixels against the
@@ -91,7 +95,7 @@ the app sets it with PCSX2's other settings while PCSX2.ini has no ShutdownVM li
 line empty, which PCSX2 reads as no binding, so off stays off. The Memory cards tab's picture and
 details stand in a box of the picture's width with room around the text. The log says more about the games: the
 run wrapper writes the game started (by its file's name, from Steam or a terminal) into the app's log, and the
-window sums up PCSX2's own log of its last run once, the next time it looks: the game (named from the catalogue),
+window sums up PCSX2's own log of its last run once, the next time it looks: the game (named from the catalog),
 how long it was played (PCSX2's count, or about the log's last time stamp when PCSX2 did not shut down by itself),
 until when and with which controller. The wiki says Steam's overlay takes and shares screenshots (F12, or Steam +
 R1 in Big Picture Mode). From the owner's screenshots, after: the Memory cards tab is a block of 720 px at most on
@@ -137,7 +141,7 @@ first start on the board, without the window's places, the BIOS and the game fol
 file without its settings version and only its reset writes the hotkeys such as Esc for the pause menu. Every other
 line of PCSX2.ini stays as it is. Choose BIOS… replaces Open folder: it copies the chosen dump, with the files beside
 it under the same name, into PCSX2's bios folder and makes it the one PCSX2 uses, without a Refresh. A game is named
-as PCSX2's catalogue names it (GameIndex.yaml, taken out of the AppImage beside it at install, and when the window
+as PCSX2's catalog names it (GameIndex.yaml, taken out of the AppImage beside it at install, and when the window
 opens for a PCSX2 installed before), else by its file's name without a serial in it ("SLUS_215.53.Lumines Plus" is
 "Lumines Plus"); the name in Steam follows, and so does the SteamGridDB lookup, which found nothing for a file's name
 with a serial in it. A new Screen column sets per game how it fills the screen: Original, Widescreen (PCSX2's
@@ -147,7 +151,7 @@ settings in PCSX2 (gamesettings/<serial>_<CRC>.ini); the CRC is the boot program
 the In Game Mode box and column are In Steam; the first step says it installs the stable release the app was tried
 with, the game folders step that subfolders are searched five deep. Tests: the settings on a first start and on an
 existing file, a mapped controller left alone, the BIOS choice, the titles, the patches looked up as PCSX2 does, the
-CRC, the screen per game, nothing written while PCSX2 runs, and the catalogue taken out at install.
+CRC, the screen per game, nothing written while PCSX2 runs, and the catalog taken out at install.
 
 Changelog: 23-10-2026 07:16:27
 
@@ -227,7 +231,7 @@ file; images/bc250-pcsx2-manager-128.png is scaled from it.
 
 Changelog: 17-10-2026 01:11:56
 
-Fixed. The app's colour follows its new icon (owner, 17-10-2026): the icon's blue, #0A55B0, with links in #5B93DA on a
+Fixed. The app's color follows its new icon (owner, 17-10-2026): the icon's blue, #0A55B0, with links in #5B93DA on a
 dark window, in place of the teal (#0E7490). White text on it reads at 7:1. The style is the shadPS4 Manager's, which
 has the same blue.
 
@@ -261,8 +265,8 @@ Release 0.2.0.
 Changelog: 16-10-2026 04:52:58
 
 Added. A game's Steam artwork is drawn from the app's icon by core's steam_art (owner, 16-10-2026), where it was the
-title and "PCSX2 Manager" on a fixed dark background: a background in the icon's colour, the icon with the game's
-title and "PS2 · PCSX2 Manager" on the portrait and the wide picture, the title centred on the banner, and the icon
+title and "PCSX2 Manager" on a fixed dark background: a background in the icon's color, the icon with the game's
+title and "PS2 · PCSX2 Manager" on the portrait and the wide picture, the title centered on the banner, and the icon
 as the logo Steam lays over the banner. A long title wraps and shrinks to fit.
 
 Changelog: 16-10-2026 01:19:38

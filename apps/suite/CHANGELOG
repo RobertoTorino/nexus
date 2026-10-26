@@ -54,7 +54,7 @@ midnight, read from its transcripts (~/.claude/projects, or CLAUDE_CONFIG_DIR), 
 the last 5 hours, the input, output and cache tokens and each model; a click opens Claude's usage page. Hidden
 without Claude Code; it looks every 5 minutes and on Refresh. Tests: tests/test_main_window.py.
 
-Fixed. GitHub API left has a green left edge while plenty of requests are left; it had none (grey) until fewer than
+Fixed. GitHub API left has a green left edge while plenty of requests are left; it had none (gray) until fewer than
 a tenth were left. Tests: tests/test_plan.py.
 
 Changelog: 20-10-2026 21:54:38
@@ -88,7 +88,7 @@ Changelog: 19-10-2026 17:58:49
 
 Added. GitHub status in the header, beside the build indicator (owner, 19-10-2026): a green dot while
 githubstatus.com reports every part of GitHub up, a red dot while it reports a problem (an incident, or a part such
-as Actions or Pages degraded or down), grey while it is not known. Hover for the incident and the parts affected;
+as Actions or Pages degraded or down), gray while it is not known. Hover for the incident and the parts affected;
 a click opens https://www.githubstatus.com/. It looks every 5 minutes, and Refresh looks at once.
 
 Changelog: 19-10-2026 02:46:23
@@ -201,7 +201,7 @@ Changelog: 15-10-2026 21:11:49
 
 A command line under the steps (command_line.py), in a splitter with them, so the commands a step shows run without a
 separate terminal (owner's request). A command runs with bash -lc in the checkout, in the folder the last cd left, and
-its output streams in as it runs (colour codes removed). Commands lists the commands the last Apply, Bump portal or
+its output streams in as it runs (color codes removed). Commands lists the commands the last Apply, Bump portal or
 Withdraw showed, without their comments, to put one on the line. Up and Down go through the history, kept in the
 settings (200 commands). Stop or Ctrl+C sends Ctrl+C to the command's own process group (setsid), so a job it started
 in the background ends too, and kills it if it has not ended 3 seconds later; clear and Clear empty the output. Input
@@ -220,7 +220,7 @@ Core's row offers its current version when that version already holds every core
 
 Changelog: 15-10-2026 06:31:03
 
-A selected cell in the tables and the input field being typed in show a purple outline with rounded corners (the accent colour) on a transparent background, instead of the desktop's solid blue highlight (SELECTION_STYLESHEET on the window). The line edit inside an editable version box keeps the box's own frame. Tests: a selected cell rendered, outline and no fill.
+A selected cell in the tables and the input field being typed in show a purple outline with rounded corners (the accent color) on a transparent background, instead of the desktop's solid blue highlight (SELECTION_STYLESHEET on the window). The line edit inside an editable version box keeps the box's own frame. Tests: a selected cell rendered, outline and no fill.
 
 Changelog: 15-10-2026 05:37:03
 
@@ -236,11 +236,11 @@ The title shows the checkout's last commit and its date beside the version ("v0.
 
 Changelog: 15-10-2026 05:08:01
 
-The GitHub API line beside the GitHub button is in the theme's text colour (white on a dark desktop, dark on a light one) instead of grey, which was barely readable on a dark desktop; orange and red still mark few and none left.
+The GitHub API line beside the GitHub button is in the theme's text color (white on a dark desktop, dark on a light one) instead of gray, which was barely readable on a dark desktop; orange and red still mark few and none left.
 
 Changelog: 15-10-2026 04:13:25
 
-Beside the GitHub button the window shows GitHub's hourly API limit as its last answer reported it ("GitHub API: 4,894 of 5,000 left until 04:16, signed in"; orange under a tenth, red at none), read from the X-RateLimit headers of every answer, the unchanged ones that do not count included; its tooltip says that none left is GitHub's limit, not a fault. plan.fetch_runs returns that RateInfo as a third value. github_token() is safe when checks overlap: it asked gh after storing "" already, so a second check in that moment went out without the token; it now holds a lock and stores only the finished answer. Tests: the limit from normal and unchanged answers, the label's text and colours, overlapping token lookups.
+Beside the GitHub button the window shows GitHub's hourly API limit as its last answer reported it ("GitHub API: 4,894 of 5,000 left until 04:16, signed in"; orange under a tenth, red at none), read from the X-RateLimit headers of every answer, the unchanged ones that do not count included; its tooltip says that none left is GitHub's limit, not a fault. plan.fetch_runs returns that RateInfo as a third value. github_token() is safe when checks overlap: it asked gh after storing "" already, so a second check in that moment went out without the token; it now holds a lock and stores only the finished answer. Tests: the limit from normal and unchanged answers, the label's text and colors, overlapping token lookups.
 
 Changelog: 15-10-2026 04:06:38
 

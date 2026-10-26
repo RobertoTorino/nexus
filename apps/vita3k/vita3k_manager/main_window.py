@@ -115,7 +115,7 @@ class MainWindow(QMainWindow):
         self.firmware_button.clicked.connect(self.on_install_firmware)
         self.game_button = QPushButton("Install game…")
         self.game_button.setToolTip("Install one of your own games in Vita3K: a .vpk or .zip, a .pkg with its zRIF "
-                                    "licence key, or a dumped game folder")
+                                    "license key, or a dumped game folder")
         menu = QMenu(self.game_button)
         menu.addAction("From a file (.vpk, .zip, .pkg)…", self.on_install_game_file)
         menu.addAction("From a dumped folder…", self.on_install_game_folder)
@@ -284,7 +284,7 @@ class MainWindow(QMainWindow):
                                      f"<code>{escape(str(self.vita_fs))}</code>.")
         else:
             self.games_state.setText("None installed yet. Install game takes your own dumps: a .vpk or .zip, a .pkg "
-                                     "with its zRIF licence key, or a dumped game folder.")
+                                     "with its zRIF license key, or a dumped game folder.")
         self.games_box.set_value(str(len(self.games)))
         found = {g.name for g in self.games}
         self.steam_box.set_value(str(len(found & set(self.in_steam))))
@@ -454,7 +454,7 @@ class MainWindow(QMainWindow):
             return
         path = Path(name)
         if path.suffix.lower() == ".pkg":
-            zrif, ok = QInputDialog.getText(self, window_title("The game's licence"),
+            zrif, ok = QInputDialog.getText(self, window_title("The game's license"),
                                             f"The zRIF licence key of {path.name} (it starts with KO5i):",
                                             QLineEdit.EchoMode.Normal)
             if ok and zrif.strip():

@@ -168,7 +168,7 @@ class Tour(Recorder):
         self.move(self.at_action(example), 0.6)
         self.click(lambda: (self.popup.close(), w.example_wallpaper()))
         self.popup = None
-        self.say("It fills the window, under a veil of the theme's colour so the text stays readable.")
+        self.say("It fills the window, under a veil of the theme's color so the text stays readable.")
         self.hold(3.5)
         self.say("")
         self.move(self.at(w.wallpaper_pill), 0.6)

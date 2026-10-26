@@ -221,9 +221,9 @@ def test_a_failed_root_step_is_shown(qapp, setup):
     paths, system, steam_dirs, download = setup
     install(paths)
     window = _window((paths, system, steam_dirs, download))
-    window.root = lambda args: privileged.Result(False, "Not authorised: the password dialog was cancelled or refused.")
+    window.root = lambda args: privileged.Result(False, "Not authorized: the password dialog was canceled or refused.")
     window.on_restart()
-    assert "Not authorised" in window.running.text() and "c62828" in window.running.styleSheet()
+    assert "Not authorized" in window.running.text() and "c62828" in window.running.styleSheet()
 
 
 def test_game_mode_greys_the_root_steps(qapp, setup, monkeypatch):

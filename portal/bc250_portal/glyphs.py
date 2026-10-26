@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The symbols on the portal's action buttons, drawn with QPainter: no image files, and they take the palette's
-text colour (or the red of an update). Drawn on a 64 x 64 grid; QIcon scales them to the button."""
+text color (or the red of an update). Drawn on a 64 x 64 grid; QIcon scales them to the button."""
 
 from __future__ import annotations
 

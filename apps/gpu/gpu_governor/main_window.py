@@ -304,7 +304,7 @@ class MainWindow(QMainWindow):
         if not self.isVisible():
             self.show()                 # a hidden window gets no close event
         self.close()
-        if self.isVisible():            # the user cancelled because of unapplied changes
+        if self.isVisible():            # the user canceled because of unapplied changes
             self._quitting = False
         else:
             QApplication.instance().quit()

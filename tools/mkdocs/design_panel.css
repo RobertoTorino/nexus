@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
-/* The design panel (design_panel.js): colours of its own, none of the site's variables, so a mock never hides it;
+/* The design panel (design_panel.js): colors of its own, none of the site's variables, so a mock never hides it;
    sizes in px, as the page's root font size (Material's 125 %) would scale rem. */
 .dp {
   position: fixed;

@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The wiki's design panel hook: on the pages only while `mkdocs serve` runs, its address relative to each page, and
-the mock it keeps (a POST stores it, a GET returns it, anything but variables dropped). No MkDocs needed."""
+"""The wiki's design panel hook: on the pages only while `mkdocs serve` runs, its address relative to each page, the
+mock it keeps (a POST stores it, a GET returns it, anything but variables dropped), and a mock merged into a
+stylesheet in place. No MkDocs needed."""
 
 from __future__ import annotations
 
@@ -8,8 +9,12 @@ import importlib.util
 import io
 import json
 import re
+import shutil
+import subprocess
 from pathlib import Path
 from types import SimpleNamespace
+
+import pytest
 
 SUITE = Path(__file__).resolve().parents[2]
 spec = importlib.util.spec_from_file_location("design_panel", SUITE / "tools" / "mkdocs" / "design_panel.py")
@@ -87,6 +92,61 @@ def test_screens_shows_pc_laptop_and_handheld_sizes(tmp_path):
     assert ("1280", "720") in sizes and "ASUS ROG Xbox Ally X" in html      # 1920 x 1080 at 150 %
     assert all(int(w) >= 1280 for w, _ in sizes)                            # no phone sizes
     assert not (tmp_path / ".design-mock.json").exists()
+
+
+SHEET = """/* The colors. */
+:root {
+  --a-primary: #5835CE;     /* Main color */
+  --a-deep: #1e1340         /* Deep, no semicolon */
+}
+
+/* Header. */
+:root {
+  --a-header-bg: var(--a-deep);   /* Header background */
+}
+
+@media screen and (max-width: 44.9375em) {
+  :root { --a-primary: #000000; }
+}
+
+.md-header { background: var(--a-header-bg); }
+"""
+
+
+def test_merge_writes_the_values_in_place():
+    """Only the values change: the layout, the comments and the rest of the file stay; the same variable under
+    @media is not the panel's and stays; a key no rule defines is not in the keys returned."""
+    merged, defined = panel.merge(SHEET, {":root|--a-primary": "#ff8800", ":root|--a-deep": "#101010",
+                                          ":root|--a-header-bg": "#ffffff", ".x|--y": "1"})
+    assert merged == SHEET.replace("#5835CE;     /* Main", "#ff8800;     /* Main") \
+        .replace("#1e1340         /* Deep", "#101010         /* Deep") \
+        .replace("var(--a-deep);   /* Header", "#ffffff;   /* Header")
+    assert "#000000" in merged
+    assert defined == {":root|--a-primary", ":root|--a-deep", ":root|--a-header-bg"}
+    assert panel.merge(SHEET, {}) == (SHEET, defined)
+
+
+def test_the_panels_merge_is_pythons(tmp_path):
+    """Copy stylesheet in the browser and tools/apply_design.py give the same file: the panel's topRules() and
+    merged() run in Node.js on the fixture above, against merge() here. Skipped where Node.js is not installed
+    (on Bazzite: brew install node)."""
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("Node.js is not installed")
+    js = (SUITE / "tools" / "mkdocs" / "design_panel.js").read_text(encoding="utf-8")
+    functions = [re.search(rf"\n  function {name}\(.*?\n  \}}\n", js, re.S).group() for name in ("topRules", "merged")]
+    values = {":root|--a-primary": "#ff8800", ":root|--a-deep": "#101010", ":root|--a-header-bg": "#ffffff"}
+    script = tmp_path / "merge.js"
+    script.write_text(f"const mock = {{values: {json.dumps(values)}}};\n" + "".join(functions) +
+                      f"\nconst parsed = topRules({json.dumps(SHEET)});\n"
+                      "process.stdout.write(merged({text: parsed.text, rules: parsed.rules}));\n", encoding="utf-8")
+    result = subprocess.run([node, str(script)], capture_output=True, text=True, check=True)
+    assert result.stdout == panel.merge(SHEET, values)[0]
+
+
+def test_the_panel_offers_both_copies():
+    js = (SUITE / "tools" / "mkdocs" / "design_panel.js").read_text(encoding="utf-8")
+    assert 'data-action="copy"' in js and 'data-action="copy-sheet"' in js and "function merged(" in js
 
 
 def test_the_panel_keeps_its_own_colours_and_sizes():

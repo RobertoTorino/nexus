@@ -293,7 +293,7 @@ class HistoryPage(QWidget):
         self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.table.verticalHeader().setVisible(False)
         self.table.setAlternatingRowColors(True)
-        # A see-through purple selection keeps the coloured counts and health readable.
+        # A see-through purple selection keeps the colored counts and health readable.
         self.table.setStyleSheet("QTableWidget { outline:0; }"
                                  "QTableWidget::item:selected { background:rgba(139, 79, 216, 90); color:palette(text); }")
         header = self.table.horizontalHeader()
@@ -399,7 +399,7 @@ class HistoryPage(QWidget):
             font.setBold(True)
             badge.setFont(font)
             if run.cancelled:
-                self.table.item(i, 1).setText(scope_text(run) + " (cancelled)")
+                self.table.item(i, 1).setText(scope_text(run) + " (canceled)")
             if run.id in selected:
                 self.table.selectRow(i)
         self.table.blockSignals(False)

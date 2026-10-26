@@ -1,3 +1,7 @@
+Changelog: 26-10-2026 02:14:35
+
+Release 0.13.0.
+
 Changelog: 25-10-2026 01:16:49
 
 Release 0.12.1.
@@ -67,7 +71,7 @@ Release 0.5.1.
 Changelog: 20-10-2026 11:34:30
 
 Fixed. The app takes the gaming apps' look, as the shadPS4 Manager (owner, 20-10-2026): the four boxes in the header
-each had another colour as their left edge (purple, blue, none, the theme's accent) and now all have the blue one,
+each had another color as their left edge (purple, blue, none, the theme's accent) and now all have the blue one,
 the buttons take the blue outline and the blue hover in place of the suite's purple, Install is filled blue and the
 Manual link is blue. The style is decky_manager/style.py, a copy of the shadPS4 Manager's. Tests:
 tests/test_main_window.py.
@@ -157,4 +161,4 @@ Release 0.1.0.
 
 Changelog: 14-10-2026 11:04:58
 
-New app decky-manager (BC-250 Decky Loader Manager): Decky Loader, the plugin loader for Steam's Game Mode, on the BC-250. Install downloads Decky Loader 3.2.10, the release the app pins (its PluginLoader binary, SHA-256 c2cf316a…8258), checks it, and installs it the way Decky's own installer does, so Decky's updater, Bazzite's ujust setup-decky and the plugins find what they expect: the binary in ~/homebrew/services (labelled bin_t for SELinux), its version in .loader.version, the plugins folder, Decky's release unit as /etc/systemd/system/plugin_loader.service (enabled and started), and Steam's .cef-enable-remote-debugging, through which Decky loads into Steam. One change to Decky's layout: ~/homebrew/services is root's, so nothing running as the user can replace the binary that root starts. The root steps run in loader.py through pkexec with the system Python in isolated mode; it checks the binary's SHA-256 again itself, takes the user from pkexec, and refuses a link in place of ~/homebrew or its services folder. Remove stops Decky and removes its service and binary, its plugins and their settings kept unless you choose to remove them too, and switches Steam's remote debugging off. The window shows the installed version (also one Decky updated itself to, and a newer Decky release when there is one), the service (running, at boot, Restart, Log from the journal), Steam's switch (on and off), the /home/deck link for plugins written for the Steam Deck (Link and Unlink, as Bazzite's ujust setup-decky makes it) and the plugins in ~/homebrew/plugins with their version, author and whether Decky has them switched off. Steps that need root are greyed in Game Mode, which has no password dialog. The installer uses the suite's shared venv; removing the app leaves Decky itself in place and says how to remove it. The icon is a placeholder.
+New app decky-manager (BC-250 Decky Loader Manager): Decky Loader, the plugin loader for Steam's Game Mode, on the BC-250. Install downloads Decky Loader 3.2.10, the release the app pins (its PluginLoader binary, SHA-256 c2cf316a…8258), checks it, and installs it the way Decky's own installer does, so Decky's updater, Bazzite's ujust setup-decky and the plugins find what they expect: the binary in ~/homebrew/services (labeled bin_t for SELinux), its version in .loader.version, the plugins folder, Decky's release unit as /etc/systemd/system/plugin_loader.service (enabled and started), and Steam's .cef-enable-remote-debugging, through which Decky loads into Steam. One change to Decky's layout: ~/homebrew/services is root's, so nothing running as the user can replace the binary that root starts. The root steps run in loader.py through pkexec with the system Python in isolated mode; it checks the binary's SHA-256 again itself, takes the user from pkexec, and refuses a link in place of ~/homebrew or its services folder. Remove stops Decky and removes its service and binary, its plugins and their settings kept unless you choose to remove them too, and switches Steam's remote debugging off. The window shows the installed version (also one Decky updated itself to, and a newer Decky release when there is one), the service (running, at boot, Restart, Log from the journal), Steam's switch (on and off), the /home/deck link for plugins written for the Steam Deck (Link and Unlink, as Bazzite's ujust setup-decky makes it) and the plugins in ~/homebrew/plugins with their version, author and whether Decky has them switched off. Steps that need root are grayed in Game Mode, which has no password dialog. The installer uses the suite's shared venv; removing the app leaves Decky itself in place and says how to remove it. The icon is a placeholder.

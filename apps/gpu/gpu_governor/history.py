@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Telemetry history: one row per poll (load, clock, temperature, socket power, performance mode, runtime
 range), kept in memory for the chart window, exportable as CSV and readable back as a reference to compare a
-live session against (`read_csv`, `summarise`)."""
+live session against (`read_csv`, `summarize`)."""
 
 from __future__ import annotations
 

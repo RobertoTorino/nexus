@@ -2,10 +2,10 @@
 """The picture after the TV was off: KDE's display settings for the CEC adapter's output, through kscreen-doctor.
 
 Behind a DP-to-HDMI converter the board never learns that the TV went to standby: the converter keeps the
-DisplayPort side up. Above 340 MHz on the HDMI side (for example 1080p120 at 10 or 12 bits per colour) HDMI 2.0
+DisplayPort side up. Above 340 MHz on the HDMI side (for example 1080p120 at 10 or 12 bits per color) HDMI 2.0
 needs scrambling, which the converter must set up with the TV again when it comes back. Some converters do not, and
 the TV stays black although it is on (the owner's UGreen cable, 11-10-2026). Two ways around it:
- * 8 bits per colour: 1080p120 then needs 297 MHz, below the limit, and the picture comes back by itself. Larger
+ * 8 bits per color: 1080p120 then needs 297 MHz, below the limit, and the picture comes back by itself. Larger
    modes (1440p120, 4K60) stay above it even at 8 bits: there only the next one helps;
  * a different signal once the TV is on again (another refresh rate and back): the converter has to handshake anew.
 Nothing here needs root; kscreen-doctor talks to the running KDE session (not to gamescope's Game Mode)."""
@@ -87,7 +87,7 @@ def other_rate(output: Output) -> Mode | None:
 
 
 def clock_mhz(mode: Mode, bits: int = 8) -> float:
-    """An estimate of the HDMI signal's speed (TMDS character rate) for *mode* at *bits* per colour: 1080p120 at 8
+    """An estimate of the HDMI signal's speed (TMDS character rate) for *mode* at *bits* per color: 1080p120 at 8
     bits is 297 MHz. kscreen-doctor does not report the real timings; CTA's are the widest common ones."""
     return mode.width * mode.height * mode.rate * BLANKING * bits / 8 / 1e6
 

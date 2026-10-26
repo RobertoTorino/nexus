@@ -48,6 +48,6 @@ def test_command_runs_this_file_through_pkexec():
 
 def test_answer():
     assert access.answer(0, '{"error": ""}\n') == ""
-    assert "cancelled" in access.answer(126, "")
+    assert "canceled" in access.answer(126, "")
     assert access.answer(1, '{"error": "Read-only file system"}') == "Read-only file system"
     assert "exit code 2" in access.answer(2, "boom")

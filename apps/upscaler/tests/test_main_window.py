@@ -302,7 +302,7 @@ def test_games_page_runs_a_game_with_helixsr(qapp, payload, game, tmp_path):
         page, target = w.games_page, dll_of(game)
         assert page.rows == [game, plain]                                  # games with FSR 3.1 first
         assert page.table.item(1, 1).text() == "No AMD FSR 3.1 DLL: HelixSR cannot be used"
-        page.table.selectRow(1)                                            # greyed out: only the Deploy page
+        page.table.selectRow(1)                                            # grayed out: only the Deploy page
         assert not page.run.isEnabled() and page.open_deploy.isEnabled()
         assert page.table.item(0, 1).text() == "Not installed"
         page.table.selectRow(0)

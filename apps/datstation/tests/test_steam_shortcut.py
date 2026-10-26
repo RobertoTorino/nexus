@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The Steam shortcut on a Steam folder made in a temp folder: added with its artwork, recognised, brought up to
+"""The Steam shortcut on a Steam folder made in a temp folder: added with its artwork, recognized, brought up to
 date, removed; the refusals without a launcher or without Steam."""
 
 from __future__ import annotations

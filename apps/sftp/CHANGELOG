@@ -1,3 +1,22 @@
+Changelog: 26-10-2026 02:14:35
+
+Release 0.13.0.
+
+Changelog: 26-10-2026 01:58:47
+
+Added. Connect is a pill in the window's header, beside the three states and as wide as they are (owner,
+26-10-2026): a click connects the SFTP Client with the fields in its tab, it reads Connecting… while it connects
+and Disconnect once connected, and the tab's own Connect button is gone. In that tab the password rules always
+show, on two lines in the column at the right of the connection form where Connect was, in muted text until a
+password is typed and then in red with what is missing or in green with a check; the form itself, and the Server
+Manager, are as they were.
+
+Changelog: 26-10-2026 01:04:02
+
+Fixed. The errors button is the suite's red #c62828, and the password warning, requirements met and not met use
+the suite's text tints #ffb74d, #81c784 and #e57373 (DESIGN.md's color families, owner, 26-10-2026), not colors of
+their own.
+
 Changelog: 25-10-2026 01:16:49
 
 Release 0.12.1.
@@ -62,7 +81,7 @@ Release 0.5.0.
 Changelog: 19-10-2026 23:41:01
 
 Added. The suite's theme, chosen in the portal; the status boxes are the theme's surface with their state as a
-coloured left edge.
+colored left edge.
 
 Changelog: 19-10-2026 03:41:49
 
@@ -159,4 +178,4 @@ A Windows program of the app: the release workflow builds BC250-SFTP-Tools.exe o
 
 Changelog: 12-10-2026 21:32:31
 
-New app: BC250 Bazzite SFTP Tools, moved in from its own repository and adapted to the suite. An SFTP client (local and remote folders, transfer queue, speed limit, overwrite choices) and a Server Manager (sshd status, start and stop, sshd_config editor) in one window with the suite's header: the icon at 96 px beside the title with the version, and a second row with the states of this system, the SFTP connection and sshd. The code is the package bc250_sftp_tools on bc250_core (start-up, single instance, tooltips, header, theme). Settings and profiles are in ~/.config/bc250-bazzite-sftp-tools and the log in ~/.local/share/bc250-bazzite-sftp-tools (they were in a folder named after the Qt organisation). The installer takes --uninstall and --uninstall --purge like the other apps' (it had --keep-data), and gives the app its own venv with PyQt6 and paramiko. The settings dialog now hands its changes to the transfer queue and the file lists straight away (they only took effect after a restart, and a failed save was logged without telling you); the password rules' dialog no longer shows the braces doubled; the file lists no longer scramble the Type, Size and Modified cells (sorting was on while the rows were filled); the sound is played without a shell; an error dot's log handler goes with its window. The Windows build files and the PyInstaller icon lookup are not part of the app.
+New app: BC250 Bazzite SFTP Tools, moved in from its own repository and adapted to the suite. An SFTP client (local and remote folders, transfer queue, speed limit, overwrite choices) and a Server Manager (sshd status, start and stop, sshd_config editor) in one window with the suite's header: the icon at 96 px beside the title with the version, and a second row with the states of this system, the SFTP connection and sshd. The code is the package bc250_sftp_tools on bc250_core (start-up, single instance, tooltips, header, theme). Settings and profiles are in ~/.config/bc250-bazzite-sftp-tools and the log in ~/.local/share/bc250-bazzite-sftp-tools (they were in a folder named after the Qt organization). The installer takes --uninstall and --uninstall --purge like the other apps' (it had --keep-data), and gives the app its own venv with PyQt6 and paramiko. The settings dialog now hands its changes to the transfer queue and the file lists straight away (they only took effect after a restart, and a failed save was logged without telling you); the password rules' dialog no longer shows the braces doubled; the file lists no longer scramble the Type, Size and Modified cells (sorting was on while the rows were filled); the sound is played without a shell; an error dot's log handler goes with its window. The Windows build files and the PyInstaller icon lookup are not part of the app.

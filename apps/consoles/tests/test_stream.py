@@ -204,7 +204,7 @@ def test_controller_buttons_reach_the_console(console_factory):
     assert [seq for seq, _, _ in console.feedback_history] == list(range(len(console.feedback_history)))
     packets = [(count, payload.hex()) for _, count, payload in console.feedback_history]
     assert packets[0] == press and packets.count(press) <= 3 and packets[packets.count(press):] == [release] * 5
-    # The stick at once, then back to the centre at once (well before the next 200 ms).
+    # The stick at once, then back to the center at once (well before the next 200 ms).
     payloads = [payload for _, payload in console.feedback_states]
     moved = [i for i, payload in enumerate(payloads) if payload[0x11:0x15] == h("03e8fc18")]
     assert len(moved) == 1 and payloads[moved[0] + 1] == h(FEEDBACK["state"][0]["v9"])
@@ -294,7 +294,7 @@ def test_rumble_and_pad_info_go_to_the_controllers(console_factory):
         connection.drive_controllers(lambda *what: outputs.append(what))
         assert outputs == [("led", (0x10, 0x20, 0x30)), ("player", 1)]
         console.send_data(stream.DATA_RUMBLE, bytes([0, 0x80, 0xff]))
-        # 25 bytes: the feedback packet it answers and a timestamp first; a motion reset and a new colour, the same
+        # 25 bytes: the feedback packet it answers and a timestamp first; a motion reset and a new color, the same
         # player.
         console.send_data(stream.DATA_PAD_INFO, bytes(8) + bytes([1, 0, 0, 0xff, 1]) + bytes(12))
         console.send_data(stream.DATA_RUMBLE, bytes([0, 0]))                    # too short: noted, nothing sent

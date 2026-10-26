@@ -17,7 +17,7 @@ The window opens on **this board**: the setup screens of its BIOS release and th
   recovery). Left and Right switch tabs.
 - **Items:** Up and Down select, Enter opens a submenu, Esc goes back. The right side shows the item's help, its
   value and default, its options and where it is stored (for example `AmdSetup + 0x25F, 4 bytes`).
-- **Show hidden items** (or H): also lists what the BIOS does not show, in grey italics, with the reason: hidden
+- **Show hidden items** (or H): also lists what the BIOS does not show, in gray italics, with the reason: hidden
   always, hidden by the value of another setting, or a menu no link leads to. The extra **Not linked** tab opens
   the menus that no menu links to.
 - **The status** next to the title: Stock BIOS or Modded BIOS. Hover it to see why.

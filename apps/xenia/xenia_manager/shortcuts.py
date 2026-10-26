@@ -4,7 +4,7 @@ game full screen (bc250-xenia-run --fullscreen=true "<game>").
 
 The file and its format are core's (bc250_core.steam). The shortcut runs the wrapper, not the AppImage, so its Steam
 number (from the program and the name) stays the same whatever Xenia's build. The app reads no pictures from a game,
-so the artwork is drawn from the app's icon by core's steam_art: a background in the icon's colour, the icon and the
+so the artwork is drawn from the app's icon by core's steam_art: a background in the icon's color, the icon and the
 game's title. The pictures from SteamGridDB (core's covers), when they are kept for the game, replace the drawn ones
 they cover."""
 
@@ -54,7 +54,7 @@ def ours(item: dict) -> bool:
 
 
 def for_game(game: Game):
-    """Recognises the game's shortcut, whatever its name now."""
+    """Recognizes the game's shortcut, whatever its name now."""
     return lambda item: _file(item) == str(game.file)
 
 

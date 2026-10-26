@@ -20,7 +20,7 @@ row as the window fits; Bazzite Test is always the first tile on Sustainable:
 
 - **The name**, without the suite's "BC-250" prefix.
 - **The icon.** Click it to open the app; an app with two windows (CU Bisect, Cores Bisect) asks which one. The
-  icon is grey while the app is not installed, and dims a little under the mouse while it opens the app. Hover over
+  icon is gray while the app is not installed, and dims a little under the mouse while it opens the app. Hover over
   it to see what the app does, its state and the release this portal pins.
 - **A red dot** in the icon: an update is available.
 - **A red circular arrow** in the icon: reinstall the app. It is installed, but not by this portal (by hand, or
@@ -102,14 +102,14 @@ checkout uses its own checkout.
   The portal remembers the choice. When the board has no audio output, the pill says No and is disabled, and the
   portal stays silent.
 - **Theme switcher**, a pill at the top showing the theme; click it for the next one: the look of every app in the
-  suite. **Gunmetal** (dark, cool blue-grey, the default), **Silver** (light) or **Warm** (dark warm grey with a
+  suite. **Gunmetal** (dark, cool blue-gray, the default), **Silver** (light) or **Warm** (dark warm gray with a
   bronze accent). It is one choice for all the apps, kept in `~/.config/bc250-bazzite-suite/theme`; each app takes
   it the next time it starts, the portal too.
 - **Wallpaper**, a pill at the top: a picture behind the portal, none until you choose one. Click the pill, then
   **Choose a picture…** for your own (**Custom**), **Example wallpaper** to see how one looks with the picture that
   comes with the portal (**Example**), or **No wallpaper** for none. Your picture must be a PNG, JPEG or WebP of at least 1920 x 1080 pixels, in 16:9 (1920 x
   1080, 2560 x 1440, 3840 x 2160); the portal refuses another and says why. It fills the window, under a veil of the
-  theme's colour so the text stays readable. **Transparency**, a slider in the same menu, sets that veil from 0 to
+  theme's color so the text stays readable. **Transparency**, a slider in the same menu, sets that veil from 0 to
   90 % (60 % at first): move it up for a dark or busy picture, so the icons stand out, down to see more of the
   picture. The window changes while you move it, and the portal remembers it. The portal keeps a copy in
   `~/.local/share/bc250-bazzite-suite/portal/`, so the original may be moved or deleted; the portal's `--purge`
@@ -181,7 +181,7 @@ for. The icons are drawn from a 512 px picture, so they stay sharp on a 4K scree
 | F11 | Y or Start | Back to Suite Desktop Mode |
 | Escape | B | Back, in a menu or a question |
 
-An app that is not installed is grey. Installing runs the app's installer in a terminal, so the portal asks, and
+An app that is not installed is gray. Installing runs the app's installer in a terminal, so the portal asks, and
 then goes back to Suite Desktop Mode to do it. A red dot or a red circular arrow marks an update or a reinstall as in
 Suite Desktop Mode; to update, switch back to it.
 

@@ -102,7 +102,7 @@ about your system: read it before you post it. Security problems: see [SECURITY.
   during a run asks first and stops the tests cleanly. A run of a minute or more that finishes while
   you're in another window gives a desktop notification (*Settings → General*).
 * The app remembers its window size, the last page, the panel sizes and the stress settings.
-* **Show Logs** lists earlier runs, coloured like the live output; **Settings** has privacy options, a
+* **Show Logs** lists earlier runs, colored like the live output; **Settings** has privacy options, a
   system overview, log cleanup, version information and **Print results**: it saves the Base and
   Extended System scores and the other header boxes as a compact "BC-250 Bazzite Test Results" card
   (results.png), easy to share and compare with other users.
@@ -188,7 +188,7 @@ test name to open its page, or *Show in log* to open the run log at that test.
   uses and, with MangoHud logging on, its FPS.
 * **↓ / ↑:** download and upload traffic over the wired and Wi-Fi interfaces, from `/proc/net/dev`.
 * **Hz:** the refresh rate of the display the app is on.
-* **Live:** switch it off to stop sampling. It also pauses while the window is minimised.
+* **Live:** switch it off to stop sampling. It also pauses while the window is minimized.
 
 It only reads a few files from `/proc` and `/sys` (about 1 ms per sample, a full process scan every 10 s) and
 slows down by itself if sampling gets expensive, so it is safe to keep running while you play.
@@ -206,7 +206,7 @@ results*.
 * Only one run happens at a time; the buttons are off while it runs.
 * **Stop** stops the current run: the tests first end their CPU and GPU load and remove their temporary files.
   The test that was running goes back to not run.
-* A test takes the colour of the worst line it logged (error over warning over success over info). Its output
+* A test takes the color of the worst line it logged (error over warning over success over info). Its output
   also streams into the terminal of the test's own category page. The **Hints** panel collects suggested fixes
   (⚠) and background notes (ℹ).
 
@@ -272,7 +272,7 @@ administrator rights, and a red bar at the top says so: reinstall the app.
   the *File* list. A clock that drops while the temperature climbs is thermal throttling; a line that simply
   stops is the moment the board froze.
 * **Benchmark history** (Performance page): bar charts per run of the scores against the baseline, GPU FP32, CPU
-  multi- and single-thread, VRAM bandwidth and GPU clock. Bars are labelled *#run CUs threads*; hover for the
+  multi- and single-thread, VRAM bandwidth and GPU clock. Bars are labeled *#run CUs threads*; hover for the
   date, mitigations and kernel.
 * **Any CSV** in Show Logs: one panel per numeric column.
 
@@ -361,7 +361,7 @@ The summary reports peak VRAM and GTT use as a percentage of each budget, warnin
 GTT) and 85% GTT (the GPU is close to running out of memory).
 
 Every line is tagged `SUCCESS`, `INFO`, `WARNING` or `ERROR`, and a `[SUMMARY]` block at the end
-reports the overall verdict. In the app these become the button colours, the counters and the hints panel.
+reports the overall verdict. In the app these become the button colors, the counters and the hints panel.
 
 ---
 
@@ -387,7 +387,7 @@ reports the overall verdict. In the app these become the button colours, the cou
 | 05 | DNS Resolution         | Resolves a known hostname.                                                |
 | 06 | Public Internet Access | Fetches a URL over HTTPS.                                                 |
 | 07 | Open Ports             | Lists listening TCP/UDP sockets.                                          |
-| 08 | NTP Synchronization    | Confirms the clock is synchronised.                                       |
+| 08 | NTP Synchronization    | Confirms the clock is synchronized.                                       |
 | 30 | SSH Service            | Reports `sshd.service` / `sshd.socket` state (off by default on Bazzite). |
 | 53 | Wi-Fi Adapter          | Every Wi-Fi adapter and whether the kernel has a driver for it. See below. |
 | 44 | Internet Speed         | **Opt-in**: run it from its button on the Network page. See below.       |
@@ -404,7 +404,7 @@ reports the overall verdict. In the app these become the button colours, the cou
 * A VPN in the path is noted, because then the VPN is measured, not the line.
 * Every run is appended to `bc250-speedtest-history.csv`; **Show graph** compares all runs.
 * Install Ookla's CLI: download the Linux x86_64 `.tgz` from <https://www.speedtest.net/apps/cli> and put the
-  `speedtest` binary in `~/.local/bin`. Running it accepts Ookla's licence and GDPR terms.
+  `speedtest` binary in `~/.local/bin`. Running it accepts Ookla's license and GDPR terms.
 
 **What test 53 says about Wi-Fi.** The BC-250 has no Wi-Fi of its own; a USB stick (or a PCIe card) adds it. The
 test lists every Wi-Fi adapter it finds, with its USB or PCI ID and its driver, and says for each one:
@@ -965,7 +965,7 @@ with the override. The BIOS route remains an alternative, not a requirement.
 
 ---
 
-## Licence
+## License
 
 Copyright © 2026 Philip.
 

@@ -2,17 +2,19 @@
 
 # Design
 
-A suite has one design: the same colours, icons, fonts and shapes in every app and in the suite's wiki. Each suite
+A suite has one design: the same colors, icons, fonts and shapes in every app and in the suite's wiki. Each suite
 may have a design of its own.
 
 Two listings at the root of the repository show what is in use:
 
-- [DESIGN.md](https://github.com/RobertoTorino/nexus/blob/main/DESIGN.md): every colour, where it is defined and
+- [DESIGN.md](https://github.com/RobertoTorino/nexus/blob/main/DESIGN.md): every color, where it is defined and
   what it is for, with a sample of each.
 - [ICONS.md](https://github.com/RobertoTorino/nexus/blob/main/ICONS.md): every icon, per suite, and where it is used.
 
 `tools/make_design.py` and `tools/make_icons.py` write them. Change the listing in the script and run it; `--check`
-says whether a file is up to date.
+says whether a file is up to date. `make_design.py --check` also compares each wiki's stylesheet with its listing,
+and the tests in `tools/tests/` do the same for the colors, the Material icons on the pages and the files of the
+Nexus icon: a color or an icon added to a wiki fails the tests until the listing has it.
 
 ## Try a design in the wiki
 
@@ -89,16 +91,16 @@ While `mkdocs serve` runs, every page has a **Design** button in its bottom left
 CSS variables of that wiki's own stylesheet, and the theme's fonts. Its first line names the wiki it changes and the
 file the changes belong in. Add `?design` to an address to open the page with the panel open.
 
-Each group is a part of the design, and each row says what it colours or sizes, with the variable's name below.
+Each group is a part of the design, and each row says what it colors or sizes, with the variable's name below.
 Hover over a row to see where the stylesheet uses the variable. The groups, the same in every wiki:
 
 | Group | What it changes |
 | --- | --- |
-| The suite's colours (Nexus's colours on the Nexus page) | The few colours the rest of the design is made from. A change here changes every place that uses the colour. |
+| The suite's colors (Nexus's colors on the Nexus page) | The few colors the rest of the design is made from. A change here changes every place that uses the color. |
 | Corners | How round notes, code blocks, tables and pictures are. |
-| Header | The bar at the top: its background, the colour of the name and the links in it, and the fill behind a link under the pointer. |
-| Material's main colour | Buttons and Material's highlights, and the text on them. |
-| Material's hover colour | Links and buttons under the pointer. |
+| Header | The bar at the top: its background, the color of the name and the links in it, and a link under the pointer (on the BC250 Bazzite Suite's wiki a fill behind it, on the Nexus page the dimmed word). |
+| Material's main color | Buttons and Material's highlights, and the text on them. |
+| Material's hover color | Links and buttons under the pointer. |
 | The page | The page background and the links in the text. |
 | Buttons | The shadow under a button under the pointer. |
 | Tables | The background and text of a table's headings. |
@@ -106,10 +108,10 @@ Hover over a row to see where the stylesheet uses the variable. The groups, the 
 | The home page's footer | Its background, the name and a link under the pointer, and the strip with the notice. |
 | Fonts | The theme's fonts, set in `mkdocs.yml`. |
 
-To change only the header, use **Header**. A change to a colour under **The suite's colours** changes the header too
-when the header uses that colour (it uses the deep colour until you set its background).
+To change only the header, use **Header**. A change to a color under **The suite's colors** changes the header too
+when the header uses that color (it uses the deep color until you set its background).
 
-- A colour has a colour picker; a colour with an opacity keeps it.
+- A color has a color picker; a color with an opacity keeps it.
 - A size (`px`, `rem`, `em`) has a slider.
 - Every variable has a text field for any value. A font field suggests common fonts; a font the device does not have
   falls back to the next one in the list.
@@ -119,11 +121,26 @@ A change shows at once, and goes to every page open on the same server within a 
 TV all show the same mock. The panel's top line says **shared with every device**, or **this device only** when the
 server cannot be reached; the changes then stay in that browser.
 
-**Copy CSS** copies the changed variables, under the rules that define them, to paste into the stylesheet the
-panel's first line names: `nexus/docs/stylesheets/nexus.css` for the Nexus page, `docs/stylesheets/suite.css` for the
-BC250 Bazzite Suite's wiki. Over
-`http://` from another device the browser has no clipboard for it: the CSS below the buttons is then selected, to
-copy by hand.
+**Copy CSS** copies the changed variables alone, under the rules that define them: a few lines, not a stylesheet.
+**Copy stylesheet** copies the whole stylesheet with the changes written in, in place: the file as it is, comments
+and all, only the values changed. Paste it over the stylesheet the panel's first line names:
+`nexus/docs/stylesheets/nexus.css` for the Nexus page, `docs/stylesheets/suite.css` for the BC250 Bazzite Suite's
+wiki. (The changes alone, pasted at the end of the file, work too, as the last rule wins, but then a variable is set
+twice.) Over `http://` from another device the browser has no clipboard for it: the text below the buttons is then
+selected, to copy by hand.
+
+Without the browser, from the checkout:
+
+```bash
+python3 tools/apply_design.py nexus/mkdocs.yml    # one wiki; without an argument, every wiki that has a mock
+```
+
+Both write the same file: `tools/tests/test_design_panel.py` runs the panel's script in Node.js against the tool
+(on Bazzite, `brew install node`; the test skips without it).
+
+It writes the mock (`.design-mock.json` beside the wiki's `mkdocs.yml`) into the wiki's stylesheet the same way,
+then empties the mock, as **Reset all** does, so the pages show the saved stylesheet. A font changed under **Fonts**
+is set in `mkdocs.yml`, not in a stylesheet: the tool names it and leaves it to you.
 
 The mock is kept next to the site's `mkdocs.yml`, in `.design-mock.json`, until **Reset all**; it outlasts a restart
 of the server, and git ignores it. The panel is never part of `mkdocs build` or the published wiki.
@@ -149,6 +166,6 @@ changes where it would on that screen; the browser's own bars take a little of t
 Tick the sizes to show, or add one as `1600x900`. Type another page's address in **Page** to show that one. The
 pages follow the mock and reload when the site is built again, so a saved stylesheet shows on every size at once.
 
-Every colour in the stylesheets is a variable, so every colour can be changed in the panel; sizes are variables
+Every color in the stylesheets is a variable, so every color can be changed in the panel; sizes are variables
 where the panel lists them. To make another size adjustable, give it a variable in the stylesheet and use that. Put a comment before its rule (the group's name) and one after the
 variable on its line (what it does): the panel shows them, and the tests ask for them.

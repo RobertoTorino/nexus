@@ -12,7 +12,7 @@ def test_command_runs_the_helper_isolated():
 
 
 def test_parse():
-    assert privileged.parse(126, "").error.startswith("Not authorised")
+    assert privileged.parse(126, "").error.startswith("Not authorized")
     ok = privileged.parse(0, 'noise\n{"ok": true, "block": {}}\n')
     assert ok.ok and ok.data == {"ok": True, "block": {}}
     bad = privileged.parse(1, '{"ok": false, "error": "no"}')

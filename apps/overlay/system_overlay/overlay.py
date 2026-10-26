@@ -54,7 +54,7 @@ def _join(*parts: str | None) -> str:
 
 
 def format_reading(reading: Reading, refresh_hz: float | None) -> dict[str, tuple[str, str]]:
-    """Row key -> (text, colour; "" = the normal text colour)."""
+    """Row key -> (text, color; "" = the normal text color)."""
     r = reading
     return {
         "cpu": (_join(f"{r.cpu_load:.0f} %" if r.cpu_load is not None else None,

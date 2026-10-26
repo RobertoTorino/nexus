@@ -178,7 +178,7 @@ def test_github_status_is_read_from_the_status_page(monkeypatch):
 
 
 def test_github_status_is_a_pill_that_opens_the_status_page(window, monkeypatch):
-    """Green while GitHub is up, red while githubstatus.com reports a problem, grey while not known; a click opens
+    """Green while GitHub is up, red while githubstatus.com reports a problem, gray while not known; a click opens
     https://www.githubstatus.com/ (owner, 19-10-2026). A pill, as the apps' status boxes (owner, 20-10-2026)."""
     from PyQt6.QtGui import QColor, QDesktopServices
     from bc250_core.theme import GREEN, GREY, RED

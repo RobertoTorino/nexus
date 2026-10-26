@@ -52,7 +52,7 @@ The **Title ID** column shows the game's ID (4D5307E6), from the `.xex` or the p
 Tick the games you want in Game Mode and press **Update Game Mode**. The app adds them to Steam as non-Steam games
 and takes out the games you unticked and games it no longer finds. Steam keeps these files in memory, so it closes
 for the change and starts again in the background. The pictures on the tiles are drawn from the app's icon, with the
-game's title, on a background in the icon's colour, and the icon is the logo on the banner.
+game's title, on a background in the icon's color, and the icon is the logo on the banner.
 
 In Steam each game's name starts with its system, for example **[X360] Halo 3**, so it stands apart from the same
 title on Steam or on another system in Steam's menus.

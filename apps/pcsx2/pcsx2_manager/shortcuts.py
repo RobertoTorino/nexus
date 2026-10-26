@@ -7,7 +7,7 @@ the game does).
 The file and its format are core's (bc250_core.steam). The shortcut runs the wrapper, not the AppImage, so its
 Steam number (from the program and the name) stays the same when the app brings another PCSX2. A PS2 disc carries
 no pictures, so the artwork is drawn from the app's icon by core's steam_art (owner, 16-10-2026): a background in
-the icon's colour, the icon and the game's title. The pictures from SteamGridDB (core's covers), when kept for the
+the icon's color, the icon and the game's title. The pictures from SteamGridDB (core's covers), when kept for the
 game, replace the drawn ones they cover: the portrait, the wide picture, the banner and the logo."""
 
 from __future__ import annotations
@@ -55,7 +55,7 @@ def ours(item: dict) -> bool:
 
 
 def for_game(game: Game):
-    """Recognises the game's shortcut, whatever its name now."""
+    """Recognizes the game's shortcut, whatever its name now."""
     return lambda item: _file(item) == str(game.file)
 
 

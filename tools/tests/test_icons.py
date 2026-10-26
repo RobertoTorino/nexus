@@ -79,7 +79,7 @@ def _image(path, size, color, width=None):
 
 
 def _color(path):
-    """The colour in the middle, each channel 0 or 255: WebP is lossy."""
+    """The color in the middle, each channel 0 or 255: WebP is lossy."""
     with Image.open(path) as image:
         pixel = image.convert("RGB").getpixel((image.width // 2, image.height // 2))
     return tuple(255 if channel > 127 else 0 for channel in pixel)

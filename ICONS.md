@@ -38,7 +38,7 @@ category's icon (`icons/<category>/`, at 1024, 512, 256 and 128 px) to these pla
 
 ### The portal's symbols
 
-Drawn with QPainter in `portal/bc250_portal/glyphs.py`, in the theme's text colour (shown here on Gunmetal) or red.
+Drawn with QPainter in `portal/bc250_portal/glyphs.py`, in the theme's text color (shown here on Gunmetal) or red.
 
 | Icon | Name | Used for |
 | --- | --- | --- |
@@ -70,7 +70,7 @@ Qt's Fusion style draws them.
 
 ### Material Design icons in the wiki
 
-Drawn by MkDocs Material in the wiki's colours.
+Drawn by MkDocs Material in the wiki's colors.
 
 | Icon | Name | Used for |
 | --- | --- | --- |
@@ -118,3 +118,23 @@ Characters of the font, used as icons in labels and buttons.
 | ● | Every app on core | The dot of a status box (`bc250_core/widgets.py`). |
 | ● | Portal | Outside the suite. |
 | ✓ ✗ | BC-250 Installer Tests | A test passed, failed. |
+
+## Nexus
+
+### The Nexus icon
+
+| Icon | File | Used for |
+| --- | --- | --- |
+| <img src="nexus/images/nexus-256.png" width="48" alt=""> | `nexus/images/nexus-<size>.png` (1024, 512, 256 and 128 px) | The icon of Nexus, the owner's drawing (25-10-2026): the set the copies are made from. |
+| <img src="nexus/docs/images/nexus.webp" width="48" alt=""> | `nexus/docs/images/nexus.webp`, `.png` (256 px) | The Nexus page's header logo and its home page's footer (`.webp`), and its favicon (`.png`). |
+
+### Material Design icons on the Nexus page
+
+Drawn by MkDocs Material in the page's colors.
+
+| Icon | Name | Used for |
+| --- | --- | --- |
+| <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/file-tree.svg" width="24" alt=""> | `material-file-tree` | Home: the card "Nexus". |
+| <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/view-grid.svg" width="24" alt=""> | `material-view-grid` | Home: the card "A suite". |
+| <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/application.svg" width="24" alt=""> | `material-application` | Home: the card "An app". |
+| <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/chip.svg" width="24" alt=""> | `material-chip` | Home: the card "BC250 Bazzite Suite". |
