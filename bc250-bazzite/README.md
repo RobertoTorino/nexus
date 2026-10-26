@@ -10,7 +10,7 @@ and removes them: BC-250 Bazzite Test is always installed, every other app is op
 
 **Beta:** The suite is in active development: features and layout may still change between releases.
 
-![wiki.png](portal/images/wiki.png)
+![The wiki](portal/images/wiki.webp)
 
 ## Install
 

@@ -86,6 +86,8 @@ NEXUS_ICON = [
      "The icon of Nexus, the owner's drawing (25-10-2026): the set the copies are made from."),
     ("nexus/docs/images/nexus.webp", "`nexus/docs/images/nexus.webp`, `.png` (256 px)",
      "The Nexus page's header logo and its home page's footer (`.webp`), and its favicon (`.png`)."),
+    ("nexus/docs/images/nexus-hero.webp", "`nexus/docs/images/nexus-hero.webp` (1024 px)",
+     "The Nexus page's home: the icon under the headline, a WebP copy of the 1024 px drawing."),
 ]
 
 NEXUS_MATERIAL = [

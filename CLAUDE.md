@@ -181,6 +181,12 @@ written for the person using the tool.
 **American English** (owner, 26-10-2026) in everything written: color, gray, center, canceled, license, catalog,
 labeled. Identifiers, settings keys, file names and recorded data keep the spelling they have.
 
+**Pictures are WebP wherever WebP is accepted** (owner, 26-10-2026): a picture put on a page (the wikis, the Nexus
+page, a README on GitHub) or in an app's window is a `.webp` copy of its source, as the app icons and the wiki's
+app pictures are (`make_icons.py` and the wiki's hook already convert); a PNG stays only where WebP is not accepted
+or expected: a favicon, the `-128.png` menu and Desktop icons (the icon theme), the source drawings in `nexus/images/`
+and a suite's `icons/`, and pictures a ported tool brought with it.
+
 **Missing tooling is installed, not worked around** (owner, 26-10-2026): when a check needs a tool the machine
 lacks (Node.js for the design panel's script, shellcheck, fakeroot, podman), get it (`brew install` on Bazzite)
 and run the check, rather than reviewing by eye.

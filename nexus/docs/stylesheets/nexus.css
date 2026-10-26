@@ -245,6 +245,14 @@
   margin: 0;
 }
 
+/* The Nexus icon under the headline (nexus/docs/images/nexus-hero.webp, the owner's drawing at 1024 px). */
+.md-typeset .home-hero__icon {
+  display: block;
+  width: min(60vw, 20rem);
+  height: auto;
+  margin: 0 auto 2.4rem;
+}
+
 /* A dark section with a grid of cards, their titles in white. */
 .home-section--dark {
   background: var(--nexus-section-bg);

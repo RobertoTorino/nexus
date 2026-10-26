@@ -31,6 +31,10 @@ project under its license) and are listed in that suite's README; each app keeps
 
 ## Disclaimer
 
-Nexus and its suites are independent community projects, not affiliated with or endorsed by the makers of the
-hardware, the operating systems, the consoles, the emulators or the other programs the apps work with; their names
-are used only to say what the apps work with. Each suite's README names them.
+Nexus and its suites are independent community projects, not affiliated with or endorsed by AMD, ASRock, the Bazzite /
+Universal Blue project, Sony, Microsoft, Nintendo, Valve, or the makers of the emulators and the other programs the
+apps work with. BC-250 is AMD's product name and Bazzite the Universal Blue project's. PlayStation, PS4, PS5, PS3,
+PS2, PSP, PS Vita, DualSense and Remote Play are Sony's; Xbox, Xbox 360, Xbox Cloud Gaming and Windows are
+Microsoft's; Steam, Steam Deck and Big Picture are Valve's; the names of Nintendo's consoles, of the emulators
+(shadPS4, RPCS3, PPSSPP, PCSX2, Vita3K, Xenia) and of Decky Loader, HelixSR and DirectMesh belong to their owners. The
+suites use them only to say what their apps work with.

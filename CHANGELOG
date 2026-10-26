@@ -1,3 +1,18 @@
+Changelog: 26-10-2026 11:13:35
+
+The Nexus page's footer and the root README carry the full disclaimer (owner, 26-10-2026: the footer still named AMD,
+Universal Blue and Sony alone): the one the BC250 Bazzite Suite's wiki Home has, with ASRock, Microsoft, Nintendo,
+Valve, the consoles, the emulators, Decky Loader, HelixSR and DirectMesh, worded for Nexus and its suites. Pictures are
+WebP wherever WebP is accepted (owner, 26-10-2026; the rule is in CLAUDE.md): the suite README's picture of the wiki is
+a WebP copy, and a PNG stays only for favicons, the -128.png menu icons, the source drawings and a ported tool's own
+icons.
+
+Changelog: 26-10-2026 11:09:26
+
+The Nexus page's home shows the Nexus icon under the headline (owner, 26-10-2026): nexus/docs/images/nexus-hero.webp,
+a WebP copy of the owner's 1024 px drawing (122 KB), centered, at most 20 rem wide and 60 % of a phone's width;
+listed in ICONS.md.
+
 Changelog: 26-10-2026 11:01:38
 
 The root README is Nexus's alone (owner, 26-10-2026: on GitHub it still read as the BC250 Bazzite Suite's): the name,

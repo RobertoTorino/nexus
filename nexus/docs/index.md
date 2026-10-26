@@ -11,6 +11,7 @@ hide:
 # Nexus { .home-hero__lead }
 <p class="home-hero__claim">One home for the suites.</p>
 </div>
+![The Nexus icon](images/nexus-hero.webp){ .home-hero__icon }
 </section>
 
 <section class="home-section home-section--dark" markdown>
