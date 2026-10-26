@@ -228,8 +228,8 @@ class AppsPage(QWidget):
             log.append(f"portal: {minimum} in " + ", ".join(str(p.relative_to(root)) for p in changed)
                        + f" and CHANGELOG entry \"{text}\": apps.toml changed since {base} ({why}), so CI needs this "
                        "bump in the same push. The portal release follows in step 2, once the apps are pinned.")
-        log += ["", run_check(root, "tools/check_versions.py"),
-                run_check(root, "tools/check_manifest.py", "--base", base)]
+        log += ["", run_check(root, rp.VERSIONS_CHECK),
+                run_check(root, rp.MANIFEST_CHECK, "--base", base)]
         if tags:
             commands = rp.app_commands(tags)
             log += ["Then:", commands]
@@ -440,8 +440,8 @@ class PortalPage(QWidget):
         text = rp.portal_text(new, pins, self.portal_notes.text(), withdrawn)
         rp.add_changelog_entry(root, portal, text)
         log += [f"portal: CHANGELOG entry \"{text}\"", "",
-                run_check(root, "tools/check_versions.py"),
-                run_check(root, "tools/check_manifest.py", "--base", self.release_window.base())]
+                run_check(root, rp.VERSIONS_CHECK),
+                run_check(root, rp.MANIFEST_CHECK, "--base", self.release_window.base())]
         # Bumped before step 1's push (an app added, a pin moved): the bump goes into that push, with the app tags
         # after it; the portal release comes after Pin. Otherwise commit, test on a board, push and tag the portal.
         pending = rp.untagged_releases(units)

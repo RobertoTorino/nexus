@@ -47,6 +47,8 @@ CHECK_SCRIPT = f"{SUITE_DIR}/apps/suite/check-release.sh"  # relative to the che
 RECORD_SCRIPT = f"{SUITE_DIR}/tools/record-tour.sh"   # the portal's video tour, relative to the checkout
 TAG_SCRIPT = "tools/tag-release.sh"     # tags only a pushed HEAD that holds the version: never one before the bump
 CI_LOCAL = "tools/ci-local.sh"          # CI's jobs here, in a container (Linux): the push only when they pass
+VERSIONS_CHECK = "tools/check_versions.py"                        # the Nexus tools' check, every suite
+MANIFEST_CHECK = f"{SUITE_DIR}/tools/check_manifest.py"          # the suite's manifest check
 CHECKOUT_ONLY = ".checkout-only"        # an app folder with this marker runs from the checkout and is never released
 _VERSION = re.compile(r"^\d+\.\d+\.\d+$")
 
@@ -1112,7 +1114,7 @@ def tag_command(tags: list[str]) -> str:
 def commit_command(message: str, base: str, amend: bool = False, python: str = "python3") -> str:
     """The git commit button: the version and manifest checks first (CI's quick ones), the commit only when they
     pass. *amend*: the staged changes join HEAD, with its message."""
-    checks = f"{python} tools/check_versions.py && {python} tools/check_manifest.py --base {shlex.quote(base)}"
+    checks = f"{python} {VERSIONS_CHECK} && {python} {MANIFEST_CHECK} --base {shlex.quote(base)}"
     commit = "git commit --amend --no-edit" if amend else f"git commit -m {shlex.quote(message)}"
     return f"{checks} && {commit}"
 

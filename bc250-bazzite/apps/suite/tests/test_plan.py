@@ -207,7 +207,7 @@ def test_app_commands_amend_the_unpushed_release_commit():
 def test_git_button_commands():
     assert rp.add_command() == "git add -A && tools/fix-modes.sh && git status --short"
     assert rp.commit_command("Release alpha-v0.2.0", "origin/main") == (
-        "python3 tools/check_versions.py && python3 tools/check_manifest.py --base origin/main && "
+        f"python3 {rp.VERSIONS_CHECK} && python3 {rp.MANIFEST_CHECK} --base origin/main && "
         "git commit -m 'Release alpha-v0.2.0'")                       # the checks first, the commit only after
     assert rp.commit_command("it's", "pushed", python="/v/python").endswith("git commit -m 'it'\"'\"'s'")
     assert rp.commit_command("", "pushed", amend=True).endswith(" && git commit --amend --no-edit")
@@ -296,7 +296,7 @@ def test_window_git_buttons(window, repo, monkeypatch):
     assert not commit.isEnabled() and "Type a commit message first." in commit.toolTip()
     window.commit_message.setText("Release alpha-v0.1.1, beta-v0.1.0")
     commit.click()
-    assert ran[-1].endswith(" tools/check_manifest.py --base pushed && git commit -m 'Release alpha-v0.1.1, beta-v0.1.0'")
+    assert ran[-1].endswith(f" {rp.MANIFEST_CHECK} --base pushed && git commit -m 'Release alpha-v0.1.1, beta-v0.1.0'")
     window.commands.last_code, window.committing = 1, True           # the checks failed: the message stays
     window.refresh()
     assert window.commit_message.text() == "Release alpha-v0.1.1, beta-v0.1.0"
