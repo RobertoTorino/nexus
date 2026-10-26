@@ -83,6 +83,22 @@ def manifest_path(root: Path) -> Path:
     return suite_dir(root) / "portal" / "apps.toml"
 
 
+def manifest_copy(root: Path) -> Path | None:
+    """The root's copy of apps.toml, for the portals installed before the suite moved into bc250-bazzite/ (they
+    read it at a tag for their update notice); check_manifest.py keeps it identical. None once the owner removed it,
+    or while the checkout is laid out as a suite."""
+    copy = root / "portal" / "apps.toml"
+    return copy if suite_dir(root) != root and copy.is_file() else None
+
+
+def write_manifest(root: Path, text: str) -> list[Path]:
+    """Writes apps.toml, and the root's copy while there is one. Returns the files written."""
+    paths = [manifest_path(root)] + [p for p in [manifest_copy(root)] if p]
+    for path in paths:
+        path.write_bytes(text.encode("utf-8"))
+    return paths
+
+
 def version_tuple(version: str) -> tuple[int, int, int]:
     a, b, c = (int(x) for x in version.split("."))
     return a, b, c
@@ -465,10 +481,10 @@ def withdraw(root: Path, unit: Unit, reason: str, now: datetime.datetime | None 
     """Marks the app's pinned release withdrawn (or, with no reason, takes that back) in apps.toml, with a CHANGELOG
     entry in the app. Returns the files changed."""
     path = manifest_path(root)
-    path.write_bytes(set_withdrawn(path.read_text(encoding="utf-8"), unit.key, reason).encode("utf-8"))
+    paths = write_manifest(root, set_withdrawn(path.read_text(encoding="utf-8"), unit.key, reason))
     text = (f"Withdrawn: {unit.pinned_tag}. {reason.strip()}" if reason.strip() else
             f"Withdrawal of {unit.pinned_tag} taken back.")
-    return [path, add_changelog_entry(root, unit, text, now)]
+    return [*paths, add_changelog_entry(root, unit, text, now)]
 
 
 def changed_withdrawals(root: Path, base: str) -> list[tuple[str, str]]:
@@ -507,9 +523,8 @@ def pin_candidates(units: list[Unit]) -> list[Unit]:
 
 
 def pin(root: Path, unit: Unit, sha256: str) -> None:
-    path = manifest_path(root)
-    text = path.read_text(encoding="utf-8")
-    path.write_bytes(pin_app.pin(text, unit.key, unit.tag, sha256.lower()).encode("utf-8"))
+    text = manifest_path(root).read_text(encoding="utf-8")
+    write_manifest(root, pin_app.pin(text, unit.key, unit.tag, sha256.lower()))
     unit.pinned_tag, unit.pinned_sha = unit.tag, sha256.lower()
 
 
@@ -519,8 +534,8 @@ def follow_unreleased_pin(root: Path, unit: Unit) -> bool:
     if unit.kind != "app" or not unit.pinned_tag or unit.pinned_tag == unit.tag \
             or unit.pinned_tag in tags_of(root, unit.key):
         return False
-    path = manifest_path(root)
-    path.write_bytes(pin_app.pin(path.read_text(encoding="utf-8"), unit.key, unit.tag, "").encode("utf-8"))
+    text = manifest_path(root).read_text(encoding="utf-8")
+    write_manifest(root, pin_app.pin(text, unit.key, unit.tag, ""))
     unit.pinned_tag, unit.pinned_sha = unit.tag, ""
     return True
 

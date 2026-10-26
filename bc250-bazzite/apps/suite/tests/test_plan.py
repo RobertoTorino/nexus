@@ -6,6 +6,7 @@ from __future__ import annotations
 import datetime
 import json
 import os
+import shutil
 import subprocess
 import sys
 from dataclasses import replace
@@ -1347,3 +1348,36 @@ def test_close_issues_command():
     assert rp.close_issues_command([12, 14], " Decky pinned at v3.3.0, it's in step ") == (
         f"gh issue close 12 --repo {repo} --comment 'Decky pinned at v3.3.0, it'\"'\"'s in step' && "
         f"gh issue close 14 --repo {repo} --comment 'Decky pinned at v3.3.0, it'\"'\"'s in step'")
+
+
+def test_the_root_copy_of_apps_toml_follows_the_suites(repo, tmp_path):
+    """Nexus keeps a copy of apps.toml at the root for the portals installed before the suite moved into
+    bc250-bazzite/ (check_manifest.py wants it identical; the owner's portal-v10.0.0 commit stopped on it,
+    26-10-2026): every write of the suite's apps.toml, a pin, a moved unreleased pin or a withdrawal, writes the
+    copy too, as long as there is one. A checkout laid out as a suite (the fixture) has no copy."""
+    assert rp.manifest_copy(repo) is None
+    nexus = tmp_path / "nexus"                                # the checkout as Nexus lays it out
+    shutil.copytree(repo, nexus / rp.SUITE_DIR)
+    shutil.move(nexus / rp.SUITE_DIR / ".git", nexus / ".git")
+    shutil.move(nexus / rp.SUITE_DIR / "core", nexus / "core")
+    sh(nexus, "add", "-A")
+    sh(nexus, "commit", "-q", "-m", "move")
+    suite_toml, copy = nexus / rp.SUITE_DIR / "portal/apps.toml", nexus / "portal/apps.toml"
+    assert rp.manifest_path(nexus) == suite_toml and rp.manifest_copy(nexus) is None
+    copy.parent.mkdir()
+    shutil.copy(suite_toml, copy)
+    assert rp.manifest_copy(nexus) == copy
+    alpha = unit(nexus, "alpha")
+    rp.pin(nexus, alpha, SHA)
+    assert f'sha256 = "{SHA}"' in suite_toml.read_text() and suite_toml.read_bytes() == copy.read_bytes()
+    beta = unit(nexus, "beta")
+    rp.set_version(nexus, beta, "0.2.0")
+    assert rp.follow_unreleased_pin(nexus, beta)
+    assert 'tag = "beta-v0.2.0"' in copy.read_text() and suite_toml.read_bytes() == copy.read_bytes()
+    changed = rp.withdraw(nexus, unit(nexus, "beta"), "Broken.")
+    assert [p.relative_to(nexus).as_posix() for p in changed] == [
+        f"{rp.SUITE_DIR}/portal/apps.toml", "portal/apps.toml", f"{rp.SUITE_DIR}/apps/beta/CHANGELOG"]
+    assert 'withdrawn = "Broken."' in copy.read_text() and suite_toml.read_bytes() == copy.read_bytes()
+    copy.unlink()                                             # the owner removed the copy: the suite's alone
+    rp.withdraw(nexus, unit(nexus, "beta"), "")
+    assert "withdrawn" not in suite_toml.read_text() and not copy.exists()

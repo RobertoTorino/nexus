@@ -6,7 +6,8 @@
 
 Without --sha256 the checksum is read from the release's SHA256SUMS on GitHub. Only the tag and sha256 lines of
 that app's [apps.<app>] table change (a table without a sha256 line, a new app before its first release, gets one
-after its tag line); comments and layout stay. Afterwards bump portal/VERSION as
+after its tag line); comments and layout stay. The root's copy of apps.toml, for the portals installed before the
+suite moved into bc250-bazzite/, gets the same text while there is one. Afterwards bump portal/VERSION as
 tools/check_manifest.py asks (at least as much as the app moved) and add the app release to the portal CHANGELOG."""
 
 from __future__ import annotations
@@ -19,6 +20,8 @@ from pathlib import Path
 
 SUITE = Path(__file__).resolve().parent.parent
 MANIFEST = SUITE / "portal" / "apps.toml"
+ROOT_COPY = SUITE.parent / "portal" / "apps.toml"   # the root's copy for the portals installed before the move,
+#                                                     while there is one (check_manifest.py wants it identical)
 REPO_URL = "https://github.com/RobertoTorino/nexus"
 _TAG = re.compile(r"^(?P<app>[a-z0-9-]+)-v\d+\.\d+\.\d+$")
 
@@ -64,8 +67,10 @@ def main(argv: list[str]) -> int:
     if not re.fullmatch(r"[0-9a-f]{64}", sha256):
         parser.error("--sha256 must be 64 hex digits")
     text = MANIFEST.read_text(encoding="utf-8")
-    MANIFEST.write_bytes(pin(text, match["app"], args.tag, sha256).encode("utf-8"))
-    print(f"pinned {args.tag} ({sha256[:16]}…) in {MANIFEST.relative_to(SUITE)}")
+    new_text = pin(text, match["app"], args.tag, sha256).encode("utf-8")
+    for path in [MANIFEST] + ([ROOT_COPY] if ROOT_COPY.is_file() else []):
+        path.write_bytes(new_text)
+        print(f"pinned {args.tag} ({sha256[:16]}…) in {path.relative_to(SUITE.parent)}")
     return 0
 
 

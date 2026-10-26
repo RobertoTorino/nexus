@@ -1,3 +1,9 @@
+Changelog: 26-10-2026 11:55:20
+
+bc250-bazzite/tools/pin_app.py writes the root's copy of portal/apps.toml as well as the suite's, while there is
+one, as Suite Releases now does (owner, 26-10-2026: the first portal release after the move stopped on the
+manifest check, since nothing had written the copy).
+
 Changelog: 26-10-2026 11:13:35
 
 The Nexus page's footer and the root README carry the full disclaimer (owner, 26-10-2026: the footer still named AMD,

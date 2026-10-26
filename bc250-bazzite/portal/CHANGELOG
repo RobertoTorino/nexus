@@ -1,3 +1,11 @@
+Changelog: 26-10-2026 12:03:41
+
+Release 10.0.0. Pins check-v0.16.0, gpu-v0.4.0, upscaler-v1.0.0, compute-v0.4.0, cores-v0.4.0, oc-v0.3.0, acpi-v0.4.0, overlay-v0.13.1, bios-v0.13.1, ace-v0.13.1, mesh-v0.15.0, vram-v0.13.1, fan-v0.13.0, wdriver-v0.13.0, cec-v0.14.0, sftp-v0.15.0, ips35-v0.7.0, hdcam-v0.9.0, hdcontrol-v0.9.0, mtool-v1.0.0, package-v2.0.0, ncgui-v0.13.1, rpcs3-v2.0.0, consoles-v1.14.0, clb-v0.9.0, shadps4-v2.0.0, decky-v0.15.0, datstation-v2.0.0, ppsspp-v0.14.0, pcsx2-v2.0.0, vita3k-v0.13.0, xenia-v0.9.0.
+
+Changelog: 26-10-2026 11:51:07
+
+Release 10.0.0. Pins check-v0.16.0, gpu-v0.4.0, upscaler-v1.0.0, compute-v0.4.0, cores-v0.4.0, oc-v0.3.0, acpi-v0.4.0, overlay-v0.13.1, bios-v0.13.1, ace-v0.13.1, mesh-v0.15.0, vram-v0.13.1, fan-v0.13.0, wdriver-v0.13.0, cec-v0.14.0, sftp-v0.15.0, ips35-v0.7.0, hdcam-v0.9.0, hdcontrol-v0.9.0, mtool-v1.0.0, package-v2.0.0, ncgui-v0.13.1, rpcs3-v2.0.0, consoles-v1.14.0, clb-v0.9.0, shadps4-v2.0.0, decky-v0.15.0, datstation-v2.0.0, ppsspp-v0.14.0, pcsx2-v2.0.0, vita3k-v0.13.0, xenia-v0.9.0.
+
 Changelog: 26-10-2026 10:29:27
 
 Added. install.sh --uninstall --all removes the whole suite at once (owner, 26-10-2026): instead of a question per

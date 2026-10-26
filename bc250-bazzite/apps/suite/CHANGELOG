@@ -1,3 +1,9 @@
+Changelog: 26-10-2026 11:55:20
+
+Fixed. Pin, a moved unreleased pin and Retract write the root's copy of apps.toml as well as the suite's, while
+there is one (owner, 26-10-2026: the portal-v10.0.0 commit stopped on check_manifest.py, which wants the copy the
+portals installed before the move read at a tag identical; nothing had written it since the move).
+
 Changelog: 26-10-2026 11:28:54
 
 Fixed. The commit command and the checks before it run the suite's manifest check at its place since the move,

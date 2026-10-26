@@ -45,3 +45,23 @@ def test_pin_adds_the_sha256_line_a_new_app_lacks():
     assert pin_app.pin(new, "a", "a-v0.1.1", "ef" * 32).count("sha256 =") == 2       # replaced, not added again
     with pytest.raises(SystemExit, match="no tag line"):
         pin_app.pin('[apps.a]\nname = "a"\n', "a", "a-v0.1.0", SHA)
+
+
+def test_main_writes_the_root_copy_too(tmp_path, monkeypatch, capsys):
+    """The root keeps a copy of apps.toml for the portals installed before the move (check_manifest.py wants it
+    identical): a pin from the command line writes both, and only the suite's once the owner removed the copy."""
+    text = '[apps.a]\ntag = "a-v1.0.0"\nsha256 = ""\n'
+    suite, copy = tmp_path / "suite/portal/apps.toml", tmp_path / "portal/apps.toml"
+    for path in (suite, copy):
+        path.parent.mkdir(parents=True)
+        path.write_text(text)
+    monkeypatch.setattr(pin_app, "SUITE", tmp_path / "suite")
+    monkeypatch.setattr(pin_app, "MANIFEST", suite)
+    monkeypatch.setattr(pin_app, "ROOT_COPY", copy)
+    assert pin_app.main(["a-v1.0.1", "--sha256", SHA]) == 0
+    assert suite.read_bytes() == copy.read_bytes() == f'[apps.a]\ntag = "a-v1.0.1"\nsha256 = "{SHA}"\n'.encode()
+    assert capsys.readouterr().out.splitlines() == [f"pinned a-v1.0.1 ({SHA[:16]}…) in suite/portal/apps.toml",
+                                                    f"pinned a-v1.0.1 ({SHA[:16]}…) in portal/apps.toml"]
+    copy.unlink()
+    assert pin_app.main(["a-v1.0.2", "--sha256", SHA]) == 0
+    assert 'tag = "a-v1.0.2"' in suite.read_text() and not copy.exists()
