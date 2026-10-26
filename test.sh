@@ -39,8 +39,8 @@ export QT_QPA_PLATFORM=offscreen
 export PYTHONDONTWRITEBYTECODE=1
 rc=0
 dirs=(core tools dev/*)
-for suite in */portal/apps.toml; do                  # each suite: bc250-bazzite/
-    suite=${suite%/portal/apps.toml}
+for suite in */SYSTEM; do                           # each suite: bc250-bazzite/, windows-portable/
+    suite=${suite%/SYSTEM}
     suite_system=$(tr -d '[:space:]' < "$suite/SYSTEM" 2>/dev/null || true)
     if [[ "$suite_system" != "$system" ]]; then
         echo "== $suite: made for ${suite_system:-no system}, left out on $system (NEXUS_SYSTEM=${suite_system:-...} ./test.sh runs it)"

@@ -54,7 +54,8 @@ jobs:
               bc250-bazzite/apps/mesh, bc250-bazzite/apps/shadps4, bc250-bazzite/apps/rpcs3,
               bc250-bazzite/apps/decky, bc250-bazzite/apps/datstation, bc250-bazzite/apps/ppsspp,
               bc250-bazzite/apps/pcsx2, bc250-bazzite/apps/vita3k, bc250-bazzite/apps/fan,
-              bc250-bazzite/apps/wdriver, bc250-bazzite/apps/xenia, bc250-bazzite/tools/installer-tests/gui]   # every folder with tests/
+              bc250-bazzite/apps/wdriver, bc250-bazzite/apps/xenia, bc250-bazzite/tools/installer-tests/gui,
+              windows-portable/apps/test]   # every folder with tests/
     defaults:
       run:
         working-directory: ${{ matrix.dir }}
@@ -195,7 +196,8 @@ jobs:
       - name: Every former repo has its LICENSE, .gitignore, VERSION and CHANGELOG
         run: |
           rc=0
-          for d in core bc250-bazzite/portal bc250-bazzite/apps/* bc250-bazzite/tools/installer-tests/gui dev/*; do
+          for d in core bc250-bazzite/portal bc250-bazzite/apps/* bc250-bazzite/tools/installer-tests/gui dev/* \
+                   windows-portable/apps/*; do
             for f in LICENSE .gitignore VERSION CHANGELOG; do
               [ -f "$d/$f" ] || { echo "::error::$d/$f missing"; rc=1; }
             done

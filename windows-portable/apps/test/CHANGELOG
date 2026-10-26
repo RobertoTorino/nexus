@@ -1,0 +1,8 @@
+Changelog: 26-10-2026 22:48:15
+
+Added. Windows Portable Test, the Windows Portable Suite's test app (owner, 26-10-2026): what Windows reports about
+the handheld (the device, processor, cores, graphics and its driver, the screen the window is on, memory installed
+and usable, storage, Windows, the firmware and the battery), read in the background with one PowerShell query, and a
+controller test that shows every button, stick and trigger as it is pressed and counts the buttons that answered
+(hold B to finish). X saves the device report in the suite's folder. Built on core's portable window: full screen,
+the controller and touch.

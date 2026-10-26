@@ -164,4 +164,4 @@ def test_the_header(qapp):
     header = PortableHeader("Windows Portable Test", "0.1.0")
     header.set_status(["82 %", "", "14:32"])
     assert header.title.text() == "Windows Portable Test" and header.version.text() == "0.1.0"
-    assert header.status.text() == "82 %   14:32"
+    assert header.status.text() == "82 %  |  14:32"

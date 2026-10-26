@@ -89,6 +89,16 @@ WINDOWS_PORTABLE_ICON = [
     ("windows-portable/icons/windows-portable-device.png", "`windows-portable/icons/windows-portable-device.png` "
      "(1376 x 768)", "The handheld, the owner's picture (26-10-2026): the hero of the suite's wiki home, as the "
      "board is the BC250 wiki's."),
+    ("windows-portable/apps/test/images/windows-portable-test.webp",
+     "`windows-portable/apps/test/images/windows-portable-test.webp` (512 px), `-128.png`",
+     "Windows Portable Test, the suite's test app: the suite's icon (the test app is the suite's base, as BC-250 "
+     "Bazzite Test is the BC250 suite's), its window header and window icon, and its Start-menu shortcut. Lossless "
+     "copies of the drawing, written by this tool."),
+]
+WINDOWS_PORTABLE_COPIES = [
+    ("windows-portable/icons/windows-portable-512.png", "windows-portable/apps/test/images/windows-portable-test.webp"),
+    ("windows-portable/icons/windows-portable-128.png",
+     "windows-portable/apps/test/images/windows-portable-test-128.png"),
 ]
 NEXUS_ICON = [
     ("nexus/images/nexus-256.png", "`nexus/images/nexus-<size>.png` (1024, 512, 256 and 128 px)",
@@ -113,11 +123,12 @@ NEXUS_COPIES = [
 
 
 def nexus_copies(root: Path = ROOT) -> list[Path]:
-    """Writes Nexus Releases' icon copies from the Nexus drawings (NEXUS_COPIES); the paths written. Lossless, so
-    a copy's pixels are the drawing's (tests compare them)."""
+    """Writes Nexus Releases' icon copies from the Nexus drawings (NEXUS_COPIES) and Windows Portable Test's from
+    the suite's (WINDOWS_PORTABLE_COPIES); the paths written. Lossless, so a copy's pixels are the drawing's (tests
+    compare them)."""
     from PIL import Image
     written = []
-    for source, target in NEXUS_COPIES:
+    for source, target in NEXUS_COPIES + WINDOWS_PORTABLE_COPIES:
         path = root / target
         with Image.open(root / source) as image:
             image = image.convert("RGBA")

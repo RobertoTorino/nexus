@@ -9,9 +9,10 @@ glow under it. Sizes are the mock-up's at 1280 x 720 and scale with the screen (
 rather than assumed: the Ally's own screen at 150 % is 1280 x 720, a TV at 125 % is 1536 x 864.
 
 The widgets: PortableHeader (icon, title, version, a status line), Card (a focusable card with a title and a line of
-text), Pill (a big rounded button that shows its controller button: A Open, Y Update), Legend (the buttons that have
-no pill: X Details, B Back) and PortableWindow, which moves the focus between the cards and pills with the d-pad, the
-left stick or the arrow keys, and turns A or Enter into the focused card's or pill's action, B or Escape into back."""
+text), Pane (the detail pane), Pill (a big button that shows its controller button: A Open, Y Update), Legend (the
+buttons that have no pill: X Details, B Back) and PortableWindow, which moves the focus between the cards and pills
+with the d-pad, the left stick or the arrow keys, and turns A or Enter into the focused card's or pill's action, B or
+Escape into back."""
 
 from __future__ import annotations
 
@@ -23,7 +24,7 @@ from PyQt6.QtWidgets import (QFrame, QGraphicsDropShadowEffect, QGraphicsOpacity
                              QPushButton, QSizePolicy, QVBoxLayout, QWidget)
 
 from .gamepad import Gamepad
-from .theme import Theme
+from .theme import Theme, load_fonts
 
 # Direction D (the owner's, 26-10-2026; mockups_d.py)
 BACKGROUND = "#121214"      # the window
@@ -40,12 +41,13 @@ PORTABLE = Theme("Portable", True, window=BACKGROUND, base=SURFACE, alt=RAISED, 
 
 BASE_WIDTH, BASE_HEIGHT = 1280, 720     # the mock-up's logical screen: every size below is at this one
 RADIUS = 14
-TITLE, SUBTITLE, TAB, CARD, BODY, PILL, GLYPH, LEGEND = 28, 15, 19, 20, 13, 15, 10, 12   # pt
+TITLE, SUBTITLE, TAB, CARD, BODY, PILL, GLYPH, LEGEND, STATUS = 28, 15, 19, 20, 13, 15, 10, 12, 18   # pt
 GLOW_BLUR, GLOW_OFFSET = 36, 8
 DIMMED = 0.6                            # a focused pill, drawn at this opacity
 FONT = "Inter"
 
 _scale = 1.0
+_fonts_loaded = False
 
 
 def scale(screen_size: tuple[int, int] | None = None) -> float:
@@ -115,8 +117,10 @@ class Legend(QWidget):
     def set_items(self, items: Sequence[tuple[str, str]]) -> None:
         while self.row.count():
             item = self.row.takeAt(0)
-            if item.widget() is not None:
-                item.widget().deleteLater()
+            widget = item.widget()
+            if widget is not None:
+                widget.hide()                           # gone now, not when Qt deletes it later
+                widget.deleteLater()
         self.row.addStretch()
         for button, text in items:                       # the amber one, A, is on the page's main pill
             self.row.addWidget(Glyph(button))
@@ -147,11 +151,11 @@ class PortableHeader(QWidget):
         column.addWidget(self.version)
         row.addLayout(column)
         row.addStretch()
-        self.status = text_label("", 13, QFont.Weight.DemiBold, DIM)
-        row.addWidget(self.status)
+        self.status = text_label("", STATUS, QFont.Weight.Bold)      # owner, 26-10-2026: 13 pt dimmed was too small
+        row.addWidget(self.status, 0, Qt.AlignmentFlag.AlignTop)       # level with the top of the title (owner)
 
     def set_status(self, parts: Sequence[str]) -> None:
-        self.status.setText("   ".join(part for part in parts if part))
+        self.status.setText("  |  ".join(part for part in parts if part))
 
 
 class Card(QFrame):
@@ -201,6 +205,18 @@ class Card(QFrame):
             self.activated.emit()
             return
         super().keyPressEvent(event)
+
+
+class Pane(QFrame):
+    """The detail pane: a card's surface without the focus, for what the focused card is and does (the test app's
+    right side, the portal's strip under the tiles). *column* is its layout."""
+
+    def __init__(self, parent: QWidget | None = None):
+        super().__init__(parent)
+        self.setObjectName("pane")
+        self.setStyleSheet(f"QFrame#pane {{ background: {SURFACE}; border-radius: {px(RADIUS)}px; }}")
+        self.column = QVBoxLayout(self)
+        self.column.setContentsMargins(px(24), px(22), px(24), px(22))
 
 
 class Pill(QPushButton):
@@ -267,6 +283,10 @@ class PortableWindow(QWidget):
 
     def __init__(self, gamepad: Gamepad | None = None, parent: QWidget | None = None):
         super().__init__(parent)
+        global _fonts_loaded
+        if not _fonts_loaded:                           # Inter, bundled with core, once per app
+            load_fonts()
+            _fonts_loaded = True
         screen = QGuiApplication.primaryScreen()
         if screen is not None:
             size = screen.availableGeometry().size()

@@ -1,3 +1,11 @@
+Changelog: 26-10-2026 22:54:30
+
+Added. portable: Pane, the detail pane (a card's surface for what the focused card shows). The window registers
+the bundled Inter itself, and the legend's old buttons leave at once when it changes; they were only detached
+first, which on the Ally could take the focus events from the window (found while building Windows Portable Test).
+The header's status line (battery and time) is 18 pt bold in the text color, level with the header's top, its parts
+divided by a bar (owner, 26-10-2026: 13 pt dimmed was too small).
+
 Changelog: 26-10-2026 22:37:18
 
 Added. portable: the portable window of the Windows Portable Suite (owner, 26-10-2026: direction D, B's amber on C's

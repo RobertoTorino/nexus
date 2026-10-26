@@ -1060,6 +1060,17 @@ behavior and dependencies. Decided (owner, 25-10-2026):
   pill's behavior ("still does not feel right"). The controller (pygame-ce 2.5.8, SDL 2.32.10) finds the Ally's pad
   as "ASUSTeK Computer Inc."; pygame names the triggers TRIGGERLEFT and TRIGGERRIGHT. DESIGN.md lists the
   colors.
+- **Windows Portable Test 0.1.0 (26-10-2026)**, `windows-portable/apps/test/` (package `portable_test`, app id
+  `windows-portable-test`, tags `wp-test-v<x.y.z>`; owner, 26-10-2026: the names, the order window, then the test
+  app, then the suite, and this first scope). Two cards: Device (one PowerShell CIM query, about two seconds on the
+  Ally: ROG Xbox Ally X, Ryzen AI Z2 Extreme 8 cores 16 threads, Radeon 890M and its driver, 24 GB installed of
+  which 15.6 usable, the 1 TB Samsung drive, Windows 11 Home build 26300, firmware RC73XA.319, the battery; no
+  serial numbers) with the screen the window is on from Qt, X saves the report in
+  `%LOCALAPPDATA%\windows-portable-suite\windows-portable-test\reports\`; Controller (every button, stick and
+  trigger live, the count of buttons that answered; the test has every button, so holding B 1.5 s, the Finish pill
+  or Escape end it). B closes the app. It runs from the checkout (`run.ps1`, full screen or `--windowed`); the
+  installer, the release format and the portal come with the suite (`portal/apps.toml`, `tools/check_manifest.py`,
+  Nexus Releases' prefix). Open (owner): a look at it on the Ally, full screen with the controller.
 - **Own tuning apps** (TDP, fans, and the like) for the handheld, later: the board's tuning apps do not port (sysfs,
   GRUB, RADV), but the same kinds of apps on both give comparison data between the BC-250 and the handheld.
 

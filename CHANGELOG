@@ -1,3 +1,11 @@
+Changelog: 26-10-2026 22:54:30
+
+Windows Portable Test is in the repository (windows-portable/apps/test/, owner, 26-10-2026: the Windows Portable
+Suite's first app, run from the checkout with run.ps1 until the suite has its portal and installers). ./test.sh
+finds a suite by its SYSTEM file, so windows-portable/ is tested on Windows before it has a portal; CI's pytest
+matrix and its four-files check list the app. tools/make_icons.py writes its icon copies from the suite's drawing
+(WINDOWS_PORTABLE_COPIES) and ICONS.md lists them.
+
 Changelog: 26-10-2026 21:32:35
 
 The tools work with more than one suite (owner, 26-10-2026: the Windows Portable Suite's tags start with wp-). A
