@@ -82,3 +82,21 @@ def test_confirmed_actions(window, commands, monkeypatch, button, flag):
     answer["value"] = QMessageBox.StandardButton.Yes
     getattr(window, button).click()
     assert [shlex.split(c) for c in commands] == [["bash", SCRIPT, flag]]
+
+
+def test_the_status_boxes_are_as_wide_as_their_text(window, qapp):
+    """A narrow window cut the text off (owner, 26-10-2026): the boxes are as wide as the widest of them, never
+    narrower than their text, and follow a wider value."""
+    window.show()
+    qapp.processEvents()
+    boxes = (window.load_box, window.rounds_box, window.oc_box, window.uv_box)
+
+    def fits() -> bool:
+        widest = max(box.sizeHint().width() for box in boxes)
+        return all(box.width() == widest and box.caption.width() >= box.caption.sizeHint().width()
+                   and box.value.width() >= box.value.sizeHint().width() for box in boxes)
+
+    assert fits()
+    window.time_spin.setValue(36000)
+    qapp.processEvents()
+    assert window.load_box.value.text() == "36000 s" and fits()

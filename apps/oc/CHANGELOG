@@ -1,3 +1,14 @@
+Changelog: 26-10-2026 05:28:40
+
+Release 0.2.4.
+
+Changelog: 26-10-2026 05:06:06
+
+Fixed. The status boxes cut their text off (owner, 26-10-2026: "oad per attempt", "o 2200 MH"): their minimum width
+of 120 px overrode the width of their text, and the window sat at its minimum width. They are as wide as the widest
+of them and never narrower than their text, as core's same_width does for the apps on core; the window grows with
+them.
+
 Changelog: 26-10-2026 04:32:52
 
 Release 0.2.3.

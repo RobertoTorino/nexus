@@ -200,9 +200,41 @@ def is_installed(entry: AppEntry) -> bool:
     return any(expand(path).exists() for path in entry.detect)
 
 
+LOCAL = "local"                     # the record of a checkout-only app, or of an older portal's checkout install
+_LOCAL_VERSION = re.compile(r"^local-v(\d+\.\d+\.\d+)$")
+
+
+def local_record(version: str = "") -> str:
+    """The record of an install from a checkout: "local" with the staged app's version, so a portal from a release
+    can tell the version it pins from it; "local" alone for a checkout-only app (it has no release), or when the
+    version is not known."""
+    return f"local-v{version}" if re.fullmatch(r"\d+\.\d+\.\d+", version) else LOCAL
+
+
+def is_local(record: str) -> bool:
+    return record == LOCAL or _LOCAL_VERSION.match(record) is not None
+
+
+def local_version(record: str) -> str:
+    """The version an install from a checkout recorded; "" for a checkout-only app, or for a record from before the
+    portal kept it (9.2.0 and earlier)."""
+    match = _LOCAL_VERSION.match(record)
+    return match[1] if match else ""
+
+
+def installed_from(record: str) -> str:
+    """The record in a sentence: "from <tag>", or "from the suite checkout", with the version when it kept one."""
+    if not is_local(record):
+        return f"from {record}"
+    version = local_version(record)
+    return "from the suite checkout" + (f" (v{version})" if version else "")
+
+
 class Records:
-    """installed.json: which tag (or "local") of each app the portal installed. Apps installed some other way are
-    still detected through apps.toml's detect paths; they just have no known tag."""
+    """installed.json: which tag of each app the portal installed; "local-v<version>" when it installed the app from
+    a checkout, "local" for a checkout-only app (and in the records of portal 9.2.0 and earlier, every checkout
+    install). Apps installed some other way are still detected through apps.toml's detect paths; they just have no
+    known tag."""
 
     def __init__(self, path: Path):
         self.path = path

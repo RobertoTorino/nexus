@@ -10,7 +10,7 @@ import subprocess
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFontDatabase, QPixmap
 from PyQt6.QtWidgets import (
-    QDialog, QDialogButtonBox, QFrame, QHBoxLayout, QLabel, QTextEdit, QVBoxLayout, QWidget,
+    QDialog, QDialogButtonBox, QFrame, QHBoxLayout, QLabel, QSizePolicy, QTextEdit, QVBoxLayout, QWidget,
 )
 
 from . import APP_NAME, LOGO_PATH, REPO_URL, __version__, window_title
@@ -95,12 +95,14 @@ class HelpDialog(QDialog):
 
 class MetricBox(QFrame):
     """One box of the header's second row: a big value with a caption, centered, on the theme's surface with
-    *colour* as its left edge. A copy of core's MetricBox with the same sizes: this app is not on core."""
+    *colour* as its left edge. A copy of core's MetricBox with the same sizes (and same_width): this app is not on
+    core."""
 
     MIN_WIDTH = 120
 
     def __init__(self, caption: str, colour: str = BLUE, parent: QWidget | None = None):
         super().__init__(parent)
+        self.peers: list[MetricBox] = []        # same_width(): the boxes this one keeps its width with
         self.set_colour(colour)
         self.setMinimumWidth(self.MIN_WIDTH)
         layout = QVBoxLayout(self)
@@ -117,8 +119,25 @@ class MetricBox(QFrame):
     def set_value(self, text: str, tooltip: str = "") -> None:
         self.value.setText(text)
         self.setToolTip(tooltip)
+        if self.peers:
+            _even(self.peers)
 
     def set_colour(self, colour: str) -> None:
         """The box's state or category color, its left edge."""
         self.setStyleSheet(surface_style(colour) + "QLabel { background:transparent; border:none; }")
+
+
+def same_width(boxes: list[MetricBox]) -> None:
+    """A row of boxes all as wide as the widest, and again whenever a value changes; never narrower than their
+    text (the minimum width alone would let a narrow window cut it off)."""
+    for box in boxes:
+        box.peers = boxes
+        box.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+    _even(boxes)
+
+
+def _even(boxes: list[MetricBox]) -> None:
+    width = max([MetricBox.MIN_WIDTH, *(box.sizeHint().width() for box in boxes)])
+    for box in boxes:
+        box.setMinimumWidth(width)
 

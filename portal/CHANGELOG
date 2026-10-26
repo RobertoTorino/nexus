@@ -1,3 +1,14 @@
+Changelog: 26-10-2026 05:06:06
+
+Fixed. An app installed from a checkout of the repository showed no update in a portal from a release (owner,
+26-10-2026: GPU OC Bisect stayed at 0.1.9, "installed from the suite checkout", while the portal pinned 0.2.3): its
+record said only "local", which the comparison with the pin skipped. A checkout install now records the staged app's
+version ("local-v0.1.9"), and a portal from a release compares that with the version it pins as it does a tag: the
+red dot, "installed from the suite checkout (v0.1.9), this portal pins oc-v0.2.3". A record from an earlier portal,
+without the version, needs a reinstall (the red circular arrow, "installed from a suite checkout, its version
+unknown"). A portal from a checkout shows what it installed from there as installed, as before. A checkout-only app
+keeps its "local" record.
+
 Changelog: 26-10-2026 04:40:45
 
 Release 9.2.0. Pins check-v0.15.0, gpu-v0.3.1, upscaler-v0.14.0, oc-v0.2.3, acpi-v0.3.1, overlay-v0.13.0, bios-v0.13.0, ace-v0.13.0, mesh-v0.14.0, vram-v0.13.0, fan-v0.12.0, wdriver-v0.12.0, cec-v0.13.0, sftp-v0.14.0, ips35-v0.6.0, hdcam-v0.8.0, hdcontrol-v0.8.0, package-v1.3.0, ncgui-v0.13.0, rpcs3-v1.3.0, consoles-v1.13.0, clb-v0.8.0, shadps4-v1.2.0, decky-v0.14.0, datstation-v1.10.0, ppsspp-v0.13.0, pcsx2-v1.4.0, vita3k-v0.12.0, xenia-v0.8.0.

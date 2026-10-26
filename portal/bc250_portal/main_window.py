@@ -12,7 +12,10 @@ An app that changes the board (unlocks, governor, ACPI) gets a warning before it
 
 Updates: a red dot marks every tile whose installed app differs from the version this portal pins, a red circular
 arrow every installed app the portal has no record of (installed by hand, or under an earlier name of the app: its
-version is unknown, so it needs a reinstall). The notice beside check names each of them, with a link to its tile,
+version is unknown, so it needs a reinstall). An app installed from a checkout is recorded with the checkout's
+version of it: a portal from a release compares that with the version it pins, as it does a tag (an older record
+without the version needs a reinstall); a portal from a checkout shows it as installed, whatever the pin, since the
+checkout is what it installs. The notice beside check names each of them, with a link to its tile,
 and a tab's name counts those on it, so none goes unseen on a tab that is not open. At start the portal looks for a
 newer portal release on GitHub (which is how newer app versions arrive).
 
@@ -78,7 +81,7 @@ from . import (APP_ICONS, APP_ID, APP_NAME, INFO, LOGO_PATH, STAGE, STAGE_NOTE, 
                remember_checkout)
 from .manifest import CATEGORIES, AppEntry
 from .portal_update import PortalUpdate
-from .sources import Records, SourceError, Sources, is_installed
+from .sources import Records, SourceError, Sources, installed_from, is_installed, is_local, local_record, local_version
 
 POLL_MS = 1000
 ICON_PX = 128                   # the app icon on its tile (the icon files are 128 x 128), and the portal's in the header
@@ -313,20 +316,33 @@ class AppTile(QFrame):
     def _ink(self) -> str:
         return self.palette().color(QPalette.ColorRole.ButtonText).name()
 
-    def show_state(self, installed: bool, installed_tag: str, busy: str = "", available: bool = True) -> str:
+    def show_state(self, installed: bool, installed_tag: str, busy: str = "", available: bool = True,
+                   from_checkout: bool = False) -> str:
         """Show the app's state; "update" when an update is available, "reinstall" when a reinstall is needed, else
         "". *available* False: a checkout-only app in a portal that does not know a checkout yet; it asks for one
-        when the app is installed or removed."""
+        when the app is installed or removed. *from_checkout*: this portal runs from a checkout."""
         entry = self.entry
-        # An update needs a known, different tag. An app installed some other way (by hand, or under an earlier
-        # name of the app) has none recorded: its version is unknown, so it needs a reinstall.
-        update = (installed and bool(installed_tag) and bool(entry.tag) and installed_tag not in (entry.tag, "local")
-                  and not entry.withdrawn)
-        reinstall = installed and not installed_tag and not entry.withdrawn
+        # An update needs a known, different version. An app installed some other way (by hand, or under an earlier
+        # name of the app) has none recorded: its version is unknown, so it needs a reinstall. An app installed from
+        # a checkout is recorded with the checkout's version of it: a portal from a release compares that with the
+        # version it pins (a record from before the version was kept, "local" alone, is unknown too); a portal from
+        # a checkout installs from the checkout, so what it installed is what it has.
+        local = is_local(installed_tag)
+        from_other_checkout = local and bool(entry.tag) and not from_checkout
+        if from_other_checkout:
+            version = local_version(installed_tag)
+            differs, unknown = bool(version) and version != entry.version, not version
+        else:
+            differs, unknown = bool(installed_tag) and not local and installed_tag != entry.tag, not installed_tag
+        update = installed and differs and bool(entry.tag) and not entry.withdrawn
+        reinstall = installed and unknown and not entry.withdrawn
         self.dot.setVisible(update)
-        self.dot.setToolTip(f"Update available: {entry.tag} (installed {installed_tag})." if update else "")
+        self.dot.setToolTip(f"Update available: {entry.tag} (installed {installed_from(installed_tag)})."
+                            if update else "")
         self.badge.setVisible(reinstall)
-        self.badge.setToolTip("Reinstall needed: the portal did not install it, so its version is unknown."
+        self.badge.setToolTip(("Reinstall needed: installed from a suite checkout, its version unknown."
+                               if from_other_checkout else
+                               "Reinstall needed: the portal did not install it, so its version is unknown.")
                               if reinstall else "")
         if busy:
             self.status, detail = busy, busy
@@ -337,15 +353,18 @@ class AppTile(QFrame):
         elif not installed:
             self.status, detail = "Not installed", "Not installed: install it with the button beside the icon."
         elif update:
-            self.status, detail = "Update", f"Update available: installed {installed_tag}, this portal pins {entry.tag}."
+            self.status = "Update"
+            detail = f"Update available: installed {installed_from(installed_tag)}, this portal pins {entry.tag}."
         elif reinstall:
             self.status = "Reinstall needed"
-            detail = ("Reinstall needed: it is installed, but not by this portal (by hand, or under an earlier name "
-                      "of the app), so its version is unknown. Reinstall it with the red button beside the icon.")
+            detail = (("Reinstall needed: an earlier portal installed it from a suite checkout without recording "
+                       "its version, so it is unknown. ") if from_other_checkout else
+                      ("Reinstall needed: it is installed, but not by this portal (by hand, or under an earlier name "
+                       "of the app), so its version is unknown. ")
+                      ) + "Reinstall it with the red button beside the icon."
         else:
             self.status = "Installed"
-            detail = (f"Installed from {installed_tag}." if installed_tag != "local" else
-                      "Installed from the suite checkout.")
+            detail = f"Installed {installed_from(installed_tag)}."
         if not available and not busy:
             detail += (" It runs from a suite checkout and has no release, and the portal found no checkout in "
                        "your home folder: it asks for one when you install it.")
@@ -815,7 +834,8 @@ class MainWindow(QMainWindow):
                 busy = "Installing…" if self.pending.action == "install" else "Removing…"
             card = self.cards[entry.key]
             available = not entry.checkout_only or self.sources.checkout_for_apps is not None
-            state = card.show_state(is_installed(entry), self.records.get(entry.key), busy, available)
+            state = card.show_state(is_installed(entry), self.records.get(entry.key), busy, available,
+                                    from_checkout=self.sources.local)
             if state:
                 marked.append((entry, state))
             if self.busy() and not busy:
@@ -932,8 +952,8 @@ class MainWindow(QMainWindow):
             for entry, state in marked:
                 tab = self.tab_of(entry)
                 where = f" ({CATEGORIES[tab]})" if tab else ""
-                what = (f"update to v{entry.version}, installed {self.records.get(entry.key)}" if state == "update"
-                        else "reinstall needed, its version is unknown")
+                what = (f"update to v{entry.version}, installed {installed_from(self.records.get(entry.key))}"
+                        if state == "update" else "reinstall needed, its version is unknown")
                 lines.append(f"<a href='{escape(entry.key)}'>{escape(entry.short or short_name(entry.name))}</a>"
                              f"{escape(where)}: {escape(what)}")
             self.notice.setText(f"<b style='color:{RED};'>\u25cf {count}</b><br>" + "<br>".join(lines))
@@ -1492,10 +1512,21 @@ class MainWindow(QMainWindow):
                                  f"Run it by hand instead:\n{shell_line(folder, commands)}")
             self.refresh()
             return
-        self.pending = Pending(entry, action, exit_file,
-                               "local" if self.sources.local or entry.checkout_only else entry.tag)
+        self.pending = Pending(entry, action, exit_file, self._record_for(entry, folder))
         self.poll.start()
         self.refresh()
+
+    def _record_for(self, entry: AppEntry, folder: Path) -> str:
+        """What a finished install records: the release's tag; from a checkout, "local" with the staged app's
+        version (a checkout-only app has no release: "local" alone)."""
+        if not (self.sources.local or entry.checkout_only):
+            return entry.tag
+        if entry.checkout_only:
+            return local_record()
+        try:
+            return local_record((folder / "VERSION").read_text(encoding="utf-8").strip())
+        except OSError:
+            return local_record()
 
     def _check_pending(self) -> None:
         pending = self.pending

@@ -250,3 +250,17 @@ def test_find_checkout(tmp_path):
     elsewhere = fake_suite(tmp_path / "mnt/work/suite")                     # outside home: a launcher points there
     (home / ".local/bin/bc250-release").write_text(f'#!/bin/sh\nexec "{elsewhere}/apps/suite/run.sh"\n')
     assert find_checkout(home) == elsewhere
+
+
+def test_the_record_of_a_checkout_install(tmp_path):
+    from bc250_portal.sources import installed_from, is_local, local_record, local_version
+    assert local_record("1.2.3") == "local-v1.2.3" and local_record() == "local" and local_record("dev") == "local"
+    assert is_local("local") and is_local("local-v1.2.3")
+    assert not is_local("local-v1") and not is_local("gpu-v1.0.0") and not is_local("")
+    assert local_version("local-v1.2.3") == "1.2.3" and local_version("local") == "" == local_version("gpu-v1.0.0")
+    assert installed_from("gpu-v1.0.0") == "from gpu-v1.0.0"
+    assert installed_from("local") == "from the suite checkout"
+    assert installed_from("local-v1.2.3") == "from the suite checkout (v1.2.3)"
+    path = tmp_path / "installed.json"                                      # a renamed app keeps it
+    path.write_text('{"gpu-oc-bisect": "local-v0.1.9"}')
+    assert Records(path).get("oc") == "local-v0.1.9"

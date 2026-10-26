@@ -24,7 +24,7 @@ from .options import (
 )
 from .terminal import launch_in_terminal
 from .theme import BLUE, header_font, muted
-from .widgets import AboutDialog, HelpDialog, MetricBox
+from .widgets import AboutDialog, HelpDialog, MetricBox, same_width
 
 
 class MainWindow(QWidget):
@@ -81,6 +81,7 @@ class MainWindow(QWidget):
         self.uv_box = MetricBox("Undervolt sweep", BLUE)
         for box in (self.load_box, self.rounds_box, self.oc_box, self.uv_box):
             boxes.addWidget(box)
+        same_width([self.load_box, self.rounds_box, self.oc_box, self.uv_box])     # as wide as their text
         boxes.addStretch(1)
         header_right.addLayout(boxes)
         header.addLayout(header_right, 1)

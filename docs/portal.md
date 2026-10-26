@@ -25,7 +25,7 @@ row as the window fits; Bazzite Test is always the first tile on Sustainable:
 - **A red dot** in the icon: an update is available.
 - **A red circular arrow** in the icon: reinstall the app. It is installed, but not by this portal (by hand, or
   under an earlier name of the app), so the portal does not know its version. Its red button reinstalls the version
-  this portal pins.
+  this portal pins. An app installed from a checkout of the repository without its version recorded shows it too.
 - **changes the board**, in orange under the icon, for apps that change how the board runs.
 - **App not available**, in red under the icon: the release of this app was withdrawn because of a problem
   (privacy, security or another reason; hover over it to read which). It cannot be installed or opened. When it is
@@ -62,8 +62,11 @@ checkout uses its own checkout.
   against the release's `SHA256SUMS` until one is pinned. Then it unpacks the tarball without ever writing
   outside its folder.
 - **Updates:** a red dot marks every app whose installed version differs from the one this portal pins; its red
-  Install button installs the pinned version. The notice beside Bazzite Test counts them and the apps that need a
-  reinstall, and names each one with its tab and versions. Click a name to go to its tile. A tab with such an app
+  Install button installs the pinned version. An app installed from a checkout of the repository counts as well:
+  the portal records the checkout's version of it and compares that with the one it pins. A portal that runs from a
+  checkout shows what it installed from there as installed, whatever it pins. The notice beside Bazzite Test counts
+  them and the apps that need a reinstall, and names each one with its tab and versions. Click a name to go to its
+  tile. A tab with such an app
   shows their number in red after its name, so none goes unseen on a tab that is not open. Newer app versions come with a newer portal
   release: at start the portal looks for one on GitHub and, when there is one, shows a red button that opens its
   release page. The button names what that release brings, for example **Portal 0.9.1: updates ACE Queues and

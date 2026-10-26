@@ -984,7 +984,8 @@ behavior and dependencies. Decided (owner, 25-10-2026):
 - **The name: Windows Portable Suite**, for any Windows handheld, not the Ally alone. It sits beside the current
   tree in its own folder, `windows-portable/` (OS and device, as the suite names: `portable/` alone would clash with
   a second portable suite; proposed 25-10-2026, the owner may still change it) with its own `portal/apps.toml`,
-  `apps/<name>/` in the same layout, and its own tag prefix so the two suites' tags never mix.
+  `apps/<name>/` in the same layout, and its own tag prefix so the two suites' tags never mix. The BC250 Bazzite
+  Suite moves into `bc250-bazzite/` beside it first (owner, 26-10-2026; the section below).
 - **The first app is the test app**, as here: the only fixed app, always installed and first, and the base for
   getting to know the device (diagnostics, stress test, benchmarks for the handheld): **Windows Portable Test**,
   with the OS in the name as in BC-250 Bazzite Test, so a test for another OS fits beside it. Then the PCSX2
@@ -1031,6 +1032,79 @@ its own folder and test app the same way (OS and device in the name).
 
 Earlier items that wait for a handheld version: the Steam release of Console Link (under its plan above), and
 streaming BC-250 games to the Ally.
+
+## Nexus: every suite in its own folder (owner, 26-10-2026)
+
+The structure (Nexus, the suites, their apps) is decided and described (the README, the Nexus page) but not in the
+tree: the BC250 Bazzite Suite is the root of the repository (`apps/`, `core/`, `portal/`, `docs/`, `install.sh`,
+`DESIGN.md`, `ICONS.md`, `icons/`), `tools/` mixes the suite's tools with Nexus's, and Suite Releases, a suite app,
+serves every wiki including the Nexus page. Decided (owner, 26-10-2026):
+
+- **The suite moves into `bc250-bazzite/`** (OS and device, as `windows-portable/`), before the Windows Portable
+  Suite is started. The root keeps only Nexus: `nexus/` (the page), `core/` (shared by every suite; the Windows plan
+  gives it a platform layer), `tools/`, `.github/`, `test.sh` (runs every suite's suites), CLAUDE.md, MIGRATION.md,
+  the README and LICENSE.
+- **One release tool for Nexus**, not one per suite: the release flow is the repository's (versions, CHANGELOG
+  kinds, tags, pins, CI); only the device checks are a suite's.
+- **`bc250_core` keeps its name for now**; the rename is on the backlog (below).
+
+The order, each step with its checks before the next:
+
+1. **First the commits of the fixes of 26-10-2026** (the portal's checkout records, the oc boxes): the move touches
+   several hundred files (`apps/` is named in about 240 files, `tools/` in 190, `core/` in 90), and a fix mixed into
+   it could not be told from the move in the diff.
+2. **The portal's manifest path.** An installed portal (9.2.0 and earlier) reads `portal/apps.toml` at the newer
+   portal's tag (`RAW_URL` in `portal_update.py`) for the notice of what the update brings; without it the notice
+   still shows the newer portal, only without the app details, and the update itself installs from the release
+   asset, which is found by tag, so no installed portal is cut off. The new portal reads
+   `bc250-bazzite/portal/apps.toml` and falls back to the old path, so it reads the tags before the move too. The
+   root keeps a copy at `portal/apps.toml` for the portals already installed, checked identical by
+   `tools/check_manifest.py`, until the first portal release after the move has been out for a while; then the
+   owner removes it (noted here with the date).
+3. **The move itself**, one `git mv` of `apps/`, `portal/`, `docs/`, `mkdocs.yml`, `install.sh`, `DESIGN.md`,
+   `ICONS.md`, `icons/` and the suite's tools (`tools/installer-tests/`, `tools/pin_app.py`,
+   `tools/check_manifest.py`, `tools/portal_screenshot.py`, `tools/portal_tour.py`, `tools/sync_icons.py`,
+   `tools/make_portal_sounds.py` and `tools/sounds/`, `tools/check_upstream.py`) into `bc250-bazzite/` and
+   `bc250-bazzite/tools/`; the Nexus tools stay at the root and take the suite as an argument (`--suite`, the one
+   suite by default): `stage_app.py`, `build_release.py`, `check_versions.py`, `check_changelogs.py`,
+   `tag-release.sh`, `release.sh`, `ci-local`, `pre-push.sh`, `fix-modes.sh`, `backlog.py`, `make_design.py`,
+   `make_icons.py`, `apply_design.py`, `type_specimen.py`, `build_windows_exe.py`, the tours, `mkdocs/` (the design
+   panel). The state folder on the board (`~/.local/share/bc250-bazzite-suite/`), the app ids, the launchers, the
+   tags (`<app>-v`, `portal-v`) and the wiki's address (`/nexus/bc250-bazzite-suite/`, which the released apps link
+   to) do not change: nothing installed notices the move.
+4. **The paths in the workflows and tools:** `ci.yml` (the pytest matrix, the shellcheck lists, the layout checks),
+   `release.yml` (`apps/<name>` and `portal/` under the suite's folder; the tag names unchanged), `docs.yml` (the
+   suite's wiki from `bc250-bazzite/mkdocs.yml` into `site/bc250-bazzite-suite/`), `backlog.yml`, `upstream.yml`;
+   `tools/tests/test_layout.py` walks every suite; `test.sh` and `tools/ci-local.sh` run every suite's folders.
+5. **The rules per level:** the root CLAUDE.md keeps what is Nexus's (git, releases, the CHANGELOG format and kinds,
+   American English, line endings, the checks), `bc250-bazzite/CLAUDE.md` gets the suite's (the board warnings, the
+   Bazzite scope, the window, the design, the apps' licenses); Claude Code reads the file of the folder it works in.
+   The architecture chapter and the READMEs name the new paths.
+6. **Nexus Releases**, from `apps/suite/` (BC250 Suite Releases): a checkout-only development app at the Nexus level
+   in `dev/releases/` (package `nexus_releases`; the folder name `dev/` for the Nexus-level development apps is a
+   proposal, the owner decides), listed on every suite's portal Development tab as `[checkout.releases]` with
+   `folder`, as Suite Releases and Installer Tests are listed today. It gets a suite chooser (every folder with a
+   `portal/apps.toml`); the Release apps, Pin and release Portal and Retract tabs work on the chosen suite; the
+   Wikis tab stays, it is the repository's; "Test on this board" becomes the suite's own check
+   (`bc250-bazzite/tools/check-release.sh`, from `apps/suite/check-release.sh`), shown for the suite of the machine
+   it runs on. The planned Nexus Design Preview goes beside it (`dev/dpreview/`). BC-250 Installer Tests stays the
+   suite's (its shims are Linux's).
+7. **The app template, as a generator:** `tools/new_app.py <suite> <name> "<App Name>"` writes a new app from the
+   architecture chapter (the package with `__main__`, the window on `AppHeader`, the tests, the installer, the four
+   files, the installer test, the manifest entry, the wiki chapter and the icon copies) and runs the layout test on
+   it, so the template cannot drift from the checks; a static template folder would. Each suite has its template
+   behind the same command; the Windows one follows the design of its window (the Windows Portable Suite section).
+   An app that does not fit the template is the owner's decision, as a deviation from the layout is now.
+8. **Proof:** every check of CLAUDE.md, both wikis built strictly and compared pixel for pixel before and after
+   (`tools/tests/test_wiki_designs.py`), every installer test, `tools/installer-tests/release.sh`, the portal
+   installed from the checkout (`bc250-bazzite/install.sh`) on the board; then the owner's portal release that
+   carries the new manifest path (the number is the owner's).
+
+- **The rename of `bc250_core` (on hold, owner 26-10-2026: eventually, not now).** The shared code is every suite's
+  and will get a name that says so (`nexus_core`, for example); the rename touches every app's imports and its
+  bundled copy (`tools/stage_app.py`), the copies of `instance.py` that `tools/tests/test_instance_copies.py` checks,
+  and the release notes. It waits until the suites are in their folders and the Windows platform layer exists, so
+  the rename happens once.
 
 ## Done
 
@@ -1625,7 +1699,14 @@ Bazzite's).
   DXVK and vkd3d-proton behind the Windows runtimes; D3D12 (12_1, DXR), D3D11, D3D9 through D3D9On12 and Vulkan run.
   Read 15-10-2026 at `0.7.216.101-tester.30` (nothing built or run): experimental, test-signed (Windows test mode),
   a GPU hang stops Windows, one developer, about 30 tester releases in three weeks, interfaces changing between
-  them. Its own Control App already does clocks (1000-2000 MHz), the 24/40 CU switch and CU pair map, the voltage
+  them. Read again 26-10-2026 at `0.7.216.104-tester.32` (23-10-2026; five releases since tester.30, the last four
+  no longer marked pre-release, each with a setup .exe that installs over the one before): still a tester release,
+  still test-signed (Windows test mode stays a requirement; the roadmap rules production signing out of the
+  project), no stable release and no milestone named "stable". Works per its README: an accelerated desktop (DWM
+  on the GPU), D3D12 12_1 with DXR, D3D11, D3D9 through D3D9On12, Vulkan with ray tracing, OpenGL 4.6 through
+  Zink, clocks to 2000 MHz, fan, the 40 CU unlock. Not yet: modes above 300 MHz pixel clock, some GPU hangs still
+  stop Windows, hibernation, conformance suites. Kernel-mode DDI 35 % of the slots, D3D12 user-mode DDI 88 %.
+  About 2,850 commits by the one developer, the last on 25-10-2026. Its own Control App already does clocks (1000-2000 MHz), the 24/40 CU switch and CU pair map, the voltage
   curve, fan, display modes and game profiles, through its registry keys
   (`HKLM\SYSTEM\CurrentControlSet\Services\bc250kmd\Parameters`) and private escapes. So on Windows governor,
   cu-bisect, cores-bisect and gpu-oc-bisect are not needed; ace-queues, mesh-shaders, persistent-acpi, hdmi-cec,

@@ -310,7 +310,7 @@ def test_red_dot_and_count_for_updates(window, home):
     assert "gpu-v0.0.9" in window.cards["gpu"].dot.toolTip()
     notice = window.notice.text()
     assert "\u25cf 1 update</b>" in notice and "<a href='gpu'>GPU Governor Manager</a> (Sustainable): update to v" in notice
-    assert "installed gpu-v0.0.9" in notice and "HelixSR" not in notice
+    assert "installed from gpu-v0.0.9" in notice and "HelixSR" not in notice
     sustainable = window.tabs.indexOf(window.pages["sustainable"])
     assert window.tabs.tabText(sustainable) == "Sustainable  \u25cf 1"                # the count on its tab
     assert window.tabs.tabText(window.tabs.indexOf(window.pages["graphics"])) == "Graphics"
@@ -1100,3 +1100,60 @@ def test_the_wallpapers_transparency(window):
     assert "Transparency 90 %" in window.wallpaper_pill.toolTip()
     window.settings.setValue(mw.VEIL_KEY, 250)              # a value from elsewhere: kept within the slider's range
     assert window.transparency() == 90
+
+
+def test_a_checkout_install_is_compared_by_its_version(window, home):
+    """A portal from a release, an app installed from a checkout (owner, 26-10-2026): the recorded version against
+    the pin, as a tag's; a record without one (portal 9.2.0 and earlier) needs a reinstall."""
+    (home / ".local" / "bin" / "bc250-governor-manager").write_text("#!/bin/sh\n")
+    card = window.cards["gpu"]
+    window.records.set("gpu", "local-v0.0.9")
+    window.refresh()
+    assert card.status == "Update" and not card.dot.isHidden() and card.badge.isHidden()
+    assert "installed from the suite checkout (v0.0.9), this portal pins" in card.icon.toolTip()
+    assert "installed from the suite checkout (v0.0.9)" in window.notice.text()
+    window.records.set("gpu", f"local-v{card.entry.version}")
+    window.refresh()
+    assert card.status == "Installed" and card.dot.isHidden() and card.badge.isHidden()
+    assert f"Installed from the suite checkout (v{card.entry.version})." in card.icon.toolTip()
+    assert "No updates" in window.notice.text()
+    window.records.set("gpu", "local")
+    window.refresh()
+    assert card.status == "Reinstall needed" and not card.badge.isHidden() and card.dot.isHidden()
+    assert "without recording its version" in card.icon.toolTip() and "suite checkout" in card.badge.toolTip()
+    assert "1 reinstall" in window.notice.text()
+
+
+def test_a_checkout_portal_shows_its_own_installs_as_installed(qapp, home, settings_dir, tmp_path, launched):
+    sources = FakeSources(tmp_path / "work")
+    sources.checkout = Path("/checkout")                                    # a portal from a checkout
+    w = mw.MainWindow(load(MANIFEST), sources, Records(tmp_path / "installed.json"))
+    (home / ".local" / "bin" / "bc250-governor-manager").write_text("#!/bin/sh\n")
+    card = w.cards["gpu"]
+    for record in ("local-v0.0.9", "local"):
+        w.records.set("gpu", record)
+        w.refresh()
+        assert card.status == "Installed" and card.dot.isHidden() and card.badge.isHidden()
+        assert "No updates" in w.notice.text()
+    assert "Installed from the suite checkout (v0.0.9)." not in card.icon.toolTip()
+    assert "Installed from the suite checkout." in card.icon.toolTip()
+    w.records.set("gpu", "gpu-v0.0.9")                                      # from a release: an update, as before
+    w.refresh()
+    assert card.status == "Update"
+    w.close()
+
+
+def test_a_checkout_install_records_the_staged_version(qapp, home, settings_dir, tmp_path, launched, monkeypatch):
+    monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: YES)
+    sources = FakeSources(tmp_path / "work")
+    sources.checkout = Path("/checkout")
+    w = mw.MainWindow(load(MANIFEST), sources, Records(tmp_path / "installed.json"))
+    entry = w.cards["upscaler"].entry
+    folder = sources.folder(entry)
+    folder.mkdir(parents=True)
+    (folder / "VERSION").write_text("1.2.3\n")
+    w.install(entry)
+    assert wait_for(lambda: launched)
+    assert w.pending.tag == "local-v1.2.3"
+    w.cancel_pending()
+    w.close()
