@@ -79,6 +79,7 @@ def test_selection_is_a_teal_outline(window):
     edge = QColor(image.pixel(rect.center().x(), rect.top() + 1))
     assert inside.name() == other.name()                            # no solid highlight behind the text
     assert edge.name() == QColor(ACCENT).name()
+    assert f"gridline-color:{NEXUS.edge};" in w.styleSheet()            # the tables' lines: the theme's thin edge
     assert f"QLineEdit:focus {{ background:transparent; border:2px solid {ACCENT}; border-radius:6px; }}" \
         in w.styleSheet()
 
@@ -352,3 +353,14 @@ def test_the_icons_are_the_nexus_drawing():
         with Image.open(copy) as got, Image.open(nexus / f"nexus-{size}.png") as want:
             assert got.size == (size, size) == want.size, copy.name
             assert got.convert("RGBA").tobytes() == want.convert("RGBA").tobytes(), copy.name
+
+
+def test_the_portal_version_field_shows_a_whole_version(window):
+    """The field on step 2 is wide enough for a version like 10.1.0 (owner, 26-10-2026: it cut the text off)."""
+    from nexus_releases.main_window import VERSION_FIELD_PX
+    w, _app = window
+    w.show()
+    field = w.portal_page.portal_version
+    assert field.minimumWidth() == VERSION_FIELD_PX >= 120
+    assert field.width() >= VERSION_FIELD_PX
+    assert field.fontMetrics().horizontalAdvance("10.1.0") + 40 < field.width()     # the text and the arrow fit

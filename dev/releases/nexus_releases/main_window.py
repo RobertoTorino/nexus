@@ -62,14 +62,17 @@ from .style import NEXUS
 
 COLUMNS = ("Release", "App", "VERSION", "Last tag", "Needs release", "New version", "Notes")
 SUITE_KEY = "suite"                     # the chosen suite, in the settings
+VERSION_FIELD_PX = 130                  # the portal version field: a version like 10.1.0 and room to type
 SEMVER_TIP = ("Breaking. (an entry that starts with it) -> major: something removed or no longer working as "
               "before. Added. -> minor: a new feature. Fixed. -> patch: a bug or security fix.")
 LOG_DIR = Path(os.environ.get("XDG_CACHE_HOME") or Path.home() / ".cache") / "nexus-releases" / "run"
 # A selected cell and the input field being typed in: a teal outline (Nexus's accent) with rounded corners on a
 # transparent background, not the desktop's solid highlight. The line edit inside an editable combo box keeps the
-# combo's frame.
+# combo's frame. The tables' grid lines are the thin dimmed-silver edge of the theme, as the border around a table
+# (owner, 26-10-2026: Qt's own lines were brighter and heavier).
 SELECTION_STYLESHEET = (
-    "QTableWidget { outline:0; selection-background-color:transparent; selection-color:palette(text); }"
+    "QTableWidget { outline:0; selection-background-color:transparent; selection-color:palette(text); "
+    f"gridline-color:{NEXUS.edge}; }}"
     "QTableWidget::item { border:2px solid transparent; border-radius:6px; }"
     f"QTableWidget::item:selected {{ background:transparent; color:palette(text); border-color:{NEXUS.accent}; }}"
     f"QLineEdit:focus {{ background:transparent; border:2px solid {NEXUS.accent}; border-radius:6px; }}"
@@ -268,6 +271,9 @@ class PortalPage(QWidget):
         self.portal_needs = QLabel()
         self.portal_version = QComboBox()
         self.portal_version.setEditable(True)
+        # Wide enough for a three-part version with room to type: the field's own width cut "10.1.0" off (owner,
+        # 26-10-2026).
+        self.portal_version.setMinimumWidth(VERSION_FIELD_PX)
         self.portal_notes = QLineEdit()
         self.portal_notes.setPlaceholderText("What this portal release brings (optional)")
         self.bump_button = accent_button("Bump portal", "Write portal/VERSION, its copies and the CHANGELOG entry")

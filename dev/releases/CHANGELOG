@@ -1,3 +1,13 @@
+Changelog: 26-10-2026 13:46:32
+
+Fixed. The tables' grid lines are the theme's thin dimmed-silver edge, as the border around a table (owner,
+26-10-2026: Qt's own lines were brighter and heavier).
+
+Changelog: 26-10-2026 13:42:28
+
+Fixed. The portal version field on step 2 is wide enough for a version like 10.1.0 (owner, 26-10-2026: the
+field cut the text off).
+
 Changelog: 26-10-2026 13:21:15
 
 Added. The window has Nexus's design, not the suite's theme (owner, 26-10-2026: a Nexus app follows Nexus):

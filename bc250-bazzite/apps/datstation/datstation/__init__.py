@@ -6,7 +6,7 @@ BC250 Bazzite Suite builds its apps (bc250_core, the same installer and launcher
 
 APP_NAME = "Bazzite DatStation"
 APP_ID = "bazzite-datstation"
-__version__ = "2.0.0"
+__version__ = "2.1.0"
 
 from pathlib import Path  # noqa: E402  (constants first, as the suite's apps do)
 
