@@ -1,3 +1,7 @@
+Changelog: 26-10-2026 05:33:41
+
+Release 9.2.1. Pins oc-v0.2.4.
+
 Changelog: 26-10-2026 05:06:06
 
 Fixed. An app installed from a checkout of the repository showed no update in a portal from a release (owner,
