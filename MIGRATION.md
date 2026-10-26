@@ -1012,14 +1012,24 @@ behavior and dependencies. Decided (owner, 25-10-2026):
   pane lies flat under the grid (the focused app's name, versions and one line of what it does, with Open and
   Update pills for touch), so the pane keeps showing what A does. Rendered as direction D
   (`~/nexus-mockups/mockups_d.py`, on `mockups.py`; `D-amber-portal.png`, `D-amber-test.png`; the eighth tile is
-  a filler to fill the page). Open (owner): judged on the Ally at full screen: the glow, the strip under the grid
-  (or X Details alone), the sizes. The images are the owner's (26-10-2026), in `~/new-images/` until
-  `windows-portable/` exists (the move of the BC250 suite into `bc250-bazzite/` comes first, the section below):
-  the suite's icon `windows-portable-1024.png` with its copies at 512, 256 and 128 px (Lanczos, as
+  a filler to fill the page). The strip stays (owner, 26-10-2026, on the Ally): its pills carry their controller
+  button (A Open, Y Update), so touch and controller use the same control and the hint line under it keeps only
+  what has no pill (X Details, B Back); without an update the Update pill, and Y with it, is gone. Open (owner):
+  the glow and the sizes, at full screen on the Ally; whether the description may take two lines (it wraps for
+  PCSX2 Manager). The images are the owner's (26-10-2026), in
+  `windows-portable/icons/` since 26-10-2026 (the PNG sources, as Nexus's are in `nexus/images/`; ICONS.md lists
+  them): the suite's icon `windows-portable-1024.png` with its copies at 512, 256 and 128 px (Lanczos, as
   `tools/sync_icons.py` scales), and `windows-portable-device.png` (1376 x 768, transparent) for the hero of the
-  suite's wiki home, as `docs/images/home/bc250-board.webp` is the BC250 wiki's. Proposed places, as the BC250
-  suite's: `windows-portable/portal/images/` for the icon and its sizes, `windows-portable/docs/images/` for the
-  wiki's copies (webp, written when the wiki exists).
+  suite's wiki home, as `docs/images/home/bc250-board.webp` is the BC250 wiki's. Their WebP copies come with the
+  portal (`windows-portable/portal/images/`) and the wiki (`windows-portable/docs/images/`). The folder is not a
+  suite yet: that takes its `portal/apps.toml`. Its `SYSTEM` says `windows` and its `TAG_PREFIX` `wp-` (owner,
+  26-10-2026: `wp-portal-v0.1.0`, `wp-test-v0.1.0`). The tools work with two suites since 26-10-2026
+  (`tools/suites.py`: the default is the suite without a prefix, a tag names its suite; `tag-release.sh` and
+  `build_release.py` take the tag's suite; `build_release.py` refuses a Windows suite's tags until its release
+  format exists). Tried with a bare `windows-portable/portal/apps.toml`: what the suite has to bring with it is
+  `apps/` (`tools/check_versions.py`) and its own `tools/check_manifest.py` (`tools/pre-push.sh` runs each
+  suite's); Nexus Releases forms tags without the prefix, and `release.yml` marks a plain `portal-v` release as
+  Latest: both wait for the suite's portal and release format.
 - **Own tuning apps** (TDP, fans, and the like) for the handheld, later: the board's tuning apps do not port (sysfs,
   GRUB, RADV), but the same kinds of apps on both give comparison data between the BC-250 and the handheld.
 

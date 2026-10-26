@@ -4,6 +4,9 @@
 
     python3 tools/build_release.py [--suite NAME] <app>-v<x.y.z> <out-dir> [--bundle DIR]
 
+The tag names its suite (tools/suites.py: a suite's TAG_PREFIX, none for bc250-bazzite); --suite overrides it. A
+Windows suite's tags are refused: their release format (no install.sh) is not built here yet.
+
 <out-dir> gets <tag>.tar.gz (unpacks into <tag>/), SHA256SUMS and notes.md. The tag's version must equal the app's
 VERSION. An app in NATIVE_WHEELS needs the wheel of its native core in that folder first, built by release.yml;
 it goes into the tarball, so the portal's checksum covers it. Bazzite Test (check) gets its engine checksum recorded
@@ -50,7 +53,7 @@ def _load(name: str, path: Path):
 
 suites = _load("nexus_suites", ROOT / "tools" / "suites.py")
 stage_app = _load("bc250_stage_app", ROOT / "tools" / "stage_app.py")
-SUITE = stage_app.SUITE                     # the one suite; main() takes --suite
+SUITE = stage_app.SUITE                     # the default suite; main() takes the tag's (tools/suites.py)
 MANIFEST = SUITE / "portal" / "apps.toml"
 manifest = _load("bc250_manifest", SUITE / "portal" / "bc250_portal" / "manifest.py")
 
@@ -166,7 +169,7 @@ def native_wheel(app: str, src: Path, version: str) -> str | None:
 
 
 def build(tag: str, out: Path, bundle: Path | None = None) -> Path:
-    match = _TAG.match(tag)
+    match = _TAG.match(tag.removeprefix(suites.tag_prefix(SUITE)))
     if not match:
         raise SystemExit(f"{tag} is not <app>-v<x.y.z>")
     app, version = match["app"], match["version"]
@@ -225,8 +228,14 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--bundle", type=Path, help="folder with the pinned check release (portal tags)")
     suites.add_argument(parser)
     args = parser.parse_args(argv)
-    if args.suite:
-        select(suites.suite(args.suite))
+    try:
+        suite = suites.suite(args.suite) if args.suite else suites.of_tag(args.tag)[0]
+    except LookupError as exc:
+        raise SystemExit(str(exc)) from None
+    if suites.system(suite) == "windows":
+        raise SystemExit(f"{args.tag}: {suite.name} is a Windows suite; its releases are not built here yet")
+    if suite != SUITE:
+        select(suite)
     archive = build(args.tag, args.out, args.bundle)
     print(f"{archive} {sha256_of(archive)}")
     return 0

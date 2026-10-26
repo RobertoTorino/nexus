@@ -81,6 +81,22 @@ def test_every_suite_names_its_system():
         assert suites.system(folder) in suites.SYSTEMS, f"{folder.name}/SYSTEM: one of {', '.join(suites.SYSTEMS)}"
 
 
+def test_the_suites_tags_never_mix():
+    """One suite has plain tags (bc250-bazzite: installed portals find its releases by them); every other has a
+    TAG_PREFIX of its own, and no app of the plain suite starts with one, so a tag names one suite."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("nexus_suites", SUITE / "tools" / "suites.py")
+    suites = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(suites)
+    prefixes = [suites.tag_prefix(folder) for folder in _suites()]
+    assert prefixes.count("") == 1 and len(set(prefixes)) == len(prefixes), prefixes
+    for prefix in filter(None, prefixes):
+        assert re.fullmatch(r"[a-z0-9]+-", prefix), f"TAG_PREFIX {prefix!r}: lowercase letters and digits, then -"
+    plain = next(folder for folder in _suites() if not suites.tag_prefix(folder))
+    for app in (plain / "apps").iterdir():
+        assert not any(app.name.startswith(prefix) for prefix in filter(None, prefixes)), app.name
+
+
 def test_every_app_has_tests_and_ci_runs_them():
     import re
     for app in _apps():

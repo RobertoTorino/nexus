@@ -25,7 +25,9 @@ its `icons/` and its `tools/` (the suite's own tools and `tools/installer-tests/
 the apps listed in its manifest; its test app (**check**, BC-250 Bazzite Test, for the BC250 suite) is always
 installed and always listed first; every other listed app is an optional tile. A suite's `SYSTEM` file names the
 system it is made for, `bazzite` or `windows` (owner, 26-10-2026: a suite is worked on and tested on its own system).
-The root keeps what is Nexus's:
+A suite's release tags start with its `TAG_PREFIX` (the Windows Portable Suite's `wp-`, owner, 26-10-2026:
+`wp-portal-v0.1.0`); the BC250 suite has none, so its tags stay as installed portals know them, and it is the
+default suite of the tools (`tools/suites.py`). The root keeps what is Nexus's:
 
 - `core/bc250_core/`: shared Python code, every suite's. It is **bundled per app** at release time
   (`tools/stage_app.py`), so each app runs on the core it was tested with; the BC250 suite's shared venv
@@ -171,7 +173,7 @@ can be read without `gh` through the public API:
 The owner does every step of a release; Claude does none of them, and doesn't offer to:
 
 - bumping a `VERSION` (and the copies `tools/check_versions.py` checks), or `portal/VERSION`;
-- tagging (`<app>-v<x.y.z>` or `portal-v<x.y.z>`, with `tools/tag-release.sh`, which waits until CI passed on the
+- tagging (`<app>-v<x.y.z>` or `portal-v<x.y.z>`, after the suite's prefix, with `tools/tag-release.sh`, which waits until CI passed on the
   commit), which starts `.github/workflows/release.yml` (it, too, builds only a commit CI passed);
 - building or publishing release assets (`tools/build_release.py`) and the GitHub releases themselves;
 - pinning a release in the suite's `portal/apps.toml` (`bc250-bazzite/tools/pin_app.py`, the `tag` and `sha256`

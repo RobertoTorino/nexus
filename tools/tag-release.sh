@@ -8,6 +8,7 @@
 #
 #   tools/tag-release.sh portal-v0.9.5
 #   tools/tag-release.sh governor-v0.1.1 upscaler-v0.2.1
+#   tools/tag-release.sh wp-portal-v0.1.0             # a suite with a tag prefix (tools/suites.py)
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
@@ -20,12 +21,12 @@ for candidate in python3 py; do      # one that runs: Windows has a python3 that
     if "$candidate" -c '' >/dev/null 2>&1; then python=$candidate; break; fi
 done
 [ -n "$python" ] || die "No Python found (python3, or py on Windows)."
-suite=$("$python" tools/suites.py --default) || die "Which suite? (tools/suites.py)"      # bc250-bazzite
-[ "$suite" = . ] && suite="" || suite="$suite/"                                        # a prefix for its paths
 
 for tag in "$@"; do
-    [[ $tag =~ ^([a-z0-9-]+)-v([0-9]+\.[0-9]+\.[0-9]+)$ ]] || die "$tag is not <name>-v<x.y.z>."
-    name=${BASH_REMATCH[1]} version=${BASH_REMATCH[2]}
+    # the tag's suite, by its prefix (tools/suites.py): bc250-bazzite's tags have none, windows-portable's wp-
+    read -r suite name version < <("$python" tools/suites.py --tag "$tag" | tr -d '\r') ||
+        die "$tag is not <name>-v<x.y.z> of a suite (tools/suites.py --tag)."
+    [ "$suite" = . ] && suite="" || suite="$suite/"                                    # a prefix for its paths
     if [ "$name" = portal ]; then dir=${suite}portal; else dir=${suite}apps/$name; fi
     [ -f "$dir/VERSION" ] || die "$tag: there is no $dir/VERSION."
     committed=$(git show "HEAD:$dir/VERSION" 2>/dev/null | tr -d '[:space:]')

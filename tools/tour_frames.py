@@ -23,7 +23,7 @@ def _suites():
 
 
 suites = _suites()
-SUITE = suites.suite()                              # the one suite (the tours take --suite)
+SUITE = suites.suite()                              # the default suite (the tours take --suite)
 WIDTH, HEIGHT = 1920, 1080
 SCALE = 1.2                                         # the window is 1600 x 900 at 120 %: readable on a phone too
 

@@ -31,7 +31,7 @@ def _load(name: str, path: Path):
 
 suites = _load("nexus_suites", Path(__file__).resolve().with_name("suites.py"))
 ROOT = suites.ROOT
-SUITE = suites.suite()                      # the one suite; main() takes --suite
+SUITE = suites.suite()                      # the default suite (tools/suites.py); main() takes --suite
 SKIP_DIRS = {"tests", "python", "_python", "__pycache__", ".pytest_cache", ".idea", ".venv",
              "target"}                          # cargo's build output (consoles/native)
 SKIP_FILES = {"requirements-dev.txt", ".gitignore", ".gitattributes", ".standalone"}

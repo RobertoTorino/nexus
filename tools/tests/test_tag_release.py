@@ -118,3 +118,29 @@ def test_a_portal_tag_waits_for_the_app_releases_it_pins(repo):
     git(repo, "push", "-q", "origin", "main")
     assert tag(repo, "portal-v0.9.6").returncode == 0
     assert "refs/tags/portal-v0.9.6" in remote_tags(repo) and "portal-v0.9.5" not in remote_tags(repo)
+
+
+def test_a_tag_goes_to_its_suite_by_its_prefix(tmp_path):
+    """Two suites: the one without a TAG_PREFIX takes the plain tags, wp- tags are windows-portable's."""
+    origin, root = tmp_path / "origin.git", tmp_path / "nexus"
+    subprocess.run(["git", "init", "-q", "--bare", "-b", "main", str(origin)], check=True)
+    (root / "tools").mkdir(parents=True)
+    for name in ("tag-release.sh", "ci_state.py", "suites.py"):
+        shutil.copy(SCRIPT.with_name(name), root / "tools" / name)
+    for suite, version in (("bc250-bazzite", "0.9.4"), ("windows-portable", "0.1.0")):
+        (root / suite / "portal").mkdir(parents=True)
+        (root / suite / "portal" / "VERSION").write_text(version + "\n")
+        (root / suite / "portal" / "apps.toml").write_text("")
+    (root / "windows-portable" / "TAG_PREFIX").write_text("wp-\n")
+    git(root, "init", "-q", "-b", "main")
+    git(root, "remote", "add", "origin", str(origin))
+    git(root, "add", "-A")
+    git(root, "commit", "-qm", "start")
+    git(root, "push", "-q", "origin", "main")
+    result = tag(root, "portal-v0.1.0")                              # the plain portal is bc250-bazzite's: 0.9.4
+    assert result.returncode != 0 and "bc250-bazzite/portal/VERSION 0.9.4" in result.stderr
+    result = tag(root, "wp-portal-v0.1.0", "portal-v0.9.4")
+    assert result.returncode == 0, result.stderr
+    assert sorted(git(root, "tag").split()) == ["portal-v0.9.4", "wp-portal-v0.1.0"]
+    result = tag(root, "xx-portal-v0.1.0")                           # no suite has that prefix, nor an app xx-portal
+    assert result.returncode != 0 and "there is no bc250-bazzite/apps/xx-portal/VERSION" in result.stderr

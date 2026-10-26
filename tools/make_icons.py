@@ -81,6 +81,15 @@ MATERIAL = [
     ("github", "The page icon of GitHub settings."),
 ]
 
+WINDOWS_PORTABLE_ICON = [
+    ("windows-portable/icons/windows-portable-256.png",
+     "`windows-portable/icons/windows-portable-<size>.png` (1024, 512, 256 and 128 px)",
+     "The icon of the Windows Portable Suite, the owner's drawing (26-10-2026): the set its portal's and wiki's "
+     "copies are made from."),
+    ("windows-portable/icons/windows-portable-device.png", "`windows-portable/icons/windows-portable-device.png` "
+     "(1376 x 768)", "The handheld, the owner's picture (26-10-2026): the hero of the suite's wiki home, as the "
+     "board is the BC250 wiki's."),
+]
 NEXUS_ICON = [
     ("nexus/images/nexus-256.png", "`nexus/images/nexus-<size>.png` (1024, 512, 256 and 128 px)",
      "The icon of Nexus, the owner's drawing (25-10-2026): the set the copies are made from."),
@@ -215,6 +224,8 @@ def build(root: Path = ROOT) -> str:
                                         for name, use in MATERIAL))
     out += ["### Symbols in text", "", "Characters of the font, used as icons in labels and buttons.", ""]
     out += table("Symbol,App,Used for", SYMBOLS)
+    out += ["## Windows Portable Suite", "", "### The suite's icon", ""]
+    out += table("Icon,File,Used for", ((img(path), file, use) for path, file, use in WINDOWS_PORTABLE_ICON))
     out += ["## Nexus", "", "### The Nexus icon", ""]
     out += table("Icon,File,Used for", ((img(path), file, use) for path, file, use in NEXUS_ICON))
     out += ["### Material Design icons on the Nexus page", "", "Drawn by MkDocs Material in the page's colors.", ""]

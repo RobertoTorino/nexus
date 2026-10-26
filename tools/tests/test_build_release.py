@@ -155,6 +155,22 @@ def test_checkout_only_app_has_no_release(tmp_path, monkeypatch):
         br.build("x-v0.1.0", tmp_path)
 
 
+
+def test_a_windows_suites_tag_is_refused(tmp_path, monkeypatch):
+    """The tag names its suite (tools/suites.py); a Windows suite's releases are not built by this tool."""
+    suite = tmp_path / "windows-portable"
+    (suite / "portal").mkdir(parents=True)
+    (suite / "SYSTEM").write_text("windows\n")
+    monkeypatch.setattr(br.suites, "of_tag", lambda tag: (suite, "portal", "0.1.0"))
+    with pytest.raises(SystemExit, match="windows-portable is a Windows suite"):
+        br.main(["wp-portal-v0.1.0", str(tmp_path / "out")])
+    assert not (tmp_path / "out").exists()
+
+
+def test_a_plain_tag_is_the_bazzite_suites():
+    assert br.suites.of_tag(BT_TAG)[0] == br.SUITE == br.suites.ROOT / "bc250-bazzite"
+
+
 def test_portal_needs_and_verifies_bundle(bt_release, pinned, tmp_path):
     with pytest.raises(SystemExit, match="needs --bundle"):
         br.build(PORTAL_TAG, tmp_path / "a")

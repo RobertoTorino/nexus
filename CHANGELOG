@@ -1,3 +1,20 @@
+Changelog: 26-10-2026 21:32:35
+
+The tools work with more than one suite (owner, 26-10-2026: the Windows Portable Suite's tags start with wp-). A
+suite's release tags start with the prefix in its TAG_PREFIX file; the BC250 suite has none, so its tags are
+unchanged, and it is the tools' default suite when there are several (tools/suites.py: tag_prefix(), of_tag(),
+--tag). tools/tag-release.sh and tools/build_release.py take each tag's suite from the tag; build_release.py refuses
+a Windows suite's tags until their release format exists. tools/tests/test_layout.py checks that one suite has plain
+tags and the others a prefix of their own that no app name starts with; tools/tests/test_suites.py is new.
+windows-portable/ has its SYSTEM (windows) and TAG_PREFIX (wp-); it is not a suite yet.
+
+Changelog: 26-10-2026 21:23:25
+
+The Windows Portable Suite's pictures are in the repository: the owner's icon at 1024, 512, 256 and 128 px and the
+handheld's picture (1376 x 768) in windows-portable/icons/, the PNG sources its portal's and wiki's WebP copies will
+be made from. ICONS.md lists them in a section of their own (tools/make_icons.py). The folder is not a suite yet (it
+has no portal/apps.toml), so no tool treats it as one.
+
 Changelog: 26-10-2026 20:45:22
 
 Each suite is tested on its own system (owner, 26-10-2026: the Bazzite suites on Bazzite, the Windows suites on
