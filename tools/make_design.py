@@ -201,6 +201,21 @@ NEXUS_APP_BLOCKS = [
     ("#80808066", "Dimmed silver (40 %): the borders of the fields, boxes, tabs and buttons, and a box's neutral "
                   "edge."),
 ]
+PORTABLE_TEXT = [
+    ("#f5f4f0", "The text: the title, a card's title, the values, the legend and a gray pill's label."),
+    ("#a5a5ab", "Dimmed: the version under the title, the line under a card's title, the labels of the values, the "
+                "status line."),
+    ("#f5a524", "Amber: an update in a tile or the detail pane, the selected tab; the main pill's glyph letter."),
+    ("#141414", "On the amber: the main pill's label, a glyph on the amber."),
+]
+PORTABLE_BLOCKS = [
+    ("#121214", "The window, behind everything; a gray pill's glyph circle."),
+    ("#1d1e22", "A card, the detail pane, a field or list."),
+    ("#292b31", "The focused card, a gray pill, a glyph's circle in the legend."),
+    ("#35383f", "Borders of fields and lists."),
+    ("#f5a524", "Amber: the focused card's edge and the glow under it, the main pill, the selected tab's line."),
+    ("#141414", "The main pill's glyph circle."),
+]
 NEXUS_BLOCKS = [
     ("#010101", "Ink: the page background, the header, the dark sections, the footer and its notice strip."),
     ("#0f0f0f", "Main color: Material's primary color, table headings."),
@@ -236,6 +251,18 @@ Each design (a suite's, the Nexus page's) has its own; none is carried over to a
   `#0a55b0` of the gaming category's icon in the emulator managers.
 - **Anything else is a deviation**, listed under Color families below with the app it is in. A new color is
   added to the family it belongs to, or it needs a reason here.
+
+### Windows Portable Suite
+
+- **The identity** (owner, 26-10-2026: direction D, B's amber on C's cards): a near-black window `#121214`, cards a
+  step lighter `#1d1e22`, the focused card raised `#292b31`, and one amber `#f5a524` for the focus and the main
+  action; text `#f5f4f0` with dimmed `#a5a5ab` for the second line. Inter, with heavy titles. From
+  `core/bc250_core/portable.py`, a theme for core's widgets set with `create_app(theme=PORTABLE)`.
+- **The focus is what a controller needs to see:** the focused card is raised with an amber edge and an amber glow
+  under it; a focused pill is dimmed (owner, 26-10-2026; its behavior still open). Cards and pills share the corner
+  radius 14.
+- **A pill shows its controller button** (A Open, Y Update); the legend at the bottom shows only the buttons that
+  have no pill (X Details, B Back), none of them in amber.
 
 ### Nexus
 
@@ -531,6 +558,10 @@ are not on core yet carry a copy). The theme is one choice for every app: Gunmet
                        "theme's surfaces.", STATE_TEXT, STATE_BLOCKS))
     out.append("## The wiki\n\n`bc250-bazzite/docs/stylesheets/suite.css`, Material's slate scheme with the suite's purple.\n")
     out.append(section("Wiki", "", WIKI_TEXT, WIKI_BLOCKS))
+    out.append("## The Windows Portable Suite\n\n`core/bc250_core/portable.py`, the portable window: direction D "
+               "(the owner's, 26-10-2026).\n")
+    out.append(section("Portable window", "The apps of the Windows Portable Suite, sized for a handheld held in the "
+                       "hands.", PORTABLE_TEXT, PORTABLE_BLOCKS))
     out.append("## The Nexus page\n\n`nexus/docs/stylesheets/nexus.css`, ink, silver and teal (the owner's design, "
                "25-10-2026): the Nexus page has a\ndesign of its own, apart from the suites' (a design per system).\n")
     out.append(section("Nexus", "", NEXUS_TEXT, NEXUS_BLOCKS))

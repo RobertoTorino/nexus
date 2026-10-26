@@ -1051,6 +1051,15 @@ behavior and dependencies. Decided (owner, 25-10-2026):
   keeps equal, so a change there is a release of each; `sound.py` is WirePlumber's (Linux). Seen once in four runs
   of core's tests on Windows: `RoundedToolTip` reports a missing `_owner` while Python shuts down (its event filter
   is still on the application when a test run ends without aboutToQuit); every test passes. A code path to check.
+- **The portable window (26-10-2026).** `core/bc250_core/portable.py` with `gamepad.py`: direction D from
+  `mockups_d.py` (the colors, radius 14, the glow 36/8, the type sizes), sizes scaled from 1280 x 720 to the screen
+  (the Ally docked to a TV at 125 % is 1536 x 864, 1.2 times; on its own screen at 150 % it is the mock-up's size).
+  Tried full screen on the Ally (duplicate mode, owner): the cards' glow is good, the sizes are fine. The pills have
+  the cards' radius 14 (owner). A focused pill: a thin light edge was barely visible, a light ring too much, the glow
+  amber on amber and an amber ring with a black gap not right either; now dimmed to 60 %. Open (owner): a focused
+  pill's behavior ("still does not feel right"). The controller (pygame-ce 2.5.8, SDL 2.32.10) finds the Ally's pad
+  as "ASUSTeK Computer Inc."; pygame names the triggers TRIGGERLEFT and TRIGGERRIGHT. DESIGN.md lists the
+  colors.
 - **Own tuning apps** (TDP, fans, and the like) for the handheld, later: the board's tuning apps do not port (sysfs,
   GRUB, RADV), but the same kinds of apps on both give comparison data between the BC-250 and the handheld.
 

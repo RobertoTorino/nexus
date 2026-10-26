@@ -1,3 +1,16 @@
+Changelog: 26-10-2026 22:37:18
+
+Added. portable: the portable window of the Windows Portable Suite (owner, 26-10-2026: direction D, B's amber on C's
+cards). PORTABLE is its design as a theme for core's widgets; PortableHeader, Card, Pill, Legend and PortableWindow
+are what its apps are built of. Sizes are the mock-up's at 1280 x 720 and scale with the screen. The focused card
+is raised with an amber edge and glow; a focused pill is dimmed. The d-pad, the left stick or the arrow keys move the
+focus to the nearest card or pill, A or Enter acts, B or Escape goes back, and a page binds its own buttons (X, Y,
+LB, RB). The controller counts only while the window is active.
+
+Added. gamepad: a game controller read with pygame-ce for the portable window: the window's actions (a held
+direction repeats) and every button, stick and trigger as it is, for a controller test. Without pygame-ce or a
+controller nothing happens. The BC250 portal keeps its own gamepad.py.
+
 Changelog: 26-10-2026 22:01:21
 
 Added. applog: an app can name its suite (log_file() and setup() take suite=), and its log goes to the suite's

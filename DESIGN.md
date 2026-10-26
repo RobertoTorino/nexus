@@ -35,6 +35,18 @@ Each design (a suite's, the Nexus page's) has its own; none is carried over to a
 - **Anything else is a deviation**, listed under Color families below with the app it is in. A new color is
   added to the family it belongs to, or it needs a reason here.
 
+### Windows Portable Suite
+
+- **The identity** (owner, 26-10-2026: direction D, B's amber on C's cards): a near-black window `#121214`, cards a
+  step lighter `#1d1e22`, the focused card raised `#292b31`, and one amber `#f5a524` for the focus and the main
+  action; text `#f5f4f0` with dimmed `#a5a5ab` for the second line. Inter, with heavy titles. From
+  `core/bc250_core/portable.py`, a theme for core's widgets set with `create_app(theme=PORTABLE)`.
+- **The focus is what a controller needs to see:** the focused card is raised with an amber edge and an amber glow
+  under it; a focused pill is dimmed (owner, 26-10-2026; its behavior still open). Cards and pills share the corner
+  radius 14.
+- **A pill shows its controller button** (A Open, Y Update); the legend at the bottom shows only the buttons that
+  have no pill (X Details, B Back), none of them in amber.
+
 ### Nexus
 
 - **The identity:** near-black ink `#010101`, silver text `#c0c0c0` and one teal `#17b6a7` (the icon's) for every
@@ -300,6 +312,43 @@ Background colors:
 | ![#ffffff1f](bc250-bazzite/docs/design/colors/block-ffffff1f.svg) | `#ffffff1f` | Behind a link in the header under the pointer (12 %). |
 | ![#00000040](bc250-bazzite/docs/design/colors/block-00000040.svg) | `#00000040` | The shadow under a button under the pointer (25 %). |
 | ![#00000059](bc250-bazzite/docs/design/colors/block-00000059.svg) | `#00000059` | The strip with the notice at the bottom of the home page's footer (35 %). |
+
+## The Windows Portable Suite
+
+`core/bc250_core/portable.py`, the portable window: direction D (the owner's, 26-10-2026).
+
+### Portable window
+
+The apps of the Windows Portable Suite, sized for a handheld held in the hands.
+
+Text colors:
+
+- `#f5f4f0` The text: the title, a card's title, the values, the legend and a gray pill's label.
+
+  ![Sample text in #f5f4f0](bc250-bazzite/docs/design/colors/text-f5f4f0.svg)
+
+- `#a5a5ab` Dimmed: the version under the title, the line under a card's title, the labels of the values, the status line.
+
+  ![Sample text in #a5a5ab](bc250-bazzite/docs/design/colors/text-a5a5ab.svg)
+
+- `#f5a524` Amber: an update in a tile or the detail pane, the selected tab; the main pill's glyph letter.
+
+  ![Sample text in #f5a524](bc250-bazzite/docs/design/colors/text-f5a524.svg)
+
+- `#141414` On the amber: the main pill's label, a glyph on the amber.
+
+  ![Sample text in #141414](bc250-bazzite/docs/design/colors/text-141414.svg)
+
+Background colors:
+
+| Color | Hex | Used for |
+| --- | --- | --- |
+| ![#121214](bc250-bazzite/docs/design/colors/block-121214.svg) | `#121214` | The window, behind everything; a gray pill's glyph circle. |
+| ![#1d1e22](bc250-bazzite/docs/design/colors/block-1d1e22.svg) | `#1d1e22` | A card, the detail pane, a field or list. |
+| ![#292b31](bc250-bazzite/docs/design/colors/block-292b31.svg) | `#292b31` | The focused card, a gray pill, a glyph's circle in the legend. |
+| ![#35383f](bc250-bazzite/docs/design/colors/block-35383f.svg) | `#35383f` | Borders of fields and lists. |
+| ![#f5a524](bc250-bazzite/docs/design/colors/block-f5a524.svg) | `#f5a524` | Amber: the focused card's edge and the glow under it, the main pill, the selected tab's line. |
+| ![#141414](bc250-bazzite/docs/design/colors/block-141414.svg) | `#141414` | The main pill's glyph circle. |
 
 ## The Nexus page
 
