@@ -7,7 +7,7 @@ from __future__ import annotations
 import shlex
 
 import pytest
-from PyQt6.QtWidgets import QLabel, QMessageBox
+from PyQt6.QtWidgets import QLabel, QMessageBox, QPushButton
 
 from oc_bisect import __version__
 from oc_bisect import main_window
@@ -100,3 +100,22 @@ def test_the_status_boxes_are_as_wide_as_their_text(window, qapp):
     window.time_spin.setValue(36000)
     qapp.processEvents()
     assert window.load_box.value.text() == "36000 s" and fits()
+
+
+def test_help_and_about_are_pills_beside_the_boxes(window, qapp, monkeypatch):
+    """Help and About are pills in the row of boxes (owner, 26-10-2026), as wide as them; a click opens the dialog.
+    The help shows the script's own header comment, which starts after its SPDX line."""
+    from pathlib import Path
+    opened = []
+    monkeypatch.setattr(main_window.HelpDialog, "exec", lambda self: opened.append(self.windowTitle()))
+    monkeypatch.setattr(main_window.AboutDialog, "exec", lambda self: opened.append(self.windowTitle()))
+    window.show()
+    qapp.processEvents()
+    assert window.help_pill.value.text() == "Help" and window.about_pill.value.text() == "About"
+    assert window.help_pill.width() == window.load_box.width() == window.about_pill.width()
+    assert not [b for b in window.findChildren(QPushButton) if b.text() in ("Help", "About")]
+    window.help_pill.click()
+    window.about_pill.click()
+    assert [t.split(" ")[0] for t in opened] == ["help", "about"]
+    text = main_window.HelpDialog._help_text(str(Path(main_window.__file__).parents[1] / "bc250-gpu-oc-bisect.sh"))
+    assert text.startswith("bc250-gpu-oc-bisect.sh - ") and "Usage:" in text and "SPDX" not in text

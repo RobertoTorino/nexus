@@ -1,18 +1,20 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-"""About and Help dialogs for the launcher GUI."""
+"""About and Help dialogs for the launcher GUI, and the header's status box and pill (copies of core's MetricBox and
+Pill: this app is not on core)."""
 
 from __future__ import annotations
 
 import subprocess
 
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QFontDatabase, QPixmap
 from PyQt6.QtWidgets import (
-    QDialog, QDialogButtonBox, QHBoxLayout, QLabel, QTextEdit, QVBoxLayout, QWidget,
+    QDialog, QDialogButtonBox, QFrame, QHBoxLayout, QLabel, QSizePolicy, QTextEdit, QVBoxLayout, QWidget,
 )
 
 from . import APP_NAME, LOGO_PATH, REPO_URL, __version__, window_title
+from .theme import ACCENT, BLUE, header_font, muted, surface_style
 
 
 class AboutDialog(QDialog):
@@ -89,3 +91,90 @@ class HelpDialog(QDialog):
             "Run it from a terminal instead:\n"
             f"  bash {script} --help"
         )
+
+
+class MetricBox(QFrame):
+    """One box of the header's second row: a big value with a caption, centered, on the theme's surface with
+    *colour* as its left edge. A copy of core's MetricBox with the same sizes (and same_width): this app is not on
+    core."""
+
+    MIN_WIDTH = 120
+
+    def __init__(self, caption: str, colour: str = BLUE, parent: QWidget | None = None):
+        super().__init__(parent)
+        self.peers: list[MetricBox] = []        # same_width(): the boxes this one keeps its width with
+        self.set_colour(colour)
+        self.setMinimumWidth(self.MIN_WIDTH)
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(8, 7, 11, 7)         # 12, 8, 12, 8 inside the border
+        layout.setSpacing(0)
+        self.value = QLabel("—")
+        self.value.setStyleSheet(header_font() + "font-size:22px; font-weight:800;")
+        self.caption = QLabel(caption)
+        self.caption.setStyleSheet("font-size:12px; font-weight:600;")
+        for label in (self.value, self.caption):
+            label.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+            layout.addWidget(label)
+
+    def set_value(self, text: str, tooltip: str = "") -> None:
+        self.value.setText(text)
+        self.setToolTip(tooltip)
+        if self.peers:
+            _even(self.peers)
+
+    def set_colour(self, colour: str) -> None:
+        """The box's state or category color, its left edge."""
+        self.setStyleSheet(surface_style(colour) + "QLabel { background:transparent; border:none; }")
+
+
+class Pill(MetricBox):
+    """A header pill that is a button, as the status boxes look: the value in large type, what it is under it; the
+    accent edge under the mouse or the keyboard focus. A click, Enter or Space emits clicked. A copy of core's Pill."""
+
+    clicked = pyqtSignal()
+
+    def __init__(self, value: str, caption: str, tooltip: str = "", colour: str = BLUE):
+        super().__init__(caption, colour)
+        self.setObjectName("pill")
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)      # never cut off
+        self.set_value(value, tooltip)
+
+    def set_colour(self, colour: str) -> None:
+        super().set_colour(colour)
+        # A pill that cannot be clicked (setEnabled(False)) shows its text muted, as a disabled button does.
+        # The rule is on the labels' own state: Qt ignores an ancestor's pseudo-state in a selector, so
+        # "#pill:disabled QLabel" would mute every pill.
+        self.setStyleSheet(self.styleSheet() + f"#pill:hover, #pill:focus {{ border-color:{ACCENT}; }}"
+                           f"#pill QLabel:disabled {{ color:{muted()}; }}")
+
+    def mouseReleaseEvent(self, event) -> None:  # noqa: N802 (Qt override)
+        if event.button() == Qt.MouseButton.LeftButton and self.rect().contains(event.position().toPoint()):
+            self.clicked.emit()
+        super().mouseReleaseEvent(event)
+
+    def keyPressEvent(self, event) -> None:  # noqa: N802 (Qt override)
+        if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter, Qt.Key.Key_Space):
+            self.clicked.emit()
+            return
+        super().keyPressEvent(event)
+
+    def click(self) -> None:
+        self.clicked.emit()
+
+
+def same_width(boxes: list[MetricBox]) -> None:
+    """A row of boxes all as wide as the widest, and again whenever a value changes; never narrower than their
+    text (the minimum width alone would let a narrow window cut it off)."""
+    for box in boxes:
+        box.peers = boxes
+        box.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+    _even(boxes)
+
+
+def _even(boxes: list[MetricBox]) -> None:
+    width = max([MetricBox.MIN_WIDTH, *(box.sizeHint().width() for box in boxes)])
+    for box in boxes:
+        box.setMinimumWidth(width)
+

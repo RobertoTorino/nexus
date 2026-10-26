@@ -1,7 +1,9 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 """Single window: a menu-driven "initial setup" screen for bc250-cores-bisect.sh. Pick the options,
-hit Start, and the GUI hands off to a terminal running the real script and gets out of the way."""
+hit Start, and the GUI hands off to a terminal running the real script and gets out of the way. The header is
+the suite's (owner, 26-10-2026): the icon, the title with the version, and under it Help and About as pills, as the
+core apps' header has its actions; what the window does is a muted note below."""
 
 from __future__ import annotations
 
@@ -20,7 +22,8 @@ from .options import (
     MIN_TIME_SECS, BisectOptions,
 )
 from .terminal import launch_in_terminal
-from .widgets import AboutDialog, HelpDialog
+from .theme import header_font, muted
+from .widgets import AboutDialog, HelpDialog, Pill, same_width
 
 # control + post-control + one item per new core + combined, on a standard 0x77 board.
 _TYPICAL_ITEMS = 5
@@ -36,6 +39,11 @@ class MainWindow(QWidget):
 
         root = QVBoxLayout(self)
         root.addLayout(self._build_header())
+        note = QLabel(("Choose how you want to run bc250-cores-bisect.sh, then click Start. This window closes "
+                      "and the real run continues in a terminal, exactly like running the script by hand."))
+        note.setWordWrap(True)
+        note.setStyleSheet(f"color:{muted()};")
+        root.addWidget(note)
         root.addWidget(self._build_options_frame())
         root.addLayout(self._build_buttons())
 
@@ -60,23 +68,23 @@ class MainWindow(QWidget):
         header_right = QVBoxLayout()
         header_right.setSpacing(6)
         title_row = QHBoxLayout()
-        title = QLabel(f"{APP_NAME}  <span style='color:#9aa0a6; font-size:14px;'>v{__version__}</span>")
-        title.setStyleSheet("font-size:24px; font-weight:800;")
+        title = QLabel(f"{APP_NAME}  <span style='color:{muted()}; font-size:14px;'>v{__version__}</span>")
+        title.setStyleSheet(header_font() + "font-size:24px; font-weight:800;")
         title_row.addWidget(title)
         title_row.addStretch(1)
-        help_btn = QPushButton("Help")
-        help_btn.setFlat(True)
-        help_btn.clicked.connect(lambda: HelpDialog(self.script, self).exec())
-        title_row.addWidget(help_btn)
-        about_btn = QPushButton("About")
-        about_btn.setFlat(True)
-        about_btn.clicked.connect(lambda: AboutDialog(self).exec())
-        title_row.addWidget(about_btn)
         header_right.addLayout(title_row)
-        sub = QLabel(("Choose how you want to run bc250-cores-bisect.sh, then click Start. This window closes "
-                      "and the real run continues in a terminal, exactly like running the script by hand."))
-        sub.setWordWrap(True)
-        header_right.addWidget(sub)
+        # Help and About are pills under the title (owner, 26-10-2026), as the core apps' header has its actions.
+        pills = QHBoxLayout()
+        pills.setSpacing(8)
+        self.help_pill = Pill("Help", "The script's options", "Shows the help of bc250-cores-bisect.sh.")
+        self.help_pill.clicked.connect(lambda: HelpDialog(self.script, self).exec())
+        self.about_pill = Pill("About", "Version and license", "The version, the license and the repository.")
+        self.about_pill.clicked.connect(lambda: AboutDialog(self).exec())
+        for pill in (self.help_pill, self.about_pill):
+            pills.addWidget(pill)
+        same_width([self.help_pill, self.about_pill])
+        pills.addStretch(1)
+        header_right.addLayout(pills)
         header.addLayout(header_right, 1)
         return header
 

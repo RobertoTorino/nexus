@@ -8,7 +8,7 @@ import shlex
 
 import pytest
 from PyQt6.QtCore import QEventLoop, QTimer
-from PyQt6.QtWidgets import QLabel, QMessageBox
+from PyQt6.QtWidgets import QLabel, QMessageBox, QPushButton
 
 from cu_bisect import __version__ as BISECT_VERSION
 from cu_bisect import main_window as bisect_window
@@ -118,3 +118,24 @@ def test_unlock_window_accepts_a_retested_mask(qapp, unlock_script, state):
         assert logo.pixmap().width() == 96
     finally:
         window.close()
+
+
+def test_help_and_about_are_pills_under_the_title(qapp, monkeypatch):
+    """Help and About are pills under the title (owner, 26-10-2026), of one width; a click opens the dialog. The
+    help shows the script's own header comment, which starts after its SPDX line."""
+    from pathlib import Path
+    opened = []
+    monkeypatch.setattr(bisect_window.HelpDialog, "exec", lambda self: opened.append(self.windowTitle()))
+    monkeypatch.setattr(bisect_window.AboutDialog, "exec", lambda self: opened.append(self.windowTitle()))
+    window = bisect_window.MainWindow(SCRIPT)
+    window.show()
+    qapp.processEvents()
+    assert window.help_pill.value.text() == "Help" and window.about_pill.value.text() == "About"
+    assert window.help_pill.width() == window.about_pill.width() >= window.help_pill.sizeHint().width()
+    assert not [b for b in window.findChildren(QPushButton) if b.text() in ("Help", "About")]
+    window.help_pill.click()
+    window.about_pill.click()
+    assert [t.split(" ")[0] for t in opened] == ["help", "about"]
+    text = bisect_window.HelpDialog._help_text(str(Path(bisect_window.__file__).parents[1] / "bc250-cu-bisect.sh"))
+    assert text.startswith("bc250-cu-bisect.sh - ") and "Usage:" in text and "SPDX" not in text
+    window.close()

@@ -1,3 +1,21 @@
+Changelog: 26-10-2026 06:07:41
+
+Release 0.3.1.
+
+Changelog: 26-10-2026 05:55:03
+
+Fixed. CU Bisect's window has the suite's header (owner, 26-10-2026): the title in Inter with the version in the muted
+color, and under it Help and About as pills of one width, as the core apps' header has its actions and GPU OC Bisect's
+has them; the two flat buttons at the right end of the title are gone, and what the window does is a muted note under
+the header. widgets.py carries copies of core's MetricBox and Pill, as the app is not on core.
+
+Changelog: 26-10-2026 05:47:49
+
+Fixed. --help (and the Help of the window, which shows it) printed only "SPDX-License-Identifier: GPL-3.0-or-later":
+usage() in bc250-cu-bisect.sh and bc250-cu-unlock.sh printed the header comment from line 2, the SPDX line since it was
+added, up to the blank line under it. It starts at line 4 now, the first line of the comment.
+tools/tests/test_script_help.py checks every such script.
+
 Changelog: 26-10-2026 02:14:35
 
 Release 0.3.0.

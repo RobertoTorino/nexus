@@ -61,7 +61,7 @@
 set -u
 if (( BASH_VERSINFO[0] < 4 )); then echo "bash 4 or newer is needed." >&2; exit 1; fi
 
-VERSION="0.3.0"
+VERSION="0.3.1"
 STRESS_SECS="" ROUNDS_OPT="" SAME_BOOT=0 AUTO=0 MODE=run
 LOAD_TOOL_OPT="" MPRIME_BIN_OPT="" RAS_OPT=""
 LOAD_TOOL=stress-ng MPRIME_BIN="" STRESS_BIN="" RAS=0 MPRIME_DIR=""
@@ -78,7 +78,7 @@ do_reboot() { # --no-ask-password: fail instead of raising a GUI auth popup, the
   systemctl reboot --no-ask-password 2>/dev/null || sudo -n systemctl reboot 2>/dev/null \
     || { say "Could not reboot automatically; reboot WARM by hand (do not power off)."; exit 1; }
 }
-usage() { sed -n '2,/^$/{s/^# \{0,1\}//;p;}' "$0"; }
+usage() { sed -n '4,/^$/{s/^# \{0,1\}//;p;}' "$0"; }   # the header comment, after the SPDX line and the blank
 
 set_colors() {
   if [[ -t 1 ]] && [[ -z ${NO_COLOR:-} ]] && command -v tput >/dev/null 2>&1; then

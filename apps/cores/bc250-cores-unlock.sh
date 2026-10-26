@@ -33,7 +33,7 @@
 set -u
 if (( BASH_VERSINFO[0] < 4 )); then echo "bash 4 or newer is needed." >&2; exit 1; fi
 
-VERSION="0.3.0"
+VERSION="0.3.1"
 SELF=$(readlink -f -- "$0")
 # --install copies the script here so the boot service never executes a user-owned file as root.
 INSTALL_BIN=/usr/local/sbin/bc250-cores-unlock.sh
@@ -52,7 +52,7 @@ MSG_WRITE_FF=$(( 0x98 ))
 
 say() { printf '%s\n' "$*"; }
 die() { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
-usage() { sed -n '2,/^$/{s/^# \{0,1\}//;p;}' "$0"; }
+usage() { sed -n '4,/^$/{s/^# \{0,1\}//;p;}' "$0"; }   # the header comment, after the SPDX line and the blank
 nthreads() { getconf _NPROCESSORS_ONLN 2>/dev/null || nproc; }
 
 need_root() { (( EUID == 0 )) || die "$1 needs root. Run with sudo."; }

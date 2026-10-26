@@ -2,9 +2,10 @@
 
 """Single window: a menu-driven "initial setup" screen for bc250-gpu-oc-bisect.sh. Pick the
 options, hit Start, and the GUI hands off to a terminal running the real script and gets out of
-the way. The header is the suite's (owner, 26-10-2026): the icon, the title with the version, Help and About at
-the right end, and under it four status boxes that sum up the sweep as the options stand (the load per attempt,
-the rounds per step, the overclock and the undervolt sweep); what the window does is a muted note below."""
+the way. The header is the suite's (owner, 26-10-2026): the icon, the title with the version, and under it four
+status boxes that sum up the sweep as the options stand (the load per attempt, the rounds per step, the overclock
+and the undervolt sweep) with Help and About as pills beside them, as the core apps' header has its actions; what
+the window does is a muted note below."""
 
 from __future__ import annotations
 
@@ -24,7 +25,7 @@ from .options import (
 )
 from .terminal import launch_in_terminal
 from .theme import BLUE, header_font, muted
-from .widgets import AboutDialog, HelpDialog, MetricBox, same_width
+from .widgets import AboutDialog, HelpDialog, MetricBox, Pill, same_width
 
 
 class MainWindow(QWidget):
@@ -64,14 +65,6 @@ class MainWindow(QWidget):
         title.setStyleSheet(header_font() + "font-size:24px; font-weight:800;")
         title_row.addWidget(title)
         title_row.addStretch(1)
-        help_btn = QPushButton("Help")
-        help_btn.setFlat(True)
-        help_btn.clicked.connect(lambda: HelpDialog(self.script, self).exec())
-        title_row.addWidget(help_btn)
-        about_btn = QPushButton("About")
-        about_btn.setFlat(True)
-        about_btn.clicked.connect(lambda: AboutDialog(self).exec())
-        title_row.addWidget(about_btn)
         header_right.addLayout(title_row)
         boxes = QHBoxLayout()                          # the sweep as the options stand, kept up to date
         boxes.setSpacing(8)
@@ -79,9 +72,15 @@ class MainWindow(QWidget):
         self.rounds_box = MetricBox("Rounds per step", BLUE)
         self.oc_box = MetricBox("Overclock sweep", BLUE)
         self.uv_box = MetricBox("Undervolt sweep", BLUE)
-        for box in (self.load_box, self.rounds_box, self.oc_box, self.uv_box):
+        # Help and About are pills beside the boxes (owner, 26-10-2026), as the core apps' header has its actions.
+        self.help_pill = Pill("Help", "The script's options", "Shows the help of bc250-gpu-oc-bisect.sh.")
+        self.help_pill.clicked.connect(lambda: HelpDialog(self.script, self).exec())
+        self.about_pill = Pill("About", "Version and license", "The version, the license and the repository.")
+        self.about_pill.clicked.connect(lambda: AboutDialog(self).exec())
+        row = [self.load_box, self.rounds_box, self.oc_box, self.uv_box, self.help_pill, self.about_pill]
+        for box in row:
             boxes.addWidget(box)
-        same_width([self.load_box, self.rounds_box, self.oc_box, self.uv_box])     # as wide as their text
+        same_width(row)                                # as wide as the widest, never narrower than their text
         boxes.addStretch(1)
         header_right.addLayout(boxes)
         header.addLayout(header_right, 1)

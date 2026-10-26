@@ -48,7 +48,7 @@
 set -u
 if (( BASH_VERSINFO[0] < 4 )); then echo "bash 4 or newer is needed." >&2; exit 1; fi
 
-VERSION="0.3.0"
+VERSION="0.3.1"
 STRESS_SECS="" ROUNDS_OPT="" BASE_OPT="" SAME_BOOT=0 AUTO=0 WATCH=1 MODE=run CONTROL_ONLY_OPT=""
 
 say()  { printf '%s\n' "$*"; }
@@ -63,7 +63,7 @@ do_reboot() { # --no-ask-password: fail instead of raising a GUI auth popup, the
   systemctl reboot --no-ask-password 2>/dev/null || sudo -n systemctl reboot 2>/dev/null \
     || { say "Could not reboot automatically; reboot WARM by hand (do not power off)."; exit 1; }
 }
-usage() { sed -n '2,/^$/{s/^# \{0,1\}//;p;}' "$0"; }
+usage() { sed -n '4,/^$/{s/^# \{0,1\}//;p;}' "$0"; }   # the header comment, after the SPDX line and the blank
 
 # Colors for the CU map; off when stdout isn't a terminal (e.g. the saved report file),
 # NO_COLOR is set, or tput is missing. Checked fresh on every call, not just once at startup.

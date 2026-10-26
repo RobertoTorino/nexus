@@ -32,7 +32,7 @@
 set -u
 if (( BASH_VERSINFO[0] < 4 )); then echo "bash 4 or newer is needed." >&2; exit 1; fi
 
-VERSION="0.3.0"
+VERSION="0.3.1"
 SELF=$(readlink -f -- "$0")
 CONF_DIR=/etc/bc250-cu-bisect
 CONF_FILE="$CONF_DIR/masks"
@@ -48,7 +48,7 @@ MASK_RE='^0x[0-9a-fA-F]{1,2}(,0x[0-9a-fA-F]{1,2}){3}$'
 
 say()  { printf '%s\n' "$*"; }
 die()  { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
-usage() { sed -n '2,/^$/{s/^# \{0,1\}//;p;}' "$0"; }
+usage() { sed -n '4,/^$/{s/^# \{0,1\}//;p;}' "$0"; }   # the header comment, after the SPDX line and the blank
 hex2() { printf '0x%02x' $(( $1 & 31 )); }
 popcount() { local n=$(( $1 )) c=0; while (( n )); do (( c += n & 1, n >>= 1 )); done; echo "$c"; }
 cu_count() { local t=0 m; IFS=, read -ra M <<<"$1"; for m in "${M[@]}"; do (( t += $(popcount "$m") * 2 )); done; echo "$t"; }

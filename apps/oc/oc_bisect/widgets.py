@@ -1,20 +1,20 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-"""About and Help dialogs for the launcher GUI, and the header's status box (a copy of core's MetricBox: this app is
-not on core)."""
+"""About and Help dialogs for the launcher GUI, and the header's status box and pill (copies of core's MetricBox and
+Pill: this app is not on core)."""
 
 from __future__ import annotations
 
 import subprocess
 
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QFontDatabase, QPixmap
 from PyQt6.QtWidgets import (
     QDialog, QDialogButtonBox, QFrame, QHBoxLayout, QLabel, QSizePolicy, QTextEdit, QVBoxLayout, QWidget,
 )
 
 from . import APP_NAME, LOGO_PATH, REPO_URL, __version__, window_title
-from .theme import BLUE, header_font, surface_style
+from .theme import ACCENT, BLUE, header_font, muted, surface_style
 
 
 class AboutDialog(QDialog):
@@ -125,6 +125,43 @@ class MetricBox(QFrame):
     def set_colour(self, colour: str) -> None:
         """The box's state or category color, its left edge."""
         self.setStyleSheet(surface_style(colour) + "QLabel { background:transparent; border:none; }")
+
+
+class Pill(MetricBox):
+    """A header pill that is a button, as the status boxes look: the value in large type, what it is under it; the
+    accent edge under the mouse or the keyboard focus. A click, Enter or Space emits clicked. A copy of core's Pill."""
+
+    clicked = pyqtSignal()
+
+    def __init__(self, value: str, caption: str, tooltip: str = "", colour: str = BLUE):
+        super().__init__(caption, colour)
+        self.setObjectName("pill")
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)      # never cut off
+        self.set_value(value, tooltip)
+
+    def set_colour(self, colour: str) -> None:
+        super().set_colour(colour)
+        # A pill that cannot be clicked (setEnabled(False)) shows its text muted, as a disabled button does.
+        # The rule is on the labels' own state: Qt ignores an ancestor's pseudo-state in a selector, so
+        # "#pill:disabled QLabel" would mute every pill.
+        self.setStyleSheet(self.styleSheet() + f"#pill:hover, #pill:focus {{ border-color:{ACCENT}; }}"
+                           f"#pill QLabel:disabled {{ color:{muted()}; }}")
+
+    def mouseReleaseEvent(self, event) -> None:  # noqa: N802 (Qt override)
+        if event.button() == Qt.MouseButton.LeftButton and self.rect().contains(event.position().toPoint()):
+            self.clicked.emit()
+        super().mouseReleaseEvent(event)
+
+    def keyPressEvent(self, event) -> None:  # noqa: N802 (Qt override)
+        if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter, Qt.Key.Key_Space):
+            self.clicked.emit()
+            return
+        super().keyPressEvent(event)
+
+    def click(self) -> None:
+        self.clicked.emit()
 
 
 def same_width(boxes: list[MetricBox]) -> None:

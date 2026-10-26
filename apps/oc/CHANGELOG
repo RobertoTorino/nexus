@@ -1,3 +1,15 @@
+Changelog: 26-10-2026 06:07:41
+
+Release 0.2.5.
+
+Changelog: 26-10-2026 05:47:49
+
+Fixed. Help and About are pills beside the status boxes (owner, 26-10-2026), as the core apps' header has its
+actions and the Governor Manager's header its boxes, all six as wide as the widest; the two flat buttons at the
+right end of the title are gone. The help was empty (only "SPDX-License-Identifier: GPL-3.0-or-later"): the
+script's usage() printed its header comment from line 2, which has been the SPDX line since it was added, up to
+the blank line under it. It starts at line 4 now, the first line of the comment.
+
 Changelog: 26-10-2026 05:28:40
 
 Release 0.2.4.
