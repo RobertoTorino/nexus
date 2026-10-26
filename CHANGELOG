@@ -1,3 +1,13 @@
+Changelog: 26-10-2026 03:01:12
+
+The release workflow's Publish step tries up to five times, a growing pause between them, when GitHub's API fails
+on creating the release (26-10-2026: one of 32 releases published in the same minute got an HTTP 500 and its run
+had to be started again); when a try made the release but its answer was lost, or a re-run finds it, the next adds
+the assets to it. tools/dev-updates.sh says what has a newer version on the development machine (Bazzite's image,
+the Flatpaks, Homebrew's packages, the Rust toolchain, the venv's packages) and, as an hourly user timer with
+--install, notifies when something is. The wiki's new page The development machine lists the tools the
+repository needs on Bazzite and Windows, how they stay up to date, and the git identity and signing setup.
+
 Changelog: 26-10-2026 01:41:33
 
 The Nexus page's header shows the icon without the name beside it (owner, 26-10-2026): the icon carries the name.

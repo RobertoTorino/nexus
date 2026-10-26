@@ -105,8 +105,22 @@ jobs:
           # Only a portal release is GitHub's "Latest": /releases/latest is what users install, never an app.
           latest=false
           [ "$app" = portal ] && latest=true
-          gh release create "$TAG" "dist/$TAG.tar.gz" dist/SHA256SUMS \
-            --title "$title" --notes-file dist/notes.md --verify-tag --latest="$latest"
+          # GitHub's API now and then answers one request with a 500 (26-10-2026: one of 32 releases published
+          # in the same minute). Up to five tries, a growing pause between them. When a try made the release but
+          # its answer was lost (or a re-run finds the release of an earlier run), the next adds the assets to it.
+          for attempt in 1 2 3 4 5; do
+            if gh release view "$TAG" >/dev/null 2>&1; then
+              gh release upload "$TAG" "dist/$TAG.tar.gz" dist/SHA256SUMS --clobber && exit 0
+            elif gh release create "$TAG" "dist/$TAG.tar.gz" dist/SHA256SUMS \
+                   --title "$title" --notes-file dist/notes.md --verify-tag --latest="$latest"; then
+              exit 0
+            fi
+            [ "$attempt" = 5 ] && break
+            echo "Publishing failed (try $attempt of 5); again in $((attempt * 30)) s" >&2
+            sleep $((attempt * 30))
+          done
+          echo "Publishing $TAG failed five times." >&2
+          exit 1
 
   windows:
     # sftp; add the tag of every app in WINDOWS_APPS (tools/tests/test_build_windows_exe.py checks it is here)

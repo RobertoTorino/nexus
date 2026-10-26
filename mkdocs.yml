@@ -97,6 +97,7 @@ nav:
       - development/index.md
       - Architecture and consistency: development/architecture.md
       - GitHub settings: development/github-settings.md
+      - The development machine: development/machine.md
       - Bazzite Test script: development/bazzite-test.md
       - Bazzite Test internals: development/bazzite-test-internals.md
       - Bazzite Test test plan: development/bazzite-test-plan.md
