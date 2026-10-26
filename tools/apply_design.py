@@ -64,7 +64,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("config", nargs="*", type=Path, help="a wiki's mkdocs.yml (default: every wiki with a mock)")
     args = parser.parse_args(argv)
-    configs = args.config or [c for c in [ROOT / "mkdocs.yml", *sorted(ROOT.glob("*/mkdocs.yml"))]
+    configs = args.config or [c for c in sorted(ROOT.glob("*/mkdocs.yml"))
                               if (c.parent / design_panel.MOCK_FILE).is_file()]
     if not configs:
         print("no wiki has a mock (.design-mock.json beside its mkdocs.yml)")

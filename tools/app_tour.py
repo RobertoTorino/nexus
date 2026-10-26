@@ -2,14 +2,15 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """A video tour of one app, for the wiki and YouTube: the app's real window from this checkout, rendered frame by
 frame into an MP4 (H.264, 1920 x 1080, 30 fps) of about 40 seconds, one short video per app, with music under it
-that fades out over the last two seconds (tools/sounds/the_quiet_engine.mp3, made with generative AI tools). The
+that fades out over the last two seconds (the suite's tools/sounds/the_quiet_engine.mp3, made with generative AI tools). The
 same script for every app: only the name changes.
 
     python3 tools/app_tour.py APP [OUT.mp4] [--package PACKAGE] [--seconds 40] [--music FILE | --no-music] [--fps 30]
 
 Default output: ~/Videos/bc250-<app>-tour-v<its VERSION>.mp4 (with the package for compute and cores).
 
-APP is the app's key in portal/apps.toml (fan, cec, ...) or its folder under apps/. An app with two programs
+APP is the app's key in the suite's portal/apps.toml (fan, cec, ...) or its folder under its apps/ (--suite names the
+suite; with one suite in the checkout it is the default). An app with two programs
 (compute, cores) needs --package to say which one (cu_bisect, cu_unlock, ...).
 
 The app starts as it does on a board, through its own __main__, in a temporary home folder (no settings of yours)
@@ -303,6 +304,7 @@ def main() -> int:
     parser.add_argument("--music", type=Path, default=MUSIC, help="the track under the video (default: the suite's)")
     parser.add_argument("--no-music", action="store_true", help="a video without sound")
     parser.add_argument("--fps", type=int, default=30)
+    tour_frames.suites.add_argument(parser)
     args = parser.parse_args()
     if not shutil.which("ffmpeg"):
         print("ffmpeg is needed", file=sys.stderr)

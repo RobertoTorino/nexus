@@ -6,8 +6,9 @@
 
 Every entry a CHANGELOG had at REF (the last push, or the PR base) must still be in it: its "Changelog: <time>"
 line, as often as it was there. The text of an old entry may be corrected; an entry that went, or a file cut down to
-its newest entries, fails. A CHANGELOG may only go together with its folder (an app removed). Without --base there
-is nothing to compare with, and the check passes."""
+its newest entries, fails. A CHANGELOG may only go together with its folder (an app removed). A CHANGELOG that moved
+into a suite's folder since REF (apps/x/CHANGELOG to bc250-bazzite/apps/x/CHANGELOG) is compared with its new place.
+Without --base there is nothing to compare with, and the check passes."""
 
 from __future__ import annotations
 
@@ -37,11 +38,21 @@ def changelogs(root: Path, base: str) -> list[str]:
     return [path for path in listing.splitlines() if path == "CHANGELOG" or path.endswith("/CHANGELOG")]
 
 
+def moved(root: Path, path: str) -> Path | None:
+    """Where *path* is now when it moved into a suite's folder (a folder under *root* with portal/apps.toml)."""
+    for suite in sorted(p for p in root.iterdir() if p.is_dir() and (p / "portal" / "apps.toml").is_file()):
+        if (suite / path).is_file():
+            return suite / path
+    return None
+
+
 def check(root: Path, base: str) -> list[str]:
     """What each CHANGELOG lost since *base*, one line per file; empty when nothing went."""
     problems = []
     for path in changelogs(root, base):
         file = root / path
+        if not file.is_file():
+            file = moved(root, path) or file
         if not file.is_file():
             if file.parent.is_dir():
                 problems.append(f"{path}: removed, while its folder is still there")

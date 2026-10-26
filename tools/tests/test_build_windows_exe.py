@@ -18,14 +18,14 @@ spec.loader.exec_module(bwe)
 
 def test_every_windows_app_has_its_package_and_a_core_to_bundle():
     for app, (package, exe_name) in bwe.WINDOWS_APPS.items():
-        src = SUITE / "apps" / app
+        src = SUITE / "bc250-bazzite" / "apps" / app
         assert (src / package / "__main__.py").is_file()
         assert bwe.stage_app.uses_core(src)
         assert exe_name and (src / "images" / f"{bwe.app_id(src, package)}.webp").is_file()
 
 
 def test_asset_names_follow_app_id_and_version():
-    src = SUITE / "apps" / "sftp"
+    src = SUITE / "bc250-bazzite" / "apps" / "sftp"
     version = (src / "VERSION").read_text(encoding="utf-8").strip()
     assert bwe.app_id(src, "sftp_tools") == "bc250-bazzite-sftp-tools"
     assert bwe.asset_name("bc250-bazzite-sftp-tools", version) == f"bc250-bazzite-sftp-tools-{version}-windows.zip"

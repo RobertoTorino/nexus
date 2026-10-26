@@ -1,0 +1,327 @@
+Changelog: 26-10-2026 09:42:18
+
+Fixed. Works on the repository with the suite in bc250-bazzite/ (26-10-2026): the units' paths, the manifest, the
+checks and the tours come from the suite's folder, core and the Nexus tools from the root; run.sh and install.sh
+find the dev venv at the root.
+
+Changelog: 25-10-2026 11:56:16
+
+Added. Test local apps has an icon for each wiki in the checkout (each mkdocs.yml: the BC250 Bazzite Suite's,
+the Nexus page's) in place of Manual (local), each served on a port of its own (8765, 8766) with a log of its
+own, and opened with its design panel. Wikis on the network serves them on every address of the computer, at
+ports of their own (8785, 8786), so the other devices on the network open them too; the page shows their
+addresses.
+
+Changelog: 25-10-2026 00:51:24
+
+Fixed. check-release.sh downloads the release assets from the suite's new name, Nexus (RobertoTorino/nexus, renamed
+25-10-2026); GitHub redirects the old address.
+
+Changelog: 23-10-2026 07:13:18
+
+Fixed. The confirmation before tagging no longer mentions an approval on GitHub: the release workflow asks for none.
+
+Changelog: 21-10-2026 12:22:00
+
+Fixed. The line that says the portal's release is being built by GitHub (Bump portal and pin) is orange instead of
+blue (owner, 21-10-2026), like the other warnings that wait on something.
+
+Changelog: 21-10-2026 11:42:36
+
+Added. The portal's icon under Test local apps warns when a portal is already open (owner, 21-10-2026): a second portal
+never opens, starting it only brings the open window to the front, so the checkout would not be tested. It looks
+for the open portal without disturbing it, and does not start another.
+
+Changelog: 21-10-2026 11:39:11
+
+Added. Test local apps, on the Test on this board tab, has the portal as its first icon (owner, 21-10-2026): a click
+starts it from the checkout (python -m bc250_portal in portal/, with the checkout's core), to try a change to the
+portal before its release, as the apps' icons do.
+
+Changelog: 21-10-2026 09:57:39
+
+Added. git push and git tag ask first (owner, 21-10-2026), with the commits or tags they send and the command.
+When the GitHub token on the machine is a gh login or a classic token, which reach every repository of the
+account, the question says so and points to a fine-grained token for this repository (plan.token_warning).
+Tests: tests/test_plan.py.
+
+Changelog: 21-10-2026 09:29:19
+
+Added. Close issues on the Test on this board tab: a window lists the open issues on GitHub (plan.fetch_open_issues,
+with the token of a gh login when there is one), each with a tick box, and Run closes the ticked ones with gh issue
+close in the Commands tab, with the comment typed under the list on each. A double click opens an issue. The
+Upstream workflow never closes its issue; this closes it once handled. Tests: tests/test_plan.py,
+tests/test_main_window.py.
+
+Changelog: 21-10-2026 00:39:06
+
+Added. A Claude tokens today pill at the end of the header: the tokens Claude Code on this machine used since
+midnight, read from its transcripts (~/.claude/projects, or CLAUDE_CONFIG_DIR), each answer once. The tooltip adds
+the last 5 hours, the input, output and cache tokens and each model; a click opens Claude's usage page. Hidden
+without Claude Code; it looks every 5 minutes and on Refresh. Tests: tests/test_main_window.py.
+
+Fixed. GitHub API left has a green left edge while plenty of requests are left; it had none (gray) until fewer than
+a tenth were left. Tests: tests/test_plan.py.
+
+Changelog: 20-10-2026 21:54:38
+
+Added. Record portal tour on the Test on this board tab (owner, 20-10-2026): it runs tools/record-tour.sh in the
+background, with its output in Logs, and records the portal's video tour from the checkout into
+~/Videos/bc250-portal-tour-v<portal version>.mp4, then opens it in the video player. The button is off while it
+records; closing the window stops a recording. Tests: tests/test_plan.py.
+
+Changelog: 20-10-2026 20:21:21
+
+Added. The header is a row of pills of equal width, as the apps' status boxes (owner, 20-10-2026): Refresh (was a
+small button), Working tree (Clean, Changed), GitHub build (Building, Passed, Failed, Offline, Limited; a click opens
+the run), GitHub API left (the requests left this hour) and GitHub status (Up, Problem; a click opens the status page).
+Tests: tests/test_main_window.py, tests/test_plan.py.
+
+Fixed. Under Test local apps every app that changes the board shows it: an orange ! on its icon, and a line in its
+tooltip. It was a third line of text under the icon, cut off by the grid's cell when the name took two lines. Tests:
+tests/test_plan.py.
+
+Changelog: 20-10-2026 10:16:46
+
+Added. Clearer names for a first release (owner, 20-10-2026): the tabs are 1. Release apps, 2. Pin and release
+Portal and 3. Retract app. A git tag button after git push runs tools/tag-release.sh with the tags of the step open:
+on tab 2 the portal's release, on the other tabs step 1's app releases that have no tag yet; it works once HEAD is
+pushed. A new tab, Test on this board, holds the tests of a release: Test app updates, Test Portal release and Test
+withdrawal (which left tabs 2 and 3), Installer tests (opens BC-250 Installer Tests from the checkout) and, under
+Test local apps, the icons of the former Local app test tab. Tests: tests/test_plan.py, tests/test_main_window.py.
+
+Changelog: 19-10-2026 17:58:49
+
+Added. GitHub status in the header, beside the build indicator (owner, 19-10-2026): a green dot while
+githubstatus.com reports every part of GitHub up, a red dot while it reports a problem (an incident, or a part such
+as Actions or Pages degraded or down), gray while it is not known. Hover for the incident and the parts affected;
+a click opens https://www.githubstatus.com/. It looks every 5 minutes, and Refresh looks at once.
+
+Changelog: 19-10-2026 02:46:23
+
+Added. git add, git commit and git push are buttons under the tabs, with the checks in between, so no command has
+to be typed or copied (owner, 19-10-2026). git add stages everything and sets the exec bits (tools/fix-modes.sh);
+git commit runs check_versions.py and check_manifest.py first and commits only when they pass, with the message
+Apply or Bump portal filled in (or Amend, when their commands add to the unpushed release commit); git push runs
+tools/ci-local.sh first on Linux and pushes only when CI's jobs pass. Each button works only when it has something
+to do, and none while a command runs; the output shows in the Commands tab. Tagging stays a command. Renamed (owner,
+19-10-2026): the tabs Log 1 and Log 2 are Logs and Commands, Run from checkout is Local app test and 3. Withdraw is
+3. Retract, with its Withdraw button Retract; Test updates is Test app updates and Test release is Test Portal
+release.
+
+Changelog: 17-10-2026 14:01:24
+
+Fixed. The app's folder in the suite is apps/suite (was apps/suite-releases) and its package is suite_releases (was
+bc250_suite_releases): the suite's naming convention (owner, 17-10-2026), a short folder name and the package named
+after the app without the BC250 prefix; both names are the owner's. With the folder go its key in the portal
+([checkout.suite]), its installer test, its tile icon and the path to check-release.sh; tools/release.sh starts it
+from there. The app keeps its name, its launcher bc250-release and its settings. A launcher written before the move
+points at the old folder: run apps/suite/install.sh again (or Install in the portal) after updating the checkout.
+
+Changelog: 17-10-2026 10:34:20
+
+Added. Step 2 follows the releases it waits for on GitHub, from the runs the header's indicator already reads. The
+pin table has a GitHub column (no run seen, building, ready, failed) and Pin waits for a release that is still
+building, or says that its workflow failed, instead of failing on the checksum that is not there yet (owner,
+17-10-2026: Pin errored a few times because the packaging was not finished). A desktop notification says when
+the release of an app to pin is ready, whether the run was seen running or not (one that starts and ends between
+two looks, or before the window opened, is told at the next look; each once), and when the portal's release is
+built. A line under the portal version says where the portal's own release stands: not tagged yet after Bump
+portal and the commit, with the tag command, then building, released or failed (17-10-2026: portal-v1.16.0 was
+committed and pushed but never tagged, and nothing in the window said so).
+
+Changelog: 17-10-2026 08:22:18
+
+Fixed. Step 2 offered 1.13.1 for the portal after the bump to 1.13.0 had gone out with the apps' releases: the
+minimum CI accepts was counted from the last push, where pinning the checksums is a change again. It is now
+counted from the last portal release, as tools/check_manifest.py does since this change, so the version bumped
+before the push stays the one offered, and Apply makes no second bump for the pins.
+
+Changelog: 17-10-2026 08:33:32
+
+Fixed. The logs are two tabs after the steps, each the whole tab area: Log 1, the log of the step last open (what
+Apply, Pin, Bump portal, Withdraw or an app started from the checkout wrote; a step that writes its log opens
+it), and Log 2, the command line with its output. Before, the step's log sat inside its tab above the command
+line, and the two flat boxes were hard to read (owner, 17-10-2026).
+
+Changelog: 17-10-2026 08:07:25
+
+Fixed. The two log boxes under the steps sit side by side, each the full height of that area: the step's own
+log (what Apply, Bump portal, Withdraw or a started app wrote; it follows the open tab) on the left, the command
+line with its output on the right. Before, the step's log sat inside its tab above the command line, and the two
+flat boxes were hard to read (owner, 17-10-2026). The line between them widens one; the line above gives both
+more room.
+
+Changelog: 17-10-2026 07:44:51
+
+Added. Apply makes the portal bump itself when the push of step 1 needs one (apps.toml changed since the last
+push: an app added, removed or moved, or a never-released pin moved along): portal/VERSION and its copies go to
+the lowest version CI accepts, with the portal's CHANGELOG entry listing the changed pins, and the log says so.
+Before, Apply only said that step 2's Bump portal had to come first, and the owner's release of 17-10-2026 was
+committed without it and failed ci-local on check_manifest. The portal release itself stays step 2.
+
+Changelog: 17-10-2026 06:41:05
+
+Added. Bump portal done before step 1's push (an app added to apps.toml needs the bump in the push that adds it)
+shows step 1's commands with the bump in them: git add, the release commit (amended when it is already made and
+not pushed, as on 17-10-2026), ci-local and push, then the app tags; the portal release's commands come once every
+app's version is tagged (plan.py: untagged_releases, unpushed_release_commit, app_commands with amend). Before,
+Bump portal always showed the portal release's commands, also while the portal could not be released yet.
+
+Changelog: 17-10-2026 06:29:57
+
+Fixed. Pin no longer closes the window when tools/pin_app.py refuses an entry: it says so in the log ("not
+pinned (...)") and pins the others. And pin_app itself now adds the sha256 line a new app's entry lacks until its
+first release, which is what closed the window on the owner's Pin of fan-control-v0.1.0.
+
+Changelog: 16-10-2026 11:57:04
+
+Fixed. When apps.toml changed since the last push, the commands after step 1's Apply start with "First: step 2's
+Bump portal (portal x.y.z)": before, they began with git commit, so a release committed without the portal bump
+failed CI on the push (plan.py: app_commands takes the portal version the push needs).
+
+Changelog: 16-10-2026 05:54:31
+
+Added. Step 1 ticks every app that needs a release by itself, when the window opens and on each reload; Tick what
+needs a release still ticks them all again. Refresh keeps your own ticks and unticks, and ticks an app that needs a
+release only since the last refresh. A core that already holds its changes stays unticked, as before.
+
+Changelog: 15-10-2026 23:22:38
+
+Added. Semantic versioning (owner's decision, 15-10-2026): the version step 1 offers first follows the CHANGELOG
+entries since the app's last tag, counted from that tag: Breaking. asks for a major release, Added. for a minor one,
+Fixed. (or an entry without a kind, from before the rule) for a patch; core's entries count for the apps that carry
+a core change. A VERSION bumped further already, or a first release, still comes first. Step 2 offers the higher of
+CI's minimum and the portal's own: its CHANGELOG entries and apps.toml since the last portal tag, so an app added and
+pushed before the portal release still asks for a minor portal release. The version box says why in its tooltip
+(plan.py: version_choices, portal_suggestion).
+
+Changelog: 15-10-2026 23:13:51
+
+Added. Step 1's Apply also runs check_manifest.py against the last push, and says when apps.toml changed since then (an app
+added, removed or moved to another section, not only a pin that moves along) so that the push needs a portal bump
+too: before, only check_versions.py ran there, and a release push failed CI on the portal bump. The push commands of
+both steps run tools/ci-local.sh first on Linux (tools/ci-local.sh && git push): no push when a CI job fails.
+
+Changelog: 15-10-2026 21:11:49
+
+A command line under the steps (command_line.py), in a splitter with them, so the commands a step shows run without a
+separate terminal (owner's request). A command runs with bash -lc in the checkout, in the folder the last cd left, and
+its output streams in as it runs (color codes removed). Commands lists the commands the last Apply, Bump portal or
+Withdraw showed, without their comments, to put one on the line. Up and Down go through the history, kept in the
+settings (200 commands). Stop or Ctrl+C sends Ctrl+C to the command's own process group (setsid), so a job it started
+in the background ends too, and kills it if it has not ended 3 seconds later; clear and Clear empty the output. Input
+is closed and git is told not to prompt, to use no editor and no pager, so no command waits for an answer that cannot
+come. After each command the window reads the checkout again, as Refresh does. Tests: output, cd, exit codes, closed
+input, Stop with a background job, history, the commands offered, the pane in the window.
+
+Changelog: 15-10-2026 21:03:51
+
+images/bc250-release-128.png is the 128 px copy of the new icon (images/bc250-release.png), scaled from the 512 px
+file; the wiki's portal chapter and the portal's tile show it.
+
+Changelog: 15-10-2026 07:07:27
+
+Core's row offers its current version when that version already holds every core change (plan.core_is_current: nothing under core/bc250_core changed since the commit that last changed core/VERSION, or a bump not committed yet), with its tick off and "0.1.5 has it: goes into 1 app release". It offered the next version (0.1.6) before, as if core needed one, when only the portal still carried an older core. A core change after its last bump offers the next version as before. Tests: core current after a bump, committed or not, and not after a later change; the row in the window.
+
+Changelog: 15-10-2026 06:31:03
+
+A selected cell in the tables and the input field being typed in show a purple outline with rounded corners (the accent color) on a transparent background, instead of the desktop's solid blue highlight (SELECTION_STYLESHEET on the window). The line edit inside an editable version box keeps the box's own frame. Tests: a selected cell rendered, outline and no fill.
+
+Changelog: 15-10-2026 05:37:03
+
+The commit in the title has its time beside the date ("v0.1.0 · 5c225cb · 15-10-2026 05:35"), in Europe/Amsterdam like the CHANGELOG lines, whatever the commit's own zone (plan.checkout_stamp reads the commit timestamp). Tests: the stamp with the time.
+
+Changelog: 15-10-2026 05:27:59
+
+New icon: images/bc250-release.png (512 px) and its 128 px copy.
+
+Changelog: 15-10-2026 05:13:53
+
+The title shows the checkout's last commit and its date beside the version ("v0.1.0 · 6de8ccd · 15-10-2026"; plan.checkout_stamp): the app runs from the checkout and is never released, so VERSION stays put and the commit says which code runs. Uncommitted changes show beside it as before ("working tree has changes"). Tests: the stamp, and the title with it.
+
+Changelog: 15-10-2026 05:08:01
+
+The GitHub API line beside the GitHub button is in the theme's text color (white on a dark desktop, dark on a light one) instead of gray, which was barely readable on a dark desktop; orange and red still mark few and none left.
+
+Changelog: 15-10-2026 04:13:25
+
+Beside the GitHub button the window shows GitHub's hourly API limit as its last answer reported it ("GitHub API: 4,894 of 5,000 left until 04:16, signed in"; orange under a tenth, red at none), read from the X-RateLimit headers of every answer, the unchanged ones that do not count included; its tooltip says that none left is GitHub's limit, not a fault. plan.fetch_runs returns that RateInfo as a third value. github_token() is safe when checks overlap: it asked gh after storing "" already, so a second check in that moment went out without the token; it now holds a lock and stores only the finished answer. Tests: the limit from normal and unchanged answers, the label's text and colors, overlapping token lookups.
+
+Changelog: 15-10-2026 04:06:38
+
+The GitHub button uses the token of a gh login when there is one (GITHUB_TOKEN or GH_TOKEN first, else gh auth token, also Homebrew's gh when started from the menu): GitHub then allows 5,000 requests an hour instead of 60, which a running build used up in about half an hour of looking every 30 seconds. The token is only sent to GitHub's API and never stored; a refused token is dropped and the button goes on without it. When the limit is used up the button says "GitHub: limit reached, back at HH:MM" instead of "not reachable", with a hint to sign in with gh when it was not signed in, and looks again only after the reset. Tests: the token lookup, the signed-in and refused requests, the limit and the button's waiting; a version bump keeps a comment after the copy.
+
+Changelog: 15-10-2026 02:31:31
+
+No translations (owner's decision): core's create_app() no longer takes lang, and AppInfo no longer has languages; the app was English only already and stays so.
+
+Changelog: 14-10-2026 18:22:56
+
+A test comment names Console Link without the BC250 prefix.
+
+Changelog: 13-10-2026 11:45:43
+
+Withdrawing a release (owner's decisions, 13-10-2026): tab 3. Withdraw. Withdraw marks an app's pinned release withdrawn in portal/apps.toml with the reason and adds a CHANGELOG entry to the app; Take back removes the mark; Test withdrawal runs check-release.sh local, so a board with the app installed shows the portal removing it; the commands for the rest (the GitHub release marked as a pre-release named Withdrawn: <tag>, then the portal release). Bump portal lists the withdrawals since the last push in the portal's CHANGELOG entry. plan.py: set_withdrawn, withdrawable (never the required app), withdraw, changed_withdrawals, withdraw_commands. Tests: the edit and its undo, the CHANGELOG entries, the minor bump, the commands, the tab.
+
+Changelog: 12-10-2026 23:09:42
+
+Apply also writes the new version into a Rust crate's own entry in its Cargo.lock (as tools/check_versions.py now checks it), so CI's cargo build with --locked keeps working after a release; the hint names Cargo.toml and Cargo.lock.
+
+Changelog: 12-10-2026 08:23:31
+
+install.sh takes --uninstall --purge (also the settings in ~/.config/bc250-release; the checkout stays), also through tools/release.sh --uninstall --purge, and checks for root before it uninstalls too.
+
+Changelog: 12-10-2026 08:07:21
+
+The window has the suite's header: the icon at 96 px beside the title with the version, and a second row below it with the working tree's state and the GitHub build; Refresh stays at the right (core's AppHeader; it was a 40 px icon in one line).
+
+Changelog: 12-10-2026 05:57:00
+
+A double-click on the Desktop icon opened the window twice: Suite Releases was the one app on bc250_core without the single-instance guard. It now asks bc250_core.instance first, as the other apps do; a second launch brings the running window to the front and exits.
+
+Changelog: 11-10-2026 20:54:31
+
+Hovering or clicking the GitHub build status stopped the app (SIGABRT): BuildIndicator kept the main window in an attribute named window, which hides QWidget.window(), and the suite's tooltip calls window() on the widget it is shown for (TypeError: 'ReleaseWindow' object is not callable). The attribute is release_window now, also in the three pages that had the same name. tests/test_main_window.py checks that every widget of the window keeps window() and shows the tooltip over the build indicator.
+
+Changelog: 11-10-2026 17:35:05
+
+The commands after Apply and Bump portal tag with tools/tag-release.sh instead of git tag, so a tag cannot land on a
+commit from before the bump; the red line for such a tag names it too. Step 3 of the portal commands says that the
+tag goes on the commit of step 1.
+
+Changelog: 11-10-2026 17:23:05
+
+The header shows whether GitHub built the last push (GitHub: building, passed or failed): the workflow runs of its
+commit, from the public Actions API with an ETag, every 30 s while a build runs and every 5 minutes otherwise, and at
+Refresh. Hover lists each run; a click opens the failed or running run. A run seen running that finishes gives a
+desktop notification (notify-send) and flags the window.
+
+Changelog: 11-10-2026 17:04:46
+
+Run from checkout has a Manual (local) icon after the apps: it serves the manual from the checkout with mkdocs serve
+(on 127.0.0.1:8765, the path of site_url) and opens it in the browser once the server answers. When it already runs,
+a click only opens the page again. The manual's release front end section says so.
+
+Changelog: 11-10-2026 14:34:03
+
+New page, Run from checkout: every app window in the checkout as an icon (each package with a __main__.py under
+apps/, tests and the checkout-only apps left out), with its name, version and icon. A click starts that app from the
+checkout, to try a change before its release: python -m <package> with this venv and the checkout's core on the path,
+as run.sh starts this app (plan.launch_targets and plan.launch_command). Apps that portal/apps.toml marks
+changes_board ask first. Each app runs in its own session, so it keeps running when the window closes, and writes its
+output to ~/.cache/bc250-release/run/<package>.log; when it stops with an error, the end of that log shows on the
+page. docs/portal.md describes the page. Tests: the targets and their command, the page (start, the question for board
+apps, the log tail of a failed app) and a real start that keeps its output in the log.
+
+Changelog: 11-10-2026 12:34:52
+
+The board test buttons of step 2 are renamed: Check updates is now Test updates, Check release is now Test release, in the window, its hint, the command list and docs/portal.md. They do what they did.
+
+Changelog: 11-10-2026 12:19:03
+
+A Refresh button in the header reads the checkout and its tags again, for changes made in a terminal while the window is open (commits, reverts, tags, edited files). It keeps what was entered: the ticks, versions and notes of step 1, and the portal version and notes of step 2. A version is kept only when it was typed or picked, not when it is still the one offered, so a version changed in a terminal shows its new choices.
+
+Changelog: 11-10-2026 09:24:18
+
+BC250 Suite Releases becomes an app of its own, moved from tools/: the window (tools/release_ui.py, now bc250_suite_releases/main_window.py), the release logic (tools/release_plan.py, now plan.py), the board checks (tools/check-release.sh, now check-release.sh), its icon and its tests. It keeps the name, the app id bc250-release and its settings. run.sh starts it with the checkout's dev venv (--list prints the overview with the system python3); install.sh makes the launcher, menu entry and Desktop icon for this checkout. It has a .standalone marker (not in the portal) and a .checkout-only marker: it edits the checkout it lives in, so it has no releases, the release tool leaves it out and build_release.py refuses its tags. The footer shows its version and the checkout it edits.

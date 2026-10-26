@@ -18,21 +18,22 @@ import tomllib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-OUT = "docs/design/icons"
+SUITE_DIR = "bc250-bazzite"                 # the BC250 Bazzite Suite's folder: its pictures are under it
+OUT = f"{SUITE_DIR}/docs/design/icons"
 MDI = "https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg"      # Material Design Icons, as MkDocs Material bundles them
 LAUNCHES = {"cu-unlock": "CU Unlock (the CU Bisect app's Unlock)",
             "cores-unlock": "Cores Unlock (the Cores Bisect app's Unlock)"}
 
 SUITE_ICON = [
-    ("portal/images/bc250-bazzite-suite.webp", "`portal/images/bc250-bazzite-suite.webp` (512 px)",
+    ("bc250-bazzite/portal/images/bc250-bazzite-suite.webp", "`portal/images/bc250-bazzite-suite.webp` (512 px)",
      "The portal's window header (a click opens the wiki) and its window icon; Suite Big Picture Mode's header; the "
      "portal's release in Suite Releases."),
-    ("portal/images/bc250-bazzite-suite-1024.webp", "`portal/images/bc250-bazzite-suite-1024.webp`",
+    ("bc250-bazzite/portal/images/bc250-bazzite-suite-1024.webp", "`portal/images/bc250-bazzite-suite-1024.webp`",
      "The intro of Suite Big Picture Mode."),
-    ("portal/images/bc250-bazzite-suite-128.png", "`portal/images/bc250-bazzite-suite-128.png`",
+    ("bc250-bazzite/portal/images/bc250-bazzite-suite-128.png", "`portal/images/bc250-bazzite-suite-128.png`",
      "The portal's menu entry and Desktop icon."),
-    ("portal/images/apps/portal.webp", "`portal/images/apps/portal.webp` (128 px)", "The portal's own tile."),
-    ("docs/images/wiki-icon.webp", "`docs/images/wiki-icon.webp`, `.png`",
+    ("bc250-bazzite/portal/images/apps/portal.webp", "`portal/images/apps/portal.webp` (128 px)", "The portal's own tile."),
+    ("bc250-bazzite/docs/images/wiki-icon.webp", "`docs/images/wiki-icon.webp`, `.png`",
      "The wiki's header logo, its home page's footer and its favicon."),
 ]
 
@@ -49,11 +50,11 @@ GLYPHS = [
 ]
 
 APP_ICONS = [
-    ("apps/ncgui/images/icons/connect.png", "`apps/ncgui/images/icons/connect.png`",
+    ("bc250-bazzite/apps/ncgui/images/icons/connect.png", "`apps/ncgui/images/icons/connect.png`",
      "Bazzite NetcatGUI: Connect (the Silk icons of the original tool, CC-BY 2.5, Mark James)."),
-    ("apps/ncgui/images/icons/listen.png", "`apps/ncgui/images/icons/listen.png`", "Bazzite NetcatGUI: Listen."),
-    ("apps/ncgui/images/icons/save.png", "`apps/ncgui/images/icons/save.png`", "Bazzite NetcatGUI: Save."),
-    ("apps/pcsx2/pcsx2_manager/arrow-down.svg", "`apps/<app>/<package>/arrow-down.svg`",
+    ("bc250-bazzite/apps/ncgui/images/icons/listen.png", "`apps/ncgui/images/icons/listen.png`", "Bazzite NetcatGUI: Listen."),
+    ("bc250-bazzite/apps/ncgui/images/icons/save.png", "`apps/ncgui/images/icons/save.png`", "Bazzite NetcatGUI: Save."),
+    ("bc250-bazzite/apps/pcsx2/pcsx2_manager/arrow-down.svg", "`apps/<app>/<package>/arrow-down.svg`",
      "The arrow of a choice box in PCSX2 Manager, RPCS3 Manager and shadPS4 Manager (a copy in each)."),
 ]
 
@@ -141,16 +142,18 @@ def rendered(name: str) -> str:
 
 def build(root: Path = ROOT) -> str:
     """ICONS.md's text, from the data above, the portal's manifest and icons/categories.toml."""
-    apps = tomllib.loads((root / "portal" / "apps.toml").read_text(encoding="utf-8"))
+    suite = root / SUITE_DIR
+    apps = tomllib.loads((suite / "portal" / "apps.toml").read_text(encoding="utf-8"))
     names = {k: v["name"] for section in ("apps", "checkout") for k, v in apps.get(section, {}).items()} | LAUNCHES
     by_category: dict[str, list[str]] = {}
-    for key, entry in tomllib.loads((root / "icons" / "categories.toml").read_text(encoding="utf-8")).items():
+    for key, entry in tomllib.loads((suite / "icons" / "categories.toml").read_text(encoding="utf-8")).items():
         by_category.setdefault(entry["category"], []).append(key)
 
     out = ["# Icons", "",
            "The icons of the project, per suite, and where each is used. Pictures are shown from their own files; "
-           "icons drawn\nin code are rendered to `docs/design/icons/`. Written by `tools/make_icons.py`: change the "
-           "listing there and\nrun it.", "",
+           "icons drawn\nin code are rendered to `bc250-bazzite/docs/design/icons/`. Written by `tools/make_icons.py`: "
+           "change the listing\nthere and run it. The paths of the BC250 Bazzite Suite's section are relative to its "
+           "folder, `bc250-bazzite/`.", "",
            "## BC250 Bazzite Suite", "", "### The suite's icon", ""]
     out += table("Icon,File,Used for", ((img(path), file, use) for path, file, use in SUITE_ICON))
     out += ["### The category icons", "",
@@ -164,7 +167,7 @@ def build(root: Path = ROOT) -> str:
             "- `portal/images/categories/<category>.webp` (512 px): the category in Suite Big Picture Mode.",
             "- In the wiki, the category's own icon (256 px) in the table of categories.", ""]
     out += table("Icon,Category,Apps", (
-        (img(f"icons/{category}/{category}-128.png", 64), category.title(),
+        (img(f"{SUITE_DIR}/icons/{category}/{category}-128.png", 64), category.title(),
          "<br>".join(f"{names.get(k, k)} (`{k}`)" for k in keys)) for category, keys in sorted(by_category.items())))
     out += ["### The portal's symbols", "",
             "Drawn with QPainter in `portal/bc250_portal/glyphs.py`, in the theme's text color (shown here on "
@@ -192,7 +195,7 @@ def build(root: Path = ROOT) -> str:
 def render(root: Path = ROOT) -> list[Path]:
     """The drawn icons as PNGs in docs/design/icons/, each 48 px on a rounded square of Gunmetal's window color."""
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
-    sys.path[:0] = [str(root / "portal"), str(root / "core")]
+    sys.path[:0] = [str(root / SUITE_DIR / "portal"), str(root / "core")]
     from PyQt6.QtCore import QRectF, Qt
     from PyQt6.QtGui import QColor, QIcon, QImage, QPainter
     from PyQt6.QtWidgets import QApplication, QStyle

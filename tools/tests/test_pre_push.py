@@ -34,9 +34,11 @@ def git(root: Path, *args: str) -> str:
 def repo(tmp_path) -> Path:
     root = tmp_path / "suite"
     (root / "tools" / "hooks").mkdir(parents=True)
-    for name in ("pre-push.sh", "hooks/pre-push"):
+    for name in ("pre-push.sh", "hooks/pre-push", "suites.py"):
         shutil.copy(TOOLS / name, root / "tools" / name)
         (root / "tools" / name).chmod(0o755)
+    (root / "portal").mkdir()
+    (root / "portal" / "apps.toml").write_text("")                  # laid out as a suite itself (tools/suites.py)
     for name in ("check_versions.py", "check_manifest.py", "check_changelogs.py"):
         (root / "tools" / name).write_text(STUB)
     (root / ".gitignore").write_text("calls.txt\n")

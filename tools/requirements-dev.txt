@@ -1,4 +1,4 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 pytest>=8
 pyyaml>=6,<7                    # tools/ci_local.py reads ci.yml
-pillow>=12,<13                  # tests/test_portal_icons.py and test_icons.py read the icons' pixels and sizes
+pillow>=12,<13                  # tests/test_make_icons.py reads the icons' pixels and sizes

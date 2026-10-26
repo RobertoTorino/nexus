@@ -52,10 +52,12 @@ for push in "${pushes[@]}"; do
     fi
     "$python" tools/check_versions.py >/dev/null ||
         fail "versions differ from their VERSION file (python3 tools/check_versions.py shows which)"
-    if [ -n "$base" ] && ! out=$("$python" tools/check_manifest.py --base "$base" 2>&1); then
-        printf '%s\n' "$out" >&2
-        fail "portal/apps.toml: bump portal/VERSION in this push (Suite Releases, step 2: Bump portal)"
-    fi
+    for suite in $("$python" tools/suites.py); do        # each suite's manifest with its portal bump
+        if [ -n "$base" ] && ! out=$("$python" "./$suite/tools/check_manifest.py" --base "$base" 2>&1); then
+            printf '%s\n' "$out" >&2
+            fail "$suite/portal/apps.toml: bump portal/VERSION in this push (Suite Releases, step 2: Bump portal)"
+        fi
+    done
     if [ -n "$base" ] && ! out=$("$python" tools/check_changelogs.py --base "$base" 2>&1); then
         printf '%s\n' "$out" >&2
         fail "a CHANGELOG lost entries the remote has: put them back below the new ones"

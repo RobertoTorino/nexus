@@ -21,7 +21,8 @@ from pathlib import Path
 S = ("A nexus is a hub, the center every part leads back to. Nexus is where the suites connect: one repository "
      "holding every suite, the code they share, and the rules they’re built by.")
 ROOT = Path(__file__).resolve().parent.parent
-COLORS = "docs/design/colors"
+SUITE_DIR = "bc250-bazzite"                 # the BC250 Bazzite Suite's folder
+COLORS = f"{SUITE_DIR}/docs/design/colors"
 DARK, LIGHT = "#22262a", "#eceef0"      # the backdrops: Gunmetal's and Silver's fields
 FILES: dict[str, str] = {}              # what build() writes: path in the checkout -> text
 
@@ -316,7 +317,7 @@ def families() -> str:
 
 # Each wiki's stylesheet and the listing of its colors: the two must name the same colors.
 STYLESHEETS = {
-    "docs/stylesheets/suite.css": (WIKI_TEXT, WIKI_BLOCKS),
+    f"{SUITE_DIR}/docs/stylesheets/suite.css": (WIKI_TEXT, WIKI_BLOCKS),
     "nexus/docs/stylesheets/nexus.css": (NEXUS_TEXT, NEXUS_BLOCKS),
 }
 
@@ -497,7 +498,7 @@ def build() -> dict[str, str]:
 
 The colors of the suite, where they are defined and what they are for. Text colors show a sample sentence in that
 color; background colors (surfaces, fills, borders and lines) show a block. The samples are SVG files in
-`docs/design/colors/`. A text sample sits on a dark or a light backdrop, whichever its color reads on; a color with
+`bc250-bazzite/docs/design/colors/`. A text sample sits on a dark or a light backdrop, whichever its color reads on; a color with
 an opacity (written `#rrggbbaa` here, `#aarrggbb` in the Qt code) shows over a checkerboard. The icons are in
 [ICONS.md](ICONS.md). Written by `tools/make_design.py`: change the listing there and run it.
 
@@ -512,7 +513,7 @@ are not on core yet carry a copy). The theme is one choice for every app: Gunmet
         out.append(section(title, "", t, b))
     out.append(section("State colors", "The same in every theme: a state shows as a colored edge or dot on the "
                        "theme's surfaces.", STATE_TEXT, STATE_BLOCKS))
-    out.append("## The wiki\n\n`docs/stylesheets/suite.css`, Material's slate scheme with the suite's purple.\n")
+    out.append("## The wiki\n\n`bc250-bazzite/docs/stylesheets/suite.css`, Material's slate scheme with the suite's purple.\n")
     out.append(section("Wiki", "", WIKI_TEXT, WIKI_BLOCKS))
     out.append("## The Nexus page\n\n`nexus/docs/stylesheets/nexus.css`, ink, silver and teal (the owner's design, "
                "25-10-2026): the Nexus page has a\ndesign of its own, apart from the suites' (a design per system).\n")
@@ -525,7 +526,7 @@ are not on core yet carry a copy). The theme is one choice for every app: Gunmet
     out.append(section("BC-250 Bazzite Test (check)", "", CHECK_TEXT, CHECK_BLOCKS))
     out.append(section("Other apps", "", OTHER_TEXT, OTHER_BLOCKS))
     out.append("## Tools\n")
-    out.append(section("Portal screenshots", "`tools/portal_screenshot.py` paints the portal in a fixed dark palette "
+    out.append(section("Portal screenshots", "`bc250-bazzite/tools/portal_screenshot.py` paints the portal in a fixed dark palette "
                        "(Breeze Dark, as Bazzite's desktop shows the portal), so screenshots look the same on every "
                        "machine.", SCREENSHOT_TEXT, SCREENSHOT_BLOCKS))
     FILES["DESIGN.md"] = "\n".join(out).rstrip("\n") + "\n"

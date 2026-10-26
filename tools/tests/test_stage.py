@@ -17,7 +17,7 @@ SUITE = Path(__file__).resolve().parent.parent.parent
 def test_readme_and_wiki_follow_the_portal_stage():
     stage, note = build_release.portal_stage()
     readme = (SUITE / "README.md").read_text(encoding="utf-8")
-    home = (SUITE / "docs" / "index.md").read_text(encoding="utf-8")
+    home = (SUITE / "bc250-bazzite" / "docs" / "index.md").read_text(encoding="utf-8")
     if stage:
         assert note
         assert f"https://img.shields.io/badge/status-{stage}-" in readme

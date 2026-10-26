@@ -1,19 +1,20 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Everything needed to run ./test.sh and build the docs, in one venv.
 -r core/requirements-dev.txt
--r portal/requirements-dev.txt
 -r tools/requirements-dev.txt
--r apps/check/requirements-dev.txt
--r apps/gpu/requirements-dev.txt
--r apps/upscaler/requirements-dev.txt
--r apps/acpi/requirements-dev.txt
--r apps/overlay/requirements-dev.txt
--r apps/suite/requirements-dev.txt
--r apps/consoles/requirements-dev.txt
--r apps/shadps4/requirements-dev.txt
--r apps/clb/requirements-dev.txt
--r apps/sftp/requirements-dev.txt     # paramiko: its tests import it
--r apps/mtool/requirements-dev.txt    # dbus-next: its tests import it
+-r bc250-bazzite/portal/requirements-dev.txt
+-r bc250-bazzite/tools/requirements-dev.txt
+-r bc250-bazzite/apps/check/requirements-dev.txt
+-r bc250-bazzite/apps/gpu/requirements-dev.txt
+-r bc250-bazzite/apps/upscaler/requirements-dev.txt
+-r bc250-bazzite/apps/acpi/requirements-dev.txt
+-r bc250-bazzite/apps/overlay/requirements-dev.txt
+-r bc250-bazzite/apps/suite/requirements-dev.txt
+-r bc250-bazzite/apps/consoles/requirements-dev.txt
+-r bc250-bazzite/apps/shadps4/requirements-dev.txt
+-r bc250-bazzite/apps/clb/requirements-dev.txt
+-r bc250-bazzite/apps/sftp/requirements-dev.txt     # paramiko: its tests import it
+-r bc250-bazzite/apps/mtool/requirements-dev.txt    # dbus-next: its tests import it
 mkdocs-material
 mkdocs>=1.6,<2                  # MkDocs 2.0 drops the plugin and theme system Material needs
-pillow>=12,<13                  # the wiki's WebP copies of the app pictures (tools/mkdocs/hooks.py)
+pillow>=12,<13                  # the wiki's WebP copies of the app pictures (bc250-bazzite/tools/mkdocs/hooks.py)

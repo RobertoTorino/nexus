@@ -37,13 +37,13 @@ def test_every_colour_of_the_wikis_is_listed():
 
 
 def test_unlisted_reports_both_directions(tmp_path):
-    sheet = tmp_path / "docs" / "stylesheets" / "suite.css"
+    sheet = tmp_path / make_design.SUITE_DIR / "docs" / "stylesheets" / "suite.css"
     sheet.parent.mkdir(parents=True)
     listed = {hex_ for hex_, _ in make_design.WIKI_TEXT + make_design.WIKI_BLOCKS}
     sheet.write_text("/* #abcdef in a comment is not a color */\n:root { --a: #123; --b: #5835CE; }\n",
                      encoding="utf-8")
     report = make_design.unlisted(tmp_path)
-    assert "docs/stylesheets/suite.css has #112233, which the listing lacks" in report
+    assert f"{make_design.SUITE_DIR}/docs/stylesheets/suite.css has #112233, which the listing lacks" in report
     assert "#abcdef" not in "\n".join(report) and "#5835ce" not in "\n".join(report)
     assert sum("no longer has" in line for line in report) == len(listed) - 1
     assert make_design.unlisted(tmp_path / "nowhere") == [f"{p} is missing" for p in make_design.STYLESHEETS]

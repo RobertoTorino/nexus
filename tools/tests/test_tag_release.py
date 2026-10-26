@@ -29,9 +29,11 @@ def repo(tmp_path) -> Path:
     (root / "tools").mkdir(parents=True)
     shutil.copy(SCRIPT, root / "tools" / "tag-release.sh")
     shutil.copy(SCRIPT.with_name("ci_state.py"), root / "tools" / "ci_state.py")
+    shutil.copy(SCRIPT.with_name("suites.py"), root / "tools" / "suites.py")
     for folder, version in (("portal", "0.9.4"), ("apps/governor", "0.1.0")):
         (root / folder).mkdir(parents=True)
         (root / folder / "VERSION").write_text(version + "\n")
+    (root / "portal" / "apps.toml").write_text("")                  # laid out as a suite itself (tools/suites.py)
     git(root, "init", "-q", "-b", "main")
     git(root, "remote", "add", "origin", str(origin))
     git(root, "add", "-A")

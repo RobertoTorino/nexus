@@ -21,15 +21,15 @@ CI = SUITE / ".github" / "workflows" / "ci.yml"
 def test_every_job_of_ci_yml_and_every_matrix_entry():
     jobs = {j.name: j for j in ci_local.load_jobs(CI)}
     assert {"versions", "native", "shell", "installers", "docs", "windows-exe"} <= set(jobs)
-    assert "pytest/tools" in jobs and "pytest/apps/gpu" in jobs and "pytest" not in jobs
-    assert jobs["pytest/apps/gpu"].matrix == {"dir": "apps/gpu"}
+    assert "pytest/tools" in jobs and "pytest/bc250-bazzite/apps/gpu" in jobs and "pytest" not in jobs
+    assert jobs["pytest/bc250-bazzite/apps/gpu"].matrix == {"dir": "bc250-bazzite/apps/gpu"}
     assert not jobs["windows-exe"].runs_here and jobs["shell"].runs_here
 
 
 def test_expressions_and_selection():
     jobs = ci_local.load_jobs(CI)
-    governor = next(j for j in jobs if j.name == "pytest/apps/gpu")
-    assert ci_local.expand("cd ${{ matrix.dir }}", governor, "abc") == "cd apps/gpu"
+    governor = next(j for j in jobs if j.name == "pytest/bc250-bazzite/apps/gpu")
+    assert ci_local.expand("cd ${{ matrix.dir }}", governor, "abc") == "cd bc250-bazzite/apps/gpu"
     assert ci_local.expand("${{ github.event.pull_request.base.sha || github.event.before }}", governor, "abc") == "abc"
     assert [j.name for j in ci_local.selected(jobs, ["pytest/tools"])] == ["pytest/tools"]   # not .../gui as well
     assert all(j.name.startswith("pytest/") for j in ci_local.selected(jobs, ["pytest"]))

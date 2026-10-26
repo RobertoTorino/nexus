@@ -10,11 +10,11 @@ import pytest
 
 SUITE = Path(__file__).resolve().parents[2]
 CORE = SUITE / "core" / "bc250_core" / "instance.py"
-COPIES = sorted([*SUITE.glob("apps/*/*/instance.py"), *SUITE.glob("tools/installer-tests/gui/*/instance.py")])
+COPIES = sorted([*SUITE.glob("*/apps/*/*/instance.py"), *SUITE.glob("*/tools/installer-tests/gui/*/instance.py")])
 UPSTREAM = SUITE / "core" / "bc250_core" / "upstream.py"
-UPSTREAM_COPIES = sorted(SUITE.glob("apps/*/*/upstream.py"))
+UPSTREAM_COPIES = sorted(SUITE.glob("*/apps/*/*/upstream.py"))
 THEME = SUITE / "core" / "bc250_core" / "theme.py"
-THEME_COPIES = sorted([*SUITE.glob("apps/*/*/theme.py"), *SUITE.glob("tools/installer-tests/gui/*/theme.py")])
+THEME_COPIES = sorted([*SUITE.glob("*/apps/*/*/theme.py"), *SUITE.glob("*/tools/installer-tests/gui/*/theme.py")])
 
 
 def body(path: Path) -> str:

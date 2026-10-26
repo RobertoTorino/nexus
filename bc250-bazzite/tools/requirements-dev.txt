@@ -1,0 +1,3 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+pytest>=8
+pillow>=12,<13                  # tests/test_portal_icons.py and test_icons.py read the icons' pixels and sizes

@@ -1,0 +1,56 @@
+Changelog: 26-10-2026 09:42:18
+
+Fixed. run.sh finds the dev venv at the root of the repository, two levels above the suite's tools (26-10-2026).
+
+Changelog: 26-10-2026 01:04:02
+
+Fixed. A passed test shows the suite's green #2e7d32 (DESIGN.md's color families, owner, 26-10-2026).
+
+Changelog: 19-10-2026 23:41:01
+
+Added. The suite's theme (a copy of core's theme.py), chosen in the portal, on Fusion.
+
+Changelog: 15-10-2026 21:03:51
+
+images/bc250-installer-test-gui-128.png is the 128 px copy of the new icon (images/bc250-installer-test-gui.png),
+scaled from the 512 px file; the README, the window and the portal's tile show it.
+
+Changelog: 15-10-2026 05:41:13
+
+The window's title has no padding any more, like core's AppHeader: it started about 9 px to the right of the line below it, now both line up on the left.
+
+Changelog: 15-10-2026 05:27:59
+
+New icon: images/bc250-installer-test-gui.png (512 px) and its 128 px copy.
+
+Changelog: 15-10-2026 02:01:27
+
+instance.py follows core's: a second launch can hand its arguments to the running instance (already_running(app_id, args), serve(..., on_args)). The window passes none, so it behaves as before: a second launch shows the open window.
+
+Changelog: 12-10-2026 08:23:31
+
+install.sh takes the options of every app's installer: --no-desktop-shortcut, --uninstall, --uninstall --purge (the app keeps no settings) and --help, given in any order.
+
+Changelog: 12-10-2026 08:07:21
+
+The window has the suite's header: the icon at 96 px (was 64) beside the title with the version, and the description line below it.
+
+Changelog: 12-10-2026 06:06:00
+
+A double-click on the Desktop icon opened the window twice. The app carries a copy of bc250_core's instance.py now, as the apps that are not on bc250_core do, and a second launch brings the running window to the front and exits.
+
+Changelog: 11-10-2026 18:15:13
+
+A .checkout-only marker: it runs from the checkout and is never released. A portal from a checkout lists it under
+Development only.
+
+Changelog: 11-10-2026 18:11:09
+
+Add a desktop GUI for selecting and running installer tests.
+Add application and documentation icons.
+Add a per-user desktop installer and uninstaller.
+Show a green checkmark for passing tests and a red cross for failures.
+Prevent duplicate test labels from overlapping the checkbox labels.
+Find the Homebrew fakeroot binary when desktop launchers provide a limited PATH.
+Keep completed test results visible when starting subsequent runs.
+Show the app icon beside the title in the window header.

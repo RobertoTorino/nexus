@@ -18,14 +18,14 @@ br = importlib.util.module_from_spec(spec)
 sys.modules[spec.name] = br
 spec.loader.exec_module(br)
 
-pin_spec = importlib.util.spec_from_file_location("pin_app", TOOLS / "pin_app.py")
+pin_spec = importlib.util.spec_from_file_location("pin_app", TOOLS.parent / "bc250-bazzite" / "tools" / "pin_app.py")
 pin_app = importlib.util.module_from_spec(pin_spec)
 sys.modules[pin_spec.name] = pin_app
 pin_spec.loader.exec_module(pin_app)
 
-BT_TAG = f"check-v{(TOOLS.parent / 'apps' / 'check' / 'VERSION').read_text().strip()}"
-PORTAL_TAG = f"portal-v{(TOOLS.parent / 'portal' / 'VERSION').read_text().strip()}"
-MEDIA_TOOL_TAG = f"mtool-v{(TOOLS.parent / 'apps' / 'mtool' / 'VERSION').read_text().strip()}"
+BT_TAG = f"check-v{(br.SUITE / 'apps' / 'check' / 'VERSION').read_text().strip()}"
+PORTAL_TAG = f"portal-v{(br.SUITE / 'portal' / 'VERSION').read_text().strip()}"
+MEDIA_TOOL_TAG = f"mtool-v{(br.SUITE / 'apps' / 'mtool' / 'VERSION').read_text().strip()}"
 
 
 @pytest.fixture(autouse=True)
@@ -47,7 +47,7 @@ def pinned(bt_release, tmp_path, monkeypatch):
     """apps.toml as shipped, but with check pinned to the local build: the shipped pin is the checksum of
     the real release, which a local build (another mtime) never matches."""
     digest = hashlib.sha256((bt_release / f"{BT_TAG}.tar.gz").read_bytes()).hexdigest()
-    text = (TOOLS.parent / "portal" / "apps.toml").read_text(encoding="utf-8")
+    text = (br.MANIFEST).read_text(encoding="utf-8")
     path = tmp_path / "apps.toml"
     path.write_text(pin_app.pin(text, "check", BT_TAG, digest), encoding="utf-8")
     monkeypatch.setattr(br, "MANIFEST", path)
@@ -76,7 +76,7 @@ def test_bazzite_test_layout(bt_release):
     info = read(archive, f"{top}/bazzite_check/_build_info.py").decode()
     assert hashlib.sha256(engine).hexdigest() in info              # release build: engine hash recorded
     assert 'BUILD_DATE = "2026-09-21 14:13 UTC"' in info                 # the commit time, not the clock: reproducible
-    manual = (TOOLS.parent / "docs" / "apps" / "check.md").read_bytes()
+    manual = (br.SUITE / "docs" / "apps" / "check.md").read_bytes()
     assert read(archive, f"{top}/MANUAL.md") == manual                # its chapter of the manual
 
 
@@ -97,7 +97,7 @@ def test_sums_and_notes(bt_release):
     assert (bt_release / "SHA256SUMS").read_text() == f"{digest}  {archive.name}\n"
     notes = (bt_release / "notes.md").read_text()
     assert f"cd {BT_TAG} && ./install.sh" in notes and digest in notes
-    core = (br.SUITE / "core" / "VERSION").read_text().strip()
+    core = (br.ROOT / "core" / "VERSION").read_text().strip()
     assert f"Bundles the suite core `bc250_core` {core}." in notes
     assert notes.index("use the portal, not this file") < notes.index("### Install")   # an app: the portal first
     assert br.LATEST_PORTAL_URL in notes

@@ -19,7 +19,7 @@ APPS = {"gpu": "gpu_governor", "upscaler": "upscaler"}
 
 
 def _app_widgets(app: str):
-    path = SUITE / "apps" / app
+    path = SUITE / "bc250-bazzite" / "apps" / app
     if not (path / APPS[app] / "widgets.py").is_file():
         pytest.skip(f"{app} has no widgets.py of its own any more")
     if str(path) not in sys.path:

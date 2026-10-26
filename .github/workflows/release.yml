@@ -5,7 +5,7 @@ name: Release
 # gpu-v0.4.0, ...) or portal-v<x.y.z>. The tag's version must equal that app's VERSION file.
 #
 # The assets are <tag>.tar.gz, SHA256SUMS and the notes, all built by tools/build_release.py, so a local build
-# has the same content (see docs/portal.md, "Checking a release"). A portal release bundles the release of Bazzite Test (check) that portal/apps.toml pins (downloaded
+# has the same content (see docs/portal.md, "Checking a release"). A portal release bundles the release of Bazzite Test (check) that bc250-bazzite/portal/apps.toml pins (downloaded
 # from its own release and checked against the pin) and requires every pinned tag to exist.
 #
 # Console Link ships the wheel of its native core in the tarball (native/wheel, build_release.py checks it is
@@ -16,7 +16,7 @@ name: Release
 # it builds the .exe on Windows and adds <app-id>-<version>-windows.zip and its .sha256 to the release the first job
 # made. They are separate downloads; the portal and SHA256SUMS only know the tarball.
 #
-# After an app release: python3 tools/pin_app.py <tag>, bump portal/VERSION as tools/check_manifest.py asks, and
+# After an app release: python3 bc250-bazzite/tools/pin_app.py <tag>, bump bc250-bazzite/portal/VERSION as bc250-bazzite/tools/check_manifest.py asks, and
 # tag the portal when the combination is tested.
 #
 # Only a commit that CI passed becomes a release: the first job waits for every CI run on the tagged commit (the
@@ -70,20 +70,20 @@ jobs:
         run: |
           python tools/check_versions.py
           case "$TAG" in
-            portal-v*) python tools/check_manifest.py --require-tags ;;
-            *)         python tools/check_manifest.py ;;
+            portal-v*) python bc250-bazzite/tools/check_manifest.py --require-tags ;;
+            *)         python bc250-bazzite/tools/check_manifest.py ;;
           esac
 
       - name: Bundled Bazzite Test (portal releases)
         if: startsWith(github.ref_name, 'portal-v')
         run: |
-          bt=$(python -c 'import tomllib; print(tomllib.load(open("portal/apps.toml", "rb"))["apps"]["check"]["tag"])')
+          bt=$(python -c 'import tomllib; print(tomllib.load(open("bc250-bazzite/portal/apps.toml", "rb"))["apps"]["check"]["tag"])')
           mkdir -p bundle
           gh release download "$bt" --pattern "$bt.tar.gz" --pattern SHA256SUMS --dir bundle
 
       - name: Native wheel (consoles releases)
         if: startsWith(github.ref_name, 'consoles-v')
-        working-directory: apps/consoles/native
+        working-directory: bc250-bazzite/apps/consoles/native
         run: |
           sudo apt-get update -q && sudo apt-get install -y -q nasm libva-dev
           ffmpeg/build.sh "$RUNNER_TEMP/ffmpeg"
@@ -140,7 +140,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install
-        run: python -m pip install -q -r apps/sftp/requirements.txt pyinstaller pillow
+        run: python -m pip install -q -r bc250-bazzite/apps/sftp/requirements.txt pyinstaller pillow
 
       - name: Build the executable
         run: python tools/build_windows_exe.py sftp windist

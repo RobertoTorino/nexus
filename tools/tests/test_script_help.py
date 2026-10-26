@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 SUITE = Path(__file__).resolve().parents[2]
-SCRIPTS = sorted(path for path in (SUITE / "apps").glob("*/*.sh")
+SCRIPTS = sorted(path for path in SUITE.glob("*/apps/*/*.sh")
                  if "usage() { sed -n '4,/^$/" in path.read_text(encoding="utf-8"))
 
 

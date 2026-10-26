@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Build the release assets of one tag:
 
-    python3 tools/build_release.py <app>-v<x.y.z> <out-dir> [--bundle DIR]
+    python3 tools/build_release.py [--suite NAME] <app>-v<x.y.z> <out-dir> [--bundle DIR]
 
 <out-dir> gets <tag>.tar.gz (unpacks into <tag>/), SHA256SUMS and notes.md. The tag's version must equal the app's
 VERSION. An app in NATIVE_WHEELS needs the wheel of its native core in that folder first, built by release.yml;
@@ -31,8 +31,7 @@ import tarfile
 import tempfile
 from pathlib import Path
 
-SUITE = Path(__file__).resolve().parent.parent
-MANIFEST = SUITE / "portal" / "apps.toml"
+ROOT = Path(__file__).resolve().parent.parent
 # release.yml marks only portal releases as GitHub's "Latest", so this always opens the newest portal.
 LATEST_PORTAL_URL = "https://github.com/RobertoTorino/nexus/releases/latest"
 _TAG = re.compile(r"^(?P<app>[a-z0-9-]+)-v(?P<version>\d+\.\d+\.\d+)$")
@@ -49,8 +48,18 @@ def _load(name: str, path: Path):
     return module
 
 
-stage_app = _load("bc250_stage_app", SUITE / "tools" / "stage_app.py")
+suites = _load("nexus_suites", ROOT / "tools" / "suites.py")
+stage_app = _load("bc250_stage_app", ROOT / "tools" / "stage_app.py")
+SUITE = stage_app.SUITE                     # the one suite; main() takes --suite
+MANIFEST = SUITE / "portal" / "apps.toml"
 manifest = _load("bc250_manifest", SUITE / "portal" / "bc250_portal" / "manifest.py")
+
+
+def select(suite: Path) -> None:
+    """Work on *suite* (its manifest and portal) instead of the default one."""
+    global SUITE, MANIFEST, manifest
+    SUITE, MANIFEST = suite, suite / "portal" / "apps.toml"
+    manifest = _load("bc250_manifest", suite / "portal" / "bc250_portal" / "manifest.py")
 
 
 def portal_stage() -> tuple[str, str]:
@@ -64,7 +73,7 @@ def source_epoch() -> int:
     if os.environ.get("SOURCE_DATE_EPOCH"):
         return int(os.environ["SOURCE_DATE_EPOCH"])
     try:
-        out = subprocess.run(["git", "log", "-1", "--format=%ct"], cwd=SUITE, capture_output=True, text=True,
+        out = subprocess.run(["git", "log", "-1", "--format=%ct"], cwd=ROOT, capture_output=True, text=True,
                              check=True).stdout.strip()
         return int(out)
     except (OSError, subprocess.CalledProcessError, ValueError):
@@ -161,7 +170,7 @@ def build(tag: str, out: Path, bundle: Path | None = None) -> Path:
     if not match:
         raise SystemExit(f"{tag} is not <app>-v<x.y.z>")
     app, version = match["app"], match["version"]
-    src = stage_app.source_dir(app)
+    src = stage_app.source_dir(app, SUITE)
     if (src / ".checkout-only").is_file():
         raise SystemExit(f"{tag}: {src.relative_to(SUITE)} runs from the checkout and has no releases")
     current = (src / "VERSION").read_text(encoding="utf-8").strip()
@@ -178,7 +187,7 @@ def build(tag: str, out: Path, bundle: Path | None = None) -> Path:
                   f"({LATEST_PORTAL_URL}) installs, updates and removes {app} for you and checks every download. "
                   "This tarball is what the portal downloads; install it by hand only without the portal.", ""]
     with tempfile.TemporaryDirectory() as tmp:
-        stage_dir = stage_app.stage(app, Path(tmp) / tag)
+        stage_dir = stage_app.stage(app, Path(tmp) / tag, SUITE)
         epoch = source_epoch()
         if app == "check":                   # its build date is the commit time too: the same tag, the same bytes
             subprocess.run([sys.executable, str(stage_dir / "development" / "tools" / "build_info.py")], check=True,
@@ -194,7 +203,7 @@ def build(tag: str, out: Path, bundle: Path | None = None) -> Path:
             notes += [f"Includes its native core as `{wheel}`, built for Linux x86-64 with FFmpeg linked in "
                       "(LGPL, from its own sources).", ""]
         if (stage_dir / "bc250_core").is_dir():
-            core = (SUITE / "core" / "VERSION").read_text(encoding="utf-8").strip()
+            core = (ROOT / "core" / "VERSION").read_text(encoding="utf-8").strip()
             notes += [f"Bundles the suite core `bc250_core` {core}.", ""]
         archive = out / f"{tag}.tar.gz"
         write_tarball(stage_dir, tag, archive, epoch)
@@ -214,7 +223,10 @@ def main(argv: list[str]) -> int:
     parser.add_argument("tag")
     parser.add_argument("out", type=Path)
     parser.add_argument("--bundle", type=Path, help="folder with the pinned check release (portal tags)")
+    suites.add_argument(parser)
     args = parser.parse_args(argv)
+    if args.suite:
+        select(suites.suite(args.suite))
     archive = build(args.tag, args.out, args.bundle)
     print(f"{archive} {sha256_of(archive)}")
     return 0

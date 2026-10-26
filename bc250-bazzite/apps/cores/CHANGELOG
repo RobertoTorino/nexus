@@ -1,0 +1,358 @@
+Changelog: 26-10-2026 09:42:18
+
+Fixed. The link to the app's source folder on GitHub names its place since the suite moved into bc250-bazzite/
+(26-10-2026); the old address ends in a 404.
+
+Changelog: 26-10-2026 06:07:41
+
+Release 0.3.1.
+
+Changelog: 26-10-2026 05:55:03
+
+Fixed. Cores Bisect's window has the suite's header (owner, 26-10-2026): the title in Inter with the version in the
+muted color, and under it Help and About as pills of one width, as the core apps' header has its actions and GPU OC
+Bisect's has them; the two flat buttons at the right end of the title are gone, and what the window does is a muted note
+under the header. widgets.py carries copies of core's MetricBox and Pill, as the app is not on core.
+
+Changelog: 26-10-2026 05:47:49
+
+Fixed. --help (and the Help of the window, which shows it) printed only "SPDX-License-Identifier: GPL-3.0-or-later":
+usage() in bc250-cores-bisect.sh and bc250-cores-unlock.sh printed the header comment from line 2, the SPDX line since
+it was added, up to the blank line under it. It starts at line 4 now, the first line of the comment.
+tools/tests/test_script_help.py checks every such script.
+
+Changelog: 26-10-2026 02:14:35
+
+Release 0.3.0.
+
+Changelog: 26-10-2026 01:04:02
+
+Fixed. The error label uses the suite's red text tint #e57373 (DESIGN.md's color families, owner, 26-10-2026),
+not a second red of its own.
+
+Changelog: 25-10-2026 01:16:49
+
+Release 0.2.1.
+
+Changelog: 25-10-2026 01:00:04
+
+Release 0.2.1.
+
+Changelog: 25-10-2026 00:51:24
+
+Fixed. The links to the suite's repository point to its new name, Nexus (RobertoTorino/nexus, renamed 25-10-2026);
+GitHub redirects the old address.
+
+Changelog: 20-10-2026 00:48:10
+
+Release 0.2.0.
+
+Changelog: 19-10-2026 23:41:01
+
+Added. The suite's theme in Cores Bisect and Cores Unlock (a copy of core's theme.py), chosen in the portal; the
+hover outline is the theme's accent, and Cores Unlock's gate banner is the theme's surface with its state as a
+colored left edge.
+
+Changelog: 19-10-2026 16:58:45
+
+Release 0.1.12.
+
+Changelog: 18-10-2026 22:45:26
+
+Release 0.1.11.
+
+Changelog: 17-10-2026 12:45:18
+
+Release 0.1.10.
+
+Changelog: 17-10-2026 11:06:03
+
+Release 0.1.9.
+
+Changelog: 17-10-2026 11:02:44
+
+Fixed. The app's folder in the suite is apps/cores (was apps/cores-bisect) and its packages are cores_bisect (was
+bc250_cores_bisect_gui, the Bisect window) and cores_unlock (was bc250_cores_gui, the Cores Unlock window): the
+suite's naming convention (owner, 17-10-2026), a short folder name and packages named after the windows without
+the BC-250 prefix; all three names are the owner's. With the folder go its key in the portal, its chapter of the
+wiki (apps/cores/), its installer test and its release tags: cores-v<x.y.z> from the next release on. The
+installed apps keep their names, their launchers bc250-cores-bisect-gui and bc250-cores-unlock-gui, their folder
+under /opt, the scripts, the results, the settings and the boot service; the portal moves its record of the
+installed copy to the new key.
+
+Changelog: 17-10-2026 09:41:48
+
+Release 0.1.9.
+
+Changelog: 15-10-2026 23:29:43
+
+Release 0.1.8.
+
+Changelog: 15-10-2026 22:51:19
+
+Release 0.1.8.
+
+Changelog: 15-10-2026 05:52:00
+
+Release 0.1.7.
+
+Changelog: 15-10-2026 05:41:13
+
+The window's title has no padding any more, like core's AppHeader: it started about 9 px to the right of the line below it, now both line up on the left.
+
+Changelog: 15-10-2026 03:27:56
+
+Release 0.1.6.
+
+Changelog: 15-10-2026 02:31:31
+
+No translations (owner's decision): the app is English only, Qt's own dialog buttons included. Gone: the translations/ of both GUIs (.ts and .qm), --lang and the translator set-up, TRANSLATIONS_DIR; every tr() is its English text, unchanged.
+
+Changelog: 15-10-2026 02:10:51
+
+Release 0.1.5.
+
+Changelog: 15-10-2026 02:01:27
+
+instance.py follows core's: a second launch can hand its arguments to the running instance (already_running(app_id, args), serve(..., on_args)). This app passes none, so it behaves as before: a second launch shows the open window.
+
+Changelog: 15-10-2026 00:23:49
+
+images/bc250-cores-bisect-128.png and images/bc250-cores-unlock-128.png: the 128 px versions of the icons, scaled from the 512 px files, so the app's images folder has both sizes like the other apps. Nothing uses them yet; they are the source for the portal's tile icon.
+
+Changelog: 13-10-2026 15:53:27
+
+Release 0.1.4.
+
+Changelog: 13-10-2026 15:51:48
+
+The installer installs the Python packages with pip --upgrade (owner's decision, 13-10-2026): installing again brings each package to the newest version its requirements allow, so a security fix within that range arrives with a reinstall from the portal.
+
+Changelog: 12-10-2026 09:19:23
+
+Release 0.1.3.
+
+Changelog: 12-10-2026 09:09:15
+
+Release 0.1.3.
+
+Changelog: 12-10-2026 08:23:31
+
+tests/: the options as a command line, the --auto unit (enabled, not started), the unlock gate (every rejection, the notes that do not block, a core that fails one round) with the cores of the owner's boards, and both windows offscreen with a fake unlock script; requirements-dev.txt.
+
+Changelog: 12-10-2026 08:07:21
+
+Both windows have the suite's header: the icon at 96 px beside the title, now 24 px with the version, and the description line below it. The unlock window had no icon in its header before; the bisect window had it at 64 px.
+
+Changelog: 11-10-2026 19:25:11
+
+Release 0.1.2.
+
+Changelog: 11-10-2026 19:02:46
+
+instance.py, the copy of core's: Two launches at the same moment (a double-click on a Desktop icon that opens on one
+click) no longer open two windows. Both found no running instance, since the window and its socket take a while to
+appear, and the second then removed the first one's socket. The first launch now takes a lock file at once; a launch
+that finds it taken waits up to 10 s for that instance's socket and hands over instead. A crashed instance's lock is
+stale, so the next launch starts as before.
+
+Changelog: 11-10-2026 17:17:19
+
+Release 0.1.1.
+
+Changelog: 11-10-2026 16:55:40
+
+Cores Unlock has its own icon (images/bc250-cores-unlock.png, 512 px) for its window, its app menu entry and Desktop
+icon (install.sh and packaging/bazzite/install-gui.sh); Cores Bisect keeps its icon. The manual's Cores Unlock
+section shows it.
+
+Changelog: 10-10-2026 20:56:48
+
+Release 0.1.0. Initial release
+
+Changelog: 09-10-2026 23:21:16
+
+Manual: the Roadmap section is gone from the chapter (every item was done or dropped).
+
+Changelog: 09-10-2026 22:59:08
+
+README: only the app's name, what it does and its license, with a link to its chapter of the manual; the rest moved into the manual (docs/apps/cores-bisect.md). The bisect GUI's and the script's texts that said "see README" now say the manual.
+
+# Changelog
+
+Changelog: 09-10-2026 18:32:48
+
+Docs: links to the old stand-alone repositories (which no longer exist) now point at the apps' folders in the
+suite repository (README and the scripts' header comments).
+
+Changelog: 09-10-2026 18:20:11
+
+Bisect and Unlock windows: about box: the project link pointed at the old stand-alone repository, which no longer exists (GitHub answers
+404); it now opens the app's folder in the BC250 Bazzite Suite repository.
+
+Changelog: 09-10-2026 17:51:51
+
+Bisect and Unlock windows: only one instance of each runs per user. Starting one again brings its running
+window to the front instead of opening a second one (bc250_core's instance module, copied into each package
+until the apps move onto core).
+
+Changelog: 09-10-2026 16:16:30
+
+Cores Unlock window: the Status with sudo button and its tooltip are translated into German, Spanish, French,
+Italian, Japanese, Polish, Russian and Chinese. The .qm files were rebuilt with pyside6-lrelease, which
+reproduces the previous .qm files byte for byte, so only these two strings changed.
+
+Changelog: 09-10-2026 13:56:58
+
+bc250-cores-unlock.sh --status printed each systemctl answer twice when the service was not installed
+("Service: not-found" and "not installed, inactive" and "inactive" on separate lines). It now prints one line,
+e.g. "Service: not installed, inactive".
+
+Cores Unlock window: new Status with sudo button. It runs the status as root, asking for the sudo password when
+needed, so the core presence mask is always shown. The new strings are English in every language for now.
+
+Changelog: 09-10-2026 13:17:34
+
+README: the passwordless sudo setup now checks the drop-in with `sudo visudo -cf /etc/sudoers.d/bc250-bisect`,
+which must print "parsed OK", and says to edit it by hand only with `sudo visudo -f`. A malformed line in
+a drop-in makes every sudo command print a warning, or stops sudo working at all. Docs only; the app
+is unchanged.
+
+## 0.2.0
+
+The last two roadmap items: optional longer burn-in, and translated GUIs.
+Also contains the pre-flight review before the first run on real hardware.
+
+Added:
+
+- Optional `mprime` (Prime95) torture test as a second load source: `--load
+  stress-ng|mprime|both` (default `stress-ng`) and `--mprime-bin PATH` for binaries that
+  aren't on `$PATH`. mprime runs `StressTester=1` with PrimeNet off, pinned to exactly the
+  same CPUs as stress-ng, from a private working directory per item under
+  `$STATE_DIR/mprime/<item>/`. With `--load both` the two tools run sequentially, never at
+  the same time, so they don't fight over the same threads - an attempt then takes
+  2 x `--time`. A torture error gives the attempt the new outcome `MPRIME-FAIL`.
+- Optional `rasdaemon` integration: `--rasdaemon` reads `ras-mc-ctl --errors` before and
+  after every attempt and records the delta; a new hardware error gives the attempt the new
+  outcome `RAS-ERROR`. The capability is probed after the sudo preflight (the command needs
+  root), and a missing or unusable `ras-mc-ctl` is reported once and then ignored. The full
+  table is exported to the Desktop folder as `ras-mc-ctl-errors.txt`.
+- `runs.tsv` gained two columns: the load tool of the attempt and its rasdaemon error count.
+  Records are padded instead of rewritten, so result files from older versions (11 or 12
+  columns) are still read correctly. The report, the per-item notes and the mixed-settings
+  warning all know about the load tool now.
+- Both new knobs are persisted in `config`, survive reboots, and are carried into the
+  `--auto` user service's `ExecStart` line.
+- Setup GUI: a "Load tool" combo box and an "Also count hardware errors with rasdaemon"
+  checkbox, both reflected in the runtime estimate and the start confirmation.
+- GUI translations for both front-ends: German, Spanish, French, Italian, Polish, Russian,
+  Simplified Chinese and Japanese, with English as the source language. The language follows
+  the desktop locale and can be forced with `--lang <code>`; Qt's own `qtbase_<lang>.qm` is
+  loaded as well, so standard dialog buttons follow suit. Source `.ts` and compiled `.qm`
+  catalogs live in each package's `translations/` directory and are installed with the
+  package, so runtime needs nothing extra - only rebuilding them needs `pyside6-lrelease`
+  (pip `PySide6-Essentials`). Terminal output of the shell scripts stays English.
+- README: a "Longer burn-in (mprime / rasdaemon)" section and a "Languages" section; both
+  remaining roadmap bullets struck through.
+- `VERSION` and both scripts now read `0.2.0`.
+
+Added (pre-flight review):
+
+- New setup GUI `cores_bisect`: a one-screen launcher that turns the `-t`/`-r`/
+  `--same-boot`/`--auto` options into a `bc250-cores-bisect.sh` command line, shows a runtime
+  estimate, and then hands off to a real terminal so the script keeps its TTY and its prompts.
+  Also exposes `--status`/`--reset`, the script's own `--help`, and can install the `--auto`
+  auto-resume user service. Packaged with `packaging/bazzite/install-bisect-gui.sh`.
+
+Fixed:
+
+- The GUI's menu entry had no icon on Bazzite: `install-gui.sh` left the bare theme name in
+  `Icon=`, which gamescope/freshly-logged-in sessions look up before the hicolor cache is
+  rebuilt. The installers now write the icon's absolute path.
+- `VERSION` and both scripts still said `0.1.0` while the repo was tagged `v0.1.9`, so the GUI
+  reported a stale version. All three now read `0.1.9`.
+
+- `--auto` was broken: `ask()` printed its info line to stdout, polluting the captured
+  answer, so auto mode refused the unlock offer and bailed at the busy-system warning.
+  Prompts now go to stderr; only the answer is captured.
+- Reboots now fall back to `sudo -n systemctl reboot` (plain `systemctl reboot` fails
+  polkit when run from the `--auto` user service), with a clear manual-reboot message.
+- `cpu_freq` reported 0 MHz for range CPU specs (`0-15`, the control item): invalid sysfs
+  path built from the range; now strips at `,` or `-`. Real-hardware testing also showed
+  the BC-250 exposes no cpufreq scaling driver at all, so it now falls back to the
+  `cpu MHz` field in `/proc/cpuinfo`.
+- New-core detection fed `sort -n` output to `comm` (needs lexicographic order); safe only
+  by luck with single-digit core_ids. Inputs now sorted lexically, result numerically.
+- Missing pciutils was reported as "no BC-250 found"; `lspci`/`setpci` presence is now
+  checked before the board check (both scripts).
+- The sudo preflight used `sudo -v`, which prompts under the default `verifypw=all` when
+  sudoers has mixed rules (e.g. wheel with password + a NOPASSWD drop-in) - in `--auto`
+  this surfaced as a blocking ksshaskpass popup at every attempt. Now tries `sudo -n true`
+  first and only falls back to `sudo -v`; the keepalive refreshes the same way.
+
+Hardened:
+
+- `core_mask` double-reads until two consecutive reads agree: the SMN index/data pair at
+  0xB8/0xBC is shared with the governor, so a single racy read could silently return a
+  wrong mask (both scripts).
+- `--install` copies the script to `/usr/local/sbin` (root-owned) and points the boot
+  service there, so root never executes a user-owned file; `--uninstall` removes the copy.
+- Autostart example uses `WantedBy=default.target`: gamescope/Steam sessions don't
+  reliably activate `graphical-session.target`.
+- Release workflow restored (it was fully commented out, so every run failed as an invalid
+  workflow) and adapted to this repo: correct archive name, no GUI/packaging references,
+  and a `bash -n` + ShellCheck gate before releasing.
+
+Added:
+
+- GUI `cores_unlock` (PyQt6, English only for now), modeled on bc250-cu-bisect's GUI.
+  It reads the bisect results from `~/.local/share/bc250-cores-bisect` and only enables
+  Install when the verdict gate passes: bisect phase, no attempt in progress, control and
+  post-control clean, every new core and the combined item PASS in every round. It shows a
+  core map (stock / ok / fails / random / not tested), runs `bc250-cores-unlock.sh`
+  `--install`/`--uninstall` through sudo (password dialog only when sudo needs one) and
+  `--status` unprivileged. It never runs the bisect itself.
+- `packaging/bazzite/install-gui.sh` / `uninstall-gui.sh`: per-user install (venv,
+  launcher `bc250-cores-unlock-gui`, menu entry, icon) without rpm-ostree or root; the names
+  don't clash with the bc250-cu-bisect GUI. `requirements.txt` for running it from a venv.
+- Release workflow: also byte-compiles the GUI and ShellChecks the packaging scripts.
+
+- Report and all raw data are copied to `~/Desktop/bc250-cores-bisect/` (like
+  bc250-bazzite-test): the report, `runs.tsv`, `config`, the per-attempt stress-ng logs and
+  `auto.log`. Previously only the report landed loose on the Desktop and the stress-ng logs
+  stayed hidden in `~/.local/share/bc250-cores-bisect/logs`.
+
+- Report accuracy (from the first overnight run, which mixed a 120 s quick test with 1800 s
+  rounds while the header claimed 1800 s throughout):
+  - Every attempt now records its load length (new last column in `runs.tsv`; files from
+    older versions stay valid and show `unknown`). The summary shows a per-item
+    "load per attempt" breakdown when an item's attempts didn't all run the current load.
+  - Changing `-t`/`-r` partway through a run is announced before the new values are saved
+    (and asks to confirm unless `--auto`), suggesting `--reset` for a uniform result.
+  - After the unlock, the summary still lists the control rounds, and says so when the
+    control ran fewer rounds than the current `--rounds`. A failed control now also blocks
+    the "looks safe" verdict in the bisect phase.
+
+- The core map is now drawn during the control phase too (previously bisect-only): before
+  the unlock the fused-off cores are derived as the IDs missing from 0-7 and shown as `..`.
+- `--auto` cleans up after itself: when all attempts are done it disables the autostart
+  unit and removes the live-output autostart entry, so nothing starts at the next login.
+  Symmetrically, a new `--auto` run re-enables the unit if it's installed but disabled, and
+  warns when the unit isn't installed at all (the run couldn't continue past a reboot).
+- App icon (`images/bc250-cores-bisect.png`, 512x512, transparent background).
+- README: "How long does it take?" section with wall-clock estimates per invocation, and a
+  "Running truly unattended" checklist for `--auto` (autologin, passwordless sudo setup,
+  autostart unit, silencing KDE Wallet / ksshaskpass popups, how to monitor a run).
+
+## 0.1.0
+
+Initial scaffold.
+
+- `bc250-cores-bisect.sh`: control (stock 6C/12T) -> SMU unlock -> per-core pinned bisect
+  (post-control, each new core alone, combined) with stress-ng --verify, MCE detection,
+  crash-safe multi-boot state machine, core map, verdicts, report and decision.
+- `bc250-cores-unlock.sh`: reversible persistence - re-applies the volatile unlock after a
+  cold boot via a root systemd service and warm-reboots once, with a reboot-loop guard.
+- Own implementation of the SMN/SMU queue-3 access (setpci on 0000:00:00.0, index/data
+  0xB8/0xBC); hardware facts credited to rw-r-r-0644/bc250-core-unlock.
+- Untested on hardware yet: syntax-checked only. Treat as experimental.

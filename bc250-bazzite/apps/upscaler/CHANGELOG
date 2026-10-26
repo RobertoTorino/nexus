@@ -1,0 +1,488 @@
+Changelog: 26-10-2026 09:42:18
+
+Fixed. The link to the app's source folder on GitHub names its place since the suite moved into bc250-bazzite/
+(26-10-2026); the old address ends in a 404.
+
+Changelog: 26-10-2026 04:32:52
+
+Release 0.14.0.
+
+Changelog: 26-10-2026 04:16:33
+
+Fixed. A neutral header box has the suite's blue left edge, as the portal's pills (owner, 26-10-2026); the widgets
+copy follows core's. The app's own copper and teal boxes are as they were.
+
+Changelog: 26-10-2026 02:14:35
+
+Release 0.13.0.
+
+Changelog: 25-10-2026 01:16:49
+
+Release 0.12.1.
+
+Changelog: 25-10-2026 01:00:04
+
+Release 0.12.1.
+
+Changelog: 25-10-2026 00:51:24
+
+Fixed. The links to the suite's repository point to its new name, Nexus (RobertoTorino/nexus, renamed 25-10-2026);
+GitHub redirects the old address.
+
+Changelog: 24-10-2026 23:29:22
+
+Release 0.12.0.
+
+Changelog: 24-10-2026 21:15:56
+
+Release 0.11.1.
+
+Changelog: 24-10-2026 19:49:22
+
+Release 0.11.0.
+
+Changelog: 24-10-2026 10:26:20
+
+Release 0.10.0.
+
+Changelog: 23-10-2026 07:16:27
+
+Release 0.9.1.
+
+Changelog: 22-10-2026 23:28:29
+
+Release 0.9.0.
+
+Changelog: 22-10-2026 19:31:16
+
+Release 0.8.0.
+
+Changelog: 21-10-2026 02:13:00
+
+Release 0.7.1.
+
+Changelog: 21-10-2026 01:54:13
+
+Breaking. The app is BC-250 Upscaler Manager (owner, 21-10-2026: it is not HelixSR itself, and the old name
+confused people), in the window, the menu entry, the portal and the wiki. With the name go the folder apps/upscaler,
+the package upscaler, the portal key upscaler, the release tags upscaler-v<x.y.z>, the wiki chapter
+docs/apps/upscaler.md and the installed name bc250-upscaler: the launcher ~/.local/bin/bc250-upscaler, the folders
+~/.local/share/bc250-upscaler and ~/.config/bc250-upscaler, the desktop entry and the icon. install.sh takes over a
+copy installed as bc250-bazzite-helixsr-gui, on install and uninstall: the imported payload, the settings
+(bc250-bazzite-helixsr-gui.conf becomes bc250-upscaler.conf) and the list of deployed games move to the new folders
+(not over ones that are there already), the old launcher, menu entry, Desktop icon, icons and the rest of the old
+folder (venv, downloads) go. The games themselves are not touched. HelixSR keeps its name wherever the app means the
+upscaler it deploys. The portal notice of a newer HelixSR is published under the key upscaler. The installer test
+plants a copy under the old name.
+
+Changelog: 21-10-2026 01:43:59
+
+Added. With OptiScaler installed for a Steam game (Deploy, stand-alone folder), the app also sets the game's Steam
+launch options (owner, 21-10-2026): WINEDLLOVERRIDES="dxgi=n,b" (under the name OptiScaler got), added to the
+launch options already there, for every Steam user (userdata/<user>/config/localconfig.vdf, only that line changes).
+Steam writes that file again when it closes, so the app asks to close it, sets them and starts Steam again
+(bc250_core.steam.with_steam_closed, as Console Link does); in Game Mode Steam stays open and the line is copied to the
+clipboard. OptiScaler's record in the HelixSR folder keeps the launch options of before, and Remove puts them back
+unless they were changed since. helixsr now uses bc250_core (its steam module only, owner, 21-10-2026): install.sh
+copies it from the checkout as a release bundles it, and uninstalls it. Help, the Deploy page and the wiki say so.
+Tests: tests/test_optiscaler.py (reading and writing localconfig.vdf, adding the override, the record) and
+tests/test_main_window.py (Deploy and Remove with Steam running, Game Mode); the installer test checks the core.
+
+Changelog: 21-10-2026 00:17:47
+
+Release 0.7.1.
+
+Changelog: 20-10-2026 23:54:32
+
+Fixed. A download the server answers with 502, 503 or 504 (GitHub's raw files are busy now and then, as for NVIDIA's
+DLSS DLL) is tried again, 3 seconds apart, five times in all; then the setup says "Server currently not available.
+Try again later." Cancel works during the pause. Other answers fail at once, as before.
+
+Changelog: 20-10-2026 21:58:19
+
+Release 0.7.0.
+
+Changelog: 20-10-2026 21:34:32
+
+Added. HelixSR 2.x is set up (owner, 20-10-2026). Its helixsr-setup.sh hands --yes on to its game installer, which
+would put HelixSR Scaler into every game it finds, and its license does not allow changing the script; so for 2.x the
+app runs what the script runs before its games: HelixSR's own builder, unchanged (setup/helixsr_setup.py on the
+release's HelixSR-fsrfg folder, --yes --no-fg, the DLSS DLL with --dlss), with the portable Python (numpy installed by
+pip when it has none, as the script does) or the system's python3 with numpy, the shader compiler through the Wine
+the script would use (Steam's Proton first) and a wrapper of the app's own in its work folder; Wine's temporary prefix
+is removed afterwards, and the build counts only when --status says network=1. The DLL is taken from HelixSR-fsrfg
+(payload_folder in backend.py); 1.x still runs its setup script. SUPPORTED_MAJOR is 2 (1.x stays available) and
+KNOWN_VERSION 2.0.0; the Setup page, the help and the wiki say so. The downloaded DLSS DLL is now also deleted when the
+build stops with an error. Tests: tests/test_acquire.py (a fake 2.x release whose setup script must not run, a fake
+builder, the DXC wrapper's paths, Wine and Python choice).
+
+Changelog: 20-10-2026 00:48:10
+
+Release 0.6.0.
+
+Changelog: 19-10-2026 23:41:01
+
+Added. The suite's theme (a copy of core's theme.py), chosen in the portal. The status boxes and pills are the
+theme's surface with their state as a colored left edge, as core's.
+
+Changelog: 19-10-2026 21:45:21
+
+Release 0.5.0.
+
+Changelog: 19-10-2026 20:53:49
+
+Added. A Games page: every Steam game on this PC (Steam's own Proton, runtime and redistributable folders left out),
+each looked through in the background for an AMD FSR 3.1 DLL; the games that have one come first with HelixSR's
+state (not installed, installed, an older build, or the game's own DLL back), the others are grayed out and Open on
+Deploy page takes them to OptiScaler. Run with HelixSR (or a double-click) puts HelixSR in where it is missing,
+older or replaced by the game's own DLL, keeping the game's helixsr.ini and backup, then starts the game through
+Steam (steam://rungameid/<AppID>, the AppID from the library's appmanifest); it asks before the first install into a
+game and changes nothing while the game runs (Steam's AppId=<id> on a running process). Update older games on the
+Overview puts the payload's HelixSR into every deployment with an older build or the game's own DLL back, keeping
+helixsr.ini, a stand-alone folder's second upscaler and the game's backup; after a build the app offers it. Download
+and build does not start with less than about 1.5 GB free.
+
+Changelog: 19-10-2026 20:53:49
+
+Fixed. A game whose own DLL came back (a game update or Steam's file check, which leave HelixSR's .original.dll)
+showed Older build on the Overview, and Deploy listed its DLL as HelixSR of another build; it is Original restored,
+as the help says, and Game's own DLL again. A DLL is HelixSR when it is the payload's, carries the network, or names
+its HelixSR version (1.4.3 and newer do).
+
+Changelog: 19-10-2026 20:28:50
+
+Fixed. HelixSR 2.0.0 is not set up: its helixsr-setup.sh hands --yes on to its game installer, which then puts
+HelixSR Scaler with frame generation into every game it finds, and its package keeps the DLL in HelixSR-fsrfg/. The
+app sets up HelixSR 1.x only (SUPPORTED_MAJOR in acquire.py): the update check reads GitHub's list of releases and
+takes the newest stable 1.x release with its HelixSR-x.y.z.zip (1.9.3), and the Setup page and the Overview say when
+a newer major version is out that the app does not support yet. The portal's notice offers only what Get HelixSR…
+installs. Download and build refuses a release of another major version. The release zip is checked against the
+SHA-256 GitHub publishes for it (a cached zip too); a zip that does not match is deleted.
+
+Changelog: 19-10-2026 03:41:49
+
+Release 0.4.0.
+
+Changelog: 19-10-2026 03:24:21
+
+Added. The update check records a newer HelixSR for the portal's notice (Outside the suite), and that there is
+none once the payload is the newest; nothing while the fallback is picked on the Setup page, nor when the check
+fails. A copy of bc250_core's upstream.py, as the app is not on core yet.
+
+Changelog: 18-10-2026 22:45:26
+
+Release 0.3.2.
+
+Changelog: 17-10-2026 12:45:18
+
+Release 0.3.1.
+
+Changelog: 17-10-2026 12:27:00
+
+Fixed. The app's package is helixsr_manager (was bc250_bazzite_helixsr): the suite's naming convention (owner,
+17-10-2026), the package named after the app without its prefix; the folder stays apps/helixsr, and with it the
+portal key, the wiki chapter and the helixsr-v<x.y.z> release tags. The installed app keeps its name, its launcher
+bc250-bazzite-helixsr-gui, its folder, its settings, the imported payload and the deployments in games. Installing
+over an older copy removes its package folder under the old name, and so does an uninstall.
+
+Changelog: 16-10-2026 07:40:47
+
+Release 0.3.0.
+
+Changelog: 16-10-2026 07:33:05
+
+Added. The app takes the copper and cyan of its icon (owner, 16-10-2026) in place of the suite's purple, in a new
+style.py: the header's boxes are a dark copper (#8A5A2E) and a dark teal (#0E6F75), both with white text at 5.9:1 (red
+and orange still mark a missing payload or network files); the selected page and the main buttons' outline are the
+icon's cyan (#26A9B0); links are a bright cyan on a dark window (#3FC8CF) and the teal on a light one. widgets.py
+keeps the suite's palette, so the tooltips' border stays purple.
+
+Changelog: 16-10-2026 07:13:33
+
+Release 0.2.11.
+
+Changelog: 16-10-2026 07:00:31
+
+Release 0.2.11.
+
+Changelog: 16-10-2026 06:38:26
+
+Fixed. HelixSR 1.9.0: a release now also carries HelixSR Scaler's zip, so the Setup page takes the zip named
+HelixSR-x.y.z.zip instead of the first one. The 1.9.0 setup can also build frame generation for HelixSR Scaler (about
+400 MB from NVIDIA), which the app does not deploy: from 1.9.0 on the app passes --no-fg. The game installer at the
+end of the setup starts with another line in 1.9.0 ("looking for games with FSR 3.1"); its questions are hidden again.
+The fallback on the Setup page is 1.8.1, the version HelixSR's developer now names, instead of 1.4.3. 1.9.0 no longer
+ships OptiScaler: the Deploy page's hint, the help and the wiki say that 1.7.0 to 1.8.1 ship it and that the fallback
+brings it. acquire.py has KNOWN_VERSION (1.8.1), the newest HelixSR the app was checked against, for the weekly
+upstream check.
+
+Changelog: 16-10-2026 01:19:38
+
+Release 0.2.10.
+
+Changelog: 16-10-2026 00:54:44
+
+Fixed. images/bc250-bazzite-helixsr-gui-128.png is the 128 px copy of the new icon
+(images/bc250-bazzite-helixsr-gui.png), scaled from the 512 px file; the portal's tile shows it.
+
+Changelog: 15-10-2026 23:29:43
+
+Release 0.2.9.
+
+Changelog: 15-10-2026 22:51:19
+
+Release 0.2.9.
+
+Changelog: 15-10-2026 05:52:00
+
+Release 0.2.8.
+
+Changelog: 15-10-2026 05:41:13
+
+The window's title has no padding any more, like core's AppHeader: it started about 9 px to the right of the line below it, now both line up on the left.
+
+Changelog: 15-10-2026 03:27:57
+
+Release 0.2.7.
+
+Changelog: 15-10-2026 02:42:56
+
+HelixSR no longer crashes when it quits on SIGTERM (at logout, or with the tray icon when the session ends): RoundedToolTip.install removes its event filter when the app quits (aboutToQuit). The filter saw the events of widgets destroyed after the event loop had ended, while Python was tearing down, and the process ended with a segmentation fault every time; core's tooltip has the same fix. Tests: tests/test_widgets.py.
+
+Changelog: 15-10-2026 02:31:31
+
+No translations (owner's decision): the app is English only, Qt's own dialog buttons included. Gone: translations/ (.ts and .qm), tools/update_translations.sh and compile_translations.py, tests/test_translations.py, --lang, the language picker on the Help page (the page is the help text alone, HelpView), the translator set-up in __main__, TRANSLATIONS_DIR and LANGUAGES; every tr()/translate() is its English text, unchanged. The ui/language setting is ignored.
+
+Changelog: 15-10-2026 02:10:51
+
+Release 0.2.6.
+
+Changelog: 15-10-2026 02:01:27
+
+instance.py follows core's: a second launch can hand its arguments to the running instance (already_running(app_id, args), serve(..., on_args)). This app passes none, so it behaves as before: a second launch shows the open window.
+
+Changelog: 15-10-2026 00:23:49
+
+images/bc250-bazzite-helixsr-gui-128.png: the 128 px version of the icon, scaled from the 512 px file, so the app's images folder has both sizes like the other apps. Nothing uses it yet; it is the source for the portal's tile icon.
+
+Changelog: 14-10-2026 18:22:56
+
+The app no longer has the BC-250 prefix in its name, as it is not tied to the board: HelixSR Manager (window, menu entry, README, manual). Its app ID, launcher, package and settings are unchanged.
+
+Changelog: 13-10-2026 22:47:54
+
+Release 0.2.5.
+
+Changelog: 12-10-2026 09:19:23
+
+Release 0.2.4.
+
+Changelog: 12-10-2026 09:09:15
+
+Release 0.2.4.
+
+Changelog: 12-10-2026 08:23:31
+
+install.sh takes --uninstall --purge (also the imported payload and the settings; the list of deployed games stays, so a reinstalled app can still restore them) and refuses to run as root, like every app's installer.
+
+Changelog: 11-10-2026 22:27:40
+
+Release 0.2.3.
+
+Changelog: 11-10-2026 20:58:28
+
+MetricBox centers by default, as core's does; the app already asked for centered boxes, so it looks the same.
+
+Changelog: 11-10-2026 19:25:11
+
+Release 0.2.2.
+
+Changelog: 11-10-2026 19:02:46
+
+instance.py, the copy of core's: Two launches at the same moment (a double-click on a Desktop icon that opens on one
+click) no longer open two windows. Both found no running instance, since the window and its socket take a while to
+appear, and the second then removed the first one's socket. The first launch now takes a lock file at once; a launch
+that finds it taken waits up to 10 s for that instance's socket and hands over instead. A crashed instance's lock is
+stale, so the next launch starts as before.
+
+Changelog: 11-10-2026 17:17:19
+
+Release 0.2.1.
+
+Changelog: 11-10-2026 16:03:59
+
+Deploy page: the two settings files are explained on the page, not only in a tooltip. Under the OptiScaler.ini
+lines: what OptiScaler.ini is (OptiScaler's settings file next to the game's .exe), what the lines do
+(Dx12Upscaler=fsr31 hands the game's upscaling to an FSR 3.1 DLL, the two Path lines say that DLL is HelixSR in the
+folder) and what Copy OptiScaler.ini lines does (the clipboard, to paste in place of the lines with the same names);
+the button has a tooltip too. Under "Write helixsr.ini": what helixsr.ini is (HelixSR's own settings file next to its
+DLL) and what ticked and unticked do. All languages updated.
+
+Changelog: 11-10-2026 15:17:42
+
+Deploy page, OptiScaler folder: the app now also installs OptiScaler, for games without a separate FSR 3.1 DLL (God of
+War, DLSS / XeSS / FSR 2 games). HelixSR 1.7 and newer ship the official OptiScaler (0.9.4) with fakenvapi; importing
+such a release copies its optiscaler folder into the payload. "Install OptiScaler next to the game's .exe" is on when
+the payload has it, and Scan fills in the .exe folder (one that already has an OptiScaler.ini, else the folder of the
+largest .exe that is no launcher, installer or crash handler; an Unreal *-Win64-Shipping.exe wins). Deploy asks
+first, then puts OptiScaler there as dxgi.dll (or under the name of an OptiScaler the game already has), adds
+fakenvapi where the game has none, and sets Dx12Upscaler=fsr31, FfxDx12Path and FfxDx12SRPath in its OptiScaler.ini,
+keeping the file's comments and line endings. A file of the game it replaces and an OptiScaler.ini the game already
+had are kept in the HelixSR folder's backup, with a record (bc250-optiscaler.json); Remove, on the Deploy page or the
+Overview, puts them back and deletes what it added. Unticked, the page shows the OptiScaler.ini lines to paste, as
+before. The same steps as HelixSR's own installer, for the app's folder. Help and the manual describe it, including
+WINEDLLOVERRIDES="dxgi=n,b" for a game whose OptiScaler menu does not appear; all languages updated. Tests: import,
+finding the .exe folder, install and remove (also over an OptiScaler the game already had), the refusals and the
+Deploy page.
+
+Changelog: 11-10-2026 15:10:06
+
+Deploy page: in a window too small for the whole page, Qt squeezed the hints to their first line and the
+OptiScaler.ini lines to one row. The Deploy and helixsr.ini pages now scroll instead; the box with the OptiScaler.ini
+lines always shows all of them, and the DLL table starts smaller (it still grows with the window).
+
+Changelog: 11-10-2026 14:06:06
+
+Setup page: the output of HelixSR's own game installer, which runs after the build and asks about each Steam game
+("GodOfWar: install? [o/d/n]"), is no longer shown, so the output no longer ends on a question nobody answers. From
+its first line ("looking for games with DLSS, XeSS or FSR") on, the page says that the network is built and that
+Deploy puts HelixSR into a game. Everything the build prints before that is shown as before.
+
+Changelog: 11-10-2026 13:08:28
+
+HelixSR 1.8.0: its setup builds the network into HelixSR's DLL (an HXSRNET1 footer at the end of the file) and removes
+helixsr_weights.bin and helixsr_kernels.pak, so Download and build failed with "The setup finished but did not
+produce helixsr_weights.bin, helixsr_kernels.pak". A DLL that carries the network now counts as a complete payload:
+the build check, import, deploy (both modes), the deployment state and Remove accept it. Deploy copies only the DLL
+and the ini, and removes network files an older release left next to it; importing such a DLL removes the payload's
+old network files. The Overview shows the weights and kernels as "In the DLL". The fsr3-drop-in folder the 1.8 setup
+writes is deleted after the build, like manual-install.
+
+helixsr.ini page: HelixSR 1.8 reads sharpening again, through Sharpener (off, nvidia, rcas), Sharpness and
+UseGameSlider instead of Mode. The page edits the two new keys and writes them only when they are set, so files for
+older versions stay as they were. It grays out per field what the payload's version does not read: Sharpener and
+UseGameSlider before 1.8, all of [Sharpening] and [ModelE] Network in 1.7, Mode and Network from 1.8 on.
+
+The Setup page no longer checks this app's own release ("This app" with its release page link), and the status bar
+no longer announces one: the app is updated through the BC250 Bazzite Suite portal. latest_release() lost its
+tag-prefix search, which only that check used.
+
+Help and the manual describe the one-file DLL, the new sharpening keys and the portal; all languages updated. Tests:
+a setup that builds a one-file DLL, import and deploy of one, the 1.8 keys in the ini and the update check covering
+only HelixSR.
+
+Changelog: 10-10-2026 20:56:48
+
+Release 0.2.0. Update to latest HelixSR release
+
+Changelog: 10-10-2026 18:43:44
+
+HelixSR 1.7.0: its helixsr-setup.sh now ends with a game installer that asks about every Steam game, and --yes does not
+answer those questions. The app ran the script with its own input, so started from a terminal the Setup page could
+wait for answers typed there. The script now gets no input: the installer stops at its first question and only the
+network files are built. The manual-install folder it leaves in the work folder (another copy of the network files)
+is deleted afterwards.
+
+Setup page: Version picks the latest HelixSR release (the default) or HelixSR 1.4.3, the version HelixSR's developer
+recommends when the latest one does not work. 1.4.3 is pinned by its tag (FALLBACK_TAG in acquire.py), and the
+choice is saved. With the fallback as the payload, the Overview reports a newer release as information, not as an
+update to install.
+
+Deployments: after switching back to an older release, games deployed with a newer one show Newer build instead of
+Older build. Stand-alone OptiScaler folders now also show Older or Newer build when their DLL is not the payload's.
+
+helixsr.ini page: with HelixSR 1.7.0 or newer as the payload, [Sharpening] and the [ModelE] Network setting are grayed
+out with a note, because those versions ignore them. Their values stay in the file for 1.4.3.
+
+Help and the manual describe the version choice; all languages updated. Tests: the setup script gets no input and
+manual-install is removed, the fallback looks up its tag, Newer build, the grayed-out ini settings and the saved
+version choice. The test fixtures now keep QSettings in a temporary folder, so the tests no longer write to the
+user's own settings (or to the Windows registry).
+
+Changelog: 09-10-2026 22:59:08
+
+README: only the app's name, what it does and its license, with a link to its chapter of the manual; the rest moved into the manual (docs/apps/helixsr.md).
+
+Changelog: 09-10-2026 18:32:48
+
+Deploy page, OptiScaler folder mode: an optional second upscaler. Pick another FidelityFX upscaler DLL (for example
+AMD's amd_fidelityfx_upscaler_dx12.dll with FSR 4) and it is copied into the folder as
+amd_fidelityfx_upscaler_dx12.amd.dll, with [Forwarding] UpscalerDll in the folder's helixsr.ini pointing at it, so
+OptiScaler's FFX Upscaler menu lists its upscalers after HelixSR (as HelixSR's README describes). Deploying again
+without one removes it and clears UpscalerDll when it named it; removing the folder removes it too. HelixSR itself
+is refused as the second upscaler. Help and README describe it; all languages updated.
+
+README: tests run from the suite's ./test.sh and its CI, releases are tagged helixsr-v<x.y.z> in the suite.
+
+Changelog: 09-10-2026 18:20:11
+
+The app's own update check asked the old stand-alone repository, which no longer exists, so it reported "GitHub
+answered 404". It now searches the BC250 Bazzite Suite releases for this app's tag (helixsr-v*), and says "no release
+tagged helixsr-v* yet" until the first one. The Help page's source link opens the app's folder in the suite
+repository, and the README's install steps use the suite's releases and repository.
+
+Build time: the network build takes about 5-6 minutes on a BC-250 (HelixSR's setup compiles its shaders for both wave
+sizes), not 2-3: the Setup page, Help and README say so, and the Setup page's stage line shows the elapsed time
+while a job runs and how long it took afterwards. The header boxes (payload, network files, deployments, Steam
+games) center their text. All languages updated; the .qm files are rebuilt with tools/compile_translations.py,
+which reproduces the previous ones byte for byte.
+
+Changelog: 09-10-2026 17:51:51
+
+Only one instance runs per user: starting the app again brings the running window to the front instead of opening a second one (bc250_core's instance module, copied into the package until the app moves onto core).
+
+Changelog: 09-10-2026 16:10:58
+
+New app icon (images/bc250-bazzite-helixsr-gui.png).
+
+Changelog: 09-10-2026 13:56:58
+
+install.sh also puts an icon on the Desktop; --no-desktop-shortcut leaves it out, and --uninstall removes
+it. Options can now be combined, e.g. --run --no-desktop-shortcut.
+
+Changelog: 08-10-2026 04:17:40
+
+Designed a new icon.
+Changelog got another look.
+
+Changelog: 07-10-2026 12:59:27
+
+The interface is now translatable and ships in nine languages: English, German, Spanish, French, Italian, Polish,
+Russian, Simplified Chinese and Japanese (303 strings each, including the whole Help page and the
+backend status/error messages). The language follows the system locale; the Help page has a picker that is saved
+and applied at the next start, and `--lang CODE` overrides it for one run. Qt's own dialog buttons are translated
+via the qtbase catalogs. New tooling: `tools/update_translations.sh` (pylupdate6 extraction) and
+`tools/compile_translations.py`, a pure-Python .ts to .qm compiler so no release is needed; the release workflow
+recompiles the .qm files. Tests check every shipped translation for completeness, preserved placeholders and a
+loadable .qm, and that switching the language actually changes the UI text.
+
+Changelog: 07-10-2026 12:21:16
+
+Deploy: the Steam library box no longer jumps back to "pick a game" after Scan or a library rescan
+(the lookup compared Path objects by identity). Setup: answering No to "Download and build again?" now says so on the
+page instead of doing nothing silently. Tooltips are parented to the window they belong to, which stops Wayland's
+"Failed to create popup" messages on every hover.
+
+Changelog: 07-10-2026 11:59:56
+
+New Setup page: one click downloads the latest HelixSR release, parses the URLs and SHA-256 sums its setup scripts pin,
+fetches NVIDIA's DLSS DLL, Microsoft's DXC and (on read-only systems) the portable Python in parallel with checksum
+verification, runs `helixsr-setup.sh --yes` with its output streamed to the page, deletes the DLSS DLL and imports
+the built release as the payload. A DLSS 310.7.0 DLL already on the PC can be used instead (*Find in Steam* compares
+checksums). Update checks for the HelixSR payload and for this app against GitHub's latest releases, at start
+(switchable) and on demand, with a hint on the Overview when a newer HelixSR exists.
+New CLI flags `--work DIR` and `--no-update-check`. Help and README describe the flow; 15 new tests run the whole
+setup against a fake script over `file://`.
+
+Changelog: 07-10-2026 07:18:40
+
+Rewrite of the app around how HelixSR actually works. 
+HelixSR replaces a game's `amd_fidelityfx_upscaler_dx12.dll` / `amd_fidelityfx_dx12.dll` 
+(kept as `*.original.dll`) and needs its two network files next to it; 
+the previous version treated it as an nvngx/dxgi injector with DLSS presets and launch options, 
+none of which apply. New: payload import from the extracted release or zip (network files are never shipped), 
+Steam library discovery, DLL scan with per-file status, replace mode and stand-alone OptiScaler 
+folder mode with the `OptiScaler.ini` snippet, reversible remove, a deployment list with live state, 
+a full `helixsr.ini` editor that keeps the upstream comments, and a Help page. 
+Packaging fixed: working `install.sh` (keeps the payload on uninstall), desktop entry, icon, GitHub workflows for 
+tests and releases, and a pytest suite. Layout, widgets and installer mirror bc250-governor-manager.

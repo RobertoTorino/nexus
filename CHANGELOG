@@ -1,3 +1,23 @@
+Changelog: 26-10-2026 09:42:18
+
+The BC250 Bazzite Suite moved into bc250-bazzite/ (owner, 26-10-2026: Nexus holds every suite in a folder of its
+own): apps/, portal/, docs/, mkdocs.yml, install.sh, icons/ and the suite's tools (the installer tests, pin_app,
+check_manifest, sync_icons, portal_screenshot, portal_tour, make_portal_sounds, sounds/, check_upstream, the two
+tour recording scripts, the wiki's hooks.py and overrides/, and the tests of those tools, in bc250-bazzite/tools/
+tests/) went there in one git mv. The root keeps what is Nexus's: nexus/, core/ (every suite's), tools/ (release
+and CI, the design panel), test.sh, CLAUDE.md, MIGRATION.md, the README, DESIGN.md and ICONS.md (both list every
+suite and the Nexus page, with the suite's paths under bc250-bazzite/). The Nexus tools take the suite as an
+argument (tools/suites.py: the folders with portal/apps.toml; with one suite it is the default): stage_app.py,
+build_release.py and app_tour.py with --suite, check_versions.py over every suite, check_changelogs.py following a
+CHANGELOG that moved into a suite's folder, tag-release.sh, release.sh, pre-push.sh and test.sh over the suites'
+folders. The app ids, launchers, state folders, tags and the wiki's address do not change: nothing installed notices
+the move. Every app's install.sh and its tests find core one level further up (../../../core from the app folder,
+only in a checkout: a release bundles core), and the installer tests find the Nexus tools through the repository
+root. The root keeps a copy of portal/apps.toml for the portals installed before the move, which read it at a tag
+for their update notice; check_manifest.py keeps it identical to the suite's. CI, the release and docs workflows
+and the wiki name the new paths; the wikis build the same as before (compared file by file), and a suite CLAUDE.md
+holds the suite's rules beside the root's.
+
 Changelog: 26-10-2026 03:19:06
 
 The README is Nexus's (owner, 26-10-2026: on GitHub the repository is nexus, and the README still presented the

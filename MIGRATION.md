@@ -1004,6 +1004,22 @@ behavior and dependencies. Decided (owner, 25-10-2026):
   lifted focus (one column for the D-pad, the pane shows what A does). Open (owner): the direction, judged on the
   Ally at full screen, then its refinement; the design (colors, type, the window) and the suite's wiki follow from
   it.
+- **The direction, chosen (owner, 26-10-2026): B's amber on C's cards.** The accent is B's amber (`#f5a524` on
+  a neutral near-black), the surfaces, radius, pills and detail pane are C's; because the screen is small, the
+  title and its subtitle are larger than in the mock-ups (28 and 15 pt against 22 and 12; the tabs 19 pt), and
+  the portal shows eight apps on one page: two rows of four tiles, each wider than tall (293 x 176 logical px,
+  the icon centered, the name and status below), the focused one with C's border and B's lifted glow. C's detail
+  pane lies flat under the grid (the focused app's name, versions and one line of what it does, with Open and
+  Update pills for touch), so the pane keeps showing what A does. Rendered as direction D
+  (`~/nexus-mockups/mockups_d.py`, on `mockups.py`; `D-amber-portal.png`, `D-amber-test.png`; the eighth tile is
+  a filler to fill the page). Open (owner): judged on the Ally at full screen: the glow, the strip under the grid
+  (or X Details alone), the sizes. The images are the owner's (26-10-2026), in `~/new-images/` until
+  `windows-portable/` exists (the move of the BC250 suite into `bc250-bazzite/` comes first, the section below):
+  the suite's icon `windows-portable-1024.png` with its copies at 512, 256 and 128 px (Lanczos, as
+  `tools/sync_icons.py` scales), and `windows-portable-device.png` (1376 x 768, transparent) for the hero of the
+  suite's wiki home, as `docs/images/home/bc250-board.webp` is the BC250 wiki's. Proposed places, as the BC250
+  suite's: `windows-portable/portal/images/` for the icon and its sizes, `windows-portable/docs/images/` for the
+  wiki's copies (webp, written when the wiki exists).
 - **Own tuning apps** (TDP, fans, and the like) for the handheld, later: the board's tuning apps do not port (sysfs,
   GRUB, RADV), but the same kinds of apps on both give comparison data between the BC-250 and the handheld.
 
@@ -1047,6 +1063,37 @@ serves every wiki including the Nexus page. Decided (owner, 26-10-2026):
 - **One release tool for Nexus**, not one per suite: the release flow is the repository's (versions, CHANGELOG
   kinds, tags, pins, CI); only the device checks are a suite's.
 - **`bc250_core` keeps its name for now**; the rename is on the backlog (below).
+- **Done (26-10-2026), steps 1 to 5 and the proof of step 8 on this machine:** the suite is in `bc250-bazzite/` (one
+  `git mv`: `apps/`, `portal/`, `docs/`, `mkdocs.yml`, `install.sh`, `icons/`, the suite's tools, the wiki's
+  `hooks.py` and `overrides/` into `bc250-bazzite/tools/mkdocs/`, the suite tools' tests into
+  `bc250-bazzite/tools/tests/`, and the two tour recording scripts, which the Media Tool runs from the suite's
+  folder); `tools/suites.py` finds the suites and gives the Nexus tools `--suite`; the new portal reads
+  `bc250-bazzite/portal/apps.toml` at a tag and falls back to the root's copy, which `check_manifest.py` keeps
+  identical; the portal's checkout is the repository, with `SUITE_DIR` naming the suite's folder; CI, the release
+  and docs workflows, `test.sh`, `pre-push.sh`, the wiki and the READMEs name the new paths; the root CLAUDE.md
+  keeps Nexus's rules, `bc250-bazzite/CLAUDE.md` the suite's. Two deviations from the list above, both easy to undo:
+  `DESIGN.md` and `ICONS.md` stay at the root (they list every suite and the Nexus page; `nexus/docs/design.md`
+  links to them there), with the suite's paths under `bc250-bazzite/`; and the install.sh of every app changed one
+  line (core's place in a checkout, `../../../core`), recorded in the root CHANGELOG as part of the move rather than
+  as an entry per app (a release bundles core, so the installed behavior is the same). The GitHub folder links in
+  compute, cores, gpu, oc and upscaler (`tree/main/apps/<x>`, a 404 after the move) changed, each with a Fixed.
+  entry; the portal has an Added. entry; Suite Releases and Installer Tests a Fixed. entry each. Proof: every test
+  suite, every installer test (release.sh included), shellcheck, both wikis built strictly and identical file for
+  file before and after the move itself (the development chapters differ since, by the paths they name), and
+  `tools/ci-local.sh`. Open (owner): the portal installed from the checkout on the board (`bc250-bazzite/install.sh`),
+  the installed 9.2.2 portal's update notice once a portal is tagged after the move, and the releases: a portal
+  release (the manifest address and the checkout layout: minor), compute, cores, gpu, oc and upscaler (patch), and
+  Suite Releases runs from the checkout. A portal from a release installed before the move does not find the
+  checkout any more for Suite Releases and Installer Tests (it looks for `apps/` at the root) until the first portal
+  release after the move; the portal from the checkout does.
+- **The portal's uninstall (owner, 26-10-2026).** It offered only the apps of its manifest, so Suite Releases,
+  Installer Tests and three emulator managers dropped from the suite earlier (mGBA, SwanStation, SameBoy) stayed
+  behind on the owner's machine. Done: it offers the checkout-only apps and the apps an earlier portal installed
+  that it no longer lists (the record and release folder it kept, else the app's own installed copy under
+  `~/.local/share/<app-id>/app` or `/opt/<app-id>`), each removed with its own uninstaller; the portal's installer
+  test covers the three cases, and the release is the owner's (Fixed., with the Added. entry of the move). Open
+  (owner): the question per app (y, s, c) stays by design; an `--all` that takes every suite app without asking
+  would be one option more, for when the whole suite goes.
 
 The order, each step with its checks before the next:
 

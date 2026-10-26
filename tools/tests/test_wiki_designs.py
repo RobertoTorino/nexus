@@ -14,7 +14,7 @@ import pytest
 yaml = pytest.importorskip("yaml")
 
 SUITE = Path(__file__).resolve().parents[2]
-WIKIS = [SUITE / "mkdocs.yml", *sorted(SUITE.glob("*/mkdocs.yml"))]
+WIKIS = sorted(SUITE.glob("*/mkdocs.yml"))        # each wiki in its folder: bc250-bazzite/, nexus/
 
 
 class Loader(yaml.SafeLoader):

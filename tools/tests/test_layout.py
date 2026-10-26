@@ -1,17 +1,23 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Every app has the same layout: its Python package(s) and images/ directly in apps/<name>/, no wrapper folder."""
+"""Every app of every suite has the same layout: its Python package(s) and images/ directly in <suite>/apps/<name>/, no
+wrapper folder."""
 
 from __future__ import annotations
 
 import re
 from pathlib import Path
 
-SUITE = Path(__file__).resolve().parents[2]
+SUITE = Path(__file__).resolve().parents[2]         # the checkout
 SKIP = {"tests", "__pycache__", ".pytest_cache"}
 
 
+def _suites() -> list[Path]:
+    """Every suite: a folder under the root with portal/apps.toml."""
+    return sorted(p for p in SUITE.iterdir() if p.is_dir() and (p / "portal" / "apps.toml").is_file())
+
+
 def _apps() -> list[Path]:
-    return sorted(path for path in (SUITE / "apps").iterdir() if (path / "VERSION").is_file())
+    return sorted(path for suite in _suites() for path in (suite / "apps").iterdir() if (path / "VERSION").is_file())
 
 
 def _visible(path: Path, app: Path) -> bool:
@@ -34,8 +40,8 @@ def test_every_app_has_a_package_and_images_at_its_root():
 
 
 def _installers() -> list[Path]:
-    return [*(app / "install.sh" for app in _apps()), SUITE / "portal" / "install.sh",
-            SUITE / "tools" / "installer-tests" / "gui" / "install.sh"]
+    return [*(app / "install.sh" for app in _apps()),
+            *(p for suite in _suites() for p in (suite / "portal" / "install.sh", suite / "tools" / "installer-tests" / "gui" / "install.sh"))]
 
 
 def test_every_app_has_an_installer_at_its_root():
@@ -56,8 +62,8 @@ def test_installers_take_the_standard_options_and_refuse_root():
 def test_installers_upgrade_the_python_packages():
     """pip install -r with --upgrade: installing again brings each package to the newest version its requirements
     allow, a security fix within the range included (owner's decision, 13-10-2026)."""
-    installers = sorted([*SUITE.glob("apps/*/install.sh"), *SUITE.glob("apps/*/packaging/*/*.sh"),
-                         SUITE / "portal" / "install.sh"])
+    installers = sorted([*SUITE.glob("*/apps/*/install.sh"), *SUITE.glob("*/apps/*/packaging/*/*.sh"),
+                         *SUITE.glob("*/portal/install.sh")])
     calls = [(path, line) for path in installers for line in path.read_text(encoding="utf-8").splitlines()
              if re.search(r"\bpip\"? install\b.* -r ", line) and not line.lstrip().startswith("#")]
     assert len(calls) >= 18

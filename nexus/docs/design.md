@@ -27,7 +27,7 @@ mkdocs serve                        # the BC250 Bazzite Suite's wiki
 mkdocs serve -f nexus/mkdocs.yml    # the Nexus page
 ```
 
-Open the address it prints. Each time you save a page, a stylesheet or a template (`tools/mkdocs/overrides/`,
+Open the address it prints. Each time you save a page, a stylesheet or a template (`bc250-bazzite/tools/mkdocs/overrides/`,
 `nexus/overrides/`), the site is built again and the browser reloads.
 
 Each wiki has a design of its own and shares no stylesheet, template or setting with another, so a change to one
@@ -35,7 +35,7 @@ never reaches the others:
 
 | Wiki | Settings | Stylesheet | Templates |
 | --- | --- | --- | --- |
-| BC250 Bazzite Suite | `mkdocs.yml` | `docs/stylesheets/suite.css` | `tools/mkdocs/overrides/` |
+| BC250 Bazzite Suite | `mkdocs.yml` | `bc250-bazzite/docs/stylesheets/suite.css` | `bc250-bazzite/tools/mkdocs/overrides/` |
 | Nexus | `nexus/mkdocs.yml` | `nexus/docs/stylesheets/nexus.css` | `nexus/overrides/` |
 
 Without a terminal: in BC250 Suite Releases, on **Test on this board** under **Test local apps**, the last icons are
@@ -124,7 +124,7 @@ server cannot be reached; the changes then stay in that browser.
 **Copy CSS** copies the changed variables alone, under the rules that define them: a few lines, not a stylesheet.
 **Copy stylesheet** copies the whole stylesheet with the changes written in, in place: the file as it is, comments
 and all, only the values changed. Paste it over the stylesheet the panel's first line names:
-`nexus/docs/stylesheets/nexus.css` for the Nexus page, `docs/stylesheets/suite.css` for the BC250 Bazzite Suite's
+`nexus/docs/stylesheets/nexus.css` for the Nexus page, `bc250-bazzite/docs/stylesheets/suite.css` for the BC250 Bazzite Suite's
 wiki. (The changes alone, pasted at the end of the file, work too, as the last rule wins, but then a variable is set
 twice.) Over `http://` from another device the browser has no clipboard for it: the text below the buttons is then
 selected, to copy by hand.

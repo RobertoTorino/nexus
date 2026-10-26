@@ -24,8 +24,8 @@ def _suite(tmp_path: Path) -> Path:
     (app / "native" / "src" / "lib.rs").write_text("")
     (app / "native" / "target" / "release").mkdir(parents=True)
     (app / "native" / "target" / "release" / "big.so").write_bytes(b"\0" * 64)
-    (suite / "core" / "bc250_core").mkdir(parents=True)
-    (suite / "core" / "bc250_core" / "__init__.py").write_text("")
+    (tmp_path / "core" / "bc250_core").mkdir(parents=True)          # core: at the root, beside the suite
+    (tmp_path / "core" / "bc250_core" / "__init__.py").write_text("")
     return suite
 
 

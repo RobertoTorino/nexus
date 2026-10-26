@@ -48,7 +48,7 @@ def test_the_rule_reads_entries_as_written():
 
 def test_new_entries_say_what_kind_of_change_they_are():
     changelogs = versioned_changelogs()
-    assert SUITE / "portal" / "CHANGELOG" in changelogs and SUITE / "core" / "CHANGELOG" in changelogs
+    assert SUITE / "bc250-bazzite" / "portal" / "CHANGELOG" in changelogs and SUITE / "core" / "CHANGELOG" in changelogs
     problems = [f"{path.relative_to(SUITE)} {line}" for path in changelogs
                 for line in unmarked(path.read_text(encoding="utf-8"))]
     assert not problems, "start these CHANGELOG entries with Breaking., Added. or Fixed.:\n" + "\n".join(problems)

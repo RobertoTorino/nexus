@@ -1,0 +1,471 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# The apps of this portal release: one tested combination. Each [apps.<name>] pins one release tag of that app.
+#
+# Rules (CI, tools/check_manifest.py):
+#  * a change to this file needs a portal/VERSION bump at least as large as the largest app bump it pins
+#    (an app patch release -> at least a portal patch release, an app minor -> at least a portal minor, ...);
+#  * every tag must exist when the portal is released; on main a tag may be one that is about to be released
+#    (its version equals that app's VERSION).
+#
+# Fields:
+#   name, summary   shown on the pill
+#   short           optional: the name on the tile (default: name without its "BC-250 " or "BC250 " prefix)
+#   tag             the pinned release: <name>-v<x.y.z>; asset <tag>.tar.gz with SHA256SUMS on the suite release
+#   sha256          of <tag>.tar.gz; filled in when the tag is released (empty: checked against SHA256SUMS only)
+#   required        installed with the portal and always listed first (only check)
+#   changes_board   true: the portal warns before installing or opening it
+#   category        sustainable, graphics, gaming, utilities or development: the app's tab in the portal; the same
+#                   category as its icon in icons/categories.toml (tools/tests/test_icons.py)
+#   withdrawn       optional: "<reason>" when the pinned release was withdrawn; the portal removes the app
+#   install         shell commands run in a terminal from the extracted release folder, in order
+#   uninstall       idem, for removal
+#   detect          paths whose existence means "installed" (any of them)
+#   launch          [[label, command]] to open the app; none for apps that are not programs
+#
+# [checkout.<name>]: an app that runs from the suite checkout and is never released (apps/<name>/.checkout-only).
+# Its category is development; only a portal that runs from a checkout, or was installed from one, can install
+# it (its install and uninstall run in apps/<name> of that checkout). Without a checkout its tile is greyed. The same fields as above, without tag, sha256 and
+# required, plus an optional folder (default apps/<name>) for one that lives elsewhere in the checkout.
+
+[apps.check]
+name = "BC-250 Bazzite Test"
+summary = "Read-only diagnostics, stress test and benchmarks. Always installed."
+tag = "check-v0.15.0"
+sha256 = "3b8c6cfc21595d6a96f3d6218b7b6632695ad7723c5099cfcec5628ee0a2db9b"
+required = true
+changes_board = false
+category = "sustainable"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/bc250-bazzite-test"]
+launch = [["Open", "~/.local/bin/bc250-bazzite-test"]]
+
+[apps.gpu]
+name = "BC-250 GPU Governor Manager"
+summary = "Manage the cyan-skillfish GPU governor: tuning, safe points, profiles, backups."
+tag = "gpu-v0.3.1"
+sha256 = "f8ae6d4e726c977d7928bb8837c9b5418e8a72b2d6edec640b91dc8021a10c40"
+required = false
+changes_board = true
+category = "sustainable"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/bc250-governor-manager"]
+launch = [["Open", "~/.local/bin/bc250-governor-manager"]]
+
+[apps.upscaler]
+name = "BC-250 Upscaler Manager"
+summary = "Deploy HelixSR (FSR 3.1 drop-in upscaler with DLSS-style networks) into games."
+tag = "upscaler-v0.14.0"
+sha256 = "c704cbd6a1b7210c5e080d3bca31da1662a688565b9927c866359779cadfa3d3"
+required = false
+changes_board = false
+category = "graphics"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/bc250-upscaler"]
+launch = [["Open", "~/.local/bin/bc250-upscaler"]]
+
+[apps.compute]
+name = "BC-250 CU Bisect"
+summary = "Tell bad CUs apart from an unstable CU unlock, and apply a tested unlock."
+tag = "compute-v0.3.1"
+sha256 = "23f0f860c5da1b586647476630acfe0044fb3bc0bccf9e76f0715f268051fdb2"
+required = false
+changes_board = true
+category = "sustainable"
+install = ["bash packaging/bazzite/install-bisect-gui.sh", "bash packaging/bazzite/install-gui.sh"]
+uninstall = ["bash packaging/bazzite/uninstall-bisect-gui.sh", "bash packaging/bazzite/uninstall-gui.sh"]
+detect = ["~/.local/bin/bc250-bisect-gui", "~/.local/bin/bc250-unlock-cu-gui"]
+launch = [["Bisect", "~/.local/bin/bc250-bisect-gui"], ["Unlock", "~/.local/bin/bc250-unlock-cu-gui"]]
+
+[apps.cores]
+name = "BC-250 Cores Bisect"
+summary = "Tell bad CPU cores apart from an unstable core unlock, before you persist the 8C/16T unlock."
+tag = "cores-v0.3.1"
+sha256 = "4fdbfefa2bc19910534f5ff7a001fdab99c490e2ffcec93222c5bbd9acbae0e0"
+required = false
+changes_board = true
+category = "sustainable"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/bc250-cores-bisect-gui", "~/.local/bin/bc250-cores-unlock-gui"]
+launch = [["Bisect", "~/.local/bin/bc250-cores-bisect-gui"], ["Unlock", "~/.local/bin/bc250-cores-unlock-gui"]]
+
+[apps.oc]
+name = "BC-250 GPU OC Bisect"
+summary = "Find your board's safe GPU overclock and undervolt, one step at a time."
+tag = "oc-v0.2.5"
+sha256 = "3d73795e05902c9bfc686f99ecbb2bfc0c65b73f1eaab830a3f0fc4cddc544ab"
+required = false
+changes_board = true
+category = "sustainable"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/bc250-gpu-oc-bisect-gui"]
+launch = [["Open", "~/.local/bin/bc250-gpu-oc-bisect-gui"]]
+
+[apps.acpi]
+name = "BC-250 Persistent ACPI"
+summary = "CPU C-states and frequency scaling through a persistent ACPI override (GRUB early initrd)."
+tag = "acpi-v0.3.1"
+sha256 = "d6f9f1d58b6b8bf8bf87bd4cba2cc28dd7d1d374cfeadfb4b39f2689abd5cb39"
+required = false
+changes_board = true
+category = "sustainable"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/bc250-persistent-acpi-gui"]
+launch = [["Open", "~/.local/bin/bc250-persistent-acpi-gui"]]
+
+[apps.overlay]
+name = "System Overlay"
+summary = "CPU, GPU, refresh rate, fan and temperatures in a small window that stays on top."
+tag = "overlay-v0.13.0"
+sha256 = "a5f77f920ee7600ebe123e47fdd16f37f7006bcea7e42d925f30251581b9e696"
+required = false
+changes_board = false
+category = "utilities"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/bc250-system-overlay"]
+launch = [["Open", "~/.local/bin/bc250-system-overlay"]]
+
+[apps.bios]
+name = "BC-250 BIOS Reader"
+summary = "The BIOS settings as the setup screen shows them, hidden menus included. Stock or modded BIOS. Read-only."
+tag = "bios-v0.13.0"
+sha256 = "787c4cf356d404115d560986b7e02c24ffe4b492c52d2ef0f4521f64c185f8a1"
+required = false
+changes_board = false
+category = "utilities"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/bc250-bios-reader"]
+launch = [["Open", "~/.local/bin/bc250-bios-reader"]]
+
+[apps.ace]
+name = "BC-250 ACE Queues"
+summary = "Async compute for games: a patched RADV beside the system Mesa, built on the board and tested before use."
+tag = "ace-v0.13.0"
+sha256 = "c6a45a2cdb7c423138252f17011eb739704a448f445b2f6e57baa102f25fb04f"
+required = false
+changes_board = true
+category = "graphics"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/bc250-ace-queues"]
+launch = [["Open", "~/.local/bin/bc250-ace-queues"]]
+
+[apps.mesh]
+name = "BC-250 Mesh Shaders"
+summary = "Mesh shaders for games: RADV with DirectMesh beside the system Mesa, built on the board and tested before use."
+tag = "mesh-v0.14.0"
+sha256 = "414cfea6aaf9a6606ea3ac1e5812d4a6f377806cf439962fe7e10b316d89566a"
+required = false
+changes_board = true
+category = "graphics"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/bc250-mesh-shaders"]
+launch = [["Open", "~/.local/bin/bc250-mesh-shaders"]]
+
+[apps.vram]
+name = "BC-250 Memory Manager"
+summary = "The VRAM split in CMOS, with the GTT, TTM limit and swap layout that go with it."
+tag = "vram-v0.13.0"
+sha256 = "eca8ed22d444dccf45780fa9a2ee156ea916e6ee7a446c7a0c6aa93457e5d64d"
+required = false
+changes_board = true
+category = "sustainable"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/bc250-memory-manager"]
+launch = [["Open", "~/.local/bin/bc250-memory-manager"]]
+
+[apps.fan]
+name = "BC-250 Fan Control"
+summary = "A thermal guard that warns, cools and shuts down cleanly at a critical temperature, and the fans."
+tag = "fan-v0.12.0"
+sha256 = "15dbc04eca3eeb31323a4f7de9df0d01d59afec9f7021bf59b895bbb0f75c8ec"
+required = false
+changes_board = true
+category = "sustainable"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/bc250-fan-control"]
+launch = [["Open", "~/.local/bin/bc250-fan-control"]]
+
+[apps.wdriver]
+name = "BC-250 USB Wi-Fi"
+summary = "The driver for AIC8800D80 USB Wi-Fi sticks: built for the running kernel, loaded at boot, rebuilt after a kernel update."
+tag = "wdriver-v0.12.0"
+sha256 = "c7a095bdb71fe8c5e9cd12ac8af2a03cc4a581e188638f6089b9029a7c2512a7"
+required = false
+changes_board = true
+category = "utilities"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/bc250-usb-wifi"]
+launch = [["Open", "~/.local/bin/bc250-usb-wifi"]]
+
+[apps.cec]
+name = "HDMI CEC Manager"
+short = "HDMI-CEC"
+summary = "Turn the TV on and off with the board, switch its input and use its remote, over HDMI-CEC."
+tag = "cec-v0.13.0"
+sha256 = "9f1df44c497b1413b1e2f47b13db5cb1133c5b8a9eaf05821ff72404b8f4f83e"
+required = false
+changes_board = false
+category = "utilities"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/bc250-hdmi-cec"]
+launch = [["Open", "~/.local/bin/bc250-hdmi-cec"]]
+
+[apps.sftp]
+name = "Bazzite SFTP Tools"
+short = "SFTP Tools"
+summary = "Move files between computers over SFTP, and manage the SSH server of a Bazzite host."
+tag = "sftp-v0.14.0"
+sha256 = "20752ea413e8c8cb491463fe8f12a234b5620c625df8122d0b1b29bbeeeaadba"
+required = false
+changes_board = false
+category = "utilities"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/bc250-bazzite-sftp-tools"]
+launch = [["Open", "~/.local/bin/bc250-bazzite-sftp-tools"]]
+
+[apps.ips35]
+name = "USB IPS3.5"
+summary = "CPU, GPU, memory, fan and temperatures on a Turzx USB IPS screen (Turing Smart Screen 3.5\")."
+tag = "ips35-v0.6.0"
+sha256 = "5d71a68a1d616b98545027ef8347cc777d7d7ed6f4506a3e52555a2f3debb7b0"
+required = false
+changes_board = false
+category = "utilities"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/bc250-usb-ips35"]
+launch = [["Open", "~/.local/bin/bc250-usb-ips35"]]
+
+[apps.hdcam]
+name = "USB HD Cam"
+summary = "The PS5 HD Camera (CFI-ZEY1) as a webcam: loads its firmware at every plug-in and shows its picture."
+tag = "hdcam-v0.8.0"
+sha256 = "a5f4d45d596bdca95a970fdcb80a2b1849af42e1cc4fad3f0023777f046a57af"
+required = false
+changes_board = false
+category = "utilities"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/bc250-usb-hdcam"]
+launch = [["Open", "~/.local/bin/bc250-usb-hdcam"]]
+
+[apps.hdcontrol]
+name = "USB HD Control"
+summary = "The DualSense and DualSense Edge on the board: battery, firmware updates from the official server, and the Edge's profiles."
+tag = "hdcontrol-v0.8.0"
+sha256 = "6e1322c7db4067f8010d5d24c3e9fe332cc208adbecb063c4a493f03baf9fb56"
+required = false
+changes_board = false
+category = "utilities"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/bc250-usb-hdcontrol"]
+launch = [["Open", "~/.local/bin/bc250-usb-hdcontrol"]]
+
+[apps.mtool]
+name = "Media Tool"
+summary = "Record a BC250 Bazzite Suite installation demo with OBS, and convert the suite's icons."
+tag = "mtool-v0.3.2"
+sha256 = "94b5418ee17993b876acfd6347eafa70bb6e03823cd2bf6edb24d67bd190516a"
+required = false
+changes_board = false
+category = "development"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/media-tool"]
+launch = [["Open", "~/.local/bin/media-tool"]]
+
+[apps.package]
+name = "Dependency Checker"
+summary = "The suite's Python packages and external tools, which apps use them, and whether newer ones exist; and whether a Bazzite update waits for a reboot."
+tag = "package-v1.3.0"
+sha256 = "7c44494de65741590da7a8044922efc58ddd49efe7964531eafaa11bb2a99374"
+required = false
+changes_board = false
+category = "development"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/bc250-portal-dependency-checker"]
+launch = [["Open", "~/.local/bin/bc250-portal-dependency-checker"]]
+
+[apps.ncgui]
+name = "Bazzite NetcatGUI"
+short = "NetcatGUI"
+summary = "A graphical netcat: connect to a host or listen on a port, TCP, UDP or TLS, one session per tab."
+tag = "ncgui-v0.13.0"
+sha256 = "f0d3bf9bdbfd4a67951bf6f6045c95a6efcd01acc0db1fc33202a5e26d224942"
+required = false
+changes_board = false
+category = "development"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/bazzite-netcatgui"]
+launch = [["Open", "~/.local/bin/bazzite-netcatgui"]]
+
+[apps.rpcs3]
+name = "RPCS3 Manager"
+summary = "PS3 games with the RPCS3 emulator: a tested RPCS3 build, the firmware, your games found and added to Game Mode."
+tag = "rpcs3-v1.3.0"
+sha256 = "b4895ba7a85e8cec7b71c298928f4947a78a100f73300580b0fa2738edc8b80c"
+required = false
+changes_board = false
+category = "gaming"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/bc250-rpcs3-manager"]
+launch = [["Open", "~/.local/bin/bc250-rpcs3-manager"]]
+
+[apps.consoles]
+name = "Console Link"
+short = "Console Link"
+summary = "Find, wake and register PS4 and PS5 consoles on the network, and start a Remote Play session."
+tag = "consoles-v1.13.0"
+sha256 = "c5f6b782f413cb3896a3ae89cd272bc17590e6e90775f81ef2b6a9f7855a6454"
+required = false
+changes_board = false
+category = "gaming"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/bc250-console-link"]
+launch = [["Open", "~/.local/bin/bc250-console-link"]]
+
+[apps.clb]
+name = "Console LinkB"
+short = "Console LinkB"
+summary = "Stream your Xbox (Remote Play) or games from Xbox Cloud Gaming to the board, signed in with your Microsoft account."
+tag = "clb-v0.8.0"
+sha256 = "76b304f308bd04955a7c62e5547721e69e0143ea5a8cb3d3ed49ead6f2d39701"
+required = false
+changes_board = false
+category = "gaming"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/bc250-console-linkb"]
+launch = [["Open", "~/.local/bin/bc250-console-linkb"]]
+
+[apps.shadps4]
+name = "shadPS4 Manager"
+summary = "PS4 games with the shadPS4 emulator: a tested shadPS4 release, your games found (or unpacked from .pkg files) and added to Game Mode."
+tag = "shadps4-v1.2.0"
+sha256 = "6b502aea1b70d91aeb6d3af83f7b8182589513638d5d152555e97ea9f5a63c9d"
+required = false
+changes_board = false
+category = "gaming"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/bc250-shadps4-manager"]
+launch = [["Open", "~/.local/bin/bc250-shadps4-manager"]]
+
+[apps.decky]
+name = "Decky Loader Manager"
+summary = "Plugins in Game Mode with Decky Loader: a tested Decky release as a system service, its state and its plugins."
+tag = "decky-v0.14.0"
+sha256 = "c871498beab86f92c71783a241738abc9cf1249e331e4ecccf42ab4cf6b2ba83"
+required = false
+changes_board = false
+category = "gaming"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/bc250-decky-manager"]
+launch = [["Open", "~/.local/bin/bc250-decky-manager"]]
+
+[apps.datstation]
+name = "Bazzite DatStation"
+short = "DatStation"
+summary = "PlayStation quiz, console history, system versions, region codes, user guides and news, with your scores."
+tag = "datstation-v1.10.0"
+sha256 = "b6c13fd080a0f1903e2f7b23f60c118dd80cbe5f9f99b4bf1ac5c3f1c783f9a0"
+required = false
+changes_board = false
+category = "gaming"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/bazzite-datstation"]
+launch = [["Open", "~/.local/bin/bazzite-datstation"]]
+
+[apps.ppsspp]
+name = "PPSSPP Manager"
+summary = "PSP games with the PPSSPP emulator: a tested PPSSPP release, your games found and added to Game Mode."
+tag = "ppsspp-v0.13.0"
+sha256 = "9b1d2d057b679aead80fd12ef73d578896bd25fe4f0894ce730234919ce8da01"
+required = false
+changes_board = false
+category = "gaming"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/bc250-ppsspp-manager"]
+launch = [["Open", "~/.local/bin/bc250-ppsspp-manager"]]
+
+[apps.pcsx2]
+name = "PCSX2 Manager"
+summary = "PS2 games with the PCSX2 emulator: a tested PCSX2 release, your PS2 BIOS, your games found and added to Game Mode."
+tag = "pcsx2-v1.4.0"
+sha256 = "81557b3a61f42baa741a51ef27709eb967b89b03a8c50e29d3dafe8e2b6ba12c"
+required = false
+changes_board = false
+category = "gaming"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/bc250-pcsx2-manager"]
+launch = [["Open", "~/.local/bin/bc250-pcsx2-manager"]]
+
+[apps.vita3k]
+name = "Vita3K Manager"
+summary = "PS Vita games with the Vita3K emulator: a tested Vita3K build, the firmware and your games installed through it, added to Game Mode."
+tag = "vita3k-v0.12.0"
+sha256 = "d382dca5fb67aaeab7656c6d34a0edc07aa8a57ff9b139182c7979649b87f89c"
+required = false
+changes_board = false
+category = "gaming"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/bc250-vita3k-manager"]
+launch = [["Open", "~/.local/bin/bc250-vita3k-manager"]]
+
+[apps.xenia]
+name = "Xenia Manager"
+summary = "Xbox 360 games with the Xenia emulator (experimental on Linux): a tested Xenia build, your games found and added to Game Mode."
+tag = "xenia-v0.8.0"
+sha256 = "658536b7e3731b32eb989f464d94393ea95ab9f4a3784c445aa8ac5a0a23363e"
+required = false
+changes_board = false
+category = "gaming"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/bc250-xenia-manager"]
+launch = [["Open", "~/.local/bin/bc250-xenia-manager"]]
+
+[checkout.suite]
+name = "BC250 Suite Releases"
+summary = "The release front end: versions, pins and the board checks of a release. Edits the checkout it runs from."
+changes_board = false
+category = "development"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/bc250-release"]
+launch = [["Open", "~/.local/bin/bc250-release"]]
+
+[checkout.installer-tests]
+name = "BC-250 Installer Tests"
+summary = "Run the suite's installer tests (tools/installer-tests) one at a time, with their output live in the window."
+folder = "tools/installer-tests/gui"
+changes_board = false
+category = "development"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/bc250-installer-test-gui"]
+launch = [["Open", "~/.local/bin/bc250-installer-test-gui"]]

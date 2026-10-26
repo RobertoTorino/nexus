@@ -6,6 +6,7 @@ Cargo.lock) must equal that folder's VERSION file. VERSION is the single source;
 and package still works on its own. Cargo.lock matters because CI builds with --locked, which fails when the lock
 file's version of the crate differs from Cargo.toml."""
 
+import importlib.util
 import re
 import sys
 from pathlib import Path
@@ -52,15 +53,24 @@ def version_pattern(path: Path) -> re.Pattern | None:
     return PATTERNS.get(path.suffix)
 
 
+def _suites():
+    spec = importlib.util.spec_from_file_location("nexus_suites", ROOT / "tools" / "suites.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+suites = _suites()
+
+
 def main() -> int:
     errors = []
     checked = 0
-    units = [
-        ROOT / "core",
-        ROOT / "portal",
-        *sorted(p for p in (ROOT / "apps").iterdir() if p.is_dir()),
-        ROOT / "tools" / "installer-tests" / "gui",
-    ]
+    units = [ROOT / "core"]
+    for suite in suites.suites():               # each suite: its portal, apps and Installer Tests
+        units += [suite / "portal", *sorted(p for p in (suite / "apps").iterdir() if p.is_dir())]
+        if (suite / "tools" / "installer-tests" / "gui").is_dir():
+            units.append(suite / "tools" / "installer-tests" / "gui")
     for unit in units:
         version_file = unit / "VERSION"
         if not version_file.is_file():

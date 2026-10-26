@@ -1,17 +1,29 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""What the video tours share (tools/portal_tour.py, tools/app_tour.py): a temporary home for an offscreen Qt, and
+"""What the video tours share (bc250-bazzite/tools/portal_tour.py, tools/app_tour.py): a temporary home for an offscreen Qt, and
 Recorder, which renders a window frame by frame into an MP4 (H.264, 1920 x 1080, no sound) with a pointer, clicks,
 captions and title cards drawn in, and add_music(), which lays a track under a finished video."""
 
 from __future__ import annotations
 
+import importlib.util
 import json
 import os
 import subprocess
 import sys
 from pathlib import Path
 
-SUITE = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def _suites():
+    spec = importlib.util.spec_from_file_location("nexus_suites", ROOT / "tools" / "suites.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+suites = _suites()
+SUITE = suites.suite()                              # the one suite (the tours take --suite)
 WIDTH, HEIGHT = 1920, 1080
 SCALE = 1.2                                         # the window is 1600 x 900 at 120 %: readable on a phone too
 
@@ -28,7 +40,7 @@ def prepare_home(home: Path) -> None:
     os.environ["QT_QPA_PLATFORM"] = f"offscreen:configfile={home / 'screen.json'}"
     os.environ["QT_SCALE_FACTOR"] = str(SCALE)
     os.environ.pop("QT_SCREEN_SCALE_FACTORS", None)
-    sys.path[:0] = [str(SUITE / "core")]
+    sys.path[:0] = [str(ROOT / "core")]
 
 
 def add_music(video: Path, music: Path, out: Path, seconds: float, fade: float = 2.0) -> int:

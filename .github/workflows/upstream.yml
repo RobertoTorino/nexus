@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 name: Upstream
 
-# Weekly: are the apps that pin or follow an upstream release still in step with it (tools/check_upstream.py)? What
+# Weekly: are the apps that pin or follow an upstream release still in step with it (bc250-bazzite/tools/check_upstream.py)? What
 # moved goes into the open "Upstream review" issue, so the owner sees it: for Decky Loader a newer release, a replaced
 # asset or a changed service unit, for shadPS4 a newer release (with its zip and SHA-256) or a replaced zip, for
 # HelixSR a release newer than the one the BC-250 Upscaler Manager was checked against or another fallback in its notes, for
@@ -29,7 +29,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           code=0
-          python3 tools/check_upstream.py --report "$RUNNER_TEMP/upstream.md" || code=$?
+          python3 bc250-bazzite/tools/check_upstream.py --report "$RUNNER_TEMP/upstream.md" || code=$?
           [ "$code" -le 1 ]
 
       - name: Open or update the Upstream review issue

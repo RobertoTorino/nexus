@@ -15,11 +15,13 @@ die() { printf '\033[1;31mERROR:\033[0m %s\n' "$1" >&2; exit 1; }
 info() { printf '\033[1;35m==>\033[0m %s\n' "$1"; }
 
 [ $# -gt 0 ] || die "Usage: $0 <name>-v<x.y.z> [...], for example $0 portal-v0.9.5"
+suite=$(python3 tools/suites.py --default) || die "Which suite? (tools/suites.py)"      # bc250-bazzite
+[ "$suite" = . ] && suite="" || suite="$suite/"                                        # a prefix for its paths
 
 for tag in "$@"; do
     [[ $tag =~ ^([a-z0-9-]+)-v([0-9]+\.[0-9]+\.[0-9]+)$ ]] || die "$tag is not <name>-v<x.y.z>."
     name=${BASH_REMATCH[1]} version=${BASH_REMATCH[2]}
-    if [ "$name" = portal ]; then dir=portal; else dir=apps/$name; fi
+    if [ "$name" = portal ]; then dir=${suite}portal; else dir=${suite}apps/$name; fi
     [ -f "$dir/VERSION" ] || die "$tag: there is no $dir/VERSION."
     committed=$(git show "HEAD:$dir/VERSION" 2>/dev/null | tr -d '[:space:]')
     if [ "$committed" != "$version" ]; then
@@ -32,13 +34,13 @@ for tag in "$@"; do
         die "$tag: $dir has changes that are not committed (git status $dir). Commit them first: the tag gets only what is committed."
     git rev-parse -q --verify "refs/tags/$tag" >/dev/null &&
         die "$tag exists already. To move it: git tag -d $tag && git push origin :refs/tags/$tag (with the release-tag ruleset set to Disabled for a moment: it restricts deletions)"
-    if [ "$name" = portal ] && git cat-file -e HEAD:portal/apps.toml 2>/dev/null; then
+    if [ "$name" = portal ] && git cat-file -e "HEAD:${suite}portal/apps.toml" 2>/dev/null; then
         # release.yml builds a portal only on app releases that exist, pinned with their checksum (step 2).
-        pins=$(git show HEAD:portal/apps.toml 2>/dev/null | python3 -c '
+        pins=$(git show "HEAD:${suite}portal/apps.toml" 2>/dev/null | python3 -c '
 import sys, tomllib
 for key, app in tomllib.loads(sys.stdin.read()).get("apps", {}).items():
     print(app.get("tag", ""), app.get("sha256", "") or "-")') ||
-            die "$tag: could not read portal/apps.toml at HEAD."
+            die "$tag: could not read ${suite}portal/apps.toml at HEAD."
         remote=$(git ls-remote --tags origin) || die "Could not reach origin to check the pinned app releases."
         while read -r pin sha; do
             [ -n "$pin" ] || continue
