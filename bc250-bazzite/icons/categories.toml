@@ -184,11 +184,6 @@ category = "gaming"
 icons = ["apps/vita3k/images/bc250-vita3k-manager"]
 tile = "portal/images/apps/vita3k.webp"
 
-[suite]
-category = "development"
-icons = ["apps/suite/images/bc250-release"]
-tile = "portal/images/apps/suite.webp"
-
 [installer-tests]
 category = "development"
 icons = ["tools/installer-tests/gui/images/bc250-installer-test-gui"]

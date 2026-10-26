@@ -1136,12 +1136,47 @@ The order, each step with its checks before the next:
    (`bc250-bazzite/tools/check-release.sh`, from `apps/suite/check-release.sh`), shown for the suite of the machine
    it runs on. The planned Nexus Design Preview goes beside it (`dev/dpreview/`). BC-250 Installer Tests stays the
    suite's (its shims are Linux's).
+   **Done (26-10-2026), after portal-v10.0.0:** one `git mv` into `dev/releases/` (package `nexus_releases`, app
+   id `nexus-releases`, the icon files `nexus-releases.*`, the tile `portal/images/apps/releases.webp`, the
+   installer test `releases.sh`); `check-release.sh` is `bc250-bazzite/tools/check-release.sh`. `plan.py` knows the
+   suites of the checkout (`tools/suites.py`): every per-suite function takes `suite=` and defaults to the first,
+   the window's header has the chooser (hidden with one suite, remembered in the settings), git commit runs every
+   suite's `check_manifest.py`, Test on this board runs the chosen suite's `tools/check-release.sh` and
+   `tools/record-tour.sh` and says so when the suite has none; the wikis stay the repository's. The portal's
+   manifest has `nexus = true` for a `[checkout.*]` entry whose folder is relative to the repository (the parser,
+   `Sources.folder`, `install.sh`'s uninstall list, `check_manifest.py`'s marker check), the record `suite` moves to
+   `releases`, and `find_checkout` reads `nexus-*` launchers too. `dev/<name>/` is checked like a suite's apps
+   (`test_layout.py`, `check_versions.py`, `test.sh`, the CI matrix and the four-files check);
+   `check_changelogs.py` follows a `git mv`. `dev/releases/install.sh` removes the old `bc250-release` launcher,
+   menu entry and Desktop icon. **Nexus's design (owner, 26-10-2026: a Nexus app follows Nexus):**
+   `nexus_releases/style.py` is a core `Theme` from the page's colors (ink window and header, main color fields,
+   silver text, teal accent with ink on it, a dimmed silver edge), set with `create_app(theme=NEXUS)`; core's
+   widgets draw with the theme set (`widgets.set_theme()`, the suite's chosen one otherwise; `theme.py` itself is
+   unchanged, so the apps' copies stay equal). Its icon, the tile on the BC250 portal included, is the Nexus
+   drawing, lossless copies `tools/make_icons.py` writes; the suite's icon catalog no longer lists the app.
+   DESIGN.md and ICONS.md say so. Open (owner): the `dev/` name; a portal release (minor, the Added. entry, and the
+   tile: an installed 10.0.0 portal still
+   lists Suite Releases at `apps/suite`, which is gone, until then; the portal from the checkout is right already);
+   on the owner's machines `dev/releases/install.sh` (or `tools/release.sh --install`) once, which also removes the
+   old launcher; the settings and command history start afresh under `~/.config/nexus-releases`.
 7. **The app template, as a generator:** `tools/new_app.py <suite> <name> "<App Name>"` writes a new app from the
    architecture chapter (the package with `__main__`, the window on `AppHeader`, the tests, the installer, the four
    files, the installer test, the manifest entry, the wiki chapter and the icon copies) and runs the layout test on
    it, so the template cannot drift from the checks; a static template folder would. Each suite has its template
    behind the same command; the Windows one follows the design of its window (the Windows Portable Suite section).
    An app that does not fit the template is the owner's decision, as a deviation from the layout is now.
+   **Done (26-10-2026):** `tools/new_app.py <suite> <name> "<App Name>" [--id] [--package] [--category]
+   [--summary] [--no-check]` writes the app (the package with `__main__.py` and a window on `AppHeader`, `images/`,
+   `tests/`, `install.sh` as the suite's installers are, the requirements, the four files, `README.md`), the
+   installer test and the wiki chapter, and lists it in `portal/apps.toml` (and the root's copy), `icons/
+   categories.toml` (the icon copies through `sync_icons.py`), `mkdocs.yml`, the apps overview and categories
+   tables, the suite README, the Dependency Checker's catalog and CI's matrix, installer step and shellcheck list;
+   then it runs the layout test, the app's tests, the suite's installer, icon and manifest tests, the catalog
+   tests, `check_manifest.py`, `bash -n` and shellcheck on it. The template is chosen by the suite's portal
+   package (`bc250_portal`: the Bazzite template); a suite without one is refused, so the Windows suite's comes
+   with its window. Proof: a throwaway app generated on this checkout passed every check, its installer test and
+   a strict wiki build, and was removed again; `tools/tests/test_new_app.py` runs the generator on a small
+   repository. The architecture chapter names the generator first, the steps by hand after it.
 8. **Proof:** every check of CLAUDE.md, both wikis built strictly and compared pixel for pixel before and after
    (`tools/tests/test_wiki_designs.py`), every installer test, `tools/installer-tests/release.sh`, the portal
    installed from the checkout (`bc250-bazzite/install.sh`) on the board; then the owner's portal release that

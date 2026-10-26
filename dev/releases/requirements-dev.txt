@@ -2,3 +2,4 @@
 # The app runs in the checkout's dev venv (requirements-dev.txt in the root), so it has no requirements.txt.
 PyQt6>=6.11,<7
 pytest>=8
+pillow>=12,<13                  # tests/test_main_window.py reads the icons' pixels

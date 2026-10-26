@@ -27,7 +27,7 @@ LAUNCHES = {"cu-unlock": "CU Unlock (the CU Bisect app's Unlock)",
 SUITE_ICON = [
     ("bc250-bazzite/portal/images/bc250-bazzite-suite.webp", "`portal/images/bc250-bazzite-suite.webp` (512 px)",
      "The portal's window header (a click opens the wiki) and its window icon; Suite Big Picture Mode's header; the "
-     "portal's release in Suite Releases."),
+     "portal's release in Nexus Releases."),
     ("bc250-bazzite/portal/images/bc250-bazzite-suite-1024.webp", "`portal/images/bc250-bazzite-suite-1024.webp`",
      "The intro of Suite Big Picture Mode."),
     ("bc250-bazzite/portal/images/bc250-bazzite-suite-128.png", "`portal/images/bc250-bazzite-suite-128.png`",
@@ -88,7 +88,36 @@ NEXUS_ICON = [
      "The Nexus page's header logo and its home page's footer (`.webp`), and its favicon (`.png`)."),
     ("nexus/docs/images/nexus-hero.webp", "`nexus/docs/images/nexus-hero.webp` (1024 px)",
      "The Nexus page's home: the icon under the headline, a WebP copy of the 1024 px drawing."),
+    ("dev/releases/images/nexus-releases.webp", "`dev/releases/images/nexus-releases.webp` (512 px), `-128.png`",
+     "Nexus Releases, Nexus's app (owner, 26-10-2026: it takes Nexus's icon, not a category's): its window header "
+     "and window icon, its menu entry and Desktop icon. Lossless copies of the drawing, written by this tool."),
+    ("bc250-bazzite/portal/images/apps/releases.webp", "`bc250-bazzite/portal/images/apps/releases.webp` (256 px)",
+     "Nexus Releases' tile on the BC250 Bazzite Suite's portal, and its icon in that wiki's app tables; the same "
+     "copy."),
 ]
+# Nexus Releases' icons: the drawing at each size, lossless (the pixels stay the drawing's), by this tool.
+NEXUS_COPIES = [
+    ("nexus/images/nexus-512.png", "dev/releases/images/nexus-releases.webp"),
+    ("nexus/images/nexus-128.png", "dev/releases/images/nexus-releases-128.png"),
+    ("nexus/images/nexus-256.png", "bc250-bazzite/portal/images/apps/releases.webp"),
+]
+
+
+def nexus_copies(root: Path = ROOT) -> list[Path]:
+    """Writes Nexus Releases' icon copies from the Nexus drawings (NEXUS_COPIES); the paths written. Lossless, so
+    a copy's pixels are the drawing's (tests compare them)."""
+    from PIL import Image
+    written = []
+    for source, target in NEXUS_COPIES:
+        path = root / target
+        with Image.open(root / source) as image:
+            image = image.convert("RGBA")
+            if path.suffix == ".png":
+                image.save(path, "PNG", optimize=True)
+            else:
+                image.save(path, "WEBP", lossless=True, exact=True, method=6)   # exact: the pixels under alpha 0 too
+        written.append(path)
+    return written
 
 NEXUS_MATERIAL = [
     ("file-tree", "Home: the card \"Nexus\"."),
@@ -122,7 +151,7 @@ SYMBOLS = [
     ("✓ ✗", "Dependency Checker", "CVE: none found, found."),
     ("⚠ ✓ ✗", "Bazzite SFTP Tools", "Password: a warning, requirements met, not met."),
     ("← ↑ ↓", "Bazzite SFTP Tools", "Download; uploads and downloads in the transfer queue."),
-    ("↑ ↓", "BC250 Suite Releases", "Earlier commands, in the command line's placeholder."),
+    ("↑ ↓", "Nexus Releases", "Earlier commands, in the command line's placeholder."),
     ("●", "Every app on core", "The dot of a status box (`bc250_core/widgets.py`)."),
     ("●", "Portal", "Outside the suite."),
     ("✓ ✗", "BC-250 Installer Tests", "A test passed, failed."),
@@ -243,6 +272,8 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--check", action="store_true", help="only say whether ICONS.md is up to date")
     args = parser.parse_args(argv)
+    if not args.check:
+        nexus_copies()
     text, path = build(), ROOT / "ICONS.md"
     if args.check:
         current = path.read_text(encoding="utf-8") if path.is_file() else ""

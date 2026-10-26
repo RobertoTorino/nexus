@@ -39,16 +39,16 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from urllib.parse import urlparse
 
-SUITE_DIR = "bc250-bazzite"             # the suite's folder in the checkout (Nexus holds every suite)
-SUITE = Path(__file__).resolve().parents[4]           # bc250-bazzite/apps/suite/suite_releases/plan.py: the checkout
-TOOLS = SUITE / "tools"                 # the Nexus tools (check_versions.py, stage_app.py)
-SUITE_TOOLS = SUITE / SUITE_DIR / "tools"   # the suite's (check_manifest.py, pin_app.py)
-CHECK_SCRIPT = f"{SUITE_DIR}/apps/suite/check-release.sh"  # relative to the checkout
-RECORD_SCRIPT = f"{SUITE_DIR}/tools/record-tour.sh"   # the portal's video tour, relative to the checkout
+CHECKOUT = Path(__file__).resolve().parents[3]        # dev/releases/nexus_releases/plan.py: the checkout (Nexus)
+TOOLS = CHECKOUT / "tools"              # the Nexus tools (check_versions.py, stage_app.py, suites.py)
 TAG_SCRIPT = "tools/tag-release.sh"     # tags only a pushed HEAD that holds the version: never one before the bump
 CI_LOCAL = "tools/ci-local.sh"          # CI's jobs here, in a container (Linux): the push only when they pass
 VERSIONS_CHECK = "tools/check_versions.py"                        # the Nexus tools' check, every suite
-MANIFEST_CHECK = f"{SUITE_DIR}/tools/check_manifest.py"          # the suite's manifest check
+# A suite's own tools, in its tools/ (check_script(), record_script() and manifest_check() give the path in the
+# checkout): the board checks of a portal release, the portal's video tour and the manifest check.
+CHECK_SCRIPT = "tools/check-release.sh"
+RECORD_SCRIPT = "tools/record-tour.sh"
+MANIFEST_CHECK = "tools/check_manifest.py"
 CHECKOUT_ONLY = ".checkout-only"        # an app folder with this marker runs from the checkout and is never released
 _VERSION = re.compile(r"^\d+\.\d+\.\d+$")
 
@@ -63,37 +63,71 @@ def _load(name: str, folder: Path = TOOLS):
 
 check_versions = _load("check_versions")
 stage_app = _load("stage_app")
-check_manifest = _load("check_manifest", SUITE_TOOLS)
-pin_app = _load("pin_app", SUITE_TOOLS)
+nexus_suites = _load("suites")
 
 
-def suite_dir(root: Path) -> Path:
-    """The suite's folder in the checkout *root* (its portal, apps, docs and tools): bc250-bazzite/, or *root*
-    itself when it is laid out as a suite (the repositories the tests make)."""
-    folder = root / SUITE_DIR
-    return folder if (folder / "portal").is_dir() else root
+def suites(root: Path = CHECKOUT) -> list[str]:
+    """The suites in the checkout *root*, by name: each folder directly under it with portal/apps.toml
+    (tools/suites.py); [] when *root* is laid out as a suite itself (the repositories the tests make)."""
+    return [p.name for p in nexus_suites.suites(root) if p != root]
 
 
-def rel(root: Path, *parts: str) -> str:
+def suite_dir(root: Path, suite: str | None = None) -> Path:
+    """The folder of the suite *suite* in the checkout *root* (its portal, apps, docs and tools), or of the first
+    suite when none is named; *root* itself when it is laid out as a suite (the repositories the tests make)."""
+    if suite:
+        return root / suite
+    names = suites(root)
+    return root / names[0] if names else root
+
+
+# The manifest's parser and the pin tool are a suite's (its portal reads its manifest): the first suite's serve
+# every suite while the suites' portals read one kind of manifest.
+check_manifest = _load("check_manifest", suite_dir(CHECKOUT) / "tools")
+pin_app = _load("pin_app", suite_dir(CHECKOUT) / "tools")
+
+
+def rel(root: Path, *parts: str, suite: str | None = None) -> str:
     """A path in the suite's folder, relative to *root* (as git names it): "bc250-bazzite/portal/apps.toml"."""
-    return (suite_dir(root) / Path(*parts)).relative_to(root).as_posix()
+    return (suite_dir(root, suite) / Path(*parts)).relative_to(root).as_posix()
 
 
-def manifest_path(root: Path) -> Path:
-    return suite_dir(root) / "portal" / "apps.toml"
+def check_script(root: Path, suite: str | None = None) -> str:
+    """The suite's board checks of a portal release (check-release.sh local|release), relative to the checkout."""
+    return rel(root, *CHECK_SCRIPT.split("/"), suite=suite)
 
 
-def manifest_copy(root: Path) -> Path | None:
+def record_script(root: Path, suite: str | None = None) -> str:
+    """The suite's script that records its portal's video tour, relative to the checkout."""
+    return rel(root, *RECORD_SCRIPT.split("/"), suite=suite)
+
+
+def manifest_check(root: Path, suite: str | None = None) -> str:
+    """The suite's manifest check (check_manifest.py), relative to the checkout."""
+    return rel(root, *MANIFEST_CHECK.split("/"), suite=suite)
+
+
+def manifest_checks(root: Path) -> list[str]:
+    """Every suite's manifest check, as the commit runs them (CI runs them all)."""
+    return [manifest_check(root, suite) for suite in (suites(root) or [None])]
+
+
+def manifest_path(root: Path, suite: str | None = None) -> Path:
+    return suite_dir(root, suite) / "portal" / "apps.toml"
+
+
+def manifest_copy(root: Path, suite: str | None = None) -> Path | None:
     """The root's copy of apps.toml, for the portals installed before the suite moved into bc250-bazzite/ (they
     read it at a tag for their update notice); check_manifest.py keeps it identical. None once the owner removed it,
-    or while the checkout is laid out as a suite."""
+    while the checkout is laid out as a suite, or for a suite that is not the first (the copy is the BC250 suite's)."""
     copy = root / "portal" / "apps.toml"
-    return copy if suite_dir(root) != root and copy.is_file() else None
+    first = suite_dir(root)
+    return copy if first != root and suite_dir(root, suite) == first and copy.is_file() else None
 
 
-def write_manifest(root: Path, text: str) -> list[Path]:
+def write_manifest(root: Path, text: str, suite: str | None = None) -> list[Path]:
     """Writes apps.toml, and the root's copy while there is one. Returns the files written."""
-    paths = [manifest_path(root)] + [p for p in [manifest_copy(root)] if p]
+    paths = [manifest_path(root, suite)] + [p for p in [manifest_copy(root, suite)] if p]
     for path in paths:
         path.write_bytes(text.encode("utf-8"))
     return paths
@@ -127,7 +161,7 @@ def git(root: Path, *args: str) -> str | None:
 
 
 def checkout_stamp(root: Path) -> str:
-    """The checkout's last commit and its time in Amsterdam ("c109b51 · 15-10-2026 03:46"): Suite Releases is never
+    """The checkout's last commit and its time in Amsterdam ("c109b51 · 15-10-2026 03:46"): Nexus Releases is never
     released, so its VERSION stays put and this says which code runs. "" outside a git checkout."""
     out = (git(root, "log", "-1", "--format=%h %ct") or "").split()
     if len(out) != 2 or not out[1].isdigit():
@@ -203,13 +237,13 @@ class Unit:
         return self.last_tag == self.tag
 
 
-def shipped_sources(root: Path, key: str, path: str) -> list[str]:
+def shipped_sources(root: Path, key: str, path: str, suite: str | None = None) -> list[str]:
     """The source paths a release of *key* is made from, as tools/stage_app.py stages it."""
     paths = [path]
     if key != "core" and stage_app.uses_core(root / path):
         paths.append("core/bc250_core")
-    if key not in ("core", "portal") and (suite_dir(root) / "docs" / "apps" / f"{key}.md").is_file():
-        paths.append(rel(root, "docs", "apps", f"{key}.md"))
+    if key not in ("core", "portal") and (suite_dir(root, suite) / "docs" / "apps" / f"{key}.md").is_file():
+        paths.append(rel(root, "docs", "apps", f"{key}.md", suite=suite))
     return paths
 
 
@@ -241,16 +275,18 @@ def bad_tags(root: Path, units: list[Unit]) -> list[str]:
     return out
 
 
-def load_units(root: Path = SUITE) -> list[Unit]:
+def load_units(root: Path = CHECKOUT, suite: str | None = None) -> list[Unit]:
+    """Core, the suite's portal and its apps, each with its version, tags and pin (*suite*: a folder name from
+    suites(); None: the first suite)."""
     pins = {}
     try:
-        for entry in check_manifest.manifest.load(manifest_path(root)):
+        for entry in check_manifest.manifest.load(manifest_path(root, suite)):
             pins[entry.key] = entry
     except (OSError, check_manifest.manifest.ManifestError):
         pass
     units = []
-    folders = [("core", "core"), ("portal", rel(root, "portal"))]
-    folders += [(p.name, rel(root, "apps", p.name)) for p in sorted((suite_dir(root) / "apps").iterdir())
+    folders = [("core", "core"), ("portal", rel(root, "portal", suite=suite))]
+    folders += [(p.name, rel(root, "apps", p.name, suite=suite)) for p in sorted((suite_dir(root, suite) / "apps").iterdir())
                 if (p / "VERSION").is_file() and not (p / CHECKOUT_ONLY).is_file()]
     for key, path in folders:
         version = (root / path / "VERSION").read_text(encoding="utf-8").strip()
@@ -259,7 +295,7 @@ def load_units(root: Path = SUITE) -> list[Unit]:
         unit = Unit(key, path, version, last, commits_since(root, last, path),
                     standalone=(root / path / ".standalone").is_file())
         if last:
-            unit.changed = changed_since(root, last, shipped_sources(root, key, path))
+            unit.changed = changed_since(root, last, shipped_sources(root, key, path, suite))
         if key in pins:
             unit.pinned_tag, unit.pinned_sha = pins[key].tag, pins[key].sha256
         units.append(unit)
@@ -422,15 +458,16 @@ def version_choices(root: Path, unit: Unit) -> tuple[list[str], str]:
     return choices, reason
 
 
-def portal_suggestion(root: Path, portal: Unit) -> tuple[str, str]:
+def portal_suggestion(root: Path, portal: Unit, suite: str | None = None) -> tuple[str, str]:
     """The portal's next version by semantic versioning since its last tag, and why: its own CHANGELOG entries, and
     what changed in apps.toml since that tag (an app added or removed: minor; the largest app bump it pins), as
     tools/check_manifest.py counts it."""
     level, why = suggested_level(new_entries(root, portal))
     reason = f"{level}: {why}" + (f" since {portal.last_tag}" if portal.last_tag else "")
-    old = git(root, "show", f"{portal.last_tag}:{rel(root, 'portal', 'apps.toml')}") if portal.last_tag else None
+    old = git(root, "show", f"{portal.last_tag}:{rel(root, 'portal', 'apps.toml', suite=suite)}") \
+        if portal.last_tag else None
     if old is not None:
-        need, what = check_manifest.required_bump(old, (manifest_path(root)).read_text(encoding="utf-8"))
+        need, what = check_manifest.required_bump(old, manifest_path(root, suite).read_text(encoding="utf-8"))
         if need > LEVELS.index(level) + 1:
             level = LEVELS[need - 1]
             reason = f"{level}: apps.toml changed since {portal.last_tag} ({what})"
@@ -466,32 +503,33 @@ def set_withdrawn(text: str, key: str, reason: str) -> str:
     return "".join(lines[:start] + block + lines[end:])
 
 
-def withdrawable(root: Path, units: list[Unit]) -> list[Unit]:
+def withdrawable(root: Path, units: list[Unit], suite: str | None = None) -> list[Unit]:
     """The apps a portal pins that can be withdrawn: never the required one (Bazzite Test, always installed)."""
-    required = {e.key for e in check_manifest.manifest.load(manifest_path(root)) if e.required}
+    required = {e.key for e in check_manifest.manifest.load(manifest_path(root, suite)) if e.required}
     return [u for u in units if u.kind == "app" and not u.standalone and u.pinned_tag and u.key not in required]
 
 
-def withdrawn_reason(root: Path, key: str) -> str:
-    entries = check_manifest.manifest.load(manifest_path(root))
+def withdrawn_reason(root: Path, key: str, suite: str | None = None) -> str:
+    entries = check_manifest.manifest.load(manifest_path(root, suite))
     return next((e.withdrawn for e in entries if e.key == key), "")
 
 
-def withdraw(root: Path, unit: Unit, reason: str, now: datetime.datetime | None = None) -> list[Path]:
+def withdraw(root: Path, unit: Unit, reason: str, now: datetime.datetime | None = None,
+             suite: str | None = None) -> list[Path]:
     """Marks the app's pinned release withdrawn (or, with no reason, takes that back) in apps.toml, with a CHANGELOG
     entry in the app. Returns the files changed."""
-    path = manifest_path(root)
-    paths = write_manifest(root, set_withdrawn(path.read_text(encoding="utf-8"), unit.key, reason))
+    path = manifest_path(root, suite)
+    paths = write_manifest(root, set_withdrawn(path.read_text(encoding="utf-8"), unit.key, reason), suite)
     text = (f"Withdrawn: {unit.pinned_tag}. {reason.strip()}" if reason.strip() else
             f"Withdrawal of {unit.pinned_tag} taken back.")
     return [*paths, add_changelog_entry(root, unit, text, now)]
 
 
-def changed_withdrawals(root: Path, base: str) -> list[tuple[str, str]]:
+def changed_withdrawals(root: Path, base: str, suite: str | None = None) -> list[tuple[str, str]]:
     """(tag, reason) of the apps withdrawn since *base*: what the portal release that follows withdraws."""
-    old_text = git(root, "show", f"{base}:{rel(root, 'portal', 'apps.toml')}") or ""
+    old_text = git(root, "show", f"{base}:{rel(root, 'portal', 'apps.toml', suite=suite)}") or ""
     old = {e.key: e.withdrawn for e in check_manifest.manifest.parse(old_text)} if old_text else {}
-    new = check_manifest.manifest.load(manifest_path(root))
+    new = check_manifest.manifest.load(manifest_path(root, suite))
     return [(e.tag, e.withdrawn) for e in new if e.withdrawn and not old.get(e.key)]
 
 
@@ -522,20 +560,20 @@ def pin_candidates(units: list[Unit]) -> list[Unit]:
             and (u.pinned_tag != u.tag or not u.pinned_sha)]
 
 
-def pin(root: Path, unit: Unit, sha256: str) -> None:
-    text = manifest_path(root).read_text(encoding="utf-8")
-    write_manifest(root, pin_app.pin(text, unit.key, unit.tag, sha256.lower()))
+def pin(root: Path, unit: Unit, sha256: str, suite: str | None = None) -> None:
+    text = manifest_path(root, suite).read_text(encoding="utf-8")
+    write_manifest(root, pin_app.pin(text, unit.key, unit.tag, sha256.lower()), suite)
     unit.pinned_tag, unit.pinned_sha = unit.tag, sha256.lower()
 
 
-def follow_unreleased_pin(root: Path, unit: Unit) -> bool:
+def follow_unreleased_pin(root: Path, unit: Unit, suite: str | None = None) -> bool:
     """When apps.toml pins a tag of this app that was never released, CI only accepts it while it matches VERSION:
     move the pin to the new version (sha256 empty). True when apps.toml changed; that push then needs a portal bump."""
     if unit.kind != "app" or not unit.pinned_tag or unit.pinned_tag == unit.tag \
             or unit.pinned_tag in tags_of(root, unit.key):
         return False
-    text = manifest_path(root).read_text(encoding="utf-8")
-    write_manifest(root, pin_app.pin(text, unit.key, unit.tag, ""))
+    text = manifest_path(root, suite).read_text(encoding="utf-8")
+    write_manifest(root, pin_app.pin(text, unit.key, unit.tag, ""), suite)
     unit.pinned_tag, unit.pinned_sha = unit.tag, ""
     return True
 
@@ -544,29 +582,30 @@ def fetch_sha256(tag: str) -> str:
     return pin_app.fetch_sha256(tag)
 
 
-def changed_pins(root: Path, base: str) -> list[str]:
+def changed_pins(root: Path, base: str, suite: str | None = None) -> list[str]:
     """The pinned tags that differ from *base*: the app releases this portal release brings."""
-    old_text = git(root, "show", f"{base}:{rel(root, 'portal', 'apps.toml')}") or ""
+    old_text = git(root, "show", f"{base}:{rel(root, 'portal', 'apps.toml', suite=suite)}") or ""
     old = {e.key: e.tag for e in check_manifest.manifest.parse(old_text)} if old_text else {}
-    new = check_manifest.manifest.load(manifest_path(root))
+    new = check_manifest.manifest.load(manifest_path(root, suite))
     return [e.tag for e in new if old.get(e.key) != e.tag]
 
 
-def portal_minimum(root: Path, base: str, portal_version: str) -> tuple[str, str]:
+def portal_minimum(root: Path, base: str, portal_version: str, suite: str | None = None) -> tuple[str, str]:
     """The lowest portal version CI accepts (tools/check_manifest.py), and why: apps.toml against the last portal
     release (its tag; a version not tagged yet may still change what it pins), or against *base* (the last push)
     while there is no portal tag; ("", "") when apps.toml is unchanged. That release's version is the starting
     point."""
     tags = tags_of(root, "portal")
     ref = tags[-1] if tags else base
-    old_text = git(root, "show", f"{ref}:{rel(root, 'portal', 'apps.toml')}")
-    new_text = (manifest_path(root)).read_text(encoding="utf-8")
+    old_text = git(root, "show", f"{ref}:{rel(root, 'portal', 'apps.toml', suite=suite)}")
+    new_text = manifest_path(root, suite).read_text(encoding="utf-8")
     if old_text is None:
         return "", ""
     need, why = check_manifest.required_bump(old_text, new_text)
     if need <= 0:
         return "", why
-    start = ref[len("portal-v"):] if tags else (git(root, "show", f"{base}:{rel(root, 'portal', 'VERSION')}") or portal_version).strip()
+    start = ref[len("portal-v"):] if tags else \
+        (git(root, "show", f"{base}:{rel(root, 'portal', 'VERSION', suite=suite)}") or portal_version).strip()
     bumped = next_versions(start)[check_manifest.LEVELS[need]]
     if version_tuple(portal_version) > version_tuple(start) and \
             check_manifest.bump_level(start, portal_version) >= need:
@@ -604,15 +643,15 @@ class Launch:
 _CONSTANT = re.compile(r'^(APP_NAME|APP_ID)\s*=\s*"([^"]+)"', re.M)
 
 
-def launch_targets(root: Path = SUITE) -> list[Launch]:
-    """Every app window in the checkout: each package with a __main__.py (one or two levels below the app folder,
-    tests left out). The checkout-only apps, like this one, are not listed."""
+def launch_targets(root: Path = CHECKOUT, suite: str | None = None) -> list[Launch]:
+    """Every app window of the suite in the checkout: each package with a __main__.py (one or two levels below the
+    app folder, tests left out). The checkout-only apps, like this one, are not listed."""
     try:
-        board = {e.key: e.changes_board for e in check_manifest.manifest.load(manifest_path(root))}
+        board = {e.key: e.changes_board for e in check_manifest.manifest.load(manifest_path(root, suite))}
     except (OSError, check_manifest.manifest.ManifestError):
         board = {}
     found = []
-    for app in sorted((suite_dir(root) / "apps").iterdir()):
+    for app in sorted((suite_dir(root, suite) / "apps").iterdir()):
         if not (app / "VERSION").is_file() or (app / CHECKOUT_ONLY).is_file():
             continue
         version = (app / "VERSION").read_text(encoding="utf-8").strip()
@@ -636,10 +675,10 @@ def launch_targets(root: Path = SUITE) -> list[Launch]:
     return found
 
 
-def portal_target(root: Path = SUITE) -> Launch | None:
-    """The portal, started from the checkout as `python -m bc250_portal` in portal/: it takes its apps from the
-    checkout, as it does when it runs from one. None when the checkout has no portal window."""
-    folder = suite_dir(root) / "portal"
+def portal_target(root: Path = CHECKOUT, suite: str | None = None) -> Launch | None:
+    """The suite's portal, started from the checkout as `python -m bc250_portal` in portal/: it takes its apps from
+    the checkout, as it does when it runs from one. None when the suite has no portal window."""
+    folder = suite_dir(root, suite) / "portal"
     if not (folder / "bc250_portal" / "__main__.py").is_file():
         return None
     try:
@@ -652,10 +691,10 @@ def portal_target(root: Path = SUITE) -> Launch | None:
                   icon if icon.is_file() else None, app_id=consts.get("APP_ID", ""))
 
 
-def installer_tests_target(root: Path = SUITE) -> Launch | None:
-    """BC-250 Installer Tests (tools/installer-tests/gui), started from the checkout as its run.sh does. None when the
-    checkout has no such window."""
-    folder = suite_dir(root) / "tools" / "installer-tests" / "gui"
+def installer_tests_target(root: Path = CHECKOUT, suite: str | None = None) -> Launch | None:
+    """The suite's installer tests window (tools/installer-tests/gui, BC-250 Installer Tests), started from the
+    checkout as its run.sh does. None when the suite has no such window."""
+    folder = suite_dir(root, suite) / "tools" / "installer-tests" / "gui"
     try:
         version = (folder / "VERSION").read_text(encoding="utf-8").strip()
         consts = dict(_CONSTANT.findall((folder / "installer_test_gui" / "__init__.py").read_text(encoding="utf-8")))
@@ -690,13 +729,22 @@ def network_addresses() -> list[str]:
     return [a for i, a in enumerate(found) if not a.startswith("127.") and a != "0.0.0.0" and a not in found[:i]]
 
 
-def wiki_configs(root: Path = SUITE) -> list[Path]:
+def wiki_icon(folder: Path) -> Path | None:
+    """The icon of the wiki in *folder*: its suite's portal icon (bc250-bazzite/portal/images/bc250-bazzite-suite.webp),
+    else its own drawing at 256 px (nexus/images/nexus-256.png); None without either."""
+    for icon in (folder / "portal" / "images" / f"{folder.name}-suite.webp", folder / "images" / f"{folder.name}-256.png"):
+        if icon.is_file():
+            return icon
+    return None
+
+
+def wiki_configs(root: Path = CHECKOUT) -> list[Path]:
     """Each wiki in the checkout: mkdocs.yml at the root (none since the suites moved into their folders), then one
     in a folder directly below it (bc250-bazzite/, nexus/, and a new suite's), by folder name."""
     return [p for p in (root / "mkdocs.yml", *sorted(root.glob("*/mkdocs.yml"))) if p.is_file()]
 
 
-def docs_targets(root: Path = SUITE, network: bool = False,
+def docs_targets(root: Path = CHECKOUT, network: bool = False,
                  addresses: list[str] | None = None) -> list[Launch]:
     """Each wiki, served from the checkout with `mkdocs serve` (the dev venv has it), each on a port of its own: it
     rebuilds on every save, and its page opens with the design panel. The page is under the path of site_url, as on
@@ -717,10 +765,8 @@ def docs_targets(root: Path = SUITE, network: bool = False,
             reach = [f"http://{a}:{port}{path}" for a in (network_addresses() if addresses is None else addresses)]
             note = ("On the other devices: " + ", ".join(reach)) if reach else \
                 "This computer has no network address the other devices can reach."
-        icon = suite_dir(root) / "portal" / "images" / "bc250-bazzite-suite.webp"
         found.append(Launch("docs" if folder == "." else f"docs-{folder}", "mkdocs",
-                            f"{name[1] if name else folder} wiki ({where})", root, "", False,
-                            icon if icon.is_file() else None,
+                            f"{name[1] if name else folder} wiki ({where})", root, "", False, wiki_icon(config.parent),
                             ("serve", "-f", config.relative_to(root).as_posix(),
                              "--dev-addr", f"{NETWORK_HOST if network else DOCS_HOST}:{port}"),
                             f"http://{DOCS_HOST}:{port}{path}?design",
@@ -863,7 +909,7 @@ def fetch_runs(etag: str = "") -> tuple[list[BuildRun] | None, str, RateInfo | N
     used up, OSError offline."""
     global _token
     token = github_token()
-    headers = {"Accept": "application/vnd.github+json", "User-Agent": "bc250-release"}
+    headers = {"Accept": "application/vnd.github+json", "User-Agent": "nexus-releases"}
     if etag:
         headers["If-None-Match"] = etag
     if token:
@@ -958,7 +1004,7 @@ def parse_issues(data: object) -> list[Issue]:
 def fetch_open_issues() -> list[Issue]:
     """The repository's open issues, newest first. Raises OSError offline, urllib.error.HTTPError on GitHub's
     refusal (its hourly limit)."""
-    headers = {"Accept": "application/vnd.github+json", "User-Agent": "bc250-release"}
+    headers = {"Accept": "application/vnd.github+json", "User-Agent": "nexus-releases"}
     token = github_token()
     if token:
         headers["Authorization"] = f"Bearer {token}"
@@ -1003,7 +1049,7 @@ def parse_github_status(data: object) -> GitHubStatus:
 
 def fetch_github_status() -> GitHubStatus:
     """githubstatus.com's summary (a public page: no token, no limit to count). Raises OSError offline."""
-    request = urllib.request.Request(STATUS_URL, headers={"User-Agent": "bc250-release"})
+    request = urllib.request.Request(STATUS_URL, headers={"User-Agent": "nexus-releases"})
     with urllib.request.urlopen(request, timeout=15) as response:
         return parse_github_status(json.load(response))
 
@@ -1126,10 +1172,14 @@ def tag_command(tags: list[str]) -> str:
     return f"{TAG_SCRIPT} {' '.join(tags)}"
 
 
-def commit_command(message: str, base: str, amend: bool = False, python: str = "python3") -> str:
-    """The git commit button: the version and manifest checks first (CI's quick ones), the commit only when they
-    pass. *amend*: the staged changes join HEAD, with its message."""
-    checks = f"{python} {VERSIONS_CHECK} && {python} {MANIFEST_CHECK} --base {shlex.quote(base)}"
+def commit_command(message: str, base: str, amend: bool = False, python: str = "python3",
+                   manifests: list[str] | None = None) -> str:
+    """The git commit button: the version check and every suite's manifest check first (CI's quick ones; *manifests*:
+    their paths, manifest_checks(), the checkout's by default), the commit only when they pass. *amend*: the staged
+    changes join HEAD, with its message."""
+    checks = " && ".join([f"{python} {VERSIONS_CHECK}",
+                          *(f"{python} {check} --base {shlex.quote(base)}" for check in
+                            (manifest_checks(CHECKOUT) if manifests is None else manifests))])
     commit = "git commit --amend --no-edit" if amend else f"git commit -m {shlex.quote(message)}"
     return f"{checks} && {commit}"
 
@@ -1186,15 +1236,16 @@ def unpushed_release_commit(root: Path, base: str) -> str:
     return subject if subject.startswith("Release ") else ""
 
 
-def portal_commands(tag: str, linux: bool | None = None) -> str:
-    """Commit, test on a board, and only then push and tag: the tag is what reaches the users' portals."""
+def portal_commands(tag: str, linux: bool | None = None, check: str = CHECK_SCRIPT) -> str:
+    """Commit, test on a board, and only then push and tag: the tag is what reaches the users' portals. *check*:
+    the suite's check-release.sh, relative to the checkout (check_script())."""
     return "\n".join([
         "# 1. Commit (no push yet):",
         "git add -A && tools/fix-modes.sh",
         f'git commit -m "Release {tag}"',
         "",
         "# 2. Test on a BC-250 (docs/portal.md, Testing a portal release before its tag): Test updates, or",
-        f"{CHECK_SCRIPT} local     # ./install.sh, then bc250-bazzite-suite --source release",
+        f"{check} local     # ./install.sh, then bc250-bazzite-suite --source release",
         "#    The apps whose pin changed show Update: update them, open each one, check that it works.",
         "#    Something wrong? Fix the app and release a new patch version (step 1), then pin again.",
         "",
@@ -1204,13 +1255,23 @@ def portal_commands(tag: str, linux: bool | None = None) -> str:
         f"{TAG_SCRIPT} {tag}",
         "",
         "# 4. Once GitHub's release workflow has built it: Test release, or",
-        f"{CHECK_SCRIPT} release {tag}   # installs and starts the published portal release",
+        f"{check} release {tag}   # installs and starts the published portal release",
     ])
 
 
 def main() -> int:
-    units = load_units()
-    for problem in bad_tags(SUITE, units):
+    """The units of every suite in the checkout, one line each (a line with the suite's name first when there are
+    several): tools/release.sh --list."""
+    names = suites(CHECKOUT) or [None]
+    for name in names:
+        if len(names) > 1:
+            print(f"== {name}")
+        list_units(load_units(CHECKOUT, name))
+    return 0
+
+
+def list_units(units: list[Unit]) -> None:
+    for problem in bad_tags(CHECKOUT, units):
         print(f"WARNING: {problem}: delete the tag and tag the commit with the bump ({TAG_SCRIPT})", file=sys.stderr)
     for u in units:
         since = "never released" if u.last_tag is None and u.kind != "core" else \
@@ -1219,7 +1280,6 @@ def main() -> int:
         needs = f"  needs a release: {u.release_reason}" if u.needs_release else \
             f"  {u.release_reason}: {', '.join(u.in_apps)}" if u.in_apps else ""
         print(f"{u.key:<16} {u.version:<8} {since}{pinned}{needs}")
-    return 0
 
 
 if __name__ == "__main__":

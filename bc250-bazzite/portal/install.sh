@@ -93,7 +93,8 @@ release_venv() {
 # The other suite apps that are installed, one per line: key, name, the folder its uninstaller runs in (empty when
 # there is none) and its uninstall commands, tab-separated. Read from the installed portal's apps.toml, the one
 # that installed them; the folder is the release the portal kept, or the app staged afresh from the checkout. The
-# checkout-only apps ([checkout.<key>]) run their uninstaller in their folder of the checkout. An app this portal no
+# checkout-only apps ([checkout.<key>]) run their uninstaller in their folder of the checkout (the suite's folder, or
+# the repository's for a Nexus app, nexus = true). An app this portal no
 # longer lists (dropped from the manifest, installed by an earlier portal) is found by the record and release folder
 # the portal kept for it, else by its own installed copy (~/.local/share/<app-id>/app or /opt/<app-id>, an install.sh
 # with the suite installers' options), and uninstalled with that installer.
@@ -160,12 +161,14 @@ for key, app in apps.items():
             folder = dest
     row(key, app.get("name", key), folder, " && ".join(app.get("uninstall", [])))
 
-# The checkout-only apps: their folder in the suite's folder of the checkout, when there is one.
+# The checkout-only apps: their folder in the suite's folder of the checkout (a Nexus app's in the repository), when
+# there is one.
 for key, app in checkout_apps.items():
     app_ids |= {Path(p).name for p in app.get("detect", [])}
     if not present(app.get("detect", [])):
         continue
-    folder = suite / app.get("folder", f"apps/{key}") if suite else None
+    base = Path(checkout) if app.get("nexus") else suite
+    folder = base / app.get("folder", f"apps/{key}") if suite else None
     row(key, app.get("name", key), folder if folder and folder.is_dir() else None,
         " && ".join(app.get("uninstall", ["bash install.sh --uninstall"])))
 

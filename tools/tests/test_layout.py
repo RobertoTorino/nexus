@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Every app of every suite has the same layout: its Python package(s) and images/ directly in <suite>/apps/<name>/, no
-wrapper folder."""
+wrapper folder; the Nexus apps in dev/<name>/ (Nexus Releases) the same."""
 
 from __future__ import annotations
 
@@ -17,7 +17,9 @@ def _suites() -> list[Path]:
 
 
 def _apps() -> list[Path]:
-    return sorted(path for suite in _suites() for path in (suite / "apps").iterdir() if (path / "VERSION").is_file())
+    folders = [suite / "apps" for suite in _suites()] + [SUITE / "dev"]
+    return sorted(path for folder in folders if folder.is_dir() for path in folder.iterdir()
+                  if (path / "VERSION").is_file())
 
 
 def _visible(path: Path, app: Path) -> bool:

@@ -38,8 +38,11 @@ Each design (a suite's, the Nexus page's) has its own; none is carried over to a
 ### Nexus
 
 - **The identity:** near-black ink `#010101`, silver text `#c0c0c0` and one teal `#17b6a7` (the icon's) for every
-  link, title and icon; nothing else. Inter, with heavy titles. The Nexus page is not a suite: it has no apps, no
-  theme and no states.
+  link, title and icon; nothing else. Inter, with heavy titles. Nexus is not a suite: the page has no apps and no
+  states. Its one app, Nexus Releases (`dev/releases/`, owner, 26-10-2026: a Nexus app takes Nexus's design), has
+  this design in its window (`nexus_releases/style.py`, a theme for core's widgets: ink surfaces, silver text, the
+  teal accent) and the Nexus icon; its states (the working tree, a build) are the apps' state family, since a build
+  passes or fails there too.
 
 ## Color families
 
@@ -226,7 +229,7 @@ Text colors:
 
   ![Sample text in #2e7d32](bc250-bazzite/docs/design/colors/text-2e7d32.svg)
 
-- `#c62828` Red: Failed, errors and problems in every app (the emulator managers' status lines, Suite Releases' bad tags, the upscaler's problems, a folder that is missing).
+- `#c62828` Red: Failed, errors and problems in every app (the emulator managers' status lines, Nexus Releases' bad tags, the upscaler's problems, a folder that is missing).
 
   ![Sample text in #c62828](bc250-bazzite/docs/design/colors/text-c62828.svg)
 
@@ -334,6 +337,29 @@ Background colors:
 | ![#c0c0c0](bc250-bazzite/docs/design/colors/block-c0c0c0.svg) | `#c0c0c0` | Silver: a button's fill under the pointer in the dark sections. |
 | ![#ffffff](bc250-bazzite/docs/design/colors/block-ffffff.svg) | `#ffffff` | The main color's lighter and darker steps, for Material. |
 | ![#00000040](bc250-bazzite/docs/design/colors/block-00000040.svg) | `#00000040` | The shadow under a button under the pointer (25 %). |
+
+### Nexus Releases
+
+The window of Nexus's app (`dev/releases/nexus_releases/style.py`): the page's colors as a theme for core's widgets, set with `create_app(theme=NEXUS)`; its states are the apps' state family.
+
+Text colors:
+
+- `#c0c0c0` Silver: the text, the title, the boxes' values and captions, the buttons, the tabs and the fields.
+
+  ![Sample text in #c0c0c0](bc250-bazzite/docs/design/colors/text-c0c0c0.svg)
+
+- `#010101` Ink: text on the teal accent (a selected row).
+
+  ![Sample text in #010101](bc250-bazzite/docs/design/colors/text-010101.svg)
+
+Background colors:
+
+| Color | Hex | Used for |
+| --- | --- | --- |
+| ![#010101](bc250-bazzite/docs/design/colors/block-010101.svg) | `#010101` | Ink: the window, the header and the dialogs; the bottom of a button's or a box's sheen; every other row of a table. |
+| ![#0f0f0f](bc250-bazzite/docs/design/colors/block-0f0f0f.svg) | `#0f0f0f` | Main color: the fields, lists and tables; the top of a button's or a box's sheen. |
+| ![#17b6a7](bc250-bazzite/docs/design/colors/block-17b6a7.svg) | `#17b6a7` | Teal: the accent: the selection, the outline of a selected cell or a focused field, a button or pill under the pointer, the main action (Apply, Bump portal, Retract), the progress bar. |
+| ![#80808066](bc250-bazzite/docs/design/colors/block-80808066.svg) | `#80808066` | Dimmed silver (40 %): the borders of the fields, boxes, tabs and buttons, and a box's neutral edge. |
 
 ## The apps' own colors
 

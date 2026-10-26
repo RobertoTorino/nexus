@@ -55,7 +55,7 @@ It reads the jobs from `ci.yml` itself, so a new app in the matrix or a new inst
 first run builds the image from `tools/ci-local/Containerfile` (Python 3.12 and the packages GitHub's runner has)
 and Console Link's FFmpeg; both are kept, with the venvs and the logs, in `~/.cache/bc250-ci-local`. It works on a
 copy of the checkout with every change staged, as the commit will have it. Only the Windows job does not run here.
-The push commands BC250 Suite Releases shows run it first (`tools/ci-local.sh && git push`): no push when a job fails.
+The push commands Nexus Releases shows run it first (`tools/ci-local.sh && git push`): no push when a job fails.
 
 `tools/pre-push.sh` runs CI's quick checks in a few seconds: the versions, `bc250-bazzite/portal/apps.toml` with the portal bump
 it needs against what the remote has, the CHANGELOGs keeping every entry the remote has (`tools/check_changelogs.py`),

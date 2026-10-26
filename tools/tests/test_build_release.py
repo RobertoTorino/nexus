@@ -144,10 +144,15 @@ def test_native_wheel_is_required_and_named(tmp_path, monkeypatch):
     assert f"Includes its native core as `{name}`" in (tmp_path / "out" / "notes.md").read_text()
 
 
-def test_checkout_only_app_has_no_release(tmp_path):
-    version = (br.SUITE / "apps/suite/VERSION").read_text().strip()
+def test_checkout_only_app_has_no_release(tmp_path, monkeypatch):
+    """An app with .checkout-only (Nexus Releases, Installer Tests) is never built: the marker is refused."""
+    suite = tmp_path / "suite"
+    (suite / "apps" / "x").mkdir(parents=True)
+    (suite / "apps" / "x" / ".checkout-only").write_text("No releases.\n")
+    (suite / "apps" / "x" / "VERSION").write_text("0.1.0\n")
+    monkeypatch.setattr(br, "SUITE", suite)
     with pytest.raises(SystemExit, match="runs from the checkout"):
-        br.build(f"suite-v{version}", tmp_path)
+        br.build("x-v0.1.0", tmp_path)
 
 
 def test_portal_needs_and_verifies_bundle(bt_release, pinned, tmp_path):

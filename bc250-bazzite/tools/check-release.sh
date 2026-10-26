@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
-# The two portal checks of a release, as the release front end's buttons run them (Linux):
+# The two portal checks of a release of the BC250 Bazzite Suite, as Nexus Releases' buttons run them (Linux):
 #
 #   check-release.sh local             # before the push: install the portal from this checkout and start it
 #                                      # with the apps from the pinned GitHub releases (--source release)
@@ -13,7 +13,7 @@
 # installed from the checkout; run ./install.sh in the checkout to go back. BC250_RELEASE_URL overrides the
 # download address (tests).
 set -euo pipefail
-cd "$(dirname "$0")/../.."
+cd "$(dirname "$0")/.."                 # the suite's folder: its install.sh and portal/VERSION
 REPO=$PWD
 URL=${BC250_RELEASE_URL:-https://github.com/RobertoTorino/nexus/releases/download}
 CACHE="${XDG_CACHE_HOME:-$HOME/.cache}/bc250-release-check"

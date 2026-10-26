@@ -7,7 +7,8 @@
 * Checkout (development): the app staged from the local suite repo with tools/stage_app.py, exactly as the release
   workflow builds it, so the portal can be tried before anything is released.
 * A checkout-only app ([checkout.<key>] in apps.toml): its own folder in the suite's folder of the checkout
-  (bc250-bazzite/apps/<key>, or the folder apps.toml names, relative to the suite's folder), as it is, since it runs
+  (bc250-bazzite/apps/<key>, or the folder apps.toml names, relative to the suite's folder; relative to the
+  repository for a Nexus app, nexus = true: dev/releases), as it is, since it runs
   from there. Never staged, never removed.
 
 The extracted folder is kept under the portal's state dir, so the matching uninstaller is at hand later; after an
@@ -109,6 +110,8 @@ class Sources:
         if entry.checkout_only:
             if self.checkout_for_apps is None:
                 raise SourceError(f"{entry.name} runs from a suite checkout, and this portal has none")
+            if entry.nexus:
+                return self.checkout_for_apps / entry.folder
             return suite_folder(self.checkout_for_apps) / (entry.folder or f"apps/{entry.key}")
         return self.work / ("local-" + entry.key if self.local else entry.tag)
 

@@ -19,7 +19,7 @@ appearing in the portal.
 
 - `apps/<name>/`: check, gpu, upscaler, compute, cores, oc, acpi,
   overlay, ips35, hdcam, hdcontrol, bios, ace, mesh, vram, fan, wdriver, cec, sftp, consoles, clb, shadps4, rpcs3,
-  ppsspp, pcsx2, vita3k, xenia, decky, mtool, package, ncgui, datstation, suite. Each has its
+  ppsspp, pcsx2, vita3k, xenia, decky, mtool, package, ncgui, datstation. Each has its
   own VERSION, CHANGELOG, LICENSE (acpi is MIT; consoles is AGPL-3.0, its protocol code ported from
   chiaki-ng: those files AGPL-3.0-only, its own AGPL-3.0-or-later; ncgui is GPL-2.0-only, a port of NetcatGUI; clb
   (Console LinkB, Xbox) is GPL-3.0-or-later with protocol code ported from Greenlight and xal-node, MIT, whose notice
@@ -28,14 +28,14 @@ appearing in the portal.
   gaming, utilities, development): the portal shows a tab per category, with the notice of updates above the tabs
   (owner, 18-10-2026) and check as the first tile on Sustainable (owner, 20-10-2026). Media Tool, the Dependency
   Checker and Bazzite NetcatGUI are development apps.
-  Suite Releases (the release front end) has `.standalone` and `.checkout-only`: it runs
-  from the checkout, is never released, and is listed as `[checkout.suite]`, also on the Development tab:
-  a portal from a release finds the checkout on the machine (it asks only when there is none) and remembers it, the
-  released apps still come from their releases. The checkout the portal records is the repository (Nexus); the
-  suite's folder in it is `bc250-bazzite/` (`SUITE_DIR` in the portal), where `[checkout.<key>]` folders are
-  relative to. Install every app through the portal, so what is installed stays in step. BC-250 Installer Tests
-  (`tools/installer-tests/gui`) is checkout-only the same way: `.checkout-only` and `[checkout.installer-tests]`
-  with `folder`.
+  Nexus Releases (the release front end, `../dev/releases/`, a Nexus app) has `.standalone` and `.checkout-only`:
+  it runs from the checkout, is never released, and is listed as `[checkout.releases]` with `nexus = true` and
+  `folder`, on the Development tab: a portal from a release finds the checkout on the machine (it asks only when
+  there is none) and remembers it, the released apps still come from their releases. The checkout the portal
+  records is the repository (Nexus); the suite's folder in it is `bc250-bazzite/` (`SUITE_DIR` in the portal),
+  where a `[checkout.<key>]` folder is relative to (a Nexus app's to the repository). Install every app through
+  the portal, so what is installed stays in step. BC-250 Installer Tests (`tools/installer-tests/gui`) is
+  checkout-only the same way: `.checkout-only` and `[checkout.installer-tests]` with `folder`.
 - `../core/bc250_core/`: shared Python code, at the root of the repository, every suite's. It is **bundled per
   app** at release time (`../tools/stage_app.py`), so each app runs on the core it was tested with; the shared venv
   `~/.local/share/bc250-bazzite-suite/venv` holds only PyQt6 and pygame-ce (the portal's controller reader). In a
@@ -44,7 +44,8 @@ appearing in the portal.
   copy of `apps.toml` at `../portal/apps.toml` for the portals installed before the move, which read it at a tag for
   their update notice; `tools/check_manifest.py` keeps it identical. The owner removes the copy once the first
   portal release after the move has been out for a while.
-- `tools/`: the suite's tools: `pin_app.py`, `check_manifest.py`, `sync_icons.py`, `portal_screenshot.py`,
+- `tools/`: the suite's tools: `pin_app.py`, `check_manifest.py`, `check-release.sh` (the board checks of a
+  portal release, run from Nexus Releases' Test on this board), `sync_icons.py`, `portal_screenshot.py`,
   `portal_tour.py`, `record-tour.sh`, `record-app-tour.sh`, `make_portal_sounds.py`, `sounds/`,
   `check_upstream.py`, `mkdocs/` (the wiki's hooks and overrides), their tests in `tools/tests/`, and
   `tools/installer-tests/` (installers on Linux with fakeroot shims). The Nexus tools (release and CI, the design

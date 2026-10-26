@@ -32,7 +32,7 @@ def cargo_lock_pattern(lock: Path) -> re.Pattern | None:
 
 
 # A line that assigns a literal version: one the pattern cannot read is an error, not a copy that is skipped (and
-# then left behind by Suite Releases' bump, which changes exactly the copies found here). Lines that read VERSION at
+# then left behind by Nexus Releases' bump, which changes exactly the copies found here). Lines that read VERSION at
 # run time (VERSION=$(...), __version__ = _read_version()) are no copies and stay out.
 CANDIDATES = {".py": re.compile(r"""^__version__\s*=\s*["'].*$""", re.M),
               ".sh": re.compile(r"""^VERSION=["']?\d.*$""", re.M)}
@@ -66,7 +66,7 @@ suites = _suites()
 def main() -> int:
     errors = []
     checked = 0
-    units = [ROOT / "core"]
+    units = [ROOT / "core", *sorted(p for p in (ROOT / "dev").glob("*") if p.is_dir())]   # the Nexus apps
     for suite in suites.suites():               # each suite: its portal, apps and Installer Tests
         units += [suite / "portal", *sorted(p for p in (suite / "apps").iterdir() if p.is_dir())]
         if (suite / "tools" / "installer-tests" / "gui").is_dir():

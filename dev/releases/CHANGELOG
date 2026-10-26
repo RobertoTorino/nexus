@@ -1,3 +1,26 @@
+Changelog: 26-10-2026 13:21:15
+
+Added. The window has Nexus's design, not the suite's theme (owner, 26-10-2026: a Nexus app follows Nexus):
+nexus_releases/style.py turns the Nexus page's colors (ink, silver, teal; nexus/docs/stylesheets/nexus.css) into a
+theme for core's widgets, which create_app(theme=NEXUS) sets; the selection and focus outlines are teal. The states
+(the working tree, a build, a release) keep the state family every app shares. The icon is the Nexus drawing: the
+window header, the window icon, the menu entry and the Desktop icon (dev/releases/images/nexus-releases.webp and
+-128.png) and the tile on the BC250 suite's portal, lossless copies written by tools/make_icons.py.
+
+Changelog: 26-10-2026 12:28:08
+
+Added. The app is Nexus Releases, a Nexus app in dev/releases/ (package nexus_releases, app id nexus-releases; was
+BC250 Suite Releases in bc250-bazzite/apps/suite, 26-10-2026: the release flow is the repository's, only the device
+checks are a suite's). The header has a suite chooser, every folder with portal/apps.toml (tools/suites.py), hidden
+while the checkout holds one suite; the steps, the pins, Retract and Test on this board work on the chosen suite,
+which is remembered; git commit runs every suite's check_manifest.py; the wikis, the git buttons and GitHub stay
+the repository's. Test on this board runs the suite's own tools/check-release.sh (from apps/suite/check-release.sh)
+and tools/record-tour.sh, and says so when the suite has none. The portal lists it as [checkout.releases] with
+nexus = true. A launcher or menu entry of BC250 Suite Releases (bc250-release) points at the old folder: run
+dev/releases/install.sh (or tools/release.sh --install, or Install in a portal from the checkout) again, which
+removes them; the settings and the command history start afresh under ~/.config/nexus-releases, the logs under
+~/.cache/nexus-releases.
+
 Changelog: 26-10-2026 11:55:20
 
 Fixed. Pin, a moved unreleased pin and Retract write the root's copy of apps.toml as well as the suite's, while

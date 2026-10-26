@@ -22,16 +22,21 @@ from PyQt6.QtWidgets import QApplication, QWidget
 
 from . import appinfo
 from .appinfo import AppInfo
-from .theme import apply_theme
-from .widgets import RoundedToolTip
+from .theme import Theme, apply_theme
+from .widgets import RoundedToolTip, current_theme, set_theme
 
 
-def create_app(info: AppInfo, qt_args: Sequence[str] = (), stylesheet: str = "") -> QApplication:
+def create_app(info: AppInfo, qt_args: Sequence[str] = (), stylesheet: str = "",
+               theme: Theme | None = None) -> QApplication:
     """The QApplication with the app's names, style and theme (*stylesheet* after the theme's), rounded tooltips
     and window icon. Also makes
     *info* the current AppInfo. The org/app names match open_settings(), so bare QSettings() find the same file.
-    The organization is only set when the app declares one (the bisect/unlock GUIs), as before the move to core."""
+    The organization is only set when the app declares one (the bisect/unlock GUIs), as before the move to core.
+    *theme*: an app that is not a suite's (Nexus Releases) passes its own; the widgets draw with it from then on.
+    Without one the suite's chosen theme applies, as always."""
     appinfo.set_current(info)
+    if theme is not None:
+        set_theme(theme)
     app = QApplication.instance() or QApplication([sys.argv[0], *qt_args])
     if info.settings_org:
         app.setOrganizationName(info.settings_org)
@@ -40,7 +45,7 @@ def create_app(info: AppInfo, qt_args: Sequence[str] = (), stylesheet: str = "")
     app.setApplicationVersion(info.version)
     app.setDesktopFileName(info.app_id)
     app.setStyle("Fusion")
-    apply_theme(app, stylesheet)
+    apply_theme(app, stylesheet, current_theme())
     RoundedToolTip.install(app)     # every tooltip: rounded corners, a thin border in the accent
     if info.logo is not None and info.logo.is_file():
         app.setWindowIcon(QIcon(str(info.logo)))

@@ -14,10 +14,11 @@ from pathlib import Path
 
 import pytest
 
-from suite_releases import plan as rp
-from suite_releases.command_line import command_lines
+from nexus_releases import plan as rp
+from nexus_releases.command_line import command_lines
 
 SHA = "cd" * 32
+SUITE_DIR = "bc250-bazzite"                 # the first suite's folder, as Nexus lays the checkout out
 
 
 def card(key: str, required: bool = False) -> str:
@@ -208,10 +209,13 @@ def test_app_commands_amend_the_unpushed_release_commit():
 def test_git_button_commands():
     assert rp.add_command() == "git add -A && tools/fix-modes.sh && git status --short"
     assert rp.commit_command("Release alpha-v0.2.0", "origin/main") == (
-        f"python3 {rp.VERSIONS_CHECK} && python3 {rp.MANIFEST_CHECK} --base origin/main && "
+        f"python3 {rp.VERSIONS_CHECK} && python3 {rp.manifest_check(rp.CHECKOUT)} --base origin/main && "
         "git commit -m 'Release alpha-v0.2.0'")                       # the checks first, the commit only after
     assert rp.commit_command("it's", "pushed", python="/v/python").endswith("git commit -m 'it'\"'\"'s'")
     assert rp.commit_command("", "pushed", amend=True).endswith(" && git commit --amend --no-edit")
+    two = rp.commit_command("m", "pushed", manifests=["a/tools/check_manifest.py", "b/tools/check_manifest.py"])
+    assert two == (f"python3 {rp.VERSIONS_CHECK} && python3 a/tools/check_manifest.py --base pushed && "
+                   "python3 b/tools/check_manifest.py --base pushed && git commit -m m")   # every suite's check
     assert rp.commit_message(rp.app_commands(["alpha-v0.2.0", "beta-v0.1.0"])) == \
         ("Release alpha-v0.2.0, beta-v0.1.0", False)
     assert rp.commit_message(rp.app_commands(["alpha-v0.2.0"], amend=True)) == ("", True)
@@ -432,7 +436,7 @@ def window(repo, tmp_path):
     from PyQt6.QtWidgets import QApplication
     QSettings.setPath(QSettings.Format.IniFormat, QSettings.Scope.UserScope, str(tmp_path / "settings"))
     app = QApplication.instance() or QApplication([])          # noqa: F841 (kept alive for the window)
-    from suite_releases import main_window
+    from nexus_releases import main_window
     w = main_window.ReleaseWindow(repo, sha256_source=lambda tag: SHA, launch=launched.append, runs_source=None,
                                   status_source=None)
     w.portal_page.base_edit.setText("pushed")
@@ -535,7 +539,7 @@ def test_window_pins_a_new_app_listed_without_a_sha256_line(window, repo, monkey
     rp.set_version(repo, unit(repo, "alpha"), "0.1.1")
     sh(repo, "tag", "alpha-v0.1.1")
     window.reload()
-    monkeypatch.setattr(rp, "pin", lambda root, unit, sha: (_ for _ in ()).throw(SystemExit("no [apps.alpha]")))
+    monkeypatch.setattr(rp, "pin", lambda root, unit, sha, suite=None: (_ for _ in ()).throw(SystemExit("no [apps.alpha]")))
     page.pin()                                                # the window stays; the log says why
     assert "alpha-v0.1.1: not pinned (no [apps.alpha])." in page.output.toPlainText()
 
@@ -661,6 +665,9 @@ def test_window_check_buttons(window, repo):
     """The board checks are on the Test on this board tab (owner, 20-10-2026), not on the steps."""
     page = window.run_page
     launched.clear()
+    page.local_button.click()                                    # the suite has no check-release.sh yet
+    assert launched == [] and f"no {rp.CHECK_SCRIPT}" in page.output.toPlainText()
+    write(repo / rp.CHECK_SCRIPT, "#!/bin/sh\n")
     page.local_button.click()
     page.release_button.click()
     page.withdraw_button.click()
@@ -677,7 +684,7 @@ def test_window_records_the_portal_tour(window, repo, tmp_path, monkeypatch):
     """Record portal tour runs the suite's record-tour.sh in the background, its output in Logs, into
     ~/Videos/bc250-portal-tour-v<portal version>.mp4, and opens the video (owner, 20-10-2026)."""
     from PyQt6.QtWidgets import QApplication
-    from suite_releases import main_window
+    from nexus_releases import main_window
     page = window.run_page
     monkeypatch.setenv("HOME", str(tmp_path / "home"))
     opened = []
@@ -773,7 +780,7 @@ def test_portal_target(repo):
 
 
 def test_the_portal_is_the_first_icon_under_test_local_apps(window, repo, tmp_path, monkeypatch):
-    from suite_releases import main_window
+    from nexus_releases import main_window
     add_windows(repo)
     write(repo / "portal/bc250_portal/__main__.py", "print('portal')\n")
     monkeypatch.setattr(main_window, "LOG_DIR", tmp_path / "logs")
@@ -790,7 +797,7 @@ def test_the_portal_is_the_first_icon_under_test_local_apps(window, repo, tmp_pa
 
 def test_an_open_portal_is_warned_about_and_not_started_again(window, repo, tmp_path, monkeypatch):
     from PyQt6.QtWidgets import QMessageBox
-    from suite_releases import main_window
+    from nexus_releases import main_window
     write(repo / "portal/bc250_portal/__main__.py", "print('portal')\n")
     write(repo / "portal/bc250_portal/__init__.py", 'APP_NAME = "Suite Portal"\nAPP_ID = "suite-portal"\n')
     monkeypatch.setattr(main_window, "LOG_DIR", tmp_path / "logs")
@@ -816,7 +823,7 @@ def test_instance_running_sees_a_listening_app_and_does_not_disturb_it():
     from PyQt6.QtWidgets import QApplication
     app = QApplication.instance() or QApplication([])          # noqa: F841 (kept alive for the sockets)
     from bc250_core.instance import server_name
-    from suite_releases import main_window
+    from nexus_releases import main_window
     name = server_name("suite-test-instance")
     QLocalServer.removeServer(name)
     assert not main_window.instance_running("suite-test-instance")
@@ -862,7 +869,7 @@ def test_network_addresses_leave_out_loopback():
 
 
 def test_window_serves_the_manual(window, repo, tmp_path, monkeypatch):
-    from suite_releases import main_window
+    from nexus_releases import main_window
     write(repo / "mkdocs.yml", "site_name: S\nsite_url: https://example.invalid/suite/\n")
     monkeypatch.setattr(main_window, "LOG_DIR", tmp_path / "logs")
     started, opened, up = [], [], [False]
@@ -888,7 +895,7 @@ def test_window_serves_the_manual(window, repo, tmp_path, monkeypatch):
 
 
 def test_window_serves_the_wikis_on_the_network(window, repo, tmp_path, monkeypatch):
-    from suite_releases import main_window
+    from nexus_releases import main_window
     write(repo / "mkdocs.yml", "site_name: S\n")
     monkeypatch.setattr(main_window, "LOG_DIR", tmp_path / "logs")
     monkeypatch.setattr(rp, "network_addresses", lambda: ["192.0.2.7"])
@@ -916,7 +923,7 @@ class FakeProcess:
 
 def test_window_runs_an_app_from_the_checkout(window, repo, tmp_path, monkeypatch):
     from PyQt6.QtWidgets import QMessageBox
-    from suite_releases import main_window
+    from nexus_releases import main_window
     add_windows(repo)
     monkeypatch.setattr(main_window, "LOG_DIR", tmp_path / "logs")
     started = []
@@ -961,7 +968,7 @@ def mock_question(answer):
 
 
 def test_start_app_keeps_the_output_in_a_log(tmp_path):
-    from suite_releases import main_window
+    from nexus_releases import main_window
     log = tmp_path / "logs" / "x.log"
     process = main_window.start_app([sys.executable, "-c", "print('hello'); raise SystemExit(3)"], dict(os.environ),
                                     tmp_path, log)
@@ -1123,7 +1130,7 @@ def test_window_build_indicator_notifies_when_a_run_ends(repo, tmp_path):
     from PyQt6.QtWidgets import QApplication
     QSettings.setPath(QSettings.Format.IniFormat, QSettings.Scope.UserScope, str(tmp_path / "settings"))
     app = QApplication.instance() or QApplication([])          # noqa: F841 (kept alive for the window)
-    from suite_releases import main_window
+    from nexus_releases import main_window
     notes = []
     w = main_window.ReleaseWindow(repo, status_source=None, sha256_source=lambda tag: SHA, launch=launched.append,
                                   runs_source=lambda etag: (None, etag), notify=lambda *a: notes.append(a))
@@ -1172,7 +1179,7 @@ def test_window_tells_when_a_release_is_ready_to_pin(repo, tmp_path):
     from PyQt6.QtWidgets import QApplication
     QSettings.setPath(QSettings.Format.IniFormat, QSettings.Scope.UserScope, str(tmp_path / "settings"))
     app = QApplication.instance() or QApplication([])          # noqa: F841 (kept alive for the window)
-    from suite_releases import main_window
+    from nexus_releases import main_window
     notes, asked = [], []
 
     def sha256(tag):
@@ -1237,7 +1244,7 @@ def test_window_tells_when_a_release_is_ready_to_pin(repo, tmp_path):
 
 def test_title_names_the_checkouts_commit_and_date(window, repo, tmp_path):
     from PyQt6.QtWidgets import QLabel
-    from suite_releases import __version__
+    from nexus_releases import __version__
     head = subprocess.run(["git", "log", "-1", "--format=%h %ct"], cwd=repo, capture_output=True, text=True).stdout.split()
     when = rp.amsterdam_now(datetime.datetime.fromtimestamp(int(head[1]), datetime.timezone.utc))
     stamp = f"{head[0]} · {when:%d-%m-%Y %H:%M}"
@@ -1356,13 +1363,8 @@ def test_the_root_copy_of_apps_toml_follows_the_suites(repo, tmp_path):
     26-10-2026): every write of the suite's apps.toml, a pin, a moved unreleased pin or a withdrawal, writes the
     copy too, as long as there is one. A checkout laid out as a suite (the fixture) has no copy."""
     assert rp.manifest_copy(repo) is None
-    nexus = tmp_path / "nexus"                                # the checkout as Nexus lays it out
-    shutil.copytree(repo, nexus / rp.SUITE_DIR)
-    shutil.move(nexus / rp.SUITE_DIR / ".git", nexus / ".git")
-    shutil.move(nexus / rp.SUITE_DIR / "core", nexus / "core")
-    sh(nexus, "add", "-A")
-    sh(nexus, "commit", "-q", "-m", "move")
-    suite_toml, copy = nexus / rp.SUITE_DIR / "portal/apps.toml", nexus / "portal/apps.toml"
+    nexus = nexus_layout(repo, tmp_path)
+    suite_toml, copy = nexus / SUITE_DIR / "portal/apps.toml", nexus / "portal/apps.toml"
     assert rp.manifest_path(nexus) == suite_toml and rp.manifest_copy(nexus) is None
     copy.parent.mkdir()
     shutil.copy(suite_toml, copy)
@@ -1376,8 +1378,89 @@ def test_the_root_copy_of_apps_toml_follows_the_suites(repo, tmp_path):
     assert 'tag = "beta-v0.2.0"' in copy.read_text() and suite_toml.read_bytes() == copy.read_bytes()
     changed = rp.withdraw(nexus, unit(nexus, "beta"), "Broken.")
     assert [p.relative_to(nexus).as_posix() for p in changed] == [
-        f"{rp.SUITE_DIR}/portal/apps.toml", "portal/apps.toml", f"{rp.SUITE_DIR}/apps/beta/CHANGELOG"]
+        f"{SUITE_DIR}/portal/apps.toml", "portal/apps.toml", f"{SUITE_DIR}/apps/beta/CHANGELOG"]
     assert 'withdrawn = "Broken."' in copy.read_text() and suite_toml.read_bytes() == copy.read_bytes()
     copy.unlink()                                             # the owner removed the copy: the suite's alone
     rp.withdraw(nexus, unit(nexus, "beta"), "")
     assert "withdrawn" not in suite_toml.read_text() and not copy.exists()
+
+
+def nexus_layout(repo: Path, tmp_path: Path, *names: str) -> Path:
+    """The fixture's repository laid out as Nexus is: core and .git at the root, the suite (and a copy of it under
+    each of *names*) in a folder of its own."""
+    nexus = tmp_path / "nexus"
+    for name in (SUITE_DIR, *names):
+        shutil.copytree(repo, nexus / name)
+        if name == SUITE_DIR:
+            shutil.move(nexus / name / ".git", nexus / ".git")
+            shutil.move(nexus / name / "core", nexus / "core")
+        else:
+            shutil.rmtree(nexus / name / ".git")
+            shutil.rmtree(nexus / name / "core")
+    sh(nexus, "add", "-A")
+    sh(nexus, "commit", "-q", "-m", "move")
+    return nexus
+
+
+def test_the_suites_of_a_checkout(repo, tmp_path):
+    """Every folder with portal/apps.toml is a suite (tools/suites.py); the per-suite functions take one by name
+    and default to the first. The fixture, laid out as a suite itself, is its own one suite."""
+    assert rp.suites(repo) == [] and rp.suite_dir(repo) == repo
+    assert rp.check_script(repo) == rp.CHECK_SCRIPT == "tools/check-release.sh"
+    assert rp.manifest_checks(repo) == [rp.MANIFEST_CHECK] == ["tools/check_manifest.py"]
+    nexus = nexus_layout(repo, tmp_path, "zz-suite")
+    assert rp.suites(nexus) == [SUITE_DIR, "zz-suite"]
+    assert rp.suite_dir(nexus) == nexus / SUITE_DIR and rp.suite_dir(nexus, "zz-suite") == nexus / "zz-suite"
+    assert rp.check_script(nexus) == f"{SUITE_DIR}/tools/check-release.sh"
+    assert rp.record_script(nexus, "zz-suite") == "zz-suite/tools/record-tour.sh"
+    assert rp.manifest_checks(nexus) == [f"{SUITE_DIR}/tools/check_manifest.py", "zz-suite/tools/check_manifest.py"]
+    assert rp.manifest_path(nexus, "zz-suite") == nexus / "zz-suite/portal/apps.toml"
+    first, second = rp.load_units(nexus), rp.load_units(nexus, "zz-suite")
+    assert [u.path for u in first][:3] == ["core", f"{SUITE_DIR}/portal", f"{SUITE_DIR}/apps/alpha"]
+    assert [u.path for u in second][:3] == ["core", "zz-suite/portal", "zz-suite/apps/alpha"]
+    write(nexus / "zz-suite/apps/alpha/alpha/__main__.py", "")
+    assert [t.folder for t in rp.launch_targets(nexus, "zz-suite")] == [nexus / "zz-suite/apps/alpha"]
+    (nexus / "portal").mkdir()
+    shutil.copy(nexus / SUITE_DIR / "portal/apps.toml", nexus / "portal/apps.toml")
+    assert rp.manifest_copy(nexus) == nexus / "portal/apps.toml"      # the root's copy is the first suite's
+    assert rp.manifest_copy(nexus, "zz-suite") is None
+    assert rp.wiki_icon(nexus / "zz-suite") is None
+    write(nexus / "zz-suite/portal/images/zz-suite-suite.webp", "webp")
+    assert rp.wiki_icon(nexus / "zz-suite") == nexus / "zz-suite/portal/images/zz-suite-suite.webp"
+    write(nexus / "nexus/images/nexus-256.png", "png")
+    assert rp.wiki_icon(nexus / "nexus") == nexus / "nexus/images/nexus-256.png"
+
+
+def test_window_suite_chooser(repo, tmp_path):
+    """The header's chooser lists the suites of the checkout and is hidden while there is one; the steps follow the
+    chosen suite, the git buttons run every suite's manifest check, and the choice is remembered."""
+    pytest.importorskip("PyQt6.QtWidgets")
+    os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+    from PyQt6.QtCore import QSettings
+    from PyQt6.QtWidgets import QApplication
+    app = QApplication.instance() or QApplication([])          # noqa: F841 (kept alive for the window)
+    from nexus_releases import main_window
+    one = main_window.ReleaseWindow(repo, status_source=None, runs_source=None, claude_source=None)
+    assert one.suite is None and one.suite_box.isHidden() and "· suite" not in one.footer.text()
+    one.close()
+    nexus = nexus_layout(repo, tmp_path, "zz-suite")
+    settings = QSettings(str(tmp_path / "settings.ini"), QSettings.Format.IniFormat)
+    w = main_window.ReleaseWindow(nexus, status_source=None, runs_source=None, claude_source=None, settings=settings)
+    assert w.suite == SUITE_DIR and not w.suite_box.isHidden()
+    assert [w.suite_box.itemText(i) for i in range(w.suite_box.count())] == [SUITE_DIR, "zz-suite"]
+    assert w.units[1].path == f"{SUITE_DIR}/portal" and f"suite {SUITE_DIR}" in w.footer.text()
+    assert f"{SUITE_DIR}/tools/check_manifest.py" in w.commit_button.toolTip() \
+        and "zz-suite/tools/check_manifest.py" in w.commit_button.toolTip()      # every suite's check
+    w.suite_box.setCurrentText("zz-suite")
+    assert w.suite == "zz-suite" and w.units[1].path == "zz-suite/portal" and "suite zz-suite" in w.footer.text()
+    assert w.portal_page.portal_unit.path == "zz-suite/portal"
+    assert settings.value("suite") == "zz-suite"
+    w.close()
+    again = main_window.ReleaseWindow(nexus, status_source=None, runs_source=None, claude_source=None,
+                                      settings=settings)
+    assert again.suite == "zz-suite"                           # remembered
+    again.close()
+    chosen = main_window.ReleaseWindow(nexus, status_source=None, runs_source=None, claude_source=None,
+                                       settings=settings, suite=SUITE_DIR)
+    assert chosen.suite == SUITE_DIR and chosen.suite_box.currentText() == SUITE_DIR
+    chosen.close()

@@ -20,7 +20,8 @@ and removes them, and each suite has its own wiki. The name, the structure and h
 
 Every suite sits in a folder of its own, with its `apps/`, its `portal/` (the manifest of pinned releases and the
 installer), its wiki in `docs/`, its icons and its own tools. The root holds what they share: `core/`, the Python
-code bundled into every app at release time, `tools/`, the release and CI tools, `test.sh`, which runs every test
+code bundled into every app at release time, `tools/`, the release and CI tools, `dev/`, the development apps of
+Nexus itself (Nexus Releases, the release front end, on every suite's portal), `test.sh`, which runs every test
 suite, and `nexus/`, the Nexus page. Each suite's rules are in its folder's `CLAUDE.md`; the repository's are in the
 root's.
 

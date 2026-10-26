@@ -78,7 +78,7 @@ def test_a_category_for_its_tab():
 def test_shipped_manifest_has_a_category_for_every_app():
     entries = load(MANIFEST) + load_checkout(MANIFEST)
     assert all(e.category in CATEGORIES for e in entries)
-    assert {e.key for e in entries if e.development} == {"mtool", "package", "ncgui", "suite", "installer-tests"}
+    assert {e.key for e in entries if e.development} == {"mtool", "package", "ncgui", "releases", "installer-tests"}
 
 
 def test_short_name_for_the_tile():
@@ -134,12 +134,18 @@ def test_checkout_tables_are_development_apps_in_a_folder():
     (moved,) = parse_checkout(CHECKOUT.replace('summary = "s"', 'summary = "s"\nfolder = "tools/x/gui"'))
     assert moved.folder == "tools/x/gui"
     assert [e.key for e in parse(MINIMAL + CHECKOUT)] == ["check", "compute"]   # never pinned
+    assert not gui.nexus
+    (nexus,) = parse_checkout(CHECKOUT.replace('summary = "s"', 'summary = "s"\nfolder = "dev/gui"\nnexus = true'))
+    assert nexus.nexus and nexus.folder == "dev/gui"                        # a Nexus app: in the repository
+    assert [(e.key, e.nexus) for e in load_checkout(MANIFEST)] == [("releases", True), ("installer-tests", False)]
 
 
 @pytest.mark.parametrize("extra, message", [
     ('tag = "gui-v0.1.0"', "never released"),
     ('folder = "../outside"', "inside the checkout"),
     ('folder = "/abs"', "inside the checkout"),
+    ('nexus = "yes"', "true or false"),
+    ('nexus = true', "names its folder"),
 ])
 def test_checkout_tables_reject(extra, message):
     with pytest.raises(ManifestError, match=message):
@@ -149,3 +155,5 @@ def test_checkout_tables_reject(extra, message):
 def test_folder_only_for_checkout_tables():
     with pytest.raises(ManifestError, match="only for"):
         parse(MINIMAL.replace('summary = "s"\ntag = "co', 'summary = "s"\nfolder = "x"\ntag = "co', 1))
+    with pytest.raises(ManifestError, match="only for"):
+        parse(MINIMAL.replace('summary = "s"\ntag = "co', 'summary = "s"\nnexus = true\ntag = "co', 1))

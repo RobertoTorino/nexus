@@ -1,3 +1,33 @@
+Changelog: 26-10-2026 13:21:15
+
+Nexus Releases has Nexus's design and icon (owner, 26-10-2026: a Nexus app follows Nexus, not a suite): DESIGN.md
+says so in the Nexus rule and lists the window's colors under the Nexus page (Nexus Releases: ink surfaces, silver
+text, the teal accent, a dimmed silver edge); ICONS.md lists the copies of the Nexus drawing, which
+tools/make_icons.py writes (dev/releases/images/, the tile in bc250-bazzite/portal/images/apps/); the suite's icon
+test leaves a Nexus app's tile to that tool.
+
+Changelog: 26-10-2026 12:48:46
+
+tools/new_app.py writes a new app of a suite from the architecture chapter (owner, 26-10-2026: step 7 of the move, a
+generator rather than a template folder, so the template cannot drift from the checks): the package with __main__.py
+and a window on AppHeader, images/, tests/, install.sh, the requirements, the four files and the README, the installer
+test and the wiki chapter, and the app's lines in portal/apps.toml (and the root's copy), icons/categories.toml (with
+the icon copies), mkdocs.yml, the apps overview and categories tables, the suite README, the Dependency Checker's
+catalog and CI's matrix, installer step and shellcheck list; then the checks run on it. Each suite has its template
+behind the same command, chosen by its portal package; so far the BC250 Bazzite Suite's.
+
+Changelog: 26-10-2026 12:28:08
+
+BC250 Suite Releases is Nexus Releases, a Nexus app in dev/releases/ (owner, 26-10-2026: one release tool for Nexus,
+not one per suite; step 6 of the move): dev/<name>/ holds the Nexus-level development apps, laid out as a suite's apps
+are (tools/tests/test_layout.py, tools/check_versions.py, test.sh and the CI matrix take them in); the suite keeps
+the board checks of a portal release as bc250-bazzite/tools/check-release.sh (from apps/suite/check-release.sh), its
+installer test is tools/installer-tests/releases.sh, its tile portal/images/apps/releases.webp, and
+icons/categories.toml names the icon's new place. bc250-bazzite/tools/check_manifest.py looks for a Nexus app's
+.checkout-only marker in the repository; tools/check_changelogs.py follows a CHANGELOG that git sees moved (a git mv,
+staged or committed), so the move loses no history; the wiki's hook copies the pictures of the checkout-only apps
+from the folders apps.toml names; tools/release.sh starts dev/releases/run.sh.
+
 Changelog: 26-10-2026 11:55:20
 
 bc250-bazzite/tools/pin_app.py writes the root's copy of portal/apps.toml as well as the suite's, while there is

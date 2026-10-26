@@ -66,5 +66,5 @@ Every app with its icon and its category.
 | ![](../assets/apps/mtool.webp){ .app-icon } [Media Tool](../other-tools/media-tool.md) | Development |
 | ![](../assets/apps/package.webp){ .app-icon } [Dependency Checker](package.md) | Development |
 | ![](../assets/apps/ncgui.webp){ .app-icon } [Bazzite NetcatGUI](ncgui.md) | Development |
-| ![](../assets/apps/suite.webp){ .app-icon } [BC250 Suite Releases](../portal.md#the-release-front-end) | Development |
+| ![](../assets/apps/releases.webp){ .app-icon } [Nexus Releases](../portal.md#the-release-front-end) | Development |
 | ![](../assets/apps/installer-tests.webp){ .app-icon } [BC-250 Installer Tests](../development/architecture.md#tests) | Development |

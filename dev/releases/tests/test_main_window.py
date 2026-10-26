@@ -11,7 +11,7 @@ from PyQt6.QtWidgets import QApplication, QWidget
 @pytest.fixture
 def window():
     app = QApplication.instance() or QApplication([])
-    from suite_releases.main_window import ReleaseWindow
+    from nexus_releases.main_window import ReleaseWindow
     w = ReleaseWindow(runs_source=lambda etag: ([], ""), launch=lambda line: None, notify=lambda s, b: True,
                       status_source=None)
     w.build.checker.stop(2000)
@@ -59,11 +59,12 @@ def test_the_header_is_a_row_of_pills(window):
     assert w.refresh_pill.minimumWidth() >= w.status.sizeHint().width()
 
 
-def test_selection_is_a_purple_outline(window):
-    """A selected cell and the focused input field: a purple rounded outline on a transparent background, not the
-    desktop's solid highlight (rendered: the cell's middle keeps the table's own background)."""
+def test_selection_is_a_teal_outline(window):
+    """A selected cell and the focused input field: a rounded outline in Nexus's teal on a transparent background,
+    not the desktop's solid highlight (rendered: the cell's middle keeps the table's own background)."""
     from PyQt6.QtGui import QColor
-    from bc250_core.theme import ACCENT
+    from nexus_releases.style import NEXUS
+    ACCENT = NEXUS.accent
     w, app = window
     w.show()
     table = w.apps_page.table
@@ -85,14 +86,14 @@ def test_selection_is_a_purple_outline(window):
 def test_a_second_launch_opens_no_window(monkeypatch):
     """A double-click on the Desktop icon starts the app twice: the second launch hands over to the first."""
     from bc250_core import instance
-    import suite_releases.__main__ as entry
-    import suite_releases.main_window as main_window
+    import nexus_releases.__main__ as entry
+    import nexus_releases.main_window as main_window
     app = QApplication.instance() or QApplication([])
     asked = []
     monkeypatch.setattr(entry, "create_app", lambda *a, **k: app)
     monkeypatch.setattr(instance, "already_running", lambda app_id: asked.append(app_id) or True)
     monkeypatch.setattr(main_window, "ReleaseWindow", lambda *a, **k: pytest.fail("a second window was opened"))
-    monkeypatch.setattr("sys.argv", ["suite_releases"])
+    monkeypatch.setattr("sys.argv", ["nexus_releases"])
     assert entry.main() == 0 and asked == [entry.INFO.app_id]
 
 
@@ -133,7 +134,7 @@ def test_the_logs_are_tabs_of_their_own(window, monkeypatch):
 
 
 def test_a_step_offers_its_commands(window):
-    from suite_releases import plan as rp
+    from nexus_releases import plan as rp
     w, _app = window
     w.commands.offer(rp.app_commands(["alpha-v0.1.1"]))
     assert w.commands.offered[-1] == f"{rp.TAG_SCRIPT} alpha-v0.1.1" and w.commands.commands_button.isEnabled()
@@ -153,7 +154,7 @@ SUMMARY_UP = {"status": {"indicator": "none", "description": "All Systems Operat
 def test_github_status_is_read_from_the_status_page(monkeypatch):
     import io
     import json
-    from suite_releases import plan as rp
+    from nexus_releases import plan as rp
     down = rp.parse_github_status(SUMMARY_DOWN)
     assert not down.up and down.description == "Partially Degraded Service"
     assert down.affected == ("Actions: degraded performance", "Pages: major outage")
@@ -182,8 +183,8 @@ def test_github_status_is_a_pill_that_opens_the_status_page(window, monkeypatch)
     https://www.githubstatus.com/ (owner, 19-10-2026). A pill, as the apps' status boxes (owner, 20-10-2026)."""
     from PyQt6.QtGui import QColor, QDesktopServices
     from bc250_core.theme import GREEN, GREY, RED
-    from suite_releases import main_window
-    from suite_releases import plan as rp
+    from nexus_releases import main_window
+    from nexus_releases import plan as rp
     w, _app = window
     status = main_window.GitHubStatusIndicator(lambda: rp.parse_github_status(SUMMARY_DOWN))
     assert not status.isHidden() and status.caption.text() == "GitHub status" and status.state == ""
@@ -219,7 +220,7 @@ def test_claude_usage_counts_each_answer_once(tmp_path):
     several parts counts once, Claude Code's own notes (<synthetic>) and other lines not at all."""
     import datetime
     import os
-    from suite_releases import plan as rp
+    from nexus_releases import plan as rp
     now = datetime.datetime(2026, 10, 21, 12, 0).timestamp()
 
     def at(hours_ago: float) -> str:
@@ -252,8 +253,8 @@ def test_claude_usage_is_a_pill_that_opens_the_usage_page(window, monkeypatch):
     click opens Claude's usage page."""
     from PyQt6.QtGui import QDesktopServices
     from bc250_core.theme import BLUE
-    from suite_releases import main_window
-    from suite_releases import plan as rp
+    from nexus_releases import main_window
+    from nexus_releases import plan as rp
     w, _app = window
     w.claude.checked(w.claude._fetch())
     assert w.claude.isHidden()                                                # conftest: no Claude Code
@@ -280,8 +281,8 @@ def test_close_issues_lists_the_open_ones_and_closes_the_ticked(window):
     """Close issues (Test on this board): the open issues with a tick box each; Run closes the ticked ones with gh
     issue close in the Commands tab."""
     from PyQt6.QtCore import Qt
-    from suite_releases import main_window
-    from suite_releases import plan as rp
+    from nexus_releases import main_window
+    from nexus_releases import plan as rp
     w, _app = window
     issues = [rp.Issue(12, "Upstream review", "https://github.com/o/r/issues/12", "2026-10-20"),
               rp.Issue(9, "Backlog review", "https://github.com/o/r/issues/9", "2026-10-19")]
@@ -312,3 +313,42 @@ def test_close_issues_lists_the_open_ones_and_closes_the_ticked(window):
     w.commands.run_now = lambda command: False
     w.run_page.run_close([9], "")
     assert "nothing was closed" in w.run_page.output.toPlainText()
+
+
+def test_the_window_has_nexus_design(window):
+    """A Nexus app, not a suite's (owner, 26-10-2026): create_app() puts Nexus's theme on the application (ink,
+    silver, teal: nexus/docs/stylesheets/nexus.css), the widgets draw with it, and the icon is the Nexus drawing."""
+    from PyQt6.QtGui import QPalette
+    from bc250_core import widgets
+    from bc250_core.app import create_app
+    from nexus_releases import INFO, LOGO_PATH
+    from nexus_releases.style import EDGE, INK, MAIN, NEXUS, SILVER, TEAL
+    w, _app = window
+    app = create_app(INFO, [], theme=NEXUS)
+    palette = app.palette()
+    assert palette.color(QPalette.ColorRole.Window).name() == INK
+    assert palette.color(QPalette.ColorRole.Base).name() == MAIN
+    assert palette.color(QPalette.ColorRole.WindowText).name() == SILVER
+    assert palette.color(QPalette.ColorRole.Highlight).name() == TEAL
+    assert palette.color(QPalette.ColorRole.HighlightedText).name() == INK
+    assert widgets.current_theme() is NEXUS and widgets.accent() == TEAL
+    assert f"stop:0 {MAIN}, stop:1 {INK}" in w.status.styleSheet() and f"color:{SILVER}" in w.status.styleSheet()
+    assert f"border:1px solid {EDGE}" in w.refresh_pill.styleSheet()
+    assert f"border-color:{TEAL}" in w.refresh_pill.styleSheet()
+    assert f"border:2px solid {TEAL}" in w.apps_page.apply_button.styleSheet()
+    assert LOGO_PATH.name == "nexus-releases.webp" and app.windowIcon().availableSizes()
+    assert "#6a1b9a" not in w.styleSheet() and "#7e97ad" not in w.styleSheet()        # nothing of the Bazzite suite
+
+
+def test_the_icons_are_the_nexus_drawing():
+    """The app's icon, its menu icon and its tile on the BC250 suite's portal are the Nexus drawing at 512, 128 and
+    256 px (tools/make_icons.py writes them, lossless, so the pixels are the drawing's)."""
+    Image = pytest.importorskip("PIL.Image")
+    from nexus_releases import ROOT
+    nexus = ROOT.parents[1] / "nexus" / "images"
+    tile = ROOT.parents[1] / "bc250-bazzite" / "portal" / "images" / "apps" / "releases.webp"
+    for copy, size in ((ROOT / "images" / "nexus-releases.webp", 512), (ROOT / "images" / "nexus-releases-128.png", 128),
+                       (tile, 256)):
+        with Image.open(copy) as got, Image.open(nexus / f"nexus-{size}.png") as want:
+            assert got.size == (size, size) == want.size, copy.name
+            assert got.convert("RGBA").tobytes() == want.convert("RGBA").tobytes(), copy.name

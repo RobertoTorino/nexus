@@ -44,9 +44,14 @@ def test_category_has_every_size(category):
 
 def test_every_app_icon_comes_from_a_category():
     """No app icon or portal tile outside icons/categories.toml: one left there keeps an old icon. An app's icons
-    are found by their PNG (the screenshots beside them are WebP too)."""
+    are found by their PNG (the screenshots beside them are WebP too). A Nexus app's tile (nexus = true in
+    portal/apps.toml: Nexus Releases) is the Nexus icon, written by tools/make_icons.py, not a category's."""
+    import tomllib
+    checkout = tomllib.loads((SUITE / "portal" / "apps.toml").read_text(encoding="utf-8")).get("checkout", {})
+    nexus = {f"{key}.webp" for key, entry in checkout.items() if entry.get("nexus")}
+    assert nexus == {"releases.webp"}
     icons = {*SUITE.glob("apps/*/images/*.png"), *SUITE.glob("tools/installer-tests/gui/images/*.png"),
-             *(p for p in SUITE.glob("portal/images/apps/*.*") if p.name != "portal.webp")}   # the suite's own
+             *(p for p in SUITE.glob("portal/images/apps/*.*") if p.name != "portal.webp" and p.name not in nexus)}
     assert sorted(p.relative_to(SUITE).as_posix() for p in icons - set(sync_icons.copies())) == []
 
 
@@ -58,6 +63,8 @@ def test_portal_tabs_follow_the_icon_categories():
     table = tomllib.loads((SUITE / "icons" / "categories.toml").read_text(encoding="utf-8"))
     path = SUITE / check_manifest.MANIFEST
     entries = check_manifest.manifest.load(path) + check_manifest.manifest.load_checkout(path)
+    assert [e.key for e in entries if e.nexus] == ["releases"]           # a Nexus app: the Nexus icon, no category icon
+    entries = [e for e in entries if not e.nexus]
     assert {e.key: e.category for e in entries} == {e.key: table[e.key]["category"] for e in entries}
     assert set(check_manifest.manifest.CATEGORIES) == {p.name for p in (SUITE / "icons").iterdir() if p.is_dir()}
 

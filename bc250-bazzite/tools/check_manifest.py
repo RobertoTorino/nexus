@@ -7,8 +7,9 @@
 * The manifest parses and lists exactly the portal apps under apps/. An app folder with a ``.standalone`` marker
   is not a portal app and must not be listed. The [checkout.<name>] tables list exactly the app folders with a
   ``.checkout-only`` marker (they run from the checkout and are never released); a table whose ``folder`` lies
-  outside apps/ needs that marker there too. Every app has a category (its tab in the portal); the parser accepts
-  none only to read the manifests of earlier portal releases.
+  outside apps/ needs that marker there too, in the repository for a Nexus app (``nexus = true``: dev/releases).
+  Every app has a category (its tab in the portal); the parser accepts none only to read the manifests of earlier
+  portal releases.
 * The copy at the repository root, portal/apps.toml, which the portals installed before the suite moved into
   bc250-bazzite/ read at a tag for their update notice, is identical (while the root keeps one).
 * Every pinned tag exists. Without --require-tags a tag that does not exist yet is accepted when its version equals
@@ -97,12 +98,17 @@ def check_entries(entries, require_tags: bool) -> list[str]:
 
 
 def check_checkout_entries(entries) -> list[str]:
+    """Every app folder with the marker is listed, and every listed folder has it: in the suite, or in the
+    repository for a Nexus app."""
     marked = {f"apps/{p.name}" for p in (SUITE / "apps").iterdir() if (p / CHECKOUT_ONLY_MARKER).is_file()}
-    listed = {e.folder or f"apps/{e.key}": e.key for e in entries}
+    listed = {e.folder or f"apps/{e.key}": e for e in entries if not e.nexus}
+    nexus = {e.folder: e for e in entries if e.nexus}
     return ([f"{folder} has {CHECKOUT_ONLY_MARKER} but no [checkout.{folder.removeprefix('apps/')}] in {MANIFEST}"
              for folder in sorted(marked - set(listed))] +
-            [f"{MANIFEST} [checkout.{key}]: {folder} has no {CHECKOUT_ONLY_MARKER}"
-             for folder, key in sorted(listed.items()) if not (SUITE / folder / CHECKOUT_ONLY_MARKER).is_file()])
+            [f"{MANIFEST} [checkout.{e.key}]: {folder} has no {CHECKOUT_ONLY_MARKER}"
+             for folder, e in sorted(listed.items()) if not (SUITE / folder / CHECKOUT_ONLY_MARKER).is_file()] +
+            [f"{MANIFEST} [checkout.{e.key}]: {folder} (nexus = true) has no {CHECKOUT_ONLY_MARKER} in the repository"
+             for folder, e in sorted(nexus.items()) if not (SUITE.parent / folder / CHECKOUT_ONLY_MARKER).is_file()])
 
 
 def check_root_copy() -> list[str]:

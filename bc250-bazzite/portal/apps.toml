@@ -25,7 +25,8 @@
 # [checkout.<name>]: an app that runs from the suite checkout and is never released (apps/<name>/.checkout-only).
 # Its category is development; only a portal that runs from a checkout, or was installed from one, can install
 # it (its install and uninstall run in apps/<name> of that checkout). Without a checkout its tile is greyed. The same fields as above, without tag, sha256 and
-# required, plus an optional folder (default apps/<name>) for one that lives elsewhere in the checkout.
+# required, plus an optional folder (default apps/<name>) for one that lives elsewhere in the checkout; with
+# nexus = true the app is Nexus's (every suite's), and its folder is relative to the repository (dev/releases).
 
 [apps.check]
 name = "BC-250 Bazzite Test"
@@ -449,15 +450,17 @@ uninstall = ["bash install.sh --uninstall"]
 detect = ["~/.local/bin/bc250-xenia-manager"]
 launch = [["Open", "~/.local/bin/bc250-xenia-manager"]]
 
-[checkout.suite]
-name = "BC250 Suite Releases"
-summary = "The release front end: versions, pins and the board checks of a release. Edits the checkout it runs from."
+[checkout.releases]
+name = "Nexus Releases"
+summary = "The release front end: versions, pins and the board checks of a release of a suite. Edits the checkout it runs from."
+folder = "dev/releases"
+nexus = true
 changes_board = false
 category = "development"
 install = ["bash install.sh"]
 uninstall = ["bash install.sh --uninstall"]
-detect = ["~/.local/bin/bc250-release"]
-launch = [["Open", "~/.local/bin/bc250-release"]]
+detect = ["~/.local/bin/nexus-releases"]
+launch = [["Open", "~/.local/bin/nexus-releases"]]
 
 [checkout.installer-tests]
 name = "BC-250 Installer Tests"

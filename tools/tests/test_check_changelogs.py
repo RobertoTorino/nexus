@@ -74,6 +74,21 @@ def test_a_changelog_goes_only_with_its_folder(repo):
     assert cc.check(repo, "pushed") == []                     # an app removed
 
 
+def test_a_changelog_follows_a_git_mv(repo):
+    """An app moved elsewhere (bc250-bazzite/apps/suite to dev/releases, 26-10-2026): its CHANGELOG is compared with
+    its new place, staged or committed, and still loses nothing."""
+    (repo / "dev").mkdir()
+    git(repo, "mv", "apps/alpha", "dev/alpha")
+    assert cc.renamed(repo, "pushed") == {"apps/alpha/CHANGELOG": "dev/alpha/CHANGELOG"}
+    assert cc.check(repo, "pushed") == []                     # staged
+    git(repo, "commit", "-qm", "moved")
+    (repo / "dev/alpha/CHANGELOG").write_text(NEW + OLD)
+    assert cc.check(repo, "pushed") == []                     # committed, with a new entry
+    (repo / "dev/alpha/CHANGELOG").write_text(NEW)
+    assert cc.check(repo, "pushed") == ["apps/alpha/CHANGELOG: 2 of the 2 entries it had at pushed are gone "
+                                        "(the newest: 'Changelog: 02-10-2026 10:00:00')"]
+
+
 def test_without_a_base_it_passes(capsys):
     assert cc.main([]) == 0
     assert "nothing to compare" in capsys.readouterr().out

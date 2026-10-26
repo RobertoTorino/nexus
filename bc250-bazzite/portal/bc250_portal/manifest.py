@@ -26,7 +26,7 @@ RENAMED = {"ace-queues": "ace", "bazzite-netcatgui": "ncgui", "bazzite-datstatio
            "shadps4-manager": "shadps4", "vita3k-manager": "vita3k",
            "demo-tool": "mtool", "dtool": "mtool", "dependency-checker": "package",
            "persistent-acpi": "acpi", "sftp-tools": "sftp",
-           "suite-releases": "suite", "usb-wifi": "wdriver",
+           "suite-releases": "suite", "suite": "releases", "usb-wifi": "wdriver",
            "system-overlay": "overlay", "helixsr": "upscaler"}
 
 
@@ -46,6 +46,7 @@ class AppEntry:
     category: str = ""                          # a key of CATEGORIES; "" only in a manifest from before categories
     checkout_only: bool = False                 # [checkout.<key>]: installs from its folder in the suite checkout
     folder: str = ""                            # checkout-only: that folder, relative to the checkout (apps/<key>)
+    nexus: bool = False                         # checkout-only: a Nexus app, its folder relative to the repository
     install: tuple[str, ...] = ()
     uninstall: tuple[str, ...] = ()
     detect: tuple[str, ...] = ()
@@ -89,14 +90,20 @@ def _entry(key: str, raw: dict, table: str = "apps") -> AppEntry:
         if not isinstance(raw.get(field), str) or not raw[field].strip():
             raise ManifestError(f"[{table}.{key}] needs a non-empty {field}")
     folder = ""
+    nexus = False
     if checkout_only:
         if any(field in raw for field in ("tag", "sha256", "required")):
             raise ManifestError(f"[{table}.{key}] is never released: no tag, sha256 or required")
         folder = raw.get("folder", f"apps/{key}")
         if not isinstance(folder, str) or not folder.strip() or folder.startswith("/") or ".." in folder.split("/"):
             raise ManifestError(f"[{table}.{key}] folder must be a path inside the checkout, like apps/{key}")
-    elif "folder" in raw:
-        raise ManifestError(f"[{table}.{key}] folder is only for [checkout.*] apps")
+        nexus = raw.get("nexus", False)
+        if not isinstance(nexus, bool):
+            raise ManifestError(f"[{table}.{key}] nexus must be true or false")
+        if nexus and "folder" not in raw:
+            raise ManifestError(f"[{table}.{key}] a Nexus app names its folder in the repository (dev/{key})")
+    elif "folder" in raw or "nexus" in raw:
+        raise ManifestError(f"[{table}.{key}] folder and nexus are only for [checkout.*] apps")
     else:
         match = _TAG.match(raw["tag"])
         if not match or match["app"] != key:
@@ -123,7 +130,7 @@ def _entry(key: str, raw: dict, table: str = "apps") -> AppEntry:
         raise ManifestError(f"[{table}.{key}] launch must be a list of [label, command] pairs")
     entry = AppEntry(key=key, name=raw["name"], summary=raw["summary"], tag=raw.get("tag", ""), sha256=sha,
                      required=bool(raw.get("required", False)), changes_board=bool(raw.get("changes_board", False)),
-                     category=category, checkout_only=checkout_only, folder=folder,
+                     category=category, checkout_only=checkout_only, folder=folder, nexus=nexus,
                      install=_strings(key, "install", raw.get("install")),
                      uninstall=_strings(key, "uninstall", raw.get("uninstall")),
                      detect=_strings(key, "detect", raw.get("detect")),

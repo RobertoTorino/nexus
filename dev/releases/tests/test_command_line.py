@@ -13,8 +13,8 @@ from PyQt6.QtCore import QEvent, QSettings, Qt
 from PyQt6.QtGui import QKeyEvent
 from PyQt6.QtWidgets import QApplication
 
-from suite_releases import plan as rp
-from suite_releases.command_line import HISTORY_KEY, CommandLine, command_lines, plain
+from nexus_releases import plan as rp
+from nexus_releases.command_line import HISTORY_KEY, CommandLine, command_lines, plain
 
 needs_bash = pytest.mark.skipif(not shutil.which("bash") or not sys.platform.startswith("linux"),
                                 reason="runs bash as on the board")
@@ -89,7 +89,7 @@ def test_commands_offered_go_on_the_line_not_run(app, tmp_path):
 
 
 def test_without_bash_it_says_so(app, tmp_path, monkeypatch):
-    monkeypatch.setattr("suite_releases.command_line.find_bash", lambda: None)
+    monkeypatch.setattr("nexus_releases.command_line.find_bash", lambda: None)
     pane = CommandLine(tmp_path)
     assert not pane.line.isEnabled() and "No bash found" in pane.output.toPlainText()
 

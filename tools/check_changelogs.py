@@ -7,7 +7,8 @@
 Every entry a CHANGELOG had at REF (the last push, or the PR base) must still be in it: its "Changelog: <time>"
 line, as often as it was there. The text of an old entry may be corrected; an entry that went, or a file cut down to
 its newest entries, fails. A CHANGELOG may only go together with its folder (an app removed). A CHANGELOG that moved
-into a suite's folder since REF (apps/x/CHANGELOG to bc250-bazzite/apps/x/CHANGELOG) is compared with its new place.
+since REF (git's rename detection: bc250-bazzite/apps/suite/CHANGELOG to dev/releases/CHANGELOG, staged or committed)
+or into a suite's folder (apps/x/CHANGELOG to bc250-bazzite/apps/x/CHANGELOG) is compared with its new place.
 Without --base there is nothing to compare with, and the check passes."""
 
 from __future__ import annotations
@@ -46,11 +47,26 @@ def moved(root: Path, path: str) -> Path | None:
     return None
 
 
+def renamed(root: Path, base: str) -> dict[str, str]:
+    """The CHANGELOGs git sees moved since *base* (a git mv, committed or still staged), old path to new. Git
+    finds a move by the file's content, so the committed moves are read against HEAD (where the file still is what
+    it was), the staged ones against the working tree."""
+    found = {}
+    for target in (["HEAD"], []):
+        out = git(root, "diff", "-M", "--name-status", "--diff-filter=R", base, *target, "--", "*CHANGELOG") or ""
+        for line in out.splitlines():
+            parts = line.split("\t")
+            if len(parts) == 3 and parts[0].startswith("R"):
+                found.setdefault(parts[1], parts[2])
+    return found
+
+
 def check(root: Path, base: str) -> list[str]:
     """What each CHANGELOG lost since *base*, one line per file; empty when nothing went."""
     problems = []
+    moves = renamed(root, base)
     for path in changelogs(root, base):
-        file = root / path
+        file = root / moves.get(path, path)
         if not file.is_file():
             file = moved(root, path) or file
         if not file.is_file():

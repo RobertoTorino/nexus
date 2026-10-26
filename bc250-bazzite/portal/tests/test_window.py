@@ -625,10 +625,10 @@ def test_checkout_only_app_has_no_update(qapp, home, settings_dir, tmp_path, lau
     sources = FakeSources(tmp_path / "work")
     sources.checkout = Path("/checkout")                                    # a portal from a checkout
     w = mw.MainWindow(entries, sources, Records(tmp_path / "installed.json"))
-    card = w.cards["suite"]
+    card = w.cards["releases"]
     assert w.grids["development"].indexOf(card) >= 0
-    (home / ".local" / "bin" / "bc250-release").write_text("#!/bin/sh\n")
-    w.records.set("suite", "local")
+    (home / ".local" / "bin" / "nexus-releases").write_text("#!/bin/sh\n")
+    w.records.set("releases", "local")
     w.refresh()
     assert card.status == "Installed" and card.dot.isHidden() and "suite checkout" in card.icon.toolTip()
     w.close()
@@ -660,7 +660,7 @@ def test_a_release_portal_finds_the_checkout_without_asking(qapp, home, settings
     from bc250_portal import remembered_checkout
     monkeypatch.setattr(mw.QFileDialog, "getExistingDirectory", lambda *a: pytest.fail("asked for a folder"))
     monkeypatch.setattr(QMessageBox, "question", lambda *a: pytest.fail("asked a question"))
-    (home / ".local/bin/bc250-release").write_text(f'#!/bin/sh\nexec "{SUITE}/apps/suite/run.sh"\n')
+    (home / ".local/bin/nexus-releases").write_text(f'#!/bin/sh\nexec "{SUITE.parent}/dev/releases/run.sh"\n')
     entries = load(MANIFEST) + load_checkout(MANIFEST)
     sources = FakeSources(tmp_path / "work")                                # a release: no checkout of its own
     w = mw.MainWindow(entries, sources, Records(tmp_path / "installed.json"))
@@ -703,7 +703,7 @@ def test_a_folder_that_is_not_the_suite_is_refused(qapp, home, settings_dir, tmp
     entries = load(MANIFEST) + load_checkout(MANIFEST)
     sources = FakeSources(tmp_path / "work")
     w = mw.MainWindow(entries, sources, Records(tmp_path / "installed.json"))
-    w.install(w.cards["suite"].entry)
+    w.install(w.cards["releases"].entry)
     assert "is not a BC250 Bazzite Suite checkout" in warned[0]
     assert sources.apps_checkout is None and sources.prepared == [] and remembered_checkout() is None
     w.close()
@@ -712,9 +712,9 @@ def test_a_folder_that_is_not_the_suite_is_refused(qapp, home, settings_dir, tmp
 def test_an_installed_checkout_app_still_opens(qapp, home, settings_dir, tmp_path, launched):
     entries = load(MANIFEST) + load_checkout(MANIFEST)
     w = mw.MainWindow(entries, FakeSources(tmp_path / "work"), Records(tmp_path / "installed.json"))
-    (home / ".local" / "bin" / "bc250-release").write_text("#!/bin/sh\n")   # installed from a checkout before
+    (home / ".local" / "bin" / "nexus-releases").write_text("#!/bin/sh\n")   # installed from a checkout before
     w.refresh()
-    card = w.cards["suite"]
+    card = w.cards["releases"]
     assert card.status == "Reinstall needed" and card.icon.isEnabled() and card.uninstall_button.isEnabled()
     assert w.cards["mtool"].install_button.isEnabled()                  # released development apps as usual
     w.close()

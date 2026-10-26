@@ -139,8 +139,8 @@ def test_shipped_manifest_passes_without_required_tags():
     assert {"mtool", "package"} <= {entry.key for entry in entries if entry.development}
     checkout = cm.manifest.load_checkout(cm.SUITE / cm.MANIFEST)
     assert cm.check_checkout_entries(checkout) == []
-    assert [(entry.key, entry.folder) for entry in checkout] == [
-        ("suite", "apps/suite"), ("installer-tests", "tools/installer-tests/gui")]
+    assert [(entry.key, entry.folder, entry.nexus) for entry in checkout] == [
+        ("releases", "dev/releases", True), ("installer-tests", "tools/installer-tests/gui", False)]
 
 
 def test_every_app_needs_a_category():
@@ -151,13 +151,24 @@ def test_every_app_needs_a_category():
         "[apps.gpu] needs a category: one of sustainable, graphics, gaming, utilities, development"]
 
 
-def test_checkout_tables_match_the_checkout_only_folders():
+def test_checkout_tables_match_the_checkout_only_folders(tmp_path, monkeypatch):
     entry = cm.manifest.AppEntry(key="gpu", name="Gov", summary="s", tag="", checkout_only=True)
     errors = cm.check_checkout_entries([entry])
-    assert any("suite has .checkout-only" in e for e in errors)
     assert any("[checkout.gpu]: apps/gpu has no .checkout-only" in e for e in errors)
+    suite = tmp_path / "suite"                                  # a suite with a marked app that is not listed
+    (suite / "apps" / "marked").mkdir(parents=True)
+    (suite / "apps" / "marked" / ".checkout-only").write_text("No releases.\n")
+    monkeypatch.setattr(cm, "SUITE", suite)
+    assert cm.check_checkout_entries([]) == ["apps/marked has .checkout-only but no [checkout.marked] in portal/apps.toml"]
+    monkeypatch.undo()
     elsewhere = cm.manifest.AppEntry(key="gui", name="G", summary="s", tag="", checkout_only=True, folder="tools")
     assert any("[checkout.gui]: tools has no .checkout-only" in e for e in cm.check_checkout_entries([elsewhere]))
+    nexus = cm.manifest.AppEntry(key="x", name="X", summary="s", tag="", checkout_only=True, folder="dev/x", nexus=True)
+    errors = cm.check_checkout_entries([nexus])
+    assert any("[checkout.x]: dev/x (nexus = true) has no .checkout-only in the repository" in e for e in errors)
+    releases = cm.manifest.AppEntry(key="releases", name="R", summary="s", tag="", checkout_only=True,
+                                    folder="dev/releases", nexus=True)
+    assert not any("releases" in e for e in cm.check_checkout_entries([releases]))   # the marker is in dev/releases
 
 
 def test_checkout_table_change_needs_a_patch_bump():

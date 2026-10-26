@@ -330,11 +330,27 @@ not run one.
 
   An app at 0.x follows the same table: a new feature takes 0.1.4 to 0.2.0, a breaking change to 1.0.0. The portal
   moves at least as far as the largest app release it pins, and a minor step when an app is added or removed.
-  BC250 Suite Releases offers that version first; `tools/tests/test_changelog_kinds.py` checks the entries.
+  Nexus Releases offers that version first; `tools/tests/test_changelog_kinds.py` checks the entries.
 - Each app is released on its own tag, `<name>-v<x.y.z>`. The portal pins one release of each app in
   `bc250-bazzite/portal/apps.toml`. The steps are in [Portal](../portal.md#appstoml-and-releases).
 
 ## Adding a new app
+
+`tools/new_app.py` writes a new app from this chapter and lists it wherever the suite lists its apps, so the
+template cannot drift from the checks; it then runs the checks on it:
+
+```bash
+python3 tools/new_app.py bc250-bazzite fan2 "BC-250 Fan Two" --category sustainable --summary "What it does."
+python3 tools/new_app.py --help     # --id, --package: the app id and the package, when the defaults are not yours
+```
+
+It writes `bc250-bazzite/apps/<name>/` (the package with `__main__.py` and a window on `AppHeader`, `images/`,
+`tests/`, `install.sh`, the requirements, `VERSION` 0.1.0, `CHANGELOG`, `LICENSE`, `.gitignore`, `README.md`),
+the installer test `bc250-bazzite/tools/installer-tests/<name>.sh` and the chapter `bc250-bazzite/docs/apps/<name>.md`,
+and adds the app to `portal/apps.toml`, `icons/categories.toml` (with the icon copies), `mkdocs.yml`, the apps
+overview and categories tables, the suite README, the Dependency Checker's catalog and CI's pytest matrix,
+installer step and shellcheck list. What it does by hand, step by step, for an app that does not fit the template
+(the owner's decision):
 
 1. Copy the folder of the app closest to yours, rename the package, and set `APP_NAME`, `APP_ID`, `VERSION`
    (0.1.0) and `__version__`. Clear its `CHANGELOG` and start it with one entry.
@@ -353,7 +369,9 @@ not run one.
 9. Run the checks from [Development](index.md) and every installer test.
 
 The tests in step 9 tell you what you missed: an app without an installer test, a catalog that does not match
-the requirements files, a version copy that does not match `VERSION`, a package in a wrapper folder.
+the requirements files, a version copy that does not match `VERSION`, a package in a wrapper folder. After the
+generator, what is left is the app itself: its window and tests, its chapter, its CHANGELOG entries, the catalog
+for a package or tool beyond PyQt6, and the portal bump the new entry asks for.
 
 ## The checks at a glance
 

@@ -1,3 +1,10 @@
+Changelog: 26-10-2026 13:21:15
+
+Added. widgets: the theme the widgets draw with can be set (set_theme(), current_theme(), accent()), and
+create_app(theme=) sets the one an app passes: an app that is not a suite's draws with its own design (owner,
+26-10-2026: Nexus Releases takes Nexus's). Without one the suite's chosen theme applies, as before; theme.py is
+unchanged, so the apps' copies of it stay equal.
+
 Changelog: 26-10-2026 04:16:33
 
 Fixed. widgets: a MetricBox or Pill with the neutral color (GRAY, the default) has the suite's blue left edge, as

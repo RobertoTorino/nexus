@@ -30,12 +30,18 @@ installed and always listed first; every other listed app is an optional tile. T
   `~/.local/share/bc250-bazzite-suite/venv` holds only PyQt6 and pygame-ce (the portal's controller reader).
 - `tools/`: the Nexus tools: release and CI (`stage_app.py`, `build_release.py`, `check_versions.py`,
   `check_changelogs.py`, `tag-release.sh`, `release.sh`, `ci-local.sh`, `pre-push.sh`, `fix-modes.sh`,
-  `backlog.py`), the design and icon catalogs (`make_design.py`, `make_icons.py`, `apply_design.py`), the tours
+  `backlog.py`), `new_app.py` (a new app of a suite from the architecture chapter, listed everywhere the suite
+  lists its apps, with the checks run on it), the design and icon catalogs (`make_design.py`, `make_icons.py`, `apply_design.py`), the tours
   (`app_tour.py`, `tour_frames.py`), `build_windows_exe.py`, `mkdocs/` (the design panel) and `tools/tests/`.
   A tool that works on a suite takes it with `--suite` (`tools/suites.py`: the folders with `portal/apps.toml`);
   with one suite in the checkout it is the default.
+- `dev/<name>/`: the Nexus-level development apps, laid out as a suite's apps are (the package, `images/`,
+  `tests/`, `install.sh`, `run.sh` and the four files; `.standalone` and `.checkout-only`: never released). Each
+  suite's portal lists them on its Development tab as `[checkout.<name>]` with `nexus = true` and `folder`, and
+  each has an installer test in the suite's `tools/installer-tests/`. `dev/releases/` is **Nexus Releases**, the
+  release front end (see Releases).
 - `DESIGN.md` and `ICONS.md`: every color and every icon, per suite and the Nexus page; `test.sh` runs every test
-  suite (core, tools, and each suite's portal, tools and apps); `portal/apps.toml` at the root is a copy of the
+  suite (core, tools, `dev/`, and each suite's portal, tools and apps); `portal/apps.toml` at the root is a copy of the
   BC250 suite's for the portals installed before the move (`bc250-bazzite/tools/check_manifest.py` keeps it
   identical; the owner removes it once the first portal release after the move has been out for a while).
 
@@ -60,16 +66,18 @@ installed and always listed first; every other listed app is an optional tile. T
   time zone data and silently gives UTC, an hour or two early.
 - **Semantic versioning** (owner, 15-10-2026): in an app's, core's or the portal's CHANGELOG, every entry starts
   with its kind: `Breaking.` (removed, or no longer working as before: major), `Added.` (a new feature: minor) or
-  `Fixed.` (a bug or security fix: patch). 0.x apps too: a feature takes 0.1.4 to 0.2.0. Suite Releases offers the
+  `Fixed.` (a bug or security fix: patch). 0.x apps too: a feature takes 0.1.4 to 0.2.0. Nexus Releases offers the
   highest kind since the last tag first; `tools/tests/test_changelog_kinds.py` checks it. The number stays the
   owner's (see Releases).
 - **VERSION is the single source** of each app's version (all started at 0.1.0). Copies in code (`__version__`,
   shell `VERSION=`, pyproject) must match: `tools/check_versions.py`.
-- **Every former repo folder** (each app, `core/`, each suite's `portal/`) keeps LICENSE, .gitignore, VERSION and
+- **Every former repo folder** (each app, `core/`, each suite's `portal/`, each `dev/` app) keeps LICENSE, .gitignore, VERSION and
   CHANGELOG. GitHub workflows live only in the root `.github/`.
 - **A design per system** (owner, 25-10-2026): the Bazzite suites keep the Bazzite design (purple, the apps' theme and
   the wiki's), the Windows suites get a design of their own, and Nexus has its own
-  (`nexus/docs/stylesheets/nexus.css`). Never carry one system's design over to another. The Windows Portable Suite's
+  (`nexus/docs/stylesheets/nexus.css`); a Nexus app (`dev/`) takes Nexus's design and icon, as Nexus Releases
+  does (`dev/releases/nexus_releases/style.py`, a core `Theme` set with `create_app(theme=)`; its icon copies
+  from `tools/make_icons.py`). Never carry one system's design over to another. The Windows Portable Suite's
   apps put far more weight on UX and UI than the board's: a small screen held in the hands, touch and a controller
   instead of a mouse and keyboard.
 - **Consistent architecture** (the suite's CLAUDE.md has the layout): every app of a suite is built the same way;
@@ -124,7 +132,7 @@ shellcheck -S warning $S/apps/oc/bc250-gpu-oc-bisect.sh $S/apps/oc/install.sh
 shellcheck -S warning $S/apps/acpi/bc250-acpi-override.sh $S/apps/acpi/install.sh \
   $S/apps/overlay/install.sh $S/apps/bios/install.sh $S/apps/vram/install.sh $S/apps/fan/install.sh \
   $S/apps/cec/install.sh $S/apps/sftp/install.sh $S/apps/ips35/install.sh $S/apps/hdcam/install.sh $S/apps/hdcontrol/install.sh \
-  $S/apps/consoles/install.sh $S/apps/clb/install.sh $S/apps/mtool/install.sh $S/apps/suite/*.sh
+  $S/apps/consoles/install.sh $S/apps/clb/install.sh $S/apps/mtool/install.sh dev/releases/*.sh $S/tools/check-release.sh
 shellcheck -S warning $S/apps/ace/bc250-ace-queues.sh $S/apps/ace/bc250-ace-queues-run \
   $S/apps/ace/install.sh $S/apps/ace/mesa/build-in-container.sh
 shellcheck -S warning $S/apps/mesh/bc250-mesh-shaders.sh $S/apps/mesh/bc250-mesh-shaders-run \
@@ -149,7 +157,7 @@ it). BC-250 Installer Tests lists the scripts in that folder by itself. The inst
 `/home/linuxbrew/.linuxbrew/bin` may need adding to PATH in a non-interactive shell. CI also checks the layout rules above: no CRLF in the index, every
 `.sh` is 100755, every former repo folder has its four files, workflows only in the root `.github/`. The pytest
 matrix of `ci.yml` lists every folder with `tests/` (`tools/tests/test_layout.py` checks it): `core`, `tools`, and
-each suite's `portal`, `tools`, `apps/<name>` and `tools/installer-tests/gui`. CI results
+each suite's `portal`, `tools`, `apps/<name>` and `tools/installer-tests/gui`, and each `dev/<name>`. CI results
 can be read without `gh` through the public API:
 `curl -s https://api.github.com/repos/RobertoTorino/nexus/actions/runs?per_page=3`.
 
@@ -165,9 +173,10 @@ The owner does every step of a release; Claude does none of them, and doesn't of
   lines);
 - the release entries in the CHANGELOGs.
 
-`tools/release.sh` starts the owner's front end for the file edits of a release, BC250 Suite Releases
-(`bc250-bazzite/apps/suite/`: `main_window.py` on `plan.py`, and `check-release.sh` for the board checks). Claude
-may change it and its tests, but never uses it on the repository.
+`tools/release.sh` starts the owner's front end for the file edits of a release, Nexus Releases (`dev/releases/`,
+a Nexus app with a suite chooser: `main_window.py` on `plan.py`; a suite's board checks are its own
+`tools/check-release.sh`, the BC250 suite's at `bc250-bazzite/tools/check-release.sh`). Claude may change it and
+its tests, but never uses it on the repository.
 
 Claude may change the release tools and their tests, and runs `bc250-bazzite/tools/installer-tests/release.sh` as a
 test (it works in a temp folder and publishes nothing). When finished work will need a release or a version bump, the

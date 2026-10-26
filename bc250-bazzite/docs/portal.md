@@ -42,7 +42,7 @@ always opens on the first tab, Sustainable.
 [Media Tool](other-tools/media-tool.md), [Dependency Checker](apps/package.md),
 [Bazzite NetcatGUI](apps/ncgui.md), the
 release front end
-[BC250 Suite Releases](#the-release-front-end) and BC-250 Installer Tests (`bc250-bazzite/tools/installer-tests/gui`), a window
+[Nexus Releases](#the-release-front-end) (`dev/releases`, Nexus's) and BC-250 Installer Tests (`bc250-bazzite/tools/installer-tests/gui`), a window
 that runs the installer tests one at a time. You do not need them to use
 the board. The last two run from a checkout of the repository and have no release. A portal installed from a
 release installs them too, from the checkout it finds on this machine: the one an installed tool of the checkout
@@ -169,7 +169,7 @@ What it installs:
 Uninstall: `/opt/bc250-bazzite-suite/install.sh --uninstall`. This removes the portal and Bazzite Test and
 keeps settings; add `--purge` to remove those too. First it asks about each other suite app that is installed:
 `y` uninstalls it, `s` skips it (it stays installed), `c` cancels the whole uninstall before anything is removed.
-The list has every app this portal lists, the apps that run from a checkout (Suite Releases, Installer Tests) and
+The list has every app this portal lists, the apps that run from a checkout (Nexus Releases, Installer Tests) and
 the apps an earlier portal installed that this one no longer lists (an app dropped from the suite), each removed
 with its own uninstaller. Those apps keep their own settings, also with `--purge`. Of the portal's own records,
 only those of the apps you kept stay, with the release each one's uninstaller needs; with no app left, that folder
@@ -277,16 +277,20 @@ Releasing an app and pinning it in the portal:
    [Testing a portal release before its tag](#testing-a-portal-release-before-its-tag)), commit steps 3 and 4,
    push, and tag with `tools/tag-release.sh portal-v<x.y.z>`. That release bundles the pinned Bazzite Test release (`check-v…`).
 
-![BC250 Suite Releases](assets/suite/bc250-release-128.png){ .app-logo }
+![Nexus Releases](assets/releases/nexus-releases-128.png){ .app-logo }
 
 ### The release front end
 
-**BC250 Suite Releases** (`bc250-bazzite/apps/suite/`) is a window that makes these file edits for you. It commits, tags and
-pushes only when you press its git buttons: after each step it shows the git commands to run. It edits the checkout it lives in, so it is not
-in the portal and has no releases of its own. Start it from the repository root:
+**Nexus Releases** (`dev/releases/`, a Nexus app: it serves every suite in the repository, and has Nexus's look,
+ink, silver and teal, and the Nexus icon rather than this suite's theme and category icon) is a window that makes
+these file edits for you. It commits, tags and pushes only when you press its git buttons: after each step it shows
+the git commands to run. It edits the checkout it lives in, so it is not in a portal's releases and has none of its
+own. When the checkout holds several suites, a chooser in the header says which one the steps, the pins and the board
+tests work on; the git buttons, the wikis and GitHub are the repository's whatever the suite. Start it from the
+repository root:
 
 ```bash
-tools/release.sh            # or bc250-bazzite/apps/suite/run.sh
+tools/release.sh            # or dev/releases/run.sh
 tools/release.sh --list     # the same overview in the terminal, with the system python3
 ```
 
@@ -294,9 +298,9 @@ To start it from the app menu instead, install it once on Linux. Nothing is copi
 of the checkout you installed it from.
 
 ```bash
-bc250-bazzite/apps/suite/install.sh                         # app menu entry and Desktop icon
-bc250-bazzite/apps/suite/install.sh --no-desktop-shortcut   # app menu entry only
-bc250-bazzite/apps/suite/install.sh --uninstall             # remove them; the checkout stays
+dev/releases/install.sh                         # app menu entry and Desktop icon
+dev/releases/install.sh --no-desktop-shortcut   # app menu entry only
+dev/releases/install.sh --uninstall             # remove them; the checkout stays
 ```
 
 `tools/release.sh --install` and `--uninstall` do the same. It runs with the checkout's `.venv-linux` (see
@@ -328,7 +332,7 @@ bc250-bazzite/apps/suite/install.sh --uninstall             # remove them; the c
   when it is already made and not pushed), and the portal release follows once the apps are pinned.
 - **3. Retract app:** withdraws a release (see [Withdrawing a release](#withdrawing-a-release)).
 - **Test on this board** holds the tests of a release on a BC-250. **Test app updates** and **Test Portal
-  release** run the two board tests below in a terminal, with `bc250-bazzite/apps/suite/check-release.sh`: the portal from the
+  release** run the two board tests below in a terminal, with the suite's `bc250-bazzite/tools/check-release.sh`: the portal from the
   checkout before the push, and the published portal release after GitHub has built it. **Test withdrawal** does
   the first on a board with a withdrawn app installed. **Installer tests** opens BC-250 Installer Tests from the
   checkout. **Record portal tour** records the portal's video tour from the checkout as it is now, for the wiki and
@@ -341,15 +345,15 @@ bc250-bazzite/apps/suite/install.sh --uninstall             # remove them; the c
   When the portal is already open, its icon warns instead of starting: a second portal never opens (starting it only
   brings the open window to the front), so close it first. A click starts that app from the checkout,
   to try a change before its release: `python -m <package>` with the checkout's venv and its `core`, as `run.sh`
-  starts Suite Releases. An app that changes how the board runs asks first, as in the portal; started from the
+  starts Nexus Releases. An app that changes how the board runs asks first, as in the portal; started from the
   checkout it uses the scripts in the checkout. Each app writes its output to
-  `~/.cache/bc250-release/run/<package>.log`. When an app stops with an error, the end of its log shows on the page.
+  `~/.cache/nexus-releases/run/<package>.log`. When an app stops with an error, the end of its log shows on the page.
   The apps keep running when you close the window. The last icons are the wikis in the checkout, one for each
   `mkdocs.yml`: **BC250 Bazzite Suite wiki (local)** serves this wiki from the checkout with `mkdocs serve` (the
   development venv has MkDocs) and opens it in the browser at `http://127.0.0.1:8765/nexus/bc250-bazzite-suite/`, with
   its design panel open; **Nexus wiki (local)** does the same for the Nexus page, at port 8766. Each rebuilds on
   every save; its log is `mkdocs-<wiki>-local.log` there. When one is already running, a click only opens the page
-  again. The wikis, like the apps, keep running when you close the window, and Suite Releases has no button that
+  again. The wikis, like the apps, keep running when you close the window, and Nexus Releases has no button that
   stops them. A wiki started before the checkout changed (after a pull, or a change to its `mkdocs.yml` or the
   design panel) can still show the old setup: stop it, then click its icon again. `pkill -f "mkdocs serve"` stops
   every wiki on Linux; on Windows, in PowerShell:
@@ -429,7 +433,7 @@ CI failed. `release.yml` asks the same before it builds anything: a tag on a com
 release. It then builds and publishes the release without an approval on GitHub (see
 [GitHub settings](development/github-settings.md#environments)).
 
-`python3 tools/release_plan.py` lists every app with its version, its last tag and its pin, without Qt.
+`tools/release.sh --list` lists every app with its version, its last tag and its pin, without Qt.
 
 ### Testing a portal release before its tag
 
@@ -438,7 +442,7 @@ portal offers those releases as updates. So before the tag, check on a BC-250 th
 install and run:
 
 1. Bump the portal (step 4) and commit. Pushing is not needed for this test.
-2. Click **Test app updates** on the release front end's **Test on this board** tab, or run `bc250-bazzite/apps/suite/check-release.sh local`. It installs the portal
+2. Click **Test app updates** on the release front end's **Test on this board** tab, or run `bc250-bazzite/tools/check-release.sh local`. It installs the portal
    from the checkout (`./install.sh` in the repository root: this portal version, with its new pins in
    `apps.toml`) and starts it with the pinned releases instead of the checkout:
 
@@ -464,8 +468,8 @@ Once GitHub's release workflow has built the portal release, click **Test Portal
 board**), or run:
 
 ```bash
-bc250-bazzite/apps/suite/check-release.sh release              # the release of bc250-bazzite/portal/VERSION
-bc250-bazzite/apps/suite/check-release.sh release portal-v0.9.2
+bc250-bazzite/tools/check-release.sh release              # the release of bc250-bazzite/portal/VERSION
+bc250-bazzite/tools/check-release.sh release portal-v0.9.2
 ```
 
 It downloads the release tarball and its `SHA256SUMS` from GitHub into `~/.cache/bc250-release-check/`, checks
@@ -479,7 +483,7 @@ banner at the top, "Local build"; the published release has none.
 A release that must not be used any more, because of a privacy, security or any other problem, is withdrawn.
 The release stays on GitHub, so its history is kept, but nothing installs it any more:
 
-1. In BC250 Suite Releases, tab **3. Retract app**: choose the app's pinned release, write why, and press
+1. In Nexus Releases, tab **3. Retract app**: choose the app's pinned release, write why, and press
    **Retract**. This adds `withdrawn = "<reason>"` to its entry in `apps.toml` and a CHANGELOG entry to the app.
    **Take back** removes it again.
 2. **Test withdrawal** (tab **Test on this board**) on a BC-250 with the app installed: it installs the portal from the checkout and starts it

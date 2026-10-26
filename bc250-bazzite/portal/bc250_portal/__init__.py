@@ -67,9 +67,11 @@ SEARCH_DEPTH = 3                        # ~/IdeaProjects/bc250-bazzite-suite is 
 
 def find_checkout(home: Path | None = None) -> Path | None:
     """A suite checkout on this machine, without asking: the one a checkout-only app's launcher in ~/.local/bin
-    runs from, else the first one in the home folder, up to SEARCH_DEPTH folders deep (hidden folders skipped)."""
+    runs from (the suite's bc250-*, Nexus's nexus-*), else the first one in the home folder, up to SEARCH_DEPTH
+    folders deep (hidden folders skipped)."""
     home = home or Path.home()
-    for launcher in sorted((home / ".local" / "bin").glob("bc250-*")):
+    bin_dir = home / ".local" / "bin"
+    for launcher in sorted([*bin_dir.glob("bc250-*"), *bin_dir.glob("nexus-*")]):
         try:
             text = launcher.read_text(encoding="utf-8", errors="replace")
         except OSError:

@@ -47,7 +47,7 @@ jobs:
         dir: [core, tools, bc250-bazzite/portal, bc250-bazzite/tools,
               bc250-bazzite/apps/check, bc250-bazzite/apps/gpu, bc250-bazzite/apps/upscaler, bc250-bazzite/apps/acpi,
               bc250-bazzite/apps/compute, bc250-bazzite/apps/cores, bc250-bazzite/apps/oc, bc250-bazzite/apps/mtool,
-              bc250-bazzite/apps/package, bc250-bazzite/apps/ncgui, bc250-bazzite/apps/suite,
+              bc250-bazzite/apps/package, bc250-bazzite/apps/ncgui, dev/releases,
               bc250-bazzite/apps/overlay, bc250-bazzite/apps/ips35, bc250-bazzite/apps/hdcam,
               bc250-bazzite/apps/hdcontrol, bc250-bazzite/apps/bios, bc250-bazzite/apps/ace, bc250-bazzite/apps/vram,
               bc250-bazzite/apps/cec, bc250-bazzite/apps/sftp, bc250-bazzite/apps/consoles, bc250-bazzite/apps/clb,
@@ -178,7 +178,7 @@ jobs:
           shellcheck -S warning bc250-bazzite/apps/package/install.sh
           shellcheck -S warning bc250-bazzite/apps/ncgui/install.sh
           shellcheck -S warning bc250-bazzite/apps/datstation/install.sh
-          shellcheck -S warning bc250-bazzite/apps/suite/*.sh
+          shellcheck -S warning dev/releases/*.sh bc250-bazzite/tools/check-release.sh
 
       - name: Line endings
         run: |
@@ -195,7 +195,7 @@ jobs:
       - name: Every former repo has its LICENSE, .gitignore, VERSION and CHANGELOG
         run: |
           rc=0
-          for d in core bc250-bazzite/portal bc250-bazzite/apps/* bc250-bazzite/tools/installer-tests/gui; do
+          for d in core bc250-bazzite/portal bc250-bazzite/apps/* bc250-bazzite/tools/installer-tests/gui dev/*; do
             for f in LICENSE .gitignore VERSION CHANGELOG; do
               [ -f "$d/$f" ] || { echo "::error::$d/$f missing"; rc=1; }
             done
@@ -285,8 +285,8 @@ jobs:
         run: bash bc250-bazzite/tools/installer-tests/ncgui.sh
       - name: DatStation installer
         run: bash bc250-bazzite/tools/installer-tests/datstation.sh
-      - name: Suite Releases installer
-        run: bash bc250-bazzite/tools/installer-tests/suite.sh
+      - name: Nexus Releases installer
+        run: bash bc250-bazzite/tools/installer-tests/releases.sh
       - name: Installer Tests installer
         run: bash bc250-bazzite/tools/installer-tests/installer-tests.sh
       - name: release tarballs, end to end

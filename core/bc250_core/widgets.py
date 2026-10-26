@@ -17,7 +17,26 @@ from PyQt6.QtWidgets import (
 )
 
 from .text import plain_tooltip, window_title
-from .theme import ACCENT, ACTIVE_RED, ACTIVE_RED_HOVER, BLUE, GREY, STATE_COLORS, header_font, muted, surface_style
+from .theme import (ACTIVE_RED, ACTIVE_RED_HOVER, BLUE, GREY, STATE_COLORS, THEME, Theme, header_font, muted,
+                    surface_style)
+
+# The theme the widgets draw with: the suite's chosen one (theme.py), unless an app sets its own with set_theme()
+# (Nexus Releases: Nexus's design, not a suite's). create_app() sets the theme an app passes it.
+_theme: Theme = THEME
+
+
+def current_theme() -> Theme:
+    return _theme
+
+
+def set_theme(theme: Theme) -> None:
+    global _theme
+    _theme = theme
+
+
+def accent() -> str:
+    """The accent of the theme the widgets draw with: hover and focus outlines, the main action."""
+    return _theme.accent
 
 
 class StatusPill(QLabel):
@@ -35,7 +54,7 @@ class StatusPill(QLabel):
         self.setText(text)
         self.setToolTip(tooltip)
         colour = STATE_COLORS.get(kind) if kind != "neutral" else None
-        self.setStyleSheet(surface_style(colour, "QLabel", 6)      # padding 3px 10px inside the border
+        self.setStyleSheet(surface_style(colour, "QLabel", 6, theme=_theme)      # padding 3px 10px inside the border
                            + "QLabel { font-weight:600; padding:2px 9px 2px 6px; }")
 
 
@@ -100,7 +119,7 @@ class MetricBox(QFrame):
     def set_colour(self, colour: str) -> None:
         """The box's state or category color, its left edge; GRAY (neutral) shows the suite's blue, as the portal's
         pills (owner, 26-10-2026)."""
-        self.setStyleSheet(surface_style(BLUE if colour == GREY else colour)
+        self.setStyleSheet(surface_style(BLUE if colour == GREY else colour, theme=_theme)
                            + "QLabel { background:transparent; border:none; }")
 
 
@@ -123,8 +142,8 @@ class Pill(MetricBox):
         # A pill that cannot be clicked (setEnabled(False)) shows its text muted, as a disabled button does.
         # The rule is on the labels' own state: Qt ignores an ancestor's pseudo-state in a selector, so
         # "#pill:disabled QLabel" would mute every pill.
-        self.setStyleSheet(self.styleSheet() + f"#pill:hover, #pill:focus {{ border-color:{ACCENT}; }}"
-                           f"#pill QLabel:disabled {{ color:{muted()}; }}")
+        self.setStyleSheet(self.styleSheet() + f"#pill:hover, #pill:focus {{ border-color:{accent()}; }}"
+                           f"#pill QLabel:disabled {{ color:{muted(_theme)}; }}")
 
     def mouseReleaseEvent(self, event) -> None:  # noqa: N802 (Qt override)
         if event.button() == Qt.MouseButton.LeftButton and self.rect().contains(event.position().toPoint()):
@@ -223,7 +242,7 @@ class AppHeader(QHBoxLayout):
         self.addWidget(self.logo)
         right = QVBoxLayout()
         right.setSpacing(6)
-        version_text = f"  <span style='color:{muted()}; font-size:14px;'>v{version}</span>" if version else ""
+        version_text = f"  <span style='color:{muted(_theme)}; font-size:14px;'>v{version}</span>" if version else ""
         self.title = QLabel(f"{name}{version_text}")
         self.title.setStyleSheet(header_font() + "font-size:24px; font-weight:800;")
         self.title_row = QHBoxLayout()
@@ -320,7 +339,7 @@ def accent_button(text: str, tooltip: str = "") -> QPushButton:
     button.setToolTip(tooltip)
     button.setMinimumHeight(36)
     button.setCursor(Qt.CursorShape.PointingHandCursor)
-    button.setStyleSheet(f"QPushButton {{ border:2px solid {ACCENT}; border-radius:6px; padding:4px 16px; font-weight:700; }}"
+    button.setStyleSheet(f"QPushButton {{ border:2px solid {accent()}; border-radius:6px; padding:4px 16px; font-weight:700; }}"
                          f"QPushButton:disabled {{ border-color:palette(mid); color:palette(mid); }}")
     return button
 
@@ -356,7 +375,7 @@ class RoundedToolTip(QObject):
         self.label = QLabel()
         self.label.setTextFormat(Qt.TextFormat.AutoText)
         self.label.setStyleSheet(
-            f"QLabel {{ background:palette(window); color:palette(window-text); border:1px solid {ACCENT}; "
+            f"QLabel {{ background:palette(window); color:palette(window-text); border:1px solid {accent()}; "
             "border-radius:6px; padding:6px 8px; }")
         box.addWidget(self.label)
         self.destroyed.connect(self.popup.deleteLater)

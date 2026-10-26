@@ -78,15 +78,15 @@ check "governor installer runs from the fetched folder" "(cd $T/work/$GOV && bas
 
 echo "== 4. check-release.sh: the local check, then back to the release"
 R=$D/bc250-bazzite-suite/portal/installed.json
-bash "$S/bc250-bazzite/apps/suite/check-release.sh" local --no-start > "$T/check-local.log" 2>&1; rc=$?
+bash "$S/bc250-bazzite/tools/check-release.sh" local --no-start > "$T/check-local.log" 2>&1; rc=$?
 check "local: installs the portal from the checkout" "[ $rc -eq 0 ] && grep -q '\"check\": \"local\"' $R"
 mkdir -p "$T/gh/$PORTAL" && cp "$T/build-portal/$PORTAL.tar.gz" "$T/build-portal/SHA256SUMS" "$T/gh/$PORTAL/"
-BC250_RELEASE_URL="file://$T/gh" bash "$S/bc250-bazzite/apps/suite/check-release.sh" release --no-start > "$T/check-release.log" 2>&1; rc=$?
+BC250_RELEASE_URL="file://$T/gh" bash "$S/bc250-bazzite/tools/check-release.sh" release --no-start > "$T/check-release.log" 2>&1; rc=$?
 check "release: downloads and verifies portal/VERSION's tag" "[ $rc -eq 0 ] && grep -q '$PORTAL.tar.gz: OK' $T/check-release.log"
 check "release: installed it, bundled Bazzite Test included" "grep -q \"\\\"check\\\": \\\"$BT\\\"\" $R && [ -f $T/opt/bc250-bazzite-suite/bc250_core/__init__.py ]"
-BC250_RELEASE_URL="file://$T/gh" bash "$S/bc250-bazzite/apps/suite/check-release.sh" release portal-v9.9.9 --no-start > "$T/check-missing.log" 2>&1; rc=$?
+BC250_RELEASE_URL="file://$T/gh" bash "$S/bc250-bazzite/tools/check-release.sh" release portal-v9.9.9 --no-start > "$T/check-missing.log" 2>&1; rc=$?
 check "release: a tag GitHub has not built yet is reported" "[ $rc -ne 0 ] && grep -q 'finished the release workflow' $T/check-missing.log"
-bash "$S/bc250-bazzite/apps/suite/check-release.sh" nonsense > "$T/check-usage.log" 2>&1; rc=$?
+bash "$S/bc250-bazzite/tools/check-release.sh" nonsense > "$T/check-usage.log" 2>&1; rc=$?
 check "unknown mode refused" "[ $rc -ne 0 ] && grep -q 'Usage' $T/check-usage.log"
 
 [ $fail -eq 0 ] && echo "ALL OK" || for l in "$T"/*.log; do echo "--- $l"; cat "$l"; done

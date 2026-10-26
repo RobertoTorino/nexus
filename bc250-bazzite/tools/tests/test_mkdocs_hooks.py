@@ -39,7 +39,7 @@ def test_pages_point_at_the_copies_only(monkeypatch):
 
 def test_only_pictures_a_page_names_are_converted():
     wanted = hooks.shown(str(SUITE / "docs"))
-    assert "assets/suite/bc250-release-128.png" in wanted
+    assert "assets/releases/nexus-releases-128.png" in wanted            # a Nexus app's, from dev/releases/images
     assert not any("/steam/" in uri for uri in wanted)      # Console Link's Steam artwork is not on any page
 
 

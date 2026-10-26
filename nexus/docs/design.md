@@ -38,13 +38,13 @@ never reaches the others:
 | BC250 Bazzite Suite | `mkdocs.yml` | `bc250-bazzite/docs/stylesheets/suite.css` | `bc250-bazzite/tools/mkdocs/overrides/` |
 | Nexus | `nexus/mkdocs.yml` | `nexus/docs/stylesheets/nexus.css` | `nexus/overrides/` |
 
-Without a terminal: in BC250 Suite Releases, on **Test on this board** under **Test local apps**, the last icons are
+Without a terminal: in Nexus Releases (`dev/releases`), on **Test on this board** under **Test local apps**, the last icons are
 the wikis, one for each `mkdocs.yml` in the checkout. A click serves that wiki and opens it with the design panel
 open; a second click only opens the page again.
 
 ### Stop a wiki
 
-`mkdocs serve` in a terminal stops with Ctrl+C. A wiki Suite Releases started keeps running when you close Suite
+`mkdocs serve` in a terminal stops with Ctrl+C. A wiki Nexus Releases started keeps running when you close Nexus
 Releases, and a click on its icon only opens the page again, so a wiki started before the checkout changed (after a
 pull, or a change to its `mkdocs.yml` or the design panel) can still show the old setup. Stop it, then click its
 icon again. On Linux:
@@ -72,7 +72,7 @@ mkdocs serve -f nexus/mkdocs.yml -a 0.0.0.0:8000
 ```
 
 Then open `http://<the computer's address>:8000` on each device. `ipconfig` (Windows) or `hostname -I` (Linux) shows
-the address. In Suite Releases, tick **Wikis on the network** before clicking a wiki's icon: it serves the wiki that
+the address. In Nexus Releases, tick **Wikis on the network** before clicking a wiki's icon: it serves the wiki that
 way, on a port of its own (8785 for the BC250 Bazzite Suite's wiki, 8786 for the Nexus page), and shows the
 addresses for the other devices. Every device shows the live version, so you see a design in real browsers, on real
 screens and at real sizes at once.
@@ -81,7 +81,7 @@ The computer's firewall has to let the devices in:
 
 - Windows asks the first time Python listens on the network: allow it on private networks.
 - On Bazzite, open the port until the next boot with `sudo firewall-cmd --add-port=8000/tcp` (or `8785-8786/tcp`
-  for Suite Releases' ports).
+  for Nexus Releases' ports).
 
 Serve on a network you trust only: everyone on it can open the pages and change the mock.
 

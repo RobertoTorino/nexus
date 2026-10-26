@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The window: enter the new versions, and it edits the files of a release (plan.py).
+"""The window: enter the new versions, and it edits the files of a release (plan.py) of the suite chosen in the
+header (every suite in the checkout, tools/suites.py; the chooser is hidden while there is one). The steps, the pins
+and the board tests are the chosen suite's; the git buttons, the wikis and GitHub are the repository's.
 
 Step 1, Release apps: tick the apps to release, enter their versions and notes, Apply. It writes VERSION, the copies
 check_versions.py checks and a "Release x.y.z." CHANGELOG entry, runs check_versions.py and check_manifest.py (an
@@ -49,25 +51,28 @@ from PyQt6.QtWidgets import (QApplication, QCheckBox, QComboBox, QDialog, QHBoxL
 
 from bc250_core.instance import server_name
 from bc250_core.platform import launch_in_terminal
-from bc250_core.theme import ACCENT, BLUE, GREEN, GREY, ORANGE, RED
+from bc250_core.theme import BLUE, GREEN, GREY, ORANGE, RED
 from bc250_core.updates import UpdateChecker
 from bc250_core.widgets import AppHeader, MetricBox, Pill, Terminal, accent_button, hint_label, same_width
 
-from . import APP_NAME, LOGO_PATH, SUITE, __version__
+from . import APP_NAME, LOGO_PATH, CHECKOUT, __version__
 from . import plan as rp
 from .command_line import CommandLine
+from .style import NEXUS
 
 COLUMNS = ("Release", "App", "VERSION", "Last tag", "Needs release", "New version", "Notes")
+SUITE_KEY = "suite"                     # the chosen suite, in the settings
 SEMVER_TIP = ("Breaking. (an entry that starts with it) -> major: something removed or no longer working as "
               "before. Added. -> minor: a new feature. Fixed. -> patch: a bug or security fix.")
-LOG_DIR = Path(os.environ.get("XDG_CACHE_HOME") or Path.home() / ".cache") / "bc250-release" / "run"
-# A selected cell and the input field being typed in: a purple outline with rounded corners on a transparent
-# background, not the desktop's solid highlight. The line edit inside an editable combo box keeps the combo's frame.
+LOG_DIR = Path(os.environ.get("XDG_CACHE_HOME") or Path.home() / ".cache") / "nexus-releases" / "run"
+# A selected cell and the input field being typed in: a teal outline (Nexus's accent) with rounded corners on a
+# transparent background, not the desktop's solid highlight. The line edit inside an editable combo box keeps the
+# combo's frame.
 SELECTION_STYLESHEET = (
     "QTableWidget { outline:0; selection-background-color:transparent; selection-color:palette(text); }"
     "QTableWidget::item { border:2px solid transparent; border-radius:6px; }"
-    f"QTableWidget::item:selected {{ background:transparent; color:palette(text); border-color:{ACCENT}; }}"
-    f"QLineEdit:focus {{ background:transparent; border:2px solid {ACCENT}; border-radius:6px; }}"
+    f"QTableWidget::item:selected {{ background:transparent; color:palette(text); border-color:{NEXUS.accent}; }}"
+    f"QLineEdit:focus {{ background:transparent; border:2px solid {NEXUS.accent}; border-radius:6px; }}"
     "QComboBox QLineEdit:focus { border:none; }"
 )
 
@@ -197,7 +202,7 @@ class AppsPage(QWidget):
         if problems:
             QMessageBox.warning(self, "Release", "\n".join(problems))
             return
-        root = self.release_window.root
+        root, suite = self.release_window.root, self.release_window.suite
         log, tags, pins_moved = [], [], []
         for unit, new, notes in picked:
             if new != unit.version:
@@ -210,7 +215,7 @@ class AppsPage(QWidget):
             log.append(f"{unit.key}: CHANGELOG entry \"{text}\"")
             if unit.kind == "app":
                 tags.append(unit.tag)
-                if rp.follow_unreleased_pin(root, unit):
+                if rp.follow_unreleased_pin(root, unit, suite):
                     pins_moved.append(unit.tag)
         if pins_moved:
             log.append(f"apps.toml: the never-released pins move along ({', '.join(pins_moved)}).")
@@ -219,17 +224,18 @@ class AppsPage(QWidget):
         # passes CI as it is (the owner's release of 17-10-2026 was committed without it and failed ci-local); the
         # portal release itself is step 2, once the apps are pinned.
         base, portal_version = self.release_window.base(), self.release_window.portal_version()
-        minimum, why = rp.portal_minimum(root, base, portal_version)
+        minimum, why = rp.portal_minimum(root, base, portal_version, suite)
         if minimum and minimum != portal_version:
-            portal = next(u for u in rp.load_units(root) if u.kind == "portal")
+            portal = next(u for u in rp.load_units(root, suite) if u.kind == "portal")
             changed = rp.set_version(root, portal, minimum)
-            text = rp.portal_text(minimum, rp.changed_pins(root, base), "", rp.changed_withdrawals(root, base))
+            text = rp.portal_text(minimum, rp.changed_pins(root, base, suite), "",
+                                  rp.changed_withdrawals(root, base, suite))
             rp.add_changelog_entry(root, portal, text)
             log.append(f"portal: {minimum} in " + ", ".join(str(p.relative_to(root)) for p in changed)
                        + f" and CHANGELOG entry \"{text}\": apps.toml changed since {base} ({why}), so CI needs this "
                        "bump in the same push. The portal release follows in step 2, once the apps are pinned.")
         log += ["", run_check(root, rp.VERSIONS_CHECK),
-                run_check(root, rp.MANIFEST_CHECK, "--base", base)]
+                run_check(root, rp.manifest_check(root, suite), "--base", base)]
         if tags:
             commands = rp.app_commands(tags)
             log += ["Then:", commands]
@@ -336,14 +342,15 @@ class PortalPage(QWidget):
             self.portal_needs.setText(f"Nothing the portal ships changed since {portal.last_tag}.")
             self.portal_needs.setStyleSheet("")
         self.portal_needs.setToolTip(needs_tooltip(portal))
-        minimum, why = rp.portal_minimum(self.release_window.root, self.release_window.base(), portal.version)
+        minimum, why = rp.portal_minimum(self.release_window.root, self.release_window.base(), portal.version,
+                                         self.release_window.suite)
         if minimum:
             self.minimum.setText(f"apps.toml changed since {self.release_window.base()} ({why}): the portal needs at least "
                                  f"{minimum}.")
         else:
             self.minimum.setText(f"apps.toml is unchanged since {self.release_window.base()}.")
         # The higher of what CI asks (since the last portal release) and what semantic versioning gives since it.
-        suggested, semver = rp.portal_suggestion(self.release_window.root, portal)
+        suggested, semver = rp.portal_suggestion(self.release_window.root, portal, self.release_window.suite)
         if minimum and rp.version_tuple(minimum) > rp.version_tuple(suggested):
             suggested, semver = minimum, f"CI's minimum: {why}"
         choices = [suggested, *([] if portal.released else [portal.version]),
@@ -414,7 +421,7 @@ class PortalPage(QWidget):
                 log.append(f"{unit.tag}: no checksum yet ({exc}). Has GitHub finished that release?")
                 continue
             try:
-                rp.pin(self.release_window.root, unit, sha)
+                rp.pin(self.release_window.root, unit, sha, self.release_window.suite)
             except SystemExit as exc:           # pin_app refuses (no such table, no tag line): say so, go on
                 log.append(f"{unit.tag}: not pinned ({exc}).")
                 continue
@@ -423,8 +430,8 @@ class PortalPage(QWidget):
         self.output.set_text("\n".join(log) or "Tick a release to pin.")
 
     def bump(self) -> None:
-        root = self.release_window.root
-        units = rp.load_units(root)
+        root, suite = self.release_window.root, self.release_window.suite
+        units = rp.load_units(root, suite)
         portal = next(u for u in units if u.kind == "portal")
         new = self.portal_version.currentText().strip()
         problem = rp.check_new_version(portal.version, new, portal.released)
@@ -435,13 +442,13 @@ class PortalPage(QWidget):
         if new != portal.version:
             changed = rp.set_version(root, portal, new)
             log.append(f"portal: {new} in " + ", ".join(str(p.relative_to(root)) for p in changed))
-        pins = rp.changed_pins(root, self.release_window.base())
-        withdrawn = rp.changed_withdrawals(root, self.release_window.base())
+        pins = rp.changed_pins(root, self.release_window.base(), suite)
+        withdrawn = rp.changed_withdrawals(root, self.release_window.base(), suite)
         text = rp.portal_text(new, pins, self.portal_notes.text(), withdrawn)
         rp.add_changelog_entry(root, portal, text)
         log += [f"portal: CHANGELOG entry \"{text}\"", "",
                 run_check(root, rp.VERSIONS_CHECK),
-                run_check(root, rp.MANIFEST_CHECK, "--base", self.release_window.base())]
+                run_check(root, rp.manifest_check(root, suite), "--base", self.release_window.base())]
         # Bumped before step 1's push (an app added, a pin moved): the bump goes into that push, with the app tags
         # after it; the portal release comes after Pin. Otherwise commit, test on a board, push and tag the portal.
         pending = rp.untagged_releases(units)
@@ -451,7 +458,7 @@ class PortalPage(QWidget):
             log += [f"Then (step 1's releases are not tagged yet: {', '.join(pending)}; the bump goes into their "
                     "push, and the portal release follows once they are pinned):", commands]
         else:
-            commands = rp.portal_commands(f"portal-v{new}")
+            commands = rp.portal_commands(f"portal-v{new}", check=rp.check_script(root, suite))
             log += ["Then:", commands]
         self.release_window.offer(commands)
         self.output.set_text("\n".join(log))
@@ -499,7 +506,7 @@ class WithdrawPage(QWidget):
 
     def fill(self, units: list[rp.Unit]) -> None:
         current = self.app_box.currentData()
-        self.units = rp.withdrawable(self.release_window.root, units)
+        self.units = rp.withdrawable(self.release_window.root, units, self.release_window.suite)
         self.app_box.blockSignals(True)
         self.app_box.clear()
         for unit in self.units:
@@ -515,7 +522,7 @@ class WithdrawPage(QWidget):
 
     def _show_state(self) -> None:
         unit = self.unit()
-        reason = rp.withdrawn_reason(self.release_window.root, unit.key) if unit else ""
+        reason = rp.withdrawn_reason(self.release_window.root, unit.key, self.release_window.suite) if unit else ""
         self.state.setText(f"Withdrawn: {reason}" if reason else "Not withdrawn.")
         self.state.setStyleSheet(f"color:{ORANGE}; font-weight:600;" if reason else "")
         self.withdraw_button.setEnabled(unit is not None and not reason)
@@ -529,8 +536,8 @@ class WithdrawPage(QWidget):
         if not reason:
             QMessageBox.warning(self, "Retract", "Say why the release is withdrawn: the boards show it.")
             return
-        changed = rp.withdraw(self.release_window.root, unit, reason)
         root = self.release_window.root
+        changed = rp.withdraw(root, unit, reason, suite=self.release_window.suite)
         self.output.set_text("\n".join([f"{unit.pinned_tag}: withdrawn in " +
                                         ", ".join(str(p.relative_to(root)) for p in changed), "",
                                         rp.withdraw_commands(unit.pinned_tag, reason)]))
@@ -542,7 +549,7 @@ class WithdrawPage(QWidget):
         unit = self.unit()
         if unit is None:
             return
-        rp.withdraw(self.release_window.root, unit, "")
+        rp.withdraw(self.release_window.root, unit, "", suite=self.release_window.suite)
         self.output.set_text(f"{unit.pinned_tag}: no longer withdrawn in portal/apps.toml (and a CHANGELOG entry). "
                              "Marked on GitHub already? Edit that release back: gh release edit "
                              f"{unit.pinned_tag} --prerelease=false --title {unit.pinned_tag}")
@@ -719,8 +726,12 @@ class RunPage(QWidget):
             self.apps.addItem(item)
 
     def check(self, test: str) -> None:
-        """Run check-release.sh in a terminal: it installs a portal and keeps it running there."""
-        script = shlex.quote(str(self.release_window.root / rp.CHECK_SCRIPT))
+        """Run the suite's check-release.sh in a terminal: it installs a portal and keeps it running there."""
+        path = rp.check_script(self.release_window.root, self.release_window.suite)
+        if not (self.release_window.root / path).is_file():
+            self.output.appendPlainText(f"This suite has no {path}.")
+            return
+        script = shlex.quote(str(self.release_window.root / path))
         mode = "release" if test == "release" else "local"
         try:
             self.release_window.launch(f"{script} {mode}")
@@ -737,9 +748,9 @@ class RunPage(QWidget):
                           "available\". Close the portal there to finish."}[test])
 
     def installer_tests(self) -> None:
-        target = rp.installer_tests_target(self.release_window.root)
+        target = rp.installer_tests_target(self.release_window.root, self.release_window.suite)
         if target is None:
-            self.output.appendPlainText("This checkout has no tools/installer-tests/gui.")
+            self.output.appendPlainText("This suite has no tools/installer-tests/gui.")
             return
         self.run(target)
 
@@ -761,10 +772,11 @@ class RunPage(QWidget):
         return Path.home() / "Videos" / f"bc250-portal-tour-v{self.release_window.portal_version()}.mp4"
 
     def record_tour(self) -> None:
-        """tools/record-tour.sh in the background, its output in Logs; the video opens when it is done."""
-        script = self.release_window.root / rp.RECORD_SCRIPT
+        """The suite's tools/record-tour.sh in the background, its output in Logs; the video opens when it is done."""
+        path = rp.record_script(self.release_window.root, self.release_window.suite)
+        script = self.release_window.root / path
         if not script.is_file():
-            self.output.appendPlainText(f"This checkout has no {rp.RECORD_SCRIPT}.")
+            self.output.appendPlainText(f"This suite has no {path}.")
             return
         if self.recorder is not None:
             return
@@ -775,7 +787,7 @@ class RunPage(QWidget):
         self.recorder.readyReadStandardOutput.connect(self._recorder_output)
         self.recorder.finished.connect(lambda code, _status: self._recorded(code, out))
         self.tour_button.setEnabled(False)
-        self.output.appendPlainText(f"$ {rp.RECORD_SCRIPT} {out}")
+        self.output.appendPlainText(f"$ {path} {out}")
         self.release_window._show_log(self)
         self.recorder.start("bash", [str(script), str(out)])
 
@@ -1196,16 +1208,21 @@ class ClaudeUsageIndicator(Pill):
 
 
 class ReleaseWindow(QMainWindow):
-    def __init__(self, root: Path = SUITE, sha256_source=rp.fetch_sha256, launch=launch_in_terminal,
+    def __init__(self, root: Path = CHECKOUT, sha256_source=rp.fetch_sha256, launch=launch_in_terminal,
                  start=start_app, runs_source=rp.fetch_runs, notify=desktop_notify, settings=None,
                  status_source=rp.fetch_github_status, claude_source=rp.fetch_claude_usage,
-                 issues_source=rp.fetch_open_issues):
+                 issues_source=rp.fetch_open_issues, suite: str | None = None):
         """*runs_source* reads the GitHub Actions runs (None: no build indicator); *notify* shows a desktop
-        notification; *settings* keeps the command line's history (None: this session only); *status_source*
-        reads githubstatus.com (None: no GitHub status); *claude_source* reads Claude Code's usage (None: no
-        Claude pill); *issues_source* reads the open GitHub issues for Close issues."""
+        notification; *settings* keeps the command line's history and the chosen suite (None: this session only);
+        *status_source* reads githubstatus.com (None: no GitHub status); *claude_source* reads Claude Code's usage
+        (None: no Claude pill); *issues_source* reads the open GitHub issues for Close issues; *suite* is the suite
+        to open with (a folder name from plan.suites(); None: the one remembered, else the first)."""
         super().__init__()
         self.root = root
+        self.settings = settings
+        self.suites = rp.suites(root)
+        remembered = str(settings.value(SUITE_KEY, "")) if settings is not None else ""
+        self.suite = suite or (remembered if remembered in self.suites else self.suites[0] if self.suites else None)
         self.issues_source = issues_source
         self.sha256_source = sha256_source
         self.launch = launch
@@ -1216,6 +1233,16 @@ class ReleaseWindow(QMainWindow):
         self.setStyleSheet(SELECTION_STYLESHEET)
         stamp = rp.checkout_stamp(root)                 # never released: the commit says which code runs
         header = AppHeader(LOGO_PATH, APP_NAME, f"{__version__} · {stamp}" if stamp else __version__)
+        # The suite chooser, first in the header's second row; hidden while the checkout holds one suite.
+        self.suite_box = QComboBox()
+        self.suite_box.addItems(self.suites)
+        if self.suite:
+            self.suite_box.setCurrentText(self.suite)
+        self.suite_box.setToolTip("The suite this window releases: its apps, its portal and its pins. The git "
+                                  "buttons, the wikis and GitHub are the repository's, whatever the suite.")
+        self.suite_box.currentTextChanged.connect(self.choose_suite)
+        self.suite_box.setVisible(len(self.suites) > 1)
+        header.add_second(self.suite_box)
         # The header's pills, all as wide as the widest (owner, 20-10-2026).
         self.refresh_pill = Pill("Refresh", "Click to refresh", "Read the checkout and its tags again, for changes "
                                  "made in a terminal; what you entered stays")
@@ -1240,7 +1267,7 @@ class ReleaseWindow(QMainWindow):
         self.tabs.addTab(self.run_page, "Test on this board")
         # Opening step 2 reads the tags again, so tags pushed from a terminal meanwhile show up; step 1 keeps what
         # was typed in it.
-        self.tabs.currentChanged.connect(lambda i: i == 1 and self.portal_page.fill(rp.load_units(self.root)))
+        self.tabs.currentChanged.connect(lambda i: i == 1 and self.portal_page.fill(rp.load_units(self.root, self.suite)))
         self.commands = CommandLine(root, settings, finished=self.refresh)    # a commit or push: read it again
         # The logs are tabs of their own, each the whole tab area (owner, 17-10-2026: boxes under the steps were
         # too flat to read). Logs shows the log of the step last open (what Apply, Pin, Bump portal, Retract or
@@ -1268,14 +1295,24 @@ class ReleaseWindow(QMainWindow):
         lay.addWidget(self.bad_tags)
         lay.addWidget(self.tabs, 1)
         lay.addLayout(self._git_row())
-        version = QLabel(f"{APP_NAME} {__version__} · edits {self.root}")
-        version.setStyleSheet("color:palette(placeholder-text);")
-        lay.addWidget(version, 0, Qt.AlignmentFlag.AlignRight)
+        self.footer = QLabel()
+        self.footer.setStyleSheet("color:palette(placeholder-text);")
+        lay.addWidget(self.footer, 0, Qt.AlignmentFlag.AlignRight)
         self.setCentralWidget(central)
         self.reload()
         self.build.check()
         self.github_status.check()
         self.claude.check()
+
+    def choose_suite(self, name: str) -> None:
+        """Another suite from the header's chooser: the steps, the pins and the board tests show it from now on,
+        and the next start opens with it."""
+        if not name or name == self.suite:
+            return
+        self.suite = name
+        if self.settings is not None:
+            self.settings.setValue(SUITE_KEY, name)
+        self.refresh()
 
     def _git_row(self) -> QHBoxLayout:
         """git add, git commit, git push and git tag as buttons, each with its checks (owner, 19-10-2026: no commands
@@ -1355,7 +1392,8 @@ class ReleaseWindow(QMainWindow):
         if not message and not amend:
             return
         self.committing = True
-        self.run_git(rp.commit_command(message, self.base(), amend, shlex.quote(sys.executable)))
+        self.run_git(rp.commit_command(message, self.base(), amend, shlex.quote(sys.executable),
+                                       rp.manifest_checks(self.root)))
 
     def _show_git_state(self) -> None:
         """Each button only when it has something to do, and none while a command runs."""
@@ -1370,8 +1408,10 @@ class ReleaseWindow(QMainWindow):
             why = "Nothing is staged: git add first." if not staged else \
                 "" if message else "Type a commit message first."
         self.commit_button.setEnabled(idle and not why)
-        self.commit_button.setToolTip(rp.commit_command(message or "<message>", self.base(), amend) + "\n\n" + (
-            why or "Runs check_versions.py and check_manifest.py first and commits only when they pass"))
+        self.commit_button.setToolTip(
+            rp.commit_command(message or "<message>", self.base(), amend, manifests=rp.manifest_checks(self.root))
+            + "\n\n" + (why or "Runs check_versions.py and every suite's check_manifest.py first and commits only "
+                              "when they pass"))
         self.push_button.setEnabled(idle and ahead > 0)
         linux = sys.platform.startswith("linux")
         self.push_button.setToolTip(rp.push_command() + "\n\n" + (
@@ -1404,7 +1444,7 @@ class ReleaseWindow(QMainWindow):
         return self.portal_page.base_edit.text().strip() or "origin/main"
 
     def portal_version(self) -> str:
-        return (rp.suite_dir(self.root) / "portal" / "VERSION").read_text(encoding="utf-8").strip()
+        return (rp.suite_dir(self.root, self.suite) / "portal" / "VERSION").read_text(encoding="utf-8").strip()
 
     def refresh(self) -> None:
         """reload(), keeping what was entered: step 1's ticks, versions and notes, step 2's portal version (if it
@@ -1428,13 +1468,15 @@ class ReleaseWindow(QMainWindow):
         self.claude.check()
 
     def reload(self) -> None:
-        units = self.units = rp.load_units(self.root)
+        units = self.units = rp.load_units(self.root, self.suite)
         self.apps_page.fill(units)
         self.portal_page.fill(units)
         self.withdraw_page.fill(units)
-        portal = rp.portal_target(self.root)
+        portal = rp.portal_target(self.root, self.suite)
         docs = rp.docs_targets(self.root, network=self.run_page.network_box.isChecked())
-        self.run_page.fill(([portal] if portal else []) + rp.launch_targets(self.root) + docs)
+        self.run_page.fill(([portal] if portal else []) + rp.launch_targets(self.root, self.suite) + docs)
+        self.footer.setText(f"{APP_NAME} {__version__} · edits {self.root}"
+                            + (f" · suite {self.suite}" if len(self.suites) > 1 else ""))
         problems = rp.bad_tags(self.root, units)
         self.bad_tags.setText("\n".join(
             f"\u26a0 {p}: release.yml cannot build it. Delete it (git tag -d {p.split()[0]} && git push origin "

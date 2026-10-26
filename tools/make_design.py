@@ -134,7 +134,7 @@ THEMES = [
 
 STATE_TEXT = [
     ("#2e7d32", "Green: Passed, a valid entry."),
-    ("#c62828", "Red: Failed, errors and problems in every app (the emulator managers' status lines, Suite Releases' "
+    ("#c62828", "Red: Failed, errors and problems in every app (the emulator managers' status lines, Nexus Releases' "
                 "bad tags, the upscaler's problems, a folder that is missing)."),
     ("#ffffff", "Bright text (palette BrightText); text on the state colors."),
 ]
@@ -188,6 +188,19 @@ NEXUS_TEXT = [
     ("#808080", "A header link under the pointer (dimmed, no box); text on the hover color, and its dimmed text."),
     ("#010101", "Ink: a button's text on hover in the dark sections."),
 ]
+NEXUS_APP_TEXT = [
+    ("#c0c0c0", "Silver: the text, the title, the boxes' values and captions, the buttons, the tabs and the fields."),
+    ("#010101", "Ink: text on the teal accent (a selected row)."),
+]
+NEXUS_APP_BLOCKS = [
+    ("#010101", "Ink: the window, the header and the dialogs; the bottom of a button's or a box's sheen; every other "
+                "row of a table."),
+    ("#0f0f0f", "Main color: the fields, lists and tables; the top of a button's or a box's sheen."),
+    ("#17b6a7", "Teal: the accent: the selection, the outline of a selected cell or a focused field, a button or "
+                "pill under the pointer, the main action (Apply, Bump portal, Retract), the progress bar."),
+    ("#80808066", "Dimmed silver (40 %): the borders of the fields, boxes, tabs and buttons, and a box's neutral "
+                  "edge."),
+]
 NEXUS_BLOCKS = [
     ("#010101", "Ink: the page background, the header, the dark sections, the footer and its notice strip."),
     ("#0f0f0f", "Main color: Material's primary color, table headings."),
@@ -227,8 +240,11 @@ Each design (a suite's, the Nexus page's) has its own; none is carried over to a
 ### Nexus
 
 - **The identity:** near-black ink `#010101`, silver text `#c0c0c0` and one teal `#17b6a7` (the icon's) for every
-  link, title and icon; nothing else. Inter, with heavy titles. The Nexus page is not a suite: it has no apps, no
-  theme and no states.
+  link, title and icon; nothing else. Inter, with heavy titles. Nexus is not a suite: the page has no apps and no
+  states. Its one app, Nexus Releases (`dev/releases/`, owner, 26-10-2026: a Nexus app takes Nexus's design), has
+  this design in its window (`nexus_releases/style.py`, a theme for core's widgets: ink surfaces, silver text, the
+  teal accent) and the Nexus icon; its states (the working tree, a build) are the apps' state family, since a build
+  passes or fails there too.
 """
 
 # The hues of the BC250 Bazzite Suite: every tint in use, what it is and why. kind: family, tint, brand, hardware,
@@ -518,6 +534,9 @@ are not on core yet carry a copy). The theme is one choice for every app: Gunmet
     out.append("## The Nexus page\n\n`nexus/docs/stylesheets/nexus.css`, ink, silver and teal (the owner's design, "
                "25-10-2026): the Nexus page has a\ndesign of its own, apart from the suites' (a design per system).\n")
     out.append(section("Nexus", "", NEXUS_TEXT, NEXUS_BLOCKS))
+    out.append(section("Nexus Releases", "The window of Nexus's app (`dev/releases/nexus_releases/style.py`): the "
+                       "page's colors as a theme for core's widgets, set with `create_app(theme=NEXUS)`; its "
+                       "states are the apps' state family.", NEXUS_APP_TEXT, NEXUS_APP_BLOCKS))
     out.append("## The apps' own colors\n\nOn top of the theme, in the apps' `style.py` or where they are used.\n")
     out.append(section("Gaming apps", "Console Link, Console LinkB, Decky, HD Control, PCSX2, PPSSPP, RPCS3, "
                        "shadPS4, Vita3K and Xenia.", GAMING_TEXT, GAMING_BLOCKS))

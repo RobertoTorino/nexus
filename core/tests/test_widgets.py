@@ -305,3 +305,30 @@ def test_a_wrapped_labels_minimum_height_follows_its_width(qapp):
     assert wrapped.minimumHeight() <= one_line + 4
     plain.close()
     wrapped.close()
+
+
+def test_an_apps_own_theme(qapp):
+    """An app that is not a suite's (Nexus Releases) draws the widgets with its own theme: the surfaces, the muted
+    text and the accent follow set_theme(), and create_app(theme=) sets it (owner, 26-10-2026: a Nexus app takes
+    Nexus's design)."""
+    from PyQt6.QtGui import QPalette
+    from bc250_core import widgets
+    from bc250_core.app import create_app
+    from bc250_core.appinfo import AppInfo
+    own = theme.Theme("Own", True, "#010101", "#0f0f0f", "#010101", "#c0c0c0", "#0f0f0f", "#010101", "#66808080",
+                      "#17b6a7", "#010101")
+    assert widgets.current_theme() is theme.THEME and widgets.accent() == theme.ACCENT
+    try:
+        app = create_app(AppInfo("x-own", "Own", "0.1.0"), theme=own)
+        assert widgets.current_theme() is own and widgets.accent() == "#17b6a7"
+        assert app.palette().color(QPalette.ColorRole.Window).name() == "#010101"
+        box = MetricBox("Box", theme.GREEN)
+        assert "stop:0 #0f0f0f, stop:1 #010101" in box.styleSheet() and "color:#c0c0c0" in box.styleSheet()
+        assert f"border-left:4px solid {theme.GREEN}" in box.styleSheet()
+        assert "border-color:#17b6a7" in Pill("1", "c").styleSheet()
+        assert "border:2px solid #17b6a7" in accent_button("Go").styleSheet()
+        assert "border-left:4px solid #66808080" in StatusPill().styleSheet()      # the own theme's edge
+    finally:
+        widgets.set_theme(theme.THEME)
+        theme.apply_theme(qapp)
+    assert f"border-left:4px solid {theme.THEME.edge}" in StatusPill().styleSheet()

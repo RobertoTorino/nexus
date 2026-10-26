@@ -1,3 +1,16 @@
+Changelog: 26-10-2026 13:21:15
+
+Fixed. Nexus Releases' tile (portal/images/apps/releases.webp) is the Nexus icon (owner, 26-10-2026: a Nexus app
+takes Nexus's icon), a lossless copy of the drawing at 256 px written by tools/make_icons.py, no longer the
+development category's icon; icons/categories.toml no longer lists the app.
+
+Changelog: 26-10-2026 12:28:08
+
+Added. A [checkout.<key>] entry with nexus = true is a Nexus app, every suite's, whose folder is relative to the
+repository: Nexus Releases, dev/releases (was [checkout.suite], BC250 Suite Releases in apps/suite, 26-10-2026). The
+portal installs and uninstalls it from there, and finds the checkout on the machine through its launcher
+(~/.local/bin/nexus-*) as through the suite's own (bc250-*). The old record "suite" moves to "releases".
+
 Changelog: 26-10-2026 12:03:41
 
 Release 10.0.0. Pins check-v0.16.0, gpu-v0.4.0, upscaler-v1.0.0, compute-v0.4.0, cores-v0.4.0, oc-v0.3.0, acpi-v0.4.0, overlay-v0.13.1, bios-v0.13.1, ace-v0.13.1, mesh-v0.15.0, vram-v0.13.1, fan-v0.13.0, wdriver-v0.13.0, cec-v0.14.0, sftp-v0.15.0, ips35-v0.7.0, hdcam-v0.9.0, hdcontrol-v0.9.0, mtool-v1.0.0, package-v2.0.0, ncgui-v0.13.1, rpcs3-v2.0.0, consoles-v1.14.0, clb-v0.9.0, shadps4-v2.0.0, decky-v0.15.0, datstation-v2.0.0, ppsspp-v0.14.0, pcsx2-v2.0.0, vita3k-v0.13.0, xenia-v0.9.0.
