@@ -1,3 +1,11 @@
+Changelog: 26-10-2026 11:01:38
+
+The root README is Nexus's alone (owner, 26-10-2026: on GitHub it still read as the BC250 Bazzite Suite's): the name,
+the suites with a link to each one's README and wiki, the structure, the license and a short disclaimer. The suite's
+part (the portal's install steps, the apps by category, its license exceptions and its disclaimer) is the suite's own
+README, bc250-bazzite/README.md, which GitHub shows in that folder; its Beta badge and notice moved with it, and
+tools/tests/test_stage.py reads them there.
+
 Changelog: 26-10-2026 09:42:18
 
 The BC250 Bazzite Suite moved into bc250-bazzite/ (owner, 26-10-2026: Nexus holds every suite in a folder of its

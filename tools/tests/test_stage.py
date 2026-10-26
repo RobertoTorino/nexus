@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The suite's stage (STAGE in portal/bc250_portal/__init__.py) is said the same way wherever it shows: the portal's
-header, a portal release's notes, the README's badge and notice, and the wiki's home page. Clearing STAGE fails
+header, a portal release's notes, the suite README's badge and notice, and the wiki's home page. Clearing STAGE fails
 this test until the README and the wiki drop it too."""
 
 from __future__ import annotations
@@ -16,7 +16,7 @@ SUITE = Path(__file__).resolve().parent.parent.parent
 
 def test_readme_and_wiki_follow_the_portal_stage():
     stage, note = build_release.portal_stage()
-    readme = (SUITE / "README.md").read_text(encoding="utf-8")
+    readme = (SUITE / "bc250-bazzite" / "README.md").read_text(encoding="utf-8")
     home = (SUITE / "bc250-bazzite" / "docs" / "index.md").read_text(encoding="utf-8")
     if stage:
         assert note
