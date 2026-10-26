@@ -111,7 +111,7 @@ It runs as your user, not as root. To see what it did:
 journalctl --user -u bc250-usb-hdcam-load.service
 ```
 
-With the option off, the service does nothing and **Load firmware** in the window's header sends the firmware. While
+With the option off, the service does nothing and the **Load firmware** pill in the window's header sends the firmware. While
 the window is open it also sends the firmware itself, once per plug-in, when the service could not (for example
 because the firmware file or the access came later).
 

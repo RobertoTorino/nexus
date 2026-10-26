@@ -13,11 +13,11 @@ from PyQt6.QtCore import QEvent, QObject, QPoint, QRect, Qt, pyqtSignal
 from PyQt6.QtGui import QFontDatabase, QMouseEvent, QPixmap
 from PyQt6.QtWidgets import (
     QAbstractItemView, QApplication, QDialog, QDialogButtonBox, QFrame, QHBoxLayout, QHeaderView, QLabel,
-    QPlainTextEdit, QPushButton, QSizePolicy, QToolTip, QVBoxLayout, QWidget,
+    QPlainTextEdit, QPushButton, QSizePolicy, QTabBar, QToolTip, QVBoxLayout, QWidget,
 )
 
 from .text import plain_tooltip, window_title
-from .theme import ACCENT, ACTIVE_RED, ACTIVE_RED_HOVER, GREY, STATE_COLORS, header_font, muted, surface_style
+from .theme import ACCENT, ACTIVE_RED, ACTIVE_RED_HOVER, BLUE, GREY, STATE_COLORS, header_font, muted, surface_style
 
 
 class StatusPill(QLabel):
@@ -98,8 +98,9 @@ class MetricBox(QFrame):
             _even(self.peers)
 
     def set_colour(self, colour: str) -> None:
-        """The box's state or category color, its left edge; GRAY (neutral) has none."""
-        self.setStyleSheet(surface_style(None if colour == GREY else colour)
+        """The box's state or category color, its left edge; GRAY (neutral) shows the suite's blue, as the portal's
+        pills (owner, 26-10-2026)."""
+        self.setStyleSheet(surface_style(BLUE if colour == GREY else colour)
                            + "QLabel { background:transparent; border:none; }")
 
 
@@ -328,8 +329,8 @@ class RoundedToolTip(QObject):
     """Every tooltip of the app with rounded corners and a thin border in the accent.
 
     Qt's own tooltip window cannot have transparent corners, so this shows a translucent frameless label
-    instead. RoundedToolTip.install(app) filters the tooltip events of all widgets, list/table items and
-    header sections; show_tooltip()/hide_tooltip() are for tooltips shown by hand (chart hovers)."""
+    instead. RoundedToolTip.install(app) filters the tooltip events of all widgets, list/table items, header
+    sections and tabs; show_tooltip()/hide_tooltip() are for tooltips shown by hand (chart hovers)."""
 
     MAX_WIDTH = 380
     _instance: RoundedToolTip | None = None
@@ -427,6 +428,11 @@ class RoundedToolTip(QObject):
             if not index.isValid():
                 return "", QRect()
             return str(index.data(Qt.ItemDataRole.ToolTipRole) or ""), view.visualRect(index)
+        if isinstance(obj, QTabBar):                    # a tab's own tooltip (setTabToolTip), not the bar's
+            index = obj.tabAt(pos)
+            if index < 0:
+                return obj.toolTip() or None, obj.rect()
+            return obj.tabToolTip(index) or obj.toolTip() or "", obj.tabRect(index)
         return obj.toolTip() or None, obj.rect()
 
     def eventFilter(self, obj: QObject, event: QEvent) -> bool:

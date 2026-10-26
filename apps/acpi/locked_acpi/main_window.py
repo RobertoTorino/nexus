@@ -1,26 +1,30 @@
 # SPDX-License-Identifier: MIT
-"""Single window: shows whether the ACPI override is installed and in use, and installs/removes it."""
+"""Single window: shows whether the ACPI override is installed and in use, and installs/removes it. The header is
+the suite's (owner, 26-10-2026): the icon, the title with the version and the state beside it, About at the right
+end, and under it the status boxes (the override, the frequency steps, the idle states), read from the script's
+status lines."""
 
 from __future__ import annotations
 
 from PyQt6.QtCore import QByteArray, QSettings, Qt
-from PyQt6.QtGui import QCursor
+from PyQt6.QtGui import QCursor, QPixmap
 from PyQt6.QtWidgets import (
     QApplication, QHBoxLayout, QLabel, QMessageBox, QPlainTextEdit, QPushButton, QVBoxLayout, QWidget,
 )
 
-from . import APP_NAME, __version__
+from . import APP_NAME, LOGO_PATH, __version__
 from .runner import ScriptRunner
-from .theme import surface_style
-from .widgets import AboutDialog, SudoDialog
+from .theme import BLUE, STATE_COLORS, header_font, muted
+from .widgets import AboutDialog, MetricBox, StatusText, SudoDialog
 
 NEEDS_CONFIRMATION = 3      # bc250-acpi-override.sh: a warning needs "Continue anyway?" (--yes)
 
-_BANNERS = {
-    "installed": ("✔ INSTALLED", "#2e7d32"),
-    "not installed": ("NOT INSTALLED", None),
-    "incomplete": ("⚠ INCOMPLETE", "#ef6c00"),
+_STATES = {                     # the state beside the title and in the Override box: text and kind
+    "installed": ("Installed", "ok"),
+    "not installed": ("Not installed", "neutral"),
+    "incomplete": ("Incomplete", "warn"),
 }
+_STATUS_FIELDS = {"Frequency steps: ": "steps", "Idle states: ": "idle"}
 
 
 def override_state(line: str) -> str | None:
@@ -34,13 +38,17 @@ def override_state(line: str) -> str | None:
     return None
 
 
-class MainWindow(QWidget):
-    @staticmethod
-    def _banner_style(colour: str | None = None) -> str:
-        """The theme's surface, the state as its left edge; padding 8px inside the border."""
-        return (surface_style(colour, "QLabel", 4)
-                + "QLabel { font-weight:700; font-size:14px; padding:7px 7px 7px 4px; }")
+def status_value(line: str) -> tuple[str, str, str] | None:
+    """("steps" or "idle", the value, the note in parentheses) from the script's "Frequency steps: 8 (800-3200 MHz;
+    ...)" and "Idle states: POLL,C1,C2 (...)" lines; None for any other line."""
+    for prefix, field in _STATUS_FIELDS.items():
+        if line.startswith(prefix):
+            value, _, note = line[len(prefix):].partition(" (")
+            return field, value.strip(), note.rstrip(")").strip()
+    return None
 
+
+class MainWindow(QWidget):
     def __init__(self, script: str, parent: QWidget | None = None):
         super().__init__(parent)
         self.setWindowTitle(f"{APP_NAME} {__version__}")
@@ -55,26 +63,46 @@ class MainWindow(QWidget):
 
         root = QVBoxLayout(self)
 
-        header_row = QHBoxLayout()
-        header = QLabel(APP_NAME)
-        header.setStyleSheet("font-size:18px; font-weight:700;")
-        header_row.addWidget(header)
-        header_row.addStretch(1)
+        # The suite's header: the icon, the title with the version and the state, About; the status boxes below.
+        header = QHBoxLayout()
+        header.setSpacing(14)
+        if LOGO_PATH.is_file():
+            logo = QLabel()
+            logo.setPixmap(QPixmap(str(LOGO_PATH)).scaled(
+                96, 96, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
+            header.addWidget(logo, 0, Qt.AlignmentFlag.AlignTop)
+        right = QVBoxLayout()
+        right.setSpacing(6)
+        title_row = QHBoxLayout()
+        title = QLabel(f"{APP_NAME}  <span style='color:{muted()}; font-size:14px;'>v{__version__}</span>")
+        title.setStyleSheet(header_font() + "font-size:24px; font-weight:800;")
+        title_row.addWidget(title)
+        self.banner = StatusText()                      # the override's state, beside the title
+        title_row.addWidget(self.banner)
+        title_row.addStretch(1)
         about_btn = QPushButton("About")
         about_btn.setFlat(True)
         about_btn.clicked.connect(self._on_about)
-        header_row.addWidget(about_btn)
-        root.addLayout(header_row)
+        title_row.addWidget(about_btn)
+        right.addLayout(title_row)
+        boxes = QHBoxLayout()
+        boxes.setSpacing(8)
+        self.override_box = MetricBox("Override", BLUE)
+        self.steps_box = MetricBox("Frequency steps", BLUE)
+        self.idle_box = MetricBox("Idle states", BLUE)
+        for box in (self.override_box, self.steps_box, self.idle_box):
+            boxes.addWidget(box)
+        boxes.addStretch(1)
+        right.addLayout(boxes)
+        header.addLayout(right, 1)
+        root.addLayout(header)
         sub = QLabel(
             "Gives the BC-250 CPU idle states (C-states) and frequency scaling (800 MHz - 3.2 GHz, 8 steps) "
             "through an ACPI override that GRUB loads at every boot. It survives kernel and image updates, "
             "and Uninstall reverses it completely.")
         sub.setWordWrap(True)
+        sub.setStyleSheet(f"color:{muted()};")
         root.addWidget(sub)
-
-        self.banner = QLabel()
-        self.banner.setStyleSheet(self._banner_style())
-        root.addWidget(self.banner)
         self._set_banner(None)
 
         buttons = QHBoxLayout()
@@ -125,9 +153,11 @@ class MainWindow(QWidget):
         AboutDialog(self).exec()
 
     def _set_banner(self, state: str | None) -> None:
-        text, color = _BANNERS.get(state or "", ("Checking…", None))
-        self.banner.setText(text)
-        self.banner.setStyleSheet(self._banner_style(color))
+        """The override's state beside the title and in the Override box: green installed, orange incomplete."""
+        text, kind = _STATES.get(state or "", ("Checking…", "neutral"))
+        self.banner.set_status(text, kind)
+        self.override_box.set_value(text)
+        self.override_box.set_colour(STATE_COLORS[kind] if kind != "neutral" else BLUE)
 
     # ---------------------------------------------------------------- output
     def _append_line(self, text: str) -> None:
@@ -136,6 +166,10 @@ class MainWindow(QWidget):
         state = override_state(text)
         if state:
             self._set_banner(state)
+        found = status_value(text)
+        if found:
+            field, value, note = found
+            (self.steps_box if field == "steps" else self.idle_box).set_value(value, note)
 
     def _set_busy(self, busy: bool) -> None:
         for btn in self._buttons:

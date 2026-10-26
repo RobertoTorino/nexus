@@ -69,12 +69,13 @@ git config --global user.email "<id>+<user>@users.noreply.github.com"
 git config --global gpg.format ssh
 git config --global user.signingkey ~/.ssh/id_ed25519.pub
 git config --global commit.gpgsign true
-git config --global tag.gpgsign true
 # so that git log --show-signature can verify your own commits
 echo "$(git config --global user.email) $(cat ~/.ssh/id_ed25519.pub)" > ~/.ssh/allowed_signers
 git config --global gpg.ssh.allowedSignersFile ~/.ssh/allowed_signers
 ```
 
-This is per machine and per user account on it: a new system, or a new home folder, starts without it. Check with
+Leave tag signing off: the release tags are plain tags (`tools/tag-release.sh`), and a signed tag needs a message,
+which breaks `git tag <name>` in the tools' tests. This is per machine and per user account on it: a new system, or
+a new home folder, starts without it. Check with
 `git config --global --list`, and with `git log -3 --format='%an <%ae> %G?'` after a commit (`G` is a good
 signature).

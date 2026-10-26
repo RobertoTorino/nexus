@@ -1,3 +1,12 @@
+Changelog: 26-10-2026 04:32:52
+
+Release 0.12.0.
+
+Changelog: 26-10-2026 04:16:34
+
+Fixed. Refresh is a pill in the header beside the status boxes (owner, 26-10-2026), as the portal's, instead of a
+button at the right end of the title row; the boxes have the suite's blue left edge, as the portal's pills.
+
 Changelog: 26-10-2026 02:14:35
 
 Release 0.11.0.

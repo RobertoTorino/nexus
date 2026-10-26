@@ -109,11 +109,11 @@ def test_states(make):
     window, link = make()
     link.state_changed.emit(State("no-access", FOUND))
     assert window.badge.text() == "No access" and not window.access_box.isHidden()
-    assert not window.power_button.isEnabled()
+    assert not window.power_pill.isEnabled()
     link.state_changed.emit(State("resetting", FOUND))
     assert window.badge.text() == "Starting the screen" and window.access_box.isHidden()
     link.state_changed.emit(State("connected", FOUND, screen.TURING_35))
-    assert window.badge.text() == "Connected" and window.power_button.isEnabled()
+    assert window.badge.text() == "Connected" and window.power_pill.isEnabled()
     assert window.model_box.value.text() == 'Turing 3.5"' and window.model_box.toolTip() == screen.TURING_35.name
     assert window.port_box.value.text() == "ttyACM0" and window.size_box.value.text() == "320×480"
     link.state_changed.emit(State("error", message="The screen stopped answering"))
@@ -167,10 +167,12 @@ def test_a_large_screen_is_previewed_smaller(make):
 def test_settings_go_to_the_link_and_are_kept(make):
     window, link = make()
     window.brightness.setValue(80)
-    window.power_button.setChecked(True)
+    window.power_pill.click()
     window.tile_boxes["disk"].setChecked(True)
     window.tile_boxes["cpu"].setChecked(False)
-    assert link.brightness[-1] == 80 and link.power == [False] and window.power_button.text() == "Screen on"
+    assert link.brightness[-1] == 80 and link.power == [False] and window.power_pill.value.text() == "Screen on"
+    window.power_pill.click()
+    assert link.power == [False, True] and window.power_pill.value.text() == "Screen off"
     window2, link2 = make()
     assert window2.brightness.value() == 80 and link2.brightness == [80]
     assert window2.shown_tiles() == ["gpu", "vram", "ram", "fan", "net", "disk"]

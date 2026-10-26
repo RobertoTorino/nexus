@@ -38,6 +38,22 @@ def test_header(window):
     assert any("BC-250 GPU OC Bisect" in label.text() and f"v{__version__}" in label.text() for label in labels)
 
 
+def test_the_status_boxes_sum_up_the_sweep(window):
+    """The suite's header (owner, 26-10-2026): four boxes under the title follow the options."""
+    boxes = (window.load_box, window.rounds_box, window.oc_box, window.uv_box)
+    assert [b.value.text() for b in boxes] == ["180 s", "3", "to 2200 MHz", "to 850 mV"]
+    assert all("#1565c0" in b.styleSheet() for b in boxes)                # the suite's blue edge
+    window.time_spin.setValue(240)
+    window.max_freq_spin.setValue(2000)
+    window.oc_volt_spin.setValue(950)
+    assert window.load_box.value.text() == "240 s" and window.oc_box.value.text() == "to 2000 MHz"
+    assert "950 mV" in window.oc_box.toolTip()
+    window.uv_check.setChecked(False)
+    assert window.uv_box.value.text() == "Off" and window.oc_box.value.text() == "to 2000 MHz"
+    window.oc_check.setChecked(False)
+    assert window.oc_box.value.text() == "Off" and not window.start_btn.isEnabled()
+
+
 def test_start_with_the_defaults(window, commands):
     window.start_btn.click()
     assert [shlex.split(c) for c in commands] == [["bash", SCRIPT, "-t", "180", "-r", "3"]]

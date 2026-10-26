@@ -94,10 +94,11 @@ class StatBox(QFrame):
         self.set_color(color)
 
     def set_color(self, color: str) -> None:
-        """The theme's surface, *color* its left edge (GRAY: none); outlined in the accent on hover."""
+        """The theme's surface, *color* its left edge (GRAY: the suite's blue, as every neutral header box; owner,
+        26-10-2026); outlined in the accent on hover."""
         self.color = color
         hover = f"StatBox:hover {{ border-color:{ACCENT}; }}" if self.clickable else ""
-        self.setStyleSheet(surface_style(None if color == GREY else color, "StatBox") + hover)
+        self.setStyleSheet(surface_style(BLUE if color == GREY else color, "StatBox") + hover)
 
     def mouseReleaseEvent(self, event) -> None:
         if (self.clickable and event.button() == Qt.MouseButton.LeftButton

@@ -47,7 +47,6 @@ AUTOMATIC = (
 )
 # The four boxes at the top, left to right, each its own color: the info blue, orange, black, purple.
 DARK_BLUE = "#1565c0"
-BLACK = "#000000"
 # What to do for the picture after the TV was off (display.py): key, label, explanation.
 PICTURE = (
     ("nothing", "Leave it as it is",
@@ -156,7 +155,7 @@ class MainWindow(QMainWindow):
 
         self.adapter_box = MetricBox("CEC adapter", DARK_BLUE)
         self.address_box = MetricBox("Physical address", ORANGE)
-        self.display_box = MetricBox("Display", BLACK)
+        self.display_box = MetricBox("Display", DARK_BLUE)      # the suite's blue (owner, 26-10-2026)
         self.power_box = MetricBox("TV power", PURPLE)
         for box in (self.adapter_box, self.address_box, self.display_box, self.power_box):
             header.add_second(box)

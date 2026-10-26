@@ -20,7 +20,7 @@ from PyQt6.QtWidgets import (QGroupBox, QHBoxLayout, QLabel, QMainWindow, QMessa
 from bc250_core import SUITE_MANUAL_URL, window_title
 from bc250_core import __version__ as CORE_VERSION
 from bc250_core.settings import SettingsStore
-from bc250_core.theme import GREY, ORANGE, RED, STATE_COLORS
+from bc250_core.theme import BLUE, ORANGE, RED, STATE_COLORS
 from bc250_core.widgets import AppHeader, MetricBox, StatusText, accent_button, hint_label
 
 from . import APP_NAME, INFO, LOGO_PATH, __version__
@@ -56,10 +56,10 @@ class MainWindow(QMainWindow):
         header = AppHeader(LOGO_PATH, APP_NAME, __version__)
         self.badge = StatusText()
         header.add_state(self.badge)
-        self.gpu_box = MetricBox("GPU (edge)", GREY)
-        self.cpu_box = MetricBox("CPU (Tctl)", GREY)
-        self.fan_box = MetricBox("Fan", GREY)
-        self.guard_box = MetricBox("Thermal guard", GREY)
+        self.gpu_box = MetricBox("GPU (edge)", BLUE)          # the suite's blue edge while nothing is wrong, as
+        self.cpu_box = MetricBox("CPU (Tctl)", BLUE)          # the portal's pills (owner, 26-10-2026)
+        self.fan_box = MetricBox("Fan", BLUE)
+        self.guard_box = MetricBox("Thermal guard", BLUE)
         for box in (self.gpu_box, self.cpu_box, self.fan_box, self.guard_box):
             header.add_second(box)
 
@@ -172,7 +172,7 @@ class MainWindow(QMainWindow):
         for box, value in ((self.gpu_box, reading.gpu_c), (self.cpu_box, reading.cpu_c)):
             box.set_value(celsius_text(value))
             hot = value is not None and value >= limits.cool_c
-            set_box_colour(box, RED if hot else ORANGE if value is not None and value >= limits.warn_c else GREY)
+            set_box_colour(box, RED if hot else ORANGE if value is not None and value >= limits.warn_c else BLUE)
         self.show_fans(reading)
         self.show_guard(reading)
         self.refresh_buttons()
@@ -207,7 +207,7 @@ class MainWindow(QMainWindow):
         if self.installed is None:
             self.badge.set_status("Guard off", "warn", "Nothing watches the temperatures while this window is closed.")
             self.guard_box.set_value("Off")
-            set_box_colour(self.guard_box, GREY)
+            set_box_colour(self.guard_box, BLUE)
         elif self.state is None:
             self.badge.set_status("Guard not running", "bad", "The guard is installed but does not run.")
             self.guard_box.set_value("Stopped")

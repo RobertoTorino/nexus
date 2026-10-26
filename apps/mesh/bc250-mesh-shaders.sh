@@ -16,7 +16,7 @@
 # test results in ~/.local/state/bc250-mesh-shaders; under sudo or pkexec these are the calling user's.
 set -euo pipefail
 
-VERSION="0.13.0"
+VERSION="0.14.0"
 # The DirectMesh release this version of the app builds: its patch (in mesa/), the stock Mesa release it is made
 # for, and the patch's SHA-256 from the release's SHA256SUMS.
 DIRECTMESH=v1.3.1

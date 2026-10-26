@@ -1,3 +1,13 @@
+Changelog: 26-10-2026 04:32:52
+
+Release 0.12.0.
+
+Changelog: 26-10-2026 04:03:35
+
+Fixed. The status boxes in the header have the suite's blue left edge while nothing is wrong, as the portal's
+pills and the other apps' boxes (owner, 26-10-2026); they had a gray one. Orange and red for a warm and a hot
+reading stay.
+
 Changelog: 26-10-2026 02:14:35
 
 Release 0.11.0.

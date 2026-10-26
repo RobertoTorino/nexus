@@ -1,3 +1,13 @@
+Changelog: 26-10-2026 04:32:52
+
+Release 0.6.0.
+
+Changelog: 26-10-2026 04:16:34
+
+Fixed. Screen off is a pill in the header beside the status boxes, as wide as they are (owner, 26-10-2026), instead
+of a button at the right end of the title row; it reads Screen on while the backlight is off. The boxes have the
+suite's blue left edge, as the portal's pills.
+
 Changelog: 26-10-2026 02:14:35
 
 Release 0.5.0.

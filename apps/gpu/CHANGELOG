@@ -1,3 +1,12 @@
+Changelog: 26-10-2026 04:32:52
+
+Release 0.3.1.
+
+Changelog: 26-10-2026 04:16:33
+
+Fixed. The header's neutral boxes (temperature, power, performance mode, governor) have the suite's blue left edge,
+as the portal's pills (owner, 26-10-2026); the widgets copy follows core's.
+
 Changelog: 26-10-2026 02:14:35
 
 Release 0.3.0.

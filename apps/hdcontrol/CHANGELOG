@@ -1,3 +1,13 @@
+Changelog: 26-10-2026 04:32:52
+
+Release 0.8.0.
+
+Changelog: 26-10-2026 04:16:33
+
+Fixed. The header's boxes and the Latest firmware pill have the edges every app's have, the suite's blue on the
+left and the theme's thin border (owner, 26-10-2026); they had the app's softened, thin edge, which the cards of the
+main page keep.
+
 Changelog: 26-10-2026 02:14:35
 
 Release 0.7.0.

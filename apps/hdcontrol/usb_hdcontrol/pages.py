@@ -190,27 +190,19 @@ WIDER = 1.05                        # the header's boxes 5 % wider than core mak
 
 
 class Box(MetricBox):
-    """Core's header box with the app's soft edge, 5 % wider."""
+    """Core's header box, 5 % wider; its edges as core draws them (owner, 26-10-2026: the same as every app's)."""
 
     def sizeHint(self) -> QSize:  # noqa: N802 (Qt override)
         hint = super().sizeHint()
         return QSize(round(hint.width() * WIDER), hint.height())
-
-    def set_colour(self, colour: str) -> None:
-        super().set_colour(colour)
-        self.setStyleSheet(style.soften(self.styleSheet()))
 
 
 class SoftPill(Pill):
-    """Core's header pill with the app's soft edge, 5 % wider."""
+    """Core's header pill, 5 % wider; its edges as core draws them (owner, 26-10-2026)."""
 
     def sizeHint(self) -> QSize:  # noqa: N802 (Qt override)
         hint = super().sizeHint()
         return QSize(round(hint.width() * WIDER), hint.height())
-
-    def set_colour(self, colour: str) -> None:
-        super().set_colour(colour)
-        self.setStyleSheet(style.soften(self.styleSheet()))
 
 
 class Section(QFrame):

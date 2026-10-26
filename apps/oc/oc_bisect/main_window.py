@@ -2,7 +2,9 @@
 
 """Single window: a menu-driven "initial setup" screen for bc250-gpu-oc-bisect.sh. Pick the
 options, hit Start, and the GUI hands off to a terminal running the real script and gets out of
-the way."""
+the way. The header is the suite's (owner, 26-10-2026): the icon, the title with the version, Help and About at
+the right end, and under it four status boxes that sum up the sweep as the options stand (the load per attempt,
+the rounds per step, the overclock and the undervolt sweep); what the window does is a muted note below."""
 
 from __future__ import annotations
 
@@ -21,7 +23,8 @@ from .options import (
     HARD_MAX_FREQ, HARD_MAX_VOLT, HARD_MIN_VOLT, SweepOptions,
 )
 from .terminal import launch_in_terminal
-from .widgets import AboutDialog, HelpDialog
+from .theme import BLUE, header_font, muted
+from .widgets import AboutDialog, HelpDialog, MetricBox
 
 
 class MainWindow(QWidget):
@@ -32,6 +35,12 @@ class MainWindow(QWidget):
 
         root = QVBoxLayout(self)
         root.addLayout(self._build_header())
+        note = QLabel("Choose how you want to run bc250-gpu-oc-bisect.sh, then click Start. This window closes and "
+                      "the real sweep continues in a terminal, exactly like running the script by hand. An unstable "
+                      "step can freeze the system - save your work first.")
+        note.setWordWrap(True)
+        note.setStyleSheet(f"color:{muted()};")
+        root.addWidget(note)
         root.addWidget(self._build_options_frame())
         root.addLayout(self._build_buttons())
         root.addStretch(1)
@@ -51,8 +60,8 @@ class MainWindow(QWidget):
         header_right = QVBoxLayout()
         header_right.setSpacing(6)
         title_row = QHBoxLayout()
-        title = QLabel(f"{APP_NAME}  <span style='color:#9aa0a6; font-size:14px;'>v{__version__}</span>")
-        title.setStyleSheet("font-size:24px; font-weight:800;")
+        title = QLabel(f"{APP_NAME}  <span style='color:{muted()}; font-size:14px;'>v{__version__}</span>")
+        title.setStyleSheet(header_font() + "font-size:24px; font-weight:800;")
         title_row.addWidget(title)
         title_row.addStretch(1)
         help_btn = QPushButton("Help")
@@ -64,13 +73,35 @@ class MainWindow(QWidget):
         about_btn.clicked.connect(lambda: AboutDialog(self).exec())
         title_row.addWidget(about_btn)
         header_right.addLayout(title_row)
-        sub = QLabel(("Choose how you want to run bc250-gpu-oc-bisect.sh, then click Start. This window "
-                      "closes and the real sweep continues in a terminal, exactly like running the script "
-                      "by hand. An unstable step can freeze the system - save your work first."))
-        sub.setWordWrap(True)
-        header_right.addWidget(sub)
+        boxes = QHBoxLayout()                          # the sweep as the options stand, kept up to date
+        boxes.setSpacing(8)
+        self.load_box = MetricBox("Load per attempt", BLUE)
+        self.rounds_box = MetricBox("Rounds per step", BLUE)
+        self.oc_box = MetricBox("Overclock sweep", BLUE)
+        self.uv_box = MetricBox("Undervolt sweep", BLUE)
+        for box in (self.load_box, self.rounds_box, self.oc_box, self.uv_box):
+            boxes.addWidget(box)
+        boxes.addStretch(1)
+        header_right.addLayout(boxes)
         header.addLayout(header_right, 1)
         return header
+
+    def _show_summary(self) -> None:
+        """The status boxes: the sweep the Start button would run."""
+        self.load_box.set_value(f"{self.time_spin.value()} s", "GPU load per attempt (-t).")
+        self.rounds_box.set_value(str(self.rounds_spin.value()), "Attempts per step (-r).")
+        if self.oc_check.isChecked():
+            volt = self.oc_volt_spin.value()
+            self.oc_box.set_value(f"to {self.max_freq_spin.value()} MHz",
+                                  f"--oc: up in steps of {self.freq_step_spin.value()} MHz, at "
+                                  f"{f'{volt} mV' if volt else 'the config\'s top voltage'}.")
+        else:
+            self.oc_box.set_value("Off", "No overclock sweep.")
+        if self.uv_check.isChecked():
+            self.uv_box.set_value(f"to {self.min_volt_spin.value()} mV",
+                                  f"--uv: down in steps of {self.volt_step_spin.value()} mV.")
+        else:
+            self.uv_box.set_value("Off", "No undervolt sweep.")
 
     def _build_options_frame(self) -> QFrame:
         frame = QFrame()
@@ -169,6 +200,9 @@ class MainWindow(QWidget):
         row += 1
 
         grid.setColumnStretch(1, 1)
+        for spin in (self.time_spin, self.rounds_spin, self.max_freq_spin, self.freq_step_spin, self.oc_volt_spin,
+                     self.min_volt_spin, self.volt_step_spin):
+            spin.valueChanged.connect(lambda _value: self._show_summary())
         return frame
 
     def _build_buttons(self) -> QHBoxLayout:
@@ -228,6 +262,7 @@ class MainWindow(QWidget):
         self.min_volt_spin.setEnabled(uv)
         self.volt_step_spin.setEnabled(uv)
         self.start_btn.setEnabled(oc or uv)
+        self._show_summary()
 
     def _collect_options(self) -> SweepOptions:
         return SweepOptions(

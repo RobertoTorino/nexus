@@ -53,7 +53,8 @@ checkout uses its own checkout.
 - `apps/` may also contain standalone tools (with a `.standalone` marker) that do not appear in `apps.toml`
   and that the portal does not install or open.
 - Install, update and uninstall run **the app's own installer** in a terminal window, because installers may ask
-  for the sudo password and print what they do. The portal watches for the result and refreshes.
+  for the sudo password and print what they do. The portal watches for the result and refreshes. A terminal whose
+  installer ended well closes by itself; one that failed stays open with what happened until you press Enter.
 - Apps that change how the board runs (CU/core unlocks, the GPU governor, GPU overclocking, the ACPI override, the VRAM
   split, a patched GPU driver) are marked **changes the board**. The portal warns before installing or opening them.
 - Each portal release pins one tested release of every app in [`apps.toml`](https://github.com/RobertoTorino/nexus/blob/main/portal/apps.toml). The portal downloads
@@ -90,6 +91,11 @@ checkout uses its own checkout.
   of how many it is at, for example **2/5**. An install that fails does not stop the others; at the end the portal
   names those that failed, and the Install button on their tiles tries again. **Refresh**, while it waits for a
   terminal that was closed, can stop waiting, and then stops the rest too.
+- **Install all apps**, the last tab: a button that looks like a tab. It installs every app of the open category
+  that is not installed yet, one after the other, the same way as **Install all updates**: one question with the
+  list and the board warning, each installer in its own terminal, the tab showing which one of how many. It is
+  disabled once every app of the category is installed, and on **Development**: those apps are tools for working on
+  the suite, installed from their tiles. A portal installed for the first time fills a category with one click.
 - **Icons on Desktop**, a pill at the top (Yes or No; click it to switch): on, every installed app has an icon on the Desktop; off, only the
   portal's icon is there and you start the apps from the portal. The apps stay in the app menu either way, so KDE's
   search and Steam's **Add a Non-Steam Game** still find them. The first time the portal starts with app icons on
@@ -123,7 +129,8 @@ checkout uses its own checkout.
   (with UEFI and Secure Boot), the CPU (model, cores and threads online, top clock, microcode), each GPU (name,
   driver, VRAM, shared memory, clock levels, VBIOS, PCIe link), the memory, the drives with the free space in your
   home folder, the displays (each output, the monitor's name and its preferred mode), the sound cards, the network
-  adapters and Bluetooth controllers (driver and link), the USB devices, the sensors (temperatures, fan speeds and
+  adapters and Bluetooth controllers (driver and link), the USB devices, the input devices (keyboards, mice and
+  controllers, each with the bus it is on: USB, Bluetooth, PS/2), the sensors (temperatures, fan speeds and
   the GPU's power at that moment) and the OS (version, Bazzite image, kernel, desktop). It is read each time the
   window opens; what a system does not report is left out. **Copy** puts it all on the clipboard as text, for an
   issue or a forum post. It holds nothing personal: no host or user name, no serial numbers, no MAC or IP
@@ -166,7 +173,7 @@ kept stay, with the release each one's uninstaller needs; with no app left, that
 
 For a TV and a controller, as Steam has its Big Picture. The portal goes fullscreen and shows the apps as large
 icons with large type: the category names across the top, the apps of the open category below, and what the keys do
-at the bottom. It opens with a short animated intro, about two seconds, with its own sound; press any key, click or
+at the bottom. It opens with a short animated intro, about three seconds, with its own sound; press any key, click or
 press any button on the controller to skip it. The header has the same pills as Suite Desktop Mode, under the title (the mode pill reads **BPM mode** here; click
 it to go back to Suite Desktop Mode), and, in a portal that runs from a checkout, the orange local-build banner. Press
 up on the top row of icons to reach the pills, and A or Enter to press one. The wallpaper and its transparency are the

@@ -21,7 +21,7 @@ from bc250_core import window_title
 from bc250_core.settings import restore_geometry, save_geometry
 from bc250_core.theme import GREY, STATE_COLORS
 from bc250_core.updates import UpdateChecker
-from bc250_core.widgets import AppHeader, MetricBox, StatusText, accent_button, hint_label, same_width
+from bc250_core.widgets import AppHeader, MetricBox, Pill, StatusText, accent_button, hint_label, same_width
 
 from . import APP_NAME, INFO, LOGO_PATH, __version__, access, camera, controls, firmware, loader, modes, runner
 from .camera import Camera
@@ -99,14 +99,14 @@ class MainWindow(QWidget):
         header = AppHeader(LOGO_PATH, APP_NAME, __version__)
         self.badge = StatusText("Looking for the camera")
         header.add_state(self.badge)
-        self.load_button = accent_button("Load firmware", "Sends the firmware to the camera now.")
-        self.load_button.clicked.connect(lambda: self.start_load(quiet=False))
-        header.add_action(self.load_button)
         self.camera_box = MetricBox("Camera")
         self.usb_box = MetricBox("USB")
         self.firmware_box = MetricBox("Firmware")
         self.video_box = MetricBox("Video")
-        boxes = [self.camera_box, self.usb_box, self.firmware_box, self.video_box]
+        # Load firmware is a pill beside the boxes (owner, 26-10-2026), as the portal's header has its actions.
+        self.load_pill = Pill("Load firmware", "Click to send", "Sends the firmware to the camera now.")
+        self.load_pill.clicked.connect(lambda: self.start_load(quiet=False))
+        boxes = [self.camera_box, self.usb_box, self.firmware_box, self.video_box, self.load_pill]
         for box in boxes:
             header.add_second(box)
         same_width(boxes)
@@ -290,7 +290,7 @@ class MainWindow(QWidget):
         self._show_firmware(data)
         self.video_box.set_value(found.videos[0].removeprefix("/dev/") if found and found.videos else "—")
         model_name = camera.MODELS[self.model()]
-        self.load_button.setEnabled(found is not None and not found.booted and not self.loading
+        self.load_pill.setEnabled(found is not None and not found.booted and not self.loading
                                     and self.can_load(found))
         pinned = firmware.PINNED.get(self.model())
         self.download_button.setEnabled(not self.download_job.running and pinned is not None)

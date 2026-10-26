@@ -28,7 +28,7 @@ GAP = 20
 MARGIN = 48
 FULL_HEIGHT = 1000             # a window this high or higher is drawn at full size, a lower one smaller
 SMALLEST = 0.68                 # 1280 x 720, the screen of a handheld, is about this
-INTRO_MS = 2000
+INTRO_MS = 3000                 # about three seconds (owner, 26-10-2026: two ended too abruptly)
 LOGO_SHARE = 0.26               # the intro's icon: this part of the screen's shorter side
 # What each category is for, short enough for the line under the title on a handheld's screen.
 SHORT_HINTS = {
@@ -459,7 +459,7 @@ class BigPicture(Backdrop):
 
 
 class Intro(QWidget):
-    """The intro of Suite Big Picture Mode, about two seconds, painted over the window: a light sweeps across a dark
+    """The intro of Suite Big Picture Mode, about three seconds, painted over the window: a light sweeps across a dark
     screen, rings open from the portal's icon, the name draws itself in wide letters and settles, and the screen
     clears to the mode. Any key, click or button skips it (skip(), also called by the gamepad)."""
 

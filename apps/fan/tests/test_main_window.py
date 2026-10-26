@@ -102,6 +102,7 @@ def test_running_guard_and_its_events(qapp, sys_root, paths, yes):
     assert "GPU is at 87 °C" in w.events_view.toPlainText()
     assert "orange" not in w.gpu_box.styleSheet()               # a color code, not a word
     assert "#ef6c00" in w.gpu_box.styleSheet()
+    assert "#1565c0" in w.cpu_box.styleSheet()                  # the suite's blue edge while nothing is wrong
 
 
 def test_stale_state_is_not_running(qapp, sys_root, paths, yes):

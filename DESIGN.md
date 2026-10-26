@@ -23,7 +23,8 @@ Each design (a suite's, the Nexus page's) has its own; none is carried over to a
   surfaces, text and accent below. An app adds no surface or text color of its own.
 - **One state family,** the same in every theme: green `#2e7d32` ok, orange `#ef6c00` warn, red `#c62828` bad,
   blue `#1565c0` info, yellow `#fdd835` running, gray `#3a3f4b` neutral. A state is an edge or a dot on the theme's
-  surface, a red button is the red with `#b71c1c` pressed. Active red `#8b0000` (`#a00000` under the pointer) is a
+  surface; a header box or pill in the neutral state shows the blue as its edge, as the portal's pills (owner,
+  26-10-2026), never the theme's dark edge color. A red button is the red with `#b71c1c` pressed. Active red `#8b0000` (`#a00000` under the pointer) is a
   toggled-on state, never an error.
 - **Text in a state color sits on a dark surface** in the next lighter tint of the same hue (Material's 300:
   red `#e57373`, orange `#ffb74d`, green `#81c784`, blue `#64b5f6`, purple `#ce93d8`), because the state fills read

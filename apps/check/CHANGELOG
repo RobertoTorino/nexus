@@ -1,3 +1,12 @@
+Changelog: 26-10-2026 04:32:52
+
+Release 0.15.0.
+
+Changelog: 26-10-2026 04:16:33
+
+Fixed. The dashboard's neutral stat boxes (Tests, Finished) have the suite's blue left edge, as the portal's pills
+(owner, 26-10-2026); they had the theme's edge color, near black on Gunmetal.
+
 Changelog: 26-10-2026 02:14:35
 
 Release 0.14.0.

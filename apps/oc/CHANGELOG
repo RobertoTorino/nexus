@@ -1,3 +1,16 @@
+Changelog: 26-10-2026 04:32:52
+
+Release 0.2.3.
+
+Changelog: 26-10-2026 04:03:35
+
+Fixed. The window has the suite's header (owner, 26-10-2026): the icon at 96 px, the title with the version in
+Inter and the muted color, Help and About at the right end, and under them four status boxes that sum up the
+sweep as the options stand (the load per attempt, the rounds per step, the overclock sweep's top frequency, the
+undervolt sweep's lowest voltage, or Off), kept up to date as you change them. What the window does is a muted
+note under the header instead of a paragraph in it. widgets.py carries a copy of core's MetricBox, as the app is
+not on core.
+
 Changelog: 26-10-2026 02:14:35
 
 Release 0.2.2.

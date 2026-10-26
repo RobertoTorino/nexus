@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from PyQt6 import sip
 from PyQt6.QtCore import QPoint, Qt
-from PyQt6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QTableWidget, QTableWidgetItem, QWidget
+from PyQt6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QTabBar, QTableWidget, QTableWidgetItem, QWidget
 
 from bc250_core import theme
 from bc250_core.widgets import (
@@ -49,7 +49,8 @@ def test_metric_box(qapp):
     assert f"border-left:4px solid {theme.PURPLE}" in box.styleSheet()
     box.set_colour(theme.RED)
     assert f"border-left:4px solid {theme.RED}" in box.styleSheet() and theme.PURPLE not in box.styleSheet()
-    assert f"border-left:4px solid {theme.THEME.edge}" in MetricBox("Neutral").styleSheet()   # GRAY: no color
+    assert f"border-left:4px solid {theme.BLUE}" in MetricBox("Neutral").styleSheet()   # GRAY: the suite's blue
+    assert theme.THEME.edge not in MetricBox("Neutral").styleSheet().split("border-left")[1].split(";")[0]
 
 
 def test_pill_is_a_metric_box_that_clicks(qapp):
@@ -183,6 +184,24 @@ def test_item_view_tooltip_text(qapp):
     rect = table.visualItemRect(item)
     text, area = RoundedToolTip._text_at(table.viewport(), rect.center())
     assert text == "cell tip" and area == rect
+
+
+def test_tab_tooltip_text(qapp):
+    """A tab's tooltip (setTabToolTip) in the rounded style too (owner, 26-10-2026: the portal's tabs showed Qt's
+    plain one); between the tabs the bar's own, or nothing."""
+    bar = QTabBar()
+    bar.addTab("One")
+    bar.addTab("Two")
+    bar.setTabToolTip(1, "second tip")
+    bar.setExpanding(False)                                  # room beside the tabs
+    bar.resize(400, 40)
+    bar.show()
+    rect = bar.tabRect(1)
+    assert RoundedToolTip._text_at(bar, rect.center()) == ("second tip", rect)
+    assert RoundedToolTip._text_at(bar, bar.tabRect(0).center()) == ("", bar.tabRect(0))
+    assert RoundedToolTip._text_at(bar, QPoint(390, 20)) == (None, bar.rect())
+    bar.setToolTip("the bar")
+    assert RoundedToolTip._text_at(bar, QPoint(390, 20)) == ("the bar", bar.rect())
 
 
 def test_tooltip_filter_is_removed_when_the_app_quits(qapp, monkeypatch):

@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The portal's system information (owner, 20-10-2026): the board, BIOS, CPU, GPU, memory, drives, displays, audio,
-network, USB devices, sensors and OS, as the system reports them, in the window the Sys info pill opens. Everything is
+network, USB devices, input devices (owner, 26-10-2026), sensors and OS, as the system reports them, in the window
+the Sys info pill opens. Everything is
 read when the window opens, from sysfs, /proc and /etc, without root and without starting a program; what a system
 does not report is left out. The sensors are the readings of that moment.
 
@@ -28,6 +29,8 @@ USB_SPEEDS = {"1.5": "USB 1.0", "12": "USB 1.1", "480": "USB 2.0", "5000": "USB 
               "20000": "USB 3.2"}
 EDID_NAME = 0xFC                # the display descriptor with the monitor's name (0xFF holds its serial: never read)
 MAC = re.compile(r"([0-9a-f]{2}[:-]){5}[0-9a-f]{2}", re.IGNORECASE)
+INPUT_BUSES = {"0003": "USB", "0005": "Bluetooth", "0006": "virtual", "0011": "PS/2", "0018": "I2C",
+               "0019": "", "0001": ""}         # host and PCI: the board's own buttons and the GPU's audio jacks
 
 Section = tuple[str, list[tuple[str, str]]]
 
@@ -282,6 +285,21 @@ def usb(sys_root: Path, usb_ids: tuple[Path, ...] = USB_IDS) -> Section:
     return "USB", rows
 
 
+def inputs(sys_root: Path) -> Section:
+    """The input devices plugged in or paired (keyboards, mice, controllers), each with the bus it is on: USB,
+    Bluetooth, PS/2, I2C or a virtual one. The board's own buttons and the GPU's audio jacks (the host and PCI buses)
+    are left out, and a device the kernel registers twice under one name is listed once."""
+    rows: list[tuple[str, str]] = []
+    devices = sorted((sys_root / "class" / "input").glob("input*"),
+                     key=lambda p: int(p.name[5:]) if p.name[5:].isdigit() else 0)
+    for device in devices:
+        name = _read(device / "name")
+        bus = INPUT_BUSES.get(_read(device / "id" / "bustype").lower(), "other bus")
+        if name and bus and (name, bus) not in rows:
+            rows.append((name, bus))
+    return "Input", rows
+
+
 def sensors(sys_root: Path) -> Section:
     """Temperatures, fan speeds and power of every hwmon chip, as they read now; a sensor that reads 0 (a fan header
     or probe with nothing on it) is left out, so is a chip named after a device's MAC address."""
@@ -333,7 +351,7 @@ def collect(sys_root: Path = Path("/sys"), proc_root: Path = Path("/proc"), etc_
     """Every section with the rows the system reports: one without any is left out."""
     sections = [board(sys_root), bios(sys_root), cpu(sys_root, proc_root), *gpus(sys_root, ids), memory(proc_root),
                 drives(sys_root, home or Path.home()), displays(sys_root), audio(proc_root),
-                network(sys_root, ids, usb_ids), usb(sys_root, usb_ids), sensors(sys_root),
+                network(sys_root, ids, usb_ids), usb(sys_root, usb_ids), inputs(sys_root), sensors(sys_root),
                 os_release(etc_root, image_info)]
     shown = [(title, [(k, v) for k, v in rows if v.strip()]) for title, rows in sections]
     return [(title, rows) for title, rows in shown if rows]

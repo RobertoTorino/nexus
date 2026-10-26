@@ -24,7 +24,7 @@ from bc250_core.sensors import Sensors
 from bc250_core.settings import SettingsStore, restore_geometry, save_geometry
 from bc250_core.theme import ACCENT
 from bc250_core.updates import UpdateChecker
-from bc250_core.widgets import AppHeader, MetricBox, StatusText, accent_button, hint_label, same_width
+from bc250_core.widgets import AppHeader, MetricBox, Pill, StatusText, accent_button, hint_label, same_width
 
 from . import APP_NAME, INFO, LOGO_PATH, __version__, access, autostart, network, render, runner, screen, weather
 from .link import Link, State
@@ -97,15 +97,15 @@ class MainWindow(QWidget):
         header = AppHeader(LOGO_PATH, APP_NAME, __version__)
         self.badge = StatusText("Looking for the screen")
         header.add_state(self.badge)
-        self.power_button = QPushButton("Screen off")
-        self.power_button.setCheckable(True)
-        self.power_button.setToolTip("Switches the screen's backlight off and on; the app keeps running.")
-        self.power_button.toggled.connect(self.set_power)
-        header.add_action(self.power_button)
         self.model_box = MetricBox("Screen")
         self.port_box = MetricBox("Port")
         self.size_box = MetricBox("Resolution")
-        boxes = [self.model_box, self.port_box, self.size_box]
+        # Screen off is a pill beside the boxes (owner, 26-10-2026); it reads Screen on while the backlight is off.
+        self.screen_off = False
+        self.power_pill = Pill("Screen off", "Click to switch",
+                               "Switches the screen's backlight off and on; the app keeps running.")
+        self.power_pill.clicked.connect(lambda: self.set_power(not self.screen_off))
+        boxes = [self.model_box, self.port_box, self.size_box, self.power_pill]
         for box in boxes:
             header.add_second(box)
         same_width(boxes)
@@ -610,7 +610,8 @@ class MainWindow(QWidget):
         self.size_box.set_value(f"{width}×{height}" if self.state.kind == "connected" else "—")
 
     def set_power(self, off: bool) -> None:
-        self.power_button.setText("Screen on" if off else "Screen off")
+        self.screen_off = off
+        self.power_pill.set_value("Screen on" if off else "Screen off", self.power_pill.toolTip())
         self.link.set_power(not off)
 
     # ------------------------------------------------------------------ state
@@ -636,7 +637,7 @@ class MainWindow(QWidget):
         self.model_box.set_value(self.model.short if connected else "—", self.model.name if connected else "")
         self.port_box.set_value(state.found.port.name if state.found else "—")
         self._show_size()
-        self.power_button.setEnabled(connected)
+        self.power_pill.setEnabled(connected)
 
     def show_sent(self, size: int) -> None:
         """How much the last update sent, in the state's tooltip: a few KB a second, a whole picture at start."""

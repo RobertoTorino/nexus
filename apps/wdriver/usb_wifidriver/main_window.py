@@ -24,7 +24,7 @@ from bc250_core import __version__ as CORE_VERSION
 from bc250_core.platform import data_home
 from bc250_core.settings import SettingsStore
 from bc250_core.theme import GREEN, GREY, ORANGE, RED
-from bc250_core.widgets import AppHeader, MetricBox, StatusText, Terminal, accent_button, hint_label
+from bc250_core.widgets import AppHeader, MetricBox, Pill, StatusText, Terminal, accent_button, hint_label
 
 from . import APP_ID, APP_NAME, INFO, LOGO_PATH, __version__
 from . import builder, driver, privileged, stick
@@ -120,15 +120,14 @@ class MainWindow(QMainWindow):
         header = AppHeader(LOGO_PATH, APP_NAME, __version__)
         self.badge = StatusText()
         header.add_state(self.badge)
-        self.refresh_button = QPushButton("Refresh")
-        self.refresh_button.setToolTip("Read the stick, the kernel log and the service again")
-        self.refresh_button.clicked.connect(lambda: self.refresh(read_log=True))
-        header.add_action(self.refresh_button)
         self.stick_box = MetricBox("Stick", GREY)
         self.chip_box = MetricBox("Chip", GREY)
         self.driver_box = MetricBox("Driver", GREY)
         self.wifi_box = MetricBox("Wi-Fi", GREY)
-        for box in (self.stick_box, self.chip_box, self.driver_box, self.wifi_box):
+        # Refresh is a pill beside the boxes (owner, 26-10-2026), as the portal's.
+        self.refresh_pill = Pill("Refresh", "Click to refresh", "Read the stick, the kernel log and the service again")
+        self.refresh_pill.clicked.connect(lambda: self.refresh(read_log=True))
+        for box in (self.stick_box, self.chip_box, self.driver_box, self.wifi_box, self.refresh_pill):
             header.add_second(box)
 
         group = QGroupBox("Driver")
@@ -411,7 +410,7 @@ class MainWindow(QMainWindow):
         self.remove_button.setEnabled(idle and self.installed is not None)
         self.branch_combo.setEnabled(idle)
         self.newest_check.setEnabled(idle)
-        self.refresh_button.setEnabled(idle)
+        self.refresh_pill.setEnabled(idle)
 
     # --- Actions ----------------------------------------------------------------------------------------------
 

@@ -148,10 +148,16 @@ def test_the_owners_board(tmp_path, monkeypatch):
     monkeypatch.setenv("XDG_CURRENT_DESKTOP", "KDE")
     monkeypatch.setenv("XDG_SESSION_TYPE", "wayland")
     sys, proc, etc, ids, image = bc250(tmp_path)
+    for number, name, bus in ((0, "Power Button", "0019"), (6, "HD-Audio Generic HDMI/DP,pcm=3", "0001"),
+                              (12, "Sony Interactive Entertainment Wireless Controller", "0003"),
+                              (13, "Dell Keybd KB740 Keyboard", "0005"), (14, "Dell Keybd KB740 Keyboard", "0005"),
+                              (15, "Microsoft X-Box 360 pad 0", "0006")):    # Steam Input's virtual pad
+        write(sys / "class" / "input" / f"input{number}" / "name", name + "\n")
+        write(sys / "class" / "input" / f"input{number}" / "id" / "bustype", bus + "\n")
     found = collect(tmp_path, sys, proc, etc, ids, image)
     sections = dict(found)
     assert list(sections) == ["Board", "BIOS", "CPU", "GPU", "Memory", "Drives", "Display", "Audio", "Network", "USB",
-                              "Sensors", "OS"]
+                              "Input", "Sensors", "OS"]
     assert sections["Board"] == [("Board", "ASRock AMD BC-250"), ("Product", "AMD BC-250")]   # no "Default string"
     assert sections["BIOS"] == [("Version", "P5.00"), ("Vendor", "American Megatrends Inc."), ("Date", "05/03/2022"),
                                 ("Boot", "UEFI")]
@@ -177,6 +183,8 @@ def test_the_owners_board(tmp_path, monkeypatch):
         ("hci0", "UGREEN BT6.0 Adapter, Bluetooth, btusb")]
     assert sections["USB"] == [("a69c:8d80", "aicsemi AIC Wlan, USB 2.0"), ("33fa:0012", "UGREEN BT6.0 Adapter, USB 1.1"),
                                ("054c:09cc", "Sony Interactive Entertainment Wireless Controller, USB 1.1")]  # bus order
+    assert sections["Input"] == [("Sony Interactive Entertainment Wireless Controller", "USB"),
+                                 ("Dell Keybd KB740 Keyboard", "Bluetooth"), ("Microsoft X-Box 360 pad 0", "virtual")]
     assert sections["Sensors"] == [
         ("nvme Composite", "39.9 °C"), ("nct6686 CPU", "42.0 °C"), ("nct6686 Pump Fan", "1151 RPM"),
         ("amdgpu edge", "44.0 °C"), ("amdgpu PPT", "43.9 W"), ("k10temp Tctl", "43.4 °C")]    # hwmon10 after hwmon3

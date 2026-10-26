@@ -149,10 +149,10 @@ class Tour(Recorder):
             self.hold(4)
 
         self.say("")
-        for index in range(1, w.tabs.count()):
+        for category, page in list(w.pages.items())[1:]:   # the last tab, Install all apps, is a button
+            index = w.tabs.indexOf(page)
             self.move(self.tab_at(w.tabs.tabBar(), index), 0.7)
             self.click(lambda i=index: w.tabs.setCurrentIndex(i))
-            category = next(k for k, page in w.pages.items() if page is w.tabs.widget(index))
             self.say(f"{CATEGORIES[category]}: {CATEGORY_HINTS[category]}")
             self.hold(3.8)
         self.say("")

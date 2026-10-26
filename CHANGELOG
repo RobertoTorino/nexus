@@ -1,3 +1,14 @@
+Changelog: 26-10-2026 03:19:06
+
+The README is Nexus's (owner, 26-10-2026: on GitHub the repository is nexus, and the README still presented the
+BC250 Bazzite Suite alone): the name and the structure, a link to the Nexus page, the list of suites, and the
+BC250 Bazzite Suite as its first section with everything it said before. The disclaimer at the bottom of the
+suite's wiki Home page and of the README names Xbox, Xbox 360, Xbox Cloud Gaming and Windows as Microsoft's, Valve's
+Steam, Steam Deck and Big Picture, Sony's consoles, DualSense and Remote Play, the emulators, Decky Loader, HelixSR
+and DirectMesh (owner, 26-10-2026). tools/type_specimen.py draws the suite's text styles (the title, a pill's value
+and caption, a page title, a state, a status pill and running text) in every weight and letter-spacing, as a picture
+or a window, to pick what reads best on a screen (owner, 26-10-2026: the bold text is hard to read).
+
 Changelog: 26-10-2026 03:01:12
 
 The release workflow's Publish step tries up to five times, a growing pause between them, when GitHub's API fails

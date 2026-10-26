@@ -85,7 +85,7 @@ def wait_load(qapp, window):
 
 def test_no_camera(make, tmp_path):
     window = make()
-    assert window.badge.text() == "No camera" and not window.load_button.isEnabled()
+    assert window.badge.text() == "No camera" and not window.load_pill.isEnabled()
     assert "Unplug it and plug it in again" in window.picture.text() and "restart" in window.badge.toolTip()
     assert window.camera_box.value.text() == "—" and window.firmware_box.value.text() == "None"
     assert not window.access_box.isVisibleTo(window) and not window.preview_button.isEnabled()
@@ -123,7 +123,7 @@ def test_boot_mode_needs_its_firmware(make, tmp_path):
     plug(tmp_path / "sys")
     window = make()
     assert window.badge.text() == "Needs its firmware" and window.camera_box.value.text() == "PS5 HD Camera"
-    assert window.usb_box.value.text() == "5 Gbit/s" and not window.load_button.isEnabled()
+    assert window.usb_box.value.text() == "5 Gbit/s" and not window.load_pill.isEnabled()
 
 
 def test_a_camera_that_is_there_gets_no_restart_hint(make, tmp_path):
@@ -136,7 +136,7 @@ def test_boot_mode_without_access(make, tmp_path):
     plug(tmp_path / "sys")
     firmware.store("cfi-zey1", FIRMWARE)
     window = make(writable=False)
-    assert window.badge.text() == "No access" and not window.load_button.isEnabled()
+    assert window.badge.text() == "No access" and not window.load_pill.isEnabled()
 
 
 def test_a_slow_port_is_flagged(make, tmp_path):
@@ -150,8 +150,8 @@ def test_load_firmware_by_hand(make, tmp_path, qapp):
     firmware.store("cfi-zey1", FIRMWARE)
     main_window.CameraSettings(main_window.INFO).set("autoload", False)
     window = make()
-    assert window.badge.text() == "Waiting for its firmware" and window.load_button.isEnabled()
-    window.load_button.click()
+    assert window.badge.text() == "Waiting for its firmware" and window.load_pill.isEnabled()
+    window.load_pill.click()
     assert window.badge.text() == "Loading the firmware"
     wait_load(qapp, window)
     assert window.loads == [("7-1", FIRMWARE)]

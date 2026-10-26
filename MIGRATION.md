@@ -1372,6 +1372,34 @@ streaming BC-250 games to the Ally.
 
 ## Known issues to fix
 
+- **The owner's list of 26-10-2026, before the next suite (owner, 26-10-2026).** Done (26-10-2026): the intro of
+  Suite Big Picture Mode lasts three seconds, its sound with it (two ended too abruptly); Install all apps, the
+  last tab as a button (owner, 26-10-2026: not a pill): every app of the open category not installed yet, as one
+  batch like Install all updates, disabled on Development; a terminal whose installer ended well closes by itself, one that failed stays open (core's
+  `keep_open="on_error"`); Sys info lists the input devices (keyboards, mice, controllers, with their bus) beside the
+  displays, audio, network, Bluetooth and USB it had since 20-10-2026 ("see what hardware is connected": the owner
+  says if more is wanted, and where); the disclaimer on the wiki's Home page and in the README names Xbox, Valve and
+  the rest; the README is Nexus's with the suite as its first section. The mesh patch (`bc250-suite-mesa-26.2.1.patch`)
+  stays: it is built into the driver but does nothing unless `RADV_BC250_MESH_SPLIT_WRITES=1` is set per game in
+  Switches…, so other games are not touched; on, it only admits mesh shaders that write memory, which DirectMesh
+  refuses otherwise, and cannot prove the game never reads those writes back in the same draw, so it stays per game.
+  The Sustainable apps checked on the board (owner, 26-10-2026): Persistent ACPI and GPU OC Bisect have the suite's
+  header now (icon, title with the version, the state or Help/About at the right end, status boxes under it; both
+  carry copies of core's MetricBox, as they are not on core), Fan Control's boxes have the suite's blue edge instead
+  of gray; GPU OC Bisect's icon was the old one because the board still ran 0.1.9 (0.2.2 carries the category icon).
+  CU Bisect and Cores Bisect have the header GPU OC Bisect had (a paragraph under the title): the owner says
+  whether they follow. The second look (owner, 26-10-2026: dark edges on the header boxes of more apps, HD
+  Control's thin ones, buttons in the title row): core's MetricBox and Pill draw the neutral (gray) state as the
+  suite's blue edge, as the portal's pills, and the gpu and upscaler copies and Bazzite Test's StatBox follow; HDMI
+  CEC's black Display edge is blue; HD Control's header boxes lost their softened edge (the main page's cards keep
+  it); Load firmware (USB HD Cam), Screen off (USB IPS3.5) and Refresh (USB Wi-Fi) are pills beside the status
+  boxes. Open: GPU OC Bisect on the board runs 0.1.9 while the portal sees no update; the installer's paths did not
+  change between 0.1.9 and 0.2.2, so the owner reads the link and the launcher on the board. The typography (the
+  bold text seemed hard to read) stays as it is (owner, 26-10-2026, after the specimen): `tools/type_specimen.py`
+  draws every text role in weights 600, 700 and 800 with 0, 0.5 and 1 px letter-spacing, as a picture or a window,
+  and stays for a later look. Needs releases: portal (minor), core (minor; the
+  portal bundles it), with the owner's numbers.
+
 - **HelixSR 2.0, our own solution (owner, 20-10-2026: HelixSR's developer did not answer
   [issue #90](https://github.com/lonewolf0622/HelixSR/issues/90), the build-only switch asked for on 19-10-2026).**
   HelixSR 2.0.0's `helixsr-setup.sh` hands `--yes` on to its game installer, which then puts HelixSR Scaler with frame

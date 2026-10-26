@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-"""About and Help dialogs for the launcher GUI."""
+"""About and Help dialogs for the launcher GUI, and the header's status box (a copy of core's MetricBox: this app is
+not on core)."""
 
 from __future__ import annotations
 
@@ -9,10 +10,11 @@ import subprocess
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFontDatabase, QPixmap
 from PyQt6.QtWidgets import (
-    QDialog, QDialogButtonBox, QHBoxLayout, QLabel, QTextEdit, QVBoxLayout, QWidget,
+    QDialog, QDialogButtonBox, QFrame, QHBoxLayout, QLabel, QTextEdit, QVBoxLayout, QWidget,
 )
 
 from . import APP_NAME, LOGO_PATH, REPO_URL, __version__, window_title
+from .theme import BLUE, header_font, surface_style
 
 
 class AboutDialog(QDialog):
@@ -89,3 +91,34 @@ class HelpDialog(QDialog):
             "Run it from a terminal instead:\n"
             f"  bash {script} --help"
         )
+
+
+class MetricBox(QFrame):
+    """One box of the header's second row: a big value with a caption, centered, on the theme's surface with
+    *colour* as its left edge. A copy of core's MetricBox with the same sizes: this app is not on core."""
+
+    MIN_WIDTH = 120
+
+    def __init__(self, caption: str, colour: str = BLUE, parent: QWidget | None = None):
+        super().__init__(parent)
+        self.set_colour(colour)
+        self.setMinimumWidth(self.MIN_WIDTH)
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(8, 7, 11, 7)         # 12, 8, 12, 8 inside the border
+        layout.setSpacing(0)
+        self.value = QLabel("—")
+        self.value.setStyleSheet(header_font() + "font-size:22px; font-weight:800;")
+        self.caption = QLabel(caption)
+        self.caption.setStyleSheet("font-size:12px; font-weight:600;")
+        for label in (self.value, self.caption):
+            label.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+            layout.addWidget(label)
+
+    def set_value(self, text: str, tooltip: str = "") -> None:
+        self.value.setText(text)
+        self.setToolTip(tooltip)
+
+    def set_colour(self, colour: str) -> None:
+        """The box's state or category color, its left edge."""
+        self.setStyleSheet(surface_style(colour) + "QLabel { background:transparent; border:none; }")
+

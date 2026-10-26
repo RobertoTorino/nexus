@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: MIT
-"""The window: the status banner from the real script on a fake board, and the install flow with sudo and the
-script replaced by fakes."""
+"""The window: the state beside the title and the status boxes from the real script on a fake board, and the
+install flow with sudo and the script replaced by fakes."""
 
 from __future__ import annotations
 
@@ -35,17 +35,35 @@ def test_override_state(line, state):
     assert mw.override_state(line) == state
 
 
+@pytest.mark.parametrize("line, found", [
+    ("Frequency steps: 8 (800-3200 MHz; the override gives 8, 800-3200 MHz)",
+     ("steps", "8", "800-3200 MHz; the override gives 8, 800-3200 MHz")),
+    ("Frequency steps: none listed (the BIOS tables give none; the override gives 8)",
+     ("steps", "none listed", "the BIOS tables give none; the override gives 8")),
+    ("Idle states: POLL,C1,C2 (the override gives POLL,C1,C2)", ("idle", "POLL,C1,C2", "the override gives POLL,C1,C2")),
+    ("Override: installed (/boot/acpi_override.cpio and the GRUB line)", None),
+])
+def test_status_value(line, found):
+    assert mw.status_value(line) == found
+
+
 @needs_bash
 def test_banner_follows_the_status(qapp, board, monkeypatch):
+    """The suite's header (owner, 26-10-2026): the state beside the title and the three status boxes follow the
+    script's status lines."""
     monkeypatch.setenv("BC250_ACPI_ROOT", str(board.root))
     window = mw.MainWindow(str(SCRIPT))
-    assert wait_for(lambda: window.banner.text() == "NOT INSTALLED")
+    assert wait_for(lambda: window.banner.text() == "Not installed")
     assert wait_for(lambda: not window.runner.busy)
     assert "Idle states: POLL" in window.output.toPlainText()
+    assert window.banner.kind == "neutral" and window.override_box.value.text() == "Not installed"
+    assert window.steps_box.value.text() == "none listed" and "the override gives 8" in window.steps_box.toolTip()
+    assert window.idle_box.value.text() == "POLL" and "#1565c0" in window.idle_box.styleSheet()
     board.cpio.write_bytes(b"x")
     board.grub.write_text('GRUB_EARLY_INITRD_LINUX_CUSTOM="../../acpi_override.cpio"\n')
     window.status_btn.click()
-    assert wait_for(lambda: window.banner.text() == "✔ INSTALLED")
+    assert wait_for(lambda: window.banner.text() == "Installed")
+    assert window.banner.kind == "ok" and "#2e7d32" in window.override_box.styleSheet()
     window.close()
 
 

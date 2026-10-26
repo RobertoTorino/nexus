@@ -4,16 +4,28 @@
 ![Status: Beta](https://img.shields.io/badge/status-Beta-8b4fd8)
 [![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
 
-# BC250 Bazzite Suite
+# Nexus
 
-Tools for the AMD BC-250 running Bazzite, in one repository. The **[portal](portal)** installs, opens, updates
+One home for the suites: one repository holding every suite, the code they share, and the tools that test and
+release them. A suite is the apps for one operating system on one kind of device; its portal installs, opens, updates
+and removes them, and each suite has its own wiki. The name, the structure and how the suites relate:
+**[the Nexus page](https://robertotorino.github.io/nexus/)**.
+
+## The suites
+
+- **[BC250 Bazzite Suite](#bc250-bazzite-suite)**: tools for the AMD BC-250 running Bazzite, at the root of this
+  repository. [Its wiki](https://robertotorino.github.io/nexus/bc250-bazzite-suite/).
+
+## BC250 Bazzite Suite
+
+Tools for the AMD BC-250 running Bazzite. The **[portal](portal)** installs, opens, updates
 and removes them: BC-250 Bazzite Test is always installed, every other app is optional.
 
 **Beta:** The suite is in active development: features and layout may still change between releases.
 
 ![wiki.png](portal/images/wiki.png)
 
-## Install
+### Install
 
 **Install the portal, not the apps one by one.** It installs, updates and removes every app below for you, and
 checks each download against its checksum.
@@ -32,7 +44,7 @@ checks each download against its checksum.
 The other releases on the Releases page (`gpu-v…`, `upscaler-v…` and so on) are the app downloads the portal
 uses. You do not need them.
 
-## The apps
+### The apps
 
 By category, as the portal's tabs list them.
 
@@ -89,7 +101,7 @@ How to install and use them: **[the manual](https://robertotorino.github.io/nexu
 
 ## License
 
-GPL-3.0-or-later ([LICENSE](LICENSE)), except BC-250 Persistent ACPI, which is MIT, Console Link, which is
+For every suite: GPL-3.0-or-later ([LICENSE](LICENSE)), except BC-250 Persistent ACPI, which is MIT, Console Link, which is
 AGPL-3.0 (its protocol code comes from chiaki-ng), and Bazzite NetcatGUI, which is GPL-2.0 (a port of NetcatGUI).
 Each app keeps its own `LICENSE`. The icons were made with generative AI tools and edited by hand in Photoshop, the
 sounds and the music of the video tours with generative AI tools; all are under the license of the folder they are in,
@@ -98,7 +110,9 @@ like the code beside them.
 ## Disclaimer
 
 The BC250 Bazzite Suite is an independent community project. It is not affiliated with or endorsed by AMD, ASRock,
-the Bazzite / Universal Blue project, Sony, Nintendo, Microsoft, or the makers of the emulators the apps work with.
-BC-250 is AMD's product name, Bazzite is the name of the Universal Blue project, and PlayStation, the names of
-Nintendo's and Microsoft's consoles and the names of the emulators belong to their owners; the suite uses them only
-to say what it works with.
+the Bazzite / Universal Blue project, Sony, Microsoft, Nintendo, Valve, or the makers of the emulators and the other
+programs the apps work with. BC-250 is AMD's product name and Bazzite the Universal Blue project's. PlayStation, PS4,
+PS5, PS3, PS2, PSP, PS Vita, DualSense and Remote Play are Sony's; Xbox, Xbox 360, Xbox Cloud Gaming and Windows are
+Microsoft's; Steam, Steam Deck and Big Picture are Valve's; the names of Nintendo's consoles, of the emulators
+(shadPS4, RPCS3, PPSSPP, PCSX2, Vita3K, Xenia) and of Decky Loader, HelixSR and DirectMesh belong to their owners.
+The suite uses them only to say what it works with.

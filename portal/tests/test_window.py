@@ -393,6 +393,56 @@ def test_stop_waiting_ends_the_batch(window, launched, monkeypatch, home):
     assert window.updates_pill.value.text() == "2" and window.updates_pill.isEnabled()
 
 
+def test_install_all_apps_is_the_last_tab_and_fills_the_open_category(window, launched, monkeypatch, qapp):
+    """Install all apps (owner, 26-10-2026): the last tab is a button that looks like a tab. A click installs every
+    app of the open category not installed yet as one batch with one question; the tab shows the batch's progress;
+    it never opens; on Development it is disabled, and so it is once every app of the category is installed."""
+    from PyQt6.QtCore import QPoint, Qt
+    from PyQt6.QtTest import QTest
+    bar, last = window.tabs.tabBar(), window.install_tab
+    assert last == window.tabs.count() - 1 and window.tabs.tabText(last) == "Install all apps"
+    assert bar.action_index == last and not window.tabs.tabIcon(last).isNull()
+    expected = [e for e in window.entries if e.category == "sustainable"]
+    assert window.shown_category() == "sustainable" and window.missing("sustainable") == expected
+    assert window.tabs.isTabEnabled(last) and f"all {len(expected)} apps on Sustainable" in window.tabs.tabToolTip(last)
+    window.show()
+    qapp.processEvents()
+    window.tabs.setCurrentIndex(last)                        # the keyboard landing on it: it goes back
+    assert window.tabs.currentIndex() == 0 and window.shown_category() == "sustainable"
+    asked = []
+    monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: (asked.append(a[2]), CANCEL)[1])
+    QTest.mouseClick(bar, Qt.MouseButton.LeftButton, pos=bar.tabRect(last).center())
+    assert window.tabs.currentIndex() == 0                   # a click does not open it
+    assert f"Install these {len(expected)} apps on Sustainable" in asked[0] and "change how your BC-250 runs" in asked[0]
+    assert "Fan Control" in asked[0] and "Upscaler" not in asked[0]
+    assert window.batch is None and launched == []
+    monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: YES)
+    QTest.mouseClick(bar, Qt.MouseButton.LeftButton, pos=bar.tabRect(last).center())
+    assert wait_for(lambda: len(launched) == 1)
+    assert window.sources.prepared == [expected[0].key]
+    assert window.tabs.tabText(last) == f"Installing 1 of {len(expected)}" and not window.tabs.isTabEnabled(last)
+    assert window.updates_pill.value.text() == "0" and not window.updates_pill.isEnabled()
+    done: set[str] = set()                                   # some detect paths are under /opt: not writable here
+    monkeypatch.setattr(mw, "is_installed", lambda entry: entry.key in done)
+    for i, entry in enumerate(expected):
+        launched[i][1].write_text("0\n")
+        done.add(entry.key)
+        window._check_pending()
+        if i + 1 < len(expected):
+            assert wait_for(lambda: len(launched) == i + 2)
+    assert window.batch is None and not window.busy()
+    assert window.sources.prepared == [e.key for e in expected]
+    assert window.tabs.tabText(last) == "Install all apps" and not window.tabs.isTabEnabled(last)
+    assert window.tabs.tabToolTip(last) == "Every app on Sustainable is installed."
+    window.tabs.setCurrentWidget(window.pages["graphics"])
+    assert window.tabs.isTabEnabled(last) and "on Graphics" in window.tabs.tabToolTip(last)
+    window.tabs.setCurrentWidget(window.pages["development"])
+    assert window.missing("development") == [] and not window.tabs.isTabEnabled(last)
+    assert "tools for working on the suite" in window.tabs.tabToolTip(last)
+    QTest.mouseClick(bar, Qt.MouseButton.LeftButton, pos=bar.tabRect(last).center())
+    assert window.batch is None and len(launched) == len(expected)         # disabled: nothing happens
+
+
 def test_no_updates_no_batch(window, launched):
     assert window.updates_pill.value.text() == "0" and not window.updates_pill.isEnabled()
     assert "No updates" in window.updates_pill.toolTip()
@@ -520,7 +570,7 @@ def test_tiles_flow_in_file_order(window, qapp):
 
 def test_a_tab_per_category_in_order(window):
     assert [window.tabs.tabText(i) for i in range(window.tabs.count())] == [
-        "Sustainable", "Graphics", "Gaming", "Utilities", "Development"]
+        "Sustainable", "Graphics", "Gaming", "Utilities", "Development", "Install all apps"]    # the last: a button
     for key, card in window.cards.items():
         inside = [c for c, grid in window.grids.items() if grid.indexOf(card) >= 0]
         assert inside == [card.entry.category], key
@@ -887,7 +937,8 @@ def test_the_tabs_are_as_large_as_the_pills(window, qapp):
     window.show()
     qapp.processEvents()
     bar, pill = window.tabs.tabBar(), window.refresh_pill
-    assert {bar.tabRect(i).width() for i in range(bar.count())} == {pill.width()}
+    categories = range(len(window.pages))                    # the action tab is as wide as its text needs
+    assert {bar.tabRect(i).width() for i in categories} == {pill.width()}
     assert {bar.tabRect(i).height() for i in range(bar.count())} == {pill.height() + mw.PillTabBar.GAP}  # the gap
     window.theme_pill.set_value("A much longer theme name")
     qapp.processEvents()

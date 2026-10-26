@@ -5,7 +5,9 @@ the apps' icons, apps.toml), each with the tiles of its apps; check is the first
 (owner, 21-10-2026).
 
 Install, update and uninstall run the app's own installer in a terminal window (they may ask for the sudo
-password and print what they do); the portal watches for the exit file the terminal writes and then refreshes.
+password and print what they do); the portal watches for the exit file the terminal writes and then refreshes. A
+terminal whose installer ended well closes by itself (owner, 26-10-2026); one that failed stays open with what
+happened until Enter is pressed.
 An app that changes the board (unlocks, governor, ACPI) gets a warning before it is installed or opened.
 
 Updates: a red dot marks every tile whose installed app differs from the version this portal pins, a red circular
@@ -24,7 +26,10 @@ sysinfo.py).
 Install all updates: every app the notice names (an update or a reinstall), one after the other, each in its own
 terminal as a single install. An installer that asks for the sudo password waits for it in its terminal, and so
 does the batch: the next one starts when it has ended. One question first, with the board warning when one of them
-changes the board; one message at the end names those that failed.
+changes the board; one message at the end names those that failed. Install all apps (owner, 26-10-2026): the last
+tab is a button that looks like a tab (PillTabBar.action_index); it installs the same way every app of the open
+category that is not installed yet, so a portal installed for the first time fills a category with one click. On
+Development it is disabled: those apps are tools for working on the suite, installed from their tiles.
 
 Desktop icons: the portal's own icon is enough to reach every app, so the apps' icons on the Desktop are the user's
 choice ("Icons on Desktop", desktop_icons.py). The first start asks when app icons are there; off, the portal
@@ -396,14 +401,25 @@ class TogglePill(Pill):
 
 class PillTabBar(QTabBar):
     """The category tabs, each as large as a header pill (owner, 21-10-2026); wider where a name needs it. A gap
-    above them, so the line over the tabs divides them from the notice."""
+    above them, so the line over the tabs divides them from the notice. The tab at action_index is a button that
+    looks like a tab (owner, 26-10-2026: Install all apps): a click on it emits action_clicked and never opens it."""
 
     GAP = 10
+    action_clicked = pyqtSignal()
 
     def __init__(self, pill: Pill):
         super().__init__()
         self.pill = pill
+        self.action_index = -1
         self.setStyleSheet(f"QTabBar::tab {{ font-size:15px; font-weight:700; margin-top:{self.GAP}px; }}")
+
+    def mousePressEvent(self, event) -> None:  # noqa: N802 (Qt override)
+        index = self.tabAt(event.position().toPoint())
+        if index >= 0 and index == self.action_index:
+            if event.button() == Qt.MouseButton.LeftButton and self.isTabEnabled(index):
+                self.action_clicked.emit()
+            return
+        super().mousePressEvent(event)
 
     def tabSizeHint(self, index: int) -> QSize:  # noqa: N802 (Qt override)
         hint = super().tabSizeHint(index)          # the margin included
@@ -509,6 +525,8 @@ class MainWindow(QMainWindow):
         self._job: tuple[AppEntry, str] | None = None
         self._withdrawal_tried: set[str] = set()        # withdrawn apps the portal tried to remove this time
         self.batch: list[AppEntry] | None = None        # Install all updates: the apps still to go; None: no batch
+        self.batch_what = "updates"                     # the batch's word: "updates" or "apps" (Install all apps)
+        self.batch_pill: Pill | None = None             # the pill that shows the batch's progress
         self.batch_size = 0
         self.batch_failed: list[str] = []
         self.settings = open_settings(INFO, self)
@@ -669,6 +687,13 @@ class MainWindow(QMainWindow):
             self.pages[category], self.grids[category] = page, grid
             self.tabs.addTab(page, label)
             self.tabs.setTabToolTip(self.tabs.count() - 1, CATEGORY_HINTS[category])
+        # The last tab is a button (owner, 26-10-2026): Install all apps, for the open category.
+        self.install_tab = self.tabs.addTab(QWidget(), "Install all apps")
+        self.tabs.setTabIcon(self.install_tab, glyphs.install(self.palette().color(QPalette.ColorRole.WindowText).name()))
+        self.tabs.tabBar().action_index = self.install_tab
+        self.tabs.tabBar().action_clicked.connect(self.install_missing)
+        self._shown_tab = 0
+        self.tabs.currentChanged.connect(self._tab_changed)
         self.tabs.currentChanged.connect(self.reflow)
         root.addWidget(self.tabs, 1)
         self.reflow()
@@ -803,26 +828,82 @@ class MainWindow(QMainWindow):
         self.big.sync(self.cards)
 
     def show_counts(self) -> None:
-        """The Installed apps pill (installed / listed, a withdrawn app not counted) and the Install all updates pill
-        (how many the notice names; during a batch, which one of how many)."""
+        """The Installed apps pill (installed / listed, a withdrawn app not counted), the Install all updates pill
+        (how many the notice names; during its batch, which one of how many) and the Install all apps tab."""
         listed = [entry for entry in self.entries if not entry.withdrawn]
         installed = sum(is_installed(entry) for entry in listed)
         self.installed_pill.set_value(f"{installed}/{len(listed)}", f"{installed} of the {len(listed)} apps in this "
                                       "portal are installed.")
-        if self.batch is not None:
-            done = self.batch_size - len(self.batch)
-            self.updates_pill.set_value(f"{done}/{self.batch_size}", (
-                f"Installing update {done} of {self.batch_size}, each in its own terminal. When one asks for your "
-                "password, type it there: the next one starts when it has ended."))
-            self.updates_pill.setEnabled(False)
+        batch = self.batch is not None
+        if batch and self.batch_pill is self.updates_pill:
+            self._show_batch()
+        else:
+            count = len(self.marked)
+            self.updates_pill.set_value(str(count), (
+                f"Click to install {'all ' * (count > 1)}{count} the notice names (updates and reinstalls), one after "
+                "the other. When an installer asks for your password, the next one waits "
+                "until you typed it in its terminal and it has ended.") if count else
+                "No updates: every installed app is the version this portal pins.")
+            self.updates_pill.setEnabled(bool(count) and not self.busy())
+        self._show_install_tab()
+
+    def _show_batch(self) -> None:
+        """The batch's progress: on the Install all updates pill, or on the Install all apps tab."""
+        assert self.batch is not None
+        done = self.batch_size - len(self.batch)
+        tip = (f"Installing {self.batch_what[:-1]} {done} of {self.batch_size}, each in its own terminal. When one asks "
+               "for your password, type it there: the next one starts when it has ended.")
+        if self.batch_pill is None:
+            self.tabs.setTabText(self.install_tab, f"Installing {done} of {self.batch_size}")
+            self.tabs.setTabToolTip(self.install_tab, tip)
+            self.tabs.setTabEnabled(self.install_tab, False)
             return
-        count = len(self.marked)
-        self.updates_pill.set_value(str(count), (
-            f"Click to install {'all ' * (count > 1)}{count} the notice names (updates and reinstalls), one after "
-            "the other. When an installer asks for your password, the next one waits "
-            "until you typed it in its terminal and it has ended.") if count else
-            "No updates: every installed app is the version this portal pins.")
-        self.updates_pill.setEnabled(bool(count) and not self.busy())
+        self.batch_pill.set_value(f"{done}/{self.batch_size}", tip)
+        self.batch_pill.setEnabled(False)
+
+    def shown_category(self) -> str:
+        """The category of the open tab (the action tab never opens)."""
+        page = self.tabs.widget(self._shown_tab)
+        return next((category for category, p in self.pages.items() if p is page), "")
+
+    def _tab_changed(self, index: int) -> None:
+        """The Install all apps tab never opens (the keyboard can land on it): back to the tab shown before. Its
+        text follows the open category."""
+        if index == self.install_tab:
+            self.tabs.setCurrentIndex(self._shown_tab)
+            return
+        self._shown_tab = index
+        self._show_install_tab()
+
+    def _show_install_tab(self) -> None:
+        """The Install all apps tab: enabled when the open category has apps not installed yet, disabled on
+        Development or when every app of the category is installed; during its batch, which one of how many."""
+        if self.batch is not None and self.batch_pill is None:
+            self._show_batch()
+            return
+        category = self.shown_category()
+        label = CATEGORIES.get(category, category)
+        count = len(self.missing(category))
+        self.tabs.setTabText(self.install_tab, "Install all apps")
+        if category == "development":
+            tip = ("The Development apps are tools for working on the suite, which a board does not need: their tiles "
+                   "install them.")
+        elif count:
+            tip = (f"Click to install {'all ' * (count > 1)}{count} app{'s' * (count != 1)} on {label} not installed "
+                   "yet, one after the other, each in its own terminal. When an installer asks for your password, the "
+                   "next one waits until you typed it there and it has ended.")
+        else:
+            tip = f"Every app on {label} is installed."
+        self.tabs.setTabToolTip(self.install_tab, tip)
+        self.tabs.setTabEnabled(self.install_tab, bool(count) and not self.busy())
+
+    def missing(self, category: str) -> list[AppEntry]:
+        """Install all apps: the listed apps of *category* that are not installed; none on Development (owner,
+        26-10-2026: tools for working on the suite, which a board does not need)."""
+        if category == "development":
+            return []
+        return [entry for entry in self.entries if self.tab_of(entry) == category and not entry.withdrawn
+                and not is_installed(entry)]
 
     def outside_updates(self) -> list[tuple[AppEntry, upstream.Outside]]:
         """Updates outside the suite that an installed app can install now, as the apps last recorded them
@@ -1325,7 +1406,15 @@ class MainWindow(QMainWindow):
     def install_all(self) -> None:
         """Install all updates: every app the notice names, after one question (with the board warning when one of
         them changes the board), one after the other."""
-        entries = [entry for entry, _ in self.marked]
+        self._start_batch([entry for entry, _ in self.marked], "updates", self.updates_pill)
+
+    def install_missing(self) -> None:
+        """Install all apps: every app of the open category that is not installed yet, the same way (owner,
+        26-10-2026); the tab shows the batch's progress."""
+        category = self.shown_category()
+        self._start_batch(self.missing(category), "apps", None, CATEGORIES.get(category, ""))
+
+    def _start_batch(self, entries: list[AppEntry], what: str, pill: Pill | None, where: str = "") -> None:
         if self.busy() or not entries:
             return
         names = "".join(f"<li>{escape(entry.name)}"
@@ -1336,9 +1425,9 @@ class MainWindow(QMainWindow):
                    "tables). A wrong setting can make the board unstable or stop it from booting until the change is "
                    "undone: read their manuals first.</p>") if board else ""
         answer = QMessageBox.question(
-            self, APP_NAME, f"<p>Install these {len(entries)} updates, one after the other?</p><ul>{names}</ul>"
-            f"{warning}<p>Each runs its installer in a terminal. When one asks for your password, type it there: the "
-            "next one waits until it has ended.</p>",
+            self, APP_NAME, f"<p>Install these {len(entries)} {what}{f' on {where}' if where else ''}, one after the "
+            f"other?</p><ul>{names}</ul>{warning}<p>Each runs its installer in a terminal. When one asks for your "
+            "password, type it there: the next one waits until it has ended.</p>",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel, QMessageBox.StandardButton.Cancel)
         if answer != QMessageBox.StandardButton.Yes:
             return
@@ -1346,6 +1435,7 @@ class MainWindow(QMainWindow):
         if not entries:
             return
         self.batch, self.batch_size, self.batch_failed = entries, len(entries), []
+        self.batch_what, self.batch_pill = what, pill
         self._next_in_batch()
 
     def _next_in_batch(self) -> None:
@@ -1358,9 +1448,9 @@ class MainWindow(QMainWindow):
         failed, self.batch = self.batch_failed, None
         self.refresh()
         if failed:
-            QMessageBox.warning(self, APP_NAME, f"{len(failed)} of the {self.batch_size} updates did not install:\n\n"
-                                + "\n".join(failed) + "\n\nTheir terminal windows show what happened; the Install "
-                                "button on each tile tries again.")
+            QMessageBox.warning(self, APP_NAME, f"{len(failed)} of the {self.batch_size} {self.batch_what} did not "
+                                "install:\n\n" + "\n".join(failed) + "\n\nTheir terminal windows show what happened; "
+                                "the Install button on each tile tries again.")
         self.remove_withdrawn()
 
     def _start(self, entry: AppEntry, action: str) -> None:
@@ -1395,7 +1485,7 @@ class MainWindow(QMainWindow):
         # A fresh name; the terminal creates the file when the commands end.
         exit_file = Path(tempfile.gettempdir()) / f"bc250-portal-{entry.key}-{uuid.uuid4().hex}.exit"
         try:
-            launch_in_terminal(shell_line(folder, commands), exit_file=exit_file)
+            launch_in_terminal(shell_line(folder, commands), exit_file=exit_file, keep_open="on_error")
         except (RuntimeError, OSError) as exc:
             self.batch = None                           # no terminal for the next one either
             QMessageBox.critical(self, APP_NAME, f"Could not open a terminal for the installer:\n\n{exc}\n\n"

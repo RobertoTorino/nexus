@@ -88,7 +88,7 @@ def key(window, which, modifiers=Qt.KeyboardModifier.NoModifier):
 
 
 # ---------------------------------------------------------------------------------------------------- the files
-@pytest.mark.parametrize("name, low, high", [("swoosh", 0.5, 1.5), ("bigpicture", 1.8, 2.6)])
+@pytest.mark.parametrize("name, low, high", [("swoosh", 0.5, 1.5), ("bigpicture", 2.8, 3.6)])
 def test_the_sounds_are_there_and_the_right_length(name, low, high):
     with wave.open(str(audio.SOUNDS / f"{name}.wav"), "rb") as sound:
         seconds = sound.getnframes() / sound.getframerate()

@@ -1,3 +1,20 @@
+Changelog: 26-10-2026 04:16:33
+
+Fixed. widgets: a MetricBox or Pill with the neutral color (GRAY, the default) has the suite's blue left edge, as
+the portal's pills (owner, 26-10-2026: the header boxes of several apps showed a near-black edge, the theme's edge
+color). A state or an app's own color still takes its place.
+
+Changelog: 26-10-2026 03:49:35
+
+Fixed. widgets: RoundedToolTip shows a tab's own tooltip (setTabToolTip) in the rounded style with the thin accent
+border, as every other tooltip (owner, 26-10-2026: the portal's tabs showed Qt's plain one).
+
+Changelog: 26-10-2026 03:19:06
+
+Added. platform: terminal_command() and launch_in_terminal() take keep_open="on_error" (owner, 26-10-2026): the
+"Press Enter" pause comes only when the command failed, so a terminal whose command ended well closes by itself; the
+exit file gets the status either way. The portal uses it for installs and uninstalls.
+
 Changelog: 25-10-2026 01:12:22
 
 Fixed. appinfo: SUITE_MANUAL_URL is the suite's own wiki, robertotorino.github.io/nexus/bc250-bazzite-suite/ (owner,

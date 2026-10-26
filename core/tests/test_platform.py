@@ -20,6 +20,29 @@ def test_terminal_command_exit_file_covers_whole_command():
     assert line == "( cd /a && bash x.sh ); echo $? > '/tmp/st 1'"
 
 
+def test_terminal_command_on_error_pauses_only_after_a_failure():
+    """keep_open="on_error" (owner, 26-10-2026): the window of a command that ended well closes by itself, one with
+    an error waits for Enter; the exit file gets the status either way."""
+    pause = "echo; read -rp 'Press Enter to close... ' _"
+    line = platform.terminal_command("cd /a && bash x.sh", keep_open="on_error", exit_file=PurePosixPath("/tmp/st 1"))
+    assert line == "( cd /a && bash x.sh ); s=$?; echo $s > '/tmp/st 1'; [ \"$s\" = 0 ] || { " + pause + "; }"
+    assert platform.terminal_command("bash x.sh", keep_open="on_error") == \
+        "( bash x.sh ); s=$?; [ \"$s\" = 0 ] || { " + pause + "; }"
+
+
+@pytest.mark.skipif(shutil.which("bash") is None, reason="needs bash")
+@pytest.mark.parametrize("command, status, paused", [("true", "0", False), ("true && false", "1", True),
+                                                      ("exit 3", "3", True)])
+def test_on_error_runs_the_pause_only_on_a_failure(tmp_path, command, status, paused):
+    exit_file = tmp_path / "status"
+    line = platform.terminal_command(command, keep_open="on_error", exit_file=Path(exit_file.as_posix()))
+    # Without a terminal "read" shows no prompt and ends at once; the pause's echo leaves its blank line.
+    result = subprocess.run(["bash", "-c", line.replace(str(exit_file.as_posix()), "status")], cwd=tmp_path,
+                            check=False, capture_output=True, text=True, stdin=subprocess.DEVNULL)
+    assert (tmp_path / "status").read_text().strip() == status
+    assert (result.stdout == "\n") is paused
+
+
 @pytest.mark.skipif(shutil.which("bash") is None, reason="needs bash")
 @pytest.mark.parametrize("command, status", [("true", "0"), ("true && false", "1"), ("exit 3", "3")])
 def test_exit_file_gets_the_status(tmp_path, command, status):

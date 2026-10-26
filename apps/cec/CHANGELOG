@@ -1,3 +1,12 @@
+Changelog: 26-10-2026 04:32:52
+
+Release 0.13.0.
+
+Changelog: 26-10-2026 04:16:33
+
+Fixed. The Display box in the header has the suite's blue left edge instead of a black one (owner, 26-10-2026: no
+header box has a black edge).
+
 Changelog: 26-10-2026 02:14:35
 
 Release 0.12.0.

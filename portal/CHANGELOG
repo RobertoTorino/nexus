@@ -1,3 +1,21 @@
+Changelog: 26-10-2026 03:19:06
+
+Added. Install all apps (owner, 26-10-2026): the last tab is a button that looks like a tab (PillTabBar's
+action_index; a click never opens it). It installs every app of the open category that is not installed yet as one
+batch, the same way as Install all updates: one question with the list and the board warning, each installer in its
+own terminal, the tab showing which one of how many; a portal installed for the first time fills a category with one
+click. It is disabled once every app of the category is installed, and on Development (tools for working on the
+suite, which a board does not need; their tiles install them). Sys info lists the input devices (owner, 26-10-2026):
+keyboards, mice and controllers, each with the bus it is on (USB, Bluetooth, PS/2, I2C or a virtual one); the
+board's own buttons and the GPU's audio jacks are left out.
+
+Changelog: 26-10-2026 03:19:06
+
+Fixed. The intro of Suite Big Picture Mode lasts three seconds instead of two, and its sound with it (owner,
+26-10-2026: the end came too abruptly); tools/make_portal_sounds.py makes the longer bigpicture.wav with a longer
+fade. A terminal whose installer ended well closes by itself (owner, 26-10-2026); one that failed stays open with
+what happened until Enter is pressed (bc250_core.platform's keep_open="on_error").
+
 Changelog: 26-10-2026 02:42:59
 
 Release 9.1.0. Pins check-v0.14.0, gpu-v0.3.0, upscaler-v0.13.0, compute-v0.3.0, cores-v0.3.0, oc-v0.2.2, acpi-v0.3.0, overlay-v0.12.0, bios-v0.12.0, ace-v0.12.0, mesh-v0.13.0, vram-v0.12.0, fan-v0.11.0, wdriver-v0.11.0, cec-v0.12.0, sftp-v0.13.0, ips35-v0.5.0, hdcam-v0.7.0, hdcontrol-v0.7.0, mtool-v0.3.2, package-v1.2.0, ncgui-v0.12.0, rpcs3-v1.2.0, consoles-v1.12.0, clb-v0.7.0, shadps4-v1.1.0, decky-v0.13.0, datstation-v1.9.0, ppsspp-v0.12.0, pcsx2-v1.3.0, vita3k-v0.11.0, xenia-v0.7.0.

@@ -84,7 +84,8 @@ Under the picture:
 
 **Screen**
 
-- **Brightness:** 0 to 100 %. **Screen off** in the header switches the screen dark while the app keeps running.
+- **Brightness:** 0 to 100 %. The **Screen off** pill in the header switches the screen dark while the app keeps running, and reads **Screen on**
+  until you click it again.
 - **Orientation:** portrait or landscape, each either way up. Choose the one that matches how the screen stands
   (where its USB cable is).
 

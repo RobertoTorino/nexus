@@ -6,7 +6,7 @@ original work; replace them with any WAV of the same name to change the sound):
     python3 tools/make_portal_sounds.py            # write swoosh.wav and bigpicture.wav
 
 swoosh.wav        the start-up swoosh: band-passed noise whose center rises and falls, about 0.9 s.
-bigpicture.wav    the Suite Big Picture Mode intro: a low thump, a rising sweep and a bell arpeggio, about 2 s."""
+bigpicture.wav    the Suite Big Picture Mode intro: a low thump, a rising sweep and a bell arpeggio, about 3 s."""
 
 from __future__ import annotations
 
@@ -72,7 +72,7 @@ def _bell(frames: list[list[float]], start: float, hz: float, length: float, gai
 
 
 def big_picture() -> list[tuple[float, float]]:
-    seconds = 2.2
+    seconds = 3.2                                   # the intro lasts three seconds (owner, 26-10-2026)
     count = int(seconds * RATE)
     frames = [[0.0, 0.0] for _ in range(count)]
     rng = random.Random(1010)
@@ -99,13 +99,13 @@ def big_picture() -> list[tuple[float, float]]:
         frames[n][1] += value
     # The arpeggio lands when the sweep ends: A minor 9 going up, spread across the stereo field.
     for i, (hz, pan) in enumerate(((440.0, 0.3), (659.3, 0.5), (880.0, 0.7), (1318.5, 0.4), (1760.0, 0.6))):
-        _bell(frames, 1.05 + 0.09 * i, hz, 1.1, 0.16, pan)
+        _bell(frames, 1.05 + 0.09 * i, hz, 2.0, 0.16, pan)
     # A short echo, so the end is not dry.
     delay = int(0.21 * RATE)
     for n in range(delay, count):
         frames[n][0] += frames[n - delay][1] * 0.28
         frames[n][1] += frames[n - delay][0] * 0.28
-    fade = int(0.25 * RATE)
+    fade = int(0.6 * RATE)                          # a long fade: the bells die away instead of being cut
     for n in range(fade):
         frames[count - 1 - n][0] *= n / fade
         frames[count - 1 - n][1] *= n / fade

@@ -162,9 +162,11 @@ code.
 ## Disclaimer
 
 The BC250 Bazzite Suite is an independent community project. It is not affiliated with or endorsed by AMD, ASRock,
-the Bazzite / Universal Blue project, Sony, Nintendo, Microsoft, or the makers of the emulators the apps work with.
-BC-250 is AMD's product name, Bazzite is the name of the Universal Blue project, and PlayStation, the names of
-Nintendo's and Microsoft's consoles and the names of the emulators belong to their owners; the suite uses them only
-to say what it works with.
+the Bazzite / Universal Blue project, Sony, Microsoft, Nintendo, Valve, or the makers of the emulators and the other
+programs the apps work with. BC-250 is AMD's product name and Bazzite the Universal Blue project's. PlayStation, PS4,
+PS5, PS3, PS2, PSP, PS Vita, DualSense and Remote Play are Sony's; Xbox, Xbox 360, Xbox Cloud Gaming and Windows are
+Microsoft's; Steam, Steam Deck and Big Picture are Valve's; the names of Nintendo's consoles, of the emulators
+(shadPS4, RPCS3, PPSSPP, PCSX2, Vita3K, Xenia) and of Decky Loader, HelixSR and DirectMesh belong to their owners.
+The suite uses them only to say what it works with.
 </div>
 </section>

@@ -1,16 +1,17 @@
 # SPDX-License-Identifier: MIT
-"""Masked sudo password prompt and the About dialog. The sudo password is returned once and never
-persisted."""
+"""Masked sudo password prompt, the About dialog, and the header's status box and state (copies of core's
+MetricBox and StatusText: this app is not on core). The sudo password is returned once and never persisted."""
 
 from __future__ import annotations
 
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import (
-    QDialog, QDialogButtonBox, QHBoxLayout, QLabel, QLineEdit, QVBoxLayout, QWidget,
+    QDialog, QDialogButtonBox, QFrame, QHBoxLayout, QLabel, QLineEdit, QVBoxLayout, QWidget,
 )
 
 from . import APP_NAME, LOGO_PATH, REPO_URL, __version__, window_title
+from .theme import BLUE, STATE_COLORS, header_font, surface_style
 
 
 class SudoDialog(QDialog):
@@ -92,3 +93,62 @@ class AboutDialog(QDialog):
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok)
         buttons.accepted.connect(self.accept)
         layout.addWidget(buttons)
+
+
+class MetricBox(QFrame):
+    """One box of the header's second row: a big value with a caption, centered, on the theme's surface with
+    *colour* as its left edge. A copy of core's MetricBox with the same sizes: this app is not on core."""
+
+    MIN_WIDTH = 120
+
+    def __init__(self, caption: str, colour: str = BLUE, parent: QWidget | None = None):
+        super().__init__(parent)
+        self.set_colour(colour)
+        self.setMinimumWidth(self.MIN_WIDTH)
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(8, 7, 11, 7)         # 12, 8, 12, 8 inside the border
+        layout.setSpacing(0)
+        self.value = QLabel("—")
+        self.value.setStyleSheet(header_font() + "font-size:22px; font-weight:800;")
+        self.caption = QLabel(caption)
+        self.caption.setStyleSheet("font-size:12px; font-weight:600;")
+        for label in (self.value, self.caption):
+            label.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+            layout.addWidget(label)
+
+    def set_value(self, text: str, tooltip: str = "") -> None:
+        self.value.setText(text)
+        self.setToolTip(tooltip)
+
+    def set_colour(self, colour: str) -> None:
+        """The box's state or category color, its left edge."""
+        self.setStyleSheet(surface_style(colour) + "QLabel { background:transparent; border:none; }")
+
+
+class StatusText(QWidget):
+    """A state next to the title: a colored dot and the state in bold, in the color of its kind (ok, warn, bad,
+    info; neutral uses the text color). A copy of core's StatusText: this app is not on core."""
+
+    def __init__(self, text: str = "", parent: QWidget | None = None):
+        super().__init__(parent)
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(4, 0, 4, 0)
+        layout.setSpacing(6)
+        self.dot = QLabel("●")
+        self.label = QLabel()
+        layout.addWidget(self.dot)
+        layout.addWidget(self.label)
+        self.kind = ""
+        self.set_status(text or "Unknown", "neutral")
+
+    def set_status(self, text: str, kind: str, tooltip: str = "") -> None:
+        self.kind = kind
+        self.label.setText(text)
+        self.setToolTip(tooltip)
+        colour = STATE_COLORS.get(kind) if kind != "neutral" else None
+        style = f"color:{colour};" if colour else "color:palette(window-text);"
+        self.dot.setStyleSheet(style + "font-size:14px;")
+        self.label.setStyleSheet(style + "font-weight:700; font-size:14px;")
+
+    def text(self) -> str:
+        return self.label.text()

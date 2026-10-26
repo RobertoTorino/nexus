@@ -77,8 +77,9 @@ class MetricBox(QFrame):
         self.setToolTip(tooltip)
 
     def set_colour(self, colour: str) -> None:
-        """The box's state or category color, its left edge; GRAY (neutral) has none."""
-        self.setStyleSheet(surface_style(None if colour == GREY else colour)
+        """The box's state or category color, its left edge; GRAY (neutral) shows the suite's blue, as the portal's
+        pills (owner, 26-10-2026)."""
+        self.setStyleSheet(surface_style(BLUE if colour == GREY else colour)
                            + "QLabel { background:transparent; border:none; }")
 
 

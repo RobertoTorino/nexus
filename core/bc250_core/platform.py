@@ -66,19 +66,27 @@ def find_terminal() -> str | None:
     return None
 
 
-def terminal_command(shell_command: str, *, keep_open: bool = True, exit_file: PurePath | None = None) -> str:
+def terminal_command(shell_command: str, *, keep_open: bool | str = True,
+                     exit_file: PurePath | None = None) -> str:
     """The shell line launch_in_terminal() runs: the command, its exit status written to *exit_file*, and a
-    "Press Enter" pause so the window stays readable after the command ends (success, error or Ctrl+C)."""
+    "Press Enter" pause so the window stays readable after the command ends (success, error or Ctrl+C).
+    keep_open="on_error" pauses only when the command failed: a window whose command ended well closes by itself
+    (the portal's installs, owner 26-10-2026), one that shows an error stays until Enter."""
     line = shell_command
+    pause = "echo; read -rp 'Press Enter to close... ' _"
+    # A subshell, so the status is the whole command's, also for "a && b" and an early exit.
+    if keep_open == "on_error":
+        written = f" echo $s > {shlex.quote(str(exit_file))};" if exit_file is not None else ""
+        return f"( {line} ); s=$?;{written} [ \"$s\" = 0 ] || {{ {pause}; }}"
     if exit_file is not None:
-        # A subshell, so the status is the whole command's, also for "a && b" and an early exit.
         line = f"( {line} ); echo $? > {shlex.quote(str(exit_file))}"
     if keep_open:
-        line = f"{line}; echo; read -rp 'Press Enter to close... ' _"
+        line = f"{line}; {pause}"
     return line
 
 
-def launch_in_terminal(shell_command: str, *, keep_open: bool = True, exit_file: PurePath | None = None) -> None:
+def launch_in_terminal(shell_command: str, *, keep_open: bool | str = True,
+                       exit_file: PurePath | None = None) -> None:
     """Runs ``shell_command`` (a single already-quoted shell command line) in a new terminal window, detached from
     this process so closing the GUI doesn't touch it.
 

@@ -17,7 +17,7 @@
 # test results in ~/.local/state/bc250-ace-queues; under sudo or pkexec these are the calling user's.
 set -euo pipefail
 
-VERSION="0.12.0"
+VERSION="0.13.0"
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)
 PREFIX=/usr/local/lib/bc250-ace-queues          # built into the driver: its ICD file and drirc paths
 # BC250_ACE_ROOT is for testing only: a folder that stands in for / (usr/local, etc and sys).
