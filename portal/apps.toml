@@ -69,8 +69,8 @@ launch = [["Open", "~/.local/bin/bc250-upscaler"]]
 [apps.compute]
 name = "BC-250 CU Bisect"
 summary = "Tell bad CUs apart from an unstable CU unlock, and apply a tested unlock."
-tag = "compute-v0.3.0"
-sha256 = "3a8b565e5fdeb3252dfe642226d45c02932b24ef73e2ea80b58217f94e996b3a"
+tag = "compute-v0.3.1"
+sha256 = "23f0f860c5da1b586647476630acfe0044fb3bc0bccf9e76f0715f268051fdb2"
 required = false
 changes_board = true
 category = "sustainable"
@@ -82,8 +82,8 @@ launch = [["Bisect", "~/.local/bin/bc250-bisect-gui"], ["Unlock", "~/.local/bin/
 [apps.cores]
 name = "BC-250 Cores Bisect"
 summary = "Tell bad CPU cores apart from an unstable core unlock, before you persist the 8C/16T unlock."
-tag = "cores-v0.3.0"
-sha256 = "7be90af313205db8a3b43bfe1248e640c50a2a506ecba9ca2778ad5313b03ef6"
+tag = "cores-v0.3.1"
+sha256 = "4fdbfefa2bc19910534f5ff7a001fdab99c490e2ffcec93222c5bbd9acbae0e0"
 required = false
 changes_board = true
 category = "sustainable"
@@ -95,8 +95,8 @@ launch = [["Bisect", "~/.local/bin/bc250-cores-bisect-gui"], ["Unlock", "~/.loca
 [apps.oc]
 name = "BC-250 GPU OC Bisect"
 summary = "Find your board's safe GPU overclock and undervolt, one step at a time."
-tag = "oc-v0.2.4"
-sha256 = "90a248c73141543bc057c8c738dad1a42ed076b38b969b1de9c2d9642d741125"
+tag = "oc-v0.2.5"
+sha256 = "3d73795e05902c9bfc686f99ecbb2bfc0c65b73f1eaab830a3f0fc4cddc544ab"
 required = false
 changes_board = true
 category = "sustainable"
