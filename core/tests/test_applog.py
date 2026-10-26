@@ -30,6 +30,26 @@ def test_the_file_and_its_lines(tmp_path, monkeypatch):
         log.removeHandler(handler)
 
 
+def test_a_suites_app_logs_in_the_suites_folder(tmp_path, monkeypatch):
+    """The Windows Portable Suite's apps name their suite: %LOCALAPPDATA%\\windows-portable-suite\\<app id>; an app
+    that names none (the BC250 suite's) keeps ~/.local/share/<app id>, on Windows too."""
+    from bc250_core import platform
+    monkeypatch.setattr(platform, "WINDOWS", True)
+    monkeypatch.setenv("LOCALAPPDATA", str(tmp_path / "Local"))
+    monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "data"))
+    assert applog.log_file("windows-portable-test", "windows-portable-suite") == \
+        tmp_path / "Local" / "windows-portable-suite" / "windows-portable-test" / "windows-portable-test.log"
+    assert applog.log_file("bc250-sftp-tools") == tmp_path / "data" / "bc250-sftp-tools" / "bc250-sftp-tools.log"
+    path = applog.setup("windows-portable-test-log", suite="windows-portable-suite")
+    assert path.parent == tmp_path / "Local" / "windows-portable-suite" / "windows-portable-test-log"
+    log = applog.logger("windows-portable-test-log")
+    log.info("Started.")
+    assert path.read_text().endswith(" INFO Started.\n")
+    for handler in list(log.handlers):
+        handler.close()
+        log.removeHandler(handler)
+
+
 def test_an_uncaught_error_is_logged(tmp_path, monkeypatch):
     reported = []
     monkeypatch.setattr(sys, "excepthook", lambda *args: reported.append(args[1]))

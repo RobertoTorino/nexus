@@ -1,3 +1,9 @@
+Changelog: 26-10-2026 22:01:21
+
+Added. applog: an app can name its suite (log_file() and setup() take suite=), and its log goes to the suite's
+folder: %LOCALAPPDATA%\windows-portable-suite\<app id>\<app id>.log for the Windows Portable Suite's apps. An app
+that names none keeps ~/.local/share/<app id>/<app id>.log, as before.
+
 Changelog: 26-10-2026 21:46:30
 
 Added. platform: the Windows side, for the Windows Portable Suite. suite_data() and suite_config() give a suite's

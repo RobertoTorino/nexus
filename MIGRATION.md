@@ -1041,6 +1041,16 @@ behavior and dependencies. Decided (owner, 25-10-2026):
   and PyQt6's deepest file in a venv (210). Open: `theme.py`, `sound.py`, `upstream.py` and `applog.py` still name
   `bc250-bazzite-suite` and the XDG folders themselves (SFTP's executable reads its theme through them), so they wait
   for a suite identity in core; sensors come with Windows Portable Test.
+- **A Windows app's place in core (26-10-2026).** Less was needed than planned: a Windows Portable Suite app names
+  its suite where it matters and core puts it in the suite folder. Settings: `AppInfo(settings_org=
+  "windows-portable-suite", settings_ini=True)` gives Qt's `.ini` at `%APPDATA%\windows-portable-suite\<app>.ini`
+  (checked on the Ally; nothing in the registry). The log: `applog.setup(APP_ID, suite="windows-portable-suite")`,
+  `%LOCALAPPDATA%\windows-portable-suite\<app id>\<app id>.log`. The look: `create_app(theme=)` with the suite's
+  design, as Nexus Releases does, so the Bazzite theme choice (`theme.py`'s file) is not read. `theme.py` and
+  `upstream.py` stay as they are: the apps not on core carry copies that `tools/tests/test_instance_copies.py`
+  keeps equal, so a change there is a release of each; `sound.py` is WirePlumber's (Linux). Seen once in four runs
+  of core's tests on Windows: `RoundedToolTip` reports a missing `_owner` while Python shuts down (its event filter
+  is still on the application when a test run ends without aboutToQuit); every test passes. A code path to check.
 - **Own tuning apps** (TDP, fans, and the like) for the handheld, later: the board's tuning apps do not port (sysfs,
   GRUB, RADV), but the same kinds of apps on both give comparison data between the BC-250 and the handheld.
 
