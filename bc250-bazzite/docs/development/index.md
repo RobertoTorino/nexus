@@ -14,7 +14,8 @@ Suite is `bc250-bazzite/`. Paths in this wiki are written from the root of the r
 core/bc250_core/              shared Python package, every suite's; see bc250_core below
 tools/                        the Nexus tools: release and CI (build_release, stage_app, check_versions,
                               check_changelogs, tag-release.sh, release.sh, ci-local.sh), the design panel
-test.sh                       runs every test suite (core, tools, and each suite's portal, tools and apps)
+test.sh                       runs every test suite (core, tools, and the portal, tools and apps of each suite
+                              made for the system it runs on: SYSTEM in the suite's folder)
 bc250-bazzite/                the BC250 Bazzite Suite:
   portal/                       the portal: app, apps.toml (the pinned app releases) and install.sh
   apps/<name>/                  one folder per app, each with its own VERSION and CHANGELOG
@@ -34,6 +35,7 @@ python3 -m venv .venv-linux && .venv-linux/bin/python -m pip install -r requirem
 py -m venv .venv-windows && .venv-windows/Scripts/python.exe -m pip install -r requirements-dev.txt
 
 ./test.sh                          # every test suite, offscreen; picks the venv of the OS it runs on
+NEXUS_SYSTEM=bazzite ./test.sh     # the Bazzite suites' tests too, on another system
 python3 tools/check_versions.py    # hard-coded versions = VERSION
 mkdocs build --strict              # from the venv
 ```

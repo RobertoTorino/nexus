@@ -307,7 +307,8 @@ an extracted release, and needs no network except for pip.
   with and without the Desktop icon, and uninstalls. It runs without root or network: `shims.sh` turns sudo into
   fakeroot and pip into a stub. CI runs each installer test in its own step. BC-250 Installer Tests lists the
   scripts in that folder by itself.
-- **`./test.sh`** runs every test suite in the repository.
+- **`./test.sh`** runs every test suite in the repository: core, tools, `dev/`, and the suites made for the
+  system it runs on (this suite's `SYSTEM` says `bazzite`).
 
 `bc250-bazzite/tools/tests/test_installer_tests.py` fails when an app or a portal entry has no installer test, or when CI does
 not run one.

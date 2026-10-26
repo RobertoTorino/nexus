@@ -229,9 +229,10 @@ def test_writes_the_app_and_lists_it_everywhere(checkout, capsys):
     assert "only goes with --uninstall" in installer and "not with sudo" in installer
     assert "--upgrade -r" in installer and 'APP_ID="bc250-fan2"' in installer and "-m fan_two" in installer
     assert "bc250-bazzite-suite/venv" in installer.replace("$DATA_DIR/bc250-bazzite-suite", "x/bc250-bazzite-suite/venv")
-    assert (app / "install.sh").stat().st_mode & 0o111
     test = suite / "tools" / "installer-tests" / "fan2.sh"
-    assert test.stat().st_mode & 0o111 and "apps/fan2/install.sh" in test.read_text()
+    if sys.platform != "win32":                               # Windows has no exec bits (git has them)
+        assert (app / "install.sh").stat().st_mode & 0o111 and test.stat().st_mode & 0o111
+    assert "apps/fan2/install.sh" in test.read_text()
     assert "--suite bc250-bazzite fan2" in test.read_text()
     if shutil.which("bash"):
         subprocess.run(["bash", "-n", str(app / "install.sh"), str(test)], check=True)

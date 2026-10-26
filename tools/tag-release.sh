@@ -15,7 +15,12 @@ die() { printf '\033[1;31mERROR:\033[0m %s\n' "$1" >&2; exit 1; }
 info() { printf '\033[1;35m==>\033[0m %s\n' "$1"; }
 
 [ $# -gt 0 ] || die "Usage: $0 <name>-v<x.y.z> [...], for example $0 portal-v0.9.5"
-suite=$(python3 tools/suites.py --default) || die "Which suite? (tools/suites.py)"      # bc250-bazzite
+python=""
+for candidate in python3 py; do      # one that runs: Windows has a python3 that only points at the Microsoft Store
+    if "$candidate" -c '' >/dev/null 2>&1; then python=$candidate; break; fi
+done
+[ -n "$python" ] || die "No Python found (python3, or py on Windows)."
+suite=$("$python" tools/suites.py --default) || die "Which suite? (tools/suites.py)"      # bc250-bazzite
 [ "$suite" = . ] && suite="" || suite="$suite/"                                        # a prefix for its paths
 
 for tag in "$@"; do
@@ -36,7 +41,7 @@ for tag in "$@"; do
         die "$tag exists already. To move it: git tag -d $tag && git push origin :refs/tags/$tag (with the release-tag ruleset set to Disabled for a moment: it restricts deletions)"
     if [ "$name" = portal ] && git cat-file -e "HEAD:${suite}portal/apps.toml" 2>/dev/null; then
         # release.yml builds a portal only on app releases that exist, pinned with their checksum (step 2).
-        pins=$(git show "HEAD:${suite}portal/apps.toml" 2>/dev/null | python3 -c '
+        pins=$(git show "HEAD:${suite}portal/apps.toml" 2>/dev/null | "$python" -c '
 import sys, tomllib
 for key, app in tomllib.loads(sys.stdin.read()).get("apps", {}).items():
     print(app.get("tag", ""), app.get("sha256", "") or "-")') ||
@@ -57,7 +62,7 @@ git merge-base --is-ancestor HEAD origin/main ||
     die "HEAD ($(git rev-parse --short HEAD)) is not on origin/main yet: git push first, then run this again."
 
 info "Checking that CI passed on $(git rev-parse --short HEAD) (waits while it runs, up to an hour)"
-python3 tools/ci_state.py --wait 60 "$(git rev-parse HEAD)" ||
+"$python" tools/ci_state.py --wait 60 "$(git rev-parse HEAD)" ||
     die "CI has not passed on HEAD ($(git rev-parse --short HEAD)), so it gets no tag: fix what failed, commit and push, then run this again."
 
 for tag in "$@"; do

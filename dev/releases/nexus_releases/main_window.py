@@ -210,7 +210,7 @@ class AppsPage(QWidget):
         for unit, new, notes in picked:
             if new != unit.version:
                 changed = rp.set_version(root, unit, new)
-                log.append(f"{unit.key}: {new} in " + ", ".join(str(p.relative_to(root)) for p in changed))
+                log.append(f"{unit.key}: {new} in " + ", ".join(p.relative_to(root).as_posix() for p in changed))
             text = f"Version {new}." if unit.kind == "core" else rp.release_text(new, notes)
             if unit.kind == "core" and notes.strip():
                 text += f" {notes.strip()}"
@@ -234,7 +234,7 @@ class AppsPage(QWidget):
             text = rp.portal_text(minimum, rp.changed_pins(root, base, suite), "",
                                   rp.changed_withdrawals(root, base, suite))
             rp.add_changelog_entry(root, portal, text)
-            log.append(f"portal: {minimum} in " + ", ".join(str(p.relative_to(root)) for p in changed)
+            log.append(f"portal: {minimum} in " + ", ".join(p.relative_to(root).as_posix() for p in changed)
                        + f" and CHANGELOG entry \"{text}\": apps.toml changed since {base} ({why}), so CI needs this "
                        "bump in the same push. The portal release follows in step 2, once the apps are pinned.")
         log += ["", run_check(root, rp.VERSIONS_CHECK),
@@ -447,7 +447,7 @@ class PortalPage(QWidget):
         log = []
         if new != portal.version:
             changed = rp.set_version(root, portal, new)
-            log.append(f"portal: {new} in " + ", ".join(str(p.relative_to(root)) for p in changed))
+            log.append(f"portal: {new} in " + ", ".join(p.relative_to(root).as_posix() for p in changed))
         pins = rp.changed_pins(root, self.release_window.base(), suite)
         withdrawn = rp.changed_withdrawals(root, self.release_window.base(), suite)
         text = rp.portal_text(new, pins, self.portal_notes.text(), withdrawn)
@@ -545,7 +545,7 @@ class WithdrawPage(QWidget):
         root = self.release_window.root
         changed = rp.withdraw(root, unit, reason, suite=self.release_window.suite)
         self.output.set_text("\n".join([f"{unit.pinned_tag}: withdrawn in " +
-                                        ", ".join(str(p.relative_to(root)) for p in changed), "",
+                                        ", ".join(p.relative_to(root).as_posix() for p in changed), "",
                                         rp.withdraw_commands(unit.pinned_tag, reason)]))
         self.release_window.offer(rp.withdraw_commands(unit.pinned_tag, reason))
         self.reason_edit.clear()

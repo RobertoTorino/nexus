@@ -1,3 +1,9 @@
+Changelog: 26-10-2026 20:45:22
+
+Fixed. The release log names the files it changed with / on Windows too (it showed apps\beta\VERSION). The tests run
+on Windows: the portal tour's test skips there (a bash script recording a Linux desktop), and a suite's copied .git
+folder is made writable before it is removed (Windows refuses read-only files).
+
 Changelog: 26-10-2026 13:46:32
 
 Fixed. The tables' grid lines are the theme's thin dimmed-silver edge, as the border around a table (owner,

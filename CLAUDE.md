@@ -23,7 +23,9 @@ A suite's folder holds its `apps/<name>/` (each with its own VERSION, CHANGELOG,
 `portal/` with `apps.toml` (one pinned release per app) and `install.sh`, its `docs/` and `mkdocs.yml` (its wiki),
 its `icons/` and its `tools/` (the suite's own tools and `tools/installer-tests/`). A **portal** installs and starts
 the apps listed in its manifest; its test app (**check**, BC-250 Bazzite Test, for the BC250 suite) is always
-installed and always listed first; every other listed app is an optional tile. The root keeps what is Nexus's:
+installed and always listed first; every other listed app is an optional tile. A suite's `SYSTEM` file names the
+system it is made for, `bazzite` or `windows` (owner, 26-10-2026: a suite is worked on and tested on its own system).
+The root keeps what is Nexus's:
 
 - `core/bc250_core/`: shared Python code, every suite's. It is **bundled per app** at release time
   (`tools/stage_app.py`), so each app runs on the core it was tested with; the BC250 suite's shared venv
@@ -41,7 +43,7 @@ installed and always listed first; every other listed app is an optional tile. T
   each has an installer test in the suite's `tools/installer-tests/`. `dev/releases/` is **Nexus Releases**, the
   release front end (see Releases).
 - `DESIGN.md` and `ICONS.md`: every color and every icon, per suite and the Nexus page; `test.sh` runs every test
-  suite (core, tools, `dev/`, and each suite's portal, tools and apps); `portal/apps.toml` at the root is a copy of the
+  suite (core, tools, `dev/`, and the portal, tools and apps of each suite made for the system it runs on); `portal/apps.toml` at the root is a copy of the
   BC250 suite's for the portals installed before the move (`bc250-bazzite/tools/check_manifest.py` keeps it
   identical; the owner removes it once the first portal release after the move has been out for a while).
 
@@ -102,8 +104,11 @@ The same repository is used from both systems.
   Bazzite's system `python3` has no PyQt6. Create one from the repo root:
   - Linux: `python3 -m venv .venv-linux && .venv-linux/bin/python -m pip install -r requirements-dev.txt`
   - Windows (Git Bash): `py -m venv .venv-windows && .venv-windows/Scripts/python.exe -m pip install -r requirements-dev.txt`
-- **Windows-only test failures:** gpu's tests need `os.getuid` and one upscaler test needs the exec bit; both
-  pass on Linux and in CI.
+- **Each suite on its own system:** `./test.sh` runs core, tools and `dev/` on both systems, and only the suites
+  whose `SYSTEM` matches: the `bazzite` suites on Linux, the `windows` suites on Windows (`NEXUS_SYSTEM=bazzite` or
+  `windows` picks them by hand). The tests of the shared parts that need Linux (sysfs, file modes, bash) skip on
+  Windows with their reason. The BC250 suite's checks (its tests, installer tests, `tools/ci-local.sh`) run on
+  Bazzite and in CI.
 - **Tests must not write to the Windows registry** (QSettings' native format there): the conftest fixtures turn
   settings into .ini files in a temp folder.
 - Keep path and link case exact: Linux and GitHub are case-sensitive.
@@ -117,7 +122,7 @@ newer Python cannot show; run it before saying work is ready:
 ```bash
 tools/ci-local.sh                                   # every CI job as GitHub runs it (podman); --list shows them
 tools/pre-push.sh                                   # CI's quick checks against origin/main (git's pre-push hook)
-./test.sh                                           # every test suite, offscreen
+./test.sh                                           # every test suite of this system, offscreen
 python3 tools/check_versions.py                     # versions = VERSION, every suite
 python3 bc250-bazzite/tools/check_manifest.py --base origin/main  # the suite's apps.toml rules, the bump since the last portal release
 python3 tools/check_changelogs.py --base origin/main  # no CHANGELOG lost an entry since the last push

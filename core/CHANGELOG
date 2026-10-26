@@ -1,3 +1,9 @@
+Changelog: 26-10-2026 20:45:22
+
+Fixed. The tests run on Windows: wifi's skip there (sysfs and kernel modules), as do the instance tests that run the
+server and the client in one thread (a named pipe on Windows; two processes reach each other, as two launches of an
+app do), and the SteamGridDB key's file mode is checked on Linux only. The code is unchanged.
+
 Changelog: 26-10-2026 13:21:15
 
 Added. widgets: the theme the widgets draw with can be set (set_theme(), current_theme(), accent()), and

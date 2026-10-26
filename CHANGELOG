@@ -1,3 +1,20 @@
+Changelog: 26-10-2026 20:45:22
+
+Each suite is tested on its own system (owner, 26-10-2026: the Bazzite suites on Bazzite, the Windows suites on
+Windows). A suite names its system in a SYSTEM file (bc250-bazzite/SYSTEM says bazzite); tools/suites.py reads it
+(system(), --system) and tools/tests/test_layout.py checks every suite has one. ./test.sh runs core, tools and dev/
+everywhere and the suites of the system it runs on; NEXUS_SYSTEM picks them by hand. The shared tests run on Windows:
+the ones that need Linux skip there with their reason, test_layout compares the CI matrix with / paths, and
+tools/pre-push.sh and tools/tag-release.sh take a Python that runs (Windows' python3 only points at the Microsoft
+Store; tag-release.sh still tries python3 first, then py) and pre-push.sh reads a CRLF line from its stdin.
+
+Changelog: 26-10-2026 19:42:34
+
+requirements-dev.txt in the root takes Nexus Releases' requirements from dev/releases/ (it still named
+bc250-bazzite/apps/suite/, which the move removed, so pip stopped on a fresh venv), and tzdata on Windows: Python
+there has no time zone data, so the CHANGELOG time of CLAUDE.md failed and tools/new_app.py fell back to the
+machine's time.
+
 Changelog: 26-10-2026 13:21:15
 
 Nexus Releases has Nexus's design and icon (owner, 26-10-2026: a Nexus app follows Nexus, not a suite): DESIGN.md

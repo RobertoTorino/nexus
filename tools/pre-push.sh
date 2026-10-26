@@ -21,7 +21,8 @@ info() { printf '\033[1;35mpre-push:\033[0m %s\n' "$1"; }
 
 python=""
 for candidate in .venv-linux/bin/python .venv-windows/Scripts/python.exe python3 py; do
-    if command -v "$candidate" >/dev/null 2>&1 || [ -x "$candidate" ]; then python=$candidate; break; fi
+    # one that runs: Windows has a python3 on PATH that only points at the Microsoft Store
+    if "$candidate" -c '' >/dev/null 2>&1; then python=$candidate; break; fi
 done
 [ -n "$python" ] || { echo "pre-push: no Python found, the checks did not run" >&2; exit 1; }
 
@@ -30,6 +31,7 @@ done
 pushes=()
 if [ $# -ge 2 ] && [ ! -t 0 ]; then
     while read -r local_ref local_sha _ remote_sha; do
+        remote_sha=${remote_sha%$'\r'}                               # a CRLF line (Windows' text-mode pipes)
         case $local_ref in refs/heads/*) ;; *) continue ;; esac     # tags: tag-release.sh checks those
         [ "$local_sha" = "$ZERO" ] && continue                       # a deleted branch
         [ "$remote_sha" = "$ZERO" ] && remote_sha=""

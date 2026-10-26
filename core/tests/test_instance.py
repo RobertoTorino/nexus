@@ -5,12 +5,18 @@ second launch handing over its arguments."""
 from __future__ import annotations
 
 import os
+import sys
 import time
 
+import pytest
 from PyQt6.QtCore import QCoreApplication, QEvent, QObject
 from PyQt6.QtWidgets import QWidget
 
 from bc250_core import instance
+
+# On Windows the socket is a named pipe, which the server and the client in one thread do not get through (two
+# processes, two launches of an app, do).
+ONE_THREAD = pytest.mark.skipif(sys.platform == "win32", reason="a named pipe on Windows: server and client in one thread")
 
 
 def dispose(*objects: QObject) -> None:
@@ -38,6 +44,7 @@ def test_nobody_running(qapp):
     assert not instance.already_running(f"bc250-test-nobody-{os.getpid()}")
 
 
+@ONE_THREAD
 def test_forward_reaches_listener(qapp):
     name = f"bc250-test-{os.getpid()}"
     server = instance.InstanceServer(None, name)
@@ -51,6 +58,7 @@ def test_forward_reaches_listener(qapp):
     dispose(server)
 
 
+@ONE_THREAD
 def test_second_launch_raises_the_window(qapp, monkeypatch):
     app_id = f"bc250-test-app-{os.getpid()}"
     window = QWidget()
@@ -74,6 +82,7 @@ def test_launch_without_arguments_sends_the_plain_show_request(qapp, monkeypatch
     assert sent == ["show", "show"]                            # what every launch sent before arguments existed
 
 
+@ONE_THREAD
 def test_second_launch_hands_over_its_arguments(qapp, monkeypatch):
     app_id = f"bc250-test-args-{os.getpid()}"
     window = QWidget()
@@ -90,6 +99,7 @@ def test_second_launch_hands_over_its_arguments(qapp, monkeypatch):
     dispose(window)
 
 
+@ONE_THREAD
 def test_arguments_without_a_handler_or_malformed_only_show(qapp, monkeypatch):
     app_id = f"bc250-test-noargs-{os.getpid()}"
     window = QWidget()
@@ -123,6 +133,7 @@ def test_first_launch_takes_the_lock(qapp):
     instance._locks.pop(name).unlock()
 
 
+@ONE_THREAD
 def test_launch_during_startup_waits_instead_of_opening_a_second_window(qapp, monkeypatch):
     from PyQt6.QtCore import QLockFile
     app_id = f"bc250-test-starting-{os.getpid()}"

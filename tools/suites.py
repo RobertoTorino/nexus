@@ -2,10 +2,12 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The suites of the repository: each a folder directly under the root with its portal's manifest,
 <suite>/portal/apps.toml (bc250-bazzite/, the BC250 Bazzite Suite). The Nexus tools work on one suite at a time,
-named with --suite; with one suite in the checkout it is the default.
+named with --suite; with one suite in the checkout it is the default. Each suite names the system it is made for
+in <suite>/SYSTEM (bazzite or windows): ./test.sh runs the suites of the system it runs on.
 
-    python3 tools/suites.py            # the suite folders, one per line (relative to the root)
-    python3 tools/suites.py --default  # the one suite, or an error when there are several"""
+    python3 tools/suites.py                   # the suite folders, one per line (relative to the root)
+    python3 tools/suites.py --default         # the one suite, or an error when there are several
+    python3 tools/suites.py --system windows  # only the suites made for that system"""
 
 from __future__ import annotations
 
@@ -15,6 +17,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 MANIFEST = Path("portal") / "apps.toml"
+SYSTEMS = ("bazzite", "windows")          # what <suite>/SYSTEM may say
 
 
 def suites(root: Path = ROOT) -> list[Path]:
@@ -22,6 +25,14 @@ def suites(root: Path = ROOT) -> list[Path]:
     the test repositories are) and holding none is the one suite."""
     found = sorted(p for p in root.iterdir() if p.is_dir() and (p / MANIFEST).is_file())
     return found or ([root] if (root / MANIFEST).is_file() else [])
+
+
+def system(folder: Path) -> str:
+    """The system the suite in *folder* is made for, from its SYSTEM file ("" without one)."""
+    try:
+        return (folder / "SYSTEM").read_text(encoding="utf-8").strip()
+    except FileNotFoundError:
+        return ""
 
 
 def suite(name: str | None = None, root: Path = ROOT) -> Path:
@@ -48,12 +59,15 @@ def add_argument(parser: argparse.ArgumentParser) -> None:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--default", action="store_true", help="only the one suite (an error when there are several)")
+    parser.add_argument("--system", choices=SYSTEMS, help="only the suites made for this system")
     args = parser.parse_args(argv)
     try:
         folders = [suite()] if args.default else suites()
     except LookupError as exc:
         print(exc, file=sys.stderr)
         return 1
+    if args.system:
+        folders = [folder for folder in folders if system(folder) == args.system]
     for folder in folders:
         print(folder.name if folder != ROOT else ".")
     return 0

@@ -680,6 +680,7 @@ def test_window_check_buttons(window, repo):
 
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="the tour is a bash script that records a Linux desktop")
 def test_window_records_the_portal_tour(window, repo, tmp_path, monkeypatch):
     """Record portal tour runs the suite's record-tour.sh in the background, its output in Logs, into
     ~/Videos/bc250-portal-tour-v<portal version>.mp4, and opens the video (owner, 20-10-2026)."""
@@ -1395,6 +1396,9 @@ def nexus_layout(repo: Path, tmp_path: Path, *names: str) -> Path:
             shutil.move(nexus / name / ".git", nexus / ".git")
             shutil.move(nexus / name / "core", nexus / "core")
         else:
+            for file in (nexus / name / ".git").rglob("*"):     # git's objects are read-only: Windows refuses
+                if file.is_file():                                # to remove them
+                    file.chmod(0o600)
             shutil.rmtree(nexus / name / ".git")
             shutil.rmtree(nexus / name / "core")
     sh(nexus, "add", "-A")

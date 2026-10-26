@@ -4,6 +4,9 @@
 # a tests/ folder), offscreen.
 # Extra arguments go to pytest, e.g. ./test.sh -k profile  or  ./test.sh -x -vv
 #
+# System: a suite is tested on the system it is made for (<suite>/SYSTEM): on Windows the windows suites, elsewhere
+# the bazzite ones. Core, tools and dev/ run on both. NEXUS_SYSTEM=bazzite or windows picks the suites by hand.
+#
 # Interpreter: $PYTHON if set, else the venv for this OS. A venv only runs on the OS that made it, so a checkout
 # used from both Linux and Windows keeps one per OS: .venv-linux/ and .venv-windows/ (a plain .venv/ works too).
 set -euo pipefail
@@ -27,12 +30,22 @@ if [[ -z "$PY" ]]; then
     exit 1
 fi
 
+case "$(uname -s)" in
+    MINGW*|MSYS*|CYGWIN*) system=${NEXUS_SYSTEM:-windows} ;;
+    *)                    system=${NEXUS_SYSTEM:-bazzite} ;;
+esac
+
 export QT_QPA_PLATFORM=offscreen
 export PYTHONDONTWRITEBYTECODE=1
 rc=0
 dirs=(core tools dev/*)
 for suite in */portal/apps.toml; do                  # each suite: bc250-bazzite/
     suite=${suite%/portal/apps.toml}
+    suite_system=$(tr -d '[:space:]' < "$suite/SYSTEM" 2>/dev/null || true)
+    if [[ "$suite_system" != "$system" ]]; then
+        echo "== $suite: made for ${suite_system:-no system}, left out on $system (NEXUS_SYSTEM=${suite_system:-...} ./test.sh runs it)"
+        continue
+    fi
     dirs+=("$suite/portal" "$suite/tools" "$suite/tools/installer-tests/gui" "$suite"/apps/*)
 done
 for dir in "${dirs[@]}"; do

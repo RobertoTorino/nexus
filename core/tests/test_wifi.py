@@ -15,6 +15,8 @@ import pytest
 
 from bc250_core import wifi
 
+pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="sysfs, kernel modules and iw, as on Linux")
+
 KERNEL = "7.2.9-ogc3.1.fc44.x86_64"
 SUITE = Path(__file__).resolve().parents[2]
 # Lines of the running kernel's modules.dep and modules.alias (7.2.9-ogc3.1), and an Intel and MediaTek one.

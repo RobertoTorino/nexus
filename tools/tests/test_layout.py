@@ -72,6 +72,15 @@ def test_installers_upgrade_the_python_packages():
     assert [(path.relative_to(SUITE), line) for path, line in calls if "--upgrade -r" not in line] == []
 
 
+def test_every_suite_names_its_system():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("nexus_suites", SUITE / "tools" / "suites.py")
+    suites = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(suites)
+    for folder in _suites():
+        assert suites.system(folder) in suites.SYSTEMS, f"{folder.name}/SYSTEM: one of {', '.join(suites.SYSTEMS)}"
+
+
 def test_every_app_has_tests_and_ci_runs_them():
     import re
     for app in _apps():
@@ -80,7 +89,7 @@ def test_every_app_has_tests_and_ci_runs_them():
     ci = (SUITE / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
     matrix = re.search(r"dir: \[([^\]]*)\]", ci).group(1)
     listed = {entry.strip() for entry in matrix.replace("\n", " ").split(",")}
-    folders = {str(path.parent.relative_to(SUITE)) for path in SUITE.glob("**/tests")
+    folders = {path.parent.relative_to(SUITE).as_posix() for path in SUITE.glob("**/tests")
                if path.is_dir() and not (set(path.relative_to(SUITE).parts) & {".git", "site", "node_modules"})
                and not any(part.startswith(".venv") for part in path.relative_to(SUITE).parts)}
     assert folders <= listed, f"CI's pytest matrix misses {sorted(folders - listed)}"
