@@ -1030,6 +1030,17 @@ behavior and dependencies. Decided (owner, 25-10-2026):
   `apps/` (`tools/check_versions.py`) and its own `tools/check_manifest.py` (`tools/pre-push.sh` runs each
   suite's); Nexus Releases forms tags without the prefix, and `release.yml` marks a plain `portal-v` release as
   Latest: both wait for the suite's portal and release format.
+- **Core's platform layer, the Windows side (26-10-2026).** `bc250_core/platform.py`: `suite_data()` and
+  `suite_config()` (one folder per suite, owner 26-10-2026: `%LOCALAPPDATA%\windows-portable-suite` and
+  `%APPDATA%\windows-portable-suite`; on Linux `~/.local/share/<suite>` and `~/.config/<suite>`), `start_menu()`,
+  `open_path()` (`os.startfile`), `launch_in_terminal()` in a PowerShell window (`powershell_command()`, the same
+  exit file and pause as bash's) and `make_shortcut()` (a `.lnk` written by WScript.Shell). `data_home()`,
+  `config_home()`, `bin_home()` and `xdg_open()` are unchanged on both systems: Bazzite SFTP's Windows executable
+  keeps its files in `~/.config` and `~/.local/share`. Windows' 260-character path limit (long paths are off on
+  the Ally, `LongPathsEnabled = 0`, and on most machines): `PATH_BUDGET` 240, checked with a 20-character user name
+  and PyQt6's deepest file in a venv (210). Open: `theme.py`, `sound.py`, `upstream.py` and `applog.py` still name
+  `bc250-bazzite-suite` and the XDG folders themselves (SFTP's executable reads its theme through them), so they wait
+  for a suite identity in core; sensors come with Windows Portable Test.
 - **Own tuning apps** (TDP, fans, and the like) for the handheld, later: the board's tuning apps do not port (sysfs,
   GRUB, RADV), but the same kinds of apps on both give comparison data between the BC-250 and the handheld.
 

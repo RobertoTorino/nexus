@@ -1,3 +1,13 @@
+Changelog: 26-10-2026 21:46:30
+
+Added. platform: the Windows side, for the Windows Portable Suite. suite_data() and suite_config() give a suite's
+folder (%LOCALAPPDATA% and %APPDATA% on Windows, the XDG folders elsewhere), start_menu() the Start-menu programs
+folder, open_path() opens a file, folder or URL with its own program (os.startfile on Windows, xdg-open elsewhere),
+launch_in_terminal() runs a PowerShell command in a window of its own on Windows (powershell_command(): the exit file
+and the "Press Enter" pause as with bash), and make_shortcut() writes a Windows shortcut. PATH_BUDGET (240 of
+Windows' 260 characters) is what a suite's paths stay within. data_home(), config_home(), bin_home() and xdg_open()
+are unchanged on every system, and nothing changes on Linux.
+
 Changelog: 26-10-2026 20:45:22
 
 Fixed. The tests run on Windows: wifi's skip there (sysfs and kernel modules), as do the instance tests that run the
