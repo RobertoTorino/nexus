@@ -91,11 +91,14 @@ def test_a_second_launch_opens_no_window(monkeypatch):
     import nexus_releases.main_window as main_window
     app = QApplication.instance() or QApplication([])
     asked = []
-    monkeypatch.setattr(entry, "create_app", lambda *a, **k: app)
+    created = []
+    monkeypatch.setattr(entry, "create_app", lambda *a, **k: created.append(k) or app)
     monkeypatch.setattr(instance, "already_running", lambda app_id: asked.append(app_id) or True)
     monkeypatch.setattr(main_window, "ReleaseWindow", lambda *a, **k: pytest.fail("a second window was opened"))
     monkeypatch.setattr("sys.argv", ["nexus_releases"])
     assert entry.main() == 0 and asked == [entry.INFO.app_id]
+    from nexus_releases.style import NEXUS
+    assert created[0]["theme"] is NEXUS                        # the window gets Nexus's design from the start
 
 
 def test_the_logs_are_tabs_of_their_own(window, monkeypatch):
@@ -320,12 +323,15 @@ def test_the_window_has_nexus_design(window):
     """A Nexus app, not a suite's (owner, 26-10-2026): create_app() puts Nexus's theme on the application (ink,
     silver, teal: nexus/docs/stylesheets/nexus.css), the widgets draw with it, and the icon is the Nexus drawing."""
     from PyQt6.QtGui import QPalette
-    from bc250_core import widgets
-    from bc250_core.app import create_app
-    from nexus_releases import INFO, LOGO_PATH
+    from bc250_core import theme, widgets
+    from nexus_releases import LOGO_PATH
     from nexus_releases.style import EDGE, INK, MAIN, NEXUS, SILVER, TEAL
-    w, _app = window
-    app = create_app(INFO, [], theme=NEXUS)
+    w, app = window
+    # As create_app(theme=NEXUS) does it (__main__.py; core's test_widgets covers create_app itself): the widgets'
+    # theme (set by conftest.py for every test here) and the application's palette and style sheet. Not
+    # create_app() again on the tests' application: a second tooltip filter on it crashed Python at exit.
+    widgets.set_theme(NEXUS)
+    theme.apply_theme(app, "", NEXUS)
     palette = app.palette()
     assert palette.color(QPalette.ColorRole.Window).name() == INK
     assert palette.color(QPalette.ColorRole.Base).name() == MAIN
@@ -337,7 +343,7 @@ def test_the_window_has_nexus_design(window):
     assert f"border:1px solid {EDGE}" in w.refresh_pill.styleSheet()
     assert f"border-color:{TEAL}" in w.refresh_pill.styleSheet()
     assert f"border:2px solid {TEAL}" in w.apps_page.apply_button.styleSheet()
-    assert LOGO_PATH.name == "nexus-releases.webp" and app.windowIcon().availableSizes()
+    assert LOGO_PATH.name == "nexus-releases.webp" and LOGO_PATH.is_file()
     assert "#6a1b9a" not in w.styleSheet() and "#7e97ad" not in w.styleSheet()        # nothing of the Bazzite suite
 
 
