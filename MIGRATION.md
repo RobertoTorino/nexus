@@ -5,6 +5,18 @@
 Working notes for moving the seven BC-250 tools into this suite. Not part of the manual or the READMEs, which
 describe only what exists.
 
+## Backlog first
+
+- **Nexus's shared checks in a workflow of their own (on hold, owner 27-10-2026: first on the backlog).** Each suite
+  has its own CI and release workflows (ci-windows-portable.yml, release-windows-portable.yml), but Nexus's shared
+  checks (core, the Nexus tools, `dev/`, the repository rules in `tools/tests/`) still run in `ci.yml` beside the
+  BC250 Bazzite Suite's, so a failure there holds the BC250 suite's tags. The Windows suite's tags wait only for
+  its own CI, which runs core's tests itself. To do: move them to a workflow of their own (`ci-nexus.yml`, say),
+  leaving `ci.yml` the BC250 suite's alone, and have both suites' tags wait for it besides their own
+  (`tools/tag-release.sh`, `tools/ci_state.py --workflow`, the `ci` job of each release workflow);
+  `tools/ci-local.sh` and the tests that read `ci.yml` (`tools/tests/test_layout.py`, `test_ci_local.py`, the BC250
+  suite's `test_installer_tests.py`) follow.
+
 ## Resume here (13-10-2026, after the break)
 
 **First (17-10-2026): the releases of the last renames, then the icons.** Every app is renamed (item 2). State at
@@ -1014,9 +1026,8 @@ behavior and dependencies. Decided (owner, 25-10-2026):
   (`~/nexus-mockups/mockups_d.py`, on `mockups.py`; `D-amber-portal.png`, `D-amber-test.png`; the eighth tile is
   a filler to fill the page). The strip stays (owner, 26-10-2026, on the Ally): its pills carry their controller
   button (A Open, Y Update), so touch and controller use the same control and the hint line under it keeps only
-  what has no pill (X Details, B Back); without an update the Update pill, and Y with it, is gone. Open (owner):
-  the glow and the sizes, at full screen on the Ally; whether the description may take two lines (it wraps for
-  PCSX2 Manager). The images are the owner's (26-10-2026), in
+  what has no pill (X Details, B Back); without an update the Update pill, and Y with it, is gone. The glow, the
+  sizes and the description's lines: done (owner, 27-10-2026). The images are the owner's (26-10-2026), in
   `windows-portable/icons/` since 26-10-2026 (the PNG sources, as Nexus's are in `nexus/images/`; ICONS.md lists
   them): the suite's icon `windows-portable-1024.png` with its copies at 512, 256 and 128 px (Lanczos, as
   `tools/sync_icons.py` scales), and `windows-portable-device.png` (1376 x 768, transparent) for the hero of the
@@ -1025,11 +1036,11 @@ behavior and dependencies. Decided (owner, 25-10-2026):
   suite yet: that takes its `portal/apps.toml`. Its `SYSTEM` says `windows` and its `TAG_PREFIX` `wp-` (owner,
   26-10-2026: `wp-portal-v0.1.0`, `wp-test-v0.1.0`). The tools work with two suites since 26-10-2026
   (`tools/suites.py`: the default is the suite without a prefix, a tag names its suite; `tag-release.sh` and
-  `build_release.py` take the tag's suite; `build_release.py` refuses a Windows suite's tags until its release
-  format exists). Tried with a bare `windows-portable/portal/apps.toml`: what the suite has to bring with it is
+  `build_release.py` take the tag's suite; `tools/build_release.py` refuses a Windows suite's tags: the suite builds
+  its own, below). Tried with a bare `windows-portable/portal/apps.toml`: what the suite has to bring with it is
   `apps/` (`tools/check_versions.py`) and its own `tools/check_manifest.py` (`tools/pre-push.sh` runs each
-  suite's); Nexus Releases forms tags without the prefix, and `release.yml` marks a plain `portal-v` release as
-  Latest: both wait for the suite's portal and release format.
+  suite's). Nexus Releases forms each suite's tags with its prefix since 27-10-2026; the suite's CI and releases
+  are its own workflows (below).
 - **Core's platform layer, the Windows side (26-10-2026).** `bc250_core/platform.py`: `suite_data()` and
   `suite_config()` (one folder per suite, owner 26-10-2026: `%LOCALAPPDATA%\windows-portable-suite` and
   `%APPDATA%\windows-portable-suite`; on Linux `~/.local/share/<suite>` and `~/.config/<suite>`), `start_menu()`,
@@ -1056,8 +1067,8 @@ behavior and dependencies. Decided (owner, 25-10-2026):
   (the Ally docked to a TV at 125 % is 1536 x 864, 1.2 times; on its own screen at 150 % it is the mock-up's size).
   Tried full screen on the Ally (duplicate mode, owner): the cards' glow is good, the sizes are fine. The pills have
   the cards' radius 14 (owner). A focused pill: a thin light edge was barely visible, a light ring too much, the glow
-  amber on amber and an amber ring with a black gap not right either; now dimmed to 60 %. Open (owner): a focused
-  pill's behavior ("still does not feel right"). The controller (pygame-ce 2.5.8, SDL 2.32.10) finds the Ally's pad
+  amber on amber and an amber ring with a black gap not right either; now dimmed to 60 %. A focused pill's
+  behavior: done (owner, 27-10-2026). The controller (pygame-ce 2.5.8, SDL 2.32.10) finds the Ally's pad
   as "ASUSTeK Computer Inc."; pygame names the triggers TRIGGERLEFT and TRIGGERRIGHT. DESIGN.md lists the
   colors.
 - **Windows Portable Test 0.1.0 (26-10-2026)**, `windows-portable/apps/test/` (package `portable_test`, app id
@@ -1070,7 +1081,54 @@ behavior and dependencies. Decided (owner, 25-10-2026):
   trigger live, the count of buttons that answered; the test has every button, so holding B 1.5 s, the Finish pill
   or Escape end it). B closes the app. It runs from the checkout (`run.ps1`, full screen or `--windowed`); the
   installer, the release format and the portal come with the suite (`portal/apps.toml`, `tools/check_manifest.py`,
-  Nexus Releases' prefix). Open (owner): a look at it on the Ally, full screen with the controller.
+  Nexus Releases' prefix). Looked at on the Ally, full screen with the controller: done (owner, 27-10-2026).
+- **The suite, its manifest and its release format (27-10-2026).** `windows-portable/` is a suite: its
+  `portal/apps.toml` pins `wp-test-v0.1.0` (required, first), read by `portal/portable_portal/manifest.py` and
+  checked by `windows-portable/tools/check_manifest.py` (wp-portal-v tags; its CI, pre-push). The
+  categories (owner, 27-10-2026): the BC250 suite's without development, so sustainable, graphics, gaming and
+  utilities, and no `[checkout.*]` apps: the Windows portal does not list the Nexus apps. The release format (owner,
+  27-10-2026: an executable per app, unsigned for now): `<tag>.zip` from `windows-portable/tools/build_release.py` on
+  Windows,
+  unpacking into `<tag>/` with `program/` (PyInstaller one-folder: the exe, named by the package's `EXE_NAME`,
+  `Windows-PT.exe` for Windows Portable Test (owner, 27-10-2026), beside `_internal/`), `install.ps1`,
+  LICENSE and THIRD-PARTY-NOTICES.txt, with SHA256SUMS and notes.md; 48.7 MB for Windows Portable Test, which
+  started from it on the Ally and read the device. `install.ps1` puts the program in
+  `%LOCALAPPDATA%\windows-portable-suite\<app id>\app`, a Start-menu entry in a Windows Portable Suite folder and a
+  Desktop shortcut, with install.sh's options, and refuses administrator. Its installer test
+  (`tools/installer-tests/test.ps1`) runs in the suite's CI, on a stand-in and on the release that CI builds.
+  **Each suite stands apart (owner, 27-10-2026):** a change to one suite never touches another's folder, CI or
+  release workflow; a change both want is two changes, one per suite. `ci-windows-portable.yml` and
+  `release-windows-portable.yml` (wp- tags, never Latest) are the suite's; `ci.yml`, `release.yml` (which leaves wp-
+  tags alone), `tools/build_release.py` and `tools/build_windows_exe.py` stay Nexus's and the BC250 suite's, as
+  released. Its tags wait for its own CI (`tools/tag-release.sh`, `tools/ci_state.py --workflow`), its versions
+  are checked on their own (`tools/check_versions.py --suite`). Nexus's shared parts (core, the tools, `dev/`, the
+  root rules of `tools/tests/`) stay in `ci.yml`, so a failure there holds the BC250 suite's tags; the Windows suite's
+  CI runs core's tests itself, and its tags wait for nothing else. Nexus's shared checks in a workflow of their own:
+  first on the backlog (top of this file). Not run on
+  GitHub yet: the new workflows' first run is the first push. Smart App Control was
+  off on the owner's Ally (27-10-2026); the portal itself has no release format yet. Open: the portal app
+  (direction D), its release format and installer; a release of wp-test-v0.1.0 (owner).
+- **Nexus Releases on every device (owner, 27-10-2026).** It runs on Windows from the checkout (`dev/releases/run.ps1`,
+  and `install.ps1` for a Start-menu entry and a Desktop shortcut; installer test
+  `windows-portable/tools/installer-tests/releases.ps1`), as on Linux, and works on each suite with its own tags
+  (`wp-` for the Windows Portable Suite), manifest rules and release asset (`<tag>.zip`). Checked on the Ally: the
+  window opens through run.ps1, and `--list` shows wp-test-v0.1.0 pinned and never released.
+- **No Development tab (owner, 27-10-2026).** It had no purpose for someone using the board and only confused, so
+  no portal has one: a portal lists only released apps. Nexus Releases and BC-250 Installer Tests run from the
+  checkout (their own `install.sh`/`install.ps1` give a menu entry); the BC250 portal's code for finding a checkout
+  for them went, and its uninstall leaves them. Media Tool, Dependency Checker and Bazzite NetcatGUI moved to
+  Utilities (owner), with its icon. Kept (owner): a portal that runs from a checkout, or was installed from one,
+  installs the released apps from that checkout's source, the test before a portal's tag in Nexus Releases. Nexus
+  Releases' manual moved to the Nexus page (`nexus/docs/releases.md`: Nexus Releases is Nexus's, not a suite's).
+  Media Tool's video tours read the manifest's `[checkout.*]` tables too, so Installer Tests is no longer in its Apps
+  video tour list. Open (owner): the releases, portal (Breaking.: the tab and the two tools removed) and mtool,
+  package and ncgui (Fixed.: the icon); the Linux checks (`tools/ci-local.sh`, the installer tests, portal.sh among
+  them) on Bazzite.
+- **Code signing (on hold, owner 27-10-2026).** The apps are unsigned: SmartScreen asks once for a file a browser
+  downloaded (not for what the portal will download itself); Smart App Control, when on, blocks an unsigned exe
+  with no way past it, and it may be on on other people's handhelds. Options: SignPath Foundation (free for open
+  source, by application) or Microsoft's Artifact Signing (paid; check who can use it). Either is one step in
+  `release.yml` after the build; the release format stays.
 - **Own tuning apps** (TDP, fans, and the like) for the handheld, later: the board's tuning apps do not port (sysfs,
   GRUB, RADV), but the same kinds of apps on both give comparison data between the BC-250 and the handheld.
 

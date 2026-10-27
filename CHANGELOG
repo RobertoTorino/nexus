@@ -1,3 +1,41 @@
+Changelog: 27-10-2026 18:59:46
+
+No Development tab in any portal (owner, 27-10-2026): a portal lists only released apps. The BC250 suite's
+apps.toml has no [checkout.*] tables any more (its root copy with it), Media Tool, Dependency Checker and Bazzite
+NetcatGUI are Utilities in apps.toml and icons/categories.toml (their icons rewritten by sync_icons.py), and
+bc250-bazzite/tools/check_manifest.py refuses a [checkout.*] table or the development category in the current
+manifest; the portal's parser still reads both in an earlier release's manifest, which the tools compare with.
+BC-250 Installer Tests keeps the development icon and loses its portal tile; Nexus Releases loses its tile (no longer
+written by tools/make_icons.py), and Big Picture Mode the development category icon (sync_icons.py writes a
+category's icon only for the portal's apps). The wiki hook, the portal's screenshot and tour tools, tools/new_app.py
+(a new app goes at the end of apps.toml) and the installer test portal.sh (the portal's uninstall leaves Installer
+Tests) follow. Nexus Releases' manual moved from the BC250 wiki's portal chapter to the Nexus page's new Releases
+chapter (nexus/docs/releases.md), with how to start it on Linux and Windows; the BC250 wiki keeps the suite's own
+release steps and board tests, and its app lists, categories and app chapters say Utilities. ICONS.md, CLAUDE.md
+and the suite's CLAUDE.md and README say the same.
+
+Changelog: 27-10-2026 17:53:45
+
+The Windows Portable Suite is a suite: windows-portable/portal/apps.toml pins its apps (Windows Portable Test,
+wp-test-v0.1.0, the required app) under four categories, the BC250 suite's without development (owner, 27-10-2026),
+so no [checkout.*] apps. windows-portable/tools/check_manifest.py checks it as the BC250 suite's does, with wp-portal-v
+tags. A Windows suite's app is released as one zip per tag (owner, 27-10-2026: an executable per app, not signed):
+windows-portable/tools/build_release.py builds <tag>.zip on Windows, which unpacks into <tag>/ with program/
+(PyInstaller's one-folder build, the .exe named by the package's EXE_NAME: Windows-PT.exe), install.ps1, LICENSE and
+THIRD-PARTY-NOTICES.txt, with SHA256SUMS and notes.md. Each suite has its own CI and release workflows (owner,
+27-10-2026: a change to one suite never touches another's checks or releases): ci-windows-portable.yml (its versions,
+manifest and four files, its tests and core's on Windows, its installer tests in Windows PowerShell, then each app's
+release built and installed) and release-windows-portable.yml (wp- tags only, never Latest); ci.yml and release.yml
+keep Nexus and the BC250 suite as they were, release.yml leaving wp- tags alone, and tools/build_release.py and
+tools/build_windows_exe.py are unchanged. tools/ci_state.py takes --workflow, tools/tag-release.sh waits for each
+tag's own suite's CI, tools/check_versions.py takes --suite, and tools/tests/test_layout.py keeps the suites'
+workflows apart and asks a Windows suite's apps for install.ps1, with the same options as install.sh and a refusal to
+run as administrator. Nexus Releases' test of its Commit button expects every suite's manifest check, as the button
+already runs them. tools/pre-push.sh reads the suites' names without Windows' CR, which made it look for
+bc250-bazzite\r on Windows. Nexus Releases runs and installs on Windows too (dev/releases/run.ps1 and install.ps1),
+with an installer test in the Windows Portable Suite (tools/installer-tests/releases.ps1); its README says how.
+bc250-bazzite/tools/pin_app.py's fetch_sha256 takes the asset's name, for a Windows suite's <tag>.zip.
+
 Changelog: 27-10-2026 17:02:23
 
 The pictures of the owner's new Nexus drawing (27-10-2026) are WebP again where WebP is accepted:

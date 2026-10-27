@@ -55,3 +55,24 @@ def test_unreachable_and_the_stub(monkeypatch):
     assert ci_state.check("abc1234", 60, fetch=offline, sleep=lambda s: None) == 3
     monkeypatch.setenv("BC250_CI_STATE", "running")
     assert ci_state.check("abc1234", 60, fetch=offline, sleep=lambda s: None) == 2   # answers at once
+
+
+def test_a_suite_of_its_own_asks_for_its_own_workflow(monkeypatch):
+    """ci.yml by default (Nexus and the BC250 Bazzite Suite); --workflow another suite's CI (owner, 27-10-2026: one
+    suite's CI never holds another suite's releases)."""
+    monkeypatch.delenv("BC250_CI_STATE", raising=False)
+    asked = []
+
+    def fetch(sha, workflow=ci_state.WORKFLOW):
+        asked.append(workflow)
+        return [run()]
+    assert ci_state.check("abc1234", fetch=fetch) == 0
+    assert ci_state.check("abc1234", fetch=fetch, workflow="ci-windows-portable.yml") == 0
+    assert asked == ["ci.yml", "ci-windows-portable.yml"]
+    calls = []
+    monkeypatch.setattr(ci_state, "check", lambda sha, wait, workflow: calls.append((sha, wait, workflow)) or 0)
+    assert ci_state.main(["abc1234"]) == 0
+    assert ci_state.main(["--wait", "1", "--workflow", "ci-windows-portable.yml", "abc1234"]) == 0
+    assert calls == [("abc1234", 0.0, "ci.yml"), ("abc1234", 1.0, "ci-windows-portable.yml")]
+    assert "workflows/ci-windows-portable.yml/runs" in ci_state.RUNS_URL.format(
+        repo="r", workflow="ci-windows-portable.yml", sha="s")

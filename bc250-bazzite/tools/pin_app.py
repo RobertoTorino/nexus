@@ -26,16 +26,18 @@ REPO_URL = "https://github.com/RobertoTorino/nexus"
 _TAG = re.compile(r"^(?P<app>[a-z0-9-]+)-v\d+\.\d+\.\d+$")
 
 
-def fetch_sha256(tag: str) -> str:
+def fetch_sha256(tag: str, asset: str = "") -> str:
+    """The checksum of the release's *asset* (default <tag>.tar.gz) in its SHA256SUMS."""
+    asset = asset or f"{tag}.tar.gz"
     url = f"{REPO_URL}/releases/download/{tag}/SHA256SUMS"
     with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "bc250-pin-app"}),
                                 timeout=30) as response:
         sums = response.read().decode("utf-8", "replace")
     for line in sums.splitlines():
         parts = line.split()
-        if len(parts) == 2 and parts[1].lstrip("*") == f"{tag}.tar.gz":
+        if len(parts) == 2 and parts[1].lstrip("*") == asset:
             return parts[0].lower()
-    raise SystemExit(f"{url} does not list {tag}.tar.gz")
+    raise SystemExit(f"{url} does not list {asset}")
 
 
 def pin(text: str, app: str, tag: str, sha256: str) -> str:

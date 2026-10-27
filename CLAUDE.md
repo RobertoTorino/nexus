@@ -15,8 +15,13 @@ The repository is **Nexus**, `github.com/RobertoTorino/nexus` (branch `main`; un
 redirect that installed portals update through). It is the umbrella over the suites: every suite in a folder of its
 own (owner, 26-10-2026), with what they share at the root. The **BC250 Bazzite Suite** (tools for the AMD BC-250 on
 Bazzite) is `bc250-bazzite/`; its tag names (`<app>-v<x.y.z>`, `portal-v<x.y.z>`), app ids and wiki address did not
-change with the move. The **Windows Portable Suite** (Windows handhelds, `windows-portable/`) is planned in
-MIGRATION.md. `nexus/` is the Nexus page (robertotorino.github.io/nexus/): the name, the structure and the suites;
+change with the move. The **Windows Portable Suite** (Windows handhelds) is `windows-portable/`: its apps are
+released as one zip per tag with a PyInstaller build and an `install.ps1` (`windows-portable/tools/build_release.py`,
+on Windows). **Each suite stands apart** (owner, 27-10-2026): a change to one suite never edits another suite's
+folder, its CI or its release workflow, and a change both suites want is two changes, one per suite, each with its
+own release. `ci.yml` and `release.yml` are Nexus's and the BC250 suite's; a suite with a tag prefix has its own
+`ci-<suite>.yml` and `release-<suite>.yml`, and its tags wait for its own CI only (`tools/tag-release.sh`,
+`tools/ci_state.py --workflow`; `tools/tests/test_layout.py` keeps them apart). `nexus/` is the Nexus page (robertotorino.github.io/nexus/): the name, the structure and the suites;
 each suite's wiki has a folder of its own beside it (the BC250 Bazzite Suite's: `/nexus/bc250-bazzite-suite/`).
 
 A suite's folder holds its `apps/<name>/` (each with its own VERSION, CHANGELOG, LICENSE and .gitignore), its
@@ -40,10 +45,11 @@ default suite of the tools (`tools/suites.py`). The root keeps what is Nexus's:
   A tool that works on a suite takes it with `--suite` (`tools/suites.py`: the folders with `portal/apps.toml`);
   with one suite in the checkout it is the default.
 - `dev/<name>/`: the Nexus-level development apps, laid out as a suite's apps are (the package, `images/`,
-  `tests/`, `install.sh`, `run.sh` and the four files; `.standalone` and `.checkout-only`: never released). Each
-  suite's portal lists them on its Development tab as `[checkout.<name>]` with `nexus = true` and `folder`, and
-  each has an installer test in the suite's `tools/installer-tests/`. `dev/releases/` is **Nexus Releases**, the
-  release front end (see Releases).
+  `tests/`, `install.sh`, `run.sh` and the four files; `.standalone` and `.checkout-only`: never released). They
+  run from the checkout and are in no portal (owner, 27-10-2026: no Development tab, a portal lists only released
+  apps); each has an installer test in each suite's `tools/installer-tests/`. `dev/releases/` is **Nexus
+  Releases**, the release front end (see Releases), with `install.ps1` and `run.ps1` for Windows; its manual is the
+  Nexus page's Releases chapter.
 - `DESIGN.md` and `ICONS.md`: every color and every icon, per suite and the Nexus page; `test.sh` runs every test
   suite (core, tools, `dev/`, and the portal, tools and apps of each suite made for the system it runs on); `portal/apps.toml` at the root is a copy of the
   BC250 suite's for the portals installed before the move (`bc250-bazzite/tools/check_manifest.py` keeps it
@@ -157,9 +163,19 @@ mkdocs build --strict -f bc250-bazzite/mkdocs.yml   # the suite's wiki, from the
 mkdocs build --strict -f nexus/mkdocs.yml          # the Nexus page
 ```
 
-Every app (and every `portal/apps.toml` entry) has an installer test, `<suite>/tools/installer-tests/<name>.sh`, and
-CI runs each one in its own step; a new app adds both (`bc250-bazzite/tools/tests/test_installer_tests.py` checks
-it). BC-250 Installer Tests lists the scripts in that folder by itself. The installer tests need `fakeroot` (Linux). On Bazzite, `brew install shellcheck fakeroot node` (Node.js runs the design panel's script in
+On Windows, for the Windows Portable Suite (its own CI, `ci-windows-portable.yml`), from PowerShell at the repo root:
+
+```powershell
+.venv-windows\Scripts\python.exe tools\check_versions.py --suite windows-portable
+.venv-windows\Scripts\python.exe windows-portable\tools\check_manifest.py --base origin/main
+Get-ChildItem windows-portable\tools\installer-tests\*.ps1 | ForEach-Object { powershell -NoProfile -ExecutionPolicy Bypass -File $_.FullName }
+.venv-windows\Scripts\python.exe windows-portable\tools\build_release.py wp-test-v<VERSION> <folder>   # needs pyinstaller and pillow in the venv
+powershell -NoProfile -ExecutionPolicy Bypass -File windows-portable\tools\installer-tests\test.ps1 -Release <folder>\wp-test-v<VERSION>.zip
+```
+
+Every app (and every `portal/apps.toml` entry) has an installer test, `<suite>/tools/installer-tests/<name>.sh`
+(`<name>.ps1` in a Windows suite), and CI runs each one in its own step; a new app adds both (each suite's
+`tools/tests/test_installer_tests.py` checks it). BC-250 Installer Tests lists the scripts in that folder by itself. The installer tests need `fakeroot` (Linux). On Bazzite, `brew install shellcheck fakeroot node` (Node.js runs the design panel's script in
 `tools/tests/test_design_panel.py`; the test skips without it); brew's folder
 `/home/linuxbrew/.linuxbrew/bin` may need adding to PATH in a non-interactive shell. CI also checks the layout rules above: no CRLF in the index, every
 `.sh` is 100755, every former repo folder has its four files, workflows only in the root `.github/`. The pytest

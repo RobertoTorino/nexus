@@ -14,8 +14,8 @@ window, such as the 1280 px screen of a Steam Deck or an ROG Xbox Ally X, they w
 length.
 
 **Bazzite Test** is always installed with the portal; every other app is optional. The notice of updates is at the
-top, on every tab. Below it is a tab for each [category](apps/categories.md): Sustainable, Graphics, Gaming, Utilities
-and Development. Each app is a tile on its category's tab, left to right in the order of `apps.toml` and as many to a
+top, on every tab. Below it is a tab for each [category](apps/categories.md): Sustainable, Graphics, Gaming and
+Utilities. Each app is a tile on its category's tab, left to right in the order of `apps.toml` and as many to a
 row as the window fits; Bazzite Test is always the first tile on Sustainable:
 
 - **The name**, without the suite's "BC-250" prefix.
@@ -38,17 +38,10 @@ row as the window fits; Bazzite Test is always the first tile on Sustainable:
 **The tabs.** Each tab says at its top what its apps are for; [The apps](apps/index.md) lists them by tab. The portal
 always opens on the first tab, Sustainable.
 
-**Development**, the last tab, holds the tools for working on the suite:
-[Media Tool](other-tools/media-tool.md), [Dependency Checker](apps/package.md),
-[Bazzite NetcatGUI](apps/ncgui.md), the
-release front end
-[Nexus Releases](#the-release-front-end) (`dev/releases`, Nexus's) and BC-250 Installer Tests (`bc250-bazzite/tools/installer-tests/gui`), a window
-that runs the installer tests one at a time. You do not need them to use
-the board. The last two run from a checkout of the repository and have no release. A portal installed from a
-release installs them too, from the checkout it finds on this machine: the one an installed tool of the checkout
-runs from, or the first in your home folder, up to three folders deep (`~/IdeaProjects/bc250-bazzite-suite`, for
-example). Only when it finds none does it ask for the folder. It remembers the checkout. The other apps still install from their releases. A portal installed from the
-checkout uses its own checkout.
+The tools for working on the suite are not in the portal: [Nexus Releases](https://robertotorino.github.io/nexus/releases/)
+and BC-250 Installer Tests (`bc250-bazzite/tools/installer-tests/gui`, a window that runs the installer tests one at
+a time) run from a checkout of the repository and have no release. Start them there, or give them a menu entry with
+their own `install.sh`.
 
 - `apps/` may also contain standalone tools (with a `.standalone` marker) that do not appear in `apps.toml`
   and that the portal does not install or open.
@@ -97,8 +90,8 @@ checkout uses its own checkout.
 - **Install all apps**, the last tab: a button that looks like a tab. It installs every app of the open category
   that is not installed yet, one after the other, the same way as **Install all updates**: one question with the
   list and the board warning, each installer in its own terminal, the tab showing which one of how many. It is
-  disabled once every app of the category is installed, and on **Development**: those apps are tools for working on
-  the suite, installed from their tiles. A portal installed for the first time fills a category with one click.
+  disabled once every app of the category is installed. A portal installed for the first time fills a category with
+  one click.
 - **Icons on Desktop**, a pill at the top (Yes or No; click it to switch): on, every installed app has an icon on the Desktop; off, only the
   portal's icon is there and you start the apps from the portal. The apps stay in the app menu either way, so KDE's
   search and Steam's **Add a Non-Steam Game** still find them. The first time the portal starts with app icons on
@@ -169,8 +162,7 @@ What it installs:
 Uninstall: `/opt/bc250-bazzite-suite/install.sh --uninstall`. This removes the portal and Bazzite Test and
 keeps settings; add `--purge` to remove those too. First it asks about each other suite app that is installed:
 `y` uninstalls it, `s` skips it (it stays installed), `c` cancels the whole uninstall before anything is removed.
-The list has every app this portal lists, the apps that run from a checkout (Nexus Releases, Installer Tests) and
-the apps an earlier portal installed that this one no longer lists (an app dropped from the suite), each removed
+The list has every app this portal lists and the apps an earlier portal installed that this one no longer lists (an app dropped from the suite), each removed
 with its own uninstaller. Those apps keep their own settings, also with `--purge`. Of the portal's own records,
 only those of the apps you kept stay, with the release each one's uninstaller needs; with no app left, that folder
 goes too. To remove the whole suite at once, `--uninstall --all` asks one question instead of one per app, after a
@@ -277,163 +269,10 @@ Releasing an app and pinning it in the portal:
    [Testing a portal release before its tag](#testing-a-portal-release-before-its-tag)), commit steps 3 and 4,
    push, and tag with `tools/tag-release.sh portal-v<x.y.z>`. That release bundles the pinned Bazzite Test release (`check-v…`).
 
-![Nexus Releases](assets/releases/nexus-releases-128.png){ .app-logo }
-
 ### The release front end
 
-**Nexus Releases** (`dev/releases/`, a Nexus app: it serves every suite in the repository, and has Nexus's look,
-ink, silver and teal, and the Nexus icon rather than this suite's theme and category icon) is a window that makes
-these file edits for you. It commits, tags and pushes only when you press its git buttons: after each step it shows
-the git commands to run. It edits the checkout it lives in, so it is not in a portal's releases and has none of its
-own. When the checkout holds several suites, a chooser in the header says which one the steps, the pins and the board
-tests work on; the git buttons, the wikis and GitHub are the repository's whatever the suite. Start it from the
-repository root:
-
-```bash
-tools/release.sh            # or dev/releases/run.sh
-tools/release.sh --list     # the same overview in the terminal, with the system python3
-```
-
-To start it from the app menu instead, install it once on Linux. Nothing is copied: the entry always starts the app
-of the checkout you installed it from.
-
-```bash
-dev/releases/install.sh                         # app menu entry and Desktop icon
-dev/releases/install.sh --no-desktop-shortcut   # app menu entry only
-dev/releases/install.sh --uninstall             # remove them; the checkout stays
-```
-
-`tools/release.sh --install` and `--uninstall` do the same. It runs with the checkout's `.venv-linux` (see
-[Development](development/index.md)). After moving the checkout, run `install.sh` again. On Windows, run
-`tools/release.sh` from Git Bash.
-
-- **1. Release apps:** the **Needs release** column marks in orange every app that ships something new since its last
-  tag: a changed file in its folder (tests and `requirements-dev.txt` do not count), in the core it bundles, or in
-  its manual chapter, committed or not. Hover it for the files. Step 2 says the same for the portal. Those apps are
-  ticked when the window opens; untick what waits (**Tick what needs a release** ticks them all again) and enter the
-  versions. The version offered first follows [semantic versioning](development/architecture.md#versions-changelogs-and-releases) from the CHANGELOG
-  entries since the last tag (`Breaking.` major, `Added.` minor, `Fixed.` patch); its tooltip says why. A version
-  that was never tagged (the first release) can be released as it is. **Apply** writes `VERSION`, every copy `tools/check_versions.py` checks and a
-  `Release x.y.z.` CHANGELOG entry with your notes, which become the release notes on GitHub. The release notes
-  of an app that bundles the core also name the core version. When `apps.toml`
-  pins a tag of that app that was never released, the pin moves to the new version. When `apps.toml` changed since
-  the last portal release, for that or another reason (an app added or removed), CI wants a portal bump in the same push:
-  Apply makes it too (the lowest portal version CI accepts, with a CHANGELOG entry that lists the changed pins) and
-  says so; the portal release itself stays step 2. It runs `bc250-bazzite/tools/check_manifest.py`. Then commit, push, and push the app tags (steps 1 and 2 above),
-  with **git add**, **git commit**, **git push** and **git tag** at the bottom: on Linux the push runs
-  `tools/ci-local.sh` first and pushes only when CI's jobs pass.
-- **2. Pin and release Portal:** once GitHub has built the app releases, **Pin** reads each release's `SHA256SUMS` and
-  pins its tag and checksum in `apps.toml` (step 3). The window shows the lowest portal version CI accepts against
-  the last portal release (its tag; the last push, `origin/main`, while there is none), and offers the higher of that and what semantic versioning gives since the last
-  portal tag (its CHANGELOG entries, and the apps added, removed or moved in `apps.toml`); **Bump portal** writes it with a CHANGELOG entry that lists the pinned app
-  releases, and runs `bc250-bazzite/tools/check_manifest.py` (step 4). Then commit, test on a BC-250 (below), and only then push
-  and tag the portal (step 5). The window lists these commands in that order. While step 1's releases are
-  not tagged yet, Bump portal lists step 1's commands with the bump in them instead (amending the release commit
-  when it is already made and not pushed), and the portal release follows once the apps are pinned.
-- **3. Retract app:** withdraws a release (see [Withdrawing a release](#withdrawing-a-release)).
-- **Test on this board** holds the tests of a release on a BC-250. **Test app updates** and **Test Portal
-  release** run the two board tests below in a terminal, with the suite's `bc250-bazzite/tools/check-release.sh`: the portal from the
-  checkout before the push, and the published portal release after GitHub has built it. **Test withdrawal** does
-  the first on a board with a withdrawn app installed. **Installer tests** opens BC-250 Installer Tests from the
-  checkout. **Record portal tour** records the portal's video tour from the checkout as it is now, for the wiki and
-  YouTube (`bc250-bazzite/tools/record-tour.sh`, about a minute, its output in Logs), into
-  `~/Videos/bc250-portal-tour-v<portal version>.mp4`, and opens it in your video player. Linux only, except
-  **Close issues**: it lists the open issues on GitHub, such as the weekly Upstream review, each with a tick box.
-  **Run** closes the ticked ones with `gh issue close` in the Commands tab, with a comment when you write one; it
-  needs a gh login (`gh auth login`). A double click opens an issue on GitHub.
-- **Test local apps**, on the same tab: the portal and every app window in the checkout, as an icon (the portal first).
-  When the portal is already open, its icon warns instead of starting: a second portal never opens (starting it only
-  brings the open window to the front), so close it first. A click starts that app from the checkout,
-  to try a change before its release: `python -m <package>` with the checkout's venv and its `core`, as `run.sh`
-  starts Nexus Releases. An app that changes how the board runs asks first, as in the portal; started from the
-  checkout it uses the scripts in the checkout. Each app writes its output to
-  `~/.cache/nexus-releases/run/<package>.log`. When an app stops with an error, the end of its log shows on the page.
-  The apps keep running when you close the window. The last icons are the wikis in the checkout, one for each
-  `mkdocs.yml`: **BC250 Bazzite Suite wiki (local)** serves this wiki from the checkout with `mkdocs serve` (the
-  development venv has MkDocs) and opens it in the browser at `http://127.0.0.1:8765/nexus/bc250-bazzite-suite/`, with
-  its design panel open; **Nexus wiki (local)** does the same for the Nexus page, at port 8766. Each rebuilds on
-  every save; its log is `mkdocs-<wiki>-local.log` there. When one is already running, a click only opens the page
-  again. The wikis, like the apps, keep running when you close the window, and Nexus Releases has no button that
-  stops them. A wiki started before the checkout changed (after a pull, or a change to its `mkdocs.yml` or the
-  design panel) can still show the old setup: stop it, then click its icon again. `pkill -f "mkdocs serve"` stops
-  every wiki on Linux; on Windows, in PowerShell:
-  `Get-CimInstance Win32_Process -Filter "Name='python.exe'" | Where-Object { $_.CommandLine -like '*mkdocs serve*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }`.
-  With **Wikis on the network** ticked, the icons serve the wikis on every address of the computer, at
-  ports 8785 and 8786, so a handheld, a laptop or the TV opens them too: the addresses for those devices show on
-  the page once a wiki started. The computer's firewall has to let them in (see the Nexus page's
-  [Design](https://robertotorino.github.io/nexus/design/) chapter).
-- **Logs** shows the log of the step last open, the whole window wide: what Apply, Pin, Bump portal, Retract
-  or a test on this board wrote. A step that writes its log opens Logs; open the step again to go on.
-- **git add**, **git commit**, **git push** and **git tag**, under the tabs, commit, push and tag without typing a command, with
-  the checks in between. **git add** stages every change and new file and runs `tools/fix-modes.sh`, which sets
-  the exec bits CI checks. **git commit** runs `tools/check_versions.py` and `bc250-bazzite/tools/check_manifest.py` first and
-  commits only when they pass; Apply and Bump portal fill in its message, and tick **Amend** when their commands
-  add to the last commit (only a commit that is not pushed yet). **git push** runs `tools/ci-local.sh` first on
-  Linux and pushes only when CI's jobs pass. **git tag** runs `tools/tag-release.sh` (below) with the tags of the
-  step open: on tab 2 the portal's release, on the other tabs step 1's app releases that have no tag yet; it
-  works once HEAD is pushed. **git push** and **git tag** ask first, with the commits or tags they send and
-  the command. When the GitHub token on the machine is a `gh` login or a classic token, which reach every
-  repository of your account, they say so: a fine-grained token for this repository only is safer. Each button
-  works only when it has something to do, and none while a command runs; their output appears in **Commands**.
-- **The command line** in **Commands** runs a command in the checkout, so you need no separate terminal for the
-  commands the steps show. Type it and press Enter; its output appears above the line as it runs. **Commands**
-  lists the commands the last step showed (Apply, Bump portal or Retract), one per line: pick one to put it on
-  the line, then check it and press Enter. Up and Down bring back earlier commands, also from earlier sessions.
-  **Stop** or Ctrl+C interrupts a command, along with anything it started in the background; `clear` or **Clear**
-  empties the output.
-  Each command runs with `bash -lc` in the folder the last `cd` left; variables you set do not carry over to the
-  next command. A command cannot read input, so nothing can ask you something: git does not prompt for a password,
-  opens no editor (commit with `-m`) and pages nothing. For a command that must ask, use a terminal. After each
-  command the window reads the checkout again, as **Refresh** does. On Windows it needs Git Bash's `bash` on the
-  PATH.
-
-**GitHub** in the header shows whether GitHub built your last push: every workflow run (CI, Release, Manual) on
-its commit, tags included. It reads **building** while one runs, then **passed** or **failed**; hover for each
-run, click to open the run that failed (or still runs) on GitHub. It looks every 30 seconds while a build runs and
-every 5 minutes otherwise, and **Refresh** looks at once. When a run it saw running finishes, a desktop
-notification says whether it passed. It needs no GitHub token: answers that did not change do not count against
-GitHub's limit of 60 requests an hour.
-
-**GitHub status** beside it says whether GitHub itself works, as [githubstatus.com](https://www.githubstatus.com/)
-reports it: a green dot while every part of GitHub is up, a red dot while the page reports a problem (an incident,
-or a part such as Actions or Pages degraded or down). A build that waits in *queued* for long is often such a
-problem. Hover for the incident and the parts affected; click to open the status page. It looks every 5 minutes,
-and **Refresh** looks at once.
-
-**Claude tokens today** says how many tokens Claude Code on this computer used since midnight, read from its own
-transcripts (`~/.claude`, or the folder `CLAUDE_CONFIG_DIR` names). Hover for the last 5 hours, the input, output and
-cache tokens, and each model; click to open [Claude's usage page](https://claude.ai/settings/usage), which shows
-your plan's limits. Other computers and claude.ai are not counted. Without Claude Code the pill is not shown. It
-looks every 5 minutes, and **Refresh** looks at once.
-
-The releases step 2 waits for are followed from the same runs. The **GitHub** column of the pin table says where
-each release to pin stands: *no run seen* (is the tag pushed?), *building…*, *ready* or *failed*; **Pin** waits
-for a release that is still building, or says that its workflow failed, instead of failing on a checksum that is
-not there yet. When the release of an app to pin is ready, a desktop notification says so (*ready to pin*), also
-when the run started and ended between two looks, or before the window opened; each release is told once. Under
-the portal version, a line says where the portal's own release stands: *not tagged yet* after Bump portal and the
-commit (nothing reaches the users until `tools/tag-release.sh portal-v<x.y.z>` is run, after the test on a
-board), then *building*, *released* (Test release installs it) or *failed*; its notification says *ready* when
-GitHub built it.
-
-Only portal releases are marked **Latest** on GitHub (`release.yml` passes `--latest=false` for app releases), so
-`/releases/latest`, which the README and the manual link to, always opens the newest portal. App release notes
-start by pointing to it.
-
-A red line at the top of the window means a release tag points at a commit whose `VERSION` is not the tag's
-version: the tag was made before the version bump was committed, and `release.yml` cannot build it. Delete the tag
-(the line shows how), commit and push the bump, and tag again with `tools/tag-release.sh`.
-
-`tools/tag-release.sh <tag> [...]` tags HEAD and pushes the tags, but refuses while HEAD does not hold each tag's
-version (the bump is not committed yet), while that folder has uncommitted changes, while HEAD is not pushed to
-`origin/main`, or when CI did not pass on HEAD: it asks GitHub (`tools/ci_state.py`) and waits while CI still runs,
-up to an hour. A portal tag also waits for the app releases it pins: each one tagged on GitHub and pinned with its
-sha256 (step 2), as the portal's release needs them. A plain `git tag` tags whatever HEAD is at that moment, also the commit from before the bump or one
-CI failed. `release.yml` asks the same before it builds anything: a tag on a commit CI did not pass gives no
-release. It then builds and publishes the release without an approval on GitHub (see
-[GitHub settings](development/github-settings.md#environments)).
-
-`tools/release.sh --list` lists every app with its version, its last tag and its pin, without Qt.
+**Nexus Releases**, Nexus's release front end, makes these file edits for you and runs the board tests below. How to
+start and use it: [Releases](https://robertotorino.github.io/nexus/releases/) on the Nexus page.
 
 ### Testing a portal release before its tag
 
@@ -519,9 +358,7 @@ tests pin their own local builds instead of the published ones.
 
 Create bc250-bazzite/apps/<name>/ with VERSION 0.1.0, a CHANGELOG, a LICENSE and a .gitignore. For an app that stays outside the
 portal, add `.standalone` instead of adding it to `bc250-bazzite/portal/apps.toml`. An app that runs from the checkout and is
-never released also gets `.checkout-only`, and a `[checkout.<name>]` table in `apps.toml` (no tag) when the portal
-should list it on its Development tab. Such a tool outside `apps/` (like
-`bc250-bazzite/tools/installer-tests/gui`) names its folder with `folder = "..."` and has the marker there.
+never released also gets `.checkout-only` and stays out of `apps.toml`: the portal lists only released apps.
 Add an install.sh that supports --uninstall and puts a launcher in ~/.local/bin/, plus tests under tests/.        
 Add the app to ./test.sh, the CI shellcheck list and an installer test in bc250-bazzite/tools/installer-tests/.       
 Add its [apps.<name>] card to bc250-bazzite/portal/apps.toml: name, summary, changes_board, category (the same as its icon's in

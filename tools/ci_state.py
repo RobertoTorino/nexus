@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Whether GitHub's CI passed on a commit: every run of .github/workflows/ci.yml on it (the push to main; a tag
-starts none of its own) finished and passed. tools/tag-release.sh asks it before tagging, and release.yml before it builds, so
+starts none of its own) finished and passed; with --workflow, of another suite's CI (ci-windows-portable.yml: each
+suite's releases wait for its own CI only, owner 27-10-2026). tools/tag-release.sh asks it before tagging, and release.yml before it builds, so
 only a commit that CI passed becomes a release.
 
-    python3 tools/ci_state.py [--wait MINUTES] <commit>
+    python3 tools/ci_state.py [--wait MINUTES] [--workflow FILE] <commit>
 
 Prints the state (passed, failed, running, none) and the runs. Exit status: 0 passed, 1 failed, 2 still running or
 no run yet (after waiting --wait minutes, default 0), 3 GitHub not reachable. Signs in with GH_TOKEN, GITHUB_TOKEN
@@ -24,7 +25,8 @@ import urllib.error
 import urllib.request
 
 REPO = "RobertoTorino/nexus"
-RUNS_URL = "https://api.github.com/repos/{repo}/actions/workflows/ci.yml/runs?head_sha={sha}&per_page=50"
+RUNS_URL = "https://api.github.com/repos/{repo}/actions/workflows/{workflow}/runs?head_sha={sha}&per_page=50"
+WORKFLOW = "ci.yml"                     # Nexus and the BC250 Bazzite Suite; a suite of its own: ci-<suite>.yml
 OK = ("success", "skipped", "neutral")
 POLL_S = 30
 EXIT = {"passed": 0, "failed": 1, "running": 2, "none": 2}
@@ -55,13 +57,13 @@ def token() -> str:
     return found
 
 
-def fetch_runs(sha: str) -> list[dict]:
-    """The CI runs on *sha*; raises OSError when GitHub cannot be reached or refuses (its hourly limit)."""
+def fetch_runs(sha: str, workflow: str = WORKFLOW) -> list[dict]:
+    """The runs of *workflow* on *sha*; raises OSError when GitHub cannot be reached or refuses (its hourly limit)."""
     headers = {"Accept": "application/vnd.github+json", "User-Agent": "bc250-ci-state"}
     signed = token()
     if signed:
         headers["Authorization"] = f"Bearer {signed}"
-    request = urllib.request.Request(RUNS_URL.format(repo=repo_slug(), sha=sha), headers=headers)
+    request = urllib.request.Request(RUNS_URL.format(repo=repo_slug(), workflow=workflow, sha=sha), headers=headers)
     with urllib.request.urlopen(request, timeout=20) as response:
         data = json.load(response)
     return [r for r in data.get("workflow_runs", []) if isinstance(r, dict)]
@@ -80,7 +82,8 @@ def describe(runs: list[dict]) -> list[str]:
             for r in runs]
 
 
-def check(sha: str, wait_minutes: float = 0, fetch=fetch_runs, sleep=time.sleep, now=time.monotonic) -> int:
+def check(sha: str, wait_minutes: float = 0, fetch=fetch_runs, sleep=time.sleep, now=time.monotonic,
+          workflow: str = WORKFLOW) -> int:
     stub = os.environ.get("BC250_CI_STATE")
     deadline = now() + wait_minutes * 60
     while True:
@@ -88,7 +91,7 @@ def check(sha: str, wait_minutes: float = 0, fetch=fetch_runs, sleep=time.sleep,
             current, lines = stub, []
         else:
             try:
-                runs = fetch(sha)
+                runs = fetch(sha) if workflow == WORKFLOW else fetch(sha, workflow)
             except (OSError, ValueError) as exc:
                 print(f"unreachable: GitHub could not be asked about {sha[:7]} ({exc})", file=sys.stderr)
                 return 3
@@ -104,13 +107,17 @@ def check(sha: str, wait_minutes: float = 0, fetch=fetch_runs, sleep=time.sleep,
 
 
 def main(argv: list[str]) -> int:
-    wait = 0.0
-    if argv[:1] == ["--wait"] and len(argv) >= 2:
-        wait, argv = float(argv[1]), argv[2:]
+    wait, workflow = 0.0, WORKFLOW
+    while argv[:1] in (["--wait"], ["--workflow"]) and len(argv) >= 2:
+        if argv[0] == "--wait":
+            wait = float(argv[1])
+        else:
+            workflow = argv[1]
+        argv = argv[2:]
     if len(argv) != 1:
         print(__doc__.split("\n\n")[1], file=sys.stderr)
         return 3
-    return check(argv[0], wait)
+    return check(argv[0], wait, workflow=workflow)
 
 
 if __name__ == "__main__":

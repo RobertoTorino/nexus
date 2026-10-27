@@ -54,7 +54,7 @@ class Tour(Recorder):
         from bc250_core.app import create_app
         from bc250_portal import INFO, LOGO_PATH, MANIFEST, audio, state_dir
         from bc250_portal.gamepad import Gamepad
-        from bc250_portal.manifest import load, load_checkout
+        from bc250_portal.manifest import load
         from bc250_portal.sources import Records, Sources
 
         self.home = home
@@ -62,7 +62,6 @@ class Tour(Recorder):
         for fmt in (QSettings.Format.NativeFormat, QSettings.Format.IniFormat):
             QSettings.setPath(fmt, QSettings.Scope.UserScope, str(home / ".config"))
         entries = load(MANIFEST)
-        shown = entries + load_checkout(MANIFEST)
         records = {}
         for entry in entries:
             if entry.key in INSTALLED:
@@ -88,7 +87,7 @@ class Tour(Recorder):
         def no_controller():
             raise OSError("no controller in the tour")
 
-        window = MainWindow(shown, Sources(state_dir() / "releases", checkout=None, download=None),
+        window = MainWindow(entries, Sources(state_dir() / "releases", checkout=None, download=None),
                             Records(state_dir() / "installed.json"), desktop=home / "Desktop",
                             menu=home / ".local/share/applications", sounds=Silent(),
                             gamepad=Gamepad(source_factory=no_controller))

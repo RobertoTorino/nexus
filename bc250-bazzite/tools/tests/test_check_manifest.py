@@ -136,11 +136,8 @@ def test_bump_is_counted_since_the_last_portal_release(tmp_path, monkeypatch):
 def test_shipped_manifest_passes_without_required_tags():
     entries = cm.manifest.load(cm.SUITE / cm.MANIFEST)
     assert cm.check_entries(entries, require_tags=False) == []
-    assert {"mtool", "package"} <= {entry.key for entry in entries if entry.development}
-    checkout = cm.manifest.load_checkout(cm.SUITE / cm.MANIFEST)
-    assert cm.check_checkout_entries(checkout) == []
-    assert [(entry.key, entry.folder, entry.nexus) for entry in checkout] == [
-        ("releases", "dev/releases", True), ("installer-tests", "tools/installer-tests/gui", False)]
+    assert {"mtool", "package", "ncgui"} <= {entry.key for entry in entries if entry.category == "utilities"}
+    assert cm.check_no_checkout_tables((cm.SUITE / cm.MANIFEST).read_text(encoding="utf-8")) == []
 
 
 def test_every_app_needs_a_category():
@@ -148,27 +145,19 @@ def test_every_app_needs_a_category():
     gpu = cm.manifest.AppEntry(key="gpu", name="Gov", summary="s", tag="gpu-v0.0.1")       # an older manifest's
     errors = cm.check_entries([*entries, gpu], require_tags=False)
     assert [e for e in errors if "category" in e] == [
-        "[apps.gpu] needs a category: one of sustainable, graphics, gaming, utilities, development"]
+        "[apps.gpu] needs a category: one of sustainable, graphics, gaming, utilities"]
+    dev = cm.manifest.AppEntry(key="gpu", name="Gov", summary="s", tag="gpu-v0.0.1", category="development")
+    assert [e for e in cm.check_entries([*entries, dev], require_tags=False) if "category" in e] == [
+        "[apps.gpu] needs a category: one of sustainable, graphics, gaming, utilities"]   # the tab is gone
 
 
-def test_checkout_tables_match_the_checkout_only_folders(tmp_path, monkeypatch):
-    entry = cm.manifest.AppEntry(key="gpu", name="Gov", summary="s", tag="", checkout_only=True)
-    errors = cm.check_checkout_entries([entry])
-    assert any("[checkout.gpu]: apps/gpu has no .checkout-only" in e for e in errors)
-    suite = tmp_path / "suite"                                  # a suite with a marked app that is not listed
-    (suite / "apps" / "marked").mkdir(parents=True)
-    (suite / "apps" / "marked" / ".checkout-only").write_text("No releases.\n")
-    monkeypatch.setattr(cm, "SUITE", suite)
-    assert cm.check_checkout_entries([]) == ["apps/marked has .checkout-only but no [checkout.marked] in portal/apps.toml"]
-    monkeypatch.undo()
-    elsewhere = cm.manifest.AppEntry(key="gui", name="G", summary="s", tag="", checkout_only=True, folder="tools")
-    assert any("[checkout.gui]: tools has no .checkout-only" in e for e in cm.check_checkout_entries([elsewhere]))
-    nexus = cm.manifest.AppEntry(key="x", name="X", summary="s", tag="", checkout_only=True, folder="dev/x", nexus=True)
-    errors = cm.check_checkout_entries([nexus])
-    assert any("[checkout.x]: dev/x (nexus = true) has no .checkout-only in the repository" in e for e in errors)
-    releases = cm.manifest.AppEntry(key="releases", name="R", summary="s", tag="", checkout_only=True,
-                                    folder="dev/releases", nexus=True)
-    assert not any("releases" in e for e in cm.check_checkout_entries([releases]))   # the marker is in dev/releases
+def test_no_checkout_tables():
+    """The portal lists only released apps (owner, 27-10-2026): the tools that run from the checkout are started
+    there, not from a Development tab."""
+    table = '\n[checkout.releases]\nname = "R"\nsummary = "s"\n'
+    assert cm.check_no_checkout_tables(BASE) == []
+    assert cm.check_no_checkout_tables(BASE + table) == [
+        "portal/apps.toml [checkout.releases]: the portal lists only released apps; start it from the checkout instead"]
 
 
 def test_checkout_table_change_needs_a_patch_bump():

@@ -4,8 +4,13 @@
 ``VERSION="x.y.z"``, pyproject and Cargo.toml ``version = "x.y.z"``, and a Rust crate's own entry in its
 Cargo.lock) must equal that folder's VERSION file. VERSION is the single source; the literals exist so each script
 and package still works on its own. Cargo.lock matters because CI builds with --locked, which fails when the lock
-file's version of the crate differs from Cargo.toml."""
+file's version of the crate differs from Cargo.toml.
 
+    python3 tools/check_versions.py                        # core, dev/ and every suite
+    python3 tools/check_versions.py --suite windows-portable  # core, dev/ and that suite only: each suite's CI
+                                                              # checks its own, so one suite never blocks another"""
+
+import argparse
 import importlib.util
 import re
 import sys
@@ -63,11 +68,19 @@ def _suites():
 suites = _suites()
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--suite", metavar="NAME", help="only this suite's folders, besides core and dev/")
+    args = parser.parse_args([] if argv is None else argv)
+    try:
+        chosen = [suites.suite(args.suite)] if args.suite else suites.suites()
+    except LookupError as exc:
+        print(exc, file=sys.stderr)
+        return 1
     errors = []
     checked = 0
     units = [ROOT / "core", *sorted(p for p in (ROOT / "dev").glob("*") if p.is_dir())]   # the Nexus apps
-    for suite in suites.suites():               # each suite: its portal, apps and Installer Tests
+    for suite in chosen:                        # each suite: its portal, apps and Installer Tests
         units += [suite / "portal", *sorted(p for p in (suite / "apps").iterdir() if p.is_dir())]
         if (suite / "tools" / "installer-tests" / "gui").is_dir():
             units.append(suite / "tools" / "installer-tests" / "gui")
@@ -101,4 +114,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main(sys.argv[1:]))

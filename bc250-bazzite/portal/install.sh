@@ -92,10 +92,8 @@ release_venv() {
 
 # The other suite apps that are installed, one per line: key, name, the folder its uninstaller runs in (empty when
 # there is none) and its uninstall commands, tab-separated. Read from the installed portal's apps.toml, the one
-# that installed them; the folder is the release the portal kept, or the app staged afresh from the checkout. The
-# checkout-only apps ([checkout.<key>]) run their uninstaller in their folder of the checkout (the suite's folder, or
-# the repository's for a Nexus app, nexus = true). An app this portal no
-# longer lists (dropped from the manifest, installed by an earlier portal) is found by the record and release folder
+# that installed them; the folder is the release the portal kept, or the app staged afresh from the checkout. An app
+# this portal no longer lists (dropped from the manifest, installed by an earlier portal) is found by the record and release folder
 # the portal kept for it, else by its own installed copy (~/.local/share/<app-id>/app or /opt/<app-id>, an install.sh
 # with the suite installers' options), and uninstalled with that installer.
 installed_apps() {
@@ -109,7 +107,7 @@ from pathlib import Path
 manifest, state, checkout, staging = Path(sys.argv[1]), Path(sys.argv[2]), sys.argv[3], Path(sys.argv[4])
 data_dir, opt_dir, own_ids = Path(sys.argv[5]), Path(sys.argv[6]), set(sys.argv[7:9])    # the portal, Bazzite Test
 tables = tomllib.loads(manifest.read_text(encoding="utf-8"))
-apps, checkout_apps = tables.get("apps", {}), tables.get("checkout", {})
+apps = tables.get("apps", {})
 suite = Path(checkout) / "bc250-bazzite" if checkout else None     # the suite's folder in the checkout
 try:
     records = json.loads((state / "installed.json").read_text(encoding="utf-8"))
@@ -161,26 +159,15 @@ for key, app in apps.items():
             folder = dest
     row(key, app.get("name", key), folder, " && ".join(app.get("uninstall", [])))
 
-# The checkout-only apps: their folder in the suite's folder of the checkout (a Nexus app's in the repository), when
-# there is one.
-for key, app in checkout_apps.items():
-    app_ids |= {Path(p).name for p in app.get("detect", [])}
-    if not present(app.get("detect", [])):
-        continue
-    base = Path(checkout) if app.get("nexus") else suite
-    folder = base / app.get("folder", f"apps/{key}") if suite else None
-    row(key, app.get("name", key), folder if folder and folder.is_dir() else None,
-        " && ".join(app.get("uninstall", ["bash install.sh --uninstall"])))
-
 # Apps this portal no longer lists: first by the record and release folder kept for them ...
 found_ids = set()
 releases = state / "releases"
-candidates = {key: tag for key, tag in records.items() if key not in apps and key not in checkout_apps}
+candidates = {key: tag for key, tag in records.items() if key not in apps}
 if releases.is_dir():
     for path in releases.iterdir():
         match = re.match(r"^(.+)-v\d+\.\d+\.\d+$", path.name)
         key = match[1] if match else path.name.removeprefix("local-")
-        if key not in apps and key not in checkout_apps and key not in candidates:
+        if key not in apps and key not in candidates:
             candidates[key] = path.name
 for key, tag in sorted(candidates.items()):
     folder = releases / (f"local-{key}" if tag == "local" else tag)

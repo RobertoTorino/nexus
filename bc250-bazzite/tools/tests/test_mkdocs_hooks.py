@@ -37,9 +37,10 @@ def test_pages_point_at_the_copies_only(monkeypatch):
         "![](../assets/apps/portal.png) ![](../images/home/portal.webp)")
 
 
-def test_only_pictures_a_page_names_are_converted():
+def test_only_pictures_a_page_names_are_converted(tmp_path):
+    (tmp_path / "page.md").write_text("![](../assets/check/shot.png) ![](../assets/apps/gpu.webp)", encoding="utf-8")
+    assert hooks.shown(str(tmp_path)) == {"assets/check/shot.png"}       # a PNG a page names; a WebP needs no copy
     wanted = hooks.shown(str(SUITE / "docs"))
-    assert "assets/releases/nexus-releases-128.png" in wanted            # a Nexus app's, from dev/releases/images
     assert not any("/steam/" in uri for uri in wanted)      # Console Link's Steam artwork is not on any page
 
 

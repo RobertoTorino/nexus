@@ -3,13 +3,12 @@
 
 APP_NAME = "BC250 Bazzite Suite"
 APP_ID = "bc250-bazzite-suite"
-__version__ = "10.1.0"
+__version__ = "11.0.0"
 # The suite's stage, shown beside the version in the header and in a portal release's notes; "" when it leaves
 # active development. The README's badge and the wiki's home page say the same (tools/tests/test_stage.py).
 STAGE = "Beta"
 STAGE_NOTE = "The suite is in active development: features and layout may still change between releases."
 
-import re
 from pathlib import Path
 
 from bc250_core import AppInfo
@@ -50,55 +49,6 @@ def is_suite(folder: Path) -> bool:
 def suite_folder(checkout: Path) -> Path:
     """The suite's folder in *checkout*: where its apps, portal, docs and tools are."""
     return checkout / SUITE_DIR
-
-
-def remembered_checkout() -> Path | None:
-    """The suite checkout a portal installed from a release was shown, for the apps that run from a checkout
-    ([checkout.<key>] in apps.toml); None when it was not shown one, or the folder is no longer a checkout."""
-    try:
-        recorded = (state_dir() / CHECKOUT_FILE).read_text(encoding="utf-8").strip()
-    except OSError:
-        return None
-    return Path(recorded) if recorded and is_suite(Path(recorded)) else None
-
-
-SEARCH_DEPTH = 3                        # ~/IdeaProjects/bc250-bazzite-suite is depth 2
-
-
-def find_checkout(home: Path | None = None) -> Path | None:
-    """A suite checkout on this machine, without asking: the one a checkout-only app's launcher in ~/.local/bin
-    runs from (the suite's bc250-*, Nexus's nexus-*), else the first one in the home folder, up to SEARCH_DEPTH
-    folders deep (hidden folders skipped)."""
-    home = home or Path.home()
-    bin_dir = home / ".local" / "bin"
-    for launcher in sorted([*bin_dir.glob("bc250-*"), *bin_dir.glob("nexus-*")]):
-        try:
-            text = launcher.read_text(encoding="utf-8", errors="replace")
-        except OSError:
-            continue
-        for quoted in re.findall(r'"(/[^"$]+)"', text):
-            for folder in Path(quoted).parents:
-                if is_suite(folder):
-                    return folder
-    level = [home]
-    for _depth in range(SEARCH_DEPTH):
-        below = []
-        for folder in level:
-            try:
-                children = sorted(c for c in folder.iterdir() if c.is_dir() and not c.name.startswith("."))
-            except OSError:
-                continue
-            for child in children:
-                if is_suite(child):
-                    return child
-            below += children
-        level = below
-    return None
-
-
-def remember_checkout(folder: Path) -> None:
-    state_dir().mkdir(parents=True, exist_ok=True)
-    (state_dir() / CHECKOUT_FILE).write_text(f"{folder}\n", encoding="utf-8")
 
 
 def suite_checkout() -> Path | None:

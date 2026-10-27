@@ -1,0 +1,85 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+name: Release Windows Portable
+
+# One GitHub release per tag of the Windows Portable Suite: wp-<app>-v<x.y.z> (wp-test-v0.1.0). The tag's version must
+# equal that app's VERSION. Apart from release.yml (the BC250 Bazzite Suite's), which leaves wp- tags alone, so a
+# change here never touches the other suite's releases (owner, 27-10-2026).
+#
+# The assets are <tag>.zip (the app's one-folder PyInstaller build with its install.ps1), SHA256SUMS and the notes,
+# built on Windows by windows-portable/tools/build_release.py. Never GitHub's "Latest": that is the BC250 suite's
+# portal, which its users install from /releases/latest. The portal has no release format yet.
+#
+# Only a commit that this suite's CI passed becomes a release: the first job waits for ci-windows-portable.yml on the
+# tagged commit, up to 75 minutes. tools/tag-release.sh asks the same before it tags.
+
+on:
+  push:
+    tags: ["wp-*-v[0-9]*.[0-9]*.[0-9]*"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    timeout-minutes: 80                 # ci_state waits up to 75
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - name: CI passed on this commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 tools/ci_state.py --workflow ci-windows-portable.yml --wait 75 "$GITHUB_SHA"
+
+  release:
+    needs: ci
+    runs-on: windows-latest
+    env:
+      TAG: ${{ github.ref_name }}
+      GH_TOKEN: ${{ github.token }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0                # tags, for check_manifest and the zip's file times
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Checks
+        run: |
+          python tools/check_versions.py --suite windows-portable
+          python windows-portable/tools/check_manifest.py
+          app=${TAG#wp-}; app=${app%-v*}
+          python -m pip install -q -r "windows-portable/apps/$app/requirements.txt" pyinstaller pillow
+
+      - name: Build
+        run: |
+          python windows-portable/tools/build_release.py "$TAG" dist
+          cat dist/SHA256SUMS
+
+      - name: Publish
+        run: |
+          app=${TAG%-v*}
+          for attempt in 1 2 3 4 5; do
+            if gh release view "$TAG" >/dev/null 2>&1; then
+              gh release upload "$TAG" "dist/$TAG.zip" dist/SHA256SUMS --clobber && exit 0
+            elif gh release create "$TAG" "dist/$TAG.zip" dist/SHA256SUMS \
+                   --title "$app ${TAG##*-v}" --notes-file dist/notes.md --verify-tag --latest=false; then
+              exit 0
+            fi
+            [ "$attempt" = 5 ] && break
+            echo "Publishing failed (try $attempt of 5); again in $((attempt * 30)) s" >&2
+            sleep $((attempt * 30))
+          done
+          echo "Publishing $TAG failed five times." >&2
+          exit 1

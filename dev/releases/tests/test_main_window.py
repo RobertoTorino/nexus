@@ -348,14 +348,13 @@ def test_the_window_has_nexus_design(window):
 
 
 def test_the_icons_are_the_nexus_drawing():
-    """The app's icon, its menu icon and its tile on the BC250 suite's portal are the Nexus drawing at 512, 128 and
-    256 px (tools/make_icons.py writes them, lossless, so the pixels are the drawing's)."""
+    """The app's icon and its menu icon are the Nexus drawing at 512 and 128 px (tools/make_icons.py writes them,
+    lossless, so the pixels are the drawing's). It has no tile on a portal: it runs from the checkout."""
     Image = pytest.importorskip("PIL.Image")
     from nexus_releases import ROOT
     nexus = ROOT.parents[1] / "nexus" / "images"
-    tile = ROOT.parents[1] / "bc250-bazzite" / "portal" / "images" / "apps" / "releases.webp"
-    for copy, size in ((ROOT / "images" / "nexus-releases.webp", 512), (ROOT / "images" / "nexus-releases-128.png", 128),
-                       (tile, 256)):
+    assert not (ROOT.parents[1] / "bc250-bazzite" / "portal" / "images" / "apps" / "releases.webp").exists()
+    for copy, size in ((ROOT / "images" / "nexus-releases.webp", 512), (ROOT / "images" / "nexus-releases-128.png", 128)):
         with Image.open(copy) as got, Image.open(nexus / f"nexus-{size}.png") as want:
             assert got.size == (size, size) == want.size, copy.name
             assert got.convert("RGBA").tobytes() == want.convert("RGBA").tobytes(), copy.name

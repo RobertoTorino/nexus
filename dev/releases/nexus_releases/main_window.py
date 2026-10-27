@@ -464,7 +464,7 @@ class PortalPage(QWidget):
             log += [f"Then (step 1's releases are not tagged yet: {', '.join(pending)}; the bump goes into their "
                     "push, and the portal release follows once they are pinned):", commands]
         else:
-            commands = rp.portal_commands(f"portal-v{new}", check=rp.check_script(root, suite))
+            commands = rp.portal_commands(self.release_window.portal_tag(new), check=rp.check_script(root, suite))
             log += ["Then:", commands]
         self.release_window.offer(commands)
         self.output.set_text("\n".join(log))
@@ -719,7 +719,7 @@ class RunPage(QWidget):
     def fill(self, targets: list[rp.Launch]) -> None:
         if sys.platform.startswith("linux"):
             self.release_button.setToolTip(
-                f"After GitHub built portal-v{self.release_window.portal_version()}: download it, check it against "
+                f"After GitHub built {self.release_window.portal_tag()}: download it, check it against "
                 "its SHA256SUMS, install it and start it (check-release.sh release)")
         self.apps.clear()
         for target in targets:
@@ -747,7 +747,7 @@ class RunPage(QWidget):
         self.output.appendPlainText({
             "local": "A terminal installs the portal from this checkout, then starts it with --source release. "
                      "Close the portal there to finish.",
-            "release": f"A terminal installs the published portal-v{self.release_window.portal_version()} release, "
+            "release": f"A terminal installs the published {self.release_window.portal_tag()} release, "
                        "then starts it. Close the portal there to finish.",
             "withdrawal": "A terminal installs the portal from this checkout and starts it. With the app installed, "
                           "the portal says it is not available any more and removes it; its tile then shows \"App not "
@@ -1451,6 +1451,10 @@ class ReleaseWindow(QMainWindow):
 
     def portal_version(self) -> str:
         return (rp.suite_dir(self.root, self.suite) / "portal" / "VERSION").read_text(encoding="utf-8").strip()
+
+    def portal_tag(self, version: str = "") -> str:
+        """The suite's portal tag of *version* (default: portal/VERSION): portal-v10.1.0, wp-portal-v0.1.0."""
+        return f"{rp.tag_prefix(self.root, self.suite)}portal-v{version or self.portal_version()}"
 
     def refresh(self) -> None:
         """reload(), keeping what was entered: step 1's ticks, versions and notes, step 2's portal version (if it

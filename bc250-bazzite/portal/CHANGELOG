@@ -1,3 +1,18 @@
+Changelog: 27-10-2026 19:45:13
+
+Release 11.0.0.
+
+Changelog: 27-10-2026 18:59:46
+
+Breaking. No Development tab (owner, 27-10-2026: it had no purpose for someone using the board and only confused):
+the portal lists only released apps. Nexus Releases and BC-250 Installer Tests, which run from a checkout of the
+repository, are no longer tiles: start them from the checkout, or give them a menu entry with their own install.sh
+(Nexus Releases' manual is the Nexus page's Releases chapter). A portal installed from a release no longer looks
+for a checkout on the machine, and its uninstall no longer asks about those two tools; they stay as they are. Media
+Tool, Dependency Checker and Bazzite NetcatGUI are on Utilities, whose line at the top names them; Big Picture Mode
+has no Development category either. A portal that runs from a checkout, or was installed from one, still installs
+the released apps from that checkout's source, which is how a release is tried on a board before its tag.
+
 Changelog: 26-10-2026 14:21:25
 
 Release 10.1.0. Pins check-v0.17.0, upscaler-v1.1.0, overlay-v0.14.0, bios-v0.14.0, ace-v0.14.0, mesh-v0.16.0, vram-v0.14.0, fan-v0.14.0, wdriver-v0.14.0, cec-v0.15.0, sftp-v0.16.0, ips35-v0.8.0, hdcam-v0.10.0, hdcontrol-v0.10.0, package-v2.1.0, ncgui-v0.14.0, rpcs3-v2.1.0, consoles-v1.15.0, clb-v0.10.0, shadps4-v2.1.0, decky-v0.16.0, datstation-v2.1.0, ppsspp-v0.15.0, pcsx2-v2.1.0, vita3k-v0.14.0, xenia-v0.10.0.

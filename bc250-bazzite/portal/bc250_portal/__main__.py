@@ -14,11 +14,10 @@ from bc250_core import __version__ as CORE_VERSION, instance
 from bc250_core.app import create_app, exec_app
 from bc250_core.updates import repo_slug
 
-from . import (APP_NAME, INFO, MANIFEST, __version__, find_checkout, installed_copy, remembered_checkout, state_dir,
-               suite_checkout)
+from . import APP_NAME, INFO, MANIFEST, __version__, installed_copy, state_dir, suite_checkout
 from . import portal_update
 from .main_window import MainWindow
-from .manifest import ManifestError, load, load_checkout
+from .manifest import ManifestError, load
 from .sources import Records, Sources, http_download
 
 
@@ -42,7 +41,6 @@ def main() -> int:
     sys.excepthook = _show_error
     try:
         entries = load(Path(args.manifest))
-        checkout_only = load_checkout(Path(args.manifest))
     except (OSError, ManifestError) as exc:
         QMessageBox.critical(None, APP_NAME, f"The app list could not be read:\n\n{exc}")
         return 1
@@ -51,12 +49,7 @@ def main() -> int:
     if args.source == "checkout" and checkout is None:
         QMessageBox.critical(None, APP_NAME, "--source checkout: the portal is not running from a suite checkout.")
         return 1
-    # The checkout-only apps run from a checkout: a portal without one of its own finds one on this machine (asking
-    # only when there is none); the released apps still install from their pinned releases.
-    shown = entries + checkout_only
-    apps_checkout = None if checkout else local_build or remembered_checkout() or find_checkout()
-    sources = Sources(state_dir() / "releases", checkout=checkout, download=http_download(INFO.user_agent),
-                      apps_checkout=apps_checkout)
+    sources = Sources(state_dir() / "releases", checkout=checkout, download=http_download(INFO.user_agent))
     # One instance: a second launch brings the running window to the front and exits.
     if instance.already_running(INFO.app_id):
         return 0
@@ -66,7 +59,7 @@ def main() -> int:
     def portal_check():
         return portal_update.check(repo_slug(INFO.repo_url), INFO.tag_prefix, entries, INFO.user_agent)
 
-    window = MainWindow(shown, sources, Records(state_dir() / "installed.json"), portal_check=portal_check,
+    window = MainWindow(entries, sources, Records(state_dir() / "installed.json"), portal_check=portal_check,
                         local_build=local_build, installed=installed_copy())
     window.show()
     window.start_up()

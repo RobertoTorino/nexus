@@ -9,6 +9,28 @@ device.
 Made for the handheld in your hands: full screen, the controller moves the amber focus between the cards (A to run,
 X to save the device report, B to close), and every card and button also works by touch.
 
+## Install it
+
+Download `wp-test-v<x.y.z>.zip` and `SHA256SUMS` from the app's release. Then, in PowerShell, in that folder:
+
+```powershell
+(Get-FileHash wp-test-v<x.y.z>.zip).Hash      # compare with SHA256SUMS
+Expand-Archive wp-test-v<x.y.z>.zip .
+cd wp-test-v<x.y.z>
+powershell -ExecutionPolicy Bypass -File install.ps1
+```
+
+It installs for your own user, not as administrator: the program in
+`%LOCALAPPDATA%\windows-portable-suite\windows-portable-test\app`, a Start-menu entry in the Windows Portable Suite
+folder and a Desktop shortcut. Python and Qt come with the program, so there is nothing else to install. The program
+is not signed, so Windows may ask once whether to run it.
+
+| Option | |
+|---|---|
+| `--no-desktop-shortcut` | the Start-menu entry only |
+| `--uninstall` | remove the app; the settings, the log and the reports stay |
+| `--uninstall --purge` | also remove the settings, the log and the reports |
+
 ## Start it from the checkout
 
 From the repository's root, with the Windows venv (`.venv-windows`, see the root CLAUDE.md):

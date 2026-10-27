@@ -1,7 +1,9 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 name: CI
 
-# Suite-wide checks on every push and pull request. Releases are made by release.yml, one per tag.
+# The checks of Nexus (core, the tools, dev/) and of the BC250 Bazzite Suite on every push and pull request. Releases
+# are made by release.yml, one per tag. The Windows Portable Suite has its own, ci-windows-portable.yml (owner,
+# 27-10-2026: one suite's checks never block another suite's releases).
 # A tag starts no CI of its own: tools/tag-release.sh tags only a pushed commit CI passed, and release.yml waits for
 # that commit's CI. A run per tag (22 in one release) only queued the same jobs again and gave each release one more
 # run that could fail or hang.
@@ -25,7 +27,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Hard-coded versions match each VERSION file
-        run: python tools/check_versions.py
+        run: python tools/check_versions.py --suite bc250-bazzite
       # apps.toml: every app listed, pinned tags exist (or are the next release), and a change to it since the last
       # portal release comes with a big enough portal/VERSION bump (bc250-bazzite/tools/check_manifest.py).
       - name: Portal manifest
@@ -54,8 +56,8 @@ jobs:
               bc250-bazzite/apps/mesh, bc250-bazzite/apps/shadps4, bc250-bazzite/apps/rpcs3,
               bc250-bazzite/apps/decky, bc250-bazzite/apps/datstation, bc250-bazzite/apps/ppsspp,
               bc250-bazzite/apps/pcsx2, bc250-bazzite/apps/vita3k, bc250-bazzite/apps/fan,
-              bc250-bazzite/apps/wdriver, bc250-bazzite/apps/xenia, bc250-bazzite/tools/installer-tests/gui,
-              windows-portable/apps/test]   # every folder with tests/
+              bc250-bazzite/apps/wdriver, bc250-bazzite/apps/xenia, bc250-bazzite/tools/installer-tests/gui]
+              # every folder with tests/ of Nexus and this suite; the Windows Portable Suite's: ci-windows-portable.yml
     defaults:
       run:
         working-directory: ${{ matrix.dir }}
@@ -196,8 +198,7 @@ jobs:
       - name: Every former repo has its LICENSE, .gitignore, VERSION and CHANGELOG
         run: |
           rc=0
-          for d in core bc250-bazzite/portal bc250-bazzite/apps/* bc250-bazzite/tools/installer-tests/gui dev/* \
-                   windows-portable/apps/*; do
+          for d in core bc250-bazzite/portal bc250-bazzite/apps/* bc250-bazzite/tools/installer-tests/gui dev/*; do
             for f in LICENSE .gitignore VERSION CHANGELOG; do
               [ -f "$d/$f" ] || { echo "::error::$d/$f missing"; rc=1; }
             done

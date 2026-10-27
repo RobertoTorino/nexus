@@ -1,0 +1,4 @@
+Changelog: 27-10-2026 17:53:45
+
+Added. The Windows Portable Suite's portal folder, with apps.toml: the apps of a portal release, each pinned to one
+wp-<app>-v<x.y.z> release, Windows Portable Test always first. portable_portal/manifest.py reads it.

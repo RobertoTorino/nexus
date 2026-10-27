@@ -75,14 +75,13 @@ By category, as the portal's tabs list them.
 - <img src="portal/images/apps/wdriver.webp" width="20" height="20" alt=""/> **[BC-250 USB Wi-Fi](apps/wdriver)**: The driver for AIC8800D80 USB Wi-Fi sticks: built for the running kernel, loaded at boot, rebuilt after a kernel update.
 - <img src="portal/images/apps/cec.webp" width="20" height="20" alt=""/> **[HDMI CEC Manager](apps/cec)**: Turn the TV on and off with the board, switch its input and use its remote, over HDMI-CEC.
 - <img src="portal/images/apps/sftp.webp" width="20" height="20" alt=""/> **[Bazzite SFTP Tools](apps/sftp)**: Move files between computers over SFTP, and manage the SSH server of a Bazzite host.
-
-**Development**: tools for working on the suite. You do not need them to use the board.
-
 - <img src="portal/images/apps/mtool.webp" width="20" height="20" alt=""/> **[Media Tool](apps/mtool)**: Record a BC250 Bazzite Suite installation demo with OBS, and convert the suite's icons.
 - <img src="portal/images/apps/package.webp" width="20" height="20" alt=""/> **[Dependency Checker](apps/package)**: The suite's Python packages and external tools, which apps use them, and whether newer ones exist; and whether a Bazzite update waits for a reboot.
 - <img src="portal/images/apps/ncgui.webp" width="20" height="20" alt=""/> **[Bazzite NetcatGUI](apps/ncgui)**: A graphical netcat: connect to a host or listen on a port, TCP, UDP or TLS, one session per tab.
-- <img src="portal/images/apps/releases.webp" width="20" height="20" alt=""/> **[Nexus Releases](../dev/releases)**: The release front end: versions, pins and the board checks of a release of a suite (a Nexus app, every suite's). Runs from a checkout of this repository.
-- <img src="portal/images/apps/installer-tests.webp" width="20" height="20" alt=""/> **[BC-250 Installer Tests](tools/installer-tests/gui)**: Run the suite's installer tests one at a time, with their output live in the window. Runs from a checkout of this repository.
+
+The tools for working on the suite run from a checkout of the repository and are not in the portal:
+**[Nexus Releases](../dev/releases)** (Nexus's, every suite's) and
+**[BC-250 Installer Tests](tools/installer-tests/gui)**.
 
 How to install and use them: **[the manual](https://robertotorino.github.io/nexus/bc250-bazzite-suite/)**.
 

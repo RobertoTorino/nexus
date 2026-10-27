@@ -31,8 +31,7 @@ terminal as a single install. An installer that asks for the sudo password waits
 does the batch: the next one starts when it has ended. One question first, with the board warning when one of them
 changes the board; one message at the end names those that failed. Install all apps (owner, 26-10-2026): the last
 tab is a button that looks like a tab (PillTabBar.action_index); it installs the same way every app of the open
-category that is not installed yet, so a portal installed for the first time fills a category with one click. On
-Development it is disabled: those apps are tools for working on the suite, installed from their tiles.
+category that is not installed yet, so a portal installed for the first time fills a category with one click.
 
 Desktop icons: the portal's own icon is enough to reach every app, so the apps' icons on the Desktop are the user's
 choice ("Icons on Desktop", desktop_icons.py). The first start asks when app icons are there; off, the portal
@@ -77,8 +76,7 @@ from . import audio, desktop_icons, glyphs, sysinfo, wallpaper
 from .bigpicture import DESKTOP_NAME, NAME as BIG_NAME, BigPicture, Intro
 from .gamepad import Gamepad
 from .looks import HOVER_OPACITY, VEIL, Backdrop, dimmed, greyed  # noqa: F401 (HOVER_OPACITY: the tests)
-from . import (APP_ICONS, APP_ID, APP_NAME, INFO, LOGO_PATH, STAGE, STAGE_NOTE, __version__, find_checkout, is_suite,
-               remember_checkout)
+from . import APP_ICONS, APP_ID, APP_NAME, INFO, LOGO_PATH, STAGE, STAGE_NOTE, __version__
 from .manifest import CATEGORIES, AppEntry
 from .portal_update import PortalUpdate
 from .sources import Records, SourceError, Sources, installed_from, is_installed, is_local, local_record, local_version
@@ -107,9 +105,8 @@ CATEGORY_HINTS = {
     "graphics": "Graphics features for games: upscaling, async compute and mesh shaders on the board's GPU.",
     "gaming": "Playing: emulators, Remote Play with your console, plugins in Game Mode, and PlayStation trivia.",
     "utilities": "Handy tools around the board: an overlay, a USB stats screen, the PS5 HD Camera as a webcam, the "
-                 "DualSense's firmware, the BIOS settings, Wi-Fi, the TV over HDMI-CEC, and file transfer.",
-    "development": "For working on the BC250 Bazzite Suite: recording demos, checking its dependencies, making "
-                   "releases, running the installer tests. You do not need these to use the board.",
+                 "DualSense's firmware, the BIOS settings, Wi-Fi, the TV over HDMI-CEC, file transfer, a graphical "
+                 "netcat, demo recordings, and the suite's dependencies.",
 }
 
 BOARD_WARNING = (
@@ -316,11 +313,9 @@ class AppTile(QFrame):
     def _ink(self) -> str:
         return self.palette().color(QPalette.ColorRole.ButtonText).name()
 
-    def show_state(self, installed: bool, installed_tag: str, busy: str = "", available: bool = True,
-                   from_checkout: bool = False) -> str:
+    def show_state(self, installed: bool, installed_tag: str, busy: str = "", from_checkout: bool = False) -> str:
         """Show the app's state; "update" when an update is available, "reinstall" when a reinstall is needed, else
-        "". *available* False: a checkout-only app in a portal that does not know a checkout yet; it asks for one
-        when the app is installed or removed. *from_checkout*: this portal runs from a checkout."""
+        "". *from_checkout*: this portal runs from a checkout."""
         entry = self.entry
         # An update needs a known, different version. An app installed some other way (by hand, or under an earlier
         # name of the app) has none recorded: its version is unknown, so it needs a reinstall. An app installed from
@@ -365,9 +360,6 @@ class AppTile(QFrame):
         else:
             self.status = "Installed"
             detail = f"Installed {installed_from(installed_tag)}."
-        if not available and not busy:
-            detail += (" It runs from a suite checkout and has no release, and the portal found no checkout in "
-                       "your home folder: it asks for one when you install it.")
         self.busy_label.setText(busy)
         self.busy_label.setVisible(bool(busy))
         self.installed = installed
@@ -681,7 +673,7 @@ class MainWindow(QMainWindow):
         top.addWidget(self.notice, 1)
         root.addLayout(top)
 
-        # A tab per category with apps on it, in the order of CATEGORIES (development last).
+        # A tab per category with apps on it, in the order of CATEGORIES.
         self.tabs = QTabWidget()
         self.tabs.setTabBar(PillTabBar(self.refresh_pill))
         self.tabs.setDocumentMode(True)
@@ -833,8 +825,7 @@ class MainWindow(QMainWindow):
             elif self.pending and self.pending.entry is entry:
                 busy = "Installing…" if self.pending.action == "install" else "Removing…"
             card = self.cards[entry.key]
-            available = not entry.checkout_only or self.sources.checkout_for_apps is not None
-            state = card.show_state(is_installed(entry), self.records.get(entry.key), busy, available,
+            state = card.show_state(is_installed(entry), self.records.get(entry.key), busy,
                                     from_checkout=self.sources.local)
             if state:
                 marked.append((entry, state))
@@ -896,8 +887,8 @@ class MainWindow(QMainWindow):
         self._show_install_tab()
 
     def _show_install_tab(self) -> None:
-        """The Install all apps tab: enabled when the open category has apps not installed yet, disabled on
-        Development or when every app of the category is installed; during its batch, which one of how many."""
+        """The Install all apps tab: enabled when the open category has apps not installed yet, disabled when every
+        app of the category is installed; during its batch, which one of how many."""
         if self.batch is not None and self.batch_pill is None:
             self._show_batch()
             return
@@ -905,10 +896,7 @@ class MainWindow(QMainWindow):
         label = CATEGORIES.get(category, category)
         count = len(self.missing(category))
         self.tabs.setTabText(self.install_tab, "Install all apps")
-        if category == "development":
-            tip = ("The Development apps are tools for working on the suite, which a board does not need: their tiles "
-                   "install them.")
-        elif count:
+        if count:
             tip = (f"Click to install {'all ' * (count > 1)}{count} app{'s' * (count != 1)} on {label} not installed "
                    "yet, one after the other, each in its own terminal. When an installer asks for your password, the "
                    "next one waits until you typed it there and it has ended.")
@@ -918,10 +906,7 @@ class MainWindow(QMainWindow):
         self.tabs.setTabEnabled(self.install_tab, bool(count) and not self.busy())
 
     def missing(self, category: str) -> list[AppEntry]:
-        """Install all apps: the listed apps of *category* that are not installed; none on Development (owner,
-        26-10-2026: tools for working on the suite, which a board does not need)."""
-        if category == "development":
-            return []
+        """Install all apps: the listed apps of *category* that are not installed."""
         return [entry for entry in self.entries if self.tab_of(entry) == category and not entry.withdrawn
                 and not is_installed(entry)]
 
@@ -1383,45 +1368,15 @@ class MainWindow(QMainWindow):
     def install(self, entry: AppEntry) -> None:
         if self.busy() or not self._confirm_board_change(entry, f"Install {entry.name}"):
             return
-        if entry.checkout_only and not self._know_checkout(entry):
-            return
         self._start(entry, "install")
 
     def uninstall(self, entry: AppEntry) -> None:
-        if self.busy() or (entry.checkout_only and not self._know_checkout(entry)):
+        if self.busy():
             return
         answer = QMessageBox.question(self, APP_NAME, f"Uninstall {entry.name}? Its own uninstaller runs in a "
                                       "terminal; settings and results are kept unless it asks otherwise.")
         if answer == QMessageBox.StandardButton.Yes:
             self._start(entry, "uninstall")
-
-    def _know_checkout(self, entry: AppEntry) -> bool:
-        """A checkout-only app needs the suite checkout it runs from. A portal installed from a release looks for one
-        on this machine, and asks only when it finds none; it remembers the folder."""
-        if self.sources.checkout_for_apps is not None:
-            return True
-        folder = find_checkout()
-        if folder is None:
-            answer = QMessageBox.question(
-                self, APP_NAME, f"{entry.name} runs from a checkout of the suite's repository, and the portal found "
-                "none in your home folder.\n\nChoose the folder of your checkout?")
-            if answer != QMessageBox.StandardButton.Yes:
-                return False
-            chosen = QFileDialog.getExistingDirectory(self, f"{APP_NAME}: the suite checkout", str(Path.home()))
-            if not chosen:
-                return False
-            folder = Path(chosen)
-        if not is_suite(folder):
-            QMessageBox.warning(self, APP_NAME, f"{folder} is not a BC250 Bazzite Suite checkout: it needs apps/, "
-                                "core/ and tools/stage_app.py. Choose the folder of the repository itself.")
-            return False
-        self.sources.apps_checkout = folder
-        try:
-            remember_checkout(folder)
-        except OSError:
-            pass                                        # used for now; asked again next time
-        self.refresh()
-        return True
 
     def install_all(self) -> None:
         """Install all updates: every app the notice names, after one question (with the board warning when one of
@@ -1450,9 +1405,6 @@ class MainWindow(QMainWindow):
             "password, type it there: the next one waits until it has ended.</p>",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel, QMessageBox.StandardButton.Cancel)
         if answer != QMessageBox.StandardButton.Yes:
-            return
-        entries = [entry for entry in entries if not entry.checkout_only or self._know_checkout(entry)]
-        if not entries:
             return
         self.batch, self.batch_size, self.batch_failed = entries, len(entries), []
         self.batch_what, self.batch_pill = what, pill
@@ -1518,11 +1470,9 @@ class MainWindow(QMainWindow):
 
     def _record_for(self, entry: AppEntry, folder: Path) -> str:
         """What a finished install records: the release's tag; from a checkout, "local" with the staged app's
-        version (a checkout-only app has no release: "local" alone)."""
-        if not (self.sources.local or entry.checkout_only):
+        version."""
+        if not self.sources.local:
             return entry.tag
-        if entry.checkout_only:
-            return local_record()
         try:
             return local_record((folder / "VERSION").read_text(encoding="utf-8").strip())
         except OSError:

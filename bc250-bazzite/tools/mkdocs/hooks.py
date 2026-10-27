@@ -2,8 +2,7 @@
 """MkDocs hook: serve the pictures the manual shows from where they live, without copies in docs/.
 
 * assets/apps/<key>.webp   the small app icons the portal shows on its cards (portal/images/apps/)
-* assets/<app>/<file>      an app's own images (apps/<app>/images/; a checkout-only app's from the folder apps.toml
-                           names, Nexus Releases' from dev/releases/): its icon and its screenshots
+* assets/<app>/<file>      an app's own images (apps/<app>/images/): its icon and its screenshots
 * assets/portal/<file>     the portal's own images (portal/images/): its icon
 * assets/categories/<category>.webp   each category's icon (icons/<category>/, the 256 px one)
 
@@ -64,23 +63,10 @@ def pictures() -> dict[str, Path]:
     for category in sorted(p for p in (SUITE / "icons").iterdir() if p.is_dir()):
         found[f"assets/categories/{category.name}.webp"] = category / f"{category.name}-256.webp"
     apps = {app.name: app for app in sorted((SUITE / "apps").iterdir())}
-    for key, entry in checkout_apps().items():          # Nexus Releases (dev/releases), Installer Tests (tools/...)
-        apps[key] = (SUITE.parent if entry.get("nexus") else SUITE) / entry.get("folder", f"apps/{key}")
     for name, app in apps.items():
         for p in sorted((app / "images").glob("*")) if (app / "images").is_dir() else []:
             found[f"assets/{name}/{p.name}"] = p
     return {uri: p for uri, p in found.items() if p.suffix.lower() in PICTURES}
-
-
-def checkout_apps() -> dict[str, dict]:
-    """The [checkout.<key>] tables of the suite's apps.toml: the apps that run from the checkout, each with its
-    folder."""
-    try:
-        tables = tomllib.loads((SUITE / "portal" / "apps.toml").read_text(encoding="utf-8"))
-    except (OSError, ValueError):
-        return {}
-    checkout = tables.get("checkout", {})
-    return {k: v for k, v in checkout.items() if isinstance(v, dict)} if isinstance(checkout, dict) else {}
 
 
 def webp_uri(uri: str) -> str:

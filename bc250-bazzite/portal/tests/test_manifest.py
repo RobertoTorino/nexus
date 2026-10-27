@@ -4,7 +4,7 @@ from __future__ import annotations
 import pytest
 
 from bc250_portal import MANIFEST
-from bc250_portal.manifest import CATEGORIES, ManifestError, load, load_checkout, parse, parse_checkout
+from bc250_portal.manifest import CATEGORIES, LEGACY_CATEGORIES, ManifestError, load, parse
 from conftest import SUITE
 
 MINIMAL = """
@@ -64,21 +64,24 @@ def test_a_withdrawn_release():
 def test_a_category_for_its_tab():
     assert parse(MINIMAL)[1].category == ""                                # a manifest from before categories
     cu = parse(MINIMAL.replace('name = "CU"', 'name = "CU"\ncategory = "gaming"', 1))[1]
-    assert cu.category == "gaming" and not cu.development
-    assert parse(MINIMAL.replace('name = "CU"', 'name = "CU"\ncategory = "development"', 1))[1].development
-    with pytest.raises(ManifestError, match="category must be one of sustainable, graphics, gaming"):
+    assert cu.category == "gaming"
+    with pytest.raises(ManifestError, match="category must be one of sustainable, graphics, gaming, utilities$"):
         parse(MINIMAL.replace('name = "CU"', 'name = "CU"\ncategory = "games"', 1))
-    with pytest.raises(ManifestError, match="required app cannot be a development app"):
-        parse(MINIMAL.replace('name = "BT"', 'name = "BT"\ncategory = "development"', 1))
-    assert parse_checkout(CHECKOUT)[0].category == "development"           # the default for a checkout app
-    with pytest.raises(ManifestError, match="its category is development"):
-        parse_checkout(CHECKOUT.replace('summary = "s"', 'summary = "s"\ncategory = "gaming"'))
+
+
+def test_no_development_tab_but_earlier_manifests_still_read():
+    """The Development tab went with the checkout-only apps (owner, 27-10-2026). A manifest of an earlier portal
+    release, which the tools compare with, still reads: its development apps, and its [checkout.*] tables unread."""
+    assert "development" not in CATEGORIES and LEGACY_CATEGORIES == ("development",)
+    earlier = parse(MINIMAL.replace('name = "CU"', 'name = "CU"\ncategory = "development"', 1) + CHECKOUT)
+    assert [(e.key, e.category) for e in earlier] == [("check", ""), ("compute", "development")]
 
 
 def test_shipped_manifest_has_a_category_for_every_app():
-    entries = load(MANIFEST) + load_checkout(MANIFEST)
+    entries = load(MANIFEST)
     assert all(e.category in CATEGORIES for e in entries)
-    assert {e.key for e in entries if e.development} == {"mtool", "package", "ncgui", "releases", "installer-tests"}
+    assert {"mtool", "package", "ncgui"} <= {e.key for e in entries if e.category == "utilities"}
+    assert "[checkout." not in MANIFEST.read_text(encoding="utf-8")           # only released apps
 
 
 def test_short_name_for_the_tile():
@@ -125,35 +128,3 @@ install = ["bash install.sh"]
 uninstall = ["bash install.sh --uninstall"]
 detect = ["~/.local/bin/gui"]
 """
-
-
-def test_checkout_tables_are_development_apps_in_a_folder():
-    (gui,) = parse_checkout(MINIMAL + CHECKOUT)
-    assert gui.checkout_only and gui.development and gui.tag == "" and gui.version == ""
-    assert gui.folder == "apps/gui"                                         # the default
-    (moved,) = parse_checkout(CHECKOUT.replace('summary = "s"', 'summary = "s"\nfolder = "tools/x/gui"'))
-    assert moved.folder == "tools/x/gui"
-    assert [e.key for e in parse(MINIMAL + CHECKOUT)] == ["check", "compute"]   # never pinned
-    assert not gui.nexus
-    (nexus,) = parse_checkout(CHECKOUT.replace('summary = "s"', 'summary = "s"\nfolder = "dev/gui"\nnexus = true'))
-    assert nexus.nexus and nexus.folder == "dev/gui"                        # a Nexus app: in the repository
-    assert [(e.key, e.nexus) for e in load_checkout(MANIFEST)] == [("releases", True), ("installer-tests", False)]
-
-
-@pytest.mark.parametrize("extra, message", [
-    ('tag = "gui-v0.1.0"', "never released"),
-    ('folder = "../outside"', "inside the checkout"),
-    ('folder = "/abs"', "inside the checkout"),
-    ('nexus = "yes"', "true or false"),
-    ('nexus = true', "names its folder"),
-])
-def test_checkout_tables_reject(extra, message):
-    with pytest.raises(ManifestError, match=message):
-        parse_checkout(CHECKOUT.replace('summary = "s"', f'summary = "s"\n{extra}'))
-
-
-def test_folder_only_for_checkout_tables():
-    with pytest.raises(ManifestError, match="only for"):
-        parse(MINIMAL.replace('summary = "s"\ntag = "co', 'summary = "s"\nfolder = "x"\ntag = "co', 1))
-    with pytest.raises(ManifestError, match="only for"):
-        parse(MINIMAL.replace('summary = "s"\ntag = "co', 'summary = "s"\nnexus = true\ntag = "co', 1))

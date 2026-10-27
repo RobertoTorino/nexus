@@ -36,7 +36,6 @@ SHORT_HINTS = {
     "graphics": "Upscaling, async compute and mesh shaders.",
     "gaming": "Emulators, Remote Play, Game Mode plugins.",
     "utilities": "Overlay, BIOS, Wi-Fi, HDMI-CEC, file transfer.",
-    "development": "Tools for working on the suite.",
 }
 KEYS = {Qt.Key.Key_Up: "up", Qt.Key.Key_Down: "down", Qt.Key.Key_Left: "left", Qt.Key.Key_Right: "right"}
 

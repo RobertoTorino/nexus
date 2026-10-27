@@ -132,6 +132,8 @@ def test_a_tag_goes_to_its_suite_by_its_prefix(tmp_path):
         (root / suite / "portal" / "VERSION").write_text(version + "\n")
         (root / suite / "portal" / "apps.toml").write_text("")
     (root / "windows-portable" / "TAG_PREFIX").write_text("wp-\n")
+    (root / ".github" / "workflows").mkdir(parents=True)
+    (root / ".github" / "workflows" / "ci-windows-portable.yml").write_text("name: CI Windows Portable\n")
     git(root, "init", "-q", "-b", "main")
     git(root, "remote", "add", "origin", str(origin))
     git(root, "add", "-A")
@@ -141,6 +143,8 @@ def test_a_tag_goes_to_its_suite_by_its_prefix(tmp_path):
     assert result.returncode != 0 and "bc250-bazzite/portal/VERSION 0.9.4" in result.stderr
     result = tag(root, "wp-portal-v0.1.0", "portal-v0.9.4")
     assert result.returncode == 0, result.stderr
+    # Each suite's tags wait for its own CI (owner, 27-10-2026): ci-windows-portable.yml, and ci.yml for the other.
+    assert "CI (ci-windows-portable.yml) passed" in result.stdout and "CI (ci.yml) passed" in result.stdout
     assert sorted(git(root, "tag").split()) == ["portal-v0.9.4", "wp-portal-v0.1.0"]
     result = tag(root, "xx-portal-v0.1.0")                           # no suite has that prefix, nor an app xx-portal
     assert result.returncode != 0 and "there is no bc250-bazzite/apps/xx-portal/VERSION" in result.stderr

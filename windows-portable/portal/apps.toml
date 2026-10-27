@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# The apps of this portal release: one tested combination. Each [apps.<name>] pins one release tag of that app.
+#
+# Rules (CI, windows-portable/tools/check_manifest.py):
+#  * a change to this file needs a portal/VERSION bump at least as large as the largest app bump it pins
+#    (an app patch release -> at least a portal patch release, an app minor -> at least a portal minor, ...);
+#  * every tag must exist when the portal is released; on main a tag may be one that is about to be released
+#    (its version equals that app's VERSION).
+#
+# Fields:
+#   name, summary   shown on the tile and in the detail pane
+#   short           optional: the name on the tile (default: name without its "Windows Portable " prefix)
+#   tag             the pinned release: wp-<name>-v<x.y.z>; asset <tag>.zip with SHA256SUMS on the suite release
+#   sha256          of <tag>.zip; filled in when the tag is released (empty: checked against SHA256SUMS only)
+#   required        installed with the portal and always listed first (only test)
+#   category        sustainable, graphics, gaming or utilities: the app's tab in the portal (no development tab)
+#   withdrawn       optional: "<reason>" when the pinned release was withdrawn; the portal removes the app
+#   install         commands run in a PowerShell window from the extracted release folder, in order
+#   uninstall       idem, for removal
+#   detect          paths whose existence means "installed" (any of them; %VARIABLES% are expanded)
+#   launch          [[label, command]] to open the app
+
+[apps.test]
+name = "Windows Portable Test"
+summary = "What Windows reports about the handheld, and a test of every button of its controller. Always installed."
+tag = "wp-test-v0.1.0"
+sha256 = ""
+required = true
+category = "sustainable"
+install = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1"]
+uninstall = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --uninstall"]
+detect = ["%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-test\\app\\Windows-PT.exe"]
+launch = [["Open", "%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-test\\app\\Windows-PT.exe"]]

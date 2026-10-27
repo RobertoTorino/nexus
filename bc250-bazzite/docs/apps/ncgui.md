@@ -22,7 +22,7 @@ nothing is installed system-wide and nothing is layered with `rpm-ostree`.
 
 ## Install
 
-In the [portal](../portal.md), open the **Development** tab and click the Install button beside its icon. Or by hand:
+In the [portal](../portal.md), open the **Utilities** tab and click the Install button beside its icon. Or by hand:
 from the suite's [Releases](https://github.com/RobertoTorino/nexus/releases) page, download the
 `ncgui-v<version>.tar.gz` release and extract it. Run `install.sh` as your own user, without `sudo`:
 

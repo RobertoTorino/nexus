@@ -14,7 +14,7 @@ from PyQt6.QtWidgets import QMessageBox
 
 from bc250_portal import MANIFEST
 from bc250_portal import main_window as mw
-from bc250_portal.manifest import load, load_checkout
+from bc250_portal.manifest import load
 from bc250_portal.sources import Records, Sources
 from bc250_core.updates import ReleaseInfo
 
@@ -68,7 +68,7 @@ def test_bazzite_test_first_without_uninstall(window):
 
 
 def test_every_card_has_its_icon(qapp, home, settings_dir, tmp_path, launched):
-    entries = load(MANIFEST) + load_checkout(MANIFEST)
+    entries = load(MANIFEST)
     w = mw.MainWindow(entries, FakeSources(tmp_path / "work"), Records(tmp_path / "installed.json"))
     for key, card in w.cards.items():
         assert (mw.APP_ICONS / f"{key}.webp").is_file(), key
@@ -396,7 +396,7 @@ def test_stop_waiting_ends_the_batch(window, launched, monkeypatch, home):
 def test_install_all_apps_is_the_last_tab_and_fills_the_open_category(window, launched, monkeypatch, qapp):
     """Install all apps (owner, 26-10-2026): the last tab is a button that looks like a tab. A click installs every
     app of the open category not installed yet as one batch with one question; the tab shows the batch's progress;
-    it never opens; on Development it is disabled, and so it is once every app of the category is installed."""
+    it never opens; it is disabled once every app of the category is installed."""
     from PyQt6.QtCore import QPoint, Qt
     from PyQt6.QtTest import QTest
     bar, last = window.tabs.tabBar(), window.install_tab
@@ -436,9 +436,7 @@ def test_install_all_apps_is_the_last_tab_and_fills_the_open_category(window, la
     assert window.tabs.tabToolTip(last) == "Every app on Sustainable is installed."
     window.tabs.setCurrentWidget(window.pages["graphics"])
     assert window.tabs.isTabEnabled(last) and "on Graphics" in window.tabs.tabToolTip(last)
-    window.tabs.setCurrentWidget(window.pages["development"])
-    assert window.missing("development") == [] and not window.tabs.isTabEnabled(last)
-    assert "tools for working on the suite" in window.tabs.tabToolTip(last)
+    window.tabs.setCurrentWidget(window.pages["sustainable"])
     QTest.mouseClick(bar, Qt.MouseButton.LeftButton, pos=bar.tabRect(last).center())
     assert window.batch is None and len(launched) == len(expected)         # disabled: nothing happens
 
@@ -570,7 +568,7 @@ def test_tiles_flow_in_file_order(window, qapp):
 
 def test_a_tab_per_category_in_order(window):
     assert [window.tabs.tabText(i) for i in range(window.tabs.count())] == [
-        "Sustainable", "Graphics", "Gaming", "Utilities", "Development", "Install all apps"]    # the last: a button
+        "Sustainable", "Graphics", "Gaming", "Utilities", "Install all apps"]    # the last: a button; no Development
     for key, card in window.cards.items():
         inside = [c for c, grid in window.grids.items() if grid.indexOf(card) >= 0]
         assert inside == [card.entry.category], key
@@ -607,30 +605,17 @@ def test_a_link_in_the_notice_opens_the_tab_of_its_app(window, home):
     assert window.tabs.currentWidget() is window.pages["sustainable"]
 
 
-def test_development_tab_says_it_is_not_needed(window):
-    page = window.pages["development"].widget()
-    assert "You do not need these to use the board." in page.findChild(mw.QLabel).text()
-    assert {k for k, c in window.cards.items() if c.entry.development} == {"mtool", "package", "ncgui"}
+def test_the_tools_of_the_development_tab_are_utilities(window):
+    """No Development tab (owner, 27-10-2026): its released apps are on Utilities, and its hint names them."""
+    assert "development" not in window.pages
+    assert {"mtool", "package", "ncgui"} <= {k for k, c in window.cards.items() if c.entry.category == "utilities"}
+    assert "a graphical netcat" in window.pages["utilities"].widget().findChild(mw.QLabel).text()
 
 
 def test_no_tab_without_its_apps(qapp, home, settings_dir, tmp_path, launched):
-    entries = [e for e in load(MANIFEST) if e.category not in ("gaming", "development")]
+    entries = [e for e in load(MANIFEST) if e.category != "gaming"]
     w = mw.MainWindow(entries, FakeSources(tmp_path / "work"), Records(tmp_path / "installed.json"))
     assert list(w.pages) == ["sustainable", "graphics", "utilities"]
-    w.close()
-
-
-def test_checkout_only_app_has_no_update(qapp, home, settings_dir, tmp_path, launched):
-    entries = load(MANIFEST) + load_checkout(MANIFEST)
-    sources = FakeSources(tmp_path / "work")
-    sources.checkout = Path("/checkout")                                    # a portal from a checkout
-    w = mw.MainWindow(entries, sources, Records(tmp_path / "installed.json"))
-    card = w.cards["releases"]
-    assert w.grids["development"].indexOf(card) >= 0
-    (home / ".local" / "bin" / "nexus-releases").write_text("#!/bin/sh\n")
-    w.records.set("releases", "local")
-    w.refresh()
-    assert card.status == "Installed" and card.dot.isHidden() and "suite checkout" in card.icon.toolTip()
     w.close()
 
 
@@ -649,75 +634,6 @@ def test_portal_offer_names_the_app_updates(qapp, home, settings_dir, tmp_path, 
     assert wait_for(lambda: not same.portal_button.isHidden())
     assert same.portal_button.text().endswith("Portal 99.0.0 available") and "same app versions" in same.portal_button.toolTip()
     same.close()
-
-
-SUITE = Path(__file__).resolve().parents[2]                                  # this checkout
-
-
-def test_a_release_portal_finds_the_checkout_without_asking(qapp, home, settings_dir, tmp_path, launched,
-                                                            monkeypatch):
-    """A portal installed from a release installs the checkout-only apps too, from the checkout on this machine."""
-    from bc250_portal import remembered_checkout
-    monkeypatch.setattr(mw.QFileDialog, "getExistingDirectory", lambda *a: pytest.fail("asked for a folder"))
-    monkeypatch.setattr(QMessageBox, "question", lambda *a: pytest.fail("asked a question"))
-    (home / ".local/bin/nexus-releases").write_text(f'#!/bin/sh\nexec "{SUITE.parent}/dev/releases/run.sh"\n')
-    entries = load(MANIFEST) + load_checkout(MANIFEST)
-    sources = FakeSources(tmp_path / "work")                                # a release: no checkout of its own
-    w = mw.MainWindow(entries, sources, Records(tmp_path / "installed.json"))
-    w.install(w.cards["installer-tests"].entry)
-    assert wait_for(lambda: launched)
-    assert sources.apps_checkout == SUITE.parent and remembered_checkout() == SUITE.parent   # the repository
-    assert launched[0][0].startswith(f"cd {SUITE / 'tools/installer-tests/gui'} && ")
-    assert sources.prepared == ["installer-tests"] and w.pending.tag == "local"
-    assert sources.folder(w.cards["gpu"].entry).name == w.cards["gpu"].entry.tag   # releases as before
-    w.cancel_pending()
-    w.close()
-
-
-def test_without_a_checkout_it_asks_first(qapp, home, settings_dir, tmp_path, launched, monkeypatch):
-    from bc250_portal import remembered_checkout
-    entries = load(MANIFEST) + load_checkout(MANIFEST)
-    sources = FakeSources(tmp_path / "work")
-    w = mw.MainWindow(entries, sources, Records(tmp_path / "installed.json"))
-    card = w.cards["installer-tests"]
-    assert card.status == "Not installed" and card.install_button.isEnabled() and "found no checkout" in card.icon.toolTip()
-    asked = []
-    monkeypatch.setattr(QMessageBox, "question", lambda *a: asked.append(a[2]) or QMessageBox.StandardButton.No)
-    monkeypatch.setattr(mw.QFileDialog, "getExistingDirectory", lambda *a: pytest.fail("no folder without a yes"))
-    w.install(card.entry)
-    assert "found none" in asked[0] and sources.prepared == [] and remembered_checkout() is None
-    monkeypatch.setattr(QMessageBox, "question", lambda *a: QMessageBox.StandardButton.Yes)
-    monkeypatch.setattr(mw.QFileDialog, "getExistingDirectory", lambda *a: str(SUITE.parent))   # the repository
-    w.install(card.entry)
-    assert wait_for(lambda: launched) and remembered_checkout() == SUITE.parent
-    w.cancel_pending()
-    w.close()
-
-
-def test_a_folder_that_is_not_the_suite_is_refused(qapp, home, settings_dir, tmp_path, launched, monkeypatch):
-    from bc250_portal import remembered_checkout
-    warned = []
-    monkeypatch.setattr(QMessageBox, "warning", lambda _p, _t, text, *a: warned.append(text))
-    monkeypatch.setattr(QMessageBox, "question", lambda *a: QMessageBox.StandardButton.Yes)
-    monkeypatch.setattr(mw.QFileDialog, "getExistingDirectory", lambda *a: str(tmp_path))
-    entries = load(MANIFEST) + load_checkout(MANIFEST)
-    sources = FakeSources(tmp_path / "work")
-    w = mw.MainWindow(entries, sources, Records(tmp_path / "installed.json"))
-    w.install(w.cards["releases"].entry)
-    assert "is not a BC250 Bazzite Suite checkout" in warned[0]
-    assert sources.apps_checkout is None and sources.prepared == [] and remembered_checkout() is None
-    w.close()
-
-
-def test_an_installed_checkout_app_still_opens(qapp, home, settings_dir, tmp_path, launched):
-    entries = load(MANIFEST) + load_checkout(MANIFEST)
-    w = mw.MainWindow(entries, FakeSources(tmp_path / "work"), Records(tmp_path / "installed.json"))
-    (home / ".local" / "bin" / "nexus-releases").write_text("#!/bin/sh\n")   # installed from a checkout before
-    w.refresh()
-    card = w.cards["releases"]
-    assert card.status == "Reinstall needed" and card.icon.isEnabled() and card.uninstall_button.isEnabled()
-    assert w.cards["mtool"].install_button.isEnabled()                  # released development apps as usual
-    w.close()
 
 
 def icons_window(tmp_path, desktop, names=("bc250-hdmi-cec.desktop", "bc250-governor-manager.desktop")):

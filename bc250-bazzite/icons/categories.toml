@@ -120,17 +120,17 @@ icons = ["apps/hdcontrol/images/bc250-usb-hdcontrol"]
 tile = "portal/images/apps/hdcontrol.webp"
 
 [mtool]
-category = "development"
+category = "utilities"
 icons = ["apps/mtool/images/media-tool"]
 tile = "portal/images/apps/mtool.webp"
 
 [package]
-category = "development"
+category = "utilities"
 icons = ["apps/package/images/bc250-dependency-checker"]
 tile = "portal/images/apps/package.webp"
 
 [ncgui]
-category = "development"
+category = "utilities"
 icons = ["apps/ncgui/images/bazzite-netcatgui"]
 tile = "portal/images/apps/ncgui.webp"
 
@@ -187,4 +187,3 @@ tile = "portal/images/apps/vita3k.webp"
 [installer-tests]
 category = "development"
 icons = ["tools/installer-tests/gui/images/bc250-installer-test-gui"]
-tile = "portal/images/apps/installer-tests.webp"

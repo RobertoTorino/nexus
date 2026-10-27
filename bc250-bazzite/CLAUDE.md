@@ -25,17 +25,16 @@ appearing in the portal.
   (Console LinkB, Xbox) is GPL-3.0-or-later with protocol code ported from Greenlight and xal-node, MIT, whose notice
   its README keeps; the rest GPL-3.0-or-later), .gitignore. Every app
   has a `category` in `portal/apps.toml`, the same as its icon's in `icons/categories.toml` (sustainable, graphics,
-  gaming, utilities, development): the portal shows a tab per category, with the notice of updates above the tabs
-  (owner, 18-10-2026) and check as the first tile on Sustainable (owner, 20-10-2026). Media Tool, the Dependency
-  Checker and Bazzite NetcatGUI are development apps.
-  Nexus Releases (the release front end, `../dev/releases/`, a Nexus app) has `.standalone` and `.checkout-only`:
-  it runs from the checkout, is never released, and is listed as `[checkout.releases]` with `nexus = true` and
-  `folder`, on the Development tab: a portal from a release finds the checkout on the machine (it asks only when
-  there is none) and remembers it, the released apps still come from their releases. The checkout the portal
-  records is the repository (Nexus); the suite's folder in it is `bc250-bazzite/` (`SUITE_DIR` in the portal),
-  where a `[checkout.<key>]` folder is relative to (a Nexus app's to the repository). Install every app through
-  the portal, so what is installed stays in step. BC-250 Installer Tests (`tools/installer-tests/gui`) is
-  checkout-only the same way: `.checkout-only` and `[checkout.installer-tests]` with `folder`.
+  gaming, utilities): the portal shows a tab per category, with the notice of updates above the tabs
+  (owner, 18-10-2026) and check as the first tile on Sustainable (owner, 20-10-2026). There is no Development tab
+  (owner, 27-10-2026): the portal lists only released apps, and Media Tool, the Dependency Checker and Bazzite
+  NetcatGUI are on Utilities. Nexus Releases (the release front end, `../dev/releases/`, a Nexus app, its manual on
+  the Nexus page) and BC-250 Installer Tests (`tools/installer-tests/gui`, whose icon keeps the `development`
+  category) have `.checkout-only`: they run from the checkout, are never released and are in no portal; start
+  them there, or give them a menu entry with their own `install.sh`. A portal that runs from the checkout, or was
+  installed from one, installs the released apps from that checkout's source (the checkout it records is the
+  repository, the suite's folder in it `bc250-bazzite/`, `SUITE_DIR`): that is how a release is tried on a board
+  before its tag. Install every app through the portal, so what is installed stays in step.
 - `../core/bc250_core/`: shared Python code, at the root of the repository, every suite's. It is **bundled per
   app** at release time (`../tools/stage_app.py`), so each app runs on the core it was tested with; the shared venv
   `~/.local/share/bc250-bazzite-suite/venv` holds only PyQt6 and pygame-ce (the portal's controller reader). In a

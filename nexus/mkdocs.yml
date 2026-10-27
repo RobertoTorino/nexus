@@ -60,4 +60,5 @@ validation:
     anchors: warn
 nav:
   - Home: index.md
+  - Releases: releases.md
   - Design: design.md

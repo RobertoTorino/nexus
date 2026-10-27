@@ -7,7 +7,7 @@
     python3 tools/sync_icons.py --category C --from IMAGE             # the category's four icons from one image
     python3 tools/sync_icons.py --category C --from IMAGE --size 512  # only the sizes named (--size again for more)
 
-The portal's Big Picture Mode also gets each category's 512 px icon, portal/images/categories/<category>.webp.
+The portal's Big Picture Mode also gets the 512 px icon of each category it lists apps in, portal/images/categories/<category>.webp.
 The copies stay in git where they are, so the installers, the portal, the wiki and a release find them as before;
 icons/ is the one place to change them. They are WebP, which Qt and the wiki read, except the 128 px one: menu
 entries, Desktop icons, Steam shortcuts and notifications get that PNG, which every desktop shows.
@@ -45,11 +45,11 @@ def copies(root: Path = ROOT) -> dict[Path, Path]:
         for icon in entry["icons"]:
             found[root / f"{icon}.webp"] = icon_path(root / "icons" / category, 512)
             found[root / f"{icon}-128.png"] = icon_path(root / "icons" / category, 128)
-        if "tile" in entry:
+        if "tile" in entry:                     # an app the portal lists
             found[root / entry["tile"]] = icon_path(root / "icons" / category, 256)
-        # Suite Big Picture Mode draws a tile large, from the 512 px icon of its category (one file per category).
-        found[root / "portal" / "images" / "categories" / f"{category}.webp"] = icon_path(
-            root / "icons" / category, 512)
+            # Suite Big Picture Mode draws a tile large, from the 512 px icon of its category (one file per category).
+            found[root / "portal" / "images" / "categories" / f"{category}.webp"] = icon_path(
+                root / "icons" / category, 512)
     return found
 
 

@@ -63,10 +63,10 @@ def render(home: Path):
     from bc250_core.platform import expand
     from bc250_portal import MANIFEST
     from bc250_portal import main_window as mw
-    from bc250_portal.manifest import load, load_checkout
+    from bc250_portal.manifest import load
     from bc250_portal.sources import Records, Sources
 
-    entries = load(MANIFEST) + load_checkout(MANIFEST)
+    entries = load(MANIFEST)
     records = Records(home / "installed.json")
     for entry in entries:
         if entry.key in NOT_INSTALLED:

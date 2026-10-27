@@ -12,7 +12,6 @@ from pathlib import Path
 
 import pytest
 
-import bc250_portal
 from bc250_portal.manifest import AppEntry
 from bc250_portal.sources import (
     Records, SourceError, Sources, expected_sha256, is_installed, safe_extract,
@@ -146,24 +145,6 @@ def test_prune_keeps_only_the_installed_release(tmp_path):
     Sources(tmp_path / "none").prune(ENTRY)                                 # no folder yet: nothing to do
 
 
-def test_checkout_only_app_runs_in_its_checkout_folder(tmp_path):
-    entry = AppEntry(key="installer-tests", name="IT", summary="s", tag="", checkout_only=True, install=("x",),
-                     uninstall=("y",), detect=("z",), folder="tools/installer-tests/gui")
-    sources = Sources(tmp_path / "work", checkout=CHECKOUT)
-    assert sources.prepare(entry) == SUITE / "tools/installer-tests/gui"   # in the suite's folder of the checkout
-    sources.forget(entry)
-    assert (SUITE / "tools/installer-tests/gui/install.sh").is_file()      # never removed
-    with pytest.raises(SourceError, match="no"):
-        Sources(tmp_path / "work").prepare(entry)                          # a portal from a release has no checkout
-    (SUITE / "apps" / "x").mkdir()
-    try:
-        assert sources.prepare(replace(entry, key="x", folder="")) == SUITE / "apps" / "x"   # the default folder
-    finally:
-        (SUITE / "apps" / "x").rmdir()
-    releases = replace(entry, key="releases", folder="dev/releases", nexus=True)
-    assert sources.prepare(releases) == CHECKOUT / "dev/releases"          # a Nexus app: in the repository
-
-
 def test_suite_checkout(tmp_path, monkeypatch):
     import bc250_portal
     assert bc250_portal.suite_checkout() == CHECKOUT                        # running from the checkout
@@ -216,55 +197,6 @@ def test_records_follow_an_app_renamed_twice(tmp_path):
     assert Records(path).get("mtool") == "mtool-v0.1.13"
     path.write_text('{"demo-tool": "demo-tool-v0.1.9"}')
     assert Records(path).get("mtool") == "mtool-v0.1.9"
-
-
-def test_a_release_portal_runs_checkout_apps_from_the_checkout_it_was_shown(tmp_path):
-    entry = AppEntry(key="installer-tests", name="IT", summary="s", tag="", checkout_only=True, install=("x",),
-                     uninstall=("y",), detect=("z",), folder="tools/installer-tests/gui")
-    sources = Sources(tmp_path / "work", apps_checkout=CHECKOUT)
-    assert not sources.local                                                # released apps still from releases
-    assert sources.prepare(entry) == SUITE / "tools/installer-tests/gui"
-    releases = replace(entry, key="releases", folder="dev/releases", nexus=True)
-    assert sources.prepare(releases) == CHECKOUT / "dev/releases"           # a Nexus app: in the repository
-    with pytest.raises(SourceError):
-        Sources(tmp_path / "work").folder(entry)
-
-
-def test_remembered_checkout(tmp_path, monkeypatch):
-    import bc250_portal
-    monkeypatch.setattr(bc250_portal, "state_dir", lambda: tmp_path / "state")
-    assert bc250_portal.remembered_checkout() is None
-    bc250_portal.remember_checkout(CHECKOUT)
-    assert bc250_portal.remembered_checkout() == CHECKOUT
-    bc250_portal.remember_checkout(tmp_path)                                # no longer a checkout: forgotten
-    assert bc250_portal.remembered_checkout() is None
-
-
-def fake_suite(folder: Path) -> Path:
-    """A checkout: the suite's apps in its folder, core and the Nexus tools at the root."""
-    for sub in (f"{bc250_portal.SUITE_DIR}/apps", "core", "tools"):
-        (folder / sub).mkdir(parents=True)
-    (folder / "tools/stage_app.py").touch()
-    return folder
-
-
-def test_find_checkout(tmp_path):
-    from bc250_portal import find_checkout
-    home = tmp_path / "home"
-    (home / ".local/bin").mkdir(parents=True)
-    assert find_checkout(home) is None
-    fake_suite(home / ".cache/old/bc250-bazzite-suite")                      # hidden folders are not searched
-    fake_suite(home / "a/b/c/bc250-bazzite-suite")                          # too deep
-    assert find_checkout(home) is None
-    found = fake_suite(home / "IdeaProjects/bc250-bazzite-suite")
-    assert find_checkout(home) == found
-    elsewhere = fake_suite(tmp_path / "mnt/work/suite")                     # outside home: a launcher points there
-    (home / ".local/bin/nexus-releases").write_text(f'#!/bin/sh\nexec "{elsewhere}/dev/releases/run.sh"\n')
-    assert find_checkout(home) == elsewhere
-    (home / ".local/bin/nexus-releases").unlink()
-    (home / ".local/bin/bc250-installer-test-gui").write_text(
-        f'#!/bin/sh\nexec "{elsewhere}/bc250-bazzite/tools/installer-tests/gui/run.sh"\n')
-    assert find_checkout(home) == elsewhere                                 # the suite's own launchers too
 
 
 def test_the_record_of_a_checkout_install(tmp_path):

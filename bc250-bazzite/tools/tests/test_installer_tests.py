@@ -24,16 +24,22 @@ def test_every_app_has_an_installer_test():
     assert not missing, f"no tools/installer-tests/<name>.sh for: {', '.join(missing)}"
 
 
-def test_every_portal_entry_has_an_installer_test():
+def _from_the_checkout() -> set[str]:
+    """The tools that run from the checkout, outside the portal: the suite's BC-250 Installer Tests and the Nexus
+    apps in dev/ (Nexus Releases), each with an install.sh."""
+    return {"installer-tests"} | {path.parent.name for path in (SUITE.parent / "dev").glob("*/install.sh")}
+
+
+def test_every_portal_entry_and_checkout_tool_has_an_installer_test():
     manifest = tomllib.loads((SUITE / "portal" / "apps.toml").read_text(encoding="utf-8"))
-    names = set(manifest.get("apps", {})) | set(manifest.get("checkout", {}))
+    names = set(manifest.get("apps", {})) | _from_the_checkout()
     missing = sorted(name for name in names if not (TESTS / f"{name}.sh").is_file())
     assert not missing, f"no tools/installer-tests/<name>.sh for: {', '.join(missing)}"
+    assert {"installer-tests", "releases"} <= _from_the_checkout()
 
 
 def test_every_installer_test_is_for_something_that_exists():
-    manifest = tomllib.loads((SUITE / "portal" / "apps.toml").read_text(encoding="utf-8"))
-    known = {path.name for path in (SUITE / "apps").iterdir()} | {"portal"} | set(manifest.get("checkout", {}))
+    known = {path.name for path in (SUITE / "apps").iterdir()} | {"portal"} | _from_the_checkout()
     stale = sorted(name for name in _scripts() - NOT_INSTALLERS if name.removesuffix(".sh") not in known)
     assert not stale, f"installer tests for nothing in the suite: {', '.join(stale)}"
 

@@ -21,8 +21,11 @@ ROOT = Path(__file__).resolve().parent.parent
 SUITE_DIR = "bc250-bazzite"                 # the BC250 Bazzite Suite's folder: its pictures are under it
 OUT = f"{SUITE_DIR}/docs/design/icons"
 MDI = "https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg"      # Material Design Icons, as MkDocs Material bundles them
+# The names of icons/categories.toml's entries the portal's manifest does not list: launches of an app, and the
+# suite's tool that runs from the checkout.
 LAUNCHES = {"cu-unlock": "CU Unlock (the CU Bisect app's Unlock)",
-            "cores-unlock": "Cores Unlock (the Cores Bisect app's Unlock)"}
+            "cores-unlock": "Cores Unlock (the Cores Bisect app's Unlock)",
+            "installer-tests": "BC-250 Installer Tests"}
 
 SUITE_ICON = [
     ("bc250-bazzite/portal/images/bc250-bazzite-suite.webp", "`portal/images/bc250-bazzite-suite.webp` (512 px)",
@@ -111,15 +114,11 @@ NEXUS_ICON = [
     ("dev/releases/images/nexus-releases.webp", "`dev/releases/images/nexus-releases.webp` (512 px), `-128.png`",
      "Nexus Releases, Nexus's app (owner, 26-10-2026: it takes Nexus's icon, not a category's): its window header "
      "and window icon, its menu entry and Desktop icon. Lossless copies of the drawing, written by this tool."),
-    ("bc250-bazzite/portal/images/apps/releases.webp", "`bc250-bazzite/portal/images/apps/releases.webp` (256 px)",
-     "Nexus Releases' tile on the BC250 Bazzite Suite's portal, and its icon in that wiki's app tables; the same "
-     "copy."),
 ]
 # Nexus Releases' icons: the drawing at each size, lossless (the pixels stay the drawing's), by this tool.
 NEXUS_COPIES = [
     ("nexus/images/nexus-512.png", "dev/releases/images/nexus-releases.webp"),
     ("nexus/images/nexus-128.png", "dev/releases/images/nexus-releases-128.png"),
-    ("nexus/images/nexus-256.png", "bc250-bazzite/portal/images/apps/releases.webp"),
 ]
 # The Nexus page's logo and hero: pictures on a web page, so lossy WebP at this quality, by this tool since
 # 27-10-2026 (the owner's new drawing had no WebP copies yet). The logo is the favicon's picture (the owner's, on a
@@ -206,7 +205,7 @@ def build(root: Path = ROOT) -> str:
     """ICONS.md's text, from the data above, the portal's manifest and icons/categories.toml."""
     suite = root / SUITE_DIR
     apps = tomllib.loads((suite / "portal" / "apps.toml").read_text(encoding="utf-8"))
-    names = {k: v["name"] for section in ("apps", "checkout") for k, v in apps.get(section, {}).items()} | LAUNCHES
+    names = {k: v["name"] for k, v in apps.get("apps", {}).items()} | LAUNCHES
     by_category: dict[str, list[str]] = {}
     for key, entry in tomllib.loads((suite / "icons" / "categories.toml").read_text(encoding="utf-8")).items():
         by_category.setdefault(entry["category"], []).append(key)

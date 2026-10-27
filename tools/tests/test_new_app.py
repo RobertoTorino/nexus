@@ -22,8 +22,6 @@ sys.modules[spec.name] = na
 spec.loader.exec_module(na)
 
 MANIFEST = '''# the pins
-#
-# [checkout.<name>]: an app that runs from the checkout.
 
 [apps.alpha]
 name = "Alpha"
@@ -36,15 +34,6 @@ category = "sustainable"
 install = ["bash install.sh"]
 uninstall = ["bash install.sh --uninstall"]
 detect = ["~/.local/bin/bc250-alpha"]
-
-[checkout.releases]
-name = "Nexus Releases"
-summary = "s"
-folder = "dev/releases"
-nexus = true
-install = ["bash install.sh"]
-uninstall = ["bash install.sh --uninstall"]
-detect = ["~/.local/bin/nexus-releases"]
 '''
 
 INDEX = '''# The apps
@@ -197,7 +186,7 @@ def test_defaults():
     assert (suite.name, suite.app_id, suite.prefix, suite.core) == ("BC250 Bazzite Suite", "bc250-bazzite-suite",
                                                                    "bc250", "bc250_core")
     assert suite.wiki == "https://robertotorino.github.io/nexus/bc250-bazzite-suite/"
-    assert suite.categories == ("sustainable", "graphics", "gaming", "utilities", "development")
+    assert suite.categories == ("sustainable", "graphics", "gaming", "utilities")      # no Development tab
 
 
 def test_writes_the_app_and_lists_it_everywhere(checkout, capsys):
@@ -242,12 +231,12 @@ def test_writes_the_app_and_lists_it_everywhere(checkout, capsys):
     assert (suite / "portal" / "images" / "apps" / "fan2.webp").read_bytes() == (ICONS / "utilities-256.webp").read_bytes()
     categories = (suite / "icons" / "categories.toml").read_text()
     assert '[fan2]\ncategory = "utilities"\nicons = ["apps/fan2/images/bc250-fan2"]\ntile = "portal/images/apps/fan2.webp"' in categories
-    # The portal's manifest, before the [checkout.*] tables, and the root's copy with it.
+    # The portal's manifest, at its end, and the root's copy with it.
     manifest = (suite / "portal" / "apps.toml").read_text()
     entry = manifest.index("[apps.fan2]")
-    assert manifest.index("[apps.alpha]") < entry < manifest.index("[checkout.releases]")
+    assert manifest.index("[apps.alpha]") < entry
     assert 'tag = "fan2-v0.1.0"\nsha256 = ""' in manifest and 'detect = ["~/.local/bin/bc250-fan2"]' in manifest
-    assert "\n\n[apps.fan2]" in manifest and "]]\n\n[checkout.releases]" in manifest
+    assert "\n\n[apps.fan2]" in manifest and manifest.endswith("]]\n")
     assert (checkout / "portal" / "apps.toml").read_text() == manifest
     # The wiki: the chapter with its icon, the nav before Development, the rows in the category's table.
     chapter = (suite / "docs" / "apps" / "fan2.md").read_text()

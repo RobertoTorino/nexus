@@ -32,7 +32,8 @@ Nexus is where the suites connect: one repository holding every suite, the code 
 <div class="home-card" markdown>
 #### :material-file-tree: Nexus
 
-The repository. It holds the suites, the shared code, the tools that test and release them, and this page.
+The repository. It holds the suites, the shared code, the tools that test and [release](releases.md) them, and this
+page.
 
 </div>
 <div class="home-card" markdown>

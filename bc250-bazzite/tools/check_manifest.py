@@ -5,11 +5,10 @@
     python3 tools/check_manifest.py [--base REF] [--require-tags]
 
 * The manifest parses and lists exactly the portal apps under apps/. An app folder with a ``.standalone`` marker
-  is not a portal app and must not be listed. The [checkout.<name>] tables list exactly the app folders with a
-  ``.checkout-only`` marker (they run from the checkout and are never released); a table whose ``folder`` lies
-  outside apps/ needs that marker there too, in the repository for a Nexus app (``nexus = true``: dev/releases).
-  Every app has a category (its tab in the portal); the parser accepts none only to read the manifests of earlier
-  portal releases.
+  (an app outside the portal, such as one with a ``.checkout-only`` marker, which runs from the checkout and is never
+  released) must not be listed. Every app has a category (its tab in the portal); the parser accepts none, and the
+  Development tab's, only to read the manifests of earlier portal releases. No [checkout.<name>] tables: the
+  portal lists only released apps (owner, 27-10-2026).
 * The copy at the repository root, portal/apps.toml, which the portals installed before the suite moved into
   bc250-bazzite/ read at a tag for their update notice, is identical (while the root keeps one).
 * Every pinned tag exists. Without --require-tags a tag that does not exist yet is accepted when its version equals
@@ -30,12 +29,12 @@ import importlib.util
 import re
 import subprocess
 import sys
+import tomllib
 from pathlib import Path
 
 SUITE = Path(__file__).resolve().parent.parent      # the suite: bc250-bazzite/; the repository is its parent
 MANIFEST = "portal/apps.toml"
 STANDALONE_MARKER = ".standalone"
-CHECKOUT_ONLY_MARKER = ".checkout-only"
 LEVELS = {0: "none", 1: "patch", 2: "minor", 3: "major"}
 _PORTAL_TAG = re.compile(r"^portal-v(\d+\.\d+\.\d+)$")
 
@@ -83,7 +82,7 @@ def check_entries(entries, require_tags: bool) -> list[str]:
     errors += [f"apps/{name} is not in {MANIFEST}" for name in sorted(apps - listed)]
     errors += [f"{MANIFEST} lists {name}, which has no apps/{name}" for name in sorted(listed - apps)]
     errors += [f"[apps.{e.key}] needs a category: one of {', '.join(manifest.CATEGORIES)}"
-               for e in entries if not e.category]
+               for e in entries if e.category not in manifest.CATEGORIES]
     for entry in entries:
         if entry.key not in apps or tag_exists(entry.tag):
             continue
@@ -97,18 +96,11 @@ def check_entries(entries, require_tags: bool) -> list[str]:
     return errors
 
 
-def check_checkout_entries(entries) -> list[str]:
-    """Every app folder with the marker is listed, and every listed folder has it: in the suite, or in the
-    repository for a Nexus app."""
-    marked = {f"apps/{p.name}" for p in (SUITE / "apps").iterdir() if (p / CHECKOUT_ONLY_MARKER).is_file()}
-    listed = {e.folder or f"apps/{e.key}": e for e in entries if not e.nexus}
-    nexus = {e.folder: e for e in entries if e.nexus}
-    return ([f"{folder} has {CHECKOUT_ONLY_MARKER} but no [checkout.{folder.removeprefix('apps/')}] in {MANIFEST}"
-             for folder in sorted(marked - set(listed))] +
-            [f"{MANIFEST} [checkout.{e.key}]: {folder} has no {CHECKOUT_ONLY_MARKER}"
-             for folder, e in sorted(listed.items()) if not (SUITE / folder / CHECKOUT_ONLY_MARKER).is_file()] +
-            [f"{MANIFEST} [checkout.{e.key}]: {folder} (nexus = true) has no {CHECKOUT_ONLY_MARKER} in the repository"
-             for folder, e in sorted(nexus.items()) if not (SUITE.parent / folder / CHECKOUT_ONLY_MARKER).is_file()])
+def check_no_checkout_tables(text: str) -> list[str]:
+    """The portal lists only released apps: no [checkout.<name>] tables (they were the Development tab's)."""
+    tables = tomllib.loads(text).get("checkout", {})
+    return [f"{MANIFEST} [checkout.{key}]: the portal lists only released apps; start it from the checkout instead"
+            for key in (tables if isinstance(tables, dict) else {})]
 
 
 def check_root_copy() -> list[str]:
@@ -187,11 +179,11 @@ def main(argv: list[str]) -> int:
     args = parser.parse_args(argv)
     try:
         entries = manifest.load(SUITE / MANIFEST)
-        checkout_entries = manifest.load_checkout(SUITE / MANIFEST)
     except (OSError, manifest.ManifestError) as exc:
         print(exc, file=sys.stderr)
         return 1
-    errors = check_entries(entries, args.require_tags) + check_checkout_entries(checkout_entries) + check_root_copy()
+    errors = (check_entries(entries, args.require_tags)
+              + check_no_checkout_tables((SUITE / MANIFEST).read_text(encoding="utf-8")) + check_root_copy())
     if args.base and set(args.base) != {"0"}:   # GitHub sends 000… for a new branch
         errors += check_bump(args.base)
     for error in errors:

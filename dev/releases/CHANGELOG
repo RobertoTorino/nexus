@@ -1,3 +1,16 @@
+Changelog: 27-10-2026 18:14:02
+
+Added. Nexus Releases on Windows (owner, 27-10-2026: on every device): run.ps1 starts it from PowerShell with the
+checkout's .venv-windows (--list too), and install.ps1 adds a Start-menu entry and a Desktop shortcut that start it
+from the checkout, with install.sh's options (--no-desktop-shortcut, --uninstall, --uninstall --purge); install.sh on
+Windows, and tools/release.sh --install from Git Bash, point there. Its installer test is the Windows Portable Suite's
+tools/installer-tests/releases.ps1.
+
+Fixed. A suite with a tag prefix gets its own tags: the Windows Portable Suite's apps and portal are wp-test-v0.1.0
+and wp-portal-v0.1.0, read, offered and pinned as such, with that suite's own manifest and portal bump rules
+(windows-portable/tools/check_manifest.py) and its release's checksum of <tag>.zip. Before, it took the BC250
+portal's portal-v10.1.0 for the Windows portal's last release and read no pins from its apps.toml.
+
 Changelog: 27-10-2026 17:02:23
 
 Fixed. The window's icon (images/nexus-releases.webp) is the owner's new Nexus drawing again, a lossless WebP

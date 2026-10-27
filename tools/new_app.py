@@ -31,9 +31,9 @@ from dataclasses import dataclass
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-CATEGORIES = ("sustainable", "graphics", "gaming", "utilities", "development")   # the portal's, when it has none
+CATEGORIES = ("sustainable", "graphics", "gaming", "utilities")   # the portal's, when it has none
 DESKTOP_CATEGORIES = {"sustainable": "System;", "graphics": "Game;Graphics;", "gaming": "Game;",
-                      "utilities": "Utility;", "development": "Development;"}
+                      "utilities": "Utility;"}
 TEMPLATES = {"bc250_portal": "bazzite"}     # the suite's portal package names its template
 _NAME = re.compile(r"^[a-z][a-z0-9-]*$")
 _PREFIXES = ("BC-250 ", "BC250 ", "Bazzite ")
@@ -705,16 +705,13 @@ def write_app(root: Path, suite: Suite, app: NewApp) -> list[Path]:
         executable=True)
     put(suite.folder / "docs" / "apps" / f"{app.name}.md", fill(CHAPTER_MD, app, suite))
 
-    # The portal's manifest, before its [checkout.*] tables; the root's copy follows while it is identical.
+    # The portal's manifest, at its end; the root's copy follows while it is identical.
     manifest = suite.folder / "portal" / "apps.toml"
     old = manifest.read_text(encoding="utf-8")
     copy = root / "portal" / "apps.toml"
     follow = copy.is_file() and copy.read_bytes() == manifest.read_bytes()
     entry = fill(MANIFEST_ENTRY, app, suite)
-    if "\n[checkout." in old:
-        new = insert_before(old, "\n[checkout.", "\n" + entry, "portal/apps.toml")
-    else:
-        new = old.rstrip("\n") + "\n\n" + entry
+    new = old.rstrip("\n") + "\n\n" + entry
     change(manifest, new)
     if follow:
         change(copy, new)

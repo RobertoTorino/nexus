@@ -4,6 +4,7 @@ stick and trigger of its controller as you press them. It reads and shows; it ch
 
 APP_NAME = "Windows Portable Test"
 APP_ID = "windows-portable-test"
+EXE_NAME = "Windows-PT"              # the program's file name in a release, Windows-PT.exe (owner, 27-10-2026)
 SUITE = "windows-portable-suite"
 __version__ = "0.1.0"
 
@@ -19,4 +20,4 @@ LOGO_PATH = ROOT / "images" / f"{APP_ID}.webp"
 INFO = AppInfo(app_id=APP_ID, name=APP_NAME, version=__version__, logo=LOGO_PATH, tag_prefix="wp-test-v",
                settings_org=SUITE, settings_ini=True)
 
-__all__ = ["APP_ID", "APP_NAME", "INFO", "LOGO_PATH", "ROOT", "SUITE", "__version__"]
+__all__ = ["APP_ID", "APP_NAME", "EXE_NAME", "INFO", "LOGO_PATH", "ROOT", "SUITE", "__version__"]

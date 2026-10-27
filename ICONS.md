@@ -30,11 +30,11 @@ category's icon (`icons/<category>/`, at 1024, 512, 256 and 128 px) to these pla
 
 | Icon | Category | Apps |
 | --- | --- | --- |
-| <img src="bc250-bazzite/icons/development/development-128.png" width="64" alt=""> | Development | Media Tool (`mtool`)<br>Dependency Checker (`package`)<br>Bazzite NetcatGUI (`ncgui`)<br>BC-250 Installer Tests (`installer-tests`) |
+| <img src="bc250-bazzite/icons/development/development-128.png" width="64" alt=""> | Development | BC-250 Installer Tests (`installer-tests`) |
 | <img src="bc250-bazzite/icons/gaming/gaming-128.png" width="64" alt=""> | Gaming | RPCS3 Manager (`rpcs3`)<br>Console Link (`consoles`)<br>Console LinkB (`clb`)<br>shadPS4 Manager (`shadps4`)<br>Decky Loader Manager (`decky`)<br>Bazzite DatStation (`datstation`)<br>PPSSPP Manager (`ppsspp`)<br>PCSX2 Manager (`pcsx2`)<br>Xenia Manager (`xenia`)<br>Vita3K Manager (`vita3k`) |
 | <img src="bc250-bazzite/icons/graphics/graphics-128.png" width="64" alt=""> | Graphics | BC-250 Upscaler Manager (`upscaler`)<br>BC-250 ACE Queues (`ace`)<br>BC-250 Mesh Shaders (`mesh`) |
 | <img src="bc250-bazzite/icons/sustainable/sustainable-128.png" width="64" alt=""> | Sustainable | BC-250 Bazzite Test (`check`)<br>BC-250 GPU Governor Manager (`gpu`)<br>BC-250 CU Bisect (`compute`)<br>CU Unlock (the CU Bisect app's Unlock) (`cu-unlock`)<br>BC-250 Cores Bisect (`cores`)<br>Cores Unlock (the Cores Bisect app's Unlock) (`cores-unlock`)<br>BC-250 GPU OC Bisect (`oc`)<br>BC-250 Persistent ACPI (`acpi`)<br>BC-250 Memory Manager (`vram`)<br>BC-250 Fan Control (`fan`) |
-| <img src="bc250-bazzite/icons/utilities/utilities-128.png" width="64" alt=""> | Utilities | System Overlay (`overlay`)<br>BC-250 BIOS Reader (`bios`)<br>BC-250 USB Wi-Fi (`wdriver`)<br>HDMI CEC Manager (`cec`)<br>Bazzite SFTP Tools (`sftp`)<br>USB IPS3.5 (`ips35`)<br>USB HD Cam (`hdcam`)<br>USB HD Control (`hdcontrol`) |
+| <img src="bc250-bazzite/icons/utilities/utilities-128.png" width="64" alt=""> | Utilities | System Overlay (`overlay`)<br>BC-250 BIOS Reader (`bios`)<br>BC-250 USB Wi-Fi (`wdriver`)<br>HDMI CEC Manager (`cec`)<br>Bazzite SFTP Tools (`sftp`)<br>USB IPS3.5 (`ips35`)<br>USB HD Cam (`hdcam`)<br>USB HD Control (`hdcontrol`)<br>Media Tool (`mtool`)<br>Dependency Checker (`package`)<br>Bazzite NetcatGUI (`ncgui`) |
 
 ### The portal's symbols
 
@@ -139,7 +139,6 @@ Characters of the font, used as icons in labels and buttons.
 | <img src="nexus/docs/images/nexus.webp" width="48" alt=""> | `nexus/docs/images/nexus.webp`, `.png` (256 px) | The Nexus page's header logo and its home page's footer (`.webp`), and its favicon (`.png`): the icon on a dark tile, the owner's (27-10-2026); the `.webp` is written by this tool. |
 | <img src="nexus/docs/images/nexus-hero.webp" width="48" alt=""> | `nexus/docs/images/nexus-hero.webp` (1024 px) | The Nexus page's home: the icon under the headline, a WebP copy of the 1024 px drawing. |
 | <img src="dev/releases/images/nexus-releases.webp" width="48" alt=""> | `dev/releases/images/nexus-releases.webp` (512 px), `-128.png` | Nexus Releases, Nexus's app (owner, 26-10-2026: it takes Nexus's icon, not a category's): its window header and window icon, its menu entry and Desktop icon. Lossless copies of the drawing, written by this tool. |
-| <img src="bc250-bazzite/portal/images/apps/releases.webp" width="48" alt=""> | `bc250-bazzite/portal/images/apps/releases.webp` (256 px) | Nexus Releases' tile on the BC250 Bazzite Suite's portal, and its icon in that wiki's app tables; the same copy. |
 
 ### Material Design icons on the Nexus page
 

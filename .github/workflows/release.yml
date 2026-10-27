@@ -28,7 +28,7 @@ name: Release
 
 on:
   push:
-    tags: ["*-v[0-9]*.[0-9]*.[0-9]*"]
+    tags: ["*-v[0-9]*.[0-9]*.[0-9]*", "!wp-*"]   # wp-: the Windows Portable Suite's, release-windows-portable.yml
 
 permissions:
   contents: write

@@ -54,7 +54,7 @@ if $uninstall; then
     exit 0
 fi
 
-[ "$(uname -s)" = Linux ] || die "install.sh makes a Linux app menu entry; on Windows run dev/releases/run.sh."
+[ "$(uname -s)" = Linux ] || die "install.sh makes a Linux app menu entry; on Windows use dev/releases/install.ps1."
 [ -x "$REPO/.venv-linux/bin/python" ] || [ -x "$REPO/.venv/bin/python" ] || [ -n "${PYTHON:-}" ] ||
     info "Note: no .venv-linux yet; create it (see CLAUDE.md) before you start the app."
 

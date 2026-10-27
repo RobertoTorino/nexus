@@ -1,3 +1,10 @@
+Changelog: 27-10-2026 17:53:45
+
+Added. install.ps1 installs the app from its release (wp-test-v<x.y.z>.zip, unpacked) for your own user: the program
+(Windows-PT.exe, EXE_NAME in the package; owner, 27-10-2026) in %LOCALAPPDATA%\windows-portable-suite\windows-portable-test\app, a Start-menu entry in the Windows Portable Suite
+folder and a Desktop shortcut. It takes the suite's options: --no-desktop-shortcut, --uninstall (the settings, the
+log and the reports stay), --uninstall --purge and --help, and refuses to run as administrator.
+
 Changelog: 27-10-2026 17:02:23
 
 Fixed. The header has no icon (owner, 27-10-2026: the screen is too small for it); the window icon stays. The main

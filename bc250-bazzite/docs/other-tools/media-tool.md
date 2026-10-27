@@ -7,7 +7,7 @@
 A standalone Qt app for recording a BC250 Bazzite Suite installation demo on Bazzite, and, in a checkout of the suite,
 for recording the video tours of the portal and the apps and for converting the suite's category icons. The three
 pills in its header, **Portal video tour**, **Apps video tour** and **Convert icons**, open those tools. The suite
-portal lists it on its Development tab. It does not use the suite's shared Python environment.
+portal lists it on its Utilities tab. It does not use the suite's shared Python environment.
 
 ## Install
 

@@ -82,6 +82,66 @@ def unit(root: Path, key: str) -> rp.Unit:
     return next(u for u in rp.load_units(root) if u.key == key)
 
 
+@pytest.fixture
+def two_suites(tmp_path) -> Path:
+    """Nexus with a suite of plain tags (bc) and the Windows Portable Suite's kind (wp: wp- tags, its own manifest
+    and check_manifest.py, copied from the checkout)."""
+    root = tmp_path / "nexus"
+    write(root / "core/VERSION", "0.1.0\n")
+    write(root / "core/bc250_core/__init__.py", '__version__ = "0.1.0"\n')
+    write(root / "bc/portal/VERSION", "3.0.0\n")
+    write(root / "bc/portal/apps.toml", card("check", required=True))
+    write(root / "bc/apps/check/VERSION", "0.1.0\n")
+    wp = root / "wp"
+    write(wp / "SYSTEM", "windows\n")
+    write(wp / "TAG_PREFIX", "wp-\n")
+    write(wp / "portal/VERSION", "0.1.0\n")
+    write(wp / "apps/test/VERSION", "0.2.0\n")
+    write(wp / "apps/test/CHANGELOG", "Changelog: 01-01-2026 00:00:00\n\nAdded. More.\n")
+    real = rp.CHECKOUT / "windows-portable"
+    for path in ("tools/check_manifest.py", "portal/portable_portal/manifest.py"):
+        write(wp / path, (real / path).read_text(encoding="utf-8"))
+    write(wp / "portal/apps.toml", '[apps.test]\nname = "T"\nsummary = "s"\ntag = "wp-test-v0.1.0"\nsha256 = ""\n'
+                                   'required = true\ncategory = "sustainable"\ninstall = ["i"]\nuninstall = ["u"]\n'
+                                   'detect = ["d"]\n')
+    sh(root, "init", "-q", "-b", "main")
+    sh(root, "add", "-A")
+    sh(root, "commit", "-q", "-m", "start")
+    for tag in ("wp-test-v0.1.0", "test-v9.9.9", "portal-v3.0.0", "check-v0.1.0"):
+        sh(root, "tag", tag)
+    return root
+
+
+def test_a_suites_tags_carry_its_prefix(two_suites):
+    assert rp.suites(two_suites) == ["bc", "wp"]
+    assert (rp.tag_prefix(two_suites, "bc"), rp.tag_prefix(two_suites, "wp")) == ("", "wp-")
+    units = {u.key: u for u in rp.load_units(two_suites, "wp")}
+    test, portal = units["test"], units["portal"]
+    assert test.last_tag == "wp-test-v0.1.0"                    # not test-v9.9.9, whatever suite that would be
+    assert (test.tag, test.pinned_tag) == ("wp-test-v0.2.0", "wp-test-v0.1.0")   # read with the suite's own parser
+    assert rp.version_choices(two_suites, test)[0][0] == "0.2.0"
+    assert portal.last_tag is None and portal.tag == "wp-portal-v0.1.0"     # the BC250 portal's tag is not its own
+    assert units["core"].prefix == ""
+    bc = {u.key: u for u in rp.load_units(two_suites, "bc")}
+    assert (bc["portal"].last_tag, bc["check"].tag) == ("portal-v3.0.0", "check-v0.1.0")
+    assert rp.manifest_tools(two_suites, "bc") is rp.check_manifest
+    assert rp.manifest_tools(two_suites, "wp").PORTAL_TAG == "wp-portal-v"
+
+
+def test_a_windows_suites_pin_and_portal_bump(two_suites):
+    test = next(u for u in rp.load_units(two_suites, "wp") if u.key == "test")
+    assert rp.follow_unreleased_pin(two_suites, test, suite="wp") is False     # wp-test-v0.1.0 is tagged
+    rp.pin(two_suites, test, "AB" * 32, suite="wp")
+    assert 'tag = "wp-test-v0.2.0"\nsha256 = "' + "ab" * 32 + '"' in (two_suites / "wp/portal/apps.toml").read_text()
+    assert rp.changed_pins(two_suites, "HEAD", suite="wp") == ["wp-test-v0.2.0"]
+    assert rp.portal_minimum(two_suites, "HEAD", "0.1.0", suite="wp")[0] == "0.2.0"     # an app minor: a portal minor
+
+
+def test_a_windows_suites_release_is_a_zip(two_suites):
+    assert rp.release_asset("wp-test-v0.2.0", two_suites) == "wp-test-v0.2.0.zip"
+    assert rp.release_asset("check-v0.1.0", two_suites) == "check-v0.1.0.tar.gz"
+
+
 def test_units(repo):
     units = {u.key: u for u in rp.load_units(repo)}
     assert list(units) == ["core", "portal", "alpha", "beta", "standalone"]   # not the checkout-only app
@@ -208,9 +268,11 @@ def test_app_commands_amend_the_unpushed_release_commit():
 
 def test_git_button_commands():
     assert rp.add_command() == "git add -A && tools/fix-modes.sh && git status --short"
+    checks = " && ".join(f"python3 {check} --base origin/main" for check in rp.manifest_checks(rp.CHECKOUT))
     assert rp.commit_command("Release alpha-v0.2.0", "origin/main") == (
-        f"python3 {rp.VERSIONS_CHECK} && python3 {rp.manifest_check(rp.CHECKOUT)} --base origin/main && "
+        f"python3 {rp.VERSIONS_CHECK} && {checks} && "
         "git commit -m 'Release alpha-v0.2.0'")                       # the checks first, the commit only after
+    assert f"python3 {rp.manifest_check(rp.CHECKOUT)} --base origin/main" in checks    # the default suite's among them
     assert rp.commit_command("it's", "pushed", python="/v/python").endswith("git commit -m 'it'\"'\"'s'")
     assert rp.commit_command("", "pushed", amend=True).endswith(" && git commit --amend --no-edit")
     two = rp.commit_command("m", "pushed", manifests=["a/tools/check_manifest.py", "b/tools/check_manifest.py"])

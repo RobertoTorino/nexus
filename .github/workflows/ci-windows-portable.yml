@@ -1,0 +1,93 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+name: CI Windows Portable
+
+# The checks of the Windows Portable Suite (windows-portable/) on every push and pull request, apart from ci.yml
+# (Nexus and the BC250 Bazzite Suite), so that one suite's checks never block another suite's releases (owner,
+# 27-10-2026). Its tags (wp-<app>-v<x.y.z>) wait for this workflow on the commit (tools/ci_state.py --workflow
+# ci-windows-portable.yml, as tools/tag-release.sh and release-windows-portable.yml ask). The suite's tests run on
+# Windows, the system it is made for, in Windows PowerShell as on the handheld; core with them, as its apps bundle it.
+# A tag starts no run of its own, as for ci.yml.
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+
+  versions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0                # the base commit and the tags, for check_manifest
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Hard-coded versions match each VERSION file
+        run: python tools/check_versions.py --suite windows-portable
+      - name: Portal manifest
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: python windows-portable/tools/check_manifest.py ${BASE:+--base "$BASE"}
+      - name: Every former repo has its LICENSE, .gitignore, VERSION and CHANGELOG
+        run: |
+          rc=0
+          for d in windows-portable/portal windows-portable/apps/*; do
+            for f in LICENSE .gitignore VERSION CHANGELOG; do
+              [ -f "$d/$f" ] || { echo "::error::$d/$f missing"; rc=1; }
+            done
+          done
+          exit $rc
+
+  pytest:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        dir: [core, windows-portable/portal, windows-portable/tools,
+              windows-portable/apps/test]   # every folder of the suite with tests/, and core, which its apps bundle
+    defaults:
+      run:
+        working-directory: ${{ matrix.dir }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: "**/requirements-dev.txt"
+      - name: Install
+        run: python -m pip install -q -r requirements-dev.txt
+      - name: Test
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: python -X faulthandler -m pytest -v tests
+
+  installers:
+    # Each installer test, then each app's release built as release-windows-portable.yml builds it and installed by its
+    # installer test. Nexus Releases' Windows installer is tested here too: this suite is the one on Windows.
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0                # the commit time, the zip's file times
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: "Installer test: test"
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File windows-portable/tools/installer-tests/test.ps1
+      - name: "Installer test: releases"
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File windows-portable/tools/installer-tests/releases.ps1
+      - name: "Release: test"
+        shell: bash
+        run: |
+          python -m pip install -q -r windows-portable/apps/test/requirements.txt pyinstaller pillow
+          python windows-portable/tools/build_release.py "wp-test-v$(cat windows-portable/apps/test/VERSION)" wpdist/test
+      - name: "Installer test on the release: test"
+        run: >-
+          powershell -NoProfile -ExecutionPolicy Bypass -File windows-portable/tools/installer-tests/test.ps1
+          -Release (Get-Item wpdist/test/*.zip).FullName

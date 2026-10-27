@@ -54,16 +54,13 @@ other app is optional. They are listed by category, as the portal's tabs list th
 | ![](../assets/apps/wdriver.webp){ .app-icon } [BC-250 USB Wi-Fi](wdriver.md) | The driver for AIC8800D80 USB Wi-Fi sticks: built for the running kernel, loaded at boot, rebuilt after a kernel update. **Changes the board.** |
 | ![](../assets/apps/cec.webp){ .app-icon } [HDMI CEC Manager](cec.md) | Turn the TV on and off with the board, switch its input and use its remote, over HDMI-CEC. |
 | ![](../assets/apps/sftp.webp){ .app-icon } [Bazzite SFTP Tools](sftp.md) | Move files between computers over SFTP, and manage the SSH server of a Bazzite host. |
-
-**Development**: tools for working on the suite. You do not need them to use the board.
-
-| App | What it does |
-|---|---|
 | ![](../assets/apps/mtool.webp){ .app-icon } [Media Tool](../other-tools/media-tool.md) | Record a BC250 Bazzite Suite installation demo with OBS, and convert the suite's icons. |
 | ![](../assets/apps/package.webp){ .app-icon } [Dependency Checker](package.md) | The suite's Python packages and external tools, which apps use them, and whether newer ones exist; and whether a Bazzite update waits for a reboot. |
 | ![](../assets/apps/ncgui.webp){ .app-icon } [Bazzite NetcatGUI](ncgui.md) | A graphical netcat: connect to a host or listen on a port, TCP, UDP or TLS, one session per tab. |
-| ![](../assets/apps/releases.webp){ .app-icon } [Nexus Releases](../portal.md#the-release-front-end) | The release front end: versions, pins and the board checks of a release of a suite. Runs from a checkout of this repository. |
-| ![](../assets/apps/installer-tests.webp){ .app-icon } [BC-250 Installer Tests](../development/architecture.md#tests) | Run the suite's installer tests one at a time, with their output live in the window. Runs from a checkout of this repository. |
+
+The tools for working on the suite run from a checkout of the repository and are not in the portal:
+[Nexus Releases](https://robertotorino.github.io/nexus/releases/) and BC-250 Installer Tests
+([Tests](../development/architecture.md#tests)).
 
 Apps that **change the board** (unlocks, the GPU governor, GPU overclocking, the ACPI override, the VRAM split,
 a patched GPU driver) change how the BC-250 runs. They are software-only and can be undone; the portal asks before it installs or opens them. Read an

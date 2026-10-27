@@ -70,10 +70,11 @@ check "check results gone" "[ ! -e $T/log/bc250-bazzite-test ]"
 check "/opt empty" "[ -z \"\$(ls $T/opt)\" ]"
 
 echo "== 5. uninstall asks about each other app: cancel, then skip one and uninstall the others"
-# The others: overlay and bios as the portal installs them from the checkout, Installer Tests (checkout-only), and
-# ncgui, installed the same way. Then bios and ncgui are dropped from the installed portal's manifest, as a newer
-# portal drops an app: bios keeps its record and release folder (the portal's), ncgui neither (found by its own
-# installed copy under ~/.local/share).
+# The others: overlay and bios as the portal installs them from the checkout, and ncgui, installed the same way.
+# Then bios and ncgui are dropped from the installed portal's manifest, as a newer portal drops an app: bios keeps
+# its record and release folder (the portal's), ncgui neither (found by its own installed copy under
+# ~/.local/share). Installer Tests, installed from the checkout too, is not the portal's (no Development tab, owner
+# 27-10-2026): the portal's uninstall leaves it.
 bash "$SUITE/install.sh" > "$T/log5" 2>&1; logs+=("$T/log5")
 for app in overlay bios ncgui; do
     /usr/bin/python3 "$NEXUS/tools/stage_app.py" "$app" "$D/bc250-bazzite-suite/portal/releases/local-$app" > /dev/null
@@ -101,12 +102,12 @@ printf 'y\nc\n' | BC250_INTERACTIVE=1 bash "$SUITE/install.sh" --uninstall >> "$
 check "cancel: exit 1" "[ $rc -eq 1 ]"
 check "cancel: nothing removed" "installed bc250-system-overlay && installed bc250-bios-reader && installed bazzite-netcatgui && installed bc250-installer-test-gui && installed bc250-bazzite-suite && installed bc250-bazzite-test"
 check "cancel: says so" "grep -q 'Canceled: nothing was uninstalled.' $T/log5"
-printf 'x\ns\ny\ny\ny\n' | BC250_INTERACTIVE=1 bash "$SUITE/install.sh" --uninstall >> "$T/log5" 2>&1; rc=$?
+printf 'x\ns\ny\ny\n' | BC250_INTERACTIVE=1 bash "$SUITE/install.sh" --uninstall >> "$T/log5" 2>&1; rc=$?
 check "exit 0" "[ $rc -eq 0 ]"
-check "asked about overlay three times (the cancel run, an unknown answer), Installer Tests twice, the dropped apps once" "[ \$(grep -o 'Uninstall System Overlay?' $T/log5 | wc -l) -eq 3 ] && [ \$(grep -o 'Uninstall BC-250 Installer Tests?' $T/log5 | wc -l) -eq 2 ] && [ \$(grep -o 'Uninstall BC-250 BIOS Reader?' $T/log5 | wc -l) -eq 1 ] && [ \$(grep -o 'Uninstall Bazzite NetcatGUI?' $T/log5 | wc -l) -eq 1 ]"
+check "asked about overlay three times (the cancel run, an unknown answer), bios twice, ncgui once, Installer Tests never" "[ \$(grep -o 'Uninstall System Overlay?' $T/log5 | wc -l) -eq 3 ] && [ \$(grep -o 'Uninstall BC-250 BIOS Reader?' $T/log5 | wc -l) -eq 2 ] && [ \$(grep -o 'Uninstall Bazzite NetcatGUI?' $T/log5 | wc -l) -eq 1 ] && ! grep -q 'Uninstall BC-250 Installer Tests?' $T/log5"
 check "skipped app stays" "installed bc250-system-overlay && [ -d $D/bc250-bazzite-suite/portal/releases/local-overlay ]"
 check "chosen app gone" "! installed bc250-bios-reader && [ ! -e $D/bc250-bazzite-suite/portal/releases/local-bios ]"
-check "checkout-only app gone, the checkout untouched" "! installed bc250-installer-test-gui && [ -f $SUITE/tools/installer-tests/gui/install.sh ]"
+check "Installer Tests stays: the checkout's, not the portal's" "installed bc250-installer-test-gui"
 check "dropped app without a record gone" "! installed bazzite-netcatgui && [ ! -e $D/bazzite-netcatgui/app ]"
 check "record drops the chosen app" "! grep -q bios $D/bc250-bazzite-suite/portal/installed.json && grep -q overlay $D/bc250-bazzite-suite/portal/installed.json"
 check "record and folder of check gone" "! grep -q check $D/bc250-bazzite-suite/portal/installed.json && [ ! -e $D/bc250-bazzite-suite/portal/releases/local-check ]"
@@ -114,6 +115,7 @@ check "older release of the skipped app gone" "[ ! -e $D/bc250-bazzite-suite/por
 check "portal and check gone" "! installed bc250-bazzite-suite && ! installed bc250-bazzite-test"
 check "mentions what is left" "grep -q 'Still installed: bc250-system-overlay' $T/log5"
 (cd "$D/bc250-bazzite-suite/portal/releases/local-overlay" && bash install.sh --uninstall) >> "$T/log5" 2>&1
+bash "$SUITE/tools/installer-tests/gui/install.sh" --uninstall >> "$T/log5" 2>&1
 
 echo "== 6. after an uninstall that kept nothing, no suite folder is left"
 bash "$SUITE/install.sh" > "$T/log6" 2>&1 && bash "$T/opt/bc250-bazzite-suite/install.sh" --uninstall >> "$T/log6" 2>&1

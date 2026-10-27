@@ -6,10 +6,6 @@
   target folder.
 * Checkout (development): the app staged from the local suite repo with tools/stage_app.py, exactly as the release
   workflow builds it, so the portal can be tried before anything is released.
-* A checkout-only app ([checkout.<key>] in apps.toml): its own folder in the suite's folder of the checkout
-  (bc250-bazzite/apps/<key>, or the folder apps.toml names, relative to the suite's folder; relative to the
-  repository for a Nexus app, nexus = true: dev/releases), as it is, since it runs
-  from there. Never staged, never removed.
 
 The extracted folder is kept under the portal's state dir, so the matching uninstaller is at hand later; after an
 install the app's other folders there (older releases) are removed.
@@ -93,7 +89,6 @@ class Sources:
 
     work: Path                                  # <state dir>/releases
     checkout: Path | None = None                # the suite repo, in development
-    apps_checkout: Path | None = None           # a release portal: the repo its checkout-only apps run from
     repo_url: str = SUITE_REPO_URL
     download: Download | None = None
 
@@ -101,28 +96,13 @@ class Sources:
     def local(self) -> bool:
         return self.checkout is not None
 
-    @property
-    def checkout_for_apps(self) -> Path | None:
-        """Where the checkout-only apps run from: the portal's own checkout, else the one it was shown."""
-        return self.checkout or self.apps_checkout
-
     def folder(self, entry: AppEntry) -> Path:
-        if entry.checkout_only:
-            if self.checkout_for_apps is None:
-                raise SourceError(f"{entry.name} runs from a suite checkout, and this portal has none")
-            if entry.nexus:
-                return self.checkout_for_apps / entry.folder
-            return suite_folder(self.checkout_for_apps) / (entry.folder or f"apps/{entry.key}")
         return self.work / ("local-" + entry.key if self.local else entry.tag)
 
     def prepare(self, entry: AppEntry) -> Path:
         """The folder with the app's installer, fetched or staged when needed. A checkout is staged afresh every
         time (it may have changed); a release folder is reused, since a tag never changes."""
         folder = self.folder(entry)
-        if entry.checkout_only:
-            if not folder.is_dir():
-                raise SourceError(f"{folder} is missing from the checkout")
-            return folder
         if self.local:
             if folder.exists():
                 shutil.rmtree(folder)
@@ -177,7 +157,7 @@ class Sources:
     def prune(self, entry: AppEntry) -> None:
         """After an install: the app's other folders here (older releases, or a staged checkout copy) go; only the
         one it was installed from stays, for its uninstaller."""
-        if entry.checkout_only or not self.work.is_dir():
+        if not self.work.is_dir():
             return
         keep = self.folder(entry)
         for path in self.work.iterdir():
@@ -187,8 +167,7 @@ class Sources:
                 shutil.rmtree(path, ignore_errors=True)
 
     def forget(self, entry: AppEntry) -> None:
-        if not entry.checkout_only:                 # that folder is the checkout's own
-            shutil.rmtree(self.folder(entry), ignore_errors=True)
+        shutil.rmtree(self.folder(entry), ignore_errors=True)
 
 
 def _stage_module(checkout: Path):
