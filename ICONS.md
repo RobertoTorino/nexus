@@ -136,7 +136,7 @@ Characters of the font, used as icons in labels and buttons.
 | Icon | File | Used for |
 | --- | --- | --- |
 | <img src="nexus/images/nexus-256.png" width="48" alt=""> | `nexus/images/nexus-<size>.png` (1024, 512, 256 and 128 px) | The icon of Nexus, the owner's drawing (25-10-2026): the set the copies are made from. |
-| <img src="nexus/docs/images/nexus.webp" width="48" alt=""> | `nexus/docs/images/nexus.webp`, `.png` (256 px) | The Nexus page's header logo and its home page's footer (`.webp`), and its favicon (`.png`). |
+| <img src="nexus/docs/images/nexus.webp" width="48" alt=""> | `nexus/docs/images/nexus.webp`, `.png` (256 px) | The Nexus page's header logo and its home page's footer (`.webp`), and its favicon (`.png`): the icon on a dark tile, the owner's (27-10-2026); the `.webp` is written by this tool. |
 | <img src="nexus/docs/images/nexus-hero.webp" width="48" alt=""> | `nexus/docs/images/nexus-hero.webp` (1024 px) | The Nexus page's home: the icon under the headline, a WebP copy of the 1024 px drawing. |
 | <img src="dev/releases/images/nexus-releases.webp" width="48" alt=""> | `dev/releases/images/nexus-releases.webp` (512 px), `-128.png` | Nexus Releases, Nexus's app (owner, 26-10-2026: it takes Nexus's icon, not a category's): its window header and window icon, its menu entry and Desktop icon. Lossless copies of the drawing, written by this tool. |
 | <img src="bc250-bazzite/portal/images/apps/releases.webp" width="48" alt=""> | `bc250-bazzite/portal/images/apps/releases.webp` (256 px) | Nexus Releases' tile on the BC250 Bazzite Suite's portal, and its icon in that wiki's app tables; the same copy. |

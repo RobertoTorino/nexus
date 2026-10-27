@@ -75,6 +75,7 @@ def test_the_device_is_read_and_shown(make, qapp):
     assert "Screen" in shown and " % scaling, " in shown["Screen"]
     assert list(shown).index("Screen") == list(shown).index("Memory") - 1
     assert window.header.status.text().startswith("82 %  |  ")
+    assert window.header.icon is None                       # the screen is too small for it (owner, 27-10-2026)
     assert [text for _, text in window.legend.items] == ["Save report", "Close"]
 
 

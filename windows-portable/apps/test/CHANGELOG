@@ -1,3 +1,8 @@
+Changelog: 27-10-2026 17:02:23
+
+Fixed. The header has no icon (owner, 27-10-2026: the screen is too small for it); the window icon stays. The main
+pill takes core's new button color, #cd8b22 (a trial). The icon copies are written again from the suite's drawing.
+
 Changelog: 26-10-2026 22:48:15
 
 Added. Windows Portable Test, the Windows Portable Suite's test app (owner, 26-10-2026): what Windows reports about

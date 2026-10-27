@@ -1,3 +1,13 @@
+Changelog: 27-10-2026 17:02:23
+
+The pictures of the owner's new Nexus drawing (27-10-2026) are WebP again where WebP is accepted:
+tools/make_icons.py now writes the Nexus page's logo (nexus/docs/images/nexus.webp, from the owner's favicon, the
+icon on a dark tile) and hero (nexus-hero.webp, from the 1024 px drawing) as lossy WebP besides the lossless copies it
+already wrote (Nexus Releases', its tile on the BC250 portal, Windows Portable Test's), so a new drawing needs only
+the tool. The PNG stand-ins dev/releases/images/nexus-releases.png and nexus/docs/images/nexus-hero.png are gone. The
+Nexus icon's test checks the hero too, and compares the logo with the favicon. DESIGN.md: the Windows Portable
+Suite's main pill is #cd8b22 (owner, 27-10-2026, a trial).
+
 Changelog: 26-10-2026 22:54:30
 
 Windows Portable Test is in the repository (windows-portable/apps/test/, owner, 26-10-2026: the Windows Portable

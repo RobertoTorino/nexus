@@ -11,7 +11,7 @@ from collections.abc import Callable
 from pathlib import Path
 
 from PyQt6.QtCore import QObject, Qt, QTimer, pyqtSignal
-from PyQt6.QtGui import QFont, QPixmap
+from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QStackedWidget, QVBoxLayout, QWidget
 
 from bc250_core import applog
@@ -20,7 +20,7 @@ from bc250_core.platform import suite_data
 from bc250_core.portable import (BODY, DIM, Card, Legend, Pane, Pill, PortableHeader, PortableWindow, px,
                                  text_label)
 
-from . import APP_ID, APP_NAME, LOGO_PATH, SUITE, __version__, device, power
+from . import APP_ID, APP_NAME, SUITE, __version__, device, power
 from .controller import ControllerPane
 
 STATUS_MS = 30_000              # the header's battery and time
@@ -103,7 +103,7 @@ class MainWindow(PortableWindow):
 
         page = QVBoxLayout(self)
         page.setContentsMargins(*self.margins())
-        self.header = PortableHeader(APP_NAME, __version__, QPixmap(str(LOGO_PATH)))
+        self.header = PortableHeader(APP_NAME, __version__)          # no icon: the screen is too small (owner)
         page.addWidget(self.header)
         page.addSpacing(px(14))
         body = QHBoxLayout()

@@ -8,7 +8,7 @@ core's widgets, set with create_app(theme=PORTABLE)). The focused card is raised
 glow under it. Sizes are the mock-up's at 1280 x 720 and scale with the screen (scale()), read from the device
 rather than assumed: the Ally's own screen at 150 % is 1280 x 720, a TV at 125 % is 1536 x 864.
 
-The widgets: PortableHeader (icon, title, version, a status line), Card (a focusable card with a title and a line of
+The widgets: PortableHeader (title, version, a status line; an icon only when given), Card (a focusable card with a title and a line of
 text), Pane (the detail pane), Pill (a big button that shows its controller button: A Open, Y Update), Legend (the
 buttons that have no pill: X Details, B Back) and PortableWindow, which moves the focus between the cards and pills
 with the d-pad, the left stick or the arrow keys, and turns A or Enter into the focused card's or pill's action, B or
@@ -35,6 +35,7 @@ TEXT = "#f5f4f0"            # the text
 DIM = "#a5a5ab"             # the second line: what a card does, the version, the status
 AMBER = "#f5a524"           # the accent: focus, the main action, the selected tab, an update
 ON_AMBER = "#141414"        # text on the amber
+BUTTON = "#cd8b22"          # the main pill (owner, 27-10-2026, a trial), with its glyph's letter
 
 PORTABLE = Theme("Portable", True, window=BACKGROUND, base=SURFACE, alt=RAISED, text=TEXT, button=RAISED,
                  button_low=SURFACE, edge=EDGE, accent=AMBER, accent_text=ON_AMBER)
@@ -130,19 +131,21 @@ class Legend(QWidget):
 
 
 class PortableHeader(QWidget):
-    """The app's icon, its name large with the version under it, and a status line on the right (battery, time)."""
+    """The app's name large with the version under it, and a status line on the right (battery, time). The icon
+    before the name only when one is given (owner, 27-10-2026: the test app's screen is too small for it)."""
 
     def __init__(self, title: str, version: str, icon: QPixmap | None = None, parent: QWidget | None = None):
         super().__init__(parent)
         row = QHBoxLayout(self)
         row.setContentsMargins(0, 0, 0, 0)
-        self.icon = QLabel()
-        self.icon.setFixedSize(px(60), px(60))
+        self.icon: QLabel | None = None
         if icon is not None and not icon.isNull():
+            self.icon = QLabel()
+            self.icon.setFixedSize(px(60), px(60))
             self.icon.setPixmap(icon.scaled(self.icon.size(), Qt.AspectRatioMode.KeepAspectRatio,
                                             Qt.TransformationMode.SmoothTransformation))
-        row.addWidget(self.icon)
-        row.addSpacing(px(16))
+            row.addWidget(self.icon)
+            row.addSpacing(px(16))
         column = QVBoxLayout()
         column.setSpacing(0)
         self.title = text_label(title, TITLE, QFont.Weight.ExtraBold)
@@ -220,7 +223,7 @@ class Pane(QFrame):
 
 
 class Pill(QPushButton):
-    """A big button with the cards' corners that shows its controller button: amber for the page's main action (A),
+    """A big button with the cards' corners that shows its controller button: BUTTON for the page's main action (A),
     a raised gray for the others (Y Update). The focus dims it (owner, 26-10-2026: a ring or a glow on the amber was
     too much or too little). Its button press is the window's: PortableWindow.bind()."""
 
@@ -234,7 +237,7 @@ class Pill(QPushButton):
         row.setSpacing(px(10))
         if button:
             self.glyph = Glyph(button, filled=False)
-            self.glyph.setStyleSheet(f"color: {AMBER if main else TEXT};"
+            self.glyph.setStyleSheet(f"color: {BUTTON if main else TEXT};"
                                      f" background: {ON_AMBER if main else BACKGROUND}; border-radius: {px(13)}px;")
             row.addWidget(self.glyph)
         self.label = text_label(text, PILL, QFont.Weight.Bold, ON_AMBER if main else TEXT)
@@ -249,7 +252,7 @@ class Pill(QPushButton):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.setPen(Qt.PenStyle.NoPen)
-        painter.setBrush(QColor(AMBER if self.main else RAISED))
+        painter.setBrush(QColor(BUTTON if self.main else RAISED))
         painter.drawRoundedRect(QRectF(self.rect()), px(RADIUS), px(RADIUS))
 
     def sizeHint(self) -> QSize:

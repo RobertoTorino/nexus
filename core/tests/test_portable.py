@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import pytest
 from PyQt6.QtCore import QEvent, QPoint, Qt
-from PyQt6.QtGui import QKeyEvent
+from PyQt6.QtGui import QKeyEvent, QPixmap
 from PyQt6.QtWidgets import QGraphicsDropShadowEffect, QGraphicsOpacityEffect, QGridLayout, QVBoxLayout
 
 from bc250_core import portable
@@ -165,3 +165,14 @@ def test_the_header(qapp):
     header.set_status(["82 %", "", "14:32"])
     assert header.title.text() == "Windows Portable Test" and header.version.text() == "0.1.0"
     assert header.status.text() == "82 %  |  14:32"
+    assert header.icon is None                                  # no icon unless one is given (owner, 27-10-2026)
+    icon = QPixmap(8, 8)
+    icon.fill()
+    assert PortableHeader("Portal", "0.1.0", icon).icon is not None
+
+
+def test_the_main_pill_has_the_button_color(qapp):
+    """Only the main pill takes #cd8b22 (owner, 27-10-2026, a trial); the focus stays amber, a gray pill gray."""
+    main, other = Pill("Open", "A", main=True), Pill("Update", "Y")
+    assert portable.BUTTON == "#cd8b22" and f"color: {portable.BUTTON};" in main.glyph.styleSheet()
+    assert portable.BUTTON not in other.glyph.styleSheet()

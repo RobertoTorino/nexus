@@ -1,3 +1,9 @@
+Changelog: 27-10-2026 17:02:23
+
+Fixed. portable: the main pill is #cd8b22 (owner, 27-10-2026, a trial; BUTTON), its glyph's letter with it; the
+focus and everything else stay as they were. PortableHeader draws an icon only when it is given one (owner,
+27-10-2026: the test app's screen is too small for it); it no longer keeps the icon's space empty.
+
 Changelog: 26-10-2026 22:54:30
 
 Added. portable: Pane, the detail pane (a card's surface for what the focused card shows). The window registers

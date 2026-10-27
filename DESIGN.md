@@ -38,9 +38,9 @@ Each design (a suite's, the Nexus page's) has its own; none is carried over to a
 ### Windows Portable Suite
 
 - **The identity** (owner, 26-10-2026: direction D, B's amber on C's cards): a near-black window `#121214`, cards a
-  step lighter `#1d1e22`, the focused card raised `#292b31`, and one amber `#f5a524` for the focus and the main
-  action; text `#f5f4f0` with dimmed `#a5a5ab` for the second line. Inter, with heavy titles. From
-  `core/bc250_core/portable.py`, a theme for core's widgets set with `create_app(theme=PORTABLE)`.
+  step lighter `#1d1e22`, the focused card raised `#292b31`, one amber `#f5a524` for the focus and the main pill
+  in `#cd8b22` (owner, 27-10-2026, a trial); text `#f5f4f0` with dimmed `#a5a5ab` for the second line. Inter, with
+  heavy titles. From `core/bc250_core/portable.py`, a theme for core's widgets set with `create_app(theme=PORTABLE)`.
 - **The focus is what a controller needs to see:** the focused card is raised with an amber edge and an amber glow
   under it; a focused pill is dimmed (owner, 26-10-2026; its behavior still open). Cards and pills share the corner
   radius 14.
@@ -331,11 +331,15 @@ Text colors:
 
   ![Sample text in #a5a5ab](bc250-bazzite/docs/design/colors/text-a5a5ab.svg)
 
-- `#f5a524` Amber: an update in a tile or the detail pane, the selected tab; the main pill's glyph letter.
+- `#f5a524` Amber: an update in a tile or the detail pane, the selected tab.
 
   ![Sample text in #f5a524](bc250-bazzite/docs/design/colors/text-f5a524.svg)
 
-- `#141414` On the amber: the main pill's label, a glyph on the amber.
+- `#cd8b22` The main pill's glyph letter, its pill's color.
+
+  ![Sample text in #cd8b22](bc250-bazzite/docs/design/colors/text-cd8b22.svg)
+
+- `#141414` On the amber and the main pill: the main pill's label, a glyph on the amber.
 
   ![Sample text in #141414](bc250-bazzite/docs/design/colors/text-141414.svg)
 
@@ -347,7 +351,8 @@ Background colors:
 | ![#1d1e22](bc250-bazzite/docs/design/colors/block-1d1e22.svg) | `#1d1e22` | A card, the detail pane, a field or list. |
 | ![#292b31](bc250-bazzite/docs/design/colors/block-292b31.svg) | `#292b31` | The focused card, a gray pill, a glyph's circle in the legend. |
 | ![#35383f](bc250-bazzite/docs/design/colors/block-35383f.svg) | `#35383f` | Borders of fields and lists. |
-| ![#f5a524](bc250-bazzite/docs/design/colors/block-f5a524.svg) | `#f5a524` | Amber: the focused card's edge and the glow under it, the main pill, the selected tab's line. |
+| ![#f5a524](bc250-bazzite/docs/design/colors/block-f5a524.svg) | `#f5a524` | Amber: the focused card's edge and the glow under it, the selected tab's line. |
+| ![#cd8b22](bc250-bazzite/docs/design/colors/block-cd8b22.svg) | `#cd8b22` | The main pill (owner, 27-10-2026, a trial). |
 | ![#141414](bc250-bazzite/docs/design/colors/block-141414.svg) | `#141414` | The main pill's glyph circle. |
 
 ## The Nexus page
