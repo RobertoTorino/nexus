@@ -153,11 +153,6 @@ commit (nothing reaches the users until `tools/tag-release.sh portal-v<x.y.z>` i
 board), then *building*, *released* (Test release installs it) or *failed*; its notification says *ready* when
 GitHub built it.
 
-Only portal releases are marked **Latest** on GitHub (`release.yml` passes `--latest=false` for app releases), so
-`/releases/latest`, which the README and the manual link to, always opens the newest portal. App release notes
-start by pointing to it. Each release's title names its suite and app, from the portal's name and `apps.toml`:
-*BC250 Bazzite Suite: Portal 12.0.0*, *BC250 Bazzite Suite: Xenia Manager 0.11.0*.
-
 A red line at the top of the window means a release tag points at a commit whose `VERSION` is not the tag's
 version: the tag was made before the version bump was committed, and `release.yml` cannot build it. Delete the tag
 (the line shows how), commit and push the bump, and tag again with `tools/tag-release.sh`.
@@ -169,6 +164,23 @@ up to an hour. A portal tag also waits for the app releases it pins: each one ta
 sha256 (step 2), as the portal's release needs them. A plain `git tag` tags whatever HEAD is at that moment, also the commit from before the bump or one
 CI failed. `release.yml` asks the same before it builds anything: a tag on a commit CI did not pass gives no
 release. It then builds and publishes the release without an approval on GitHub (see
-[GitHub settings](https://robertotorino.github.io/nexus/bc250-bazzite-suite/development/github-settings/#environments)).
+[GitHub settings](github-settings.md#environments)).
 
 `tools/release.sh --list` lists every app with its version, its last tag and its pin, without Qt.
+
+## The releases on GitHub
+
+Every suite publishes its releases in the one repository, so each release's title names its suite and app, from
+the portal's name and `apps.toml`: *BC250 Bazzite Suite: Portal 12.0.0*, *BC250 Bazzite Suite: Xenia Manager
+0.11.0*, *Windows Portable Suite: Windows Portable Test 0.1.1* (`build_release.py` of each suite writes it).
+
+A repository has one **Latest** release, and Nexus holds several suites, so no suite's portal is it. Latest is the
+Nexus index, the release named Nexus and tagged `nexus`: a section per suite with its newest portal, the download
+links and the install steps, or the newest release of each app while a suite has no portal release yet
+(`tools/nexus_index.py`). Every release is published with `--latest=false`; after each release workflow that
+succeeded, `nexus-index.yml` writes the index again. Its first run, started by hand from the Actions tab (Nexus
+index, Run workflow), makes the release and marks it Latest.
+
+`/releases/latest`, which the suites' READMEs and wikis link to, opens the index, and app release notes start by
+pointing to it. Installed portals do not use it: they find their releases by their tag prefix (`portal-v`,
+`wp-portal-v`).

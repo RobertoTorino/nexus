@@ -36,8 +36,8 @@ import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-# release.yml marks only portal releases as GitHub's "Latest", so this always opens the newest portal.
-LATEST_PORTAL_URL = "https://github.com/RobertoTorino/nexus/releases/latest"
+# GitHub's "Latest" release is the Nexus index (tools/nexus_index.py), which points at every suite's newest portal.
+INDEX_URL = "https://github.com/RobertoTorino/nexus/releases/latest"
 _TAG = re.compile(r"^(?P<app>[a-z0-9-]+)-v(?P<version>\d+\.\d+\.\d+)$")
 # The app's folder for the wheel of its native core (Rust with FFmpeg inside), which release.yml builds before this
 # runs: users install it with pip and need no compiler. Its version is the app's.
@@ -197,8 +197,8 @@ def build(tag: str, out: Path, bundle: Path | None = None) -> Path:
     if app == "portal" and stage:
         notes += [f"> **{stage}:** {stage_note}", ""]
     if app != "portal":
-        notes += [f"> **To install the suite, use the portal, not this file:** the [latest portal release]"
-                  f"({LATEST_PORTAL_URL}) installs, updates and removes {app} for you and checks every download. "
+        notes += [f"> **To install the suite, use the portal, not this file:** the newest portal, listed in the "
+                  f"[Nexus index]({INDEX_URL}), installs, updates and removes {app} for you and checks every download. "
                   "This tarball is what the portal downloads; install it by hand only without the portal.", ""]
     with tempfile.TemporaryDirectory() as tmp:
         stage_dir = stage_app.stage(app, Path(tmp) / tag, SUITE)

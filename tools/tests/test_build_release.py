@@ -100,7 +100,7 @@ def test_sums_and_notes(bt_release):
     core = (br.ROOT / "core" / "VERSION").read_text().strip()
     assert f"Bundles the suite core `bc250_core` {core}." in notes
     assert notes.index("use the portal, not this file") < notes.index("### Install")   # an app: the portal first
-    assert br.LATEST_PORTAL_URL in notes
+    assert br.INDEX_URL in notes
     version = BT_TAG.split("-v")[1]
     assert (bt_release / "title.txt").read_text() == f"BC250 Bazzite Suite: BC-250 Bazzite Test {version}\n"
 

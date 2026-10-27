@@ -83,7 +83,6 @@ Drawn by MkDocs Material in the wiki's colors.
 | <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/tray-arrow-down.svg" width="24" alt=""> | `material-tray-arrow-down` | The page icon of Install. |
 | <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/eye-off-outline.svg" width="24" alt=""> | `material-eye-off-outline` | The page icon of Privacy. |
 | <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/shield-lock-outline.svg" width="24" alt=""> | `material-shield-lock-outline` | The page icon of Security. |
-| <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/github.svg" width="24" alt=""> | `material-github` | The page icon of GitHub settings. |
 
 ### Symbols in text
 
@@ -136,7 +135,7 @@ Characters of the font, used as icons in labels and buttons.
 | Icon | File | Used for |
 | --- | --- | --- |
 | <img src="nexus/images/nexus-256.png" width="48" alt=""> | `nexus/images/nexus-<size>.png` (1024, 512, 256 and 128 px) | The icon of Nexus, the owner's drawing (25-10-2026): the set the copies are made from. |
-| <img src="nexus/docs/images/nexus.webp" width="48" alt=""> | `nexus/docs/images/nexus.webp`, `.png` (256 px) | The Nexus page's header logo and its home page's footer (`.webp`), and its favicon (`.png`): the icon on a dark tile, the owner's (27-10-2026); the `.webp` is written by this tool. |
+| <img src="nexus/docs/images/nexus.webp" width="48" alt=""> | `nexus/docs/images/nexus.webp`, `.png` (256 px) | The Nexus page's header logo and its home page's footer (`.webp`), and its favicon (`.png`): the 256 px drawing, transparent (owner, 27-10-2026: no more dark tile), both written by this tool. |
 | <img src="nexus/docs/images/nexus-hero.webp" width="48" alt=""> | `nexus/docs/images/nexus-hero.webp` (1024 px) | The Nexus page's home: the icon under the headline, a WebP copy of the 1024 px drawing. |
 | <img src="dev/releases/images/nexus-releases.webp" width="48" alt=""> | `dev/releases/images/nexus-releases.webp` (512 px), `-128.png` | Nexus Releases, Nexus's app (owner, 26-10-2026: it takes Nexus's icon, not a category's): its window header and window icon, its menu entry and Desktop icon. Lossless copies of the drawing, written by this tool. |
 

@@ -3,7 +3,7 @@
 # The development machine
 
 What a machine needs to work on the repository, on Bazzite or on Windows, and how it stays up to date. The
-checks before a push are in [Development](index.md#development); the release commands in
+checks before a push are in [Development](development.md#ci-on-your-own-machine); the release commands in
 [GitHub settings](github-settings.md#the-github-cli).
 
 ## Tools
@@ -12,7 +12,7 @@ checks before a push are in [Development](index.md#development); the release com
 |---|---|---|---|
 | Git | everything; `tools/hooks/pre-push` as the pre-push hook | comes with Bazzite | Git for Windows (`winget install Git.Git`); Git Bash runs the `.sh` scripts |
 | Python 3.11 or newer (CI runs 3.12) | the venvs, every tool in `tools/` | comes with Bazzite (`python3`, without PyQt6) | python.org or `winget install Python.Python.3.12`, with the `py` launcher |
-| The development venv (`requirements-dev.txt`) | `./test.sh`, `mkdocs`, the tools; it brings pytest, PyQt6, MkDocs Material and Pillow | `.venv-linux/`, see [Development](index.md#development) | `.venv-windows/` |
+| The development venv (`requirements-dev.txt`) | `./test.sh`, `mkdocs`, the tools; it brings pytest, PyQt6, MkDocs Material and Pillow | `.venv-linux/`, see [Development](development.md#set-up-and-test) | `.venv-windows/` |
 | podman (or docker) | `tools/ci-local.sh`: CI's jobs in a container, with Python 3.12, shellcheck, fakeroot, Rust and Console Link's build tools inside | comes with Bazzite | not used; CI's Windows job runs only on GitHub |
 | shellcheck | the shell checks of CI | `brew install shellcheck` | `winget install koalaman.shellcheck` |
 | fakeroot | the installer tests (`bc250-bazzite/tools/installer-tests/`) | `brew install fakeroot` | Linux only |

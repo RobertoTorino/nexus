@@ -50,15 +50,16 @@ def test_every_file_of_the_nexus_icon_is_listed():
 
 
 def test_the_nexus_page_shows_the_nexus_icon():
-    """The page's favicon (nexus/docs/images/nexus.png, the icon on a dark tile, the owner's) and the logo, its WebP
-    copy, at 256 px; the hero, a copy of the 1024 px drawing. Compared by their pixels at 32 px as
+    """The page's favicon (nexus/docs/images/nexus.png, the 256 px drawing, transparent) and the logo, its WebP copy,
+    at 256 px; the hero, a copy of the 1024 px drawing. Compared by their pixels at 32 px as
     tests/test_portal_icons.py does for the wiki's icon."""
     from PIL import Image, ImageChops, ImageStat
 
     def small(path):
         return Image.open(path).convert("RGBA").resize((32, 32), Image.Resampling.LANCZOS)
 
-    icon = small(SUITE / "nexus" / "docs" / "images" / "nexus.png")
+    icon = small(SUITE / "nexus" / "images" / "nexus-256.png")
+    assert Image.open(SUITE / "nexus" / "docs" / "images" / "nexus.png").getpixel((0, 0))[3] == 0, "no tile behind it"
     for name in ("nexus.webp", "nexus.png"):
         copy = SUITE / "nexus" / "docs" / "images" / name
         assert Image.open(copy).size == (256, 256), name

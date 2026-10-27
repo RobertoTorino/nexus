@@ -61,7 +61,8 @@
 
 /* The home page. */
 :root {
-  --nexus-hero-fg: #17b6a7;                   /* The words at the top: the name and the claim */
+  --nexus-hero-fg: #17b6a7;                   /* The name at the top */
+  --nexus-hero-claim-fg: #c0c0c0;             /* The claim under it, as the headings */
   --nexus-section-bg: var(--nexus-ink);           /* Background of the dark sections */
   --nexus-section-fg: #c0c0c0;                /* Text, card titles and links in the dark sections */
   --nexus-section-button: #c0c0c0;            /* Buttons there: outline and text, the fill under the pointer */
@@ -70,7 +71,7 @@
 /* The home page's footer. */
 :root {
   --nexus-footer-bg: var(--nexus-ink);            /* Footer background */
-  --nexus-footer-fg: #17b6a7;                 /* The name, and a link under the pointer */
+  --nexus-footer-fg: #17b6a7;                 /* A link under the pointer */
   --nexus-footer-notice-bg: #010101;        /* The strip with the notice at the bottom, over the footer */
 }
 
@@ -243,6 +244,7 @@
 .md-typeset .home-hero__claim {
   font-weight: 800;
   margin: 0;
+  color: var(--nexus-hero-claim-fg);
 }
 
 /* The Nexus icon under the headline (nexus/docs/images/nexus-hero.webp, the owner's drawing at 1024 px). */
@@ -307,7 +309,7 @@
   color: var(--nexus-deep);
 }
 
-/* The home page's footer: the name on the left, columns of links on the right. */
+/* The home page's footer: the icon on the left (it says NEXUS), columns of links on the right. */
 .home-footer {
   background: var(--nexus-footer-bg);
   color: var(--nexus-footer-fg);
@@ -324,10 +326,11 @@
 .home-footer__brand {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  font-weight: 800;
-  font-size: 0.9rem;
-  color: var(--nexus-footer-fg);
+}
+
+.home-footer__brand img {
+  height: 3.4rem;               /* as big as the header's logo */
+  width: auto;
 }
 
 .home-footer__columns {

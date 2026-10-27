@@ -21,7 +21,9 @@ on Windows). **Each suite stands apart** (owner, 27-10-2026): a change to one su
 folder, its CI or its release workflow, and a change both suites want is two changes, one per suite, each with its
 own release. `ci.yml` and `release.yml` are Nexus's and the BC250 suite's; a suite with a tag prefix has its own
 `ci-<suite>.yml` and `release-<suite>.yml`, and its tags wait for its own CI only (`tools/tag-release.sh`,
-`tools/ci_state.py --workflow`; `tools/tests/test_layout.py` keeps them apart). `nexus/` is the Nexus page (robertotorino.github.io/nexus/): the name, the structure and the suites;
+`tools/ci_state.py --workflow`; `tools/tests/test_layout.py` keeps them apart). `nexus/` is the Nexus page (robertotorino.github.io/nexus/): the name, the structure and the suites, and the
+chapters that are every suite's (Releases, Development with bc250_core, The development machine, GitHub
+settings, Design);
 each suite's wiki has a folder of its own beside it (the BC250 Bazzite Suite's: `/nexus/bc250-bazzite-suite/`).
 
 A suite's folder holds its `apps/<name>/` (each with its own VERSION, CHANGELOG, LICENSE and .gitignore), its
@@ -39,8 +41,9 @@ default suite of the tools (`tools/suites.py`). The root keeps what is Nexus's:
   `~/.local/share/bc250-bazzite-suite/venv` holds only PyQt6 and pygame-ce (the portal's controller reader).
 - `tools/`: the Nexus tools: release and CI (`stage_app.py`, `build_release.py`, `check_versions.py`,
   `check_changelogs.py`, `tag-release.sh`, `release.sh`, `ci-local.sh`, `pre-push.sh`, `fix-modes.sh`,
-  `backlog.py`, `dev-updates.sh`, `dev-backup.sh`), `new_app.py` (a new app of a suite from the architecture chapter, listed everywhere the suite
-  lists its apps, with the checks run on it), the design and icon catalogs (`make_design.py`, `make_icons.py`, `apply_design.py`), the tours
+  `backlog.py`, `nexus_index.py` (GitHub's Latest release: the Nexus index, every suite's newest portal),
+  `dev-updates.sh`, `dev-backup.sh`), `new_app.py` (a new app of a suite from the architecture chapter, listed
+  everywhere the suite lists its apps, with the checks run on it), the design and icon catalogs (`make_design.py`, `make_icons.py`, `apply_design.py`), the tours
   (`app_tour.py`, `tour_frames.py`), `build_windows_exe.py`, `mkdocs/` (the design panel) and `tools/tests/`.
   A tool that works on a suite takes it with `--suite` (`tools/suites.py`: the folders with `portal/apps.toml`);
   with one suite in the checkout it is the default.
@@ -70,6 +73,10 @@ default suite of the tools (`tools/suites.py`). The root keeps what is Nexus's:
   `.github/workflows/backlog.yml` lists those items every Monday in the "Backlog review" issue (`tools/backlog.py`).
   No placeholder folders that only describe future work. CHANGELOG entries are history and may
   mention steps.
+- **What touches every suite is documented on the Nexus page** (owner, 27-10-2026): `nexus/docs/`, the Nexus
+  wiki, holds the central parts (the repository, Nexus Releases, GitHub's releases and the Nexus index, Nexus's
+  tools and workflows, general information). A suite's wiki holds what is that suite's and links to the Nexus page
+  for the rest, rather than explaining it again.
 - **CHANGELOG for every change:** the root CHANGELOG for suite-wide changes, the app's (or core's, or portal's)
   for its own. Format: a `Changelog: DD-MM-YYYY HH:MM:SS` line, a blank line, then plain sentences; newest first.
   The time is Europe/Amsterdam (CET/CEST) on both systems, whatever the machine's own zone:

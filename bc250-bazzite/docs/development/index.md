@@ -2,20 +2,21 @@
 
 # Development
 
-How the repository is laid out, how to work on it from Linux and Windows, and how versions and releases fit
-together. How every app is built, and how to add one: [Architecture and consistency](architecture.md). The repository's settings on GitHub, and how to handle Dependabot's pull requests: [GitHub settings](github-settings.md). The tools a machine needs to work on it, on Bazzite or Windows, and how they stay up to date: [The development machine](machine.md). The portal's release steps are in [Portal](../portal.md#appstoml-and-releases).
+How the BC250 Bazzite Suite is laid out, how its wiki's pictures and tours are made, and how its versions and
+releases fit together. What every suite shares is on the Nexus page: the repository's layout, setting up a venv,
+the tests and CI on your own machine, working from Linux and Windows
+([Development](https://robertotorino.github.io/nexus/development/)), the repository's settings on GitHub and Dependabot's pull requests
+([GitHub settings](https://robertotorino.github.io/nexus/github-settings/)). How every app is built, and how to add one:
+[Architecture and consistency](architecture.md). The tools a machine needs to work on it, on Bazzite or Windows,
+and how they stay up to date: [The development machine](https://robertotorino.github.io/nexus/machine/) on the Nexus page. The portal's release steps are in
+[Portal](../portal.md#appstoml-and-releases).
 
 ## Layout
 
-The repository is Nexus: every suite in a folder of its own, with what they share at the root. The BC250 Bazzite
-Suite is `bc250-bazzite/`. Paths in this wiki are written from the root of the repository.
+The suite is `bc250-bazzite/` in the repository, laid out as every suite is; the rest of the repository is on the
+Nexus page ([Layout](https://robertotorino.github.io/nexus/development/#layout)). Paths in this wiki are written from the root of the repository.
 
 ```
-core/bc250_core/              shared Python package, every suite's; see bc250_core below
-tools/                        the Nexus tools: release and CI (build_release, stage_app, check_versions,
-                              check_changelogs, tag-release.sh, release.sh, ci-local.sh), the design panel
-test.sh                       runs every test suite (core, tools, and the portal, tools and apps of each suite
-                              made for the system it runs on: SYSTEM in the suite's folder)
 bc250-bazzite/                the BC250 Bazzite Suite:
   portal/                       the portal: app, apps.toml (the pinned app releases) and install.sh
   apps/<name>/                  one folder per app, each with its own VERSION and CHANGELOG
@@ -23,52 +24,13 @@ bc250-bazzite/                the BC250 Bazzite Suite:
                                 the screenshot and tour scripts
   docs/ mkdocs.yml              this wiki (MkDocs Material)
   icons/ install.sh             the category icons; the portal's installer for a checkout
-nexus/                        the Nexus page
+core/bc250_core/              the shared Python package its apps bundle; see bc250_core below
 ```
 
-## Development
+Its checks run on Bazzite and in CI (`ci.yml`): its tests with `./test.sh`, every CI job with `tools/ci-local.sh`
+([CI on your own machine](https://robertotorino.github.io/nexus/development/#ci-on-your-own-machine)).
 
-```bash
-# Linux
-python3 -m venv .venv-linux && .venv-linux/bin/python -m pip install -r requirements-dev.txt
-# Windows (Git Bash)
-py -m venv .venv-windows && .venv-windows/Scripts/python.exe -m pip install -r requirements-dev.txt
-
-./test.sh                          # every test suite, offscreen; picks the venv of the OS it runs on
-NEXUS_SYSTEM=bazzite ./test.sh     # the Bazzite suites' tests too, on another system
-python3 tools/check_versions.py    # hard-coded versions = VERSION
-mkdocs build --strict              # from the venv
-```
-
-### CI on your own machine
-
-`./test.sh` runs every suite in one venv that holds everything, on whatever Python your system has. GitHub's CI runs
-each job on Python 3.12 with only that job's own requirements, so a test can pass here and still fail there: a
-Python 3.13 function, or a package only the full venv has. `tools/ci-local.sh` runs the jobs of
-`.github/workflows/ci.yml` the way GitHub does, in a container (podman, which Bazzite has, or docker):
-
-```bash
-tools/ci-local.sh                      # every job, about a minute and a half once the image is built
-tools/ci-local.sh pytest/tools shell   # some jobs; a matrix job by its value, pytest for all of them
-tools/ci-local.sh --list               # the jobs, read from ci.yml
-```
-
-It reads the jobs from `ci.yml` itself, so a new app in the matrix or a new installer step needs no change. The
-first run builds the image from `tools/ci-local/Containerfile` (Python 3.12 and the packages GitHub's runner has)
-and Console Link's FFmpeg; both are kept, with the venvs and the logs, in `~/.cache/bc250-ci-local`. It works on a
-copy of the checkout with every change staged, as the commit will have it. Only the Windows job does not run here.
-The push commands Nexus Releases shows run it first (`tools/ci-local.sh && git push`): no push when a job fails.
-
-`tools/pre-push.sh` runs CI's quick checks in a few seconds: the versions, `bc250-bazzite/portal/apps.toml` with the portal bump
-it needs against what the remote has, the CHANGELOGs keeping every entry the remote has (`tools/check_changelogs.py`),
-the scripts' exec bits and the line endings. Make it git's pre-push hook once
-per checkout, and every `git push` runs it first:
-
-```bash
-git config core.hooksPath tools/hooks   # once per checkout
-BC250_PRE_PUSH=full git push            # also every CI job (tools/ci-local.sh)
-git push --no-verify                    # without the checks
-```
+## The wiki's pictures and tours
 
 To preview the manual locally, run `mkdocs serve` from the repository root with the development venv active,
 then open <http://127.0.0.1:8000/bc250-bazzite-suite/>. Stop the server with Ctrl+C.
@@ -106,23 +68,6 @@ The controller beside the board on the home page changes with every portal relea
 `bc250-bazzite/docs/images/home/controllers/controllers.toml`. To add one, put its picture in that folder (WebP, 1295 × 1600, with
 a transparent background, like the others) and add it at the end of the list with its alt text.
 
-### Working from both Linux and Windows
-
-The repo is used from both systems, so it is set up to behave the same on each:
-
-- **Line endings:** `.gitattributes` makes every text file LF in the repository and in the working tree on both
-  systems, regardless of `core.autocrlf` (Git for Windows sets it to `true`). Scripts, units and `.desktop` files
-  reach the board with LF, and moving between systems never shows files as changed. CI rejects CRLF.
-- **Executable bit:** Git for Windows runs with `core.fileMode=false` and records new files as not executable. After
-  `git add` and before committing, run `tools/fix-modes.sh`: it marks every `.sh` as executable in the index (this
-  works the same on both systems). CI fails when a script is missing the bit.
-- **Venvs:** a venv only runs on the OS that created it, so keep one per system (`.venv-linux/`, `.venv-windows/`).
-  Both are ignored by git.
-- **Tests:** some app tests use Linux-only calls (`os.getuid`, file modes) and fail on Windows; Linux and CI are
-  the reference. Core's tests run on both and never write to the Windows registry.
-- **File names:** Linux is case-sensitive and Windows is not, so a link or path whose case only matches on Windows
-  breaks on Linux and on GitHub. Keep links and asset names in exactly the case of the file.
-
 ## Where things are installed
 
 - **Root-owned `/opt`:** the portal (`/opt/bc250-bazzite-suite`), Bazzite Test (`check`), cores, oc and
@@ -144,6 +89,9 @@ Each app is released on its own tag (`check-v0.1.0`, `gpu-v0.4.0`, …); the rel
 `<tag>.tar.gz` and `SHA256SUMS`. The portal has `portal-vX.Y.Z` and pins one release of every app in
 `bc250-bazzite/portal/apps.toml`; a change there since the last portal release needs a portal version bump at least as large as the largest app bump.
 The release steps are in [Portal](../portal.md#appstoml-and-releases).
+
+How the releases are titled on GitHub, and why its **Latest** release is the Nexus index and not this suite's
+portal: [The releases on GitHub](https://robertotorino.github.io/nexus/releases/#the-releases-on-github) on the Nexus page.
 
 ### Upstream releases an app pins or follows
 
@@ -226,33 +174,5 @@ python3 bc250-bazzite/tools/check_upstream.py helixsr    # one: decky, shadps4, 
 
 ## bc250_core
 
-Code shared by the suite's apps. Nothing in it imports an app: each app passes its constants in as an `AppInfo`.
-
-| Module | What it holds | Merged from |
-|---|---|---|
-| `appinfo` | `AppInfo` (id, name, version, logo, tag prefix, settings names) | new |
-| `theme` | The suite's theme (`THEMES`, `theme_name()`, `save_theme_name()`, `apply_theme()`, `surface_style()`, `muted()`), `STATE_COLORS`, bundled Inter font, `header_font()`, `HOVER_STYLESHEET`; self-contained, so an app not on core carries a copy | all six GUIs |
-| `text` | `fmt()` (`%1` placeholders), `fill()` (`{name}` placeholders), `plain_tooltip()`, `window_title()` | governor, upscaler |
-| `widgets` | `AppHeader` (the window header), `StatusPill`, `MetricBox`, `Pill` (a `MetricBox` that is a button), `same_width()`, `ClickableLogo`, `Terminal`, `TextDialog`, `RoundedToolTip`, `show_tooltip()`, `page_header()`, `hint_label()`, `accent_button()`, `set_button_active()` | governor + helixsr's Wayland tooltip + bazzite-test's manual tooltips |
-| `app` | `create_app()` / `run_app()` / `exec_app()`: names, Fusion with the theme, tooltip, icon, SIGTERM | the apps' `__main__` |
-| `settings` | `open_settings(info)` at each app's existing file, geometry helpers, `SettingsStore` (typed defaults) | bazzite-test's `AppSettings` |
-| `help` | `HelpView` (the content stays in the app) | upscaler |
-| `updates` | `latest_release()` (with a tag prefix for the suite's per-app tags), `UpdateStatus`, `UpdateChecker` (any job, off the GUI thread) | upscaler + governor |
-| `platform` | XDG folders, `xdg_open()`, `launch_in_terminal()` (with an exit file the caller can watch); for Windows, a suite's folders under `%LOCALAPPDATA%` and `%APPDATA%`, `open_path()`, a PowerShell window and Start-menu shortcuts | the bisect GUIs' `terminal.py` |
-| `steam` | Steam's folders and users, `with_steam_closed()`, `shortcuts.vdf` and the shortcuts' artwork in `grid/` (standard library only) | consoles |
-| `steam_art` | `draw_icon_art()`: a shortcut's four pictures drawn from an app's icon, in the icon's color | consoles |
-| `upstream` | `publish()` / `read_all()`: the updates outside the suite an app can install now, for the portal's notice (standard library only; HelixSR carries a copy) | new: helixsr, pcsx2, portal |
-| `sensors` | `Sensors.read()`: the board's live values from `/proc` and `/sys` without root (CPU, GPU, the governor's range, VRAM, RAM, temperatures, network, disk, fans), `Reading`, `Fan` | System Overlay; used by USB IPS3.5 too |
-| `wifi` | The Wi-Fi adapters and whether the running kernel has a driver and firmware for them, `report()` (standard library only; `python3 -m bc250_core.wifi`) | new: check's test 53, wdriver |
-
-Core is **bundled per app**: `tools/stage_app.py` copies `bc250_core/` next to the package of every app that
-imports it, so each release runs on the core it was tested with.
-
-### Tests
-
-```bash
-cd core && QT_QPA_PLATFORM=offscreen python -m pytest -q tests
-```
-
-`tests/test_parity.py` renders core's widgets next to the copies in `bc250-bazzite/apps/gpu` and `bc250-bazzite/apps/upscaler` and requires
-identical pixels; a case is skipped once its app no longer has its own copy.
+The shared Python package every app of the suite bundles, its modules and its tests:
+[bc250_core](https://robertotorino.github.io/nexus/development/#bc250_core) on the Nexus page.

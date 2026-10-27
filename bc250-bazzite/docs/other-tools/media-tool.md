@@ -73,7 +73,7 @@ the icons (below). A recording runs in the background; its output shows in the w
   board is real, so watch a video before you publish it.
 
 The tool runs the checkout's `bc250-bazzite/tools/record-tour.sh` and `bc250-bazzite/tools/record-app-tour.sh` with the checkout's development
-environment (`.venv-linux`, see [Development](../development/index.md)); they need ffmpeg.
+environment (`.venv-linux`, see [Development](https://robertotorino.github.io/nexus/development/#set-up-and-test) on the Nexus page); they need ffmpeg.
 
 ## Convert the suite's icons
 

@@ -81,7 +81,6 @@ MATERIAL = [
     ("tray-arrow-down", "The page icon of Install."),
     ("eye-off-outline", "The page icon of Privacy."),
     ("shield-lock-outline", "The page icon of Security."),
-    ("github", "The page icon of GitHub settings."),
 ]
 
 WINDOWS_PORTABLE_ICON = [
@@ -107,8 +106,8 @@ NEXUS_ICON = [
     ("nexus/images/nexus-256.png", "`nexus/images/nexus-<size>.png` (1024, 512, 256 and 128 px)",
      "The icon of Nexus, the owner's drawing (25-10-2026): the set the copies are made from."),
     ("nexus/docs/images/nexus.webp", "`nexus/docs/images/nexus.webp`, `.png` (256 px)",
-     "The Nexus page's header logo and its home page's footer (`.webp`), and its favicon (`.png`): the icon on a "
-     "dark tile, the owner's (27-10-2026); the `.webp` is written by this tool."),
+     "The Nexus page's header logo and its home page's footer (`.webp`), and its favicon (`.png`): the 256 px "
+     "drawing, transparent (owner, 27-10-2026: no more dark tile), both written by this tool."),
     ("nexus/docs/images/nexus-hero.webp", "`nexus/docs/images/nexus-hero.webp` (1024 px)",
      "The Nexus page's home: the icon under the headline, a WebP copy of the 1024 px drawing."),
     ("dev/releases/images/nexus-releases.webp", "`dev/releases/images/nexus-releases.webp` (512 px), `-128.png`",
@@ -119,10 +118,11 @@ NEXUS_ICON = [
 NEXUS_COPIES = [
     ("nexus/images/nexus-512.png", "dev/releases/images/nexus-releases.webp"),
     ("nexus/images/nexus-128.png", "dev/releases/images/nexus-releases-128.png"),
+    ("nexus/images/nexus-256.png", "nexus/docs/images/nexus.png"),      # the Nexus page's favicon
 ]
 # The Nexus page's logo and hero: pictures on a web page, so lossy WebP at this quality, by this tool since
-# 27-10-2026 (the owner's new drawing had no WebP copies yet). The logo is the favicon's picture (the owner's, on a
-# dark tile), the hero the drawing.
+# 27-10-2026 (the owner's new drawing had no WebP copies yet). The logo is the favicon's picture (the 256 px
+# drawing, written first, in NEXUS_COPIES), the hero the 1024 px drawing.
 NEXUS_PAGE_COPIES = [
     ("nexus/docs/images/nexus.png", "nexus/docs/images/nexus.webp"),
     ("nexus/images/nexus-1024.png", "nexus/docs/images/nexus-hero.webp"),
@@ -131,9 +131,10 @@ PAGE_QUALITY = 90
 
 
 def nexus_copies(root: Path = ROOT) -> list[Path]:
-    """Writes Nexus Releases' icon copies from the Nexus drawings (NEXUS_COPIES) and Windows Portable Test's from
-    the suite's (WINDOWS_PORTABLE_COPIES), lossless, so a copy's pixels are the drawing's (tests compare them); and
-    the Nexus page's (NEXUS_PAGE_COPIES), lossy. The paths written."""
+    """Writes Nexus Releases' icon copies and the Nexus page's favicon from the Nexus drawings (NEXUS_COPIES) and
+    Windows Portable Test's from the suite's (WINDOWS_PORTABLE_COPIES), lossless, so a copy's pixels are the
+    drawing's (tests compare them); and the Nexus page's logo and hero (NEXUS_PAGE_COPIES), lossy. The paths
+    written."""
     from PIL import Image
     written = []
     for source, target in NEXUS_COPIES + WINDOWS_PORTABLE_COPIES + NEXUS_PAGE_COPIES:

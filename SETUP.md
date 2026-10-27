@@ -6,7 +6,7 @@ What to take from the old drive, and what to install on the new one, before the 
 again. The development machine on the Bazzite side is the BC-250 board itself (ASRock AMD BC-250, Bazzite
 stable with the KDE desktop), so the list covers the board's setup as well as the repository's tools. The tools'
 table and the update timer are on the wiki's
-[The development machine](bc250-bazzite/docs/development/machine.md) page; this file is the order to do things
+[The development machine](nexus/docs/machine.md) page; this file is the order to do things
 in. The Windows machine is not touched by a drive change on the board: its tools are in the same table.
 
 ## Before the old drive goes
@@ -82,7 +82,7 @@ points into it.
 
    It keeps a file that already exists (`--force` replaces it) and puts the lists next to the archive. Then
    check the identity and the sign-ins: `git config --global --list` (name, email, SSH signing: the wiki's
-   [Git identity and signing](bc250-bazzite/docs/development/machine.md#git-identity-and-signing)),
+   [Git identity and signing](nexus/docs/machine.md#git-identity-and-signing)),
    `ssh -T git@github.com`, `gh auth status` (`gh auth login` and `gh auth setup-git` when the keyring did not
    come along: the token lives in the desktop's keyring, not in `~/.config/gh`).
 8. **The checkout**:

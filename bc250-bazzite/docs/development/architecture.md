@@ -187,7 +187,7 @@ fails when a copy is out of date or an app icon has no category.
 
 `core/bc250_core` holds what more than one app needs: theme, widgets, start-up, settings, help, update checks and
 platform helpers. Nothing in it imports an app; each app passes its constants in as `AppInfo`. The module table is
-in [Development](index.md#bc250_core).
+in [Development](https://robertotorino.github.io/nexus/development/#bc250_core) on the Nexus page.
 
 Core is **bundled per app**. `tools/stage_app.py` copies `bc250_core/` next to the package of every app that
 imports it, so each release runs on the core it was tested with. From a checkout, the installer bundles the

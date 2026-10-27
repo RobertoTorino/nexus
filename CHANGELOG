@@ -1,3 +1,50 @@
+Changelog: 27-10-2026 23:45:28
+
+The development machine page moved from the BC250 wiki to the Nexus page (nexus/docs/machine.md), and the
+bc250_core section (its modules, bundling and tests) from the BC250 wiki's development page to the Nexus page's
+Development chapter, as every suite's (owner, 27-10-2026). The BC250 wiki keeps a short bc250_core section that
+links there; its architecture page, core/README.md and SETUP.md point to the new places.
+
+The Nexus page's home: the claim under the name ("One home for the suites.") is silver like the headings, its own
+color in nexus.css (--nexus-hero-claim-fg), and the footer shows the Nexus icon without the name beside it, as the
+icon says NEXUS already, as big as the header's logo (3.4rem) (owner, 27-10-2026). The page's favicon (nexus/docs/images/nexus.png) and logo
+(nexus.webp) were the old icon on a dark tile; they are now the owner's drawing at 256 px, transparent, written by
+tools/make_icons.py like the other copies (ICONS.md says so; the test checks there is no tile).
+
+Changelog: 27-10-2026 23:38:01
+
+What touches every suite is documented on the Nexus page (owner, 27-10-2026; CLAUDE.md has the rule). GitHub
+settings moved from the BC250 wiki to the Nexus page (nexus/docs/github-settings.md), written for every suite's
+release workflows and wikis; the new Development chapter there (nexus/docs/development.md) has the repository's
+layout with both suites, dev/ and the workflows, the layout every suite has, setting up and testing, CI on your own
+machine and working from Linux and Windows, which were on the BC250 wiki's development page. That page keeps the
+suite's own parts (its folder's layout, its wiki's pictures and tours, where things are installed, versions and
+tags, bc250_core) and links to the Nexus page for the rest, as do its machine, portal and media tool pages. The
+Nexus page's nav has Development and GitHub settings; the BC250 wiki's icon catalog drops material-github, which
+only GitHub settings used (tools/make_icons.py, ICONS.md).
+
+Changelog: 27-10-2026 23:12:58
+
+GitHub's Latest release is the Nexus index, not the BC250 suite's portal: a repository has one Latest and Nexus
+holds several suites. tools/nexus_index.py writes its text, a section per suite (the portal's name, the wiki's
+description and address) with its newest portal, the links to its tarball and SHA256SUMS and the install steps of
+its release notes, or, while a suite has no portal release (the Windows Portable Suite), the newest release of each
+of its apps. The new workflow nexus-index.yml writes it to the release tagged nexus, made on its first run and
+marked Latest, after each run of release.yml or release-windows-portable.yml that succeeded, or when started by
+hand. release.yml publishes portal releases with --latest=false too. App release notes point to the newest portal
+in the Nexus index (build_release.py's INDEX_URL, which was LATEST_PORTAL_URL). The BC250 suite's README and wiki
+(Home, Install, Portal) send users to the index, under BC250 Bazzite Suite. What touches every suite is on the
+Nexus page: its Releases chapter has a section The releases on GitHub (the titles, the index, its workflow), and
+the BC250 wiki's release steps (Portal, step 6) and development page (Versions and tags) link to it; its layout
+box lists nexus_index and its GitHub settings page the workflow's permissions. Installed portals do not use
+Latest: they find their releases by their tag prefix, as they always did.
+
+Changelog: 27-10-2026 23:00:33
+
+tools/tests/test_dev_backup.py accepts an empty Brewfile where brew is installed but holds nothing, as on GitHub's
+Ubuntu runner (Homebrew in /home/linuxbrew/.linuxbrew, which the script adds to PATH): brew bundle dump writes an
+empty file there, and CI's pytest (tools) failed on it. Without brew it still checks the file says so.
+
 Changelog: 27-10-2026 22:30:00
 
 SETUP.md at the root says what to take from the development machine before its drive is replaced and what to

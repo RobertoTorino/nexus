@@ -1,7 +1,5 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 
-<span class="page-icon">:material-github:</span>
-
 # GitHub settings
 
 The repository's settings on GitHub, and why. They suit a repository where one person pushes straight to `main`
@@ -13,7 +11,7 @@ and releases come from tags. Use them as a starting point for a new project.
 
 | Feature | Setting | Why |
 |---|---|---|
-| Wikis | Off | The documentation is this site, built from `docs/` and checked by `mkdocs build --strict`. A GitHub wiki is a separate repository outside CI, and search engines skip it on small repositories. |
+| Wikis | Off | The documentation is the wikis, the Nexus page (`nexus/docs/`) and each suite's (its `docs/`), built and checked by `mkdocs build --strict`. A GitHub wiki is a separate repository outside CI, and search engines skip it on small repositories. |
 | Issues | On | Bug reports and feature requests, through the forms in `.github/ISSUE_TEMPLATE/`. |
 | Discussions | Off | Issues cover it. Turn it on for questions and reports that are not bugs. |
 | Projects | Off | Not used. |
@@ -24,7 +22,7 @@ Also under **Settings → General**, in **Pull Requests**: tick **Automatically 
 
 The ⚙ next to **About** on the repository's front page, not in Settings.
 
-- **Website:** tick **Use your GitHub Pages website**, so the address of this site shows on the front page.
+- **Website:** tick **Use your GitHub Pages website**, so the address of the Nexus page shows on the front page.
 - **Topics:** the keywords people search and browse by, such as `bazzite`, `bc250`, `amd`, `linux-gaming`,
   `fedora-atomic`, `universal-blue` and `pyqt6`. Only topics that really describe the project.
 
@@ -51,12 +49,13 @@ Direct pushes keep working. Rules that require pull requests or passing checks w
 
 ## Environments
 
-**Settings → Environments.** The release job of `release.yml` runs in no environment, so a release needs no
-approval on GitHub: a tag on a commit that CI passed is built and published at once. An environment `release` left
+**Settings → Environments.** The release workflows (`release.yml`, and each suite's own `release-<suite>.yml`)
+run in no environment, so a release needs no approval on GitHub: a tag on a commit that its suite's CI passed is
+built and published at once. An environment `release` left
 from before is no longer used and can be deleted.
 
-What guards a release: only someone who may push to the repository can push a tag, and `release.yml` builds only a
-commit that CI passed.
+What guards a release: only someone who may push to the repository can push a tag, and a release workflow builds
+only a commit that its suite's CI passed.
 
 ## Actions
 
@@ -68,13 +67,14 @@ commit that CI passed.
 - **Require actions to be pinned to a full-length commit SHA:** off. The workflows refer to actions by version
   (`actions/checkout@v4`); this setting would fail every run until each `uses:` line names a commit hash.
 - **Workflow permissions:** **Read repository contents**. A workflow that needs more asks for it in its own
-  `permissions:` block (`release.yml` writes releases, `docs.yml` publishes the site).
+  `permissions:` block (`release.yml` and `release-windows-portable.yml` write releases, `nexus-index.yml` the
+  Nexus index release, `docs.yml` publishes the wikis).
 
 ## Security
 
 **Settings → Advanced Security.**
 
-- **Private vulnerability reporting:** on. The [Security policy](../SECURITY.md) and the issue form's
+- **Private vulnerability reporting:** on. The [Security policy](https://robertotorino.github.io/nexus/bc250-bazzite-suite/SECURITY/) and the issue form's
   "Security problem" link send people to it; with it off, that link fails.
 - **Dependabot alerts** and **Dependabot security updates:** on.
 - **Dependabot version updates:** set in `.github/dependabot.yml`. Once a week one pull request updates the
@@ -112,7 +112,7 @@ more than `main`. A rebase force-pushes Dependabot's branch, and **Block force p
 deletions** keeps the branch after the merge too. Set the ruleset's target to **Include default branch** only, as
 in [Rulesets](#rulesets), then comment `@dependabot rebase` again.
 
-`release.yml` runs only for a tag, so CI does not test a change to it. The next release is the first run on the new
+The release workflows run only for a tag, so CI does not test a change to them. The next release is the first run on the new
 action versions; watch it.
 
 From a terminal, signed in with `gh` (see [The GitHub CLI](#the-github-cli)):

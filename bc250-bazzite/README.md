@@ -17,8 +17,8 @@ and removes them: BC-250 Bazzite Test is always installed, every other app is op
 **Install the portal, not the apps one by one.** It installs, updates and removes every app below for you, and
 checks each download against its checksum.
 
-1. Open the **[latest portal release](https://github.com/RobertoTorino/nexus/releases/latest)** and
-   download `portal-v<version>.tar.gz` and `SHA256SUMS`.
+1. Open the **[Nexus index](https://github.com/RobertoTorino/nexus/releases/latest)**, GitHub's latest release,
+   and under **BC250 Bazzite Suite** download `portal-v<version>.tar.gz` and `SHA256SUMS`.
 2. In a terminal, in the folder you downloaded them to:
 
    ```bash

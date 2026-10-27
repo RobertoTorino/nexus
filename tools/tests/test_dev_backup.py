@@ -99,8 +99,8 @@ def test_lists_say_which_tool_is_missing(tmp_path: Path):
         ssh_files = tar.extractfile("lists/ssh-files.txt").read().decode()
     if shutil.which("brew", path="/usr/bin:/bin:/home/linuxbrew/.linuxbrew/bin") is None:  # the script adds brew's folder
         assert "brew is not installed" in brewfile
-    else:
-        assert brewfile.strip(), "brew bundle dump wrote the Brewfile"
+    else:                       # brew bundle dump wrote it: empty where brew installed nothing (GitHub's runner)
+        assert "brew is not installed" not in brewfile
     assert "ps2-bios" in ssh_files, "the files not packed are listed so the owner can copy them by hand"
 
 

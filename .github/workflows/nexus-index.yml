@@ -1,0 +1,46 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+name: Nexus index
+
+# GitHub's "Latest" release is the Nexus index, the release tagged nexus: one section per suite with its newest portal
+# (tools/nexus_index.py). A repository has one Latest and Nexus holds several suites, so no suite's portal is it:
+# release.yml and release-windows-portable.yml publish every release with --latest=false. After each run of either
+# that succeeded, the index is written again; the first run makes the release (its tag on the commit it runs on, and
+# never moved after). Installed portals do not use Latest: they find their releases by their tag prefix.
+# Only the nexus release changes.
+
+on:
+  workflow_run:
+    workflows: ["Release", "Release Windows Portable"]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: nexus-index           # a release of many tags finishes many runs: one writes at a time, the last one wins
+  cancel-in-progress: false
+
+jobs:
+  index:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      TAG: nexus
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: The index
+        run: python3 tools/nexus_index.py > "$RUNNER_TEMP/index.md"
+
+      - name: Publish it as the Latest release
+        run: |
+          notes="$RUNNER_TEMP/index.md"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release edit "$TAG" --title Nexus --notes-file "$notes" --latest
+          else
+            gh release create "$TAG" --target "$GITHUB_SHA" --title Nexus --notes-file "$notes" --latest
+          fi

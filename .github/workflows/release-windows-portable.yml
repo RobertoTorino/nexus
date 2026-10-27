@@ -6,8 +6,9 @@ name: Release Windows Portable
 # change here never touches the other suite's releases (owner, 27-10-2026).
 #
 # The assets are <tag>.zip (the app's one-folder PyInstaller build with its install.ps1), SHA256SUMS and the notes,
-# built on Windows by windows-portable/tools/build_release.py. Never GitHub's "Latest": that is the BC250 suite's
-# portal, which its users install from /releases/latest. The portal has no release format yet.
+# built on Windows by windows-portable/tools/build_release.py. Never GitHub's "Latest": that is the Nexus index
+# (nexus-index.yml, written again once this run succeeded), which points at every suite's newest portal and, while
+# this suite has none, at its apps' newest releases. The portal has no release format yet.
 #
 # Only a commit that this suite's CI passed becomes a release: the first job waits for ci-windows-portable.yml on the
 # tagged commit, up to 75 minutes. tools/tag-release.sh asks the same before it tags.

@@ -61,4 +61,7 @@ validation:
 nav:
   - Home: index.md
   - Releases: releases.md
+  - Development: development.md
+  - The development machine: machine.md
+  - GitHub settings: github-settings.md
   - Design: design.md

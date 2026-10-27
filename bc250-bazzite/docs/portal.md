@@ -138,8 +138,8 @@ their own `install.sh`.
 
 ## Install
 
-From the [latest portal release](https://github.com/RobertoTorino/nexus/releases/latest), download
-`portal-v<version>.tar.gz` and `SHA256SUMS`, then:
+From the [Nexus index](https://github.com/RobertoTorino/nexus/releases/latest), under BC250 Bazzite Suite,
+download `portal-v<version>.tar.gz` and `SHA256SUMS`, then:
 
 ```shell
 sha256sum --check --ignore-missing SHA256SUMS
@@ -231,7 +231,7 @@ portal's `--purge` does so for the portal and Bazzite Test.
 
 Run the portal straight from the checkout. Apps then install from the local source, staged exactly as the
 release workflow stages them, so everything can be tried before anything is released. It needs PyQt6, so use the
-development venv from [Development](development/index.md#development) (Bazzite's own `python3` has no PyQt6):
+development venv from [Development](https://robertotorino.github.io/nexus/development/#set-up-and-test) on the Nexus page (Bazzite's own `python3` has no PyQt6):
 
 ```shell
 cd portal
@@ -268,6 +268,8 @@ Releasing an app and pinning it in the portal:
 5. Once the pinned app releases are tested together on a BC-250 (see
    [Testing a portal release before its tag](#testing-a-portal-release-before-its-tag)), commit steps 3 and 4,
    push, and tag with `tools/tag-release.sh portal-v<x.y.z>`. That release bundles the pinned Bazzite Test release (`check-v…`).
+6. Once `release.yml` has published it, the Nexus index (GitHub's **Latest** release) shows it under BC250 Bazzite
+   Suite, where users download the portal: [The releases on GitHub](https://robertotorino.github.io/nexus/releases/#the-releases-on-github) on the Nexus page.
 
 ### The release front end
 
