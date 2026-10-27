@@ -1,3 +1,9 @@
+Changelog: 27-10-2026 20:12:21
+
+core's tests that run a command in bash (tests/test_platform.py) skip when bash does not run one, not only when
+there is none: on GitHub's Windows runner the bash Windows starts is WSL's launcher, without a Linux to run it in,
+and the first run of ci-windows-portable.yml failed on them. With Git Bash, as ./test.sh has it, they run.
+
 Changelog: 27-10-2026 18:59:46
 
 No Development tab in any portal (owner, 27-10-2026): a portal lists only released apps. The BC250 suite's

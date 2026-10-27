@@ -197,7 +197,8 @@ The owner does every step of a release; Claude does none of them, and doesn't of
 - the release entries in the CHANGELOGs.
 
 `tools/release.sh` starts the owner's front end for the file edits of a release, Nexus Releases (`dev/releases/`,
-a Nexus app with a suite chooser: `main_window.py` on `plan.py`; a suite's board checks are its own
+a Nexus app with its suites' portals in its first column, the one to release ticked: `main_window.py` on
+`plan.py`; a suite's board checks are its own
 `tools/check-release.sh`, the BC250 suite's at `bc250-bazzite/tools/check-release.sh`). Claude may change it and
 its tests, but never uses it on the repository.
 

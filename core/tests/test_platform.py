@@ -12,6 +12,21 @@ import pytest
 from bc250_core import platform
 
 
+def _working_bash() -> bool:
+    """A bash that runs a command: on GitHub's Windows runner the first bash is WSL's launcher, without a Linux to
+    run it in, so a test that runs bash skips there; with Git Bash first, as ./test.sh has it, it runs."""
+    if shutil.which("bash") is None:
+        return False
+    try:
+        result = subprocess.run(["bash", "-c", "echo ok"], capture_output=True, text=True, timeout=30)
+    except (OSError, subprocess.TimeoutExpired):
+        return False
+    return result.returncode == 0 and result.stdout.strip() == "ok"
+
+
+NEEDS_BASH = pytest.mark.skipif(not _working_bash(), reason="needs a bash that runs (not WSL's launcher alone)")
+
+
 def test_terminal_command_plain_keeps_window_open():
     assert platform.terminal_command("bash x.sh") == "bash x.sh; echo; read -rp 'Press Enter to close... ' _"
     assert platform.terminal_command("bash x.sh", keep_open=False) == "bash x.sh"
@@ -32,7 +47,7 @@ def test_terminal_command_on_error_pauses_only_after_a_failure():
         "( bash x.sh ); s=$?; [ \"$s\" = 0 ] || { " + pause + "; }"
 
 
-@pytest.mark.skipif(shutil.which("bash") is None, reason="needs bash")
+@NEEDS_BASH
 @pytest.mark.parametrize("command, status, paused", [("true", "0", False), ("true && false", "1", True),
                                                       ("exit 3", "3", True)])
 def test_on_error_runs_the_pause_only_on_a_failure(tmp_path, command, status, paused):
@@ -45,7 +60,7 @@ def test_on_error_runs_the_pause_only_on_a_failure(tmp_path, command, status, pa
     assert (result.stdout == "\n") is paused
 
 
-@pytest.mark.skipif(shutil.which("bash") is None, reason="needs bash")
+@NEEDS_BASH
 @pytest.mark.parametrize("command, status", [("true", "0"), ("true && false", "1"), ("exit 3", "3")])
 def test_exit_file_gets_the_status(tmp_path, command, status):
     exit_file = tmp_path / "status"

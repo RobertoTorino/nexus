@@ -1,3 +1,25 @@
+Changelog: 27-10-2026 20:04:40
+
+Fixed. The window answers faster, on Windows most of all (owner, 27-10-2026: it was slow there, where starting a
+git process takes some 20 ms): reading the checkout started about 230 git processes, one after the other, on the
+window's own thread; now about 75, eight at a time. The tags and the new files are read once instead of once per
+app, the check for tags made before their bump reads every VERSION with one git cat-file, and so does step 1 for
+the CHANGELOGs at the last tags. A Refresh on Windows takes under a second instead of about four; the answers are
+the same.
+
+Fixed. On Windows, step 1's suggested versions counted CHANGELOG entries as new that were not: git's output was read
+in Windows' own encoding, which garbled every é and × of a CHANGELOG read at a tag, so none of its entries matched
+the current file. It is read as UTF-8 now, as on Linux.
+
+Changelog: 27-10-2026 19:55:31
+
+Added. The suites are the window's first column (owner, 27-10-2026: in place of the chooser in the header), under
+Portals: each suite by its portal's name and icon, with the tag of its portal's current version
+(bc250-bazzite's portal-v11.0.0, windows-portable's wp-portal-v0.1.0), and a tick on the one this window releases,
+always exactly one. A click on a row ticks that suite; the steps, the pins and the board tests follow it, and the
+window opens on the one ticked last. After Bump portal its row shows the new tag. Hidden while the checkout holds
+one suite.
+
 Changelog: 27-10-2026 18:14:02
 
 Added. Nexus Releases on Windows (owner, 27-10-2026: on every device): run.ps1 starts it from PowerShell with the

@@ -6,8 +6,9 @@
 the file edits of a release for you, the versions, the CHANGELOG entries, the pins and the portal bump, and runs a
 suite's board checks. It commits, tags and pushes only when you press its git buttons: after each step it shows the
 git commands to run. It edits the checkout it lives in, so it is not in a portal's releases and has none of its own.
-When the checkout holds several suites, a chooser in the header says which one the steps, the pins and the board
-tests work on; the git buttons, the wikis and GitHub are the repository's whatever the suite. Each suite's tags start
+When the checkout holds several suites, the first column lists them, each portal with its icon and the tag of its
+version, and the ticked one is the suite the steps, the pins and the board tests work on: click a row to release
+that suite instead (the window opens on the one ticked last); the git buttons, the wikis and GitHub are the repository's whatever the suite. Each suite's tags start
 with its prefix: the Windows Portable Suite's are `wp-test-v0.1.0` and `wp-portal-v0.1.0`.
 
 What a release of the BC250 Bazzite Suite involves, step by step, is in its wiki:

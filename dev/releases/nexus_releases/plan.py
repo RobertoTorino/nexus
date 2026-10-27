@@ -35,6 +35,7 @@ import subprocess
 import sys
 import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from pathlib import Path
 from urllib.parse import urlparse
@@ -51,6 +52,7 @@ RECORD_SCRIPT = "tools/record-tour.sh"
 MANIFEST_CHECK = "tools/check_manifest.py"
 CHECKOUT_ONLY = ".checkout-only"        # an app folder with this marker runs from the checkout and is never released
 _VERSION = re.compile(r"^\d+\.\d+\.\d+$")
+GIT_WORKERS = 8                         # git processes load_units() runs at once
 
 
 def _load(name: str, folder: Path = TOOLS):
@@ -180,7 +182,10 @@ def check_new_version(current: str, new: str, released: bool) -> str:
 # --- git (read-only) -------------------------------------------------------------------------------------------
 
 def git(root: Path, *args: str) -> str | None:
-    result = subprocess.run(["git", *args], cwd=root, capture_output=True, text=True)
+    # UTF-8, as git writes it: Windows' own encoding (cp1252) garbled every é and × of a CHANGELOG read at a tag, so
+    # its entries no longer matched and step 1 counted them all as new.
+    result = subprocess.run(["git", *args], cwd=root, capture_output=True, text=True, encoding="utf-8",
+                            errors="replace")
     return result.stdout if result.returncode == 0 else None
 
 
@@ -194,11 +199,20 @@ def checkout_stamp(root: Path) -> str:
     return f"{out[0]} · {when:%d-%m-%Y %H:%M}"
 
 
-def tags_of(root: Path, key: str, prefix: str = "") -> list[str]:
-    """The release tags of one app (or the portal), oldest first; *prefix*: the suite's (tag_prefix())."""
+def all_tags(root: Path) -> list[str]:
+    """Every tag of the checkout, read once: load_units() picks each unit's from it, as one git process per unit
+    made the window slow on Windows (owner, 27-10-2026), where starting a process takes some 20 ms."""
+    return (git(root, "tag", "--list") or "").split()
+
+
+def tags_of(root: Path, key: str, prefix: str = "", tags: list[str] | None = None) -> list[str]:
+    """The release tags of one app (or the portal), oldest first; *prefix*: the suite's (tag_prefix()); *tags*:
+    all_tags() when already read."""
     found = []
     head = f"{prefix}{key}-v"
-    for tag in (git(root, "tag", "--list", f"{head}*") or "").split():
+    listed = (git(root, "tag", "--list", f"{head}*") or "").split() if tags is None else \
+        [tag for tag in tags if tag.startswith(head)]
+    for tag in listed:
         version = tag[len(head):]
         if _VERSION.match(version):
             found.append((version_tuple(version), tag))
@@ -284,22 +298,54 @@ def is_shipped(rel: str) -> bool:
         and not parts[-1].endswith(".pyc") and not any(p.startswith(".venv") for p in parts)
 
 
-def changed_since(root: Path, tag: str, paths: list[str]) -> list[str]:
+def untracked(root: Path) -> list[str]:
+    """The checkout's new files that git does not know yet (and does not ignore), read once for every unit."""
+    return (git(root, "ls-files", "--others", "--exclude-standard") or "").splitlines()
+
+
+def changed_since(root: Path, tag: str, paths: list[str], new_files: list[str] | None = None) -> list[str]:
     """Shipped files under *paths* that differ between *tag* and the working tree: committed, not yet committed
-    and new (untracked) files alike."""
+    and new (untracked) files alike; *new_files*: untracked() when already read."""
     diff = git(root, "diff", "--name-only", tag, "--", *paths) or ""
-    new = git(root, "ls-files", "--others", "--exclude-standard", "--", *paths) or ""
-    return sorted({f for f in (diff + new).splitlines() if f and is_shipped(f)})
+    if new_files is None:
+        new = (git(root, "ls-files", "--others", "--exclude-standard", "--", *paths) or "").splitlines()
+    else:
+        new = [f for f in new_files if any(f == p or f.startswith(p.rstrip("/") + "/") for p in paths)]
+    return sorted({f for f in [*diff.splitlines(), *new] if f and is_shipped(f)})
+
+
+def read_blobs(root: Path, specs: list[str]) -> dict[str, str | None]:
+    """The text of each "<rev>:<path>" in *specs*, read by one git cat-file --batch (None for one that does not
+    exist), instead of a git show per file."""
+    if not specs:
+        return {}
+    result = subprocess.run(["git", "cat-file", "--batch"], cwd=root, input="".join(f"{s}\n" for s in specs).encode(),
+                            capture_output=True)
+    out, at, found = result.stdout, 0, {}
+    for spec in specs:
+        end = out.find(b"\n", at)
+        if end < 0:
+            found[spec] = None
+            continue
+        header = out[at:end].decode(errors="replace").split()
+        at = end + 1
+        if len(header) == 3 and header[1] == "blob":
+            size = int(header[2])
+            found[spec] = out[at:at + size].decode("utf-8", errors="replace")
+            at += size + 1                                  # the blob and its closing newline
+        else:
+            found[spec] = None                              # "<spec> missing", or not a blob
+    return found
 
 
 def bad_tags(root: Path, units: list[Unit]) -> list[str]:
     """Tags that point at a commit whose VERSION is not the tag's version: tagged before the version bump was
     committed. release.yml refuses to build those; delete the tag and tag the right commit again."""
     out = []
-    for unit in units:
-        if unit.kind == "core" or not unit.last_tag:
-            continue
-        at_tag = (git(root, "show", f"{unit.last_tag}:{unit.path}/VERSION") or "").strip()
+    tagged = [unit for unit in units if unit.kind != "core" and unit.last_tag]
+    versions = read_blobs(root, [f"{unit.last_tag}:{unit.path}/VERSION" for unit in tagged])
+    for unit in tagged:
+        at_tag = (versions.get(f"{unit.last_tag}:{unit.path}/VERSION") or "").strip()
         want = unit.last_tag[len(unit.tag_head):]
         if at_tag and at_tag != want:
             out.append(f"{unit.last_tag} points at a commit where {unit.path}/VERSION is {at_tag}")
@@ -312,6 +358,7 @@ def load_units(root: Path = CHECKOUT, suite: str | None = None) -> list[Unit]:
     pins = {}
     tools = manifest_tools(root, suite)
     prefix = tag_prefix(root, suite)
+    every_tag, new_files = all_tags(root), untracked(root)        # once, not per unit: see all_tags()
     try:
         for entry in tools.manifest.load(manifest_path(root, suite)):
             pins[entry.key] = entry
@@ -323,33 +370,42 @@ def load_units(root: Path = CHECKOUT, suite: str | None = None) -> list[Unit]:
                 if (p / "VERSION").is_file() and not (p / CHECKOUT_ONLY).is_file()]
     for key, path in folders:
         version = (root / path / "VERSION").read_text(encoding="utf-8").strip()
-        tags = tags_of(root, key, prefix) if key != "core" else []
+        tags = tags_of(root, key, prefix, every_tag) if key != "core" else []
         last = tags[-1] if tags else None
-        unit = Unit(key, path, version, last, commits_since(root, last, path),
+        unit = Unit(key, path, version, last, None,
                     standalone=(root / path / ".standalone").is_file(), prefix="" if key == "core" else prefix)
-        if last:
-            unit.changed = changed_since(root, last, shipped_sources(root, key, path, suite))
         if key in pins:
             unit.pinned_tag, unit.pinned_sha = pins[key].tag, pins[key].sha256
         units.append(unit)
+
+    # Each unit's two git questions (commits since its tag, files changed since it) depend on its own tag. They run
+    # side by side: a git process is mostly waiting to start, some 20 ms on Windows (owner, 27-10-2026: the window
+    # was slow there), and the answers are the same as one after the other.
+    def ask(unit: Unit) -> None:
+        unit.commits = commits_since(root, unit.last_tag, unit.path)
+        if unit.last_tag:
+            unit.changed = changed_since(root, unit.last_tag, shipped_sources(root, unit.key, unit.path, suite),
+                                         new_files)
+    with ThreadPoolExecutor(max_workers=GIT_WORKERS) as pool:
+        list(pool.map(ask, units))
     # Core is never tagged: it ships inside each app that imports it, so its changes are the core files those
     # apps' releases would carry.
     core = units[0]
     carriers = [u for u in units if u.kind != "core" and any(f.startswith("core/") for f in u.changed or [])]
     core.in_apps = [u.key for u in carriers]
     core.changed = sorted({f for u in carriers for f in u.changed or [] if f.startswith("core/")})
-    core.current = core_is_current(root)
+    core.current = core_is_current(root, new_files)
     return units
 
 
-def core_is_current(root: Path) -> bool:
+def core_is_current(root: Path, new_files: list[str] | None = None) -> bool:
     """Whether core's VERSION already covers what it ships: nothing under core/bc250_core changed since the commit
     that last changed core/VERSION, or that VERSION is changed and not committed yet (a bump in progress). Then an
-    app release carries core as it is, and core needs no new version."""
+    app release carries core as it is, and core needs no new version. *new_files*: untracked(), read already."""
     if git(root, "diff", "--quiet", "HEAD", "--", "core/VERSION") is None:
         return True
     bump = (git(root, "log", "-1", "--format=%H", "--", "core/VERSION") or "").strip()
-    return bool(bump) and not changed_since(root, bump, ["core/bc250_core"])
+    return bool(bump) and not changed_since(root, bump, ["core/bc250_core"], new_files)
 
 
 # --- Edits -----------------------------------------------------------------------------------------------------
@@ -426,9 +482,23 @@ def change_word(body: str) -> str:
     return next((word for word in CHANGE_WORDS if body.startswith(word + " ") or body == word), "")
 
 
-def new_entries(root: Path, unit: Unit) -> list[str]:
+def changelog_specs(units: list[Unit]) -> list[str]:
+    """The CHANGELOGs new_entries() reads at the units' last tags, as "<tag>:<path>/CHANGELOG": read them all at once
+    with read_blobs() and hand that to version_choices() (one git process for the whole table, not one per row)."""
+    specs = []
+    for unit in units:
+        if unit.kind == "core" or not unit.last_tag:
+            continue
+        specs.append(f"{unit.last_tag}:{unit.path}/CHANGELOG")
+        if any(f.startswith("core/") for f in unit.changed or []):
+            specs.append(f"{unit.last_tag}:core/CHANGELOG")
+    return specs
+
+
+def new_entries(root: Path, unit: Unit, blobs: dict[str, str | None] | None = None) -> list[str]:
     """The change entries (bodies) since the unit's last tag: its own, and core's when the release carries a core
-    change. Core itself, never tagged: its entries since its last "Version x.y.z." entry."""
+    change. Core itself, never tagged: its entries since its last "Version x.y.z." entry. *blobs*: the CHANGELOGs at
+    the tags, read already (changelog_specs())."""
     def since(path: str, ref: str | None) -> list[str]:
         file = root / path / "CHANGELOG"
         current = changelog_entries(file.read_text(encoding="utf-8")) if file.is_file() else []
@@ -436,7 +506,9 @@ def new_entries(root: Path, unit: Unit) -> list[str]:
             cut = next((i for i, e in enumerate(current) if entry_body(e).startswith("Version ")), len(current))
             current = current[:cut]
         else:
-            old = set(changelog_entries(git(root, "show", f"{ref}:{path}/CHANGELOG") or ""))
+            spec = f"{ref}:{path}/CHANGELOG"
+            text = blobs[spec] if blobs is not None and spec in blobs else git(root, "show", spec)
+            old = set(changelog_entries(text or ""))
             current = [e for e in current if e not in old]
         return [b for b in map(entry_body, current) if b and not b.startswith(TOOL_ENTRIES)]
 
@@ -470,7 +542,7 @@ def _tagged_version(unit: Unit) -> str:
     return unit.last_tag[len(unit.tag_head):] if unit.last_tag else unit.version
 
 
-def version_choices(root: Path, unit: Unit) -> tuple[list[str], str]:
+def version_choices(root: Path, unit: Unit, blobs: dict[str, str | None] | None = None) -> tuple[list[str], str]:
     """The versions step 1 offers for the unit, the one semantic versioning gives first, and why. Breaking. ->
     major, Added. -> minor, otherwise patch, counted from the last tag. A VERSION bumped further already, never
     tagged, comes first; a first release is offered as it is."""
@@ -479,7 +551,7 @@ def version_choices(root: Path, unit: Unit) -> tuple[list[str], str]:
         return [unit.version] + nexts, f"{unit.version} already holds core's changes"
     if unit.kind != "core" and unit.last_tag is None:
         return [unit.version] + nexts, "the first release"
-    level, why = suggested_level(new_entries(root, unit))
+    level, why = suggested_level(new_entries(root, unit, blobs))
     suggested = next_versions(_tagged_version(unit))[level]
     reason = f"{level}: {why}" + (f" since {unit.last_tag}" if unit.last_tag else "")
     released = unit.released or unit.kind == "core"
@@ -785,6 +857,29 @@ def wiki_icon(folder: Path) -> Path | None:
         if icon.is_file():
             return icon
     return None
+
+
+def suite_name(root: Path, suite: str | None = None) -> str:
+    """The suite's name, as its portal calls itself (APP_NAME in portal/<package>/__init__.py: BC250 Bazzite Suite,
+    Windows Portable Suite); its folder's name without one."""
+    folder = suite_dir(root, suite)
+    for init in sorted((folder / "portal").glob("*/__init__.py")):
+        found = _CONSTANT.search(init.read_text(encoding="utf-8"))
+        while found and found.group(1) != "APP_NAME":
+            found = _CONSTANT.search(init.read_text(encoding="utf-8"), found.end())
+        if found:
+            return found.group(2)
+    return folder.name
+
+
+def suite_icon(root: Path, suite: str | None = None) -> Path | None:
+    """The suite's icon: its portal's (wiki_icon()), else its own drawing (windows-portable/icons/
+    windows-portable-256.png) for a suite whose portal has no images yet; None without either."""
+    folder = suite_dir(root, suite)
+    icon = wiki_icon(folder)
+    if icon is not None:
+        return icon
+    return next((p for size in (256, 128) if (p := folder / "icons" / f"{folder.name}-{size}.png").is_file()), None)
 
 
 def wiki_configs(root: Path = CHECKOUT) -> list[Path]:

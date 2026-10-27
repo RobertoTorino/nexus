@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The window: enter the new versions, and it edits the files of a release (plan.py) of the suite chosen in the
-header (every suite in the checkout, tools/suites.py; the chooser is hidden while there is one). The steps, the pins
-and the board tests are the chosen suite's; the git buttons, the wikis and GitHub are the repository's.
+"""The window: enter the new versions, and it edits the files of a release (plan.py) of the suite ticked in the
+first column (every suite in the checkout, tools/suites.py, with its portal's tag; hidden while there is one). The
+steps, the pins and the board tests are the ticked suite's; the git buttons, the wikis and GitHub are the repository's.
 
 Step 1, Release apps: tick the apps to release, enter their versions and notes, Apply. It writes VERSION, the copies
 check_versions.py checks and a "Release x.y.z." CHANGELOG entry, runs check_versions.py and check_manifest.py (an
@@ -143,6 +143,9 @@ class AppsPage(QWidget):
         shown = [u for u in units if u.kind != "portal"]
         self.table.setRowCount(len(shown))
         self.rows = []
+        # The CHANGELOGs at the last tags, for the suggested versions: one git process for the table (owner,
+        # 27-10-2026: one per row made the window slow on Windows).
+        blobs = rp.read_blobs(self.release_window.root, rp.changelog_specs(shown))
         for i, unit in enumerate(shown):
             tick = QCheckBox()
             if unit.kind == "core" and unit.current:        # its version already covers it: nothing to write
@@ -165,7 +168,7 @@ class AppsPage(QWidget):
                 self.table.setItem(i, col, item)
             combo = QComboBox()
             combo.setEditable(True)
-            choices, why = rp.version_choices(self.release_window.root, unit)
+            choices, why = rp.version_choices(self.release_window.root, unit, blobs)
             combo.addItems(choices)
             combo.setToolTip(f"{choices[0]}: {why}.\n\n{SEMVER_TIP}")
             notes = QLineEdit()
@@ -1213,6 +1216,71 @@ class ClaudeUsageIndicator(Pill):
         self.checker.stop(2000)
 
 
+class SuiteList(QListWidget):
+    """The suites of the checkout as the window's first column, left of the steps (owner, 27-10-2026: in place of a
+    chooser in the header): each portal with its icon, its name and the tag of its current version. The checkmark is
+    the suite this window releases, always exactly one; a click on a row, or on its box, moves it there and calls
+    *chosen* with the suite's folder. Hidden while the checkout holds one suite."""
+
+    WIDTH = 230
+
+    def __init__(self, root: Path, suites: list[str], current: str | None, chosen):
+        super().__init__()
+        self.root, self.chosen = root, chosen
+        self.setFixedWidth(self.WIDTH)
+        self.setIconSize(QSize(32, 32))
+        self.setSpacing(2)
+        self.setToolTip("The suite this window releases: its apps, its portal and its pins. The git buttons, the "
+                        "wikis and GitHub are the repository's, whatever the suite.")
+        for name in suites:
+            icon = rp.suite_icon(root, name)
+            item = QListWidgetItem(QIcon(str(icon)) if icon else QIcon(), "")
+            item.setData(Qt.ItemDataRole.UserRole, name)
+            item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsUserCheckable)
+            self.addItem(item)
+        self.show_texts()
+        self.check(current)
+        self.itemClicked.connect(lambda item: self._pick(item.data(Qt.ItemDataRole.UserRole)))
+        self.itemChanged.connect(self._box)
+        self.setVisible(len(suites) > 1)
+
+    def show_texts(self) -> None:
+        """Each row's name and its portal's tag, read again (after Bump portal the version moved)."""
+        self.blockSignals(True)
+        for row in range(self.count()):
+            item = self.item(row)
+            name = item.data(Qt.ItemDataRole.UserRole)
+            version_file = rp.suite_dir(self.root, name) / "portal" / "VERSION"
+            version = version_file.read_text(encoding="utf-8").strip() if version_file.is_file() else "?"
+            item.setText(f"{rp.suite_name(self.root, name)}\n{rp.tag_prefix(self.root, name)}portal-v{version}")
+            item.setToolTip(f"{name}/: its apps, its portal and its pins")
+        self.blockSignals(False)
+
+    def check(self, name: str | None) -> None:
+        self.blockSignals(True)
+        for row in range(self.count()):
+            item = self.item(row)
+            mine = item.data(Qt.ItemDataRole.UserRole) == name
+            item.setCheckState(Qt.CheckState.Checked if mine else Qt.CheckState.Unchecked)
+        self.blockSignals(False)
+
+    def current(self) -> str | None:
+        return next((self.item(row).data(Qt.ItemDataRole.UserRole) for row in range(self.count())
+                     if self.item(row).checkState() == Qt.CheckState.Checked), None)
+
+    def _box(self, item: QListWidgetItem) -> None:
+        """The box of a row clicked: checking it picks that suite; unchecking the checked one keeps it checked."""
+        name = item.data(Qt.ItemDataRole.UserRole)
+        if item.checkState() == Qt.CheckState.Checked:
+            self._pick(name)
+        else:
+            self.check(name)
+
+    def _pick(self, name: str) -> None:
+        self.check(name)
+        self.chosen(name)
+
+
 class ReleaseWindow(QMainWindow):
     def __init__(self, root: Path = CHECKOUT, sha256_source=rp.fetch_sha256, launch=launch_in_terminal,
                  start=start_app, runs_source=rp.fetch_runs, notify=desktop_notify, settings=None,
@@ -1239,16 +1307,8 @@ class ReleaseWindow(QMainWindow):
         self.setStyleSheet(SELECTION_STYLESHEET)
         stamp = rp.checkout_stamp(root)                 # never released: the commit says which code runs
         header = AppHeader(LOGO_PATH, APP_NAME, f"{__version__} · {stamp}" if stamp else __version__)
-        # The suite chooser, first in the header's second row; hidden while the checkout holds one suite.
-        self.suite_box = QComboBox()
-        self.suite_box.addItems(self.suites)
-        if self.suite:
-            self.suite_box.setCurrentText(self.suite)
-        self.suite_box.setToolTip("The suite this window releases: its apps, its portal and its pins. The git "
-                                  "buttons, the wikis and GitHub are the repository's, whatever the suite.")
-        self.suite_box.currentTextChanged.connect(self.choose_suite)
-        self.suite_box.setVisible(len(self.suites) > 1)
-        header.add_second(self.suite_box)
+        # The suites, the first column left of the steps; hidden while the checkout holds one suite.
+        self.suite_list = SuiteList(root, self.suites, self.suite, self.choose_suite)
         # The header's pills, all as wide as the widest (owner, 20-10-2026).
         self.refresh_pill = Pill("Refresh", "Click to refresh", "Read the checkout and its tags again, for changes "
                                  "made in a terminal; what you entered stays")
@@ -1299,7 +1359,18 @@ class ReleaseWindow(QMainWindow):
         self.bad_tags.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         self.bad_tags.setStyleSheet("color:#c62828; font-weight:600;")
         lay.addWidget(self.bad_tags)
-        lay.addWidget(self.tabs, 1)
+        columns = QHBoxLayout()
+        self.suite_column = QWidget()                   # "Portals" over the list; hidden with it
+        column = QVBoxLayout(self.suite_column)
+        column.setContentsMargins(0, 0, 0, 0)
+        title = QLabel("Portals")
+        title.setStyleSheet("font-weight:600; padding:6px 2px 2px 2px;")
+        column.addWidget(title)
+        column.addWidget(self.suite_list, 1)
+        self.suite_column.setVisible(not self.suite_list.isHidden())
+        columns.addWidget(self.suite_column)
+        columns.addWidget(self.tabs, 1)
+        lay.addLayout(columns, 1)
         lay.addLayout(self._git_row())
         self.footer = QLabel()
         self.footer.setStyleSheet("color:palette(placeholder-text);")
@@ -1311,7 +1382,7 @@ class ReleaseWindow(QMainWindow):
         self.claude.check()
 
     def choose_suite(self, name: str) -> None:
-        """Another suite from the header's chooser: the steps, the pins and the board tests show it from now on,
+        """Another suite ticked in the first column: the steps, the pins and the board tests show it from now on,
         and the next start opens with it."""
         if not name or name == self.suite:
             return
@@ -1479,6 +1550,7 @@ class ReleaseWindow(QMainWindow):
 
     def reload(self) -> None:
         units = self.units = rp.load_units(self.root, self.suite)
+        self.suite_list.show_texts()                    # a portal bumped meanwhile shows its new tag
         self.apps_page.fill(units)
         self.portal_page.fill(units)
         self.withdraw_page.fill(units)

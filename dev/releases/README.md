@@ -3,8 +3,8 @@
 # Nexus Releases
 
 The release front end of Nexus: it writes the versions, CHANGELOG entries, pins and portal bump of a release of a
-suite in the repository (a suite chooser when the checkout holds several), and runs the board checks of a portal
-release. It edits the checkout it lives in, so it is not part of a portal's releases and has none of its own.
+suite in the repository (the suites in the first column, the one to release ticked), and runs the board checks of a
+portal release. It edits the checkout it lives in, so it is not part of a portal's releases and has none of its own.
 Committing, tagging and pushing stay with you.
 
 ## Start it

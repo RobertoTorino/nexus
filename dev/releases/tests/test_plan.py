@@ -1497,36 +1497,111 @@ def test_the_suites_of_a_checkout(repo, tmp_path):
     assert rp.wiki_icon(nexus / "nexus") == nexus / "nexus/images/nexus-256.png"
 
 
-def test_window_suite_chooser(repo, tmp_path):
-    """The header's chooser lists the suites of the checkout and is hidden while there is one; the steps follow the
-    chosen suite, the git buttons run every suite's manifest check, and the choice is remembered."""
+def test_window_suite_column(repo, tmp_path):
+    """The first column lists the suites of the checkout (owner, 27-10-2026: in place of the header's chooser), each
+    by its portal's name with the tag of its version, and is hidden while there is one. Exactly one is ticked: the
+    steps follow it, a click on another row moves the tick there, and the choice is remembered. The git buttons run
+    every suite's manifest check."""
     pytest.importorskip("PyQt6.QtWidgets")
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
-    from PyQt6.QtCore import QSettings
+    from PyQt6.QtCore import QSettings, Qt
     from PyQt6.QtWidgets import QApplication
     app = QApplication.instance() or QApplication([])          # noqa: F841 (kept alive for the window)
     from nexus_releases import main_window
     one = main_window.ReleaseWindow(repo, status_source=None, runs_source=None, claude_source=None)
-    assert one.suite is None and one.suite_box.isHidden() and "· suite" not in one.footer.text()
+    assert one.suite is None and one.suite_list.isHidden() and "· suite" not in one.footer.text()
     one.close()
     nexus = nexus_layout(repo, tmp_path, "zz-suite")
+    write(nexus / "zz-suite/portal/bc250_portal/__init__.py", 'APP_NAME = "Zed Suite"\n__version__ = "0.1.0"\n')
+    write(nexus / "zz-suite/TAG_PREFIX", "zz-\n")
     settings = QSettings(str(tmp_path / "settings.ini"), QSettings.Format.IniFormat)
     w = main_window.ReleaseWindow(nexus, status_source=None, runs_source=None, claude_source=None, settings=settings)
-    assert w.suite == SUITE_DIR and not w.suite_box.isHidden()
-    assert [w.suite_box.itemText(i) for i in range(w.suite_box.count())] == [SUITE_DIR, "zz-suite"]
+    column = w.suite_list
+    assert w.suite == SUITE_DIR and not column.isHidden() and column.current() == SUITE_DIR
+    rows = [column.item(i) for i in range(column.count())]
+    assert [r.text() for r in rows] == [f"{SUITE_DIR}\nportal-v0.1.0", "Zed Suite\nzz-portal-v0.1.0"]
+    assert [r.checkState() for r in rows] == [Qt.CheckState.Checked, Qt.CheckState.Unchecked]
     assert w.units[1].path == f"{SUITE_DIR}/portal" and f"suite {SUITE_DIR}" in w.footer.text()
     assert f"{SUITE_DIR}/tools/check_manifest.py" in w.commit_button.toolTip() \
         and "zz-suite/tools/check_manifest.py" in w.commit_button.toolTip()      # every suite's check
-    w.suite_box.setCurrentText("zz-suite")
-    assert w.suite == "zz-suite" and w.units[1].path == "zz-suite/portal" and "suite zz-suite" in w.footer.text()
+    column.itemClicked.emit(rows[1])                              # a click on the row
+    assert w.suite == "zz-suite" and column.current() == "zz-suite" and rows[0].checkState() == Qt.CheckState.Unchecked
+    assert w.units[1].path == "zz-suite/portal" and "suite zz-suite" in w.footer.text()
     assert w.portal_page.portal_unit.path == "zz-suite/portal"
     assert settings.value("suite") == "zz-suite"
+    rows[1].setCheckState(Qt.CheckState.Unchecked)                # its box unticked: one stays ticked
+    assert column.current() == "zz-suite" and w.suite == "zz-suite"
+    rows[0].setCheckState(Qt.CheckState.Checked)                  # the other box ticked: that suite
+    assert column.current() == SUITE_DIR and w.suite == SUITE_DIR
+    write(nexus / "zz-suite/portal/VERSION", "0.2.0\n")
+    w.refresh()
+    assert rows[1].text() == "Zed Suite\nzz-portal-v0.2.0"        # a bumped portal shows its new tag
+    column.itemClicked.emit(rows[1])
     w.close()
     again = main_window.ReleaseWindow(nexus, status_source=None, runs_source=None, claude_source=None,
                                       settings=settings)
-    assert again.suite == "zz-suite"                           # remembered
+    assert again.suite == "zz-suite" and again.suite_list.current() == "zz-suite"    # remembered
     again.close()
     chosen = main_window.ReleaseWindow(nexus, status_source=None, runs_source=None, claude_source=None,
                                        settings=settings, suite=SUITE_DIR)
-    assert chosen.suite == SUITE_DIR and chosen.suite_box.currentText() == SUITE_DIR
+    assert chosen.suite == SUITE_DIR and chosen.suite_list.current() == SUITE_DIR
     chosen.close()
+
+
+def test_the_suites_names_and_icons():
+    """The first column's rows: each suite by its portal's name, with its portal's icon, or its own drawing while its
+    portal has no images (the Windows Portable Suite)."""
+    assert rp.suite_name(rp.CHECKOUT, "bc250-bazzite") == "BC250 Bazzite Suite"
+    assert rp.suite_name(rp.CHECKOUT, "windows-portable") == "Windows Portable Suite"
+    assert rp.suite_icon(rp.CHECKOUT, "bc250-bazzite").name == "bc250-bazzite-suite.webp"
+    assert rp.suite_icon(rp.CHECKOUT, "windows-portable").name == "windows-portable-256.png"
+
+
+def test_the_git_questions_are_asked_once_or_side_by_side(repo, monkeypatch):
+    """load_units() reads the tags and the untracked files once, and asks each unit's two questions side by side; the
+    window's step 1 reads its CHANGELOGs at the tags with one git cat-file (owner, 27-10-2026: the window was slow on
+    Windows, some 20 ms per git process). The answers are those of one process per question."""
+    calls = []
+    real = rp.subprocess.run
+
+    def run(args, *a, **k):
+        calls.append(args[1])
+        return real(args, *a, **k)
+    monkeypatch.setattr(rp.subprocess, "run", run)
+    units = rp.load_units(repo)
+    assert calls.count("tag") == 1 and calls.count("ls-files") == 1     # once, not once per unit
+    for unit in units:
+        if unit.kind == "core":
+            continue
+        tags = rp.tags_of(repo, unit.key, unit.prefix)                  # one git process, as before
+        assert unit.last_tag == (tags[-1] if tags else None), unit.key
+        if unit.last_tag:
+            assert unit.changed == rp.changed_since(repo, unit.last_tag,
+                                                    rp.shipped_sources(repo, unit.key, unit.path)), unit.key
+    monkeypatch.setattr(rp, "GIT_WORKERS", 1)
+    assert [vars(u) for u in rp.load_units(repo)] == [vars(u) for u in units]       # side by side or one by one
+    shown = [u for u in units if u.kind != "portal"]
+    calls.clear()
+    blobs = rp.read_blobs(repo, rp.changelog_specs(shown))
+    assert calls == ["cat-file"] and "alpha-v0.1.0:apps/alpha/CHANGELOG" in blobs
+    assert [rp.version_choices(repo, u, blobs) for u in shown] == [rp.version_choices(repo, u) for u in shown]
+
+
+def test_read_blobs_reads_each_file_or_none(repo):
+    write(repo / "apps/alpha/CHANGELOG", "Changelog: 01-01-2026 00:00:00\n\nFirst. Café × 2.\n")
+    sh(repo, "commit", "-qam", "accents")
+    found = rp.read_blobs(repo, ["HEAD:apps/alpha/CHANGELOG", "HEAD:no/such/file", "HEAD:apps/alpha/VERSION"])
+    assert found == {"HEAD:apps/alpha/CHANGELOG": "Changelog: 01-01-2026 00:00:00\n\nFirst. Café × 2.\n",
+                     "HEAD:no/such/file": None, "HEAD:apps/alpha/VERSION": "0.1.0\n"}
+    assert rp.read_blobs(repo, []) == {}
+
+
+def test_git_answers_are_utf8_on_every_system(repo):
+    """git() reads git's output as UTF-8: Windows' own encoding garbled a CHANGELOG's é and ×, so step 1 counted
+    every entry of such a CHANGELOG as new since the tag."""
+    write(repo / "apps/beta/CHANGELOG", "Changelog: 01-01-2026 00:00:00\n\nFixed. Naïve × 3.\n")
+    sh(repo, "commit", "-qam", "accents")
+    sh(repo, "tag", "beta-v0.1.0")
+    assert rp.git(repo, "show", "beta-v0.1.0:apps/beta/CHANGELOG").endswith("Fixed. Naïve × 3.\n")
+    beta = next(u for u in rp.load_units(repo) if u.key == "beta")
+    assert rp.new_entries(repo, beta) == []                             # nothing new since its tag
