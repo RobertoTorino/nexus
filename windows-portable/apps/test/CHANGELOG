@@ -1,3 +1,7 @@
+Changelog: 27-10-2026 21:41:30
+
+Release 0.1.0.
+
 Changelog: 27-10-2026 17:53:45
 
 Added. install.ps1 installs the app from its release (wp-test-v<x.y.z>.zip, unpacked) for your own user: the program
