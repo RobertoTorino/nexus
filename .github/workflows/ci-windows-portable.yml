@@ -54,6 +54,8 @@ jobs:
         working-directory: ${{ matrix.dir }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0                # the tags: windows-portable/tools checks the shipped apps.toml, whose pins must exist
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"

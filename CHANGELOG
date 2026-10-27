@@ -1,3 +1,16 @@
+Changelog: 27-10-2026 22:04:00
+
+The cache of MkDocs' privacy plugin (.cache/plugin/privacy/, the wiki's fonts and Mermaid) is out of git again:
+it came in with a release commit on 15-10-2026 although .gitignore lists /.cache/, and its long file names keep a
+Windows checkout from completing without core.longpaths. The plugin downloads it again at build time.
+
+Changelog: 27-10-2026 22:02:05
+
+The pytest job of ci-windows-portable.yml checks out the whole history with its tags, as ci.yml's does. Its
+windows-portable/tools tests check the shipped apps.toml, whose pinned tags must exist, and the shallow checkout has
+none: with 0.1.1 in apps/test/VERSION and wp-test-v0.1.0 still pinned, the pin was no longer the next
+release either, and test_the_shipped_manifest_passes failed.
+
 Changelog: 27-10-2026 20:12:21
 
 core's tests that run a command in bash (tests/test_platform.py) skip when bash does not run one, not only when
