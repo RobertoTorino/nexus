@@ -50,3 +50,7 @@ def test_one_suite_at_a_time(capsys):
     assert check_versions.main(["--suite", "windows-portable"]) == 0
     assert f"in {folders} folders" in capsys.readouterr().out
     assert check_versions.main(["--suite", "no-such-suite"]) == 1
+    # Nexus's CI (ci-nexus.yml): core and dev/ alone, no suite's folders
+    nexus = 1 + len([p for p in (root / "dev").glob("*") if p.is_dir()])
+    assert check_versions.main(["--nexus"]) == 0
+    assert f"in {nexus} folders" in capsys.readouterr().out

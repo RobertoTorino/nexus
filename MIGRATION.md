@@ -5,18 +5,6 @@
 Working notes for moving the seven BC-250 tools into this suite. Not part of the manual or the READMEs, which
 describe only what exists.
 
-## Backlog first
-
-- **Nexus's shared checks in a workflow of their own (on hold, owner 27-10-2026: first on the backlog).** Each suite
-  has its own CI and release workflows (ci-windows-portable.yml, release-windows-portable.yml), but Nexus's shared
-  checks (core, the Nexus tools, `dev/`, the repository rules in `tools/tests/`) still run in `ci.yml` beside the
-  BC250 Bazzite Suite's, so a failure there holds the BC250 suite's tags. The Windows suite's tags wait only for
-  its own CI, which runs core's tests itself. To do: move them to a workflow of their own (`ci-nexus.yml`, say),
-  leaving `ci.yml` the BC250 suite's alone, and have both suites' tags wait for it besides their own
-  (`tools/tag-release.sh`, `tools/ci_state.py --workflow`, the `ci` job of each release workflow);
-  `tools/ci-local.sh` and the tests that read `ci.yml` (`tools/tests/test_layout.py`, `test_ci_local.py`, the BC250
-  suite's `test_installer_tests.py`) follow.
-
 ## Resume here (13-10-2026, after the break)
 
 **First (17-10-2026): the releases of the last renames, then the icons.** Every app is renamed (item 2). State at
@@ -1291,6 +1279,24 @@ The order, each step with its checks before the next:
    installed from the checkout (`bc250-bazzite/install.sh`) on the board; then the owner's portal release that
    carries the new manifest path (the number is the owner's).
 
+- **Nexus's shared checks in a workflow of their own (owner, 27-10-2026: first on the backlog; done 28-10-2026).**
+  Each suite had its own CI and release workflows, but Nexus's shared checks (core, the Nexus tools, `dev/`, the
+  repository rules) still ran in `ci.yml` beside the BC250 Bazzite Suite's, so a failure there held that suite's
+  tags while the Windows suite's waited for its own CI only. Now `ci-nexus.yml` runs them (versions of core and
+  `dev/` with `check_versions.py --nexus`, every CHANGELOG keeping its entries, the tests of core, tools and
+  `dev/releases`, bash -n and shellcheck on `tools/`, `test.sh` and `dev/`, line endings, exec bits, the four
+  files of core, `dev/*` and the root, workflows only at the root, the Nexus page built strictly); `ci.yml` keeps
+  the suite's alone. Both suites' tags wait for it besides their own CI: `tools/tag-release.sh` adds it to the
+  workflows it asks `ci_state.py` about, and the `ci` job of `release.yml` and `release-windows-portable.yml` has a
+  second wait (the job's limit is 155 minutes for two waits of 75; both workflows run on the same push, so the
+  second is mostly over). `tools/ci-local.sh` runs both workflows (`ci_local.all_jobs`, Nexus's jobs as
+  `nexus-<job>`, since both have versions, pytest, shell and docs); `test_layout.py` checks the split
+  (`test_nexus_checks_have_a_workflow_of_their_own`), `test_ci_local.py` both files; the BC250 suite's
+  `test_installer_tests.py` still reads `ci.yml`, where its installer tests stay (Nexus Releases' too: it is the
+  suite's installer test, run with the suite's shims). `ci-windows-portable.yml` is untouched: it keeps running
+  core's tests on Windows, the system the suite's apps bundle it for. By the way: `new_app.py` looked for
+  `]   # every folder with tests/` on the matrix's last line, which `ci.yml` had on the line after; the comment is on
+  the last line again, and its second anchor is the shell job's new comment on the repository's rules.
 - **The rename of `bc250_core` (on hold, owner 26-10-2026: eventually, not now).** The shared code is every suite's
   and will get a name that says so (`nexus_core`, for example); the rename touches every app's imports and its
   bundled copy (`tools/stage_app.py`), the copies of `instance.py` that `tools/tests/test_instance_copies.py` checks,

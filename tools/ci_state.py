@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Whether GitHub's CI passed on a commit: every run of .github/workflows/ci.yml on it (the push to main; a tag
-starts none of its own) finished and passed; with --workflow, of another suite's CI (ci-windows-portable.yml: each
-suite's releases wait for its own CI only, owner 27-10-2026). tools/tag-release.sh asks it before tagging, and release.yml before it builds, so
-only a commit that CI passed becomes a release.
+starts none of its own) finished and passed; with --workflow, of another workflow: a suite's own CI
+(ci-windows-portable.yml: each suite's releases wait for its own CI, not another suite's, owner 27-10-2026) or
+Nexus's (ci-nexus.yml, which every suite's releases wait for besides their own). tools/tag-release.sh asks it
+before tagging, and the release workflows before they build, so only a commit that CI passed becomes a release.
 
     python3 tools/ci_state.py [--wait MINUTES] [--workflow FILE] <commit>
 
@@ -26,7 +27,7 @@ import urllib.request
 
 REPO = "RobertoTorino/nexus"
 RUNS_URL = "https://api.github.com/repos/{repo}/actions/workflows/{workflow}/runs?head_sha={sha}&per_page=50"
-WORKFLOW = "ci.yml"                     # Nexus and the BC250 Bazzite Suite; a suite of its own: ci-<suite>.yml
+WORKFLOW = "ci.yml"                     # the BC250 Bazzite Suite's; another suite: ci-<suite>.yml; Nexus: ci-nexus.yml
 OK = ("success", "skipped", "neutral")
 POLL_S = 30
 EXIT = {"passed": 0, "failed": 1, "running": 2, "none": 2}

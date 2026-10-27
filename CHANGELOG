@@ -1,3 +1,20 @@
+Changelog: 28-10-2026 00:12:46
+
+Nexus's shared checks run in a workflow of their own, .github/workflows/ci-nexus.yml (owner, 27-10-2026: first on
+the backlog): the versions of core and dev/ (tools/check_versions.py --nexus, new), every CHANGELOG keeping its
+entries, the tests of core, tools and dev/releases, bash -n and shellcheck on tools/, test.sh and dev/, the line
+endings, the exec bits, the four files of core, dev/* and the root, workflows only at the root, and the Nexus page
+built strictly. ci.yml keeps the BC250 Bazzite Suite's checks alone, so a failure in Nexus's is Nexus's and one
+suite's checks never hold another suite's tags. Every suite's tags wait for ci-nexus.yml besides the suite's own
+CI: tools/tag-release.sh asks tools/ci_state.py about it too, and the ci job of release.yml and
+release-windows-portable.yml waits for it after the suite's CI (up to 75 minutes each; both run on the same push).
+tools/ci-local.sh runs the jobs of both workflows, ci-nexus.yml's as nexus-<job> (nexus-shell, nexus-pytest/core),
+since both have a versions, pytest, shell and docs job; tools/tests/test_layout.py checks the split and
+test_ci_local.py reads both files. The README has the CI Nexus badge; CLAUDE.md and the Nexus page's Development
+chapter say which workflow checks what. tools/new_app.py finds the matrix comment it inserts before on the
+matrix's last line again (ci.yml had it on the next line) and puts a new app's shellcheck line before the shell
+job's comment on the repository's rules.
+
 Changelog: 27-10-2026 23:45:28
 
 The development machine page moved from the BC250 wiki to the Nexus page (nexus/docs/machine.md), and the

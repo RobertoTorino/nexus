@@ -120,7 +120,7 @@ def test_every_app_has_tests_and_ci_runs_them():
     for app in _apps():
         assert (app / "tests").is_dir(), f"{app.name}: no tests/"
         assert (app / "requirements-dev.txt").is_file(), f"{app.name}: no requirements-dev.txt (CI installs it)"
-    # ci.yml (Nexus and the BC250 Bazzite Suite) and a suite's own ci-<suite>.yml (ci-windows-portable.yml)
+    # ci-nexus.yml (core, tools, dev/), ci.yml (the BC250 Bazzite Suite) and a suite's own ci-<suite>.yml
     listed = set()
     for workflow in sorted((SUITE / ".github" / "workflows").glob("ci*.yml")):
         matrix = re.search(r"dir: \[([^\]]*)\]", workflow.read_text(encoding="utf-8")).group(1)
@@ -157,3 +157,23 @@ def test_each_suite_has_its_own_ci_and_release_workflows():
             assert f"{folder.name}/" not in (workflows / shared).read_text(encoding="utf-8"), shared
         assert f'"!{prefix}*"' in (workflows / "release.yml").read_text(encoding="utf-8")
     assert plain == ["bc250-bazzite"]
+
+
+def test_nexus_checks_have_a_workflow_of_their_own():
+    """Nexus's shared checks (core, tools, dev/, the repository's rules) run in ci-nexus.yml, apart from every
+    suite's CI, so a failure there is Nexus's and holds every suite's tags alike: tools/tag-release.sh and the ci
+    job of each release workflow wait for it besides the suite's own CI (owner, 27-10-2026)."""
+    workflows = SUITE / ".github" / "workflows"
+    nexus = (workflows / "ci-nexus.yml").read_text(encoding="utf-8")
+    assert not [folder.name for folder in _suites() if f"{folder.name}/" in nexus], "ci-nexus.yml names a suite"
+    shared = {"core", "tools"} | {f"dev/{p.name}" for p in (SUITE / "dev").iterdir() if (p / "tests").is_dir()}
+    matrix = re.search(r"dir: \[([^\]]*)\]", nexus).group(1)
+    assert {entry.strip() for entry in matrix.split(",")} == shared
+    for folder in _suites():
+        own = workflows / (f"ci-{folder.name}.yml" if (workflows / f"ci-{folder.name}.yml").is_file() else "ci.yml")
+        matrix = re.search(r"dir: \[([^\]]*)\]", own.read_text(encoding="utf-8")).group(1)
+        entries = {entry.strip() for entry in matrix.split(",")}
+        assert not entries & (shared - {"core"}), f"{own.name} runs Nexus's tests"   # core: a suite may run it too
+    for release in sorted(workflows.glob("release*.yml")):
+        assert "ci_state.py --workflow ci-nexus.yml" in release.read_text(encoding="utf-8"), release.name
+    assert "workflows+=(ci-nexus.yml)" in (SUITE / "tools" / "tag-release.sh").read_text(encoding="utf-8")

@@ -20,8 +20,9 @@ name: Release
 # tag the portal when the combination is tested.
 #
 # Only a commit that CI passed becomes a release: the first job waits for every CI run on the tagged commit (the
-# push to main; a tag starts no CI of its own), up to 75 minutes, and stops everything when one did not pass.
-# tools/tag-release.sh asks the same before it tags.
+# push to main; a tag starts no CI of its own), up to 75 minutes each for the suite's CI (ci.yml) and Nexus's
+# (ci-nexus.yml: core, which every app bundles, the release tools and the repository's rules), and stops everything
+# when one did not pass. tools/tag-release.sh asks the same before it tags.
 #
 # The release job runs in no environment, so GitHub asks no approval before it builds and publishes (owner,
 # 23-10-2026: approving every tag took too long when one change to core makes many app releases).
@@ -40,8 +41,8 @@ concurrency:
 jobs:
   ci:
     runs-on: ubuntu-latest
-    timeout-minutes: 80                 # ci_state waits up to 75
-    permissions:
+    timeout-minutes: 155                # ci_state waits up to 75, twice (both workflows run on the same push, so
+    permissions:                        # the second wait is mostly over already)
       actions: read
       contents: read
     steps:
@@ -50,6 +51,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: python3 tools/ci_state.py --wait 75 "$GITHUB_SHA"
+      - name: Nexus's CI passed on this commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 tools/ci_state.py --workflow ci-nexus.yml --wait 75 "$GITHUB_SHA"
 
   release:
     needs: ci

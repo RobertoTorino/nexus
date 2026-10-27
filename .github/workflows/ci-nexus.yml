@@ -1,0 +1,135 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+name: CI Nexus
+
+# The checks of Nexus, what every suite shares, on every push and pull request: core (bc250_core), the Nexus tools
+# (tools/), the Nexus apps (dev/), the Nexus page and the repository's rules (line endings, exec bits, the four
+# files of every former repo, workflows only at the root, no CHANGELOG losing an entry). Apart from each suite's
+# CI (ci.yml, the BC250 Bazzite Suite's; ci-windows-portable.yml), so a failure here is Nexus's, not a suite's,
+# and one suite's checks never hold another suite's tags (owner, 27-10-2026). Every suite's tags wait for this
+# workflow besides the suite's own CI: tools/tag-release.sh before it tags, and the ci job of release.yml and
+# release-windows-portable.yml (tools/ci_state.py --workflow ci-nexus.yml) before they build.
+# A tag starts no run of its own, and every job has a time limit, as in ci.yml.
+
+on:
+  push:
+    branches: ["**"]                    # every branch, no tag. Not tags-ignore alone: GitHub then runs no branch push
+  pull_request:
+
+jobs:
+  versions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0                # the base commit, for check_changelogs
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Hard-coded versions match each VERSION file
+        run: python tools/check_versions.py --nexus
+      # A CHANGELOG is history: every entry it had at the base is still there. The rule is the repository's, so
+      # every CHANGELOG is checked here, the suites' too.
+      - name: CHANGELOGs keep their entries
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: python tools/check_changelogs.py ${BASE:+--base "$BASE"}
+
+  pytest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        dir: [core, tools, dev/releases]   # every folder with tests/ of Nexus; a suite's folders: its own CI
+    defaults:
+      run:
+        working-directory: ${{ matrix.dir }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0                # the tags: tools/tests checks the shipped apps.toml, whose pins must exist
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: "**/requirements-dev.txt"
+
+      - name: Qt runtime libraries
+        timeout-minutes: 5                    # a stalled mirror fails here, by name, not after the job's 20
+        working-directory: .                  # the script's path is from the root, not the matrix folder
+        run: bash tools/ci-qt-libs.sh --pulse
+
+      - name: Install
+        run: python -m pip install -q -r requirements-dev.txt
+
+      - name: Test
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: python -X faulthandler -m pytest -v tests        # -v: a crash log names the test
+
+  shell:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: bash -n
+        run: |
+          rc=0
+          while IFS= read -r -d '' f; do bash -n "$f" || { echo "::error file=$f::syntax error"; rc=1; }; done \
+            < <(find tools dev test.sh -name '*.sh' -print0)
+          exit $rc
+
+      # shellcheck is preinstalled on ubuntu-latest. Error level for everything, warning level for the Nexus tools,
+      # the hook, test.sh and the Nexus apps' scripts.
+      - name: shellcheck (errors, all scripts)
+        run: find tools dev test.sh -name '*.sh' -print0 | xargs -0 shellcheck -x -S error
+      - name: shellcheck (warnings, the Nexus tools, test.sh and dev/)
+        run: |
+          shellcheck -x -S warning tools/*.sh test.sh tools/hooks/pre-push
+          shellcheck -S warning dev/releases/*.sh
+
+      - name: Line endings
+        run: |
+          if git ls-files --eol | grep -E '^i/(crlf|mixed)' ; then echo "::error::CRLF in the index (see above)"; exit 1; fi
+
+      # Commits made from Windows record new files as 100644 (core.fileMode=false); tools/fix-modes.sh repairs it.
+      - name: Scripts are executable
+        run: |
+          missing=$(git ls-files -s -- '*.sh' 'tools/hooks/*' | awk '$1 != "100755" { print $4 }')
+          if [ -n "$missing" ]; then
+            echo "::error::not executable in git (run tools/fix-modes.sh):"; echo "$missing"; exit 1
+          fi
+
+      # core, the Nexus apps and the root; a suite's folders are checked by its own CI.
+      - name: Every former repo has its LICENSE, .gitignore, VERSION and CHANGELOG
+        run: |
+          rc=0
+          for d in core dev/*; do
+            for f in LICENSE .gitignore VERSION CHANGELOG; do
+              [ -f "$d/$f" ] || { echo "::error::$d/$f missing"; rc=1; }
+            done
+          done
+          for f in LICENSE .gitignore CHANGELOG README.md; do
+            [ -f "$f" ] || { echo "::error::$f missing at the repo root"; rc=1; }
+          done
+          exit $rc
+
+      - name: Workflows only at the repo root
+        run: |
+          if find . -path ./.git -prune -o -path ./.github -prune -o -type d -name .github -print | grep . ; then
+            echo "::error::GitHub only runs workflows from the root .github/; move these"; exit 1
+          fi
+
+  docs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -q mkdocs-material "mkdocs>=1.6,<2"
+      - run: mkdocs build --strict -f nexus/mkdocs.yml

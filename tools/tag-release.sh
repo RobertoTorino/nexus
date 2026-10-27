@@ -3,8 +3,9 @@
 # Tags release commits and pushes the tags, but only when they can be built: HEAD must hold each tag's version
 # (the bump is committed), have no uncommitted changes in that folder, be pushed to origin/main, and have passed CI
 # on GitHub (tools/ci_state.py; it waits while CI still runs, up to an hour): the CI of the tag's suite, its
-# .github/workflows/ci-<suite>.yml when it has one (ci-windows-portable.yml), else ci.yml (Nexus and the BC250
-# Bazzite Suite), so one suite's CI never holds another suite's tags (owner, 27-10-2026). A portal tag also needs every app
+# .github/workflows/ci-<suite>.yml when it has one (ci-windows-portable.yml), else ci.yml (the BC250 Bazzite
+# Suite's), so one suite's CI never holds another suite's tags (owner, 27-10-2026), and Nexus's ci-nexus.yml (core,
+# which every app bundles, the release tools and the repository's rules). A portal tag also needs every app
 # release HEAD's apps.toml pins: tagged on origin and pinned with its sha256 (step 2). A plain `git tag` tags
 # whatever HEAD is, also a commit from before the bump or one CI failed, which release.yml then refuses.
 #
@@ -24,7 +25,7 @@ for candidate in python3 py; do      # one that runs: Windows has a python3 that
 done
 [ -n "$python" ] || die "No Python found (python3, or py on Windows)."
 
-workflows=()                         # the CI each tag waits for, once each
+workflows=()                         # the CI each tag waits for, once each, then Nexus's
 for tag in "$@"; do
     # the tag's suite, by its prefix (tools/suites.py): bc250-bazzite's tags have none, windows-portable's wp-
     read -r suite name version < <("$python" tools/suites.py --tag "$tag" | tr -d '\r') ||
@@ -63,6 +64,7 @@ for key, app in tomllib.loads(sys.stdin.read()).get("apps", {}).items():
         done <<<"$pins"
     fi
 done
+workflows+=(ci-nexus.yml)
 
 git fetch -q origin main || die "Could not reach origin to check that HEAD is pushed."
 git merge-base --is-ancestor HEAD origin/main ||

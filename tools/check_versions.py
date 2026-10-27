@@ -8,7 +8,8 @@ file's version of the crate differs from Cargo.toml.
 
     python3 tools/check_versions.py                        # core, dev/ and every suite
     python3 tools/check_versions.py --suite windows-portable  # core, dev/ and that suite only: each suite's CI
-                                                              # checks its own, so one suite never blocks another"""
+                                                              # checks its own, so one suite never blocks another
+    python3 tools/check_versions.py --nexus                # core and dev/ only: Nexus's CI (ci-nexus.yml)"""
 
 import argparse
 import importlib.util
@@ -71,9 +72,10 @@ suites = _suites()
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--suite", metavar="NAME", help="only this suite's folders, besides core and dev/")
+    parser.add_argument("--nexus", action="store_true", help="core and dev/ only, no suite (Nexus's CI)")
     args = parser.parse_args([] if argv is None else argv)
     try:
-        chosen = [suites.suite(args.suite)] if args.suite else suites.suites()
+        chosen = [] if args.nexus else [suites.suite(args.suite)] if args.suite else suites.suites()
     except LookupError as exc:
         print(exc, file=sys.stderr)
         return 1

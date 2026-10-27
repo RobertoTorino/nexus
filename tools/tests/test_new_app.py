@@ -126,17 +126,18 @@ CI = '''jobs:
   pytest:
     strategy:
       matrix:
-        dir: [core, tools, bc250-bazzite/portal,
+        dir: [bc250-bazzite/portal,
               bc250-bazzite/apps/alpha]   # every folder with tests/
   shell:
     steps:
       - name: shellcheck (warnings)
         run: |
           shellcheck -S warning bc250-bazzite/apps/alpha/install.sh
-          shellcheck -S warning dev/releases/*.sh
+          shellcheck -S warning bc250-bazzite/tools/check-release.sh
 
-      - name: Line endings
-        run: git ls-files --eol
+      # The repository's rules: ci-nexus.yml.
+      - name: Every former repo has its LICENSE, .gitignore, VERSION and CHANGELOG
+        run: ls
   installers:
     steps:
       - name: alpha installer
@@ -264,8 +265,9 @@ def test_writes_the_app_and_lists_it_everywhere(checkout, capsys):
     # CI: the pytest matrix, the installer step and the shellcheck list.
     ci = (checkout / ".github" / "workflows" / "ci.yml").read_text()
     assert "bc250-bazzite/apps/alpha, bc250-bazzite/apps/fan2]   # every folder with tests/" in ci
-    assert ("shellcheck -S warning dev/releases/*.sh\n          shellcheck -S warning bc250-bazzite/apps/fan2/install.sh"
-            "\n\n      - name: Line endings") in ci
+    assert ("shellcheck -S warning bc250-bazzite/tools/check-release.sh\n"
+            "          shellcheck -S warning bc250-bazzite/apps/fan2/install.sh"
+            "\n\n      # The repository's rules") in ci
     assert ("      - name: fan2 installer\n        run: bash bc250-bazzite/tools/installer-tests/fan2.sh\n"
             "      - name: release tarballs") in ci
 

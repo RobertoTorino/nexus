@@ -1,12 +1,16 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Runs the jobs of .github/workflows/ci.yml as GitHub runs them, inside the container tools/ci-local.sh starts:
-Python 3.12, each job (and each entry of a matrix) in its own environment with only what that job installs. Tests
-that pass in the suite's full venv on a newer Python can still fail in CI; this shows it before the push.
+"""Runs the jobs of .github/workflows/ci.yml (the BC250 Bazzite Suite's CI) and ci-nexus.yml (Nexus's: core, the
+tools, dev/, the repository's rules) as GitHub runs them, inside the container tools/ci-local.sh starts: Python
+3.12, each job (and each entry of a matrix) in its own environment with only what that job installs. Tests that
+pass in the suite's full venv on a newer Python can still fail in CI; this shows it before the push.
 
-    tools/ci-local.sh [--list] [--workers N] [job[/matrix value] ...]     e.g.  tools/ci-local.sh pytest/tools shell
+    tools/ci-local.sh [--list] [--workers N] [job[/matrix value] ...]
+    e.g.  tools/ci-local.sh pytest/bc250-bazzite/apps/gpu shell nexus-pytest/tools
 
-The jobs come from ci.yml itself, so a new app in the matrix or a new installer step is run without changing this.
+The jobs come from the workflows themselves, so a new app in the matrix or a new installer step is run without
+changing this. ci-nexus.yml's jobs are listed with nexus- before their name (nexus-shell, nexus-pytest/core), as
+both workflows have a versions, pytest, shell and docs job.
 What cannot run here is reported, not hidden: a job for another system (windows-latest), apt-get steps (the image
 has those packages) and actions/cache (its folder is kept in ~/.cache/bc250-ci-local instead). The work happens on a
 copy of the checkout with every change staged, as a commit would have it; logs go to the cache folder."""
@@ -31,6 +35,7 @@ import yaml
 SRC = Path(os.environ.get("CI_LOCAL_SRC", "/src"))          # the checkout, read-only
 WORK = Path(os.environ.get("CI_LOCAL_WORK", "/tmp/ci-local-work"))   # the copy the jobs run in
 CACHE = Path(os.environ.get("CI_LOCAL_CACHE", "/cache"))     # venvs, pip's cache, logs: kept between runs
+WORKFLOWS = (("ci.yml", ""), ("ci-nexus.yml", "nexus-"))     # each workflow run here, with the prefix of its job names
 COPY_EXCLUDES = (".venv*", "target", "site", "__pycache__", ".pytest_cache", "dist", "node_modules")
 SHELL = ["bash", "--noprofile", "--norc", "-eo", "pipefail", "-c"]      # GitHub's shell for run steps on Linux
 EXPR = re.compile(r"\$\{\{\s*(.*?)\s*\}\}")
@@ -60,23 +65,29 @@ class Result:
     skipped: bool = False               # a job for another system: neither passed nor failed
 
 
-def load_jobs(workflow: Path) -> list[Job]:
-    """Every job of the workflow, a matrix job once per combination ("pytest/apps/gpu")."""
+def load_jobs(workflow: Path, prefix: str = "") -> list[Job]:
+    """Every job of the workflow, a matrix job once per combination ("pytest/apps/gpu"), *prefix* before each name."""
     jobs = []
     for name, spec in yaml.safe_load(workflow.read_text(encoding="utf-8"))["jobs"].items():
         matrix = (spec.get("strategy") or {}).get("matrix") or {}
         keys = [k for k, v in matrix.items() if isinstance(v, list)]
         if not keys:
-            jobs.append(Job(name, spec))
+            jobs.append(Job(prefix + name, spec))
             continue
         for values in itertools.product(*(matrix[k] for k in keys)):
             combo = dict(zip(keys, values))
-            jobs.append(Job(f"{name}/{'/'.join(str(v) for v in values)}", spec, combo))
+            jobs.append(Job(f"{prefix}{name}/{'/'.join(str(v) for v in values)}", spec, combo))
     return jobs
 
 
+def all_jobs(src: Path = SRC) -> list[Job]:
+    """The jobs of every workflow run here (WORKFLOWS), in that order."""
+    return [job for name, prefix in WORKFLOWS for job in load_jobs(src / ".github" / "workflows" / name, prefix)]
+
+
 def expand(text: str, job: Job, base: str) -> str:
-    """The ${{ }} expressions ci.yml uses: matrix values, and the base commit of check_manifest (origin/main)."""
+    """The ${{ }} expressions the workflows use: matrix values, and the base commit of check_manifest and
+    check_changelogs (origin/main)."""
     def value(m: re.Match) -> str:
         expr = m.group(1)
         if expr.startswith("matrix."):
@@ -198,7 +209,7 @@ def main(argv: list[str]) -> int:
     if "--workers" in argv:
         i = argv.index("--workers")
         workers, argv = int(argv[i + 1]), argv[:i] + argv[i + 2:]
-    jobs = load_jobs(SRC / ".github" / "workflows" / "ci.yml")
+    jobs = all_jobs()
     if "--list" in argv:
         print("\n".join(j.name + ("" if j.runs_here else f"   (not here: {j.spec.get('runs-on')})") for j in jobs))
         return 0
@@ -207,7 +218,8 @@ def main(argv: list[str]) -> int:
         print(f"no job matches {' '.join(argv)}; tools/ci-local.sh --list shows them", file=sys.stderr)
         return 2
     base = prepare_copy()
-    print(f"{len(jobs)} jobs from ci.yml, {workers} at a time, on Python {sys.version.split()[0]}", flush=True)
+    print(f"{len(jobs)} jobs from {' and '.join(name for name, _ in WORKFLOWS)}, {workers} at a time, "
+          f"on Python {sys.version.split()[0]}", flush=True)
     results: list[Result] = []
     with concurrent.futures.ThreadPoolExecutor(workers) as pool:
         for result in pool.map(lambda j: run_job(j, base), jobs):

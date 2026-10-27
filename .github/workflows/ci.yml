@@ -1,9 +1,11 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 name: CI
 
-# The checks of Nexus (core, the tools, dev/) and of the BC250 Bazzite Suite on every push and pull request. Releases
-# are made by release.yml, one per tag. The Windows Portable Suite has its own, ci-windows-portable.yml (owner,
-# 27-10-2026: one suite's checks never block another suite's releases).
+# The checks of the BC250 Bazzite Suite (bc250-bazzite/) on every push and pull request. Releases are made by
+# release.yml, one per tag. The Windows Portable Suite has its own, ci-windows-portable.yml, and Nexus's shared
+# checks (core, the Nexus tools, dev/, the Nexus page and the repository's rules) run in ci-nexus.yml (owner,
+# 27-10-2026: one suite's checks never block another suite's releases). This suite's tags wait for this workflow
+# and for ci-nexus.yml (tools/tag-release.sh, the ci job of release.yml).
 # A tag starts no CI of its own: tools/tag-release.sh tags only a pushed commit CI passed, and release.yml waits for
 # that commit's CI. A run per tag (22 in one release) only queued the same jobs again and gave each release one more
 # run that could fail or hang.
@@ -34,11 +36,6 @@ jobs:
         env:
           BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: python bc250-bazzite/tools/check_manifest.py ${BASE:+--base "$BASE"}
-      # A CHANGELOG is history: every entry it had at the base is still there.
-      - name: CHANGELOGs keep their entries
-        env:
-          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
-        run: python tools/check_changelogs.py ${BASE:+--base "$BASE"}
 
   pytest:
     runs-on: ubuntu-latest
@@ -46,18 +43,19 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        dir: [core, tools, bc250-bazzite/portal, bc250-bazzite/tools,
+        dir: [bc250-bazzite/portal, bc250-bazzite/tools,
               bc250-bazzite/apps/check, bc250-bazzite/apps/gpu, bc250-bazzite/apps/upscaler, bc250-bazzite/apps/acpi,
               bc250-bazzite/apps/compute, bc250-bazzite/apps/cores, bc250-bazzite/apps/oc, bc250-bazzite/apps/mtool,
-              bc250-bazzite/apps/package, bc250-bazzite/apps/ncgui, dev/releases,
+              bc250-bazzite/apps/package, bc250-bazzite/apps/ncgui,
               bc250-bazzite/apps/overlay, bc250-bazzite/apps/ips35, bc250-bazzite/apps/hdcam,
               bc250-bazzite/apps/hdcontrol, bc250-bazzite/apps/bios, bc250-bazzite/apps/ace, bc250-bazzite/apps/vram,
               bc250-bazzite/apps/cec, bc250-bazzite/apps/sftp, bc250-bazzite/apps/consoles, bc250-bazzite/apps/clb,
               bc250-bazzite/apps/mesh, bc250-bazzite/apps/shadps4, bc250-bazzite/apps/rpcs3,
               bc250-bazzite/apps/decky, bc250-bazzite/apps/datstation, bc250-bazzite/apps/ppsspp,
               bc250-bazzite/apps/pcsx2, bc250-bazzite/apps/vita3k, bc250-bazzite/apps/fan,
-              bc250-bazzite/apps/wdriver, bc250-bazzite/apps/xenia, bc250-bazzite/tools/installer-tests/gui]
-              # every folder with tests/ of Nexus and this suite; the Windows Portable Suite's: ci-windows-portable.yml
+              bc250-bazzite/apps/wdriver, bc250-bazzite/apps/xenia,
+              bc250-bazzite/tools/installer-tests/gui]   # every folder with tests/ of this suite (new_app.py adds here)
+              # Nexus's (core, tools, dev/): ci-nexus.yml; the Windows Portable Suite's: ci-windows-portable.yml
     defaults:
       run:
         working-directory: ${{ matrix.dir }}
@@ -145,18 +143,17 @@ jobs:
         run: |
           rc=0
           while IFS= read -r -d '' f; do bash -n "$f" || { echo "::error file=$f::syntax error"; rc=1; }; done \
-            < <(find bc250-bazzite tools test.sh -name '*.sh' -print0)
+            < <(find bc250-bazzite -name '*.sh' -print0)
           exit $rc
 
       # shellcheck is preinstalled on ubuntu-latest. Error level for everything; warning level for the scripts
-      # that their own release workflows already held to it.
+      # that their own release workflows already held to it. The Nexus tools, test.sh and dev/: ci-nexus.yml.
       - name: shellcheck (errors, all scripts)
-        run: find bc250-bazzite tools test.sh -name '*.sh' -print0 | xargs -0 shellcheck -x -S error
+        run: find bc250-bazzite -name '*.sh' -print0 | xargs -0 shellcheck -x -S error
       - name: shellcheck (warnings, cores, oc, acpi, overlay, ips35, hdcam, hdcontrol, bios, ace, vram, fan, wdriver, cec, sftp, consoles, clb, mesh, shadps4, rpcs3, ppsspp, pcsx2, vita3k, xenia, decky, netcatgui, datstation and the suite's own scripts)
         run: |
-          shellcheck -x -S warning bc250-bazzite/portal/install.sh bc250-bazzite/apps/check/install.sh tools/*.sh bc250-bazzite/tools/*.sh \
-            bc250-bazzite/tools/installer-tests/*.sh \
-            test.sh bc250-bazzite/install.sh tools/hooks/pre-push
+          shellcheck -x -S warning bc250-bazzite/portal/install.sh bc250-bazzite/apps/check/install.sh bc250-bazzite/tools/*.sh \
+            bc250-bazzite/tools/installer-tests/*.sh bc250-bazzite/install.sh
           shellcheck -S warning bc250-bazzite/apps/cores/bc250-cores-bisect.sh bc250-bazzite/apps/cores/bc250-cores-unlock.sh \
             bc250-bazzite/apps/cores/install.sh bc250-bazzite/apps/cores/packaging/bazzite/*.sh
           shellcheck -S warning bc250-bazzite/apps/oc/bc250-gpu-oc-bisect.sh bc250-bazzite/apps/oc/install.sh
@@ -181,38 +178,18 @@ jobs:
           shellcheck -S warning bc250-bazzite/apps/package/install.sh
           shellcheck -S warning bc250-bazzite/apps/ncgui/install.sh
           shellcheck -S warning bc250-bazzite/apps/datstation/install.sh
-          shellcheck -S warning dev/releases/*.sh bc250-bazzite/tools/check-release.sh
+          shellcheck -S warning bc250-bazzite/tools/check-release.sh
 
-      - name: Line endings
-        run: |
-          if git ls-files --eol | grep -E '^i/(crlf|mixed)' ; then echo "::error::CRLF in the index (see above)"; exit 1; fi
-
-      # Commits made from Windows record new files as 100644 (core.fileMode=false); tools/fix-modes.sh repairs it.
-      - name: Scripts are executable
-        run: |
-          missing=$(git ls-files -s -- '*.sh' 'tools/hooks/*' | awk '$1 != "100755" { print $4 }')
-          if [ -n "$missing" ]; then
-            echo "::error::not executable in git (run tools/fix-modes.sh):"; echo "$missing"; exit 1
-          fi
-
+      # The repository's rules (line endings, exec bits, workflows only at the root): ci-nexus.yml.
       - name: Every former repo has its LICENSE, .gitignore, VERSION and CHANGELOG
         run: |
           rc=0
-          for d in core bc250-bazzite/portal bc250-bazzite/apps/* bc250-bazzite/tools/installer-tests/gui dev/*; do
+          for d in bc250-bazzite/portal bc250-bazzite/apps/* bc250-bazzite/tools/installer-tests/gui; do
             for f in LICENSE .gitignore VERSION CHANGELOG; do
               [ -f "$d/$f" ] || { echo "::error::$d/$f missing"; rc=1; }
             done
           done
-          for f in LICENSE .gitignore CHANGELOG README.md; do
-            [ -f "$f" ] || { echo "::error::$f missing at the repo root"; rc=1; }
-          done
           exit $rc
-
-      - name: Workflows only at the repo root
-        run: |
-          if find . -path ./.git -prune -o -path ./.github -prune -o -type d -name .github -print | grep . ; then
-            echo "::error::GitHub only runs workflows from the root .github/; move these"; exit 1
-          fi
 
   # The installers on Linux without root or network: sudo becomes fakeroot, venvs are stubs (see shims.sh).
   installers:
@@ -311,8 +288,7 @@ jobs:
         run: |
           python -m pip install -q -r bc250-bazzite/portal/requirements.txt
           QT_QPA_PLATFORM=offscreen python bc250-bazzite/tools/portal_screenshot.py
-      - run: mkdocs build --strict -f bc250-bazzite/mkdocs.yml
-      - run: mkdocs build --strict -f nexus/mkdocs.yml
+      - run: mkdocs build --strict -f bc250-bazzite/mkdocs.yml     # the Nexus page: ci-nexus.yml
 
   windows-exe:
     # The Windows executables of the release workflow, built here too so a broken build shows before a tag.

@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
-# Runs the jobs of .github/workflows/ci.yml here, as GitHub runs them (Python 3.12, each job with only its own
-# requirements), in a container: tools/ci_local.py inside tools/ci-local/Containerfile. Before a push or a release,
-# so "passes here, fails in CI" shows up here first.
+# Runs the jobs of .github/workflows/ci.yml (the BC250 Bazzite Suite's CI) and ci-nexus.yml (Nexus's) here, as
+# GitHub runs them (Python 3.12, each job with only its own requirements), in a container: tools/ci_local.py inside
+# tools/ci-local/Containerfile. Before a push or a release, so "passes here, fails in CI" shows up here first.
 #
-#   tools/ci-local.sh                     # every job
-#   tools/ci-local.sh pytest/tools shell  # these jobs (a matrix job by its value: pytest/apps/gpu)
-#   tools/ci-local.sh --list              # the jobs
+#   tools/ci-local.sh                           # every job of both workflows
+#   tools/ci-local.sh shell nexus-pytest/tools  # these jobs (a matrix job by its value: pytest/bc250-bazzite/apps/gpu;
+#                                               # ci-nexus.yml's jobs with nexus- before the name)
+#   tools/ci-local.sh --list                    # the jobs
 #
 # Needs podman (Bazzite has it) or docker. The image is built the first time and when the Containerfile changes;
 # venvs, pip's downloads and the logs stay in ~/.cache/bc250-ci-local. Linux only.

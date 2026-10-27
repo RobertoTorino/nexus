@@ -10,8 +10,9 @@ name: Release Windows Portable
 # (nexus-index.yml, written again once this run succeeded), which points at every suite's newest portal and, while
 # this suite has none, at its apps' newest releases. The portal has no release format yet.
 #
-# Only a commit that this suite's CI passed becomes a release: the first job waits for ci-windows-portable.yml on the
-# tagged commit, up to 75 minutes. tools/tag-release.sh asks the same before it tags.
+# Only a commit that CI passed becomes a release: the first job waits for ci-windows-portable.yml on the tagged
+# commit and for Nexus's ci-nexus.yml (core, which every app bundles, the release tools and the repository's
+# rules), up to 75 minutes each. tools/tag-release.sh asks the same before it tags.
 
 on:
   push:
@@ -27,8 +28,8 @@ concurrency:
 jobs:
   ci:
     runs-on: ubuntu-latest
-    timeout-minutes: 80                 # ci_state waits up to 75
-    permissions:
+    timeout-minutes: 155                # ci_state waits up to 75, twice (both workflows run on the same push, so
+    permissions:                        # the second wait is mostly over already)
       actions: read
       contents: read
     steps:
@@ -37,6 +38,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: python3 tools/ci_state.py --workflow ci-windows-portable.yml --wait 75 "$GITHUB_SHA"
+      - name: Nexus's CI passed on this commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 tools/ci_state.py --workflow ci-nexus.yml --wait 75 "$GITHUB_SHA"
 
   release:
     needs: ci

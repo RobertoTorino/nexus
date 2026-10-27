@@ -756,7 +756,7 @@ def write_app(root: Path, suite: Suite, app: NewApp) -> list[Path]:
     text = insert_before(text, "      - name: release tarballs, end to end\n",
                          f"      - name: {app.name} installer\n"
                          f"        run: bash {suite.folder.name}/tools/installer-tests/{app.name}.sh\n", "ci.yml")
-    text = insert_before(text, "\n\n      - name: Line endings\n",
+    text = insert_before(text, "\n\n      # The repository's rules",
                          f"\n          shellcheck -S warning {suite.folder.name}/apps/{app.name}/install.sh", "ci.yml")
     change(ci, text)
     return [p.relative_to(root) for p in written]

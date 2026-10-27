@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
-# The system libraries Qt needs on a GitHub runner, for ci.yml's tests and its picture of the portal. The runner image
+# The system libraries Qt needs on a GitHub runner, for the CI workflows' tests and ci.yml's picture of the portal. The runner image
 # usually has them, so Ubuntu's mirror is asked only when one is missing: apt-get update, run in every job, hung a CI
 # job for 20 minutes on 23-10-2026. Libraries are looked up by file (ldconfig), not by package: Ubuntu 24.04 renamed
 # some packages (libglib2.0-0t64).

@@ -26,8 +26,9 @@ windows-portable/             the Windows Portable Suite (its tags start with wp
 nexus/                        the Nexus page
 DESIGN.md ICONS.md            every color and every icon, per suite and the Nexus page
 SETUP.md                      what to take from the development machine and install on the next one
-.github/workflows/            every workflow: ci.yml and release.yml (Nexus and the BC250 Bazzite Suite), each other
-                              suite's ci-<suite>.yml and release-<suite>.yml, nexus-index.yml, docs.yml (the wikis)
+.github/workflows/            every workflow: ci-nexus.yml (Nexus's checks), ci.yml and release.yml (the BC250
+                              Bazzite Suite), each other suite's ci-<suite>.yml and release-<suite>.yml,
+                              nexus-index.yml, docs.yml (the wikis)
 ```
 
 Every suite's folder is laid out the same way:
@@ -95,18 +96,23 @@ suites on Windows, and core, tools and `dev/` on both.
 
 ### CI on your own machine
 
+GitHub runs two CI workflows on every push: `ci-nexus.yml`, Nexus's checks (core, the Nexus tools, `dev/`, the Nexus
+page and the repository's rules: line endings, exec bits, the four files of every former repo, no CHANGELOG losing
+an entry), and the suite's own (`ci.yml` for the BC250 Bazzite Suite, `ci-<suite>.yml` for the others). A suite's
+release tags wait for both, never for another suite's CI, so one suite's failure never holds another's releases.
+
 `./test.sh` runs every suite in one venv that holds everything, on whatever Python your system has. GitHub's CI runs
 each job on Python 3.12 with only that job's own requirements, so a test can pass here and still fail there: a
-Python 3.13 function, or a package only the full venv has. `tools/ci-local.sh` runs the jobs of
-`.github/workflows/ci.yml` the way GitHub does, in a container (podman, which Bazzite has, or docker):
+Python 3.13 function, or a package only the full venv has. `tools/ci-local.sh` runs the jobs of `ci.yml` and
+`ci-nexus.yml` the way GitHub does, in a container (podman, which Bazzite has, or docker):
 
 ```bash
-tools/ci-local.sh                      # every job, about a minute and a half once the image is built
-tools/ci-local.sh pytest/tools shell   # some jobs; a matrix job by its value, pytest for all of them
-tools/ci-local.sh --list               # the jobs, read from ci.yml
+tools/ci-local.sh                            # every job of both workflows, about a minute and a half once the image is built
+tools/ci-local.sh shell nexus-pytest/tools   # some jobs; a matrix job by its value, pytest for all of the suite's
+tools/ci-local.sh --list                     # the jobs; ci-nexus.yml's have nexus- before the name (nexus-shell)
 ```
 
-It reads the jobs from `ci.yml` itself, so a new app in the matrix or a new installer step needs no change. The
+It reads the jobs from the workflows themselves, so a new app in the matrix or a new installer step needs no change. The
 first run builds the image from `tools/ci-local/Containerfile` (Python 3.12 and the packages GitHub's runner has)
 and Console Link's FFmpeg; both are kept, with the venvs and the logs, in `~/.cache/bc250-ci-local`. It works on a
 copy of the checkout with every change staged, as the commit will have it. Only the Windows job does not run here.
