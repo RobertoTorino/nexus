@@ -3,7 +3,7 @@
 
 APP_NAME = "BC-250 Upscaler Manager"
 APP_ID = "bc250-upscaler"
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 
 import os
 from pathlib import Path
