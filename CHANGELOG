@@ -1,3 +1,13 @@
+Changelog: 27-10-2026 22:30:00
+
+SETUP.md at the root says what to take from the development machine before its drive is replaced and what to
+install on the new one, in order: the board's layered packages and kernel arguments, Homebrew's packages, the
+Flatpaks, Rust, the checkout with its venv and hook, Claude Code, VS Code and the suite itself. tools/dev-backup.sh
+packs what the repository does not hold (Claude Code's memory, settings, plugins and sign-in, the git identity, the
+SSH keys, the GitHub CLI's and the suite's settings, VS Code's settings) with lists of what was installed, and
+restores it into the new home folder; tools/tests/test_dev_backup.py covers it. The wiki's machine page points at
+both.
+
 Changelog: 27-10-2026 22:23:19
 
 The Windows Portable Suite's releases are titled with the suite's and the app's names, as the BC250 suite's now are:

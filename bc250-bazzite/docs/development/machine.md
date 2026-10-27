@@ -27,6 +27,23 @@ checks before a push are in [Development](index.md#development); the release com
 Homebrew on Bazzite installs to `/home/linuxbrew/.linuxbrew/bin`; a shell that is not interactive (a timer, an IDE's
 terminal) may need it on `PATH`.
 
+## Moving to a new drive
+
+`SETUP.md` at the root of the repository is the order of things when the machine gets a new drive or a fresh
+Bazzite: what to pack first, then the layered packages, Homebrew's packages, the Flatpaks, Rust, the checkout,
+Claude Code, VS Code and the suite. `tools/dev-backup.sh` packs what the repository does not hold and restores it:
+
+```bash
+tools/dev-backup.sh pack /run/media/$USER/<stick>            # the archive: home files and the lists of what is installed
+tools/dev-backup.sh list <archive>                          # what it holds
+tools/dev-backup.sh restore <archive>                       # into the new home folder; existing files are kept
+```
+
+The archive holds Claude Code's memory and sign-in, the git identity, the SSH keys, the GitHub CLI's and the
+suite's settings and VS Code's settings, with a Brewfile, the Flatpak and extension lists, the image's layered
+packages and kernel arguments and the user timers; it holds secrets, so it stays on a drive of your own and is
+deleted once the new machine works.
+
 ## Staying up to date
 
 Bazzite keeps itself current: its updater (`uupd.timer`) runs every day at 04:00, or at the next boot when the
