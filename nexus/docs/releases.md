@@ -155,7 +155,8 @@ GitHub built it.
 
 Only portal releases are marked **Latest** on GitHub (`release.yml` passes `--latest=false` for app releases), so
 `/releases/latest`, which the README and the manual link to, always opens the newest portal. App release notes
-start by pointing to it.
+start by pointing to it. Each release's title names its suite and app, from the portal's name and `apps.toml`:
+*BC250 Bazzite Suite: Portal 12.0.0*, *BC250 Bazzite Suite: Xenia Manager 0.11.0*.
 
 A red line at the top of the window means a release tag points at a commit whose `VERSION` is not the tag's
 version: the tag was made before the version bump was committed, and `release.yml` cannot build it. Delete the tag

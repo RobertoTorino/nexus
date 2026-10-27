@@ -48,6 +48,8 @@ def test_an_app_gets_its_zip_checksum_and_notes(tmp_path, fake_pyinstaller):
     assert f"Expand-Archive {archive.name} ." in notes and "install.ps1" in notes
     assert "not signed" in notes and "### Changes" in notes
     assert "latest portal release" not in notes                 # no portal yet, and never the BC250 suite's
+    title = f"Windows Portable Suite: Windows Portable Test {TEST_TAG.split('-v')[1]}\n"
+    assert (tmp_path / "title.txt").read_text(encoding="utf-8") == title
 
 
 def test_the_portal_a_stale_version_and_another_suites_tag_are_refused(tmp_path, fake_pyinstaller):

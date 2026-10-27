@@ -69,12 +69,12 @@ jobs:
 
       - name: Publish
         run: |
-          app=${TAG%-v*}
+          title=$(cat dist/title.txt)   # the suite's and the app's names (build_release.py's release_title)
           for attempt in 1 2 3 4 5; do
             if gh release view "$TAG" >/dev/null 2>&1; then
               gh release upload "$TAG" "dist/$TAG.zip" dist/SHA256SUMS --clobber && exit 0
             elif gh release create "$TAG" "dist/$TAG.zip" dist/SHA256SUMS \
-                   --title "$app ${TAG##*-v}" --notes-file dist/notes.md --verify-tag --latest=false; then
+                   --title "$title" --notes-file dist/notes.md --verify-tag --latest=false; then
               exit 0
             fi
             [ "$attempt" = 5 ] && break

@@ -101,7 +101,7 @@ jobs:
       - name: Publish
         run: |
           app=${TAG%-v*}
-          title="$app ${TAG##*-v}"
+          title=$(cat dist/title.txt)   # the suite's and the app's names: "BC250 Bazzite Suite: Portal 12.0.0"
           # Only a portal release is GitHub's "Latest": /releases/latest is what users install, never an app.
           latest=false
           [ "$app" = portal ] && latest=true

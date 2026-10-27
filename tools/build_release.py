@@ -7,11 +7,12 @@
 The tag names its suite (tools/suites.py: a suite's TAG_PREFIX, none for bc250-bazzite); --suite overrides it. A
 Windows suite's tags are refused: their release format (no install.sh) is not built here yet.
 
-<out-dir> gets <tag>.tar.gz (unpacks into <tag>/), SHA256SUMS and notes.md. The tag's version must equal the app's
-VERSION. An app in NATIVE_WHEELS needs the wheel of its native core in that folder first, built by release.yml;
-it goes into the tarball, so the portal's checksum covers it. Bazzite Test (check) gets its engine checksum recorded
-(development/tools/build_info.py), which makes it a release build that refuses a changed engine. A portal tag needs --bundle: a folder with the pinned check release
-(<tag>.tar.gz and SHA256SUMS, as published); it is verified against apps.toml and unpacked into bundled/.
+<out-dir> gets <tag>.tar.gz (unpacks into <tag>/), SHA256SUMS, notes.md and title.txt (the release's title). The
+tag's version must equal the app's VERSION. An app in NATIVE_WHEELS needs the wheel of its native core in that folder
+first, built by release.yml; it goes into the tarball, so the portal's checksum covers it. Bazzite Test (check) gets
+its engine checksum recorded (development/tools/build_info.py), which makes it a release build that refuses a changed
+engine. A portal tag needs --bundle: a folder with the pinned check release (<tag>.tar.gz and SHA256SUMS, as
+published); it is verified against apps.toml and unpacked into bundled/.
 
 The tar inside is reproducible and the same on Linux and Windows: sorted entries, root:root, the commit time (or
 SOURCE_DATE_EPOCH) as mtime, and modes set here (755 for folders and scripts, 644 for the rest), not taken from the
@@ -70,6 +71,16 @@ def portal_stage() -> tuple[str, str]:
     text = (SUITE / "portal" / "bc250_portal" / "__init__.py").read_text(encoding="utf-8")
     found = [re.search(rf'^{name} = "(.*)"$', text, re.M) for name in ("STAGE", "STAGE_NOTE")]
     return found[0][1] if found[0] else "", found[1][1] if found[1] else ""
+
+
+def release_title(app: str, version: str) -> str:
+    """The GitHub release's title: the suite's name (the portal's APP_NAME), then the app's name in apps.toml, so a
+    release names what it is among every suite's releases ("BC250 Bazzite Suite: Xenia Manager 0.11.0")."""
+    text = (SUITE / "portal" / "bc250_portal" / "__init__.py").read_text(encoding="utf-8")
+    found = re.search(r'^APP_NAME = "(.*)"$', text, re.M)
+    suite_name = found[1] if found else SUITE.name
+    name = "Portal" if app == "portal" else next((e.name for e in manifest.load(MANIFEST) if e.key == app), app)
+    return f"{suite_name}: {name} {version}"
 
 
 def source_epoch() -> int:
@@ -218,6 +229,7 @@ def build(tag: str, out: Path, bundle: Path | None = None) -> Path:
     if changes:
         notes += ["### Changes", "", changes, ""]
     (out / "notes.md").write_text("\n".join(notes), encoding="utf-8")
+    (out / "title.txt").write_text(release_title(app, version) + "\n", encoding="utf-8")
     return archive
 
 

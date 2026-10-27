@@ -4,11 +4,12 @@
 
     python windows-portable/tools/build_release.py wp-<app>-v<x.y.z> <out-dir>
 
-<out-dir> gets <tag>.zip, SHA256SUMS and notes.md. The zip unpacks into <tag>/ with program/ (PyInstaller's
-one-folder build: the .exe, named by the package's EXE_NAME, beside _internal/, which starts faster than a one-file
-exe and is flagged less often by virus scanners), install.ps1, LICENSE, THIRD-PARTY-NOTICES.txt and MANUAL.md when
-the suite has the app's chapter. The tag's version must equal the app's VERSION. The app is staged first, as a
-release of any suite is (tools/stage_app.py), so the exe runs on the bc250_core the app was tested with.
+<out-dir> gets <tag>.zip, SHA256SUMS, notes.md and title.txt (the release's title). The zip unpacks into <tag>/
+with program/ (PyInstaller's one-folder build: the .exe, named by the package's EXE_NAME, beside _internal/, which
+starts faster than a one-file exe and is flagged less often by virus scanners), install.ps1, LICENSE,
+THIRD-PARTY-NOTICES.txt and MANUAL.md when the suite has the app's chapter. The tag's version must equal the app's
+VERSION. The app is staged first, as a release of any suite is (tools/stage_app.py), so the exe runs on the
+bc250_core the app was tested with.
 
 This is the suite's own tool (owner, 27-10-2026: a change to one suite never touches another's release): the
 BC250 Bazzite Suite's releases are built by tools/build_release.py. It uses the Nexus tools' staging and the
@@ -25,6 +26,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import tomllib
 import zipfile
 from pathlib import Path
 
@@ -54,6 +56,16 @@ def source_epoch() -> int:
         return int(out)
     except (OSError, subprocess.CalledProcessError, ValueError):
         return 0
+
+
+def release_title(app: str, version: str) -> str:
+    """The GitHub release's title: the suite's name (the portal's APP_NAME), then the app's name in apps.toml, so a
+    release names what it is among every suite's releases ("Windows Portable Suite: Windows Portable Test 0.1.1")."""
+    text = (SUITE / "portal" / "portable_portal" / "__init__.py").read_text(encoding="utf-8")
+    found = re.search(r'^APP_NAME = "(.*)"$', text, re.M)
+    suite_name = found[1] if found else SUITE.name
+    apps = tomllib.loads((SUITE / "portal" / "apps.toml").read_text(encoding="utf-8")).get("apps", {})
+    return f"{suite_name}: {apps.get(app, {}).get('name', app)} {version}"
 
 
 def sha256_of(path: Path) -> str:
@@ -160,7 +172,7 @@ def build_zip(app: str, tag: str, out: Path, epoch: int) -> Path:
 
 
 def build(tag: str, out: Path) -> Path:
-    """<tag>.zip, SHA256SUMS and notes.md of an app of the suite."""
+    """<tag>.zip, SHA256SUMS, notes.md and title.txt of an app of the suite."""
     match = _TAG.match(tag)
     if not match:
         raise SystemExit(f"{tag} is not wp-<app>-v<x.y.z>")
@@ -187,6 +199,7 @@ def build(tag: str, out: Path) -> Path:
     if changes:
         notes += ["### Changes", "", changes, ""]
     (out / "notes.md").write_text("\n".join(notes), encoding="utf-8")
+    (out / "title.txt").write_text(release_title(app, version) + "\n", encoding="utf-8")
     return archive
 
 

@@ -101,6 +101,8 @@ def test_sums_and_notes(bt_release):
     assert f"Bundles the suite core `bc250_core` {core}." in notes
     assert notes.index("use the portal, not this file") < notes.index("### Install")   # an app: the portal first
     assert br.LATEST_PORTAL_URL in notes
+    version = BT_TAG.split("-v")[1]
+    assert (bt_release / "title.txt").read_text() == f"BC250 Bazzite Suite: BC-250 Bazzite Test {version}\n"
 
 
 def test_reproducible(bt_release, tmp_path):
@@ -182,6 +184,8 @@ def test_portal_needs_and_verifies_bundle(bt_release, pinned, tmp_path):
     assert f"{PORTAL_TAG}/bc250_core/platform.py" in names and f"{PORTAL_TAG}/apps.toml" in names
     notes = (tmp_path / "b" / "notes.md").read_text()
     assert BT_TAG in notes and "use the portal, not this file" not in notes
+    version = PORTAL_TAG.split("-v")[1]
+    assert (tmp_path / "b" / "title.txt").read_text() == f"BC250 Bazzite Suite: Portal {version}\n"
     stage, note = br.portal_stage()
     assert (f"> **{stage}:** {note}" in notes) == bool(stage)            # the suite's stage, at the top
 
