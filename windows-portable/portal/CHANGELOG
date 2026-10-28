@@ -1,3 +1,13 @@
+Changelog: 28-10-2026 16:46:20
+
+Release 1.1.0. Pins wp-test-v1.1.1.
+
+Changelog: 28-10-2026 16:36:06
+
+Added. A short intro when the portal opens, about three seconds (owner, 28-10-2026): the BC250 portal's intro of Suite
+Big Picture Mode with this suite's name, icon and amber, painted over the window; any button, key or tap skips it
+(portable_portal/intro.py). The handheld has no mode to switch to, so the intro plays at the start.
+
 Changelog: 28-10-2026 16:25:16
 
 Release 1.0.2.

@@ -28,6 +28,7 @@ from bc250_core.platform import expand, launch_in_terminal
 from bc250_core.portable import AMBER, DIM, Card, Legend, PortableHeader, PortableWindow, px
 
 from . import APP_ICONS, APP_ID, APP_NAME, __version__
+from .intro import INTRO_MS, Intro
 from .manifest import CATEGORIES, AppEntry
 from .portal_update import PortalUpdate, short
 from .sources import Records, SourceError, Sources, fetch_release, is_installed
@@ -122,7 +123,8 @@ class MainWindow(PortableWindow):
                  battery: Callable[[], tuple[int, bool] | None] = power.battery,
                  launch: Callable[[list[str]], None] = start_app,
                  terminal: Callable[..., None] = launch_in_terminal, icons: Path = APP_ICONS,
-                 exe: str = "", exit_dir: Path | None = None):
+                 exe: str = "", exit_dir: Path | None = None, intro_ms: int = INTRO_MS):
+        """*intro_ms*: how long the intro plays when the window starts (0: none)."""
         super().__init__(gamepad)
         self.setWindowTitle(f"{APP_NAME} {__version__}")
         self.log = applog.logger(APP_ID)
@@ -130,6 +132,8 @@ class MainWindow(PortableWindow):
         self.portal_check, self.battery, self.launch, self.terminal = portal_check, battery, launch, terminal
         self.exe = exe                                  # the installed portal's program, for a restart; "" from a checkout
         self.exit_dir = exit_dir or Path(tempfile.gettempdir())
+        self.intro_ms = intro_ms
+        self.intro: Intro | None = None
         self.settings = QSettings()
         self.by_key = {entry.key: entry for entry in entries}
         self.current_key = ""
@@ -211,8 +215,8 @@ class MainWindow(PortableWindow):
         self.confirm_timer.timeout.connect(self._confirm_over)
 
     def start(self) -> None:
-        """After the window is shown: the controller, the status line, the last tab, and the portal's own update
-        checked once in the background."""
+        """After the window is shown: the intro, the controller, the status line, the last tab, and the portal's own
+        update checked once in the background."""
         self.start_gamepad()
         self.update_status()
         self.status_timer.start()
@@ -222,6 +226,26 @@ class MainWindow(PortableWindow):
         else:
             self.show_tab(self.tabs.current)
         self.check_portal()
+        if self.intro_ms > 0:
+            self.intro = Intro(self, self.intro_ms)
+            self.intro.finished.connect(self._intro_done)
+            self.intro.begin()
+
+    def _intro_done(self) -> None:
+        self.intro = None
+        self.show_tab(self.tabs.current)                # the focus back on the tab's tile
+
+    def on_action(self, action: str) -> None:
+        if self.intro is not None:                      # any button skips the intro, and only that
+            if self.isActiveWindow():
+                self.intro.skip()
+            return
+        super().on_action(action)
+
+    def resizeEvent(self, event) -> None:  # noqa: N802 (Qt override)
+        super().resizeEvent(event)
+        if self.intro is not None:
+            self.intro.setGeometry(self.rect())
 
     # The pages
 

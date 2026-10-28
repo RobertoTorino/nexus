@@ -1319,6 +1319,19 @@ def test_release_runs_of_the_tags_waited_for():
     assert rp.finished_releases(announced, runs, []) == []
 
 
+def test_a_suites_own_release_workflow_counts_too():
+    # The Windows Portable Suite's release-windows-portable.yml, "Release Windows Portable" (owner, 28-10-2026: its
+    # GitHub column said no run seen while it had built wp-test-v1.1.1).
+    named = {**run("Release Windows Portable", "wp-test-v1.1.1", n=2),
+             "path": ".github/workflows/release-windows-portable.yml"}
+    unnamed = run("Release Windows Portable", "wp-portal-v1.0.2", "in_progress", n=1)
+    ci = {**run("CI Windows Portable", "wp-test-v1.1.1", n=3), "path": ".github/workflows/ci-windows-portable.yml"}
+    runs = rp.parse_runs({"workflow_runs": [ci, named, unnamed]})
+    assert rp.release_run(runs, "wp-test-v1.1.1").url.endswith("/2")        # not the CI run on the tag
+    assert rp.release_state(runs, "wp-test-v1.1.1") == "passed"
+    assert rp.release_state(runs, "wp-portal-v1.0.2") == "running"
+
+
 def test_fetch_runs_sends_the_etag(monkeypatch):
     import io
     import urllib.error

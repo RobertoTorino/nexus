@@ -116,6 +116,7 @@ def world(qapp, tmp_path, monkeypatch):
 
     def make(portal_check=None, **kwargs):
         pad = FakePad()
+        kwargs.setdefault("intro_ms", 0)                # the intro has its own tests
         window = mw.MainWindow(w.entries, w.sources, w.records, portal_check=portal_check,
                                gamepad=Gamepad(source_factory=lambda: pad), battery=lambda: (82, False),
                                launch=w.launched.append, terminal=w.terminal, exit_dir=tmp_path / "exit", **kwargs)
@@ -303,3 +304,37 @@ def test_ps_line_and_launch_argv(monkeypatch):
     assert mw.launch_argv(r'"%LOCALAPPDATA%\suite\app\X.exe" --full') == [r"C:\Users\me\AppData\Local\suite\app\X.exe", "--full"]
     assert mw.launch_argv(r"%LOCALAPPDATA%\suite\app\X.exe") == [r"C:\Users\me\AppData\Local\suite\app\X.exe"]
     assert mw.restart_line(Path(r"C:\u"), "").endswith('{ throw "install.ps1 ended with exit status $LASTEXITCODE" }')
+
+
+def test_the_intro_plays_at_the_start_and_any_button_skips_it(world, qapp, monkeypatch):
+    window = world.make(intro_ms=60_000)
+    intro = window.intro
+    assert intro is not None and intro.isVisible() and intro.name == "Windows Portable Suite"
+    assert intro.geometry() == window.rect()
+    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
+    window.on_action("accept")                          # skips the intro, installs nothing
+    assert window.intro is None and world.terminal.lines == [] and intro.done
+    assert window.tiles["test"].hasFocus()
+
+
+def test_the_intro_ends_by_itself(world, qapp):
+    window = world.make(intro_ms=50)
+    assert window.intro is not None
+    end = time.monotonic() + 5
+    while window.intro is not None and time.monotonic() < end:
+        qapp.processEvents()
+        time.sleep(0.01)
+    assert window.intro is None
+
+
+def test_the_intro_paints_every_phase(qapp):
+    from PyQt6.QtWidgets import QWidget
+    from portable_portal.intro import Intro
+    host = QWidget()
+    host.resize(1280, 720)
+    intro = Intro(host)
+    intro.setGeometry(host.rect())
+    for step in range(11):
+        intro.progress = step / 10
+        assert not intro.grab().isNull()
+    intro.skip()

@@ -1205,10 +1205,19 @@ def just_finished(before: dict[str, BuildRun], runs: list[BuildRun]) -> list[Bui
     return [r for r in runs if r.done and r.url in before and not before[r.url].done]
 
 
+def is_release(run: BuildRun) -> bool:
+    """A suite's release workflow: release.yml ("Release"), or release-<suite>.yml for a suite with a tag prefix
+    ("Release Windows Portable"); by its name when GitHub gives no file."""
+    if run.file:
+        return run.file == "release.yml" or (run.file.startswith("release-") and run.file.endswith(".yml"))
+    return run.workflow == "Release" or run.workflow.startswith("Release ")
+
+
 def release_run(runs: list[BuildRun], tag: str) -> BuildRun | None:
-    """The newest Release run on *tag* (release.yml, which builds and publishes its tarball); None while GitHub
-    shows none: the tag is not pushed yet, or the run is not among the newest ones any more."""
-    return next((r for r in runs if r.workflow == "Release" and r.ref == tag), None)
+    """The newest release run on *tag* (release.yml or the suite's release-<suite>.yml, which builds and publishes
+    its release); None while GitHub shows none: the tag is not pushed yet, or the run is not among the newest ones
+    any more."""
+    return next((r for r in runs if is_release(r) and r.ref == tag), None)
 
 
 def release_state(runs: list[BuildRun], tag: str) -> str:

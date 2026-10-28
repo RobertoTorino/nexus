@@ -163,8 +163,9 @@ cache tokens, and each model; click to open [Claude's usage page](https://claude
 your plan's limits. Other computers and claude.ai are not counted. Without Claude Code the pill is not shown. It
 looks every 5 minutes, and **Refresh** looks at once.
 
-The releases step 2 waits for are followed from the same runs. The **GitHub** column of the pin table says where
-each release to pin stands: *no run seen* (is the tag pushed?), *building…*, *ready* or *failed*; **Pin** waits
+The releases step 2 waits for are followed from the same runs, those of the suite's release workflow (**Release**,
+**Release Windows Portable**). The **GitHub** column of the pin table says where each release to pin stands: *no
+run seen* (is the tag pushed?), *building…*, *ready* or *failed*; **Pin** waits
 for a release that is still building, or says that its workflow failed, instead of failing on a checksum that is
 not there yet. When the release of an app to pin is ready, a desktop notification says so (*ready to pin*), also
 when the run started and ended between two looks, or before the window opened; each release is told once. Under
