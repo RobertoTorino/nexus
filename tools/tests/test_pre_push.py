@@ -87,6 +87,25 @@ def test_a_changelog_that_lost_entries_stops_the_push(repo):
     assert "CHANGELOG lost entries" in result.stderr and "not pushed" in result.stderr
 
 
+def test_a_remote_ahead_says_pull_first(repo):
+    """Pushed from the other machine meanwhile (owner, 28-10-2026: the hook blamed a CHANGELOG): the remote's commit
+    is not here, or here but not under HEAD. The hook says to pull, and runs no check against it."""
+    first = git(repo, "rev-parse", "HEAD")
+    (repo / "x.txt").write_text("x\n")
+    git(repo, "add", "x.txt")
+    git(repo, "commit", "-qm", "theirs")
+    theirs = git(repo, "rev-parse", "HEAD")
+    git(repo, "reset", "-q", "--hard", first)
+    (repo / "y.txt").write_text("y\n")
+    git(repo, "add", "y.txt")
+    git(repo, "commit", "-qm", "mine")
+    head = git(repo, "rev-parse", "HEAD")
+    for remote in (theirs, "1" * 40):                                         # fetched, or not fetched at all
+        result = hook(repo, [f"refs/heads/main {head} refs/heads/main {remote}"])
+        assert result.returncode == 1 and "git pull --rebase" in result.stderr
+        assert "CHANGELOG" not in result.stderr and calls(repo) == []
+
+
 def test_a_version_mismatch_stops_the_push(repo):
     head = git(repo, "rev-parse", "HEAD")
     result = hook(repo, [f"refs/heads/main {head} refs/heads/main {head}"], FAIL_CHECK_VERSIONS="1")

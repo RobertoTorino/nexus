@@ -49,6 +49,12 @@ for push in "${pushes[@]}"; do
         info "${sha:0:7} is not HEAD: the checks read the working tree, so they are skipped for it"
         continue
     fi
+    # The remote has commits this checkout lacks (pushed from the other machine): git would refuse the push anyway,
+    # and the checks below cannot compare with a commit that is not here. Say so, rather than a CHANGELOG error.
+    if [ -n "$base" ] && ! git merge-base --is-ancestor "$base" "$sha" 2>/dev/null; then
+        fail "the remote has commits this checkout does not (pushed from another machine?): git pull --rebase, then push again"
+        continue
+    fi
     if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
         info "uncommitted changes: the checks see them, the push does not"
     fi

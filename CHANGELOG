@@ -2,6 +2,14 @@ Changelog: 28-10-2026 13:29:11
 
 Release 0.1.0.
 
+Changelog: 28-10-2026 13:31:23
+
+Fixed. The pre-push hook said "a CHANGELOG lost entries the remote has" when the remote only had commits this
+checkout lacked, pushed from the other machine (owner, 28-10-2026: Release nexus-v0.1.0 from Windows after
+portal-v12.1.0 from Bazzite). tools/pre-push.sh now checks first that what the remote has is under the commit being
+pushed, and otherwise says to git pull --rebase and push again, with no check run against a commit that is not
+there (tools/tests/test_pre_push.py). The Nexus page's Development chapter says so.
+
 Changelog: 28-10-2026 13:21:31
 
 Added. A rule (owner, 28-10-2026, CLAUDE.md): new information, a new way of working or new logic worth knowing goes

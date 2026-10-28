@@ -129,6 +129,9 @@ BC250_PRE_PUSH=full git push            # also every CI job (tools/ci-local.sh)
 git push --no-verify                    # without the checks
 ```
 
+When the remote has commits this checkout lacks, pushed from the other machine, the hook says so and stops before
+the checks: run `git pull --rebase`, then push again.
+
 ### Working from both Linux and Windows
 
 The repo is used from both systems, so it is set up to behave the same on each:
