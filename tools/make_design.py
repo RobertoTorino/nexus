@@ -18,7 +18,7 @@ import sys
 import textwrap
 from pathlib import Path
 
-S = ("A nexus is a hub, the center every part leads back to. Nexus is where the suites connect: one repository "
+S = ("A nexus is like a hub, the center every part leads back to. Nexus is where the suites connect: one repository "
      "holding every suite, the code they share, and the rules they’re built by.")
 ROOT = Path(__file__).resolve().parent.parent
 SUITE_DIR = "bc250-bazzite"                 # the BC250 Bazzite Suite's folder

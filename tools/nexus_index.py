@@ -26,7 +26,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 REPO = "RobertoTorino/nexus"
 RELEASES_URL = f"https://github.com/{REPO}/releases"
-SYSTEM_NAMES = {"bazzite": "Bazzite", "windows": "Windows"}
+# What a suite is for, while it has no wiki whose site_description says it (owner, 28-10-2026: the Windows suite's)
+SYSTEM_TEXTS = {"bazzite": "For Bazzite.", "windows": "For Windows running on portable gaming devices."}
 _VERSION = re.compile(r"^v(\d+)\.(\d+)\.(\d+)$")
 
 
@@ -88,9 +89,9 @@ def install_steps(notes: str) -> str:
 def section(folder: Path, releases: list[dict]) -> list[str]:
     name, prefix = suite_name(folder), suites.tag_prefix(folder)
     url, description = wiki(folder)
-    system = SYSTEM_NAMES.get(suites.system(folder), suites.system(folder))
+    system = suites.system(folder)
     about = " ".join(part for part in (
-        f"{description.rstrip('.')}." if description else (f"For {system}." if system else ""),
+        f"{description.rstrip('.')}." if description else SYSTEM_TEXTS.get(system, f"For {system}." if system else ""),
         f"[Wiki]({url})" if url else "") if part)
     out = [f"## {name}", ""] + ([about, ""] if about else [])
     portal = newest(releases, f"{prefix}portal-")

@@ -27,7 +27,7 @@ Your browser cannot play this video; <a href="videos/nexus.mp4">download it</a> 
 <div class="home-section__inner" markdown>
 ## The name
 
-A nexus is a hub, the center every part leads back to.  
+A nexus is like a hub, the center every part leads back to.  
 Nexus is where the suites connect: one repository holding every suite, the code they share, and the rules they’re built by.
 
 </div>

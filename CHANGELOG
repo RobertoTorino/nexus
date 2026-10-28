@@ -1,3 +1,16 @@
+Changelog: 28-10-2026 01:49:23
+
+The Nexus page's home says "A nexus is like a hub, the center every part leads back to." (owner, 28-10-2026; it
+said "is a hub"). The sentence is also the sample text of every color in DESIGN.md (tools/make_design.py), so the
+samples in bc250-bazzite/docs/design/colors/ are written again.
+
+Changelog: 28-10-2026 01:45:04
+
+The Nexus index says what a suite without a wiki is for in a sentence of its own (tools/nexus_index.py,
+SYSTEM_TEXTS): the Windows Portable Suite's section reads "For Windows running on portable gaming devices." (owner,
+28-10-2026), where it said "For Windows."; once the suite has a wiki, its site_description takes the line's place,
+as the BC250 suite's does.
+
 Changelog: 28-10-2026 01:11:11
 
 The Nexus page's home plays the Nexus video (the owner's, 28-10-2026; nexus/docs/videos/nexus.mp4, 23 s, re-encoded
