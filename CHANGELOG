@@ -1,3 +1,11 @@
+Changelog: 28-10-2026 10:16:19
+
+The Windows Portable Suite's build_release test of a portal's bundle no longer reads apps.toml's pin: its fake test
+release is pinned with its own sha256 (windows-portable/tools/tests/test_build_release.py). It passed only while
+the pin had none, and failed in CI once wp-test-v1.0.2 was pinned with its checksum. The test also checks the
+SHA256SUMS fallback of a pin without one. build_release.py's checksum error ends the hashes it shows with "...",
+not "…", which the Windows console of the runner printed as "�".
+
 Changelog: 28-10-2026 01:49:23
 
 The Nexus page's home says "A nexus is like a hub, the center every part leads back to." (owner, 28-10-2026; it

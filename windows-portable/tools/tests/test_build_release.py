@@ -44,14 +44,16 @@ def fake_pyinstaller(monkeypatch):
 
 
 @pytest.fixture
-def bundle(tmp_path):
-    """A folder with the pinned test release's zip and its SHA256SUMS, as the release workflow downloads them."""
+def bundle(tmp_path, monkeypatch):
+    """A folder with the pinned test release's zip and its SHA256SUMS, as the release workflow downloads them, and
+    the pin's sha256 set to that zip's (apps.toml's own pin is of the real release)."""
     tag, _ = br.pinned_test()
     folder = tmp_path / "bundle"
     folder.mkdir()
     (folder / f"{tag}.zip").write_bytes(b"the test release")
     digest = hashlib.sha256(b"the test release").hexdigest()
     (folder / "SHA256SUMS").write_text(f"{digest}  {tag}.zip\n", encoding="utf-8")
+    monkeypatch.setattr(br, "pinned_test", lambda: (tag, digest))
     return folder
 
 
@@ -79,6 +81,8 @@ def test_the_portal_bundles_the_pinned_test_release(tmp_path, fake_pyinstaller, 
     assert (tmp_path / "out" / "title.txt").read_text(encoding="utf-8") == title
     with pytest.raises(SystemExit, match="--bundle"):
         br.build(PORTAL_TAG, tmp_path / "out2")
+    monkeypatch.setattr(br, "pinned_test", lambda: (tag, ""))         # no sha256 pinned: SHA256SUMS checks it
+    assert br.bundled_test(bundle) == (bundle / f"{tag}.zip", hashlib.sha256(b"the test release").hexdigest())
     (bundle / f"{tag}.zip").write_bytes(b"another")
     with pytest.raises(SystemExit, match="does not match its checksum"):
         br.bundled_test(bundle)

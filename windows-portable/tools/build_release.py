@@ -103,7 +103,7 @@ def bundled_test(bundle: Path | None) -> tuple[Path, str]:
             raise SystemExit(f"{sums} does not list {archive.name}")
     got = sha256_of(archive)
     if got != want:
-        raise SystemExit(f"{archive.name} does not match its checksum (got {got[:16]}…, expected {want[:16]}…)")
+        raise SystemExit(f"{archive.name} does not match its checksum (got {got[:16]}..., expected {want[:16]}...)")
     return archive, got
 
 
