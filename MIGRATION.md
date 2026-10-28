@@ -1157,6 +1157,14 @@ behavior and dependencies. Decided (owner, 25-10-2026):
   `release.yml` after the build; the release format stays.
 - **Own tuning apps** (TDP, fans, and the like) for the handheld, later: the board's tuning apps do not port (sysfs,
   GRUB, RADV), but the same kinds of apps on both give comparison data between the BC-250 and the handheld.
+- **A network test in Windows Portable Test (owner, 28-10-2026: found out once the tests are built).** The portal's
+  update downloaded its 94 MB release at about 0.8 MB/s on the Ally (17:04), where the same file came in at 69 MB/s
+  with curl and 56 MB/s with the portal's own http_download an hour later, on mains power: the code is not the
+  cause, the connection at that moment was. Seen then: the MediaTek MT7922 (Wi-Fi 6E) at 5 GHz, 802.11ax, 2402 Mbps,
+  signal 84 %; the power plan's wireless power saving off on mains and Medium Power Saving on battery. A card that
+  shows the link (band, rate, signal), the power plan's Wi-Fi setting on mains and on battery, what else is
+  downloading (Windows Update's Delivery Optimization, the Xbox app, Steam) and a timed download, so a slow moment
+  can be compared with a fast one, on mains and on battery.
 - **An app for the back buttons (on hold, owner 28-10-2026).** The Ally X's M1 and M2 never reach Windows as buttons
   by default: they are Armoury Crate's modifiers (held with A a screenshot, with Y a recording, with Up the on-screen
   keyboard), mapped in Armoury Crate (Settings, Configure, M1 or M2; untick Secondary Function to map one alone, as
