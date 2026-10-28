@@ -5,6 +5,34 @@
 Working notes for moving the seven BC-250 tools into this suite. Not part of the manual or the READMEs, which
 describe only what exists.
 
+## Resume here (28-10-2026): the Windows Portable Suite
+
+Where it stands: wp-test-v1.3.0 and wp-portal-v1.3.0 are released, with core 0.2.0 inside and Nexus at 0.5.0;
+nothing is open in the working tree. The details are under "Windows Portable Suite" below. What 1.3.0 brought: the
+portal's intro covers the window from its first frame, with the BC250 intro's sound; its own update replaces the
+program safely (`Install-Folder`) and shows the MB of a download; an install by hand offers to remove the download;
+the apps it installs get no Desktop shortcut. Windows Portable Test reads on A, and has four cards: Device, Hardware,
+Connected (a dock or hub by its maker, external screens, USB network and drives; the owner's JSAUX stand shows as a
+Realtek hub with the TV over DisplayPort) and Controller (with the M1/M2 note). The header reads `82% | Wednesday
+28/10/2026 | 17:04`. The suite's wiki is live at /nexus/windows-portable-suite/. Nexus Releases moves Nexus's
+version with every suite release (minor; a new suite major), and DESIGN.md's samples are in `design/colors/`.
+
+Next, in this order:
+
+1. On the Ally (owner): 1.3.0 through the Suite page's update from the installed portal, the intro and its sound,
+   the four cards docked and undocked, the download question, no Test shortcut on the Desktop.
+2. Open (owner): B during a download closes the portal and drops the download: wait, or ask first?
+3. PCSX2 Manager, the first optional app and the blueprint of the managers: its name, what it does on Windows and
+   its category are the owner's to decide first.
+4. The Network card in Windows Portable Test is built (28-10-2026, in the working tree, not released: an `Added.`
+   in the app's CHANGELOG, so a minor wp-test release and a portal pin after). On the Ally (owner): A on the card on
+   mains and on battery, docked on Ethernet, and X with the Network section in the report.
+5. Smaller: paging in a portal tab once it has a ninth app; the drawn icons ICONS.md shows are still in
+   `bc250-bazzite/docs/design/icons/` (the color samples moved to the root; the icons not decided).
+
+On hold: the portal as Xbox mode's home app (MSIX), code signing, an app for the back buttons, the handheld's own
+tuning apps.
+
 ## Resume here (13-10-2026, after the break)
 
 **First (17-10-2026): the releases of the last renames, then the icons.** Every app is renamed (item 2). State at
@@ -1173,7 +1201,14 @@ behavior and dependencies. Decided (owner, 25-10-2026):
   signal 84 %; the power plan's wireless power saving off on mains and Medium Power Saving on battery. A card that
   shows the link (band, rate, signal), the power plan's Wi-Fi setting on mains and on battery, what else is
   downloading (Windows Update's Delivery Optimization, the Xbox app, Steam) and a timed download, so a slow moment
-  can be compared with a fast one, on mains and on battery.
+  can be compared with a fast one, on mains and on battery. Built (28-10-2026): `portable_test/network.py`, the
+  link through wlanapi and the plan's Power Saving Mode through powrprof (ctypes: netsh and powercfg answer in
+  Windows' language), one PowerShell query for the bytes received over 2 s, Delivery Optimization's jobs that are Downloading and the
+  downloaders' processes, and up to 10 s of the newest wp-test zip (core's `latest_release`). The fifth card fits at
+  104 px: the window's height is set by the Controller pane, as before. Measured while building it on the Ally
+  (19:00 to 19:20, mains, the same link throughout: 5 GHz, channel 56, 2402 Mbps, 85 %): 0.4, 22.8 and 7.3 MB/s with
+  the app's download and 1.2, 1.9 and 64 MB/s with curl, one after the other. The slowness comes and goes on an
+  unchanged link, so it lies past the handheld: the access point, the line or GitHub's servers.
 - **An app for the back buttons (on hold, owner 28-10-2026).** The Ally X's M1 and M2 never reach Windows as buttons
   by default: they are Armoury Crate's modifiers (held with A a screenshot, with Y a recording, with Up the on-screen
   keyboard), mapped in Armoury Crate (Settings, Configure, M1 or M2; untick Secondary Function to map one alone, as

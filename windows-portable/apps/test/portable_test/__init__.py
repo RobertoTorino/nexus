@@ -1,12 +1,13 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Windows Portable Test: getting to know the handheld. What Windows reports about the device, and every button,
-stick and trigger of its controller as you press them. It reads and shows; it changes nothing on the device."""
+"""Windows Portable Test: getting to know the handheld. What Windows reports about the device, how its network does,
+and every button, stick and trigger of its controller as you press them. It reads and shows; it changes nothing on
+the device."""
 
 APP_NAME = "Windows Portable Test"
 APP_ID = "windows-portable-test"
 EXE_NAME = "Windows-Portable-Test"   # the program's file name in a release (owner, 28-10-2026; was Windows-PT)
 SUITE = "windows-portable-suite"
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 
 from pathlib import Path
 

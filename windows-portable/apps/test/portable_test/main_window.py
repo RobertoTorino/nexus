@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The window: the tests as cards on the left (Device, Controller), what the focused one shows on the right, the
-controller's buttons at the bottom. Direction D's test screen (the owner's, 26-10-2026)."""
+"""The window: the tests as cards on the left (Device, Hardware, Connected, Network, Controller), what the focused one
+shows on the right, the controller's buttons at the bottom. Direction D's test screen (the owner's, 26-10-2026)."""
 
 from __future__ import annotations
 
@@ -20,21 +20,24 @@ from bc250_core.platform import suite_data
 from bc250_core.portable import (BODY, DIM, Card, Legend, Pane, Pill, PortableHeader, PortableWindow, px,
                                  status_clock, text_label)
 
-from . import APP_ID, APP_NAME, SUITE, __version__, device
+from . import APP_ID, APP_NAME, SUITE, __version__, device, network
 from .controller import ControllerPane
 
 STATUS_MS = 30_000              # the header's battery and time
 WAITING = "Press A to read what Windows reports."     # nothing runs before (owner, 28-10-2026)
+MEASURE = "Press A to measure the network."
 CARDS_WIDTH = 663               # the cards' column, as wide as its 5 of 9 parts of the page were: a long value wraps
 
 
 class _Reader(QObject):
-    """Reads the device off the window's thread; done or failed arrive on the window's."""
+    """Reads the device (or measures the network) off the window's thread; done, failed and what it is doing
+    (progress) arrive on the window's."""
 
     done = pyqtSignal(object)
     failed = pyqtSignal(str)
+    progress = pyqtSignal(str)
 
-    def __init__(self, read: Callable[[], device.Device]):
+    def __init__(self, read: Callable[[], object]):
         super().__init__()
         self.read = read
         self.busy = False
@@ -58,10 +61,11 @@ class _Reader(QObject):
 
 
 class InfoPane(Pane):
-    """What Windows reports, as labels and values: the Device, Hardware and Connected cards' pane. One read fills
-    all three; each has the Read pill and the status line."""
+    """What Windows reports, as labels and values: the Device, Hardware and Connected cards' pane (one read fills all
+    three) and the Network card's. Each has its pill (Read, Test) and the status line."""
 
-    def __init__(self, title: str, about: str, empty: str = "", parent: QWidget | None = None):
+    def __init__(self, title: str, about: str, empty: str = "", action: str = "Read", waiting: str = WAITING,
+                 parent: QWidget | None = None):
         super().__init__(parent)
         self.empty = empty                              # said when a read found nothing for this card
         self.column.addWidget(text_label(title, 24, QFont.Weight.ExtraBold))
@@ -72,9 +76,9 @@ class InfoPane(Pane):
         self.grid.setVerticalSpacing(px(4))
         self.column.addLayout(self.grid)
         self.column.addStretch()
-        self.status = text_label(WAITING, BODY + 1, color=DIM, wrap=True)
+        self.status = text_label(waiting, BODY + 1, color=DIM, wrap=True)
         self.column.addWidget(self.status)
-        self.read_pill = Pill("Read", "A", main=True)
+        self.read_pill = Pill(action, "A", main=True)
         self.column.addWidget(self.read_pill)
 
     def show_rows(self, rows: list[tuple[str, str]]) -> None:
@@ -96,6 +100,7 @@ class InfoPane(Pane):
 class MainWindow(PortableWindow):
     def __init__(self, log_path: Path | None = None, gamepad: Gamepad | None = None,
                  read: Callable[[], device.Device] = device.read,
+                 measure: Callable[..., network.Network] = network.measure,
                  battery: Callable[[], tuple[int, bool] | None] = power.battery,
                  reports: Path | None = None, clock: Callable[[], float] = time.monotonic):
         super().__init__(gamepad)
@@ -105,6 +110,7 @@ class MainWindow(PortableWindow):
         self.battery = battery
         self.reports = reports or suite_data(SUITE) / APP_ID / "reports"
         self.device: device.Device | None = None
+        self.network: network.Network | None = None
         self.testing = False
 
         page = QVBoxLayout(self)
@@ -121,9 +127,10 @@ class MainWindow(PortableWindow):
         self.device_card = Card("Device", "Processor, graphics, memory, storage, screen and battery.")
         self.hardware_card = Card("Hardware", "Panel, touch, Wi-Fi, Bluetooth, audio, fingerprint, sensors and USB.")
         self.connected_card = Card("Connected", "A dock or hub, screens, network and drives plugged in.")
+        self.network_card = Card("Network", "The Wi-Fi link, its power setting and a timed download.")
         self.controller_card = Card("Controller", "Every button, stick and trigger, shown as you press them.")
         self.info_cards = (self.device_card, self.hardware_card, self.connected_card)
-        for card in (*self.info_cards, self.controller_card):
+        for card in (*self.info_cards, self.network_card, self.controller_card):
             card.setFixedHeight(px(104))
             cards.addWidget(card)
         cards.addStretch()
@@ -136,8 +143,12 @@ class MainWindow(PortableWindow):
                                        "and drives. Windows does not tell a dock from a hub: the hub's maker and "
                                        "what is behind it show.", empty="Nothing is plugged in.")
         self.info_panes = (self.device_pane, self.hardware_pane, self.connected_pane)
+        self.network_pane = InfoPane("Network", "The Wi-Fi link, what else is downloading, and a timed download "
+                                     f"from GitHub ({network.DOWNLOAD_SECONDS} seconds at most, nothing is kept). "
+                                     "Compare a slow moment with a fast one.", action="Test", waiting=MEASURE)
+        self.report_panes = (*self.info_panes, self.network_pane)      # what X saves
         self.controller_pane = ControllerPane(clock=clock)
-        for pane in (*self.info_panes, self.controller_pane):
+        for pane in (*self.report_panes, self.controller_pane):
             self.panes.addWidget(pane)
         body.addWidget(self.panes, 1)
         page.addLayout(body, 1)
@@ -152,6 +163,13 @@ class MainWindow(PortableWindow):
             card.focused.connect(lambda pane=pane: self.show_pane(pane))
             card.activated.connect(self.read_device)
             pane.read_pill.activated.connect(self.read_device)
+        self.tester = _Reader(lambda: measure(network.power_text(self.battery()), say=self.tester.progress.emit))
+        self.tester.done.connect(self.network_measured)
+        self.tester.failed.connect(self.network_failed)
+        self.tester.progress.connect(self.network_pane.status.setText)
+        self.network_card.focused.connect(lambda: self.show_pane(self.network_pane))
+        self.network_card.activated.connect(self.measure_network)
+        self.network_pane.read_pill.activated.connect(self.measure_network)
         self.controller_card.focused.connect(lambda: self.show_pane(self.controller_pane))
         self.controller_card.activated.connect(self.start_test)
         self.controller_pane.finished.connect(self.test_finished)
@@ -178,7 +196,7 @@ class MainWindow(PortableWindow):
         if self.testing:
             return
         self.panes.setCurrentWidget(pane)
-        if pane in self.info_panes:
+        if pane in self.report_panes:
             self.legend.set_items([("X", "Save report"), ("B", "Close")])
         else:
             self.legend.set_items([("A", "Start the test"), ("B", "Close")])
@@ -191,9 +209,9 @@ class MainWindow(PortableWindow):
                 pane.status.setText("Reading what Windows reports ...")
                 pane.read_pill.setEnabled(False)
 
-    def say(self, text: str) -> None:
-        """A line on the status of every info pane: the report saved, or a read that failed."""
-        for pane in self.info_panes:
+    def say(self, text: str, panes: tuple[InfoPane, ...] | None = None) -> None:
+        """A line on the status of every pane X saves (the report saved), or of *panes* (a read that failed)."""
+        for pane in panes or self.report_panes:
             pane.status.setText(text)
 
     def screen_row(self) -> tuple[str, str]:
@@ -214,29 +232,32 @@ class MainWindow(PortableWindow):
         return [(label, value) for label, value in rows if value]
 
     def sections(self) -> list[tuple[str, list[tuple[str, str]]]]:
-        """Each info card's title and rows, as the cards show them and the report lists them."""
-        if self.device is None:
-            return []
-        return [("Device", self.rows()), ("Hardware", self.device.hardware_rows()),
-                ("Connected", self.device.connected_rows())]
+        """The title and rows of each card read or measured, as the cards show them and the report lists them."""
+        sections = []
+        if self.device is not None:
+            sections += [("Device", self.rows()), ("Hardware", self.device.hardware_rows()),
+                         ("Connected", self.device.connected_rows())]
+        if self.network is not None:
+            sections.append(("Network", self.network.rows()))
+        return sections
 
     def device_read(self, found: device.Device) -> None:
         self.device = found
-        for pane, (_, rows) in zip(self.info_panes, self.sections()):
+        for pane, (_, rows) in zip(self.info_panes, self.sections()):     # the Network section, when measured, is last
             pane.show_rows(rows)
             pane.read_pill.set_text("Read again")
             pane.read_pill.setEnabled(True)
         self.log.info(f"Read the device: {found.name}.")
 
     def device_failed(self, error: str) -> None:
-        self.say(f"Windows did not answer: {error}")
+        self.say(f"Windows did not answer: {error}", self.info_panes)
         for pane in self.info_panes:
             pane.read_pill.setEnabled(True)
         self.log.error(f"Reading the device failed: {error}")
 
     def save_report(self) -> Path | None:
-        """The device report as a text file in the suite's folder; the pane says where."""
-        if self.device is None or self.testing:
+        """The report of what was read and measured as a text file in the suite's folder; the pane says where."""
+        if (self.device is None and self.network is None) or self.testing:
             return None
         stamp = datetime.datetime.now()
         path = self.reports / f"device-{stamp:%Y-%m-%d-%H%M%S}.txt"
@@ -251,8 +272,29 @@ class MainWindow(PortableWindow):
             self.log.error(f"Saving the report failed: {error}")
             return None
         self.say(f"Saved: {path}")
-        self.log.info(f"Saved the device report: {path}")
+        self.log.info(f"Saved the report: {path}")
         return path
+
+    # The Network card
+
+    def measure_network(self) -> None:
+        if self.tester.start():
+            self.network_pane.status.setText("Measuring the network ...")
+            self.network_pane.read_pill.setEnabled(False)
+
+    def network_measured(self, found: network.Network) -> None:
+        self.network = found
+        self.network_pane.show_rows(found.rows())
+        self.network_pane.read_pill.set_text("Test again")
+        self.network_pane.read_pill.setEnabled(True)
+        if found.error:
+            self.network_pane.status.setText(f"The download failed: {found.error}")
+        self.log.info("Measured the network: " + "; ".join(f"{label} {value}" for label, value in found.rows()))
+
+    def network_failed(self, error: str) -> None:
+        self.network_pane.status.setText(f"The network was not measured: {error}")
+        self.network_pane.read_pill.setEnabled(True)
+        self.log.error(f"Measuring the network failed: {error}")
 
     # The Controller card
 

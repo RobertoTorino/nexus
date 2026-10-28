@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The window (main_window.py): the device read on A in the background and shown, read again, the report saved, a failed
-read, the controller test that has every button until B is held, and B closing the app."""
+read, the network measured, the controller test that has every button until B is held, and B closing the app."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ from PyQt6.QtGui import QKeyEvent
 
 from bc250_core import portable
 from bc250_core.gamepad import Gamepad
-from portable_test import device
+from portable_test import device, network
 from portable_test.main_window import MainWindow
 
 
@@ -45,10 +45,10 @@ def wait_for(qapp, predicate, seconds=5.0):
 def make(qapp, tmp_path, ally_json):
     windows = []
 
-    def make(read=None, pad=None):
+    def make(read=None, pad=None, measure=None):
         pad = pad or FakePad()
         window = MainWindow(gamepad=Gamepad(source_factory=lambda: pad), read=read or (lambda: device.parse(ally_json)),
-                            battery=lambda: (82, False), reports=tmp_path / "reports")
+                            measure=measure or measured, battery=lambda: (82, False), reports=tmp_path / "reports")
         portable.scale((1280, 720))
         window.resize(1280, 720)
         window.show()
@@ -62,8 +62,14 @@ def make(qapp, tmp_path, ally_json):
         window.close()
 
 
-def values(window) -> dict[str, str]:
-    grid = window.device_pane.grid
+def measured(power, say):
+    say("Downloading for up to 10 seconds ...")
+    return network.Network(power=power, adapter="MediaTek", link=network.Link(5280, 56, 10, 85, -54, 2402, 2402),
+                           downloaded=4_521_984, seconds=10.05)
+
+
+def values(window, pane=None) -> dict[str, str]:
+    grid = (pane or window.device_pane).grid
     cells = [grid.itemAt(i).widget().text() for i in range(grid.count())]
     return dict(zip(cells[0::2], cells[1::2]))
 
@@ -198,3 +204,40 @@ def test_the_header_has_the_date():
 
     from bc250_core.portable import status_clock
     assert status_clock(datetime.datetime(2026, 10, 28, 17, 4)) == ["Wednesday 28/10/2026", "17:04"]
+
+
+def test_the_network_is_measured_on_a_and_saved_with_x(make, qapp, monkeypatch):
+    said = []
+    window, _ = make(measure=lambda power, say: said.append(power) or measured(power, say))
+    window.network_card.setFocus()
+    qapp.processEvents()
+    assert window.panes.currentWidget() is window.network_pane
+    assert window.legend.items == [("X", "Save report"), ("B", "Close")]
+    assert said == [] and window.network_pane.status.text() == "Press A to measure the network."
+    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
+    window.on_action("accept")
+    assert wait_for(qapp, lambda: window.network is not None)
+    qapp.processEvents()
+    assert said == ["battery, 82%"] and window.network_pane.read_pill.label.text() == "Test again"
+    shown = values(window, window.network_pane)
+    assert shown["Wi-Fi"] == "5 GHz, channel 56" and shown["Download"] == "0.4 MB/s (4.5 MB in 10.1 s)"
+    assert window.device is None and window.device_pane.grid.count() == 0       # the device was not read
+    saved = window.save_report().read_text(encoding="utf-8")
+    assert "\nNetwork\nWi-Fi: 5 GHz, channel 56\n" in saved and "\nDevice\n" not in saved
+    assert str(window.reports) in window.network_pane.status.text()
+    assert read(window, qapp)
+    saved = window.save_report().read_text(encoding="utf-8")
+    assert saved.index("\nDevice\n") < saved.index("\nNetwork\n")                  # the network's section last
+
+
+def test_a_failed_download_and_a_failed_measurement(make, qapp):
+    def failed(power, say):
+        return network.Network(power=power, error="timed out")
+    window, _ = make(measure=failed)
+    window.network_pane.read_pill.click()
+    assert wait_for(qapp, lambda: window.network is not None)
+    assert window.network_pane.status.text() == "The download failed: timed out"
+    window, _ = make(measure=lambda power, say: (_ for _ in ()).throw(OSError("wlanapi is missing")))
+    window.network_pane.read_pill.click()
+    assert wait_for(qapp, lambda: "not measured" in window.network_pane.status.text())
+    assert window.network_pane.read_pill.isEnabled() and "Press A" in window.device_pane.status.text()

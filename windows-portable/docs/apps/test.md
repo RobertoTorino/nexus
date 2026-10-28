@@ -4,15 +4,16 @@
 
 # Windows Portable Test
 
-Gets to know a **Windows handheld**: what Windows reports about the device, and every button, stick and trigger of
-its controller as you press them. It reads and shows; it changes nothing on the device.
+Gets to know a **Windows handheld**: what Windows reports about the device, how its network does, and every button,
+stick and trigger of its controller as you press them. It reads and shows; it changes nothing on the device.
 
 Windows Portable Test is always installed with the [portal](../portal.md) and is its first tile. Open it there with
 **A**, or from the Start menu (**Windows Portable Suite**, **Windows Portable Test**). It opens full screen.
 
 ## The screen
 
-Four cards on the left: Device, Hardware, Connected and Controller; the right side shows what the focused card does.
+Five cards on the left: Device, Hardware, Connected, Network and Controller; the right side shows what the focused
+card does.
 The d-pad or the left stick moves the amber focus between the cards, **A** runs the focused card, **B** closes the
 app. Every card and pill also works by touch. The line at the top shows the battery, the date and the time.
 
@@ -27,7 +28,7 @@ fills all three; Windows takes about four seconds to answer. **Read again** read
 
 **X** saves what the three cards show as one text report in
 `%LOCALAPPDATA%\windows-portable-suite\windows-portable-test\reports\` (`device-<date>-<time>.txt`), a section per
-card; the card says where.
+card, with the Network card's last when it was measured; the card says where.
 
 ## Hardware
 
@@ -45,6 +46,29 @@ USB 2) and what is behind it. With nothing plugged in, the card says so.
 
 A screen on a dock's or a stand's HDMI port shows as **DisplayPort**: the handheld sends the picture as DisplayPort
 over USB-C, and the dock turns it into HDMI.
+
+## Network
+
+How the network does at this moment, to compare a slow moment with a fast one, on mains and on battery. **A** on the
+Network card, or **Test**, measures it; it takes about fifteen seconds. **Test again** measures once more.
+
+| Row | What it shows |
+|---|---|
+| Wi-Fi | The band (2.4, 5 or 6 GHz) and the channel |
+| Standard | Wi-Fi 6 (802.11ax), Wi-Fi 5 (802.11ac) and so on |
+| Signal | The signal in percent and in dBm |
+| Rate | The link's rate down and up, in Mbps: what the adapter and the access point agreed, not the download speed |
+| Power | Mains or battery, and the power plan |
+| Wi-Fi on mains, Wi-Fi on battery | The power plan's Wi-Fi setting: Maximum Performance to Maximum Power Saving |
+| Other traffic | What the handheld received in the two seconds before the download |
+| Also running | Delivery Optimization's downloads (Windows Update, the Microsoft Store and the Xbox app's games) and the programs that download on their own: Steam, the Xbox app, the Epic Games Launcher, Windows Update and others |
+| Download | The speed of a timed download: Windows Portable Test's newest release from GitHub, as the portal downloads it, for ten seconds at most. Nothing is kept |
+
+A slow download with a good link (a high rate and signal) points past the handheld: the access point, the internet
+connection or GitHub at that moment. Without Wi-Fi (on a dock's Ethernet port) the card says so and still times the
+download. The network's name and the access point's address are never read out.
+
+**X** saves the measurement in the same report as the device, as its Network section.
 
 ## Controller
 
@@ -85,6 +109,6 @@ remove the download.
 | Where | What |
 |---|---|
 | `%LOCALAPPDATA%\windows-portable-suite\windows-portable-test\app\` | The program, `Windows-Portable-Test.exe` |
-| `%LOCALAPPDATA%\windows-portable-suite\windows-portable-test\reports\` | The saved device reports |
+| `%LOCALAPPDATA%\windows-portable-suite\windows-portable-test\reports\` | The saved reports |
 | `%LOCALAPPDATA%\windows-portable-suite\windows-portable-test\windows-portable-test.log` | The log |
 | `%APPDATA%\windows-portable-suite\windows-portable-test.ini` | The settings |
