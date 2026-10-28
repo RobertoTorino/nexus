@@ -22,7 +22,11 @@ Every wiki, the Nexus page and each suite's, shows the same disclaimer. `tools/m
 text, once; a wiki lists it under `hooks:` in its `mkdocs.yml`. The footer of its home page shows it with
 `{{ config.extra.disclaimer }}`, and its home page ends with a **Disclaimer** section whose text is the line
 `<!-- disclaimer -->`, which the hook replaces. To change the disclaimer, change it in the hook: every wiki follows.
-A new wiki does the same three things; `tools/tests/test_disclaimer.py` fails until it does.
+A new wiki does the same three things; `tools/tests/test_disclaimer.py` fails until it does. Every other
+Disclaimer section has the same text written out, because it is read without the hook: a README on GitHub, and an
+app's README and manual chapter, which its release ships as `MANUAL.md` as it is. The test compares each one with
+the hook's text word for word, so a change to the disclaimer is made in the hook and in each of them, and the apps
+whose README or chapter changed need a release.
 
 ## Try a design in the wiki
 

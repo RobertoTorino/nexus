@@ -48,7 +48,8 @@ from PyQt6.QtGui import QColor, QDesktopServices, QIcon, QPainter, QPen, QPixmap
 from PyQt6.QtNetwork import QLocalSocket
 from PyQt6.QtWidgets import (QApplication, QCheckBox, QComboBox, QDialog, QFrame, QHBoxLayout, QHeaderView, QLabel, QLineEdit, QListView,
                              QListWidget, QListWidgetItem, QMainWindow, QMessageBox, QPushButton, QSizePolicy,
-                             QStackedWidget, QTableWidget, QTableWidgetItem, QTabWidget, QVBoxLayout, QWidget)
+                             QStackedWidget, QSystemTrayIcon, QTableWidget, QTableWidgetItem, QTabWidget, QVBoxLayout,
+                             QWidget)
 
 from bc250_core.instance import server_name
 from bc250_core.platform import launch_in_terminal
@@ -975,11 +976,43 @@ class IssuesDialog(QDialog):
         super().done(code)
 
 
+NOTIFY_MS = 10_000                      # how long a notification from the tray icon shows
+_tray: QSystemTrayIcon | None = None    # made at the first notification, kept while the app runs
+
+
+def tray_notify(summary: str, body: str) -> bool:
+    """A notification from the app's icon in the notification area, Qt's QSystemTrayIcon: Windows shows it as one of
+    its own notifications (owner, 28-10-2026: Windows has no notify-send, so none came there). A click on it, or on
+    the icon, brings the window to the front. False without a notification area."""
+    global _tray
+    app = QApplication.instance()
+    if app is None or not QSystemTrayIcon.isSystemTrayAvailable():
+        return False
+    if _tray is None:
+        _tray = QSystemTrayIcon(QIcon(str(LOGO_PATH)), app)
+        _tray.setToolTip(APP_NAME)
+        _tray.messageClicked.connect(_raise_window)
+        _tray.activated.connect(lambda _reason: _raise_window())
+    _tray.show()
+    _tray.showMessage(summary, body, _tray.icon(), NOTIFY_MS)
+    return True
+
+
+def _raise_window() -> None:
+    for widget in QApplication.topLevelWidgets():
+        if isinstance(widget, ReleaseWindow) and widget.isVisible():
+            if widget.isMinimized():
+                widget.showNormal()
+            widget.raise_()
+            widget.activateWindow()
+
+
 def desktop_notify(summary: str, body: str) -> bool:
-    """A desktop notification through notify-send; False when the desktop has none."""
+    """A desktop notification through notify-send (Linux); without it (Windows), from the tray icon (tray_notify).
+    False when the desktop has neither."""
     exe = shutil.which("notify-send")
     if not exe:
-        return False
+        return tray_notify(summary, body)
     ok, _pid = QProcess.startDetached(exe, ["--app-name", APP_NAME, "--icon", str(LOGO_PATH), summary, body])
     return ok
 
@@ -1077,6 +1110,7 @@ class BuildIndicator(Pill):
         state = rp.build_state(latest)
         self.show_state(state, self.details(latest))
         self.release_window.ticker.show_runs(latest, self.signed_in)
+        self.release_window._show_git_state()          # a push from elsewhere: git pull says so
         running = any(not r.done for r in self.runs)
         self.timer.start(BUILD_BUSY_MS if running else BUILD_IDLE_MS)
 
@@ -1567,6 +1601,9 @@ class ReleaseWindow(QMainWindow):
     def _git_row(self) -> QHBoxLayout:
         """git add, git commit, git push and git tag as buttons, each with its checks (owner, 19-10-2026: no commands
         to type or copy; git tag, owner, 20-10-2026). They run in the command line, whose output opens."""
+        # git pull first (owner, 28-10-2026: a push from the other machine only showed as a push that failed).
+        self.pull_button = QPushButton("git pull")
+        self.pull_button.clicked.connect(lambda: self.run_git(rp.pull_command()))
         self.add_button = QPushButton("git add")
         self.add_button.setToolTip(f"{rp.add_command()}\n\nStages every change and new file, sets the exec bits CI "
                                    "checks and lists what is staged")
@@ -1587,6 +1624,7 @@ class ReleaseWindow(QMainWindow):
         self.git_state = (False, False, 0)
         self.committing = False                 # the commit button's command runs: its message goes when it passes
         row = QHBoxLayout()
+        row.addWidget(self.pull_button)
         row.addWidget(self.add_button)
         row.addWidget(self.commit_message, 1)
         row.addWidget(self.amend_box)
@@ -1651,6 +1689,20 @@ class ReleaseWindow(QMainWindow):
         idle = not self.commands.is_running() and bool(self.commands.bash)
         amend = self.amend_box.isChecked()
         message = self.commit_message.text().strip()
+        self.pull_button.setEnabled(idle)
+        waiting = rp.behind(self.root, self.base())
+        # The build pill sees every push on GitHub: its newest on main that is no commit here was pushed elsewhere.
+        pushed = next((r for r in self.build.runs if r.ref == "main"), None)
+        newer = pushed is not None and rp.git(self.root, "cat-file", "-e", f"{pushed.sha}^{{commit}}") is None
+        self.pull_button.setText(f"git pull ({waiting})" if waiting else "git pull (new)" if newer else "git pull")
+        self.pull_button.setToolTip(
+            rp.pull_command() + "\n\n" + (f"{self.base()} has {waiting} commit{'s' if waiting != 1 else ''} this "
+                                         "checkout does not: pull before you go on. " if waiting else
+                                         f"GitHub has a push this checkout does not ({pushed.sha[:7]} "
+                                         f"{pushed.title}): pull before you go on. " if newer else "") +
+            "Brings in what was pushed from the other machine (Linux or Windows), with this checkout's own commits on "
+            "top of it and the changes not committed yet kept. Pull when you start working here, and when git push "
+            "says the remote has commits this checkout does not.")
         self.add_button.setEnabled(idle and unstaged)
         if amend:                               # a pushed commit is never amended: its push would need --force
             why = "" if ahead else f"The last commit is pushed already ({self.base()}): commit without Amend."
@@ -1749,6 +1801,8 @@ class ReleaseWindow(QMainWindow):
     def closeEvent(self, event) -> None:
         self.build.stop()
         self.ticker.stop()
+        if _tray is not None:                           # no icon left behind in the notification area
+            _tray.hide()
         self.github_status.stop()
         self.claude.stop()
         self.commands.shutdown()

@@ -1533,6 +1533,19 @@ def push_command(linux: bool | None = None) -> str:
     return f"{CI_LOCAL} && git push" if linux else "git push"
 
 
+def pull_command() -> str:
+    """The git pull button: what was pushed from the other machine, with this checkout's own commits put on top of
+    it (--rebase: no merge commit) and its changes not committed yet kept as they are (--autostash)."""
+    return "git pull --rebase --autostash"
+
+
+def behind(root: Path, base: str) -> int:
+    """How many commits *base* (the remote's main, as git last fetched it) has that HEAD does not: pushed from the
+    other machine. 0 when unknown."""
+    out = (git(root, "rev-list", "--count", f"HEAD..{base}") or "0").strip()
+    return int(out) if out.isdigit() else 0
+
+
 def add_command() -> str:
     """The git add button: everything, the exec bits CI checks, and what is staged now."""
     return "git add -A && tools/fix-modes.sh && git status --short"

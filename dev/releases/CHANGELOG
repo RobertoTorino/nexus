@@ -1,3 +1,27 @@
+Changelog: 28-10-2026 14:04:11
+
+Added. A git pull button, first in the git row (owner, 28-10-2026: a push from the other machine only showed as a
+push that failed). It runs git pull --rebase --autostash in the Commands tab: what was pushed elsewhere, with this
+checkout's commits on top and its changes not committed yet kept. It reads git pull (2) when the remote's main, as
+last fetched, has two commits HEAD lacks (plan.py, behind), and git pull (new) when the GitHub pill's newest push
+on main is no commit here; its tooltip says which.
+
+Changelog: 28-10-2026 13:48:22
+
+Fixed. On Windows the notifications named Python as their source (owner, 28-10-2026). When it starts, the app now
+registers its Windows app ID for the current user (HKCU\Software\Classes\AppUserModelId\Nexus.NexusReleases: the
+name Nexus Releases and its 128 px icon) and gives it to its process (__main__.py, windows_app_id), so its
+notifications and its taskbar button are Nexus Releases'. install.ps1 --uninstall removes the key; the installer
+test stands it in with a folder (WPS_APP_ID_KEY), so no test writes the registry.
+
+Changelog: 28-10-2026 13:40:41
+
+Fixed. On Windows no notification came when a build passed or failed, or a release was ready to pin (owner,
+28-10-2026): they went through notify-send, which Windows does not have. Without notify-send they now come from the
+app's icon in the notification area (Qt's QSystemTrayIcon; main_window.py, tray_notify), as Windows' own
+notifications; a click on one, or on the icon, brings the window to the front, and the icon goes when the window
+closes. Linux keeps notify-send, as before.
+
 Changelog: 28-10-2026 13:15:16
 
 Added. Step 1 lists Nexus's own version as the row nexus, beside core (owner, 28-10-2026): the root VERSION and

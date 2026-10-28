@@ -106,8 +106,12 @@ the settings.
   [Design](design.md) chapter).
 - **Logs** shows the log of the step last open, the whole window wide: what Apply, Pin, Bump portal, Retract
   or a test on this board wrote. A step that writes its log opens Logs; open the step again to go on.
-- **git add**, **git commit**, **git push** and **git tag**, under the tabs, commit, push and tag without typing a command, with
-  the checks in between. **git add** stages every change and new file and runs `tools/fix-modes.sh`, which sets
+- **git pull**, **git add**, **git commit**, **git push** and **git tag**, under the tabs, commit, push and tag without typing a command, with
+  the checks in between. **git pull** brings in what was pushed from the other machine (`git pull --rebase
+  --autostash`: your own commits go on top of it, and changes you have not committed stay as they are). It reads
+  **git pull (2)** when the remote's main, as git last fetched it, has two commits this checkout lacks, and **git
+  pull (new)** when the GitHub pill sees a push on main that is no commit here. Pull when you start working on a
+  machine, and when **git push** says the remote has commits this checkout does not. **git add** stages every change and new file and runs `tools/fix-modes.sh`, which sets
   the exec bits CI checks. **git commit** runs `tools/check_versions.py` and `bc250-bazzite/tools/check_manifest.py` first and
   commits only when they pass; Apply and Bump portal fill in its message, and tick **Amend** when their commands
   add to the last commit (only a commit that is not pushed yet). **git push** runs `tools/ci-local.sh` first on
@@ -166,6 +170,12 @@ the portal version, a line says where the portal's own release stands: *not tagg
 commit (nothing reaches the users until `tools/tag-release.sh portal-v<x.y.z>` is run, after the test on a
 board), then *building*, *released* (Test release installs it) or *failed*; its notification says *ready* when
 GitHub built it.
+
+The notifications are the desktop's own: on Linux through `notify-send`, on Windows from the Nexus Releases icon
+in the notification area, which appears with the first notification and goes when the window closes. A click on
+the notification or the icon brings the window to the front. On Windows they name Nexus Releases as their source,
+with its icon, not Python: when it starts, the app registers its Windows app ID for your user (in the registry,
+`HKCU\Software\Classes\AppUserModelId\Nexus.NexusReleases`); `install.ps1 --uninstall` removes it.
 
 A red line at the top of the window means a release tag points at a commit whose `VERSION` is not the tag's
 version: the tag was made before the version bump was committed, and `release.yml` cannot build it. Delete the tag

@@ -174,8 +174,13 @@ Mode then no longer start: take them out first by unticking them and pressing **
 
 ## Disclaimer
 
-Vita3K Manager is an independent project, not affiliated with or endorsed by the makers of PlayStation.
-PlayStation and PS Vita are trademarks of their owner.
+Nexus and its suites are independent community projects, not affiliated with or endorsed by AMD, ASRock, the Bazzite
+/ Universal Blue project, Sony, Microsoft, Nintendo, Valve, or the makers of the emulators and the other programs the
+apps work with. BC-250 is AMD's product name and Bazzite the Universal Blue project's. PlayStation, PS4, PS5, PS3,
+PS2, PSP, PS Vita, PSN, DualSense and Remote Play are Sony's; Xbox, Xbox 360, Xbox Cloud Gaming, Game Pass and
+Windows are Microsoft's; Steam, Steam Deck and Big Picture are Valve's; the names of Nintendo's consoles, of the
+emulators (shadPS4, RPCS3, PPSSPP, PCSX2, Vita3K, Xenia) and of Decky Loader, HelixSR and DirectMesh belong to their
+owners. The suites use them only to say what their apps work with.
 
 ## License
 

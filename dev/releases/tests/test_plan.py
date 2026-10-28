@@ -429,6 +429,36 @@ def test_window_git_buttons(window, repo, monkeypatch):
     assert not commit.isEnabled() and not push.isEnabled() and "pushed already" in commit.toolTip()
 
 
+def test_window_git_pull_button(window, repo, monkeypatch):
+    """git pull (owner, 28-10-2026: a push from the other machine only showed as a push that failed): always there
+    when no command runs; it counts what the remote has that HEAD does not, and says (new) when GitHub's newest
+    push on main is no commit here."""
+    ran = []
+    monkeypatch.setattr(window.commands, "run_now", lambda command: ran.append(command) or True)
+    pull = window.pull_button
+    assert pull.isEnabled() and pull.text() == "git pull" and rp.pull_command() in pull.toolTip()
+    pull.click()
+    assert ran[-1] == "git pull --rebase --autostash" and window.tabs.currentIndex() == window.commands_tab
+    sh(repo, "checkout", "-q", "pushed")                                 # the other machine pushes two commits
+    for name in ("a", "b"):
+        write(repo / f"{name}.txt", name)
+        sh(repo, "add", "-A")
+        sh(repo, "commit", "-q", "-m", name)
+    sh(repo, "checkout", "-q", "main")
+    assert rp.behind(repo, "pushed") == 2
+    window.reload()
+    assert pull.text() == "git pull (2)" and "2 commits this checkout does not" in pull.toolTip()
+    sh(repo, "branch", "-f", "pushed", "main")
+    window.reload()
+    assert pull.text() == "git pull"
+    elsewhere = run(sha="f" * 40)                                         # GitHub saw a push this checkout lacks
+    window.build.checked((rp.parse_runs({"workflow_runs": [elsewhere]}), "e1"))
+    assert pull.text() == "git pull (new)" and "GitHub has a push this checkout does not (fffffff Fix it)" in pull.toolTip()
+    here = run(sha=subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, capture_output=True, text=True).stdout.strip())
+    window.build.checked((rp.parse_runs({"workflow_runs": [here]}), "e2"))
+    assert pull.text() == "git pull"
+
+
 def test_window_git_tag_button(window, repo, monkeypatch):
     """git tag after git push (owner, 20-10-2026): tag-release.sh with step 1's untagged app releases, or on step 2's
     tab the portal's release; only once HEAD is pushed and something has no tag yet. It asks first, and warns about

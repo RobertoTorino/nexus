@@ -19,6 +19,7 @@ $env:LOCALAPPDATA = Join-Path $T 'local'
 $env:APPDATA = Join-Path $T 'roaming'
 $env:WPS_DESKTOP_DIR = Join-Path $T 'desktop'
 $env:WPS_ELEVATED = '0'
+$env:WPS_APP_ID_KEY = Join-Path $T 'app-id-key'        # the registry key the app registers, as a folder: no registry
 $Menu = Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs\Nexus Releases.lnk'
 $Desk = Join-Path $env:WPS_DESKTOP_DIR 'Nexus Releases.lnk'
 $Icon = Join-Path $env:LOCALAPPDATA 'nexus-releases\nexus-releases.ico'
@@ -68,9 +69,11 @@ Check '--help shows the usage' { $rc -eq 0 -and (Log 'log3') -match '(?m)^Instal
 Write-Host '== 4. uninstall keeps the settings'
 New-Item -ItemType Directory -Force -Path $Settings | Out-Null
 Set-Content -LiteralPath (Join-Path $Settings 'nexus-releases.ini') -Value '[General]' -Encoding ascii
+New-Item -ItemType Directory -Force -Path $env:WPS_APP_ID_KEY | Out-Null          # as the app registers it
 $rc = Run 'log4' @('--uninstall')
 Check 'exit 0' { $rc -eq 0 }
 Check 'shortcuts and icon gone' { -not (Test-Path $Menu) -and -not (Test-Path $Desk) -and -not (Test-Path $Icon) }
+Check 'the app ID gone' { -not (Test-Path $env:WPS_APP_ID_KEY) }
 Check 'settings kept, the checkout untouched' { (Test-Path (Join-Path $Settings 'nexus-releases.ini')) -and (Test-Path (Join-Path $App 'run.ps1')) }
 
 Write-Host '== 5. reinstall, then uninstall --purge'

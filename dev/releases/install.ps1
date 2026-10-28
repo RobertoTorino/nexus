@@ -10,8 +10,9 @@
 #
 # Run it as your own user, not as administrator. The shortcuts start run.ps1 in a hidden PowerShell window, with
 # the icon written to %LOCALAPPDATA%\nexus-releases. The settings are in %APPDATA%\nexus-releases.
-# WPS_DESKTOP_DIR and WPS_ELEVATED stand in for the Desktop folder and the administrator check in the installer
-# test (windows-portable/tools/installer-tests/releases.ps1).
+# The app registers its Windows app ID for the current user when it starts (the name and icon of its notifications);
+# --uninstall removes it. WPS_DESKTOP_DIR, WPS_ELEVATED and WPS_APP_ID_KEY stand in for the Desktop folder, the
+# administrator check and that registry key in the installer test (windows-portable/tools/installer-tests/releases.ps1).
 $ErrorActionPreference = 'Stop'
 
 $AppId = 'nexus-releases'
@@ -24,6 +25,8 @@ $Icon = Join-Path $DataDir "$AppId.ico"
 $MenuEntry = Join-Path $env:APPDATA "Microsoft\Windows\Start Menu\Programs\$AppName.lnk"
 if ($env:WPS_DESKTOP_DIR) { $DesktopDir = $env:WPS_DESKTOP_DIR } else { $DesktopDir = [Environment]::GetFolderPath('Desktop') }
 $DesktopIcon = Join-Path $DesktopDir "$AppName.lnk"
+# The app ID the app registers when it starts (nexus_releases/__main__.py: the name and icon of its notifications)
+if ($env:WPS_APP_ID_KEY) { $AppIdKey = $env:WPS_APP_ID_KEY } else { $AppIdKey = 'HKCU:\Software\Classes\AppUserModelId\Nexus.NexusReleases' }
 
 function Info($text) { Write-Host '==> ' -ForegroundColor Magenta -NoNewline; Write-Host $text }
 function Die($text) { Write-Host "ERROR: $text" -ForegroundColor Red; exit 1 }
@@ -82,10 +85,11 @@ if ($Purge -and -not $Uninstall) { Die '--purge only goes with --uninstall.' }
 if (Elevated) { Die 'Run this as your own user, not as administrator.' }
 
 if ($Uninstall) {
-    Info 'Removing the Start-menu entry, the Desktop shortcut and the icon'
+    Info 'Removing the Start-menu entry, the Desktop shortcut, the icon and the app ID'
     Remove-IfThere $MenuEntry
     Remove-IfThere $DesktopIcon
     Remove-IfThere $DataDir
+    Remove-IfThere $AppIdKey
     if ($Purge) {
         Info 'Removing the settings'
         Remove-IfThere $ConfigDir

@@ -28,6 +28,28 @@ def test_every_widget_keeps_qts_window_method(window):
         assert callable(widget.window), type(widget).__name__
 
 
+def test_without_notify_send_the_tray_icon_notifies(window, monkeypatch):
+    """Windows has no notify-send: the notification comes from the tray icon instead (owner, 28-10-2026)."""
+    from nexus_releases import main_window
+    w, _app = window
+    shown = []
+    monkeypatch.setattr(main_window.shutil, "which", lambda name: None)
+    monkeypatch.setattr(main_window.QSystemTrayIcon, "isSystemTrayAvailable", staticmethod(lambda: True))
+    monkeypatch.setattr(main_window.QSystemTrayIcon, "showMessage",
+                        lambda self, title, text, icon, ms: shown.append((title, text, ms)))
+    monkeypatch.setattr(main_window, "_tray", None)
+    assert main_window.desktop_notify("alpha-v0.1.0 is ready to pin", "GitHub published it.")
+    assert shown == [("alpha-v0.1.0 is ready to pin", "GitHub published it.", main_window.NOTIFY_MS)]
+    tray = main_window._tray
+    assert tray is not None and tray.toolTip() == main_window.APP_NAME
+    assert main_window.desktop_notify("GitHub build passed", "CI on main: passed")
+    assert main_window._tray is tray and len(shown) == 2                     # one icon, kept
+    monkeypatch.setattr(main_window.QSystemTrayIcon, "isSystemTrayAvailable", staticmethod(lambda: False))
+    monkeypatch.setattr(main_window, "_tray", None)
+    assert not main_window.desktop_notify("x", "y")                          # no notification area: nothing
+    tray.hide()
+
+
 def test_tooltip_over_the_build_indicator(window):
     from bc250_core.widgets import RoundedToolTip
     w, app = window

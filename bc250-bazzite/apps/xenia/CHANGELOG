@@ -1,3 +1,13 @@
+Changelog: 28-10-2026 14:19:41
+
+Release 0.12.1.
+
+Changelog: 28-10-2026 13:58:20
+
+Fixed. The Disclaimer of the README and of the manual chapter (MANUAL.md) is the one every part of Nexus has, word for
+word (owner, 28-10-2026: all disclaimers look the same; tools/mkdocs/disclaimer.py), where the app had its own
+shorter wording. Nothing else changes.
+
 Changelog: 28-10-2026 12:34:13
 
 Release 0.12.0.

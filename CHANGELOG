@@ -1,6 +1,24 @@
-Changelog: 28-10-2026 13:29:11
+Changelog: 28-10-2026 14:19:41
 
-Release 0.1.0.
+Release 0.1.1.
+
+Changelog: 28-10-2026 13:58:20
+
+Fixed. Every disclaimer is the same text now (owner, 28-10-2026), the eight BC250 apps' too: Console Link, Console
+LinkB and the six emulator managers had their own in their README and manual chapter. The shared text names PSN and
+Game Pass as well, which only those two apps' own disclaimers named, so nothing they said is lost
+(tools/mkdocs/disclaimer.py, and the READMEs written out with it). tools/tests/test_disclaimer.py checks every
+Disclaimer section in the repository's Markdown: the hook's marker on a wiki's home page, the same text word for
+word everywhere else (an app's chapter ships as its MANUAL.md as it is, without the hook). Those eight apps need a
+release for it, each with a CHANGELOG entry.
+
+Changelog: 28-10-2026 13:48:22
+
+Fixed. The repository's README listed the BC250 Bazzite Suite only (owner, 28-10-2026): it lists the Windows
+Portable Suite too, with its portal's README and the releases, and has the badge of its CI. It no longer says Nexus
+Releases is on every suite's portal: it runs from the checkout. The BC250 suite's README has the shared disclaimer,
+word for word, where it had its own wording; tools/tests/test_disclaimer.py compares the README of the repository
+and of each suite with the hook's text.
 
 Changelog: 28-10-2026 13:31:23
 
@@ -9,6 +27,10 @@ checkout lacked, pushed from the other machine (owner, 28-10-2026: Release nexus
 portal-v12.1.0 from Bazzite). tools/pre-push.sh now checks first that what the remote has is under the commit being
 pushed, and otherwise says to git pull --rebase and push again, with no check run against a commit that is not
 there (tools/tests/test_pre_push.py). The Nexus page's Development chapter says so.
+
+Changelog: 28-10-2026 13:29:11
+
+Release 0.1.0.
 
 Changelog: 28-10-2026 13:21:31
 
