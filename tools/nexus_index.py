@@ -27,7 +27,7 @@ ROOT = Path(__file__).resolve().parent.parent
 REPO = "RobertoTorino/nexus"
 RELEASES_URL = f"https://github.com/{REPO}/releases"
 # What a suite is for, while it has no wiki whose site_description says it (owner, 28-10-2026: the Windows suite's)
-SYSTEM_TEXTS = {"bazzite": "For Bazzite.", "windows": "For Windows running on portable gaming devices."}
+SYSTEM_TEXTS = {"bazzite": "For Bazzite.", "windows": "Tools for Windows 10/11 running on portable gaming devices."}
 _VERSION = re.compile(r"^v(\d+)\.(\d+)\.(\d+)$")
 
 

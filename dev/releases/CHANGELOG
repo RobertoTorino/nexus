@@ -1,3 +1,22 @@
+Changelog: 28-10-2026 10:52:37
+
+Fixed. Step 2 offers a portal that was never tagged at its own version first, as step 1 offers an app's first
+release (owner, 28-10-2026; plan.py, portal_suggestion): the Windows Portable Suite's portal at 1.0.0 was offered
+1.0.1 first, counted up from its VERSION as if 1.0.0 had been released.
+
+Changelog: 28-10-2026 10:47:39
+
+Added. The Portals column's title is drawn as a tab on its list, as the selected step's tab: a box as wide as the
+column with rounded top corners and the teal edge on top (owner, 28-10-2026; nexus_releases/style.py,
+TAB_TITLE_STYLESHEET). The columns sit twice the layout's spacing under the header's pills, where they sat one.
+
+Changelog: 28-10-2026 10:47:38
+
+Fixed. The checkboxes (the Release and Pin ticks, the Portals column, Amend, Wikis on the network) were dark on dark
+and hardly visible: they have a teal edge and a teal checkmark now (owner, 28-10-2026; nexus_releases/check.svg,
+CHECK_STYLESHEET), a disabled one the dimmed edge. Step 2's note "Nothing to pin" read as if the portal had to wait
+for a pin: while the portal's version has no tag it now says the portal can be released with the pins it has.
+
 Changelog: 28-10-2026 00:48:41
 
 Fixed. The Windows Portable Suite's row shows its portal's icon (windows-portable/portal/images/

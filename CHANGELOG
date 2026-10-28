@@ -1,3 +1,20 @@
+Changelog: 28-10-2026 11:24:13
+
+The Windows Portable Suite's release notes (windows-portable/tools/build_release.py), and with them the Nexus
+index, check the download in PowerShell by themselves: (Get-FileHash <zip>).Hash -eq (-split (Get-Content
+SHA256SUMS))[0] prints True or False, as sha256sum --check does on Linux, where the line before showed the hash to
+compare by eye (owner, 28-10-2026). The Nexus page's home lists the Windows Portable Suite under The suites, with a
+link to the releases until it has a wiki. Both wikis, the Nexus page and the BC250 Bazzite Suite's, show a title as
+Material's own tooltip (content.tooltips) instead of the browser's square one: a rounded box (6 px, the new
+--nexus-radius-small and the suite's --suite-radius-small) with a 1 px edge in the hover color and no tail, as the
+apps' tooltips (owner, 28-10-2026: every pop-up rounded).
+
+Changelog: 28-10-2026 10:47:39
+
+The Nexus index describes the Windows Portable Suite as "Tools for Windows 10/11 running on portable gaming devices."
+(owner, 28-10-2026; tools/nexus_index.py, SYSTEM_TEXTS), where it said "For Windows running on portable gaming
+devices.".
+
 Changelog: 28-10-2026 10:16:19
 
 The Windows Portable Suite's build_release test of a portal's bundle no longer reads apps.toml's pin: its fake test

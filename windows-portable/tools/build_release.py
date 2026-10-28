@@ -241,7 +241,8 @@ def build(tag: str, out: Path, bundle: Path | None = None) -> Path:
              f"Built for Windows (x64) with Python, Qt and the suite core `bc250_core` {core} inside; nothing else to "
              "install. The program is not signed, so Windows may ask once whether to run it.", "",
              "### Install", "", "In PowerShell, in the folder you downloaded it to:", "", "```powershell",
-             f"(Get-FileHash {archive.name}).Hash   # compare with SHA256SUMS",
+             f"(Get-FileHash {archive.name}).Hash -eq (-split (Get-Content SHA256SUMS))[0]"
+             "   # True: the download is intact",
              f"Expand-Archive {archive.name} .", f"cd {tag}",
              "powershell -ExecutionPolicy Bypass -File install.ps1", "```", "",
              f"SHA-256 of `{archive.name}`: `{digest}`", ""]

@@ -1,3 +1,9 @@
+Changelog: 28-10-2026 11:24:13
+
+Fixed. The README's install steps check the download by themselves:
+(Get-FileHash wp-test-v<x.y.z>.zip).Hash -eq (-split (Get-Content SHA256SUMS))[0] prints True for an intact zip,
+where the line before showed the hash to compare with SHA256SUMS by eye (owner, 28-10-2026).
+
 Changelog: 28-10-2026 09:51:04
 
 Release 1.0.2.

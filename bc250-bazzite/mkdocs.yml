@@ -34,6 +34,7 @@ theme:
     - toc.follow
     - search.highlight
     - content.code.copy
+    - content.tooltips         # a title shows as a rounded tooltip of the site's design, not the browser's
 extra_css:
   - stylesheets/suite.css
 extra:

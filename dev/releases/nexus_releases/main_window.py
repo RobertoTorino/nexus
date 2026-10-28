@@ -58,7 +58,7 @@ from bc250_core.widgets import AppHeader, MetricBox, Pill, Terminal, accent_butt
 from . import APP_NAME, LOGO_PATH, CHECKOUT, __version__
 from . import plan as rp
 from .command_line import CommandLine
-from .style import NEXUS
+from .style import CHECK_STYLESHEET, NEXUS, TAB_TITLE_STYLESHEET
 
 COLUMNS = ("Release", "App", "VERSION", "Last tag", "Needs release", "New version", "Notes")
 SUITE_KEY = "suite"                     # the chosen suite, in the settings
@@ -336,13 +336,17 @@ class PortalPage(QWidget):
                 self.pins.setItem(i, col, QTableWidgetItem(text))
             self.candidates.append((unit, tick))
         self.pin_button.setEnabled(bool(cands))
+        portal = next(u for u in units if u.kind == "portal")
+        self.portal_unit = portal
+        # Nothing to pin never holds the portal back: what apps.toml pins now is what it releases.
         self.empty_note.setText("" if cands else
                                 "Nothing to pin: every app whose VERSION is tagged is already pinned with its checksum. "
                                 "Tagged on another machine? Fetch tags. Not tagged yet? Do step 1, push, and push the "
-                                "app tags first.")
+                                "app tags first."
+                                + (f" The portal can be released with the pins it has: {portal.tag} is not tagged yet "
+                                   "(Bump portal when its version is not set yet, commit, push, git tag)."
+                                   if not portal.released else ""))
         self.empty_note.setVisible(not cands)
-        portal = next(u for u in units if u.kind == "portal")
-        self.portal_unit = portal
         if portal.needs_release:
             self.portal_needs.setText(f"The portal needs a release: {portal.release_reason}"
                                       + (f" since {portal.last_tag}." if portal.last_tag else "."))
@@ -1304,7 +1308,7 @@ class ReleaseWindow(QMainWindow):
         self.units: list[rp.Unit] = []
         self.setWindowTitle(APP_NAME)
         self.resize(1100, 760)
-        self.setStyleSheet(SELECTION_STYLESHEET)
+        self.setStyleSheet(SELECTION_STYLESHEET + CHECK_STYLESHEET)
         stamp = rp.checkout_stamp(root)                 # never released: the commit says which code runs
         header = AppHeader(LOGO_PATH, APP_NAME, f"{__version__} · {stamp}" if stamp else __version__)
         # The suites, the first column left of the steps; hidden while the checkout holds one suite.
@@ -1360,11 +1364,15 @@ class ReleaseWindow(QMainWindow):
         self.bad_tags.setStyleSheet("color:#c62828; font-weight:600;")
         lay.addWidget(self.bad_tags)
         columns = QHBoxLayout()
+        # Twice the layout's spacing between the header's pills and the tabs (owner, 28-10-2026: too close).
+        columns.setContentsMargins(0, lay.spacing(), 0, 0)
         self.suite_column = QWidget()                   # "Portals" over the list; hidden with it
         column = QVBoxLayout(self.suite_column)
         column.setContentsMargins(0, 0, 0, 0)
-        title = QLabel("Portals")
-        title.setStyleSheet("font-weight:600; padding:6px 2px 2px 2px;")
+        column.setSpacing(0)                            # the title sits on the list as a tab on its page
+        title = QLabel("Portals")                       # as wide as the column (owner, 28-10-2026)
+        title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        title.setStyleSheet(TAB_TITLE_STYLESHEET)
         column.addWidget(title)
         column.addWidget(self.suite_list, 1)
         self.suite_column.setVisible(not self.suite_list.isHidden())

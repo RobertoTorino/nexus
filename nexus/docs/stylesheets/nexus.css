@@ -15,6 +15,7 @@
 
 /* Corners. */
 :root {
+  --nexus-radius-small: 6px;    /* Tooltips, as the apps' */
   --nexus-radius-medium: 8px;   /* Notes, code blocks, tables, pictures, search results */
 }
 
@@ -415,4 +416,15 @@
 
 .home-footer .md-footer-meta {
   background: var(--nexus-footer-notice-bg);
+}
+
+/* Tooltips: what an icon or a link's title says, on hover (content.tooltips). A rounded box with an edge in the hover
+   color, as the apps' tooltips (owner, 28-10-2026); no tail. */
+.md-tooltip2__inner,
+.md-tooltip__inner {
+  border: 1px solid var(--md-accent-fg-color);
+  border-radius: var(--nexus-radius-small);
+}
+.md-tooltip2::before {
+  display: none;
 }

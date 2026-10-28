@@ -612,6 +612,11 @@ def test_window_explains_an_empty_pin_list(window, repo):
     assert window.portal_page.candidates == []
     assert not window.portal_page.empty_note.isHidden()
     assert "Fetch tags" in window.portal_page.empty_note.text()
+    portal = window.portal_page.portal_unit                   # nothing to pin never holds an untagged portal back
+    assert not portal.released and f"{portal.tag} is not tagged yet" in window.portal_page.empty_note.text()
+    sh(repo, "tag", portal.tag)
+    window.reload()
+    assert "is not tagged yet" not in window.portal_page.empty_note.text()
 
 
 def needs(root):
@@ -1385,6 +1390,8 @@ def test_a_core_change_counts_for_the_apps_that_carry_it(repo):
 def test_a_first_release_is_offered_as_it_is(repo):
     choices, why = rp.version_choices(repo, unit(repo, "beta"))
     assert choices[0] == "0.1.0" and why == "the first release"
+    entry(repo / "portal/CHANGELOG", "Added. The first portal.")          # a portal never tagged: the same
+    assert rp.portal_suggestion(repo, unit(repo, "portal")) == (unit(repo, "portal").version, "the first release")
 
 
 def test_the_portal_counts_apps_toml_since_its_last_tag(repo):

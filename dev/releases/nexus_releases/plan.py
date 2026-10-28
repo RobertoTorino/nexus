@@ -566,7 +566,10 @@ def version_choices(root: Path, unit: Unit, blobs: dict[str, str | None] | None 
 def portal_suggestion(root: Path, portal: Unit, suite: str | None = None) -> tuple[str, str]:
     """The portal's next version by semantic versioning since its last tag, and why: its own CHANGELOG entries, and
     what changed in apps.toml since that tag (an app added or removed: minor; the largest app bump it pins), as
-    tools/check_manifest.py counts it."""
+    tools/check_manifest.py counts it. A portal never tagged is offered as it is, as step 1 offers a first release
+    (owner, 28-10-2026)."""
+    if portal.last_tag is None:
+        return portal.version, "the first release"
     level, why = suggested_level(new_entries(root, portal))
     reason = f"{level}: {why}" + (f" since {portal.last_tag}" if portal.last_tag else "")
     old = git(root, "show", f"{portal.last_tag}:{rel(root, 'portal', 'apps.toml', suite=suite)}") \

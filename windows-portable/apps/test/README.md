@@ -14,7 +14,7 @@ X to save the device report, B to close), and every card and button also works b
 Download `wp-test-v<x.y.z>.zip` and `SHA256SUMS` from the app's release. Then, in PowerShell, in that folder:
 
 ```powershell
-(Get-FileHash wp-test-v<x.y.z>.zip).Hash      # compare with SHA256SUMS
+(Get-FileHash wp-test-v<x.y.z>.zip).Hash -eq (-split (Get-Content SHA256SUMS))[0]   # True: the download is intact
 Expand-Archive wp-test-v<x.y.z>.zip .
 cd wp-test-v<x.y.z>
 powershell -ExecutionPolicy Bypass -File install.ps1

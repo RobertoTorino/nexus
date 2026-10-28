@@ -16,7 +16,7 @@ Download `wp-portal-v<x.y.z>.zip` and `SHA256SUMS` from the portal's release (th
 page points at the newest). Then, in PowerShell, in that folder:
 
 ```powershell
-(Get-FileHash wp-portal-v<x.y.z>.zip).Hash      # compare with SHA256SUMS
+(Get-FileHash wp-portal-v<x.y.z>.zip).Hash -eq (-split (Get-Content SHA256SUMS))[0]   # True: the download is intact
 Expand-Archive wp-portal-v<x.y.z>.zip .
 cd wp-portal-v<x.y.z>
 powershell -ExecutionPolicy Bypass -File install.ps1

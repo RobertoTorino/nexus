@@ -1,3 +1,9 @@
+Changelog: 28-10-2026 11:24:13
+
+Fixed. The memory map's tooltips (what each part of the map is) are the app's rounded tooltip with its accent
+edge, as every other tooltip of the app, where they were Qt's square one (owner, 28-10-2026: every pop-up rounded;
+memory_map.py, core's show_tooltip and hide_tooltip).
+
 Changelog: 27-10-2026 21:22:47
 
 Release 0.15.0.

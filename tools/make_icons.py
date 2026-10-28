@@ -167,6 +167,7 @@ NEXUS_MATERIAL = [
     ("view-grid", "Home: the card \"A suite\"."),
     ("application", "Home: the card \"An app\"."),
     ("chip", "Home: the card \"BC250 Bazzite Suite\"."),
+    ("controller", "Home: the card \"Windows Portable Suite\"."),
 ]
 
 SYMBOLS = [

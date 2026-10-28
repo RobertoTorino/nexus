@@ -4,8 +4,8 @@
 from __future__ import annotations
 
 import pytest
-from PyQt6.QtCore import QPoint
-from PyQt6.QtWidgets import QApplication, QWidget
+from PyQt6.QtCore import QPoint, Qt
+from PyQt6.QtWidgets import QApplication, QLabel, QWidget
 
 
 @pytest.fixture
@@ -345,6 +345,18 @@ def test_the_window_has_nexus_design(window):
     assert f"border:2px solid {TEAL}" in w.apps_page.apply_button.styleSheet()
     assert LOGO_PATH.name == "nexus-releases.webp" and LOGO_PATH.is_file()
     assert "#6a1b9a" not in w.styleSheet() and "#7e97ad" not in w.styleSheet()        # nothing of the Bazzite suite
+    # The checkboxes: a teal box with its teal checkmark (owner, 28-10-2026), and Portals drawn as a selected tab.
+    from pathlib import Path
+    from nexus_releases.style import CHECK_IMAGE
+    assert f"border:1px solid {TEAL}" in w.styleSheet() and f"image:url({CHECK_IMAGE})" in w.styleSheet()
+    assert Path(CHECK_IMAGE).is_file() and TEAL in Path(CHECK_IMAGE).read_text(encoding="utf-8")
+    title = w.suite_column.findChild(QLabel)
+    assert title.text() == "Portals" and f"border-top:2px solid {TEAL}" in title.styleSheet()
+    assert title.alignment() == Qt.AlignmentFlag.AlignCenter                        # as wide as the column
+    central = w.centralWidget().layout()
+    row = next(central.itemAt(i).layout() for i in range(central.count())
+               if central.itemAt(i).layout() is not None and central.itemAt(i).layout().indexOf(w.suite_column) >= 0)
+    assert row.contentsMargins().top() == central.spacing() > 0                 # twice the spacing off the pills
 
 
 def test_the_icons_are_the_nexus_drawing():

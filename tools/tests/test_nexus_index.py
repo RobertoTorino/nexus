@@ -87,7 +87,7 @@ def test_a_section_per_suite_with_its_portal_or_its_apps(tmp_path: Path):
     assert f"[`SHA256SUMS`]({DOWNLOAD}/portal-v12.0.0/SHA256SUMS)" in bc250
     assert "cd portal-v12.0.0 && ./install.sh\n```" in bc250 and "check-v0.18.0" not in bc250
     windows = text[text.index("## Windows"):]
-    assert "For Windows running on portable gaming devices." in windows and "No portal release yet." in windows
+    assert "Tools for Windows 10/11 running on portable gaming devices." in windows and "No portal release yet." in windows
     test = "- [Windows Portable Test 0.1.1](https://github.com/RobertoTorino/nexus/releases/tag/wp-test-v0.1.1)"
     assert test in windows
     assert "PCSX2" not in windows, "an app without a release is not listed"

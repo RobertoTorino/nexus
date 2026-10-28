@@ -12,9 +12,10 @@ from dataclasses import dataclass
 
 from PyQt6.QtCore import QEvent, QPointF, QRectF, Qt
 from PyQt6.QtGui import QColor, QFontMetrics, QPainter, QPalette, QPen
-from PyQt6.QtWidgets import QSizePolicy, QToolTip, QWidget
+from PyQt6.QtWidgets import QSizePolicy, QWidget
 
 from bc250_core.theme import BLUE, GREEN, GREY, ORANGE, PURPLE
+from bc250_core.widgets import hide_tooltip, show_tooltip
 
 from .system import TOTAL_MIB, Memory, Usage, mib_text
 
@@ -362,9 +363,9 @@ class MemoryMap(QWidget):
         if event.type() == QEvent.Type.ToolTip:
             tip = self.tip_at(QPointF(event.pos()))
             if tip:
-                QToolTip.showText(event.globalPos(), tip, self)
+                show_tooltip(event.globalPos(), tip, self)   # the app's rounded tooltip, as every other one
             else:
-                QToolTip.hideText()
+                hide_tooltip()
                 event.ignore()
             return True
         return super().event(event)
