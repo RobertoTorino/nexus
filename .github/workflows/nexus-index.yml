@@ -1,18 +1,24 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 name: Nexus index
 
-# GitHub's "Latest" release is the Nexus index, the release tagged nexus: one section per suite with its newest portal
-# (tools/nexus_index.py). A repository has one Latest and Nexus holds several suites, so no suite's portal is it:
-# release.yml and release-windows-portable.yml publish every release with --latest=false. After each run of either
-# that succeeded, the index is made again: the nexus release and its tag are removed and made anew on the newest
-# commit, because editing a release keeps its date. So Latest always carries the time of the newest release and
+# GitHub's "Latest" release is the Nexus index, tagged nexus-v<x.y.z> and titled Nexus v<x.y.z> after the root
+# VERSION, Nexus's own (owner, 28-10-2026): one section per suite with its newest portal (tools/nexus_index.py). A
+# repository has one Latest and Nexus holds several suites, so no suite's portal is it: release.yml and
+# release-windows-portable.yml publish every release with --latest=false. After each run of either that succeeded,
+# and after a push to main that changes VERSION, the index is made again: every earlier index release (nexus-v*, and
+# the nexus of before the version) and its tag are removed and the index is made anew on the newest commit, because
+# editing a release keeps its date. So there is one index, Latest always carries the time of the newest release and
 # stays first on the Releases page, which is ordered by the date of each tag's commit. Installed portals do not use
-# Latest: they find their releases by their tag prefix. Only the nexus release and its tag change.
+# Latest: they find their releases by their tag prefix. Only the index releases and their tags change; the release
+# tags ruleset excludes nexus-v* for that (the Nexus page, GitHub settings).
 
 on:
   workflow_run:
     workflows: ["Release", "Release Windows Portable"]
     types: [completed]
+  push:
+    branches: [main]
+    paths: [VERSION]           # Nexus's version bumped: the index takes its new number
   workflow_dispatch:
 
 permissions:
@@ -24,13 +30,12 @@ concurrency:
 
 jobs:
   index:
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
-      TAG: nexus
     steps:
       - uses: actions/checkout@v7
 
@@ -40,9 +45,15 @@ jobs:
       - name: Publish it as the Latest release
         run: |
           notes="$RUNNER_TEMP/index.md"
+          version=$(tr -d '[:space:]' < VERSION)
+          [[ $version =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "VERSION is not x.y.z: $version" >&2; exit 1; }
+          tag="nexus-v$version"
           # Made anew, not edited: an edit keeps the release's date and its tag's commit, so a new release of a suite
-          # would show under an old Latest. GITHUB_SHA is main's newest commit (workflow_run runs on the default branch).
-          if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release delete "$TAG" --yes --cleanup-tag
-          fi
-          gh release create "$TAG" --target "$GITHUB_SHA" --title Nexus --notes-file "$notes" --latest
+          # would show under an old Latest. Every earlier index goes, so there is one: nexus-v<any version> and the
+          # nexus of before the version. GITHUB_SHA is main's newest commit (workflow_run runs on the default branch).
+          gh release list --limit 1000 --json tagName --jq '.[].tagName' |
+            { grep -E '^nexus(-v[0-9]+\.[0-9]+\.[0-9]+)?$' || true; } |      # none (a first run): no failure
+            while read -r old; do gh release delete "$old" --yes --cleanup-tag; done
+          # A tag left without its release would hold the old commit: gone too, so the new one is on GITHUB_SHA.
+          gh api -X DELETE "repos/$GH_REPO/git/refs/tags/$tag" >/dev/null 2>&1 || true
+          gh release create "$tag" --target "$GITHUB_SHA" --title "Nexus v$version" --notes-file "$notes" --latest

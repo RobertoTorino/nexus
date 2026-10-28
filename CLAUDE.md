@@ -78,13 +78,24 @@ default suite of the tools (`tools/suites.py`). The root keeps what is Nexus's:
   wiki, holds the central parts (the repository, Nexus Releases, GitHub's releases and the Nexus index, Nexus's
   tools and workflows, general information). A suite's wiki holds what is that suite's and links to the Nexus page
   for the rest, rather than explaining it again.
+- **The wikis keep up with the work** (owner, 28-10-2026): new information, a new way of working or new logic worth
+  knowing goes into its chapter of the wiki it belongs to (the Nexus page for Nexus's, the suite's wiki for a
+  suite's) in the same change as the code, as a CHANGELOG entry does: what it does and how to use it, written for
+  the person using it, never status or plans. The handover names the chapters it changed.
 - **CHANGELOG for every change:** the root CHANGELOG for suite-wide changes, the app's (or core's, or portal's)
   for its own. Format: a `Changelog: DD-MM-YYYY HH:MM:SS` line, a blank line, then plain sentences; newest first.
   The time is Europe/Amsterdam (CET/CEST) on both systems, whatever the machine's own zone:
   `python3 -c "import datetime, zoneinfo; print(datetime.datetime.now(zoneinfo.ZoneInfo('Europe/Amsterdam')).strftime('%d-%m-%Y %H:%M:%S'))"`
   (on Windows with `.venv-windows/Scripts/python.exe`). Not `TZ=Europe/Amsterdam date`: Git Bash on Windows has no
   time zone data and silently gives UTC, an hour or two early.
-- **Semantic versioning** (owner, 15-10-2026): in an app's, core's or the portal's CHANGELOG, every entry starts
+- **Nexus's version** (owner, 28-10-2026): the root `VERSION`, with the root CHANGELOG, is Nexus's own; the owner
+  bumps it (Nexus Releases' step 1 row **nexus**). It is never tagged by hand: `nexus-index.yml` publishes GitHub's
+  Latest release, the Nexus index, as `nexus-v<VERSION>` titled `Nexus v<VERSION>`.
+- **One disclaimer for every wiki** (owner, 28-10-2026): `tools/mkdocs/disclaimer.py` holds it; every wiki lists
+  the hook, its home page's footer shows `{{ config.extra.disclaimer }}` and its home page ends with
+  `## Disclaimer` over the line `<!-- disclaimer -->` (`tools/tests/test_disclaimer.py`).
+- **Semantic versioning** (owner, 15-10-2026): in an app's, core's, the portal's or the root (Nexus's, from
+  28-10-2026) CHANGELOG, every entry starts
   with its kind: `Breaking.` (removed, or no longer working as before: major), `Added.` (a new feature: minor) or
   `Fixed.` (a bug or security fix: patch). 0.x apps too: a feature takes 0.1.4 to 0.2.0. Nexus Releases offers the
   highest kind since the last tag first; `tools/tests/test_changelog_kinds.py` checks it. The number stays the

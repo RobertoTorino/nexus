@@ -102,3 +102,12 @@ controller. Install it with its portal from the
 
 </div>
 </section>
+
+<section class="home-section home-section--dark" markdown>
+<div class="home-section__inner" markdown>
+## Disclaimer
+
+<!-- disclaimer -->
+
+</div>
+</section>

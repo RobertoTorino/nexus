@@ -33,6 +33,8 @@ The ⚙ next to **About** on the repository's front page, not in Settings.
 **Release tags:** **New tag ruleset**.
 
 - Target: **Include by pattern** `*-v*`. That covers every app and portal tag (`portal-v1.1.3`, `governor-v0.1.1`).
+  **Exclude by pattern** `nexus-v*`: the Nexus index (GitHub's Latest, `nexus-v0.1.0`) is removed and made anew
+  after every release, so its tag must stay deletable.
 - Rules: **Restrict updates** and **Restrict deletions**. Leave **Restrict creations** off, or new release tags
   are blocked too.
 - Bypass list: empty. To really move a tag, set the ruleset to Disabled for a moment.

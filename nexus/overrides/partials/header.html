@@ -1,8 +1,9 @@
 {#- SPDX-License-Identifier: GPL-3.0-or-later -#}
-{#- The Nexus page's header: the icon on the left (it carries the name), Design, GitHub and the suites on the right. -#}
+{#- The Nexus page's header: the icon on the left (it carries the name, so no tooltip repeats it, owner 28-10-2026),
+    Design, GitHub and the suites on the right. -#}
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="{{ lang.t('header') }}">
-    <a href="{{ nav.homepage.url | url }}" title="{{ config.site_name | e }}" class="md-header__button md-logo" aria-label="{{ config.site_name }}" data-md-component="logo">
+    <a href="{{ nav.homepage.url | url }}" class="md-header__button md-logo" aria-label="{{ config.site_name }}" data-md-component="logo">
       {% include "partials/logo.html" %}
     </a>
     <div class="md-header__spacer"></div>

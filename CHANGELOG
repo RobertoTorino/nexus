@@ -1,3 +1,33 @@
+Changelog: 28-10-2026 13:21:31
+
+Added. A rule (owner, 28-10-2026, CLAUDE.md): new information, a new way of working or new logic worth knowing goes
+into its wiki chapter in the same change as the code. Done for today's work: the Nexus page's Design chapter has
+What every wiki has (the shared disclaimer, its hook and how a new wiki takes it), and its Releases chapter says how
+step 2 and Retract test a Windows suite's portal (portal\run.ps1 on the handheld, gh release download after the tag).
+
+Changelog: 28-10-2026 13:15:16
+
+Added. Nexus has a version of its own (owner, 28-10-2026): the root VERSION, 0.1.0, with this CHANGELOG, whose
+entries start with their kind from now on, as an app's do (tools/tests/test_changelog_kinds.py). GitHub's Latest
+release, the Nexus index, is tagged nexus-v<VERSION> and titled Nexus v<VERSION>, where it was tagged nexus and
+titled Nexus: nexus-index.yml removes every earlier index and its tag (nexus-v*, and nexus) and makes it again
+after each suite release, and now also after a push to main that changes VERSION. tools/check_versions.py checks
+that VERSION is x.y.z. The release tags ruleset must exclude nexus-v* (the Nexus page, GitHub settings), or the
+workflow cannot remove the old index tag. Every disclaimer looks the same: the BC250 suite's home page ends with the
+shared text too (<!-- disclaimer --> in bc250-bazzite/docs/index.md), and tools/tests/test_disclaimer.py asks it of
+every wiki's home page.
+
+Changelog: 28-10-2026 13:08:05
+
+One disclaimer for every wiki (owner, 28-10-2026: the Nexus page's footer line is the one, and more wikis will
+come): tools/mkdocs/disclaimer.py holds the text and sets it as config.extra.disclaimer; the Nexus page and the
+BC250 suite's wiki list the hook, and their home pages' footers show it. The BC250 wiki's footer said it was not
+affiliated with AMD, Universal Blue or Sony only; it now has the full text too. The Nexus page's home ends with a
+Disclaimer section, as the BC250 suite's wiki does, with the same text (its marker <!-- disclaimer --> in
+nexus/docs/index.md). The Nexus icon at the top left has no tooltip any more: the icon carries the name
+(nexus/overrides/partials/header.html). tools/tests/test_disclaimer.py checks that every wiki lists the hook and
+that no home page keeps a copy of its own.
+
 Changelog: 28-10-2026 11:47:54
 
 GitHub's Latest release, the Nexus index, now always has the time of the newest release of any suite and is first on

@@ -123,6 +123,15 @@ def check_script(root: Path, suite: str | None = None) -> str:
     return rel(root, *CHECK_SCRIPT.split("/"), suite=suite)
 
 
+def portal_run_script(root: Path, suite: str | None = None) -> str:
+    """A Windows suite has no check-release.sh: its portal is tried on the handheld from the checkout, with its
+    portal/run.ps1 (it installs the pinned apps from their GitHub releases). That path, relative to the checkout; ""
+    for a suite tested on the board with check-release.sh."""
+    if nexus_suites.system(suite_dir(root, suite)) != "windows":
+        return ""
+    return rel(root, "portal", "run.ps1", suite=suite)
+
+
 def record_script(root: Path, suite: str | None = None) -> str:
     """The suite's script that records its portal's video tour, relative to the checkout."""
     return rel(root, *RECORD_SCRIPT.split("/"), suite=suite)
@@ -226,6 +235,10 @@ def commits_since(root: Path, tag: str | None, path: str) -> int | None:
 
 # --- The units -------------------------------------------------------------------------------------------------
 
+# Nexus's own version (owner, 28-10-2026): the root VERSION, bumped like an app's with a "Release x.y.z." entry in
+# the root CHANGELOG. Never tagged here: nexus-index.yml publishes GitHub's Latest release as nexus-v<VERSION>.
+NEXUS = "nexus"
+
 @dataclass
 class Unit:
     key: str                            # "gpu", "portal", "core"
@@ -240,14 +253,22 @@ class Unit:
     current: bool = False               # core only: nothing it ships changed since its VERSION was last bumped
     standalone: bool = False            # apps only: released separately, never pinned in the portal
     prefix: str = ""                    # the suite's tag prefix: "wp-" makes wp-test-v0.1.0
+    released_as: str = ""               # nexus only: the version of the root CHANGELOG's newest "Release x.y.z."
 
     @property
     def needs_release(self) -> bool:
-        """Something it ships changed since its last tag (or it was never released). Core is never released."""
+        """Something it ships changed since its last tag (or it was never released). Core is never released; Nexus
+        when its CHANGELOG has entries since its last release (changed holds them), or it never had one."""
+        if self.kind == "nexus":
+            return not self.released_as or bool(self.changed)
         return self.kind != "core" and (self.last_tag is None or bool(self.changed))
 
     @property
     def release_reason(self) -> str:
+        if self.kind == "nexus":
+            n = len(self.changed or [])
+            return "first release" if not self.released_as else \
+                f"yes: {n} CHANGELOG entr{'ies' if n != 1 else 'y'}" if n else "no"
         if self.kind == "core":
             n = len(self.in_apps)
             releases = f"{n} app release{'s' if n != 1 else ''}"
@@ -265,7 +286,7 @@ class Unit:
 
     @property
     def kind(self) -> str:
-        return self.key if self.key in ("core", "portal") else "app"
+        return self.key if self.key in ("core", "portal", NEXUS) else "app"
 
     @property
     def tag(self) -> str:
@@ -279,6 +300,8 @@ class Unit:
 
     @property
     def released(self) -> bool:
+        if self.kind == "nexus":                # its tag is the index workflow's: released once its entry is written
+            return self.released_as == self.version
         return self.last_tag == self.tag
 
 
@@ -365,15 +388,17 @@ def load_units(root: Path = CHECKOUT, suite: str | None = None) -> list[Unit]:
     except (OSError, tools.manifest.ManifestError):
         pass
     units = []
-    folders = [("core", "core"), ("portal", rel(root, "portal", suite=suite))]
+    folders = [("core", "core")] + ([(NEXUS, ".")] if (root / "VERSION").is_file() else [])
+    folders += [("portal", rel(root, "portal", suite=suite))]
     folders += [(p.name, rel(root, "apps", p.name, suite=suite)) for p in sorted((suite_dir(root, suite) / "apps").iterdir())
                 if (p / "VERSION").is_file() and not (p / CHECKOUT_ONLY).is_file()]
     for key, path in folders:
         version = (root / path / "VERSION").read_text(encoding="utf-8").strip()
-        tags = tags_of(root, key, prefix, every_tag) if key != "core" else []
+        tags = tags_of(root, key, prefix, every_tag) if key not in ("core", NEXUS) else []
         last = tags[-1] if tags else None
         unit = Unit(key, path, version, last, None,
-                    standalone=(root / path / ".standalone").is_file(), prefix="" if key == "core" else prefix)
+                    standalone=(root / path / ".standalone").is_file(),
+                    prefix="" if key in ("core", NEXUS) else prefix)
         if key in pins:
             unit.pinned_tag, unit.pinned_sha = pins[key].tag, pins[key].sha256
         units.append(unit)
@@ -382,6 +407,8 @@ def load_units(root: Path = CHECKOUT, suite: str | None = None) -> list[Unit]:
     # side by side: a git process is mostly waiting to start, some 20 ms on Windows (owner, 27-10-2026: the window
     # was slow there), and the answers are the same as one after the other.
     def ask(unit: Unit) -> None:
+        if unit.kind == NEXUS:                  # its CHANGELOG says what changed, not its files (the whole checkout)
+            return
         unit.commits = commits_since(root, unit.last_tag, unit.path)
         if unit.last_tag:
             unit.changed = changed_since(root, unit.last_tag, shipped_sources(root, unit.key, unit.path, suite),
@@ -391,11 +418,28 @@ def load_units(root: Path = CHECKOUT, suite: str | None = None) -> list[Unit]:
     # Core is never tagged: it ships inside each app that imports it, so its changes are the core files those
     # apps' releases would carry.
     core = units[0]
-    carriers = [u for u in units if u.kind != "core" and any(f.startswith("core/") for f in u.changed or [])]
+    carriers = [u for u in units if u.kind not in ("core", NEXUS) and any(f.startswith("core/") for f in u.changed or [])]
     core.in_apps = [u.key for u in carriers]
     core.changed = sorted({f for u in carriers for f in u.changed or [] if f.startswith("core/")})
     core.current = core_is_current(root, new_files)
+    for unit in units:
+        if unit.kind == NEXUS:
+            text = (root / "CHANGELOG").read_text(encoding="utf-8") if (root / "CHANGELOG").is_file() else ""
+            unit.released_as = last_release(text)
+            unit.changed = [b.split("\n", 1)[0] for b in new_entries(root, unit)] if unit.released_as else []
     return units
+
+
+_RELEASE = re.compile(r"^Release (\d+\.\d+\.\d+)\.")
+
+
+def last_release(changelog: str) -> str:
+    """The version of the newest "Release x.y.z." entry of a CHANGELOG; "" without one."""
+    for entry in changelog_entries(changelog):
+        found = _RELEASE.match(entry_body(entry))
+        if found:
+            return found[1]
+    return ""
 
 
 def core_is_current(root: Path, new_files: list[str] | None = None) -> bool:
@@ -411,10 +455,14 @@ def core_is_current(root: Path, new_files: list[str] | None = None) -> bool:
 # --- Edits -----------------------------------------------------------------------------------------------------
 
 def set_version(root: Path, unit: Unit, new: str) -> list[Path]:
-    """Writes *new* to the unit's VERSION and to every copy check_versions.py checks; returns the changed files."""
+    """Writes *new* to the unit's VERSION and to every copy check_versions.py checks; returns the changed files.
+    Nexus's VERSION has no copies: its folder is the whole checkout, whose copies are the other units'."""
     folder = root / unit.path
     changed = [folder / "VERSION"]
     (folder / "VERSION").write_bytes(f"{new}\n".encode())
+    if unit.kind == NEXUS:
+        unit.version = new
+        return changed
     for path in sorted(folder.rglob("*")):
         parts = path.relative_to(folder).parts
         if not path.is_file() or "tests" in parts or "target" in parts:
@@ -499,11 +547,11 @@ def new_entries(root: Path, unit: Unit, blobs: dict[str, str | None] | None = No
     """The change entries (bodies) since the unit's last tag: its own, and core's when the release carries a core
     change. Core itself, never tagged: its entries since its last "Version x.y.z." entry. *blobs*: the CHANGELOGs at
     the tags, read already (changelog_specs())."""
-    def since(path: str, ref: str | None) -> list[str]:
+    def since(path: str, ref: str | None, mark: str = "Version ") -> list[str]:
         file = root / path / "CHANGELOG"
         current = changelog_entries(file.read_text(encoding="utf-8")) if file.is_file() else []
         if ref is None:
-            cut = next((i for i, e in enumerate(current) if entry_body(e).startswith("Version ")), len(current))
+            cut = next((i for i, e in enumerate(current) if entry_body(e).startswith(mark)), len(current))
             current = current[:cut]
         else:
             spec = f"{ref}:{path}/CHANGELOG"
@@ -514,6 +562,8 @@ def new_entries(root: Path, unit: Unit, blobs: dict[str, str | None] | None = No
 
     if unit.kind == "core":
         return since(unit.path, None)
+    if unit.kind == NEXUS:                      # the root CHANGELOG since its last "Release x.y.z." entry
+        return since(unit.path, None, "Release ")
     entries = since(unit.path, unit.last_tag) if unit.last_tag else []
     if unit.last_tag and any(f.startswith("core/") for f in unit.changed or []):
         entries += since("core", unit.last_tag)
@@ -538,7 +588,10 @@ def suggested_level(entries: list[str]) -> tuple[str, str]:
 
 
 def _tagged_version(unit: Unit) -> str:
-    """The version of the unit's last tag, where the next version counts from; its VERSION without a tag."""
+    """The version of the unit's last tag, where the next version counts from; its VERSION without a tag (Nexus:
+    its last release)."""
+    if unit.kind == NEXUS and unit.released_as:
+        return unit.released_as
     return unit.last_tag[len(unit.tag_head):] if unit.last_tag else unit.version
 
 
@@ -549,11 +602,12 @@ def version_choices(root: Path, unit: Unit, blobs: dict[str, str | None] | None 
     nexts = list(next_versions(unit.version).values())
     if unit.kind == "core" and unit.current:
         return [unit.version] + nexts, f"{unit.version} already holds core's changes"
-    if unit.kind != "core" and unit.last_tag is None:
+    if unit.kind == NEXUS and not unit.released_as or unit.kind not in ("core", NEXUS) and unit.last_tag is None:
         return [unit.version] + nexts, "the first release"
     level, why = suggested_level(new_entries(root, unit, blobs))
     suggested = next_versions(_tagged_version(unit))[level]
-    reason = f"{level}: {why}" + (f" since {unit.last_tag}" if unit.last_tag else "")
+    reason = f"{level}: {why}" + (f" since {unit.last_tag}" if unit.last_tag else
+                                  f" since Release {unit.released_as}" if unit.released_as else "")
     released = unit.released or unit.kind == "core"
     choices = [suggested, unit.version, *nexts]
     if version_tuple(unit.version) > version_tuple(suggested):
@@ -643,19 +697,27 @@ def changed_withdrawals(root: Path, base: str, suite: str | None = None) -> list
     return [(e.tag, e.withdrawn) for e in new if e.withdrawn and not old.get(e.key)]
 
 
-def withdraw_commands(tag: str, reason: str, now: datetime.datetime | None = None) -> str:
+def withdraw_commands(tag: str, reason: str, now: datetime.datetime | None = None, run_script: str = "") -> str:
     """What stays the owner's: mark the GitHub release (it stays, as a pre-release, so no update check offers it),
-    then the portal release that removes the app from the boards."""
+    then the portal release that removes the app from the boards. *run_script*: a Windows suite's portal/run.ps1
+    (portal_run_script()), its test on the handheld."""
     date = amsterdam_now(now).strftime("%d-%m-%Y")
     notes = f"Withdrawn on {date}: {reason.strip()} Do not install this release."
+    test = [
+        "# 2. Test it on the handheld with the app installed: start the portal from this checkout. It must say the",
+        "#    app is not available any more and remove it. Take back undoes the mark after a test.",
+        f"powershell -NoProfile -ExecutionPolicy Bypass -File {run_script} --windowed",
+    ] if run_script else [
+        "# 2. Test it on a BC-250 with the app installed: Test withdrawal, tab Test on this board (check-release.sh",
+        "#    local). The portal must show the app as \"App not available\" and remove it. Take back undoes the",
+        "#    mark after a test.",
+    ]
     return "\n".join([
         "# 1. Mark the release withdrawn on GitHub (it stays; a pre-release is offered by no update check):",
         f"gh release edit {tag} --prerelease --title {shlex.quote('Withdrawn: ' + tag)} "
         f"--notes {shlex.quote(notes)}",
         "",
-        "# 2. Test it on a BC-250 with the app installed: Test withdrawal, tab Test on this board (check-release.sh",
-        "#    local). The portal must show the app as \"App not available\" and remove it. Take back undoes the",
-        "#    mark after a test.",
+        *test,
         "",
         "# 3. Then a portal release (2. Pin and release Portal: Bump portal, at least a minor version): it lists the",
         "#    withdrawal in its CHANGELOG entry; commit, push and tag it as usual.",
@@ -949,6 +1011,7 @@ class BuildRun:
     title: str                          # the commit message's first line
     jobs_url: str = ""                  # its jobs on GitHub's API (fetch_jobs)
     started: float = 0.0                # seconds since the epoch; 0 when GitHub does not say
+    file: str = ""                      # its workflow's file: "ci.yml", "ci-windows-portable.yml"
 
     @property
     def done(self) -> bool:
@@ -977,7 +1040,8 @@ def parse_runs(data: object) -> list[BuildRun]:
     return [BuildRun(str(r.get("name") or ""), str(r.get("head_branch") or ""), str(r.get("status") or ""),
                      str(r.get("conclusion") or ""), str(r.get("html_url") or ""), str(r.get("head_sha") or ""),
                      str(r.get("display_title") or ""), str(r.get("jobs_url") or ""),
-                     epoch(r.get("run_started_at"))) for r in runs if isinstance(r, dict)]
+                     epoch(r.get("run_started_at")), str(r.get("path") or "").split("@")[0].rsplit("/", 1)[-1])
+            for r in runs if isinstance(r, dict)]
 
 
 def epoch(text: object) -> float:
@@ -1205,6 +1269,23 @@ def elapsed(seconds: float) -> str:
     total = max(0, int(seconds))
     hours, rest = divmod(total, 3600)
     return f"{hours}:{rest // 60:02d}:{rest % 60:02d}" if hours else f"{rest // 60}:{rest % 60:02d}"
+
+
+def suite_workflows(root: Path, suite: str | None = None) -> set[str]:
+    """The workflow files that are the suite's own: ci.yml and release.yml for the suite without a tag prefix,
+    ci-<suite>.yml and release-<suite>.yml for one with (each suite's CI and releases stand apart, owner
+    27-10-2026)."""
+    if not tag_prefix(root, suite):
+        return {"ci.yml", "release.yml"}
+    name = suite_dir(root, suite).name
+    return {f"ci-{name}.yml", f"release-{name}.yml"}
+
+
+def other_suites_workflows(root: Path, suite: str | None = None) -> set[str]:
+    """The workflow files of every suite but *suite*: the ticker leaves their runs out, so it follows the suite
+    being released and Nexus's own workflows (CI Nexus, Manual)."""
+    mine = suite_workflows(root, suite)
+    return {f for name in suites(root) if name != suite for f in suite_workflows(root, name)} - mine
 
 
 def ticker_runs(runs: list[BuildRun]) -> list[BuildRun]:
@@ -1511,6 +1592,17 @@ def app_commands(tags: list[str], linux: bool | None = None, portal: str = "", a
     return "\n".join(lines)
 
 
+NEXUS_INDEX_NOTE = ("# Nexus {version}: once this push is on main, GitHub's Latest release becomes nexus-v{version} "
+                    "(nexus-index.yml); nothing to tag")
+
+
+def nexus_commands(version: str, linux: bool | None = None) -> str:
+    """The commands after step 1's Apply of Nexus's version alone: commit and push; the index workflow publishes
+    the Latest release as nexus-v<version> when the push changes VERSION."""
+    return "\n".join(["git add -A && tools/fix-modes.sh", f'git commit -m "Release {NEXUS}-v{version}"',
+                      push_command(linux), NEXUS_INDEX_NOTE.format(version=version)])
+
+
 def untagged_releases(units: list[Unit]) -> list[str]:
     """The tags step 1 still has to push: every portal app whose VERSION has no tag. While there is one, the portal
     cannot be released (release.yml checks every pinned tag), so a portal bump made now goes into step 1's push."""
@@ -1526,16 +1618,36 @@ def unpushed_release_commit(root: Path, base: str) -> str:
     return subject if subject.startswith("Release ") else ""
 
 
-def portal_commands(tag: str, linux: bool | None = None, check: str = CHECK_SCRIPT) -> str:
+def portal_commands(tag: str, linux: bool | None = None, check: str = CHECK_SCRIPT, run_script: str = "") -> str:
     """Commit, test on a board, and only then push and tag: the tag is what reaches the users' portals. *check*:
-    the suite's check-release.sh, relative to the checkout (check_script())."""
+    the suite's check-release.sh, relative to the checkout (check_script()); *run_script*: a Windows suite's
+    portal/run.ps1 instead (portal_run_script()), tried on the handheld."""
+    if run_script:
+        before = [
+            "# 2. Test on the handheld: start the portal from this checkout; it installs the apps apps.toml pins from",
+            "#    their GitHub releases, as the installed portal does:",
+            f"powershell -NoProfile -ExecutionPolicy Bypass -File {run_script} --windowed",
+        ]
+        after = [
+            "# 4. Once GitHub's release workflow has built it: download the published release, then install it on",
+            "#    the handheld as the portal's README says (check SHA256SUMS, Expand-Archive, install.ps1) and start it:",
+            f'gh release download {tag} --dir "$TEMP/{tag}" --clobber',
+        ]
+    else:
+        before = [
+            "# 2. Test on a BC-250 (docs/portal.md, Testing a portal release before its tag): Test updates, or",
+            f"{check} local     # ./install.sh, then bc250-bazzite-suite --source release",
+        ]
+        after = [
+            "# 4. Once GitHub's release workflow has built it: Test release, or",
+            f"{check} release {tag}   # installs and starts the published portal release",
+        ]
     return "\n".join([
         "# 1. Commit (no push yet):",
         "git add -A && tools/fix-modes.sh",
         f'git commit -m "Release {tag}"',
         "",
-        "# 2. Test on a BC-250 (docs/portal.md, Testing a portal release before its tag): Test updates, or",
-        f"{check} local     # ./install.sh, then bc250-bazzite-suite --source release",
+        *before,
         "#    The apps whose pin changed show Update: update them, open each one, check that it works.",
         "#    Something wrong? Fix the app and release a new patch version (step 1), then pin again.",
         "",
@@ -1544,8 +1656,7 @@ def portal_commands(tag: str, linux: bool | None = None, check: str = CHECK_SCRI
         push_command(linux),
         f"{TAG_SCRIPT} {tag}",
         "",
-        "# 4. Once GitHub's release workflow has built it: Test release, or",
-        f"{check} release {tag}   # installs and starts the published portal release",
+        *after,
     ])
 
 
@@ -1564,7 +1675,8 @@ def list_units(units: list[Unit]) -> None:
     for problem in bad_tags(CHECKOUT, units):
         print(f"WARNING: {problem}: delete the tag and tag the commit with the bump ({TAG_SCRIPT})", file=sys.stderr)
     for u in units:
-        since = "never released" if u.last_tag is None and u.kind != "core" else \
+        since = (f"released {u.released_as}" if u.released_as else "never released") if u.kind == NEXUS else \
+            "never released" if u.last_tag is None and u.kind != "core" else \
             f"{u.commits} commits since {u.last_tag}" if u.last_tag else ""
         pinned = f"  pinned {u.pinned_tag}{'' if u.pinned_sha else ' (no sha256)'}" if u.pinned_tag else ""
         needs = f"  needs a release: {u.release_reason}" if u.needs_release else \

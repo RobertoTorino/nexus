@@ -16,6 +16,14 @@ says whether a file is up to date. `make_design.py --check` also compares each w
 and the tests in `tools/tests/` do the same for the colors, the Material icons on the pages and the files of the
 Nexus icon: a color or an icon added to a wiki fails the tests until the listing has it.
 
+## What every wiki has
+
+Every wiki, the Nexus page and each suite's, shows the same disclaimer. `tools/mkdocs/disclaimer.py` holds the
+text, once; a wiki lists it under `hooks:` in its `mkdocs.yml`. The footer of its home page shows it with
+`{{ config.extra.disclaimer }}`, and its home page ends with a **Disclaimer** section whose text is the line
+`<!-- disclaimer -->`, which the hook replaces. To change the disclaimer, change it in the hook: every wiki follows.
+A new wiki does the same three things; `tools/tests/test_disclaimer.py` fails until it does.
+
 ## Try a design in the wiki
 
 ### Live preview

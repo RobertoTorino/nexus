@@ -4,7 +4,8 @@
 ``VERSION="x.y.z"``, pyproject and Cargo.toml ``version = "x.y.z"``, and a Rust crate's own entry in its
 Cargo.lock) must equal that folder's VERSION file. VERSION is the single source; the literals exist so each script
 and package still works on its own. Cargo.lock matters because CI builds with --locked, which fails when the lock
-file's version of the crate differs from Cargo.toml.
+file's version of the crate differs from Cargo.toml. The root VERSION is Nexus's own and must be x.y.z; it has
+no copies.
 
     python3 tools/check_versions.py                        # core, dev/ and every suite
     python3 tools/check_versions.py --suite windows-portable  # core, dev/ and that suite only: each suite's CI
@@ -81,6 +82,13 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     errors = []
     checked = 0
+    # Nexus's own version (the root VERSION, GitHub's Latest release nexus-v<x.y.z>): no copies to compare, its
+    # folder is the whole checkout, whose copies are the units' below.
+    nexus = ROOT / "VERSION"
+    if not nexus.is_file():
+        errors.append("VERSION: no VERSION file at the root (Nexus's version)")
+    elif not re.fullmatch(r"\d+\.\d+\.\d+", nexus.read_text(encoding="utf-8").strip()):
+        errors.append(f"VERSION: {nexus.read_text(encoding='utf-8').strip()!r} is not x.y.z")
     units = [ROOT / "core", *sorted(p for p in (ROOT / "dev").glob("*") if p.is_dir())]   # the Nexus apps
     for suite in chosen:                        # each suite: its portal, apps and Installer Tests
         units += [suite / "portal", *sorted(p for p in (suite / "apps").iterdir() if p.is_dir())]

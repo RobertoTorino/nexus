@@ -250,6 +250,49 @@ def test_commands():
     assert order == sorted(order)                             # commit, test, push and tag, then check the release
 
 
+def test_ticker_follows_the_suite_ticked(two_suites, tmp_path):
+    """Every push starts every suite's CI: the ticker shows the ticked suite's runs and Nexus's, not another
+    suite's (owner, 28-10-2026: the BC250 portal's release showed CI Windows Portable first)."""
+    assert rp.suite_workflows(two_suites, "bc") == {"ci.yml", "release.yml"}
+    assert rp.other_suites_workflows(two_suites, "bc") == {"ci-wp.yml", "release-wp.yml"}
+    assert rp.other_suites_workflows(two_suites, "wp") == {"ci.yml", "release.yml"}
+    pytest.importorskip("PyQt6.QtWidgets")
+    from PyQt6.QtCore import QSettings
+    from PyQt6.QtWidgets import QApplication
+    QSettings.setPath(QSettings.Format.IniFormat, QSettings.Scope.UserScope, str(tmp_path / "settings"))
+    app = QApplication.instance() or QApplication([])          # noqa: F841 (kept alive for the window)
+    from nexus_releases import main_window
+    w = main_window.ReleaseWindow(two_suites, status_source=None, runs_source=lambda etag: (None, etag),
+                                  notify=lambda *a: None, claude_source=None, jobs_source=None, suite="bc")
+    runs = [run("CI Windows Portable", status="in_progress", n=4), run("CI Nexus", n=3), run(n=2),
+            run("Release", "portal-v3.0.1", status="in_progress", n=1)]
+    for data, path in zip(runs, ("ci-wp.yml", "ci-nexus.yml", "ci.yml", "release.yml")):
+        data["path"] = f".github/workflows/{path}"
+    w.build.checked((rp.parse_runs({"workflow_runs": runs}), "e1"))
+    assert w.ticker.line == "Release on portal-v3.0.1: in progress   |   CI Nexus on main: passed   |   CI on main: passed"
+    w.choose_suite("wp")
+    w.ticker.checker.stop(2000)
+    assert w.ticker.line.startswith("CI Windows Portable on main: in progress   |   CI Nexus on main: passed")
+    assert "Release on" not in w.ticker.line and "|   CI on main" not in w.ticker.line
+    w.close()
+
+
+def test_a_windows_suite_tests_its_portal_on_the_handheld(two_suites):
+    """The Windows Portable Suite has no check-release.sh and no BC-250: its portal and a withdrawal are tried from
+    the checkout with its portal/run.ps1, and the published release is downloaded to install on the handheld."""
+    assert rp.portal_run_script(two_suites, "bc") == "" and rp.portal_run_script(two_suites, "wp") == "wp/portal/run.ps1"
+    text = rp.portal_commands("wp-portal-v1.0.1", linux=False, check="wp/tools/check-release.sh",
+                              run_script="wp/portal/run.ps1")
+    assert "BC-250" not in text and "check-release.sh" not in text and "bc250" not in text
+    assert "\npowershell -NoProfile -ExecutionPolicy Bypass -File wp/portal/run.ps1 --windowed\n" in text
+    assert text.endswith('\ngh release download wp-portal-v1.0.1 --dir "$TEMP/wp-portal-v1.0.1" --clobber')
+    order = [text.index(s) for s in ("git commit", "run.ps1", "git push\n", "tag-release.sh", "gh release download")]
+    assert order == sorted(order)
+    withdraw = rp.withdraw_commands("wp-test-v0.1.0", "Broken.", run_script="wp/portal/run.ps1")
+    assert "BC-250" not in withdraw and "check-release.sh" not in withdraw
+    assert "\npowershell -NoProfile -ExecutionPolicy Bypass -File wp/portal/run.ps1 --windowed\n" in withdraw
+
+
 def test_app_commands_put_the_portal_bump_first_when_the_push_needs_it():
     text = rp.app_commands(["alpha-v0.2.0"], linux=True, portal="1.9.0")
     first, second = text.splitlines()[:2]
@@ -552,6 +595,54 @@ def test_window_refuses_a_tagged_version(window, repo, monkeypatch):
     window.apps_page.apply()
     assert "already tagged" in warnings[0]
     assert (repo / "apps/alpha/CHANGELOG").read_text().startswith("Changelog: 01-01-2026")
+
+
+def test_nexus_has_a_version_of_its_own(repo):
+    """The root VERSION and CHANGELOG are Nexus's (owner, 28-10-2026): a row beside core, released with a "Release
+    x.y.z." entry, never tagged here; a checkout without a root VERSION has no row."""
+    assert all(u.key != rp.NEXUS for u in rp.load_units(repo))
+    write(repo / "VERSION", "0.1.0\n")
+    write(repo / "CHANGELOG", "Changelog: 01-01-2026 00:00:00\n\nFrom before.\n")
+    nexus = unit(repo, rp.NEXUS)
+    assert (nexus.kind, nexus.path, nexus.tag) == ("nexus", ".", "nexus-v0.1.0")
+    assert nexus.needs_release and nexus.release_reason == "first release" and not nexus.released
+    assert rp.version_choices(repo, nexus) == (["0.1.0", "0.1.1", "0.2.0", "1.0.0"], "the first release")
+    assert rp.set_version(repo, nexus, "0.1.0") == [repo / "VERSION"]         # never the copies of the units
+    assert (repo / "apps/alpha/alpha/__init__.py").read_text() == 'APP = "alpha"\n__version__ = "0.1.0"\n'
+    rp.add_changelog_entry(repo, nexus, rp.release_text("0.1.0", ""))
+    nexus = unit(repo, rp.NEXUS)
+    assert nexus.released and nexus.released_as == "0.1.0" and not nexus.needs_release
+    assert nexus.release_reason == "no"
+    rp.add_changelog_entry(repo, nexus, "Added. The ticker.")
+    rp.add_changelog_entry(repo, nexus, "Fixed. A typo.")
+    nexus = unit(repo, rp.NEXUS)
+    assert nexus.needs_release and nexus.release_reason == "yes: 2 CHANGELOG entries"
+    assert nexus.changed == ["Fixed. A typo.", "Added. The ticker."]
+    choices, why = rp.version_choices(repo, nexus)
+    assert choices[0] == "0.2.0" and why == "minor: 1 Added, 1 Fixed since Release 0.1.0"
+    assert rp.last_release("Changelog: x\n\nRelease 2.0.0. Notes.\n\nChangelog: y\n\nRelease 1.0.0.\n") == "2.0.0"
+    commands = rp.nexus_commands("0.2.0", linux=False)
+    assert commands.splitlines()[:3] == ["git add -A && tools/fix-modes.sh", 'git commit -m "Release nexus-v0.2.0"',
+                                         "git push"]
+    assert "nexus-v0.2.0" in commands.splitlines()[-1] and rp.TAG_SCRIPT not in commands
+
+
+def test_window_releases_nexus(window, repo):
+    write(repo / "VERSION", "0.1.0\n")
+    write(repo / "CHANGELOG", "Changelog: 01-01-2026 00:00:00\n\nRelease 0.1.0.\n")
+    rp.add_changelog_entry(repo, unit(repo, rp.NEXUS), "Added. The ticker.")
+    window.reload()
+    for unit_, tick, _, _ in window.apps_page.rows:
+        tick.setChecked(unit_.kind == rp.NEXUS)
+    nexus_row = row(window, rp.NEXUS)
+    assert nexus_row[2].currentText() == "0.2.0"
+    assert window.apps_page.table.item(window.apps_page.rows.index(nexus_row), 3).text() == "nexus-v0.1.0"
+    window.apps_page.apply()
+    out = window.apps_page.output.toPlainText()
+    assert (repo / "VERSION").read_text() == "0.2.0\n"
+    assert (repo / "CHANGELOG").read_text().split("\n\n")[1] == "Release 0.2.0."
+    assert 'git commit -m "Release nexus-v0.2.0"' in out and rp.TAG_SCRIPT not in out
+    assert window.commit_message.text() == "Release nexus-v0.2.0"
 
 
 def test_window_reads_new_tags_when_step_2_opens(window, repo):

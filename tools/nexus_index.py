@@ -5,12 +5,12 @@
     python3 tools/nexus_index.py                    # Markdown on stdout, from the releases on GitHub (gh api)
     python3 tools/nexus_index.py --releases FILE    # from a saved release list (JSON: a list, or one per line)
 
-A repository has one "Latest" release and Nexus holds several suites, so no portal is it: the release tagged nexus
-is, and its text points at each suite's newest portal (tools/suites.py: the suites, their TAG_PREFIX; the name is
+A repository has one "Latest" release and Nexus holds several suites, so no portal is it: the release tagged
+nexus-v<x.y.z> (Nexus's version, the root VERSION) is, and its text points at each suite's newest portal (tools/suites.py: the suites, their TAG_PREFIX; the name is
 the portal's APP_NAME), with its tarball, SHA256SUMS and the install steps of its notes. A suite without a portal
 release yet lists the newest release of each app in its apps.toml instead. Drafts and pre-releases are skipped. The
-workflow .github/workflows/nexus-index.yml makes the nexus release anew with it after every release of any suite;
-nothing is changed here."""
+workflow .github/workflows/nexus-index.yml makes that release anew with it after every release of any suite and
+every push of a new VERSION; nothing is changed here."""
 
 from __future__ import annotations
 

@@ -1,3 +1,27 @@
+Changelog: 28-10-2026 13:15:16
+
+Added. Step 1 lists Nexus's own version as the row nexus, beside core (owner, 28-10-2026): the root VERSION and
+CHANGELOG. It is ticked when the root CHANGELOG has entries since its last "Release x.y.z." entry, with the version
+their kinds ask for (the first release as it is). Apply writes the root VERSION alone (none of the checkout's copies,
+which are the other units') and the "Release x.y.z." entry; the commands commit and push and tag nothing: the push
+makes GitHub's Latest release nexus-v<x.y.z> (nexus-index.yml). plan.py: NEXUS, Unit.released_as, last_release,
+nexus_commands. A checkout without a root VERSION has no such row.
+
+Changelog: 28-10-2026 13:04:40
+
+Fixed. The ticker showed the Windows Portable Suite's CI first while the BC250 suite's portal was being released
+(owner, 28-10-2026): every push starts every suite's CI. It now shows the runs of the suite ticked in the Portals
+column and Nexus's own (CI Nexus, Manual), not another suite's CI or releases (plan.py, suite_workflows and
+other_suites_workflows, from each run's workflow file). The GitHub build pill still counts every run of the push.
+
+Changelog: 28-10-2026 12:34:26
+
+Fixed. The commands after Bump portal and Retract told the Windows Portable Suite to test on a BC-250 with a
+check-release.sh it does not have (owner, 28-10-2026). For a suite whose SYSTEM is windows they now start its portal
+from the checkout on the handheld (portal/run.ps1 --windowed), and after the tag download the published release
+(gh release download) to install it as the portal's README says (plan.py, portal_run_script; portal_commands and
+withdraw_commands take it). The BC250 suite's commands are unchanged, byte for byte.
+
 Changelog: 28-10-2026 12:15:41
 
 Added. A ticker between the header's pills and the tabs says where the workflow runs of the newest push stand

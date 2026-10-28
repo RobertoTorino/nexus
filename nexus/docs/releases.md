@@ -66,8 +66,13 @@ the settings.
   releases, and runs `bc250-bazzite/tools/check_manifest.py` (step 4). Then commit, test on a BC-250 ([before its tag](https://robertotorino.github.io/nexus/bc250-bazzite-suite/portal/#testing-a-portal-release-before-its-tag)), and only then push
   and tag the portal (step 5). The window lists these commands in that order. While step 1's releases are
   not tagged yet, Bump portal lists step 1's commands with the bump in them instead (amending the release commit
-  when it is already made and not pushed), and the portal release follows once the apps are pinned.
+  when it is already made and not pushed), and the portal release follows once the apps are pinned. A suite made
+  for Windows (its `SYSTEM` file says `windows`) has no board and no `check-release.sh`: its commands test the
+  portal on the handheld from the checkout instead (`portal\run.ps1 --windowed`, which installs the pinned apps
+  from their GitHub releases), and after the tag download the published release (`gh release download`) to
+  install it as the portal's README says.
 - **3. Retract app:** withdraws a release (see [Withdrawing a release](https://robertotorino.github.io/nexus/bc250-bazzite-suite/portal/#withdrawing-a-release)).
+  For a Windows suite, its commands test the withdrawal with `portal\run.ps1` on the handheld, as above.
 - **Test on this board** holds the tests of a release on a BC-250. **Test app updates** and **Test Portal
   release** run the two [board tests](https://robertotorino.github.io/nexus/bc250-bazzite-suite/portal/#testing-a-portal-release-before-its-tag) in a terminal, with the suite's `bc250-bazzite/tools/check-release.sh`: the portal from the
   checkout before the push, and the published portal release after GitHub has built it. **Test withdrawal** does
@@ -132,7 +137,8 @@ notification says whether it passed. It needs no GitHub token: answers that did 
 GitHub's limit of 60 requests an hour.
 
 The **ticker** under the pills says where the runs of that push stand, so you need not open GitHub to follow a
-build. For each run that is still going it shows how many of its jobs are done, each job that runs with the step it
+build: those of the suite ticked in the Portals column and Nexus's own (CI Nexus, Manual), not another suite's CI or
+releases. For each run that is still going it shows how many of its jobs are done, each job that runs with the step it
 is at (*pytest (core): Run tests (4/7)*) and the time since the run started; a run that failed names its job and
 step; a run that passed says so. The dot is blue while something runs, red when a run failed and green when all
 passed. Hover for every job of every run; click to open the job that runs (or failed) on GitHub. The jobs need a gh
@@ -183,12 +189,21 @@ the portal's name and `apps.toml`: *BC250 Bazzite Suite: Portal 12.0.0*, *BC250 
 0.11.0*, *Windows Portable Suite: Windows Portable Test 0.1.1* (`build_release.py` of each suite writes it).
 
 A repository has one **Latest** release, and Nexus holds several suites, so no suite's portal is it. Latest is the
-Nexus index, the release named Nexus and tagged `nexus`: a section per suite with its newest portal, the download
-links and the install steps, or the newest release of each app while a suite has no portal release yet
-(`tools/nexus_index.py`). Every release is published with `--latest=false`; after each release workflow that
-succeeded, `nexus-index.yml` makes the index again: it removes the Nexus release and its tag and makes them anew on
-the newest commit, marked Latest. So Latest always has the time of the newest release of any suite and is first on
-the Releases page. It can also be started by hand from the Actions tab (Nexus index, Run workflow).
+Nexus index, named after Nexus's own version: *Nexus v0.1.0*, tagged `nexus-v0.1.0`. It has a section per suite
+with its newest portal, the download links and the install steps, or the newest release of each app while a suite
+has no portal release yet (`tools/nexus_index.py`). Every release is published with `--latest=false`; after each
+release workflow that succeeded, and after a push to main that changes the root `VERSION`, `nexus-index.yml` makes
+the index again: it removes every earlier index release and its tag and makes the index anew on the newest commit,
+marked Latest. So there is one index, Latest always has the time of the newest release of any suite and is first on
+the Releases page. It can also be started by hand from the Actions tab (Nexus index, Run workflow). The release
+tags ruleset must exclude `nexus-v*`, or the workflow cannot remove the old index tag
+([GitHub settings](github-settings.md#rulesets)).
+
+**Nexus's version** is the root `VERSION`, the single source, with the root `CHANGELOG`: its entries start with
+their kind (`Breaking.`, `Added.`, `Fixed.`), as an app's do. Step 1 lists it as **nexus**, beside core: ticked
+when the root CHANGELOG has entries since its last `Release x.y.z.` entry, with the version those entries ask for.
+Apply writes `VERSION` and the `Release x.y.z.` entry; there is nothing to tag, because the push to main makes the
+index `nexus-v<x.y.z>`.
 
 `/releases/latest`, which the suites' READMEs and wikis link to, opens the index, and app release notes start by
 pointing to it. Installed portals do not use it: they find their releases by their tag prefix (`portal-v`,

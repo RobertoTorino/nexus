@@ -97,6 +97,16 @@ def needs_tooltip(unit: rp.Unit) -> str:
             if unit.current:
                 text += f"\n\nCore {unit.version} already has these changes: it needs no new version."
         return text
+    if unit.kind == rp.NEXUS:
+        text = ("Nexus's own version: the root VERSION, with a \"Release x.y.z.\" entry in the root CHANGELOG. Not "
+                "tagged here: once the push is on main, GitHub's Latest release (the Nexus index) becomes "
+                f"{unit.tag_head}<VERSION>.\n\n")
+        if not unit.released_as:
+            return text + "Never released."
+        if not unit.changed:
+            return text + f"No CHANGELOG entries since Release {unit.released_as}."
+        entries = unit.changed[:25] + ([f"… and {len(unit.changed) - 25} more"] if len(unit.changed) > 25 else [])
+        return text + f"CHANGELOG entries since Release {unit.released_as}:\n" + "\n".join(entries)
     if unit.last_tag is None:
         return "Never released."
     if not unit.changed:
@@ -129,7 +139,9 @@ class AppsPage(QWidget):
             "version can be released as it is. Apply writes VERSION, its copies (__version__, VERSION=, pyproject, Cargo.toml and Cargo.lock) and a "
             "\"Release x.y.z.\" CHANGELOG entry with the notes, which become the release notes on GitHub. Core is "
             "bundled with the "
-            "apps and gets a version only, no tag. <b>Needs release</b> (orange): something the app ships (its "
+            "apps and gets a version only, no tag. <b>nexus</b> is the repository's own version (the root VERSION and "
+            "CHANGELOG): no tag either, its push makes GitHub's Latest release nexus-v&lt;version&gt;. "
+            "<b>Needs release</b> (orange): something the app ships (its "
             "folder without tests, the core it bundles, its manual chapter) differs from its last tag, committed or "
             "not; hover it for the files."))
         lay.addWidget(self.table, 2)
@@ -160,7 +172,8 @@ class AppsPage(QWidget):
             if unit.needs_release and unit.last_tag and not unit.released:
                 reason += f" · {unit.version} not tagged yet"
             tip = needs_tooltip(unit)
-            for col, text in ((1, unit.key), (2, unit.version), (3, unit.last_tag or "—"), (4, reason)):
+            last = unit.last_tag or (f"{unit.tag_head}{unit.released_as}" if unit.released_as else "—")
+            for col, text in ((1, unit.key), (2, unit.version), (3, last), (4, reason)):
                 item = QTableWidgetItem(text)
                 item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
                 item.setToolTip(tip)
@@ -210,8 +223,10 @@ class AppsPage(QWidget):
             QMessageBox.warning(self, "Release", "\n".join(problems))
             return
         root, suite = self.release_window.root, self.release_window.suite
-        log, tags, pins_moved = [], [], []
+        log, tags, pins_moved, nexus = [], [], [], ""
         for unit, new, notes in picked:
+            if unit.kind == rp.NEXUS:
+                nexus = new
             if new != unit.version:
                 changed = rp.set_version(root, unit, new)
                 log.append(f"{unit.key}: {new} in " + ", ".join(p.relative_to(root).as_posix() for p in changed))
@@ -243,8 +258,11 @@ class AppsPage(QWidget):
                        "bump in the same push. The portal release follows in step 2, once the apps are pinned.")
         log += ["", run_check(root, rp.VERSIONS_CHECK),
                 run_check(root, rp.manifest_check(root, suite), "--base", base)]
-        if tags:
-            commands = rp.app_commands(tags)
+        # Nexus's version is not tagged here: its push is enough (nexus-index.yml); with app releases it joins theirs.
+        commands = rp.app_commands(tags) if tags else rp.nexus_commands(nexus) if nexus else ""
+        if tags and nexus:
+            commands += "\n" + rp.NEXUS_INDEX_NOTE.format(version=nexus)
+        if commands:
             log += ["Then:", commands]
             self.release_window.offer(commands)
         self.output.set_text("\n".join(log))
@@ -472,7 +490,8 @@ class PortalPage(QWidget):
             log += [f"Then (step 1's releases are not tagged yet: {', '.join(pending)}; the bump goes into their "
                     "push, and the portal release follows once they are pinned):", commands]
         else:
-            commands = rp.portal_commands(self.release_window.portal_tag(new), check=rp.check_script(root, suite))
+            commands = rp.portal_commands(self.release_window.portal_tag(new), check=rp.check_script(root, suite),
+                                          run_script=rp.portal_run_script(root, suite))
             log += ["Then:", commands]
         self.release_window.offer(commands)
         self.output.set_text("\n".join(log))
@@ -552,10 +571,11 @@ class WithdrawPage(QWidget):
             return
         root = self.release_window.root
         changed = rp.withdraw(root, unit, reason, suite=self.release_window.suite)
+        commands = rp.withdraw_commands(unit.pinned_tag, reason,
+                                        run_script=rp.portal_run_script(root, self.release_window.suite))
         self.output.set_text("\n".join([f"{unit.pinned_tag}: withdrawn in " +
-                                        ", ".join(p.relative_to(root).as_posix() for p in changed), "",
-                                        rp.withdraw_commands(unit.pinned_tag, reason)]))
-        self.release_window.offer(rp.withdraw_commands(unit.pinned_tag, reason))
+                                        ", ".join(p.relative_to(root).as_posix() for p in changed), "", commands]))
+        self.release_window.offer(commands)
         self.reason_edit.clear()
         self.release_window.reload()
 
@@ -1131,7 +1151,8 @@ TICK_MS = 1000                          # and counts its time
 
 class WorkflowTicker(QFrame):
     """Between the header's pills and the tabs: where GitHub's workflows on the newest push stand (owner,
-    28-10-2026: no switching to the browser for it). Each run that runs with its jobs done of all, the job that runs
+    28-10-2026: no switching to the browser for it), those of the suite ticked and Nexus's own; the other suites'
+    CI and releases are left out (owner, 28-10-2026). Each run that runs with its jobs done of all, the job that runs
     and its step, and the time since it started, counted every second; a failed run names its job and step; a run
     that passed says so. Signed in with gh it reads the jobs of every run that runs every 10 seconds, and of a run
     that failed once (unchanged answers do not count against GitHub's limit); without a token, the 60 requests an
@@ -1141,7 +1162,9 @@ class WorkflowTicker(QFrame):
     def __init__(self, source):
         super().__init__()
         self.source = source            # rp.fetch_jobs(url, etag): (jobs | None when unchanged, etag, rate)
-        self.runs: list[rp.BuildRun] = []
+        self.pushed: list[rp.BuildRun] = []     # every run of the newest push
+        self.hidden: set[str] = set()           # the workflow files left out: the other suites'
+        self.runs: list[rp.BuildRun] = []       # the runs shown
         self.jobs: dict[str, list[rp.BuildJob]] = {}    # by the run's url
         self.etags: dict[str, str] = {}
         self.final: set[str] = set()            # the runs whose jobs were read after they finished
@@ -1165,10 +1188,17 @@ class WorkflowTicker(QFrame):
         self.clock.timeout.connect(self.render)
         self.setVisible(False)
 
+    def follow(self, hidden: set[str]) -> None:
+        """Another suite ticked: leave out the runs of these workflow files (the other suites' CI and releases)."""
+        self.hidden = hidden
+        self.show_runs(self.pushed, self.signed_in)
+
     def show_runs(self, runs: list[rp.BuildRun], signed_in: bool) -> None:
-        """The build pill looked: these are the newest push's runs."""
-        self.runs, self.signed_in = runs, signed_in
-        urls = {r.url for r in runs}
+        """The build pill looked: these are the newest push's runs; the ticker shows those of the suite ticked and
+        Nexus's own."""
+        self.pushed, self.signed_in = runs, signed_in
+        self.runs = [r for r in runs if r.file not in self.hidden]
+        urls = {r.url for r in self.runs}
         self.jobs = {url: jobs for url, jobs in self.jobs.items() if url in urls}
         self.etags = {url: etag for url, etag in self.etags.items() if url in urls}
         self.fetch()
@@ -1451,6 +1481,7 @@ class ReleaseWindow(QMainWindow):
         self.status = MetricBox("Working tree")    # clean or changed
         self.build = BuildIndicator(self, runs_source, notify)
         self.ticker = WorkflowTicker(jobs_source)       # between the pills and the tabs, fed by the build's looks
+        self.ticker.hidden = rp.other_suites_workflows(root, self.suite)
         self.github_status = GitHubStatusIndicator(status_source)
         self.claude = ClaudeUsageIndicator(claude_source)
         pills = [self.refresh_pill, self.status, self.build, self.build.rate, self.github_status, self.claude]
@@ -1530,6 +1561,7 @@ class ReleaseWindow(QMainWindow):
         self.suite = name
         if self.settings is not None:
             self.settings.setValue(SUITE_KEY, name)
+        self.ticker.follow(rp.other_suites_workflows(self.root, name))
         self.refresh()
 
     def _git_row(self) -> QHBoxLayout:
