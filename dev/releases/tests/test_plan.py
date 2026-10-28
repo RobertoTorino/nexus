@@ -1891,3 +1891,77 @@ def test_git_answers_are_utf8_on_every_system(repo):
     assert rp.git(repo, "show", "beta-v0.1.0:apps/beta/CHANGELOG").endswith("Fixed. Naïve × 3.\n")
     beta = next(u for u in rp.load_units(repo) if u.key == "beta")
     assert rp.new_entries(repo, beta) == []                             # nothing new since its tag
+
+
+def test_a_suites_release_moves_nexus(two_suites):
+    """Latest, the Nexus index, lists every suite's newest portal: a suite's release since Nexus's last version
+    needs a Nexus release too, minor; a new suite major (owner, 28-10-2026)."""
+    root = two_suites
+    write(root / "VERSION", "0.1.0\n")
+    write(root / "CHANGELOG", "Changelog: 01-01-2026 00:00:00\n\nRelease 0.1.0.\n")
+    sh(root, "add", "-A")
+    sh(root, "commit", "-q", "-m", "Nexus 0.1.0")
+    assert rp.suite_releases(root) == []
+    nexus = next(u for u in rp.load_units(root, "wp") if u.kind == rp.NEXUS)
+    assert not nexus.needs_release and nexus.release_reason == "no"
+
+    write(root / "wp/apps/test/VERSION", "0.3.0\n")              # bumped, not committed or tagged yet: it counts
+    write(root / "bc/apps/check/VERSION", "0.1.1\n")             # another suite's too
+    write(root / "bc/apps/dev/VERSION", "0.2.0\n")
+    write(root / "bc/apps/dev/.checkout-only", "Never released.\n")
+    sh(root, "add", "-A")
+    sh(root, "commit", "-q", "-m", "releases")
+    assert rp.suite_releases(root) == ["check-v0.1.1", "wp-test-v0.3.0"]      # never a checkout-only app
+    nexus = next(u for u in rp.load_units(root, "wp") if u.kind == rp.NEXUS)
+    assert nexus.needs_release and nexus.release_reason == "yes: check-v0.1.1, wp-test-v0.3.0"
+    choices, why = rp.version_choices(root, nexus)
+    assert choices[0] == "0.2.0" and why == "minor: the suites' releases check-v0.1.1, wp-test-v0.3.0 since Release 0.1.0"
+    assert rp.nexus_notes("", nexus.suite_releases) == "Brings check-v0.1.1, wp-test-v0.3.0."
+    assert rp.nexus_notes("Mine.", nexus.suite_releases) == "Mine."
+
+    assert rp.bump_nexus(root, "0.2.0") == "Release 0.2.0. Brings check-v0.1.1, wp-test-v0.3.0."
+    assert (root / "VERSION").read_text() == "0.2.0\n" and rp.suite_releases(root) == []   # the bump takes them in
+    sh(root, "add", "-A")
+    sh(root, "commit", "-q", "-m", "Nexus 0.2.0")
+    assert rp.suite_releases(root) == []
+
+    write(root / "new/portal/apps.toml", card("x", required=True))       # a new suite: major
+    write(root / "new/portal/VERSION", "0.1.0\n")
+    sh(root, "add", "-A")
+    sh(root, "commit", "-q", "-m", "a new suite")
+    assert rp.suite_releases(root) == ["new suite new", "portal-v0.1.0"]
+    nexus = next(u for u in rp.load_units(root, "wp") if u.kind == rp.NEXUS)
+    choices, why = rp.version_choices(root, nexus)
+    assert choices[0] == "1.0.0" and why.startswith("major: new suite new, the suites' releases portal-v0.1.0")
+    assert rp.nexus_notes("", nexus.suite_releases) == "Brings the new suite new, portal-v0.1.0."
+
+
+def test_window_an_apps_release_takes_nexus_along(window, repo):
+    write(repo / "VERSION", "0.1.0\n")
+    write(repo / "CHANGELOG", "Changelog: 01-01-2026 00:00:00\n\nRelease 0.1.0.\n")
+    sh(repo, "add", "-A")
+    sh(repo, "commit", "-q", "-m", "Nexus 0.1.0")
+    window.reload()
+    for _, tick, _, _ in window.apps_page.rows:
+        tick.setChecked(False)
+    _, tick, _, _ = row(window, "alpha")
+    _, nexus_tick, nexus_combo, _ = row(window, rp.NEXUS)
+    tick.setChecked(True)
+    assert nexus_tick.isChecked()                                         # ticked along, visibly
+    nexus_combo.setEditText("0.2.0")
+    window.apps_page.apply()
+    assert (repo / "VERSION").read_text() == "0.2.0\n"
+    assert (repo / "CHANGELOG").read_text().split("\n\n")[1] == "Release 0.2.0. Brings alpha-v0.1.1."
+    sh(repo, "add", "-A")
+    sh(repo, "commit", "-q", "-m", "Release alpha-v0.1.1")
+    sh(repo, "tag", "alpha-v0.1.1")
+    sh(repo, "tag", "beta-v0.1.0")
+    window.reload()
+    page = window.portal_page
+    page.pin()
+    assert not page.nexus_too.isHidden() and page.nexus_too.isChecked()
+    assert page.nexus_version.currentText() == "0.3.0"                    # the portal's release: minor
+    page.bump()
+    assert (repo / "VERSION").read_text() == "0.3.0\n"
+    assert (repo / "CHANGELOG").read_text().split("\n\n")[1] == "Release 0.3.0. Brings portal-v0.1.1."
+    assert "nexus-v0.3.0" in page.output.toPlainText()

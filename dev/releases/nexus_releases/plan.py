@@ -279,21 +279,23 @@ class Unit:
     standalone: bool = False            # apps only: released separately, never pinned in the portal
     prefix: str = ""                    # the suite's tag prefix: "wp-" makes wp-test-v0.1.0
     released_as: str = ""               # nexus only: the version of the root CHANGELOG's newest "Release x.y.z."
+    suite_releases: list[str] = field(default_factory=list)   # nexus only: the suites' releases since that version
 
     @property
     def needs_release(self) -> bool:
         """Something it ships changed since its last tag (or it was never released). Core is never released; Nexus
-        when its CHANGELOG has entries since its last release (changed holds them), or it never had one."""
+        when its CHANGELOG has entries since its last release (changed holds them), when a suite has a release since
+        then (suite_releases: the Nexus index lists them, so its number moves too), or it never had one."""
         if self.kind == "nexus":
-            return not self.released_as or bool(self.changed)
+            return not self.released_as or bool(self.changed) or bool(self.suite_releases)
         return self.kind != "core" and (self.last_tag is None or bool(self.changed))
 
     @property
     def release_reason(self) -> str:
         if self.kind == "nexus":
             n = len(self.changed or [])
-            return "first release" if not self.released_as else \
-                f"yes: {n} CHANGELOG entr{'ies' if n != 1 else 'y'}" if n else "no"
+            parts = ([f"{n} CHANGELOG entr{'ies' if n != 1 else 'y'}"] if n else []) + self.suite_releases
+            return "first release" if not self.released_as else f"yes: {', '.join(parts)}" if parts else "no"
         if self.kind == "core":
             n = len(self.in_apps)
             releases = f"{n} app release{'s' if n != 1 else ''}"
@@ -452,7 +454,41 @@ def load_units(root: Path = CHECKOUT, suite: str | None = None) -> list[Unit]:
             text = (root / "CHANGELOG").read_text(encoding="utf-8") if (root / "CHANGELOG").is_file() else ""
             unit.released_as = last_release(text)
             unit.changed = [b.split("\n", 1)[0] for b in new_entries(root, unit)] if unit.released_as else []
+            unit.suite_releases = suite_releases(root) if unit.released_as else []
     return units
+
+
+NEW_SUITE = "new suite "
+
+
+def suite_releases(root: Path) -> list[str]:
+    """The suites' releases since Nexus's last version, as their tags ("wp-test-v1.3.0"): every app and portal, of
+    every suite, whose VERSION differs from what it was in the last commit that changed the root VERSION, tagged
+    already or still to be (the working tree counts). Latest, the Nexus index, lists every suite's newest portal and
+    is made anew after each release, so its number has to move with them (owner, 28-10-2026: a Latest that still said
+    v0.3.0 after a suite's release looked as if nothing had changed). [] while the root VERSION is changed and not
+    committed (the bump that takes them in), or never committed. A suite that came since is listed as "new suite
+    <folder>"."""
+    if git(root, "diff", "--quiet", "HEAD", "--", "VERSION") is None:
+        return []
+    base = (git(root, "log", "-1", "--format=%H", "--", "VERSION") or "").strip()
+    if not base:
+        return []
+    out = git(root, "diff", "--name-only", base, "--", ":(glob)**/apps/*/VERSION", ":(glob)**/portal/VERSION") or ""
+    new = [f"{NEW_SUITE}{p.name}" for p in nexus_suites.suites(root)
+           if p != root and git(root, "cat-file", "-e", f"{base}:{p.relative_to(root).as_posix()}/portal/apps.toml")
+           is None]
+    found = []
+    for path in out.split():
+        folder = root / path.rsplit("/", 1)[0]
+        version_file = root / path
+        if not version_file.is_file() or (folder / CHECKOUT_ONLY).is_file():
+            continue
+        suite = next((p for p in nexus_suites.suites(root) if folder.is_relative_to(p)), root)
+        prefix = nexus_suites.tag_prefix(suite)
+        key = "portal" if folder.name == "portal" else folder.name
+        found.append(f"{prefix}{key}-v{version_file.read_text(encoding='utf-8').strip()}")
+    return new + sorted(found)
 
 
 _RELEASE = re.compile(r"^Release (\d+\.\d+\.\d+)\.")
@@ -528,6 +564,27 @@ def add_changelog_entry(root: Path, unit: Unit, text: str, now: datetime.datetim
 
 def release_text(version: str, notes: str) -> str:
     return f"Release {version}." + (f" {notes.strip()}" if notes.strip() else "")
+
+
+def nexus_notes(notes: str, releases: list[str]) -> str:
+    """The notes of Nexus's release entry: what was entered, else what the suites brought since its last version
+    ("Brings wp-portal-v1.3.0."), so the entry says why the index moved."""
+    if notes.strip() or not releases:
+        return notes
+    new = [r.removeprefix(NEW_SUITE) for r in releases if r.startswith(NEW_SUITE)]
+    tags = [r for r in releases if not r.startswith(NEW_SUITE)]
+    parts = ([f"the new suite{'s' if len(new) != 1 else ''} {', '.join(new)}"] if new else []) + tags
+    return f"Brings {', '.join(parts)}."
+
+
+def bump_nexus(root: Path, version: str, notes: str = "") -> str:
+    """Nexus's version and its release entry, as step 1's Apply of the nexus row writes them; the entry's text."""
+    nexus = next(u for u in load_units(root) if u.kind == NEXUS)
+    text = release_text(version, nexus_notes(notes, suite_releases(root)))
+    if version != nexus.version:
+        set_version(root, nexus, version)
+    add_changelog_entry(root, nexus, text)
+    return text
 
 
 # --- The kind of change: semantic versioning (owner, 15-10-2026) -----------------------------------------------
@@ -630,6 +687,8 @@ def version_choices(root: Path, unit: Unit, blobs: dict[str, str | None] | None 
     if unit.kind == NEXUS and not unit.released_as or unit.kind not in ("core", NEXUS) and unit.last_tag is None:
         return [unit.version] + nexts, "the first release"
     level, why = suggested_level(new_entries(root, unit, blobs))
+    if unit.kind == NEXUS:
+        level, why = nexus_level(level, why, unit.suite_releases)
     suggested = next_versions(_tagged_version(unit))[level]
     reason = f"{level}: {why}" + (f" since {unit.last_tag}" if unit.last_tag else
                                   f" since Release {unit.released_as}" if unit.released_as else "")
@@ -640,6 +699,17 @@ def version_choices(root: Path, unit: Unit, blobs: dict[str, str | None] | None 
     choices = [v for i, v in enumerate(choices) if v not in choices[:i] and not check_new_version(unit.version, v,
                                                                                                     released)]
     return choices, reason
+
+
+def nexus_level(level: str, why: str, releases: list[str]) -> tuple[str, str]:
+    """Nexus's level with its suites' releases since its last version (owner, 28-10-2026): a new suite is major, a
+    suite's release minor; the higher of that and its own CHANGELOG's."""
+    if not releases:
+        return level, why
+    new = [r.removeprefix(NEW_SUITE) for r in releases if r.startswith(NEW_SUITE)]
+    tags = [r for r in releases if not r.startswith(NEW_SUITE)]
+    reasons = ([why] if why != "no CHANGELOG entries" else []) +         ([f"new suite{'s' if len(new) != 1 else ''} {', '.join(new)}"] if new else []) +         ([f"the suites' releases {', '.join(tags)}"] if tags else [])
+    return max(level, "major" if new else "minor", key=LEVELS.index), ", ".join(reasons)
 
 
 def portal_suggestion(root: Path, portal: Unit, suite: str | None = None) -> tuple[str, str]:

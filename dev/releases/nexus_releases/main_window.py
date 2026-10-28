@@ -191,6 +191,13 @@ class AppsPage(QWidget):
             self.table.setCellWidget(i, 5, combo)
             self.table.setCellWidget(i, 6, notes)
             self.rows.append((unit, tick, combo, notes))
+        # An app's release is a suite's release: the Nexus index lists it, so Nexus's number moves with it (owner,
+        # 28-10-2026). Ticking an app ticks the nexus row; it can be unticked.
+        nexus = next((tick for unit, tick, _, _ in self.rows if unit.kind == rp.NEXUS), None)
+        if nexus is not None:
+            for unit, tick, _, _ in self.rows:
+                if unit.kind == "app":
+                    tick.toggled.connect(lambda on, nexus=nexus: on and nexus.setChecked(True))
 
     def typed(self) -> dict[str, tuple[bool, str | None, str, bool]]:
         """What was entered per app: the tick, a version only if it differs from the one offered, the notes; and
@@ -225,9 +232,12 @@ class AppsPage(QWidget):
             return
         root, suite = self.release_window.root, self.release_window.suite
         log, tags, pins_moved, nexus = [], [], [], ""
+        # Nexus last: its entry names the suites' releases, the ones written here among them.
+        picked.sort(key=lambda p: p[0].kind == rp.NEXUS)
         for unit, new, notes in picked:
             if unit.kind == rp.NEXUS:
                 nexus = new
+                notes = rp.nexus_notes(notes, rp.suite_releases(root))
             if new != unit.version:
                 changed = rp.set_version(root, unit, new)
                 log.append(f"{unit.key}: {new} in " + ", ".join(p.relative_to(root).as_posix() for p in changed))
@@ -299,6 +309,13 @@ class PortalPage(QWidget):
         self.portal_version.setMinimumWidth(VERSION_FIELD_PX)
         self.portal_notes = QLineEdit()
         self.portal_notes.setPlaceholderText("What this portal release brings (optional)")
+        self.nexus_too = QCheckBox("Nexus too:")
+        self.nexus_too.setToolTip("A portal release is a suite's release: the Nexus index (GitHub's Latest) lists it, "
+                                  "so Bump portal bumps Nexus's version too, with a Release entry that says what the "
+                                  "suites bring (owner, 28-10-2026)")
+        self.nexus_version = QComboBox()
+        self.nexus_version.setEditable(True)
+        self.nexus_version.setMinimumWidth(VERSION_FIELD_PX)
         self.bump_button = accent_button("Bump portal", "Write portal/VERSION, its copies and the CHANGELOG entry")
         self.bump_button.clicked.connect(self.bump)
         self.portal_state = QLabel()             # the portal's own release: not tagged yet, building, built
@@ -318,6 +335,8 @@ class PortalPage(QWidget):
         portal_row.addWidget(QLabel("Portal version:"))
         portal_row.addWidget(self.portal_version)
         portal_row.addWidget(self.portal_notes, 1)
+        portal_row.addWidget(self.nexus_too)
+        portal_row.addWidget(self.nexus_version)
         portal_row.addWidget(self.bump_button)
         lay = QVBoxLayout(self)
         lay.addWidget(hint_label(
@@ -393,6 +412,19 @@ class PortalPage(QWidget):
         self.portal_version.clear()
         self.portal_version.addItems(choices)
         self.portal_version.setToolTip(f"{suggested}: {semver}.\n\n{SEMVER_TIP}")
+        # Nexus with the portal: a suite's release is at least minor for it, a new suite major (owner, 28-10-2026).
+        nexus = next((u for u in units if u.kind == rp.NEXUS), None)
+        self.nexus_too.setVisible(nexus is not None and bool(nexus.released_as))
+        self.nexus_version.setVisible(not self.nexus_too.isHidden())
+        if not self.nexus_too.isHidden():
+            choices, why = rp.version_choices(self.release_window.root, nexus)
+            if not nexus.suite_releases:                # the portal bumped here is the suites' release then
+                minor = rp.next_versions(nexus.version)["minor"]
+                choices, why = [minor, *(c for c in choices if c != minor)], "minor: the portal's release"
+            self.nexus_version.clear()
+            self.nexus_version.addItems(choices)
+            self.nexus_version.setToolTip(f"{choices[0]}: {why}.\n\n{SEMVER_TIP}")
+            self.nexus_too.setChecked(True)
         self.show_builds()
 
     def waiting_tags(self) -> list[str]:
@@ -479,7 +511,13 @@ class PortalPage(QWidget):
         withdrawn = rp.changed_withdrawals(root, self.release_window.base(), suite)
         text = rp.portal_text(new, pins, self.portal_notes.text(), withdrawn)
         rp.add_changelog_entry(root, portal, text)
-        log += [f"portal: CHANGELOG entry \"{text}\"", "",
+        log.append(f"portal: CHANGELOG entry \"{text}\"")
+        nexus = ""
+        if not self.nexus_too.isHidden() and self.nexus_too.isChecked():
+            nexus = self.nexus_version.currentText().strip()
+            log.append(f"nexus: {nexus}, CHANGELOG entry \"{rp.bump_nexus(root, nexus)}\": the Nexus index lists "
+                       "this portal, so its number moves with it")
+        log += ["",
                 run_check(root, rp.VERSIONS_CHECK),
                 run_check(root, rp.manifest_check(root, suite), "--base", self.release_window.base())]
         # Bumped before step 1's push (an app added, a pin moved): the bump goes into that push, with the app tags
@@ -494,6 +532,10 @@ class PortalPage(QWidget):
             commands = rp.portal_commands(self.release_window.portal_tag(new), check=rp.check_script(root, suite),
                                           run_script=rp.portal_run_script(root, suite))
             log += ["Then:", commands]
+        if nexus:
+            note = rp.NEXUS_INDEX_NOTE.format(version=nexus)
+            commands += "\n" + note
+            log.append(note)
         self.release_window.offer(commands)
         self.output.set_text("\n".join(log))
         self.release_window.reload()

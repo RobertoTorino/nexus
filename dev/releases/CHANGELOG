@@ -1,3 +1,12 @@
+Changelog: 28-10-2026 18:30:12
+
+Added. A suite's release needs a Nexus release too (owner, 28-10-2026: Latest, the Nexus index, said v0.3.0
+while a suite had changed under it): the nexus row needs one when an app or a portal of any suite has a VERSION it
+did not have when the root VERSION last changed, tagged or about to be (plan.py: suite_releases), and says which.
+The version offered first counts a suite's release as minor and a new suite as major, with the root CHANGELOG's own
+kinds (nexus_level). Ticking an app in step 1 ticks nexus too; step 2 has Nexus too beside Bump portal, with its
+version (bump_nexus). Without notes, the Release entry names what the suites bring (nexus_notes).
+
 Changelog: 28-10-2026 16:36:06
 
 Fixed. The GitHub column of step 2's pin table, and the ready to pin notification, follow a suite's own release

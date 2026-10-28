@@ -221,10 +221,18 @@ tags ruleset must exclude `nexus-v*`, or the workflow cannot remove the old inde
 ([GitHub settings](github-settings.md#rulesets)).
 
 **Nexus's version** is the root `VERSION`, the single source, with the root `CHANGELOG`: its entries start with
-their kind (`Breaking.`, `Added.`, `Fixed.`), as an app's do. Step 1 lists it as **nexus**, beside core: ticked
-when the root CHANGELOG has entries since its last `Release x.y.z.` entry, with the version those entries ask for.
-Apply writes `VERSION` and the `Release x.y.z.` entry; there is nothing to tag, because the push to main makes the
-index `nexus-v<x.y.z>`.
+their kind (`Breaking.`, `Added.`, `Fixed.`), as an app's do. Step 1 lists it as **nexus**, beside core. It needs
+a release when the root CHANGELOG has entries since its last `Release x.y.z.` entry, and when a suite has a release
+since then: the index lists every suite's newest portal, so its number moves with them, and a Latest that keeps its
+number never looks as if a suite changed. A suite's release is an app or a portal whose `VERSION` differs from what
+it was when Nexus's `VERSION` last changed, tagged already or about to be; the column names them
+(*yes: wp-portal-v1.3.0*). The version offered first is the highest of what the entries ask for and what the suites
+ask for: a suite's release is **minor**, a new suite **major**.
+
+Ticking an app in step 1 ticks **nexus** too (untick it to leave Nexus for later), and step 2's **Nexus too** does
+the same for Bump portal, with Nexus's version beside it. Apply and Bump portal write `VERSION` and the
+`Release x.y.z.` entry; without notes the entry says what the suites bring (*Release 0.4.0. Brings
+wp-portal-v1.3.0.*). There is nothing to tag, because the push to main makes the index `nexus-v<x.y.z>`.
 
 `/releases/latest`, which the suites' READMEs and wikis link to, opens the index, and app release notes start by
 pointing to it. Installed portals do not use it: they find their releases by their tag prefix (`portal-v`,

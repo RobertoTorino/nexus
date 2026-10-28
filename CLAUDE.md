@@ -93,7 +93,9 @@ default suite of the tools (`tools/suites.py`). The root keeps what is Nexus's:
   time zone data and silently gives UTC, an hour or two early.
 - **Nexus's version** (owner, 28-10-2026): the root `VERSION`, with the root CHANGELOG, is Nexus's own; the owner
   bumps it (Nexus Releases' step 1 row **nexus**). It is never tagged by hand: `nexus-index.yml` publishes GitHub's
-  Latest release, the Nexus index, as `nexus-v<VERSION>` titled `Nexus v<VERSION>`.
+  Latest release, the Nexus index, as `nexus-v<VERSION>` titled `Nexus v<VERSION>`. A suite's release (an app or a
+  portal) moves it too, since the index lists every suite: a suite's release is minor, a new suite major (owner,
+  28-10-2026); Nexus Releases offers it with every app and portal release.
 - **One disclaimer for every wiki** (owner, 28-10-2026): `tools/mkdocs/disclaimer.py` holds it; every wiki lists
   the hook, its home page's footer shows `{{ config.extra.disclaimer }}` and its home page ends with
   `## Disclaimer` over the line `<!-- disclaimer -->` (`tools/tests/test_disclaimer.py`). Every other Disclaimer
