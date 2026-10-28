@@ -1,3 +1,18 @@
+Changelog: 28-10-2026 21:24:57
+
+Release 1.5.0. Pins wp-pcsx2-v0.1.0.
+
+Changelog: 28-10-2026 20:21:08
+
+Added. PCSX2 Manager on the Gaming tab: the portal pins wp-pcsx2-v0.1.0, the suite's first optional app, with the
+Gaming category's icon.
+
+Changelog: 28-10-2026 20:02:53
+
+Added. A wallpaper behind the page, to try out (owner, 28-10-2026): the owner's picture of a highway interchange at
+night (images/wallpaper.webp), filling the window without stretching, under the background at three fifths, and the tiles and the strip see-through over it (core's glass(), 200 of
+255) so it shines through while the text stays easy to read; the focused tile stays solid.
+
 Changelog: 28-10-2026 19:54:10
 
 Release 1.4.0. Pins wp-test-v1.4.0.

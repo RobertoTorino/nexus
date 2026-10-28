@@ -1,3 +1,16 @@
+Changelog: 28-10-2026 20:01:44
+
+Added. portable.InfoPill and InfoPopup: an information icon (a ring with an i drawn in it, 32 px) for more text
+than fits on a page (owner, 28-10-2026); A or a tap shows the text under its title in a solid panel over the
+darkened window, A, B, Escape or a tap beside it closes it and the focus goes back to the icon.
+PortableWindow.show_popup() opens one; while it shows, the other buttons do nothing.
+
+Added. PortableHeader.set_status() takes a second line, shown under the status line when given (owner, 28-10-2026:
+Windows Portable Test's temperatures under the battery, the date and the time).
+
+Added. portable.glass(): how opaque the cards and panes are, set by a window with a wallpaper behind it so the
+picture shines through (owner, 28-10-2026); a focused card stays solid, so its amber glow does not tint it.
+
 Changelog: 28-10-2026 18:12:48
 
 Version 0.2.0.

@@ -22,6 +22,7 @@ The suite is part of [Nexus](https://robertotorino.github.io/nexus/), beside the
 |---|---|
 | [Portal](portal.md) | Installs, updates, opens and removes the suite's apps, each from its own release. |
 | [Windows Portable Test](apps/test.md) | What Windows reports about the handheld, and a test of every button, stick and trigger of its controller. Always installed with the portal. |
+| [PCSX2 Manager](apps/pcsx2.md) | Installs PCSX2, the PlayStation 2 emulator, in portable mode, and opens it. |
 
 ## Get started
 

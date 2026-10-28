@@ -306,3 +306,141 @@ def test_the_help_names_the_steps():
     result = subprocess.run([sys.executable, str(ROOT / "tools" / "new_app.py"), "--help"], capture_output=True,
                             text=True)
     assert result.returncode == 0 and "--category" in result.stdout and "architecture chapter" in result.stdout
+
+
+WINDOWS = "windows-portable"
+W_MANIFEST = '''# the pins
+
+[apps.test]
+name = "Windows Portable Test"
+summary = "s"
+tag = "wp-test-v0.1.0"
+required = true
+category = "sustainable"
+install = ["i"]
+uninstall = ["u"]
+detect = ["d"]
+'''
+
+W_MKDOCS = '''site_name: Windows Portable Suite
+site_url: https://example.invalid/nexus/windows-portable-suite/
+nav:
+  - Home: index.md
+  - Portal: portal.md
+  - Apps:
+      - Windows Portable Test: apps/test.md
+'''
+
+W_HOME = '''# Windows Portable Suite
+
+## The apps
+
+| App | What it does |
+|---|---|
+| [Portal](portal.md) | Installs the apps. |
+| [Windows Portable Test](apps/test.md) | The handheld. |
+
+## Get started
+'''
+
+W_CI = '''jobs:
+  pytest:
+    strategy:
+      matrix:
+        dir: [core, windows-portable/portal,
+              windows-portable/apps/test]   # every folder of the suite with tests/, and core, which its apps bundle
+  installers:
+    steps:
+      - name: "Installer test: test"
+        run: powershell -File windows-portable/tools/installer-tests/test.ps1
+      - name: "Installer test: releases"
+        run: powershell -File windows-portable/tools/installer-tests/releases.ps1
+      - name: "Build the release zip, not published: test"
+        run: python build
+      - name: "Build the release zip, not published: portal"
+        run: python build portal
+'''
+
+
+@pytest.fixture
+def windows_checkout(tmp_path) -> Path:
+    """A repository with a Windows suite laid out as the Windows Portable Suite is: its portal package with the
+    categories, TAG_PREFIX, the wiki's nav and home, the gaming category's icons, the suite's CI, and the real
+    tools/make_icons.py, which copies the app's icons."""
+    root = tmp_path / "nexus"
+    suite = root / WINDOWS
+    write(root / "core" / "bc250_core" / "__init__.py", "")
+    write(suite / "portal" / "apps.toml", W_MANIFEST)
+    write(suite / "portal" / "portable_portal" / "__init__.py",
+          'APP_NAME = "Windows Portable Suite"\nAPP_ID = "windows-portable-suite"\n')
+    write(suite / "portal" / "portable_portal" / "manifest.py",
+          'CATEGORIES = {"sustainable": "Sustainable", "graphics": "Graphics", "gaming": "Gaming", '
+          '"utilities": "Utilities"}\n')
+    write(suite / "portal" / "LICENSE", "GPL-3.0-or-later\n")
+    write(suite / "TAG_PREFIX", "wp-\n")
+    write(suite / "mkdocs.yml", W_MKDOCS)
+    write(suite / "docs" / "index.md", W_HOME)
+    (suite / "icons" / "gaming").mkdir(parents=True)
+    for size in (1024, 512, 256, 128):
+        shutil.copy(ROOT / WINDOWS / "icons" / "gaming" / f"gaming-{size}.png", suite / "icons" / "gaming")
+    (suite / "tools" / "installer-tests").mkdir(parents=True)
+    (root / "tools").mkdir()
+    shutil.copy(ROOT / "tools" / "make_icons.py", root / "tools" / "make_icons.py")
+    write(root / ".github" / "workflows" / "ci-windows-portable.yml", W_CI)
+    return root
+
+
+def test_a_windows_suites_app(windows_checkout, capsys):
+    root = windows_checkout
+    assert na.main([WINDOWS, "emu", "Emu Manager", "--category", "gaming", "--summary", "An emulator.", "--no-check",
+                    "--root", str(root)]) == 0
+    assert capsys.readouterr().out.startswith(
+        "Emu Manager (windows-portable/apps/emu, package emu_manager, id windows-portable-emu, gaming):")
+    suite = root / WINDOWS
+    app = suite / "apps" / "emu"
+    for name in ("emu_manager/__init__.py", "emu_manager/__main__.py", "emu_manager/main_window.py",
+                 "tests/conftest.py", "tests/test_main_window.py", "install.ps1", "run.ps1", "requirements.txt",
+                 "requirements-dev.txt", "VERSION", "CHANGELOG", "LICENSE", ".gitignore", "README.md"):
+        assert (app / name).is_file(), name
+        if name.endswith(".py"):
+            compile((app / name).read_text(), name, "exec")
+    init = (app / "emu_manager" / "__init__.py").read_text()
+    assert 'APP_ID = "windows-portable-emu"' in init and 'EXE_NAME = "Emu-Manager"' in init
+    assert 'tag_prefix="wp-emu-v"' in init and 'SUITE = "windows-portable-suite"' in init
+    assert "PortableWindow" in (app / "emu_manager" / "main_window.py").read_text()
+    installer = (app / "install.ps1").read_text()
+    for option in ("'--no-desktop-shortcut'", "'--uninstall'", "'--purge'", "'--help'"):
+        assert option in installer
+    assert "not as administrator" in installer and "$Exe = 'Emu-Manager.exe'" in installer
+    assert "(wp-emu-v<x.y.z>.zip" in installer and "\n# Installs Emu Manager from" in installer
+    test = (suite / "tools" / "installer-tests" / "emu.ps1").read_text()
+    assert "$env:WPS_DESKTOP_DIR = " in test and test.index("$env:WPS_DESKTOP_DIR = ") < test.index("Run 'log1'")
+    assert r"apps\emu\install.ps1" in test and r"Start Menu\Programs\Windows Portable Suite" in test
+    # The icons: the category's, copied by tools/make_icons.py.
+    from PIL import Image
+    assert Image.open(app / "images" / "windows-portable-emu.webp").size == (512, 512)
+    assert Image.open(app / "images" / "windows-portable-emu-128.png").size == (128, 128)
+    assert Image.open(suite / "portal" / "images" / "apps" / "emu.webp").size == (128, 128)
+    assert Image.open(suite / "docs" / "images" / "apps" / "emu.webp").size == (256, 256)
+    import tomllib
+    entry = tomllib.loads((suite / "portal" / "apps.toml").read_text())["apps"]["emu"]
+    assert entry["tag"] == "wp-emu-v0.1.0" and entry["category"] == "gaming" and "required" not in entry
+    assert entry["detect"] == [r"%LOCALAPPDATA%\windows-portable-suite\windows-portable-emu\app\Emu-Manager.exe"]
+    chapter = (suite / "docs" / "apps" / "emu.md").read_text()
+    assert "![Emu Manager](../images/apps/emu.webp){ .app-logo }\n\n# Emu Manager\n\nAn emulator." in chapter
+    assert "**Gaming** tab" in chapter and "wp-emu-v<x.y.z>.zip" in chapter
+    assert "      - Windows Portable Test: apps/test.md\n      - Emu Manager: apps/emu.md\n" in \
+        (suite / "mkdocs.yml").read_text()
+    assert "| The handheld. |\n| [Emu Manager](apps/emu.md) | An emulator. |\n\n## Get started" in \
+        (suite / "docs" / "index.md").read_text()
+    ci = (root / ".github" / "workflows" / "ci-windows-portable.yml").read_text()
+    assert "windows-portable/apps/test,\n              windows-portable/apps/emu]   # every folder" in ci
+    assert ('      - name: "Installer test: emu"\n        run: powershell -NoProfile -ExecutionPolicy Bypass -File '
+            'windows-portable/tools/installer-tests/emu.ps1\n      - name: "Installer test: releases"') in ci
+    assert ('wpdist/emu\n      - name: "Installer test on the release: emu"') in ci
+    assert ci.index('not published: emu"') < ci.index('not published: portal"')
+
+
+def test_a_windows_category_without_icons_is_refused(windows_checkout):
+    with pytest.raises(SystemExit, match="has no icons yet"):
+        na.main([WINDOWS, "tool", "A Tool", "--category", "utilities", "--no-check", "--root", str(windows_checkout)])

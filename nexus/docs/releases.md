@@ -79,7 +79,13 @@ the settings.
   the first on a board with a withdrawn app installed. **Installer tests** opens BC-250 Installer Tests from the
   checkout. **Record portal tour** records the portal's video tour from the checkout as it is now, for the wiki and
   YouTube (`bc250-bazzite/tools/record-tour.sh`, about a minute, its output in Logs), into
-  `~/Videos/bc250-portal-tour-v<portal version>.mp4`, and opens it in your video player. Linux only, except
+  `~/Videos/bc250-portal-tour-v<portal version>.mp4`, and opens it in your video player. The tests run on the
+  ticked suite's own system: the BC250 suite's on Linux (the board). For a Windows suite they run on Windows (the
+  handheld), with its `tools\check-release.ps1` in a PowerShell window: **Test app updates** and **Test withdrawal**
+  start the portal from the checkout (`check-release.ps1 local`), **Test Portal release** downloads the published
+  portal release, checks it against its SHA256SUMS, installs it and starts it (`check-release.ps1 release`), and
+  **Installer tests** runs every installer test of the suite in turn (`check-release.ps1 installer`). **Record
+  portal tour** is the BC250 suite's, on Linux. A button greyed out says on which system its tests run. Then
   **Close issues**: it lists the open issues on GitHub, such as the weekly Upstream review, each with a tick box.
   **Run** closes the ticked ones with `gh issue close` in the Commands tab, with a comment when you write one; it
   needs a gh login (`gh auth login`). A double click opens an issue on GitHub.

@@ -18,15 +18,15 @@ from dataclasses import dataclass
 from pathlib import Path, PurePath
 
 from PyQt6.QtCore import QObject, QSettings, Qt, QTimer, pyqtSignal
-from PyQt6.QtGui import QPixmap
+from PyQt6.QtGui import QColor, QPainter, QPixmap
 from PyQt6.QtWidgets import QGridLayout, QStackedWidget, QVBoxLayout, QWidget
 
-from bc250_core import applog, power
+from bc250_core import applog, portable, power
 from bc250_core.gamepad import Gamepad
 from bc250_core.platform import expand, launch_in_terminal
-from bc250_core.portable import AMBER, DIM, Card, Legend, PortableHeader, PortableWindow, px, status_clock
+from bc250_core.portable import AMBER, BACKGROUND, DIM, Card, Legend, PortableHeader, PortableWindow, px, status_clock
 
-from . import APP_ICONS, APP_ID, APP_NAME, __version__
+from . import APP_ICONS, APP_ID, APP_NAME, WALLPAPER, __version__
 from .intro import INTRO_MS, Intro
 from .manifest import CATEGORIES, AppEntry
 from .portal_update import PortalUpdate, short
@@ -35,6 +35,8 @@ from .widgets import AppPane, DetailsPane, SuitePane, Tabs
 
 STATUS_MS = 30_000              # the header's battery and time
 POLL_MS = 1000                  # how often the portal looks for the installer window's exit status
+SHADE = 150                     # of 255: how much of the background lies over the wallpaper
+GLASS = 200                     # of 255: the cards' and the strip's opacity over it, so it shines through
 CONFIRM_MS = 5000               # Remove, and B while the portal is busy, ask for a second press within this
 PROGRESS_MS = 500               # how often a download's size is shown (owner, 28-10-2026: 94 MB looked like a hang)
 TILE_W, TILE_H, GAP = 293, 176, 14      # the mock-up's tiles: two rows of four
@@ -126,8 +128,10 @@ class MainWindow(PortableWindow):
                  battery: Callable[[], tuple[int, bool] | None] = power.battery,
                  launch: Callable[[list[str]], None] = start_app,
                  terminal: Callable[..., None] = launch_in_terminal, icons: Path = APP_ICONS,
-                 exe: str = "", exit_dir: Path | None = None, intro_ms: int = INTRO_MS):
-        """*intro_ms*: how long the intro plays when the window starts (0: none)."""
+                 exe: str = "", exit_dir: Path | None = None, intro_ms: int = INTRO_MS,
+                 wallpaper: Path | None = WALLPAPER):
+        """*intro_ms*: how long the intro plays when the window starts (0: none). *wallpaper*: the picture behind
+        the page, darkened (None: the plain background)."""
         super().__init__(gamepad)
         self.setWindowTitle(f"{APP_NAME} {__version__}")
         self.log = applog.logger(APP_ID)
@@ -136,6 +140,8 @@ class MainWindow(PortableWindow):
         self.exe = exe                                  # the installed portal's program, for a restart; "" from a checkout
         self.exit_dir = exit_dir or Path(tempfile.gettempdir())
         self.intro: Intro | None = None
+        self.wallpaper = QPixmap(str(wallpaper)) if wallpaper is not None else QPixmap()
+        portable.glass(GLASS if not self.wallpaper.isNull() else 255)    # before the cards are made
         self.settings = QSettings()
         self.by_key = {entry.key: entry for entry in entries}
         self.current_key = ""
@@ -250,6 +256,20 @@ class MainWindow(PortableWindow):
                 self.intro.skip()
             return
         super().on_action(action)
+
+    def paintEvent(self, event) -> None:  # noqa: N802 (Qt override)
+        """The wallpaper filling the window (cropped, never stretched), under the background at SHADE so the tiles
+        and the text stay easy to read."""
+        if self.wallpaper.isNull():
+            super().paintEvent(event)
+            return
+        painter = QPainter(self)
+        scaled = self.wallpaper.scaled(self.size(), Qt.AspectRatioMode.KeepAspectRatioByExpanding,
+                                       Qt.TransformationMode.SmoothTransformation)
+        painter.drawPixmap((self.width() - scaled.width()) // 2, (self.height() - scaled.height()) // 2, scaled)
+        shade = QColor(BACKGROUND)
+        shade.setAlpha(SHADE)
+        painter.fillRect(self.rect(), shade)
 
     def resizeEvent(self, event) -> None:  # noqa: N802 (Qt override)
         super().resizeEvent(event)

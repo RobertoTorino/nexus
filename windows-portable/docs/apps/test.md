@@ -15,7 +15,13 @@ Windows Portable Test is always installed with the [portal](../portal.md) and is
 Five cards on the left: Device, Hardware, Connected, Network and Controller; the right side shows what the focused
 card does.
 The d-pad or the left stick moves the amber focus between the cards, **A** runs the focused card, **B** closes the
-app. Every card and pill also works by touch. The line at the top shows the battery, the date and the time.
+app. Every card and pill also works by touch. The line at the top shows the battery, the date and the time,
+`82% | Wednesday 28/10/2026 | 17:04`, and the line under it the CPU's and the GPU's temperature, live every five
+seconds: `CPU 47° GPU 45°`. On an AMD handheld both temperatures come from AMD's driver; on another the GPU's comes
+from Windows (as Task Manager shows it) and the CPU's is left out.
+
+The information icon (a ring with an i) at the top right of a pane opens more about it, over the window; **A** or
+**B** closes it.
 
 ## Device
 
@@ -80,9 +86,13 @@ During the test every button is the test's, B too: **hold B** for a second and a
 On a keyboard, Escape ends it.
 
 The buttons on the card are those Windows reports for an Xbox controller: LB, View, Xbox, ☰ (Menu), RB, the d-pad,
-A, B, X, Y and the two stick presses. The **back buttons M1 and M2** of the ROG Xbox Ally X answer only once Armoury
-Crate maps them to one of these buttons (Settings, Configure): by default they are Armoury Crate's own modifiers
-(held with A a screenshot, with Y a recording), and Windows never sees them.
+A, B, X, Y and the two stick presses, and on an ASUS handheld such as the ROG Xbox Ally X the **back buttons M1 and
+M2** as one chip, **M1/M2**. They are Armoury Crate's own modifiers (held with A a screenshot, with Y a recording),
+never gamepad buttons, and Armoury Crate reports either of them the same way, so Windows cannot tell M1 from M2: the
+chip lights for both. To use them as two buttons, map them in Armoury Crate (Settings, Configure, M1 or M2: untick
+Secondary Function and choose a button); they then light that button. A handheld without ASUS's channel shows no
+M1/M2 chip, and the count leaves it out. The information icon at the top right of the Controller card's pane says so
+on the device; it opens before or after the test, not during it.
 
 ## Install it on its own
 

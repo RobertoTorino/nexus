@@ -1,3 +1,37 @@
+Changelog: 28-10-2026 21:24:56
+
+Release 0.8.0. Brings wp-test-v1.5.0.
+
+Changelog: 28-10-2026 21:14:11
+
+Added. windows-portable/tools/check-release.ps1, the Windows Portable Suite's release checks on the handheld, as the
+BC250 suite's check-release.sh on the board (owner, 28-10-2026): local starts the portal from the checkout, release
+downloads the published wp-portal release, checks it against its SHA256SUMS, installs it and starts it, installer
+runs every installer test of the suite in turn. Nexus Releases' test buttons run it on Windows.
+
+Changelog: 28-10-2026 20:58:05
+
+Fixed. The Windows Portable Suite's release build (windows-portable/tools/build_release.py) adds the files a package
+reads from beside its modules, such as PCSX2 Manager's pcsx2_defaults.ini: PyInstaller collects only the modules.
+
+Changelog: 28-10-2026 20:06:38
+
+Added. tools/new_app.py has a template for a Windows suite (the Windows Portable Suite's): an app on the portable
+window with install.ps1, run.ps1 and its tests, the installer test <name>.ps1, the wiki chapter, and the app listed in
+the portal's apps.toml, the wiki's nav and home table and ci-<suite>.yml (the pytest matrix, the installer test, the
+release built and installed). The app id is the suite's id without -suite (windows-portable-<name>), the program's
+name the app's name with dashes. tools/make_icons.py copies each Windows Portable Suite app's icon from its category's
+(windows-portable/icons/<category>/, 1024 to 128 px) and lists the categories in ICONS.md; the first is Gaming, made
+from the owner's picture of the handheld. The suite's wiki home shows the owner's white handheld (28-10-2026).
+
+Changelog: 28-10-2026 20:04:45
+
+Added. The Windows Portable Suite has its own README.md (how to install the portal, the apps by category, the license
+and the disclaimer) and CLAUDE.md (its rules: the portable design, the controller and touch, the 1280 x 720 window,
+an i for text that does not fit, for your own user, how an app is built, its checks), as the BC250 suite has (owner,
+28-10-2026). The root README links the suite's README and wiki, the root CLAUDE.md its CLAUDE.md. The Nexus page's
+chapter Development with bc250_core lists core's portable module.
+
 Changelog: 28-10-2026 19:54:10
 
 Release 0.7.0.

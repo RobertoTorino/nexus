@@ -25,7 +25,7 @@ def test_buttons_light_while_held_and_stay_answered(qapp):
     assert not pane.chips["x"].held and pane.chips["x"].seen and f"color: {AMBER}" in pane.chips["x"].styleSheet()
     pane.feed("button", "a", True)
     assert pane.seen() == ["x", "a"] or pane.seen() == ["a", "x"]
-    assert pane.count.text() == f"2 of {len(BUTTONS)} buttons answered"
+    assert pane.count.text() == f"2 of {len(BUTTONS) - 1} buttons answered"       # no M1/M2 without the ASUS channel
 
 
 def test_sticks_and_triggers(qapp):
@@ -70,8 +70,14 @@ def test_holding_b_finishes(qapp):
 
 
 def test_it_says_where_the_back_buttons_come_from(qapp):
-    pane = ControllerPane()
-    assert "M1 and M2" in pane.back_buttons.text() and "Armoury Crate" in pane.back_buttons.text()
+    pane = ControllerPane(clock=Clock())
+    assert pane.back_buttons.title == "The back buttons M1 and M2" and "reports none" in pane.back_buttons.info
+    pane.set_back_buttons(True)
+    assert "Armoury Crate" in pane.back_buttons.info and pane.count.text() == f"0 of {len(BUTTONS)} buttons answered"
+    pane.start()
+    assert not pane.back_buttons.isEnabled()                    # every button is the test's: no popup meanwhile
+    pane.finish()
+    assert pane.back_buttons.isEnabled()
 
 
 def test_the_finish_pill_and_the_pads_name(qapp):

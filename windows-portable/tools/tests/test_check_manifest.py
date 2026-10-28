@@ -5,6 +5,7 @@ tags."""
 from __future__ import annotations
 
 import importlib.util
+import re
 from pathlib import Path
 
 TOOLS = Path(__file__).resolve().parent.parent
@@ -24,16 +25,22 @@ uninstall = ["u"]
 detect = ["d"]
 """
 
-PCSX2 = """
-[apps.pcsx2]
-name = "Windows Portable PCSX2 Manager"
+DEMO = """
+[apps.demo]
+name = "Demo"
 summary = "s"
-tag = "wp-pcsx2-v0.2.0"
+tag = "wp-demo-v0.2.0"
 category = "gaming"
 install = ["i"]
 uninstall = ["u"]
 detect = ["d"]
 """
+
+
+def shipped(test_tag: str) -> str:
+    """The suite's own apps.toml (every app folder listed) with *test_tag* as the test app's pin."""
+    text = (cm.SUITE / cm.MANIFEST).read_text(encoding="utf-8")
+    return re.sub(r'tag = "wp-test-v[^"]+"', f'tag = "{test_tag}"', text)
 
 
 def test_the_shipped_manifest_passes():
@@ -57,7 +64,7 @@ def test_an_app_bump_needs_a_portal_bump_as_large():
 
 
 def test_an_added_app_needs_a_minor_bump_and_a_checksum_a_patch():
-    assert cm.required_bump(BASE, BASE + PCSX2) == (2, "pcsx2 was added")
+    assert cm.required_bump(BASE, BASE + DEMO) == (2, "demo was added")
     assert cm.required_bump(BASE, BASE.replace('required = true', 'required = true\nsha256 = "' + "a" * 64 + '"')) \
         == (1, "apps.toml changed")
     assert cm.required_bump(BASE, BASE) == (0, "")
@@ -75,20 +82,25 @@ def test_the_latest_portal_tag_is_the_suites_by_version():
 
 
 def test_a_missing_tag_is_accepted_only_as_the_next_release(monkeypatch):
-    monkeypatch.setattr(cm, "tag_exists", lambda tag: False)
+    monkeypatch.setattr(cm, "tag_exists", lambda tag: not tag.startswith("wp-test-v"))    # only the test's missing
     version = (cm.SUITE / "apps" / "test" / "VERSION").read_text(encoding="utf-8").strip()
-    entries = cm.manifest.parse(BASE.replace("wp-test-v0.1.0", f"wp-test-v{version}"))
+    entries = cm.manifest.parse(shipped(f"wp-test-v{version}"))
     assert cm.check_entries(entries, require_tags=False) == []
     assert cm.check_entries(entries, require_tags=True) == [f"wp-test-v{version} does not exist: release it "
                                                             "before the portal"]
-    stale = cm.manifest.parse(BASE.replace("wp-test-v0.1.0", "wp-test-v9.9.9"))
+    stale = cm.manifest.parse(shipped("wp-test-v9.9.9"))
     assert "is not the next release either" in cm.check_entries(stale, require_tags=False)[0]
 
 
 def test_every_app_folder_is_listed(monkeypatch):
     monkeypatch.setattr(cm, "tag_exists", lambda tag: True)
-    errors = cm.check_entries(cm.manifest.parse(BASE + PCSX2), require_tags=False)
-    assert errors == [f"{cm.MANIFEST} lists pcsx2, which has no apps/pcsx2"]
+    text = (cm.SUITE / cm.MANIFEST).read_text(encoding="utf-8")
+    assert cm.check_entries(cm.manifest.parse(text + DEMO), require_tags=False) == \
+        [f"{cm.MANIFEST} lists demo, which has no apps/demo"]
+    others = [entry for entry in cm.manifest.parse(text) if entry.key != "test"]
+    if others:                                          # an app folder the manifest leaves out
+        missing = cm.check_entries(cm.manifest.parse(BASE), require_tags=False)
+        assert f"apps/{others[0].key} is not in {cm.MANIFEST}" in missing
 
 
 def test_the_reference_reads_the_suites_files_at_the_base(monkeypatch):

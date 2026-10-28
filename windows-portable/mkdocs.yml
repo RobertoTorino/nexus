@@ -64,3 +64,4 @@ nav:
   - Portal: portal.md
   - Apps:
       - Windows Portable Test: apps/test.md
+      - PCSX2 Manager: apps/pcsx2.md

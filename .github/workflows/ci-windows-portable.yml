@@ -60,7 +60,8 @@ jobs:
       fail-fast: false
       matrix:
         dir: [core, windows-portable/portal, windows-portable/tools,
-              windows-portable/apps/test]   # every folder of the suite with tests/, and core, which its apps bundle
+              windows-portable/apps/test,
+              windows-portable/apps/pcsx2]   # every folder of the suite with tests/, and core, which its apps bundle
     defaults:
       run:
         working-directory: ${{ matrix.dir }}
@@ -97,6 +98,8 @@ jobs:
         run: powershell -NoProfile -ExecutionPolicy Bypass -File windows-portable/tools/installer-tests/portal.ps1
       - name: "Installer test: test"
         run: powershell -NoProfile -ExecutionPolicy Bypass -File windows-portable/tools/installer-tests/test.ps1
+      - name: "Installer test: pcsx2"
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File windows-portable/tools/installer-tests/pcsx2.ps1
       - name: "Installer test: releases"
         run: powershell -NoProfile -ExecutionPolicy Bypass -File windows-portable/tools/installer-tests/releases.ps1
       - name: "Build the release zip, not published: test"
@@ -108,6 +111,15 @@ jobs:
         run: >-
           powershell -NoProfile -ExecutionPolicy Bypass -File windows-portable/tools/installer-tests/test.ps1
           -Release (Get-Item wpdist/test/*.zip).FullName
+      - name: "Build the release zip, not published: pcsx2"
+        shell: bash
+        run: |
+          python -m pip install -q -r windows-portable/apps/pcsx2/requirements.txt pyinstaller pillow
+          python windows-portable/tools/build_release.py "wp-pcsx2-v$(cat windows-portable/apps/pcsx2/VERSION)" wpdist/pcsx2
+      - name: "Installer test on the release: pcsx2"
+        run: >-
+          powershell -NoProfile -ExecutionPolicy Bypass -File windows-portable/tools/installer-tests/pcsx2.ps1
+          -Release (Get-Item wpdist/pcsx2/*.zip).FullName
       - name: "Build the release zip, not published: portal"
         shell: bash
         env:

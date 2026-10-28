@@ -12,7 +12,7 @@ from portable_portal.manifest import AppEntry, load
 
 RELEASE = ReleaseInfo(version="99.0.0", tag="wp-portal-v99.0.0", url="https://example.invalid/r",
                       published="2030-01-01")
-PCSX2 = AppEntry(key="pcsx2", name="Windows Portable PCSX2 Manager", summary="s", tag="wp-pcsx2-v0.2.0",
+PCSX2 = AppEntry(key="pcsx2-next", name="Windows Portable PCSX2 Manager", summary="s", tag="wp-pcsx2-next-v0.2.0",
                  category="gaming", install=("i",), uninstall=("u",), detect=("d",))
 
 

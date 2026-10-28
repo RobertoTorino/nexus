@@ -13,19 +13,29 @@ from PyQt6.QtCore import QPointF, QRectF, Qt, QTimer, pyqtSignal
 from PyQt6.QtGui import QColor, QFont, QPainter, QPen
 from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QSizePolicy, QWidget
 
-from bc250_core.portable import (AMBER, BODY, DIM, ON_AMBER, RAISED, TEXT, Pane, Pill, font, px,
+from bc250_core.portable import (AMBER, BODY, DIM, ON_AMBER, RAISED, TEXT, InfoPill, Pane, Pill, font, px,
                                  text_label)
 
 HOLD = 1.5                      # s that B is held to end the test
 # The buttons as the chips show them, in rows: SDL's name and the label (the Ally's face: A B X Y, View, the Menu
 # button's ☰)
 ROWS = [[("leftshoulder", "LB"), ("back", "View"), ("guide", "Xbox"), ("start", "☰"), ("rightshoulder", "RB")],
-        [("dpad_up", "Up"), ("dpad_down", "Down"), ("dpad_left", "Left"), ("dpad_right", "Right")],
+        [("dpad_up", "Up"), ("dpad_down", "Down"), ("dpad_left", "Left"), ("dpad_right", "Right"),
+         ("m1m2", "M1/M2")],
         [("a", "A"), ("b", "B"), ("x", "X"), ("y", "Y"), ("leftstick", "LS"), ("rightstick", "RS")]]
 BUTTONS = [name for row in ROWS for name, _ in row]
-# The Ally's back buttons are Armoury Crate's modifiers: Windows never sees them as buttons (owner, 28-10-2026)
-BACK_BUTTONS = ("The back buttons M1 and M2 answer here only once Armoury Crate maps them to a button "
-                "(Settings, Configure).")
+BACK = "m1m2"                   # the back buttons' chip: only where the handheld's ASUS channel reports them
+# The Ally's back buttons are Armoury Crate's modifiers, never gamepad buttons; its ASUS channel reports either of them
+# as one code (back_buttons.py, owner's Ally X 28-10-2026). The text is behind the information icon at the pane's top
+# right: two lines of it did not fit the 720 px high screen
+BACK_TITLE = "The back buttons M1 and M2"
+BACK_BUTTONS = ("M1 and M2 light the M1/M2 chip: Armoury Crate reports either of them the same way, so Windows "
+                "cannot tell them apart. By default they are Armoury Crate's own modifiers: held with A a screenshot, "
+                "with Y a recording, with Up the on-screen keyboard. To use them as two buttons, map them in Armoury "
+                "Crate (Settings, Configure, M1 or M2: untick Secondary Function and choose a button); they then "
+                "light that button here.")
+NO_BACK_BUTTONS = ("The back buttons of an ASUS handheld show here as M1/M2. This handheld reports none: map its back "
+                   "buttons to a controller button in its maker's app, and they light that button.")
 
 
 class Chip(QLabel):
@@ -124,7 +134,12 @@ class ControllerPane(Pane):
         self.clock = clock
         self.running = False
         self.b_since: float | None = None
-        self.column.addWidget(text_label("Controller", 24, QFont.Weight.ExtraBold))
+        heading = QHBoxLayout()
+        heading.addWidget(text_label("Controller", 24, QFont.Weight.ExtraBold))
+        heading.addStretch()
+        self.back_buttons = InfoPill(BACK_TITLE, BACK_BUTTONS)        # top right: the most room (owner, 28-10-2026)
+        heading.addWidget(self.back_buttons, 0, Qt.AlignmentFlag.AlignTop)
+        self.column.addLayout(heading)
         self.name = text_label("", BODY + 1, color=DIM, wrap=True)
         self.column.addWidget(self.name)
         self.column.addSpacing(px(12))
@@ -150,8 +165,6 @@ class ControllerPane(Pane):
         self.column.addLayout(triggers)
         self.count = text_label("", BODY + 1, QFont.Weight.DemiBold)
         self.column.addWidget(self.count)
-        self.back_buttons = text_label(BACK_BUTTONS, BODY, color=DIM, wrap=True)
-        self.column.addWidget(self.back_buttons)
         self.column.addStretch()
         self.finish_pill = Pill("Finish", main=True)
         self.finish_pill.activated.connect(self.finish)
@@ -159,6 +172,8 @@ class ControllerPane(Pane):
         self.timer = QTimer(self)
         self.timer.setInterval(100)
         self.timer.timeout.connect(self.check_hold)
+        self.has_back = True
+        self.set_back_buttons(False)                    # until the window found the ASUS channel
         self.reset()
 
     def set_pads(self, names: list[str]) -> None:
@@ -179,6 +194,7 @@ class ControllerPane(Pane):
     def start(self) -> None:
         self.reset()
         self.running = True
+        self.back_buttons.setEnabled(False)            # every button is the test's: no popup meanwhile
         self.b_since = None
         self.timer.start()
 
@@ -188,13 +204,24 @@ class ControllerPane(Pane):
         self.running = False
         self.timer.stop()
         self.b_since = None
+        self.back_buttons.setEnabled(True)
         self.finished.emit()
 
+    def buttons(self) -> list[str]:
+        """The buttons this controller can answer with: M1/M2 only where the ASUS channel reports them."""
+        return [name for name in BUTTONS if name != BACK or self.has_back]
+
+    def set_back_buttons(self, available: bool) -> None:
+        self.has_back = available
+        self.chips[BACK].setVisible(available)
+        self.back_buttons.info = BACK_BUTTONS if available else NO_BACK_BUTTONS
+        self.update_count()
+
     def seen(self) -> list[str]:
-        return [name for name in BUTTONS if self.chips[name].seen]
+        return [name for name in self.buttons() if self.chips[name].seen]
 
     def update_count(self) -> None:
-        self.count.setText(f"{len(self.seen())} of {len(BUTTONS)} buttons answered")
+        self.count.setText(f"{len(self.seen())} of {len(self.buttons())} buttons answered")
 
     def feed(self, kind: str, name: str, value) -> None:
         """A raw event of the pad: ("button", name, pressed) or ("axis", name, value)."""

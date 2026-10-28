@@ -22,8 +22,8 @@ and removes them, and each suite has its own wiki. The name, the structure and h
   [its wiki](https://robertotorino.github.io/nexus/bc250-bazzite-suite/) is the manual.
 - **[Windows Portable Suite](windows-portable/)**: tools for Windows 10/11 running on portable gaming devices, made
   for a small screen held in the hands, touch and a controller, in `windows-portable/`. Its
-  [portal's README](windows-portable/portal/README.md) says how to install it; the portal comes from the
-  [releases](https://github.com/RobertoTorino/nexus/releases/latest).
+  [README](windows-portable/README.md) says how to install the portal and lists the apps;
+  [its wiki](https://robertotorino.github.io/nexus/windows-portable-suite/) is the manual.
 
 ## The structure
 

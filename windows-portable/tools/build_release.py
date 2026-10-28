@@ -146,6 +146,11 @@ def pyinstaller_args(stage: Path, launcher: Path, package: str, exe_name: str, i
     manifest = [("--add-data", f"{stage / 'apps.toml'}{sep}.")] if (stage / "apps.toml").is_file() else []
     # And its intro's sound from sounds/ (portable_portal.INTRO_SOUND).
     sounds = [("--add-data", f"{stage / 'sounds'}{sep}sounds")] if (stage / "sounds").is_dir() else []
+    # The files a package reads from beside its modules (PCSX2 Manager's pcsx2_defaults.ini): PyInstaller collects
+    # only the modules.
+    data = [("--add-data", f"{path}{sep}{path.parent.relative_to(stage).as_posix()}")
+            for path in sorted((stage / package).rglob("*"))
+            if path.is_file() and path.suffix not in (".py", ".pyc") and "__pycache__" not in path.parts]
     return [
         str(launcher),
         "--onedir", "--windowed", "--noconfirm", "--clean", "--noupx",
@@ -158,7 +163,7 @@ def pyinstaller_args(stage: Path, launcher: Path, package: str, exe_name: str, i
         # Read from next to the package, as in an install: the logo, and the fonts core registers.
         "--add-data", f"{stage / 'images'}{sep}images",
         "--add-data", f"{stage / 'bc250_core' / 'fonts'}{sep}bc250_core/fonts",
-        *(part for pair in manifest + sounds for part in pair),
+        *(part for pair in manifest + sounds + data for part in pair),
     ]
 
 

@@ -6,7 +6,8 @@ Instructions for Claude Code in this repository. The owner works on it from both
 talks to Claude on both, so this file, not a local memory, carries the standing rules. Status and plans:
 [MIGRATION.md](MIGRATION.md). This file holds what is Nexus's: the repository, git, releases, the CHANGELOG format
 and kinds, line endings, the checks and the style. Each suite's own rules are in its folder's CLAUDE.md:
-[bc250-bazzite/CLAUDE.md](bc250-bazzite/CLAUDE.md) for the BC250 Bazzite Suite.
+[bc250-bazzite/CLAUDE.md](bc250-bazzite/CLAUDE.md) for the BC250 Bazzite Suite,
+[windows-portable/CLAUDE.md](windows-portable/CLAUDE.md) for the Windows Portable Suite.
 
 ## What this is
 
@@ -229,7 +230,8 @@ The owner does every step of a release; Claude does none of them, and doesn't of
 `tools/release.sh` starts the owner's front end for the file edits of a release, Nexus Releases (`dev/releases/`,
 a Nexus app with its suites' portals in its first column, the one to release ticked: `main_window.py` on
 `plan.py`; a suite's board checks are its own
-`tools/check-release.sh`, the BC250 suite's at `bc250-bazzite/tools/check-release.sh`). Claude may change it and
+`tools/check-release.sh`, the BC250 suite's at `bc250-bazzite/tools/check-release.sh`; a Windows suite's
+`tools/check-release.ps1`, run on the handheld). Claude may change it and
 its tests, but never uses it on the repository.
 
 Claude may change the release tools and their tests, and runs `bc250-bazzite/tools/installer-tests/release.sh` as a

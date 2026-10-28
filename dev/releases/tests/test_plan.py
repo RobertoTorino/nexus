@@ -1965,3 +1965,39 @@ def test_window_an_apps_release_takes_nexus_along(window, repo):
     assert (repo / "VERSION").read_text() == "0.3.0\n"
     assert (repo / "CHANGELOG").read_text().split("\n\n")[1] == "Release 0.3.0. Brings portal-v0.1.1."
     assert "nexus-v0.3.0" in page.output.toPlainText()
+
+
+def test_a_windows_suites_release_checks(two_suites):
+    """A Windows suite's board tests are its check-release.ps1, run on Windows (owner, 28-10-2026: on Windows every
+    test button was off); a Bazzite suite's stay check-release.sh, on Linux."""
+    assert rp.check_script(two_suites, "wp") == "wp/tools/check-release.ps1"
+    assert rp.check_script(two_suites, "bc") == "bc/tools/check-release.sh"
+    assert rp.tests_here(two_suites, "wp", "win32") and not rp.tests_here(two_suites, "wp", "linux")
+    assert rp.tests_here(two_suites, "bc", "linux") and not rp.tests_here(two_suites, "bc", "win32")
+
+
+def test_window_runs_a_windows_suites_checks_on_windows(two_suites, tmp_path, monkeypatch):
+    pytest.importorskip("PyQt6.QtWidgets")
+    os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+    from PyQt6.QtCore import QSettings
+    from PyQt6.QtWidgets import QApplication
+    QSettings.setPath(QSettings.Format.IniFormat, QSettings.Scope.UserScope, str(tmp_path / "settings"))
+    app = QApplication.instance() or QApplication([])          # noqa: F841 (kept alive for the window)
+    from nexus_releases import main_window
+    monkeypatch.setattr(rp.sys, "platform", "win32")
+    write(two_suites / "wp/tools/check-release.ps1", "Write-Host hi\n")
+    w = main_window.ReleaseWindow(two_suites, sha256_source=lambda tag: SHA, launch=launched.append,
+                                  runs_source=None, status_source=None, suite="wp")
+    w.reload()
+    page = w.run_page
+    assert page.local_button.isEnabled() and page.installer_button.isEnabled() and not page.tour_button.isEnabled()
+    assert "check-release.ps1 local" in page.local_button.toolTip()
+    launched.clear()
+    page.local_button.click()
+    page.release_button.click()
+    page.installer_button.click()
+    script = str(two_suites / "wp/tools/check-release.ps1")
+    assert launched == [f"& '{script}' local", f"& '{script}' release", f"& '{script}' installer"]
+    w.choose_suite("bc")                                        # the board's suite: its tests run on Linux
+    assert not page.local_button.isEnabled() and "Linux (the board)" in page.local_button.toolTip()
+    w.close()

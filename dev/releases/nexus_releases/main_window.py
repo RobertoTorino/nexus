@@ -697,6 +697,17 @@ def instance_running(app_id: str) -> bool:
     return found
 
 
+# What the test buttons do for a Windows suite (its check-release.ps1, on the handheld)
+WINDOWS_TIPS = {
+    "Test app updates": "Start the portal from this checkout (check-release.ps1 local): it installs the apps "
+                        "apps.toml pins from their GitHub releases",
+    "Test withdrawal": "Start the portal from this checkout on a handheld with the withdrawn app installed "
+                       "(check-release.ps1 local); it must show the app as not available and remove it",
+    "Installer tests": "Run every installer test of the suite in turn, in a PowerShell window "
+                       "(check-release.ps1 installer)",
+}
+
+
 class RunPage(QWidget):
     """Test on this board: the board checks of a release (check-release.sh in a terminal), the installer tests, and
     every app window in the checkout as an icon: a click starts it from the checkout, as it is before a release."""
@@ -728,11 +739,9 @@ class RunPage(QWidget):
         self.issues_button.setToolTip("The open issues on GitHub: tick the ones that are handled, and Run closes "
                                       "them (gh issue close, in the Commands tab)")
         self.issues_button.clicked.connect(self.close_issues)
-        if not sys.platform.startswith("linux"):
-            for button in (self.local_button, self.release_button, self.withdraw_button, self.installer_button,
-                           self.tour_button):
-                button.setEnabled(False)
-                button.setToolTip("Runs on the board: Linux only")
+        self.tooltips = {button: button.toolTip() for button in (self.local_button, self.release_button,
+                                                                 self.withdraw_button, self.installer_button,
+                                                                 self.tour_button)}
         self.apps = QListWidget()
         self.apps.setViewMode(QListView.ViewMode.IconMode)
         self.apps.setIconSize(QSize(ICON_PX, ICON_PX))
@@ -788,10 +797,11 @@ class RunPage(QWidget):
         self.timer.timeout.connect(self.poll)
 
     def fill(self, targets: list[rp.Launch]) -> None:
-        if sys.platform.startswith("linux"):
+        self.enable_tests()
+        if self.release_button.isEnabled():
             self.release_button.setToolTip(
                 f"After GitHub built {self.release_window.portal_tag()}: download it, check it against "
-                "its SHA256SUMS, install it and start it (check-release.sh release)")
+                f"its SHA256SUMS, install it and start it ({Path(self._check_path()).name} release)")
         self.apps.clear()
         for target in targets:
             icon = QIcon(str(target.icon)) if target.icon else QIcon()
@@ -802,18 +812,58 @@ class RunPage(QWidget):
                             (f"\nopens {target.url}" if target.url else ""))
             self.apps.addItem(item)
 
+    def _check_path(self) -> str:
+        return rp.check_script(self.release_window.root, self.release_window.suite)
+
+    def windows_suite(self) -> bool:
+        return rp.suite_system(self.release_window.root, self.release_window.suite) == "windows"
+
+    def enable_tests(self) -> None:
+        """The board tests of the ticked suite, on its own system (owner, 28-10-2026: on Windows they were all off):
+        a Bazzite suite's on Linux, a Windows suite's on Windows (its check-release.ps1). The portal tour is recorded
+        on Linux only."""
+        here = rp.tests_here(self.release_window.root, self.release_window.suite)
+        windows = self.windows_suite()
+        for button, tip in self.tooltips.items():
+            on = here and not (button is self.tour_button and windows)
+            button.setEnabled(on)
+            if on:
+                button.setToolTip(WINDOWS_TIPS.get(button.text(), tip) if windows else tip)
+            elif button is self.tour_button and windows:
+                button.setToolTip("The portal tour is recorded on Linux, for the BC250 suite")
+            else:
+                button.setToolTip("This suite's tests run on " + ("Windows (the handheld)" if windows else
+                                                                  "Linux (the board)"))
+
+    def _script_line(self, mode: str) -> str:
+        """The check script's command line: bash's on Linux, PowerShell's call operator on Windows."""
+        script = str(self.release_window.root / self._check_path())
+        if self.windows_suite():
+            return "& '" + script.replace("'", "''") + f"' {mode}"
+        return f"{shlex.quote(script)} {mode}"
+
     def check(self, test: str) -> None:
-        """Run the suite's check-release.sh in a terminal: it installs a portal and keeps it running there."""
-        path = rp.check_script(self.release_window.root, self.release_window.suite)
+        """Run the suite's check-release script in a terminal: it installs or starts a portal and keeps it running
+        there."""
+        path = self._check_path()
         if not (self.release_window.root / path).is_file():
             self.output.appendPlainText(f"This suite has no {path}.")
             return
-        script = shlex.quote(str(self.release_window.root / path))
         mode = "release" if test == "release" else "local"
         try:
-            self.release_window.launch(f"{script} {mode}")
+            self.release_window.launch(self._script_line(mode))
         except RuntimeError as exc:
             self.output.appendPlainText(str(exc))
+            return
+        if self.windows_suite():
+            self.output.appendPlainText({
+                "local": "A PowerShell window starts the portal from this checkout; it installs the apps from their "
+                         "GitHub releases. Close the portal to finish.",
+                "release": f"A PowerShell window downloads the published {self.release_window.portal_tag()} release, "
+                           "checks it, installs it and starts it.",
+                "withdrawal": "A PowerShell window starts the portal from this checkout. With the app installed, the "
+                              "portal removes it and its tile shows it is not available. Close the portal to finish."
+            }[test])
             return
         self.output.appendPlainText({
             "local": "A terminal installs the portal from this checkout, then starts it with --source release. "
@@ -825,6 +875,14 @@ class RunPage(QWidget):
                           "available\". Close the portal there to finish."}[test])
 
     def installer_tests(self) -> None:
+        if self.windows_suite():                    # no window of its own: every .ps1 in turn, in PowerShell
+            try:
+                self.release_window.launch(self._script_line("installer"))
+            except RuntimeError as exc:
+                self.output.appendPlainText(str(exc))
+                return
+            self.output.appendPlainText("A PowerShell window runs every installer test of the suite in turn.")
+            return
         target = rp.installer_tests_target(self.release_window.root, self.release_window.suite)
         if target is None:
             self.output.appendPlainText("This suite has no tools/installer-tests/gui.")

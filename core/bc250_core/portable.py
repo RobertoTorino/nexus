@@ -9,7 +9,8 @@ glow under it. Sizes are the mock-up's at 1280 x 720 and scale with the screen (
 rather than assumed: the Ally's own screen at 150 % is 1280 x 720, a TV at 125 % is 1536 x 864.
 
 The widgets: PortableHeader (title, version, a status line; an icon only when given), Card (a focusable card with a title and a line of
-text), Pane (the detail pane), Pill (a big button that shows its controller button: A Open, Y Update), Legend (the
+text), Pane (the detail pane), Pill (a big button that shows its controller button: A Open, Y Update), InfoPill and
+InfoPopup (an "i" that shows more text than fits, over the window), Legend (the
 buttons that have no pill: X Details, B Back) and PortableWindow, which moves the focus between the cards and pills
 with the d-pad, the left stick or the arrow keys, and turns A or Enter into the focused card's or pill's action, B or
 Escape into back."""
@@ -19,8 +20,8 @@ from __future__ import annotations
 import datetime
 from collections.abc import Callable, Sequence
 
-from PyQt6.QtCore import QEvent, QPoint, QRectF, QSize, Qt, pyqtSignal
-from PyQt6.QtGui import QColor, QFont, QGuiApplication, QKeyEvent, QPainter, QPixmap
+from PyQt6.QtCore import QEvent, QPoint, QPointF, QRectF, QSize, Qt, pyqtSignal
+from PyQt6.QtGui import QColor, QFont, QGuiApplication, QKeyEvent, QPainter, QPen, QPixmap
 from PyQt6.QtWidgets import (QFrame, QGraphicsDropShadowEffect, QGraphicsOpacityEffect, QHBoxLayout, QLabel,
                              QPushButton, QSizePolicy, QVBoxLayout, QWidget)
 
@@ -50,6 +51,7 @@ DIMMED = 0.6                            # a focused pill, drawn at this opacity
 FONT = "Inter"
 
 _scale = 1.0
+_glass = 255                            # the cards' and panes' opacity: glass()
 _fonts_loaded = False
 
 
@@ -61,6 +63,23 @@ def scale(screen_size: tuple[int, int] | None = None) -> float:
         width, height = screen_size
         _scale = max(1.0, min(width / BASE_WIDTH, height / BASE_HEIGHT))
     return _scale
+
+
+def glass(alpha: int | None = None) -> int:
+    """How opaque the cards and panes are, 0 to 255: 255 (solid) unless a window with a wallpaper behind it sets it,
+    before it builds its cards, so the picture shines through (owner, 28-10-2026). Set when given; read otherwise."""
+    global _glass
+    if alpha is not None:
+        _glass = max(0, min(255, alpha))
+    return _glass
+
+
+def surface(color: str) -> str:
+    """*color* (SURFACE, RAISED) as a style sheet color at glass()'s opacity."""
+    if _glass >= 255:
+        return color
+    c = QColor(color)
+    return f"rgba({c.red()}, {c.green()}, {c.blue()}, {_glass})"
 
 
 def px(value: float) -> int:
@@ -156,11 +175,25 @@ class PortableHeader(QWidget):
         column.addWidget(self.version)
         row.addLayout(column)
         row.addStretch()
+        lines = QVBoxLayout()
+        lines.setSpacing(0)
         self.status = text_label("", STATUS, QFont.Weight.Bold)      # owner, 26-10-2026: 13 pt dimmed was too small
-        row.addWidget(self.status, 0, Qt.AlignmentFlag.AlignTop)       # level with the top of the title (owner)
+        self.status.setAlignment(Qt.AlignmentFlag.AlignRight)
+        lines.addWidget(self.status)                                   # level with the top of the title (owner)
+        self.second = text_label("", STATUS, QFont.Weight.Bold)      # a second line under it, when one is given
+        self.second.setAlignment(Qt.AlignmentFlag.AlignRight)
+        self.second.hide()
+        lines.addWidget(self.second)
+        lines.addStretch()
+        row.addLayout(lines)
 
-    def set_status(self, parts: Sequence[str]) -> None:
+    def set_status(self, parts: Sequence[str], second: Sequence[str] = ()) -> None:
+        """The status line's *parts* joined by bars; *second* on a line of its own under it (owner, 28-10-2026: the
+        test app's temperatures under the battery, the date and the time)."""
         self.status.setText("  |  ".join(part for part in parts if part))
+        below = "  |  ".join(part for part in second if part)
+        self.second.setText(below)
+        self.second.setVisible(bool(below))
 
 
 DAYS = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
@@ -217,7 +250,8 @@ class Card(QFrame):
 
     def _paint(self, focus: bool) -> None:
         edge = f"{px(2)}px solid {AMBER}" if focus else f"{px(2)}px solid transparent"
-        self.setStyleSheet(f"QFrame#card {{ background: {RAISED if focus else SURFACE}; border: {edge};"
+        # Focused it stays solid: its amber glow under a see-through card would tint it (glass())
+        self.setStyleSheet(f"QFrame#card {{ background: {RAISED if focus else surface(SURFACE)}; border: {edge};"
                            f" border-radius: {px(RADIUS)}px; }}")
         lift(self, focus)
 
@@ -251,7 +285,7 @@ class Pane(QFrame):
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
         self.setObjectName("pane")
-        self.setStyleSheet(f"QFrame#pane {{ background: {SURFACE}; border-radius: {px(RADIUS)}px; }}")
+        self.setStyleSheet(f"QFrame#pane {{ background: {surface(SURFACE)}; border-radius: {px(RADIUS)}px; }}")
         self.column = QVBoxLayout(self)
         self.column.setContentsMargins(px(24), px(22), px(24), px(22))
 
@@ -310,6 +344,94 @@ class Pill(QPushButton):
         self.label.setText(text)
 
 
+class InfoPill(Pill):
+    """An information icon (a ring with an "i" drawn in it), for more text than fits on the page (owner, 28-10-2026:
+    an icon rather than the letter, at the top right of its pane): A or a tap shows *text* under *title* in an
+    InfoPopup over the window. Focused, it is dimmed like every pill."""
+
+    def __init__(self, title: str, text: str, parent: QWidget | None = None):
+        super().__init__("", parent=parent)
+        self.title, self.info = title, text
+        self.label.hide()
+        self.layout().setContentsMargins(0, 0, 0, 0)
+        self.setMinimumSize(px(32), px(32))
+        self.setFixedSize(px(32), px(32))
+        self.activated.connect(self.show_info)
+
+    def paintEvent(self, event) -> None:
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        side = min(self.width(), self.height())
+        line = max(2.0, side / 14)
+        ring = QRectF(line / 2, line / 2, side - line, side - line)
+        painter.setPen(QPen(QColor(TEXT), line))
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.drawEllipse(ring)
+        center = side / 2
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(QColor(TEXT))
+        dot = side * 0.085
+        painter.drawEllipse(QPointF(center, side * 0.30), dot, dot)
+        stem = side * 0.13
+        painter.drawRoundedRect(QRectF(center - stem / 2, side * 0.43, stem, side * 0.33), stem / 2, stem / 2)
+
+    def show_info(self) -> None:
+        window = self.window()
+        if isinstance(window, PortableWindow):
+            window.show_popup(self.title, self.info, self)
+
+
+class InfoPopup(QWidget):
+    """The window darkened, with a panel in the middle: a title, the text and a Close pill. A, B, Escape or a tap
+    beside the panel closes it, and the focus goes back to where it came from."""
+
+    closed = pyqtSignal()
+
+    def __init__(self, window: QWidget, title: str, text: str, back_to: QWidget | None = None):
+        super().__init__(window)
+        self.back_to = back_to
+        self.setGeometry(window.rect())
+        outer = QVBoxLayout(self)
+        outer.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.panel = Pane()
+        self.panel.setStyleSheet(f"QFrame#pane {{ background: {SURFACE}; border-radius: {px(RADIUS)}px; }}")  # solid
+        self.panel.setFixedWidth(px(640))
+        inner = px(640 - 48)                            # the pane's margins: a wrapped label needs its width to be tall
+        heading = text_label(title, 24, QFont.Weight.ExtraBold, wrap=True)
+        heading.setFixedWidth(inner)
+        self.panel.column.addWidget(heading)
+        self.panel.column.addSpacing(px(8))
+        self.text = text_label(text, BODY + 1, wrap=True)
+        self.text.setFixedWidth(inner)
+        self.panel.column.addWidget(self.text)
+        self.panel.column.addSpacing(px(16))
+        self.close_pill = Pill("Close", "B", main=True)
+        self.close_pill.activated.connect(self.dismiss)
+        self.panel.column.addWidget(self.close_pill)
+        outer.addWidget(self.panel)
+        self.show()
+        self.raise_()
+        self.close_pill.setFocus(Qt.FocusReason.OtherFocusReason)
+
+    def paintEvent(self, event) -> None:
+        painter = QPainter(self)
+        backdrop = QColor(BACKGROUND)
+        backdrop.setAlpha(220)
+        painter.fillRect(self.rect(), backdrop)
+
+    def mousePressEvent(self, event) -> None:
+        if not self.panel.geometry().contains(event.position().toPoint()):
+            self.dismiss()
+        event.accept()
+
+    def dismiss(self) -> None:
+        self.hide()
+        if self.back_to is not None:
+            self.back_to.setFocus(Qt.FocusReason.OtherFocusReason)
+        self.closed.emit()
+        self.deleteLater()
+
+
 class PortableWindow(QWidget):
     """The portable app's window: the design, the controller and the keyboard. Moves the focus between the visible
     cards and pills (the nearest one in the direction pressed), turns A or Enter into the focused one's action,
@@ -334,6 +456,7 @@ class PortableWindow(QWidget):
         self.handlers: dict[str, Callable[[], None]] = {}
         self.gamepad = gamepad if gamepad is not None else Gamepad(self)
         self.gamepad.action.connect(self.on_action)
+        self.popup: InfoPopup | None = None
 
     def margins(self) -> tuple[int, int, int, int]:
         """The window's margins around header, page and legend: the mock-up's 32, 20, 32, 16."""
@@ -371,8 +494,24 @@ class PortableWindow(QWidget):
         if isinstance(focus, (Card, Pill)) and focus in self.focusables():
             focus.activated.emit()
 
+    def show_popup(self, title: str, text: str, back_to: QWidget | None = None) -> InfoPopup:
+        """*text* under *title* over the window (an InfoPill's); while it shows, A and B close it and the other
+        buttons do nothing."""
+        if self.popup is not None:
+            self.popup.dismiss()
+        self.popup = InfoPopup(self, title, text, back_to)
+        self.popup.closed.connect(self._popup_closed)
+        return self.popup
+
+    def _popup_closed(self) -> None:
+        self.popup = None
+
     def on_action(self, action: str) -> None:
         if not self.isActiveWindow():
+            return
+        if self.popup is not None:
+            if action in ("accept", "back"):
+                self.popup.dismiss()
             return
         if action in ("up", "down", "left", "right"):
             self.move_focus(action)
@@ -388,9 +527,17 @@ class PortableWindow(QWidget):
         if event.key() in keys:
             self.move_focus(keys[event.key()])
         elif event.key() == Qt.Key.Key_Escape:
-            self.back.emit()
+            if self.popup is not None:
+                self.popup.dismiss()
+            else:
+                self.back.emit()
         else:
             super().keyPressEvent(event)
+
+    def resizeEvent(self, event) -> None:  # noqa: N802 (Qt override)
+        super().resizeEvent(event)
+        if self.popup is not None:
+            self.popup.setGeometry(self.rect())
 
     def event(self, event) -> bool:
         # The arrow keys move between the cards rather than through Qt's tab order.

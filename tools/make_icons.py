@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import re
 import sys
 import tomllib
 from pathlib import Path
@@ -88,8 +89,8 @@ WINDOWS_PORTABLE_ICON = [
      "`windows-portable/icons/windows-portable-<size>.png` (1024, 512, 256 and 128 px)",
      "The icon of the Windows Portable Suite, the owner's drawing (26-10-2026): the set its portal's and wiki's "
      "copies are made from."),
-    ("windows-portable/icons/windows-portable-device.png", "`windows-portable/icons/windows-portable-device.png` "
-     "(1376 x 768)", "The handheld, the owner's picture (26-10-2026): the hero of the suite's wiki home, as the "
+    ("windows-portable/icons/windows-portable-white.png", "`windows-portable/icons/windows-portable-white.png` "
+     "(1377 x 768)", "The white handheld, the owner's picture (28-10-2026): the hero of the suite's wiki home, as the "
      "board is the BC250 wiki's."),
     ("windows-portable/apps/test/images/windows-portable-test.webp",
      "`windows-portable/apps/test/images/windows-portable-test.webp` (512 px), `-128.png`",
@@ -102,8 +103,8 @@ WINDOWS_PORTABLE_ICON = [
      "Nexus Releases. Lossless copies of the drawing, written by this tool."),
     ("windows-portable/docs/images/wiki-icon.webp", "`windows-portable/docs/images/wiki-icon.webp`, `.png` (256 px)",
      "The suite's wiki: the header logo (`.webp`) and the favicon (`.png`), written by this tool."),
-    ("windows-portable/docs/images/home/device.webp", "`windows-portable/docs/images/home/device.webp` (1376 x 768)",
-     "The suite's wiki home: the handheld under the headline, a WebP copy of the owner's picture."),
+    ("windows-portable/docs/images/home/device.webp", "`windows-portable/docs/images/home/device.webp` (1377 x 768)",
+     "The suite's wiki home: the handheld under the headline, a WebP copy of the owner's white handheld."),
     ("windows-portable/docs/images/apps/test.webp", "`windows-portable/docs/images/apps/<key>.webp` (256 px)",
      "An app's chapter in the suite's wiki: its icon at the top, a WebP copy of the app's drawing."),
     ("windows-portable/portal/images/apps/test.webp", "`windows-portable/portal/images/apps/<key>.webp` (128 px)",
@@ -146,32 +147,85 @@ NEXUS_PAGE_COPIES = [
     ("nexus/images/nexus-1024.png", "nexus/docs/images/nexus-hero.webp"),
     # The Windows Portable Suite's wiki: its logo, the home's handheld and the apps' icons in their chapters.
     ("windows-portable/icons/windows-portable-256.png", "windows-portable/docs/images/wiki-icon.webp"),
-    ("windows-portable/icons/windows-portable-device.png", "windows-portable/docs/images/home/device.webp"),
+    ("windows-portable/icons/windows-portable-white.png", "windows-portable/docs/images/home/device.webp"),
     ("windows-portable/icons/windows-portable-256.png", "windows-portable/docs/images/apps/test.webp"),
 ]
 PAGE_QUALITY = 90
+# The Windows Portable Suite's category icons: icons/<category>/<category>-<size>.png (1024, 512, 256 and 128 px),
+# each made from a picture of the owner's. Every app of the suite but the test app (which has the suite's drawing)
+# takes its category's: windows_portable_app_copies() names the copies from the portal's apps.toml.
+WINDOWS_PORTABLE = "windows-portable"
+WINDOWS_PORTABLE_CATEGORIES = {
+    "gaming": "`windows-portable/icons/windows-portable-device.png` (1376 x 768), the owner's picture of the handheld "
+              "(26-10-2026): cropped to the handheld, centered on a transparent square (28-10-2026)",
+}
+
+
+def windows_portable_apps(root: Path = ROOT) -> list[tuple[str, str, str, str]]:
+    """The suite's apps that take their category's icon: (key, name, category, app id), the app id from the
+    package's APP_ID (apps/<key>/<package>/__init__.py)."""
+    suite = root / WINDOWS_PORTABLE
+    apps = tomllib.loads((suite / "portal" / "apps.toml").read_text(encoding="utf-8")).get("apps", {})
+    found = []
+    for key, entry in apps.items():
+        if entry.get("required"):
+            continue                                    # the test app: the suite's own drawing
+        inits = sorted((suite / "apps" / key).glob("*/__init__.py"))
+        ids = [m[1] for init in inits for m in [re.search(r'^APP_ID = "([^"]+)"', init.read_text(encoding="utf-8"),
+                                                          re.M)] if m]
+        if ids:
+            found.append((key, entry.get("name", key), entry["category"], ids[0]))
+    return found
+
+
+def windows_portable_app_copies(root: Path = ROOT) -> tuple[list[tuple[str, str]], list[tuple[str, str]]]:
+    """The icon copies of each app that takes its category's (lossless) and its chapter's icon in the wiki (a
+    picture on a page, lossy): the 512 px icon for the window, the 128 px one for the Start menu and the tile, the
+    256 px one for the wiki."""
+    exact, page = [], []
+    for key, _, category, app_id in windows_portable_apps(root):
+        icons = f"{WINDOWS_PORTABLE}/icons/{category}/{category}"
+        exact += [(f"{icons}-512.png", f"{WINDOWS_PORTABLE}/apps/{key}/images/{app_id}.webp"),
+                  (f"{icons}-128.png", f"{WINDOWS_PORTABLE}/apps/{key}/images/{app_id}-128.png"),
+                  (f"{icons}-128.png", f"{WINDOWS_PORTABLE}/portal/images/apps/{key}.webp")]
+        page.append((f"{icons}-256.png", f"{WINDOWS_PORTABLE}/docs/images/apps/{key}.webp"))
+    return exact, page
 
 
 def nexus_copies(root: Path = ROOT) -> list[Path]:
     """Writes Nexus Releases' icon copies and the Nexus page's favicon from the Nexus drawings (NEXUS_COPIES) and
     Windows Portable Test's and the Windows portal's from the suite's (WINDOWS_PORTABLE_COPIES), lossless, so a
     copy's pixels are the drawing's (tests compare them); and the Nexus page's logo and hero (NEXUS_PAGE_COPIES),
-    lossy. The paths written."""
+    lossy; and every Windows Portable Suite app's category icon (windows_portable_icons()). The paths written."""
+    return write_copies(root, NEXUS_COPIES + WINDOWS_PORTABLE_COPIES, NEXUS_PAGE_COPIES) + windows_portable_icons(root)
+
+
+def windows_portable_icons(root: Path = ROOT) -> list[Path]:
+    """The copies of each Windows Portable Suite app's category icon (tools/new_app.py writes a new app's with
+    this). The paths written."""
+    exact, page = windows_portable_app_copies(root)
+    return write_copies(root, exact, page)
+
+
+def write_copies(root: Path, exact: list[tuple[str, str]], page: list[tuple[str, str]]) -> list[Path]:
+    """Each (source, target): *exact* lossless (a PNG, or WebP with the pixels under alpha 0 too), *page* as a
+    picture on a web page (lossy WebP at PAGE_QUALITY)."""
     from PIL import Image
     written = []
-    for source, target in NEXUS_COPIES + WINDOWS_PORTABLE_COPIES + NEXUS_PAGE_COPIES:
+    for (source, target), lossy in [*((pair, False) for pair in exact), *((pair, True) for pair in page)]:
         path = root / target
         path.parent.mkdir(parents=True, exist_ok=True)
         with Image.open(root / source) as image:
             image = image.convert("RGBA")
-            if (source, target) in NEXUS_PAGE_COPIES:
+            if lossy:
                 image.save(path, "WEBP", quality=PAGE_QUALITY, method=6)
             elif path.suffix == ".png":
                 image.save(path, "PNG", optimize=True)
             else:
-                image.save(path, "WEBP", lossless=True, exact=True, method=6)   # exact: the pixels under alpha 0 too
+                image.save(path, "WEBP", lossless=True, exact=True, method=6)
         written.append(path)
     return written
+
 
 NEXUS_MATERIAL = [
     ("file-tree", "Home: the card \"Nexus\"."),
@@ -272,6 +326,18 @@ def build(root: Path = ROOT) -> str:
     out += table("Symbol,App,Used for", SYMBOLS)
     out += ["## Windows Portable Suite", "", "### The suite's icon", ""]
     out += table("Icon,File,Used for", ((img(path), file, use) for path, file, use in WINDOWS_PORTABLE_ICON))
+    by_category: dict[str, list[str]] = {}
+    for key, name, category, _ in windows_portable_apps(root):
+        by_category.setdefault(category, []).append(f"{name} (`{key}`)")
+    out += ["### The category icons", "",
+            "Every app but Windows Portable Test has the icon of its category: `windows-portable/icons/<category>/` "
+            "at 1024, 512,\n256 and 128 px (PNG), copied by this tool from the portal's `apps.toml` to the app's "
+            "`images/<app id>.webp` (512 px)\nand `-128.png`, its tile `portal/images/apps/<key>.webp` (128 px) and its "
+            "chapter's icon `docs/images/apps/<key>.webp`\n(256 px).", ""]
+    out += table("Icon,Category,Apps", (
+        (img(f"{WINDOWS_PORTABLE}/icons/{category}/{category}-128.png", 64),
+         f"{category.title()}: {source}", "<br>".join(by_category.get(category, [])))
+        for category, source in sorted(WINDOWS_PORTABLE_CATEGORIES.items())))
     out += ["## Nexus", "", "### The Nexus icon", ""]
     out += table("Icon,File,Used for", ((img(path), file, use) for path, file, use in NEXUS_ICON))
     out += ["### Material Design icons on the Nexus page", "", "Drawn by MkDocs Material in the page's colors.", ""]

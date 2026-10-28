@@ -44,6 +44,16 @@ Every suite's folder is laid out the same way:
   TAG_PREFIX                    what its release tags start with, when not nothing
 ```
 
+A new app of a suite starts with `tools/new_app.py`: it writes the app from the suite's template and lists it
+wherever the suite lists its apps (the portal's `apps.toml`, the wiki, the installer test, CI), then runs the checks
+on it. Each suite has its template: the BC250 Bazzite Suite's (see its architecture chapter) and the Windows
+Portable Suite's, an app on the portable window with `install.ps1`, `run.ps1` and the installer test `<name>.ps1`,
+its icon its category's (`windows-portable/icons/<category>/`, copied by `tools/make_icons.py`):
+
+```powershell
+.venv-windows\Scripts\python.exe tools\new_app.py windows-portable pcsx2 "PCSX2 Manager" --category gaming --summary "What it does."
+```
+
 ## bc250_core
 
 Code shared by every suite's apps (`core/`). Nothing in it imports an app: each app passes its constants in as an `AppInfo`.
@@ -63,6 +73,7 @@ Code shared by every suite's apps (`core/`). Nothing in it imports an app: each 
 | `steam_art` | `draw_icon_art()`: a shortcut's four pictures drawn from an app's icon, in the icon's color | consoles |
 | `upstream` | `publish()` / `read_all()`: the updates outside the suite an app can install now, for the portal's notice (standard library only; HelixSR carries a copy) | new: helixsr, pcsx2, portal |
 | `sensors` | `Sensors.read()`: the board's live values from `/proc` and `/sys` without root (CPU, GPU, the governor's range, VRAM, RAM, temperatures, network, disk, fans), `Reading`, `Fan` | System Overlay; used by USB IPS3.5 too |
+| `portable` | The portable window of the Windows Portable Suite: `PortableWindow` (the d-pad, A and B, `bind()`, `show_popup()`), `PortableHeader`, `Card`, `Pane`, `Pill`, `InfoPill` (an information icon that shows more text than fits, in an `InfoPopup` over the window), `Legend`, `status_clock()`, `px()`, `glass()` (see-through cards over a wallpaper) | new |
 | `wifi` | The Wi-Fi adapters and whether the running kernel has a driver and firmware for them, `report()` (standard library only; `python3 -m bc250_core.wifi`) | new: check's test 53, wdriver |
 
 Core is **bundled per app**: `tools/stage_app.py` copies `bc250_core/` next to the package of every app that

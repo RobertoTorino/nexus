@@ -1,3 +1,28 @@
+Changelog: 28-10-2026 21:24:56
+
+Release 1.5.0.
+
+Changelog: 28-10-2026 20:49:54
+
+Added. The back buttons M1 and M2 in the controller test, as one M1/M2 chip in the d-pad's row (owner, 28-10-2026: "I
+don't see the M1 and M2 buttons"). They never reach Windows as gamepad buttons; the controller reports them on ASUS's
+own channel (usage page 0xFF31), read without administrator rights while Armoury Crate runs, and both send the same
+code there (tried on the owner's Ally X), so the chip lights for either. A handheld without that channel shows no
+M1/M2 chip and counts 15 buttons. The information icon's text says how to map them as two buttons in Armoury Crate.
+
+Changelog: 28-10-2026 20:01:44
+
+Added. The header shows the CPU's and the GPU's temperature, live every five seconds, on a line of its own under
+the battery, the date and the time: CPU 47° GPU 45° (owner, 28-10-2026: live in the header, on a second line).
+Read without administrator rights and in any Windows language from AMD's driver library (ADL); without it, the GPU's
+as Task Manager reads it (D3DKMT) and no CPU temperature.
+
+Fixed. The window fits the Ally's screen again: with the Controller pane it asked for 740 of the 720 px, so the
+legend at the bottom was cut off (owner, 28-10-2026). The cards are 100 px high, the controller's chips and sticks a
+little closer, and the text about the back buttons M1 and M2 is behind an information icon at the top right
+of the Controller pane (owner, 28-10-2026: an icon with a popup where text does not fit, at the top right); it
+opens before or after the test.
+
 Changelog: 28-10-2026 19:45:06
 
 Release 1.4.0.

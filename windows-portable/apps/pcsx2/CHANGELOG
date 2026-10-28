@@ -1,0 +1,40 @@
+Changelog: 28-10-2026 21:24:56
+
+Release 0.1.0.
+
+Changelog: 28-10-2026 20:58:05
+
+Added. PCSX2's settings (owner, 28-10-2026: next the settings, set up as the BC250 suite's PCSX2 Manager does, so its
+lessons need not be learned again). The window has two cards, PCSX2 and Settings, with their panes beside them, as
+Windows Portable Test. After an install, when the window opens and before PCSX2 opens, the app keeps what it owns in
+PCSX2's inis\PCSX2.ini, starting from PCSX2 2.8.2's own defaults (pcsx2_defaults.ini, the file it wrote at its
+first start on the Ally) when there is none: the setup wizard done, PCSX2's own updates off, the mouse pointer
+hidden in a game, the BIOS in its bios folder, player 1 on the handheld's controller (SDL-0, by the buttons' places)
+while no controller is mapped, View + Menu to quit a game, and Big Picture mode full screen (StartBigPictureMode and
+StartFullscreen: tried on the Ally, PCSX2 opens its controller menu full screen). The quit chord and Big Picture
+stay off once turned off; every other line stays as PCSX2 wrote it, with its CRLF line ends. The Settings pane has a
+pill per setting with its value, A steps to the next one and writes it at once: Renderer (Automatic, Direct3D 12,
+Direct3D 11, Vulkan, OpenGL, Software), Resolution (Native to 4x), VSync, Show FPS, Fast boot, Vibration, Player 2,
+Quit with Select + Start and Big Picture; what each does is behind the information icon. Nothing is written while
+this folder's PCSX2 runs (Windows' process list and the program's path: it writes its settings back when it closes);
+Open PCSX2 says when it is open already.
+
+Fixed. PCSX2's first start showed its setup wizard, with its own updates ticked, and left the controller unmapped:
+the install wrote no settings (the BC250 suite's lesson of 23-10-2026). The settings are now written right after the
+install, before PCSX2 first opens. The release carries pcsx2_defaults.ini (the suite's build adds a package's data
+files).
+
+Changelog: 28-10-2026 20:35:50
+
+Added. PCSX2 installed and opened (owner, 28-10-2026: installing PCSX2 first). A on Install downloads PCSX2 2.8.2
+for Windows (pcsx2-v2.8.2-windows-x64-Qt.7z, 26 MB) from PCSX2's release on GitHub, checks it against the pinned
+SHA-256 and unpacks it with Windows' own tar.exe into
+%LOCALAPPDATA%\windows-portable-suite\windows-portable-pcsx2\emulator\, in PCSX2's portable mode (portable.txt): its
+settings, BIOS, memory cards and save states stay in that folder. The page counts the megabytes; B during the download asks first. A on Open PCSX2 starts it detached. Remove,
+with a second press, deletes only the files the release brought (installed.json lists them). When PCSX2 replaced its
+program with another build (its own updater), the page says so and Y Reinstall puts 2.8.2 back. install.ps1
+--uninstall keeps PCSX2's folder, --purge removes it too.
+
+Changelog: 28-10-2026 20:03:59
+
+Added. PCSX2 Manager: the first version, written by tools/new_app.py from the architecture chapter.

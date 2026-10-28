@@ -48,6 +48,7 @@ VERSIONS_CHECK = "tools/check_versions.py"                        # the Nexus to
 # A suite's own tools, in its tools/ (check_script(), record_script() and manifest_check() give the path in the
 # checkout): the board checks of a portal release, the portal's video tour and the manifest check.
 CHECK_SCRIPT = "tools/check-release.sh"
+WINDOWS_CHECK_SCRIPT = "tools/check-release.ps1"    # a Windows suite's, on the handheld
 RECORD_SCRIPT = "tools/record-tour.sh"
 MANIFEST_CHECK = "tools/check_manifest.py"
 CHECKOUT_ONLY = ".checkout-only"        # an app folder with this marker runs from the checkout and is never released
@@ -119,8 +120,22 @@ def rel(root: Path, *parts: str, suite: str | None = None) -> str:
 
 
 def check_script(root: Path, suite: str | None = None) -> str:
-    """The suite's board checks of a portal release (check-release.sh local|release), relative to the checkout."""
+    """The suite's board checks of a portal release (check-release.sh local|release), relative to the checkout; a
+    Windows suite's are check-release.ps1 (local|release|installer), run on the handheld."""
+    if suite_system(root, suite) == "windows":
+        return rel(root, *WINDOWS_CHECK_SCRIPT.split("/"), suite=suite)
     return rel(root, *CHECK_SCRIPT.split("/"), suite=suite)
+
+
+def suite_system(root: Path, suite: str | None = None) -> str:
+    """The system the suite is made for and tested on: "bazzite" or "windows" (its SYSTEM file)."""
+    return nexus_suites.system(suite_dir(root, suite))
+
+
+def tests_here(root: Path, suite: str | None = None, platform: str | None = None) -> bool:
+    """Whether the suite's release checks run on this computer (*platform*, sys.platform's): a Bazzite suite's on
+    Linux (the board), a Windows suite's on Windows (the handheld)."""
+    return ((platform or sys.platform) == "win32") == (suite_system(root, suite) == "windows")
 
 
 def portal_run_script(root: Path, suite: str | None = None) -> str:

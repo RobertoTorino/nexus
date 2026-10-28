@@ -20,10 +20,10 @@ from bc250_core.platform import suite_data
 from bc250_core.portable import (BODY, DIM, Card, Legend, Pane, Pill, PortableHeader, PortableWindow, px,
                                  status_clock, text_label)
 
-from . import APP_ID, APP_NAME, SUITE, __version__, device, network
+from . import APP_ID, APP_NAME, SUITE, __version__, back_buttons, controller, device, network, temps
 from .controller import ControllerPane
 
-STATUS_MS = 30_000              # the header's battery and time
+STATUS_MS = 5_000               # the header's battery, temperatures and time: the temperatures live
 WAITING = "Press A to read what Windows reports."     # nothing runs before (owner, 28-10-2026)
 MEASURE = "Press A to measure the network."
 CARDS_WIDTH = 663               # the cards' column, as wide as its 5 of 9 parts of the page were: a long value wraps
@@ -102,12 +102,20 @@ class MainWindow(PortableWindow):
                  read: Callable[[], device.Device] = device.read,
                  measure: Callable[..., network.Network] = network.measure,
                  battery: Callable[[], tuple[int, bool] | None] = power.battery,
-                 reports: Path | None = None, clock: Callable[[], float] = time.monotonic):
+                 reports: Path | None = None, clock: Callable[[], float] = time.monotonic,
+                 temperatures: Callable[[], tuple[int | None, int | None]] | None = None,
+                 back_reader: back_buttons.Reader | None = None):
         super().__init__(gamepad)
         self.setWindowTitle(f"{APP_NAME} {__version__}")
         self.log = applog.logger(APP_ID)
         self.log_path = log_path
         self.battery = battery
+        self.sensors: temps.Temperatures | None = None
+        if temperatures is None:                    # ADL opened once, read every STATUS_MS
+            self.sensors = temps.Temperatures()
+            temperatures = self.sensors.read
+        self.temperatures = temperatures
+        self.back_reader = back_reader if back_reader is not None else back_buttons.Reader()
         self.reports = reports or suite_data(SUITE) / APP_ID / "reports"
         self.device: device.Device | None = None
         self.network: network.Network | None = None
@@ -185,12 +193,14 @@ class MainWindow(PortableWindow):
         """After the window is shown: the controller and the status line; the device is read on A."""
         self.start_gamepad()
         self.controller_pane.set_pads(self.gamepad.names())
+        self.controller_pane.set_back_buttons(self.back_reader.start())
+        self.back_reader.changed.connect(lambda held: self.controller_pane.feed("button", controller.BACK, held))
         self.update_status()
         self.status_timer.start()
         self.device_card.setFocus()
 
     def update_status(self) -> None:
-        self.header.set_status([power.text(self.battery()), *status_clock()])
+        self.header.set_status([power.text(self.battery()), *status_clock()], [temps.text(*self.temperatures())])
 
     def show_pane(self, pane: Pane) -> None:
         if self.testing:
@@ -327,3 +337,10 @@ class MainWindow(PortableWindow):
     def on_back(self) -> None:
         if not self.testing:
             self.close()
+
+    def closeEvent(self, event) -> None:
+        self.status_timer.stop()
+        self.back_reader.stop()
+        if self.sensors is not None:
+            self.sensors.close()
+        super().closeEvent(event)

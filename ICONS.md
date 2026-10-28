@@ -125,13 +125,24 @@ Characters of the font, used as icons in labels and buttons.
 | Icon | File | Used for |
 | --- | --- | --- |
 | <img src="windows-portable/icons/windows-portable-256.png" width="48" alt=""> | `windows-portable/icons/windows-portable-<size>.png` (1024, 512, 256 and 128 px) | The icon of the Windows Portable Suite, the owner's drawing (26-10-2026): the set its portal's and wiki's copies are made from. |
-| <img src="windows-portable/icons/windows-portable-device.png" width="48" alt=""> | `windows-portable/icons/windows-portable-device.png` (1376 x 768) | The handheld, the owner's picture (26-10-2026): the hero of the suite's wiki home, as the board is the BC250 wiki's. |
+| <img src="windows-portable/icons/windows-portable-white.png" width="48" alt=""> | `windows-portable/icons/windows-portable-white.png` (1377 x 768) | The white handheld, the owner's picture (28-10-2026): the hero of the suite's wiki home, as the board is the BC250 wiki's. |
 | <img src="windows-portable/apps/test/images/windows-portable-test.webp" width="48" alt=""> | `windows-portable/apps/test/images/windows-portable-test.webp` (512 px), `-128.png` | Windows Portable Test, the suite's test app: the suite's icon (the test app is the suite's base, as BC-250 Bazzite Test is the BC250 suite's), its window header and window icon, and its Start-menu shortcut. Lossless copies of the drawing, written by this tool. |
 | <img src="windows-portable/portal/images/windows-portable-suite.webp" width="48" alt=""> | `windows-portable/portal/images/windows-portable-suite.webp` (512 px), `-128.png` | The Windows Portable Suite's portal: its window icon and its Start-menu shortcut, and the portal's release in Nexus Releases. Lossless copies of the drawing, written by this tool. |
 | <img src="windows-portable/docs/images/wiki-icon.webp" width="48" alt=""> | `windows-portable/docs/images/wiki-icon.webp`, `.png` (256 px) | The suite's wiki: the header logo (`.webp`) and the favicon (`.png`), written by this tool. |
-| <img src="windows-portable/docs/images/home/device.webp" width="48" alt=""> | `windows-portable/docs/images/home/device.webp` (1376 x 768) | The suite's wiki home: the handheld under the headline, a WebP copy of the owner's picture. |
+| <img src="windows-portable/docs/images/home/device.webp" width="48" alt=""> | `windows-portable/docs/images/home/device.webp` (1377 x 768) | The suite's wiki home: the handheld under the headline, a WebP copy of the owner's white handheld. |
 | <img src="windows-portable/docs/images/apps/test.webp" width="48" alt=""> | `windows-portable/docs/images/apps/<key>.webp` (256 px) | An app's chapter in the suite's wiki: its icon at the top, a WebP copy of the app's drawing. |
 | <img src="windows-portable/portal/images/apps/test.webp" width="48" alt=""> | `windows-portable/portal/images/apps/<key>.webp` (128 px) | The icon on an app's tile in the portal: Windows Portable Test's is the suite's drawing, written by this tool; another app's is a copy of its own icon. |
+
+### The category icons
+
+Every app but Windows Portable Test has the icon of its category: `windows-portable/icons/<category>/` at 1024, 512,
+256 and 128 px (PNG), copied by this tool from the portal's `apps.toml` to the app's `images/<app id>.webp` (512 px)
+and `-128.png`, its tile `portal/images/apps/<key>.webp` (128 px) and its chapter's icon `docs/images/apps/<key>.webp`
+(256 px).
+
+| Icon | Category | Apps |
+| --- | --- | --- |
+| <img src="windows-portable/icons/gaming/gaming-128.png" width="64" alt=""> | Gaming: `windows-portable/icons/windows-portable-device.png` (1376 x 768), the owner's picture of the handheld (26-10-2026): cropped to the handheld, centered on a transparent square (28-10-2026) | PCSX2 Manager (`pcsx2`) |
 
 ## Nexus
 

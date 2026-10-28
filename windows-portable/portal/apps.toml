@@ -32,3 +32,14 @@ install = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --no
 uninstall = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --uninstall"]
 detect = ["%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-test\\app\\Windows-Portable-Test.exe"]
 launch = [["Open", "%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-test\\app\\Windows-Portable-Test.exe"]]
+
+[apps.pcsx2]
+name = "PCSX2 Manager"
+summary = "Installs PCSX2, the PlayStation 2 emulator, in portable mode, and opens it."
+tag = "wp-pcsx2-v0.1.0"
+sha256 = ""
+category = "gaming"
+install = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --no-desktop-shortcut"]
+uninstall = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --uninstall"]
+detect = ["%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-pcsx2\\app\\PCSX2-Manager.exe"]
+launch = [["Open", "%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-pcsx2\\app\\PCSX2-Manager.exe"]]

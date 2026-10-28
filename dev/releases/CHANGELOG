@@ -1,3 +1,11 @@
+Changelog: 28-10-2026 21:14:11
+
+Added. The Test on this board tab runs a Windows suite's tests on Windows (owner, 28-10-2026: on Windows Test app
+updates, Test Portal release, Test withdrawal and Installer tests were all off, "Linux only"). The buttons follow the
+ticked suite's own system: the BC250 suite's on Linux with its check-release.sh, the Windows Portable Suite's on
+Windows with its tools\check-release.ps1 (local, release, installer) in a PowerShell window. Record portal tour stays
+the BC250 suite's, on Linux; a greyed-out button says on which system its tests run.
+
 Changelog: 28-10-2026 18:30:12
 
 Added. A suite's release needs a Nexus release too (owner, 28-10-2026: Latest, the Nexus index, said v0.3.0

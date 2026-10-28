@@ -176,3 +176,54 @@ def test_the_main_pill_has_the_button_color(qapp):
     main, other = Pill("Open", "A", main=True), Pill("Update", "Y")
     assert portable.BUTTON == "#cd8b22" and f"color: {portable.BUTTON};" in main.glyph.styleSheet()
     assert portable.BUTTON not in other.glyph.styleSheet()
+
+
+def test_the_info_pill_shows_its_text_over_the_window(qapp, monkeypatch):
+    """More text than fits goes behind an "i" (owner, 28-10-2026): A or a tap opens it, A, B or Escape closes it."""
+    window = PortableWindow(gamepad=portable.Gamepad(source_factory=NoPad))
+    window.setFixedSize(800, 500)
+    column = QVBoxLayout(window)
+    card = Card("Card", "What it does.")
+    info = portable.InfoPill("The back buttons", "A long explanation.")
+    column.addWidget(card)
+    column.addWidget(info)
+    window.show()
+    qapp.processEvents()
+    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
+    backs = []
+    window.back.connect(lambda: backs.append(True))
+    assert info.width() == info.height() == portable.px(32)
+    info.setFocus()
+    window.on_action("accept")
+    popup = window.popup
+    assert popup is not None and popup.geometry() == window.rect() and popup.text.text() == "A long explanation."
+    assert popup.close_pill.hasFocus()
+    window.on_action("up")                                                 # the popup has the buttons
+    window.on_action("back")
+    assert window.popup is None and backs == [] and info.hasFocus()
+    info.click()                                                           # a tap
+    assert window.popup is not None
+    window.keyPressEvent(QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_Escape, Qt.KeyboardModifier.NoModifier))
+    assert window.popup is None and backs == []
+    window.on_action("back")
+    assert backs == [True]                                                 # no popup: B is the page's again
+    window.close()
+
+
+def test_glass_lets_a_wallpaper_shine_through(qapp):
+    """A window with a wallpaper makes its cards and panes see-through (owner, 28-10-2026); a focused card stays
+    solid, so its amber glow does not tint it, and an InfoPopup's panel stays solid to read."""
+    assert portable.glass() == 255 and portable.surface(portable.SURFACE) == portable.SURFACE
+    try:
+        portable.glass(200)
+        assert portable.surface(portable.SURFACE) == "rgba(29, 30, 34, 200)"
+        card, pane = Card("Card", "What it does."), portable.Pane()
+        assert "rgba(29, 30, 34, 200)" in card.styleSheet() and "rgba(29, 30, 34, 200)" in pane.styleSheet()
+        card._paint(True)
+        assert portable.RAISED in card.styleSheet()
+        window = PortableWindow(gamepad=portable.Gamepad(source_factory=NoPad))
+        popup = window.show_popup("Title", "Text.")
+        assert "rgba" not in popup.panel.styleSheet()
+        window.close()
+    finally:
+        portable.glass(255)

@@ -133,6 +133,13 @@ def test_a_one_folder_build_with_the_logo_and_core_fonts(tmp_path):
                                tmp_path / "logo.webp", tmp_path / "work", tmp_path / "dist", sep=";")
     assert args[-4:] == ["--add-data", f"{tmp_path / 'stage' / 'apps.toml'};.",
                          "--add-data", f"{tmp_path / 'stage' / 'sounds'};sounds"]
+    package = tmp_path / "stage" / "pcsx2_manager"                           # a file the package reads beside itself
+    (package / "__pycache__").mkdir(parents=True)
+    for name in ("__init__.py", "pcsx2_defaults.ini", "__pycache__/x.pyc"):
+        (package / name).write_text("")
+    args = br.pyinstaller_args(tmp_path / "stage", tmp_path / "run.py", "pcsx2_manager", "PCSX2-Manager",
+                               tmp_path / "logo.webp", tmp_path / "work", tmp_path / "dist", sep=";")
+    assert args[-2:] == ["--add-data", f"{package / 'pcsx2_defaults.ini'};pcsx2_manager"]
 
 
 def test_the_package_and_exe_name_come_from_the_app():

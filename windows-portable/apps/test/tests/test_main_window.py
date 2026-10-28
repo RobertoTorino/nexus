@@ -9,7 +9,7 @@ import time
 from pathlib import Path
 
 import pytest
-from PyQt6.QtCore import QEvent, Qt
+from PyQt6.QtCore import QEvent, QObject, Qt, pyqtSignal
 from PyQt6.QtGui import QKeyEvent
 
 from bc250_core import portable
@@ -33,6 +33,22 @@ class FakePad:
         return ["ASUSTeK Computer Inc."]
 
 
+class FakeBack(QObject):
+    """Stands in for the ASUS channel of the back buttons (back_buttons.Reader)."""
+
+    changed = pyqtSignal(bool)
+
+    def __init__(self, available: bool):
+        super().__init__()
+        self.available = available
+
+    def start(self) -> bool:
+        return self.available
+
+    def stop(self) -> None:
+        pass
+
+
 def wait_for(qapp, predicate, seconds=5.0):
     end = time.monotonic() + seconds
     while time.monotonic() < end and not predicate():
@@ -45,10 +61,11 @@ def wait_for(qapp, predicate, seconds=5.0):
 def make(qapp, tmp_path, ally_json):
     windows = []
 
-    def make(read=None, pad=None, measure=None):
+    def make(read=None, pad=None, measure=None, back=None):
         pad = pad or FakePad()
         window = MainWindow(gamepad=Gamepad(source_factory=lambda: pad), read=read or (lambda: device.parse(ally_json)),
-                            measure=measure or measured, battery=lambda: (82, False), reports=tmp_path / "reports")
+                            measure=measure or measured, battery=lambda: (82, False), reports=tmp_path / "reports",
+                            temperatures=lambda: (47, 45), back_reader=back or FakeBack(True))
         portable.scale((1280, 720))
         window.resize(1280, 720)
         window.show()
@@ -99,6 +116,7 @@ def test_the_device_is_read_and_shown(make, qapp):
     assert "Screen" in shown and "% scaling, " in shown["Screen"]
     assert list(shown).index("Screen") == list(shown).index("Memory") - 1
     assert re.fullmatch(r"82%  \|  \w+day \d\d/\d\d/\d{4}  \|  \d\d:\d\d", window.header.status.text())
+    assert window.header.second.text() == "CPU 47° GPU 45°"            # a line of its own (owner, 28-10-2026)
     assert window.header.icon is None                       # the screen is too small for it (owner, 27-10-2026)
     assert [text for _, text in window.legend.items] == ["Save report", "Close"]
 
@@ -241,3 +259,30 @@ def test_a_failed_download_and_a_failed_measurement(make, qapp):
     window.network_pane.read_pill.click()
     assert wait_for(qapp, lambda: "not measured" in window.network_pane.status.text())
     assert window.network_pane.read_pill.isEnabled() and "Press A" in window.device_pane.status.text()
+
+
+def test_the_window_fits_the_allys_screen(make, qapp):
+    # The legend was cut off at the bottom on the Ally (owner, 28-10-2026): the window asked for 740 of 720 px.
+    window, _ = make()
+    assert window.minimumSizeHint().height() <= 720 and window.height() == 720
+
+
+def test_the_back_buttons_light_one_chip(make, qapp):
+    # M1 and M2 come through the ASUS channel as one code (owner's Ally X, 28-10-2026): one M1/M2 chip.
+    back = FakeBack(True)
+    window, _ = make(back=back)
+    pane = window.controller_pane
+    assert pane.chips["m1m2"].isVisibleTo(pane) and pane.count.text() == "0 of 16 buttons answered"
+    window.start_test()
+    back.changed.emit(True)
+    assert pane.chips["m1m2"].held
+    back.changed.emit(False)
+    assert pane.seen() == ["m1m2"] and pane.count.text() == "1 of 16 buttons answered"
+    assert "cannot tell them apart" in pane.back_buttons.info
+
+
+def test_without_the_asus_channel_there_is_no_back_buttons_chip(make, qapp):
+    window, _ = make(back=FakeBack(False))
+    pane = window.controller_pane
+    assert not pane.chips["m1m2"].isVisibleTo(pane) and pane.count.text() == "0 of 15 buttons answered"
+    assert "reports none" in pane.back_buttons.info

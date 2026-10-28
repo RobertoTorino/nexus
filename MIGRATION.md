@@ -7,27 +7,44 @@ describe only what exists.
 
 ## Resume here (28-10-2026): the Windows Portable Suite
 
-Where it stands: wp-test-v1.3.0 and wp-portal-v1.3.0 are released, with core 0.2.0 inside and Nexus at 0.5.0;
-nothing is open in the working tree. The details are under "Windows Portable Suite" below. What 1.3.0 brought: the
-portal's intro covers the window from its first frame, with the BC250 intro's sound; its own update replaces the
-program safely (`Install-Folder`) and shows the MB of a download; an install by hand offers to remove the download;
-the apps it installs get no Desktop shortcut. Windows Portable Test reads on A, and has four cards: Device, Hardware,
-Connected (a dock or hub by its maker, external screens, USB network and drives; the owner's JSAUX stand shows as a
-Realtek hub with the TV over DisplayPort) and Controller (with the M1/M2 note). The header reads `82% | Wednesday
-28/10/2026 | 17:04`. The suite's wiki is live at /nexus/windows-portable-suite/. Nexus Releases moves Nexus's
-version with every suite release (minor; a new suite major), and DESIGN.md's samples are in `design/colors/`.
+Where it stands: wp-test-v1.4.0 (the Network card) and wp-portal-v1.4.0 (B asks first during a download or an
+install) are released, Nexus at 0.7.0. The details are under "Windows Portable Suite" below. In the working tree
+(28-10-2026, evening), not released:
+
+- Windows Portable Test: the window fits the Ally's 720 px again (it asked for 740: the legend was cut off; the
+  cards 100 px, which went out in the portal's commit already, the controller's chips closer, the M1/M2 text behind
+  an information icon at the pane's top right), and the CPU and GPU temperatures live in the header (owner: "Live in the header"; AMD's ADL, else D3DKMT
+  for the GPU only). Its CHANGELOG has an Added.: a minor release, and a portal pin after.
+- Core: `InfoPill` and `InfoPopup` (owner, 28-10-2026: an information icon with a popup where text does not fit), and `glass()`, the see-through
+  cards over the portal's wallpaper. An Added. in
+  core's CHANGELOG; core is bundled per app, so it reaches the apps with their releases.
+- The portal: the owner's wallpaper behind the page, to try out (`portal/images/wallpaper.webp`, SHADE 150 and GLASS 200 of 255: the tiles and the strip see-through).
+  An Added. in its CHANGELOG.
+- PCSX2 Manager (owner, 28-10-2026: the name, `apps/pcsx2`, package `pcsx2_manager`, the Gaming tab, "skeleton
+  first"): the app as an empty portable window with its icon, installer, tests, wiki chapter and portal entry; the
+  BC250 manager's features are ported one at a time, each designed for the handheld first. `tools/new_app.py
+  --suite windows-portable` made it (a Windows template beside the BC250 one). The pin needs a minor portal release
+  (`check_manifest.py --base origin/main` fails until portal/VERSION moves past 1.4.0), with wp-pcsx2-v0.1.0.
+- The Gaming category icon from the owner's device picture, and the white handheld as the wiki home's picture.
+- `windows-portable/README.md` and `windows-portable/CLAUDE.md`, as the BC250 suite has.
 
 Next, in this order:
 
-1. On the Ally (owner): 1.3.0 through the Suite page's update from the installed portal, the intro and its sound,
-   the four cards docked and undocked, the download question, no Test shortcut on the Desktop.
-2. Open (owner): B during a download closes the portal and drops the download: wait, or ask first?
-3. PCSX2 Manager, the first optional app and the blueprint of the managers: its name, what it does on Windows and
-   its category are the owner's to decide first.
-4. The Network card in Windows Portable Test is built (28-10-2026, in the working tree, not released: an `Added.`
-   in the app's CHANGELOG, so a minor wp-test release and a portal pin after). On the Ally (owner): A on the card on
-   mains and on battery, docked on Ethernet, and X with the Network section in the report.
-5. Smaller: paging in a portal tab once it has a ninth app; the drawn icons ICONS.md shows are still in
+1. M1 and M2 (28-10-2026): the owner's guided run on the Ally X: M1 alone, M2 alone and both send the same report on
+   ASUS's channel (mi_02 col01, usage page 0xFF31, usage 0x76): `5A A5` down, `5A 00` up; M1 held with A sends
+   `5A A0` (Armoury Crate's screenshot), and `5A EC` shows now and then. So the controller test has one M1/M2 chip
+   (`portable_test/back_buttons.py`, a ReadFile thread; no chip and 15 buttons without the channel). Telling them
+   apart takes Armoury Crate's mapping (Secondary Function unticked): then they light that button. On the Ally
+   (owner): the chip lights for M1 and for M2.
+2. On the Ally (owner): the releases above, the window at the bottom, the temperatures under load, the i, the
+   wallpaper (keep it, another picture, or none).
+3. PCSX2 Manager installs PCSX2 (owner, 28-10-2026: "first installing"): v2.8.2's portable 7z, pinned with its
+   SHA-256, unpacked by Windows' own tar.exe into one folder (`windows-portable-pcsx2\emulator\`, portable.txt, so
+   the BIOS, cards, saves and settings stay beside the exe and survive an upgrade; Remove takes only the files the
+   archive brought), A Install or Open, Y Reinstall when PCSX2's updater replaced it, Remove with a second press.
+   Tried on the Ally into a scratch folder (2 s). On the Ally (owner): the app from the checkout, Install and Open.
+   Next feature (owner): set-up, the BIOS, games to Steam or memory cards.
+4. Smaller: paging in a portal tab once it has a ninth app; the drawn icons ICONS.md shows are still in
    `bc250-bazzite/docs/design/icons/` (the color samples moved to the root; the icons not decided).
 
 On hold: the portal as Xbox mode's home app (MSIX), code signing, an app for the back buttons, the handheld's own
