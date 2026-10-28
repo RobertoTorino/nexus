@@ -7,7 +7,7 @@ build-backend = "maturin"
 
 [project]
 name = "bc250-console-link-core"
-version = "1.16.0"
+version = "1.17.0"
 requires-python = ">=3.10"
 license = { text = "AGPL-3.0-only" }
 
