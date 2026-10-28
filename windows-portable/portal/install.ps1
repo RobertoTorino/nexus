@@ -3,7 +3,7 @@
 # (wp-portal-v<x.y.z>.zip):
 #
 #   powershell -ExecutionPolicy Bypass -File install.ps1                          # install or update
-#   powershell -ExecutionPolicy Bypass -File install.ps1 --no-desktop-shortcut    # Start-menu entries only
+#   powershell -ExecutionPolicy Bypass -File install.ps1 --no-desktop-shortcut    # the Start-menu entry only
 #   powershell -ExecutionPolicy Bypass -File install.ps1 --uninstall              # remove the portal and Windows Portable Test; the other apps stay
 #   powershell -ExecutionPolicy Bypass -File install.ps1 --uninstall --all        # the whole suite: every app the portal installed too
 #   powershell -ExecutionPolicy Bypass -File install.ps1 --uninstall --purge      # also remove the settings, the log and the records
@@ -17,7 +17,8 @@
 #  * %APPDATA%\windows-portable-suite\portal.ini: the settings.
 #  * A Start-menu entry in the Windows Portable Suite folder, and a Desktop shortcut.
 #  * Windows Portable Test, which the suite always includes, from bundle\wp-test-v<x.y.z>.zip through its own
-#    installer (checked against bundle\SHA256SUMS). The other apps are installed from the portal.
+#    installer (checked against bundle\SHA256SUMS), with its Start-menu entry and no Desktop shortcut: it is in the
+#    portal. The other apps are installed from the portal, the same way.
 # WPS_DESKTOP_DIR and WPS_ELEVATED stand in for the Desktop folder and the administrator check in the installer
 # tests (windows-portable/tools/installer-tests/portal.ps1).
 $ErrorActionPreference = 'Stop'
@@ -208,8 +209,7 @@ if ($TestZip) {
     Move-Item -LiteralPath $Inner -Destination $Folder
     Remove-IfThere $Tmp
     [IO.File]::WriteAllText((Join-Path $Folder '.complete'), $got + "`n")     # the portal reuses the folder
-    $testOptions = @()
-    if (-not $DesktopShortcut) { $testOptions += '--no-desktop-shortcut' }
+    $testOptions = @('--no-desktop-shortcut')            # the portal starts it (owner, 28-10-2026)
     if (-not (Invoke-AppInstaller $Tag $testOptions)) { Die "The installer of $TestName ($Tag) failed." }
     $records = Read-Records
     $records['test'] = $Tag

@@ -17,11 +17,15 @@ from bc250_core.portable import (AMBER, BODY, DIM, ON_AMBER, RAISED, TEXT, Pane,
                                  text_label)
 
 HOLD = 1.5                      # s that B is held to end the test
-# The buttons as the chips show them, in rows: SDL's name and the label (the Ally's face: A B X Y, View, Menu)
-ROWS = [[("leftshoulder", "LB"), ("back", "View"), ("guide", "Xbox"), ("start", "Menu"), ("rightshoulder", "RB")],
+# The buttons as the chips show them, in rows: SDL's name and the label (the Ally's face: A B X Y, View, the Menu
+# button's ☰)
+ROWS = [[("leftshoulder", "LB"), ("back", "View"), ("guide", "Xbox"), ("start", "☰"), ("rightshoulder", "RB")],
         [("dpad_up", "Up"), ("dpad_down", "Down"), ("dpad_left", "Left"), ("dpad_right", "Right")],
         [("a", "A"), ("b", "B"), ("x", "X"), ("y", "Y"), ("leftstick", "LS"), ("rightstick", "RS")]]
 BUTTONS = [name for row in ROWS for name, _ in row]
+# The Ally's back buttons are Armoury Crate's modifiers: Windows never sees them as buttons (owner, 28-10-2026)
+BACK_BUTTONS = ("The back buttons M1 and M2 answer here only once Armoury Crate maps them to a button "
+                "(Settings, Configure).")
 
 
 class Chip(QLabel):
@@ -147,6 +151,8 @@ class ControllerPane(Pane):
         self.column.addSpacing(px(8))
         self.count = text_label("", BODY + 1, QFont.Weight.DemiBold)
         self.column.addWidget(self.count)
+        self.back_buttons = text_label(BACK_BUTTONS, BODY, color=DIM, wrap=True)
+        self.column.addWidget(self.back_buttons)
         self.column.addStretch()
         self.finish_pill = Pill("Finish", main=True)
         self.finish_pill.activated.connect(self.finish)

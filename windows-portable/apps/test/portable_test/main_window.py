@@ -24,6 +24,8 @@ from . import APP_ID, APP_NAME, SUITE, __version__, device
 from .controller import ControllerPane
 
 STATUS_MS = 30_000              # the header's battery and time
+WAITING = "Press A to read what Windows reports."     # nothing runs before (owner, 28-10-2026)
+CARDS_WIDTH = 663               # the cards' column, as wide as its 5 of 9 parts of the page were: a long value wraps
 
 
 class _Reader(QObject):
@@ -67,9 +69,9 @@ class DevicePane(Pane):
         self.grid.setVerticalSpacing(px(4))
         self.column.addLayout(self.grid)
         self.column.addStretch()
-        self.status = text_label("", BODY + 1, color=DIM, wrap=True)
+        self.status = text_label(WAITING, BODY + 1, color=DIM, wrap=True)
         self.column.addWidget(self.status)
-        self.read_pill = Pill("Read again", "A", main=True)
+        self.read_pill = Pill("Read", "A", main=True)
         self.column.addWidget(self.read_pill)
 
     def show_rows(self, rows: list[tuple[str, str]]) -> None:
@@ -81,8 +83,8 @@ class DevicePane(Pane):
                 widget.deleteLater()
         for r, (label, value) in enumerate(rows):
             self.grid.addWidget(text_label(label, BODY + 1, color=DIM), r, 0, Qt.AlignmentFlag.AlignTop)
-            shown = text_label(value, BODY + 1, QFont.Weight.DemiBold)          # one line: no row runs over
-            shown.setAlignment(Qt.AlignmentFlag.AlignRight)
+            shown = text_label(value, BODY + 1, QFont.Weight.DemiBold, wrap=True)    # a long value wraps
+            shown.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
             self.grid.addWidget(shown, r, 1)
         self.grid.setColumnStretch(1, 1)
 
@@ -107,7 +109,10 @@ class MainWindow(PortableWindow):
         page.addWidget(self.header)
         page.addSpacing(px(14))
         body = QHBoxLayout()
-        cards = QVBoxLayout()
+        column = QWidget()
+        column.setFixedWidth(px(CARDS_WIDTH))
+        cards = QVBoxLayout(column)
+        cards.setContentsMargins(0, 0, 0, 0)
         cards.setSpacing(px(12))
         self.device_card = Card("Device", "Processor, graphics, memory, storage, screen and battery.")
         self.controller_card = Card("Controller", "Every button, stick and trigger, shown as you press them.")
@@ -115,14 +120,14 @@ class MainWindow(PortableWindow):
             card.setFixedHeight(px(104))
             cards.addWidget(card)
         cards.addStretch()
-        body.addLayout(cards, 5)
+        body.addWidget(column)
         body.addSpacing(px(16))
         self.panes = QStackedWidget()
         self.device_pane = DevicePane()
         self.controller_pane = ControllerPane(clock=clock)
         self.panes.addWidget(self.device_pane)
         self.panes.addWidget(self.controller_pane)
-        body.addWidget(self.panes, 4)
+        body.addWidget(self.panes, 1)
         page.addLayout(body, 1)
         page.addSpacing(px(8))
         self.legend = Legend()
@@ -146,13 +151,12 @@ class MainWindow(PortableWindow):
         self.show_pane(self.device_pane)
 
     def start(self) -> None:
-        """After the window is shown: the controller, the status line, and the device read once."""
+        """After the window is shown: the controller and the status line; the device is read on A."""
         self.start_gamepad()
         self.controller_pane.set_pads(self.gamepad.names())
         self.update_status()
         self.status_timer.start()
         self.device_card.setFocus()
-        self.read_device()
 
     def update_status(self) -> None:
         self.header.set_status([power.text(self.battery()), datetime.datetime.now().strftime("%H:%M")])
@@ -194,6 +198,7 @@ class MainWindow(PortableWindow):
         self.device = found
         self.device_pane.show_rows(self.rows())
         self.device_pane.status.setText("")
+        self.device_pane.read_pill.set_text("Read again")
         self.device_pane.read_pill.setEnabled(True)
         self.log.info(f"Read the device: {found.name}.")
 

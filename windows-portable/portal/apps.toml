@@ -15,7 +15,8 @@
 #   required        installed with the portal and always listed first (only test)
 #   category        sustainable, graphics, gaming or utilities: the app's tab in the portal (no development tab)
 #   withdrawn       optional: "<reason>" when the pinned release was withdrawn; the portal removes the app
-#   install         commands run in a PowerShell window from the extracted release folder, in order
+#   install         commands run in a PowerShell window from the extracted release folder, in order; an app the
+#                   portal installs gets no Desktop shortcut (--no-desktop-shortcut): the portal starts it
 #   uninstall       idem, for removal
 #   detect          paths whose existence means "installed" (any of them; %VARIABLES% are expanded)
 #   launch          [[label, command]] to open the app
@@ -27,7 +28,7 @@ tag = "wp-test-v1.0.3"
 sha256 = "b7dfdcfa8dda5b6af367e7089ba66efb6baaa7be5fcc133ef5100b28a257c05f"
 required = true
 category = "sustainable"
-install = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1"]
+install = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --no-desktop-shortcut"]
 uninstall = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --uninstall"]
 detect = ["%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-test\\app\\Windows-Portable-Test.exe"]
 launch = [["Open", "%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-test\\app\\Windows-Portable-Test.exe"]]

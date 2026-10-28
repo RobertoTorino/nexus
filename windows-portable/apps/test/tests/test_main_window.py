@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The window (main_window.py): the device read in the background and shown, read again, the report saved, a failed
+"""The window (main_window.py): the device read on A in the background and shown, read again, the report saved, a failed
 read, the controller test that has every button until B is held, and B closing the app."""
 
 from __future__ import annotations
@@ -67,9 +67,26 @@ def values(window) -> dict[str, str]:
     return dict(zip(cells[0::2], cells[1::2]))
 
 
+def read(window, qapp) -> bool:
+    window.device_pane.read_pill.click()
+    return wait_for(qapp, lambda: window.device is not None)
+
+
+def test_nothing_is_read_before_a(make, qapp, ally_json, monkeypatch):
+    calls = []
+    window, _ = make(read=lambda: calls.append(True) or device.parse(ally_json))
+    qapp.processEvents()
+    assert calls == [] and window.device is None and window.device_pane.read_pill.label.text() == "Read"
+    assert "Press A" in window.device_pane.status.text()
+    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
+    window.on_action("accept")                                  # A on the Device card
+    assert wait_for(qapp, lambda: calls == [True])
+
+
 def test_the_device_is_read_and_shown(make, qapp):
     window, _ = make()
-    assert wait_for(qapp, lambda: window.device is not None)
+    assert read(window, qapp)
+    assert window.device_pane.read_pill.label.text() == "Read again"
     shown = values(window)
     assert shown["Device"] == "ROG Xbox Ally X" and shown["Memory"] == "24 GB, 15.6 GB usable"
     assert "Screen" in shown and " % scaling, " in shown["Screen"]
@@ -82,7 +99,7 @@ def test_the_device_is_read_and_shown(make, qapp):
 def test_read_again_and_a_failed_read(make, qapp, ally_json):
     answers = [lambda: device.parse(ally_json), lambda: (_ for _ in ()).throw(RuntimeError("CIM is not running"))]
     window, _ = make(read=lambda: answers.pop(0)())
-    assert wait_for(qapp, lambda: window.device is not None and window.device_pane.read_pill.isEnabled())
+    assert read(window, qapp) and wait_for(qapp, lambda: window.device_pane.read_pill.isEnabled())
     window.device_pane.read_pill.click()
     assert wait_for(qapp, lambda: "did not answer" in window.device_pane.status.text())
     assert "CIM is not running" in window.device_pane.status.text() and window.device is not None
@@ -90,7 +107,7 @@ def test_read_again_and_a_failed_read(make, qapp, ally_json):
 
 def test_x_saves_the_report(make, qapp, tmp_path, monkeypatch):
     window, _ = make()
-    assert wait_for(qapp, lambda: window.device is not None)
+    assert read(window, qapp)
     monkeypatch.setattr(window, "isActiveWindow", lambda: True)
     window.on_action("x")
     saved = list((tmp_path / "reports").glob("device-*.txt"))
@@ -128,6 +145,16 @@ def test_the_cards_show_their_panes(make, qapp):
     window.device_card.setFocus()
     qapp.processEvents()
     assert window.panes.currentWidget() is window.device_pane
+
+
+def test_a_long_value_wraps_and_leaves_the_cards_their_width(make, qapp):
+    window, _ = make()
+    assert read(window, qapp)
+    width = window.device_card.width()
+    window.device_pane.show_rows([("Graphics", "AMD Radeon 890M Graphics " * 12)])
+    qapp.processEvents()
+    assert window.device_card.width() == width
+    assert window.device_pane.geometry().right() < window.width()
 
 
 def test_the_version_is_the_apps():

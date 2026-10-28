@@ -69,6 +69,11 @@ def test_holding_b_finishes(qapp):
     assert finished == [True] and not pane.running
 
 
+def test_it_says_where_the_back_buttons_come_from(qapp):
+    pane = ControllerPane()
+    assert "M1 and M2" in pane.back_buttons.text() and "Armoury Crate" in pane.back_buttons.text()
+
+
 def test_the_finish_pill_and_the_pads_name(qapp):
     pane = ControllerPane(clock=Clock())
     finished = []

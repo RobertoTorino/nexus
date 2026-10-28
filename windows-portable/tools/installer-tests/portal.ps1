@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Exercise portal/install.ps1: install from a release folder (the portal and, from its bundle, Windows Portable Test
-# through its own installer, recorded in installed.json), an update without the Desktop shortcut, the refusals
-# (administrator, --purge and --all alone, an unknown option, the checkout without a built program, a bundle that
-# does not match its SHA256SUMS), uninstall (the test app goes with the portal, another app the portal installed
-# stays and is named; settings, log and records kept), --uninstall --all --purge. The user's folders are a temp
-# folder's: LOCALAPPDATA, APPDATA and the Desktop (WPS_DESKTOP_DIR); WPS_ELEVATED stands in for the administrator
-# check, since CI's runner is one.
+# through its own installer, without a Desktop shortcut, recorded in installed.json), an update without the Desktop
+# shortcut, the refusals (administrator, --purge and --all alone, an unknown option, the checkout without a built
+# program, a bundle that does not match its SHA256SUMS), uninstall (the test app goes with the portal, another app
+# the portal installed stays and is named; settings, log and records kept), --uninstall --all --purge. The user's
+# folders are a temp folder's: LOCALAPPDATA, APPDATA and the Desktop (WPS_DESKTOP_DIR); WPS_ELEVATED stands in for
+# the administrator check, since CI's runner is one.
 #
 #   powershell -ExecutionPolicy Bypass -File windows-portable\tools\installer-tests\portal.ps1
 #   ... portal.ps1 -Release dist\wp-portal-v0.1.0.zip   # the built release (with the real bundle) instead of a stand-in
@@ -75,13 +75,15 @@ function RecordOf($key) {
 }
 
 Write-Host '== 1. install from the release folder: the portal and the bundled test app'
+New-Item -ItemType Directory -Force -Path $env:WPS_DESKTOP_DIR | Out-Null
+Set-Content -LiteralPath $TestDesk -Value 'the shortcut an older portal made' -Encoding ascii
 $rc = Run 'log1' @()
 Check 'exit 0' { $rc -eq 0 }
 Check 'program copied with its _internal folder' { (Test-Path (Join-Path $A $Exe)) -and (Test-Path (Join-Path $A '_internal')) }
 Check 'LICENSE copied, install.ps1 not' { (Test-Path (Join-Path $A 'LICENSE')) -and -not (Test-Path (Join-Path $A 'install.ps1')) }
 Check 'Start-menu entry starts the installed exe' { (Test-Path $Menu) -and ((Target $Menu) -eq (Join-Path $A $Exe)) }
 Check 'Desktop shortcut' { (Test-Path $Desk) -and ((Target $Desk) -eq (Join-Path $A $Exe)) }
-Check 'the test app installed through its own installer' { (Test-Path $TestApp) -and (Get-ChildItem -LiteralPath $TestApp -Filter '*.exe') -and (Test-Path $TestMenu) -and (Test-Path $TestDesk) }
+Check 'the test app installed through its own installer' { (Test-Path $TestApp) -and (Get-ChildItem -LiteralPath $TestApp -Filter '*.exe') -and (Test-Path $TestMenu) -and -not (Test-Path $TestDesk) }
 Check 'its release kept for the portal, complete' { (Test-Path (Join-Path $Releases "$TestTag\install.ps1")) -and (Test-Path (Join-Path $Releases "$TestTag\.complete")) }
 Check 'recorded in installed.json without a byte order mark' { ((RecordOf 'test') -eq $TestTag) -and ([IO.File]::ReadAllBytes($Records)[0] -eq 0x7B) }
 

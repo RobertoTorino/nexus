@@ -1150,6 +1150,12 @@ behavior and dependencies. Decided (owner, 25-10-2026):
   `release.yml` after the build; the release format stays.
 - **Own tuning apps** (TDP, fans, and the like) for the handheld, later: the board's tuning apps do not port (sysfs,
   GRUB, RADV), but the same kinds of apps on both give comparison data between the BC-250 and the handheld.
+- **An app for the back buttons (on hold, owner 28-10-2026).** The Ally X's M1 and M2 never reach Windows as buttons
+  by default: they are Armoury Crate's modifiers (held with A a screenshot, with Y a recording, with Up the on-screen
+  keyboard), mapped in Armoury Crate (Settings, Configure, M1 or M2; untick Secondary Function to map one alone, as
+  LB or RB, or keys). Seen on the Ally (28-10-2026): SDL reports its pad with 16 buttons, and a 90 s listen with
+  pygame-ce caught no press of M1 or M2. The idea: a suite app that programs them. The controller test shows them,
+  and says on its card that they answer only once Armoury Crate maps them to a standard button.
 
 The scan (25-10-2026), what each BC-250 app means for Windows:
 

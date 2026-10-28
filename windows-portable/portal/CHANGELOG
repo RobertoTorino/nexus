@@ -1,3 +1,18 @@
+Changelog: 28-10-2026 16:14:41
+
+Release 1.0.2.
+
+Changelog: 28-10-2026 16:10:21
+
+Fixed. The legend shows the Menu button as ☰, the symbol on the Ally, instead of the word Menu (owner,
+28-10-2026).
+
+Changelog: 28-10-2026 15:59:38
+
+Fixed. The apps the portal installs, Windows Portable Test from the bundle too, get their Start-menu entry and no
+Desktop shortcut: they are started from the portal (owner, 28-10-2026, on the Ally). An update removes the test
+app's Desktop shortcut that an earlier portal made; the portal keeps its own.
+
 Changelog: 28-10-2026 12:28:13
 
 Release 1.0.1. Pins wp-test-v1.0.3.

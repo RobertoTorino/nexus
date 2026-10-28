@@ -1,3 +1,28 @@
+Changelog: 28-10-2026 16:14:41
+
+Release 1.1.0.
+
+Changelog: 28-10-2026 16:12:59
+
+Added. The Controller card says that the back buttons M1 and M2 answer only once Armoury Crate maps them to a
+button (Settings, Configure): by default they are its modifiers and Windows never sees them (owner, 28-10-2026).
+
+Changelog: 28-10-2026 16:10:21
+
+Fixed. The controller test shows the Menu button as ☰, the symbol on the Ally, instead of the word Menu (owner,
+28-10-2026).
+
+Changelog: 28-10-2026 15:59:38
+
+Fixed. The Device card reads what Windows reports only when you press A (or tap Read), instead of as soon as the
+app opens; after the first read the pill says Read again (owner, 28-10-2026, on the Ally).
+
+Changelog: 28-10-2026 15:56:25
+
+Fixed. A long value on the Device card (a driver or a screen name) wraps onto a second line instead of widening
+the card's pane, which pushed the cards on the left narrower: the cards' column keeps its width (owner, 28-10-2026,
+on the Ally).
+
 Changelog: 28-10-2026 12:21:25
 
 Release 1.0.3.

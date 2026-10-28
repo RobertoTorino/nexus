@@ -8,7 +8,8 @@ portal carries. Windows Portable Test is always installed with the portal and li
 
 Made for the handheld in your hands: full screen, the apps as tiles under tabs (LB and RB change the tab), the
 amber focus moved by the d-pad, A to install or open the focused app, Y to update it, X for its details (and Remove
-there), Menu for the Suite page (the portal's own update), B to close. Every tile and pill also works by touch.
+there), ☰ (the Menu button) for the Suite page (the portal's own update), B to close. Every tile and pill also
+works by touch.
 
 ## Install it
 
@@ -24,13 +25,14 @@ powershell -ExecutionPolicy Bypass -File install.ps1
 
 It installs for your own user, not as administrator: the program in
 `%LOCALAPPDATA%\windows-portable-suite\portal\app`, a Start-menu entry in the Windows Portable Suite folder and a
-Desktop shortcut, and Windows Portable Test from the bundled release through its own installer. Python and Qt come
+Desktop shortcut, and Windows Portable Test from the bundled release through its own installer. The apps the portal
+installs, Windows Portable Test too, get a Start-menu entry and no Desktop shortcut: you start them from the portal. Python and Qt come
 with the program, so there is nothing else to install. The program is not signed, so Windows may ask once whether to
 run it.
 
 | Option | |
 |---|---|
-| `--no-desktop-shortcut` | the Start-menu entries only |
+| `--no-desktop-shortcut` | the portal's Start-menu entry only, no Desktop shortcut |
 | `--uninstall` | remove the portal and Windows Portable Test; the other apps stay (it names them); the settings, the log and the records stay |
 | `--uninstall --all` | the whole suite: every app the portal installed too |
 | `--uninstall --purge` | also remove the settings, the log, the records and the extracted releases |

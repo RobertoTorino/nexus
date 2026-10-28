@@ -39,7 +39,8 @@ CONFIRM_MS = 5000               # Remove asks for a second press within this
 TILE_W, TILE_H, GAP = 293, 176, 14      # the mock-up's tiles: two rows of four
 COLUMNS, PER_PAGE = 4, 8
 TAB_KEY = "window/tab"          # the settings: the tab shown last
-APPS_LEGEND = (("X", "Details"), ("Menu", "Suite"), ("B", "Close"))   # Menu: the Ally's ≡ button (SDL's start)
+MENU = "☰"                  # the Menu button as the Ally shows it (SDL's start; owner, 28-10-2026: not "Menu")
+APPS_LEGEND = (("X", "Details"), (MENU, "Suite"), ("B", "Close"))
 
 
 @dataclass
