@@ -1,3 +1,7 @@
+Changelog: 28-10-2026 18:12:48
+
+Version 0.2.0.
+
 Changelog: 28-10-2026 18:04:37
 
 Added. portable.status_clock(): the date and the time for the portable header's status line, "Wednesday
