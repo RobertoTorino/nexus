@@ -1,0 +1,305 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+"""The window (main_window.py): the tabs and tiles, what the strip says for an app in each state, an install (the
+release fetched in the background, the installer's PowerShell window, its exit status), opening an app, the details
+page with Remove's second press, the Suite page with the portal's own update, and B."""
+
+from __future__ import annotations
+
+import hashlib
+import shutil
+import time
+import zipfile
+from pathlib import Path
+
+import pytest
+from bc250_core import portable
+from bc250_core.gamepad import Gamepad
+from bc250_core.updates import ReleaseInfo
+
+from portable_portal import main_window as mw
+from portable_portal.manifest import AppEntry
+from portable_portal.portal_update import AppChange, PortalUpdate
+from portable_portal.sources import Records, Sources
+
+
+class FakePad:
+    def __init__(self):
+        self.queue = []
+
+    def events(self):
+        found, self.queue = self.queue, []
+        return found
+
+    def close(self):
+        pass
+
+    def names(self):
+        return ["ASUSTeK Computer Inc."]
+
+
+class FakeTerminal:
+    """Stands in for the PowerShell window: records the line, runs the "installer" (makes or removes the app's
+    program) and writes the exit status, as the window would."""
+
+    def __init__(self, app_dir: Path, status: str = "0"):
+        self.app_dir, self.status, self.lines, self.exit_files = app_dir, status, [], []
+
+    def __call__(self, line: str, exit_file: Path | None = None, keep_open=True) -> None:
+        self.lines.append(line)
+        self.exit_files.append(exit_file)
+        if exit_file is None:
+            return
+        if self.status == "0" and "--uninstall" in line:
+            shutil.rmtree(self.app_dir, ignore_errors=True)
+        elif self.status == "0":
+            self.app_dir.mkdir(parents=True, exist_ok=True)
+            (self.app_dir / "X.exe").write_bytes(b"x")
+        exit_file.write_text(self.status + "\n")
+
+
+def make_zip(path: Path, top: str) -> str:
+    with zipfile.ZipFile(path, "w") as zf:
+        zf.writestr(f"{top}/install.ps1", b"Write-Host hi\n")
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def wait_for(qapp, predicate, seconds=5.0):
+    end = time.monotonic() + seconds
+    while time.monotonic() < end and not predicate():
+        qapp.processEvents()
+        time.sleep(0.01)
+    return predicate()
+
+
+@pytest.fixture
+def world(qapp, tmp_path, monkeypatch):
+    """Two apps (test, required, and a gaming one), their releases served from a folder, the installer stood in
+    for, and a window on them."""
+    monkeypatch.setenv("LOCALAPPDATA", str(tmp_path / "Local"))
+    app_dir = tmp_path / "Local" / "windows-portable-suite" / "windows-portable-test" / "app"
+    other_dir = tmp_path / "Local" / "windows-portable-suite" / "windows-portable-pcsx2" / "app"
+    test = AppEntry(key="test", name="Windows Portable Test", summary="Device and controller.", tag="wp-test-v0.1.0",
+                    required=True, category="sustainable", install=("powershell -File install.ps1",),
+                    uninstall=("powershell -File install.ps1 --uninstall",),
+                    detect=(r"%LOCALAPPDATA%\windows-portable-suite\windows-portable-test\app\X.exe",),
+                    launch=(("Open", r'"%LOCALAPPDATA%\windows-portable-suite\windows-portable-test\app\X.exe" --full'),))
+    pcsx2 = AppEntry(key="pcsx2", name="Windows Portable PCSX2 Manager", summary="PS2 games.", tag="wp-pcsx2-v0.2.0",
+                     category="gaming", install=("powershell -File install.ps1",),
+                     uninstall=("powershell -File install.ps1 --uninstall",),
+                     detect=(r"%LOCALAPPDATA%\windows-portable-suite\windows-portable-pcsx2\app\X.exe",),
+                     launch=(("Open", r"%LOCALAPPDATA%\windows-portable-suite\windows-portable-pcsx2\app\X.exe"),))
+    assets = tmp_path / "assets"
+    assets.mkdir()
+    sums = ""
+    for tag in ("wp-test-v0.1.0", "wp-pcsx2-v0.2.0", "wp-portal-v9.9.9"):
+        sums += f"{make_zip(assets / f'{tag}.zip', tag)}  {tag}.zip\n"
+    (assets / "SHA256SUMS").write_text(sums)
+
+    def download(url: str, dest: Path) -> None:
+        src = assets / url.rsplit("/", 1)[1]
+        if not src.is_file():
+            raise OSError(f"404 {url}")
+        shutil.copy(src, dest)
+
+    class World:
+        pass
+    w = World()
+    w.entries, w.app_dir, w.other_dir = [test, pcsx2], app_dir, other_dir
+    w.sources = Sources(tmp_path / "state" / "releases", repo_url="https://example.invalid/r", download=download)
+    w.records = Records(tmp_path / "state" / "installed.json")
+    w.terminal = FakeTerminal(app_dir)
+    w.launched = []
+    w.checks = []
+    w.update = PortalUpdate(ReleaseInfo(version="9.9.9", tag="wp-portal-v9.9.9", published="2030-01-01"),
+                            [AppChange("Windows Portable Test", "0.1.0", "0.2.0")])
+    w.windows = []
+
+    def make(portal_check=None, **kwargs):
+        pad = FakePad()
+        window = mw.MainWindow(w.entries, w.sources, w.records, portal_check=portal_check,
+                               gamepad=Gamepad(source_factory=lambda: pad), battery=lambda: (82, False),
+                               launch=w.launched.append, terminal=w.terminal, exit_dir=tmp_path / "exit", **kwargs)
+        (tmp_path / "exit").mkdir(exist_ok=True)
+        portable.scale((1280, 720))
+        window.resize(1280, 720)
+        window.show()
+        window.activateWindow()
+        qapp.processEvents()
+        window.start()
+        w.windows.append(window)
+        return window
+    w.make = make
+    yield w
+    for window in w.windows:
+        window.close()
+
+
+def pane_texts(window) -> tuple[str, str, str]:
+    pane = window.app_pane
+    return (pane.name.text(), pane.main.label.text() if pane.main.isVisible() else "",
+            pane.other.label.text() if pane.other.isVisible() else "")
+
+
+def test_the_tabs_and_tiles_and_the_strip_for_the_focused_app(world, qapp):
+    window = world.make()
+    assert window.tabs.keys == ["sustainable", "gaming"] and window.tabs.current == "sustainable"
+    assert window.tiles["test"].isVisible() and not window.tiles["pcsx2"].isVisible()
+    assert window.tiles["test"].hasFocus() and window.tiles["test"].icon is not None      # the suite's drawing
+    assert window.tiles["test"].text.text() == "Not installed"
+    assert pane_texts(window) == ("Windows Portable Test", "Install", "")
+    assert window.app_pane.versions.text() == "Not installed; this portal has 0.1.0"
+    assert window.header.status.text().startswith("82 %  |  ")
+    assert [text for _, text in window.legend.items] == ["Details", "Suite", "Close"]
+    window.tabs.step(1)
+    assert window.tabs.current == "gaming" and window.tiles["pcsx2"].isVisible() and not window.tiles["test"].isVisible()
+    assert pane_texts(window)[0] == "Windows Portable PCSX2 Manager" and window.tiles["pcsx2"].hasFocus()
+    window.tabs.step(1)
+    assert window.tabs.current == "sustainable"                                          # round
+
+
+def test_the_last_tab_is_remembered(world, qapp):
+    first = world.make()
+    first.tabs.select("gaming")
+    first.close()
+    assert world.make().tabs.current == "gaming"
+
+
+def test_a_installs_the_app_through_its_installer_window(world, qapp):
+    window = world.make()
+    window.on_action("accept")
+    assert window.tiles["test"].text.text() == "Downloading…" and pane_texts(window)[1] == ""
+    assert wait_for(qapp, lambda: window.pending is not None)
+    assert window.tiles["test"].text.text() == "Installing…"
+    line = world.terminal.lines[0]
+    folder = world.sources.folder(world.entries[0])
+    assert line.startswith(f"Set-Location -LiteralPath '{folder}'; powershell -File install.ps1; if ($LASTEXITCODE")
+    assert (folder / "install.ps1").is_file()
+    assert wait_for(qapp, lambda: window.pending is None)
+    assert world.records.get("test") == "wp-test-v0.1.0"
+    assert window.tiles["test"].text.text() == "Installed 0.1.0" and pane_texts(window) == ("Windows Portable Test", "Open", "")
+    assert window.app_pane.status.text() == "Windows Portable Test 0.1.0 is installed."
+    assert not world.terminal.exit_files[0].exists()
+
+
+def test_a_failed_install_says_so_and_changes_nothing(world, qapp):
+    world.terminal.status = "1"
+    window = world.make()
+    window.main_action("test")
+    assert wait_for(qapp, lambda: window.pending is None and window.job is None and world.terminal.lines)
+    assert world.records.get("test") == "" and window.tiles["test"].text.text() == "Not installed"
+    assert "exit status 1" in window.app_pane.status.text()
+    world.terminal.status = "0"
+    world.sources.download = lambda url, dest: (_ for _ in ()).throw(OSError("offline"))
+    shutil.rmtree(world.sources.work)
+    window.main_action("test")
+    assert wait_for(qapp, lambda: window.job is None)
+    assert "could not be prepared" in window.app_pane.status.text() and "offline" in window.app_pane.status.text()
+
+
+def test_an_update_and_a_reinstall_are_offered_with_y(world, qapp):
+    world.app_dir.mkdir(parents=True)
+    (world.app_dir / "X.exe").write_bytes(b"x")
+    world.records.set("test", "wp-test-v0.0.9")
+    window = world.make()
+    assert window.tiles["test"].text.text() == "Update 0.1.0" and pane_texts(window) == ("Windows Portable Test", "Open", "Update")
+    assert window.app_pane.versions.text() == "Installed 0.0.9; this portal has 0.1.0"
+    world.records.remove("test")
+    window.refresh()
+    assert window.tiles["test"].text.text() == "Installed, version unknown" and pane_texts(window)[2] == "Reinstall"
+    window.on_action("y")
+    assert wait_for(qapp, lambda: window.pending is None and world.records.get("test") == "wp-test-v0.1.0")
+    assert pane_texts(window) == ("Windows Portable Test", "Open", "")
+
+
+def test_a_opens_an_installed_app_detached(world, qapp):
+    world.app_dir.mkdir(parents=True)
+    (world.app_dir / "X.exe").write_bytes(b"x")
+    world.records.set("test", "wp-test-v0.1.0")
+    window = world.make()
+    window.on_action("accept")
+    assert world.launched == [[str(world.app_dir / "X.exe"), "--full"]]
+    assert world.terminal.lines == []
+
+
+def test_x_shows_the_details_and_remove_takes_a_second_press(world, qapp):
+    world.app_dir.mkdir(parents=True)
+    (world.app_dir / "X.exe").write_bytes(b"x")
+    world.records.set("test", "wp-test-v0.1.0")
+    window = world.make()
+    window.on_action("x")
+    assert window.stack.currentWidget() is window.details_pane and window.legend.items == [("B", "Back")]
+    rows = {window.details_pane.grid.itemAt(i).widget().text(): window.details_pane.grid.itemAt(i + 1).widget().text()
+            for i in range(0, window.details_pane.grid.count(), 2)}
+    assert rows["Installed"] == "0.1.0 (wp-test-v0.1.0)" and rows["This portal pins"] == "wp-test-v0.1.0"
+    assert rows["Program"] == str(world.app_dir / "X.exe") and rows["Category"] == "Sustainable"
+    assert window.details_pane.open.hasFocus() and window.details_pane.remove.isVisible()
+    window.on_action("y")
+    assert window.details_pane.remove.label.text() == "Press again to remove" and world.terminal.lines == []
+    window._confirm_over()                                      # the few seconds passed: asked again
+    assert window.details_pane.remove.label.text() == "Remove"
+    window.on_action("y")
+    window.on_action("y")
+    assert wait_for(qapp, lambda: window.pending is None and world.terminal.lines)
+    assert "--uninstall" in world.terminal.lines[0] and world.records.get("test") == ""
+    assert not world.app_dir.exists() and not world.sources.folder(world.entries[0]).exists()
+    assert window.stack.currentWidget() is window.apps_page           # back: the app is gone
+    assert window.tiles["test"].text.text() == "Not installed"
+
+
+def test_b_goes_back_from_a_page_and_closes_the_portal_from_the_tiles(world, qapp, monkeypatch):
+    window = world.make()
+    closed = []
+    monkeypatch.setattr(window, "close", lambda: closed.append(True))
+    window.on_action("menu")
+    assert window.stack.currentWidget() is window.suite_pane and window.suite_pane.action.hasFocus()
+    window.on_action("back")
+    assert window.stack.currentWidget() is window.apps_page and window.tiles["test"].hasFocus() and closed == []
+    window.on_action("back")
+    assert closed == [True]
+
+
+def test_the_suite_page_offers_the_portals_own_update_and_installs_it(world, qapp, monkeypatch):
+    window = world.make(portal_check=lambda: world.update, exe=r"C:\portal\Windows-Portable-Suite.exe")
+    assert wait_for(qapp, lambda: window.update is not None)
+    assert "Suite 9.9.9 available" in window.header.status.text()
+    window.show_suite()
+    rows = {window.suite_pane.grid.itemAt(i).widget().text(): window.suite_pane.grid.itemAt(i + 1).widget().text()
+            for i in range(0, window.suite_pane.grid.count(), 2)}
+    assert rows["This portal"] == mw.__version__ and rows["Newest release"] == "9.9.9, 2030-01-01"
+    assert rows["It brings"] == "updates Test" and rows[""] == "Windows Portable Test: 0.1.0 → 0.2.0"
+    assert window.suite_pane.action.label.text() == "Update to 9.9.9"
+    closed = []
+    monkeypatch.setattr(window, "close", lambda: closed.append(True))
+    window.on_action("accept")
+    assert wait_for(qapp, lambda: closed == [True])
+    line = world.terminal.lines[0]
+    folder = world.sources.work.parent / "portal-update" / "wp-portal-v9.9.9"
+    assert (folder / "install.ps1").is_file()
+    assert line.startswith("Wait-Process -Id ") and f"Set-Location -LiteralPath '{folder}'" in line
+    assert "-File install.ps1" in line and line.endswith("Start-Process -FilePath 'C:\\portal\\Windows-Portable-Suite.exe'")
+    assert world.terminal.exit_files == [None]
+
+
+def test_the_suite_page_without_an_update(world, qapp):
+    same = PortalUpdate(ReleaseInfo(version=mw.__version__, tag=f"wp-portal-v{mw.__version__}"))
+    window = world.make(portal_check=lambda: same)
+    assert wait_for(qapp, lambda: window.update is not None)
+    assert "available" not in window.header.status.text()
+    window.show_suite()
+    assert window.suite_pane.action.label.text() == "Check again"
+    offline = PortalUpdate(ReleaseInfo(error="no connection (offline)"))
+    window.portal_check = lambda: offline
+    window.on_action("accept")
+    assert wait_for(qapp, lambda: window.update is offline)
+    assert window.suite_pane.grid.itemAt(3).widget().text() == "not known: no connection (offline)"
+
+
+def test_ps_line_and_launch_argv(monkeypatch):
+    line = mw.ps_line(Path(r"C:\it's\wp-test-v0.1.0"), ("powershell -File install.ps1", "second"))
+    assert line == ("Set-Location -LiteralPath 'C:\\it''s\\wp-test-v0.1.0'; powershell -File install.ps1; "
+                    'if ($LASTEXITCODE -ne 0) { throw "ended with exit status $LASTEXITCODE" }; second; '
+                    'if ($LASTEXITCODE -ne 0) { throw "ended with exit status $LASTEXITCODE" }')
+    monkeypatch.setenv("LOCALAPPDATA", r"C:\Users\me\AppData\Local")
+    assert mw.launch_argv(r'"%LOCALAPPDATA%\suite\app\X.exe" --full') == [r"C:\Users\me\AppData\Local\suite\app\X.exe", "--full"]
+    assert mw.launch_argv(r"%LOCALAPPDATA%\suite\app\X.exe") == [r"C:\Users\me\AppData\Local\suite\app\X.exe"]
+    assert mw.restart_line(Path(r"C:\u"), "").endswith('{ throw "install.ps1 ended with exit status $LASTEXITCODE" }')

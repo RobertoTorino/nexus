@@ -38,6 +38,8 @@ theme:
     - content.code.copy
 extra_css:
   - stylesheets/nexus.css
+extra_javascript:
+  - javascripts/home-video.js  # the home page's video, played over the page by a click on the Nexus icon
 extra:
   generator: false             # no "Made with Material for MkDocs" in the footer
 markdown_extensions:

@@ -11,7 +11,16 @@ hide:
 # Nexus { .home-hero__lead }
 <p class="home-hero__claim">One home for the suites.</p>
 </div>
-![The Nexus icon](images/nexus-hero.webp){ .home-hero__icon }
+<a class="home-hero__play" href="videos/nexus.mp4" title="Play the Nexus video">
+<img class="home-hero__icon" src="images/nexus-hero.webp" alt="The Nexus icon">
+</a>
+<div class="home-video" hidden>
+<button class="home-video__close" type="button" aria-label="Close the video">×</button>
+<video class="home-video__player" controls playsinline preload="metadata" poster="images/nexus-hero.webp">
+<source src="videos/nexus.mp4" type="video/mp4">
+Your browser cannot play this video; <a href="videos/nexus.mp4">download it</a> instead.
+</video>
+</div>
 </section>
 
 <section class="home-section home-section--dark" markdown>

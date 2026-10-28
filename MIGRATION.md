@@ -1094,8 +1094,39 @@ behavior and dependencies. Decided (owner, 25-10-2026):
   CI runs core's tests itself, and its tags wait for nothing else. Nexus's shared checks in a workflow of their own:
   first on the backlog (top of this file). Not run on
   GitHub yet: the new workflows' first run is the first push. Smart App Control was
-  off on the owner's Ally (27-10-2026); the portal itself has no release format yet. Open: the portal app
-  (direction D), its release format and installer; a release of wp-test-v0.1.0 (owner).
+  off on the owner's Ally (27-10-2026). The portal app, its release format and installer: the next item.
+- **The portal (28-10-2026; the owner's decisions the same day: Windows-Portable-Suite.exe, the test app's exe
+  renamed Windows-Portable-Test.exe, Remove through X Details, releases only, the portal's own update downloaded
+  and installed by the portal).** `windows-portable/portal/portable_portal/`: direction D on `PortableWindow`:
+  the categories as tabs between LB and RB glyphs (`widgets.Tabs`), the tab's apps as two rows of four tiles (core's
+  `Card` with an `icon`: the icon centered above the name and the status, 293 x 176), the strip under them with
+  the focused app's name, versions, summary and pills (A Install or Open, Y Update or Reinstall), X the details
+  page (versions, pin, category, program, Open and Remove with a second press within 5 s instead of a dialog),
+  Menu or View the Suite page (this portal's version, the newest release and what its pins change, A Update to
+  x.y.z or Check again), B back or close; the header's status line has the battery, the time and "Suite x.y.z
+  available". `sources.py` (after the BC250 portal's, for zips: the release checked against the pin or
+  SHA256SUMS, unpacked into `%LOCALAPPDATA%\windows-portable-suite\portal\releases\<tag>\` with a `.complete`
+  marker, pruned after an install; `installed.json` the records), `portal_update.py` (the newer portal's
+  apps.toml at its tag), the install flow (the release in a worker thread, then `install.ps1` in a PowerShell
+  window through `launch_in_terminal` with an exit file the portal polls; a command's own exit status is checked
+  between the manifest's commands, as PowerShell does not stop on it). The portal's own update fetches
+  `wp-portal-v<x.y.z>.zip`, runs its `install.ps1` after the portal has ended (`Wait-Process` on the portal's
+  pid) and starts the new program; from the checkout (`run.ps1`) there is no program to replace. The release
+  format: `wp-portal-v<x.y.z>.zip` like an app's, with `apps.toml` and the tiles' icons inside the program and
+  `bundle\` holding the pinned test release and its SHA256SUMS line (`build_release.py --bundle`, the release
+  workflow downloads them from GitHub, `check_manifest.py --require-tags`); `install.ps1` installs the portal and,
+  from the bundle, Windows Portable Test through its own installer (checked against the SHA256SUMS; recorded in
+  `installed.json`, written without a byte order mark); `--uninstall` takes the test app along and names the
+  other apps, `--all` removes them too through their installers, `--purge` the settings, the log and the state.
+  Its installer test (`tools/installer-tests/portal.ps1`) builds a stand-in portal release with a stand-in test
+  release in its bundle; CI runs it, builds the portal's release with the real pinned test release and runs the
+  test on that too. `bc250_core/power.py` (the battery) moved from the test app into core, both apps read it.
+  Looked at offscreen at 1280 x 720 (the three pages); not yet on the Ally. Open (owner): the test app's release
+  (Breaking.: the exe's name; apps.toml's detect and launch paths already name the new one, so pin that release
+  before the portal's), the portal's VERSION bump `check_manifest.py` asks for (apps.toml changed: at least a
+  patch; the portal's entries are Added.), then the portal's first release; on the Ally: the tiles, the strip,
+  an install from a release, Details and Remove, the Suite page's update once a second portal release exists;
+  a tab with more than eight apps shows the first eight (paging comes with the ninth app); the suite's wiki.
 - **Nexus Releases on every device (owner, 27-10-2026).** It runs on Windows from the checkout (`dev/releases/run.ps1`,
   and `install.ps1` for a Start-menu entry and a Desktop shortcut; installer test
   `windows-portable/tools/installer-tests/releases.ps1`), as on Linux, and works on each suite with its own tags

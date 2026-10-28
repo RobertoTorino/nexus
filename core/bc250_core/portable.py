@@ -44,6 +44,7 @@ BASE_WIDTH, BASE_HEIGHT = 1280, 720     # the mock-up's logical screen: every si
 RADIUS = 14
 TITLE, SUBTITLE, TAB, CARD, BODY, PILL, GLYPH, LEGEND, STATUS = 28, 15, 19, 20, 13, 15, 10, 12, 18   # pt
 GLOW_BLUR, GLOW_OFFSET = 36, 8
+ICON = 64                               # a tile's icon (logical px at 1280 x 720)
 DIMMED = 0.6                            # a focused pill, drawn at this opacity
 FONT = "Inter"
 
@@ -163,23 +164,45 @@ class PortableHeader(QWidget):
 
 class Card(QFrame):
     """A card with a title and a line of text, focusable: raised with an amber edge and glow while it has the
-    focus. A tap or a click gives it the focus (focused); A, Enter or a second tap acts (activated)."""
+    focus. A tap or a click gives it the focus (focused); A, Enter or a second tap acts (activated). With an
+    *icon* it is a tile (the portal's apps): the icon centered above the title and the text, both centered."""
 
     focused = pyqtSignal()
     activated = pyqtSignal()
 
-    def __init__(self, title: str, text: str = "", parent: QWidget | None = None):
+    def __init__(self, title: str, text: str = "", icon: QPixmap | None = None, parent: QWidget | None = None):
         super().__init__(parent)
         self.setObjectName("card")
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         column = QVBoxLayout(self)
-        column.setContentsMargins(px(20), px(12), px(20), px(12))
+        self.icon: QLabel | None = None
         self.title = text_label(title, CARD, QFont.Weight.Bold)
         self.text = text_label(text, BODY, color=DIM, wrap=True)
+        if icon is not None and not icon.isNull():
+            column.setContentsMargins(px(16), px(14), px(16), px(12))
+            self.icon = QLabel()
+            self.icon.setFixedSize(px(ICON), px(ICON))
+            self.icon.setPixmap(icon.scaled(self.icon.size(), Qt.AspectRatioMode.KeepAspectRatio,
+                                            Qt.TransformationMode.SmoothTransformation))
+            self.icon.setStyleSheet("background: transparent;")
+            column.addStretch()
+            column.addWidget(self.icon, 0, Qt.AlignmentFlag.AlignHCenter)
+            column.addSpacing(px(6))
+            for label in (self.title, self.text):
+                label.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+        else:
+            column.setContentsMargins(px(20), px(12), px(20), px(12))
         column.addWidget(self.title)
         column.addWidget(self.text)
+        if self.icon is not None:
+            column.addStretch()
         self._paint(False)
+
+    def set_text(self, text: str, color: str = DIM) -> None:
+        """The line under the title, in *color* (amber for an update on a tile)."""
+        self.text.setText(text)
+        self.text.setStyleSheet(f"color: {color}; background: transparent;")
 
     def _paint(self, focus: bool) -> None:
         edge = f"{px(2)}px solid {AMBER}" if focus else f"{px(2)}px solid transparent"

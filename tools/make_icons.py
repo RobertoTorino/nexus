@@ -96,11 +96,22 @@ WINDOWS_PORTABLE_ICON = [
      "Windows Portable Test, the suite's test app: the suite's icon (the test app is the suite's base, as BC-250 "
      "Bazzite Test is the BC250 suite's), its window header and window icon, and its Start-menu shortcut. Lossless "
      "copies of the drawing, written by this tool."),
+    ("windows-portable/portal/images/windows-portable-suite.webp",
+     "`windows-portable/portal/images/windows-portable-suite.webp` (512 px), `-128.png`",
+     "The Windows Portable Suite's portal: its window icon and its Start-menu shortcut, and the portal's release in "
+     "Nexus Releases. Lossless copies of the drawing, written by this tool."),
+    ("windows-portable/portal/images/apps/test.webp", "`windows-portable/portal/images/apps/<key>.webp` (128 px)",
+     "The icon on an app's tile in the portal: Windows Portable Test's is the suite's drawing, written by this tool; "
+     "another app's is a copy of its own icon."),
 ]
 WINDOWS_PORTABLE_COPIES = [
     ("windows-portable/icons/windows-portable-512.png", "windows-portable/apps/test/images/windows-portable-test.webp"),
     ("windows-portable/icons/windows-portable-128.png",
      "windows-portable/apps/test/images/windows-portable-test-128.png"),
+    ("windows-portable/icons/windows-portable-512.png", "windows-portable/portal/images/windows-portable-suite.webp"),
+    ("windows-portable/icons/windows-portable-128.png",
+     "windows-portable/portal/images/windows-portable-suite-128.png"),
+    ("windows-portable/icons/windows-portable-128.png", "windows-portable/portal/images/apps/test.webp"),
 ]
 NEXUS_ICON = [
     ("nexus/images/nexus-256.png", "`nexus/images/nexus-<size>.png` (1024, 512, 256 and 128 px)",
@@ -132,13 +143,14 @@ PAGE_QUALITY = 90
 
 def nexus_copies(root: Path = ROOT) -> list[Path]:
     """Writes Nexus Releases' icon copies and the Nexus page's favicon from the Nexus drawings (NEXUS_COPIES) and
-    Windows Portable Test's from the suite's (WINDOWS_PORTABLE_COPIES), lossless, so a copy's pixels are the
-    drawing's (tests compare them); and the Nexus page's logo and hero (NEXUS_PAGE_COPIES), lossy. The paths
-    written."""
+    Windows Portable Test's and the Windows portal's from the suite's (WINDOWS_PORTABLE_COPIES), lossless, so a
+    copy's pixels are the drawing's (tests compare them); and the Nexus page's logo and hero (NEXUS_PAGE_COPIES),
+    lossy. The paths written."""
     from PIL import Image
     written = []
     for source, target in NEXUS_COPIES + WINDOWS_PORTABLE_COPIES + NEXUS_PAGE_COPIES:
         path = root / target
+        path.parent.mkdir(parents=True, exist_ok=True)
         with Image.open(root / source) as image:
             image = image.convert("RGBA")
             if (source, target) in NEXUS_PAGE_COPIES:

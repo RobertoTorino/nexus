@@ -1,3 +1,10 @@
+Changelog: 28-10-2026 00:48:41
+
+Added. power.py, the battery for the portable header's status line (Windows' GetSystemPowerStatus), from Windows
+Portable Test, so the Windows portal reads it too. portable: a Card with an icon is a tile (the Windows portal's
+apps): the icon (ICON, 64) centered above the title and the text, both centered; Card.set_text(text, color) for a
+status in amber. A Card without an icon is drawn as before.
+
 Changelog: 27-10-2026 17:02:23
 
 Fixed. portable: the main pill is #cd8b22 (owner, 27-10-2026, a trial; BUTTON), its glyph's letter with it; the

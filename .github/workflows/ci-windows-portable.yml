@@ -69,10 +69,11 @@ jobs:
         run: python -X faulthandler -m pytest -v tests
 
   installers:
-    # Each installer test, then each app's release built as release-windows-portable.yml builds it and installed by its
-    # installer test. Nexus Releases' Windows installer is tested here too: this suite is the one on Windows.
+    # Each installer test, then each app's release (and the portal's, with the pinned test release downloaded from
+    # GitHub as its bundle) built as release-windows-portable.yml builds it and installed by its installer test.
+    # Nexus Releases' Windows installer is tested here too: this suite is the one on Windows.
     runs-on: windows-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v7
         with:
@@ -80,6 +81,8 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
+      - name: "Installer test: portal"
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File windows-portable/tools/installer-tests/portal.ps1
       - name: "Installer test: test"
         run: powershell -NoProfile -ExecutionPolicy Bypass -File windows-portable/tools/installer-tests/test.ps1
       - name: "Installer test: releases"
@@ -93,3 +96,17 @@ jobs:
         run: >-
           powershell -NoProfile -ExecutionPolicy Bypass -File windows-portable/tools/installer-tests/test.ps1
           -Release (Get-Item wpdist/test/*.zip).FullName
+      - name: "Release: portal"
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          bt=$(python -c 'import tomllib; print(tomllib.load(open("windows-portable/portal/apps.toml", "rb"))["apps"]["test"]["tag"])')
+          mkdir -p bundle
+          gh release download "$bt" --pattern "$bt.zip" --pattern SHA256SUMS --dir bundle
+          python -m pip install -q -r windows-portable/portal/requirements.txt pyinstaller pillow
+          python windows-portable/tools/build_release.py "wp-portal-v$(cat windows-portable/portal/VERSION)" wpdist/portal --bundle bundle
+      - name: "Installer test on the release: portal"
+        run: >-
+          powershell -NoProfile -ExecutionPolicy Bypass -File windows-portable/tools/installer-tests/portal.ps1
+          -Release (Get-Item wpdist/portal/*.zip).FullName

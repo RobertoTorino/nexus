@@ -1,3 +1,23 @@
+Changelog: 28-10-2026 01:11:11
+
+The Nexus page's home plays the Nexus video (the owner's, 28-10-2026; nexus/docs/videos/nexus.mp4, 23 s, re-encoded
+from the original to 7 MB at 1080p): the big Nexus icon under the headline is a link to the video, and
+nexus/docs/javascripts/home-video.js opens a player over the page on a click, closed with Escape, the close button or
+a click beside it; without the script the browser plays the file itself. The backdrop and the close button have
+their colors in nexus.css (DESIGN.md lists the backdrop); nexus/mkdocs.yml loads the script.
+
+Changelog: 28-10-2026 00:48:41
+
+The Windows Portable Suite's portal has a release format and an installer (the portal's CHANGELOG has the app):
+windows-portable/tools/build_release.py builds wp-portal-v<x.y.z>.zip from portal/ with apps.toml inside the
+program and, with --bundle, the pinned Windows Portable Test release in bundle\, checked against the pin;
+release-windows-portable.yml downloads that release from GitHub for a portal tag and passes --require-tags to
+check_manifest.py; ci-windows-portable.yml runs the portal's installer test (tools/installer-tests/portal.ps1), builds
+the portal's release with the real pinned test release and runs the test on it. tools/make_icons.py writes the
+portal's icon copies (images/windows-portable-suite.webp, -128.png, apps/test.webp; ICONS.md lists them). The test
+app's exe is Windows-Portable-Test.exe (owner, 28-10-2026; its CHANGELOG), and bc250_core.power holds the battery
+both apps show. DESIGN.md describes the tiles.
+
 Changelog: 28-10-2026 00:12:46
 
 Nexus's shared checks run in a workflow of their own, .github/workflows/ci-nexus.yml (owner, 27-10-2026: first on

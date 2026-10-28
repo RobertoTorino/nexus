@@ -1,3 +1,9 @@
+Changelog: 28-10-2026 00:48:41
+
+Fixed. The Windows Portable Suite's row shows its portal's icon (windows-portable/portal/images/
+windows-portable-suite.webp, since the portal has images); the test of the fallback to a suite's own drawing uses a
+bare suite folder. Nothing changes in the code.
+
 Changelog: 27-10-2026 20:04:40
 
 Fixed. The window answers faster, on Windows most of all (owner, 27-10-2026: it was slow there, where starting a

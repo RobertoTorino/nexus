@@ -1548,13 +1548,19 @@ def test_window_suite_column(repo, tmp_path):
     chosen.close()
 
 
-def test_the_suites_names_and_icons():
-    """The first column's rows: each suite by its portal's name, with its portal's icon, or its own drawing while its
-    portal has no images (the Windows Portable Suite)."""
+def test_the_suites_names_and_icons(tmp_path):
+    """The first column's rows: each suite by its portal's name, with its portal's icon (both suites since the
+    Windows portal got its images, 28-10-2026), or its own drawing while a portal has no images."""
     assert rp.suite_name(rp.CHECKOUT, "bc250-bazzite") == "BC250 Bazzite Suite"
     assert rp.suite_name(rp.CHECKOUT, "windows-portable") == "Windows Portable Suite"
     assert rp.suite_icon(rp.CHECKOUT, "bc250-bazzite").name == "bc250-bazzite-suite.webp"
-    assert rp.suite_icon(rp.CHECKOUT, "windows-portable").name == "windows-portable-256.png"
+    assert rp.suite_icon(rp.CHECKOUT, "windows-portable").name == "windows-portable-suite.webp"
+    bare = tmp_path / "windows-portable"
+    (bare / "portal").mkdir(parents=True)
+    (bare / "portal" / "apps.toml").write_text("")
+    (bare / "icons").mkdir()
+    (bare / "icons" / "windows-portable-256.png").write_bytes(b"png")
+    assert rp.suite_icon(tmp_path, "windows-portable").name == "windows-portable-256.png"
 
 
 def test_the_git_questions_are_asked_once_or_side_by_side(repo, monkeypatch):

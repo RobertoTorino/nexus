@@ -1,3 +1,33 @@
+Changelog: 28-10-2026 01:33:29
+
+Release 0.1.2.
+
+Changelog: 28-10-2026 00:48:41
+
+Added. The portal app (owner, 26-10-2026: direction D; 28-10-2026: the decisions below), portable_portal on core's
+portable window: the categories as tabs that LB and RB step through, the tab's apps as two rows of four tiles (the
+app's icon, its name and its status: Not installed, Installed x.y.z, Update x.y.z or Installed, version unknown),
+the strip under them with the focused app's name, versions, what it does and its pills (A Install or Open, Y Update
+or Reinstall), X the app's details (versions, the pin, the category, the program; Open, and Remove, which asks for a
+second press within five seconds instead of a dialog), Menu or View the Suite page (this portal's version, the
+newest portal release on GitHub and what its pins change; A updates the portal: its release is downloaded and
+checked, its install.ps1 runs after the portal has ended and the new portal starts; from the checkout there is
+nothing to replace), B back or close; the header shows the battery, the time and a newer suite. An install
+downloads the app's release in the background, checks it against the checksum apps.toml pins (or the release's
+SHA256SUMS), unpacks it into %LOCALAPPDATA%\windows-portable-suite\portal\releases\<tag>\ and runs its install.ps1
+in a PowerShell window, which stays open only when it fails; the portal records the release in installed.json. The
+portal installs from releases only (owner, 28-10-2026). run.ps1 starts it from the checkout.
+
+Added. The release format and the installer (owner, 28-10-2026): wp-portal-v<x.y.z>.zip, built by
+windows-portable/tools/build_release.py like an app's (program\Windows-Portable-Suite.exe with apps.toml and the
+tiles' icons inside), with bundle\ holding the Windows Portable Test release apps.toml pins and its SHA256SUMS line.
+install.ps1 installs the portal for your own user (%LOCALAPPDATA%\windows-portable-suite\portal\app, a Start-menu
+entry in the Windows Portable Suite folder and a Desktop shortcut) and Windows Portable Test from the bundle through
+its own installer; --uninstall removes the portal and the test app and names the other apps the portal installed,
+--uninstall --all removes those too through their installers, --purge the settings, the log and the records; it
+refuses to run as administrator. The tile icon images/apps/test.webp and the portal's own images/windows-portable-suite.webp
+and -128.png are written by tools/make_icons.py from the suite's drawing.
+
 Changelog: 27-10-2026 21:53:31
 
 Release 0.1.1.

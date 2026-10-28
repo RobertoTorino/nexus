@@ -29,5 +29,5 @@ required = true
 category = "sustainable"
 install = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1"]
 uninstall = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --uninstall"]
-detect = ["%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-test\\app\\Windows-PT.exe"]
-launch = [["Open", "%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-test\\app\\Windows-PT.exe"]]
+detect = ["%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-test\\app\\Windows-Portable-Test.exe"]
+launch = [["Open", "%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-test\\app\\Windows-Portable-Test.exe"]]

@@ -68,6 +68,12 @@
   --nexus-section-button: #c0c0c0;            /* Buttons there: outline and text, the fill under the pointer */
 }
 
+/* The home page's video: a click on the Nexus icon plays it over the page. */
+:root {
+  --nexus-video-backdrop: #010101e6;          /* The page dimmed behind the video (90 %) */
+  --nexus-video-close-fg: #c0c0c0;            /* The close button in the corner */
+}
+
 /* The home page's footer. */
 :root {
   --nexus-footer-bg: var(--nexus-ink);            /* Footer background */
@@ -247,12 +253,54 @@
   color: var(--nexus-hero-claim-fg);
 }
 
-/* The Nexus icon under the headline (nexus/docs/images/nexus-hero.webp, the owner's drawing at 1024 px). */
+/* The Nexus icon under the headline (nexus/docs/images/nexus-hero.webp, the owner's drawing at 1024 px). A click
+   on it plays the Nexus video (videos/nexus.mp4): the link opens the file, javascripts/home-video.js plays it over
+   the page instead. */
 .md-typeset .home-hero__icon {
   display: block;
   width: min(60vw, 20rem);
   height: auto;
   margin: 0 auto 2.4rem;
+}
+
+.md-typeset .home-hero__play {
+  display: block;
+  width: fit-content;
+  margin: 0 auto;
+}
+
+.home-video {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: var(--nexus-video-backdrop);
+}
+
+.home-video[hidden] {
+  display: none;
+}
+
+.home-video__player {
+  width: min(100%, 64rem);
+  max-height: 90vh;
+  border-radius: var(--nexus-radius-medium);
+  background: var(--nexus-ink);
+}
+
+.home-video__close {
+  position: absolute;
+  top: 0.6rem;
+  right: 1rem;
+  border: 0;
+  background: none;
+  color: var(--nexus-video-close-fg);
+  font-size: 2.4rem;
+  line-height: 1;
+  cursor: pointer;
 }
 
 /* A dark section with a grid of cards, their titles in white. */

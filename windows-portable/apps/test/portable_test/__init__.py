@@ -4,9 +4,9 @@ stick and trigger of its controller as you press them. It reads and shows; it ch
 
 APP_NAME = "Windows Portable Test"
 APP_ID = "windows-portable-test"
-EXE_NAME = "Windows-PT"              # the program's file name in a release, Windows-PT.exe (owner, 27-10-2026)
+EXE_NAME = "Windows-Portable-Test"   # the program's file name in a release (owner, 28-10-2026; was Windows-PT)
 SUITE = "windows-portable-suite"
-__version__ = "0.1.1"
+__version__ = "1.0.0"
 
 from pathlib import Path
 

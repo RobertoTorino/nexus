@@ -46,6 +46,10 @@ Each design (a suite's, the Nexus page's) has its own; none is carried over to a
   radius 14.
 - **A pill shows its controller button** (A Open, Y Update); the legend at the bottom shows only the buttons that
   have no pill (X Details, B Back), none of them in amber.
+- **A tile is a card with an icon** (the portal's apps, 28-10-2026): the app's icon centered above its name and
+  its status, two rows of four under the category tabs; a status that asks for something (an update, a reinstall,
+  an install running) is amber, the rest dimmed. The strip under the tiles is the detail pane, flat, with the
+  focused app's pills at its right.
 
 ### Nexus
 
@@ -391,6 +395,7 @@ Background colors:
 | ![#c0c0c0](bc250-bazzite/docs/design/colors/block-c0c0c0.svg) | `#c0c0c0` | Silver: a button's fill under the pointer in the dark sections. |
 | ![#ffffff](bc250-bazzite/docs/design/colors/block-ffffff.svg) | `#ffffff` | The main color's lighter and darker steps, for Material. |
 | ![#00000040](bc250-bazzite/docs/design/colors/block-00000040.svg) | `#00000040` | The shadow under a button under the pointer (25 %). |
+| ![#010101e6](bc250-bazzite/docs/design/colors/block-010101e6.svg) | `#010101e6` | The page dimmed behind the home page's video (90 %). |
 
 ### Nexus Releases
 

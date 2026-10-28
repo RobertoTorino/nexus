@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The battery for the header's status line: Windows' GetSystemPowerStatus, which answers at once (the Device
-card's CIM query takes seconds). None where there is no battery, or not on Windows."""
+"""The battery for the portable header's status line (the Windows Portable Suite's apps and portal): Windows'
+GetSystemPowerStatus, which answers at once (Windows Portable Test's Device card takes seconds over CIM). None where
+there is no battery, or not on Windows. From the test app, where it was until the portal needed it too."""
 
 from __future__ import annotations
 

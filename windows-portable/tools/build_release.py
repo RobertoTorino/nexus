@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Build the release assets of one tag of the Windows Portable Suite, on Windows:
 
-    python windows-portable/tools/build_release.py wp-<app>-v<x.y.z> <out-dir>
+    python windows-portable/tools/build_release.py wp-<app>-v<x.y.z> <out-dir> [--bundle <dir>]
 
 <out-dir> gets <tag>.zip, SHA256SUMS, notes.md and title.txt (the release's title). The zip unpacks into <tag>/
 with program/ (PyInstaller's one-folder build: the .exe, named by the package's EXE_NAME, beside _internal/, which
@@ -11,9 +11,15 @@ THIRD-PARTY-NOTICES.txt and MANUAL.md when the suite has the app's chapter. The 
 VERSION. The app is staged first, as a release of any suite is (tools/stage_app.py), so the exe runs on the
 bc250_core the app was tested with.
 
+A portal release (wp-portal-v<x.y.z>, owner 28-10-2026) is built the same way from portal/ (Windows-Portable-Suite.exe
+with apps.toml and the tiles' icons inside) and bundles the release of Windows Portable Test that apps.toml pins:
+--bundle names a folder with that release's <tag>.zip and SHA256SUMS (the release workflow downloads them from
+GitHub), checked against the pin; the zip gets them in bundle/, and the portal's install.ps1 installs the test app
+from there. Every pinned tag must exist (check_manifest.py --require-tags, in the release workflow).
+
 This is the suite's own tool (owner, 27-10-2026: a change to one suite never touches another's release): the
 BC250 Bazzite Suite's releases are built by tools/build_release.py. It uses the Nexus tools' staging and the
-third-party notices of tools/build_windows_exe.py, without changing them. The portal has no release format yet."""
+third-party notices of tools/build_windows_exe.py, without changing them."""
 
 from __future__ import annotations
 
@@ -65,7 +71,40 @@ def release_title(app: str, version: str) -> str:
     found = re.search(r'^APP_NAME = "(.*)"$', text, re.M)
     suite_name = found[1] if found else SUITE.name
     apps = tomllib.loads((SUITE / "portal" / "apps.toml").read_text(encoding="utf-8")).get("apps", {})
-    return f"{suite_name}: {apps.get(app, {}).get('name', app)} {version}"
+    name = "Portal" if app == "portal" else apps.get(app, {}).get("name", app)
+    return f"{suite_name}: {name} {version}"
+
+
+def pinned_test() -> tuple[str, str]:
+    """The tag and sha256 of the Windows Portable Test release apps.toml pins: what a portal release bundles."""
+    apps = tomllib.loads((SUITE / "portal" / "apps.toml").read_text(encoding="utf-8")).get("apps", {})
+    test = apps.get("test", {})
+    return str(test.get("tag", "")), str(test.get("sha256", "")).lower()
+
+
+def bundled_test(bundle: Path | None) -> tuple[Path, str]:
+    """The pinned test release's zip in *bundle*, checked against the pin's sha256 (or the folder's SHA256SUMS
+    while none is pinned): the zip and its digest. A portal release needs it."""
+    tag, want = pinned_test()
+    if bundle is None:
+        raise SystemExit(f"a portal release bundles {tag}.zip: --bundle <folder with it and its SHA256SUMS>")
+    archive = bundle / f"{tag}.zip"
+    if not archive.is_file():
+        raise SystemExit(f"{bundle} has no {tag}.zip, the test release apps.toml pins")
+    if not want:
+        sums = bundle / "SHA256SUMS"
+        if not sums.is_file():
+            raise SystemExit(f"{tag} is pinned without a sha256 and {bundle} has no SHA256SUMS to check it with")
+        for line in sums.read_text(encoding="utf-8", errors="replace").splitlines():
+            parts = line.split()
+            if len(parts) == 2 and parts[1].lstrip("*") == archive.name:
+                want = parts[0].lower()
+        if not want:
+            raise SystemExit(f"{sums} does not list {archive.name}")
+    got = sha256_of(archive)
+    if got != want:
+        raise SystemExit(f"{archive.name} does not match its checksum (got {got[:16]}…, expected {want[:16]}…)")
+    return archive, got
 
 
 def sha256_of(path: Path) -> str:
@@ -103,6 +142,8 @@ def exe_name_of(src: Path, package: str) -> str:
 
 def pyinstaller_args(stage: Path, launcher: Path, package: str, exe_name: str, icon: Path, work: Path, dist: Path,
                      sep: str = os.pathsep) -> list[str]:
+    # The portal reads apps.toml from next to its package too (portable_portal.MANIFEST).
+    manifest = [("--add-data", f"{stage / 'apps.toml'}{sep}.")] if (stage / "apps.toml").is_file() else []
     return [
         str(launcher),
         "--onedir", "--windowed", "--noconfirm", "--clean", "--noupx",
@@ -115,6 +156,7 @@ def pyinstaller_args(stage: Path, launcher: Path, package: str, exe_name: str, i
         # Read from next to the package, as in an install: the logo, and the fonts core registers.
         "--add-data", f"{stage / 'images'}{sep}images",
         "--add-data", f"{stage / 'bc250_core' / 'fonts'}{sep}bc250_core/fonts",
+        *(part for pair in manifest for part in pair),
     ]
 
 
@@ -138,14 +180,16 @@ def write_zip(root: Path, top: str, dest: Path, epoch: int) -> None:
                 zf.writestr(info, path.read_bytes())
 
 
-def build_zip(app: str, tag: str, out: Path, epoch: int) -> Path:
+def build_zip(app: str, tag: str, out: Path, epoch: int, bundle: Path | None = None) -> Path:
     """out/<tag>.zip of app *app*: <tag>/program/ (PyInstaller's one-folder build), install.ps1, LICENSE,
-    THIRD-PARTY-NOTICES.txt and MANUAL.md when there is one."""
+    THIRD-PARTY-NOTICES.txt and MANUAL.md when there is one; the portal's with bundle/ (the pinned test release
+    and its SHA256SUMS line)."""
     src = stage_app.source_dir(app, SUITE)
     if not (src / "install.ps1").is_file():
         raise SystemExit(f"{src.relative_to(ROOT)} has no install.ps1")
     package = suite_package(src)
     exe_name = exe_name_of(src, package)
+    bundled = bundled_test(bundle) if app == "portal" else None
     out.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory() as tmp:
         work = Path(tmp)
@@ -166,28 +210,34 @@ def build_zip(app: str, tag: str, out: Path, epoch: int) -> Path:
             if (stage / extra).is_file():
                 shutil.copyfile(stage / extra, release / extra)
         (release / windows_exe.NOTICES).write_text(notices(stage, exe_name), encoding="utf-8")
+        if bundled is not None:
+            test_zip, digest = bundled
+            (release / "bundle").mkdir()
+            shutil.copyfile(test_zip, release / "bundle" / test_zip.name)
+            (release / "bundle" / "SHA256SUMS").write_text(f"{digest}  {test_zip.name}\n", encoding="utf-8")
         archive = out / f"{tag}.zip"
         write_zip(release, tag, archive, epoch)
     return archive
 
 
-def build(tag: str, out: Path) -> Path:
-    """<tag>.zip, SHA256SUMS, notes.md and title.txt of an app of the suite."""
+def build(tag: str, out: Path, bundle: Path | None = None) -> Path:
+    """<tag>.zip, SHA256SUMS, notes.md and title.txt of an app of the suite, or of the portal (with *bundle*)."""
     match = _TAG.match(tag)
     if not match:
         raise SystemExit(f"{tag} is not wp-<app>-v<x.y.z>")
     app, version = match["app"], match["version"]
-    if app == "portal":
-        raise SystemExit(f"{tag}: the portal has no release format yet")
     src = stage_app.source_dir(app, SUITE)
     current = (src / "VERSION").read_text(encoding="utf-8").strip()
     if current != version:
         raise SystemExit(f"{tag}: {src.relative_to(SUITE)}/VERSION is {current}; bump it before tagging")
-    archive = build_zip(app, tag, out, source_epoch())
+    archive = build_zip(app, tag, out, source_epoch(), bundle)
     digest = sha256_of(archive)
     (out / "SHA256SUMS").write_text(f"{digest}  {archive.name}\n", encoding="utf-8")
     core = (ROOT / "core" / "VERSION").read_text(encoding="utf-8").strip()
-    notes = [f"## {tag}", "",
+    what = ["The portal of the Windows Portable Suite: it installs, updates, opens and removes the suite's apps, "
+            f"with Windows Portable Test {pinned_test()[0].rsplit('-v', 1)[1]} bundled and installed with it.", ""] \
+        if app == "portal" else []
+    notes = [f"## {tag}", "", *what,
              f"Built for Windows (x64) with Python, Qt and the suite core `bc250_core` {core} inside; nothing else to "
              "install. The program is not signed, so Windows may ask once whether to run it.", "",
              "### Install", "", "In PowerShell, in the folder you downloaded it to:", "", "```powershell",
@@ -204,6 +254,9 @@ def build(tag: str, out: Path) -> Path:
 
 
 def main(argv: list[str]) -> int:
+    bundle = None
+    if len(argv) == 4 and argv[2] == "--bundle":
+        bundle, argv = Path(argv[3]), argv[:2]
     if len(argv) != 2:
         print(__doc__.strip().splitlines()[2].strip(), file=sys.stderr)
         return 2
@@ -211,7 +264,7 @@ def main(argv: list[str]) -> int:
         print(f"{argv[0]}: the Windows Portable Suite's releases are built on Windows (PyInstaller builds for the "
               "system it runs on)", file=sys.stderr)
         return 1
-    archive = build(argv[0], Path(argv[1]))
+    archive = build(argv[0], Path(argv[1]), bundle)
     print(f"{archive} {sha256_of(archive)}")
     return 0
 

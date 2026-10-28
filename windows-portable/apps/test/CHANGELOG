@@ -1,3 +1,14 @@
+Changelog: 28-10-2026 01:33:28
+
+Release 1.0.0.
+
+Changelog: 28-10-2026 00:48:41
+
+Breaking. The program is Windows-Portable-Test.exe (EXE_NAME; owner, 28-10-2026), no longer Windows-PT.exe:
+install.ps1 installs and the portal's apps.toml detects and opens the new name, so a portal pinning this release
+does not find an older one installed until it is updated. The header's battery moved into core (bc250_core.power),
+where the portal reads it too; nothing changes in the window.
+
 Changelog: 27-10-2026 22:10:09
 
 Release 0.1.1.

@@ -7,7 +7,7 @@
 #   powershell -ExecutionPolicy Bypass -File install.ps1 --uninstall --purge      # also remove its settings, log and reports
 #
 # Run it as your own user, not as administrator: everything goes in your own folders.
-#  * %LOCALAPPDATA%\windows-portable-suite\windows-portable-test\app: the program (Windows-PT.exe with
+#  * %LOCALAPPDATA%\windows-portable-suite\windows-portable-test\app: the program (Windows-Portable-Test.exe with
 #    the Python, Qt and bc250_core it was tested with), its LICENSE and THIRD-PARTY-NOTICES.txt.
 #  * %LOCALAPPDATA%\windows-portable-suite\windows-portable-test: the log, and reports\ with the saved device reports.
 #  * %APPDATA%\windows-portable-suite\windows-portable-test.ini: the settings.
@@ -18,7 +18,7 @@ $ErrorActionPreference = 'Stop'
 
 $AppId = 'windows-portable-test'
 $AppName = 'Windows Portable Test'
-$Exe = 'Windows-PT.exe'
+$Exe = 'Windows-Portable-Test.exe'
 $Suite = 'windows-portable-suite'
 $SuiteName = 'Windows Portable Suite'
 $AppHome = Join-Path $env:LOCALAPPDATA "$Suite\$AppId"

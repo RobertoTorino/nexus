@@ -127,6 +127,8 @@ Characters of the font, used as icons in labels and buttons.
 | <img src="windows-portable/icons/windows-portable-256.png" width="48" alt=""> | `windows-portable/icons/windows-portable-<size>.png` (1024, 512, 256 and 128 px) | The icon of the Windows Portable Suite, the owner's drawing (26-10-2026): the set its portal's and wiki's copies are made from. |
 | <img src="windows-portable/icons/windows-portable-device.png" width="48" alt=""> | `windows-portable/icons/windows-portable-device.png` (1376 x 768) | The handheld, the owner's picture (26-10-2026): the hero of the suite's wiki home, as the board is the BC250 wiki's. |
 | <img src="windows-portable/apps/test/images/windows-portable-test.webp" width="48" alt=""> | `windows-portable/apps/test/images/windows-portable-test.webp` (512 px), `-128.png` | Windows Portable Test, the suite's test app: the suite's icon (the test app is the suite's base, as BC-250 Bazzite Test is the BC250 suite's), its window header and window icon, and its Start-menu shortcut. Lossless copies of the drawing, written by this tool. |
+| <img src="windows-portable/portal/images/windows-portable-suite.webp" width="48" alt=""> | `windows-portable/portal/images/windows-portable-suite.webp` (512 px), `-128.png` | The Windows Portable Suite's portal: its window icon and its Start-menu shortcut, and the portal's release in Nexus Releases. Lossless copies of the drawing, written by this tool. |
+| <img src="windows-portable/portal/images/apps/test.webp" width="48" alt=""> | `windows-portable/portal/images/apps/<key>.webp` (128 px) | The icon on an app's tile in the portal: Windows Portable Test's is the suite's drawing, written by this tool; another app's is a copy of its own icon. |
 
 ## Nexus
 

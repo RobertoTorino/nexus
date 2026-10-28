@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The header's battery (power.py): GetSystemPowerStatus's answer, and none without a battery."""
+"""The portable header's battery (power.py): GetSystemPowerStatus's answer, and none without a battery."""
 
 from __future__ import annotations
 
 import sys
 
-from portable_test import power
+from bc250_core import power
 
 
 def test_the_status():

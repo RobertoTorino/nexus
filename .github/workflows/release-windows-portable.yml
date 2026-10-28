@@ -6,9 +6,11 @@ name: Release Windows Portable
 # change here never touches the other suite's releases (owner, 27-10-2026).
 #
 # The assets are <tag>.zip (the app's one-folder PyInstaller build with its install.ps1), SHA256SUMS and the notes,
-# built on Windows by windows-portable/tools/build_release.py. Never GitHub's "Latest": that is the Nexus index
+# built on Windows by windows-portable/tools/build_release.py. A portal release (wp-portal-v<x.y.z>) bundles the
+# release of Windows Portable Test that windows-portable/portal/apps.toml pins (downloaded from its own release and
+# checked against the pin) and requires every pinned tag to exist. Never GitHub's "Latest": that is the Nexus index
 # (nexus-index.yml, written again once this run succeeded), which points at every suite's newest portal and, while
-# this suite has none, at its apps' newest releases. The portal has no release format yet.
+# this suite has none, at its apps' newest releases.
 #
 # Only a commit that CI passed becomes a release: the first job waits for ci-windows-portable.yml on the tagged
 # commit and for Nexus's ci-nexus.yml (core, which every app bundles, the release tools and the repository's
@@ -64,13 +66,26 @@ jobs:
       - name: Checks
         run: |
           python tools/check_versions.py --suite windows-portable
-          python windows-portable/tools/check_manifest.py
           app=${TAG#wp-}; app=${app%-v*}
-          python -m pip install -q -r "windows-portable/apps/$app/requirements.txt" pyinstaller pillow
+          case "$app" in
+            portal) python windows-portable/tools/check_manifest.py --require-tags
+                    python -m pip install -q -r windows-portable/portal/requirements.txt pyinstaller pillow ;;
+            *)      python windows-portable/tools/check_manifest.py
+                    python -m pip install -q -r "windows-portable/apps/$app/requirements.txt" pyinstaller pillow ;;
+          esac
+
+      - name: Bundled Windows Portable Test (portal releases)
+        if: startsWith(github.ref_name, 'wp-portal-v')
+        run: |
+          bt=$(python -c 'import tomllib; print(tomllib.load(open("windows-portable/portal/apps.toml", "rb"))["apps"]["test"]["tag"])')
+          mkdir -p bundle
+          gh release download "$bt" --pattern "$bt.zip" --pattern SHA256SUMS --dir bundle
 
       - name: Build
         run: |
-          python windows-portable/tools/build_release.py "$TAG" dist
+          args=()
+          [ -d bundle ] && args+=(--bundle bundle)
+          python windows-portable/tools/build_release.py "$TAG" dist "${args[@]}"
           cat dist/SHA256SUMS
 
       - name: Publish

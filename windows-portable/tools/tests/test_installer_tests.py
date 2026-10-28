@@ -1,7 +1,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Every app of the Windows Portable Suite, and every Nexus app with a Windows installer (dev/<name>/install.ps1:
-Nexus Releases), has an installer test (tools/installer-tests/<name>.ps1), and the suite's CI
-(ci-windows-portable.yml) runs each one; it also builds each app's release and runs its test on that release."""
+"""Every app of the Windows Portable Suite, its portal, and every Nexus app with a Windows installer
+(dev/<name>/install.ps1: Nexus Releases), has an installer test (tools/installer-tests/<name>.ps1), and the suite's
+CI (ci-windows-portable.yml) runs each one; it also builds each app's release and the portal's and runs its test on
+that release."""
 
 from __future__ import annotations
 
@@ -15,7 +16,8 @@ CI = REPO / ".github" / "workflows" / "ci-windows-portable.yml"
 
 
 def _apps() -> set[str]:
-    return {path.name for path in (SUITE / "apps").iterdir() if (path / "VERSION").is_file()}
+    """The apps and the portal: each is released by build_release.py and installed by its install.ps1."""
+    return {path.name for path in (SUITE / "apps").iterdir() if (path / "VERSION").is_file()} | {"portal"}
 
 
 def _nexus_apps() -> set[str]:
