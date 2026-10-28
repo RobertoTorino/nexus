@@ -1,3 +1,10 @@
+Changelog: 28-10-2026 11:47:54
+
+GitHub's Latest release, the Nexus index, now always has the time of the newest release of any suite and is first on
+the Releases page (owner, 28-10-2026: a new release of a suite showed under a Latest of 11 hours before).
+nexus-index.yml edited the nexus release, and an edit keeps a release's date and its tag's commit; it now removes the
+release and its tag after every release workflow that succeeded and makes them anew on main's newest commit.
+
 Changelog: 28-10-2026 11:24:13
 
 The Windows Portable Suite's release notes (windows-portable/tools/build_release.py), and with them the Nexus

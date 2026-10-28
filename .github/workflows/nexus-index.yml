@@ -4,9 +4,10 @@ name: Nexus index
 # GitHub's "Latest" release is the Nexus index, the release tagged nexus: one section per suite with its newest portal
 # (tools/nexus_index.py). A repository has one Latest and Nexus holds several suites, so no suite's portal is it:
 # release.yml and release-windows-portable.yml publish every release with --latest=false. After each run of either
-# that succeeded, the index is written again; the first run makes the release (its tag on the commit it runs on, and
-# never moved after). Installed portals do not use Latest: they find their releases by their tag prefix.
-# Only the nexus release changes.
+# that succeeded, the index is made again: the nexus release and its tag are removed and made anew on the newest
+# commit, because editing a release keeps its date. So Latest always carries the time of the newest release and
+# stays first on the Releases page, which is ordered by the date of each tag's commit. Installed portals do not use
+# Latest: they find their releases by their tag prefix. Only the nexus release and its tag change.
 
 on:
   workflow_run:
@@ -39,8 +40,9 @@ jobs:
       - name: Publish it as the Latest release
         run: |
           notes="$RUNNER_TEMP/index.md"
+          # Made anew, not edited: an edit keeps the release's date and its tag's commit, so a new release of a suite
+          # would show under an old Latest. GITHUB_SHA is main's newest commit (workflow_run runs on the default branch).
           if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release edit "$TAG" --title Nexus --notes-file "$notes" --latest
-          else
-            gh release create "$TAG" --target "$GITHUB_SHA" --title Nexus --notes-file "$notes" --latest
+            gh release delete "$TAG" --yes --cleanup-tag
           fi
+          gh release create "$TAG" --target "$GITHUB_SHA" --title Nexus --notes-file "$notes" --latest

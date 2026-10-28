@@ -178,8 +178,9 @@ A repository has one **Latest** release, and Nexus holds several suites, so no s
 Nexus index, the release named Nexus and tagged `nexus`: a section per suite with its newest portal, the download
 links and the install steps, or the newest release of each app while a suite has no portal release yet
 (`tools/nexus_index.py`). Every release is published with `--latest=false`; after each release workflow that
-succeeded, `nexus-index.yml` writes the index again. Its first run, started by hand from the Actions tab (Nexus
-index, Run workflow), makes the release and marks it Latest.
+succeeded, `nexus-index.yml` makes the index again: it removes the Nexus release and its tag and makes them anew on
+the newest commit, marked Latest. So Latest always has the time of the newest release of any suite and is first on
+the Releases page. It can also be started by hand from the Actions tab (Nexus index, Run workflow).
 
 `/releases/latest`, which the suites' READMEs and wikis link to, opens the index, and app release notes start by
 pointing to it. Installed portals do not use it: they find their releases by their tag prefix (`portal-v`,

@@ -9,7 +9,7 @@ A repository has one "Latest" release and Nexus holds several suites, so no port
 is, and its text points at each suite's newest portal (tools/suites.py: the suites, their TAG_PREFIX; the name is
 the portal's APP_NAME), with its tarball, SHA256SUMS and the install steps of its notes. A suite without a portal
 release yet lists the newest release of each app in its apps.toml instead. Drafts and pre-releases are skipped. The
-workflow .github/workflows/nexus-index.yml writes it to the nexus release after every release of any suite;
+workflow .github/workflows/nexus-index.yml makes the nexus release anew with it after every release of any suite;
 nothing is changed here."""
 
 from __future__ import annotations
