@@ -19,7 +19,8 @@ The header is a row of pills, as the apps' status boxes (owner, 20-10-2026): Ref
 GitHub built the last push (CI, Release, Manual; it notifies when a build it saw running passes or fails), how many
 of GitHub's API requests are left (green, orange under a tenth, red at none), GitHub status: green while
 githubstatus.com reports GitHub up, red while it reports a problem; a click opens that page, and Claude tokens today:
-what Claude Code on this machine used, from its transcripts; a click opens Claude's usage page.
+what Claude Code on this machine used, from its transcripts; a click opens Claude's usage page. Under the pills, the
+ticker says where the newest push's workflow runs stand: the job that runs and its step (owner, 28-10-2026).
 Test on this board: Test app updates and Test withdrawal install the portal from the checkout and start it with the
 apps from their releases, Test Portal release installs the published portal release (check-release.sh, in a
 terminal); Installer tests opens BC-250 Installer Tests; Record portal tour records the portal's video tour
@@ -45,9 +46,9 @@ from pathlib import Path
 from PyQt6.QtCore import QProcess, QRectF, QSize, Qt, QTimer, QUrl
 from PyQt6.QtGui import QColor, QDesktopServices, QIcon, QPainter, QPen, QPixmap
 from PyQt6.QtNetwork import QLocalSocket
-from PyQt6.QtWidgets import (QApplication, QCheckBox, QComboBox, QDialog, QHBoxLayout, QHeaderView, QLabel, QLineEdit, QListView,
-                             QListWidget, QListWidgetItem, QMainWindow, QMessageBox, QPushButton, QStackedWidget,
-                             QTableWidget, QTableWidgetItem, QTabWidget, QVBoxLayout, QWidget)
+from PyQt6.QtWidgets import (QApplication, QCheckBox, QComboBox, QDialog, QFrame, QHBoxLayout, QHeaderView, QLabel, QLineEdit, QListView,
+                             QListWidget, QListWidgetItem, QMainWindow, QMessageBox, QPushButton, QSizePolicy,
+                             QStackedWidget, QTableWidget, QTableWidgetItem, QTabWidget, QVBoxLayout, QWidget)
 
 from bc250_core.instance import server_name
 from bc250_core.platform import launch_in_terminal
@@ -999,6 +1000,7 @@ class BuildIndicator(Pill):
         self.timer.timeout.connect(self.check)
         self.rate = MetricBox("GitHub API left")    # GitHub's hourly limit: placed beside it by the window
         self.rate.setVisible(source is not None)
+        self.signed_in = False                  # the last answer came with a token: the ticker reads the jobs
         self.show_state("", "Not looked yet.")
         self.show_rate(None)
         self.setVisible(source is not None)
@@ -1054,6 +1056,7 @@ class BuildIndicator(Pill):
         latest = rp.latest_push(self.runs)
         state = rp.build_state(latest)
         self.show_state(state, self.details(latest))
+        self.release_window.ticker.show_runs(latest, self.signed_in)
         running = any(not r.done for r in self.runs)
         self.timer.start(BUILD_BUSY_MS if running else BUILD_IDLE_MS)
 
@@ -1078,6 +1081,7 @@ class BuildIndicator(Pill):
         if rate is None:
             value, color, now = "—", GREY, "The limit is not known yet."
         else:
+            self.signed_in = rate.signed_in
             value, now = f"{rate.remaining:,}", f"{rate.text}."
             color = RED if rate.remaining == 0 else ORANGE if rate.remaining < rate.limit / 10 else GREEN
         sign_in = "" if rate is not None and rate.signed_in else \
@@ -1118,6 +1122,132 @@ class BuildIndicator(Pill):
 
     def stop(self) -> None:
         self.timer.stop()
+        self.checker.stop(2000)
+
+
+JOBS_BUSY_MS = 10_000                   # how often the ticker reads the jobs while a run runs
+TICK_MS = 1000                          # and counts its time
+
+
+class WorkflowTicker(QFrame):
+    """Between the header's pills and the tabs: where GitHub's workflows on the newest push stand (owner,
+    28-10-2026: no switching to the browser for it). Each run that runs with its jobs done of all, the job that runs
+    and its step, and the time since it started, counted every second; a failed run names its job and step; a run
+    that passed says so. Signed in with gh it reads the jobs of every run that runs every 10 seconds, and of a run
+    that failed once (unchanged answers do not count against GitHub's limit); without a token, the 60 requests an
+    hour are the build pill's, so it shows the runs only. A click opens the job that runs (or failed), else the run.
+    Hidden until GitHub shows a run."""
+
+    def __init__(self, source):
+        super().__init__()
+        self.source = source            # rp.fetch_jobs(url, etag): (jobs | None when unchanged, etag, rate)
+        self.runs: list[rp.BuildRun] = []
+        self.jobs: dict[str, list[rp.BuildJob]] = {}    # by the run's url
+        self.etags: dict[str, str] = {}
+        self.final: set[str] = set()            # the runs whose jobs were read after they finished
+        self.signed_in = False
+        self.line = ""
+        self.setObjectName("ticker")
+        self.setStyleSheet(f"#ticker {{ border:1px solid {NEXUS.edge}; border-radius:6px; }}")
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.dot = QLabel("●")
+        self.text = QLabel()
+        self.text.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)  # elided, never wider
+        lay = QHBoxLayout(self)
+        lay.setContentsMargins(10, 4, 10, 4)
+        lay.addWidget(self.dot)
+        lay.addWidget(self.text, 1)
+        self.checker = UpdateChecker(self)
+        self.checker.finished.connect(self.fetched)
+        self.timer = QTimer(self, singleShot=True)
+        self.timer.timeout.connect(self.fetch)
+        self.clock = QTimer(self, interval=TICK_MS)
+        self.clock.timeout.connect(self.render)
+        self.setVisible(False)
+
+    def show_runs(self, runs: list[rp.BuildRun], signed_in: bool) -> None:
+        """The build pill looked: these are the newest push's runs."""
+        self.runs, self.signed_in = runs, signed_in
+        urls = {r.url for r in runs}
+        self.jobs = {url: jobs for url, jobs in self.jobs.items() if url in urls}
+        self.etags = {url: etag for url, etag in self.etags.items() if url in urls}
+        self.fetch()
+        self.render()
+
+    def wanted(self) -> list[rp.BuildRun]:
+        """The runs whose jobs to read: those that run, and a failed one not read since it finished."""
+        if self.source is None or not self.signed_in:
+            return []
+        return [r for r in self.runs if r.jobs_url and (not r.done or (not r.passed and r.url not in self.final))]
+
+    def fetch(self) -> None:
+        wanted = [(r.url, r.jobs_url, self.etags.get(r.url, ""), r.done) for r in self.wanted()]
+        if wanted:
+            self.checker.start(lambda: self._fetch(wanted))
+
+    def _fetch(self, wanted: list[tuple[str, str, str, bool]]) -> dict:
+        """Worker thread: each run's jobs (None when unchanged) with its ETag; a run GitHub did not answer for keeps
+        what was read before."""
+        found = {}
+        for url, jobs_url, etag, done in wanted:
+            try:
+                jobs, etag, *_rate = self.source(jobs_url, etag)
+            except (OSError, ValueError):
+                continue
+            found[url] = (jobs, etag, done)
+        return found
+
+    def fetched(self, found: dict) -> None:
+        urls = {r.url for r in self.runs}
+        for url, (jobs, etag, done) in found.items():
+            if url not in urls:                 # a newer push meanwhile
+                continue
+            if jobs is not None:
+                self.jobs[url] = jobs
+            self.etags[url] = etag
+            if done:
+                self.final.add(url)
+        self.render()
+
+    def render(self) -> None:
+        now = time.time()
+        self.setVisible(bool(self.runs))
+        state = rp.build_state(self.runs)
+        running = state == "running"
+        if running and not self.clock.isActive():
+            self.clock.start()
+        elif not running:
+            self.clock.stop()
+        if running and self.wanted() and not self.timer.isActive():
+            self.timer.start(JOBS_BUSY_MS)
+        if not self.runs:
+            return
+        self.dot.setStyleSheet(f"color:{BUILD_LOOK[state][0]};")
+        self.line = rp.ticker_line(self.runs, self.jobs, now)
+        self._elide()
+        sign_in = "" if self.signed_in or self.source is None else \
+            "\n\nSigned in with gh (gh auth login), the ticker shows each job and the step it is at too."
+        self.setToolTip(rp.ticker_details(self.runs, self.jobs, now) + sign_in + "\n\nClick to open it on GitHub.")
+
+    def _elide(self) -> None:
+        self.text.setText(self.text.fontMetrics().elidedText(self.line, Qt.TextElideMode.ElideRight,
+                                                             max(0, self.text.width())))
+
+    def resizeEvent(self, event) -> None:  # noqa: N802 (Qt override)
+        super().resizeEvent(event)
+        self._elide()
+
+    def target(self) -> str:
+        return rp.ticker_target(self.runs, self.jobs)
+
+    def mouseReleaseEvent(self, event) -> None:  # noqa: N802 (Qt override)
+        if event.button() == Qt.MouseButton.LeftButton and self.target():
+            open_url(self.target())
+        super().mouseReleaseEvent(event)
+
+    def stop(self) -> None:
+        self.timer.stop()
+        self.clock.stop()
         self.checker.stop(2000)
 
 
@@ -1289,8 +1419,9 @@ class ReleaseWindow(QMainWindow):
     def __init__(self, root: Path = CHECKOUT, sha256_source=rp.fetch_sha256, launch=launch_in_terminal,
                  start=start_app, runs_source=rp.fetch_runs, notify=desktop_notify, settings=None,
                  status_source=rp.fetch_github_status, claude_source=rp.fetch_claude_usage,
-                 issues_source=rp.fetch_open_issues, suite: str | None = None):
-        """*runs_source* reads the GitHub Actions runs (None: no build indicator); *notify* shows a desktop
+                 issues_source=rp.fetch_open_issues, suite: str | None = None, jobs_source=rp.fetch_jobs):
+        """*runs_source* reads the GitHub Actions runs (None: no build indicator and no ticker); *jobs_source* the
+        jobs of a run, for the ticker (None: the runs only); *notify* shows a desktop
         notification; *settings* keeps the command line's history and the chosen suite (None: this session only);
         *status_source* reads githubstatus.com (None: no GitHub status); *claude_source* reads Claude Code's usage
         (None: no Claude pill); *issues_source* reads the open GitHub issues for Close issues; *suite* is the suite
@@ -1319,6 +1450,7 @@ class ReleaseWindow(QMainWindow):
         self.refresh_pill.clicked.connect(self.refresh)
         self.status = MetricBox("Working tree")    # clean or changed
         self.build = BuildIndicator(self, runs_source, notify)
+        self.ticker = WorkflowTicker(jobs_source)       # between the pills and the tabs, fed by the build's looks
         self.github_status = GitHubStatusIndicator(status_source)
         self.claude = ClaudeUsageIndicator(claude_source)
         pills = [self.refresh_pill, self.status, self.build, self.build.rate, self.github_status, self.claude]
@@ -1358,6 +1490,7 @@ class ReleaseWindow(QMainWindow):
         central = QWidget()
         lay = QVBoxLayout(central)
         lay.addLayout(header)
+        lay.addWidget(self.ticker)
         self.bad_tags = QLabel()
         self.bad_tags.setWordWrap(True)
         self.bad_tags.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
@@ -1583,6 +1716,7 @@ class ReleaseWindow(QMainWindow):
 
     def closeEvent(self, event) -> None:
         self.build.stop()
+        self.ticker.stop()
         self.github_status.stop()
         self.claude.stop()
         self.commands.shutdown()

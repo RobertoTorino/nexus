@@ -1,3 +1,13 @@
+Changelog: 28-10-2026 12:15:41
+
+Added. A ticker between the header's pills and the tabs says where the workflow runs of the newest push stand
+(owner, 28-10-2026: no switching to the browser for it): for each run that is still going, its jobs done of all,
+each job that runs with the step it is at and the time since it started, counted every second; a failed run names
+its job and step. Hover for every job, click to open the one that runs or failed (main_window.py, WorkflowTicker;
+plan.py, fetch_jobs and ticker_line). It reads the jobs every 10 seconds while a run goes, only with a gh login;
+without one it shows the runs, so GitHub's 60 requests an hour stay for the GitHub pill. fetch_runs and fetch_jobs
+share their request (plan.github_get).
+
 Changelog: 28-10-2026 10:52:37
 
 Fixed. Step 2 offers a portal that was never tagged at its own version first, as step 1 offers an app's first

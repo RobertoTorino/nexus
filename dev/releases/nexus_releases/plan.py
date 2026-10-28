@@ -947,6 +947,8 @@ class BuildRun:
     url: str                            # its page; also what tells two runs apart
     sha: str
     title: str                          # the commit message's first line
+    jobs_url: str = ""                  # its jobs on GitHub's API (fetch_jobs)
+    started: float = 0.0                # seconds since the epoch; 0 when GitHub does not say
 
     @property
     def done(self) -> bool:
@@ -974,7 +976,16 @@ def parse_runs(data: object) -> list[BuildRun]:
     runs = data.get("workflow_runs", []) if isinstance(data, dict) else []
     return [BuildRun(str(r.get("name") or ""), str(r.get("head_branch") or ""), str(r.get("status") or ""),
                      str(r.get("conclusion") or ""), str(r.get("html_url") or ""), str(r.get("head_sha") or ""),
-                     str(r.get("display_title") or "")) for r in runs if isinstance(r, dict)]
+                     str(r.get("display_title") or ""), str(r.get("jobs_url") or ""),
+                     epoch(r.get("run_started_at"))) for r in runs if isinstance(r, dict)]
+
+
+def epoch(text: object) -> float:
+    """GitHub's time ("2026-10-28T09:12:03Z") in seconds since the epoch; 0 without one."""
+    try:
+        return datetime.datetime.fromisoformat(str(text).replace("Z", "+00:00")).timestamp()
+    except ValueError:
+        return 0.0
 
 
 GH_FALLBACK = "/home/linuxbrew/.linuxbrew/bin/gh"   # Homebrew's gh on Bazzite: not on PATH when started from the menu
@@ -1049,11 +1060,11 @@ def token_warning(token: str) -> str:
             "this account can do: github.com, Settings, Developer settings, Fine-grained tokens.")
 
 
-def fetch_runs(etag: str = "") -> tuple[list[BuildRun] | None, str, RateInfo | None]:
-    """The newest workflow runs (newest first), the ETag to send next time and GitHub's hourly limit as it stands;
-    runs None when nothing changed since *etag*. GitHub answers that with 304, which does not count against the
-    limit (60 requests without a token, 5,000 with the token of a gh login). Raises RateLimited when the limit is
-    used up, OSError offline."""
+def github_get(url: str, etag: str = "") -> tuple[object | None, str, RateInfo | None]:
+    """GitHub's API answer at *url* (parsed JSON), the ETag to send next time and GitHub's hourly limit as it
+    stands; the answer None when nothing changed since *etag*. GitHub answers that with 304, which does not count
+    against the limit (60 requests without a token, 5,000 with the token of a gh login). Raises RateLimited when
+    the limit is used up, OSError offline."""
     global _token
     token = github_token()
     headers = {"Accept": "application/vnd.github+json", "User-Agent": "nexus-releases"}
@@ -1061,21 +1072,28 @@ def fetch_runs(etag: str = "") -> tuple[list[BuildRun] | None, str, RateInfo | N
         headers["If-None-Match"] = etag
     if token:
         headers["Authorization"] = f"Bearer {token}"
-    request = urllib.request.Request(RUNS_URL.format(repo=repo_slug()), headers=headers)
+    request = urllib.request.Request(url, headers=headers)
     try:
         with urllib.request.urlopen(request, timeout=15) as response:
-            return (parse_runs(json.load(response)), response.headers.get("ETag", ""),
+            return (json.load(response), response.headers.get("ETag", ""),
                     RateInfo.from_headers(response.headers, bool(token)))
     except urllib.error.HTTPError as exc:
         if exc.code == 304:
             return None, etag, RateInfo.from_headers(exc.headers, bool(token))
         if exc.code == 401 and token:            # an expired or revoked login: go on without it
             _token = ""
-            return fetch_runs(etag)
+            return github_get(url, etag)
         if exc.code in (403, 429) and exc.headers.get("X-RateLimit-Remaining") == "0":
             raise RateLimited(float(exc.headers.get("X-RateLimit-Reset") or time.time() + 3600), bool(token),
                               RateInfo.from_headers(exc.headers, bool(token))) from exc
         raise
+
+
+def fetch_runs(etag: str = "") -> tuple[list[BuildRun] | None, str, RateInfo | None]:
+    """The newest workflow runs (newest first), the ETag to send next time and GitHub's hourly limit as it stands;
+    runs None when nothing changed since *etag* (github_get)."""
+    data, etag, rate = github_get(RUNS_URL.format(repo=repo_slug()), etag)
+    return (None if data is None else parse_runs(data)), etag, rate
 
 
 def latest_push(runs: list[BuildRun]) -> list[BuildRun]:
@@ -1121,6 +1139,131 @@ def finished_releases(announced: set[str], runs: list[BuildRun], tags: list[str]
         if run and run.done and run.url not in announced:
             found.append(run)
     return found
+
+
+# --- GitHub Actions: the jobs of a run and the step each is at, for the ticker -----------------------------------
+
+@dataclass(frozen=True)
+class BuildJob:
+    """One job of a workflow run (a CI matrix entry, the release build) and the step it is at."""
+    name: str                           # "pytest (core)"
+    status: str                         # "queued", "in_progress", "completed"
+    conclusion: str                     # "success", "failure", ...; "" until it is completed
+    url: str                            # its page, with its log
+    step: str = ""                      # the step that runs, else the first that failed, else the next; ""
+    step_number: int = 0                # its place among the job's steps, from 1; 0 without one
+    steps: int = 0
+
+    @property
+    def done(self) -> bool:
+        return self.status == "completed"
+
+    @property
+    def passed(self) -> bool:
+        return self.done and self.conclusion in OK_CONCLUSIONS
+
+    @property
+    def outcome(self) -> str:
+        return ("passed" if self.passed else self.conclusion.replace("_", " ") or "failed") if self.done \
+            else self.status.replace("_", " ")
+
+
+def current_step(steps: list[dict]) -> tuple[str, int]:
+    """The step a job is at, with its place from 1: the one running, else the first that did not pass (a failed
+    job's), else the first not finished (between two steps); ("", 0) without one."""
+    for pick in (lambda st: st.get("status") == "in_progress",
+                 lambda st: st.get("status") == "completed" and (st.get("conclusion") or "") not in OK_CONCLUSIONS,
+                 lambda st: st.get("status") != "completed"):
+        for i, st in enumerate(steps):
+            if pick(st):
+                return str(st.get("name") or ""), i + 1
+    return "", 0
+
+
+def parse_jobs(data: object) -> list[BuildJob]:
+    jobs = data.get("jobs", []) if isinstance(data, dict) else []
+    found = []
+    for job in jobs:
+        if not isinstance(job, dict):
+            continue
+        steps = [st for st in job.get("steps") or [] if isinstance(st, dict)]
+        step, number = current_step(steps)
+        found.append(BuildJob(str(job.get("name") or ""), str(job.get("status") or ""),
+                              str(job.get("conclusion") or ""), str(job.get("html_url") or ""), step, number,
+                              len(steps)))
+    return found
+
+
+def fetch_jobs(url: str, etag: str = "") -> tuple[list[BuildJob] | None, str, RateInfo | None]:
+    """The jobs of a run (its BuildRun.jobs_url) with the step each is at, read as fetch_runs reads the runs."""
+    data, etag, rate = github_get(f"{url}?per_page=100", etag)
+    return (None if data is None else parse_jobs(data)), etag, rate
+
+
+def elapsed(seconds: float) -> str:
+    """2:14, or 1:02:03 past an hour."""
+    total = max(0, int(seconds))
+    hours, rest = divmod(total, 3600)
+    return f"{hours}:{rest // 60:02d}:{rest % 60:02d}" if hours else f"{rest // 60}:{rest % 60:02d}"
+
+
+def ticker_runs(runs: list[BuildRun]) -> list[BuildRun]:
+    """The ticker's runs in its order: those running, then those that failed, then those that passed."""
+    return sorted(runs, key=lambda r: 0 if not r.done else 2 if r.passed else 1)
+
+
+def run_line(run: BuildRun, jobs: list[BuildJob] | None, now: float) -> str:
+    """Where one run stands, for the ticker: "CI on main: 3 of 8 jobs done · pytest (core): Run tests (4/7) ·
+    2:14"; a failed run names its job and step; without its jobs (not read), the run's own state."""
+    if run.passed:
+        return f"{run.label}: passed"
+    failed = [j for j in jobs or [] if j.done and not j.passed]
+    if run.done:
+        where = (f" in {failed[0].name}" + (f", step {failed[0].step}" if failed[0].step else "")) if failed else ""
+        return f"{run.label}: {run.outcome}{where}"
+    parts = [f"{run.label}: {run.outcome}"]
+    if jobs:
+        parts = [f"{run.label}: {sum(j.done for j in jobs)} of {len(jobs)} jobs done"]
+        if failed:
+            parts.append(f"{len(failed)} failed")
+        parts += [f"{j.name}: {j.step} ({j.step_number}/{j.steps})" if j.step else j.name
+                  for j in jobs if j.status == "in_progress"]
+    if run.started:
+        parts.append(elapsed(now - run.started))
+    return " · ".join(parts)
+
+
+def ticker_line(runs: list[BuildRun], jobs: dict[str, list[BuildJob]], now: float) -> str:
+    """The ticker: every run of the newest push, the running ones first (run_line)."""
+    return "   |   ".join(run_line(r, jobs.get(r.url), now) for r in ticker_runs(runs))
+
+
+def ticker_details(runs: list[BuildRun], jobs: dict[str, list[BuildJob]], now: float) -> str:
+    """The ticker's tooltip: the commit, then each run with every job and the step it is at."""
+    if not runs:
+        return ""
+    lines = [f"{runs[0].sha[:7]} {runs[0].title}"]
+    for run in ticker_runs(runs):
+        lines += ["", f"{run.label}: {run.outcome}"
+                  + (f", {elapsed(now - run.started)}" if run.started and not run.done else "")]
+        for job in jobs.get(run.url) or []:
+            step = f", step {job.step_number} of {job.steps}: {job.step}" if job.step and not job.passed else ""
+            lines.append(f"    {job.name}: {job.outcome}{step}")
+    return "\n".join(lines)
+
+
+def ticker_target(runs: list[BuildRun], jobs: dict[str, list[BuildJob]]) -> str:
+    """What a click on the ticker opens: the job that runs, else the one that failed, else the run that runs or
+    failed, else the newest run; "" without runs."""
+    ordered = ticker_runs(runs)
+    for run in ordered:
+        if run.passed:
+            break
+        listed = jobs.get(run.url) or []
+        pick = next((j for j in listed if j.status == "in_progress"), None) or \
+            next((j for j in listed if j.done and not j.passed), None)
+        return pick.url if pick and pick.url else run.url
+    return ordered[0].url if ordered else ""
 
 
 # --- GitHub issues: the open ones, closed once handled -----------------------------------------------------------

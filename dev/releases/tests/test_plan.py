@@ -1066,6 +1066,95 @@ def test_build_state_of_the_latest_push():
     assert rp.just_finished({}, done) == []                                   # finished before the first look
 
 
+def job(name, status="completed", conclusion="success", steps=(), n=1):
+    return {"name": name, "status": status, "conclusion": conclusion if status == "completed" else None,
+            "html_url": f"https://github.invalid/jobs/{n}",
+            "steps": [{"name": s, "status": st, "conclusion": c} for s, st, c in steps]}
+
+
+def test_jobs_and_the_step_each_is_at():
+    jobs = rp.parse_jobs({"jobs": [
+        job("lint"),
+        job("pytest (core)", "in_progress", steps=[("Set up", "completed", "success"),
+                                                   ("Run tests", "in_progress", None), ("Post", "queued", None)], n=2),
+        job("pytest (tools)", conclusion="failure", steps=[("Set up", "completed", "success"),
+                                                           ("Run tests", "completed", "failure"),
+                                                           ("Post", "completed", "skipped")], n=3),
+        job("build", "in_progress", steps=[("Set up", "completed", "success"), ("Build", "queued", None)], n=4),
+        "not a job"]})
+    assert [(j.name, j.step, j.step_number, j.steps) for j in jobs] == [
+        ("lint", "", 0, 0), ("pytest (core)", "Run tests", 2, 3), ("pytest (tools)", "Run tests", 2, 3),
+        ("build", "Build", 2, 2)]                                             # between two steps: the next one
+    assert jobs[2].outcome == "failure" and jobs[1].outcome == "in progress" and jobs[0].passed
+    assert rp.parse_jobs({"message": "Not Found"}) == []
+    data = run(status="in_progress", n=7)
+    data.update(jobs_url="https://api.github.invalid/runs/7/jobs", run_started_at="2026-10-28T09:00:00Z")
+    ci, nexus = rp.parse_runs({"workflow_runs": [data, run("Nexus CI", n=8)]})
+    assert ci.jobs_url.endswith("/runs/7/jobs") and nexus.jobs_url == "" and nexus.started == 0.0
+    now = ci.started + 134
+    by_url = {ci.url: jobs}
+    assert rp.run_line(ci, jobs, now) == ("CI on main: 2 of 4 jobs done · 1 failed · pytest (core): Run tests (2/3) "
+                                          "· build: Build (2/2) · 2:14")
+    assert rp.run_line(ci, None, now) == "CI on main: in progress · 2:14"     # its jobs not read: the run only
+    assert rp.ticker_line([nexus, ci], by_url, now).startswith("CI on main")  # the running one first
+    assert rp.ticker_line([nexus, ci], by_url, now).endswith("   |   Nexus CI on main: passed")
+    failed = replace(ci, status="completed", conclusion="failure")
+    assert rp.run_line(failed, jobs, now) == "CI on main: failure in pytest (tools), step Run tests"
+    assert rp.run_line(failed, None, now) == "CI on main: failure"
+    assert rp.ticker_target([nexus, ci], by_url) == "https://github.invalid/jobs/2"     # the job that runs
+    assert rp.ticker_target([nexus, failed], {failed.url: jobs[:1] + jobs[2:3]}) == "https://github.invalid/jobs/3"
+    assert rp.ticker_target([nexus, failed], {}) == failed.url and rp.ticker_target([nexus], {}) == nexus.url
+    assert rp.ticker_target([], {}) == ""
+    details = rp.ticker_details([nexus, ci], by_url, now)
+    assert details.startswith("abc1234 Fix it\n\nCI on main: in progress, 2:14\n    lint: passed\n")
+    assert "    pytest (core): in progress, step 2 of 3: Run tests" in details
+    assert "    pytest (tools): failure, step 2 of 3: Run tests" in details and details.endswith("Nexus CI on main: passed")
+    assert rp.elapsed(3723) == "1:02:03" and rp.elapsed(-5) == "0:00" and rp.epoch(None) == 0.0
+
+
+def test_window_ticker_shows_the_jobs_of_the_runs(repo, tmp_path):
+    pytest.importorskip("PyQt6.QtWidgets")
+    os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+    from PyQt6.QtCore import QSettings
+    from PyQt6.QtWidgets import QApplication
+    QSettings.setPath(QSettings.Format.IniFormat, QSettings.Scope.UserScope, str(tmp_path / "settings"))
+    app = QApplication.instance() or QApplication([])          # noqa: F841 (kept alive for the window)
+    from nexus_releases import main_window
+    asked = []
+
+    def jobs_source(url, etag):
+        asked.append((url, etag))
+        return (rp.parse_jobs({"jobs": [job("pytest (core)", "in_progress",
+                                            steps=[("Run tests", "in_progress", None)])]}), "j1", None)
+
+    w = main_window.ReleaseWindow(repo, status_source=None, sha256_source=lambda tag: SHA, launch=launched.append,
+                                  runs_source=lambda etag: (None, etag), notify=lambda *a: None, claude_source=None,
+                                  jobs_source=jobs_source)
+    ticker = w.ticker
+    assert ticker.isHidden()                                                   # no runs seen yet
+    going = run(status="in_progress", n=2)
+    going["jobs_url"] = "https://api.github.invalid/runs/2/jobs"
+    w.build.checked((rp.parse_runs({"workflow_runs": [going, run(n=1)]}), "e1"))
+    assert not ticker.isHidden() and asked == []                               # not signed in: the runs only
+    assert ticker.line == "CI on main: in progress   |   CI on main: passed"
+    assert "gh auth login" in ticker.toolTip() and ticker.clock.isActive()
+    assert main_window.BLUE in ticker.dot.styleSheet()
+    w.build.checked((None, "e1", rp.RateInfo(5000, 4900, 1_900_000_000, signed_in=True)))
+    ticker.checker.stop(5000)                                                  # the worker: run it here instead
+    ticker.fetched(ticker._fetch([(r.url, r.jobs_url, "", r.done) for r in ticker.wanted()]))
+    assert asked[-1] == ("https://api.github.invalid/runs/2/jobs", "")
+    assert ticker.line.startswith("CI on main: 0 of 1 jobs done · pytest (core): Run tests (1/1)")
+    assert ticker.etags == {going["html_url"]: "j1"} and ticker.timer.isActive()
+    assert ticker.target() == "https://github.invalid/jobs/1" and "gh auth login" not in ticker.toolTip()
+    done = dict(going, status="completed", conclusion="success")
+    w.build.checked((rp.parse_runs({"workflow_runs": [done, run(n=1)]}), "e2"))
+    ticker.checker.stop(5000)
+    assert ticker.wanted() == [] and not ticker.clock.isActive()               # all passed: nothing more to read
+    assert ticker.line == "CI on main: passed   |   CI on main: passed" and main_window.GREEN in ticker.dot.styleSheet()
+    w.close()
+    assert not ticker.timer.isActive()
+
+
 def test_release_runs_of_the_tags_waited_for():
     runs = rp.parse_runs({"workflow_runs": [run("Release", "alpha-v0.1.1", "in_progress", n=4),
                                             run("Release", "alpha-v0.1.1", conclusion="failure", n=3),

@@ -131,6 +131,14 @@ every 5 minutes otherwise, and **Refresh** looks at once. When a run it saw runn
 notification says whether it passed. It needs no GitHub token: answers that did not change do not count against
 GitHub's limit of 60 requests an hour.
 
+The **ticker** under the pills says where the runs of that push stand, so you need not open GitHub to follow a
+build. For each run that is still going it shows how many of its jobs are done, each job that runs with the step it
+is at (*pytest (core): Run tests (4/7)*) and the time since the run started; a run that failed names its job and
+step; a run that passed says so. The dot is blue while something runs, red when a run failed and green when all
+passed. Hover for every job of every run; click to open the job that runs (or failed) on GitHub. The jobs need a gh
+login (`gh auth login`): it then reads them every 10 seconds while a run goes. Without one it shows the runs only,
+so the 60 requests an hour stay for the **GitHub** pill.
+
 **GitHub status** beside it says whether GitHub itself works, as [githubstatus.com](https://www.githubstatus.com/)
 reports it: a green dot while every part of GitHub is up, a red dot while the page reports a problem (an incident,
 or a part such as Actions or Pages degraded or down). A build that waits in *queued* for long is often such a
