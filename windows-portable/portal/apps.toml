@@ -24,8 +24,8 @@
 [apps.test]
 name = "Windows Portable Test"
 summary = "What Windows reports about the handheld, and a test of every button of its controller. Always installed."
-tag = "wp-test-v1.4.0"
-sha256 = "b0c6a15cd7e5830f995feda19a3313dd2ed830965237166dd6e7d91560bc4669"
+tag = "wp-test-v1.5.0"
+sha256 = "a938764456bc03ada96bff5ffef9cc63184f9eac6726ceaf1ba5d34e2be12465"
 required = true
 category = "sustainable"
 install = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --no-desktop-shortcut"]
@@ -37,7 +37,7 @@ launch = [["Open", "%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-tes
 name = "PCSX2 Manager"
 summary = "Installs PCSX2, the PlayStation 2 emulator, in portable mode, and opens it."
 tag = "wp-pcsx2-v0.1.0"
-sha256 = ""
+sha256 = "a3db3242e38a0ace2742b515be8b440fc019640c9ffbacc5b6465151ec1e6407"
 category = "gaming"
 install = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --no-desktop-shortcut"]
 uninstall = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --uninstall"]
