@@ -1,3 +1,22 @@
+Changelog: 29-10-2026 00:54:47
+
+Release 1.5.1.
+
+Changelog: 29-10-2026 00:46:46
+
+Fixed. PCSX2 Manager's tile has the owner's new Gaming icon (29-10-2026), the handheld cropped close.
+
+Changelog: 29-10-2026 00:46:14
+
+Fixed. The portal kept its settings (the tab shown last, the wallpaper) in the Windows registry instead of
+%APPDATA%\windows-portable-suite\portal.ini (owner, 29-10-2026), through core. A tab or wallpaper chosen
+before is not carried over: the registry key HKCU\Software\windows-portable-suite can be deleted.
+
+Changelog: 28-10-2026 23:55:54
+
+Fixed. PCSX2 Manager's tile icon was half the size of the Test tile's (owner, 28-10-2026): the handheld fills its
+tile now, from a 256 px picture so it stays sharp (the tiles' pictures were 128 px).
+
 Changelog: 28-10-2026 23:37:55
 
 Release 1.5.0. Pins wp-test-v1.5.1, wp-pcsx2-v0.1.1.

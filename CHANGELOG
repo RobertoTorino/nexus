@@ -1,3 +1,13 @@
+Changelog: 29-10-2026 00:54:47
+
+Release 0.12.0. Brings wp-pcsx2-v0.2.0, wp-test-v1.6.0.
+
+Changelog: 29-10-2026 00:46:46
+
+Added. The owner's new pictures (29-10-2026): the Gaming icon, the handheld cropped close at 2:1 (the tiles and
+the wiki show it wide, tools/make_icons.py centers it on a square for a window and Start-menu icon), and the
+white handheld cropped close as the Windows Portable Suite wiki's home picture.
+
 Changelog: 28-10-2026 23:37:56
 
 Release 0.11.0. Brings wp-pcsx2-v0.1.1, wp-test-v1.5.1.

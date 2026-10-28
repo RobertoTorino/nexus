@@ -1,3 +1,22 @@
+Changelog: 29-10-2026 00:46:14
+
+Fixed. On Windows a bare QSettings() of an app with .ini settings (AppInfo settings_ini) wrote to the registry,
+under HKCU\Software\<org>: create_app() now makes .ini the default format there, so it is the file
+%APPDATA%\<org>\<app>.ini that open_settings() opens (owner, 29-10-2026: %APPDATA%\windows-portable-suite was
+empty; the portal's and PCSX2 Manager's settings were in the registry). Linux is unchanged.
+
+Changelog: 29-10-2026 00:18:23
+
+Added. steam.py on Windows (the Windows Portable Suite's PCSX2 Manager, 29-10-2026): Steam's folder from its registry
+key (HKCU\Software\Valve\Steam, SteamPath; only read), whether it runs from Windows' process list (steam.exe), and
+its own steam.exe to close it and start it again (shutdown_command(), start_command()). Linux works as before.
+
+Changelog: 28-10-2026 23:55:54
+
+Fixed. A tile's icon (Card with an icon) is drawn without its transparent edges, and a wide one (the Gaming icon's
+handheld, 2:1) in a box up to twice as wide and a quarter taller than a square icon's: it was half the size of the
+Test icon beside it (owner, 28-10-2026: "the game icon is way too small").
+
 Changelog: 28-10-2026 23:07:51
 
 Fixed. portable.scale() adapts to a smaller screen too (owner, 28-10-2026: "can it not auto adapt to the screen

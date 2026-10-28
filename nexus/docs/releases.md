@@ -58,11 +58,16 @@ the settings.
   Apply makes it too (the lowest portal version CI accepts, with a CHANGELOG entry that lists the changed pins) and
   says so; the portal release itself stays step 2. It runs `bc250-bazzite/tools/check_manifest.py`. Then commit, push, and push the app tags (steps 1 and 2 of [the suite's release steps](https://robertotorino.github.io/nexus/bc250-bazzite-suite/portal/#appstoml-and-releases)),
   with **git add**, **git commit**, **git push** and **git tag** at the bottom: on Linux the push runs
-  `tools/ci-local.sh` first and pushes only when CI's jobs pass.
-- **2. Pin and release Portal:** once GitHub has built the app releases, **Pin** reads each release's `SHA256SUMS` and
-  pins its tag and checksum in `apps.toml` (step 3 of the suite's release steps). The window shows the lowest portal version CI accepts against
+  `tools/ci-local.sh` first and pushes only when CI's jobs pass. **Apply** is the pill in the header beside
+  **Refresh** (*New app releases*); from another tab it opens step 1. Once applied, it is greyed out: what it
+  wrote is on top of each CHANGELOG, and an app left unticked then is not ticked again. It works again when another
+  app is to be released, or when you tick one.
+- **2. Pin and release Portal:** the app releases to pin show here from step 1's Apply on, with where each one stands
+  on GitHub (*not tagged yet* until its tag is pushed). **Pin** is greyed out until every ticked one is built; then it
+  reads each release's `SHA256SUMS` and pins its tag and checksum in `apps.toml` (step 3 of the suite's release
+  steps). The window shows the lowest portal version CI accepts against
   the last portal release (its tag; the last push, `origin/main`, while there is none), and offers the higher of that and what semantic versioning gives since the last
-  portal tag (its CHANGELOG entries, and the apps added, removed or moved in `apps.toml`); **Bump portal** writes it with a CHANGELOG entry that lists the pinned app
+  portal tag (its CHANGELOG entries, and the apps added, removed or moved in `apps.toml`); **Bump** writes it, the portal's version on the first line and Nexus's on the second, with a CHANGELOG entry that lists the pinned app
   releases, and runs `bc250-bazzite/tools/check_manifest.py` (step 4). Then commit, test on a BC-250 ([before its tag](https://robertotorino.github.io/nexus/bc250-bazzite-suite/portal/#testing-a-portal-release-before-its-tag)), and only then push
   and tag the portal (step 5). The window lists these commands in that order. While step 1's releases are
   not tagged yet, Bump portal lists step 1's commands with the bump in them instead (amending the release commit

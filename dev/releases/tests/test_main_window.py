@@ -364,7 +364,7 @@ def test_the_window_has_nexus_design(window):
     assert f"stop:0 {MAIN}, stop:1 {INK}" in w.status.styleSheet() and f"color:{SILVER}" in w.status.styleSheet()
     assert f"border:1px solid {EDGE}" in w.refresh_pill.styleSheet()
     assert f"border-color:{TEAL}" in w.refresh_pill.styleSheet()
-    assert f"border:2px solid {TEAL}" in w.apps_page.apply_button.styleSheet()
+    assert f"border-color:{TEAL}" in w.apps_page.apply_button.styleSheet()          # a pill: the accent on focus
     assert LOGO_PATH.name == "nexus-releases.webp" and LOGO_PATH.is_file()
     assert "#6a1b9a" not in w.styleSheet() and "#7e97ad" not in w.styleSheet()        # nothing of the Bazzite suite
     # The checkboxes: a teal box with its teal checkmark (owner, 28-10-2026), and Portals drawn as a selected tab.

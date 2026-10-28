@@ -12,7 +12,11 @@ under that number: <id>p.png (the library's portrait, 2:3, 600 × 900), <id>.png
 Steam holds its settings in memory and rewrites its files when it exits, so a change while it runs would be lost:
 with_steam_closed() closes Steam first (steam -shutdown) and starts it again in the background as the desktop starts
 it at login (Bazzite's bazzite-steam -silent, elsewhere steam -silent). The other shortcuts in the file stay as they
-are. Moved here from BC250 Console Link (14-10-2026), which wrote it first."""
+are. Moved here from BC250 Console Link (14-10-2026), which wrote it first.
+
+On Windows (the Windows Portable Suite's PCSX2 Manager, 29-10-2026) Steam's folder is the one its registry key names
+(HKCU\\Software\\Valve\\Steam, SteamPath; only read), whether it runs is steam.exe in Windows' process list, and it is
+closed and started again with its own steam.exe (-shutdown, -silent). The files are the same."""
 
 from __future__ import annotations
 
@@ -20,6 +24,7 @@ import os
 import shutil
 import struct
 import subprocess
+import sys
 import threading
 import time
 import zlib
@@ -32,6 +37,8 @@ STEAM_DIRS = (                          # the native Steam (Bazzite's), its olde
     "~/.steam/steam",
     "~/.var/app/com.valvesoftware.Steam/.local/share/Steam",
 )
+WINDOWS = sys.platform == "win32"
+WINDOWS_STEAM = r"C:\Program Files (x86)\Steam"     # where Steam installs itself when the registry does not say
 SHUTDOWN_TIMEOUT = 30.0
 MAP, STRING, INT32, END = 0, 1, 2, 8
 ART = {"p": (600, 900), "": (920, 430), "_hero": (3840, 1240), "_logo": (1280, 720)}
@@ -49,8 +56,23 @@ class ShortcutError(Exception):
 
 # --- Steam itself ----------------------------------------------------------------------------------------------
 
+def windows_steam() -> Path | None:
+    """Steam's folder on Windows, as its registry key names it, else where it installs itself; None off Windows."""
+    if not WINDOWS:
+        return None
+    try:
+        import winreg
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\Valve\Steam") as key:
+            return Path(str(winreg.QueryValueEx(key, "SteamPath")[0]))
+    except OSError:
+        return Path(WINDOWS_STEAM)
+
+
 def find_steam(home: Path | None = None) -> Path | None:
     """The Steam folder with users in it, or None when Steam was never used here."""
+    if WINDOWS and home is None:
+        folder = windows_steam()
+        return folder.resolve() if folder is not None and (folder / "userdata").is_dir() else None
     for folder in STEAM_DIRS:
         path = Path(folder.replace("~", str(home), 1) if home else os.path.expanduser(folder))
         if (path / "userdata").is_dir():
@@ -63,10 +85,39 @@ def user_folders(steam: Path) -> list[Path]:
     return sorted(p for p in (steam / "userdata").glob("*/config") if p.is_dir())
 
 
+def _windows_running(name: str) -> bool:
+    """Whether a process named *name* (steam.exe) is in Windows' process list."""
+    import ctypes
+
+    class Entry(ctypes.Structure):               # PROCESSENTRY32W
+        _fields_ = [("size", ctypes.c_ulong), ("usage", ctypes.c_ulong), ("pid", ctypes.c_ulong),
+                    ("heap", ctypes.c_size_t), ("module", ctypes.c_ulong), ("threads", ctypes.c_ulong),
+                    ("parent", ctypes.c_ulong), ("priority", ctypes.c_long), ("flags", ctypes.c_ulong),
+                    ("exe", ctypes.c_wchar * 260)]
+    k32 = ctypes.windll.kernel32  # type: ignore[attr-defined]
+    k32.CreateToolhelp32Snapshot.restype = ctypes.c_void_p
+    snapshot = k32.CreateToolhelp32Snapshot(0x2, 0)    # TH32CS_SNAPPROCESS
+    if not snapshot or snapshot == ctypes.c_void_p(-1).value:
+        return False
+    try:
+        entry = Entry()
+        entry.size = ctypes.sizeof(Entry)
+        more = k32.Process32FirstW(ctypes.c_void_p(snapshot), ctypes.byref(entry))
+        while more:
+            if entry.exe.lower() == name:
+                return True
+            more = k32.Process32NextW(ctypes.c_void_p(snapshot), ctypes.byref(entry))
+    finally:
+        k32.CloseHandle(ctypes.c_void_p(snapshot))
+    return False
+
+
 def steam_running(proc: Path = Path("/proc")) -> bool:
     """Whether a Steam client process runs (its process name is steam). A finished one that its parent has not
     collected yet (a zombie, state Z) does not count: on the owner's board (13-10-2026) the app's own finished
-    steam -shutdown was one, and Steam seemed not to close."""
+    steam -shutdown was one, and Steam seemed not to close. On Windows: steam.exe in the process list."""
+    if WINDOWS:
+        return _windows_running("steam.exe")
     for folder in proc.glob("[0-9]*"):
         try:
             if (folder / "comm").read_text().strip() != "steam":
@@ -84,8 +135,22 @@ def game_mode() -> bool:
     return "gamescope" in os.environ.get("XDG_CURRENT_DESKTOP", "").lower()
 
 
+def _steam_program() -> str:
+    """The Steam client to run: steam (on PATH) on Linux, the steam.exe in Steam's folder on Windows."""
+    if WINDOWS:
+        folder = windows_steam()
+        return str(folder / "steam.exe") if folder is not None else "steam.exe"
+    return "steam"
+
+
 def start_command() -> list[str]:
+    if WINDOWS:
+        return [_steam_program(), "-silent"]
     return ["bazzite-steam" if shutil.which("bazzite-steam") else "steam", "-silent"]
+
+
+def shutdown_command() -> list[str]:
+    return [_steam_program(), "-shutdown"]
 
 
 def _run(command: list[str]) -> None:
@@ -101,7 +166,7 @@ def with_steam_closed(change: Callable[[], None], run: Run = _run, running: Call
     Returns whether Steam was restarted. Nothing is changed when Steam does not close."""
     was_running = running()
     if was_running:
-        run(["steam", "-shutdown"])
+        run(shutdown_command())
         waited = 0.0
         while running():
             if waited >= timeout:

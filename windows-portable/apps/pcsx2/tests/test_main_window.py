@@ -8,12 +8,18 @@ icons are where the checks expect them."""
 from __future__ import annotations
 
 import re
+import tempfile
 import threading
 import time
 
 from bc250_core import portable
 from bc250_core.gamepad import Gamepad
-from pcsx2_manager import APP_ID, APP_NAME, EXE_NAME, INFO, LOGO_PATH, ROOT, __version__, emulator
+from pathlib import Path
+
+from PyQt6.QtCore import QSettings
+
+from conftest import make_disc
+from pcsx2_manager import APP_ID, APP_NAME, EXE_NAME, INFO, LOGO_PATH, ROOT, __version__, emulator, shortcuts
 from pcsx2_manager.main_window import MainWindow
 
 
@@ -50,12 +56,17 @@ def wait_for(qapp, predicate, seconds=5.0):
     return predicate()
 
 
-def make(qapp, home=None, install=fake_install, start=lambda home: None, running=lambda home: False):
+def make(qapp, home=None, install=fake_install, start=lambda home: None, running=lambda home: False, **more):
+    more.setdefault("steam_dir", None)                  # never the real Steam
+    more.setdefault("drives", lambda: [])
+    more.setdefault("settings", QSettings(str(Path(tempfile.mkdtemp()) / "app.ini"),
+                                          QSettings.Format.IniFormat))   # never Windows' registry
     window = MainWindow(gamepad=Gamepad(source_factory=FakePad), battery=lambda: (82, False), home=home,
-                        install=install, start=start, running=running)
+                        install=install, start=start, running=running, **more)
     portable.scale((1280, 720))
     window.resize(1280, 720)
     window.show()
+    window.activateWindow()                     # the focus moves in the active window only
     qapp.processEvents()
     window.start()
     return window
@@ -168,10 +179,12 @@ def test_the_cards_show_their_panes_and_a_on_pcsx2_installs(qapp, tmp_path, monk
     monkeypatch.setattr(window, "isActiveWindow", lambda: True)
     assert window.panes.currentWidget() is window.pane
     window.on_action("down")
+    assert window.games_card.hasFocus() and window.panes.currentWidget() is window.games_pane
+    window.on_action("down")
     assert window.settings_card.hasFocus() and window.panes.currentWidget() is window.settings_pane
     assert not window.settings_pane.pills["renderer"].isEnabled()                  # nothing installed yet
     assert window.settings_pane.status.text() == "Install PCSX2 first: the settings are in its folder."
-    window.on_action("up")
+    window.pcsx2_card.setFocus()
     window.on_action("accept")                                                     # A on the PCSX2 card
     assert wait_for(qapp, lambda: not window.busy) and emulator.installed(tmp_path / "emulator")
     window.close()
@@ -216,4 +229,144 @@ def test_the_settings_info_is_behind_the_icon(qapp):
     window = make(qapp)
     info = window.settings_pane.info
     assert info.title == "PCSX2's settings" and "Big Picture:" in info.info and "Renderer:" in info.info
+    window.close()
+
+
+
+def test_a_long_folder_wraps_and_the_window_stays_on_the_screen(qapp, tmp_path):
+    deep = tmp_path / ("a-rather-long-folder-name" * 3) / "windows-portable-suite" / "windows-portable-pcsx2" / "emulator"
+    window = make(qapp, deep)
+    assert window.minimumSizeHint().width() <= 1280 and window.width() == 1280
+    assert window.panes.minimumSizeHint().width() < 800
+    window.close()
+
+
+def test_the_window_fits_a_smaller_screen(qapp, tmp_path):
+    # It adapts to the screen it is on (a 1080p screen at 175 % is 1097 x 617), as every app of the suite.
+    portable.pin_scale((1097, 617))
+    try:
+        window = MainWindow(gamepad=Gamepad(source_factory=FakePad), battery=lambda: (82, False), steam_dir=None,
+                            settings=QSettings(str(tmp_path / "app.ini"), QSettings.Format.IniFormat))
+        window.resize(1097, 617)
+        window.show()
+        qapp.processEvents()
+        assert window.minimumSizeHint().height() <= 617
+        window.close()
+    finally:
+        portable.pin_scale((1280, 720))
+
+
+def test_your_games_folders_play_and_steam(qapp, tmp_path, monkeypatch):
+    home = tmp_path / "emulator"
+    fake_install(home)
+    (home / "resources").mkdir()
+    (home / "resources" / "GameIndex.yaml").write_text('SLUS-21553:\n  name: "Lumines Plus"\n', encoding="utf-8")
+    user = tmp_path / "me"
+    games = user / "Games"
+    make_disc(games / "PS2" / "SLUS_215.53.Lumines.iso", "SLUS_215.53")
+    (user / "Downloads").mkdir(parents=True)
+    other = tmp_path / "picked"
+    make_disc(other / "Other.iso", "SLES_500.03")
+    steam_dir = tmp_path / "Steam"
+    (steam_dir / "userdata" / "1" / "config").mkdir(parents=True)
+    played, closed = [], []
+
+    def with_steam_closed(change):
+        closed.append(True)
+        change()
+        return False
+    window = make(qapp, home, play=lambda h, game: played.append(game), steam_dir=steam_dir,
+                  steam_closed=with_steam_closed, choose_folder=lambda: str(other), user_home=user)
+    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
+    window.games_card.setFocus()
+    qapp.processEvents()
+    assert window.panes.currentWidget() is window.games_pane
+    assert window.legend.items == [("X", "Steam mark"), ("Y", "Update Steam"), ("B", "Close")]
+    assert window.games_pane.list.pills == {} and "Folders adds" in window.games_pane.status.text()
+    window.folders_pill.click()                                    # the folders: the usual places, and Choose
+    assert window.legend.items == [("B", "Close")] and not window.steam_pill.isVisible()
+    pills = window.games_pane.list.pills
+    assert list(pills) == [f"add:{games}", f"add:{user / 'Downloads'}", "choose"]
+    pills[f"add:{games}"].click()
+    assert "1 game(s) in it" in window.games_pane.status.text()
+    window.games_pane.list.pills["choose"].click()                 # Windows' folder window, stood in for
+    window.folders_pill.click()                                    # back to the games
+    pills = window.games_pane.list.pills
+    lumines = str(games / "PS2" / "SLUS_215.53.Lumines.iso")
+    assert pills[lumines].label.text() == "Lumines Plus  ·  SLUS-21553" and len(pills) == 2
+    pills[lumines].click()                                         # A plays it
+    assert played == [Path(lumines)] and "starts in PCSX2" in window.games_pane.status.text()
+    assert not window.steam_pill.isEnabled()                       # nothing to change in Steam yet
+    window.games_pane.list.pills[lumines].setFocus()
+    qapp.processEvents()
+    window.on_action("x")                                          # X marks it for Steam
+    assert "✓ Steam (Update Steam)" in window.games_pane.list.pills[lumines].label.text()
+    assert window.steam_pill.isEnabled()
+    window.on_action("y")                                          # Y on Your games: Update Steam
+    assert wait_for(qapp, lambda: not window.busy)
+    assert closed == [True] and shortcuts.in_steam(steam_dir) == {lumines: "[PS2] Lumines Plus"}
+    assert "1 game(s) in Steam" in window.games_pane.status.text()
+    assert window.games_pane.list.pills[lumines].label.text().endswith("✓ Steam")
+    window.close()
+
+
+def test_a_folder_is_taken_off_the_list_with_a_second_press(qapp, tmp_path):
+    folder = tmp_path / "games"
+    make_disc(folder / "A.iso", "SLUS_123.45")
+    window = make(qapp, tmp_path / "emulator", choose_folder=lambda: str(folder), user_home=tmp_path / "me")
+    window.toggle_folders()
+    window.games_pane.list.pills["choose"].click()
+    key = f"folder:{folder}"
+    window.games_pane.list.pills[key].click()
+    assert window.games_pane.list.pills[key].label.text() == "Press A again to take it off the list"
+    window.games_pane.list.pills[key].click()
+    assert key not in window.games_pane.list.pills and (folder / "A.iso").is_file()
+    assert "no longer a game folder" in window.games_pane.status.text()
+    window.close()
+
+
+def test_memory_cards_new_copy_and_saves(qapp, tmp_path, cards):
+    home = tmp_path / "emulator"
+    fake_install(home)
+    (home / "inis").mkdir()
+    (home / "inis" / "PCSX2.ini").write_text(f"[Folders]\nMemoryCards = {cards}\n", encoding="utf-8")
+    window = make(qapp, home, any_running=lambda: False)
+    window.cards_card.setFocus()
+    qapp.processEvents()
+    pills = window.cards_pane.list.pills
+    assert list(pills) == ["mc01.ps2", "mc02.ps2"] and "2 card(s)" in window.cards_pane.summary.text()
+    assert all(pill.isVisible() for pill in pills.values())      # made before the pane showed, shown with it
+    assert "save(s)" in pills["mc01.ps2"].label.text()
+    pills["mc01.ps2"].setFocus()                                   # the card Copy card copies
+    pills["mc01.ps2"].click()                                      # A: its saves
+    saves = window.cards_pane.list.pills
+    assert list(saves)[0] == "‹" and len(saves) > 1 and "mc01.ps2:" in window.cards_pane.summary.text()
+    saves["‹"].click()                                        # back to the cards
+    window.copy_card_pill.click()
+    assert (cards / "mc01 copy.ps2").is_file() and "is copied to mc01 copy.ps2" in window.cards_pane.status.text()
+    window.new_card_pill.click()
+    assert (cards / "Mcd001.ps2").is_file() and "Mcd001.ps2" in window.cards_pane.list.pills
+    window.close()
+
+
+def test_the_log_shows_pcsx2s_last_run(qapp, tmp_path):
+    home = tmp_path / "emulator"
+    fake_install(home)
+    (home / "logs").mkdir()
+    (home / "logs" / "emulog.txt").write_text("[    0.07] PCSX2 v2.8.2\n[    0.50]   Serial: SLUS-21553\n"
+                                             "[  346.00] Add 346 seconds play time to SLUS-21553 -> now 346\n")
+    log = tmp_path / "app.log"
+    log.write_text("first line\nPlayed Lumines Plus (SLUS-21553).\n", encoding="utf-8")
+    window = MainWindow(log_path=log, gamepad=Gamepad(source_factory=FakePad), battery=lambda: (82, False),
+                        home=home, steam_dir=None,
+                        settings=QSettings(str(tmp_path / "app.ini"), QSettings.Format.IniFormat))
+    window.resize(1280, 720)
+    window.show()
+    window.log_card.setFocus()
+    qapp.processEvents()
+    grid = window.log_pane.grid
+    cells = [grid.itemAt(i).widget().text() for i in range(grid.count())]
+    rows = dict(zip(cells[0::2], cells[1::2]))
+    assert rows["Played"] == "5 min 46 s" and rows["PCSX2's last run"].endswith("SLUS-21553")
+    assert "Played Lumines Plus" in window.log_pane.lines.text()
     window.close()

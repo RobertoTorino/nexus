@@ -1,3 +1,34 @@
+Changelog: 29-10-2026 00:54:47
+
+Release 0.2.0.
+
+Changelog: 29-10-2026 00:46:46
+
+Fixed. The owner's new Gaming icon (29-10-2026): the handheld cropped close, its window and Start-menu icon
+centered on a square.
+
+Changelog: 29-10-2026 00:46:14
+
+Fixed. Its settings are kept in %APPDATA%\windows-portable-suite\windows-portable-pcsx2.ini, never in the
+Windows registry (owner, 29-10-2026), through core.
+
+Changelog: 29-10-2026 00:18:23
+
+Added. Your games, Memory cards and Log, the BC250 suite's PCSX2 Manager's other parts, as cards beside PCSX2 and
+Settings (owner, 29-10-2026: "same as BC250, portable look"). Your games: the PS2 disc images (ISO, CHD, CSO, ZSO,
+GZ) in the chosen folders and five below them, an ISO read for its serial and titled from PCSX2's own GameIndex.yaml
+(resources\ in its folder); A plays a game alone and full screen (pcsx2-qt.exe -nogui -fullscreen -- <game>), X
+marks it for Steam and Y Update Steam makes Steam's shortcuts match ("[PS2] <title>", PCSX2's own program with the
+game, the pictures drawn from the app's icon or fetched from SteamGridDB with the suite's key in
+%APPDATA%\windows-portable-suite\steamgriddb-key), Steam closed for it and started again; Folders offers the usual
+places and the removable drives, and Windows' own folder window; a folder goes off the list with a second press. The
+games, the catalog, the shortcuts and the memory card code (mymc++, as the BC250 app keeps it) are the BC250 app's,
+with Windows' paths and process list. Memory cards: the cards in PCSX2's memcards folder with their slot, saves and
+free space, a card's saves on A, New card (8 MB) and Copy card. Log: PCSX2's last run from its own log (the game,
+the time played, the controllers), the play time in all, the newest lines of the app's log and Open the log. A long
+list scrolls with the d-pad and a finger, the focused row kept in view. The window fits a screen smaller than the
+handheld's, as every app of the suite.
+
 Changelog: 28-10-2026 23:27:46
 
 Release 0.1.1.

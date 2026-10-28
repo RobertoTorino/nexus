@@ -845,9 +845,25 @@ def withdraw_commands(tag: str, reason: str, now: datetime.datetime | None = Non
 # --- Step 2: pins and the portal -------------------------------------------------------------------------------
 
 def pin_candidates(units: list[Unit]) -> list[Unit]:
-    """Apps whose current VERSION is tagged but not pinned with a checksum yet."""
-    return [u for u in units if u.kind == "app" and not u.standalone and u.released
+    """Apps whose current VERSION is not pinned with a checksum yet: tagged ones and ones still to be tagged or built,
+    so step 2 shows them from Apply on and Pin waits for their builds (owner, 28-10-2026)."""
+    return [u for u in units if u.kind == "app" and not u.standalone
             and (u.pinned_tag != u.tag or not u.pinned_sha)]
+
+
+def applied(root: Path, unit: Unit) -> bool:
+    """Whether step 1's Apply already wrote this unit's release: its newest CHANGELOG entry is "Release <VERSION>."
+    ("Version <VERSION>." for core) and that version is not tagged yet. Apply then has nothing new for it."""
+    if unit.released:
+        return False
+    try:
+        entries = changelog_entries((root / unit.path / "CHANGELOG").read_text(encoding="utf-8"))
+    except OSError:
+        return False
+    if not entries:
+        return False
+    body = entry_body(entries[0])
+    return body.startswith(f"Release {unit.version}.") or body.startswith(f"Version {unit.version}.")
 
 
 def pin(root: Path, unit: Unit, sha256: str, suite: str | None = None) -> None:

@@ -420,8 +420,8 @@ def test_a_windows_suites_app(windows_checkout, capsys):
     from PIL import Image
     assert Image.open(app / "images" / "windows-portable-emu.webp").size == (512, 512)
     assert Image.open(app / "images" / "windows-portable-emu-128.png").size == (128, 128)
-    assert Image.open(suite / "portal" / "images" / "apps" / "emu.webp").size == (128, 128)
-    assert Image.open(suite / "docs" / "images" / "apps" / "emu.webp").size == (256, 256)
+    for picture in ("portal/images/apps/emu.webp", "docs/images/apps/emu.webp"):   # the tile and the wiki: 256 px
+        assert Image.open(suite / picture).width == 256                                  # wide, a wide one stays wide
     import tomllib
     entry = tomllib.loads((suite / "portal" / "apps.toml").read_text())["apps"]["emu"]
     assert entry["tag"] == "wp-emu-v0.1.0" and entry["category"] == "gaming" and "required" not in entry

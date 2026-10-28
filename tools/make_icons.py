@@ -90,7 +90,8 @@ WINDOWS_PORTABLE_ICON = [
      "The icon of the Windows Portable Suite, the owner's drawing (26-10-2026): the set its portal's and wiki's "
      "copies are made from."),
     ("windows-portable/icons/windows-portable-white.png", "`windows-portable/icons/windows-portable-white.png` "
-     "(1377 x 768)", "The white handheld, the owner's picture (28-10-2026): the hero of the suite's wiki home, as the "
+     "(1024 x 514)", "The white handheld, the owner's picture (29-10-2026, cropped to the handheld): the hero of the "
+     "suite's wiki home, as the "
      "board is the BC250 wiki's."),
     ("windows-portable/apps/test/images/windows-portable-test.webp",
      "`windows-portable/apps/test/images/windows-portable-test.webp` (512 px), `-128.png`",
@@ -103,14 +104,14 @@ WINDOWS_PORTABLE_ICON = [
      "Nexus Releases. Lossless copies of the drawing, written by this tool."),
     ("windows-portable/docs/images/wiki-icon.webp", "`windows-portable/docs/images/wiki-icon.webp`, `.png` (256 px)",
      "The suite's wiki: the header logo (`.webp`) and the favicon (`.png`), written by this tool."),
-    ("windows-portable/docs/images/home/device.webp", "`windows-portable/docs/images/home/device.webp` (1377 x 768)",
+    ("windows-portable/docs/images/home/device.webp", "`windows-portable/docs/images/home/device.webp` (1024 x 514)",
      "The suite's wiki home: the handheld under the headline, a WebP copy of the owner's white handheld."),
     ("windows-portable/docs/images/home/portal.webp", "`windows-portable/docs/images/home/portal.webp` (1280 x 720)",
      "The suite's wiki home, One portal for every app: the portal at the Ally's 1280 x 720, rendered offscreen with "
      "the suite's apps.toml (Windows Portable Test installed), as WebP."),
     ("windows-portable/docs/images/apps/test.webp", "`windows-portable/docs/images/apps/<key>.webp` (256 px)",
      "An app's chapter in the suite's wiki: its icon at the top, a WebP copy of the app's drawing."),
-    ("windows-portable/portal/images/apps/test.webp", "`windows-portable/portal/images/apps/<key>.webp` (128 px)",
+    ("windows-portable/portal/images/apps/test.webp", "`windows-portable/portal/images/apps/<key>.webp` (256 px)",
      "The icon on an app's tile in the portal: Windows Portable Test's is the suite's drawing, written by this tool; "
      "another app's is a copy of its own icon."),
 ]
@@ -121,7 +122,7 @@ WINDOWS_PORTABLE_COPIES = [
     ("windows-portable/icons/windows-portable-512.png", "windows-portable/portal/images/windows-portable-suite.webp"),
     ("windows-portable/icons/windows-portable-128.png",
      "windows-portable/portal/images/windows-portable-suite-128.png"),
-    ("windows-portable/icons/windows-portable-128.png", "windows-portable/portal/images/apps/test.webp"),
+    ("windows-portable/icons/windows-portable-256.png", "windows-portable/portal/images/apps/test.webp"),
     ("windows-portable/icons/windows-portable-256.png", "windows-portable/docs/images/wiki-icon.png"),
 ]
 NEXUS_ICON = [
@@ -159,8 +160,9 @@ PAGE_QUALITY = 90
 # takes its category's: windows_portable_app_copies() names the copies from the portal's apps.toml.
 WINDOWS_PORTABLE = "windows-portable"
 WINDOWS_PORTABLE_CATEGORIES = {
-    "gaming": "`windows-portable/icons/windows-portable-device.png` (1376 x 768), the owner's picture of the handheld "
-              "(26-10-2026): cropped to the handheld, centered on a transparent square (28-10-2026)",
+    "gaming": "the owner's pictures of the handheld (29-10-2026), wide (2:1: 1024 x 512 down to 128 x 64): the tile and "
+              "the wiki show them as they are, the window, program and Start-menu icons centered on a transparent "
+              "square",
 }
 
 
@@ -186,11 +188,11 @@ def windows_portable_app_copies(root: Path = ROOT) -> tuple[list[tuple[str, str]
     picture on a page, lossy): the 512 px icon for the window, the 128 px one for the Start menu and the tile, the
     256 px one for the wiki."""
     exact, page = [], []
-    for key, _, category, app_id in windows_portable_apps(root):
+    for key, _, category, app_id in windows_portable_apps(root):         # SQUARE: the window and program icons
         icons = f"{WINDOWS_PORTABLE}/icons/{category}/{category}"
         exact += [(f"{icons}-512.png", f"{WINDOWS_PORTABLE}/apps/{key}/images/{app_id}.webp"),
                   (f"{icons}-128.png", f"{WINDOWS_PORTABLE}/apps/{key}/images/{app_id}-128.png"),
-                  (f"{icons}-128.png", f"{WINDOWS_PORTABLE}/portal/images/apps/{key}.webp")]
+                  (f"{icons}-256.png", f"{WINDOWS_PORTABLE}/portal/images/apps/{key}.webp")]   # sharp when wide
         page.append((f"{icons}-256.png", f"{WINDOWS_PORTABLE}/docs/images/apps/{key}.webp"))
     return exact, page
 
@@ -210,9 +212,17 @@ def windows_portable_icons(root: Path = ROOT) -> list[Path]:
     return write_copies(root, exact, page)
 
 
+def square_target(target: str) -> bool:
+    """A Windows Portable Suite app's window and program icon (images/<app id>.webp, PyInstaller's --icon) and its
+    Start-menu picture (-128.png): a Windows icon is square, so a wide category picture is centered on a transparent
+    square there (owner, 28-10-2026: the Gaming pictures are 2:1)."""
+    return target.startswith(f"{WINDOWS_PORTABLE}/apps/") and "/images/" in target
+
+
 def write_copies(root: Path, exact: list[tuple[str, str]], page: list[tuple[str, str]]) -> list[Path]:
     """Each (source, target): *exact* lossless (a PNG, or WebP with the pixels under alpha 0 too), *page* as a
-    picture on a web page (lossy WebP at PAGE_QUALITY)."""
+    picture on a web page (lossy WebP at PAGE_QUALITY). A wide picture for a square target (square_target()) is
+    centered on a transparent square."""
     from PIL import Image
     written = []
     for (source, target), lossy in [*((pair, False) for pair in exact), *((pair, True) for pair in page)]:
@@ -220,6 +230,11 @@ def write_copies(root: Path, exact: list[tuple[str, str]], page: list[tuple[str,
         path.parent.mkdir(parents=True, exist_ok=True)
         with Image.open(root / source) as image:
             image = image.convert("RGBA")
+            if square_target(target) and image.width != image.height:
+                side = max(image.size)
+                canvas = Image.new("RGBA", (side, side), (0, 0, 0, 0))
+                canvas.paste(image, ((side - image.width) // 2, (side - image.height) // 2))
+                image = canvas
             if lossy:
                 image.save(path, "WEBP", quality=PAGE_QUALITY, method=6)
             elif path.suffix == ".png":
@@ -342,7 +357,7 @@ def build(root: Path = ROOT) -> str:
     out += ["### The category icons", "",
             "Every app but Windows Portable Test has the icon of its category: `windows-portable/icons/<category>/` "
             "at 1024, 512,\n256 and 128 px (PNG), copied by this tool from the portal's `apps.toml` to the app's "
-            "`images/<app id>.webp` (512 px)\nand `-128.png`, its tile `portal/images/apps/<key>.webp` (128 px) and its "
+            "`images/<app id>.webp` (512 px)\nand `-128.png`, its tile `portal/images/apps/<key>.webp` (256 px) and its "
             "chapter's icon `docs/images/apps/<key>.webp`\n(256 px).", ""]
     out += table("Icon,Category,Apps", (
         (img(f"{WINDOWS_PORTABLE}/icons/{category}/{category}-128.png", 64),

@@ -5,7 +5,8 @@
 # PCSX2 Manager
 
 Installs PCSX2, the PlayStation 2 emulator, on the device and opens it: one tested release, for your own user,
-in portable mode.
+in portable mode. It finds your PS2 games in the folders you choose, plays them, puts them in Steam, shows your
+memory cards and keeps a log of what was played.
 
 PCSX2 Manager is on the [portal](../portal.md)'s **Gaming** tab: **A** on its tile installs it, and once it
 is installed, **A** opens it. It is also in the Start menu (**Windows Portable Suite**, **PCSX2 Manager**). It opens full
@@ -13,8 +14,10 @@ screen; **B** closes it.
 
 ## The screen
 
-Two cards on the left, **PCSX2** and **Settings**; the right side shows what the focused card does. The d-pad or the
-left stick moves the amber focus, **A** acts, **B** closes the app. Every card and pill also works by touch.
+Five cards on the left, **PCSX2**, **Your games**, **Settings**, **Memory cards** and **Log**; the right side shows
+what the focused card does. The d-pad or the left stick moves the amber focus, **A** acts, **B** closes the app. Every
+card and pill also works by touch, and a long list scrolls with the d-pad or a finger. The **information icon** at a
+pane's top right says more about it.
 
 ## PCSX2
 
@@ -38,6 +41,26 @@ app tells PCSX2 to use it.
 PCSX2 can update itself from its own window. When it has replaced its program with another build, the page says so
 and **Y Reinstall** puts the tested release back; what you made stays. A newer PCSX2 comes with a newer version of
 PCSX2 Manager, which offers **Y Update to x.y.z**.
+
+## Your games
+
+The games are the PS2 disc images in your game folders and up to five folders below them: ISO, CHD, CSO, ZSO and GZ.
+An ISO is read for its serial (SLUS-21553), and the title comes from PCSX2's own list of games; a compressed image
+is listed under its file's name. **A** on the Your games card goes to the list.
+
+- **A** on a game plays it in PCSX2, alone and full screen. Closing the game closes PCSX2.
+- **X** marks a game for Steam, or takes the mark away. **Y Update Steam** then makes Steam match the marks: each
+  marked game is a non-Steam game named `[PS2] <title>` in Steam's library and its Big Picture mode, started the
+  same way; a game without the mark, or no longer found, is taken out. Steam closes for it and starts again in the
+  background. Steam must have been started once on the device.
+- **Folders** shows your game folders instead of the games, and **Games** goes back. The usual places that are on
+  the device (Games, Downloads and Documents in your user folder) and each removable drive, such as an SD card, are
+  offered as **+ Add**; **+ Choose a folder…** opens Windows' own folder window for any other. **A** twice on a
+  folder takes it off the list: the first press asks, for five seconds. Its games stay where they are.
+
+The pictures in Steam are drawn from the app's icon with the game's title. With your own SteamGridDB API key (made
+at steamgriddb.com, in your profile's preferences) in `%APPDATA%\windows-portable-suite\steamgriddb-key`, Update
+Steam fetches each game's pictures from SteamGridDB instead and keeps them, so they are not fetched again.
 
 ## Settings
 
@@ -77,6 +100,23 @@ writes its own settings back when it closes. The **information icon** at the pan
 The pills show once PCSX2 is installed. A value set in PCSX2's own window that the app does not offer is shown as it
 is, and **A** goes on from the first value.
 
+## Memory cards
+
+The PS2 memory cards in PCSX2's `memcards` folder, each with the slot PCSX2 puts it in, how many saves it holds and
+its free space. **A** on a card lists its saves (their titles, sizes and dates); **A** on **‹ The cards** goes back.
+
+- **New card** makes an empty 8 MB card, the size of the PS2's own, named `Mcd001.ps2` or the next free number.
+- **Copy card** copies the card the focus was on last, with its saves, under a new name (`Mcd001 copy.ps2`).
+
+A card is not copied while PCSX2 runs: it keeps the card in memory and writes it back. Folder memory cards and PS1
+cards are listed with the reason they are not read.
+
+## Log
+
+PCSX2's last run as its own log tells it: when, which game, how long it was played and which controllers PCSX2
+opened; the play time PCSX2 counted in all; and the newest lines of this app's log (the games played, Steam's
+changes, the installs). **Open the log** shows the whole file.
+
 ## Install it on its own
 
 The portal installs it. To install it on its own, download `wp-pcsx2-v<x.y.z>.zip` and `SHA256SUMS` from its release,
@@ -103,5 +143,8 @@ remove the download.
 |---|---|
 | `%LOCALAPPDATA%\windows-portable-suite\windows-portable-pcsx2\app\` | The program, `PCSX2-Manager.exe` |
 | `%LOCALAPPDATA%\windows-portable-suite\windows-portable-pcsx2\emulator\` | PCSX2 (`pcsx2-qt.exe`), its settings, BIOS, memory cards and save states, and `installed.json` (the version and the files the app installed) |
+| `%LOCALAPPDATA%\windows-portable-suite\windows-portable-pcsx2\covers\` | The pictures from SteamGridDB, per game |
 | `%LOCALAPPDATA%\windows-portable-suite\windows-portable-pcsx2\windows-portable-pcsx2.log` | The log |
-| `%APPDATA%\windows-portable-suite\windows-portable-pcsx2.ini` | The settings |
+| `%APPDATA%\windows-portable-suite\windows-portable-pcsx2.ini` | The settings, with your game folders |
+| `%APPDATA%\windows-portable-suite\steamgriddb-key` | Your SteamGridDB API key, when you put one there |
+| Steam's `userdata\<user>\config\shortcuts.vdf` and `grid\` | The games in Steam and their pictures |

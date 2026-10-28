@@ -177,35 +177,48 @@ def running(home: Path) -> bool:
     """Whether this folder's PCSX2 runs (its pcsx2-qt.exe, not another one): Windows' process list and each
     pcsx2-qt.exe's own path. PCSX2 writes its settings back when it closes, so the app writes none meanwhile (the
     BC250 suite's rule)."""
+    target = os.path.normcase(str(program(home)))
+    return any(os.path.normcase(path) == target for path in processes(EXE))
+
+
+def processes(name: str) -> list[str]:
+    """The programs' paths of the running processes named *name* (pcsx2-qt.exe); [] off Windows. A process whose
+    path cannot be read (another user's) counts with ""."""
     if sys.platform != "win32":
-        return False
+        return []
     k32 = ctypes.windll.kernel32  # type: ignore[attr-defined]
     k32.CreateToolhelp32Snapshot.restype = ctypes.c_void_p
     k32.OpenProcess.restype = ctypes.c_void_p
     snapshot = k32.CreateToolhelp32Snapshot(0x2, 0)    # TH32CS_SNAPPROCESS
     if not snapshot or snapshot == ctypes.c_void_p(-1).value:
-        return False
-    target = os.path.normcase(str(program(home)))
+        return []
+    found = []
     try:
         entry = _Entry()
         entry.size = ctypes.sizeof(_Entry)
         more = k32.Process32FirstW(ctypes.c_void_p(snapshot), ctypes.byref(entry))
         while more:
-            if entry.exe.lower() == EXE:
+            if entry.exe.lower() == name.lower():
+                path = ""
                 handle = k32.OpenProcess(0x1000, False, entry.pid)     # PROCESS_QUERY_LIMITED_INFORMATION
                 if handle:
-                    path, size = ctypes.create_unicode_buffer(1024), ctypes.c_ulong(1024)
-                    ok = k32.QueryFullProcessImageNameW(ctypes.c_void_p(handle), 0, path, ctypes.byref(size))
+                    buffer, size = ctypes.create_unicode_buffer(1024), ctypes.c_ulong(1024)
+                    if k32.QueryFullProcessImageNameW(ctypes.c_void_p(handle), 0, buffer, ctypes.byref(size)):
+                        path = buffer.value
                     k32.CloseHandle(ctypes.c_void_p(handle))
-                    if ok and os.path.normcase(path.value) == target:
-                        return True
+                found.append(path)
             more = k32.Process32NextW(ctypes.c_void_p(snapshot), ctypes.byref(entry))
     finally:
         k32.CloseHandle(ctypes.c_void_p(snapshot))
-    return False
+    return found
 
 
-def start(home: Path) -> None:
-    """PCSX2, detached from this app, in its own folder."""
+GAME_ARGS = ("-nogui", "-fullscreen")   # a game alone and full screen; -nogui also ends PCSX2 with the game
+
+
+def start(home: Path, game: Path | None = None) -> None:
+    """PCSX2, detached from this app, in its own folder; with *game*, that game alone and full screen, as the BC250
+    suite's PCSX2 Manager starts one (-nogui -fullscreen -- <game>)."""
     flags = 0x00000008 | 0x00000200 if sys.platform == "win32" else 0   # DETACHED_PROCESS, CREATE_NEW_PROCESS_GROUP
-    subprocess.Popen([str(program(home))], cwd=str(home), creationflags=flags, close_fds=True)
+    argv = [str(program(home))] + ([*GAME_ARGS, "--", str(game)] if game is not None else [])
+    subprocess.Popen(argv, cwd=str(home), creationflags=flags, close_fds=True)

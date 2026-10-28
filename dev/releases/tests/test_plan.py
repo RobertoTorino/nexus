@@ -237,7 +237,8 @@ def test_unreleased_pin_follows_the_version(repo):
 
 
 def test_pin_and_portal(repo):
-    assert [u.key for u in rp.pin_candidates(rp.load_units(repo))] == ["alpha"]     # tagged, no sha256 yet
+    # alpha tagged, no sha256 yet; beta pinned at a version never tagged: shown too, to pin once built
+    assert [u.key for u in rp.pin_candidates(rp.load_units(repo))] == ["alpha", "beta"]
     assert rp.portal_minimum(repo, "pushed", "0.1.0") == ("", "")
     alpha = unit(repo, "alpha")
     rp.set_version(repo, alpha, "0.1.1")
@@ -247,7 +248,7 @@ def test_pin_and_portal(repo):
     rp.pin(repo, alpha, SHA.upper())
     text = (repo / "portal/apps.toml").read_text()
     assert f'tag = "alpha-v0.1.1"\nsha256 = "{SHA}"' in text and text.startswith("# the pins\n")
-    assert rp.pin_candidates(rp.load_units(repo)) == []
+    assert [u.key for u in rp.pin_candidates(rp.load_units(repo))] == ["beta"]
     assert rp.changed_pins(repo, "pushed") == ["alpha-v0.1.1"]
     assert rp.portal_minimum(repo, "pushed", "0.1.0") == ("0.1.1", "apps.toml changed")
     assert rp.portal_minimum(repo, "pushed", "0.2.0")[0] == "0.2.0"     # already bumped far enough
@@ -648,7 +649,7 @@ def test_window_release_then_portal(window, repo):
     sh(repo, "tag", "alpha-v0.1.1")                           # the owner tagged it; GitHub built it
     window.reload()
     page = window.portal_page
-    assert [u.tag for u, _ in page.candidates] == ["alpha-v0.1.1"]
+    assert [u.tag for u, _ in page.candidates] == ["alpha-v0.1.1", "beta-v0.1.0"]
     page.pin()
     assert f'sha256 = "{SHA}"' in (repo / "portal/apps.toml").read_text()
     assert "at least 0.1.1" in page.minimum.text() and page.portal_version.currentText() == "0.1.1"
@@ -723,11 +724,11 @@ def test_window_releases_nexus(window, repo):
 def test_window_reads_new_tags_when_step_2_opens(window, repo):
     _, tick, combo, _ = row(window, "alpha")
     tick.setChecked(True)                                     # typed in step 1: kept
-    assert [u.tag for u, _ in window.portal_page.candidates] == ["alpha-v0.1.0"]
+    assert [u.tag for u, _ in window.portal_page.candidates] == ["alpha-v0.1.0", "beta-v0.1.0"]
     rp.set_version(repo, unit(repo, "alpha"), "0.1.1")
     sh(repo, "tag", "alpha-v0.1.1")                           # tagged in a terminal while the window is open
     window.tabs.setCurrentIndex(1)
-    assert [u.tag for u, _ in window.portal_page.candidates] == ["alpha-v0.1.1"]
+    assert [u.tag for u, _ in window.portal_page.candidates] == ["alpha-v0.1.1", "beta-v0.1.0"]
     assert window.portal_page.empty_note.isHidden()
     assert row(window, "alpha")[1].isChecked()
 
@@ -774,6 +775,7 @@ def test_window_pins_a_new_app_listed_without_a_sha256_line(window, repo, monkey
 
 def test_window_explains_an_empty_pin_list(window, repo):
     rp.pin(repo, unit(repo, "alpha"), SHA)
+    rp.pin(repo, unit(repo, "beta"), SHA)
     window.reload()
     assert window.portal_page.candidates == []
     assert not window.portal_page.empty_note.isHidden()
@@ -2021,3 +2023,30 @@ def test_window_runs_a_windows_suites_checks_on_windows(two_suites, tmp_path, mo
     w.choose_suite("bc")                                        # the board's suite: its tests run on Linux
     assert not page.local_button.isEnabled() and "Linux (the board)" in page.local_button.toolTip()
     w.close()
+
+
+def test_window_apply_greys_out_once_applied_and_pin_waits_for_the_builds(window, repo):
+    """Apply is greyed out once it wrote the ticked releases, until another is to be applied; step 2 shows the
+    releases to pin from Apply on, and Pin is greyed out until every ticked one is built (owner, 28-10-2026)."""
+    page = window.apps_page
+    for _, tick, _, _ in page.rows:
+        tick.setChecked(False)
+    assert not page.apply_button.isEnabled()                  # nothing ticked
+    _, tick, combo, _ = row(window, "alpha")
+    tick.setChecked(True)
+    assert page.apply_button.isEnabled() and combo.currentText() == "0.1.1"
+    page.apply()
+    assert rp.applied(repo, unit(repo, "alpha"))
+    _, tick, _, _ = row(window, "alpha")                       # filled again by the reload, not ticked again
+    assert not page.apply_button.isEnabled()                  # applied: greyed out
+    _, btick, _, _ = row(window, "beta")
+    btick.setChecked(True)                                     # another release to apply: Apply works again
+    assert page.apply_button.isEnabled()
+    pins = window.portal_page
+    assert [u.tag for u, _ in pins.candidates] == ["alpha-v0.1.1", "beta-v0.1.0"]
+    assert pins.pins.item(0, 3).text() == "not tagged yet" and not pins.pin_button.isEnabled()
+    sh(repo, "tag", "alpha-v0.1.1")
+    window.reload()
+    assert not window.portal_page.pin_button.isEnabled()      # beta, ticked, is not tagged yet
+    window.portal_page.candidates[1][1].setChecked(False)
+    assert window.portal_page.pin_button.isEnabled()          # alpha alone: tagged (no GitHub runs here)

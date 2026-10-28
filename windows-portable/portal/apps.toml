@@ -35,7 +35,7 @@ launch = [["Open", "%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-tes
 
 [apps.pcsx2]
 name = "PCSX2 Manager"
-summary = "Installs PCSX2, the PlayStation 2 emulator, in portable mode, and opens it."
+summary = "PCSX2, the PlayStation 2 emulator: installed and set up, your games played and put in Steam, your memory cards."
 tag = "wp-pcsx2-v0.1.1"
 sha256 = "fdf6b26c7e72147a69140f144395c93f5c54508d6e4c2f3470b5646201ef4c4b"
 category = "gaming"

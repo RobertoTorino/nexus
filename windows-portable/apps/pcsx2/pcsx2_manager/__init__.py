@@ -1,12 +1,14 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """PCSX2 Manager: installs PCSX2, the PlayStation 2 emulator, on the handheld (one tested release, in portable
-mode), sets it up to open ready to play with the handheld's controller, offers its settings, and opens it."""
+mode), sets it up to open ready to play with the handheld's controller, offers its settings, and opens it; the games
+in the chosen folders, played and put in Steam; the memory cards; the log. The BC250 suite's PCSX2 Manager's parts in
+the portable window."""
 
 APP_NAME = "PCSX2 Manager"
 APP_ID = "windows-portable-pcsx2"
 EXE_NAME = "PCSX2-Manager"   # the program's file name in a release
 SUITE = "windows-portable-suite"
-__version__ = "0.1.1"
+__version__ = "0.2.0"
 
 from pathlib import Path
 

@@ -46,6 +46,7 @@ BASE_WIDTH, BASE_HEIGHT = 1280, 720     # the mock-up's logical screen: every si
 RADIUS = 14
 TITLE, SUBTITLE, TAB, CARD, BODY, PILL, GLYPH, LEGEND, STATUS = 28, 15, 19, 20, 13, 15, 10, 12, 18   # pt
 GLOW_BLUR, GLOW_OFFSET = 36, 8
+WIDE_ICON = 1.25                        # a wide icon on a tile: this much taller than a square one
 ICON = 64                               # a tile's icon (logical px at 1280 x 720)
 DIMMED = 0.6                            # a focused pill, drawn at this opacity
 FONT = "Inter"
@@ -218,6 +219,16 @@ def status_clock(now: datetime.datetime | None = None) -> list[str]:
     return [f"{DAYS[now.weekday()]} {now:%d/%m/%Y}", f"{now:%H:%M}"]
 
 
+def trimmed(pixmap: QPixmap) -> QPixmap:
+    """*pixmap* without its fully transparent edges: a picture padded to a square shows at its own size."""
+    image = pixmap.toImage()
+    rows = [y for y in range(image.height()) if any(image.pixelColor(x, y).alpha() for x in range(0, image.width(), 2))]
+    cols = [x for x in range(image.width()) if any(image.pixelColor(x, y).alpha() for y in range(0, image.height(), 2))]
+    if not rows or not cols:
+        return pixmap
+    return pixmap.copy(cols[0], rows[0], cols[-1] - cols[0] + 1, rows[-1] - rows[0] + 1)
+
+
 class Card(QFrame):
     """A card with a title and a line of text, focusable: raised with an amber edge and glow while it has the
     focus. A tap or a click gives it the focus (focused); A, Enter or a second tap acts (activated). With an
@@ -238,7 +249,12 @@ class Card(QFrame):
         if icon is not None and not icon.isNull():
             column.setContentsMargins(px(16), px(14), px(16), px(12))
             self.icon = QLabel()
-            self.icon.setFixedSize(px(ICON), px(ICON))
+            # Its transparent edges trimmed, and a wide picture (the Gaming icon's handheld, 2:1) as wide as twice
+            # the icon's height, so it does not end up half the size of a square one (owner, 28-10-2026)
+            icon = trimmed(icon)
+            ratio = min(2.0, max(1.0, icon.width() / max(1, icon.height())))
+            high = ICON * (WIDE_ICON if ratio > 1.2 else 1)          # the tile has room for a taller wide one
+            self.icon.setFixedSize(px(high * ratio), px(high))
             self.icon.setPixmap(icon.scaled(self.icon.size(), Qt.AspectRatioMode.KeepAspectRatio,
                                             Qt.TransformationMode.SmoothTransformation))
             self.icon.setStyleSheet("background: transparent;")

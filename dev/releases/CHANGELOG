@@ -1,3 +1,16 @@
+Changelog: 29-10-2026 00:15:57
+
+Added. Apply is a pill in the header beside Refresh, Apply over New app releases (owner, 28-10-2026); Pin and
+Bump are pills too, Bump without the word portal. Step 2's
+portal and Nexus versions are two lines with the Bump pill beside them.
+
+Added. Apply is greyed out once it wrote the ticked releases, until another app is to be released or one is ticked by
+hand (owner, 28-10-2026); an app left unticked when it was pressed is not ticked again by the reload.
+
+Fixed. Step 2 was empty between step 1 and the app tags (owner, 28-10-2026: the apps to pin used to show, with Pin
+greyed out until they were built): it lists every app whose VERSION is not pinned with its checksum from Apply on,
+the not yet tagged ones as such, and Pin is greyed out until every ticked one is built.
+
 Changelog: 28-10-2026 23:22:28
 
 Fixed. Applying a release again, after a check stopped its commit, wrote a second "Release x.y.z." entry on top of the

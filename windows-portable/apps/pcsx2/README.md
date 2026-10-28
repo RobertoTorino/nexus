@@ -10,7 +10,9 @@ Installs PCSX2, the PlayStation 2 emulator, on a Windows handheld and opens it: 
 PCSX2's own release, checked against the checksum this version of the app was tested with, for your own user and in
 PCSX2's portable mode, so its settings, the BIOS, the memory cards and the save states stay in its folder. It sets
 PCSX2 up to open ready to play with the handheld's controller, in Big Picture mode, and offers PCSX2's settings that
-matter on the handheld. Remove takes PCSX2's program away and leaves what you made.
+matter on the handheld. It finds your PS2 games in the folders you choose, plays them and puts them in Steam, shows
+your memory cards with their saves, and keeps a log of what was played. Remove takes PCSX2's program away and leaves
+what you made.
 
 Made for the handheld in your hands: full screen, the controller moves the amber focus, B closes the app, and
 everything also works by touch. How to install and use it: [PCSX2 Manager in the wiki](https://robertotorino.github.io/nexus/windows-portable-suite/apps/pcsx2/).
@@ -29,4 +31,6 @@ The settings are in `%APPDATA%\windows-portable-suite\windows-portable-pcsx2.ini
 
 ## License
 
-GPL-3.0-or-later, see [LICENSE](LICENSE).
+GPL-3.0-or-later, see [LICENSE](LICENSE). The memory card code in `pcsx2_manager/mymc` is from
+[mymc++](https://github.com/Adubbz/mymcplusplus) (GPL-3.0-or-later) by Adubbz, based on mymc+ by Florian Märkl and
+mymc by Ross Ridge, as the BC250 suite's PCSX2 Manager carries it.

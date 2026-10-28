@@ -5,6 +5,7 @@ added, updated and removed beside others, several in one write, closing Steam fo
 from __future__ import annotations
 
 import struct
+import sys
 import zlib
 from pathlib import Path
 
@@ -139,7 +140,7 @@ def test_closed_for_a_change_and_started_again():
             state["running"] = state["polls"] <= 2                        # closes after a moment
         return state["running"]
     assert steam.with_steam_closed(lambda: changed.append(state["running"]), run, running, sleep=lambda s: None)
-    assert changed == [False] and commands == [["steam", "-shutdown"], steam.start_command()]
+    assert changed == [False] and commands == [steam.shutdown_command(), steam.start_command()]
     assert steam.with_steam_closed(lambda: None, run, lambda: False) is False and len(commands) == 2
 
 
@@ -148,10 +149,11 @@ def test_steam_that_does_not_close_changes_nothing():
     with pytest.raises(steam.SteamError, match="did not close"):
         steam.with_steam_closed(lambda: changed.append(1), commands.append, lambda: True, timeout=1.0,
                                 sleep=lambda s: None)
-    assert commands == [["steam", "-shutdown"]] and changed == []
+    assert commands == [steam.shutdown_command()] and changed == []
 
 
-def test_steam_running_reads_process_names(tmp_path):
+def test_steam_running_reads_process_names(tmp_path, monkeypatch):
+    monkeypatch.setattr(steam, "WINDOWS", False)    # Linux's /proc, read on any system
     def process(pid, name, state="S"):
         (tmp_path / str(pid)).mkdir()
         (tmp_path / str(pid) / "comm").write_text(name + "\n")
@@ -169,3 +171,31 @@ def test_game_mode(monkeypatch):
     assert steam.game_mode()
     monkeypatch.setenv("XDG_CURRENT_DESKTOP", "KDE")
     assert not steam.game_mode()
+
+
+def test_linux_closes_steam_with_its_own_command(monkeypatch):
+    monkeypatch.setattr(steam, "WINDOWS", False)
+    assert steam.shutdown_command() == ["steam", "-shutdown"]          # as before Windows (29-10-2026)
+
+
+def test_steam_on_windows(tmp_path, monkeypatch):
+    """Windows (the Windows Portable Suite's PCSX2 Manager, 29-10-2026): Steam's folder from its registry key, its own
+    steam.exe to close and start it, steam.exe in the process list."""
+    monkeypatch.setattr(steam, "WINDOWS", True)
+    folder = tmp_path / "Steam"
+    monkeypatch.setattr(steam, "windows_steam", lambda: folder)
+    assert steam.find_steam() is None                                   # never started: no userdata
+    (folder / "userdata" / "123" / "config").mkdir(parents=True)
+    assert steam.find_steam() == folder.resolve() and steam.user_folders(folder)
+    assert steam.find_steam(tmp_path / "home") is None                  # a home given: the Linux folders below it
+    assert steam.shutdown_command() == [str(folder / "steam.exe"), "-shutdown"]
+    assert steam.start_command() == [str(folder / "steam.exe"), "-silent"]
+    names = []
+    monkeypatch.setattr(steam, "_windows_running", lambda name: names.append(name) or True)
+    assert steam.steam_running() and names == ["steam.exe"]
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="Windows' process list")
+def test_windows_process_list_finds_this_python():
+    assert steam._windows_running(Path(sys.executable).name.lower())
+    assert not steam._windows_running("no-such-program.exe")

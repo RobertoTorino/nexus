@@ -46,7 +46,8 @@ from pathlib import Path
 from PyQt6.QtCore import QProcess, QRectF, QSize, Qt, QTimer, QUrl
 from PyQt6.QtGui import QColor, QDesktopServices, QIcon, QPainter, QPen, QPixmap
 from PyQt6.QtNetwork import QLocalSocket
-from PyQt6.QtWidgets import (QApplication, QCheckBox, QComboBox, QDialog, QFrame, QHBoxLayout, QHeaderView, QLabel, QLineEdit, QListView,
+from PyQt6.QtWidgets import (QApplication, QCheckBox, QComboBox, QDialog, QFrame, QGridLayout, QHBoxLayout, QHeaderView, QLabel,
+                             QLineEdit, QListView,
                              QListWidget, QListWidgetItem, QMainWindow, QMessageBox, QPushButton, QSizePolicy,
                              QStackedWidget, QSystemTrayIcon, QTableWidget, QTableWidgetItem, QTabWidget, QVBoxLayout,
                              QWidget)
@@ -60,7 +61,7 @@ from bc250_core.widgets import AppHeader, MetricBox, Pill, Terminal, accent_butt
 from . import APP_NAME, LOGO_PATH, CHECKOUT, __version__
 from . import plan as rp
 from .command_line import CommandLine
-from .style import CHECK_STYLESHEET, NEXUS, TAB_TITLE_STYLESHEET
+from .style import CHECK_STYLESHEET, NEXUS, TAB_TITLE_STYLESHEET, TEAL
 
 COLUMNS = ("Release", "App", "VERSION", "Last tag", "Needs release", "New version", "Notes")
 SUITE_KEY = "suite"                     # the chosen suite, in the settings
@@ -129,8 +130,11 @@ class AppsPage(QWidget):
         header = self.table.horizontalHeader()
         header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         header.setSectionResizeMode(len(COLUMNS) - 1, QHeaderView.ResizeMode.Stretch)
-        self.apply_button = accent_button("Apply", "Write the new versions and CHANGELOG entries of the ticked apps")
-        self.apply_button.clicked.connect(self.apply)
+        # A pill in the window's header, beside Refresh (owner, 28-10-2026), greyed out once applied until something
+        # new is to be applied
+        self.apply_button = Pill("Apply", "New app releases", "Write the new versions and CHANGELOG entries of the "
+                                 "ticked apps (step 1)", TEAL)
+        self.apply_button.clicked.connect(self.apply_from_header)
         self.tick_button = QPushButton("Tick what needs a release")
         self.tick_button.setToolTip("Tick every app whose shipped files changed since its last tag")
         self.tick_button.clicked.connect(self.tick_needed)
@@ -150,9 +154,9 @@ class AppsPage(QWidget):
         row = QHBoxLayout()
         row.addWidget(self.tick_button)
         row.addStretch(1)
-        row.addWidget(self.apply_button)
         lay.addLayout(row)
         self.rows: list[tuple[rp.Unit, QCheckBox, QComboBox, QLineEdit]] = []
+        self.handled: set[tuple[str, str]] = set()  # (key, version) that needed a release when Apply was pressed
 
     def fill(self, units: list[rp.Unit]) -> None:
         shown = [u for u in units if u.kind != "portal"]
@@ -167,8 +171,9 @@ class AppsPage(QWidget):
                 tick.setEnabled(False)
                 tick.setToolTip(f"Core {unit.version} already holds every change since its last version; the app "
                                 "releases carry it as it is")
-            else:
-                tick.setChecked(unit.needs_release)         # ticked from the start; untick what waits
+            else:                                           # ticked from the start; untick what waits. After
+                tick.setChecked(unit.needs_release           # Apply, not what was there then: what was left
+                                and (unit.key, unit.version) not in self.handled)    # unticked waits
             self.table.setCellWidget(i, 0, tick)
             reason = unit.release_reason
             if unit.needs_release and unit.last_tag and not unit.released:
@@ -192,6 +197,7 @@ class AppsPage(QWidget):
             self.table.setCellWidget(i, 5, combo)
             self.table.setCellWidget(i, 6, notes)
             self.rows.append((unit, tick, combo, notes))
+            tick.toggled.connect(lambda _on: self.enable_apply())
         # An app's release is a suite's release: the Nexus index lists it, so Nexus's number moves with it (owner,
         # 28-10-2026). Ticking an app ticks the nexus row; it can be unticked.
         nexus = next((tick for unit, tick, _, _ in self.rows if unit.kind == rp.NEXUS), None)
@@ -199,6 +205,17 @@ class AppsPage(QWidget):
             for unit, tick, _, _ in self.rows:
                 if unit.kind == "app":
                     tick.toggled.connect(lambda on, nexus=nexus: on and nexus.setChecked(True))
+        self.enable_apply()
+
+    def enable_apply(self) -> None:
+        """Apply works while a ticked row has something to write: greyed out once it is applied (its "Release
+        x.y.z." entry on top, the version not tagged yet), until a new release is to be applied (owner, 28-10-2026)."""
+        root = self.release_window.root
+        new = [u for u, tick, _, _ in self.rows if tick.isChecked() and not rp.applied(root, u)]
+        self.apply_button.setEnabled(bool(new))
+        self.apply_button.setToolTip("Write the new versions and CHANGELOG entries of the ticked apps" if new else
+                                     "Applied: the ticked releases are written. It works again when another release "
+                                     "is to be applied.")
 
     def typed(self) -> dict[str, tuple[bool, str | None, str, bool]]:
         """What was entered per app: the tick, a version only if it differs from the one offered, the notes; and
@@ -220,6 +237,11 @@ class AppsPage(QWidget):
         for unit, tick, _, _ in self.rows:
             tick.setChecked(unit.needs_release)
 
+    def apply_from_header(self) -> None:
+        """Apply from the header: on step 1, where the ticks are and its log shows what it wrote."""
+        self.release_window.tabs.setCurrentWidget(self)
+        self.apply()
+
     def apply(self) -> None:
         picked = [(u, combo.currentText().strip(), notes.text()) for u, tick, combo, notes in self.rows
                   if tick.isChecked()]
@@ -232,6 +254,8 @@ class AppsPage(QWidget):
             QMessageBox.warning(self, "Release", "\n".join(problems))
             return
         root, suite = self.release_window.root, self.release_window.suite
+        self.handled = {(u.key, u.version) for u, _, _, _ in self.rows if u.needs_release} | \
+            {(u.key, new) for u, new, _ in picked}
         log, tags, pins_moved, nexus = [], [], [], ""
         # Nexus last: its entry names the suites' releases, the ones written here among them.
         picked.sort(key=lambda p: p[0].kind == rp.NEXUS)
@@ -297,8 +321,8 @@ class PortalPage(QWidget):
         self.pins.setHorizontalHeaderLabels(("Pin", "Release", "Pinned now", "GitHub"))
         self.pins.verticalHeader().setVisible(False)
         self.pins.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        self.pin_button = QPushButton("Pin")
-        self.pin_button.setToolTip("Read each ticked release's SHA256SUMS from GitHub and pin tag and sha256")
+        self.pin_button = Pill("Pin", " ", "Read each ticked release's SHA256SUMS from GitHub and pin tag and sha256",
+                               TEAL)
         self.pin_button.clicked.connect(self.pin)
         self.empty_note = hint_label("")
         self.minimum = QLabel()
@@ -317,7 +341,8 @@ class PortalPage(QWidget):
         self.nexus_version = QComboBox()
         self.nexus_version.setEditable(True)
         self.nexus_version.setMinimumWidth(VERSION_FIELD_PX)
-        self.bump_button = accent_button("Bump portal", "Write portal/VERSION, its copies and the CHANGELOG entry")
+        self.bump_button = Pill("Bump", " ", "Write portal/VERSION, its copies and the CHANGELOG entry (and Nexus's "
+                                "version with Nexus too)", TEAL)
         self.bump_button.clicked.connect(self.bump)
         self.portal_state = QLabel()             # the portal's own release: not tagged yet, building, built
         self.portal_state.setWordWrap(True)
@@ -332,13 +357,18 @@ class PortalPage(QWidget):
         pin_row = QHBoxLayout()
         pin_row.addStretch(1)
         pin_row.addWidget(self.pin_button)
+        # Two lines, the portal's and Nexus's version, with the Bump pill beside them (owner, 28-10-2026)
+        versions = QGridLayout()
+        versions.addWidget(QLabel("Portal version:"), 0, 0)
+        versions.addWidget(self.portal_version, 0, 1)
+        versions.addWidget(self.portal_notes, 0, 2)
+        versions.addWidget(self.nexus_too, 1, 0)
+        versions.addWidget(self.nexus_version, 1, 1)
+        versions.setColumnStretch(2, 1)
         portal_row = QHBoxLayout()
-        portal_row.addWidget(QLabel("Portal version:"))
-        portal_row.addWidget(self.portal_version)
-        portal_row.addWidget(self.portal_notes, 1)
-        portal_row.addWidget(self.nexus_too)
-        portal_row.addWidget(self.nexus_version)
-        portal_row.addWidget(self.bump_button)
+        portal_row.addLayout(versions, 1)
+        portal_row.addSpacing(12)
+        portal_row.addWidget(self.bump_button, 0, Qt.AlignmentFlag.AlignVCenter)
         lay = QVBoxLayout(self)
         lay.addWidget(hint_label(
             "After step 1 is pushed and tagged, and GitHub has built those releases (the GitHub column says where "
@@ -375,7 +405,7 @@ class PortalPage(QWidget):
             for col, text in ((1, unit.tag), (2, unit.pinned_tag + ("" if unit.pinned_sha else " (no sha256)"))):
                 self.pins.setItem(i, col, QTableWidgetItem(text))
             self.candidates.append((unit, tick))
-        self.pin_button.setEnabled(bool(cands))
+            tick.toggled.connect(lambda _on: self.enable_pin())
         portal = next(u for u in units if u.kind == "portal")
         self.portal_unit = portal
         # Nothing to pin never holds the portal back: what apps.toml pins now is what it releases.
@@ -430,7 +460,18 @@ class PortalPage(QWidget):
 
     def waiting_tags(self) -> list[str]:
         """The app releases step 2 waits for: tagged, not pinned with their checksum yet."""
-        return [unit.tag for unit, _tick in self.candidates]
+        return [unit.tag for unit, _tick in self.candidates if unit.released]
+
+    def enable_pin(self) -> None:
+        """Pin works once every ticked release is built: GitHub published it (owner, 28-10-2026: the releases to pin
+        show from Apply on, Pin greyed out until they are built). Without GitHub's runs (offline, no source), once
+        they are tagged."""
+        ticked = [unit for unit, tick in self.candidates if tick.isChecked()]
+        if self.release_window.build.source is None:
+            ready = [u for u in ticked if u.released]
+        else:
+            ready = [u for u in ticked if rp.release_state(self.release_window.build.runs, u.tag) == "passed"]
+        self.pin_button.setEnabled(bool(ticked) and len(ready) == len(ticked))
 
     def show_builds(self) -> None:
         """What GitHub shows for each release to pin and for the portal's own release (the header's indicator
@@ -441,7 +482,12 @@ class PortalPage(QWidget):
             item = QTableWidgetItem(RELEASE_TEXT[state])
             item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
             item.setToolTip(RELEASE_TIP[state].format(tag=unit.tag))
+            if not unit.released:
+                item.setText("not tagged yet")
+                item.setToolTip(f"{unit.tag} is not tagged yet: commit, push and tag step 1 ({rp.TAG_SCRIPT} "
+                                f"{unit.tag}); GitHub then builds it, and Pin works once it is built")
             self.pins.setItem(i, 3, item)
+        self.enable_pin()
         portal = self.portal_unit
         if portal is None:
             return
@@ -471,6 +517,10 @@ class PortalPage(QWidget):
         log = []
         for unit, tick in self.candidates:
             if not tick.isChecked():
+                continue
+            if not unit.released:
+                log.append(f"{unit.tag}: not tagged yet, so GitHub has not built it: commit, push and tag step 1 "
+                           f"({rp.TAG_SCRIPT} {unit.tag}). Not pinned.")
                 continue
             state = rp.release_state(self.release_window.build.runs, unit.tag)
             if state == "running":
@@ -1621,13 +1671,14 @@ class ReleaseWindow(QMainWindow):
         self.ticker.hidden = rp.other_suites_workflows(root, self.suite)
         self.github_status = GitHubStatusIndicator(status_source)
         self.claude = ClaudeUsageIndicator(claude_source)
-        pills = [self.refresh_pill, self.status, self.build, self.build.rate, self.github_status, self.claude]
+        self.tabs = QTabWidget()
+        self.apps_page = AppsPage(self)                 # its Apply is the header's third pill
+        pills = [self.refresh_pill, self.status, self.apps_page.apply_button, self.build, self.build.rate,
+                 self.github_status, self.claude]
         for pill in pills:
             header.add_second(pill)
         same_width(pills)
         header.second_row.addStretch(1)
-        self.tabs = QTabWidget()
-        self.apps_page = AppsPage(self)
         self.portal_page = PortalPage(self)
         self.tabs.addTab(self.apps_page, "1. Release apps")
         self.tabs.addTab(self.portal_page, "2. Pin and release Portal")
