@@ -34,7 +34,8 @@ The strip under the tiles shows the focused app: its name, its versions, what it
 | A | Install the app, or open it once it is installed |
 | Y | Update or reinstall the app, when the strip shows that pill |
 | X | The app's details |
-| ☰ (Menu), View | The Suite page |
+| ☰ (Menu) | The Suite page |
+| ⧉ (View) | The Settings page |
 | B | Close the portal |
 
 Every tile and pill also works by touch. On a keyboard, the arrow keys move, Enter presses and Escape goes back.
@@ -62,7 +63,7 @@ dialog; the pill says **Press again to remove** meanwhile. **B** goes back to th
 
 ## The Suite page
 
-**☰** (or View) shows the Suite page: this portal's version, the newest portal release, and what that release
+**☰** shows the Suite page: this portal's version, the newest portal release, and what that release
 changes (which apps it updates). With a newer release, its pill says **Update to x.y.z**; otherwise **Check again**.
 The status line at the top, with the battery, the date and the time, says **Suite x.y.z available** while there is
 one.
@@ -70,6 +71,18 @@ one.
 **A** on **Update to x.y.z** downloads the new portal; the page counts the megabytes. The portal then closes,
 installs the new release in a PowerShell window and starts again. The new release brings the apps it pins: their
 tiles then say **Update** where a newer release is pinned.
+
+## Settings
+
+**⧉** (View) shows the Settings page: how the portal looks, kept for the next start. **A** switches the focused
+setting, **B** goes back.
+
+| Setting | |
+|---|---|
+| Wallpaper | A picture behind the tiles, which show it through them. Off: the plain dark background. |
+
+The window fits the screen it is on: it is laid out for the Ally's 1280 x 720 (at Windows' 150 % scaling) and drawn
+larger on a larger screen, such as a TV, and smaller on a smaller one.
 
 ## Files
 

@@ -31,7 +31,7 @@ from .intro import INTRO_MS, Intro
 from .manifest import CATEGORIES, AppEntry
 from .portal_update import PortalUpdate, short
 from .sources import Records, SourceError, Sources, downloaded, fetch_release, is_installed
-from .widgets import AppPane, DetailsPane, SuitePane, Tabs
+from .widgets import AppPane, DetailsPane, SettingsPane, SuitePane, Tabs
 
 STATUS_MS = 30_000              # the header's battery and time
 POLL_MS = 1000                  # how often the portal looks for the installer window's exit status
@@ -42,8 +42,10 @@ PROGRESS_MS = 500               # how often a download's size is shown (owner, 2
 TILE_W, TILE_H, GAP = 293, 176, 14      # the mock-up's tiles: two rows of four
 COLUMNS, PER_PAGE = 4, 8
 TAB_KEY = "window/tab"          # the settings: the tab shown last
+WALLPAPER_KEY = "look/wallpaper"  # the wallpaper on (the default) or off (Settings, owner 28-10-2026)
+VIEW = "\u29c9"                  # the View button as the Ally shows it: two squares
 MENU = "☰"                  # the Menu button as the Ally shows it (SDL's start; owner, 28-10-2026: not "Menu")
-APPS_LEGEND = (("X", "Details"), (MENU, "Suite"), ("B", "Close"))
+APPS_LEGEND = (("X", "Details"), (MENU, "Suite"), (VIEW, "Settings"), ("B", "Close"))
 
 
 @dataclass
@@ -141,8 +143,9 @@ class MainWindow(PortableWindow):
         self.exit_dir = exit_dir or Path(tempfile.gettempdir())
         self.intro: Intro | None = None
         self.wallpaper = QPixmap(str(wallpaper)) if wallpaper is not None else QPixmap()
-        portable.glass(GLASS if not self.wallpaper.isNull() else 255)    # before the cards are made
         self.settings = QSettings()
+        self.wallpaper_on = str(self.settings.value(WALLPAPER_KEY, "true")).lower() != "false"
+        portable.glass(GLASS if self.shows_wallpaper() else 255)        # before the cards are made
         self.by_key = {entry.key: entry for entry in entries}
         self.current_key = ""
         self.job: tuple[AppEntry, str] | None = None    # being downloaded
@@ -180,7 +183,8 @@ class MainWindow(PortableWindow):
         apps.addWidget(self.app_pane)
         self.details_pane = DetailsPane()
         self.suite_pane = SuitePane()
-        for widget in (self.apps_page, self.details_pane, self.suite_pane):
+        self.settings_pane = SettingsPane()
+        for widget in (self.apps_page, self.details_pane, self.suite_pane, self.settings_pane):
             self.stack.addWidget(widget)
         page.addWidget(self.stack, 1)
         page.addSpacing(px(8))
@@ -200,13 +204,14 @@ class MainWindow(PortableWindow):
         self.details_pane.open.activated.connect(lambda: self.open_app(self.current_key))
         self.details_pane.remove.activated.connect(lambda: self.remove_action(self.current_key))
         self.suite_pane.action.activated.connect(self.suite_action)
+        self.settings_pane.wallpaper.activated.connect(self.toggle_wallpaper)
         self.tabs.changed.connect(self.show_tab)
         self.bind("x", self.show_details)
         self.bind("y", self.y_action)
         self.bind("previous", lambda: self.tabs.step(-1))
         self.bind("next", lambda: self.tabs.step(1))
         self.bind("menu", self.show_suite)
-        self.bind("view", self.show_suite)
+        self.bind("view", self.show_settings)
         self.back.connect(self.on_back)
 
         self.worker = _Worker()
@@ -257,10 +262,23 @@ class MainWindow(PortableWindow):
             return
         super().on_action(action)
 
+    def shows_wallpaper(self) -> bool:
+        return self.wallpaper_on and not self.wallpaper.isNull()
+
+    def toggle_wallpaper(self) -> None:
+        """Settings' Wallpaper pill: the picture and the see-through tiles on or off, kept for the next start."""
+        self.wallpaper_on = not self.wallpaper_on
+        self.settings.setValue(WALLPAPER_KEY, "true" if self.wallpaper_on else "false")
+        portable.glass(GLASS if self.shows_wallpaper() else 255)
+        self.restyle()
+        self.settings_pane.fill(self.wallpaper_on)
+        QWidget.update(self)                            # self.update is the portal's own update check
+        self.log.info(f"Wallpaper {'on' if self.wallpaper_on else 'off'}.")
+
     def paintEvent(self, event) -> None:  # noqa: N802 (Qt override)
         """The wallpaper filling the window (cropped, never stretched), under the background at SHADE so the tiles
         and the text stay easy to read."""
-        if self.wallpaper.isNull():
+        if not self.shows_wallpaper():
             super().paintEvent(event)
             return
         painter = QPainter(self)
@@ -326,6 +344,14 @@ class MainWindow(PortableWindow):
         self.legend.set_items([("B", "Back")])
         self.refresh()
         self.suite_pane.action.setFocus()
+
+    def show_settings(self) -> None:
+        if self.stack.currentWidget() is self.settings_pane:
+            return
+        self.stack.setCurrentWidget(self.settings_pane)
+        self.settings_pane.fill(self.wallpaper_on)
+        self.legend.set_items([("B", "Back")])
+        self.settings_pane.wallpaper.setFocus()
 
     def on_back(self) -> None:
         if self.stack.currentWidget() is self.apps_page:

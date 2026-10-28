@@ -200,4 +200,28 @@ class SuitePane(Pane):
         self.action.setVisible(bool(action))
 
 
-__all__ = ["AppPane", "DetailsPane", "SuitePane", "Tabs", "TEXT"]
+class SettingsPane(Pane):
+    """The Settings page (View): the portal's own settings, a pill each that A switches (owner, 28-10-2026: the
+    wallpaper on or off)."""
+
+    def __init__(self, parent: QWidget | None = None):
+        super().__init__(parent)
+        self.column.addWidget(text_label("Settings", NAME, QFont.Weight.ExtraBold))
+        self.column.addWidget(text_label("How the portal looks. A switches the focused setting; it is kept for the "
+                                         "next start.", BODY + 1, color=DIM, wrap=True))
+        self.column.addSpacing(px(16))
+        row = QHBoxLayout()
+        row.addWidget(text_label("Wallpaper", BODY + 2, QFont.Weight.DemiBold))
+        row.addWidget(text_label("A picture behind the tiles, which show it through them.", BODY + 1, color=DIM,
+                                 wrap=True), 1)
+        self.wallpaper = Pill("On", "A", main=True)
+        self.wallpaper.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+        row.addWidget(self.wallpaper)
+        self.column.addLayout(row)
+        self.column.addStretch()
+
+    def fill(self, wallpaper: bool) -> None:
+        self.wallpaper.set_text("On" if wallpaper else "Off")
+
+
+__all__ = ["AppPane", "DetailsPane", "SettingsPane", "SuitePane", "Tabs", "TEXT"]

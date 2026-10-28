@@ -68,6 +68,7 @@ VERSION_FIELD_PX = 130                  # the portal version field: a version li
 SEMVER_TIP = ("Breaking. (an entry that starts with it) -> major: something removed or no longer working as "
               "before. Added. -> minor: a new feature. Fixed. -> patch: a bug or security fix.")
 LOG_DIR = Path(os.environ.get("XDG_CACHE_HOME") or Path.home() / ".cache") / "nexus-releases" / "run"
+COMMAND_LOG_DIR = LOG_DIR.parent / "commands"   # every command line's output, a file a day (command_line.py)
 # A selected cell and the input field being typed in: a teal outline (Nexus's accent) with rounded corners on a
 # transparent background, not the desktop's solid highlight. The line edit inside an editable combo box keeps the
 # combo's frame. The tables' grid lines are the thin dimmed-silver edge of the theme, as the border around a table
@@ -1637,7 +1638,8 @@ class ReleaseWindow(QMainWindow):
         # Opening step 2 reads the tags again, so tags pushed from a terminal meanwhile show up; step 1 keeps what
         # was typed in it.
         self.tabs.currentChanged.connect(lambda i: i == 1 and self.portal_page.fill(rp.load_units(self.root, self.suite)))
-        self.commands = CommandLine(root, settings, finished=self.refresh)    # a commit or push: read it again
+        self.commands = CommandLine(root, settings, finished=self.refresh,     # a commit or push: read it again
+                                    log_dir=COMMAND_LOG_DIR if settings is not None else None)
         # The logs are tabs of their own, each the whole tab area (owner, 17-10-2026: boxes under the steps were
         # too flat to read). Logs shows the log of the step last open (what Apply, Pin, Bump portal, Retract or
         # a started app wrote); a step that writes its log opens it. Commands is the command line with its output.

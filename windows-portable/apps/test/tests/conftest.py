@@ -54,6 +54,8 @@ def qapp():
     from PyQt6.QtCore import QSettings
     from PyQt6.QtWidgets import QApplication
     app = QApplication.instance() or QApplication([])
+    from bc250_core import portable
+    portable.pin_scale((1280, 720))     # the Ally's screen, not the offscreen one (800 x 800): the windows fit-tested
     yield app
     QSettings.setDefaultFormat(QSettings.Format.IniFormat)
 

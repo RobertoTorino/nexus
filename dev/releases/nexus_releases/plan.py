@@ -569,10 +569,18 @@ def amsterdam_now(now: datetime.datetime | None = None) -> datetime.datetime:
 
 
 def add_changelog_entry(root: Path, unit: Unit, text: str, now: datetime.datetime | None = None) -> Path:
-    """Puts "Changelog: <time>", a blank line and *text* on top of the unit's CHANGELOG."""
+    """Puts "Changelog: <time>", a blank line and *text* on top of the unit's CHANGELOG. A release entry ("Release
+    x.y.z.") replaces the newest entry when that is the same release already, so applying a release again (after a
+    check stopped the commit) leaves one entry, with the latest notes (owner, 28-10-2026: "Release 1.3.0." twice)."""
     path = root / unit.path / "CHANGELOG"
     stamp = amsterdam_now(now).strftime("%d-%m-%Y %H:%M:%S")
     old = path.read_text(encoding="utf-8") if path.is_file() else ""
+    release = _RELEASE.match(text.strip())
+    if release:
+        entries = changelog_entries(old)
+        newest = _RELEASE.match(entry_body(entries[0])) if entries else None
+        if newest and newest[1] == release[1]:
+            old = old[old.index(entries[0]) + len(entries[0]):].lstrip("\n")
     path.write_bytes(f"Changelog: {stamp}\n\n{text.strip()}\n\n{old}".encode("utf-8"))
     return path
 

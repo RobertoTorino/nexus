@@ -51,18 +51,30 @@ DIMMED = 0.6                            # a focused pill, drawn at this opacity
 FONT = "Inter"
 
 _scale = 1.0
+_pinned = False                         # pin_scale(): the windows keep the scale given
+MIN_SCALE = 0.6                         # text smaller than this is too small to read in the hands
 _glass = 255                            # the cards' and panes' opacity: glass()
 _fonts_loaded = False
 
 
 def scale(screen_size: tuple[int, int] | None = None) -> float:
-    """How much larger than the mock-up everything is drawn: the screen's logical size against 1280 x 720 (the
-    smaller ratio, so the layout fits), at least 1. Set for the app when called with a size; read otherwise."""
+    """How much larger (or smaller) than the mock-up everything is drawn: the screen's logical size against
+    1280 x 720, the smaller ratio, so the layout fits a larger screen and a smaller one alike (owner, 28-10-2026: it
+    adapts to the screen it is on; a 1080p screen at 175 % is 1097 x 617), at least MIN_SCALE. Set for the app when
+    called with a size; read otherwise."""
     global _scale
     if screen_size is not None:
         width, height = screen_size
-        _scale = max(1.0, min(width / BASE_WIDTH, height / BASE_HEIGHT))
+        _scale = max(MIN_SCALE, min(width / BASE_WIDTH, height / BASE_HEIGHT))
     return _scale
+
+
+def pin_scale(screen_size: tuple[int, int] | None) -> float:
+    """The scale of *screen_size*, kept: a PortableWindow made afterwards does not read its screen (tests, and pictures
+    rendered for the wiki, at the Ally's 1280 x 720 whatever screen the machine has). None reads the screen again."""
+    global _pinned
+    _pinned = screen_size is not None
+    return scale(screen_size) if screen_size is not None else _scale
 
 
 def glass(alpha: int | None = None) -> int:
@@ -282,12 +294,18 @@ class Pane(QFrame):
     """The detail pane: a card's surface without the focus, for what the focused card is and does (the test app's
     right side, the portal's strip under the tiles). *column* is its layout."""
 
-    def __init__(self, parent: QWidget | None = None):
+    def __init__(self, parent: QWidget | None = None, solid: bool = False):
         super().__init__(parent)
         self.setObjectName("pane")
-        self.setStyleSheet(f"QFrame#pane {{ background: {surface(SURFACE)}; border-radius: {px(RADIUS)}px; }}")
+        self.solid = solid                              # never see-through (an InfoPopup's panel)
+        self.restyle()
         self.column = QVBoxLayout(self)
         self.column.setContentsMargins(px(24), px(22), px(24), px(22))
+
+    def restyle(self) -> None:
+        """Its surface at glass()'s opacity (solid when *solid*), again after glass() changed."""
+        color = SURFACE if self.solid else surface(SURFACE)
+        self.setStyleSheet(f"QFrame#pane {{ background: {color}; border-radius: {px(RADIUS)}px; }}")
 
 
 class Pill(QPushButton):
@@ -393,8 +411,7 @@ class InfoPopup(QWidget):
         self.setGeometry(window.rect())
         outer = QVBoxLayout(self)
         outer.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.panel = Pane()
-        self.panel.setStyleSheet(f"QFrame#pane {{ background: {SURFACE}; border-radius: {px(RADIUS)}px; }}")  # solid
+        self.panel = Pane(solid=True)
         self.panel.setFixedWidth(px(640))
         inner = px(640 - 48)                            # the pane's margins: a wrapped label needs its width to be tall
         heading = text_label(title, 24, QFont.Weight.ExtraBold, wrap=True)
@@ -447,8 +464,8 @@ class PortableWindow(QWidget):
             load_fonts()
             _fonts_loaded = True
         screen = QGuiApplication.primaryScreen()
-        if screen is not None:
-            size = screen.availableGeometry().size()
+        if screen is not None and not _pinned:          # the whole screen: the apps run full screen, over the taskbar
+            size = screen.geometry().size()
             scale((size.width(), size.height()))
         self.setObjectName("portable")
         self.setStyleSheet(f"QWidget#portable {{ background: {BACKGROUND}; }}")
@@ -493,6 +510,13 @@ class PortableWindow(QWidget):
         focus = QGuiApplication.focusObject()
         if isinstance(focus, (Card, Pill)) and focus in self.focusables():
             focus.activated.emit()
+
+    def restyle(self) -> None:
+        """Every card and pane drawn again at glass()'s opacity, after it changed (a wallpaper switched on or off)."""
+        for card in self.findChildren(Card):
+            card._paint(card.hasFocus())
+        for pane in self.findChildren(Pane):
+            pane.restyle()
 
     def show_popup(self, title: str, text: str, back_to: QWidget | None = None) -> InfoPopup:
         """*text* under *title* over the window (an InfoPill's); while it shows, A and B close it and the other

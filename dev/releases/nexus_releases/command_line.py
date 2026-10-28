@@ -6,7 +6,8 @@ variables. Nothing can be typed into a running command (its input is closed), so
 no answer and stops: git is told not to prompt, opens no editor (commit with -m) and pages nothing. Stop (or
 Ctrl+C) interrupts the command and everything it started. The commands a step shows (Apply, Bump portal, Retract)
 are offered under Commands, one per line, to put on the line, not to run straight away. The window's git buttons
-run theirs here too (run_now)."""
+run theirs here too (run_now). With a *log_dir*, every command, its output and how it ended are also written to
+commands-<date>.log there, so what a release step said can be read afterwards (owner, 28-10-2026)."""
 
 from __future__ import annotations
 
@@ -14,6 +15,7 @@ import os
 import re
 import shutil
 import signal
+import datetime
 import tempfile
 from pathlib import Path
 
@@ -70,9 +72,11 @@ def find_bash() -> str | None:
 class CommandLine(QWidget):
     """The output, and below it the line to type in with Commands, Run/Stop and Clear."""
 
-    def __init__(self, root: Path, settings: QSettings | None = None, bash: str | None = None, finished=None):
+    def __init__(self, root: Path, settings: QSettings | None = None, bash: str | None = None, finished=None,
+                 log_dir: Path | None = None):
         """*settings* keeps the history between sessions (None: this session only); *finished* is called after each
-        command, so the window can read the checkout again."""
+        command, so the window can read the checkout again; *log_dir* keeps each command's output in a file of the
+        day (None: none)."""
         super().__init__()
         self.root = root
         self.cwd = root
@@ -92,6 +96,7 @@ class CommandLine(QWidget):
         self.pid = 0
         self.stopping = False
         self.last_code: int | None = None       # how the last command ended: its exit code, None when stopped
+        self.log_dir = log_dir
 
         self.output = Terminal()
         self.output.setMaximumBlockCount(OUTPUT_MAX_LINES)
@@ -188,7 +193,25 @@ class CommandLine(QWidget):
         self.run(command)
         return True
 
+    def log_file(self) -> Path | None:
+        """Today's log of the commands, commands-<YYYY-MM-DD>.log; None without a log_dir."""
+        if self.log_dir is None:
+            return None
+        return self.log_dir / f"commands-{datetime.date.today():%Y-%m-%d}.log"
+
+    def _log(self, text: str) -> None:
+        path = self.log_file()
+        if path is None:
+            return
+        try:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            with path.open("a", encoding="utf-8", newline="\n") as log:
+                log.write(text)
+        except OSError:
+            pass                                # the command runs on; only its copy in the log is missing
+
     def run(self, command: str) -> None:
+        self._log(f"\n=== {datetime.datetime.now():%Y-%m-%d %H:%M:%S} in {self.cwd}\n$ {command}\n")
         self._append(f"{self._prompt_text()} {command}\n")
         self.running = command
         script = 'cd -- "$1" || exit; eval "$2"; rc=$?; printf %s "$PWD" > "$3"; exit $rc'
@@ -247,8 +270,9 @@ class CommandLine(QWidget):
         return env
 
     def _read(self) -> None:
-        data = bytes(self.process.readAllStandardOutput()).decode("utf-8", errors="replace")
-        self._append(plain(data))
+        data = plain(bytes(self.process.readAllStandardOutput()).decode("utf-8", errors="replace"))
+        self._append(data)
+        self._log(data)
 
     def _done(self, code: int, status: QProcess.ExitStatus) -> None:
         self.kill_timer.stop()
@@ -263,6 +287,8 @@ class CommandLine(QWidget):
         except OSError:
             pass
         self.last_code = None if status == QProcess.ExitStatus.CrashExit else code
+        self._log(f"\n=== {'stopped' if self.last_code is None or code == 130 else f'exit code {code}'}"
+                  f" at {datetime.datetime.now():%H:%M:%S}\n")
         if status == QProcess.ExitStatus.CrashExit or code == 130:
             self._end_line("stopped")
         elif code != 0:

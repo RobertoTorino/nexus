@@ -150,7 +150,7 @@ def test_the_tabs_and_tiles_and_the_strip_for_the_focused_app(world, qapp):
     assert pane_texts(window) == ("Windows Portable Test", "Install", "")
     assert window.app_pane.versions.text() == "Not installed; this portal has 0.1.0"
     assert window.header.status.text().startswith("82%  |  ")
-    assert [text for _, text in window.legend.items] == ["Details", "Suite", "Close"]
+    assert [text for _, text in window.legend.items] == ["Details", "Suite", "Settings", "Close"]
     window.tabs.step(1)
     assert window.tabs.current == "gaming" and window.tiles["pcsx2"].isVisible() and not window.tiles["test"].isVisible()
     assert pane_texts(window)[0] == "Windows Portable PCSX2 Manager" and window.tiles["pcsx2"].hasFocus()
@@ -439,3 +439,24 @@ def test_b_during_a_download_asks_first(world, qapp, monkeypatch):
     assert wait_for(qapp, lambda: window.job is None)
     window.on_action("back")                            # nothing runs: B closes at once
     assert closed == [True, True]
+
+
+def test_view_opens_the_settings_and_a_switches_the_wallpaper(world, qapp, monkeypatch):
+    # The wallpaper is a setting (owner, 28-10-2026: "a feature you can toggle, so a settings menu").
+    from bc250_core import portable
+    window = world.make()
+    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
+    assert window.wallpaper_on and portable.glass() == mw.GLASS
+    window.on_action("view")
+    assert window.stack.currentWidget() is window.settings_pane and window.settings_pane.wallpaper.hasFocus()
+    assert window.settings_pane.wallpaper.label.text() == "On" and window.legend.items == [("B", "Back")]
+    window.on_action("accept")
+    assert not window.wallpaper_on and portable.glass() == 255 and window.settings_pane.wallpaper.label.text() == "Off"
+    assert "rgba" not in window.app_pane.styleSheet()                 # the strip solid again, at once
+    assert window.settings.value(mw.WALLPAPER_KEY) == "false"
+    window.on_action("back")
+    assert window.stack.currentWidget() is window.apps_page
+    again = world.make()                                              # kept for the next start
+    assert not again.wallpaper_on and portable.glass() == 255
+    again.toggle_wallpaper()
+    assert again.wallpaper_on and portable.glass() == mw.GLASS and "rgba" in again.app_pane.styleSheet()

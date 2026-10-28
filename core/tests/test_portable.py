@@ -23,9 +23,9 @@ class NoPad:
 
 @pytest.fixture(autouse=True)
 def mockup_scale():
-    portable.scale((1280, 720))
+    portable.pin_scale((1280, 720))     # the mock-up's screen, not the offscreen one
     yield
-    portable.scale((1280, 720))
+    portable.pin_scale((1280, 720))
 
 
 def test_the_sizes_follow_the_screen():
@@ -33,7 +33,10 @@ def test_the_sizes_follow_the_screen():
     assert portable.scale((1280, 720)) == 1 and portable.px(14) == 14
     assert portable.scale((1536, 864)) == pytest.approx(1.2) and portable.px(14) == 17
     assert portable.scale((2560, 1080)) == pytest.approx(1.5)              # the smaller ratio: it fits
-    assert portable.scale((1024, 600)) == 1                                # never smaller than the mock-up
+    assert portable.scale((1024, 600)) == pytest.approx(0.8)               # smaller: it fits (owner, 28-10-2026)
+    assert portable.scale((1097, 617)) == pytest.approx(0.857, abs=1e-3)   # a 1080p screen at 175 %
+    assert portable.scale((400, 300)) == portable.MIN_SCALE                # never too small to read
+    portable.scale((1280, 720))
     assert portable.font(portable.TITLE).pointSizeF() == pytest.approx(portable.TITLE)
 
 
@@ -227,3 +230,15 @@ def test_glass_lets_a_wallpaper_shine_through(qapp):
         window.close()
     finally:
         portable.glass(255)
+
+
+def test_a_pinned_scale_is_kept_by_a_window(qapp):
+    portable.pin_scale((1536, 864))
+    window = PortableWindow(gamepad=portable.Gamepad(source_factory=NoPad))
+    assert portable.scale() == pytest.approx(1.2)                          # not the offscreen screen's
+    window.close()
+    portable.pin_scale(None)
+    window = PortableWindow(gamepad=portable.Gamepad(source_factory=NoPad))
+    screen = qapp.primaryScreen().geometry()
+    assert portable.scale() == pytest.approx(max(portable.MIN_SCALE, min(screen.width() / 1280, screen.height() / 720)))
+    window.close()

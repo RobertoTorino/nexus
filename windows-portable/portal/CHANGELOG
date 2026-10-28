@@ -1,3 +1,13 @@
+Changelog: 28-10-2026 23:07:51
+
+Added. A Settings page (owner, 28-10-2026: the wallpaper is a setting you can switch): View (⧉) opens it, as
+Menu (☰) opens the Suite page; its Wallpaper pill switches the wallpaper and the see-through tiles on or off at once,
+kept for the next start (look/wallpaper in portal.ini). The legend shows ⧉ Settings.
+
+Fixed. The window fits a screen smaller than the Ally's (owner, 28-10-2026: "can it not auto adapt to the screen it's
+on"): core scales the layout down as well as up, from the whole screen, as the portal runs full screen over the
+taskbar.
+
 Changelog: 28-10-2026 22:46:03
 
 Release 1.5.0. Pins wp-test-v1.5.0.

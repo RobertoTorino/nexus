@@ -1,3 +1,13 @@
+Changelog: 28-10-2026 23:22:28
+
+Fixed. Applying a release again, after a check stopped its commit, wrote a second "Release x.y.z." entry on top of the
+first (owner, 28-10-2026: Windows Portable Test and its portal each had "Release 1.3.0." twice): the same release now
+replaces the newest entry, with the latest notes; another release or another kind of entry is added as before.
+
+Added. Every command the command line runs, the git buttons' too, is kept with its whole output and its exit code in
+~/.cache/nexus-releases/commands/commands-<date>.log (owner, 28-10-2026: only the commands were kept, so a release
+that went wrong could not be read back).
+
 Changelog: 28-10-2026 21:33:59
 
 Fixed. The test of the Windows suite's test buttons failed in CI on Linux (28-10-2026): it set sys.platform to win32

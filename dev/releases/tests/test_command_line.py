@@ -193,3 +193,18 @@ def test_run_now_runs_a_button_command(app, tmp_path):
     finish(pane)
     assert pane.last_code == 0
     pane.shutdown()
+
+
+@needs_bash
+def test_every_command_and_its_output_are_logged(app, tmp_path):
+    # What a release step said can be read afterwards (owner, 28-10-2026: only the commands were kept).
+    pane = CommandLine(tmp_path, log_dir=tmp_path / "logs")
+    type_and_run(pane, "echo first")
+    type_and_run(pane, "echo second; exit 3")
+    log = pane.log_file().read_text(encoding="utf-8")
+    assert pane.log_file().parent == tmp_path / "logs" and pane.log_file().name.startswith("commands-")
+    assert "$ echo first\nfirst\n" in log and "exit code 0" in log
+    assert "$ echo second; exit 3\nsecond\n" in log and "exit code 3" in log
+    assert log.index("echo first") < log.index("echo second")
+    pane.shutdown()
+    assert CommandLine(tmp_path, bash="").log_file() is None             # no log_dir: nothing written

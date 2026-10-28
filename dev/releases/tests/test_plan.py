@@ -206,6 +206,24 @@ def test_changelog_entry(repo):
     assert rp.portal_text("0.2.0", ["alpha-v0.2.0"], "") == "Release 0.2.0. Pins alpha-v0.2.0."
 
 
+def test_applying_a_release_again_keeps_one_entry(repo):
+    """Apply after a check stopped the commit wrote "Release 1.3.0." a second time (owner, 28-10-2026): the same
+    release replaces the newest entry, with the latest notes; another release, or another kind of entry, is added."""
+    beta = unit(repo, "beta")
+    first = datetime.datetime(2026, 10, 10, 18, 0, tzinfo=datetime.timezone.utc)
+    again = datetime.datetime(2026, 10, 10, 18, 5, tzinfo=datetime.timezone.utc)
+    rp.add_changelog_entry(repo, beta, rp.release_text("0.1.0", ""), first)
+    rp.add_changelog_entry(repo, beta, rp.release_text("0.1.0", "Pins alpha-v0.2.0."), again)
+    text = (repo / "apps/beta/CHANGELOG").read_text()
+    assert text == ("Changelog: 10-10-2026 20:05:00\n\nRelease 0.1.0. Pins alpha-v0.2.0.\n\n"
+                    "Changelog: 01-01-2026 00:00:00\n\nFirst.\n")
+    rp.add_changelog_entry(repo, beta, "Fixed. A typo.", again)
+    rp.add_changelog_entry(repo, beta, rp.release_text("0.1.1", ""), again)
+    rp.add_changelog_entry(repo, beta, rp.release_text("0.1.1", ""), again)
+    assert [rp.entry_body(e) for e in rp.changelog_entries((repo / "apps/beta/CHANGELOG").read_text())] == [
+        "Release 0.1.1.", "Fixed. A typo.", "Release 0.1.0. Pins alpha-v0.2.0.", "First."]
+
+
 def test_unreleased_pin_follows_the_version(repo):
     beta = unit(repo, "beta")                                 # pinned beta-v0.1.0, never tagged
     rp.set_version(repo, beta, "0.2.0")

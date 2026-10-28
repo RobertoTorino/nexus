@@ -1,3 +1,14 @@
+Changelog: 28-10-2026 23:07:51
+
+Fixed. portable.scale() adapts to a smaller screen too (owner, 28-10-2026: "can it not auto adapt to the screen
+it's on"): the layout is drawn smaller than the mock-up where the screen is (a 1080p screen at 175 % is 1097 x 617:
+0.86), down to MIN_SCALE 0.6, and PortableWindow reads the whole screen rather than the part beside the taskbar, as the
+apps run full screen over it (the Ally stays at 1). pin_scale() keeps a size for the windows made afterwards (tests,
+pictures for the wiki).
+
+Added. PortableWindow.restyle() draws every card and pane again after glass() changed, so a wallpaper switches on and
+off in a running window; Pane(solid=True) is never see-through (an InfoPopup's panel).
+
 Changelog: 28-10-2026 20:01:44
 
 Added. portable.InfoPill and InfoPopup: an information icon (a ring with an i drawn in it, 32 px) for more text

@@ -139,7 +139,12 @@ the settings.
   next command. A command cannot read input, so nothing can ask you something: git does not prompt for a password,
   opens no editor (commit with `-m`) and pages nothing. For a command that must ask, use a terminal. After each
   command the window reads the checkout again, as **Refresh** does. On Windows it needs Git Bash's `bash` on the
-  PATH.
+  PATH. Every command, its whole output and how it ended (its exit code) are also kept in a file of the day,
+  `~/.cache/nexus-releases/commands/commands-<YYYY-MM-DD>.log` (on Windows under your user folder,
+  `.cache\nexus-releases\commands`), so what a step said can be read again afterwards, or sent along when one went
+  wrong.
+- **Applying a release again** (after a check stopped its commit) leaves one release entry in the CHANGELOG: the
+  new "Release x.y.z." takes the place of the same release's entry on top, with the notes of the second Apply.
 
 **GitHub** in the header shows whether GitHub built your last push: every workflow run (CI, Release, Manual) on
 its commit, tags included. It reads **building** while one runs, then **passed** or **failed**; hover for each

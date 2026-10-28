@@ -286,3 +286,19 @@ def test_without_the_asus_channel_there_is_no_back_buttons_chip(make, qapp):
     pane = window.controller_pane
     assert not pane.chips["m1m2"].isVisibleTo(pane) and pane.count.text() == "0 of 15 buttons answered"
     assert "reports none" in pane.back_buttons.info
+
+
+def test_the_window_fits_a_smaller_screen(qapp, ally_json):
+    # It adapts to the screen it is on (owner, 28-10-2026): a 1080p screen at 175 % is 1097 x 617.
+    portable.pin_scale((1097, 617))
+    try:
+        window = MainWindow(gamepad=Gamepad(source_factory=FakePad), read=lambda: device.parse(ally_json),
+                            measure=measured, battery=lambda: (82, False), temperatures=lambda: (47, 45),
+                            back_reader=FakeBack(True))
+        window.resize(1097, 617)
+        window.show()
+        qapp.processEvents()
+        assert window.minimumSizeHint().height() <= 617 and window.height() == 617
+        window.close()
+    finally:
+        portable.pin_scale((1280, 720))

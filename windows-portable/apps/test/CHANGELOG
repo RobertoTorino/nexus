@@ -1,3 +1,12 @@
+Changelog: 28-10-2026 23:27:46
+
+Release 1.5.1.
+
+Changelog: 28-10-2026 23:07:51
+
+Fixed. The window adapts to the screen it is on (owner, 28-10-2026): on a screen smaller than the Ally's 1280 x
+720, such as a 1080p screen at 175 % (1097 x 617), core draws it smaller instead of cutting off its bottom.
+
 Changelog: 28-10-2026 22:34:29
 
 Release 1.5.0.
