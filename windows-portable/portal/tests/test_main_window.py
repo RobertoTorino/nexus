@@ -149,7 +149,7 @@ def test_the_tabs_and_tiles_and_the_strip_for_the_focused_app(world, qapp):
     assert window.tiles["test"].text.text() == "Not installed"
     assert pane_texts(window) == ("Windows Portable Test", "Install", "")
     assert window.app_pane.versions.text() == "Not installed; this portal has 0.1.0"
-    assert window.header.status.text().startswith("82 %  |  ")
+    assert window.header.status.text().startswith("82%  |  ")
     assert [text for _, text in window.legend.items] == ["Details", "Suite", "Close"]
     window.tabs.step(1)
     assert window.tabs.current == "gaming" and window.tiles["pcsx2"].isVisible() and not window.tiles["test"].isVisible()
@@ -393,3 +393,18 @@ def test_a_download_shows_how_far_it_is(world, qapp, monkeypatch):
     assert wait_for(qapp, lambda: window.tiles["test"].text.text() == "Downloading… 3 MB")
     release.set()
     assert wait_for(qapp, lambda: window.job is None) and not window.progress_timer.isActive()
+
+
+def test_the_intro_covers_the_window_before_it_shows(world, qapp):
+    # The page showed first, then the intro faded in over it (owner, 28-10-2026): now its first frame is the intro's.
+    window = mw.MainWindow(world.entries, world.sources, world.records, intro_ms=60_000,
+                           gamepad=Gamepad(source_factory=FakePad), battery=lambda: None)
+    world.windows.append(window)
+    assert window.intro is not None and window.intro.isVisibleTo(window)
+    portable.scale((1280, 720))
+    window.resize(1280, 720)
+    window.show()
+    qapp.processEvents()
+    assert window.intro.geometry() == window.rect()
+    frame = window.grab().toImage()
+    assert frame.pixelColor(640, 600).name() == portable.BACKGROUND        # dark where the tiles are, before start()

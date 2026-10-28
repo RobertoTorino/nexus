@@ -4,6 +4,7 @@ read, the controller test that has every button until B is held, and B closing t
 
 from __future__ import annotations
 
+import re
 import time
 from pathlib import Path
 
@@ -89,9 +90,9 @@ def test_the_device_is_read_and_shown(make, qapp):
     assert window.device_pane.read_pill.label.text() == "Read again"
     shown = values(window)
     assert shown["Device"] == "ROG Xbox Ally X" and shown["Memory"] == "24 GB, 15.6 GB usable"
-    assert "Screen" in shown and " % scaling, " in shown["Screen"]
+    assert "Screen" in shown and "% scaling, " in shown["Screen"]
     assert list(shown).index("Screen") == list(shown).index("Memory") - 1
-    assert window.header.status.text().startswith("82 %  |  ")
+    assert re.fullmatch(r"82%  \|  \w+day \d\d/\d\d/\d{4}  \|  \d\d:\d\d", window.header.status.text())
     assert window.header.icon is None                       # the screen is too small for it (owner, 27-10-2026)
     assert [text for _, text in window.legend.items] == ["Save report", "Close"]
 
@@ -160,3 +161,40 @@ def test_a_long_value_wraps_and_leaves_the_cards_their_width(make, qapp):
 def test_the_version_is_the_apps():
     from portable_test import __version__
     assert __version__ == (Path(__file__).resolve().parents[1] / "VERSION").read_text().strip()
+
+
+def test_one_read_fills_the_device_hardware_and_connected_cards(make, qapp, monkeypatch):
+    import json
+
+    from conftest import DOCKED
+    window, _ = make(read=lambda: device.parse(json.dumps(DOCKED)))
+    assert read(window, qapp)
+    window.hardware_card.setFocus()
+    qapp.processEvents()
+    assert window.panes.currentWidget() is window.hardware_pane
+    assert window.legend.items == [("X", "Save report"), ("B", "Close")]
+    hardware = window.hardware_pane.grid
+    assert [hardware.itemAt(i).widget().text() for i in range(0, hardware.count(), 2)][:2] == ["Panel", "Touch"]
+    window.connected_card.setFocus()
+    qapp.processEvents()
+    connected = window.connected_pane.grid
+    assert connected.itemAt(1).widget().text() == "Realtek USB hub (USB 3, USB 2)"
+    assert all(p.read_pill.label.text() == "Read again" for p in window.info_panes)
+    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
+    saved = window.save_report().read_text(encoding="utf-8")
+    assert "\nDevice\nDevice: ROG Xbox Ally X\n" in saved and "\nHardware\nPanel: about 7 inches" in saved
+    assert "\nConnected\nDock or hub: Realtek USB hub (USB 3, USB 2)\n" in saved
+    assert str(window.reports) in window.connected_pane.status.text()      # every card says where it went
+
+
+def test_nothing_plugged_in_says_so(make, qapp):
+    window, _ = make()
+    assert read(window, qapp)
+    assert window.connected_pane.grid.count() == 0 and window.connected_pane.status.text() == "Nothing is plugged in."
+
+
+def test_the_header_has_the_date():
+    import datetime
+
+    from bc250_core.portable import status_clock
+    assert status_clock(datetime.datetime(2026, 10, 28, 17, 4)) == ["Wednesday 28/10/2026", "17:04"]

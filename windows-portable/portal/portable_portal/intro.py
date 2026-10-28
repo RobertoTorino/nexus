@@ -1,9 +1,12 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The portal's intro, about three seconds when it opens (owner, 28-10-2026: the BC250 portal's intro of Suite Big
 Picture Mode with its sound, here with this suite's name, icon and amber; a handheld has no mode to switch to, so
-it plays at the start). Painted over the window: a light sweeps across a dark screen, rings open from the suite's icon, the name
-draws itself in wide letters and settles, and the screen clears to the tiles. Any key, tap or button skips it, and
-its sound with it (skip(), also called for the controller's buttons)."""
+it plays at the start). Painted over the window: a light sweeps across a dark screen, rings open from the suite's
+icon, the name draws itself in wide letters and settles, and the screen clears to the tiles. Any key, tap or button
+skips it, and its sound with it (skip(), also called for the controller's buttons).
+
+It covers the window from its first frame (cover(), before the window shows) and is dark from the start: the tiles
+show only as it clears at the end (owner, 28-10-2026: the page showed first, then the intro faded in over it)."""
 
 from __future__ import annotations
 
@@ -55,10 +58,14 @@ class Intro(QWidget):
         self.animation.finished.connect(self._done)
         self.done = False
 
-    def begin(self) -> None:
+    def cover(self) -> None:
+        """Over the whole window, dark: called before the window shows, so its first frame is the intro's."""
         self.setGeometry(self.parentWidget().rect())
         self.raise_()
         self.show()
+
+    def begin(self) -> None:
+        self.cover()
         self.setFocus()
         self.animation.start()
         self.player(self.sound)
@@ -110,7 +117,7 @@ class Intro(QWidget):
         painter = QPainter(self)
         painter.setRenderHints(QPainter.RenderHint.Antialiasing | QPainter.RenderHint.SmoothPixmapTransform)
         backdrop = QColor(BACKGROUND)
-        backdrop.setAlphaF(min(1.0, p / 0.12) * (1 - self._phase(p, 0.86, 1.0)))
+        backdrop.setAlphaF(1 - self._phase(p, 0.86, 1.0))     # dark from the start, clearing at the end
         painter.fillRect(self.rect(), backdrop)
         center = QPointF(w / 2, h / 2 - h * 0.06)
         accent = QColor(AMBER)

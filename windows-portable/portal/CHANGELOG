@@ -1,3 +1,17 @@
+Changelog: 28-10-2026 18:04:37
+
+Added. The header shows the date between the battery and the time: 82% | Wednesday 28/10/2026 | 17:04 (owner,
+28-10-2026).
+
+Fixed. The battery's percentage has no space before its sign: 82% (owner, 28-10-2026).
+
+Changelog: 28-10-2026 17:44:50
+
+Fixed. The intro covers the window from its first frame and is dark from the start; the tiles show only as it
+clears at the end. The page showed first and the intro then faded in over it, as the BC250 intro does over Big
+Picture Mode (owner, 28-10-2026). The intro is made with the window (Intro.cover()) and starts once the window is
+ready.
+
 Changelog: 28-10-2026 17:23:39
 
 Release 1.2.0. Pins wp-test-v1.2.0.

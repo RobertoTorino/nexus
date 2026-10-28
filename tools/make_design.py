@@ -2,10 +2,10 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Write DESIGN.md: every color of the suites, where it is defined and what it is for:
 
-    python3 tools/make_design.py            # write DESIGN.md and its samples in docs/design/colors/
+    python3 tools/make_design.py            # write DESIGN.md and its samples in design/colors/
     python3 tools/make_design.py --check    # only list what is out of date; exit 1 when anything is
 
-A text color shows a sample sentence, any other color a block, each an SVG in docs/design/colors/; a sample no
+A text color shows a sample sentence, any other color a block, each an SVG in design/colors/; a sample no
 color uses any more is removed. The listing is the data below: change it here and run the script, not DESIGN.md
 itself. The wikis' stylesheets are compared with their listings (STYLESHEETS): a color in a stylesheet that the
 listing lacks, or a listed color the stylesheet no longer has, is reported by --check and by tools/tests."""
@@ -22,7 +22,7 @@ S = ("A nexus is like a hub, the center every part leads back to. Nexus is where
      "holding every suite, the code they share, and the rules they’re built by.")
 ROOT = Path(__file__).resolve().parent.parent
 SUITE_DIR = "bc250-bazzite"                 # the BC250 Bazzite Suite's folder
-COLORS = f"{SUITE_DIR}/docs/design/colors"
+COLORS = "design/colors"                       # beside DESIGN.md: every suite's and the Nexus page's (owner, 28-10-2026)
 DARK, LIGHT = "#22262a", "#eceef0"      # the backdrops: Gunmetal's and Silver's fields
 FILES: dict[str, str] = {}              # what build() writes: path in the checkout -> text
 
@@ -218,6 +218,23 @@ PORTABLE_BLOCKS = [
     ("#cd8b22", "The main pill (owner, 27-10-2026, a trial)."),
     ("#141414", "The main pill's glyph circle."),
 ]
+PORTABLE_WIKI_TEXT = [
+    ("#f5f4f0", "The text: the pages, the header's name and links, table headings."),
+    ("#a5a5ab", "Dimmed: the line under the home page's name, the search field's hint."),
+    ("#f5a524", "Amber: links in the text, the name on the home page, a header link under the pointer."),
+    ("#141414", "Text on the amber."),
+]
+PORTABLE_WIKI_BLOCKS = [
+    ("#121214", "The page, the header and the footer, as the window."),
+    ("#1d1e22", "Code blocks and the footer's bottom strip, as a card."),
+    ("#292b31", "Table headings and Material's main color, as a focused card."),
+    ("#35383f", "Lines: the header's bottom edge, between a table's rows."),
+    ("#f5a524", "Amber: links and buttons under the pointer, the outline on linked pictures; the main color's lighter "
+                "step."),
+    ("#cd8b22", "The main color's darker step: the main pill's amber."),
+    ("#f5a5241a", "A faint amber behind what is under the pointer (10 %)."),
+    ("#f5a52440", "The amber glow under the handheld on the home page (25 %), as under a focused card."),
+]
 NEXUS_BLOCKS = [
     ("#010101", "Ink: the page background, the header, the dark sections, the footer and its notice strip."),
     ("#0f0f0f", "Main color: Material's primary color, table headings."),
@@ -369,6 +386,7 @@ def families() -> str:
 STYLESHEETS = {
     f"{SUITE_DIR}/docs/stylesheets/suite.css": (WIKI_TEXT, WIKI_BLOCKS),
     "nexus/docs/stylesheets/nexus.css": (NEXUS_TEXT, NEXUS_BLOCKS),
+    "windows-portable/docs/stylesheets/portable.css": (PORTABLE_WIKI_TEXT, PORTABLE_WIKI_BLOCKS),
 }
 
 GAMING_TEXT = [
@@ -548,7 +566,7 @@ def build() -> dict[str, str]:
 
 The colors of the suite, where they are defined and what they are for. Text colors show a sample sentence in that
 color; background colors (surfaces, fills, borders and lines) show a block. The samples are SVG files in
-`bc250-bazzite/docs/design/colors/`. A text sample sits on a dark or a light backdrop, whichever its color reads on; a color with
+`design/colors/`. A text sample sits on a dark or a light backdrop, whichever its color reads on; a color with
 an opacity (written `#rrggbbaa` here, `#aarrggbb` in the Qt code) shows over a checkerboard. The icons are in
 [ICONS.md](ICONS.md). Written by `tools/make_design.py`: change the listing there and run it.
 
@@ -569,6 +587,8 @@ are not on core yet carry a copy). The theme is one choice for every app: Gunmet
                "(the owner's, 26-10-2026).\n")
     out.append(section("Portable window", "The apps of the Windows Portable Suite, sized for a handheld held in the "
                        "hands.", PORTABLE_TEXT, PORTABLE_BLOCKS))
+    out.append(section("Wiki", "`windows-portable/docs/stylesheets/portable.css`: the portable window's colors on "
+                       "Material's slate scheme.", PORTABLE_WIKI_TEXT, PORTABLE_WIKI_BLOCKS))
     out.append("## The Nexus page\n\n`nexus/docs/stylesheets/nexus.css`, ink, silver and teal (the owner's design, "
                "25-10-2026): the Nexus page has a\ndesign of its own, apart from the suites' (a design per system).\n")
     out.append(section("Nexus", "", NEXUS_TEXT, NEXUS_BLOCKS))
@@ -618,7 +638,7 @@ def unlisted(root: Path = ROOT) -> list[str]:
 
 
 def differences(files: dict[str, str], root: Path = ROOT) -> tuple[list[str], list[str]]:
-    """The files that are missing or differ from *files*, and the samples in docs/design/colors/ no color uses."""
+    """The files that are missing or differ from *files*, and the samples in design/colors/ no color uses."""
     changed = [name for name, text in files.items()
                if not (root / name).is_file() or (root / name).read_text(encoding="utf-8") != text]
     folder = root / COLORS

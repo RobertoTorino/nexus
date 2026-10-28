@@ -1121,12 +1121,21 @@ behavior and dependencies. Decided (owner, 25-10-2026):
   Its installer test (`tools/installer-tests/portal.ps1`) builds a stand-in portal release with a stand-in test
   release in its bundle; CI runs it, builds the portal's release with the real pinned test release and runs the
   test on that too. `bc250_core/power.py` (the battery) moved from the test app into core, both apps read it.
-  Looked at offscreen at 1280 x 720 (the three pages); not yet on the Ally. Open (owner): the test app's release
-  (Breaking.: the exe's name; apps.toml's detect and launch paths already name the new one, so pin that release
-  before the portal's), the portal's VERSION bump `check_manifest.py` asks for (apps.toml changed: at least a
-  patch; the portal's entries are Added.), then the portal's first release; on the Ally: the tiles, the strip,
-  an install from a release, Details and Remove, the Suite page's update once a second portal release exists;
-  a tab with more than eight apps shows the first eight (paging comes with the ninth app); the suite's wiki.
+  Released (owner, 28-10-2026): wp-portal-v1.0.0 to v1.2.0, with wp-test-v1.0.2 to v1.2.0; the tiles, the strip,
+  an install from a release and Details were looked at on the Ally. Found there and fixed the same day (in 1.2.0):
+  the apps the portal installs get no Desktop shortcut; the legend shows the Menu button as ☰; the intro with its
+  sound at the start (`portable_portal/intro.py`, the BC250 portal's Big Picture intro with this suite's name, icon
+  and amber; the handheld has no mode to switch to); the portal's own update deleted the installed program and
+  stopped (its PowerShell window started in the program folder, which Windows keeps while a process has it as its
+  working directory: the window moves out first, and both installers put the new program in place before the old
+  one goes, `Install-Folder`); a download shows its MB (94 MB took two minutes once, which looked like a hang); an
+  install by hand asks whether to remove the download (`Remove-Download`); SHA256SUMS is written with LF. Nexus
+  Releases' GitHub column follows a suite's own release workflow. Open (owner): on the Ally, the Suite page's update
+  from an installed portal (the first one with the fixed installer), Remove, the intro and its sound, the download
+  question; B closes the portal during a download and drops it (wait, or ask first?). A tab with more than eight
+  apps shows the first eight (paging comes with the ninth app). The suite's wiki: done (28-10-2026),
+  `windows-portable/mkdocs.yml` and `docs/` (Home, Install, Portal, Windows Portable Test), its design the
+  portable window's; a new app adds its chapter `docs/apps/<key>.md` (its MANUAL.md) and a nav line.
 - **Nexus Releases on every device (owner, 27-10-2026).** It runs on Windows from the checkout (`dev/releases/run.ps1`,
   and `install.ps1` for a Start-menu entry and a Desktop shortcut; installer test
   `windows-portable/tools/installer-tests/releases.ps1`), as on Linux, and works on each suite with its own tags

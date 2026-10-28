@@ -88,7 +88,7 @@ py -m venv .venv-windows && .venv-windows/Scripts/python.exe -m pip install -r r
 ./test.sh                                   # every test suite of this system, offscreen; picks this OS's venv
 NEXUS_SYSTEM=bazzite ./test.sh              # the Bazzite suites' tests too, on another system
 python3 tools/check_versions.py             # hard-coded versions = VERSION
-mkdocs build --strict -f nexus/mkdocs.yml   # the Nexus page; -f bc250-bazzite/mkdocs.yml for that suite's wiki
+mkdocs build --strict -f nexus/mkdocs.yml   # the Nexus page; -f <suite>/mkdocs.yml for a suite's wiki
 ```
 
 A suite is worked on and tested on its own system: `./test.sh` runs the `bazzite` suites on Linux and the `windows`

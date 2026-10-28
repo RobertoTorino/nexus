@@ -16,6 +16,7 @@ Escape into back."""
 
 from __future__ import annotations
 
+import datetime
 from collections.abc import Callable, Sequence
 
 from PyQt6.QtCore import QEvent, QPoint, QRectF, QSize, Qt, pyqtSignal
@@ -160,6 +161,16 @@ class PortableHeader(QWidget):
 
     def set_status(self, parts: Sequence[str]) -> None:
         self.status.setText("  |  ".join(part for part in parts if part))
+
+
+DAYS = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
+
+
+def status_clock(now: datetime.datetime | None = None) -> list[str]:
+    """The date and the time for the header's status line, after the battery: "Monday 27/10/2026", "17:04" (owner,
+    28-10-2026). The day's name is English whatever Windows' language, as the apps' text is."""
+    now = now or datetime.datetime.now()
+    return [f"{DAYS[now.weekday()]} {now:%d/%m/%Y}", f"{now:%H:%M}"]
 
 
 class Card(QFrame):

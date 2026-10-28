@@ -94,8 +94,7 @@ Tools for the AMD BC-250 running Bazzite: diagnostics, tuning, unlocks, gaming a
 #### :material-controller: Windows Portable Suite
 
 Tools for Windows 10/11 running on portable gaming devices, made for a small screen held in the hands, touch and a
-controller. Install it with its portal from the
-[releases](https://github.com/RobertoTorino/nexus/releases/latest).
+controller. [Its wiki](windows-portable-suite/).
 
 </div>
 </div>

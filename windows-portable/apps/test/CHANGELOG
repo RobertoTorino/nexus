@@ -1,3 +1,27 @@
+Changelog: 28-10-2026 18:07:05
+
+Release 1.3.0.
+
+Changelog: 28-10-2026 18:04:37
+
+Added. Two cards beside Device, filled by the same read (owner, 28-10-2026: the Wi-Fi card and any other
+hardware; the Device card had room for one more row). Hardware: the built-in panel's size, the touch screen and its
+touch points, the Wi-Fi adapter with its driver, the Bluetooth adapter (never a paired device), audio, the fingerprint
+reader, a camera, the sensors and the USB controllers. Connected: a dock or a hub (its maker, USB 3 and USB 2: Windows
+does not tell a dock from a hub), the external screens and how they are connected, network adapters and drives on
+USB; the Device card's Storage lists the built-in drives. X saves one report with a section per card. The read takes
+about four seconds.
+
+Added. The header shows the date between the battery and the time: 82% | Wednesday 28/10/2026 | 17:04 (owner,
+28-10-2026).
+
+Fixed. A percentage has no space before its sign: 82%, 150% scaling, LT 40% (owner, 28-10-2026).
+
+Changelog: 28-10-2026 17:37:11
+
+Added. The release carries the app's chapter of the suite's wiki as MANUAL.md (installed beside the program):
+the Device and Controller cards, the back buttons, installing it on its own and its files.
+
 Changelog: 28-10-2026 17:14:56
 
 Release 1.2.0.

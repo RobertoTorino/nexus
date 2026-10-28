@@ -18,7 +18,7 @@ from bc250_core import applog, power
 from bc250_core.gamepad import Gamepad
 from bc250_core.platform import suite_data
 from bc250_core.portable import (BODY, DIM, Card, Legend, Pane, Pill, PortableHeader, PortableWindow, px,
-                                 text_label)
+                                 status_clock, text_label)
 
 from . import APP_ID, APP_NAME, SUITE, __version__, device
 from .controller import ControllerPane
@@ -57,12 +57,15 @@ class _Reader(QObject):
         self.done.emit(found)
 
 
-class DevicePane(Pane):
-    def __init__(self, parent: QWidget | None = None):
+class InfoPane(Pane):
+    """What Windows reports, as labels and values: the Device, Hardware and Connected cards' pane. One read fills
+    all three; each has the Read pill and the status line."""
+
+    def __init__(self, title: str, about: str, empty: str = "", parent: QWidget | None = None):
         super().__init__(parent)
-        self.column.addWidget(text_label("Device", 24, QFont.Weight.ExtraBold))
-        self.column.addWidget(text_label("What Windows reports about this handheld. It changes nothing.", BODY + 1,
-                                         color=DIM, wrap=True))
+        self.empty = empty                              # said when a read found nothing for this card
+        self.column.addWidget(text_label(title, 24, QFont.Weight.ExtraBold))
+        self.column.addWidget(text_label(about, BODY + 1, color=DIM, wrap=True))
         self.column.addSpacing(px(12))
         self.grid = QGridLayout()
         self.grid.setHorizontalSpacing(px(16))
@@ -87,6 +90,7 @@ class DevicePane(Pane):
             shown.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
             self.grid.addWidget(shown, r, 1)
         self.grid.setColumnStretch(1, 1)
+        self.status.setText("" if rows else self.empty)
 
 
 class MainWindow(PortableWindow):
@@ -115,18 +119,26 @@ class MainWindow(PortableWindow):
         cards.setContentsMargins(0, 0, 0, 0)
         cards.setSpacing(px(12))
         self.device_card = Card("Device", "Processor, graphics, memory, storage, screen and battery.")
+        self.hardware_card = Card("Hardware", "Panel, touch, Wi-Fi, Bluetooth, audio, fingerprint, sensors and USB.")
+        self.connected_card = Card("Connected", "A dock or hub, screens, network and drives plugged in.")
         self.controller_card = Card("Controller", "Every button, stick and trigger, shown as you press them.")
-        for card in (self.device_card, self.controller_card):
+        self.info_cards = (self.device_card, self.hardware_card, self.connected_card)
+        for card in (*self.info_cards, self.controller_card):
             card.setFixedHeight(px(104))
             cards.addWidget(card)
         cards.addStretch()
         body.addWidget(column)
         body.addSpacing(px(16))
         self.panes = QStackedWidget()
-        self.device_pane = DevicePane()
+        self.device_pane = InfoPane("Device", "What Windows reports about this handheld. It changes nothing.")
+        self.hardware_pane = InfoPane("Hardware", "What is built in, as Windows reports it.")
+        self.connected_pane = InfoPane("Connected", "What is plugged in: a dock or a hub, screens, network adapters "
+                                       "and drives. Windows does not tell a dock from a hub: the hub's maker and "
+                                       "what is behind it show.", empty="Nothing is plugged in.")
+        self.info_panes = (self.device_pane, self.hardware_pane, self.connected_pane)
         self.controller_pane = ControllerPane(clock=clock)
-        self.panes.addWidget(self.device_pane)
-        self.panes.addWidget(self.controller_pane)
+        for pane in (*self.info_panes, self.controller_pane):
+            self.panes.addWidget(pane)
         body.addWidget(self.panes, 1)
         page.addLayout(body, 1)
         page.addSpacing(px(8))
@@ -136,10 +148,11 @@ class MainWindow(PortableWindow):
         self.reader = _Reader(read)
         self.reader.done.connect(self.device_read)
         self.reader.failed.connect(self.device_failed)
-        self.device_card.focused.connect(lambda: self.show_pane(self.device_pane))
+        for card, pane in zip(self.info_cards, self.info_panes):
+            card.focused.connect(lambda pane=pane: self.show_pane(pane))
+            card.activated.connect(self.read_device)
+            pane.read_pill.activated.connect(self.read_device)
         self.controller_card.focused.connect(lambda: self.show_pane(self.controller_pane))
-        self.device_card.activated.connect(self.read_device)
-        self.device_pane.read_pill.activated.connect(self.read_device)
         self.controller_card.activated.connect(self.start_test)
         self.controller_pane.finished.connect(self.test_finished)
         self.gamepad.raw.connect(self.controller_pane.feed)
@@ -159,23 +172,29 @@ class MainWindow(PortableWindow):
         self.device_card.setFocus()
 
     def update_status(self) -> None:
-        self.header.set_status([power.text(self.battery()), datetime.datetime.now().strftime("%H:%M")])
+        self.header.set_status([power.text(self.battery()), *status_clock()])
 
     def show_pane(self, pane: Pane) -> None:
         if self.testing:
             return
         self.panes.setCurrentWidget(pane)
-        if pane is self.device_pane:
+        if pane in self.info_panes:
             self.legend.set_items([("X", "Save report"), ("B", "Close")])
         else:
             self.legend.set_items([("A", "Start the test"), ("B", "Close")])
 
-    # The Device card
+    # The Device, Hardware and Connected cards: one read fills all three
 
     def read_device(self) -> None:
         if self.reader.start():
-            self.device_pane.status.setText("Reading what Windows reports ...")
-            self.device_pane.read_pill.setEnabled(False)
+            for pane in self.info_panes:
+                pane.status.setText("Reading what Windows reports ...")
+                pane.read_pill.setEnabled(False)
+
+    def say(self, text: str) -> None:
+        """A line on the status of every info pane: the report saved, or a read that failed."""
+        for pane in self.info_panes:
+            pane.status.setText(text)
 
     def screen_row(self) -> tuple[str, str]:
         """The screen the window is on, as Qt sees it: its pixels, Windows' scaling and the refresh rate."""
@@ -186,7 +205,7 @@ class MainWindow(PortableWindow):
         size = screen.size()
         name = f" ({screen.name()})" if screen.name() else ""
         return ("Screen", f"{round(size.width() * ratio)} x {round(size.height() * ratio)}, "
-                          f"{round(ratio * 100)} % scaling, {round(screen.refreshRate())} Hz{name}")
+                          f"{round(ratio * 100)}% scaling, {round(screen.refreshRate())} Hz{name}")
 
     def rows(self) -> list[tuple[str, str]]:
         rows = self.device.rows() if self.device is not None else []
@@ -194,17 +213,25 @@ class MainWindow(PortableWindow):
         rows.insert(at, self.screen_row())
         return [(label, value) for label, value in rows if value]
 
+    def sections(self) -> list[tuple[str, list[tuple[str, str]]]]:
+        """Each info card's title and rows, as the cards show them and the report lists them."""
+        if self.device is None:
+            return []
+        return [("Device", self.rows()), ("Hardware", self.device.hardware_rows()),
+                ("Connected", self.device.connected_rows())]
+
     def device_read(self, found: device.Device) -> None:
         self.device = found
-        self.device_pane.show_rows(self.rows())
-        self.device_pane.status.setText("")
-        self.device_pane.read_pill.set_text("Read again")
-        self.device_pane.read_pill.setEnabled(True)
+        for pane, (_, rows) in zip(self.info_panes, self.sections()):
+            pane.show_rows(rows)
+            pane.read_pill.set_text("Read again")
+            pane.read_pill.setEnabled(True)
         self.log.info(f"Read the device: {found.name}.")
 
     def device_failed(self, error: str) -> None:
-        self.device_pane.status.setText(f"Windows did not answer: {error}")
-        self.device_pane.read_pill.setEnabled(True)
+        self.say(f"Windows did not answer: {error}")
+        for pane in self.info_panes:
+            pane.read_pill.setEnabled(True)
         self.log.error(f"Reading the device failed: {error}")
 
     def save_report(self) -> Path | None:
@@ -213,16 +240,17 @@ class MainWindow(PortableWindow):
             return None
         stamp = datetime.datetime.now()
         path = self.reports / f"device-{stamp:%Y-%m-%d-%H%M%S}.txt"
-        text = f"{APP_NAME} {__version__}, {stamp:%d-%m-%Y %H:%M:%S}\n\n" + \
-            "\n".join(f"{label}: {value}" for label, value in self.rows()) + "\n"
+        text = f"{APP_NAME} {__version__}, {stamp:%d-%m-%Y %H:%M:%S}\n" + "".join(
+            f"\n{title}\n" + "".join(f"{label}: {value}\n" for label, value in rows)
+            for title, rows in self.sections() if rows)
         try:
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(text, encoding="utf-8")
         except OSError as error:
-            self.device_pane.status.setText(f"The report was not saved: {error.strerror or error}")
+            self.say(f"The report was not saved: {error.strerror or error}")
             self.log.error(f"Saving the report failed: {error}")
             return None
-        self.device_pane.status.setText(f"Saved: {path}")
+        self.say(f"Saved: {path}")
         self.log.info(f"Saved the device report: {path}")
         return path
 

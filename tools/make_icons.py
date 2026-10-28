@@ -100,6 +100,12 @@ WINDOWS_PORTABLE_ICON = [
      "`windows-portable/portal/images/windows-portable-suite.webp` (512 px), `-128.png`",
      "The Windows Portable Suite's portal: its window icon and its Start-menu shortcut, and the portal's release in "
      "Nexus Releases. Lossless copies of the drawing, written by this tool."),
+    ("windows-portable/docs/images/wiki-icon.webp", "`windows-portable/docs/images/wiki-icon.webp`, `.png` (256 px)",
+     "The suite's wiki: the header logo (`.webp`) and the favicon (`.png`), written by this tool."),
+    ("windows-portable/docs/images/home/device.webp", "`windows-portable/docs/images/home/device.webp` (1376 x 768)",
+     "The suite's wiki home: the handheld under the headline, a WebP copy of the owner's picture."),
+    ("windows-portable/docs/images/apps/test.webp", "`windows-portable/docs/images/apps/<key>.webp` (256 px)",
+     "An app's chapter in the suite's wiki: its icon at the top, a WebP copy of the app's drawing."),
     ("windows-portable/portal/images/apps/test.webp", "`windows-portable/portal/images/apps/<key>.webp` (128 px)",
      "The icon on an app's tile in the portal: Windows Portable Test's is the suite's drawing, written by this tool; "
      "another app's is a copy of its own icon."),
@@ -112,6 +118,7 @@ WINDOWS_PORTABLE_COPIES = [
     ("windows-portable/icons/windows-portable-128.png",
      "windows-portable/portal/images/windows-portable-suite-128.png"),
     ("windows-portable/icons/windows-portable-128.png", "windows-portable/portal/images/apps/test.webp"),
+    ("windows-portable/icons/windows-portable-256.png", "windows-portable/docs/images/wiki-icon.png"),
 ]
 NEXUS_ICON = [
     ("nexus/images/nexus-256.png", "`nexus/images/nexus-<size>.png` (1024, 512, 256 and 128 px)",
@@ -137,6 +144,10 @@ NEXUS_COPIES = [
 NEXUS_PAGE_COPIES = [
     ("nexus/docs/images/nexus.png", "nexus/docs/images/nexus.webp"),
     ("nexus/images/nexus-1024.png", "nexus/docs/images/nexus-hero.webp"),
+    # The Windows Portable Suite's wiki: its logo, the home's handheld and the apps' icons in their chapters.
+    ("windows-portable/icons/windows-portable-256.png", "windows-portable/docs/images/wiki-icon.webp"),
+    ("windows-portable/icons/windows-portable-device.png", "windows-portable/docs/images/home/device.webp"),
+    ("windows-portable/icons/windows-portable-256.png", "windows-portable/docs/images/apps/test.webp"),
 ]
 PAGE_QUALITY = 90
 

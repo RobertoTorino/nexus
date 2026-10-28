@@ -1,3 +1,11 @@
+Changelog: 28-10-2026 18:04:37
+
+Added. portable.status_clock(): the date and the time for the portable header's status line, "Wednesday
+28/10/2026" and "17:04", the day's name in English whatever Windows' language (owner, 28-10-2026).
+
+Fixed. power.text() writes the percentage without a space before its sign: 82%, 64% charging (owner,
+28-10-2026).
+
 Changelog: 28-10-2026 00:48:41
 
 Added. power.py, the battery for the portable header's status line (Windows' GetSystemPowerStatus), from Windows

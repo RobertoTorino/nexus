@@ -1,3 +1,26 @@
+Changelog: 28-10-2026 18:07:05
+
+Release 0.3.0.
+
+Changelog: 28-10-2026 17:44:50
+
+Fixed. DESIGN.md's color samples are in design/colors/ beside it (owner, 28-10-2026), no longer in the BC250
+Bazzite Suite's bc250-bazzite/docs/design/colors/: they are every suite's and the Nexus page's, and the BC250 wiki
+showed none of them (tools/make_design.py).
+
+Changelog: 28-10-2026 17:37:11
+
+Added. The Windows Portable Suite has a wiki (owner, 28-10-2026), windows-portable/mkdocs.yml and docs/, at
+robertotorino.github.io/nexus/windows-portable-suite/: Home (the handheld, the apps, where the files are), Install
+(the download, its check, the options, the download removed afterwards, updates), Portal (the tiles and their states,
+the buttons, installing, details and Remove, the Suite page and its update, the files) and Windows Portable Test.
+Its design is the portable window's, on Material's slate scheme (docs/stylesheets/portable.css, a header of its own
+in tools/mkdocs/overrides/): the near-black page, cards a step lighter, one amber, the cards' 14 px corners. docs.yml
+publishes it beside the BC250 wiki, ci-windows-portable.yml builds it (strict) on every push; the Nexus page's card
+and footer link to it. DESIGN.md lists its colors (tools/make_design.py), ICONS.md its pictures, which
+tools/make_icons.py copies from the suite's drawings (the logo and favicon, the handheld on Home, an app's icon in
+its chapter).
+
 Changelog: 28-10-2026 17:14:56
 
 Release 0.2.0.

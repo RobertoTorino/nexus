@@ -1,0 +1,202 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+/* The Windows Portable Suite's wiki: the portable window's design (core/bc250_core/portable.py, direction D): a
+   near-black page, cards a step lighter, one amber, and Inter with heavy titles. Only this wiki loads this file, and it
+   loads no other stylesheet of the repository: every wiki has a design of its own. The design panel (mkdocs serve)
+   shows the variables below: the comment before a rule names its group, the comment after a variable says what it
+   colors. */
+
+/* The suite's colors: the rest of the design is made from these. */
+:root {
+  --wps-window: #121214;        /* The page, as the window */
+  --wps-surface: #1d1e22;       /* Cards, tables and code, as the apps' cards */
+  --wps-raised: #292b31;        /* A table's headings and what is under the pointer, as a focused card */
+  --wps-edge: #35383f;          /* Lines: table borders, the header's line */
+  --wps-amber: #f5a524;         /* The accent: links, the focus, the hero's name */
+  --wps-text: #f5f4f0;          /* The text */
+  --wps-dim: #a5a5ab;           /* Dimmed text: the hero's line, captions */
+}
+
+/* Corners. */
+:root {
+  --wps-radius-small: 6px;      /* Tooltips */
+  --wps-radius: 14px;           /* Notes, code blocks, tables, pictures, search results: the cards' radius */
+}
+
+/* Header: the bar at the top of every page. */
+:root {
+  --wps-header-bg: var(--wps-window);     /* Header background */
+  --wps-header-fg: #f5f4f0;               /* Header text: the name and the links */
+  --wps-header-hover-fg: #f5a524;         /* A link in the header under the pointer */
+}
+
+/* Material's main color. */
+[data-md-color-primary="custom"] {
+  --md-primary-fg-color: var(--wps-raised);      /* Buttons and Material's highlights */
+  --md-primary-fg-color--light: #f5a524;         /* Lighter main color */
+  --md-primary-fg-color--dark: #cd8b22;          /* Darker main color: the main pill's */
+  --md-primary-bg-color: #f5f4f0;                /* Text on the main color */
+  --md-primary-bg-color--light: #a5a5ab;         /* Dimmed text on the main color: the search field's hint */
+}
+
+/* Material's hover color. */
+[data-md-color-accent="custom"] {
+  --md-accent-fg-color: var(--wps-amber);        /* Links and buttons under the pointer, the outline on pictures */
+  --md-accent-fg-color--transparent: #f5a5241a;  /* A faint amber behind what is under the pointer (10 %) */
+  --md-accent-bg-color: #141414;                 /* Text on the amber */
+  --md-accent-bg-color--light: #141414;          /* Dimmed text on the amber */
+}
+
+/* The page. */
+[data-md-color-scheme="slate"] {
+  --md-typeset-a-color: var(--wps-amber);        /* Links in the text */
+  --md-default-bg-color: var(--wps-window);      /* Page background */
+  --md-default-fg-color: #f5f4f0;                /* The text */
+  --md-default-fg-color--light: #a5a5ab;         /* Dimmed text */
+  --md-code-bg-color: var(--wps-surface);        /* Code blocks */
+  --md-footer-bg-color: var(--wps-window);       /* The footer */
+  --md-footer-bg-color--dark: var(--wps-surface);   /* The footer's bottom strip, with the copyright */
+}
+
+/* Tables. */
+:root {
+  --wps-table-head-bg: var(--wps-raised);        /* Background of a table's headings */
+  --wps-table-head-fg: #f5f4f0;                  /* Text of a table's headings */
+}
+
+/* The home page. */
+:root {
+  --wps-hero-fg: #f5a524;                        /* The suite's name under the handheld */
+  --wps-glow: #f5a52440;                         /* The amber glow under the handheld (25 %), as under a focused card */
+}
+
+
+.md-header {
+  background: var(--wps-header-bg);
+  color: var(--wps-header-fg);
+  border-bottom: 1px solid var(--wps-edge);
+}
+
+.md-search__form {
+  border-radius: 2em;
+}
+
+.md-typeset h1, .md-typeset h2 {
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.md-typeset h1 {
+  color: var(--md-default-fg-color);
+}
+
+.md-typeset h3, .md-typeset h4 {
+  font-weight: 700;
+}
+
+.md-typeset .admonition,
+.md-typeset details,
+.md-typeset .highlight,
+.md-typeset pre,
+.md-typeset table:not([class]),
+.md-typeset img,
+.md-search__output {
+  border-radius: var(--wps-radius);
+}
+
+.md-typeset .admonition,
+.md-typeset details {
+  overflow: hidden;
+}
+
+.md-typeset .highlight,
+.md-typeset pre {
+  overflow: auto;
+}
+
+.md-typeset table:not([class]) th {
+  background-color: var(--wps-table-head-bg);
+  color: var(--wps-table-head-fg);
+}
+
+.md-typeset table:not([class]) td {
+  border-top-color: var(--wps-edge);
+}
+
+.md-tooltip {
+  border-radius: var(--wps-radius-small);
+}
+
+/* The icon in the header, large, and the suite's name beside it. */
+.md-header__button.md-logo img,
+.md-header__button.md-logo svg {
+  height: 2.4rem;
+  width: auto;
+}
+
+.md-header__name {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--wps-header-fg);
+  white-space: nowrap;
+}
+
+/* The links on the right of the header, as plain words; under the pointer the word turns amber. */
+.md-header__spacer {
+  flex-grow: 1;
+}
+
+.md-header__links {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  margin: 0 0.4rem;
+}
+
+.md-header__link {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--wps-header-fg);
+  transition: color 150ms ease;
+}
+
+.md-header__link:hover,
+.md-header__link:focus {
+  color: var(--wps-header-hover-fg);
+}
+
+/* An app's icon at the top of its chapter. */
+.md-typeset img.app-logo {
+  float: right;
+  width: 7rem;
+  margin: 0 0 1rem 1rem;
+}
+
+/* The home page: the handheld with its amber glow, the suite's name under it. */
+.md-typeset .hero {
+  text-align: center;
+  margin: 0.5rem 0 2rem;
+}
+
+.md-typeset .hero img {
+  max-width: 100%;
+  width: 38rem;
+  filter: drop-shadow(0 1.2rem 2rem var(--wps-glow));
+}
+
+.md-typeset .hero h1 {
+  color: var(--wps-hero-fg);
+  margin: 1rem 0 0.3rem;
+}
+
+.md-typeset .hero p {
+  color: var(--wps-dim);
+  font-size: 0.9rem;
+}
+
+@media screen and (max-width: 44.9375em) {
+  .md-header__name,
+  .md-header__links {
+    display: none;
+  }
+}

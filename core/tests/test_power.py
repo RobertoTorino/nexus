@@ -16,9 +16,9 @@ def test_the_status():
 
 
 def test_the_text():
-    assert power.text((82, False)) == "82 %"
-    assert power.text((64, True)) == "64 % charging"
-    assert power.text((100, True)) == "100 %"
+    assert power.text((82, False)) == "82%"
+    assert power.text((64, True)) == "64% charging"
+    assert power.text((100, True)) == "100%"
     assert power.text(None) == ""
 
 
@@ -28,3 +28,12 @@ def test_off_windows_there_is_none():
     else:
         state = power.battery()
         assert state is None or (0 <= state[0] <= 100 and isinstance(state[1], bool))
+
+
+def test_the_status_clock():
+    """The header's date and time after the battery (owner, 28-10-2026): "Monday 27/10/2026", "17:04"."""
+    import datetime
+
+    from bc250_core.portable import status_clock
+    assert status_clock(datetime.datetime(2026, 10, 27, 17, 4)) == ["Tuesday 27/10/2026", "17:04"]
+    assert status_clock(datetime.datetime(2026, 10, 26, 9, 5)) == ["Monday 26/10/2026", "09:05"]

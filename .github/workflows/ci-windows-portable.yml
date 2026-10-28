@@ -41,6 +41,18 @@ jobs:
           done
           exit $rc
 
+  docs:
+    # The suite's wiki (windows-portable/docs/), as docs.yml builds it for GitHub Pages.
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -q mkdocs-material "mkdocs>=1.6,<2"
+      - run: mkdocs build --strict -f windows-portable/mkdocs.yml
+
   pytest:
     runs-on: windows-latest
     timeout-minutes: 20

@@ -7,7 +7,6 @@ status. Direction D's portal screen (the owner's, 26-10-2026)."""
 
 from __future__ import annotations
 
-import datetime
 import shlex
 import subprocess
 import sys
@@ -25,7 +24,7 @@ from PyQt6.QtWidgets import QGridLayout, QStackedWidget, QVBoxLayout, QWidget
 from bc250_core import applog, power
 from bc250_core.gamepad import Gamepad
 from bc250_core.platform import expand, launch_in_terminal
-from bc250_core.portable import AMBER, DIM, Card, Legend, PortableHeader, PortableWindow, px
+from bc250_core.portable import AMBER, DIM, Card, Legend, PortableHeader, PortableWindow, px, status_clock
 
 from . import APP_ICONS, APP_ID, APP_NAME, __version__
 from .intro import INTRO_MS, Intro
@@ -136,7 +135,6 @@ class MainWindow(PortableWindow):
         self.portal_check, self.battery, self.launch, self.terminal = portal_check, battery, launch, terminal
         self.exe = exe                                  # the installed portal's program, for a restart; "" from a checkout
         self.exit_dir = exit_dir or Path(tempfile.gettempdir())
-        self.intro_ms = intro_ms
         self.intro: Intro | None = None
         self.settings = QSettings()
         self.by_key = {entry.key: entry for entry in entries}
@@ -221,6 +219,10 @@ class MainWindow(PortableWindow):
         self.confirm_timer.setSingleShot(True)
         self.confirm_timer.setInterval(CONFIRM_MS)
         self.confirm_timer.timeout.connect(self._confirm_over)
+        if intro_ms > 0:                                # over the window before it shows: its first frame is dark
+            self.intro = Intro(self, intro_ms)
+            self.intro.finished.connect(self._intro_done)
+            self.intro.cover()
 
     def start(self) -> None:
         """After the window is shown: the intro, the controller, the status line, the last tab, and the portal's own
@@ -234,9 +236,7 @@ class MainWindow(PortableWindow):
         else:
             self.show_tab(self.tabs.current)
         self.check_portal()
-        if self.intro_ms > 0:
-            self.intro = Intro(self, self.intro_ms)
-            self.intro.finished.connect(self._intro_done)
+        if self.intro is not None:
             self.intro.begin()
 
     def _intro_done(self) -> None:
@@ -258,7 +258,7 @@ class MainWindow(PortableWindow):
     # The pages
 
     def update_status(self) -> None:
-        parts = [power.text(self.battery()), datetime.datetime.now().strftime("%H:%M")]
+        parts = [power.text(self.battery()), *status_clock()]
         if self.update_available():
             parts.append(f"Suite {self.update.release.version} available")
         self.header.set_status(parts)

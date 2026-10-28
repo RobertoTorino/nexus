@@ -187,6 +187,7 @@ shellcheck -S warning $S/apps/decky/install.sh $S/apps/ncgui/install.sh \
 for t in bc250-bazzite/tools/installer-tests/*.sh; do [ "${t##*/}" = shims.sh ] || bash "$t"; done   # every installer test
 mkdocs build --strict -f bc250-bazzite/mkdocs.yml   # the suite's wiki, from the venv
 mkdocs build --strict -f nexus/mkdocs.yml          # the Nexus page
+mkdocs build --strict -f windows-portable/mkdocs.yml   # the Windows Portable Suite's wiki
 ```
 
 On Windows, for the Windows Portable Suite (its own CI, `ci-windows-portable.yml`), from PowerShell at the repo root:

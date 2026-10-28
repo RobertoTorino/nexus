@@ -1,0 +1,66 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# The Windows Portable Suite's wiki. It stands on its own: no INHERIT and no file of another wiki, so its design
+# (tools/mkdocs/overrides/, docs/stylesheets/portable.css: the portable window's near-black, cards and amber) changes
+# nothing elsewhere. Published beside the BC250 Bazzite Suite's wiki, under the Nexus page
+# (.github/workflows/docs.yml). An app's chapter, docs/apps/<key>.md, ships with its release as MANUAL.md.
+
+site_name: Windows Portable Suite
+site_description: Tools for Windows 10/11 running on portable gaming devices
+site_url: https://robertotorino.github.io/nexus/windows-portable-suite/
+repo_url: https://github.com/RobertoTorino/nexus
+repo_name: RobertoTorino/nexus
+edit_uri: edit/main/windows-portable/docs/
+docs_dir: docs
+strict: true
+plugins:
+  - search
+  - privacy                    # fonts and other external assets downloaded at build time and served from the
+                               # wiki itself, so a visit sends nothing to Google Fonts
+hooks:
+  - ../tools/mkdocs/design_panel.py   # a design panel on every page, only while `mkdocs serve` runs (the Nexus tools)
+  - ../tools/mkdocs/disclaimer.py     # the disclaimer every wiki shows (config.extra.disclaimer, the Nexus tools)
+theme:
+  name: material
+  custom_dir: tools/mkdocs/overrides
+  logo: images/wiki-icon.webp  # the suite's icon (windows-portable/icons/, the owner's), copied by tools/make_icons.py
+  favicon: images/wiki-icon.png
+  font:
+    text: Inter
+    code: JetBrains Mono
+  palette:                     # dark only, without a switch
+    scheme: slate
+    primary: custom
+    accent: custom
+  features:
+    - navigation.sections
+    - navigation.top
+    - navigation.indexes
+    - toc.follow
+    - search.highlight
+    - content.code.copy
+    - content.tooltips         # a title shows as a rounded tooltip of the site's design, not the browser's
+extra_css:
+  - stylesheets/portable.css
+extra:
+  generator: false             # no "Made with Material for MkDocs" in the footer
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+      slugify: !!python/object/apply:pymdownx.slugs.slugify {kwds: {case: lower}}   # GitHub's anchors
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+validation:
+  links:
+    anchors: warn
+nav:
+  - Home: index.md
+  - Install: install.md
+  - Portal: portal.md
+  - Apps:
+      - Windows Portable Test: apps/test.md

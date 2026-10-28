@@ -111,7 +111,7 @@ class Trigger(QWidget):
         painter.setPen(QColor(DIM))
         painter.setFont(font(BODY))
         painter.drawText(QRectF(0, 0, self.width(), px(22)), Qt.AlignmentFlag.AlignLeft,
-                         f"{self.label}  {round(self.value * 100)} %")
+                         f"{self.label}  {round(self.value * 100)}%")
 
 
 class ControllerPane(Pane):
