@@ -144,6 +144,8 @@ def pyinstaller_args(stage: Path, launcher: Path, package: str, exe_name: str, i
                      sep: str = os.pathsep) -> list[str]:
     # The portal reads apps.toml from next to its package too (portable_portal.MANIFEST).
     manifest = [("--add-data", f"{stage / 'apps.toml'}{sep}.")] if (stage / "apps.toml").is_file() else []
+    # And its intro's sound from sounds/ (portable_portal.INTRO_SOUND).
+    sounds = [("--add-data", f"{stage / 'sounds'}{sep}sounds")] if (stage / "sounds").is_dir() else []
     return [
         str(launcher),
         "--onedir", "--windowed", "--noconfirm", "--clean", "--noupx",
@@ -156,7 +158,7 @@ def pyinstaller_args(stage: Path, launcher: Path, package: str, exe_name: str, i
         # Read from next to the package, as in an install: the logo, and the fonts core registers.
         "--add-data", f"{stage / 'images'}{sep}images",
         "--add-data", f"{stage / 'bc250_core' / 'fonts'}{sep}bc250_core/fonts",
-        *(part for pair in manifest for part in pair),
+        *(part for pair in manifest + sounds for part in pair),
     ]
 
 
@@ -214,7 +216,8 @@ def build_zip(app: str, tag: str, out: Path, epoch: int, bundle: Path | None = N
             test_zip, digest = bundled
             (release / "bundle").mkdir()
             shutil.copyfile(test_zip, release / "bundle" / test_zip.name)
-            (release / "bundle" / "SHA256SUMS").write_text(f"{digest}  {test_zip.name}\n", encoding="utf-8")
+            (release / "bundle" / "SHA256SUMS").write_text(f"{digest}  {test_zip.name}\n", encoding="utf-8",
+                                                           newline="\n")
         archive = out / f"{tag}.zip"
         write_zip(release, tag, archive, epoch)
     return archive
@@ -232,7 +235,8 @@ def build(tag: str, out: Path, bundle: Path | None = None) -> Path:
         raise SystemExit(f"{tag}: {src.relative_to(SUITE)}/VERSION is {current}; bump it before tagging")
     archive = build_zip(app, tag, out, source_epoch(), bundle)
     digest = sha256_of(archive)
-    (out / "SHA256SUMS").write_text(f"{digest}  {archive.name}\n", encoding="utf-8")
+    # LF, as sha256sum -c on Linux reads it: Windows' text mode wrote CRLF
+    (out / "SHA256SUMS").write_text(f"{digest}  {archive.name}\n", encoding="utf-8", newline="\n")
     core = (ROOT / "core" / "VERSION").read_text(encoding="utf-8").strip()
     what = ["The portal of the Windows Portable Suite: it installs, updates, opens and removes the suite's apps, "
             f"with Windows Portable Test {pinned_test()[0].rsplit('-v', 1)[1]} bundled and installed with it.", ""] \
@@ -243,8 +247,10 @@ def build(tag: str, out: Path, bundle: Path | None = None) -> Path:
              "### Install", "", "In PowerShell, in the folder you downloaded it to:", "", "```powershell",
              f"(Get-FileHash {archive.name}).Hash -eq (-split (Get-Content SHA256SUMS))[0]"
              "   # True: the download is intact",
-             f"Expand-Archive {archive.name} .", f"cd {tag}",
-             "powershell -ExecutionPolicy Bypass -File install.ps1", "```", "",
+             f"Expand-Archive {archive.name} . -Force",
+             f"powershell -ExecutionPolicy Bypass -File {tag}\\install.ps1", "```", "",
+             "Once it is installed, the installer asks whether to remove the download (the zip, its SHA256SUMS and "
+             "the unpacked folder).", "",
              f"SHA-256 of `{archive.name}`: `{digest}`", ""]
     changes = latest_changes(src / "CHANGELOG")
     if changes:

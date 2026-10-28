@@ -44,6 +44,15 @@ def http_download(user_agent: str) -> Download:
     return download
 
 
+def downloaded(work: Path, tag: str, asset: str) -> int:
+    """How many bytes of *asset* fetch_release has downloaded so far into *work*; 0 before it starts and once it is
+    done (its folder is gone then)."""
+    try:
+        return (work / f".{tag}.part" / asset).stat().st_size
+    except OSError:
+        return 0
+
+
 def sha256_of(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as fh:

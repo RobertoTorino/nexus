@@ -1,3 +1,26 @@
+Changelog: 28-10-2026 17:10:34
+
+Fixed. A download shows how far it is, on the tile (Downloading… 40 MB) and on the Suite page (Downloading the
+portal… 40 MB), where it said Downloading… for the two minutes the 94 MB portal release took on the Ally, which
+looked like a hang (owner, 28-10-2026).
+
+Changelog: 28-10-2026 17:10:34
+
+Added. After an install started by hand from a download, install.ps1 asks whether to remove the download: the zip,
+its SHA256SUMS (also one saved as SHA256SUMS (1)) and the unpacked folder (owner, 28-10-2026: a second download
+was saved as SHA256SUMS (1), and the check read the old one). Never asked when the portal runs the installer. The
+README's steps run install.ps1 from the download folder instead of cd into the unpacked one, so it can go.
+
+Changelog: 28-10-2026 17:00:55
+
+Fixed. The portal's own update deleted the installed program and stopped, so the portal was gone (owner,
+28-10-2026, on the Ally): the update's PowerShell window started in the portal's program folder, which Windows will
+not remove while a process has it as its working directory, and install.ps1 removed the files before it found
+out. The window now moves to the release folder before the installer runs ([Environment]::CurrentDirectory), and
+install.ps1 puts the new program in place before the old one goes: it renames the folder, or, while a window still
+holds it (an update started by an earlier portal), moves its contents; a program still running from it is refused
+with nothing changed.
+
 Changelog: 28-10-2026 16:46:20
 
 Release 1.1.0. Pins wp-test-v1.1.1.
@@ -5,8 +28,10 @@ Release 1.1.0. Pins wp-test-v1.1.1.
 Changelog: 28-10-2026 16:36:06
 
 Added. A short intro when the portal opens, about three seconds (owner, 28-10-2026): the BC250 portal's intro of Suite
-Big Picture Mode with this suite's name, icon and amber, painted over the window; any button, key or tap skips it
-(portable_portal/intro.py). The handheld has no mode to switch to, so the intro plays at the start.
+Big Picture Mode with its sound, here with this suite's name, icon and amber, painted over the window; any button,
+key or tap skips it and its sound (portable_portal/intro.py; the sound is sounds/intro.wav, played with Windows' own
+winsound, so the program carries no Qt Multimedia). The handheld has no mode to switch to, so the intro plays at the
+start.
 
 Changelog: 28-10-2026 16:25:16
 

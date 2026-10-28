@@ -306,18 +306,32 @@ def test_ps_line_and_launch_argv(monkeypatch):
     assert mw.restart_line(Path(r"C:\u"), "").endswith('{ throw "install.ps1 ended with exit status $LASTEXITCODE" }')
 
 
+def test_the_update_window_leaves_the_program_folder_before_the_installer_runs():
+    # The window starts in the portal's working directory, its program folder: while a process has it as its working
+    # directory install.ps1 cannot replace it (owner, 28-10-2026: the update deleted the program and stopped).
+    steps = mw.restart_line(Path(r"C:\rel"), r"C:\app\X.exe").split("; ")
+    moved = steps.index(r"[Environment]::CurrentDirectory = 'C:\rel'")
+    assert steps.index(r"Set-Location -LiteralPath 'C:\rel'") < moved
+    assert moved < steps.index("powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1")
+    assert steps[-1] == r"Start-Process -FilePath 'C:\app\X.exe'"
+
+
 def test_the_intro_plays_at_the_start_and_any_button_skips_it(world, qapp, monkeypatch):
+    played = []
+    monkeypatch.setattr("portable_portal.intro.play", played.append)
     window = world.make(intro_ms=60_000)
+    assert len(played) == 1 and played[0].name == "intro.wav"
     intro = window.intro
     assert intro is not None and intro.isVisible() and intro.name == "Windows Portable Suite"
     assert intro.geometry() == window.rect()
     monkeypatch.setattr(window, "isActiveWindow", lambda: True)
     window.on_action("accept")                          # skips the intro, installs nothing
     assert window.intro is None and world.terminal.lines == [] and intro.done
-    assert window.tiles["test"].hasFocus()
+    assert window.tiles["test"].hasFocus() and played[-1] is None
 
 
-def test_the_intro_ends_by_itself(world, qapp):
+def test_the_intro_ends_by_itself(world, qapp, monkeypatch):
+    monkeypatch.setattr("portable_portal.intro.play", lambda wav: None)
     window = world.make(intro_ms=50)
     assert window.intro is not None
     end = time.monotonic() + 5
@@ -327,14 +341,55 @@ def test_the_intro_ends_by_itself(world, qapp):
     assert window.intro is None
 
 
-def test_the_intro_paints_every_phase(qapp):
+def test_the_intro_paints_every_phase_and_plays_its_sound(qapp):
     from PyQt6.QtWidgets import QWidget
+    from portable_portal import INTRO_SOUND
     from portable_portal.intro import Intro
+    assert INTRO_SOUND.is_file() and INTRO_SOUND.read_bytes()[:4] == b"RIFF"
     host = QWidget()
     host.resize(1280, 720)
-    intro = Intro(host)
-    intro.setGeometry(host.rect())
+    played = []
+    intro = Intro(host, player=played.append)
+    intro.begin()
+    assert played == [INTRO_SOUND]
     for step in range(11):
         intro.progress = step / 10
         assert not intro.grab().isNull()
     intro.skip()
+    assert played == [INTRO_SOUND, None]                # skipped: the sound stops too
+    intro.skip()
+    assert played == [INTRO_SOUND, None]
+
+
+def test_the_intro_ends_with_its_sound(qapp):
+    from PyQt6.QtWidgets import QWidget
+    from portable_portal.intro import Intro
+    host = QWidget()
+    played = []
+    intro = Intro(host, duration=10, player=played.append)
+    intro.begin()
+    end = time.monotonic() + 5
+    while not intro.done and time.monotonic() < end:
+        qapp.processEvents()
+        time.sleep(0.01)
+    assert intro.done and played == [played[0]]         # ended by itself: the sound plays on to its end
+
+
+def test_a_download_shows_how_far_it_is(world, qapp, monkeypatch):
+    # 94 MB of a portal release took two minutes on the Ally with nothing moving on screen (owner, 28-10-2026).
+    import threading
+    release = threading.Event()
+    first = world.sources.download
+
+    def slow(url: str, dest: Path) -> None:
+        if url.endswith(".zip"):
+            dest.write_bytes(b"\0" * 3_000_000)         # the first 3 MB are in
+            release.wait(10)
+        first(url, dest)
+    monkeypatch.setattr(world.sources, "download", slow)
+    window = world.make()
+    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
+    window.on_action("accept")                          # A: install the focused app (the test app)
+    assert wait_for(qapp, lambda: window.tiles["test"].text.text() == "Downloading… 3 MB")
+    release.set()
+    assert wait_for(qapp, lambda: window.job is None) and not window.progress_timer.isActive()

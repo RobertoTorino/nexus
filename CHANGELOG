@@ -1,3 +1,20 @@
+Changelog: 28-10-2026 17:14:56
+
+Release 0.2.0.
+
+Changelog: 28-10-2026 17:10:34
+
+Added. The Windows Portable Suite's release notes run install.ps1 from the download folder
+(powershell -File <tag>\install.ps1, no cd into the unpacked folder) and say that the installer offers to remove
+the download afterwards (windows-portable/tools/build_release.py).
+
+Changelog: 28-10-2026 16:55:36
+
+Fixed. The Windows Portable Suite's releases write SHA256SUMS with LF, also the one in a portal's bundle: built on
+Windows, its text mode wrote CRLF, and sha256sum -c on Linux then looked for a file whose name ends in a carriage
+return (seen on wp-test-v1.1.1; windows-portable/tools/build_release.py). The portal release carries its intro's
+sound too (the program's sounds folder).
+
 Changelog: 28-10-2026 16:20:21
 
 Release 0.1.4.

@@ -31,12 +31,13 @@ from . import APP_ICONS, APP_ID, APP_NAME, __version__
 from .intro import INTRO_MS, Intro
 from .manifest import CATEGORIES, AppEntry
 from .portal_update import PortalUpdate, short
-from .sources import Records, SourceError, Sources, fetch_release, is_installed
+from .sources import Records, SourceError, Sources, downloaded, fetch_release, is_installed
 from .widgets import AppPane, DetailsPane, SuitePane, Tabs
 
 STATUS_MS = 30_000              # the header's battery and time
 POLL_MS = 1000                  # how often the portal looks for the installer window's exit status
 CONFIRM_MS = 5000               # Remove asks for a second press within this
+PROGRESS_MS = 500               # how often a download's size is shown (owner, 28-10-2026: 94 MB looked like a hang)
 TILE_W, TILE_H, GAP = 293, 176, 14      # the mock-up's tiles: two rows of four
 COLUMNS, PER_PAGE = 4, 8
 TAB_KEY = "window/tab"          # the settings: the tab shown last
@@ -82,9 +83,12 @@ def start_app(argv: list[str]) -> None:
 
 def restart_line(folder: PurePath, exe: str) -> str:
     """The portal's own update, run after this portal has ended (its program folder is replaced): the release's
-    install.ps1, then the new portal."""
+    install.ps1, then the new portal. The window starts in the portal's working directory, its program folder, which
+    a process's working directory keeps from being replaced: Set-Location alone does not move the process, so
+    [Environment]::CurrentDirectory moves it to the release folder too."""
     steps = [f"Wait-Process -Id {subprocess.os.getpid()} -ErrorAction SilentlyContinue",
              f"Set-Location -LiteralPath {ps_quote(folder)}",
+             f"[Environment]::CurrentDirectory = {ps_quote(folder)}",
              "powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1",
              'if ($LASTEXITCODE -ne 0) { throw "install.ps1 ended with exit status $LASTEXITCODE" }']
     if exe:
@@ -201,6 +205,10 @@ class MainWindow(PortableWindow):
         self.back.connect(self.on_back)
 
         self.worker = _Worker()
+        self.download_at: Path | None = None            # the folder of the job's download, for its size
+        self.progress_timer = QTimer(self)
+        self.progress_timer.setInterval(PROGRESS_MS)
+        self.progress_timer.timeout.connect(self.refresh)
         self.worker.done.connect(self._worker_done)
         self._on_done: Callable[[object], None] | None = None
         self.poll = QTimer(self)
@@ -311,9 +319,17 @@ class MainWindow(PortableWindow):
 
     # What each app's tile and pane say
 
+    def downloaded_text(self) -> str:
+        """How much of the job's release has come in: " 40 MB", or "" before the first bytes."""
+        if self.job is None or self.download_at is None:
+            return ""
+        entry = self.job[0]
+        size = downloaded(self.download_at, entry.tag, entry.asset)
+        return f" {size / 1_000_000:.0f} MB" if size else ""
+
     def busy_text(self, key: str) -> str:
         if self.job is not None and self.job[0].key == key:
-            return "Downloading…" if self.job[1] == "install" else "Preparing…"
+            return f"Downloading…{self.downloaded_text()}" if self.job[1] == "install" else "Preparing…"
         if self.pending is not None and self.pending.entry.key == key:
             return "Installing…" if self.pending.action == "install" else "Removing…"
         return ""
@@ -436,6 +452,8 @@ class MainWindow(PortableWindow):
             return
         self.job = (entry, action)
         self.message = ""
+        self.download_at = self.sources.work
+        self.progress_timer.start()
         self.refresh()
         self._run(lambda: self.sources.prepare(entry), self._prepared)
 
@@ -451,6 +469,7 @@ class MainWindow(PortableWindow):
     def _prepared(self, result: object) -> None:
         entry, action = self.job or (None, "")
         self.job = None
+        self.progress_timer.stop()
         if entry is None:
             return
         if isinstance(result, Exception):
@@ -544,7 +563,7 @@ class MainWindow(PortableWindow):
                         rows.append(("", self.update.details()))
                     action = f"Update to {release.version}"
         if self.job is not None and self.job[0].key == "":
-            status, action = "Downloading the portal…", ""
+            status, action = f"Downloading the portal…{self.downloaded_text()}", ""
         if self.message_key == "" and self.message:
             status = self.message
         self.suite_pane.fill(APP_NAME, f"{__version__}, the portal of the suite", rows, status, action)
@@ -565,12 +584,15 @@ class MainWindow(PortableWindow):
         work = self.sources.work.parent / "portal-update"
         self.job = (AppEntry(key="", name=APP_NAME, summary="", tag=tag), "install")
         self.message = ""
+        self.download_at = work
+        self.progress_timer.start()
         self.refresh()
         self._run(lambda: fetch_release(download, self.sources.repo_url, tag, f"{tag}.zip", work),
                   self._portal_fetched)
 
     def _portal_fetched(self, result: object) -> None:
         self.job = None
+        self.progress_timer.stop()
         if isinstance(result, Exception):
             self.say("", f"The portal could not be prepared: {result}")
             self.log.error(f"The portal update could not be prepared: {result}")
@@ -585,6 +607,7 @@ class MainWindow(PortableWindow):
 
     def closeEvent(self, event) -> None:
         self.poll.stop()
+        self.progress_timer.stop()
         self.status_timer.stop()
         super().closeEvent(event)
 

@@ -1143,6 +1143,13 @@ behavior and dependencies. Decided (owner, 25-10-2026):
   video tour list. Open (owner): the releases, portal (Breaking.: the tab and the two tools removed) and mtool,
   package and ncgui (Fixed.: the icon); the Linux checks (`tools/ci-local.sh`, the installer tests, portal.sh among
   them) on Bazzite.
+- **The portal as Xbox mode's home app (on hold, owner 28-10-2026).** Windows 11 (24H2 and later, the Full Handheld
+  edition of Xbox mode, as on the Ally) offers apps under Settings, Gaming, Xbox mode, Choose home app. OmniConsole
+  (github.com/8bit2qubit/OmniConsole) does it: an MSIX package whose manifest declares the `windows.gamingApp` app
+  extension (`uap3:AppExtension`) and the custom capability `Microsoft.appCategory.gamingHome_8wekyb3d8bbwe`, with
+  runFullTrust. Without a Store-signed package the user turns on Developer Mode and trusts the package's
+  certificate in the machine's Trusted People, both as administrator (the suite's installers refuse administrator).
+  So it takes an MSIX release format beside the zip, and ties into code signing below.
 - **Code signing (on hold, owner 27-10-2026).** The apps are unsigned: SmartScreen asks once for a file a browser
   downloaded (not for what the portal will download itself); Smart App Control, when on, blocks an unsigned exe
   with no way past it, and it may be on on other people's handhelds. Options: SignPath Foundation (free for open

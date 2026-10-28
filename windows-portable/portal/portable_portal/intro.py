@@ -1,11 +1,14 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The portal's intro, about three seconds when it opens (owner, 28-10-2026: the BC250 portal's intro of Suite Big
-Picture Mode, here with this suite's name, icon and amber; a handheld has no mode to switch to, so it plays at the
-start). Painted over the window: a light sweeps across a dark screen, rings open from the suite's icon, the name
-draws itself in wide letters and settles, and the screen clears to the tiles. Any key, tap or button skips it
-(skip(), also called for the controller's buttons)."""
+Picture Mode with its sound, here with this suite's name, icon and amber; a handheld has no mode to switch to, so
+it plays at the start). Painted over the window: a light sweeps across a dark screen, rings open from the suite's icon, the name
+draws itself in wide letters and settles, and the screen clears to the tiles. Any key, tap or button skips it, and
+its sound with it (skip(), also called for the controller's buttons)."""
 
 from __future__ import annotations
+
+from collections.abc import Callable
+from pathlib import Path
 
 from PyQt6.QtCore import QEasingCurve, QPointF, QRect, QRectF, Qt, QVariantAnimation, pyqtSignal
 from PyQt6.QtGui import QColor, QFont, QLinearGradient, QPainter, QPen, QPixmap, QRadialGradient
@@ -13,19 +16,33 @@ from PyQt6.QtWidgets import QWidget
 
 from bc250_core.portable import AMBER, BACKGROUND, font
 
-from . import APP_NAME, LOGO_PATH
+from . import APP_NAME, INTRO_SOUND, LOGO_PATH
 
 INTRO_MS = 3000                 # about three seconds, as the BC250 portal's
 LOGO_SHARE = 0.26               # the icon: this part of the screen's shorter side
 
 
+def play(sound: Path | None) -> None:
+    """Play a .wav in the background with Windows' own player (winsound: no Qt Multimedia in the program), or stop
+    the one playing (None). Without winsound (Linux) or without an audio output the intro stays silent."""
+    try:
+        import winsound
+        if sound is None:
+            winsound.PlaySound(None, 0)
+        elif sound.is_file():
+            winsound.PlaySound(str(sound), winsound.SND_FILENAME | winsound.SND_ASYNC | winsound.SND_NODEFAULT)
+    except (ImportError, RuntimeError):     # not Windows, or no sound device: no sound, no message
+        pass
+
+
 class Intro(QWidget):
     finished = pyqtSignal()
 
-    def __init__(self, parent: QWidget, duration: int = INTRO_MS, name: str = APP_NAME):
+    def __init__(self, parent: QWidget, duration: int = INTRO_MS, name: str = APP_NAME,
+                 sound: Path | None = INTRO_SOUND, player: Callable[[Path | None], None] | None = None):
         super().__init__(parent)
         self.progress = 0.0
-        self.name = name
+        self.name, self.sound, self.player = name, sound, player or (lambda wav: play(wav))
         self.logo = QPixmap(str(LOGO_PATH))
         self._logo_at: tuple[int, float] | None = None
         self._logo_scaled = QPixmap()
@@ -44,8 +61,11 @@ class Intro(QWidget):
         self.show()
         self.setFocus()
         self.animation.start()
+        self.player(self.sound)
 
     def skip(self) -> None:
+        if not self.done:
+            self.player(None)                   # cut short: its sound stops too
         self.animation.stop()
         self._done()
 

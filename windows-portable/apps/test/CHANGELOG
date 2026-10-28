@@ -1,3 +1,21 @@
+Changelog: 28-10-2026 17:14:56
+
+Release 1.2.0.
+
+Changelog: 28-10-2026 17:10:34
+
+Added. After an install started by hand from a download, install.ps1 asks whether to remove the download: the zip,
+its SHA256SUMS (also one saved as SHA256SUMS (1)) and the unpacked folder (owner, 28-10-2026: a second download
+was saved as SHA256SUMS (1), and the check read the old one). Never asked when the portal runs the installer. The
+README's steps run install.ps1 from the download folder instead of cd into the unpacked one, so it can go.
+
+Changelog: 28-10-2026 17:00:55
+
+Fixed. install.ps1 puts the new program in place before the old one goes: it renames the program folder, or,
+while a window has the folder as its working directory, moves its contents, where it deleted the files first and
+then could not remove the folder, which left no program (owner, 28-10-2026: seen with the portal's update). A
+program still running from the folder is refused with nothing changed.
+
 Changelog: 28-10-2026 16:20:21
 
 Release 1.1.1.

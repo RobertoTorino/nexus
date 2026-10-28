@@ -15,10 +15,12 @@ Download `wp-test-v<x.y.z>.zip` and `SHA256SUMS` from the app's release. Then, i
 
 ```powershell
 (Get-FileHash wp-test-v<x.y.z>.zip).Hash -eq (-split (Get-Content SHA256SUMS))[0]   # True: the download is intact
-Expand-Archive wp-test-v<x.y.z>.zip .
-cd wp-test-v<x.y.z>
-powershell -ExecutionPolicy Bypass -File install.ps1
+Expand-Archive wp-test-v<x.y.z>.zip . -Force
+powershell -ExecutionPolicy Bypass -File wp-test-v<x.y.z>\install.ps1
 ```
+
+Once it is installed, the installer asks whether to remove the download (the zip, its `SHA256SUMS` and the unpacked
+folder): a second download would otherwise be saved as `SHA256SUMS (1)` beside the old one.
 
 It installs for your own user, not as administrator: the program in
 `%LOCALAPPDATA%\windows-portable-suite\windows-portable-test\app`, a Start-menu entry in the Windows Portable Suite

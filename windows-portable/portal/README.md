@@ -6,7 +6,8 @@ The portal of the **Windows Portable Suite**: it installs, updates, opens and re
 handheld (first the ASUS ROG Xbox Ally X), each from its own GitHub release, checked against the checksum the
 portal carries. Windows Portable Test is always installed with the portal and listed first.
 
-It opens with a short intro, about three seconds, with the suite's name; any button, key or tap skips it.
+It opens with a short intro, about three seconds, with the suite's name and its sound; any button, key or tap
+skips it.
 
 Made for the handheld in your hands: full screen, the apps as tiles under tabs (LB and RB change the tab), the
 amber focus moved by the d-pad, A to install or open the focused app, Y to update it, X for its details (and Remove
@@ -20,10 +21,12 @@ page points at the newest). Then, in PowerShell, in that folder:
 
 ```powershell
 (Get-FileHash wp-portal-v<x.y.z>.zip).Hash -eq (-split (Get-Content SHA256SUMS))[0]   # True: the download is intact
-Expand-Archive wp-portal-v<x.y.z>.zip .
-cd wp-portal-v<x.y.z>
-powershell -ExecutionPolicy Bypass -File install.ps1
+Expand-Archive wp-portal-v<x.y.z>.zip . -Force
+powershell -ExecutionPolicy Bypass -File wp-portal-v<x.y.z>\install.ps1
 ```
+
+Once it is installed, the installer asks whether to remove the download (the zip, its `SHA256SUMS` and the unpacked
+folder): a second download would otherwise be saved as `SHA256SUMS (1)` beside the old one.
 
 It installs for your own user, not as administrator: the program in
 `%LOCALAPPDATA%\windows-portable-suite\portal\app`, a Start-menu entry in the Windows Portable Suite folder and a

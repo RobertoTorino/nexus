@@ -61,10 +61,13 @@ def test_an_app_gets_its_zip_checksum_and_notes(tmp_path, fake_pyinstaller):
     archive = br.build(TEST_TAG, tmp_path)
     assert archive == tmp_path / f"{TEST_TAG}.zip" and archive.read_bytes() == b"test 1790000000"
     digest = hashlib.sha256(archive.read_bytes()).hexdigest()
-    assert (tmp_path / "SHA256SUMS").read_text(encoding="utf-8") == f"{digest}  {archive.name}\n"
+    assert (tmp_path / "SHA256SUMS").read_bytes() == f"{digest}  {archive.name}\n".encode()      # LF on Windows too
     notes = (tmp_path / "notes.md").read_text(encoding="utf-8")
     assert notes.startswith(f"## {TEST_TAG}\n")
-    assert f"Expand-Archive {archive.name} ." in notes and "install.ps1" in notes
+    assert f"Expand-Archive {archive.name} . -Force" in notes
+    # Run from the folder the zip is in, so the installer can remove the unpacked folder afterwards.
+    assert f"-File {TEST_TAG}\\install.ps1" in notes and f"cd {TEST_TAG}" not in notes
+    assert "asks whether to remove the download" in notes
     # The check compares by itself, as sha256sum --check does: True or False, nothing to read by eye.
     assert f"(Get-FileHash {archive.name}).Hash -eq (-split (Get-Content SHA256SUMS))[0]" in notes
     assert "not signed" in notes and "### Changes" in notes
@@ -125,9 +128,11 @@ def test_a_one_folder_build_with_the_logo_and_core_fonts(tmp_path):
     assert add_data == [f"{tmp_path / 'stage' / 'images'};images", f"{tmp_path / 'stage' / 'bc250_core' / 'fonts'};bc250_core/fonts"]
     (tmp_path / "stage").mkdir()
     (tmp_path / "stage" / "apps.toml").write_text("")                     # the portal: its manifest beside the package
+    (tmp_path / "stage" / "sounds").mkdir()                                 # and its intro's sound
     args = br.pyinstaller_args(tmp_path / "stage", tmp_path / "run.py", "portable_portal", "Windows-Portable-Suite",
                                tmp_path / "logo.webp", tmp_path / "work", tmp_path / "dist", sep=";")
-    assert args[-2:] == ["--add-data", f"{tmp_path / 'stage' / 'apps.toml'};."]
+    assert args[-4:] == ["--add-data", f"{tmp_path / 'stage' / 'apps.toml'};.",
+                         "--add-data", f"{tmp_path / 'stage' / 'sounds'};sounds"]
 
 
 def test_the_package_and_exe_name_come_from_the_app():

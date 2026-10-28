@@ -50,6 +50,75 @@ function Remove-IfEmpty($folder) {
     }
 }
 
+function Install-Folder($new, $dir, $name) {
+    # $new in the place of $dir, deleting nothing of $dir until $new is in place: a folder a process uses as its
+    # working directory (the window an older portal's update ran in) cannot be removed or renamed, and removing
+    # it deleted the program and then failed. Then its contents move instead, and the folder stays.
+    $running = Get-Process -ErrorAction SilentlyContinue |
+        Where-Object { $_.Path -and $_.Path.StartsWith("$dir\", [StringComparison]::OrdinalIgnoreCase) }
+    if ($running) { Remove-IfThere $new; Die "$dir could not be replaced: close $name first." }
+    $old = "$dir.old"
+    try { Remove-IfThere $old } catch { $old = "$dir.old-" + [guid]::NewGuid().ToString('N').Substring(0, 8) }
+    if (Test-Path -LiteralPath $dir) {
+        try {
+            Rename-Item -LiteralPath $dir -NewName (Split-Path -Leaf $old) -ErrorAction Stop
+        } catch {
+            New-Item -ItemType Directory -Force -Path $old | Out-Null
+            $moved = @()
+            try {
+                foreach ($item in Get-ChildItem -LiteralPath $dir -Force) {
+                    Move-Item -LiteralPath $item.FullName -Destination $old -ErrorAction Stop
+                    $moved += $item.Name
+                }
+            } catch {
+                foreach ($item in $moved) { Move-Item -LiteralPath (Join-Path $old $item) -Destination $dir }
+                Remove-IfThere $new
+                Die "$dir could not be replaced: close $name first. ($_)"
+            }
+            foreach ($item in Get-ChildItem -LiteralPath $new -Force) {
+                Move-Item -LiteralPath $item.FullName -Destination $dir
+            }
+            Remove-IfThere $new
+            try { Remove-IfThere $old } catch { }
+            return
+        }
+    }
+    Rename-Item -LiteralPath $new -NewName (Split-Path -Leaf $dir)
+    try { Remove-IfThere $old } catch { }
+}
+
+function Remove-Download {
+    # After an install from a download (owner, 28-10-2026): the zip, its SHA256SUMS and the unpacked folder, on a
+    # yes. A second download would otherwise be saved as "SHA256SUMS (1)" beside the old one, and the check read the
+    # old one. Not asked when the portal runs the installer (its releases are in the suite's folder), or when nobody
+    # can answer; WPS_REMOVE_DOWNLOAD (y or n) answers in the installer tests.
+    $suiteData = Join-Path $env:LOCALAPPDATA "$Suite\"
+    if ($Src.StartsWith($suiteData, [StringComparison]::OrdinalIgnoreCase)) { return }
+    $tag = Split-Path -Leaf $Src
+    $downloads = Split-Path -Parent $Src
+    $zip = Join-Path $downloads "$tag.zip"
+    if (-not (Test-Path -LiteralPath $zip)) { return }
+    $sums = @(Get-ChildItem -LiteralPath $downloads -File -Filter 'SHA256SUMS*' |
+        Where-Object { (Get-Content -Raw -LiteralPath $_.FullName) -match "\s\*?$([regex]::Escape("$tag.zip"))\s*$" })
+    $answer = $env:WPS_REMOVE_DOWNLOAD
+    if (-not $answer) {
+        if (-not [Environment]::UserInteractive -or [Console]::IsInputRedirected) { return }
+        $names = (@("$tag.zip") + ($sums | ForEach-Object { $_.Name }) + @("$tag\")) -join ', '
+        $answer = Read-Host "Remove the download from $downloads ($names)? [Y/n]"
+    }
+    if ($answer -and $answer -notmatch '^\s*y') { Info "Keeping the download in $downloads"; return }
+    Set-Location -LiteralPath $downloads
+    [Environment]::CurrentDirectory = $downloads           # out of the unpacked folder, so it can go
+    Remove-IfThere $zip
+    foreach ($file in $sums) { Remove-IfThere $file.FullName }
+    try {
+        Remove-IfThere $Src
+        Info 'Removed the download'
+    } catch {
+        Info "Removed the zip and SHA256SUMS; remove $Src yourself once no window is in it"
+    }
+}
+
 function New-Shortcut($link, $target) {
     New-Item -ItemType Directory -Force -Path (Split-Path -Parent $link) | Out-Null
     $shortcut = (New-Object -ComObject WScript.Shell).CreateShortcut($link)
@@ -112,8 +181,7 @@ Copy-Item -Path (Join-Path $Program '*') -Destination $New -Recurse -Force
 foreach ($file in 'LICENSE', 'THIRD-PARTY-NOTICES.txt', 'MANUAL.md') {
     if (Test-Path -LiteralPath (Join-Path $Src $file)) { Copy-Item -LiteralPath (Join-Path $Src $file) -Destination $New }
 }
-try { Remove-IfThere $AppDir } catch { Remove-IfThere $New; Die "$AppDir could not be replaced: close $AppName first. ($_)" }
-Rename-Item -LiteralPath $New -NewName 'app'
+Install-Folder $New $AppDir $AppName
 
 # --- Shortcuts ---------------------------------------------------------------------------------
 $Target = Join-Path $AppDir $Exe
@@ -126,3 +194,4 @@ if ($DesktopShortcut) {
     Remove-IfThere $DesktopIcon
 }
 Info "$AppName is installed. Start it from the Start menu, or run $Target"
+Remove-Download

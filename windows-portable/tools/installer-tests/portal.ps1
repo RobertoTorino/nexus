@@ -6,6 +6,8 @@
 # the portal installed stays and is named; settings, log and records kept), --uninstall --all --purge. The user's
 # folders are a temp folder's: LOCALAPPDATA, APPDATA and the Desktop (WPS_DESKTOP_DIR); WPS_ELEVATED stands in for
 # the administrator check, since CI's runner is one.
+# Also an update while a window has the program folder as its working directory, and a program running from it,
+# which is refused with nothing changed, and an install by hand from a download (the download removed on a yes).
 #
 #   powershell -ExecutionPolicy Bypass -File windows-portable\tools\installer-tests\portal.ps1
 #   ... portal.ps1 -Release dist\wp-portal-v0.1.0.zip   # the built release (with the real bundle) instead of a stand-in
@@ -96,6 +98,26 @@ Check 'the old program replaced, nothing left over' { -not (Test-Path (Join-Path
 Check 'Desktop shortcuts removed, Start-menu entries kept' { -not (Test-Path $Desk) -and -not (Test-Path $TestDesk) -and (Test-Path $Menu) -and (Test-Path $TestMenu) }
 Check 'the record kept' { (RecordOf 'test') -eq $TestTag }
 
+Write-Host '== 2b. update while a window has the program folder as its working directory (an older portal''s update)'
+$holder = Start-Process powershell.exe -ArgumentList '-NoProfile', '-Command', 'Start-Sleep 60' -WorkingDirectory $A -WindowStyle Hidden -PassThru
+Start-Sleep -Milliseconds 1500
+Set-Content -LiteralPath (Join-Path $A 'stale.txt') -Value 'from an older release' -Encoding ascii
+$rc = Run 'log2b' @('--no-desktop-shortcut')
+Stop-Process -Id $holder.Id -Force -ErrorAction SilentlyContinue
+Check 'exit 0' { $rc -eq 0 }
+Check 'the new program in place, the old one and the staging folders gone' { (Test-Path (Join-Path $A $Exe)) -and (Test-Path (Join-Path $A '_internal')) -and -not (Test-Path (Join-Path $A 'stale.txt')) -and -not (Test-Path "$A.new") -and -not (Test-Path "$A.old") }
+
+Write-Host '== 2c. a program running from the folder is not replaced'
+Copy-Item -LiteralPath (Join-Path $env:WINDIR 'System32\PING.EXE') -Destination (Join-Path $A 'running.exe')
+$running = Start-Process (Join-Path $A 'running.exe') -ArgumentList '-n', '60', '127.0.0.1' -WindowStyle Hidden -PassThru
+Start-Sleep -Milliseconds 800
+$rc = Run 'log2c' @('--no-desktop-shortcut')
+Stop-Process -Id $running.Id -Force -ErrorAction SilentlyContinue
+Start-Sleep -Milliseconds 500
+Check 'refused: close it first' { $rc -ne 0 -and (Log 'log2c') -match 'close .* first' }
+Check 'the installed program untouched' { (Test-Path (Join-Path $A $Exe)) -and (Test-Path (Join-Path $A 'running.exe')) -and -not (Test-Path "$A.new") }
+Remove-Item -LiteralPath (Join-Path $A 'running.exe') -Force
+
 Write-Host '== 3. refusals'
 $env:WPS_ELEVATED = '1'
 $rc = Run 'log3' @()
@@ -141,6 +163,24 @@ Check 'exit 0' { $rc -eq 0 }
 Check 'the other app removed through its installer' { -not (Test-Path (Join-Path $SuiteHome 'windows-portable-other')) }
 Check 'settings, log, records and releases removed' { -not (Test-Path $Ini) -and -not (Test-Path $PortalHome) }
 Check 'the empty suite folders removed' { -not (Test-Path $SuiteHome) -and -not (Test-Path (Join-Path $env:APPDATA 'windows-portable-suite')) -and -not (Test-Path $MenuDir) }
+
+Write-Host '== 6. installed by hand from a download: the download removed on a yes, kept on a no'
+$Dl = Join-Path $T 'downloads'
+$Tag = Split-Path -Leaf $R
+New-Item -ItemType Directory -Force -Path $Dl | Out-Null
+Copy-Item -LiteralPath $R -Destination $Dl -Recurse
+Set-Content -LiteralPath (Join-Path $Dl "$Tag.zip") -Value 'the zip' -Encoding ascii
+Set-Content -LiteralPath (Join-Path $Dl 'SHA256SUMS (1)') -Value "abc  $Tag.zip" -Encoding ascii     # a second download
+Set-Content -LiteralPath (Join-Path $Dl 'SHA256SUMS') -Value 'def  wp-other-v1.0.0.zip' -Encoding ascii
+$env:WPS_REMOVE_DOWNLOAD = 'n'
+$rc = Run 'log6' @() (Join-Path $Dl "$Tag\install.ps1")
+Check 'exit 0, the download kept on a no' { $rc -eq 0 -and (Test-Path (Join-Path $Dl "$Tag.zip")) -and (Test-Path (Join-Path $Dl $Tag)) }
+$env:WPS_REMOVE_DOWNLOAD = 'y'
+$rc = Run 'log6b' @() (Join-Path $Dl "$Tag\install.ps1")
+$env:WPS_REMOVE_DOWNLOAD = ''
+Check 'exit 0, installed' { $rc -eq 0 -and (Test-Path (Join-Path $A $Exe)) }
+Check 'the zip, its SHA256SUMS and the unpacked folder removed' { -not (Test-Path (Join-Path $Dl "$Tag.zip")) -and -not (Test-Path (Join-Path $Dl 'SHA256SUMS (1)')) -and -not (Test-Path (Join-Path $Dl $Tag)) }
+Check 'another release''s SHA256SUMS kept' { Test-Path (Join-Path $Dl 'SHA256SUMS') }
 
 if ($script:fail -eq 0) {
     Write-Host 'ALL OK'
