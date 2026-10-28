@@ -1,3 +1,16 @@
+Changelog: 28-10-2026 14:48:47
+
+Release 0.1.2.
+
+Changelog: 28-10-2026 14:32:15
+
+Fixed. The push of Nexus 0.1.1 made nexus-index.yml fail (owner, 28-10-2026): the release tags ruleset still
+protected nexus-v0.1.0, so the run deleted that release and then could not delete its tag, and GitHub's Latest fell
+back to the newest app release. A ruleset that only excludes nexus-v* does nothing beside the one that includes
+*-v*: the exclusion belongs in that ruleset (the Nexus page, GitHub settings, says so now). The workflow also
+removes every index tag left without its release (git/matching-refs/tags/nexus), so such a run leaves one index
+again once the ruleset allows it, where it only removed the tag it was about to make.
+
 Changelog: 28-10-2026 14:19:41
 
 Release 0.1.1.

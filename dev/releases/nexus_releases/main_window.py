@@ -1100,7 +1100,9 @@ class BuildIndicator(Pill):
             waiting.append(portal.tag)
         releases = rp.finished_releases(self.announced, self.runs, waiting)
         self.announced.update(r.url for r in releases)
-        others = [r for r in finished if r not in releases]
+        # Told about: the runs of the suite ticked and Nexus's own, as the ticker shows them (owner, 28-10-2026: the
+        # Windows Portable Suite's CI notified while BC250 was released, as every push starts every suite's CI).
+        others = [r for r in finished if r not in releases and r.file not in self.release_window.ticker.hidden]
         if others:
             self.announce(others)
         for release in releases:

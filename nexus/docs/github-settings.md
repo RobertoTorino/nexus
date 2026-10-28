@@ -30,11 +30,16 @@ The ⚙ next to **About** on the repository's front page, not in Settings.
 
 **Settings → Rules → Rulesets.** Rules that guard against mistakes without getting in the way of daily work.
 
-**Release tags:** **New tag ruleset**.
+**Release tags:** one tag ruleset (**New ruleset → New tag ruleset**; its name is yours, such as
+`nexus-target-tags`).
 
-- Target: **Include by pattern** `*-v*`. That covers every app and portal tag (`portal-v1.1.3`, `governor-v0.1.1`).
-  **Exclude by pattern** `nexus-v*`: the Nexus index (GitHub's Latest, `nexus-v0.1.0`) is removed and made anew
-  after every release, so its tag must stay deletable.
+- Target tags: **Add target → Include by pattern** `*-v*`. That covers every app and portal tag (`portal-v1.1.3`,
+  `governor-v0.1.1`). Then, in the same ruleset's **Target tags**, **Add target → Exclude by pattern** `nexus-v*`:
+  the Nexus index (GitHub's Latest, `nexus-v0.1.0`) is removed and made anew after every release, so its tag must
+  stay deletable. The list then shows both lines, the include and the exclude.
+- An exclusion only narrows the ruleset it is in. A ruleset of its own with only `nexus-v*` excluded targets no tag
+  at all and changes nothing: the one with `*-v*` still protects the index tag, and the Nexus index workflow then
+  fails with *Repository rule violations found … Cannot delete this tag*.
 - Rules: **Restrict updates** and **Restrict deletions**. Leave **Restrict creations** off, or new release tags
   are blocked too.
 - Bypass list: empty. To really move a tag, set the ruleset to Disabled for a moment.

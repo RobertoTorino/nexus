@@ -277,6 +277,33 @@ def test_ticker_follows_the_suite_ticked(two_suites, tmp_path):
     w.close()
 
 
+def test_notifications_follow_the_suite_ticked(two_suites, tmp_path):
+    """A run that finishes is told about only when it is the ticked suite's or Nexus's (owner, 28-10-2026: CI Windows
+    Portable notified while BC250 was released)."""
+    pytest.importorskip("PyQt6.QtWidgets")
+    from PyQt6.QtCore import QSettings
+    from PyQt6.QtWidgets import QApplication
+    QSettings.setPath(QSettings.Format.IniFormat, QSettings.Scope.UserScope, str(tmp_path / "settings"))
+    app = QApplication.instance() or QApplication([])          # noqa: F841 (kept alive for the window)
+    from nexus_releases import main_window
+    notes = []
+    w = main_window.ReleaseWindow(two_suites, status_source=None, runs_source=lambda etag: (None, etag),
+                                  notify=lambda *a: notes.append(a), claude_source=None, jobs_source=None, suite="bc")
+
+    def runs(status, conclusion="success"):
+        found = [run(name, status=status, conclusion=conclusion, n=n) for n, name in
+                 ((3, "CI Windows Portable"), (2, "Nexus index"), (1, "CI"))]
+        for data, path in zip(found, ("ci-wp.yml", "nexus-index.yml", "ci.yml")):
+            data["path"] = f".github/workflows/{path}"
+        return rp.parse_runs({"workflow_runs": found})
+    w.build.checked((runs("in_progress"), "e1"))
+    w.build.checked((runs("completed", "failure"), "e2"))
+    assert notes[-1][0] == "GitHub build failed"
+    assert "Nexus index on main" in notes[-1][1] and "CI on main" in notes[-1][1]
+    assert "Windows Portable" not in notes[-1][1]
+    w.close()
+
+
 def test_a_windows_suite_tests_its_portal_on_the_handheld(two_suites):
     """The Windows Portable Suite has no check-release.sh and no BC-250: its portal and a withdrawal are tried from
     the checkout with its portal/run.ps1, and the published release is downloaded to install on the handheld."""

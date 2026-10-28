@@ -171,7 +171,9 @@ commit (nothing reaches the users until `tools/tag-release.sh portal-v<x.y.z>` i
 board), then *building*, *released* (Test release installs it) or *failed*; its notification says *ready* when
 GitHub built it.
 
-The notifications are the desktop's own: on Linux through `notify-send`, on Windows from the Nexus Releases icon
+Like the ticker, the notifications of a build that passed or failed follow the suite ticked in the Portals column:
+its CI and releases and Nexus's own workflows, not another suite's CI, which every push starts too. The **GitHub**
+pill itself still counts every run of the push. The notifications are the desktop's own: on Linux through `notify-send`, on Windows from the Nexus Releases icon
 in the notification area, which appears with the first notification and goes when the window closes. A click on
 the notification or the icon brings the window to the front. On Windows they name Nexus Releases as their source,
 with its icon, not Python: when it starts, the app registers its Windows app ID for your user (in the registry,

@@ -1,3 +1,10 @@
+Changelog: 28-10-2026 14:32:15
+
+Fixed. A build that passed or failed was told about for every workflow of the push, so CI Windows Portable notified
+while the BC250 suite was released (owner, 28-10-2026): every push starts every suite's CI. The notifications now
+follow the suite ticked in the Portals column, as the ticker does: its CI and releases and Nexus's own workflows.
+The GitHub pill still counts every run.
+
 Changelog: 28-10-2026 14:04:11
 
 Added. A git pull button, first in the git row (owner, 28-10-2026: a push from the other machine only showed as a
