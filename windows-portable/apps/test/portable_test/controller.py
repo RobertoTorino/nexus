@@ -56,7 +56,7 @@ class Stick(QWidget):
     def __init__(self, label: str):
         super().__init__()
         self.label, self.x, self.y, self.pressed = label, 0.0, 0.0, False
-        self.setMinimumSize(px(110), px(120))
+        self.setMinimumSize(px(110), px(116))          # the circle and the line under it
         self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
 
     def set_axis(self, axis: str, value: float) -> None:
@@ -129,7 +129,7 @@ class ControllerPane(Pane):
         self.column.addWidget(self.name)
         self.column.addSpacing(px(12))
         grid = QGridLayout()
-        grid.setSpacing(px(8))
+        grid.setSpacing(px(6))
         self.chips: dict[str, Chip] = {}
         for r, row in enumerate(ROWS):
             for c, (name, label) in enumerate(row):
@@ -148,7 +148,6 @@ class ControllerPane(Pane):
         triggers.addWidget(self.triggers["lefttrigger"])
         triggers.addWidget(self.triggers["righttrigger"])
         self.column.addLayout(triggers)
-        self.column.addSpacing(px(8))
         self.count = text_label("", BODY + 1, QFont.Weight.DemiBold)
         self.column.addWidget(self.count)
         self.back_buttons = text_label(BACK_BUTTONS, BODY, color=DIM, wrap=True)

@@ -1,3 +1,17 @@
+Changelog: 28-10-2026 19:54:10
+
+Release 1.4.0. Pins wp-test-v1.4.0.
+
+Changelog: 28-10-2026 19:53:55
+
+Release 1.4.0.
+
+Changelog: 28-10-2026 19:50:58
+
+Added. B while a download or an installer runs asks first (owner, 28-10-2026): the strip says what closing does (the
+download stops; an installer finishes in its window, unrecorded) and the legend says Press again to close; a second B
+within five seconds closes the portal. Before, B closed it at once and dropped the download.
+
 Changelog: 28-10-2026 19:03:00
 
 Release 1.3.0.

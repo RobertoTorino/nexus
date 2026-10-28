@@ -45,6 +45,10 @@ Every tile and pill also works by touch. On a keyboard, the arrow keys move, Ent
 window. The tile counts the megabytes while it downloads. When the installer is done, the window closes by itself;
 when it fails, the window stays open so you can read why, and the strip says so too.
 
+**B** while a download or an installer runs asks first: the strip says what closing does (the download stops; an
+installer finishes in its window, but the portal does not record it), and a second **B** within five seconds closes
+the portal.
+
 An app the portal installs gets a Start-menu entry in the **Windows Portable Suite** folder and no Desktop shortcut:
 you start it from the portal.
 

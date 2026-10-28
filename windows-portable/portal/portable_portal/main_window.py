@@ -35,7 +35,7 @@ from .widgets import AppPane, DetailsPane, SuitePane, Tabs
 
 STATUS_MS = 30_000              # the header's battery and time
 POLL_MS = 1000                  # how often the portal looks for the installer window's exit status
-CONFIRM_MS = 5000               # Remove asks for a second press within this
+CONFIRM_MS = 5000               # Remove, and B while the portal is busy, ask for a second press within this
 PROGRESS_MS = 500               # how often a download's size is shown (owner, 28-10-2026: 94 MB looked like a hang)
 TILE_W, TILE_H, GAP = 293, 176, 14      # the mock-up's tiles: two rows of four
 COLUMNS, PER_PAGE = 4, 8
@@ -144,6 +144,7 @@ class MainWindow(PortableWindow):
         self.update: PortalUpdate | None = None
         self.checking = False
         self.confirm_key = ""                           # Remove pressed once on this app
+        self.close_asked = False                        # B pressed once while a download or an install runs
         self.message = ""                               # the last outcome, under the focused app
         self.message_key = ""
 
@@ -308,6 +309,9 @@ class MainWindow(PortableWindow):
 
     def on_back(self) -> None:
         if self.stack.currentWidget() is self.apps_page:
+            if (self.job is not None or self.pending is not None) and not self.close_asked:
+                self.ask_close()
+                return
             self.close()
             return
         self.stack.setCurrentWidget(self.apps_page)
@@ -422,8 +426,27 @@ class MainWindow(PortableWindow):
         self._confirm_over()
         self._start(entry, "uninstall")
 
+    def ask_close(self) -> None:
+        """B while a download or an install runs asks first (owner, 28-10-2026): closing drops the download, and an
+        installer that ends after the portal is not recorded. A second B within CONFIRM_MS closes."""
+        self.close_asked = True
+        self.confirm_timer.start()
+        if self.job is not None:
+            text = "Press B again to close the portal: the download stops."
+        else:
+            text = "Press B again to close the portal: the installer finishes in its window, unrecorded."
+        self.say(self.current_key, text)
+        self.legend.set_items([("B", "Press again to close")])
+
     def _confirm_over(self) -> None:
         self.confirm_timer.stop()
+        if self.close_asked:
+            self.close_asked = False
+            if self.message.startswith("Press B again"):
+                self.message = ""
+            if self.stack.currentWidget() is self.apps_page:
+                self.legend.set_items(APPS_LEGEND)
+            self.refresh()
         if self.confirm_key:
             self.confirm_key = ""
             self.refresh()

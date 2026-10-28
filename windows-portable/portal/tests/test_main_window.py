@@ -408,3 +408,34 @@ def test_the_intro_covers_the_window_before_it_shows(world, qapp):
     assert window.intro.geometry() == window.rect()
     frame = window.grab().toImage()
     assert frame.pixelColor(640, 600).name() == portable.BACKGROUND        # dark where the tiles are, before start()
+
+
+def test_b_during_a_download_asks_first(world, qapp, monkeypatch):
+    # B closed the portal and dropped the download at once (owner, 28-10-2026: ask first).
+    import threading
+    release = threading.Event()
+    first = world.sources.download
+
+    def slow(url: str, dest: Path) -> None:
+        if url.endswith(".zip"):
+            release.wait(10)
+        first(url, dest)
+    monkeypatch.setattr(world.sources, "download", slow)
+    window = world.make()
+    closed = []
+    monkeypatch.setattr(window, "close", lambda: closed.append(True))
+    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
+    window.on_action("accept")
+    assert wait_for(qapp, lambda: window.job is not None)
+    window.on_action("back")
+    assert closed == [] and window.legend.items == [("B", "Press again to close")]
+    assert window.app_pane.status.text() == "Press B again to close the portal: the download stops."
+    window._confirm_over()                              # five seconds without a second B
+    assert window.legend.items == list(mw.APPS_LEGEND) and not window.close_asked
+    window.on_action("back")
+    window.on_action("back")
+    assert closed == [True]
+    release.set()
+    assert wait_for(qapp, lambda: window.job is None)
+    window.on_action("back")                            # nothing runs: B closes at once
+    assert closed == [True, True]

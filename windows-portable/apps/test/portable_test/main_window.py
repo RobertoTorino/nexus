@@ -131,7 +131,7 @@ class MainWindow(PortableWindow):
         self.controller_card = Card("Controller", "Every button, stick and trigger, shown as you press them.")
         self.info_cards = (self.device_card, self.hardware_card, self.connected_card)
         for card in (*self.info_cards, self.network_card, self.controller_card):
-            card.setFixedHeight(px(104))
+            card.setFixedHeight(px(100))
             cards.addWidget(card)
         cards.addStretch()
         body.addWidget(column)
