@@ -1,3 +1,10 @@
+Changelog: 28-10-2026 15:18:36
+
+Fixed. git commit ran every suite's check_versions.py and check_manifest.py first, so a failing check of one suite
+held a commit of another (owner, 28-10-2026: the suites stand apart). It runs the checks of the suites the staged
+changes touch now, check_versions.py --nexus when none (plan.py: touched_suites, staged_suites, version_checks;
+manifest_checks takes the suites); its tooltip shows which.
+
 Changelog: 28-10-2026 14:32:15
 
 Fixed. A build that passed or failed was told about for every workflow of the push, so CI Windows Portable notified

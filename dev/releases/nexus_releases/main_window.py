@@ -1682,8 +1682,9 @@ class ReleaseWindow(QMainWindow):
         if not message and not amend:
             return
         self.committing = True
+        touched = rp.staged_suites(self.root)           # the suites the commit changes: their checks alone
         self.run_git(rp.commit_command(message, self.base(), amend, shlex.quote(sys.executable),
-                                       rp.manifest_checks(self.root)))
+                                       rp.manifest_checks(self.root, touched), rp.version_checks(touched)))
 
     def _show_git_state(self) -> None:
         """Each button only when it has something to do, and none while a command runs."""
@@ -1712,10 +1713,13 @@ class ReleaseWindow(QMainWindow):
             why = "Nothing is staged: git add first." if not staged else \
                 "" if message else "Type a commit message first."
         self.commit_button.setEnabled(idle and not why)
+        touched = rp.staged_suites(self.root)
         self.commit_button.setToolTip(
-            rp.commit_command(message or "<message>", self.base(), amend, manifests=rp.manifest_checks(self.root))
-            + "\n\n" + (why or "Runs check_versions.py and every suite's check_manifest.py first and commits only "
-                              "when they pass"))
+            rp.commit_command(message or "<message>", self.base(), amend, manifests=rp.manifest_checks(self.root, touched),
+                              versions=rp.version_checks(touched))
+            + "\n\n" + (why or "Runs check_versions.py and check_manifest.py first, of the suites the staged changes "
+                              "touch (one suite's checks never hold another's commit), and commits only when they "
+                              "pass"))
         self.push_button.setEnabled(idle and ahead > 0)
         linux = sys.platform.startswith("linux")
         self.push_button.setToolTip(rp.push_command() + "\n\n" + (

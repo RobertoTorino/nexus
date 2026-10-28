@@ -118,10 +118,12 @@ and Console Link's FFmpeg; both are kept, with the venvs and the logs, in `~/.ca
 copy of the checkout with every change staged, as the commit will have it. Only the Windows job does not run here.
 The push commands Nexus Releases shows run it first (`tools/ci-local.sh && git push`): no push when a job fails.
 
-`tools/pre-push.sh` runs CI's quick checks in a few seconds: the versions, `bc250-bazzite/portal/apps.toml` with the
+`tools/pre-push.sh` runs CI's quick checks in a few seconds: the versions, each suite's `portal/apps.toml` with the
 portal bump it needs against what the remote has, the CHANGELOGs keeping every entry the remote has
-(`tools/check_changelogs.py`), the scripts' exec bits and the line endings. Make it git's pre-push hook once per
-checkout, and every `git push` runs it first:
+(`tools/check_changelogs.py`), the scripts' exec bits and the line endings. A suite's versions and manifest are
+checked only when the push changes that suite (its folder), so a failing check of the Windows Portable Suite never
+holds a push of the BC250 suite, and the other way round; core and `dev/` are checked on every push. Make it git's
+pre-push hook once per checkout, and every `git push` runs it first:
 
 ```bash
 git config core.hooksPath tools/hooks   # once per checkout

@@ -22,7 +22,10 @@ folder, its CI or its release workflow, and a change both suites want is two cha
 own release. `ci-nexus.yml` is Nexus's (core, the Nexus tools, `dev/`, the Nexus page and the repository's rules);
 `ci.yml` and `release.yml` are the BC250 suite's; a suite with a tag prefix has its own `ci-<suite>.yml` and
 `release-<suite>.yml`. A suite's tags wait for its own CI and for `ci-nexus.yml`, never for another suite's
-(`tools/tag-release.sh`, `tools/ci_state.py --workflow`; `tools/tests/test_layout.py` keeps them apart). `nexus/` is the Nexus page (robertotorino.github.io/nexus/): the name, the structure and the suites, and the
+(`tools/tag-release.sh`, `tools/ci_state.py --workflow`; `tools/tests/test_layout.py` keeps them apart). The
+local gates do the same (owner, 28-10-2026): the pre-push hook and Nexus Releases' git commit run a suite's version
+and manifest checks only when the push or commit changes that suite, so one suite's failing check never holds
+another suite's work. `nexus/` is the Nexus page (robertotorino.github.io/nexus/): the name, the structure and the suites, and the
 chapters that are every suite's (Releases, Development with bc250_core, The development machine, GitHub
 settings, Design);
 each suite's wiki has a folder of its own beside it (the BC250 Bazzite Suite's: `/nexus/bc250-bazzite-suite/`).

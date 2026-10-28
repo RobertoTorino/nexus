@@ -58,9 +58,31 @@ for push in "${pushes[@]}"; do
     if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
         info "uncommitted changes: the checks see them, the push does not"
     fi
-    "$python" tools/check_versions.py >/dev/null ||
-        fail "versions differ from their VERSION file (python3 tools/check_versions.py shows which)"
-    for suite in $("$python" tools/suites.py | tr -d '\r'); do   # each suite's manifest with its portal bump (Windows' Python ends lines with CRLF)
+    # A suite's checks run when this push changes that suite (its folder; the root's copy of apps.toml, portal/, is
+    # the suite's without a tag prefix): one suite's checks never hold another suite's push, as its CI and its tags
+    # stand apart (owner, 28-10-2026). Core and dev/ are checked always; a new branch (no base) or a suite at the
+    # root (".") checks every suite.
+    changed=""
+    [ -z "$base" ] || changed=$(git diff --name-only "$base" "$sha")
+    touched=()
+    for suite in $("$python" tools/suites.py | tr -d '\r'); do   # Windows' Python ends lines with CRLF
+        if [ -z "$base" ] || [ "$suite" = . ] || grep -q "^$suite/" <<<"$changed" ||
+            { [ ! -f "$suite/TAG_PREFIX" ] && grep -q '^portal/' <<<"$changed"; }; then
+            touched+=("$suite")
+        fi
+    done
+    versions() {
+        "$python" tools/check_versions.py "$@" >/dev/null ||
+            fail "versions differ from their VERSION file (python3 tools/check_versions.py $* shows which)"
+    }
+    if [ -z "$base" ] || [[ " ${touched[*]-} " == *" . "* ]]; then
+        versions                                                  # every suite
+    elif [ ${#touched[@]} -eq 0 ]; then
+        versions --nexus                                          # no suite changed: core and dev/
+    else
+        for suite in "${touched[@]}"; do versions --suite "$suite"; done
+    fi
+    for suite in ${touched[@]+"${touched[@]}"}; do               # each suite's manifest with its portal bump
         if [ -n "$base" ] && ! out=$("$python" "./$suite/tools/check_manifest.py" --base "$base" 2>&1); then
             printf '%s\n' "$out" >&2
             fail "$suite/portal/apps.toml: bump portal/VERSION in this push (Nexus Releases, step 2: Bump portal)"

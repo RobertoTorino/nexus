@@ -1724,6 +1724,20 @@ def test_the_suites_of_a_checkout(repo, tmp_path):
     assert rp.check_script(nexus) == f"{SUITE_DIR}/tools/check-release.sh"
     assert rp.record_script(nexus, "zz-suite") == "zz-suite/tools/record-tour.sh"
     assert rp.manifest_checks(nexus) == [f"{SUITE_DIR}/tools/check_manifest.py", "zz-suite/tools/check_manifest.py"]
+    # The commit checks the suites it changes alone (owner, 28-10-2026: one suite's checks never hold another's).
+    assert rp.touched_suites(repo, ["apps/alpha/x.py"]) is None                  # no suite folders: every check
+    assert rp.touched_suites(nexus, [f"{SUITE_DIR}/apps/alpha/x.py", "core/x.py"]) == [SUITE_DIR]
+    assert rp.touched_suites(nexus, ["core/x.py", "tools/x.py"]) == []
+    assert rp.manifest_checks(nexus, ["zz-suite"]) == ["zz-suite/tools/check_manifest.py"]
+    assert rp.version_checks(None) == [rp.VERSIONS_CHECK] and rp.version_checks([]) == [f"{rp.VERSIONS_CHECK} --nexus"]
+    assert rp.version_checks(["zz-suite"]) == [f"{rp.VERSIONS_CHECK} --suite zz-suite"]
+    command = rp.commit_command("m", "pushed", manifests=rp.manifest_checks(nexus, ["zz-suite"]),
+                                versions=rp.version_checks(["zz-suite"]))
+    assert command == ("python3 tools/check_versions.py --suite zz-suite && python3 zz-suite/tools/check_manifest.py "
+                       "--base pushed && git commit -m m")
+    write(nexus / "zz-suite/apps/alpha/new.txt", "x")
+    sh(nexus, "add", "zz-suite/apps/alpha/new.txt")
+    assert rp.staged_suites(nexus) == ["zz-suite"]
     assert rp.manifest_path(nexus, "zz-suite") == nexus / "zz-suite/portal/apps.toml"
     first, second = rp.load_units(nexus), rp.load_units(nexus, "zz-suite")
     assert [u.path for u in first][:3] == ["core", f"{SUITE_DIR}/portal", f"{SUITE_DIR}/apps/alpha"]
@@ -1766,8 +1780,17 @@ def test_window_suite_column(repo, tmp_path):
     assert [r.text() for r in rows] == [f"{SUITE_DIR}\nportal-v0.1.0", "Zed Suite\nzz-portal-v0.1.0"]
     assert [r.checkState() for r in rows] == [Qt.CheckState.Checked, Qt.CheckState.Unchecked]
     assert w.units[1].path == f"{SUITE_DIR}/portal" and f"suite {SUITE_DIR}" in w.footer.text()
-    assert f"{SUITE_DIR}/tools/check_manifest.py" in w.commit_button.toolTip() \
-        and "zz-suite/tools/check_manifest.py" in w.commit_button.toolTip()      # every suite's check
+    tip = w.commit_button.toolTip()                               # nothing staged: no suite's check, core and dev/
+    assert "check_versions.py --nexus" in tip and "check_manifest.py" not in tip
+    write(nexus / "zz-suite/apps/alpha/new.txt", "x")
+    sh(nexus, "add", "zz-suite/apps/alpha/new.txt")
+    w.reload()
+    tip = w.commit_button.toolTip()                               # the suite staged: its checks alone
+    assert "check_versions.py --suite zz-suite" in tip and "zz-suite/tools/check_manifest.py" in tip
+    assert f"{SUITE_DIR}/tools/check_manifest.py" not in tip
+    sh(nexus, "reset", "-q", "zz-suite/apps/alpha/new.txt")
+    (nexus / "zz-suite/apps/alpha/new.txt").unlink()
+    w.reload()
     column.itemClicked.emit(rows[1])                              # a click on the row
     assert w.suite == "zz-suite" and column.current() == "zz-suite" and rows[0].checkState() == Qt.CheckState.Unchecked
     assert w.units[1].path == "zz-suite/portal" and "suite zz-suite" in w.footer.text()

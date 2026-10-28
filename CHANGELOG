@@ -1,3 +1,22 @@
+Changelog: 28-10-2026 15:18:36
+
+Fixed. The pre-push hook checked every suite's versions and manifest on every push, so a Windows Portable Suite
+left in a failing state would have held a push of the BC250 suite, where its CI and its tags never would (owner,
+28-10-2026: the suites stand apart). tools/pre-push.sh now runs a suite's checks only when the push changes that
+suite (its folder; the root's copy of apps.toml counts for the suite it copies), check_versions.py --suite for each
+such suite and --nexus (core, dev/) when none changes; a new branch still checks every suite
+(tools/tests/test_pre_push.py). Nothing GitHub runs changes: a suite's tags and release workflow already waited for
+its own CI and Nexus's only. The Nexus page's Development chapter and CLAUDE.md say so.
+
+Changelog: 28-10-2026 15:08:07
+
+Fixed. CI Windows Portable's steps "Release: test" and "Release: portal" read as a release of the Windows Portable
+Suite while the BC250 suite's portal was released (owner, 28-10-2026; on the Actions page the run was titled with
+the push's commit message, Release portal-v12.1.1, too). They only build the release zip on GitHub's test machine
+for the installer test after them, and publish nothing: they are called "Build the release zip, not published:
+test" and "...: portal" now (windows-portable/tools/tests/test_installer_tests.py follows). The Nexus page's Releases
+chapter says that only a tag builds and publishes a release, and why every run of a release push carries its title.
+
 Changelog: 28-10-2026 14:48:47
 
 Release 0.1.2.

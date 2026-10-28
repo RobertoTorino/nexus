@@ -106,6 +106,46 @@ def test_a_remote_ahead_says_pull_first(repo):
         assert "CHANGELOG" not in result.stderr and calls(repo) == []
 
 
+def test_a_suite_is_checked_only_when_the_push_changes_it(repo):
+    """Two suites in their folders: a push that changes one runs that suite's checks only, so the other's, failing,
+    holds nothing (owner, 28-10-2026: a Windows check never holds a Bazzite push); core alone: --nexus."""
+    (repo / "portal" / "apps.toml").unlink()                         # the root is no suite here
+    for suite in ("bc", "wp"):
+        (repo / suite / "portal").mkdir(parents=True)
+        (repo / suite / "portal" / "apps.toml").write_text("")
+        (repo / suite / "tools").mkdir()
+        (repo / suite / "tools" / "check_manifest.py").write_text(STUB.replace(
+            "Path(__file__).parent.parent", "Path(__file__).parent.parent.parent").replace(
+            "Path(__file__).name", f'"{suite}/" + Path(__file__).name').replace(
+            '"FAIL_" + Path(__file__).stem.upper()', f'"FAIL_{suite.upper()}"'))
+    (repo / "wp" / "TAG_PREFIX").write_text("wp-\n")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-qm", "two suites")
+    base = git(repo, "rev-parse", "HEAD")
+    (repo / "bc" / "x.txt").write_text("x\n")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-qm", "bc only")
+    head = git(repo, "rev-parse", "HEAD")
+    result = hook(repo, [f"refs/heads/main {head} refs/heads/main {base}"], FAIL_WP="1")
+    assert result.returncode == 0, result.stderr                     # wp's failing check is not run
+    assert calls(repo)[:2] == ["check_versions.py --suite bc", f"bc/check_manifest.py --base {base}"]
+    assert not any(c.startswith("wp/") for c in calls(repo))
+    (repo / "calls.txt").unlink()
+    (repo / "core.txt").write_text("c\n")                             # shared parts only
+    git(repo, "add", "-A")
+    git(repo, "commit", "-qm", "shared")
+    result = hook(repo, [f"refs/heads/main {git(repo, 'rev-parse', 'HEAD')} refs/heads/main {head}"], FAIL_WP="1")
+    assert result.returncode == 0 and calls(repo)[0] == "check_versions.py --nexus"
+    assert not any("check_manifest" in c for c in calls(repo))
+    (repo / "calls.txt").unlink()
+    (repo / "portal").mkdir(exist_ok=True)                            # the root's copy of the plain suite's apps.toml
+    (repo / "portal" / "apps.toml").write_text("# copy\n")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-qm", "copy")
+    result = hook(repo, [f"refs/heads/main {git(repo, 'rev-parse', 'HEAD')} refs/heads/main {base}"], FAIL_WP="1")
+    assert "bc/check_manifest.py" in " ".join(calls(repo)) and "wp/check_manifest.py" not in " ".join(calls(repo))
+
+
 def test_a_version_mismatch_stops_the_push(repo):
     head = git(repo, "rev-parse", "HEAD")
     result = hook(repo, [f"refs/heads/main {head} refs/heads/main {head}"], FAIL_CHECK_VERSIONS="1")

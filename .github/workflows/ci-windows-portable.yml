@@ -87,7 +87,7 @@ jobs:
         run: powershell -NoProfile -ExecutionPolicy Bypass -File windows-portable/tools/installer-tests/test.ps1
       - name: "Installer test: releases"
         run: powershell -NoProfile -ExecutionPolicy Bypass -File windows-portable/tools/installer-tests/releases.ps1
-      - name: "Release: test"
+      - name: "Build the release zip, not published: test"
         shell: bash
         run: |
           python -m pip install -q -r windows-portable/apps/test/requirements.txt pyinstaller pillow
@@ -96,7 +96,7 @@ jobs:
         run: >-
           powershell -NoProfile -ExecutionPolicy Bypass -File windows-portable/tools/installer-tests/test.ps1
           -Release (Get-Item wpdist/test/*.zip).FullName
-      - name: "Release: portal"
+      - name: "Build the release zip, not published: portal"
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}

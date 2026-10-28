@@ -112,8 +112,10 @@ the settings.
   **git pull (2)** when the remote's main, as git last fetched it, has two commits this checkout lacks, and **git
   pull (new)** when the GitHub pill sees a push on main that is no commit here. Pull when you start working on a
   machine, and when **git push** says the remote has commits this checkout does not. **git add** stages every change and new file and runs `tools/fix-modes.sh`, which sets
-  the exec bits CI checks. **git commit** runs `tools/check_versions.py` and `bc250-bazzite/tools/check_manifest.py` first and
-  commits only when they pass; Apply and Bump portal fill in its message, and tick **Amend** when their commands
+  the exec bits CI checks. **git commit** runs `tools/check_versions.py` and `check_manifest.py` first, of the
+  suites the staged changes touch (`--suite bc250-bazzite` and `bc250-bazzite/tools/check_manifest.py` for a BC250
+  change; `--nexus`, core and `dev/`, when no suite changes), and commits only when they pass: one suite's failing
+  check never holds another suite's commit, as its CI never holds another suite's tags; Apply and Bump portal fill in its message, and tick **Amend** when their commands
   add to the last commit (only a commit that is not pushed yet). **git push** runs `tools/ci-local.sh` first on
   Linux and pushes only when CI's jobs pass. **git tag** runs `tools/tag-release.sh` (below) with the tags of the
   step open: on tab 2 the portal's release, on the other tabs step 1's app releases that have no tag yet; it
@@ -199,6 +201,12 @@ release. It then builds and publishes the release without an approval on GitHub 
 Every suite publishes its releases in the one repository, so each release's title names its suite and app, from
 the portal's name and `apps.toml`: *BC250 Bazzite Suite: Portal 12.0.0*, *BC250 Bazzite Suite: Xenia Manager
 0.11.0*, *Windows Portable Suite: Windows Portable Test 0.1.1* (`build_release.py` of each suite writes it).
+
+Only a tag builds and publishes a release: an app or portal tag starts its suite's release workflow (**Release**,
+**Release Windows Portable**). A push to main starts every suite's CI, whatever suite it is for, and on the Actions
+page each run is titled with the push's commit message: after a push of *Release portal-v12.1.1*, **CI Windows
+Portable** shows as *Release portal-v12.1.1* too, but it only tests. Its steps **Build the release zip, not
+published** build a suite's zip on GitHub's test machine, so the next step can install it; nothing is uploaded.
 
 A repository has one **Latest** release, and Nexus holds several suites, so no suite's portal is it. Latest is the
 Nexus index, named after Nexus's own version: *Nexus v0.1.0*, tagged `nexus-v0.1.0`. It has a section per suite

@@ -47,7 +47,8 @@ def test_ci_runs_each_installer_test_and_each_release_in_its_own_step():
         assert f'- name: "Installer test: {name}"' in ci, name
         assert f"windows-portable/tools/installer-tests/{name}.ps1" in ci, name
     for name in sorted(_apps()):
-        assert f'- name: "Release: {name}"' in ci, name
+        # Built and tested in CI, never published (owner, 28-10-2026: "Release: portal" read as a release)
+        assert f'- name: "Build the release zip, not published: {name}"' in ci, name
         assert f'- name: "Installer test on the release: {name}"' in ci, name
 
 

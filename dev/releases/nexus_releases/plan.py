@@ -142,9 +142,34 @@ def manifest_check(root: Path, suite: str | None = None) -> str:
     return rel(root, *MANIFEST_CHECK.split("/"), suite=suite)
 
 
-def manifest_checks(root: Path) -> list[str]:
-    """Every suite's manifest check, as the commit runs them (CI runs them all)."""
-    return [manifest_check(root, suite) for suite in (suites(root) or [None])]
+def manifest_checks(root: Path, only: list[str] | None = None) -> list[str]:
+    """The suites' manifest checks, as the commit runs them: every suite's, or those in *only* (touched_suites())."""
+    return [manifest_check(root, suite) for suite in (suites(root) or [None]) if only is None or suite in only]
+
+
+def touched_suites(root: Path, paths: list[str]) -> list[str] | None:
+    """The suites whose folder holds one of *paths* (the root's copy of apps.toml, portal/, counts for the suite it
+    copies): the commit checks those alone, as each suite's CI checks only its own (owner, 28-10-2026: a Windows
+    check never holds a Bazzite commit). None in a checkout without suite folders: every check then."""
+    names = suites(root)
+    if not names:
+        return None
+    return [name for name in names
+            if any(p.startswith(f"{name}/") or (p.startswith("portal/") and manifest_copy(root, name) is not None)
+                   for p in paths)]
+
+
+def staged_suites(root: Path) -> list[str] | None:
+    """touched_suites() of what is staged: the suites the commit changes."""
+    return touched_suites(root, (git(root, "diff", "--cached", "--name-only") or "").splitlines())
+
+
+def version_checks(only: list[str] | None = None) -> list[str]:
+    """check_versions.py as the commit runs it: every suite (*only* None), else each suite in *only* with core and
+    dev/ (--suite), or core and dev/ alone (--nexus) when the commit touches no suite."""
+    if only is None:
+        return [VERSIONS_CHECK]
+    return [f"{VERSIONS_CHECK} --suite {name}" for name in only] or [f"{VERSIONS_CHECK} --nexus"]
 
 
 def manifest_path(root: Path, suite: str | None = None) -> Path:
@@ -1557,11 +1582,11 @@ def tag_command(tags: list[str]) -> str:
 
 
 def commit_command(message: str, base: str, amend: bool = False, python: str = "python3",
-                   manifests: list[str] | None = None) -> str:
-    """The git commit button: the version check and every suite's manifest check first (CI's quick ones; *manifests*:
-    their paths, manifest_checks(), the checkout's by default), the commit only when they pass. *amend*: the staged
-    changes join HEAD, with its message."""
-    checks = " && ".join([f"{python} {VERSIONS_CHECK}",
+                   manifests: list[str] | None = None, versions: list[str] | None = None) -> str:
+    """The git commit button: the version check and the suites' manifest checks first (CI's quick ones; *manifests*:
+    their paths, manifest_checks(), every suite's of the checkout by default; *versions*: version_checks(), every
+    suite by default), the commit only when they pass. *amend*: the staged changes join HEAD, with its message."""
+    checks = " && ".join([*(f"{python} {check}" for check in (versions or [VERSIONS_CHECK])),
                           *(f"{python} {check} --base {shlex.quote(base)}" for check in
                             (manifest_checks(CHECKOUT) if manifests is None else manifests))])
     commit = "git commit --amend --no-edit" if amend else f"git commit -m {shlex.quote(message)}"
