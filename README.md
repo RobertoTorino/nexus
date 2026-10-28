@@ -11,6 +11,8 @@ release them. A suite is the apps for one operating system on one kind of device
 and removes them, and each suite has its own wiki. The name, the structure and how the suites relate:
 **[the Nexus page](https://robertotorino.github.io/nexus/)**.
 
+![alt text](nexus/images/nexus-256.png)
+
 ## The suites
 
 - **[BC250 Bazzite Suite](bc250-bazzite/)**: tools for the AMD BC-250 running Bazzite, in `bc250-bazzite/`. Its
