@@ -24,8 +24,8 @@
 [apps.test]
 name = "Windows Portable Test"
 summary = "What Windows reports about the handheld, and a test of every button of its controller. Always installed."
-tag = "wp-test-v1.2.0"
-sha256 = "5a09e7155c398a69961c898439e85432b68cf1117fb47d0b767aaecba089ff6c"
+tag = "wp-test-v1.3.0"
+sha256 = "562c3852711131efc26d0d068fb7b1bc4c4b13a71b75f80d4261b0b4ee596c92"
 required = true
 category = "sustainable"
 install = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --no-desktop-shortcut"]
