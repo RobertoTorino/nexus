@@ -200,7 +200,8 @@ class MainWindow(PortableWindow):
         self.device_card.setFocus()
 
     def update_status(self) -> None:
-        self.header.set_status([power.text(self.battery()), *status_clock()], [temps.text(*self.temperatures())])
+        # The date and the time, and under them the temperatures and the battery (owner, 28-10-2026)
+        self.header.set_status(status_clock(), [temps.text(*self.temperatures()), power.text(self.battery())])
 
     def show_pane(self, pane: Pane) -> None:
         if self.testing:

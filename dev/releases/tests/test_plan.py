@@ -1984,7 +1984,9 @@ def test_window_runs_a_windows_suites_checks_on_windows(two_suites, tmp_path, mo
     QSettings.setPath(QSettings.Format.IniFormat, QSettings.Scope.UserScope, str(tmp_path / "settings"))
     app = QApplication.instance() or QApplication([])          # noqa: F841 (kept alive for the window)
     from nexus_releases import main_window
-    monkeypatch.setattr(rp.sys, "platform", "win32")
+    tests_here = rp.tests_here                                  # this computer as Windows, for these tests alone:
+    monkeypatch.setattr(rp, "tests_here", lambda root, suite=None, platform=None: tests_here(root, suite, "win32"))
+    # (sys.platform itself stays: patched, shutil.which takes Windows' path on Linux and fails, as in CI 28-10-2026)
     write(two_suites / "wp/tools/check-release.ps1", "Write-Host hi\n")
     w = main_window.ReleaseWindow(two_suites, sha256_source=lambda tag: SHA, launch=launched.append,
                                   runs_source=None, status_source=None, suite="wp")

@@ -67,6 +67,10 @@
   --nexus-section-bg: var(--nexus-ink);           /* Background of the dark sections */
   --nexus-section-fg: #c0c0c0;                /* Text, card titles and links in the dark sections */
   --nexus-section-button: #c0c0c0;            /* Buttons there: outline and text, the fill under the pointer */
+  --nexus-stage-bg: #17b6a7;                  /* The stage pill under the claim */
+  --nexus-stage-fg: #010101;                  /* Text in the stage pill */
+  --nexus-accent-bg: #17b6a7;                 /* Get started: the teal section */
+  --nexus-accent-fg: #010101;                 /* Text, links and buttons on the teal */
 }
 
 /* The home page's video: a click on the Nexus icon plays it over the page. */
@@ -261,7 +265,7 @@
   display: block;
   width: min(60vw, 20rem);
   height: auto;
-  margin: 0 auto 2.4rem;
+  margin: 3rem auto 0;
 }
 
 .md-typeset .home-hero__play {
@@ -302,6 +306,59 @@
   font-size: 2.4rem;
   line-height: 1;
   cursor: pointer;
+}
+
+/* Nexus's stage: a pill and its note under the claim, as on the suites' wikis. */
+.md-typeset .home-hero__stage {
+  margin: 1rem 0 0;
+  font-size: 0.8rem;
+  color: var(--nexus-mist);
+}
+
+.md-typeset .home-hero__stage strong {
+  background: var(--nexus-stage-bg);
+  color: var(--nexus-stage-fg);
+  border-radius: var(--nexus-radius-small);
+  padding: 0.1rem 0.5rem;
+  margin-right: 0.5rem;
+}
+
+/* Get started: the teal, with an ink Nexus index button. */
+.home-section--accent {
+  background: var(--nexus-accent-bg);
+  color: var(--nexus-accent-fg);
+}
+
+.md-typeset .home-section--accent a:not(.md-button) {
+  color: var(--nexus-accent-fg);
+  font-weight: 600;
+}
+
+.md-typeset .home-section--accent .md-button {
+  color: var(--nexus-accent-fg);
+  border-color: var(--nexus-accent-fg);
+  margin: 0 0.6rem 0.6rem 0;
+}
+
+.md-typeset .home-section--accent .md-button--primary,
+.md-typeset .home-section--accent .md-button:hover {
+  background-color: var(--nexus-ink);
+  border-color: var(--nexus-ink);
+  color: var(--nexus-soft);
+}
+
+/* License and Disclaimer: one readable column, as the suites' FAQ. */
+.home-faq .home-section__inner {
+  max-width: 44rem;
+}
+
+.md-typeset .home-faq h2:not(:first-child) {
+  margin-top: 2.4rem;
+}
+
+.md-typeset .home-faq p {
+  margin: 0;
+  color: var(--nexus-mist);
 }
 
 /* A dark section with a grid of cards, their titles in white. */

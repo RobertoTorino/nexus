@@ -98,8 +98,9 @@ default suite of the tools (`tools/suites.py`). The root keeps what is Nexus's:
   portal) moves it too, since the index lists every suite: a suite's release is minor, a new suite major (owner,
   28-10-2026); Nexus Releases offers it with every app and portal release.
 - **One disclaimer for every wiki** (owner, 28-10-2026): `tools/mkdocs/disclaimer.py` holds it; every wiki lists
-  the hook, its home page's footer shows `{{ config.extra.disclaimer }}` and its home page ends with
-  `## Disclaimer` over the line `<!-- disclaimer -->` (`tools/tests/test_disclaimer.py`). Every other Disclaimer
+  the hook, and its home page shows it once, in the footer: `<strong>Disclaimer:</strong>
+  {{ config.extra.disclaimer }}` (owner, 28-10-2026: no Disclaimer section of its own on the home page;
+  `tools/tests/test_disclaimer.py`). Every other Disclaimer
   section (a README, an app's README and manual chapter, which ships as its MANUAL.md) has the same text written
   out; the test compares each one word for word. A change to the text is a change to every one of them.
 - **Semantic versioning** (owner, 15-10-2026): in an app's, core's, the portal's or the root (Nexus's, from

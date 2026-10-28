@@ -4,8 +4,8 @@
 
 # Windows Portable Test
 
-Gets to know a **Windows handheld**: what Windows reports about the device, how its network does, and every button,
-stick and trigger of its controller as you press them. It reads and shows; it changes nothing on the device.
+Gets to know a **Windows portable device**: what Windows reports about the device, how its network does, and every
+button, stick and trigger of its controller as you press them. It reads and shows; it changes nothing on the device.
 
 Windows Portable Test is always installed with the [portal](../portal.md) and is its first tile. Open it there with
 **A**, or from the Start menu (**Windows Portable Suite**, **Windows Portable Test**). It opens full screen.
@@ -15,17 +15,17 @@ Windows Portable Test is always installed with the [portal](../portal.md) and is
 Five cards on the left: Device, Hardware, Connected, Network and Controller; the right side shows what the focused
 card does.
 The d-pad or the left stick moves the amber focus between the cards, **A** runs the focused card, **B** closes the
-app. Every card and pill also works by touch. The line at the top shows the battery, the date and the time,
-`82% | Wednesday 28/10/2026 | 17:04`, and the line under it the CPU's and the GPU's temperature, live every five
-seconds: `CPU 47° GPU 45°`. On an AMD handheld both temperatures come from AMD's driver; on another the GPU's comes
-from Windows (as Task Manager shows it) and the CPU's is left out.
+app. Every card and pill also works by touch. The top right shows the date and the time,
+`Wednesday 28/10/2026 | 17:04`, and under them the CPU's and the GPU's temperature, live every five seconds, and the
+battery: `CPU 47° GPU 45° | 82%`. On a device with AMD graphics both temperatures come from AMD's driver; on another the GPU's
+comes from Windows (as Task Manager shows it) and the CPU's is left out.
 
 The information icon (a ring with an i) at the top right of a pane opens more about it, over the window; **A** or
 **B** closes it.
 
 ## Device
 
-What Windows reports about the handheld: the device's name, the processor with its cores and threads, the graphics
+What Windows reports about the device: its name, the processor with its cores and threads, the graphics
 and its driver, the memory (installed and usable), the storage, the screen the window is on (its pixels, Windows'
 scaling and the refresh rate), Windows' version, the firmware and the battery. No serial numbers.
 
@@ -50,7 +50,7 @@ DisplayPort or HDMI), network adapters on USB (a dock's Ethernet port) and drive
 from a hub: a dock is a USB hub with ports behind it, so the card shows the hub's maker (such as Realtek, USB 3 and
 USB 2) and what is behind it. With nothing plugged in, the card says so.
 
-A screen on a dock's or a stand's HDMI port shows as **DisplayPort**: the handheld sends the picture as DisplayPort
+A screen on a dock's or a stand's HDMI port shows as **DisplayPort**: the device sends the picture as DisplayPort
 over USB-C, and the dock turns it into HDMI.
 
 ## Network
@@ -66,11 +66,11 @@ Network card, or **Test**, measures it; it takes about fifteen seconds. **Test a
 | Rate | The link's rate down and up, in Mbps: what the adapter and the access point agreed, not the download speed |
 | Power | Mains or battery, and the power plan |
 | Wi-Fi on mains, Wi-Fi on battery | The power plan's Wi-Fi setting: Maximum Performance to Maximum Power Saving |
-| Other traffic | What the handheld received in the two seconds before the download |
+| Other traffic | What the device received in the two seconds before the download |
 | Also running | Delivery Optimization's downloads (Windows Update, the Microsoft Store and the Xbox app's games) and the programs that download on their own: Steam, the Xbox app, the Epic Games Launcher, Windows Update and others |
 | Download | The speed of a timed download: Windows Portable Test's newest release from GitHub, as the portal downloads it, for ten seconds at most. Nothing is kept |
 
-A slow download with a good link (a high rate and signal) points past the handheld: the access point, the internet
+A slow download with a good link (a high rate and signal) points past the device: the access point, the internet
 connection or GitHub at that moment. Without Wi-Fi (on a dock's Ethernet port) the card says so and still times the
 download. The network's name and the access point's address are never read out.
 
@@ -86,11 +86,11 @@ During the test every button is the test's, B too: **hold B** for a second and a
 On a keyboard, Escape ends it.
 
 The buttons on the card are those Windows reports for an Xbox controller: LB, View, Xbox, ☰ (Menu), RB, the d-pad,
-A, B, X, Y and the two stick presses, and on an ASUS handheld such as the ROG Xbox Ally X the **back buttons M1 and
+A, B, X, Y and the two stick presses, and on an ASUS device such as the ROG Xbox Ally X the **back buttons M1 and
 M2** as one chip, **M1/M2**. They are Armoury Crate's own modifiers (held with A a screenshot, with Y a recording),
 never gamepad buttons, and Armoury Crate reports either of them the same way, so Windows cannot tell M1 from M2: the
 chip lights for both. To use them as two buttons, map them in Armoury Crate (Settings, Configure, M1 or M2: untick
-Secondary Function and choose a button); they then light that button. A handheld without ASUS's channel shows no
+Secondary Function and choose a button); they then light that button. A device without ASUS's channel shows no
 M1/M2 chip, and the count leaves it out. The information icon at the top right of the Controller card's pane says so
 on the device; it opens before or after the test, not during it.
 

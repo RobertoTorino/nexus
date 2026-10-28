@@ -130,6 +130,7 @@ Characters of the font, used as icons in labels and buttons.
 | <img src="windows-portable/portal/images/windows-portable-suite.webp" width="48" alt=""> | `windows-portable/portal/images/windows-portable-suite.webp` (512 px), `-128.png` | The Windows Portable Suite's portal: its window icon and its Start-menu shortcut, and the portal's release in Nexus Releases. Lossless copies of the drawing, written by this tool. |
 | <img src="windows-portable/docs/images/wiki-icon.webp" width="48" alt=""> | `windows-portable/docs/images/wiki-icon.webp`, `.png` (256 px) | The suite's wiki: the header logo (`.webp`) and the favicon (`.png`), written by this tool. |
 | <img src="windows-portable/docs/images/home/device.webp" width="48" alt=""> | `windows-portable/docs/images/home/device.webp` (1377 x 768) | The suite's wiki home: the handheld under the headline, a WebP copy of the owner's white handheld. |
+| <img src="windows-portable/docs/images/home/portal.webp" width="48" alt=""> | `windows-portable/docs/images/home/portal.webp` (1280 x 720) | The suite's wiki home, One portal for every app: the portal at the Ally's 1280 x 720, rendered offscreen with the suite's apps.toml (Windows Portable Test installed), as WebP. |
 | <img src="windows-portable/docs/images/apps/test.webp" width="48" alt=""> | `windows-portable/docs/images/apps/<key>.webp` (256 px) | An app's chapter in the suite's wiki: its icon at the top, a WebP copy of the app's drawing. |
 | <img src="windows-portable/portal/images/apps/test.webp" width="48" alt=""> | `windows-portable/portal/images/apps/<key>.webp` (128 px) | The icon on an app's tile in the portal: Windows Portable Test's is the suite's drawing, written by this tool; another app's is a copy of its own icon. |
 
@@ -143,6 +144,16 @@ and `-128.png`, its tile `portal/images/apps/<key>.webp` (128 px) and its chapte
 | Icon | Category | Apps |
 | --- | --- | --- |
 | <img src="windows-portable/icons/gaming/gaming-128.png" width="64" alt=""> | Gaming: `windows-portable/icons/windows-portable-device.png` (1376 x 768), the owner's picture of the handheld (26-10-2026): cropped to the handheld, centered on a transparent square (28-10-2026) | PCSX2 Manager (`pcsx2`) |
+
+### Material Design icons in the wiki
+
+Drawn by MkDocs Material in the wiki's colors.
+
+| Icon | Name | Used for |
+| --- | --- | --- |
+| <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/stethoscope.svg" width="24" alt=""> | `material-stethoscope` | Home: the card "Sustainable". |
+| <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/gamepad-variant.svg" width="24" alt=""> | `material-gamepad-variant` | Home: the card "Gaming". |
+| <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/download.svg" width="24" alt=""> | `material-download` | Home: the Download button. |
 
 ## Nexus
 
@@ -166,3 +177,4 @@ Drawn by MkDocs Material in the page's colors.
 | <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/application.svg" width="24" alt=""> | `material-application` | Home: the card "An app". |
 | <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/chip.svg" width="24" alt=""> | `material-chip` | Home: the card "BC250 Bazzite Suite". |
 | <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/controller.svg" width="24" alt=""> | `material-controller` | Home: the card "Windows Portable Suite". |
+| <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/download.svg" width="24" alt=""> | `material-download` | Home: the Nexus index button. |

@@ -35,7 +35,9 @@ def test_every_material_icon_of_each_wiki_is_listed():
     """What the wiki's pages use is what its section lists, no more and no less."""
     assert material_icons(SUITE / make_icons.SUITE_DIR / "docs") == {name for name, _ in make_icons.MATERIAL}
     assert material_icons(SUITE / "nexus" / "docs") == {name for name, _ in make_icons.NEXUS_MATERIAL}
-    for config in (SUITE / make_icons.SUITE_DIR / "mkdocs.yml", SUITE / "nexus" / "mkdocs.yml"):   # no placeholder logo from Material
+    assert material_icons(SUITE / "windows-portable" / "docs") == {name for name, _ in make_icons.WINDOWS_PORTABLE_MATERIAL}
+    for config in (SUITE / make_icons.SUITE_DIR / "mkdocs.yml", SUITE / "nexus" / "mkdocs.yml",
+                   SUITE / "windows-portable" / "mkdocs.yml"):   # no placeholder logo from Material
         assert "material/" not in re.sub(r"#.*", "", config.read_text(encoding="utf-8"))
 
 

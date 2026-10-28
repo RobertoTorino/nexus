@@ -1,5 +1,9 @@
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 
+![Status: Beta](https://img.shields.io/badge/status-Beta-8b4fd8)
+[![CI](https://github.com/RobertoTorino/nexus/actions/workflows/ci.yml/badge.svg)](https://github.com/RobertoTorino/nexus/actions/workflows/ci.yml)
+[![License: AGPL-3.0-or-later](https://img.shields.io/badge/license-AGPL--3.0--or--later-blue)](LICENSE)
+
 # Console Link
 
 Console Link connects the **AMD BC-250** on **Bazzite** to your PS4 or PS5: find the consoles on your network, wake

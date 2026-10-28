@@ -1,3 +1,43 @@
+Changelog: 28-10-2026 22:34:30
+
+Release 0.9.0.
+
+Changelog: 28-10-2026 22:29:59
+
+Fixed. Every wiki's home page showed the disclaimer twice: its own Disclaimer section and the footer under it, with the
+same text (owner, 28-10-2026). The footer's stays, starting with a bold Disclaimer:, in the BC250 Bazzite Suite's wiki,
+the Windows Portable Suite's and the Nexus page; tools/tests/test_disclaimer.py checks it. The Windows Portable wiki
+says "a Windows portable device" where it named the kind of device a Windows handheld.
+
+Changelog: 28-10-2026 22:04:41
+
+Added. The Windows Portable Suite wiki's home page has no search field, as the BC250 suite's has none there (owner,
+28-10-2026: no search bar on a wiki's front page; the Nexus page has no search at all), and its slogan is the owner's:
+"Awesome tools to get more out of your portable device." with "More control. More performance. More play." under it.
+Its Get started says "on your portable device" rather than "on the handheld", and the wiki calls the
+reader's own device the device (owner, 28-10-2026: "Do the apps change my device?"); "a Windows handheld" stays
+where it names the kind of device.
+
+Changelog: 28-10-2026 21:52:39
+
+Added. The Windows Portable Suite's wiki and the Nexus page have the home page layout of the BC250 Bazzite Suite's
+wiki, each in its own design (owner, 28-10-2026): a hero with the picture above the words and a Beta pill under the
+claim ("The suite is in active development" on the suite's wiki, "Nexus is in active development" on the Nexus
+page), sections in full width, an accent Get started with its buttons, and a footer of links. The Windows Portable
+wiki's home: the white handheld, In the suite (a card per category: Sustainable with Windows Portable Test, Gaming
+with PCSX2 Manager), One portal for every app with the portal rendered at 1280 x 720 (docs/images/home/portal.webp),
+Get started in amber, an FAQ for the Windows handheld, License and Disclaimer; its own home.html. The Nexus page:
+the icon above its name, Get started in teal with the Nexus index and the two wikis, License beside the Disclaimer.
+DESIGN.md and ICONS.md list the new uses of the colors, the portal picture and the wiki's Material icons.
+
+Changelog: 28-10-2026 21:46:46
+
+Added. Every README has three badges at the top, above its title (owner, 28-10-2026): Beta in its system's color (the
+BC250 suite's purple, the Windows Portable Suite's amber, Nexus's teal: the root README's was the BC250 purple), the
+CI workflow that tests its folder (ci.yml, ci-windows-portable.yml or ci-nexus.yml; the root README all three) and
+its license, as its SPDX line and its LICENSE say (BC-250 Persistent ACPI's README gets its MIT SPDX line).
+tools/tests/test_readme_badges.py checks every README, as test_disclaimer.py checks every disclaimer.
+
 Changelog: 28-10-2026 21:24:56
 
 Release 0.8.0. Brings wp-test-v1.5.0.

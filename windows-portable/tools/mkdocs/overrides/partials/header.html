@@ -1,6 +1,8 @@
 {#- SPDX-License-Identifier: GPL-3.0-or-later -#}
-{#- The Windows Portable Suite wiki's header: the suite's icon and name on the left, the search, and the links GitHub
-    and Wiki (the wiki, from its first chapter) on the right. No color switch: the wiki is dark only. -#}
+{#- The Windows Portable Suite wiki's header: the suite's icon and name on the left, the search (on every page but
+    Home, owner 28-10-2026), and the links GitHub and Wiki (the wiki, from its first chapter) on the right. No color
+    switch: the wiki is dark only. -#}
+{% set home = page.meta and page.meta.template == "home.html" %}
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="{{ lang.t('header') }}">
     <a href="{{ nav.homepage.url | url }}" title="{{ config.site_name | e }}" class="md-header__button md-logo" aria-label="{{ config.site_name }}" data-md-component="logo">
@@ -11,7 +13,7 @@
     </label>
     <a href="{{ nav.homepage.url | url }}" class="md-header__name">{{ config.site_name | e }}</a>
     <div class="md-header__spacer"></div>
-    {% if "material/search" in config.plugins %}
+    {% if not home and "material/search" in config.plugins %}
       {% set search = config.plugins["material/search"] | attr("config") %}
       {% if search.enabled %}
         <label class="md-header__button md-icon" for="__search">

@@ -55,6 +55,9 @@ markdown_extensions:
   - pymdownx.superfences
   - pymdownx.highlight
   - pymdownx.inlinehilite
+  - pymdownx.emoji:            # the :material-...: icons of the home page's cards and buttons
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
 validation:
   links:
     anchors: warn

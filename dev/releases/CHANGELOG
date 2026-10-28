@@ -1,3 +1,9 @@
+Changelog: 28-10-2026 21:33:59
+
+Fixed. The test of the Windows suite's test buttons failed in CI on Linux (28-10-2026): it set sys.platform to win32
+for the whole run, so Python's shutil.which took Windows' path. It now stands in for this computer's system in
+Nexus Releases' own check alone.
+
 Changelog: 28-10-2026 21:14:11
 
 Added. The Test on this board tab runs a Windows suite's tests on Windows (owner, 28-10-2026: on Windows Test app

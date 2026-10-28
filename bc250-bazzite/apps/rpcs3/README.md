@@ -1,5 +1,9 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 
+![Status: Beta](https://img.shields.io/badge/status-Beta-8b4fd8)
+[![CI](https://github.com/RobertoTorino/nexus/actions/workflows/ci.yml/badge.svg)](https://github.com/RobertoTorino/nexus/actions/workflows/ci.yml)
+[![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
+
 # RPCS3 Manager
 
 Plays PS3 games on the **AMD BC-250** on **Bazzite** with [RPCS3](https://rpcs3.net): installs the RPCS3 build it was

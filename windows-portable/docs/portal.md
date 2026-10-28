@@ -18,7 +18,7 @@ rows of four tiles each. A tile shows the app's icon, its name and its state:
 
 | State | Meaning |
 |---|---|
-| Not installed | The app is not on this handheld. |
+| Not installed | The app is not on this device. |
 | Installed x.y.z | The version this portal pins is installed. |
 | Update x.y.z | An older release is installed; this portal brings x.y.z. |
 | Installed, version unknown | The app is there, but not installed by this portal. |

@@ -54,8 +54,9 @@ def test_every_wiki_uses_it():
         if home.is_file():
             text = home.read_text(encoding="utf-8")
             assert "{{ config.extra.disclaimer }}" in text and "not affiliated" not in text, home
-        # The home page ends with the Disclaimer section, its text the hook's (owner, 28-10-2026: every disclaimer
-        # looks the same, on every home page to come too).
+            # One disclaimer on the home page, the footer's, starting with a bold "Disclaimer:" (owner, 28-10-2026:
+            # the page's own Disclaimer section above the footer showed the same text twice).
+            assert "<strong>Disclaimer:</strong> {{ config.extra.disclaimer }}" in text, home
         index = (config.parent / "docs" / "index.md").read_text(encoding="utf-8")
-        assert re.search(rf"^## Disclaimer\n\n{re.escape(disclaimer.MARKER)}$", index, re.M), config
+        assert "## Disclaimer" not in index and disclaimer.MARKER not in index, config
         assert "not affiliated" not in index, config

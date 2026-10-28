@@ -365,19 +365,19 @@ Background colors:
 
 Text colors:
 
-- `#f5f4f0` The text: the pages, the header's name and links, table headings.
+- `#f5f4f0` The text: the pages, the header's name and links, table headings; on the home page the words under the handheld, the dark sections' text and card titles, the footer's name.
 
   ![Sample text in #f5f4f0](design/colors/text-f5f4f0.svg)
 
-- `#a5a5ab` Dimmed: the line under the home page's name, the search field's hint.
+- `#a5a5ab` Dimmed: the stage note and the card text on the home page, the footer's links, the search field's hint.
 
   ![Sample text in #a5a5ab](design/colors/text-a5a5ab.svg)
 
-- `#f5a524` Amber: links in the text, the name on the home page, a header link under the pointer.
+- `#f5a524` Amber: links in the text, a header link under the pointer, the icons on the home page's cards, the footer's column headings, the Download button's text.
 
   ![Sample text in #f5a524](design/colors/text-f5a524.svg)
 
-- `#141414` Text on the amber.
+- `#141414` Text on the amber: the stage pill, Get started.
 
   ![Sample text in #141414](design/colors/text-141414.svg)
 
@@ -385,14 +385,14 @@ Background colors:
 
 | Color | Hex | Used for |
 | --- | --- | --- |
-| ![#121214](design/colors/block-121214.svg) | `#121214` | The page, the header and the footer, as the window. |
-| ![#1d1e22](design/colors/block-1d1e22.svg) | `#1d1e22` | Code blocks and the footer's bottom strip, as a card. |
+| ![#121214](design/colors/block-121214.svg) | `#121214` | The page and the header, as the window; the Download button, the footer's notice strip. |
+| ![#1d1e22](design/colors/block-1d1e22.svg) | `#1d1e22` | Code blocks, the home page's dark sections and its footer, as a card. |
 | ![#292b31](design/colors/block-292b31.svg) | `#292b31` | Table headings and Material's main color, as a focused card. |
-| ![#35383f](design/colors/block-35383f.svg) | `#35383f` | Lines: the header's bottom edge, between a table's rows. |
-| ![#f5a524](design/colors/block-f5a524.svg) | `#f5a524` | Amber: links and buttons under the pointer, the outline on linked pictures; the main color's lighter step. |
-| ![#cd8b22](design/colors/block-cd8b22.svg) | `#cd8b22` | The main color's darker step: the main pill's amber. |
+| ![#35383f](design/colors/block-35383f.svg) | `#35383f` | Lines: the header's bottom edge, between a table's rows, between the questions of the FAQ. |
+| ![#f5a524](design/colors/block-f5a524.svg) | `#f5a524` | Amber: links and buttons under the pointer, the outline on linked pictures, the main color's lighter step; the stage pill and the start of Get started's gradient on the home page. |
+| ![#cd8b22](design/colors/block-cd8b22.svg) | `#cd8b22` | The main color's darker step: the main pill's amber; the end of Get started's gradient. |
 | ![#f5a5241a](design/colors/block-f5a5241a.svg) | `#f5a5241a` | A faint amber behind what is under the pointer (10 %). |
-| ![#f5a52440](design/colors/block-f5a52440.svg) | `#f5a52440` | The amber glow under the handheld on the home page (25 %), as under a focused card. |
+| ![#f5a52440](design/colors/block-f5a52440.svg) | `#f5a52440` | The amber glow under the handheld on the home page and under a button under the pointer (25 %), as under a focused card; behind code in Get started. |
 
 ## The Nexus page
 
@@ -403,11 +403,11 @@ design of its own, apart from the suites' (a design per system).
 
 Text colors:
 
-- `#c0c0c0` Silver: the header's links, table headings, the text, card titles, links and buttons of the dark sections, card text, footer links; text on the main color and the search field's hint.
+- `#c0c0c0` Silver: the header's links, table headings, the text, card titles, links and buttons of the dark sections, card text, the stage note, footer links, License and Disclaimer; text on the main color and the search field's hint.
 
   ![Sample text in #c0c0c0](design/colors/text-c0c0c0.svg)
 
-- `#17b6a7` Teal: links in the text, the icons on the home page's cards, the words at the top (the name and the claim), footer column headings, the footer's name and a footer link under the pointer, a dark section's link under the pointer.
+- `#17b6a7` Teal: links in the text, the icons on the home page's cards, the words at the top (the name and the claim), footer column headings, the footer's name and a footer link under the pointer, a dark section's link under the pointer, the text of the Nexus index button.
 
   ![Sample text in #17b6a7](design/colors/text-17b6a7.svg)
 
@@ -415,7 +415,7 @@ Text colors:
 
   ![Sample text in #808080](design/colors/text-808080.svg)
 
-- `#010101` Ink: a button's text on hover in the dark sections.
+- `#010101` Ink: a button's text on hover in the dark sections; text, links and buttons on the teal (the stage pill, Get started).
 
   ![Sample text in #010101](design/colors/text-010101.svg)
 
@@ -423,9 +423,9 @@ Background colors:
 
 | Color | Hex | Used for |
 | --- | --- | --- |
-| ![#010101](design/colors/block-010101.svg) | `#010101` | Ink: the page background, the header, the dark sections, the footer and its notice strip. |
+| ![#010101](design/colors/block-010101.svg) | `#010101` | Ink: the page background, the header, the dark sections, the footer and its notice strip; the Nexus index button and a button under the pointer in Get started. |
 | ![#0f0f0f](design/colors/block-0f0f0f.svg) | `#0f0f0f` | Main color: Material's primary color, table headings. |
-| ![#17b6a7](design/colors/block-17b6a7.svg) | `#17b6a7` | Teal: the hover color of links and buttons, the outline on linked pictures. |
+| ![#17b6a7](design/colors/block-17b6a7.svg) | `#17b6a7` | Teal: the hover color of links and buttons, the outline on linked pictures; the stage pill and Get started on the home page. |
 | ![#8080801a](design/colors/block-8080801a.svg) | `#8080801a` | The hover color's faint fill behind what is under the pointer (10 %). |
 | ![#c0c0c0](design/colors/block-c0c0c0.svg) | `#c0c0c0` | Silver: a button's fill under the pointer in the dark sections. |
 | ![#ffffff](design/colors/block-ffffff.svg) | `#ffffff` | The main color's lighter and darker steps, for Material. |

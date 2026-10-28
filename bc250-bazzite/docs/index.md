@@ -160,8 +160,5 @@ its own `LICENSE`. The icons were made with generative AI tools and edited by ha
 music of the video tours with generative AI tools; all are under the license of the app or tool they come with, like its
 code.
 
-## Disclaimer
-
-<!-- disclaimer -->
 </div>
 </section>

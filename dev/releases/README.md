@@ -1,5 +1,9 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 
+![Status: Beta](https://img.shields.io/badge/status-Beta-17b6a7)
+[![CI Nexus](https://github.com/RobertoTorino/nexus/actions/workflows/ci-nexus.yml/badge.svg)](https://github.com/RobertoTorino/nexus/actions/workflows/ci-nexus.yml)
+[![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
+
 # Nexus Releases
 
 The release front end of Nexus: it writes the versions, CHANGELOG entries, pins and portal bump of a release of a

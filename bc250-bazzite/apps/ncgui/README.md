@@ -1,5 +1,9 @@
 <!-- SPDX-License-Identifier: GPL-2.0-only -->
 
+![Status: Beta](https://img.shields.io/badge/status-Beta-8b4fd8)
+[![CI](https://github.com/RobertoTorino/nexus/actions/workflows/ci.yml/badge.svg)](https://github.com/RobertoTorino/nexus/actions/workflows/ci.yml)
+[![License: GPL-2.0-only](https://img.shields.io/badge/license-GPL--2.0--only-blue)](LICENSE)
+
 # Bazzite NetcatGUI
 
 ![Bazzite NetcatGUI](images/bazzite-netcatgui-128.png)

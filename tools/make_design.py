@@ -181,12 +181,14 @@ WIKI_BLOCKS = [
 
 NEXUS_TEXT = [
     ("#c0c0c0", "Silver: the header's links, table headings, the text, card titles, links and buttons of "
-                "the dark sections, card text, footer links; text on the main color and the search field's hint."),
+                "the dark sections, card text, the stage note, footer links, License and Disclaimer; text on the main "
+                "color and the search field's hint."),
     ("#17b6a7", "Teal: links in the text, the icons on the home page's cards, the words at the top (the name and the "
                 "claim), footer column headings, the footer's name and a footer link under the pointer, a dark "
-                "section's link under the pointer."),
+                "section's link under the pointer, the text of the Nexus index button."),
     ("#808080", "A header link under the pointer (dimmed, no box); text on the hover color, and its dimmed text."),
-    ("#010101", "Ink: a button's text on hover in the dark sections."),
+    ("#010101", "Ink: a button's text on hover in the dark sections; text, links and buttons on the teal (the stage "
+                "pill, Get started)."),
 ]
 NEXUS_APP_TEXT = [
     ("#c0c0c0", "Silver: the text, the title, the boxes' values and captions, the buttons, the tabs and the fields."),
@@ -219,26 +221,32 @@ PORTABLE_BLOCKS = [
     ("#141414", "The main pill's glyph circle."),
 ]
 PORTABLE_WIKI_TEXT = [
-    ("#f5f4f0", "The text: the pages, the header's name and links, table headings."),
-    ("#a5a5ab", "Dimmed: the line under the home page's name, the search field's hint."),
-    ("#f5a524", "Amber: links in the text, the name on the home page, a header link under the pointer."),
-    ("#141414", "Text on the amber."),
+    ("#f5f4f0", "The text: the pages, the header's name and links, table headings; on the home page the words under "
+                "the handheld, the dark sections' text and card titles, the footer's name."),
+    ("#a5a5ab", "Dimmed: the stage note and the card text on the home page, the footer's links, the search field's "
+                "hint."),
+    ("#f5a524", "Amber: links in the text, a header link under the pointer, the icons on the home page's cards, the "
+                "footer's column headings, the Download button's text."),
+    ("#141414", "Text on the amber: the stage pill, Get started."),
 ]
 PORTABLE_WIKI_BLOCKS = [
-    ("#121214", "The page, the header and the footer, as the window."),
-    ("#1d1e22", "Code blocks and the footer's bottom strip, as a card."),
+    ("#121214", "The page and the header, as the window; the Download button, the footer's notice strip."),
+    ("#1d1e22", "Code blocks, the home page's dark sections and its footer, as a card."),
     ("#292b31", "Table headings and Material's main color, as a focused card."),
-    ("#35383f", "Lines: the header's bottom edge, between a table's rows."),
-    ("#f5a524", "Amber: links and buttons under the pointer, the outline on linked pictures; the main color's lighter "
-                "step."),
-    ("#cd8b22", "The main color's darker step: the main pill's amber."),
+    ("#35383f", "Lines: the header's bottom edge, between a table's rows, between the questions of the FAQ."),
+    ("#f5a524", "Amber: links and buttons under the pointer, the outline on linked pictures, the main color's lighter "
+                "step; the stage pill and the start of Get started's gradient on the home page."),
+    ("#cd8b22", "The main color's darker step: the main pill's amber; the end of Get started's gradient."),
     ("#f5a5241a", "A faint amber behind what is under the pointer (10 %)."),
-    ("#f5a52440", "The amber glow under the handheld on the home page (25 %), as under a focused card."),
+    ("#f5a52440", "The amber glow under the handheld on the home page and under a button under the pointer (25 %), "
+                  "as under a focused card; behind code in Get started."),
 ]
 NEXUS_BLOCKS = [
-    ("#010101", "Ink: the page background, the header, the dark sections, the footer and its notice strip."),
+    ("#010101", "Ink: the page background, the header, the dark sections, the footer and its notice strip; the Nexus "
+                "index button and a button under the pointer in Get started."),
     ("#0f0f0f", "Main color: Material's primary color, table headings."),
-    ("#17b6a7", "Teal: the hover color of links and buttons, the outline on linked pictures."),
+    ("#17b6a7", "Teal: the hover color of links and buttons, the outline on linked pictures; the stage pill and Get "
+                "started on the home page."),
     ("#8080801a", "The hover color's faint fill behind what is under the pointer (10 %)."),
     ("#c0c0c0", "Silver: a button's fill under the pointer in the dark sections."),
     ("#ffffff", "The main color's lighter and darker steps, for Material."),

@@ -115,8 +115,8 @@ def test_the_device_is_read_and_shown(make, qapp):
     assert shown["Device"] == "ROG Xbox Ally X" and shown["Memory"] == "24 GB, 15.6 GB usable"
     assert "Screen" in shown and "% scaling, " in shown["Screen"]
     assert list(shown).index("Screen") == list(shown).index("Memory") - 1
-    assert re.fullmatch(r"82%  \|  \w+day \d\d/\d\d/\d{4}  \|  \d\d:\d\d", window.header.status.text())
-    assert window.header.second.text() == "CPU 47° GPU 45°"            # a line of its own (owner, 28-10-2026)
+    assert re.fullmatch(r"\w+day \d\d/\d\d/\d{4}  \|  \d\d:\d\d", window.header.status.text())
+    assert window.header.second.text() == "CPU 47° GPU 45°  |  82%"    # under it (owner, 28-10-2026)
     assert window.header.icon is None                       # the screen is too small for it (owner, 27-10-2026)
     assert [text for _, text in window.legend.items] == ["Save report", "Close"]
 

@@ -4,7 +4,7 @@
 
 # PCSX2 Manager
 
-Installs PCSX2, the PlayStation 2 emulator, on the handheld and opens it: one tested release, for your own user,
+Installs PCSX2, the PlayStation 2 emulator, on the device and opens it: one tested release, for your own user,
 in portable mode.
 
 PCSX2 Manager is on the [portal](../portal.md)'s **Gaming** tab: **A** on its tile installs it, and once it
@@ -48,7 +48,7 @@ PCSX2 opens ready to play: right after the install, and each time before it open
 - its own updates off (they would replace the tested release);
 - the mouse pointer hidden over a game;
 - the BIOS: the dump in its `bios` folder, unless the settings already name one that is there;
-- player 1 on the handheld's controller (PCSX2 maps only the keyboard by itself), the buttons by their place: A is
+- player 1 on the device's controller (PCSX2 maps only the keyboard by itself), the buttons by their place: A is
   Cross, B Circle, X Square, Y Triangle, View Select and Menu Start. Once you map a controller in PCSX2's own window,
   the app leaves player 1 alone;
 - View and Menu together end a game, without a question;
@@ -65,7 +65,7 @@ writes its own settings back when it closes. The **information icon** at the pan
 | Setting | Values |
 |---|---|
 | Renderer | Automatic (PCSX2 chooses), Direct3D 12, Direct3D 11, Vulkan, OpenGL, Software (on the CPU: exact but slow) |
-| Resolution | Native (the PS2's), 2x (720p), 3x (1080p, the handheld's screen), 4x (1440p) |
+| Resolution | Native (the PS2's), 2x (720p), 3x (1080p, the device's screen), 4x (1440p) |
 | VSync | On or Off: no tearing, a little more delay |
 | Show FPS | On or Off: the frames a second in a corner |
 | Fast boot | On or Off: skips the PS2's start-up screen |

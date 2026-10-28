@@ -50,11 +50,12 @@ app is an optional tile. The wiki is at robertotorino.github.io/nexus/windows-po
   - No dialogs: an action that needs care asks for a second press within five seconds (Remove; B while the portal
     downloads or installs), and the pill or the strip says so meanwhile.
   - The window fits the Ally's screen: 1280 x 720 logical pixels at 150 %, the size every page is laid out for
-    (`portable.px()` scales it to a larger screen). Text that does not fit goes behind an information icon (`InfoPill`, at the top right of its pane) that
-    shows it over the window (owner, 28-10-2026).
+    (`portable.px()` scales it to a larger screen). Text that does not fit goes behind an information icon
+    (`InfoPill`, at the top right of its pane) that shows it over the window (owner, 28-10-2026).
   - Nothing runs before it is asked for: a card that reads the device reads on A (owner, 28-10-2026).
   - The header's status line: the battery, the date and the time, `82% | Wednesday 28/10/2026 | 17:04` (owner,
-    28-10-2026: no space before %); Windows Portable Test adds the temperatures on a second line under it, `CPU 47° GPU 45°`. No icon in the
+    28-10-2026: no space before %); Windows Portable Test shows the date and the time, and under them
+    the temperatures and the battery, `CPU 47° GPU 45° | 82%`. No icon in the
     test app's header (the screen is too small for it).
 - **Not limited to the owner's handheld.** The Ally X is one case, not the target: an app reads what Windows
   reports, works on another Windows handheld, and says so where something does not apply (no AMD driver, no Wi-Fi,

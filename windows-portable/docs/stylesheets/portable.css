@@ -65,8 +65,26 @@
 
 /* The home page. */
 :root {
-  --wps-hero-fg: #f5a524;                        /* The suite's name under the handheld */
+  --wps-hero-fg: #f5f4f0;                        /* The words under the handheld: the line and the claim */
   --wps-glow: #f5a52440;                         /* The amber glow under the handheld (25 %), as under a focused card */
+  --wps-stage-bg: #f5a524;                       /* The stage pill under the claim */
+  --wps-stage-fg: #141414;                       /* Text in the stage pill */
+  --wps-section-bg: var(--wps-surface);          /* Background of the dark sections, a step lighter than the page */
+  --wps-section-fg: #f5f4f0;                     /* Text, card titles and links in the dark sections */
+  --wps-card-icon: #f5a524;                      /* The icons on the home page's cards */
+  --wps-accent-from: #f5a524;                    /* Get started: the amber at its top left */
+  --wps-accent-to: #cd8b22;                      /* Get started: the darker amber at its bottom right */
+  --wps-accent-fg: #141414;                      /* Text, links and buttons on the amber */
+  --wps-button-shadow: #f5a52440;                /* The glow under a button under the pointer (25 %) */
+}
+
+/* The home page's footer. */
+:root {
+  --wps-footer-bg: var(--wps-surface);           /* Footer background */
+  --wps-footer-fg: #f5f4f0;                      /* The name, and a link under the pointer */
+  --wps-footer-heading: #f5a524;                 /* The columns' headings */
+  --wps-footer-link: #a5a5ab;                    /* The links */
+  --wps-footer-notice-bg: var(--wps-window);     /* The strip with the notice at the bottom */
 }
 
 
@@ -172,26 +190,317 @@
   margin: 0 0 1rem 1rem;
 }
 
-/* The home page: the handheld with its amber glow, the suite's name under it. */
-.md-typeset .hero {
-  text-align: center;
-  margin: 0.5rem 0 2rem;
+/* Buttons as pills. */
+.md-typeset .md-button {
+  border-radius: 2em;
+  padding: 0.55em 1.5em;
+  font-weight: 700;
+  transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
 }
 
-.md-typeset .hero img {
-  max-width: 100%;
-  width: 38rem;
+.md-typeset .md-button {
+  color: var(--wps-text);
+  border-color: var(--wps-text);
+}
+
+.md-typeset .md-button:hover,
+.md-typeset .md-button:focus {
+  background-color: var(--wps-amber);
+  border-color: var(--wps-amber);
+  color: var(--wps-accent-fg);
+  box-shadow: 0 0.5em 1em var(--wps-button-shadow);
+}
+
+/* The home page (docs/index.md on tools/mkdocs/overrides/home.html): full-width sections, as on a product page, the
+   layout of the BC250 Bazzite Suite's wiki home in the portable design. */
+.md-main__inner:has(> .home) {
+  max-width: none;
+  margin: 0;
+}
+
+/* Material hides the icon on a narrow screen behind the menu button; Home has no menu, so it keeps the icon. */
+.md-header:has(~ .md-container .home) .md-header__button.md-logo {
+  display: inline-block;
+}
+
+.md-typeset .home-hero .headerlink,
+.md-typeset .home-card .headerlink {
+  display: none;
+}
+
+.md-typeset.home__article {
+  margin: 0;
+}
+
+.home-section__inner {
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 3.2rem 0.8rem;
+}
+
+.md-typeset .home-section h2,
+.md-typeset .home-hero__lead,
+.md-typeset .home-hero__claim {
+  font-size: clamp(1.3rem, 4.2vw, 2.8rem);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin: 0 0 1.2rem;
+  color: inherit;
+}
+
+/* The hero: the handheld on the page with its amber glow, as under a focused card; the words below. */
+.home-hero__pictures {
+  padding-top: 3rem;
+}
+
+.home-hero__pictures p {
+  display: flex;
+  justify-content: center;
+  width: 80vw;
+  max-width: 48rem;
+  margin: 0 auto;
+}
+
+.md-typeset .home-hero__device {
+  width: 100%;
   filter: drop-shadow(0 1.2rem 2rem var(--wps-glow));
 }
 
-.md-typeset .hero h1 {
-  color: var(--wps-hero-fg);
-  margin: 1rem 0 0.3rem;
+.home-hero__text {
+  width: fit-content;
+  max-width: 80vw;
+  margin: 0 auto;
+  padding: 1.6rem 0 3rem;
 }
 
-.md-typeset .hero p {
+.md-typeset .home-hero__text {
+  color: var(--wps-hero-fg);
+}
+
+.md-typeset .home-hero__lead {
+  font-weight: 400;
+  margin: 0;
+}
+
+.md-typeset .home-hero__claim {
+  font-weight: 800;
+  margin: 0;
+}
+
+/* The suite's stage: a pill and its note under the claim. */
+.md-typeset .home-hero__stage {
+  margin: 1rem 0 0;
+  font-size: 0.8rem;
   color: var(--wps-dim);
+}
+
+.md-typeset .home-hero__stage strong {
+  background: var(--wps-stage-bg);
+  color: var(--wps-stage-fg);
+  border-radius: var(--wps-radius-small);
+  padding: 0.1rem 0.5rem;
+  margin-right: 0.5rem;
+}
+
+/* In the suite: a dark section with a grid of cards. */
+.home-section--dark {
+  background: var(--wps-section-bg);
+  color: var(--wps-section-fg);
+}
+
+.home-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 2rem 2.4rem;
+  margin: 2rem 0 2.4rem;
+}
+
+.md-typeset .home-card h4 {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0 0 0.4rem;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--wps-section-fg);
+}
+
+.md-typeset .home-card h4 .twemoji svg {
+  width: 1.2em;
+  max-height: none;
+  fill: var(--wps-card-icon);
+}
+
+.md-typeset .home-card p {
+  margin: 0;
+  color: var(--wps-dim);
+}
+
+.md-typeset .home-section--dark a:not(.md-button) {
+  color: var(--wps-section-fg);
+  font-weight: 600;
+}
+
+.md-typeset .home-section--dark a:not(.md-button):hover {
+  color: var(--wps-amber);
+}
+
+.md-typeset .home-section--dark .md-button {
+  color: var(--wps-section-fg);
+  border-color: var(--wps-section-fg);
+}
+
+.md-typeset .home-section--dark .md-button:hover {
+  background-color: var(--wps-amber);
+  border-color: var(--wps-amber);
+  color: var(--wps-accent-fg);
+}
+
+/* One portal for every app: words and a picture side by side, stacked on a narrow screen. */
+.home-split {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 2.4rem;
+  align-items: center;
+}
+
+.md-typeset .home-split__picture {
+  display: block;
+  width: 100%;
+}
+
+.home-split > p {
+  margin: 0;
+}
+
+@media screen and (max-width: 44.9375em) {
+  .home-split {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Get started: the amber, with a near-black Download button. */
+.home-section--accent {
+  background: linear-gradient(135deg, var(--wps-accent-from), var(--wps-accent-to));
+  color: var(--wps-accent-fg);
+}
+
+.md-typeset .home-section--accent a:not(.md-button),
+.md-typeset .home-section--accent code {
+  color: var(--wps-accent-fg);
+  font-weight: 600;
+}
+
+.md-typeset .home-section--accent code {
+  background: var(--wps-glow);
+}
+
+.md-typeset .home-section--accent .md-button {
+  color: var(--wps-accent-fg);
+  border-color: var(--wps-accent-fg);
+}
+
+.md-typeset .home-section--accent .md-button--primary {
+  background-color: var(--wps-window);
+  border-color: var(--wps-window);
+  color: var(--wps-amber);
+}
+
+.md-typeset .home-section--accent .md-button:hover {
+  background-color: var(--wps-window);
+  border-color: var(--wps-window);
+  color: var(--wps-text);
+}
+
+.md-typeset .home-section--accent .md-button + .md-button {
+  margin-left: 0.6rem;
+}
+
+/* FAQ: questions and answers in one readable column. */
+.home-faq .home-section__inner {
+  max-width: 44rem;
+}
+
+.md-typeset .home-faq h2:not(:first-child) {
+  font-size: 1.6rem;
+  margin-top: 2.4rem;
+}
+
+.md-typeset .home-faq h3 {
+  font-size: 1rem;
+  font-weight: 800;
+  margin: 1.6rem 0 0.4rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--wps-edge);
+}
+
+.md-typeset .home-faq h2 + h3 {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.md-typeset .home-faq p {
+  margin: 0;
+  color: var(--md-default-fg-color--light);
+}
+
+/* The home page's footer: the suite on the left, columns of links on the right. */
+.home-footer {
+  background: var(--wps-footer-bg);
+  color: var(--wps-footer-fg);
+}
+
+.home-footer__inner {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 2rem;
+  padding: 2.4rem 0.8rem;
+}
+
+.home-footer__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-weight: 800;
   font-size: 0.9rem;
+  color: var(--wps-footer-fg);
+}
+
+.home-footer__columns {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(7rem, auto));
+  gap: 1.2rem 2.4rem;
+  font-size: 0.7rem;
+}
+
+.home-footer__columns h4 {
+  margin: 0 0 0.6rem;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--wps-footer-heading);
+}
+
+.home-footer__columns a {
+  display: block;
+  margin-bottom: 0.4rem;
+  color: var(--wps-footer-link);
+}
+
+.home-footer__columns a:hover {
+  color: var(--wps-footer-fg);
+}
+
+@media screen and (max-width: 44.9375em) {
+  .home-footer__columns {
+    grid-template-columns: repeat(2, minmax(7rem, 1fr));
+  }
+}
+
+.home-footer .md-footer-meta {
+  background: var(--wps-footer-notice-bg);
 }
 
 @media screen and (max-width: 44.9375em) {

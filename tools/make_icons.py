@@ -105,6 +105,9 @@ WINDOWS_PORTABLE_ICON = [
      "The suite's wiki: the header logo (`.webp`) and the favicon (`.png`), written by this tool."),
     ("windows-portable/docs/images/home/device.webp", "`windows-portable/docs/images/home/device.webp` (1377 x 768)",
      "The suite's wiki home: the handheld under the headline, a WebP copy of the owner's white handheld."),
+    ("windows-portable/docs/images/home/portal.webp", "`windows-portable/docs/images/home/portal.webp` (1280 x 720)",
+     "The suite's wiki home, One portal for every app: the portal at the Ally's 1280 x 720, rendered offscreen with "
+     "the suite's apps.toml (Windows Portable Test installed), as WebP."),
     ("windows-portable/docs/images/apps/test.webp", "`windows-portable/docs/images/apps/<key>.webp` (256 px)",
      "An app's chapter in the suite's wiki: its icon at the top, a WebP copy of the app's drawing."),
     ("windows-portable/portal/images/apps/test.webp", "`windows-portable/portal/images/apps/<key>.webp` (128 px)",
@@ -227,12 +230,19 @@ def write_copies(root: Path, exact: list[tuple[str, str]], page: list[tuple[str,
     return written
 
 
+WINDOWS_PORTABLE_MATERIAL = [
+    ("stethoscope", "Home: the card \"Sustainable\"."),
+    ("gamepad-variant", "Home: the card \"Gaming\"."),
+    ("download", "Home: the Download button."),
+]
+
 NEXUS_MATERIAL = [
     ("file-tree", "Home: the card \"Nexus\"."),
     ("view-grid", "Home: the card \"A suite\"."),
     ("application", "Home: the card \"An app\"."),
     ("chip", "Home: the card \"BC250 Bazzite Suite\"."),
     ("controller", "Home: the card \"Windows Portable Suite\"."),
+    ("download", "Home: the Nexus index button."),
 ]
 
 SYMBOLS = [
@@ -338,6 +348,9 @@ def build(root: Path = ROOT) -> str:
         (img(f"{WINDOWS_PORTABLE}/icons/{category}/{category}-128.png", 64),
          f"{category.title()}: {source}", "<br>".join(by_category.get(category, [])))
         for category, source in sorted(WINDOWS_PORTABLE_CATEGORIES.items())))
+    out += ["### Material Design icons in the wiki", "", "Drawn by MkDocs Material in the wiki's colors.", ""]
+    out += table("Icon,Name,Used for", ((img(f"{MDI}/{name}.svg", 24), f"`material-{name}`", use)
+                                        for name, use in WINDOWS_PORTABLE_MATERIAL))
     out += ["## Nexus", "", "### The Nexus icon", ""]
     out += table("Icon,File,Used for", ((img(path), file, use) for path, file, use in NEXUS_ICON))
     out += ["### Material Design icons on the Nexus page", "", "Drawn by MkDocs Material in the page's colors.", ""]

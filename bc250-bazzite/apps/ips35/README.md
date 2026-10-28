@@ -1,5 +1,9 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 
+![Status: Beta](https://img.shields.io/badge/status-Beta-8b4fd8)
+[![CI](https://github.com/RobertoTorino/nexus/actions/workflows/ci.yml/badge.svg)](https://github.com/RobertoTorino/nexus/actions/workflows/ci.yml)
+[![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
+
 # USB IPS3.5
 
 Shows the **AMD BC-250**'s live system values on a **Turzx USB IPS screen** (the Turing Smart Screen 3.5" and the
