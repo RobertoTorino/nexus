@@ -1,3 +1,15 @@
+Changelog: 29-10-2026 20:26:55
+
+Release 0.24.0.
+
+Changelog: 29-10-2026 19:58:49
+
+Added. The Windows Portable Suite's weekly upstream check checks an emulator that publishes a build for every
+change (Vita3K Manager's and Xenia Manager's: CADENCE = "daily" in their emulator.py) only for its pinned file,
+where it would report a newer build every week; the BC250 suite's check leaves Vita3K and Xenia out for the same
+reason. It also reads a constant named by another (TAG = VERSION: Vita3K's builds are tagged with their number
+alone, Xenia's with their commit). With tests.
+
 Changelog: 29-10-2026 19:25:44
 
 Release 0.23.0.

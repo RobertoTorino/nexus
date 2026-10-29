@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The weekly upstream check (check_upstream.py) with GitHub stood in for: the pins read from the apps' emulator.py
 (the real ones, and one made here), a newer release and a replaced or missing asset reported, all in step quiet,
-and an upstream that cannot be asked."""
+an emulator with a build for every change checked for its file only, and an upstream that cannot be asked."""
 
 from __future__ import annotations
 
@@ -41,7 +41,7 @@ def github(latest: str, digest: str = SHA, asset: str = "Emu-v1.2.0-Windows-x64.
 
 def test_the_suites_own_pins_are_read():
     found = {pin.app: pin for pin in cu.pins()}
-    assert set(found) == {"pcsx2", "ppsspp", "rpcs3", "shadps4"}
+    assert set(found) == {"pcsx2", "ppsspp", "rpcs3", "shadps4", "vita3k", "xenia"}
     assert found["ppsspp"].repo == "hrydgard/ppsspp" and found["ppsspp"].asset == f"PPSSPP-v{found['ppsspp'].version}-Windows-x64.zip"
     assert found["pcsx2"].repo == "PCSX2/pcsx2" and found["pcsx2"].tag == f"v{found['pcsx2'].version}"
     assert found["ppsspp"].name == "PPSSPP Manager" and len(found["pcsx2"].sha256) == 64
@@ -55,6 +55,15 @@ def test_the_suites_own_pins_are_read():
     shadps4 = found["shadps4"]
     assert shadps4.repo == "shadps4-emu/shadPS4" and shadps4.tag == f"v.{shadps4.version}"
     assert shadps4.file_tag == shadps4.tag and shadps4.version in shadps4.asset
+    # Vita3K publishes a build for every change, tagged with its number
+    vita3k = found["vita3k"]
+    assert vita3k.repo == "Vita3K/Vita3K-builds" and vita3k.tag == vita3k.version and vita3k.version.isdigit()
+    assert vita3k.daily and vita3k.version in vita3k.asset and vita3k.asset.endswith("-windows-x86_64.7z")
+    assert not any(found[name].daily for name in ("pcsx2", "ppsspp", "rpcs3", "shadps4"))
+    # Xenia Canary too, each build tagged with its commit
+    xenia = found["xenia"]
+    assert xenia.repo == "xenia-canary/xenia-canary" and xenia.tag == xenia.version and xenia.daily
+    assert xenia.asset == "xenia_canary_windows.7z"
 
 
 def test_a_pin_whose_file_is_in_another_repository(tmp_path):
@@ -132,3 +141,25 @@ def test_a_tag_with_a_dot_after_the_v(tmp_path):
     assert "Pinned 1.2.0, latest stable 1.3.0" in report.read_text()
     assert cu.check(cu.pins(suite(tmp_path / "again"))[0], github("v.1.2.0")).text().startswith(
         "Emu Manager: pinned 1.2.0, latest stable 1.2.0. In step.")
+
+
+def test_a_build_for_every_change_is_checked_for_its_file_only(tmp_path, capsys):
+    """CADENCE = "daily" (Vita3K's builds, one a day): newer builds are not reported, a replaced file is."""
+    package = tmp_path / "windows-portable" / "apps" / "emu" / "emu_manager"
+    package.mkdir(parents=True)
+    (package / "emulator.py").write_text(
+        'VERSION = "4186"\nTAG = VERSION\nREPO = "someone/emu-builds"\nCADENCE = "daily"\n'
+        f'ASSET = "emu-4186-windows-x86_64.7z"\nSHA256 = "{SHA}"\n', encoding="utf-8")
+    asked = []
+
+    def get(url: str, digest: str = SHA) -> bytes:
+        asked.append(url)
+        if url.endswith("someone/emu-builds/releases/tags/4186"):
+            return json.dumps({"assets": [{"name": "emu-4186-windows-x86_64.7z", "digest": f"sha256:{digest}"}]}).encode()
+        raise AssertionError(url)                   # never the latest release
+    report = tmp_path / "upstream.md"
+    assert cu.main(["--report", str(report)], get, tmp_path / "windows-portable") == 0
+    assert report.read_text() == "" and len(asked) == 1
+    assert "emu: pinned 4186, a build daily, not compared. In step." in capsys.readouterr().out
+    assert cu.main(["--report", str(report)], lambda url: get(url, "cd" * 32), tmp_path / "windows-portable") == 1
+    assert "Pinned 4186, a build daily, not compared." in report.read_text() and "was replaced" in report.read_text()

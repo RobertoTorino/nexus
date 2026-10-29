@@ -7,26 +7,116 @@ describe only what exists.
 
 ## Resume here (29-10-2026, for a new chat): the Windows Portable Suite
 
-**Start the next chat here (29-10-2026, evening).** RPCS3 Manager went out as wp-rpcs3-v0.1.0 (with
-wp-pcsx2-v2.0.1, wp-ppsspp-v0.1.1, wp-test-v2.0.1, nexus-v0.22.0), but **the portal's 3.1.0 that pins it was never
-tagged**: portal/VERSION says 3.1.0 and the commit "Release wp-portal-v3.1.0" is on main, yet GitHub's newest portal
-is wp-portal-v3.0.0 (CI Nexus failed on that commit, "CHANGELOGs keep their entries", which "Restore lost CHANGELOG
-entry" fixed; CI passed on 1d86c6c). So installed portals do not offer RPCS3 Manager yet; the owner's tag-release.sh
-for wp-portal-v3.1.0 is still to run. The working tree now holds **shadPS4 Manager**, finished and checked (the next
-paragraph). Then the gaming category goes on: **Vita3K Manager** (`apps/vita3k/`) and **Xenia Manager**
-(`apps/xenia/`), each the way RPCS3 and shadPS4 Manager were made: `tools/new_app.py windows-portable <key> "<Name> Manager"
---category gaming` first, then look up the emulator's Windows build on GitHub (its asset name, archive format, SHA-256
-and size, and how it keeps its files: a portable mode or a folder beside the program; `<exe> --help` lists its flags,
-the owner's tip), pin it in `emulator.py` (a file in another repository than the releases takes `BUILDS` and
-`BUILD_TAG`, as RPCS3's), then port the BC250 app's parts onto PPSSPP Manager's layout (cards, legend, browser, Steam,
-settings in tabs, log), its tests from PPSSPP Manager's and RPCS3 Manager's, the wiki chapter, the CHANGELOG entry
-and the MIGRATION notes. After the three: item 2 of the list below, Windows Portable Test's tabs. What RPCS3 Manager
-settled for all of them: the games are played from Steam only, the emulator's own window is never shown, an install
-that the emulator must do itself runs headless where its flags allow, a .7z is unpacked with Windows' tar, and an
-empty SD slot is no drive.
+**Start the next chat here (29-10-2026, night).** RPCS3 Manager and shadPS4 Manager are out (wp-rpcs3-v0.1.0,
+wp-shadps4-v0.1.0, and wp-portal-v3.1.0 that pins both, tagged on 6cb1fcf). The working tree now holds **Vita3K
+Manager** and **Xenia Manager**, finished and checked but for the owner's round on the Ally and their releases (the
+next two paragraphs; the portal's one minor bump pins both). That ends the gaming category's emulator managers (owner,
+29-10-2026: the gaming category first). Next: item 2 of the list below, Windows Portable Test's tabs, and the rest of
+item 3. What the emulator managers settled, for any later one: the games are played from Steam only, the emulator's
+own window is never shown, an install that the emulator must do itself runs headless where its flags allow, a .7z is
+unpacked with Windows' tar, an empty SD slot is no drive, a build for every change takes `CADENCE = "daily"` in
+`emulator.py` (the weekly check then checks only its file) and the pane shows the newest build; running a downloaded
+program is refused here, so the flags, paths and portable mode come from the emulator's source at the pinned commit
+and the runtime from the .exe's imports.
 
-**shadPS4 Manager for the Windows Portable Suite, in the working tree (29-10-2026, evening; not committed: the owner
-commits).** `windows-portable/apps/shadps4/`, 0.1.0, made with `tools/new_app.py windows-portable shadps4 "shadPS4
+**Xenia Manager for the Windows Portable Suite, in the working tree (29-10-2026, night; not committed: the owner
+commits).** `windows-portable/apps/xenia/`, 0.1.0, made with `tools/new_app.py windows-portable xenia "Xenia Manager"
+--package xenia_manager --category gaming`, then ported from the BC250 app (`bc250-bazzite/apps/xenia/`) onto shadPS4
+Manager's layout with four cards (Xenia, Your games, Settings, Log). Nothing needed the owner's answer: Xenia is
+portable by itself on Windows and its line is the BC250 app's. Checked on Windows: `./test.sh` (every suite; Xenia
+Manager 70 tests), the live download (`WPS_LIVE_DOWNLOAD=1`), `check_upstream.py` live, the installer test, a release
+built and installed by the installer test (`-Release`), the frozen program started offscreen (its log said build
+48b318a is out), both wikis `--strict`, `check_versions.py`, `check_changelogs.py`, `tools/pre-push.sh`. What was found,
+from Xenia Canary's source at the pinned commit (e6cd2e4):
+
+- **The pin**: the BC250 app's build, e6cd2e4, its Windows archive `xenia_canary_windows.7z` in the same release (3.7
+  MB: xenia_canary.exe and LICENSE, BSD-3-Clause; GitHub's digest and our download agree). xenia_canary.exe is a GUI
+  program and imports the same Visual C++ runtime as Vita3K's and shadPS4's.
+- **Portable by itself** (`app/xenia_main.cc`): the `portable` cvar defaults to true on Windows, so the storage root is
+  the program's folder (elsewhere only with a portable.txt; else Documents\Xenia): xenia-canary.config.toml,
+  content\ (saves), cache_host\, and the log xenia_canary.log beside the program. One folder, as RPCS3's.
+- **Playing**: `xenia_canary.exe --fullscreen=true "<game>"`, the BC250 app's line; a command-line value is not saved
+  into the config (cvar.h: commandline_value_). Xenia has no controller combination that ends a game (the hotkeys are
+  for the guide button, and off by default): Steam's Exit game ends it.
+- **Settings**: 13 cvars in four tabs (Picture 6, Speed 2, Sound 2, Console 3), from their DEFINE_ lines. The config
+  file is TOML as config.cc's SaveConfig writes it: [Category], `name = value` padded to column 50, `\t# description`,
+  strings in single quotes (EscapeString). The app edits those lines (xenia_settings.toml_set), the description kept
+  at column 50; the resolution scale writes draw_resolution_scale_x and _y together. The tests write a file in that
+  layout by hand: no config file of a real Xenia run was available here.
+- **Games, shortcuts, artwork**: the BC250 app's games.py unchanged; the shortcuts Windows-style (shadPS4 Manager's
+  parsing); the artwork drawn from the app's icon by core's steam_art, as the BC250 app's (the Windows icon is the
+  Gaming category's picture).
+- **To check on the Ally**: `tar --version` says liblzma and A Install unpacks; the VC runtime line; a game folder on an
+  SD card with an .iso, an unpacked disc and a Games on Demand package; A Steam mark, Y Update Steam and the game from
+  Steam **full screen**; the controller in a game; Steam's Exit game; the drawn pictures in Steam (and with a
+  SteamGridDB key); the settings read by Xenia (Direct3D 12 on the Ally; that Xenia keeps the app's lines when it
+  rewrites its config at start); no user name on any screen.
+- **The release**: the app is new (0.1.0, its CHANGELOG has the Added entry); the portal pins `wp-xenia-v0.1.0` with an
+  empty sha256 and its CHANGELOG has the Added entry (one minor bump with Vita3K's); the root CHANGELOG's upstream
+  entry names both.
+
+**Vita3K Manager for the Windows Portable Suite, in the working tree (29-10-2026, night; not committed: the owner
+commits).** `windows-portable/apps/vita3k/`, 0.1.0, made with `tools/new_app.py windows-portable vita3k "Vita3K
+Manager" --package vita3k_manager --category gaming`, then ported from the BC250 app (`bc250-bazzite/apps/vita3k/`)
+onto RPCS3 Manager's layout with four cards (Vita3K, Your games, Settings, Log). The owner's answers (29-10-2026):
+**games start with Vita3K's own (Qt) frontend, full screen**, and **a .vpk, .zip or folder install is closed once
+installed**. Checked on Windows: `./test.sh` (every suite; Vita3K Manager 80 tests), the live download
+(`WPS_LIVE_DOWNLOAD=1`: 4186's archive downloaded, checked, unpacked with Windows' tar), `check_upstream.py` live, the
+installer test, a release built with `build_release.py` (47 MB) and installed by the installer test (`-Release`), the
+frozen program started offscreen (it ran, and its log said build 4242 is out), both wikis `--strict`,
+`check_versions.py`, `check_changelogs.py`, `tools/pre-push.sh`. What was found and decided, from Vita3K's source at
+the pinned commit (f0273e4c; running Vita3K.exe here was refused):
+
+- **The pin**: the BC250 app's build, 4186, as its Windows archive `vita3k-4186-f0273e4c-windows-x86_64.7z` (24.5 MB;
+  GitHub's digest and our download agree) on `Vita3K/Vita3K-builds`, a release per build tagged with its number;
+  `Vita3K/Vita3K` has only the rolling "continuous". A .7z that Windows' tar lists and unpacks (156 entries:
+  Vita3K.exe, Qt6, FFmpeg, data, shaders-builtin, translations). Vita3K.exe is a GUI program (no console output) and
+  imports vcruntime140, vcruntime140_1, msvcp140 and msvcp140_atomic_wait, as shadPS4's: the pane says when the
+  runtime is missing.
+- **Portable mode** (`app::init_paths`): a `portable` folder beside Vita3K.exe holds everything, config.yml, vita3k.log
+  (written anew at each start, async and unflushed) and the Vita FS in `portable\fs` (`config::init_config` forces it
+  there in portable mode, whatever pref-path says); without it, config and log beside the program and the Vita FS in
+  `%APPDATA%\Vita3K\Vita3K`. The app makes `portable\` at install, as shadPS4's `user\`.
+- **The weekly upstream check** compares no newer build for Vita3K (`CADENCE = "daily"` in its emulator.py: Vita3K
+  publishes one a day, 4242 already; the BC250 suite's check leaves Vita3K out for that reason) and checks only that
+  the pinned file is there unchanged; the Vita3K pane shows the newest build instead (the BC250 app's notice, asked
+  of GitHub when the window opens, off the window's thread). Root CHANGELOG (Added.). The owner agreed
+  (29-10-2026, "everything is ok"): the question to GitHub at the window's start stays, and the weekly check does
+  not report Vita3K's builds.
+- **Playing** (main.cpp, sdl-frontend/session.cpp, gui-qt/main_window.cpp): the SDL frontend (the BC250 app's
+  `--frontend sdl -r <ID>`) opens a 960 x 544 window that never goes full screen (not even on master), and nothing
+  on the controller ends it; Game Mode's compositor hides that on the board. So the shortcut is `Vita3K.exe -r <ID>`
+  (Vita3K's Qt frontend boots the game at once) and the app sets `boot-apps-full-screen: true` in config.yml, with
+  `show-welcome: false` and `check-for-updates-mode: 0` (userdata.OWNED; written at install, at the window's start
+  and before each Vita3K job, never while it runs; config.yml's other lines kept, a missing key keeps Vita3K's
+  default: `config::update_members`). Steam's Exit game ends it; the guide button opens Vita3K's pause menu (Resume,
+  Exit), whose Exit leaves Vita3K's own window (Steam's Exit game closes that). The SDL frontend has no pause menu on
+  the desktop (no hooks given).
+- **Installs**: `--firmware <PUP>` and `--pkg <file> --zrif <key>` install and quit without a window
+  (`init_config` returns QuitRequested), so they run as jobs (emulator.run_quiet) and the outcome is read from the
+  files written (the firmware's parts; a game, update or extra content in ux0\app, ux0\patch, ux0\addcont by mtime).
+  A .vpk, .zip or folder installs only from the content path and then boots the game, so the app starts
+  `Vita3K.exe --frontend sdl <file>` and kills it as soon as a visible window of its process shows (EnumWindows;
+  the window opens only after the install); an update or DLC boots nothing, and Vita3K ends by itself.
+  `--frontend` is not saved in config.yml. X takes only a dumped game's own folder (sce_sys\param.sfo in it): Vita3K
+  installs every param.sfo below a folder it is given, a PS4 dump included.
+- **Settings**: 16 of config.yml's top-level keys in four tabs (Picture 6, Speed 5, Sound 3, System 2), their
+  defaults checked against the BC250 suite's config-4186.yml fixture (copied into the app's tests). The BC250 app
+  has no settings of its own (its Vita3K settings button opened Vita3K's window).
+- **Not carried over**: Play on the desktop (the suite's rule) and Vita3K's own settings window.
+- **To check on the Ally**: `tar --version` says liblzma and A Install unpacks; the VC runtime line; the three
+  PSP2UPDAT.PUP files through LB Firmware (each a minute or two; the row says which part); a .vpk through RB (does a
+  window flash, is the game in Your games), a dumped folder with X, a .pkg with a pasted zRIF; A Steam mark, Y Update
+  Steam and the game from Steam **full screen** (does the Qt frontend show its main window or the welcome or update
+  window before the game?); the controller in a game (A Cross, B Circle); Steam's Exit game, and whether the guide
+  button reaches Vita3K's pause menu under Steam Input; the settings read by Vita3K; the whole log; no user name on any
+  screen.
+- **The release**: the app is new (0.1.0, its CHANGELOG has the Added entry); the portal pins `wp-vita3k-v0.1.0`
+  with an empty sha256 and its CHANGELOG has the Added entry, so `check_manifest.py --base origin/main` asks for the
+  portal's minor bump (the owner's number); Nexus (the root CHANGELOG: the upstream check, Added.).
+
+**shadPS4 Manager for the Windows Portable Suite (29-10-2026, evening; released as wp-shadps4-v0.1.0 with
+wp-portal-v3.1.0).** `windows-portable/apps/shadps4/`, 0.1.0, made with `tools/new_app.py windows-portable shadps4 "shadPS4
 Manager" --package shadps4_manager --category gaming`, then ported from the BC250 app (`bc250-bazzite/apps/shadps4/`)
 onto RPCS3 Manager's layout with five cards (shadPS4, Your games, Settings, shadNet, Log). The owner's answers
 (29-10-2026): **Extract PKG as a pane**, **shadNet included**, shadPS4's files in **user\ beside shadPS4.exe**.
@@ -150,12 +240,9 @@ was found out and decided, in order:
   repository, Fixed.); core (Fixed., bundled into every release), PCSX2 Manager and PPSSPP Manager (Fixed.) for the
   card-slot fix.
 
-**Next** (owner, 29-10-2026: the gaming category first): RPCS3 Manager is released but for the portal's tag (see the
-top of this chapter), shadPS4 Manager done but for the owner's round on the Ally and its release; then **Vita3K
-Manager and Xenia Manager** the same way (each from
-`tools/new_app.py --category gaming`, ported from the BC250 app, its emulator's Windows build, archive format and
-portable mode to look up first, as RPCS3's were); then item 2 below, Windows Portable Test's tabs, and the rest of
-item 3.
+**Next** (owner, 29-10-2026: the gaming category first): RPCS3 Manager and shadPS4 Manager are released, Vita3K
+Manager and Xenia Manager done but for the owner's round on the Ally and their releases (see the top of this
+chapter); then item 2 below, Windows Portable Test's tabs, and the rest of item 3.
 
 **Released as wp-pcsx2-v2.0.0, wp-ppsspp-v0.1.0, wp-test-v2.0.0 and wp-portal-v3.0.0 (the owner, 29-10-2026; the list
 as it was prepared).** Nothing is committed: the owner commits.

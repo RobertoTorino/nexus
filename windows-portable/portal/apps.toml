@@ -76,3 +76,25 @@ install = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --no
 uninstall = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --uninstall"]
 detect = ["%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-shadps4\\app\\shadPS4-Manager.exe"]
 launch = [["Open", "%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-shadps4\\app\\shadPS4-Manager.exe"]]
+
+[apps.vita3k]
+name = "Vita3K Manager"
+summary = "Vita3K, the PS Vita emulator: installed, the firmware and your games installed in it, its settings, your games put in Steam."
+tag = "wp-vita3k-v0.1.0"
+sha256 = ""
+category = "gaming"
+install = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --no-desktop-shortcut"]
+uninstall = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --uninstall"]
+detect = ["%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-vita3k\\app\\Vita3K-Manager.exe"]
+launch = [["Open", "%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-vita3k\\app\\Vita3K-Manager.exe"]]
+
+[apps.xenia]
+name = "Xenia Manager"
+summary = "Xenia, the Xbox 360 emulator: installed, its settings, your games found in your folders and put in Steam."
+tag = "wp-xenia-v0.1.0"
+sha256 = ""
+category = "gaming"
+install = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --no-desktop-shortcut"]
+uninstall = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --uninstall"]
+detect = ["%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-xenia\\app\\Xenia-Manager.exe"]
+launch = [["Open", "%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-xenia\\app\\Xenia-Manager.exe"]]

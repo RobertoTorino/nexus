@@ -1,0 +1,24 @@
+Changelog: 29-10-2026 20:26:55
+
+Release 0.1.0.
+
+Changelog: 29-10-2026 20:20:27
+
+Added. The BC250 suite's Xenia Manager on the portable window (owner, 29-10-2026: the gaming category, after Vita3K
+Manager), laid out as RPCS3 Manager: four cards, Xenia, Your games, Settings and Log, the actions with a controller
+button in the row at the bottom. A Install downloads Xenia Canary build e6cd2e4 for Windows, the build the BC250
+suite's app pins (xenia_canary_windows.7z from its release, 3.7 MB: xenia_canary.exe and its LICENSE), checks it
+against the pinned SHA-256 and unpacks it with Windows' own tar (a .7z, as RPCS3 Manager's) into
+%LOCALAPPDATA%\windows-portable-suite\windows-portable-xenia\emulator\, where Xenia keeps its settings, your games'
+content, the saves and its log beside its program (portable by itself on Windows); X Remove Xenia, with a second
+press, deletes only its program; Y Update when another build is there. The Xenia pane says when Microsoft's Visual C++
+runtime is missing (xenia_canary.exe imports vcruntime140, vcruntime140_1, msvcp140 and msvcp140_atomic_wait) and when
+a newer Xenia Canary build is out (asked of GitHub when the window opens, the BC250 app's notice; the build is never
+installed). Your games: disc images, unpacked discs, .zar archives and Games on Demand and Arcade packages in the
+chosen folders, read as the BC250 app reads them; played from Steam, never from the app (owner, 29-10-2026), as
+xenia_canary.exe --fullscreen=true "<game>"; A Steam mark and Y Update Steam put them in Steam as "[X360] <title>"
+(Xenia installed first), with pictures drawn from the app's icon, or all four from SteamGridDB with the suite's key
+(RB Steam artwork); LB Folders, with the folder browser for the controller. Settings in four tabs (Picture, Speed,
+Sound, Console: 13 of xenia-canary.config.toml's settings, which the BC250 app leaves to Xenia's own window), never
+written while Xenia runs. Log: Xenia's folder and the app's log, read in the app. Not carried over from the BC250
+window: Play on the desktop and Xenia's own window.

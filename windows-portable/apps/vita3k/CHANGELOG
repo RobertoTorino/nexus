@@ -1,0 +1,33 @@
+Changelog: 29-10-2026 20:26:55
+
+Release 0.1.0.
+
+Changelog: 29-10-2026 19:58:49
+
+Added. The BC250 suite's Vita3K Manager on the portable window (owner, 29-10-2026: the gaming category, after
+shadPS4 Manager), laid out as RPCS3 Manager: four cards, Vita3K, Your games, Settings and Log, the actions with a
+controller button in the row at the bottom. A Install downloads Vita3K build 4186 for Windows, the build the BC250
+suite's app pins (vita3k-4186-f0273e4c-windows-x86_64.7z from Vita3K/Vita3K-builds, 25 MB), checks it against the
+pinned SHA-256 and unpacks it with Windows' own tar (a .7z, as RPCS3 Manager's) into
+%LOCALAPPDATA%\windows-portable-suite\windows-portable-vita3k\emulator\ with Vita3K's portable folder portable\ beside
+it, where Vita3K keeps its config.yml, its log and the PS Vita's storage, fs\ (build 4186's own rule: a portable folder
+beside the program, else %APPDATA%\Vita3K\Vita3K); X Remove Vita3K, with a second press, deletes only its program; Y
+Update when another build is there. The Vita3K pane says when Microsoft's Visual C++ runtime is missing (Vita3K.exe
+imports vcruntime140, vcruntime140_1, msvcp140 and msvcp140_atomic_wait), which parts of the PS Vita's firmware are
+installed, and when a newer Vita3K build is out (asked of GitHub when the window opens, the BC250 app's notice; the
+build is never installed). LB Firmware: the app's folder browser in Downloads showing the .PUP files; A on one gives it
+to Vita3K (--firmware), which installs it without a window, and the pane names the parts it wrote. RB Install a game:
+the browser showing the .vpk, .zip and .pkg files. A on a .vpk or .zip, or X on a dumped game's own folder, gives it to
+Vita3K, which installs it and then opens its window to start the game; the app closes Vita3K as soon as that window
+shows (owner, 29-10-2026). A on a .pkg opens a page for its license key (the zRIF, X Paste), then Vita3K installs it
+without a window (--pkg, --zrif); the key is in no log line. What came into Vita3K's storage (a game, an update, extra
+content) is named on the status line. When the app installs Vita3K, opens and gives Vita3K a job, it sets three lines
+of config.yml: games full screen, Vita3K's welcome window and its own update check off. Your games: the games
+installed in Vita3K (ux0\app), read as the BC250 app reads them; played from Steam, never from the app (owner,
+29-10-2026), as Vita3K.exe -r <ID>: Vita3K's own frontend boots the game full screen (owner, 29-10-2026: the BC250
+app's SDL frontend opens a 960 x 544 window that never goes full screen on Windows); A Steam mark and Y Update Steam
+put them in Steam as "[PS Vita] <title>" (Vita3K and its firmware installed first), with the game's own pictures and a
+cover from SteamGridDB with the suite's key (RB Steam artwork). Settings in four tabs (Picture, Speed, Sound, System:
+16 of config.yml's settings, which the BC250 app leaves to Vita3K's own window), never written while Vita3K runs. Log:
+Vita3K's folder and the app's log, read in the app. Not carried over from the BC250 window: Play on the desktop and
+Vita3K's own settings window.

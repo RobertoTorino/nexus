@@ -46,6 +46,12 @@ your PS3 games full screen and puts them in Steam.
 
 [shadPS4 Manager](apps/shadps4.md) installs shadPS4, the PS4 emulator, takes the system modules of your PS4,
 unpacks your packages, plays your PS4 games full screen and puts them in Steam.
+
+[Vita3K Manager](apps/vita3k.md) installs Vita3K, the PS Vita emulator, has it install the PS Vita's firmware and your
+games, plays your PS Vita games full screen and puts them in Steam.
+
+[Xenia Manager](apps/xenia.md) installs Xenia, the Xbox 360 emulator, finds your Xbox 360 games, plays them full
+screen and puts them in Steam.
 </div>
 </div>
 

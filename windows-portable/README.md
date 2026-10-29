@@ -46,6 +46,8 @@ By category, as the portal's tabs list them.
 - <img src="portal/images/apps/ppsspp.webp" width="20" height="20" alt=""/> **[PPSSPP Manager](apps/ppsspp)**: Installs PPSSPP, the PSP emulator, in portable mode, and plays your PSP games.
 - <img src="portal/images/apps/rpcs3.webp" width="20" height="20" alt=""/> **[RPCS3 Manager](apps/rpcs3)**: Installs RPCS3, the PS3 emulator, takes the PS3's firmware and your packages, and plays your PS3 games.
 - <img src="portal/images/apps/shadps4.webp" width="20" height="20" alt=""/> **[shadPS4 Manager](apps/shadps4)**: Installs shadPS4, the PS4 emulator, takes the system modules, unpacks your packages, and plays your PS4 games.
+- <img src="portal/images/apps/vita3k.webp" width="20" height="20" alt=""/> **[Vita3K Manager](apps/vita3k)**: Installs Vita3K, the PS Vita emulator, has it install the firmware and your games, and plays your PS Vita games.
+- <img src="portal/images/apps/xenia.webp" width="20" height="20" alt=""/> **[Xenia Manager](apps/xenia)**: Installs Xenia, the Xbox 360 emulator, and plays your Xbox 360 games.
 
 How to install and use them: **[the wiki](https://robertotorino.github.io/nexus/windows-portable-suite/)**.
 
