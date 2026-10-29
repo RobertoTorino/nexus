@@ -446,17 +446,27 @@ def test_view_opens_the_settings_and_a_switches_the_wallpaper(world, qapp, monke
     from bc250_core import portable
     window = world.make()
     monkeypatch.setattr(window, "isActiveWindow", lambda: True)
-    assert window.wallpaper_on and portable.glass() == mw.GLASS
+    assert window.wallpaper_on and portable.glass() == portable.GLASS
     window.on_action("view")
     assert window.stack.currentWidget() is window.settings_pane and window.settings_pane.wallpaper.hasFocus()
-    assert window.settings_pane.wallpaper.label.text() == "On" and window.legend.items == [("B", "Back")]
+    assert window.settings_pane.wallpaper.label.text() == "Wallpaper: On" and window.legend.items == [("B", "Back")]
     window.on_action("accept")
-    assert not window.wallpaper_on and portable.glass() == 255 and window.settings_pane.wallpaper.label.text() == "Off"
+    assert not window.wallpaper_on and portable.glass() == 255 and window.settings_pane.wallpaper.label.text() == "Wallpaper: Off"
     assert "rgba" not in window.app_pane.styleSheet()                 # the strip solid again, at once
-    assert window.settings.value(mw.WALLPAPER_KEY) == "false"
+    assert not portable.wallpaper_on(mw.SUITE)                         # the suite's: every app (owner, 29-10-2026)
     window.on_action("back")
     assert window.stack.currentWidget() is window.apps_page
     again = world.make()                                              # kept for the next start
     assert not again.wallpaper_on and portable.glass() == 255
     again.toggle_wallpaper()
-    assert again.wallpaper_on and portable.glass() == mw.GLASS and "rgba" in again.app_pane.styleSheet()
+    assert again.wallpaper_on and portable.glass() == portable.GLASS and "rgba" in again.app_pane.styleSheet()
+
+
+def test_portal_1_6_0s_wallpaper_switch_becomes_the_suites(world, qapp):
+    from PyQt6.QtCore import QSettings
+
+    from bc250_core import portable
+    QSettings().setValue(mw.WALLPAPER_KEY, "false")                   # switched off in portal 1.6.0
+    window = world.make()
+    assert not window.wallpaper_on and not portable.wallpaper_on(mw.SUITE)
+    assert not QSettings().contains(mw.WALLPAPER_KEY)

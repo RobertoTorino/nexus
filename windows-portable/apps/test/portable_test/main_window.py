@@ -17,11 +17,11 @@ from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QStackedWidget, QVBoxLayou
 from bc250_core import applog, power
 from bc250_core.gamepad import Gamepad
 from bc250_core.platform import suite_data
-from bc250_core.portable import (BODY, DIM, Card, Legend, Pane, Pill, PortableHeader, PortableWindow, px,
-                                 status_clock, text_label)
+from bc250_core.portable import (BODY, DIM, Card, Legend, Pane, Pill, PortableHeader, PortableWindow, pill_row,
+                                 px, status_clock, text_label)
 
-from . import APP_ID, APP_NAME, SUITE, __version__, back_buttons, controller, device, network, temps
-from .controller import ControllerPane
+from . import APP_ID, APP_NAME, SUITE, __version__, back_buttons, controller, device, lights, network, temps
+from .controller import LIGHTS_TEXT, LIGHTS_TITLE, ControllerPane, LightsPanel
 
 STATUS_MS = 5_000               # the header's battery, temperatures and time: the temperatures live
 WAITING = "Press A to read what Windows reports."     # nothing runs before (owner, 28-10-2026)
@@ -79,7 +79,7 @@ class InfoPane(Pane):
         self.status = text_label(waiting, BODY + 1, color=DIM, wrap=True)
         self.column.addWidget(self.status)
         self.read_pill = Pill(action, "A", main=True)
-        self.column.addWidget(self.read_pill)
+        self.column.addLayout(pill_row(self.read_pill))
 
     def show_rows(self, rows: list[tuple[str, str]]) -> None:
         while self.grid.count():
@@ -104,7 +104,8 @@ class MainWindow(PortableWindow):
                  battery: Callable[[], tuple[int, bool] | None] = power.battery,
                  reports: Path | None = None, clock: Callable[[], float] = time.monotonic,
                  temperatures: Callable[[], tuple[int | None, int | None]] | None = None,
-                 back_reader: back_buttons.Reader | None = None):
+                 watts: Callable[[], int | None] | None = None, hertz: Callable[[], int | None] | None = None,
+                 back_reader: back_buttons.Reader | None = None, lamps: lights.Lights | None = None):
         super().__init__(gamepad)
         self.setWindowTitle(f"{APP_NAME} {__version__}")
         self.log = applog.logger(APP_ID)
@@ -114,8 +115,12 @@ class MainWindow(PortableWindow):
         if temperatures is None:                    # ADL opened once, read every STATUS_MS
             self.sensors = temps.Temperatures()
             temperatures = self.sensors.read
+            watts = watts or self.sensors.watts
         self.temperatures = temperatures
+        self.watts = watts or (lambda: None)
+        self.hertz = hertz or self.screen_hertz
         self.back_reader = back_reader if back_reader is not None else back_buttons.Reader()
+        self.lights = lamps if lamps is not None else lights.Lights()
         self.reports = reports or suite_data(SUITE) / APP_ID / "reports"
         self.device: device.Device | None = None
         self.network: network.Network | None = None
@@ -181,6 +186,7 @@ class MainWindow(PortableWindow):
         self.controller_card.focused.connect(lambda: self.show_pane(self.controller_pane))
         self.controller_card.activated.connect(self.start_test)
         self.controller_pane.finished.connect(self.test_finished)
+        self.controller_pane.lights_pill.activated.connect(self.show_lights)
         self.gamepad.raw.connect(self.controller_pane.feed)
         self.bind("x", self.save_report)
         self.back.connect(self.on_back)
@@ -200,8 +206,15 @@ class MainWindow(PortableWindow):
         self.device_card.setFocus()
 
     def update_status(self) -> None:
-        # The date and the time, and under them the temperatures and the battery (owner, 28-10-2026)
-        self.header.set_status(status_clock(), [temps.text(*self.temperatures()), power.text(self.battery())])
+        # The date and the time, and under them the temperatures, the power draw, the screen's refresh rate and the
+        # battery (owner, 28-10-2026 and 29-10-2026)
+        self.header.set_status(status_clock(), temps.status(*self.temperatures(), self.watts(), self.hertz(),
+                                                            power.text(self.battery())))
+
+    def screen_hertz(self) -> int | None:
+        """The refresh rate of the screen the window is on, as Qt reads it: it changes when docked to a TV."""
+        screen = self.screen()
+        return round(screen.refreshRate()) if screen is not None and screen.refreshRate() > 0 else None
 
     def show_pane(self, pane: Pane) -> None:
         if self.testing:
@@ -215,10 +228,12 @@ class MainWindow(PortableWindow):
     # The Device, Hardware and Connected cards: one read fills all three
 
     def read_device(self) -> None:
-        if self.reader.start():
-            for pane in self.info_panes:
-                pane.status.setText("Reading what Windows reports ...")
-                pane.read_pill.setEnabled(False)
+        """A on Read: a read starts, or, while one runs, the pane says so (owner, 29-10-2026: a pill is never grayed
+        out)."""
+        started = self.reader.start()
+        for pane in self.info_panes:
+            pane.status.setText("Reading what Windows reports ..." if started else
+                                "Reading ... Windows is still answering the read before.")
 
     def say(self, text: str, panes: tuple[InfoPane, ...] | None = None) -> None:
         """A line on the status of every pane X saves (the report saved), or of *panes* (a read that failed)."""
@@ -257,13 +272,10 @@ class MainWindow(PortableWindow):
         for pane, (_, rows) in zip(self.info_panes, self.sections()):     # the Network section, when measured, is last
             pane.show_rows(rows)
             pane.read_pill.set_text("Read again")
-            pane.read_pill.setEnabled(True)
         self.log.info(f"Read the device: {found.name}.")
 
     def device_failed(self, error: str) -> None:
         self.say(f"Windows did not answer: {error}", self.info_panes)
-        for pane in self.info_panes:
-            pane.read_pill.setEnabled(True)
         self.log.error(f"Reading the device failed: {error}")
 
     def save_report(self) -> Path | None:
@@ -289,22 +301,20 @@ class MainWindow(PortableWindow):
     # The Network card
 
     def measure_network(self) -> None:
-        if self.tester.start():
-            self.network_pane.status.setText("Measuring the network ...")
-            self.network_pane.read_pill.setEnabled(False)
+        started = self.tester.start()
+        self.network_pane.status.setText("Measuring the network ..." if started else
+                                         "Measuring ... the test before is still running.")
 
     def network_measured(self, found: network.Network) -> None:
         self.network = found
         self.network_pane.show_rows(found.rows())
         self.network_pane.read_pill.set_text("Test again")
-        self.network_pane.read_pill.setEnabled(True)
         if found.error:
             self.network_pane.status.setText(f"The download failed: {found.error}")
         self.log.info("Measured the network: " + "; ".join(f"{label} {value}" for label, value in found.rows()))
 
     def network_failed(self, error: str) -> None:
         self.network_pane.status.setText(f"The network was not measured: {error}")
-        self.network_pane.read_pill.setEnabled(True)
         self.log.error(f"Measuring the network failed: {error}")
 
     # The Controller card
@@ -323,6 +333,17 @@ class MainWindow(PortableWindow):
         self.log.info(f"Controller test finished: {len(seen)} buttons answered ({', '.join(seen) or 'none'}).")
         self.show_pane(self.controller_pane)
         self.controller_card.setFocus()
+
+    def show_lights(self) -> None:
+        """The stick lights' test in a popup over the window (owner, 29-10-2026: short of space, an icon and a
+        popup); Close gives the lights back."""
+        if self.testing:
+            return
+        found = self.lights.open()
+        self.log.info(f"Stick lights: {found.text() if found is not None else 'no LampArray'}")
+        popup = self.show_popup(LIGHTS_TITLE, LIGHTS_TEXT, self.controller_pane.lights_pill,
+                                LightsPanel(found, self.lights.show))
+        popup.closed.connect(self.lights.close)
 
     def on_action(self, action: str) -> None:
         if self.testing:                    # every button is the test's; holding B ends it (ControllerPane)
@@ -344,4 +365,5 @@ class MainWindow(PortableWindow):
         self.back_reader.stop()
         if self.sensors is not None:
             self.sensors.close()
+        self.lights.close()
         super().closeEvent(event)

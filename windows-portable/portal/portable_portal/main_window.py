@@ -18,15 +18,15 @@ from dataclasses import dataclass
 from pathlib import Path, PurePath
 
 from PyQt6.QtCore import QObject, QSettings, Qt, QTimer, pyqtSignal
-from PyQt6.QtGui import QColor, QPainter, QPixmap
+from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import QGridLayout, QStackedWidget, QVBoxLayout, QWidget
 
 from bc250_core import applog, portable, power
 from bc250_core.gamepad import Gamepad
 from bc250_core.platform import expand, launch_in_terminal
-from bc250_core.portable import AMBER, BACKGROUND, DIM, Card, Legend, PortableHeader, PortableWindow, px, status_clock
+from bc250_core.portable import AMBER, DIM, Card, Legend, PortableHeader, PortableWindow, px, status_clock
 
-from . import APP_ICONS, APP_ID, APP_NAME, WALLPAPER, __version__
+from . import APP_ICONS, APP_ID, APP_NAME, SUITE, __version__
 from .intro import INTRO_MS, Intro
 from .manifest import CATEGORIES, AppEntry
 from .portal_update import PortalUpdate, short
@@ -35,14 +35,12 @@ from .widgets import AppPane, DetailsPane, SettingsPane, SuitePane, Tabs
 
 STATUS_MS = 30_000              # the header's battery and time
 POLL_MS = 1000                  # how often the portal looks for the installer window's exit status
-SHADE = 150                     # of 255: how much of the background lies over the wallpaper
-GLASS = 200                     # of 255: the cards' and the strip's opacity over it, so it shines through
 CONFIRM_MS = 5000               # Remove, and B while the portal is busy, ask for a second press within this
 PROGRESS_MS = 500               # how often a download's size is shown (owner, 28-10-2026: 94 MB looked like a hang)
 TILE_W, TILE_H, GAP = 293, 176, 14      # the mock-up's tiles: two rows of four
 COLUMNS, PER_PAGE = 4, 8
 TAB_KEY = "window/tab"          # the settings: the tab shown last
-WALLPAPER_KEY = "look/wallpaper"  # the wallpaper on (the default) or off (Settings, owner 28-10-2026)
+WALLPAPER_KEY = "look/wallpaper"  # where portal 1.6.0 kept the wallpaper switch: now the suite's (core, suite.ini)
 VIEW = "\u29c9"                  # the View button as the Ally shows it: two squares
 MENU = "☰"                  # the Menu button as the Ally shows it (SDL's start; owner, 28-10-2026: not "Menu")
 APPS_LEGEND = (("X", "Details"), (MENU, "Suite"), (VIEW, "Settings"), ("B", "Close"))
@@ -131,10 +129,14 @@ class MainWindow(PortableWindow):
                  launch: Callable[[list[str]], None] = start_app,
                  terminal: Callable[..., None] = launch_in_terminal, icons: Path = APP_ICONS,
                  exe: str = "", exit_dir: Path | None = None, intro_ms: int = INTRO_MS,
-                 wallpaper: Path | None = WALLPAPER):
+                 wallpaper: Path | None = portable.WALLPAPER):
         """*intro_ms*: how long the intro plays when the window starts (0: none). *wallpaper*: the picture behind
-        the page, darkened (None: the plain background)."""
-        super().__init__(gamepad)
+        the page, darkened (None: the plain background); on or off for the whole suite (Settings)."""
+        old = QSettings()                               # portal 1.6.0 kept the switch in portal.ini: the suite's now
+        if old.contains(WALLPAPER_KEY) and portable.look_settings(SUITE).value(portable.LOOK_KEY) is None:
+            portable.set_wallpaper_on(SUITE, str(old.value(WALLPAPER_KEY)).lower() != "false")
+        old.remove(WALLPAPER_KEY)
+        super().__init__(gamepad, suite=SUITE, wallpaper=wallpaper)
         self.setWindowTitle(f"{APP_NAME} {__version__}")
         self.log = applog.logger(APP_ID)
         self.entries, self.sources, self.records = entries, sources, records
@@ -142,10 +144,7 @@ class MainWindow(PortableWindow):
         self.exe = exe                                  # the installed portal's program, for a restart; "" from a checkout
         self.exit_dir = exit_dir or Path(tempfile.gettempdir())
         self.intro: Intro | None = None
-        self.wallpaper = QPixmap(str(wallpaper)) if wallpaper is not None else QPixmap()
         self.settings = QSettings()
-        self.wallpaper_on = str(self.settings.value(WALLPAPER_KEY, "true")).lower() != "false"
-        portable.glass(GLASS if self.shows_wallpaper() else 255)        # before the cards are made
         self.by_key = {entry.key: entry for entry in entries}
         self.current_key = ""
         self.job: tuple[AppEntry, str] | None = None    # being downloaded
@@ -262,32 +261,12 @@ class MainWindow(PortableWindow):
             return
         super().on_action(action)
 
-    def shows_wallpaper(self) -> bool:
-        return self.wallpaper_on and not self.wallpaper.isNull()
-
     def toggle_wallpaper(self) -> None:
-        """Settings' Wallpaper pill: the picture and the see-through tiles on or off, kept for the next start."""
-        self.wallpaper_on = not self.wallpaper_on
-        self.settings.setValue(WALLPAPER_KEY, "true" if self.wallpaper_on else "false")
-        portable.glass(GLASS if self.shows_wallpaper() else 255)
-        self.restyle()
+        """Settings' Wallpaper pill: the picture and the see-through cards on or off in every app of the suite (each
+        at its next start; this window at once)."""
+        self.set_wallpaper(not self.wallpaper_on)
         self.settings_pane.fill(self.wallpaper_on)
-        QWidget.update(self)                            # self.update is the portal's own update check
-        self.log.info(f"Wallpaper {'on' if self.wallpaper_on else 'off'}.")
-
-    def paintEvent(self, event) -> None:  # noqa: N802 (Qt override)
-        """The wallpaper filling the window (cropped, never stretched), under the background at SHADE so the tiles
-        and the text stay easy to read."""
-        if not self.shows_wallpaper():
-            super().paintEvent(event)
-            return
-        painter = QPainter(self)
-        scaled = self.wallpaper.scaled(self.size(), Qt.AspectRatioMode.KeepAspectRatioByExpanding,
-                                       Qt.TransformationMode.SmoothTransformation)
-        painter.drawPixmap((self.width() - scaled.width()) // 2, (self.height() - scaled.height()) // 2, scaled)
-        shade = QColor(BACKGROUND)
-        shade.setAlpha(SHADE)
-        painter.fillRect(self.rect(), shade)
+        self.log.info(f"Wallpaper {'on' if self.wallpaper_on else 'off'}, for the suite.")
 
     def resizeEvent(self, event) -> None:  # noqa: N802 (Qt override)
         super().resizeEvent(event)

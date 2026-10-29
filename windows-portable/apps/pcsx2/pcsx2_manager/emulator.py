@@ -11,8 +11,8 @@ of pcsx2-qt.exe and the files the archive brought; Remove deletes only those fil
 and the settings stay (install.ps1 --uninstall --purge removes the whole folder).
 
 The archive is a .7z, unpacked by Windows' own tar.exe (bsdtar, libarchive: it reads 7z), so nothing else is needed.
-PCSX2's own window offers its updates and replaces its program when asked to; the app then says so (replaced()), and
-Install puts the pinned release back."""
+PCSX2's own updater (the app keeps it off) would replace its program; when another build is there, the app says so
+(replaced()), and Install puts the pinned release back."""
 
 from __future__ import annotations
 
@@ -213,12 +213,25 @@ def processes(name: str) -> list[str]:
     return found
 
 
-GAME_ARGS = ("-nogui", "-fullscreen")   # a game alone and full screen; -nogui also ends PCSX2 with the game
+# A game alone and full screen, PCSX2's own window never shown (owner, 29-10-2026: "we don't want to see PCSX2 at
+# all, the manager should take care of everything", the BC250 suite's rule): -nogui hides its main window, -batch
+# ends PCSX2 when the game ends (back to the app or Steam), as PCSX2 2.8.2's -help says
+GAME_ARGS = ("-nogui", "-fullscreen", "-batch")
 
 
-def start(home: Path, game: Path | None = None) -> None:
-    """PCSX2, detached from this app, in its own folder; with *game*, that game alone and full screen, as the BC250
-    suite's PCSX2 Manager starts one (-nogui -fullscreen -- <game>)."""
+def start(home: Path, game: Path) -> None:
+    """The game in PCSX2, detached from this app, in PCSX2's own folder: pcsx2-qt.exe -nogui -fullscreen -batch --
+    <game>. There is no way to PCSX2's own window."""
     flags = 0x00000008 | 0x00000200 if sys.platform == "win32" else 0   # DETACHED_PROCESS, CREATE_NEW_PROCESS_GROUP
-    argv = [str(program(home))] + ([*GAME_ARGS, "--", str(game)] if game is not None else [])
-    subprocess.Popen(argv, cwd=str(home), creationflags=flags, close_fds=True)
+    subprocess.Popen(game_argv(home, game), cwd=str(home), creationflags=flags, close_fds=True, env=pcsx2_env())
+
+
+def game_argv(home: Path, game: Path) -> list[str]:
+    return [str(program(home)), *GAME_ARGS, "--", str(game)]
+
+
+def pcsx2_env() -> dict[str, str]:
+    """This process's environment without Qt's own variables: PCSX2 is a Qt program too, and the app's (its Qt
+    plugin folder, a platform set for it) made PCSX2 stop with "no Qt platform plugin could be initialized" in its
+    own message window (seen on the Ally, 29-10-2026)."""
+    return {key: value for key, value in os.environ.items() if not key.upper().startswith("QT_")}

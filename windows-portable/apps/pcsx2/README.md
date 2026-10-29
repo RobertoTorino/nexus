@@ -9,9 +9,10 @@
 Installs PCSX2, the PlayStation 2 emulator, on a Windows handheld and opens it: PCSX2 2.8.2 for Windows from
 PCSX2's own release, checked against the checksum this version of the app was tested with, for your own user and in
 PCSX2's portable mode, so its settings, the BIOS, the memory cards and the save states stay in its folder. It sets
-PCSX2 up to open ready to play with the handheld's controller, in Big Picture mode, and offers PCSX2's settings that
-matter on the handheld. It finds your PS2 games in the folders you choose, plays them and puts them in Steam, shows
-your memory cards with their saves, and keeps a log of what was played. Remove takes PCSX2's program away and leaves
+PCSX2 up for the handheld's controller, takes your own console's BIOS (Choose BIOS), offers PCSX2's settings that
+matter on the handheld, finds your PS2 games in the folders you choose, plays them and puts them in Steam (with
+pictures from SteamGridDB when you give it your key), shows your memory cards with their saves, and keeps a log of
+what was played. PCSX2's own window is never needed: a game starts alone and full screen, and PCSX2 closes with it. Remove takes PCSX2's program away and leaves
 what you made.
 
 Made for the handheld in your hands: full screen, the controller moves the amber focus, B closes the app, and

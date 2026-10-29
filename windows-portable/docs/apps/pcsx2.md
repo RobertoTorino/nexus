@@ -4,13 +4,26 @@
 
 # PCSX2 Manager
 
-Installs PCSX2, the PlayStation 2 emulator, on the device and opens it: one tested release, for your own user,
-in portable mode. It finds your PS2 games in the folders you choose, plays them, puts them in Steam, shows your
-memory cards and keeps a log of what was played.
+Plays your PS2 games on the device with PCSX2, the PlayStation 2 emulator, and takes care of everything around
+it: it installs one tested release of PCSX2 for your own user, sets it up, takes your BIOS, finds your games in the
+folders you choose, plays them and puts them in Steam, shows your memory cards and keeps a log of what was played.
+You never need PCSX2's own window: a game starts alone and full screen, and when it ends you are back where you
+started it.
 
 PCSX2 Manager is on the [portal](../portal.md)'s **Gaming** tab: **A** on its tile installs it, and once it
 is installed, **A** opens it. It is also in the Start menu (**Windows Portable Suite**, **PCSX2 Manager**). It opens full
 screen; **B** closes it.
+
+## What you need
+
+- **The PS2's BIOS, from your own console.** PCSX2 cannot start a game without it, and it is not the app's to give.
+  Dump it from your PlayStation 2 with biosdrain, a homebrew tool, as
+  [PCSX2's BIOS page](https://pcsx2.net/docs/setup/bios) says, and copy the dump (a `.bin` of 4 MB, often with
+  `.nvm` and `.mec` files beside it) to the device, for instance into Downloads. **Choose BIOS** on the PCSX2 card
+  takes it from there.
+- **Your PS2 games** as disc images (ISO, CHD, CSO, ZSO or GZ), dumped from your own discs, in a folder on the device
+  or an SD card.
+- **Steam**, started once on the device, to play the games from Steam (optional).
 
 ## The screen
 
@@ -19,28 +32,44 @@ what the focused card does. The d-pad or the left stick moves the amber focus, *
 card and pill also works by touch, and a long list scrolls with the d-pad or a finger. The **information icon** at a
 pane's top right says more about it.
 
+The amber edge shows where you are. On a card it comes with a glow under it; once the focus moves into the pane at the right, the pane takes the edge and the glow, and its card keeps only the edge. In a list the row with the focus is lighter, with the amber edge. Every pill looks the same: amber, with its controller button when it has one, in a row at the bottom right of its pane, the **A** pill rightmost. A pill with the focus or under your finger dims. A pill is never grayed out: when it cannot do its job now, pressing it says why on the pane's status line.
+
 ## PCSX2
 
-**A** on the PCSX2 card does what its main pill says (Install or Open PCSX2). The pane shows the PCSX2 that is installed, the one this version of the app installs, and its folder.
+The pane shows the PCSX2 that is installed, the one this version of the app installs, the BIOS and the folder, with
+its pills in one row: **Choose BIOS**, **Remove BIOS**, **Remove PCSX2**, **Y Reinstall** or **Y Update** when there
+is one, and **A Install** while PCSX2 is not installed. **A** on the PCSX2 card installs PCSX2; once it is installed,
+A takes the focus to the pane's pills. PCSX2's own window is never opened: your games are on the **Your games** card.
 
 - **A** on **Install** downloads PCSX2 2.8.2 for Windows from PCSX2's own release on GitHub (26 MB), checks it against
   the checksum this version of the app was tested with, and unpacks it. The page counts the megabytes while it
   downloads. Nothing is downloaded before you press A.
-- **A** on **Open PCSX2** starts PCSX2, in its Big Picture mode, full screen, made for a controller (see Settings). It
-  runs on its own: closing PCSX2 Manager leaves it open.
-- **Remove** removes PCSX2's program. Press it twice: the first press only changes the pill to **Press again to
-  remove** for five seconds. Your BIOS, memory cards, save states and settings stay in the folder, so a new install
+- **Remove PCSX2** removes PCSX2's program. Press it twice: the first press only changes the pill to **Press
+  again** for five seconds. Your BIOS, memory cards, save states and settings stay in the folder, so a new install
   finds them again.
 
 **B** during the download asks first: a second **B** within five seconds closes the app and stops the download.
 
 PCSX2 runs in **portable mode** (an empty `portable.txt` beside `pcsx2-qt.exe`): it keeps its settings, the BIOS, the
-memory cards and the save states in its own folder, not in Documents. Put your PS2 BIOS in its `bios` folder: the
-app tells PCSX2 to use it.
+memory cards and the save states in its own folder, not in Documents.
 
-PCSX2 can update itself from its own window. When it has replaced its program with another build, the page says so
-and **Y Reinstall** puts the tested release back; what you made stays. A newer PCSX2 comes with a newer version of
-PCSX2 Manager, which offers **Y Update to x.y.z**.
+The **BIOS** row says which dump PCSX2 uses, or **No BIOS yet** (the PCSX2 card says so too):
+
+- **Choose BIOS** opens Windows' own file window, in your Downloads. Pick the `.bin` (or `.rom`): the app copies it,
+  with the files beside it under the same name (`.nvm`, `.mec`, `.erom`), into PCSX2's `bios` folder and makes
+  PCSX2 use it.
+- **Remove BIOS** takes the dump PCSX2 uses out of that folder again, with its files. Press it twice: the first press
+  only asks, for five seconds. The dump you chose it from stays where it is; with another dump in the folder, PCSX2
+  uses that one.
+
+Both work once PCSX2 is installed and not while it runs (it writes its settings back when it closes); pressed
+then, they say why. Without a BIOS
+no game starts, from the app or from Steam: PCSX2 would stop at its own error window. The **information icon** says
+where a BIOS comes from.
+
+If PCSX2's program was replaced by another build, the page says so and **Y Reinstall** puts the tested release back;
+what you made stays. A newer PCSX2 comes with a newer version of
+PCSX2 Manager, which offers **Y Update**.
 
 ## Your games
 
@@ -48,19 +77,21 @@ The games are the PS2 disc images in your game folders and up to five folders be
 An ISO is read for its serial (SLUS-21553), and the title comes from PCSX2's own list of games; a compressed image
 is listed under its file's name. **A** on the Your games card goes to the list.
 
-- **A** on a game plays it in PCSX2, alone and full screen. Closing the game closes PCSX2.
+- **A** on a game plays it in PCSX2, alone and full screen, without PCSX2's own window. When the game ends (View
+  and Menu together, see Settings), PCSX2 closes and you are back in the app.
 - **X** marks a game for Steam, or takes the mark away. **Y Update Steam** then makes Steam match the marks: each
   marked game is a non-Steam game named `[PS2] <title>` in Steam's library and its Big Picture mode, started the
   same way; a game without the mark, or no longer found, is taken out. Steam closes for it and starts again in the
-  background. Steam must have been started once on the device.
+  background. Steam must have been started once on the device. When there is nothing to change, **Y** says so
+  on the status line instead.
 - **Folders** shows your game folders instead of the games, and **Games** goes back. The usual places that are on
   the device (Games, Downloads and Documents in your user folder) and each removable drive, such as an SD card, are
   offered as **+ Add**; **+ Choose a folder…** opens Windows' own folder window for any other. **A** twice on a
   folder takes it off the list: the first press asks, for five seconds. Its games stay where they are.
 
-The pictures in Steam are drawn from the app's icon with the game's title. With your own SteamGridDB API key (made
-at steamgriddb.com, in your profile's preferences) in `%APPDATA%\windows-portable-suite\steamgriddb-key`, Update
-Steam fetches each game's pictures from SteamGridDB instead and keeps them, so they are not fetched again.
+The pictures in Steam are drawn from the app's icon with the game's title. With a SteamGridDB API key, Update Steam
+takes each game's pictures from SteamGridDB instead: **Steam artwork** on the Your games pane keeps the key. See
+[Steam artwork from SteamGridDB](covers.md).
 
 ## Settings
 
@@ -72,16 +103,16 @@ PCSX2 opens ready to play: right after the install, and each time before it open
 - the mouse pointer hidden over a game;
 - the BIOS: the dump in its `bios` folder, unless the settings already name one that is there;
 - player 1 on the device's controller (PCSX2 maps only the keyboard by itself), the buttons by their place: A is
-  Cross, B Circle, X Square, Y Triangle, View Select and Menu Start. Once you map a controller in PCSX2's own window,
-  the app leaves player 1 alone;
+  Cross, B Circle, X Square, Y Triangle, View Select and Menu Start. A controller mapping already in PCSX2's
+  settings stays;
 - View and Menu together end a game, without a question;
-- Big Picture mode, full screen.
+- PCSX2's Big Picture mode off: it is PCSX2's own menu, and the app starts every game without it.
 
-The last two stay as you set them below: turned off, the app does not turn them on again. Everything else in the file
+The quit chord stays as you set it below: turned off, the app does not turn it on again. Everything else in the file
 stays as PCSX2 wrote it. Without a settings file the app starts from PCSX2's own defaults, as PCSX2 2.8.2 writes them
 at its first start.
 
-The Settings card's pane has a pill per setting with its value; **A** on one steps to the next value and saves it at
+The Settings card's pane has a row per setting with its value; **A** on one steps to the next value and saves it at
 once. PCSX2 reads it the next time it opens; while PCSX2 is open, the pane asks you to close it first, since PCSX2
 writes its own settings back when it closes. The **information icon** at the pane's top right says what each one does.
 
@@ -95,10 +126,9 @@ writes its own settings back when it closes. The **information icon** at the pan
 | Vibration | On or Off: the controller's rumble |
 | Player 2 | On or Off: a second controller is player 2, with the same buttons |
 | Quit with Select + Start | On or Off: View and Menu together end the game |
-| Big Picture | On or Off: PCSX2 opens full screen for a controller, or in its desktop window |
 
-The pills show once PCSX2 is installed. A value set in PCSX2's own window that the app does not offer is shown as it
-is, and **A** goes on from the first value.
+The pills show once PCSX2 is installed. A value in PCSX2's settings that the app does not offer is shown as it is,
+and **A** goes on from the first value.
 
 ## Memory cards
 
@@ -116,6 +146,13 @@ cards are listed with the reason they are not read.
 PCSX2's last run as its own log tells it: when, which game, how long it was played and which controllers PCSX2
 opened; the play time PCSX2 counted in all; and the newest lines of this app's log (the games played, Steam's
 changes, the installs). **Open the log** shows the whole file.
+
+## How it works
+
+A game starts as `pcsx2-qt.exe -nogui -fullscreen -batch -- "<game>"`, from the app and from Steam alike: `-nogui`
+keeps PCSX2's own window away, `-fullscreen` gives the game the whole screen, and `-batch` closes PCSX2 when the
+game ends, so you are back in the app or in Steam. Everything PCSX2's window would be used for is in the app: the
+BIOS, the settings, the controllers and the memory cards. Its setup wizard and its own updates stay off.
 
 ## Install it on its own
 

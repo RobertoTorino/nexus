@@ -20,7 +20,8 @@ from PyQt6.QtCore import QSettings
 
 from conftest import make_disc
 from pcsx2_manager import APP_ID, APP_NAME, EXE_NAME, INFO, LOGO_PATH, ROOT, __version__, emulator, shortcuts
-from pcsx2_manager.main_window import MainWindow
+from pcsx2_manager.main_window import (BIOS_NEEDS_PCSX2, NO_BIOS_TO_REMOVE, NO_CARD_TO_COPY, NO_STEAM, NOT_THE_GAMES,
+                                      NOTHING_TO_CHANGE, MainWindow)
 
 
 class FakePad:
@@ -56,13 +57,13 @@ def wait_for(qapp, predicate, seconds=5.0):
     return predicate()
 
 
-def make(qapp, home=None, install=fake_install, start=lambda home: None, running=lambda home: False, **more):
+def make(qapp, home=None, install=fake_install, running=lambda home: False, **more):
     more.setdefault("steam_dir", None)                  # never the real Steam
     more.setdefault("drives", lambda: [])
     more.setdefault("settings", QSettings(str(Path(tempfile.mkdtemp()) / "app.ini"),
                                           QSettings.Format.IniFormat))   # never Windows' registry
     window = MainWindow(gamepad=Gamepad(source_factory=FakePad), battery=lambda: (82, False), home=home,
-                        install=install, start=start, running=running, **more)
+                        install=install, running=running, **more)
     portable.scale((1280, 720))
     window.resize(1280, 720)
     window.show()
@@ -130,7 +131,7 @@ def test_a_installs_off_the_windows_thread_and_counts_the_megabytes(qapp, tmp_pa
     gate.set()
     assert wait_for(qapp, lambda: not window.busy)
     assert window.status.text() == f"PCSX2 {emulator.VERSION} is installed." and window.legend.items == [("B", "Close")]
-    assert window.main.label.text() == "Open PCSX2" and window.remove_pill.isVisible()
+    assert not window.main.isVisible() and window.remove_pill.isVisible()
     window.on_action("back")
     assert closed == [True]                                     # nothing runs: B closes at once
 
@@ -151,12 +152,16 @@ def test_open_reinstall_and_remove(qapp, tmp_path, monkeypatch):
     fake_install(home)
     (home / "memcards").mkdir()
     (home / "memcards" / "Mcd001.ps2").write_bytes(b"x")
-    started = []
-    window = make(qapp, home, start=started.append)
+    window = make(qapp, home)
     monkeypatch.setattr(window, "isActiveWindow", lambda: True)
-    assert window.main.label.text() == "Open PCSX2" and not window.other.isVisible()
-    window.main.click()
-    assert started == [home]
+    # Installed, no A pill (owner, 29-10-2026: Your games is the card on the left); A on the card goes to the pills
+    assert not window.main.isVisible() and not window.other.isVisible()
+    window.pcsx2_card.setFocus()
+    window.on_action("accept")
+    assert window.choose_bios_pill.hasFocus() and window.panes.currentWidget() is window.pane
+    pills = [window.choose_bios_pill, window.remove_bios_pill, window.remove_pill, window.other, window.main]
+    assert len({pill.geometry().center().y() for pill in pills if pill.isVisible()}) == 1   # one row
+    window.pcsx2_card.setFocus()
     emulator.program(home).write_bytes(b"another build")         # PCSX2's own updater
     window.refresh()
     assert window.other.isVisible() and window.other.label.text() == "Reinstall"
@@ -164,9 +169,9 @@ def test_open_reinstall_and_remove(qapp, tmp_path, monkeypatch):
     window.on_action("y")
     assert wait_for(qapp, lambda: not window.busy) and not emulator.replaced(home)
     window.remove_pill.click()
-    assert window.remove_pill.label.text() == "Press again to remove" and emulator.installed(home)
+    assert window.remove_pill.label.text() == "Press again" and emulator.installed(home)
     window._confirm_over()                                      # five seconds without a second press
-    assert window.remove_pill.label.text() == "Remove"
+    assert window.remove_pill.label.text() == "Remove PCSX2"
     window.remove_pill.click()
     window.remove_pill.click()
     assert emulator.installed(home) == "" and (home / "memcards" / "Mcd001.ps2").is_file()
@@ -182,8 +187,11 @@ def test_the_cards_show_their_panes_and_a_on_pcsx2_installs(qapp, tmp_path, monk
     assert window.games_card.hasFocus() and window.panes.currentWidget() is window.games_pane
     window.on_action("down")
     assert window.settings_card.hasFocus() and window.panes.currentWidget() is window.settings_pane
-    assert not window.settings_pane.pills["renderer"].isEnabled()                  # nothing installed yet
     assert window.settings_pane.status.text() == "Install PCSX2 first: the settings are in its folder."
+    window.settings_pane.status.setText("")
+    window.settings_pane.pills["renderer"].click()                                 # never grayed out: says why
+    assert window.settings_pane.status.text() == "Install PCSX2 first: the settings are in its folder."
+    assert window.settings_pane.pills["renderer"].isEnabled()
     window.pcsx2_card.setFocus()
     window.on_action("accept")                                                     # A on the PCSX2 card
     assert wait_for(qapp, lambda: not window.busy) and emulator.installed(tmp_path / "emulator")
@@ -197,7 +205,7 @@ def test_an_install_prepares_pcsx2s_settings_before_its_first_start(qapp, tmp_pa
     assert wait_for(qapp, lambda: not window.busy)
     ini = (home / "inis" / "PCSX2.ini").read_text(encoding="utf-8")
     assert "SetupWizardIncomplete = false" in ini and "CheckAtStartup = false" in ini
-    assert "Cross = SDL-0/FaceSouth" in ini and "StartBigPictureMode = true" in ini
+    assert "Cross = SDL-0/FaceSouth" in ini and "StartBigPictureMode = false" in ini
     window.close()
 
 
@@ -209,26 +217,24 @@ def test_the_settings_step_and_are_written_at_once(qapp, tmp_path, monkeypatch):
     monkeypatch.setattr(window, "isActiveWindow", lambda: True)
     pills = window.settings_pane.pills
     assert pills["renderer"].label.text() == "Renderer: Automatic"
-    assert pills["bigpicture"].label.text() == "Big Picture: On" and pills["quit"].label.text().endswith(": On")
+    assert "bigpicture" not in pills and pills["quit"].label.text().endswith(": On")
     window.settings_card.activated.emit()                                          # A on the card: the first pill
     assert pills["renderer"].hasFocus()
     pills["renderer"].click()
     assert pills["renderer"].label.text() == "Renderer: Direct3D 12"
     assert "Renderer = 15" in (home / "inis" / "PCSX2.ini").read_text(encoding="utf-8")
-    pills["bigpicture"].click()
-    assert pills["bigpicture"].label.text() == "Big Picture: Off"
     is_running[0] = True                                                           # PCSX2 is open
     pills["fps"].click()
     assert window.settings_pane.status.text().startswith("PCSX2 is open") and pills["fps"].label.text() == "Show FPS: Off"
-    window.main.click()
-    assert window.status.text() == "PCSX2 is open already."
+    window.choose_bios_pill.click()                                                # PCSX2 open: says so
+    assert window.status.text().startswith("PCSX2 is open") and window.choose_bios_pill.isEnabled()
     window.close()
 
 
 def test_the_settings_info_is_behind_the_icon(qapp):
     window = make(qapp)
     info = window.settings_pane.info
-    assert info.title == "PCSX2's settings" and "Big Picture:" in info.info and "Renderer:" in info.info
+    assert info.title == "PCSX2's settings" and "Big Picture" not in info.info and "Renderer:" in info.info
     window.close()
 
 
@@ -294,14 +300,21 @@ def test_your_games_folders_play_and_steam(qapp, tmp_path, monkeypatch):
     pills = window.games_pane.list.pills
     lumines = str(games / "PS2" / "SLUS_215.53.Lumines.iso")
     assert pills[lumines].label.text() == "Lumines Plus  ·  SLUS-21553" and len(pills) == 2
+    pills[lumines].click()                                         # no BIOS: PCSX2 would show its error window
+    assert played == [] and window.games_pane.status.text().startswith("Choose BIOS first")
+    (home / "bios").mkdir()
+    (home / "bios" / "SCPH-70012.bin").write_bytes(b"\0" * 64)
     pills[lumines].click()                                         # A plays it
     assert played == [Path(lumines)] and "starts in PCSX2" in window.games_pane.status.text()
-    assert not window.steam_pill.isEnabled()                       # nothing to change in Steam yet
+    assert window.steam_pill.isEnabled()                           # nothing to change yet, and it says so
+    window.steam_pill.click()
+    assert window.games_pane.status.text() == NOTHING_TO_CHANGE
     window.games_pane.list.pills[lumines].setFocus()
     qapp.processEvents()
+    window.on_action("y")                                          # Y answers even then (owner, 29-10-2026)
+    assert window.games_pane.status.text() == NOTHING_TO_CHANGE and not window.busy
     window.on_action("x")                                          # X marks it for Steam
     assert "✓ Steam (Update Steam)" in window.games_pane.list.pills[lumines].label.text()
-    assert window.steam_pill.isEnabled()
     window.on_action("y")                                          # Y on Your games: Update Steam
     assert wait_for(qapp, lambda: not window.busy)
     assert closed == [True] and shortcuts.in_steam(steam_dir) == {lumines: "[PS2] Lumines Plus"}
@@ -369,4 +382,162 @@ def test_the_log_shows_pcsx2s_last_run(qapp, tmp_path):
     rows = dict(zip(cells[0::2], cells[1::2]))
     assert rows["Played"] == "5 min 46 s" and rows["PCSX2's last run"].endswith("SLUS-21553")
     assert "Played Lumines Plus" in window.log_pane.lines.text()
+    window.close()
+
+
+
+def test_the_bios_is_chosen_and_removed_on_the_pcsx2_pane(qapp, tmp_path, monkeypatch):
+    r"""The BC250 app's BIOS Install and BIOS Uninstall (owner, 29-10-2026: "where do I set the BIOS"): Windows' file
+    window stood in for, the dump with its files copied into bios\ and named in PCSX2.ini, the state line, Remove BIOS
+    with a second press; while PCSX2 runs or is not installed, both pills say why (owner, 29-10-2026: a pill is
+    never grayed out)."""
+    home = tmp_path / "emulator"
+    downloads = tmp_path / "Downloads"
+    downloads.mkdir()
+    dump = downloads / "SCPH-70012.bin"
+    dump.write_bytes(b"\0" * (4 << 20))
+    (downloads / "SCPH-70012.nvm").write_bytes(b"\0" * 1024)
+    is_running = [False]
+    window = make(qapp, home, running=lambda h: is_running[0], choose_file=lambda: str(dump))
+    assert dict(window.rows())["BIOS"] == "install PCSX2 first"
+    for pill in (window.choose_bios_pill, window.remove_bios_pill):                 # not installed
+        pill.click()
+        assert pill.isEnabled() and window.status.text() == BIOS_NEEDS_PCSX2
+    assert not (home / "bios").exists()
+    fake_install(home)
+    window.refresh()
+    window.remove_bios_pill.click()                                                # no BIOS yet
+    assert window.status.text() == NO_BIOS_TO_REMOVE
+    assert dict(window.rows())["BIOS"].startswith("No BIOS yet") and "No BIOS yet" in window.pcsx2_card.text.text()
+    window.choose_bios_pill.click()
+    assert sorted(p.name for p in (home / "bios").iterdir()) == ["SCPH-70012.bin", "SCPH-70012.nvm"]
+    assert "BIOS = SCPH-70012.bin" in (home / "inis" / "PCSX2.ini").read_text(encoding="utf-8")
+    assert dict(window.rows())["BIOS"] == "PCSX2 uses SCPH-70012.bin"
+    assert window.status.text() == "PCSX2 uses SCPH-70012.bin now." and "No BIOS" not in window.pcsx2_card.text.text()
+    is_running[0] = True                                         # PCSX2 writes its settings when it closes
+    window.refresh()
+    for pill in (window.choose_bios_pill, window.remove_bios_pill):
+        window.message = ""
+        pill.click()
+        assert window.status.text().startswith("PCSX2 is open") and (home / "bios" / dump.name).is_file()
+    is_running[0] = False
+    window.message = ""
+    window.refresh()
+    window.remove_bios_pill.click()
+    assert window.remove_bios_pill.label.text() == "Press again" and (home / "bios" / dump.name).is_file()
+    window._confirm_over()                                       # five seconds without a second press
+    assert window.remove_bios_pill.label.text() == "Remove BIOS"
+    window.remove_bios_pill.click()
+    window.remove_bios_pill.click()
+    assert list((home / "bios").iterdir()) == [] and dump.is_file()
+    assert window.status.text() == "SCPH-70012.bin, SCPH-70012.nvm removed from PCSX2's bios folder. PCSX2 has no BIOS now."
+    assert "biosdrain" in window.bios_info.info and "your own PlayStation 2" in window.bios_info.info
+    window.close()
+
+
+def test_a_game_starts_with_pcsx2s_window_kept_away(tmp_path, monkeypatch):
+    # -nogui -fullscreen -batch (owner, 29-10-2026: PCSX2 is never seen), for the app and for Steam's shortcuts
+    seen = []
+    monkeypatch.setattr(emulator.subprocess, "Popen", lambda argv, **kwargs: seen.append((argv, kwargs["env"])) or None)
+    monkeypatch.setenv("QT_QPA_PLATFORM", "offscreen")         # the app's own Qt never reaches PCSX2's
+    emulator.start(tmp_path, tmp_path / "game.iso")
+    assert not any(key.upper().startswith("QT_") for key in seen[0][1])
+    seen = [argv for argv, _env in seen]
+    assert seen == [[str(tmp_path / emulator.EXE), "-nogui", "-fullscreen", "-batch", "--", str(tmp_path / "game.iso")]]
+    from pcsx2_manager.games import Game
+    assert shortcuts.launch_options(Game(tmp_path / "g.iso", "G")) == f'-nogui -fullscreen -batch -- "{tmp_path / "g.iso"}"'
+
+
+
+def test_the_steamgriddb_key_is_pasted_saved_and_removed(qapp, tmp_path, monkeypatch):
+    r"""The BC250 app's Steam artwork… key (owner, 29-10-2026: "exactly as BC250 has it"), as a page: one key for the
+    suite in %APPDATA%\windows-portable-suite\steamgriddb-key, Paste from the clipboard, Save, Remove key with a second
+    press, B back without saving; told as the BC250 app tells it."""
+    from bc250_core import covers
+    from PyQt6.QtGui import QGuiApplication
+    from pcsx2_manager import library
+    key_file = library.key_file()
+    assert key_file == tmp_path / "Roaming" / "windows-portable-suite" / "steamgriddb-key"
+    window = make(qapp, tmp_path / "emulator")
+    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
+    window.games_card.setFocus()
+    qapp.processEvents()
+    window.artwork_pill.click()
+    pane = window.key_pane
+    assert window.panes.currentWidget() is pane and window.legend.items == [("B", "Back")]
+    assert pane.field.echoMode() == pane.field.EchoMode.Password and "Generate API Key" in pane.findChildren(
+        type(window.status))[1].text()
+    assert pane.status.text().startswith("No key")
+    pane.remove.click()                                         # no key: it says so, and stays amber
+    assert pane.remove.isEnabled() and pane.status.text().startswith("There is no key to remove")
+    QGuiApplication.clipboard().setText("  0123456789abcdef0123456789abcdef \n")
+    window.on_action("x")                                       # X on the key page: Paste
+    assert pane.field.text() == "0123456789abcdef0123456789abcdef"
+    window.on_action("back")                                    # B: back, nothing saved
+    assert window.panes.currentWidget() is window.games_pane and not key_file.exists()
+    window.artwork_pill.click()
+    window.key_pane.field.setText("0123456789abcdef0123456789abcdef")
+    window.key_pane.save.click()
+    assert covers.read_key(key_file) == "0123456789abcdef0123456789abcdef"
+    assert window.games_pane.status.text() == "The SteamGridDB key was changed."
+    assert window.panes.currentWidget() is window.games_pane and pane.field.text() == ""   # not left in the window
+    window.artwork_pill.click()
+    assert pane.field.text() == "0123456789abcdef0123456789abcdef"
+    pane.remove.click()
+    assert pane.remove.label.text() == "Press again to remove the key" and key_file.exists()
+    window._confirm_over()                                      # five seconds without a second press
+    assert pane.remove.label.text() == "Remove key"
+    pane.remove.click()
+    pane.remove.click()
+    assert not key_file.exists()
+    assert window.games_pane.status.text() == "The SteamGridDB key was taken out; the pictures kept stay in use."
+    window.close()
+
+
+def test_y_on_your_games_always_says_what_it_did(qapp, tmp_path, monkeypatch):
+    """Y in Your games did nothing when there was nothing to do (owner, 29-10-2026): now the status line says why."""
+    folder = tmp_path / "games"
+    make_disc(folder / "A.iso", "SLUS_123.45")
+    window = make(qapp, tmp_path / "emulator", choose_folder=lambda: str(folder), user_home=tmp_path / "me")
+    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
+    window.games_card.setFocus()
+    window.toggle_folders()
+    window.games_pane.list.pills["choose"].click()
+    window.games_pane.list.first().setFocus()
+    qapp.processEvents()
+    window.on_action("y")                                          # the folders: Update Steam is the games'
+    assert window.games_pane.status.text() == NOT_THE_GAMES
+    window.toggle_folders()
+    window.games_pane.list.first().setFocus()
+    qapp.processEvents()
+    window.on_action("x")
+    window.on_action("y")                                          # a game marked, but no Steam on this device
+    assert window.games_pane.status.text() == NO_STEAM and not window.busy
+    window.close()
+
+
+def test_copy_card_without_a_card_says_why(qapp, tmp_path, cards):
+    """Copy card is never grayed out (owner, 29-10-2026): before the focus was on a card, it says what it needs."""
+    home = tmp_path / "emulator"
+    fake_install(home)
+    (home / "inis").mkdir()
+    (home / "inis" / "PCSX2.ini").write_text(f"[Folders]\nMemoryCards = {cards}\n", encoding="utf-8")
+    window = make(qapp, home, any_running=lambda: False)
+    window.cards_card.setFocus()
+    qapp.processEvents()
+    assert window.copy_card_pill.isEnabled()
+    window.copy_card_pill.click()
+    assert window.cards_pane.status.text() == NO_CARD_TO_COPY and sorted(p.name for p in cards.iterdir()) == [
+        "mc01.ps2", "mc02.ps2"]
+    window.close()
+
+
+def test_no_pill_of_the_app_is_ever_grayed_out(qapp, tmp_path):
+    """The suite's rule (owner, 29-10-2026): every pill stays amber; one that cannot act says why."""
+    window = make(qapp, tmp_path / "emulator")
+    for pane in (window.pane, window.games_pane, window.settings_pane, window.cards_pane, window.log_pane,
+                 window.key_pane):
+        window.panes.setCurrentWidget(pane)
+        window.refresh()
+        assert all(pill.isEnabled() for pill in pane.findChildren(portable.Pill))
     window.close()

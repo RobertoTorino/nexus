@@ -15,10 +15,16 @@ Windows Portable Test is always installed with the [portal](../portal.md) and is
 Five cards on the left: Device, Hardware, Connected, Network and Controller; the right side shows what the focused
 card does.
 The d-pad or the left stick moves the amber focus between the cards, **A** runs the focused card, **B** closes the
-app. Every card and pill also works by touch. The top right shows the date and the time,
-`Wednesday 28/10/2026 | 17:04`, and under them the CPU's and the GPU's temperature, live every five seconds, and the
-battery: `CPU 47° GPU 45° | 82%`. On a device with AMD graphics both temperatures come from AMD's driver; on another the GPU's
-comes from Windows (as Task Manager shows it) and the CPU's is left out.
+app. Every card and pill also works by touch. The amber edge shows where you are: on a card with a glow under it,
+and on the pane at the right, with its card keeping only the edge, once the focus moves into it. The top right
+shows the date and the time,
+`Wednesday 28/10/2026 | 17:04`, and under them, live every five seconds, the CPU's and the GPU's temperature, the
+power the chip draws, the refresh rate of the screen and the battery: `CPU 47° GPU 45° | 18 W | 120 Hz | 82%`. On a
+device with AMD graphics the temperatures and the power come from AMD's driver; on another the GPU's temperature
+comes from Windows (as Task Manager shows it), and the CPU's and the power are left out. The refresh rate is the
+screen the window is on: docked to a TV, it is the TV's.
+
+The wallpaper the portal shows is behind its cards too, unless it is switched off in the portal's Settings.
 
 The information icon (a ring with an i) at the top right of a pane opens more about it, over the window; **A** or
 **B** closes it.
@@ -93,6 +99,20 @@ chip lights for both. To use them as two buttons, map them in Armoury Crate (Set
 Secondary Function and choose a button); they then light that button. A device without ASUS's channel shows no
 M1/M2 chip, and the count leaves it out. The information icon at the top right of the Controller card's pane says so
 on the device; it opens before or after the test, not during it.
+
+## Stick lights
+
+The light icon (a bulb in a ring) beside the information icon opens the stick lights' test over the window. Its
+pills set the lights around the sticks: **Red**, **Green**, **Blue** or **White** on both, **Left only** or **Right
+only** in white with the other stick dark, and **Off**. The d-pad moves between them, **A** presses one, and the line
+under them says what it did. Above the pills is what Windows reports: the controller, its lamps (four on the ROG
+Xbox Ally X, two around each stick) and whether Dynamic Lighting is on for it.
+
+The app sets the lights through Windows' Dynamic Lighting, and Windows lets it do so only while its window is in
+front. **Close** (or **B**) gives them back to the app that sets them otherwise, such as Armoury Crate; Windows does
+so too when the window closes or another one comes in front. Without lights Windows can set, the popup says so: where
+a controller has them, switch Dynamic Lighting on in Settings > Personalization > Dynamic Lighting and open it
+again. Like the information icon, it opens before or after the button test, not during it.
 
 ## Install it on its own
 

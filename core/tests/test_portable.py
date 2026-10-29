@@ -5,9 +5,10 @@ with the d-pad or the arrow keys, A and B, a page's own buttons, and the control
 from __future__ import annotations
 
 import pytest
-from PyQt6.QtCore import QEvent, QPoint, Qt
-from PyQt6.QtGui import QKeyEvent, QPixmap
-from PyQt6.QtWidgets import QGraphicsDropShadowEffect, QGraphicsOpacityEffect, QGridLayout, QVBoxLayout
+from PyQt6.QtCore import QEvent, QPoint, QPointF, Qt
+from PyQt6.QtGui import QEnterEvent, QKeyEvent, QPixmap
+from PyQt6.QtWidgets import (QGraphicsDropShadowEffect, QGraphicsOpacityEffect, QGridLayout, QHBoxLayout, QVBoxLayout,
+                             QWidget)
 
 from bc250_core import portable
 from bc250_core.portable import AMBER, Card, Legend, Pill, PortableHeader, PortableWindow, nearest
@@ -24,8 +25,10 @@ class NoPad:
 @pytest.fixture(autouse=True)
 def mockup_scale():
     portable.pin_scale((1280, 720))     # the mock-up's screen, not the offscreen one
+    portable.glass(255)
     yield
     portable.pin_scale((1280, 720))
+    portable.glass(255)
 
 
 def test_the_sizes_follow_the_screen():
@@ -174,11 +177,85 @@ def test_the_header(qapp):
     assert PortableHeader("Portal", "0.1.0", icon).icon is not None
 
 
-def test_the_main_pill_has_the_button_color(qapp):
-    """Only the main pill takes #cd8b22 (owner, 27-10-2026, a trial); the focus stays amber, a gray pill gray."""
-    main, other = Pill("Open", "A", main=True), Pill("Update", "Y")
-    assert portable.BUTTON == "#cd8b22" and f"color: {portable.BUTTON};" in main.glyph.styleSheet()
-    assert portable.BUTTON not in other.glyph.styleSheet()
+def test_every_pill_is_the_same(qapp):
+    """One kind of pill everywhere (owner, 29-10-2026): amber with dark text, the glyph's letter amber on dark, the
+    same height and minimum width with a button or without one (touch only); disabled it is gray."""
+    main, other, touch = Pill("Open", "A", main=True), Pill("Update", "Y"), Pill("Folders")
+    for pill in (main, other, touch):
+        assert pill.minimumHeight() == portable.px(portable.PILL_HEIGHT)
+        assert pill.minimumWidth() == portable.px(portable.PILL_WIDTH)
+        assert f"color: {portable.ON_AMBER};" in pill.label.styleSheet()
+    assert main.glyph.colors == other.glyph.colors == (portable.BUTTON, portable.ON_AMBER)
+    assert touch.glyph is None
+    other.setEnabled(False)
+    assert f"color: {portable.DIM};" in other.label.styleSheet() and other.glyph.colors[0] == portable.DIM
+    other.setEnabled(True)
+    assert f"color: {portable.ON_AMBER};" in other.label.styleSheet()
+
+
+def test_hover_dims_a_pill_as_the_focus_does(qapp, monkeypatch):
+    pill = Pill("Open", "A", main=True)
+    assert pill.graphicsEffect() is None
+    monkeypatch.setattr(pill, "underMouse", lambda: True)
+    pill.enterEvent(QEnterEvent(QPointF(), QPointF(), QPointF()))
+    assert isinstance(pill.graphicsEffect(), QGraphicsOpacityEffect)
+    assert pill.graphicsEffect().opacity() == pytest.approx(portable.DIMMED)
+    monkeypatch.setattr(pill, "underMouse", lambda: False)
+    pill.leaveEvent(QEvent(QEvent.Type.Leave))
+    assert pill.graphicsEffect() is None
+    pill.setEnabled(False)
+    monkeypatch.setattr(pill, "underMouse", lambda: True)
+    pill.enterEvent(QEnterEvent(QPointF(), QPointF(), QPointF()))
+    assert pill.graphicsEffect() is None                                    # a disabled pill does not answer
+
+
+def test_a_row_is_a_row_and_pills_sit_at_the_bottom_right(qapp):
+    row = portable.Row("Renderer: Automatic")
+    assert row.height() == portable.px(portable.ROW_HEIGHT) or row.maximumHeight() == portable.px(portable.ROW_HEIGHT)
+    assert f"color: {portable.TEXT};" in row.label.styleSheet() and row.glyph is None
+    assert bool(row.label.alignment() & Qt.AlignmentFlag.AlignLeft)
+    a, y = Pill("Save", "A", main=True), Pill("Remove", "Y")
+    line = portable.pill_row(y, a)
+    assert line.itemAt(0).spacerItem() is not None                          # right-aligned
+    assert [line.itemAt(i).widget() for i in (1, 2)] == [y, a]              # the A pill rightmost
+
+
+def test_the_pane_with_the_focus_reads_as_one_with_its_card(qapp, monkeypatch):
+    """Where you are (owner, 29-10-2026): the focus in a pane gives it the amber edge and glow, and its card keeps the
+    edge without the glow; back on the cards, the pane is plain again."""
+    window = PortableWindow(gamepad=portable.Gamepad(source_factory=NoPad))
+    window.setFixedSize(900, 500)
+    line = QHBoxLayout(window)
+    card, other = Card("Card", "What it does."), Card("Other", "Too.")
+    cards = QVBoxLayout()
+    cards.addWidget(card)
+    cards.addWidget(other)
+    line.addLayout(cards)
+    pane = portable.Pane()
+    row = portable.Row("A row")
+    pill = Pill("Open", "A", main=True)
+    pane.column.addWidget(row)
+    pane.column.addWidget(pill)
+    line.addWidget(pane)
+    window.show()
+    window.activateWindow()
+    qapp.processEvents()
+    card.setFocus()
+    qapp.processEvents()
+    assert not pane.active and f"solid {portable.AMBER}" not in pane.styleSheet() and not card.selected
+    row.setFocus()
+    qapp.processEvents()
+    assert pane.active and f"solid {portable.AMBER}" in pane.styleSheet()
+    assert isinstance(pane.graphicsEffect(), QGraphicsDropShadowEffect)    # the glow
+    assert card.selected and card.graphicsEffect() is None and f"solid {portable.AMBER}" in card.styleSheet()
+    pill.setFocus()
+    qapp.processEvents()
+    assert pane.active and card.selected
+    other.setFocus()
+    qapp.processEvents()
+    assert not pane.active and pane.graphicsEffect() is None and not card.selected
+    assert f"solid {portable.AMBER}" not in card.styleSheet()
+    window.close()
 
 
 def test_the_info_pill_shows_its_text_over_the_window(qapp, monkeypatch):
@@ -241,4 +318,143 @@ def test_a_pinned_scale_is_kept_by_a_window(qapp):
     window = PortableWindow(gamepad=portable.Gamepad(source_factory=NoPad))
     screen = qapp.primaryScreen().geometry()
     assert portable.scale() == pytest.approx(max(portable.MIN_SCALE, min(screen.width() / 1280, screen.height() / 720)))
+    window.close()
+
+
+def test_the_wallpaper_is_the_suites(qapp, tmp_path):
+    """Every window of a suite shows the wallpaper unless the suite switched it off (owner, 29-10-2026: "available
+    throughout the suite"); a window of no suite shows none."""
+    from PyQt6.QtCore import QSettings
+    QSettings.setPath(QSettings.Format.IniFormat, QSettings.Scope.UserScope, str(tmp_path))
+    plain = PortableWindow(gamepad=portable.Gamepad(source_factory=NoPad))
+    assert not plain.shows_wallpaper() and portable.glass() == 255
+    window = PortableWindow(gamepad=portable.Gamepad(source_factory=NoPad), suite="x-suite")
+    assert window.shows_wallpaper() and portable.glass() == portable.GLASS
+    assert portable.WALLPAPER.is_file()
+    card = Card("Card", "What it does.")
+    window.set_wallpaper(False)
+    assert not portable.wallpaper_on("x-suite") and portable.glass() == 255
+    assert (tmp_path / "x-suite" / "suite.ini").is_file()
+    other = PortableWindow(gamepad=portable.Gamepad(source_factory=NoPad), suite="x-suite")
+    assert not other.shows_wallpaper()                                     # another app of the suite: off too
+    for w in (plain, window, other):
+        w.close()
+    card.close()
+
+
+def test_the_focused_row_is_raised_with_an_amber_edge(qapp):
+    """In a list the row with the focus stands out (owner, 29-10-2026): lighter, with the amber edge."""
+    window = PortableWindow(gamepad=portable.Gamepad(source_factory=NoPad))
+    column = QVBoxLayout(window)
+    row, other = portable.Row("Renderer: Automatic"), portable.Row("Aspect: 16:9")
+    column.addWidget(row)
+    column.addWidget(other)
+    window.resize(400, 200)
+    window.show()
+    window.activateWindow()
+    row.setFocus()
+    qapp.processEvents()
+    focused, plain = row.grab().toImage(), other.grab().toImage()
+    middle = row.width() // 2
+    assert focused.pixelColor(middle, row.height() // 2).name() == portable.ROW_FOCUS
+    assert plain.pixelColor(middle, other.height() // 2).name() == portable.RAISED
+    assert focused.pixelColor(middle, 0).name() == AMBER                   # the edge
+    window.close()
+
+
+def test_a_pane_in_a_stack_glows_on_the_stack(qapp):
+    """The stack is as big as its pane: on the pane, the glow would be cut off at the stack's edges."""
+    from PyQt6.QtWidgets import QStackedWidget
+    window = PortableWindow(gamepad=portable.Gamepad(source_factory=NoPad))
+    line = QHBoxLayout(window)
+    card = Card("Card", "What it does.")
+    line.addWidget(card)
+    stack = QStackedWidget()
+    first, second = portable.Pane(), portable.Pane()
+    row = portable.Row("A row")
+    first.column.addWidget(row)
+    stack.addWidget(first)
+    stack.addWidget(second)
+    line.addWidget(stack)
+    window.resize(900, 500)
+    window.show()
+    window.activateWindow()
+    row.setFocus()
+    qapp.processEvents()
+    assert first.active and isinstance(stack.graphicsEffect(), QGraphicsDropShadowEffect)
+    assert first.graphicsEffect() is None
+    card.setFocus()
+    qapp.processEvents()
+    assert stack.graphicsEffect() is None and not first.active
+    window.close()
+
+
+def test_a_glyph_paints_a_circle_not_a_square(qapp):
+    """On the Ally a QLabel's stylesheet border-radius showed a black square (owner, 29-10-2026): Glyph paints its
+    circle itself, so its corners stay clear."""
+    pill = Pill("Open", "A", main=True)
+    for glyph in (portable.Glyph("A"), pill.glyph, portable.Glyph("LB", filled=True)):
+        image = glyph.grab().toImage()
+        assert image.pixelColor(0, 0).alpha() == 0 and image.pixelColor(image.width() - 1, image.height() - 1).alpha() == 0
+        middle = image.pixelColor(image.width() // 2, 1)
+        assert middle.alpha() == 255 and middle.name() == glyph.colors[1]
+
+
+def test_a_popup_holds_pills_and_keeps_the_focus(qapp, monkeypatch):
+    """A popup with controls (owner, 29-10-2026): the d-pad moves between its pills and Close only, A presses the
+    focused one, B closes it and the focus goes back."""
+    window = PortableWindow(gamepad=portable.Gamepad(source_factory=NoPad))
+    line = QHBoxLayout(window)
+    outside = Pill("Outside", "A", main=True)
+    line.addWidget(outside)
+    window.resize(1280, 720)
+    window.show()
+    window.activateWindow()
+    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
+    pressed = []
+    content = QWidget()
+    row = QHBoxLayout(content)
+    one, two = Pill("One", "A"), Pill("Two", "A")
+    one.activated.connect(lambda: pressed.append("one"))
+    two.activated.connect(lambda: pressed.append("two"))
+    row.addWidget(one)
+    row.addWidget(two)
+    popup = window.show_popup("Title", "Text.", outside, content)
+    qapp.processEvents()
+    assert one.hasFocus() and outside not in window.focusables()
+    window.on_action("right")
+    assert two.hasFocus()
+    window.on_action("accept")
+    assert pressed == ["two"] and window.popup is popup             # A presses, the popup stays
+    window.on_action("down")
+    assert popup.close_pill.hasFocus()
+    window.on_action("back")
+    assert window.popup is None and outside.hasFocus()
+    window.close()
+
+
+def test_the_light_icon_is_drawn_as_the_info_icon(qapp):
+    light, info = portable.LightPill(), portable.InfoPill("Title", "Text.")
+    assert light.size() == info.size() and not light.label.isVisible()
+    assert light.grab().toImage() != info.grab().toImage()
+
+
+def test_closing_a_popup_gives_the_focus_back_before_it_hides(qapp, monkeypatch):
+    """Hidden while a pill in it had the focus, Qt handed the focus to the first card, which showed its own pane."""
+    window = PortableWindow(gamepad=portable.Gamepad(source_factory=NoPad))
+    line = QHBoxLayout(window)
+    card, icon = Card("Card", "What it does."), Pill("Icon", "A")
+    line.addWidget(card)
+    line.addWidget(icon)
+    window.resize(1280, 720)
+    window.show()
+    window.activateWindow()
+    qapp.processEvents()
+    seen = []
+    card.focused.connect(lambda: seen.append("card"))
+    icon.setFocus()
+    qapp.processEvents()
+    window.show_popup("Title", "Text.", icon).dismiss()
+    qapp.processEvents()
+    assert icon.hasFocus() and seen == []
     window.close()

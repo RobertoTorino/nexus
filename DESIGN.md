@@ -38,12 +38,18 @@ Each design (a suite's, the Nexus page's) has its own; none is carried over to a
 ### Windows Portable Suite
 
 - **The identity** (owner, 26-10-2026: direction D, B's amber on C's cards): a near-black window `#121214`, cards a
-  step lighter `#1d1e22`, the focused card raised `#292b31`, one amber `#f5a524` for the focus and the main pill
-  in `#cd8b22` (owner, 27-10-2026, a trial); text `#f5f4f0` with dimmed `#a5a5ab` for the second line. Inter, with
+  step lighter `#1d1e22`, the focused card raised `#292b31`, one amber `#f5a524` for the focus and every pill
+  in `#cd8b22` (owner, 29-10-2026); text `#f5f4f0` with dimmed `#a5a5ab` for the second line. Inter, with
   heavy titles. From `core/bc250_core/portable.py`, a theme for core's widgets set with `create_app(theme=PORTABLE)`.
-- **The focus is what a controller needs to see:** the focused card is raised with an amber edge and an amber glow
-  under it; a focused pill is dimmed (owner, 26-10-2026; its behavior still open). Cards and pills share the corner
+- **The focus is what a controller needs to see** (owner, 29-10-2026: "hardly visible where you are"): the focused
+  card is raised with an amber edge and an amber glow under it. When the focus moves into the pane at the right, the
+  pane takes the edge and the glow, and its card keeps the edge without the glow; back on the cards, the pane is
+  plain again. In a list the focused row is lighter `#3a3d45` with the amber edge. Cards and pills share the corner
   radius 14.
+- **One kind of pill everywhere** (owner, 29-10-2026): `#cd8b22` with a dark label, the same height and minimum
+  width, in a row at the bottom right of its pane with the A pill rightmost; a pill only for touch looks the same.
+  Focused or under the pointer it is dimmed. A pill is never grayed out: when it cannot act it says why (owner,
+  29-10-2026). The glyph paints its own circle (a stylesheet's radius showed a square on the Ally).
 - **A pill shows its controller button** (A Open, Y Update); the legend at the bottom shows only the buttons that
   have no pill (X Details, B Back), none of them in amber.
 - **A tile is a card with an icon** (the portal's apps, 28-10-2026): the app's icon centered above its name and
@@ -351,13 +357,14 @@ Background colors:
 
 | Color | Hex | Used for |
 | --- | --- | --- |
-| ![#121214](design/colors/block-121214.svg) | `#121214` | The window, behind everything; a gray pill's glyph circle. |
+| ![#121214](design/colors/block-121214.svg) | `#121214` | The window, behind everything; a disabled pill's glyph circle. |
 | ![#1d1e22](design/colors/block-1d1e22.svg) | `#1d1e22` | A card, the detail pane, a field or list. |
-| ![#292b31](design/colors/block-292b31.svg) | `#292b31` | The focused card, a gray pill, a glyph's circle in the legend. |
-| ![#35383f](design/colors/block-35383f.svg) | `#35383f` | Borders of fields and lists. |
-| ![#f5a524](design/colors/block-f5a524.svg) | `#f5a524` | Amber: the focused card's edge and the glow under it, the selected tab's line. |
-| ![#cd8b22](design/colors/block-cd8b22.svg) | `#cd8b22` | The main pill (owner, 27-10-2026, a trial). |
-| ![#141414](design/colors/block-141414.svg) | `#141414` | The main pill's glyph circle. |
+| ![#292b31](design/colors/block-292b31.svg) | `#292b31` | The focused card, a list's row, a disabled pill, a glyph's circle in the legend. |
+| ![#3a3d45](design/colors/block-3a3d45.svg) | `#3a3d45` | The focused row of a list (owner, 29-10-2026), with the amber edge. |
+| ![#35383f](design/colors/block-35383f.svg) | `#35383f` | Borders of fields and lists; a row under the pointer. |
+| ![#f5a524](design/colors/block-f5a524.svg) | `#f5a524` | Amber: the focused card's edge and the glow under it, the edge and glow of the pane the focus is in, the focused row's edge, the selected tab's line. |
+| ![#cd8b22](design/colors/block-cd8b22.svg) | `#cd8b22` | Every pill (owner, 29-10-2026: one kind of pill), and its glyph's letter. |
+| ![#141414](design/colors/block-141414.svg) | `#141414` | A pill's label and its glyph's circle. |
 
 ### Wiki
 

@@ -49,13 +49,23 @@ app is an optional tile. The wiki is at robertotorino.github.io/nexus/windows-po
     bottom only the buttons that have no pill (X Details, B Close).
   - No dialogs: an action that needs care asks for a second press within five seconds (Remove; B while the portal
     downloads or installs), and the pill or the strip says so meanwhile.
+  - One kind of pill (owner, 29-10-2026): amber, the same size, in a row at the bottom right of its pane with the A
+    pill rightmost (`portable.pill_row()`); the pane with the focus has the amber edge and glow, its card keeps the
+    edge. **A pill is never grayed out: it says why when it cannot act** (owner, 29-10-2026): it stays amber and
+    enabled, and pressed when its action cannot run now, it says why on the pane's status line. Never
+    `setEnabled(False)` on a `Pill`; hide it when it does not belong to the state at all.
   - The window fits the Ally's screen: 1280 x 720 logical pixels at 150 %, the size every page is laid out for
     (`portable.px()` scales it to a larger screen). Text that does not fit goes behind an information icon
-    (`InfoPill`, at the top right of its pane) that shows it over the window (owner, 28-10-2026).
+    (`InfoPill`, at the top right of its pane) that shows it over the window (owner, 28-10-2026). Where space is
+    short, an icon at the pane's top right opens a popup with the rest (text or controls), owner 29-10-2026.
+  - The wallpaper is the suite's (owner, 29-10-2026): every window shows it behind see-through cards (core's
+    `PortableWindow`), on or off for every app at once in the portal's Settings
+    (`%APPDATA%\windows-portable-suite\suite.ini`).
   - Nothing runs before it is asked for: a card that reads the device reads on A (owner, 28-10-2026).
   - The header's status line: the battery, the date and the time, `82% | Wednesday 28/10/2026 | 17:04` (owner,
     28-10-2026: no space before %); Windows Portable Test shows the date and the time, and under them
-    the temperatures and the battery, `CPU 47° GPU 45° | 82%`. No icon in the
+    the temperatures, the power draw, the screen's refresh rate and the battery, `CPU 47° GPU 45° | 18 W | 120 Hz |
+    82%` (owner, 29-10-2026). No icon in the
     test app's header (the screen is too small for it).
 - **Not limited to the owner's handheld.** The Ally X is one case, not the target: an app reads what Windows
   reports, works on another Windows handheld, and says so where something does not apply (no AMD driver, no Wi-Fi,

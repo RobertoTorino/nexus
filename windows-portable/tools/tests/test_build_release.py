@@ -125,7 +125,8 @@ def test_a_one_folder_build_with_the_logo_and_core_fonts(tmp_path):
     collected = [args[i + 1] for i, a in enumerate(args) if a in ("--collect-submodules", "--collect-all")]
     assert collected == ["portable_test", "bc250_core"]
     add_data = [args[i + 1] for i, a in enumerate(args) if a == "--add-data"]
-    assert add_data == [f"{tmp_path / 'stage' / 'images'};images", f"{tmp_path / 'stage' / 'bc250_core' / 'fonts'};bc250_core/fonts"]
+    assert add_data == [f"{tmp_path / 'stage' / 'images'};images", f"{tmp_path / 'stage' / 'bc250_core' / 'fonts'};bc250_core/fonts",
+                        f"{tmp_path / 'stage' / 'bc250_core' / 'images'};bc250_core/images"]   # the suite's wallpaper
     (tmp_path / "stage").mkdir()
     (tmp_path / "stage" / "apps.toml").write_text("")                     # the portal: its manifest beside the package
     (tmp_path / "stage" / "sounds").mkdir()                                 # and its intro's sound

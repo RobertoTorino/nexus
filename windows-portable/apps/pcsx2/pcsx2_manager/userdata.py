@@ -16,10 +16,12 @@ from __future__ import annotations
 
 import configparser
 import re
+import shutil
 from dataclasses import dataclass
 from pathlib import Path
 
 BIOS_SUFFIXES = (".bin", ".rom")
+BIOS_HELP_URL = "https://pcsx2.net/docs/setup/bios"     # PCSX2's own page on dumping the BIOS (biosdrain)
 
 
 def bios_dir(home: Path) -> Path:
@@ -33,6 +35,32 @@ def bios_files(folder: Path) -> list[Path]:
                       if p.is_file() and p.suffix.lower() in BIOS_SUFFIXES)
     except OSError:
         return []
+
+
+def copy_bios(dump: Path, folder: Path) -> Path:
+    """Copies *dump* into *folder* with the files beside it under the same name (SCPH10000.BIN with SCPH10000.NVM
+    and SCPH10000.MEC), unless it is in that folder already; returns the dump's place there. OSError is the
+    caller's. (The BC250 suite's PCSX2 Manager's, as it is.)"""
+    folder.mkdir(parents=True, exist_ok=True)
+    if dump.parent.resolve() == folder.resolve():
+        return dump
+    stem = dump.stem.lower()
+    for item in sorted(dump.parent.iterdir()):
+        if item.is_file() and item.stem.lower() == stem:
+            shutil.copy2(item, folder / item.name)
+    return folder / dump.name
+
+
+def remove_bios(dump: Path) -> list[str]:
+    """Removes the dump from PCSX2's bios folder with the files beside it under the same name; the names removed.
+    OSError is the caller's."""
+    stem = dump.stem.lower()
+    removed = []
+    for item in sorted(dump.parent.iterdir()):
+        if item.is_file() and item.stem.lower() == stem:
+            item.unlink()
+            removed.append(item.name)
+    return removed
 
 
 def ini_value(home: Path, section: str, key: str) -> str:

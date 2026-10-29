@@ -5,6 +5,7 @@ read, the network measured, the controller test that has every button until B is
 from __future__ import annotations
 
 import re
+import threading
 import time
 from pathlib import Path
 
@@ -14,7 +15,7 @@ from PyQt6.QtGui import QKeyEvent
 
 from bc250_core import portable
 from bc250_core.gamepad import Gamepad
-from portable_test import device, network
+from portable_test import device, lights, network
 from portable_test.main_window import MainWindow
 
 
@@ -61,11 +62,13 @@ def wait_for(qapp, predicate, seconds=5.0):
 def make(qapp, tmp_path, ally_json):
     windows = []
 
-    def make(read=None, pad=None, measure=None, back=None):
+    def make(read=None, pad=None, measure=None, back=None, lamps=None):
         pad = pad or FakePad()
         window = MainWindow(gamepad=Gamepad(source_factory=lambda: pad), read=read or (lambda: device.parse(ally_json)),
                             measure=measure or measured, battery=lambda: (82, False), reports=tmp_path / "reports",
-                            temperatures=lambda: (47, 45), back_reader=back or FakeBack(True))
+                            temperatures=lambda: (47, 45), watts=lambda: 18, hertz=lambda: 120,
+                            back_reader=back or FakeBack(True),
+                            lamps=lamps or lights.Lights(find=lambda: []))     # never the real lights
         portable.scale((1280, 720))
         window.resize(1280, 720)
         window.show()
@@ -116,7 +119,7 @@ def test_the_device_is_read_and_shown(make, qapp):
     assert "Screen" in shown and "% scaling, " in shown["Screen"]
     assert list(shown).index("Screen") == list(shown).index("Memory") - 1
     assert re.fullmatch(r"\w+day \d\d/\d\d/\d{4}  \|  \d\d:\d\d", window.header.status.text())
-    assert window.header.second.text() == "CPU 47° GPU 45°  |  82%"    # under it (owner, 28-10-2026)
+    assert window.header.second.text() == "CPU 47° GPU 45°  |  18 W  |  120 Hz  |  82%"   # under it (owner, 29-10-2026)
     assert window.header.icon is None                       # the screen is too small for it (owner, 27-10-2026)
     assert [text for _, text in window.legend.items] == ["Save report", "Close"]
 
@@ -124,7 +127,7 @@ def test_the_device_is_read_and_shown(make, qapp):
 def test_read_again_and_a_failed_read(make, qapp, ally_json):
     answers = [lambda: device.parse(ally_json), lambda: (_ for _ in ()).throw(RuntimeError("CIM is not running"))]
     window, _ = make(read=lambda: answers.pop(0)())
-    assert read(window, qapp) and wait_for(qapp, lambda: window.device_pane.read_pill.isEnabled())
+    assert read(window, qapp) and wait_for(qapp, lambda: window.device_pane.read_pill.label.text() == "Read again")
     window.device_pane.read_pill.click()
     assert wait_for(qapp, lambda: "did not answer" in window.device_pane.status.text())
     assert "CIM is not running" in window.device_pane.status.text() and window.device is not None
@@ -302,3 +305,73 @@ def test_the_window_fits_a_smaller_screen(qapp, ally_json):
         window.close()
     finally:
         portable.pin_scale((1280, 720))
+
+
+def test_read_while_a_read_runs_says_so(make, qapp, ally_json):
+    """Read and Test are never grayed out (owner, 29-10-2026): pressed again while they run, the pane says so."""
+    gate = threading.Event()
+    window, _ = make(read=lambda: gate.wait(10) and device.parse(ally_json),
+                     measure=lambda power, say: gate.wait(10) and network.Network(power=power, error="timed out"))
+    window.device_pane.read_pill.click()
+    window.device_pane.read_pill.click()
+    assert window.device_pane.read_pill.isEnabled()
+    assert window.device_pane.status.text() == "Reading ... Windows is still answering the read before."
+    window.network_pane.read_pill.click()
+    window.network_pane.read_pill.click()
+    assert window.network_pane.read_pill.isEnabled()
+    assert window.network_pane.status.text() == "Measuring ... the test before is still running."
+    gate.set()
+    assert wait_for(qapp, lambda: window.device is not None and window.network is not None)
+
+
+def test_the_stick_lights_test_is_a_popup(make, qapp, monkeypatch):
+    """Short of space on the Controller pane, an icon at its top right opens the LED test (owner, 29-10-2026): the
+    colors as pills, the d-pad between them, A presses, B closes and gives the lights back."""
+    from test_lights import FakeArray
+    array = FakeArray()
+    lamps = lights.Lights(find=lambda: [("RTG789", array)], color=lambda rgb: rgb)
+    window, _ = make(lamps=lamps)
+    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
+    window.controller_card.setFocus()
+    qapp.processEvents()
+    icon = window.controller_pane.lights_pill
+    assert icon.isVisible() and icon.geometry().right() < window.controller_pane.back_buttons.geometry().left()
+    icon.click()
+    popup = window.popup
+    panel = popup.content
+    assert popup is not None and list(panel.pills) == ["Red", "Green", "Blue", "White", "Left only", "Right only", "Off"]
+    assert panel.pills["Red"].hasFocus() and "4 lamps" in panel.report.text()
+    window.on_action("accept")                                      # A on Red
+    assert array.colors == [(255, 0, 0)] * 4 and panel.status.text() == "Red on both sticks."
+    window.on_action("right")
+    assert panel.pills["Green"].hasFocus()
+    for _ in range(6):                                              # the focus stays inside the popup
+        window.on_action("down")
+    assert window.focusWidget() in popup.pills()
+    panel.pills["Left only"].setFocus()
+    window.on_action("accept")
+    assert array.colors[:2] == [(255, 255, 255)] * 2 and array.colors[2:] == [(0, 0, 0)] * 2
+    assert panel.status.text() == "White on the left stick."
+    window.on_action("back")                                        # B: closed, the lights given back
+    assert window.popup is None and lamps.array is None and icon.hasFocus()
+
+
+def test_no_lights_says_how_to_switch_them_on(make, qapp, monkeypatch):
+    window, _ = make()
+    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
+    window.controller_pane.lights_pill.click()
+    panel = window.popup.content
+    assert panel.pills == {} and "Settings > Personalization > Dynamic Lighting" in panel.report.text()
+    assert window.popup.close_pill.hasFocus()
+    window.on_action("accept")                                      # A on Close
+    assert window.popup is None
+
+
+def test_the_lights_icon_is_off_limits_during_the_button_test(make, qapp):
+    window, _ = make()
+    window.start_test()
+    assert not window.controller_pane.lights_pill.isEnabled()
+    window.show_lights()
+    assert window.popup is None
+    window.controller_pane.finish()
+    assert window.controller_pane.lights_pill.isEnabled()

@@ -40,6 +40,8 @@ The strip under the tiles shows the focused app: its name, its versions, what it
 
 Every tile and pill also works by touch. On a keyboard, the arrow keys move, Enter presses and Escape goes back.
 
+Every pill looks the same: amber, with its controller button, at the right of its pane; it dims with the focus or under your finger. On the Settings page the setting with the focus has the amber edge.
+
 ## Installing and updating an app
 
 **A** on an app that is not installed downloads its release, checks it and runs its installer in a PowerShell
@@ -79,7 +81,7 @@ setting, **B** goes back.
 
 | Setting | |
 |---|---|
-| Wallpaper | A picture behind the tiles, which show it through them. Off: the plain dark background. |
+| Wallpaper | A picture behind the tiles, which show it through them, in every app of the suite: switched here, it is on or off in each app from its next start. Off: the plain dark background. |
 
 The window fits the screen it is on: it is laid out for the Ally's 1280 x 720 (at Windows' 150 % scaling) and drawn
 larger on a larger screen, such as a TV, and smaller on a smaller one.

@@ -1,3 +1,32 @@
+Changelog: 29-10-2026 02:51:30
+
+Added. A popup can hold controls (owner, 29-10-2026: "if we are short in space somewhere we should consider an icon
+and popup window"): show_popup() and InfoPopup take content, a widget with pills; while it shows, the d-pad moves
+between its pills and Close only, A presses the focused one and B closes it. IconPill is a small round icon at a
+pane's top right with a sign drawn in it, InfoPill and the new LightPill (a bulb) among them.
+
+Fixed. Closing a popup gave the focus to the first card on the way, which showed that card's pane instead of the
+one the popup was opened from: the focus goes back before the popup hides.
+
+Changelog: 29-10-2026 02:41:27
+
+Fixed. A pill's A showed as a black square on the Ally, not a circle (owner, 29-10-2026): a QLabel's stylesheet
+border-radius was not applied there. Glyph paints its own circle now, its colors set with set_colors(), for the
+pills and the legend alike. Pill's docstring says the suite never disables a pill.
+
+Changelog: 29-10-2026 02:21:23
+
+Fixed. One kind of pill in the portable window (owner, 29-10-2026: "why are the buttons not the same everywhere?"): every Pill is amber with a dark label, its glyph's letter amber on dark, the same height and minimum width with a button or without one; under the pointer it dims as with the focus, and disabled it is gray with a dimmed label. pill_row() puts a pane's pills in a row at its bottom right, the A pill last.
+
+Added. Where you are reads at a glance (owner, 29-10-2026): PortableWindow follows the focus, and a Pane with the focus inside it gets the focused card's amber edge and glow (on its QStackedWidget when it is in one, which would cut the glow off), while the card whose pane it is keeps the edge without the glow (Card.set_selected); back on the cards, the pane is plain again. Row is a list's or a setting's row: left-aligned text, and with the focus lighter (#3a3d45) with the amber edge.
+
+Changelog: 29-10-2026 01:47:57
+
+Added. The wallpaper is the suite's (owner, 29-10-2026: "available throughout the suite"): core's
+PortableWindow draws it behind every window of a suite (bc250_core/images/wallpaper.webp, darkened, the cards
+see-through), on or off for every app of the suite at once in <suite>\suite.ini (look/wallpaper: wallpaper_on(),
+set_wallpaper_on(), PortableWindow.set_wallpaper()). A window of no suite shows none.
+
 Changelog: 29-10-2026 00:46:14
 
 Fixed. On Windows a bare QSettings() of an app with .ini settings (AppInfo settings_ini) wrote to the registry,

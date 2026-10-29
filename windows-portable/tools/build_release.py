@@ -163,6 +163,8 @@ def pyinstaller_args(stage: Path, launcher: Path, package: str, exe_name: str, i
         # Read from next to the package, as in an install: the logo, and the fonts core registers.
         "--add-data", f"{stage / 'images'}{sep}images",
         "--add-data", f"{stage / 'bc250_core' / 'fonts'}{sep}bc250_core/fonts",
+        # The wallpaper every window of the suite can show (core's portable window)
+        "--add-data", f"{stage / 'bc250_core' / 'images'}{sep}bc250_core/images",
         *(part for pair in manifest + sounds + data for part in pair),
     ]
 

@@ -12,11 +12,15 @@ from collections.abc import Sequence
 
 from PyQt6.QtCore import QEvent, QObject, Qt, pyqtSignal
 from PyQt6.QtGui import QFont
-from PyQt6.QtWidgets import QFrame, QGridLayout, QHBoxLayout, QScrollArea, QScroller, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import (QFrame, QGridLayout, QHBoxLayout, QLineEdit, QScrollArea, QScroller, QVBoxLayout,
+                             QWidget)
 
-from bc250_core.portable import AMBER, BODY, DIM, InfoPill, Pane, Pill, px, text_label
+from bc250_core import covers
 
-ROW = 40                                # a list's pill, as a setting's
+from bc250_core.portable import (AMBER, BODY, DIM, RAISED, ROW_HEIGHT, TEXT, InfoPill, Pane, Pill, Row, font,
+                                 pill_row, px, text_label)
+
+ROW = ROW_HEIGHT                        # a list's row, as a setting's
 
 
 class ListArea(QScrollArea):
@@ -41,7 +45,7 @@ class ListArea(QScrollArea):
         self.column.addStretch()
         self.setWidget(self.inner)
         QScroller.grabGesture(self.viewport(), QScroller.ScrollerGestureType.LeftMouseButtonGesture)  # a finger drags
-        self.pills: dict[str, Pill] = {}
+        self.pills: dict[str, Row] = {}
         self._keys: dict[QObject, str] = {}
 
     def set_items(self, items: Sequence[tuple[str, str]]) -> None:
@@ -52,9 +56,7 @@ class ListArea(QScrollArea):
         had = next((key for key, pill in old.items() if pill.hasFocus()), None)
         self.pills, self._keys = {}, {}
         for n, (key, text) in enumerate(items):
-            pill = Pill(text)
-            pill.setFixedHeight(px(ROW))
-            pill.label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+            pill = Row(text)
             pill.activated.connect(lambda key=key: self.picked.emit(key))
             pill.installEventFilter(self)
             self.column.insertWidget(n, pill)
@@ -77,12 +79,13 @@ class ListArea(QScrollArea):
             self.current.emit(self._keys[obj])
         return super().eventFilter(obj, event)
 
-    def first(self) -> Pill | None:
+    def first(self) -> Row | None:
         return next(iter(self.pills.values()), None)
 
 
 class ListPane(Pane):
-    """A heading with the information icon, a line under it, a ListArea, the status line and a row of pills."""
+    """A heading with the information icon, a line under it, a ListArea, the status line and the pills at the
+    bottom right, as every pane has them."""
 
     def __init__(self, title: str, info_title: str, info: str, parent: QWidget | None = None):
         super().__init__(parent)
@@ -100,13 +103,11 @@ class ListPane(Pane):
         self.status = text_label("", BODY + 1, QFont.Weight.DemiBold, AMBER, wrap=True)
         self.column.addWidget(self.status)
         self.column.addSpacing(px(6))
-        self.pills = QHBoxLayout()
-        self.pills.setSpacing(px(12))
+        self.pills = pill_row()
         self.column.addLayout(self.pills)
 
-    def add_pill(self, pill: Pill, stretch_before: bool = False) -> Pill:
-        if stretch_before:
-            self.pills.addStretch()
+    def add_pill(self, pill: Pill) -> Pill:
+        """The next pill of the row, left to right: the one with A last."""
         self.pills.addWidget(pill)
         return pill
 
@@ -149,11 +150,8 @@ class LogPane(Pane):
         self.lines.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         self.column.addWidget(self.lines, 1, Qt.AlignmentFlag.AlignTop)
         self.column.addStretch()
-        pills = QHBoxLayout()
-        pills.addStretch()
         self.open = Pill("Open the log", "A", main=True)
-        pills.addWidget(self.open)
-        self.column.addLayout(pills)
+        self.column.addLayout(pill_row(self.open))
 
     def fill(self, rows: Sequence[tuple[str, str]], lines: Sequence[str]) -> None:
         while self.grid.count():
@@ -169,3 +167,41 @@ class LogPane(Pane):
             self.grid.addWidget(shown, r, 1)
         self.grid.setColumnStretch(1, 1)
         self.lines.setText("\n".join(lines) or "Nothing logged yet.")
+
+
+# The key: the BC250 app's Steam artwork… dialog (core's covers.edit_key) as a page of the portable window
+KEY_TEXT = (
+    "Steam's library shows each game with a cover, its page with a banner. A PS2 disc brings no pictures in Steam's "
+    "shapes, so the app draws them. With a SteamGridDB API key, Update Steam looks each game up on SteamGridDB by "
+    "its title and takes the pictures with the most votes instead.\n\n"
+    "The key is free with a SteamGridDB account: in your account click Preferences, then the API tab at the top, "
+    f"then Generate API Key, and copy the key ({covers.KEY_PAGE}). Copied in a browser on this device, Paste puts "
+    "it in the field.\n"
+    "It is one key for every app of the suite. Leave it empty to look nothing up.")
+
+
+class KeyPane(Pane):
+    """The SteamGridDB key: the text, the field (masked, as the BC250 app's), Paste, Remove key and Save."""
+
+    def __init__(self, parent: QWidget | None = None):
+        super().__init__(parent)
+        self.column.addWidget(text_label("Steam artwork", 24, QFont.Weight.ExtraBold))
+        self.column.addSpacing(px(6))
+        self.column.addWidget(text_label(KEY_TEXT, BODY + 1, color=DIM, wrap=True))
+        self.column.addSpacing(px(12))
+        self.field = QLineEdit()
+        self.field.setEchoMode(QLineEdit.EchoMode.Password)
+        self.field.setPlaceholderText("Your SteamGridDB API key")
+        self.field.setFont(font(BODY + 2))
+        self.field.setMinimumHeight(px(44))
+        self.field.setStyleSheet(f"QLineEdit {{ color: {TEXT}; background: {RAISED}; border: none; "
+                                 f"border-radius: {px(10)}px; padding: 0 {px(12)}px; }}")
+        self.column.addWidget(self.field)
+        self.column.addStretch()
+        self.status = text_label("", BODY + 1, QFont.Weight.DemiBold, AMBER, wrap=True)
+        self.column.addWidget(self.status)
+        self.column.addSpacing(px(6))
+        self.paste = Pill("Paste", "X")
+        self.remove = Pill("Remove key", "Y")
+        self.save = Pill("Save", "A", main=True)
+        self.column.addLayout(pill_row(self.paste, self.remove, self.save))

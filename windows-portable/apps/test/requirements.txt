@@ -1,3 +1,10 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 PyQt6>=6.11,<7
 pygame-ce>=2.5,<3         # the controller (bc250_core.gamepad)
+# The stick lights (portable_test.lights): Windows' Dynamic Lighting through pywinrt
+winrt-runtime>=3.2,<5
+winrt-Windows.Devices.Enumeration>=3.2,<5!0
+winrt-Windows.Devices.Lights>=3.2,<5!0
+winrt-Windows.Foundation>=3.2,<5!0
+winrt-Windows.Foundation.Collections>=3.2,<5!0
+winrt-Windows.UI>=3.2,<5!0

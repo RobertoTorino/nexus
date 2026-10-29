@@ -16,7 +16,7 @@ LUMINES = Game(Path(r"D:\PS2 Games\Lumines Plus.iso"), "Lumines Plus", "SLUS-215
 def test_a_shortcut_starts_pcsx2_with_the_game(tmp_path):
     item = shortcuts.entry(LUMINES, "[PS2] Lumines Plus", PROGRAM, tmp_path / "logo.png")
     assert item["Exe"] == f'"{PROGRAM}"' and item["StartDir"] == f'"{PROGRAM.parent}\\"'
-    assert item["LaunchOptions"] == '-nogui -fullscreen -- "D:\\PS2 Games\\Lumines Plus.iso"'
+    assert item["LaunchOptions"] == '-nogui -fullscreen -batch -- "D:\\PS2 Games\\Lumines Plus.iso"'
     assert item["tags"] == {"0": "PS2", "1": "PCSX2 Manager"}
     assert shortcuts.ours(item) and shortcuts.for_game(LUMINES)(item)
     assert shortcuts.for_game(Game(Path(r"d:\ps2 games\LUMINES PLUS.iso"), "x"))(item)     # Windows ignores case

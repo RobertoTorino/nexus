@@ -68,3 +68,4 @@ nav:
   - Apps:
       - Windows Portable Test: apps/test.md
       - PCSX2 Manager: apps/pcsx2.md
+      - Steam artwork: apps/covers.md

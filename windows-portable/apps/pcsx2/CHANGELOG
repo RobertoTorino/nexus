@@ -1,3 +1,53 @@
+Changelog: 29-10-2026 03:26:16
+
+Release 1.0.0.
+
+Changelog: 29-10-2026 02:41:27
+
+Fixed. The PCSX2 pane's pills are one row (owner, 29-10-2026): Choose BIOS, Remove BIOS, Remove PCSX2, Y Reinstall
+or Update, and A Install only while PCSX2 is not installed; the Your games pill is gone, as Your games is the card
+on the left. A on the PCSX2 card, once installed, goes to the pills. The cards' column is narrower, so the row fits
+at 1280 x 720 and 1097 x 617.
+
+Fixed. No pill is grayed out any more (owner, 29-10-2026: "Update Steam button is not orange, Copy card button is
+not orange"): Update Steam, Copy card, Choose BIOS, Remove BIOS, Remove key and the settings stay amber, and
+pressed when they cannot act they say why on the pane's status line.
+
+Changelog: 29-10-2026 02:21:23
+
+Fixed. Y in Your games did nothing when there was nothing to do (owner, 29-10-2026): it says why on the status line now, with nothing marked to change, without Steam on the device, or with the folders shown. Y Remove key without a key says so too.
+
+Fixed. The same pills in every pane (owner, 29-10-2026): amber, the same size, in a row at the bottom right with the A pill rightmost; the PCSX2 pane has Choose BIOS and Remove BIOS above Remove, Y and A. The games, the folders, the memory cards and the settings are rows; the focused one is lighter with the amber edge. Once the focus moves into a pane, the pane has the amber edge and glow and its card keeps the edge.
+
+Changelog: 29-10-2026 01:50:35
+
+Added. The suite's wallpaper behind the cards, as in the portal (owner, 29-10-2026), on or off with the
+portal's Settings.
+
+Changelog: 29-10-2026 01:48:33
+
+Breaking. PCSX2's own window is never opened (owner, 29-10-2026: "we don't want to see PCSX2 at all, the manager
+should take care of everything", the BC250 suite's rule): Open PCSX2 is gone (once PCSX2 is installed, A on the PCSX2
+card goes to Your games), and so is the Big Picture setting, PCSX2's own menu; the app now keeps Big Picture off
+([UI] StartBigPictureMode = false). A game starts with pcsx2-qt.exe -nogui -fullscreen -batch -- <game>, from the app
+and from Steam's shortcuts (Update Steam rewrites them): -batch closes PCSX2 when the game ends. PCSX2 gets the
+app's environment without Qt's own variables (with them, PCSX2 stopped with "no Qt platform plugin could be
+initialized", seen on the Ally). No game starts without a BIOS: PCSX2 would stop at its own Startup Error window.
+
+Added. The BIOS on the PCSX2 card's pane, as the BC250 app's BIOS Install and BIOS Uninstall (owner, 29-10-2026:
+"where do I set the BIOS"): a BIOS row with the dump PCSX2 uses ("No BIOS yet" with why, also on the PCSX2 card),
+Choose BIOS (Windows' own file window, in Downloads, *.bin and *.rom) copies the dump with the files beside it under
+the same name into PCSX2's bios folder and names it in [Filenames] BIOS, Remove BIOS takes it out with its files on
+a second press; both off while PCSX2 is not installed or runs. The information icon says where a BIOS comes from
+(your own console, biosdrain, PCSX2's BIOS page).
+
+Added. The SteamGridDB key, as the BC250 app's Steam artwork… (owner, 29-10-2026: "exactly as BC250 has it"): a
+Steam artwork pill on Your games opens a page with the BC250 dialog's text, the key's field (masked), X Paste from
+the clipboard (the key copied in a browser on the device), A Save and Y Remove key with a second press, B back.
+One key for the suite, %APPDATA%\windows-portable-suite\steamgriddb-key, sent only to SteamGridDB; empty or removed
+looks nothing up and the pictures kept stay in use. Told as the BC250 app tells it: "The SteamGridDB key was
+changed." or "... taken out; the pictures kept stay in use." The wiki has a chapter for it, Steam artwork.
+
 Changelog: 29-10-2026 00:54:47
 
 Release 0.2.0.

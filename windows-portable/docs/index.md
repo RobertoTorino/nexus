@@ -30,7 +30,7 @@ a small screen, a controller and touch. The amber focus shows where the next pre
 
 [Windows Portable Test](apps/test.md) shows what Windows reports about the device, what is built in and what is
 plugged in, measures the network with a timed download, and tests every button, stick and trigger of its controller,
-the back buttons too. The CPU's and the GPU's temperature stay in its header.
+the back buttons and the stick lights too. The temperatures, the power draw and the screen's refresh rate stay in its header.
 </div>
 <div class="home-card" markdown>
 #### :material-gamepad-variant: Gaming

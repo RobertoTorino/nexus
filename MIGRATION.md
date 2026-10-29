@@ -5,50 +5,227 @@
 Working notes for moving the seven BC-250 tools into this suite. Not part of the manual or the READMEs, which
 describe only what exists.
 
-## Resume here (28-10-2026): the Windows Portable Suite
+## Resume here (29-10-2026, for a new chat): the Windows Portable Suite
 
-Where it stands: wp-test-v1.4.0 (the Network card) and wp-portal-v1.4.0 (B asks first during a download or an
-install) are released, Nexus at 0.7.0. The details are under "Windows Portable Suite" below. In the working tree
-(28-10-2026, evening), not released:
+**Released** (the owner, 28/29-10-2026): wp-portal-v1.6.0, wp-test-v1.6.0, wp-pcsx2-v0.2.0, Nexus 0.13.0, core 0.2.0
+inside them. GitHub's releases and CI were all green at the last check.
 
-- Windows Portable Test: the window fits the Ally's 720 px again (it asked for 740: the legend was cut off; the
-  cards 100 px, which went out in the portal's commit already, the controller's chips closer, the M1/M2 text behind
-  an information icon at the pane's top right), and the CPU and GPU temperatures live in the header (owner: "Live in the header"; AMD's ADL, else D3DKMT
-  for the GPU only). Its CHANGELOG has an Added.: a minor release, and a portal pin after.
-- Core: `InfoPill` and `InfoPopup` (owner, 28-10-2026: an information icon with a popup where text does not fit), and `glass()`, the see-through
-  cards over the portal's wallpaper. An Added. in
-  core's CHANGELOG; core is bundled per app, so it reaches the apps with their releases.
-- The portal: the owner's wallpaper behind the page, to try out (`portal/images/wallpaper.webp`, SHADE 150 and GLASS 200 of 255: the tiles and the strip see-through).
-  An Added. in its CHANGELOG.
-- PCSX2 Manager (owner, 28-10-2026: the name, `apps/pcsx2`, package `pcsx2_manager`, the Gaming tab, "skeleton
-  first"): the app as an empty portable window with its icon, installer, tests, wiki chapter and portal entry; the
-  BC250 manager's features are ported one at a time, each designed for the handheld first. `tools/new_app.py
-  --suite windows-portable` made it (a Windows template beside the BC250 one). The pin needs a minor portal release
-  (`check_manifest.py --base origin/main` fails until portal/VERSION moves past 1.4.0), with wp-pcsx2-v0.1.0.
-- The Gaming category icon from the owner's device picture, and the white handheld as the wiki home's picture.
-- `windows-portable/README.md` and `windows-portable/CLAUDE.md`, as the BC250 suite has.
+**In the working tree, finished and checked, not released** (29-10-2026; every test suite, check_versions,
+check_changelogs, the strict wiki builds and the four installer tests pass on the Ally):
 
-Next, in this order:
+- **Core** (its CHANGELOG has the entries; core is bundled per app, 0.3.0 suggested):
+  - `.ini` settings on Windows: a bare QSettings() went to the registry (HKCU\Software\windows-portable-suite);
+    `create_app()` makes .ini the default there (Linux unchanged). The old registry key can be deleted by the owner.
+  - The portable window: scales down as well as up (MIN_SCALE 0.6, from the whole screen), `pin_scale()` for tests;
+    InfoPill/InfoPopup (popups hold pills now), `glass()`/`restyle()`, the suite's wallpaper
+    (`bc250_core/images/wallpaper.webp`, on or off for the suite in `%APPDATA%\<suite>\suite.ini`), one kind of pill
+    (amber, its glyph, never greyed out: it says why), the pane's amber edge when the focus is inside it and its card
+    selected, focused list rows, Glyph drawn by itself (it was a black square on the Ally), the tile icon trimmed and
+    wide icons wider; PortableHeader's second line; Steam on Windows in `steam.py` (registry read only).
+- **Windows Portable Test:** fits 720 and 1097x617; header `Thursday 29/10/2026 | 02:50` over
+  `CPU 47° GPU 45° | 18 W | 120 Hz | 100%` (ADL's ASIC_POWER, QScreen's Hz); M1/M2 chip (one code for both, ASUS's
+  channel); the information icon at the Controller pane's top right; the stick-light test behind a bulb icon
+  (Dynamic Lighting through pywinrt, new dependency; `--lights` logs what Windows reports); the wallpaper.
+- **PCSX2 Manager:** five cards (PCSX2, Your games, Settings, Memory cards, Log), ported from BC250; the BIOS in the
+  manager (Choose/Remove); PCSX2's own window never shown (`-nogui -fullscreen -batch`, no Big Picture: a
+  `Breaking.` entry, so a major release); the SteamGridDB key as BC250 has it (Steam artwork: Paste, Save, Remove,
+  one key for the suite in `%APPDATA%\windows-portable-suite\steamgriddb-key`); the owner's Gaming icon.
+- **The portal:** a Settings page (View ⧉) with the suite's wallpaper switch (portal 1.6.0's choice carried over),
+  the PCSX2 tile's bigger icon (256 px tiles), the new pills and focus.
+- **Nexus Releases** (no release: checkout only): Apply in the header (Apply / New app releases), greyed once applied;
+  step 2 lists the releases to pin from Apply on, Pin greyed until they are built; Pin and Bump pills, the two
+  version lines beside Bump; one "Release x.y.z." entry when Apply runs twice; every command's output in
+  `~/.cache/nexus-releases/commands/commands-<date>.log`; a Windows suite's tests on Windows
+  (`windows-portable/tools/check-release.ps1`).
+- The wikis: BC250's layout for the Windows Portable wiki and the Nexus page, the Beta line, one disclaimer (the
+  footer's, bold "Disclaimer:"), no search on a home page, "device" for the reader's own; README badges (Beta,
+  workflow, license) on all 42 READMEs (`tools/tests/test_readme_badges.py`).
 
-1. M1 and M2 (28-10-2026): the owner's guided run on the Ally X: M1 alone, M2 alone and both send the same report on
-   ASUS's channel (mi_02 col01, usage page 0xFF31, usage 0x76): `5A A5` down, `5A 00` up; M1 held with A sends
-   `5A A0` (Armoury Crate's screenshot), and `5A EC` shows now and then. So the controller test has one M1/M2 chip
-   (`portable_test/back_buttons.py`, a ReadFile thread; no chip and 15 buttons without the channel). Telling them
-   apart takes Armoury Crate's mapping (Secondary Function unticked): then they light that button. On the Ally
-   (owner): the chip lights for M1 and for M2.
-2. On the Ally (owner): the releases above, the window at the bottom, the temperatures under load, the i, the
-   wallpaper (keep it, another picture, or none).
-3. PCSX2 Manager installs PCSX2 (owner, 28-10-2026: "first installing"): v2.8.2's portable 7z, pinned with its
-   SHA-256, unpacked by Windows' own tar.exe into one folder (`windows-portable-pcsx2\emulator\`, portable.txt, so
-   the BIOS, cards, saves and settings stay beside the exe and survive an upgrade; Remove takes only the files the
-   archive brought), A Install or Open, Y Reinstall when PCSX2's updater replaced it, Remove with a second press.
-   Tried on the Ally into a scratch folder (2 s). On the Ally (owner): the app from the checkout, Install and Open.
-   Next feature (owner): set-up, the BIOS, games to Steam or memory cards.
-4. Smaller: paging in a portal tab once it has a ninth app; the drawn icons ICONS.md shows are still in
-   `bc250-bazzite/docs/design/icons/` (the color samples moved to the root; the icons not decided).
+**The release that takes it** (the owner's numbers): step 1 core 0.3.0, PCSX2 Manager (major: Breaking.), Windows
+Portable Test (minor), Nexus; step 2 pin both, bump the portal (minor).
+
+**On the Ally, the owner** (not checkable from here): the stick lights (Controller → bulb: Red, Green, Blue, White
+light both rings, Left only / Right only one ring white, Off dark, Close back to Armoury Crate); PCSX2 ends by itself
+after a game (`-batch`, end with View + Menu); a real game with the BIOS; the touch keyboard on the key field; the
+M1/M2 chip for each back button; Update Steam with the real Steam (it closes and restarts it); the wallpaper and the
+pills on the device.
+
+**Next, in this order:**
+
+1. Windows Portable Test's tabs and tests: the plan below ("The plan: Windows Portable Test's tabs"), the owner
+   picks the order. Decided: no test needing administrator rights; tabs per category as the portal's (LB/RB).
+2. The BC250 apps for the Ally (owner, 29-10-2026): **left out** the board's and Linux's: GPU Governor Manager, CU
+   Bisect, Cores Bisect, GPU OC Bisect, Persistent ACPI, Memory Manager, Fan Control (the handheld's own tuning apps
+   stay on hold instead), ACE Queues, Mesh Shaders, BIOS Reader, USB Wi-Fi, Console LinkB (the Xbox app does it),
+   Decky Loader Manager. **HDMI CEC Manager first**: the owner tests it with a dock and a special USB-C adapter (how
+   Windows reaches CEC over that adapter is to find out). **They come** (ported, the portable design): RPCS3,
+   shadPS4, PPSSPP, Vita3K and Xenia Managers (as PCSX2 Manager: never their own window), Console Link, Bazzite
+   DatStation, BC-250 Upscaler Manager, System Overlay, USB IPS3.5, USB HD Control, Bazzite SFTP Tools, Media Tool,
+   Dependency Checker, Bazzite NetcatGUI; USB HD Cam once the PS5 camera's driver on Windows is found out. Their
+   Windows names (without BC-250/Bazzite) are the owner's to give with each.
+3. Smaller: paging in a portal tab from a ninth app; a portal that checks for its own update again (it checks once
+   at start: wp-portal-v1.5.0 was published 9 s after the check, 28-10-2026); the drawn icons of ICONS.md in
+   `bc250-bazzite/docs/design/icons/`.
 
 On hold: the portal as Xbox mode's home app (MSIX), code signing, an app for the back buttons, the handheld's own
 tuning apps.
+
+## BC-250 Bazzite Test against Windows Portable Test (29-10-2026, the owner: "list all tests in BC250 and check which ones we can port over ... list everything")
+
+What BC-250 Bazzite Test has (`bc250-bazzite/docs/apps/check.md`), and what each means on a Windows handheld, read
+without administrator rights unless it says so. **Has** = Windows Portable Test has it already; **Ports** = the
+same idea works on Windows; **Part** = only part of it, or it needs a decision; **No** = Linux, Bazzite or the
+board only. What comes, and in which order, is the owner's to pick. Decided (owner, 29-10-2026):
+
+- **No test that needs administrator rights:** what only an administrator can read is left out (marked *dropped*
+  below), no UAC helper. The suite never runs as administrator.
+- **Tabs for the categories,** as the portal's (LB and RB step through them, a tap picks one): each tab a category
+  (System, Network, Storage, Logs, Graphics, Stability, Gaming, Updates, ...), its tests as cards or rows with
+  their result color, the pane on the right with the result and its hint; Run all in the header or a tab of its
+  own. The five cards of today become the first tabs' content.
+
+
+### The plan: Windows Portable Test's tabs, without administrator rights (owner, 29-10-2026)
+
+Each line one test (BC250's number in brackets when it comes from there). **Has**: in the app already.
+
+**Device**
+- Device: model, processor, graphics and driver, memory, storage, Windows build, firmware, battery (00, 25) **Has**
+- Hardware: panel, touch, Wi-Fi, Bluetooth, audio, fingerprint, sensors, USB (53) **Has**
+- Connected: dock or hub, screens, USB network and drives **Has**
+- Display: resolution, refresh rate, HDR, VRR (FreeSync), scaling, per screen (29)
+- Controller: every button, the sticks and triggers, M1/M2, the stick lights **Has**
+
+**System**
+- Uptime, last boot, Fast Startup (03)
+- What runs: running services and the startup apps with their impact (01, 12)
+- Failed services: automatic services that are stopped, service failures in the log (02)
+- Resource use: the processes using the most CPU and memory (11)
+- Time synchronization (08)
+
+**Network**
+- Wi-Fi link, power plan's Wi-Fi setting, other traffic, timed download **Has**
+- Connectivity: ping to the router and the internet, DNS, HTTPS (04, 05, 06)
+- Open ports (07); OpenSSH Server (30)
+- Internet speed: an opt-in full speed test (44)
+
+**Storage and memory**
+- Volumes: use, free space, the SD card (09)
+- The drive: model, bus, PCIe link (10)
+- Memory: page file, memory compression, commit charge (14)
+- The graphics' share of the RAM and its use (37)
+- Memory bandwidth: a copy benchmark of our own (49)
+- Disk speed: opt-in sequential read and write, the SLC cache (43)
+
+**Logs and crashes**
+- Errors in the System and Application logs, last 7 days, with hints, the harmless ones filtered (15, 16)
+- Unexpected shutdowns (34), graphics driver resets (35), blue screens (36)
+
+**Graphics and power**
+- Temperatures, power draw, refresh rate in the header **Has**
+- Clocks: GPU, memory and SoC moving under load (19)
+- Power and throttling: power draw, clocks, throttle status (40)
+- Power plan and Windows' power mode (26)
+- Graphics driver and its date (17); Vulkan runtime and DirectX feature level (20)
+- DirectX 12 Ultimate features: ray tracing, mesh shaders, VRS (47)
+- Video codecs (50)
+- Modern Standby (28)
+
+**Gaming**
+- Steam, Xbox app, Gaming Services, Game Mode, Game Bar, Armoury Crate; library folders and free space (38)
+- Audio: default output, its format, the devices (39)
+- Memory integrity and VBS, which cost FPS (24)
+
+**Performance**
+- CPU and GPU stress with telemetry, first minute against the last (41)
+- Benchmark: CPU single and multi, GPU FP32, the comparison ladder (42)
+
+**Updates and security**
+- An update waiting for a restart (32); Windows Update and the Store (33)
+- Installed programs and Store apps (45)
+- Firewall, Defender, Smart App Control, Secure Boot (13)
+
+**Around the tests**
+- Run all, a tab, one test; results in color (pass, warning, failure, info), a hint per finding
+- Health score and the Warnings, Failures and Info counts; a system score against a stock Ally X
+- History of runs, two compared; graphs; a notification when a long run ends; a results card to share
+- The report (X), privacy masking **Has**
+
+Left out: what needs administrator rights (boot duration, drive wear, sleep study, crash dumps, PresentMon's
+frame times) and what is the board's own (GPU governor, CU count, IOMMU, Handheld Daemon, CEC, CPU voltage).
+
+The full comparison, test by test:
+
+| # | BC250 test | Windows | How on Windows |
+|---|---|---|---|
+| 00 | Platform Identification | Has | Device card: model, firmware, Windows build. Ports: "a newer firmware exists" needs ASUS's list. |
+| 01 | Running Services | Ports | Get-Service: what runs, and what starts with Windows (startup apps and their impact, as Task Manager shows). |
+| 02 | Failed Units | Ports | Automatic services that are stopped; service failures in the System event log. |
+| 03 | System Uptime | Ports | Uptime and last boot; Fast Startup on or off (a "shutdown" that is a hibernation). |
+| 11 | Resource Consumption | Ports | The processes using the most CPU and memory: background hogs on a handheld. |
+| 12 | Boot Time | Part | The startup apps' impact; Windows' boot-duration log needs admin: dropped. |
+| 31 | File and Directory Integrity | Part | Only the suite's own folders writable. |
+| 04-06 | Connectivity, DNS, HTTPS | Ports | Ping to the router and the internet, a DNS lookup (the network logger had all three) on the Network card. |
+| 07 | Open Ports | Ports | Get-NetTCPConnection listening sockets; low value on a handheld. |
+| 08 | NTP Synchronization | Ports | `w32tm /query /status` (readable, language-independent fields). |
+| 30 | SSH Service | Ports | Whether OpenSSH Server is installed and running; low value. |
+| 53 | Wi-Fi Adapter | Has | Hardware and Network cards. |
+| 44 | Internet Speed | Part | The Network card's timed download; a full speed test (Ookla's CLI has a Windows build) as an opt-in. |
+| 09 | Disk Configuration | Ports | Volumes, their use and free space, the SD card. |
+| 10 | NVMe Devices | Part | Model, bus and PCIe link; wear, temperature and errors need admin: dropped. |
+| 14 | Memory and Swap | Ports | Page file, memory compression, commit charge. |
+| 37 | Unified Memory and VRAM Pressure | Ports | The graphics' share of the RAM (UMA frame buffer: 24 GB installed, about 16 usable on the Ally X) and its use (GPU memory counters). |
+| 49 | CPU Memory Bandwidth | Part | No stress-ng: a small copy benchmark of our own. |
+| 43 | Disk Speed | Ports | Opt-in: sequential read and write (unbuffered), the SLC cache, our own code. |
+| 15-16 | Boot Logs, System Journal | Ports | System and Application event logs (errors of the last 7 days), with hints per kind and known-harmless ones filtered, as BC250 does. |
+| 17 | amdgpu Driver | Part | The graphics driver and its date (Device card); "a newer Adrenalin exists" needs AMD's site. |
+| 18, 21, 23, 27 | GPU governor, CU count, IOMMU, Handheld Daemon | No | The board's own. |
+| 19 | GPU Frequency Scaling | Ports | ADL's clocks (GFX, memory, SoC) moving under load. |
+| 20 | Vulkan / Mesa | Part | Vulkan's runtime and DirectX's feature level; no vulkaninfo on Windows. |
+| 29 | Display Session | Ports | Resolution, refresh rate, HDR, VRR (FreeSync), scaling, per screen. |
+| 47 | Vulkan Futureproof Matrix | Part | DirectX 12 Ultimate's features (ray tracing, mesh shaders, VRS): needs D3D12 queries through ctypes; bigger. |
+| 50 | Video Decode and Encode | Part | The codecs Windows' Media Foundation offers on the 890M. |
+| 51-52 | HDMI-CEC | No | No CEC on the handheld (a dock at most). |
+| 24 | CPU Mitigations | Ports | Its Windows counterpart: Memory integrity (HVCI) and VBS, which cost FPS in games (Win32_DeviceGuard, readable). |
+| 25 | Core and Thread Count | Has | Device card. |
+| 26 | CPU Power Management | Part | Power plan and Windows' power mode; Armoury Crate's mode (Turbo, Performance, Silent) and the TDP: to find out. |
+| 46 | CPU Voltage | No | Needs a driver on Windows. |
+| 22 | Hardware Sensors | Has | Temperatures and power in the header; fan speed: to find out (ADL on an APU likely not). |
+| 28 | Suspend Targets | Ports | Modern Standby (S0ix): `powercfg /a` (readable); the sleep study needs admin: dropped. |
+| 40 | Power Delivery and Throttling | Ports | ADL's power, clocks and throttle status (PMLog THROTTLER_STATUS). |
+| 34 | Previous Boot Shutdown Integrity | Ports | Unexpected shutdowns: Kernel-Power 41 and EventLog 6008 in the System log. |
+| 35 | GPU Hang and Reset History | Ports | Display driver resets (TDR, Display 4101) in the System log. |
+| 36 | Kernel Panic and Crash Dump | Part | Blue screens (BugCheck 1001 events); the minidumps need admin: dropped. |
+| 38 | Steam and Gaming Stack | Ports | Steam, the Xbox app, Gaming Services, Game Mode, Game Bar, Armoury Crate; library folders and their free space. |
+| 39 | Audio Stack | Ports | Default output, its format, the audio devices. |
+| 48 | Real-Game Frametime | Part | No MangoHud; PresentMon needs admin or the Performance Log Users group: dropped, unless a way without admin turns up. |
+| 41 | CPU + GPU Stress and Telemetry | Part | CPU load from our own code; a GPU load needs a shader workload (Qt's OpenGL); the telemetry from ADL. Bigger. |
+| 42 | Performance Benchmark | Part | CPU single/multi score in our own code; GPU FP32 needs a compute shader; the comparison ladder (Steam Deck, Series S, ...) ports. Bigger. |
+| 13 | Security Configuration | Ports | Firewall profile, Defender, Smart App Control (it blocks the suite's unsigned programs), Secure Boot, VBS. |
+| 32 | OSTree Deployment | Ports | Its counterpart: an update waiting for a restart (Windows Update's reboot-pending state). |
+| 33 | Update and Patch | Ports | Windows Update's last check and pending updates (its COM API, readable), the Store's. |
+| 45 | Installed Packages | Ports | Installed programs and Store apps (count, names and versions), winget if present. |
+
+The app around the tests:
+
+| BC250 feature | Windows | How |
+|---|---|---|
+| Run all, a category, one test; colored results (pass, warning, failure, info) | Ports | Tabs per category (owner, 29-10-2026), tests as cards or rows with their color, Run as a pill; the information icon or a popup where space is short. |
+| Hints panel (what to do about a finding) | Ports | Per finding, in the pane or behind the information icon. |
+| Health score; Warnings, Failures, Info boxes | Ports | In the header or an overview card. |
+| System score (Base and Extended against a stock board) | Ports | Against a stock Ally X (firmware, memory split, power mode, Memory integrity, drivers). |
+| Administrator password for some tests | No | Dropped (owner, 29-10-2026): no test needs administrator rights. |
+| History of runs, two compared | Ports | Runs kept as JSON in the reports folder; a before/after compare. |
+| Logs, Show logs, Clean up logs | Ports | The reports folder; a cleanup in Settings. |
+| Integrity of the tests | Part | To check what it guards on BC250. |
+| Graphs of the CSVs (speed test, disk, stress) | Ports | QPainter charts of our own (no QtCharts in the venv). |
+| Stress and benchmark settings | Ports | With 41 and 42. |
+| Game details: a game recorded while played (Steam launch option), checks for the last session | Part | Steam launch options work on Windows; the recording from ADL; no FPS without PresentMon (dropped above). |
+| In-game overlay | No (here) | The System Overlay port (a later app, MIGRATION.md's scan). |
+| Notification when a long run ends | Ports | Windows' tray notification (Nexus Releases has one). |
+| Print results (results.png card to share) | Ports | A card rendered with Qt. |
+| Privacy options (what logs keep) | Ports | The suite already masks personal data. |
+| System overview, live status bar | Has | Device card; the header's temperatures, power and Hz. |
 
 ## Resume here (13-10-2026, after the break)
 

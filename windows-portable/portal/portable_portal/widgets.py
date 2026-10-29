@@ -9,9 +9,9 @@ from collections.abc import Sequence
 
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QFont
-from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QSizePolicy, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QVBoxLayout, QWidget
 
-from bc250_core.portable import AMBER, BODY, DIM, TAB, TEXT, Glyph, Pane, Pill, px, text_label
+from bc250_core.portable import AMBER, BODY, DIM, TAB, TEXT, Glyph, Pane, Pill, Row, pill_row, px, text_label
 
 NAME = 24                               # pt: the name at the top of a pane
 
@@ -143,15 +143,9 @@ class DetailsPane(Pane):
         self.column.addStretch()
         self.status = text_label("", BODY + 1, QFont.Weight.DemiBold, AMBER, wrap=True)
         self.column.addWidget(self.status)
-        pills = QHBoxLayout()
-        pills.setSpacing(px(12))
-        pills.addStretch()
         self.remove = Pill("Remove", "Y")
         self.open = Pill("Open", "A", main=True)
-        for pill in (self.remove, self.open):           # their own width, at the right, not the pane's
-            pill.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
-            pills.addWidget(pill)
-        self.column.addLayout(pills)
+        self.column.addLayout(pill_row(self.remove, self.open))
 
     def fill(self, name: str, summary: str, rows: Sequence[tuple[str, str]], status: str, can_open: bool,
              can_remove: bool, remove_text: str = "Remove") -> None:
@@ -183,12 +177,8 @@ class SuitePane(Pane):
         self.column.addStretch()
         self.status = text_label("", BODY + 1, QFont.Weight.DemiBold, AMBER, wrap=True)
         self.column.addWidget(self.status)
-        pills = QHBoxLayout()
-        pills.addStretch()
         self.action = Pill("Check again", "A", main=True)
-        self.action.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
-        pills.addWidget(self.action)
-        self.column.addLayout(pills)
+        self.column.addLayout(pill_row(self.action))
 
     def fill(self, name: str, version: str, rows: Sequence[tuple[str, str]], status: str, action: str) -> None:
         self.name.setText(name)
@@ -201,8 +191,8 @@ class SuitePane(Pane):
 
 
 class SettingsPane(Pane):
-    """The Settings page (View): the portal's own settings, a pill each that A switches (owner, 28-10-2026: the
-    wallpaper on or off)."""
+    """The Settings page (View): the portal's own settings, a row each that A switches (owner, 28-10-2026: the
+    wallpaper on or off), with a line under it of what it does."""
 
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
@@ -210,18 +200,15 @@ class SettingsPane(Pane):
         self.column.addWidget(text_label("How the portal looks. A switches the focused setting; it is kept for the "
                                          "next start.", BODY + 1, color=DIM, wrap=True))
         self.column.addSpacing(px(16))
-        row = QHBoxLayout()
-        row.addWidget(text_label("Wallpaper", BODY + 2, QFont.Weight.DemiBold))
-        row.addWidget(text_label("A picture behind the tiles, which show it through them.", BODY + 1, color=DIM,
-                                 wrap=True), 1)
-        self.wallpaper = Pill("On", "A", main=True)
-        self.wallpaper.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
-        row.addWidget(self.wallpaper)
-        self.column.addLayout(row)
+        self.wallpaper = Row("Wallpaper: On")
+        self.column.addWidget(self.wallpaper)
+        self.column.addSpacing(px(4))
+        self.column.addWidget(text_label("A picture behind the tiles, which show it through them, in every app "
+                                         "of the suite.", BODY + 1, color=DIM, wrap=True))
         self.column.addStretch()
 
     def fill(self, wallpaper: bool) -> None:
-        self.wallpaper.set_text("On" if wallpaper else "Off")
+        self.wallpaper.set_text(f"Wallpaper: {'On' if wallpaper else 'Off'}")
 
 
 __all__ = ["AppPane", "DetailsPane", "SettingsPane", "SuitePane", "Tabs", "TEXT"]

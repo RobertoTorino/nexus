@@ -43,13 +43,13 @@ def test_a_first_start_gets_pcsx2s_own_defaults(tmp_path):
     assert prepare(tmp_path) == [
         "PCSX2's settings made from its own defaults", "its setup wizard skipped", "its own updates off",
         "the mouse pointer hidden in a game", "the BIOS SCPH10000.BIN", "player 1 on the first controller",
-        "Select + Start quits a game", "PCSX2 opens in Big Picture mode, full screen"]
+        "Select + Start quits a game", "PCSX2's Big Picture mode off"]
     ini = read(tmp_path)
     assert ini.get("UI", "SettingsVersion") == "1" and ini.get("UI", "SetupWizardIncomplete") == "false"
     assert ini.get("Hotkeys", "ShutdownVM") == pcsx2_settings.QUIT_CHORD and ini.get("UI", "ConfirmShutdown") == "false"
     assert ini.get("Hotkeys", "OpenPauseMenu") == "Keyboard/Escape"
     assert ini.get("AutoUpdater", "CheckAtStartup") == "false" and ini.get("UI", "HideMouseCursor") == "true"
-    assert ini.get("UI", "StartBigPictureMode") == "true" and ini.get("UI", "StartFullscreen") == "true"
+    assert ini.get("UI", "StartBigPictureMode") == "false" and ini.get("UI", "StartFullscreen") == "false"
     assert ini.get("Filenames", "BIOS") == "SCPH10000.BIN" and ini.get("InputSources", "SDL") == "true"
     assert ini.keys("Pad1") == {"Type": "DualShock2", "InvertL": "0", "InvertR": "0", "Deadzone": "0",
                                 "AxisScale": "1.33", "LargeMotorScale": "1", "SmallMotorScale": "1",
@@ -75,7 +75,7 @@ def test_an_existing_file_keeps_everything_else(tmp_path):
     assert prepare(tmp_path) == ["its setup wizard skipped", "its own updates off",
                                  "the mouse pointer hidden in a game", "the BIOS SCPH-70004.BIN",
                                  "player 1 on the first controller", "Select + Start quits a game",
-                                 "PCSX2 opens in Big Picture mode, full screen"]
+                                 "PCSX2's Big Picture mode off"]
     text = path.read_bytes().decode("utf-8")
     assert "Theme = darkfusionblue\r\n" in text and "Paths = D:\\Games\\PS2" in text
     assert "SetupWizardIncomplete = false" in text and "BIOS = SCPH-70004.BIN" in text
@@ -125,16 +125,27 @@ def test_the_settings_are_read_and_written(tmp_path):
     assert vibration.shown("false") == "Off" and vibration.next_value("false") == "true"
 
 
-def test_player2_the_quit_chord_and_big_picture(tmp_path):
+def test_player2_the_quit_chord_and_big_picture_off(tmp_path):
     prepare(tmp_path)
     assert not pcsx2_settings.player2(tmp_path)
     pcsx2_settings.set_player2(tmp_path, True)
     assert pcsx2_settings.player2(tmp_path) and read(tmp_path).get("Pad2", "Cross") == "SDL-1/FaceSouth"
     pcsx2_settings.set_player2(tmp_path, False)
     assert not pcsx2_settings.player2(tmp_path) and read(tmp_path).get("Pad2", "Cross") is None
-    assert pcsx2_settings.quit_chord(tmp_path) and pcsx2_settings.big_picture(tmp_path)
+    assert pcsx2_settings.quit_chord(tmp_path)
     pcsx2_settings.set_quit_chord(tmp_path, False)
-    pcsx2_settings.set_big_picture(tmp_path, False)
     assert prepare(tmp_path) == []                                               # off stays off
     assert not pcsx2_settings.quit_chord(tmp_path) and read(tmp_path).get("Hotkeys", "ShutdownVM") == ""
-    assert not pcsx2_settings.big_picture(tmp_path) and read(tmp_path).get("UI", "StartFullscreen") == "false"
+    # Big Picture is PCSX2's own interface (owner, 29-10-2026: PCSX2 is never seen): owned, and kept off
+    assert read(tmp_path).get("UI", "StartBigPictureMode") == "false"
+    path = settings_path(tmp_path)
+    path.write_bytes(path.read_bytes().replace(b"StartBigPictureMode = false", b"StartBigPictureMode = true"))
+    assert prepare(tmp_path) == ["PCSX2's Big Picture mode off"]
+
+
+def test_the_bios_pcsx2_uses(tmp_path):
+    assert pcsx2_settings.chosen_bios(tmp_path) == ""
+    prepare(tmp_path)
+    pcsx2_settings.choose_bios(tmp_path, "SCPH-70012.bin")
+    assert pcsx2_settings.chosen_bios(tmp_path) == "SCPH-70012.bin"
+    assert read(tmp_path).get("Filenames", "BIOS") == "SCPH-70012.bin"

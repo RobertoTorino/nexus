@@ -19,7 +19,6 @@ ROOT = Path(__file__).resolve().parent.parent       # portal/ in the checkout; p
 MANIFEST = ROOT / "apps.toml"
 LOGO_PATH = ROOT / "images" / f"{APP_ID}.webp"
 APP_ICONS = ROOT / "images" / "apps"                # <key>.webp: the icon on each app's tile
-WALLPAPER = ROOT / "images" / "wallpaper.webp"      # behind the page, darkened (owner, 28-10-2026: to try out)
 INTRO_SOUND = ROOT / "sounds" / "intro.wav"         # the BC250 portal's sounds/bigpicture.wav (owner, 28-10-2026)
 # Settings in %APPDATA%\windows-portable-suite\portal.ini; the state (which release of each app the portal
 # installed, the extracted releases it installed from, its log) in %LOCALAPPDATA%\windows-portable-suite\portal\,
@@ -35,4 +34,4 @@ def state_dir() -> Path:
 
 
 __all__ = ["APP_ICONS", "APP_ID", "APP_NAME", "EXE_NAME", "INFO", "INTRO_SOUND", "LOGO_PATH", "MANIFEST", "ROOT", "SUITE",
-           "WALLPAPER", "__version__", "state_dir"]
+           "__version__", "state_dir"]

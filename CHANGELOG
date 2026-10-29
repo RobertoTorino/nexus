@@ -1,3 +1,18 @@
+Changelog: 29-10-2026 03:26:17
+
+Release 0.14.0. Brings wp-pcsx2-v1.0.0, wp-test-v1.7.0.
+
+Changelog: 29-10-2026 02:41:27
+
+Added. DESIGN.md has the Windows Portable Suite's rule that a pill is never grayed out, and the glyph that paints
+its own circle (owner, 29-10-2026; tools/make_design.py).
+
+Changelog: 29-10-2026 02:21:23
+
+Added. DESIGN.md describes the Windows Portable Suite's one kind of pill and where the focus is (owner,
+29-10-2026): every pill #cd8b22, the pane with the focus edged and glowing, the focused row #3a3d45 with the amber
+edge (tools/make_design.py).
+
 Changelog: 29-10-2026 01:05:16
 
 Release 0.13.0. Brings wp-portal-v1.6.0.

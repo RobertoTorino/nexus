@@ -14,15 +14,14 @@ PCSX2.ini (inis\\ in PCSX2's portable folder):
   BIOS ([Filenames] BIOS, when it names no dump in the bios folder), player 1 on the first controller ([Pad1], only
   while no controller is bound to it: a mapping made in PCSX2's window stays; PCSX2 itself maps only the keyboard,
   so the controller did nothing in a game), Select + Start on that controller to quit a game ([Hotkeys] ShutdownVM,
-  with PCSX2's question before shutting down off) and PCSX2 opening in its Big Picture mode, full screen ([UI]
-  StartBigPictureMode and StartFullscreen: the handheld's controller drives it; seen on the Ally, 28-10-2026). The
+  with PCSX2's question before shutting down off) and PCSX2's Big Picture mode off ([UI] StartBigPictureMode:
+  owner, 29-10-2026, it is PCSX2's own interface, and the app starts every game with PCSX2's window kept away). The
   first controller is SDL-0, whatever its kind: its buttons by position as PCSX2's Automatic Mapping binds them, so
-  Cross is the bottom face button. The chord and Big Picture are set only while their line is missing: their switch
-  in the Settings pane turns one off by writing it off (the chord's line left empty, which PCSX2 reads as no
-  binding), so off stays off.
+  Cross is the bottom face button. The chord is set only while its line is missing: its switch in the Settings
+  pane turns it off by leaving the line empty (which PCSX2 reads as no binding), so off stays off.
 * The settings the Settings pane offers (SETTINGS below): each one key of PCSX2.ini, read from the file (or from the
-  defaults while there is none) and written one at a time, as are player 2 on the second controller ([Pad2]), the
-  quit chord and Big Picture.
+  defaults while there is none) and written one at a time, as are player 2 on the second controller ([Pad2]) and
+  the quit chord.
 
 The file is changed line by line: every other line, comment and order stays as PCSX2 wrote it, with its CRLF line
 ends (PCSX2 on Windows writes them)."""
@@ -180,6 +179,18 @@ def _read(home: Path) -> IniFile:
     return IniFile(path.read_text(encoding="utf-8") if path.is_file() else DEFAULTS.read_text(encoding="utf-8"))
 
 
+def choose_bios(home: Path, name: str) -> None:
+    """Makes the dump *name* in the bios folder the one PCSX2 uses ([Filenames] BIOS). OSError is the caller's."""
+    ini = _read(home)
+    ini.set("Filenames", "BIOS", name)
+    _write(settings_path(home), ini.text())
+
+
+def chosen_bios(home: Path) -> str:
+    """The dump PCSX2.ini names ("" when none)."""
+    return userdata.ini_value(home, "Filenames", "BIOS")
+
+
 def _controller_bound(pad: dict[str, str]) -> bool:
     """Whether any of player 1's buttons is bound to something other than the keyboard."""
     return any(value and not value.startswith("Keyboard/") for key, value in pad.items() if key in PAD1)
@@ -216,10 +227,9 @@ def prepare(home: Path) -> list[str]:
         ini.set("Hotkeys", "ShutdownVM", QUIT_CHORD)
         ini.set("UI", "ConfirmShutdown", "false")
         done.append("Select + Start quits a game")
-    if ini.get("UI", "StartBigPictureMode") is None:
-        ini.set("UI", "StartBigPictureMode", "true")
-        ini.set("UI", "StartFullscreen", "true")
-        done.append("PCSX2 opens in Big Picture mode, full screen")
+    if ini.get("UI", "StartBigPictureMode") != "false":
+        ini.set("UI", "StartBigPictureMode", "false")
+        done.append("PCSX2's Big Picture mode off")
     if fresh or ini.text() != before:
         _write(path, ini.text())
     return done
@@ -287,15 +297,3 @@ def set_quit_chord(home: Path, on: bool) -> None:
     _write(settings_path(home), ini.text())
 
 
-def big_picture(home: Path) -> bool:
-    """Whether PCSX2 opens in its Big Picture mode (full screen, for the controller)."""
-    return _read(home).get("UI", "StartBigPictureMode") == "true"
-
-
-def set_big_picture(home: Path, on: bool) -> None:
-    """PCSX2 opens in Big Picture mode, full screen, or in its desktop window. Off writes both off, so prepare()
-    does not set them again."""
-    ini = _read(home)
-    ini.set("UI", "StartBigPictureMode", "true" if on else "false")
-    ini.set("UI", "StartFullscreen", "true" if on else "false")
-    _write(settings_path(home), ini.text())

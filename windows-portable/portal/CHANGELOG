@@ -1,3 +1,19 @@
+Changelog: 29-10-2026 02:41:27
+
+Fixed. The A in a pill and the LB and RB beside the tabs are circles on the Ally, not squares (owner, 29-10-2026).
+
+Changelog: 29-10-2026 02:21:23
+
+Fixed. The pills are the suite's one kind (owner, 29-10-2026): amber, the same size, at the bottom right of the details and Suite pages; they dim under a finger as with the focus, and a disabled one is gray. The pane with the focus has the amber edge and glow, the tile keeping its edge.
+
+Fixed. The Settings page's Wallpaper is a row, "Wallpaper: On", with the amber edge when it has the focus, and its description under it.
+
+Changelog: 29-10-2026 01:47:57
+
+Added. The Settings page's Wallpaper switches the wallpaper in every app of the suite (owner,
+29-10-2026), each from its next start: it is kept in %APPDATA%\windows-portable-suite\suite.ini instead of
+portal.ini, and a wallpaper switched off in portal 1.6.0 stays off. The picture comes with core now.
+
 Changelog: 29-10-2026 01:05:15
 
 Release 1.6.0. Pins wp-test-v1.6.0, wp-pcsx2-v0.2.0.

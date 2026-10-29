@@ -1,3 +1,35 @@
+Changelog: 29-10-2026 03:26:16
+
+Release 1.7.0.
+
+Changelog: 29-10-2026 02:51:30
+
+Added. The header's second line has the power the chip draws and the screen's refresh rate (owner, 29-10-2026:
+"power, display Hz"): CPU 47° GPU 45° | 18 W | 120 Hz | 82%, live every five seconds. The power is AMD's driver's
+(ADL's ASIC_POWER), left out on a device without it; the refresh rate is the screen the window is on, a TV's when
+docked.
+
+Added. A test of the stick lights (owner, 29-10-2026: "I don't see a LED test in the controller test"): the light
+icon at the top right of the Controller pane opens it over the window, with Red, Green, Blue, White, Left only,
+Right only and Off as pills and what Windows reports about the lamps. It sets them through Windows' Dynamic
+Lighting (pywinrt's Windows.Devices.Lights, bundled in the release and listed in THIRD-PARTY-NOTICES.txt), only
+while the window is in front; Close gives them back to Armoury Crate. Without lights it says how to switch Dynamic
+Lighting on. --lights reads them, writes what Windows reports in the log and exits (a release's check).
+
+Changelog: 29-10-2026 02:41:27
+
+Fixed. Read and Test are never grayed out while they run (owner, 29-10-2026): pressed again, the pane says the read
+or the test before is still running. The A in a pill is a circle on the Ally, not a square.
+
+Changelog: 29-10-2026 02:21:23
+
+Fixed. The pills are the suite's one kind (owner, 29-10-2026): Read, Test and Finish are amber, their own size at the bottom right of the pane instead of its whole width. Once the focus moves into a pane, the pane has the amber edge and glow and its card keeps the edge, so you see which screen you are in.
+
+Changelog: 29-10-2026 01:47:57
+
+Added. The suite's wallpaper behind the cards, as in the portal (owner, 29-10-2026), on or off with the
+portal's Settings.
+
 Changelog: 29-10-2026 00:54:47
 
 Release 1.6.0.

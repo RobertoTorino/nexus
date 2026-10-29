@@ -11,10 +11,12 @@ from collections.abc import Callable
 
 from PyQt6.QtCore import QPointF, QRectF, Qt, QTimer, pyqtSignal
 from PyQt6.QtGui import QColor, QFont, QPainter, QPen
-from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QSizePolicy, QWidget
+from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QSizePolicy, QVBoxLayout, QWidget
 
-from bc250_core.portable import (AMBER, BODY, DIM, ON_AMBER, RAISED, TEXT, InfoPill, Pane, Pill, font, px,
-                                 text_label)
+from bc250_core.portable import (AMBER, BODY, DIM, ON_AMBER, RAISED, TEXT, InfoPill, LightPill, Pane, Pill, font,
+                                 pill_row, px, text_label)
+
+from . import lights
 
 HOLD = 1.5                      # s that B is held to end the test
 # The buttons as the chips show them, in rows: SDL's name and the label (the Ally's face: A B X Y, View, the Menu
@@ -137,6 +139,9 @@ class ControllerPane(Pane):
         heading = QHBoxLayout()
         heading.addWidget(text_label("Controller", 24, QFont.Weight.ExtraBold))
         heading.addStretch()
+        self.lights_pill = LightPill()                  # the stick lights' test, in a popup (owner, 29-10-2026)
+        heading.addWidget(self.lights_pill, 0, Qt.AlignmentFlag.AlignTop)
+        heading.addSpacing(px(10))
         self.back_buttons = InfoPill(BACK_TITLE, BACK_BUTTONS)        # top right: the most room (owner, 28-10-2026)
         heading.addWidget(self.back_buttons, 0, Qt.AlignmentFlag.AlignTop)
         self.column.addLayout(heading)
@@ -168,7 +173,7 @@ class ControllerPane(Pane):
         self.column.addStretch()
         self.finish_pill = Pill("Finish", main=True)
         self.finish_pill.activated.connect(self.finish)
-        self.column.addWidget(self.finish_pill)
+        self.column.addLayout(pill_row(self.finish_pill))
         self.timer = QTimer(self)
         self.timer.setInterval(100)
         self.timer.timeout.connect(self.check_hold)
@@ -195,6 +200,7 @@ class ControllerPane(Pane):
         self.reset()
         self.running = True
         self.back_buttons.setEnabled(False)            # every button is the test's: no popup meanwhile
+        self.lights_pill.setEnabled(False)
         self.b_since = None
         self.timer.start()
 
@@ -205,6 +211,7 @@ class ControllerPane(Pane):
         self.timer.stop()
         self.b_since = None
         self.back_buttons.setEnabled(True)
+        self.lights_pill.setEnabled(True)
         self.finished.emit()
 
     def buttons(self) -> list[str]:
@@ -245,3 +252,50 @@ class ControllerPane(Pane):
     def check_hold(self) -> None:
         if self.b_since is not None and self.clock() - self.b_since >= HOLD:
             self.finish()
+
+
+LIGHTS_TITLE = "Stick lights"
+LIGHTS_TEXT = ("The lights around the sticks, set through Windows' Dynamic Lighting while this window is in front. "
+               "Close gives them back to the app that sets them otherwise, such as Armoury Crate.")
+NO_LIGHTS = ("Windows reports no lights it can set on this device. Where a controller has them, switch Dynamic "
+             f"Lighting on in {lights.SETTINGS}, then open this again.")
+
+
+class LightsPanel(QWidget):
+    """The stick lights' pills for the popup: a color on both sticks, white on one stick, or off; what Windows reports
+    under them, and what the last press did."""
+
+    def __init__(self, found: lights.Found | None, show: Callable[[tuple[int, int, int], tuple[int, ...] | None], bool],
+                 parent: QWidget | None = None):
+        super().__init__(parent)
+        self.show_lights = show
+        column = QVBoxLayout(self)
+        column.setContentsMargins(0, 0, 0, 0)
+        column.setSpacing(px(8))
+        self.report = text_label(found.text() if found is not None else NO_LIGHTS, BODY + 1, color=DIM, wrap=True)
+        column.addWidget(self.report)
+        self.pills: dict[str, Pill] = {}
+        if found is not None:
+            grid = QGridLayout()
+            grid.setSpacing(px(8))
+            choices = [(name, rgb, None) for name, rgb in lights.COLORS.items()]
+            choices += [("Left only", lights.COLORS["White"], lights.LEFT),
+                        ("Right only", lights.COLORS["White"], lights.RIGHT), ("Off", lights.OFF, None)]
+            for n, (name, rgb, lamps) in enumerate(choices):
+                pill = Pill(name, "A")
+                pill.activated.connect(lambda name=name, rgb=rgb, lamps=lamps: self.press(name, rgb, lamps))
+                self.pills[name] = pill
+                grid.addWidget(pill, n // 3, n % 3)
+            column.addLayout(grid)
+        self.status = text_label("", BODY + 1, QFont.Weight.DemiBold, AMBER, wrap=True)
+        column.addWidget(self.status)
+
+    def press(self, name: str, rgb: tuple[int, int, int], lamps: tuple[int, ...] | None) -> None:
+        try:
+            done = self.show_lights(rgb, lamps)
+        except OSError as error:
+            self.status.setText(f"Windows did not take it: {error}")
+            return
+        where = {lights.LEFT: "the left stick", lights.RIGHT: "the right stick"}.get(lamps, "both sticks")
+        self.status.setText(("Off: both sticks dark." if name == "Off" else f"{'White' if lamps else name} "
+                             f"on {where}.") if done else NO_LIGHTS)

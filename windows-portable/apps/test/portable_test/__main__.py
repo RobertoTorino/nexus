@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Entry point: python -m portable_test [--windowed]"""
+"""Entry point: python -m portable_test [--windowed] [--lights]"""
 
 from __future__ import annotations
 
@@ -17,6 +17,8 @@ def main() -> int:
     parser = argparse.ArgumentParser(prog="portable_test", description=f"{APP_NAME} {__version__}")
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__} (core {CORE_VERSION})")
     parser.add_argument("--windowed", action="store_true", help="a window instead of the full screen")
+    parser.add_argument("--lights", action="store_true",
+                        help="read the stick lights as the LED test does, write what Windows reports in the log, exit")
     args, qt_args = parser.parse_known_args()
 
     app = create_app(INFO, qt_args, theme=PORTABLE)
@@ -24,6 +26,11 @@ def main() -> int:
         return 0
     log_path = applog.setup(APP_ID, suite=SUITE)
     applog.logger(APP_ID).info(f"{APP_NAME} {__version__} started.")
+    if args.lights:                                 # a release's check: pywinrt bundled and answering
+        from .lights import Lights
+        found = Lights().open()
+        applog.logger(APP_ID).info(f"Stick lights: {found.text() if found is not None else 'no LampArray'}")
+        return 0 if found is not None else 1
     from .main_window import MainWindow
     window = MainWindow(log_path=log_path)
     if args.windowed:

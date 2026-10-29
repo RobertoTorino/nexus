@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The CPU and GPU temperatures for the header's status line, live (owner, 28-10-2026). Read without administrator
+"""The CPU and GPU temperatures for the header's status line, live (owner, 28-10-2026), and the power the chip
+draws (owner, 29-10-2026: ADL's ASIC_POWER, whole watts; none without AMD's driver). Read without administrator
 rights and in any Windows language: AMD's driver library (ADL, atiadlxx.dll, its PMLog sensors TEMPERATURE_CPU and
 TEMPERATURE_GFX) on an AMD handheld; else the GPU's temperature as Task Manager reads it (D3DKMT, the adapter's
 performance data) and no CPU temperature, rather than an ACPI thermal zone that is no CPU sensor (on the Ally the
@@ -11,7 +12,7 @@ import ctypes
 import sys
 
 # ADL: ADL_PMLOG_SENSORS (adl_defines.h), the sensors this reads; whole °C
-TEMPERATURE_GFX, TEMPERATURE_CPU = 28, 32
+ASIC_POWER, TEMPERATURE_GFX, TEMPERATURE_CPU = 23, 28, 32
 SENSORS = 256                           # ADL_PMLOG_MAX_SENSORS
 # D3DKMT: KMTQAITYPE_ADAPTERTYPE and _ADAPTERPERFDATA; the adapter type's SoftwareDevice bit (Microsoft Basic Render)
 ADAPTER_TYPE, ADAPTER_PERFDATA = 15, 62
@@ -65,7 +66,8 @@ _ALLOC = ctypes.CFUNCTYPE(ctypes.c_void_p, ctypes.c_int)
 
 
 class Temperatures:
-    """Opens ADL once (it stays open while the app runs) and reads both temperatures on read()."""
+    """Opens ADL once (it stays open while the app runs) and reads both temperatures on read(), the power draw on
+    watts()."""
 
     def __init__(self):
         self._buffers: list = []                    # what ADL allocated through the callback: kept alive
@@ -116,6 +118,15 @@ class Temperatures:
             gpu = kmt_temperature()
         return cpu, gpu
 
+    def watts(self) -> int | None:
+        """The power the whole chip draws, in W (ADL's ASIC_POWER); None without AMD's driver."""
+        if self._adl is None:
+            return None
+        data = _PMLog()
+        if self._adl.ADL2_New_QueryPMLogData_Get(self._context, self._adapter, ctypes.byref(data)):
+            return None
+        return _sensor(data, ASIC_POWER)
+
     def close(self) -> None:
         if self._adl is not None:
             self._adl.ADL2_Main_Control_Destroy(self._context)
@@ -154,3 +165,9 @@ def kmt_temperature() -> int | None:
 def text(cpu: int | None, gpu: int | None) -> str:
     """For the header: "CPU 47° GPU 45°" (owner, 28-10-2026); "" with neither."""
     return " ".join(f"{name} {value}°" for name, value in (("CPU", cpu), ("GPU", gpu)) if value is not None)
+
+
+def status(cpu: int | None, gpu: int | None, watts: int | None, hertz: int | None, battery: str) -> list[str]:
+    """The header's second line (owner, 29-10-2026: "power, display Hz"): "CPU 47° GPU 45°", "18 W", "120 Hz" and
+    the battery, each left out when there is none."""
+    return [text(cpu, gpu), f"{watts} W" if watts else "", f"{hertz} Hz" if hertz else "", battery]

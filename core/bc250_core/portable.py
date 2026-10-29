@@ -18,13 +18,15 @@ Escape into back."""
 from __future__ import annotations
 
 import datetime
+from pathlib import Path
 from collections.abc import Callable, Sequence
 
 from PyQt6.QtCore import QEvent, QPoint, QPointF, QRectF, QSize, Qt, pyqtSignal
 from PyQt6.QtGui import QColor, QFont, QGuiApplication, QKeyEvent, QPainter, QPen, QPixmap
-from PyQt6.QtWidgets import (QFrame, QGraphicsDropShadowEffect, QGraphicsOpacityEffect, QHBoxLayout, QLabel,
-                             QPushButton, QSizePolicy, QVBoxLayout, QWidget)
+from PyQt6.QtWidgets import (QApplication, QFrame, QGraphicsDropShadowEffect, QGraphicsOpacityEffect, QHBoxLayout,
+                             QLabel, QPushButton, QSizePolicy, QStackedWidget, QVBoxLayout, QWidget)
 
+from . import appinfo
 from .gamepad import Gamepad
 from .theme import Theme, load_fonts
 
@@ -48,13 +50,22 @@ TITLE, SUBTITLE, TAB, CARD, BODY, PILL, GLYPH, LEGEND, STATUS = 28, 15, 19, 20, 
 GLOW_BLUR, GLOW_OFFSET = 36, 8
 WIDE_ICON = 1.25                        # a wide icon on a tile: this much taller than a square one
 ICON = 64                               # a tile's icon (logical px at 1280 x 720)
-DIMMED = 0.6                            # a focused pill, drawn at this opacity
+DIMMED = 0.6                            # a focused pill, drawn at this opacity, and one under the mouse
+PILL_HEIGHT, PILL_WIDTH = 48, 150       # every pill: the same height, at least this wide (owner, 29-10-2026)
+ROW_HEIGHT = 40                         # a row of a list or of the settings
+ROW_FOCUS = "#3a3d45"                   # the focused row: raised above the others, with the amber edge
 FONT = "Inter"
 
 _scale = 1.0
 _pinned = False                         # pin_scale(): the windows keep the scale given
 MIN_SCALE = 0.6                         # text smaller than this is too small to read in the hands
 _glass = 255                            # the cards' and panes' opacity: glass()
+# The wallpaper behind every window of the suite (owner, 28-10-2026: the portal's first; 29-10-2026: "available
+# throughout the suite"), on or off for the whole suite in the portal's Settings: <suite>\suite.ini, look/wallpaper
+WALLPAPER = Path(__file__).resolve().parent / "images" / "wallpaper.webp"
+SHADE = 150                             # of 255: how much of the background lies over the wallpaper
+GLASS = 200                             # of 255: the cards' and panes' opacity over it, so it shines through
+LOOK_KEY = "look/wallpaper"
 _fonts_loaded = False
 
 
@@ -85,6 +96,23 @@ def glass(alpha: int | None = None) -> int:
     if alpha is not None:
         _glass = max(0, min(255, alpha))
     return _glass
+
+
+def look_settings(suite: str):
+    """The suite's own settings, shared by its apps: %APPDATA%\\<suite>\\suite.ini (~/.config/<suite>/suite.ini)."""
+    from PyQt6.QtCore import QSettings
+    return QSettings(QSettings.Format.IniFormat, QSettings.Scope.UserScope, suite, "suite")
+
+
+def wallpaper_on(suite: str) -> bool:
+    """Whether the suite's apps show the wallpaper: on unless switched off in the portal's Settings."""
+    return str(look_settings(suite).value(LOOK_KEY, "true")).lower() != "false"
+
+
+def set_wallpaper_on(suite: str, on: bool) -> None:
+    settings = look_settings(suite)
+    settings.setValue(LOOK_KEY, "true" if on else "false")
+    settings.sync()
 
 
 def surface(color: str) -> str:
@@ -129,15 +157,33 @@ def lift(widget: QWidget, focus: bool) -> None:
 
 
 class Glyph(QLabel):
-    """A controller button as the legend and the pills show it: its letter in a circle, amber for the main one."""
+    """A controller button as the legend and the pills show it: its letter in a circle, amber for the main one. It
+    paints itself (owner, 29-10-2026: on the Ally a stylesheet's border-radius on a QLabel showed a square):
+    set_colors() sets the letter's and the circle's color."""
 
     def __init__(self, button: str, filled: bool = False, parent: QWidget | None = None):
         super().__init__(button, parent)
         self.setFont(font(GLYPH, QFont.Weight.Bold))
         self.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.setFixedSize(px(30 if len(button) == 1 else 40), px(26))
-        self.setStyleSheet(f"color: {ON_AMBER if filled else TEXT}; background: {AMBER if filled else RAISED};"
-                           f" border-radius: {px(13)}px;")
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.colors = (ON_AMBER, AMBER) if filled else (TEXT, RAISED)
+
+    def set_colors(self, color: str, background: str) -> None:
+        if (color, background) != self.colors:
+            self.colors = (color, background)
+            self.update()
+
+    def paintEvent(self, event) -> None:
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(QColor(self.colors[1]))
+        radius = self.height() / 2
+        painter.drawRoundedRect(QRectF(self.rect()), radius, radius)
+        painter.setPen(QColor(self.colors[0]))
+        painter.setFont(self.font())
+        painter.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, self.text())
 
 
 class Legend(QWidget):
@@ -239,6 +285,7 @@ class Card(QFrame):
 
     def __init__(self, title: str, text: str = "", icon: QPixmap | None = None, parent: QWidget | None = None):
         super().__init__(parent)
+        self.selected = False                           # the focus is in this card's pane: the edge, no glow
         self.setObjectName("card")
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
@@ -277,11 +324,18 @@ class Card(QFrame):
         self.text.setStyleSheet(f"color: {color}; background: transparent;")
 
     def _paint(self, focus: bool) -> None:
-        edge = f"{px(2)}px solid {AMBER}" if focus else f"{px(2)}px solid transparent"
+        edge = f"{px(2)}px solid {AMBER}" if focus or self.selected else f"{px(2)}px solid transparent"
         # Focused it stays solid: its amber glow under a see-through card would tint it (glass())
-        self.setStyleSheet(f"QFrame#card {{ background: {RAISED if focus else surface(SURFACE)}; border: {edge};"
-                           f" border-radius: {px(RADIUS)}px; }}")
+        self.setStyleSheet(f"QFrame#card {{ background: {RAISED if focus or self.selected else surface(SURFACE)};"
+                           f" border: {edge}; border-radius: {px(RADIUS)}px; }}")
         lift(self, focus)
+
+    def set_selected(self, selected: bool) -> None:
+        """The card whose pane has the focus: its amber edge without the glow, so card and pane read as one (owner,
+        29-10-2026: hardly visible where you are)."""
+        if selected != self.selected:
+            self.selected = selected
+            self._paint(self.hasFocus())
 
     def focusInEvent(self, event) -> None:
         super().focusInEvent(event)
@@ -314,20 +368,42 @@ class Pane(QFrame):
         super().__init__(parent)
         self.setObjectName("pane")
         self.solid = solid                              # never see-through (an InfoPopup's panel)
+        self.active = False                             # the focus is inside it: the focused card's edge and glow
         self.restyle()
         self.column = QVBoxLayout(self)
         self.column.setContentsMargins(px(24), px(22), px(24), px(22))
 
     def restyle(self) -> None:
-        """Its surface at glass()'s opacity (solid when *solid*), again after glass() changed."""
-        color = SURFACE if self.solid else surface(SURFACE)
-        self.setStyleSheet(f"QFrame#pane {{ background: {color}; border-radius: {px(RADIUS)}px; }}")
+        """Its surface at glass()'s opacity (solid when *solid*, and while active, as a focused card), again after
+        glass() changed; the amber edge while active."""
+        color = SURFACE if self.solid or self.active else surface(SURFACE)
+        edge = AMBER if self.active else "transparent"
+        self.setStyleSheet(f"QFrame#pane {{ background: {color}; border: {px(2)}px solid {edge};"
+                           f" border-radius: {px(RADIUS)}px; }}")
+
+    def set_active(self, active: bool) -> None:
+        """The focus moved into the pane, or out of it (PortableWindow follows the focus): where you are reads at a
+        glance (owner, 29-10-2026)."""
+        if active != self.active:
+            self.active = active
+            self.restyle()
+            lift(self.glow_holder(), active)
+
+    def glow_holder(self) -> QWidget:
+        """The widget the glow is put on: a pane in a QStackedWidget, which is as big as the pane and would cut the
+        glow off at its edges, lends it the stack's (the stack draws the pane, and the glow under it)."""
+        parent = self.parentWidget()
+        return parent if isinstance(parent, QStackedWidget) else self
 
 
 class Pill(QPushButton):
-    """A big button with the cards' corners that shows its controller button: BUTTON for the page's main action (A),
-    a raised gray for the others (Y Update). The focus dims it (owner, 26-10-2026: a ring or a glow on the amber was
-    too much or too little). Its button press is the window's: PortableWindow.bind()."""
+    """A big button with the cards' corners, one kind everywhere (owner, 29-10-2026: "why are the buttons not the same
+    everywhere"): amber with dark text, the same height and at least PILL_WIDTH wide, with its controller button's
+    glyph when it answers to one (A Open, Y Update), the same without one (touch only). The focus, and the mouse over
+    it, dim it (owner, 26-10-2026: a ring or a glow on the amber was too much or too little); disabled it is gray,
+    though the suite never disables one (owner, 29-10-2026): a pill that cannot act now says why when pressed.
+    *main* is kept for the callers: every pill looks like the main one now. Its button press is the window's:
+    PortableWindow.bind(). pill_row() puts a pane's pills in a row at its bottom, right-aligned, A last."""
 
     activated = pyqtSignal()
 
@@ -337,25 +413,57 @@ class Pill(QPushButton):
         row = QHBoxLayout(self)
         row.setContentsMargins(px(10), 0, px(20), 0)
         row.setSpacing(px(10))
+        self.glyph: Glyph | None = None
         if button:
             self.glyph = Glyph(button, filled=False)
-            self.glyph.setStyleSheet(f"color: {BUTTON if main else TEXT};"
-                                     f" background: {ON_AMBER if main else BACKGROUND}; border-radius: {px(13)}px;")
             row.addWidget(self.glyph)
-        self.label = text_label(text, PILL, QFont.Weight.Bold, ON_AMBER if main else TEXT)
+        self.label = text_label(text, PILL, QFont.Weight.Bold, ON_AMBER)
         self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         row.addWidget(self.label, 1)
-        self.setMinimumSize(px(150), px(48))
+        self.setMinimumSize(px(PILL_WIDTH), px(PILL_HEIGHT))
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.setAttribute(Qt.WidgetAttribute.WA_Hover)
         self.clicked.connect(self.activated.emit)
+        self._colors()
+
+    def _colors(self) -> None:
+        """The label's and the glyph's colors: dark on amber, gray when disabled."""
+        on = self.isEnabled()
+        self.label.setStyleSheet(f"color: {ON_AMBER if on else DIM}; background: transparent;")
+        if self.glyph is not None:
+            self.glyph.set_colors(BUTTON if on else DIM, ON_AMBER if on else BACKGROUND)
+
+    def _dim(self) -> None:
+        """Dimmed while it has the focus or the mouse over it (not when disabled)."""
+        if self.isEnabled() and (self.hasFocus() or self.underMouse()):
+            if not isinstance(self.graphicsEffect(), QGraphicsOpacityEffect):
+                dim = QGraphicsOpacityEffect(self)       # the pill with its glyph and label
+                dim.setOpacity(DIMMED)
+                self.setGraphicsEffect(dim)
+        else:
+            self.setGraphicsEffect(None)
 
     def paintEvent(self, event) -> None:
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.setPen(Qt.PenStyle.NoPen)
-        painter.setBrush(QColor(BUTTON if self.main else RAISED))
+        painter.setBrush(QColor(BUTTON if self.isEnabled() else RAISED))
         painter.drawRoundedRect(QRectF(self.rect()), px(RADIUS), px(RADIUS))
+
+    def changeEvent(self, event) -> None:
+        super().changeEvent(event)
+        if event.type() == QEvent.Type.EnabledChange:
+            self._colors()
+            self._dim()
+
+    def enterEvent(self, event) -> None:
+        super().enterEvent(event)
+        self._dim()
+
+    def leaveEvent(self, event) -> None:
+        super().leaveEvent(event)
+        self._dim()
 
     def sizeHint(self) -> QSize:
         # QPushButton measures its own text, which is empty: the glyph and the label are in the layout.
@@ -366,31 +474,68 @@ class Pill(QPushButton):
 
     def focusInEvent(self, event) -> None:
         super().focusInEvent(event)
-        dim = QGraphicsOpacityEffect(self)               # the pill with its glyph and label
-        dim.setOpacity(DIMMED)
-        self.setGraphicsEffect(dim)
+        self._dim()
 
     def focusOutEvent(self, event) -> None:
         super().focusOutEvent(event)
-        self.setGraphicsEffect(None)
+        self._dim()
 
     def set_text(self, text: str) -> None:
         self.label.setText(text)
 
 
-class InfoPill(Pill):
-    """An information icon (a ring with an "i" drawn in it), for more text than fits on the page (owner, 28-10-2026:
-    an icon rather than the letter, at the top right of its pane): A or a tap shows *text* under *title* in an
-    InfoPopup over the window. Focused, it is dimmed like every pill."""
+def pill_row(*pills: Pill) -> QHBoxLayout:
+    """A pane's pills in a row at its bottom, right-aligned, in the order given: the A pill last, rightmost (owner,
+    29-10-2026: the same place in every pane)."""
+    row = QHBoxLayout()
+    row.setSpacing(px(12))
+    row.addStretch()
+    for pill in pills:
+        pill.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+        row.addWidget(pill)
+    return row
 
-    def __init__(self, title: str, text: str, parent: QWidget | None = None):
+
+class Row(Pill):
+    """A row of a list or of the settings (a game, a folder, a memory card, "Renderer: Automatic"): focusable and
+    acted on with A like a pill, but drawn as a row, text on the left; the focused one raised with the amber edge,
+    clearly apart from the others (owner, 29-10-2026)."""
+
+    def __init__(self, text: str, parent: QWidget | None = None):
+        super().__init__(text, parent=parent)
+        self.layout().setContentsMargins(px(14), 0, px(14), 0)
+        self.label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        self.label.setFont(font(PILL - 1, QFont.Weight.DemiBold))
+        self.setMinimumSize(px(60), px(ROW_HEIGHT))
+        self.setFixedHeight(px(ROW_HEIGHT))
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+
+    def _colors(self) -> None:
+        self.label.setStyleSheet(f"color: {TEXT if self.isEnabled() else DIM}; background: transparent;")
+
+    def _dim(self) -> None:
+        self.update()                                   # no dimming: the focus is drawn (paintEvent)
+
+    def paintEvent(self, event) -> None:
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        focus = self.hasFocus()
+        painter.setBrush(QColor(ROW_FOCUS if focus else EDGE if self.underMouse() and self.isEnabled() else RAISED))
+        painter.setPen(QPen(QColor(AMBER), px(2)) if focus else Qt.PenStyle.NoPen)
+        inset = px(1) if focus else 0
+        painter.drawRoundedRect(QRectF(self.rect()).adjusted(inset, inset, -inset, -inset), px(10), px(10))
+
+
+class IconPill(Pill):
+    """A small round icon at a pane's top right, a ring with a sign drawn in it (draw()): where space is short, it
+    opens a popup with the rest, text or controls (owner, 29-10-2026). Focused, it is dimmed like every pill."""
+
+    def __init__(self, parent: QWidget | None = None):
         super().__init__("", parent=parent)
-        self.title, self.info = title, text
         self.label.hide()
         self.layout().setContentsMargins(0, 0, 0, 0)
         self.setMinimumSize(px(32), px(32))
         self.setFixedSize(px(32), px(32))
-        self.activated.connect(self.show_info)
 
     def paintEvent(self, event) -> None:
         painter = QPainter(self)
@@ -401,9 +546,37 @@ class InfoPill(Pill):
         painter.setPen(QPen(QColor(TEXT), line))
         painter.setBrush(Qt.BrushStyle.NoBrush)
         painter.drawEllipse(ring)
-        center = side / 2
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(QColor(TEXT))
+        self.draw(painter, side)
+
+    def draw(self, painter: QPainter, side: float) -> None:
+        """The sign in the ring, in the text color (the pen off, the brush set)."""
+
+
+class LightPill(IconPill):
+    """A light bulb in the ring: a page's light test (the test app's stick lights, owner 29-10-2026)."""
+
+    def draw(self, painter: QPainter, side: float) -> None:
+        center = side / 2
+        painter.drawEllipse(QPointF(center, side * 0.40), side * 0.17, side * 0.17)        # the bulb
+        neck = side * 0.18
+        painter.drawRect(QRectF(center - neck / 2, side * 0.52, neck, side * 0.12))
+        painter.drawRoundedRect(QRectF(center - neck / 2, side * 0.67, neck, side * 0.07), side * 0.03, side * 0.03)
+
+
+class InfoPill(IconPill):
+    """An information icon (a ring with an "i" drawn in it), for more text than fits on the page (owner, 28-10-2026:
+    an icon rather than the letter, at the top right of its pane): A or a tap shows *text* under *title* in an
+    InfoPopup over the window."""
+
+    def __init__(self, title: str, text: str, parent: QWidget | None = None):
+        super().__init__(parent)
+        self.title, self.info = title, text
+        self.activated.connect(self.show_info)
+
+    def draw(self, painter: QPainter, side: float) -> None:
+        center = side / 2
         dot = side * 0.085
         painter.drawEllipse(QPointF(center, side * 0.30), dot, dot)
         stem = side * 0.13
@@ -417,13 +590,16 @@ class InfoPill(Pill):
 
 class InfoPopup(QWidget):
     """The window darkened, with a panel in the middle: a title, the text and a Close pill. A, B, Escape or a tap
-    beside the panel closes it, and the focus goes back to where it came from."""
+    beside the panel closes it, and the focus goes back to where it came from. With *content* (a widget with pills,
+    owner 29-10-2026: a popup holds the controls that do not fit a pane) it shows under the text, the d-pad moves
+    between its pills and A presses one; B, Escape, Close or a tap beside it still closes it."""
 
     closed = pyqtSignal()
 
-    def __init__(self, window: QWidget, title: str, text: str, back_to: QWidget | None = None):
+    def __init__(self, window: QWidget, title: str, text: str, back_to: QWidget | None = None,
+                 content: QWidget | None = None):
         super().__init__(window)
-        self.back_to = back_to
+        self.back_to, self.content = back_to, content
         self.setGeometry(window.rect())
         outer = QVBoxLayout(self)
         outer.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -438,13 +614,21 @@ class InfoPopup(QWidget):
         self.text.setFixedWidth(inner)
         self.panel.column.addWidget(self.text)
         self.panel.column.addSpacing(px(16))
+        if content is not None:
+            content.setFixedWidth(inner)
+            self.panel.column.addWidget(content)
+            self.panel.column.addSpacing(px(16))
         self.close_pill = Pill("Close", "B", main=True)
         self.close_pill.activated.connect(self.dismiss)
-        self.panel.column.addWidget(self.close_pill)
+        self.panel.column.addLayout(pill_row(self.close_pill))
         outer.addWidget(self.panel)
         self.show()
         self.raise_()
-        self.close_pill.setFocus(Qt.FocusReason.OtherFocusReason)
+        first = content.findChildren(Pill)[0] if content is not None and content.findChildren(Pill) else None
+        (first or self.close_pill).setFocus(Qt.FocusReason.OtherFocusReason)
+
+    def pills(self) -> list[Pill]:
+        return [pill for pill in self.findChildren(Pill) if pill.isVisible() and pill.isEnabled()]
 
     def paintEvent(self, event) -> None:
         painter = QPainter(self)
@@ -458,9 +642,9 @@ class InfoPopup(QWidget):
         event.accept()
 
     def dismiss(self) -> None:
-        self.hide()
-        if self.back_to is not None:
+        if self.back_to is not None:                    # first: hidden with the focus, Qt would hand it to a card
             self.back_to.setFocus(Qt.FocusReason.OtherFocusReason)
+        self.hide()
         self.closed.emit()
         self.deleteLater()
 
@@ -473,7 +657,10 @@ class PortableWindow(QWidget):
 
     back = pyqtSignal()
 
-    def __init__(self, gamepad: Gamepad | None = None, parent: QWidget | None = None):
+    def __init__(self, gamepad: Gamepad | None = None, parent: QWidget | None = None, suite: str | None = None,
+                 wallpaper: Path | None = WALLPAPER):
+        """*suite*: whose look it follows, the wallpaper on or off (default the app's, its AppInfo settings_org; none:
+        no wallpaper). *wallpaper*: the picture (None: none)."""
         super().__init__(parent)
         global _fonts_loaded
         if not _fonts_loaded:                           # Inter, bundled with core, once per app
@@ -490,6 +677,63 @@ class PortableWindow(QWidget):
         self.gamepad = gamepad if gamepad is not None else Gamepad(self)
         self.gamepad.action.connect(self.on_action)
         self.popup: InfoPopup | None = None
+        info = appinfo.current()
+        self.suite = suite or (info.settings_org if info is not None else "") or ""
+        self.wallpaper = QPixmap(str(wallpaper)) if wallpaper is not None else QPixmap()
+        self.wallpaper_on = bool(self.suite) and wallpaper_on(self.suite)
+        glass(GLASS if self.shows_wallpaper() else 255)              # before the subclass makes its cards
+        self.pane_card: Card | None = None              # the card the focus was on last: selected while in its pane
+        app = QApplication.instance()
+        if app is not None:
+            app.focusChanged.connect(self._focus_moved)
+
+    def _focus_moved(self, _old: QWidget | None, new: QWidget | None) -> None:
+        """Where the focus is, shown (owner, 29-10-2026): a pane with the focus inside it gets the amber edge and glow,
+        the card whose pane it is keeps its edge (selected); back on a card, the panes are plain again."""
+        if new is None or not self.isAncestorOf(new):
+            return
+        pane = new
+        while pane is not None and pane is not self and not isinstance(pane, Pane):
+            pane = pane.parentWidget()
+        inside = pane if isinstance(pane, Pane) else None
+        if isinstance(new, Card):
+            if self.pane_card is not None and self.pane_card is not new:
+                self.pane_card.set_selected(False)
+            self.pane_card = new
+        panes = self.findChildren(Pane)
+        for each in panes:                              # the others first: a stack's glow is its current pane's
+            if each is not inside:
+                each.set_active(False)
+        if inside is not None:
+            inside.set_active(True)
+        if self.pane_card is not None:
+            self.pane_card.set_selected(inside is not None and not isinstance(new, Card))
+
+    def shows_wallpaper(self) -> bool:
+        return self.wallpaper_on and not self.wallpaper.isNull()
+
+    def set_wallpaper(self, on: bool) -> None:
+        """The wallpaper on or off, for the whole suite (the next start of every app), and in this window at once."""
+        self.wallpaper_on = on
+        if self.suite:
+            set_wallpaper_on(self.suite, on)
+        glass(GLASS if self.shows_wallpaper() else 255)
+        self.restyle()
+        QWidget.update(self)
+
+    def paintEvent(self, event) -> None:  # noqa: N802 (Qt override)
+        """The wallpaper filling the window (cropped, never stretched), under the background at SHADE so the cards
+        and the text stay easy to read."""
+        if not self.shows_wallpaper():
+            super().paintEvent(event)
+            return
+        painter = QPainter(self)
+        scaled = self.wallpaper.scaled(self.size(), Qt.AspectRatioMode.KeepAspectRatioByExpanding,
+                                       Qt.TransformationMode.SmoothTransformation)
+        painter.drawPixmap((self.width() - scaled.width()) // 2, (self.height() - scaled.height()) // 2, scaled)
+        shade = QColor(BACKGROUND)
+        shade.setAlpha(SHADE)
+        painter.fillRect(self.rect(), shade)
 
     def margins(self) -> tuple[int, int, int, int]:
         """The window's margins around header, page and legend: the mock-up's 32, 20, 32, 16."""
@@ -503,6 +747,9 @@ class PortableWindow(QWidget):
         return self.gamepad.start()
 
     def focusables(self) -> list[QWidget]:
+        """The cards and pills the focus can move to: only the popup's while one shows."""
+        if self.popup is not None:
+            return self.popup.pills()
         return [w for w in self.findChildren(QWidget) if isinstance(w, (Card, Pill)) and w.isVisible()
                 and w.isEnabled()]
 
@@ -534,12 +781,14 @@ class PortableWindow(QWidget):
         for pane in self.findChildren(Pane):
             pane.restyle()
 
-    def show_popup(self, title: str, text: str, back_to: QWidget | None = None) -> InfoPopup:
+    def show_popup(self, title: str, text: str, back_to: QWidget | None = None,
+                   content: QWidget | None = None) -> InfoPopup:
         """*text* under *title* over the window (an InfoPill's); while it shows, A and B close it and the other
-        buttons do nothing."""
+        buttons do nothing. With *content*, its pills: the d-pad moves between them and Close, A presses the one
+        with the focus, B closes; the focus stays inside the popup."""
         if self.popup is not None:
             self.popup.dismiss()
-        self.popup = InfoPopup(self, title, text, back_to)
+        self.popup = InfoPopup(self, title, text, back_to, content)
         self.popup.closed.connect(self._popup_closed)
         return self.popup
 
@@ -550,8 +799,12 @@ class PortableWindow(QWidget):
         if not self.isActiveWindow():
             return
         if self.popup is not None:
-            if action in ("accept", "back"):
+            if action == "back" or (action == "accept" and self.popup.content is None):
                 self.popup.dismiss()
+            elif action == "accept":
+                self.accept()
+            elif action in ("up", "down", "left", "right"):
+                self.move_focus(action)
             return
         if action in ("up", "down", "left", "right"):
             self.move_focus(action)

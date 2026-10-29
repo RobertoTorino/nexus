@@ -7,6 +7,7 @@ from __future__ import annotations
 from PyQt6.QtCore import QSettings
 
 from bc250_core import app as app_module
+from bc250_core import appinfo
 from bc250_core.appinfo import AppInfo
 
 
@@ -27,3 +28,4 @@ def test_a_bare_qsettings_is_an_ini_file_on_windows(qapp, monkeypatch, tmp_path)
         assert QSettings().format() == QSettings.Format.IniFormat
     finally:
         QSettings.setDefaultFormat(before)
+        appinfo.set_current(None)
