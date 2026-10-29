@@ -1,3 +1,17 @@
+Changelog: 29-10-2026 04:49:00
+
+Release 1.7.0.
+
+Changelog: 29-10-2026 04:28:23
+
+Fixed. The stick lights' test is on Y in the Controller pane's legend, Y Stick lights, and a tap on that entry opens
+it too (owner, 29-10-2026: "I can not access the light test"); the light icon at the pane's top right is gone. The
+information icon shows its focus in amber (owner: "it's hard to see which button is active"), and it is hidden
+during the button test rather than grayed out.
+
+Fixed. One action to read (owner, 29-10-2026: "we have Read and Press A to read, one of them must go"): the Device,
+Hardware, Connected and Network panes show the A Read or A Test pill alone, without the "Press A to ..." line.
+
 Changelog: 29-10-2026 03:26:16
 
 Release 1.7.0.

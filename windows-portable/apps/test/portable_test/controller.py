@@ -13,8 +13,8 @@ from PyQt6.QtCore import QPointF, QRectF, Qt, QTimer, pyqtSignal
 from PyQt6.QtGui import QColor, QFont, QPainter, QPen
 from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QSizePolicy, QVBoxLayout, QWidget
 
-from bc250_core.portable import (AMBER, BODY, DIM, ON_AMBER, RAISED, TEXT, InfoPill, LightPill, Pane, Pill, font,
-                                 pill_row, px, text_label)
+from bc250_core.portable import (AMBER, BODY, DIM, ON_AMBER, RAISED, TEXT, InfoPill, Pane, Pill, font, pill_row, px,
+                                 text_label)
 
 from . import lights
 
@@ -139,9 +139,6 @@ class ControllerPane(Pane):
         heading = QHBoxLayout()
         heading.addWidget(text_label("Controller", 24, QFont.Weight.ExtraBold))
         heading.addStretch()
-        self.lights_pill = LightPill()                  # the stick lights' test, in a popup (owner, 29-10-2026)
-        heading.addWidget(self.lights_pill, 0, Qt.AlignmentFlag.AlignTop)
-        heading.addSpacing(px(10))
         self.back_buttons = InfoPill(BACK_TITLE, BACK_BUTTONS)        # top right: the most room (owner, 28-10-2026)
         heading.addWidget(self.back_buttons, 0, Qt.AlignmentFlag.AlignTop)
         self.column.addLayout(heading)
@@ -199,9 +196,8 @@ class ControllerPane(Pane):
     def start(self) -> None:
         self.reset()
         self.running = True
-        self.back_buttons.setEnabled(False)            # every button is the test's: no popup meanwhile
-        self.lights_pill.setEnabled(False)
-        self.b_since = None
+        self.back_buttons.hide()                        # every button is the test's: no popup meanwhile (a pill is
+        self.b_since = None                             # never disabled: hidden when it does not belong to the state)
         self.timer.start()
 
     def finish(self) -> None:
@@ -210,8 +206,7 @@ class ControllerPane(Pane):
         self.running = False
         self.timer.stop()
         self.b_since = None
-        self.back_buttons.setEnabled(True)
-        self.lights_pill.setEnabled(True)
+        self.back_buttons.show()
         self.finished.emit()
 
     def buttons(self) -> list[str]:
@@ -254,7 +249,7 @@ class ControllerPane(Pane):
             self.finish()
 
 
-LIGHTS_TITLE = "Stick lights"
+LIGHTS_TITLE = "Stick lights"               # on Y in the Controller pane's legend (owner, 29-10-2026)
 LIGHTS_TEXT = ("The lights around the sticks, set through Windows' Dynamic Lighting while this window is in front. "
                "Close gives them back to the app that sets them otherwise, such as Armoury Crate.")
 NO_LIGHTS = ("Windows reports no lights it can set on this device. Where a controller has them, switch Dynamic "

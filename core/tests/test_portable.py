@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The portable window (portable.py): the design's sizes on any screen, a card's focus, the pill's, moving the focus
-with the d-pad or the arrow keys, A and B, a page's own buttons, and the controller only while the window is active."""
+with the d-pad or the arrow keys, A and B, a page's own buttons, the legend whose entries act on a tap, the tabs, and
+the controller only while the window is active."""
 
 from __future__ import annotations
 
@@ -164,6 +165,80 @@ def test_the_legend_has_no_amber_glyph(qapp):
     assert [g.text() for g in glyphs] == ["X", "B"] and not any(AMBER in g.styleSheet() for g in glyphs)
     legend.set_items([("B", "Back")])
     assert legend.items == [("B", "Back")]
+
+
+def test_a_tap_on_a_legend_entry_does_what_its_button_does(qapp, monkeypatch):
+    """The bottom row is for actions (owner, 29-10-2026): an entry tapped runs the window's handler for its button,
+    B its back, and the same entries set again leave the row as it is (a page refreshes while it downloads)."""
+    from PyQt6.QtGui import QMouseEvent
+    window = PortableWindow(gamepad=portable.Gamepad(source_factory=NoPad))
+    column = QVBoxLayout(window)
+    legend = Legend([("X", "Details"), ("Y", "Update"), ("LB", "Folders"), ("B", "Back")])
+    column.addWidget(legend)
+    window.show()
+    qapp.processEvents()
+    done, backs = [], []
+    window.bind("x", lambda: done.append("x"))
+    window.bind("previous", lambda: done.append("previous"))
+    window.back.connect(lambda: backs.append(True))
+    monkeypatch.setattr(window, "isActiveWindow", lambda: False)   # a tap counts, whatever the controller's rule
+    entry = legend.entries["X"]
+    press = QMouseEvent(QEvent.Type.MouseButtonPress, QPointF(5, 5), QPointF(5, 5), Qt.MouseButton.LeftButton,
+                        Qt.MouseButton.LeftButton, Qt.KeyboardModifier.NoModifier)
+    entry.mousePressEvent(press)
+    legend.entries["LB"].pressed.emit()
+    legend.entries["B"].pressed.emit()
+    legend.entries["Y"].pressed.emit()                                     # no handler bound: nothing happens
+    assert done == ["x", "previous"] and backs == [True]
+    assert entry.minimumSizeHint().height() > portable.px(26)                # taller than the glyph: a finger's target
+    before = list(legend.entries.values())
+    legend.set_items(legend.items)
+    assert list(legend.entries.values()) == before                          # the same again: untouched
+    legend.set_items([("B", "Close")])
+    assert list(legend.entries) == ["B"] and legend.entries["B"].label.text() == "Close"
+    window.close()
+
+
+def test_an_icon_pill_shows_its_focus_in_amber(qapp):
+    """Dimmed as a pill is, it was hard to see which icon was active (owner, 29-10-2026): with the focus, the ring and
+    the sign are amber."""
+    window = PortableWindow(gamepad=portable.Gamepad(source_factory=NoPad))
+    line = QHBoxLayout(window)
+    card, info = Card("Card", "What it does."), portable.InfoPill("Title", "Text.")
+    line.addWidget(card)
+    line.addWidget(info)
+    window.resize(600, 300)
+    window.show()
+    window.activateWindow()
+    qapp.processEvents()
+    plain = info.grab().toImage()
+    info.setFocus()
+    qapp.processEvents()
+    focused = info.grab().toImage()
+    side = info.width()
+    ring = [focused.pixelColor(side // 2, y) for y in range(1, 5)]           # the ring, drawn with antialiasing
+    assert any(abs(c.red() - 0xF5) <= 2 and abs(c.green() - 0xA5) <= 2 and abs(c.blue() - 0x24) <= 2 for c in ring)
+    before = [plain.pixelColor(side // 2, y) for y in range(1, 5)]
+    assert any(c.red() > 0xE0 and c.green() > 0xE0 and c.blue() > 0xE0 for c in before)      # TEXT, no amber
+    assert info.graphicsEffect() is None                                     # drawn, not dimmed
+    window.close()
+
+
+def test_tabs_step_round_and_tell_their_change(qapp):
+    """The portal's tabs are core's (29-10-2026, for a page's parts too): LB and RB step round, a tap selects, the
+    selected one is amber."""
+    tabs = portable.Tabs([("a", "First"), ("b", "Second"), ("c", "Third")])
+    seen = []
+    tabs.changed.connect(seen.append)
+    assert tabs.current == "a" and tabs.keys == ["a", "b", "c"]
+    tabs.step(1)
+    tabs.step(-1)
+    tabs.step(-1)
+    assert seen == ["b", "a", "c"] and tabs.current == "c"
+    tabs.select("c")                                                         # the same again: no change told
+    tabs.labels["b"].pressed.emit("b")                                       # a tap
+    assert seen == ["b", "a", "c", "b"]
+    assert AMBER in tabs.labels["b"].styleSheet() and AMBER not in tabs.labels["a"].styleSheet()
 
 
 def test_the_header(qapp):
@@ -355,10 +430,10 @@ def test_the_focused_row_is_raised_with_an_amber_edge(qapp):
     row.setFocus()
     qapp.processEvents()
     focused, plain = row.grab().toImage(), other.grab().toImage()
-    middle = row.width() // 2
-    assert focused.pixelColor(middle, row.height() // 2).name() == portable.ROW_FOCUS
-    assert plain.pixelColor(middle, other.height() // 2).name() == portable.RAISED
-    assert focused.pixelColor(middle, 0).name() == AMBER                   # the edge
+    beside = row.width() - portable.px(8)                                  # right of the text, which is left-aligned
+    assert focused.pixelColor(beside, row.height() // 2).name() == portable.ROW_FOCUS
+    assert plain.pixelColor(beside, other.height() // 2).name() == portable.RAISED
+    assert focused.pixelColor(row.width() // 2, 0).name() == AMBER         # the edge
     window.close()
 
 

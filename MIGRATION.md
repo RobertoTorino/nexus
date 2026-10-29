@@ -7,11 +7,54 @@ describe only what exists.
 
 ## Resume here (29-10-2026, for a new chat): the Windows Portable Suite
 
-**Released** (the owner, 28/29-10-2026): wp-portal-v1.6.0, wp-test-v1.6.0, wp-pcsx2-v0.2.0, Nexus 0.13.0, core 0.2.0
-inside them. GitHub's releases and CI were all green at the last check.
+**Released** (the owner, 28/29-10-2026): wp-portal-v1.6.0, then wp-pcsx2-v1.0.0 and wp-test-v1.7.0 (the last
+commit, with core 0.2.0 inside them; everything listed under "Released as" below). The portal, 1.6.0, still pins
+wp-test-v1.6.0 and wp-pcsx2-v0.2.0: step 2 of that release (pin both, bump the portal) is still to do. CI on that
+commit failed in core's tests on Linux: `test_the_focused_row_is_raised_with_an_amber_edge` sampled a pixel that lies
+on the row's text under Linux's fonts; the test samples beside the text now (29-10-2026).
 
-**In the working tree, finished and checked, not released** (29-10-2026; every test suite, check_versions,
-check_changelogs, the strict wiki builds and the four installer tests pass on the Ally):
+**In the working tree now (29-10-2026, after the owner's first round with wp-pcsx2-v1.0.0 and wp-test-v1.7.0 on the
+Ally), checked (core, the portal, both apps' suites), not released:**
+
+- **Core:** the legend is the row of actions: every entry acts on a tap (`LegendItem`, through
+  `PortableWindow.act()`), so an action with a controller button is in the legend alone, never on a pill as well
+  (owner: "we have update steam 2 times ... use that bottom row for actions"); `Tabs` moved from the portal into
+  core; an `IconPill` shows its focus with an amber ring (owner: "hard to see which button is active");
+  `steam.field()` reads a shortcut's fields whatever their case. Core is bundled: minor (Added.), 0.3.0 suggested.
+- **PCSX2 Manager** (minor: Added.): the Settings pane in four tabs with 24 settings (Picture with Resolution up to
+  8x and Aspect ratio, Game, Controller, On screen; LB/RB); Update Steam, Steam mark, Folders, Steam artwork, New
+  card, Copy card, Choose BIOS, Reinstall, Paste and Remove key moved from pills to the legend (X, Y, LB, RB);
+  Update Steam reads Steam's file back right after the write, before Steam restarts, and names a game it wrote but
+  cannot read back on the status line and in the log (owner: "it still says 0 games in steam", see below).
+- **Windows Portable Test** (patch: Fixed.): Y Stick lights in the Controller pane's legend instead of the bulb icon
+  (owner: "I can not access the light test"); the "Press A to read" line gone, the A Read pill alone (owner: "one
+  of them must go"); the information icon hidden during the button test instead of grayed out.
+- **The portal** (patch: Fixed.): `Tabs` imported from core; its legend's entries act on a tap, from core.
+- The wikis: PCSX2 Manager's chapter (the screen, the buttons, the Settings tables per tab), Windows Portable Test's
+  (the row at the bottom, Y Stick lights), the portal's (the row works by touch), the Nexus page's development
+  chapter (`Legend`, `Tabs`, `act()`); the suite's CLAUDE.md and DESIGN.md carry the legend rule.
+
+**Open from the owner's round, to check on the Ally:**
+
+- **Update Steam said 0 in Steam** after Y (owner, 29-10-2026). Not reproduced from the code: the write and the read
+  use the same file and the same key names, and the round trip passes in the tests, with lower-case field names
+  too. Three things changed to find it: the games are read back right after the write (while Steam is still
+  closed), the status line and the log name a game written but not read back, and a failed read of Steam's file is
+  logged. The owner's next Y says which it is; the Log card shows the newest lines, the whole file is
+  `%LOCALAPPDATA%\windows-portable-suite\windows-portable-pcsx2\windows-portable-pcsx2.log`. Also worth knowing:
+  what the status line said right after Y the first time.
+- **Text of one pane left visible on another** (owner, 29-10-2026, a screenshot not seen from here): not found in
+  the code (every pane is a page of one QStackedWidget, and a hidden page does not paint). The likeliest cause is
+  Qt's drop-shadow effect on the stack (the pane's glow) keeping a stale picture of the stack when a label inside it
+  changes: a known artifact of QGraphicsEffect with changing children. To confirm: does it go away with the
+  wallpaper off (the glass), or when the focus is on a card (no glow on the stack)? Which pane's text, on which pane?
+- **How to quit a game on the Ally:** hold **View and Menu (☰) together** (PCSX2's Select + Start chord, the
+  Controller tab's "Quit with View + Menu", on by default; PCSX2 then closes by itself with `-batch`). Off, PCSX2's
+  pause menu (Escape on a keyboard) ends it.
+- The new legend on the device: X, Y, LB and RB on each pane, a tap on an entry; the Settings tabs; Y Stick lights;
+  the amber ring on the information icon.
+
+**Released as wp-pcsx2-v1.0.0 and wp-test-v1.7.0** (the owner, 29-10-2026; the list as it was prepared):
 
 - **Core** (its CHANGELOG has the entries; core is bundled per app, 0.3.0 suggested):
   - `.ini` settings on Windows: a bare QSettings() went to the registry (HKCU\Software\windows-portable-suite);
@@ -53,7 +96,8 @@ pills on the device.
 **Next, in this order:**
 
 1. Windows Portable Test's tabs and tests: the plan below ("The plan: Windows Portable Test's tabs"), the owner
-   picks the order. Decided: no test needing administrator rights; tabs per category as the portal's (LB/RB).
+   picks the order. Decided: no test needing administrator rights; tabs per category as the portal's (LB/RB), with
+   core's `Tabs` (PCSX2 Manager's Settings pane uses it the same way).
 2. The BC250 apps for the Ally (owner, 29-10-2026): **left out** the board's and Linux's: GPU Governor Manager, CU
    Bisect, Cores Bisect, GPU OC Bisect, Persistent ACPI, Memory Manager, Fan Control (the handheld's own tuning apps
    stay on hold instead), ACE Queues, Mesh Shaders, BIOS Reader, USB Wi-Fi, Console LinkB (the Xbox app does it),

@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The window: the tests as cards on the left (Device, Hardware, Connected, Network, Controller), what the focused one
-shows on the right, the controller's buttons at the bottom. Direction D's test screen (the owner's, 26-10-2026)."""
+shows on the right, the controller's buttons at the bottom (X Save report; on the Controller card Y Stick lights; a
+tap on an entry does the same). Direction D's test screen (the owner's, 26-10-2026)."""
 
 from __future__ import annotations
 
@@ -24,9 +25,8 @@ from . import APP_ID, APP_NAME, SUITE, __version__, back_buttons, controller, de
 from .controller import LIGHTS_TEXT, LIGHTS_TITLE, ControllerPane, LightsPanel
 
 STATUS_MS = 5_000               # the header's battery, temperatures and time: the temperatures live
-WAITING = "Press A to read what Windows reports."     # nothing runs before (owner, 28-10-2026)
-MEASURE = "Press A to measure the network."
 CARDS_WIDTH = 663               # the cards' column, as wide as its 5 of 9 parts of the page were: a long value wraps
+CONTROLLER_LEGEND = [("A", "Start the test"), ("Y", "Stick lights"), ("B", "Close")]
 
 
 class _Reader(QObject):
@@ -62,9 +62,11 @@ class _Reader(QObject):
 
 class InfoPane(Pane):
     """What Windows reports, as labels and values: the Device, Hardware and Connected cards' pane (one read fills all
-    three) and the Network card's. Each has its pill (Read, Test) and the status line."""
+    three) and the Network card's. Each has its pill (A Read, A Test) and the status line; nothing runs before the
+    pill, or A on the card, asks for it (owner, 28-10-2026), and the pill alone says so (owner, 29-10-2026: "we have
+    Read and Press A to read, one of them must go")."""
 
-    def __init__(self, title: str, about: str, empty: str = "", action: str = "Read", waiting: str = WAITING,
+    def __init__(self, title: str, about: str, empty: str = "", action: str = "Read",
                  parent: QWidget | None = None):
         super().__init__(parent)
         self.empty = empty                              # said when a read found nothing for this card
@@ -76,7 +78,7 @@ class InfoPane(Pane):
         self.grid.setVerticalSpacing(px(4))
         self.column.addLayout(self.grid)
         self.column.addStretch()
-        self.status = text_label(waiting, BODY + 1, color=DIM, wrap=True)
+        self.status = text_label("", BODY + 1, color=DIM, wrap=True)
         self.column.addWidget(self.status)
         self.read_pill = Pill(action, "A", main=True)
         self.column.addLayout(pill_row(self.read_pill))
@@ -158,7 +160,7 @@ class MainWindow(PortableWindow):
         self.info_panes = (self.device_pane, self.hardware_pane, self.connected_pane)
         self.network_pane = InfoPane("Network", "The Wi-Fi link, what else is downloading, and a timed download "
                                      f"from GitHub ({network.DOWNLOAD_SECONDS} seconds at most, nothing is kept). "
-                                     "Compare a slow moment with a fast one.", action="Test", waiting=MEASURE)
+                                     "Compare a slow moment with a fast one.", action="Test")
         self.report_panes = (*self.info_panes, self.network_pane)      # what X saves
         self.controller_pane = ControllerPane(clock=clock)
         for pane in (*self.report_panes, self.controller_pane):
@@ -186,9 +188,9 @@ class MainWindow(PortableWindow):
         self.controller_card.focused.connect(lambda: self.show_pane(self.controller_pane))
         self.controller_card.activated.connect(self.start_test)
         self.controller_pane.finished.connect(self.test_finished)
-        self.controller_pane.lights_pill.activated.connect(self.show_lights)
         self.gamepad.raw.connect(self.controller_pane.feed)
         self.bind("x", self.save_report)
+        self.bind("y", self.y_action)
         self.back.connect(self.on_back)
         self.status_timer = QTimer(self)
         self.status_timer.setInterval(STATUS_MS)
@@ -223,7 +225,12 @@ class MainWindow(PortableWindow):
         if pane in self.report_panes:
             self.legend.set_items([("X", "Save report"), ("B", "Close")])
         else:
-            self.legend.set_items([("A", "Start the test"), ("B", "Close")])
+            self.legend.set_items(CONTROLLER_LEGEND)
+
+    def y_action(self) -> None:
+        """Y on the Controller card: the stick lights' test (owner, 29-10-2026: the icon for it was hard to reach)."""
+        if self.panes.currentWidget() is self.controller_pane:
+            self.show_lights()
 
     # The Device, Hardware and Connected cards: one read fills all three
 
@@ -335,13 +342,13 @@ class MainWindow(PortableWindow):
         self.controller_card.setFocus()
 
     def show_lights(self) -> None:
-        """The stick lights' test in a popup over the window (owner, 29-10-2026: short of space, an icon and a
-        popup); Close gives the lights back."""
+        """The stick lights' test in a popup over the window (owner, 29-10-2026: short of space, a popup), on Y in
+        the Controller pane's legend; Close gives the lights back and the focus to where it was."""
         if self.testing:
             return
         found = self.lights.open()
         self.log.info(f"Stick lights: {found.text() if found is not None else 'no LampArray'}")
-        popup = self.show_popup(LIGHTS_TITLE, LIGHTS_TEXT, self.controller_pane.lights_pill,
+        popup = self.show_popup(LIGHTS_TITLE, LIGHTS_TEXT, self.focusWidget() or self.controller_card,
                                 LightsPanel(found, self.lights.show))
         popup.closed.connect(self.lights.close)
 

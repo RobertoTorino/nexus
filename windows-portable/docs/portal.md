@@ -38,7 +38,8 @@ The strip under the tiles shows the focused app: its name, its versions, what it
 | ⧉ (View) | The Settings page |
 | B | Close the portal |
 
-Every tile and pill also works by touch. On a keyboard, the arrow keys move, Enter presses and Escape goes back.
+Every tile and pill also works by touch, and so does the row at the bottom: a tap on an entry (**X Details**, **☰**,
+**⧉**, **B**) does what the button does. On a keyboard, the arrow keys move, Enter presses and Escape goes back.
 
 Every pill looks the same: amber, with its controller button, at the right of its pane; it dims with the focus or under your finger. On the Settings page the setting with the focus has the amber edge.
 

@@ -75,9 +75,9 @@ def test_it_says_where_the_back_buttons_come_from(qapp):
     pane.set_back_buttons(True)
     assert "Armoury Crate" in pane.back_buttons.info and pane.count.text() == f"0 of {len(BUTTONS)} buttons answered"
     pane.start()
-    assert not pane.back_buttons.isEnabled()                    # every button is the test's: no popup meanwhile
+    assert pane.back_buttons.isHidden()                         # every button is the test's: no popup meanwhile
     pane.finish()
-    assert pane.back_buttons.isEnabled()
+    assert not pane.back_buttons.isHidden()
 
 
 def test_the_finish_pill_and_the_pads_name(qapp):

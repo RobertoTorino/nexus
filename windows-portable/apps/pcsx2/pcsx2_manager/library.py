@@ -90,18 +90,27 @@ def pending(found: list[Game], marked: set[str], in_steam: dict[str, str]) -> bo
 
 def update_steam(steam_dir: Path, add: list[Game], remove: list[Game], program: Path, logo: Path,
                  existing: dict[str, str], closed: Callable[[Callable[[], None]], bool] = steam.with_steam_closed,
-                 key: str = "", home: Path | None = None, get=None) -> tuple[bool, str]:
+                 key: str = "", home: Path | None = None, get=None) -> tuple[bool, str, dict[str, str] | None]:
     """Steam's shortcuts made to match (off the window's thread): the pictures from SteamGridDB first when there is
-    a key, then the shortcuts with Steam closed. (ok, what to tell)."""
+    a key, then the shortcuts with Steam closed. (ok, what to tell, the app's games in Steam's file as read back
+    right after the write, while Steam is still closed; None when nothing was written). Reading the file back then
+    rather than once Steam starts again (29-10-2026: "it still says 0 games in Steam") tells whether the shortcuts
+    were written as the app reads them, before Steam touches the file."""
     home = home or covers_home()
     notes = (covers.fetch([(shortcuts.cover_name(g), g.title) for g in add], shortcuts.COVERS, key, home,
                           *([get] if get else [])) if key else [])
     changes = shortcuts.changes(add, remove, program, logo, existing,
                                 found=lambda g: covers.art(home, shortcuts.cover_name(g), shortcuts.COVERS))
+    found: dict[str, str] = {}
+
+    def change() -> None:
+        steam.write_shortcuts(steam_dir, changes)
+        found.update(shortcuts.in_steam(steam_dir))
+
     try:
-        restarted = closed(lambda: steam.write_shortcuts(steam_dir, changes))
+        restarted = closed(change)
     except (steam.SteamError, steam.ShortcutError, OSError) as error:
-        return False, "\n".join([*notes, f"Steam was not changed: {error}"])
+        return False, "\n".join([*notes, f"Steam was not changed: {error}"]), None
     again = " Steam was closed for it and starts again in the background." if restarted else ""
     return True, "\n".join([*notes, f"{len(add)} game(s) in Steam, under Non-Steam in its library"
-                                      f"{f'; {len(remove)} taken out' if remove else ''}.{again}"])
+                                      f"{f'; {len(remove)} taken out' if remove else ''}.{again}"]), found

@@ -4,7 +4,8 @@ games (the games in the chosen folders, played on A, in Steam or not), Memory ca
 folder and the saves on each) and Log (PCSX2's last run and the app's own log).
 
 A long list is a ListArea: pills in a column that scrolls, the one with the focus kept in view, so the d-pad goes
-down a list of any length and a finger can drag it."""
+down a list of any length and a finger can drag it. A pane's actions with a controller button (X, Y, LB, RB) are in
+the window's legend, not on pills (owner, 29-10-2026)."""
 
 from __future__ import annotations
 
@@ -84,8 +85,8 @@ class ListArea(QScrollArea):
 
 
 class ListPane(Pane):
-    """A heading with the information icon, a line under it, a ListArea, the status line and the pills at the
-    bottom right, as every pane has them."""
+    """A heading with the information icon, a line under it, a ListArea and the status line. Its actions are on
+    controller buttons, in the legend at the bottom of the window (owner, 29-10-2026), so it has no pills."""
 
     def __init__(self, title: str, info_title: str, info: str, parent: QWidget | None = None):
         super().__init__(parent)
@@ -102,14 +103,6 @@ class ListPane(Pane):
         self.column.addWidget(self.list, 1)
         self.status = text_label("", BODY + 1, QFont.Weight.DemiBold, AMBER, wrap=True)
         self.column.addWidget(self.status)
-        self.column.addSpacing(px(6))
-        self.pills = pill_row()
-        self.column.addLayout(self.pills)
-
-    def add_pill(self, pill: Pill) -> Pill:
-        """The next pill of the row, left to right: the one with A last."""
-        self.pills.addWidget(pill)
-        return pill
 
 
 GAMES_INFO = (
@@ -118,15 +111,16 @@ GAMES_INFO = (
     "library and its Big Picture mode, started the same way. Steam closes for it and starts again.\n\n"
     "Games are the disc images (ISO, CHD, CSO, ZSO, GZ) in your game folders and up to five folders below them. An ISO "
     "is read for its serial, and the title comes from PCSX2's own list of games; a compressed image keeps its file's "
-    "name. Folders shows the folders: add one of the usual places, a drive (an SD card), or choose any folder; A twice "
-    "on a folder takes it off the list (its games stay where they are).\n\n"
-    "Pictures for Steam: with your own SteamGridDB API key in %APPDATA%\\windows-portable-suite\\steamgriddb-key, "
-    "Update Steam fetches each game's pictures; without one, they are drawn from the app's icon.")
+    "name. LB Folders shows the folders: add one of the usual places, a drive (an SD card), or choose any folder; A "
+    "twice on a folder takes it off the list (its games stay where they are). LB Games shows the games again.\n\n"
+    "Pictures for Steam: with your own SteamGridDB API key (RB Steam artwork keeps it, one key for the suite), Update "
+    "Steam fetches each game's pictures; without one, they are drawn from the app's icon. The buttons at the bottom "
+    "also work by touch.")
 CARDS_INFO = (
     "The PS2 memory cards in PCSX2's memcards folder, with the slot PCSX2 puts each in. A on a card shows its saves; "
-    "A on ‹ The cards goes back. New card makes an 8 MB card, as the PS2's own; Copy card copies the card the "
-    "focus was on last, under a new name, with its saves. A card is never changed while PCSX2 runs: it keeps the card "
-    "in memory and would write its own copy over the change.")
+    "A on ‹ The cards goes back. X New card makes an 8 MB card, as the PS2's own; Y Copy card copies the card "
+    "the focus was on last, under a new name, with its saves. A card is never changed while PCSX2 runs: it keeps the "
+    "card in memory and would write its own copy over the change.")
 LOG_INFO = ("PCSX2's last run as its own log tells it (it writes the log over at every start), the play time it "
             "counted, and the newest lines of this app's log. Open the log shows the whole file.")
 
@@ -175,13 +169,14 @@ KEY_TEXT = (
     "shapes, so the app draws them. With a SteamGridDB API key, Update Steam looks each game up on SteamGridDB by "
     "its title and takes the pictures with the most votes instead.\n\n"
     "The key is free with a SteamGridDB account: in your account click Preferences, then the API tab at the top, "
-    f"then Generate API Key, and copy the key ({covers.KEY_PAGE}). Copied in a browser on this device, Paste puts "
-    "it in the field.\n"
+    f"then Generate API Key, and copy the key ({covers.KEY_PAGE}). Copied in a browser on this device, X Paste puts "
+    "it in the field; Y Remove key takes a kept key out, on a second press.\n"
     "It is one key for every app of the suite. Leave it empty to look nothing up.")
 
 
 class KeyPane(Pane):
-    """The SteamGridDB key: the text, the field (masked, as the BC250 app's), Paste, Remove key and Save."""
+    """The SteamGridDB key: the text, the field (masked, as the BC250 app's) and A Save; X Paste and Y Remove key
+    are in the legend."""
 
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
@@ -201,7 +196,5 @@ class KeyPane(Pane):
         self.status = text_label("", BODY + 1, QFont.Weight.DemiBold, AMBER, wrap=True)
         self.column.addWidget(self.status)
         self.column.addSpacing(px(6))
-        self.paste = Pill("Paste", "X")
-        self.remove = Pill("Remove key", "Y")
         self.save = Pill("Save", "A", main=True)
-        self.column.addLayout(pill_row(self.paste, self.remove, self.save))
+        self.column.addLayout(pill_row(self.save))

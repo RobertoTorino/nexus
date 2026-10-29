@@ -1,3 +1,32 @@
+Changelog: 29-10-2026 04:49:00
+
+Release 1.0.0.
+
+Changelog: 29-10-2026 04:28:23
+
+Added. The Settings pane has tabs, with more of PCSX2's settings (owner, 29-10-2026: "we have way too less settings
+in PCSX2, we can use tabs in the settings page to add more. Screen sizes should be added in the first page"): LB and
+RB step through Picture (Renderer, Resolution up to 8x with the screen size each gives, Aspect ratio, Video aspect
+ratio, Widescreen patches, Anisotropic filtering, VSync), Game (Fast boot, No-interlacing patches, Cheats, Save state
+when quitting, Volume), Controller (Vibration, Stick dead zone, Stick range, Player 2, Quit with View + Menu) and On
+screen (Show FPS, speed, resolution, CPU and GPU use, frame times, inputs, Text size); a tap picks a tab. The
+information icon tells the tab's settings. Quit with Select + Start is named Quit with View + Menu, the handheld's
+buttons.
+
+Fixed. An action with a controller button is in the legend at the bottom alone (owner, 29-10-2026: "we have update
+steam 2 times, in a orange button and at the bottom again"), and a tap on the legend's entry does the same: Your
+games has X Steam mark, Y Update Steam, LB Folders (LB Games in the folders), RB Steam artwork; Memory cards X New
+card and Y Copy card; the PCSX2 pane X Choose BIOS and Y Reinstall or Update; the key page X Paste and Y Remove key
+(Y Press again for the second press). The pills that stay are Remove BIOS, Remove PCSX2, A Install, A Save and A
+Open the log.
+
+Fixed. Update Steam reads Steam's file back right after writing it, while Steam is still closed (owner, 29-10-2026:
+"Update Steam does not seem to work it still says 0 games in steam"), and counts from that rather than from a read
+once Steam starts again; a game written but not found then is named on the status line and in the log, with how
+many of the app's games Steam's file names, so the log tells whether the file or the reading is at fault. The
+shortcuts' fields are read whatever their case (Steam has written appname and exe in lower case in some versions),
+and a failed read of Steam's file is logged instead of passed over.
+
 Changelog: 29-10-2026 03:26:16
 
 Release 1.0.0.

@@ -15,8 +15,10 @@ Windows Portable Test is always installed with the [portal](../portal.md) and is
 Five cards on the left: Device, Hardware, Connected, Network and Controller; the right side shows what the focused
 card does.
 The d-pad or the left stick moves the amber focus between the cards, **A** runs the focused card, **B** closes the
-app. Every card and pill also works by touch. The amber edge shows where you are: on a card with a glow under it,
-and on the pane at the right, with its card keeping only the edge, once the focus moves into it. The top right
+app. The row at the bottom lists the buttons that act on the pane that shows (**X Save report**, **Y Stick
+lights**): press the button, or tap the entry. Every card, pill and entry also works by touch. The amber edge shows
+where you are: on a card with a glow under it, and on the pane at the right, with its card keeping only the edge,
+once the focus moves into it. The top right
 shows the date and the time,
 `Wednesday 28/10/2026 | 17:04`, and under them, live every five seconds, the CPU's and the GPU's temperature, the
 power the chip draws, the refresh rate of the screen and the battery: `CPU 47° GPU 45° | 18 W | 120 Hz | 82%`. On a
@@ -27,7 +29,7 @@ screen the window is on: docked to a TV, it is the TV's.
 The wallpaper the portal shows is behind its cards too, unless it is switched off in the portal's Settings.
 
 The information icon (a ring with an i) at the top right of a pane opens more about it, over the window; **A** or
-**B** closes it.
+**B** closes it. With the focus on it, its ring is amber.
 
 ## Device
 
@@ -35,8 +37,8 @@ What Windows reports about the device: its name, the processor with its cores an
 and its driver, the memory (installed and usable), the storage, the screen the window is on (its pixels, Windows'
 scaling and the refresh rate), Windows' version, the firmware and the battery. No serial numbers.
 
-Nothing is read until you ask: press **A** on the Device, Hardware or Connected card, or tap **Read**. One read
-fills all three; Windows takes about four seconds to answer. **Read again** reads it once more.
+Nothing is read until you ask: press **A** on the Device, Hardware or Connected card, or tap the **A Read** pill.
+One read fills all three; Windows takes about four seconds to answer. **Read again** reads it once more.
 
 **X** saves what the three cards show as one text report in
 `%LOCALAPPDATA%\windows-portable-suite\windows-portable-test\reports\` (`device-<date>-<time>.txt`), a section per
@@ -98,21 +100,22 @@ never gamepad buttons, and Armoury Crate reports either of them the same way, so
 chip lights for both. To use them as two buttons, map them in Armoury Crate (Settings, Configure, M1 or M2: untick
 Secondary Function and choose a button); they then light that button. A device without ASUS's channel shows no
 M1/M2 chip, and the count leaves it out. The information icon at the top right of the Controller card's pane says so
-on the device; it opens before or after the test, not during it.
+on the device; it is there before and after the test, not during it.
 
 ## Stick lights
 
-The light icon (a bulb in a ring) beside the information icon opens the stick lights' test over the window. Its
-pills set the lights around the sticks: **Red**, **Green**, **Blue** or **White** on both, **Left only** or **Right
-only** in white with the other stick dark, and **Off**. The d-pad moves between them, **A** presses one, and the line
-under them says what it did. Above the pills is what Windows reports: the controller, its lamps (four on the ROG
-Xbox Ally X, two around each stick) and whether Dynamic Lighting is on for it.
+**Y Stick lights**, in the row at the bottom while the Controller card shows (press Y, or tap the entry), opens the
+stick lights' test over the window. Its pills set the lights around the sticks: **Red**, **Green**, **Blue** or
+**White** on both, **Left only** or **Right only** in white with the other stick dark, and **Off**. The d-pad moves
+between them, **A** presses one, and the line under them says what it did. Above the pills is what Windows reports:
+the controller, its lamps (four on the ROG Xbox Ally X, two around each stick) and whether Dynamic Lighting is on for
+it.
 
 The app sets the lights through Windows' Dynamic Lighting, and Windows lets it do so only while its window is in
 front. **Close** (or **B**) gives them back to the app that sets them otherwise, such as Armoury Crate; Windows does
 so too when the window closes or another one comes in front. Without lights Windows can set, the popup says so: where
 a controller has them, switch Dynamic Lighting on in Settings > Personalization > Dynamic Lighting and open it
-again. Like the information icon, it opens before or after the button test, not during it.
+again. It opens before or after the button test, not during it.
 
 ## Install it on its own
 

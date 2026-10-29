@@ -1,79 +1,19 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The portal's own widgets on the portable window: the tabs (LB and RB step through the categories), the strip
-under the tiles (what the focused app is and does, with its pills), the details page of an app and the Suite page
-(the portal's own version and update). Direction D's portal screen (the owner's, 26-10-2026)."""
+"""The portal's own widgets on the portable window: the strip under the tiles (what the focused app is and does,
+with its pills), the details page of an app and the Suite page (the portal's own version and update). The tabs
+(LB and RB step through the categories) are core's Tabs. Direction D's portal screen (the owner's, 26-10-2026)."""
 
 from __future__ import annotations
 
 from collections.abc import Sequence
 
-from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont
-from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QVBoxLayout, QWidget
 
-from bc250_core.portable import AMBER, BODY, DIM, TAB, TEXT, Glyph, Pane, Pill, Row, pill_row, px, text_label
+from bc250_core.portable import AMBER, BODY, DIM, TEXT, Pane, Pill, Row, Tabs, pill_row, px, text_label
 
 NAME = 24                               # pt: the name at the top of a pane
-
-
-class _TabLabel(QLabel):
-    pressed = pyqtSignal(str)
-
-    def __init__(self, key: str, name: str):
-        super().__init__(name)
-        self.key = key
-        self.setFont(text_label("", TAB, QFont.Weight.Bold).font())
-        self.setContentsMargins(px(4), 0, px(4), px(6))
-        self.paint(False)
-
-    def paint(self, selected: bool) -> None:
-        line = f"{px(3)}px solid {AMBER if selected else 'transparent'}"
-        self.setStyleSheet(f"color: {AMBER if selected else DIM}; background: transparent; border-bottom: {line};")
-
-    def mousePressEvent(self, event) -> None:
-        self.pressed.emit(self.key)
-        event.accept()
-
-
-class Tabs(QWidget):
-    """The categories as tabs between the LB and RB glyphs: those buttons step through them, a tap picks one; the
-    selected tab is amber with a line under it."""
-
-    changed = pyqtSignal(str)
-
-    def __init__(self, tabs: Sequence[tuple[str, str]], parent: QWidget | None = None):
-        super().__init__(parent)
-        row = QHBoxLayout(self)
-        row.setContentsMargins(0, 0, 0, 0)
-        row.setSpacing(px(14))
-        self.keys = [key for key, _ in tabs]
-        self.labels: dict[str, _TabLabel] = {}
-        self.current = ""
-        row.addWidget(Glyph("LB"))
-        for key, name in tabs:
-            label = _TabLabel(key, name)
-            label.pressed.connect(self.select)
-            self.labels[key] = label
-            row.addWidget(label)
-        row.addWidget(Glyph("RB"))
-        row.addStretch()
-        if self.keys:
-            self.select(self.keys[0])
-
-    def select(self, key: str) -> None:
-        if key not in self.labels or key == self.current:
-            return
-        self.current = key
-        for other, label in self.labels.items():
-            label.paint(other == key)
-        self.changed.emit(key)
-
-    def step(self, delta: int) -> None:
-        """LB (-1) or RB (+1): the next tab round."""
-        if not self.keys:
-            return
-        at = self.keys.index(self.current) if self.current in self.keys else 0
-        self.select(self.keys[(at + delta) % len(self.keys)])
 
 
 class AppPane(Pane):

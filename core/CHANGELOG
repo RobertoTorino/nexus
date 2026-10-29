@@ -1,3 +1,21 @@
+Changelog: 29-10-2026 04:28:23
+
+Added. The legend is the row of actions (owner, 29-10-2026: "we have update steam 2 times ... if we can use that
+bottom row for actions we should do that"): every entry of a Legend is a LegendItem that, tapped, does what its
+button does, through PortableWindow.act() (on_action() without the active-window rule, which is the controller's).
+An action with a controller button is in the legend alone, not on a pill too; the pills are the actions without a
+button and A. set_items() with the same entries again leaves the row as it is, so a page may refresh it freely.
+
+Added. Tabs and TabLabel are core's, from the portal's widgets: tabs between the LB and RB glyphs, step(±1) bound to
+previous and next, a tap selects one, changed(key) tells; for the portal's categories and a page's parts (PCSX2
+Manager's settings).
+
+Fixed. An IconPill (the information icon, the light bulb) shows its focus: the ring and the sign amber (owner,
+29-10-2026: "it's hard to see which button is active"; dimmed as a pill is, it hardly showed).
+
+Fixed. steam.field() reads a shortcut's field whatever the case of its name (Steam has written AppName as appname and
+Exe as exe in some versions): the artwork's number and a kept play time use it, and the apps' shortcut readers can.
+
 Changelog: 29-10-2026 02:51:30
 
 Added. A popup can hold controls (owner, 29-10-2026: "if we are short in space somewhere we should consider an icon

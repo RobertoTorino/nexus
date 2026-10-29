@@ -45,8 +45,12 @@ app is an optional tile. The wiki is at robertotorino.github.io/nexus/windows-po
   amber on C's cards; `../DESIGN.md`), never the Bazzite design. A small screen held in the hands, touch and a
   controller, often without a keyboard:
   - Every action is reachable with the controller and by touch: the d-pad moves an amber focus between cards and
-    pills, A acts, B goes back or closes; a pill shows its controller button (A Open, Y Update), the legend at the
-    bottom only the buttons that have no pill (X Details, B Close).
+    pills, A acts, B goes back or closes. **The legend at the bottom is the row of actions** (owner, 29-10-2026:
+    "use that bottom row for actions"): an action with a controller button (X Steam mark, Y Update Steam, LB
+    Folders, RB Steam artwork, B Close) is a legend entry, never a pill as well, and a tap on the entry does the
+    same (core's `Legend`, through `PortableWindow.act()`). A pill is for an action without a button (Remove BIOS,
+    New card on a page whose X and Y are taken) and for A, the main action (A Install, A Read), which shows its
+    glyph. An icon pill (the information icon) shows its focus with an amber ring.
   - No dialogs: an action that needs care asks for a second press within five seconds (Remove; B while the portal
     downloads or installs), and the pill or the strip says so meanwhile.
   - One kind of pill (owner, 29-10-2026): amber, the same size, in a row at the bottom right of its pane with the A

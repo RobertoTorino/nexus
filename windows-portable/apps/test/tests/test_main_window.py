@@ -104,7 +104,7 @@ def test_nothing_is_read_before_a(make, qapp, ally_json, monkeypatch):
     window, _ = make(read=lambda: calls.append(True) or device.parse(ally_json))
     qapp.processEvents()
     assert calls == [] and window.device is None and window.device_pane.read_pill.label.text() == "Read"
-    assert "Press A" in window.device_pane.status.text()
+    assert window.device_pane.status.text() == ""              # the pill says it (owner, 29-10-2026: not twice)
     monkeypatch.setattr(window, "isActiveWindow", lambda: True)
     window.on_action("accept")                                  # A on the Device card
     assert wait_for(qapp, lambda: calls == [True])
@@ -169,7 +169,7 @@ def test_the_cards_show_their_panes(make, qapp):
     window.controller_card.setFocus()
     qapp.processEvents()
     assert window.panes.currentWidget() is window.controller_pane
-    assert window.legend.items == [("A", "Start the test"), ("B", "Close")]
+    assert window.legend.items == [("A", "Start the test"), ("Y", "Stick lights"), ("B", "Close")]
     window.device_card.setFocus()
     qapp.processEvents()
     assert window.panes.currentWidget() is window.device_pane
@@ -234,7 +234,7 @@ def test_the_network_is_measured_on_a_and_saved_with_x(make, qapp, monkeypatch):
     qapp.processEvents()
     assert window.panes.currentWidget() is window.network_pane
     assert window.legend.items == [("X", "Save report"), ("B", "Close")]
-    assert said == [] and window.network_pane.status.text() == "Press A to measure the network."
+    assert said == [] and window.network_pane.status.text() == ""
     monkeypatch.setattr(window, "isActiveWindow", lambda: True)
     window.on_action("accept")
     assert wait_for(qapp, lambda: window.network is not None)
@@ -261,7 +261,7 @@ def test_a_failed_download_and_a_failed_measurement(make, qapp):
     window, _ = make(measure=lambda power, say: (_ for _ in ()).throw(OSError("wlanapi is missing")))
     window.network_pane.read_pill.click()
     assert wait_for(qapp, lambda: "not measured" in window.network_pane.status.text())
-    assert window.network_pane.read_pill.isEnabled() and "Press A" in window.device_pane.status.text()
+    assert window.network_pane.read_pill.isEnabled() and window.device_pane.status.text() == ""
 
 
 def test_the_window_fits_the_allys_screen(make, qapp):
@@ -325,8 +325,9 @@ def test_read_while_a_read_runs_says_so(make, qapp, ally_json):
 
 
 def test_the_stick_lights_test_is_a_popup(make, qapp, monkeypatch):
-    """Short of space on the Controller pane, an icon at its top right opens the LED test (owner, 29-10-2026): the
-    colors as pills, the d-pad between them, A presses, B closes and gives the lights back."""
+    """Short of space on the Controller pane, Y in its legend opens the LED test over the window (owner, 29-10-2026:
+    the icon for it was hard to reach): the colors as pills, the d-pad between them, A presses, B closes and gives
+    the lights back."""
     from test_lights import FakeArray
     array = FakeArray()
     lamps = lights.Lights(find=lambda: [("RTG789", array)], color=lambda rgb: rgb)
@@ -334,9 +335,8 @@ def test_the_stick_lights_test_is_a_popup(make, qapp, monkeypatch):
     monkeypatch.setattr(window, "isActiveWindow", lambda: True)
     window.controller_card.setFocus()
     qapp.processEvents()
-    icon = window.controller_pane.lights_pill
-    assert icon.isVisible() and icon.geometry().right() < window.controller_pane.back_buttons.geometry().left()
-    icon.click()
+    assert ("Y", "Stick lights") in window.legend.items
+    window.on_action("y")
     popup = window.popup
     panel = popup.content
     assert popup is not None and list(panel.pills) == ["Red", "Green", "Blue", "White", "Left only", "Right only", "Off"]
@@ -353,13 +353,19 @@ def test_the_stick_lights_test_is_a_popup(make, qapp, monkeypatch):
     assert array.colors[:2] == [(255, 255, 255)] * 2 and array.colors[2:] == [(0, 0, 0)] * 2
     assert panel.status.text() == "White on the left stick."
     window.on_action("back")                                        # B: closed, the lights given back
-    assert window.popup is None and lamps.array is None and icon.hasFocus()
+    assert window.popup is None and lamps.array is None and window.controller_card.hasFocus()
+    window.device_card.setFocus()
+    qapp.processEvents()
+    window.on_action("y")                                           # Y is the Controller card's alone
+    assert window.popup is None
 
 
 def test_no_lights_says_how_to_switch_them_on(make, qapp, monkeypatch):
     window, _ = make()
     monkeypatch.setattr(window, "isActiveWindow", lambda: True)
-    window.controller_pane.lights_pill.click()
+    window.controller_card.setFocus()
+    qapp.processEvents()
+    window.legend.entries["Y"].pressed.emit()                       # a tap on Y Stick lights
     panel = window.popup.content
     assert panel.pills == {} and "Settings > Personalization > Dynamic Lighting" in panel.report.text()
     assert window.popup.close_pill.hasFocus()
@@ -367,11 +373,13 @@ def test_no_lights_says_how_to_switch_them_on(make, qapp, monkeypatch):
     assert window.popup is None
 
 
-def test_the_lights_icon_is_off_limits_during_the_button_test(make, qapp):
+def test_the_lights_are_off_limits_during_the_button_test(make, qapp, monkeypatch):
     window, _ = make()
+    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
     window.start_test()
-    assert not window.controller_pane.lights_pill.isEnabled()
+    assert window.legend.items == [("B", "Hold to finish")] and window.controller_pane.back_buttons.isHidden()
+    window.on_action("y")
     window.show_lights()
     assert window.popup is None
     window.controller_pane.finish()
-    assert window.controller_pane.lights_pill.isEnabled()
+    assert not window.controller_pane.back_buttons.isHidden() and ("Y", "Stick lights") in window.legend.items

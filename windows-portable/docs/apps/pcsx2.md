@@ -28,18 +28,25 @@ screen; **B** closes it.
 ## The screen
 
 Five cards on the left, **PCSX2**, **Your games**, **Settings**, **Memory cards** and **Log**; the right side shows
-what the focused card does. The d-pad or the left stick moves the amber focus, **A** acts, **B** closes the app. Every
-card and pill also works by touch, and a long list scrolls with the d-pad or a finger. The **information icon** at a
-pane's top right says more about it.
+what the focused card does. The d-pad or the left stick moves the amber focus, **A** acts, **B** closes the app. The
+row at the bottom lists the buttons that act on the pane that shows, with what each does (**X Steam mark**, **Y
+Update Steam**, **LB Folders**, **RB Steam artwork**): press the button, or tap the entry. Every card, pill and
+entry also works by touch, and a long list scrolls with the d-pad or a finger. The **information icon** at a pane's
+top right says more about it; with the focus on it, its ring is amber.
 
-The amber edge shows where you are. On a card it comes with a glow under it; once the focus moves into the pane at the right, the pane takes the edge and the glow, and its card keeps only the edge. In a list the row with the focus is lighter, with the amber edge. Every pill looks the same: amber, with its controller button when it has one, in a row at the bottom right of its pane, the **A** pill rightmost. A pill with the focus or under your finger dims. A pill is never grayed out: when it cannot do its job now, pressing it says why on the pane's status line.
+The amber edge shows where you are. On a card it comes with a glow under it; once the focus moves into the pane at
+the right, the pane takes the edge and the glow, and its card keeps only the edge. In a list the row with the focus
+is lighter, with the amber edge. A pill is an action that has no button of its own, or the **A** one: amber, in a row
+at the bottom right of its pane, the **A** pill rightmost. A pill with the focus or under your finger dims. A pill or
+a button is never grayed out: when it cannot do its job now, pressing it says why on the pane's status line.
 
 ## PCSX2
 
-The pane shows the PCSX2 that is installed, the one this version of the app installs, the BIOS and the folder, with
-its pills in one row: **Choose BIOS**, **Remove BIOS**, **Remove PCSX2**, **Y Reinstall** or **Y Update** when there
-is one, and **A Install** while PCSX2 is not installed. **A** on the PCSX2 card installs PCSX2; once it is installed,
-A takes the focus to the pane's pills. PCSX2's own window is never opened: your games are on the **Your games** card.
+The pane shows the PCSX2 that is installed, the one this version of the app installs, the BIOS and the folder. Its
+buttons are **X Choose BIOS** and, when there is one, **Y Reinstall** or **Y Update**; its pills **Remove BIOS**,
+**Remove PCSX2** and, while PCSX2 is not installed, **A Install**. **A** on the PCSX2 card installs PCSX2; once it is
+installed, A takes the focus to the pane's pills. PCSX2's own window is never opened: your games are on the **Your
+games** card.
 
 - **A** on **Install** downloads PCSX2 2.8.2 for Windows from PCSX2's own release on GitHub (26 MB), checks it against
   the checksum this version of the app was tested with, and unpacks it. The page counts the megabytes while it
@@ -55,8 +62,8 @@ memory cards and the save states in its own folder, not in Documents.
 
 The **BIOS** row says which dump PCSX2 uses, or **No BIOS yet** (the PCSX2 card says so too):
 
-- **Choose BIOS** opens Windows' own file window, in your Downloads. Pick the `.bin` (or `.rom`): the app copies it,
-  with the files beside it under the same name (`.nvm`, `.mec`, `.erom`), into PCSX2's `bios` folder and makes
+- **X Choose BIOS** opens Windows' own file window, in your Downloads. Pick the `.bin` (or `.rom`): the app copies
+  it, with the files beside it under the same name (`.nvm`, `.mec`, `.erom`), into PCSX2's `bios` folder and makes
   PCSX2 use it.
 - **Remove BIOS** takes the dump PCSX2 uses out of that folder again, with its files. Press it twice: the first press
   only asks, for five seconds. The dump you chose it from stays where it is; with another dump in the folder, PCSX2
@@ -79,19 +86,20 @@ is listed under its file's name. **A** on the Your games card goes to the list.
 
 - **A** on a game plays it in PCSX2, alone and full screen, without PCSX2's own window. When the game ends (View
   and Menu together, see Settings), PCSX2 closes and you are back in the app.
-- **X** marks a game for Steam, or takes the mark away. **Y Update Steam** then makes Steam match the marks: each
-  marked game is a non-Steam game named `[PS2] <title>` in Steam's library and its Big Picture mode, started the
-  same way; a game without the mark, or no longer found, is taken out. Steam closes for it and starts again in the
-  background. Steam must have been started once on the device. When there is nothing to change, **Y** says so
-  on the status line instead.
-- **Folders** shows your game folders instead of the games, and **Games** goes back. The usual places that are on
-  the device (Games, Downloads and Documents in your user folder) and each removable drive, such as an SD card, are
-  offered as **+ Add**; **+ Choose a folder…** opens Windows' own folder window for any other. **A** twice on a
+- **X Steam mark** marks a game for Steam, or takes the mark away. **Y Update Steam** then makes Steam match the
+  marks: each marked game is a non-Steam game named `[PS2] <title>` in Steam's library and its Big Picture mode,
+  started the same way; a game without the mark, or no longer found, is taken out. Steam closes for it and starts
+  again in the background. Steam must have been started once on the device. When there is nothing to change, **Y**
+  says so on the status line instead. Right after writing, the app reads Steam's file back and counts the games in
+  Steam from that; should a game it wrote not be found, the status line and the log say which.
+- **LB Folders** shows your game folders instead of the games, and **LB Games** goes back. The usual places that are
+  on the device (Games, Downloads and Documents in your user folder) and each removable drive, such as an SD card,
+  are offered as **+ Add**; **+ Choose a folder…** opens Windows' own folder window for any other. **A** twice on a
   folder takes it off the list: the first press asks, for five seconds. Its games stay where they are.
 
 The pictures in Steam are drawn from the app's icon with the game's title. With a SteamGridDB API key, Update Steam
-takes each game's pictures from SteamGridDB instead: **Steam artwork** on the Your games pane keeps the key. See
-[Steam artwork from SteamGridDB](covers.md).
+takes each game's pictures from SteamGridDB instead: **RB Steam artwork** opens the page that keeps the key (**X
+Paste**, **A Save**, **Y Remove key** twice, **B** back). See [Steam artwork from SteamGridDB](covers.md).
 
 ## Settings
 
@@ -105,29 +113,64 @@ PCSX2 opens ready to play: right after the install, and each time before it open
 - player 1 on the device's controller (PCSX2 maps only the keyboard by itself), the buttons by their place: A is
   Cross, B Circle, X Square, Y Triangle, View Select and Menu Start. A controller mapping already in PCSX2's
   settings stays;
-- View and Menu together end a game, without a question;
+- View and Menu (☰) held together end a game, without a question (the PS2's Select and Start);
 - PCSX2's Big Picture mode off: it is PCSX2's own menu, and the app starts every game without it.
 
 The quit chord stays as you set it below: turned off, the app does not turn it on again. Everything else in the file
 stays as PCSX2 wrote it. Without a settings file the app starts from PCSX2's own defaults, as PCSX2 2.8.2 writes them
 at its first start.
 
-The Settings card's pane has a row per setting with its value; **A** on one steps to the next value and saves it at
-once. PCSX2 reads it the next time it opens; while PCSX2 is open, the pane asks you to close it first, since PCSX2
-writes its own settings back when it closes. The **information icon** at the pane's top right says what each one does.
+The Settings card's pane has four tabs, **Picture**, **Game**, **Controller** and **On screen**: **LB** and **RB**
+step through them, or tap one. A tab is a row per setting with its value; **A** on one steps to the next value and
+saves it at once. PCSX2 reads it the next time it opens; while PCSX2 is open, the pane asks you to close it first,
+since PCSX2 writes its own settings back when it closes. The **information icon** at the pane's top right says what
+each setting of the tab does.
+
+**Picture**
 
 | Setting | Values |
 |---|---|
 | Renderer | Automatic (PCSX2 chooses), Direct3D 12, Direct3D 11, Vulkan, OpenGL, Software (on the CPU: exact but slow) |
-| Resolution | Native (the PS2's), 2x (720p), 3x (1080p, the device's screen), 4x (1440p) |
+| Resolution | Native (the PS2's), 2x (720p), 3x (1080p, the device's screen), 4x (1440p), 5x (1800p), 6x (2160p, a 4K TV), 8x (2880p); higher asks more of the graphics chip and the battery |
+| Aspect ratio | Auto (the game's own shape, black at the sides), 4:3, 16:9 (fills the screen), Stretch to the screen |
+| Video aspect ratio | As the game, Auto, 4:3, 16:9: the shape of a game's videos when they are not the game's own |
+| Widescreen patches | On or Off: 16:9 in the games PCSX2 has a patch for, with Aspect ratio on 16:9 |
+| Anisotropic filtering | Off, 2x, 4x, 8x, 16x: sharper textures seen at an angle |
 | VSync | On or Off: no tearing, a little more delay |
-| Show FPS | On or Off: the frames a second in a corner |
-| Fast boot | On or Off: skips the PS2's start-up screen |
-| Vibration | On or Off: the controller's rumble |
-| Player 2 | On or Off: a second controller is player 2, with the same buttons |
-| Quit with Select + Start | On or Off: View and Menu together end the game |
 
-The pills show once PCSX2 is installed. A value in PCSX2's settings that the app does not offer is shown as it is,
+**Game**
+
+| Setting | Values |
+|---|---|
+| Fast boot | On or Off: skips the PS2's start-up screen |
+| No-interlacing patches | On or Off: a steadier picture in the games PCSX2 has a patch for |
+| Cheats | On or Off: the cheats in PCSX2's `cheats` folder, for the games they are made for |
+| Save state when quitting | On or Off: a save state when a game ends, to load from PCSX2's pause menu next time |
+| Volume | 100%, 75%, 50%, 25%, Muted: PCSX2's own volume, before Windows' |
+
+**Controller**
+
+| Setting | Values |
+|---|---|
+| Vibration | On or Off: the controller's rumble |
+| Stick dead zone | Off, Small, Medium, Large: how far a stick moves before the game sees it, for a stick that drifts |
+| Stick range | PCSX2's (1.33), As the stick (1.00), Wider (1.66): how the stick's travel maps onto the PS2's |
+| Player 2 | On or Off: a second controller is player 2, with the same buttons |
+| Quit with View + Menu | On or Off: View and Menu (☰) held together end the game |
+
+**On screen**
+
+| Setting | Values |
+|---|---|
+| Show FPS | On or Off: the frames a second in a corner |
+| Show speed | On or Off: the game's speed in percent |
+| Show resolution | On or Off: the picture's size in pixels |
+| Show CPU and GPU use | On or Off: how busy the processor and the graphics chip are |
+| Show frame times | On or Off: a graph of how long each frame took |
+| Show inputs | On or Off: the controller's buttons as they are pressed |
+| Text size | Normal, Larger, Largest: the size of PCSX2's text on the screen |
+
+The values show once PCSX2 is installed. A value in PCSX2's settings that the app does not offer is shown as it is,
 and **A** goes on from the first value.
 
 ## Memory cards
@@ -135,8 +178,8 @@ and **A** goes on from the first value.
 The PS2 memory cards in PCSX2's `memcards` folder, each with the slot PCSX2 puts it in, how many saves it holds and
 its free space. **A** on a card lists its saves (their titles, sizes and dates); **A** on **‹ The cards** goes back.
 
-- **New card** makes an empty 8 MB card, the size of the PS2's own, named `Mcd001.ps2` or the next free number.
-- **Copy card** copies the card the focus was on last, with its saves, under a new name (`Mcd001 copy.ps2`).
+- **X New card** makes an empty 8 MB card, the size of the PS2's own, named `Mcd001.ps2` or the next free number.
+- **Y Copy card** copies the card the focus was on last, with its saves, under a new name (`Mcd001 copy.ps2`).
 
 A card is not copied while PCSX2 runs: it keeps the card in memory and writes it back. Folder memory cards and PS1
 cards are listed with the reason they are not read.

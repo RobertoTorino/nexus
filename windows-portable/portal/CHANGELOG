@@ -1,3 +1,9 @@
+Changelog: 29-10-2026 04:28:23
+
+Fixed. The tabs are core's Tabs (moved from the portal's widgets, for PCSX2 Manager's settings too), unchanged in
+look and use. The legend's entries at the bottom (X Details, ☰ Suite, ⧉ Settings, B Close) also work by touch:
+a tap does what the button does.
+
 Changelog: 29-10-2026 02:41:27
 
 Fixed. The A in a pill and the LB and RB beside the tabs are circles on the Ally, not squares (owner, 29-10-2026).

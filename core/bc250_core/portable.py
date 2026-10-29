@@ -186,16 +186,52 @@ class Glyph(QLabel):
         painter.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, self.text())
 
 
+# The legend's buttons and the window's actions they stand for (Gamepad's names)
+LEGEND_ACTIONS = {"A": "accept", "B": "back", "X": "x", "Y": "y", "LB": "previous", "RB": "next", "☰": "menu",
+                  "View": "view"}
+
+
+class LegendItem(QWidget):
+    """One entry of the legend, the glyph and its text: tapped, it does what its button does (owner, 29-10-2026:
+    the bottom row is for actions), so an action with a controller button needs no pill of its own."""
+
+    pressed = pyqtSignal()
+
+    def __init__(self, button: str, text: str, parent: QWidget | None = None):
+        super().__init__(parent)
+        row = QHBoxLayout(self)
+        row.setContentsMargins(0, px(2), 0, px(2))      # a finger's target, a little taller than the glyph
+        row.setSpacing(px(8))
+        self.glyph = Glyph(button)
+        row.addWidget(self.glyph)
+        self.label = text_label(text, LEGEND, QFont.Weight.DemiBold)
+        row.addWidget(self.label)
+
+    def mousePressEvent(self, event) -> None:
+        self.pressed.emit()
+        event.accept()
+
+
 class Legend(QWidget):
-    """The line at the bottom: the controller buttons the page answers to that have no pill of their own."""
+    """The row at the bottom: the controller buttons the page answers to, each with what it does (X Steam mark,
+    Y Update Steam, B Close). An action with a button is here, not on a pill too (owner, 29-10-2026: "we have
+    update steam 2 times"); a tap on an entry does the same as its button, through the window's on_action(), so
+    every action stays reachable by touch. A, the amber one, belongs to the page's main pill."""
+
+    activated = pyqtSignal(str)                         # the button tapped ("X")
 
     def __init__(self, items: Sequence[tuple[str, str]] = (), parent: QWidget | None = None):
         super().__init__(parent)
         self.row = QHBoxLayout(self)
         self.row.setContentsMargins(0, 0, 0, 0)
+        self.entries: dict[str, LegendItem] = {}
+        self.items: list[tuple[str, str]] | None = None  # None: nothing built yet
         self.set_items(items)
 
     def set_items(self, items: Sequence[tuple[str, str]]) -> None:
+        """The entries, in order; the same ones again change nothing (a page refreshes while it downloads)."""
+        if list(items) == self.items:
+            return
         while self.row.count():
             item = self.row.takeAt(0)
             widget = item.widget()
@@ -203,11 +239,84 @@ class Legend(QWidget):
                 widget.hide()                           # gone now, not when Qt deletes it later
                 widget.deleteLater()
         self.row.addStretch()
-        for button, text in items:                       # the amber one, A, is on the page's main pill
-            self.row.addWidget(Glyph(button))
-            self.row.addWidget(text_label(text, LEGEND, QFont.Weight.DemiBold))
+        self.entries = {}
+        for button, text in items:
+            entry = LegendItem(button, text)
+            entry.pressed.connect(lambda button=button: self._tapped(button))
+            self.row.addWidget(entry)
             self.row.addSpacing(px(18))
+            self.entries[button] = entry
         self.items = list(items)
+
+    def _tapped(self, button: str) -> None:
+        self.activated.emit(button)
+        window = self.window()
+        action = LEGEND_ACTIONS.get(button)
+        if action and isinstance(window, PortableWindow):
+            window.act(action)
+
+
+class TabLabel(QLabel):
+    """One tab: its name, amber with a line under it while selected, dimmed otherwise; a tap selects it."""
+
+    pressed = pyqtSignal(str)
+
+    def __init__(self, key: str, name: str):
+        super().__init__(name)
+        self.key = key
+        self.setFont(font(TAB, QFont.Weight.Bold))
+        self.setContentsMargins(px(4), 0, px(4), px(6))
+        self.paint(False)
+
+    def paint(self, selected: bool) -> None:
+        line = f"{px(3)}px solid {AMBER if selected else 'transparent'}"
+        self.setStyleSheet(f"color: {AMBER if selected else DIM}; background: transparent; border-bottom: {line};")
+
+    def mousePressEvent(self, event) -> None:
+        self.pressed.emit(self.key)
+        event.accept()
+
+
+class Tabs(QWidget):
+    """Tabs between the LB and RB glyphs, the portal's categories first (29-10-2026: a page's parts too, PCSX2
+    Manager's settings): those buttons step through them (step(), bound to previous and next), a tap picks one;
+    the selected tab is amber with a line under it. changed(key) when another is selected."""
+
+    changed = pyqtSignal(str)
+
+    def __init__(self, tabs: Sequence[tuple[str, str]], parent: QWidget | None = None):
+        super().__init__(parent)
+        row = QHBoxLayout(self)
+        row.setContentsMargins(0, 0, 0, 0)
+        row.setSpacing(px(14))
+        self.keys = [key for key, _ in tabs]
+        self.labels: dict[str, TabLabel] = {}
+        self.current = ""
+        row.addWidget(Glyph("LB"))
+        for key, name in tabs:
+            label = TabLabel(key, name)
+            label.pressed.connect(self.select)
+            self.labels[key] = label
+            row.addWidget(label)
+        row.addWidget(Glyph("RB"))
+        row.addStretch()
+        if self.keys:
+            self.select(self.keys[0])
+
+    def select(self, key: str) -> None:
+        if key not in self.labels or key == self.current:
+            return
+        self.current = key
+        for other, label in self.labels.items():
+            label.paint(other == key)
+        self.changed.emit(key)
+
+    def step(self, delta: int) -> None:
+        """LB (-1) or RB (+1): the next tab round."""
+        if not self.keys:
+            return
+        at = self.keys.index(self.current) if self.current in self.keys else 0
+        self.select(self.keys[(at + delta) % len(self.keys)])
 
 
 class PortableHeader(QWidget):
@@ -528,7 +637,8 @@ class Row(Pill):
 
 class IconPill(Pill):
     """A small round icon at a pane's top right, a ring with a sign drawn in it (draw()): where space is short, it
-    opens a popup with the rest, text or controls (owner, 29-10-2026). Focused, it is dimmed like every pill."""
+    opens a popup with the rest, text or controls (owner, 29-10-2026). With the focus, the ring and the sign are
+    amber (owner, 29-10-2026: dimmed, as a pill is, it was hard to see which one was active)."""
 
     def __init__(self, parent: QWidget | None = None):
         super().__init__("", parent=parent)
@@ -537,17 +647,22 @@ class IconPill(Pill):
         self.setMinimumSize(px(32), px(32))
         self.setFixedSize(px(32), px(32))
 
+    def _dim(self) -> None:
+        self.setGraphicsEffect(None)
+        self.update()                                   # the focus is drawn (paintEvent), not dimmed
+
     def paintEvent(self, event) -> None:
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         side = min(self.width(), self.height())
         line = max(2.0, side / 14)
         ring = QRectF(line / 2, line / 2, side - line, side - line)
-        painter.setPen(QPen(QColor(TEXT), line))
+        color = QColor(AMBER if self.hasFocus() else TEXT)
+        painter.setPen(QPen(color, line))
         painter.setBrush(Qt.BrushStyle.NoBrush)
         painter.drawEllipse(ring)
         painter.setPen(Qt.PenStyle.NoPen)
-        painter.setBrush(QColor(TEXT))
+        painter.setBrush(color)
         self.draw(painter, side)
 
     def draw(self, painter: QPainter, side: float) -> None:
@@ -798,6 +913,11 @@ class PortableWindow(QWidget):
     def on_action(self, action: str) -> None:
         if not self.isActiveWindow():
             return
+        self.act(action)
+
+    def act(self, action: str) -> None:
+        """*action* done, whoever asks: the controller (on_action, in the active window only) or a tap on the
+        legend's entry for it."""
         if self.popup is not None:
             if action == "back" or (action == "accept" and self.popup.content is None):
                 self.popup.dismiss()

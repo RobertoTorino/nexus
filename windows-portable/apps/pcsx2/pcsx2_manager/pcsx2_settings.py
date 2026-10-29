@@ -19,9 +19,9 @@ PCSX2.ini (inis\\ in PCSX2's portable folder):
   first controller is SDL-0, whatever its kind: its buttons by position as PCSX2's Automatic Mapping binds them, so
   Cross is the bottom face button. The chord is set only while its line is missing: its switch in the Settings
   pane turns it off by leaving the line empty (which PCSX2 reads as no binding), so off stays off.
-* The settings the Settings pane offers (SETTINGS below): each one key of PCSX2.ini, read from the file (or from the
-  defaults while there is none) and written one at a time, as are player 2 on the second controller ([Pad2]) and
-  the quit chord.
+* The settings the Settings pane offers, in tabs (TABS below: Picture, Game, Controller, On screen): each one or
+  more keys of PCSX2.ini, read from the file (or from the defaults while there is none) and written one at a time,
+  as are player 2 on the second controller ([Pad2]) and the quit chord (OWN).
 
 The file is changed line by line: every other line, comment and order stays as PCSX2 wrote it, with its CRLF line
 ends (PCSX2 on Windows writes them)."""
@@ -86,21 +86,86 @@ class Setting:
 # GSRendererType: the Windows build's renderers
 RENDERERS = (("-1", "Automatic"), ("15", "Direct3D 12"), ("3", "Direct3D 11"), ("14", "Vulkan"), ("12", "OpenGL"),
              ("13", "Software"))
-RESOLUTIONS = (("1", "Native (the PS2's)"), ("2", "2x (720p)"), ("3", "3x (1080p)"), ("4", "4x (1440p)"))
-SETTINGS: tuple[Setting, ...] = (
-    Setting("renderer", "Renderer", "EmuCore/GS", ("Renderer",), CHOICE, RENDERERS,
-            "Automatic lets PCSX2 choose for the graphics chip; Software draws on the CPU, exact but slow."),
-    Setting("resolution", "Resolution", "EmuCore/GS", ("upscale_multiplier",), CHOICE, RESOLUTIONS,
-            "3x fills a 1080p screen sharply; higher asks more of the graphics chip and the battery."),
-    Setting("vsync", "VSync", "EmuCore/GS", ("VsyncEnable",), SWITCH,
-            tip="no tearing, a little more delay."),
-    Setting("fps", "Show FPS", "EmuCore/GS", ("OsdShowFPS",), SWITCH,
-            tip="the frames a second in a corner of the picture."),
-    Setting("fastboot", "Fast boot", "EmuCore", ("EnableFastBoot",), SWITCH,
-            tip="skips the PS2's start-up screen."),
-    Setting("vibration", "Vibration", "Pad1", ("LargeMotorScale", "SmallMotorScale"), SWITCH,
-            tip="the controller's rumble in a game that uses it."),
+# upscale_multiplier: the PS2's own picture (about 640 x 448) times this; the screen sizes it comes to (owner,
+# 29-10-2026: "screen sizes should be added in the first page")
+RESOLUTIONS = (("1", "Native (the PS2's)"), ("2", "2x (720p)"), ("3", "3x (1080p)"), ("4", "4x (1440p)"),
+               ("5", "5x (1800p)"), ("6", "6x (2160p, 4K)"), ("8", "8x (2880p)"))
+ASPECTS = (("Auto 4:3/3:2", "Auto (the game's own)"), ("4:3", "4:3"), ("16:9", "16:9 (fills the screen)"),
+           ("Stretch", "Stretch to the screen"))
+FMV_ASPECTS = (("Off", "As the game"), ("Auto 4:3/3:2", "Auto"), ("4:3", "4:3"), ("16:9", "16:9"))
+ANISOTROPY = (("0", "Off"), ("2", "2x"), ("4", "4x"), ("8", "8x"), ("16", "16x"))
+VOLUMES = (("100", "100%"), ("75", "75%"), ("50", "50%"), ("25", "25%"), ("0", "Muted"))
+DEADZONES = (("0", "Off"), ("0.1", "Small"), ("0.2", "Medium"), ("0.3", "Large"))
+STICK_RANGES = (("1.33", "PCSX2's (1.33)"), ("1", "As the stick (1.00)"), ("1.66", "Wider (1.66)"))
+OSD_SIZES = (("100", "Normal"), ("150", "Larger"), ("200", "Largest"))
+
+# The switches the app sets with a function of its own (player2(), quit_chord()): OWN below
+PLAYER2 = Setting("player2", "Player 2", "Pad2", ("Type",), SWITCH,
+                  tip="a second controller is player 2, with the same buttons as player 1.")
+QUIT = Setting("quit", "Quit with View + Menu", "Hotkeys", ("ShutdownVM",), SWITCH,
+               tip="View and Menu (☰) held together end the game; off, PCSX2's pause menu does.")
+
+# The Settings pane's tabs (owner, 29-10-2026: "we have way too less settings, we can use tabs"): the key, the tab's
+# name and its settings, each one or more keys of PCSX2.ini, in the order the rows show them
+TABS: tuple[tuple[str, str, tuple[Setting, ...]], ...] = (
+    ("picture", "Picture", (
+        Setting("renderer", "Renderer", "EmuCore/GS", ("Renderer",), CHOICE, RENDERERS,
+                "Automatic lets PCSX2 choose for the graphics chip; Software draws on the CPU, exact but slow."),
+        Setting("resolution", "Resolution", "EmuCore/GS", ("upscale_multiplier",), CHOICE, RESOLUTIONS,
+                "the picture's size: 3x fills a 1080p screen sharply, 6x a 4K TV; higher asks more of the graphics "
+                "chip and the battery."),
+        Setting("aspect", "Aspect ratio", "EmuCore/GS", ("AspectRatio",), CHOICE, ASPECTS,
+                "how the picture fills the screen: Auto keeps the game's own shape with black at the sides, 16:9 "
+                "fills a wide screen, Stretch fills it whatever the shape."),
+        Setting("fmv_aspect", "Video aspect ratio", "EmuCore/GS", ("FMVAspectRatioSwitch",), CHOICE, FMV_ASPECTS,
+                "the shape of a game's videos (its FMVs) when they are not the game's own."),
+        Setting("widescreen", "Widescreen patches", "EmuCore", ("EnableWideScreenPatches",), SWITCH,
+                tip="16:9 in the games PCSX2 has a widescreen patch for, with Aspect ratio on 16:9."),
+        Setting("anisotropy", "Anisotropic filtering", "EmuCore/GS", ("MaxAnisotropy",), CHOICE, ANISOTROPY,
+                "sharper textures seen at an angle, at little cost."),
+        Setting("vsync", "VSync", "EmuCore/GS", ("VsyncEnable",), SWITCH,
+                tip="no tearing, a little more delay."),
+    )),
+    ("game", "Game", (
+        Setting("fastboot", "Fast boot", "EmuCore", ("EnableFastBoot",), SWITCH,
+                tip="skips the PS2's start-up screen."),
+        Setting("nointerlacing", "No-interlacing patches", "EmuCore", ("EnableNoInterlacingPatches",), SWITCH,
+                tip="a steadier picture in the games PCSX2 has a no-interlacing patch for."),
+        Setting("cheats", "Cheats", "EmuCore", ("EnableCheats",), SWITCH,
+                tip="the cheats in PCSX2's cheats folder, for the games they are made for."),
+        Setting("savestate", "Save state when quitting", "EmuCore", ("SaveStateOnShutdown",), SWITCH,
+                tip="a save state when a game ends, to load from PCSX2's pause menu next time."),
+        Setting("volume", "Volume", "SPU2/Output", ("StandardVolume",), CHOICE, VOLUMES,
+                "PCSX2's own volume, before Windows'."),
+    )),
+    ("controller", "Controller", (
+        Setting("vibration", "Vibration", "Pad1", ("LargeMotorScale", "SmallMotorScale"), SWITCH,
+                tip="the controller's rumble in a game that uses it."),
+        Setting("deadzone", "Stick dead zone", "Pad1", ("Deadzone",), CHOICE, DEADZONES,
+                "how far a stick moves before the game sees it: for a stick that drifts."),
+        Setting("stick_range", "Stick range", "Pad1", ("AxisScale",), CHOICE, STICK_RANGES,
+                "how the stick's travel maps onto the PS2's: PCSX2's 1.33 reaches the edge sooner."),
+        PLAYER2,
+        QUIT,
+    )),
+    ("osd", "On screen", (
+        Setting("fps", "Show FPS", "EmuCore/GS", ("OsdShowFPS",), SWITCH,
+                tip="the frames a second in a corner of the picture."),
+        Setting("speed", "Show speed", "EmuCore/GS", ("OsdShowSpeed",), SWITCH,
+                tip="the game's speed in percent."),
+        Setting("show_resolution", "Show resolution", "EmuCore/GS", ("OsdShowResolution",), SWITCH,
+                tip="the picture's size in pixels."),
+        Setting("load", "Show CPU and GPU use", "EmuCore/GS", ("OsdShowCPU", "OsdShowGPU"), SWITCH,
+                tip="how busy the processor and the graphics chip are."),
+        Setting("frametimes", "Show frame times", "EmuCore/GS", ("OsdShowFrameTimes",), SWITCH,
+                tip="a graph of how long each frame took."),
+        Setting("inputs", "Show inputs", "EmuCore/GS", ("OsdShowInputs",), SWITCH,
+                tip="the controller's buttons as they are pressed."),
+        Setting("osd_size", "Text size", "EmuCore/GS", ("OsdScale",), CHOICE, OSD_SIZES,
+                "the size of PCSX2's text on the screen."),
+    )),
 )
+SETTINGS: tuple[Setting, ...] = tuple(setting for _key, _name, group in TABS for setting in group)
 SWITCH_VALUES = {"vibration": ("1", "0")}               # a SWITCH whose keys are not true/false: (on, off)
 
 
@@ -297,3 +362,5 @@ def set_quit_chord(home: Path, on: bool) -> None:
     _write(settings_path(home), ini.text())
 
 
+# The switches set by a function of their own rather than by one key: (read, write)
+OWN = {PLAYER2.key: (player2, set_player2), QUIT.key: (quit_chord, set_quit_chord)}

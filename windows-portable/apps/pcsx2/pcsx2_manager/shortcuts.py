@@ -34,11 +34,12 @@ def launch_options(game: Game) -> str:
 
 def _file(item: dict) -> str:
     """The game a shortcut of this app starts ("" for any other shortcut): the last word of its launch options,
-    after -nogui, of a shortcut that runs pcsx2-qt.exe."""
-    if ntpath.basename(str(item.get("Exe", "")).strip('"')).lower() != emulator.EXE:
+    after -nogui, of a shortcut that runs pcsx2-qt.exe. The fields by name whatever their case (steam.field): Steam
+    has written them in lower case in some versions."""
+    if ntpath.basename(str(steam.field(item, "Exe")).strip('"')).lower() != emulator.EXE:
         return ""
     try:
-        words = shlex.split(str(item.get("LaunchOptions", "")).replace("\\", "/"))
+        words = shlex.split(str(steam.field(item, "LaunchOptions")).replace("\\", "/"))
     except ValueError:
         return ""
     if "-nogui" not in words[:-1] or not words[-1] or words[-1].startswith("-"):
@@ -77,7 +78,7 @@ def entry(game: Game, name: str, program: Path, logo: Path) -> dict:
 
 def in_steam(folder: Path) -> dict[str, str]:
     """The game files that have a shortcut of this app, for any Steam user, with the shortcut's name."""
-    return {_file(item): str(item.get("AppName", "")) for item in steam.shortcuts(folder) if ours(item)}
+    return {_file(item): str(steam.field(item, "AppName")) for item in steam.shortcuts(folder) if ours(item)}
 
 
 def cover_name(game: Game) -> str:

@@ -294,7 +294,7 @@ def put_shortcut(values: dict, new: dict, ours: Match) -> dict:
     shortcuts = list(values.get("shortcuts", {}).values())
     for n, item in enumerate(shortcuts):
         if ours(item):
-            shortcuts[n] = {**new, "LastPlayTime": item.get("LastPlayTime", 0)}
+            shortcuts[n] = {**new, "LastPlayTime": field(item, "LastPlayTime", 0)}
             break
     else:
         shortcuts.append(new)
@@ -337,9 +337,18 @@ class Change:
         return self.entry["appid"] & 0xFFFFFFFF
 
 
+def field(item: dict, name: str, default="") -> object:
+    """A shortcut's field by name, whatever its case in the file: Steam has written AppName as appname and Exe as exe
+    in some versions (29-10-2026), and keeps a shortcut's fields as it found them."""
+    if name in item:
+        return item[name]
+    wanted = name.lower()
+    return next((value for key, value in item.items() if key.lower() == wanted), default)
+
+
 def _number(item: dict) -> int:
     """The number a shortcut's artwork is filed under: from its program and name, as appid() gives it."""
-    return appid(str(item.get("Exe", "")), str(item.get("AppName", "")))
+    return appid(str(field(item, "Exe")), str(field(item, "AppName")))
 
 
 def write_shortcuts(steam: Path, changes: Sequence[Change]) -> list[int]:

@@ -297,8 +297,11 @@ Each design (a suite's, the Nexus page's) has its own; none is carried over to a
   width, in a row at the bottom right of its pane with the A pill rightmost; a pill only for touch looks the same.
   Focused or under the pointer it is dimmed. A pill is never grayed out: when it cannot act it says why (owner,
   29-10-2026). The glyph paints its own circle (a stylesheet's radius showed a square on the Ally).
-- **A pill shows its controller button** (A Open, Y Update); the legend at the bottom shows only the buttons that
-  have no pill (X Details, B Back), none of them in amber.
+- **The legend at the bottom is the row of actions** (owner, 29-10-2026): an action with a controller button is
+  an entry there (X Steam mark, Y Update Steam, LB Folders, RB Steam artwork, B Close), its glyph gray, never a pill
+  as well; a tap on an entry does what the button does. A pill is for an action without a button, and for A, the
+  main action, which shows its glyph. An icon pill (the information icon) shows its focus with an amber ring and
+  sign.
 - **A tile is a card with an icon** (the portal's apps, 28-10-2026): the app's icon centered above its name and
   its status, two rows of four under the category tabs; a status that asks for something (an update, a reinstall,
   an install running) is amber, the rest dimmed. The strip under the tiles is the detail pane, flat, with the
