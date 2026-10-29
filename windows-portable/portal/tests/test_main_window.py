@@ -13,6 +13,8 @@ from pathlib import Path
 
 import pytest
 from bc250_core import portable
+from bc250_core.platform import private
+from bc250_core.portable import VIEW
 from bc250_core.gamepad import Gamepad
 from bc250_core.updates import ReleaseInfo
 
@@ -137,8 +139,7 @@ def world(qapp, tmp_path, monkeypatch):
 
 def pane_texts(window) -> tuple[str, str, str]:
     pane = window.app_pane
-    return (pane.name.text(), pane.main.label.text() if pane.main.isVisible() else "",
-            pane.other.label.text() if pane.other.isVisible() else "")
+    return (pane.name.text(), pane.main, pane.other)
 
 
 def test_the_tabs_and_tiles_and_the_strip_for_the_focused_app(world, qapp):
@@ -150,7 +151,8 @@ def test_the_tabs_and_tiles_and_the_strip_for_the_focused_app(world, qapp):
     assert pane_texts(window) == ("Windows Portable Test", "Install", "")
     assert window.app_pane.versions.text() == "Not installed; this portal has 0.1.0"
     assert window.header.status.text().startswith("82%  |  ")
-    assert [text for _, text in window.legend.items] == ["Details", "Suite", "Settings", "Close"]
+    assert [text for _, text in window.legend.items][1:] == ["Details", "Suite", "Exit app"]
+    assert window.legend.items[0][0] == "A" and window.app_pane.findChildren(portable.Pill) == []   # no pill (owner)
     window.tabs.step(1)
     assert window.tabs.current == "gaming" and window.tiles["pcsx2"].isVisible() and not window.tiles["test"].isVisible()
     assert pane_texts(window)[0] == "Windows Portable PCSX2 Manager" and window.tiles["pcsx2"].hasFocus()
@@ -228,16 +230,16 @@ def test_x_shows_the_details_and_remove_takes_a_second_press(world, qapp):
     world.records.set("test", "wp-test-v0.1.0")
     window = world.make()
     window.on_action("x")
-    assert window.stack.currentWidget() is window.details_pane and window.legend.items == [("B", "Back")]
+    assert window.stack.currentWidget() is window.details_pane
+    assert window.legend.items == [("A", "Open"), ("Y", "Remove"), ("B", "Back"), (VIEW, "Exit app")]
     rows = {window.details_pane.grid.itemAt(i).widget().text(): window.details_pane.grid.itemAt(i + 1).widget().text()
             for i in range(0, window.details_pane.grid.count(), 2)}
     assert rows["Installed"] == "0.1.0 (wp-test-v0.1.0)" and rows["This portal pins"] == "wp-test-v0.1.0"
-    assert rows["Program"] == str(world.app_dir / "X.exe") and rows["Category"] == "Sustainable"
-    assert window.details_pane.open.hasFocus() and window.details_pane.remove.isVisible()
+    assert rows["Program"] == private(world.app_dir / "X.exe") and rows["Category"] == "Sustainable"   # no user name
     window.on_action("y")
-    assert window.details_pane.remove.label.text() == "Press again to remove" and world.terminal.lines == []
+    assert ("Y", "Press again to remove") in window.legend.items and world.terminal.lines == []
     window._confirm_over()                                      # the few seconds passed: asked again
-    assert window.details_pane.remove.label.text() == "Remove"
+    assert ("Y", "Remove") in window.legend.items
     window.on_action("y")
     window.on_action("y")
     assert wait_for(qapp, lambda: window.pending is None and world.terminal.lines)
@@ -247,15 +249,19 @@ def test_x_shows_the_details_and_remove_takes_a_second_press(world, qapp):
     assert window.tiles["test"].text.text() == "Not installed"
 
 
-def test_b_goes_back_from_a_page_and_closes_the_portal_from_the_tiles(world, qapp, monkeypatch):
+def test_b_goes_back_and_view_exits(world, qapp, monkeypatch):
+    """The suite's buttons (owner, 29-10-2026: "Close" on B was not clear): B goes back from a page to the tiles, and
+    on a tile does nothing; View (Exit app) closes the portal, a tap on its entry too."""
     window = world.make()
     closed = []
     monkeypatch.setattr(window, "close", lambda: closed.append(True))
     window.on_action("menu")
-    assert window.stack.currentWidget() is window.suite_pane and window.suite_pane.action.hasFocus()
+    assert window.stack.currentWidget() is window.suite_pane and window.suite_pane.wallpaper.hasFocus()
     window.on_action("back")
     assert window.stack.currentWidget() is window.apps_page and window.tiles["test"].hasFocus() and closed == []
-    window.on_action("back")
+    window.on_action("back")                            # on a tile: nothing
+    assert closed == [] and window.tiles["test"].hasFocus()
+    window.legend.entries[VIEW].pressed.emit()
     assert closed == [True]
 
 
@@ -268,10 +274,10 @@ def test_the_suite_page_offers_the_portals_own_update_and_installs_it(world, qap
             for i in range(0, window.suite_pane.grid.count(), 2)}
     assert rows["This portal"] == mw.__version__ and rows["Newest release"] == "9.9.9, 2030-01-01"
     assert rows["It brings"] == "updates Test" and rows[""] == "Windows Portable Test: 0.1.0 → 0.2.0"
-    assert window.suite_pane.action.label.text() == "Update to 9.9.9"
+    assert ("Y", "Update to 9.9.9") in window.legend.items           # A switches the setting, Y updates
     closed = []
     monkeypatch.setattr(window, "close", lambda: closed.append(True))
-    window.on_action("accept")
+    window.on_action("y")
     assert wait_for(qapp, lambda: closed == [True])
     line = world.terminal.lines[0]
     folder = world.sources.work.parent / "portal-update" / "wp-portal-v9.9.9"
@@ -287,10 +293,10 @@ def test_the_suite_page_without_an_update(world, qapp):
     assert wait_for(qapp, lambda: window.update is not None)
     assert "available" not in window.header.status.text()
     window.show_suite()
-    assert window.suite_pane.action.label.text() == "Check again"
+    assert ("Y", "Check again") in window.legend.items
     offline = PortalUpdate(ReleaseInfo(error="no connection (offline)"))
     window.portal_check = lambda: offline
-    window.on_action("accept")
+    window.legend.entries["Y"].pressed.emit()
     assert wait_for(qapp, lambda: window.update is offline)
     assert window.suite_pane.grid.itemAt(3).widget().text() == "not known: no connection (offline)"
 
@@ -410,8 +416,8 @@ def test_the_intro_covers_the_window_before_it_shows(world, qapp):
     assert frame.pixelColor(640, 600).name() == portable.BACKGROUND        # dark where the tiles are, before start()
 
 
-def test_b_during_a_download_asks_first(world, qapp, monkeypatch):
-    # B closed the portal and dropped the download at once (owner, 28-10-2026: ask first).
+def test_exit_during_a_download_asks_first(world, qapp, monkeypatch):
+    # B closed the portal and dropped the download at once (owner, 28-10-2026: ask first); View exits now (29-10-2026).
     import threading
     release = threading.Event()
     first = world.sources.download
@@ -427,31 +433,34 @@ def test_b_during_a_download_asks_first(world, qapp, monkeypatch):
     monkeypatch.setattr(window, "isActiveWindow", lambda: True)
     window.on_action("accept")
     assert wait_for(qapp, lambda: window.job is not None)
-    window.on_action("back")
-    assert closed == [] and window.legend.items == [("B", "Press again to close")]
-    assert window.app_pane.status.text() == "Press B again to close the portal: the download stops."
-    window._confirm_over()                              # five seconds without a second B
-    assert window.legend.items == list(mw.APPS_LEGEND) and not window.close_asked
-    window.on_action("back")
-    window.on_action("back")
+    window.on_action("view")
+    assert closed == [] and window.legend.items == [(VIEW, "Press again to exit")]
+    assert window.app_pane.status.text() == "Press View again to exit the portal: the download stops."
+    window._confirm_over()                              # five seconds without a second press
+    assert ("X", "Details") in window.legend.items and not window.close_asked
+    window.on_action("view")
+    window.on_action("view")
     assert closed == [True]
     release.set()
     assert wait_for(qapp, lambda: window.job is None)
-    window.on_action("back")                            # nothing runs: B closes at once
+    window.on_action("view")                            # nothing runs: View exits at once
     assert closed == [True, True]
 
 
-def test_view_opens_the_settings_and_a_switches_the_wallpaper(world, qapp, monkeypatch):
-    # The wallpaper is a setting (owner, 28-10-2026: "a feature you can toggle, so a settings menu").
+def test_the_suite_page_switches_the_wallpaper(world, qapp, monkeypatch):
+    # The wallpaper is a setting (owner, 28-10-2026: "a feature you can toggle, so a settings menu"), on the Suite
+    # page since View became Exit app (owner, 29-10-2026).
     from bc250_core import portable
     window = world.make()
     monkeypatch.setattr(window, "isActiveWindow", lambda: True)
     assert window.wallpaper_on and portable.glass() == portable.GLASS
-    window.on_action("view")
-    assert window.stack.currentWidget() is window.settings_pane and window.settings_pane.wallpaper.hasFocus()
-    assert window.settings_pane.wallpaper.label.text() == "Wallpaper: On" and window.legend.items == [("B", "Back")]
+    window.on_action("menu")
+    assert window.stack.currentWidget() is window.suite_pane
+    window.suite_pane.wallpaper.setFocus()
+    assert window.suite_pane.wallpaper.label.text() == "Wallpaper: On"
+    assert window.legend.items == [("A", "Change"), ("Y", "Check again"), ("B", "Back"), (VIEW, "Exit app")]
     window.on_action("accept")
-    assert not window.wallpaper_on and portable.glass() == 255 and window.settings_pane.wallpaper.label.text() == "Wallpaper: Off"
+    assert not window.wallpaper_on and portable.glass() == 255 and window.suite_pane.wallpaper.label.text() == "Wallpaper: Off"
     assert "rgba" not in window.app_pane.styleSheet()                 # the strip solid again, at once
     assert not portable.wallpaper_on(mw.SUITE)                         # the suite's: every app (owner, 29-10-2026)
     window.on_action("back")

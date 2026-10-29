@@ -15,8 +15,9 @@ pictures from SteamGridDB when you give it your key), shows your memory cards wi
 what was played. PCSX2's own window is never needed: a game starts alone and full screen, and PCSX2 closes with it. Remove takes PCSX2's program away and leaves
 what you made.
 
-Made for the handheld in your hands: full screen, the controller moves the amber focus, B closes the app, and
-everything also works by touch. How to install and use it: [PCSX2 Manager in the wiki](https://robertotorino.github.io/nexus/windows-portable-suite/apps/pcsx2/).
+Made for the handheld in your hands: full screen, the controller moves the amber focus, B goes back, View (⧉) exits
+the app, and everything also works by touch. How to install and use it:
+[PCSX2 Manager in the wiki](https://robertotorino.github.io/nexus/windows-portable-suite/apps/pcsx2/).
 
 ## Start it from the checkout
 

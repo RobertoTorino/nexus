@@ -1,0 +1,51 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+name: Upstream Windows Portable
+
+# Weekly: is every emulator an app of the Windows Portable Suite installs still the newest stable release, and is the
+# pinned file still the one the app was tried with (windows-portable/tools/check_upstream.py)? What moved goes into the
+# open "Upstream review (Windows Portable Suite)" issue, so the owner sees it (owner, 29-10-2026: a newer emulator can
+# break things, so it reaches the device only with a new release of its app, tried first). A new issue, or a comment
+# on the open one, notifies everyone who watches the repository; close it once handled. The job fails only when an
+# upstream could not be checked (network, GitHub's rate limit). It only reads from GitHub; only that issue changes.
+# The BC250 suite's emulators are upstream.yml's: each suite stands apart.
+
+on:
+  schedule:
+    - cron: "30 6 * * 1"        # Mondays 06:30 UTC, after the BC250 suite's Upstream, before the Backlog
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Every pinned emulator against its newest release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          code=0
+          python3 windows-portable/tools/check_upstream.py --report "$RUNNER_TEMP/upstream.md" || code=$?
+          [ "$code" -le 1 ]
+
+      - name: Open or update the Upstream review issue
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TITLE: Upstream review (Windows Portable Suite)
+        run: |
+          body="$RUNNER_TEMP/upstream.md"
+          if [ ! -s "$body" ]; then echo "Every emulator is in step."; exit 0; fi
+          number=$(gh issue list --state open --search "\"$TITLE\" in:title" --json number,title \
+            --jq "map(select(.title == \"$TITLE\")) | .[0].number // empty")
+          if [ -n "$number" ]; then
+            gh issue edit "$number" --body-file "$body"
+            gh issue comment "$number" --body "Weekly upstream check: the list above is updated."
+          else
+            gh issue create --title "$TITLE" --body-file "$body"
+          fi

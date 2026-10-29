@@ -43,6 +43,7 @@ By category, as the portal's tabs list them.
 **Gaming**: games and their emulators on the handheld.
 
 - <img src="portal/images/apps/pcsx2.webp" width="20" height="20" alt=""/> **[PCSX2 Manager](apps/pcsx2)**: Installs PCSX2, the PlayStation 2 emulator, in portable mode, and opens it.
+- <img src="portal/images/apps/ppsspp.webp" width="20" height="20" alt=""/> **[PPSSPP Manager](apps/ppsspp)**: Installs PPSSPP, the PSP emulator, in portable mode, and plays your PSP games.
 
 How to install and use them: **[the wiki](https://robertotorino.github.io/nexus/windows-portable-suite/)**.
 

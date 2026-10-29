@@ -13,10 +13,10 @@ portal carries. Windows Portable Test is always installed with the portal and li
 It opens with a short intro, about three seconds, with the suite's name and its sound; any button, key or tap
 skips it.
 
-Made for the handheld in your hands: full screen, the apps as tiles under tabs (LB and RB change the tab), the
-amber focus moved by the d-pad, A to install or open the focused app, Y to update it, X for its details (and Remove
-there), ☰ (the Menu button) for the Suite page (the portal's own update), B to close. Every tile and pill also
-works by touch.
+Made for the handheld in your hands: full screen, the apps as tiles under tabs (LB and RB change the tab), the amber
+focus moved by the d-pad, A to install or open the focused app, Y to update it, X for its details (and Remove there),
+☰ (the Menu button) for the Suite page (the portal's own update and its settings), B to go back, View (⧉) to exit,
+each in the row at the bottom too. Every tile and entry also works by touch.
 
 ## Install it
 

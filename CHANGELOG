@@ -1,3 +1,27 @@
+Changelog: 29-10-2026 14:35:18
+
+Release 0.20.0. Brings wp-pcsx2-v2.0.0, wp-test-v2.0.0.
+
+Changelog: 29-10-2026 12:46:22
+
+Added. A weekly check of the Windows Portable Suite's emulators (owner, 29-10-2026: a newer emulator can break
+things, so it reaches the device only with a new release of its app): .github/workflows/upstream-windows-portable.yml
+runs windows-portable/tools/check_upstream.py every Monday, which compares each app's pinned emulator (REPO, VERSION,
+ASSET, SHA256 in its emulator.py) with the newest stable release on GitHub and the file GitHub publishes, and keeps
+the "Upstream review (Windows Portable Suite)" issue up to date. The BC250 suite's Upstream workflow stays as it is.
+
+Changelog: 29-10-2026 11:35:27
+
+Added. tools/new_app.py's Windows template follows the suite's buttons (owner, 29-10-2026): the new app's legend
+ends with core's common_items() (⧉ Exit app), B goes back and View exits, and its window test checks both.
+
+Changelog: 29-10-2026 10:26:43
+
+Fixed. tools/new_app.py stopped at a Windows suite's wiki home page ("no '## The apps' paragraph") after writing half
+of a new app: the Windows Portable Suite's home page lists the apps in a card per category since its new layout. The
+app's paragraph now goes into its category's card, or a new card at the end of the grid; a home page with the table
+still gets a row.
+
 Changelog: 29-10-2026 06:32:02
 
 Release 0.19.0. Brings wp-portal-v2.0.3.

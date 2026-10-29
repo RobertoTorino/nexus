@@ -11,14 +11,15 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QVBoxLayout, QWidget
 
-from bc250_core.portable import AMBER, BODY, DIM, TEXT, Pane, Pill, Row, Tabs, pill_row, px, text_label
+from bc250_core.portable import AMBER, BODY, DIM, TEXT, Pane, Row, Tabs, px, text_label
 
 NAME = 24                               # pt: the name at the top of a pane
 
 
 class AppPane(Pane):
-    """The strip under the tiles: the focused app's name, its versions and one line of what it does, with the pills
-    for touch (A Install or Open, Y Update) so the strip keeps showing what A does."""
+    """The strip under the tiles: the focused app's name, its versions and one line of what it does. What A and Y
+    do (Install or Open, Update) is in the window's legend, never a pill (owner, 29-10-2026: one way everywhere):
+    main and other keep their texts for it."""
 
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
@@ -34,22 +35,17 @@ class AppPane(Pane):
         for label in (self.name, self.versions, self.summary, self.status):
             texts.addWidget(label)
         row.addLayout(texts, 1)
-        self.other = Pill("Update", "Y")
-        self.main = Pill("Open", "A", main=True)
-        row.addWidget(self.other, 0, Qt.AlignmentFlag.AlignVCenter)
-        row.addWidget(self.main, 0, Qt.AlignmentFlag.AlignVCenter)
+        self.main = self.other = ""                     # A's and Y's text in the legend; "" for none
         self.column.addLayout(row)
 
     def fill(self, name: str, versions: str, summary: str, status: str, main: str, other: str) -> None:
-        """The texts, and the pills: a pill without a text is hidden (no Y without an update)."""
+        """The texts, and A's and Y's in the legend: "" for none (no Y without an update)."""
         self.name.setText(name)
         self.versions.setText(versions)
         self.summary.setText(summary)
         self.status.setText(status)
         self.status.setVisible(bool(status))
-        for pill, text in ((self.main, main), (self.other, other)):
-            pill.set_text(text)
-            pill.setVisible(bool(text))
+        self.main, self.other = main, other
 
 
 def _rows(grid: QGridLayout, rows: Sequence[tuple[str, str]]) -> None:
@@ -67,7 +63,8 @@ def _rows(grid: QGridLayout, rows: Sequence[tuple[str, str]]) -> None:
 
 
 class DetailsPane(Pane):
-    """An app's details page (X): its versions, where it is and what it does, with Open (A) and Remove (Y)."""
+    """An app's details page (X): its versions, where it is and what it does; A Open and Y Remove are in the
+    window's legend (open, remove: their texts, "" for none)."""
 
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
@@ -83,9 +80,7 @@ class DetailsPane(Pane):
         self.column.addStretch()
         self.status = text_label("", BODY + 1, QFont.Weight.DemiBold, AMBER, wrap=True)
         self.column.addWidget(self.status)
-        self.remove = Pill("Remove", "Y")
-        self.open = Pill("Open", "A", main=True)
-        self.column.addLayout(pill_row(self.remove, self.open))
+        self.open = self.remove = ""                    # A's and Y's text in the legend; "" for none
 
     def fill(self, name: str, summary: str, rows: Sequence[tuple[str, str]], status: str, can_open: bool,
              can_remove: bool, remove_text: str = "Remove") -> None:
@@ -94,14 +89,15 @@ class DetailsPane(Pane):
         _rows(self.grid, rows)
         self.status.setText(status)
         self.status.setVisible(bool(status))
-        self.open.setVisible(can_open)
-        self.remove.set_text(remove_text)
-        self.remove.setVisible(can_remove)
+        self.open = "Open" if can_open else ""
+        self.remove = remove_text if can_remove else ""
 
 
 class SuitePane(Pane):
-    """The Suite page (Start or View): the portal's own version, the newest release on GitHub and what it changes,
-    with Update (A) when there is a newer one."""
+    """The Suite page (Menu): the portal's own version, the newest release on GitHub and what it changes, with Update
+    (A) when there is a newer one; and the suite's settings, a row each that A switches (owner, 28-10-2026: the
+    wallpaper on or off), with a line under it of what it does. They had a page of their own on View until View became
+    the suite's Exit app (owner, 29-10-2026)."""
 
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
@@ -114,11 +110,17 @@ class SuitePane(Pane):
         self.grid.setHorizontalSpacing(px(16))
         self.grid.setVerticalSpacing(px(4))
         self.column.addLayout(self.grid)
+        self.column.addSpacing(px(16))
+        self.wallpaper = Row("Wallpaper: On")
+        self.column.addWidget(self.wallpaper)
+        self.column.addSpacing(px(4))
+        self.column.addWidget(text_label("A picture behind the tiles, which show it through them, in every app of the "
+                                         "suite. A switches it; it is kept for the next start.", BODY + 1, color=DIM,
+                                         wrap=True))
         self.column.addStretch()
         self.status = text_label("", BODY + 1, QFont.Weight.DemiBold, AMBER, wrap=True)
         self.column.addWidget(self.status)
-        self.action = Pill("Check again", "A", main=True)
-        self.column.addLayout(pill_row(self.action))
+        self.action = ""                                # Y's text in the legend: Check again, Update to x.y.z
 
     def fill(self, name: str, version: str, rows: Sequence[tuple[str, str]], status: str, action: str) -> None:
         self.name.setText(name)
@@ -126,29 +128,10 @@ class SuitePane(Pane):
         _rows(self.grid, rows)
         self.status.setText(status)
         self.status.setVisible(bool(status))
-        self.action.set_text(action)
-        self.action.setVisible(bool(action))
+        self.action = action
+
+    def set_wallpaper(self, on: bool) -> None:
+        self.wallpaper.set_text(f"Wallpaper: {'On' if on else 'Off'}")
 
 
-class SettingsPane(Pane):
-    """The Settings page (View): the portal's own settings, a row each that A switches (owner, 28-10-2026: the
-    wallpaper on or off), with a line under it of what it does."""
-
-    def __init__(self, parent: QWidget | None = None):
-        super().__init__(parent)
-        self.column.addWidget(text_label("Settings", NAME, QFont.Weight.ExtraBold))
-        self.column.addWidget(text_label("How the portal looks. A switches the focused setting; it is kept for the "
-                                         "next start.", BODY + 1, color=DIM, wrap=True))
-        self.column.addSpacing(px(16))
-        self.wallpaper = Row("Wallpaper: On")
-        self.column.addWidget(self.wallpaper)
-        self.column.addSpacing(px(4))
-        self.column.addWidget(text_label("A picture behind the tiles, which show it through them, in every app "
-                                         "of the suite.", BODY + 1, color=DIM, wrap=True))
-        self.column.addStretch()
-
-    def fill(self, wallpaper: bool) -> None:
-        self.wallpaper.set_text(f"Wallpaper: {'On' if wallpaper else 'Off'}")
-
-
-__all__ = ["AppPane", "DetailsPane", "SettingsPane", "SuitePane", "Tabs", "TEXT"]
+__all__ = ["AppPane", "DetailsPane", "SuitePane", "Tabs", "TEXT"]

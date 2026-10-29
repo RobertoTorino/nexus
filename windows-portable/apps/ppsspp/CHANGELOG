@@ -1,0 +1,32 @@
+Changelog: 29-10-2026 14:35:18
+
+Release 0.1.0.
+
+Changelog: 29-10-2026 10:26:43
+
+Added. The BC250 suite's PPSSPP Manager on the portable window (owner, 29-10-2026: "I want to start with PPSSPP
+Manager"), laid out as PCSX2 Manager: four cards, PPSSPP, Your games, Settings and Log, the actions with a controller
+button in the row at the bottom. A Install downloads PPSSPP 1.20.4 for Windows (PPSSPP-v1.20.4-Windows-x64.zip, 20
+MB) from PPSSPP's release on GitHub, checks it against the pinned SHA-256 and unpacks it into
+%LOCALAPPDATA%\windows-portable-suite\windows-portable-ppsspp\emulator\, in PPSSPP's portable mode (no installed.txt:
+its memory stick, with the settings, saves and save states, in memstick\ beside it); X Remove PPSSPP, with a second
+press, deletes only the files the release brought; Y Update when an older PPSSPP is there. Your games: the PSP disc
+images (ISO, CSO, CHD) and memory stick games (EBOOT.PBP) in the chosen folders and on PPSSPP's memory stick, read as
+the BC250 app reads them; played from Steam, never from the app (owner, 29-10-2026), alone and full screen
+(--fullscreen --pause-menu-exit: PPSSPP's own window never shows, LT opens its pause menu and Exit ends PPSSPP); A
+Steam mark and Y Update Steam put them in Steam as "[PSP] <title>", with the game's own pictures and a cover from
+SteamGridDB with the suite's key (RB Steam artwork); LB Folders, with the app's own folder browser for the controller
+(core's browse), where Windows' folder window cannot be used. Settings in four tabs (Picture, Game, Controller, On
+screen: 15 settings of ppsspp.ini, PPSSPP's own keys and defaults), never written while PPSSPP runs; PPSSPP's notice
+of a newer release turned off. The Log: the memory stick's saves and save states, and the app's log; A View log (or a
+tap) shows the whole log in the app. Every action is in the row at the bottom, A too, and no pane holds a pill
+(owner, 29-10-2026). The buttons are the suite's (owner, 29-10-2026): B goes back (from a pane to its card, from a
+page to where it came from; on a card it does nothing), View (⧉) exits the app and Menu (☰) opens the information of
+the pane that shows; B on the folders goes back to the games, on Steam artwork to Your games. In a pane the d-pad
+stays in it, and only B goes back to the cards (core's rule). No path on the screen or in the log shows the user's
+name: the user's folders as %LOCALAPPDATA% and %USERPROFILE% (owner, 29-10-2026). Not carried over yet: the BC250
+app's Rename files.
+
+Changelog: 29-10-2026 10:11:34
+
+Added. PPSSPP Manager: the first version, written by tools/new_app.py from the architecture chapter.

@@ -435,6 +435,38 @@ def test_a_windows_suites_app(windows_checkout, capsys):
     assert "app: [test, emu, portal]   # every app of the suite, and the portal" in ci   # its installers job
 
 
+W_HOME_CARDS = '''# Windows Portable Suite
+
+## In the suite
+
+<div class="home-grid" markdown>
+<div class="home-card" markdown>
+#### :material-stethoscope: Sustainable
+
+[Windows Portable Test](apps/test.md) shows the handheld.
+</div>
+</div>
+
+[Install](install.md){ .md-button }
+'''
+
+
+def test_a_windows_home_page_with_cards(windows_checkout):
+    """The home page lists the apps in a card per category: a new app's paragraph goes in its category's card, and
+    a category without one gets a card at the end of the grid."""
+    root = windows_checkout
+    home = root / WINDOWS / "docs" / "index.md"
+    write(home, W_HOME_CARDS)
+    assert na.main([WINDOWS, "emu", "Emu Manager", "--category", "gaming", "--summary", "An emulator.", "--no-check",
+                    "--root", str(root)]) == 0
+    assert ("shows the handheld.\n</div>\n<div class=\"home-card\" markdown>\n#### :material-gamepad-variant: Gaming"
+            "\n\n[Emu Manager](apps/emu.md): An emulator.\n</div>\n</div>\n\n[Install]") in home.read_text()
+    assert na.main([WINDOWS, "emu2", "Emu Two", "--category", "gaming", "--summary", "Another one.", "--no-check",
+                    "--root", str(root)]) == 0
+    assert ("[Emu Manager](apps/emu.md): An emulator.\n\n[Emu Two](apps/emu2.md): Another one.\n</div>\n</div>"
+            in home.read_text())
+
+
 def test_a_windows_category_without_icons_is_refused(windows_checkout):
     with pytest.raises(SystemExit, match="has no icons yet"):
         na.main([WINDOWS, "tool", "A Tool", "--category", "utilities", "--no-check", "--root", str(windows_checkout)])

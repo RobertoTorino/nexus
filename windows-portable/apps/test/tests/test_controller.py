@@ -80,14 +80,16 @@ def test_it_says_where_the_back_buttons_come_from(qapp):
     assert not pane.back_buttons.isHidden()
 
 
-def test_the_finish_pill_and_the_pads_name(qapp):
+def test_finish_and_the_pads_name(qapp):
+    """finish() ends a running test (B held, Escape, or a tap on the legend's "B Hold to finish"); the pane has no
+    pill of its own (owner, 29-10-2026: every action in the row at the bottom)."""
     pane = ControllerPane(clock=Clock())
     finished = []
     pane.finished.connect(lambda: finished.append(True))
     pane.finish()                                           # not running: nothing
     pane.start()
-    pane.finish_pill.click()
-    assert finished == [True]
+    pane.finish()
+    assert finished == [True] and not hasattr(pane, "finish_pill")
     pane.set_pads([])
     assert "No controller found" in pane.name.text()
     pane.set_pads(["ASUSTeK Computer Inc."])

@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The window: the categories as tabs (LB, RB), the tab's apps as two rows of four tiles, the strip under them with
-the focused app and its pills (A Install or Open, Y Update), X for the app's details (and Remove there), Start or
-View for the Suite page (the portal's own update), B to close. An install downloads the app's release in the
+the focused app and its pills (A Install or Open, Y Update), X for the app's details (and Remove there), Menu for
+the Suite page (the portal's own update and the settings), B back, View to exit (core's buttons, owner 29-10-2026). An install downloads the app's release in the
 background, checks it and runs its install.ps1 in a PowerShell window; the portal waits for that window's exit
 status. Direction D's portal screen (the owner's, 26-10-2026)."""
 
@@ -23,15 +23,15 @@ from PyQt6.QtWidgets import QGridLayout, QStackedWidget, QVBoxLayout, QWidget
 
 from bc250_core import applog, portable, power
 from bc250_core.gamepad import Gamepad
-from bc250_core.platform import expand, launch_in_terminal
-from bc250_core.portable import AMBER, DIM, Card, Legend, PortableHeader, PortableWindow, px, status_clock
+from bc250_core.platform import expand, launch_in_terminal, private
+from bc250_core.portable import AMBER, DIM, MENU, VIEW, Card, Legend, PortableHeader, PortableWindow, px, status_clock
 
 from . import APP_ICONS, APP_ID, APP_NAME, SUITE, __version__
 from .intro import INTRO_MS, Intro
 from .manifest import CATEGORIES, AppEntry
 from .portal_update import PortalUpdate, short
 from .sources import Records, SourceError, Sources, downloaded, fetch_release, is_installed
-from .widgets import AppPane, DetailsPane, SettingsPane, SuitePane, Tabs
+from .widgets import AppPane, DetailsPane, SuitePane, Tabs
 
 STATUS_MS = 30_000              # the header's battery and time
 POLL_MS = 1000                  # how often the portal looks for the installer window's exit status
@@ -41,9 +41,6 @@ TILE_W, TILE_H, GAP = 293, 176, 14      # the mock-up's tiles: two rows of four
 COLUMNS, PER_PAGE = 4, 8
 TAB_KEY = "window/tab"          # the settings: the tab shown last
 WALLPAPER_KEY = "look/wallpaper"  # where portal 1.6.0 kept the wallpaper switch: now the suite's (core, suite.ini)
-VIEW = "\u29c9"                  # the View button as the Ally shows it: two squares
-MENU = "☰"                  # the Menu button as the Ally shows it (SDL's start; owner, 28-10-2026: not "Menu")
-APPS_LEGEND = (("X", "Details"), (MENU, "Suite"), (VIEW, "Settings"), ("B", "Close"))
 
 
 @dataclass
@@ -152,7 +149,7 @@ class MainWindow(PortableWindow):
         self.update: PortalUpdate | None = None
         self.checking = False
         self.confirm_key = ""                           # Remove pressed once on this app
-        self.close_asked = False                        # B pressed once while a download or an install runs
+        self.close_asked = False                        # View pressed once while a download or an install runs
         self.message = ""                               # the last outcome, under the focused app
         self.message_key = ""
 
@@ -182,8 +179,7 @@ class MainWindow(PortableWindow):
         apps.addWidget(self.app_pane)
         self.details_pane = DetailsPane()
         self.suite_pane = SuitePane()
-        self.settings_pane = SettingsPane()
-        for widget in (self.apps_page, self.details_pane, self.suite_pane, self.settings_pane):
+        for widget in (self.apps_page, self.details_pane, self.suite_pane):
             self.stack.addWidget(widget)
         page.addWidget(self.stack, 1)
         page.addSpacing(px(8))
@@ -198,19 +194,14 @@ class MainWindow(PortableWindow):
             tile.focused.connect(lambda key=entry.key: self.show_app(key))
             tile.activated.connect(lambda key=entry.key: self.main_action(key))
             self.tiles[entry.key] = tile
-        self.app_pane.main.activated.connect(lambda: self.main_action(self.current_key))
-        self.app_pane.other.activated.connect(lambda: self.update_action(self.current_key))
-        self.details_pane.open.activated.connect(lambda: self.open_app(self.current_key))
-        self.details_pane.remove.activated.connect(lambda: self.remove_action(self.current_key))
-        self.suite_pane.action.activated.connect(self.suite_action)
-        self.settings_pane.wallpaper.activated.connect(self.toggle_wallpaper)
+        self.suite_pane.wallpaper.activated.connect(self.toggle_wallpaper)
         self.tabs.changed.connect(self.show_tab)
+        self.bind("accept", self.a_action)
         self.bind("x", self.show_details)
         self.bind("y", self.y_action)
         self.bind("previous", lambda: self.tabs.step(-1))
         self.bind("next", lambda: self.tabs.step(1))
         self.bind("menu", self.show_suite)
-        self.bind("view", self.show_settings)
         self.back.connect(self.on_back)
 
         self.worker = _Worker()
@@ -262,10 +253,10 @@ class MainWindow(PortableWindow):
         super().on_action(action)
 
     def toggle_wallpaper(self) -> None:
-        """Settings' Wallpaper pill: the picture and the see-through cards on or off in every app of the suite (each
+        """The Suite page's Wallpaper row: the picture and the see-through cards on or off in every app of the suite (each
         at its next start; this window at once)."""
         self.set_wallpaper(not self.wallpaper_on)
-        self.settings_pane.fill(self.wallpaper_on)
+        self.suite_pane.set_wallpaper(self.wallpaper_on)
         self.log.info(f"Wallpaper {'on' if self.wallpaper_on else 'off'}, for the suite.")
 
     def resizeEvent(self, event) -> None:  # noqa: N802 (Qt override)
@@ -299,7 +290,7 @@ class MainWindow(PortableWindow):
         if shown:
             self.tiles[shown[0].key].setFocus()
             self.show_app(shown[0].key)
-        self.legend.set_items(APPS_LEGEND)
+        self.update_legend()
 
     def show_app(self, key: str) -> None:
         if key not in self.by_key:
@@ -311,36 +302,53 @@ class MainWindow(PortableWindow):
         if self.stack.currentWidget() is not self.apps_page or self.current_key not in self.by_key:
             return
         self.stack.setCurrentWidget(self.details_pane)
-        self.legend.set_items([("B", "Back")])
+        self.update_legend()
         self.refresh()
-        focus = self.details_pane.open if self.details_pane.open.isVisible() else self.details_pane.remove
-        focus.setFocus()
 
     def show_suite(self) -> None:
         if self.stack.currentWidget() is self.suite_pane:
             return
         self.stack.setCurrentWidget(self.suite_pane)
-        self.legend.set_items([("B", "Back")])
+        self.suite_pane.set_wallpaper(self.wallpaper_on)
+        self.update_legend()
         self.refresh()
-        self.suite_pane.action.setFocus()
+        self.suite_pane.wallpaper.setFocus()
 
-    def show_settings(self) -> None:
-        if self.stack.currentWidget() is self.settings_pane:
+    def update_legend(self) -> None:
+        """The page's buttons, then core's B Back (on Details and Suite, and from the strip to its tile) and View Exit
+        app; while an exit is asked, only that."""
+        if not hasattr(self, "legend") or not hasattr(self, "stack"):
             return
-        self.stack.setCurrentWidget(self.settings_pane)
-        self.settings_pane.fill(self.wallpaper_on)
-        self.legend.set_items([("B", "Back")])
-        self.settings_pane.wallpaper.setFocus()
+        if self.close_asked:
+            self.legend.set_items([(VIEW, "Press again to exit")])
+        elif self.stack.currentWidget() is self.apps_page:
+            pane = self.app_pane
+            self.legend.set_items([*([("A", pane.main)] if pane.main else []), ("X", "Details"),
+                                   *([("Y", pane.other)] if pane.other else []), (MENU, "Suite"),
+                                   *self.common_items()])
+        elif self.stack.currentWidget() is self.details_pane:
+            pane = self.details_pane
+            self.legend.set_items([*([("A", pane.open)] if pane.open else []),
+                                   *([("Y", pane.remove)] if pane.remove else []), *self.common_items(True)])
+        else:
+            self.legend.set_items([("A", "Change"), *([("Y", self.suite_pane.action)] if self.suite_pane.action
+                                                      else []), *self.common_items(True)])
+
+    def exit_app(self) -> None:
+        """View: the portal closes; while a download or an install runs it asks first."""
+        if (self.job is not None or self.pending is not None) and not self.close_asked:
+            self.ask_close()
+            return
+        self.close()
 
     def on_back(self) -> None:
+        """B goes back (owner, 29-10-2026): Details and Suite to the tiles, the strip's pills to their tile; on a
+        tile it does nothing (View exits)."""
         if self.stack.currentWidget() is self.apps_page:
-            if (self.job is not None or self.pending is not None) and not self.close_asked:
-                self.ask_close()
-                return
-            self.close()
+            self.go_back()
             return
         self.stack.setCurrentWidget(self.apps_page)
-        self.legend.set_items(APPS_LEGEND)
+        self.update_legend()
         self._confirm_over()
         if self.current_key in self.tiles and self.tiles[self.current_key].isVisible():
             self.tiles[self.current_key].setFocus()
@@ -403,6 +411,7 @@ class MainWindow(PortableWindow):
                                    can_remove, "Press again to remove" if self.confirm_key == entry.key else "Remove")
         self.fill_suite()
         self.update_status()
+        self.update_legend()                            # A's and Y's texts follow the app and its state
 
     def detail_rows(self, entry: AppEntry) -> list[tuple[str, str]]:
         record = self.records.get(entry.key)
@@ -410,7 +419,7 @@ class MainWindow(PortableWindow):
                      if record else "installed, version unknown: Reinstall records it")
         rows = [("Installed", installed), ("This portal pins", entry.tag),
                 ("Category", CATEGORIES.get(entry.category, entry.category)),
-                ("Program", str(expand(entry.detect[0])) if entry.detect else "")]
+                ("Program", private(expand(entry.detect[0])) if entry.detect else "")]       # never the user's name
         if entry.withdrawn:
             rows.append(("Withdrawn", entry.withdrawn))
         return rows
@@ -432,11 +441,21 @@ class MainWindow(PortableWindow):
         if entry is not None and self.state(entry)[3]:
             self._start(entry, "install")
 
+    def a_action(self) -> None:
+        """A away from a tile or a row (a tap on the legend's A, A on the Details page): the page's own A."""
+        if self.stack.currentWidget() is self.details_pane:
+            if self.details_pane.open:
+                self.open_app(self.current_key)
+        elif self.stack.currentWidget() is self.apps_page:
+            self.main_action(self.current_key)
+
     def y_action(self) -> None:
         if self.stack.currentWidget() is self.details_pane:
             self.remove_action(self.current_key)
         elif self.stack.currentWidget() is self.apps_page:
             self.update_action(self.current_key)
+        elif self.stack.currentWidget() is self.suite_pane:
+            self.suite_action()
 
     def remove_action(self, key: str) -> None:
         """Remove asks for a second press (no dialog on a handheld): the pill says so for a few seconds."""
@@ -452,25 +471,24 @@ class MainWindow(PortableWindow):
         self._start(entry, "uninstall")
 
     def ask_close(self) -> None:
-        """B while a download or an install runs asks first (owner, 28-10-2026): closing drops the download, and an
-        installer that ends after the portal is not recorded. A second B within CONFIRM_MS closes."""
+        """View while a download or an install runs asks first (owner, 28-10-2026): exiting drops the download, and
+        an installer that ends after the portal is not recorded. A second View within CONFIRM_MS exits."""
         self.close_asked = True
         self.confirm_timer.start()
         if self.job is not None:
-            text = "Press B again to close the portal: the download stops."
+            text = "Press View again to exit the portal: the download stops."
         else:
-            text = "Press B again to close the portal: the installer finishes in its window, unrecorded."
+            text = "Press View again to exit the portal: the installer finishes in its window, unrecorded."
         self.say(self.current_key, text)
-        self.legend.set_items([("B", "Press again to close")])
+        self.update_legend()
 
     def _confirm_over(self) -> None:
         self.confirm_timer.stop()
         if self.close_asked:
             self.close_asked = False
-            if self.message.startswith("Press B again"):
+            if self.message.startswith("Press View again"):
                 self.message = ""
-            if self.stack.currentWidget() is self.apps_page:
-                self.legend.set_items(APPS_LEGEND)
+            self.update_legend()
             self.refresh()
         if self.confirm_key:
             self.confirm_key = ""

@@ -1,3 +1,46 @@
+Changelog: 29-10-2026 13:17:58
+
+Added. platform.private(): a path or a text with the user's folders written as %LOCALAPPDATA%, %APPDATA% and
+%USERPROFILE% (~ on Linux), so no user name shows (owner, 29-10-2026: a folder on the screen showed it, against the
+privacy rule); applog.setup(private=True) applies it to every line of the log, and browse shows the places and the
+way up through it.
+
+Changelog: 29-10-2026 13:03:08
+
+Fixed. In a pane the d-pad stays in it (owner, 29-10-2026: at the top or bottom of a list the focus jumped back to
+the cards on the left): PortableWindow.move_focus() only moves to what is in the same pane, and stops at its edges; B
+goes back to the card. From a card the d-pad still moves between the cards.
+
+Changelog: 29-10-2026 12:46:22
+
+Breaking. The information icon (IconPill, InfoPill, LightPill) is touch only (owner, 29-10-2026): the d-pad never
+lands on it, so A in a pane is always the pane's own action; Menu opens the information, and closing it gives the
+focus back to where it was, not to the icon.
+
+Added. browse: choosing a folder or a file with the controller, where Windows' own folder and file windows cannot be
+used (owner, 29-10-2026: a game folder could not be chosen): places() (the user's Games, Downloads, Documents and
+Desktop folders, then every drive), Browser (rows(), open(), up()), listing() without the hidden and system ones.
+TextView: a long text read in a pane (the log, instead of Notepad, which no button closes), the d-pad's up and down
+scroll it. Pane.tapped: a tap on a pane, for its A where that is safe. A beside a card or a pill reaches the page's
+own bind("accept"), so every action, A too, can be a legend entry and no pane needs a pill.
+
+Changelog: 29-10-2026 11:35:27
+
+Added. The buttons every portable window shares (owner, 29-10-2026: "Close" on B was not clear): B goes back (from a pane to its card, from a page to where it came from; on a card it does nothing), View (⧉) exits the app and Menu (☰) opens the information of the pane that shows.
+PortableWindow.go_back() takes the focus from a pane back to its card, exit_app() closes (an app overrides it to ask
+first while it is busy), Menu opens the shown pane's InfoPill (info_pill(), show_info()) and closes the popup again;
+common_items() ends a legend with ☰ Info, B Back (while B can act) and ⧉ Exit app, and update_legend() is called on
+every move of the focus, so the legend follows it. VIEW, MENU, INFO, BACK and EXIT are core's; a tap on the ⧉ entry
+now acts (the legend knew View only by the name "View").
+
+Changelog: 29-10-2026 11:04:36
+
+Fixed. The text of one pane showed through another (owner, 29-10-2026, in PCSX2 Manager and PPSSPP Manager, with
+the wallpaper on): a switch away from the page that held the focus (RB Steam artwork from a game in the list) handed
+the focus to the first card, whose own pane was switched to inside the first switch, and QStackedLayout then left
+both pages visible, the see-through one over the other. PortableWindow now keeps every stack of its window to its
+current page after each switch (one_page()).
+
 Changelog: 29-10-2026 06:16:12
 
 Fixed. The cards and panes over the wallpaper are more see-through: 160 of 255 opaque instead of 200 (owner,

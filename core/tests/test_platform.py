@@ -218,3 +218,24 @@ def test_make_shortcut_writes_a_link(tmp_path):
     link = tmp_path / "Start Menu" / "It's an app.lnk"
     platform.make_shortcut(link, Path(sys.executable), '-c "print(1)"', description="A test")
     assert link.is_file() and link.read_bytes()[:4] == b"L\x00\x00\x00"                # a Shell Link header
+
+
+def test_private_writes_the_users_folders_by_their_variable(monkeypatch):
+    """The privacy rule (owner, 29-10-2026: a folder on the screen showed the user's name): the user's folders as
+    %LOCALAPPDATA%, %APPDATA% and %USERPROFILE% on Windows, ~ elsewhere, wherever they are in the text."""
+    from pathlib import Path
+    from bc250_core import platform
+    if platform.WINDOWS:
+        monkeypatch.setenv("USERPROFILE", r"C:\Users\Someone")
+        monkeypatch.setenv("LOCALAPPDATA", r"C:\Users\Someone\AppData\Local")
+        monkeypatch.setenv("APPDATA", r"C:\Users\Someone\AppData\Roaming")
+        monkeypatch.setattr(Path, "home", lambda: Path(r"C:\Users\Someone"))
+        assert platform.private(Path(r"C:\Users\Someone\AppData\Local\windows-portable-suite\x")) == \
+            r"%LOCALAPPDATA%\windows-portable-suite\x"
+        assert platform.private(r"Added: c:\users\someone\Games (2 games); kept C:\Users\Someone2\x") == \
+            r"Added: %USERPROFILE%\Games (2 games); kept C:\Users\Someone2\x"      # a longer name is someone else
+        assert platform.private(r"%APPDATA% or C:\Users\Someone\AppData\Roaming\s.ini") == r"%APPDATA% or %APPDATA%\s.ini"
+        assert platform.private("D:\PSP") == "D:\PSP"
+    else:
+        monkeypatch.setattr(Path, "home", lambda: Path("/home/someone"))
+        assert platform.private("/home/someone/Games and /home/someone2") == "~/Games and /home/someone2"

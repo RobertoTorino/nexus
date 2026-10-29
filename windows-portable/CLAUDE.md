@@ -38,34 +38,51 @@ app is an optional tile. The wiki is at robertotorino.github.io/nexus/windows-po
 - **Each suite stands apart** (owner, 27-10-2026): a change here never edits the BC250 suite's folder, its CI or its
   release workflow, and a change both suites want is two changes, one per suite, each with its own release. This
   suite's CI is `../.github/workflows/ci-windows-portable.yml`, its releases `release-windows-portable.yml` (never
-  GitHub's Latest: that is the Nexus index).
+  GitHub's Latest: that is the Nexus index), its weekly emulator check `upstream-windows-portable.yml`.
+- **An emulator moves only with its app** (owner, 29-10-2026: a new emulator release can break things): each app
+  pins one tested release in its `emulator.py` (`REPO`, `VERSION`, `ASSET`, `SHA256`), and a newer one reaches the
+  device only with a new release of the app, tried first. Every Monday `tools/check_upstream.py` compares each pin
+  with the newest stable release and with the file GitHub publishes, and keeps the "Upstream review (Windows
+  Portable Suite)" issue up to date; a new emulator app's `emulator.py` with those constants is checked by itself.
 - **Worked on and tested on Windows** (owner, 26-10-2026): the suite's tests, installer tests and release builds
   run on Windows (`./test.sh` runs them only there, unless `NEXUS_SYSTEM=windows`).
 - **A design of its own, with the weight on UX and UI** (owner, 25-10-2026): the portable design (direction D, B's
   amber on C's cards; `../DESIGN.md`), never the Bazzite design. A small screen held in the hands, touch and a
   controller, often without a keyboard:
   - Every action is reachable with the controller and by touch: the d-pad moves an amber focus between cards and
-    pills, A acts, B goes back or closes. **The legend at the bottom is the row of actions** (owner, 29-10-2026:
-    "use that bottom row for actions"): an action with a controller button (X Steam mark, Y Update Steam, LB
-    Folders, RB Steam artwork, B Close) is a legend entry, never a pill as well, and a tap on the entry does the
-    same (core's `Legend`, through `PortableWindow.act()`). A pill is for an action without a button (Remove BIOS,
-    New card on a page whose X and Y are taken) and for A, the main action (A Install, A Read), which shows its
-    glyph. An icon pill (the information icon) shows its focus with an amber ring.
-  - No dialogs: an action that needs care asks for a second press within five seconds (Remove; B while the portal
-    downloads or installs), and the pill or the strip says so meanwhile.
-  - One kind of pill (owner, 29-10-2026): amber, the same size, in a row at the bottom right of its pane with the A
-    pill rightmost (`portable.pill_row()`); the pane with the focus has the amber edge and glow, its card keeps the
-    edge. **A pill is never grayed out: it says why when it cannot act** (owner, 29-10-2026): it stays amber and
-    enabled, and pressed when its action cannot run now, it says why on the pane's status line. Never
-    `setEnabled(False)` on a `Pill`; hide it when it does not belong to the state at all.
+    rows, A acts, B goes back (a pane to its card, a page to where it came from; nothing on a card; in a pane
+    the d-pad stays in it, never jumping to the cards at a list's end: core's `move_focus()`), View (⧉)
+    exits the app and Menu (☰) opens the information of the pane that shows (owner, 29-10-2026: "Close" on B was
+    not clear; core's `PortableWindow`, the legend ending with `common_items()`: ☰ Info, B Back, ⧉ Exit app). **The
+    legend at the bottom is the row of actions** (owner, 29-10-2026:
+    "use that bottom row for actions"; then "one way everywhere"): **every action is a button and a legend entry,
+    A too (A Install, A Read, A Steam mark, A View log), and a pane holds no pill** (no Install, Remove, Save or
+    Open the log pill); a tap on the entry does the same (core's `Legend`, through `PortableWindow.act()`, A
+    beside a card or row through `bind("accept")`). An action without a button of its own takes a free one on its
+    pane (Remove PCSX2 on RB, Remove BIOS on LB, Remove PPSSPP on X). A tap on a pane may do its A where that is
+    safe (the Log pane shows the log). Pills stay only inside a popup, as its choices (the stick lights). The
+    information icon is touch only: the d-pad never lands on it, Menu (☰) opens it.
+  - No dialogs: an action that needs care asks for a second press within five seconds (Remove; View while a
+    download or an install runs), and the legend's entry and the status line say so meanwhile. **Nothing is grayed
+    out** (owner, 29-10-2026): pressed when its action cannot run now, a button says why on the pane's status
+    line. Never `setEnabled(False)` on a `Pill` or a row.
+  - Windows' own windows are not used: they cannot be used with the controller (owner, 29-10-2026: a folder could
+    not be chosen). A folder or a file is chosen in core's browser (`browse.Browser`: the places, then folders,
+    A opens, B goes up, X adds the folder, A on a file picks it); a long text (the log) is read in a `TextView` in
+    the pane, the d-pad scrolling it, never in Notepad.
+  - The emulator apps never start a game (owner, 29-10-2026): the games are played from Steam, and A on a game is
+    its Steam mark.
   - The window fits the Ally's screen: 1280 x 720 logical pixels at 150 %, the size every page is laid out for
     (`portable.px()` scales it to a larger screen). Text that does not fit goes behind an information icon
     (`InfoPill`, at the top right of its pane) that shows it over the window (owner, 28-10-2026). Where space is
     short, an icon at the pane's top right opens a popup with the rest (text or controls), owner 29-10-2026.
   - The wallpaper is the suite's (owner, 29-10-2026): every window shows it behind see-through cards (core's
-    `PortableWindow`), on or off for every app at once in the portal's Settings
+    `PortableWindow`), on or off for every app at once on the portal's Suite page
     (`%APPDATA%\windows-portable-suite\suite.ini`).
   - Nothing runs before it is asked for: a card that reads the device reads on A (owner, 28-10-2026).
+  - **No user name on the screen or in a log** (owner, 29-10-2026: the privacy rule): a path is shown through core's
+    `platform.private()` (`%LOCALAPPDATA%\...`, `%USERPROFILE%\...`), and every app logs with
+    `applog.setup(..., private=True)`.
   - The header's status line: the battery, the date and the time, `82% | Wednesday 28/10/2026 | 17:04` (owner,
     28-10-2026: no space before %); Windows Portable Test shows the date and the time, and under them
     the temperatures, the power draw, the screen's refresh rate and the battery, `CPU 47° GPU 45° | 18 W | 120 Hz |

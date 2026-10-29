@@ -24,7 +24,8 @@ from collections.abc import Callable, Sequence
 from PyQt6.QtCore import QEvent, QPoint, QPointF, QRectF, QSize, Qt, pyqtSignal
 from PyQt6.QtGui import QColor, QFont, QGuiApplication, QKeyEvent, QPainter, QPen, QPixmap
 from PyQt6.QtWidgets import (QApplication, QFrame, QGraphicsDropShadowEffect, QGraphicsOpacityEffect, QHBoxLayout,
-                             QLabel, QPushButton, QSizePolicy, QStackedWidget, QVBoxLayout, QWidget)
+                             QLabel, QPlainTextEdit, QPushButton, QScroller, QSizePolicy, QStackedWidget, QVBoxLayout,
+                             QWidget)
 
 from . import appinfo
 from .gamepad import Gamepad
@@ -61,7 +62,7 @@ _pinned = False                         # pin_scale(): the windows keep the scal
 MIN_SCALE = 0.6                         # text smaller than this is too small to read in the hands
 _glass = 255                            # the cards' and panes' opacity: glass()
 # The wallpaper behind every window of the suite (owner, 28-10-2026: the portal's first; 29-10-2026: "available
-# throughout the suite"), on or off for the whole suite in the portal's Settings: <suite>\suite.ini, look/wallpaper
+# throughout the suite"), on or off for the whole suite on the portal's Suite page: <suite>\suite.ini, look/wallpaper
 WALLPAPER = Path(__file__).resolve().parent / "images" / "wallpaper.webp"
 SHADE = 150                             # of 255: how much of the background lies over the wallpaper
 GLASS = 160                             # of 255: the cards' and panes' opacity over it, so it shines through (200
@@ -106,7 +107,7 @@ def look_settings(suite: str):
 
 
 def wallpaper_on(suite: str) -> bool:
-    """Whether the suite's apps show the wallpaper: on unless switched off in the portal's Settings."""
+    """Whether the suite's apps show the wallpaper: on unless switched off on the portal's Suite page."""
     return str(look_settings(suite).value(LOOK_KEY, "true")).lower() != "false"
 
 
@@ -157,6 +158,18 @@ def lift(widget: QWidget, focus: bool) -> None:
     widget.setGraphicsEffect(glow)
 
 
+def one_page(stack: QStackedWidget) -> None:
+    """Every page of *stack* but its current one hidden. A switch away from the page that holds the focus hands the
+    focus on (to a card), and a card that switches the stack to its own pane in that moment runs a switch inside the
+    first one: QStackedLayout then showed both pages, the see-through one over the other (the text of one pane on
+    another, owner 29-10-2026)."""
+    current = stack.currentWidget()
+    for n in range(stack.count()):
+        page = stack.widget(n)
+        if page is not current and not page.isHidden():
+            page.hide()
+
+
 class Glyph(QLabel):
     """A controller button as the legend and the pills show it: its letter in a circle, amber for the main one. It
     paints itself (owner, 29-10-2026: on the Ally a stylesheet's border-radius on a QLabel showed a square):
@@ -187,9 +200,14 @@ class Glyph(QLabel):
         painter.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, self.text())
 
 
+# The Ally's View and Menu buttons as it shows them: two squares, three lines (owner, 28-10-2026: not "Menu")
+VIEW, MENU = "⧉", "☰"
 # The legend's buttons and the window's actions they stand for (Gamepad's names)
-LEGEND_ACTIONS = {"A": "accept", "B": "back", "X": "x", "Y": "y", "LB": "previous", "RB": "next", "☰": "menu",
-                  "View": "view"}
+LEGEND_ACTIONS = {"A": "accept", "B": "back", "X": "x", "Y": "y", "LB": "previous", "RB": "next", MENU: "menu",
+                  VIEW: "view", "View": "view"}
+# Every window's last entries (owner, 29-10-2026: "Close" on B was not clear): Menu the pane's information, B back,
+# View leaves the app
+INFO, BACK, EXIT = (MENU, "Info"), ("B", "Back"), (VIEW, "Exit app")
 
 
 class LegendItem(QWidget):
@@ -470,9 +488,54 @@ class Card(QFrame):
         super().keyPressEvent(event)
 
 
+class TextView(QPlainTextEdit):
+    """A long text to read on the page (owner, 29-10-2026: the log in the app, not in Notepad, which no button
+    closes): read-only, the d-pad's up and down scroll it a few lines, a finger drags it; left and right move the focus
+    on as everywhere. The focus shows with the amber edge."""
+
+    STEP = 6                                            # lines a press scrolls
+
+    def __init__(self, parent: QWidget | None = None):
+        super().__init__(parent)
+        self.setReadOnly(True)
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        self.setFont(font(BODY))
+        self.setLineWrapMode(QPlainTextEdit.LineWrapMode.WidgetWidth)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        QScroller.grabGesture(self.viewport(), QScroller.ScrollerGestureType.LeftMouseButtonGesture)
+        self._style(False)
+
+    def _style(self, focus: bool) -> None:
+        edge = AMBER if focus else "transparent"
+        self.setStyleSheet(f"QPlainTextEdit {{ color: {TEXT}; background: {RAISED}; border: {px(2)}px solid {edge};"
+                           f" border-radius: {px(10)}px; padding: {px(8)}px; }}")
+
+    def focusInEvent(self, event) -> None:
+        super().focusInEvent(event)
+        self._style(True)
+
+    def focusOutEvent(self, event) -> None:
+        super().focusOutEvent(event)
+        self._style(False)
+
+    def scroll(self, direction: str) -> bool:
+        """Up or down a few lines; False at that end already (the focus may move on then)."""
+        bar = self.verticalScrollBar()
+        before = bar.value()
+        bar.setValue(before + (-1 if direction == "up" else 1) * self.STEP * bar.singleStep())
+        return bar.value() != before
+
+    def show_end(self) -> None:
+        self.verticalScrollBar().setValue(self.verticalScrollBar().maximum())
+
+
 class Pane(QFrame):
     """The detail pane: a card's surface without the focus, for what the focused card is and does (the test app's
-    right side, the portal's strip under the tiles). *column* is its layout."""
+    right side, the portal's strip under the tiles). *column* is its layout. tapped() when a finger or the mouse
+    presses the pane itself (not a row or a pill in it): a page connects it to its A action where a tap should do
+    that (owner, 29-10-2026: a tap on the Log pane shows the log)."""
+
+    tapped = pyqtSignal()
 
     def __init__(self, parent: QWidget | None = None, solid: bool = False):
         super().__init__(parent)
@@ -482,6 +545,11 @@ class Pane(QFrame):
         self.restyle()
         self.column = QVBoxLayout(self)
         self.column.setContentsMargins(px(24), px(22), px(24), px(22))
+
+    def mousePressEvent(self, event) -> None:
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.tapped.emit()
+        super().mousePressEvent(event)
 
     def restyle(self) -> None:
         """Its surface at glass()'s opacity (solid when *solid*, and while active, as a focused card), again after
@@ -647,6 +715,9 @@ class IconPill(Pill):
         self.layout().setContentsMargins(0, 0, 0, 0)
         self.setMinimumSize(px(32), px(32))
         self.setFixedSize(px(32), px(32))
+        # Touch only (owner, 29-10-2026): Menu opens the information, so the d-pad never lands here and A in a pane
+        # is always the pane's own action
+        self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
     def _dim(self) -> None:
         self.setGraphicsEffect(None)
@@ -699,9 +770,10 @@ class InfoPill(IconPill):
         painter.drawRoundedRect(QRectF(center - stem / 2, side * 0.43, stem, side * 0.33), stem / 2, stem / 2)
 
     def show_info(self) -> None:
+        """The popup; closed, the focus goes back to where it was (the icon itself never holds it)."""
         window = self.window()
         if isinstance(window, PortableWindow):
-            window.show_popup(self.title, self.info, self)
+            window.show_popup(self.title, self.info, window.focusWidget())
 
 
 class InfoPopup(QWidget):
@@ -824,6 +896,64 @@ class PortableWindow(QWidget):
             inside.set_active(True)
         if self.pane_card is not None:
             self.pane_card.set_selected(inside is not None and not isinstance(new, Card))
+        self.update_legend()                            # B Back only while there is somewhere to go back to
+
+    # The buttons every window shares (owner, 29-10-2026): B goes back, View exits the app, Menu shows the information
+    # of the pane that shows. A subclass binds its own with bind() (the portal's Menu: its Suite page).
+
+    def update_legend(self) -> None:
+        """The legend for where the focus is now: a subclass with a legend sets it here (called on every move of the
+        focus), ending with common_items()."""
+
+    def common_items(self, back: bool | None = None) -> list[tuple[str, str]]:
+        """The legend's last entries: Menu Info while the pane that shows has an information icon, B Back when B
+        does something (*back*; default: the focus is in a pane, can_go_back()), and View Exit app."""
+        back = self.can_go_back() if back is None else back
+        return [*([INFO] if self.info_pill() is not None else []), *([BACK] if back else []), EXIT]
+
+    def info_pill(self) -> InfoPill | None:
+        """The information icon of what shows: the one in the pane with the focus, else the first one shown (a
+        window shows one pane at a time beside its cards); never one in a popup."""
+        shown = [pill for pill in self.findChildren(InfoPill) if pill.isVisible()
+                 and (self.popup is None or not self.popup.isAncestorOf(pill))]
+        pane = _pane_of(self.focusWidget())
+        inside = [pill for pill in shown if pane is not None and _pane_of(pill) is pane]
+        return (inside or shown or [None])[0]
+
+    def show_info(self) -> bool:
+        """Menu: the information of the pane that shows, as its icon would; whether there was one."""
+        pill = self.info_pill()
+        if pill is None:
+            return False
+        pill.show_info()
+        return True
+
+    def can_go_back(self) -> bool:
+        """Whether B has somewhere to go: the focus is in a pane, and the card whose pane it is shows."""
+        focus = self.focusWidget()
+        return (focus is not None and not isinstance(focus, Card) and _pane_of(focus) is not None
+                and self.pane_card is not None and self.pane_card.isVisible())
+
+    def go_back(self) -> bool:
+        """B in a pane: the focus back to its card on the left; on a card there is nowhere to go (nothing happens).
+        Whether it went."""
+        if not self.can_go_back():
+            return False
+        self.pane_card.setFocus(Qt.FocusReason.OtherFocusReason)
+        return True
+
+    def exit_app(self) -> None:
+        """View: the app closes. A subclass that is busy (a download) asks first."""
+        self.close()
+
+    def showEvent(self, event) -> None:  # noqa: N802 (Qt override)
+        """Every stack of the window, as the subclass made them, keeps to one visible page after each switch
+        (one_page)."""
+        for stack in self.findChildren(QStackedWidget):
+            if not stack.property("one_page"):
+                stack.setProperty("one_page", True)
+                stack.currentChanged.connect(lambda _index, stack=stack: one_page(stack))
+        super().showEvent(event)
 
     def shows_wallpaper(self) -> bool:
         return self.wallpaper_on and not self.wallpaper.isNull()
@@ -866,16 +996,25 @@ class PortableWindow(QWidget):
         """The cards and pills the focus can move to: only the popup's while one shows."""
         if self.popup is not None:
             return self.popup.pills()
-        return [w for w in self.findChildren(QWidget) if isinstance(w, (Card, Pill)) and w.isVisible()
-                and w.isEnabled()]
+        return [w for w in self.findChildren(QWidget) if isinstance(w, (Card, Pill, TextView)) and w.isVisible()
+                and w.isEnabled() and w.focusPolicy() != Qt.FocusPolicy.NoFocus]
 
     def move_focus(self, direction: str) -> QWidget | None:
         """Give the focus to the nearest card or pill in *direction* from the focused one (or the first, when none
-        has it); stays when there is none that way. Returns the one that has the focus."""
+        has it); stays when there is none that way. Returns the one that has the focus. In a pane the focus stays in
+        it (owner, 29-10-2026: the focus jumped back to the cards at the top or bottom of a list): only what is in
+        the same pane is a candidate, and B goes back to the cards."""
         candidates = self.focusables()
         if not candidates:
             return None
         current = QGuiApplication.focusObject()
+        if isinstance(current, TextView) and direction in ("up", "down") and current.scroll(direction):
+            return current
+        pane = _pane_of(current) if isinstance(current, QWidget) and not isinstance(current, Card) else None
+        if pane is not None and self.popup is None:
+            candidates = [w for w in candidates if _pane_of(w) is pane]
+            if current not in candidates:              # a text field, an emptied list: stay, B leaves
+                return current
         if current not in candidates:
             candidates[0].setFocus(Qt.FocusReason.OtherFocusReason)
             return candidates[0]
@@ -886,9 +1025,12 @@ class PortableWindow(QWidget):
         return current
 
     def accept(self) -> None:
+        """A: the focused card or pill acts; elsewhere (a text field, a text view) the page's own A, bind("accept")."""
         focus = QGuiApplication.focusObject()
         if isinstance(focus, (Card, Pill)) and focus in self.focusables():
             focus.activated.emit()
+        elif "accept" in self.handlers:
+            self.handlers["accept"]()
 
     def restyle(self) -> None:
         """Every card and pane drawn again at glass()'s opacity, after it changed (a wallpaper switched on or off)."""
@@ -920,7 +1062,7 @@ class PortableWindow(QWidget):
         """*action* done, whoever asks: the controller (on_action, in the active window only) or a tap on the
         legend's entry for it."""
         if self.popup is not None:
-            if action == "back" or (action == "accept" and self.popup.content is None):
+            if action in ("back", "menu") or (action == "accept" and self.popup.content is None):
                 self.popup.dismiss()
             elif action == "accept":
                 self.accept()
@@ -935,6 +1077,10 @@ class PortableWindow(QWidget):
             self.back.emit()
         elif action in self.handlers:
             self.handlers[action]()
+        elif action == "view":
+            self.exit_app()
+        elif action == "menu":
+            self.show_info()
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
         keys = {Qt.Key.Key_Up: "up", Qt.Key.Key_Down: "down", Qt.Key.Key_Left: "left", Qt.Key.Key_Right: "right"}
@@ -963,6 +1109,13 @@ class PortableWindow(QWidget):
     def closeEvent(self, event) -> None:
         self.gamepad.stop()
         super().closeEvent(event)
+
+
+def _pane_of(widget: QWidget | None) -> Pane | None:
+    """The Pane *widget* is in (itself included), None outside one; a popup's panel does not count."""
+    while widget is not None and not isinstance(widget, Pane):
+        widget = widget.parentWidget()
+    return None if widget is None or widget.solid else widget
 
 
 def _center(widget: QWidget) -> QPoint:

@@ -25,23 +25,26 @@ rows of four tiles each. A tile shows the app's icon, its name and its state:
 | Downloading… 40 MB | The release is coming in. |
 | Installing… | Its installer runs in a PowerShell window. |
 
-The strip under the tiles shows the focused app: its name, its versions, what it does and its pills.
+The strip under the tiles shows the focused app: its name, its versions and what it does.
 
 | Button | What it does |
 |---|---|
 | D-pad, left stick | Move the amber focus between the tiles |
 | LB, RB | The tab to the left or right |
 | A | Install the app, or open it once it is installed |
-| Y | Update or reinstall the app, when the strip shows that pill |
+| Y | Update or reinstall the app, when the row at the bottom offers it |
 | X | The app's details |
-| ☰ (Menu) | The Suite page |
-| ⧉ (View) | The Settings page |
-| B | Close the portal |
+| ☰ (Menu) | The Suite page, with the settings |
+| B | Back: from a page to the tiles; on a tile nothing |
+| ⧉ (View) | Exit the portal |
 
-Every tile and pill also works by touch, and so does the row at the bottom: a tap on an entry (**X Details**, **☰**,
-**⧉**, **B**) does what the button does. On a keyboard, the arrow keys move, Enter presses and Escape goes back.
+Every action is a button, in the row at the bottom with what it does for the focused app (**A Install** or **A
+Open**, **X Details**, **Y Update**, **☰ Suite**, **⧉ Exit app**). Every tile works by touch, and so does the row: a
+tap on an entry does what the button does. On a keyboard, the arrow keys move, Enter presses and
+Escape goes back.
 
-Every pill looks the same: amber, with its controller button, at the right of its pane; it dims with the focus or under your finger. On the Settings page the setting with the focus has the amber edge.
+On the Suite page the setting with the focus has the amber edge; the d-pad stays on the page, and **B** goes back to
+the tiles.
 
 ## Installing and updating an app
 
@@ -61,24 +64,23 @@ you start it from the portal.
 ## The details page
 
 **X** shows the app's details: the version installed and the one this portal pins, its category and where its
-program is. Its pills are **Open** and **Remove**. Remove asks for a second press within five seconds instead of a
-dialog; the pill says **Press again to remove** meanwhile. **B** goes back to the tiles.
+program is. **A Open** opens it and **Y Remove** removes it. Remove asks for a second press within five seconds
+instead of a dialog; the row at the bottom says **Press again to remove** meanwhile. **B** goes back to the tiles.
 
 ## The Suite page
 
 **☰** shows the Suite page: this portal's version, the newest portal release, and what that release
-changes (which apps it updates). With a newer release, its pill says **Update to x.y.z**; otherwise **Check again**.
+changes (which apps it updates). With a newer release, the row at the bottom offers **Y Update to x.y.z**;
+otherwise **Y Check again**.
 The status line at the top, with the battery, the date and the time, says **Suite x.y.z available** while there is
 one.
 
-**A** on **Update to x.y.z** downloads the new portal; the page counts the megabytes. The portal then closes,
+**Y Update to x.y.z** downloads the new portal; the page counts the megabytes. The portal then closes,
 installs the new release in a PowerShell window and starts again. The new release brings the apps it pins: their
 tiles then say **Update** where a newer release is pinned.
 
-## Settings
-
-**⧉** (View) shows the Settings page: how the portal looks, kept for the next start. **A** switches the focused
-setting, **B** goes back.
+The settings are on the Suite page too, under the release: how the portal looks, kept for the next start. **A** on a
+setting switches it; **B** goes back to the tiles.
 
 | Setting | |
 |---|---|

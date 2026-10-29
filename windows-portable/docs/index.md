@@ -36,7 +36,10 @@ the back buttons and the stick lights too. The temperatures, the power draw and 
 #### :material-gamepad-variant: Gaming
 
 [PCSX2 Manager](apps/pcsx2.md) installs PCSX2, the PlayStation 2 emulator, in portable mode, sets it up for the
-device's controller and opens it full screen in its Big Picture mode.
+device's controller, plays your PS2 games full screen and puts them in Steam.
+
+[PPSSPP Manager](apps/ppsspp.md) installs PPSSPP, the PSP emulator, in portable mode, plays your PSP games full
+screen and puts them in Steam.
 </div>
 </div>
 
@@ -79,7 +82,7 @@ portal.
 ### Do the apps change my device?
 
 No setting of Windows or of the device. Windows Portable Test only reads and shows what Windows reports. PCSX2
-Manager installs PCSX2 in its own folder and writes PCSX2's settings there, and nowhere else.
+Manager and PPSSPP Manager install their emulator in its own folder and write its settings there, and nowhere else.
 
 ### Do I need administrator rights?
 

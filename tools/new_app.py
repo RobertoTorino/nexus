@@ -30,6 +30,7 @@ import re
 import shutil
 import subprocess
 import sys
+import textwrap
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -678,7 +679,7 @@ def main() -> int:
     app = create_app(INFO, qt_args, theme=PORTABLE)
     if instance.already_running(INFO.app_id):       # a second launch brings the open window to the front
         return 0
-    log_path = applog.setup(APP_ID, suite=SUITE)
+    log_path = applog.setup(APP_ID, suite=SUITE, private=True)   # no user name in a line
     applog.logger(APP_ID).info(f"{APP_NAME} {__version__} started.")
     from .main_window import MainWindow
     window = MainWindow(log_path=log_path)
@@ -711,7 +712,8 @@ from PyQt6.QtWidgets import QVBoxLayout
 
 from @CORE@ import applog, power
 from @CORE@.gamepad import Gamepad
-from @CORE@.portable import BODY, DIM, Legend, Pane, PortableHeader, PortableWindow, px, status_clock, text_label
+from @CORE@.portable import (BODY, DIM, Legend, Pane, PortableHeader, PortableWindow, px, status_clock,
+                                 text_label)
 
 from . import APP_ID, APP_NAME, __version__
 
@@ -739,7 +741,7 @@ class MainWindow(PortableWindow):
         self.pane.column.addStretch()
         page.addWidget(self.pane, 1)
         page.addSpacing(px(8))
-        self.legend = Legend([("B", "Close")])
+        self.legend = Legend(self.common_items())
         page.addWidget(self.legend)
 
         self.back.connect(self.on_back)
@@ -756,8 +758,14 @@ class MainWindow(PortableWindow):
     def update_status(self) -> None:
         self.header.set_status([power.text(self.battery()), *status_clock()])
 
+    def update_legend(self) -> None:
+        """The page's buttons, then core's Menu Info, B Back and View Exit app (the suite's rule)."""
+        if hasattr(self, "legend"):
+            self.legend.set_items(self.common_items())
+
     def on_back(self) -> None:
-        self.close()
+        """B goes back: from a pane to its card; with nowhere to go it does nothing (View exits the app)."""
+        self.go_back()
 '''
 
 W_CONFTEST_PY = r'''# SPDX-License-Identifier: GPL-3.0-or-later
@@ -799,13 +807,14 @@ def settings_in_tmp(tmp_path, monkeypatch):
 
 W_TEST_WINDOW_PY = r'''# SPDX-License-Identifier: GPL-3.0-or-later
 """The window (main_window.py): it opens on the portable window with the header's battery, date and time, fits the
-handheld's screen, and B closes it; the version and the icons are where the checks expect them."""
+handheld's screen, B goes back and View exits; the version and the icons are where the checks expect them."""
 
 from __future__ import annotations
 
 import re
 
 from @CORE@ import portable
+from @CORE@.portable import EXIT
 from @CORE@.gamepad import Gamepad
 from @PACKAGE@ import APP_ID, APP_NAME, EXE_NAME, INFO, LOGO_PATH, ROOT, __version__
 from @PACKAGE@.main_window import MainWindow
@@ -836,7 +845,7 @@ def test_the_window_opens_with_the_suites_header(qapp):
     window = make(qapp)
     assert window.header.title.text() == APP_NAME and window.header.version.text() == __version__
     assert re.fullmatch(r"82%  \|  \w+day \d\d/\d\d/\d{4}  \|  \d\d:\d\d", window.header.status.text())
-    assert window.legend.items == [("B", "Close")]
+    assert window.legend.items == [EXIT]
     window.close()
 
 
@@ -846,12 +855,15 @@ def test_the_window_fits_the_handhelds_screen(qapp):
     window.close()
 
 
-def test_b_closes_the_app(qapp, monkeypatch):
+def test_b_goes_back_and_view_exits(qapp, monkeypatch):
+    """The suite's buttons: B goes back (with nowhere to go, nothing happens) and View exits the app."""
     window = make(qapp)
     closed = []
     monkeypatch.setattr(window, "close", lambda: closed.append(True))
     monkeypatch.setattr(window, "isActiveWindow", lambda: True)
     window.on_action("back")
+    assert closed == []
+    window.on_action("view")
     assert closed == [True]
 
 
@@ -1299,6 +1311,10 @@ launch = [["Open", "%LOCALAPPDATA%\\@VENV_ID@\\@APP_ID@\\app\\@EXE@.exe"]]
 '''
 
 W_HOME_ROW = "| [@APP_NAME@](apps/@NAME@.md) | @SUMMARY@ |\n"
+# The home page's "In the suite": a card per category (#### :material-<icon>: <Category>), a paragraph per app
+W_HOME_PARAGRAPH = "[@APP_NAME@](apps/@NAME@.md): @SUMMARY@"
+W_HOME_ICONS = {"sustainable": "stethoscope", "graphics": "monitor", "gaming": "gamepad-variant",
+                "utilities": "toolbox"}
 
 
 # --- Writing -----------------------------------------------------------------------------------------------------
@@ -1319,6 +1335,32 @@ def insert_after_table(text: str, heading: str, row: str, where: str) -> str:
     if table < 0:
         raise SystemExit(f"{where}: no table after {heading!r}")
     return _insert_after_block(text, table + 1, "|", row)
+
+
+def insert_home_card(text: str, category: str, title: str, paragraph: str, where: str) -> str:
+    """*paragraph* at the end of the category's card on the home page ("#### :material-<icon>: <title>" in a
+    home-card), or in a new card for it at the end of the grid when the category has none yet."""
+    paragraph = "\n".join(textwrap.wrap(paragraph, 116, break_on_hyphens=False)) + "\n"
+    card = re.search(rf"^#### :material-[\w-]+: {re.escape(title)}\n", text, re.MULTILINE)
+    if card is not None:
+        end = text.find("\n</div>", card.end())
+        if end < 0:
+            raise SystemExit(f"{where}: the {title} card has no </div>")
+        return text[:end] + "\n\n" + paragraph.rstrip("\n") + text[end:]
+    grid = text.find('<div class="home-grid" markdown>')
+    if grid < 0:
+        raise SystemExit(f"{where}: no home-grid to put a {title} card in")
+    depth, at = 0, grid
+    for tag in re.finditer(r"<div\b[^>]*>|</div>", text[grid:]):
+        depth += -1 if tag.group().startswith("</") else 1
+        if depth == 0:
+            at = grid + tag.start()
+            break
+    else:
+        raise SystemExit(f"{where}: the home-grid has no </div>")
+    icon = W_HOME_ICONS.get(category, "apps")
+    return (text[:at] + f'<div class="home-card" markdown>\n#### :material-{icon}: {title}\n\n{paragraph}</div>\n'
+            + text[at:])
 
 
 def insert_after_list(text: str, heading: str, line: str, where: str) -> str:
@@ -1507,8 +1549,12 @@ def write_windows_app(root: Path, suite: Suite, app: NewApp) -> list[Path]:
     put(config, _insert_after_block(text, at + len("\n  - Apps:\n"), "      - ",
                                     f"      - {title}: apps/{app.name}.md\n"))
     home = suite.folder / "docs" / "index.md"
-    put(home, insert_after_table(home.read_text(encoding="utf-8"), "## The apps", fill(W_HOME_ROW, app, suite),
-                                 "docs/index.md"))
+    text = home.read_text(encoding="utf-8")
+    if 'class="home-grid"' in text:
+        put(home, insert_home_card(text, app.category, app.category_title, fill(W_HOME_PARAGRAPH, app, suite),
+                                   "docs/index.md"))
+    else:
+        put(home, insert_after_table(text, "## The apps", fill(W_HOME_ROW, app, suite), "docs/index.md"))
     readme = suite.folder / "README.md"
     if readme.is_file() and f"**{app.category_title}**" in readme.read_text(encoding="utf-8"):
         put(readme, insert_after_list(readme.read_text(encoding="utf-8"), f"**{app.category_title}**",

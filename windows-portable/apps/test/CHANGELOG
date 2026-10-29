@@ -1,3 +1,26 @@
+Changelog: 29-10-2026 14:35:18
+
+Release 2.0.0.
+
+Changelog: 29-10-2026 13:17:58
+
+Fixed. A path on the screen showed the user's name (owner, 29-10-2026: against the privacy rule): the report's Saved
+line and the log show the user's folders as %LOCALAPPDATA% and %USERPROFILE%, and no line of the log names the user
+(core's platform.private).
+
+Changelog: 29-10-2026 12:46:22
+
+Breaking. No pills (owner, 29-10-2026: one way everywhere): A Read (Read again) and A Test (Test again) are in the
+row at the bottom with the pane's other buttons, and the controller test's Finish pill is gone: a tap on the row's B
+Hold to finish ends the test. The information icon is touch only; Menu opens it.
+
+Changelog: 29-10-2026 11:35:27
+
+Breaking. The buttons (owner, 29-10-2026: "Close" on B was not clear): B goes back (from a pane to its card, from a
+page to where it came from; on a card it does nothing), View (⧉) exits the app and Menu (☰) opens the information of
+the pane that shows. During the controller test every button is still the test's, and holding B ends it. The row at
+the bottom ends with ☰ Info, B Back and ⧉ Exit app.
+
 Changelog: 29-10-2026 06:24:25
 
 Release 1.7.1.

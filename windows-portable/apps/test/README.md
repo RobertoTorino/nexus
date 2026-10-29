@@ -11,7 +11,7 @@ network does (the Wi-Fi link, what else is downloading and a timed download from
 trigger of its controller as you press them. It reads and shows; it changes nothing on the device.
 
 Made for the handheld in your hands: full screen, the controller moves the amber focus between the cards (A to run,
-X to save the report, B to close), and every card and button also works by touch.
+X to save the report, B to go back, View (⧉) to exit), and every card and button also works by touch.
 
 ## Install it
 

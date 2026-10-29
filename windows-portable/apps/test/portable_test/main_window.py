@@ -17,8 +17,8 @@ from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QStackedWidget, QVBoxLayou
 
 from bc250_core import applog, power
 from bc250_core.gamepad import Gamepad
-from bc250_core.platform import suite_data
-from bc250_core.portable import (BODY, DIM, Card, Legend, Pane, Pill, PortableHeader, PortableWindow, pill_row,
+from bc250_core.platform import private, suite_data
+from bc250_core.portable import (BODY, DIM, Card, Legend, Pane, PortableHeader, PortableWindow,
                                  px, status_clock, text_label)
 
 from . import APP_ID, APP_NAME, SUITE, __version__, back_buttons, controller, device, lights, network, temps
@@ -26,7 +26,7 @@ from .controller import LIGHTS_TEXT, LIGHTS_TITLE, ControllerPane, LightsPanel
 
 STATUS_MS = 5_000               # the header's battery, temperatures and time: the temperatures live
 CARDS_WIDTH = 663               # the cards' column, as wide as its 5 of 9 parts of the page were: a long value wraps
-CONTROLLER_LEGEND = [("A", "Start the test"), ("Y", "Stick lights"), ("B", "Close")]
+CONTROLLER_LEGEND = [("A", "Start the test"), ("Y", "Stick lights")]   # then core's Info, Back and Exit app
 
 
 class _Reader(QObject):
@@ -62,9 +62,9 @@ class _Reader(QObject):
 
 class InfoPane(Pane):
     """What Windows reports, as labels and values: the Device, Hardware and Connected cards' pane (one read fills all
-    three) and the Network card's. Each has its pill (A Read, A Test) and the status line; nothing runs before the
-    pill, or A on the card, asks for it (owner, 28-10-2026), and the pill alone says so (owner, 29-10-2026: "we have
-    Read and Press A to read, one of them must go")."""
+    three) and the Network card's. Its action, A Read or A Test (then Read again, Test again), is in the window's
+    legend, never a pill (owner, 29-10-2026: one way everywhere); nothing runs before A asks for it (owner,
+    28-10-2026). *action* is the legend's text for A."""
 
     def __init__(self, title: str, about: str, empty: str = "", action: str = "Read",
                  parent: QWidget | None = None):
@@ -80,8 +80,7 @@ class InfoPane(Pane):
         self.column.addStretch()
         self.status = text_label("", BODY + 1, color=DIM, wrap=True)
         self.column.addWidget(self.status)
-        self.read_pill = Pill(action, "A", main=True)
-        self.column.addLayout(pill_row(self.read_pill))
+        self.action = action
 
     def show_rows(self, rows: list[tuple[str, str]]) -> None:
         while self.grid.count():
@@ -177,18 +176,17 @@ class MainWindow(PortableWindow):
         for card, pane in zip(self.info_cards, self.info_panes):
             card.focused.connect(lambda pane=pane: self.show_pane(pane))
             card.activated.connect(self.read_device)
-            pane.read_pill.activated.connect(self.read_device)
         self.tester = _Reader(lambda: measure(network.power_text(self.battery()), say=self.tester.progress.emit))
         self.tester.done.connect(self.network_measured)
         self.tester.failed.connect(self.network_failed)
         self.tester.progress.connect(self.network_pane.status.setText)
         self.network_card.focused.connect(lambda: self.show_pane(self.network_pane))
         self.network_card.activated.connect(self.measure_network)
-        self.network_pane.read_pill.activated.connect(self.measure_network)
         self.controller_card.focused.connect(lambda: self.show_pane(self.controller_pane))
         self.controller_card.activated.connect(self.start_test)
         self.controller_pane.finished.connect(self.test_finished)
         self.gamepad.raw.connect(self.controller_pane.feed)
+        self.bind("accept", self.a_action)
         self.bind("x", self.save_report)
         self.bind("y", self.y_action)
         self.back.connect(self.on_back)
@@ -222,10 +220,35 @@ class MainWindow(PortableWindow):
         if self.testing:
             return
         self.panes.setCurrentWidget(pane)
-        if pane in self.report_panes:
-            self.legend.set_items([("X", "Save report"), ("B", "Close")])
-        else:
-            self.legend.set_items(CONTROLLER_LEGEND)
+        self.update_legend()
+
+    def update_legend(self) -> None:
+        """The pane's buttons, then core's Menu Info, B Back (while the focus is in a pane) and View Exit app (the
+        suite's rule, owner 29-10-2026); during the button test only B held, which ends it."""
+        if self.testing or not hasattr(self, "legend"):
+            return
+        pane = self.panes.currentWidget()
+        items = [("A", pane.action), ("X", "Save report")] if pane in self.report_panes else CONTROLLER_LEGEND
+        self.legend.set_items([*items, *self.common_items()])
+
+    def a_action(self) -> None:
+        """A beside a card (a tap on the legend's A, A in a pane): the pane's action, as A on its card."""
+        pane = self.panes.currentWidget()
+        if pane in self.info_panes:
+            self.read_device()
+        elif pane is self.network_pane:
+            self.measure_network()
+        elif pane is self.controller_pane:
+            self.start_test()
+
+    def act(self, action: str) -> None:
+        """During the button test every button is the test's (on_action drops them); a tap on the legend's "B Hold
+        to finish" ends it, for a finger."""
+        if self.testing:
+            if action == "back":
+                self.controller_pane.finish()
+            return
+        super().act(action)
 
     def y_action(self) -> None:
         """Y on the Controller card: the stick lights' test (owner, 29-10-2026: the icon for it was hard to reach)."""
@@ -278,7 +301,8 @@ class MainWindow(PortableWindow):
         self.device = found
         for pane, (_, rows) in zip(self.info_panes, self.sections()):     # the Network section, when measured, is last
             pane.show_rows(rows)
-            pane.read_pill.set_text("Read again")
+            pane.action = "Read again"
+        self.update_legend()
         self.log.info(f"Read the device: {found.name}.")
 
     def device_failed(self, error: str) -> None:
@@ -301,7 +325,7 @@ class MainWindow(PortableWindow):
             self.say(f"The report was not saved: {error.strerror or error}")
             self.log.error(f"Saving the report failed: {error}")
             return None
-        self.say(f"Saved: {path}")
+        self.say(f"Saved: {private(path)}")     # the user's folder by its variable (owner, 29-10-2026)
         self.log.info(f"Saved the report: {path}")
         return path
 
@@ -315,7 +339,8 @@ class MainWindow(PortableWindow):
     def network_measured(self, found: network.Network) -> None:
         self.network = found
         self.network_pane.show_rows(found.rows())
-        self.network_pane.read_pill.set_text("Test again")
+        self.network_pane.action = "Test again"
+        self.update_legend()
         if found.error:
             self.network_pane.status.setText(f"The download failed: {found.error}")
         self.log.info("Measured the network: " + "; ".join(f"{label} {value}" for label, value in found.rows()))
@@ -364,8 +389,9 @@ class MainWindow(PortableWindow):
         super().keyPressEvent(event)
 
     def on_back(self) -> None:
+        """B goes back: from a pane to its card; on a card it does nothing (View exits the app)."""
         if not self.testing:
-            self.close()
+            self.go_back()
 
     def closeEvent(self, event) -> None:
         self.status_timer.stop()

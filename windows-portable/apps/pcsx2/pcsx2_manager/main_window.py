@@ -3,28 +3,30 @@
 games, Settings, Memory cards, Log: the BC250 suite's PCSX2 Manager's parts, owner 29-10-2026), what the focused one
 shows on the right, the controller's buttons at the bottom.
 
-An action with a controller button is in the legend at the bottom, not on a pill too (owner, 29-10-2026: "we have
-update steam 2 times ... use that bottom row for actions"); a tap on the legend's entry does the same. The pills that
-stay are the actions without a button: Remove BIOS and Remove PCSX2 (a second press each), A Install, A Save, A Open
-the log.
+Every action is a controller button in the legend at the bottom, A too, and a tap on the entry does the same; there
+are no pills (owner, 29-10-2026: "we have update steam 2 times ... use that bottom row for actions", then one way
+everywhere). Core's rule ends the legend: B goes back (a pane to its card, the folders to the games, a card's saves to
+the cards, the browser a level up), View exits the app and Menu shows the information of the pane that shows.
 
-The Your games pane (panes.py, library.py): the games in the chosen folders; A plays one, X marks it for Steam, Y
-Update Steam makes Steam's shortcuts match the marks; LB Folders lists the folders, the usual places and a drive to
-add, and Choose a folder (Windows' own folder window), LB Games goes back; RB Steam artwork keeps the SteamGridDB key.
-The Memory cards pane: the cards and the saves on each, X New card and Y Copy card. The Log pane: PCSX2's last run and
-the newest lines of the app's log.
+The Your games pane (panes.py, library.py): the games in the chosen folders, played from Steam (owner, 29-10-2026:
+the app never starts a game itself); A marks one for Steam, Y Update Steam makes Steam's shortcuts match the marks;
+LB Folders lists the folders, the usual places and a drive to add, and Browse, which opens the browser (core's
+browse: the controller's own way to a folder, where Windows' folder window is not); LB Games goes back; RB Steam
+artwork keeps the SteamGridDB key. The Memory cards pane: the cards and the saves on each, X New card and Y Copy card.
+The Log pane: PCSX2's last run and the newest lines of the app's log; A (or a tap on the pane) shows the whole log in
+the pane, B goes back.
 
-The PCSX2 pane: what is installed, where, the BIOS; X Choose BIOS, Y Reinstall or Update, and the pills Remove BIOS,
-Remove PCSX2 (a second press each) and A Install until PCSX2 is installed (PCSX2's own window is never opened). A pill
-is never grayed out: one that cannot act now says why on the status line. Nothing downloads before A. The download and
-the unpacking run off the window's thread; the pane counts the megabytes. B while they run asks first, as the portal
-does.
+The PCSX2 pane: what is installed, where, the BIOS; A Install until PCSX2 is installed, X Choose BIOS (the browser,
+in Downloads, showing the .bin and .rom dumps), Y Reinstall or Update, LB Remove BIOS and RB Remove PCSX2 (a second
+press each). A press that cannot act now says why on the status line. Nothing downloads before A. The download and
+the unpacking run off the window's thread; the pane counts the megabytes. View (exit) while they run asks first, as
+the portal does.
 
 The Settings pane: PCSX2's settings that matter on the handheld, in tabs (LB and RB: Picture, Game, Controller, On
 screen), a row each with its value; A steps to the next value and writes it into PCSX2.ini at once (pcsx2_settings),
 never while PCSX2 runs (it writes its own settings back when it closes). What the app owns in PCSX2.ini is set after
-an install, when the window opens and before PCSX2 opens (pcsx2_settings.prepare), so PCSX2 opens ready to play: the
-BC250 suite's PCSX2 Manager's rules."""
+an install and when the window opens (pcsx2_settings.prepare), so PCSX2 opens ready to play: the BC250 suite's PCSX2
+Manager's rules."""
 
 from __future__ import annotations
 
@@ -36,58 +38,63 @@ from pathlib import Path
 
 from PyQt6.QtCore import QObject, QSettings, Qt, QTimer, pyqtSignal
 from PyQt6.QtGui import QFont, QGuiApplication
-from PyQt6.QtWidgets import QFileDialog, QGridLayout, QHBoxLayout, QStackedWidget, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QStackedWidget, QVBoxLayout, QWidget
 
-from bc250_core import applog, covers, power, steam
+from bc250_core import applog, browse, covers, power, steam
 from bc250_core.gamepad import Gamepad
-from bc250_core.platform import open_path
-from bc250_core.portable import (AMBER, BODY, DIM, Card, InfoPill, Legend, Pane, Pill, PortableHeader,
-                                 PortableWindow, Row, Tabs, pill_row, px, status_clock, text_label)
+from bc250_core.platform import private
+from bc250_core.portable import (AMBER, BODY, DIM, EXIT, VIEW, Card, InfoPill, Legend, Pane, PortableHeader,
+                                 PortableWindow, Row, Tabs, px, status_clock, text_label)
 
 from . import (APP_ID, APP_NAME, LOGO_PATH, __version__, catalogue, emulator, library, memcards, pcsx2_settings,
                shortcuts, userdata)
 from .games import Game, scan
-from .panes import CARDS_INFO, GAMES_INFO, KeyPane, ListPane, LogPane
+from .panes import BROWSE_INFO, CARDS_INFO, GAMES_INFO, KeyPane, ListPane, LogPane
 from .pcsx2_settings import OWN, TABS, Setting
 
 STATUS_MS = 30_000              # the header's battery and time
 PROGRESS_MS = 500               # the megabytes of a download
-CONFIRM_MS = 5000               # Remove, and B while PCSX2 is being installed, ask for a second press within this
-CARDS_WIDTH = 460               # the cards' column; the panes take the rest, the PCSX2 pane's one row of pills
+CONFIRM_MS = 5000               # Remove, and View (exit) while PCSX2 is being installed, ask for a second press within this
+CARDS_WIDTH = 460               # the cards' column; the panes take the rest
 ABOUT = ("PCSX2, the PlayStation 2 emulator, installed for your own user in portable mode: its settings, the BIOS, "
          "the memory cards and the save states stay in its folder.")
-CLOSE, BACK = ("B", "Close"), ("B", "Back")
 CARD_HEIGHT = 100               # five cards and their gaps fit the column at 720 px high
 LOG_LINES = 12                  # the newest lines of the app's log in the Log pane
-BACK_KEY = "\u2039"            # the first row of a card's saves: back to the cards
+LOG_MAX = 2000                  # the lines of the log the whole view shows, the newest
+BACK_KEY = "‹"            # the first row of a card's saves: back to the cards
 FOLDERS, GAMES_VIEW = "folders", "games"
+BROWSE_KEY = "browse"           # the folders' last row: the browser
+FOLDER, BIOS = "folder", "bios"  # what the browser looks for
+BIOS_SUFFIXES = (".bin", ".rom")
 RUNNING = "PCSX2 is open: close it first, it would write its own settings over the change."
-# Without a BIOS PCSX2 stops at its own Startup Error window (seen on the Ally, 29-10-2026): no game starts then
-NO_BIOS = "Choose BIOS first (the PCSX2 card): PCSX2 cannot start a game without your console's BIOS."
 NOT_INSTALLED = "Install PCSX2 first: the settings are in its folder."
 BUSY = "Wait a moment: the app is still busy with the step before."
 BIOS_NEEDS_PCSX2 = "Install PCSX2 first: the BIOS goes in its folder."
-NO_BIOS_TO_REMOVE = "There is no BIOS to remove: Choose BIOS takes your own console's dump."
+NO_BIOS_TO_REMOVE = "There is no BIOS to remove: the X button (Choose BIOS) takes your own console's dump."
 NO_CARD_TO_COPY = "Copy card copies the card the focus was on last: move to a card in the list first."
+OPEN_A_FOLDER = "Open a folder first: the A button opens the one the focus is on, then the X button adds it."
 ALL_SETTINGS = pcsx2_settings.SETTINGS
 BIOS_INFO = (
     "PCSX2 needs the PS2's BIOS to start any game, and it is not ours to give: it comes from your own PlayStation 2. "
     "Dump it with biosdrain, a homebrew tool run on the console (PCSX2's BIOS page, "
     f"{userdata.BIOS_HELP_URL}, says how), and copy the dump to the device. A dump is a .bin or .rom file of 4 MB, "
     "often with files beside it under the same name (.nvm, .mec, .erom).\n\n"
-    "X Choose BIOS opens Windows' own file window, in your Downloads: pick the .bin, and the app copies it, with the "
-    "files beside it, into PCSX2's bios folder and makes PCSX2 use it. Remove BIOS takes the one PCSX2 uses out of "
-    "that folder again, with its files, on a second press; the dump you chose it from stays where it is. Neither "
-    "works while PCSX2 runs: it writes its settings back when it closes.")
+    "The X button (Choose BIOS) opens the app's browser in your Downloads: open folders with the A button, and the A "
+    "button on the .bin chooses it. The app copies it, with the files beside it, into PCSX2's bios folder and makes "
+    "PCSX2 use it. The LB button (Remove BIOS) takes the one PCSX2 uses out of that folder again, with its files, on a "
+    "second press; the dump you chose it from stays where it is. Neither works while PCSX2 runs: it writes its "
+    "settings back when it closes.")
 # The Settings pane's information, per tab: what each setting of the tab does
-TAB_INFO = {key: ("A changes the setting the focus is on, LB and RB change the tab; PCSX2 reads the settings the "
-                  "next time it opens.\n\n" + "\n".join(f"{setting.label}: {setting.tip}" for setting in group))
+TAB_INFO = {key: ("The A button changes the setting the focus is on, the LB and RB buttons change the tab; PCSX2 "
+                  "reads the settings the next time it opens.\n\n"
+                  + "\n".join(f"{setting.label}: {setting.tip}" for setting in group))
             for key, _name, group in TABS}
 
 
 def wrappable(path: Path) -> str:
-    """A path that a label can wrap after each backslash: a long one would make the pane wider than the screen."""
-    return str(path).replace("\\", "\\\u200b")
+    """A path as the screen shows it: the user's folders by their variable (%LOCALAPPDATA%: never the user's name,
+    owner 29-10-2026), wrapping after each backslash, as a long one would make the pane wider than the screen."""
+    return private(path).replace("\\", "\\​")
 
 
 class _Worker(QObject):
@@ -117,10 +124,13 @@ class _Worker(QObject):
         self.done.emit(result)
 
 
-NOT_THE_GAMES = "Update Steam works on the games: Games shows them again."
+NOT_THE_GAMES = "Update Steam works on the games: the LB button shows them again."
 NO_STEAM = "Steam was never started on this device: start it once, then Update Steam puts the marked games in it."
-NOTHING_TO_CHANGE = ("Nothing to change in Steam: X on a game marks it for Steam or takes the mark away, then Y "
-                     "Update Steam.")
+NOTHING_TO_CHANGE = ("Nothing to change in Steam: the A button on a game marks it for Steam or takes the mark away, "
+                     "then the Y button updates Steam.")
+# Without a BIOS PCSX2 stops at its own Startup Error window (seen on the Ally, 29-10-2026): a game in Steam would not
+# start
+NO_BIOS = "Choose BIOS first (the X button on the PCSX2 card): PCSX2 cannot start a game without your console's BIOS."
 
 
 class SettingsPane(Pane):
@@ -166,7 +176,7 @@ class SettingsPane(Pane):
         keys = [k for k, _name, _group in TABS]
         inside = any(pill.hasFocus() for pill in self.pills.values())
         if inside:
-            self.info.setFocus()                        # off the old page first: a row hidden with the focus would
+            self.setFocus()                             # off the old page first: a row hidden with the focus would
         self.pages.setCurrentIndex(keys.index(key))     # hand it to a card, and that card's pane would show
         self.info.info = TAB_INFO[key]
         if inside:
@@ -180,16 +190,14 @@ class MainWindow(PortableWindow):
     def __init__(self, log_path: Path | None = None, gamepad: Gamepad | None = None,
                  battery: Callable[[], tuple[int, bool] | None] = power.battery, home: Path | None = None,
                  install: Callable[..., str] = emulator.install, running: Callable[[Path], bool] = emulator.running,
-                 play: Callable[[Path, Path], None] = emulator.start, steam_dir: Path | None | bool = False,
+                 steam_dir: Path | None | bool = False,
                  steam_closed: Callable[[Callable[[], None]], bool] = steam.with_steam_closed,
-                 choose_folder: Callable[[], str] | None = None, user_home: Path | None = None,
-                 drives: Callable[[], list[Path]] = library.removable_drives,
-                 any_running: Callable[[], bool] = memcards.pcsx2_running, settings: QSettings | None = None,
-                 choose_file: Callable[[], str] | None = None):
-        """*steam_dir*: Steam's folder (False: found on this system, None: no Steam); *choose_folder*: a folder
-        picked by the user ("" when none), Windows' own folder window by default; *settings*: the app's (its .ini,
-        create_app's), where the game folders are kept; *choose_file*: a BIOS dump picked by the user ("" when
-        none), Windows' own file window by default."""
+                 user_home: Path | None = None, drives: Callable[[], list[Path]] = library.removable_drives,
+                 roots: Callable[[], list[Path]] = browse.drives,
+                 any_running: Callable[[], bool] = memcards.pcsx2_running, settings: QSettings | None = None):
+        """*steam_dir*: Steam's folder (False: found on this system, None: no Steam); *user_home*: the user's folder
+        (the usual places, Downloads for the BIOS); *drives*: the removable drives offered as folders, *roots*: every
+        drive the browser offers; *settings*: the app's (its .ini, create_app's), where the game folders are kept."""
         super().__init__(gamepad)
         self.setWindowTitle(f"{APP_NAME} {__version__}")
         self.log = applog.logger(APP_ID)
@@ -197,18 +205,16 @@ class MainWindow(PortableWindow):
         self.battery = battery
         self.home = home or emulator.emulator_home()
         self.install_job, self.running = install, running
-        self.choose_file = choose_file or self._bios_window
         self.confirm_bios = False                       # Remove BIOS pressed once
         self.busy = False
         self.got = 0                                    # bytes of the download so far (the worker's thread writes it)
         self.stage = ""                                 # "Checking the download…", "Unpacking…"
         self.message = ""                               # the last outcome
         self.confirm_remove = self.close_asked = False
-        self.play_game, self.steam_closed, self.any_running = play, steam_closed, any_running
+        self.steam_closed, self.any_running = steam_closed, any_running
         self._job = ""                                  # "steam" while Update Steam runs in the worker
         self.steam_dir = steam.find_steam() if steam_dir is False else steam_dir
-        self.choose_folder = choose_folder or self._folder_window
-        self.user_home, self.drives = user_home, drives
+        self.user_home, self.drives, self.roots = user_home, drives, roots
         self.settings = settings if settings is not None else QSettings()
         self.games: list[Game] = []
         self.in_steam: dict[str, str] = {}
@@ -217,6 +223,8 @@ class MainWindow(PortableWindow):
         self.forget_asked = ""                          # a folder pressed once: A again takes it off the list
         self.card_view = ""                             # "" the cards, else the card whose saves show
         self.last_card = ""                             # the card the focus was on last: Copy card copies it
+        self.browser: browse.Browser | None = None      # the browser, while it shows
+        self.browsing = FOLDER                          # what it looks for: a game folder or the BIOS dump
 
         page = QVBoxLayout(self)
         page.setContentsMargins(*self.margins())
@@ -230,7 +238,7 @@ class MainWindow(PortableWindow):
         cards.setContentsMargins(0, 0, 0, 0)
         cards.setSpacing(px(12))
         self.pcsx2_card = Card("PCSX2", "Install, update or remove it, and its BIOS.")
-        self.games_card = Card("Your games", "Play them, and put them in Steam.")
+        self.games_card = Card("Your games", "Mark them for Steam, and their folders.")
         self.settings_card = Card("Settings", "The picture, the controllers and how PCSX2 opens.")
         self.cards_card = Card("Memory cards", "The cards and the saves on them.")
         self.log_card = Card("Log", "PCSX2's last run, and this app's log.")
@@ -258,27 +266,22 @@ class MainWindow(PortableWindow):
         self.pane.column.addStretch()
         self.status = text_label("", BODY + 1, QFont.Weight.DemiBold, AMBER, wrap=True)
         self.pane.column.addWidget(self.status)
-        self.pane.column.addSpacing(px(8))
-        # The pills: the actions without a controller button (the others are in the legend), one row
-        self.remove_bios_pill = Pill("Remove BIOS")
-        self.remove_pill = Pill("Remove PCSX2")
-        self.main = Pill("Install", "A", main=True)
-        self.pane.column.addLayout(pill_row(self.remove_bios_pill, self.remove_pill, self.main))
-        self.main.hide()                                # refresh() shows what the state asks for
         self.settings_pane = SettingsPane()
         self.games_pane = ListPane("Your games", "Your games", GAMES_INFO)
+        self.browse_pane = ListPane("Choose a folder", "Browsing", BROWSE_INFO)
         self.key_pane = KeyPane()
         self.cards_pane = ListPane("Memory cards", "The memory cards", CARDS_INFO)
         self.log_pane = LogPane()
-        for pane in (self.pane, self.games_pane, self.settings_pane, self.cards_pane, self.log_pane, self.key_pane):
+        for pane in (self.pane, self.games_pane, self.settings_pane, self.cards_pane, self.log_pane, self.key_pane,
+                     self.browse_pane):
             self.panes.addWidget(pane)
         self.cards = {self.pane: self.pcsx2_card, self.games_pane: self.games_card,
                       self.settings_pane: self.settings_card, self.cards_pane: self.cards_card,
-                      self.log_pane: self.log_card, self.key_pane: self.games_card}
+                      self.log_pane: self.log_card, self.key_pane: self.games_card, self.browse_pane: self.games_card}
         body.addWidget(self.panes, 1)
         page.addLayout(body, 1)
         page.addSpacing(px(8))
-        self.legend = Legend([CLOSE])
+        self.legend = Legend([EXIT])
         page.addWidget(self.legend)
 
         self.worker = _Worker()
@@ -293,18 +296,16 @@ class MainWindow(PortableWindow):
         self.cards_card.focused.connect(lambda: self.show_pane(self.cards_pane))
         self.cards_card.activated.connect(lambda: self.focus_list(self.cards_pane))
         self.log_card.focused.connect(lambda: self.show_pane(self.log_pane))
-        self.log_card.activated.connect(self.open_log)
+        self.log_card.activated.connect(self.view_log)
+        self.log_pane.tapped.connect(self.view_log)
         self.games_pane.list.picked.connect(self.game_picked)
-        self.key_pane.save.activated.connect(self.save_key)
+        self.browse_pane.list.picked.connect(self.browse_picked)
         self.confirm_key = False                        # Remove key pressed once
         self.cards_pane.list.picked.connect(self.card_picked)
         self.cards_pane.list.current.connect(self._card_focused)
-        self.log_pane.open.activated.connect(self.open_log)
-        self.main.activated.connect(self.main_action)
-        self.remove_bios_pill.activated.connect(self.remove_bios)
-        self.remove_pill.activated.connect(self.remove_action)
         for setting in ALL_SETTINGS:
             self.settings_pane.pills[setting.key].activated.connect(lambda s=setting: self.step_setting(s))
+        self.bind("accept", self.a_action)
         self.bind("y", self.y_action)
         self.bind("x", self.x_action)
         self.bind("previous", self.lb_action)
@@ -353,8 +354,7 @@ class MainWindow(PortableWindow):
     # What the panes say
 
     def state(self) -> tuple[str, str, str]:
-        """The status line (amber), the main pill's text (A) and Y's in the legend (Reinstall, Update); "" hides
-        either. Installed, there is no main pill (owner, 29-10-2026: Your games is the card on the left)."""
+        """The status line (amber), A's entry (Install) and Y's (Reinstall, Update); "" leaves either out."""
         if self.busy and self._job == "steam":
             return "Steam's shortcuts are being changed (Your games).", "", ""
         if self.busy:
@@ -366,10 +366,10 @@ class MainWindow(PortableWindow):
         if not version:
             return "", "Install", ""
         if emulator.replaced(self.home):
-            return (f"PCSX2 replaced itself with another build. Reinstall puts {emulator.VERSION} back.",
-                    "", "Reinstall")
+            return (f"PCSX2 replaced itself with another build. The Y button (Reinstall) puts {emulator.VERSION} "
+                    "back.", "", "Reinstall")
         if version != emulator.VERSION:
-            return f"This app installs PCSX2 {emulator.VERSION}: Update puts it in.", "", "Update"
+            return f"This app installs PCSX2 {emulator.VERSION}: the Y button updates it.", "", "Update"
         return "", "", ""
 
     def rows(self) -> list[tuple[str, str]]:
@@ -393,7 +393,8 @@ class MainWindow(PortableWindow):
             return "install PCSX2 first"
         used = self.bios_used()
         if used is None:
-            return "No BIOS yet: PCSX2 needs your own console's BIOS to start a game. Choose BIOS takes the dump."
+            return ("No BIOS yet: PCSX2 needs your own console's BIOS to start a game. The X button (Choose BIOS) "
+                    "takes the dump.")
         others = [d.name for d in self.bios_dumps() if d != used]
         return f"PCSX2 uses {used.name}" + (f"; also there: {', '.join(others)}" if others else "")
 
@@ -415,22 +416,18 @@ class MainWindow(PortableWindow):
             shown.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
             self.grid.addWidget(shown, r, 1)
         self.grid.setColumnStretch(1, 1)
-        status, main, _other = self.state()
+        status = self.state()[0]
+        if self.confirm_remove:
+            status = "Press the RB button again to remove PCSX2: its BIOS, memory cards and settings stay."
+        elif self.confirm_bios:
+            status = "Press the LB button again to remove the BIOS PCSX2 uses from its folder."
         self.status.setText(self.message or status)
-        self.main.set_text(main)
-        self.main.setVisible(bool(main))
-        self.remove_pill.set_text("Press again" if self.confirm_remove else "Remove PCSX2")
-        self.remove_pill.setVisible(not self.busy and bool(emulator.installed(self.home)))
         installed = bool(emulator.installed(self.home))
-        self.remove_bios_pill.set_text("Press again" if self.confirm_bios else "Remove BIOS")
-        self.pcsx2_card.set_text("No BIOS yet: X Choose BIOS on the PCSX2 pane." if installed and self.bios_used() is None
+        self.pcsx2_card.set_text("No BIOS yet: the X button on the PCSX2 pane chooses it."
+                                 if installed and self.bios_used() is None
                                  else "Install, update or remove it, and its BIOS.")
         self.refresh_settings()
         self.update_legend()
-        focus = self.focusWidget()
-        if focus is not None and not focus.isVisible() and focus in (self.main, self.remove_pill):
-            visible = [pill for pill in (self.main, self.remove_pill) if pill.isVisible()]
-            (visible[0] if visible else self.pcsx2_card).setFocus()
 
     def refresh_settings(self) -> None:
         ready = not self.busy and bool(emulator.installed(self.home))
@@ -444,32 +441,50 @@ class MainWindow(PortableWindow):
             self.settings_pane.status.setText("")
 
     def show_pane(self, pane: Pane) -> None:
+        if pane is not self.log_pane and self.log_pane.viewing:
+            self.log_pane.show_summary()
         self.panes.setCurrentWidget(pane)
         if pane is self.log_pane:
             self.refresh_log()
         self.update_legend()
 
     def legend_items(self) -> list[tuple[str, str]]:
-        """The legend for the pane that shows: its actions on the controller's buttons (a tap on an entry does the
-        same), B last. A press that cannot act now says why on the pane's status line."""
+        """The legend for the pane that shows: its actions on the controller's buttons, A too (a tap on an entry does
+        the same), then core's Menu Info, B Back (in a pane, and on the folders, the browser, a card's saves, the key
+        page and the whole log) and View Exit app. A press that cannot act now says why on the pane's status
+        line."""
         if self.close_asked:
-            return [("B", "Press again to close")]
+            return [(VIEW, "Press again to exit")]
         pane = self.panes.currentWidget()
         items: list[tuple[str, str]] = []
         if pane is self.pane:
-            other = self.state()[2]
-            items = [("X", "Choose BIOS"), *([("Y", other)] if other else [])]
+            _status, main, other = self.state()
+            installed = not self.busy and bool(emulator.installed(self.home))
+            items = [*([("A", main)] if main else []), ("X", "Choose BIOS"), *([("Y", other)] if other else []),
+                     *([("LB", "Press again" if self.confirm_bios else "Remove BIOS"),
+                        ("RB", "Press again" if self.confirm_remove else "Remove PCSX2")] if installed else [])]
         elif pane is self.games_pane:
-            items = ([("X", "Steam mark"), ("Y", "Update Steam"), ("LB", "Folders")]
-                     if self.games_view == GAMES_VIEW else [("LB", "Games")]) + [("RB", "Steam artwork")]
+            items = ([("A", "Steam mark"), ("Y", "Update Steam"), ("LB", "Folders")]
+                     if self.games_view == GAMES_VIEW else [("A", "Choose"), ("LB", "Games")]) + \
+                    [("RB", "Steam artwork")]
+        elif pane is self.browse_pane:
+            items = [("A", "Open")] + ([("X", "Add this folder")] if self.browsing == FOLDER else [])
+        elif pane is self.settings_pane:
+            items = [("A", "Change"), ("LB", "Previous tab"), ("RB", "Next tab")]
         elif pane is self.cards_pane:
-            items = [("X", "New card"), ("Y", "Copy card")]
+            items = [*([] if self.card_view else [("A", "Saves")]), ("X", "New card"), ("Y", "Copy card")]
+        elif pane is self.log_pane:
+            items = [] if self.log_pane.viewing else [("A", "View log")]
         elif pane is self.key_pane:
-            items = [("X", "Paste"), ("Y", "Press again" if self.confirm_key else "Remove key")]
-        return [*items, BACK if pane is self.key_pane else CLOSE]
+            items = [("A", "Save"), ("X", "Paste"), ("Y", "Press again" if self.confirm_key else "Remove key")]
+        on_a_page = (pane in (self.key_pane, self.browse_pane) or self.log_pane.viewing
+                     or (pane is self.games_pane and self.games_view == FOLDERS)
+                     or (pane is self.cards_pane and bool(self.card_view)))
+        return [*items, *self.common_items(True if on_a_page else None)]
 
     def update_legend(self) -> None:
-        self.legend.set_items(self.legend_items())
+        if hasattr(self, "legend"):
+            self.legend.set_items(self.legend_items())
 
     def focus_list(self, pane: ListPane) -> None:
         """The list's first row, or the pane's card while the list is empty."""
@@ -506,32 +521,32 @@ class MainWindow(PortableWindow):
                                 ". Steam was never started on this device: start it once to put games in it."))
         if self.games_view == FOLDERS:
             rows = [(f"folder:{f}", ("Press A again to take it off the list" if self.forget_asked == str(f)
-                                     else f"{f}  ·  {len(scan([f]))} game(s)")) for f in chosen]
-            rows += [(f"add:{p}", f"+ Add {p}") for p in library.suggested(chosen, self.user_home, self.drives)]
-            rows.append(("choose", "+ Choose a folder…"))
+                                     else f"{private(f)}  ·  {len(scan([f]))} game(s)")) for f in chosen]
+            rows += [(f"add:{p}", f"+ Add {private(p)}") for p in library.suggested(chosen, self.user_home, self.drives)]
+            rows.append((BROWSE_KEY, "+ Browse to a folder…"))
         else:
             rows = [(str(g.file), self.game_text(g)) for g in self.games]
             if not rows:
-                pane.status.setText(pane.status.text() or "No games yet: LB Folders adds the folders your games are in.")
+                pane.status.setText(pane.status.text() or "No games yet: the LB button shows your game folders, "
+                                                           "to add the one your games are in.")
         pane.list.set_items(rows)
-        self.update_legend()                            # Update Steam is the games' (owner's screen, 29-10-2026)
+        self.update_legend()
 
     def game_text(self, game: Game) -> str:
-        mark = "\u2713 Steam" if str(game.file) in self.marked else ""
+        mark = "✓ Steam" if str(game.file) in self.marked else ""
         changed = (str(game.file) in self.marked) != (str(game.file) in self.in_steam)
         return "  ·  ".join(p for p in (game.title, game.serial, mark + (" (Update Steam)" if changed else "")) if p)
 
     def game_picked(self, key: str) -> None:
-        if key == "choose":
-            folder = self.choose_folder()
-            if folder:
-                self.add_folder(Path(folder))
+        """A on a row: a game's Steam mark, a folder's second press, a place to add, or the browser."""
+        if key == BROWSE_KEY:
+            self.show_browser(FOLDER)
         elif key.startswith("add:"):
             self.add_folder(Path(key[4:]))
         elif key.startswith("folder:"):
             self.forget_folder(Path(key[7:]))
         else:
-            self.play(next((g for g in self.games if str(g.file) == key), None))
+            self.mark_game(key)
 
     def toggle_folders(self) -> None:
         self.games_view = GAMES_VIEW if self.games_view == FOLDERS else FOLDERS
@@ -566,30 +581,66 @@ class MainWindow(PortableWindow):
         self.log.info(f"Game folder taken off the list: {folder}.")
         self.focus_list(self.games_pane)
 
-    def _folder_window(self) -> str:
-        return QFileDialog.getExistingDirectory(self, "Add a game folder", str(self.user_home or Path.home()))
+    # The browser (core's browse): a game folder, or the BIOS dump in Downloads
 
-    def play(self, game: Game | None) -> None:
-        if game is None or self.busy:
+    def show_browser(self, looking_for: str) -> None:
+        self.browsing = looking_for
+        start = browse.places(self.user_home, self.roots)
+        downloads = (self.user_home or Path.home()) / "Downloads"
+        if looking_for == BIOS:
+            self.browser = browse.Browser(start, BIOS_SUFFIXES, downloads if downloads.is_dir() else None)
+            self.browse_pane.heading.setText("Choose your BIOS dump")
+            self.cards[self.browse_pane] = self.pcsx2_card
+        else:
+            self.browser = browse.Browser(start)
+            self.browse_pane.heading.setText("Choose a folder")
+            self.cards[self.browse_pane] = self.games_card
+        self.browse_pane.status.setText("")
+        self.show_pane(self.browse_pane)
+        self.show_browse()
+
+    def show_browse(self) -> None:
+        path = self.browser.path if self.browser is not None else None
+        hint = ("Where is your BIOS dump? Open a place, then the folder it is in." if self.browsing == BIOS else
+                "Where are your games? Open a place, then the folder they are in.")
+        self.browse_pane.summary.setText(wrappable(path) if path is not None else hint)
+        self.browse_pane.list.set_items(self.browser.rows() if self.browser is not None else [])
+        self.focus_list(self.browse_pane)
+        self.update_legend()
+
+    def browse_picked(self, key: str) -> None:
+        if self.browser is None:
             return
-        if not emulator.installed(self.home):
-            self.games_pane.status.setText("Install PCSX2 first (the PCSX2 card).")
+        picked = self.browser.open(key)
+        if picked is not None and self.browsing == BIOS:
+            self.leave_browser()
+            self.take_bios(picked)
             return
-        if self.bios_used() is None:                    # PCSX2 would stop at its own error window
-            self.games_pane.status.setText(NO_BIOS)
+        self.browse_pane.status.setText("")
+        self.show_browse()
+
+    def add_browsed(self) -> None:
+        """X in the browser: the open folder becomes a game folder; back to the folders."""
+        if self.browsing != FOLDER:
             return
-        if self.running(self.home):
-            self.games_pane.status.setText("PCSX2 is open: close it first, then play the game.")
+        if self.browser is None or self.browser.path is None:
+            self.browse_pane.status.setText(OPEN_A_FOLDER)
             return
-        self.prepare()
-        try:
-            self.play_game(self.home, game.file)
-        except OSError as error:
-            self.games_pane.status.setText(f"{game.title} could not be started: {error}")
-            self.log.error(f"{game.title} could not be started: {error}")
+        folder = self.browser.path
+        self.leave_browser()
+        self.add_folder(folder)
+
+    def leave_browser(self) -> None:
+        """Back where the browser was opened from: the folders, or the PCSX2 pane."""
+        self.browser = None
+        if self.browsing == BIOS:
+            self.show_pane(self.pane)
+            self.pcsx2_card.setFocus()
             return
-        self.games_pane.status.setText(f"{game.title} starts in PCSX2.")
-        self.log.info(f"Played {game.title} ({game.serial or game.file.name}).")
+        self.games_view = FOLDERS
+        self.show_games()
+        self.show_pane(self.games_pane)
+        self.focus_list(self.games_pane)
 
     # The SteamGridDB key (the BC250 app's Steam artwork… and core's covers.edit_key, as a page)
 
@@ -599,7 +650,7 @@ class MainWindow(PortableWindow):
         self.key_pane.status.setText("A key is kept: Update Steam fetches each game's pictures." if old else
                                      "No key: Update Steam draws the pictures from the app's icon.")
         self.show_pane(self.key_pane)
-        self.key_pane.save.setFocus()
+        self.key_pane.field.setFocus()
 
     def paste_key(self) -> None:
         """The key from the clipboard (copied in a browser on the device): typing 32 characters on a handheld is
@@ -609,8 +660,7 @@ class MainWindow(PortableWindow):
             self.key_pane.status.setText("The clipboard is empty: copy the key on SteamGridDB's API page first.")
             return
         self.key_pane.field.setText(text.split()[0])
-        self.key_pane.status.setText("The key is in the field: Save keeps it.")
-        self.key_pane.save.setFocus()
+        self.key_pane.status.setText("The key is in the field: the A button saves it.")
 
     def save_key(self) -> None:
         key = self.key_pane.field.text().strip()
@@ -631,12 +681,12 @@ class MainWindow(PortableWindow):
     def remove_key(self) -> None:
         """Remove key asks for a second press (no dialog on a handheld); the pictures kept stay in use."""
         if not covers.read_key(library.key_file()):
-            self.key_pane.status.setText("There is no key to remove: Paste puts one in, Save keeps it.")
+            self.key_pane.status.setText("There is no key to remove: the X button pastes one, the A button saves it.")
             return
         if not self.confirm_key:
             self.confirm_key = True
             self.confirm_timer.start()
-            self.key_pane.status.setText("Press Y again to remove the key.")
+            self.key_pane.status.setText("Press the Y button again to remove the key.")
             self.update_legend()
             return
         self._confirm_over()
@@ -655,14 +705,24 @@ class MainWindow(PortableWindow):
             self.games_pane.status.setText(said)
         self.focus_list(self.games_pane)
 
-    # The legend's buttons: what X, Y, LB and RB do on the pane that shows (a tap on the legend's entry does the same)
+    # The legend's buttons: what A (beside a card or a row), X, Y, LB and RB do on the pane that shows (a tap on the
+    # legend's entry does the same)
+
+    def a_action(self) -> None:
+        pane = self.panes.currentWidget()
+        if pane is self.key_pane:
+            self.save_key()
+        elif pane is self.pane:
+            self.main_action()
+        elif pane is self.log_pane:
+            self.view_log()
 
     def x_action(self) -> None:
         pane = self.panes.currentWidget()
         if pane is self.pane:
             self.choose_bios()
-        elif pane is self.games_pane:
-            self.mark_game()
+        elif pane is self.browse_pane:
+            self.add_browsed()
         elif pane is self.cards_pane:
             self.new_card()
         elif pane is self.key_pane:
@@ -681,27 +741,25 @@ class MainWindow(PortableWindow):
 
     def lb_action(self) -> None:
         pane = self.panes.currentWidget()
-        if pane is self.games_pane:
+        if pane is self.pane:
+            self.remove_bios()
+        elif pane is self.games_pane:
             self.toggle_folders()
         elif pane is self.settings_pane:
             self.settings_pane.tabs.step(-1)
 
     def rb_action(self) -> None:
         pane = self.panes.currentWidget()
-        if pane is self.games_pane:
+        if pane is self.pane:
+            self.remove_action()
+        elif pane is self.games_pane:
             self.show_key()
         elif pane is self.settings_pane:
             self.settings_pane.tabs.step(1)
 
-    def mark_game(self) -> None:
-        """X on a game: mark it for Steam, or take the mark away."""
-        if self.games_view != GAMES_VIEW:
-            return
-        pills = self.games_pane.list.pills
-        focus = self.focusWidget()
-        key = next((k for k, pill in pills.items() if pill is focus), "")
-        if not key:
-            self.games_pane.status.setText("Move to a game in the list first: X marks the one with the focus.")
+    def mark_game(self, key: str) -> None:
+        """A on a game: mark it for Steam, or take the mark away."""
+        if key not in {str(g.file) for g in self.games}:
             return
         if key in self.marked:
             self.marked.discard(key)
@@ -731,7 +789,7 @@ class MainWindow(PortableWindow):
             return
         add, remove = library.plan(self.games, self.marked, self.in_steam)
         if add and not emulator.installed(self.home):
-            self.games_pane.status.setText("Install PCSX2 first: the games in Steam start it.")
+            self.games_pane.status.setText("Install PCSX2 first (the PCSX2 card): the games in Steam start it.")
             return
         if add and self.bios_used() is None:
             self.games_pane.status.setText(NO_BIOS)
@@ -768,6 +826,7 @@ class MainWindow(PortableWindow):
                 pane.summary.setText(f"{card.name}: {len(card.saves)} save(s), {memcards.kib(card.free)} free of "
                                      f"{memcards.kib(card.total)}" if card.readable else f"{card.name}: {card.error}")
                 pane.list.set_items(rows)
+                self.update_legend()
                 return
         rows = []
         for card in found:
@@ -777,8 +836,9 @@ class MainWindow(PortableWindow):
             rows.append((card.name, "  ·  ".join(p for p in parts if p)))
         pane.summary.setText(f"{len(found)} card(s) in {wrappable(folder)}" if found else
                              f"No memory cards yet in {wrappable(folder)}: PCSX2 makes its two at its first start, "
-                             "New card makes one.")
+                             "the X button (New card) makes one.")
         pane.list.set_items(rows)
+        self.update_legend()
 
     def _card_focused(self, key: str) -> None:
         if not self.card_view and key != BACK_KEY and not key.startswith("save:"):
@@ -803,7 +863,7 @@ class MainWindow(PortableWindow):
             folder.mkdir(parents=True, exist_ok=True)
             made = memcards.new_card(folder, f"Mcd{n:03d}.ps2", 8)
         except (memcards.CardError, OSError) as error:
-            self.cards_pane.status.setText(f"No card was made: {error}")
+            self.cards_pane.status.setText(private(f"No card was made: {error}"))
             self.log.error(f"New card failed: {error}")
             return
         self.cards_pane.status.setText(f"{made.name} is made: 8 MB, empty.")
@@ -851,17 +911,22 @@ class MainWindow(PortableWindow):
             rows.append(("Play time in all", userdata.played(total)))
         if not rows:
             rows.append(("PCSX2's last run", "none yet"))
-        lines: list[str] = []
-        if self.log_path is not None:
-            try:
-                lines = self.log_path.read_text(encoding="utf-8", errors="replace").splitlines()[-LOG_LINES:]
-            except OSError:
-                lines = []
-        self.log_pane.fill(rows, lines)
+        self.log_pane.fill(rows, [private(line) for line in self.log_lines()[-LOG_LINES:]])
 
-    def open_log(self) -> None:
-        if self.log_path is not None and self.log_path.is_file():
-            open_path(self.log_path)
+    def log_lines(self) -> list[str]:
+        if self.log_path is None:
+            return []
+        try:
+            return self.log_path.read_text(encoding="utf-8", errors="replace").splitlines()
+        except OSError:
+            return []
+
+    def view_log(self) -> None:
+        """The whole log (its newest lines) in the Log pane: the d-pad scrolls it, B goes back (owner, 29-10-2026:
+        Notepad, where it opened before, has no button to close it)."""
+        self.show_pane(self.log_pane)
+        self.log_pane.show_whole(private("\n".join(self.log_lines()[-LOG_MAX:])))   # older lines too
+        self.update_legend()
 
     # The Settings pane
 
@@ -869,7 +934,7 @@ class MainWindow(PortableWindow):
         self.settings_pane.focus_first()
 
     def step_setting(self, setting: Setting) -> None:
-        """A on a setting's pill: its next value, written now, unless PCSX2 runs."""
+        """A on a setting's row: its next value, written now, unless PCSX2 runs."""
         if self.busy or not emulator.installed(self.home):
             self.settings_pane.status.setText(BUSY if self.busy else NOT_INSTALLED)
             return
@@ -890,16 +955,12 @@ class MainWindow(PortableWindow):
         self.log.info(f"{setting.label}: {setting.shown(value)}.")
         self.refresh_settings()
 
-    # A, Y and Remove
+    # A, Y, and Remove on the PCSX2 pane
 
     def main_action(self) -> None:
-        if self.busy:
-            return
-        _, main, _ = self.state()
-        if main == "Install":
+        """A on the PCSX2 card or pane: Install while PCSX2 is not installed."""
+        if not self.busy and self.state()[1] == "Install":
             self.install()
-        else:                                           # installed: A on the card goes to the pane's pills
-            self.remove_bios_pill.setFocus()
 
     def other_action(self) -> None:
         if not self.busy and self.state()[2]:
@@ -930,14 +991,13 @@ class MainWindow(PortableWindow):
         if self.close_asked:
             self._confirm_over()
         if isinstance(result, Exception):
-            self.message = f"PCSX2 could not be installed: {result}"
+            self.message = private(f"PCSX2 could not be installed: {result}")
             self.log.error(f"Installing PCSX2 failed: {result}")
         else:
             self.message = f"PCSX2 {result} is installed."
             self.log.info(f"PCSX2 {result} installed.")
             self.prepare()                              # before its first start: no setup wizard, no updater
         self.refresh()
-        self.main.setFocus()
 
     def _steam_done(self, result: object) -> None:
         """What Update Steam did, and the games in Steam as it read them back right after the write (29-10-2026:
@@ -965,15 +1025,8 @@ class MainWindow(PortableWindow):
 
     # The BIOS (the BC250 app's BIOS Install and BIOS Uninstall)
 
-    def _bios_window(self) -> str:
-        downloads = (self.user_home or Path.home()) / "Downloads"
-        path, _ = QFileDialog.getOpenFileName(self, "Choose your BIOS dump", str(downloads),
-                                              "PS2 BIOS dumps (*.bin *.BIN *.rom *.ROM)")
-        return path
-
     def choose_bios(self) -> None:
-        """Copies the dump picked in Windows' file window, with the files beside it, into PCSX2's bios folder and makes
-        it the one PCSX2 uses."""
+        """X Choose BIOS: the browser in Downloads, showing the dumps (.bin, .rom); A on one takes it."""
         if self.busy or not emulator.installed(self.home):
             self.message = BUSY if self.busy else BIOS_NEEDS_PCSX2
             self.refresh()
@@ -982,11 +1035,14 @@ class MainWindow(PortableWindow):
             self.message = RUNNING
             self.refresh()
             return
-        picked = self.choose_file()
-        if not picked:
-            return
+        self.message = ""
+        self.show_browser(BIOS)
+
+    def take_bios(self, picked: Path) -> None:
+        """Copies the dump picked in the browser, with the files beside it, into PCSX2's bios folder and makes it the
+        one PCSX2 uses."""
         try:
-            placed = userdata.copy_bios(Path(picked), userdata.bios_dir(self.home))
+            placed = userdata.copy_bios(picked, userdata.bios_dir(self.home))
             pcsx2_settings.choose_bios(self.home, placed.name)
         except OSError as error:
             self.message = f"The BIOS was not taken: {error.strerror or error}"
@@ -998,8 +1054,8 @@ class MainWindow(PortableWindow):
         self.refresh()
 
     def remove_bios(self) -> None:
-        """Remove BIOS asks for a second press (no dialog on a handheld); the second takes the dump PCSX2 uses out of
-        its bios folder, with the files beside it. PCSX2 then uses another one, when there is."""
+        """LB Remove BIOS asks for a second press (no dialog on a handheld); the second takes the dump PCSX2 uses out
+        of its bios folder, with the files beside it. PCSX2 then uses another one, when there is."""
         used = self.bios_used()
         if self.busy or used is None:
             self.message = (BUSY if self.busy else NO_BIOS_TO_REMOVE if emulator.installed(self.home)
@@ -1011,7 +1067,7 @@ class MainWindow(PortableWindow):
             self.refresh()
             return
         if not self.confirm_bios:
-            self.confirm_bios = True
+            self.confirm_bios, self.message = True, ""
             self.confirm_timer.start()
             self.refresh()
             return
@@ -1032,14 +1088,18 @@ class MainWindow(PortableWindow):
         self.refresh()
 
     def remove_action(self) -> None:
-        """Remove asks for a second press (no dialog on a handheld): the pill says so for a few seconds."""
-        if self.busy or not emulator.installed(self.home):
-            if self.busy:
-                self.message = BUSY
-                self.refresh()
+        """RB Remove PCSX2 asks for a second press (no dialog on a handheld): the legend and the status line say so
+        for a few seconds."""
+        if self.busy:
+            self.message = BUSY
+            self.refresh()
+            return
+        if not emulator.installed(self.home):
+            self.message = "PCSX2 is not installed: there is nothing to remove."
+            self.refresh()
             return
         if not self.confirm_remove:
-            self.confirm_remove = True
+            self.confirm_remove, self.message = True, ""
             self.confirm_timer.start()
             self.refresh()
             return
@@ -1053,7 +1113,6 @@ class MainWindow(PortableWindow):
             self.message = "PCSX2 is removed. Its BIOS, memory cards and settings stay in its folder."
             self.log.info("PCSX2 removed.")
         self.refresh()
-        self.main.setFocus()
 
     def _confirm_over(self) -> None:
         self.confirm_timer.stop()
@@ -1065,10 +1124,10 @@ class MainWindow(PortableWindow):
             self.refresh()
         if self.confirm_key:
             self.confirm_key = False
-            if self.key_pane.status.text().startswith("Press Y again"):
+            if self.key_pane.status.text().startswith("Press the Y button again"):
                 self.key_pane.status.setText("")
         changed = self.confirm_remove or self.close_asked
-        if self.close_asked and self.message.startswith("Press B again"):
+        if self.close_asked and self.message.startswith("Press View again"):
             self.message = ""
         self.confirm_remove = self.close_asked = False
         if changed:
@@ -1078,14 +1137,36 @@ class MainWindow(PortableWindow):
     # B
 
     def on_back(self) -> None:
-        if self.panes.currentWidget() is self.key_pane:  # B on the key page: back to Your games, nothing saved
+        """B goes back (the suite's rule, owner 29-10-2026): the whole log to its summary, the browser a level up (from
+        the places to where it was opened), the key page to Your games (nothing saved), the folders to the games, a
+        card's saves to the cards, a pane to its card; on a card it does nothing (View exits)."""
+        pane = self.panes.currentWidget()
+        if pane is self.log_pane and self.log_pane.viewing:
+            self.log_pane.show_summary()
+            self.log_card.setFocus()
+            self.update_legend()
+        elif pane is self.browse_pane:
+            if self.browser is not None and self.browser.up():
+                self.show_browse()
+            else:
+                self.leave_browser()
+        elif pane is self.key_pane:
             self.back_to_games()
-            return
-        if self.busy and not self.close_asked:          # closing drops the download (owner, 28-10-2026: ask first)
+        elif pane is self.games_pane and self.games_view == FOLDERS:
+            self.toggle_folders()
+        elif pane is self.cards_pane and self.card_view:
+            self.card_picked(BACK_KEY)
+        else:
+            self.go_back()
+
+    # View
+
+    def exit_app(self) -> None:
+        if self.busy and not self.close_asked:          # exiting drops the download (owner, 28-10-2026: ask first)
             self.close_asked = True
             self.confirm_timer.start()
-            self.message = ("Press B again to close: Steam's shortcuts may be left half changed."
-                            if self._job == "steam" else "Press B again to close: the download stops.")
+            self.message = ("Press View again to exit: Steam's shortcuts may be left half changed."
+                            if self._job == "steam" else "Press View again to exit: the download stops.")
             self.refresh()                              # the legend says so too
             return
         self.close()

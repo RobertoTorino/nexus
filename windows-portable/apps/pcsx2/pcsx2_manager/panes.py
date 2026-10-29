@@ -1,11 +1,12 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The panes beside the PCSX2 and Settings panes, the BC250 suite's PCSX2 Manager's tabs in the portable design: Your
-games (the games in the chosen folders, played on A, in Steam or not), Memory cards (the cards in PCSX2's memcards
-folder and the saves on each) and Log (PCSX2's last run and the app's own log).
+games (the games in the chosen folders, marked for Steam with A), the browser (a game folder, the BIOS dump), Memory
+cards (the cards in PCSX2's memcards folder and the saves on each) and Log (PCSX2's last run and the app's own log,
+read in the app).
 
 A long list is a ListArea: pills in a column that scrolls, the one with the focus kept in view, so the d-pad goes
-down a list of any length and a finger can drag it. A pane's actions with a controller button (X, Y, LB, RB) are in
-the window's legend, not on pills (owner, 29-10-2026)."""
+down a list of any length and a finger can drag it. Every action is a controller button in the window's legend, A
+too, never a pill (owner, 29-10-2026: one way everywhere); the information texts name a button "the A button"."""
 
 from __future__ import annotations
 
@@ -18,8 +19,8 @@ from PyQt6.QtWidgets import (QFrame, QGridLayout, QHBoxLayout, QLineEdit, QScrol
 
 from bc250_core import covers
 
-from bc250_core.portable import (AMBER, BODY, DIM, RAISED, ROW_HEIGHT, TEXT, InfoPill, Pane, Pill, Row, font,
-                                 pill_row, px, text_label)
+from bc250_core.portable import (AMBER, BODY, DIM, RAISED, ROW_HEIGHT, TEXT, InfoPill, Pane, Row, TextView,
+                                 font, px, text_label)
 
 ROW = ROW_HEIGHT                        # a list's row, as a setting's
 
@@ -91,7 +92,8 @@ class ListPane(Pane):
     def __init__(self, title: str, info_title: str, info: str, parent: QWidget | None = None):
         super().__init__(parent)
         heading = QHBoxLayout()
-        heading.addWidget(text_label(title, 24, QFont.Weight.ExtraBold))
+        self.heading = text_label(title, 24, QFont.Weight.ExtraBold)
+        heading.addWidget(self.heading)
         heading.addStretch()
         self.info = InfoPill(info_title, info)
         heading.addWidget(self.info, 0, Qt.AlignmentFlag.AlignTop)
@@ -106,26 +108,39 @@ class ListPane(Pane):
 
 
 GAMES_INFO = (
-    "A on a game plays it in PCSX2, alone and full screen; X marks it for Steam or takes the mark away, and Y Update "
-    "Steam makes Steam's shortcuts match the marks: each marked game a non-Steam game, \"[PS2] <title>\", in Steam's "
-    "library and its Big Picture mode, started the same way. Steam closes for it and starts again.\n\n"
-    "Games are the disc images (ISO, CHD, CSO, ZSO, GZ) in your game folders and up to five folders below them. An ISO "
-    "is read for its serial, and the title comes from PCSX2's own list of games; a compressed image keeps its file's "
-    "name. LB Folders shows the folders: add one of the usual places, a drive (an SD card), or choose any folder; A "
-    "twice on a folder takes it off the list (its games stay where they are). LB Games shows the games again.\n\n"
-    "Pictures for Steam: with your own SteamGridDB API key (RB Steam artwork keeps it, one key for the suite), Update "
-    "Steam fetches each game's pictures; without one, they are drawn from the app's icon. The buttons at the bottom "
-    "also work by touch.")
+    "Your PS2 games, to play from Steam. Press the A button on a game to mark it for Steam, or to take the mark away; "
+    "then the Y button (Update Steam) makes Steam match the marks: each marked game becomes a non-Steam game, "
+    "\"[PS2] <title>\", in Steam's library and its Big Picture mode, and a game without the mark is taken out. Steam "
+    "closes for it and starts again. In a game, View and Menu held together end it.\n\n"
+    "The games are the disc images (ISO, CHD, CSO, ZSO, GZ) in your game folders and up to five folders below them. "
+    "An ISO is read for its serial, and the title comes from PCSX2's own list of games; a compressed image keeps its "
+    "file's name.\n\n"
+    "The LB button (Folders) shows your game folders: add one of the usual places or a drive (an SD card), or browse "
+    "to any folder with the controller. The A button twice on a folder takes it off the list; its games stay where "
+    "they are. The LB button again shows the games.\n\n"
+    "Pictures for Steam: with your own SteamGridDB API key (the RB button, Steam artwork; one key for the suite), "
+    "Update Steam fetches each game's pictures; without one, they are drawn from the app's icon. Every entry of the "
+    "row at the bottom also works by touch.")
+BROWSE_INFO = (
+    "Find the folder your games are in, or your BIOS dump. The A button opens the folder the focus is on (on a BIOS "
+    "dump it chooses it), the B button goes a level up, and from the places back. When looking for a game folder, "
+    "the X button adds the folder that is open. The places are your Games, Downloads, Documents and Desktop folders "
+    "and every drive, such as an SD card.")
 CARDS_INFO = (
-    "The PS2 memory cards in PCSX2's memcards folder, with the slot PCSX2 puts each in. A on a card shows its saves; "
-    "A on ‹ The cards goes back. X New card makes an 8 MB card, as the PS2's own; Y Copy card copies the card "
-    "the focus was on last, under a new name, with its saves. A card is never changed while PCSX2 runs: it keeps the "
-    "card in memory and would write its own copy over the change.")
-LOG_INFO = ("PCSX2's last run as its own log tells it (it writes the log over at every start), the play time it "
-            "counted, and the newest lines of this app's log. Open the log shows the whole file.")
+    "The PS2 memory cards in PCSX2's memcards folder, with the slot PCSX2 puts each in. The A button on a card shows "
+    "its saves, and the B button goes back to the cards. The X button (New card) makes an 8 MB card, as the PS2's "
+    "own; the Y button (Copy card) copies the card the focus was on last, under a new name, with its saves. A card is "
+    "never changed while PCSX2 runs: it keeps the card in memory and would write its own copy over the change.")
+LOG_INFO = (
+    "PCSX2's last run as its own log tells it (it writes the log over at every start), the play time it counted, and "
+    "the newest lines of this app's log. The A button, or a tap on this pane, shows the whole log here: the d-pad "
+    "scrolls it, the B button goes back.")
 
 
 class LogPane(Pane):
+    """PCSX2's last run and the newest lines of the log; show_whole() puts the whole log in a TextView in their place
+    (owner, 29-10-2026: not in Notepad, which no button closes), show_summary() goes back."""
+
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
         heading = QHBoxLayout()
@@ -143,9 +158,13 @@ class LogPane(Pane):
         self.lines = text_label("", BODY, color=DIM, wrap=True)
         self.lines.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         self.column.addWidget(self.lines, 1, Qt.AlignmentFlag.AlignTop)
-        self.column.addStretch()
-        self.open = Pill("Open the log", "A", main=True)
-        self.column.addLayout(pill_row(self.open))
+        self.view = TextView()
+        self.view.hide()
+        self.column.addWidget(self.view, 1)
+
+    @property
+    def viewing(self) -> bool:
+        return not self.view.isHidden()
 
     def fill(self, rows: Sequence[tuple[str, str]], lines: Sequence[str]) -> None:
         while self.grid.count():
@@ -162,6 +181,17 @@ class LogPane(Pane):
         self.grid.setColumnStretch(1, 1)
         self.lines.setText("\n".join(lines) or "Nothing logged yet.")
 
+    def show_whole(self, text: str) -> None:
+        self.lines.hide()
+        self.view.setPlainText(text or "Nothing logged yet.")
+        self.view.show()
+        self.view.show_end()                            # the newest lines first in view
+        self.view.setFocus()
+
+    def show_summary(self) -> None:
+        self.view.hide()
+        self.lines.show()
+
 
 # The key: the BC250 app's Steam artwork… dialog (core's covers.edit_key) as a page of the portable window
 KEY_TEXT = (
@@ -169,13 +199,14 @@ KEY_TEXT = (
     "shapes, so the app draws them. With a SteamGridDB API key, Update Steam looks each game up on SteamGridDB by "
     "its title and takes the pictures with the most votes instead.\n\n"
     "The key is free with a SteamGridDB account: in your account click Preferences, then the API tab at the top, "
-    f"then Generate API Key, and copy the key ({covers.KEY_PAGE}). Copied in a browser on this device, X Paste puts "
-    "it in the field; Y Remove key takes a kept key out, on a second press.\n"
+    f"then Generate API Key, and copy the key ({covers.KEY_PAGE}). Copied in a browser on this device, the X button "
+    "(Paste) puts it in the field and the A button saves it; the Y button (Remove key) takes a kept key out, on a "
+    "second press. The B button goes back without saving.\n"
     "It is one key for every app of the suite. Leave it empty to look nothing up.")
 
 
 class KeyPane(Pane):
-    """The SteamGridDB key: the text, the field (masked, as the BC250 app's) and A Save; X Paste and Y Remove key
+    """The SteamGridDB key: the text and the field (masked, as the BC250 app's); A Save, X Paste and Y Remove key
     are in the legend."""
 
     def __init__(self, parent: QWidget | None = None):
@@ -195,6 +226,3 @@ class KeyPane(Pane):
         self.column.addStretch()
         self.status = text_label("", BODY + 1, QFont.Weight.DemiBold, AMBER, wrap=True)
         self.column.addWidget(self.status)
-        self.column.addSpacing(px(6))
-        self.save = Pill("Save", "A", main=True)
-        self.column.addLayout(pill_row(self.save))

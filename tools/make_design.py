@@ -293,15 +293,14 @@ Each design (a suite's, the Nexus page's) has its own; none is carried over to a
   pane takes the edge and the glow, and its card keeps the edge without the glow; back on the cards, the pane is
   plain again. In a list the focused row is lighter `#3a3d45` with the amber edge. Cards and pills share the corner
   radius 14.
-- **One kind of pill everywhere** (owner, 29-10-2026): `#cd8b22` with a dark label, the same height and minimum
-  width, in a row at the bottom right of its pane with the A pill rightmost; a pill only for touch looks the same.
-  Focused or under the pointer it is dimmed. A pill is never grayed out: when it cannot act it says why (owner,
-  29-10-2026). The glyph paints its own circle (a stylesheet's radius showed a square on the Ally).
-- **The legend at the bottom is the row of actions** (owner, 29-10-2026): an action with a controller button is
-  an entry there (X Steam mark, Y Update Steam, LB Folders, RB Steam artwork, B Close), its glyph gray, never a pill
-  as well; a tap on an entry does what the button does. A pill is for an action without a button, and for A, the
-  main action, which shows its glyph. An icon pill (the information icon) shows its focus with an amber ring and
-  sign.
+- **One kind of pill, in popups only** (owner, 29-10-2026): `#cd8b22` with a dark label, the same height and
+  minimum width, in a row at the bottom right of the popup with the A pill rightmost; a pane holds none, every action
+  being in the legend. Focused or under the pointer it is dimmed. Nothing is grayed out: what cannot act says why
+  (owner, 29-10-2026). The glyph paints its own circle (a stylesheet's radius showed a square on the Ally).
+- **The legend at the bottom is the row of actions** (owner, 29-10-2026): every action is an entry there, A too
+  (A Steam mark, Y Update Steam, LB Folders, RB Steam artwork), its glyph gray, and every legend ends with the shared
+  ones: ☰ Info (the pane's information), B Back (while B can act) and ⧉ Exit app; a tap on an entry does what the
+  button does. The information icon at a pane's top right is touch only, a ring with its sign.
 - **A tile is a card with an icon** (the portal's apps, 28-10-2026): the app's icon centered above its name and
   its status, two rows of four under the category tabs; a status that asks for something (an update, a reinstall,
   an install running) is amber, the rest dimmed. The strip under the tiles is the detail pane, flat, with the

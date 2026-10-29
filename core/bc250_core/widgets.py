@@ -391,6 +391,15 @@ class RoundedToolTip(QObject):
         cls._instance = tip
         return tip
 
+    @classmethod
+    def uninstall(cls) -> None:
+        """Take the installed tooltip off the app. For tests: without an event loop aboutToQuit never comes, so a
+        test session calls this in its teardown, before Python's final garbage collection (pytest, 29-10-2026)."""
+        tip, cls._instance = cls._instance, None
+        app = QApplication.instance()
+        if tip is not None and app is not None and not sip.isdeleted(tip):
+            app.removeEventFilter(tip)
+
     def show_text(self, pos: QPoint, text: str, owner: QWidget | None = None, area: QRect | None = None) -> None:
         if not text:
             self.hide()
@@ -425,7 +434,7 @@ class RoundedToolTip(QObject):
 
     def hide(self) -> None:
         self._owner = None
-        if not sip.isdeleted(self.popup) and self.popup.isVisible():
+        if hasattr(self, "popup") and not sip.isdeleted(self.popup) and self.popup.isVisible():
             self.popup.hide()
 
     @staticmethod
@@ -455,6 +464,8 @@ class RoundedToolTip(QObject):
         return obj.toolTip() or None, obj.rect()
 
     def eventFilter(self, obj: QObject, event: QEvent) -> bool:
+        if not hasattr(self, "popup"):
+            return False                # Python already tore this object down (garbage collection at exit)
         kind = event.type()
         if kind == QEvent.Type.ToolTip:
             if not isinstance(obj, QWidget):

@@ -29,7 +29,7 @@ def main() -> int:
     app = create_app(INFO, qt_args, theme=PORTABLE)
     if instance.already_running(INFO.app_id):
         return 0
-    log_path = applog.setup(APP_ID, path=state_dir() / "portal.log")
+    log_path = applog.setup(APP_ID, path=state_dir() / "portal.log", private=True)
     applog.logger(APP_ID).info(f"{APP_NAME} {__version__} started ({log_path}).")
     try:
         entries = load(Path(args.manifest))

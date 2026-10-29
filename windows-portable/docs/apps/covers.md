@@ -2,10 +2,12 @@
 
 # Steam artwork from SteamGridDB
 
-A game put in Steam (by PCSX2 Manager's **Update Steam**) has a cover in Steam's library and a banner on its page.
-A PS2 disc brings no pictures in Steam's shapes, so the app draws them from its icon with the game's title. With
-a SteamGridDB API key of your own, Update Steam looks each game up on [SteamGridDB](https://www.steamgriddb.com) by
-its title and takes the pictures with the most votes instead.
+A game put in Steam (by the **Update Steam** of PCSX2 Manager or PPSSPP Manager) has a cover in Steam's library and
+a banner on its page. A PS2 disc brings no pictures in Steam's shapes, so PCSX2 Manager draws them from its icon with
+the game's title; a PSP game carries its own icon and background, from which PPSSPP Manager draws them. With a
+SteamGridDB API key of your own, Update Steam looks each game up on [SteamGridDB](https://www.steamgriddb.com) by its
+title and takes the pictures with the most votes instead: all of them in PCSX2 Manager, the cover in PPSSPP Manager
+(the game's own pictures stay for the rest).
 
 ## The key
 
@@ -19,7 +21,8 @@ The key is free. To get one:
 Signed in, the API page is also at
 [steamgriddb.com/profile/preferences/api](https://www.steamgriddb.com/profile/preferences/api).
 
-Copy it in a browser on the device, then in PCSX2 Manager press **Steam artwork** on the Your games pane:
+Copy it in a browser on the device, then in PCSX2 Manager or PPSSPP Manager press **Steam artwork** on the Your games
+pane:
 
 - **X Paste** puts the copied key in the field; a tap on the field lets you type it instead.
 - **A Save** keeps it. **Y Remove key** takes it out again, on a second press.
@@ -43,5 +46,6 @@ with another game, may get the other game's pictures.
 ## Your own pictures
 
 The app looks up a game once and keeps what it found in its covers folder,
-`%LOCALAPPDATA%\windows-portable-suite\windows-portable-pcsx2\covers\`, so a later change to Steam takes the same
-pictures, also offline. A picture you put there in place of one, under the same name, is taken the same way.
+`%LOCALAPPDATA%\windows-portable-suite\windows-portable-pcsx2\covers\` (PPSSPP Manager's in
+`windows-portable-ppsspp\covers\`), so a later change to Steam takes the same pictures, also offline. A picture you
+put there in place of one, under the same name, is taken the same way.

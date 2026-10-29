@@ -13,23 +13,22 @@ Windows Portable Test is always installed with the [portal](../portal.md) and is
 ## The screen
 
 Five cards on the left: Device, Hardware, Connected, Network and Controller; the right side shows what the focused
-card does.
-The d-pad or the left stick moves the amber focus between the cards, **A** runs the focused card, **B** closes the
-app. The row at the bottom lists the buttons that act on the pane that shows (**X Save report**, **Y Stick
-lights**): press the button, or tap the entry. Every card, pill and entry also works by touch. The amber edge shows
-where you are: on a card with a glow under it, and on the pane at the right, with its card keeping only the edge,
-once the focus moves into it. The top right
-shows the date and the time,
-`Wednesday 28/10/2026 | 17:04`, and under them, live every five seconds, the CPU's and the GPU's temperature, the
-power the chip draws, the refresh rate of the screen and the battery: `CPU 47° GPU 45° | 18 W | 120 Hz | 82%`. On a
-device with AMD graphics the temperatures and the power come from AMD's driver; on another the GPU's temperature
-comes from Windows (as Task Manager shows it), and the CPU's and the power are left out. The refresh rate is the
-screen the window is on: docked to a TV, it is the TV's.
+card does. The d-pad or the left stick moves the amber focus between the cards, **A** runs the focused card, **B**
+goes back from a pane to its card (on a card it does nothing), **⧉** (View) exits the app and **☰** (Menu) opens the
+information of the pane that shows. Every action is a button, listed in the row at the bottom with what it does on the
+pane that shows (**A Read**, **X Save report**, **Y Stick lights**, **☰ Info**, **⧉ Exit app**): press the button, or
+tap the entry. Every card and entry also works by touch. The amber edge shows where you are: on a card with a glow
+under it, and on the pane at the right, with its card keeping only the edge, once the focus moves into it. The top
+right shows the date and the time, `Wednesday 28/10/2026 | 17:04`, and under them, live every five seconds, the CPU's
+and the GPU's temperature, the power the chip draws, the refresh rate of the screen and the battery: `CPU 47° GPU 45°
+| 18 W | 120 Hz | 82%`. On a device with AMD graphics the temperatures and the power come from AMD's driver; on
+another the GPU's temperature comes from Windows (as Task Manager shows it), and the CPU's and the power are left out.
+The refresh rate is the screen the window is on: docked to a TV, it is the TV's.
 
-The wallpaper the portal shows is behind its cards too, unless it is switched off in the portal's Settings.
+The wallpaper the portal shows is behind its cards too, unless it is switched off on the portal's Suite page.
 
-The information icon (a ring with an i) at the top right of a pane opens more about it, over the window; **A** or
-**B** closes it. With the focus on it, its ring is amber.
+The information icon (a ring with an i) at the top right of a pane opens more about it, over the window, and so
+does **☰**; **A**, **B** or **☰** closes it. With the focus on it, its ring is amber.
 
 ## Device
 
@@ -37,8 +36,9 @@ What Windows reports about the device: its name, the processor with its cores an
 and its driver, the memory (installed and usable), the storage, the screen the window is on (its pixels, Windows'
 scaling and the refresh rate), Windows' version, the firmware and the battery. No serial numbers.
 
-Nothing is read until you ask: press **A** on the Device, Hardware or Connected card, or tap the **A Read** pill.
-One read fills all three; Windows takes about four seconds to answer. **Read again** reads it once more.
+Nothing is read until you ask: press **A** on the Device, Hardware or Connected card, or tap **A Read** in the row
+at the bottom. One read fills all three; Windows takes about four seconds to answer. **A Read again** reads it once
+more.
 
 **X** saves what the three cards show as one text report in
 `%LOCALAPPDATA%\windows-portable-suite\windows-portable-test\reports\` (`device-<date>-<time>.txt`), a section per
@@ -64,7 +64,8 @@ over USB-C, and the dock turns it into HDMI.
 ## Network
 
 How the network does at this moment, to compare a slow moment with a fast one, on mains and on battery. **A** on the
-Network card, or **Test**, measures it; it takes about fifteen seconds. **Test again** measures once more.
+Network card, or **A Test** in the row at the bottom, measures it; it takes about fifteen seconds. **A Test
+again** measures once more.
 
 | Row | What it shows |
 |---|---|
@@ -90,7 +91,8 @@ download. The network's name and the access point's address are never read out.
 once it answered, so a button that never answers stands out; the count under them says how many answered. The sticks
 show as a dot in a circle with their position, the triggers as a bar from 0 to 100 %.
 
-During the test every button is the test's, B too: **hold B** for a second and a half, or tap **Finish**, to end it.
+During the test every button is the test's, B too: **hold B** for a second and a half, or tap **B Hold to finish**
+in the row at the bottom, to end it.
 On a keyboard, Escape ends it.
 
 The buttons on the card are those Windows reports for an Xbox controller: LB, View, Xbox, ☰ (Menu), RB, the d-pad,

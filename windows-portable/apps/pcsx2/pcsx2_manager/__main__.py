@@ -22,7 +22,7 @@ def main() -> int:
     app = create_app(INFO, qt_args, theme=PORTABLE)
     if instance.already_running(INFO.app_id):       # a second launch brings the open window to the front
         return 0
-    log_path = applog.setup(APP_ID, suite=SUITE)
+    log_path = applog.setup(APP_ID, suite=SUITE, private=True)
     applog.logger(APP_ID).info(f"{APP_NAME} {__version__} started.")
     from .main_window import MainWindow
     window = MainWindow(log_path=log_path)

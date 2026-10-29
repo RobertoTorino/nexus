@@ -1,3 +1,48 @@
+Changelog: 29-10-2026 14:35:17
+
+Release 2.0.0.
+
+Changelog: 29-10-2026 13:17:58
+
+Fixed. A path on the screen showed the user's name (owner, 29-10-2026: against the privacy rule): the Folder row, the
+game folders, the places to add, the memory cards' folder, the log and an install's error show the user's folders as
+%LOCALAPPDATA% and %USERPROFILE%, and no line of the log names the user (core's platform.private).
+
+Changelog: 29-10-2026 13:03:08
+
+Fixed. At the top or bottom of a list in a pane (Your games, the settings, the memory cards, the browser) the focus
+jumped back to the cards on the left; it stays in the pane now, and only B goes back (owner, 29-10-2026; core's fix).
+
+Changelog: 29-10-2026 12:46:22
+
+Breaking. The app never starts a game (owner, 29-10-2026: the games are played from Steam, never in the emulator from
+the app): A on a game is its Steam mark (X before), and nothing plays it from Your games.
+
+Breaking. No pills (owner, 29-10-2026: one way everywhere): every action is in the row at the bottom, A too. The
+PCSX2 pane: A Install, X Choose BIOS, Y Reinstall or Update, LB Remove BIOS and RB Remove PCSX2 (a second press each,
+where they were pills); the Log pane: A View log (or a tap on the pane) shows the whole log in the app, the d-pad
+scrolls it, B goes back (it opened in Notepad, which no button closes); the key page: A Save; the memory cards: A
+Saves.
+
+Fixed. A game folder and the BIOS dump could not be chosen with the controller (owner, 29-10-2026): Windows' own
+folder and file windows are replaced by the app's browser (core's browse): + Browse to a folder… in Folders (A opens
+a folder, B goes up, X adds the open one), and X Choose BIOS opens it in Downloads showing the .bin and .rom dumps (A
+on one takes it). The information texts name the buttons ("the A button") and no longer say a game plays from the
+app.
+
+Changelog: 29-10-2026 11:35:27
+
+Breaking. The buttons (owner, 29-10-2026: "Close" on B was not clear): B goes back (from a pane to its card, from a
+page to where it came from; on a card it does nothing), View (⧉) exits the app and Menu (☰) opens the information of
+the pane that shows; B on the folders goes back to the games, on a card's saves to the cards, on Steam artwork to
+Your games. Exit asks first while PCSX2 is being downloaded or Steam changed (Press View again). The row at the
+bottom ends with ☰ Info, B Back and ⧉ Exit app.
+
+Changelog: 29-10-2026 11:04:36
+
+Fixed. The PCSX2 pane's text showed through Steam artwork, Your games or another pane (owner, 29-10-2026), after
+RB Steam artwork from a game in the list: two pages were visible at once. Core's fix: one page shows.
+
 Changelog: 29-10-2026 06:24:25
 
 Release 1.0.1.

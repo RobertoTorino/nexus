@@ -1,3 +1,35 @@
+Changelog: 29-10-2026 14:35:18
+
+Release 2.1.0. Pins wp-ppsspp-v0.1.0.
+
+Changelog: 29-10-2026 13:17:58
+
+Fixed. A path on the screen showed the user's name (owner, 29-10-2026: against the privacy rule): the Details page's
+Program row and the log show the user's folders as %LOCALAPPDATA% and %USERPROFILE%, and no line of the log names the
+user (core's platform.private).
+
+Changelog: 29-10-2026 13:03:08
+
+Fixed. On the Suite page the d-pad no longer leaves the page for the tiles behind it; B goes back (owner, 29-10-2026;
+core's fix).
+
+Changelog: 29-10-2026 12:46:22
+
+Breaking. No pills (owner, 29-10-2026: one way everywhere): A Install or Open and Y Update are in the row at the
+bottom for the focused app, A Open and Y Remove on the Details page; on the Suite page A switches the focused setting
+(the wallpaper) and Y is Check again or Update to x.y.z (A was).
+
+Changelog: 29-10-2026 11:35:27
+
+Breaking. The buttons (owner, 29-10-2026: "Close" on B was not clear): B goes back (Details and Suite to the
+tiles, the strip's pills to their tile; on a tile it does nothing) and View (⧉) exits the portal, asking first while
+a download or an install runs (Press View again). The Settings page is gone from View: the wallpaper switch is a row
+on the Suite page (☰). The row at the bottom ends with B Back and ⧉ Exit app.
+
+Changelog: 29-10-2026 10:26:43
+
+Added. PPSSPP Manager on the Gaming tab: the portal pins wp-ppsspp-v0.1.0, with the Gaming category's icon.
+
 Changelog: 29-10-2026 06:32:01
 
 Release 2.0.3. Pins wp-test-v1.7.1, wp-pcsx2-v1.0.1.

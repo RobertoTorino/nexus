@@ -14,6 +14,9 @@ from PyQt6.QtCore import QEvent, QObject, Qt, pyqtSignal
 from PyQt6.QtGui import QKeyEvent
 
 from bc250_core import portable
+from bc250_core.platform import private
+from bc250_core.portable import EXIT
+from bc250_core.portable import INFO as MENU_INFO
 from bc250_core.gamepad import Gamepad
 from portable_test import device, lights, network
 from portable_test.main_window import MainWindow
@@ -95,7 +98,7 @@ def values(window, pane=None) -> dict[str, str]:
 
 
 def read(window, qapp) -> bool:
-    window.device_pane.read_pill.click()
+    window.read_device()
     return wait_for(qapp, lambda: window.device is not None)
 
 
@@ -103,8 +106,9 @@ def test_nothing_is_read_before_a(make, qapp, ally_json, monkeypatch):
     calls = []
     window, _ = make(read=lambda: calls.append(True) or device.parse(ally_json))
     qapp.processEvents()
-    assert calls == [] and window.device is None and window.device_pane.read_pill.label.text() == "Read"
-    assert window.device_pane.status.text() == ""              # the pill says it (owner, 29-10-2026: not twice)
+    assert calls == [] and window.device is None and window.device_pane.action == "Read"
+    assert window.device_pane.status.text() == ""              # the legend says it (owner, 29-10-2026: not twice)
+    assert window.legend.items[0] == ("A", "Read")
     monkeypatch.setattr(window, "isActiveWindow", lambda: True)
     window.on_action("accept")                                  # A on the Device card
     assert wait_for(qapp, lambda: calls == [True])
@@ -113,7 +117,7 @@ def test_nothing_is_read_before_a(make, qapp, ally_json, monkeypatch):
 def test_the_device_is_read_and_shown(make, qapp):
     window, _ = make()
     assert read(window, qapp)
-    assert window.device_pane.read_pill.label.text() == "Read again"
+    assert window.device_pane.action == "Read again"
     shown = values(window)
     assert shown["Device"] == "ROG Xbox Ally X" and shown["Memory"] == "24 GB, 15.6 GB usable"
     assert "Screen" in shown and "% scaling, " in shown["Screen"]
@@ -121,14 +125,14 @@ def test_the_device_is_read_and_shown(make, qapp):
     assert re.fullmatch(r"\w+day \d\d/\d\d/\d{4}  \|  \d\d:\d\d", window.header.status.text())
     assert window.header.second.text() == "CPU 47° GPU 45°  |  18 W  |  120 Hz  |  82%"   # under it (owner, 29-10-2026)
     assert window.header.icon is None                       # the screen is too small for it (owner, 27-10-2026)
-    assert [text for _, text in window.legend.items] == ["Save report", "Close"]
+    assert [text for _, text in window.legend.items] == ["Read again", "Save report", "Exit app"]
 
 
 def test_read_again_and_a_failed_read(make, qapp, ally_json):
     answers = [lambda: device.parse(ally_json), lambda: (_ for _ in ()).throw(RuntimeError("CIM is not running"))]
     window, _ = make(read=lambda: answers.pop(0)())
-    assert read(window, qapp) and wait_for(qapp, lambda: window.device_pane.read_pill.label.text() == "Read again")
-    window.device_pane.read_pill.click()
+    assert read(window, qapp) and wait_for(qapp, lambda: window.device_pane.action == "Read again")
+    window.read_device()
     assert wait_for(qapp, lambda: "did not answer" in window.device_pane.status.text())
     assert "CIM is not running" in window.device_pane.status.text() and window.device is not None
 
@@ -140,7 +144,7 @@ def test_x_saves_the_report(make, qapp, tmp_path, monkeypatch):
     window.on_action("x")
     saved = list((tmp_path / "reports").glob("device-*.txt"))
     assert len(saved) == 1 and "Device: ROG Xbox Ally X" in saved[0].read_text(encoding="utf-8")
-    assert str(saved[0]) in window.device_pane.status.text()
+    assert private(saved[0]) in window.device_pane.status.text() and str(Path.home()) not in window.device_pane.status.text()
 
 
 def test_the_controller_test_has_every_button_until_b_is_held(make, qapp, monkeypatch):
@@ -161,7 +165,9 @@ def test_the_controller_test_has_every_button_until_b_is_held(make, qapp, monkey
     window.keyPressEvent(QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_Escape, Qt.KeyboardModifier.NoModifier))
     assert not window.testing and closed == []                                # Escape ended the test only
     window.on_action("back")
-    assert closed == [True]                                                   # now B closes the app
+    assert closed == [] and window.controller_card.hasFocus()                # B on a card: nothing (owner)
+    window.on_action("view")
+    assert closed == [True]                                                   # View exits the app
 
 
 def test_the_cards_show_their_panes(make, qapp):
@@ -169,7 +175,7 @@ def test_the_cards_show_their_panes(make, qapp):
     window.controller_card.setFocus()
     qapp.processEvents()
     assert window.panes.currentWidget() is window.controller_pane
-    assert window.legend.items == [("A", "Start the test"), ("Y", "Stick lights"), ("B", "Close")]
+    assert window.legend.items == [("A", "Start the test"), ("Y", "Stick lights"), MENU_INFO, EXIT]
     window.device_card.setFocus()
     qapp.processEvents()
     assert window.panes.currentWidget() is window.device_pane
@@ -199,19 +205,19 @@ def test_one_read_fills_the_device_hardware_and_connected_cards(make, qapp, monk
     window.hardware_card.setFocus()
     qapp.processEvents()
     assert window.panes.currentWidget() is window.hardware_pane
-    assert window.legend.items == [("X", "Save report"), ("B", "Close")]
+    assert window.legend.items[1:] == [("X", "Save report"), EXIT]
     hardware = window.hardware_pane.grid
     assert [hardware.itemAt(i).widget().text() for i in range(0, hardware.count(), 2)][:2] == ["Panel", "Touch"]
     window.connected_card.setFocus()
     qapp.processEvents()
     connected = window.connected_pane.grid
     assert connected.itemAt(1).widget().text() == "Realtek USB hub (USB 3, USB 2)"
-    assert all(p.read_pill.label.text() == "Read again" for p in window.info_panes)
+    assert all(p.action == "Read again" for p in window.info_panes)
     monkeypatch.setattr(window, "isActiveWindow", lambda: True)
     saved = window.save_report().read_text(encoding="utf-8")
     assert "\nDevice\nDevice: ROG Xbox Ally X\n" in saved and "\nHardware\nPanel: about 7 inches" in saved
     assert "\nConnected\nDock or hub: Realtek USB hub (USB 3, USB 2)\n" in saved
-    assert str(window.reports) in window.connected_pane.status.text()      # every card says where it went
+    assert private(window.reports) in window.connected_pane.status.text()      # every card says where it went
 
 
 def test_nothing_plugged_in_says_so(make, qapp):
@@ -233,19 +239,19 @@ def test_the_network_is_measured_on_a_and_saved_with_x(make, qapp, monkeypatch):
     window.network_card.setFocus()
     qapp.processEvents()
     assert window.panes.currentWidget() is window.network_pane
-    assert window.legend.items == [("X", "Save report"), ("B", "Close")]
+    assert window.legend.items[1:] == [("X", "Save report"), EXIT]
     assert said == [] and window.network_pane.status.text() == ""
     monkeypatch.setattr(window, "isActiveWindow", lambda: True)
     window.on_action("accept")
     assert wait_for(qapp, lambda: window.network is not None)
     qapp.processEvents()
-    assert said == ["battery, 82%"] and window.network_pane.read_pill.label.text() == "Test again"
+    assert said == ["battery, 82%"] and window.network_pane.action == "Test again"
     shown = values(window, window.network_pane)
     assert shown["Wi-Fi"] == "5 GHz, channel 56" and shown["Download"] == "0.4 MB/s (4.5 MB in 10.1 s)"
     assert window.device is None and window.device_pane.grid.count() == 0       # the device was not read
     saved = window.save_report().read_text(encoding="utf-8")
     assert "\nNetwork\nWi-Fi: 5 GHz, channel 56\n" in saved and "\nDevice\n" not in saved
-    assert str(window.reports) in window.network_pane.status.text()
+    assert private(window.reports) in window.network_pane.status.text()
     assert read(window, qapp)
     saved = window.save_report().read_text(encoding="utf-8")
     assert saved.index("\nDevice\n") < saved.index("\nNetwork\n")                  # the network's section last
@@ -255,13 +261,13 @@ def test_a_failed_download_and_a_failed_measurement(make, qapp):
     def failed(power, say):
         return network.Network(power=power, error="timed out")
     window, _ = make(measure=failed)
-    window.network_pane.read_pill.click()
+    window.measure_network()
     assert wait_for(qapp, lambda: window.network is not None)
     assert window.network_pane.status.text() == "The download failed: timed out"
     window, _ = make(measure=lambda power, say: (_ for _ in ()).throw(OSError("wlanapi is missing")))
-    window.network_pane.read_pill.click()
+    window.measure_network()
     assert wait_for(qapp, lambda: "not measured" in window.network_pane.status.text())
-    assert window.network_pane.read_pill.isEnabled() and window.device_pane.status.text() == ""
+    assert window.device_pane.status.text() == ""
 
 
 def test_the_window_fits_the_allys_screen(make, qapp):
@@ -312,13 +318,11 @@ def test_read_while_a_read_runs_says_so(make, qapp, ally_json):
     gate = threading.Event()
     window, _ = make(read=lambda: gate.wait(10) and device.parse(ally_json),
                      measure=lambda power, say: gate.wait(10) and network.Network(power=power, error="timed out"))
-    window.device_pane.read_pill.click()
-    window.device_pane.read_pill.click()
-    assert window.device_pane.read_pill.isEnabled()
+    window.read_device()
+    window.read_device()
     assert window.device_pane.status.text() == "Reading ... Windows is still answering the read before."
-    window.network_pane.read_pill.click()
-    window.network_pane.read_pill.click()
-    assert window.network_pane.read_pill.isEnabled()
+    window.measure_network()
+    window.measure_network()
     assert window.network_pane.status.text() == "Measuring ... the test before is still running."
     gate.set()
     assert wait_for(qapp, lambda: window.device is not None and window.network is not None)
@@ -383,3 +387,33 @@ def test_the_lights_are_off_limits_during_the_button_test(make, qapp, monkeypatc
     assert window.popup is None
     window.controller_pane.finish()
     assert not window.controller_pane.back_buttons.isHidden() and ("Y", "Stick lights") in window.legend.items
+
+
+def test_b_on_a_card_does_nothing_and_no_pane_holds_a_pill(make, qapp, monkeypatch):
+    """The suite's buttons (owner, 29-10-2026): B goes back, and on a card there is nowhere to go; every action is in
+    the row at the bottom, A Read and A Test too, so no pane holds a pill, and a tap on the legend's A acts."""
+    window, _ = make()
+    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
+    closed = []
+    monkeypatch.setattr(window, "close", lambda: closed.append(True))
+    window.device_card.setFocus()
+    qapp.processEvents()
+    window.on_action("back")
+    assert window.device_card.hasFocus() and closed == [] and ("B", "Back") not in window.legend.items
+    assert [p for p in window.panes.findChildren(portable.Pill) if type(p) is portable.Pill] == []
+    window.legend.entries["A"].pressed.emit()                   # a tap on A Read
+    assert wait_for(qapp, lambda: window.device is not None)
+    window.close()
+
+
+def test_a_tap_on_hold_to_finish_ends_the_button_test(make, qapp):
+    """The Finish pill is gone (owner, 29-10-2026: every action in the row at the bottom): during the test the legend
+    says "B Hold to finish", and a finger's tap on it ends the test; the controller's buttons stay the test's."""
+    window, _ = make()
+    window.start_test()
+    assert window.testing and window.legend.items == [("B", "Hold to finish")]
+    window.act("x")                                             # every button is the test's: nothing else happens
+    assert window.testing
+    window.legend.entries["B"].pressed.emit()
+    assert not window.testing
+    window.close()

@@ -7,7 +7,7 @@ APP_NAME = "Windows Portable Test"
 APP_ID = "windows-portable-test"
 EXE_NAME = "Windows-Portable-Test"   # the program's file name in a release (owner, 28-10-2026; was Windows-PT)
 SUITE = "windows-portable-suite"
-__version__ = "1.7.1"
+__version__ = "2.0.0"
 
 from pathlib import Path
 

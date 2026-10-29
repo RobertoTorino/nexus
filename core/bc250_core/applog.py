@@ -18,7 +18,7 @@ import sys
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
-from .platform import data_home, suite_data
+from .platform import data_home, private as private_text, suite_data
 
 MAX_BYTES = 1_000_000
 KEPT = 3
@@ -35,11 +35,20 @@ def logger(app_id: str) -> logging.Logger:
     return logging.getLogger(app_id)
 
 
-def setup(app_id: str, path: Path | None = None, suite: str = "") -> Path:
+class _Private(logging.Formatter):
+    """Every line with the user's folders written as %LOCALAPPDATA%, %APPDATA%, %USERPROFILE% (~ on Linux): no user
+    name in a log (platform.private)."""
+
+    def format(self, record: logging.LogRecord) -> str:
+        return private_text(super().format(record))
+
+
+def setup(app_id: str, path: Path | None = None, suite: str = "", private: bool = False) -> Path:
     """The app's log, in *path* (its own file, log_file(app_id, suite), when not given): every record of
     logger(app_id) goes there, and an uncaught exception is written before Python reports it. A second call changes
     nothing. Returns the file; when it cannot be made, the log goes to stderr and the file is still what is
-    returned."""
+    returned. *private*: the user's folders masked in every line (the Windows Portable Suite's apps, owner
+    29-10-2026: the log shows on their screen)."""
     path = path or log_file(app_id, suite)
     log = logger(app_id)
     if log.handlers:
@@ -51,7 +60,7 @@ def setup(app_id: str, path: Path | None = None, suite: str = "") -> Path:
                                                        encoding="utf-8")
     except OSError:
         handler = logging.StreamHandler()
-    handler.setFormatter(logging.Formatter(FORMAT, DATE))
+    handler.setFormatter((_Private if private else logging.Formatter)(FORMAT, DATE))
     log.addHandler(handler)
     previous = sys.excepthook
 

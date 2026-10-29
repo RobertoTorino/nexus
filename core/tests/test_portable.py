@@ -333,8 +333,41 @@ def test_the_pane_with_the_focus_reads_as_one_with_its_card(qapp, monkeypatch):
     window.close()
 
 
+def test_a_switch_inside_a_switch_leaves_one_page_visible(qapp):
+    """The text of one pane on another (owner, 29-10-2026, seen in PCSX2 Manager and PPSSPP Manager): a switch away
+    from the page with the focus hands the focus to a card, whose own pane is switched to in that moment, inside the
+    first switch; QStackedLayout then left both pages visible, the see-through one over the other. One stays."""
+    from PyQt6.QtCore import QObject
+    from PyQt6.QtWidgets import QStackedWidget
+
+    class SwitchWhenHidden(QObject):                # the card that takes the focus shows its own pane, then and there
+        def eventFilter(self, obj, event):
+            if event.type() == QEvent.Type.Hide and stack.currentWidget() is not own:
+                stack.setCurrentWidget(own)
+            return False
+    window = PortableWindow(gamepad=portable.Gamepad(source_factory=NoPad))
+    window.setFixedSize(900, 500)
+    line = QHBoxLayout(window)
+    stack = QStackedWidget()
+    own, focused, other = portable.Pane(), portable.Pane(), portable.Pane()
+    for page in (own, focused, other):
+        stack.addWidget(page)
+    line.addWidget(stack)
+    window.show()
+    qapp.processEvents()
+    stack.setCurrentWidget(focused)
+    qapp.processEvents()
+    hidden = SwitchWhenHidden()
+    focused.installEventFilter(hidden)
+    stack.setCurrentWidget(other)                                     # a switch, with one inside it
+    qapp.processEvents()
+    assert [page for page in (own, focused, other) if page.isVisible()] == [stack.currentWidget()]
+    window.close()
+
+
 def test_the_info_pill_shows_its_text_over_the_window(qapp, monkeypatch):
-    """More text than fits goes behind an "i" (owner, 28-10-2026): A or a tap opens it, A, B or Escape closes it."""
+    """More text than fits goes behind an "i" (owner, 28-10-2026): Menu or a tap opens it, A, B, Menu or Escape
+    closes it, and the focus goes back where it was. The icon is touch only (owner, 29-10-2026): the d-pad skips it."""
     window = PortableWindow(gamepad=portable.Gamepad(source_factory=NoPad))
     window.setFixedSize(800, 500)
     column = QVBoxLayout(window)
@@ -348,14 +381,15 @@ def test_the_info_pill_shows_its_text_over_the_window(qapp, monkeypatch):
     backs = []
     window.back.connect(lambda: backs.append(True))
     assert info.width() == info.height() == portable.px(32)
-    info.setFocus()
-    window.on_action("accept")
+    assert info not in window.focusables()
+    card.setFocus()
+    window.on_action("menu")
     popup = window.popup
     assert popup is not None and popup.geometry() == window.rect() and popup.text.text() == "A long explanation."
     assert popup.close_pill.hasFocus()
     window.on_action("up")                                                 # the popup has the buttons
     window.on_action("back")
-    assert window.popup is None and backs == [] and info.hasFocus()
+    assert window.popup is None and backs == [] and card.hasFocus()
     info.click()                                                           # a tap
     assert window.popup is not None
     window.keyPressEvent(QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_Escape, Qt.KeyboardModifier.NoModifier))
@@ -532,4 +566,84 @@ def test_closing_a_popup_gives_the_focus_back_before_it_hides(qapp, monkeypatch)
     window.show_popup("Title", "Text.", icon).dismiss()
     qapp.processEvents()
     assert icon.hasFocus() and seen == []
+    window.close()
+
+
+def test_b_goes_back_view_exits_and_menu_shows_the_information(qapp, monkeypatch):
+    """Every window's buttons (owner, 29-10-2026: "Close" on B was not clear): B in a pane goes back to its card and
+    does nothing on a card; View is Exit app; Menu opens the information icon of the pane that shows (and closes it
+    again). The legend's last entries follow the focus: Menu Info, B Back while B can act, View Exit app."""
+    window = PortableWindow(gamepad=portable.Gamepad(source_factory=NoPad))
+    window.setFixedSize(900, 500)
+    line = QHBoxLayout(window)
+    card = Card("Card", "Its pane.")
+    line.addWidget(card)
+    pane = portable.Pane()
+    info = portable.InfoPill("About it", "What the pane does.")
+    pill = Pill("Open", "A", main=True)
+    pane.column.addWidget(info)
+    pane.column.addWidget(pill)
+    line.addWidget(pane)
+    closed = []
+    monkeypatch.setattr(window, "close", lambda: closed.append(True))
+    window.back.connect(window.go_back)
+    window.show()
+    window.activateWindow()
+    qapp.processEvents()
+    card.setFocus()
+    qapp.processEvents()
+    assert window.common_items() == [portable.INFO, portable.EXIT] and not window.go_back()
+    pill.setFocus()
+    qapp.processEvents()
+    assert window.common_items() == [portable.INFO, portable.BACK, portable.EXIT]
+    window.act("menu")
+    assert window.popup is not None and window.popup.text.text() == "What the pane does."
+    window.act("menu")
+    assert window.popup is None
+    window.act("back")
+    qapp.processEvents()
+    assert card.hasFocus() and closed == []
+    window.act("back")                                                # on the card: nothing
+    assert card.hasFocus() and closed == []
+    window.act("view")
+    assert closed == [True]
+    window.close()
+
+
+def test_the_focus_stays_in_the_pane_until_b(qapp):
+    """Working in a pane, the d-pad stays in it (owner, 29-10-2026: at the top or bottom of a list the focus jumped
+    back to the cards); only B goes back to the card. From a card the d-pad still reaches the other cards."""
+    window = PortableWindow(gamepad=portable.Gamepad(source_factory=NoPad))
+    window.setFixedSize(900, 500)
+    line = QHBoxLayout(window)
+    cards = QVBoxLayout()
+    card, other = Card("Card", "Its pane."), Card("Other", "Another.")
+    cards.addWidget(card)
+    cards.addWidget(other)
+    line.addLayout(cards)
+    pane = portable.Pane()
+    first, second = portable.Row("First"), portable.Row("Second")
+    pane.column.addWidget(first)
+    pane.column.addWidget(second)
+    line.addWidget(pane)
+    window.back.connect(window.go_back)
+    window.show()
+    window.activateWindow()
+    qapp.processEvents()
+    card.setFocus()
+    qapp.processEvents()
+    window.act("down")
+    assert other.hasFocus()                                           # from a card: the next card
+    card.setFocus()
+    first.setFocus()
+    qapp.processEvents()
+    for direction in ("up", "left", "up"):                            # the top, and the cards to the left: stays
+        window.act(direction)
+        assert first.hasFocus(), direction
+    window.act("down")
+    window.act("down")                                                # the bottom: stays
+    assert second.hasFocus()
+    window.act("back")
+    qapp.processEvents()
+    assert card.hasFocus()                                            # only B goes back
     window.close()

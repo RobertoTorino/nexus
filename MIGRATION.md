@@ -7,14 +7,113 @@ describe only what exists.
 
 ## Resume here (29-10-2026, for a new chat): the Windows Portable Suite
 
-**Released** (the owner, 28/29-10-2026): wp-portal-v1.6.0, then wp-pcsx2-v1.0.0 and wp-test-v1.7.0 (the last
-commit, with core 0.2.0 inside them; everything listed under "Released as" below). The portal, 1.6.0, still pins
-wp-test-v1.6.0 and wp-pcsx2-v0.2.0: step 2 of that release (pin both, bump the portal) is still to do. CI on that
-commit failed in core's tests on Linux: `test_the_focused_row_is_raised_with_an_amber_edge` sampled a pixel that lies
-on the row's text under Linux's fonts; the test samples beside the text now (29-10-2026).
+**Where we stand (end of the session of 29-10-2026, for the next one).** Nothing is committed: the owner commits.
+The working tree holds one round of work, every check passing on Windows (`./test.sh`: core 219, tools 173,
+dev/releases 116, the portal 45, the suite's tools 27, PCSX2 Manager 109, PPSSPP Manager 67, Windows Portable Test
+77; both wikis built with `--strict`; `tools/pre-push.sh` fine; no CRLF). `tools/ci-local.sh` was not run (no podman on
+this PC). In it, each part detailed in the paragraphs below:
 
-**In the working tree now (29-10-2026, after the owner's first round with wp-pcsx2-v1.0.0 and wp-test-v1.7.0 on the
-Ally), checked (core, the portal, both apps' suites), not released:**
+1. **PPSSPP Manager**, new (`windows-portable/apps/ppsspp/`, 0.1.0, listed in the portal's `apps.toml` as
+   `wp-ppsspp-v0.1.0`; the portal needs a minor bump for the new entry: `check_manifest.py --base origin/main` says
+   so). Not carried over from BC250: Rename files.
+2. **Ghosting fixed** (two pages of a stack visible at once; core's `one_page()`).
+3. **The suite's buttons**: B Back (nothing on a card), View (⧉) Exit app, Menu (☰) Info; the d-pad stays in a pane
+   once there, only B leaves it (core's `move_focus()`).
+4. **One way everywhere**: no pills in the panes, every action a legend entry, A too; Remove on free buttons; the
+   information icon touch only; the emulator apps never start a game (A is the Steam mark); core's folder browser
+   (`browse.py`) instead of Windows' folder and file windows (game folders, PCSX2's BIOS); the log read in the app
+   (`TextView`); the info texts name "the A button".
+5. **Privacy**: `platform.private()` shows the user's folders as `%LOCALAPPDATA%`/`%USERPROFILE%`; every portable
+   app logs with `applog.setup(private=True)`.
+6. **Emulator updates**: `windows-portable/tools/check_upstream.py` and `.github/workflows/upstream-windows-portable.yml`
+   (Mondays, the "Upstream review (Windows Portable Suite)" issue); runs on GitHub only after the push.
+7. **Nexus tools**: `tools/new_app.py` writes the Windows wiki's home card (it stopped there before), and its
+   template has the new buttons and the private log.
+
+**The release this asks for** (the numbers are the owner's; the CHANGELOGs have every entry): core (`Breaking.`: the
+information icon no longer takes the focus; `Added.`/`Fixed.` the rest), PCSX2 Manager, Windows Portable Test and the
+portal (`Breaking.`: B no longer closes, the pills gone, View no longer the portal's Settings), PPSSPP Manager's first
+release (0.1.0), the portal pinning all of them (its minor bump at least), Nexus (the root CHANGELOG: new_app,
+the upstream workflow).
+
+**To check on the Ally first:** PPSSPP Manager end to end (install, a real ISO and CSO put in Steam and played there,
+LT and Exit, Vulkan on the Ally's GPU, the settings read by PPSSPP); the folder browser with an SD card; PCSX2's BIOS
+picked in Downloads; the whole log scrolled; B and View everywhere; the d-pad staying in a pane; every pane's A entry;
+the portal's Suite page (A on the wallpaper, Y Check again / Update); no user name on any screen. Lines logged
+before the privacy change still hold the name in the log files until they rotate (the screen masks them).
+
+**Next** (the list under "Next, in this order" below): item 1, PPSSPP Manager, is done but for the owner's round on
+the Ally and its release; then 2, Windows Portable Test's tabs; 3, the BC250 apps for the Ally, HDMI CEC Manager first.
+
+**Released** (the owner, 29-10-2026): wp-pcsx2-v1.0.1 and wp-test-v1.7.1, pinned by wp-portal-v2.0.3 (nexus-v0.19.0),
+with everything listed under "Released as" below.
+
+**In the working tree now (29-10-2026), checked on Windows (every test suite of `./test.sh`, the installer test, a
+release built with `build_release.py` and installed by the installer test, the frozen program started offscreen, the
+wiki built), not released: PPSSPP Manager for the Windows Portable Suite** (owner's name: "PPSSPP Manager"),
+`windows-portable/apps/ppsspp/`, made with `tools/new_app.py` and then ported from the BC250 app and laid out as PCSX2
+Manager: four cards (PPSSPP, Your games, Settings, Log), the legend as the action row.
+
+- PPSSPP 1.20.4's Windows build pinned (`PPSSPP-v1.20.4-Windows-x64.zip`, 20 MB, GitHub's sha256 and our own download
+  agree; the live download test passes), unpacked with zipfile into `emulator\`, portable mode by PPSSPP's own rule
+  (no `installed.txt` beside `PPSSPPWindows64.exe`: the memory stick is `memstick\` beside it; read in PPSSPP's
+  `Windows\main.cpp` at v1.20.4). Remove keeps the memory stick.
+- Games: the BC250 app's `games.py` unchanged (ISO, CSO, CHD, EBOOT.PBP), plus the memory stick's `PSP\GAME`. A game
+  starts as `PPSSPPWindows64.exe --fullscreen --pause-menu-exit "<game>"` (PPSSPP's window never shown); to quit, LT or
+  the guide button opens PPSSPP's pause menu (its default XInput map, `Core\KeyMapDefaults.cpp`), Exit closes PPSSPP.
+- Steam: PCSX2 Manager's Windows shortcuts with the BC250 app's artwork from the game's own ICON0/PIC1; SteamGridDB
+  gives the cover only (as BC250).
+- Settings in four tabs, 15 settings of `memstick\PSP\SYSTEM\ppsspp.ini` (keys, sections and defaults from PPSSPP
+  1.20.4's `Core\Config.cpp`; the file's byte order mark and CRLF kept); the app owns only `[General]
+  CheckForNewVersion = False`. PPSSPP maps the Ally's controller itself, so no mapping is written.
+- Not carried over: the BC250 app's **Rename files** (a dialog there; on the handheld it would need a view of its
+  own), and the BC250 app's "a newer PPSSPP is out" notice. The owner's to decide whether either comes.
+- To check on the Ally: install, a real ISO and CSO played, LT and Exit, Steam's shortcuts and pictures, the settings
+  read by PPSSPP (Vulkan on the Ally's GPU), touch.
+- The release: the app is new (0.1.0, its CHANGELOG has the Added entry); the portal pins `wp-ppsspp-v0.1.0` with an
+  empty sha256, so `windows-portable/tools/check_manifest.py --base origin/main` asks for a portal minor bump (the
+  owner's numbers). The portal's CHANGELOG has the Added entry, the root's the `new_app.py` fix.
+- **One way everywhere, from the owner's PPSSPP test round** (29-10-2026; the owner's answers: Steam only, Remove on
+  the free buttons, the information icon touch only, a weekly GitHub issue for emulator updates):
+  - **No pills in the panes**, in all four apps: every action is a legend entry, A too (core: A beside a card or row
+    reaches `bind("accept")`). Remove PCSX2 on RB, Remove BIOS on LB, Remove PPSSPP on X; the portal's Suite page has
+    Y for Check again / Update to x.y.z (A switches the wallpaper row); Windows Portable Test's A Read / A Test, and a
+    tap on "B Hold to finish" ends the controller test (its Finish pill gone). Pills stay only in a popup (the stick
+    lights). The information icon is touch only (`IconPill` NoFocus); Menu opens it.
+  - **The emulator apps never start a game**: A on a game is its Steam mark (X before); `emulator.start()` and its
+    helpers removed from both apps, `GAME_ARGS` kept for Steam's shortcuts.
+  - **Core's browser** (`bc250_core/browse.py`) replaces Windows' folder and file windows, which the controller cannot
+    use: + Browse to a folder… (A opens, B up, X adds) in both apps, and PCSX2's X Choose BIOS in Downloads showing
+    the .bin/.rom dumps.
+  - **The log read in the app** (core's `TextView`: A View log or a tap on the Log pane, the d-pad scrolls, B back)
+    instead of Notepad.
+  - **The info texts** name the buttons ("the A button") and no longer say a game plays from the app.
+  - **Emulator updates**: `windows-portable/tools/check_upstream.py` and `.github/workflows/upstream-windows-portable.yml`
+    (Mondays 06:30 UTC) keep the "Upstream review (Windows Portable Suite)" issue up to date; run here against GitHub:
+    PCSX2 2.8.2 and PPSSPP 1.20.4 are the newest and their files unchanged. Not yet run on GitHub (needs the push).
+  - Kinds: `Breaking.` in PCSX2 Manager, Windows Portable Test, the portal and core (the icon), `Added.` in core and the
+    root; PPSSPP Manager's first-version entry covers it. To check on the Ally: the browser with an SD card, the BIOS
+    picked in Downloads, the whole log scrolled, every row's A entry, the portal's Suite page (A on the wallpaper, Y).
+- **The suite's buttons** (owner, 29-10-2026, testing PPSSPP Manager: "Close" on B was not clear; the owner's
+  answers: View exits, B on a card does nothing, the whole suite, the portal's Settings inside its Suite page). In
+  core's `PortableWindow`: B goes back (`go_back()`: a pane to its card; nothing on a card), View (⧉) exits
+  (`exit_app()`, which an app overrides to ask first while busy: "Press View again"), Menu (☰) opens the shown
+  pane's information icon (`show_info()`) and closes it again; `common_items()` ends every legend with ☰ Info, B Back
+  (while B can act) and ⧉ Exit app, and `update_legend()` follows the focus. In the apps: PCSX2 Manager and PPSSPP
+  Manager (B also leaves the folders, a card's saves and Steam artwork), Windows Portable Test (the controller test
+  keeps every button, B held ends it), the portal (☰ Suite stays, the wallpaper row moved onto the Suite page, the
+  Settings page and View's binding gone), and `tools/new_app.py`'s Windows template. The ☰ and ⧉ signs are not in
+  the bundled Inter font: Windows draws them from its symbol font (checked on this PC; offscreen they are boxes).
+  Kinds: `Breaking.` in PCSX2 Manager, Windows Portable Test and the portal (B no longer closes, View no longer opens
+  the portal's Settings), `Added.` in core; the numbers are the owner's. To check on the Ally: every pane's legend,
+  B from each page, View with a download running, ☰ on a pane with and without an information icon.
+- Also in the working tree: `tools/new_app.py` stopped at the Windows wiki's home page (it looked for the old table;
+  the home page has a card per category now) after writing half the app: it now adds a paragraph to the category's
+  card, with a test; the Nexus page's development chapter says so. The Windows wiki's home page no longer says PCSX2
+  Manager opens PCSX2 in its Big Picture mode (gone since wp-pcsx2-v1.0.0).
+
+**Released as wp-pcsx2-v1.0.1, wp-test-v1.7.1 and wp-portal-v2.0.3** (the owner, 29-10-2026; the list as it was
+prepared, after the owner's first round with wp-pcsx2-v1.0.0 and wp-test-v1.7.0 on the Ally):
 
 - **Core:** the legend is the row of actions: every entry acts on a tap (`LegendItem`, through
   `PortableWindow.act()`), so an action with a controller button is in the legend alone, never on a pill as well
@@ -56,11 +155,18 @@ Ally), checked (core, the portal, both apps' suites), not released:**
   logged. The owner's next Y says which it is; the Log card shows the newest lines, the whole file is
   `%LOCALAPPDATA%\windows-portable-suite\windows-portable-pcsx2\windows-portable-pcsx2.log`. Also worth knowing:
   what the status line said right after Y the first time.
-- **Text of one pane left visible on another** (owner, 29-10-2026, a screenshot not seen from here): not found in
-  the code (every pane is a page of one QStackedWidget, and a hidden page does not paint). The likeliest cause is
-  Qt's drop-shadow effect on the stack (the pane's glow) keeping a stale picture of the stack when a label inside it
-  changes: a known artifact of QGraphicsEffect with changing children. To confirm: does it go away with the
-  wallpaper off (the glass), or when the focus is on a card (no glow on the stack)? Which pane's text, on which pane?
+- **Text of one pane left visible on another: found and fixed in core, in the working tree** (owner, 29-10-2026,
+  screenshots of PPSSPP Manager and seen in PCSX2 Manager; recorded at 60 fps on this PC during a fast controller
+  walk, the owner confirming the frames). Not a stale picture and not the glow: two pages of the stack were really
+  visible. A switch away from the page holding the focus (RB Steam artwork from a game in the list) handed the focus
+  to the first card, whose `focused` switched the stack to its own pane inside the first switch, and QStackedLayout
+  then showed both pages, the see-through one over the other (only visible with the wallpaper's glass). Fix:
+  `PortableWindow.showEvent` connects every stack's `currentChanged` to `one_page()`, which hides every page but the
+  current one; core's test `test_a_switch_inside_a_switch_leaves_one_page_visible` fails without it. A 3000-move
+  walk leaves one page visible in PPSSPP and PCSX2 Manager (PCSX2 Manager showed two at move 52 without it). Needs
+  a release of every app that bundles core with the fix: PCSX2 Manager (its CHANGELOG has the entry), PPSSPP
+  Manager (new), and Windows Portable Test and the portal as they are next released (they have stacks too; not seen
+  there).
 - **How to quit a game on the Ally:** hold **View and Menu (☰) together** (PCSX2's Select + Start chord, the
   Controller tab's "Quit with View + Menu", on by default; PCSX2 then closes by itself with `-batch`). Off, PCSX2's
   pause menu (Escape on a keyboard) ends it.
@@ -113,7 +219,7 @@ pills on the device.
 
 **Next, in this order (owner, 29-10-2026: "I want to start with PPSSPP Manager in a next chat"):**
 
-1. **PPSSPP Manager for the Windows Portable Suite**, ported from the BC250 suite's PPSSPP Manager
+1. **PPSSPP Manager for the Windows Portable Suite** (in the working tree, see above; Rename files left out), ported from the BC250 suite's PPSSPP Manager
    (`bc250-bazzite/apps/ppsspp/`) the way PCSX2 Manager was: `tools/new_app.py --suite windows-portable ppsspp`
    first (the layout, the manifest entry, the installer test, the CI matrix, the wiki chapter), then the BC250 app's
    parts on the portable window (PPSSPP's own window never shown, the games, Steam, the settings in tabs with core's

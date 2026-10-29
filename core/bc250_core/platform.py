@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import base64
 import os
+import re
 import shlex
 import shutil
 import subprocess
@@ -87,6 +88,24 @@ def start_menu() -> Path:
     """The user's Start-menu programs folder (Windows): where an app's shortcut goes, as .desktop files go to
     ~/.local/share/applications on Linux."""
     return roaming_config() / "Microsoft" / "Windows" / "Start Menu" / "Programs"
+
+
+def private(text: str | PurePath) -> str:
+    """*text* (a path, a message, a log line) with the user's folders written as Windows writes them for anyone:
+    %LOCALAPPDATA%, %APPDATA% and %USERPROFILE% (Linux: ~ for the home folder), so the user's name never shows on the
+    screen or in a log (owner, 29-10-2026: the privacy rule, "we don't do that anywhere"). Every place in the text,
+    whatever its case on Windows."""
+    text = str(text)
+    if WINDOWS:
+        folders = [(name, os.environ.get(name, "")) for name in ("LOCALAPPDATA", "APPDATA", "USERPROFILE")]
+        folders.append(("USERPROFILE", str(Path.home())))
+        for name, folder in sorted(((n, f.rstrip("\\/")) for n, f in folders if f), key=lambda nf: -len(nf[1])):
+            if len(folder) > 3:                         # never a drive's root
+                text = re.sub(re.escape(folder) + r"(?=[\\/]|\b|$)", lambda _m, n=name: f"%{n}%", text,
+                              flags=re.IGNORECASE)
+        return text
+    home = str(Path.home()).rstrip("/")
+    return re.sub(re.escape(home) + r"(?=/|\b|$)", "~", text) if len(home) > 1 else text
 
 
 def expand(path: str) -> Path:

@@ -24,7 +24,7 @@ def main() -> int:
     app = create_app(INFO, qt_args, theme=PORTABLE)
     if instance.already_running(INFO.app_id):
         return 0
-    log_path = applog.setup(APP_ID, suite=SUITE)
+    log_path = applog.setup(APP_ID, suite=SUITE, private=True)
     applog.logger(APP_ID).info(f"{APP_NAME} {__version__} started.")
     if args.lights:                                 # a release's check: pywinrt bundled and answering
         from .lights import Lights

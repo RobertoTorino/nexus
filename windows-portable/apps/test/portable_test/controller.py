@@ -13,7 +13,7 @@ from PyQt6.QtCore import QPointF, QRectF, Qt, QTimer, pyqtSignal
 from PyQt6.QtGui import QColor, QFont, QPainter, QPen
 from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QSizePolicy, QVBoxLayout, QWidget
 
-from bc250_core.portable import (AMBER, BODY, DIM, ON_AMBER, RAISED, TEXT, InfoPill, Pane, Pill, font, pill_row, px,
+from bc250_core.portable import (AMBER, BODY, DIM, ON_AMBER, RAISED, TEXT, InfoPill, Pane, Pill, font, px,
                                  text_label)
 
 from . import lights
@@ -168,9 +168,6 @@ class ControllerPane(Pane):
         self.count = text_label("", BODY + 1, QFont.Weight.DemiBold)
         self.column.addWidget(self.count)
         self.column.addStretch()
-        self.finish_pill = Pill("Finish", main=True)
-        self.finish_pill.activated.connect(self.finish)
-        self.column.addLayout(pill_row(self.finish_pill))
         self.timer = QTimer(self)
         self.timer.setInterval(100)
         self.timer.timeout.connect(self.check_hold)
