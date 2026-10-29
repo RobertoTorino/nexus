@@ -66,6 +66,11 @@ Ally), checked (core, the portal, both apps' suites), not released:**
   pause menu (Escape on a keyboard) ends it.
 - The new legend on the device: X, Y, LB and RB on each pane, a tap on an entry; the Settings tabs; Y Stick lights;
   the amber ring on the information icon.
+- The cards' glass at 160 of 255 (owner, 29-10-2026, picked from a rendered comparison: 200 read as solid on the
+  Ally): judge it on the device's own panel, brighter than a monitor.
+- **The focused tile see-through (on hold, owner 29-10-2026: "leave it for now").** The card with the focus is
+  solid by design (28-10-2026: its amber glow under a see-through card would tint it); the owner meant that tile
+  when asking about transparency, not the strip, which was glass already. One line in `Card._paint` when wanted.
 
 **Released as wp-pcsx2-v1.0.0 and wp-test-v1.7.0** (the owner, 29-10-2026; the list as it was prepared):
 

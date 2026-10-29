@@ -1,3 +1,9 @@
+Changelog: 29-10-2026 06:16:12
+
+Fixed. The cards and panes over the wallpaper are more see-through: 160 of 255 opaque instead of 200 (owner,
+29-10-2026: "the cards are not semi-transparent"; at 200 over the shaded picture they read as solid). The shade
+over the wallpaper stays 150, so the text keeps its contrast.
+
 Changelog: 29-10-2026 04:28:23
 
 Added. The legend is the row of actions (owner, 29-10-2026: "we have update steam 2 times ... if we can use that

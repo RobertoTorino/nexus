@@ -64,7 +64,8 @@ _glass = 255                            # the cards' and panes' opacity: glass()
 # throughout the suite"), on or off for the whole suite in the portal's Settings: <suite>\suite.ini, look/wallpaper
 WALLPAPER = Path(__file__).resolve().parent / "images" / "wallpaper.webp"
 SHADE = 150                             # of 255: how much of the background lies over the wallpaper
-GLASS = 200                             # of 255: the cards' and panes' opacity over it, so it shines through
+GLASS = 160                             # of 255: the cards' and panes' opacity over it, so it shines through (200
+                                        # read as solid on the Ally: owner, 29-10-2026)
 LOOK_KEY = "look/wallpaper"
 _fonts_loaded = False
 
