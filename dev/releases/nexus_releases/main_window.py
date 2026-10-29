@@ -269,7 +269,7 @@ class AppsPage(QWidget):
             text = f"Version {new}." if unit.kind == "core" else rp.release_text(new, notes)
             if unit.kind == "core" and notes.strip():
                 text += f" {notes.strip()}"
-            rp.add_changelog_entry(root, unit, text)
+            rp.add_changelog_entry(root, unit, text, base=self.release_window.base())
             log.append(f"{unit.key}: CHANGELOG entry \"{text}\"")
             if unit.kind == "app":
                 tags.append(unit.tag)
@@ -288,7 +288,7 @@ class AppsPage(QWidget):
             changed = rp.set_version(root, portal, minimum)
             text = rp.portal_text(minimum, rp.changed_pins(root, base, suite), "",
                                   rp.changed_withdrawals(root, base, suite))
-            rp.add_changelog_entry(root, portal, text)
+            rp.add_changelog_entry(root, portal, text, base=base)
             log.append(f"portal: {minimum} in " + ", ".join(p.relative_to(root).as_posix() for p in changed)
                        + f" and CHANGELOG entry \"{text}\": apps.toml changed since {base} ({why}), so CI needs this "
                        "bump in the same push. The portal release follows in step 2, once the apps are pinned.")
@@ -561,13 +561,14 @@ class PortalPage(QWidget):
         pins = rp.changed_pins(root, self.release_window.base(), suite)
         withdrawn = rp.changed_withdrawals(root, self.release_window.base(), suite)
         text = rp.portal_text(new, pins, self.portal_notes.text(), withdrawn)
-        rp.add_changelog_entry(root, portal, text)
+        rp.add_changelog_entry(root, portal, text, base=self.release_window.base())
         log.append(f"portal: CHANGELOG entry \"{text}\"")
         nexus = ""
         if not self.nexus_too.isHidden() and self.nexus_too.isChecked():
             nexus = self.nexus_version.currentText().strip()
-            log.append(f"nexus: {nexus}, CHANGELOG entry \"{rp.bump_nexus(root, nexus)}\": the Nexus index lists "
-                       "this portal, so its number moves with it")
+            entry = rp.bump_nexus(root, nexus, base=self.release_window.base())
+            log.append(f"nexus: {nexus}, CHANGELOG entry \"{entry}\": the Nexus index lists this portal, so its "
+                       "number moves with it")
         log += ["",
                 run_check(root, rp.VERSIONS_CHECK),
                 run_check(root, rp.manifest_check(root, suite), "--base", self.release_window.base())]

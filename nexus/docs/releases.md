@@ -76,6 +76,9 @@ the settings.
   portal on the handheld from the checkout instead (`portal\run.ps1 --windowed`, which installs the pinned apps
   from their GitHub releases), and after the tag download the published release (`gh release download`) to
   install it as the portal's README says.
+  Applying or bumping the same release again replaces its newest "Release x.y.z." entry, so it is written once,
+  unless that entry is already pushed (it is in the last push, `origin/main`): a pushed entry is history, so the
+  new one goes on top of it.
 - **3. Retract app:** withdraws a release (see [Withdrawing a release](https://robertotorino.github.io/nexus/bc250-bazzite-suite/portal/#withdrawing-a-release)).
   For a Windows suite, its commands test the withdrawal with `portal\run.ps1` on the handheld, as above.
 - **Test on this board** holds the tests of a release on a BC-250. **Test app updates** and **Test Portal

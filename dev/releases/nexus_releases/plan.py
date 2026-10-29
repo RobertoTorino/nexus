@@ -568,10 +568,13 @@ def amsterdam_now(now: datetime.datetime | None = None) -> datetime.datetime:
     return (utc + datetime.timedelta(hours=2 if summer else 1)).replace(tzinfo=None)
 
 
-def add_changelog_entry(root: Path, unit: Unit, text: str, now: datetime.datetime | None = None) -> Path:
+def add_changelog_entry(root: Path, unit: Unit, text: str, now: datetime.datetime | None = None,
+                        base: str = "origin/main") -> Path:
     """Puts "Changelog: <time>", a blank line and *text* on top of the unit's CHANGELOG. A release entry ("Release
     x.y.z.") replaces the newest entry when that is the same release already, so applying a release again (after a
-    check stopped the commit) leaves one entry, with the latest notes (owner, 28-10-2026: "Release 1.3.0." twice)."""
+    check stopped the commit) leaves one entry, with the latest notes (owner, 28-10-2026: "Release 1.3.0." twice).
+    Never one *base* (the last push) has: that is history, which check_changelogs.py keeps (owner, 29-10-2026: the
+    portal release replaced the "Release 3.2.0. Pins ..." entry its app release had pushed, and the push failed)."""
     path = root / unit.path / "CHANGELOG"
     stamp = amsterdam_now(now).strftime("%d-%m-%Y %H:%M:%S")
     old = path.read_text(encoding="utf-8") if path.is_file() else ""
@@ -579,7 +582,8 @@ def add_changelog_entry(root: Path, unit: Unit, text: str, now: datetime.datetim
     if release:
         entries = changelog_entries(old)
         newest = _RELEASE.match(entry_body(entries[0])) if entries else None
-        if newest and newest[1] == release[1]:
+        pushed = git(root, "show", f"{base}:{Path(unit.path).as_posix()}/CHANGELOG") if newest else None
+        if newest and newest[1] == release[1] and entries[0] not in changelog_entries(pushed or ""):
             old = old[old.index(entries[0]) + len(entries[0]):].lstrip("\n")
     path.write_bytes(f"Changelog: {stamp}\n\n{text.strip()}\n\n{old}".encode("utf-8"))
     return path
@@ -600,13 +604,13 @@ def nexus_notes(notes: str, releases: list[str]) -> str:
     return f"Brings {', '.join(parts)}."
 
 
-def bump_nexus(root: Path, version: str, notes: str = "") -> str:
+def bump_nexus(root: Path, version: str, notes: str = "", base: str = "origin/main") -> str:
     """Nexus's version and its release entry, as step 1's Apply of the nexus row writes them; the entry's text."""
     nexus = next(u for u in load_units(root) if u.kind == NEXUS)
     text = release_text(version, nexus_notes(notes, suite_releases(root)))
     if version != nexus.version:
         set_version(root, nexus, version)
-    add_changelog_entry(root, nexus, text)
+    add_changelog_entry(root, nexus, text, base=base)
     return text
 
 

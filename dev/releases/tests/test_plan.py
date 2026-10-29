@@ -224,6 +224,21 @@ def test_applying_a_release_again_keeps_one_entry(repo):
         "Release 0.1.1.", "Fixed. A typo.", "Release 0.1.0. Pins alpha-v0.2.0.", "First."]
 
 
+def test_a_pushed_release_entry_stays(repo):
+    """The portal release replaced the "Release 3.2.0. Pins ..." entry its app release had pushed, and the push
+    failed check_changelogs.py (owner, 29-10-2026): an entry the last push has is history, so the same release is
+    added on top of it."""
+    beta = unit(repo, "beta")
+    first = datetime.datetime(2026, 10, 10, 18, 0, tzinfo=datetime.timezone.utc)
+    again = datetime.datetime(2026, 10, 10, 18, 5, tzinfo=datetime.timezone.utc)
+    rp.add_changelog_entry(repo, beta, rp.release_text("0.1.0", "Pins alpha-v0.2.0."), first, base="pushed")
+    sh(repo, "commit", "-q", "-am", "release")
+    sh(repo, "branch", "-f", "pushed")
+    rp.add_changelog_entry(repo, beta, rp.release_text("0.1.0", ""), again, base="pushed")
+    assert [rp.entry_body(e) for e in rp.changelog_entries((repo / "apps/beta/CHANGELOG").read_text())] == [
+        "Release 0.1.0.", "Release 0.1.0. Pins alpha-v0.2.0.", "First."]
+
+
 def test_unreleased_pin_follows_the_version(repo):
     beta = unit(repo, "beta")                                 # pinned beta-v0.1.0, never tagged
     rp.set_version(repo, beta, "0.2.0")
