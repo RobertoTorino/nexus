@@ -43,6 +43,9 @@ screen and puts them in Steam.
 
 [RPCS3 Manager](apps/rpcs3.md) installs RPCS3, the PS3 emulator, takes the PS3's firmware and your packages, plays
 your PS3 games full screen and puts them in Steam.
+
+[shadPS4 Manager](apps/shadps4.md) installs shadPS4, the PS4 emulator, takes the system modules of your PS4,
+unpacks your packages, plays your PS4 games full screen and puts them in Steam.
 </div>
 </div>
 

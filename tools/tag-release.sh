@@ -36,12 +36,13 @@ for tag in "$@"; do
     [ "$suite" = . ] && suite="" || suite="$suite/"                                    # a prefix for its paths
     if [ "$name" = portal ]; then dir=${suite}portal; else dir=${suite}apps/$name; fi
     [ -f "$dir/VERSION" ] || die "$tag: there is no $dir/VERSION."
-    committed=$(git show "HEAD:$dir/VERSION" 2>/dev/null | tr -d '[:space:]')
+    # A new app is not in HEAD yet: git show fails, which pipefail would turn into a silent exit 128.
+    committed=$(git show "HEAD:$dir/VERSION" 2>/dev/null | tr -d '[:space:]') || committed=""
     if [ "$committed" != "$version" ]; then
         if [ "$(tr -d '[:space:]' <"$dir/VERSION")" = "$version" ]; then
-            die "$tag: the bump to $version is not committed yet (HEAD has $dir/VERSION $committed). Commit it, push, then run this again."
+            die "$tag: the bump to $version is not committed yet (HEAD has $dir/VERSION ${committed:-not at all}). Commit it, push, then run this again."
         fi
-        die "$tag: HEAD has $dir/VERSION $committed, not $version."
+        die "$tag: HEAD has $dir/VERSION ${committed:-not at all}, not $version."
     fi
     git diff --quiet HEAD -- "$dir" ||
         die "$tag: $dir has changes that are not committed (git status $dir). Commit them first: the tag gets only what is committed."

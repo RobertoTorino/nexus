@@ -1,0 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+PyQt6>=6.11,<7
+pygame-ce>=2.5,<3         # the controller (bc250_core.gamepad)
+cryptography>=42,<51      # Extract PKG's decryption (pkgxtractor)

@@ -1239,7 +1239,7 @@ W_CHAPTER_MD = r'''<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 
 @APP_NAME@ is on the [portal](../portal.md)'s **@CATEGORY_TITLE@** tab: **A** on its tile installs it, and once it
 is installed, **A** opens it. It is also in the Start menu (**@SUITE_NAME@**, **@APP_NAME@**). It opens full
-screen; **B** closes it.
+screen; **B** goes back and **⧉** (View) exits it.
 
 ## Install it on its own
 
@@ -1276,8 +1276,8 @@ W_README_MD = r'''<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 
 @SUMMARY@
 
-Made for the handheld in your hands: full screen, the controller moves the amber focus, B closes the app, and
-everything also works by touch. How to install and use it: [@APP_NAME@ in the wiki](@WIKI@apps/@NAME@/).
+Made for the handheld in your hands: full screen, the controller moves the amber focus, B goes back, View (⧉) exits
+the app, and everything also works by touch. How to install and use it: [@APP_NAME@ in the wiki](@WIKI@apps/@NAME@/).
 
 ## Start it from the checkout
 

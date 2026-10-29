@@ -1,0 +1,47 @@
+Changelog: 29-10-2026 19:16:18
+
+Release 0.1.0.
+
+Changelog: 29-10-2026 18:52:05
+
+Added. The BC250 suite's shadPS4 Manager on the portable window (owner, 29-10-2026: the gaming category, after
+RPCS3 Manager; Extract PKG and shadNet come along), laid out as RPCS3 Manager: five cards, shadPS4, Your games,
+Settings, shadNet and Log, the actions with a controller button in the row at the bottom. A Install downloads shadPS4
+0.20.0 for Windows, the release the BC250 suite's app pins (shadps4-win64-sdl-2026-0.20.0.zip, 32 MB, shadPS4.exe
+alone), checks it against the pinned SHA-256 and unpacks it into
+%LOCALAPPDATA%\windows-portable-suite\windows-portable-shadps4\emulator\ with shadPS4's portable folder user\ beside
+it, where shadPS4 keeps its settings, users, saves, system modules and log (its own rule: a user folder in the folder
+it starts in, else %APPDATA%\shadPS4); X Remove shadPS4, with a second press, deletes only its program; Y Update when
+another version is there. The shadPS4 pane says when Microsoft's Visual C++ runtime is missing (shadPS4.exe imports
+vcruntime140, vcruntime140_1, msvcp140 and msvcp140_atomic_wait). LB Modules: the app's folder browser showing the
+.sprx files, X copies the open folder's into shadPS4's module folder, and the pane counts the 24 shadPS4 cannot do
+without. RB Packages: Extract PKG, the BC250 app's pkgxtractor unchanged, as a pane: the browser showing the .pkg
+files, A on one lists the places (the game folders, the usual places, the package's own folder), A on a place unpacks
+it there off the window's thread with the files counted, a game into its ID's folder, an update into ID-UPDATE beside
+its game (one there already replaced on a second press, only once every file of the new one was written), a folder
+that is there never written into; the place becomes a game folder. Not carried over from the BC250 window: the
+preview, salvage mode, the comparisons, renaming to the content ID and the icon viewer. When the app installs shadPS4
+and when it opens, it adds shadPS4's quit hotkeys to user\input_config\global.ini (View + Menu, Ctrl+Shift+End). Your
+games: the folders with an eboot.bin in the chosen folders, read as the BC250 app reads them, with the time spent in
+each; played from Steam, never from the app (owner, 29-10-2026), full screen (shadPS4.exe -f true -g, started in its
+folder so it finds user\); A Steam mark and Y Update Steam put them in Steam as "[PS4] <title>" (shadPS4 installed
+first), with the game's own pictures and a cover from SteamGridDB with the suite's key (RB Steam artwork); LB Folders,
+with the folder browser for the controller. The game folders are the app's, as in the suite's other managers (the
+BC250 app keeps them in shadPS4's config.json). Settings in four tabs (Picture, Sound, Controller, In a game: the BC250
+app's 12 settings of config.json, shadPS4 0.20.0's keys and defaults; the volume steps through nine values), never
+written while shadPS4 runs. shadNet, the BC250 app's shadNet window as a pane of rows (Sign in, Player, shadNet name,
+Password, Email, Server, Registration key): A on a text row opens its page with the field alone, A keeps the value in
+shadPS4's users.json and config.json at once (made with shadPS4's four default users when shadPS4 never ran, as on
+the handheld its window never shows), X Create account, Y Try sign-in, against the server off the window's thread;
+the line under the heading says who signs in where and what the last game's sign-in did, from shadPS4's log
+(log\shad_log.txt, or <Id>.log). The Log: shadPS4's folder, the system modules and the game folders, and the app's
+log; A View log (or a tap) shows the whole log in the app. The suite's buttons (B back, View exit, Menu the
+information), the d-pad staying in a pane, no pill in a pane and no user name on the screen or in the log, as in every
+app of the suite. A game's pictures on a card that was taken out are none rather than an error (Windows raises for an
+empty card slot), so Update Steam still takes its shortcut out. Not carried over from the BC250 app: the controller
+state in the header (the handheld's controller is built in), the desktop's volume for shadPS4 (Bazzite's), shadPS4's
+own window for its other settings, the command-line extractor, and the drop of a .pkg on the window.
+
+Changelog: 29-10-2026 18:32:41
+
+Added. shadPS4 Manager: the first version, written by tools/new_app.py from the architecture chapter.

@@ -1,3 +1,8 @@
+Changelog: 29-10-2026 19:13:47
+
+Fixed. git tag was lit while the staged changes were not committed yet, since nothing was ahead of the last push;
+it stays greyed out now until they are committed ("Commit first"), then pushed.
+
 Changelog: 29-10-2026 00:15:57
 
 Added. Apply is a pill in the header beside Refresh, Apply over New app releases (owner, 28-10-2026); Pin and

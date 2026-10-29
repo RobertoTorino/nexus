@@ -41,7 +41,7 @@ def github(latest: str, digest: str = SHA, asset: str = "Emu-v1.2.0-Windows-x64.
 
 def test_the_suites_own_pins_are_read():
     found = {pin.app: pin for pin in cu.pins()}
-    assert set(found) == {"pcsx2", "ppsspp", "rpcs3"}
+    assert set(found) == {"pcsx2", "ppsspp", "rpcs3", "shadps4"}
     assert found["ppsspp"].repo == "hrydgard/ppsspp" and found["ppsspp"].asset == f"PPSSPP-v{found['ppsspp'].version}-Windows-x64.zip"
     assert found["pcsx2"].repo == "PCSX2/pcsx2" and found["pcsx2"].tag == f"v{found['pcsx2'].version}"
     assert found["ppsspp"].name == "PPSSPP Manager" and len(found["pcsx2"].sha256) == 64
@@ -51,6 +51,10 @@ def test_the_suites_own_pins_are_read():
     assert rpcs3.repo == "RPCS3/rpcs3" and rpcs3.tag == "v" + rpcs3.version.split("-")[0]
     assert rpcs3.file_repo == "RPCS3/rpcs3-binaries-win" and rpcs3.file_tag.startswith("build-")
     assert rpcs3.asset.endswith("_win64_msvc.7z") and rpcs3.version in rpcs3.asset
+    # shadPS4 tags its releases "v.0.20.0"
+    shadps4 = found["shadps4"]
+    assert shadps4.repo == "shadps4-emu/shadPS4" and shadps4.tag == f"v.{shadps4.version}"
+    assert shadps4.file_tag == shadps4.tag and shadps4.version in shadps4.asset
 
 
 def test_a_pin_whose_file_is_in_another_repository(tmp_path):
@@ -119,3 +123,12 @@ def test_an_upstream_that_cannot_be_asked(tmp_path, capsys):
 @pytest.mark.parametrize("argv", [["--report"]])
 def test_report_needs_a_file(argv):
     assert cu.main(argv) == 2
+
+
+def test_a_tag_with_a_dot_after_the_v(tmp_path):
+    """shadPS4 tags its releases "v.0.20.0": the version compared and shown without the "v."."""
+    report = tmp_path / "upstream.md"
+    assert cu.main(["--report", str(report)], github("v.1.3.0"), suite(tmp_path)) == 1
+    assert "Pinned 1.2.0, latest stable 1.3.0" in report.read_text()
+    assert cu.check(cu.pins(suite(tmp_path / "again"))[0], github("v.1.2.0")).text().startswith(
+        "Emu Manager: pinned 1.2.0, latest stable 1.2.0. In step.")

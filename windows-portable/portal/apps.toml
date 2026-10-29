@@ -65,3 +65,14 @@ install = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --no
 uninstall = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --uninstall"]
 detect = ["%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-rpcs3\\app\\RPCS3-Manager.exe"]
 launch = [["Open", "%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-rpcs3\\app\\RPCS3-Manager.exe"]]
+
+[apps.shadps4]
+name = "shadPS4 Manager"
+summary = "shadPS4, the PlayStation 4 emulator: installed, the system modules and your packages, its settings and shadNet, your games put in Steam."
+tag = "wp-shadps4-v0.1.0"
+sha256 = ""
+category = "gaming"
+install = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --no-desktop-shortcut"]
+uninstall = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --uninstall"]
+detect = ["%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-shadps4\\app\\shadPS4-Manager.exe"]
+launch = [["Open", "%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-shadps4\\app\\shadPS4-Manager.exe"]]

@@ -7,12 +7,14 @@ describe only what exists.
 
 ## Resume here (29-10-2026, for a new chat): the Windows Portable Suite
 
-**Start the next chat here (owner, 29-10-2026, end of the day: "make a note so we can continue in the next chat").**
-The working tree holds RPCS3 Manager, finished and checked (the paragraph below has every detail); the owner's part
-is the round on the Ally (the "To check on the Ally" list) and the releases (RPCS3 Manager 0.1.0, the portal's minor
-bump, core, PCSX2 Manager and PPSSPP Manager patch, Nexus). Then the gaming category goes on in this order:
-**shadPS4 Manager** (`bc250-bazzite/apps/shadps4/`), **Vita3K Manager** (`apps/vita3k/`), **Xenia Manager**
-(`apps/xenia/`), each the way RPCS3 Manager was made: `tools/new_app.py windows-portable <key> "<Name> Manager"
+**Start the next chat here (29-10-2026, evening).** RPCS3 Manager went out as wp-rpcs3-v0.1.0 (with
+wp-pcsx2-v2.0.1, wp-ppsspp-v0.1.1, wp-test-v2.0.1, nexus-v0.22.0), but **the portal's 3.1.0 that pins it was never
+tagged**: portal/VERSION says 3.1.0 and the commit "Release wp-portal-v3.1.0" is on main, yet GitHub's newest portal
+is wp-portal-v3.0.0 (CI Nexus failed on that commit, "CHANGELOGs keep their entries", which "Restore lost CHANGELOG
+entry" fixed; CI passed on 1d86c6c). So installed portals do not offer RPCS3 Manager yet; the owner's tag-release.sh
+for wp-portal-v3.1.0 is still to run. The working tree now holds **shadPS4 Manager**, finished and checked (the next
+paragraph). Then the gaming category goes on: **Vita3K Manager** (`apps/vita3k/`) and **Xenia Manager**
+(`apps/xenia/`), each the way RPCS3 and shadPS4 Manager were made: `tools/new_app.py windows-portable <key> "<Name> Manager"
 --category gaming` first, then look up the emulator's Windows build on GitHub (its asset name, archive format, SHA-256
 and size, and how it keeps its files: a portable mode or a folder beside the program; `<exe> --help` lists its flags,
 the owner's tip), pin it in `emulator.py` (a file in another repository than the releases takes `BUILDS` and
@@ -22,6 +24,57 @@ and the MIGRATION notes. After the three: item 2 of the list below, Windows Port
 settled for all of them: the games are played from Steam only, the emulator's own window is never shown, an install
 that the emulator must do itself runs headless where its flags allow, a .7z is unpacked with Windows' tar, and an
 empty SD slot is no drive.
+
+**shadPS4 Manager for the Windows Portable Suite, in the working tree (29-10-2026, evening; not committed: the owner
+commits).** `windows-portable/apps/shadps4/`, 0.1.0, made with `tools/new_app.py windows-portable shadps4 "shadPS4
+Manager" --package shadps4_manager --category gaming`, then ported from the BC250 app (`bc250-bazzite/apps/shadps4/`)
+onto RPCS3 Manager's layout with five cards (shadPS4, Your games, Settings, shadNet, Log). The owner's answers
+(29-10-2026): **Extract PKG as a pane**, **shadNet included**, shadPS4's files in **user\ beside shadPS4.exe**.
+Checked on Windows: `./test.sh` (every suite; shadPS4 Manager 103 tests), the live download (`WPS_LIVE_DOWNLOAD=1`),
+`check_upstream.py` live (in step), the installer test, a release built with `build_release.py` and installed by the
+installer test (`-Release`), the frozen program started offscreen (its window, with cryptography, loads), both wikis
+`--strict`, `check_versions.py`, `check_manifest.py --base origin/main`, `check_changelogs.py`, `tools/pre-push.sh`.
+What was found and decided:
+
+- **The pin**: the BC250 app's release, 0.20.0, as its Windows zip `shadps4-win64-sdl-2026-0.20.0.zip` (31.6 MB,
+  shadPS4.exe alone; GitHub's digest and our download agree), tag `v.0.20.0`. shadPS4.exe imports vcruntime140,
+  vcruntime140_1, msvcp140 and msvcp140_atomic_wait (read from its import table; running it was refused here), so
+  the pane says when the Visual C++ runtime is missing, as RPCS3's. Flags from `src/main.cpp` at the tag: `-g`, `-f
+  true|false`, `-b` (Big Picture), `--add-game-folder`.
+- **Portable mode**: shadPS4 takes a `user` folder in its current folder, else `%APPDATA%\shadPS4`
+  (`common/path_util.cpp`); the app makes `emulator\user\` at install, and the Steam shortcut starts in the emulator
+  folder. Saves are in `user\home\<user id>\savedata\`, the log `user\log\shad_log.txt` (or `<Id>.log`).
+- **Extract PKG** (`extract.py`): the BC250 window's worker in normal mode on the unchanged pkgxtractor; RB Packages,
+  the browser with the .pkg files, then a list of places (game folders, usual places, the package's own folder), A
+  unpacks off the window's thread with the files counted; an update beside its game, replaced on a second press.
+  **Not carried over** (the owner's to decide): preview, salvage mode, the comparisons, rename to content ID, the
+  icon viewer, the command-line extractor, a .pkg dropped on the window.
+- **shadNet**: the BC250 dialog as rows; a text row opens a page with the field alone (core's d-pad stays in a text
+  field), A keeps it in users.json/config.json at once. On the handheld shadPS4 may never have run, so users.json is
+  made with shadPS4 0.20.0's four default users (`user_manager.cpp`), config.json with only Network's two keys.
+- **The game folders** are the app's settings, as in the other Windows managers (the BC250 app keeps them in
+  shadPS4's config.json, which only shadPS4's window reads). **Quit**: View + Menu (`hotkey_quit = back, options`
+  in global.ini, the BC250 app's lines), then A in shadPS4's quit window.
+- **Found on the way**:
+  - An empty card slot again: `Game.picture()` (`is_file()` on `D:\…`) raised WinError 1005 on this PC; fixed in
+    shadPS4 Manager (a test). **RPCS3 Manager has the same code** (`rpcs3_manager/games.py`, `picture()`): its
+    `test_shortcuts.py` failed on this PC once (the slot flickers; CI has none), and on the Ally Update Steam would
+    fail to take out the shortcut of a game whose card was taken out. Not changed: a patch of RPCS3 Manager, the
+    owner's call. PCSX2 and PPSSPP Manager are not affected.
+  - The BC250 app's `shadnet.session()` reads only `*.log`, but shadPS4 0.20.0 logs into `shad_log.txt` unless its
+    separate logs are on: the board's shadNet pill may never see a sign-in. A code path to check in the BC250 suite
+    (not changed: the suites stand apart); the Windows port reads both.
+  - `tools/new_app.py`'s Windows template said "B closes the app" (fixed, with a test; root CHANGELOG), and
+    `check_upstream.py` showed shadPS4's tag as ".0.20.0" (fixed, with a test).
+- **To check on the Ally**: A Install and the VC runtime line; LB Modules with a real module dump; RB Packages with a
+  real game package and its update (and the update's second press); a game from Steam full screen, View + Menu and A
+  to quit; the Settings read by shadPS4; shadNet: the rows, a field with the touch keyboard, Create account and Try
+  sign-in on the real server, the summary line after a game; Update Steam with the game's pictures; no user name on
+  any screen.
+- **The release**: the app is new (0.1.0, its CHANGELOG has the Added entry); the portal pins `wp-shadps4-v0.1.0`
+  with an empty sha256 and its CHANGELOG has the Added entry: a minor bump on top of 3.1.0 once that is tagged
+  (`check_manifest.py` passes now only because it compares with wp-portal-v3.0.0); Nexus (the root CHANGELOG: two
+  Fixed entries).
 
 **Where we stand (29-10-2026, later in the day, for the next chat).** Nothing is committed: the owner commits. The
 round below went out as wp-pcsx2-v2.0.0, wp-ppsspp-v0.1.0, wp-test-v2.0.0 and wp-portal-v3.0.0 (nexus-v0.21.0). The
@@ -97,8 +150,9 @@ was found out and decided, in order:
   repository, Fixed.); core (Fixed., bundled into every release), PCSX2 Manager and PPSSPP Manager (Fixed.) for the
   card-slot fix.
 
-**Next** (owner, 29-10-2026: the gaming category first): RPCS3 Manager is done but for the owner's round on the Ally
-and its release; then **shadPS4 Manager, Vita3K Manager and Xenia Manager** the same way (each from
+**Next** (owner, 29-10-2026: the gaming category first): RPCS3 Manager is released but for the portal's tag (see the
+top of this chapter), shadPS4 Manager done but for the owner's round on the Ally and its release; then **Vita3K
+Manager and Xenia Manager** the same way (each from
 `tools/new_app.py --category gaming`, ported from the BC250 app, its emulator's Windows build, archive format and
 portable mode to look up first, as RPCS3's were); then item 2 below, Windows Portable Test's tabs, and the rest of
 item 3.

@@ -426,6 +426,10 @@ def test_a_windows_suites_app(windows_checkout, capsys):
     chapter = (suite / "docs" / "apps" / "emu.md").read_text()
     assert "![Emu Manager](../images/apps/emu.webp){ .app-logo }\n\n# Emu Manager\n\nAn emulator." in chapter
     assert "**Gaming** tab" in chapter and "wp-emu-v<x.y.z>.zip" in chapter
+    # The suite's buttons (owner, 29-10-2026): B goes back, View exits; never "B closes".
+    readme = (app / "README.md").read_text(encoding="utf-8")
+    for text in (chapter, readme):
+        assert "closes" not in text and "View" in text and "goes back" in text
     assert "      - Windows Portable Test: apps/test.md\n      - Emu Manager: apps/emu.md\n" in \
         (suite / "mkdocs.yml").read_text()
     assert "| The handheld. |\n| [Emu Manager](apps/emu.md) | An emulator. |\n\n## Get started" in \

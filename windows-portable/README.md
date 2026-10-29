@@ -45,6 +45,7 @@ By category, as the portal's tabs list them.
 - <img src="portal/images/apps/pcsx2.webp" width="20" height="20" alt=""/> **[PCSX2 Manager](apps/pcsx2)**: Installs PCSX2, the PlayStation 2 emulator, in portable mode, and opens it.
 - <img src="portal/images/apps/ppsspp.webp" width="20" height="20" alt=""/> **[PPSSPP Manager](apps/ppsspp)**: Installs PPSSPP, the PSP emulator, in portable mode, and plays your PSP games.
 - <img src="portal/images/apps/rpcs3.webp" width="20" height="20" alt=""/> **[RPCS3 Manager](apps/rpcs3)**: Installs RPCS3, the PS3 emulator, takes the PS3's firmware and your packages, and plays your PS3 games.
+- <img src="portal/images/apps/shadps4.webp" width="20" height="20" alt=""/> **[shadPS4 Manager](apps/shadps4)**: Installs shadPS4, the PS4 emulator, takes the system modules, unpacks your packages, and plays your PS4 games.
 
 How to install and use them: **[the wiki](https://robertotorino.github.io/nexus/windows-portable-suite/)**.
 

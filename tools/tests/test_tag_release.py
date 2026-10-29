@@ -58,6 +58,16 @@ def test_refuses_a_bump_that_is_not_committed(repo):
     assert git(repo, "tag") == "" and remote_tags(repo) == ""
 
 
+def test_refuses_a_new_app_that_is_not_committed(repo):
+    """The owner's case of 29-10-2026: wp-shadps4-v0.1.0, staged but not committed, ended in a bare exit 128."""
+    (repo / "apps/shadps4").mkdir()
+    (repo / "apps/shadps4/VERSION").write_text("0.1.0\n")
+    git(repo, "add", "-A")
+    result = tag(repo, "shadps4-v0.1.0")
+    assert result.returncode == 1 and "not committed yet (HEAD has apps/shadps4/VERSION not at all)" in result.stderr
+    assert git(repo, "tag") == "" and remote_tags(repo) == ""
+
+
 def test_refuses_an_unpushed_bump_then_tags_the_pushed_one(repo):
     (repo / "portal" / "VERSION").write_text("0.9.5\n")
     git(repo, "commit", "-qam", "Release portal-v0.9.5")

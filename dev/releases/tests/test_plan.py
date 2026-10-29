@@ -518,6 +518,14 @@ def test_window_git_tag_button(window, repo, monkeypatch):
     window.portal_page.base_edit.setText("main")
     window.reload()
     assert tag.isEnabled() and tag.toolTip().startswith("tools/tag-release.sh beta-v0.1.0\n")
+    write(repo / "staged.txt", "x")                                  # git add, no commit (owner, 29-10-2026)
+    sh(repo, "add", "staged.txt")
+    window.reload()
+    assert not tag.isEnabled() and "Commit first" in tag.toolTip()
+    sh(repo, "rm", "-q", "--cached", "staged.txt")
+    (repo / "staged.txt").unlink()
+    window.reload()
+    assert tag.isEnabled()
     monkeypatch.setattr(rp, "_token", "gho_login")                       # a gh login reaches every repository
     with mock_question(QMessageBox.StandardButton.No) as asked:
         tag.click()

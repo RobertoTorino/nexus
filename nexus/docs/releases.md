@@ -130,7 +130,7 @@ the settings.
   add to the last commit (only a commit that is not pushed yet). **git push** runs `tools/ci-local.sh` first on
   Linux and pushes only when CI's jobs pass. **git tag** runs `tools/tag-release.sh` (below) with the tags of the
   step open: on tab 2 the portal's release, on the other tabs step 1's app releases that have no tag yet; it
-  works once HEAD is pushed. **git push** and **git tag** ask first, with the commits or tags they send and
+  works once what is staged is committed and HEAD is pushed. **git push** and **git tag** ask first, with the commits or tags they send and
   the command. When the GitHub token on the machine is a `gh` login or a classic token, which reach every
   repository of your account, they say so: a fine-grained token for this repository only is safer. Each button
   works only when it has something to do, and none while a command runs; their output appears in **Commands**.

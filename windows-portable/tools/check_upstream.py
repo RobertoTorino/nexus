@@ -5,8 +5,8 @@
     python3 windows-portable/tools/check_upstream.py [--report FILE] [app ...]      # every app when none is named
 
 Each app that installs an emulator pins one release in its emulator.py (PCSX2 Manager's, PPSSPP Manager's, RPCS3
-Manager's): REPO, its GitHub repository; VERSION (or TAG), the release; ASSET, the file it downloads; SHA256, the
-checksum it was tried with; and, where the file is published in another repository than the releases (RPCS3's builds,
+Manager's, shadPS4 Manager's): REPO, its GitHub repository; VERSION (or TAG), the release; ASSET, the file it
+downloads; SHA256, the checksum it was tried with; and, where the file is published in another repository than the releases (RPCS3's builds,
 RPCS3/rpcs3-binaries-win, one release per build, its landmarks tagged in RPCS3/rpcs3), BUILDS, that repository, and
 BUILD_TAG, the file's release there. They are read here without importing the app, from every
 apps/<name>/<package>/emulator.py of the suite. For each:
@@ -147,7 +147,7 @@ def check(pin: Pin, get: Fetch = fetch) -> Report:
     api = API.format(repo=pin.repo)
     latest = json.loads(get(f"{api}/releases/latest"))
     tag = str(latest.get("tag_name", ""))
-    report.latest = tag.lstrip("v")
+    report.latest = tag.lstrip("v.")                # v1.20.4, and shadPS4's v.0.20.0
     if tag and _version(tag) > _version(pin.version):
         report.drift.append(f"{tag} is out ({str(latest.get('published_at', ''))[:10]}): a new version of {pin.name} "
                             f"brings it, once tried on the device ({pin.where}). {latest.get('html_url', '')}")

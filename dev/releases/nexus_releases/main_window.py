@@ -1883,6 +1883,7 @@ class ReleaseWindow(QMainWindow):
         tags = self.tags_to_push()
         what = "the portal" if self.tabs.currentWidget() is self.portal_page else "step 1's apps"
         why = f"Nothing to tag: every release of {what} has its tag." if not tags else \
+            "Commit first: the staged changes are not in a commit yet." if staged else \
             "Push first: a tag goes only on a pushed commit." if ahead else ""
         self.tag_button.setEnabled(idle and not why)
         self.tag_button.setToolTip((rp.tag_command(tags) if tags else rp.TAG_SCRIPT) + "\n\n" + (

@@ -1,3 +1,27 @@
+Changelog: 29-10-2026 19:16:18
+
+Release 0.22.2.
+
+Changelog: 29-10-2026 19:13:47
+
+Fixed. tools/tag-release.sh stopped with a bare exit code 128 and no message on the tag of an app that is not in
+HEAD yet (wp-shadps4-v0.1.0, staged but not committed): git show of its VERSION failed inside a pipe, which
+pipefail made fatal. It now says the app is not committed yet.
+
+Changelog: 29-10-2026 19:05:54
+
+Release 0.22.1.
+
+Changelog: 29-10-2026 18:52:05
+
+Fixed. tools/new_app.py's template for a Windows suite wrote "B closes the app" into the new app's README and
+wiki chapter, where B goes back and View exits in every app of the suite since 29-10-2026; it writes that now,
+with a test.
+
+Fixed. The Windows Portable Suite's weekly upstream check showed a tag like shadPS4's "v.0.20.0" as ".0.20.0" in its
+report (the version compared was right); it shows 0.20.0, with a test. Its test of the suite's own pins knows
+shadPS4 Manager's.
+
 Changelog: 29-10-2026 17:40:35
 
 Release 0.22.0.
