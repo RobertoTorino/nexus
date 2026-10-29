@@ -83,3 +83,15 @@ def test_the_games_own_pictures(tmp_path, qapp):
     game = read_game(tmp_path / "g" / "PS3_GAME", disc=True)
     assert game.picture("ICON0.PNG") == tmp_path / "g" / "PS3_GAME" / "ICON0.PNG"
     assert game.picture("PIC0.PNG") is None
+
+
+def test_a_game_on_a_card_that_was_taken_out_has_no_pictures(tmp_path, monkeypatch):
+    """An empty card slot keeps its drive letter, and Windows raises for a path on it (WinError 1005) rather than
+    answer: the game's shortcut is still taken out of Steam, without its pictures (shadPS4 Manager's fix)."""
+    from pathlib import Path
+    game = Game(tmp_path / "Gone" / "PS3_GAME" / "USRDIR" / "EBOOT.BIN", "Gone", "BLUS00001", disc=True)
+
+    def unreadable(self):
+        raise OSError(22, "The volume does not contain a recognized file system")
+    monkeypatch.setattr(Path, "is_file", unreadable)
+    assert game.picture("ICON0.PNG") is None

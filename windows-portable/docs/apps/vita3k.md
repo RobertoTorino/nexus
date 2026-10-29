@@ -65,7 +65,7 @@ Vita3K from here.
   installs it without opening its window; it takes a minute or two. The pane then says which part it was: the system
   software, the font package or the preinstalled apps.
 - **RB Install a game** opens the browser showing your games: `.vpk`, `.zip` and `.pkg` files. See
-  [Installing a game](#installing-a-game).
+  [Installing a game](#installing-a-game). Every browser of the app opens again in the folder you last took a folder or picked a file in, while it is there.
 - **X Remove Vita3K** removes Vita3K's program. Press it twice: the first press only changes the entry to **Press
   again** for five seconds. Vita3K's folder, with the firmware, your games, your saves and its settings, stays, so a
   new install finds them again. It does not work while Vita3K runs.
@@ -115,6 +115,10 @@ You play the games from Steam; the app puts them there.
   font package. When there is nothing to change, **Y** says so on the status line instead. Right after writing, the
   app reads Steam's file back and counts the games in Steam from that; should a game it wrote not be found, the status
   line and the log say which.
+- **X Play** on a game that is in Steam starts it, through Steam: Steam starts first when it does not run, then
+  Vita3K with the game, full screen, as from Steam's library. A game that is not in Steam yet says so: **A** marks
+  it, **Y** puts it there.
+- **Open Steam**, the row at the top of the list, opens Steam's library in Big Picture mode (**A Open Steam**).
 
 The pictures in Steam come from inside the game: its icon (`sce_sys\icon0.png`) on the cover, the wide picture and as
 the logo, its LiveArea picture (`sce_sys\pic0.png`) on the banner; without them the title is drawn on a dark
@@ -183,6 +187,7 @@ Vita3K's settings that the app does not offer is shown as it is, and **A** goes 
 Vita3K's folder, which parts of the firmware it has, how many games are installed in it, and the newest lines of this
 app's log (the installs, the firmware and the games given to Vita3K, the Steam changes and the settings changed).
 **A View log**, or a tap on the pane, shows the whole log in the pane: the d-pad scrolls it, and **B** goes back.
+The newest lines show at the bottom of a box of their own, which a finger can scroll; a tap on it shows the whole log too.
 
 ## How it works
 

@@ -5,8 +5,8 @@ pill is left (owner, 29-10-2026); B goes back and View exits; RPCS3 installed on
 megabytes counted, View asking first meanwhile, its files prepared after), updated from an older build, and removed
 with X pressed twice; the firmware and the packages given to RPCS3 without its window (stood in for) and the result
 read from its log; the Settings pane's rows, in tabs, step through their values, never while RPCS3 runs; Your games
-from the folders and RPCS3, marked for Steam with A (never played from the app), their screen stepped with X and put
-in Steam; the folder browser; the Log pane and the whole log read in the app; the SteamGridDB key; the version and the
+from the folders and RPCS3, marked for Steam with A, put in Steam and played through it with X, Open Steam; the
+folder browser, which opens where it was left; the Log pane and the whole log read in the app; the SteamGridDB key; the version and the
 icons are where the checks expect them."""
 
 from __future__ import annotations
@@ -279,7 +279,7 @@ def test_the_settings_are_in_tabs(qapp, tmp_path, monkeypatch):
     monkeypatch.setattr(window, "isActiveWindow", lambda: True)
     pane = window.settings_pane
     assert [key for key, _, _ in TABS] == ["picture", "speed", "sound", "messages"] == pane.tabs.keys
-    assert pane.tabs.current == "picture" and pane.pills["stretch"].isVisibleTo(pane)
+    assert pane.tabs.current == "picture" and pane.pills["screen"].isVisibleTo(pane)
     assert not pane.pills["vsync"].isVisibleTo(pane) and "Renderer:" in pane.info.info
     assert "The A button changes" in pane.info.info
     window.settings_card.setFocus()
@@ -408,6 +408,7 @@ def test_packages_are_installed_one_run_each_the_updates_last(qapp, tmp_path, mo
     window.on_action("next")                                    # RB Packages
     assert window.panes.currentWidget() is window.browse_pane
     assert window.legend.items == [("A", "Open"), ("X", "Install from this folder"), MENU_INFO, BACK, EXIT]
+    assert window.browser.path == user / "Downloads"
     window.browse_pane.list.pills[f"dir:{pkgs}"].click()       # into the folder: its files show
     assert sorted(k for k in window.browse_pane.list.pills if k.startswith("file:")) == sorted(
         f"file:{pkgs / n}" for n in ("A-Update.pkg", "Game.pkg", "Game.rap"))
@@ -421,6 +422,9 @@ def test_packages_are_installed_one_run_each_the_updates_last(qapp, tmp_path, mo
     window.games_card.setFocus()
     qapp.processEvents()
     assert [p.label.text() for p in window.games_pane.list.pills.values()] == ["LUMINES Supernova  ·  NPUB30048"]
+    window.rpcs3_card.setFocus()
+    window.on_action("next")                                    # RB again: the folder of before (owner, 29-10-2026)
+    assert window.browser.path == pkgs
     window.close()
 
 
@@ -435,8 +439,8 @@ def test_a_folder_without_packages_says_so(qapp, tmp_path):
 
 
 def test_your_games_are_marked_with_a_and_put_in_steam(qapp, tmp_path, monkeypatch):
-    """The games are played from Steam (owner, 29-10-2026: the app never starts one): A on a game is its Steam mark,
-    X its screen, Y Update Steam writes the marks."""
+    """The games are played from Steam (owner, 29-10-2026): A on a game is its Steam mark, Y Update Steam writes the
+    marks, X plays a game that is in Steam through Steam (steam://rungameid), Open Steam opens Steam's library."""
     home = tmp_path / "emulator"
     ready(home)
     hdd_game = make_hdd_game(home / "dev_hdd0" / "game" / "NPUB30001", "Flower", "NPUB30001")
@@ -452,16 +456,28 @@ def test_your_games_are_marked_with_a_and_put_in_steam(qapp, tmp_path, monkeypat
         closed.append(True)
         change()
         return False
-    window = make(qapp, home, steam_dir=steam_dir, steam_closed=with_steam_closed, user_home=user)
+    played = []
+    window = make(qapp, home, steam_dir=steam_dir, steam_closed=with_steam_closed, user_home=user,
+                  play=played.append)
     monkeypatch.setattr(window, "isActiveWindow", lambda: True)
     window.games_card.setFocus()
     qapp.processEvents()
-    assert window.legend.items == [("A", "Steam mark"), ("X", "Screen"), ("Y", "Update Steam"), ("LB", "Folders"),
+    assert window.legend.items == [("A", "Steam mark"), ("Y", "Update Steam"), ("LB", "Folders"),
                                    ("RB", "Steam artwork"), MENU_INFO, EXIT]
+    window.on_action("accept")                                     # into the list
+    window.on_action("up")                                         # Open Steam, at the top
+    assert window.steam_row.hasFocus()
+    assert window.legend.items == [("A", "Open Steam"), ("Y", "Update Steam"), ("LB", "Folders"),
+                                   ("RB", "Steam artwork"), MENU_INFO, BACK, EXIT]
+    window.on_action("accept")
+    assert played == ["steam://open/bigpicture"] and window.games_pane.status.text() == "Opening Steam…"
+    window.games_card.setFocus()
+    qapp.processEvents()
     assert "Press the A button on a game to mark it for Steam" in window.games_pane.info.info
     assert list(window.games_pane.list.pills) == [str(hdd_game)]                   # RPCS3's, no folder yet
     window.on_action("previous")                                   # LB Folders: the usual places, and Browse
     assert window.legend.items == [("A", "Choose"), ("LB", "Games"), ("RB", "Steam artwork"), MENU_INFO, BACK, EXIT]
+    assert window.steam_row.isHidden()                             # Open Steam is above the games only
     pills = window.games_pane.list.pills
     assert list(pills) == [f"add:{games}", f"add:{user / 'Downloads'}", "browse"]
     pills[f"add:{games}"].click()
@@ -473,11 +489,10 @@ def test_your_games_are_marked_with_a_and_put_in_steam(qapp, tmp_path, monkeypat
     assert window.games_pane.status.text() == NOTHING_TO_CHANGE
     pills[str(demon)].setFocus()
     qapp.processEvents()
-    window.on_action("x")                                          # X: the screen, 16:9 to 4:3
-    assert window.games_pane.status.text() == "Demon's Souls: 4:3."
-    assert userdata.read_screen(userdata.game_config(home, "BLUS30443")) == userdata.NARROW
-    assert window.games_pane.list.pills[str(demon)].label.text() == "Demon's Souls  ·  BLUS30443  ·  4:3"
-    assert window.games_pane.list.pills[str(demon)].hasFocus()
+    assert ("X", "Play") in window.legend.items and not window.steam_row.isHidden()
+    window.on_action("x")                                          # X: not in Steam yet
+    assert window.games_pane.status.text() == ("Demon's Souls is not in Steam yet: A marks it, then Y Update Steam "
+                                               "puts it there.") and played == ["steam://open/bigpicture"]
     window.on_action("accept")                                     # A: the Steam mark
     assert "✓ Steam (Update Steam)" in window.games_pane.list.pills[str(demon)].label.text()
     window.on_action("y")                                          # Y on Your games: Update Steam
@@ -485,6 +500,11 @@ def test_your_games_are_marked_with_a_and_put_in_steam(qapp, tmp_path, monkeypat
     assert closed == [True] and shortcuts.in_steam(steam_dir) == {str(demon): "[PS3] Demon's Souls"}
     assert "1 game(s) in Steam" in window.games_pane.status.text() and "Read back" not in window.games_pane.status.text()
     assert window.games_pane.list.pills[str(demon)].label.text().endswith("✓ Steam")
+    window.games_pane.list.pills[str(demon)].setFocus()
+    window.on_action("x")                                          # X: played through Steam
+    number = shortcuts.numbers(steam_dir)[str(demon)]
+    assert played[-1] == f"steam://rungameid/{(number << 32) | 0x02000000}"
+    assert window.games_pane.status.text() == "Starting Demon's Souls in Steam…"
     window.close()
 
 
@@ -545,7 +565,10 @@ def test_the_folder_browser_goes_by_the_controller(qapp, tmp_path, monkeypatch):
     window.on_action("x")                                          # X: this folder
     assert window.panes.currentWidget() is window.games_pane and window.games_view == "folders"
     assert f"folder:{target}" in window.games_pane.list.pills and "1 game(s) in it" in window.games_pane.status.text()
-    window.games_pane.list.pills["browse"].click()
+    window.games_pane.list.pills["browse"].click()                 # again: where it was left
+    assert window.browser.path == target
+    window.on_action("back")                                       # B: up, Games, a place
+    window.on_action("back")                                       # the places
     window.on_action("back")                                       # B at the places: back to the folders
     assert window.panes.currentWidget() is window.games_pane and window.browser is None
     window.close()
@@ -606,7 +629,10 @@ def test_the_log_is_read_in_the_app(qapp, tmp_path, monkeypatch):
     qapp.processEvents()
     texts = [label.text() for label in window.log_pane.findChildren(type(window.status))]
     assert "Firmware" in texts and "4.92" in texts and "Saves" in texts and "2" in texts
-    assert window.log_pane.lines.text().splitlines() == [f"line {n}" for n in range(288, 300)]
+    lines = window.log_pane.lines
+    assert lines.toPlainText().splitlines() == [f"line {n}" for n in range(288, 300)]
+    assert lines.focusPolicy() == portable.Qt.FocusPolicy.NoFocus                 # the d-pad never lands on it
+    assert lines.verticalScrollBar().value() == lines.verticalScrollBar().maximum()   # the newest line in view
     assert window.legend.items[0] == ("A", "View log")
     window.on_action("accept")                                     # A: the whole log, here
     view = window.log_pane.view
@@ -688,14 +714,14 @@ def test_menu_shows_the_panes_information_and_the_icon_is_touch_only(qapp, tmp_p
     qapp.processEvents()
     assert window.rpcs3_info not in window.focusables()
     window.on_action("menu")                                    # the RPCS3 pane's information: the firmware, packages
-    assert window.popup is not None and "PS3UPDAT.PUP" in window.popup.text.text()
+    assert window.popup is not None and "PS3UPDAT.PUP" in window.popup.text.toPlainText()
     window.on_action("menu")
     assert window.popup is None
     window.games_card.setFocus()
     qapp.processEvents()
     assert window.games_pane.info not in window.focusables()
     window.on_action("menu")
-    assert window.popup is not None and "to play from Steam" in window.popup.text.text()
+    assert window.popup is not None and "to play from Steam" in window.popup.text.toPlainText()
     window.on_action("menu")                                    # Menu again (or B) closes it
     assert window.popup is None and window.games_card.hasFocus()
     window.close()
@@ -720,3 +746,61 @@ def test_no_path_on_the_screen_shows_the_users_name(qapp, tmp_path):
     finally:
         import shutil
         shutil.rmtree(games, ignore_errors=True)
+
+
+def test_marked_packages_are_installed_together(qapp, tmp_path, monkeypatch):
+    """Owner, 29-10-2026: not one package at a time. Y marks a file in the packages browser (a ✓ before it), X then
+    installs the marked ones only, licenses first; the marks go when another folder opens."""
+    home = tmp_path / "emulator"
+    ready(home)
+    user = tmp_path / "me"
+    pkgs = user / "Downloads" / "psn"
+    pkgs.mkdir(parents=True)
+    for name in ("A.pkg", "B.pkg", "C.pkg", "B.rap"):
+        (pkgs / name).write_bytes(b"")
+    runs = []
+
+    def run_headless(home_, *args):
+        runs.append(Path(args[1]).name)
+        return 0
+    window = make(qapp, home, user_home=user, run_headless=run_headless)
+    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
+    window.on_action("next")                                    # RB Packages
+    window.browse_pane.list.pills[f"dir:{pkgs}"].click()
+    rows = window.browse_pane.list.pills
+    rows[f"file:{pkgs / 'B.pkg'}"].setFocus()
+    qapp.processEvents()
+    assert window.legend.items[:3] == [("A", "Install"), ("X", "Install from this folder"), ("Y", "Mark")]
+    window.on_action("y")
+    assert window.browse_pane.list.pills[f"file:{pkgs / 'B.pkg'}"].label.text() == "✓ B.pkg"
+    assert window.browse_pane.list.pills[f"file:{pkgs / 'B.pkg'}"].hasFocus()
+    assert window.legend.items[:3] == [("A", "Install"), ("X", "Install marked (1)"), ("Y", "Unmark")]
+    window.on_action("down")
+    window.on_action("y")                                       # B.rap too
+    window.on_action("up")
+    window.on_action("up")
+    assert window.browse_pane.list.focused() == f"file:{pkgs / 'A.pkg'}"
+    window.on_action("y")
+    window.on_action("y")                                       # marked and unmarked again
+    assert window.legend.items[1] == ("X", "Install marked (2)")
+    window.on_action("x")
+    assert wait_for(qapp, lambda: not window.busy)
+    assert runs == ["B.rap", "B.pkg"]
+    window.rpcs3_card.setFocus()
+    window.on_action("next")                                    # the same folder again: no marks left
+    assert window.browser.path == pkgs and not window.picked_files
+    window.browse_pane.list.pills["up"].setFocus()
+    window.on_action("y")                                       # Y on the way up: says how
+    assert window.browse_pane.status.text().startswith("Put the focus on a file first")
+    window.close()
+
+
+def test_x_plays_only_a_game_in_steam(qapp, tmp_path, monkeypatch):
+    """X with no game row in focus says how; Steam's shortcuts read for the game's number."""
+    from rpcs3_manager.main_window import NO_GAME
+    window = make(qapp, tmp_path / "emulator", play=lambda url: None)
+    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
+    window.games_card.setFocus()
+    window.on_action("x")
+    assert window.games_pane.status.text() == NO_GAME
+    window.close()

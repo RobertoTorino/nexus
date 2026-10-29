@@ -69,3 +69,26 @@ def test_an_empty_card_slot_is_no_drive(monkeypatch):
         return
     assert browse.drives(lambda root: root == Path("C:\\")) == [Path("C:\\")]
     assert browse.drives(lambda root: False) == []
+
+
+class Memory(dict):
+    def value(self, key, default=None):
+        return self.get(key, default)
+
+    def setValue(self, key, value):  # noqa: N802 (QSettings' name)
+        self[key] = value
+
+
+def test_a_browser_opens_where_it_was_left(tmp_path):
+    """Owner, 29-10-2026: the folder chosen last is where the next browser opens, while it is there."""
+    home = tree(tmp_path)
+    memory = Memory()
+    assert browse.remembered(memory, "games") is None
+    browse.remember(memory, "games", home / "Games" / "PSP")
+    browse.remember(memory, "games", None)                      # nothing picked: kept as it was
+    assert browse.remembered(memory, "games") == home / "Games" / "PSP"
+    assert browse.remembered(memory, "bios") is None
+    (home / "Games" / "PSP" / "Zeta").rmdir()
+    (home / "Games" / "PSP" / "alpha").rmdir()
+    (home / "Games" / "PSP").rmdir()
+    assert browse.remembered(memory, "games") is None           # gone (a card taken out): the places

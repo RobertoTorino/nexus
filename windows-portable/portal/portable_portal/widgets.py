@@ -95,8 +95,8 @@ class DetailsPane(Pane):
 
 class SuitePane(Pane):
     """The Suite page (Menu): the portal's own version, the newest release on GitHub and what it changes, with Update
-    (A) when there is a newer one; and the suite's settings, a row each that A switches (owner, 28-10-2026: the
-    wallpaper on or off), with a line under it of what it does. They had a page of their own on View until View became
+    (Y) when there is a newer one; and the suite's settings, a row each that A switches (owner, 28-10-2026: the
+    wallpaper on or off; 29-10-2026: the sound on or off), with a line under it of what it does. They had a page of their own on View until View became
     the suite's Exit app (owner, 29-10-2026)."""
 
     def __init__(self, parent: QWidget | None = None):
@@ -117,6 +117,12 @@ class SuitePane(Pane):
         self.column.addWidget(text_label("A picture behind the tiles, which show it through them, in every app of the "
                                          "suite. A switches it; it is kept for the next start.", BODY + 1, color=DIM,
                                          wrap=True))
+        self.column.addSpacing(px(12))
+        self.sound = Row("Sound: On")
+        self.column.addWidget(self.sound)
+        self.column.addSpacing(px(4))
+        self.column.addWidget(text_label("The portal's intro sound, for the suite. A switches it; it is kept for the "
+                                         "next start.", BODY + 1, color=DIM, wrap=True))
         self.column.addStretch()
         self.status = text_label("", BODY + 1, QFont.Weight.DemiBold, AMBER, wrap=True)
         self.column.addWidget(self.status)
@@ -132,6 +138,9 @@ class SuitePane(Pane):
 
     def set_wallpaper(self, on: bool) -> None:
         self.wallpaper.set_text(f"Wallpaper: {'On' if on else 'Off'}")
+
+    def set_sound(self, on: bool) -> None:
+        self.sound.set_text(f"Sound: {'On' if on else 'Off'}")
 
 
 __all__ = ["AppPane", "DetailsPane", "SuitePane", "Tabs", "TEXT"]

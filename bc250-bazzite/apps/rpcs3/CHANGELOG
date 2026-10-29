@@ -1,3 +1,10 @@
+Changelog: 29-10-2026 21:46:50
+
+Fixed. A failing or half-mounted SD card no longer ends the scan of the game folders, the games RPCS3 knows
+(games.yml), a game's check for its EBOOT.BIN and its own pictures for Steam: asking about a file or folder on it
+raises an error (EIO) where Python answers no for a missing one, so what cannot be read is skipped and the rest is
+read (found on Windows with an empty card slot, 29-10-2026; a code path to check on the board).
+
 Changelog: 28-10-2026 14:48:47
 
 Release 2.3.2.

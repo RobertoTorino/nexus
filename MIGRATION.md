@@ -7,6 +7,45 @@ describe only what exists.
 
 ## Resume here (29-10-2026, for a new chat): the Windows Portable Suite
 
+**The owner's round of observations (29-10-2026, late evening; in the working tree, not committed).** Checked on
+Windows: `./test.sh` (core 226, tools 174, Nexus Releases 119, the portal 47, the suite's tools 30, PCSX2 Manager
+110, PPSSPP Manager 68, RPCS3 Manager 83, shadPS4 Manager 103, Windows Portable Test 77, Vita3K Manager 81, Xenia
+Manager 71), the three wikis `--strict`, `check_versions.py`, `check_changelogs.py`, `tools/pre-push.sh`, no CRLF.
+`tools/ci-local.sh` not run (no podman here). What changed, each with its CHANGELOG entry:
+
+- **core** (Breaking.: the popup's Close pill gone): an info popup's text scrolls (d-pad, finger), at most half the
+  window high, with a legend at its bottom (B Close) instead of the amber pill (owner: no big orange buttons, "A
+  Update" in the legend); Card.set_dot() (the red dot), sound_on()/set_sound_on() (suite.ini, look/sound),
+  browse.remembered()/remember(), steam.play_url()/open_url()/OPEN_URL, a thin scroll bar in TextView.
+- **The six game managers** (Added., Fixed.): X Play on a game in Steam (steam://rungameid/ with the shortcut's appid
+  read from shortcuts.vdf), an Open Steam row at the top of Your games (Steam's Big Picture), the log's summary a
+  TextView (its lines were cut off), every browser opens where it was left (keys folders, bios, firmware, packages,
+  modules, game). **RPCS3 Manager** (Breaking.): Screen moved from X on a game to the Settings page (Picture tab,
+  config.yml's Aspect ratio and Stretch To Display Area; it replaces the Fill the screen switch; per-game files are no
+  longer written, old ones stay); RB Packages: Y marks files, X installs the marked ones (else the folder's, as
+  before); Game.picture() no longer ends on an empty SD slot. **shadPS4 Manager**: several packages at once not done
+  (each package asks its own place and its own replace question): the owner's to decide how.
+- **Windows Portable Test** (Breaking.): the stick-light test is part of the controller test (A, B, X, Y light both
+  rings in their colors, a stick moved or pressed lights its ring white, a line says what Windows reports); the Y
+  popup and its pills are gone. To check on the Ally: if the frozen build cannot import winrt, find_lamp_arrays()
+  answers [] silently, which looks like "no lights": `Windows-PT.exe --lights` logs what Windows reports.
+- **The portal** (Added.): a red dot on the tile of an installed app with an update; Sound: On/Off on the Suite page
+  (the intro's sound).
+- **Nexus Releases** (Fixed.): Pin and Bump are ordinary buttons; Test local apps shows the ticked suite's wiki and
+  the Nexus page only, and the Windows Portable Suite's portal as its first icon (plan.portal_target() finds any
+  portal package).
+- **The BC250 suite** (Fixed., in pcsx2, ppsspp, rpcs3, shadps4, vita3k, xenia `games.py`): a failing SD card (EIO,
+  EACCES from is_file()/is_dir() or a DirEntry) no longer ends a scan or picture(); a test each. Run their suites on
+  Bazzite (on Windows the rest of those suites fail as they did at HEAD).
+- **Windows Explorer crashing on a screen size change**: not reproduced, nothing changed. This PC's event log has no
+  explorer.exe crash. The suite's windows never follow a screen change (scale() is read once). Asked of the owner:
+  the Event Viewer entry (Application, ID 1000/1001, explorer.exe: faulting module, exception code), which change
+  (resolution, scaling, TV or dock), which apps were open, and whether it happens with none open. A fix on our side
+  (follow screenChanged/geometryChanged, full screen again, the layout at the new scale) waits for that.
+- **The releases this asks for** (the numbers are the owner's): core; PCSX2, PPSSPP, RPCS3, shadPS4, Vita3K, Xenia
+  Manager and Windows Portable Test of the Windows suite, its portal pinning them; the six BC250 apps above (a patch
+  each) and the BC250 portal pinning them; Nexus (the index moves with every suite release).
+
 **Start the next chat here (29-10-2026, night).** RPCS3 Manager and shadPS4 Manager are out (wp-rpcs3-v0.1.0,
 wp-shadps4-v0.1.0, and wp-portal-v3.1.0 that pins both, tagged on 6cb1fcf). The working tree now holds **Vita3K
 Manager** and **Xenia Manager**, finished and checked but for the owner's round on the Ally and their releases (the

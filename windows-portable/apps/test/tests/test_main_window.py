@@ -175,7 +175,7 @@ def test_the_cards_show_their_panes(make, qapp):
     window.controller_card.setFocus()
     qapp.processEvents()
     assert window.panes.currentWidget() is window.controller_pane
-    assert window.legend.items == [("A", "Start the test"), ("Y", "Stick lights"), MENU_INFO, EXIT]
+    assert window.legend.items == [("A", "Start the test"), MENU_INFO, EXIT]
     window.device_card.setFocus()
     qapp.processEvents()
     assert window.panes.currentWidget() is window.device_pane
@@ -328,65 +328,49 @@ def test_read_while_a_read_runs_says_so(make, qapp, ally_json):
     assert wait_for(qapp, lambda: window.device is not None and window.network is not None)
 
 
-def test_the_stick_lights_test_is_a_popup(make, qapp, monkeypatch):
-    """Short of space on the Controller pane, Y in its legend opens the LED test over the window (owner, 29-10-2026:
-    the icon for it was hard to reach): the colors as pills, the d-pad between them, A presses, B closes and gives
-    the lights back."""
+def test_the_stick_lights_are_part_of_the_controller_test(make, qapp, monkeypatch):
+    """The LED test is in the controller test (owner, 29-10-2026), not a popup on Y: while it runs A, B, X and Y light
+    both sticks in their color and a stick lights its own ring; the end gives the lights back. No big amber pills."""
     from test_lights import FakeArray
     array = FakeArray()
     lamps = lights.Lights(find=lambda: [("RTG789", array)], color=lambda rgb: rgb)
-    window, _ = make(lamps=lamps)
+    window, pad = make(lamps=lamps)
     monkeypatch.setattr(window, "isActiveWindow", lambda: True)
     window.controller_card.setFocus()
     qapp.processEvents()
-    assert ("Y", "Stick lights") in window.legend.items
-    window.on_action("y")
-    popup = window.popup
-    panel = popup.content
-    assert popup is not None and list(panel.pills) == ["Red", "Green", "Blue", "White", "Left only", "Right only", "Off"]
-    assert panel.pills["Red"].hasFocus() and "4 lamps" in panel.report.text()
-    window.on_action("accept")                                      # A on Red
-    assert array.colors == [(255, 0, 0)] * 4 and panel.status.text() == "Red on both sticks."
-    window.on_action("right")
-    assert panel.pills["Green"].hasFocus()
-    for _ in range(6):                                              # the focus stays inside the popup
-        window.on_action("down")
-    assert window.focusWidget() in popup.pills()
-    panel.pills["Left only"].setFocus()
-    window.on_action("accept")
-    assert array.colors[:2] == [(255, 255, 255)] * 2 and array.colors[2:] == [(0, 0, 0)] * 2
-    assert panel.status.text() == "White on the left stick."
-    window.on_action("back")                                        # B: closed, the lights given back
-    assert window.popup is None and lamps.array is None and window.controller_card.hasFocus()
-    window.device_card.setFocus()
-    qapp.processEvents()
-    window.on_action("y")                                           # Y is the Controller card's alone
-    assert window.popup is None
-
-
-def test_no_lights_says_how_to_switch_them_on(make, qapp, monkeypatch):
-    window, _ = make()
-    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
-    window.controller_card.setFocus()
-    qapp.processEvents()
-    window.legend.entries["Y"].pressed.emit()                       # a tap on Y Stick lights
-    panel = window.popup.content
-    assert panel.pills == {} and "Settings > Personalization > Dynamic Lighting" in panel.report.text()
-    assert window.popup.close_pill.hasFocus()
-    window.on_action("accept")                                      # A on Close
-    assert window.popup is None
-
-
-def test_the_lights_are_off_limits_during_the_button_test(make, qapp, monkeypatch):
-    window, _ = make()
-    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
+    window.on_action("y")                                           # Y opens nothing any more
+    assert window.popup is None and ("Y", "Stick lights") not in window.legend.items
     window.start_test()
-    assert window.legend.items == [("B", "Hold to finish")] and window.controller_pane.back_buttons.isHidden()
-    window.on_action("y")
-    window.show_lights()
-    assert window.popup is None
+    line = window.controller_pane.lights_line
+    assert lamps.array is array and "4 lamps" in line.text() and "A, B, X and Y" in line.text()
+    window.controller_pane.feed("button", "x", True)
+    assert array.colors == [(0, 0, 255)] * 4 and line.text().endswith("Now: Blue on both sticks.")
+    window.controller_pane.feed("axis", "rightx", 0.9)
+    assert array.colors == [(0, 0, 0)] * 2 + [(255, 255, 255)] * 2
+    assert line.text().endswith("Now: White on the right stick.")
     window.controller_pane.finish()
-    assert not window.controller_pane.back_buttons.isHidden() and ("Y", "Stick lights") in window.legend.items
+    assert lamps.array is None and "Now:" not in line.text()        # given back to Windows (Armoury Crate)
+    assert not window.findChildren(portable.Pill) or all(
+        isinstance(pill, (portable.Row, portable.IconPill)) for pill in window.findChildren(portable.Pill))
+
+
+def test_no_lights_says_how_to_switch_them_on(make, qapp):
+    window, _ = make()
+    window.start_test()
+    text = window.controller_pane.lights_line.text()
+    assert "Settings > Personalization > Dynamic Lighting" in text and "start the test again" in text
+    window.controller_pane.feed("button", "a", True)                # nothing to light: no error
+    window.controller_pane.finish()
+
+
+def test_lights_switched_off_or_behind_another_window_say_so(make, qapp):
+    from test_lights import FakeArray
+    for array, says in ((FakeArray(enabled=False), "Switch it on in Settings"),
+                        (FakeArray(available=False), "close what is over it")):
+        window, _ = make(lamps=lights.Lights(find=lambda array=array: [("RTG789", array)], color=lambda rgb: rgb))
+        window.start_test()
+        assert says in window.controller_pane.lights_line.text()
+        window.controller_pane.finish()
 
 
 def test_b_on_a_card_does_nothing_and_no_pane_holds_a_pill(make, qapp, monkeypatch):

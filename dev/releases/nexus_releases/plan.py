@@ -1000,19 +1000,22 @@ def launch_targets(root: Path = CHECKOUT, suite: str | None = None) -> list[Laun
 
 
 def portal_target(root: Path = CHECKOUT, suite: str | None = None) -> Launch | None:
-    """The suite's portal, started from the checkout as `python -m bc250_portal` in portal/: it takes its apps from
-    the checkout, as it does when it runs from one. None when the suite has no portal window."""
+    """The suite's portal, started from the checkout as `python -m <its package>` in portal/ (bc250_portal, the
+    Windows Portable Suite's portable_portal: owner, 29-10-2026, a Windows suite's portal had no local test): it
+    takes its apps from the checkout, as it does when it runs from one. None when the suite has no portal window."""
     folder = suite_dir(root, suite) / "portal"
-    if not (folder / "bc250_portal" / "__main__.py").is_file():
+    mains = sorted(p for p in folder.glob("*/__main__.py") if p.parent.name != "tests")
+    if not mains:
         return None
+    package = mains[0].parent
     try:
         version = (folder / "VERSION").read_text(encoding="utf-8").strip()
-        consts = dict(_CONSTANT.findall((folder / "bc250_portal" / "__init__.py").read_text(encoding="utf-8")))
+        consts = dict(_CONSTANT.findall((package / "__init__.py").read_text(encoding="utf-8")))
     except OSError:
         return None
-    icon = folder / "images" / "bc250-bazzite-suite.webp"
-    return Launch("portal", "bc250_portal", consts.get("APP_NAME", "bc250_portal"), folder, version, False,
-                  icon if icon.is_file() else None, app_id=consts.get("APP_ID", ""))
+    icon = wiki_icon(suite_dir(root, suite))           # images/<suite folder>-suite.webp
+    return Launch("portal", package.name, consts.get("APP_NAME", package.name), folder, version, False, icon,
+                  app_id=consts.get("APP_ID", ""))
 
 
 def installer_tests_target(root: Path = CHECKOUT, suite: str | None = None) -> Launch | None:
@@ -1092,13 +1095,18 @@ def wiki_configs(root: Path = CHECKOUT) -> list[Path]:
 
 
 def docs_targets(root: Path = CHECKOUT, network: bool = False,
-                 addresses: list[str] | None = None) -> list[Launch]:
+                 addresses: list[str] | None = None, suite: str | None = None) -> list[Launch]:
     """Each wiki, served from the checkout with `mkdocs serve` (the dev venv has it), each on a port of its own: it
     rebuilds on every save, and its page opens with the design panel. The page is under the path of site_url, as on
     GitHub Pages. With *network* it is served on every address of this computer, for the other devices on the
-    network; the browser here still opens it at 127.0.0.1."""
+    network; the browser here still opens it at 127.0.0.1. With *suite*, that suite's wiki and the ones that are no
+    suite's (the Nexus page), never another suite's (owner, 29-10-2026: the BC250 wiki showed under the Windows
+    suite); a wiki keeps its port whichever suite is ticked."""
+    others = {name for name in suites(root) if name != suite} if suite else set()
     found = []
     for number, config in enumerate(wiki_configs(root)):
+        if config.parent.name in others and config.parent != root:
+            continue
         text = config.read_text(encoding="utf-8")
         name = re.search(r"^site_name:\s*(.+?)\s*$", text, re.M)
         site = re.search(r"^site_url:\s*(\S+)", text, re.M)

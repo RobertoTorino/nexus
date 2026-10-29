@@ -1027,11 +1027,11 @@ def test_portal_target(repo):
     assert rp.portal_target(repo) is None                                     # the fixture's portal has no window
     write(repo / "portal/bc250_portal/__main__.py", "print('portal')\n")
     write(repo / "portal/bc250_portal/__init__.py", 'APP_NAME = "Suite Portal"\n__version__ = "0.1.0"\n')
-    write(repo / "portal/images/bc250-bazzite-suite.webp", "webp")
+    write(repo / "portal/images/suite-suite.webp", "webp")                  # named after the suite's folder
     portal = rp.portal_target(repo)
     assert (portal.key, portal.module, portal.folder, portal.label) == (
         "portal", "bc250_portal", repo / "portal", "Suite Portal 0.1.0")
-    assert portal.icon == repo / "portal/images/bc250-bazzite-suite.webp" and not portal.changes_board
+    assert portal.icon == repo / "portal/images/suite-suite.webp" and not portal.changes_board
     command, env = rp.launch_command(repo, portal, python="/venv/python")
     assert command == ["/venv/python", "-m", "bc250_portal"]                  # --source auto: from the checkout
     assert env["PYTHONPATH"].split(os.pathsep)[0] == str(repo / "core")
@@ -1110,6 +1110,33 @@ def test_docs_targets(repo):
     assert not docs.note
     write(repo / "mkdocs.yml", "site_name: S\n")
     assert rp.docs_targets(repo)[0].url == f"http://127.0.0.1:{rp.DOCS_PORT}/?design"
+
+
+def test_a_suite_shows_its_own_wiki_and_the_nexus_page(two_suites):
+    """The BC250 wiki showed under the Windows suite (owner, 29-10-2026): a suite ticked lists its own wiki and the
+    Nexus page, never another suite's, each on the port it has whichever suite is ticked."""
+    for folder, name in (("bc", "BC"), ("nexus", "Nexus"), ("wp", "WP")):
+        write(two_suites / folder / "mkdocs.yml", f"site_name: {name}\n")
+    everything = {t.label: t.args[-1] for t in rp.docs_targets(two_suites)}
+    assert list(everything) == ["BC wiki (local)", "Nexus wiki (local)", "WP wiki (local)"]
+    for suite, other in (("bc", "WP wiki (local)"), ("wp", "BC wiki (local)")):
+        shown = rp.docs_targets(two_suites, suite=suite)
+        assert other not in [t.label for t in shown] and "Nexus wiki (local)" in [t.label for t in shown]
+        assert all(everything[t.label] == t.args[-1] for t in shown)
+
+
+def test_a_windows_suites_portal_is_tried_from_the_checkout(two_suites):
+    """A Windows suite's portal had no local test (owner, 29-10-2026): its own package, its own icon."""
+    assert rp.portal_target(two_suites, "wp") is None                         # no window yet
+    write(two_suites / "wp/portal/portable_portal/__main__.py", "print('portal')\n")
+    write(two_suites / "wp/portal/portable_portal/__init__.py", 'APP_NAME = "WP Suite"\nAPP_ID = "wp-suite"\n')
+    write(two_suites / "wp/portal/images/wp-suite.webp", "webp")
+    portal = rp.portal_target(two_suites, "wp")
+    assert (portal.module, portal.folder, portal.label, portal.app_id) == (
+        "portable_portal", two_suites / "wp/portal", "WP Suite 0.1.0", "wp-suite")
+    assert portal.icon == two_suites / "wp/portal/images/wp-suite.webp"
+    assert rp.portal_target(two_suites, "bc") is None                         # the other suite's has none
+    assert rp.portal_target(rp.CHECKOUT, "windows-portable").module == "portable_portal"   # this checkout's
 
 
 def test_docs_targets_on_the_network(repo):

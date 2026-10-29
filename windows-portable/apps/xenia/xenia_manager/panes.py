@@ -125,6 +125,8 @@ GAMES_INFO = (
     "\"[X360] <title>\", in Steam's library and its Big Picture mode, and a game without the mark is taken out. Steam "
     "closes for it and starts again. A game from Steam starts full screen; Steam's own menu and its Exit game end "
     "it.\n\n"
+    "The X button starts the game the focus is on, through Steam, once Update Steam has put it there; Steam "
+    "starts first when it is not open. The Open Steam row at the top opens Steam's library.\n\n"
     "The games are found in your game folders and up to six folders below them: a disc image (.iso), an unpacked "
     "disc (the default.xex in its folder), a .zar, and the packages of Games on Demand and Arcade titles, in the "
     "folders the console keeps them in (<title ID>\\00007000 or 000D0000).\n\n"
@@ -162,8 +164,12 @@ class LogPane(Pane):
         self.grid.setVerticalSpacing(px(4))
         self.column.addLayout(self.grid)
         self.column.addSpacing(px(10))
-        self.lines = text_label("", BODY, color=DIM, wrap=True)
-        self.column.addWidget(self.lines, 1, Qt.AlignmentFlag.AlignTop)
+        # The newest lines in a view of their own, the last in sight: as a label they ran off the pane's top
+        # (owner, 29-10-2026); the d-pad passes it by, and a tap goes to the pane: A or the tap shows the whole log
+        self.lines = TextView(background="transparent")
+        self.lines.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.lines.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        self.column.addWidget(self.lines, 1)
         self.view = TextView()
         self.view.hide()
         self.column.addWidget(self.view, 1)
@@ -185,7 +191,8 @@ class LogPane(Pane):
             shown.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
             self.grid.addWidget(shown, r, 1)
         self.grid.setColumnStretch(1, 1)
-        self.lines.setText("\n".join(lines) or "Nothing logged yet.")
+        self.lines.setPlainText("\n".join(lines) or "Nothing logged yet.")
+        self.lines.show_end()
 
     def show_whole(self, text: str) -> None:
         self.lines.hide()
@@ -197,6 +204,7 @@ class LogPane(Pane):
     def show_summary(self) -> None:
         self.view.hide()
         self.lines.show()
+        self.lines.show_end()
 
 
 # The key: the BC250 app's Covers… dialog (core's covers.edit_key) as a page of the portable window

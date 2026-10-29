@@ -58,9 +58,14 @@ class Game:
             return False
 
     def picture(self, name: str) -> Path | None:
-        """One of the game's own pictures (ICON0.PNG: 320 × 176, PIC1.PNG: 1920 × 1080), if it has it."""
+        """One of the game's own pictures (ICON0.PNG: 320 × 176, PIC1.PNG: 1920 × 1080), if it has it. A game on a
+        card that was taken out has none: Windows raises rather than answer for an empty card slot, which keeps its
+        drive letter (WinError 1005), and Update Steam still takes such a game's shortcut out."""
         path = self.content / name
-        return path if path.is_file() else None
+        try:
+            return path if path.is_file() else None
+        except OSError:
+            return None
 
 
 def read_sfo(data: bytes) -> dict[str, str | int]:

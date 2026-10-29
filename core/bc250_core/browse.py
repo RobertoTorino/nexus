@@ -75,6 +75,22 @@ def listing(folder: Path, suffixes: Sequence[str] = ()) -> tuple[list[Path], lis
     return sorted(folders, key=key), sorted(files, key=key)
 
 
+def remembered(settings, key: str) -> Path | None:
+    """The folder a browser for *key* was last left in (remember()), while it is still there: a browser opens
+    there again (owner, 29-10-2026). *settings*: the app's QSettings, or anything with value()."""
+    value = settings.value(f"browse/{key}", "")
+    if not value:
+        return None
+    folder = Path(str(value))
+    return folder if mounted(folder) else None
+
+
+def remember(settings, key: str, folder: Path | None) -> None:
+    """Keep *folder* (a folder added, the one a file was picked in) for the next browser for *key*."""
+    if folder is not None:
+        settings.setValue(f"browse/{key}", str(folder))
+
+
 class Browser:
     """Where the page is: the places (path None) or a folder. rows() are (key, text): a folder "dir:<path>", a file
     "file:<path>", and, in a folder, "up" first (‹ and where it leads, for a finger)."""

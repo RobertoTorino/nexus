@@ -1,3 +1,16 @@
+Changelog: 29-10-2026 21:46:34
+
+Fixed. Test local apps shows the ticked suite's own wiki and the Nexus page, never another suite's (owner,
+29-10-2026: the BC250 Bazzite Suite's wiki sat under the Windows Portable Suite); a wiki keeps its port whichever suite
+is ticked. The Windows Portable Suite's portal is the first icon there now, started from the checkout as the BC250
+suite's is (owner, 29-10-2026: no local test for the Windows Portable Suite): plan.portal_target() finds a suite's
+portal package, not only bc250_portal, and its icon by the suite's folder.
+
+Changelog: 29-10-2026 21:37:16
+
+Fixed. Pin and Bump on the portal step are ordinary buttons, as Retract and Run, instead of the large header pills
+(owner, 29-10-2026: make them smaller).
+
 Changelog: 29-10-2026 20:45:40
 
 Fixed. Bump portal replaced the newest "Release x.y.z." entry of the same version even when it was already

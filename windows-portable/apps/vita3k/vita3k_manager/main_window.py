@@ -21,8 +21,10 @@ its welcome window and update check off) is set after an install, when the windo
 installs, while Vita3K does not run.
 
 The Your games pane (panes.py, library.py): the games installed in Vita3K, played from Steam (owner, 29-10-2026: the
-app never starts a game itself); A marks one for Steam, Y Update Steam makes Steam's shortcuts match the marks; RB
-Steam artwork keeps the SteamGridDB key. The Log pane: Vita3K's folder and the newest lines of the app's log; A (or a
+app never starts Vita3K itself); A marks one for Steam, X plays one that is in Steam, through Steam
+(steam://rungameid), Y Update Steam makes Steam's shortcuts match the marks; Open Steam, the row at the top, opens
+Steam's library; RB Steam artwork keeps the SteamGridDB key. The browser opens where the last one of its kind was left
+(browse.remembered). The Log pane: Vita3K's folder and the newest lines of the app's log; A (or a
 tap on the pane) shows the whole log in the pane.
 
 The Settings pane: Vita3K's settings that matter on the handheld, in tabs (LB and RB: Picture, Speed, Sound,
@@ -37,7 +39,7 @@ import time
 from collections.abc import Callable
 from pathlib import Path
 
-from PyQt6.QtCore import QObject, Qt, QTimer, pyqtSignal
+from PyQt6.QtCore import QObject, QSettings, Qt, QTimer, pyqtSignal
 from PyQt6.QtGui import QFont, QGuiApplication
 from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QStackedWidget, QVBoxLayout, QWidget
 
@@ -62,7 +64,7 @@ ABOUT = ("Vita3K, the PS Vita emulator, installed for your own user: the firmwar
          "settings stay in its folder.")
 LOG_LINES = 12                  # the newest lines of the app's log in the Log pane
 LOG_MAX = 2000                  # the lines of the log the whole view shows, the newest
-FIRMWARE, GAME = "firmware", "game"     # what the browser looks for
+FIRMWARE, GAME = "firmware", "game"     # what the browser looks for, and browse.remembered's keys
 RUNNING = "Vita3K is open: close it first, it would write its own settings over the change."
 NOT_INSTALLED = "Install Vita3K first: the settings are in its folder."
 NEEDS_VITA3K = "Install Vita3K first (the A button): it is Vita3K that installs the firmware and your games."
@@ -70,6 +72,7 @@ NO_FIRMWARE = ("Install the PS Vita's firmware and its font package first (the L
                "without them most games do not start.")
 BUSY = "Wait a moment: the app is still busy with the step before."
 OPEN_A_FOLDER = "Open the game's folder first: the A button opens the one the focus is on, then the X button takes it."
+NO_GAME = "Put the focus on a game first: the X button starts it through Steam."
 ALL_SETTINGS = vita3k_settings.SETTINGS
 # The Settings pane's information, per tab: what each setting of the tab does
 TAB_INFO = {key: ("The A button changes the setting the focus is on, the LB and RB buttons change the tab; Vita3K "
@@ -195,12 +198,14 @@ class MainWindow(PortableWindow):
                  newer_release: Callable[[], ReleaseInfo | None] = emulator.newer_release,
                  steam_dir: Path | None | bool = False,
                  steam_closed: Callable[[Callable[[], None]], bool] = steam.with_steam_closed,
-                 user_home: Path | None = None, roots: Callable[[], list[Path]] = browse.drives):
+                 user_home: Path | None = None, roots: Callable[[], list[Path]] = browse.drives,
+                 settings: QSettings | None = None, play: Callable[[str], None] = steam.open_url):
         """*steam_dir*: Steam's folder (False: found on this system, None: no Steam); *run_quiet*: Vita3K installing
         a firmware file or a package without a window, *install_content*: Vita3K installing a .vpk, .zip or folder
         (tests pass their own); *runtime_missing*: the Visual C++ runtime's files that are missing; *newer_release*:
         asks GitHub for a newer Vita3K build; *user_home*: the user's folder (the browser's places); *roots*: every
-        drive the browser offers."""
+        drive the browser offers; *settings*: the app's (its .ini, create_app's), where the browsers' last folders
+        are kept; *play*: hands a steam:// address to Steam (a game, Steam's library)."""
         super().__init__(gamepad)
         self.setWindowTitle(f"{APP_NAME} {__version__}")
         self.log = applog.logger(APP_ID)
@@ -210,6 +215,8 @@ class MainWindow(PortableWindow):
         self.install_job, self.running = install, running
         self.run_quiet, self.install_content = run_quiet, install_content
         self.runtime_missing = runtime_missing
+        self.settings = settings if settings is not None else QSettings()
+        self.play = play
         self.newer_release = newer_release
         self.newer: ReleaseInfo | None = None           # Vita3K's newest build, when newer than the pinned one
         self.busy = False
@@ -242,7 +249,7 @@ class MainWindow(PortableWindow):
         cards.setContentsMargins(0, 0, 0, 0)
         cards.setSpacing(px(12))
         self.vita3k_card = Card("Vita3K", "Install it, the PS Vita's firmware and your games.")
-        self.games_card = Card("Your games", "Mark them for Steam.")
+        self.games_card = Card("Your games", "Mark them for Steam, and play them.")
         self.settings_card = Card("Settings", "The picture, the speed, the sound and the system.")
         self.log_card = Card("Log", "Vita3K's folder, and this app's log.")
         for card in (self.vita3k_card, self.games_card, self.settings_card, self.log_card):
@@ -271,6 +278,9 @@ class MainWindow(PortableWindow):
         self.pane.column.addWidget(self.status)
         self.settings_pane = SettingsPane()
         self.games_pane = ListPane("Your games", "Your games", GAMES_INFO)
+        self.steam_row = Row("Open Steam")              # Steam's library, where the games are played
+        self.games_pane.column.insertWidget(3, self.steam_row)
+        self.games_pane.column.insertSpacing(4, px(6))
         self.browse_pane = ListPane("Choose a file", "Choosing a file", BROWSE_INFO)
         self.key_pane = KeyPane()
         self.zrif_pane = FieldPane()
@@ -302,6 +312,7 @@ class MainWindow(PortableWindow):
         self.log_card.activated.connect(self.view_log)
         self.log_pane.tapped.connect(self.view_log)
         self.games_pane.list.picked.connect(self.mark_game)
+        self.steam_row.activated.connect(self.open_steam)
         self.browse_pane.list.picked.connect(self.browse_picked)
         self.confirm_key = False                        # Remove key pressed once
         for setting in ALL_SETTINGS:
@@ -468,7 +479,11 @@ class MainWindow(PortableWindow):
                      *([("Y", other)] if other else []),
                      *([("LB", "Firmware"), ("RB", "Install a game")] if installed else [])]
         elif pane is self.games_pane:
-            items = [("A", "Steam mark"), ("Y", "Update Steam"), ("RB", "Steam artwork")]
+            if self.steam_row.hasFocus():
+                items = [("A", "Open Steam"), ("Y", "Update Steam"), ("RB", "Steam artwork")]
+            else:
+                items = [("A", "Steam mark"), *([("X", "Play")] if self.games_pane.list.focused() else []),
+                         ("Y", "Update Steam"), ("RB", "Steam artwork")]
         elif pane is self.browse_pane:
             items = [("A", "Open")] + ([("X", "Install this folder")] if self.browsing == GAME else [])
         elif pane is self.settings_pane:
@@ -487,8 +502,9 @@ class MainWindow(PortableWindow):
             self.legend.set_items(self.legend_items())
 
     def focus_list(self, pane: ListPane) -> None:
-        """The list's first row, or the pane's card while the list is empty."""
-        (pane.list.first() or self.cards[pane]).setFocus()
+        """The list's first row, or (Your games) Open Steam, or the pane's card while the list is empty."""
+        steam_row = self.steam_row if pane is self.games_pane and not self.steam_row.isHidden() else None
+        (pane.list.first() or steam_row or self.cards[pane]).setFocus()
 
     # Your games
 
@@ -574,13 +590,53 @@ class MainWindow(PortableWindow):
         self._steam_plan = (add, remove)
         self.worker.run(lambda: library.update_steam(folder, add, remove, program, LOGO_PATH, existing, closed, key))
 
+    def play_game(self) -> None:
+        """X on a game: started through Steam (owner, 29-10-2026), which starts Vita3K with it full screen as its
+        shortcut says; Steam starts first when it does not run. A game not in Steam yet says how it gets there."""
+        key = self.games_pane.list.focused()
+        game = next((g for g in self.games if g.name == key), None)
+        if game is None:
+            self.games_pane.status.setText(NO_GAME)
+            return
+        try:
+            number = shortcuts.numbers(self.steam_dir).get(key) if self.steam_dir is not None else None
+        except OSError as error:
+            self.log.error(f"Steam's shortcuts could not be read: {error}")
+            number = None
+        if number is None:
+            self.games_pane.status.setText(f"{game.title} is not in Steam yet: A marks it, then Y Update Steam puts "
+                                           "it there.")
+            return
+        url = steam.play_url(number)
+        try:
+            self.play(url)
+        except OSError as error:
+            self.games_pane.status.setText(f"Steam could not be asked to start {game.title}: {error.strerror or error}")
+            self.log.error(f"Starting {game.title} through Steam ({url}) failed: {error}")
+            return
+        self.games_pane.status.setText(f"Starting {game.title} in Steam…")
+        self.log.info(f"Starting {game.title} in Steam ({url}).")
+
+    def open_steam(self) -> None:
+        """A on Open Steam: Steam's library (in Big Picture), started when Steam does not run."""
+        try:
+            self.play(steam.OPEN_URL)
+        except OSError as error:
+            self.games_pane.status.setText(f"Steam could not be opened: {error.strerror or error}")
+            self.log.error(f"Opening Steam ({steam.OPEN_URL}) failed: {error}")
+            return
+        self.games_pane.status.setText("Opening Steam…")
+        self.log.info("Opening Steam.")
+
     # The browser (core's browse): the firmware file in Downloads, or a game to install
 
     def show_browser(self, looking_for: str) -> None:
+        """The browser for *looking_for*, opened where the last one of its kind was left (owner, 29-10-2026), else
+        in Downloads."""
         self.browsing = looking_for
         start = browse.places(self.user_home, self.roots)
         downloads = (self.user_home or Path.home()) / "Downloads"
-        at = downloads if downloads.is_dir() else None
+        at = browse.remembered(self.settings, looking_for) or (downloads if downloads.is_dir() else None)
         if looking_for == FIRMWARE:
             self.browser = browse.Browser(start, userdata.FIRMWARE_SUFFIXES, at)
             self.browse_pane.heading.setText("Choose the firmware file")
@@ -606,6 +662,8 @@ class MainWindow(PortableWindow):
         if self.browser is None:
             return
         picked = self.browser.open(key)
+        if picked is not None:
+            browse.remember(self.settings, self.browsing, picked.parent)
         if picked is not None and self.browsing == FIRMWARE:
             self.leave_browser()
             self.install_firmware(picked)
@@ -632,6 +690,7 @@ class MainWindow(PortableWindow):
             self.browse_pane.status.setText(f"No PS Vita game in {folder.name or folder}: open the game's own folder "
                                             "(with sce_sys and eboot.bin), then the X button.")
             return
+        browse.remember(self.settings, GAME, folder.parent)    # the folder the dumped games are in
         self.leave_browser()
         self.install_game(folder)
 
@@ -748,6 +807,8 @@ class MainWindow(PortableWindow):
             self.install_browsed()
         elif pane in (self.key_pane, self.zrif_pane):
             self.paste(pane)
+        elif pane is self.games_pane:
+            self.play_game()
 
     def y_action(self) -> None:
         pane = self.panes.currentWidget()

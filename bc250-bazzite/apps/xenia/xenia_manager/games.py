@@ -112,16 +112,25 @@ def _found(root: Path, depth: int = MAX_DEPTH):
         entries = sorted(os.scandir(root), key=lambda e: e.name)
     except OSError:
         return
-    names = {e.name.lower() for e in entries if e.is_file()}
+    kinds = {}
+    for entry in entries:
+        try:
+            plain = entry.is_file()
+            kinds[entry.name] = "file" if plain else "dir" if depth > 0 and entry.is_dir(follow_symlinks=False) else ""
+        except OSError:                                 # a failing card: skipped, the scan goes on
+            continue
+    names = {name.lower() for name, kind in kinds.items() if kind == "file"}
     packages = root.name.upper() in PACKAGE_FOLDERS
     for entry in entries:
-        if entry.is_file():
+        if entry.name not in kinds:
+            continue
+        if kinds[entry.name] == "file":
             name = entry.name.lower()
             if name.endswith((".iso", ".zar")) or (packages and "." not in name):
                 yield Path(entry.path)
             elif name.endswith(".xex") and (name == "default.xex" or "default.xex" not in names):
                 yield Path(entry.path)
-        elif depth > 0 and entry.is_dir(follow_symlinks=False) and not entry.name.startswith("."):
+        elif kinds[entry.name] == "dir" and not entry.name.startswith("."):
             yield from _found(Path(entry.path), depth - 1)
 
 

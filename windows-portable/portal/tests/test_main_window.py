@@ -6,6 +6,7 @@ page with Remove's second press, the Suite page with the portal's own update, an
 from __future__ import annotations
 
 import hashlib
+import os
 import shutil
 import time
 import zipfile
@@ -205,6 +206,7 @@ def test_an_update_and_a_reinstall_are_offered_with_y(world, qapp):
     world.records.set("test", "wp-test-v0.0.9")
     window = world.make()
     assert window.tiles["test"].text.text() == "Update 0.1.0" and pane_texts(window) == ("Windows Portable Test", "Open", "Update")
+    assert window.tiles["test"].dot and not window.tiles["pcsx2"].dot     # the red dot (owner, 29-10-2026)
     assert window.app_pane.versions.text() == "Installed 0.0.9; this portal has 0.1.0"
     world.records.remove("test")
     window.refresh()
@@ -479,3 +481,41 @@ def test_portal_1_6_0s_wallpaper_switch_becomes_the_suites(world, qapp):
     window = world.make()
     assert not window.wallpaper_on and not portable.wallpaper_on(mw.SUITE)
     assert not QSettings().contains(mw.WALLPAPER_KEY)
+
+
+def test_a_tile_has_a_red_dot_only_while_an_update_is_out(world, qapp):
+    window = world.make()
+    assert not any(tile.dot for tile in window.tiles.values())       # nothing installed
+    world.records.set("test", "wp-test-v0.0.9")
+    window.refresh()
+    assert not window.tiles["test"].dot                               # recorded, but its program is not there
+    app = Path(os.environ["LOCALAPPDATA"]) / "windows-portable-suite" / "windows-portable-test" / "app"
+    app.mkdir(parents=True, exist_ok=True)
+    (app / "X.exe").write_bytes(b"")
+    window.refresh()
+    assert window.tiles["test"].dot
+    world.records.set("test", "wp-test-v0.1.0")                       # updated
+    window.refresh()
+    assert not window.tiles["test"].dot
+
+
+def test_the_suite_page_switches_the_sound(world, qapp, monkeypatch):
+    """Suite settings: sound off (owner, 29-10-2026): the intro plays no sound at the next start."""
+    from bc250_core import portable
+    played = []
+    monkeypatch.setattr("portable_portal.intro.play", played.append)
+    window = world.make()
+    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
+    window.on_action("menu")
+    assert window.suite_pane.wallpaper.hasFocus() and window.suite_pane.sound.label.text() == "Sound: On"
+    window.on_action("down")
+    assert window.suite_pane.sound.hasFocus() and ("A", "Change") in window.legend.items
+    window.on_action("accept")
+    assert window.suite_pane.sound.label.text() == "Sound: Off" and not portable.sound_on(mw.SUITE)
+    assert window.wallpaper_on                                        # the other row unchanged
+    silent = world.make(intro_ms=60_000)
+    assert played == [] and silent.intro is not None                  # the intro plays, silent
+    silent.toggle_sound()
+    assert portable.sound_on(mw.SUITE)
+    world.make(intro_ms=60_000)
+    assert len(played) == 1 and played[0].name == "intro.wav"

@@ -1,3 +1,19 @@
+Changelog: 29-10-2026 21:56:04
+
+Release 3.0.0.
+
+Changelog: 29-10-2026 21:43:25
+
+Added. X Play on Your games starts the game the focus is on through Steam, by its shortcut's appid
+(steam://rungameid/), Steam first when it is not open (owner, 29-10-2026: a game started from the manager); a game
+not in Steam yet says how to put it there. An Open Steam row above the games opens Steam's library in Big Picture
+mode. The folder browser opens in the game folder added last, while it is there (owner, 29-10-2026: the folder
+remembered after it was chosen). PCSX2's BIOS browser opens in the folder the dump was taken from last (else Downloads).
+
+Fixed. The Log pane's newest lines ran off the pane's top (owner, 29-10-2026): they are a view of their own now, the
+newest line in sight. A long information text scrolls (core's popup), and the popup closes with B Close in its legend
+instead of a big button.
+
 Changelog: 29-10-2026 17:05:12
 
 Release 2.0.1.

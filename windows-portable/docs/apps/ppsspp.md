@@ -64,7 +64,7 @@ game folders and up to five folders below them, and the games on PPSSPP's memory
 read for the game's title and disc ID (ULUS10044); a CHD is listed under its file's name. A game's update on the
 memory stick is no game of its own: PPSSPP lays it over the game. **A** on the Your games card goes to the list.
 
-You play the games from Steam; the app puts them there.
+You play the games from Steam; the app puts them there, and starts them there with **X**.
 
 - **A Steam mark** on a game marks it for Steam, or takes the mark away. **Y Update Steam** then makes Steam match the
   marks: each marked game is a non-Steam game named `[PSP] <title>` in Steam's library and its Big Picture mode; a
@@ -72,13 +72,18 @@ You play the games from Steam; the app puts them there.
   Steam must have been started once on the device. When there is nothing to change, **Y** says so on the status line
   instead. Right after writing, the app reads Steam's file back and counts the games in Steam from that; should a game
   it wrote not be found, the status line and the log say which.
+- **X Play** on a game that is in Steam starts it through Steam, as its tile in Steam's library would; Steam
+  starts first when it is not open. A game that is not in Steam yet says so: mark it with **A**, then
+  **Y Update Steam**.
+- **Open Steam**, the row above the games, opens Steam's library in Big Picture mode with **A**.
 - **LB Folders** shows your game folders instead of the games; **LB** or **B** goes back to the games. The usual
   places that are on the device (Games, Downloads and Documents in your user folder) and each removable drive, such as
   an SD card, are offered as **+ Add**. **A** twice on a folder takes it off the list: the first press asks, for five
   seconds. Its games stay where they are.
 - **+ Browse to a folder…** opens the app's own browser, made for the controller: your Games, Downloads, Documents and
   Desktop folders and every drive first. **A** opens the folder the focus is on, **B** goes a level up (and from the
-  places back to your folders), and **X Add this folder** adds the folder that is open.
+  places back to your folders), and **X Add this folder** adds the folder that is open. The browser opens again in
+  the folder you added last, while it is there.
 
 In a game started from Steam, PPSSPP takes the device's controller as it is: A is Cross, B Circle, X Square, Y
 Triangle, View Select, Menu Start, LB and RB the PSP's L and R, RT fast forward. **LT** (or the guide button) opens

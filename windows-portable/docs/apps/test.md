@@ -16,7 +16,7 @@ Five cards on the left: Device, Hardware, Connected, Network and Controller; the
 card does. The d-pad or the left stick moves the amber focus between the cards, **A** runs the focused card, **B**
 goes back from a pane to its card (on a card it does nothing), **⧉** (View) exits the app and **☰** (Menu) opens the
 information of the pane that shows. Every action is a button, listed in the row at the bottom with what it does on the
-pane that shows (**A Read**, **X Save report**, **Y Stick lights**, **☰ Info**, **⧉ Exit app**): press the button, or
+pane that shows (**A Read**, **X Save report**, **☰ Info**, **⧉ Exit app**): press the button, or
 tap the entry. Every card and entry also works by touch. The amber edge shows where you are: on a card with a glow
 under it, and on the pane at the right, with its card keeping only the edge, once the focus moves into it. The top
 right shows the date and the time, `Wednesday 28/10/2026 | 17:04`, and under them, live every five seconds, the CPU's
@@ -106,18 +106,16 @@ on the device; it is there before and after the test, not during it.
 
 ## Stick lights
 
-**Y Stick lights**, in the row at the bottom while the Controller card shows (press Y, or tap the entry), opens the
-stick lights' test over the window. Its pills set the lights around the sticks: **Red**, **Green**, **Blue** or
-**White** on both, **Left only** or **Right only** in white with the other stick dark, and **Off**. The d-pad moves
-between them, **A** presses one, and the line under them says what it did. Above the pills is what Windows reports:
-the controller, its lamps (four on the ROG Xbox Ally X, two around each stick) and whether Dynamic Lighting is on for
-it.
+The stick lights are tested with the buttons: while the controller test runs, **A**, **B**, **X** and **Y** light
+both sticks in their color (green, red, blue and yellow), and a stick moved or pressed lights its own ring white with
+the other dark. The line under the count says what Windows reports, the controller and its lamps (four on the ROG
+Xbox Ally X, two around each stick), and what is lit now.
 
 The app sets the lights through Windows' Dynamic Lighting, and Windows lets it do so only while its window is in
-front. **Close** (or **B**) gives them back to the app that sets them otherwise, such as Armoury Crate; Windows does
-so too when the window closes or another one comes in front. Without lights Windows can set, the popup says so: where
-a controller has them, switch Dynamic Lighting on in Settings > Personalization > Dynamic Lighting and open it
-again. It opens before or after the button test, not during it.
+front; the end of the test gives them back to the app that sets them otherwise, such as Armoury Crate. When the line
+says there are none, switch Dynamic Lighting on in Settings > Personalization > Dynamic Lighting, with the controller
+listed and on there, and start the test again; when it says another window is in front, close that one (Armoury
+Crate's or Steam's overlay) first.
 
 ## Install it on its own
 

@@ -547,8 +547,8 @@ def test_the_window_fits_a_smaller_screen(qapp, tmp_path):
 
 
 def test_your_games_are_marked_with_a_and_put_in_steam(qapp, tmp_path, monkeypatch):
-    """The games are played from Steam (owner, 29-10-2026: the app never starts one): A on a game is its Steam mark,
-    Y Update Steam writes the marks."""
+    """The games are played from Steam (owner, 29-10-2026): A on a game is its Steam mark, Y Update Steam writes the
+    marks, X plays a game that is in Steam through Steam (steam://rungameid), Open Steam opens Steam's library."""
     home = tmp_path / "emulator"
     shad = ready(home)
     (shad / "play_time.txt").write_text("CUSA00900 1:22:47 1792613335\n")
@@ -564,7 +564,9 @@ def test_your_games_are_marked_with_a_and_put_in_steam(qapp, tmp_path, monkeypat
         closed.append(True)
         change()
         return False
-    window = make(qapp, home, steam_dir=steam_dir, steam_closed=with_steam_closed, user_home=user)
+    played = []
+    window = make(qapp, home, steam_dir=steam_dir, steam_closed=with_steam_closed, user_home=user,
+                  play=played.append)
     monkeypatch.setattr(window, "isActiveWindow", lambda: True)
     assert dict(window.rows())["Play time"] == "1 h 22 min"
     window.games_card.setFocus()
@@ -573,8 +575,15 @@ def test_your_games_are_marked_with_a_and_put_in_steam(qapp, tmp_path, monkeypat
                                    ("RB", "Steam artwork"), MENU_INFO, EXIT]
     assert "Press the A button on a game to mark it for Steam" in window.games_pane.info.info
     assert list(window.games_pane.list.pills) == []                                # no folder yet
+    window.on_action("accept")                                     # into the pane: no game, Open Steam
+    assert window.steam_row.hasFocus()
+    assert window.legend.items == [("A", "Open Steam"), ("Y", "Update Steam"), ("LB", "Folders"),
+                                   ("RB", "Steam artwork"), MENU_INFO, BACK, EXIT]
+    window.on_action("accept")
+    assert played == ["steam://open/bigpicture"] and window.games_pane.status.text() == "Opening Steam…"
     window.on_action("previous")                                   # LB Folders: the usual places, and Browse
     assert window.legend.items == [("A", "Choose"), ("LB", "Games"), ("RB", "Steam artwork"), MENU_INFO, BACK, EXIT]
+    assert window.steam_row.isHidden()                             # Open Steam is above the games only
     pills = window.games_pane.list.pills
     assert list(pills) == [f"add:{games}", f"add:{user / 'Downloads'}", "browse"]
     pills[f"add:{games}"].click()
@@ -586,6 +595,10 @@ def test_your_games_are_marked_with_a_and_put_in_steam(qapp, tmp_path, monkeypat
     assert window.games_pane.status.text() == NOTHING_TO_CHANGE
     pills[str(bloodborne)].setFocus()
     qapp.processEvents()
+    assert ("X", "Play") in window.legend.items and not window.steam_row.isHidden()
+    window.on_action("x")                                          # X: not in Steam yet
+    assert window.games_pane.status.text() == ("Bloodborne is not in Steam yet: A marks it, then Y Update Steam "
+                                               "puts it there.") and len(played) == 1
     window.on_action("accept")                                     # A: the Steam mark
     assert "✓ Steam (Update Steam)" in window.games_pane.list.pills[str(bloodborne)].label.text()
     window.on_action("y")                                          # Y on Your games: Update Steam
@@ -593,6 +606,11 @@ def test_your_games_are_marked_with_a_and_put_in_steam(qapp, tmp_path, monkeypat
     assert closed == [True] and shortcuts.in_steam(steam_dir) == {str(bloodborne): "[PS4] Bloodborne"}
     assert "1 game(s) in Steam" in window.games_pane.status.text() and "Read back" not in window.games_pane.status.text()
     assert window.games_pane.list.pills[str(bloodborne)].label.text().endswith("✓ Steam")
+    window.games_pane.list.pills[str(bloodborne)].setFocus()
+    window.on_action("x")                                          # X: played through Steam
+    number = shortcuts.numbers(steam_dir)[str(bloodborne)]
+    assert played[-1] == f"steam://rungameid/{(number << 32) | 0x02000000}"
+    assert window.games_pane.status.text() == "Starting Bloodborne in Steam…"
     window.close()
 
 
@@ -642,7 +660,10 @@ def test_the_folder_browser_goes_by_the_controller(qapp, tmp_path, monkeypatch):
     window.on_action("x")                                          # X: this folder
     assert window.panes.currentWidget() is window.games_pane and window.games_view == "folders"
     assert f"folder:{target}" in window.games_pane.list.pills and "1 game(s) in it" in window.games_pane.status.text()
-    window.games_pane.list.pills["browse"].click()
+    window.games_pane.list.pills["browse"].click()                 # again: where it was left (owner, 29-10-2026)
+    assert window.browser.path == target
+    window.on_action("back")                                       # B: up, Games, a place
+    window.on_action("back")                                       # the places
     window.on_action("back")                                       # B at the places: back to the folders
     assert window.panes.currentWidget() is window.games_pane and window.browser is None
     window.close()
@@ -701,7 +722,10 @@ def test_the_log_is_read_in_the_app(qapp, tmp_path, monkeypatch):
     qapp.processEvents()
     texts = [label.text() for label in window.log_pane.findChildren(type(window.status))]
     assert "System modules" in texts and "all 24" in texts and "Game folders" in texts
-    assert window.log_pane.lines.text().splitlines() == [f"line {n}" for n in range(288, 300)]
+    lines = window.log_pane.lines
+    assert lines.toPlainText().splitlines() == [f"line {n}" for n in range(288, 300)]
+    assert lines.focusPolicy() == portable.Qt.FocusPolicy.NoFocus                 # the d-pad never lands on it
+    assert lines.verticalScrollBar().value() == lines.verticalScrollBar().maximum()   # the newest line in view
     assert window.legend.items[0] == ("A", "View log")
     window.on_action("accept")                                     # A: the whole log, here
     view = window.log_pane.view
@@ -783,13 +807,13 @@ def test_menu_shows_the_panes_information_and_the_icon_is_touch_only(qapp, tmp_p
     qapp.processEvents()
     assert window.shadps4_info not in window.focusables()
     window.on_action("menu")                                    # the shadPS4 pane's information: modules, packages
-    assert window.popup is not None and "System modules" in window.popup.text.text()
+    assert window.popup is not None and "System modules" in window.popup.text.toPlainText()
     window.on_action("menu")
     assert window.popup is None
     window.shadnet_card.setFocus()
     qapp.processEvents()
     window.on_action("menu")
-    assert window.popup is not None and "shadPS4's online service" in window.popup.text.text()
+    assert window.popup is not None and "shadPS4's online service" in window.popup.text.toPlainText()
     window.on_action("menu")                                    # Menu again (or B) closes it
     assert window.popup is None and window.shadnet_card.hasFocus()
     window.close()

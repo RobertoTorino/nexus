@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The window: the tests as cards on the left (Device, Hardware, Connected, Network, Controller), what the focused one
-shows on the right, the controller's buttons at the bottom (X Save report; on the Controller card Y Stick lights; a
-tap on an entry does the same). Direction D's test screen (the owner's, 26-10-2026)."""
+shows on the right, the controller's buttons at the bottom (X Save report; a tap on an entry does the same). The
+stick lights are part of the controller test. Direction D's test screen (the owner's, 26-10-2026)."""
 
 from __future__ import annotations
 
@@ -22,11 +22,11 @@ from bc250_core.portable import (BODY, DIM, Card, Legend, Pane, PortableHeader, 
                                  px, status_clock, text_label)
 
 from . import APP_ID, APP_NAME, SUITE, __version__, back_buttons, controller, device, lights, network, temps
-from .controller import LIGHTS_TEXT, LIGHTS_TITLE, ControllerPane, LightsPanel
+from .controller import ControllerPane
 
 STATUS_MS = 5_000               # the header's battery, temperatures and time: the temperatures live
 CARDS_WIDTH = 663               # the cards' column, as wide as its 5 of 9 parts of the page were: a long value wraps
-CONTROLLER_LEGEND = [("A", "Start the test"), ("Y", "Stick lights")]   # then core's Info, Back and Exit app
+CONTROLLER_LEGEND = [("A", "Start the test")]   # then core's Info, Back and Exit app
 
 
 class _Reader(QObject):
@@ -161,7 +161,7 @@ class MainWindow(PortableWindow):
                                      f"from GitHub ({network.DOWNLOAD_SECONDS} seconds at most, nothing is kept). "
                                      "Compare a slow moment with a fast one.", action="Test")
         self.report_panes = (*self.info_panes, self.network_pane)      # what X saves
-        self.controller_pane = ControllerPane(clock=clock)
+        self.controller_pane = ControllerPane(clock=clock, lamps=self.lights)
         for pane in (*self.report_panes, self.controller_pane):
             self.panes.addWidget(pane)
         body.addWidget(self.panes, 1)
@@ -188,7 +188,6 @@ class MainWindow(PortableWindow):
         self.gamepad.raw.connect(self.controller_pane.feed)
         self.bind("accept", self.a_action)
         self.bind("x", self.save_report)
-        self.bind("y", self.y_action)
         self.back.connect(self.on_back)
         self.status_timer = QTimer(self)
         self.status_timer.setInterval(STATUS_MS)
@@ -249,11 +248,6 @@ class MainWindow(PortableWindow):
                 self.controller_pane.finish()
             return
         super().act(action)
-
-    def y_action(self) -> None:
-        """Y on the Controller card: the stick lights' test (owner, 29-10-2026: the icon for it was hard to reach)."""
-        if self.panes.currentWidget() is self.controller_pane:
-            self.show_lights()
 
     # The Device, Hardware and Connected cards: one read fills all three
 
@@ -363,19 +357,9 @@ class MainWindow(PortableWindow):
         self.testing = False
         seen = self.controller_pane.seen()
         self.log.info(f"Controller test finished: {len(seen)} buttons answered ({', '.join(seen) or 'none'}).")
+        self.log.info(self.controller_pane.lights_line.text() or "Stick lights: not tested.")
         self.show_pane(self.controller_pane)
         self.controller_card.setFocus()
-
-    def show_lights(self) -> None:
-        """The stick lights' test in a popup over the window (owner, 29-10-2026: short of space, a popup), on Y in
-        the Controller pane's legend; Close gives the lights back and the focus to where it was."""
-        if self.testing:
-            return
-        found = self.lights.open()
-        self.log.info(f"Stick lights: {found.text() if found is not None else 'no LampArray'}")
-        popup = self.show_popup(LIGHTS_TITLE, LIGHTS_TEXT, self.focusWidget() or self.controller_card,
-                                LightsPanel(found, self.lights.show))
-        popup.closed.connect(self.lights.close)
 
     def on_action(self, action: str) -> None:
         if self.testing:                    # every button is the test's; holding B ends it (ControllerPane)

@@ -321,9 +321,10 @@ class PortalPage(QWidget):
         self.pins.setHorizontalHeaderLabels(("Pin", "Release", "Pinned now", "GitHub"))
         self.pins.verticalHeader().setVisible(False)
         self.pins.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        self.pin_button = Pill("Pin", " ", "Read each ticked release's SHA256SUMS from GitHub and pin tag and sha256",
-                               TEAL)
-        self.pin_button.clicked.connect(self.pin)
+        # Pin and Bump are ordinary buttons, as Retract and Run (owner, 29-10-2026: the pills were too big)
+        self.pin_button = accent_button("Pin", "Read each ticked release's SHA256SUMS from GitHub and pin tag and "
+                                        "sha256")
+        self.pin_button.clicked.connect(lambda: self.pin())
         self.empty_note = hint_label("")
         self.minimum = QLabel()
         self.portal_needs = QLabel()
@@ -341,9 +342,9 @@ class PortalPage(QWidget):
         self.nexus_version = QComboBox()
         self.nexus_version.setEditable(True)
         self.nexus_version.setMinimumWidth(VERSION_FIELD_PX)
-        self.bump_button = Pill("Bump", " ", "Write portal/VERSION, its copies and the CHANGELOG entry (and Nexus's "
-                                "version with Nexus too)", TEAL)
-        self.bump_button.clicked.connect(self.bump)
+        self.bump_button = accent_button("Bump", "Write portal/VERSION, its copies and the CHANGELOG entry (and "
+                                         "Nexus's version with Nexus too)")
+        self.bump_button.clicked.connect(lambda: self.bump())
         self.portal_state = QLabel()             # the portal's own release: not tagged yet, building, built
         self.portal_state.setWordWrap(True)
         self.portal_state.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
@@ -357,7 +358,7 @@ class PortalPage(QWidget):
         pin_row = QHBoxLayout()
         pin_row.addStretch(1)
         pin_row.addWidget(self.pin_button)
-        # Two lines, the portal's and Nexus's version, with the Bump pill beside them (owner, 28-10-2026)
+        # Two lines, the portal's and Nexus's version, with the Bump button beside them (owner, 28-10-2026)
         versions = QGridLayout()
         versions.addWidget(QLabel("Portal version:"), 0, 0)
         versions.addWidget(self.portal_version, 0, 1)
@@ -837,8 +838,8 @@ class RunPage(QWidget):
             "this venv and the checkout's core, as <code>run.sh</code> starts this app. An app that changes how the "
             "board runs (an orange <b>!</b> on its icon) asks first; it uses the scripts in the checkout. Each app "
             f"writes its output to <code>{LOG_DIR}</code>; when it stops with an error, the end of that log shows below. "
-            "The portal is the first icon; when a portal is already open it warns instead, as a second one would only "
-            "show the open one. The last icons are the wikis in the checkout (each <code>mkdocs.yml</code>): each is "
+            "The ticked suite's portal is the first icon; when a portal is already open it warns instead, as a second one "
+            "would only show the open one. The last icons are the ticked suite's wiki and the Nexus page: each is "
             "served with <code>mkdocs serve</code> on a port of its own and opens in the browser with its design "
             "panel; it rebuilds on every save. With <b>Wikis on the network</b> they are served for the other devices "
             "too, on ports of their own; the addresses show below."))
@@ -1941,7 +1942,7 @@ class ReleaseWindow(QMainWindow):
         self.portal_page.fill(units)
         self.withdraw_page.fill(units)
         portal = rp.portal_target(self.root, self.suite)
-        docs = rp.docs_targets(self.root, network=self.run_page.network_box.isChecked())
+        docs = rp.docs_targets(self.root, network=self.run_page.network_box.isChecked(), suite=self.suite)
         self.run_page.fill(([portal] if portal else []) + rp.launch_targets(self.root, self.suite) + docs)
         self.footer.setText(f"{APP_NAME} {__version__} · edits {self.root}"
                             + (f" · suite {self.suite}" if len(self.suites) > 1 else ""))

@@ -120,7 +120,7 @@ RPCS3_INFO = (
     "the LB button (Firmware) finds it there and RPCS3 installs it, without opening its window.\n\n"
     "A game bought digitally comes as a package (.pkg), with its license (.rap) for a PSN game: put them in one "
     "folder, then the RB button (Packages) finds the folder and RPCS3 installs them, each in a run of its own, a "
-    "game's update last. A disc game is a folder copied from the disc (PS3_DISC.SFB and PS3_GAME): see Your games.\n\n"
+    "game's update last; the Y button on a file marks it, and the X button then installs the marked ones only. A disc game is a folder copied from the disc (PS3_DISC.SFB and PS3_GAME): see Your games.\n\n"
     "RPCS3 for Windows needs Microsoft's Visual C++ runtime, which Steam and most games bring; the pane says when "
     "it is missing (vc_redist.x64.exe from Microsoft installs it). The X button removes RPCS3's program; its "
     "folder, with the firmware and your saves, stays.")
@@ -134,8 +134,8 @@ GAMES_INFO = (
     "own, as copied from the disc: PS3_DISC.SFB and the PS3_GAME folder; RPCS3 does not start one without its "
     "PS3_DISC.SFB), the games installed from packages (in RPCS3's dev_hdd0) and the disc games RPCS3 knows from "
     "before.\n\n"
-    "The X button (Screen) sets how the game fills the screen, kept in the game's own settings in RPCS3: 16:9, the "
-    "PS3's picture for a wide screen; 4:3, with borders on a wide one; or Fill screen, stretched to fill it.\n\n"
+    "The X button on a game that is in Steam starts it, through Steam (Steam starts first when it does not run). "
+    "Open Steam, the row at the top of the list, opens Steam's library.\n\n"
     "The LB button (Folders) shows your game folders: add one of the usual places or a drive (an SD card), or browse "
     "to any folder with the controller. The A button twice on a folder takes it off the list; its games stay where "
     "they are. The LB button again shows the games.\n\n"
@@ -145,8 +145,10 @@ GAMES_INFO = (
 BROWSE_INFO = (
     "Find the folder or the file. The A button opens the folder the focus is on, or picks the file; the B button "
     "goes a level up, and from the places back to where you came from. The X button takes the folder that is open: "
-    "as a game folder, or as the folder whose packages RPCS3 installs. The places are your Games, Downloads, "
-    "Documents and Desktop folders and every drive, such as an SD card.")
+    "as a game folder, or as the folder whose packages RPCS3 installs. With packages, the Y button marks the file "
+    "the focus is on (a ✓ before it) and the X button installs the marked ones; the marks go when you open another "
+    "folder. The places are your Games, Downloads, Documents and Desktop folders and every drive, such as an SD "
+    "card. The browser opens again in the folder you took or picked a file in last.")
 LOG_INFO = (
     "RPCS3's folder, where it keeps the firmware, the saves, its settings and the games installed from packages, "
     "and the newest lines of this app's log. The A button, or a tap on this pane, shows the whole log here: the "
@@ -171,8 +173,12 @@ class LogPane(Pane):
         self.grid.setVerticalSpacing(px(4))
         self.column.addLayout(self.grid)
         self.column.addSpacing(px(10))
-        self.lines = text_label("", BODY, color=DIM, wrap=True)
-        self.column.addWidget(self.lines, 1, Qt.AlignmentFlag.AlignTop)
+        # The newest lines in a view of their own with its end in view (owner, 29-10-2026: as a label they were cut
+        # off at the top); the d-pad never lands on it, a tap shows the whole log as the A button does
+        self.lines = TextView()
+        self.lines.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.lines.viewport().installEventFilter(self)
+        self.column.addWidget(self.lines, 1)
         self.view = TextView()
         self.view.hide()
         self.column.addWidget(self.view, 1)
@@ -194,7 +200,17 @@ class LogPane(Pane):
             shown.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
             self.grid.addWidget(shown, r, 1)
         self.grid.setColumnStretch(1, 1)
-        self.lines.setText("\n".join(lines) or "Nothing logged yet.")
+        self.lines.setPlainText("\n".join(lines) or "Nothing logged yet.")
+        self.lines.show_end()
+
+    def eventFilter(self, obj, event) -> bool:
+        if obj is self.lines.viewport() and event.type() == QEvent.Type.MouseButtonPress:
+            self.tapped.emit()
+        return super().eventFilter(obj, event)
+
+    def showEvent(self, event) -> None:
+        super().showEvent(event)
+        self.lines.show_end()                           # laid out now: the newest line at the bottom
 
     def show_whole(self, text: str) -> None:
         self.lines.hide()
@@ -206,6 +222,7 @@ class LogPane(Pane):
     def show_summary(self) -> None:
         self.view.hide()
         self.lines.show()
+        self.lines.show_end()
 
 
 # The key: the BC250 app's Covers… dialog (core's covers.edit_key) as a page of the portable window

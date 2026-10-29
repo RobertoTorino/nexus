@@ -1,3 +1,17 @@
+Changelog: 29-10-2026 21:56:04
+
+Release 3.0.0.
+
+Changelog: 29-10-2026 21:37:16
+
+Breaking. The stick lights' test is part of the controller test (owner, 29-10-2026: "we were planning on including
+the LED test in the controller test"; on the Ally no LED test was found): Y Stick lights and its popup with the big
+amber color pills are gone. While the button test runs, A, B, X and Y light both sticks green, red, blue and yellow,
+and a stick moved or pressed lights its own ring white with the other dark; the line under the count says what
+Windows reports about the lights and what is lit now. The test's end gives the lights back to Windows (Armoury
+Crate). Without lights, with Dynamic Lighting off for the controller, or with another window in front, the line says
+what to do; an error from Windows is shown there instead of ending the app.
+
 Changelog: 29-10-2026 17:05:12
 
 Release 2.0.1.

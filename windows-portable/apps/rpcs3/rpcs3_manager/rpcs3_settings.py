@@ -7,7 +7,9 @@ sound (Audio) and the messages RPCS3 shows in a game (Miscellaneous). The values
 
 A setting is read from the file (RPCS3's default while the file, or the line, is not there) and written one line at a
 time, every other line kept (userdata.yaml_set); RPCS3 writes the whole file itself when its own settings are saved.
-Never while RPCS3 runs. A game's own settings in RPCS3 (the game's screen, X on the game) come before these.
+Never while RPCS3 runs. Screen sets two lines, Aspect ratio and Stretch To Display Area (userdata.read_screen and
+write_screen, the values a game's own settings took when X on a game set them: owner, 29-10-2026, X plays a game
+now). A game's own settings in RPCS3 (a config_<ID>.yml made before) come before these.
 
 The pane shows them in tabs (TABS below: Picture, Speed, Sound, Messages), a row each with its value; A steps to the
 next value (Setting.next_value), as PPSSPP Manager's pane does."""
@@ -21,6 +23,7 @@ from . import userdata
 
 CONFIG = "config.yml"
 CHOICE, SWITCH = "choice", "switch"
+SCREEN = "screen"                       # the setting of two lines: userdata.read_screen and write_screen
 TRUE, FALSE = "true", "false"
 
 
@@ -96,9 +99,10 @@ TABS: tuple[tuple[str, str, tuple[Setting, ...]], ...] = (
         Setting("scaling", "Output scaling", "Video", "Output Scaling Mode", "Bilinear", CHOICE, SCALING,
                 "how the drawn picture is scaled to the screen: Bilinear smooth, Nearest sharp pixels, FidelityFX "
                 "Super Resolution AMD's upscaler, sharper from a lower resolution scale."),
-        Setting("stretch", "Fill the screen", "Video", "Stretch To Display Area", FALSE, SWITCH,
-                tip="the picture stretched to fill the screen for every game without a screen setting of its own "
-                    "(the X button on a game)."),
+        Setting(SCREEN, "Screen", "Video", "Aspect ratio", userdata.WIDE, CHOICE,
+                tuple(userdata.SCREENS.items()),
+                "how the games fill the screen: 16:9, the PS3's picture for a wide screen; 4:3, with borders on a "
+                "wide one; or Fill screen, stretched to fill it."),
     )),
     ("speed", "Speed", (
         Setting("vsync", "VSync", "Video", "VSync Mode", "Disabled", CHOICE, VSYNC,
@@ -145,19 +149,25 @@ def _lines(home: Path) -> list[str]:
 def read_setting(home: Path, setting: Setting) -> str:
     """The setting's value as config.yml holds it, in the pane's form (Setting.canonical): RPCS3's default when the
     file names none."""
+    if setting.key == SCREEN:
+        return userdata.read_screen(settings_path(home))
     return setting.canonical(userdata.yaml_value(_lines(home), setting.section, setting.name))
 
 
 def read_settings(home: Path) -> dict[str, str]:
     """Every setting's value, the app's key to the value."""
     lines = _lines(home)
-    return {setting.key: setting.canonical(userdata.yaml_value(lines, setting.section, setting.name))
+    return {setting.key: (userdata.read_screen(settings_path(home)) if setting.key == SCREEN else
+                          setting.canonical(userdata.yaml_value(lines, setting.section, setting.name)))
             for setting in SETTINGS}
 
 
 def write_setting(home: Path, setting: Setting, value: str) -> None:
     """One line of config.yml set; the file made when there is none. OSError is the caller's; the caller makes sure
     RPCS3 does not run."""
+    if setting.key == SCREEN:
+        userdata.write_screen(settings_path(home), value)
+        return
     lines = _lines(home)
     userdata.yaml_set(lines, setting.section, setting.name, value)
     userdata.write_lines(settings_path(home), lines)

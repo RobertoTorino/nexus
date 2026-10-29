@@ -9,7 +9,7 @@ the folders to the games, the browser a level up), View exits the app and Menu s
 shows.
 
 The Your games pane (panes.py, library.py): the games in the chosen folders and on PPSSPP's memory stick, played from
-Steam (owner, 29-10-2026: the app never starts a game itself); A marks one for Steam, Y Update Steam makes Steam's
+Steam (owner, 29-10-2026: X Play starts one in Steam); A marks one for Steam, Y Update Steam makes Steam's
 shortcuts match the marks; LB Folders lists the folders, the usual places and a drive to add, and Browse, which opens
 the folder browser (core's browse: the controller's own way to a folder, where Windows' folder window is not); LB
 Games goes back; RB Steam artwork keeps the SteamGridDB key. The Log pane: PPSSPP's memory stick and the newest lines
@@ -56,6 +56,7 @@ CARD_HEIGHT = 100               # the cards and their gaps fit the column at 720
 LOG_LINES = 12                  # the newest lines of the app's log in the Log pane
 LOG_MAX = 2000                  # the lines of the log the whole view shows, the newest
 FOLDERS, GAMES_VIEW = "folders", "games"
+FOLDERS_BROWSED = "folders"     # the browser's folder kept for next time (browse.remember)
 BROWSE_KEY = "browse"           # the folders' last row: the folder browser
 RUNNING = "PPSSPP is open: close it first, it would write its own settings over the change."
 NOT_INSTALLED = "Install PPSSPP first: the settings are in its folder."
@@ -111,6 +112,7 @@ class _Worker(QObject):
 
 
 NOT_THE_GAMES = "Update Steam works on the games: the LB button shows them again."
+PICK_A_GAME = "Put the focus on a game first: the X button starts it in Steam."
 NO_STEAM = "Steam was never started on this device: start it once, then Update Steam puts the marked games in it."
 NOTHING_TO_CHANGE = ("Nothing to change in Steam: the A button on a game marks it for Steam or takes the mark away, "
                      "then the Y button updates Steam.")
@@ -175,10 +177,12 @@ class MainWindow(PortableWindow):
                  steam_dir: Path | None | bool = False,
                  steam_closed: Callable[[Callable[[], None]], bool] = steam.with_steam_closed,
                  user_home: Path | None = None, drives: Callable[[], list[Path]] = library.removable_drives,
-                 roots: Callable[[], list[Path]] = browse.drives, settings: QSettings | None = None):
+                 roots: Callable[[], list[Path]] = browse.drives, settings: QSettings | None = None,
+                 open_url: Callable[[str], None] = steam.open_url):
         """*steam_dir*: Steam's folder (False: found on this system, None: no Steam); *user_home*: the user's folder
         (the usual places); *drives*: the removable drives offered as folders, *roots*: every drive the browser
-        offers; *settings*: the app's (its .ini, create_app's), where the game folders are kept."""
+        offers; *settings*: the app's (its .ini, create_app's), where the game folders are kept;
+        *open_url*: hands a steam:// address to Steam (Play, Open Steam)."""
         super().__init__(gamepad)
         self.setWindowTitle(f"{APP_NAME} {__version__}")
         self.log = applog.logger(APP_ID)
@@ -196,6 +200,7 @@ class MainWindow(PortableWindow):
         self.steam_dir = steam.find_steam() if steam_dir is False else steam_dir
         self.user_home, self.drives, self.roots = user_home, drives, roots
         self.settings = settings if settings is not None else QSettings()
+        self.open_url = open_url
         self.games: list[Game] = []
         self.in_steam: dict[str, str] = {}
         self.marked: set[str] = set()
@@ -239,6 +244,10 @@ class MainWindow(PortableWindow):
         self.pane.column.addWidget(self.status)
         self.settings_pane = SettingsPane()
         self.games_pane = ListPane("Your games", "Your games", GAMES_INFO)
+        self.open_steam = Row("Open Steam")             # Steam's library (owner, 29-10-2026), above the games
+        at = self.games_pane.column.indexOf(self.games_pane.list)
+        self.games_pane.column.insertWidget(at, self.open_steam)
+        self.games_pane.column.insertSpacing(at + 1, px(6))
         self.browse_pane = ListPane("Choose a folder", "Choosing a folder", BROWSE_INFO)
         self.key_pane = KeyPane()
         self.log_pane = LogPane()
@@ -266,6 +275,7 @@ class MainWindow(PortableWindow):
         self.log_card.activated.connect(self.view_log)
         self.log_pane.tapped.connect(self.view_log)
         self.games_pane.list.picked.connect(self.game_picked)
+        self.open_steam.activated.connect(self.show_steam)
         self.browse_pane.list.picked.connect(self.browse_picked)
         self.confirm_key = False                        # Remove key pressed once
         for setting in ALL_SETTINGS:
@@ -395,8 +405,10 @@ class MainWindow(PortableWindow):
                      *([("X", "Press again" if self.confirm_remove else "Remove PPSSPP")] if installed else []),
                      *([("Y", other)] if other else [])]
         elif pane is self.games_pane:
-            items = ([("A", "Steam mark"), ("Y", "Update Steam"), ("LB", "Folders")]
-                     if self.games_view == GAMES_VIEW else [("A", "Choose"), ("LB", "Games")]) + \
+            steam_row = ("A", "Open Steam") if self.open_steam.hasFocus() else None
+            items = ([steam_row or ("A", "Steam mark"), *([("X", "Play")] if self.focused_game() else []),
+                      ("Y", "Update Steam"), ("LB", "Folders")]
+                     if self.games_view == GAMES_VIEW else [steam_row or ("A", "Choose"), ("LB", "Games")]) + \
                     [("RB", "Steam artwork")]
         elif pane is self.browse_pane:
             items = [("A", "Open"), ("X", "Add this folder")]
@@ -479,6 +491,49 @@ class MainWindow(PortableWindow):
         else:
             self.mark_game(key)
 
+    def focused_game(self) -> Game | None:
+        """The game whose row has the focus, on the games' view."""
+        if self.games_view != GAMES_VIEW:
+            return None
+        key = next((key for key, pill in self.games_pane.list.pills.items() if pill.hasFocus()), None)
+        return next((game for game in self.games if str(game.file) == key), None)
+
+    def play(self) -> None:
+        """X on a game: started through Steam, as its shortcut there (owner, 29-10-2026: a game started from the
+        app; Steam keeps its controller layout and its overlay). Steam starts first when it is not open."""
+        game = self.focused_game()
+        if game is None:
+            self.games_pane.status.setText(PICK_A_GAME)
+            return
+        try:
+            number = (shortcuts.numbers(self.steam_dir) if self.steam_dir is not None else {}).get(str(game.file))
+        except OSError as error:
+            number = None
+            self.log.error(f"Steam's shortcuts could not be read: {error}")
+        if number is None:
+            self.games_pane.status.setText(f"{game.title} is not in Steam yet: A marks it, then Y Update Steam puts "
+                                           "it there.")
+            return
+        try:
+            self.open_url(steam.play_url(number))
+        except OSError as error:
+            self.games_pane.status.setText(f"Steam could not be asked to start {game.title}: {error.strerror or error}")
+            self.log.error(f"Starting {game.title} in Steam failed: {error}")
+            return
+        self.games_pane.status.setText(f"Starting {game.title} in Steam…")
+        self.log.info(f"Play: {game.title}, started in Steam.")
+
+    def show_steam(self) -> None:
+        """The Open Steam row: Steam's library, in Big Picture; Steam starts first when it is not open."""
+        try:
+            self.open_url(steam.OPEN_URL)
+        except OSError as error:
+            self.games_pane.status.setText(f"Steam could not be opened: {error.strerror or error}")
+            self.log.error(f"Opening Steam failed: {error}")
+            return
+        self.games_pane.status.setText("Opening Steam…")
+        self.log.info("Steam opened.")
+
     def toggle_folders(self) -> None:
         self.games_view = GAMES_VIEW if self.games_view == FOLDERS else FOLDERS
         self.forget_asked = ""
@@ -488,6 +543,7 @@ class MainWindow(PortableWindow):
         self.focus_list(self.games_pane)
 
     def add_folder(self, folder: Path) -> None:
+        browse.remember(self.settings, FOLDERS_BROWSED, folder)        # the browser opens here next time
         chosen = library.folders(self.settings)
         if str(folder) not in {str(f) for f in chosen}:
             library.set_folders(self.settings, chosen + [folder])
@@ -515,7 +571,8 @@ class MainWindow(PortableWindow):
     # The folder browser (core's browse)
 
     def show_browser(self) -> None:
-        self.browser = browse.Browser(browse.places(self.user_home, self.roots))
+        self.browser = browse.Browser(browse.places(self.user_home, self.roots),
+                                      path=browse.remembered(self.settings, FOLDERS_BROWSED))
         self.browse_pane.status.setText("")
         self.show_pane(self.browse_pane)
         self.show_browse()
@@ -631,6 +688,8 @@ class MainWindow(PortableWindow):
             self.remove_action()
         elif pane is self.browse_pane:
             self.add_browsed()
+        elif pane is self.games_pane:
+            self.play()
         elif pane is self.key_pane:
             self.paste_key()
 

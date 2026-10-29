@@ -148,12 +148,21 @@ def file_title(stem: str) -> str:
     return _SERIAL_IN_NAME.sub("", stem).strip(" ._-") or stem
 
 
+def is_file(path: Path) -> bool:
+    """path.is_file(), False when it cannot be asked: a failing or half-mounted SD card answers with an error (EIO)
+    instead of no, which ended the scan (the Windows suite's empty card slot, 29-10-2026)."""
+    try:
+        return path.is_file()
+    except OSError:
+        return False
+
+
 def read_disc(path: Path, titles: dict[str, str] | None = None) -> Game | None:
     """The game of a disc image: an ISO read for its SYSTEM.CNF and boot program, the compressed formats under their
     own name; None when the file is not there. An ISO without a SYSTEM.CNF (not a PS2 disc) is no game. *titles*:
     PCSX2's titles by serial."""
     kind = path.suffix.lower().lstrip(".")
-    if not path.is_file():
+    if not is_file(path):
         return None
     if kind != "iso":
         return Game(path, file_title(path.stem), kind=kind)
@@ -177,10 +186,15 @@ def _found(root: Path, depth: int = MAX_DEPTH):
     except OSError:
         return
     for entry in entries:
-        if entry.is_file():
+        try:
+            plain = entry.is_file()
+            folder = not plain and depth > 0 and entry.is_dir(follow_symlinks=False)
+        except OSError:                                 # a failing card: skipped, the scan goes on
+            continue
+        if plain:
             if entry.name.lower().endswith(DISC_SUFFIXES):
                 yield Path(entry.path)
-        elif depth > 0 and entry.is_dir(follow_symlinks=False) and not entry.name.startswith("."):
+        elif folder and not entry.name.startswith("."):
             yield from _found(Path(entry.path), depth - 1)
 
 

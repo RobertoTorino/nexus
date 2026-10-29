@@ -20,7 +20,7 @@ rows of four tiles each. A tile shows the app's icon, its name and its state:
 |---|---|
 | Not installed | The app is not on this device. |
 | Installed x.y.z | The version this portal pins is installed. |
-| Update x.y.z | An older release is installed; this portal brings x.y.z. |
+| Update x.y.z | An older release is installed; this portal brings x.y.z. The tile has a red dot at its top right. |
 | Installed, version unknown | The app is there, but not installed by this portal. |
 | Downloading… 40 MB | The release is coming in. |
 | Installing… | Its installer runs in a PowerShell window. |
@@ -79,12 +79,13 @@ one.
 installs the new release in a PowerShell window and starts again. The new release brings the apps it pins: their
 tiles then say **Update** where a newer release is pinned.
 
-The settings are on the Suite page too, under the release: how the portal looks, kept for the next start. **A** on a
-setting switches it; **B** goes back to the tiles.
+The settings are on the Suite page too, under the release: how the portal looks and sounds, kept for the next start.
+The d-pad moves between them, **A** on a setting switches it; **B** goes back to the tiles.
 
 | Setting | |
 |---|---|
 | Wallpaper | A picture behind the tiles, which show it through them, in every app of the suite: switched here, it is on or off in each app from its next start. Off: the plain dark background. |
+| Sound | The intro's sound when the portal starts. Off: the intro plays without it. |
 
 The window fits the screen it is on: it is laid out for the Ally's 1280 x 720 (at Windows' 150 % scaling) and drawn
 larger on a larger screen, such as a TV, and smaller on a smaller one.

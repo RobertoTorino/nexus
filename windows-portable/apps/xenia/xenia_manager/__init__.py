@@ -7,7 +7,7 @@ APP_NAME = "Xenia Manager"
 APP_ID = "windows-portable-xenia"
 EXE_NAME = "Xenia-Manager"   # the program's file name in a release
 SUITE = "windows-portable-suite"
-__version__ = "0.1.0"
+__version__ = "1.0.0"
 
 from pathlib import Path
 

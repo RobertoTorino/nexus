@@ -5,9 +5,14 @@ their own name, a game found twice, and depth."""
 
 from __future__ import annotations
 
+import errno
+import os
+from pathlib import Path
+
 from conftest import iso_bytes, make_disc, system_cnf
 
 from pcsx2_manager.games import Game, elf_crc, file_title, iso_file, read_disc, read_system_cnf, scan, serial_of
+from pcsx2_manager import games
 
 
 def test_system_cnf_is_read():
@@ -95,3 +100,55 @@ def test_a_serial_is_cut_out_of_a_files_name():
     assert file_title("Gran Turismo 4 (USA) (SCUS-97328)") == "Gran Turismo 4 (USA)"
     assert file_title("Gran Turismo 4 (USA)") == "Gran Turismo 4 (USA)"
     assert file_title("SLUS_215.53") == "SLUS_215.53"                                      # nothing else left
+
+
+# A failing or half-mounted SD card (29-10-2026, found on Windows with an empty card slot): asking about anything on it
+# raises EIO, which Python's pathlib (3.12) passes on rather than answering no. The scan skips it and goes on.
+
+class Unreadable:
+    """A folder entry of a failing card: os.scandir lists it, asking what it is raises."""
+
+    def __init__(self, path: Path):
+        self.path, self.name = str(path), path.name
+
+    def is_file(self, follow_symlinks: bool = True) -> bool:
+        raise OSError(errno.EIO, "Input/output error", self.path)
+
+    def is_dir(self, follow_symlinks: bool = True) -> bool:
+        raise OSError(errno.EIO, "Input/output error", self.path)
+
+
+def failing_card(monkeypatch, card: Path, root: Path | None = None) -> None:
+    """Everything below *card* raises on is_file() and is_dir(); *root* lists an Unreadable entry beside its own."""
+    real_file, real_dir, real_scandir = Path.is_file, Path.is_dir, os.scandir
+
+    def broken(path) -> bool:
+        return str(path).startswith(str(card))
+
+    def is_file(self, *args, **kwargs):
+        if broken(self):
+            raise OSError(errno.EIO, "Input/output error", str(self))
+        return real_file(self, *args, **kwargs)
+
+    def is_dir(self, *args, **kwargs):
+        if broken(self):
+            raise OSError(errno.EIO, "Input/output error", str(self))
+        return real_dir(self, *args, **kwargs)
+
+    def scandir(path):
+        entries = list(real_scandir(path))
+        if broken(path):                                # the card lists its entries, none can be asked about
+            return [Unreadable(Path(entry.path)) for entry in entries]
+        return entries + [Unreadable(Path(path) / "card")] if root is not None and Path(path) == root else entries
+
+    monkeypatch.setattr(Path, "is_file", is_file)
+    monkeypatch.setattr(Path, "is_dir", is_dir)
+    if hasattr(games, "os"):                            # the scans list folders with os.scandir
+        monkeypatch.setattr(games.os, "scandir", scandir)
+
+
+def test_a_failing_card_ends_no_scan(tmp_path, monkeypatch):
+    iso = make_disc(tmp_path / "Games" / "Okami.iso", "SLUS_215.15")
+    failing_card(monkeypatch, tmp_path / "card", tmp_path / "Games")
+    assert [game.file for game in scan([tmp_path / "Games", tmp_path / "card"])] == [iso]
+    assert read_disc(tmp_path / "card" / "Okami.iso") is None

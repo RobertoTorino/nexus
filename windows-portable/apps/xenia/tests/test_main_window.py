@@ -26,7 +26,8 @@ from bc250_core.portable import INFO as MENU_INFO
 from bc250_core.updates import ReleaseInfo
 from conftest import fake_install, make_iso, make_package, make_xex
 from xenia_manager import APP_ID, APP_NAME, EXE_NAME, INFO, LOGO_PATH, ROOT, __version__, emulator, shortcuts
-from xenia_manager.main_window import NO_STEAM, NOT_THE_GAMES, NOTHING_TO_CHANGE, OPEN_A_FOLDER, MainWindow
+from xenia_manager.main_window import (NO_STEAM, NOT_THE_GAMES, NOTHING_TO_CHANGE, OPEN_A_FOLDER, PICK_A_GAME,
+                                      MainWindow)
 
 
 class FakePad:
@@ -405,7 +406,11 @@ def test_the_folder_browser_goes_by_the_controller(qapp, tmp_path, monkeypatch):
     window.on_action("x")                                          # X: this folder
     assert window.panes.currentWidget() is window.games_pane and window.games_view == "folders"
     assert f"folder:{target}" in window.games_pane.list.pills and "1 game(s) in it" in window.games_pane.status.text()
-    window.games_pane.list.pills["browse"].click()
+    window.games_pane.list.pills["browse"].click()                 # opens where the folder was added (owner)
+    assert window.browser.path == target
+    window.on_action("back")                                       # B: up a level, to the place
+    assert window.browser.path == user / "Games"
+    window.on_action("back")                                       # the places
     window.on_action("back")                                       # B at the places: back to the folders
     assert window.panes.currentWidget() is window.games_pane and window.browser is None
     window.close()
@@ -483,7 +488,9 @@ def test_the_log_is_read_in_the_app(qapp, tmp_path, monkeypatch):
     qapp.processEvents()
     texts = [label.text() for label in window.log_pane.findChildren(type(window.status))]
     assert "Game folders" in texts and "Games" in texts
-    assert window.log_pane.lines.text().splitlines() == [f"line {n}" for n in range(288, 300)]
+    assert window.log_pane.lines.toPlainText().splitlines() == [f"line {n}" for n in range(288, 300)]
+    summary = window.log_pane.lines.verticalScrollBar()                 # the newest lines in sight, never cut off
+    assert summary.value() == summary.maximum() and window.log_pane.lines not in window.focusables()
     assert window.legend.items[0] == ("A", "View log")
     window.on_action("accept")                                     # A: the whole log, here
     view = window.log_pane.view
@@ -545,13 +552,13 @@ def test_menu_shows_the_panes_information_and_the_icon_is_touch_only(qapp, tmp_p
     qapp.processEvents()
     assert window.xenia_info not in window.focusables()
     window.on_action("menu")
-    assert window.popup is not None and "needs no firmware" in window.popup.text.text()
+    assert window.popup is not None and "needs no firmware" in window.popup.text.toPlainText()
     window.on_action("menu")
     assert window.popup is None
     window.games_card.setFocus()
     qapp.processEvents()
     window.on_action("menu")
-    assert window.popup is not None and "to play from Steam" in window.popup.text.text()
+    assert window.popup is not None and "to play from Steam" in window.popup.text.toPlainText()
     window.on_action("menu")
     assert window.popup is None and window.games_card.hasFocus()
     window.close()
@@ -575,3 +582,50 @@ def test_no_path_on_the_screen_shows_the_users_name(qapp):
     finally:
         import shutil
         shutil.rmtree(games, ignore_errors=True)
+
+
+def test_a_game_is_played_through_steam_and_steam_is_opened(qapp, tmp_path, monkeypatch):
+    """X on a game in Steam starts it through Steam, by its shortcut's appid; a game not in Steam yet says how; the
+    Open Steam row above the games opens Steam's library (owner, 29-10-2026)."""
+    home = tmp_path / "emulator"
+    fake_install(home)
+    game = make_iso(tmp_path / "me" / "Games" / "Halo 3.iso")
+    steam_dir = tmp_path / "Steam"
+    (steam_dir / "userdata" / "1" / "config").mkdir(parents=True)
+    opened = []
+
+    def with_steam_closed(change):
+        change()
+        return False
+    window = make(qapp, home, steam_dir=steam_dir, steam_closed=with_steam_closed, user_home=tmp_path / "me",
+                  open_url=opened.append)
+    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
+    window.add_folder(tmp_path / "me" / "Games")
+    window.games_card.setFocus()
+    window.games_pane.list.pills[str(game)].setFocus()
+    qapp.processEvents()
+    title = window.focused_game().title
+    assert window.legend.items[:3] == [("A", "Steam mark"), ("X", "Play"), ("Y", "Update Steam")]
+    window.on_action("x")                                          # not in Steam yet: says how
+    assert opened == [] and window.games_pane.status.text() == (f"{title} is not in Steam yet: A marks it, then Y "
+                                                                "Update Steam puts it there.")
+    window.on_action("accept")                                     # A: the Steam mark, Y: into Steam
+    window.on_action("y")
+    assert wait_for(qapp, lambda: not window.busy)
+    window.games_pane.list.pills[str(game)].setFocus()
+    qapp.processEvents()
+    window.on_action("x")                                          # X: started through Steam
+    item = next(item for item in steam.shortcuts(steam_dir) if shortcuts.ours(item))
+    number = shortcuts.numbers(steam_dir)[str(game)]
+    assert number == steam.appid(str(steam.field(item, "Exe")), str(steam.field(item, "AppName")))
+    assert opened == [steam.play_url(number)] and window.games_pane.status.text() == f"Starting {title} in Steam…"
+    window.games_pane.list.pills[str(game)].setFocus()
+    window.on_action("up")                                         # above the games: Open Steam
+    assert window.open_steam.hasFocus()
+    assert window.legend.items[0] == ("A", "Open Steam") and ("X", "Play") not in window.legend.items
+    window.on_action("accept")
+    assert opened[-1] == steam.OPEN_URL and window.games_pane.status.text() == "Opening Steam…"
+    window.toggle_folders()                                        # X on the folders plays nothing
+    window.on_action("x")
+    assert opened[-1] == steam.OPEN_URL and window.games_pane.status.text() == PICK_A_GAME
+    window.close()

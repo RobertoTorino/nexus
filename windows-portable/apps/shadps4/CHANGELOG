@@ -1,3 +1,19 @@
+Changelog: 29-10-2026 21:56:04
+
+Release 1.0.0.
+
+Changelog: 29-10-2026 21:44:22
+
+Added. X Play on a game of Your games that is in Steam starts it through Steam (steam://rungameid, Steam started
+first when it does not run; owner, 29-10-2026: a game started from the manager); a game not in Steam yet says how it
+gets there. Open Steam, a row at the top of Your games, opens Steam's library in Big Picture (A Open Steam). Every
+browser of the app opens again in the folder last taken or picked a file in (core's browse.remembered), while it is
+there.
+
+Fixed. The Log pane's newest lines were a label that grew past the pane and was cut off at the top (owner,
+29-10-2026): they are a view of their own now, its newest line in view, which a finger scrolls; a tap on it shows the
+whole log as A does.
+
 Changelog: 29-10-2026 19:16:18
 
 Release 0.1.0.

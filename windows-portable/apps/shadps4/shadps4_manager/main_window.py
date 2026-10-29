@@ -18,9 +18,10 @@ asks first, as the portal does. shadPS4's own window (Big Picture) is never show
 files (userdata: the quit hotkeys, View + Menu) is set after an install and when the window opens.
 
 The Your games pane (panes.py, library.py): the games in the chosen folders, played from Steam (owner, 29-10-2026: the
-app never starts a game itself); A marks one for Steam, Y Update Steam makes Steam's shortcuts match the marks; LB
-Folders lists the folders, the usual places and a drive to add, and Browse, which opens the folder browser (core's
-browse); LB Games goes back; RB Steam artwork keeps the SteamGridDB key. The Log pane: shadPS4's folder and the
+app never starts shadPS4 itself); A marks one for Steam, X plays one that is in Steam, through Steam
+(steam://rungameid), Y Update Steam makes Steam's shortcuts match the marks; Open Steam, the row at the top, opens
+Steam's library; LB Folders lists the folders, the usual places and a drive to add, and Browse, which opens the folder
+browser (core's browse; every browser opens where the last one of its kind was left: browse.remembered); LB Games goes back; RB Steam artwork keeps the SteamGridDB key. The Log pane: shadPS4's folder and the
 newest lines of the app's log; A (or a tap on the pane) shows the whole log in the pane.
 
 The Settings pane: the BC250 app's settings of shadPS4, in tabs (LB and RB: Picture, Sound, Controller, In a game), a
@@ -68,6 +69,8 @@ RUNNING = "shadPS4 is open: close it first, it would write its own settings over
 NOT_INSTALLED = "Install shadPS4 first: the settings are in its folder."
 BUSY = "Wait a moment: the app is still busy with the step before."
 OPEN_A_FOLDER = "Open a folder first: the A button opens the one the focus is on, then the X button takes it."
+NO_GAME = "Put the focus on a game first: the X button starts it through Steam."
+BROWSE_KEYS = {FOLDER: "folders", MODULES: "modules", PACKAGE: "packages"}   # browse.remembered's, per kind
 ALL_SETTINGS = shadps4_settings.SETTINGS
 # The Settings pane's information, per tab: what each setting of the tab does
 TAB_INFO = {key: ("The A button changes the setting the focus is on, the LB and RB buttons change the tab; shadPS4 "
@@ -188,12 +191,14 @@ class MainWindow(PortableWindow):
                  steam_dir: Path | None | bool = False,
                  steam_closed: Callable[[Callable[[], None]], bool] = steam.with_steam_closed,
                  user_home: Path | None = None, drives: Callable[[], list[Path]] = library.removable_drives,
-                 roots: Callable[[], list[Path]] = browse.drives, settings: QSettings | None = None):
+                 roots: Callable[[], list[Path]] = browse.drives, settings: QSettings | None = None,
+                 play: Callable[[str], None] = steam.open_url):
         """*steam_dir*: Steam's folder (False: found on this system, None: no Steam); *runtime_missing*: the Visual
         C++ runtime's files that are missing; *unpack*: Extract PKG's job (extract.unpack); *connect*: opens the
         connection to a shadNet server (tests pass a fake server); *user_home*: the user's folder (the usual places);
         *drives*: the removable drives offered as folders, *roots*: every drive the browser offers; *settings*: the
-        app's (its .ini, create_app's), where the game folders are kept."""
+        app's (its .ini, create_app's), where the game folders are kept; *play*: hands a steam:// address to Steam (a
+        game, Steam's library)."""
         super().__init__(gamepad)
         self.setWindowTitle(f"{APP_NAME} {__version__}")
         self.log = applog.logger(APP_ID)
@@ -215,6 +220,7 @@ class MainWindow(PortableWindow):
         self.steam_dir = steam.find_steam() if steam_dir is False else steam_dir
         self.user_home, self.drives, self.roots = user_home, drives, roots
         self.settings = settings if settings is not None else QSettings()
+        self.play = play
         self.games: list[Game] = []
         self.in_steam: dict[str, str] = {}
         self.marked: set[str] = set()
@@ -243,7 +249,7 @@ class MainWindow(PortableWindow):
         cards.setContentsMargins(0, 0, 0, 0)
         cards.setSpacing(px(12))
         self.shadps4_card = Card("shadPS4", "Install it, the system modules and your packages.")
-        self.games_card = Card("Your games", "Mark them for Steam, and their folders.")
+        self.games_card = Card("Your games", "Mark them for Steam, play them, their folders.")
         self.settings_card = Card("Settings", "The picture, the sound and the controller.")
         self.shadnet_card = Card("shadNet", "The online account shadPS4 signs in with.")
         self.log_card = Card("Log", "shadPS4's folder, and this app's log.")
@@ -273,6 +279,9 @@ class MainWindow(PortableWindow):
         self.pane.column.addWidget(self.status)
         self.settings_pane = SettingsPane()
         self.games_pane = ListPane("Your games", "Your games", GAMES_INFO)
+        self.steam_row = Row("Open Steam")              # Steam's library, where the games are played
+        self.games_pane.column.insertWidget(3, self.steam_row)
+        self.games_pane.column.insertSpacing(4, px(6))
         self.browse_pane = ListPane("Choose a folder", "Choosing a folder or a file", BROWSE_INFO)
         self.shadnet_pane = ShadNetPane()
         self.key_pane = KeyPane()
@@ -306,6 +315,7 @@ class MainWindow(PortableWindow):
         self.log_card.activated.connect(self.view_log)
         self.log_pane.tapped.connect(self.view_log)
         self.games_pane.list.picked.connect(self.game_picked)
+        self.steam_row.activated.connect(self.open_steam)
         self.browse_pane.list.picked.connect(self.browse_picked)
         self.confirm_key = False                        # Remove key pressed once
         for setting in ALL_SETTINGS:
@@ -472,9 +482,14 @@ class MainWindow(PortableWindow):
                      *([("LB", "Modules")] if installed else []),
                      *([("RB", "Packages")] if not self.busy else [])]
         elif pane is self.games_pane:
-            items = ([("A", "Steam mark"), ("Y", "Update Steam"), ("LB", "Folders")]
-                     if self.games_view == GAMES_VIEW else [("A", "Choose"), ("LB", "Games")]) + \
-                    [("RB", "Steam artwork")]
+            if self.games_view != GAMES_VIEW:
+                items = [("A", "Choose"), ("LB", "Games")]
+            elif self.steam_row.hasFocus():
+                items = [("A", "Open Steam"), ("Y", "Update Steam"), ("LB", "Folders")]
+            else:
+                items = [("A", "Steam mark"), *([("X", "Play")] if self.games_pane.list.focused() else []),
+                         ("Y", "Update Steam"), ("LB", "Folders")]
+            items.append(("RB", "Steam artwork"))
         elif pane is self.browse_pane:
             if self.browsing == TARGET:
                 items = [("A", "Press again" if self.replace_asked else "Unpack here")]
@@ -500,8 +515,9 @@ class MainWindow(PortableWindow):
             self.legend.set_items(self.legend_items())
 
     def focus_list(self, pane: ListPane) -> None:
-        """The list's first row, or the pane's card while the list is empty."""
-        (pane.list.first() or self.cards[pane]).setFocus()
+        """The list's first row, or (Your games) Open Steam, or the pane's card while the list is empty."""
+        steam_row = self.steam_row if pane is self.games_pane and not self.steam_row.isHidden() else None
+        (pane.list.first() or steam_row or self.cards[pane]).setFocus()
 
     # Your games
 
@@ -546,6 +562,10 @@ class MainWindow(PortableWindow):
                                                            "add the one your games are in; the RB button on the "
                                                            "shadPS4 pane unpacks a package.")
         pane.list.set_items(rows)
+        shown = self.games_view == GAMES_VIEW           # Open Steam above the games, not above the folders
+        if not shown and self.steam_row.hasFocus():
+            (pane.list.first() or self.games_card).setFocus()
+        self.steam_row.setVisible(shown)
         self.update_legend()
 
     def game_text(self, game: Game) -> str:
@@ -602,14 +622,55 @@ class MainWindow(PortableWindow):
         self.log.info(f"Game folder taken off the list: {folder}.")
         self.focus_list(self.games_pane)
 
+    def play_game(self) -> None:
+        """X on a game: started through Steam (owner, 29-10-2026), which starts shadPS4 with it full screen as its
+        shortcut says; Steam starts first when it does not run. A game not in Steam yet says how it gets there."""
+        key = self.games_pane.list.focused()
+        game = next((g for g in self.games if str(g.eboot) == key), None)
+        if game is None:
+            self.games_pane.status.setText(NO_GAME)
+            return
+        try:
+            number = shortcuts.numbers(self.steam_dir).get(key) if self.steam_dir is not None else None
+        except OSError as error:
+            self.log.error(f"Steam's shortcuts could not be read: {error}")
+            number = None
+        if number is None:
+            self.games_pane.status.setText(f"{game.title} is not in Steam yet: A marks it, then Y Update Steam puts "
+                                           "it there.")
+            return
+        url = steam.play_url(number)
+        try:
+            self.play(url)
+        except OSError as error:
+            self.games_pane.status.setText(f"Steam could not be asked to start {game.title}: {error.strerror or error}")
+            self.log.error(f"Starting {game.title} through Steam ({url}) failed: {error}")
+            return
+        self.games_pane.status.setText(f"Starting {game.title} in Steam…")
+        self.log.info(f"Starting {game.title} in Steam ({url}).")
+
+    def open_steam(self) -> None:
+        """A on Open Steam: Steam's library (in Big Picture), started when Steam does not run."""
+        try:
+            self.play(steam.OPEN_URL)
+        except OSError as error:
+            self.games_pane.status.setText(f"Steam could not be opened: {error.strerror or error}")
+            self.log.error(f"Opening Steam ({steam.OPEN_URL}) failed: {error}")
+            return
+        self.games_pane.status.setText("Opening Steam…")
+        self.log.info("Opening Steam.")
+
     # The browser (core's browse): a game folder, the system modules, a package, and where a package is unpacked
 
     def show_browser(self, looking_for: str) -> None:
+        """The browser for *looking_for*, opened where the last one of its kind was left (owner, 29-10-2026), else
+        in Downloads (the modules, a package) or at the places (a game folder)."""
         self.browsing = looking_for
         self.replace_asked = ""
         start = browse.places(self.user_home, self.roots)
         downloads = (self.user_home or Path.home()) / "Downloads"
-        at = downloads if downloads.is_dir() else None
+        remembered = browse.remembered(self.settings, BROWSE_KEYS[looking_for])
+        at = remembered or (downloads if downloads.is_dir() else None)
         self.browse_pane.info.info = BROWSE_INFO
         if looking_for == MODULES:
             self.browser = browse.Browser(start, userdata.MODULE_SUFFIXES, at)
@@ -620,7 +681,7 @@ class MainWindow(PortableWindow):
             self.browse_pane.heading.setText("Choose a package")
             self.cards[self.browse_pane] = self.shadps4_card
         else:
-            self.browser = browse.Browser(start)
+            self.browser = browse.Browser(start, (), remembered)
             self.browse_pane.heading.setText("Choose a folder")
             self.cards[self.browse_pane] = self.games_card
         self.browse_pane.status.setText("")
@@ -645,6 +706,8 @@ class MainWindow(PortableWindow):
         if self.browser is None:
             return
         picked = self.browser.open(key)
+        if picked is not None:
+            browse.remember(self.settings, BROWSE_KEYS[self.browsing], picked.parent)
         if picked is not None and self.browsing == PACKAGE:
             self.choose_target(picked)
             return
@@ -664,6 +727,7 @@ class MainWindow(PortableWindow):
             self.browse_pane.status.setText(OPEN_A_FOLDER)
             return
         folder = self.browser.path
+        browse.remember(self.settings, BROWSE_KEYS[self.browsing], folder)
         self.leave_browser()
         if self.browsing == MODULES:
             self.install_modules(folder)
@@ -1048,6 +1112,8 @@ class MainWindow(PortableWindow):
             self.paste(self.field_pane)
         elif pane is self.shadnet_pane:
             self.shadnet_job(create=True)
+        elif pane is self.games_pane and self.games_view == GAMES_VIEW:
+            self.play_game()
 
     def y_action(self) -> None:
         pane = self.panes.currentWidget()

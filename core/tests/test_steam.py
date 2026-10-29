@@ -199,3 +199,15 @@ def test_steam_on_windows(tmp_path, monkeypatch):
 def test_windows_process_list_finds_this_python():
     assert steam._windows_running(Path(sys.executable).name.lower())
     assert not steam._windows_running("no-such-program.exe")
+
+
+def test_a_shortcut_is_started_by_its_game_id(monkeypatch):
+    """A game started from its manager goes through Steam (owner, 29-10-2026): steam://rungameid/ with the shortcut's
+    appid in the high half."""
+    assert steam.play_url(0x9ABCDEF0) == f"steam://rungameid/{(0x9ABCDEF0 << 32) | 0x02000000}"
+    assert steam.play_url(steam.as_int32(0x9ABCDEF0)) == steam.play_url(0x9ABCDEF0)   # signed as in the file
+    ran = []
+    monkeypatch.setattr(steam, "WINDOWS", False)
+    monkeypatch.setattr(steam, "_run", ran.append)
+    steam.open_url(steam.OPEN_URL)
+    assert ran == [["xdg-open", "steam://open/bigpicture"]]

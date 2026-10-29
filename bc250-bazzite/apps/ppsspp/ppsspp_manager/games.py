@@ -238,10 +238,15 @@ def _found(root: Path, depth: int = MAX_DEPTH):
     except OSError:
         return
     for entry in entries:
-        if entry.is_file():
+        try:
+            plain = entry.is_file()
+            folder = not plain and depth > 0 and entry.is_dir(follow_symlinks=False)
+        except OSError:                                 # a failing card: skipped, the scan goes on
+            continue
+        if plain:
             if entry.name.lower().endswith(DISC_SUFFIXES) or entry.name.upper() == "EBOOT.PBP":
                 yield Path(entry.path)
-        elif depth > 0 and entry.is_dir(follow_symlinks=False) and not entry.name.startswith("."):
+        elif folder and not entry.name.startswith("."):
             yield from _found(Path(entry.path), depth - 1)
 
 

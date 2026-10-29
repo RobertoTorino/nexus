@@ -139,11 +139,10 @@ def test_the_pad_file_for_player_1(tmp_path):
     assert userdata.pad_device(tmp_path) == "XInput Pad #2"
 
 
-def test_a_games_screen_in_its_own_settings(tmp_path):
-    """The screen choice in config\\custom_configs\\config_<serial>.yml: made from nothing, or two lines of a file
-    RPCS3 wrote; read back, RPCS3's default without a file; X steps round."""
-    path = userdata.game_config(tmp_path, "BLUS30443")
-    assert path == tmp_path / "config" / "custom_configs" / "config_BLUS30443.yml"
+def test_the_screen_in_a_settings_file(tmp_path):
+    """The screen choice in config\\config.yml (the Settings pane's Screen): made from nothing, or two lines of a file
+    RPCS3 wrote; read back, RPCS3's default without a file."""
+    path = tmp_path / "config" / "config.yml"
     assert userdata.read_screen(path) == userdata.WIDE
     userdata.write_screen(path, userdata.NARROW)
     assert path.read_text() == "Video:\n  Stretch To Display Area: false\n  Aspect ratio: 4:3\n"
@@ -160,7 +159,6 @@ def test_a_games_screen_in_its_own_settings(tmp_path):
     userdata.write_screen(path, userdata.FILL)
     assert path.read_text() == "Audio:\n  Renderer: Cubeb\nVideo:\n  Stretch To Display Area: true\n  Aspect ratio: 16:9\n"
     assert userdata.SCREENS == {"wide": "16:9", "narrow": "4:3", "fill": "Fill screen"}
-    assert [userdata.next_screen(s) for s in ("wide", "narrow", "fill", "odd")] == ["narrow", "fill", "wide", "wide"]
 
 
 def test_packages_and_licenses_in_a_folder(tmp_path):

@@ -153,6 +153,26 @@ def shutdown_command() -> list[str]:
     return [_steam_program(), "-shutdown"]
 
 
+# Steam's library, in Big Picture on a handheld's screen; Steam starts when it does not run (owner, 29-10-2026: an
+# Open Steam button in the game managers)
+OPEN_URL = "steam://open/bigpicture"
+
+
+def play_url(number: int) -> str:
+    """The steam:// address that starts the non-Steam game whose shortcut has appid *number* (its 32 bits, as
+    Change.number): Steam's game id for a shortcut is that appid in the high half with 0x02000000 below it. Steam
+    starts first when it does not run (owner, 29-10-2026: a game started from its manager, through Steam)."""
+    return f"steam://rungameid/{((number & 0xFFFFFFFF) << 32) | 0x02000000}"
+
+
+def open_url(url: str) -> None:
+    """A steam:// address handed to Steam: Windows' handler for it (os.startfile), xdg-open elsewhere."""
+    if WINDOWS:
+        os.startfile(url)  # type: ignore[attr-defined]  # noqa: S606 (a steam:// address, never a file)
+    else:
+        _run(["xdg-open", url])
+
+
 def _run(command: list[str]) -> None:
     """Starts a Steam command in the background; a thread collects it when it ends, so it leaves no zombie."""
     process = subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,

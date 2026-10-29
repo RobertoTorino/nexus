@@ -27,6 +27,15 @@ _PREFIX = re.compile(r"^\[PS4\]\s*", re.IGNORECASE)
 OVERLAYS = ("-UPDATE", "-patch", "-mods")
 
 
+def is_file(path: Path) -> bool:
+    """path.is_file(), False when it cannot be asked: a failing or half-mounted SD card answers with an error (EIO)
+    instead of no, which ended the scan (the Windows suite's empty card slot, 29-10-2026)."""
+    try:
+        return path.is_file()
+    except OSError:
+        return False
+
+
 @dataclass(frozen=True)
 class Game:
     eboot: Path
@@ -42,7 +51,7 @@ class Game:
     def picture(self, name: str) -> Path | None:
         """One of the game's own pictures in sce_sys (icon0.png: 512 × 512, pic1.png: 1920 × 1080), if it has it."""
         path = self.folder / "sce_sys" / name
-        return path if path.is_file() else None
+        return path if is_file(path) else None
 
 
 def read_sfo(data: bytes) -> dict[str, str | int]:
@@ -86,13 +95,20 @@ def _eboots(root: Path, depth: int = MAX_DEPTH):
         entries = list(os.scandir(root))
     except OSError:
         return
+    folders = []
     for entry in entries:
-        if entry.is_file() and entry.name.lower() == "eboot.bin":
+        try:
+            plain = entry.is_file()
+            folder = not plain and depth > 0 and entry.is_dir(follow_symlinks=False)
+        except OSError:                                 # a failing card: skipped, the scan goes on
+            continue
+        if plain and entry.name.lower() == "eboot.bin":
             yield Path(entry.path)
-    if depth > 0:
-        for entry in entries:
-            if entry.is_dir(follow_symlinks=False) and not entry.name.startswith(".") and entry.name != "sce_sys":
-                yield from _eboots(Path(entry.path), depth - 1)
+        elif folder:
+            folders.append(entry)
+    for entry in folders:
+        if not entry.name.startswith(".") and entry.name != "sce_sys":
+            yield from _eboots(Path(entry.path), depth - 1)
 
 
 def scan(folders: list[Path]) -> list[Game]:

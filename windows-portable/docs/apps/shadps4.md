@@ -120,13 +120,17 @@ You play the games from Steam; the app puts them there.
   Steam must have been started once on the device, and shadPS4 must be installed. When there is nothing to change,
   **Y** says so on the status line instead. Right after writing, the app reads Steam's file back and counts the games
   in Steam from that; should a game it wrote not be found, the status line and the log say which.
+- **X Play** on a game that is in Steam starts it, through Steam: Steam starts first when it does not run, then
+  shadPS4 with the game, full screen, as from Steam's library. A game that is not in Steam yet says so: **A** marks
+  it, **Y** puts it there.
+- **Open Steam**, the row at the top of the list, opens Steam's library in Big Picture mode (**A Open Steam**).
 - **LB Folders** shows your game folders instead of the games; **LB** or **B** goes back to the games. The usual
   places that are on the device (Games, Downloads and Documents in your user folder) and each removable drive, such as
   an SD card, are offered as **+ Add**. **A** twice on a folder takes it off the list: the first press asks, for five
   seconds. Its games stay where they are.
 - **+ Browse to a folder…** opens the app's own browser, made for the controller: your Games, Downloads, Documents and
   Desktop folders and every drive first. **A** opens the folder the focus is on, **B** goes a level up (and from the
-  places back to your folders), and **X Add this folder** adds the folder that is open.
+  places back to your folders), and **X Add this folder** adds the folder that is open. Every browser of the app opens again in the folder you last took a folder or picked a file in, while it is there.
 
 The pictures in Steam come from inside the game: its icon (`sce_sys\icon0.png`) on the cover, the wide picture and as
 the logo, its background (`sce_sys\pic1.png`) on the banner; without them the title is drawn on a dark background. With
@@ -222,7 +226,7 @@ The password goes over the network as it is, as shadPS4 itself sends it: use one
 shadPS4's folder, how many of the system modules it cannot do without are there, how many game folders you have, and
 the newest lines of this app's log (the installs, the modules copied, the packages unpacked, the Steam changes, the
 settings and the shadNet account changed). **A View log**, or a tap on the pane, shows the whole log in the pane: the
-d-pad scrolls it, and **B** goes back.
+d-pad scrolls it, and **B** goes back. The newest lines show at the bottom of a box of their own, which a finger can scroll; a tap on it shows the whole log too.
 
 ## How it works
 

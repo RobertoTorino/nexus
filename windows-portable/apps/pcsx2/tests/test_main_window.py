@@ -18,14 +18,14 @@ from pathlib import Path
 
 from PyQt6.QtCore import QSettings
 
-from bc250_core import portable
+from bc250_core import portable, steam
 from bc250_core.gamepad import Gamepad
 from bc250_core.portable import BACK, EXIT, VIEW
 from bc250_core.portable import INFO as MENU_INFO
 from conftest import make_disc
 from pcsx2_manager import APP_ID, APP_NAME, EXE_NAME, INFO, LOGO_PATH, ROOT, __version__, emulator, shortcuts
 from pcsx2_manager.main_window import (BIOS_NEEDS_PCSX2, NO_BIOS, NO_BIOS_TO_REMOVE, NO_CARD_TO_COPY, NO_STEAM,
-                                      NOT_THE_GAMES, NOTHING_TO_CHANGE, OPEN_A_FOLDER, MainWindow)
+                                      NOT_THE_GAMES, NOTHING_TO_CHANGE, OPEN_A_FOLDER, PICK_A_GAME, MainWindow)
 
 
 class FakePad:
@@ -114,7 +114,7 @@ def test_b_goes_back_and_view_exits(qapp, monkeypatch):
     window.on_action("back")                                    # on the PCSX2 card: nothing
     assert closed == [] and window.pcsx2_card.hasFocus()
     window.on_action("menu")
-    assert window.popup is not None and "biosdrain" in window.popup.text.text()
+    assert window.popup is not None and "biosdrain" in window.popup.text.toPlainText()
     window.on_action("back")                                    # B closes the information first
     assert window.popup is None and closed == []
     window.settings_card.setFocus()
@@ -378,7 +378,11 @@ def test_the_folder_browser_goes_by_the_controller(qapp, tmp_path, monkeypatch):
     window.browse_pane.list.pills[f"dir:{target}"].click()
     window.on_action("x")                                          # X: this folder
     assert window.panes.currentWidget() is window.games_pane and f"folder:{target}" in window.games_pane.list.pills
-    window.games_pane.list.pills["browse"].click()
+    window.games_pane.list.pills["browse"].click()                 # opens where the folder was added (owner)
+    assert window.browser.path == target
+    window.on_action("back")                                       # B: up a level, to the place
+    assert window.browser.path == user / "Games"
+    window.on_action("back")                                       # the places
     window.on_action("back")                                       # B at the places: back to the folders
     assert window.panes.currentWidget() is window.games_pane and window.browser is None
     window.close()
@@ -475,7 +479,9 @@ def test_the_log_is_read_in_the_app(qapp, tmp_path, monkeypatch):
     cells = [grid.itemAt(i).widget().text() for i in range(grid.count())]
     rows = dict(zip(cells[0::2], cells[1::2]))
     assert rows["Played"] == "5 min 46 s" and rows["PCSX2's last run"].endswith("SLUS-21553")
-    assert "Played Lumines Plus" in window.log_pane.lines.text()
+    assert "Played Lumines Plus" in window.log_pane.lines.toPlainText()
+    summary = window.log_pane.lines.verticalScrollBar()                 # the newest lines in sight, never cut off
+    assert summary.value() == summary.maximum() and window.log_pane.lines not in window.focusables()
     assert window.legend.items[0] == ("A", "View log")
     window.on_action("accept")                                     # A: the whole log, here
     view = window.log_pane.view
@@ -528,6 +534,7 @@ def test_the_bios_is_chosen_in_the_browser_and_removed(qapp, tmp_path, monkeypat
     assert window.panes.currentWidget() is window.pane
     assert sorted(p.name for p in (home / "bios").iterdir()) == ["SCPH-70012.bin", "SCPH-70012.nvm"]
     assert "BIOS = SCPH-70012.bin" in (home / "inis" / "PCSX2.ini").read_text(encoding="utf-8")
+    assert window.settings.value("browse/bios") == str(downloads)               # the next browser opens there
     assert window.status.text() == "PCSX2 uses SCPH-70012.bin now." and "No BIOS" not in window.pcsx2_card.text.text()
     is_running[0] = True                                         # PCSX2 writes its settings when it closes
     for button in ("x", "previous"):
@@ -645,3 +652,51 @@ def test_no_path_on_the_screen_shows_the_users_name(qapp, tmp_path):
     finally:
         import shutil
         shutil.rmtree(games, ignore_errors=True)
+
+
+def test_a_game_is_played_through_steam_and_steam_is_opened(qapp, tmp_path, monkeypatch):
+    """X on a game in Steam starts it through Steam, by its shortcut's appid; a game not in Steam yet says how; the
+    Open Steam row above the games opens Steam's library (owner, 29-10-2026)."""
+    home = tmp_path / "emulator"
+    fake_install(home)
+    with_bios(home)
+    game = make_disc(tmp_path / "me" / "Games" / "A.iso", "SLUS_123.45")
+    steam_dir = tmp_path / "Steam"
+    (steam_dir / "userdata" / "1" / "config").mkdir(parents=True)
+    opened = []
+
+    def with_steam_closed(change):
+        change()
+        return False
+    window = make(qapp, home, steam_dir=steam_dir, steam_closed=with_steam_closed, user_home=tmp_path / "me",
+                  open_url=opened.append)
+    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
+    window.add_folder(tmp_path / "me" / "Games")
+    window.games_card.setFocus()
+    window.games_pane.list.pills[str(game)].setFocus()
+    qapp.processEvents()
+    title = window.focused_game().title
+    assert window.legend.items[:3] == [("A", "Steam mark"), ("X", "Play"), ("Y", "Update Steam")]
+    window.on_action("x")                                          # not in Steam yet: says how
+    assert opened == [] and window.games_pane.status.text() == (f"{title} is not in Steam yet: A marks it, then Y "
+                                                                "Update Steam puts it there.")
+    window.on_action("accept")                                     # A: the Steam mark, Y: into Steam
+    window.on_action("y")
+    assert wait_for(qapp, lambda: not window.busy)
+    window.games_pane.list.pills[str(game)].setFocus()
+    qapp.processEvents()
+    window.on_action("x")                                          # X: started through Steam
+    item = next(item for item in steam.shortcuts(steam_dir) if shortcuts.ours(item))
+    number = shortcuts.numbers(steam_dir)[str(game)]
+    assert number == steam.appid(str(steam.field(item, "Exe")), str(steam.field(item, "AppName")))
+    assert opened == [steam.play_url(number)] and window.games_pane.status.text() == f"Starting {title} in Steam…"
+    window.games_pane.list.pills[str(game)].setFocus()
+    window.on_action("up")                                         # above the games: Open Steam
+    assert window.open_steam.hasFocus()
+    assert window.legend.items[0] == ("A", "Open Steam") and ("X", "Play") not in window.legend.items
+    window.on_action("accept")
+    assert opened[-1] == steam.OPEN_URL and window.games_pane.status.text() == "Opening Steam…"
+    window.toggle_folders()                                        # X on the folders plays nothing
+    window.on_action("x")
+    assert opened[-1] == steam.OPEN_URL and window.games_pane.status.text() == PICK_A_GAME
+    window.close()

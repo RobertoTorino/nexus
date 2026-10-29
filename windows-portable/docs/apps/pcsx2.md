@@ -66,7 +66,7 @@ The **BIOS** row says which dump PCSX2 uses, or **No BIOS yet** (the PCSX2 card 
 - **X Choose BIOS** opens the app's own browser, made for the controller, in your Downloads: it shows the folders and
   the BIOS dumps (`.bin`, `.rom`). **A** opens a folder, **B** goes a level up, and **A** on the dump chooses it: the
   app copies it, with the files beside it under the same name (`.nvm`, `.mec`, `.erom`), into PCSX2's `bios` folder
-  and makes PCSX2 use it.
+  and makes PCSX2 use it. The next time the browser opens in the folder you took the dump from.
 - **LB Remove BIOS** takes the dump PCSX2 uses out of that folder again, with its files. Press it twice: the first
   press only asks, for five seconds. The dump you chose it from stays where it is; with another dump in the folder,
   PCSX2 uses that one.
@@ -84,7 +84,7 @@ The games are the PS2 disc images in your game folders and up to five folders be
 An ISO is read for its serial (SLUS-21553), and the title comes from PCSX2's own list of games; a compressed image
 is listed under its file's name. **A** on the Your games card goes to the list.
 
-You play the games from Steam; the app puts them there.
+You play the games from Steam; the app puts them there, and starts them there with **X**.
 
 - **A Steam mark** on a game marks it for Steam, or takes the mark away. **Y Update Steam** then makes Steam match the
   marks: each marked game is a non-Steam game named `[PS2] <title>` in Steam's library and its Big Picture mode; a
@@ -92,13 +92,18 @@ You play the games from Steam; the app puts them there.
   Steam must have been started once on the device. When there is nothing to change, **Y** says so on the status line
   instead. Right after writing, the app reads Steam's file back and counts the games in Steam from that; should a game
   it wrote not be found, the status line and the log say which.
+- **X Play** on a game that is in Steam starts it through Steam, as its tile in Steam's library would; Steam
+  starts first when it is not open. A game that is not in Steam yet says so: mark it with **A**, then
+  **Y Update Steam**.
+- **Open Steam**, the row above the games, opens Steam's library in Big Picture mode with **A**.
 - **LB Folders** shows your game folders instead of the games; **LB** or **B** goes back to the games. The usual
   places that are on the device (Games, Downloads and Documents in your user folder) and each removable drive, such as
   an SD card, are offered as **+ Add**. **A** twice on a folder takes it off the list: the first press asks, for five
   seconds. Its games stay where they are.
 - **+ Browse to a folder…** opens the app's own browser, made for the controller: your Games, Downloads, Documents and
   Desktop folders and every drive first. **A** opens the folder the focus is on, **B** goes a level up (and from the
-  places back to your folders), and **X Add this folder** adds the folder that is open.
+  places back to your folders), and **X Add this folder** adds the folder that is open. The browser opens again in
+  the folder you added last, while it is there.
 
 In a game started from Steam, View and Menu held together end the game (see Settings), and PCSX2 closes by itself.
 

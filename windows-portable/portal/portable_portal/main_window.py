@@ -26,7 +26,7 @@ from bc250_core.gamepad import Gamepad
 from bc250_core.platform import expand, launch_in_terminal, private
 from bc250_core.portable import AMBER, DIM, MENU, VIEW, Card, Legend, PortableHeader, PortableWindow, px, status_clock
 
-from . import APP_ICONS, APP_ID, APP_NAME, SUITE, __version__
+from . import APP_ICONS, APP_ID, APP_NAME, INTRO_SOUND, SUITE, __version__
 from .intro import INTRO_MS, Intro
 from .manifest import CATEGORIES, AppEntry
 from .portal_update import PortalUpdate, short
@@ -195,6 +195,7 @@ class MainWindow(PortableWindow):
             tile.activated.connect(lambda key=entry.key: self.main_action(key))
             self.tiles[entry.key] = tile
         self.suite_pane.wallpaper.activated.connect(self.toggle_wallpaper)
+        self.suite_pane.sound.activated.connect(self.toggle_sound)
         self.tabs.changed.connect(self.show_tab)
         self.bind("accept", self.a_action)
         self.bind("x", self.show_details)
@@ -222,7 +223,7 @@ class MainWindow(PortableWindow):
         self.confirm_timer.setInterval(CONFIRM_MS)
         self.confirm_timer.timeout.connect(self._confirm_over)
         if intro_ms > 0:                                # over the window before it shows: its first frame is dark
-            self.intro = Intro(self, intro_ms)
+            self.intro = Intro(self, intro_ms, sound=INTRO_SOUND if portable.sound_on(SUITE) else None)
             self.intro.finished.connect(self._intro_done)
             self.intro.cover()
 
@@ -258,6 +259,14 @@ class MainWindow(PortableWindow):
         self.set_wallpaper(not self.wallpaper_on)
         self.suite_pane.set_wallpaper(self.wallpaper_on)
         self.log.info(f"Wallpaper {'on' if self.wallpaper_on else 'off'}, for the suite.")
+
+    def toggle_sound(self) -> None:
+        """The Suite page's Sound row: the portal's intro sound on or off for the suite (owner, 29-10-2026), kept for
+        the next start."""
+        on = not portable.sound_on(SUITE)
+        portable.set_sound_on(SUITE, on)
+        self.suite_pane.set_sound(on)
+        self.log.info(f"Sound {'on' if on else 'off'}, for the suite.")
 
     def resizeEvent(self, event) -> None:  # noqa: N802 (Qt override)
         super().resizeEvent(event)
@@ -310,6 +319,7 @@ class MainWindow(PortableWindow):
             return
         self.stack.setCurrentWidget(self.suite_pane)
         self.suite_pane.set_wallpaper(self.wallpaper_on)
+        self.suite_pane.set_sound(portable.sound_on(SUITE))
         self.update_legend()
         self.refresh()
         self.suite_pane.wallpaper.setFocus()
@@ -392,8 +402,9 @@ class MainWindow(PortableWindow):
     def refresh(self) -> None:
         busy = self.job is not None or self.pending is not None
         for entry in self.entries:
-            status, color, _, _ = self.state(entry)
+            status, color, _, other = self.state(entry)
             self.tiles[entry.key].set_text(status, color)
+            self.tiles[entry.key].set_dot(other == "Update")       # an update is out (owner, 29-10-2026: a red dot)
         entry = self.by_key.get(self.current_key)
         if entry is None:
             self.app_pane.fill("", "", "", "", "", "")

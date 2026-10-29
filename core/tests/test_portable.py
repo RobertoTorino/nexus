@@ -385,8 +385,10 @@ def test_the_info_pill_shows_its_text_over_the_window(qapp, monkeypatch):
     card.setFocus()
     window.on_action("menu")
     popup = window.popup
-    assert popup is not None and popup.geometry() == window.rect() and popup.text.text() == "A long explanation."
-    assert popup.close_pill.hasFocus()
+    assert popup is not None and popup.geometry() == window.rect()
+    assert popup.text.toPlainText() == "A long explanation."
+    assert popup.legend.items == [("B", "Close")] and not popup.findChildren(Pill)   # no big amber pill
+    assert not popup.pills() and card.hasFocus()                           # a short text: nothing to scroll
     window.on_action("up")                                                 # the popup has the buttons
     window.on_action("back")
     assert window.popup is None and backs == [] and card.hasFocus()
@@ -536,10 +538,67 @@ def test_a_popup_holds_pills_and_keeps_the_focus(qapp, monkeypatch):
     window.on_action("accept")
     assert pressed == ["two"] and window.popup is popup             # A presses, the popup stays
     window.on_action("down")
-    assert popup.close_pill.hasFocus()
-    window.on_action("back")
+    assert two.hasFocus()                                           # nothing below the rows: the legend's B Close
+    popup.legend.entries["B"].pressed.emit()                        # a tap on B Close
     assert window.popup is None and outside.hasFocus()
     window.close()
+
+
+def test_a_long_popup_text_scrolls(qapp, monkeypatch):
+    """A long information text was cut off (owner, 29-10-2026): the popup's text is at most half the window high and
+    the d-pad's up and down scroll it."""
+    window = PortableWindow(gamepad=portable.Gamepad(source_factory=NoPad))
+    window.resize(1280, 720)
+    window.show()
+    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
+    text = "\n\n".join(f"Paragraph {n}: a line of what the page does, long enough to wrap once or twice in the "
+                        "popup's panel at the handheld's size." for n in range(40))
+    popup = window.show_popup("Title", text)
+    qapp.processEvents()
+    assert popup.text.height() <= 720 * portable.POPUP_TEXT and popup.text.scrolls()
+    assert popup.text.hasFocus() and popup.pills() == [popup.text]
+    bar = popup.text.verticalScrollBar()
+    assert bar.value() == 0
+    window.on_action("down")
+    assert bar.value() > 0 and window.popup is popup
+    window.on_action("up")
+    assert bar.value() == 0
+    window.on_action("accept")                                      # A still closes it
+    assert window.popup is None
+    window.close()
+
+
+def test_a_popup_legend_names_its_actions(qapp):
+    window = PortableWindow(gamepad=portable.Gamepad(source_factory=NoPad))
+    content = QWidget()
+    QHBoxLayout(content).addWidget(portable.Row("Red"))
+    popup = window.show_popup("Title", "Text.", None, content, [("A", "Show")])
+    assert popup.legend.items == [("A", "Show"), ("B", "Close")]
+    window.close()
+
+
+def test_a_card_shows_a_red_dot_for_an_update(qapp):
+    """The portal's tile of an app with an update shows a red dot (owner, 29-10-2026)."""
+    card = Card("Card", "Installed 1.0.0")
+    card.resize(293, 176)
+    plain = card.grab().toImage()
+    card.set_dot(True)
+    dotted = card.grab().toImage()
+    x = card.width() - portable.px(portable.DOT_INSET) - portable.px(portable.DOT_SIZE) // 2
+    y = portable.px(portable.DOT_INSET) + portable.px(portable.DOT_SIZE) // 2
+    assert dotted.pixelColor(x, y).name() == portable.DOT and plain.pixelColor(x, y).name() != portable.DOT
+    card.set_dot(False)
+    assert card.grab().toImage().pixelColor(x, y).name() != portable.DOT
+
+
+def test_the_suite_sound_switch(qapp):
+    suite = "test-suite-sound"
+    portable.look_settings(suite).remove(portable.SOUND_KEY)
+    assert portable.sound_on(suite)
+    portable.set_sound_on(suite, False)
+    assert not portable.sound_on(suite)
+    portable.set_sound_on(suite, True)
+    assert portable.sound_on(suite)
 
 
 def test_the_light_icon_is_drawn_as_the_info_icon(qapp):
@@ -597,7 +656,7 @@ def test_b_goes_back_view_exits_and_menu_shows_the_information(qapp, monkeypatch
     qapp.processEvents()
     assert window.common_items() == [portable.INFO, portable.BACK, portable.EXIT]
     window.act("menu")
-    assert window.popup is not None and window.popup.text.text() == "What the pane does."
+    assert window.popup is not None and window.popup.text.toPlainText() == "What the pane does."
     window.act("menu")
     assert window.popup is None
     window.act("back")

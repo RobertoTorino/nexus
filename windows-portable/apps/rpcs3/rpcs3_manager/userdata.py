@@ -34,11 +34,11 @@ game, the manager does the rest), never while RPCS3 runs, since RPCS3 writes its
   on the Ally the Xbox button is Windows' own, so View and Menu together are the way (pad_thread::open_home_menu is
   the only pad way out: RPCS3 has no chord that quits a game outright). The file starts with a comment of the app's,
   which RPCS3's own Pads settings drop when they save: a file RPCS3 wrote is never touched.
-* How a game fills the screen, config\\custom_configs\\config_<serial>.yml, the game's own settings in RPCS3, as its
-  own window writes them (rpcs3::utils::get_custom_config_path): the PS3's picture for a wide screen (16:9), for a
-  4:3 screen, or stretched to fill the window ([Video] Aspect ratio and Stretch To Display Area). A file RPCS3 wrote
-  (its whole config) is changed in those two lines only; RPCS3 reads what the file has and keeps its defaults for
-  the rest (cfg::decode).
+* How the games fill the screen, in config\\config.yml (the Settings pane's Screen): the PS3's picture for a wide
+  screen (16:9), for a 4:3 screen, or stretched to fill the window ([Video] Aspect ratio and Stretch To Display
+  Area), changed in those two lines only; RPCS3 reads what the file has and keeps its defaults for the rest
+  (cfg::decode). A game's own settings, config\\custom_configs\\config_<serial>.yml, which the app wrote before
+  (owner, 29-10-2026: X on a game plays it now), stay as they are and still come first for that game.
 
 One more file of RPCS3's the app only reads: its own log, log\\RPCS3.log (RPCS3 starts a new one on every start and
 keeps the one before it as RPCS3.log.gz), for what a headless install of the firmware or of packages did (the lines
@@ -223,10 +223,8 @@ XINPUT_MAPPING = (("Left Stick Left", "LS X-"), ("Left Stick Down", "LS Y-"), ("
                   ("Left Stick Deadzone", "7849"), ("Right Stick Deadzone", "8689"),
                   ("Left Stick Anti-Deadzone", "4259"), ("Right Stick Anti-Deadzone", "4259"),
                   ("Left Trigger Threshold", "30"), ("Right Trigger Threshold", "30"))
-CUSTOM_CONFIGS = Path(CONFIG_DIR) / "custom_configs"
 WIDE, NARROW, FILL = "wide", "narrow", "fill"
 SCREENS = {WIDE: "16:9", NARROW: "4:3", FILL: "Fill screen"}
-SCREEN_ORDER = (WIDE, NARROW, FILL)     # X on a game steps through them
 # What each screen choice sets under Video: (Aspect ratio, Stretch To Display Area).
 SCREEN_VALUES = {WIDE: ("16:9", "false"), NARROW: ("4:3", "false"), FILL: ("16:9", "true")}
 PACKAGE_SUFFIXES = (".pkg",)
@@ -362,11 +360,7 @@ def write_pads(home: Path, devices: tuple[str, ...] | list[str] = (XINPUT_DEVICE
     return True
 
 
-# --- How a game fills the screen --------------------------------------------------------------------------------
-
-def game_config(home: Path, serial: str) -> Path:
-    return home / CUSTOM_CONFIGS / f"config_{serial}.yml"
-
+# --- How the games fill the screen -------------------------------------------------------------------------------
 
 def _yaml_find(lines: list[str], section: str, key: str) -> tuple[int, int]:
     """(the line of the top-level *section*, the line of *key* two spaces in under it), -1 for each not there."""
@@ -406,7 +400,8 @@ def yaml_set(lines: list[str], section: str, key: str, value: str) -> None:
 
 
 def read_screen(path: Path) -> str:
-    """The screen choice a game's own settings hold; WIDE (RPCS3's default) without one."""
+    """The screen choice a settings file holds (config.yml, or a game's own settings); WIDE (RPCS3's default)
+    without one."""
     try:
         lines = path.read_text(encoding="utf-8").splitlines()
     except OSError:
@@ -417,18 +412,14 @@ def read_screen(path: Path) -> str:
 
 
 def write_screen(path: Path, screen: str) -> None:
-    """Writes the screen choice into the game's own settings, making the file when there is none. OSError is the
-    caller's; the caller makes sure RPCS3 does not run."""
+    """Writes the screen choice into a settings file (config.yml: the Settings pane's Screen), making the file when
+    there is none. OSError is the caller's; the caller makes sure RPCS3 does not run."""
     aspect, stretch = SCREEN_VALUES[screen]
     lines = path.read_text(encoding="utf-8").splitlines() if path.is_file() else []
     yaml_set(lines, "Video", "Aspect ratio", aspect)
     yaml_set(lines, "Video", "Stretch To Display Area", stretch)
     write_lines(path, lines)
 
-
-def next_screen(screen: str) -> str:
-    """The choice after *screen*: X on a game steps through 16:9, 4:3 and Fill screen."""
-    return SCREEN_ORDER[(SCREEN_ORDER.index(screen) + 1) % len(SCREEN_ORDER)] if screen in SCREEN_ORDER else WIDE
 
 
 # --- Packages ---------------------------------------------------------------------------------------------------

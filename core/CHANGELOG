@@ -1,3 +1,18 @@
+Changelog: 29-10-2026 21:33:37
+
+Breaking. InfoPopup has no Close pill any more (owner, 29-10-2026: no big amber buttons, the buttons in a legend at
+the bottom): its panel ends in a legend, B Close, with show_popup(actions=) for a popup's own entries before it
+(("A", "Show")); a tap on B Close closes it. Its text is a TextView at most half the window high, so a long text
+scrolls with the d-pad's up and down or a finger (owner, 29-10-2026: a long info text was cut off); InfoPopup.text
+is that view now, and pills() holds it while it scrolls.
+
+Added. Card.set_dot(): a red dot at a card's top right corner, for an update on the portal's tile (owner,
+29-10-2026). portable.sound_on() and set_sound_on(): the suite's sounds on or off (suite.ini, look/sound), for the
+portal's Suite page. browse.remembered() and remember(): a browser opens in the folder chosen last, while it is
+there (owner, 29-10-2026). steam.play_url(), open_url() and OPEN_URL: a non-Steam game started through Steam
+(steam://rungameid/), and Steam's library opened (owner, 29-10-2026: a game started from its manager, an Open Steam
+button). TextView takes its background (transparent in a popup) and draws a thin scroll bar without arrows.
+
 Changelog: 29-10-2026 16:36:08
 
 Fixed. browse.drives() leaves out a drive letter whose root cannot be read (a card reader or an SD slot without a

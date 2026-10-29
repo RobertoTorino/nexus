@@ -2,7 +2,8 @@
 """The controller test: every button, stick and trigger of the pad shown as it is pressed (bc250_core.gamepad's raw
 events). A button lights amber while it is held and keeps an amber letter once it was pressed, so a button that
 never answers stands out; the count says how many of them answered. The sticks are a dot in a circle, the triggers a
-bar. The test has every button, B too, so it ends by holding B (HOLD seconds), the Finish pill or Escape."""
+bar, and the stick lights follow the buttons and the sticks (FACE_COLORS). The test has every button, B too, so it
+ends by holding B (HOLD seconds), a tap on the legend's B Hold to finish, or Escape."""
 
 from __future__ import annotations
 
@@ -11,10 +12,9 @@ from collections.abc import Callable
 
 from PyQt6.QtCore import QPointF, QRectF, Qt, QTimer, pyqtSignal
 from PyQt6.QtGui import QColor, QFont, QPainter, QPen
-from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QSizePolicy, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QSizePolicy, QWidget
 
-from bc250_core.portable import (AMBER, BODY, DIM, ON_AMBER, RAISED, TEXT, InfoPill, Pane, Pill, font, px,
-                                 text_label)
+from bc250_core.portable import AMBER, BODY, DIM, ON_AMBER, RAISED, TEXT, InfoPill, Pane, font, px, text_label
 
 from . import lights
 
@@ -131,9 +131,13 @@ class ControllerPane(Pane):
 
     finished = pyqtSignal()
 
-    def __init__(self, clock: Callable[[], float] = time.monotonic, parent: QWidget | None = None):
+    def __init__(self, clock: Callable[[], float] = time.monotonic, lamps: lights.Lights | None = None,
+                 parent: QWidget | None = None):
+        """*lamps*: the stick lights, opened while the test runs (None: a test without them)."""
         super().__init__(parent)
         self.clock = clock
+        self.lamps = lamps
+        self.lit: tuple | None = None               # what the lights show now: (rgb, lamps), set only on a change
         self.running = False
         self.b_since: float | None = None
         heading = QHBoxLayout()
@@ -167,6 +171,10 @@ class ControllerPane(Pane):
         self.column.addLayout(triggers)
         self.count = text_label("", BODY + 1, QFont.Weight.DemiBold)
         self.column.addWidget(self.count)
+        self.column.addSpacing(px(6))
+        self.lights_line = text_label("", BODY + 1, color=DIM, wrap=True)     # what Windows reports, what is lit
+        self.lights_line.setVisible(lamps is not None)
+        self.column.addWidget(self.lights_line)
         self.column.addStretch()
         self.timer = QTimer(self)
         self.timer.setInterval(100)
@@ -196,6 +204,7 @@ class ControllerPane(Pane):
         self.back_buttons.hide()                        # every button is the test's: no popup meanwhile (a pill is
         self.b_since = None                             # never disabled: hidden when it does not belong to the state)
         self.timer.start()
+        self.open_lights()
 
     def finish(self) -> None:
         if not self.running:
@@ -204,7 +213,54 @@ class ControllerPane(Pane):
         self.timer.stop()
         self.b_since = None
         self.back_buttons.show()
+        self.close_lights()
         self.finished.emit()
+
+    # The stick lights, while the test runs
+
+    def open_lights(self) -> None:
+        """The stick lights taken from Windows for the test, and what it reports about them on the pane's last line."""
+        self.lit = None
+        if self.lamps is None:
+            return
+        try:
+            self.found = self.lamps.open()
+        except Exception as error:  # noqa: BLE001  (pywinrt's errors are not OSError: shown, never raised)
+            self.found = None
+            self.lights_line.setText(f"Stick lights: Windows did not answer ({error}). {NO_LIGHTS}")
+            return
+        if self.found is None:
+            self.lights_line.setText(NO_LIGHTS)
+        elif not self.found.enabled:
+            self.lights_line.setText(f"Stick lights: {self.found.text()} Switch it on in {lights.SETTINGS}, then "
+                                     "start the test again.")
+        elif not self.found.available:
+            self.lights_line.setText(f"Stick lights: {self.found.text()} {NOT_IN_FRONT}")
+        else:
+            self.lights_line.setText(f"Stick lights: {self.found.text()} {LIGHTS_HINT}")
+
+    def close_lights(self) -> None:
+        """Windows gets the lights back (Armoury Crate sets them again)."""
+        if self.lamps is not None and self.lamps.array is not None:
+            self.lamps.close()
+            self.lights_line.setText(self.lights_line.text().split(" Now:")[0])
+
+    def light(self, name: str, rgb: tuple[int, int, int], which: tuple[int, ...] | None) -> None:
+        """*rgb* on *which* stick's ring (both when None), the other dark; only when it changes, and said on the
+        pane's last line."""
+        if self.lamps is None or self.lamps.array is None or (rgb, which) == self.lit:
+            return
+        try:
+            done = self.lamps.show(rgb, which)
+        except Exception as error:  # noqa: BLE001  (as above)
+            self.lights_line.setText(f"Stick lights: Windows did not take it ({error}).")
+            self.lamps.close()
+            return
+        if done:
+            self.lit = (rgb, which)
+            where = {lights.LEFT: "the left stick", lights.RIGHT: "the right stick"}.get(which, "both sticks")
+            report = self.lights_line.text().split(" Now:")[0]
+            self.lights_line.setText(f"{report} Now: {name} on {where}.")
 
     def buttons(self) -> list[str]:
         """The buttons this controller can answer with: M1/M2 only where the ASUS channel reports them."""
@@ -234,60 +290,36 @@ class ControllerPane(Pane):
                 stick.update()
             if name == "b":
                 self.b_since = self.clock() if value else None
+            if value and name in FACE_COLORS:
+                self.light(*FACE_COLORS[name], None)
+            elif value and name in ("leftstick", "rightstick"):
+                self.light("White", lights.COLORS["White"], lights.LEFT if name == "leftstick" else lights.RIGHT)
             self.update_count()
         elif kind == "axis":
             if name in self.triggers:
                 self.triggers[name].set_value(float(value))
             elif name in ("leftx", "lefty", "rightx", "righty"):
-                self.sticks[name[:-1]].set_axis(name[-1], float(value))
+                stick = self.sticks[name[:-1]]
+                stick.set_axis(name[-1], float(value))
+                if max(abs(stick.x), abs(stick.y)) >= TILT:
+                    self.light("White", lights.COLORS["White"], lights.LEFT if stick is self.sticks["left"]
+                               else lights.RIGHT)
 
     def check_hold(self) -> None:
         if self.b_since is not None and self.clock() - self.b_since >= HOLD:
             self.finish()
 
 
-LIGHTS_TITLE = "Stick lights"               # on Y in the Controller pane's legend (owner, 29-10-2026)
-LIGHTS_TEXT = ("The lights around the sticks, set through Windows' Dynamic Lighting while this window is in front. "
-               "Close gives them back to the app that sets them otherwise, such as Armoury Crate.")
-NO_LIGHTS = ("Windows reports no lights it can set on this device. Where a controller has them, switch Dynamic "
-             f"Lighting on in {lights.SETTINGS}, then open this again.")
-
-
-class LightsPanel(QWidget):
-    """The stick lights' pills for the popup: a color on both sticks, white on one stick, or off; what Windows reports
-    under them, and what the last press did."""
-
-    def __init__(self, found: lights.Found | None, show: Callable[[tuple[int, int, int], tuple[int, ...] | None], bool],
-                 parent: QWidget | None = None):
-        super().__init__(parent)
-        self.show_lights = show
-        column = QVBoxLayout(self)
-        column.setContentsMargins(0, 0, 0, 0)
-        column.setSpacing(px(8))
-        self.report = text_label(found.text() if found is not None else NO_LIGHTS, BODY + 1, color=DIM, wrap=True)
-        column.addWidget(self.report)
-        self.pills: dict[str, Pill] = {}
-        if found is not None:
-            grid = QGridLayout()
-            grid.setSpacing(px(8))
-            choices = [(name, rgb, None) for name, rgb in lights.COLORS.items()]
-            choices += [("Left only", lights.COLORS["White"], lights.LEFT),
-                        ("Right only", lights.COLORS["White"], lights.RIGHT), ("Off", lights.OFF, None)]
-            for n, (name, rgb, lamps) in enumerate(choices):
-                pill = Pill(name, "A")
-                pill.activated.connect(lambda name=name, rgb=rgb, lamps=lamps: self.press(name, rgb, lamps))
-                self.pills[name] = pill
-                grid.addWidget(pill, n // 3, n % 3)
-            column.addLayout(grid)
-        self.status = text_label("", BODY + 1, QFont.Weight.DemiBold, AMBER, wrap=True)
-        column.addWidget(self.status)
-
-    def press(self, name: str, rgb: tuple[int, int, int], lamps: tuple[int, ...] | None) -> None:
-        try:
-            done = self.show_lights(rgb, lamps)
-        except OSError as error:
-            self.status.setText(f"Windows did not take it: {error}")
-            return
-        where = {lights.LEFT: "the left stick", lights.RIGHT: "the right stick"}.get(lamps, "both sticks")
-        self.status.setText(("Off: both sticks dark." if name == "Off" else f"{'White' if lamps else name} "
-                             f"on {where}.") if done else NO_LIGHTS)
+# The stick lights are part of the button test (owner, 29-10-2026: "we were planning on including the LED test in
+# the controller test"): while it runs, A, B, X and Y light both sticks in their color, a stick moved or pressed
+# lights its own ring white, the other dark. Windows lets the app set them only while its window is in front, and
+# gets them back when the test ends.
+FACE_COLORS = {"a": ("Green", (0, 255, 0)), "b": ("Red", (255, 0, 0)), "x": ("Blue", (0, 0, 255)),
+               "y": ("Yellow", (255, 200, 0))}
+TILT = 0.5                      # a stick this far from the middle lights its ring
+LIGHTS_HINT = "A, B, X and Y light both sticks in their color; a stick moved or pressed lights its own ring."
+NO_LIGHTS = ("Stick lights: Windows reports none it can set. Where the controller has them (the ROG Xbox Ally's "
+             f"rings around the sticks), switch Dynamic Lighting on in {lights.SETTINGS}, with the controller "
+             "listed and on, then start the test again.")
+NOT_IN_FRONT = ("Windows lets the app set them only while its window is in front: close what is over it (Armoury "
+                "Crate's overlay, Steam's), then start the test again.")

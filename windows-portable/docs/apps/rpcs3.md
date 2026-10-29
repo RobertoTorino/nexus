@@ -63,8 +63,10 @@ games** card, the firmware and the packages are installed from here.
   `.edat` licenses. **X Install from this folder** has RPCS3 install the open folder's files, without opening its
   window: the licenses first, copied into RPCS3's own folder, then each package, a game's update last (an update
   needs its game installed first). RPCS3 starts once per file, and a large package takes minutes; the status line
-  says what came. **A** on one file installs that file alone. The files in the folder itself are taken, not those in
-  its subfolders. A game's update is a package too: RPCS3 uses it when it starts the game, and Your games lists the
+  says what came. **A** on one file installs that file alone. To install some of the folder's files, **Y Mark** the
+  ones you want (a ✓ shows before each; **Y Unmark** takes it away), then **X Install marked**: those are installed
+  together, in the same order. The marks go when you open another folder. The files in the folder itself are taken,
+  not those in its subfolders. A game's update is a package too: RPCS3 uses it when it starts the game, and Your games lists the
   game once.
 - **X Remove RPCS3** removes RPCS3's program. Press it twice: the first press only changes the entry to **Press
   again** for five seconds. RPCS3's folder, with the firmware, your saves, its settings and the installed games,
@@ -114,18 +116,17 @@ You play the games from Steam; the app puts them there.
   Steam must have been started once on the device, RPCS3 must be installed with its firmware. When there is nothing
   to change, **Y** says so on the status line instead. Right after writing, the app reads Steam's file back and counts
   the games in Steam from that; should a game it wrote not be found, the status line and the log say which.
-- **X Screen** sets how the focused game fills the screen, kept in the game's own settings in RPCS3 (the file RPCS3's
-  window would write for the game; the app changes two lines and leaves the rest): **16:9**, the PS3's picture for a
-  wide screen, as RPCS3 draws it by default; **4:3**, the picture for a 4:3 screen, with borders on a wide one, for a
-  game made for it; or **Fill screen**, the picture stretched to fill the screen. Each press goes to the next; the row
-  shows the choice when it is not 16:9. A game without an ID has no settings of its own in RPCS3.
+- **X Play** on a game that is in Steam starts it, through Steam: Steam starts first when it does not run, then
+  RPCS3 with the game, full screen, as from Steam's library. A game that is not in Steam yet says so: **A** marks
+  it, **Y** puts it there.
+- **Open Steam**, the row at the top of the list, opens Steam's library in Big Picture mode (**A Open Steam**).
 - **LB Folders** shows your game folders instead of the games; **LB** or **B** goes back to the games. The usual
   places that are on the device (Games, Downloads and Documents in your user folder) and each removable drive, such as
   an SD card, are offered as **+ Add**. **A** twice on a folder takes it off the list: the first press asks, for five
   seconds. Its games stay where they are.
 - **+ Browse to a folder…** opens the app's own browser, made for the controller: your Games, Downloads, Documents and
   Desktop folders and every drive first. **A** opens the folder the focus is on, **B** goes a level up (and from the
-  places back to your folders), and **X Add this folder** adds the folder that is open.
+  places back to your folders), and **X Add this folder** adds the folder that is open. Every browser of the app opens again in the folder you last took a folder or picked a file in, while it is there.
 
 In a game started from Steam, RPCS3 takes the device's controller as player 1: A is Cross, B Circle, X Square, Y
 Triangle, View Select, Menu Start, LB and RB are L1 and R1, the triggers L2 and R2. **View and Menu together** open
@@ -145,8 +146,8 @@ The Settings card's pane has four tabs, **Picture**, **Speed**, **Sound** and **
 through them, or tap one. A tab is a row per setting with its value; **A** on one steps to the next value and saves it
 at once into RPCS3's settings (`config\config.yml` in its folder; the row at the bottom says **A Change**, **LB
 Previous tab**, **RB Next tab**). RPCS3 reads them when a game starts; while RPCS3 is open, the pane asks you to close
-it first, since RPCS3 writes its own settings back when it closes. A game's own settings in RPCS3 (its screen, **X**
-on the game) come before these. The **information icon** at the pane's top right says what each setting of the tab
+it first, since RPCS3 writes its own settings back when it closes. A game's own settings in RPCS3, where a game has
+them, come before these. The **information icon** at the pane's top right says what each setting of the tab
 does.
 
 **Picture**
@@ -158,7 +159,7 @@ does.
 | Anisotropic filtering | As the game, 2x, 4x, 8x, 16x: sharper textures seen at an angle |
 | Anti-aliasing (MSAA) | As the game, Off: smooth edges as the game asks, or none, faster |
 | Output scaling | Bilinear (smooth), Nearest (sharp pixels), FidelityFX Super Resolution (AMD's upscaler, sharper from a lower resolution scale) |
-| Fill the screen | On or Off: the picture stretched to fill the screen, for every game without a screen setting of its own |
+| Screen | 16:9 (the PS3's picture for a wide screen, RPCS3's default), 4:3 (with borders on a wide screen, for a game made for it), Fill screen (the picture stretched to fill the screen) |
 
 **Speed**
 
@@ -192,7 +193,7 @@ in RPCS3's settings that the app does not offer is shown as it is, and **A** goe
 RPCS3's folder, with the firmware's version, how many games are installed in it and how many saves it keeps, and the
 newest lines of this app's log (the installs, what RPCS3's log said of the firmware and each package, the Steam
 changes, the settings changed). **A View log**, or a tap on the pane, shows the whole log in the pane: the d-pad
-scrolls it, and **B** goes back.
+scrolls it, and **B** goes back. The newest lines show at the bottom of a box of their own, which a finger can scroll; a tap on it shows the whole log too.
 
 ## How it works
 
@@ -242,7 +243,7 @@ remove the download.
 | Where | What |
 |---|---|
 | `%LOCALAPPDATA%\windows-portable-suite\windows-portable-rpcs3\app\` | The program, `RPCS3-Manager.exe` |
-| `%LOCALAPPDATA%\windows-portable-suite\windows-portable-rpcs3\emulator\` | RPCS3 (`rpcs3.exe`) and everything it keeps: `config\` (its settings, the controller, each game's screen), `dev_hdd0\` (the installed games, the saves), `dev_flash\` (the firmware), `GuiConfigs\` (its window's settings, the play time), `log\RPCS3.log` (its own log), and `installed.json` (the build and the files the app installed) |
+| `%LOCALAPPDATA%\windows-portable-suite\windows-portable-rpcs3\emulator\` | RPCS3 (`rpcs3.exe`) and everything it keeps: `config\` (its settings, the controller), `dev_hdd0\` (the installed games, the saves), `dev_flash\` (the firmware), `GuiConfigs\` (its window's settings, the play time), `log\RPCS3.log` (its own log), and `installed.json` (the build and the files the app installed) |
 | `%LOCALAPPDATA%\windows-portable-suite\windows-portable-rpcs3\covers\` | The covers from SteamGridDB, per game |
 | `%LOCALAPPDATA%\windows-portable-suite\windows-portable-rpcs3\windows-portable-rpcs3.log` | The log |
 | `%APPDATA%\windows-portable-suite\windows-portable-rpcs3.ini` | The settings, with your game folders |

@@ -1,3 +1,10 @@
+Changelog: 29-10-2026 21:37:16
+
+Added. A red dot at the top right of an app's tile while an update is out for it (owner, 29-10-2026), as long as its
+tile says Update x.y.z. Suite settings: Sound (owner, 29-10-2026: "sound off"), a row on the Suite page under
+Wallpaper; A switches it, and with it off the intro plays without its sound from the next start. The setting is the
+suite's (suite.ini, core's portable.sound_on).
+
 Changelog: 29-10-2026 20:40:00
 
 Release 3.2.0.

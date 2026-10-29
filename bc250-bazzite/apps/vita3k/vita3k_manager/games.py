@@ -18,6 +18,15 @@ from pathlib import Path
 TEXT, TEXT_SPECIAL, NUMBER = 0x0204, 0x0004, 0x0404
 
 
+def is_file(path: Path) -> bool:
+    """path.is_file(), False when it cannot be asked: a failing or half-mounted SD card answers with an error (EIO)
+    instead of no, which ended the scan (the Windows suite's empty card slot, 29-10-2026)."""
+    try:
+        return path.is_file()
+    except OSError:
+        return False
+
+
 @dataclass(frozen=True)
 class Game:
     folder: Path                        # ux0/app/<title ID>
@@ -33,7 +42,7 @@ class Game:
     def picture(self, name: str) -> Path | None:
         """One of the game's own pictures in sce_sys (icon0.png: 128 × 128, pic0.png: 960 × 544), if it has it."""
         path = self.folder / "sce_sys" / name
-        return path if path.is_file() else None
+        return path if is_file(path) else None
 
 
 def read_sfo(data: bytes) -> dict[str, str | int]:
@@ -63,7 +72,7 @@ def read_game(folder: Path) -> Game | None:
         sfo = read_sfo((folder / "sce_sys" / "param.sfo").read_bytes())
     except OSError:
         return None
-    if not sfo or not (folder / "eboot.bin").is_file():
+    if not sfo or not is_file(folder / "eboot.bin"):
         return None
     title = " ".join(str(sfo.get("TITLE") or sfo.get("STITLE") or "").split()) or folder.name
     version = str(sfo.get("APP_VER") or "")

@@ -27,6 +27,15 @@ TEXT, TEXT_SPECIAL, NUMBER = 0x0204, 0x0004, 0x0404
 GAME_DATA = "GD"                        # an update or other game data, not a game
 
 
+def is_file(path: Path) -> bool:
+    """path.is_file(), False when it cannot be asked: a failing or half-mounted SD card answers with an error (EIO)
+    instead of no, which ended the scan (the Windows suite's empty card slot, 29-10-2026)."""
+    try:
+        return path.is_file()
+    except OSError:
+        return False
+
+
 @dataclass(frozen=True)
 class Game:
     eboot: Path                         # USRDIR/EBOOT.BIN, what RPCS3 starts
@@ -59,7 +68,7 @@ class Game:
     def picture(self, name: str) -> Path | None:
         """One of the game's own pictures (ICON0.PNG: 320 × 176, PIC1.PNG: 1920 × 1080), if it has it."""
         path = self.content / name
-        return path if path.is_file() else None
+        return path if is_file(path) else None
 
 
 def read_sfo(data: bytes) -> dict[str, str | int]:
@@ -90,7 +99,7 @@ def read_game(content: Path, disc: bool = False) -> Game | None:
         sfo = read_sfo((content / "PARAM.SFO").read_bytes())
     except OSError:
         return None
-    if not sfo or sfo.get("CATEGORY") == GAME_DATA or not eboot.is_file():
+    if not sfo or sfo.get("CATEGORY") == GAME_DATA or not is_file(eboot):
         return None
     folder = content.parent if disc else content
     title = " ".join(str(sfo.get("TITLE") or "").split()) or folder.name   # PS3 titles may hold line breaks
@@ -100,7 +109,7 @@ def read_game(content: Path, disc: bool = False) -> Game | None:
 
 def _disc_games(root: Path, depth: int = MAX_DEPTH):
     """The disc games below *root*: folders with PS3_GAME/PARAM.SFO. Not looked into further once found."""
-    if (root / "PS3_GAME" / "PARAM.SFO").is_file():
+    if is_file(root / "PS3_GAME" / "PARAM.SFO"):
         yield root
         return
     if depth <= 0:
@@ -110,7 +119,11 @@ def _disc_games(root: Path, depth: int = MAX_DEPTH):
     except OSError:
         return
     for entry in entries:
-        if entry.is_dir(follow_symlinks=False) and not entry.name.startswith(".") and entry.name != "USRDIR":
+        try:
+            folder = entry.is_dir(follow_symlinks=False)
+        except OSError:                                 # a failing card: skipped, the scan goes on
+            continue
+        if folder and not entry.name.startswith(".") and entry.name != "USRDIR":
             yield from _disc_games(Path(entry.path), depth - 1)
 
 
@@ -128,7 +141,11 @@ def known(paths: list[str]) -> list[Game]:
     games = []
     for path in paths:
         folder = Path(path.rstrip("/").removesuffix("/."))
-        if (folder / "PS3_GAME").is_dir():
+        try:
+            disc = (folder / "PS3_GAME").is_dir()
+        except OSError:                                 # on a failing card: left out, the others are read
+            continue
+        if disc:
             game = read_game(folder / "PS3_GAME", disc=True)
         elif folder.name == "PS3_GAME":
             game = read_game(folder, disc=True)

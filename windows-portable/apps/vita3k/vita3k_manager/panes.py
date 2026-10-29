@@ -135,6 +135,8 @@ GAMES_INFO = (
     "Steam) makes Steam match the marks: each marked game becomes a non-Steam game, \"[PS Vita] <title>\", in "
     "Steam's library and its Big Picture mode, and a game without the mark is taken out. Steam closes for it and "
     "starts again. A game from Steam starts full screen; Steam's own menu and its Exit game end it.\n\n"
+    "The X button on a game that is in Steam starts it, through Steam (Steam starts first when it does not run). "
+    "Open Steam, the row at the top of the list, opens Steam's library.\n\n"
     "The pictures in Steam come from inside each game (its icon and its LiveArea picture). With your own "
     "SteamGridDB API key (the RB button, Steam artwork; one key for the suite), Update Steam also fetches a cover for "
     "each game. Every entry of the row at the bottom also works by touch.")
@@ -142,7 +144,7 @@ BROWSE_INFO = (
     "Find the file. The A button opens the folder the focus is on, or picks the file; the B button goes a level up, "
     "and from the places back to where you came from. When a game is a dumped folder (with sce_sys and eboot.bin), "
     "open that folder and press the X button. The places are your Games, Downloads, Documents and Desktop folders "
-    "and every drive, such as an SD card.")
+    "and every drive, such as an SD card. The browser opens again in the folder you took or picked a file in last.")
 LOG_INFO = (
     "Vita3K's folder, where it keeps the firmware, your games, the saves and its settings, and the newest lines of "
     "this app's log. The A button, or a tap on this pane, shows the whole log here: the d-pad scrolls it, the B "
@@ -168,8 +170,12 @@ class LogPane(Pane):
         self.grid.setVerticalSpacing(px(4))
         self.column.addLayout(self.grid)
         self.column.addSpacing(px(10))
-        self.lines = text_label("", BODY, color=DIM, wrap=True)
-        self.column.addWidget(self.lines, 1, Qt.AlignmentFlag.AlignTop)
+        # The newest lines in a view of their own with its end in view (owner, 29-10-2026: as a label they were cut
+        # off at the top); the d-pad never lands on it, a tap shows the whole log as the A button does
+        self.lines = TextView()
+        self.lines.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.lines.viewport().installEventFilter(self)
+        self.column.addWidget(self.lines, 1)
         self.view = TextView()
         self.view.hide()
         self.column.addWidget(self.view, 1)
@@ -191,7 +197,17 @@ class LogPane(Pane):
             shown.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
             self.grid.addWidget(shown, r, 1)
         self.grid.setColumnStretch(1, 1)
-        self.lines.setText("\n".join(lines) or "Nothing logged yet.")
+        self.lines.setPlainText("\n".join(lines) or "Nothing logged yet.")
+        self.lines.show_end()
+
+    def eventFilter(self, obj, event) -> bool:
+        if obj is self.lines.viewport() and event.type() == QEvent.Type.MouseButtonPress:
+            self.tapped.emit()
+        return super().eventFilter(obj, event)
+
+    def showEvent(self, event) -> None:
+        super().showEvent(event)
+        self.lines.show_end()                           # laid out now: the newest line at the bottom
 
     def show_whole(self, text: str) -> None:
         self.lines.hide()
@@ -203,6 +219,7 @@ class LogPane(Pane):
     def show_summary(self) -> None:
         self.view.hide()
         self.lines.show()
+        self.lines.show_end()
 
 
 # The key: the BC250 app's Covers… dialog (core's covers.edit_key) as a page of the portable window

@@ -83,7 +83,7 @@ where the app can read it (4D5307E6) and its kind:
 Other packages, such as saves, downloadable content and title updates, are not games. **A** on the Your games card goes
 to the list.
 
-You play the games from Steam; the app puts them there.
+You play the games from Steam; the app puts them there, and starts them there with **X**.
 
 - **A Steam mark** on a game marks it for Steam, or takes the mark away. **Y Update Steam** then makes Steam match the
   marks: each marked game is a non-Steam game named `[X360] <title>` in Steam's library and its Big Picture mode; a
@@ -91,13 +91,18 @@ You play the games from Steam; the app puts them there.
   Steam must have been started once on the device, and Xenia must be installed. When there is nothing to change, **Y**
   says so on the status line instead. Right after writing, the app reads Steam's file back and counts the games in
   Steam from that; should a game it wrote not be found, the status line and the log say which.
+- **X Play** on a game that is in Steam starts it through Steam, as its tile in Steam's library would; Steam
+  starts first when it is not open. A game that is not in Steam yet says so: mark it with **A**, then
+  **Y Update Steam**.
+- **Open Steam**, the row above the games, opens Steam's library in Big Picture mode with **A**.
 - **LB Folders** shows your game folders instead of the games; **LB** or **B** goes back to the games. The usual
   places that are on the device (Games, Downloads and Documents in your user folder) and each removable drive, such as
   an SD card, are offered as **+ Add**. **A** twice on a folder takes it off the list: the first press asks, for five
   seconds. Its games stay where they are.
 - **+ Browse to a folder…** opens the app's own browser, made for the controller: your Games, Downloads, Documents and
   Desktop folders and every drive first. **A** opens the folder the focus is on, **B** goes a level up (and from the
-  places back to your folders), and **X Add this folder** adds the folder that is open.
+  places back to your folders), and **X Add this folder** adds the folder that is open. The browser opens again in
+  the folder you added last, while it is there.
 
 The app reads no pictures from a game, so the pictures in Steam are drawn from this app's icon, with the game's title.
 With a SteamGridDB API key, Update Steam takes all four of a game's pictures from SteamGridDB instead: **RB Steam

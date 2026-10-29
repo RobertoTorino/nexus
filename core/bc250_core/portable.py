@@ -55,6 +55,9 @@ DIMMED = 0.6                            # a focused pill, drawn at this opacity,
 PILL_HEIGHT, PILL_WIDTH = 48, 150       # every pill: the same height, at least this wide (owner, 29-10-2026)
 ROW_HEIGHT = 40                         # a row of a list or of the settings
 ROW_FOCUS = "#3a3d45"                   # the focused row: raised above the others, with the amber edge
+DOT = "#e5484d"                         # Card.set_dot(): something new is out (owner, 29-10-2026: a red dot)
+DOT_SIZE, DOT_INSET = 14, 12            # its size, and its distance from the card's top right corner
+POPUP_TEXT = 0.5                        # a popup's text: at most this part of the window high, then it scrolls
 FONT = "Inter"
 
 _scale = 1.0
@@ -68,6 +71,7 @@ SHADE = 150                             # of 255: how much of the background lie
 GLASS = 160                             # of 255: the cards' and panes' opacity over it, so it shines through (200
                                         # read as solid on the Ally: owner, 29-10-2026)
 LOOK_KEY = "look/wallpaper"
+SOUND_KEY = "look/sound"                # the suite's sounds (the portal's intro) on or off: sound_on()
 _fonts_loaded = False
 
 
@@ -114,6 +118,18 @@ def wallpaper_on(suite: str) -> bool:
 def set_wallpaper_on(suite: str, on: bool) -> None:
     settings = look_settings(suite)
     settings.setValue(LOOK_KEY, "true" if on else "false")
+    settings.sync()
+
+
+def sound_on(suite: str) -> bool:
+    """Whether the suite's apps play their sounds (the portal's intro): on unless switched off on the portal's Suite
+    page (owner, 29-10-2026)."""
+    return str(look_settings(suite).value(SOUND_KEY, "true")).lower() != "false"
+
+
+def set_sound_on(suite: str, on: bool) -> None:
+    settings = look_settings(suite)
+    settings.setValue(SOUND_KEY, "true" if on else "false")
     settings.sync()
 
 
@@ -444,12 +460,30 @@ class Card(QFrame):
         column.addWidget(self.text)
         if self.icon is not None:
             column.addStretch()
+        self.dot = False                                # set_dot(): something new is out for it
         self._paint(False)
 
     def set_text(self, text: str, color: str = DIM) -> None:
         """The line under the title, in *color* (amber for an update on a tile)."""
         self.text.setText(text)
         self.text.setStyleSheet(f"color: {color}; background: transparent;")
+
+    def set_dot(self, on: bool) -> None:
+        """A red dot at the top right corner: something new is out for it (owner, 29-10-2026: an app's update on
+        its portal tile)."""
+        if on != self.dot:
+            self.dot = on
+            self.update()
+
+    def paintEvent(self, event) -> None:
+        super().paintEvent(event)
+        if self.dot:
+            painter = QPainter(self)
+            painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+            painter.setPen(Qt.PenStyle.NoPen)
+            painter.setBrush(QColor(DOT))
+            radius = px(DOT_SIZE) / 2
+            painter.drawEllipse(QPointF(self.width() - px(DOT_INSET) - radius, px(DOT_INSET) + radius), radius, radius)
 
     def _paint(self, focus: bool) -> None:
         edge = f"{px(2)}px solid {AMBER}" if focus or self.selected else f"{px(2)}px solid transparent"
@@ -495,8 +529,9 @@ class TextView(QPlainTextEdit):
 
     STEP = 6                                            # lines a press scrolls
 
-    def __init__(self, parent: QWidget | None = None):
+    def __init__(self, parent: QWidget | None = None, background: str = RAISED):
         super().__init__(parent)
+        self.background = background                    # transparent in a popup's panel
         self.setReadOnly(True)
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.setFont(font(BODY))
@@ -507,8 +542,15 @@ class TextView(QPlainTextEdit):
 
     def _style(self, focus: bool) -> None:
         edge = AMBER if focus else "transparent"
-        self.setStyleSheet(f"QPlainTextEdit {{ color: {TEXT}; background: {RAISED}; border: {px(2)}px solid {edge};"
-                           f" border-radius: {px(10)}px; padding: {px(8)}px; }}")
+        self.setStyleSheet(f"QPlainTextEdit {{ color: {TEXT}; background: {self.background};"
+                           f" border: {px(2)}px solid {edge};"
+                           f" border-radius: {px(10)}px; padding: {px(8)}px; }}"
+                           # A thin bar of where in the text it is, no arrows: the d-pad and a finger scroll
+                           f" QScrollBar:vertical {{ background: transparent; width: {px(6)}px; margin: 0; }}"
+                           f" QScrollBar::handle:vertical {{ background: {DIM}; border-radius: {px(3)}px;"
+                           f" min-height: {px(24)}px; }}"
+                           " QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0; }"
+                           " QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical { background: none; }")
 
     def focusInEvent(self, event) -> None:
         super().focusInEvent(event)
@@ -527,6 +569,10 @@ class TextView(QPlainTextEdit):
 
     def show_end(self) -> None:
         self.verticalScrollBar().setValue(self.verticalScrollBar().maximum())
+
+    def scrolls(self) -> bool:
+        """Whether the text is longer than the view shows."""
+        return self.verticalScrollBar().maximum() > 0
 
 
 class Pane(QFrame):
@@ -777,15 +823,17 @@ class InfoPill(IconPill):
 
 
 class InfoPopup(QWidget):
-    """The window darkened, with a panel in the middle: a title, the text and a Close pill. A, B, Escape or a tap
-    beside the panel closes it, and the focus goes back to where it came from. With *content* (a widget with pills,
-    owner 29-10-2026: a popup holds the controls that do not fit a pane) it shows under the text, the d-pad moves
-    between its pills and A presses one; B, Escape, Close or a tap beside it still closes it."""
+    """The window darkened, with a panel in the middle: a title, the text and a legend at its bottom, B Close (owner,
+    29-10-2026: no big amber buttons, the buttons in a legend). A long text scrolls: the d-pad's up and down, or a
+    finger (owner, 29-10-2026: a long text was cut off). A, B, Escape, a tap on B Close or beside the panel closes it,
+    and the focus goes back to where it came from. With *content* (a widget with rows, owner 29-10-2026: a popup holds
+    the controls that do not fit a pane) it shows under the text, the d-pad moves between its rows and A presses one
+    (*actions*: the legend's entries for them, before B Close); B, Escape or a tap beside it still closes it."""
 
     closed = pyqtSignal()
 
     def __init__(self, window: QWidget, title: str, text: str, back_to: QWidget | None = None,
-                 content: QWidget | None = None):
+                 content: QWidget | None = None, actions: Sequence[tuple[str, str]] = ()):
         super().__init__(window)
         self.back_to, self.content = back_to, content
         self.setGeometry(window.rect())
@@ -798,25 +846,38 @@ class InfoPopup(QWidget):
         heading.setFixedWidth(inner)
         self.panel.column.addWidget(heading)
         self.panel.column.addSpacing(px(8))
-        self.text = text_label(text, BODY + 1, wrap=True)
+        self.text = TextView(background="transparent")
+        self.text.setFont(font(BODY + 1))
+        self.text.setPlainText(text)
         self.text.setFixedWidth(inner)
+        measure = text_label(text, BODY + 1, wrap=True)                 # the height the whole text needs
+        needed = measure.heightForWidth(inner - px(24)) + px(28) + 2 * round(self.text.document().documentMargin())
+        self.text.setFixedHeight(max(px(40), min(needed, round(window.height() * POPUP_TEXT))))
         self.panel.column.addWidget(self.text)
         self.panel.column.addSpacing(px(16))
         if content is not None:
             content.setFixedWidth(inner)
             self.panel.column.addWidget(content)
             self.panel.column.addSpacing(px(16))
-        self.close_pill = Pill("Close", "B", main=True)
-        self.close_pill.activated.connect(self.dismiss)
-        self.panel.column.addLayout(pill_row(self.close_pill))
+        self.legend = Legend([*actions, ("B", "Close")])
+        self.panel.column.addWidget(self.legend)
+        self.panel.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Maximum)    # as high as it needs
         outer.addWidget(self.panel)
         self.show()
         self.raise_()
+        self.text.verticalScrollBar().setValue(0)
+        if not self.text.scrolls():                     # nothing to scroll: the d-pad never lands on it
+            self.text.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         first = content.findChildren(Pill)[0] if content is not None and content.findChildren(Pill) else None
-        (first or self.close_pill).setFocus(Qt.FocusReason.OtherFocusReason)
+        if first is not None:
+            first.setFocus(Qt.FocusReason.OtherFocusReason)
+        elif self.text.scrolls():
+            self.text.setFocus(Qt.FocusReason.OtherFocusReason)
 
-    def pills(self) -> list[Pill]:
-        return [pill for pill in self.findChildren(Pill) if pill.isVisible() and pill.isEnabled()]
+    def pills(self) -> list[QWidget]:
+        """What the d-pad moves between: the text while it scrolls, and the content's rows."""
+        text = [self.text] if self.text.focusPolicy() != Qt.FocusPolicy.NoFocus else []
+        return [*text, *(pill for pill in self.findChildren(Pill) if pill.isVisible() and pill.isEnabled())]
 
     def paintEvent(self, event) -> None:
         painter = QPainter(self)
@@ -1040,13 +1101,14 @@ class PortableWindow(QWidget):
             pane.restyle()
 
     def show_popup(self, title: str, text: str, back_to: QWidget | None = None,
-                   content: QWidget | None = None) -> InfoPopup:
-        """*text* under *title* over the window (an InfoPill's); while it shows, A and B close it and the other
-        buttons do nothing. With *content*, its pills: the d-pad moves between them and Close, A presses the one
-        with the focus, B closes; the focus stays inside the popup."""
+                   content: QWidget | None = None, actions: Sequence[tuple[str, str]] = ()) -> InfoPopup:
+        """*text* under *title* over the window (an InfoPill's); while it shows, A and B close it, the d-pad scrolls
+        a long text and the other buttons do nothing. With *content*, its rows: the d-pad moves between them, A
+        presses the one with the focus, B closes; the focus stays inside the popup. *actions*: the popup legend's
+        entries before B Close."""
         if self.popup is not None:
             self.popup.dismiss()
-        self.popup = InfoPopup(self, title, text, back_to, content)
+        self.popup = InfoPopup(self, title, text, back_to, content, actions)
         self.popup.closed.connect(self._popup_closed)
         return self.popup
 

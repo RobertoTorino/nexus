@@ -18,6 +18,8 @@ import threading
 import time
 from pathlib import Path
 
+from PyQt6.QtCore import QSettings
+
 from bc250_core import portable, steam
 from bc250_core.gamepad import Gamepad
 from bc250_core.portable import BACK, EXIT, VIEW
@@ -55,6 +57,8 @@ def make(qapp, home=None, install=fake_install, running=lambda home: False, **mo
     more.setdefault("newer_release", lambda: None)      # never GitHub
     more.setdefault("run_quiet", lambda home, *args: 0)
     more.setdefault("install_content", lambda home, content: True)
+    more.setdefault("settings", QSettings(str(Path(tempfile.mkdtemp()) / "app.ini"),
+                                          QSettings.Format.IniFormat))   # never Windows' registry
     window = MainWindow(gamepad=Gamepad(source_factory=FakePad), battery=lambda: (82, False),
                         home=home or Path(tempfile.mkdtemp()) / "emulator", install=install, running=running, **more)
     portable.scale((1280, 720))
@@ -556,8 +560,8 @@ def test_view_while_vita3k_installs_asks_first(qapp, tmp_path, monkeypatch):
 
 
 def test_your_games_are_marked_with_a_and_put_in_steam(qapp, tmp_path, monkeypatch):
-    """The games are played from Steam (owner, 29-10-2026: the app never starts one): A on a game is its Steam mark,
-    Y Update Steam writes the marks."""
+    """The games are played from Steam (owner, 29-10-2026): A on a game is its Steam mark, Y Update Steam writes the
+    marks, X plays a game that is in Steam through Steam (steam://rungameid), Open Steam opens Steam's library."""
     home = tmp_path / "emulator"
     ready(home)
     persona = make_game(fs(home), "Persona 4 Golden", "PCSB00245", pictures=True)
@@ -570,12 +574,20 @@ def test_your_games_are_marked_with_a_and_put_in_steam(qapp, tmp_path, monkeypat
         closed.append(True)
         change()
         return False
-    window = make(qapp, home, steam_dir=steam_dir, steam_closed=with_steam_closed)
+    played = []
+    window = make(qapp, home, steam_dir=steam_dir, steam_closed=with_steam_closed, play=played.append)
     monkeypatch.setattr(window, "isActiveWindow", lambda: True)
     window.games_card.setFocus()
     qapp.processEvents()
     assert window.legend.items == [("A", "Steam mark"), ("Y", "Update Steam"), ("RB", "Steam artwork"), MENU_INFO,
                                    EXIT]
+    window.on_action("accept")                                     # into the list
+    window.on_action("up")                                         # Open Steam, at the top
+    assert window.steam_row.hasFocus()
+    assert window.legend.items == [("A", "Open Steam"), ("Y", "Update Steam"), ("RB", "Steam artwork"), MENU_INFO,
+                                   BACK, EXIT]
+    window.on_action("accept")
+    assert played == ["steam://open/bigpicture"] and window.games_pane.status.text() == "Opening Steam…"
     assert "Press the A button on a game to mark it for Steam" in window.games_pane.info.info
     assert window.games_pane.summary.text() == "2 game(s) installed in Vita3K, 0 in Steam"
     pills = window.games_pane.list.pills
@@ -585,6 +597,10 @@ def test_your_games_are_marked_with_a_and_put_in_steam(qapp, tmp_path, monkeypat
     assert window.games_pane.status.text() == NOTHING_TO_CHANGE
     pills["PCSB00245"].setFocus()
     qapp.processEvents()
+    assert ("X", "Play") in window.legend.items
+    window.on_action("x")                                          # X: not in Steam yet
+    assert window.games_pane.status.text() == ("Persona 4 Golden is not in Steam yet: A marks it, then Y Update "
+                                               "Steam puts it there.") and len(played) == 1
     window.on_action("accept")                                     # A: the Steam mark
     assert "✓ Steam (Update Steam)" in window.games_pane.list.pills["PCSB00245"].label.text()
     assert window.games_pane.list.pills["PCSB00245"].hasFocus()
@@ -596,6 +612,12 @@ def test_your_games_are_marked_with_a_and_put_in_steam(qapp, tmp_path, monkeypat
     item = next(i for i in steam.shortcuts(steam_dir) if i.get("AppName"))
     assert item["LaunchOptions"] == "-r PCSB00245" and item["Exe"] == f'"{emulator.program(home)}"'
     assert item["icon"] == str(persona / "sce_sys" / "icon0.png")
+    window.games_pane.list.pills["PCSB00245"].setFocus()
+    window.on_action("x")                                          # X: played through Steam
+    number = shortcuts.numbers(steam_dir)["PCSB00245"]
+    assert played[-1] == f"steam://rungameid/{(number << 32) | 0x02000000}"
+    assert number == steam.appid(item["Exe"], item["AppName"]) & 0xFFFFFFFF
+    assert window.games_pane.status.text() == "Starting Persona 4 Golden in Steam…"
     window.games_pane.list.pills["PCSB00245"].click()              # the mark off, and Steam again: taken out
     window.on_action("y")
     assert wait_for(qapp, lambda: not window.busy) and shortcuts.in_steam(steam_dir) == {}
@@ -672,7 +694,10 @@ def test_the_log_is_read_in_the_app(qapp, tmp_path, monkeypatch):
     qapp.processEvents()
     texts = [label.text() for label in window.log_pane.findChildren(type(window.status))]
     assert "Firmware" in texts and "installed" in texts and "Installed games" in texts and "1" in texts
-    assert window.log_pane.lines.text().splitlines() == [f"line {n}" for n in range(288, 300)]
+    lines = window.log_pane.lines
+    assert lines.toPlainText().splitlines() == [f"line {n}" for n in range(288, 300)]
+    assert lines.focusPolicy() == portable.Qt.FocusPolicy.NoFocus                 # the d-pad never lands on it
+    assert lines.verticalScrollBar().value() == lines.verticalScrollBar().maximum()   # the newest line in view
     assert window.legend.items[0] == ("A", "View log")
     window.on_action("accept")                                     # A: the whole log, here
     view = window.log_pane.view
@@ -735,14 +760,14 @@ def test_menu_shows_the_panes_information_and_the_icon_is_touch_only(qapp, tmp_p
     qapp.processEvents()
     assert window.vita3k_info not in window.focusables()
     window.on_action("menu")                                    # the Vita3K pane's information: the firmware, games
-    assert window.popup is not None and "PSP2UPDAT.PUP" in window.popup.text.text()
+    assert window.popup is not None and "PSP2UPDAT.PUP" in window.popup.text.toPlainText()
     window.on_action("menu")
     assert window.popup is None
     window.games_card.setFocus()
     qapp.processEvents()
     assert window.games_pane.info not in window.focusables()
     window.on_action("menu")
-    assert window.popup is not None and "to play from Steam" in window.popup.text.text()
+    assert window.popup is not None and "to play from Steam" in window.popup.text.toPlainText()
     window.on_action("menu")                                    # Menu again (or B) closes it
     assert window.popup is None and window.games_card.hasFocus()
     window.close()
@@ -760,4 +785,25 @@ def test_no_path_on_the_screen_shows_the_users_name(qapp):
     shown = [value for _label, value in window.rows()] + [label.text() for label in
                                                           window.log_pane.findChildren(type(window.status))]
     assert not any(str(user).lower() in text.replace("​", "").lower() for text in shown if text)
+    window.close()
+
+
+def test_the_browser_opens_where_it_was_left(qapp, tmp_path, monkeypatch):
+    """Owner, 29-10-2026: a file picked in a folder, the next browser of its kind opens in that folder."""
+    home = tmp_path / "emulator"
+    ready(home)
+    user = tmp_path / "me"
+    folder = user / "Downloads" / "vita"
+    folder.mkdir(parents=True)
+    (folder / "Persona.vpk").write_bytes(b"PK")
+    window = make(qapp, home, user_home=user)
+    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
+    window.on_action("next")                                    # RB Install a game: Downloads
+    assert window.browser.path == user / "Downloads"
+    window.browse_pane.list.pills[f"dir:{folder}"].click()
+    window.browse_pane.list.pills[f"file:{folder / 'Persona.vpk'}"].click()
+    assert wait_for(qapp, lambda: not window.busy)
+    window.vita3k_card.setFocus()
+    window.on_action("next")
+    assert window.browser.path == folder
     window.close()

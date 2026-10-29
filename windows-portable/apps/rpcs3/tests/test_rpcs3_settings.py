@@ -14,7 +14,7 @@ BY_KEY = {s.key: s for s in SETTINGS}
 def test_the_defaults_without_a_file(tmp_path):
     values = read_settings(tmp_path)
     assert values["renderer"] == "Vulkan" and values["scale"] == "100" and values["vsync"] == "Disabled"
-    assert values["framelimit"] == "Auto" and values["stretch"] == "false" and values["volume"] == "100"
+    assert values["framelimit"] == "Auto" and values["screen"] == "wide" and values["volume"] == "100"
     assert values["ppu"] == "Recompiler (LLVM)" and values["audio"] == "Cubeb" and values["trophies"] == "true"
     assert not settings_path(tmp_path).exists()                                 # reading made no file
     assert settings_path(tmp_path) == tmp_path / "config" / "config.yml"
@@ -41,7 +41,7 @@ def test_every_setting_is_one_of_rpcs3s():
     """The keys, sections and defaults as RPCS3 0.0.43 writes them (system_config.h); a CHOICE's default is one
     of its choices; a tab holds six rows at most (they fit the pane)."""
     names = {(s.section, s.name) for s in SETTINGS}
-    assert ("Video", "Stretch To Display Area") in names and ("Core", "SPU Decoder") in names
+    assert ("Video", "Aspect ratio") in names and ("Core", "SPU Decoder") in names
     assert ("Audio", "Master Volume") in names and ("Miscellaneous", "Show shader compilation hint") in names
     assert len(names) == len(SETTINGS)
     for setting in SETTINGS:
@@ -62,6 +62,26 @@ def test_a_row_steps_through_its_values():
     assert scale.shown("150") == "150% (1080p)" and scale.next_value("100") == "150"
     assert scale.next_value("300") == "100" and scale.next_value("175") == "100"   # a value the app does not offer
     assert scale.shown("175") == "175" and scale.canonical(None) == "100" and scale.canonical(" 200 ") == "200"
-    stretch = BY_KEY["stretch"]
-    assert stretch.shown("true") == "On" and stretch.shown("false") == "Off" and stretch.next_value("false") == "true"
-    assert stretch.canonical("True") == "true" and stretch.canonical("") == "false"
+    buffering = BY_KEY["buffering"]
+    assert buffering.shown("true") == "On" and buffering.shown("false") == "Off"
+    assert buffering.next_value("false") == "true"
+    assert buffering.canonical("True") == "true" and buffering.canonical("") == "true"   # its default
+
+
+def test_the_screen_is_two_lines_of_config_yml(tmp_path):
+    """Screen (owner, 29-10-2026: it moved from X on a game to the Settings pane): 16:9, 4:3 or Fill screen, as
+    Aspect ratio and Stretch To Display Area in config.yml, the file's other lines kept."""
+    screen = BY_KEY["screen"]
+    assert [screen.shown(v) for v, _ in screen.choices] == ["16:9", "4:3", "Fill screen"]
+    assert screen.next_value("wide") == "narrow" and screen.next_value("fill") == "wide"
+    assert screen in dict((key, group) for key, _name, group in TABS)["picture"]
+    path = settings_path(tmp_path)
+    path.parent.mkdir(parents=True)
+    path.write_text("Video:\n  Renderer: Vulkan\n  Aspect ratio: 16:9\n", encoding="utf-8")
+    assert read_setting(tmp_path, screen) == "wide"
+    write_setting(tmp_path, screen, "fill")
+    text = path.read_text(encoding="utf-8")
+    assert "  Renderer: Vulkan" in text and "  Stretch To Display Area: true" in text and "Aspect ratio: 16:9" in text
+    assert read_setting(tmp_path, screen) == "fill" and read_settings(tmp_path)["screen"] == "fill"
+    write_setting(tmp_path, screen, "narrow")
+    assert read_setting(tmp_path, screen) == "narrow" and "Aspect ratio: 4:3" in path.read_text(encoding="utf-8")

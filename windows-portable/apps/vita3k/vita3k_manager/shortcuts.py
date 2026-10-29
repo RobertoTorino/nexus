@@ -86,6 +86,20 @@ def in_steam(folder: Path) -> dict[str, str]:
     return {_name(item): str(steam.field(item, "AppName")) for item in steam.shortcuts(folder) if ours(item)}
 
 
+
+def numbers(folder: Path) -> dict[str, int]:
+    """The Steam number (appid, unsigned) of each shortcut of this app, by the game as in_steam() names it: what
+    steam.play_url() starts (owner, 29-10-2026: a game started from the app, through Steam). A shortcut without an
+    appid field is numbered as Steam numbers it, from its program and name."""
+    found = {}
+    for item in steam.shortcuts(folder):
+        if ours(item):
+            number = steam.field(item, "appid", None)
+            found[_name(item)] = (number & 0xFFFFFFFF if isinstance(number, int) else
+                                  steam.appid(str(steam.field(item, "Exe")), str(steam.field(item, "AppName"))))
+    return found
+
+
 def cover_name(game: Game) -> str:
     """The name the game's pictures from SteamGridDB are kept under."""
     return covers.name(game.title, game.title_id)

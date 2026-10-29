@@ -134,6 +134,8 @@ GAMES_INFO = (
     "\"[PS4] <title>\", in Steam's library and its Big Picture mode, and a game without the mark is taken out. Steam "
     "closes for it and starts again. In a game, View and Menu together open shadPS4's quit window: the A button "
     "quits the game, and Steam has the screen back.\n\n"
+    "The X button on a game that is in Steam starts it, through Steam (Steam starts first when it does not run). "
+    "Open Steam, the row at the top of the list, opens Steam's library.\n\n"
     "The games are the folders with an eboot.bin in your game folders and up to five folders below them, each in a "
     "folder of its own, as Extract PKG unpacks them. An update or a mod beside a game (a folder named like it with "
     "-UPDATE, -patch or -mods) is no game of its own: shadPS4 lays it over the game.\n\n"
@@ -147,7 +149,7 @@ BROWSE_INFO = (
     "Find the folder or the file. The A button opens the folder the focus is on, or picks the file; the B button "
     "goes a level up, and from the places back to where you came from. The X button takes the folder that is open: "
     "as a game folder, or as the folder whose system modules are copied into shadPS4. The places are your Games, "
-    "Downloads, Documents and Desktop folders and every drive, such as an SD card.")
+    "Downloads, Documents and Desktop folders and every drive, such as an SD card. The browser opens again in the folder you took or picked a file in last.")
 TARGET_INFO = (
     "Where the package is unpacked: one of your game folders, a usual place (which becomes a game folder), or the "
     "package's own folder. The A button unpacks it there, into a folder named by the game's ID; a game needs about as "
@@ -186,8 +188,12 @@ class LogPane(Pane):
         self.grid.setVerticalSpacing(px(4))
         self.column.addLayout(self.grid)
         self.column.addSpacing(px(10))
-        self.lines = text_label("", BODY, color=DIM, wrap=True)
-        self.column.addWidget(self.lines, 1, Qt.AlignmentFlag.AlignTop)
+        # The newest lines in a view of their own with its end in view (owner, 29-10-2026: as a label they were cut
+        # off at the top); the d-pad never lands on it, a tap shows the whole log as the A button does
+        self.lines = TextView()
+        self.lines.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.lines.viewport().installEventFilter(self)
+        self.column.addWidget(self.lines, 1)
         self.view = TextView()
         self.view.hide()
         self.column.addWidget(self.view, 1)
@@ -209,7 +215,17 @@ class LogPane(Pane):
             shown.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
             self.grid.addWidget(shown, r, 1)
         self.grid.setColumnStretch(1, 1)
-        self.lines.setText("\n".join(lines) or "Nothing logged yet.")
+        self.lines.setPlainText("\n".join(lines) or "Nothing logged yet.")
+        self.lines.show_end()
+
+    def eventFilter(self, obj, event) -> bool:
+        if obj is self.lines.viewport() and event.type() == QEvent.Type.MouseButtonPress:
+            self.tapped.emit()
+        return super().eventFilter(obj, event)
+
+    def showEvent(self, event) -> None:
+        super().showEvent(event)
+        self.lines.show_end()                           # laid out now: the newest line at the bottom
 
     def show_whole(self, text: str) -> None:
         self.lines.hide()
@@ -221,6 +237,7 @@ class LogPane(Pane):
     def show_summary(self) -> None:
         self.view.hide()
         self.lines.show()
+        self.lines.show_end()
 
 
 class ShadNetPane(Pane):

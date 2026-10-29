@@ -97,17 +97,21 @@ the settings.
   **Close issues**: it lists the open issues on GitHub, such as the weekly Upstream review, each with a tick box.
   **Run** closes the ticked ones with `gh issue close` in the Commands tab, with a comment when you write one; it
   needs a gh login (`gh auth login`). A double click opens an issue on GitHub.
-- **Test local apps**, on the same tab: the portal and every app window in the checkout, as an icon (the portal first).
+- **Test local apps**, on the same tab: the ticked suite's portal and every app window of it in the checkout, as an
+  icon (the portal first; the Windows Portable Suite's portal too, which starts full screen as on the handheld:
+  View exits it).
   When the portal is already open, its icon warns instead of starting: a second portal never opens (starting it only
   brings the open window to the front), so close it first. A click starts that app from the checkout,
   to try a change before its release: `python -m <package>` with the checkout's venv and its `core`, as `run.sh`
   starts Nexus Releases. An app that changes how the board runs asks first, as in the portal; started from the
   checkout it uses the scripts in the checkout. Each app writes its output to
   `~/.cache/nexus-releases/run/<package>.log`. When an app stops with an error, the end of its log shows on the page.
-  The apps keep running when you close the window. The last icons are the wikis in the checkout, one for each
-  `mkdocs.yml`: **BC250 Bazzite Suite wiki (local)** serves this wiki from the checkout with `mkdocs serve` (the
+  The apps keep running when you close the window. The last icons are the ticked suite's wiki and the Nexus page
+  (another suite's wiki shows when that suite is ticked; each keeps its port): **BC250 Bazzite Suite wiki
+  (local)** serves this wiki from the checkout with `mkdocs serve` (the
   development venv has MkDocs) and opens it in the browser at `http://127.0.0.1:8765/nexus/bc250-bazzite-suite/`, with
-  its design panel open; **Nexus wiki (local)** does the same for the Nexus page, at port 8766. Each rebuilds on
+  its design panel open; **Nexus wiki (local)** does the same for the Nexus page, at port 8766, and **Windows
+  Portable Suite wiki (local)** for that suite's wiki, at port 8767. Each rebuilds on
   every save; its log is `mkdocs-<wiki>-local.log` there. When one is already running, a click only opens the page
   again. The wikis, like the apps, keep running when you close the window, and Nexus Releases has no button that
   stops them. A wiki started before the checkout changed (after a pull, or a change to its `mkdocs.yml` or the
