@@ -54,3 +54,14 @@ install = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --no
 uninstall = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --uninstall"]
 detect = ["%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-ppsspp\\app\\PPSSPP-Manager.exe"]
 launch = [["Open", "%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-ppsspp\\app\\PPSSPP-Manager.exe"]]
+
+[apps.rpcs3]
+name = "RPCS3 Manager"
+summary = "RPCS3, the PlayStation 3 emulator: installed and set up, the firmware and your games, played and put in Steam."
+tag = "wp-rpcs3-v0.1.0"
+sha256 = ""
+category = "gaming"
+install = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --no-desktop-shortcut"]
+uninstall = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --uninstall"]
+detect = ["%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-rpcs3\\app\\RPCS3-Manager.exe"]
+launch = [["Open", "%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-rpcs3\\app\\RPCS3-Manager.exe"]]

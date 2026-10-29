@@ -40,6 +40,9 @@ device's controller, plays your PS2 games full screen and puts them in Steam.
 
 [PPSSPP Manager](apps/ppsspp.md) installs PPSSPP, the PSP emulator, in portable mode, plays your PSP games full
 screen and puts them in Steam.
+
+[RPCS3 Manager](apps/rpcs3.md) installs RPCS3, the PS3 emulator, takes the PS3's firmware and your packages, plays
+your PS3 games full screen and puts them in Steam.
 </div>
 </div>
 

@@ -81,7 +81,8 @@ jobs:
         dir: [core, windows-portable/portal, windows-portable/tools,
               windows-portable/apps/test,
               windows-portable/apps/pcsx2,
-              windows-portable/apps/ppsspp]   # every folder of the suite with tests/, and core, which its apps bundle
+              windows-portable/apps/ppsspp,
+              windows-portable/apps/rpcs3]   # every folder of the suite with tests/, and core, which its apps bundle
     defaults:
       run:
         working-directory: ${{ matrix.dir }}
@@ -112,7 +113,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        app: [test, pcsx2, ppsspp, portal]   # every app of the suite, and the portal
+        app: [test, pcsx2, ppsspp, rpcs3, portal]   # every app of the suite, and the portal
     env:
       APP: ${{ matrix.app }}
     steps:

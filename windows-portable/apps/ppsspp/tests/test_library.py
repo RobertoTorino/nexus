@@ -33,6 +33,14 @@ def test_the_usual_places_are_offered(tmp_path):
     assert library.suggested([], home, lambda: [card]) == [home / "Games", home / "Downloads", card]
     assert library.suggested([home / "Games"], home, lambda: []) == [home / "Downloads"]   # chosen already
 
+    class EmptySlot:                    # a card reader without a card: Windows raises when asked about it
+        def is_dir(self):
+            raise OSError(22, "The volume does not contain a recognized file system.")
+
+        def __str__(self):
+            return "E:\\"
+    assert library.suggested([], home, lambda: [EmptySlot(), card]) == [home / "Games", home / "Downloads", card]
+
 
 def test_the_plan(tmp_path):
     a, b = Game(tmp_path / "a.iso", "A"), Game(tmp_path / "b.iso", "B")

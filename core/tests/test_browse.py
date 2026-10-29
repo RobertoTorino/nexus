@@ -53,3 +53,19 @@ def test_a_folder_that_cannot_be_read_is_empty(tmp_path):
 
 def test_the_drives_are_there():
     assert browse.drives() and all(d.exists() for d in browse.drives())
+
+
+def test_an_empty_card_slot_is_no_drive(monkeypatch):
+    """A card reader or an SD slot without a card keeps its drive letter, and Windows raises when asked about it
+    (WinError 1005 on this PC's E: and F:); it is left out of the drives rather than ending the app."""
+    import sys
+
+    class EmptySlot:
+        def is_dir(self):
+            raise OSError(22, "The volume does not contain a recognized file system.")
+    assert not browse.mounted(EmptySlot()) and browse.mounted(Path.home())
+    if sys.platform != "win32":
+        assert browse.drives(lambda root: False) == [Path("/")]
+        return
+    assert browse.drives(lambda root: root == Path("C:\\")) == [Path("C:\\")]
+    assert browse.drives(lambda root: False) == []

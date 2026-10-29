@@ -69,4 +69,5 @@ nav:
       - Windows Portable Test: apps/test.md
       - PCSX2 Manager: apps/pcsx2.md
       - PPSSPP Manager: apps/ppsspp.md
+      - RPCS3 Manager: apps/rpcs3.md
       - Steam artwork: apps/covers.md

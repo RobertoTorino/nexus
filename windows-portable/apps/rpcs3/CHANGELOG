@@ -1,0 +1,41 @@
+Changelog: 29-10-2026 17:05:12
+
+Release 0.1.0.
+
+Changelog: 29-10-2026 16:28:00
+
+Added. The BC250 suite's RPCS3 Manager on the portable window (owner, 29-10-2026: "finish the gaming category,
+starting with RPCS3"), laid out as PPSSPP Manager: four cards, RPCS3, Your games, Settings and Log, the actions with a
+controller button in the row at the bottom. A Install downloads RPCS3 0.0.43-20395 for Windows, the build the BC250
+suite's app pins (rpcs3-v0.0.43-20395-46b7fb67_win64_msvc.7z, 37 MB, from RPCS3/rpcs3-binaries-win), checks it
+against the pinned SHA-256 and unpacks it with Windows' own tar (the .7z uses the BCJ2 filter, which no Python package
+reads) into %LOCALAPPDATA%\windows-portable-suite\windows-portable-rpcs3\emulator\, where RPCS3 on Windows keeps
+everything beside its program (config\, dev_hdd0\, dev_flash\, GuiConfigs\, log\); X Remove RPCS3, with a second
+press, deletes only the files the archive brought; Y Update when an older build is there. The RPCS3 pane says when
+Microsoft's Visual C++ runtime is missing. LB Firmware: the app's folder browser in Downloads showing the .PUP files,
+and RPCS3 installs the one picked without any window (--headless --installfw; the result from its log, log\RPCS3.log,
+and the version from dev_flash); RB Packages: the browser showing the .pkg files and the .rap and .edat licenses, X
+installs the open folder's (the licenses first, then the packages, a game's update last) and A on a file that one,
+each in a run of RPCS3 without its window (--headless --installpkg), the outcome from RPCS3's log. Before RPCS3's
+first start the app turns its welcome dialog and its update check off (GuiConfigs\CurrentSettings.ini) and writes
+player 1 on the device's controller through RPCS3's XInput handler with RPCS3's default layout, in which View and
+Menu together (or the guide button) open RPCS3's menu with Exit Game (config\input_configs\global\Default.yml; a
+file RPCS3 wrote is never touched). Your games: the disc games in the chosen folders (PS3_DISC.SFB and PS3_GAME; one
+without its PS3_DISC.SFB is said so), the games installed in RPCS3's dev_hdd0 and the disc games RPCS3 knows, read as
+the BC250 app reads them; played from Steam, never from the app (owner, 29-10-2026), alone and full screen (--no-gui
+--fullscreen: RPCS3 ends with the game); A Steam mark and Y Update Steam put them in Steam as "[PS3] <title>" (RPCS3
+and its firmware installed first), with the game's own pictures and a cover from SteamGridDB with the suite's key (RB
+Steam artwork); X Screen steps the game's screen (16:9, 4:3, Fill screen) in its own settings in RPCS3; LB Folders,
+with the folder browser for the controller. Settings in four tabs (Picture, Speed, Sound, Messages: 15 settings of
+config\config.yml, RPCS3 0.0.43's own keys and defaults, Cubeb and XAudio2 for the sound on Windows), never written
+while RPCS3 runs. The Log: RPCS3's folder with the firmware, the installed games and the saves, and the app's log; A
+View log (or a tap) shows the whole log in the app. The suite's buttons (B back, View exit, Menu the information), the
+d-pad staying in a pane, no pill in a pane and no user name on the screen or in the log, as in every app of the suite.
+Not carried over from the BC250 app: the controller state in the header (the handheld's controller is built in), the
+desktop's volume for RPCS3 (Bazzite's), RPCS3's own window for its other settings. A removable drive without a card
+(an empty SD slot) is left out of the folders offered and of the browser's places (core), rather than ending the
+app.
+
+Changelog: 29-10-2026 15:22:36
+
+Added. RPCS3 Manager: the first version, written by tools/new_app.py from the architecture chapter.

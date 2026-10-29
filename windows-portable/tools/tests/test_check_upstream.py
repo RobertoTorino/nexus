@@ -41,10 +41,47 @@ def github(latest: str, digest: str = SHA, asset: str = "Emu-v1.2.0-Windows-x64.
 
 def test_the_suites_own_pins_are_read():
     found = {pin.app: pin for pin in cu.pins()}
-    assert set(found) == {"pcsx2", "ppsspp"}
+    assert set(found) == {"pcsx2", "ppsspp", "rpcs3"}
     assert found["ppsspp"].repo == "hrydgard/ppsspp" and found["ppsspp"].asset == f"PPSSPP-v{found['ppsspp'].version}-Windows-x64.zip"
     assert found["pcsx2"].repo == "PCSX2/pcsx2" and found["pcsx2"].tag == f"v{found['pcsx2'].version}"
     assert found["ppsspp"].name == "PPSSPP Manager" and len(found["pcsx2"].sha256) == 64
+    assert found["ppsspp"].file_repo == "hrydgard/ppsspp" and found["ppsspp"].file_tag == found["ppsspp"].tag
+    # RPCS3's landmarks are tagged in one repository, its builds published in another: the pin names both
+    rpcs3 = found["rpcs3"]
+    assert rpcs3.repo == "RPCS3/rpcs3" and rpcs3.tag == "v" + rpcs3.version.split("-")[0]
+    assert rpcs3.file_repo == "RPCS3/rpcs3-binaries-win" and rpcs3.file_tag.startswith("build-")
+    assert rpcs3.asset.endswith("_win64_msvc.7z") and rpcs3.version in rpcs3.asset
+
+
+def test_a_pin_whose_file_is_in_another_repository(tmp_path):
+    """The latest release from REPO, the file from BUILDS at BUILD_TAG (RPCS3's layout)."""
+    package = tmp_path / "windows-portable" / "apps" / "emu" / "emu_manager"
+    package.mkdir(parents=True)
+    (package / "emulator.py").write_text(
+        'LANDMARK = "0.0.43"\nBUILD = 20395\nVERSION = f"{LANDMARK}-20395"\nTAG = f"v{LANDMARK}"\n'
+        'REPO = "someone/emu"\nBUILDS = "someone/emu-builds"\nBUILD_TAG = "build-abc"\n'
+        f'ASSET = "emu-v0.0.43-20395_win64.7z"\nSHA256 = "{SHA}"\n', encoding="utf-8")
+    asked = []
+
+    def get(url: str) -> bytes:
+        asked.append(url)
+        if url.endswith("someone/emu/releases/latest"):
+            return json.dumps({"tag_name": "v0.0.43", "published_at": "2030-01-02T00:00:00Z"}).encode()
+        if url.endswith("someone/emu-builds/releases/tags/build-abc"):
+            return json.dumps({"assets": [{"name": "emu-v0.0.43-20395_win64.7z", "digest": f"sha256:{SHA}"}]}).encode()
+        raise AssertionError(url)
+    report = tmp_path / "upstream.md"
+    assert cu.main(["--report", str(report)], get, tmp_path / "windows-portable") == 0
+    assert report.read_text() == "" and len(asked) == 2
+    pin = cu.pins(tmp_path / "windows-portable")[0]
+    assert pin.version == "0.0.43-20395" and pin.tag == "v0.0.43" and pin.file_tag == "build-abc"
+
+    def newer(url: str) -> bytes:
+        if url.endswith("/releases/latest"):
+            return json.dumps({"tag_name": "v0.0.44", "published_at": "2030-02-02T00:00:00Z", "html_url": "u"}).encode()
+        return get(url)
+    assert cu.main(["--report", str(report)], newer, tmp_path / "windows-portable") == 1
+    assert "v0.0.44 is out" in report.read_text()
 
 
 def test_all_in_step_writes_an_empty_report(tmp_path, capsys):

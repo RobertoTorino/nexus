@@ -1,3 +1,14 @@
+Changelog: 29-10-2026 17:05:12
+
+Release 0.1.1.
+
+Changelog: 29-10-2026 16:36:08
+
+Fixed. A removable drive without a card (an empty SD or card-reader slot keeps its drive letter, and Windows raises
+when asked about it: WinError 1005, no recognized file system) is left out of the folders offered as + Add, instead of
+ending the app while it lists them (found on the development PC's card reader, 29-10-2026); core's folder browser
+leaves it out of the places the same way.
+
 Changelog: 29-10-2026 14:35:18
 
 Release 0.1.0.

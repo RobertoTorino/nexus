@@ -69,7 +69,16 @@ def suggested(chosen: list[Path], home: Path | None = None,
     home = home or Path.home()
     taken = {os.path.normcase(str(f)) for f in chosen}
     places = [home / "Games", home / "Downloads", home / "Documents", *drives()]
-    return [p for p in places if p.is_dir() and os.path.normcase(str(p)) not in taken]
+    return [p for p in places if _is_dir(p) and os.path.normcase(str(p)) not in taken]
+
+
+def _is_dir(place: Path) -> bool:
+    """Whether the place is a folder; a removable drive without a card (an empty SD slot keeps its letter) makes
+    Windows raise rather than answer, and is no place."""
+    try:
+        return place.is_dir()
+    except OSError:
+        return False
 
 
 def plan(found: list[Game], marked: set[str], in_steam: dict[str, str]) -> tuple[list[Game], list[Game]]:

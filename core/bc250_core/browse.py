@@ -22,12 +22,23 @@ UP = "up"
 PLACES = ("Games", "Downloads", "Documents", "Desktop")
 
 
-def drives() -> list[Path]:
-    """Every drive's root that is there (C:\\, an SD card's E:\\); the filesystem's root off Windows."""
+def mounted(root: Path) -> bool:
+    """Whether a drive's root can be read: a card reader or an SD slot without a card keeps its letter, and asking
+    Windows about it raises (WinError 1005, no recognized file system) or answers no, rather than listing it."""
+    try:
+        return root.is_dir()
+    except OSError:
+        return False
+
+
+def drives(there: Callable[[Path], bool] = mounted) -> list[Path]:
+    """Every drive's root that is there (C:\\, an SD card's E:\\), an empty slot left out; the filesystem's root off
+    Windows."""
     if sys.platform != "win32":
         return [Path("/")]
     mask = ctypes.windll.kernel32.GetLogicalDrives()  # type: ignore[attr-defined]
-    return [Path(f"{letter}:\\") for n, letter in enumerate(string.ascii_uppercase) if mask & (1 << n)]
+    roots = [Path(f"{letter}:\\") for n, letter in enumerate(string.ascii_uppercase) if mask & (1 << n)]
+    return [root for root in roots if there(root)]
 
 
 def places(home: Path | None = None, roots: Callable[[], list[Path]] = drives) -> list[Path]:

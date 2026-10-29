@@ -1,3 +1,9 @@
+Changelog: 29-10-2026 16:36:08
+
+Fixed. browse.drives() leaves out a drive letter whose root cannot be read (a card reader or an SD slot without a
+card: Windows raises WinError 1005, no recognized file system, where the PC's E: and F: were, 29-10-2026), so the
+browser's places never end the app; browse.mounted() is the test, and drives() takes another for the tests.
+
 Changelog: 29-10-2026 13:17:58
 
 Added. platform.private(): a path or a text with the user's folders written as %LOCALAPPDATA%, %APPDATA% and

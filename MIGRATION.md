@@ -7,7 +7,104 @@ describe only what exists.
 
 ## Resume here (29-10-2026, for a new chat): the Windows Portable Suite
 
-**Where we stand (end of the session of 29-10-2026, for the next one).** Nothing is committed: the owner commits.
+**Start the next chat here (owner, 29-10-2026, end of the day: "make a note so we can continue in the next chat").**
+The working tree holds RPCS3 Manager, finished and checked (the paragraph below has every detail); the owner's part
+is the round on the Ally (the "To check on the Ally" list) and the releases (RPCS3 Manager 0.1.0, the portal's minor
+bump, core, PCSX2 Manager and PPSSPP Manager patch, Nexus). Then the gaming category goes on in this order:
+**shadPS4 Manager** (`bc250-bazzite/apps/shadps4/`), **Vita3K Manager** (`apps/vita3k/`), **Xenia Manager**
+(`apps/xenia/`), each the way RPCS3 Manager was made: `tools/new_app.py windows-portable <key> "<Name> Manager"
+--category gaming` first, then look up the emulator's Windows build on GitHub (its asset name, archive format, SHA-256
+and size, and how it keeps its files: a portable mode or a folder beside the program; `<exe> --help` lists its flags,
+the owner's tip), pin it in `emulator.py` (a file in another repository than the releases takes `BUILDS` and
+`BUILD_TAG`, as RPCS3's), then port the BC250 app's parts onto PPSSPP Manager's layout (cards, legend, browser, Steam,
+settings in tabs, log), its tests from PPSSPP Manager's and RPCS3 Manager's, the wiki chapter, the CHANGELOG entry
+and the MIGRATION notes. After the three: item 2 of the list below, Windows Portable Test's tabs. What RPCS3 Manager
+settled for all of them: the games are played from Steam only, the emulator's own window is never shown, an install
+that the emulator must do itself runs headless where its flags allow, a .7z is unpacked with Windows' tar, and an
+empty SD slot is no drive.
+
+**Where we stand (29-10-2026, later in the day, for the next chat).** Nothing is committed: the owner commits. The
+round below went out as wp-pcsx2-v2.0.0, wp-ppsspp-v0.1.0, wp-test-v2.0.0 and wp-portal-v3.0.0 (nexus-v0.21.0). The
+working tree holds **RPCS3 Manager for the Windows Portable Suite** (owner, 29-10-2026: "a change of plans, i first
+want to finish the gaming category, starting with RPCS3"), `windows-portable/apps/rpcs3/`, 0.1.0, made with
+`tools/new_app.py windows-portable rpcs3 "RPCS3 Manager" --category gaming` and then ported from the BC250 app
+(`bc250-bazzite/apps/rpcs3/`) and laid out as PPSSPP Manager (four cards: RPCS3, Your games, Settings, Log). Checked
+on Windows: every test suite of `./test.sh` (RPCS3 Manager 80), the installer test, a release built with
+`build_release.py` and installed by the installer test, the frozen program started offscreen, both wikis built
+`--strict`, `check_versions.py`, `check_upstream.py` live against GitHub. The portal pins `wp-rpcs3-v0.1.0` with an
+empty sha256, so `check_manifest.py --base origin/main` asks for the portal's minor bump (the owner's number). What
+was found out and decided, in order:
+
+- **The pin** is the BC250 app's build, 0.0.43-20395 (commit 46b7fb67), as its Windows archive
+  `rpcs3-v0.0.43-20395-46b7fb67_win64_msvc.7z` (37 MB; GitHub's digest and our own download agree) on
+  `RPCS3/rpcs3-binaries-win`, one release per build; the landmarks (v0.0.43) are tagged in `RPCS3/rpcs3`. So
+  `emulator.py` names both (`REPO` and `TAG`; `BUILDS` and `BUILD_TAG`), and `windows-portable/tools/check_upstream.py`
+  reads the latest release from the one and the pinned file from the other (run here: in step). `rpcs3.exe --help`
+  (the owner's tip) lists the flags: `--headless`, `--no-gui`, `--fullscreen` (only with it), `--installfw`,
+  `--installpkg`, `--allow-any-location`, `--input-config`, `--config`.
+- **The archive is a .7z with the BCJ2 filter.** Python's lzma has no BCJ2 and py7zr refuses it (tried here:
+  UnsupportedCompressionMethodError; uninstalled again), so the app unpacks it with **Windows' own tar**
+  (`System32\tar.exe`, bsdtar 3.8.9 with liblzma on this PC; its exit code and listing are language-free, no new
+  dependency). `emulator.tar_unpacks_7z()` looks for liblzma in `tar --version` before anything is downloaded;
+  Windows 10's tar was built without it, and the pane then says so. The live test (`WPS_LIVE_DOWNLOAD=1`) downloads,
+  checks and unpacks the real archive (255 files, 140 MB).
+- **RPCS3 on Windows keeps everything beside rpcs3.exe** (`Utilities/File.cpp`, `fs::get_config_dir`: the program's
+  folder, `config\` for config.yml, vfs.yml, games.yml, input_configs and custom_configs, `log\RPCS3.log`,
+  `GuiConfigs\` at the top; a `portable\` folder beside it would move them, the app makes none), so the emulator
+  folder is one folder: Remove deletes the archive's files by the record (`installed.json`), RPCS3's own files stay.
+  RPCS3 refuses to run from %TEMP% ("should never be run from a temporary location"; `--allow-any-location` lifts it,
+  used for the experiments here); the suite's folder is not temp.
+- **Headless installs work without any window**: `rpcs3.exe --headless --installfw <PUP>` and `--headless
+  --installpkg <file>` run to the end (rpcs3.cpp hands them to `main_window::InstallPup` and `InstallPackages` with
+  no window, which then ask nothing) and end with RPCS3's own fault at teardown (exit 0xC0000409, "Verification
+  failed (object: 0x0)"), so the result is read from `log\RPCS3.log` ("GUI: Successfully installed PS3 firmware
+  version 4.92." and the package lines the BC250 app reads) and from `dev_flash\vsh\etc\version.txt`; tried here with
+  dummy files (the error lines). So the firmware is installed **from the app**, the file picked with core's browser in
+  Downloads (LB Firmware), where the BC250 app had to open RPCS3's window for it. RB Packages: the browser showing
+  the .pkg and .rap/.edat files, X installs the open folder's (licenses, packages, updates last, one run each), A a
+  file.
+- **The controller**: RPCS3 plays with the keyboard until its pad file names a controller, so the app writes
+  `config\input_configs\global\Default.yml` (with its mark, as the BC250 app) for RPCS3's **XInput** handler, device
+  "XInput Pad #1", with RPCS3's default XInput mapping (`xinput_pad_handler::init_config` at the commit: XInput's
+  deadzones 7849/8689, trigger threshold 30, anti-deadzone 13 %); PS Button "Guide,Back&Start", so **View + Menu
+  together** open RPCS3's home menu with Exit Game (the Ally's Xbox button is Windows'). No controller detection (the
+  handheld's is built in). To check on the Ally.
+- The RPCS3 pane says when Microsoft's **Visual C++ runtime** is missing (vcruntime140.dll, vcruntime140_1.dll,
+  msvcp140.dll in System32; the wiki links vc_redist.x64.exe); the games are played from Steam only once RPCS3
+  **and its firmware** are there (Update Steam says so). X on a game steps its **screen** (16:9, 4:3, Fill screen:
+  `config\custom_configs\config_<ID>.yml`, the BC250 app's Screen setting column). Settings: 15 of
+  `config\config.yml` in four tabs (Picture 6, Speed 4, Sound 3, Messages 2; Cubeb, XAudio2, FAudio on Windows).
+  Not carried over: the controller state in the header, Bazzite's volume for RPCS3 (sound.py), the RPCS3 settings
+  button (its window), the "a newer RPCS3 is out" notice in the app (the weekly check does it).
+- **To check on the Ally**: `tar --version` says liblzma and A Install unpacks; the VC runtime line; a real
+  PS3UPDAT.PUP through LB Firmware (a minute or two; the Firmware row shows 4.92); a folder with .pkg and .rap through
+  RB Packages; a disc game folder on an SD card; A Steam mark, Y Update Steam and the game from Steam full screen; View
+  + Menu for RPCS3's menu and Exit Game (and whether the guide button reaches RPCS3); X Screen; the settings read by
+  RPCS3 (Vulkan on the Ally's GPU); the whole log; no user name on any screen.
+- **Found on the way, fixed in the working tree: an empty card slot ended the folder list.** `./test.sh` failed
+  core's `test_the_drives_are_there` on this PC: its card reader's E: and F: keep their drive letters without a card,
+  and `Path.exists()` / `is_dir()` on them raises WinError 1005 ("The volume does not contain a recognized file
+  system") instead of answering False (the state flickers: a minute later `GetDriveTypeW` said DRIVE_NO_ROOT_DIR and
+  they answered False). The same `is_dir()` sits in every game manager's `library.suggested()` (the + Add places,
+  built on every show of the games) and in core's `browse.drives()` (the browser's places), so an Ally with an empty
+  SD slot could end PCSX2 Manager and PPSSPP Manager there. Fixed: core's `drives()` leaves out a root that cannot
+  be read (`browse.mounted()`), and `suggested()` in PCSX2, PPSSPP and RPCS3 Manager skips such a drive; tests in
+  core and the three apps; CHANGELOG entries in core (Fixed.), PCSX2 Manager and PPSSPP Manager (Fixed.: a patch
+  release each, the owner's call; RPCS3 Manager's first entry covers it). core's `test_nobody_running` also failed
+  once, during the parallel runs only; alone it passes.
+- **The release**: the app is new (0.1.0, its CHANGELOG has the Added entry); the portal's minor bump (its CHANGELOG
+  has the Added entry); Nexus (the root CHANGELOG: `check_upstream.py` follows a pin whose file is in another
+  repository, Fixed.); core (Fixed., bundled into every release), PCSX2 Manager and PPSSPP Manager (Fixed.) for the
+  card-slot fix.
+
+**Next** (owner, 29-10-2026: the gaming category first): RPCS3 Manager is done but for the owner's round on the Ally
+and its release; then **shadPS4 Manager, Vita3K Manager and Xenia Manager** the same way (each from
+`tools/new_app.py --category gaming`, ported from the BC250 app, its emulator's Windows build, archive format and
+portable mode to look up first, as RPCS3's were); then item 2 below, Windows Portable Test's tabs, and the rest of
+item 3.
+
+**Released as wp-pcsx2-v2.0.0, wp-ppsspp-v0.1.0, wp-test-v2.0.0 and wp-portal-v3.0.0 (the owner, 29-10-2026; the list
+as it was prepared).** Nothing is committed: the owner commits.
 The working tree holds one round of work, every check passing on Windows (`./test.sh`: core 219, tools 173,
 dev/releases 116, the portal 45, the suite's tools 27, PCSX2 Manager 109, PPSSPP Manager 67, Windows Portable Test
 77; both wikis built with `--strict`; `tools/pre-push.sh` fine; no CRLF). `tools/ci-local.sh` was not run (no podman on
@@ -42,8 +139,9 @@ picked in Downloads; the whole log scrolled; B and View everywhere; the d-pad st
 the portal's Suite page (A on the wallpaper, Y Check again / Update); no user name on any screen. Lines logged
 before the privacy change still hold the name in the log files until they rotate (the screen masks them).
 
-**Next** (the list under "Next, in this order" below): item 1, PPSSPP Manager, is done but for the owner's round on
-the Ally and its release; then 2, Windows Portable Test's tabs; 3, the BC250 apps for the Ally, HDMI CEC Manager first.
+**Next, as it stood then** (the list under "Next, in this order" below): item 1, PPSSPP Manager, done but for the
+owner's round on the Ally and its release; then 2, Windows Portable Test's tabs; 3, the BC250 apps for the Ally, HDMI
+CEC Manager first. Changed later that day: the gaming category first (see the top of this chapter).
 
 **Released** (the owner, 29-10-2026): wp-pcsx2-v1.0.1 and wp-test-v1.7.1, pinned by wp-portal-v2.0.3 (nexus-v0.19.0),
 with everything listed under "Released as" below.
@@ -217,9 +315,10 @@ after a game (`-batch`, end with View + Menu); a real game with the BIOS; the to
 M1/M2 chip for each back button; Update Steam with the real Steam (it closes and restarts it); the wallpaper and the
 pills on the device.
 
-**Next, in this order (owner, 29-10-2026: "I want to start with PPSSPP Manager in a next chat"):**
+**Next, in this order (owner, 29-10-2026: "I want to start with PPSSPP Manager in a next chat"; later that day: the
+gaming category first, RPCS3 Manager done in the working tree, then shadPS4, Vita3K and Xenia, then item 2):**
 
-1. **PPSSPP Manager for the Windows Portable Suite** (in the working tree, see above; Rename files left out), ported from the BC250 suite's PPSSPP Manager
+1. **PPSSPP Manager for the Windows Portable Suite** (released as wp-ppsspp-v0.1.0; Rename files left out), ported from the BC250 suite's PPSSPP Manager
    (`bc250-bazzite/apps/ppsspp/`) the way PCSX2 Manager was: `tools/new_app.py --suite windows-portable ppsspp`
    first (the layout, the manifest entry, the installer test, the CI matrix, the wiki chapter), then the BC250 app's
    parts on the portable window (PPSSPP's own window never shown, the games, Steam, the settings in tabs with core's

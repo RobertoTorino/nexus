@@ -1,3 +1,11 @@
+Changelog: 29-10-2026 17:05:12
+
+Release 0.21.1. Brings wp-pcsx2-v2.0.1, wp-ppsspp-v0.1.1, wp-test-v2.0.1.
+
+Changelog: 29-10-2026 16:29:33
+
+Fixed. The Windows Portable Suite's weekly upstream check (windows-portable/tools/check_upstream.py) follows a pin whose file is published in another repository than the emulator's releases: RPCS3 tags its landmarks in RPCS3/rpcs3 and publishes every build in RPCS3/rpcs3-binaries-win, so an emulator.py may name BUILDS and BUILD_TAG beside REPO and ASSET, and the check reads the latest release from the one and the pinned file from the other (RPCS3 Manager's pin, the first).
+
 Changelog: 29-10-2026 15:04:05
 
 Release 0.21.0. Brings wp-portal-v3.0.0.

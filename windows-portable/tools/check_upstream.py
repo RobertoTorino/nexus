@@ -4,9 +4,12 @@
 
     python3 windows-portable/tools/check_upstream.py [--report FILE] [app ...]      # every app when none is named
 
-Each app that installs an emulator pins one release in its emulator.py (PCSX2 Manager's, PPSSPP Manager's): REPO, its
-GitHub repository; VERSION (or TAG), the release; ASSET, the file it downloads; SHA256, the checksum it was tried with.
-They are read here without importing the app, from every apps/<name>/<package>/emulator.py of the suite. For each:
+Each app that installs an emulator pins one release in its emulator.py (PCSX2 Manager's, PPSSPP Manager's, RPCS3
+Manager's): REPO, its GitHub repository; VERSION (or TAG), the release; ASSET, the file it downloads; SHA256, the
+checksum it was tried with; and, where the file is published in another repository than the releases (RPCS3's builds,
+RPCS3/rpcs3-binaries-win, one release per build, its landmarks tagged in RPCS3/rpcs3), BUILDS, that repository, and
+BUILD_TAG, the file's release there. They are read here without importing the app, from every
+apps/<name>/<package>/emulator.py of the suite. For each:
  * the latest stable release: newer than the pin means a new version of the app, which brings it once tried on the
    device (owner, 29-10-2026: a new emulator can break things, so it never reaches the device without a release of
    the app); the report names the release and the constant to move;
@@ -68,6 +71,16 @@ class Pin:
     asset: str                                  # "PPSSPP-v1.20.4-Windows-x64.zip"
     sha256: str
     where: str                                  # "VERSION in windows-portable/apps/ppsspp/ppsspp_manager/emulator.py"
+    asset_repo: str = ""                        # where the file is, when not *repo*: "RPCS3/rpcs3-binaries-win"
+    asset_tag: str = ""                         # its release there: "build-<commit>"
+
+    @property
+    def file_repo(self) -> str:
+        return self.asset_repo or self.repo
+
+    @property
+    def file_tag(self) -> str:
+        return self.asset_tag or self.tag
 
 
 def _constants(path: Path) -> dict[str, str]:
@@ -106,7 +119,8 @@ def pins(suite: Path = SUITE) -> list[Pin]:
         constant = "VERSION" if "VERSION" in values else "TAG"
         found.append(Pin(path.parent.parent.name, init.get("APP_NAME", path.parent.parent.name), values["REPO"],
                          version, values.get("TAG", f"v{version}"), values["ASSET"], values["SHA256"].lower(),
-                         f"{constant} in {path.relative_to(suite.parent).as_posix()}"))
+                         f"{constant} in {path.relative_to(suite.parent).as_posix()}",
+                         values.get("BUILDS", ""), values.get("BUILD_TAG", "")))
     return found
 
 
@@ -139,14 +153,14 @@ def check(pin: Pin, get: Fetch = fetch) -> Report:
                             f"brings it, once tried on the device ({pin.where}). {latest.get('html_url', '')}")
     else:
         report.fine.append(f"no stable release newer than {pin.version}")
-    pinned = json.loads(get(f"{api}/releases/tags/{pin.tag}"))
+    pinned = json.loads(get(f"{API.format(repo=pin.file_repo)}/releases/tags/{pin.file_tag}"))
     asset = next((a for a in pinned.get("assets", []) if a.get("name") == pin.asset), None)
     if asset is None:
-        report.drift.append(f"{pin.asset} is gone from {pin.tag}: every install of {pin.name} fails now.")
+        report.drift.append(f"{pin.asset} is gone from {pin.file_tag}: every install of {pin.name} fails now.")
     else:
         digest = str(asset.get("digest") or "")
         if digest.startswith("sha256:") and digest[7:].lower() != pin.sha256:
-            report.drift.append(f"{pin.asset} of {pin.tag} was replaced: GitHub publishes {digest[7:]}, the app pins "
+            report.drift.append(f"{pin.asset} of {pin.file_tag} was replaced: GitHub publishes {digest[7:]}, the app pins "
                                 f"{pin.sha256}; every install of {pin.name} fails now.")
         else:
             report.fine.append(f"{pin.asset} is the pinned file" if digest else f"{pin.asset} is there")
