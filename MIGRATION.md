@@ -111,12 +111,18 @@ after a game (`-batch`, end with View + Menu); a real game with the BIOS; the to
 M1/M2 chip for each back button; Update Steam with the real Steam (it closes and restarts it); the wallpaper and the
 pills on the device.
 
-**Next, in this order:**
+**Next, in this order (owner, 29-10-2026: "I want to start with PPSSPP Manager in a next chat"):**
 
-1. Windows Portable Test's tabs and tests: the plan below ("The plan: Windows Portable Test's tabs"), the owner
+1. **PPSSPP Manager for the Windows Portable Suite**, ported from the BC250 suite's PPSSPP Manager
+   (`bc250-bazzite/apps/ppsspp/`) the way PCSX2 Manager was: `tools/new_app.py --suite windows-portable ppsspp`
+   first (the layout, the manifest entry, the installer test, the CI matrix, the wiki chapter), then the BC250 app's
+   parts on the portable window (PPSSPP's own window never shown, the games, Steam, the settings in tabs with core's
+   `Tabs`, the legend as the action row, the Gaming category's icon). PPSSPP's Windows build and its portable mode
+   (a `memstick` folder beside the program) are to look up; the name without "BC-250" is the owner's to give.
+2. Windows Portable Test's tabs and tests: the plan below ("The plan: Windows Portable Test's tabs"), the owner
    picks the order. Decided: no test needing administrator rights; tabs per category as the portal's (LB/RB), with
    core's `Tabs` (PCSX2 Manager's Settings pane uses it the same way).
-2. The BC250 apps for the Ally (owner, 29-10-2026): **left out** the board's and Linux's: GPU Governor Manager, CU
+3. The BC250 apps for the Ally (owner, 29-10-2026): **left out** the board's and Linux's: GPU Governor Manager, CU
    Bisect, Cores Bisect, GPU OC Bisect, Persistent ACPI, Memory Manager, Fan Control (the handheld's own tuning apps
    stay on hold instead), ACE Queues, Mesh Shaders, BIOS Reader, USB Wi-Fi, Console LinkB (the Xbox app does it),
    Decky Loader Manager. **HDMI CEC Manager first**: the owner tests it with a dock and a special USB-C adapter (how
@@ -125,7 +131,7 @@ pills on the device.
    DatStation, BC-250 Upscaler Manager, System Overlay, USB IPS3.5, USB HD Control, Bazzite SFTP Tools, Media Tool,
    Dependency Checker, Bazzite NetcatGUI; USB HD Cam once the PS5 camera's driver on Windows is found out. Their
    Windows names (without BC-250/Bazzite) are the owner's to give with each.
-3. Smaller: paging in a portal tab from a ninth app; a portal that checks for its own update again (it checks once
+4. Smaller: paging in a portal tab from a ninth app; a portal that checks for its own update again (it checks once
    at start: wp-portal-v1.5.0 was published 9 s after the check, 28-10-2026); the drawn icons of ICONS.md in
    `bc250-bazzite/docs/design/icons/`.
 
