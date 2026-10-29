@@ -41,15 +41,22 @@ def test_nexus_releases_installs_on_windows():
     assert "releases" in _nexus_apps()
 
 
-def test_ci_runs_each_installer_test_and_each_release_in_its_own_step():
+def test_ci_runs_each_installer_test_and_each_release_in_a_job_of_its_own():
+    """The installers job is a matrix, one job per app and the portal (29-10-2026: one job doing them all in a row
+    took six to fifteen minutes): each runs the installer test, builds the release (never published, owner
+    28-10-2026) and installs it; Nexus Releases' Windows installer has a job of its own."""
+    import re
     ci = CI.read_text(encoding="utf-8")
-    for name in sorted(_apps() | _nexus_apps()):
+    matrix = re.search(r"app: \[([^\]]*)\]", ci).group(1)
+    assert {entry.strip() for entry in matrix.split(",")} == _apps()
+    assert matrix.strip().endswith("portal")                   # the portal last: new_app.py puts an app before it
+    for step in ("- name: Installer test\n", "- name: Build the release zip, not published\n",
+                 "- name: Installer test on the release\n"):
+        assert step in ci, step
+    assert "windows-portable/tools/installer-tests/${{ matrix.app }}.ps1" in ci
+    for name in sorted(_nexus_apps()):
         assert f'- name: "Installer test: {name}"' in ci, name
         assert f"windows-portable/tools/installer-tests/{name}.ps1" in ci, name
-    for name in sorted(_apps()):
-        # Built and tested in CI, never published (owner, 28-10-2026: "Release: portal" read as a release)
-        assert f'- name: "Build the release zip, not published: {name}"' in ci, name
-        assert f'- name: "Installer test on the release: {name}"' in ci, name
 
 
 def test_the_installer_tests_never_touch_the_users_own_folders():

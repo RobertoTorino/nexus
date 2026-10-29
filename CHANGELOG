@@ -1,3 +1,20 @@
+Changelog: 29-10-2026 05:31:40
+
+Release 0.15.1.
+
+Changelog: 29-10-2026 05:21:49
+
+Fixed. A push to one suite runs no other suite's CI (owner, 29-10-2026: "why run a bazzite CI when releasing
+Windows"): ci.yml and ci-windows-portable.yml run only for a push that changes their suite or what its releases are
+built from (core, tools/, dev/; ci.yml also the root's apps.toml copy and test.sh). ci-nexus.yml still runs on every
+push. tools/ci_state.py answers "none" within five minutes for a commit that has no run of the workflow, with the
+reason, instead of waiting the whole hour (tools/tag-release.sh and the release workflows ask it).
+
+Fixed. The Windows Portable Suite's CI builds and installs each app's and the portal's release in a job of its own
+(the installers matrix; one job doing them all in a row took six to fifteen minutes, the longest wait of every push
+and so of every release); Nexus Releases' Windows installer test has a job of its own. tools/new_app.py adds a new
+Windows app to the matrix.
+
 Changelog: 29-10-2026 04:58:48
 
 Release 0.15.0. Brings wp-portal-v2.0.0.

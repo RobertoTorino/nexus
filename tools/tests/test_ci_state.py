@@ -47,6 +47,24 @@ def test_gives_up_after_the_wait_and_reports_failure_at_once(monkeypatch, capsys
     assert "failure  https://x/main" in capsys.readouterr().out
 
 
+def test_a_commit_without_a_run_is_answered_within_minutes(monkeypatch, capsys):
+    """A suite's CI runs only when a push changes its paths (29-10-2026): a commit that has no run after the grace
+    gets "none" then, with the reason, not after the whole wait; a run that appears in time is waited for."""
+    monkeypatch.delenv("BC250_CI_STATE", raising=False)
+    clock = [0.0]
+
+    def sleep(seconds):
+        clock[0] += seconds
+    assert ci_state.check("abc1234", 60, fetch=lambda sha, workflow: [], sleep=sleep, now=lambda: clock[0],
+                          workflow="ci-windows-portable.yml") == 2
+    assert ci_state.NONE_GRACE_S <= clock[0] < ci_state.NONE_GRACE_S + 2 * ci_state.POLL_S
+    out, err = capsys.readouterr()
+    assert out.startswith("none\n") and "no run of ci-windows-portable.yml on abc1234" in err
+    clock[0] = 0.0
+    late = [[]] * 4 + [[run(status="in_progress", conclusion=None)], [run()]]
+    assert ci_state.check("abc1234", 60, fetch=lambda sha: late.pop(0), sleep=sleep, now=lambda: clock[0]) == 0
+
+
 def test_unreachable_and_the_stub(monkeypatch):
     monkeypatch.delenv("BC250_CI_STATE", raising=False)
 

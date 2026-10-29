@@ -1,11 +1,14 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 name: CI
 
-# The checks of the BC250 Bazzite Suite (bc250-bazzite/) on every push and pull request. Releases are made by
-# release.yml, one per tag. The Windows Portable Suite has its own, ci-windows-portable.yml, and Nexus's shared
-# checks (core, the Nexus tools, dev/, the Nexus page and the repository's rules) run in ci-nexus.yml (owner,
+# The checks of the BC250 Bazzite Suite (bc250-bazzite/) on every push and pull request that changes the suite or
+# what its releases are built from (core, the Nexus tools, dev/, the root's copy of its apps.toml, test.sh): a push
+# to another suite alone runs no job here (owner, 29-10-2026: "why run a bazzite CI when releasing Windows"). Releases
+# are made by release.yml, one per tag. The Windows Portable Suite has its own, ci-windows-portable.yml, and Nexus's
+# shared checks (core, the Nexus tools, dev/, the Nexus page and the repository's rules) run in ci-nexus.yml (owner,
 # 27-10-2026: one suite's checks never block another suite's releases). This suite's tags wait for this workflow
-# and for ci-nexus.yml (tools/tag-release.sh, the ci job of release.yml).
+# and for ci-nexus.yml (tools/tag-release.sh, the ci job of release.yml); a release commit changes the suite (its
+# VERSION and CHANGELOG), so it has a run.
 # A tag starts no CI of its own: tools/tag-release.sh tags only a pushed commit CI passed, and release.yml waits for
 # that commit's CI. A run per tag (22 in one release) only queued the same jobs again and gave each release one more
 # run that could fail or hang.
@@ -15,7 +18,27 @@ name: CI
 on:
   push:
     branches: ["**"]                    # every branch, no tag. Not tags-ignore alone: GitHub then runs no branch push
+    paths:
+      - "bc250-bazzite/**"
+      - "core/**"                       # bundled in every app
+      - "tools/**"                      # the release tools
+      - "dev/**"                        # Nexus Releases: installer-tests/release.sh
+      - "portal/**"                     # the root's copy of the suite's apps.toml
+      - "test.sh"
+      - "requirements-dev.txt"
+      - ".github/workflows/ci.yml"
+      - ".github/workflows/release.yml"
   pull_request:
+    paths:
+      - "bc250-bazzite/**"
+      - "core/**"
+      - "tools/**"
+      - "dev/**"
+      - "portal/**"
+      - "test.sh"
+      - "requirements-dev.txt"
+      - ".github/workflows/ci.yml"
+      - ".github/workflows/release.yml"
 
 jobs:
   versions:

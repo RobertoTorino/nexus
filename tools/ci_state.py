@@ -9,7 +9,10 @@ before tagging, and the release workflows before they build, so only a commit th
     python3 tools/ci_state.py [--wait MINUTES] [--workflow FILE] <commit>
 
 Prints the state (passed, failed, running, none) and the runs. Exit status: 0 passed, 1 failed, 2 still running or
-no run yet (after waiting --wait minutes, default 0), 3 GitHub not reachable. Signs in with GH_TOKEN, GITHUB_TOKEN
+no run yet (after waiting --wait minutes, default 0), 3 GitHub not reachable. A suite's CI runs only when a push
+changes the suite or the shared parts (the workflows' paths, 29-10-2026), so a commit may have no run at all: when
+none has appeared after NONE_GRACE_S of waiting, the answer is "none" at once, with the reason, rather than after the
+whole wait. Signs in with GH_TOKEN, GITHUB_TOKEN
 or the gh login when there is one (60 requests an hour without, 5,000 with). BC250_CI_STATE answers instead of
 GitHub (passed, failed, running, none): for the tests of tag-release.sh."""
 
@@ -30,7 +33,10 @@ RUNS_URL = "https://api.github.com/repos/{repo}/actions/workflows/{workflow}/run
 WORKFLOW = "ci.yml"                     # the BC250 Bazzite Suite's; another suite: ci-<suite>.yml; Nexus: ci-nexus.yml
 OK = ("success", "skipped", "neutral")
 POLL_S = 30
+NONE_GRACE_S = 300                      # a run GitHub is about to start appears well within this
 EXIT = {"passed": 0, "failed": 1, "running": 2, "none": 2}
+NO_RUN = ("no run of {workflow} on {sha}: it runs only when a push changes its suite or the shared parts (the "
+          "workflow's paths). Tag a commit that changed them, or push one.")
 
 
 def repo_slug() -> str:
@@ -86,7 +92,8 @@ def describe(runs: list[dict]) -> list[str]:
 def check(sha: str, wait_minutes: float = 0, fetch=fetch_runs, sleep=time.sleep, now=time.monotonic,
           workflow: str = WORKFLOW) -> int:
     stub = os.environ.get("BC250_CI_STATE")
-    deadline = now() + wait_minutes * 60
+    started = now()
+    deadline = started + wait_minutes * 60
     while True:
         if stub:
             current, lines = stub, []
@@ -98,6 +105,9 @@ def check(sha: str, wait_minutes: float = 0, fetch=fetch_runs, sleep=time.sleep,
                 return 3
             current, lines = state(runs), describe(runs)
         if stub or current in ("passed", "failed") or now() >= deadline:      # a fixed answer: no use waiting
+            break
+        if current == "none" and now() >= started + NONE_GRACE_S:               # no run is coming
+            print(NO_RUN.format(workflow=workflow, sha=sha[:7]), file=sys.stderr)
             break
         print(f"CI on {sha[:7]}: {current}, looking again in {POLL_S} s", file=sys.stderr, flush=True)
         sleep(POLL_S)

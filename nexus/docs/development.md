@@ -107,10 +107,18 @@ suites on Windows, and core, tools and `dev/` on both.
 
 ### CI on your own machine
 
-GitHub runs two CI workflows on every push: `ci-nexus.yml`, Nexus's checks (core, the Nexus tools, `dev/`, the Nexus
-page and the repository's rules: line endings, exec bits, the four files of every former repo, no CHANGELOG losing
-an entry), and the suite's own (`ci.yml` for the BC250 Bazzite Suite, `ci-<suite>.yml` for the others). A suite's
-release tags wait for both, never for another suite's CI, so one suite's failure never holds another's releases.
+GitHub runs `ci-nexus.yml` on every push: Nexus's checks (core, the Nexus tools, `dev/`, the Nexus page and the
+repository's rules: line endings, exec bits, the four files of every former repo, no CHANGELOG losing an entry). A
+suite's own CI (`ci.yml` for the BC250 Bazzite Suite, `ci-<suite>.yml` for the others) runs when the push changes
+that suite's folder or what its releases are built from (core, `tools/`, `dev/`), never for a push to another suite
+alone. A suite's release tags wait for its own CI and for Nexus's, never for another suite's, so one suite's failure
+never holds another's releases; a commit that has no run of the suite's CI (nothing of the suite changed) gets no
+tag: `tools/ci_state.py` says so within five minutes instead of waiting the hour.
+
+The Windows Portable Suite's CI runs its installer tests and release builds as one job per app and the portal
+(`installers`, a matrix): each installs the app from the checkout, builds its release zip as the release workflow
+does (never published) and installs it from that zip. A new app is one more entry in that matrix
+(`tools/new_app.py` adds it).
 
 `./test.sh` runs every suite in one venv that holds everything, on whatever Python your system has. GitHub's CI runs
 each job on Python 3.12 with only that job's own requirements, so a test can pass here and still fail there: a

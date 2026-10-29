@@ -350,15 +350,12 @@ W_CI = '''jobs:
         dir: [core, windows-portable/portal,
               windows-portable/apps/test]   # every folder of the suite with tests/, and core, which its apps bundle
   installers:
+    strategy:
+      matrix:
+        app: [test, portal]   # every app of the suite, and the portal
     steps:
-      - name: "Installer test: test"
-        run: powershell -File windows-portable/tools/installer-tests/test.ps1
-      - name: "Installer test: releases"
-        run: powershell -File windows-portable/tools/installer-tests/releases.ps1
-      - name: "Build the release zip, not published: test"
-        run: python build
-      - name: "Build the release zip, not published: portal"
-        run: python build portal
+      - name: Installer test
+        run: powershell -File windows-portable/tools/installer-tests/${{ matrix.app }}.ps1
 '''
 
 
@@ -435,10 +432,7 @@ def test_a_windows_suites_app(windows_checkout, capsys):
         (suite / "docs" / "index.md").read_text()
     ci = (root / ".github" / "workflows" / "ci-windows-portable.yml").read_text()
     assert "windows-portable/apps/test,\n              windows-portable/apps/emu]   # every folder" in ci
-    assert ('      - name: "Installer test: emu"\n        run: powershell -NoProfile -ExecutionPolicy Bypass -File '
-            'windows-portable/tools/installer-tests/emu.ps1\n      - name: "Installer test: releases"') in ci
-    assert ('wpdist/emu\n      - name: "Installer test on the release: emu"') in ci
-    assert ci.index('not published: emu"') < ci.index('not published: portal"')
+    assert "app: [test, emu, portal]   # every app of the suite, and the portal" in ci   # its installers job
 
 
 def test_a_windows_category_without_icons_is_refused(windows_checkout):

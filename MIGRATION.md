@@ -33,6 +33,19 @@ Ally), checked (core, the portal, both apps' suites), not released:**
 - The wikis: PCSX2 Manager's chapter (the screen, the buttons, the Settings tables per tab), Windows Portable Test's
   (the row at the bottom, Y Stick lights), the portal's (the row works by touch), the Nexus page's development
   chapter (`Legend`, `Tabs`, `act()`); the suite's CLAUDE.md and DESIGN.md carry the legend rule.
+- **CI and releases faster** (owner, 29-10-2026: "build and release on GitHub takes an awful lot of time now"; the
+  release logic stays: only a commit CI passed is released, a tag runs no CI, each suite waits for its own CI and
+  Nexus's). The Windows CI's `installers` job, one job doing four installer tests, three builds and three installs
+  in a row (6 to 15 min, the gate of every `wp-` tag), is a matrix with a job per app and the portal (about 2 to 3
+  min). `ci.yml` and `ci-windows-portable.yml` have path filters: a push to one suite runs no other suite's CI
+  (the owner: "why run a bazzite CI when releasing Windows"; the rule of 27-10-2026 kept the workflows apart and the
+  tags waiting only for their own, but every workflow still ran on every push). `tools/ci_state.py` answers "none"
+  within five minutes for a commit without a run. Root CHANGELOG (Nexus, Fixed.). **Not done, the owner's call:**
+  releasing the apps and the portal in one round. The portal pins each app's tag with the sha256 of its zip, filled
+  in when the tag is released (Nexus Releases' step 2 waits for the app releases, then pins); one round would mean
+  pinning without the sha256 (the format allows it: the bundle is then checked against SHA256SUMS only), the portal's
+  release waiting for the test release to exist, and a rework of Nexus Releases' two steps. It would halve a full
+  release again (one CI wait instead of two).
 
 **Open from the owner's round, to check on the Ally:**
 

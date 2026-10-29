@@ -100,9 +100,11 @@ Every app is built the same way; Windows Portable Test is the model:
 - What Windows reports is read through its own APIs (ctypes) or one CIM or PowerShell query that returns JSON, never
   the text of a tool such as netsh or powercfg, which is in Windows' language. Slow reads run off the window's
   thread.
-- A new app adds its `portal/apps.toml` entry, its installer test `tools/installer-tests/<name>.ps1`, its step in
-  the suite's CI and its folder in the CI's pytest matrix (`../tools/tests/test_layout.py` and
-  `tools/tests/` check them); `../tools/new_app.py --suite windows-portable` does all of it.
+- A new app adds its `portal/apps.toml` entry, its installer test `tools/installer-tests/<name>.ps1`, its entry
+  in the suite's CI's `installers` matrix (a job per app: the installer test, the release built and installed) and
+  its folder in the CI's pytest matrix (`../tools/tests/test_layout.py` and `tools/tests/` check them);
+  `../tools/new_app.py --suite windows-portable` does all of it. The suite's CI runs only for a push that changes
+  the suite, core, `tools/` or `dev/releases/` (owner, 29-10-2026).
 
 ## Checks of the suite
 

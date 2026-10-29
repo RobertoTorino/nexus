@@ -18,8 +18,8 @@ the owner's.
 Each suite has its template behind the same command: the BC250 Bazzite Suite's (a Linux app on the shared venv, with
 the suite's installer) and a Windows suite's (the Windows Portable Suite's: an app on the portable window with
 install.ps1 and run.ps1, the installer test <name>.ps1, its category's icon copied by tools/make_icons.py, the
-wiki's nav and home table, and ci-<suite>.yml's pytest matrix, installer test and release build). A suite without
-one is refused."""
+wiki's nav and home table, and ci-<suite>.yml's pytest matrix and its installers matrix, a job per app that runs
+the installer test, builds the release and installs it). A suite without one is refused."""
 
 from __future__ import annotations
 
@@ -1300,17 +1300,6 @@ launch = [["Open", "%LOCALAPPDATA%\\@VENV_ID@\\@APP_ID@\\app\\@EXE@.exe"]]
 
 W_HOME_ROW = "| [@APP_NAME@](apps/@NAME@.md) | @SUMMARY@ |\n"
 
-W_CI_STEPS = '''      - name: "Build the release zip, not published: @NAME@"
-        shell: bash
-        run: |
-          python -m pip install -q -r @SUITE@/apps/@NAME@/requirements.txt pyinstaller pillow
-          python @SUITE@/tools/build_release.py "@TAG@-v$(cat @SUITE@/apps/@NAME@/VERSION)" wpdist/@NAME@
-      - name: "Installer test on the release: @NAME@"
-        run: >-
-          powershell -NoProfile -ExecutionPolicy Bypass -File @SUITE@/tools/installer-tests/@NAME@.ps1
-          -Release (Get-Item wpdist/@NAME@/*.zip).FullName
-'''
-
 
 # --- Writing -----------------------------------------------------------------------------------------------------
 
@@ -1524,16 +1513,13 @@ def write_windows_app(root: Path, suite: Suite, app: NewApp) -> list[Path]:
     if readme.is_file() and f"**{app.category_title}**" in readme.read_text(encoding="utf-8"):
         put(readme, insert_after_list(readme.read_text(encoding="utf-8"), f"**{app.category_title}**",
                                       fill(README_ROW, app, suite), "README.md"))
-    # The suite's CI: the pytest matrix, the installer test, the release built and installed.
+    # The suite's CI: the pytest matrix, and the installers matrix (a job per app: its installer test, its release
+    # built and installed), the portal last.
     ci = root / ".github" / "workflows" / f"ci-{suite.folder.name}.yml"
     text = ci.read_text(encoding="utf-8")
     text = insert_before(text, "]   # every folder of the suite with tests/", f",\n              {suite.folder.name}/apps/{app.name}",
                          ci.name)
-    text = insert_before(text, '      - name: "Installer test: releases"\n',
-                         f'      - name: "Installer test: {app.name}"\n        run: powershell -NoProfile -ExecutionPolicy '
-                         f'Bypass -File {suite.folder.name}/tools/installer-tests/{app.name}.ps1\n', ci.name)
-    text = insert_before(text, '      - name: "Build the release zip, not published: portal"\n',
-                         fill(W_CI_STEPS, app, suite), ci.name)
+    text = insert_before(text, ", portal]   # every app of the suite, and the portal", f", {app.name}", ci.name)
     put(ci, text)
     return [p.relative_to(root) for p in dict.fromkeys(written)]
 

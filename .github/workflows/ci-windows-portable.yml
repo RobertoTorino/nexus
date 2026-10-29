@@ -1,17 +1,36 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 name: CI Windows Portable
 
-# The checks of the Windows Portable Suite (windows-portable/) on every push and pull request, apart from ci.yml
-# (Nexus and the BC250 Bazzite Suite), so that one suite's checks never block another suite's releases (owner,
-# 27-10-2026). Its tags (wp-<app>-v<x.y.z>) wait for this workflow on the commit (tools/ci_state.py --workflow
-# ci-windows-portable.yml, as tools/tag-release.sh and release-windows-portable.yml ask). The suite's tests run on
-# Windows, the system it is made for, in Windows PowerShell as on the handheld; core with them, as its apps bundle it.
+# The checks of the Windows Portable Suite (windows-portable/) on every push and pull request that changes the suite
+# or what its releases are built from (core, which its apps bundle; the Nexus tools; Nexus Releases' Windows
+# installer, tested here), apart from ci.yml (the BC250 Bazzite Suite) and ci-nexus.yml (Nexus), so that one suite's
+# checks never block another suite's releases and a push to one suite runs no other suite's CI (owner, 27-10-2026 and
+# 29-10-2026). Its tags (wp-<app>-v<x.y.z>) wait for this workflow on the commit (tools/ci_state.py --workflow
+# ci-windows-portable.yml, as tools/tag-release.sh and release-windows-portable.yml ask): a release commit changes
+# the suite (its VERSION and CHANGELOG), so it has a run. The suite's tests run on Windows, the system it is made
+# for, in Windows PowerShell as on the handheld; core with them, as its apps bundle it.
 # A tag starts no run of its own, as for ci.yml.
 
 on:
   push:
     branches: ["**"]
+    paths:
+      - "windows-portable/**"
+      - "core/**"                       # bundled in every app
+      - "tools/**"                      # the release tools (stage_app.py, check_versions.py)
+      - "dev/releases/**"               # Nexus Releases' Windows installer: installer-tests/releases.ps1
+      - "requirements-dev.txt"
+      - ".github/workflows/ci-windows-portable.yml"
+      - ".github/workflows/release-windows-portable.yml"
   pull_request:
+    paths:
+      - "windows-portable/**"
+      - "core/**"
+      - "tools/**"
+      - "dev/releases/**"
+      - "requirements-dev.txt"
+      - ".github/workflows/ci-windows-portable.yml"
+      - ".github/workflows/release-windows-portable.yml"
 
 jobs:
 
@@ -82,11 +101,19 @@ jobs:
         run: python -X faulthandler -m pytest -v tests
 
   installers:
-    # Each installer test, then each app's release (and the portal's, with the pinned test release downloaded from
-    # GitHub as its bundle) built as release-windows-portable.yml builds it and installed by its installer test.
-    # Nexus Releases' Windows installer is tested here too: this suite is the one on Windows.
+    # Each app and the portal in a job of its own (owner, 29-10-2026: one job doing them all in a row took six to
+    # fifteen minutes, the longest wait of every push and so of every release): its installer test, then its release
+    # built as release-windows-portable.yml builds it (not published) and installed by the installer test on that
+    # release. The portal's bundles the pinned Windows Portable Test release, downloaded from GitHub as the release
+    # workflow does. new_app.py adds a new app to the matrix.
     runs-on: windows-latest
-    timeout-minutes: 40
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [test, pcsx2, portal]   # every app of the suite, and the portal
+    env:
+      APP: ${{ matrix.app }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -94,33 +121,12 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
-      - name: "Installer test: portal"
-        run: powershell -NoProfile -ExecutionPolicy Bypass -File windows-portable/tools/installer-tests/portal.ps1
-      - name: "Installer test: test"
-        run: powershell -NoProfile -ExecutionPolicy Bypass -File windows-portable/tools/installer-tests/test.ps1
-      - name: "Installer test: pcsx2"
-        run: powershell -NoProfile -ExecutionPolicy Bypass -File windows-portable/tools/installer-tests/pcsx2.ps1
-      - name: "Installer test: releases"
-        run: powershell -NoProfile -ExecutionPolicy Bypass -File windows-portable/tools/installer-tests/releases.ps1
-      - name: "Build the release zip, not published: test"
-        shell: bash
-        run: |
-          python -m pip install -q -r windows-portable/apps/test/requirements.txt pyinstaller pillow
-          python windows-portable/tools/build_release.py "wp-test-v$(cat windows-portable/apps/test/VERSION)" wpdist/test
-      - name: "Installer test on the release: test"
-        run: >-
-          powershell -NoProfile -ExecutionPolicy Bypass -File windows-portable/tools/installer-tests/test.ps1
-          -Release (Get-Item wpdist/test/*.zip).FullName
-      - name: "Build the release zip, not published: pcsx2"
-        shell: bash
-        run: |
-          python -m pip install -q -r windows-portable/apps/pcsx2/requirements.txt pyinstaller pillow
-          python windows-portable/tools/build_release.py "wp-pcsx2-v$(cat windows-portable/apps/pcsx2/VERSION)" wpdist/pcsx2
-      - name: "Installer test on the release: pcsx2"
-        run: >-
-          powershell -NoProfile -ExecutionPolicy Bypass -File windows-portable/tools/installer-tests/pcsx2.ps1
-          -Release (Get-Item wpdist/pcsx2/*.zip).FullName
-      - name: "Build the release zip, not published: portal"
+          cache: pip
+          cache-dependency-path: "windows-portable/**/requirements.txt"
+      - name: Installer test
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File windows-portable/tools/installer-tests/${{ matrix.app }}.ps1
+      - name: The pinned Windows Portable Test release, for the portal's bundle
+        if: matrix.app == 'portal'
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
@@ -128,9 +134,27 @@ jobs:
           bt=$(python -c 'import tomllib; print(tomllib.load(open("windows-portable/portal/apps.toml", "rb"))["apps"]["test"]["tag"])')
           mkdir -p bundle
           gh release download "$bt" --pattern "$bt.zip" --pattern SHA256SUMS --dir bundle
-          python -m pip install -q -r windows-portable/portal/requirements.txt pyinstaller pillow
-          python windows-portable/tools/build_release.py "wp-portal-v$(cat windows-portable/portal/VERSION)" wpdist/portal --bundle bundle
-      - name: "Installer test on the release: portal"
+      - name: Build the release zip, not published
+        shell: bash
+        run: |
+          case "$APP" in
+            portal) folder=windows-portable/portal ;;
+            *)      folder=windows-portable/apps/$APP ;;
+          esac
+          python -m pip install -q -r "$folder/requirements.txt" pyinstaller pillow
+          args=()
+          [ -d bundle ] && args+=(--bundle bundle)
+          python windows-portable/tools/build_release.py "wp-$APP-v$(cat "$folder/VERSION")" wpdist "${args[@]}"
+      - name: Installer test on the release
         run: >-
-          powershell -NoProfile -ExecutionPolicy Bypass -File windows-portable/tools/installer-tests/portal.ps1
-          -Release (Get-Item wpdist/portal/*.zip).FullName
+          powershell -NoProfile -ExecutionPolicy Bypass -File windows-portable/tools/installer-tests/${{ matrix.app }}.ps1
+          -Release (Get-Item wpdist/*.zip).FullName
+
+  nexus-releases-installer:
+    # Nexus Releases' Windows installer (dev/releases/install.ps1) is tested here: this suite is the one on Windows.
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - name: "Installer test: releases"
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File windows-portable/tools/installer-tests/releases.ps1
