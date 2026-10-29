@@ -1,3 +1,13 @@
+Changelog: 29-10-2026 05:48:19
+
+Release 0.16.1.
+
+Changelog: 29-10-2026 05:45:09
+
+Fixed. The cache of MkDocs' privacy plugin (.cache/, the fonts it downloads) is ignored wherever mkdocs is run
+from, not only at the root: a build run from tools/ left tools/.cache, which went into the commit of 29-10-2026
+(removed again). The Windows Portable Suite's site/ is ignored too.
+
 Changelog: 29-10-2026 05:35:55
 
 Release 0.16.0. Brings wp-portal-v2.0.1.

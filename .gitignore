@@ -13,11 +13,13 @@ _python/
 /.venv/
 /.venv-*/
 
-# MkDocs output, and the cache of its privacy plugin (the fonts it downloads at build time)
+# MkDocs output, and the cache of its privacy plugin (the fonts it downloads at build time), which lands in the
+# folder mkdocs is run from: anywhere, not only the root (29-10-2026: tools/.cache was committed)
 /site/
 /nexus/site/
 /bc250-bazzite/site/
-/.cache/
+/windows-portable/site/
+.cache/
 /bc250-bazzite/.cache/
 # The design panel's mock while `mkdocs serve` runs (tools/mkdocs/design_panel.py)
 .design-mock.json
