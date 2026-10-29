@@ -24,13 +24,12 @@ on:
 permissions:
   contents: write
 
-concurrency:
-  group: nexus-index           # a release of many tags finishes many runs: one writes at a time, the last one wins
-  cancel-in-progress: false
-
 jobs:
   index:
     if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    concurrency:
+      group: nexus-index           # a release of many tags finishes many runs: one writes at a time, the last one wins
+      cancel-in-progress: false     
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:

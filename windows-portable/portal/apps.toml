@@ -24,8 +24,8 @@
 [apps.test]
 name = "Windows Portable Test"
 summary = "What Windows reports about the handheld, and a test of every button of its controller. Always installed."
-tag = "wp-test-v2.0.0"
-sha256 = "a37d78b2943fc7b9b601af18fc5bac90c1122b3642f9be45e9c4a04cc2cb671b"
+tag = "wp-test-v2.0.1"
+sha256 = "e7caa14d06c3b41d00f2dbcc4e65bd84d037907a051e5e26abae8b305687d2b7"
 required = true
 category = "sustainable"
 install = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --no-desktop-shortcut"]
@@ -36,8 +36,8 @@ launch = [["Open", "%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-tes
 [apps.pcsx2]
 name = "PCSX2 Manager"
 summary = "PCSX2, the PlayStation 2 emulator: installed and set up, your games played and put in Steam, your memory cards."
-tag = "wp-pcsx2-v2.0.0"
-sha256 = "cdaf29da90c579238bd3c20d4f961e2ebac7aeff6612d1cf099057b73c9c8902"
+tag = "wp-pcsx2-v2.0.1"
+sha256 = "8f64172fa0aaf43f29391f9da9d762ee6c7a2ce48387917d089cb2eac8299daf"
 category = "gaming"
 install = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --no-desktop-shortcut"]
 uninstall = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --uninstall"]
@@ -47,8 +47,8 @@ launch = [["Open", "%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-pcs
 [apps.ppsspp]
 name = "PPSSPP Manager"
 summary = "PPSSPP, the PSP emulator: installed and set up, your games played and put in Steam."
-tag = "wp-ppsspp-v0.1.0"
-sha256 = "8f5bee5e283bb148982c09b5cae49c9e4c1096729cb89563d8820adc520e555d"
+tag = "wp-ppsspp-v0.1.1"
+sha256 = "ad02a90a5e42bcf4903621e5ac14176744ea4aa0fe5428a10b6ce1b5b4ffdf04"
 category = "gaming"
 install = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --no-desktop-shortcut"]
 uninstall = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --uninstall"]
@@ -59,7 +59,7 @@ launch = [["Open", "%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-pps
 name = "RPCS3 Manager"
 summary = "RPCS3, the PlayStation 3 emulator: installed and set up, the firmware and your games, played and put in Steam."
 tag = "wp-rpcs3-v0.1.0"
-sha256 = ""
+sha256 = "35c3063a8d68fc56c88aa49923cd6182c1ad81126d56e3d23ba085ae9b63d9b3"
 category = "gaming"
 install = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --no-desktop-shortcut"]
 uninstall = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --uninstall"]
