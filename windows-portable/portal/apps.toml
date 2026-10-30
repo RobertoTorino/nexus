@@ -24,8 +24,8 @@
 [apps.test]
 name = "Windows Portable Test"
 summary = "What Windows reports about the handheld, and a test of every button of its controller. Always installed."
-tag = "wp-test-v2.0.1"
-sha256 = "e7caa14d06c3b41d00f2dbcc4e65bd84d037907a051e5e26abae8b305687d2b7"
+tag = "wp-test-v3.0.1"
+sha256 = "8f9932d4c88fbf8783a380f9a65cca9ecb11cbb2ec83d290e6cf65aeb89d40f7"
 required = true
 category = "sustainable"
 install = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --no-desktop-shortcut"]
@@ -36,8 +36,8 @@ launch = [["Open", "%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-tes
 [apps.pcsx2]
 name = "PCSX2 Manager"
 summary = "PCSX2, the PlayStation 2 emulator: installed and set up, your games played and put in Steam, your memory cards."
-tag = "wp-pcsx2-v2.0.1"
-sha256 = "8f64172fa0aaf43f29391f9da9d762ee6c7a2ce48387917d089cb2eac8299daf"
+tag = "wp-pcsx2-v3.0.1"
+sha256 = "74825b0532dbf9a659dab43525247c4cbdb6239e5ceca18833dc268d92864a0a"
 category = "gaming"
 install = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --no-desktop-shortcut"]
 uninstall = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --uninstall"]
@@ -47,8 +47,8 @@ launch = [["Open", "%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-pcs
 [apps.ppsspp]
 name = "PPSSPP Manager"
 summary = "PPSSPP, the PSP emulator: installed and set up, your games played and put in Steam."
-tag = "wp-ppsspp-v0.1.1"
-sha256 = "ad02a90a5e42bcf4903621e5ac14176744ea4aa0fe5428a10b6ce1b5b4ffdf04"
+tag = "wp-ppsspp-v1.0.1"
+sha256 = "bccdb37d71324be811e11edb00a4825512d4d66e081c15c22d8b49ee174cf685"
 category = "gaming"
 install = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --no-desktop-shortcut"]
 uninstall = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --uninstall"]
@@ -58,8 +58,8 @@ launch = [["Open", "%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-pps
 [apps.rpcs3]
 name = "RPCS3 Manager"
 summary = "RPCS3, the PlayStation 3 emulator: installed and set up, the firmware and your games, played and put in Steam."
-tag = "wp-rpcs3-v0.1.0"
-sha256 = "35c3063a8d68fc56c88aa49923cd6182c1ad81126d56e3d23ba085ae9b63d9b3"
+tag = "wp-rpcs3-v1.0.1"
+sha256 = "1a48b72874d99e1a00a79d5d877d53953c7a5dba644ce7b3cde5a9fdaed61871"
 category = "gaming"
 install = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --no-desktop-shortcut"]
 uninstall = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --uninstall"]
@@ -69,8 +69,8 @@ launch = [["Open", "%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-rpc
 [apps.shadps4]
 name = "shadPS4 Manager"
 summary = "shadPS4, the PlayStation 4 emulator: installed, the system modules and your packages, its settings and shadNet, your games put in Steam."
-tag = "wp-shadps4-v0.1.0"
-sha256 = "ee5dd62b07fa8eec5cd8c4b1dd0fbe792121a788d2bc8cc002c0c96a7981ebaf"
+tag = "wp-shadps4-v1.1.0"
+sha256 = "3f3b9a01274672c6c13680cd42f3975e6bd29969858d2bbe57318c3c837aef3c"
 category = "gaming"
 install = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --no-desktop-shortcut"]
 uninstall = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --uninstall"]
@@ -80,8 +80,8 @@ launch = [["Open", "%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-sha
 [apps.vita3k]
 name = "Vita3K Manager"
 summary = "Vita3K, the PS Vita emulator: installed, the firmware and your games installed in it, its settings, your games put in Steam."
-tag = "wp-vita3k-v0.1.0"
-sha256 = "120514304a45e6f9b430345d1338abd3180e58fb15337280ce1229e6a1f1ab5b"
+tag = "wp-vita3k-v1.0.1"
+sha256 = "3a21086881b80973a10bdc0ac83dab4c4b9e087abb2956a86420195f98bdfa06"
 category = "gaming"
 install = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --no-desktop-shortcut"]
 uninstall = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --uninstall"]
@@ -91,8 +91,8 @@ launch = [["Open", "%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-vit
 [apps.xenia]
 name = "Xenia Manager"
 summary = "Xenia, the Xbox 360 emulator: installed, its settings, your games found in your folders and put in Steam."
-tag = "wp-xenia-v0.1.0"
-sha256 = "1502f14f6721d4638109f9c2953b4b7433559d9e10d041120cdff07bc84572b8"
+tag = "wp-xenia-v1.0.1"
+sha256 = "8bff098765008e4cfbe086f6098f1c74de62851249875b9c31bb1c2401a04f1b"
 category = "gaming"
 install = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --no-desktop-shortcut"]
 uninstall = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --uninstall"]
