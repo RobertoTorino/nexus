@@ -1,3 +1,12 @@
+Changelog: 30-10-2026 22:07:18
+
+Fixed. The window fits the screen again (owner, 30-10-2026, the device test of 6.0.0: the status line with the CPU
+and the GPU made the window wider than the Ally's screen, cut off at the right): the status line has two lines, the
+date, the time and a portal update on the first, the CPU, the GPU and the battery on the second. The Settings page
+has no lines of text under its rows any more (owner: where the space is not there, the information icon explains):
+what each setting does, where your own wallpapers go and by which rules, and the pictures that cannot be used, are
+behind its information icon, which Menu on the page or a tap opens; the rows are stacked again.
+
 Changelog: 30-10-2026 21:48:01
 
 Release 6.0.0. Pins wp-test-v4.0.0, wp-pcsx2-v5.0.0, wp-ppsspp-v3.0.0, wp-rpcs3-v3.0.0, wp-shadps4-v3.0.0, wp-vita3k-v3.0.0, wp-xenia-v3.0.0.

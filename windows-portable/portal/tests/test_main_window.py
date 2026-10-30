@@ -15,7 +15,7 @@ from pathlib import Path
 import pytest
 from bc250_core import portable, steam
 from bc250_core.platform import private
-from bc250_core.portable import VIEW
+from bc250_core.portable import MENU, VIEW
 from bc250_core.gamepad import Gamepad
 from bc250_core.updates import ReleaseInfo
 
@@ -154,8 +154,9 @@ def test_the_tabs_and_tiles_and_the_strip_for_the_focused_app(world, qapp):
     assert window.tiles["test"].text.text() == "Not installed"
     assert pane_texts(window) == ("Windows Portable Test", "Install", "")
     assert window.app_pane.versions.text() == "Not installed; this portal has 0.1.0"
-    assert window.header.status.text().endswith("  |  82%")            # the battery last (owner, 30-10-2026)
-    assert "  |  CPU 12% 48°  |  GPU 7% 47°  |  82%" in window.header.status.text()   # live (owner, 30-10-2026)
+    # The date and the time; under them the CPU and the GPU live and the battery last (owner, 30-10-2026: two
+    # lines, one was wider than the Ally's screen)
+    assert window.header.second.text() == "CPU 12% 48°  |  GPU 7% 47°  |  82%" and "CPU" not in window.header.status.text()
     assert mw.STATUS_MS == 2_000
     assert [text for _, text in window.legend.items][1:] == ["Details", "Settings", "Exit app"]
     assert window.legend.items[0][0] == "A" and window.app_pane.findChildren(portable.Pill) == []   # no pill (owner)
@@ -519,7 +520,11 @@ def test_the_suite_page_switches_the_wallpaper(world, qapp, monkeypatch):
     assert window.stack.currentWidget() is window.suite_pane
     window.suite_pane.wallpaper.setFocus()
     assert window.suite_pane.wallpaper.label.text() == "Wallpaper: Built-in"
-    assert window.legend.items == [("A", "Change"), ("Y", "Check again"), ("B", "Back"), (VIEW, "Exit app")]
+    assert window.legend.items == [("A", "Change"), ("Y", "Check again"), (MENU, "Info"), ("B", "Back"), (VIEW, "Exit app")]
+    window.on_action("menu")                                          # on the page: what the settings do
+    assert window.popup is not None and "Transparency: how much" in window.suite_pane.info.info
+    window.on_action("back")
+    assert window.popup is None and window.stack.currentWidget() is window.suite_pane
     window.on_action("accept")                                        # Built-in, without a picture of the user's
     assert not window.wallpaper_on and portable.glass() == 255 and window.suite_pane.wallpaper.label.text() == "Wallpaper: Off"
     assert "rgba" not in window.app_pane.styleSheet()                 # the strip solid again, at once
@@ -549,7 +554,7 @@ def test_a_wallpaper_dropped_in_the_folder_and_its_transparency(world, qapp):
     window.on_action("menu")
     pane = window.suite_pane
     assert pane.wallpaper.label.text() == "Wallpaper: Built-in" and pane.transparency.label.text() == "Transparency: 59 %"
-    text = pane.wallpaper_text.text()
+    text = pane.info.info                                            # behind the information icon (owner, 30-10-2026)
     assert r"%LOCALAPPDATA%\windows-portable-suite\wallpapers" in text
     assert "small.png (800 x 450, smaller than 1280 x 720)" in text and "tall.png (1440 x 2560, not wider than high)" in text
     assert "notes.txt (not a PNG, JPEG or WebP picture)" in text
@@ -610,10 +615,8 @@ def test_the_suite_page_switches_the_sound(world, qapp, monkeypatch):
     monkeypatch.setattr(window, "isActiveWindow", lambda: True)
     window.on_action("menu")
     assert window.suite_pane.wallpaper.hasFocus() and window.suite_pane.sound.label.text() == "Sound: On"
-    window.on_action("right")
-    assert window.suite_pane.transparency.hasFocus()                  # beside the wallpaper (30-10-2026)
-    window.on_action("left")
-    assert window.suite_pane.wallpaper.hasFocus()
+    window.on_action("down")
+    assert window.suite_pane.transparency.hasFocus()                  # the wallpaper's (30-10-2026), then the sound
     window.on_action("down")
     assert window.suite_pane.sound.hasFocus() and ("A", "Change") in window.legend.items
     window.on_action("accept")
@@ -650,6 +653,6 @@ def test_the_chip_is_read_through_cores_chip_and_closed_with_the_window(world, q
     monkeypatch.setattr(chip, "CpuLoad", lambda: type("Load", (), {"read": lambda self: 9})())
     window = world.make(chip_parts=None)
     window.update_status()
-    assert "CPU 9% 51°  |  GPU 33% 49°" in window.header.status.text() and len(opened) == 1
+    assert "CPU 9% 51°  |  GPU 33% 49°" in window.header.second.text() and len(opened) == 1
     window.close()
     assert opened[0].closed

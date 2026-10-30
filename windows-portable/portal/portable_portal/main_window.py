@@ -20,7 +20,7 @@ from pathlib import Path, PurePath
 
 from PyQt6.QtCore import QObject, QSettings, Qt, QTimer, pyqtSignal
 from PyQt6.QtGui import QPixmap
-from PyQt6.QtWidgets import QApplication, QGridLayout, QStackedWidget, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import QGridLayout, QStackedWidget, QVBoxLayout, QWidget
 
 from bc250_core import applog, chip, portable, power, steam, xbox
 from bc250_core.gamepad import Gamepad
@@ -273,17 +273,6 @@ class MainWindow(PortableWindow):
             return
         super().on_action(action)
 
-    def move_focus(self, direction: str) -> QWidget | None:
-        """Core's d-pad, with the Wallpaper and Transparency rows side by side as a pair: right and left go between
-        them (the row under them is nearer by core's measure, being as wide as the page)."""
-        pair = (self.suite_pane.wallpaper, self.suite_pane.transparency)
-        focus = QApplication.focusWidget()
-        if focus in pair and direction in ("left", "right"):
-            target = pair[1] if direction == "right" else pair[0]
-            target.setFocus(Qt.FocusReason.OtherFocusReason)
-            return target
-        return super().move_focus(direction)
-
     def wallpaper_choices(self) -> tuple[list[tuple[str, Path | None]], dict[str, str]]:
         """The Wallpaper row's choices in order, (name, picture): Off, Built-in (the suite's own), then each picture in
         the suite's wallpaper folder that can be one (owner, 30-10-2026); and the folder's others, each with why not."""
@@ -379,12 +368,12 @@ class MainWindow(PortableWindow):
         return read
 
     def update_status(self) -> None:
-        # The date and the time, the CPU's and the GPU's load and temperature (owner, 30-10-2026), a portal update
-        # when there is one, and the battery last
-        parts = [*status_clock(), *self.chip_parts()]
+        # The date and the time, and a portal update when there is one; under them the CPU's and the GPU's load and
+        # temperature (owner, 30-10-2026: two lines, one was wider than the screen) and the battery, last
+        parts = status_clock()
         if self.update_available():
             parts.append(f"Suite {self.update.release.version} available")
-        self.header.set_status([*parts, power.text(self.battery())])    # the battery last (owner, 30-10-2026)
+        self.header.set_status(parts, [*self.chip_parts(), power.text(self.battery())])
 
     def tab_entries(self, category: str) -> list[AppEntry]:
         return [entry for entry in self.entries if entry.category == category][:PER_PAGE]
@@ -420,7 +409,9 @@ class MainWindow(PortableWindow):
         self.refresh()
 
     def show_suite(self) -> None:
+        """Menu: the Settings page; on it, Menu shows what the settings do (its information icon)."""
         if self.stack.currentWidget() is self.suite_pane:
+            self.show_info()
             return
         self.stack.setCurrentWidget(self.suite_pane)
         self.show_wallpaper_rows()
