@@ -21,7 +21,7 @@ The Your games pane (panes.py, library.py): the games in the app's own Games\\PS
 games and packages are dropped there; library.fixed, an SD card's too), played from Steam (owner, 29-10-2026); A
 marks one for Steam, X plays one that is in Steam, through Steam (steam://rungameid), and on a device without Steam
 starts it in the app's play mode itself (owner, 30-10-2026: a fallback, as its shortcut would start it; core's play:
-View and Menu held quit any game), Y Update Steam makes Steam's shortcuts match the marks and brings a shortcut made
+View, LB and RB held quit any game), Y Update Steam makes Steam's shortcuts match the marks and brings a shortcut made
 before the play mode to it, RB Remove game (a second press) takes a game out of Steam and deletes its folder with its
 update. A package that waits there (extract.waiting: a game not unpacked, an update its game lacks) is a row of its
 own, PKG; A unpacks it, X Unpack all every one, the games first and each update beside its game (extract.place), and a

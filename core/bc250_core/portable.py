@@ -67,12 +67,21 @@ _pinned = False                         # pin_scale(): the windows keep the scal
 MIN_SCALE = 0.6                         # text smaller than this is too small to read in the hands
 _glass = 255                            # the cards' and panes' opacity: glass()
 # The wallpaper behind every window of the suite (owner, 28-10-2026: the portal's first; 29-10-2026: "available
-# throughout the suite"), on or off for the whole suite on the portal's Suite page: <suite>\suite.ini, look/wallpaper
+# throughout the suite"), on or off for the whole suite on the portal's Settings page: <suite>\suite.ini, look/wallpaper
 WALLPAPER = Path(__file__).resolve().parent / "images" / "wallpaper.webp"
 SHADE = 150                             # of 255: how much of the background lies over the wallpaper
 GLASS = 160                             # of 255: the cards' and panes' opacity over it, so it shines through (200
                                         # read as solid on the Ally: owner, 29-10-2026)
 LOOK_KEY = "look/wallpaper"
+# Which wallpaper (owner, 30-10-2026: a selector, only pictures dropped in the suite's wallpaper folder): its file name
+# in <suite data>\wallpapers, "" the suite's own; and its transparency, the % of the background over it (as the BC250
+# portal's veil), SHADE's when never set
+PICTURE_KEY = "look/wallpaper_picture"
+VEIL_KEY = "look/wallpaper_transparency"
+VEIL_MAX, VEIL_STEP = 90, 10            # 90 %: the picture still shows; Wallpaper: Off takes it away
+PICTURE_SUFFIXES = (".png", ".jpg", ".jpeg", ".webp")
+PICTURE_MIN = (1280, 720)               # the Ally's screen: a smaller picture blurs when it fills the window
+PICTURE_RULES = "PNG, JPEG or WebP, wider than high, at least 1280 x 720 pixels"
 SOUND_KEY = "look/sound"                # the suite's sounds (the portal's intro) on or off: sound_on()
 _fonts_loaded = False
 
@@ -113,7 +122,7 @@ def look_settings(suite: str):
 
 
 def wallpaper_on(suite: str) -> bool:
-    """Whether the suite's apps show the wallpaper: on unless switched off on the portal's Suite page."""
+    """Whether the suite's apps show the wallpaper: on unless switched off on the portal's Settings page."""
     return str(look_settings(suite).value(LOOK_KEY, "true")).lower() != "false"
 
 
@@ -133,6 +142,85 @@ def set_sound_on(suite: str, on: bool) -> None:
     settings = look_settings(suite)
     settings.setValue(SOUND_KEY, "true" if on else "false")
     settings.sync()
+
+
+def wallpaper_folder(suite: str) -> Path:
+    """Where the suite's wallpapers are dropped: %LOCALAPPDATA%\\<suite>\\wallpapers (the portal's installer makes it)."""
+    from .platform import suite_data
+    return suite_data(suite) / "wallpapers"
+
+
+def picture_problem(path: Path) -> str:
+    """Why *path* cannot be a wallpaper (PICTURE_RULES), "" when it can; its size read without decoding it."""
+    from PyQt6.QtGui import QImageReader
+    if path.suffix.lower() not in PICTURE_SUFFIXES:
+        return "not a PNG, JPEG or WebP picture"
+    size = QImageReader(str(path)).size()
+    if not size.isValid():
+        return "not a picture that can be read"
+    if size.width() < PICTURE_MIN[0] or size.height() < PICTURE_MIN[1]:
+        return f"{size.width()} x {size.height()}, smaller than {PICTURE_MIN[0]} x {PICTURE_MIN[1]}"
+    if size.width() <= size.height():
+        return f"{size.width()} x {size.height()}, not wider than high"
+    return ""
+
+
+def wallpapers(suite: str) -> tuple[list[Path], dict[str, str]]:
+    """The pictures in the suite's wallpaper folder that can be one, by name; and the others' names, each with why
+    not. The folder is made when it is missing."""
+    folder = wallpaper_folder(suite)
+    try:
+        folder.mkdir(parents=True, exist_ok=True)
+        files = sorted((p for p in folder.iterdir() if p.is_file()), key=lambda p: p.name.lower())
+    except OSError:
+        return [], {}
+    usable, refused = [], {}
+    for path in files:
+        problem = picture_problem(path)
+        if problem:
+            refused[path.name] = problem
+        else:
+            usable.append(path)
+    return usable, refused
+
+
+def wallpaper_picture(suite: str, default: Path | None = WALLPAPER) -> Path | None:
+    """The picture the suite's apps show: the one chosen on the portal's Settings page while it is still in the
+    folder and can be one, else *default* (the suite's own)."""
+    name = str(look_settings(suite).value(PICTURE_KEY, "") or "")
+    if name:
+        path = wallpaper_folder(suite) / Path(name).name
+        if path.is_file() and not picture_problem(path):
+            return path
+    return default
+
+
+def set_wallpaper_picture(suite: str, path: Path | None) -> None:
+    """*path*, a picture in the suite's wallpaper folder, as the suite's wallpaper; None: the suite's own."""
+    settings = look_settings(suite)
+    settings.setValue(PICTURE_KEY, path.name if path is not None else "")
+    settings.sync()
+
+
+def wallpaper_veil(suite: str) -> int | None:
+    """The wallpaper's transparency in %, 0 to VEIL_MAX: how much of the background lies over it; None when never set
+    (SHADE's then)."""
+    value = look_settings(suite).value(VEIL_KEY)
+    try:
+        return max(0, min(VEIL_MAX, int(value))) if value is not None else None
+    except (TypeError, ValueError):
+        return None
+
+
+def set_wallpaper_veil(suite: str, percent: int) -> None:
+    settings = look_settings(suite)
+    settings.setValue(VEIL_KEY, max(0, min(VEIL_MAX, percent)))
+    settings.sync()
+
+
+def shade(veil: int | None) -> int:
+    """The background's alpha over the wallpaper, 0 to 255, for a transparency in % (None: SHADE)."""
+    return SHADE if veil is None else round(veil * 255 / 100)
 
 
 def surface(color: str) -> str:
@@ -937,8 +1025,11 @@ class PortableWindow(QWidget):
         self.popup: InfoPopup | None = None
         info = appinfo.current()
         self.suite = suite or (info.settings_org if info is not None else "") or ""
+        if self.suite and wallpaper == WALLPAPER:       # the suite's own picture, or the one chosen for the suite
+            wallpaper = wallpaper_picture(self.suite)
         self.wallpaper = QPixmap(str(wallpaper)) if wallpaper is not None else QPixmap()
         self.wallpaper_on = bool(self.suite) and wallpaper_on(self.suite)
+        self.shade = shade(wallpaper_veil(self.suite)) if self.suite else SHADE
         glass(GLASS if self.shows_wallpaper() else 255)              # before the subclass makes its cards
         self.pane_card: Card | None = None              # the card the focus was on last: selected while in its pane
         app = QApplication.instance()
@@ -969,7 +1060,7 @@ class PortableWindow(QWidget):
         self.update_legend()                            # B Back only while there is somewhere to go back to
 
     # The buttons every window shares (owner, 29-10-2026): B goes back, View exits the app, Menu shows the information
-    # of the pane that shows. A subclass binds its own with bind() (the portal's Menu: its Suite page).
+    # of the pane that shows. A subclass binds its own with bind() (the portal's Menu: its Settings page).
 
     def update_legend(self) -> None:
         """The legend for where the focus is now: a subclass with a legend sets it here (called on every move of the
@@ -1037,9 +1128,23 @@ class PortableWindow(QWidget):
         self.restyle()
         QWidget.update(self)
 
+    def set_wallpaper_picture(self, path: Path | None) -> None:
+        """*path* (None: the suite's own picture) as the suite's wallpaper, and in this window at once."""
+        if self.suite:
+            set_wallpaper_picture(self.suite, path)
+        self.wallpaper = QPixmap(str(path if path is not None else WALLPAPER))
+        QWidget.update(self)
+
+    def set_wallpaper_veil(self, percent: int) -> None:
+        """The wallpaper's transparency in % for the suite, and in this window at once."""
+        if self.suite:
+            set_wallpaper_veil(self.suite, percent)
+        self.shade = shade(max(0, min(VEIL_MAX, percent)))
+        QWidget.update(self)
+
     def paintEvent(self, event) -> None:  # noqa: N802 (Qt override)
-        """The wallpaper filling the window (cropped, never stretched), under the background at SHADE so the cards
-        and the text stay easy to read."""
+        """The wallpaper filling the window (cropped, never stretched), under the background at the transparency set
+        (SHADE until one is) so the cards and the text stay easy to read."""
         if not self.shows_wallpaper():
             super().paintEvent(event)
             return
@@ -1047,9 +1152,9 @@ class PortableWindow(QWidget):
         scaled = self.wallpaper.scaled(self.size(), Qt.AspectRatioMode.KeepAspectRatioByExpanding,
                                        Qt.TransformationMode.SmoothTransformation)
         painter.drawPixmap((self.width() - scaled.width()) // 2, (self.height() - scaled.height()) // 2, scaled)
-        shade = QColor(BACKGROUND)
-        shade.setAlpha(SHADE)
-        painter.fillRect(self.rect(), shade)
+        veil = QColor(BACKGROUND)
+        veil.setAlpha(self.shade)
+        painter.fillRect(self.rect(), veil)
 
     def margins(self) -> tuple[int, int, int, int]:
         """The window's margins around header, page and legend: the mock-up's 32, 20, 32, 16."""

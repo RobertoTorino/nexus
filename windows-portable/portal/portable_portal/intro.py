@@ -68,7 +68,7 @@ class Intro(QWidget):
         self.cover()
         self.setFocus()
         self.animation.start()
-        if self.sound is not None:              # None: the suite's sound is off (the portal's Suite page)
+        if self.sound is not None:              # None: the suite's sound is off (the portal's Settings page)
             self.player(self.sound)
 
     def skip(self) -> None:

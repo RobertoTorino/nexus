@@ -617,8 +617,8 @@ def test_your_games_are_marked_with_a_and_put_in_steam(qapp, tmp_path, monkeypat
     number = shortcuts.numbers(steam_dir)["PCSB00245"]
     assert played[-1] == f"steam://rungameid/{(number << 32) | 0x02000000}"
     assert number == steam.appid(item["Exe"], item["AppName"]) & 0xFFFFFFFF
-    assert window.games_pane.status.text() == ("Starting Persona 4 Golden in Steam… In the game, hold View and Menu "
-                                               "together to quit.")    # how to quit, on the screen
+    assert window.games_pane.status.text() == ("Starting Persona 4 Golden in Steam… In the game, hold View, LB and "
+                                               "RB together to quit.")    # how to quit, on the screen
     window.games_pane.list.pills["PCSB00245"].click()              # the mark off, and Steam again: taken out
     window.on_action("y")
     assert wait_for(qapp, lambda: not window.busy) and shortcuts.in_steam(steam_dir) == {}
@@ -644,7 +644,7 @@ def test_without_steam_x_starts_the_game_in_vita3k(qapp, tmp_path, monkeypatch):
     launcher, before = play.launcher(ROOT)                      # the play mode, as the shortcut would start it
     assert started == [([launcher, *before, "-r", "PCSB00245"], program.parent)]
     assert played == [] and window.games_pane.status.text() == ("Starting Persona 4 Golden in Vita3K… In the game, "
-                                                                "hold View and Menu together to quit.")
+                                                                "hold View, LB and RB together to quit.")
 
     def fails(command, cwd=None):
         raise PermissionError(13, "Access is denied")
@@ -846,7 +846,7 @@ def test_the_browser_opens_where_it_was_left(qapp, tmp_path, monkeypatch):
 
 def test_a_shortcut_made_before_the_play_mode_asks_for_update_steam(qapp, tmp_path, monkeypatch):
     """A game whose shortcut still starts Vita3K itself (1.0.1's) says (Update Steam), and Y brings it to the play
-    mode (owner, 30-10-2026: View and Menu held quit every game)."""
+    mode (owner, 30-10-2026: View, LB and RB held quit every game)."""
     home = tmp_path / "emulator"
     ready(home)
     make_game(fs(home), "Persona 4 Golden", "PCSB00245")

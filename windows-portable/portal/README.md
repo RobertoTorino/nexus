@@ -15,7 +15,7 @@ skips it.
 
 Made for the handheld in your hands: full screen, the apps as tiles under tabs (LB and RB change the tab), the amber
 focus moved by the d-pad, A to install or open the focused app, Y to update it, X for its details (and Remove there),
-☰ (the Menu button) for the Suite page (the portal's own update and its settings), B to go back, View (⧉) to exit,
+☰ (the Menu button) for the Settings page (the portal's own update and its settings), B to go back, View (⧉) to exit,
 each in the row at the bottom too. Every tile and entry also works by touch.
 
 ## Install it

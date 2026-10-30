@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The play mode (play.py): the launcher a shortcut starts, View and Menu held to close the emulator, the grace before
+"""The play mode (play.py): the launcher a shortcut starts, View, LB and RB held to close the emulator, the grace before
 it is ended, and a game without a controller reader."""
 
 from __future__ import annotations
@@ -74,28 +74,46 @@ def played(script, process, hold=2.0, grace=10.0):
     return code, closed, lines, pad, clock
 
 
-def test_view_and_menu_held_close_the_emulator():
-    """One way out of every game (owner, 30-10-2026): View and Menu held together for two seconds ask the emulator's
+def test_view_lb_and_rb_held_close_the_emulator():
+    """One way out of every game (owner, 30-10-2026): View, LB and RB held together for two seconds ask the emulator's
     windows to close; a shorter hold does nothing of ours."""
-    script = {0.5: [("button", "back", True), ("button", "start", True)], 1.0: [("button", "start", False)],
-              3.0: [("button", "start", True)], 3.5: [("button", "back", True)]}
+    script = {0.5: [("button", "back", True), ("button", "leftshoulder", True), ("button", "rightshoulder", True)],
+              1.0: [("button", "rightshoulder", False)], 3.0: [("button", "rightshoulder", True)],
+              3.5: [("button", "back", True)]}
     process = Process()
     code, closed, lines, pad, clock = played(script, process)
     assert closed == [4242] and code == 0 and not process.terminated and pad.closed
     assert 5.0 <= clock.now < 5.5                                  # both down from 3.0 (View since 0.5): two seconds
-    assert lines[0] == "Play: emu.exe started; View and Menu held for 2 s close it."
+    assert lines[0] == "Play: emu.exe started; View, LB and RB held for 2 s close it."
     assert lines[-1] == "Play: the emulator ended (exit code 0)."
+
+
+def test_view_and_menu_alone_are_left_to_the_system():
+    """View and Menu are Windows' and Steam's guide button (owner, 30-10-2026: they opened their overlays over the game,
+    whose focus they took): held, they close nothing; the play mode's chord is View, LB and RB."""
+    process = Process()
+    process.returncode = None
+    clock = Clock()
+    process.poll = lambda: 0 if clock.now >= 6 else None
+    pad = Pad({0.0: [("button", "back", True), ("button", "start", True), ("button", "leftshoulder", True)]})
+    pad.clock = clock
+    closed = []
+    play.run(["emu.exe"], Path("."), start=lambda c, d: process, pad=lambda: pad, close=closed.append, clock=clock,
+             sleep=clock.sleep)
+    assert closed == [] and play.CHORD == ("back", "leftshoulder", "rightshoulder")
 
 
 def test_an_emulator_that_does_not_close_is_ended():
     process = Process(closes_after=None)
-    code, closed, lines, _, clock = played({0.0: [("button", "back", True), ("button", "start", True)]}, process)
+    code, closed, lines, _, clock = played({0.0: [("button", "back", True), ("button", "leftshoulder", True),
+                                                  ("button", "rightshoulder", True)]}, process)
     assert closed == [4242] and process.terminated and code == 1
     assert "did not close within 10 s; ended" in lines[-2] and 12.0 <= clock.now < 12.2
 
 
 def test_an_unplugged_pad_lets_go_of_the_buttons():
-    script = {0.0: [("button", "back", True), ("button", "start", True)], 1.0: [("removed", "", False)]}
+    script = {0.0: [("button", "back", True), ("button", "leftshoulder", True), ("button", "rightshoulder", True)],
+              1.0: [("removed", "", False)]}
     process = Process()
     process.returncode = None
 
@@ -166,7 +184,7 @@ def test_an_emulator_that_asks_before_it_quits_is_answered():
     while it still runs, Enter answers it, once; it then ends as on its own Quit."""
     clock, lines, answered = Clock(), [], []
     process = Process(closes_after=None)
-    pad = Pad({0.0: [("button", "back", True), ("button", "start", True)]})
+    pad = Pad({0.0: [("button", "back", True), ("button", "leftshoulder", True), ("button", "rightshoulder", True)]})
     pad.clock = clock
 
     def confirm(pid):

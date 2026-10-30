@@ -133,12 +133,12 @@ saving). See [Steam artwork from SteamGridDB](covers.md).
 A game from Steam starts full screen, with the device's controller as the PS Vita's: A is Cross, B Circle, X Square, Y
 Triangle, Menu Start, View Select, LB and RB are L and R.
 
-To quit a game, **hold View and Menu together for two seconds**: Vita3K closes as its window would close, and you are
+To quit a game, **hold View, LB and RB together for two seconds**: Vita3K closes as its window would close, and you are
 back in Steam, or in the app when it started the game. It works the same in every game manager of the suite, started
 from Steam's library or from the app. The line at the bottom of Your games says so when a game starts. **Steam's own
 menu** (the Steam button, or the guide button where Windows does not take it) and its **Exit game** still end the game
 too. Vita3K's own pause menu, on its PS button, has **Exit**, which ends the game but leaves Vita3K's window; holding
-View and Menu closes that too.
+View, LB and RB closes that too.
 
 ## Settings
 
@@ -199,7 +199,7 @@ The newest lines show at the bottom of a box of their own, which a finger can sc
 
 A game's shortcut in Steam starts the app itself in its play mode, `Vita3K-Manager.exe --play -r <ID>`, which shows
 no window: it starts `Vita3K.exe -r <ID>` in Vita3K's folder, the game's ID as Vita3K installed it, so Vita3K starts
-that game at once, full screen; it watches the controller for View and Menu held, and ends when Vita3K ends, so Steam
+that game at once, full screen; it watches the controller for View, LB and RB held, and ends when Vita3K ends, so Steam
 sees the game end. Asked to close, Vita3K gets ten seconds before it is ended. On a device without Steam the app starts
 a game the same way. A shortcut made by an earlier version, which starts `Vita3K.exe` itself, shows **(Update Steam)**
 on its game: **Y Update Steam** writes it again.

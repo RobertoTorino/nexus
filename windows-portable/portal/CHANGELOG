@@ -1,3 +1,13 @@
+Changelog: 30-10-2026 21:19:45
+
+Added. The Settings page (owner, 30-10-2026: the legend's Suite is now Settings, and so is the page): the Wallpaper
+row picks the next of Off, Built-in and each of your own pictures, dropped in
+%LOCALAPPDATA%\windows-portable-suite\wallpapers (PNG, JPEG or WebP, wider than high, at least 1280 x 720; a picture
+that is not is named with why), for every app of the suite; Transparency beside it sets how much of the background
+lies over the picture, 10 % more each time up to 90 %, then 0 (as the BC250 portal's). install.ps1 makes the folder
+and an uninstall keeps your pictures. The status line shows the CPU and the GPU live, each with its load and
+temperature, read every two seconds (core's chip.py).
+
 Changelog: 30-10-2026 19:43:49
 
 Release 5.0.0. Pins wp-test-v3.2.0, wp-pcsx2-v4.1.0, wp-ppsspp-v2.1.0, wp-rpcs3-v2.1.0, wp-shadps4-v2.1.0, wp-vita3k-v2.1.0, wp-xenia-v2.1.0.

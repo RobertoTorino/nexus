@@ -90,7 +90,7 @@ You play the games from Steam; the app puts them there, and starts them there wi
 In a game started from Steam, PPSSPP takes the device's controller as it is: A is Cross, B Circle, X Square, Y
 Triangle, View Select, Menu Start, LB and RB the PSP's L and R, RT fast forward.
 
-To quit a game, **hold View and Menu together for two seconds**: PPSSPP closes as its window would close, and you are
+To quit a game, **hold View, LB and RB together for two seconds**: PPSSPP closes as its window would close, and you are
 back in Steam, or in the app when it started the game. It works the same in every game manager of the suite, started
 from Steam's library or from the app. The line at the bottom of Your games says so when a game starts. **LT** (or the
 guide button) still opens PPSSPP's pause menu; its **Exit** ends the game and closes PPSSPP too.
@@ -160,7 +160,7 @@ pane: the d-pad scrolls it, and **B** goes back.
 
 A game's shortcut in Steam starts the app itself in its play mode, `PPSSPP-Manager.exe --play --fullscreen
 --pause-menu-exit "<game>"`, which shows no window: it starts `PPSSPPWindows64.exe --fullscreen --pause-menu-exit
-"<game>"` in PPSSPP's folder, watches the controller for View and Menu held, and ends when PPSSPP ends, so Steam sees
+"<game>"` in PPSSPP's folder, watches the controller for View, LB and RB held, and ends when PPSSPP ends, so Steam sees
 the game end. With a game named, PPSSPP goes straight to it without its own window, `--fullscreen` gives the game the
 whole screen, and `--pause-menu-exit` makes the pause menu's **Exit** close PPSSPP. Asked to close, PPSSPP gets ten
 seconds before it is ended. On a device without Steam the app starts a game the same way. A shortcut made by an earlier

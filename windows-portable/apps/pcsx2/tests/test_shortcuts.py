@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The Steam shortcuts (shortcuts.py) on Windows: the app's play mode with the game alone and full screen (owner,
-30-10-2026: View and Menu held quit it), one made before it that starts PCSX2 itself still the game's, paths in double
+30-10-2026: View, LB and RB held quit it), one made before it that starts PCSX2 itself still the game's, paths in double
 quotes as Steam writes them, "[PS2] <title>" names made unique, and the app's own shortcuts told from others."""
 
 from __future__ import annotations

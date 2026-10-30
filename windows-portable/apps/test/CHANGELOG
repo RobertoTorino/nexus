@@ -1,3 +1,8 @@
+Changelog: 30-10-2026 21:19:45
+
+Fixed. No change in what it does: the temperatures and the power draw are read by core's chip.py, where temps.py's
+reader moved (30-10-2026, for the portal's header too); temps.py keeps the header's text.
+
 Changelog: 30-10-2026 19:43:48
 
 Release 3.2.0.

@@ -732,8 +732,8 @@ def test_without_steam_x_starts_the_game_in_pcsx2(qapp, tmp_path, monkeypatch):
     program = emulator.program(home)
     launcher, before = play.launcher(ROOT)                      # the play mode, as the shortcut would start it
     assert started == [([launcher, *before, *emulator.GAME_ARGS, "--", str(game)], program.parent)]
-    assert opened == [] and window.games_pane.status.text() == (f"Starting {title} in PCSX2… In the game, hold View "
-                                                                "and Menu together to quit.")
+    assert opened == [] and window.games_pane.status.text() == (f"Starting {title} in PCSX2… In the game, hold View"
+                                                                ", LB and RB together to quit.")
 
     def fails(command, cwd=None):
         raise PermissionError(13, "Access is denied")
@@ -745,7 +745,7 @@ def test_without_steam_x_starts_the_game_in_pcsx2(qapp, tmp_path, monkeypatch):
 
 def test_a_shortcut_made_before_the_play_mode_asks_for_update_steam(qapp, tmp_path, monkeypatch):
     """A game whose shortcut still starts PCSX2 itself (3.0.1's) says (Update Steam), and Y brings it to the play
-    mode (owner, 30-10-2026: View and Menu held quit every game)."""
+    mode (owner, 30-10-2026: View, LB and RB held quit every game)."""
     home = tmp_path / "emulator"
     fake_install(home)
     with_bios(home)

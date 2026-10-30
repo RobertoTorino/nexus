@@ -624,7 +624,7 @@ def test_a_game_is_played_through_steam(qapp, tmp_path, monkeypatch):
     number = shortcuts.numbers(steam_dir)[str(game)]
     assert number == steam.appid(str(steam.field(item, "Exe")), str(steam.field(item, "AppName")))
     assert opened == [steam.play_url(number)]
-    assert window.games_pane.status.text() == (f"Starting {title} in Steam… In the game, hold View and Menu together "
+    assert window.games_pane.status.text() == (f"Starting {title} in Steam… In the game, hold View, LB and RB together "
                                                "to quit.")             # how to quit, on the screen (owner, 30-10-2026)
     assert not hasattr(window, "open_steam") and not hasattr(window, "show_steam")
     window.toggle_folders()                                        # X on the folders plays nothing
@@ -656,8 +656,8 @@ def test_without_steam_x_starts_the_game_in_xenia(qapp, tmp_path, monkeypatch):
     program = emulator.program(home)
     launcher, before = play.launcher(ROOT)                      # the play mode, as the shortcut would start it
     assert started == [([launcher, *before, "--fullscreen=true", str(game)], program.parent)]
-    assert opened == [] and window.games_pane.status.text() == (f"Starting {title} in Xenia… In the game, hold View "
-                                                                "and Menu together to quit.")
+    assert opened == [] and window.games_pane.status.text() == (f"Starting {title} in Xenia… In the game, hold View"
+                                                                ", LB and RB together to quit.")
 
     def fails(command, cwd=None):
         raise PermissionError(13, "Access is denied")
@@ -669,7 +669,7 @@ def test_without_steam_x_starts_the_game_in_xenia(qapp, tmp_path, monkeypatch):
 
 def test_a_shortcut_made_before_the_play_mode_asks_for_update_steam(qapp, tmp_path, monkeypatch):
     """A game whose shortcut still starts Xenia itself (1.0.1's) says (Update Steam), and Y brings it to the play
-    mode (owner, 30-10-2026: View and Menu held quit every game)."""
+    mode (owner, 30-10-2026: View, LB and RB held quit every game)."""
     home = tmp_path / "emulator"
     fake_install(home)
     user = tmp_path / "me"

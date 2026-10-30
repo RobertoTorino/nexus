@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """What a newer portal release brings: its apps.toml, read from GitHub at its tag, compared with the running
-portal's pins. App updates reach users through a portal update, so the Suite page can name them. After the BC250
+portal's pins. App updates reach users through a portal update, so the Settings page can name them. After the BC250
 portal's portal_update.py, with the suite's tags and manifest path."""
 
 from __future__ import annotations
@@ -48,7 +48,7 @@ class PortalUpdate:
         return ", ".join(parts)
 
     def details(self) -> str:
-        """One line per app, for the Suite page."""
+        """One line per app, for the Settings page."""
         return "\n".join(f"{c.name}: not available any more ({c.withdrawn}); removed" if c.withdrawn
                          else f"{c.name}: {c.old} → {c.new}" if c.old else f"{c.name}: new, {c.new}"
                          for c in self.changes or [])

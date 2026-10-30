@@ -4,7 +4,7 @@ starts PCSX2 with the game alone and full screen, pcsx2-qt.exe -nogui -fullscree
 PCSX2 exit when the game does), named "[PS2] <title>", in Steam's library and its Big Picture mode.
 
 On Windows the shortcut runs the app's own program in its play mode (core's play.py; owner, 30-10-2026: one way out
-of every game, View and Menu held): PCSX2-Manager.exe --play -nogui -fullscreen -- "<game>" starts PCSX2 in the
+of every game, View, LB and RB held): PCSX2-Manager.exe --play -nogui -fullscreen -- "<game>" starts PCSX2 in the
 app's emulator folder, watches the controller and ends with the game. The app's program stays where it is when the
 app is updated, so the shortcut's Steam number, from the program and the name, stays the same. A shortcut made
 before, which runs pcsx2-qt.exe itself, is still the game's (outdated(): Update Steam brings it to the play mode).

@@ -134,7 +134,7 @@ GAMES_INFO = (
     "one). Press the A button on a game to mark it for Steam, or to take the mark away; then the Y button (Update "
     "Steam) makes Steam match the marks: each marked game becomes a non-Steam game, \"[PS Vita] <title>\", in "
     "Steam's library and its Big Picture mode, and a game without the mark is taken out. Steam closes for it and "
-    "starts again. A game starts full screen. To quit a game, hold View and Menu together for two seconds: Vita3K "
+    "starts again. A game starts full screen. To quit a game, hold View, LB and RB together for two seconds: Vita3K "
     "closes, and you are back where you started it. The same works in every game manager of the suite.\n\n"
     "The X button on a game that is in Steam starts it, through Steam (Steam starts first when it does not run). "
     "On a device without Steam the X button starts the game in Vita3K itself. Steam's library opens from the "

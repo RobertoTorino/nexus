@@ -14,7 +14,7 @@ from . import APP_ID, APP_NAME, INFO, SUITE, __version__
 
 
 def play_game(args: list[str]) -> int:
-    """The play mode: RPCS3 with *args* (--no-gui --fullscreen "<EBOOT.BIN>") from its folder, closed on View and Menu
+    """The play mode: RPCS3 with *args* (--no-gui --fullscreen "<EBOOT.BIN>") from its folder, closed on View, LB and RB
     held (core's play.run), without a window of the app's; RPCS3's exit code. Never the app's one window: it runs
     beside it."""
     applog.setup(APP_ID, suite=SUITE, private=True)

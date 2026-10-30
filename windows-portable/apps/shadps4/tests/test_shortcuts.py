@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The Steam shortcuts (shortcuts.py) on Windows, as RPCS3 Manager's are tested: the app's play mode with the game full
-screen (owner, 30-10-2026: View and Menu held quit it), one made before it that starts shadPS4 itself still the game's,
+screen (owner, 30-10-2026: View, LB and RB held quit it), one made before it that starts shadPS4 itself still the game's,
 started in shadPS4's folder (shadPS4's portable folder beside it), paths in double quotes as Steam writes them,
 "[PS4] <title>" names made unique, the app's own shortcuts told from others, adding and taking out beside other
 shortcuts in a Steam folder made in a temp folder, and the artwork from the game's own pictures (the BC250 suite's

@@ -123,7 +123,7 @@ GAMES_INFO = (
     "Your Xbox 360 games, to play from Steam. Press the A button on a game to mark it for Steam, or to take the mark "
     "away; then the Y button (Update Steam) makes Steam match the marks: each marked game becomes a non-Steam game, "
     "\"[X360] <title>\", in Steam's library and its Big Picture mode, and a game without the mark is taken out. Steam "
-    "closes for it and starts again. A game starts full screen. To quit a game, hold View and Menu together for two "
+    "closes for it and starts again. A game starts full screen. To quit a game, hold View, LB and RB together for two "
     "seconds: Xenia closes, and you are back where you started it. The same works in every game manager of the "
     "suite; Steam's own menu and its Exit game end it too.\n\n"
     "The X button starts the game the focus is on, through Steam, once Update Steam has put it there; Steam "

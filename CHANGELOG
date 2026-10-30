@@ -1,3 +1,11 @@
+Changelog: 30-10-2026 21:19:45
+
+Added. The Windows Portable Suite (owner, 30-10-2026): a game quits with View, LB and RB held, no longer View and
+Menu, which Windows and Steam take as the guide button and answered with their overlays over the game (core's
+play.py, the six game managers); the portal's Settings page (formerly Suite) picks the wallpaper from your own
+pictures in the suite's wallpapers folder and sets its transparency, and its status line shows the CPU and the GPU
+live (core's chip.py).
+
 Changelog: 30-10-2026 20:55:37
 
 Release 1.3.0.

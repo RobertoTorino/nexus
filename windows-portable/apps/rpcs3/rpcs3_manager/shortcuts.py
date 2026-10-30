@@ -5,7 +5,7 @@ starts RPCS3 with the game alone and full screen, rpcs3.exe --no-gui --fullscree
 screen back.
 
 On Windows the shortcut runs the app's own program in its play mode (core's play.py; owner, 30-10-2026: one way out
-of every game, View and Menu held): RPCS3-Manager.exe --play --no-gui --fullscreen "<EBOOT.BIN>" starts RPCS3 in the
+of every game, View, LB and RB held): RPCS3-Manager.exe --play --no-gui --fullscreen "<EBOOT.BIN>" starts RPCS3 in the
 app's emulator folder, watches the controller and ends with the game. The app's program stays where it is when the
 app is updated, so the shortcut's Steam number, from the program and the name, stays the same. A shortcut made
 before, which runs rpcs3.exe itself, is still the game's (outdated(): Update Steam brings it to the play mode).

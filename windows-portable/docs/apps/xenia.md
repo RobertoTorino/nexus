@@ -115,7 +115,7 @@ saving). See [Steam artwork from SteamGridDB](covers.md).
 
 A game starts full screen, with the device's controller as the Xbox 360's.
 
-To quit a game, **hold View and Menu together for two seconds**: Xenia closes as its window would close, and you are
+To quit a game, **hold View, LB and RB together for two seconds**: Xenia closes as its window would close, and you are
 back in Steam, or in the app when it started the game. It works the same in every game manager of the suite, started
 from Steam's library or from the app. The line at the bottom of Your games says so when a game starts. **Steam's own
 menu** (the Steam button, or the guide button) and its **Exit game** end the game too.
@@ -176,7 +176,7 @@ the whole log in the pane: the d-pad scrolls it, and **B** goes back.
 A game's shortcut in Steam starts the app itself in its play mode, `Xenia-Manager.exe --play --fullscreen=true
 "<game>"`, which shows no window: it starts `xenia_canary.exe --fullscreen=true "<game>"` in Xenia's folder, as the
 BC250 suite's Xenia Manager starts it (the value on the command line is not written into Xenia's settings), watches the
-controller for View and Menu held, and ends when Xenia ends, so Steam sees the game end. Asked to close, Xenia gets ten
+controller for View, LB and RB held, and ends when Xenia ends, so Steam sees the game end. Asked to close, Xenia gets ten
 seconds before it is ended. On a device without Steam the app starts a game the same way. A shortcut made by an
 earlier version, which starts `xenia_canary.exe` itself, shows **(Update Steam)** on its game: **Y Update Steam** writes
 it again.

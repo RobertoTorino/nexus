@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The Steam shortcuts (shortcuts.py) on Windows: the app's play mode with the game alone and full screen (owner,
-30-10-2026: View and Menu held quit it), one made before it that starts PPSSPP itself still the game's, paths in
+30-10-2026: View, LB and RB held quit it), one made before it that starts PPSSPP itself still the game's, paths in
 double quotes as Steam writes them, "[PSP] <title>" names made unique, the app's own shortcuts told from others,
 adding and taking out beside other shortcuts in a Steam folder made in a temp folder, and the artwork from the game's
 own pictures (the BC250 suite's PPSSPP Manager's tests)."""

@@ -87,6 +87,7 @@ Check 'Start-menu entry starts the installed exe' { (Test-Path $Menu) -and ((Tar
 Check 'Desktop shortcut' { (Test-Path $Desk) -and ((Target $Desk) -eq (Join-Path $A $Exe)) }
 Check 'the test app installed through its own installer' { (Test-Path $TestApp) -and (Get-ChildItem -LiteralPath $TestApp -Filter '*.exe') -and (Test-Path $TestMenu) -and -not (Test-Path $TestDesk) }
 Check 'its release kept for the portal, complete' { (Test-Path (Join-Path $Releases "$TestTag\install.ps1")) -and (Test-Path (Join-Path $Releases "$TestTag\.complete")) }
+Check 'the wallpapers folder made, and named' { (Test-Path -PathType Container (Join-Path $SuiteHome 'wallpapers')) -and (Log 'log1') -match 'Your own wallpapers go in' }
 Check 'recorded in installed.json without a byte order mark' { ((RecordOf 'test') -eq $TestTag) -and ([IO.File]::ReadAllBytes($Records)[0] -eq 0x7B) }
 
 Write-Host '== 2. update without the Desktop shortcut'
@@ -149,7 +150,10 @@ if ($args -contains '--uninstall') { Remove-Item -Recurse -Force (Join-Path $env
 '@
 [IO.File]::WriteAllText($Records, ('{"test": "' + $TestTag + '", "other": "wp-other-v0.1.0"}'))
 Set-Content -LiteralPath $Ini, (Join-Path $PortalHome 'portal.log') -Value 'x' -Encoding ascii
+Set-Content -LiteralPath (Join-Path $SuiteHome 'wallpapers\mine.png') -Value 'x'      # a picture of the user's
 $rc = Run 'log4' @('--uninstall')
+Check 'a picture in the wallpapers folder kept' { Test-Path (Join-Path $SuiteHome 'wallpapers\mine.png') }
+Remove-Item -LiteralPath (Join-Path $SuiteHome 'wallpapers\mine.png')
 Check 'exit 0' { $rc -eq 0 }
 Check 'portal gone' { -not (Test-Path $A) -and -not (Test-Path $Menu) }
 Check 'the test app gone with it, its release folder too' { -not (Test-Path $TestApp) -and -not (Test-Path $TestMenu) -and -not (Test-Path (Join-Path $Releases $TestTag)) }
@@ -194,7 +198,7 @@ Check '--xbox-menu adds it; a portal that cannot do it does not fail the install
 Remove-Item -LiteralPath (Join-Path $A $Exe) -Force
 $env:WPS_XBOX_MENU = 'n'
 $rc = Run 'log7d' @()
-Check 'a first install asked, a no kept' { $rc -eq 0 -and (Log 'log7d') -match 'Not added to the Xbox menu \(the Suite page' }
+Check 'a first install asked, a no kept' { $rc -eq 0 -and (Log 'log7d') -match 'Not added to the Xbox menu \(the Settings page' }
 $rc = Run 'log7e' @('--no-xbox-menu')
 Check '--no-xbox-menu: not asked' { $rc -eq 0 -and (Log 'log7e') -notmatch 'Xbox menu' }
 $env:WPS_XBOX_MENU = ''

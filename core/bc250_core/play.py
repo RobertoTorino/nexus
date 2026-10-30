@@ -1,8 +1,9 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """A game played through an app's play mode (the Windows Portable Suite's game managers; owner, 30-10-2026: one way
-out of every game, "Hold View + Menu, everywhere"): the app's own program, started by the game's Steam shortcut (or
-by the app itself on a device without Steam) as <program> --play <the emulator's arguments>, starts the emulator
-outside the app's bundle, watches the controller while it runs, and when View and Menu are held together for HOLD
+out of every game, "Hold View + Menu, everywhere"; then View + LB + RB, the same day: View + Menu is Windows' and
+Steam's guide button, which opened their overlays over the game): the app's own program, started by the game's Steam
+shortcut (or by the app itself on a device without Steam) as <program> --play <the emulator's arguments>, starts the emulator
+outside the app's bundle, watches the controller while it runs, and when View, LB and RB are held together for HOLD
 seconds asks the emulator's windows to close, as Alt+F4 does, so it saves and ends as on any close; one still
 running GRACE seconds later is ended. It ends with the emulator, with its exit code, so Steam sees the game end.
 
@@ -24,14 +25,14 @@ from pathlib import Path
 
 from .platform import outside_bundle
 
-HOLD = 2.0                      # s View and Menu are held together before the game is closed
+HOLD = 2.0                      # s View, LB and RB are held together before the game is closed
 GRACE = 10.0                    # s an emulator asked to close has before it is ended
 ASK = 1.0                       # s after the close before an emulator's own quit question is answered
 POLL = 0.05                     # s between two looks at the controller and the emulator
-CHORD = ("back", "start")       # SDL's names of View and Menu
+CHORD = ("back", "leftshoulder", "rightshoulder")    # SDL's names of View, LB and RB
 FLAG = "--play"                 # the app's argument for its play mode
 POWERSHELL = r"C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
-QUIT_HINT = "In the game, hold View and Menu together to quit."
+QUIT_HINT = "In the game, hold View, LB and RB together to quit."
 
 
 def launcher(app_root: Path, frozen: bool | None = None, program: str | None = None) -> tuple[str, list[str]]:
@@ -156,12 +157,12 @@ def run(command: Sequence[str], cwd: Path, log: Callable[[str], None] = lambda l
         close: Callable[[int], int] = close_windows, clock: Callable[[], float] = time.monotonic,
         sleep: Callable[[float], None] = time.sleep, hold: float = HOLD, grace: float = GRACE,
         confirm: Callable[[int], int] | None = None) -> int:
-    """The emulator *command* run in *cwd* to its end, closed on View and Menu held for *hold* seconds; its exit
+    """The emulator *command* run in *cwd* to its end, closed on View, LB and RB held for *hold* seconds; its exit
     code. *confirm*: for an emulator that asks before it quits (shadPS4), what answers yes (press_enter), ASK seconds
     after the close while it still runs. Without a controller reader (no pygame-ce, no SDL) the game still runs, only
     without the chord. OSError when the emulator cannot start."""
     process = start(command, cwd)
-    log(f"Play: {Path(command[0]).name} started; View and Menu held for {hold:g} s close it.")
+    log(f"Play: {Path(command[0]).name} started; View, LB and RB held for {hold:g} s close it.")
     try:
         source = pad()
     except Exception as error:  # noqa: BLE001  (no controller reader: the game runs, without the chord)
@@ -180,7 +181,7 @@ def run(command: Sequence[str], cwd: Path, log: Callable[[str], None] = lambda l
             since = (since if since is not None else now) if all(b in pressed for b in CHORD) else None
             if asked is None and since is not None and now - since >= hold:
                 asked = now
-                log(f"Play: View and Menu held; {close(process.pid)} window(s) of the emulator asked to close.")
+                log(f"Play: View, LB and RB held; {close(process.pid)} window(s) of the emulator asked to close.")
             elif asked is not None and confirm is not None and now - asked >= ASK:
                 log(f"Play: the emulator asks before it quits; answered in {confirm(process.pid)} window(s).")
                 confirm = None

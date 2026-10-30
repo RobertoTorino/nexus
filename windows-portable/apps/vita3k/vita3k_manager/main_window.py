@@ -624,7 +624,7 @@ class MainWindow(PortableWindow):
 
     def play_without_steam(self, game: Game) -> None:
         """X on a game on a device without Steam (owner, 30-10-2026: a fallback): the game in the app's play mode, as
-        its Steam shortcut would start it (core's play: View and Menu held quit it), outside the app's bundle
+        its Steam shortcut would start it (core's play: View, LB and RB held quit it), outside the app's bundle
         (platform.start_program)."""
         if not emulator.installed(self.home):
             self.games_pane.status.setText(f"Install Vita3K first: it starts {game.title} on a device without Steam.")

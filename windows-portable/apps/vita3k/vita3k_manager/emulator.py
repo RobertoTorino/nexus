@@ -359,7 +359,7 @@ def processes(name: str) -> list[str]:
 # A game alone and full screen, as the app's play mode starts it for Steam's shortcuts (owner, 29-10-2026, the games
 # are played from Steam; 30-10-2026, the play mode, and without Steam the app): -r names the installed game by its
 # title ID, and Vita3K's own frontend (owner, 29-10-2026: not the SDL frontend, whose window never goes full screen on
-# Windows) boots it at once, full screen as config.yml's boot-apps-full-screen says (userdata.prepare). View and Menu
-# held close Vita3K (core's play), as Steam's Exit game ends it; Vita3K's own pause menu (its PS button) has Exit, which
+# Windows) boots it at once, full screen as config.yml's boot-apps-full-screen says (userdata.prepare). View, LB and
+# RB held close Vita3K (core's play), as Steam's Exit game ends it; Vita3K's own pause menu (its PS button) has Exit, which
 # ends the game and leaves Vita3K's window.
 GAME_ARGS = ("-r",)

@@ -4,7 +4,7 @@ starts Xenia with the game full screen, xenia_canary.exe --fullscreen=true "<gam
 library and its Big Picture mode.
 
 On Windows the shortcut runs the app's own program in its play mode (core's play.py; owner, 30-10-2026: one way out
-of every game, View and Menu held): Xenia-Manager.exe --play --fullscreen=true "<game>" starts Xenia in the app's
+of every game, View, LB and RB held): Xenia-Manager.exe --play --fullscreen=true "<game>" starts Xenia in the app's
 emulator folder, watches the controller and ends with the game. The app's program stays where it is when the app is
 updated, so the shortcut's Steam number, from the program and the name, stays the same. A shortcut made before, which
 runs xenia_canary.exe itself, is still the game's (outdated(): Update Steam brings it to the play mode). Windows paths

@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The portal's own widgets on the portable window: the strip under the tiles (what the focused app is and does,
-with its pills), the details page of an app and the Suite page (the portal's own version and update). The tabs
+with its pills), the details page of an app and the Settings page (the portal's own version and update). The tabs
 (LB and RB step through the categories) are core's Tabs. Direction D's portal screen (the owner's, 26-10-2026)."""
 
 from __future__ import annotations
@@ -13,6 +13,7 @@ from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QVBoxLayout, QWidget
 
 from bc250_core.portable import AMBER, BODY, DIM, TEXT, Pane, Row, Tabs, px, text_label
 
+WALLPAPER_FOLDER = r"%LOCALAPPDATA%\windows-portable-suite\wallpapers"   # as the user finds it
 NAME = 24                               # pt: the name at the top of a pane
 
 
@@ -94,9 +95,10 @@ class DetailsPane(Pane):
 
 
 class SuitePane(Pane):
-    """The Suite page (Menu): the portal's own version, the newest release on GitHub and what it changes, with Update
+    """The Settings page (Menu): the portal's own version, the newest release on GitHub and what it changes, with Update
     (Y) when there is a newer one; and the suite's settings, a row each that A switches (owner, 28-10-2026: the
-    wallpaper on or off; 29-10-2026: the sound on or off), with a line under it of what it does. They had a page of their own on View until View became
+    wallpaper on or off; 29-10-2026: the sound on or off; 30-10-2026: which wallpaper, and its transparency), with a
+    line under it of what it does. They had a page of their own on View until View became
     the suite's Exit app (owner, 29-10-2026)."""
 
     def __init__(self, parent: QWidget | None = None):
@@ -111,12 +113,16 @@ class SuitePane(Pane):
         self.grid.setVerticalSpacing(px(4))
         self.column.addLayout(self.grid)
         self.column.addSpacing(px(16))
-        self.wallpaper = Row("Wallpaper: On")
-        self.column.addWidget(self.wallpaper)
+        self.wallpaper = Row("Wallpaper: Built-in")       # side by side: the page fits the Ally's screen
+        self.transparency = Row("Transparency: 59 %")
+        pair = QHBoxLayout()
+        pair.setSpacing(px(12))
+        pair.addWidget(self.wallpaper, 3)
+        pair.addWidget(self.transparency, 2)
+        self.column.addLayout(pair)
         self.column.addSpacing(px(4))
-        self.column.addWidget(text_label("A picture behind the tiles, which show it through them, in every app of the "
-                                         "suite. A switches it; it is kept for the next start.", BODY + 1, color=DIM,
-                                         wrap=True))
+        self.wallpaper_text = text_label("", BODY + 1, color=DIM, wrap=True)
+        self.column.addWidget(self.wallpaper_text)
         self.column.addSpacing(px(12))
         self.sound = Row("Sound: On")
         self.column.addWidget(self.sound)
@@ -143,8 +149,17 @@ class SuitePane(Pane):
         self.status.setVisible(bool(status))
         self.action = action
 
-    def set_wallpaper(self, on: bool) -> None:
-        self.wallpaper.set_text(f"Wallpaper: {'On' if on else 'Off'}")
+    def set_wallpaper(self, name: str, refused: dict[str, str] | None = None) -> None:
+        """The Wallpaper row: *name* (Off, Built-in or a picture's), and under it where pictures go, with the pictures
+        in the folder that cannot be one (*refused*: name, why: the rule it breaks; the wiki has PICTURE_RULES)."""
+        self.wallpaper.set_text(f"Wallpaper: {name}")
+        text = f"Off, Built-in, or each picture in {WALLPAPER_FOLDER}. Transparency: the background over it."
+        if refused:
+            text += " Not used: " + "; ".join(f"{name} ({why})" for name, why in refused.items()) + "."
+        self.wallpaper_text.setText(text)
+
+    def set_transparency(self, percent: int) -> None:
+        self.transparency.set_text(f"Transparency: {percent} %")
 
     def set_sound(self, on: bool) -> None:
         self.sound.set_text(f"Sound: {'On' if on else 'Off'}")

@@ -14,7 +14,7 @@ from . import APP_ID, APP_NAME, INFO, SUITE, __version__
 
 
 def play_game(args: list[str]) -> int:
-    """The play mode: Vita3K with *args* (-r <title ID>) from its folder, closed on View and Menu held (core's
+    """The play mode: Vita3K with *args* (-r <title ID>) from its folder, closed on View, LB and RB held (core's
     play.run), without a window of the app's; Vita3K's exit code. Never the app's one window: it runs beside it."""
     applog.setup(APP_ID, suite=SUITE, private=True)
     log = applog.logger(APP_ID)

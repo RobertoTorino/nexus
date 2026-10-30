@@ -21,7 +21,7 @@ handheld's controller) is set after an install and when the window opens, while 
 The Your games pane (panes.py, library.py): the disc games in the chosen folders, the games installed in RPCS3 and
 the disc games it knows, played from Steam (owner, 29-10-2026); A marks one for Steam, X plays one that is in Steam,
 through Steam (steam://rungameid), and on a device without Steam starts it in the app's play mode itself (owner,
-30-10-2026: a fallback, as its shortcut would start it; core's play: View and Menu held quit any game), Y Update
+30-10-2026: a fallback, as its shortcut would start it; core's play: View, LB and RB held quit any game), Y Update
 Steam makes Steam's shortcuts match the marks and brings a shortcut made before the play mode to it; Steam's library
 is the portal's RT Steam (owner, 30-10-2026: Open Steam moved there); LB Folders lists the folders, the usual places
 and a drive to add, and Browse, which opens the folder browser (core's browse, which opens where it was left:

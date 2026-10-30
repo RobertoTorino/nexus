@@ -732,3 +732,33 @@ def test_the_focus_stays_in_the_pane_until_b(qapp):
     qapp.processEvents()
     assert card.hasFocus()                                            # only B goes back
     window.close()
+
+
+def test_the_wallpaper_dropped_in_the_suites_folder_and_its_transparency(qapp, tmp_path, monkeypatch):
+    """Which wallpaper (owner, 30-10-2026): a picture in the suite's wallpaper folder that follows PICTURE_RULES, kept
+    for every app of the suite; the suite's own while none is chosen or the chosen one is gone; the transparency in %,
+    SHADE's while none is set."""
+    from PyQt6.QtGui import QColor, QImage
+    monkeypatch.setenv("LOCALAPPDATA", str(tmp_path / "Local"))
+    monkeypatch.setattr("bc250_core.platform.WINDOWS", True)
+    suite = "windows-portable-suite"
+    folder = portable.wallpaper_folder(suite)
+    assert folder == tmp_path / "Local" / suite / "wallpapers"
+    assert portable.wallpapers(suite) == ([], {}) and folder.is_dir()      # made when missing
+    for name, size in (("b.png", (1280, 720)), ("a.jpg", (1920, 1080)), ("c.webp", (1279, 720)), ("d.png", (800, 800))):
+        image = QImage(*size, QImage.Format.Format_RGB32)
+        image.fill(QColor("#000000"))
+        assert image.save(str(folder / name))
+    (folder / "e.png").write_bytes(b"not a picture")
+    usable, refused = portable.wallpapers(suite)
+    assert [p.name for p in usable] == ["a.jpg", "b.png"]
+    assert refused == {"c.webp": "1279 x 720, smaller than 1280 x 720", "d.png": "800 x 800, smaller than 1280 x 720",
+                       "e.png": "not a picture that can be read"}
+    assert portable.wallpaper_picture(suite) == portable.WALLPAPER
+    portable.set_wallpaper_picture(suite, folder / "b.png")
+    assert portable.wallpaper_picture(suite) == folder / "b.png"
+    (folder / "b.png").unlink()
+    assert portable.wallpaper_picture(suite) == portable.WALLPAPER and portable.wallpaper_picture(suite, None) is None
+    assert portable.wallpaper_veil(suite) is None and portable.shade(None) == portable.SHADE == 150
+    portable.set_wallpaper_veil(suite, 120)
+    assert portable.wallpaper_veil(suite) == portable.VEIL_MAX == 90 and portable.shade(90) == 230

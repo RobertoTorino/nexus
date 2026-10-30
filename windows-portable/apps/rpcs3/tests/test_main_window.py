@@ -500,8 +500,8 @@ def test_your_games_are_marked_with_a_and_put_in_steam(qapp, tmp_path, monkeypat
     window.on_action("x")                                          # X: played through Steam
     number = shortcuts.numbers(steam_dir)[str(demon)]
     assert played[-1] == f"steam://rungameid/{(number << 32) | 0x02000000}"
-    assert window.games_pane.status.text() == ("Starting Demon's Souls in Steam… In the game, hold View and Menu "
-                                               "together to quit.")      # how to quit, on the screen (30-10-2026)
+    assert window.games_pane.status.text() == ("Starting Demon's Souls in Steam… In the game, hold View, LB and "
+                                               "RB together to quit.")      # how to quit, on the screen (30-10-2026)
     window.close()
 
 
@@ -524,8 +524,8 @@ def test_without_steam_x_starts_the_game_in_rpcs3(qapp, tmp_path, monkeypatch):
     program = emulator.program(home)
     launcher, before = play.launcher(ROOT)                      # the play mode, as the shortcut would start it
     assert started == [([launcher, *before, "--no-gui", "--fullscreen", str(game)], program.parent)]
-    assert played == [] and window.games_pane.status.text() == ("Starting Flower in RPCS3… In the game, hold View "
-                                                                "and Menu together to quit.")
+    assert played == [] and window.games_pane.status.text() == ("Starting Flower in RPCS3… In the game, hold View"
+                                                                ", LB and RB together to quit.")
 
     def fails(command, cwd=None):
         raise PermissionError(13, "Access is denied")
@@ -839,7 +839,7 @@ def test_x_plays_only_a_game_in_steam(qapp, tmp_path, monkeypatch):
 
 def test_a_shortcut_made_before_the_play_mode_asks_for_update_steam(qapp, tmp_path, monkeypatch):
     """A game whose shortcut still starts RPCS3 itself (1.0.1's) says (Update Steam), and Y brings it to the play
-    mode (owner, 30-10-2026: View and Menu held quit every game)."""
+    mode (owner, 30-10-2026: View, LB and RB held quit every game)."""
     home = tmp_path / "emulator"
     ready(home)
     game = make_hdd_game(home / "dev_hdd0" / "game" / "NPUB30001", "Flower", "NPUB30001")

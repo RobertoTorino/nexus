@@ -81,7 +81,7 @@ RPCS3 on Windows keeps everything beside its program, in the app's `emulator` fo
 (`config.yml`, `games.yml`, the controller and the per-game settings), the PS3's drives `dev_hdd0` (the installed
 games, the saves) and `dev_flash` (the firmware), its window's settings in `GuiConfigs` and its own log in
 `log\RPCS3.log`. Before RPCS3's first start, and each time the app opens, the app sets up what RPCS3 would otherwise
-ask for in its window: its welcome dialog, its question before a game's window closes (View and Menu held close it)
+ask for in its window: its welcome dialog, its question before a game's window closes (View, LB and RB held close it)
 and its own update check off (a newer RPCS3 comes with the app), and the
 device's controller as player 1 through RPCS3's XInput handler, with RPCS3's own button layout for it (see
 [Controller](#controller)). What it set up goes to the log.
@@ -134,7 +134,7 @@ You play the games from Steam; the app puts them there.
 In a game started from Steam, RPCS3 takes the device's controller as player 1: A is Cross, B Circle, X Square, Y
 Triangle, View Select, Menu Start, LB and RB are L1 and R1, the triggers L2 and R2.
 
-To quit a game, **hold View and Menu together for two seconds**: RPCS3 closes as its window would close, and you are
+To quit a game, **hold View, LB and RB together for two seconds**: RPCS3 closes as its window would close, and you are
 back in Steam, or in the app when it started the game. It works the same in every game manager of the suite, started
 from Steam's library or from the app. The line at the bottom of Your games says so when a game starts. A short press
 of View and Menu opens RPCS3's own menu over the game, with **Exit Game** in it; the guide button opens it too, where
@@ -205,7 +205,7 @@ scrolls it, and **B** goes back. The newest lines show at the bottom of a box of
 
 A game's shortcut in Steam starts the app itself in its play mode, `RPCS3-Manager.exe --play --no-gui --fullscreen
 "<game>\PS3_GAME\USRDIR\EBOOT.BIN"`, which shows no window: it starts `rpcs3.exe --no-gui --fullscreen
-"<game>\PS3_GAME\USRDIR\EBOOT.BIN"` in RPCS3's folder, watches the controller for View and Menu held, and ends when
+"<game>\PS3_GAME\USRDIR\EBOOT.BIN"` in RPCS3's folder, watches the controller for View, LB and RB held, and ends when
 RPCS3 ends, so Steam sees the game end. With `--no-gui` RPCS3 boots the game without its own window and ends when the
 game ends; `--fullscreen` (which RPCS3 takes only with it) gives the game the whole screen. Asked to close, RPCS3 gets
 ten seconds before it is ended. On a device without Steam the app starts a game the same way. A shortcut made by an

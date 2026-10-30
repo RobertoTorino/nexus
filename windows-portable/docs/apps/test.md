@@ -25,7 +25,7 @@ and the GPU's temperature, the power the chip draws, the refresh rate of the scr
 another the GPU's temperature comes from Windows (as Task Manager shows it), and the CPU's and the power are left out.
 The refresh rate is the screen the window is on: docked to a TV, it is the TV's.
 
-The wallpaper the portal shows is behind its cards too, unless it is switched off on the portal's Suite page.
+The wallpaper the portal shows is behind its cards too, unless it is switched off on the portal's Settings page.
 
 The information icon (a ring with an i) at the top right of a pane opens more about it, over the window, and so
 does **☰**; **A**, **B** or **☰** closes it. With the focus on it, its ring is amber.

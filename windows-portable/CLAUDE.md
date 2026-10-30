@@ -79,7 +79,7 @@ app is an optional tile. The wiki is at robertotorino.github.io/nexus/windows-po
     (`InfoPill`, at the top right of its pane) that shows it over the window (owner, 28-10-2026). Where space is
     short, an icon at the pane's top right opens a popup with the rest (text or controls), owner 29-10-2026.
   - The wallpaper is the suite's (owner, 29-10-2026): every window shows it behind see-through cards (core's
-    `PortableWindow`), on or off for every app at once on the portal's Suite page
+    `PortableWindow`), on or off for every app at once on the portal's Settings page
     (`%APPDATA%\windows-portable-suite\suite.ini`).
   - Nothing runs before it is asked for: a card that reads the device reads on A (owner, 28-10-2026).
   - **No user name on the screen or in a log** (owner, 29-10-2026: the privacy rule): a path is shown through core's

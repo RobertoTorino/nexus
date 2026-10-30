@@ -17,6 +17,9 @@
 #    installed), releases\<tag>\ (the extracted releases the apps were installed from, kept for their uninstallers)
 #    and portal.log.
 #  * %APPDATA%\windows-portable-suite\portal.ini: the settings.
+#  * %LOCALAPPDATA%\windows-portable-suite\wallpapers: the folder for your own wallpapers, which the portal's
+#    Settings page offers (PNG, JPEG or WebP, wider than high, at least 1280 x 720). Your pictures in it always stay;
+#    an uninstall removes it only when it is empty.
 #  * A Start-menu entry in the Windows Portable Suite folder, and a Desktop shortcut.
 #  * Windows Portable Test, which the suite always includes, from bundle\wp-test-v<x.y.z>.zip through its own
 #    installer (checked against bundle\SHA256SUMS), with its Start-menu entry and no Desktop shortcut: it is in the
@@ -37,6 +40,7 @@ $AppDir = Join-Path $PortalHome 'app'
 $Releases = Join-Path $PortalHome 'releases'
 $RecordsFile = Join-Path $PortalHome 'installed.json'
 $Settings = Join-Path $env:APPDATA "$Suite\portal.ini"
+$Wallpapers = Join-Path $SuiteHome 'wallpapers'
 $MenuDir = Join-Path $env:APPDATA "Microsoft\Windows\Start Menu\Programs\$SuiteName"
 $MenuEntry = Join-Path $MenuDir "$AppName.lnk"
 if ($env:WPS_DESKTOP_DIR) { $DesktopDir = $env:WPS_DESKTOP_DIR } else { $DesktopDir = [Environment]::GetFolderPath('Desktop') }
@@ -49,7 +53,7 @@ function Usage { Get-Content -LiteralPath $PSCommandPath | Select-Object -Skip 1
 
 function Add-ToXboxMenu($program) {
     # The suite in the Xbox app's library, so Xbox mode starts it from its home (owner, 30-10-2026): asked on a
-    # first install (an update keeps what was chosen; the Suite page adds it any time), --xbox-menu and
+    # first install (an update keeps what was chosen; the Settings page adds it any time), --xbox-menu and
     # --no-xbox-menu answer without the question, WPS_XBOX_MENU (y or n) in the installer tests. The portal itself
     # writes it (--xbox-menu, core's xbox.py): the Xbox app closes for a moment.
     if ($XboxMenu -eq $false) { return }
@@ -61,13 +65,13 @@ function Add-ToXboxMenu($program) {
             if (-not [Environment]::UserInteractive -or [Console]::IsInputRedirected) { return }
             $answer = Read-Host "Add $AppName to the Xbox menu, so Xbox mode starts it from its home? The Xbox app closes for a moment. [Y/n]"
         }
-        if ($answer -and $answer -notmatch '^\s*y') { Info 'Not added to the Xbox menu (the Suite page adds it any time)'; return }
+        if ($answer -and $answer -notmatch '^\s*y') { Info 'Not added to the Xbox menu (the Settings page adds it any time)'; return }
     }
     Info "Adding $AppName to the Xbox menu"
     try { $run = Start-Process -FilePath $program -ArgumentList '--xbox-menu' -Wait -PassThru -WindowStyle Hidden }
-    catch { Info "Not added to the Xbox menu: $_ (the Suite page tries again)"; return }
+    catch { Info "Not added to the Xbox menu: $_ (the Settings page tries again)"; return }
     if ($run.ExitCode -eq 0) { Info "$AppName is in the Xbox menu" }
-    else { Info "Not added to the Xbox menu: $PortalHome\portal.log says why (the Suite page tries again)" }
+    else { Info "Not added to the Xbox menu: $PortalHome\portal.log says why (the Settings page tries again)" }
 }
 
 function Elevated {
@@ -244,6 +248,7 @@ if ($Uninstall) {
         Info "Keeping your settings in $Settings and the log and records in $PortalHome"
     }
     Remove-IfEmpty $MenuDir
+    Remove-IfEmpty $Wallpapers                                              # your pictures always stay
     Remove-IfEmpty $SuiteHome
     Info "$AppName is uninstalled."
     exit 0
@@ -316,6 +321,8 @@ if ($TestZip) {
 } else {
     Info "No $TestName in bundle\ (a build from the checkout): install it from the portal."
 }
+New-Item -ItemType Directory -Force -Path $Wallpapers | Out-Null
+Info "Your own wallpapers go in $Wallpapers (the portal's Settings page offers them)"
 Add-ToXboxMenu $Target
 Info "$AppName is installed. Start it from the Start menu, or run $Target"
 Remove-Download

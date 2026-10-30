@@ -655,7 +655,7 @@ def test_without_steam_x_starts_the_game_in_ppsspp(qapp, tmp_path, monkeypatch):
 
 def test_a_shortcut_made_before_the_play_mode_asks_for_update_steam(qapp, tmp_path, monkeypatch):
     """A game whose shortcut still starts PPSSPP itself (1.0.1's) says (Update Steam), and Y brings it to the play
-    mode (owner, 30-10-2026: View and Menu held quit every game)."""
+    mode (owner, 30-10-2026: View, LB and RB held quit every game)."""
     home = tmp_path / "emulator"
     fake_install(home)
     game = make_disc(tmp_path / "me" / "Games" / "Daxter.iso", "Daxter", "ULUS10044")

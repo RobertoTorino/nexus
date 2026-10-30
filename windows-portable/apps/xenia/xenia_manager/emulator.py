@@ -283,6 +283,6 @@ def processes(name: str) -> list[str]:
 # played from Steam; 30-10-2026: on a device without Steam the app starts it the same way): Xenia's options take
 # --name=value, and --fullscreen=true opens the game's window full screen, as the BC250 suite's Xenia Manager starts
 # it; the game's file follows. A value given on the command line is not written into Xenia's config file. Xenia has no
-# controller combination of its own that ends a game: the play mode closes it on View and Menu held (core's play), and
+# controller combination of its own that ends a game: the play mode closes it on View, LB and RB held (core's play), and
 # Steam's Exit game ends it too.
 GAME_ARGS = ("--fullscreen=true",)

@@ -16,7 +16,7 @@ portable by itself on Windows, and a game's line gives it full screen.
 
 The Your games pane (panes.py, library.py): the games in the chosen folders, played from Steam (owner, 29-10-2026: the
 app starts one in Steam, X Play; on a device without Steam X Play starts it in the app's play mode itself, owner
-30-10-2026: a fallback, as its shortcut would start it; core's play: View and Menu held quit any game); A marks one
+30-10-2026: a fallback, as its shortcut would start it; core's play: View, LB and RB held quit any game); A marks one
 for Steam, Y Update Steam makes Steam's shortcuts match the marks and brings a shortcut made before the play mode to
 it; LB Folders lists the folders, the usual places and a drive to add, and Browse, which opens the folder browser
 (core's browse); LB Games goes back; RB Steam artwork keeps the SteamGridDB key; Steam's library is the portal's RT

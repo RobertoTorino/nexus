@@ -5,7 +5,7 @@ Picture mode. Vita3K boots the game full screen (emulator.GAME_ARGS: its own fro
 BC250 app's line is the SDL frontend's, whose window Game Mode's compositor fills).
 
 On Windows the shortcut runs the app's own program in its play mode (core's play.py; owner, 30-10-2026: one way out
-of every game, View and Menu held): Vita3K-Manager.exe --play -r <title ID> starts Vita3K in the app's emulator
+of every game, View, LB and RB held): Vita3K-Manager.exe --play -r <title ID> starts Vita3K in the app's emulator
 folder, watches the controller and ends with the game. The app's program stays where it is when the app is updated,
 so the shortcut's Steam number, from the program and the name, stays the same. Vita3K finds its portable folder beside
 its program. A shortcut made before, which runs Vita3K.exe itself, is still the game's (outdated(): Update Steam brings

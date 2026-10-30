@@ -34,17 +34,17 @@ The strip under the tiles shows the focused app: its name, its versions and what
 | A | Install the app, or open it once it is installed |
 | Y | Update or reinstall the app, when the row at the bottom offers it |
 | X | The app's details |
-| ☰ (Menu) | The Suite page, with the settings |
+| ☰ (Menu) | The Settings page, with the settings |
 | RT | Steam's library, in Big Picture mode, when Steam is installed |
 | B | Back: from a page to the tiles; on a tile nothing |
 | ⧉ (View) | Exit the portal |
 
 Every action is a button, in the row at the bottom with what it does for the focused app (**A Install** or **A
-Open**, **X Details**, **Y Update**, **☰ Suite**, **RT Steam**, **⧉ Exit app**). Every tile works by touch, and so does the row: a
+Open**, **X Details**, **Y Update**, **☰ Settings**, **RT Steam**, **⧉ Exit app**). Every tile works by touch, and so does the row: a
 tap on an entry does what the button does. On a keyboard, the arrow keys move, Enter presses and
 Escape goes back.
 
-On the Suite page the setting with the focus has the amber edge; the d-pad stays on the page, and **B** goes back to
+On the Settings page the setting with the focus has the amber edge; the d-pad stays on the page, and **B** goes back to
 the tiles.
 
 ## Steam
@@ -75,27 +75,38 @@ you start it from the portal.
 program is. **A Open** opens it and **Y Remove** removes it. Remove asks for a second press within five seconds
 instead of a dialog; the row at the bottom says **Press again to remove** meanwhile. **B** goes back to the tiles.
 
-## The Suite page
+## The Settings page
 
-**☰** shows the Suite page: this portal's version, the newest portal release, and what that release
+**☰** shows the Settings page: this portal's version, the newest portal release, and what that release
 changes (which apps it updates). With a newer release, the row at the bottom offers **Y Update to x.y.z**;
 otherwise **Y Check again**.
-The status line at the top, with the date and the time, says **Suite x.y.z available** while there is one; the
+The status line at the top shows the date and the time, then the CPU and the GPU live, each with its load and its
+temperature (**CPU 12% 48°**, **GPU 7% 47°**, read every two seconds from AMD's driver and Windows; on a device
+without AMD's driver the GPU shows only its temperature). It says **Suite x.y.z available** while there is one; the
 battery is always last, at the right: its percentage, or **Plugged in** while the device is on its charger. The apps'
-status lines show it the same way.
+status lines show the battery the same way.
 
 **Y Update to x.y.z** downloads the new portal; the page counts the megabytes. The portal then closes,
 installs the new release in a PowerShell window and starts again. The new release brings the apps it pins: their
 tiles then say **Update** where a newer release is pinned.
 
-The settings are on the Suite page too, under the release: how the portal looks and sounds, kept for the next start.
-The d-pad moves between them, **A** on a setting switches it; **B** goes back to the tiles.
+The settings are on the Settings page too, under the release: how the portal looks and sounds, kept for the next start.
+The d-pad moves between them, **A** on a setting changes it; **B** goes back to the tiles.
 
 | Setting | |
 |---|---|
-| Wallpaper | A picture behind the tiles, which show it through them, in every app of the suite: switched here, it is on or off in each app from its next start. Off: the plain dark background. |
+| Wallpaper | A picture behind the tiles, which show it through them, in every app of the suite, each from its next start. **A** picks the next: **Off** (the plain dark background), **Built-in** (the suite's own picture), then each of your own pictures, by file name (see below). |
+| Transparency | Beside Wallpaper: how much of the dark background lies over the picture, so the text stays easy to read. **A** adds 10 %, up to 90 %, then starts at 0 %. It starts at 59 %. |
 | Sound | The intro's sound when the portal starts. Off: the intro plays without it. |
 | Xbox menu | Only with the Xbox app on the device. **Add** puts the suite in the Xbox app's library, so Xbox mode starts the portal from its home; the Xbox app closes for a moment while its library changes. **In the menu** once it is there. The Xbox app keeps its library in a file of its own that Microsoft does not document: when a newer Xbox app keeps it otherwise, the row says so and nothing is changed; add the suite in the Xbox app then (**My Library**, **+**). |
+
+**Your own wallpapers** go in the folder `%LOCALAPPDATA%\windows-portable-suite\wallpapers`, which the installer
+makes: paste that address in File Explorer's address bar and drop the pictures there. Only pictures in that folder
+are offered, and only those that fill the screen without blurring: PNG, JPEG or WebP, wider than high, at least
+1280 x 720 pixels (1920 x 1080 or larger looks sharp on a TV too). The picture is cropped to the screen, never
+stretched. A picture that does not follow these rules is named under the row with the reason (**Not used:
+small.png (800 x 450, smaller than 1280 x 720)**). Take a picture out of the folder and the apps show the built-in
+one again. Your pictures stay when the suite is uninstalled.
 
 The window fits the screen it is on: it is laid out for the Ally's 1280 x 720 (at Windows' 150 % scaling) and drawn
 larger on a larger screen, such as a TV, and smaller on a smaller one.

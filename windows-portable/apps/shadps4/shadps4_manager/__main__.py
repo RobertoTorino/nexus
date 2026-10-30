@@ -14,7 +14,7 @@ from . import APP_ID, APP_NAME, INFO, SUITE, __version__
 
 
 def play_game(args: list[str]) -> int:
-    """The play mode: shadPS4 with *args* (-f true -g "<eboot.bin>") from its folder, closed on View and Menu held
+    """The play mode: shadPS4 with *args* (-f true -g "<eboot.bin>") from its folder, closed on View, LB and RB held
     (core's play.run), without a window of the app's; shadPS4's exit code. Never the app's one window: it runs beside
     it."""
     applog.setup(APP_ID, suite=SUITE, private=True)

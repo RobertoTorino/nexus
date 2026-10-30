@@ -518,7 +518,7 @@ def test_your_games_are_marked_with_a_and_put_in_steam(qapp, tmp_path, monkeypat
     window.on_action("x")                                          # X: played through Steam
     number = shortcuts.numbers(steam_dir)[str(bloodborne)]
     assert played[-1] == f"steam://rungameid/{(number << 32) | 0x02000000}"
-    assert window.games_pane.status.text() == ("Starting Bloodborne in Steam… In the game, hold View and Menu together "
+    assert window.games_pane.status.text() == ("Starting Bloodborne in Steam… In the game, hold View, LB and RB together "
                                                "to quit.")             # how to quit, on the screen (owner, 30-10-2026)
     window.close()
 
@@ -547,7 +547,7 @@ def test_without_steam_x_starts_the_game_in_shadps4(qapp, tmp_path, monkeypatch)
     launcher, before = play.launcher(ROOT)                      # the play mode, as the shortcut would start it
     assert started == [([launcher, *before, "-f", "true", "-g", str(game)], program.parent)]
     assert played == [] and window.games_pane.status.text() == ("Starting Bloodborne in shadPS4… In the game, hold "
-                                                                "View and Menu together to quit.")
+                                                                "View, LB and RB together to quit.")
 
     def fails(command, cwd=None):
         raise PermissionError(13, "Access is denied")
@@ -840,7 +840,7 @@ def test_the_packages_in_games_ps4_are_unpacked_from_your_games(qapp, tmp_path, 
 
 def test_a_shortcut_made_before_the_play_mode_asks_for_update_steam(qapp, tmp_path, monkeypatch):
     """A game whose shortcut still starts shadPS4 itself (1.1.0's) says (Update Steam), and Y brings it to the play
-    mode (owner, 30-10-2026: View and Menu held quit every game)."""
+    mode (owner, 30-10-2026: View, LB and RB held quit every game)."""
     home = tmp_path / "emulator"
     ready(home)
     user = tmp_path / "me"

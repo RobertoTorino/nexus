@@ -163,7 +163,7 @@ games opens the page that keeps the key (**X Paste**, **A Save**, **Y Remove key
 shadPS4 plays with the device's controller as the PS4's: A is Cross, B Circle, X Square, Y Triangle, Menu Options, LB
 and RB are L1 and R1, the triggers L2 and R2, and View alone is the touchpad.
 
-To quit a game, **hold View and Menu together for two seconds**: shadPS4 closes as its window would close, and you
+To quit a game, **hold View, LB and RB together for two seconds**: shadPS4 closes as its window would close, and you
 are back in Steam, or in the app when it started the game. It works the same in every game manager of the suite,
 started from Steam's library or from the app. The line at the bottom of Your games says so when a game starts. A
 short press of View and Menu opens shadPS4's own quit window (**A** quits, **B** goes back to the game), as does
@@ -258,7 +258,7 @@ scroll; a tap on it shows the whole log too.
 A game's shortcut in Steam starts the app itself in its play mode, `shadPS4-Manager.exe --play -f true -g
 "<game>\eboot.bin"`, which shows no window: it starts `shadPS4.exe -f true -g "<game>\eboot.bin"` in shadPS4's folder,
 so that shadPS4 finds its `user` folder there (`-f true` gives the game the whole screen), watches the controller for
-View and Menu held, and ends when shadPS4 ends, so Steam sees the game end. Asked to close, shadPS4 gets ten seconds
+View, LB and RB held, and ends when shadPS4 ends, so Steam sees the game end. Asked to close, shadPS4 gets ten seconds
 before it is ended. shadPS4's own window (its Big Picture mode) is never shown. On a device without Steam the app starts
 a game the same way. A shortcut made by an earlier version, which starts `shadPS4.exe` itself, shows **(Update
 Steam)** on its game: **Y Update Steam** writes it again.

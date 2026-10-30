@@ -1,3 +1,21 @@
+Changelog: 30-10-2026 21:19:45
+
+Breaking. play.py's chord is View, LB and RB held for two seconds (CHORD back, leftshoulder, rightshoulder; owner,
+30-10-2026), no longer View and Menu, which Windows ("Use View + Menu as Guide button in apps", on by default) and
+Steam Input (Select + Start) take as the guide button: their overlays opened over the game and took its focus.
+QUIT_HINT says the new one.
+
+Changelog: 30-10-2026 21:19:45
+
+Added. chip.py, the chip's live values on a Windows handheld: the temperatures and the power draw moved from Windows
+Portable Test's temps.py, unchanged, with the GPU's load (ADL's INFO_ACTIVITY_GFX), the CPU's load (CpuLoad,
+Windows' GetSystemTimes) and parts() for a header (owner, 30-10-2026: the portal's). portable.py: which wallpaper
+the suite shows (owner, 30-10-2026): a picture dropped in the suite's wallpapers folder (wallpaper_folder(),
+wallpapers(), picture_problem(): PNG, JPEG or WebP, wider than high, at least 1280 x 720), kept in suite.ini
+(wallpaper_picture(), set_wallpaper_picture()), the suite's own while none is chosen or it is gone; and its
+transparency in % (wallpaper_veil(), shade(), PortableWindow.set_wallpaper_veil()), SHADE until one is set, so the
+look stays as it was.
+
 Changelog: 30-10-2026 19:43:49
 
 Version 1.1.0.

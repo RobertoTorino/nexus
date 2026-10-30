@@ -35,7 +35,7 @@ The installer puts:
 On a first install, with the Xbox app on the device, the installer asks whether to add the suite to the Xbox menu:
 the Xbox app's library, so Xbox mode starts the portal from its home. Answer **Y** (or press Enter) to add it; the Xbox
 app closes for a moment while its library changes and starts again. An update does not ask again, and the portal's
-Suite page adds it any time (**Xbox menu: Add**).
+Settings page adds it any time (**Xbox menu: Add**).
 
 ## Remove the download
 
@@ -63,7 +63,7 @@ To uninstall, run the installer of the portal you have with `--uninstall`, from 
 
 The portal updates itself and its apps: a newer portal shows as **Suite x.y.z available** at the top. Open the Suite
 page (the ☰ button) and press **A** on **Update to x.y.z**. The portal downloads the release, closes, installs it and
-starts again. See [Portal](portal.md#the-suite-page).
+starts again. See [Portal](portal.md#the-settings-page).
 
 ## Each app on its own
 

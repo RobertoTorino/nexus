@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The window (main_window.py): the tabs and tiles, what the strip says for an app in each state, an install (the
 release fetched in the background, the installer's PowerShell window, its exit status), opening an app, the details
-page with Remove's second press, the Suite page with the portal's own update, and B."""
+page with Remove's second press, the Settings page with the portal's own update, and B."""
 
 from __future__ import annotations
 
@@ -122,6 +122,7 @@ def world(qapp, tmp_path, monkeypatch):
         kwargs.setdefault("intro_ms", 0)                # the intro has its own tests
         kwargs.setdefault("steam_here", lambda: False)  # never this machine's own Steam
         kwargs.setdefault("xbox_local", tmp_path / "no-xbox")  # never this machine's own Xbox app
+        kwargs.setdefault("chip_parts", lambda: ["CPU 12% 48°", "GPU 7% 47°"])   # never this machine's own chip
         window = mw.MainWindow(w.entries, w.sources, w.records, portal_check=portal_check,
                                gamepad=Gamepad(source_factory=lambda: pad), battery=lambda: (82, False),
                                launch=w.launched.append, terminal=w.terminal, exit_dir=tmp_path / "exit", **kwargs)
@@ -154,7 +155,9 @@ def test_the_tabs_and_tiles_and_the_strip_for_the_focused_app(world, qapp):
     assert pane_texts(window) == ("Windows Portable Test", "Install", "")
     assert window.app_pane.versions.text() == "Not installed; this portal has 0.1.0"
     assert window.header.status.text().endswith("  |  82%")            # the battery last (owner, 30-10-2026)
-    assert [text for _, text in window.legend.items][1:] == ["Details", "Suite", "Exit app"]
+    assert "  |  CPU 12% 48°  |  GPU 7% 47°  |  82%" in window.header.status.text()   # live (owner, 30-10-2026)
+    assert mw.STATUS_MS == 2_000
+    assert [text for _, text in window.legend.items][1:] == ["Details", "Settings", "Exit app"]
     assert window.legend.items[0][0] == "A" and window.app_pane.findChildren(portable.Pill) == []   # no pill (owner)
     window.tabs.step(1)
     assert window.tabs.current == "gaming" and window.tiles["pcsx2"].isVisible() and not window.tiles["test"].isVisible()
@@ -239,7 +242,7 @@ def test_rt_opens_steam_where_it_is_installed(world, qapp):
     window.legend._tapped("RT")
     assert opened == [steam.OPEN_URL] * 2
     window.on_action("menu")
-    assert ("RT", "Steam") in window.legend.items                 # the Suite page too
+    assert ("RT", "Steam") in window.legend.items                 # the Settings page too
     window.on_action("back")
     here[0] = False
     window.refresh()
@@ -515,9 +518,9 @@ def test_the_suite_page_switches_the_wallpaper(world, qapp, monkeypatch):
     window.on_action("menu")
     assert window.stack.currentWidget() is window.suite_pane
     window.suite_pane.wallpaper.setFocus()
-    assert window.suite_pane.wallpaper.label.text() == "Wallpaper: On"
+    assert window.suite_pane.wallpaper.label.text() == "Wallpaper: Built-in"
     assert window.legend.items == [("A", "Change"), ("Y", "Check again"), ("B", "Back"), (VIEW, "Exit app")]
-    window.on_action("accept")
+    window.on_action("accept")                                        # Built-in, without a picture of the user's
     assert not window.wallpaper_on and portable.glass() == 255 and window.suite_pane.wallpaper.label.text() == "Wallpaper: Off"
     assert "rgba" not in window.app_pane.styleSheet()                 # the strip solid again, at once
     assert not portable.wallpaper_on(mw.SUITE)                         # the suite's: every app (owner, 29-10-2026)
@@ -525,8 +528,51 @@ def test_the_suite_page_switches_the_wallpaper(world, qapp, monkeypatch):
     assert window.stack.currentWidget() is window.apps_page
     again = world.make()                                              # kept for the next start
     assert not again.wallpaper_on and portable.glass() == 255
-    again.toggle_wallpaper()
+    again.next_wallpaper()
     assert again.wallpaper_on and portable.glass() == portable.GLASS and "rgba" in again.app_pane.styleSheet()
+
+
+def test_a_wallpaper_dropped_in_the_folder_and_its_transparency(world, qapp):
+    """Which wallpaper (owner, 30-10-2026): only pictures dropped in the suite's wallpaper folder, by the rules; A
+    steps Off, Built-in, then each one; the Transparency row steps the veil over it by 10 %, from 90 % to 0."""
+    from PyQt6.QtGui import QColor, QImage
+
+    from bc250_core import portable
+    folder = portable.wallpaper_folder(mw.SUITE)
+    folder.mkdir(parents=True)
+    for name, width, height in (("galaga.png", 2560, 1440), ("small.png", 800, 450), ("tall.png", 1440, 2560)):
+        image = QImage(width, height, QImage.Format.Format_RGB32)
+        image.fill(QColor("#123456"))
+        image.save(str(folder / name))
+    (folder / "notes.txt").write_text("x", encoding="utf-8")
+    window = world.make()
+    window.on_action("menu")
+    pane = window.suite_pane
+    assert pane.wallpaper.label.text() == "Wallpaper: Built-in" and pane.transparency.label.text() == "Transparency: 59 %"
+    text = pane.wallpaper_text.text()
+    assert r"%LOCALAPPDATA%\windows-portable-suite\wallpapers" in text
+    assert "small.png (800 x 450, smaller than 1280 x 720)" in text and "tall.png (1440 x 2560, not wider than high)" in text
+    assert "notes.txt (not a PNG, JPEG or WebP picture)" in text
+    window.next_wallpaper()
+    assert pane.wallpaper.label.text() == "Wallpaper: galaga" and window.wallpaper.width() == 2560
+    assert portable.wallpaper_picture(mw.SUITE) == folder / "galaga.png"   # the suite's: every app's next start
+    window.next_wallpaper()
+    assert pane.wallpaper.label.text() == "Wallpaper: Off" and not window.wallpaper_on
+    window.next_wallpaper()
+    assert pane.wallpaper.label.text() == "Wallpaper: Built-in" and window.wallpaper_on
+    assert portable.wallpaper_picture(mw.SUITE, None) is None
+    window.next_wallpaper()
+    assert world.make().wallpaper.width() == 2560                        # kept for the next start
+    (folder / "galaga.png").unlink()                                   # taken away: the suite's own again
+    assert world.make().wallpaper.width() != 2560 and portable.wallpaper_picture(mw.SUITE) == portable.WALLPAPER
+    assert window.shade == portable.SHADE
+    steps = []
+    for _ in range(5):
+        window.next_transparency()
+        steps.append(pane.transparency.label.text().removeprefix("Transparency: "))
+    assert steps == ["60 %", "70 %", "80 %", "90 %", "0 %"] and window.shade == 0
+    window.next_transparency()
+    assert window.shade == portable.shade(10) == 26 and world.make().shade == 26
 
 
 def test_portal_1_6_0s_wallpaper_switch_becomes_the_suites(world, qapp):
@@ -564,6 +610,10 @@ def test_the_suite_page_switches_the_sound(world, qapp, monkeypatch):
     monkeypatch.setattr(window, "isActiveWindow", lambda: True)
     window.on_action("menu")
     assert window.suite_pane.wallpaper.hasFocus() and window.suite_pane.sound.label.text() == "Sound: On"
+    window.on_action("right")
+    assert window.suite_pane.transparency.hasFocus()                  # beside the wallpaper (30-10-2026)
+    window.on_action("left")
+    assert window.suite_pane.wallpaper.hasFocus()
     window.on_action("down")
     assert window.suite_pane.sound.hasFocus() and ("A", "Change") in window.legend.items
     window.on_action("accept")
@@ -575,3 +625,31 @@ def test_the_suite_page_switches_the_sound(world, qapp, monkeypatch):
     assert portable.sound_on(mw.SUITE)
     world.make(intro_ms=60_000)
     assert len(played) == 1 and played[0].name == "intro.wav"
+
+
+def test_the_chip_is_read_through_cores_chip_and_closed_with_the_window(world, qapp, monkeypatch):
+    """The CPU's and the GPU's load and temperature (owner, 30-10-2026): AMD's driver opened once, read each STATUS_MS,
+    closed with the window."""
+    from bc250_core import chip
+    opened = []
+
+    class Sensors:
+        def __init__(self):
+            opened.append(self)
+            self.closed = False
+
+        def read(self):
+            return 51, 49
+
+        def gpu_load(self):
+            return 33
+
+        def close(self):
+            self.closed = True
+    monkeypatch.setattr(chip, "Temperatures", Sensors)
+    monkeypatch.setattr(chip, "CpuLoad", lambda: type("Load", (), {"read": lambda self: 9})())
+    window = world.make(chip_parts=None)
+    window.update_status()
+    assert "CPU 9% 51°  |  GPU 33% 49°" in window.header.status.text() and len(opened) == 1
+    window.close()
+    assert opened[0].closed

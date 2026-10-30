@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The Steam shortcuts (shortcuts.py) on Windows, as shadPS4 Manager's are tested: the app's play mode with the game
-full screen (owner, 30-10-2026: View and Menu held quit it), one made before it that starts Xenia itself still the
+full screen (owner, 30-10-2026: View, LB and RB held quit it), one made before it that starts Xenia itself still the
 game's, started in Xenia's folder, paths in double quotes as Steam writes them, "[X360] <title>" names made unique, the
 app's own shortcuts told from others, adding and taking out beside other shortcuts in a Steam folder made in a temp
 folder, and the artwork drawn from the app's icon (the BC250 suite's Xenia Manager's tests)."""

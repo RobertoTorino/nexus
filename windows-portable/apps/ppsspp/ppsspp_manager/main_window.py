@@ -10,7 +10,7 @@ shows.
 
 The Your games pane (panes.py, library.py): the games in the chosen folders and on PPSSPP's memory stick, played from
 Steam (owner, 29-10-2026: X Play starts one in Steam), and on a device without Steam X Play starts it in the app's
-play mode itself (owner, 30-10-2026: a fallback, as its shortcut would start it; core's play: View and Menu held quit
+play mode itself (owner, 30-10-2026: a fallback, as its shortcut would start it; core's play: View, LB and RB held quit
 any game); A marks one for Steam, Y Update Steam makes Steam's shortcuts match the marks and brings a shortcut made
 before the play mode to it; LB Folders lists the folders, the usual places and a drive to add, and Browse, which opens
 the folder browser (core's browse: the controller's own way to a folder, where Windows' folder window is not); LB

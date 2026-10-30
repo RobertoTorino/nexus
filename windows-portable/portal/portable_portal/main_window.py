@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The window: the categories as tabs (LB, RB), the tab's apps as two rows of four tiles, the strip under them with
 the focused app and its pills (A Install or Open, Y Update), X for the app's details (and Remove there), Menu for
-the Suite page (the portal's own update and the settings), B back, View to exit (core's buttons, owner 29-10-2026), RT
+the Settings page (the portal's own update and the settings), B back, View to exit (core's buttons, owner 29-10-2026), RT
 Steam's library where Steam is installed (owner, 30-10-2026: out of the game managers, into the portal). An install downloads the app's release in the
 background, checks it and runs its install.ps1 in a PowerShell window; the portal waits for that window's exit
 status. Direction D's portal screen (the owner's, 26-10-2026)."""
@@ -20,9 +20,9 @@ from pathlib import Path, PurePath
 
 from PyQt6.QtCore import QObject, QSettings, Qt, QTimer, pyqtSignal
 from PyQt6.QtGui import QPixmap
-from PyQt6.QtWidgets import QGridLayout, QStackedWidget, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import QApplication, QGridLayout, QStackedWidget, QVBoxLayout, QWidget
 
-from bc250_core import applog, portable, power, steam, xbox
+from bc250_core import applog, chip, portable, power, steam, xbox
 from bc250_core.gamepad import Gamepad
 from bc250_core.platform import expand, launch_in_terminal, private
 from bc250_core.portable import AMBER, DIM, MENU, VIEW, Card, Legend, PortableHeader, PortableWindow, px, status_clock
@@ -34,7 +34,7 @@ from .portal_update import PortalUpdate, short
 from .sources import Records, SourceError, Sources, downloaded, fetch_release, is_installed
 from .widgets import AppPane, DetailsPane, SuitePane, Tabs
 
-STATUS_MS = 30_000              # the header's battery and time
+STATUS_MS = 2_000               # the header: the CPU and GPU live (owner, 30-10-2026), the battery and the time
 POLL_MS = 1000                  # how often the portal looks for the installer window's exit status
 CONFIRM_MS = 5000               # Remove, and B while the portal is busy, ask for a second press within this
 PROGRESS_MS = 500               # how often a download's size is shown (owner, 28-10-2026: 94 MB looked like a hang)
@@ -131,12 +131,14 @@ class MainWindow(PortableWindow):
                  exe: str = "", exit_dir: Path | None = None, intro_ms: int = INTRO_MS,
                  wallpaper: Path | None = portable.WALLPAPER,
                  steam_here: Callable[[], bool] = steam.installed, open_steam: Callable[[str], None] = steam.open_url,
-                 xbox_local: Path | None = None, xbox_closed: Callable[[Callable[[], None]], None] | None = None):
+                 xbox_local: Path | None = None, xbox_closed: Callable[[Callable[[], None]], None] | None = None,
+                 chip_parts: Callable[[], list[str]] | None = None):
         """*intro_ms*: how long the intro plays when the window starts (0: none). *wallpaper*: the picture behind
         the page, darkened (None: the plain background); on or off for the whole suite (Settings). *steam_here*:
         whether Steam is installed; *open_steam*: hands a steam:// address to Steam (its library). *xbox_local*:
         where the Xbox app's package folder is (default %LOCALAPPDATA%); *xbox_closed*: runs a change with the Xbox
-        app closed (core's xbox.with_xbox_closed)."""
+        app closed (core's xbox.with_xbox_closed). *chip_parts*: the CPU's and the GPU's load and temperature for the
+        status line (default core's chip.py, AMD's driver opened once)."""
         old = QSettings()                               # portal 1.6.0 kept the switch in portal.ini: the suite's now
         if old.contains(WALLPAPER_KEY) and portable.look_settings(SUITE).value(portable.LOOK_KEY) is None:
             portable.set_wallpaper_on(SUITE, str(old.value(WALLPAPER_KEY)).lower() != "false")
@@ -148,6 +150,11 @@ class MainWindow(PortableWindow):
         self.steam_here, self.open_steam = steam_here, open_steam
         self.xbox_local, self.xbox_closed = xbox_local, xbox_closed
         self.portal_check, self.battery, self.launch, self.terminal = portal_check, battery, launch, terminal
+        self.sensors: chip.Temperatures | None = None
+        if chip_parts is None:                          # ADL opened once, read every STATUS_MS
+            self.sensors, cpu_load = chip.Temperatures(), chip.CpuLoad()
+            chip_parts = self.read_chip(self.sensors, cpu_load)
+        self.chip_parts = chip_parts
         self.exe = exe                                  # the installed portal's program, for a restart; "" from a checkout
         self.exit_dir = exit_dir or Path(tempfile.gettempdir())
         self.intro: Intro | None = None
@@ -204,7 +211,8 @@ class MainWindow(PortableWindow):
             tile.focused.connect(lambda key=entry.key: self.show_app(key))
             tile.activated.connect(lambda key=entry.key: self.main_action(key))
             self.tiles[entry.key] = tile
-        self.suite_pane.wallpaper.activated.connect(self.toggle_wallpaper)
+        self.suite_pane.wallpaper.activated.connect(self.next_wallpaper)
+        self.suite_pane.transparency.activated.connect(self.next_transparency)
         self.suite_pane.sound.activated.connect(self.toggle_sound)
         self.suite_pane.xbox.activated.connect(self.add_to_xbox)
         self.tabs.changed.connect(self.show_tab)
@@ -265,12 +273,59 @@ class MainWindow(PortableWindow):
             return
         super().on_action(action)
 
-    def toggle_wallpaper(self) -> None:
-        """The Suite page's Wallpaper row: the picture and the see-through cards on or off in every app of the suite (each
-        at its next start; this window at once)."""
-        self.set_wallpaper(not self.wallpaper_on)
-        self.suite_pane.set_wallpaper(self.wallpaper_on)
-        self.log.info(f"Wallpaper {'on' if self.wallpaper_on else 'off'}, for the suite.")
+    def move_focus(self, direction: str) -> QWidget | None:
+        """Core's d-pad, with the Wallpaper and Transparency rows side by side as a pair: right and left go between
+        them (the row under them is nearer by core's measure, being as wide as the page)."""
+        pair = (self.suite_pane.wallpaper, self.suite_pane.transparency)
+        focus = QApplication.focusWidget()
+        if focus in pair and direction in ("left", "right"):
+            target = pair[1] if direction == "right" else pair[0]
+            target.setFocus(Qt.FocusReason.OtherFocusReason)
+            return target
+        return super().move_focus(direction)
+
+    def wallpaper_choices(self) -> tuple[list[tuple[str, Path | None]], dict[str, str]]:
+        """The Wallpaper row's choices in order, (name, picture): Off, Built-in (the suite's own), then each picture in
+        the suite's wallpaper folder that can be one (owner, 30-10-2026); and the folder's others, each with why not."""
+        usable, refused = portable.wallpapers(SUITE)
+        return [("Off", None), ("Built-in", None), *((path.stem, path) for path in usable)], refused
+
+    def wallpaper_name(self, choices: list[tuple[str, Path | None]]) -> str:
+        """The choice shown now: Off, Built-in, or the chosen picture's name."""
+        if not self.wallpaper_on:
+            return "Off"
+        picture = portable.wallpaper_picture(SUITE, None)
+        return next((name for name, path in choices[2:] if path == picture), "Built-in")
+
+    def show_wallpaper_rows(self) -> None:
+        choices, refused = self.wallpaper_choices()
+        self.suite_pane.set_wallpaper(self.wallpaper_name(choices), refused)
+        veil = portable.wallpaper_veil(SUITE)
+        self.suite_pane.set_transparency(veil if veil is not None else round(portable.SHADE * 100 / 255))
+
+    def next_wallpaper(self) -> None:
+        """The Settings page's Wallpaper row: the next choice, for every app of the suite (each at its next start; this
+        window at once): Off, the suite's own picture, then each picture dropped in the suite's wallpaper folder."""
+        choices, _ = self.wallpaper_choices()
+        names = [name for name, _ in choices]
+        name, picture = choices[(names.index(self.wallpaper_name(choices)) + 1) % len(choices)]
+        if name == "Off":
+            self.set_wallpaper(False)
+        else:
+            self.set_wallpaper_picture(picture)
+            self.set_wallpaper(True)
+        self.show_wallpaper_rows()
+        self.log.info(f"Wallpaper: {name}, for the suite.")
+
+    def next_transparency(self) -> None:
+        """The Settings page's Transparency row: VEIL_STEP more of the background over the wallpaper, from VEIL_MAX
+        back to 0 (owner, 30-10-2026: as the BC250 portal's transparency), for the suite."""
+        veil = portable.wallpaper_veil(SUITE)
+        now = veil if veil is not None else round(portable.SHADE * 100 / 255)
+        percent = 0 if now >= portable.VEIL_MAX else (now // portable.VEIL_STEP + 1) * portable.VEIL_STEP
+        self.set_wallpaper_veil(percent)
+        self.show_wallpaper_rows()
+        self.log.info(f"Wallpaper transparency {percent} %, for the suite.")
 
     def xbox_state(self) -> str:
         """The Xbox menu row's state: "" without the Xbox app, In the menu, or Add."""
@@ -283,7 +338,7 @@ class MainWindow(PortableWindow):
         return state_dir() / "app" / f"{EXE_NAME}.exe"
 
     def add_to_xbox(self) -> None:
-        """The Suite page's Xbox menu row (owner, 30-10-2026): the suite in the Xbox app's library, the Xbox app
+        """The Settings page's Xbox menu row (owner, 30-10-2026): the suite in the Xbox app's library, the Xbox app
         closed for a moment (core's xbox.py); said on the row and in the log."""
         if self.xbox_state() != "Add":
             self.suite_pane.set_xbox(self.xbox_state())
@@ -302,7 +357,7 @@ class MainWindow(PortableWindow):
         self.log.info("Added to the Xbox menu (the Xbox app's library).")
 
     def toggle_sound(self) -> None:
-        """The Suite page's Sound row: the portal's intro sound on or off for the suite (owner, 29-10-2026), kept for
+        """The Settings page's Sound row: the portal's intro sound on or off for the suite (owner, 29-10-2026), kept for
         the next start."""
         on = not portable.sound_on(SUITE)
         portable.set_sound_on(SUITE, on)
@@ -316,8 +371,17 @@ class MainWindow(PortableWindow):
 
     # The pages
 
+    @staticmethod
+    def read_chip(sensors: chip.Temperatures, cpu_load: chip.CpuLoad) -> Callable[[], list[str]]:
+        def read() -> list[str]:
+            cpu_temp, gpu_temp = sensors.read()
+            return chip.parts(cpu_load.read(), cpu_temp, sensors.gpu_load(), gpu_temp)
+        return read
+
     def update_status(self) -> None:
-        parts = status_clock()
+        # The date and the time, the CPU's and the GPU's load and temperature (owner, 30-10-2026), a portal update
+        # when there is one, and the battery last
+        parts = [*status_clock(), *self.chip_parts()]
         if self.update_available():
             parts.append(f"Suite {self.update.release.version} available")
         self.header.set_status([*parts, power.text(self.battery())])    # the battery last (owner, 30-10-2026)
@@ -359,7 +423,7 @@ class MainWindow(PortableWindow):
         if self.stack.currentWidget() is self.suite_pane:
             return
         self.stack.setCurrentWidget(self.suite_pane)
-        self.suite_pane.set_wallpaper(self.wallpaper_on)
+        self.show_wallpaper_rows()
         self.suite_pane.set_sound(portable.sound_on(SUITE))
         self.suite_pane.set_xbox(self.xbox_state())
         self.update_legend()
@@ -377,7 +441,7 @@ class MainWindow(PortableWindow):
         elif self.stack.currentWidget() is self.apps_page:
             pane = self.app_pane
             self.legend.set_items([*([("A", pane.main)] if pane.main else []), ("X", "Details"),
-                                   *([("Y", pane.other)] if pane.other else []), (MENU, "Suite"), *steam_item,
+                                   *([("Y", pane.other)] if pane.other else []), (MENU, "Settings"), *steam_item,
                                    *self.common_items()])
         elif self.stack.currentWidget() is self.details_pane:
             pane = self.details_pane
@@ -657,7 +721,7 @@ class MainWindow(PortableWindow):
         if self.stack.currentWidget() is self.details_pane and not is_installed(entry):
             self.on_back()
 
-    # The portal's own update (the Suite page)
+    # The portal's own update (the Settings page)
 
     def update_available(self) -> bool:
         release = self.update.release if self.update is not None else None
@@ -747,6 +811,9 @@ class MainWindow(PortableWindow):
         self.poll.stop()
         self.progress_timer.stop()
         self.status_timer.stop()
+        if self.sensors is not None:
+            self.sensors.close()
+            self.sensors = None
         super().closeEvent(event)
 
 

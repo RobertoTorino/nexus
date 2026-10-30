@@ -1,3 +1,12 @@
+Changelog: 30-10-2026 21:19:45
+
+Breaking. A game quits with View, LB and RB held together for two seconds, no longer View and Menu (owner,
+30-10-2026): View and Menu are Windows' and Steam's guide button (Windows' "Use View + Menu as Guide button in
+apps", Steam Input's Select + Start), so holding them opened the Xbox overlay or Steam's over the game, which took
+the focus and left the game's own quit question unreachable. The play mode closes the emulator on the new chord
+(core's play.py); the line at the bottom of Your games, the help and the wiki say so. A short press of View and Menu
+still opens RPCS3's own menu, where Windows and Steam leave them to it.
+
 Changelog: 30-10-2026 19:43:48
 
 Release 2.1.0.
