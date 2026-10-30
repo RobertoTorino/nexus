@@ -5,7 +5,27 @@
 Working notes for moving the seven BC-250 tools into this suite. Not part of the manual or the READMEs, which
 describe only what exists.
 
-## Release redesign: a Nexus release carries the changed suites (owner, 30-10-2026; stage 1 in the working tree)
+## Resume here (30-10-2026 04:17, for a new chat)
+
+The owner: "we continue in a next chat". Where things stand:
+
+- **Pushed in f52085b** (on main): Nexus Releases renamed the Nexus Release Tool (NRT: `dev/nrt/`, the package
+  `nexus_release_tool`, `tools/nrt.sh`, the installer tests `nrt.sh`/`nrt.ps1`; the installers remove the old
+  name's shortcuts, the app takes over its settings), and stage 1 of the release redesign below (release-nexus.yml,
+  the Windows Portable Suite on it, NRT's Nexus release tab). On Windows the owner ran `dev\nrt\install.ps1`; on
+  Bazzite, after a pull, `tools/nrt.sh --install` once.
+- **Next: the first real Nexus release** is stage 1's test (nothing of it has run on GitHub yet). Check that CI of
+  f52085b passed, that NRT on the handheld has `gh` signed in (the draft's download and Publish need it), then Start
+  new release and watch: the run (ci, plan, apps, pin, portal jobs), the *Pin ...* commit on main, the draft portal,
+  the device test, Publish, the Nexus index made after it, and that an installed portal offers the new portal as
+  before. Fix what it shows, in the working tree, for the owner to commit.
+- **Not run on this machine:** the BC250 installer test `bc250-bazzite/tools/installer-tests/nrt.sh` and
+  `tools/ci-local.sh` (Linux): run them on Bazzite.
+- **Then:** stage 2 (the CI test matrix read from the suites' folders), stage 3 (the BC250 suite on the Nexus
+  release); and, after the owner's test of shadPS4 Manager on the Ally, the fixed folders for the other five game
+  managers (the paragraph "Fixed folders, no folder selecting" below).
+
+## Release redesign: a Nexus release carries the changed suites (owner, 30-10-2026; stage 1 pushed, not run yet)
 
 The owner, 30-10-2026: "Remember we are growing fast, I have for sure 3 more suites on my list ... the BC250 Bazzite
 one needs a refactoring." And the model (owner, 30-10-2026): "any change in Nexus triggers a Nexus release, a nexus
@@ -84,7 +104,7 @@ change of core releases every app; no shared CI YAML; the tool is the Nexus Rele
 the run's commits and tags as they are (tag creation is not restricted, `main` only blocks deletion and force
 pushes); the owner pulls after each release.
 
-**Stage 1 as built (30-10-2026, in the working tree, not committed, not run on GitHub yet).** `release-nexus.yml`
+**Stage 1 as built (30-10-2026, pushed in f52085b, not run on GitHub yet).** `release-nexus.yml`
 (workflow_dispatch with the release commit; checks main is that commit, waits for ci-nexus.yml, `tools/nexus_release.py
 suites` picks the suites, a job per suite calls its workflow, a job makes the index when there is no suite);
 `release-windows-portable.yml` with `workflow_call` beside its tag trigger (jobs ci, plan, apps as a matrix, pin,
