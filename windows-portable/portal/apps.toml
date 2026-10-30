@@ -25,8 +25,8 @@
 name = "Windows Portable Test"
 short = "Portable Test"         # the whole name does not fit a tile at the Ally's size (owner, 30-10-2026)
 summary = "What Windows reports about the handheld, and a test of every button of its controller. Always installed."
-tag = "wp-test-v4.0.0"
-sha256 = "2470fad1084461b547ccbbaa9e348ba08582be1190fe65054e99162b6f21e19b"
+tag = "wp-test-v4.1.0"
+sha256 = ""
 required = true
 category = "sustainable"
 install = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --no-desktop-shortcut"]
@@ -37,8 +37,8 @@ launch = [["Open", "%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-tes
 [apps.pcsx2]
 name = "PCSX2 Manager"
 summary = "PCSX2, the PlayStation 2 emulator: installed and set up, your games played and put in Steam, your memory cards."
-tag = "wp-pcsx2-v5.0.0"
-sha256 = "bc2c724657135eca1565ca9e7afb567105bea2fd309fe6accb054ddb36f91604"
+tag = "wp-pcsx2-v5.1.0"
+sha256 = ""
 category = "gaming"
 install = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --no-desktop-shortcut"]
 uninstall = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --uninstall"]
@@ -48,8 +48,8 @@ launch = [["Open", "%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-pcs
 [apps.ppsspp]
 name = "PPSSPP Manager"
 summary = "PPSSPP, the PSP emulator: installed and set up, your games played and put in Steam."
-tag = "wp-ppsspp-v3.0.0"
-sha256 = "ba07675c51c3c272848df8f8fcac544458d8b0e67678cb3fe7098c9952d5f819"
+tag = "wp-ppsspp-v3.1.0"
+sha256 = ""
 category = "gaming"
 install = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --no-desktop-shortcut"]
 uninstall = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --uninstall"]
@@ -59,8 +59,8 @@ launch = [["Open", "%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-pps
 [apps.rpcs3]
 name = "RPCS3 Manager"
 summary = "RPCS3, the PlayStation 3 emulator: installed and set up, the firmware and your games, played and put in Steam."
-tag = "wp-rpcs3-v3.0.0"
-sha256 = "e66bb133085744562d41a2a249d17c01b66983076a992fef8bc02c85c59d6fd8"
+tag = "wp-rpcs3-v3.1.0"
+sha256 = ""
 category = "gaming"
 install = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --no-desktop-shortcut"]
 uninstall = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --uninstall"]
@@ -70,8 +70,8 @@ launch = [["Open", "%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-rpc
 [apps.shadps4]
 name = "shadPS4 Manager"
 summary = "shadPS4, the PlayStation 4 emulator: installed, the system modules and your packages, its settings and shadNet, your games put in Steam."
-tag = "wp-shadps4-v3.0.0"
-sha256 = "27f5b8fca50ee1a6e856adcb2a5d09d5e2a1623f0e0ab98344a75781bada6820"
+tag = "wp-shadps4-v3.1.0"
+sha256 = ""
 category = "gaming"
 install = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --no-desktop-shortcut"]
 uninstall = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --uninstall"]
@@ -81,8 +81,8 @@ launch = [["Open", "%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-sha
 [apps.vita3k]
 name = "Vita3K Manager"
 summary = "Vita3K, the PS Vita emulator: installed, the firmware and your games installed in it, its settings, your games put in Steam."
-tag = "wp-vita3k-v3.0.0"
-sha256 = "f2baabb64b5ba9890b96481f7da6f827b95740b2ab6eaade127dce054150b3b8"
+tag = "wp-vita3k-v3.1.0"
+sha256 = ""
 category = "gaming"
 install = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --no-desktop-shortcut"]
 uninstall = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --uninstall"]
@@ -92,8 +92,8 @@ launch = [["Open", "%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-vit
 [apps.xenia]
 name = "Xenia Manager"
 summary = "Xenia, the Xbox 360 emulator: installed, its settings, your games found in your folders and put in Steam."
-tag = "wp-xenia-v3.0.0"
-sha256 = "a5865a511886be1ed8219c64a8d5c31d68734a37b328b87223e7b1e51cd1e7fd"
+tag = "wp-xenia-v3.1.0"
+sha256 = ""
 category = "gaming"
 install = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --no-desktop-shortcut"]
 uninstall = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --uninstall"]

@@ -7,7 +7,7 @@ APP_NAME = "PPSSPP Manager"
 APP_ID = "windows-portable-ppsspp"
 EXE_NAME = "PPSSPP-Manager"   # the program's file name in a release
 SUITE = "windows-portable-suite"
-__version__ = "3.0.0"
+__version__ = "3.1.0"
 
 from pathlib import Path
 
