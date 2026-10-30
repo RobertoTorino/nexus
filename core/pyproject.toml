@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "bc250-core"
-version = "1.0.0"                     # = VERSION; tools/check_versions.py keeps them equal
+version = "1.1.0"                     # = VERSION; tools/check_versions.py keeps them equal
 description = "Shared code of the BC250 Bazzite Suite apps"
 license = "GPL-3.0-or-later"
 requires-python = ">=3.11"

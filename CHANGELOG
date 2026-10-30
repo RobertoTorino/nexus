@@ -1,3 +1,7 @@
+Changelog: 30-10-2026 19:43:50
+
+Release 1.2.0. Brings wp-pcsx2-v4.1.0, wp-ppsspp-v2.1.0, wp-rpcs3-v2.1.0, wp-shadps4-v2.1.0, wp-test-v3.2.0, wp-vita3k-v2.1.0, wp-xenia-v2.1.0.
+
 Changelog: 30-10-2026 17:18:10
 
 Fixed. The device test of a Nexus release closes the installed portal first (windows-portable/tools/check-release.ps1,

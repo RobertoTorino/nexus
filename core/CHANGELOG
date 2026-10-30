@@ -1,3 +1,7 @@
+Changelog: 30-10-2026 19:43:49
+
+Version 1.1.0.
+
 Changelog: 30-10-2026 19:09:13
 
 Fixed. xbox.py reads and writes the Xbox app's paths as Windows paths on any system (ntpath, PureWindowsPath): on Linux a
