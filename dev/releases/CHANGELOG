@@ -1,3 +1,11 @@
+Changelog: 30-10-2026 01:16:05
+
+Fixed. The GitHub pill said Failed for a push whose runs all passed but one canceled Nexus index run (owner,
+30-10-2026: 1759427): GitHub cancels a waiting run of nexus-index.yml when a later one of the same concurrency group
+comes, and each release run of a push starts one. A run canceled for a later run of its workflow on the same commit
+no longer counts (plan.superseded()): not in the pill, the notification or what a click opens; hover says "replaced
+by a later run". A canceled run nothing replaced still makes the push failed.
+
 Changelog: 29-10-2026 21:46:34
 
 Fixed. Test local apps shows the ticked suite's own wiki and the Nexus page, never another suite's (owner,

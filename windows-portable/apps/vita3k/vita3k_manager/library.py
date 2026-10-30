@@ -66,6 +66,6 @@ def update_steam(steam_dir: Path, add: list[Game], remove: list[Game], program: 
         restarted = closed(change)
     except (steam.SteamError, steam.ShortcutError, OSError) as error:
         return False, "\n".join([*notes, f"Steam was not changed: {error}"]), None
-    again = " Steam was closed for it and starts again in the background." if restarted else ""
+    again = " Steam was closed for it and started again, signed in." if restarted else ""
     return True, "\n".join([*notes, f"{len(add)} game(s) in Steam, under Non-Steam in its library"
                                       f"{f'; {len(remove)} taken out' if remove else ''}.{again}"]), found

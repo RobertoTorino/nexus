@@ -7,7 +7,8 @@
 Gets your PS4 games ready to play from Steam with [shadPS4](https://shadps4.net), the PS4 emulator, and takes care of
 everything around it: it installs one tested release of shadPS4 for your own user, takes the system modules of your
 PS4, unpacks your packages (`.pkg`) into game folders, offers shadPS4's settings and the shadNet account it signs in
-with, finds your games in the folders you choose, puts them in Steam, and keeps a log. You play from Steam, and never
+with, finds your games in its own `Games\PS4` folder, puts them in Steam, and keeps a log. You never choose a folder:
+you put your games, packages and system modules in the app's folders, and it takes care of them. You play from Steam, and never
 need shadPS4's own window: a game starts full screen, and when you quit it you are back in Steam.
 
 shadPS4 Manager is on the [portal](../portal.md)'s **Gaming** tab: **A** on its tile installs it, and once it is
@@ -21,11 +22,11 @@ found; a PS4 game asks a lot of a handheld.
 ## What you need
 
 - **Your PS4 games**: games dumped from your own PS4, each in a folder of its own with `eboot.bin` (as the app unpacks
-  them), or packages (`.pkg`: a game, its update or add-on content) that the app unpacks for you, on the device or an
-  SD card. The app never downloads a game.
-- **The PS4's system modules** (`.sprx` files), libraries of the PS4's own firmware, copied from your own PS4 into a
-  folder on the device. Many games run without them; a game that needs a missing one does not start. The app cannot
-  ship them. **LB Modules** copies them into shadPS4.
+  them), or packages (`.pkg`: a game or its update) that the app unpacks for you, put in `Games\PS4` on the device
+  or an SD card. The app never downloads a game.
+- **The PS4's system modules** (`.sprx` files), libraries of the PS4's own firmware, copied from your own PS4 into
+  `Games\PS4\Modules` on the device. Many games run without them; a game that needs a missing one does not start. The
+  app cannot ship them; it copies them into shadPS4 by itself.
 - **Microsoft's Visual C++ runtime**, which Steam and most games install already. shadPS4 for Windows does not start
   without it; the shadPS4 pane says so when it is missing, and
   [vc_redist.x64.exe](https://aka.ms/vs/17/release/vc_redist.x64.exe) from Microsoft installs it.
@@ -50,27 +51,23 @@ list scrolls with the d-pad or a finger.
 
 The pane shows the shadPS4 that is installed, the one this version of the app installs, how many of the system modules
 shadPS4 cannot do without are there, the time spent in your games (as shadPS4 counts it) and the folder. shadPS4's own
-window is never opened: your games are on the **Your games** card, the modules and the packages are taken from here.
+window is never opened: your games and their packages are on the **Your games** card, the modules are taken from
+here.
 
 - **A Install** (also **A** on the shadPS4 card) downloads shadPS4 0.20.0 for Windows from shadPS4's release on GitHub
   (32 MB), checks it against the checksum this version of the app was tested with, and unpacks it. The page counts the
   megabytes while it downloads. Nothing is downloaded before you press A.
-- **LB Modules** opens the app's own browser, made for the controller, in your Downloads: it shows the folders and the
-  system modules (`.sprx`). **A** opens a folder, **B** goes a level up, and **X Copy from this folder** copies the open
-  folder's modules into shadPS4's module folder (**A** on one module does the same for its folder). A module that is
-  there already is replaced. The pane then says how many of the 24 that shadPS4 cannot do without are there.
-- **RB Packages** opens the browser showing the packages (`.pkg`). **A** on one shows where it can go: your game
-  folders first, then the usual places (Games, Downloads, Documents and each SD card), then the package's own folder.
-  **A** on a place unpacks the package there, into a folder named by the game's ID (`CUSA00001`), in the layout
-  shadPS4 loads; the status line counts the files, and a large game takes minutes. The place becomes a game folder, so
-  the game shows on **Your games**. A game needs about as much room as its package. See [Packages](#packages).
+- **The system modules** you put in `Games\PS4\Modules` are copied into shadPS4's module folder by the app itself,
+  when it opens and each time the shadPS4 card gets the focus: only the new or changed ones, so a module put there
+  later is taken in too. The status line says how many it took, and the pane how many of the 24 that shadPS4 cannot
+  do without are there; when some are missing, the status line names the folder to put them in.
 - **X Remove shadPS4** removes shadPS4's program. Press it twice: the first press only changes the entry to **Press
   again** for five seconds. shadPS4's folder, with your saves, its settings and the system modules, stays, so a new
   install finds them again. It does not work while shadPS4 runs.
 - **Y Update** shows when another shadPS4 is installed, and puts in the one this version of the app brings.
 
 **⧉** during a download or while a package is unpacked asks first: a second **⧉** within five seconds exits the app.
-A download stops then; a package is left half unpacked, so remove its folder and unpack it again.
+A download stops then; a package is left half unpacked and stays, so remove the half folder and unpack it again.
 
 shadPS4 keeps its files in a folder named `user` beside its program (its portable mode), in the app's `emulator`
 folder: its settings (`config.json`), its users and their shadNet accounts (`users.json`), the saves (`home`, per user),
@@ -82,32 +79,52 @@ A newer shadPS4 never reaches the device by itself: a new release may change how
 new version of shadPS4 Manager, tried first, which the portal offers as an update. Then **Y Update** puts in its
 program, and what you made stays.
 
+## Where your games go
+
+The app has folders of its own, which it makes when it opens; you never choose or browse to a folder:
+
+- `Games\PS4` in your user folder (`C:\Users\<you>\Games\PS4`): put your games there, as packages (`.pkg`) or already
+  unpacked, and they show on **Your games**. On an SD card or a USB drive, make a folder `Games\PS4` on it, and the
+  app looks there too.
+- `Games\PS4\Modules`: put the system modules (`.sprx`) from your PS4 there, and the app copies them into shadPS4.
+
+The **Log** card shows where the folder is.
+
+```
+Games\PS4\
+├── Modules\              the system modules you put here (.sprx)
+├── EP0700-CUSA03865_00-GALAGA0000000000-0100.pkg   a package you put here
+├── CUSA03865\            the game, unpacked by the app: eboot.bin, sce_sys\ (param.sfo, icon0.png, pic1.png), ...
+└── CUSA03865-UPDATE\     its update, which shadPS4 lays over the game when it starts
+```
+
 ## Packages
 
-A package (`.pkg`) is how the PS4 gets a game bought digitally, its update or its add-on content. **RB Packages** on the
-shadPS4 pane unpacks one into a game folder, with the same extractor as the BC250 suite's shadPS4 Manager. The
-package says what it is: the heading says **Unpack the game**, **the update** or **the add-on**.
+A package (`.pkg`) is how the PS4 gets a game bought digitally, or its update. On **Your games** a package that waits
+is a row of its own: **PKG** is a game that needs to be unpacked to play, **PKG update** an update for a game you have.
+The app unpacks them with the same extractor as the BC250 suite's shadPS4 Manager.
 
-- **A game** goes into a folder named by its ID, `CUSA00001`, in the place you choose.
-- **An update** goes beside its game, into `CUSA00001-UPDATE`, which shadPS4 lays over the game when it starts; the
-  game's folder stays as it was. So choose the place the game is in. When an update is there already, **A** asks for a
-  second press to replace it: the new one is unpacked first, and the old one goes only when every file of the new one
-  was written. An update without its game in that place goes into `CUSA00001`, as a game with its update in it.
-- **A folder that is there already** is never written into: the status line says so, and you choose another place or
-  remove that folder first.
-
-```
-PS4/
-├── CUSA00001/            eboot.bin, sce_sys/ (param.sfo, icon0.png, pic1.png), ...
-└── CUSA00001-UPDATE/     the update, laid over the game
-```
+- **X Unpack all** unpacks every package that waits, one after the other: the games first, then the updates. **A
+  Unpack** on one unpacks only that one. The status line says which one of how many and counts its files; a large game
+  takes minutes.
+- **A game** goes into a folder named by its ID, `CUSA00001`, beside its package.
+- **An update** goes beside its game, wherever that is, into a folder named like the game's with `-UPDATE`, which
+  shadPS4 lays over the game when it starts; the game's folder stays as it was. An update newer than the one there
+  replaces it: the new one is unpacked first, and the old one goes only when every file of the new one was written. An
+  update whose game is still a package waits for it: **A** on it says so, and **X** unpacks both. An update without its
+  game goes into `CUSA00001`, as a game with its update in it.
+- **The package is deleted** once it was unpacked without an error, as it takes as much room as its game. A package
+  that failed stays, and the status line says why.
+- **A folder that is there already** is never written into: the status line says so; remove that folder first.
+- **Add-ons** (DLC) are not unpacked by the app, and do not show.
 
 When some files of a package could not be written, the status line says how many, and `extraction_errors.txt` in the
 game's folder names them; the game may not start. `filelist.txt` there lists every file of the package.
 
 ## Your games
 
-The games are the folders with an `eboot.bin` in your game folders and up to five folders below them, each listed with
+The games are the folders with an `eboot.bin` in the app's `Games\PS4` folders (see
+[Where your games go](#where-your-games-go)) and up to five folders below them, each listed with
 its title and ID (CUSA00001) from its own `param.sfo`, and the time spent in it. An update or a mod beside a game (a
 folder named like the game's with `-UPDATE`, `-patch` or `-mods`) is no game of its own: shadPS4 lays it over the
 game. **A** on the Your games card goes to the list.
@@ -116,26 +133,27 @@ You play the games from Steam; the app puts them there.
 
 - **A Steam mark** on a game marks it for Steam, or takes the mark away. **Y Update Steam** then makes Steam match the
   marks: each marked game is a non-Steam game named `[PS4] <title>` in Steam's library and its Big Picture mode; a
-  game without the mark, or no longer found, is taken out. Steam closes for it and starts again in the background.
-  Steam must have been started once on the device, and shadPS4 must be installed. When there is nothing to change,
-  **Y** says so on the status line instead. Right after writing, the app reads Steam's file back and counts the games
-  in Steam from that; should a game it wrote not be found, the status line and the log say which.
-- **X Play** on a game that is in Steam starts it, through Steam: Steam starts first when it does not run, then
-  shadPS4 with the game, full screen, as from Steam's library. A game that is not in Steam yet says so: **A** marks
-  it, **Y** puts it there.
-- **Open Steam**, the row at the top of the list, opens Steam's library in Big Picture mode (**A Open Steam**).
-- **LB Folders** shows your game folders instead of the games; **LB** or **B** goes back to the games. The usual
-  places that are on the device (Games, Downloads and Documents in your user folder) and each removable drive, such as
-  an SD card, are offered as **+ Add**. **A** twice on a folder takes it off the list: the first press asks, for five
-  seconds. Its games stay where they are.
-- **+ Browse to a folder…** opens the app's own browser, made for the controller: your Games, Downloads, Documents and
-  Desktop folders and every drive first. **A** opens the folder the focus is on, **B** goes a level up (and from the
-  places back to your folders), and **X Add this folder** adds the folder that is open. Every browser of the app opens again in the folder you last took a folder or picked a file in, while it is there.
+  game without the mark, or no longer found, is taken out. Steam closes for it and starts again, its window open and
+  signed in. Steam must have been started once on the device, and shadPS4 must be installed. When there is nothing to
+  change, **Y** says so on the status line instead. Right after writing, the app reads Steam's file back and counts
+  the games in Steam from that; should a game it wrote not be found, the status line and the log say which.
+- **X Play** on a game that is in Steam starts it, through Steam: when Steam does not run, the app starts it first
+  and hands it the game once Steam has signed in, then Steam starts shadPS4 with the game, full screen, as from
+  Steam's library. A game that is not in Steam yet says so: **A** marks it, **Y** puts it there.
+- **Open Steam**, the row at the top of the list, opens Steam's library in Big Picture mode (**A Open Steam**); a
+  Steam that does not run is started first and opens it once it has signed in.
+- **RB Remove game** on a game, pressed twice, removes it: the first press asks, for five seconds, and names the
+  folders that go. The second takes the game out of Steam (Steam closes for it and starts again) and deletes its
+  folder from the disk, with its update, patch and mods beside it. Your saves and the play time stay in shadPS4's
+  folder. The app deletes no game whose folder is one of the app's `Games\PS4` folders itself, a drive, or a folder
+  holding another game: the status line says to delete it by hand.
+- A package that waits is a row of its own, **PKG** or **PKG update**: **A Unpack** and **X Unpack all**, see
+  [Packages](#packages).
 
 The pictures in Steam come from inside the game: its icon (`sce_sys\icon0.png`) on the cover, the wide picture and as
 the logo, its background (`sce_sys\pic1.png`) on the banner; without them the title is drawn on a dark background. With
-a SteamGridDB API key, Update Steam also takes a cover for each game from SteamGridDB: **RB Steam artwork** opens the
-page that keeps the key (**X Paste**, **A Save**, **Y Remove key** twice, **B** back without saving). See
+a SteamGridDB API key, Update Steam also takes a cover for each game from SteamGridDB: **LB Steam artwork** on Your
+games opens the page that keeps the key (**X Paste**, **A Save**, **Y Remove key** twice, **B** back without saving). See
 [Steam artwork from SteamGridDB](covers.md).
 
 ### In a game
@@ -223,10 +241,11 @@ The password goes over the network as it is, as shadPS4 itself sends it: use one
 
 ## Log
 
-shadPS4's folder, how many of the system modules it cannot do without are there, how many game folders you have, and
+shadPS4's folder, how many of the system modules it cannot do without are there, where your `Games\PS4` folder is, and
 the newest lines of this app's log (the installs, the modules copied, the packages unpacked, the Steam changes, the
 settings and the shadNet account changed). **A View log**, or a tap on the pane, shows the whole log in the pane: the
-d-pad scrolls it, and **B** goes back. The newest lines show at the bottom of a box of their own, which a finger can scroll; a tap on it shows the whole log too.
+d-pad scrolls it, and **B** goes back. The newest lines show at the bottom of a box of their own, which a finger can
+scroll; a tap on it shows the whole log too.
 
 ## How it works
 
@@ -266,6 +285,7 @@ remove the download.
 | `%LOCALAPPDATA%\windows-portable-suite\windows-portable-shadps4\emulator\` | shadPS4 (`shadPS4.exe`), `installed.json` (the version the app installed) and `user\`, everything shadPS4 keeps: `config.json` (its settings), `users.json` (its users and their shadNet accounts), `home\` (the saves, per user), `sys_modules\` (the system modules), `input_config\` (the hotkeys), `play_time.txt` (the time spent in each game), `log\shad_log.txt` (its own log) |
 | `%LOCALAPPDATA%\windows-portable-suite\windows-portable-shadps4\covers\` | The covers from SteamGridDB, per game |
 | `%LOCALAPPDATA%\windows-portable-suite\windows-portable-shadps4\windows-portable-shadps4.log` | The log |
-| `%APPDATA%\windows-portable-suite\windows-portable-shadps4.ini` | The settings, with your game folders |
+| `%USERPROFILE%\Games\PS4\` | Your games and packages; `Modules\` in it, the system modules you put there |
+| `%APPDATA%\windows-portable-suite\windows-portable-shadps4.ini` | The app's settings |
 | `%APPDATA%\windows-portable-suite\steamgriddb-key` | Your SteamGridDB API key, when you put one there |
 | Steam's `userdata\<user>\config\shortcuts.vdf` and `grid\` | The games in Steam and their pictures |

@@ -5,24 +5,28 @@ the right, the controller's buttons at the bottom.
 
 Every action is a controller button in the legend at the bottom, A too, and a tap on the entry does the same; there
 are no pills (owner, 29-10-2026: one way everywhere). Core's rule ends the legend: B goes back (a pane to its card,
-the folders to the games, the browser a level up, a field's page to its pane), View exits the app and Menu shows the
-information of the pane that shows.
+a page to its pane), View exits the app and Menu shows the information of the pane that shows. Nothing is browsed to
+(owner, 30-10-2026): the games, the packages and the system modules are put in the app's own folders (library.fixed:
+Games\\PS4 and Games\\PS4\\Modules in your user folder), and the app takes care of them.
 
 The shadPS4 pane: what is installed, the system modules, the play time and where; A Install until shadPS4 is
-installed, Y Update when another version is there, X Remove shadPS4 (a second press), LB Modules (the browser showing
-the .sprx files; X copies the open folder's into shadPS4's module folder) and RB Packages (the browser showing the .pkg
-files; A on one lists where to unpack it, and A on a place unpacks it there: extract.py, Extract PKG of the BC250 app).
-A press that cannot act now says why on the status line. Nothing downloads before A. The download, the unpacking and
-shadNet's server run off the window's thread; the pane counts the megabytes or the files. View (exit) while a job runs
-asks first, as the portal does. shadPS4's own window (Big Picture) is never shown: what the app owns in shadPS4's
+installed, Y Update when another version is there and X Remove shadPS4 (a second press); the system modules put in
+Games\\PS4\\Modules are copied into shadPS4's module folder when the app opens and when the shadPS4 card gets the focus
+(userdata.sync_modules, only what is new or changed). A press that cannot act now says why on the status line.
+Nothing downloads before A. The download, the unpacking and shadNet's server run off the window's thread; the pane
+counts the megabytes or the files. View (exit) while a job runs asks first, as the portal does. shadPS4's own window (Big Picture) is never shown: what the app owns in shadPS4's
 files (userdata: the quit hotkeys, View + Menu) is set after an install and when the window opens.
 
-The Your games pane (panes.py, library.py): the games in the chosen folders, played from Steam (owner, 29-10-2026: the
+The Your games pane (panes.py, library.py): the games in the app's own Games\\PS4 folders (owner, 30-10-2026: the
+games and packages are dropped there; library.fixed, an SD card's too), played from Steam (owner, 29-10-2026: the
 app never starts shadPS4 itself); A marks one for Steam, X plays one that is in Steam, through Steam
-(steam://rungameid), Y Update Steam makes Steam's shortcuts match the marks; Open Steam, the row at the top, opens
-Steam's library; LB Folders lists the folders, the usual places and a drive to add, and Browse, which opens the folder
-browser (core's browse; every browser opens where the last one of its kind was left: browse.remembered); LB Games goes back; RB Steam artwork keeps the SteamGridDB key. The Log pane: shadPS4's folder and the
-newest lines of the app's log; A (or a tap on the pane) shows the whole log in the pane.
+(steam://rungameid), Y Update Steam makes Steam's shortcuts match the marks, RB Remove game (a second press) takes a
+game out of Steam and deletes its folder with its update. A package that waits there (extract.waiting: a game not
+unpacked, an update its game lacks) is a row of its own, PKG; A unpacks it, X Unpack all every one, the games first
+and each update beside its game (extract.place), and a package unpacked whole is deleted (extract.py, Extract PKG of
+the BC250 app). Open Steam, the row at the top, opens Steam's library; LB Steam artwork keeps the SteamGridDB key.
+The Log pane: shadPS4's folder, the app's folders and the newest lines of the app's log; A (or a tap on the pane)
+shows the whole log in the pane.
 
 The Settings pane: the BC250 app's settings of shadPS4, in tabs (LB and RB: Picture, Sound, Controller, In a game), a
 row each with its value; A steps to the next value and writes it into config.json at once (shadps4_settings). The
@@ -40,7 +44,7 @@ from PyQt6.QtCore import QObject, QSettings, Qt, QTimer, pyqtSignal
 from PyQt6.QtGui import QFont, QGuiApplication
 from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QStackedWidget, QVBoxLayout, QWidget
 
-from bc250_core import applog, browse, covers, power, steam
+from bc250_core import applog, covers, power, steam
 from bc250_core.gamepad import Gamepad
 from bc250_core.platform import private
 from bc250_core.portable import (AMBER, BODY, DIM, EXIT, VIEW, Card, InfoPill, Legend, Pane, PortableHeader,
@@ -49,8 +53,7 @@ from bc250_core.portable import (AMBER, BODY, DIM, EXIT, VIEW, Card, InfoPill, L
 from . import (APP_ID, APP_NAME, LOGO_PATH, __version__, emulator, extract, library, shadnet, shadps4_settings,
                shortcuts, userdata)
 from .games import Game, scan
-from .panes import (BROWSE_INFO, GAMES_INFO, SHADPS4_INFO, TARGET_INFO, FieldPane, KeyPane, ListPane, LogPane,
-                    ShadNetPane)
+from .panes import GAMES_INFO, SHADPS4_INFO, FieldPane, KeyPane, ListPane, LogPane, ShadNetPane
 from .shadps4_settings import TABS, Setting
 
 STATUS_MS = 30_000              # the header's battery and time
@@ -62,22 +65,17 @@ ABOUT = ("shadPS4, the PS4 emulator, installed for your own user: its settings, 
          "stay in its folder.")
 LOG_LINES = 12                  # the newest lines of the app's log in the Log pane
 LOG_MAX = 2000                  # the lines of the log the whole view shows, the newest
-FOLDERS, GAMES_VIEW = "folders", "games"
-BROWSE_KEY = "browse"           # the folders' last row: the folder browser
-FOLDER, MODULES, PACKAGE, TARGET = "folder", "modules", "package", "target"   # what the browser looks for
 RUNNING = "shadPS4 is open: close it first, it would write its own settings over the change."
 NOT_INSTALLED = "Install shadPS4 first: the settings are in its folder."
 BUSY = "Wait a moment: the app is still busy with the step before."
-OPEN_A_FOLDER = "Open a folder first: the A button opens the one the focus is on, then the X button takes it."
 NO_GAME = "Put the focus on a game first: the X button starts it through Steam."
-BROWSE_KEYS = {FOLDER: "folders", MODULES: "modules", PACKAGE: "packages"}   # browse.remembered's, per kind
+NOTHING_TO_UNPACK = "Nothing to unpack: put .pkg files in your Games\\PS4 folder, then the X button unpacks them."
 ALL_SETTINGS = shadps4_settings.SETTINGS
 # The Settings pane's information, per tab: what each setting of the tab does
 TAB_INFO = {key: ("The A button changes the setting the focus is on, the LB and RB buttons change the tab; shadPS4 "
                   "reads the settings when a game starts. A game's own settings in shadPS4 come before these.\n\n"
                   + "\n".join(f"{setting.label}: {setting.tip}" for setting in group))
             for key, _name, group in TABS}
-NOT_THE_GAMES = "Update Steam works on the games: the LB button shows them again."
 NO_STEAM = "Steam was never started on this device: start it once, then Update Steam puts the marked games in it."
 NOTHING_TO_CHANGE = ("Nothing to change in Steam: the A button on a game marks it for Steam or takes the mark away, "
                      "then the Y button updates Steam.")
@@ -191,14 +189,13 @@ class MainWindow(PortableWindow):
                  steam_dir: Path | None | bool = False,
                  steam_closed: Callable[[Callable[[], None]], bool] = steam.with_steam_closed,
                  user_home: Path | None = None, drives: Callable[[], list[Path]] = library.removable_drives,
-                 roots: Callable[[], list[Path]] = browse.drives, settings: QSettings | None = None,
+                 settings: QSettings | None = None,
                  play: Callable[[str], None] = steam.open_url):
         """*steam_dir*: Steam's folder (False: found on this system, None: no Steam); *runtime_missing*: the Visual
         C++ runtime's files that are missing; *unpack*: Extract PKG's job (extract.unpack); *connect*: opens the
-        connection to a shadNet server (tests pass a fake server); *user_home*: the user's folder (the usual places);
-        *drives*: the removable drives offered as folders, *roots*: every drive the browser offers; *settings*: the
-        app's (its .ini, create_app's), where the game folders are kept; *play*: hands a steam:// address to Steam (a
-        game, Steam's library)."""
+        connection to a shadNet server (tests pass a fake server); *user_home*: the user's folder (where Games\\PS4
+        is); *drives*: the removable drives, whose Games\\PS4 is looked in too; *settings*: the app's (its .ini,
+        create_app's); *play*: hands a steam:// address to Steam (a game, Steam's library)."""
         super().__init__(gamepad)
         self.setWindowTitle(f"{APP_NAME} {__version__}")
         self.log = applog.logger(APP_ID)
@@ -218,18 +215,14 @@ class MainWindow(PortableWindow):
         self.steam_closed = steam_closed
         self._job = ""                                  # "install", "steam", "extract" or "shadnet" while one runs
         self.steam_dir = steam.find_steam() if steam_dir is False else steam_dir
-        self.user_home, self.drives, self.roots = user_home, drives, roots
+        self.user_home, self.drives = user_home, drives
         self.settings = settings if settings is not None else QSettings()
         self.play = play
         self.games: list[Game] = []
         self.in_steam: dict[str, str] = {}
         self.marked: set[str] = set()
-        self.games_view = GAMES_VIEW
-        self.forget_asked = ""                          # a folder pressed once: A again takes it off the list
-        self.browser: browse.Browser | None = None      # the browser, while it shows
-        self.browsing = FOLDER                          # what it looks for
-        self.package: extract.Package | None = None     # the package picked, while its place is chosen
-        self.replace_asked = ""                         # a place pressed once whose update A again replaces
+        self.remove_asked = ""                          # a game RB pressed once: RB again deletes it
+        self.waiting: list[extract.Package] = []        # the game packages in the game folders not unpacked yet
         self.config: dict = {}
         self.modules = userdata.check_modules(self.shad_home / "sys_modules")
         self.users: list[userdata.User] = []
@@ -282,18 +275,17 @@ class MainWindow(PortableWindow):
         self.steam_row = Row("Open Steam")              # Steam's library, where the games are played
         self.games_pane.column.insertWidget(3, self.steam_row)
         self.games_pane.column.insertSpacing(4, px(6))
-        self.browse_pane = ListPane("Choose a folder", "Choosing a folder or a file", BROWSE_INFO)
         self.shadnet_pane = ShadNetPane()
         self.key_pane = KeyPane()
         self.field_pane = FieldPane()
         self.log_pane = LogPane()
         for pane in (self.pane, self.games_pane, self.settings_pane, self.shadnet_pane, self.log_pane, self.key_pane,
-                     self.field_pane, self.browse_pane):
+                     self.field_pane):
             self.panes.addWidget(pane)
         self.cards = {self.pane: self.shadps4_card, self.games_pane: self.games_card,
                       self.settings_pane: self.settings_card, self.shadnet_pane: self.shadnet_card,
                       self.log_pane: self.log_card, self.key_pane: self.games_card,
-                      self.field_pane: self.shadnet_card, self.browse_pane: self.games_card}
+                      self.field_pane: self.shadnet_card}
         body.addWidget(self.panes, 1)
         page.addLayout(body, 1)
         page.addSpacing(px(8))
@@ -303,7 +295,7 @@ class MainWindow(PortableWindow):
         self.worker = _Worker()
         self.worker.done.connect(self._done)
         self.worker.said.connect(self._said)
-        self.shadps4_card.focused.connect(lambda: self.show_pane(self.pane))
+        self.shadps4_card.focused.connect(self.show_shadps4)
         self.shadps4_card.activated.connect(self.main_action)
         self.settings_card.focused.connect(lambda: self.show_pane(self.settings_pane))
         self.settings_card.activated.connect(self.focus_settings)
@@ -316,7 +308,6 @@ class MainWindow(PortableWindow):
         self.log_pane.tapped.connect(self.view_log)
         self.games_pane.list.picked.connect(self.game_picked)
         self.steam_row.activated.connect(self.open_steam)
-        self.browse_pane.list.picked.connect(self.browse_picked)
         self.confirm_key = False                        # Remove key pressed once
         for setting in ALL_SETTINGS:
             self.settings_pane.pills[setting.key].activated.connect(lambda s=setting: self.step_setting(s))
@@ -349,6 +340,7 @@ class MainWindow(PortableWindow):
         self.status_timer.start()
         self.prepare()
         self.read_shadps4()
+        self.sync_modules()
         self.refresh()
         self.refresh_games()
         self.shadps4_card.setFocus()
@@ -363,6 +355,32 @@ class MainWindow(PortableWindow):
         self.users = userdata.read_users(self.shad_home)
         self.user_index = min(self.user_index, max(len(self.users) - 1, 0))
         self.session = shadnet.session(self.shad_home / "log")
+
+    def show_shadps4(self) -> None:
+        self.sync_modules()
+        self.show_pane(self.pane)
+
+    def sync_modules(self) -> None:
+        """The system modules put in Games\\PS4\\Modules (owner, 30-10-2026: drop them there, the app takes care of
+        them) copied into shadPS4's module folder while shadPS4 is installed, the new or changed ones only; what was
+        copied goes to the status line and the log."""
+        if self.busy or not emulator.installed(self.home):
+            return
+        source = library.modules_home(self.user_home)
+        try:
+            copied = userdata.sync_modules(source, self.modules.folder)
+        except OSError as error:
+            self.message = f"The system modules were not copied: {error.strerror or error}"
+            self.log.error(f"Copying the system modules from {source} failed: {error}")
+            self.refresh()
+            return
+        if not copied:
+            return
+        self.read_shadps4()
+        self.message = (f"{len(copied)} system module(s) taken from the Modules folder: {len(self.modules.needed)} of "
+                        f"the {len(userdata.NEEDED)} shadPS4 cannot do without are there now.")
+        self.log.info(self.message)
+        self.refresh()
 
     def prepare(self) -> None:
         """shadPS4's files brought to what the app owns while it is installed: the quit hotkeys in
@@ -386,6 +404,8 @@ class MainWindow(PortableWindow):
             return "Steam's shortcuts are being changed (Your games).", "", ""
         if self.busy and self._job == "shadnet":
             return "Asking the shadNet server (shadNet).", "", ""
+        if self.busy and self._job == "remove":
+            return "A game is being removed (Your games).", "", ""
         if self.busy and self._job == "extract":
             done, total = self.files
             files = f" {done} of {total} files" if total else ""
@@ -405,8 +425,8 @@ class MainWindow(PortableWindow):
             return (f"shadPS4 needs Microsoft's Visual C++ runtime ({', '.join(missing)} missing in System32): "
                     "install vc_redist.x64.exe from Microsoft, then open the app again.", "", "")
         if not self.modules.complete:
-            return ("Some games need system modules from your own PS4: the LB button copies them into shadPS4.", "",
-                    "")
+            return (f"Some games need system modules from your own PS4: put them in "
+                    f"{private(library.modules_home(self.user_home))}, and the app copies them into shadPS4.", "", "")
         return "", "", ""
 
     def modules_text(self) -> str:
@@ -442,6 +462,8 @@ class MainWindow(PortableWindow):
             status = ("Press the X button again to remove shadPS4: its folder, with your saves and the system modules, "
                       "stays.")
         self.status.setText(self.message or status)
+        if self.busy and self._job == "extract":
+            self.games_pane.status.setText(status)      # the packages are unpacked from Your games: their files there
         self.refresh_settings()
         self.refresh_shadnet()
         self.update_legend()
@@ -467,8 +489,8 @@ class MainWindow(PortableWindow):
 
     def legend_items(self) -> list[tuple[str, str]]:
         """The legend for the pane that shows: its actions on the controller's buttons, A too (a tap on an entry does
-        the same), then core's Menu Info, B Back (in a pane, and on the folders, the browser, a field's page and the
-        whole log) and View Exit app. A press that cannot act now says why on the status line."""
+        the same), then core's Menu Info, B Back (in a pane, and on the key page, a field's page and the whole log)
+        and View Exit app. A press that cannot act now says why on the status line."""
         if self.close_asked:
             return [(VIEW, "Press again to exit")]
         pane = self.panes.currentWidget()
@@ -478,24 +500,19 @@ class MainWindow(PortableWindow):
             installed = not self.busy and bool(emulator.installed(self.home))
             items = [*([("A", main)] if main else []),
                      *([("X", "Press again" if self.confirm_remove else "Remove shadPS4")] if installed else []),
-                     *([("Y", other)] if other else []),
-                     *([("LB", "Modules")] if installed else []),
-                     *([("RB", "Packages")] if not self.busy else [])]
+                     *([("Y", other)] if other else [])]
         elif pane is self.games_pane:
-            if self.games_view != GAMES_VIEW:
-                items = [("A", "Choose"), ("LB", "Games")]
-            elif self.steam_row.hasFocus():
-                items = [("A", "Open Steam"), ("Y", "Update Steam"), ("LB", "Folders")]
+            focused = self.games_pane.list.focused()
+            if self.steam_row.hasFocus():
+                items = [("A", "Open Steam"), *([("X", "Unpack all")] if self.waiting else []), ("Y", "Update Steam"),
+                         ("LB", "Steam artwork")]
+            elif focused.startswith("pkg:"):
+                items = [("A", "Unpack"), ("X", "Unpack all"), ("Y", "Update Steam"), ("LB", "Steam artwork")]
             else:
-                items = [("A", "Steam mark"), *([("X", "Play")] if self.games_pane.list.focused() else []),
-                         ("Y", "Update Steam"), ("LB", "Folders")]
-            items.append(("RB", "Steam artwork"))
-        elif pane is self.browse_pane:
-            if self.browsing == TARGET:
-                items = [("A", "Press again" if self.replace_asked else "Unpack here")]
-            else:
-                items = [("A", "Open")] + ([("X", "Add this folder")] if self.browsing == FOLDER else
-                                           [("X", "Copy from this folder")] if self.browsing == MODULES else [])
+                items = [("A", "Steam mark"), *([("X", "Play")] if focused else []), ("Y", "Update Steam"),
+                         ("LB", "Steam artwork"),
+                         *([("RB", "Press again" if self.remove_asked == focused else "Remove game")]
+                           if focused else [])]
         elif pane is self.settings_pane:
             items = [("A", "Change"), ("LB", "Previous tab"), ("RB", "Next tab")]
         elif pane is self.shadnet_pane:
@@ -506,8 +523,7 @@ class MainWindow(PortableWindow):
             items = [("A", "Save"), ("X", "Paste"), ("Y", "Press again" if self.confirm_key else "Remove key")]
         elif pane is self.field_pane:
             items = [("A", "Keep"), ("X", "Paste")]
-        on_a_page = (pane in (self.key_pane, self.field_pane, self.browse_pane) or self.log_pane.viewing
-                     or (pane is self.games_pane and self.games_view == FOLDERS))
+        on_a_page = pane in (self.key_pane, self.field_pane) or self.log_pane.viewing
         return [*items, *self.common_items(True if on_a_page else None)]
 
     def update_legend(self) -> None:
@@ -521,13 +537,23 @@ class MainWindow(PortableWindow):
 
     # Your games
 
+    def game_folders(self) -> list[Path]:
+        """The app's own Games\\PS4 folders (made when missing): the user's, then each SD card's."""
+        return library.fixed(self.user_home, self.drives)
+
     def scan(self) -> list[Game]:
-        return scan(library.folders(self.settings))
+        return scan(self.game_folders())
+
+    def unpacked(self) -> dict[str, Path]:
+        """Each game's folder by its title ID, a game without its update before one with it in it."""
+        ordered = sorted((g for g in self.games if g.title_id), key=lambda g: not g.patched)
+        return {g.title_id: g.folder for g in ordered}
 
     def refresh_games(self, in_steam: dict[str, str] | None = None) -> None:
         """The games, which are in Steam (*in_steam* when given: what Update Steam read back, else Steam's file now),
         and the list as the view shows it."""
         self.games = self.scan()
+        self.waiting = extract.waiting(self.game_folders(), self.unpacked())
         if in_steam is not None:
             self.in_steam = in_steam
         else:
@@ -545,30 +571,28 @@ class MainWindow(PortableWindow):
 
     def show_games(self) -> None:
         pane = self.games_pane
-        chosen = library.folders(self.settings)
+        own = library.fixed(self.user_home, self.drives)
         in_steam = sum(1 for g in self.games if str(g.eboot) in self.in_steam)
-        pane.summary.setText(f"{len(self.games)} game(s) in {len(chosen)} folder(s)"
+        pane.summary.setText(f"{len(self.games)} game(s) in {len(self.game_folders())} folder(s)"
+                             + (f", {len(self.waiting)} to unpack" if self.waiting else "")
                              + (f", {in_steam} in Steam" if self.steam_dir is not None else
                                 ". Steam was never started on this device: start it once to put games in it."))
-        if self.games_view == FOLDERS:
-            rows = [(f"folder:{f}", ("Press A again to take it off the list" if self.forget_asked == str(f)
-                                     else f"{private(f)}  ·  {len(scan([f]))} game(s)")) for f in chosen]
-            rows += [(f"add:{p}", f"+ Add {private(p)}") for p in library.suggested(chosen, self.user_home, self.drives)]
-            rows.append((BROWSE_KEY, "+ Browse to a folder…"))
-        else:
-            rows = [(str(g.eboot), self.game_text(g)) for g in self.games]
-            if not rows:
-                pane.status.setText(pane.status.text() or "No games yet: the LB button shows your game folders, to "
-                                                           "add the one your games are in; the RB button on the "
-                                                           "shadPS4 pane unpacks a package.")
+        rows = [(str(g.eboot), self.game_text(g)) for g in self.games]
+        unpacked = self.unpacked()
+        rows += [(f"pkg:{p.path}", "  ·  ".join(t for t in (
+            p.title or p.path.name, p.title_id,
+            "PKG update" if p.category == "gp" and p.title_id in unpacked else "PKG") if t))
+                 for p in self.waiting]                 # short, or the row is cut off (owner, 30-10-2026)
+        if not rows:
+            pane.status.setText(pane.status.text() or
+                                f"No games yet: put your .pkg files or unpacked games in {private(own[0])}, then "
+                                "the X button unpacks the packages.")
         pane.list.set_items(rows)
-        shown = self.games_view == GAMES_VIEW           # Open Steam above the games, not above the folders
-        if not shown and self.steam_row.hasFocus():
-            (pane.list.first() or self.games_card).setFocus()
-        self.steam_row.setVisible(shown)
         self.update_legend()
 
     def game_text(self, game: Game) -> str:
+        if self.remove_asked == str(game.eboot):
+            return f"Press RB again to delete {game.title} from the disk"
         mark = "✓ Steam" if str(game.eboot) in self.marked else ""
         changed = (str(game.eboot) in self.marked) != (str(game.eboot) in self.in_steam)
         seconds = userdata.play_times(self.shad_home).get(game.title_id, (0, 0.0))[0] if game.title_id else 0
@@ -577,50 +601,11 @@ class MainWindow(PortableWindow):
         return "  ·  ".join(p for p in parts if p)
 
     def game_picked(self, key: str) -> None:
-        """A on a row: a game's Steam mark, a folder's second press, a place to add, or the browser."""
-        if key == BROWSE_KEY:
-            self.show_browser(FOLDER)
-        elif key.startswith("add:"):
-            self.add_folder(Path(key[4:]))
-        elif key.startswith("folder:"):
-            self.forget_folder(Path(key[7:]))
+        """A on a row: a game's Steam mark, or a package unpacked."""
+        if key.startswith("pkg:"):
+            self.unpack_packages([p for p in self.waiting if str(p.path) == key[4:]])
         else:
             self.mark_game(key)
-
-    def toggle_folders(self) -> None:
-        self.games_view = GAMES_VIEW if self.games_view == FOLDERS else FOLDERS
-        self.forget_asked = ""
-        self.games_pane.status.setText("")
-        self.show_games()
-        self.show_pane(self.games_pane)
-        self.focus_list(self.games_pane)
-
-    def add_folder(self, folder: Path, said: bool = True) -> None:
-        chosen = library.folders(self.settings)
-        if str(folder) not in {str(f) for f in chosen}:
-            library.set_folders(self.settings, chosen + [folder])
-        self.refresh_games()
-        if not said:
-            return
-        found = sum(1 for g in self.games if g.folder == folder or folder in g.eboot.parents)
-        self.games_pane.status.setText(f"{folder.name or folder} is a game folder now: {found} game(s) in it.")
-        self.log.info(f"Game folder added: {folder} ({found} game(s)).")
-
-    def forget_folder(self, folder: Path) -> None:
-        """A on a folder asks for a second press (no dialog on a handheld); the second takes it off the list."""
-        if self.forget_asked != str(folder):
-            self.forget_asked = str(folder)
-            self.confirm_timer.start()
-            self.show_games()
-            self.games_pane.list.pills[f"folder:{folder}"].setFocus()
-            return
-        self.forget_asked = ""
-        library.set_folders(self.settings, [f for f in library.folders(self.settings) if f != folder])
-        self.refresh_games()
-        self.games_pane.status.setText(f"{folder.name or folder} is no longer a game folder; its games stay where "
-                                       "they are.")
-        self.log.info(f"Game folder taken off the list: {folder}.")
-        self.focus_list(self.games_pane)
 
     def play_game(self) -> None:
         """X on a game: started through Steam (owner, 29-10-2026), which starts shadPS4 with it full screen as its
@@ -649,6 +634,129 @@ class MainWindow(PortableWindow):
         self.games_pane.status.setText(f"Starting {game.title} in Steam…")
         self.log.info(f"Starting {game.title} in Steam ({url}).")
 
+
+    def unpack_packages(self, packages: list[extract.Package]) -> None:
+        """A on a PKG, or X Unpack all (owner, 30-10-2026: drop the packages in the folder, the manager takes care of
+        them): unpacked one after the other off the window's thread, the games first, each update beside its game (an
+        older one there replaced), the files counted on the pane's line. A package unpacked without a missing file is
+        deleted (owner, 30-10-2026: it takes as much room as its game)."""
+        if self.busy:
+            self.games_pane.status.setText(BUSY)
+            return
+        todo = sorted(packages, key=lambda p: extract.ORDER[p.category])
+        if not todo:
+            self.games_pane.status.setText(NOTHING_TO_UNPACK)
+            return
+        unpacked = self.unpacked()
+        games = {p.title_id for p in todo if p.category == "gd"}
+        waiting_games = {p.title_id for p in self.waiting if p.category == "gd"}
+        alone = next((p for p in todo if p.category == "gp" and p.title_id not in unpacked
+                      and p.title_id in waiting_games and p.title_id not in games), None)
+        if alone is not None:                           # its game first, or the update takes the game's folder
+            self.games_pane.status.setText(f"{alone.title or alone.title_id} is an update: unpack its game first, or "
+                                           "the X button unpacks both.")
+            return
+        run, log = self.unpack, self.log
+
+        def progress(done: int, total: int) -> None:
+            self.files = (done, total)                  # read by refresh() on the window's thread
+
+        def job() -> tuple[bool, str]:
+            done: list[str] = []
+            failed: list[str] = []
+            for n, package in enumerate(todo, 1):
+                what = package.title or package.title_id or package.path.name
+                self.stage = f"Unpacking {n} of {len(todo)}: {what}…" if len(todo) > 1 else f"Unpacking {what}…"
+                self.files = (0, 0)
+                folder, game = extract.place(package, unpacked)
+                log.info(f"Extract PKG: {package.path} ({package.title_id}, {package.kind}) into {folder}.")
+                try:
+                    final, written, missing = run(package, folder.parent, game is not None and
+                                                  extract.has_entries(folder), progress, log.info, beside=game)
+                except extract.ExtractError as error:
+                    failed.append(f"{what} ({error})")
+                    continue
+                if missing:
+                    failed.append(f"{what} ({missing} of {written + missing} file(s) missing, {extract.ERRORS} in "
+                                  f"{final.name} names them; the package stays)")
+                    continue
+                if package.category == "gd":
+                    unpacked[package.title_id] = final
+                try:
+                    package.path.unlink()
+                except OSError as error:
+                    failed.append(f"{what} (unpacked, but {package.path.name} was not deleted: "
+                                  f"{error.strerror or error})")
+                    continue
+                done.append(what)
+            if len(todo) == 1 and done:
+                text = f"{done[0]} is unpacked, and its package is deleted."
+            else:
+                text = f"{len(done)} of {len(todo)} package(s) unpacked, each package deleted after."
+            if failed:
+                text += " Not done: " + "; ".join(failed) + "."
+            return not failed, text
+        self.busy, self.message, self.files = True, "", (0, 0)
+        self._job = "extract"
+        self.stage = f"Unpacking 1 of {len(todo)}…" if len(todo) > 1 else "Unpacking…"
+        self.progress_timer.start()
+        self.refresh()
+        self.log.info(f"Extract PKG: {len(todo)} package(s).")
+        self.worker.run(job)
+
+    def remove_game(self) -> None:
+        """RB on a game (owner, 30-10-2026: a game that no longer plays goes): with a second press (no dialog on a
+        handheld), its shortcut taken out of Steam, then its folder deleted with its update, patch and mods beside it
+        (library.removal), off the window's thread. Its saves and play time stay in shadPS4's folder; the package it
+        came from is not touched."""
+        key = self.games_pane.list.focused()
+        game = next((g for g in self.games if str(g.eboot) == key), None)
+        if game is None:
+            return
+        if self.busy:
+            self.games_pane.status.setText(BUSY)
+            return
+        if self.running(self.home):
+            self.games_pane.status.setText("shadPS4 is open: quit the game first, then remove it.")
+            return
+        folders, why = library.removal(game, self.game_folders(), self.games)
+        if not folders:
+            self.games_pane.status.setText(private(why))
+            return
+        if self.remove_asked != key:
+            self.remove_asked = key
+            self.confirm_timer.start()
+            self.show_games()
+            self.games_pane.list.pills[key].setFocus()
+            self.games_pane.status.setText(
+                f"Press the RB button again to delete {', '.join(f.name for f in folders)} from the disk"
+                + (" and take the game out of Steam" if key in self.in_steam else "")
+                + ". Its saves stay in shadPS4's folder.")
+            self.update_legend()
+            return
+        self.remove_asked = ""
+        steam_dir = self.steam_dir if key in self.in_steam else None
+        closed, program, existing = self.steam_closed, emulator.program(self.home), self.in_steam
+
+        def job() -> tuple[bool, str, dict[str, str] | None]:
+            found = None
+            if steam_dir is not None:
+                ok, said, found = library.update_steam(steam_dir, [], [game], program, LOGO_PATH, existing, closed)
+                if not ok:
+                    return False, f"{game.title} was not removed: {said}", None
+            failed = library.delete(folders)
+            if failed:
+                return False, f"{game.title} was not removed completely: not deleted {', '.join(failed)}.", found
+            return True, (f"{game.title} is removed: {', '.join(f.name for f in folders)} deleted"
+                          + (", its shortcut taken out of Steam" if steam_dir is not None else "")
+                          + ". Its saves stay in shadPS4's folder."), found
+        self.busy, self.message = True, ""
+        self._job = "remove"
+        self.games_pane.status.setText(f"Removing {game.title}…")
+        self.log.info(f"Removing {game.title}: {', '.join(str(f) for f in folders)}"
+                      + (", and its Steam shortcut." if steam_dir is not None else "."))
+        self.worker.run(job)
+
     def open_steam(self) -> None:
         """A on Open Steam: Steam's library (in Big Picture), started when Steam does not run."""
         try:
@@ -660,187 +768,7 @@ class MainWindow(PortableWindow):
         self.games_pane.status.setText("Opening Steam…")
         self.log.info("Opening Steam.")
 
-    # The browser (core's browse): a game folder, the system modules, a package, and where a package is unpacked
-
-    def show_browser(self, looking_for: str) -> None:
-        """The browser for *looking_for*, opened where the last one of its kind was left (owner, 29-10-2026), else
-        in Downloads (the modules, a package) or at the places (a game folder)."""
-        self.browsing = looking_for
-        self.replace_asked = ""
-        start = browse.places(self.user_home, self.roots)
-        downloads = (self.user_home or Path.home()) / "Downloads"
-        remembered = browse.remembered(self.settings, BROWSE_KEYS[looking_for])
-        at = remembered or (downloads if downloads.is_dir() else None)
-        self.browse_pane.info.info = BROWSE_INFO
-        if looking_for == MODULES:
-            self.browser = browse.Browser(start, userdata.MODULE_SUFFIXES, at)
-            self.browse_pane.heading.setText("Choose the system modules")
-            self.cards[self.browse_pane] = self.shadps4_card
-        elif looking_for == PACKAGE:
-            self.browser = browse.Browser(start, extract.PACKAGE_SUFFIXES, at)
-            self.browse_pane.heading.setText("Choose a package")
-            self.cards[self.browse_pane] = self.shadps4_card
-        else:
-            self.browser = browse.Browser(start, (), remembered)
-            self.browse_pane.heading.setText("Choose a folder")
-            self.cards[self.browse_pane] = self.games_card
-        self.browse_pane.status.setText("")
-        self.show_pane(self.browse_pane)
-        self.show_browse()
-
-    def show_browse(self) -> None:
-        path = self.browser.path if self.browser is not None else None
-        hint = {MODULES: "Where are the system modules? Open the folder with the .sprx files from your PS4, then the "
-                         "X button.",
-                PACKAGE: "Where is the package? Open the folder you put the .pkg file in, then the A button on it."
-                }.get(self.browsing, "Where are your games? Open a place, then the folder they are in.")
-        self.browse_pane.summary.setText(wrappable(path) if path is not None else hint)
-        self.browse_pane.list.set_items(self.browser.rows() if self.browser is not None else [])
-        self.focus_list(self.browse_pane)
-        self.update_legend()
-
-    def browse_picked(self, key: str) -> None:
-        if self.browsing == TARGET:
-            self.unpack_to(Path(key))
-            return
-        if self.browser is None:
-            return
-        picked = self.browser.open(key)
-        if picked is not None:
-            browse.remember(self.settings, BROWSE_KEYS[self.browsing], picked.parent)
-        if picked is not None and self.browsing == PACKAGE:
-            self.choose_target(picked)
-            return
-        if picked is not None and self.browsing == MODULES:
-            self.leave_browser()
-            self.install_modules(picked.parent)
-            return
-        self.browse_pane.status.setText("")
-        self.show_browse()
-
-    def add_browsed(self) -> None:
-        """X in the browser: the open folder becomes a game folder (back to the folders), or its system modules are
-        copied (back to the shadPS4 pane)."""
-        if self.browsing not in (FOLDER, MODULES):
-            return
-        if self.browser is None or self.browser.path is None:
-            self.browse_pane.status.setText(OPEN_A_FOLDER)
-            return
-        folder = self.browser.path
-        browse.remember(self.settings, BROWSE_KEYS[self.browsing], folder)
-        self.leave_browser()
-        if self.browsing == MODULES:
-            self.install_modules(folder)
-        else:
-            self.add_folder(folder)
-
-    def leave_browser(self) -> None:
-        self.browser = None
-        self.package = None
-        self.replace_asked = ""
-        if self.browsing == FOLDER:
-            self.games_view = FOLDERS
-            self.show_games()
-            self.show_pane(self.games_pane)
-            self.focus_list(self.games_pane)
-        else:
-            self.show_pane(self.pane)
-            self.shadps4_card.setFocus()
-
-    # Extract PKG (extract.py): the package picked in the browser, then the place, then the unpacking as a job
-
-    def choose_target(self, path: Path) -> None:
-        """The package's places to unpack it to (library.targets), in the browser's pane."""
-        try:
-            package = extract.read_package(path)
-        except extract.ExtractError as error:
-            self.browse_pane.status.setText(str(error))
-            self.log.error(str(error))
-            return
-        self.package, self.browser, self.browsing, self.replace_asked = package, None, TARGET, ""
-        what = package.title or package.path.name
-        self.browse_pane.heading.setText(f"Unpack the {package.kind}")
-        self.browse_pane.info.info = TARGET_INFO
-        self.browse_pane.summary.setText(f"{what} ({package.title_id or 'no ID'}): where should it go?")
-        self.browse_pane.status.setText("")
-        places = library.targets(library.folders(self.settings), path, self.user_home, self.drives)
-        chosen = {str(f) for f in library.folders(self.settings)}
-        self.browse_pane.list.set_items([(str(p), private(p) + ("" if str(p) in chosen else "  ·  new game folder"))
-                                         for p in places])
-        self.focus_list(self.browse_pane)
-        self.update_legend()
-
-    def unpack_to(self, root: Path) -> None:
-        """A on a place: the package unpacked into it as the window's job; a place where its folder is there already
-        says so, and one with the game's update asks for a second press to replace it."""
-        package = self.package
-        if package is None:
-            return
-        if self.busy:
-            self.browse_pane.status.setText(BUSY)
-            return
-        folder, update = extract.target(root, package)
-        replace = False
-        if extract.has_entries(folder):
-            if not update:
-                self.browse_pane.status.setText(f"{folder.name} is in {private(root)} already: choose another place, "
-                                                "or remove that folder first.")
-                return
-            if self.replace_asked != str(root):
-                self.replace_asked = str(root)
-                self.confirm_timer.start()
-                self.browse_pane.status.setText(f"{folder.name} holds an update already: press the A button again "
-                                                "to replace it. The new one is unpacked first; the old one goes only "
-                                                "when that worked.")
-                self.update_legend()
-                return
-            replace = True
-        self.replace_asked = ""
-        self.leave_browser()
-        run, log = self.unpack, self.log
-
-        def progress(done: int, total: int) -> None:
-            self.files = (done, total)                  # read by refresh() on the window's thread
-
-        def job() -> tuple[bool, str, Path | None]:
-            try:
-                final, written, failed = run(package, root, replace, progress, log.info)
-            except extract.ExtractError as error:
-                return False, str(error), None
-            what = package.title or package.title_id or package.path.name
-            if failed:
-                return False, (f"{what} was unpacked into {final.name} with {failed} of {written + failed} file(s) "
-                               f"missing ({extract.ERRORS} there names them): it may not start."), root
-            return True, f"{what} is unpacked into {final.name}, in {root.name or root}.", root
-        self.busy, self.message, self.files = True, "", (0, 0)
-        self._job = "extract"
-        self.stage = f"Unpacking {package.title or package.path.name}…"
-        self.progress_timer.start()
-        self.refresh()
-        self.log.info(f"Extract PKG: {package.path} ({package.title_id}, {package.kind}) into {root}.")
-        self.worker.run(job)
-
     # The system modules
-
-    def install_modules(self, source: Path) -> None:
-        """The .sprx files of *source* copied into shadPS4's module folder, which shadPS4 reads when a game asks for a
-        module (so it may run meanwhile)."""
-        try:
-            copied = userdata.install_modules(source, self.modules.folder)
-        except OSError as error:
-            self.message = f"The system modules were not copied: {error.strerror or error}"
-            self.log.error(f"Copying the system modules from {source} failed: {error}")
-            self.refresh()
-            return
-        if not copied:
-            self.message = f"No system module (.sprx) in {source.name or source}."
-            self.refresh()
-            return
-        self.read_shadps4()
-        self.message = (f"{len(copied)} system module(s) copied into shadPS4: {len(self.modules.needed)} of the "
-                        f"{len(userdata.NEEDED)} it cannot do without are there now.")
-        self.log.info(self.message)
-        self.refresh()
 
     # The SteamGridDB key (the BC250 app's Covers… and core's covers.edit_key, as a page)
 
@@ -1104,16 +1032,18 @@ class MainWindow(PortableWindow):
         pane = self.panes.currentWidget()
         if pane is self.pane:
             self.remove_action()
-        elif pane is self.browse_pane:
-            self.add_browsed()
         elif pane is self.key_pane:
             self.paste(self.key_pane)
         elif pane is self.field_pane:
             self.paste(self.field_pane)
         elif pane is self.shadnet_pane:
             self.shadnet_job(create=True)
-        elif pane is self.games_pane and self.games_view == GAMES_VIEW:
-            self.play_game()
+        elif pane is self.games_pane:
+            focused = self.games_pane.list.focused()
+            if focused.startswith("pkg:") or (self.steam_row.hasFocus() and self.waiting):
+                self.unpack_packages(self.waiting)
+            else:
+                self.play_game()
 
     def y_action(self) -> None:
         pane = self.panes.currentWidget()
@@ -1128,19 +1058,15 @@ class MainWindow(PortableWindow):
 
     def lb_action(self) -> None:
         pane = self.panes.currentWidget()
-        if pane is self.pane:
-            self.choose_modules()
-        elif pane is self.games_pane:
-            self.toggle_folders()
+        if pane is self.games_pane:
+            self.show_key()
         elif pane is self.settings_pane:
             self.settings_pane.tabs.step(-1)
 
     def rb_action(self) -> None:
         pane = self.panes.currentWidget()
-        if pane is self.pane:
-            self.choose_package()
-        elif pane is self.games_pane:
-            self.show_key()
+        if pane is self.games_pane:
+            self.remove_game()
         elif pane is self.settings_pane:
             self.settings_pane.tabs.step(1)
 
@@ -1164,9 +1090,6 @@ class MainWindow(PortableWindow):
         if self.busy:
             if self._job != "steam":                    # Steam's own job says so on the line already
                 self.games_pane.status.setText(BUSY)
-            return
-        if self.games_view != GAMES_VIEW:
-            self.games_pane.status.setText(NOT_THE_GAMES)
             return
         if self.steam_dir is None:
             self.games_pane.status.setText(NO_STEAM)
@@ -1194,7 +1117,7 @@ class MainWindow(PortableWindow):
         rows: list[tuple[str, str]] = [("shadPS4's folder", wrappable(self.shad_home))]
         if emulator.installed(self.home):
             rows += [("System modules", self.modules_text()),
-                     ("Game folders", str(len(library.folders(self.settings))))]
+                     ("Games", wrappable(library.fixed(self.user_home, self.drives)[0]))]   # Modules is in it
         self.log_pane.fill(rows, [private(line) for line in self.log_lines()[-LOG_LINES:]])
 
     def log_lines(self) -> list[str]:
@@ -1282,6 +1205,15 @@ class MainWindow(PortableWindow):
             (self.log.info if ok else self.log.error)(text)
             self.update_legend()
             return
+        if job == "remove":
+            ok, text, found = result if isinstance(result, tuple) else (False, f"The game was not removed: {result}",
+                                                                        None)
+            self.games_pane.status.setText(private(text))
+            (self.log.info if ok else self.log.error)(text)
+            self.refresh()
+            self.refresh_games(found)
+            self.focus_list(self.games_pane)
+            return
         if job == "install":
             if isinstance(result, Exception):
                 self.message = private(f"shadPS4 could not be installed: {result}")
@@ -1291,13 +1223,10 @@ class MainWindow(PortableWindow):
                 self.log.info(f"shadPS4 {result} installed.")
                 self.prepare()                          # before its first start
         elif job == "extract":
-            ok, text, root = result if isinstance(result, tuple) else (False, f"The package was not unpacked: "
-                                                                              f"{result}", None)
-            self.message = private(text)
+            ok, text = result if isinstance(result, tuple) else (False, f"The packages were not unpacked: {result}")
+            self.games_pane.status.setText(private(text))
             (self.log.info if ok else self.log.error)(text)
             self.files = (0, 0)
-            if root is not None:                        # something was written: the place is a game folder now,
-                self.add_folder(root, said=False)       # so the game shows
         self.read_shadps4()
         self.refresh()
         self.refresh_games()
@@ -1357,35 +1286,13 @@ class MainWindow(PortableWindow):
             self.log.info("shadPS4 removed.")
         self.refresh()
 
-    def choose_modules(self) -> None:
-        """LB Modules: the browser showing the .sprx files; X copies the open folder's, A on a file its folder's."""
-        if self.busy:
-            self.message = BUSY
-        elif not emulator.installed(self.home):
-            self.message = "Install shadPS4 first (the A button): the system modules go into its folder."
-        else:
-            self.message = ""
-            self.show_browser(MODULES)
-            return
-        self.refresh()
-
-    def choose_package(self) -> None:
-        """RB Packages: the browser showing the .pkg files; A on one lists where to unpack it."""
-        if self.busy:
-            self.message = BUSY
-            self.refresh()
-            return
-        self.message = ""
-        self.show_browser(PACKAGE)
-
     def _confirm_over(self) -> None:
         self.confirm_timer.stop()
-        if self.forget_asked:
-            self.forget_asked = ""
+        if self.remove_asked:
+            if self.games_pane.status.text().startswith("Press the RB button again"):
+                self.games_pane.status.setText("")
+            self.remove_asked = ""
             self.show_games()
-        if self.replace_asked:
-            self.replace_asked = ""
-            self.browse_pane.status.setText("")
         if self.confirm_key:
             self.confirm_key = False
             if self.key_pane.status.text().startswith("Press the Y button again"):
@@ -1401,28 +1308,17 @@ class MainWindow(PortableWindow):
     # B
 
     def on_back(self) -> None:
-        """B goes back (the suite's rule, owner 29-10-2026): the whole log to its summary, the browser a level up (from
-        the places to where it came from), the places for a package back to the packages, the key page to Your games
-        and a field's page to shadNet (nothing kept), the folders to the games, a pane to its card; on a card it does
-        nothing (View exits)."""
+        """B goes back (the suite's rule, owner 29-10-2026): the whole log to its summary, the key page to Your games
+        and a field's page to shadNet (nothing kept), a pane to its card; on a card it does nothing (View exits)."""
         pane = self.panes.currentWidget()
         if pane is self.log_pane and self.log_pane.viewing:
             self.log_pane.show_summary()
             self.log_card.setFocus()
             self.update_legend()
-        elif pane is self.browse_pane:
-            if self.browsing == TARGET:
-                self.show_browser(PACKAGE)
-            elif self.browser is not None and self.browser.up():
-                self.show_browse()
-            else:
-                self.leave_browser()
         elif pane is self.key_pane:
             self.back_to_games()
         elif pane is self.field_pane:
             self.back_to_shadnet()
-        elif pane is self.games_pane and self.games_view == FOLDERS:
-            self.toggle_folders()
         else:
             self.go_back()
 
@@ -1435,7 +1331,8 @@ class MainWindow(PortableWindow):
             self.message = {"steam": "Press View again to exit: Steam's shortcuts may be left half changed.",
                             "extract": "Press View again to exit: the unpacking stops, and the game's folder is left "
                                        "half written.",
-                            "shadnet": "Press View again to exit: the answer of the shadNet server is not waited for."
+                            "shadnet": "Press View again to exit: the answer of the shadNet server is not waited for.",
+                            "remove": "Press View again to exit: the game is left half deleted."
                             }.get(self._job, "Press View again to exit: the download stops.")
             self.refresh()                              # the legend says so too
             return
@@ -1446,4 +1343,3 @@ class MainWindow(PortableWindow):
         self.progress_timer.stop()
         self.confirm_timer.stop()
         super().closeEvent(event)
-

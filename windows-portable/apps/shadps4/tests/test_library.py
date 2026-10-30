@@ -1,13 +1,10 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Your games (library.py), as RPCS3 Manager's are tested: the game folders kept, the usual places offered, the places
-Extract PKG offers, Update Steam's plan, and Steam's shortcuts written into a Steam folder of a test (never the real
-one), with Steam closed around it."""
+"""Your games (library.py), as RPCS3 Manager's are tested: the app's own Games\\PS4 folders, Update Steam's plan, and
+Steam's shortcuts written into a Steam folder of a test (never the real one), with Steam closed around it."""
 
 from __future__ import annotations
 
 from pathlib import Path
-
-from PyQt6.QtCore import QSettings
 
 from bc250_core import steam
 from conftest import make_game
@@ -17,42 +14,23 @@ from shadps4_manager.games import Game, scan
 PROGRAM = Path(r"C:\emu\shadPS4.exe")
 
 
-def test_the_folders_are_kept(qapp, tmp_path):
-    settings = QSettings(str(tmp_path / "s.ini"), QSettings.Format.IniFormat)
-    assert library.folders(settings) == []
-    library.set_folders(settings, [tmp_path / "a", tmp_path / "b"])
-    assert library.folders(QSettings(str(tmp_path / "s.ini"), QSettings.Format.IniFormat)) == [tmp_path / "a",
-                                                                                               tmp_path / "b"]
-
-
-def test_the_usual_places_are_offered(tmp_path):
+def test_the_apps_own_folders(tmp_path):
+    r"""The app's own folders (owner, 30-10-2026: the games, packages and system modules are put there, no folder is
+    chosen): Games\PS4 in the user's folder with its Modules folder, made when missing, then Games\PS4 on a removable
+    drive that has one; an empty card slot is none."""
     home = tmp_path / "me"
-    (home / "Downloads").mkdir(parents=True)
-    (home / "Games").mkdir()
-    card = tmp_path / "E"
-    card.mkdir()
-    assert library.suggested([], home, lambda: [card]) == [home / "Games", home / "Downloads", card]
-    assert library.suggested([home / "Games"], home, lambda: []) == [home / "Downloads"]   # chosen already
+    card, empty = tmp_path / "E", tmp_path / "F"
+    (card / "Games" / "PS4").mkdir(parents=True)
+    empty.mkdir()
 
     class EmptySlot:                    # a card reader without a card: Windows raises when asked about it
+        def __truediv__(self, other):
+            return self
+
         def is_dir(self):
             raise OSError(22, "The volume does not contain a recognized file system.")
-
-        def __str__(self):
-            return "E:\\"
-    assert library.suggested([], home, lambda: [EmptySlot(), card]) == [home / "Games", home / "Downloads", card]
-
-
-def test_a_package_is_offered_the_game_folders_then_the_usual_places_then_its_own(tmp_path):
-    home = tmp_path / "me"
-    (home / "Downloads").mkdir(parents=True)
-    (home / "Games").mkdir()
-    card = tmp_path / "E"
-    (card / "PS4").mkdir(parents=True)
-    package = home / "Downloads" / "game.pkg"
-    assert library.targets([card / "PS4"], package, home, lambda: [card]) == [
-        card / "PS4", home / "Games", home / "Downloads", card]                 # Downloads, its own, once
-    assert library.targets([tmp_path / "gone"], package, home, lambda: []) == [home / "Games", home / "Downloads"]
+    assert library.fixed(home, lambda: [EmptySlot(), card, empty]) == [home / "Games" / "PS4", card / "Games" / "PS4"]
+    assert library.modules_home(home) == home / "Games" / "PS4" / "Modules" and library.modules_home(home).is_dir()
 
 
 def test_the_plan(tmp_path):

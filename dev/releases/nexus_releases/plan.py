@@ -1311,9 +1311,20 @@ def latest_push(runs: list[BuildRun]) -> list[BuildRun]:
     return [r for r in runs if r.sha == runs[0].sha] if runs else []
 
 
+def superseded(run: BuildRun, runs: list[BuildRun]) -> bool:
+    """Whether *run* was canceled for a later run of its workflow on the same commit and ref: GitHub cancels a
+    waiting run when a newer one of the same concurrency group comes (nexus-index.yml, which every release run of a
+    push starts once), so it was never a failure (owner, 30-10-2026: the pill said Failed for 1759427, whose runs all
+    passed but one canceled Nexus index)."""
+    return (run.done and run.conclusion in ("cancelled", "canceled")
+            and any(r is not run and r.workflow == run.workflow and r.sha == run.sha and r.ref == run.ref
+                    and (r.started >= run.started or not r.done) for r in runs))
+
+
 def build_state(runs: list[BuildRun]) -> str:
     """"running" while one of *runs* has not finished, else "failed" when one did not pass, else "passed"; ""
-    without runs."""
+    without runs. A run canceled for a later one of its workflow on the same commit does not count (superseded)."""
+    runs = [r for r in runs if not superseded(r, runs)]
     if not runs:
         return ""
     if not all(r.done for r in runs):

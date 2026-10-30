@@ -3,12 +3,13 @@
 battery, date and time, fits the handheld's screen; every action is a button in the row at the bottom, A too, and no
 pill is left (owner, 29-10-2026); B goes back and View exits; shadPS4 installed on A (off the window's thread, the
 megabytes counted, View asking first meanwhile, its quit hotkeys set after), updated from another version, and removed
-with X pressed twice; the system modules copied from a folder found in the browser; a package unpacked into a place
-chosen after it (Extract PKG, with the synthetic package), an update beside its game replaced on a second press; the
-Settings pane's rows, in tabs, step through their values in config.json, never while shadPS4 runs; the shadNet pane's
-rows and field pages, the account kept in shadPS4's files, created and tried on a fake server; Your games from the
-folders, marked for Steam with A (never played from the app) and put in Steam; the folder browser; the Log pane and the
-whole log read in the app; the SteamGridDB key; the version and the icons are where the checks expect them."""
+with X pressed twice; the system modules put in Games\\PS4\\Modules taken in by themselves; the packages put in the
+app's Games\\PS4 folder unpacked from Your games (Extract PKG, with the synthetic package), a game and its update beside
+it, each package deleted after; a game removed; the Settings pane's rows, in tabs, step through their values in
+config.json, never while shadPS4 runs; the shadNet pane's rows and field pages, the account kept in shadPS4's files,
+created and tried on a fake server; Your games from Games\\PS4 (no folder is chosen), marked for Steam with A (never
+played from the app) and put in Steam; the Log pane and the whole log read in the app; the SteamGridDB key; the
+version and the icons are where the checks expect them."""
 
 from __future__ import annotations
 
@@ -23,11 +24,12 @@ from PyQt6.QtCore import QSettings
 
 from bc250_core import portable
 from bc250_core.gamepad import Gamepad
+from bc250_core.platform import private
 from bc250_core.portable import BACK, EXIT, VIEW
 from bc250_core.portable import INFO as MENU_INFO
 from conftest import FakeShadNet, fake_install, make_game, write_shad_files
 from shadps4_manager import APP_ID, APP_NAME, EXE_NAME, INFO, LOGO_PATH, ROOT, __version__, emulator, shortcuts, userdata
-from shadps4_manager.main_window import NO_STEAM, NOT_THE_GAMES, NOTHING_TO_CHANGE, OPEN_A_FOLDER, MainWindow
+from shadps4_manager.main_window import NO_STEAM, NOTHING_TO_CHANGE, MainWindow
 
 
 class FakePad:
@@ -51,8 +53,8 @@ def wait_for(qapp, predicate, seconds=10.0):
 
 def make(qapp, home=None, install=fake_install, running=lambda home: False, **more):
     more.setdefault("steam_dir", None)                  # never the real Steam
+    more.setdefault("user_home", Path(tempfile.mkdtemp()) / "me")   # never the real Games\\PS4
     more.setdefault("drives", lambda: [])
-    more.setdefault("roots", lambda: [])
     more.setdefault("runtime_missing", lambda: [])
     more.setdefault("settings", QSettings(str(Path(tempfile.mkdtemp()) / "app.ini"),
                                           QSettings.Format.IniFormat))   # never Windows' registry
@@ -87,7 +89,7 @@ def test_the_window_opens_with_the_suites_header(qapp):
     window = make(qapp)
     assert window.header.title.text() == APP_NAME and window.header.version.text() == __version__
     assert re.fullmatch(r"82%  \|  \w+day \d\d/\d\d/\d{4}  \|  \d\d:\d\d", window.header.status.text())
-    assert window.legend.items == [("A", "Install"), ("RB", "Packages"), MENU_INFO, EXIT]   # on a card: no Back
+    assert window.legend.items == [("A", "Install"), MENU_INFO, EXIT]   # on a card: no Back
     assert no_pills(window)
     window.close()
 
@@ -137,8 +139,7 @@ def test_nothing_is_installed_before_a(qapp, tmp_path):
     assert dict(window.rows())["Installed"] == "not installed" and dict(window.rows())["System modules"] == "0 of 24"
     window.on_action("x")                                       # X Remove: says why, nothing happens
     assert "nothing to remove" in window.status.text() and calls == []
-    window.on_action("previous")                                # LB Modules: shadPS4 first
-    assert window.status.text().startswith("Install shadPS4 first") and window.panes.currentWidget() is window.pane
+    assert ("LB", "Modules") not in window.legend.items         # no browsing (owner, 30-10-2026)
     window.close()
 
 
@@ -150,7 +151,7 @@ def test_a_installs_off_the_windows_thread_and_counts_the_megabytes(qapp, tmp_pa
     assert window.busy
     window.refresh()
     assert window.status.text() == f"Downloading shadPS4 {emulator.VERSION}… 12 of 32 MB"
-    assert ("A", "Install") not in window.legend.items and ("RB", "Packages") not in window.legend.items
+    assert ("A", "Install") not in window.legend.items
     closed = []
     monkeypatch.setattr(window, "close", lambda: closed.append(True))
     window.on_action("view")                                    # Exit asks first while it downloads
@@ -159,7 +160,7 @@ def test_a_installs_off_the_windows_thread_and_counts_the_megabytes(qapp, tmp_pa
     gate.set()
     assert wait_for(qapp, lambda: not window.busy)
     assert window.status.text() == f"shadPS4 {emulator.VERSION} is installed."
-    assert window.legend.items == [("X", "Remove shadPS4"), ("LB", "Modules"), ("RB", "Packages"), MENU_INFO, EXIT]
+    assert window.legend.items == [("X", "Remove shadPS4"), MENU_INFO, EXIT]
     hotkeys = (emulator.user_folder(tmp_path / "emulator") / "input_config" / "global.ini").read_text()
     assert "hotkey_quit = back, options" in hotkeys                 # View + Menu: set before its first start
     window.on_action("view")
@@ -185,8 +186,7 @@ def test_update_and_remove_with_x_pressed_twice(qapp, tmp_path):
     save.parent.mkdir(parents=True)
     save.write_bytes(b"x")
     window = make(qapp, home)
-    assert window.legend.items == [("X", "Remove shadPS4"), ("Y", "Update"), ("LB", "Modules"), ("RB", "Packages"),
-                                   MENU_INFO, EXIT]
+    assert window.legend.items == [("X", "Remove shadPS4"), ("Y", "Update"), MENU_INFO, EXIT]
     assert window.status.text() == f"This app installs shadPS4 {emulator.VERSION}: the Y button updates it."
     window.act("y")
     assert wait_for(qapp, lambda: not window.busy) and emulator.installed(home) == emulator.VERSION
@@ -221,120 +221,39 @@ def test_the_runtime_and_the_modules_are_asked_for(qapp, tmp_path):
     window = make(qapp, home, runtime_missing=lambda: ["msvcp140_atomic_wait.dll"])
     assert window.status.text().startswith("shadPS4 needs Microsoft's Visual C++ runtime (msvcp140_atomic_wait.dll")
     window.close()
-    window = make(qapp, home)
-    assert window.status.text() == ("Some games need system modules from your own PS4: the LB button copies them "
-                                    "into shadPS4.")
+    window = make(qapp, home, user_home=tmp_path / "me")
+    assert window.status.text() == ("Some games need system modules from your own PS4: put them in "
+                                    f"{private(tmp_path / 'me' / 'Games' / 'PS4' / 'Modules')}, and the app copies "
+                                    "them into shadPS4.")
     window.close()
 
 
-def test_the_system_modules_are_copied_from_a_folder_found_in_the_browser(qapp, tmp_path, monkeypatch):
+def test_the_system_modules_put_in_the_modules_folder_are_taken_in(qapp, tmp_path, monkeypatch):
+    r"""The system modules are put in Games\PS4\Modules (owner, 30-10-2026: no browsing, the app takes care of them):
+    copied into shadPS4 when the app opens and when the shadPS4 card gets the focus, the new or changed ones only."""
     home = tmp_path / "emulator"
     fake_install(home)
     user = tmp_path / "me"
-    dump = user / "Downloads" / "ps4-modules"
+    dump = user / "Games" / "PS4" / "Modules"
     dump.mkdir(parents=True)
     for name in (*userdata.NEEDED[:20], "libSceNgs2.sprx"):
         (dump / name).write_bytes(b"sprx")
     (dump / "notes.txt").write_text("")
     window = make(qapp, home, user_home=user)
     monkeypatch.setattr(window, "isActiveWindow", lambda: True)
-    window.on_action("previous")                                # LB Modules
-    assert window.panes.currentWidget() is window.browse_pane and window.browser.path == user / "Downloads"
-    assert window.browse_pane.heading.text() == "Choose the system modules"
-    assert window.legend.items == [("A", "Open"), ("X", "Copy from this folder"), MENU_INFO, BACK, EXIT]
-    window.browse_pane.list.pills[f"dir:{dump}"].click()        # into the folder: the .sprx files, not the notes
-    assert len([k for k in window.browse_pane.list.pills if k.startswith("file:")]) == 21
-    window.on_action("x")                                       # X: copy the open folder's
-    assert window.panes.currentWidget() is window.pane
-    assert window.status.text() == ("21 system module(s) copied into shadPS4: 20 of the 24 it cannot do without are "
-                                    "there now.")
+    assert window.status.text() == ("21 system module(s) taken from the Modules folder: 20 of the 24 shadPS4 cannot do "
+                                    "without are there now.")
     assert dict(window.rows())["System modules"] == "20 of 24"
-    assert (emulator.user_folder(home) / "sys_modules" / "libSceNgs2.sprx").is_file()
-    window.close()
-
-
-def test_a_package_is_unpacked_where_it_is_told(qapp, tmp_path, monkeypatch, built_pkg):
-    """RB Packages: the browser showing the .pkg files; A on one lists the places, the game folders first; A on a
-    place unpacks it there as the window's job, the files counted, and the place becomes a game folder."""
-    home = tmp_path / "emulator"
-    ready(home)
-    user = tmp_path / "me"
-    (user / "Downloads").mkdir(parents=True)
-    (user / "Games").mkdir()
-    package = user / "Downloads" / "game.pkg"
-    package.write_bytes(built_pkg.path.read_bytes())
-    gate = threading.Event()
-    from shadps4_manager import extract
-
-    def unpack(*args, **kwargs):
-        gate.wait(10)
-        return extract.unpack(*args, **kwargs)
-    window = make(qapp, home, user_home=user, unpack=unpack)
-    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
-    window.on_action("next")                                    # RB Packages
-    assert window.panes.currentWidget() is window.browse_pane and window.browse_pane.heading.text() == "Choose a package"
-    assert window.legend.items == [("A", "Open"), MENU_INFO, BACK, EXIT]
-    window.browse_pane.list.pills[f"file:{package}"].click()    # A on the package: where should it go?
-    assert window.browse_pane.heading.text() == "Unpack the game"
-    assert window.browse_pane.summary.text() == f"Synthetic Test Title ({built_pkg.title_id}): where should it go?"
-    assert list(window.browse_pane.list.pills) == [str(user / "Games"), str(user / "Downloads")]
-    assert window.legend.items == [("A", "Unpack here"), MENU_INFO, BACK, EXIT]
-    window.on_action("back")                                    # B: back to the packages, in Downloads
-    assert window.browse_pane.heading.text() == "Choose a package" and window.browser.path == user / "Downloads"
-    window.browse_pane.list.pills[f"file:{package}"].click()
-    window.browse_pane.list.pills[str(user / "Games")].click()  # A on Games: it unpacks
-    assert window.busy and window.panes.currentWidget() is window.pane
-    assert window.status.text().startswith("Unpacking Synthetic Test Title…")
-    closed = []
-    monkeypatch.setattr(window, "close", lambda: closed.append(True))
-    window.on_action("view")
-    assert closed == [] and "the unpacking stops" in window.status.text()
-    window._confirm_over()
-    gate.set()
-    assert wait_for(qapp, lambda: not window.busy)
-    assert window.status.text() == f"Synthetic Test Title is unpacked into {built_pkg.title_id}, in Games."
-    assert (user / "Games" / built_pkg.title_id / "eboot.bin").read_bytes() == built_pkg.expected_files["eboot.bin"]
+    modules = emulator.user_folder(home) / "sys_modules"
+    assert (modules / "libSceNgs2.sprx").is_file() and not (modules / "notes.txt").exists()
+    for name in userdata.NEEDED[20:]:                           # the rest, put in while the app is open
+        (dump / name).write_bytes(b"sprx")
     window.games_card.setFocus()
+    window.shadps4_card.setFocus()                              # the card again: they are taken in
     qapp.processEvents()
-    assert [p.label.text() for p in window.games_pane.list.pills.values()] == [
-        f"Synthetic Test Title  ·  {built_pkg.title_id}"]       # Games is a game folder now
-    window.close()
-
-
-def test_an_update_already_there_is_replaced_on_a_second_press(qapp, tmp_path, built_pkg):
-    from pkg_builder import build_pkg, default_tree
-    from shadps4_manager import extract
-    games = tmp_path / "games"
-    games.mkdir()
-    extract.unpack(extract.read_package(built_pkg.path), games)
-    first = build_pkg(tmp_path / "u1.pkg", default_tree(), category="gp", app_ver="01.01")
-    extract.unpack(extract.read_package(first.path), games)
-    second = build_pkg(tmp_path / "u2.pkg", default_tree(), category="gp", app_ver="01.02")
-    window = make(qapp, tmp_path / "emulator", user_home=tmp_path / "me")
-    window.add_folder(games)
-    window.show_browser("package")
-    window.choose_target(second.path)
-    assert window.browse_pane.heading.text() == "Unpack the update"
-    window.browse_pane.list.pills[str(games)].click()
-    assert window.browse_pane.status.text().startswith(f"{built_pkg.title_id}-UPDATE holds an update already")
-    assert window.legend.items[0] == ("A", "Press again") and not window.busy
-    window.browse_pane.list.pills[str(games)].click()
-    assert wait_for(qapp, lambda: not window.busy)
-    update = games / f"{built_pkg.title_id}-UPDATE"
-    assert (update / "eboot.bin").read_bytes() == second.expected_files["eboot.bin"]
-    window.choose_target(built_pkg.path)                        # the game again: its folder is there
-    window.browse_pane.list.pills[str(games)].click()
-    assert window.browse_pane.status.text().startswith(f"{built_pkg.title_id} is in") and not window.busy
-    window.close()
-
-
-def test_a_file_that_is_no_package_is_said(qapp, tmp_path):
-    window = make(qapp, tmp_path / "emulator")
-    fake = tmp_path / "x.pkg"
-    fake.write_bytes(b"nothing")
-    window.show_browser("package")
-    window.choose_target(fake)
-    assert window.browse_pane.status.text() == "x.pkg is not a PS4 package." and window.browsing == "package"
+    assert window.status.text().startswith("4 system module(s) taken from the Modules folder: 24 of the 24")
+    assert dict(window.rows())["System modules"] == "all 24"
+    assert userdata.sync_modules(dump, modules) == []           # nothing new: nothing copied
     window.close()
 
 
@@ -535,7 +454,7 @@ def test_the_window_fits_a_smaller_screen(qapp, tmp_path):
     portable.pin_scale((1097, 617))
     try:
         window = MainWindow(gamepad=Gamepad(source_factory=FakePad), battery=lambda: (82, False), steam_dir=None,
-                            home=tmp_path / "emulator", roots=lambda: [], runtime_missing=lambda: [],
+                            home=tmp_path / "emulator", user_home=tmp_path / "me", runtime_missing=lambda: [],
                             settings=QSettings(str(tmp_path / "app.ini"), QSettings.Format.IniFormat))
         window.resize(1097, 617)
         window.show()
@@ -553,9 +472,7 @@ def test_your_games_are_marked_with_a_and_put_in_steam(qapp, tmp_path, monkeypat
     shad = ready(home)
     (shad / "play_time.txt").write_text("CUSA00900 1:22:47 1792613335\n")
     user = tmp_path / "me"
-    games = user / "Games"
-    bloodborne = make_game(games / "PS4" / "CUSA00900", "Bloodborne", "CUSA00900", pictures=True)
-    (user / "Downloads").mkdir(parents=True)
+    bloodborne = make_game(user / "Games" / "PS4" / "CUSA00900", "Bloodborne", "CUSA00900", pictures=True)
     steam_dir = tmp_path / "Steam"
     (steam_dir / "userdata" / "1" / "config").mkdir(parents=True)
     closed = []
@@ -571,31 +488,24 @@ def test_your_games_are_marked_with_a_and_put_in_steam(qapp, tmp_path, monkeypat
     assert dict(window.rows())["Play time"] == "1 h 22 min"
     window.games_card.setFocus()
     qapp.processEvents()
-    assert window.legend.items == [("A", "Steam mark"), ("Y", "Update Steam"), ("LB", "Folders"),
-                                   ("RB", "Steam artwork"), MENU_INFO, EXIT]
+    assert window.legend.items == [("A", "Steam mark"), ("Y", "Update Steam"), ("LB", "Steam artwork"), MENU_INFO,
+                                   EXIT]
     assert "Press the A button on a game to mark it for Steam" in window.games_pane.info.info
-    assert list(window.games_pane.list.pills) == []                                # no folder yet
-    window.on_action("accept")                                     # into the pane: no game, Open Steam
-    assert window.steam_row.hasFocus()
-    assert window.legend.items == [("A", "Open Steam"), ("Y", "Update Steam"), ("LB", "Folders"),
-                                   ("RB", "Steam artwork"), MENU_INFO, BACK, EXIT]
+    window.on_action("accept")                                     # into the pane
+    window.steam_row.setFocus()
+    qapp.processEvents()
+    assert window.legend.items == [("A", "Open Steam"), ("Y", "Update Steam"), ("LB", "Steam artwork"), MENU_INFO,
+                                   BACK, EXIT]
     window.on_action("accept")
     assert played == ["steam://open/bigpicture"] and window.games_pane.status.text() == "Opening Steam…"
-    window.on_action("previous")                                   # LB Folders: the usual places, and Browse
-    assert window.legend.items == [("A", "Choose"), ("LB", "Games"), ("RB", "Steam artwork"), MENU_INFO, BACK, EXIT]
-    assert window.steam_row.isHidden()                             # Open Steam is above the games only
-    pills = window.games_pane.list.pills
-    assert list(pills) == [f"add:{games}", f"add:{user / 'Downloads'}", "browse"]
-    pills[f"add:{games}"].click()
-    assert "1 game(s) in it" in window.games_pane.status.text()
-    window.on_action("back")                                       # B on the folders: the games
-    pills = window.games_pane.list.pills
+    pills = window.games_pane.list.pills                           # the game in Games\PS4: no folder chosen
     assert [pill.label.text() for pill in pills.values()] == ["Bloodborne  ·  CUSA00900  ·  1 h 22 min"]
     window.legend.entries["Y"].pressed.emit()                      # a tap on Y Update Steam: nothing to change yet
     assert window.games_pane.status.text() == NOTHING_TO_CHANGE
     pills[str(bloodborne)].setFocus()
     qapp.processEvents()
-    assert ("X", "Play") in window.legend.items and not window.steam_row.isHidden()
+    assert ("X", "Play") in window.legend.items
+    assert ("RB", "Remove game") in window.legend.items
     window.on_action("x")                                          # X: not in Steam yet
     assert window.games_pane.status.text() == ("Bloodborne is not in Steam yet: A marks it, then Y Update Steam "
                                                "puts it there.") and len(played) == 1
@@ -615,13 +525,11 @@ def test_your_games_are_marked_with_a_and_put_in_steam(qapp, tmp_path, monkeypat
 
 
 def test_update_steam_needs_shadps4(qapp, tmp_path, monkeypatch):
-    folder = tmp_path / "games"
-    make_game(folder / "A", "A", "CUSA00001")
+    make_game(tmp_path / "me" / "Games" / "PS4" / "A", "A", "CUSA00001")
     steam_dir = tmp_path / "Steam"
     (steam_dir / "userdata" / "1" / "config").mkdir(parents=True)
     window = make(qapp, tmp_path / "emulator", steam_dir=steam_dir, user_home=tmp_path / "me")
     monkeypatch.setattr(window, "isActiveWindow", lambda: True)
-    window.add_folder(folder)
     window.games_card.setFocus()
     window.games_pane.list.first().setFocus()
     qapp.processEvents()
@@ -631,49 +539,11 @@ def test_update_steam_needs_shadps4(qapp, tmp_path, monkeypatch):
     window.close()
 
 
-def test_the_folder_browser_goes_by_the_controller(qapp, tmp_path, monkeypatch):
-    """Windows' own folder window cannot be used with the controller (owner, 29-10-2026): the app's browser lists the
-    places and the folders; A opens one, X adds the open folder, B goes up and, from the places, back."""
-    user = tmp_path / "me"
-    target = user / "Games" / "PS4"
-    make_game(target / "CUSA00900", "Bloodborne", "CUSA00900")
-    card = tmp_path / "E"
-    (card / "roms").mkdir(parents=True)
-    window = make(qapp, tmp_path / "emulator", user_home=user, roots=lambda: [card])
-    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
-    window.games_card.setFocus()
-    window.on_action("previous")                                   # LB Folders
-    window.games_pane.list.pills["browse"].click()
-    assert window.panes.currentWidget() is window.browse_pane
-    assert window.legend.items == [("A", "Open"), ("X", "Add this folder"), MENU_INFO, BACK, EXIT]
-    rows = window.browse_pane.list.pills
-    assert list(rows) == [f"dir:{user / 'Games'}", f"dir:{card}"]
-    window.on_action("x")                                          # nothing open yet: says how
-    assert window.browse_pane.status.text() == OPEN_A_FOLDER
-    rows[f"dir:{user / 'Games'}"].setFocus()
-    window.on_action("accept")                                     # A opens it
-    assert window.browser.path == user / "Games" and list(window.browse_pane.list.pills)[1] == f"dir:{target}"
-    window.on_action("back")                                       # B: up, to the places
-    assert window.browser.path is None and window.panes.currentWidget() is window.browse_pane
-    window.browse_pane.list.pills[f"dir:{user / 'Games'}"].click()
-    window.browse_pane.list.pills[f"dir:{target}"].click()
-    window.on_action("x")                                          # X: this folder
-    assert window.panes.currentWidget() is window.games_pane and window.games_view == "folders"
-    assert f"folder:{target}" in window.games_pane.list.pills and "1 game(s) in it" in window.games_pane.status.text()
-    window.games_pane.list.pills["browse"].click()                 # again: where it was left (owner, 29-10-2026)
-    assert window.browser.path == target
-    window.on_action("back")                                       # B: up, Games, a place
-    window.on_action("back")                                       # the places
-    window.on_action("back")                                       # B at the places: back to the folders
-    assert window.panes.currentWidget() is window.games_pane and window.browser is None
-    window.close()
-
-
 def test_a_game_written_but_not_read_back_is_said_and_logged(qapp, tmp_path, monkeypatch):
     from shadps4_manager import library
     home = tmp_path / "emulator"
     ready(home)
-    make_game(tmp_path / "me" / "Games" / "A", "A")
+    make_game(tmp_path / "me" / "Games" / "PS4" / "A", "A")
     steam_dir = tmp_path / "Steam"
     (steam_dir / "userdata" / "1" / "config").mkdir(parents=True)
     monkeypatch.setattr(library, "update_steam", lambda *a, **k: (True, "1 game(s) in Steam.", {}))
@@ -681,7 +551,6 @@ def test_a_game_written_but_not_read_back_is_said_and_logged(qapp, tmp_path, mon
     monkeypatch.setattr(window, "isActiveWindow", lambda: True)
     logged = []
     monkeypatch.setattr(window.log, "error", lambda text: logged.append(text))
-    window.add_folder(tmp_path / "me" / "Games")
     window.games_card.setFocus()
     window.games_pane.list.first().setFocus()
     qapp.processEvents()
@@ -690,21 +559,6 @@ def test_a_game_written_but_not_read_back_is_said_and_logged(qapp, tmp_path, mon
     assert wait_for(qapp, lambda: not window.busy)
     assert "Read back from Steam's file, 0 of the 1 game(s) are there: not A" in window.games_pane.status.text()
     assert any("reading Steam's file back finds 0" in text for text in logged) and window.in_steam == {}
-    window.close()
-
-
-def test_a_folder_is_taken_off_the_list_with_a_second_press(qapp, tmp_path):
-    folder = tmp_path / "games"
-    make_game(folder / "A", "A")
-    window = make(qapp, tmp_path / "emulator", user_home=tmp_path / "me")
-    window.add_folder(folder)
-    window.toggle_folders()
-    key = f"folder:{folder}"
-    window.games_pane.list.pills[key].click()
-    assert window.games_pane.list.pills[key].label.text() == "Press A again to take it off the list"
-    window.games_pane.list.pills[key].click()
-    assert key not in window.games_pane.list.pills and (folder / "A" / "eboot.bin").is_file()
-    assert "no longer a game folder" in window.games_pane.status.text()
     window.close()
 
 
@@ -721,7 +575,7 @@ def test_the_log_is_read_in_the_app(qapp, tmp_path, monkeypatch):
     window.log_card.setFocus()
     qapp.processEvents()
     texts = [label.text() for label in window.log_pane.findChildren(type(window.status))]
-    assert "System modules" in texts and "all 24" in texts and "Game folders" in texts
+    assert "System modules" in texts and "all 24" in texts and "Games" in texts
     lines = window.log_pane.lines
     assert lines.toPlainText().splitlines() == [f"line {n}" for n in range(288, 300)]
     assert lines.focusPolicy() == portable.Qt.FocusPolicy.NoFocus                 # the d-pad never lands on it
@@ -744,7 +598,8 @@ def test_the_log_is_read_in_the_app(qapp, tmp_path, monkeypatch):
 def test_the_steamgriddb_key_is_pasted_saved_and_removed(qapp, tmp_path, monkeypatch):
     r"""The BC250 app's Covers… key, as PCSX2 Manager has it on a page: one key for the suite in
     %APPDATA%\windows-portable-suite\steamgriddb-key, X Paste from the clipboard, A Save, Y Remove key with a second
-    press, B back without saving, the page on RB."""
+    press, B back without saving, the page on LB on Your games (owner, 30-10-2026: RB on a game removes it, and
+    there are no folders to show)."""
     from bc250_core import covers
     from PyQt6.QtGui import QGuiApplication
     from shadps4_manager import library
@@ -754,7 +609,9 @@ def test_the_steamgriddb_key_is_pasted_saved_and_removed(qapp, tmp_path, monkeyp
     monkeypatch.setattr(window, "isActiveWindow", lambda: True)
     window.games_card.setFocus()
     qapp.processEvents()
-    window.on_action("next")                                    # RB Steam artwork
+    window.on_action("next")                                    # RB on the games: no game, nothing
+    assert window.panes.currentWidget() is window.games_pane
+    window.on_action("previous")                                # LB Steam artwork
     pane = window.key_pane
     assert window.panes.currentWidget() is pane and pane.field.hasFocus()
     assert window.legend.items == [("A", "Save"), ("X", "Paste"), ("Y", "Remove key"), BACK, EXIT]
@@ -766,12 +623,12 @@ def test_the_steamgriddb_key_is_pasted_saved_and_removed(qapp, tmp_path, monkeyp
     assert pane.field.text() == "0123456789abcdef0123456789abcdef"
     window.on_action("back")                                    # B: back, nothing saved
     assert window.panes.currentWidget() is window.games_pane and not key_file.exists()
-    window.legend.entries["RB"].pressed.emit()                  # a tap on RB Steam artwork
+    window.legend.entries["LB"].pressed.emit()                  # a tap on LB Steam artwork
     window.key_pane.field.setText("0123456789abcdef0123456789abcdef")
     window.on_action("accept")                                  # A Save
     assert covers.read_key(key_file) == "0123456789abcdef0123456789abcdef"
     assert window.games_pane.status.text() == "The SteamGridDB key was changed." and pane.field.text() == ""
-    window.on_action("next")
+    window.on_action("previous")
     window.on_action("y")
     assert window.legend.items[2] == ("Y", "Press again") and key_file.exists()
     window.legend.entries["Y"].pressed.emit()                   # the second press, as a tap
@@ -780,16 +637,10 @@ def test_the_steamgriddb_key_is_pasted_saved_and_removed(qapp, tmp_path, monkeyp
 
 
 def test_y_on_your_games_always_says_what_it_did(qapp, tmp_path, monkeypatch):
-    folder = tmp_path / "games"
-    make_game(folder / "A", "A")
+    make_game(tmp_path / "me" / "Games" / "PS4" / "A", "A")
     window = make(qapp, tmp_path / "emulator", user_home=tmp_path / "me")
     monkeypatch.setattr(window, "isActiveWindow", lambda: True)
-    window.add_folder(folder)
     window.games_card.setFocus()
-    window.toggle_folders()
-    window.on_action("y")                                          # the folders: Update Steam is the games'
-    assert window.games_pane.status.text() == NOT_THE_GAMES
-    window.toggle_folders()
     window.games_pane.list.first().setFocus()
     qapp.processEvents()
     window.on_action("accept")
@@ -820,21 +671,135 @@ def test_menu_shows_the_panes_information_and_the_icon_is_touch_only(qapp, tmp_p
 
 
 def test_no_path_on_the_screen_shows_the_users_name(qapp, tmp_path):
-    """The privacy rule (owner, 29-10-2026): the folder, the game folders and the places to add show the user's
-    folders by their variable (%LOCALAPPDATA%, %USERPROFILE%)."""
+    """The privacy rule (owner, 29-10-2026): the folder, Games\\PS4 and its Modules folder show the user's folders by
+    their variable (%LOCALAPPDATA%, %USERPROFILE%)."""
     import os
     user = Path(os.environ.get("USERPROFILE") or Path.home())
     games = user / "AppData" / "Local" / "Temp" / f"wps-private-test-{os.getpid()}"
     (games / "Games").mkdir(parents=True, exist_ok=True)
     try:
         window = make(qapp, tmp_path / "emulator", user_home=games)
-        window.add_folder(games / "Games")
-        window.toggle_folders()
-        shown = [value for _label, value in window.rows()] + [pill.label.text() for pill in
-                                                              window.games_pane.list.pills.values()]
+        window.refresh_log()
+        shown = [value for _label, value in window.rows()] + [label.text() for label in
+                                                              window.log_pane.findChildren(type(window.status))]
         assert shown and not any(str(user).lower() in text.replace("​", "").lower() for text in shown)
         assert any("%LOCALAPPDATA%" in text or "%USERPROFILE%" in text for text in shown)
         window.close()
     finally:
         import shutil
         shutil.rmtree(games, ignore_errors=True)
+
+
+def test_a_game_is_removed_from_steam_and_the_disk(qapp, tmp_path, monkeypatch):
+    """RB Remove game (owner, 30-10-2026: Lumines no longer plays on 0.20.0): the first press asks, naming the
+    folders, and lapses; the second takes the game out of Steam and deletes its folder with its update beside it, off
+    the window's thread; the saves stay. A game that is a game folder itself is never deleted."""
+    home = tmp_path / "emulator"
+    shad = ready(home)
+    games = tmp_path / "me" / "Games" / "PS4"
+    lumines = make_game(games / "CUSA11624", "LUMINES REMASTERED", "CUSA11624")
+    make_game(games / "CUSA11624-UPDATE", "LUMINES REMASTERED", "CUSA11624", "01.05", category="gp")
+    (lumines.parent / "sce_sys" / "param.sfo").chmod(0o444)                         # read-only goes too
+    other = make_game(games / "CUSA03865", "Galaga", "CUSA03865")
+    (shad / "savedata" / "1" / "CUSA11624").mkdir(parents=True)
+    steam_dir = tmp_path / "Steam"
+    (steam_dir / "userdata" / "1" / "config").mkdir(parents=True)
+    closed = []
+
+    def with_steam_closed(change):
+        closed.append(True)
+        change()
+        return True
+    card = tmp_path / "E"
+    loose = make_game(card / "Games" / "PS4", "Alone", "CUSA00002")    # a game that is a game folder itself
+    window = make(qapp, home, steam_dir=steam_dir, steam_closed=with_steam_closed, user_home=tmp_path / "me",
+                  drives=lambda: [card])
+    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
+    window.mark_game(str(lumines))
+    window.mark_game(str(other))
+    window.update_steam()
+    assert wait_for(qapp, lambda: not window.busy) and len(shortcuts.in_steam(steam_dir)) == 2
+    window.games_card.setFocus()
+    window.on_action("accept")
+    window.games_pane.list.pills[str(lumines)].setFocus()
+    qapp.processEvents()
+    window.on_action("next")                                    # RB: it asks first
+    assert window.legend.items[-4] == ("RB", "Press again") and lumines.exists()
+    assert window.games_pane.status.text() == ("Press the RB button again to delete CUSA11624, CUSA11624-UPDATE from "
+                                               "the disk and take the game out of Steam. Its saves stay in shadPS4's "
+                                               "folder.")
+    assert window.games_pane.list.pills[str(lumines)].label.text().startswith("Press RB again")
+    window._confirm_over()                                      # five seconds later: asked no more
+    assert window.games_pane.status.text() == "" and window.legend.items[-4] == ("RB", "Remove game")
+    window.games_pane.list.pills[str(lumines)].setFocus()
+    window.on_action("next")
+    window.legend.entries["RB"].pressed.emit()                  # the second press, as a tap
+    assert wait_for(qapp, lambda: not window.busy)
+    assert not (games / "CUSA11624").exists() and not (games / "CUSA11624-UPDATE").exists() and other.exists()
+    assert shortcuts.in_steam(steam_dir) == {str(other): "[PS4] Galaga"} and len(closed) == 2
+    assert window.games_pane.status.text() == ("LUMINES REMASTERED is removed: CUSA11624, CUSA11624-UPDATE deleted, "
+                                               "its shortcut taken out of Steam. Its saves stay in shadPS4's folder.")
+    assert (shad / "savedata" / "1" / "CUSA11624").is_dir()
+    assert list(window.games_pane.list.pills) == [str(loose), str(other)]
+    window.games_pane.list.pills[str(loose)].setFocus()
+    window.on_action("next")
+    assert window.games_pane.status.text().startswith("Alone is in PS4, one of the app's game folders itself")
+    assert loose.exists() and not window.busy
+    window.close()
+
+
+def test_the_packages_in_games_ps4_are_unpacked_from_your_games(qapp, tmp_path, monkeypatch, built_pkg):
+    r"""The packages are dropped in the app's own Games\PS4 folder (owner, 30-10-2026: no browsing, the manager takes
+    care of them): each a short row, PKG or PKG update; an update alone waits for its game; X Unpack all unpacks the
+    game into its ID's folder, then its update beside it, the files counted on the pane's line, and deletes each
+    package."""
+    from pkg_builder import build_pkg, default_tree
+    home = tmp_path / "emulator"
+    ready(home)
+    user = tmp_path / "me"
+    own = user / "Games" / "PS4"
+    gate = threading.Event()
+    from shadps4_manager import extract
+
+    def unpack(*args, **kwargs):
+        gate.wait(10)
+        return extract.unpack(*args, **kwargs)
+    window = make(qapp, home, user_home=user, unpack=unpack)
+    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
+    assert own.is_dir()                                         # made by the app
+    window.games_card.setFocus()
+    window.on_action("accept")
+    assert ("X", "Unpack all") not in window.legend.items     # on Open Steam: nothing waits
+    game = own / "galaga.pkg"
+    game.write_bytes(built_pkg.path.read_bytes())
+    update = build_pkg(own / "update.pkg", default_tree(), category="gp", app_ver="01.01")
+    window.refresh_games()
+    assert window.games_pane.summary.text().startswith("0 game(s) in 1 folder(s), 2 to unpack")
+    rows = window.games_pane.list.pills
+    title_id = built_pkg.title_id
+    assert [p.label.text() for p in rows.values()] == [f"Synthetic Test Title  ·  {title_id}  ·  PKG",
+                                                       f"Synthetic Test Title  ·  {title_id}  ·  PKG"]
+    rows[f"pkg:{update.path}"].setFocus()
+    qapp.processEvents()
+    assert window.legend.items[:4] == [("A", "Unpack"), ("X", "Unpack all"), ("Y", "Update Steam"),
+                                       ("LB", "Steam artwork")]
+    window.on_action("accept")                                  # A on the update alone: its game first
+    assert window.games_pane.status.text().startswith("Synthetic Test Title is an update: unpack its game first")
+    window.on_action("x")                                       # X Unpack all
+    assert window.busy and window.panes.currentWidget() is window.games_pane
+    gate.set()
+    assert wait_for(qapp, lambda: not window.busy)
+    assert window.games_pane.status.text() == "2 of 2 package(s) unpacked, each package deleted after."
+    assert (own / title_id / "eboot.bin").read_bytes() == built_pkg.expected_files["eboot.bin"]
+    assert (own / f"{title_id}-UPDATE" / "eboot.bin").read_bytes() == update.expected_files["eboot.bin"]
+    assert not game.exists() and not update.path.exists()
+    assert [p.label.text() for p in window.games_pane.list.pills.values()] == [f"Synthetic Test Title  ·  {title_id}"]
+    newer = build_pkg(own / "newer.pkg", default_tree(), category="gp", app_ver="01.02")
+    window.refresh_games()
+    assert window.games_pane.list.pills[f"pkg:{newer.path}"].label.text().endswith("·  PKG update")
+    window.games_pane.list.pills[f"pkg:{newer.path}"].setFocus()
+    window.on_action("accept")                                  # A: the newer update replaces the one there
+    assert wait_for(qapp, lambda: not window.busy)
+    assert window.games_pane.status.text() == "Synthetic Test Title is unpacked, and its package is deleted."
+    assert (own / f"{title_id}-UPDATE" / "eboot.bin").read_bytes() == newer.expected_files["eboot.bin"]
+    window.close()

@@ -40,7 +40,7 @@ OPTIONAL = (
     "libSceNgs2.sprx", "libSceAvPlayer.sprx", "libSceRtc.sprx", "libSceJpegEnc.sprx", "libScePngDec.sprx",
     "libScePngEnc.sprx", "libSceFont.sprx", "libSceFontFt.sprx", "libSceRudp.sprx", "libSceSystemGesture.sprx",
 )
-MODULE_SUFFIXES = (".sprx",)            # what the browser shows when the modules are looked for
+MODULE_SUFFIXES = (".sprx",)            # the system modules, as the Modules folder holds them
 
 
 def read_config(home: Path) -> dict:
@@ -109,6 +109,32 @@ def install_modules(source: Path, target: Path) -> list[str]:
         destination = target / module.name
         if not (destination.exists() and destination.samefile(module)):
             shutil.copy2(module, destination)
+        copied.append(module.name)
+    return copied
+
+
+def sync_modules(source: Path, target: Path) -> list[str]:
+    """The system modules (.sprx) put in *source*, the app's Modules folder (owner, 30-10-2026: drop them there, the
+    app takes care of them), copied into shadPS4's module folder *target* when they are new or changed (another size
+    or time; copy2 keeps the time), so an unchanged folder copies nothing. Returns the names copied, sorted; [] when
+    *source* is missing or empty. OSError when a file cannot be read or written."""
+    try:
+        found = sorted((entry for entry in source.iterdir()
+                        if entry.is_file() and entry.suffix.lower() in MODULE_SUFFIXES),
+                       key=lambda entry: entry.name.casefold())
+    except OSError:
+        return []
+    copied = []
+    for module in found:
+        destination = target / module.name
+        try:
+            there, here = destination.stat(), module.stat()
+            if there.st_size == here.st_size and int(there.st_mtime) == int(here.st_mtime):
+                continue
+        except OSError:
+            pass
+        target.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(module, destination)
         copied.append(module.name)
     return copied
 

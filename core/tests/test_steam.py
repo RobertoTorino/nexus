@@ -189,7 +189,7 @@ def test_steam_on_windows(tmp_path, monkeypatch):
     assert steam.find_steam() == folder.resolve() and steam.user_folders(folder)
     assert steam.find_steam(tmp_path / "home") is None                  # a home given: the Linux folders below it
     assert steam.shutdown_command() == [str(folder / "steam.exe"), "-shutdown"]
-    assert steam.start_command() == [str(folder / "steam.exe"), "-silent"]
+    assert steam.start_command() == [str(folder / "steam.exe")]        # -silent never signed in on Windows
     names = []
     monkeypatch.setattr(steam, "_windows_running", lambda name: names.append(name) or True)
     assert steam.steam_running() and names == ["steam.exe"]
@@ -211,3 +211,27 @@ def test_a_shortcut_is_started_by_its_game_id(monkeypatch):
     monkeypatch.setattr(steam, "_run", ran.append)
     steam.open_url(steam.OPEN_URL)
     assert ran == [["xdg-open", "steam://open/bigpicture"]]
+
+
+def test_on_windows_a_steam_not_running_is_started_plainly_first(monkeypatch, tmp_path):
+    """A steam:// address as Steam's first command never signed in (the owner's Ally, 30-10-2026): a Steam that does
+    not run is started as a plain steam.exe, and the address follows once it is signed in; a running one gets it at
+    once."""
+    monkeypatch.setattr(steam, "WINDOWS", True)
+    monkeypatch.setattr(steam, "windows_steam", lambda: tmp_path / "Steam")
+    given, ran, later = [], [], []
+    monkeypatch.setattr(steam, "_startfile", given.append)
+    steam.open_url(steam.OPEN_URL, run=ran.append, running=lambda: True, later=later.append)
+    assert given == [steam.OPEN_URL] and ran == [] and later == []
+    steam.open_url(steam.OPEN_URL, run=ran.append, running=lambda: False, later=later.append)
+    assert ran == [[str(tmp_path / "Steam" / "steam.exe")]] and later == [steam.OPEN_URL] and len(given) == 1
+    answers, slept = iter([False, False, True]), []
+    assert steam.hand_over("steam://x", signed=lambda: next(answers), give=given.append, sleep=slept.append)
+    assert given[-1] == "steam://x" and slept == [0.5, 0.5]
+    assert not steam.hand_over("steam://y", signed=lambda: False, give=given.append, timeout=1.0, sleep=lambda s: None)
+    assert given[-1] == "steam://x"                            # never signed in: nothing given
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="Windows' registry")
+def test_signed_in_reads_the_registry_without_failing():
+    assert steam.signed_in() in (True, False)

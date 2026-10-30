@@ -8,7 +8,9 @@
 # By hand:                                     tools/pre-push.sh [BASE]        (BASE: default origin/main)
 #
 # BC250_PRE_PUSH=full also runs tools/ci-local.sh (Linux); BC250_PRE_PUSH=off skips the hook, as git push --no-verify
-# does. The checks read the working tree, as CI reads the commit: commit everything before the push.
+# does. The checks read the commit that is pushed, as CI does, in a checkout of it of their own (git worktree, a second
+# or two): what is not committed never makes a push pass (owner, 30-10-2026: the lost CHANGELOG entry, put back but not
+# committed, let the push through, and CI failed on it).
 set -euo pipefail
 ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)
 cd "$ROOT"
@@ -20,7 +22,7 @@ info() { printf '\033[1;35mpre-push:\033[0m %s\n' "$1"; }
 [ "${BC250_PRE_PUSH:-}" = off ] && exit 0
 
 python=""
-for candidate in .venv-linux/bin/python .venv-windows/Scripts/python.exe python3 py; do
+for candidate in "$ROOT/.venv-linux/bin/python" "$ROOT/.venv-windows/Scripts/python.exe" python3 py; do
     # one that runs: Windows has a python3 on PATH that only points at the Microsoft Store
     if "$candidate" -c '' >/dev/null 2>&1; then python=$candidate; break; fi
 done
@@ -43,12 +45,19 @@ fi
 [ ${#pushes[@]} -gt 0 ] || exit 0
 
 failed=0
+checkout=""
+done_with_checkout() {
+    if [ -n "$checkout" ]; then
+        git -C "$ROOT" worktree remove --force "$checkout/tree" >/dev/null 2>&1 || true
+        rm -rf "$checkout"
+        git -C "$ROOT" worktree prune >/dev/null 2>&1 || true
+        checkout=""
+    fi
+}
+trap done_with_checkout EXIT
 for push in "${pushes[@]}"; do
     read -r sha base <<<"$push"
-    if [ "$sha" != "$(git rev-parse HEAD)" ]; then
-        info "${sha:0:7} is not HEAD: the checks read the working tree, so they are skipped for it"
-        continue
-    fi
+    cd "$ROOT"
     # The remote has commits this checkout lacks (pushed from the other machine): git would refuse the push anyway,
     # and the checks below cannot compare with a commit that is not here. Say so, rather than a CHANGELOG error.
     if [ -n "$base" ] && ! git merge-base --is-ancestor "$base" "$sha" 2>/dev/null; then
@@ -56,8 +65,15 @@ for push in "${pushes[@]}"; do
         continue
     fi
     if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
-        info "uncommitted changes: the checks see them, the push does not"
+        info "uncommitted changes stay here: the checks read the commit that is pushed (${sha:0:7})"
     fi
+    done_with_checkout
+    checkout=$(mktemp -d)
+    if ! git worktree add -q --detach "$checkout/tree" "$sha" >/dev/null 2>&1; then
+        fail "${sha:0:7} could not be checked out to check it (git worktree add)"
+        continue
+    fi
+    cd "$checkout/tree"
     # A suite's checks run when this push changes that suite (its folder; the root's copy of apps.toml, portal/, is
     # the suite's without a tag prefix): one suite's checks never hold another suite's push, as its CI and its tags
     # stand apart (owner, 28-10-2026). Core and dev/ are checked always; a new branch (no base) or a suite at the
@@ -92,17 +108,19 @@ for push in "${pushes[@]}"; do
         printf '%s\n' "$out" >&2
         fail "a CHANGELOG lost entries the remote has: put them back below the new ones"
     fi
+    cd "$ROOT"
     missing=$(git ls-tree -r "$sha" | awk '($4 ~ /\.sh$/ || $4 ~ /^tools\/hooks\//) && $1 != "100755" { print $4 }')
     [ -z "$missing" ] || fail "not executable in git (tools/fix-modes.sh, then amend the commit): $(echo "$missing" | tr '\n' ' ')"
     crlf=$(git ls-files --eol | awk '$1 ~ /^i\/(crlf|mixed)/ { print $NF }')
     [ -z "$crlf" ] || fail "CRLF in the index: $(echo "$crlf" | tr '\n' ' ')"
 done
+done_with_checkout
 
 if [ "$failed" = 0 ] && [ "${BC250_PRE_PUSH:-}" = full ]; then
     tools/ci-local.sh || fail "tools/ci-local.sh: a CI job failed (above)"
 fi
 if [ "$failed" != 0 ]; then
-    echo "pre-push: not pushed. CI would fail on the same; fix it, or push anyway with git push --no-verify." >&2
+    echo "pre-push: not pushed. CI would fail on the same: fix it, commit, and push again." >&2
     exit 1
 fi
 info "versions, apps.toml, CHANGELOGs, exec bits and line endings are fine"

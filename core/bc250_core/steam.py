@@ -16,7 +16,8 @@ are. Moved here from BC250 Console Link (14-10-2026), which wrote it first.
 
 On Windows (the Windows Portable Suite's PCSX2 Manager, 29-10-2026) Steam's folder is the one its registry key names
 (HKCU\\Software\\Valve\\Steam, SteamPath; only read), whether it runs is steam.exe in Windows' process list, and it is
-closed and started again with its own steam.exe (-shutdown, -silent). The files are the same."""
+closed and started again with its own steam.exe (-shutdown, then steam.exe as the user starts it). The files are the
+same."""
 
 from __future__ import annotations
 
@@ -144,8 +145,11 @@ def _steam_program() -> str:
 
 
 def start_command() -> list[str]:
+    """Steam started again after with_steam_closed(). On Windows without -silent: a steam.exe -silent never signed in
+    (the owner's Ally, 29-10-2026: three starts by the game managers stayed Logged Off for up to six hours, with no
+    window to sign in from, so steam:// addresses went nowhere), where every plain start signed in."""
     if WINDOWS:
-        return [_steam_program(), "-silent"]
+        return [_steam_program()]
     return ["bazzite-steam" if shutil.which("bazzite-steam") else "steam", "-silent"]
 
 
@@ -165,12 +169,58 @@ def play_url(number: int) -> str:
     return f"steam://rungameid/{((number & 0xFFFFFFFF) << 32) | 0x02000000}"
 
 
-def open_url(url: str) -> None:
-    """A steam:// address handed to Steam: Windows' handler for it (os.startfile), xdg-open elsewhere."""
-    if WINDOWS:
-        os.startfile(url)  # type: ignore[attr-defined]  # noqa: S606 (a steam:// address, never a file)
+SIGN_IN_TIMEOUT = 120.0                 # how long a steam:// address waits for a Steam just started to sign in
+
+
+def signed_in() -> bool:
+    """Whether Steam runs signed in. On Windows Steam keeps its account's number in the registry while it is signed in
+    (HKCU\\Software\\Valve\\Steam\\ActiveProcess, ActiveUser; 0 when none); elsewhere: whether Steam runs."""
+    if not WINDOWS:
+        return steam_running()
+    import winreg
+    try:
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\Valve\Steam\ActiveProcess") as key:
+            return bool(winreg.QueryValueEx(key, "ActiveUser")[0]) and steam_running()
+    except OSError:
+        return False
+
+
+def _startfile(url: str) -> None:
+    os.startfile(url)  # type: ignore[attr-defined]  # noqa: S606 (a steam:// address, never a file)
+
+
+def hand_over(url: str, signed: Callable[[], bool] = signed_in, give: Callable[[str], None] = _startfile,
+              timeout: float = SIGN_IN_TIMEOUT, sleep: Callable[[float], None] = time.sleep) -> bool:
+    """*url* given to Steam once it is signed in (a Steam just started); False when it was not within *timeout*."""
+    waited = 0.0
+    while not signed():
+        if waited >= timeout:
+            return False
+        sleep(0.5)
+        waited += 0.5
+    give(url)
+    return True
+
+
+def open_url(url: str, run: Run | None = None, running: Callable[[], bool] = steam_running,
+             later: Callable[[str], object] | None = None) -> None:
+    """A steam:// address handed to Steam: Windows' handler for it (os.startfile), xdg-open elsewhere. On Windows a
+    Steam that does not run is started first as a plain steam.exe, and the address follows once it is signed in, off
+    the caller's thread (*later*: hand_over on a thread of its own): a Steam started by the address itself never
+    signed in (the owner's Ally, 30-10-2026: steam.exe -- steam://open/bigpicture showed "Updating Steam" and stopped,
+    its login window never made, where a plain steam.exe signed in within seconds)."""
+    run = run or _run
+    if not WINDOWS:
+        run(["xdg-open", url])
+        return
+    if running():
+        _startfile(url)
+        return
+    run(start_command())
+    if later is None:
+        threading.Thread(target=hand_over, args=(url,), name="steam-url", daemon=True).start()
     else:
-        _run(["xdg-open", url])
+        later(url)
 
 
 def _run(command: list[str]) -> None:

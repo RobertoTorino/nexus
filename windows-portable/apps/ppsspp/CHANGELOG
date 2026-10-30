@@ -1,3 +1,13 @@
+Changelog: 30-10-2026 01:30:27
+
+Release 1.0.1.
+
+Changelog: 29-10-2026 23:14:12
+
+Fixed. Update Steam starts Steam again signed in (core's with_steam_closed(): a plain steam.exe on Windows; owner,
+29-10-2026): the steam.exe -silent it started never signed in, so a game's Play and Open Steam did nothing until
+Steam was started by hand. The status line says Steam was started again, signed in.
+
 Changelog: 29-10-2026 21:56:04
 
 Release 1.0.0.

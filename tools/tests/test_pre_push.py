@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """tools/pre-push.sh, git's pre-push hook through tools/hooks/pre-push: CI's quick checks before a push, against what
-the remote has. check_versions.py, check_manifest.py and check_changelogs.py are stubs here that record how they were called."""
+the remote has, on the commit that is pushed (a checkout of its own), never the working tree. check_versions.py,
+check_manifest.py and check_changelogs.py are stubs here that record how they were called (in $CALLS)."""
 
 from __future__ import annotations
 
@@ -20,7 +21,7 @@ pytestmark = pytest.mark.skipif(shutil.which("bash") is None or shutil.which("gi
 
 STUB = """import os, sys
 from pathlib import Path
-with open(Path(__file__).parent.parent / "calls.txt", "a") as f:
+with open(os.environ["CALLS"], "a") as f:
     f.write(Path(__file__).name + " " + " ".join(sys.argv[1:]) + "\\n")
 sys.exit(int(os.environ.get("FAIL_" + Path(__file__).stem.upper(), "0")))
 """
@@ -52,7 +53,7 @@ def repo(tmp_path) -> Path:
 def hook(root: Path, lines: list[str], **env: str) -> subprocess.CompletedProcess:
     """The hook as git runs it: the remote's name and url as arguments, the refs on stdin."""
     return subprocess.run(["bash", "tools/hooks/pre-push", "origin", "url"], cwd=root, input="\n".join(lines) + "\n",
-                          capture_output=True, text=True, env=dict(ENV, **env))
+                          capture_output=True, text=True, env=dict(ENV, CALLS=str(root / "calls.txt"), **env))
 
 
 def calls(root: Path) -> list[str]:
@@ -77,7 +78,8 @@ def test_a_portal_bump_missing_stops_the_push(repo):
     head = git(repo, "rev-parse", "HEAD")
     result = hook(repo, [f"refs/heads/main {head} refs/heads/main {head}"], FAIL_CHECK_MANIFEST="1")
     assert result.returncode == 1
-    assert "Bump portal" in result.stderr and "not pushed" in result.stderr and "--no-verify" in result.stderr
+    assert "Bump portal" in result.stderr and "not pushed" in result.stderr
+    assert "--no-verify" not in result.stderr                   # never offered (owner, 30-10-2026: CI failed after it)
 
 
 def test_a_changelog_that_lost_entries_stops_the_push(repo):
@@ -189,7 +191,45 @@ def test_off_skips_every_check(repo):
 
 def test_by_hand_against_a_base(repo):
     base = git(repo, "rev-parse", "HEAD")
-    result = subprocess.run(["bash", "tools/pre-push.sh", base], cwd=repo, capture_output=True, text=True, env=ENV,
-                            stdin=subprocess.DEVNULL)
+    result = subprocess.run(["bash", "tools/pre-push.sh", base], cwd=repo, capture_output=True, text=True,
+                            env=dict(ENV, CALLS=str(repo / "calls.txt")), stdin=subprocess.DEVNULL)
     assert result.returncode == 0, result.stderr
     assert calls(repo)[-2:] == [f"check_manifest.py --base {base}", f"check_changelogs.py --base {base}"]
+
+
+def test_the_pushed_commit_is_checked_not_the_working_tree(repo):
+    """The push of 29-10-2026 20:59: the lost CHANGELOG entry was put back in the working tree but not committed, the
+    hook read the working tree and let the commit through, and CI failed on it. The checks read the pushed commit."""
+    base = git(repo, "rev-parse", "HEAD")
+    (repo / "CHANGELOG").write_text("old\n")
+    git(repo, "add", "CHANGELOG")
+    git(repo, "commit", "-qm", "history")
+    pushed = git(repo, "rev-parse", "HEAD")
+    (repo / "tools" / "check_changelogs.py").write_text(STUB.replace(
+        'sys.exit(int(os.environ.get("FAIL_" + Path(__file__).stem.upper(), "0")))',
+        'sys.exit(0 if "old" in Path("CHANGELOG").read_text() else 1)'))
+    git(repo, "add", "-A")
+    git(repo, "commit", "-qm", "a check that reads CHANGELOG")
+    (repo / "CHANGELOG").write_text("new\n")                      # the commit loses the entry...
+    git(repo, "commit", "-qam", "lost it")
+    head = git(repo, "rev-parse", "HEAD")
+    (repo / "CHANGELOG").write_text("new\nold\n")                # ...and the working tree has it back, uncommitted
+    result = hook(repo, [f"refs/heads/main {head} refs/heads/main {pushed}"])
+    assert result.returncode == 1 and "CHANGELOG lost entries" in result.stderr
+    assert "uncommitted changes stay here" in result.stdout
+    git(repo, "commit", "-qam", "put back")                       # committed: it passes
+    result = hook(repo, [f"refs/heads/main {git(repo, 'rev-parse', 'HEAD')} refs/heads/main {pushed}"])
+    assert result.returncode == 0, result.stderr
+    assert git(repo, "worktree", "list").count("\n") == 0          # the checkout of the commit is gone again
+    assert base
+
+
+def test_a_branch_that_is_not_head_is_checked_too(repo):
+    """The checks read a checkout of the pushed commit, so another branch than HEAD is checked as well."""
+    git(repo, "branch", "topic")
+    (repo / "x.txt").write_text("x\n")
+    git(repo, "add", "x.txt")
+    git(repo, "commit", "-qm", "on main")
+    topic = git(repo, "rev-parse", "topic")
+    result = hook(repo, [f"refs/heads/topic {topic} refs/heads/topic {ZERO}"], FAIL_CHECK_VERSIONS="1")
+    assert result.returncode == 1 and "check_versions.py" in result.stderr

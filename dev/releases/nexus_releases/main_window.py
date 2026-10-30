@@ -1273,7 +1273,8 @@ class BuildIndicator(Pill):
         if not latest:
             return "No workflow runs on GitHub."
         head = f"{latest[0].sha[:7]} {latest[0].title}"
-        return "\n".join([head, *(f"{r.label}: {r.outcome}" for r in latest), "", "Click to open it on GitHub."])
+        return "\n".join([head, *(f"{r.label}: {'replaced by a later run' if rp.superseded(r, latest) else r.outcome}"
+                                  for r in latest), "", "Click to open it on GitHub."])
 
     def show_state(self, state: str, tooltip: str, unreachable: bool = False, limited: str = "") -> None:
         if limited:
@@ -1302,7 +1303,7 @@ class BuildIndicator(Pill):
             f"in.{sign_in} When none are left, nothing is broken: GitHub answers again after the time shown.")
 
     def announce(self, finished: list[rp.BuildRun]) -> None:
-        failed = [r for r in finished if not r.passed]
+        failed = [r for r in finished if not r.passed and not rp.superseded(r, self.runs)]
         summary = f"GitHub build {'failed' if failed else 'passed'}"
         body = "\n".join(f"{r.label}: {r.outcome}" for r in (failed or finished))
         self.notify(summary, body)
@@ -1322,7 +1323,7 @@ class BuildIndicator(Pill):
 
     def target(self) -> str:
         latest = rp.latest_push(self.runs)
-        pick = next((r for r in latest if r.done and not r.passed), None) or \
+        pick = next((r for r in latest if r.done and not r.passed and not rp.superseded(r, latest)), None) or \
             next((r for r in latest if not r.done), None)
         return pick.url if pick else rp.ACTIONS_URL.format(repo_url=rp.pin_app.REPO_URL)
 

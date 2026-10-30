@@ -1,33 +1,31 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Your games, as RPCS3 Manager and PCSX2 Manager on Windows keep them: the game folders (the app's settings; the BC250
-suite's shadPS4 Manager keeps them in shadPS4's config.json, which only shadPS4's own window reads), the games found
-in them (games.scan), which have a Steam shortcut of this app, and the plan Update Steam carries out: the marked games
-in Steam, the others out, and the shortcuts of games no longer found out too.
-
-On a handheld a folder is mostly one of a few places, so the usual ones are offered as they are (Games, Downloads and
-Documents in your user folder) with every removable drive (an SD card, a USB stick); any other folder is chosen in
-core's browser, made for the controller. Extract PKG offers the same places to unpack a package into (targets). The
-suite's SteamGridDB key and the pictures found are in the suite's folders
-(%APPDATA%\\windows-portable-suite\\steamgriddb-key, the app's covers\\)."""
+"""Your games: the app's own folders (owner, 30-10-2026: the games, the packages and the system modules are put
+there, nothing is browsed to; the BC250 suite's shadPS4 Manager keeps chosen folders in shadPS4's config.json):
+Games\\PS4 in your user folder, made when it is missing, and Games\\PS4 on a removable drive (an SD card, a USB
+stick) that has one (fixed), with Games\\PS4\\Modules for the system modules (modules_home). Then the games found in
+them (games.scan), which have a Steam shortcut of this app, and the plan Update Steam carries out: the marked games
+in Steam, the others out, and the shortcuts of games no longer found out too. The suite's SteamGridDB key and the
+pictures found are in the suite's folders (%APPDATA%\\windows-portable-suite\\steamgriddb-key, the app's covers\\)."""
 
 from __future__ import annotations
 
 import ctypes
 import os
+import shutil
+import stat
 import string
 import sys
 from collections.abc import Callable
 from pathlib import Path
 
-from PyQt6.QtCore import QSettings
-
 from bc250_core import covers, steam
 from bc250_core.platform import suite_config, suite_data
 
 from . import APP_ID, SUITE, shortcuts
-from .games import Game
+from .games import OVERLAYS, Game
 
-FOLDERS_KEY = "games/folders"
+GAMES_HOME = Path("Games") / "PS4"      # the app's own game folder, in the user's folder and on a removable drive
+MODULES = "Modules"                     # the system modules' folder in it
 DRIVE_REMOVABLE = 2                     # GetDriveTypeW
 
 
@@ -38,16 +36,6 @@ def key_file() -> Path:
 
 def covers_home() -> Path:
     return suite_data(SUITE) / APP_ID / "covers"
-
-
-def folders(settings: QSettings) -> list[Path]:
-    stored = settings.value(FOLDERS_KEY, [])
-    stored = [stored] if isinstance(stored, str) else list(stored or [])
-    return [Path(f) for f in stored if f]
-
-
-def set_folders(settings: QSettings, chosen: list[Path]) -> None:
-    settings.setValue(FOLDERS_KEY, [str(f) for f in chosen])
 
 
 def removable_drives() -> list[Path]:
@@ -63,27 +51,21 @@ def removable_drives() -> list[Path]:
     return found
 
 
-def suggested(chosen: list[Path], home: Path | None = None,
-              drives: Callable[[], list[Path]] = removable_drives) -> list[Path]:
-    """The usual places for games that are there and not chosen yet: Games, Downloads and Documents in the user's
-    folder, then each removable drive."""
-    home = home or Path.home()
-    taken = {os.path.normcase(str(f)) for f in chosen}
-    places = [home / "Games", home / "Downloads", home / "Documents", *drives()]
-    return [p for p in places if _is_dir(p) and os.path.normcase(str(p)) not in taken]
+def modules_home(home: Path | None = None) -> Path:
+    """Where the system modules are put: Games\\PS4\\Modules in the user's folder."""
+    return (home or Path.home()) / GAMES_HOME / MODULES
 
 
-def targets(chosen: list[Path], package: Path, home: Path | None = None,
-            drives: Callable[[], list[Path]] = removable_drives) -> list[Path]:
-    """Where Extract PKG may unpack *package*: the game folders first, then the usual places that are not one yet
-    (suggested), then the package's own folder; each once."""
-    places, seen = [], set()
-    for place in [*chosen, *suggested(chosen, home, drives), package.parent]:
-        key = os.path.normcase(str(place))
-        if key not in seen and _is_dir(place):
-            seen.add(key)
-            places.append(place)
-    return places
+def fixed(home: Path | None = None, drives: Callable[[], list[Path]] = removable_drives) -> list[Path]:
+    """The app's own game folders (owner, 30-10-2026: drop the games and packages there, no browsing): Games\\PS4 in
+    the user's folder, made with its Modules folder when they are missing, then Games\\PS4 on each removable drive
+    that has one."""
+    own = (home or Path.home()) / GAMES_HOME
+    try:
+        modules_home(home).mkdir(parents=True, exist_ok=True)
+    except OSError:
+        pass
+    return [own, *[d / GAMES_HOME for d in drives() if _is_dir(d / GAMES_HOME)]]
 
 
 def _is_dir(place: Path) -> bool:
@@ -135,6 +117,38 @@ def update_steam(steam_dir: Path, add: list[Game], remove: list[Game], program: 
         restarted = closed(change)
     except (steam.SteamError, steam.ShortcutError, OSError) as error:
         return False, "\n".join([*notes, f"Steam was not changed: {error}"]), None
-    again = " Steam was closed for it and starts again in the background." if restarted else ""
+    again = " Steam was closed for it and started again, signed in." if restarted else ""
     return True, "\n".join([*notes, f"{len(add)} game(s) in Steam, under Non-Steam in its library"
                                       f"{f'; {len(remove)} taken out' if remove else ''}.{again}"]), found
+
+
+def removal(game: Game, chosen: list[Path], found: list[Game]) -> tuple[list[Path], str]:
+    """The folders Remove game deletes (owner, 30-10-2026: a game that no longer plays goes, files and all): the
+    game's folder, then its update, patch and mods beside it. With none, why not: a drive, a game folder of the list
+    (or one holding one) or a folder holding another game is never deleted by the app."""
+    folder = game.folder
+    if folder.parent == folder:
+        return [], f"{game.title} is at the top of {folder}: delete its files by hand."
+    for place in chosen:
+        if os.path.normcase(str(place)) == os.path.normcase(str(folder)) or folder in place.parents:
+            return [], (f"{game.title} is in {folder.name}, one of the app's game folders itself: delete its files "
+                        "by hand.")
+    for other in found:
+        if other.eboot != game.eboot and folder in other.eboot.parents:
+            return [], f"{folder.name} holds another game too ({other.title}): delete {game.title}'s files by hand."
+    overlays = [folder.with_name(folder.name + suffix) for suffix in OVERLAYS]
+    return [folder, *[f for f in overlays if _is_dir(f)]], ""
+
+
+def delete(folders: list[Path]) -> list[str]:
+    """The folders deleted, read-only files too (an unpacked game's may be); what could not be, each with why."""
+    def writable(function, path, _error) -> None:
+        os.chmod(path, stat.S_IWRITE)
+        function(path)
+    failed = []
+    for folder in folders:
+        try:
+            shutil.rmtree(folder, onexc=writable)
+        except OSError as error:
+            failed.append(f"{folder.name} ({error.strerror or error})")
+    return failed

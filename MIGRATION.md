@@ -7,6 +7,21 @@ describe only what exists.
 
 ## Resume here (29-10-2026, for a new chat): the Windows Portable Suite
 
+**Fixed folders, no folder selecting (owner, 30-10-2026; in the working tree, not committed).** The rule for every
+game manager: games and the files the emulator needs (system modules, BIOS, firmware) go in fixed folders the app
+makes, one per system with the required files in a subfolder (`Games\PS4`, `Games\PS4\Modules`; then `Games\PS2` with
+`BIOS\`, `Games\PS3` with `Firmware\`, `Games\Vita\Firmware`, ...), plus `Games\<system>` on an SD card; required files
+are taken in automatically (when the app opens and when its card gets the focus); no browser and no added folders.
+Done in **shadPS4 Manager** first (owner: "shadPS4 first"), with X Unpack all, PKG rows, packages deleted after a clean
+unpack, RB Remove game and LB Steam artwork; the owner tests it on the Ally, then PCSX2, PPSSPP, RPCS3, Vita3K and
+Xenia Manager follow the same way. Also in the tree: core's `steam.open_url()` starts a Steam that does not run as a
+plain steam.exe and hands over the address once it is signed in (a steam:// address as Steam's first start never
+signed in on the Ally), core's `with_steam_closed()` restarts Steam without `-silent` on Windows, and the information
+popup is larger (900 wide, 0.7 of the window). Not handled: add-on (DLC) packages, which the app never installed;
+shadPS4 0.20.0's add-on layout needs looking at first. Lumines Remastered crashes on shadPS4 0.20.0 (in the game's own
+code; it ran on the owner's laptop with an older shadPS4). Releases this asks for (the owner's numbers): core, all six
+game managers (the core), shadPS4 Manager with a `Breaking.` entry.
+
 **The owner's round of observations (29-10-2026, late evening; in the working tree, not committed).** Checked on
 Windows: `./test.sh` (core 226, tools 174, Nexus Releases 119, the portal 47, the suite's tools 30, PCSX2 Manager
 110, PPSSPP Manager 68, RPCS3 Manager 83, shadPS4 Manager 103, Windows Portable Test 77, Vita3K Manager 81, Xenia
@@ -23,12 +38,16 @@ Manager 71), the three wikis `--strict`, `check_versions.py`, `check_changelogs.
   modules, game). **RPCS3 Manager** (Breaking.): Screen moved from X on a game to the Settings page (Picture tab,
   config.yml's Aspect ratio and Stretch To Display Area; it replaces the Fill the screen switch; per-game files are no
   longer written, old ones stay); RB Packages: Y marks files, X installs the marked ones (else the folder's, as
-  before); Game.picture() no longer ends on an empty SD slot. **shadPS4 Manager**: several packages at once not done
-  (each package asks its own place and its own replace question): the owner's to decide how.
+  before); Game.picture() no longer ends on an empty SD slot. **shadPS4 Manager** (Added., after its 1.0.0 entry;
+  owner, 29-10-2026: "we can build an interface"): several packages at once, Y marks, X the marked ones or the
+  folder's, one place for all, then a page of what each does there (A takes one in or leaves it out, lets an update
+  replace the one there), X unpacks them games first; 105 tests. To check on the Ally with real packages: a game, its
+  update and an add-on in one go.
 - **Windows Portable Test** (Breaking.): the stick-light test is part of the controller test (A, B, X, Y light both
   rings in their colors, a stick moved or pressed lights its ring white, a line says what Windows reports); the Y
-  popup and its pills are gone. To check on the Ally: if the frozen build cannot import winrt, find_lamp_arrays()
-  answers [] silently, which looks like "no lights": `Windows-PT.exe --lights` logs what Windows reports.
+  popup and its pills are gone. Checked on the Ally (owner, 29-10-2026): the installed 2.0.1's `--lights` found
+  RTG789 with 4 lamps and Dynamic Lighting on, and the working tree's controller test lights the rings. In 2.0.1 the
+  light test was only behind Y on the Controller card, so the controller test itself never lit them.
 - **The portal** (Added.): a red dot on the tile of an installed app with an update; Sound: On/Off on the Suite page
   (the intro's sound).
 - **Nexus Releases** (Fixed.): Pin and Bump are ordinary buttons; Test local apps shows the ticked suite's wiki and
@@ -2112,6 +2131,14 @@ The order, each step with its checks before the next:
   package from shadPS4 itself): shadPS4 is GPL-2.0-or-later, the Manager GPL-3.0-or-later, so a build with both is
   GPL-3.0; to check before starting. The quit window itself opens from any controller and keyboard since
   22-10-2026 (the Manager's quit hotkeys in shadPS4's `input_config/global.ini`).
+- **Several packages at once in the BC250 suite's shadPS4 Manager (on hold, owner 29-10-2026: "we will also
+  implement this on Bazzite").** The Windows Portable Suite's shadPS4 Manager unpacks several packages in one go
+  (`windows-portable/apps/shadps4`: `extract.read_all()` and `extract.plan()`, the marks in RB Packages, the page of
+  what each package does in the place chosen, the games first, then their updates and add-ons). The BC250 app's
+  Extract PKG window (`bc250-bazzite/apps/shadps4/shadps4_manager/extract_dialog.py`) takes one package at a time.
+  Port the planning there as a change of the BC250 suite of its own (the suites stand apart), shaped for its desktop
+  window (a list with tick boxes rather than the controller's marks), with its own tests, CHANGELOG entry and
+  release.
 - **A PS4 Camera for USB HD Cam (on hold, owner 23-10-2026: when there is one at the board).** The app handles the
   PS4 Camera on Sony's PlayStation Camera Adapter (CFI-ZAA1), but nothing of it was tried: there is no PS4 Camera at
   the board. To try then: the adapter's hub (054c:0d0b) shows it as PS4 Camera; Download gets its firmware (PS4

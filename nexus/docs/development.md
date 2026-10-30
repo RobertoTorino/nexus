@@ -144,14 +144,18 @@ The push commands Nexus Releases shows run it first (`tools/ci-local.sh && git p
 portal bump it needs against what the remote has, the CHANGELOGs keeping every entry the remote has
 (`tools/check_changelogs.py`), the scripts' exec bits and the line endings. A suite's versions and manifest are
 checked only when the push changes that suite (its folder), so a failing check of the Windows Portable Suite never
-holds a push of the BC250 suite, and the other way round; core and `dev/` are checked on every push. Make it git's
-pre-push hook once per checkout, and every `git push` runs it first:
+holds a push of the BC250 suite, and the other way round; core and `dev/` are checked on every push. The checks read
+the commit that is pushed, in a checkout of it of their own (a few seconds more), as CI does: a fix that is in the
+working tree but not committed never lets a push through. Make it git's pre-push hook once per checkout, and every
+`git push` runs it first:
 
 ```bash
 git config core.hooksPath tools/hooks   # once per checkout
 BC250_PRE_PUSH=full git push            # also every CI job (tools/ci-local.sh)
-git push --no-verify                    # without the checks
 ```
+
+When the hook stops a push, CI would fail on the same commit: fix it, commit, and push again. Pushing past it with
+`git push --no-verify` sends the failure to GitHub, and the release tags wait until a new push passes CI.
 
 When the remote has commits this checkout lacks, pushed from the other machine, the hook says so and stops before
 the checks: run `git pull --rebase`, then push again.

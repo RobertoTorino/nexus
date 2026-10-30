@@ -1279,6 +1279,12 @@ def test_build_state_of_the_latest_push():
     assert rp.build_state([latest[0], *done]) == "failed" and done[0].outcome == "failure"
     assert rp.build_state([latest[0], replace(latest[1], status="completed", conclusion="skipped")]) == "passed"
     assert rp.build_state([]) == "" and rp.parse_runs({"message": "rate limit"}) == []
+    # A run GitHub canceled for a later one of its workflow on the same commit (nexus-index.yml's concurrency) is no
+    # failure (owner, 30-10-2026: the pill said Failed for 1759427); a canceled run nothing replaced still is
+    index = rp.parse_runs({"workflow_runs": [run("Nexus index", n=6), run("Nexus index", conclusion="cancelled", n=5),
+                                             run(n=4)]})
+    assert rp.build_state(index) == "passed" and rp.superseded(index[1], index)
+    assert not rp.superseded(index[1], [index[1], index[2]]) and rp.build_state([index[1], index[2]]) == "failed"
     before = {r.url: r for r in runs}
     assert rp.just_finished(before, [latest[0], *done]) == done              # only what was seen running
     assert rp.just_finished({}, done) == []                                   # finished before the first look

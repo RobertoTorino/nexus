@@ -1,3 +1,20 @@
+Changelog: 30-10-2026 00:42:29
+
+Fixed. On Windows, steam.open_url() starts a Steam that does not run as a plain steam.exe and hands it the steam://
+address once it has signed in (hand_over(), signed_in(): HKCU\Software\Valve\Steam\ActiveProcess, ActiveUser), off
+the caller's thread (owner, 30-10-2026: Play and Open Steam after a reboot showed "Updating Steam" and stopped:
+steam.exe -- steam://open/bigpicture as Steam's first start never made its login window, where a plain steam.exe
+signed in within seconds). A running Steam gets the address at once; Linux as before. The portable window's
+information popup is larger: 900 wide and its text up to 0.7 of the window high before it scrolls (POPUP_WIDTH,
+POPUP_TEXT; owner, 30-10-2026: 640 by half the window was cramped).
+
+Changelog: 29-10-2026 23:14:12
+
+Fixed. On Windows, with_steam_closed() starts Steam again as a plain steam.exe, not steam.exe -silent (owner,
+29-10-2026: Steam would not load after Update Steam in shadPS4 Manager): Steam's logs on the Ally showed every
+steam.exe -silent the game managers started staying Logged Off, one of them for six hours, with no window to sign in
+from, so Play and Open Steam went nowhere, where every plain start signed in. Linux starts Steam as before.
+
 Changelog: 29-10-2026 21:33:37
 
 Breaking. InfoPopup has no Close pill any more (owner, 29-10-2026: no big amber buttons, the buttons in a legend at

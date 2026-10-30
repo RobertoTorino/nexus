@@ -1,3 +1,16 @@
+Changelog: 30-10-2026 01:30:27
+
+Release 0.26.0. Brings wp-pcsx2-v3.0.1, wp-ppsspp-v1.0.1, wp-rpcs3-v1.0.1, wp-shadps4-v1.1.0, wp-test-v3.0.1, wp-vita3k-v1.0.1, wp-xenia-v1.0.1.
+
+Changelog: 30-10-2026 01:09:00
+
+Fixed. The pre-push hook read the working tree, not the commit that is pushed, so a fix put back but not committed
+let a broken commit through (owner, 30-10-2026: d49aed3, Release wp-portal-v3.2.0, lost a portal CHANGELOG entry;
+the hook stopped it at 20:40, passed it at 20:59 with the entry back in the working tree only, and CI failed).
+tools/pre-push.sh now checks each pushed commit in a checkout of its own (git worktree, removed again; a few seconds
+more), a branch that is not HEAD too, and no longer offers git push --no-verify when it stops a push (9abfc14 was
+pushed past it that way, and CI failed on the same). The Nexus page's Development chapter says so.
+
 Changelog: 29-10-2026 20:40:01
 
 Release 0.25.0.

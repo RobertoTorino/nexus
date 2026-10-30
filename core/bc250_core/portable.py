@@ -57,7 +57,8 @@ ROW_HEIGHT = 40                         # a row of a list or of the settings
 ROW_FOCUS = "#3a3d45"                   # the focused row: raised above the others, with the amber edge
 DOT = "#e5484d"                         # Card.set_dot(): something new is out (owner, 29-10-2026: a red dot)
 DOT_SIZE, DOT_INSET = 14, 12            # its size, and its distance from the card's top right corner
-POPUP_TEXT = 0.5                        # a popup's text: at most this part of the window high, then it scrolls
+POPUP_TEXT = 0.7                        # a popup's text: at most this part of the window high, then it scrolls
+POPUP_WIDTH = 900                       # a popup's panel (owner, 30-10-2026: 640 by half the window was cramped)
 FONT = "Inter"
 
 _scale = 1.0
@@ -840,8 +841,8 @@ class InfoPopup(QWidget):
         outer = QVBoxLayout(self)
         outer.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.panel = Pane(solid=True)
-        self.panel.setFixedWidth(px(640))
-        inner = px(640 - 48)                            # the pane's margins: a wrapped label needs its width to be tall
+        self.panel.setFixedWidth(px(POPUP_WIDTH))
+        inner = px(POPUP_WIDTH - 48)                            # the pane's margins: a wrapped label needs its width to be tall
         heading = text_label(title, 24, QFont.Weight.ExtraBold, wrap=True)
         heading.setFixedWidth(inner)
         self.panel.column.addWidget(heading)

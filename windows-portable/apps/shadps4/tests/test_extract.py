@@ -16,8 +16,8 @@ from shadps4_manager import extract
 
 def test_a_package_says_what_it_is(built_pkg, tmp_path):
     package = extract.read_package(built_pkg.path)
-    assert (package.title_id, package.title, package.category, package.kind) == (
-        built_pkg.title_id, "Synthetic Test Title", "gd", "game")
+    assert (package.title_id, package.title, package.category, package.kind, package.version) == (
+        built_pkg.title_id, "Synthetic Test Title", "gd", "game", "01.00")
     other = tmp_path / "notes.pkg"
     other.write_bytes(b"not a package at all" * 10)
     with pytest.raises(extract.ExtractError, match="is not a PS4 package"):
@@ -94,3 +94,42 @@ def test_files_that_fail_are_counted_and_named(built_pkg, tmp_path, monkeypatch)
     folder, written, failed = extract.unpack(extract.read_package(built_pkg.path), out)
     assert failed == 1 and written > 0
     assert "File 1: the card is full" in (folder / extract.ERRORS).read_text(encoding="utf-8")
+
+
+def test_the_packages_waiting_in_the_game_folders(built_pkg, tmp_path):
+    """The packages dropped in the game folders (owner, 30-10-2026: the manager takes care of them): a game whose title
+    ID is not unpacked, an update its game lacks (that version), the games first; no add-on, no file that is no
+    package."""
+    games = tmp_path / "games"
+    (games / "drop").mkdir(parents=True)
+    shutil.copy(built_pkg.path, games / "galaga.pkg")
+    build_pkg(games / "drop" / "update.pkg", default_tree(), category="gp", app_ver="01.01")
+    build_pkg(games / "addon.pkg", default_tree(), category="ac", content_id="UP9000-CUSA88888_00-SYNTHETICADD0001")
+    (games / "notes.pkg").write_bytes(b"not a package at all" * 10)
+    game_id = built_pkg.title_id
+    waiting = extract.waiting([games], {})
+    assert [(p.path.name, p.category, p.version) for p in waiting] == [("galaga.pkg", "gd", "01.00"),
+                                                                       ("update.pkg", "gp", "01.01")]
+    mine = games / "Galaga [CUSA]"                                              # the game, in a folder of its own name
+    assert [p.path.name for p in extract.waiting([games], {game_id: mine})] == ["update.pkg"]
+    (mine.with_name(mine.name + "-UPDATE") / "sce_sys").mkdir(parents=True)
+    from conftest import make_sfo
+    (mine.with_name(mine.name + "-UPDATE") / "sce_sys" / "param.sfo").write_bytes(make_sfo({"APP_VER": "01.01"}))
+    assert extract.waiting([games], {game_id: mine}) == []                    # that update is there already
+
+
+def test_a_package_is_placed_beside_itself_an_update_beside_its_game(built_pkg, tmp_path):
+    games = tmp_path / "games"
+    games.mkdir()
+    update = build_pkg(games / "update.pkg", default_tree(), category="gp", app_ver="01.01")
+    game, patch = extract.read_package(built_pkg.path), extract.read_package(update.path)
+    game_id = built_pkg.title_id
+    assert extract.place(game, {}) == (built_pkg.path.parent / game_id, None)
+    mine = tmp_path / "elsewhere" / "Galaga [CUSA]"
+    assert extract.place(patch, {game_id: mine}) == (mine.with_name("Galaga [CUSA]-UPDATE"), mine)
+    assert extract.place(patch, {}) == (games / game_id, None)                  # without its game: a game of its own
+    extract.unpack(game, mine.parent)                                           # the game, then its update beside it
+    (mine.parent / game_id).rename(mine)
+    final, written, missing = extract.unpack(patch, mine.parent, beside=mine)
+    assert final == mine.with_name("Galaga [CUSA]-UPDATE") and written and not missing
+    assert (final / "eboot.bin").read_bytes() == update.expected_files["eboot.bin"]

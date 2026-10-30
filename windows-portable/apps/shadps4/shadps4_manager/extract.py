@@ -5,11 +5,13 @@ ExtractionWorker in normal mode) with the same pkgxtractor. The window runs it o
 done; there is no preview, salvage mode, comparison or renaming here (the BC250 window's tools for a damaged or
 unknown package).
 
-A game goes into a folder named by its title ID (CUSA00001) in the chosen folder; an update (CATEGORY gp) into
-CUSA00001-UPDATE beside its game, which shadPS4 lays over the game when it starts (fs.cpp in 0.20.0), so the game stays
-as it was. Without its game there a gp package goes into CUSA00001: a game with its update in it says gp too. A folder
-that is there already is never written into, except an update the user agreed to replace: the new one is unpacked
-into a folder beside it and takes its place only when every file was written, else the old one stays."""
+The packages are the ones put in the game folders (owner, 30-10-2026: drop them there, the manager takes care of
+them): waiting() finds those still to unpack, place() says where each goes. A game goes into a folder named by its
+title ID (CUSA00001) beside its package; an update (CATEGORY gp) beside its game, in a folder named like the game's
+with -UPDATE, which shadPS4 lays over the game when it starts (fs.cpp in 0.20.0), so the game stays as it was. Without
+its game a gp package goes into CUSA00001: a game with its update in it says gp too. A folder that is there already is
+never written into, except an older update: the new one is unpacked into a folder beside it and takes its place only
+when every file was written, else the old one stays."""
 
 from __future__ import annotations
 
@@ -21,6 +23,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from .pkgxtractor.pkg import PKG, PKGError, is_pkg_file, sanitize_folder_name
+from .games import read_sfo
 from .pkgxtractor.psf import PSF, PSFError
 
 PACKAGE_SUFFIXES = (".pkg",)            # what the browser shows when a package is looked for
@@ -42,6 +45,7 @@ class Package:
     title_id: str
     title: str
     category: str                       # gd a game, gp an update, ac add-on content; "" when unknown
+    version: str = ""                   # APP_VER: 01.05
 
     @property
     def kind(self) -> str:
@@ -62,28 +66,109 @@ def _open(pkg: PKG, path: Path) -> None:
     raise ExtractError(f"{path.name} could not be opened: {reason}")
 
 
-def _category(sfo: bytes) -> tuple[str, str]:
-    """(CATEGORY in lower case, TITLE) from the package's param.sfo; "" for what is not there."""
+def _category(sfo: bytes) -> tuple[str, str, str]:
+    """(CATEGORY in lower case, TITLE, APP_VER) from the package's param.sfo; "" for what is not there."""
     if not sfo:
-        return "", ""
+        return "", "", ""
     try:
         psf = PSF.from_bytes(sfo)
     except PSFError:
-        return "", ""
+        return "", "", ""
 
     def clean(value: str | None) -> str:
         return (value or "").replace("\x00", "").strip()
-    return clean(psf.get_string("CATEGORY")).lower(), clean(psf.get_string("TITLE"))
+    return (clean(psf.get_string("CATEGORY")).lower(), clean(psf.get_string("TITLE")),
+            clean(psf.get_string("APP_VER")))
 
 
 def read_package(path: Path) -> Package:
-    """The package's title ID, title and category; ExtractError when it is not a package or cannot be read."""
+    """The package's title ID, title, category and version; ExtractError when it is not a package or cannot be read."""
     if not path.is_file() or not is_pkg_file(path):
         raise ExtractError(f"{path.name} is not a PS4 package.")
     with PKG() as pkg:
         _open(pkg, path)
-        category, title = _category(pkg.sfo)
-        return Package(path, pkg.title_id.replace("\x00", "").strip(), title, category)
+        category, title, version = _category(pkg.sfo)
+        return Package(path, pkg.title_id.replace("\x00", "").strip(), title, category, version)
+
+
+_read: dict[tuple[str, int, int], Package | None] = {}     # waiting()'s packages read, by path, size and time
+ORDER = {"gd": 0, "gp": 1}              # Unpack all unpacks the games first, so their updates find them
+
+
+def _packages(root: Path, depth: int):
+    try:
+        entries = list(os.scandir(root))
+    except OSError:
+        return
+    for entry in entries:
+        if entry.name.lower().endswith(PACKAGE_SUFFIXES) and entry.is_file():
+            yield entry
+    if depth > 0:
+        for entry in entries:
+            if entry.is_dir(follow_symlinks=False) and not entry.name.startswith(".") and entry.name != "sce_sys":
+                yield from _packages(Path(entry.path), depth - 1)
+
+
+def update_folder(game: Path) -> Path:
+    """Where shadPS4 0.20.0 looks for a game's update: a folder named like the game's with -UPDATE (fs.cpp)."""
+    return game.with_name(f"{game.name}-UPDATE")
+
+
+def _version(folder: Path) -> str:
+    try:
+        return str(read_sfo((folder / "sce_sys" / "param.sfo").read_bytes()).get("APP_VER") or "")
+    except OSError:
+        return ""
+
+
+def waiting(folders: list[Path], unpacked: dict[str, Path], depth: int = 5) -> list[Package]:
+    """The packages in the game folders (and up to *depth* folders below them, as games.scan looks) that wait to be
+    unpacked (owner, 30-10-2026: drop a .pkg in the folder, the manager takes care of it): a game (gd) whose title ID
+    is not in *unpacked* (title ID: its game's folder), an update (gp) unless its game has that version of it beside
+    it already. An add-on (ac) is left out: shadPS4 keeps add-ons elsewhere, which the app does not unpack into; so is
+    a file that is no package. Sorted as Unpack all takes them, the games first. A package is read once while it
+    stays the same."""
+    found: dict[str, Package] = {}
+    for folder in folders:
+        for entry in _packages(folder, depth):
+            try:
+                stat = entry.stat()
+            except OSError:
+                continue
+            key = (os.path.normcase(entry.path), stat.st_size, stat.st_mtime_ns)
+            if key not in _read:
+                try:
+                    _read[key] = read_package(Path(entry.path))
+                except (ExtractError, OSError):
+                    _read[key] = None
+            package = _read[key]
+            if package is None or package.category not in ORDER or not package.title_id:
+                continue
+            game = unpacked.get(package.title_id)
+            if package.category == "gd" and game is not None:
+                continue
+            if (package.category == "gp" and game is not None and package.version
+                    and _version(update_folder(game)) == package.version):
+                continue
+            found.setdefault(key[0], package)
+    return sorted(found.values(), key=lambda p: (ORDER[p.category], (p.title or p.path.name).casefold(), str(p.path)))
+
+
+def place(package: Package, unpacked: dict[str, Path]) -> tuple[Path, Path | None]:
+    """Where a waiting package goes: (the folder it is unpacked into, its game's folder for an update beside it, else
+    None). A game goes into a folder named by its title ID beside the package; an update beside its game, wherever
+    that is; an update without its game is a game of its own (a game with its update in it says gp too)."""
+    game = unpacked.get(package.title_id) if package.category == "gp" else None
+    if game is not None:
+        return update_folder(game), game
+    return package.path.parent / sanitize_folder_name(package.title_id or "unknown_title"), None
+
+
+def _is_dir(folder: Path) -> bool:
+    try:
+        return folder.is_dir()
+    except OSError:                                 # an SD card that cannot be read: no folder to replace
+        return False
 
 
 def has_entries(folder: Path) -> bool:
@@ -99,21 +184,24 @@ def has_entries(folder: Path) -> bool:
         return True
 
 
-def target(output_root: Path, package: Package) -> tuple[Path, bool]:
+def target(output_root: Path, package: Package, beside: Path | None = None) -> tuple[Path, bool]:
     """The folder a package goes into, and whether it is an update beside its game (the BC250 app's
-    extraction_target)."""
+    extraction_target): beside *beside* when it is the game's folder (named as the user named it), else beside the
+    title ID's folder in *output_root*."""
+    if package.category == "gp" and beside is not None:
+        return update_folder(beside), True
     game = output_root / sanitize_folder_name(package.title_id or "unknown_title")
     if package.category == "gp" and game.is_dir() and has_entries(game):
-        return game.with_name(f"{game.name}-UPDATE"), True
+        return update_folder(game), True
     return game, False
 
 
 def unpack(package: Package, output_root: Path, replace_update: bool = False, progress: Progress = lambda d, t: None,
-           log: Callable[[str], None] = lambda line: None) -> tuple[Path, int, int]:
+           log: Callable[[str], None] = lambda line: None, beside: Path | None = None) -> tuple[Path, int, int]:
     """Unpack *package* into its folder in *output_root* (target). Returns (the folder, the files written, the files
     that failed); ExtractError when nothing could be unpacked, the folder is taken, or a replaced update failed (the
     old one then stays). *log* gets what the BC250 app's window logs, without a line per file."""
-    final, update = target(output_root, package)
+    final, update = target(output_root, package, beside)
     folder = final
     if has_entries(final):
         if not (update and replace_update and final.is_dir()):

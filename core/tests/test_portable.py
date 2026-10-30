@@ -545,8 +545,9 @@ def test_a_popup_holds_pills_and_keeps_the_focus(qapp, monkeypatch):
 
 
 def test_a_long_popup_text_scrolls(qapp, monkeypatch):
-    """A long information text was cut off (owner, 29-10-2026): the popup's text is at most half the window high and
-    the d-pad's up and down scroll it."""
+    """A long information text was cut off (owner, 29-10-2026): the popup's text is at most part of the window high
+    (owner, 30-10-2026: 0.7 of it and 900 wide, since half by 640 was cramped), the panel inside the window, and the
+    d-pad's up and down scroll it."""
     window = PortableWindow(gamepad=portable.Gamepad(source_factory=NoPad))
     window.resize(1280, 720)
     window.show()
@@ -555,7 +556,9 @@ def test_a_long_popup_text_scrolls(qapp, monkeypatch):
                         "popup's panel at the handheld's size." for n in range(40))
     popup = window.show_popup("Title", text)
     qapp.processEvents()
-    assert popup.text.height() <= 720 * portable.POPUP_TEXT and popup.text.scrolls()
+    assert popup.text.height() <= round(720 * portable.POPUP_TEXT) and popup.text.scrolls()
+    assert popup.text.height() > 720 * 0.6 and popup.panel.width() == portable.POPUP_WIDTH
+    assert popup.panel.geometry().top() >= 0 and popup.panel.geometry().bottom() <= 720
     assert popup.text.hasFocus() and popup.pills() == [popup.text]
     bar = popup.text.verticalScrollBar()
     assert bar.value() == 0

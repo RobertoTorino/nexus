@@ -1,3 +1,67 @@
+Changelog: 30-10-2026 01:30:27
+
+Release 1.1.0.
+
+Changelog: 30-10-2026 00:58:35
+
+Added. The system modules are put in Games\PS4\Modules (owner, 30-10-2026: fixed folders for what the emulator
+needs, no folder selecting): the app makes the folder and copies the new or changed .sprx files into shadPS4's module
+folder by itself when it opens and each time the shadPS4 card gets the focus (userdata.sync_modules(),
+library.modules_home()); the status line says how many it took, and names the folder while modules are missing.
+
+Breaking. No folder is chosen or browsed to any more (owner, 30-10-2026): LB Modules and its browser, and LB Folders
+with its added folders, usual places and folder browser, are gone; Your games looks only in Games\PS4 (the user's and
+each SD card's), and folders added before are no longer looked in. LB on Your games is Steam artwork now. The Log
+pane shows where Games\PS4 is (library.folders(), set_folders(), suggested() and game_folders() removed).
+
+Changelog: 30-10-2026 00:42:29
+
+Added. The app's own game folder (owner, 30-10-2026: drop the games and packages there, no browsing): Games\PS4 in
+the user's folder, made when the app opens, and Games\PS4 on each SD card or USB drive that has one, always looked in
+and first on LB Folders (library.fixed(), game_folders()); folders can still be added. A package there that waits is a
+short row of Your games, "PKG" (a game that needs to be unpacked to play) or "PKG update" (an update its game
+lacks: that version is not beside it); X Unpack all unpacks every one, the games first, then each update beside its
+game wherever it is, in a folder named like the game's with -UPDATE (an older update there replaced), A Unpack one
+(extract.waiting(), place(); unpack(beside=)). A package unpacked without a missing file is deleted (owner,
+30-10-2026). Add-ons are left out. The information of Your games says what PKG means.
+
+Breaking. RB Packages, the packages browser on the shadPS4 pane with its places and its page for several packages,
+is gone: the packages are put in Games\PS4 and unpacked from Your games (extract.read_all(), plan(), Step and
+library.targets() removed).
+
+Fixed. Play and Open Steam start a Steam that does not run plainly, then hand it the game once it has signed in
+(core's steam.open_url(); owner, 30-10-2026: after a reboot Steam showed "Updating Steam" and stopped). A package's
+row is short enough not to be cut off (owner, 30-10-2026), and the information popup is larger (core).
+
+Changelog: 30-10-2026 00:10:48
+
+Added. RB Remove game on a game of Your games (owner, 30-10-2026: Lumines Remastered no longer plays on shadPS4
+0.20.0, and there was no way to take it off the list): the first press asks for five seconds and names the folders
+that go; the second takes the game out of Steam and deletes its folder with its update, patch and mods beside it, off
+the window's thread (library.removal(), library.delete(), read-only files too). The saves, the play time and the
+package stay. A game whose folder is a game folder of the list, a drive, or holds another game is never deleted: the
+status line says to delete it by hand. A game package in the game folders whose game is not unpacked yet is a row of
+Your games, "not unpacked" (owner, 30-10-2026: Galaga's folder held only its .pkg and showed 0 games), and A Unpack
+unpacks it into the folder it is in, the files counted on the pane's line (extract.waiting(); an update waiting
+beside its game's package is not listed, so it never takes the game's folder).
+
+Breaking. RB Steam artwork is on the folders now (LB Folders, then RB), since RB on a game removes it.
+
+Changelog: 29-10-2026 23:14:12
+
+Fixed. Update Steam starts Steam again signed in (core's with_steam_closed(): a plain steam.exe on Windows; owner,
+29-10-2026): the steam.exe -silent it started never signed in, so a game's Play and Open Steam did nothing until
+Steam was started by hand. The status line says Steam was started again, signed in.
+
+Changelog: 29-10-2026 22:08:01
+
+Added. Several packages at once (owner, 29-10-2026: not one by one; "we can build an interface"): in RB Packages, Y
+marks a package and X unpacks the marked ones, or every package of the open folder; one place for all, then a page of
+what each one does there (a folder of its own, beside its game, its folder there already, the same folder as another,
+no package), where A takes one in or leaves it out and lets an update replace the one there; X unpacks them one after
+the other, the games first, then their updates and add-ons, and the status line sums it up (extract.read_all(),
+extract.plan()).
+
 Changelog: 29-10-2026 21:56:04
 
 Release 1.0.0.

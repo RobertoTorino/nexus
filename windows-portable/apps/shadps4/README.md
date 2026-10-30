@@ -8,11 +8,11 @@
 
 Plays your PS4 games on a Windows handheld with shadPS4, the PS4 emulator: shadPS4 0.20.0 for Windows from shadPS4's
 own release, checked against the checksum this version of the app was tested with, for your own user; shadPS4 keeps
-its settings, your saves and the system modules in its portable folder beside its program, in the app's folder. It
-copies the system modules of your PS4 into shadPS4, unpacks your packages (.pkg) into game folders in the layout
-shadPS4 loads (an update beside its game), offers shadPS4's settings and the shadNet account it signs in with, finds
-your games in the folders you choose and puts them in Steam (with the game's own pictures, and a cover from
-SteamGridDB when you give it your key), and keeps a log. shadPS4's own window is never needed: a game starts full
+its settings, your saves and the system modules in its portable folder beside its program, in the app's folder. You
+never choose a folder: it copies the system modules you put in Games\PS4\Modules into shadPS4, unpacks the packages
+(.pkg) you put in Games\PS4 in the layout shadPS4 loads (an update beside its game), offers shadPS4's settings and
+the shadNet account it signs in with, finds your games in Games\PS4 and puts them in Steam (with the game's own
+pictures, and a cover from SteamGridDB when you give it your key), and keeps a log. shadPS4's own window is never needed: a game starts full
 screen from Steam, and View and Menu together open shadPS4's quit window. Remove takes shadPS4's program away and
 leaves what you made.
 

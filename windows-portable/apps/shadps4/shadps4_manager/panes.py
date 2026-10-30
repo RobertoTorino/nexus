@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The panes beside the shadPS4 and Settings panes, as RPCS3 Manager has them: Your games (the games in the chosen
-folders, marked for Steam with A), the browser (a game folder, the system modules, a package, and where a package is
-unpacked), shadNet (the account shadPS4 signs in with), Log (shadPS4's folder and the app's own log, read in the app)
-and the page with one text field (the SteamGridDB key, and each of shadNet's fields).
+"""The panes beside the shadPS4 and Settings panes, as RPCS3 Manager has them: Your games (the games in the app's
+Games\\PS4 folders and the packages waiting there, marked for Steam with A), shadNet (the account shadPS4 signs in
+with), Log (shadPS4's folder and the app's own log, read in the app) and the page with one text field (the
+SteamGridDB key, and each of shadNet's fields).
 
 A long list is a ListArea: rows in a column that scrolls, the one with the focus kept in view, so the d-pad goes down
 a list of any length and a finger can drag it. Every action is a controller button in the window's legend, A too,
@@ -118,13 +118,12 @@ SHADPS4_INFO = (
     "shadPS4, the PS4 emulator, installed for your own user: it keeps its settings, your saves and the system "
     "modules in its folder (user, beside its program). The A button installs the release this version of the app "
     "was tried with; a newer shadPS4 comes with a new version of the app.\n\n"
-    "System modules are libraries of the PS4's own firmware, which the app cannot give you: copy them from your own "
-    "PS4 into a folder on this device, then the LB button (Modules) finds the folder and copies its .sprx files into "
-    "shadPS4's module folder. Many games run without them; a game that needs a missing one does not start.\n\n"
-    "A game bought digitally comes as a package (.pkg): the RB button (Packages) finds it, then you choose where to "
-    "unpack it, and the app unpacks it into a folder named by the game's ID (CUSA00001), in the layout shadPS4 loads. "
-    "An update goes beside its game (CUSA00001-UPDATE), and shadPS4 lays it over the game when it starts; the A button "
-    "twice replaces an update that is there already.\n\n"
+    "System modules are libraries of the PS4's own firmware, which the app cannot give you: copy the .sprx files "
+    "from your own PS4 into the Games\\PS4\\Modules folder in your user folder, which the app makes. The app copies "
+    "new ones into shadPS4 by itself, when it opens and when this card gets the focus, and the pane counts them. "
+    "Many games run without them; a game that needs a missing one does not start.\n\n"
+    "A game bought digitally comes as a package (.pkg): put it in your Games\\PS4 folder, and Your games unpacks it "
+    "(its information says how).\n\n"
     "shadPS4 for Windows needs Microsoft's Visual C++ runtime, which Steam and most games bring; the pane says when "
     "it is missing (vc_redist.x64.exe from Microsoft installs it). The X button removes shadPS4's program; its "
     "folder, with your saves and the system modules, stays.")
@@ -136,24 +135,22 @@ GAMES_INFO = (
     "quits the game, and Steam has the screen back.\n\n"
     "The X button on a game that is in Steam starts it, through Steam (Steam starts first when it does not run). "
     "Open Steam, the row at the top of the list, opens Steam's library.\n\n"
-    "The games are the folders with an eboot.bin in your game folders and up to five folders below them, each in a "
-    "folder of its own, as Extract PKG unpacks them. An update or a mod beside a game (a folder named like it with "
-    "-UPDATE, -patch or -mods) is no game of its own: shadPS4 lays it over the game.\n\n"
-    "The LB button (Folders) shows your game folders: add one of the usual places or a drive (an SD card), or browse "
-    "to any folder with the controller. The A button twice on a folder takes it off the list; its games stay where "
-    "they are. The LB button again shows the games.\n\n"
+    "The RB button (Remove game) on a game, pressed twice, takes it out of Steam and deletes it from the disk: its "
+    "folder, and its update, patch and mods beside it. Your saves stay in shadPS4's folder.\n\n"
+    "Where your games go: the Games\\PS4 folder in your user folder, which the app makes, or Games\\PS4 on an SD "
+    "card (make that folder on the card). Put your .pkg files there, or games that are unpacked already (a folder "
+    "with eboot.bin), and they show here; there is no folder to choose. The Log card shows where the folder is.\n\n"
+    "PKG after a game means it is a package: a game that needs to be unpacked to play. PKG update is an update for a "
+    "game you have. The X button (Unpack all) unpacks every package that waits, the games first, then each update "
+    "beside its game (an older update there is replaced); the A button on one unpacks only that one. A package "
+    "unpacked without an error is deleted, as it takes as much room as its game. Add-ons (DLC) are not unpacked.\n\n"
+    "The games are the folders with an eboot.bin in the Games\\PS4 folders and up to five folders below them, each in "
+    "a folder of its own. An update or a mod beside a game (a folder named like it with -UPDATE, -patch or -mods) is "
+    "no game of its own: shadPS4 lays it over the game.\n\n"
+
     "The pictures in Steam come from inside each game (its icon and its background). With your own SteamGridDB API "
-    "key (the RB button, Steam artwork; one key for the suite), Update Steam also fetches a cover for each game. "
+    "key (the LB button, Steam artwork; one key for the suite), Update Steam also fetches a cover for each game. "
     "Every entry of the row at the bottom also works by touch.")
-BROWSE_INFO = (
-    "Find the folder or the file. The A button opens the folder the focus is on, or picks the file; the B button "
-    "goes a level up, and from the places back to where you came from. The X button takes the folder that is open: "
-    "as a game folder, or as the folder whose system modules are copied into shadPS4. The places are your Games, "
-    "Downloads, Documents and Desktop folders and every drive, such as an SD card. The browser opens again in the folder you took or picked a file in last.")
-TARGET_INFO = (
-    "Where the package is unpacked: one of your game folders, a usual place (which becomes a game folder), or the "
-    "package's own folder. The A button unpacks it there, into a folder named by the game's ID; a game needs about as "
-    "much room as its package. An update goes beside its game, so choose the folder the game is in.")
 SHADNET_INFO = (
     "shadNet is shadPS4's online service, for online trophies, friends and online play in the games it supports. "
     "shadPS4 signs in by itself when a game starts, with the account kept here for one of its four users (player 1 "

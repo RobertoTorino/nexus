@@ -68,7 +68,7 @@ You play the games from Steam; the app puts them there, and starts them there wi
 
 - **A Steam mark** on a game marks it for Steam, or takes the mark away. **Y Update Steam** then makes Steam match the
   marks: each marked game is a non-Steam game named `[PSP] <title>` in Steam's library and its Big Picture mode; a
-  game without the mark, or no longer found, is taken out. Steam closes for it and starts again in the background.
+  game without the mark, or no longer found, is taken out. Steam closes for it and starts again, its window open and signed in.
   Steam must have been started once on the device. When there is nothing to change, **Y** says so on the status line
   instead. Right after writing, the app reads Steam's file back and counts the games in Steam from that; should a game
   it wrote not be found, the status line and the log say which.
