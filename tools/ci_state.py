@@ -6,7 +6,7 @@ starts none of its own) finished and passed; with --workflow, of another workflo
 Nexus's (ci-nexus.yml, which every suite's releases wait for besides their own). tools/tag-release.sh asks it
 before tagging, and the release workflows before they build, so only a commit that CI passed becomes a release.
 
-    python3 tools/ci_state.py [--wait MINUTES] [--workflow FILE] <commit>
+    python3 tools/ci_state.py [--wait MINUTES] [--workflow FILE] [--release-commit] <commit>
 
 Prints the state (passed, failed, running, none) and the runs. Exit status: 0 passed, 1 failed, 2 still running or
 no run yet (after waiting --wait minutes, default 0), 3 GitHub not reachable. A suite's CI runs only when a push
@@ -14,7 +14,12 @@ changes the suite or the shared parts (the workflows' paths, 29-10-2026), so a c
 none has appeared after NONE_GRACE_S of waiting, the answer is "none" at once, with the reason, rather than after the
 whole wait. Signs in with GH_TOKEN, GITHUB_TOKEN
 or the gh login when there is one (60 requests an hour without, 5,000 with). BC250_CI_STATE answers instead of
-GitHub (passed, failed, running, none): for the tests of tag-release.sh."""
+GitHub (passed, failed, running, none): for the tests of tag-release.sh.
+
+With --release-commit (the release workflows, owner 30-10-2026): when the commit only writes a release
+(tools/release_commit.py: versions, Release and Version entries, apps.toml's tags and sha256), the CI of its parent,
+the work commit, answers for it, so a release does not wait for CI to run again on the same code. When the work
+commit has no run of the workflow (its push did not touch the workflow's paths), the commit's own CI answers."""
 
 from __future__ import annotations
 
@@ -117,9 +122,36 @@ def check(sha: str, wait_minutes: float = 0, fetch=fetch_runs, sleep=time.sleep,
     return EXIT.get(current, 3)
 
 
+def work_commit_of(sha: str) -> str | None:
+    """The parent of *sha* when *sha* only writes a release (tools/release_commit.py); else None."""
+    import release_commit                   # next to this file
+    return release_commit.check(sha)[0]
+
+
+def check_release_commit(sha: str, wait_minutes: float = 0, workflow: str = WORKFLOW, fetch=fetch_runs,
+                         work_commit=work_commit_of, **kwargs) -> int:
+    """check() of the work commit when *sha* only writes a release and the work commit has a run; else of *sha*."""
+    work = None if os.environ.get("BC250_CI_STATE") else work_commit(sha)
+    if work is not None:
+        try:
+            has_run = bool(fetch(work) if workflow == WORKFLOW else fetch(work, workflow))
+        except (OSError, ValueError):
+            has_run = True                          # check() says it is unreachable
+        if has_run:
+            print(f"{sha[:7]} only writes a release: the CI of its work commit {work[:7]} answers for it",
+                  file=sys.stderr)
+            return check(work, wait_minutes, fetch=fetch, workflow=workflow, **kwargs)
+        print(f"{sha[:7]} only writes a release, but its work commit {work[:7]} has no run of {workflow}: the "
+              "commit's own CI answers", file=sys.stderr)
+    return check(sha, wait_minutes, fetch=fetch, workflow=workflow, **kwargs)
+
+
 def main(argv: list[str]) -> int:
-    wait, workflow = 0.0, WORKFLOW
-    while argv[:1] in (["--wait"], ["--workflow"]) and len(argv) >= 2:
+    wait, workflow, release = 0.0, WORKFLOW, False
+    while argv[:1] == ["--release-commit"] or argv[:1] in (["--wait"], ["--workflow"]) and len(argv) >= 2:
+        if argv[0] == "--release-commit":
+            release, argv = True, argv[1:]
+            continue
         if argv[0] == "--wait":
             wait = float(argv[1])
         else:
@@ -128,6 +160,8 @@ def main(argv: list[str]) -> int:
     if len(argv) != 1:
         print(__doc__.split("\n\n")[1], file=sys.stderr)
         return 3
+    if release:
+        return check_release_commit(argv[0], wait, workflow=workflow)
     return check(argv[0], wait, workflow=workflow)
 
 

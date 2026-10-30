@@ -5,27 +5,56 @@
 Working notes for moving the seven BC-250 tools into this suite. Not part of the manual or the READMEs, which
 describe only what exists.
 
-## Resume here (30-10-2026 04:17, for a new chat)
+## Resume here (30-10-2026 20:20, for a new chat)
 
-The owner: "we continue in a next chat". Where things stand:
+The owner: "make a note for a new chat". Where things stand:
 
-- **Pushed in f52085b** (on main): Nexus Releases renamed the Nexus Release Tool (NRT: `dev/nrt/`, the package
-  `nexus_release_tool`, `tools/nrt.sh`, the installer tests `nrt.sh`/`nrt.ps1`; the installers remove the old
-  name's shortcuts, the app takes over its settings), and stage 1 of the release redesign below (release-nexus.yml,
-  the Windows Portable Suite on it, NRT's Nexus release tab). On Windows the owner ran `dev\nrt\install.ps1`; on
-  Bazzite, after a pull, `tools/nrt.sh --install` once.
-- **Next: the first real Nexus release** is stage 1's test (nothing of it has run on GitHub yet). Check that CI of
-  f52085b passed, that NRT on the handheld has `gh` signed in (the draft's download and Publish need it), then Start
-  new release and watch: the run (ci, plan, apps, pin, portal jobs), the *Pin ...* commit on main, the draft portal,
-  the device test, Publish, the Nexus index made after it, and that an installed portal offers the new portal as
-  before. Fix what it shows, in the working tree, for the owner to commit.
-- **Not run on this machine:** the BC250 installer test `bc250-bazzite/tools/installer-tests/nrt.sh` and
-  `tools/ci-local.sh` (Linux): run them on Bazzite.
+- **Done: the Nexus release nexus-v1.2.0** (release commit 9a61e34, Pin commit 05c8722 on main; Release Nexus run
+  41109397782 passed): the apps wp-pcsx2-v4.1.0, wp-ppsspp-v2.1.0, wp-rpcs3-v2.1.0, wp-shadps4-v2.1.0,
+  wp-test-v3.2.0, wp-vita3k-v2.1.0 and wp-xenia-v2.1.0 published and pinned; wp-portal-v5.0.0 device-tested and
+  published 30-10-2026 20:15 (it replaced the draft of nexus-v1.1.0's run, which was never published); the Nexus
+  index Nexus v1.2.0 is GitHub's Latest release.
+- **What this release brought, to keep an eye on with use on the Ally:** Steam started by the apps signs in (core's
+  platform.outside_bundle() keeps the controller reader's SDL_VIDEODRIVER=dummy away from started programs: it, not
+  the lower-case name of steam.exe, kept Steam Logged Off, in Desktop and Xbox mode); X Play without Steam (each
+  manager's emulator through the play mode); View + Menu held 2 s quits a game in every manager (core's play.py,
+  the managers' --play, Steam shortcuts start it: an old shortcut shows (Update Steam), Y rewrites it once); shadPS4's
+  "Are you sure you want to quit?" answered with Enter (play.press_enter, not yet seen in the game itself) and the
+  close sent to the main window only (Steam's overlay opened over the game before); the portal's RT Steam (Open
+  Steam moved out of the managers); the battery last in the status line, Plugged in on the charger; the Suite page's
+  Xbox menu row and install.ps1's question (core's xbox.py, the Xbox app's undocumented
+  `ThirdPartyLibraries\CustomLibraryManagement\CustomLibraryManagement.manifest`; writing it with the Xbox app
+  running in Xbox mode is not tested yet: the owner's Ally has the suite there already, added by hand); RPCS3's exit
+  question off (confirmationBoxExitGame=false, not seen yet); the device test closes an open portal; PCSX2's X Play
+  checks the BIOS.
+- **Option 2, in the working tree (30-10-2026 20:25, for the owner to commit):** `tools/release_commit.py` (the
+  rule, `tools/tests/test_release_commit.py`), `tools/ci_state.py --release-commit`, used by release-nexus.yml and
+  release-windows-portable.yml (fetch-depth 2). The first Nexus release after its push shows it: Release Nexus's
+  "Nexus's CI passed on this commit" and the suite's "CI passed on this commit" say "only writes a release: the CI
+  of its work commit ... answers for it" and pass within seconds; Start to draft should then take about 5 minutes
+  instead of 9:40 (nexus-v1.2.0 waited 0:50 in Release Nexus's plan and 3:40 in the suite's ci job for CI on the
+  release commit). The case it was written for:
+- **Asked (owner, 30-10-2026: "2 but wait until this is finished"; nexus-v1.2.0 is finished):** a release takes about 18
+  minutes from the owner's Commit, 10 of them CI Windows Portable run twice (on the work commit and again on the
+  release commit, which only changes versions, CHANGELOG entries and apps.toml). The owner chose option 2: keep the
+  two commits, and let the release accept the CI that passed on the work commit when the release commit changes
+  nothing but VERSION files and their copies, the `Release x.y.z.` / `Version x.y.z.` CHANGELOG entries and
+  apps.toml's tags (and sha256, which the pin fills); anything else still waits for CI on the release commit. Where:
+  release-windows-portable.yml's ci job ("CI passed on this commit") and release-nexus.yml's wait for CI Nexus; the
+  rule in a tool of its own with tests that it is exact (a code change in a release commit must never pass). Measured
+  times of 30-10-2026, Amsterdam: Commit 19:35:46, push 19:36:27, CI 19:36:27-19:41:06, Start 19:43:51, CI on the
+  release commit 19:43:57-19:49:14, release 19:49:25-19:53:31.
+- **Set aside by the owner (30-10-2026):** an install feature for Xenia Manager ("could not find it anymore, so
+  drop it"); the Steam overlay that sometimes showed over a game ("drop it; issues might come up during tests").
+- **The Portable Test tile name** (apps.toml's `short = "Portable Test"`, owner, 30-10-2026) was taken out of
+  nexus-v1.1.0 so that release could go: put it back in a later release with its portal CHANGELOG entry (the whole
+  name, Windows Portable Test, does not fit a tile at the Ally's size; Portable Test does).
+- **Not run on this machine:** `tools/ci-local.sh` and the BC250 installer tests (Linux): run them on Bazzite.
 - **Then:** stage 2 (the CI test matrix read from the suites' folders), stage 3 (the BC250 suite on the Nexus
-  release); and, after the owner's test of shadPS4 Manager on the Ally, the fixed folders for the other five game
-  managers (the paragraph "Fixed folders, no folder selecting" below).
+  release); the fixed folders for the other five game managers (the paragraph "Fixed folders, no folder selecting"
+  below).
 
-## Release redesign: a Nexus release carries the changed suites (owner, 30-10-2026; stage 1 pushed, not run yet)
+## Release redesign: a Nexus release carries the changed suites (owner, 30-10-2026; stage 1 in use since nexus-v1.1.0)
 
 The owner, 30-10-2026: "Remember we are growing fast, I have for sure 3 more suites on my list ... the BC250 Bazzite
 one needs a refactoring." And the model (owner, 30-10-2026): "any change in Nexus triggers a Nexus release, a nexus

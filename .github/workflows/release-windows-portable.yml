@@ -14,6 +14,9 @@ name: Release Windows Portable
 #   a portal tag.
 # * A tag pushed by hand, wp-<app>-v<x.y.z> (wp-test-v0.1.0): that one release, published at once, as before the
 #   Nexus release. The tag's version must equal that app's VERSION.
+#   A tag whose release is published already is left alone: the Nexus Release Tool's Publish makes the portal tag
+#   of a Nexus release that way, on the pin commit, which has no CI run (a push with the workflow's token starts no
+#   workflow), so the run would only wait for CI in vain (30-10-2026, wp-portal-v5.0.0) and then build it again.
 #
 # The assets are <tag>.zip (the app's one-folder PyInstaller build with its install.ps1), SHA256SUMS and the notes,
 # built on Windows by windows-portable/tools/build_release.py. A portal release bundles the release of Windows
@@ -24,7 +27,10 @@ name: Release Windows Portable
 #
 # Only a commit that CI passed becomes a release: the first job waits for ci-windows-portable.yml on the commit and
 # for Nexus's ci-nexus.yml (core, which every app bundles, the release tools and the repository's rules), up to 75
-# minutes each. The pin commit changes only sha256 lines and is checked here (check_manifest.py --require-tags).
+# minutes each. A release commit that only writes the release (versions, Release entries, apps.toml's tags:
+# tools/release_commit.py) takes the CI that passed on its work commit, the parent (owner, 30-10-2026: CI ran twice
+# on the same code); anything more waits for CI on the commit itself. The pin commit changes only sha256 lines and is
+# checked here (check_manifest.py --require-tags).
 
 on:
   push:
@@ -50,23 +56,42 @@ jobs:
     permissions:                        # the second wait is mostly over already)
       actions: read
       contents: read
+    outputs:
+      out: ${{ steps.out.outputs.out }}
     env:
       COMMIT: ${{ inputs.commit || github.sha }}
     steps:
+      - name: Not published already
+        id: out
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          if [ "$(gh release view "$TAG" --json isDraft --jq .isDraft 2>/dev/null)" = false ]; then
+            echo "$TAG is published already (the Nexus Release Tool's Publish made the tag): nothing to do."
+            echo "out=true" >> "$GITHUB_OUTPUT"
+          fi
       - uses: actions/checkout@v7
+        if: steps.out.outputs.out != 'true'
         with:
           ref: ${{ inputs.commit || github.sha }}
+          fetch-depth: 2                # the parent: a release commit's work commit
       - name: CI passed on this commit
+        if: steps.out.outputs.out != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: python3 tools/ci_state.py --workflow ci-windows-portable.yml --wait 75 "$COMMIT"
+        run: python3 tools/ci_state.py --workflow ci-windows-portable.yml --release-commit --wait 75 "$COMMIT"
       - name: Nexus's CI passed on this commit
+        if: steps.out.outputs.out != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: python3 tools/ci_state.py --workflow ci-nexus.yml --wait 75 "$COMMIT"
+        run: python3 tools/ci_state.py --workflow ci-nexus.yml --release-commit --wait 75 "$COMMIT"
 
   plan:
     needs: ci
+    if: needs.ci.outputs.out != 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     outputs:

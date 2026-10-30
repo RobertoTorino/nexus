@@ -69,7 +69,9 @@ what there is to do. Only the lit pill does anything, so you never need a comman
    and their copies, the `Release x.y.z.` entries, the new tags in `apps.toml`, the portal's version and its entry,
    Nexus's), commits it, pushes it and starts Release Nexus on that commit. If the push stops, fix what it says;
    the pill then reads **Push and start**.
-6. **The release on GitHub:** Release Nexus calls each changed suite's release workflow. A suite's run builds its
+6. **The release on GitHub:** Release Nexus calls each changed suite's release workflow. It starts at once: your
+   release commit only writes the release, so the CI that passed on your commit in step 4 counts for it, and CI
+   does not have to run again first. A suite's run builds its
    new app releases side by side and publishes them, writes their checksums into `apps.toml` in a commit *Pin ...*
    on top of yours, and builds the portal as a **draft**: a draft has no tag yet, so no installed portal sees it.
    The line links the run; a run that ends badly gives a notification and lights **Resume run** (what is out already
@@ -87,7 +89,9 @@ what there is to do. Only the lit pill does anything, so you never need a comman
    start again from **Commit your changes**.
 9. **Bring in the pin commit** (**git pull**): the *Pin ...* commit is on main. Then every step shows ✓.
 
-A tag pushed by hand (**git tag** in the steps below) still releases that one app or portal, published at once.
+A tag pushed by hand (**git tag** in the steps below) still releases that one app or portal, published at once. The
+portal tag Publish makes starts Release Windows Portable too, as any pushed tag does; that run sees the release is
+published already and ends at once.
 
 ## The window
 
@@ -280,6 +284,15 @@ started by a tag pushed by hand, or called by **Release Nexus** for a Nexus rele
 page each run is titled with the push's commit message: after a push of *Release portal-v12.1.1*, **CI Windows
 Portable** shows as *Release portal-v12.1.1* too, but it only tests. Its steps **Build the release zip, not
 published** build a suite's zip on GitHub's test machine, so the next step can install it; nothing is uploaded.
+
+A release builds only a commit CI passed (`tools/ci_state.py`): the suite's own CI and Nexus's. A Nexus release's
+release commit is the exception that saves a second CI run on the same code: when it changes nothing but what a
+release writes (`tools/release_commit.py`: `VERSION` files and their copies, `Release x.y.z.` and `Version x.y.z.`
+entries on top of the CHANGELOGs, the `tag` and `sha256` lines of `apps.toml`), the CI that passed on its parent,
+the commit you pushed before Start new release, counts for it (`ci_state.py --release-commit`). Any other change in
+it, a line of code or a file added, and the release waits for CI on the release commit itself, as does a commit
+whose parent CI did not run on (it changed nothing of the suite). CI still runs on the release commit; nothing
+waits for it.
 
 A repository has one **Latest** release, and Nexus holds several suites, so no suite's portal is it. Latest is the
 Nexus index, named after Nexus's own version: *Nexus v0.1.0*, tagged `nexus-v0.1.0`. It has a section per suite

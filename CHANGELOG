@@ -1,3 +1,23 @@
+Changelog: 30-10-2026 20:30:42
+
+Fixed. Publishing a Nexus release's portal no longer ends in a failed Release Windows Portable run (owner,
+30-10-2026, after wp-portal-v5.0.0): Publish makes the portal tag on the pin commit, the tag starts the workflow's
+path for a tag pushed by hand, and that waited for CI on the pin commit, which has none (the release run pushes it
+with the workflow's token, which starts no workflow), and failed after five minutes; had CI been there, it would have
+built the published portal again. A pushed tag whose release is published already now ends the run at once, with
+nothing to do.
+
+Changelog: 30-10-2026 20:25:27
+
+Added. A release no longer waits for CI to run twice on the same code (owner, 30-10-2026, option 2: a release took
+about 18 minutes from Commit, 10 of them CI): tools/release_commit.py tells a release commit that only writes the
+release (VERSION files and their copies, Release x.y.z. and Version x.y.z. entries on top of the CHANGELOGs,
+apps.toml's tag and sha256 lines, nothing added, removed or renamed, one parent) from one that changes anything
+more, and tools/ci_state.py --release-commit then takes the CI of its parent, the work commit; any other change, or a
+work commit without a run of the workflow, waits for CI on the commit itself as before. Release Nexus and Release
+Windows Portable use it (fetch-depth 2, for the parent); release.yml and tag-release.sh of the BC250 Bazzite Suite do
+not change. The Nexus page's Releases chapter says so.
+
 Changelog: 30-10-2026 19:43:50
 
 Release 1.2.0. Brings wp-pcsx2-v4.1.0, wp-ppsspp-v2.1.0, wp-rpcs3-v2.1.0, wp-shadps4-v2.1.0, wp-test-v3.2.0, wp-vita3k-v2.1.0, wp-xenia-v2.1.0.

@@ -12,6 +12,8 @@ name: Release Nexus
 # (owner, 27-10-2026 and 30-10-2026: no shared release YAML); a suite joins with a job below.
 #
 # It starts only on main's newest commit, after Nexus's CI passed on it, so no commit of anyone else's slips in.
+# A release commit that only writes the release (tools/release_commit.py) takes the CI that passed on its work
+# commit, the parent (owner, 30-10-2026); anything more waits for CI on the commit itself.
 
 on:
   workflow_dispatch:
@@ -43,6 +45,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.commit }}
+          fetch-depth: 2                # the parent: the release commit's work commit
       - name: The release commit is main's newest
         run: |
           git fetch -q origin main
@@ -50,7 +53,7 @@ jobs:
           [ "$head" = "$(git rev-parse HEAD)" ] ||
             { echo "main is $head, not the release commit $COMMIT: start the release again on the new main." >&2; exit 1; }
       - name: Nexus's CI passed on this commit
-        run: python3 tools/ci_state.py --workflow ci-nexus.yml --wait 75 "$COMMIT"
+        run: python3 tools/ci_state.py --workflow ci-nexus.yml --release-commit --wait 75 "$COMMIT"
       - name: The suites this release carries
         id: plan
         run: python3 tools/nexus_release.py suites | tee -a "$GITHUB_OUTPUT"

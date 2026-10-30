@@ -94,3 +94,31 @@ def test_a_suite_of_its_own_asks_for_its_own_workflow(monkeypatch):
     assert calls == [("abc1234", 0.0, "ci.yml"), ("abc1234", 1.0, "ci-windows-portable.yml")]
     assert "workflows/ci-windows-portable.yml/runs" in ci_state.RUNS_URL.format(
         repo="r", workflow="ci-windows-portable.yml", sha="s")
+
+
+def test_a_release_commit_is_answered_by_its_work_commit(monkeypatch, capsys):
+    """--release-commit (owner, 30-10-2026): a commit that only writes a release takes the CI of its parent, the
+    work commit; one that changes more, or whose work commit has no run of the workflow, takes its own."""
+    monkeypatch.delenv("BC250_CI_STATE", raising=False)
+    runs = {"work123": [run()], "rel4567": [run(status="in_progress", conclusion=None)], "nocirun": []}
+    asked = []
+
+    def fetch(sha, workflow=ci_state.WORKFLOW):
+        asked.append(sha)
+        return runs[sha]
+    parents = {"rel4567": "work123"}
+    assert ci_state.check_release_commit("rel4567", fetch=fetch, work_commit=parents.get) == 0
+    assert asked[-1] == "work123" and "answers for it" in capsys.readouterr().err
+    assert ci_state.check_release_commit("work123", fetch=fetch, work_commit=parents.get) == 0   # not a release
+    assert asked[-1] == "work123"
+    parents["rel4567"] = "nocirun"
+    assert ci_state.check_release_commit("rel4567", fetch=fetch, work_commit=parents.get) == 2   # its own: running
+    assert asked[-1] == "rel4567" and "has no run of ci.yml" in capsys.readouterr().err
+    failed = {"work123": [run(conclusion="failure")]}
+    assert ci_state.check_release_commit("rel4567", fetch=lambda sha: failed.get(sha, []),
+                                         work_commit={"rel4567": "work123"}.get) == 1
+    calls = []
+    monkeypatch.setattr(ci_state, "check_release_commit",
+                        lambda sha, wait, workflow: calls.append((sha, wait, workflow)) or 0)
+    assert ci_state.main(["--workflow", "ci-nexus.yml", "--release-commit", "--wait", "75", "rel4567"]) == 0
+    assert calls == [("rel4567", 75.0, "ci-nexus.yml")]
