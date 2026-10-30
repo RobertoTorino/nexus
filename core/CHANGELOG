@@ -1,3 +1,7 @@
+Changelog: 30-10-2026 21:48:01
+
+Version 2.0.0.
+
 Changelog: 30-10-2026 21:19:45
 
 Breaking. play.py's chord is View, LB and RB held for two seconds (CHORD back, leftshoulder, rightshoulder; owner,

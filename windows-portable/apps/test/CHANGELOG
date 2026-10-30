@@ -1,3 +1,7 @@
+Changelog: 30-10-2026 21:48:01
+
+Release 4.0.0.
+
 Changelog: 30-10-2026 21:19:45
 
 Fixed. No change in what it does: the temperatures and the power draw are read by core's chip.py, where temps.py's
