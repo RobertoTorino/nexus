@@ -17,8 +17,8 @@ def test_the_status():
 
 def test_the_text():
     assert power.text((82, False)) == "82%"
-    assert power.text((64, True)) == "64% charging"
-    assert power.text((100, True)) == "100%"
+    assert power.text((64, True)) == "Plugged in"             # on the charger (owner, 30-10-2026)
+    assert power.text((100, True)) == "Plugged in"
     assert power.text(None) == ""
 
 

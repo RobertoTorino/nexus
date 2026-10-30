@@ -228,6 +228,11 @@ class ReleasePage(QWidget):
     def detail(self, key: str, state: str, facts: flow.Facts) -> str:
         """The step's line while it is the one to do or failed: what is there to do, in words; "" for its usual
         line."""
+        if key == "test" and state == "later" and facts.drafts and flow.current_step(facts) in (
+                "pull", "commit", "push", "ci", "start"):
+            # After Not OK, or after a restart of NRT, which keeps nothing of its own: the draft says it is still there
+            return (f"{', '.join(facts.drafts)} is still a draft, not published: Start new release replaces it with "
+                    "a new one.")
         if state not in ("now", "failed"):
             return ""
         window = self.release_window

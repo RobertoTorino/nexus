@@ -318,7 +318,7 @@ class MainWindow(PortableWindow):
         threading.Thread(target=lambda: self.release_found.emit(ask()), daemon=True).start()
 
     def update_status(self) -> None:
-        self.header.set_status([power.text(self.battery()), *status_clock()])
+        self.header.set_status([*status_clock(), power.text(self.battery())])   # the battery last (owner, 30-10-2026)
 
     def _release_found(self, release: object) -> None:
         self.newer = release if isinstance(release, ReleaseInfo) else None

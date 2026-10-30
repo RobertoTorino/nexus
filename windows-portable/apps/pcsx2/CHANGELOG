@@ -1,3 +1,14 @@
+Changelog: 30-10-2026 17:55:08
+
+Added. The battery is last in the status line at the top, at the right, and says Plugged in on the charger (owner,
+30-10-2026; core's power.text()).
+
+Changelog: 30-10-2026 17:18:10
+
+Fixed. Steam started by the app signs in, in Desktop and in Xbox mode (core's outside_bundle(), owner, 30-10-2026): it
+inherited the controller reader's SDL_VIDEODRIVER=dummy, so Steam made its login window without a window and stayed
+Logged Off. X Play, the restart after Update Steam and a game started without Steam no longer get those variables.
+
 Changelog: 30-10-2026 16:11:24
 
 Release 4.0.0.

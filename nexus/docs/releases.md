@@ -77,8 +77,9 @@ what there is to do. Only the lit pill does anything, so you never need a comman
    changes**, **Push them** and **CI passes** for the fix, and step 6 reads **Start again on this commit**, which runs
    the release as it is written on the fix's commit.
 7. **Device test,** on the suite's own device (the handheld for the Windows Portable Suite): it downloads the draft
-   portal, checks it against its `SHA256SUMS`, installs it and starts it (`check-release.ps1 draft`). Test it as a
-   user would.
+   portal, checks it against its `SHA256SUMS`, installs it and starts it (`check-release.ps1 draft`). An installed
+   portal that is open is closed first, as its window would close (ended when it has not closed within 10 seconds):
+   a program that runs cannot be replaced. Test it as a user would.
 8. **Publish** when it works: the draft becomes a release, which makes its portal tag, and the portals offer it from
    then on; the Nexus index follows. **Not OK** leaves the draft unpublished: fix what the test showed; the steps
    start again from **Commit your changes**.

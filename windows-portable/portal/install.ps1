@@ -4,6 +4,8 @@
 #
 #   powershell -ExecutionPolicy Bypass -File install.ps1                          # install or update
 #   powershell -ExecutionPolicy Bypass -File install.ps1 --no-desktop-shortcut    # the Start-menu entry only
+#   powershell -ExecutionPolicy Bypass -File install.ps1 --xbox-menu              # also into the Xbox menu, unasked
+#   powershell -ExecutionPolicy Bypass -File install.ps1 --no-xbox-menu           # not into the Xbox menu, unasked
 #   powershell -ExecutionPolicy Bypass -File install.ps1 --uninstall              # remove the portal and Windows Portable Test; the other apps stay
 #   powershell -ExecutionPolicy Bypass -File install.ps1 --uninstall --all        # the whole suite: every app the portal installed too
 #   powershell -ExecutionPolicy Bypass -File install.ps1 --uninstall --purge      # also remove the settings, the log and the records
@@ -43,7 +45,30 @@ $Src = $PSScriptRoot
 
 function Info($text) { Write-Host '==> ' -ForegroundColor Magenta -NoNewline; Write-Host $text }
 function Die($text) { Write-Host "ERROR: $text" -ForegroundColor Red; exit 1 }
-function Usage { Get-Content -LiteralPath $PSCommandPath | Select-Object -Skip 1 -First 8 | ForEach-Object { $_ -replace '^# ?', '' } }
+function Usage { Get-Content -LiteralPath $PSCommandPath | Select-Object -Skip 1 -First 10 | ForEach-Object { $_ -replace '^# ?', '' } }
+
+function Add-ToXboxMenu($program) {
+    # The suite in the Xbox app's library, so Xbox mode starts it from its home (owner, 30-10-2026): asked on a
+    # first install (an update keeps what was chosen; the Suite page adds it any time), --xbox-menu and
+    # --no-xbox-menu answer without the question, WPS_XBOX_MENU (y or n) in the installer tests. The portal itself
+    # writes it (--xbox-menu, core's xbox.py): the Xbox app closes for a moment.
+    if ($XboxMenu -eq $false) { return }
+    if (-not (Test-Path -LiteralPath (Join-Path $env:LOCALAPPDATA 'Packages\Microsoft.GamingApp_8wekyb3d8bbwe'))) { return }
+    if ($XboxMenu -ne $true) {
+        if (-not $FirstInstall) { return }
+        $answer = $env:WPS_XBOX_MENU
+        if (-not $answer) {
+            if (-not [Environment]::UserInteractive -or [Console]::IsInputRedirected) { return }
+            $answer = Read-Host "Add $AppName to the Xbox menu, so Xbox mode starts it from its home? The Xbox app closes for a moment. [Y/n]"
+        }
+        if ($answer -and $answer -notmatch '^\s*y') { Info 'Not added to the Xbox menu (the Suite page adds it any time)'; return }
+    }
+    Info "Adding $AppName to the Xbox menu"
+    try { $run = Start-Process -FilePath $program -ArgumentList '--xbox-menu' -Wait -PassThru -WindowStyle Hidden }
+    catch { Info "Not added to the Xbox menu: $_ (the Suite page tries again)"; return }
+    if ($run.ExitCode -eq 0) { Info "$AppName is in the Xbox menu" }
+    else { Info "Not added to the Xbox menu: $PortalHome\portal.log says why (the Suite page tries again)" }
+}
 
 function Elevated {
     if ($env:WPS_ELEVATED) { return $env:WPS_ELEVATED -eq '1' }
@@ -167,12 +192,15 @@ function Invoke-AppInstaller($tag, [string[]]$options) {
 }
 
 $DesktopShortcut = $true
+$XboxMenu = $null                               # $null: asked on a first install
 $Uninstall = $false
 $All = $false
 $Purge = $false
 foreach ($arg in $args) {
     switch -CaseSensitive ($arg) {
         '--no-desktop-shortcut' { $DesktopShortcut = $false }
+        '--xbox-menu' { $XboxMenu = $true }
+        '--no-xbox-menu' { $XboxMenu = $false }
         '--uninstall' { $Uninstall = $true }
         '--all' { $All = $true }
         '--purge' { $Purge = $true }
@@ -241,6 +269,7 @@ if ($TestZip) {
 }
 
 # --- The portal --------------------------------------------------------------------------------
+$FirstInstall = -not (Test-Path -LiteralPath (Join-Path $AppDir $Exe))
 Info "Installing $AppName in $AppDir"
 $New = "$AppDir.new"
 Remove-IfThere $New
@@ -287,5 +316,6 @@ if ($TestZip) {
 } else {
     Info "No $TestName in bundle\ (a build from the checkout): install it from the portal."
 }
+Add-ToXboxMenu $Target
 Info "$AppName is installed. Start it from the Start menu, or run $Target"
 Remove-Download

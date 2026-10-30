@@ -1,3 +1,21 @@
+Changelog: 30-10-2026 18:17:38
+
+Added. The suite in the Xbox menu (owner, 30-10-2026): the Suite page's row Xbox menu (only with the Xbox app):
+Add puts the installed portal in the Xbox app's library, so Xbox mode starts it from its home, In the menu once it is
+there (core's xbox.py). install.ps1 asks on a first install (Y/n), --xbox-menu and --no-xbox-menu answer without the
+question (WPS_XBOX_MENU in the installer tests), and runs the installed portal with --xbox-menu, which adds it without a
+window; a portal that cannot never fails the install.
+
+Changelog: 30-10-2026 17:55:08
+
+Added. The battery is last in the status line at the top, after Suite x.y.z available, and says Plugged in on the
+charger (owner, 30-10-2026).
+
+Changelog: 30-10-2026 17:18:10
+
+Fixed. RT Steam starts a Steam that signs in (core's outside_bundle(), owner, 30-10-2026): it inherited the controller
+reader's SDL_VIDEODRIVER=dummy and stayed Logged Off, its login window made without a window.
+
 Changelog: 30-10-2026 16:11:24
 
 Release 5.0.0. Pins wp-test-v3.1.0, wp-pcsx2-v4.0.0, wp-ppsspp-v2.0.0, wp-rpcs3-v2.0.0, wp-shadps4-v2.0.0, wp-vita3k-v2.0.0, wp-xenia-v2.0.0.

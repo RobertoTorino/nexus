@@ -91,7 +91,7 @@ def ready(home: Path) -> Path:
 def test_the_window_opens_with_the_suites_header(qapp):
     window = make(qapp)
     assert window.header.title.text() == APP_NAME and window.header.version.text() == __version__
-    assert re.fullmatch(r"82%  \|  \w+day \d\d/\d\d/\d{4}  \|  \d\d:\d\d", window.header.status.text())
+    assert re.fullmatch(r"\w+day \d\d/\d\d/\d{4}  \|  \d\d:\d\d  \|  82%", window.header.status.text())   # battery last
     assert window.legend.items == [("A", "Install"), MENU_INFO, EXIT]   # on a card: no Back
     assert no_pills(window)
     window.close()
@@ -874,14 +874,14 @@ def test_play_runs_the_game_without_a_window(monkeypatch, tmp_path):
     ran = []
     monkeypatch.setattr(emulator, "emulator_home", lambda: tmp_path / "emulator")
     monkeypatch.setattr(entry.applog, "setup", lambda *a, **k: tmp_path / "log")
-    monkeypatch.setattr(entry.play, "run", lambda command, cwd, log: ran.append((command, cwd)) or 3)
+    monkeypatch.setattr(entry.play, "run", lambda command, cwd, log, confirm: ran.append((command, cwd, confirm)) or 3)
     monkeypatch.setattr(entry, "create_app", lambda *a, **k: pytest.fail("no window in the play mode"))
     monkeypatch.setattr(sys, "argv", ["shadPS4-Manager.exe", "--play", "-f", "true", "-g", r"D:\G\eboot.bin"])
     assert entry.main() == 3
     program = emulator.program(tmp_path / "emulator")
-    assert ran == [([str(program), "-f", "true", "-g", r"D:\G\eboot.bin"], program.parent)]
+    assert ran == [([str(program), "-f", "true", "-g", r"D:\G\eboot.bin"], program.parent, entry.play.press_enter)]
 
-    def fails(command, cwd, log):
+    def fails(command, cwd, log, confirm):
         raise FileNotFoundError(2, "The system cannot find the file specified")
     monkeypatch.setattr(entry.play, "run", fails)
     assert entry.main() == 1

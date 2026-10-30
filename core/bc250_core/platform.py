@@ -140,6 +140,9 @@ def open_path(target: str | Path) -> bool:
 
 _OUTSIDE = threading.Lock()
 BUNDLE_VARIABLES = ("QT_PLUGIN_PATH", "QML2_IMPORT_PATH")     # what PyInstaller's PyQt6 hook sets for the app itself
+# What the app's own controller reader sets for SDL (gamepad.PygameSource), for itself only
+APP_VARIABLES = ("SDL_VIDEODRIVER", "SDL_AUDIODRIVER", "SDL_JOYSTICK_ALLOW_BACKGROUND_EVENTS",
+                 "PYGAME_HIDE_SUPPORT_PROMPT")
 
 
 def _get_dll_directory() -> str:
@@ -162,28 +165,39 @@ def without_folder(path: str, folder: str) -> str:
 
 @contextmanager
 def outside_bundle() -> Iterator[None]:
-    """A program started within it does not see the app's own DLLs. In an app built with PyInstaller on Windows (the
-    Windows Portable Suite's) the bootloader sets the DLL directory to the app's _internal folder and the PyQt6 hook
-    puts that folder first on PATH, and a program the app starts inherits both: Windows searches the DLL directory
-    before System32, so Steam, whose folder has no VCRUNTIME140.dll, ucrtbase.dll or OpenSSL of its own, took the
-    app's (the owner's Ally, 30-10-2026: Steam started by a game manager never ran, where Steam started by hand did).
-    steam.py starts Steam within it, start_program() any other program.
-    Both are taken away while the program starts and put back after; elsewhere, and from the checkout, nothing."""
-    bundle = getattr(sys, "_MEIPASS", None)
-    if not WINDOWS or not getattr(sys, "frozen", False) or not bundle:
+    """A program started within it does not see what the app set up for itself. Windows only; elsewhere nothing.
+
+    The controller reader's SDL variables (APP_VARIABLES): gamepad.py sets SDL_VIDEODRIVER=dummy, so SDL needs no
+    window of its own, and a program the app starts inherits it. Steam draws its windows with SDL3, so a Steam started
+    by a game manager made its login window without a window (System window 0) and never signed in (the owner's
+    Ally, 30-10-2026, in Steam's logs: started with these variables Logged Off, without them signed in within 15 s);
+    an emulator that draws with SDL would show no game either. Gone from a release and from the checkout alike.
+
+    In an app built with PyInstaller (the Windows Portable Suite's) also the bundle: the bootloader sets the DLL
+    directory to the app's _internal folder and the PyQt6 hook puts that folder first on PATH (and sets
+    BUNDLE_VARIABLES), and a program the app starts inherits them: Windows searches the DLL directory before
+    System32, and Steam's folder has no VCRUNTIME140.dll, ucrtbase.dll or OpenSSL of its own.
+
+    steam.py starts Steam within it, start_program() and play.py any other program. All of it is put back after."""
+    if not WINDOWS:
         yield
         return
+    bundle = getattr(sys, "_MEIPASS", None) if getattr(sys, "frozen", False) else None
+    names = (*APP_VARIABLES, *(("PATH", *BUNDLE_VARIABLES) if bundle else ()))
     with _OUTSIDE:
-        folder = _get_dll_directory()
-        saved = {name: os.environ.get(name) for name in ("PATH", *BUNDLE_VARIABLES)}
+        folder = _get_dll_directory() if bundle else ""
+        saved = {name: os.environ.get(name) for name in names}
         try:
-            _set_dll_directory(None)
-            os.environ["PATH"] = without_folder(saved["PATH"] or "", bundle)
-            for name in BUNDLE_VARIABLES:
-                os.environ.pop(name, None)
+            if bundle:
+                _set_dll_directory(None)
+                os.environ["PATH"] = without_folder(saved["PATH"] or "", bundle)
+            for name in names:
+                if name != "PATH":
+                    os.environ.pop(name, None)
             yield
         finally:
-            _set_dll_directory(folder or None)
+            if bundle:
+                _set_dll_directory(folder or None)
             for name, value in saved.items():
                 if value is None:
                     os.environ.pop(name, None)

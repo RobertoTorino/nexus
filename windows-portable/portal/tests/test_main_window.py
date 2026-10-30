@@ -121,6 +121,7 @@ def world(qapp, tmp_path, monkeypatch):
         pad = FakePad()
         kwargs.setdefault("intro_ms", 0)                # the intro has its own tests
         kwargs.setdefault("steam_here", lambda: False)  # never this machine's own Steam
+        kwargs.setdefault("xbox_local", tmp_path / "no-xbox")  # never this machine's own Xbox app
         window = mw.MainWindow(w.entries, w.sources, w.records, portal_check=portal_check,
                                gamepad=Gamepad(source_factory=lambda: pad), battery=lambda: (82, False),
                                launch=w.launched.append, terminal=w.terminal, exit_dir=tmp_path / "exit", **kwargs)
@@ -152,7 +153,7 @@ def test_the_tabs_and_tiles_and_the_strip_for_the_focused_app(world, qapp):
     assert window.tiles["test"].text.text() == "Not installed"
     assert pane_texts(window) == ("Windows Portable Test", "Install", "")
     assert window.app_pane.versions.text() == "Not installed; this portal has 0.1.0"
-    assert window.header.status.text().startswith("82%  |  ")
+    assert window.header.status.text().endswith("  |  82%")            # the battery last (owner, 30-10-2026)
     assert [text for _, text in window.legend.items][1:] == ["Details", "Suite", "Exit app"]
     assert window.legend.items[0][0] == "A" and window.app_pane.findChildren(portable.Pill) == []   # no pill (owner)
     window.tabs.step(1)
@@ -251,6 +252,34 @@ def test_rt_opens_steam_where_it_is_installed(world, qapp):
     window = world.make(steam_here=lambda: True, open_steam=fails)
     window.on_action("rt")
     assert window.app_pane.status.text() == "Steam could not be opened: The system cannot find the file specified"
+
+
+def test_the_suite_page_adds_the_suite_to_the_xbox_menu(world, qapp, tmp_path, monkeypatch):
+    """The Xbox menu row (owner, 30-10-2026): only with the Xbox app; A adds the installed portal to its library,
+    once, with the Xbox app closed for the change; a library kept otherwise is left alone and said."""
+    from bc250_core import xbox
+    window = world.make()
+    window.on_action("menu")
+    assert not window.suite_pane.xbox.isVisible()                  # no Xbox app here
+    window.close()
+    local = tmp_path / "local"
+    (local / "Packages" / xbox.PACKAGE).mkdir(parents=True)
+    monkeypatch.setattr(mw, "state_dir", lambda: tmp_path / "portal")
+    closed = []
+    window = world.make(xbox_local=local, xbox_closed=lambda change: closed.append(True) or change())
+    window.on_action("menu")
+    row = window.suite_pane.xbox
+    assert row.isVisible() and row.label.text() == "Xbox menu: Add"
+    row.activated.emit()
+    program = tmp_path / "portal" / "app" / "Windows-Portable-Suite.exe"
+    assert closed == [True] and xbox.listed(program, local) and row.label.text() == "Xbox menu: In the menu"
+    row.activated.emit()
+    assert closed == [True]                                         # never twice
+    xbox.manifest_path(local).write_text('{"customApps": []}', encoding="utf-8")
+    window.suite_pane.set_xbox("Add")
+    row.activated.emit()
+    assert row.label.text() == "Xbox menu: not added, the Xbox app keeps its library otherwise"
+    assert xbox.manifest_path(local).read_text(encoding="utf-8") == '{"customApps": []}'
 
 
 def test_x_shows_the_details_and_remove_takes_a_second_press(world, qapp):

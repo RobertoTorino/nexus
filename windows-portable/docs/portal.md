@@ -80,8 +80,9 @@ instead of a dialog; the row at the bottom says **Press again to remove** meanwh
 **☰** shows the Suite page: this portal's version, the newest portal release, and what that release
 changes (which apps it updates). With a newer release, the row at the bottom offers **Y Update to x.y.z**;
 otherwise **Y Check again**.
-The status line at the top, with the battery, the date and the time, says **Suite x.y.z available** while there is
-one.
+The status line at the top, with the date and the time, says **Suite x.y.z available** while there is one; the
+battery is always last, at the right: its percentage, or **Plugged in** while the device is on its charger. The apps'
+status lines show it the same way.
 
 **Y Update to x.y.z** downloads the new portal; the page counts the megabytes. The portal then closes,
 installs the new release in a PowerShell window and starts again. The new release brings the apps it pins: their
@@ -94,6 +95,7 @@ The d-pad moves between them, **A** on a setting switches it; **B** goes back to
 |---|---|
 | Wallpaper | A picture behind the tiles, which show it through them, in every app of the suite: switched here, it is on or off in each app from its next start. Off: the plain dark background. |
 | Sound | The intro's sound when the portal starts. Off: the intro plays without it. |
+| Xbox menu | Only with the Xbox app on the device. **Add** puts the suite in the Xbox app's library, so Xbox mode starts the portal from its home; the Xbox app closes for a moment while its library changes. **In the menu** once it is there. The Xbox app keeps its library in a file of its own that Microsoft does not document: when a newer Xbox app keeps it otherwise, the row says so and nothing is changed; add the suite in the Xbox app then (**My Library**, **+**). |
 
 The window fits the screen it is on: it is laid out for the Ally's 1280 x 720 (at Windows' 150 % scaling) and drawn
 larger on a larger screen, such as a TV, and smaller on a smaller one.

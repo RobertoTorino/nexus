@@ -405,8 +405,8 @@ DAYS = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sun
 
 
 def status_clock(now: datetime.datetime | None = None) -> list[str]:
-    """The date and the time for the header's status line, after the battery: "Monday 27/10/2026", "17:04" (owner,
-    28-10-2026). The day's name is English whatever Windows' language, as the apps' text is."""
+    """The date and the time for the header's status line, before the battery (owner, 30-10-2026: the battery last):
+    "Monday 27/10/2026", "17:04" (owner, 28-10-2026). The day's name is English whatever Windows' language, as the apps' text is."""
     now = now or datetime.datetime.now()
     return [f"{DAYS[now.weekday()]} {now:%d/%m/%Y}", f"{now:%H:%M}"]
 

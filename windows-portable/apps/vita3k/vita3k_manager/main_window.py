@@ -351,7 +351,7 @@ class MainWindow(PortableWindow):
         threading.Thread(target=lambda: self.release_found.emit(ask()), daemon=True).start()
 
     def update_status(self) -> None:
-        self.header.set_status([power.text(self.battery()), *status_clock()])
+        self.header.set_status([*status_clock(), power.text(self.battery())])   # the battery last (owner, 30-10-2026)
 
     def read_vita3k(self) -> None:
         """The PS Vita's storage and the firmware's parts in it."""

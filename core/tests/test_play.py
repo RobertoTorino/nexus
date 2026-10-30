@@ -159,3 +159,49 @@ def test_close_windows_closes_a_real_window(tmp_path):
     finally:
         if process.poll() is None:
             process.kill()
+
+
+def test_an_emulator_that_asks_before_it_quits_is_answered():
+    """shadPS4 asks "Are you sure you want to quit?" after a close (the owner's Ally, 30-10-2026): a second later,
+    while it still runs, Enter answers it, once; it then ends as on its own Quit."""
+    clock, lines, answered = Clock(), [], []
+    process = Process(closes_after=None)
+    pad = Pad({0.0: [("button", "back", True), ("button", "start", True)]})
+    pad.clock = clock
+
+    def confirm(pid):
+        answered.append(clock.now)
+        process.closes_after = 0
+        return 1
+    code = play.run(["shadPS4.exe"], Path("."), log=lines.append, start=lambda c, d: process, pad=lambda: pad,
+                    close=lambda pid: setattr(process, "asked", True) or 1, clock=clock, sleep=clock.sleep,
+                    confirm=confirm)
+    assert len(answered) == 1 and 3.0 <= answered[0] < 3.2 and code == 0 and not process.terminated
+    assert any("asks before it quits; answered in 1 window(s)" in line for line in lines)
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="Windows' windows")
+def test_only_the_main_window_is_closed(tmp_path):
+    """Steam's overlay has windows in the game's process: a close goes to the main window alone, not to a tool
+    window beside it (as the overlay's)."""
+    pytest.importorskip("tkinter")
+    marker = tmp_path / "closed"
+    script = ("import tkinter, pathlib, sys; root = tkinter.Tk(); root.title('play-main'); "
+              "tool = tkinter.Toplevel(root); tool.attributes('-toolwindow', True); "
+              "tool.protocol('WM_DELETE_WINDOW', lambda: pathlib.Path(sys.argv[1]).write_text('tool')); "
+              "root.protocol('WM_DELETE_WINDOW', lambda: (pathlib.Path(sys.argv[1]).write_text("
+              "pathlib.Path(sys.argv[1]).read_text() + 'main' if pathlib.Path(sys.argv[1]).exists() else 'main'), "
+              "root.destroy())); root.after(20000, root.destroy); root.mainloop()")
+    process = subprocess.Popen([sys.executable, "-c", script, str(marker)])
+    try:
+        end = time.monotonic() + 10
+        while time.monotonic() < end and len(play.main_windows(process.pid)) == 0:
+            time.sleep(0.2)
+        time.sleep(0.5)
+        assert len(play.main_windows(process.pid)) == 1             # the tool window is not one
+        play.close_windows(process.pid)
+        process.wait(10)
+        assert marker.read_text() == "main"
+    finally:
+        if process.poll() is None:
+            process.kill()

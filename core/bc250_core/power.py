@@ -35,8 +35,9 @@ def from_status(ac_line: int, flags: int, percent: int) -> tuple[int, bool] | No
 
 
 def text(state: tuple[int, bool] | None) -> str:
-    """"82%" on battery, "100% charging" on the charger, "" without a battery (owner, 28-10-2026: no space)."""
+    """"82%" on battery, "Plugged in" on the charger (owner, 30-10-2026), "" without a battery (owner, 28-10-2026: no
+    space). The header shows it last of its values."""
     if state is None:
         return ""
     percent, plugged = state
-    return f"{percent}% charging" if plugged and percent < 100 else f"{percent}%"
+    return "Plugged in" if plugged else f"{percent}%"

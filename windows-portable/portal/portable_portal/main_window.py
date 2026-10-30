@@ -22,12 +22,12 @@ from PyQt6.QtCore import QObject, QSettings, Qt, QTimer, pyqtSignal
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import QGridLayout, QStackedWidget, QVBoxLayout, QWidget
 
-from bc250_core import applog, portable, power, steam
+from bc250_core import applog, portable, power, steam, xbox
 from bc250_core.gamepad import Gamepad
 from bc250_core.platform import expand, launch_in_terminal, private
 from bc250_core.portable import AMBER, DIM, MENU, VIEW, Card, Legend, PortableHeader, PortableWindow, px, status_clock
 
-from . import APP_ICONS, APP_ID, APP_NAME, INTRO_SOUND, SUITE, __version__
+from . import APP_ICONS, APP_ID, APP_NAME, EXE_NAME, INTRO_SOUND, ROOT, SUITE, __version__, state_dir
 from .intro import INTRO_MS, Intro
 from .manifest import CATEGORIES, AppEntry
 from .portal_update import PortalUpdate, short
@@ -41,6 +41,7 @@ PROGRESS_MS = 500               # how often a download's size is shown (owner, 2
 TILE_W, TILE_H, GAP = 293, 176, 14      # the mock-up's tiles: two rows of four
 COLUMNS, PER_PAGE = 4, 8
 TAB_KEY = "window/tab"          # the settings: the tab shown last
+LOGO_PNG = ROOT / "images" / f"{APP_ID}-128.png"   # the suite's icon, its picture in the Xbox menu
 STEAM_MISSING = "Steam is not installed on this device: install it from store.steampowered.com, then RT opens it."
 WALLPAPER_KEY = "look/wallpaper"  # where portal 1.6.0 kept the wallpaper switch: now the suite's (core, suite.ini)
 
@@ -129,10 +130,13 @@ class MainWindow(PortableWindow):
                  terminal: Callable[..., None] = launch_in_terminal, icons: Path = APP_ICONS,
                  exe: str = "", exit_dir: Path | None = None, intro_ms: int = INTRO_MS,
                  wallpaper: Path | None = portable.WALLPAPER,
-                 steam_here: Callable[[], bool] = steam.installed, open_steam: Callable[[str], None] = steam.open_url):
+                 steam_here: Callable[[], bool] = steam.installed, open_steam: Callable[[str], None] = steam.open_url,
+                 xbox_local: Path | None = None, xbox_closed: Callable[[Callable[[], None]], None] | None = None):
         """*intro_ms*: how long the intro plays when the window starts (0: none). *wallpaper*: the picture behind
         the page, darkened (None: the plain background); on or off for the whole suite (Settings). *steam_here*:
-        whether Steam is installed; *open_steam*: hands a steam:// address to Steam (its library)."""
+        whether Steam is installed; *open_steam*: hands a steam:// address to Steam (its library). *xbox_local*:
+        where the Xbox app's package folder is (default %LOCALAPPDATA%); *xbox_closed*: runs a change with the Xbox
+        app closed (core's xbox.with_xbox_closed)."""
         old = QSettings()                               # portal 1.6.0 kept the switch in portal.ini: the suite's now
         if old.contains(WALLPAPER_KEY) and portable.look_settings(SUITE).value(portable.LOOK_KEY) is None:
             portable.set_wallpaper_on(SUITE, str(old.value(WALLPAPER_KEY)).lower() != "false")
@@ -142,6 +146,7 @@ class MainWindow(PortableWindow):
         self.log = applog.logger(APP_ID)
         self.entries, self.sources, self.records = entries, sources, records
         self.steam_here, self.open_steam = steam_here, open_steam
+        self.xbox_local, self.xbox_closed = xbox_local, xbox_closed
         self.portal_check, self.battery, self.launch, self.terminal = portal_check, battery, launch, terminal
         self.exe = exe                                  # the installed portal's program, for a restart; "" from a checkout
         self.exit_dir = exit_dir or Path(tempfile.gettempdir())
@@ -201,6 +206,7 @@ class MainWindow(PortableWindow):
             self.tiles[entry.key] = tile
         self.suite_pane.wallpaper.activated.connect(self.toggle_wallpaper)
         self.suite_pane.sound.activated.connect(self.toggle_sound)
+        self.suite_pane.xbox.activated.connect(self.add_to_xbox)
         self.tabs.changed.connect(self.show_tab)
         self.bind("accept", self.a_action)
         self.bind("x", self.show_details)
@@ -266,6 +272,35 @@ class MainWindow(PortableWindow):
         self.suite_pane.set_wallpaper(self.wallpaper_on)
         self.log.info(f"Wallpaper {'on' if self.wallpaper_on else 'off'}, for the suite.")
 
+    def xbox_state(self) -> str:
+        """The Xbox menu row's state: "" without the Xbox app, In the menu, or Add."""
+        if not xbox.installed(self.xbox_local):
+            return ""
+        return "In the menu" if xbox.listed(self.program(), self.xbox_local) else "Add"
+
+    def program(self) -> Path:
+        """The installed portal, what the Xbox menu starts (never a checkout's Python)."""
+        return state_dir() / "app" / f"{EXE_NAME}.exe"
+
+    def add_to_xbox(self) -> None:
+        """The Suite page's Xbox menu row (owner, 30-10-2026): the suite in the Xbox app's library, the Xbox app
+        closed for a moment (core's xbox.py); said on the row and in the log."""
+        if self.xbox_state() != "Add":
+            self.suite_pane.set_xbox(self.xbox_state())
+            return
+        try:
+            xbox.add(self.program(), APP_NAME, LOGO_PNG, local=self.xbox_local, closed=self.xbox_closed)
+        except xbox.FormatError as exc:
+            self.suite_pane.set_xbox("not added, the Xbox app keeps its library otherwise")
+            self.log.error(f"Not added to the Xbox menu: {exc}")
+            return
+        except OSError as exc:
+            self.suite_pane.set_xbox(f"not added ({exc.strerror or exc})")
+            self.log.error(f"Not added to the Xbox menu: {exc}")
+            return
+        self.suite_pane.set_xbox(self.xbox_state())
+        self.log.info("Added to the Xbox menu (the Xbox app's library).")
+
     def toggle_sound(self) -> None:
         """The Suite page's Sound row: the portal's intro sound on or off for the suite (owner, 29-10-2026), kept for
         the next start."""
@@ -282,10 +317,10 @@ class MainWindow(PortableWindow):
     # The pages
 
     def update_status(self) -> None:
-        parts = [power.text(self.battery()), *status_clock()]
+        parts = status_clock()
         if self.update_available():
             parts.append(f"Suite {self.update.release.version} available")
-        self.header.set_status(parts)
+        self.header.set_status([*parts, power.text(self.battery())])    # the battery last (owner, 30-10-2026)
 
     def tab_entries(self, category: str) -> list[AppEntry]:
         return [entry for entry in self.entries if entry.category == category][:PER_PAGE]
@@ -326,6 +361,7 @@ class MainWindow(PortableWindow):
         self.stack.setCurrentWidget(self.suite_pane)
         self.suite_pane.set_wallpaper(self.wallpaper_on)
         self.suite_pane.set_sound(portable.sound_on(SUITE))
+        self.suite_pane.set_xbox(self.xbox_state())
         self.update_legend()
         self.refresh()
         self.suite_pane.wallpaper.setFocus()

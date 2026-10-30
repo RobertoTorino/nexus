@@ -1,3 +1,36 @@
+Changelog: 30-10-2026 18:17:38
+
+Added. xbox.py, the Xbox app's library on Windows (owner, 30-10-2026: the Windows Portable Suite in the Xbox menu):
+the apps added there with My Library's + are in the Xbox app's own JSON file,
+LocalState\ThirdPartyLibraries\CustomLibraryManagement\CustomLibraryManagement.manifest in its package folder (as
+the Xbox app 2611.1001.9.0 wrote it on the owner's Ally; the CustomLibraryManagement\ beside ThirdPartyLibraries\ stays
+empty). add() writes an entry as the Xbox app writes one (gameCache, {guid}: id, title, installLocation,
+executableName, imagePath, the dates), never twice, the file backed up (.bak) first and written with the Xbox app
+closed (with_xbox_closed(), started again after); a file in another shape is never written (FormatError).
+
+Changelog: 30-10-2026 17:55:08
+
+Fixed. The play mode closes only the emulator's main windows (play.main_windows(): visible, top-level, without an
+owner, not a tool window): Steam's overlay has windows in the game's process too, and a close sent to every window opened
+it over the game (the owner's Ally, 30-10-2026, shadPS4 with Galaga). play.run() takes confirm (press_enter(): Enter in
+the main window, ASK = 1 s after the close) for an emulator that asks before it quits: shadPS4's "Are you sure you want
+to quit?", which it has no setting to skip, stayed on the screen.
+
+Changelog: 30-10-2026 17:55:08
+
+Added. power.text() says Plugged in while the device is on its charger (owner, 30-10-2026), its percentage on battery;
+status_clock() comes before it: the header shows the battery last of its values.
+
+Changelog: 30-10-2026 17:18:10
+
+Fixed. A program an app starts on Windows never gets the controller reader's SDL variables (platform.outside_bundle(),
+APP_VARIABLES: SDL_VIDEODRIVER=dummy, SDL_AUDIODRIVER, SDL_JOYSTICK_ALLOW_BACKGROUND_EVENTS, PYGAME_HIDE_SUPPORT_PROMPT),
+from a release and from the checkout alike. Steam draws with SDL3: started with SDL_VIDEODRIVER=dummy it made its login
+window without a window and never signed in, in Desktop and in Xbox mode (the owner's Ally, 30-10-2026: started so,
+Logged Off; without them, signed in within 15 s). That, not the lower-case name of Steam's program (windows_steam(),
+1.0.0), kept the game managers' Steam from signing in: every start that failed had the variables. An emulator that
+draws with SDL, started without Steam, would have shown no game either.
+
 Changelog: 30-10-2026 16:11:24
 
 Version 1.0.0.

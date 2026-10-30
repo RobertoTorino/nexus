@@ -1,3 +1,10 @@
+Changelog: 30-10-2026 18:40:10
+
+Fixed. A draft portal left unpublished (Not OK, or NRT started again, which keeps nothing of its own: every step is read
+from git and GitHub) is said at step 7 while the fix goes through steps 1 to 5: "wp-portal-v5.0.0 is still a draft, not
+published: Start new release replaces it with a new one" (owner, 30-10-2026: after a restart the tab opened on a tree
+that was not clean, without a word of the draft).
+
 Changelog: 30-10-2026 16:28:14
 
 Added. A Nexus release whose run failed gets its fix and starts again on it (owner, 30-10-2026: CI failed on the

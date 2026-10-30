@@ -26,6 +26,24 @@ $Program = Join-Path $env:LOCALAPPDATA 'windows-portable-suite\portal\app\Window
 function Info([string]$Text) { Write-Host "==> $Text" -ForegroundColor Magenta }
 function Die([string]$Text) { Write-Host "ERROR: $Text" -ForegroundColor Red; exit 1 }
 
+function Close-Portal {
+    # The installed portal open (owner, 30-10-2026: "Device test does not run if the portal is still open"): its
+    # install.ps1 cannot replace a program that runs. Said, then asked to close as its window would; ended after 10 s.
+    $folder = Split-Path -Parent $Program
+    $open = @(Get-Process -ErrorAction SilentlyContinue |
+        Where-Object { $_.Path -and $_.Path.StartsWith("$folder\", [StringComparison]::OrdinalIgnoreCase) })
+    if (-not $open) { return }
+    Write-Host "==> The portal is open: closing it for the test" -ForegroundColor Yellow
+    foreach ($process in $open) { [void]$process.CloseMainWindow() }
+    $until = (Get-Date).AddSeconds(10)
+    while ((Get-Date) -lt $until -and ($open | Where-Object { -not $_.HasExited })) { Start-Sleep -Milliseconds 250 }
+    foreach ($process in $open | Where-Object { -not $_.HasExited }) {
+        Write-Host "==> It did not close within 10 s: ended" -ForegroundColor Yellow
+        Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
+        [void]$process.WaitForExit(5000)
+    }
+}
+
 $Mode = if ($args.Count -gt 0) { [string]$args[0] } else { '' }
 $Tag = ''
 $Start = $true
@@ -71,6 +89,7 @@ switch ($Mode) {
         if ($actual -ne $expected) { Die "$Tag.zip does not match its SHA256SUMS ($actual)" }
         Info "Checked against SHA256SUMS: $actual"
         Expand-Archive -LiteralPath $zip -DestinationPath $Cache -Force
+        Close-Portal
         Info "Installing $Tag"
         & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $Cache "$Tag\install.ps1")
         if ($LASTEXITCODE -ne 0) { Die "Its install.ps1 ended with $LASTEXITCODE" }

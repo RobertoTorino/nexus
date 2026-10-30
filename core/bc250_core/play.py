@@ -26,6 +26,7 @@ from .platform import outside_bundle
 
 HOLD = 2.0                      # s View and Menu are held together before the game is closed
 GRACE = 10.0                    # s an emulator asked to close has before it is ended
+ASK = 1.0                       # s after the close before an emulator's own quit question is answered
 POLL = 0.05                     # s between two looks at the controller and the emulator
 CHORD = ("back", "start")       # SDL's names of View and Menu
 FLAG = "--play"                 # the app's argument for its play mode
@@ -95,26 +96,48 @@ def _process_tree(pid: int) -> set[int]:
     return tree
 
 
-def close_windows(pid: int) -> int:
-    """WM_CLOSE to every visible top-level window of *pid* and the processes it started, as Alt+F4 sends; how many
-    were asked."""
+def main_windows(pid: int) -> list[int]:
+    """The main windows of *pid* and the processes it started: visible, top-level, without an owner and not a tool
+    window. Steam's overlay lives in the game's process too, with windows of its own: a close sent to every window
+    opened it over the game (the owner's Ally, 30-10-2026, shadPS4 with Galaga)."""
     import ctypes
     from ctypes import wintypes
     user32 = ctypes.windll.user32  # type: ignore[attr-defined]
+    user32.GetWindowLongPtrW.restype = ctypes.c_ssize_t
     tree = _process_tree(pid)
-    asked = []
+    found = []
 
     @ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HWND, wintypes.LPARAM)
     def visit(hwnd, _param):
         owner = wintypes.DWORD()
         user32.GetWindowThreadProcessId(hwnd, ctypes.byref(owner))
-        if owner.value in tree and user32.IsWindowVisible(hwnd):
-            asked.append(hwnd)
+        if (owner.value in tree and user32.IsWindowVisible(hwnd) and not user32.GetWindow(hwnd, 4)  # GW_OWNER
+                and not user32.GetWindowLongPtrW(hwnd, -20) & 0x80):                               # WS_EX_TOOLWINDOW
+            found.append(hwnd)
         return True
     user32.EnumWindows(visit, 0)
-    for hwnd in asked:
-        user32.PostMessageW(hwnd, 0x0010, 0, 0)        # WM_CLOSE
-    return len(asked)
+    return found
+
+
+def close_windows(pid: int) -> int:
+    """WM_CLOSE to the main windows of *pid* and the processes it started, as Alt+F4 sends; how many were asked."""
+    import ctypes
+    windows = main_windows(pid)
+    for hwnd in windows:
+        ctypes.windll.user32.PostMessageW(hwnd, 0x0010, 0, 0)  # type: ignore[attr-defined]  # WM_CLOSE
+    return len(windows)
+
+
+def press_enter(pid: int) -> int:
+    """Enter pressed in the main windows of *pid*: the answer to an emulator's own "Are you sure you want to quit?"
+    after a close (shadPS4's: "Press Enter or Cross/A button to quit"); how many got it."""
+    import ctypes
+    user32 = ctypes.windll.user32  # type: ignore[attr-defined]
+    windows = main_windows(pid)
+    for hwnd in windows:
+        user32.PostMessageW(hwnd, 0x0100, 0x0D, 0x001C0001)    # WM_KEYDOWN, VK_RETURN, its scan code
+        user32.PostMessageW(hwnd, 0x0101, 0x0D, 0xC01C0001)    # WM_KEYUP
+    return len(windows)
 
 
 def _start(command: Sequence[str], cwd: Path) -> subprocess.Popen:
@@ -131,10 +154,12 @@ def _pad():
 def run(command: Sequence[str], cwd: Path, log: Callable[[str], None] = lambda line: None,
         start: Callable[[Sequence[str], Path], subprocess.Popen] = _start, pad: Callable[[], object] = _pad,
         close: Callable[[int], int] = close_windows, clock: Callable[[], float] = time.monotonic,
-        sleep: Callable[[float], None] = time.sleep, hold: float = HOLD, grace: float = GRACE) -> int:
+        sleep: Callable[[float], None] = time.sleep, hold: float = HOLD, grace: float = GRACE,
+        confirm: Callable[[int], int] | None = None) -> int:
     """The emulator *command* run in *cwd* to its end, closed on View and Menu held for *hold* seconds; its exit
-    code. Without a controller reader (no pygame-ce, no SDL) the game still runs, only without the chord. OSError
-    when the emulator cannot start."""
+    code. *confirm*: for an emulator that asks before it quits (shadPS4), what answers yes (press_enter), ASK seconds
+    after the close while it still runs. Without a controller reader (no pygame-ce, no SDL) the game still runs, only
+    without the chord. OSError when the emulator cannot start."""
     process = start(command, cwd)
     log(f"Play: {Path(command[0]).name} started; View and Menu held for {hold:g} s close it.")
     try:
@@ -156,6 +181,9 @@ def run(command: Sequence[str], cwd: Path, log: Callable[[str], None] = lambda l
             if asked is None and since is not None and now - since >= hold:
                 asked = now
                 log(f"Play: View and Menu held; {close(process.pid)} window(s) of the emulator asked to close.")
+            elif asked is not None and confirm is not None and now - asked >= ASK:
+                log(f"Play: the emulator asks before it quits; answered in {confirm(process.pid)} window(s).")
+                confirm = None
             elif asked is not None and now - asked >= grace:
                 log(f"Play: the emulator did not close within {grace:g} s; ended.")
                 process.terminate()

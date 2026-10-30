@@ -312,7 +312,7 @@ class MainWindow(PortableWindow):
         self.ppsspp_card.setFocus()
 
     def update_status(self) -> None:
-        self.header.set_status([power.text(self.battery()), *status_clock()])
+        self.header.set_status([*status_clock(), power.text(self.battery())])   # the battery last (owner, 30-10-2026)
 
     def prepare(self) -> bool:
         """ppsspp_settings.prepare() while PPSSPP is installed and not running; whether ppsspp.ini is ready."""

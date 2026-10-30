@@ -1,3 +1,9 @@
+Changelog: 30-10-2026 17:18:10
+
+Fixed. The device test of a Nexus release closes the installed portal first (windows-portable/tools/check-release.ps1,
+Close-Portal; owner, 30-10-2026: "Device test does not run if the portal is still open"): it says so, asks the portal's
+window to close and ends it after 10 s, then installs the draft, whose install.ps1 cannot replace a program that runs.
+
 Changelog: 30-10-2026 16:28:14
 
 Fixed. CI Windows Portable passes on a Nexus release's commit (owner, 30-10-2026: Release Nexus stopped at "CI

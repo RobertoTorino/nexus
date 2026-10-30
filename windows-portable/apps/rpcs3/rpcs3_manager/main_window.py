@@ -361,7 +361,7 @@ class MainWindow(PortableWindow):
         self.rpcs3_card.setFocus()
 
     def update_status(self) -> None:
-        self.header.set_status([power.text(self.battery()), *status_clock()])
+        self.header.set_status([*status_clock(), power.text(self.battery())])   # the battery last (owner, 30-10-2026)
 
     def read_rpcs3(self) -> None:
         """RPCS3's drives, the firmware's version and the disc games it knows, from its files."""

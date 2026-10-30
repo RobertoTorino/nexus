@@ -22,7 +22,8 @@ def play_game(args: list[str]) -> int:
     from . import emulator
     program = emulator.program(emulator.emulator_home())
     try:
-        return play.run([str(program), *args], program.parent, log=log.info)
+        # shadPS4 asks "Are you sure you want to quit?" on a close, and has no setting to skip it: Enter answers it
+        return play.run([str(program), *args], program.parent, log=log.info, confirm=play.press_enter)
     except OSError as error:
         log.error(f"Play: shadPS4 could not start: {error}")
         return 1

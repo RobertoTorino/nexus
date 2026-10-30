@@ -271,6 +271,28 @@ def test_steam_starts_outside_the_apps_bundle(monkeypatch, tmp_path):
     assert seen[-1][1] == bundle and seen[-1][2].startswith(bundle)
 
 
+def test_a_started_program_never_sees_the_controller_readers_sdl_variables(monkeypatch, tmp_path):
+    """SDL_VIDEODRIVER=dummy, the app's controller reader's, kept Steam (SDL3) from making its login window, so it
+    never signed in (the owner's Ally, 30-10-2026): gone while Steam or an emulator starts, in a release and from the
+    checkout, and back for the app's own reader after."""
+    monkeypatch.setattr(platform, "WINDOWS", True)
+    monkeypatch.setattr(sys, "frozen", False, raising=False)
+    for name, value in (("SDL_VIDEODRIVER", "dummy"), ("SDL_AUDIODRIVER", "dummy"),
+                        ("SDL_JOYSTICK_ALLOW_BACKGROUND_EVENTS", "1"), ("PYGAME_HIDE_SUPPORT_PROMPT", "1")):
+        monkeypatch.setenv(name, value)
+    monkeypatch.setenv("PATH", r"C:\Windows\System32")
+    seen = []
+    monkeypatch.setattr(subprocess, "Popen", lambda command, **_: seen.append(
+        sorted(k for k in os.environ if k.startswith(("SDL_", "PYGAME_")))) or SimpleNamespace(wait=int))
+    steam._run(["steam.exe"])
+    platform.start_program(["pcsx2-qt.exe"], cwd=tmp_path)
+    assert seen == [[], []] and os.environ["PATH"] == r"C:\Windows\System32"       # from the checkout: PATH stays
+    assert os.environ["SDL_VIDEODRIVER"] == "dummy" and os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] == "1"
+    monkeypatch.setattr(platform, "WINDOWS", False)                 # Linux as before
+    steam._run(["steam"])
+    assert "SDL_VIDEODRIVER" in seen[-1]
+
+
 @pytest.mark.skipif(sys.platform != "win32", reason="Windows' DLL search")
 def test_a_program_started_outside_the_bundle_misses_its_dlls(monkeypatch, tmp_path):
     """Windows itself: a child process finds a DLL by name in its parent's DLL directory, and not when it starts

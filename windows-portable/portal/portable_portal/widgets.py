@@ -123,6 +123,13 @@ class SuitePane(Pane):
         self.column.addSpacing(px(4))
         self.column.addWidget(text_label("The portal's intro sound, for the suite. A switches it; it is kept for the "
                                          "next start.", BODY + 1, color=DIM, wrap=True))
+        self.xbox = Row("Xbox menu: Add")
+        self.xbox_text = text_label("The suite in the Xbox app's library, so Xbox mode starts it from its home. A adds "
+                                    "it; the Xbox app closes for a moment.", BODY + 1, color=DIM, wrap=True)
+        self.column.addSpacing(px(12))
+        self.column.addWidget(self.xbox)
+        self.column.addSpacing(px(4))
+        self.column.addWidget(self.xbox_text)
         self.column.addStretch()
         self.status = text_label("", BODY + 1, QFont.Weight.DemiBold, AMBER, wrap=True)
         self.column.addWidget(self.status)
@@ -141,6 +148,13 @@ class SuitePane(Pane):
 
     def set_sound(self, on: bool) -> None:
         self.sound.set_text(f"Sound: {'On' if on else 'Off'}")
+
+    def set_xbox(self, state: str) -> None:
+        """The Xbox menu row: "" without the Xbox app (hidden), else what it says after "Xbox menu: "."""
+        self.xbox.setVisible(bool(state))
+        self.xbox_text.setVisible(bool(state))
+        if state:
+            self.xbox.set_text(f"Xbox menu: {state}")
 
 
 __all__ = ["AppPane", "DetailsPane", "SuitePane", "Tabs", "TEXT"]
