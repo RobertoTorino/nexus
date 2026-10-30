@@ -260,7 +260,8 @@ def test_rt_opens_steam_where_it_is_installed(world, qapp):
 
 def test_the_suite_page_adds_the_suite_to_the_xbox_menu(world, qapp, tmp_path, monkeypatch):
     """The Xbox menu row (owner, 30-10-2026): only with the Xbox app; A adds the installed portal to its library,
-    once, with the Xbox app closed for the change; a library kept otherwise is left alone and said."""
+    and A again takes it out, with the Xbox app closed for each change; a library kept otherwise is left alone and
+    said."""
     from bc250_core import xbox
     window = world.make()
     window.on_action("menu")
@@ -277,8 +278,11 @@ def test_the_suite_page_adds_the_suite_to_the_xbox_menu(world, qapp, tmp_path, m
     row.activated.emit()
     program = tmp_path / "portal" / "app" / "Windows-Portable-Suite.exe"
     assert closed == [True] and xbox.listed(program, local) and row.label.text() == "Xbox menu: In the menu"
+    row.activated.emit()                                            # A on In the menu takes it out (30-10-2026)
+    assert closed == [True, True] and not xbox.listed(program, local) and row.label.text() == "Xbox menu: Add"
     row.activated.emit()
-    assert closed == [True]                                         # never twice
+    assert closed == [True, True, True] and xbox.listed(program, local)
+    assert xbox.remove(program, local=local, closed=lambda change: change())
     xbox.manifest_path(local).write_text('{"customApps": []}', encoding="utf-8")
     window.suite_pane.set_xbox("Add")
     row.activated.emit()
@@ -325,6 +329,19 @@ def test_b_goes_back_and_view_exits(world, qapp, monkeypatch):
     assert closed == [] and window.tiles["test"].hasFocus()
     window.legend.entries[VIEW].pressed.emit()
     assert closed == [True]
+
+
+def test_a_portal_newer_than_the_newest_release_says_so(world, qapp):
+    """A draft on its device test (owner, 30-10-2026: "it says the latest update is 5.0.0 but the version is already
+    6.0.0"): the newest release is older than this portal, which is not published yet."""
+    older = PortalUpdate(ReleaseInfo(version="0.0.1", tag="wp-portal-v0.0.1", published="2026-10-30"), [])
+    window = world.make(portal_check=lambda: older)
+    assert wait_for(qapp, lambda: window.update is not None)
+    window.show_suite()
+    rows = {window.suite_pane.grid.itemAt(i).widget().text(): window.suite_pane.grid.itemAt(i + 1).widget().text()
+            for i in range(0, window.suite_pane.grid.count(), 2)}
+    assert rows["Newest release"] == "0.0.1, 2026-10-30: older than this portal, which is not published yet"
+    assert ("Y", "Check again") in window.legend.items and "available" not in window.header.status.text()
 
 
 def test_the_suite_page_offers_the_portals_own_update_and_installs_it(world, qapp, monkeypatch):

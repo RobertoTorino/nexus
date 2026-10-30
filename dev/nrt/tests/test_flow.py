@@ -336,5 +336,23 @@ def test_the_device_test_and_publish(release_window, monkeypatch):
     monkeypatch.setattr(w, "run_git", ran.append)
     page.publish()
     assert ran == ["gh release edit wp-portal-v1.0.0 --draft=false --latest=false"]
+    w.build.runs = [_run(sh(w.root, "rev-parse", "HEAD").strip())]   # the release run passed on HEAD: its draft
+    monkeypatch.setattr(flow, "published", lambda *a: False)          # wp-portal-v1.0.0 a draft still
+    page.show_state()
+    assert flow.step_states(page.facts)["test"] == "now"
     page.reject()
     assert "stays a draft" in page.output.toPlainText()
+    # Not OK shows on the step (owner, 30-10-2026: it seemed to do nothing): red, with what comes next
+    assert flow.step_states(page.facts)["test"] == "failed" and page.facts.rejected == ["wp-portal-v1.0.0"]
+    assert page.details["test"].text().startswith("Not OK: wp-portal-v1.0.0 stays a draft")
+    assert page.marks["test"].text() == "!" and page.test_button.isEnabled() and page.publish_button.isEnabled()
+
+
+def test_not_ok_is_the_runs_and_a_fix_goes_on_from_commit():
+    run = _run()
+    facts = flow.Facts(run=run, drafts=["wp-portal-v6.0.0"], rejected=["wp-portal-v6.0.0"])
+    states = flow.step_states(facts)
+    assert flow.current_step(facts) == "test" and states["test"] == "failed" and states["publish"] == "later"
+    assert flow.step_states(flow.Facts(run=run, drafts=["wp-portal-v6.0.0"]))["test"] == "now"   # a run made anew
+    assert flow.current_step(flow.Facts(run=run, drafts=["wp-portal-v6.0.0"], rejected=["wp-portal-v6.0.0"],
+                                        dirty=True)) == "commit"

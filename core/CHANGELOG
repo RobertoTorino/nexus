@@ -1,3 +1,9 @@
+Changelog: 30-10-2026 22:46:16
+
+Added. xbox.remove(): a program taken out of the Xbox app's library again, every entry of it, the others kept, the
+file backed up and written with the Xbox app closed as add() does (owner, 30-10-2026: the portal's Xbox menu row
+removes the suite too); False, nothing written, when it is not there. add() and remove() write through one _write().
+
 Changelog: 30-10-2026 21:48:01
 
 Version 2.0.0.

@@ -59,7 +59,7 @@ def test_check_reads_the_pins_at_the_release_tag():
 
     update = pu.check("owner/repo", "wp-portal-v", current, "ua", release_of=lambda *a, **k: RELEASE, read=read)
     assert urls == ["https://raw.githubusercontent.com/owner/repo/wp-portal-v99.0.0/windows-portable/portal/apps.toml"]
-    assert update.release is RELEASE and update.summary() == "updates Test"
+    assert update.release is RELEASE and update.summary() == "updates Portable Test"
 
 
 def test_check_without_a_release_or_a_readable_manifest():

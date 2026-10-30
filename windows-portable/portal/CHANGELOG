@@ -1,3 +1,16 @@
+Changelog: 30-10-2026 22:46:16
+
+Added. The Xbox menu row takes the suite out of the Xbox app's library again (owner, 30-10-2026): A on Xbox menu: In
+the menu removes it, the Xbox app closed for a moment as when it is added (core's xbox.remove()).
+
+Changelog: 30-10-2026 22:46:16
+
+Fixed. From the device test of 6.0.0 (owner, 30-10-2026): the Settings page's information is titled Settings, not
+The settings, and says what each button at the bottom does (A, Y, RT Steam, Menu, B, View); the Newest release row
+of a portal newer than every published release (a draft on its device test) says it is older than this portal, which
+is not published yet, instead of reading as an older update; Windows Portable Test's tile is named Portable Test
+(apps.toml's short: the whole name does not fit a tile at the Ally's size).
+
 Changelog: 30-10-2026 22:22:15
 
 Release 6.0.0.

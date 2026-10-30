@@ -109,7 +109,7 @@ class SuitePane(Pane):
         self.name = text_label("", NAME, QFont.Weight.ExtraBold)
         heading.addWidget(self.name)
         heading.addStretch()
-        self.info = InfoPill("The settings", "")
+        self.info = InfoPill("Settings", "")
         heading.addWidget(self.info, 0, Qt.AlignmentFlag.AlignTop)
         self.column.addLayout(heading)
         self.version = text_label("", BODY + 1, color=DIM)
@@ -144,7 +144,8 @@ class SuitePane(Pane):
 
     def _explain(self) -> None:
         """The information icon's text: each setting, where your own wallpapers go and by which rules, the pictures in
-        that folder that cannot be one with why, and the Xbox menu only where the Xbox app is."""
+        that folder that cannot be one with why, the Xbox menu only where the Xbox app is, and the buttons at the
+        bottom (owner, 30-10-2026)."""
         parts = [
             "Wallpaper: a picture behind the tiles, in every app of the suite (each from its next start). The A button "
             "picks the next: Off (the plain dark background), Built-in (the suite's own picture), then each of your "
@@ -159,8 +160,12 @@ class SuitePane(Pane):
                   "Sound: the portal's intro sound, for the suite."]
         if self.xbox.isVisibleTo(self):
             parts.append("Xbox menu: the suite in the Xbox app's library, so Xbox mode starts it from its home. The A "
-                         "button adds it; the Xbox app closes for a moment.")
-        parts.append("Every setting is kept for the next start.")
+                         "button adds it, and on In the menu takes it out again; the Xbox app closes for a moment.")
+        parts += ["Every setting is kept for the next start.",
+                  "The buttons at the bottom: A changes the setting with the focus. Y looks for a newer portal on "
+                  "GitHub (Check again), or downloads and installs it (Update to x.y.z). RT starts Steam's library in "
+                  "Big Picture, Steam first when it does not run (where Steam is installed). Menu (☰) shows this. B "
+                  "goes back to the tiles. View (⧉) exits the portal."]
         self.info.info = "\n\n".join(parts)
 
     def set_wallpaper(self, name: str, refused: dict[str, str] | None = None) -> None:

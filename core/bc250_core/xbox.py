@@ -111,15 +111,39 @@ def add(program: Path, title: str, image: Path | None = None, local: Path | None
     def change() -> None:
         current = read(path)                            # as the Xbox app left it once closed
         current["gameCache"][new["id"]] = new
-        path.parent.mkdir(parents=True, exist_ok=True)
-        if path.is_file():
-            backup = path.with_name(path.name + ".bak")
-            backup.write_bytes(path.read_bytes())
-        part = path.with_name(path.name + ".part")
-        part.write_text(json.dumps(current, separators=(",", ":")), encoding="utf-8", newline="")
-        os.replace(part, path)
+        _write(path, current)
     (closed or with_xbox_closed)(change)
     return True
+
+
+def remove(program: Path, local: Path | None = None,
+           closed: Callable[[Callable[[], None]], None] | None = None) -> bool:
+    """*program* taken out of the Xbox app's library (owner, 30-10-2026: the portal's Xbox menu row removes it too),
+    every entry of it: False when it is not there (nothing written). Backed up and written with the Xbox app closed,
+    as add(); FormatError when the file is not as known; OSError when it cannot be written."""
+    path = manifest_path(local)
+    data = read(path)
+    if not any(key != "version" and _same(item, program) for key, item in data["gameCache"].items()):
+        return False
+
+    def change() -> None:
+        current = read(path)
+        current["gameCache"] = {key: item for key, item in current["gameCache"].items()
+                                if key == "version" or not _same(item, program)}
+        _write(path, current)
+    (closed or with_xbox_closed)(change)
+    return True
+
+
+def _write(path: Path, data: dict) -> None:
+    """The library written whole: the old file kept as .bak, the new one put in place at once (.part, then renamed)."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if path.is_file():
+        backup = path.with_name(path.name + ".bak")
+        backup.write_bytes(path.read_bytes())
+    part = path.with_name(path.name + ".part")
+    part.write_text(json.dumps(data, separators=(",", ":")), encoding="utf-8", newline="")
+    os.replace(part, path)
 
 
 def _running() -> list[int]:

@@ -214,7 +214,7 @@ class MainWindow(PortableWindow):
         self.suite_pane.wallpaper.activated.connect(self.next_wallpaper)
         self.suite_pane.transparency.activated.connect(self.next_transparency)
         self.suite_pane.sound.activated.connect(self.toggle_sound)
-        self.suite_pane.xbox.activated.connect(self.add_to_xbox)
+        self.suite_pane.xbox.activated.connect(self.xbox_menu)
         self.tabs.changed.connect(self.show_tab)
         self.bind("accept", self.a_action)
         self.bind("x", self.show_details)
@@ -326,24 +326,29 @@ class MainWindow(PortableWindow):
         """The installed portal, what the Xbox menu starts (never a checkout's Python)."""
         return state_dir() / "app" / f"{EXE_NAME}.exe"
 
-    def add_to_xbox(self) -> None:
-        """The Settings page's Xbox menu row (owner, 30-10-2026): the suite in the Xbox app's library, the Xbox app
-        closed for a moment (core's xbox.py); said on the row and in the log."""
-        if self.xbox_state() != "Add":
-            self.suite_pane.set_xbox(self.xbox_state())
+    def xbox_menu(self) -> None:
+        """The Settings page's Xbox menu row (owner, 30-10-2026): A puts the suite in the Xbox app's library, and A on
+        In the menu takes it out again, the Xbox app closed for a moment either way (core's xbox.py); said on the row
+        and in the log."""
+        state = self.xbox_state()
+        if not state:
             return
+        adding = state == "Add"
         try:
-            xbox.add(self.program(), APP_NAME, LOGO_PNG, local=self.xbox_local, closed=self.xbox_closed)
+            if adding:
+                xbox.add(self.program(), APP_NAME, LOGO_PNG, local=self.xbox_local, closed=self.xbox_closed)
+            else:
+                xbox.remove(self.program(), local=self.xbox_local, closed=self.xbox_closed)
         except xbox.FormatError as exc:
-            self.suite_pane.set_xbox("not added, the Xbox app keeps its library otherwise")
-            self.log.error(f"Not added to the Xbox menu: {exc}")
+            self.suite_pane.set_xbox(f"not {'added' if adding else 'removed'}, the Xbox app keeps its library otherwise")
+            self.log.error(f"Not {'added to' if adding else 'removed from'} the Xbox menu: {exc}")
             return
         except OSError as exc:
-            self.suite_pane.set_xbox(f"not added ({exc.strerror or exc})")
-            self.log.error(f"Not added to the Xbox menu: {exc}")
+            self.suite_pane.set_xbox(f"not {'added' if adding else 'removed'} ({exc.strerror or exc})")
+            self.log.error(f"Not {'added to' if adding else 'removed from'} the Xbox menu: {exc}")
             return
         self.suite_pane.set_xbox(self.xbox_state())
-        self.log.info("Added to the Xbox menu (the Xbox app's library).")
+        self.log.info(f"{'Added to' if adding else 'Removed from'} the Xbox menu (the Xbox app's library).")
 
     def toggle_sound(self) -> None:
         """The Settings page's Sound row: the portal's intro sound on or off for the suite (owner, 29-10-2026), kept for
@@ -747,8 +752,12 @@ class MainWindow(PortableWindow):
             if release.error:
                 rows.append(("Newest release", f"not known: {release.error}"))
             else:
-                rows.append(("Newest release", f"{release.version}" + (f", {release.published}" if release.published
-                                                                       else "")))
+                newest = f"{release.version}" + (f", {release.published}" if release.published else "")
+                if power_version(release.version) < power_version(__version__):
+                    # This portal is out of no release yet (owner, 30-10-2026: a draft on its device test read as
+                    # "the newest is 5.0.0" under 6.0.0)
+                    newest += ": older than this portal, which is not published yet"
+                rows.append(("Newest release", newest))
                 if self.update_available():
                     summary = self.update.summary()
                     rows.append(("It brings", summary or "the portal itself"))

@@ -85,8 +85,11 @@ what there is to do. Only the lit pill does anything, so you never need a comman
    portal that is open is closed first, as its window would close (ended when it has not closed within 10 seconds):
    a program that runs cannot be replaced. Test it as a user would.
 8. **Publish** when it works: the draft becomes a release, which makes its portal tag, and the portals offer it from
-   then on; the Nexus index follows. **Not OK** leaves the draft unpublished: fix what the test showed; the steps
-   start again from **Commit your changes**.
+   then on; the Nexus index follows. **Not OK** leaves the draft unpublished: the Device test step turns red and
+   says what comes next. Fix what the test showed; the steps start again from **Commit your changes**, then **Push
+   them**, **CI passes** and **Start new release**, which builds the portal anew (a portal that was never published
+   keeps its version; the apps already out are skipped). Until the fix is committed, **Device test** and **Publish**
+   stay at hand, for a Not OK pressed by mistake.
 9. **Bring in the pin commit** (**git pull**): the *Pin ...* commit is on main. Then every step shows ✓.
 
 A tag pushed by hand (**git tag** in the steps below) still releases that one app or portal, published at once. The

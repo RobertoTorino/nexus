@@ -258,6 +258,7 @@ class Facts:
     run: rp.BuildRun | None = None      # the release run of this release, while it lasts
     drafts: list[str] = field(default_factory=list)     # its portals not published yet
     restart: bool = False               # HEAD is not the run's commit: a failed run starts again on HEAD, the fix
+    rejected: list[str] = field(default_factory=list)   # its drafts the device test failed (Not OK), still drafts
 
 
 def ci_state(runs: list[rp.BuildRun], sha: str) -> str:
@@ -344,7 +345,9 @@ def step_states(facts: Facts) -> dict[str, str]:
     states = {key: "done" if i < at else "later" for i, key in enumerate(KEYS)}
     states[now] = "failed" if (now == "ci" and facts.ci == "failed") or \
         (now == "run" and facts.run is not None and facts.run.done and not facts.run.passed) else "now"
-    if now == "test":
+    if now == "test" and facts.drafts and set(facts.drafts) <= set(facts.rejected):
+        states["test"] = "failed"          # Not OK (owner, 30-10-2026: it seemed to do nothing): the fix comes next
+    elif now == "test":
         states["publish"] = "now"          # the test is the owner's: Publish or Not OK once it is done
     if now in ("pull", "commit", "push", "ci", "start"):
         for key in ("run", "test", "publish", "finish"):

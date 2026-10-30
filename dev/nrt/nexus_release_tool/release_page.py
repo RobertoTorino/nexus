@@ -31,6 +31,7 @@ COLUMNS = ("Release", "Now", "New version", "Why", "Notes")
 SEMVER_TIP = ("Breaking. (an entry that starts with it) -> major, Added. -> minor, Fixed. -> patch. auto: worked out "
               "when Start writes the release.")
 MARKS = {"done": ("✓", GREEN), "now": ("▶", ORANGE), "failed": ("!", RED), "later": ("", GREY)}
+REJECTED_KEY = "release/rejected"     # "<run url>|<portal tag>" of each Not OK, the newest 20
 
 
 class ReleasePage(QWidget):
@@ -39,6 +40,7 @@ class ReleasePage(QWidget):
     def __init__(self, window: "ReleaseWindow"):
         super().__init__()
         self.release_window = window
+        self.rejected_here: dict[str, list[str]] = {}     # Not OK without settings: by run url
         self.table = QTableWidget(0, len(COLUMNS))
         self.table.setHorizontalHeaderLabels(COLUMNS)
         self.table.verticalHeader().setVisible(False)
@@ -183,7 +185,18 @@ class ReleasePage(QWidget):
             ci=flow.ci_state(runs, head) if window.build.source is not None else "unknown",
             unpushed=flow.unpushed_release(root, base), something=bool(self.picks), run=run,
             drafts=[t for t in flow.waiting_portals(root) if not flow.published(root, runs, t)] if run else [],
-            restart=run is not None and run.sha != head)
+            restart=run is not None and run.sha != head, rejected=self.rejected(run))
+
+    def rejected(self, run: rp.BuildRun | None) -> list[str]:
+        """The drafts of *run* the owner said Not OK to, kept in NRT's settings by the run (a run made again makes its
+        draft anew, untested); without settings, for this session."""
+        if run is None:
+            return []
+        settings = self.release_window.settings
+        if settings is None:
+            return list(self.rejected_here.get(run.url, []))
+        marks = str(settings.value(REJECTED_KEY, "") or "").split()
+        return [mark.split("|", 1)[1] for mark in marks if mark.startswith(f"{run.url}|")]
 
     def show_state(self) -> None:
         """Each step's mark and line, and only the pills of the step to do now lit (none while a command runs)."""
@@ -265,6 +278,11 @@ class ReleasePage(QWidget):
                         f"passed CI: Start again on this commit (the release is not written anew).{link}")
             return (f"{flow.WORKFLOW_NAME} ended {facts.run.outcome}: when it failed on something of GitHub's, Resume "
                     f"run; when the code must change, fix it, then Commit, Push, and start it again here.{link}")
+        if key == "test" and state == "failed":
+            return (f"Not OK: {', '.join(facts.drafts)} stays a draft, no portal sees it. Fix what the test showed, "
+                    "then Commit your changes, Push them and, once CI passes, Start new release: the portal is built "
+                    "anew, the apps already out are skipped. Device test tests this draft again; Publish still "
+                    "publishes it.")
         if key in ("test", "publish") and facts.drafts:
             return (f"{', '.join(facts.drafts)} is a draft: Device test, then Publish when it works or Not OK."
                     if key == "test" else "After the device test: Publish, or Not OK.")
@@ -369,8 +387,19 @@ class ReleasePage(QWidget):
             self.release_window.run_git(flow.publish_command(tag))
 
     def reject(self) -> None:
+        """Not OK: the draft stays unpublished, and the Device test step says so in red until the fix is committed
+        (owner, 30-10-2026: it only wrote a line below, which looked like nothing)."""
         tag = self.portal_choice.currentText()
+        run = self.run()
+        if tag and run is not None:
+            settings = self.release_window.settings
+            if settings is not None:
+                kept = str(settings.value(REJECTED_KEY, "") or "").split()
+                settings.setValue(REJECTED_KEY, " ".join([*kept, f"{run.url}|{tag}"][-20:]))
+            else:
+                self.rejected_here.setdefault(run.url, []).append(tag)
         self.output.set_text(f"{tag} stays a draft: no portal sees it. Fix what the device test showed, then do the "
                              "steps again from Commit your changes: the apps already out are skipped and the portal "
                              "is built anew.")
         self.release_window.tabs.setCurrentWidget(self)
+        self.show_state()
