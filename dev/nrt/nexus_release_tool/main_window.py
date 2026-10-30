@@ -59,6 +59,7 @@ from bc250_core.updates import UpdateChecker
 from bc250_core.widgets import AppHeader, MetricBox, Pill, Terminal, accent_button, hint_label, same_width
 
 from . import APP_NAME, LOGO_PATH, CHECKOUT, __version__
+from . import flow
 from . import plan as rp
 from .command_line import CommandLine
 from .release_page import ReleasePage
@@ -1858,8 +1859,8 @@ class ReleaseWindow(QMainWindow):
         self.pull_button.setEnabled(idle)
         waiting = rp.behind(self.root, self.base())
         # The build pill sees every push on GitHub: its newest on main that is no commit here was pushed elsewhere.
-        pushed = next((r for r in self.build.runs if r.ref == "main"), None)
-        newer = pushed is not None and rp.git(self.root, "cat-file", "-e", f"{pushed.sha}^{{commit}}") is None
+        pushed = flow.pushed_elsewhere(self.root, self.build.runs)
+        newer = pushed is not None
         self.pull_button.setText(f"git pull ({waiting})" if waiting else "git pull (new)" if newer else "git pull")
         self.pull_button.setToolTip(
             rp.pull_command() + "\n\n" + (f"{self.base()} has {waiting} commit{'s' if waiting != 1 else ''} this "

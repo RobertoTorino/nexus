@@ -181,7 +181,7 @@ class ReleasePage(QWidget):
         run = flow.cycle_run(root, runs)
         unstaged, staged, ahead = rp.git_state(root, base)
         return flow.Facts(
-            behind=rp.behind(root, base), dirty=unstaged or staged, ahead=ahead,
+            behind=rp.behind(root, base) or int(flow.pushed_elsewhere(root, runs) is not None), dirty=unstaged or staged, ahead=ahead,
             ci=flow.ci_state(runs, head) if window.build.source is not None else "unknown",
             unpushed=flow.unpushed_release(root, base), something=bool(self.picks), run=run,
             drafts=[t for t in flow.waiting_portals(root) if not flow.published(root, runs, t)] if run else [],

@@ -324,6 +324,23 @@ def test_the_release_run_lasts_until_other_work_is_committed(nexus):
     assert not flow.published(nexus, [], "wp-portal-v9.9.9")
 
 
+def test_a_push_git_has_not_fetched_lights_the_pull(release_window, monkeypatch):
+    """The release's Pin ... commit is on GitHub, not fetched (owner, 30-10-2026: step 9 stayed dark while git pull
+    (new) was lit): GitHub's newest run on main names a commit this checkout lacks, so step 9 is the one to do."""
+    w = release_window
+    page = w.release_page
+    head = sh(w.root, "rev-parse", "HEAD").strip()
+    release = _run(head)
+    assert flow.pushed_elsewhere(w.root, [_run(head, "ci.yml", "CI"), release]) is None
+    pin = _run("f" * 40, "ci.yml", "CI")
+    assert flow.pushed_elsewhere(w.root, [pin, release]) is pin
+    monkeypatch.setattr(w.build, "runs", [pin, release])
+    monkeypatch.setattr(flow, "waiting_portals", lambda root: [])
+    page.show_state()
+    assert page.facts.behind == 1 and flow.current_step(page.facts) == "finish"
+    assert page.finish_button.isEnabled()
+
+
 def test_the_device_test_and_publish(release_window, monkeypatch):
     w = release_window
     page = w.release_page

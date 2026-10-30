@@ -1,3 +1,10 @@
+Changelog: 30-10-2026 23:55:24
+
+Fixed. Step 9, Bring in the pin commit, lights as soon as GitHub has the release's Pin ... commit (owner,
+30-10-2026: every step showed done and its git pull could not be pressed, while the bottom bar's git pull (new) was
+lit). The steps counted only the commits git had fetched; they now also see a push on main that GitHub's runs name
+and this checkout lacks, as the bottom bar does.
+
 Changelog: 30-10-2026 22:44:13
 
 Fixed. Not OK shows that it was pressed (owner, 30-10-2026: "the not ok button does not seem to do anything"; it

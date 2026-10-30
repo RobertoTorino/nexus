@@ -304,6 +304,15 @@ def published(root: Path, runs: list[rp.BuildRun], tag: str) -> bool:
     return bool((rp.git(root, "tag", "-l", tag) or "").strip()) or any(r.ref == tag for r in runs)
 
 
+def pushed_elsewhere(root: Path, runs: list[rp.BuildRun]) -> rp.BuildRun | None:
+    """GitHub's newest run on main when its commit is not in this checkout: a push git has not fetched yet (owner,
+    30-10-2026: the release's Pin ... commit, so step 9 stayed dark while git pull (new) was lit)."""
+    pushed = next((r for r in runs if r.ref == "main"), None)
+    if pushed is None or not pushed.sha or rp.git(root, "cat-file", "-e", f"{pushed.sha}^{{commit}}") is not None:
+        return None
+    return pushed
+
+
 def current_step(facts: Facts) -> str:
     """The step to do now, its key in STEPS; "" when there is nothing to do."""
     run = facts.run

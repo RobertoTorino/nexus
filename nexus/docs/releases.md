@@ -90,7 +90,8 @@ what there is to do. Only the lit pill does anything, so you never need a comman
    them**, **CI passes** and **Start new release**, which builds the portal anew (a portal that was never published
    keeps its version; the apps already out are skipped). Until the fix is committed, **Device test** and **Publish**
    stay at hand, for a Not OK pressed by mistake.
-9. **Bring in the pin commit** (**git pull**): the *Pin ...* commit is on main. Then every step shows ✓.
+9. **Bring in the pin commit** (**git pull**): the *Pin ...* commit is on main. It lights as soon as GitHub's runs
+   show that commit, before git has fetched it. Then every step shows ✓.
 
 A tag pushed by hand (**git tag** in the steps below) still releases that one app or portal, published at once. The
 portal tag Publish makes starts Release Windows Portable too, as any pushed tag does; that run sees the release is
