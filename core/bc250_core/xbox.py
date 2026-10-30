@@ -14,12 +14,13 @@ Only the standard library here."""
 from __future__ import annotations
 
 import json
+import ntpath
 import os
 import subprocess
 import time
 import uuid
 from collections.abc import Callable
-from pathlib import Path
+from pathlib import Path, PurePath, PureWindowsPath
 
 PACKAGE = "Microsoft.GamingApp_8wekyb3d8bbwe"
 APP_ID = f"{PACKAGE}!Microsoft.Xbox.App"               # its Start-menu app, what starts it again
@@ -64,10 +65,16 @@ def read(path: Path) -> dict:
     return data
 
 
-def _same(entry: dict, program: Path) -> bool:
-    folder = os.path.normcase(os.path.normpath(str(entry.get("installLocation", ""))))
-    return (folder == os.path.normcase(os.path.normpath(str(program.parent)))
-            and str(entry.get("executableName", "")).lower() == program.name.lower())
+def _windows(program: PurePath) -> PureWindowsPath:
+    """*program* as the Windows path the Xbox app's file holds, on any system (the tests run on Linux too)."""
+    return PureWindowsPath(str(program))
+
+
+def _same(entry: dict, program: PurePath) -> bool:
+    win = _windows(program)
+    folder = ntpath.normcase(ntpath.normpath(str(entry.get("installLocation", ""))))
+    return (folder == ntpath.normcase(ntpath.normpath(str(win.parent)))
+            and str(entry.get("executableName", "")).lower() == win.name.lower())
 
 
 def listed(program: Path, local: Path | None = None) -> bool:
@@ -84,8 +91,9 @@ def entry(program: Path, title: str, image: Path | None = None, now: float | Non
     """The library entry of *program*, as the Xbox app writes one it was given."""
     stamp = str(int((time.time() if now is None else now) * 1000))
     key = new_id()
+    win = _windows(program)
     return {"id": key, "lastPlayedDate": stamp, "addedDate": stamp, "imagePath": str(image or ""),
-            "title": title, "installLocation": str(program.parent) + "\\", "executableName": program.name,
+            "title": title, "installLocation": str(win.parent) + "\\", "executableName": win.name,
             "executableCommandArgs": ""}
 
 

@@ -34,7 +34,8 @@ def test_an_app_is_added_once_beside_the_others(tmp_path):
     added = [e for k, e in data["gameCache"].items() if k != "version" and e["title"] == "Windows Portable Suite"]
     assert len(added) == 1 and data["gameCache"][OTHER["id"]] == OTHER and data["provider"]["enabled"] is True
     new = added[0]
-    assert new["installLocation"] == str(PROGRAM.parent) + "\\" and new["executableName"] == PROGRAM.name
+    assert new["installLocation"] == "C:\\Users\\me\\AppData\\Local\\windows-portable-suite\\portal\\app\\"
+    assert new["executableName"] == "Windows-Portable-Suite.exe"
     assert new["addedDate"] == "1793400000000" and new["id"].startswith("{") and new["id"] in data["gameCache"]
     assert path.with_name(path.name + ".bak").read_bytes() == before        # backed up first
     assert xbox.listed(PROGRAM, tmp_path)

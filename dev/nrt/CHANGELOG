@@ -1,3 +1,9 @@
+Changelog: 30-10-2026 19:10:40
+
+Added. Step 4, CI passes, lights Run CI again when CI failed on the commit (owner, 30-10-2026: CI failed while GitHub's
+Actions were degraded): it starts the failed jobs of that commit's CI runs again (flow.failed_ci(), rerun_ci_command():
+gh run rerun --failed). The line says when to use it, GitHub's own trouble, and when to fix and commit instead.
+
 Changelog: 30-10-2026 18:40:10
 
 Fixed. A draft portal left unpublished (Not OK, or NRT started again, which keeps nothing of its own: every step is read

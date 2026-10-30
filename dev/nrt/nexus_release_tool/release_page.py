@@ -56,6 +56,9 @@ class ReleasePage(QWidget):
         self.commit_button.clicked.connect(self.commit)
         self.push_button = accent_button("Push", "Push your commits to GitHub; the pre-push hook checks them first")
         self.push_button.clicked.connect(self.release_window.push)
+        self.rerun_ci_button = accent_button("Run CI again", "Start CI's failed jobs on this commit again: for a "
+                                             "failure of GitHub's own; when the code is wrong, fix it and commit")
+        self.rerun_ci_button.clicked.connect(self.rerun_ci)
         self.start_button = accent_button("Start new release", "Write the release, commit it, push it and start the "
                                           "release on GitHub")
         self.start_button.clicked.connect(self.start)
@@ -91,7 +94,7 @@ class ReleasePage(QWidget):
         self.facts = flow.Facts()
 
         pills = {"pull": [self.pull_button], "commit": [self.commit_message, self.commit_button],
-                 "push": [self.push_button], "ci": [], "start": [self.start_button],
+                 "push": [self.push_button], "ci": [self.rerun_ci_button], "start": [self.start_button],
                  "run": [self.stop_button, self.resume_button], "test": [self.portal_choice, self.test_button],
                  "publish": [self.publish_button, self.reject_button], "finish": [self.finish_button]}
         steps = QGridLayout()
@@ -205,6 +208,7 @@ class ReleasePage(QWidget):
         self.commit_button.setEnabled(idle and now == "commit" and bool(self.commit_message.text().strip()))
         self.commit_message.setEnabled(now == "commit")
         self.push_button.setEnabled(idle and now == "push")
+        self.rerun_ci_button.setEnabled(idle and now == "ci" and facts.ci == "failed")
         self.start_button.setText("Push and start" if facts.unpushed else "Start new release")
         self.start_button.setEnabled(idle and now == "start" and (bool(facts.unpushed) or not reasons))
         run = facts.run
@@ -245,7 +249,8 @@ class ReleasePage(QWidget):
             return f"{facts.ahead} commit{'s' if facts.ahead != 1 else ''} to push."
         if key == "ci":
             if facts.ci == "failed":
-                return "CI failed on this commit: open the GitHub pill, fix what failed, then commit and push again."
+                return ("CI failed on this commit. When it was GitHub's own trouble (an error of its servers, a job "
+                        "that never started): Run CI again. When a test failed: fix it, then Commit and Push.")
             return ("CI is running on this commit: wait until it passed." if facts.ci == "building" else
                     "GitHub has no CI run on this commit yet: wait a moment.")
         if key == "start":
@@ -274,6 +279,13 @@ class ReleasePage(QWidget):
                     None)
 
     # --- the pills ------------------------------------------------------------------------------------------------
+
+    def rerun_ci(self) -> None:
+        window = self.release_window
+        head = (rp.git(window.root, "rev-parse", "HEAD") or "").strip()
+        failed = flow.failed_ci(window.build.runs, head)
+        if failed:
+            window.run_git(flow.rerun_ci_command(failed))
 
     def pull(self) -> None:
         self.release_window.run_git(rp.pull_command())

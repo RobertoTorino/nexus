@@ -61,8 +61,10 @@ what there is to do. Only the lit pill does anything, so you never need a comman
 2. **Commit your changes:** type what they do, then **Commit**. It stages every change and new file and commits
    them after the version and manifest checks of the suites they touch.
 3. **Push them** (**Push**): the pre-push hook checks them first.
-4. **CI passes:** nothing to press. The step waits until GitHub's CI passed on that commit; when it failed, the line
-   says so: fix it, then commit and push again.
+4. **CI passes:** the step waits until GitHub's CI passed on that commit. When it failed, the line says so. A test that
+   failed: fix it, then commit and push again. GitHub's own trouble (an error of its servers, a job that never
+   started; [githubstatus.com](https://www.githubstatus.com) says when Actions are degraded): **Run CI again** starts
+   the failed jobs again on the same commit.
 5. **Start new release:** check the versions in the list above, then press it. It writes the release (the versions
    and their copies, the `Release x.y.z.` entries, the new tags in `apps.toml`, the portal's version and its entry,
    Nexus's), commits it, pushes it and starts Release Nexus on that commit. If the push stops, fix what it says;

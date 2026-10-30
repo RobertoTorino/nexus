@@ -271,6 +271,18 @@ def ci_state(runs: list[rp.BuildRun], sha: str) -> str:
     return "passed" if all(r.passed for r in found) else "failed"
 
 
+def failed_ci(runs: list[rp.BuildRun], sha: str) -> list[rp.BuildRun]:
+    """The CI runs on *sha* that ended badly: what Run CI again starts again."""
+    return [r for r in runs if r.sha == sha and (r.file.startswith("ci") or r.workflow.startswith("CI"))
+            and r.done and not r.passed]
+
+
+def rerun_ci_command(runs: list[rp.BuildRun]) -> str:
+    """Run CI again (owner, 30-10-2026: CI failed while GitHub's Actions were degraded): each failed CI run's failed
+    jobs started again (gh run rerun --failed), on the same commit."""
+    return " && ".join(f"gh run rerun {run_id(r)} --failed" for r in runs)
+
+
 def cycle_run(root: Path, runs: list[rp.BuildRun]) -> rp.BuildRun | None:
     """The newest release run, while its release lasts: HEAD is its commit, or that commit with only the release's
     Pin ... commits on top (after git pull). None once other work is committed on top."""

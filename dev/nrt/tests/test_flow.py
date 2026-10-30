@@ -283,6 +283,27 @@ def test_a_failed_release_run_lasts_with_fixes_on_top(nexus):
     assert flow.cycle_run(nexus, [_run(head)]) is None              # one that passed: other work ends it
 
 
+def test_failed_ci_runs_again(release_window, monkeypatch):
+    """CI failed for GitHub's own trouble (30-10-2026, Actions degraded): step 4 lights Run CI again, which starts
+    the failed CI runs of HEAD again; a passed one and another commit's are left alone."""
+    runs = [_run("aaa", "ci.yml", "CI", conclusion="failure"), _run("aaa", "ci-nexus.yml", "CI Nexus"),
+            _run("bbb", "ci.yml", "CI", conclusion="failure")]
+    assert flow.failed_ci(runs, "aaa") == [runs[0]]
+    assert flow.rerun_ci_command(flow.failed_ci(runs, "aaa")) == f"gh run rerun {flow.run_id(runs[0])} --failed"
+    w = release_window
+    page = w.release_page
+    head = sh(w.root, "rev-parse", "HEAD").strip()
+    monkeypatch.setattr(w.build, "runs", [_run(head, "ci.yml", "CI", conclusion="failure")])
+    monkeypatch.setattr(w.build, "source", object())
+    page.show_state()
+    assert page.facts.ci == "failed" and page.rerun_ci_button.isEnabled()
+    assert "Run CI again" in page.details["ci"].text()
+    ran = []
+    monkeypatch.setattr(w, "run_git", ran.append)
+    page.rerun_ci()
+    assert ran and ran[0].startswith("gh run rerun ") and ran[0].endswith(" --failed")
+
+
 def test_ci_state_reads_the_ci_runs_of_the_commit():
     runs = [_run("aaa", "ci.yml", "CI"), _run("aaa", "ci-nexus.yml", "CI Nexus", "in_progress", ""),
             _run("aaa", "release-nexus.yml"), _run("bbb", "ci.yml", "CI", conclusion="failure")]

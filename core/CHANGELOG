@@ -1,3 +1,9 @@
+Changelog: 30-10-2026 19:09:13
+
+Fixed. xbox.py reads and writes the Xbox app's paths as Windows paths on any system (ntpath, PureWindowsPath): on Linux a
+Windows path was one name without folders, so an app added was never found as listed (CI Nexus, pytest (core), on the
+push of 30-10-2026). On Windows as before.
+
 Changelog: 30-10-2026 18:17:38
 
 Added. xbox.py, the Xbox app's library on Windows (owner, 30-10-2026: the Windows Portable Suite in the Xbox menu):
