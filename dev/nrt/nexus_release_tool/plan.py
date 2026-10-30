@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The file edits of a release, for the window in main_window.py (and on their own: tools/release.sh --list lists
+"""The file edits of a release, for the window in main_window.py (and on their own: tools/nrt.sh --list lists
 the apps). Nothing here commits, tags or pushes; it prints the git commands for that instead. It needs no PyQt6 and
 no bc250_core, so it also runs with the system python3.
 
@@ -40,7 +40,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from urllib.parse import urlparse
 
-CHECKOUT = Path(__file__).resolve().parents[3]        # dev/releases/nexus_releases/plan.py: the checkout (Nexus)
+CHECKOUT = Path(__file__).resolve().parents[3]        # dev/nrt/nexus_release_tool/plan.py: the checkout (Nexus)
 TOOLS = CHECKOUT / "tools"              # the Nexus tools (check_versions.py, stage_app.py, suites.py)
 TAG_SCRIPT = "tools/tag-release.sh"     # tags only a pushed HEAD that holds the version: never one before the bump
 CI_LOCAL = "tools/ci-local.sh"          # CI's jobs here, in a container (Linux): the push only when they pass
@@ -239,7 +239,7 @@ def git(root: Path, *args: str) -> str | None:
 
 
 def checkout_stamp(root: Path) -> str:
-    """The checkout's last commit and its time in Amsterdam ("c109b51 · 15-10-2026 03:46"): Nexus Releases is never
+    """The checkout's last commit and its time in Amsterdam ("c109b51 · 15-10-2026 03:46"): Nexus Release Tool is never
     released, so its VERSION stays put and this says which code runs. "" outside a git checkout."""
     out = (git(root, "log", "-1", "--format=%h %ct") or "").split()
     if len(out) != 2 or not out[1].isdigit():
@@ -1277,7 +1277,7 @@ def github_get(url: str, etag: str = "") -> tuple[object | None, str, RateInfo |
     the limit is used up, OSError offline."""
     global _token
     token = github_token()
-    headers = {"Accept": "application/vnd.github+json", "User-Agent": "nexus-releases"}
+    headers = {"Accept": "application/vnd.github+json", "User-Agent": "nexus-release-tool"}
     if etag:
         headers["If-None-Match"] = etag
     if token:
@@ -1541,7 +1541,7 @@ def parse_issues(data: object) -> list[Issue]:
 def fetch_open_issues() -> list[Issue]:
     """The repository's open issues, newest first. Raises OSError offline, urllib.error.HTTPError on GitHub's
     refusal (its hourly limit)."""
-    headers = {"Accept": "application/vnd.github+json", "User-Agent": "nexus-releases"}
+    headers = {"Accept": "application/vnd.github+json", "User-Agent": "nexus-release-tool"}
     token = github_token()
     if token:
         headers["Authorization"] = f"Bearer {token}"
@@ -1586,7 +1586,7 @@ def parse_github_status(data: object) -> GitHubStatus:
 
 def fetch_github_status() -> GitHubStatus:
     """githubstatus.com's summary (a public page: no token, no limit to count). Raises OSError offline."""
-    request = urllib.request.Request(STATUS_URL, headers={"User-Agent": "nexus-releases"})
+    request = urllib.request.Request(STATUS_URL, headers={"User-Agent": "nexus-release-tool"})
     with urllib.request.urlopen(request, timeout=15) as response:
         return parse_github_status(json.load(response))
 
@@ -1841,7 +1841,7 @@ def portal_commands(tag: str, linux: bool | None = None, check: str = CHECK_SCRI
 
 def main() -> int:
     """The units of every suite in the checkout, one line each (a line with the suite's name first when there are
-    several): tools/release.sh --list."""
+    several): tools/nrt.sh --list."""
     names = suites(CHECKOUT) or [None]
     for name in names:
         if len(names) > 1:

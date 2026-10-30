@@ -1,0 +1,73 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+name: Release Nexus
+
+# A Nexus release (owner, 30-10-2026): the one release of the repository, started by the Nexus Release Tool's Start
+# new release with the release commit it pushed (Nexus's VERSION, and for each suite that changed its apps' versions,
+# their CHANGELOG entries, the new tags in apps.toml and the portal's VERSION). It carries each suite that changed,
+# and only those (tools/nexus_release.py: a suite on the Nexus release whose portal version has no release yet), by
+# calling that suite's own release workflow, side by side: with 10 suites and 1 changed, this workflow and that
+# suite's run. A suite's run ends with its portal as a draft; the Nexus Release Tool publishes it after the device
+# test, and the Nexus index (nexus-index.yml) follows each published portal. A Nexus release without a suite (a change
+# of Nexus's own: the tools, dev/, the Nexus page) gets its index here. Each suite keeps its own release workflow
+# (owner, 27-10-2026 and 30-10-2026: no shared release YAML); a suite joins with a job below.
+#
+# It starts only on main's newest commit, after Nexus's CI passed on it, so no commit of anyone else's slips in.
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit:
+        description: The release commit (main's newest)
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: release-nexus
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 80
+    outputs:
+      suites: ${{ steps.plan.outputs.suites }}
+    env:
+      COMMIT: ${{ inputs.commit }}
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.commit }}
+      - name: The release commit is main's newest
+        run: |
+          git fetch -q origin main
+          head=$(git rev-parse origin/main)
+          [ "$head" = "$(git rev-parse HEAD)" ] ||
+            { echo "main is $head, not the release commit $COMMIT: start the release again on the new main." >&2; exit 1; }
+      - name: Nexus's CI passed on this commit
+        run: python3 tools/ci_state.py --workflow ci-nexus.yml --wait 75 "$COMMIT"
+      - name: The suites this release carries
+        id: plan
+        run: python3 tools/nexus_release.py suites | tee -a "$GITHUB_OUTPUT"
+
+  windows-portable:
+    needs: plan
+    if: contains(fromJSON(needs.plan.outputs.suites), 'windows-portable')
+    permissions:
+      contents: write
+      actions: read
+    uses: ./.github/workflows/release-windows-portable.yml
+    with:
+      commit: ${{ inputs.commit }}
+
+  index:
+    needs: plan
+    if: needs.plan.outputs.suites == '[]'
+    permissions:
+      contents: write
+    uses: ./.github/workflows/nexus-index.yml

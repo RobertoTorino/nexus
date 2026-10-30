@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-# The portal checks of a release of the Windows Portable Suite, as Nexus Releases' buttons run them on the handheld
+# The portal checks of a release of the Windows Portable Suite, as the Nexus Release Tool's buttons run them on the handheld
 # (Windows), as the BC250 suite's check-release.sh does on the board:
 #
 #   check-release.ps1 local              # before the push: start the portal from this checkout; it installs the
@@ -8,6 +8,9 @@
 #   check-release.ps1 release [TAG]      # after the release workflow built the portal: download the published
 #                                        # portal release (default wp-portal-v<portal\VERSION>), check it against its
 #                                        # SHA256SUMS, install it and start it, so the handheld runs the release again
+#   check-release.ps1 draft [TAG]        # the device test of a Nexus release: the portal's draft release the
+#                                        # release workflow made (default wp-portal-v<portal\VERSION>), downloaded
+#                                        # with gh (a draft needs the sign-in), then as release
 #   check-release.ps1 installer          # every installer test of the suite (tools\installer-tests\*.ps1), in turn
 #   ... --no-start                       # install only, do not start the portal
 #
@@ -16,6 +19,7 @@
 $ErrorActionPreference = 'Stop'
 $Suite = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path        # the suite's folder: portal\VERSION, portal\run.ps1
 $Url = if ($env:WPS_RELEASE_URL) { $env:WPS_RELEASE_URL } else { 'https://github.com/RobertoTorino/nexus/releases/download' }
+$Repo = 'RobertoTorino/nexus'
 $Cache = Join-Path $env:TEMP 'wps-release-check'
 $Program = Join-Path $env:LOCALAPPDATA 'windows-portable-suite\portal\app\Windows-Portable-Suite.exe'
 
@@ -40,17 +44,23 @@ switch ($Mode) {
         & (Join-Path $Suite 'portal\run.ps1')
         exit $LASTEXITCODE
     }
-    'release' {
+    { $_ -in 'release', 'draft' } {
         if (-not $Tag) {
             $version = (Get-Content -LiteralPath (Join-Path $Suite 'portal\VERSION') -Raw).Trim()
             $Tag = "wp-portal-v$version"
         }
         if (Test-Path -LiteralPath $Cache) { Remove-Item -LiteralPath $Cache -Recurse -Force }
         New-Item -ItemType Directory -Path $Cache | Out-Null
-        Info "Downloading $Tag"
-        $ProgressPreference = 'SilentlyContinue'                    # the progress bar slows the download down
-        foreach ($name in "$Tag.zip", 'SHA256SUMS') {
-            Invoke-WebRequest -Uri "$Url/$Tag/$name" -OutFile (Join-Path $Cache $name) -UseBasicParsing
+        if ($Mode -eq 'draft') {
+            Info "Downloading the draft of $Tag"
+            & gh release download $Tag --pattern "$Tag.zip" --pattern 'SHA256SUMS' --dir $Cache --repo $Repo
+            if ($LASTEXITCODE -ne 0) { Die "No draft of $Tag to download (gh ended with $LASTEXITCODE)" }
+        } else {
+            Info "Downloading $Tag"
+            $ProgressPreference = 'SilentlyContinue'                # the progress bar slows the download down
+            foreach ($name in "$Tag.zip", 'SHA256SUMS') {
+                Invoke-WebRequest -Uri "$Url/$Tag/$name" -OutFile (Join-Path $Cache $name) -UseBasicParsing
+            }
         }
         $zip = Join-Path $Cache "$Tag.zip"
         $line = Get-Content -LiteralPath (Join-Path $Cache 'SHA256SUMS') | Where-Object { $_ -match "\s\*?$([regex]::Escape("$Tag.zip"))$" } |
@@ -80,5 +90,5 @@ switch ($Mode) {
         Info 'Every installer test passed.'
         exit 0
     }
-    default { Die "Usage: check-release.ps1 local | release [wp-portal-vX.Y.Z] | installer [--no-start]" }
+    default { Die "Usage: check-release.ps1 local | release [wp-portal-vX.Y.Z] | draft [wp-portal-vX.Y.Z] | installer [--no-start]" }
 }

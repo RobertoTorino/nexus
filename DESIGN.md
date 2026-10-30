@@ -63,8 +63,8 @@ Each design (a suite's, the Nexus page's) has its own; none is carried over to a
 
 - **The identity:** near-black ink `#010101`, silver text `#c0c0c0` and one teal `#17b6a7` (the icon's) for every
   link, title and icon; nothing else. Inter, with heavy titles. Nexus is not a suite: the page has no apps and no
-  states. Its one app, Nexus Releases (`dev/releases/`, owner, 26-10-2026: a Nexus app takes Nexus's design), has
-  this design in its window (`nexus_releases/style.py`, a theme for core's widgets: ink surfaces, silver text, the
+  states. Its one app, Nexus Release Tool (`dev/nrt/`, owner, 26-10-2026: a Nexus app takes Nexus's design), has
+  this design in its window (`nexus_release_tool/style.py`, a theme for core's widgets: ink surfaces, silver text, the
   teal accent) and the Nexus icon; its states (the working tree, a build) are the apps' state family, since a build
   passes or fails there too.
 
@@ -253,7 +253,7 @@ Text colors:
 
   ![Sample text in #2e7d32](design/colors/text-2e7d32.svg)
 
-- `#c62828` Red: Failed, errors and problems in every app (the emulator managers' status lines, Nexus Releases' bad tags, the upscaler's problems, a folder that is missing).
+- `#c62828` Red: Failed, errors and problems in every app (the emulator managers' status lines, the Nexus Release Tool's bad tags, the upscaler's problems, a folder that is missing).
 
   ![Sample text in #c62828](design/colors/text-c62828.svg)
 
@@ -441,9 +441,9 @@ Background colors:
 | ![#00000040](design/colors/block-00000040.svg) | `#00000040` | The shadow under a button under the pointer (25 %). |
 | ![#010101e6](design/colors/block-010101e6.svg) | `#010101e6` | The page dimmed behind the home page's video (90 %). |
 
-### Nexus Releases
+### Nexus Release Tool
 
-The window of Nexus's app (`dev/releases/nexus_releases/style.py`): the page's colors as a theme for core's widgets, set with `create_app(theme=NEXUS)`; its states are the apps' state family.
+The window of Nexus's app (`dev/nrt/nexus_release_tool/style.py`): the page's colors as a theme for core's widgets, set with `create_app(theme=NEXUS)`; its states are the apps' state family.
 
 Text colors:
 

@@ -59,7 +59,7 @@ other app is optional. They are listed by category, as the portal's tabs list th
 | ![](../assets/apps/ncgui.webp){ .app-icon } [Bazzite NetcatGUI](ncgui.md) | A graphical netcat: connect to a host or listen on a port, TCP, UDP or TLS, one session per tab. |
 
 The tools for working on the suite run from a checkout of the repository and are not in the portal:
-[Nexus Releases](https://robertotorino.github.io/nexus/releases/) and BC-250 Installer Tests
+[Nexus Release Tool](https://robertotorino.github.io/nexus/releases/) and BC-250 Installer Tests
 ([Tests](../development/architecture.md#tests)).
 
 Apps that **change the board** (unlocks, the GPU governor, GPU overclocking, the ACPI override, the VRAM split,

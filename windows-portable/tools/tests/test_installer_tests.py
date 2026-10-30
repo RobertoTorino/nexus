@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Every app of the Windows Portable Suite, its portal, and every Nexus app with a Windows installer
-(dev/<name>/install.ps1: Nexus Releases), has an installer test (tools/installer-tests/<name>.ps1), and the suite's
+(dev/<name>/install.ps1: Nexus Release Tool), has an installer test (tools/installer-tests/<name>.ps1), and the suite's
 CI (ci-windows-portable.yml) runs each one; it also builds each app's release and the portal's and runs its test on
 that release."""
 
@@ -37,14 +37,14 @@ def test_every_installer_test_is_for_something_that_exists():
     assert not stale, f"installer tests for nothing in the suite: {', '.join(stale)}"
 
 
-def test_nexus_releases_installs_on_windows():
-    assert "releases" in _nexus_apps()
+def test_nexus_release_tool_installs_on_windows():
+    assert "nrt" in _nexus_apps()
 
 
 def test_ci_runs_each_installer_test_and_each_release_in_a_job_of_its_own():
     """The installers job is a matrix, one job per app and the portal (29-10-2026: one job doing them all in a row
     took six to fifteen minutes): each runs the installer test, builds the release (never published, owner
-    28-10-2026) and installs it; Nexus Releases' Windows installer has a job of its own."""
+    28-10-2026) and installs it; the Nexus Release Tool's Windows installer has a job of its own."""
     import re
     ci = CI.read_text(encoding="utf-8")
     matrix = re.search(r"app: \[([^\]]*)\]", ci).group(1)

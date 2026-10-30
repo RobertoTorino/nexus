@@ -22,9 +22,11 @@ app is an optional tile. The wiki is at robertotorino.github.io/nexus/windows-po
 - `portal/`: the portal (`portable_portal/`), `apps.toml` (one pinned release per app), its `install.ps1` and
   `run.ps1`, its images and the intro's sound.
 - `tools/`: `build_release.py` (an app's or the portal's release zip, on Windows), `check_manifest.py`,
-  `check-release.ps1` (the release checks on the handheld, from Nexus Releases' test buttons), `mkdocs/`
+  `suite_release.py` and `publish_release.sh` (the release workflow's plan, pin and publish steps),
+  `check-release.ps1` (the release checks on the handheld, from the Nexus Release Tool's test buttons; `draft`: the
+  device test of a Nexus release), `mkdocs/`
   (the wiki's overrides), their tests in `tools/tests/`, and `tools/installer-tests/<name>.ps1` (an installer test
-  per app and per manifest entry, and Nexus Releases' `releases.ps1`).
+  per app and per manifest entry, and the Nexus Release Tool's `nrt.ps1`).
 - `docs/` and `mkdocs.yml`: the wiki; `icons/`: the suite's pictures and the category icons
   (`icons/<category>/<category>-<size>.png`), the PNG sources of their copies: every optional app takes its
   category's icon (`../tools/make_icons.py` writes the copies, `../ICONS.md` lists them).
@@ -121,7 +123,7 @@ Every app is built the same way; Windows Portable Test is the model:
   in the suite's CI's `installers` matrix (a job per app: the installer test, the release built and installed) and
   its folder in the CI's pytest matrix (`../tools/tests/test_layout.py` and `tools/tests/` check them);
   `../tools/new_app.py --suite windows-portable` does all of it. The suite's CI runs only for a push that changes
-  the suite, core, `tools/` or `dev/releases/` (owner, 29-10-2026).
+  the suite, core, `tools/` or `dev/nrt/` (owner, 29-10-2026).
 
 ## Checks of the suite
 

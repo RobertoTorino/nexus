@@ -147,7 +147,7 @@ def test_native_wheel_is_required_and_named(tmp_path, monkeypatch):
 
 
 def test_checkout_only_app_has_no_release(tmp_path, monkeypatch):
-    """An app with .checkout-only (Nexus Releases, Installer Tests) is never built: the marker is refused."""
+    """An app with .checkout-only (Nexus Release Tool, Installer Tests) is never built: the marker is refused."""
     suite = tmp_path / "suite"
     (suite / "apps" / "x").mkdir(parents=True)
     (suite / "apps" / "x" / ".checkout-only").write_text("No releases.\n")

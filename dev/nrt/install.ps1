@@ -1,22 +1,22 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-# Installs Nexus Releases on Windows for the current user: a Start-menu entry and a Desktop shortcut that start
+# Installs Nexus Release Tool on Windows for the current user: a Start-menu entry and a Desktop shortcut that start
 # run.ps1 in this checkout, as install.sh does on Linux. Nothing is copied: the app edits the checkout it lives in,
 # so it always runs the checkout's own code. Moving the checkout needs install.ps1 again.
 #
-#   powershell -ExecutionPolicy Bypass -File dev\releases\install.ps1                          # Start menu and Desktop
-#   powershell -ExecutionPolicy Bypass -File dev\releases\install.ps1 --no-desktop-shortcut    # Start-menu entry only
-#   powershell -ExecutionPolicy Bypass -File dev\releases\install.ps1 --uninstall              # remove them; the checkout and the settings stay
-#   powershell -ExecutionPolicy Bypass -File dev\releases\install.ps1 --uninstall --purge      # also remove the settings
+#   powershell -ExecutionPolicy Bypass -File dev\nrt\install.ps1                          # Start menu and Desktop
+#   powershell -ExecutionPolicy Bypass -File dev\nrt\install.ps1 --no-desktop-shortcut    # Start-menu entry only
+#   powershell -ExecutionPolicy Bypass -File dev\nrt\install.ps1 --uninstall              # remove them; the checkout and the settings stay
+#   powershell -ExecutionPolicy Bypass -File dev\nrt\install.ps1 --uninstall --purge      # also remove the settings
 #
 # Run it as your own user, not as administrator. The shortcuts start run.ps1 in a hidden PowerShell window, with
-# the icon written to %LOCALAPPDATA%\nexus-releases. The settings are in %APPDATA%\nexus-releases.
+# the icon written to %LOCALAPPDATA%\nexus-release-tool. The settings are in %APPDATA%\nexus-release-tool.
 # The app registers its Windows app ID for the current user when it starts (the name and icon of its notifications);
 # --uninstall removes it. WPS_DESKTOP_DIR, WPS_ELEVATED and WPS_APP_ID_KEY stand in for the Desktop folder, the
-# administrator check and that registry key in the installer test (windows-portable/tools/installer-tests/releases.ps1).
+# administrator check and that registry key in the installer test (windows-portable/tools/installer-tests/nrt.ps1).
 $ErrorActionPreference = 'Stop'
 
-$AppId = 'nexus-releases'
-$AppName = 'Nexus Releases'
+$AppId = 'nexus-release-tool'
+$AppName = 'Nexus Release Tool'
 $App = $PSScriptRoot
 $Repo = (Resolve-Path (Join-Path $App '..\..')).Path
 $DataDir = Join-Path $env:LOCALAPPDATA $AppId
@@ -25,8 +25,13 @@ $Icon = Join-Path $DataDir "$AppId.ico"
 $MenuEntry = Join-Path $env:APPDATA "Microsoft\Windows\Start Menu\Programs\$AppName.lnk"
 if ($env:WPS_DESKTOP_DIR) { $DesktopDir = $env:WPS_DESKTOP_DIR } else { $DesktopDir = [Environment]::GetFolderPath('Desktop') }
 $DesktopIcon = Join-Path $DesktopDir "$AppName.lnk"
-# The app ID the app registers when it starts (nexus_releases/__main__.py: the name and icon of its notifications)
-if ($env:WPS_APP_ID_KEY) { $AppIdKey = $env:WPS_APP_ID_KEY } else { $AppIdKey = 'HKCU:\Software\Classes\AppUserModelId\Nexus.NexusReleases' }
+# The app ID the app registers when it starts (nexus_release_tool/__main__.py: the name and icon of its notifications)
+if ($env:WPS_APP_ID_KEY) { $AppIdKey = $env:WPS_APP_ID_KEY } else { $AppIdKey = 'HKCU:\Software\Classes\AppUserModelId\Nexus.NexusReleaseTool' }
+# The app's earlier name, Nexus Releases (dev\releases, until 30-10-2026): its shortcuts pointed at a folder that is
+# gone and go when this app is installed, with its icon and app ID. The app takes over its settings when it starts.
+$OldName = 'Nexus Releases'
+$OldDataDir = Join-Path $env:LOCALAPPDATA 'nexus-releases'
+if ($env:WPS_OLD_APP_ID_KEY) { $OldAppIdKey = $env:WPS_OLD_APP_ID_KEY } else { $OldAppIdKey = 'HKCU:\Software\Classes\AppUserModelId\Nexus.NexusReleases' }
 
 function Info($text) { Write-Host '==> ' -ForegroundColor Magenta -NoNewline; Write-Host $text }
 function Die($text) { Write-Host "ERROR: $text" -ForegroundColor Red; exit 1 }
@@ -104,6 +109,14 @@ if (-not (Test-Path -LiteralPath (Join-Path $Repo '.venv-windows\Scripts\python.
     Info 'Note: no .venv-windows yet; create it (see CLAUDE.md) before you start the app.'
 }
 
+foreach ($old in @((Join-Path (Split-Path -Parent $MenuEntry) "$OldName.lnk"), (Join-Path $DesktopDir "$OldName.lnk"),
+                   $OldDataDir, $OldAppIdKey)) {
+    if (Test-Path -LiteralPath $old) {
+        Info "Removing $old (the app's earlier name)"
+        Remove-IfThere $old
+    }
+}
+
 Write-Icon (Join-Path $App "images\$AppId-128.png") $Icon
 Info 'Adding the Start-menu entry'
 New-Shortcut $MenuEntry
@@ -113,4 +126,4 @@ if ($DesktopShortcut) {
 } else {
     Remove-IfThere $DesktopIcon
 }
-Info "Done. Start `"$AppName`" from the Start menu$(if ($DesktopShortcut) { ' or the Desktop' }), or run dev\releases\run.ps1"
+Info "Done. Start `"$AppName`" from the Start menu$(if ($DesktopShortcut) { ' or the Desktop' }), or run dev\nrt\run.ps1"

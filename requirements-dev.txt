@@ -14,7 +14,7 @@
 -r bc250-bazzite/apps/clb/requirements-dev.txt
 -r bc250-bazzite/apps/sftp/requirements-dev.txt     # paramiko: its tests import it
 -r bc250-bazzite/apps/mtool/requirements-dev.txt    # dbus-next: its tests import it
--r dev/releases/requirements-dev.txt
+-r dev/nrt/requirements-dev.txt
 mkdocs-material
 mkdocs>=1.6,<2                  # MkDocs 2.0 drops the plugin and theme system Material needs
 pillow>=12,<13                  # the wiki's WebP copies of the app pictures (bc250-bazzite/tools/mkdocs/hooks.py)

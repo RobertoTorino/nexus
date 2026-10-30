@@ -331,7 +331,7 @@ not run one.
 
   An app at 0.x follows the same table: a new feature takes 0.1.4 to 0.2.0, a breaking change to 1.0.0. The portal
   moves at least as far as the largest app release it pins, and a minor step when an app is added or removed.
-  Nexus Releases offers that version first; `tools/tests/test_changelog_kinds.py` checks the entries.
+  Nexus Release Tool offers that version first; `tools/tests/test_changelog_kinds.py` checks the entries.
 - Each app is released on its own tag, `<name>-v<x.y.z>`. The portal pins one release of each app in
   `bc250-bazzite/portal/apps.toml`. The steps are in [Portal](../portal.md#appstoml-and-releases).
 

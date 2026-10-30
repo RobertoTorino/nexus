@@ -2,7 +2,7 @@
 name: CI Windows Portable
 
 # The checks of the Windows Portable Suite (windows-portable/) on every push and pull request that changes the suite
-# or what its releases are built from (core, which its apps bundle; the Nexus tools; Nexus Releases' Windows
+# or what its releases are built from (core, which its apps bundle; the Nexus tools; the Nexus Release Tool's Windows
 # installer, tested here), apart from ci.yml (the BC250 Bazzite Suite) and ci-nexus.yml (Nexus), so that one suite's
 # checks never block another suite's releases and a push to one suite runs no other suite's CI (owner, 27-10-2026 and
 # 29-10-2026). Its tags (wp-<app>-v<x.y.z>) wait for this workflow on the commit (tools/ci_state.py --workflow
@@ -18,7 +18,7 @@ on:
       - "windows-portable/**"
       - "core/**"                       # bundled in every app
       - "tools/**"                      # the release tools (stage_app.py, check_versions.py)
-      - "dev/releases/**"               # Nexus Releases' Windows installer: installer-tests/releases.ps1
+      - "dev/nrt/**"                    # the Nexus Release Tool's Windows installer: installer-tests/nrt.ps1
       - "requirements-dev.txt"
       - ".github/workflows/ci-windows-portable.yml"
       - ".github/workflows/release-windows-portable.yml"
@@ -27,7 +27,7 @@ on:
       - "windows-portable/**"
       - "core/**"
       - "tools/**"
-      - "dev/releases/**"
+      - "dev/nrt/**"
       - "requirements-dev.txt"
       - ".github/workflows/ci-windows-portable.yml"
       - ".github/workflows/release-windows-portable.yml"
@@ -155,11 +155,11 @@ jobs:
           powershell -NoProfile -ExecutionPolicy Bypass -File windows-portable/tools/installer-tests/${{ matrix.app }}.ps1
           -Release (Get-Item wpdist/*.zip).FullName
 
-  nexus-releases-installer:
-    # Nexus Releases' Windows installer (dev/releases/install.ps1) is tested here: this suite is the one on Windows.
+  nexus-release-tool-installer:
+    # the Nexus Release Tool's Windows installer (dev/nrt/install.ps1) is tested here: this suite is the one on Windows.
     runs-on: windows-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
-      - name: "Installer test: releases"
-        run: powershell -NoProfile -ExecutionPolicy Bypass -File windows-portable/tools/installer-tests/releases.ps1
+      - name: "Installer test: nrt"
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File windows-portable/tools/installer-tests/nrt.ps1

@@ -39,7 +39,7 @@ def cargo_lock_pattern(lock: Path) -> re.Pattern | None:
 
 
 # A line that assigns a literal version: one the pattern cannot read is an error, not a copy that is skipped (and
-# then left behind by Nexus Releases' bump, which changes exactly the copies found here). Lines that read VERSION at
+# then left behind by the Nexus Release Tool's bump, which changes exactly the copies found here). Lines that read VERSION at
 # run time (VERSION=$(...), __version__ = _read_version()) are no copies and stay out.
 CANDIDATES = {".py": re.compile(r"""^__version__\s*=\s*["'].*$""", re.M),
               ".sh": re.compile(r"""^VERSION=["']?\d.*$""", re.M)}

@@ -1,0 +1,233 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+"""flow.py, the Nexus release: what it holds, what Start writes (as steps 1 and 2 would, with the portal's and
+Nexus's versions worked out), when Start can go, its one command, and the commands that follow the run."""
+
+from __future__ import annotations
+
+import subprocess
+from pathlib import Path
+
+import pytest
+
+from nexus_release_tool import flow
+from nexus_release_tool import plan as rp
+
+APPS_TOML = ('[apps.test]\nname = "T"\nsummary = "s"\ntag = "wp-test-v0.1.0"\nsha256 = "' + "ab" * 32 + '"\n'
+             'required = true\ncategory = "sustainable"\ninstall = ["i"]\nuninstall = ["u"]\ndetect = ["d"]\n')
+
+
+def write(path: Path, text: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(text.encode("utf-8"))
+
+
+def sh(root: Path, *args: str) -> str:
+    return subprocess.run(["git", *args], cwd=root, check=True, capture_output=True, text=True).stdout
+
+
+@pytest.fixture
+def nexus(tmp_path) -> Path:
+    """Nexus with the Windows Portable Suite's kind on the Nexus release (wp), released once, then a change in its
+    test app."""
+    root = tmp_path / "nexus"
+    write(root / ".gitignore", "__pycache__/\n")                    # as the repository's: the manifest tools' caches
+    write(root / "VERSION", "0.5.0\n")
+    write(root / "CHANGELOG", "Changelog: 01-01-2026 00:00:00\n\nRelease 0.5.0.\n")
+    write(root / "core/VERSION", "0.1.0\n")
+    write(root / "core/CHANGELOG", "Changelog: 01-01-2026 00:00:00\n\nVersion 0.1.0.\n")
+    write(root / "core/bc250_core/__init__.py", '__version__ = "0.1.0"\n')
+    wp = root / "wp"
+    write(wp / "SYSTEM", "windows\n")
+    write(wp / "TAG_PREFIX", "wp-\n")
+    write(wp / "portal/VERSION", "1.0.0\n")
+    write(wp / "portal/CHANGELOG", "Changelog: 01-01-2026 00:00:00\n\nRelease 1.0.0.\n")
+    write(wp / "apps/test/VERSION", "0.1.0\n")
+    write(wp / "apps/test/CHANGELOG", "Changelog: 01-01-2026 00:00:00\n\nRelease 0.1.0.\n")
+    write(wp / "apps/test/app.py", "print('hi')\n")
+    real = rp.CHECKOUT / "windows-portable"
+    for path in ("tools/check_manifest.py", "portal/portable_portal/manifest.py"):
+        write(wp / path, (real / path).read_text(encoding="utf-8"))
+    write(wp / "portal/apps.toml", APPS_TOML)
+    write(root / ".github/workflows/release-wp.yml", "on:\n  workflow_call:\n")
+    sh(root, "init", "-q", "-b", "main")
+    sh(root, "-c", "user.name=t", "-c", "user.email=t@t", "add", "-A")
+    sh(root, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "-m", "start")
+    for tag in ("wp-test-v0.1.0", "wp-portal-v1.0.0"):
+        sh(root, "tag", tag)
+    write(wp / "apps/test/app.py", "print('hello')\n")
+    write(wp / "apps/test/CHANGELOG", "Changelog: 02-01-2026 00:00:00\n\nAdded. A greeting.\n\n"
+                                      "Changelog: 01-01-2026 00:00:00\n\nRelease 0.1.0.\n")
+    sh(root, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "-am", "greeting")
+    return root
+
+
+def test_only_the_suites_on_the_nexus_release(nexus):
+    assert flow.release_suites(nexus) == ["wp"]
+    (nexus / ".github/workflows/release-wp.yml").write_text("on:\n  push:\n", encoding="utf-8")
+    assert flow.release_suites(nexus) == []
+
+
+def test_the_release_holds_the_changed_app_its_portal_and_nexus(nexus):
+    found = {p.unit.key: p for p in flow.picks(nexus)}
+    assert set(found) == {"test", "portal", rp.NEXUS}               # core did not change
+    assert found["test"].choices[0] == "0.2.0" and found["test"].suite == "wp"     # Added. -> minor
+    assert found["portal"].version == flow.AUTO and found[rp.NEXUS].version == flow.AUTO
+    assert found["test"].label == "wp · test" and found[rp.NEXUS].label == "nexus"
+
+
+def test_nothing_changed_nothing_to_release(nexus):
+    sh(nexus, "tag", "-f", "wp-test-v0.1.0")                        # the change is in the tag now
+    assert flow.picks(nexus) == []
+
+
+def test_start_writes_the_release_as_steps_one_and_two_would(nexus):
+    log, tags = flow.write(nexus, flow.picks(nexus), base="HEAD")
+    assert tags == ["wp-test-v0.2.0", "wp-portal-v1.1.0", "nexus-v0.6.0"]
+    assert (nexus / "wp/apps/test/VERSION").read_text() == "0.2.0\n"
+    manifest = (nexus / "wp/portal/apps.toml").read_text()
+    assert 'tag = "wp-test-v0.2.0"\nsha256 = ""\n' in manifest          # the sha256 is the workflow's
+    assert (nexus / "wp/portal/VERSION").read_text() == "1.1.0\n"       # an app minor: a portal minor
+    assert "Release 1.1.0. Pins wp-test-v0.2.0." in (nexus / "wp/portal/CHANGELOG").read_text()
+    assert "Release 0.2.0." in (nexus / "wp/apps/test/CHANGELOG").read_text()
+    assert (nexus / "VERSION").read_text() == "0.6.0\n"                 # a suite's release: Nexus minor
+    assert "Release 0.6.0. Brings wp-portal-v1.1.0, wp-test-v0.2.0." in (nexus / "CHANGELOG").read_text()
+    assert len(log) == 3
+
+
+def test_a_typed_version_overrides_the_suggestion(nexus):
+    chosen = flow.picks(nexus)
+    for pick in chosen:
+        pick.version = {"test": "1.0.0", "portal": "2.0.0", rp.NEXUS: "1.0.0"}[pick.unit.key]
+        pick.notes = "notes" if pick.unit.key == "test" else ""
+    _log, tags = flow.write(nexus, chosen, base="HEAD")
+    assert tags == ["wp-test-v1.0.0", "wp-portal-v2.0.0", "nexus-v1.0.0"]
+    assert "Release 1.0.0. notes" in (nexus / "wp/apps/test/CHANGELOG").read_text()
+
+
+def test_a_portal_typed_too_low_gets_what_ci_asks(nexus):
+    chosen = flow.picks(nexus)
+    for pick in chosen:
+        if pick.unit.key == "test":
+            pick.version = "1.0.0"                                  # a major app release
+        if pick.unit.key == "portal":
+            pick.version = "1.0.1"
+    log, tags = flow.write(nexus, chosen, base="HEAD")
+    assert "wp-portal-v2.0.0" in tags and any("less than CI asks" in line for line in log)
+
+
+def test_wrong_versions_are_refused_before_anything_is_written(nexus):
+    chosen = flow.picks(nexus)
+    chosen[0].version = "0.0.9"
+    assert flow.problems(chosen) == ["wp · test: 0.0.9 is not higher than 0.1.0, which is already tagged"]
+    chosen[0].version = "abc"
+    assert "is not x.y.z" in flow.problems(chosen)[0]
+
+
+def test_start_needs_a_clean_tree_at_the_last_push(nexus):
+    assert flow.ready(nexus, base="HEAD") == []
+    (nexus / "wp/apps/test/app.py").write_text("changed\n")
+    assert flow.ready(nexus, base="HEAD")[0].startswith("The working tree has changes")
+    sh(nexus, "checkout", "-q", "--", ".")
+    assert "not pushed" in flow.ready(nexus, base="HEAD~1")[0]
+    assert "git fetch" in flow.ready(nexus, base="origin/main")[0]
+
+
+def test_the_one_command_commits_pushes_and_starts_the_workflow():
+    command = flow.start_command(flow.commit_message(["wp-test-v0.2.0", "wp-portal-v1.1.0", "nexus-v0.6.0"]))
+    assert command.startswith("git commit -a -q -m 'Release wp-test-v0.2.0, wp-portal-v1.1.0, nexus-v0.6.0' && ")
+    assert "git push origin HEAD:main && gh workflow run release-nexus.yml --ref main" in command
+    assert '-f commit="$(git rev-parse HEAD)"' in command
+
+
+def test_the_run_is_followed_stopped_and_resumed():
+    other = rp.BuildRun("CI Nexus", "main", "completed", "success", "https://github.com/o/r/actions/runs/1", "abc", "t",
+                        file="ci-nexus.yml")
+    run = rp.BuildRun("Release Nexus", "main", "in_progress", "", "https://github.com/o/r/actions/runs/42", "abc", "t",
+                      file="release-nexus.yml")
+    assert flow.release_run([other, run]) is run and flow.release_run([other, run], "def") is None
+    assert flow.stop_command(run) == "gh run cancel 42"
+    assert flow.resume_command(run) == "gh run rerun 42 --failed"
+
+
+def test_the_device_test_and_publish_work_on_the_portals_draft(nexus):
+    assert flow.waiting_portals(nexus) == ["wp-portal-v1.0.0"]
+    assert flow.publish_command("wp-portal-v1.1.0") == "gh release edit wp-portal-v1.1.0 --draft=false --latest=false"
+    line = flow.device_test_line(nexus, "wp", "wp-portal-v1.1.0", windows=True)
+    assert line.startswith("& '") and line.endswith("check-release.ps1' draft wp-portal-v1.1.0")
+
+
+def test_a_release_commit_whose_push_stopped_is_pushed_and_started(nexus):
+    assert flow.unpushed_release(nexus, base="HEAD") == ""
+    sh(nexus, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "--allow-empty", "-m",
+       "Release wp-test-v0.2.0, wp-portal-v1.1.0")
+    assert flow.unpushed_release(nexus, base="HEAD~1") == "Release wp-test-v0.2.0, wp-portal-v1.1.0"
+    sh(nexus, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "--allow-empty", "-m", "other")
+    assert flow.unpushed_release(nexus, base="HEAD~2") == ""             # not right on top of the last push
+    assert flow.push_and_start_command().startswith("git push origin HEAD:main && gh workflow run release-nexus.yml")
+
+
+@pytest.fixture
+def release_window(nexus, tmp_path):
+    pytest.importorskip("PyQt6.QtWidgets")
+    from PyQt6.QtWidgets import QApplication
+    app = QApplication.instance() or QApplication([])          # noqa: F841 (kept alive for the window)
+    from nexus_release_tool import main_window
+    launched: list[str] = []
+    w = main_window.ReleaseWindow(nexus, launch=launched.append, runs_source=None, status_source=None,
+                                  claude_source=None, suite="wp")
+    w.portal_page.base_edit.setText("HEAD")
+    w.reload()
+    w.launched = launched
+    yield w
+    w.close()
+
+
+def test_the_window_opens_on_the_nexus_release(release_window):
+    w = release_window
+    page = w.release_page
+    assert w.tabs.widget(0) is page and w.tabs.tabText(0) == "Nexus release"
+    assert [pick.label for pick, _combo, _notes in page.rows] == ["wp · test", "wp · portal", "nexus"]
+    assert page.rows[0][1].currentText() == "0.2.0" and page.rows[1][1].currentText() == flow.AUTO
+    assert page.start_button.isEnabled() and page.portal_choice.currentText() == "wp-portal-v1.0.0"
+    assert not page.stop_button.isEnabled() and not page.resume_button.isEnabled()
+
+
+def test_start_writes_the_release_and_runs_the_one_command(release_window, monkeypatch):
+    w = release_window
+    page = w.release_page
+    ran = []
+    monkeypatch.setattr(w, "confirm_git", lambda *a: True)
+    monkeypatch.setattr(w, "run_git", ran.append)
+    page.rows[0][2].setText("A greeting")
+    page.start()
+    assert ran == [flow.start_command("Release wp-test-v0.2.0, wp-portal-v1.1.0, nexus-v0.6.0")]
+    assert "Release 0.2.0. A greeting" in (w.root / "wp/apps/test/CHANGELOG").read_text()
+    assert "wp · test: 0.2.0" in page.output.toPlainText()
+
+
+def test_start_waits_for_a_clean_tree(release_window, monkeypatch):
+    w = release_window
+    (w.root / "wp/apps/test/app.py").write_text("changed\n")
+    w.reload()
+    assert not w.release_page.start_button.isEnabled()
+    assert "working tree has changes" in w.release_page.why_not.text()
+    warned = []
+    monkeypatch.setattr("nexus_release_tool.release_page.QMessageBox.warning", lambda *a: warned.append(a[2]))
+    w.release_page.start()
+    assert warned and "working tree has changes" in warned[0]
+
+
+def test_the_device_test_and_publish(release_window, monkeypatch):
+    w = release_window
+    page = w.release_page
+    monkeypatch.setattr("nexus_release_tool.release_page.rp.tests_here", lambda *a: True)
+    page.show_state()
+    page.device_test()
+    assert w.launched and w.launched[-1].endswith("draft wp-portal-v1.0.0")
+    ran = []
+    monkeypatch.setattr(w, "confirm_git", lambda *a: True)
+    monkeypatch.setattr(w, "run_git", ran.append)
+    page.publish()
+    assert ran == ["gh release edit wp-portal-v1.0.0 --draft=false --latest=false"]
+    page.reject()
+    assert "stays a draft" in page.output.toPlainText()

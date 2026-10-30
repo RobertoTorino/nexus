@@ -75,7 +75,9 @@ only a commit that its suite's CI passed.
   (`actions/checkout@v4`); this setting would fail every run until each `uses:` line names a commit hash.
 - **Workflow permissions:** **Read repository contents**. A workflow that needs more asks for it in its own
   `permissions:` block (`release.yml` and `release-windows-portable.yml` write releases, `nexus-index.yml` the
-  Nexus index release, `docs.yml` publishes the wikis).
+  Nexus index release, `docs.yml` publishes the wikis). In a Nexus release, `release-windows-portable.yml` also
+  pushes its *Pin ...* commit to main and makes the app tags with that token; the rulesets allow it as they are
+  (no rule on new tags, main only guarded against deletion and force pushes).
 
 ## Security
 
@@ -141,7 +143,7 @@ GitHub's API answers a limited number of requests an hour: **60 without signing 
 (everything on your network that asks GitHub without signing in shares them), and **5,000 when signed in**.
 Answers that did not change since the last look ("304 Not Modified") do not count.
 
-Nexus Releases asks the API whether the newest push built: every 30 seconds while a build runs, every 5
+Nexus Release Tool asks the API whether the newest push built: every 30 seconds while a build runs, every 5
 minutes otherwise. A running build with a busy hour of other requests can use up the 60. The window shows how many
 are left, beside its GitHub button (*GitHub API: 4,894 of 5,000 left until 04:16, signed in*); when none are left
 the button says *GitHub: limit reached, back at …* and waits until then.
@@ -154,7 +156,7 @@ brew install gh
 gh auth login
 ```
 
-Nexus Releases then uses that login (`gh auth token`; a `GITHUB_TOKEN` or `GH_TOKEN` variable takes its place). The
+Nexus Release Tool then uses that login (`gh auth token`; a `GITHUB_TOKEN` or `GH_TOKEN` variable takes its place). The
 token is only sent to GitHub's API and never stored by the app. The limit as it stands right now:
 
 ```bash

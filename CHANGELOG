@@ -1,3 +1,24 @@
+Changelog: 30-10-2026 04:04:06
+
+Added. The Nexus release (owner, 30-10-2026): release-nexus.yml, started by the Nexus Release Tool's Start new
+release with the release commit, carries every suite that changed (tools/nexus_release.py: a suite whose release
+workflow can be called and whose portal version is not out yet) by calling that suite's own release workflow. The
+Windows Portable Suite is on it: release-windows-portable.yml can be called with the commit, builds every new app
+release side by side and publishes it, pins the checksums in a commit "Pin ..." on main (only while main is still the
+release commit), and makes the portal a draft (windows-portable/tools/suite_release.py and publish_release.sh);
+check-release.ps1 draft is the device test. A tag pushed by hand still releases that one release.
+
+Breaking. The Nexus index is no longer made by a push that changes the root VERSION (every release commit does now):
+it follows each release workflow started by a tag, each release published by hand (a Nexus release's portal) and a
+Nexus release without a suite.
+
+Changelog: 30-10-2026 03:25:12
+
+Breaking. Nexus Releases is now the Nexus Release Tool, NRT (owner, 30-10-2026): dev/nrt/ (was dev/releases/),
+tools/nrt.sh (was tools/release.sh), and the installer tests nrt.sh and nrt.ps1 in each suite's
+tools/installer-tests/ (were releases.sh and releases.ps1). CLAUDE.md, the CI workflows, DESIGN.md, ICONS.md, the
+Nexus page and the suites' wikis name it so.
+
 Changelog: 30-10-2026 01:49:02
 
 Release 0.27.0. Brings wp-portal-v4.0.0.

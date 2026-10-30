@@ -2,8 +2,8 @@
 
 # Releases
 
-**Nexus Releases** (`dev/releases/` in the repository) is the release front end of every suite: a window that makes
-the file edits of a release for you, the versions, the CHANGELOG entries, the pins and the portal bump, and runs a
+The **Nexus Release Tool**, NRT for short (`dev/nrt/` in the repository), is the release front end of every suite:
+a window that makes the file edits of a release for you, the versions, the CHANGELOG entries, the pins and the portal bump, and runs a
 suite's board checks. It commits, tags and pushes only when you press its git buttons: after each step it shows the
 git commands to run. It edits the checkout it lives in, so it is not in a portal's releases and has none of its own.
 When the checkout holds several suites, the first column lists them, each portal with its icon and the tag of its
@@ -23,24 +23,56 @@ checkout you installed it from. After moving the checkout, install it again.
 On Linux:
 
 ```bash
-tools/release.sh                                # open it (dev/releases/run.sh)
-tools/release.sh --list                         # the same overview in the terminal, with the system python3
-dev/releases/install.sh                         # app menu entry and Desktop icon
-dev/releases/install.sh --no-desktop-shortcut   # app menu entry only
-dev/releases/install.sh --uninstall             # remove them; the checkout stays
+tools/nrt.sh                                # open it (dev/nrt/run.sh)
+tools/nrt.sh --list                         # the same overview in the terminal, with the system python3
+dev/nrt/install.sh                         # app menu entry and Desktop icon
+dev/nrt/install.sh --no-desktop-shortcut   # app menu entry only
+dev/nrt/install.sh --uninstall             # remove them; the checkout stays
 ```
 
 On Windows, in PowerShell:
 
 ```powershell
-dev\releases\run.ps1                                                          # open it
-dev\releases\run.ps1 --list                                                   # the overview in the terminal
-powershell -ExecutionPolicy Bypass -File dev\releases\install.ps1             # Start-menu entry and Desktop shortcut
-powershell -ExecutionPolicy Bypass -File dev\releases\install.ps1 --uninstall # remove them; the checkout stays
+dev\nrt\run.ps1                                                          # open it
+dev\nrt\run.ps1 --list                                                   # the overview in the terminal
+powershell -ExecutionPolicy Bypass -File dev\nrt\install.ps1             # Start-menu entry and Desktop shortcut
+powershell -ExecutionPolicy Bypass -File dev\nrt\install.ps1 --uninstall # remove them; the checkout stays
 ```
 
-From Git Bash, `tools/release.sh` and `tools/release.sh --install` do the same. `--uninstall --purge` also removes
+From Git Bash, `tools/nrt.sh` and `tools/nrt.sh --install` do the same. `--uninstall --purge` also removes
 the settings.
+
+## The Nexus release
+
+A Nexus release is the one release of the repository: Nexus's version with every suite that changed since its last
+release, and only those. A suite takes part once its release workflow can be called by **Release Nexus**
+(`release-nexus.yml`); the Windows Portable Suite does. The BC250 Bazzite Suite still releases with the steps below.
+
+The tab **Nexus release** lists what the release holds: each app of such a suite that ships something new since its
+last release, its portal, core when it changed since its last version, and Nexus. The version offered first follows
+the CHANGELOG entries, as in step 1; type another to override it. A portal's and Nexus's version say **auto**: they
+are worked out when the release is written, at least what the app releases need, and can be typed too.
+
+1. **Start new release.** It goes only when the working tree is clean and HEAD is what was pushed last. It writes
+   the release (the versions and their copies, the `Release x.y.z.` entries, the new tags in `apps.toml`, the
+   portal's version and its entry, Nexus's), then one command in the Commands tab commits it, pushes it (the pre-push
+   hook checks it) and starts Release Nexus on that commit. If the push stops, fix what it says; the button then
+   reads **Push and start**.
+2. **On GitHub,** Release Nexus waits for CI on the commit and calls each changed suite's release workflow. A suite's
+   run builds its new app releases side by side and publishes them, writes their checksums into `apps.toml` in a
+   commit *Pin ...* on top of yours, and builds the portal as a **draft**: a draft has no tag yet, so no installed
+   portal sees it. The tab says where the run stands; a run that ends badly gives a notification. **Resume run**
+   starts what failed again (what is out already is skipped, the draft is made anew); **Stop run** stops it. Stopping
+   is safe until a portal is published.
+3. **Device test,** on the suite's own device (the handheld for the Windows Portable Suite): it downloads the draft
+   portal, checks it against its `SHA256SUMS`, installs it and starts it (`check-release.ps1 draft`). Test it as a
+   user would.
+4. **Publish** when it works: the draft becomes a release, which makes its portal tag, and the portals offer it from
+   then on; the Nexus index follows. **Not OK** leaves the draft unpublished: fix what the test showed, commit and
+   push the fix, and start a new release.
+5. **git pull** afterwards: the *Pin ...* commit is on main.
+
+A tag pushed by hand (**git tag** in the steps below) still releases that one app or portal, published at once.
 
 ## The window
 
@@ -103,9 +135,9 @@ the settings.
   When the portal is already open, its icon warns instead of starting: a second portal never opens (starting it only
   brings the open window to the front), so close it first. A click starts that app from the checkout,
   to try a change before its release: `python -m <package>` with the checkout's venv and its `core`, as `run.sh`
-  starts Nexus Releases. An app that changes how the board runs asks first, as in the portal; started from the
+  starts Nexus Release Tool. An app that changes how the board runs asks first, as in the portal; started from the
   checkout it uses the scripts in the checkout. Each app writes its output to
-  `~/.cache/nexus-releases/run/<package>.log`. When an app stops with an error, the end of its log shows on the page.
+  `~/.cache/nexus-release-tool/run/<package>.log`. When an app stops with an error, the end of its log shows on the page.
   The apps keep running when you close the window. The last icons are the ticked suite's wiki and the Nexus page
   (another suite's wiki shows when that suite is ticked; each keeps its port): **BC250 Bazzite Suite wiki
   (local)** serves this wiki from the checkout with `mkdocs serve` (the
@@ -113,7 +145,7 @@ the settings.
   its design panel open; **Nexus wiki (local)** does the same for the Nexus page, at port 8766, and **Windows
   Portable Suite wiki (local)** for that suite's wiki, at port 8767. Each rebuilds on
   every save; its log is `mkdocs-<wiki>-local.log` there. When one is already running, a click only opens the page
-  again. The wikis, like the apps, keep running when you close the window, and Nexus Releases has no button that
+  again. The wikis, like the apps, keep running when you close the window, and Nexus Release Tool has no button that
   stops them. A wiki started before the checkout changed (after a pull, or a change to its `mkdocs.yml` or the
   design panel) can still show the old setup: stop it, then click its icon again. `pkill -f "mkdocs serve"` stops
   every wiki on Linux; on Windows, in PowerShell:
@@ -152,8 +184,8 @@ the settings.
   opens no editor (commit with `-m`) and pages nothing. For a command that must ask, use a terminal. After each
   command the window reads the checkout again, as **Refresh** does. On Windows it needs Git Bash's `bash` on the
   PATH. Every command, its whole output and how it ended (its exit code) are also kept in a file of the day,
-  `~/.cache/nexus-releases/commands/commands-<YYYY-MM-DD>.log` (on Windows under your user folder,
-  `.cache\nexus-releases\commands`), so what a step said can be read again afterwards, or sent along when one went
+  `~/.cache/nexus-release-tool/commands/commands-<YYYY-MM-DD>.log` (on Windows under your user folder,
+  `.cache\nexus-release-tool\commands`), so what a step said can be read again afterwards, or sent along when one went
   wrong.
 - **Applying a release again** (after a check stopped its commit) leaves one release entry in the CHANGELOG: the
   new "Release x.y.z." takes the place of the same release's entry on top, with the notes of the second Apply.
@@ -201,11 +233,11 @@ GitHub built it.
 
 Like the ticker, the notifications of a build that passed or failed follow the suite ticked in the Portals column:
 its CI and releases and Nexus's own workflows, not another suite's CI, which every push starts too. The **GitHub**
-pill itself still counts every run of the push. The notifications are the desktop's own: on Linux through `notify-send`, on Windows from the Nexus Releases icon
+pill itself still counts every run of the push. The notifications are the desktop's own: on Linux through `notify-send`, on Windows from the Nexus Release Tool icon
 in the notification area, which appears with the first notification and goes when the window closes. A click on
-the notification or the icon brings the window to the front. On Windows they name Nexus Releases as their source,
+the notification or the icon brings the window to the front. On Windows they name Nexus Release Tool as their source,
 with its icon, not Python: when it starts, the app registers its Windows app ID for your user (in the registry,
-`HKCU\Software\Classes\AppUserModelId\Nexus.NexusReleases`); `install.ps1 --uninstall` removes it.
+`HKCU\Software\Classes\AppUserModelId\Nexus.NexusReleaseTool`); `install.ps1 --uninstall` removes it.
 
 A red line at the top of the window means a release tag points at a commit whose `VERSION` is not the tag's
 version: the tag was made before the version bump was committed, and `release.yml` cannot build it. Delete the tag
@@ -220,7 +252,7 @@ CI failed. `release.yml` asks the same before it builds anything: a tag on a com
 release. It then builds and publishes the release without an approval on GitHub (see
 [GitHub settings](github-settings.md#environments)).
 
-`tools/release.sh --list` lists every app with its version, its last tag and its pin, without Qt.
+`tools/nrt.sh --list` lists every app with its version, its last tag and its pin, without Qt.
 
 ## The releases on GitHub
 
@@ -228,8 +260,8 @@ Every suite publishes its releases in the one repository, so each release's titl
 the portal's name and `apps.toml`: *BC250 Bazzite Suite: Portal 12.0.0*, *BC250 Bazzite Suite: Xenia Manager
 0.11.0*, *Windows Portable Suite: Windows Portable Test 0.1.1* (`build_release.py` of each suite writes it).
 
-Only a tag builds and publishes a release: an app or portal tag starts its suite's release workflow (**Release**,
-**Release Windows Portable**). A push to main starts every suite's CI, whatever suite it is for, and on the Actions
+A release is built and published by its suite's release workflow (**Release**, **Release Windows Portable**):
+started by a tag pushed by hand, or called by **Release Nexus** for a Nexus release. A push to main starts every suite's CI, whatever suite it is for, and on the Actions
 page each run is titled with the push's commit message: after a push of *Release portal-v12.1.1*, **CI Windows
 Portable** shows as *Release portal-v12.1.1* too, but it only tests. Its steps **Build the release zip, not
 published** build a suite's zip on GitHub's test machine, so the next step can install it; nothing is uploaded.
@@ -238,8 +270,8 @@ A repository has one **Latest** release, and Nexus holds several suites, so no s
 Nexus index, named after Nexus's own version: *Nexus v0.1.0*, tagged `nexus-v0.1.0`. It has a section per suite
 with its newest portal, the download links and the install steps, or the newest release of each app while a suite
 has no portal release yet (`tools/nexus_index.py`). Every release is published with `--latest=false`; after each
-release workflow that succeeded, and after a push to main that changes the root `VERSION`, `nexus-index.yml` makes
-the index again: it removes every earlier index release and its tag and makes the index anew on the newest commit,
+release workflow started by a tag that succeeded, after each release published by hand (a Nexus release's portal,
+by Publish), and at the end of a Nexus release without a suite, `nexus-index.yml` makes the index again: it removes every earlier index release and its tag and makes the index anew on the newest commit,
 marked Latest. So there is one index, Latest always has the time of the newest release of any suite and is first on
 the Releases page. It can also be started by hand from the Actions tab (Nexus index, Run workflow). The release
 tags ruleset must exclude `nexus-v*`, or the workflow cannot remove the old index tag
@@ -257,7 +289,7 @@ ask for: a suite's release is **minor**, a new suite **major**.
 Ticking an app in step 1 ticks **nexus** too (untick it to leave Nexus for later), and step 2's **Nexus too** does
 the same for Bump portal, with Nexus's version beside it. Apply and Bump portal write `VERSION` and the
 `Release x.y.z.` entry; without notes the entry says what the suites bring (*Release 0.4.0. Brings
-wp-portal-v1.3.0.*). There is nothing to tag, because the push to main makes the index `nexus-v<x.y.z>`.
+wp-portal-v1.3.0.*). There is nothing to tag: the index takes the number `nexus-v<x.y.z>` when it is made next.
 
 `/releases/latest`, which the suites' READMEs and wikis link to, opens the index, and app release notes start by
 pointing to it. Installed portals do not use it: they find their releases by their tag prefix (`portal-v`,

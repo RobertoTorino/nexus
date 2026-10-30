@@ -38,7 +38,7 @@ row as the window fits; Bazzite Test is always the first tile on Sustainable:
 **The tabs.** Each tab says at its top what its apps are for; [The apps](apps/index.md) lists them by tab. The portal
 always opens on the first tab, Sustainable.
 
-The tools for working on the suite are not in the portal: [Nexus Releases](https://robertotorino.github.io/nexus/releases/)
+The tools for working on the suite are not in the portal: [Nexus Release Tool](https://robertotorino.github.io/nexus/releases/)
 and BC-250 Installer Tests (`bc250-bazzite/tools/installer-tests/gui`, a window that runs the installer tests one at
 a time) run from a checkout of the repository and have no release. Start them there, or give them a menu entry with
 their own `install.sh`.
@@ -273,7 +273,7 @@ Releasing an app and pinning it in the portal:
 
 ### The release front end
 
-**Nexus Releases**, Nexus's release front end, makes these file edits for you and runs the board tests below. How to
+**Nexus Release Tool**, Nexus's release front end, makes these file edits for you and runs the board tests below. How to
 start and use it: [Releases](https://robertotorino.github.io/nexus/releases/) on the Nexus page.
 
 ### Testing a portal release before its tag
@@ -324,7 +324,7 @@ banner at the top, "Local build"; the published release has none.
 A release that must not be used any more, because of a privacy, security or any other problem, is withdrawn.
 The release stays on GitHub, so its history is kept, but nothing installs it any more:
 
-1. In Nexus Releases, tab **3. Retract app**: choose the app's pinned release, write why, and press
+1. In Nexus Release Tool, tab **3. Retract app**: choose the app's pinned release, write why, and press
    **Retract**. This adds `withdrawn = "<reason>"` to its entry in `apps.toml` and a CHANGELOG entry to the app.
    **Take back** removes it again.
 2. **Test withdrawal** (tab **Test on this board**) on a BC-250 with the app installed: it installs the portal from the checkout and starts it

@@ -14,8 +14,8 @@ from pathlib import Path
 
 import pytest
 
-from nexus_releases import plan as rp
-from nexus_releases.command_line import command_lines
+from nexus_release_tool import plan as rp
+from nexus_release_tool.command_line import command_lines
 
 SHA = "cd" * 32
 SUITE_DIR = "bc250-bazzite"                 # the first suite's folder, as Nexus lays the checkout out
@@ -295,7 +295,7 @@ def test_ticker_follows_the_suite_ticked(two_suites, tmp_path):
     from PyQt6.QtWidgets import QApplication
     QSettings.setPath(QSettings.Format.IniFormat, QSettings.Scope.UserScope, str(tmp_path / "settings"))
     app = QApplication.instance() or QApplication([])          # noqa: F841 (kept alive for the window)
-    from nexus_releases import main_window
+    from nexus_release_tool import main_window
     w = main_window.ReleaseWindow(two_suites, status_source=None, runs_source=lambda etag: (None, etag),
                                   notify=lambda *a: None, claude_source=None, jobs_source=None, suite="bc")
     runs = [run("CI Windows Portable", status="in_progress", n=4), run("CI Nexus", n=3), run(n=2),
@@ -319,7 +319,7 @@ def test_notifications_follow_the_suite_ticked(two_suites, tmp_path):
     from PyQt6.QtWidgets import QApplication
     QSettings.setPath(QSettings.Format.IniFormat, QSettings.Scope.UserScope, str(tmp_path / "settings"))
     app = QApplication.instance() or QApplication([])          # noqa: F841 (kept alive for the window)
-    from nexus_releases import main_window
+    from nexus_release_tool import main_window
     notes = []
     w = main_window.ReleaseWindow(two_suites, status_source=None, runs_source=lambda etag: (None, etag),
                                   notify=lambda *a: notes.append(a), claude_source=None, jobs_source=None, suite="bc")
@@ -640,7 +640,7 @@ def window(repo, tmp_path):
     from PyQt6.QtWidgets import QApplication
     QSettings.setPath(QSettings.Format.IniFormat, QSettings.Scope.UserScope, str(tmp_path / "settings"))
     app = QApplication.instance() or QApplication([])          # noqa: F841 (kept alive for the window)
-    from nexus_releases import main_window
+    from nexus_release_tool import main_window
     w = main_window.ReleaseWindow(repo, sha256_source=lambda tag: SHA, launch=launched.append, runs_source=None,
                                   status_source=None)
     w.portal_page.base_edit.setText("pushed")
@@ -750,7 +750,7 @@ def test_window_reads_new_tags_when_step_2_opens(window, repo):
     assert [u.tag for u, _ in window.portal_page.candidates] == ["alpha-v0.1.0", "beta-v0.1.0"]
     rp.set_version(repo, unit(repo, "alpha"), "0.1.1")
     sh(repo, "tag", "alpha-v0.1.1")                           # tagged in a terminal while the window is open
-    window.tabs.setCurrentIndex(1)
+    window.tabs.setCurrentWidget(window.portal_page)
     assert [u.tag for u, _ in window.portal_page.candidates] == ["alpha-v0.1.1", "beta-v0.1.0"]
     assert window.portal_page.empty_note.isHidden()
     assert row(window, "alpha")[1].isChecked()
@@ -943,7 +943,7 @@ def test_window_records_the_portal_tour(window, repo, tmp_path, monkeypatch):
     """Record portal tour runs the suite's record-tour.sh in the background, its output in Logs, into
     ~/Videos/bc250-portal-tour-v<portal version>.mp4, and opens the video (owner, 20-10-2026)."""
     from PyQt6.QtWidgets import QApplication
-    from nexus_releases import main_window
+    from nexus_release_tool import main_window
     page = window.run_page
     monkeypatch.setenv("HOME", str(tmp_path / "home"))
     opened = []
@@ -1039,7 +1039,7 @@ def test_portal_target(repo):
 
 
 def test_the_portal_is_the_first_icon_under_test_local_apps(window, repo, tmp_path, monkeypatch):
-    from nexus_releases import main_window
+    from nexus_release_tool import main_window
     add_windows(repo)
     write(repo / "portal/bc250_portal/__main__.py", "print('portal')\n")
     monkeypatch.setattr(main_window, "LOG_DIR", tmp_path / "logs")
@@ -1056,7 +1056,7 @@ def test_the_portal_is_the_first_icon_under_test_local_apps(window, repo, tmp_pa
 
 def test_an_open_portal_is_warned_about_and_not_started_again(window, repo, tmp_path, monkeypatch):
     from PyQt6.QtWidgets import QMessageBox
-    from nexus_releases import main_window
+    from nexus_release_tool import main_window
     write(repo / "portal/bc250_portal/__main__.py", "print('portal')\n")
     write(repo / "portal/bc250_portal/__init__.py", 'APP_NAME = "Suite Portal"\nAPP_ID = "suite-portal"\n')
     monkeypatch.setattr(main_window, "LOG_DIR", tmp_path / "logs")
@@ -1082,7 +1082,7 @@ def test_instance_running_sees_a_listening_app_and_does_not_disturb_it():
     from PyQt6.QtWidgets import QApplication
     app = QApplication.instance() or QApplication([])          # noqa: F841 (kept alive for the sockets)
     from bc250_core.instance import server_name
-    from nexus_releases import main_window
+    from nexus_release_tool import main_window
     name = server_name("suite-test-instance")
     QLocalServer.removeServer(name)
     assert not main_window.instance_running("suite-test-instance")
@@ -1155,7 +1155,7 @@ def test_network_addresses_leave_out_loopback():
 
 
 def test_window_serves_the_manual(window, repo, tmp_path, monkeypatch):
-    from nexus_releases import main_window
+    from nexus_release_tool import main_window
     write(repo / "mkdocs.yml", "site_name: S\nsite_url: https://example.invalid/suite/\n")
     monkeypatch.setattr(main_window, "LOG_DIR", tmp_path / "logs")
     started, opened, up = [], [], [False]
@@ -1181,7 +1181,7 @@ def test_window_serves_the_manual(window, repo, tmp_path, monkeypatch):
 
 
 def test_window_serves_the_wikis_on_the_network(window, repo, tmp_path, monkeypatch):
-    from nexus_releases import main_window
+    from nexus_release_tool import main_window
     write(repo / "mkdocs.yml", "site_name: S\n")
     monkeypatch.setattr(main_window, "LOG_DIR", tmp_path / "logs")
     monkeypatch.setattr(rp, "network_addresses", lambda: ["192.0.2.7"])
@@ -1209,7 +1209,7 @@ class FakeProcess:
 
 def test_window_runs_an_app_from_the_checkout(window, repo, tmp_path, monkeypatch):
     from PyQt6.QtWidgets import QMessageBox
-    from nexus_releases import main_window
+    from nexus_release_tool import main_window
     add_windows(repo)
     monkeypatch.setattr(main_window, "LOG_DIR", tmp_path / "logs")
     started = []
@@ -1254,7 +1254,7 @@ def mock_question(answer):
 
 
 def test_start_app_keeps_the_output_in_a_log(tmp_path):
-    from nexus_releases import main_window
+    from nexus_release_tool import main_window
     log = tmp_path / "logs" / "x.log"
     process = main_window.start_app([sys.executable, "-c", "print('hello'); raise SystemExit(3)"], dict(os.environ),
                                     tmp_path, log)
@@ -1343,7 +1343,7 @@ def test_window_ticker_shows_the_jobs_of_the_runs(repo, tmp_path):
     from PyQt6.QtWidgets import QApplication
     QSettings.setPath(QSettings.Format.IniFormat, QSettings.Scope.UserScope, str(tmp_path / "settings"))
     app = QApplication.instance() or QApplication([])          # noqa: F841 (kept alive for the window)
-    from nexus_releases import main_window
+    from nexus_release_tool import main_window
     asked = []
 
     def jobs_source(url, etag):
@@ -1524,7 +1524,7 @@ def test_window_build_indicator_notifies_when_a_run_ends(repo, tmp_path):
     from PyQt6.QtWidgets import QApplication
     QSettings.setPath(QSettings.Format.IniFormat, QSettings.Scope.UserScope, str(tmp_path / "settings"))
     app = QApplication.instance() or QApplication([])          # noqa: F841 (kept alive for the window)
-    from nexus_releases import main_window
+    from nexus_release_tool import main_window
     notes = []
     w = main_window.ReleaseWindow(repo, status_source=None, sha256_source=lambda tag: SHA, launch=launched.append,
                                   runs_source=lambda etag: (None, etag), notify=lambda *a: notes.append(a))
@@ -1573,7 +1573,7 @@ def test_window_tells_when_a_release_is_ready_to_pin(repo, tmp_path):
     from PyQt6.QtWidgets import QApplication
     QSettings.setPath(QSettings.Format.IniFormat, QSettings.Scope.UserScope, str(tmp_path / "settings"))
     app = QApplication.instance() or QApplication([])          # noqa: F841 (kept alive for the window)
-    from nexus_releases import main_window
+    from nexus_release_tool import main_window
     notes, asked = [], []
 
     def sha256(tag):
@@ -1638,7 +1638,7 @@ def test_window_tells_when_a_release_is_ready_to_pin(repo, tmp_path):
 
 def test_title_names_the_checkouts_commit_and_date(window, repo, tmp_path):
     from PyQt6.QtWidgets import QLabel
-    from nexus_releases import __version__
+    from nexus_release_tool import __version__
     head = subprocess.run(["git", "log", "-1", "--format=%h %ct"], cwd=repo, capture_output=True, text=True).stdout.split()
     when = rp.amsterdam_now(datetime.datetime.fromtimestamp(int(head[1]), datetime.timezone.utc))
     stamp = f"{head[0]} · {when:%d-%m-%Y %H:%M}"
@@ -1854,7 +1854,7 @@ def test_window_suite_column(repo, tmp_path):
     from PyQt6.QtCore import QSettings, Qt
     from PyQt6.QtWidgets import QApplication
     app = QApplication.instance() or QApplication([])          # noqa: F841 (kept alive for the window)
-    from nexus_releases import main_window
+    from nexus_release_tool import main_window
     one = main_window.ReleaseWindow(repo, status_source=None, runs_source=None, claude_source=None)
     assert one.suite is None and one.suite_list.isHidden() and "· suite" not in one.footer.text()
     one.close()
@@ -2059,7 +2059,7 @@ def test_window_runs_a_windows_suites_checks_on_windows(two_suites, tmp_path, mo
     from PyQt6.QtWidgets import QApplication
     QSettings.setPath(QSettings.Format.IniFormat, QSettings.Scope.UserScope, str(tmp_path / "settings"))
     app = QApplication.instance() or QApplication([])          # noqa: F841 (kept alive for the window)
-    from nexus_releases import main_window
+    from nexus_release_tool import main_window
     tests_here = rp.tests_here                                  # this computer as Windows, for these tests alone:
     monkeypatch.setattr(rp, "tests_here", lambda root, suite=None, platform=None: tests_here(root, suite, "win32"))
     # (sys.platform itself stays: patched, shutil.which takes Windows' path on Linux and fails, as in CI 28-10-2026)

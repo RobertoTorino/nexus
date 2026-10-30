@@ -22,7 +22,7 @@ on:
       - "bc250-bazzite/**"
       - "core/**"                       # bundled in every app
       - "tools/**"                      # the release tools
-      - "dev/**"                        # Nexus Releases: installer-tests/release.sh
+      - "dev/**"                        # Nexus Release Tool: installer-tests/nrt.sh
       - "portal/**"                     # the root's copy of the suite's apps.toml
       - "test.sh"
       - "requirements-dev.txt"
@@ -288,8 +288,8 @@ jobs:
         run: bash bc250-bazzite/tools/installer-tests/ncgui.sh
       - name: DatStation installer
         run: bash bc250-bazzite/tools/installer-tests/datstation.sh
-      - name: Nexus Releases installer
-        run: bash bc250-bazzite/tools/installer-tests/releases.sh
+      - name: Nexus Release Tool installer
+        run: bash bc250-bazzite/tools/installer-tests/nrt.sh
       - name: Installer Tests installer
         run: bash bc250-bazzite/tools/installer-tests/installer-tests.sh
       - name: release tarballs, end to end

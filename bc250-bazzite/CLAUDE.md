@@ -28,7 +28,7 @@ appearing in the portal.
   gaming, utilities): the portal shows a tab per category, with the notice of updates above the tabs
   (owner, 18-10-2026) and check as the first tile on Sustainable (owner, 20-10-2026). There is no Development tab
   (owner, 27-10-2026): the portal lists only released apps, and Media Tool, the Dependency Checker and Bazzite
-  NetcatGUI are on Utilities. Nexus Releases (the release front end, `../dev/releases/`, a Nexus app, its manual on
+  NetcatGUI are on Utilities. Nexus Release Tool (the release front end, `../dev/nrt/`, a Nexus app, its manual on
   the Nexus page) and BC-250 Installer Tests (`tools/installer-tests/gui`, whose icon keeps the `development`
   category) have `.checkout-only`: they run from the checkout, are never released and are in no portal; start
   them there, or give them a menu entry with their own `install.sh`. A portal that runs from the checkout, or was
@@ -44,7 +44,7 @@ appearing in the portal.
   their update notice; `tools/check_manifest.py` keeps it identical. The owner removes the copy once the first
   portal release after the move has been out for a while.
 - `tools/`: the suite's tools: `pin_app.py`, `check_manifest.py`, `check-release.sh` (the board checks of a
-  portal release, run from Nexus Releases' Test on this board), `sync_icons.py`, `portal_screenshot.py`,
+  portal release, run from the Nexus Release Tool's Test on this board), `sync_icons.py`, `portal_screenshot.py`,
   `portal_tour.py`, `record-tour.sh`, `record-app-tour.sh`, `make_portal_sounds.py`, `sounds/`,
   `check_upstream.py`, `mkdocs/` (the wiki's hooks and overrides), their tests in `tools/tests/`, and
   `tools/installer-tests/` (installers on Linux with fakeroot shims). The Nexus tools (release and CI, the design

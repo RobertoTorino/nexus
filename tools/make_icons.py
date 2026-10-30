@@ -31,7 +31,7 @@ LAUNCHES = {"cu-unlock": "CU Unlock (the CU Bisect app's Unlock)",
 SUITE_ICON = [
     ("bc250-bazzite/portal/images/bc250-bazzite-suite.webp", "`portal/images/bc250-bazzite-suite.webp` (512 px)",
      "The portal's window header (a click opens the wiki) and its window icon; Suite Big Picture Mode's header; the "
-     "portal's release in Nexus Releases."),
+     "portal's release in Nexus Release Tool."),
     ("bc250-bazzite/portal/images/bc250-bazzite-suite-1024.webp", "`portal/images/bc250-bazzite-suite-1024.webp`",
      "The intro of Suite Big Picture Mode."),
     ("bc250-bazzite/portal/images/bc250-bazzite-suite-128.png", "`portal/images/bc250-bazzite-suite-128.png`",
@@ -101,7 +101,7 @@ WINDOWS_PORTABLE_ICON = [
     ("windows-portable/portal/images/windows-portable-suite.webp",
      "`windows-portable/portal/images/windows-portable-suite.webp` (512 px), `-128.png`",
      "The Windows Portable Suite's portal: its window icon and its Start-menu shortcut, and the portal's release in "
-     "Nexus Releases. Lossless copies of the drawing, written by this tool."),
+     "Nexus Release Tool. Lossless copies of the drawing, written by this tool."),
     ("windows-portable/docs/images/wiki-icon.webp", "`windows-portable/docs/images/wiki-icon.webp`, `.png` (256 px)",
      "The suite's wiki: the header logo (`.webp`) and the favicon (`.png`), written by this tool."),
     ("windows-portable/docs/images/home/device.webp", "`windows-portable/docs/images/home/device.webp` (1024 x 514)",
@@ -133,14 +133,14 @@ NEXUS_ICON = [
      "drawing, transparent (owner, 27-10-2026: no more dark tile), both written by this tool."),
     ("nexus/docs/images/nexus-hero.webp", "`nexus/docs/images/nexus-hero.webp` (1024 px)",
      "The Nexus page's home: the icon under the headline, a WebP copy of the 1024 px drawing."),
-    ("dev/releases/images/nexus-releases.webp", "`dev/releases/images/nexus-releases.webp` (512 px), `-128.png`",
-     "Nexus Releases, Nexus's app (owner, 26-10-2026: it takes Nexus's icon, not a category's): its window header "
+    ("dev/nrt/images/nexus-release-tool.webp", "`dev/nrt/images/nexus-release-tool.webp` (512 px), `-128.png`",
+     "Nexus Release Tool, Nexus's app (owner, 26-10-2026: it takes Nexus's icon, not a category's): its window header "
      "and window icon, its menu entry and Desktop icon. Lossless copies of the drawing, written by this tool."),
 ]
-# Nexus Releases' icons: the drawing at each size, lossless (the pixels stay the drawing's), by this tool.
+# the Nexus Release Tool's icons: the drawing at each size, lossless (the pixels stay the drawing's), by this tool.
 NEXUS_COPIES = [
-    ("nexus/images/nexus-512.png", "dev/releases/images/nexus-releases.webp"),
-    ("nexus/images/nexus-128.png", "dev/releases/images/nexus-releases-128.png"),
+    ("nexus/images/nexus-512.png", "dev/nrt/images/nexus-release-tool.webp"),
+    ("nexus/images/nexus-128.png", "dev/nrt/images/nexus-release-tool-128.png"),
     ("nexus/images/nexus-256.png", "nexus/docs/images/nexus.png"),      # the Nexus page's favicon
 ]
 # The Nexus page's logo and hero: pictures on a web page, so lossy WebP at this quality, by this tool since
@@ -198,7 +198,7 @@ def windows_portable_app_copies(root: Path = ROOT) -> tuple[list[tuple[str, str]
 
 
 def nexus_copies(root: Path = ROOT) -> list[Path]:
-    """Writes Nexus Releases' icon copies and the Nexus page's favicon from the Nexus drawings (NEXUS_COPIES) and
+    """Writes the Nexus Release Tool's icon copies and the Nexus page's favicon from the Nexus drawings (NEXUS_COPIES) and
     Windows Portable Test's and the Windows portal's from the suite's (WINDOWS_PORTABLE_COPIES), lossless, so a
     copy's pixels are the drawing's (tests compare them); and the Nexus page's logo and hero (NEXUS_PAGE_COPIES),
     lossy; and every Windows Portable Suite app's category icon (windows_portable_icons()). The paths written."""
@@ -285,7 +285,7 @@ SYMBOLS = [
     ("✓ ✗", "Dependency Checker", "CVE: none found, found."),
     ("⚠ ✓ ✗", "Bazzite SFTP Tools", "Password: a warning, requirements met, not met."),
     ("← ↑ ↓", "Bazzite SFTP Tools", "Download; uploads and downloads in the transfer queue."),
-    ("↑ ↓", "Nexus Releases", "Earlier commands, in the command line's placeholder."),
+    ("↑ ↓", "Nexus Release Tool", "Earlier commands, in the command line's placeholder."),
     ("●", "Every app on core", "The dot of a status box (`bc250_core/widgets.py`)."),
     ("●", "Portal", "Outside the suite."),
     ("✓ ✗", "BC-250 Installer Tests", "A test passed, failed."),

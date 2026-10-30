@@ -18,7 +18,7 @@ core/bc250_core/              shared Python package, every suite's; bundled into
 tools/                        the Nexus tools: release and CI (build_release, stage_app, check_versions,
                               check_changelogs, tag-release.sh, release.sh, ci-local.sh, pre-push.sh, nexus_index),
                               new_app, the design and icon catalogs, the tours, the design panel
-dev/<name>/                   the Nexus development apps, run from the checkout: dev/releases/ is Nexus Releases
+dev/<name>/                   the Nexus development apps, run from the checkout: dev/nrt/ is Nexus Release Tool
 test.sh                       runs every test suite (core, tools, dev/, and the portal, tools and apps of each suite
                               made for the system it runs on: SYSTEM in the suite's folder)
 bc250-bazzite/                the BC250 Bazzite Suite
@@ -138,7 +138,7 @@ It reads the jobs from the workflows themselves, so a new app in the matrix or a
 first run builds the image from `tools/ci-local/Containerfile` (Python 3.12 and the packages GitHub's runner has)
 and Console Link's FFmpeg; both are kept, with the venvs and the logs, in `~/.cache/bc250-ci-local`. It works on a
 copy of the checkout with every change staged, as the commit will have it. Only the Windows job does not run here.
-The push commands Nexus Releases shows run it first (`tools/ci-local.sh && git push`): no push when a job fails.
+The push commands Nexus Release Tool shows run it first (`tools/ci-local.sh && git push`): no push when a job fails.
 
 `tools/pre-push.sh` runs CI's quick checks in a few seconds: the versions, each suite's `portal/apps.toml` with the
 portal bump it needs against what the remote has, the CHANGELOGs keeping every entry the remote has

@@ -24,7 +24,7 @@ own release. `ci-nexus.yml` is Nexus's (core, the Nexus tools, `dev/`, the Nexus
 `ci.yml` and `release.yml` are the BC250 suite's; a suite with a tag prefix has its own `ci-<suite>.yml` and
 `release-<suite>.yml`. A suite's tags wait for its own CI and for `ci-nexus.yml`, never for another suite's
 (`tools/tag-release.sh`, `tools/ci_state.py --workflow`; `tools/tests/test_layout.py` keeps them apart). The
-local gates do the same (owner, 28-10-2026): the pre-push hook and Nexus Releases' git commit run a suite's version
+local gates do the same (owner, 28-10-2026): the pre-push hook and the Nexus Release Tool's git commit run a suite's version
 and manifest checks only when the push or commit changes that suite, so one suite's failing check never holds
 another suite's work. `nexus/` is the Nexus page (robertotorino.github.io/nexus/): the name, the structure and the suites, and the
 chapters that are every suite's (Releases, Development with bc250_core, The development machine, GitHub
@@ -55,8 +55,8 @@ default suite of the tools (`tools/suites.py`). The root keeps what is Nexus's:
 - `dev/<name>/`: the Nexus-level development apps, laid out as a suite's apps are (the package, `images/`,
   `tests/`, `install.sh`, `run.sh` and the four files; `.standalone` and `.checkout-only`: never released). They
   run from the checkout and are in no portal (owner, 27-10-2026: no Development tab, a portal lists only released
-  apps); each has an installer test in each suite's `tools/installer-tests/`. `dev/releases/` is **Nexus
-  Releases**, the release front end (see Releases), with `install.ps1` and `run.ps1` for Windows; its manual is the
+  apps); each has an installer test in each suite's `tools/installer-tests/`. `dev/nrt/` is the **Nexus
+  Release Tool** (NRT), the release front end (see Releases), with `install.ps1` and `run.ps1` for Windows; its manual is the
   Nexus page's Releases chapter.
 - `SETUP.md`: what to take from the development machine before a drive change and what to install on the new
   one, in order (`tools/dev-backup.sh` packs and restores what the repository does not hold).
@@ -79,7 +79,7 @@ default suite of the tools (`tools/suites.py`). The root keeps what is Nexus's:
   No placeholder folders that only describe future work. CHANGELOG entries are history and may
   mention steps.
 - **What touches every suite is documented on the Nexus page** (owner, 27-10-2026): `nexus/docs/`, the Nexus
-  wiki, holds the central parts (the repository, Nexus Releases, GitHub's releases and the Nexus index, Nexus's
+  wiki, holds the central parts (the repository, Nexus Release Tool, GitHub's releases and the Nexus index, Nexus's
   tools and workflows, general information). A suite's wiki holds what is that suite's and links to the Nexus page
   for the rest, rather than explaining it again.
 - **The wikis keep up with the work** (owner, 28-10-2026): new information, a new way of working or new logic worth
@@ -93,10 +93,10 @@ default suite of the tools (`tools/suites.py`). The root keeps what is Nexus's:
   (on Windows with `.venv-windows/Scripts/python.exe`). Not `TZ=Europe/Amsterdam date`: Git Bash on Windows has no
   time zone data and silently gives UTC, an hour or two early.
 - **Nexus's version** (owner, 28-10-2026): the root `VERSION`, with the root CHANGELOG, is Nexus's own; the owner
-  bumps it (Nexus Releases' step 1 row **nexus**). It is never tagged by hand: `nexus-index.yml` publishes GitHub's
+  bumps it (the Nexus Release Tool's step 1 row **nexus**). It is never tagged by hand: `nexus-index.yml` publishes GitHub's
   Latest release, the Nexus index, as `nexus-v<VERSION>` titled `Nexus v<VERSION>`. A suite's release (an app or a
   portal) moves it too, since the index lists every suite: a suite's release is minor, a new suite major (owner,
-  28-10-2026); Nexus Releases offers it with every app and portal release.
+  28-10-2026); Nexus Release Tool offers it with every app and portal release.
 - **One disclaimer for every wiki** (owner, 28-10-2026): `tools/mkdocs/disclaimer.py` holds it; every wiki lists
   the hook, and its home page shows it once, in the footer: `<strong>Disclaimer:</strong>
   {{ config.extra.disclaimer }}` (owner, 28-10-2026: no Disclaimer section of its own on the home page;
@@ -106,7 +106,7 @@ default suite of the tools (`tools/suites.py`). The root keeps what is Nexus's:
 - **Semantic versioning** (owner, 15-10-2026): in an app's, core's, the portal's or the root (Nexus's, from
   28-10-2026) CHANGELOG, every entry starts
   with its kind: `Breaking.` (removed, or no longer working as before: major), `Added.` (a new feature: minor) or
-  `Fixed.` (a bug or security fix: patch). 0.x apps too: a feature takes 0.1.4 to 0.2.0. Nexus Releases offers the
+  `Fixed.` (a bug or security fix: patch). 0.x apps too: a feature takes 0.1.4 to 0.2.0. Nexus Release Tool offers the
   highest kind since the last tag first; `tools/tests/test_changelog_kinds.py` checks it. The number stays the
   owner's (see Releases).
 - **VERSION is the single source** of each app's version (all started at 0.1.0). Copies in code (`__version__`,
@@ -115,8 +115,8 @@ default suite of the tools (`tools/suites.py`). The root keeps what is Nexus's:
   CHANGELOG. GitHub workflows live only in the root `.github/`.
 - **A design per system** (owner, 25-10-2026): the Bazzite suites keep the Bazzite design (purple, the apps' theme and
   the wiki's), the Windows suites get a design of their own, and Nexus has its own
-  (`nexus/docs/stylesheets/nexus.css`); a Nexus app (`dev/`) takes Nexus's design and icon, as Nexus Releases
-  does (`dev/releases/nexus_releases/style.py`, a core `Theme` set with `create_app(theme=)`; its icon copies
+  (`nexus/docs/stylesheets/nexus.css`); a Nexus app (`dev/`) takes Nexus's design and icon, as Nexus Release Tool
+  does (`dev/nrt/nexus_release_tool/style.py`, a core `Theme` set with `create_app(theme=)`; its icon copies
   from `tools/make_icons.py`). Never carry one system's design over to another. The Windows Portable Suite's
   apps put far more weight on UX and UI than the board's: a small screen held in the hands, touch and a controller
   instead of a mouse and keyboard.
@@ -175,7 +175,7 @@ shellcheck -S warning $S/apps/oc/bc250-gpu-oc-bisect.sh $S/apps/oc/install.sh
 shellcheck -S warning $S/apps/acpi/bc250-acpi-override.sh $S/apps/acpi/install.sh \
   $S/apps/overlay/install.sh $S/apps/bios/install.sh $S/apps/vram/install.sh $S/apps/fan/install.sh \
   $S/apps/cec/install.sh $S/apps/sftp/install.sh $S/apps/ips35/install.sh $S/apps/hdcam/install.sh $S/apps/hdcontrol/install.sh \
-  $S/apps/consoles/install.sh $S/apps/clb/install.sh $S/apps/mtool/install.sh dev/releases/*.sh $S/tools/check-release.sh
+  $S/apps/consoles/install.sh $S/apps/clb/install.sh $S/apps/mtool/install.sh dev/nrt/*.sh $S/tools/check-release.sh
 shellcheck -S warning $S/apps/ace/bc250-ace-queues.sh $S/apps/ace/bc250-ace-queues-run \
   $S/apps/ace/install.sh $S/apps/ace/mesa/build-in-container.sh
 shellcheck -S warning $S/apps/mesh/bc250-mesh-shaders.sh $S/apps/mesh/bc250-mesh-shaders-run \
@@ -218,6 +218,13 @@ can be read without `gh` through the public API:
 
 ## Releases
 
+A **Nexus release** (owner, 30-10-2026) is the one release of the repository: Nexus's version with every suite that
+changed, started by the owner with the Nexus Release Tool's one action, Start new release
+(`.github/workflows/release-nexus.yml` calls each changed suite's own release workflow, which builds, publishes and
+pins; each portal ends as a draft the owner device-tests and publishes from the tool). A suite takes part once its
+release workflow has `workflow_call` (the Windows Portable Suite; the BC250 Bazzite Suite still releases by tags).
+The plan and its stages are in MIGRATION.md.
+
 The owner does every step of a release; Claude does none of them, and doesn't offer to:
 
 - bumping a `VERSION` (and the copies `tools/check_versions.py` checks), or `portal/VERSION`;
@@ -228,7 +235,7 @@ The owner does every step of a release; Claude does none of them, and doesn't of
   lines);
 - the release entries in the CHANGELOGs.
 
-`tools/release.sh` starts the owner's front end for the file edits of a release, Nexus Releases (`dev/releases/`,
+`tools/nrt.sh` starts the owner's front end for the file edits of a release, Nexus Release Tool (`dev/nrt/`,
 a Nexus app with its suites' portals in its first column, the one to release ticked: `main_window.py` on
 `plan.py`; a suite's board checks are its own
 `tools/check-release.sh`, the BC250 suite's at `bc250-bazzite/tools/check-release.sh`; a Windows suite's

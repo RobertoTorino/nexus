@@ -4,7 +4,7 @@
 [![CI Nexus](https://github.com/RobertoTorino/nexus/actions/workflows/ci-nexus.yml/badge.svg)](https://github.com/RobertoTorino/nexus/actions/workflows/ci-nexus.yml)
 [![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
 
-# Nexus Releases
+# Nexus Release Tool
 
 The release front end of Nexus: it writes the versions, CHANGELOG entries, pins and portal bump of a release of a
 suite in the repository (the suites in the first column, the one to release ticked), and runs the board checks of a
@@ -17,9 +17,9 @@ From the repository's root, with the checkout's venv for the system (see the roo
 
 | | Linux | Windows (PowerShell) |
 |---|---|---|
-| Open it | `tools/release.sh` | `dev\releases\run.ps1` |
-| The overview in the terminal | `tools/release.sh --list` | `dev\releases\run.ps1 --list` |
-| Menu entry and Desktop icon | `dev/releases/install.sh` | `powershell -ExecutionPolicy Bypass -File dev\releases\install.ps1` |
+| Open it | `tools/nrt.sh` | `dev\nrt\run.ps1` |
+| The overview in the terminal | `tools/nrt.sh --list` | `dev\nrt\run.ps1 --list` |
+| Menu entry and Desktop icon | `dev/nrt/install.sh` | `powershell -ExecutionPolicy Bypass -File dev\nrt\install.ps1` |
 
 Both installers take `--no-desktop-shortcut`, `--uninstall` and `--uninstall --purge` (the settings too). Nothing is
 copied: the entry starts the app of the checkout you installed it from.

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
-# Installs Nexus Releases for the current user: a launcher, an app menu entry and a Desktop icon that start
+# Installs Nexus Release Tool for the current user: a launcher, an app menu entry and a Desktop icon that start
 # run.sh in this checkout (Linux). Nothing is copied: the app edits the checkout it lives in, so it always runs the
 # checkout's own code. It is not part of a portal's releases. Moving the checkout needs install.sh again.
 #
@@ -12,8 +12,8 @@ set -euo pipefail
 APP=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)
 REPO=$(cd "$APP/../.." && pwd -P)          # the repository: the venvs
 
-APP_ID="nexus-releases"
-APP_NAME="Nexus Releases"
+APP_ID="nexus-release-tool"
+APP_NAME="Nexus Release Tool"
 DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}"
 CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}"
 LAUNCHER="$HOME/.local/bin/$APP_ID"
@@ -54,25 +54,27 @@ if $uninstall; then
     exit 0
 fi
 
-[ "$(uname -s)" = Linux ] || die "install.sh makes a Linux app menu entry; on Windows use dev/releases/install.ps1."
+[ "$(uname -s)" = Linux ] || die "install.sh makes a Linux app menu entry; on Windows use dev/nrt/install.ps1."
 [ -x "$REPO/.venv-linux/bin/python" ] || [ -x "$REPO/.venv/bin/python" ] || [ -n "${PYTHON:-}" ] ||
     info "Note: no .venv-linux yet; create it (see CLAUDE.md) before you start the app."
 
-# The launcher, menu entry and Desktop icon of BC250 Suite Releases (bc250-release, until 26-10-2026) pointed at a
-# folder that is gone: they go when this app is installed.
-OLD_ID="bc250-release"
-for old in "$HOME/.local/bin/$OLD_ID" "$DATA_DIR/applications/$OLD_ID.desktop" "$DESKTOP_DIR/$OLD_ID.desktop"; do
-    [ -e "$old" ] || continue
-    info "Removing $old (BC250 Suite Releases, the app's earlier name)"
-    rm -f "$old"
+# The launcher, menu entry and Desktop icon of the app's earlier names pointed at a folder that is gone: BC250 Suite
+# Releases (bc250-release, until 26-10-2026) and Nexus Releases (nexus-releases in dev/releases, until 30-10-2026).
+# They go when this app is installed; the settings of Nexus Releases are taken over by the app when it starts.
+for old_id in bc250-release nexus-releases; do
+    for old in "$HOME/.local/bin/$old_id" "$DATA_DIR/applications/$old_id.desktop" "$DESKTOP_DIR/$old_id.desktop"; do
+        [ -e "$old" ] || continue
+        info "Removing $old (the app's earlier name)"
+        rm -f "$old"
+    done
 done
 
 info "Creating the launcher $LAUNCHER"
 mkdir -p "$(dirname "$LAUNCHER")"
 cat >"$LAUNCHER" <<LAUNCH
 #!/usr/bin/env bash
-# $APP_NAME launcher, written by dev/releases/install.sh. Runs the app of this checkout.
-[ -x "$APP/run.sh" ] || { echo "No checkout in $REPO any more; run dev/releases/install.sh again." >&2; exit 1; }
+# $APP_NAME launcher, written by dev/nrt/install.sh. Runs the app of this checkout.
+[ -x "$APP/run.sh" ] || { echo "No checkout in $REPO any more; run dev/nrt/install.sh again." >&2; exit 1; }
 exec "$APP/run.sh" "\$@"
 LAUNCH
 chmod 755 "$LAUNCHER"

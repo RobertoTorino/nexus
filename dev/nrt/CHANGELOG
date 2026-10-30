@@ -1,3 +1,21 @@
+Changelog: 30-10-2026 04:04:06
+
+Added. The Nexus release, the first tab (owner, 30-10-2026: "there is just one action in the tool to perform
+which is start new release"): it lists what the release holds (each changed app of a suite on the Nexus release, its
+portal, core, Nexus), with the version offered first and room to type another (auto: a portal's and Nexus's version,
+worked out when it is written). Start new release writes the release, commits it, pushes it and starts
+release-nexus.yml on GitHub, in one command; Push and start when the push stopped. The tab follows the run (Stop run,
+Resume run), then Device test installs a suite's draft portal on its device (check-release draft) and Publish makes
+it a release; Not OK leaves it a draft. The steps stay for the BC250 Bazzite Suite and for doing a step by hand.
+
+Changelog: 30-10-2026 03:25:12
+
+Breaking. Nexus Releases is now the Nexus Release Tool, NRT (owner, 30-10-2026): the folder dev/nrt/ (was
+dev/releases/), the package nexus_release_tool, the app id nexus-release-tool and tools/nrt.sh (was tools/release.sh).
+install.sh and install.ps1 remove the launcher, menu entry, Desktop icon and Start-menu shortcuts of the earlier name,
+and on Windows its icon and app ID; run the installer once again after the update. The app takes over the settings of
+the earlier name the first time it starts.
+
 Changelog: 30-10-2026 01:16:05
 
 Fixed. The GitHub pill said Failed for a push whose runs all passed but one canceled Nexus index run (owner,

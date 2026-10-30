@@ -1,10 +1,10 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-# Starts Nexus Releases on Windows with the checkout's Windows venv and bc250_core from core\, as run.sh does on
+# Starts Nexus Release Tool on Windows with the checkout's Windows venv and bc250_core from core\, as run.sh does on
 # Linux. It only edits files; committing, tagging and pushing stay with you.
 #
-#   dev\releases\run.ps1            # open the window
-#   dev\releases\run.ps1 --list     # list the apps, their tags and what needs a release
-#   dev\releases\install.ps1        # Start-menu entry and Desktop shortcut for this checkout
+#   dev\nrt\run.ps1            # open the window
+#   dev\nrt\run.ps1 --list     # list the apps, their tags and what needs a release
+#   dev\nrt\install.ps1        # Start-menu entry and Desktop shortcut for this checkout
 $ErrorActionPreference = 'Stop'
 $app = $PSScriptRoot
 $repo = (Resolve-Path (Join-Path $app '..\..')).Path
@@ -20,10 +20,10 @@ if (-not (Test-Path -LiteralPath $python)) {
     exit 1
 }
 if ($args -contains '--list') {
-    & $python (Join-Path $app 'nexus_releases\plan.py')
+    & $python (Join-Path $app 'nexus_release_tool\plan.py')
     exit $LASTEXITCODE
 }
 Set-Location -LiteralPath $app
 $env:PYTHONPATH = Join-Path $repo 'core'
-& $python -m nexus_releases @args
+& $python -m nexus_release_tool @args
 exit $LASTEXITCODE

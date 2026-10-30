@@ -134,7 +134,7 @@ THEMES = [
 
 STATE_TEXT = [
     ("#2e7d32", "Green: Passed, a valid entry."),
-    ("#c62828", "Red: Failed, errors and problems in every app (the emulator managers' status lines, Nexus Releases' "
+    ("#c62828", "Red: Failed, errors and problems in every app (the emulator managers' status lines, the Nexus Release Tool's "
                 "bad tags, the upscaler's problems, a folder that is missing)."),
     ("#ffffff", "Bright text (palette BrightText); text on the state colors."),
 ]
@@ -310,8 +310,8 @@ Each design (a suite's, the Nexus page's) has its own; none is carried over to a
 
 - **The identity:** near-black ink `#010101`, silver text `#c0c0c0` and one teal `#17b6a7` (the icon's) for every
   link, title and icon; nothing else. Inter, with heavy titles. Nexus is not a suite: the page has no apps and no
-  states. Its one app, Nexus Releases (`dev/releases/`, owner, 26-10-2026: a Nexus app takes Nexus's design), has
-  this design in its window (`nexus_releases/style.py`, a theme for core's widgets: ink surfaces, silver text, the
+  states. Its one app, Nexus Release Tool (`dev/nrt/`, owner, 26-10-2026: a Nexus app takes Nexus's design), has
+  this design in its window (`nexus_release_tool/style.py`, a theme for core's widgets: ink surfaces, silver text, the
   teal accent) and the Nexus icon; its states (the working tree, a build) are the apps' state family, since a build
   passes or fails there too.
 """
@@ -610,7 +610,7 @@ are not on core yet carry a copy). The theme is one choice for every app: Gunmet
     out.append("## The Nexus page\n\n`nexus/docs/stylesheets/nexus.css`, ink, silver and teal (the owner's design, "
                "25-10-2026): the Nexus page has a\ndesign of its own, apart from the suites' (a design per system).\n")
     out.append(section("Nexus", "", NEXUS_TEXT, NEXUS_BLOCKS))
-    out.append(section("Nexus Releases", "The window of Nexus's app (`dev/releases/nexus_releases/style.py`): the "
+    out.append(section("Nexus Release Tool", "The window of Nexus's app (`dev/nrt/nexus_release_tool/style.py`): the "
                        "page's colors as a theme for core's widgets, set with `create_app(theme=NEXUS)`; its "
                        "states are the apps' state family.", NEXUS_APP_TEXT, NEXUS_APP_BLOCKS))
     out.append("## The apps' own colors\n\nOn top of the theme, in the apps' `style.py` or where they are used.\n")

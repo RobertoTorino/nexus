@@ -5,9 +5,112 @@
 Working notes for moving the seven BC-250 tools into this suite. Not part of the manual or the READMEs, which
 describe only what exists.
 
+## Release redesign: a Nexus release carries the changed suites (owner, 30-10-2026; stage 1 in the working tree)
+
+The owner, 30-10-2026: "Remember we are growing fast, I have for sure 3 more suites on my list ... the BC250 Bazzite
+one needs a refactoring." And the model (owner, 30-10-2026): "any change in Nexus triggers a Nexus release, a nexus
+release is triggered by a change in a suite, that suite is part of the release since a change in a suite means it
+has to be updated so if we have 10 suites and only 1 has a change only the Nexus workflow and that suite's workflow
+will run." Nothing of this is built. It runs alongside new apps: a stage never stops app work, and
+until a suite is switched over it releases the way it does now.
+
+**What costs time now.** A suite release is two rounds. Round 1: bump the apps, commit, push, wait for CI, push one
+tag per app; each tag starts its own release run, each waits for CI again, and each success rebuilds the Nexus index
+(7 tags gave 7 index runs on 30-10-2026, 5 of them canceled). Round 2: wait for every app release, pin each sha256
+in `apps.toml`, bump the portal, commit, push, wait for CI, tag the portal. The pins are the reason for two rounds:
+a sha256 exists only after GitHub built the zip. Nexus Releases edits the CHANGELOGs in both rounds (the lost portal
+entry of 02a2012). Every suite has its own copy of CI and release YAML, and `tools/new_app.py` adds every new app to
+the suite's CI matrices by hand.
+
+**What installed portals need, and keep.** A portal bundles its `apps.toml` and learns of updates only from a newer
+portal tag of its suite (`wp-portal-v*`, `portal-v*`), whose `apps.toml` it reads from raw GitHub at that tag
+(`portal_update.RAW_URL(S)`), then downloads `<tag>.zip` (or the BC250 tarball) from each pinned app tag's release,
+checked against the sha256 pin. The design keeps all of that as it is, so no portal changes, and the BC250 baseline is
+untouched: old and new portals see a release exactly as they do now.
+
+**The design.**
+
+0. **The Nexus release is the one release.** A Nexus release (the root VERSION, `nexus-v<x.y.z>`, the Nexus index)
+   is made for every change; it carries each suite that changed since the last Nexus release, and only those. A new
+   `release-nexus.yml` finds them (the suite's folder changed since the last `nexus-v*`), calls each changed suite's
+   own `release-<suite>.yml` (`workflow_call`, side by side), and writes the Nexus index once when they all
+   succeeded. With 10 suites and 1 changed, two workflows run: Nexus's and that suite's. Each suite keeps its own
+   release workflow, so "each suite stands apart" (owner, 27-10-2026) holds; only the calling is shared. A change
+   of Nexus's alone (the tools, `dev/`, the Nexus page) is a Nexus release with no suite in it.
+1. **One action: Start new release** (owner, 30-10-2026: "there is just one action in the tool to perform which is
+   start new release, that triggers the workflow, all subsequent actions are automated, including pins and tag").
+   The **Nexus Release Tool** (NRT; owner, 30-10-2026: the new name of Nexus Releases) offers it only on a clean
+   working tree that equals `origin/main`; unfinished work never gets that far, the pre-push hook and CI reject it.
+   It shows what the release will hold (the changed suites, their apps, each one's kind and new version, which the
+   owner may change per app: owner, 30-10-2026, "keep the override") and starts `release-nexus.yml`. From there the
+   workflow does everything: the version bumps and their copies, the "Release x.y.z." entries, the new tags in
+   `apps.toml`, the portals' and Nexus's VERSION, in one release commit; then each changed suite's run (point 2).
+   No commit, tag or pin is made by hand.
+2. **Each suite's run does the rest, in order, on that commit.** It waits for the suite's CI and `ci-nexus.yml` (as
+   now, once); builds every app whose `apps.toml` tag has no release yet, in parallel; tags and publishes each;
+   writes their sha256 into `apps.toml` (and the root copy for the BC250 suite) in one commit "Pin ..." on top of the
+   release commit; builds the portal and makes its release a draft aimed at that commit (a draft has no tag yet and
+   is not shown to the portals, which ask GitHub without signing in). A run that stops halfway is started again:
+   releases that exist are skipped, as the Publish step already does.
+2c. **The device test is part of the chain** (owner, 30-10-2026). When a suite's draft is ready, NRT on that suite's
+   device (the handheld for the Windows suite, a board for BC250) downloads the draft's portal, installs and starts
+   it as `check-release` does now, and asks the owner to confirm. On a yes NRT publishes the draft, which makes the
+   portal tag: from then on the portals offer the release. On a no the draft stays unpublished, the owner is told
+   what failed, and the release waits for a fix (a new Start). After the last suite is published, `release-nexus.yml`
+   writes the Nexus index (started by the published portal release). A release with two changed suites needs both
+   devices; each suite is published on its own yes.
+2a. **Watched, and stoppable** (owner, 30-10-2026: "if something fails in that chain I will be notified by the tool.
+   Manual intervention is still possible and a release can be interrupted if necessary"). The tool follows the run
+   step by step and says which step failed, with GitHub's reason and a link; it can stop the run and start it again
+   from where it stopped. Stopping is safe until the device test's yes: portals see only portal tags, so app
+   releases published before that reach no device.
+2b. **A change of core is a change in every suite** (owner, 30-10-2026: "If a change touches all suites and all
+   apps, they all will get a new release"): every app that bundles core is released again, in every suite.
+3. **Safety rules of the run.** It pushes the pin commit only when `main` is still at the release commit, so no
+   untested commit of someone else's slips into a portal tag; otherwise it stops before tagging anything. The
+   release commit is made the same way: only when `main` is still the commit that Start was given. The pin
+   commit changes only sha256 lines, which the run checks with `check_manifest.py --require-tags` before it pushes.
+   Afterwards the owner pulls once (the pin commit is on `main`).
+4. **CHANGELOGs written once.** Only the release commit adds release entries, on top; nothing rewrites one. The
+   pins are in `apps.toml` and the release notes, not in a second CHANGELOG entry.
+5. **Each suite keeps its own CI and release YAML** (owner, 30-10-2026: no shared CI YAML). Only the test matrix
+   is read from the suite's folders by a first job (every folder with `tests/`, as `test_layout.py` already knows),
+   so a new app needs no workflow edit. A new suite copies its two workflow files from a suite made for the same
+   system.
+
+**The owner's decisions** (30-10-2026), all taken: the start is NRT's one action; the run commits the release and
+the pins and makes the tags on `main`; NRT keeps the version override; the device test is part of the chain; a
+change of core releases every app; no shared CI YAML; the tool is the Nexus Release Tool, NRT. The rulesets allow
+the run's commits and tags as they are (tag creation is not restricted, `main` only blocks deletion and force
+pushes); the owner pulls after each release.
+
+**Stage 1 as built (30-10-2026, in the working tree, not committed, not run on GitHub yet).** `release-nexus.yml`
+(workflow_dispatch with the release commit; checks main is that commit, waits for ci-nexus.yml, `tools/nexus_release.py
+suites` picks the suites, a job per suite calls its workflow, a job makes the index when there is no suite);
+`release-windows-portable.yml` with `workflow_call` beside its tag trigger (jobs ci, plan, apps as a matrix, pin,
+portal; `windows-portable/tools/suite_release.py` plan and pin, `publish_release.sh` with `--draft`);
+`nexus-index.yml` on `release: published` and `workflow_call` instead of the push of VERSION;
+`check-release.ps1 draft`; NRT's Nexus release tab (`flow.py`, `release_page.py`). The device test publishes from
+NRT with `gh release edit <tag> --draft=false --latest=false`. Checked here: the tests, actionlint with shellcheck on
+the three workflows; not yet: a real run. The first real Nexus release is its test: watch the run, the pin commit on
+main, the draft, the device test and the publish, and that installed portals see the new portal as before.
+`windows-portable/tools/publish_release.sh` is new: `tools/fix-modes.sh` before the commit (100755).
+
+**Stages**, each finished and released on its own:
+
+1. `release-nexus.yml` and the Windows Portable Suite on it (points 0 to 4; `release-windows-portable.yml` called
+   by it, with the draft portal and the device test on the handheld), NRT (renamed in the tree 30-10-2026) with Start new
+   release, the run followed, stopped and resumed, the release chapter of the Nexus page. Until stage 3 the BC250
+   suite keeps its tags and `release.yml` as they are, and `release-nexus.yml` leaves it out. Its first use is the
+   next release.
+2. The test matrix read from the folders (`new_app.py` stops editing workflows), both suites.
+3. The BC250 suite on the same run, after the Windows suite has used it for a few releases; the baseline: prove that
+   a BC250 portal installed before reads the release as it does now (`bc250-bazzite/tools/installer-tests/release.sh`).
+   The next new suite starts on the new run.
+
 ## Resume here (29-10-2026, for a new chat): the Windows Portable Suite
 
-**Fixed folders, no folder selecting (owner, 30-10-2026; in the working tree, not committed).** The rule for every
+**Fixed folders, no folder selecting (owner, 30-10-2026; released in wp-shadps4-v1.1.0 and wp-portal-v4.0.0).** The rule for every
 game manager: games and the files the emulator needs (system modules, BIOS, firmware) go in fixed folders the app
 makes, one per system with the required files in a subfolder (`Games\PS4`, `Games\PS4\Modules`; then `Games\PS2` with
 `BIOS\`, `Games\PS3` with `Firmware\`, `Games\Vita\Firmware`, ...), plus `Games\<system>` on an SD card; required files

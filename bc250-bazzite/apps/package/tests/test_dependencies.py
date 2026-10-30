@@ -178,7 +178,7 @@ def test_launcher_python_reads_the_exec_line(tmp_path):
                              "alter_sys=True)' \"/home/u/.local/share/p/app\" p \"$@\"\n")
     assert launcher_python(caller_folder) == Path("/home/u/.local/share/p/venv/bin/python")
     script = tmp_path / "script"
-    script.write_text('exec "/checkout/dev/releases/run.sh" "$@"\n')
+    script.write_text('exec "/checkout/dev/nrt/run.sh" "$@"\n')
     assert launcher_python(script) is None
     assert launcher_python(tmp_path / "missing") is None
 

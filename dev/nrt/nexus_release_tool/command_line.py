@@ -90,7 +90,7 @@ class CommandLine(QWidget):
         self.history_pos = len(self.history)
         self.draft = ""
         self.offered: list[str] = []
-        self.cwd_file = Path(tempfile.gettempdir()) / f"nexus-releases-cwd-{os.getpid()}"
+        self.cwd_file = Path(tempfile.gettempdir()) / f"nexus-release-tool-cwd-{os.getpid()}"
         self.running = ""
         self.grouped = False                    # the running command has its own process group
         self.pid = 0

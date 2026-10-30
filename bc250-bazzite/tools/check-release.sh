@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
-# The two portal checks of a release of the BC250 Bazzite Suite, as Nexus Releases' buttons run them (Linux):
+# The two portal checks of a release of the BC250 Bazzite Suite, as the Nexus Release Tool's buttons run them (Linux):
 #
 #   check-release.sh local             # before the push: install the portal from this checkout and start it
 #                                      # with the apps from the pinned GitHub releases (--source release)

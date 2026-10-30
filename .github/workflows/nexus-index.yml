@@ -4,8 +4,11 @@ name: Nexus index
 # GitHub's "Latest" release is the Nexus index, tagged nexus-v<x.y.z> and titled Nexus v<x.y.z> after the root
 # VERSION, Nexus's own (owner, 28-10-2026): one section per suite with its newest portal (tools/nexus_index.py). A
 # repository has one Latest and Nexus holds several suites, so no suite's portal is it: release.yml and
-# release-windows-portable.yml publish every release with --latest=false. After each run of either that succeeded,
-# and after a push to main that changes VERSION, the index is made again: every earlier index release (nexus-v*, and
+# release-windows-portable.yml publish every release with --latest=false. The index is made again after each run of
+# either that succeeded (a release by tags pushed by hand), after each release published by someone (the Nexus
+# Release Tool publishes a suite's portal after the device test; the releases the workflows publish with their own
+# token start no workflow, so the index waits for the portal), and when release-nexus.yml calls it (a Nexus release
+# without a suite: Nexus's VERSION alone): every earlier index release (nexus-v*, and
 # the nexus of before the version) and its tag are removed and the index is made anew on the newest commit, because
 # editing a release keeps its date. So there is one index, Latest always carries the time of the newest release and
 # stays first on the Releases page, which is ordered by the date of each tag's commit. Installed portals do not use
@@ -16,9 +19,9 @@ on:
   workflow_run:
     workflows: ["Release", "Release Windows Portable"]
     types: [completed]
-  push:
-    branches: [main]
-    paths: [VERSION]           # Nexus's version bumped: the index takes its new number
+  release:
+    types: [published]         # a portal published by the Nexus Release Tool, after the device test
+  workflow_call:               # release-nexus.yml: a Nexus release without a suite
   workflow_dispatch:
 
 permissions:

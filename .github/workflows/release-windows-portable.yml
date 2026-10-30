@@ -1,30 +1,46 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 name: Release Windows Portable
 
-# One GitHub release per tag of the Windows Portable Suite: wp-<app>-v<x.y.z> (wp-test-v0.1.0). The tag's version must
-# equal that app's VERSION. Apart from release.yml (the BC250 Bazzite Suite's), which leaves wp- tags alone, so a
-# change here never touches the other suite's releases (owner, 27-10-2026).
+# The releases of the Windows Portable Suite, in one of two ways:
+#
+# * A Nexus release (owner, 30-10-2026): release-nexus.yml calls this workflow with the release commit that the Nexus
+#   Release Tool pushed (the versions, the CHANGELOG entries, the new tags in apps.toml, portal/VERSION). One run
+#   releases the suite: it builds every app tag apps.toml pins that has no release yet, side by side, and publishes
+#   each (the tag made on the release commit); writes their sha256 into apps.toml in one commit "Pin ..." on top of
+#   it; and builds the portal from that commit as a draft release (no tag yet, so no portal sees it). The Nexus
+#   Release Tool installs that draft on the handheld and publishes it after the owner's yes, which makes the portal
+#   tag; the Nexus index follows (nexus-index.yml). Started again, the run skips what is out already and makes the
+#   draft anew. The pin commit is pushed only while main is still the release commit, so no other commit gets into
+#   a portal tag.
+# * A tag pushed by hand, wp-<app>-v<x.y.z> (wp-test-v0.1.0): that one release, published at once, as before the
+#   Nexus release. The tag's version must equal that app's VERSION.
 #
 # The assets are <tag>.zip (the app's one-folder PyInstaller build with its install.ps1), SHA256SUMS and the notes,
-# built on Windows by windows-portable/tools/build_release.py. A portal release (wp-portal-v<x.y.z>) bundles the
-# release of Windows Portable Test that windows-portable/portal/apps.toml pins (downloaded from its own release and
-# checked against the pin) and requires every pinned tag to exist. Never GitHub's "Latest": that is the Nexus index
-# (nexus-index.yml, written again once this run succeeded), which points at every suite's newest portal and, while
-# this suite has none, at its apps' newest releases.
+# built on Windows by windows-portable/tools/build_release.py. A portal release bundles the release of Windows
+# Portable Test that windows-portable/portal/apps.toml pins (downloaded from its own release and checked against the
+# pin) and requires every pinned tag to exist. Never GitHub's "Latest": that is the Nexus index (nexus-index.yml),
+# which points at every suite's newest portal. Apart from release.yml (the BC250 Bazzite Suite's), which leaves wp-
+# tags alone, so a change here never touches the other suite's releases (owner, 27-10-2026).
 #
-# Only a commit that CI passed becomes a release: the first job waits for ci-windows-portable.yml on the tagged
-# commit and for Nexus's ci-nexus.yml (core, which every app bundles, the release tools and the repository's
-# rules), up to 75 minutes each. tools/tag-release.sh asks the same before it tags.
+# Only a commit that CI passed becomes a release: the first job waits for ci-windows-portable.yml on the commit and
+# for Nexus's ci-nexus.yml (core, which every app bundles, the release tools and the repository's rules), up to 75
+# minutes each. The pin commit changes only sha256 lines and is checked here (check_manifest.py --require-tags).
 
 on:
   push:
     tags: ["wp-*-v[0-9]*.[0-9]*.[0-9]*"]
+  workflow_call:
+    inputs:
+      commit:
+        description: The release commit (main when the Nexus release started)
+        required: true
+        type: string
 
 permissions:
   contents: write
 
 concurrency:
-  group: release-${{ github.ref }}
+  group: release-windows-portable-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -34,22 +50,59 @@ jobs:
     permissions:                        # the second wait is mostly over already)
       actions: read
       contents: read
+    env:
+      COMMIT: ${{ inputs.commit || github.sha }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.commit || github.sha }}
       - name: CI passed on this commit
         env:
           GH_TOKEN: ${{ github.token }}
-        run: python3 tools/ci_state.py --workflow ci-windows-portable.yml --wait 75 "$GITHUB_SHA"
+        run: python3 tools/ci_state.py --workflow ci-windows-portable.yml --wait 75 "$COMMIT"
       - name: Nexus's CI passed on this commit
         env:
           GH_TOKEN: ${{ github.token }}
-        run: python3 tools/ci_state.py --workflow ci-nexus.yml --wait 75 "$GITHUB_SHA"
+        run: python3 tools/ci_state.py --workflow ci-nexus.yml --wait 75 "$COMMIT"
 
-  release:
+  plan:
     needs: ci
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      apps: ${{ steps.plan.outputs.apps }}
+      portal: ${{ steps.plan.outputs.portal }}
+      draft: ${{ steps.plan.outputs.draft }}
     env:
-      TAG: ${{ github.ref_name }}
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.commit || github.sha }}
+          fetch-depth: 0                # tags, for check_manifest
+      - name: Checks
+        run: |
+          python3 tools/check_versions.py --suite windows-portable
+          python3 windows-portable/tools/check_manifest.py
+      - name: What this run releases
+        id: plan
+        env:
+          TAG: ${{ github.event_name == 'push' && github.ref_name || '' }}
+        run: |
+          python3 windows-portable/tools/suite_release.py plan ${TAG:+--tag "$TAG"} | tee -a "$GITHUB_OUTPUT"
+
+  apps:
+    needs: plan
+    if: needs.plan.outputs.apps != '[]'
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false                  # one app's failure leaves the others' releases: a run started again skips them
+      matrix:
+        tag: ${{ fromJSON(needs.plan.outputs.apps) }}
+    env:
+      TAG: ${{ matrix.tag }}
+      COMMIT: ${{ inputs.commit || github.sha }}
       GH_TOKEN: ${{ github.token }}
     defaults:
       run:
@@ -57,6 +110,93 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
+          ref: ${{ inputs.commit || github.sha }}
+          fetch-depth: 0                # tags, and the zip's file times
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Requirements
+        run: |
+          app=${TAG#wp-}; app=${app%-v*}
+          python -m pip install -q -r "windows-portable/apps/$app/requirements.txt" pyinstaller pillow
+
+      - name: Build
+        run: |
+          python windows-portable/tools/build_release.py "$TAG" dist
+          cat dist/SHA256SUMS
+
+      - name: Publish
+        run: bash windows-portable/tools/publish_release.sh "$TAG" "$COMMIT" dist
+
+  pin:
+    needs: [plan, apps]
+    if: ${{ !cancelled() && !failure() && needs.plan.outputs.portal != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      commit: ${{ steps.pin.outputs.commit }}
+    env:
+      COMMIT: ${{ inputs.commit || github.sha }}
+      APPS: ${{ needs.plan.outputs.apps }}
+      DRAFT: ${{ needs.plan.outputs.draft }}
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.commit || github.sha }}
+          fetch-depth: 0
+      - name: Pin the new app releases
+        id: pin
+        run: |
+          mapfile -t tags < <(python3 -c 'import json, os; print("\n".join(json.loads(os.environ["APPS"])))')
+          if [ "$DRAFT" != true ] || [ ${#tags[@]} -eq 0 ] || [ -z "${tags[0]}" ]; then
+            echo "commit=$COMMIT" >> "$GITHUB_OUTPUT"          # a tag pushed by hand, or nothing to pin
+            exit 0
+          fi
+          git fetch -q origin main
+          head=$(git rev-parse origin/main)
+          if [ "$head" != "$COMMIT" ]; then
+            # Started again after the pins were pushed: main is that pin commit, right on top of the release commit.
+            if [ "$(git rev-parse "$head^")" = "$COMMIT" ] && git log -1 --format=%s "$head" | grep -q '^Pin '; then
+              echo "Pinned already in $head"
+              echo "commit=$head" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            echo "main moved on from the release commit $COMMIT to $head: nothing is pinned or tagged." >&2
+            echo "Start the release again from the Nexus Release Tool on the new main." >&2
+            exit 1
+          fi
+          for tag in "${tags[@]}"; do
+            gh release download "$tag" --pattern SHA256SUMS --dir "sums/$tag"
+          done
+          python3 windows-portable/tools/suite_release.py pin sums "${tags[@]}"
+          rm -rf sums
+          python3 windows-portable/tools/check_manifest.py --require-tags
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -q -m "Pin ${tags[*]}" -- windows-portable/portal/apps.toml
+          git push origin "HEAD:refs/heads/main"         # refused when main moved meanwhile: nothing is tagged
+          echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+  portal:
+    needs: [plan, pin]
+    if: ${{ !cancelled() && !failure() && needs.plan.outputs.portal != '' }}
+    runs-on: windows-latest
+    env:
+      TAG: ${{ needs.plan.outputs.portal }}
+      COMMIT: ${{ needs.pin.outputs.commit }}
+      DRAFT: ${{ needs.plan.outputs.draft }}
+      GH_TOKEN: ${{ github.token }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.pin.outputs.commit }}
           fetch-depth: 0                # tags, for check_manifest and the zip's file times
 
       - uses: actions/setup-python@v7
@@ -66,16 +206,10 @@ jobs:
       - name: Checks
         run: |
           python tools/check_versions.py --suite windows-portable
-          app=${TAG#wp-}; app=${app%-v*}
-          case "$app" in
-            portal) python windows-portable/tools/check_manifest.py --require-tags
-                    python -m pip install -q -r windows-portable/portal/requirements.txt pyinstaller pillow ;;
-            *)      python windows-portable/tools/check_manifest.py
-                    python -m pip install -q -r "windows-portable/apps/$app/requirements.txt" pyinstaller pillow ;;
-          esac
+          python windows-portable/tools/check_manifest.py --require-tags
+          python -m pip install -q -r windows-portable/portal/requirements.txt pyinstaller pillow
 
-      - name: Bundled Windows Portable Test (portal releases)
-        if: startsWith(github.ref_name, 'wp-portal-v')
+      - name: Bundled Windows Portable Test
         run: |
           bt=$(python -c 'import tomllib; print(tomllib.load(open("windows-portable/portal/apps.toml", "rb"))["apps"]["test"]["tag"])')
           mkdir -p bundle
@@ -83,24 +217,11 @@ jobs:
 
       - name: Build
         run: |
-          args=()
-          [ -d bundle ] && args+=(--bundle bundle)
-          python windows-portable/tools/build_release.py "$TAG" dist "${args[@]}"
+          python windows-portable/tools/build_release.py "$TAG" dist --bundle bundle
           cat dist/SHA256SUMS
 
       - name: Publish
         run: |
-          title=$(cat dist/title.txt)   # the suite's and the app's names (build_release.py's release_title)
-          for attempt in 1 2 3 4 5; do
-            if gh release view "$TAG" >/dev/null 2>&1; then
-              gh release upload "$TAG" "dist/$TAG.zip" dist/SHA256SUMS --clobber && exit 0
-            elif gh release create "$TAG" "dist/$TAG.zip" dist/SHA256SUMS \
-                   --title "$title" --notes-file dist/notes.md --verify-tag --latest=false; then
-              exit 0
-            fi
-            [ "$attempt" = 5 ] && break
-            echo "Publishing failed (try $attempt of 5); again in $((attempt * 30)) s" >&2
-            sleep $((attempt * 30))
-          done
-          echo "Publishing $TAG failed five times." >&2
-          exit 1
+          args=()
+          [ "$DRAFT" = true ] && args+=(--draft)
+          bash windows-portable/tools/publish_release.sh "$TAG" "$COMMIT" dist "${args[@]}"

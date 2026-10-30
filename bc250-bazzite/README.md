@@ -81,7 +81,7 @@ By category, as the portal's tabs list them.
 - <img src="portal/images/apps/ncgui.webp" width="20" height="20" alt=""/> **[Bazzite NetcatGUI](apps/ncgui)**: A graphical netcat: connect to a host or listen on a port, TCP, UDP or TLS, one session per tab.
 
 The tools for working on the suite run from a checkout of the repository and are not in the portal:
-**[Nexus Releases](../dev/releases)** (Nexus's, every suite's) and
+**[Nexus Release Tool](../dev/nrt)** (Nexus's, every suite's) and
 **[BC-250 Installer Tests](tools/installer-tests/gui)**.
 
 How to install and use them: **[the manual](https://robertotorino.github.io/nexus/bc250-bazzite-suite/)**.

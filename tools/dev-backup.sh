@@ -3,7 +3,7 @@
 # Packs what the repository does not hold on this development machine, and puts it back on the next one: Claude
 # Code's memory, settings, plugins and sign-in (~/.claude, ~/.claude.json), the git identity (~/.gitconfig), the
 # SSH keys (~/.ssh), the GitHub CLI's configuration (~/.config/gh), VS Code's settings, the settings of the
-# suite's apps (~/.config/bc250-*, bazzite-*, nexus-releases), and lists of what to install again: a Brewfile,
+# suite's apps (~/.config/bc250-*, bazzite-*, nexus-release-tool), and lists of what to install again: a Brewfile,
 # the Flatpaks, VS Code's extensions, the image's layered packages and kernel arguments, the user timers and the
 # Rust toolchain. SETUP.md says when to run it and what to do with the lists.
 #
@@ -40,7 +40,7 @@ HOME_PATHS=(
 home_globs() {
     local path
     for path in "$HOME"/.claude/projects/*/memory "$HOME"/.ssh/id_* "$HOME"/.config/bc250-* \
-                "$HOME"/.config/bazzite-* "$HOME"/.config/nexus-releases; do
+                "$HOME"/.config/bazzite-* "$HOME"/.config/nexus-release-tool; do
         [ -e "$path" ] && printf '%s\n' "${path#"$HOME"/}"
     done
     return 0

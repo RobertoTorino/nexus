@@ -11,7 +11,7 @@ from PyQt6.QtWidgets import QApplication, QLabel, QWidget
 @pytest.fixture
 def window():
     app = QApplication.instance() or QApplication([])
-    from nexus_releases.main_window import ReleaseWindow
+    from nexus_release_tool.main_window import ReleaseWindow
     w = ReleaseWindow(runs_source=lambda etag: ([], ""), launch=lambda line: None, notify=lambda s, b: True,
                       status_source=None)
     w.build.checker.stop(2000)
@@ -30,7 +30,7 @@ def test_every_widget_keeps_qts_window_method(window):
 
 def test_without_notify_send_the_tray_icon_notifies(window, monkeypatch):
     """Windows has no notify-send: the notification comes from the tray icon instead (owner, 28-10-2026)."""
-    from nexus_releases import main_window
+    from nexus_release_tool import main_window
     w, _app = window
     shown = []
     monkeypatch.setattr(main_window.shutil, "which", lambda name: None)
@@ -85,7 +85,7 @@ def test_selection_is_a_teal_outline(window):
     """A selected cell and the focused input field: a rounded outline in Nexus's teal on a transparent background,
     not the desktop's solid highlight (rendered: the cell's middle keeps the table's own background)."""
     from PyQt6.QtGui import QColor
-    from nexus_releases.style import NEXUS
+    from nexus_release_tool.style import NEXUS
     ACCENT = NEXUS.accent
     w, app = window
     w.show()
@@ -109,18 +109,43 @@ def test_selection_is_a_teal_outline(window):
 def test_a_second_launch_opens_no_window(monkeypatch):
     """A double-click on the Desktop icon starts the app twice: the second launch hands over to the first."""
     from bc250_core import instance
-    import nexus_releases.__main__ as entry
-    import nexus_releases.main_window as main_window
+    import nexus_release_tool.__main__ as entry
+    import nexus_release_tool.main_window as main_window
     app = QApplication.instance() or QApplication([])
     asked = []
     created = []
     monkeypatch.setattr(entry, "create_app", lambda *a, **k: created.append(k) or app)
     monkeypatch.setattr(instance, "already_running", lambda app_id: asked.append(app_id) or True)
     monkeypatch.setattr(main_window, "ReleaseWindow", lambda *a, **k: pytest.fail("a second window was opened"))
-    monkeypatch.setattr("sys.argv", ["nexus_releases"])
+    monkeypatch.setattr("sys.argv", ["nexus_release_tool"])
     assert entry.main() == 0 and asked == [entry.INFO.app_id]
-    from nexus_releases.style import NEXUS
+    from nexus_release_tool.style import NEXUS
     assert created[0]["theme"] is NEXUS                        # the window gets Nexus's design from the start
+
+
+def test_the_settings_of_the_earlier_name_are_taken_over(tmp_path):
+    """Nexus Releases' settings (nexus-releases, until 30-10-2026) become the Nexus Release Tool's, once."""
+    import nexus_release_tool.__main__ as entry
+    SETTINGS = "[General]\nsuite=windows-portable\n"
+    new = entry.settings_file()
+    assert new.parent.name == new.stem == "nexus-release-tool" and str(new).startswith(str(tmp_path))
+    old = new.parent.parent / "nexus-releases" / "nexus-releases.ini"
+    old.parent.mkdir(parents=True)
+    old.write_text(SETTINGS, encoding="utf-8")
+    assert entry.take_earlier_settings(new)
+    assert new.read_text(encoding="utf-8") == SETTINGS and not old.parent.exists()
+    assert not entry.take_earlier_settings(new)                  # once: nothing left to take over
+
+
+def test_own_settings_are_never_replaced(tmp_path):
+    import nexus_release_tool.__main__ as entry
+    new = entry.settings_file()
+    old = new.parent.parent / "nexus-releases" / "nexus-releases.ini"
+    for path, text in ((new, "own"), (old, "earlier")):
+        path.parent.mkdir(parents=True)
+        path.write_text(text, encoding="utf-8")
+    assert not entry.take_earlier_settings(new)
+    assert new.read_text(encoding="utf-8") == "own" and old.is_file()
 
 
 def test_the_logs_are_tabs_of_their_own(window, monkeypatch):
@@ -128,9 +153,9 @@ def test_the_logs_are_tabs_of_their_own(window, monkeypatch):
     tab area (owner, 17-10-2026: boxes under the steps were too flat to read). A step that writes its log opens
     Logs; opening a step makes Logs its log again. A finished command reads the checkout again (a commit, a push)."""
     w, _app = window
-    pages = (w.apps_page, w.portal_page, w.withdraw_page, w.run_page)
-    assert [w.tabs.tabText(i) for i in range(w.tabs.count())] == \
-        ["1. Release apps", "2. Pin and release Portal", "3. Retract app", "Test on this board", "Logs", "Commands"]
+    pages = (w.release_page, w.apps_page, w.portal_page, w.withdraw_page, w.run_page)
+    assert [w.tabs.tabText(i) for i in range(w.tabs.count())] ==         ["Nexus release", "1. Release apps", "2. Pin and release Portal", "3. Retract app", "Test on this board",
+         "Logs", "Commands"]
     assert w.tabs.widget(w.log_tab) is w.outputs and w.tabs.widget(w.commands_tab) is w.commands
     assert [w.outputs.widget(i) for i in range(w.outputs.count())] == [p.output for p in pages]
     assert not any(p.isAncestorOf(p.output) for p in pages)             # no longer inside the step's tab
@@ -140,16 +165,16 @@ def test_the_logs_are_tabs_of_their_own(window, monkeypatch):
         assert w.outputs.currentWidget() is page.output
     w.tabs.setCurrentIndex(w.log_tab)
     assert w.outputs.currentWidget() is w.run_page.output               # a log tab leaves it as it is
-    w.tabs.setCurrentIndex(1)
+    w.tabs.setCurrentIndex(2)
     w.portal_page.output.set_text("Tags fetched.")                      # the open step wrote: Logs opens
     assert w.tabs.currentIndex() == w.log_tab and w.outputs.currentWidget() is w.portal_page.output
-    w.tabs.setCurrentIndex(0)
+    w.tabs.setCurrentIndex(1)
     w.portal_page.output.set_text("later")                              # another step's log: no switch
-    assert w.tabs.currentIndex() == 0
+    assert w.tabs.currentIndex() == 1
     w.run_page.output.appendPlainText("alpha started")                  # Test on this board never switches
-    w.tabs.setCurrentIndex(3)
+    w.tabs.setCurrentIndex(4)
     w.run_page.output.appendPlainText("alpha closed.")
-    assert w.tabs.currentIndex() == 3
+    assert w.tabs.currentIndex() == 4
     w.tabs.setCurrentIndex(0)
     assert w.commands.root == w.root
     refreshed = []
@@ -160,7 +185,7 @@ def test_the_logs_are_tabs_of_their_own(window, monkeypatch):
 
 
 def test_a_step_offers_its_commands(window):
-    from nexus_releases import plan as rp
+    from nexus_release_tool import plan as rp
     w, _app = window
     w.commands.offer(rp.app_commands(["alpha-v0.1.1"]))
     assert w.commands.offered[-1] == f"{rp.TAG_SCRIPT} alpha-v0.1.1" and w.commands.commands_button.isEnabled()
@@ -180,7 +205,7 @@ SUMMARY_UP = {"status": {"indicator": "none", "description": "All Systems Operat
 def test_github_status_is_read_from_the_status_page(monkeypatch):
     import io
     import json
-    from nexus_releases import plan as rp
+    from nexus_release_tool import plan as rp
     down = rp.parse_github_status(SUMMARY_DOWN)
     assert not down.up and down.description == "Partially Degraded Service"
     assert down.affected == ("Actions: degraded performance", "Pages: major outage")
@@ -209,8 +234,8 @@ def test_github_status_is_a_pill_that_opens_the_status_page(window, monkeypatch)
     https://www.githubstatus.com/ (owner, 19-10-2026). A pill, as the apps' status boxes (owner, 20-10-2026)."""
     from PyQt6.QtGui import QColor, QDesktopServices
     from bc250_core.theme import GREEN, GREY, RED
-    from nexus_releases import main_window
-    from nexus_releases import plan as rp
+    from nexus_release_tool import main_window
+    from nexus_release_tool import plan as rp
     w, _app = window
     status = main_window.GitHubStatusIndicator(lambda: rp.parse_github_status(SUMMARY_DOWN))
     assert not status.isHidden() and status.caption.text() == "GitHub status" and status.state == ""
@@ -246,7 +271,7 @@ def test_claude_usage_counts_each_answer_once(tmp_path):
     several parts counts once, Claude Code's own notes (<synthetic>) and other lines not at all."""
     import datetime
     import os
-    from nexus_releases import plan as rp
+    from nexus_release_tool import plan as rp
     now = datetime.datetime(2026, 10, 21, 12, 0).timestamp()
 
     def at(hours_ago: float) -> str:
@@ -279,8 +304,8 @@ def test_claude_usage_is_a_pill_that_opens_the_usage_page(window, monkeypatch):
     click opens Claude's usage page."""
     from PyQt6.QtGui import QDesktopServices
     from bc250_core.theme import BLUE
-    from nexus_releases import main_window
-    from nexus_releases import plan as rp
+    from nexus_release_tool import main_window
+    from nexus_release_tool import plan as rp
     w, _app = window
     w.claude.checked(w.claude._fetch())
     assert w.claude.isHidden()                                                # conftest: no Claude Code
@@ -307,8 +332,8 @@ def test_close_issues_lists_the_open_ones_and_closes_the_ticked(window):
     """Close issues (Test on this board): the open issues with a tick box each; Run closes the ticked ones with gh
     issue close in the Commands tab."""
     from PyQt6.QtCore import Qt
-    from nexus_releases import main_window
-    from nexus_releases import plan as rp
+    from nexus_release_tool import main_window
+    from nexus_release_tool import plan as rp
     w, _app = window
     issues = [rp.Issue(12, "Upstream review", "https://github.com/o/r/issues/12", "2026-10-20"),
               rp.Issue(9, "Backlog review", "https://github.com/o/r/issues/9", "2026-10-19")]
@@ -346,8 +371,8 @@ def test_the_window_has_nexus_design(window):
     silver, teal: nexus/docs/stylesheets/nexus.css), the widgets draw with it, and the icon is the Nexus drawing."""
     from PyQt6.QtGui import QPalette
     from bc250_core import theme, widgets
-    from nexus_releases import LOGO_PATH
-    from nexus_releases.style import EDGE, INK, MAIN, NEXUS, SILVER, TEAL
+    from nexus_release_tool import LOGO_PATH
+    from nexus_release_tool.style import EDGE, INK, MAIN, NEXUS, SILVER, TEAL
     w, app = window
     # As create_app(theme=NEXUS) does it (__main__.py; core's test_widgets covers create_app itself): the widgets'
     # theme (set by conftest.py for every test here) and the application's palette and style sheet. Not
@@ -365,11 +390,11 @@ def test_the_window_has_nexus_design(window):
     assert f"border:1px solid {EDGE}" in w.refresh_pill.styleSheet()
     assert f"border-color:{TEAL}" in w.refresh_pill.styleSheet()
     assert f"border-color:{TEAL}" in w.apps_page.apply_button.styleSheet()          # a pill: the accent on focus
-    assert LOGO_PATH.name == "nexus-releases.webp" and LOGO_PATH.is_file()
+    assert LOGO_PATH.name == "nexus-release-tool.webp" and LOGO_PATH.is_file()
     assert "#6a1b9a" not in w.styleSheet() and "#7e97ad" not in w.styleSheet()        # nothing of the Bazzite suite
     # The checkboxes: a teal box with its teal checkmark (owner, 28-10-2026), and Portals drawn as a selected tab.
     from pathlib import Path
-    from nexus_releases.style import CHECK_IMAGE
+    from nexus_release_tool.style import CHECK_IMAGE
     assert f"border:1px solid {TEAL}" in w.styleSheet() and f"image:url({CHECK_IMAGE})" in w.styleSheet()
     assert Path(CHECK_IMAGE).is_file() and TEAL in Path(CHECK_IMAGE).read_text(encoding="utf-8")
     title = w.suite_column.findChild(QLabel)
@@ -385,10 +410,10 @@ def test_the_icons_are_the_nexus_drawing():
     """The app's icon and its menu icon are the Nexus drawing at 512 and 128 px (tools/make_icons.py writes them,
     lossless, so the pixels are the drawing's). It has no tile on a portal: it runs from the checkout."""
     Image = pytest.importorskip("PIL.Image")
-    from nexus_releases import ROOT
+    from nexus_release_tool import ROOT
     nexus = ROOT.parents[1] / "nexus" / "images"
     assert not (ROOT.parents[1] / "bc250-bazzite" / "portal" / "images" / "apps" / "releases.webp").exists()
-    for copy, size in ((ROOT / "images" / "nexus-releases.webp", 512), (ROOT / "images" / "nexus-releases-128.png", 128)):
+    for copy, size in ((ROOT / "images" / "nexus-release-tool.webp", 512), (ROOT / "images" / "nexus-release-tool-128.png", 128)):
         with Image.open(copy) as got, Image.open(nexus / f"nexus-{size}.png") as want:
             assert got.size == (size, size) == want.size, copy.name
             assert got.convert("RGBA").tobytes() == want.convert("RGBA").tobytes(), copy.name
@@ -396,7 +421,7 @@ def test_the_icons_are_the_nexus_drawing():
 
 def test_the_portal_version_field_shows_a_whole_version(window):
     """The field on step 2 is wide enough for a version like 10.1.0 (owner, 26-10-2026: it cut the text off)."""
-    from nexus_releases.main_window import VERSION_FIELD_PX
+    from nexus_release_tool.main_window import VERSION_FIELD_PX
     w, _app = window
     w.show()
     field = w.portal_page.portal_version

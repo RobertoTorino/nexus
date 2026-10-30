@@ -33,7 +33,7 @@ def test_nexus_jobs_come_after_the_suites_with_their_prefix():
     a versions, pytest, shell and docs job."""
     nexus = {j.name: j for j in ci_local.load_jobs(CI_NEXUS, "nexus-")}
     assert {"nexus-versions", "nexus-shell", "nexus-docs", "nexus-pytest/core", "nexus-pytest/tools",
-            "nexus-pytest/dev/releases"} <= set(nexus)
+            "nexus-pytest/dev/nrt"} <= set(nexus)
     assert nexus["nexus-pytest/core"].matrix == {"dir": "core"} and all(j.runs_here for j in nexus.values())
     names = [j.name for j in ci_local.all_jobs(SUITE)]
     assert names == [j.name for j in ci_local.load_jobs(CI)] + list(nexus) and len(set(names)) == len(names)
@@ -48,7 +48,7 @@ def test_expressions_and_selection():
     assert [j.name for j in ci_local.selected(jobs, ["shell"])] == ["shell"]                  # not nexus-shell too
     assert all(j.name.startswith("pytest/") for j in ci_local.selected(jobs, ["pytest"]))    # the suite's only
     assert [j.name for j in ci_local.selected(jobs, ["nexus-pytest"])] == ["nexus-pytest/core", "nexus-pytest/tools",
-                                                                             "nexus-pytest/dev/releases"]
+                                                                             "nexus-pytest/dev/nrt"]
     assert ci_local.selected(jobs, []) == jobs
 
 

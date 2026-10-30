@@ -75,7 +75,7 @@ def test_a_changelog_goes_only_with_its_folder(repo):
 
 
 def test_a_changelog_follows_a_git_mv(repo):
-    """An app moved elsewhere (bc250-bazzite/apps/suite to dev/releases, 26-10-2026): its CHANGELOG is compared with
+    """An app moved elsewhere (bc250-bazzite/apps/suite to dev/nrt, 26-10-2026): its CHANGELOG is compared with
     its new place, staged or committed, and still loses nothing."""
     (repo / "dev").mkdir()
     git(repo, "mv", "apps/alpha", "dev/alpha")

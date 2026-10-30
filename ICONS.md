@@ -10,7 +10,7 @@ there and run it. The paths of the BC250 Bazzite Suite's section are relative to
 
 | Icon | File | Used for |
 | --- | --- | --- |
-| <img src="bc250-bazzite/portal/images/bc250-bazzite-suite.webp" width="48" alt=""> | `portal/images/bc250-bazzite-suite.webp` (512 px) | The portal's window header (a click opens the wiki) and its window icon; Suite Big Picture Mode's header; the portal's release in Nexus Releases. |
+| <img src="bc250-bazzite/portal/images/bc250-bazzite-suite.webp" width="48" alt=""> | `portal/images/bc250-bazzite-suite.webp` (512 px) | The portal's window header (a click opens the wiki) and its window icon; Suite Big Picture Mode's header; the portal's release in Nexus Release Tool. |
 | <img src="bc250-bazzite/portal/images/bc250-bazzite-suite-1024.webp" width="48" alt=""> | `portal/images/bc250-bazzite-suite-1024.webp` | The intro of Suite Big Picture Mode. |
 | <img src="bc250-bazzite/portal/images/bc250-bazzite-suite-128.png" width="48" alt=""> | `portal/images/bc250-bazzite-suite-128.png` | The portal's menu entry and Desktop icon. |
 | <img src="bc250-bazzite/portal/images/apps/portal.webp" width="48" alt=""> | `portal/images/apps/portal.webp` (128 px) | The portal's own tile. |
@@ -113,7 +113,7 @@ Characters of the font, used as icons in labels and buttons.
 | ✓ ✗ | Dependency Checker | CVE: none found, found. |
 | ⚠ ✓ ✗ | Bazzite SFTP Tools | Password: a warning, requirements met, not met. |
 | ← ↑ ↓ | Bazzite SFTP Tools | Download; uploads and downloads in the transfer queue. |
-| ↑ ↓ | Nexus Releases | Earlier commands, in the command line's placeholder. |
+| ↑ ↓ | Nexus Release Tool | Earlier commands, in the command line's placeholder. |
 | ● | Every app on core | The dot of a status box (`bc250_core/widgets.py`). |
 | ● | Portal | Outside the suite. |
 | ✓ ✗ | BC-250 Installer Tests | A test passed, failed. |
@@ -127,7 +127,7 @@ Characters of the font, used as icons in labels and buttons.
 | <img src="windows-portable/icons/windows-portable-256.png" width="48" alt=""> | `windows-portable/icons/windows-portable-<size>.png` (1024, 512, 256 and 128 px) | The icon of the Windows Portable Suite, the owner's drawing (26-10-2026): the set its portal's and wiki's copies are made from. |
 | <img src="windows-portable/icons/windows-portable-white.png" width="48" alt=""> | `windows-portable/icons/windows-portable-white.png` (1024 x 514) | The white handheld, the owner's picture (29-10-2026, cropped to the handheld): the hero of the suite's wiki home, as the board is the BC250 wiki's. |
 | <img src="windows-portable/apps/test/images/windows-portable-test.webp" width="48" alt=""> | `windows-portable/apps/test/images/windows-portable-test.webp` (512 px), `-128.png` | Windows Portable Test, the suite's test app: the suite's icon (the test app is the suite's base, as BC-250 Bazzite Test is the BC250 suite's), its window header and window icon, and its Start-menu shortcut. Lossless copies of the drawing, written by this tool. |
-| <img src="windows-portable/portal/images/windows-portable-suite.webp" width="48" alt=""> | `windows-portable/portal/images/windows-portable-suite.webp` (512 px), `-128.png` | The Windows Portable Suite's portal: its window icon and its Start-menu shortcut, and the portal's release in Nexus Releases. Lossless copies of the drawing, written by this tool. |
+| <img src="windows-portable/portal/images/windows-portable-suite.webp" width="48" alt=""> | `windows-portable/portal/images/windows-portable-suite.webp` (512 px), `-128.png` | The Windows Portable Suite's portal: its window icon and its Start-menu shortcut, and the portal's release in Nexus Release Tool. Lossless copies of the drawing, written by this tool. |
 | <img src="windows-portable/docs/images/wiki-icon.webp" width="48" alt=""> | `windows-portable/docs/images/wiki-icon.webp`, `.png` (256 px) | The suite's wiki: the header logo (`.webp`) and the favicon (`.png`), written by this tool. |
 | <img src="windows-portable/docs/images/home/device.webp" width="48" alt=""> | `windows-portable/docs/images/home/device.webp` (1024 x 514) | The suite's wiki home: the handheld under the headline, a WebP copy of the owner's white handheld. |
 | <img src="windows-portable/docs/images/home/portal.webp" width="48" alt=""> | `windows-portable/docs/images/home/portal.webp` (1280 x 720) | The suite's wiki home, One portal for every app: the portal at the Ally's 1280 x 720, rendered offscreen with the suite's apps.toml (Windows Portable Test installed), as WebP. |
@@ -164,7 +164,7 @@ Drawn by MkDocs Material in the wiki's colors.
 | <img src="nexus/images/nexus-256.png" width="48" alt=""> | `nexus/images/nexus-<size>.png` (1024, 512, 256 and 128 px) | The icon of Nexus, the owner's drawing (25-10-2026): the set the copies are made from. |
 | <img src="nexus/docs/images/nexus.webp" width="48" alt=""> | `nexus/docs/images/nexus.webp`, `.png` (256 px) | The Nexus page's header logo and its home page's footer (`.webp`), and its favicon (`.png`): the 256 px drawing, transparent (owner, 27-10-2026: no more dark tile), both written by this tool. |
 | <img src="nexus/docs/images/nexus-hero.webp" width="48" alt=""> | `nexus/docs/images/nexus-hero.webp` (1024 px) | The Nexus page's home: the icon under the headline, a WebP copy of the 1024 px drawing. |
-| <img src="dev/releases/images/nexus-releases.webp" width="48" alt=""> | `dev/releases/images/nexus-releases.webp` (512 px), `-128.png` | Nexus Releases, Nexus's app (owner, 26-10-2026: it takes Nexus's icon, not a category's): its window header and window icon, its menu entry and Desktop icon. Lossless copies of the drawing, written by this tool. |
+| <img src="dev/nrt/images/nexus-release-tool.webp" width="48" alt=""> | `dev/nrt/images/nexus-release-tool.webp` (512 px), `-128.png` | Nexus Release Tool, Nexus's app (owner, 26-10-2026: it takes Nexus's icon, not a category's): its window header and window icon, its menu entry and Desktop icon. Lossless copies of the drawing, written by this tool. |
 
 ### Material Design icons on the Nexus page
 

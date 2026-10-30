@@ -61,6 +61,7 @@ from bc250_core.widgets import AppHeader, MetricBox, Pill, Terminal, accent_butt
 from . import APP_NAME, LOGO_PATH, CHECKOUT, __version__
 from . import plan as rp
 from .command_line import CommandLine
+from .release_page import ReleasePage
 from .style import CHECK_STYLESHEET, NEXUS, TAB_TITLE_STYLESHEET, TEAL
 
 COLUMNS = ("Release", "App", "VERSION", "Last tag", "Needs release", "New version", "Notes")
@@ -68,7 +69,7 @@ SUITE_KEY = "suite"                     # the chosen suite, in the settings
 VERSION_FIELD_PX = 130                  # the portal version field: a version like 10.1.0 and room to type
 SEMVER_TIP = ("Breaking. (an entry that starts with it) -> major: something removed or no longer working as "
               "before. Added. -> minor: a new feature. Fixed. -> patch: a bug or security fix.")
-LOG_DIR = Path(os.environ.get("XDG_CACHE_HOME") or Path.home() / ".cache") / "nexus-releases" / "run"
+LOG_DIR = Path(os.environ.get("XDG_CACHE_HOME") or Path.home() / ".cache") / "nexus-release-tool" / "run"
 COMMAND_LOG_DIR = LOG_DIR.parent / "commands"   # every command line's output, a file a day (command_line.py)
 # A selected cell and the input field being typed in: a teal outline (Nexus's accent) with rounded corners on a
 # transparent background, not the desktop's solid highlight. The line edit inside an editable combo box keeps the
@@ -1261,6 +1262,7 @@ class BuildIndicator(Pill):
         for release in releases:
             self.announce_release(release, pin=release.ref != (portal.tag if portal else ""))
         page.show_builds()
+        self.release_window.release_page.show_state()   # the Nexus release's run, from the same runs
         latest = rp.latest_push(self.runs)
         state = rp.build_state(latest)
         self.show_state(state, self.details(latest))
@@ -1683,6 +1685,10 @@ class ReleaseWindow(QMainWindow):
         same_width(pills)
         header.second_row.addStretch(1)
         self.portal_page = PortalPage(self)
+        # The Nexus release first (owner, 30-10-2026: one action, Start new release); the steps stay for a suite not
+        # on it yet (bc250-bazzite) and for doing a step by hand.
+        self.release_page = ReleasePage(self)
+        self.tabs.addTab(self.release_page, "Nexus release")
         self.tabs.addTab(self.apps_page, "1. Release apps")
         self.tabs.addTab(self.portal_page, "2. Pin and release Portal")
         self.withdraw_page = WithdrawPage(self)
@@ -1691,13 +1697,14 @@ class ReleaseWindow(QMainWindow):
         self.tabs.addTab(self.run_page, "Test on this board")
         # Opening step 2 reads the tags again, so tags pushed from a terminal meanwhile show up; step 1 keeps what
         # was typed in it.
-        self.tabs.currentChanged.connect(lambda i: i == 1 and self.portal_page.fill(rp.load_units(self.root, self.suite)))
+        self.tabs.currentChanged.connect(lambda i: self.tabs.widget(i) is self.portal_page
+                                         and self.portal_page.fill(rp.load_units(self.root, self.suite)))
         self.commands = CommandLine(root, settings, finished=self.refresh,     # a commit or push: read it again
                                     log_dir=COMMAND_LOG_DIR if settings is not None else None)
         # The logs are tabs of their own, each the whole tab area (owner, 17-10-2026: boxes under the steps were
         # too flat to read). Logs shows the log of the step last open (what Apply, Pin, Bump portal, Retract or
         # a started app wrote); a step that writes its log opens it. Commands is the command line with its output.
-        self.step_pages = (self.apps_page, self.portal_page, self.withdraw_page, self.run_page)
+        self.step_pages = (self.release_page, self.apps_page, self.portal_page, self.withdraw_page, self.run_page)
         self.outputs = QStackedWidget()
         for page in self.step_pages:
             self.outputs.addWidget(page.output)
@@ -1708,7 +1715,7 @@ class ReleaseWindow(QMainWindow):
         self.tabs.setTabToolTip(self.commands_tab, "The command line: runs a command in the checkout and shows its "
                                                    "output; Commands offers what the last step showed")
         self.tabs.currentChanged.connect(self._tab_changed)
-        for page in self.step_pages[:3]:                 # not Test on this board: its lines come while you click
+        for page in self.step_pages[:4]:                 # not Test on this board: its lines come while you click
             page.output.textChanged.connect(lambda page=page: self._show_log(page))
         central = QWidget()
         lay = QVBoxLayout(central)
@@ -1939,6 +1946,7 @@ class ReleaseWindow(QMainWindow):
     def reload(self) -> None:
         units = self.units = rp.load_units(self.root, self.suite)
         self.suite_list.show_texts()                    # a portal bumped meanwhile shows its new tag
+        self.release_page.fill()
         self.apps_page.fill(units)
         self.portal_page.fill(units)
         self.withdraw_page.fill(units)
