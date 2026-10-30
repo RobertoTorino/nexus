@@ -18,13 +18,15 @@ counts the megabytes or the files. View (exit) while a job runs asks first, as t
 files (userdata: the quit hotkeys, View + Menu) is set after an install and when the window opens.
 
 The Your games pane (panes.py, library.py): the games in the app's own Games\\PS4 folders (owner, 30-10-2026: the
-games and packages are dropped there; library.fixed, an SD card's too), played from Steam (owner, 29-10-2026: the
-app never starts shadPS4 itself); A marks one for Steam, X plays one that is in Steam, through Steam
-(steam://rungameid), Y Update Steam makes Steam's shortcuts match the marks, RB Remove game (a second press) takes a
-game out of Steam and deletes its folder with its update. A package that waits there (extract.waiting: a game not
-unpacked, an update its game lacks) is a row of its own, PKG; A unpacks it, X Unpack all every one, the games first
-and each update beside its game (extract.place), and a package unpacked whole is deleted (extract.py, Extract PKG of
-the BC250 app). Open Steam, the row at the top, opens Steam's library; LB Steam artwork keeps the SteamGridDB key.
+games and packages are dropped there; library.fixed, an SD card's too), played from Steam (owner, 29-10-2026); A
+marks one for Steam, X plays one that is in Steam, through Steam (steam://rungameid), and on a device without Steam
+starts it in the app's play mode itself (owner, 30-10-2026: a fallback, as its shortcut would start it; core's play:
+View and Menu held quit any game), Y Update Steam makes Steam's shortcuts match the marks and brings a shortcut made
+before the play mode to it, RB Remove game (a second press) takes a game out of Steam and deletes its folder with its
+update. A package that waits there (extract.waiting: a game not unpacked, an update its game lacks) is a row of its
+own, PKG; A unpacks it, X Unpack all every one, the games first and each update beside its game (extract.place), and a
+package unpacked whole is deleted (extract.py, Extract PKG of the BC250 app). LB Steam artwork keeps the SteamGridDB key; Steam's library is the portal's RT Steam (owner,
+30-10-2026: Open Steam moved there).
 The Log pane: shadPS4's folder, the app's folders and the newest lines of the app's log; A (or a tap on the pane)
 shows the whole log in the pane.
 
@@ -44,7 +46,7 @@ from PyQt6.QtCore import QObject, QSettings, Qt, QTimer, pyqtSignal
 from PyQt6.QtGui import QFont, QGuiApplication
 from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QStackedWidget, QVBoxLayout, QWidget
 
-from bc250_core import applog, covers, power, steam
+from bc250_core import applog, covers, platform, play, power, steam
 from bc250_core.gamepad import Gamepad
 from bc250_core.platform import private
 from bc250_core.portable import (AMBER, BODY, DIM, EXIT, VIEW, Card, InfoPill, Legend, Pane, PortableHeader,
@@ -68,7 +70,7 @@ LOG_MAX = 2000                  # the lines of the log the whole view shows, the
 RUNNING = "shadPS4 is open: close it first, it would write its own settings over the change."
 NOT_INSTALLED = "Install shadPS4 first: the settings are in its folder."
 BUSY = "Wait a moment: the app is still busy with the step before."
-NO_GAME = "Put the focus on a game first: the X button starts it through Steam."
+NO_GAME = "Put the focus on a game first: the X button starts it."
 NOTHING_TO_UNPACK = "Nothing to unpack: put .pkg files in your Games\\PS4 folder, then the X button unpacks them."
 ALL_SETTINGS = shadps4_settings.SETTINGS
 # The Settings pane's information, per tab: what each setting of the tab does
@@ -190,12 +192,14 @@ class MainWindow(PortableWindow):
                  steam_closed: Callable[[Callable[[], None]], bool] = steam.with_steam_closed,
                  user_home: Path | None = None, drives: Callable[[], list[Path]] = library.removable_drives,
                  settings: QSettings | None = None,
-                 play: Callable[[str], None] = steam.open_url):
+                 play: Callable[[str], None] = steam.open_url,
+                 start: Callable[..., None] = platform.start_program):
         """*steam_dir*: Steam's folder (False: found on this system, None: no Steam); *runtime_missing*: the Visual
         C++ runtime's files that are missing; *unpack*: Extract PKG's job (extract.unpack); *connect*: opens the
         connection to a shadNet server (tests pass a fake server); *user_home*: the user's folder (where Games\\PS4
         is); *drives*: the removable drives, whose Games\\PS4 is looked in too; *settings*: the app's (its .ini,
-        create_app's); *play*: hands a steam:// address to Steam (a game, Steam's library)."""
+        create_app's); *play*: hands a steam:// address to Steam (a game); *start*: starts a program on its own
+        (shadPS4 with a game, without Steam)."""
         super().__init__(gamepad)
         self.setWindowTitle(f"{APP_NAME} {__version__}")
         self.log = applog.logger(APP_ID)
@@ -217,9 +221,10 @@ class MainWindow(PortableWindow):
         self.steam_dir = steam.find_steam() if steam_dir is False else steam_dir
         self.user_home, self.drives = user_home, drives
         self.settings = settings if settings is not None else QSettings()
-        self.play = play
+        self.play, self.start_program = play, start
         self.games: list[Game] = []
         self.in_steam: dict[str, str] = {}
+        self.outdated: set[str] = set()                 # games whose shortcut does not start the play mode yet
         self.marked: set[str] = set()
         self.remove_asked = ""                          # a game RB pressed once: RB again deletes it
         self.waiting: list[extract.Package] = []        # the game packages in the game folders not unpacked yet
@@ -272,9 +277,6 @@ class MainWindow(PortableWindow):
         self.pane.column.addWidget(self.status)
         self.settings_pane = SettingsPane()
         self.games_pane = ListPane("Your games", "Your games", GAMES_INFO)
-        self.steam_row = Row("Open Steam")              # Steam's library, where the games are played
-        self.games_pane.column.insertWidget(3, self.steam_row)
-        self.games_pane.column.insertSpacing(4, px(6))
         self.shadnet_pane = ShadNetPane()
         self.key_pane = KeyPane()
         self.field_pane = FieldPane()
@@ -307,7 +309,6 @@ class MainWindow(PortableWindow):
         self.log_card.activated.connect(self.view_log)
         self.log_pane.tapped.connect(self.view_log)
         self.games_pane.list.picked.connect(self.game_picked)
-        self.steam_row.activated.connect(self.open_steam)
         self.confirm_key = False                        # Remove key pressed once
         for setting in ALL_SETTINGS:
             self.settings_pane.pills[setting.key].activated.connect(lambda s=setting: self.step_setting(s))
@@ -503,10 +504,7 @@ class MainWindow(PortableWindow):
                      *([("Y", other)] if other else [])]
         elif pane is self.games_pane:
             focused = self.games_pane.list.focused()
-            if self.steam_row.hasFocus():
-                items = [("A", "Open Steam"), *([("X", "Unpack all")] if self.waiting else []), ("Y", "Update Steam"),
-                         ("LB", "Steam artwork")]
-            elif focused.startswith("pkg:"):
+            if focused.startswith("pkg:"):
                 items = [("A", "Unpack"), ("X", "Unpack all"), ("Y", "Update Steam"), ("LB", "Steam artwork")]
             else:
                 items = [("A", "Steam mark"), *([("X", "Play")] if focused else []), ("Y", "Update Steam"),
@@ -531,9 +529,8 @@ class MainWindow(PortableWindow):
             self.legend.set_items(self.legend_items())
 
     def focus_list(self, pane: ListPane) -> None:
-        """The list's first row, or (Your games) Open Steam, or the pane's card while the list is empty."""
-        steam_row = self.steam_row if pane is self.games_pane and not self.steam_row.isHidden() else None
-        (pane.list.first() or steam_row or self.cards[pane]).setFocus()
+        """The list's first row, or the pane's card while the list is empty."""
+        (pane.list.first() or self.cards[pane]).setFocus()
 
     # Your games
 
@@ -562,6 +559,10 @@ class MainWindow(PortableWindow):
             except OSError as error:
                 self.in_steam = {}
                 self.log.error(f"Steam's shortcuts could not be read: {error}")
+        try:
+            self.outdated = shortcuts.outdated(self.steam_dir) if self.steam_dir is not None else set()
+        except OSError:
+            self.outdated = set()
         found = {str(g.eboot) for g in self.games}
         self.marked = {f for f in self.marked if f in found} | {f for f in self.in_steam if f in found
                                                                   and f not in self._unmarked}
@@ -594,7 +595,8 @@ class MainWindow(PortableWindow):
         if self.remove_asked == str(game.eboot):
             return f"Press RB again to delete {game.title} from the disk"
         mark = "✓ Steam" if str(game.eboot) in self.marked else ""
-        changed = (str(game.eboot) in self.marked) != (str(game.eboot) in self.in_steam)
+        changed = ((str(game.eboot) in self.marked) != (str(game.eboot) in self.in_steam)
+                   or str(game.eboot) in self.marked and str(game.eboot) in self.outdated)
         seconds = userdata.play_times(self.shad_home).get(game.title_id, (0, 0.0))[0] if game.title_id else 0
         parts = (game.title, game.title_id, userdata.played(seconds) if seconds else "",
                  mark + (" (Update Steam)" if changed else ""))
@@ -609,11 +611,15 @@ class MainWindow(PortableWindow):
 
     def play_game(self) -> None:
         """X on a game: started through Steam (owner, 29-10-2026), which starts shadPS4 with it full screen as its
-        shortcut says; Steam starts first when it does not run. A game not in Steam yet says how it gets there."""
+        shortcut says; Steam starts first when it does not run. A game not in Steam yet says how it gets there; on a
+        device without Steam shadPS4 starts it itself."""
         key = self.games_pane.list.focused()
         game = next((g for g in self.games if str(g.eboot) == key), None)
         if game is None:
             self.games_pane.status.setText(NO_GAME)
+            return
+        if self.steam_dir is None:
+            self.play_without_steam(game)
             return
         try:
             number = shortcuts.numbers(self.steam_dir).get(key) if self.steam_dir is not None else None
@@ -631,7 +637,7 @@ class MainWindow(PortableWindow):
             self.games_pane.status.setText(f"Steam could not be asked to start {game.title}: {error.strerror or error}")
             self.log.error(f"Starting {game.title} through Steam ({url}) failed: {error}")
             return
-        self.games_pane.status.setText(f"Starting {game.title} in Steam…")
+        self.games_pane.status.setText(f"Starting {game.title} in Steam… {play.QUIT_HINT}")
         self.log.info(f"Starting {game.title} in Steam ({url}).")
 
 
@@ -757,16 +763,21 @@ class MainWindow(PortableWindow):
                       + (", and its Steam shortcut." if steam_dir is not None else "."))
         self.worker.run(job)
 
-    def open_steam(self) -> None:
-        """A on Open Steam: Steam's library (in Big Picture), started when Steam does not run."""
-        try:
-            self.play(steam.OPEN_URL)
-        except OSError as error:
-            self.games_pane.status.setText(f"Steam could not be opened: {error.strerror or error}")
-            self.log.error(f"Opening Steam ({steam.OPEN_URL}) failed: {error}")
+    def play_without_steam(self, game: Game) -> None:
+        """X on a game on a device without Steam (owner, 30-10-2026: a fallback): shadPS4 started with it full screen,
+        as its Steam shortcut would start it, outside the app's bundle (platform.start_program)."""
+        if not emulator.installed(self.home):
+            self.games_pane.status.setText(f"Install shadPS4 first: it starts {game.title} on a device without Steam.")
             return
-        self.games_pane.status.setText("Opening Steam…")
-        self.log.info("Opening Steam.")
+        command = shortcuts.command(game)
+        try:
+            self.start_program(command, cwd=emulator.program(self.home).parent)
+        except OSError as error:
+            self.games_pane.status.setText(f"shadPS4 could not start {game.title}: {error.strerror or error}")
+            self.log.error(f"Starting {game.title} in shadPS4 failed: {error}")
+            return
+        self.games_pane.status.setText(f"Starting {game.title} in shadPS4… {play.QUIT_HINT}")
+        self.log.info(f"Starting {game.title} in shadPS4, without Steam.")
 
     # The system modules
 
@@ -1040,7 +1051,7 @@ class MainWindow(PortableWindow):
             self.shadnet_job(create=True)
         elif pane is self.games_pane:
             focused = self.games_pane.list.focused()
-            if focused.startswith("pkg:") or (self.steam_row.hasFocus() and self.waiting):
+            if focused.startswith("pkg:"):
                 self.unpack_packages(self.waiting)
             else:
                 self.play_game()
@@ -1094,7 +1105,7 @@ class MainWindow(PortableWindow):
         if self.steam_dir is None:
             self.games_pane.status.setText(NO_STEAM)
             return
-        if not library.pending(self.games, self.marked, self.in_steam):
+        if not library.pending(self.games, self.marked, self.in_steam, self.outdated):
             self.games_pane.status.setText(NOTHING_TO_CHANGE)
             return
         add, remove = library.plan(self.games, self.marked, self.in_steam)

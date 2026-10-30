@@ -27,7 +27,8 @@ Whether a game runs, and how well, is up to Xenia. Its
   [vc_redist.x64.exe](https://aka.ms/vs/17/release/vc_redist.x64.exe) from Microsoft installs it.
 - **Windows 11**: Xenia comes as a `.7z`, which the app unpacks with Windows' own `tar`; the `tar` of Windows 10
   cannot, and the pane says so.
-- **Steam**, started once on the device, to play the games from Steam (optional).
+- **Steam**, started once on the device, to play the games from Steam (optional: without Steam, **X Play** starts a
+  game in Xenia itself).
 
 ## The screen
 
@@ -93,8 +94,9 @@ You play the games from Steam; the app puts them there, and starts them there wi
   Steam from that; should a game it wrote not be found, the status line and the log say which.
 - **X Play** on a game that is in Steam starts it through Steam, as its tile in Steam's library would; Steam
   starts first when it is not open. A game that is not in Steam yet says so: mark it with **A**, then
-  **Y Update Steam**.
-- **Open Steam**, the row above the games, opens Steam's library in Big Picture mode with **A**.
+  **Y Update Steam**. On a device without Steam (not installed, or never started), **X Play** starts the game in
+  Xenia itself, full screen, the same way Steam would.
+- Steam's library opens from the portal: **RT Steam** in its bottom row.
 - **LB Folders** shows your game folders instead of the games; **LB** or **B** goes back to the games. The usual
   places that are on the device (Games, Downloads and Documents in your user folder) and each removable drive, such as
   an SD card, are offered as **+ Add**. **A** twice on a folder takes it off the list: the first press asks, for five
@@ -111,9 +113,12 @@ saving). See [Steam artwork from SteamGridDB](covers.md).
 
 ### In a game
 
-A game from Steam starts full screen, with the device's controller as the Xbox 360's. **Steam's own menu** (the Steam
-button, or the guide button) and its **Exit game** end the game and Xenia with it, as for any game: Xenia has no button
-combination of its own that ends a game.
+A game starts full screen, with the device's controller as the Xbox 360's.
+
+To quit a game, **hold View and Menu together for two seconds**: Xenia closes as its window would close, and you are
+back in Steam, or in the app when it started the game. It works the same in every game manager of the suite, started
+from Steam's library or from the app. The line at the bottom of Your games says so when a game starts. **Steam's own
+menu** (the Steam button, or the guide button) and its **Exit game** end the game too.
 
 ## Settings
 
@@ -168,8 +173,13 @@ the whole log in the pane: the d-pad scrolls it, and **B** goes back.
 
 ## How it works
 
-A game starts from Steam as `xenia_canary.exe --fullscreen=true "<game>"`, as the BC250 suite's Xenia Manager starts
-it; the value on the command line is not written into Xenia's settings. The app itself never starts a game.
+A game's shortcut in Steam starts the app itself in its play mode, `Xenia-Manager.exe --play --fullscreen=true
+"<game>"`, which shows no window: it starts `xenia_canary.exe --fullscreen=true "<game>"` in Xenia's folder, as the
+BC250 suite's Xenia Manager starts it (the value on the command line is not written into Xenia's settings), watches the
+controller for View and Menu held, and ends when Xenia ends, so Steam sees the game end. Asked to close, Xenia gets ten
+seconds before it is ended. On a device without Steam the app starts a game the same way. A shortcut made by an
+earlier version, which starts `xenia_canary.exe` itself, shows **(Update Steam)** on its game: **Y Update Steam** writes
+it again.
 
 Every Monday the suite checks that the file Xenia Manager downloads is still the one it was tested with; Xenia
 Canary's newer builds, out almost every day, are not reported there, the Xenia pane shows the newest.

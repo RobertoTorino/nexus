@@ -15,14 +15,16 @@ from __future__ import annotations
 
 import json
 import re
+import sys
 import tempfile
 import threading
 import time
 from pathlib import Path
 
+import pytest
 from PyQt6.QtCore import QSettings
 
-from bc250_core import portable
+from bc250_core import play, portable, steam
 from bc250_core.gamepad import Gamepad
 from bc250_core.platform import private
 from bc250_core.portable import BACK, EXIT, VIEW
@@ -53,6 +55,7 @@ def wait_for(qapp, predicate, seconds=10.0):
 
 def make(qapp, home=None, install=fake_install, running=lambda home: False, **more):
     more.setdefault("steam_dir", None)                  # never the real Steam
+    more.setdefault("start", lambda command, cwd=None: None)   # never a real shadPS4
     more.setdefault("user_home", Path(tempfile.mkdtemp()) / "me")   # never the real Games\\PS4
     more.setdefault("drives", lambda: [])
     more.setdefault("runtime_missing", lambda: [])
@@ -467,7 +470,8 @@ def test_the_window_fits_a_smaller_screen(qapp, tmp_path):
 
 def test_your_games_are_marked_with_a_and_put_in_steam(qapp, tmp_path, monkeypatch):
     """The games are played from Steam (owner, 29-10-2026): A on a game is its Steam mark, Y Update Steam writes the
-    marks, X plays a game that is in Steam through Steam (steam://rungameid), Open Steam opens Steam's library."""
+    marks, X plays a game that is in Steam through Steam (steam://rungameid); Steam's library is the portal's (owner,
+    30-10-2026: no Open Steam row)."""
     home = tmp_path / "emulator"
     shad = ready(home)
     (shad / "play_time.txt").write_text("CUSA00900 1:22:47 1792613335\n")
@@ -491,13 +495,7 @@ def test_your_games_are_marked_with_a_and_put_in_steam(qapp, tmp_path, monkeypat
     assert window.legend.items == [("A", "Steam mark"), ("Y", "Update Steam"), ("LB", "Steam artwork"), MENU_INFO,
                                    EXIT]
     assert "Press the A button on a game to mark it for Steam" in window.games_pane.info.info
-    window.on_action("accept")                                     # into the pane
-    window.steam_row.setFocus()
-    qapp.processEvents()
-    assert window.legend.items == [("A", "Open Steam"), ("Y", "Update Steam"), ("LB", "Steam artwork"), MENU_INFO,
-                                   BACK, EXIT]
-    window.on_action("accept")
-    assert played == ["steam://open/bigpicture"] and window.games_pane.status.text() == "Opening Steam…"
+    assert not hasattr(window, "steam_row")
     pills = window.games_pane.list.pills                           # the game in Games\PS4: no folder chosen
     assert [pill.label.text() for pill in pills.values()] == ["Bloodborne  ·  CUSA00900  ·  1 h 22 min"]
     window.legend.entries["Y"].pressed.emit()                      # a tap on Y Update Steam: nothing to change yet
@@ -508,7 +506,7 @@ def test_your_games_are_marked_with_a_and_put_in_steam(qapp, tmp_path, monkeypat
     assert ("RB", "Remove game") in window.legend.items
     window.on_action("x")                                          # X: not in Steam yet
     assert window.games_pane.status.text() == ("Bloodborne is not in Steam yet: A marks it, then Y Update Steam "
-                                               "puts it there.") and len(played) == 1
+                                               "puts it there.") and played == []
     window.on_action("accept")                                     # A: the Steam mark
     assert "✓ Steam (Update Steam)" in window.games_pane.list.pills[str(bloodborne)].label.text()
     window.on_action("y")                                          # Y on Your games: Update Steam
@@ -520,7 +518,42 @@ def test_your_games_are_marked_with_a_and_put_in_steam(qapp, tmp_path, monkeypat
     window.on_action("x")                                          # X: played through Steam
     number = shortcuts.numbers(steam_dir)[str(bloodborne)]
     assert played[-1] == f"steam://rungameid/{(number << 32) | 0x02000000}"
-    assert window.games_pane.status.text() == "Starting Bloodborne in Steam…"
+    assert window.games_pane.status.text() == ("Starting Bloodborne in Steam… In the game, hold View and Menu together "
+                                               "to quit.")             # how to quit, on the screen (owner, 30-10-2026)
+    window.close()
+
+
+def test_without_steam_x_starts_the_game_in_shadps4(qapp, tmp_path, monkeypatch):
+    """A device without Steam (owner, 30-10-2026: a fallback): X starts shadPS4 with the game full screen, as its
+    shortcut would, from shadPS4's folder; without shadPS4 it says to install it first."""
+    home = tmp_path / "emulator"
+    user = tmp_path / "me"
+    game = make_game(user / "Games" / "PS4" / "CUSA00900", "Bloodborne", "CUSA00900")
+    started, played = [], []
+    window = make(qapp, home, user_home=user, start=lambda command, cwd=None: started.append((command, cwd)),
+                  play=played.append)
+    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
+    window.games_card.setFocus()
+    window.on_action("accept")
+    window.games_pane.list.pills[str(game)].setFocus()
+    qapp.processEvents()
+    assert ("X", "Play") in window.legend.items
+    window.on_action("x")
+    assert started == [] and window.games_pane.status.text() == ("Install shadPS4 first: it starts Bloodborne on a "
+                                                                 "device without Steam.")
+    ready(home)
+    window.on_action("x")
+    program = emulator.program(home)
+    launcher, before = play.launcher(ROOT)                      # the play mode, as the shortcut would start it
+    assert started == [([launcher, *before, "-f", "true", "-g", str(game)], program.parent)]
+    assert played == [] and window.games_pane.status.text() == ("Starting Bloodborne in shadPS4… In the game, hold "
+                                                                "View and Menu together to quit.")
+
+    def fails(command, cwd=None):
+        raise PermissionError(13, "Access is denied")
+    window.start_program = fails
+    window.on_action("x")
+    assert window.games_pane.status.text() == "shadPS4 could not start Bloodborne: Access is denied"
     window.close()
 
 
@@ -769,7 +802,7 @@ def test_the_packages_in_games_ps4_are_unpacked_from_your_games(qapp, tmp_path, 
     assert own.is_dir()                                         # made by the app
     window.games_card.setFocus()
     window.on_action("accept")
-    assert ("X", "Unpack all") not in window.legend.items     # on Open Steam: nothing waits
+    assert ("X", "Unpack all") not in window.legend.items     # nothing waits
     game = own / "galaga.pkg"
     game.write_bytes(built_pkg.path.read_bytes())
     update = build_pkg(own / "update.pkg", default_tree(), category="gp", app_ver="01.01")
@@ -803,3 +836,52 @@ def test_the_packages_in_games_ps4_are_unpacked_from_your_games(qapp, tmp_path, 
     assert window.games_pane.status.text() == "Synthetic Test Title is unpacked, and its package is deleted."
     assert (own / f"{title_id}-UPDATE" / "eboot.bin").read_bytes() == newer.expected_files["eboot.bin"]
     window.close()
+
+
+def test_a_shortcut_made_before_the_play_mode_asks_for_update_steam(qapp, tmp_path, monkeypatch):
+    """A game whose shortcut still starts shadPS4 itself (1.1.0's) says (Update Steam), and Y brings it to the play
+    mode (owner, 30-10-2026: View and Menu held quit every game)."""
+    home = tmp_path / "emulator"
+    ready(home)
+    user = tmp_path / "me"
+    game = make_game(user / "Games" / "PS4" / "CUSA00900", "Bloodborne", "CUSA00900")
+    steam_dir = tmp_path / "Steam"
+    config = steam_dir / "userdata" / "1" / "config"
+    config.mkdir(parents=True)
+    program = emulator.program(home)
+    old = steam.shortcut_entry(f'"{program}"', "[PS4] Bloodborne", f'"{program.parent}\\"', "",
+                               f'-f true -g "{game}"', shortcuts.TAGS)
+    (config / "shortcuts.vdf").write_bytes(steam.write_vdf({"shortcuts": {"0": old}}))
+
+    def with_steam_closed(change):
+        change()
+        return False
+    window = make(qapp, home, steam_dir=steam_dir, steam_closed=with_steam_closed, user_home=user)
+    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
+    assert window.games_pane.list.pills[str(game)].label.text().endswith("✓ Steam (Update Steam)")
+    window.games_card.setFocus()
+    window.on_action("y")
+    assert wait_for(qapp, lambda: not window.busy)
+    assert shortcuts.outdated(steam_dir) == set() and len(steam.shortcuts(steam_dir)) == 1
+    assert window.games_pane.list.pills[str(game)].label.text().endswith("✓ Steam")
+    window.close()
+
+
+def test_play_runs_the_game_without_a_window(monkeypatch, tmp_path):
+    """--play, as a shortcut starts the app: shadPS4 with the shortcut's arguments from its folder, through core's
+    play mode, before any window or the one-window check (the app's window may be open beside it)."""
+    from shadps4_manager import __main__ as entry
+    ran = []
+    monkeypatch.setattr(emulator, "emulator_home", lambda: tmp_path / "emulator")
+    monkeypatch.setattr(entry.applog, "setup", lambda *a, **k: tmp_path / "log")
+    monkeypatch.setattr(entry.play, "run", lambda command, cwd, log: ran.append((command, cwd)) or 3)
+    monkeypatch.setattr(entry, "create_app", lambda *a, **k: pytest.fail("no window in the play mode"))
+    monkeypatch.setattr(sys, "argv", ["shadPS4-Manager.exe", "--play", "-f", "true", "-g", r"D:\G\eboot.bin"])
+    assert entry.main() == 3
+    program = emulator.program(tmp_path / "emulator")
+    assert ran == [([str(program), "-f", "true", "-g", r"D:\G\eboot.bin"], program.parent)]
+
+    def fails(command, cwd, log):
+        raise FileNotFoundError(2, "The system cannot find the file specified")
+    monkeypatch.setattr(entry.play, "run", fails)
+    assert entry.main() == 1

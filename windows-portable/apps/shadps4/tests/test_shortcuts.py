@@ -1,20 +1,24 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The Steam shortcuts (shortcuts.py) on Windows, as RPCS3 Manager's are tested: shadPS4's program with the game full
-screen, started in its folder (shadPS4's portable folder beside it), paths in double quotes as Steam writes them,
+"""The Steam shortcuts (shortcuts.py) on Windows, as RPCS3 Manager's are tested: the app's play mode with the game full
+screen (owner, 30-10-2026: View and Menu held quit it), one made before it that starts shadPS4 itself still the game's,
+started in shadPS4's folder (shadPS4's portable folder beside it), paths in double quotes as Steam writes them,
 "[PS4] <title>" names made unique, the app's own shortcuts told from others, adding and taking out beside other
 shortcuts in a Steam folder made in a temp folder, and the artwork from the game's own pictures (the BC250 suite's
 shadPS4 Manager's tests)."""
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
+import pytest
 from conftest import make_game
 
-from bc250_core import steam
-from shadps4_manager import LOGO_PATH, shortcuts
+from bc250_core import play, steam
+from shadps4_manager import LOGO_PATH, ROOT, shortcuts
 from shadps4_manager.games import Game, read_game
 
+MANAGER = r"C:\Users\me\AppData\Local\windows-portable-suite\windows-portable-shadps4\app\shadPS4-Manager.exe"
 PROGRAM = Path(r"C:\Users\me\AppData\Local\windows-portable-suite\windows-portable-shadps4\emulator\shadPS4.exe")
 BLOODBORNE = Game(Path(r"D:\PS4\Bloodborne\CUSA00900\eboot.bin"), "Bloodborne", "CUSA00900")
 OTHER = {"appid": -1234, "AppName": "RetroArch", "Exe": '"C:\\RetroArch\\retroarch.exe"',
@@ -28,16 +32,46 @@ def _steam(tmp_path: Path) -> Path:
     return tmp_path / "Steam"
 
 
-def test_a_shortcut_starts_shadps4_with_the_game_in_its_folder(tmp_path):
+@pytest.fixture
+def release(monkeypatch):
+    """The app as a release runs it: PyInstaller's program."""
+    monkeypatch.setattr(sys, "frozen", True, raising=False)
+    monkeypatch.setattr(sys, "executable", MANAGER)
+
+
+def test_a_shortcut_starts_the_play_mode_in_shadps4s_folder(release):
     item = shortcuts.entry(BLOODBORNE, "[PS4] Bloodborne", PROGRAM, LOGO_PATH)
-    assert item["Exe"] == f'"{PROGRAM}"' and item["StartDir"] == f'"{PROGRAM.parent}\\"'   # where user\ is
-    assert item["LaunchOptions"] == '-f true -g "D:\\PS4\\Bloodborne\\CUSA00900\\eboot.bin"'
+    assert item["Exe"] == f'"{MANAGER}"' and item["StartDir"] == f'"{PROGRAM.parent}\\"'   # where user\ is
+    assert item["LaunchOptions"] == '--play -f true -g "D:\\PS4\\Bloodborne\\CUSA00900\\eboot.bin"'
+    assert shortcuts.command(BLOODBORNE) == [MANAGER, "--play", "-f", "true", "-g", str(BLOODBORNE.eboot)]
     assert item["tags"] == {"0": "PS4", "1": "shadPS4 Manager"}
     assert shortcuts.ours(item) and shortcuts.for_game(BLOODBORNE)(item)
     assert shortcuts.for_game(Game(Path(r"d:\ps4\BLOODBORNE\cusa00900\EBOOT.BIN"), "x"))(item)       # case
     assert not shortcuts.for_game(Game(Path(r"D:\PS4\Other\eboot.bin"), "Other"))(item)
     lower = {key.lower(): value for key, value in item.items()}                            # as some Steam writes it
     assert shortcuts.ours(lower)
+
+
+def test_a_shortcut_made_before_the_play_mode_is_the_games_and_outdated(tmp_path, release):
+    """A shortcut that starts shadPS4.exe itself (1.1.0 and before) is the game's, so Update Steam replaces it, and
+    outdated() names it; one made from the checkout (PowerShell and run.ps1) is outdated in a release too."""
+    folder = _steam(tmp_path)
+    old = steam.shortcut_entry(f'"{PROGRAM}"', "[PS4] Bloodborne", f'"{PROGRAM.parent}\\"', "",
+                               '-f true -g "D:\\PS4\\Bloodborne\\CUSA00900\\eboot.bin"', shortcuts.TAGS)
+    assert shortcuts.ours(old) and shortcuts.for_game(BLOODBORNE)(old)
+    before = play.launcher(ROOT, frozen=False)[1]
+    checkout = steam.shortcut_entry(f'"{play.POWERSHELL}"', "[PS4] Two", '"x\\"', "",
+                                    play.launch_options(before, '-f true -g "D:\\Two\\eboot.bin"'), shortcuts.TAGS)
+    three = Game(Path(r"D:\Three\eboot.bin"), "Three", "CUSA00003")
+    config = steam.user_folders(folder)[0]
+    values = steam.read_vdf((config / "shortcuts.vdf").read_bytes())
+    values["shortcuts"].update({"1": old, "2": checkout,
+                                "3": shortcuts.entry(three, "[PS4] Three", PROGRAM, LOGO_PATH)})
+    (config / "shortcuts.vdf").write_bytes(steam.write_vdf(values))
+    assert set(shortcuts.in_steam(folder)) == {str(BLOODBORNE.eboot), r"D:\Two\eboot.bin", str(three.eboot)}
+    assert shortcuts.outdated(folder) == {str(BLOODBORNE.eboot), r"D:\Two\eboot.bin"}
+    steam.write_shortcuts(folder, shortcuts.changes([BLOODBORNE], [], PROGRAM, LOGO_PATH, {}, art=False))
+    assert shortcuts.outdated(folder) == {r"D:\Two\eboot.bin"} and len(steam.shortcuts(folder)) == 4
 
 
 def test_other_shortcuts_are_not_ours():
@@ -47,6 +81,7 @@ def test_other_shortcuts_are_not_ours():
     assert not shortcuts.ours({"Exe": f'"{PROGRAM}"', "LaunchOptions": "-b"})            # its Big Picture
     assert not shortcuts.ours({"Exe": f'"{PROGRAM}"', "LaunchOptions": "-f true -g"})
     assert not shortcuts.ours({"Exe": f'"{PROGRAM}"', "LaunchOptions": '-g "unclosed'})
+    assert not shortcuts.ours({"Exe": f'"{play.POWERSHELL}"', "LaunchOptions": '-File x.ps1 -g "x\\eboot.bin"'})
 
 
 def test_names_are_unique():

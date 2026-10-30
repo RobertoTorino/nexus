@@ -95,23 +95,27 @@ def test_the_play_time_rpcs3_counted(tmp_path):
 # --- What the app writes for RPCS3 ------------------------------------------------------------------------------
 
 def test_rpcs3s_gui_settings_get_what_the_app_owns(tmp_path):
-    """No CurrentSettings.ini yet: the two keys in their sections. One RPCS3 wrote: the keys set, every other line
-    kept; a second run changes nothing. No style: RPCS3's window is never shown here."""
-    assert userdata.prepare_gui(tmp_path) == ["its welcome dialog off", "its own update check off"]
+    """No CurrentSettings.ini yet: the three keys in their sections (the exit question off: owner, 30-10-2026, View
+    and Menu held close the game's window). One RPCS3 wrote: the keys set, every other line kept; a second run
+    changes nothing. No style: RPCS3's window is never shown here."""
+    owned = ["its welcome dialog off", "its exit question off", "its own update check off"]
+    assert userdata.prepare_gui(tmp_path) == owned
     path = tmp_path / userdata.GUI_SETTINGS
     assert path == tmp_path / "GuiConfigs" / "CurrentSettings.ini"
-    assert path.read_text() == "[main_window]\ninfoBoxEnabledWelcome=false\n\n[Meta]\ncheckUpdateStart=false\n"
+    assert path.read_text() == ("[main_window]\ninfoBoxEnabledWelcome=false\nconfirmationBoxExitGame=false\n\n"
+                                "[Meta]\ncheckUpdateStart=false\n")
     stamp = path.stat().st_mtime_ns
     assert userdata.prepare_gui(tmp_path) == [] and path.stat().st_mtime_ns == stamp
     path.write_text("[GSFrame]\nvisibility=Windowed\n\n[Meta]\nattachCommandLine=false\ncheckUpdateStart=true\n\n"
                     "[main_window]\nguiVolume=1\ninfoBoxEnabledWelcome=true\nlastExplorePathPUP=C:/somewhere\n")
-    assert userdata.prepare_gui(tmp_path) == ["its welcome dialog off", "its own update check off"]
+    assert userdata.prepare_gui(tmp_path) == owned
     assert path.read_text() == ("[GSFrame]\nvisibility=Windowed\n\n[Meta]\nattachCommandLine=false\n"
                                 "checkUpdateStart=false\n\n"
-                                "[main_window]\nguiVolume=1\ninfoBoxEnabledWelcome=false\nlastExplorePathPUP=C:/somewhere\n")
+                                "[main_window]\nguiVolume=1\ninfoBoxEnabledWelcome=false\nlastExplorePathPUP=C:/somewhere\n"
+                                "confirmationBoxExitGame=false\n")
     assert "currentStylesheet" not in path.read_text()
-    path.write_text("[main_window]\ninfoBoxEnabledWelcome=false\n")                # one of the two set already
-    assert userdata.prepare_gui(tmp_path) == ["its own update check off"]
+    path.write_text("[main_window]\ninfoBoxEnabledWelcome=false\n")                # one of the three set already
+    assert userdata.prepare_gui(tmp_path) == owned[1:]
 
 
 def test_the_pad_file_for_player_1(tmp_path):

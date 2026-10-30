@@ -9,10 +9,12 @@ everywhere). Core's rule ends the legend: B goes back (a pane to its card, the f
 the cards, the browser a level up), View exits the app and Menu shows the information of the pane that shows.
 
 The Your games pane (panes.py, library.py): the games in the chosen folders, played from Steam (owner, 29-10-2026:
-X Play starts one in Steam); A marks one for Steam, Y Update Steam makes Steam's shortcuts match the marks;
+X Play starts one in Steam; on a device without Steam X starts PCSX2 with it itself, owner 30-10-2026: a fallback, as
+its shortcut would start it); A marks one for Steam, Y Update Steam makes Steam's shortcuts match the marks;
 LB Folders lists the folders, the usual places and a drive to add, and Browse, which opens the browser (core's
 browse: the controller's own way to a folder, where Windows' folder window is not); LB Games goes back; RB Steam
-artwork keeps the SteamGridDB key. The Memory cards pane: the cards and the saves on each, X New card and Y Copy card.
+artwork keeps the SteamGridDB key. Steam's library is the portal's RT Steam (owner, 30-10-2026: Open Steam moved
+there). The Memory cards pane: the cards and the saves on each, X New card and Y Copy card.
 The Log pane: PCSX2's last run and the newest lines of the app's log; A (or a tap on the pane) shows the whole log in
 the pane, B goes back.
 
@@ -40,7 +42,7 @@ from PyQt6.QtCore import QObject, QSettings, Qt, QTimer, pyqtSignal
 from PyQt6.QtGui import QFont, QGuiApplication
 from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QStackedWidget, QVBoxLayout, QWidget
 
-from bc250_core import applog, browse, covers, power, steam
+from bc250_core import applog, browse, covers, platform, play, power, steam
 from bc250_core.gamepad import Gamepad
 from bc250_core.platform import private
 from bc250_core.portable import (AMBER, BODY, DIM, EXIT, VIEW, Card, InfoPill, Legend, Pane, PortableHeader,
@@ -127,7 +129,7 @@ class _Worker(QObject):
 
 
 NOT_THE_GAMES = "Update Steam works on the games: the LB button shows them again."
-PICK_A_GAME = "Put the focus on a game first: the X button starts it in Steam."
+PICK_A_GAME = "Put the focus on a game first: the X button starts it."
 NO_STEAM = "Steam was never started on this device: start it once, then Update Steam puts the marked games in it."
 NOTHING_TO_CHANGE = ("Nothing to change in Steam: the A button on a game marks it for Steam or takes the mark away, "
                      "then the Y button updates Steam.")
@@ -198,11 +200,13 @@ class MainWindow(PortableWindow):
                  user_home: Path | None = None, drives: Callable[[], list[Path]] = library.removable_drives,
                  roots: Callable[[], list[Path]] = browse.drives,
                  any_running: Callable[[], bool] = memcards.pcsx2_running, settings: QSettings | None = None,
-                 open_url: Callable[[str], None] = steam.open_url):
+                 open_url: Callable[[str], None] = steam.open_url,
+                 start: Callable[..., None] = platform.start_program):
         """*steam_dir*: Steam's folder (False: found on this system, None: no Steam); *user_home*: the user's folder
         (the usual places, Downloads for the BIOS); *drives*: the removable drives offered as folders, *roots*: every
         drive the browser offers; *settings*: the app's (its .ini, create_app's), where the game folders are kept;
-        *open_url*: hands a steam:// address to Steam (Play, Open Steam)."""
+        *open_url*: hands a steam:// address to Steam (Play); *start*: starts a program on its own (PCSX2 with a
+        game, without Steam)."""
         super().__init__(gamepad)
         self.setWindowTitle(f"{APP_NAME} {__version__}")
         self.log = applog.logger(APP_ID)
@@ -221,9 +225,10 @@ class MainWindow(PortableWindow):
         self.steam_dir = steam.find_steam() if steam_dir is False else steam_dir
         self.user_home, self.drives, self.roots = user_home, drives, roots
         self.settings = settings if settings is not None else QSettings()
-        self.open_url = open_url
+        self.open_url, self.start_program = open_url, start
         self.games: list[Game] = []
         self.in_steam: dict[str, str] = {}
+        self.outdated: set[str] = set()                 # games whose shortcut does not start the play mode yet
         self.marked: set[str] = set()
         self.games_view = GAMES_VIEW
         self.forget_asked = ""                          # a folder pressed once: A again takes it off the list
@@ -274,10 +279,6 @@ class MainWindow(PortableWindow):
         self.pane.column.addWidget(self.status)
         self.settings_pane = SettingsPane()
         self.games_pane = ListPane("Your games", "Your games", GAMES_INFO)
-        self.open_steam = Row("Open Steam")             # Steam's library (owner, 29-10-2026), above the games
-        at = self.games_pane.column.indexOf(self.games_pane.list)
-        self.games_pane.column.insertWidget(at, self.open_steam)
-        self.games_pane.column.insertSpacing(at + 1, px(6))
         self.browse_pane = ListPane("Choose a folder", "Browsing", BROWSE_INFO)
         self.key_pane = KeyPane()
         self.cards_pane = ListPane("Memory cards", "The memory cards", CARDS_INFO)
@@ -309,7 +310,6 @@ class MainWindow(PortableWindow):
         self.log_card.activated.connect(self.view_log)
         self.log_pane.tapped.connect(self.view_log)
         self.games_pane.list.picked.connect(self.game_picked)
-        self.open_steam.activated.connect(self.show_steam)
         self.browse_pane.list.picked.connect(self.browse_picked)
         self.confirm_key = False                        # Remove key pressed once
         self.cards_pane.list.picked.connect(self.card_picked)
@@ -475,10 +475,9 @@ class MainWindow(PortableWindow):
                      *([("LB", "Press again" if self.confirm_bios else "Remove BIOS"),
                         ("RB", "Press again" if self.confirm_remove else "Remove PCSX2")] if installed else [])]
         elif pane is self.games_pane:
-            steam_row = ("A", "Open Steam") if self.open_steam.hasFocus() else None
-            items = ([steam_row or ("A", "Steam mark"), *([("X", "Play")] if self.focused_game() else []),
+            items = ([("A", "Steam mark"), *([("X", "Play")] if self.focused_game() else []),
                       ("Y", "Update Steam"), ("LB", "Folders")]
-                     if self.games_view == GAMES_VIEW else [steam_row or ("A", "Choose"), ("LB", "Games")]) + \
+                     if self.games_view == GAMES_VIEW else [("A", "Choose"), ("LB", "Games")]) + \
                     [("RB", "Steam artwork")]
         elif pane is self.browse_pane:
             items = [("A", "Open")] + ([("X", "Add this folder")] if self.browsing == FOLDER else [])
@@ -518,6 +517,10 @@ class MainWindow(PortableWindow):
             except OSError as error:
                 self.in_steam = {}
                 self.log.error(f"Steam's shortcuts could not be read: {error}")
+        try:
+            self.outdated = shortcuts.outdated(self.steam_dir) if self.steam_dir is not None else set()
+        except OSError:
+            self.outdated = set()
         found = {str(g.file) for g in self.games}
         self.marked = {f for f in self.marked if f in found} | {f for f in self.in_steam if f in found
                                                                   and f not in self._unmarked}
@@ -547,7 +550,8 @@ class MainWindow(PortableWindow):
 
     def game_text(self, game: Game) -> str:
         mark = "✓ Steam" if str(game.file) in self.marked else ""
-        changed = (str(game.file) in self.marked) != (str(game.file) in self.in_steam)
+        changed = ((str(game.file) in self.marked) != (str(game.file) in self.in_steam)
+                   or str(game.file) in self.marked and str(game.file) in self.outdated)
         return "  ·  ".join(p for p in (game.title, game.serial, mark + (" (Update Steam)" if changed else "")) if p)
 
     def game_picked(self, key: str) -> None:
@@ -570,10 +574,18 @@ class MainWindow(PortableWindow):
 
     def play(self) -> None:
         """X on a game: started through Steam, as its shortcut there (owner, 29-10-2026: a game started from the
-        app; Steam keeps its controller layout and its overlay). Steam starts first when it is not open."""
+        app; Steam keeps its controller layout and its overlay). Steam starts first when it is not open. On a device
+        without Steam PCSX2 starts it itself. Without a BIOS it says so and starts nothing (owner, 30-10-2026: "we check
+        for a BIOS since we are the manager"; PCSX2 would stop at its Startup Error window)."""
         game = self.focused_game()
         if game is None:
             self.games_pane.status.setText(PICK_A_GAME)
+            return
+        if emulator.installed(self.home) and self.bios_used() is None:
+            self.games_pane.status.setText(NO_BIOS)
+            return
+        if self.steam_dir is None:
+            self.play_without_steam(game)
             return
         try:
             number = (shortcuts.numbers(self.steam_dir) if self.steam_dir is not None else {}).get(str(game.file))
@@ -590,19 +602,24 @@ class MainWindow(PortableWindow):
             self.games_pane.status.setText(f"Steam could not be asked to start {game.title}: {error.strerror or error}")
             self.log.error(f"Starting {game.title} in Steam failed: {error}")
             return
-        self.games_pane.status.setText(f"Starting {game.title} in Steam…")
+        self.games_pane.status.setText(f"Starting {game.title} in Steam… {play.QUIT_HINT}")
         self.log.info(f"Play: {game.title}, started in Steam.")
 
-    def show_steam(self) -> None:
-        """The Open Steam row: Steam's library, in Big Picture; Steam starts first when it is not open."""
-        try:
-            self.open_url(steam.OPEN_URL)
-        except OSError as error:
-            self.games_pane.status.setText(f"Steam could not be opened: {error.strerror or error}")
-            self.log.error(f"Opening Steam failed: {error}")
+    def play_without_steam(self, game: Game) -> None:
+        """X on a game on a device without Steam (owner, 30-10-2026: a fallback): PCSX2 started with it full screen,
+        as its Steam shortcut would start it, outside the app's bundle (platform.start_program)."""
+        if not emulator.installed(self.home):
+            self.games_pane.status.setText(f"Install PCSX2 first: it starts {game.title} on a device without Steam.")
             return
-        self.games_pane.status.setText("Opening Steam…")
-        self.log.info("Steam opened.")
+        command = shortcuts.command(game)
+        try:
+            self.start_program(command, cwd=emulator.program(self.home).parent)
+        except OSError as error:
+            self.games_pane.status.setText(f"PCSX2 could not start {game.title}: {error.strerror or error}")
+            self.log.error(f"Starting {game.title} in PCSX2 failed: {error}")
+            return
+        self.games_pane.status.setText(f"Starting {game.title} in PCSX2… {play.QUIT_HINT}")
+        self.log.info(f"Play: {game.title}, started in PCSX2, without Steam.")
 
     def toggle_folders(self) -> None:
         self.games_view = GAMES_VIEW if self.games_view == FOLDERS else FOLDERS
@@ -845,7 +862,7 @@ class MainWindow(PortableWindow):
         if self.steam_dir is None:
             self.games_pane.status.setText(NO_STEAM)
             return
-        if not library.pending(self.games, self.marked, self.in_steam):
+        if not library.pending(self.games, self.marked, self.in_steam, self.outdated):
             self.games_pane.status.setText(NOTHING_TO_CHANGE)
             return
         add, remove = library.plan(self.games, self.marked, self.in_steam)

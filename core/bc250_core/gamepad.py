@@ -5,7 +5,7 @@ button names, the Ally's built-in pad as an Xbox controller.
 
 Gamepad turns what the pads do into actions for the window: the d-pad and left stick move (a held direction repeats),
 A accepts, B goes back, X and Y are the page's own (Details, Update), LB and RB change the tab, Start and View are the
-menu and the view. It also reports every button, stick and trigger as it is (raw), for a controller test. Without
+menu and the view, RT (pressed past halfway) the portal's Steam. It also reports every button, stick and trigger as it is (raw), for a controller test. Without
 pygame-ce, or without a controller, nothing happens and the window has the keyboard and touch.
 
 After the BC250 portal's gamepad.py (Suite Big Picture Mode), which stays as it is: this one reads every control."""
@@ -23,6 +23,7 @@ DEADZONE = 0.55                 # of the stick's travel: beyond it the stick cou
 FIRST_REPEAT = 0.4              # s before a held direction repeats, then every REPEAT s
 REPEAT = 0.12
 DIRECTIONS = ("up", "down", "left", "right")
+PRESSED, RELEASED = 0.5, 0.3   # a trigger past PRESSED is a press, once until it is back under RELEASED
 
 # SDL's button names (pygame's CONTROLLER_BUTTON_*, in lower case): every button pygame-ce reports
 BUTTON_NAMES = ("a", "b", "x", "y", "back", "guide", "start", "leftstick", "rightstick", "leftshoulder",
@@ -37,6 +38,7 @@ ACTIONS = {                     # the buttons the window acts on
     "a": "accept", "b": "back", "x": "x", "y": "y",
     "leftshoulder": "previous", "rightshoulder": "next", "start": "menu", "back": "view",
 }
+TRIGGER_ACTIONS = {"righttrigger": "rt"}       # the triggers the window acts on (owner, 30-10-2026: RT Steam)
 
 
 def stick_direction(x: float, y: float) -> str | None:
@@ -112,7 +114,7 @@ class PygameSource:
 
 class Gamepad(QObject):
     """action(name): up, down, left, right (a held direction repeats), accept, back, x, y, previous, next, menu,
-    view. raw(kind, name, value): every button ("button", name, pressed) and axis ("axis", name, value) as it is,
+    view, rt. raw(kind, name, value): every button ("button", name, pressed) and axis ("axis", name, value) as it is,
     and ("added"/"removed", "", ...) when a pad comes or goes."""
 
     action = pyqtSignal(str)
@@ -126,6 +128,7 @@ class Gamepad(QObject):
         self.source = None
         self.held: dict[str, tuple[str, float]] = {}    # a d-pad button or the stick: its direction, its next repeat
         self.stick = [0.0, 0.0]
+        self.pulled: set[str] = set()                   # the triggers pressed now
         self.timer = QTimer(self)
         self.timer.setInterval(POLL_MS)
         self.timer.timeout.connect(self.poll)
@@ -143,6 +146,7 @@ class Gamepad(QObject):
     def stop(self) -> None:
         self.timer.stop()
         self.held.clear()
+        self.pulled.clear()
         self.stick = [0.0, 0.0]
         if self.source is not None:
             self.source.close()
@@ -167,10 +171,17 @@ class Gamepad(QObject):
         if kind == "axis" and name in TRIGGERS:
             value = max(0.0, float(value))
         self.raw.emit(kind, name, value)
-        if kind == "removed":                           # a pad was unplugged with a direction held
+        if kind == "removed":                           # a pad was unplugged with a direction or a trigger held
             self.held.clear()
+            self.pulled.clear()
             return
         if kind == "axis":
+            if name in TRIGGER_ACTIONS:
+                if value >= PRESSED and name not in self.pulled:
+                    self.pulled.add(name)
+                    self.action.emit(TRIGGER_ACTIONS[name])
+                elif value < RELEASED:
+                    self.pulled.discard(name)
             if name in ("leftx", "lefty"):
                 self.stick[0 if name == "leftx" else 1] = float(value)
                 self._push("stick", stick_direction(*self.stick))

@@ -1,3 +1,14 @@
+Changelog: 30-10-2026 15:58:58
+
+Added. The Nexus release tab shows the release as nine numbered steps in their order, each with its pill (owner,
+30-10-2026: "if I open NRT I want to see exactly what has to be done in their logical sequence ... we make pills for
+them that can be clicked"): Get up to date (git pull), Commit your changes (a message and Commit: every change staged
+and committed after the suites' version and manifest checks), Push them, CI passes (read from GitHub's runs of the
+commit), Start new release, the release on GitHub (Stop run, Resume run), Device test, Publish (or Not OK) and Bring
+in the pin commit. The step to do now has an orange arrow and its pill lit, done ones a green check, a failed one a red
+cross; the line beside each says what there is to do (flow.current_step(), step_states(), ci_state(), cycle_run()).
+Before, committing and pushing your own work was left to the git row at the bottom, and Start stood alone.
+
 Changelog: 30-10-2026 04:04:06
 
 Added. The Nexus release, the first tab (owner, 30-10-2026: "there is just one action in the tool to perform

@@ -17,7 +17,8 @@ screen; **⧉** (View) exits it.
 
 - **Your PSP games**, dumped from your own UMDs as disc images (ISO, CSO or CHD), or memory stick games (a folder with
   an `EBOOT.PBP`), in a folder on the device or an SD card. PPSSPP needs no BIOS.
-- **Steam**, started once on the device, to play the games from Steam (optional).
+- **Steam**, started once on the device, to play the games from Steam (optional: without Steam, **X Play** starts a
+  game in PPSSPP itself).
 
 ## The screen
 
@@ -74,8 +75,9 @@ You play the games from Steam; the app puts them there, and starts them there wi
   it wrote not be found, the status line and the log say which.
 - **X Play** on a game that is in Steam starts it through Steam, as its tile in Steam's library would; Steam
   starts first when it is not open. A game that is not in Steam yet says so: mark it with **A**, then
-  **Y Update Steam**.
-- **Open Steam**, the row above the games, opens Steam's library in Big Picture mode with **A**.
+  **Y Update Steam**. On a device without Steam (not installed, or never started), **X Play** starts the game in
+  PPSSPP itself, full screen, the same way Steam would.
+- Steam's library opens from the portal: **RT Steam** in its bottom row.
 - **LB Folders** shows your game folders instead of the games; **LB** or **B** goes back to the games. The usual
   places that are on the device (Games, Downloads and Documents in your user folder) and each removable drive, such as
   an SD card, are offered as **+ Add**. **A** twice on a folder takes it off the list: the first press asks, for five
@@ -86,8 +88,12 @@ You play the games from Steam; the app puts them there, and starts them there wi
   the folder you added last, while it is there.
 
 In a game started from Steam, PPSSPP takes the device's controller as it is: A is Cross, B Circle, X Square, Y
-Triangle, View Select, Menu Start, LB and RB the PSP's L and R, RT fast forward. **LT** (or the guide button) opens
-PPSSPP's pause menu; its **Exit** ends the game and closes PPSSPP, and you are back in Steam.
+Triangle, View Select, Menu Start, LB and RB the PSP's L and R, RT fast forward.
+
+To quit a game, **hold View and Menu together for two seconds**: PPSSPP closes as its window would close, and you are
+back in Steam, or in the app when it started the game. It works the same in every game manager of the suite, started
+from Steam's library or from the app. The line at the bottom of Your games says so when a game starts. **LT** (or the
+guide button) still opens PPSSPP's pause menu; its **Exit** ends the game and closes PPSSPP too.
 
 The pictures in Steam come from inside the game: its icon on the cover, the wide picture and as the logo, its
 background on the banner; a CHD gets its title on a dark background. With a SteamGridDB API key, Update Steam also
@@ -152,9 +158,14 @@ pane: the d-pad scrolls it, and **B** goes back.
 
 ## How it works
 
-A game starts from Steam as `PPSSPPWindows64.exe --fullscreen --pause-menu-exit "<game>"`: with a game named, PPSSPP
-goes straight to it without its own window, `--fullscreen` gives the game the whole screen, and `--pause-menu-exit`
-makes the pause menu's **Exit** close PPSSPP, so you are back in Steam. The app itself never starts a game.
+A game's shortcut in Steam starts the app itself in its play mode, `PPSSPP-Manager.exe --play --fullscreen
+--pause-menu-exit "<game>"`, which shows no window: it starts `PPSSPPWindows64.exe --fullscreen --pause-menu-exit
+"<game>"` in PPSSPP's folder, watches the controller for View and Menu held, and ends when PPSSPP ends, so Steam sees
+the game end. With a game named, PPSSPP goes straight to it without its own window, `--fullscreen` gives the game the
+whole screen, and `--pause-menu-exit` makes the pause menu's **Exit** close PPSSPP. Asked to close, PPSSPP gets ten
+seconds before it is ended. On a device without Steam the app starts a game the same way. A shortcut made by an earlier
+version, which starts `PPSSPPWindows64.exe` itself, shows **(Update Steam)** on its game: **Y Update Steam** writes it
+again.
 
 Every Monday the suite checks whether PPSSPP has a newer release than the one this app brings, and whether the file it
 downloads is still the one it was tested with; what moved goes to the suite's developers, and a newer PPSSPP comes in

@@ -33,6 +33,8 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from .platform import outside_bundle
+
 STEAM_DIRS = (                          # the native Steam (Bazzite's), its older link, the Flatpak's
     "~/.local/share/Steam",
     "~/.steam/steam",
@@ -58,15 +60,29 @@ class ShortcutError(Exception):
 # --- Steam itself ----------------------------------------------------------------------------------------------
 
 def windows_steam() -> Path | None:
-    """Steam's folder on Windows, as its registry key names it, else where it installs itself; None off Windows."""
+    """Steam's folder on Windows, as its registry key names it, else where it installs itself; None off Windows. Its
+    name as it is on the disk: the key has it in lower case (c:/program files (x86)/steam), and a steam.exe started
+    by that name never signed in (the owner's Ally, 30-10-2026: every start as c:\\program files (x86)\\steam\\steam.exe
+    stayed Logged Off with its login window off the screen, every one as C:\\Program Files (x86)\\Steam\\steam.exe
+    signed in within seconds)."""
     if not WINDOWS:
         return None
     try:
         import winreg
         with winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\Valve\Steam") as key:
-            return Path(str(winreg.QueryValueEx(key, "SteamPath")[0]))
+            folder = str(winreg.QueryValueEx(key, "SteamPath")[0])
     except OSError:
-        return Path(WINDOWS_STEAM)
+        folder = WINDOWS_STEAM
+    return Path(os.path.realpath(folder))
+
+
+def installed() -> bool:
+    """Whether Steam's program is here, signed in once or not: steam.exe in Steam's folder on Windows, steam on PATH
+    elsewhere (owner, 30-10-2026: the portal's RT Steam only where there is a Steam to open)."""
+    if WINDOWS:
+        folder = windows_steam()
+        return folder is not None and (folder / "steam.exe").is_file()
+    return shutil.which("steam") is not None
 
 
 def find_steam(home: Path | None = None) -> Path | None:
@@ -147,7 +163,8 @@ def _steam_program() -> str:
 def start_command() -> list[str]:
     """Steam started again after with_steam_closed(). On Windows without -silent: a steam.exe -silent never signed in
     (the owner's Ally, 29-10-2026: three starts by the game managers stayed Logged Off for up to six hours, with no
-    window to sign in from, so steam:// addresses went nowhere), where every plain start signed in."""
+    window to sign in from, so steam:// addresses went nowhere), where every plain start signed in. Those starts also
+    had Steam's name in lower case, which alone kept it from signing in (windows_steam(), 30-10-2026)."""
     if WINDOWS:
         return [_steam_program()]
     return ["bazzite-steam" if shutil.which("bazzite-steam") else "steam", "-silent"]
@@ -186,7 +203,8 @@ def signed_in() -> bool:
 
 
 def _startfile(url: str) -> None:
-    os.startfile(url)  # type: ignore[attr-defined]  # noqa: S606 (a steam:// address, never a file)
+    with outside_bundle():
+        os.startfile(url)  # type: ignore[attr-defined]  # noqa: S606 (a steam:// address, never a file)
 
 
 def hand_over(url: str, signed: Callable[[], bool] = signed_in, give: Callable[[str], None] = _startfile,
@@ -225,8 +243,9 @@ def open_url(url: str, run: Run | None = None, running: Callable[[], bool] = ste
 
 def _run(command: list[str]) -> None:
     """Starts a Steam command in the background; a thread collects it when it ends, so it leaves no zombie."""
-    process = subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
-                               stderr=subprocess.DEVNULL, start_new_session=True)
+    with outside_bundle():
+        process = subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                                   stderr=subprocess.DEVNULL, start_new_session=True)
     threading.Thread(target=process.wait, name="steam-command", daemon=True).start()
 
 
@@ -432,10 +451,11 @@ def write_shortcuts(steam: Path, changes: Sequence[Change]) -> list[int]:
     for config in folders:
         path = config / "shortcuts.vdf"
         values = read_vdf(path.read_bytes()) if path.is_file() else {}
+        # The numbers of the shortcuts each change finds: a renamed one's, and one taken out that another program
+        # started (a game manager's play mode, 30-10-2026), so the artwork under its number goes too
         renamed = set()
         for change in changes:
-            if not change.remove:
-                renamed |= {_number(item) for item in values.get("shortcuts", {}).values() if change.ours(item)}
+            renamed |= {_number(item) for item in values.get("shortcuts", {}).values() if change.ours(item)}
             values = remove_shortcut(values, change.ours) if change.remove else put_shortcut(values, change.entry,
                                                                                             change.ours)
         write_atomic(path, write_vdf(values))

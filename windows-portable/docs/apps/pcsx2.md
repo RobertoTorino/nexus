@@ -23,7 +23,8 @@ screen; **⧉** (View) exits it.
   card takes it from there.
 - **Your PS2 games** as disc images (ISO, CHD, CSO, ZSO or GZ), dumped from your own discs, in a folder on the device
   or an SD card.
-- **Steam**, started once on the device, to play the games from Steam (optional).
+- **Steam**, started once on the device, to play the games from Steam (optional: without Steam, **X Play** starts a
+  game in PCSX2 itself).
 
 ## The screen
 
@@ -94,8 +95,10 @@ You play the games from Steam; the app puts them there, and starts them there wi
   it wrote not be found, the status line and the log say which.
 - **X Play** on a game that is in Steam starts it through Steam, as its tile in Steam's library would; Steam
   starts first when it is not open. A game that is not in Steam yet says so: mark it with **A**, then
-  **Y Update Steam**.
-- **Open Steam**, the row above the games, opens Steam's library in Big Picture mode with **A**.
+  **Y Update Steam**. On a device without Steam (not installed, or never started), **X Play** starts the game in PCSX2
+  itself, full screen, the same way Steam would. Without a BIOS, **X Play** starts nothing and says to choose one
+  first (**X Choose BIOS** on the PCSX2 card): PCSX2 cannot start a game without it.
+- Steam's library opens from the portal: **RT Steam** in its bottom row.
 - **LB Folders** shows your game folders instead of the games; **LB** or **B** goes back to the games. The usual
   places that are on the device (Games, Downloads and Documents in your user folder) and each removable drive, such as
   an SD card, are offered as **+ Add**. **A** twice on a folder takes it off the list: the first press asks, for five
@@ -105,7 +108,11 @@ You play the games from Steam; the app puts them there, and starts them there wi
   places back to your folders), and **X Add this folder** adds the folder that is open. The browser opens again in
   the folder you added last, while it is there.
 
-In a game started from Steam, View and Menu held together end the game (see Settings), and PCSX2 closes by itself.
+To quit a game, **hold View and Menu together for two seconds**: PCSX2 closes as its window would close, and you
+are back in Steam, or in the app when it started the game. It works the same in every game manager of the suite,
+started from Steam's library or from the app, and the line at the bottom of Your games says so when a game starts.
+With **Quit with View + Menu** on (see Settings), PCSX2's own quit chord, a short press of the two already ends the
+game; the two-second hold works either way.
 
 The pictures in Steam are drawn from the app's icon with the game's title. With a SteamGridDB API key, Update Steam
 takes each game's pictures from SteamGridDB instead: **RB Steam artwork** opens the page that keeps the key (**X
@@ -205,10 +212,14 @@ and **B** goes back.
 
 ## How it works
 
-A game starts from Steam as `pcsx2-qt.exe -nogui -fullscreen -batch -- "<game>"`: `-nogui` keeps PCSX2's own window
-away, `-fullscreen` gives the game the whole screen, and `-batch` closes PCSX2 when the game ends, so you are back in
-Steam. The app itself never starts a game. Everything PCSX2's window would be used for is in the app: the BIOS, the
-settings, the controllers and the memory cards. Its setup wizard and its own updates stay off.
+A game's shortcut in Steam starts the app itself in its play mode, `PCSX2-Manager.exe --play -nogui -fullscreen
+-batch -- "<game>"`, which shows no window: it starts `pcsx2-qt.exe -nogui -fullscreen -batch -- "<game>"` in PCSX2's
+folder (`-nogui` keeps PCSX2's own window away, `-fullscreen` gives the game the whole screen, and `-batch` closes
+PCSX2 when the game ends), watches the controller for View and Menu held, and ends when PCSX2 ends, so you are back
+in Steam. Asked to close, PCSX2 gets ten seconds before it is ended. On a device without Steam the app starts a game
+the same way. A shortcut made by an earlier version, which starts `pcsx2-qt.exe` itself, shows **(Update Steam)** on
+its game: **Y Update Steam** writes it again. Everything PCSX2's window would be used for is in the app: the BIOS,
+the settings, the controllers and the memory cards. Its setup wizard and its own updates stay off.
 
 Every Monday the suite checks whether PCSX2 has a newer release than the one this app brings, and whether the file it
 downloads is still the one it was tested with; what moved goes to the suite's developers, and a newer PCSX2 comes in

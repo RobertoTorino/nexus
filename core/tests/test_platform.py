@@ -2,14 +2,16 @@
 from __future__ import annotations
 
 import base64
+import os
 import shutil
 import subprocess
 import sys
 from pathlib import Path, PurePosixPath, PureWindowsPath
+from types import SimpleNamespace
 
 import pytest
 
-from bc250_core import platform
+from bc250_core import platform, steam
 
 
 def _working_bash() -> bool:
@@ -239,3 +241,52 @@ def test_private_writes_the_users_folders_by_their_variable(monkeypatch):
     else:
         monkeypatch.setattr(Path, "home", lambda: Path("/home/someone"))
         assert platform.private("/home/someone/Games and /home/someone2") == "~/Games and /home/someone2"
+
+
+def test_steam_starts_outside_the_apps_bundle(monkeypatch, tmp_path):
+    """A frozen app's DLL directory and PATH point at its _internal folder, and a program it starts inherits both (the
+    owner's Ally, 30-10-2026: Steam started by a game manager never ran): taken away while Steam or an emulator starts,
+    put back after."""
+    bundle = str(tmp_path / "_internal")
+    monkeypatch.setattr(platform, "WINDOWS", True)
+    monkeypatch.setattr(sys, "frozen", True, raising=False)
+    monkeypatch.setattr(sys, "_MEIPASS", bundle, raising=False)
+    monkeypatch.setenv("PATH", os.pathsep.join([bundle, r"C:\Windows\System32", bundle + os.sep]))
+    monkeypatch.setenv("QT_PLUGIN_PATH", bundle + r"\PyQt6\Qt6\plugins")
+    monkeypatch.delenv("QML2_IMPORT_PATH", raising=False)
+    directory = [bundle]
+    monkeypatch.setattr(platform, "_get_dll_directory", lambda: directory[-1] or "")
+    monkeypatch.setattr(platform, "_set_dll_directory", directory.append)
+    seen = []
+    monkeypatch.setattr(subprocess, "Popen", lambda command, **_: seen.append(
+        (command, directory[-1], os.environ["PATH"], "QT_PLUGIN_PATH" in os.environ)) or SimpleNamespace(wait=int))
+    steam._run(["steam.exe"])
+    platform.start_program(["shadPS4.exe", "-g", "eboot.bin"], cwd=tmp_path)
+    assert seen == [(["steam.exe"], None, r"C:\Windows\System32", False),
+                    (["shadPS4.exe", "-g", "eboot.bin"], None, r"C:\Windows\System32", False)]
+    assert directory[-1] == bundle and os.environ["PATH"].startswith(bundle) and "QT_PLUGIN_PATH" in os.environ
+    assert "QML2_IMPORT_PATH" not in os.environ
+    monkeypatch.setattr(sys, "frozen", False)                   # from the checkout: as before
+    steam._run(["steam.exe"])
+    assert seen[-1][1] == bundle and seen[-1][2].startswith(bundle)
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="Windows' DLL search")
+def test_a_program_started_outside_the_bundle_misses_its_dlls(monkeypatch, tmp_path):
+    """Windows itself: a child process finds a DLL by name in its parent's DLL directory, and not when it starts
+    within outside_bundle()."""
+    shutil.copy(Path(sys.base_prefix) / "DLLs" / "libffi-8.dll", tmp_path / "nexus-test-only.dll")
+    monkeypatch.setattr(sys, "frozen", True, raising=False)
+    monkeypatch.setattr(sys, "_MEIPASS", str(tmp_path), raising=False)
+    monkeypatch.setenv("PATH", os.environ.get("SystemRoot", r"C:\Windows") + r"\System32")
+    child = [sys.executable, "-c", "import ctypes; k = ctypes.windll.kernel32; k.LoadLibraryW.restype = "
+             "ctypes.c_void_p; raise SystemExit(0 if k.LoadLibraryW('nexus-test-only.dll') else 1)"]
+    before = platform._get_dll_directory()
+    try:
+        platform._set_dll_directory(str(tmp_path))
+        assert subprocess.run(child).returncode == 0            # inherited, as Steam inherited the app's
+        with platform.outside_bundle():
+            assert subprocess.run(child).returncode == 1
+        assert platform._get_dll_directory() == str(tmp_path)       # put back for the app's own DLLs
+    finally:
+        platform._set_dll_directory(before or None)

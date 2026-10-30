@@ -13,7 +13,7 @@ import zipfile
 from pathlib import Path
 
 import pytest
-from bc250_core import portable
+from bc250_core import portable, steam
 from bc250_core.platform import private
 from bc250_core.portable import VIEW
 from bc250_core.gamepad import Gamepad
@@ -120,6 +120,7 @@ def world(qapp, tmp_path, monkeypatch):
     def make(portal_check=None, **kwargs):
         pad = FakePad()
         kwargs.setdefault("intro_ms", 0)                # the intro has its own tests
+        kwargs.setdefault("steam_here", lambda: False)  # never this machine's own Steam
         window = mw.MainWindow(w.entries, w.sources, w.records, portal_check=portal_check,
                                gamepad=Gamepad(source_factory=lambda: pad), battery=lambda: (82, False),
                                launch=w.launched.append, terminal=w.terminal, exit_dir=tmp_path / "exit", **kwargs)
@@ -224,6 +225,32 @@ def test_a_opens_an_installed_app_detached(world, qapp):
     window.on_action("accept")
     assert world.launched == [[str(world.app_dir / "X.exe"), "--full"]]
     assert world.terminal.lines == []
+
+
+def test_rt_opens_steam_where_it_is_installed(world, qapp):
+    """RT Steam (owner, 30-10-2026: the game managers' Open Steam, now in the portal's bottom row): on every page
+    while Steam is installed, by RT or a tap; without Steam no entry, and RT says why."""
+    opened, here = [], [True]
+    window = world.make(steam_here=lambda: here[0], open_steam=opened.append)
+    assert ("RT", "Steam") in window.legend.items and window.legend.items[-1] == (VIEW, "Exit app")
+    window.on_action("rt")
+    assert opened == [steam.OPEN_URL] and window.app_pane.status.text() == "Opening Steam…"
+    window.legend._tapped("RT")
+    assert opened == [steam.OPEN_URL] * 2
+    window.on_action("menu")
+    assert ("RT", "Steam") in window.legend.items                 # the Suite page too
+    window.on_action("back")
+    here[0] = False
+    window.refresh()
+    assert ("RT", "Steam") not in window.legend.items
+    window.on_action("rt")
+    assert opened == [steam.OPEN_URL] * 2 and window.app_pane.status.text() == mw.STEAM_MISSING
+
+    def fails(url):
+        raise FileNotFoundError(2, "The system cannot find the file specified")
+    window = world.make(steam_here=lambda: True, open_steam=fails)
+    window.on_action("rt")
+    assert window.app_pane.status.text() == "Steam could not be opened: The system cannot find the file specified"
 
 
 def test_x_shows_the_details_and_remove_takes_a_second_press(world, qapp):

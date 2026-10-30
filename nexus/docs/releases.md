@@ -53,24 +53,33 @@ last release, its portal, core when it changed since its last version, and Nexus
 the CHANGELOG entries, as in step 1; type another to override it. A portal's and Nexus's version say **auto**: they
 are worked out when the release is written, at least what the app releases need, and can be typed too.
 
-1. **Start new release.** It goes only when the working tree is clean and HEAD is what was pushed last. It writes
-   the release (the versions and their copies, the `Release x.y.z.` entries, the new tags in `apps.toml`, the
-   portal's version and its entry, Nexus's), then one command in the Commands tab commits it, pushes it (the pre-push
-   hook checks it) and starts Release Nexus on that commit. If the push stops, fix what it says; the button then
-   reads **Push and start**.
-2. **On GitHub,** Release Nexus waits for CI on the commit and calls each changed suite's release workflow. A suite's
-   run builds its new app releases side by side and publishes them, writes their checksums into `apps.toml` in a
-   commit *Pin ...* on top of yours, and builds the portal as a **draft**: a draft has no tag yet, so no installed
-   portal sees it. The tab says where the run stands; a run that ends badly gives a notification. **Resume run**
-   starts what failed again (what is out already is skipped, the draft is made anew); **Stop run** stops it. Stopping
-   is safe until a portal is published.
-3. **Device test,** on the suite's own device (the handheld for the Windows Portable Suite): it downloads the draft
+Under that list are the release's steps, numbered, in the order you do them, each with its pill. The step to do now
+has an orange ▶ and its pill lit; a step done has a green ✓, one that failed a red ✕, and the line beside each says
+what there is to do. Only the lit pill does anything, so you never need a command or another tab:
+
+1. **Get up to date** (**git pull**): only when GitHub has commits this checkout lacks, pushed from the other machine.
+2. **Commit your changes:** type what they do, then **Commit**. It stages every change and new file and commits
+   them after the version and manifest checks of the suites they touch.
+3. **Push them** (**Push**): the pre-push hook checks them first.
+4. **CI passes:** nothing to press. The step waits until GitHub's CI passed on that commit; when it failed, the line
+   says so: fix it, then commit and push again.
+5. **Start new release:** check the versions in the list above, then press it. It writes the release (the versions
+   and their copies, the `Release x.y.z.` entries, the new tags in `apps.toml`, the portal's version and its entry,
+   Nexus's), commits it, pushes it and starts Release Nexus on that commit. If the push stops, fix what it says;
+   the pill then reads **Push and start**.
+6. **The release on GitHub:** Release Nexus calls each changed suite's release workflow. A suite's run builds its
+   new app releases side by side and publishes them, writes their checksums into `apps.toml` in a commit *Pin ...*
+   on top of yours, and builds the portal as a **draft**: a draft has no tag yet, so no installed portal sees it.
+   The line links the run; a run that ends badly gives a notification and lights **Resume run** (what is out already
+   is skipped, the draft is made anew). **Stop run** stops a run that must not go on; stopping is safe until a
+   portal is published.
+7. **Device test,** on the suite's own device (the handheld for the Windows Portable Suite): it downloads the draft
    portal, checks it against its `SHA256SUMS`, installs it and starts it (`check-release.ps1 draft`). Test it as a
    user would.
-4. **Publish** when it works: the draft becomes a release, which makes its portal tag, and the portals offer it from
-   then on; the Nexus index follows. **Not OK** leaves the draft unpublished: fix what the test showed, commit and
-   push the fix, and start a new release.
-5. **git pull** afterwards: the *Pin ...* commit is on main.
+8. **Publish** when it works: the draft becomes a release, which makes its portal tag, and the portals offer it from
+   then on; the Nexus index follows. **Not OK** leaves the draft unpublished: fix what the test showed; the steps
+   start again from **Commit your changes**.
+9. **Bring in the pin commit** (**git pull**): the *Pin ...* commit is on main. Then every step shows ✓.
 
 A tag pushed by hand (**git tag** in the steps below) still releases that one app or portal, published at once.
 

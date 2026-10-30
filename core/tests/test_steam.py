@@ -8,6 +8,7 @@ import struct
 import sys
 import zlib
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -94,6 +95,20 @@ def test_update_keeps_the_play_time_and_remove_takes_the_artwork(tmp_path):
     assert values["shortcuts"]["1"]["LastPlayTime"] == 1750000000
     assert [p.name for p in (config / "grid").iterdir()] == [f"{renamed.number}p.png"]   # the old number's went
     steam.write_shortcuts(folder, [steam.Change(renamed.entry, renamed.ours, remove=True)])
+    assert steam.read_vdf((config / "shortcuts.vdf").read_bytes()) == {"shortcuts": {"0": OTHER}}
+    assert not list((config / "grid").iterdir())
+
+
+def test_a_shortcut_of_another_program_taken_out_takes_its_artwork(tmp_path):
+    """A shortcut made before a game manager's play mode starts the emulator itself, so its number is another's than
+    the change that takes it out (30-10-2026): the artwork under the number it has goes."""
+    folder = _steam(tmp_path)
+    old = _game("Game", "-g /a")
+    steam.write_shortcuts(folder, [steam.Change(old.entry, old.ours, {"p": b"P", "_hero": b"H"})])
+    entry = steam.shortcut_entry('"/bin/manager"', "Game", '"/bin/"', "/icon.png", "-g /a", ["PS4", "BC250"])
+    assert steam.Change(entry, old.ours).number != old.number
+    steam.write_shortcuts(folder, [steam.Change(entry, old.ours, remove=True)])
+    config = steam.user_folders(folder)[0]
     assert steam.read_vdf((config / "shortcuts.vdf").read_bytes()) == {"shortcuts": {"0": OTHER}}
     assert not list((config / "grid").iterdir())
 
@@ -193,6 +208,46 @@ def test_steam_on_windows(tmp_path, monkeypatch):
     names = []
     monkeypatch.setattr(steam, "_windows_running", lambda name: names.append(name) or True)
     assert steam.steam_running() and names == ["steam.exe"]
+
+
+def test_installed_is_steams_program(tmp_path, monkeypatch):
+    """The portal's RT Steam shows only where Steam's program is (owner, 30-10-2026)."""
+    monkeypatch.setattr(steam, "WINDOWS", True)
+    monkeypatch.setattr(steam, "windows_steam", lambda: tmp_path / "Steam")
+    assert not steam.installed()
+    (tmp_path / "Steam").mkdir()
+    (tmp_path / "Steam" / "steam.exe").write_bytes(b"")
+    assert steam.installed()                            # never signed in yet (no userdata): there, to be opened
+    monkeypatch.setattr(steam, "WINDOWS", False)
+    monkeypatch.setattr(steam.shutil, "which", lambda name: None)
+    assert not steam.installed()
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="Windows' file names")
+def test_steams_folder_has_its_name_as_on_the_disk(tmp_path, monkeypatch):
+    """The registry names Steam's folder in lower case, and a steam.exe started by that name never signed in (the
+    owner's Ally, 30-10-2026): the folder as it is on the disk, also where the key is missing."""
+    folder = tmp_path / "Program Files (x86)" / "Steam"
+    folder.mkdir(parents=True)
+
+    class Key:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+    lower = str(folder).lower().replace("\\", "/")
+    monkeypatch.setitem(sys.modules, "winreg", SimpleNamespace(
+        HKEY_CURRENT_USER=0, OpenKey=lambda *a: Key(), QueryValueEx=lambda key, name: (lower, 1)))
+    monkeypatch.setattr(steam, "WINDOWS", True)
+    assert str(steam.windows_steam()) == str(folder)
+    assert steam.start_command() == [str(folder / "steam.exe")]
+
+    def missing(*a):
+        raise OSError("no key")
+    monkeypatch.setitem(sys.modules, "winreg", SimpleNamespace(HKEY_CURRENT_USER=0, OpenKey=missing))
+    monkeypatch.setattr(steam, "WINDOWS_STEAM", lower)
+    assert str(steam.windows_steam()) == str(folder)
 
 
 @pytest.mark.skipif(sys.platform != "win32", reason="Windows' process list")

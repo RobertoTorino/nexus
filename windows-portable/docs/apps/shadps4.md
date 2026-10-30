@@ -30,7 +30,8 @@ found; a PS4 game asks a lot of a handheld.
 - **Microsoft's Visual C++ runtime**, which Steam and most games install already. shadPS4 for Windows does not start
   without it; the shadPS4 pane says so when it is missing, and
   [vc_redist.x64.exe](https://aka.ms/vs/17/release/vc_redist.x64.exe) from Microsoft installs it.
-- **Steam**, started once on the device, to play the games from Steam (optional).
+- **Steam**, started once on the device, to play the games from Steam (optional: without Steam, **X Play** starts a
+  game in shadPS4 itself).
 
 ## The screen
 
@@ -139,9 +140,10 @@ You play the games from Steam; the app puts them there.
   the games in Steam from that; should a game it wrote not be found, the status line and the log say which.
 - **X Play** on a game that is in Steam starts it, through Steam: when Steam does not run, the app starts it first
   and hands it the game once Steam has signed in, then Steam starts shadPS4 with the game, full screen, as from
-  Steam's library. A game that is not in Steam yet says so: **A** marks it, **Y** puts it there.
-- **Open Steam**, the row at the top of the list, opens Steam's library in Big Picture mode (**A Open Steam**); a
-  Steam that does not run is started first and opens it once it has signed in.
+  Steam's library. A game that is not in Steam yet says so: **A** marks it, **Y** puts it there. On a device without
+  Steam (not installed, or never started), **X Play** starts the game in shadPS4 itself, full screen, the same way
+  Steam would.
+- Steam's library opens from the portal: **RT Steam** in its bottom row.
 - **RB Remove game** on a game, pressed twice, removes it: the first press asks, for five seconds, and names the
   folders that go. The second takes the game out of Steam (Steam closes for it and starts again) and deletes its
   folder from the disk, with its update, patch and mods beside it. Your saves and the play time stay in shadPS4's
@@ -159,10 +161,14 @@ games opens the page that keeps the key (**X Paste**, **A Save**, **Y Remove key
 ### In a game
 
 shadPS4 plays with the device's controller as the PS4's: A is Cross, B Circle, X Square, Y Triangle, Menu Options, LB
-and RB are L1 and R1, the triggers L2 and R2, and View alone is the touchpad. **View and Menu together** open
-shadPS4's quit window: **A** quits the game, and you are back in Steam; **B** goes back to the game. On a keyboard,
-Ctrl+Shift+End does the same. The app adds these hotkeys to shadPS4's `input_config\global.ini`, since shadPS4 by itself
-opens its quit window only from a keyboard; the file's other lines stay as they are.
+and RB are L1 and R1, the triggers L2 and R2, and View alone is the touchpad.
+
+To quit a game, **hold View and Menu together for two seconds**: shadPS4 closes as its window would close, and you
+are back in Steam, or in the app when it started the game. It works the same in every game manager of the suite,
+started from Steam's library or from the app. The line at the bottom of Your games says so when a game starts. A
+short press of View and Menu opens shadPS4's own quit window (**A** quits, **B** goes back to the game), as does
+Ctrl+Shift+End on a keyboard: the app adds these hotkeys to shadPS4's `input_config\global.ini`, since shadPS4 by
+itself opens it only from a keyboard; the file's other lines stay as they are.
 
 ## Settings
 
@@ -249,9 +255,13 @@ scroll; a tap on it shows the whole log too.
 
 ## How it works
 
-A game starts from Steam as `shadPS4.exe -f true -g "<game>\eboot.bin"`, in shadPS4's folder, so that shadPS4 finds
-its `user` folder there: `-f true` gives the game the whole screen. shadPS4's own window (its Big Picture mode) is never
-shown, and the app itself never starts a game.
+A game's shortcut in Steam starts the app itself in its play mode, `shadPS4-Manager.exe --play -f true -g
+"<game>\eboot.bin"`, which shows no window: it starts `shadPS4.exe -f true -g "<game>\eboot.bin"` in shadPS4's folder,
+so that shadPS4 finds its `user` folder there (`-f true` gives the game the whole screen), watches the controller for
+View and Menu held, and ends when shadPS4 ends, so Steam sees the game end. Asked to close, shadPS4 gets ten seconds
+before it is ended. shadPS4's own window (its Big Picture mode) is never shown. On a device without Steam the app starts
+a game the same way. A shortcut made by an earlier version, which starts `shadPS4.exe` itself, shows **(Update
+Steam)** on its game: **Y Update Steam** writes it again.
 
 Every Monday the suite checks whether shadPS4 has a newer release than the one this app brings, and whether the file
 it downloads is still the one it was tested with; what moved goes to the suite's developers, and a newer shadPS4 comes

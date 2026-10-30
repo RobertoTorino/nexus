@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import re
 import shlex
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from . import plan as rp
@@ -219,6 +219,120 @@ def stop_command(run: rp.BuildRun) -> str:
 def resume_command(run: rp.BuildRun) -> str:
     """Started again from where it stopped: only the jobs that failed or were canceled, and what needs them."""
     return f"gh run rerun {run_id(run)} --failed"
+
+
+# --- The steps, in their order (owner, 30-10-2026: "if I open NRT I want to see exactly what has to be done in their
+# logical sequence", each action a pill) ---------------------------------------------------------------------------
+
+STEPS = (
+    ("pull", "Get up to date", "Bring in what was pushed from the other machine."),
+    ("commit", "Commit your changes", "Everything changed here, in one commit, after the version and manifest checks."),
+    ("push", "Push them", "Your commits to GitHub; the pre-push hook checks them first."),
+    ("ci", "CI passes", "GitHub's CI on that commit. Nothing to press: wait until it passed."),
+    ("start", "Start new release", "Check the versions above, then start: it writes the release, commits and pushes "
+                                   "it and starts Release Nexus."),
+    ("run", "The release on GitHub", "Builds and publishes the apps, pins them and makes each portal a draft."),
+    ("test", "Device test", "Installs the draft portal on this device and starts it: test it as a user would."),
+    ("publish", "Publish", "The test passed: publish the portal. Not OK leaves it a draft."),
+    ("finish", "Bring in the pin commit", "The release wrote a commit Pin ... on main: pull it."),
+)
+KEYS = tuple(key for key, _title, _what in STEPS)
+
+
+@dataclass
+class Facts:
+    """What the steps are read from: the checkout and the runs the window's header fetched."""
+    behind: int = 0                     # commits on the last push that HEAD lacks
+    dirty: bool = False                 # changes not committed
+    ahead: int = 0                      # commits not pushed
+    ci: str = "none"                    # CI on HEAD: none, building, passed, failed; unknown without GitHub
+    unpushed: str = ""                  # a release commit Start made whose push stopped
+    something: bool = False             # something to release
+    run: rp.BuildRun | None = None      # the release run of this release, while it lasts
+    drafts: list[str] = field(default_factory=list)     # its portals not published yet
+
+
+def ci_state(runs: list[rp.BuildRun], sha: str) -> str:
+    """CI on *sha* (ci*.yml, every suite's and Nexus's): building while one runs, passed when every one passed,
+    failed when one failed; none before GitHub has one."""
+    found = [r for r in runs if r.sha == sha and (r.file.startswith("ci") or r.workflow.startswith("CI"))]
+    if not found:
+        return "none"
+    if any(not r.done for r in found):
+        return "building"
+    return "passed" if all(r.passed for r in found) else "failed"
+
+
+def cycle_run(root: Path, runs: list[rp.BuildRun]) -> rp.BuildRun | None:
+    """The newest release run, while its release lasts: HEAD is its commit, or that commit with only the release's
+    Pin ... commits on top (after git pull). None once other work is committed on top."""
+    run = release_run(runs)
+    if run is None or not run.sha:
+        return None
+    if rp.git(root, "merge-base", "--is-ancestor", run.sha, "HEAD") is None:
+        return None
+    subjects = (rp.git(root, "log", "--format=%s", f"{run.sha}..HEAD") or "").splitlines()
+    return run if all(s.startswith("Pin ") for s in subjects if s.strip()) else None
+
+
+def published(root: Path, runs: list[rp.BuildRun], tag: str) -> bool:
+    """Whether a portal draft is published: its tag is here, or GitHub ran something on it (the Nexus index follows
+    a publish)."""
+    return bool((rp.git(root, "tag", "-l", tag) or "").strip()) or any(r.ref == tag for r in runs)
+
+
+def current_step(facts: Facts) -> str:
+    """The step to do now, its key in STEPS; "" when there is nothing to do."""
+    run = facts.run
+    if run is not None and not facts.dirty and not (facts.ahead and not facts.unpushed):
+        if not run.passed:
+            return "run"                    # running, or ended badly: Resume or Stop
+        if facts.drafts:
+            return "test"
+        return "finish" if facts.behind else ""
+    if facts.unpushed:
+        return "start"                      # its push stopped: Push and start
+    if facts.behind:
+        return "pull"
+    if facts.dirty:
+        return "commit"
+    if facts.ahead:
+        return "push"
+    if facts.ci in ("none", "building", "failed"):
+        return "ci"
+    return "start" if facts.something else ""
+
+
+def step_states(facts: Facts) -> dict[str, str]:
+    """Each step's state: done, now, failed (the step to do now, which went wrong) or later."""
+    now = current_step(facts)
+    if not now:                             # nothing to do: every step of a release done, or none to make
+        return {key: "done" for key in KEYS}
+    at = KEYS.index(now)
+    states = {key: "done" if i < at else "later" for i, key in enumerate(KEYS)}
+    states[now] = "failed" if (now == "ci" and facts.ci == "failed") or \
+        (now == "run" and facts.run is not None and facts.run.done and not facts.run.passed) else "now"
+    if now == "test":
+        states["publish"] = "now"          # the test is the owner's: Publish or Not OK once it is done
+    if now in ("pull", "commit", "push", "ci", "start"):
+        for key in ("run", "test", "publish", "finish"):
+            states[key] = "later"
+    return states
+
+
+def dirty_paths(root: Path) -> list[str]:
+    """The files the Commit step commits: changed ones and new ones."""
+    changed = (rp.git(root, "diff", "--name-only", "HEAD") or "").splitlines()
+    new = (rp.git(root, "ls-files", "--others", "--exclude-standard") or "").splitlines()
+    return [p for p in changed + new if p.strip()]
+
+
+def commit_work_command(root: Path, message: str, base: str, python: str) -> str:
+    """The Commit step: everything staged (with the exec bits CI checks), then the commit after the version and
+    manifest checks of the suites it touches, as the git commit button runs them."""
+    touched = rp.touched_suites(root, dirty_paths(root))
+    return f"{rp.add_command()} && " + rp.commit_command(message, base, False, python,
+                                                        rp.manifest_checks(root, touched), rp.version_checks(touched))
 
 
 def waiting_portals(root: Path) -> list[str]:

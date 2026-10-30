@@ -1,3 +1,51 @@
+Changelog: 30-10-2026 14:49:38
+
+Added. play.py, the game managers' play mode (owner, 30-10-2026: one way out of every game, "Hold View + Menu,
+everywhere"): play.run() starts the emulator outside the app's bundle, watches the controller (core's PygameSource)
+and, with View and Menu held together for two seconds (HOLD), sends WM_CLOSE to the emulator's windows and its
+children's, as Alt+F4 does; one still running ten seconds (GRACE) later is ended. It ends with the emulator, with its
+exit code. play.launcher(): what a game's Steam shortcut starts, the app's own program with --play in a release, its
+run.ps1 in a hidden PowerShell window from the checkout; played() tells such a shortcut from one made before.
+QUIT_HINT, the line the managers show when a game starts.
+
+Changelog: 30-10-2026 14:49:38
+
+Fixed. steam.write_shortcuts() takes the artwork of a shortcut it takes out under the number that shortcut has, also
+when the change's own entry would number it otherwise (a shortcut another program started, such as one made before a
+game manager's play mode).
+
+Changelog: 30-10-2026 14:49:18
+
+Fixed. On Windows, Steam's folder is its name as on the disk (windows_steam(), os.path.realpath): Steam's registry
+key has it in lower case, and steam.exe started as c:\program files (x86)\steam\steam.exe never signed in, its
+login window made off the screen and the client Logged Off for hours (the owner's Ally, 30-10-2026, in Steam's own
+logs: every start by that name, the game managers' since 29-10-2026, against every start as C:\Program Files
+(x86)\Steam\steam.exe, which signed in within 15 seconds). That, not -silent, kept Steam from signing in.
+
+Changelog: 30-10-2026 14:49:18
+
+Fixed. An information popup's text box is as high as its text, up to 0.7 of the window: the text is measured as the
+view lays it out, as plain text (a label took "[PS4] <title>" for HTML and left out what followed, so Your games'
+information stayed four lines high with the window's room to spare; owner, 30-10-2026).
+
+Changelog: 30-10-2026 13:35:58
+
+Added. RT is a button of the portable window (owner, 30-10-2026: RT Steam in the portal): Gamepad's action rt when
+the right trigger is pulled past halfway, once until it is let go (under 0.3), and the legend's RT entry, which a tap
+does the same as. steam.installed(): whether Steam's program is there (steam.exe in Steam's folder on Windows, steam on
+PATH elsewhere), signed in once or not. platform.start_program(): a program started on its own outside the app's
+bundle (outside_bundle(), moved from steam.py), for a game manager's emulator started without Steam.
+
+Changelog: 30-10-2026 12:54:34
+
+Fixed. On Windows, in an app built with PyInstaller, Steam starts outside the app's bundle (platform's outside_bundle(),
+round every steam.exe command and steam:// address): the bootloader's DLL directory and the PyQt6 hook's PATH entry are the
+app's _internal folder, and a program the app started inherited both, so Steam, whose folder has no VCRUNTIME140.dll,
+ucrtbase.dll or OpenSSL of its own, loaded the app's copies before Windows' own (owner, 30-10-2026: Open Steam and a
+game's Play in shadPS4 Manager never got Steam running, where Steam started by hand did). The DLL directory, PATH,
+QT_PLUGIN_PATH and QML2_IMPORT_PATH are taken away while Steam starts and put back after; Linux and an app run from
+the checkout as before.
+
 Changelog: 30-10-2026 00:42:29
 
 Fixed. On Windows, steam.open_url() starts a Steam that does not run as a plain steam.exe and hands it the steam://

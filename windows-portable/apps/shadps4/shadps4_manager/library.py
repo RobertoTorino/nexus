@@ -87,11 +87,12 @@ def plan(found: list[Game], marked: set[str], in_steam: dict[str, str]) -> tuple
     return add, remove
 
 
-def pending(found: list[Game], marked: set[str], in_steam: dict[str, str]) -> bool:
-    """Whether Update Steam would change anything: a game in or out, or a name in Steam that differs."""
+def pending(found: list[Game], marked: set[str], in_steam: dict[str, str], outdated: set[str] = frozenset()) -> bool:
+    """Whether Update Steam would change anything: a game in or out, a name in Steam that differs, or a shortcut that
+    does not start the play mode yet (*outdated*, shortcuts.outdated)."""
     add, remove = plan(found, marked, in_steam)
     named = shortcuts.names(add)
-    return bool(remove) or any(in_steam.get(str(g.eboot)) != named[g.eboot] for g in add)
+    return bool(remove) or any(in_steam.get(str(g.eboot)) != named[g.eboot] or str(g.eboot) in outdated for g in add)
 
 
 def update_steam(steam_dir: Path, add: list[Game], remove: list[Game], program: Path, logo: Path,

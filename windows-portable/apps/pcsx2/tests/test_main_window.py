@@ -11,14 +11,16 @@ the checks expect them."""
 from __future__ import annotations
 
 import re
+import sys
 import tempfile
 import threading
 import time
 from pathlib import Path
 
+import pytest
 from PyQt6.QtCore import QSettings
 
-from bc250_core import portable, steam
+from bc250_core import play, portable, steam
 from bc250_core.gamepad import Gamepad
 from bc250_core.portable import BACK, EXIT, VIEW
 from bc250_core.portable import INFO as MENU_INFO
@@ -68,6 +70,7 @@ def wait_for(qapp, predicate, seconds=5.0):
 
 def make(qapp, home=None, install=fake_install, running=lambda home: False, **more):
     more.setdefault("steam_dir", None)                  # never the real Steam
+    more.setdefault("start", lambda command, cwd=None: None)   # never a real PCSX2
     more.setdefault("drives", lambda: [])
     more.setdefault("roots", lambda: [])
     more.setdefault("settings", QSettings(str(Path(tempfile.mkdtemp()) / "app.ini"),
@@ -654,9 +657,9 @@ def test_no_path_on_the_screen_shows_the_users_name(qapp, tmp_path):
         shutil.rmtree(games, ignore_errors=True)
 
 
-def test_a_game_is_played_through_steam_and_steam_is_opened(qapp, tmp_path, monkeypatch):
-    """X on a game in Steam starts it through Steam, by its shortcut's appid; a game not in Steam yet says how; the
-    Open Steam row above the games opens Steam's library (owner, 29-10-2026)."""
+def test_a_game_is_played_through_steam(qapp, tmp_path, monkeypatch):
+    """X on a game in Steam starts it through Steam, by its shortcut's appid; a game not in Steam yet says how (owner,
+    29-10-2026). Steam's library is the portal's (owner, 30-10-2026: no Open Steam row)."""
     home = tmp_path / "emulator"
     fake_install(home)
     with_bios(home)
@@ -689,14 +692,104 @@ def test_a_game_is_played_through_steam_and_steam_is_opened(qapp, tmp_path, monk
     item = next(item for item in steam.shortcuts(steam_dir) if shortcuts.ours(item))
     number = shortcuts.numbers(steam_dir)[str(game)]
     assert number == steam.appid(str(steam.field(item, "Exe")), str(steam.field(item, "AppName")))
-    assert opened == [steam.play_url(number)] and window.games_pane.status.text() == f"Starting {title} in Steam…"
-    window.games_pane.list.pills[str(game)].setFocus()
-    window.on_action("up")                                         # above the games: Open Steam
-    assert window.open_steam.hasFocus()
-    assert window.legend.items[0] == ("A", "Open Steam") and ("X", "Play") not in window.legend.items
-    window.on_action("accept")
-    assert opened[-1] == steam.OPEN_URL and window.games_pane.status.text() == "Opening Steam…"
+    assert opened == [steam.play_url(number)]
+    assert window.games_pane.status.text() == f"Starting {title} in Steam… {play.QUIT_HINT}"   # how to quit, shown
+    assert not hasattr(window, "open_steam")
+    for dump in (home / "bios").iterdir():                         # the BIOS gone: the manager says so first
+        dump.unlink()
+    window.on_action("x")
+    assert len(opened) == 1 and window.games_pane.status.text() == NO_BIOS
     window.toggle_folders()                                        # X on the folders plays nothing
     window.on_action("x")
-    assert opened[-1] == steam.OPEN_URL and window.games_pane.status.text() == PICK_A_GAME
+    assert len(opened) == 1 and window.games_pane.status.text() == PICK_A_GAME
     window.close()
+
+
+def test_without_steam_x_starts_the_game_in_pcsx2(qapp, tmp_path, monkeypatch):
+    """A device without Steam (owner, 30-10-2026: a fallback): X starts PCSX2 with the game full screen, as its
+    shortcut would, from PCSX2's folder; without PCSX2 it says to install it first, without a BIOS to choose one
+    (owner, 30-10-2026: the manager checks)."""
+    home = tmp_path / "emulator"
+    game = make_disc(tmp_path / "me" / "Games" / "A.iso", "SLUS_123.45")
+    started, opened = [], []
+    window = make(qapp, home, user_home=tmp_path / "me", start=lambda command, cwd=None: started.append((command, cwd)),
+                  open_url=opened.append)
+    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
+    window.add_folder(tmp_path / "me" / "Games")
+    window.games_card.setFocus()
+    window.games_pane.list.pills[str(game)].setFocus()
+    qapp.processEvents()
+    title = window.focused_game().title
+    assert ("X", "Play") in window.legend.items
+    window.on_action("x")
+    assert started == [] and window.games_pane.status.text() == (f"Install PCSX2 first: it starts {title} on a "
+                                                                 "device without Steam.")
+    fake_install(home)
+    window.on_action("x")
+    assert started == [] and window.games_pane.status.text() == NO_BIOS
+    with_bios(home)
+    window.on_action("x")
+    program = emulator.program(home)
+    launcher, before = play.launcher(ROOT)                      # the play mode, as the shortcut would start it
+    assert started == [([launcher, *before, *emulator.GAME_ARGS, "--", str(game)], program.parent)]
+    assert opened == [] and window.games_pane.status.text() == (f"Starting {title} in PCSX2… In the game, hold View "
+                                                                "and Menu together to quit.")
+
+    def fails(command, cwd=None):
+        raise PermissionError(13, "Access is denied")
+    window.start_program = fails
+    window.on_action("x")
+    assert window.games_pane.status.text() == f"PCSX2 could not start {title}: Access is denied"
+    window.close()
+
+
+def test_a_shortcut_made_before_the_play_mode_asks_for_update_steam(qapp, tmp_path, monkeypatch):
+    """A game whose shortcut still starts PCSX2 itself (3.0.1's) says (Update Steam), and Y brings it to the play
+    mode (owner, 30-10-2026: View and Menu held quit every game)."""
+    home = tmp_path / "emulator"
+    fake_install(home)
+    with_bios(home)
+    game = make_disc(tmp_path / "me" / "Games" / "A.iso", "SLUS_123.45")
+    steam_dir = tmp_path / "Steam"
+    config = steam_dir / "userdata" / "1" / "config"
+    config.mkdir(parents=True)
+
+    def with_steam_closed(change):
+        change()
+        return False
+    window = make(qapp, home, steam_dir=steam_dir, steam_closed=with_steam_closed, user_home=tmp_path / "me")
+    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
+    window.add_folder(tmp_path / "me" / "Games")
+    program = emulator.program(home)
+    name = shortcuts.names([g for g in window.games if str(g.file) == str(game)])
+    old = steam.shortcut_entry(f'"{program}"', next(iter(name.values())), f'"{program.parent}\\"', "",
+                               f'{" ".join(emulator.GAME_ARGS)} -- "{game}"', shortcuts.TAGS)
+    (config / "shortcuts.vdf").write_bytes(steam.write_vdf({"shortcuts": {"0": old}}))
+    window.refresh_games()
+    assert window.games_pane.list.pills[str(game)].label.text().endswith("✓ Steam (Update Steam)")
+    window.games_card.setFocus()
+    window.on_action("y")
+    assert wait_for(qapp, lambda: not window.busy)
+    assert shortcuts.outdated(steam_dir) == set() and len(steam.shortcuts(steam_dir)) == 1
+    assert window.games_pane.list.pills[str(game)].label.text().endswith("✓ Steam")
+    window.close()
+
+
+def test_play_runs_the_game_without_a_window(monkeypatch, tmp_path):
+    """--play, as a shortcut starts the app: PCSX2 with the shortcut's arguments from its folder, through core's play
+    mode, before any window or the one-window check (the app's window may be open beside it)."""
+    from pcsx2_manager import __main__ as entry
+    ran = []
+    monkeypatch.setattr(emulator, "emulator_home", lambda: tmp_path / "emulator")
+    monkeypatch.setattr(entry.applog, "setup", lambda *a, **k: tmp_path / "log")
+    monkeypatch.setattr(entry.play, "run", lambda command, cwd, log: ran.append((command, cwd)) or 3)
+    monkeypatch.setattr(entry, "create_app", lambda *a, **k: pytest.fail("no window in the play mode"))
+    monkeypatch.setattr(sys, "argv", ["PCSX2-Manager.exe", "--play", "-nogui", "-fullscreen", "--", r"D:\A.iso"])
+    assert entry.main() == 3
+    program = emulator.program(tmp_path / "emulator")
+    assert ran == [([str(program), "-nogui", "-fullscreen", "--", r"D:\A.iso"], program.parent)]
+
+    def fails(command, cwd, log):
+        raise FileNotFoundError(2, "The system cannot find the file specified")
+    monkeypatch.setattr(entry.play, "run", fails)
+    assert entry.main() == 1

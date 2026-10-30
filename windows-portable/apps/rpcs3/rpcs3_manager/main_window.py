@@ -15,15 +15,18 @@ and RB Packages (the browser showing the .pkg files and the licenses; X installs
 marked in it, A on a file that one: --headless --installpkg, one run per file, the updates last). A press that cannot act now says why on the status
 line. Nothing downloads before A. The download and the unpacking run off the window's thread; the pane counts the
 megabytes. View (exit) while a job runs asks first, as the portal does. RPCS3's own window is never shown: what the
-app owns in RPCS3's files (userdata: its welcome dialog and update check off, player 1 on the handheld's controller)
-is set after an install and when the window opens, while RPCS3 does not run.
+app owns in RPCS3's files (userdata: its welcome dialog, exit question and update check off, player 1 on the
+handheld's controller) is set after an install and when the window opens, while RPCS3 does not run.
 
 The Your games pane (panes.py, library.py): the disc games in the chosen folders, the games installed in RPCS3 and
-the disc games it knows, played from Steam (owner, 29-10-2026: the app never starts RPCS3 itself); A marks one for
-Steam, X plays one that is in Steam, through Steam (steam://rungameid), Y Update Steam makes Steam's shortcuts match
-the marks; Open Steam, the row at the top, opens Steam's library; LB Folders lists the folders, the usual places and a drive to add, and Browse, which opens
-the folder browser (core's browse, which opens where it was left: browse.remembered); LB Games goes back; RB Steam artwork keeps the SteamGridDB key. The Log pane:
-RPCS3's folder and the newest lines of the app's log; A (or a tap on the pane) shows the whole log in the pane.
+the disc games it knows, played from Steam (owner, 29-10-2026); A marks one for Steam, X plays one that is in Steam,
+through Steam (steam://rungameid), and on a device without Steam starts it in the app's play mode itself (owner,
+30-10-2026: a fallback, as its shortcut would start it; core's play: View and Menu held quit any game), Y Update
+Steam makes Steam's shortcuts match the marks and brings a shortcut made before the play mode to it; Steam's library
+is the portal's RT Steam (owner, 30-10-2026: Open Steam moved there); LB Folders lists the folders, the usual places
+and a drive to add, and Browse, which opens the folder browser (core's browse, which opens where it was left:
+browse.remembered); LB Games goes back; RB Steam artwork keeps the SteamGridDB key. The Log pane: RPCS3's folder and
+the newest lines of the app's log; A (or a tap on the pane) shows the whole log in the pane.
 
 The Settings pane: RPCS3's settings that matter on the handheld, in tabs (LB and RB: Picture, Speed, Sound,
 Messages; Screen, how the games fill it, among the Picture's), a row each with its value; A steps to the next value and writes it into config.yml at once
@@ -39,7 +42,7 @@ from PyQt6.QtCore import QObject, QSettings, Qt, QTimer, pyqtSignal
 from PyQt6.QtGui import QFont, QGuiApplication
 from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QStackedWidget, QVBoxLayout, QWidget
 
-from bc250_core import applog, browse, covers, power, steam
+from bc250_core import applog, browse, covers, platform, play, power, steam
 from bc250_core.gamepad import Gamepad
 from bc250_core.platform import private
 from bc250_core.portable import (AMBER, BODY, DIM, EXIT, VIEW, Card, InfoPill, Legend, Pane, PortableHeader,
@@ -69,7 +72,7 @@ NO_FIRMWARE = ("Install the PS3's firmware first (the LB button on the RPCS3 pan
                "Steam.")
 BUSY = "Wait a moment: the app is still busy with the step before."
 OPEN_A_FOLDER = "Open a folder first: the A button opens the one the focus is on, then the X button takes it."
-NO_GAME = "Put the focus on a game first: the X button starts it through Steam."
+NO_GAME = "Put the focus on a game first: the X button starts it."
 NO_FILE = "Put the focus on a file first: the Y button marks it, the X button then installs the marked ones."
 BROWSE_KEYS = {FOLDER: "folders", FIRMWARE: "firmware", PACKAGES: "packages"}   # browse.remembered's, per kind
 ALL_SETTINGS = rpcs3_settings.SETTINGS
@@ -213,12 +216,14 @@ class MainWindow(PortableWindow):
                  steam_closed: Callable[[Callable[[], None]], bool] = steam.with_steam_closed,
                  user_home: Path | None = None, drives: Callable[[], list[Path]] = library.removable_drives,
                  roots: Callable[[], list[Path]] = browse.drives, settings: QSettings | None = None,
-                 play: Callable[[str], None] = steam.open_url):
+                 play: Callable[[str], None] = steam.open_url,
+                 start: Callable[..., None] = platform.start_program):
         """*steam_dir*: Steam's folder (False: found on this system, None: no Steam); *run_headless*: RPCS3 without a
         window for a firmware or package install (tests pass their own); *runtime_missing*: the Visual C++ runtime's
         files that are missing; *user_home*: the user's folder (the usual places); *drives*: the removable drives
         offered as folders, *roots*: every drive the browser offers; *settings*: the app's (its .ini, create_app's),
-        where the game folders are kept; *play*: hands a steam:// address to Steam (a game, Steam's library)."""
+        where the game folders are kept; *play*: hands a steam:// address to Steam (a game); *start*: starts a program
+        on its own (RPCS3 with a game, without Steam)."""
         super().__init__(gamepad)
         self.setWindowTitle(f"{APP_NAME} {__version__}")
         self.log = applog.logger(APP_ID)
@@ -237,9 +242,10 @@ class MainWindow(PortableWindow):
         self.steam_dir = steam.find_steam() if steam_dir is False else steam_dir
         self.user_home, self.drives, self.roots = user_home, drives, roots
         self.settings = settings if settings is not None else QSettings()
-        self.play = play
+        self.play, self.start_program = play, start
         self.games: list[Game] = []
         self.in_steam: dict[str, str] = {}
+        self.outdated: set[str] = set()                 # games whose shortcut does not start the play mode yet
         self.marked: set[str] = set()
         self.games_view = GAMES_VIEW
         self.forget_asked = ""                          # a folder pressed once: A again takes it off the list
@@ -292,9 +298,6 @@ class MainWindow(PortableWindow):
         self.pane.column.addWidget(self.status)
         self.settings_pane = SettingsPane()
         self.games_pane = ListPane("Your games", "Your games", GAMES_INFO)
-        self.steam_row = Row("Open Steam")              # Steam's library, where the games are played
-        self.games_pane.column.insertWidget(3, self.steam_row)
-        self.games_pane.column.insertSpacing(4, px(6))
         self.browse_pane = ListPane("Choose a folder", "Choosing a folder or a file", BROWSE_INFO)
         self.key_pane = KeyPane()
         self.log_pane = LogPane()
@@ -322,7 +325,6 @@ class MainWindow(PortableWindow):
         self.log_card.activated.connect(self.view_log)
         self.log_pane.tapped.connect(self.view_log)
         self.games_pane.list.picked.connect(self.game_picked)
-        self.steam_row.activated.connect(self.open_steam)
         self.browse_pane.list.picked.connect(self.browse_picked)
         self.confirm_key = False                        # Remove key pressed once
         for setting in ALL_SETTINGS:
@@ -478,8 +480,6 @@ class MainWindow(PortableWindow):
         elif pane is self.games_pane:
             if self.games_view != GAMES_VIEW:
                 items = [("A", "Choose"), ("LB", "Games")]
-            elif self.steam_row.hasFocus():
-                items = [("A", "Open Steam"), ("Y", "Update Steam"), ("LB", "Folders")]
             else:
                 items = [("A", "Steam mark"), *([("X", "Play")] if self.games_pane.list.focused() else []),
                          ("Y", "Update Steam"), ("LB", "Folders")]
@@ -510,9 +510,8 @@ class MainWindow(PortableWindow):
             self.legend.set_items(self.legend_items())
 
     def focus_list(self, pane: ListPane) -> None:
-        """The list's first row, or (Your games) Open Steam, or the pane's card while the list is empty."""
-        steam_row = self.steam_row if pane is self.games_pane and not self.steam_row.isHidden() else None
-        (pane.list.first() or steam_row or self.cards[pane]).setFocus()
+        """The list's first row, or the pane's card while the list is empty."""
+        (pane.list.first() or self.cards[pane]).setFocus()
 
     # Your games
 
@@ -532,6 +531,10 @@ class MainWindow(PortableWindow):
             except OSError as error:
                 self.in_steam = {}
                 self.log.error(f"Steam's shortcuts could not be read: {error}")
+        try:
+            self.outdated = shortcuts.outdated(self.steam_dir) if self.steam_dir is not None else set()
+        except OSError:
+            self.outdated = set()
         found = {str(g.eboot) for g in self.games}
         self.marked = {f for f in self.marked if f in found} | {f for f in self.in_steam if f in found
                                                                   and f not in self._unmarked}
@@ -558,15 +561,12 @@ class MainWindow(PortableWindow):
                                                            "to add the one your disc games are in; the RB button "
                                                            "on the RPCS3 pane installs packages.")
         pane.list.set_items(rows)
-        shown = self.games_view == GAMES_VIEW           # Open Steam above the games, not above the folders
-        if not shown and self.steam_row.hasFocus():
-            (pane.list.first() or self.games_card).setFocus()
-        self.steam_row.setVisible(shown)
         self.update_legend()
 
     def game_text(self, game: Game) -> str:
         mark = "✓ Steam" if str(game.eboot) in self.marked else ""
-        changed = (str(game.eboot) in self.marked) != (str(game.eboot) in self.in_steam)
+        changed = ((str(game.eboot) in self.marked) != (str(game.eboot) in self.in_steam)
+                   or str(game.eboot) in self.marked and str(game.eboot) in self.outdated)
         parts = (game.title, game.title_id, "" if game.startable else "no PS3_DISC.SFB",
                  mark + (" (Update Steam)" if changed else ""))
         return "  ·  ".join(p for p in parts if p)
@@ -617,11 +617,15 @@ class MainWindow(PortableWindow):
 
     def play_game(self) -> None:
         """X on a game: started through Steam (owner, 29-10-2026), which starts RPCS3 with it full screen as its
-        shortcut says; Steam starts first when it does not run. A game not in Steam yet says how it gets there."""
+        shortcut says; Steam starts first when it does not run. A game not in Steam yet says how it gets there; on a
+        device without Steam RPCS3 starts it itself."""
         key = self.games_pane.list.focused()
         game = next((g for g in self.games if str(g.eboot) == key), None)
         if game is None:
             self.games_pane.status.setText(NO_GAME)
+            return
+        if self.steam_dir is None:
+            self.play_without_steam(game)
             return
         try:
             number = shortcuts.numbers(self.steam_dir).get(key) if self.steam_dir is not None else None
@@ -639,19 +643,24 @@ class MainWindow(PortableWindow):
             self.games_pane.status.setText(f"Steam could not be asked to start {game.title}: {error.strerror or error}")
             self.log.error(f"Starting {game.title} through Steam ({url}) failed: {error}")
             return
-        self.games_pane.status.setText(f"Starting {game.title} in Steam…")
+        self.games_pane.status.setText(f"Starting {game.title} in Steam… {play.QUIT_HINT}")
         self.log.info(f"Starting {game.title} in Steam ({url}).")
 
-    def open_steam(self) -> None:
-        """A on Open Steam: Steam's library (in Big Picture), started when Steam does not run."""
-        try:
-            self.play(steam.OPEN_URL)
-        except OSError as error:
-            self.games_pane.status.setText(f"Steam could not be opened: {error.strerror or error}")
-            self.log.error(f"Opening Steam ({steam.OPEN_URL}) failed: {error}")
+    def play_without_steam(self, game: Game) -> None:
+        """X on a game on a device without Steam (owner, 30-10-2026: a fallback): RPCS3 started with it full screen,
+        as its Steam shortcut would start it, outside the app's bundle (platform.start_program)."""
+        if not emulator.installed(self.home):
+            self.games_pane.status.setText(f"Install RPCS3 first: it starts {game.title} on a device without Steam.")
             return
-        self.games_pane.status.setText("Opening Steam…")
-        self.log.info("Opening Steam.")
+        command = shortcuts.command(game)
+        try:
+            self.start_program(command, cwd=emulator.program(self.home).parent)
+        except OSError as error:
+            self.games_pane.status.setText(f"RPCS3 could not start {game.title}: {error.strerror or error}")
+            self.log.error(f"Starting {game.title} in RPCS3 failed: {error}")
+            return
+        self.games_pane.status.setText(f"Starting {game.title} in RPCS3… {play.QUIT_HINT}")
+        self.log.info(f"Starting {game.title} in RPCS3, without Steam.")
 
     # The browser (core's browse): a game folder, the firmware file in Downloads, or a folder with packages
 
@@ -899,7 +908,7 @@ class MainWindow(PortableWindow):
         if self.steam_dir is None:
             self.games_pane.status.setText(NO_STEAM)
             return
-        if not library.pending(self.games, self.marked, self.in_steam):
+        if not library.pending(self.games, self.marked, self.in_steam, self.outdated):
             self.games_pane.status.setText(NOTHING_TO_CHANGE)
             return
         add, remove = library.plan(self.games, self.marked, self.in_steam)

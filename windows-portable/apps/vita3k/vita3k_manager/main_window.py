@@ -20,10 +20,11 @@ runs asks first, as the portal does. What the app owns in Vita3K's config.yml (u
 its welcome window and update check off) is set after an install, when the window opens and before each of Vita3K's
 installs, while Vita3K does not run.
 
-The Your games pane (panes.py, library.py): the games installed in Vita3K, played from Steam (owner, 29-10-2026: the
-app never starts Vita3K itself); A marks one for Steam, X plays one that is in Steam, through Steam
-(steam://rungameid), Y Update Steam makes Steam's shortcuts match the marks; Open Steam, the row at the top, opens
-Steam's library; RB Steam artwork keeps the SteamGridDB key. The browser opens where the last one of its kind was left
+The Your games pane (panes.py, library.py): the games installed in Vita3K, played from Steam (owner, 29-10-2026); A
+marks one for Steam, X plays one that is in Steam, through Steam (steam://rungameid), and on a device without Steam
+starts Vita3K with it itself (owner, 30-10-2026: a fallback, as its shortcut would start it), Y Update Steam makes
+Steam's shortcuts match the marks; RB Steam artwork keeps the SteamGridDB key; Steam's library is the portal's RT
+Steam (owner, 30-10-2026: Open Steam moved there). The browser opens where the last one of its kind was left
 (browse.remembered). The Log pane: Vita3K's folder and the newest lines of the app's log; A (or a
 tap on the pane) shows the whole log in the pane.
 
@@ -43,7 +44,7 @@ from PyQt6.QtCore import QObject, QSettings, Qt, QTimer, pyqtSignal
 from PyQt6.QtGui import QFont, QGuiApplication
 from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QStackedWidget, QVBoxLayout, QWidget
 
-from bc250_core import applog, browse, covers, power, steam
+from bc250_core import applog, browse, covers, platform, play, power, steam
 from bc250_core.gamepad import Gamepad
 from bc250_core.platform import private
 from bc250_core.portable import (AMBER, BODY, DIM, EXIT, VIEW, Card, InfoPill, Legend, Pane, PortableHeader,
@@ -72,7 +73,7 @@ NO_FIRMWARE = ("Install the PS Vita's firmware and its font package first (the L
                "without them most games do not start.")
 BUSY = "Wait a moment: the app is still busy with the step before."
 OPEN_A_FOLDER = "Open the game's folder first: the A button opens the one the focus is on, then the X button takes it."
-NO_GAME = "Put the focus on a game first: the X button starts it through Steam."
+NO_GAME = "Put the focus on a game first: the X button starts it."
 ALL_SETTINGS = vita3k_settings.SETTINGS
 # The Settings pane's information, per tab: what each setting of the tab does
 TAB_INFO = {key: ("The A button changes the setting the focus is on, the LB and RB buttons change the tab; Vita3K "
@@ -199,13 +200,15 @@ class MainWindow(PortableWindow):
                  steam_dir: Path | None | bool = False,
                  steam_closed: Callable[[Callable[[], None]], bool] = steam.with_steam_closed,
                  user_home: Path | None = None, roots: Callable[[], list[Path]] = browse.drives,
-                 settings: QSettings | None = None, play: Callable[[str], None] = steam.open_url):
+                 settings: QSettings | None = None, play: Callable[[str], None] = steam.open_url,
+                 start: Callable[..., None] = platform.start_program):
         """*steam_dir*: Steam's folder (False: found on this system, None: no Steam); *run_quiet*: Vita3K installing
         a firmware file or a package without a window, *install_content*: Vita3K installing a .vpk, .zip or folder
         (tests pass their own); *runtime_missing*: the Visual C++ runtime's files that are missing; *newer_release*:
         asks GitHub for a newer Vita3K build; *user_home*: the user's folder (the browser's places); *roots*: every
         drive the browser offers; *settings*: the app's (its .ini, create_app's), where the browsers' last folders
-        are kept; *play*: hands a steam:// address to Steam (a game, Steam's library)."""
+        are kept; *play*: hands a steam:// address to Steam (a game); *start*: starts a program on its own (Vita3K
+        with a game, without Steam)."""
         super().__init__(gamepad)
         self.setWindowTitle(f"{APP_NAME} {__version__}")
         self.log = applog.logger(APP_ID)
@@ -216,7 +219,7 @@ class MainWindow(PortableWindow):
         self.run_quiet, self.install_content = run_quiet, install_content
         self.runtime_missing = runtime_missing
         self.settings = settings if settings is not None else QSettings()
-        self.play = play
+        self.play, self.start_program = play, start
         self.newer_release = newer_release
         self.newer: ReleaseInfo | None = None           # Vita3K's newest build, when newer than the pinned one
         self.busy = False
@@ -230,6 +233,7 @@ class MainWindow(PortableWindow):
         self.user_home, self.roots = user_home, roots
         self.games: list[Game] = []
         self.in_steam: dict[str, str] = {}
+        self.outdated: set[str] = set()                 # games whose shortcut does not start the play mode yet
         self.marked: set[str] = set()
         self.browser: browse.Browser | None = None      # the browser, while it shows
         self.browsing = FIRMWARE                        # what it looks for
@@ -278,9 +282,6 @@ class MainWindow(PortableWindow):
         self.pane.column.addWidget(self.status)
         self.settings_pane = SettingsPane()
         self.games_pane = ListPane("Your games", "Your games", GAMES_INFO)
-        self.steam_row = Row("Open Steam")              # Steam's library, where the games are played
-        self.games_pane.column.insertWidget(3, self.steam_row)
-        self.games_pane.column.insertSpacing(4, px(6))
         self.browse_pane = ListPane("Choose a file", "Choosing a file", BROWSE_INFO)
         self.key_pane = KeyPane()
         self.zrif_pane = FieldPane()
@@ -312,7 +313,6 @@ class MainWindow(PortableWindow):
         self.log_card.activated.connect(self.view_log)
         self.log_pane.tapped.connect(self.view_log)
         self.games_pane.list.picked.connect(self.mark_game)
-        self.steam_row.activated.connect(self.open_steam)
         self.browse_pane.list.picked.connect(self.browse_picked)
         self.confirm_key = False                        # Remove key pressed once
         for setting in ALL_SETTINGS:
@@ -479,11 +479,8 @@ class MainWindow(PortableWindow):
                      *([("Y", other)] if other else []),
                      *([("LB", "Firmware"), ("RB", "Install a game")] if installed else [])]
         elif pane is self.games_pane:
-            if self.steam_row.hasFocus():
-                items = [("A", "Open Steam"), ("Y", "Update Steam"), ("RB", "Steam artwork")]
-            else:
-                items = [("A", "Steam mark"), *([("X", "Play")] if self.games_pane.list.focused() else []),
-                         ("Y", "Update Steam"), ("RB", "Steam artwork")]
+            items = [("A", "Steam mark"), *([("X", "Play")] if self.games_pane.list.focused() else []),
+                     ("Y", "Update Steam"), ("RB", "Steam artwork")]
         elif pane is self.browse_pane:
             items = [("A", "Open")] + ([("X", "Install this folder")] if self.browsing == GAME else [])
         elif pane is self.settings_pane:
@@ -502,9 +499,8 @@ class MainWindow(PortableWindow):
             self.legend.set_items(self.legend_items())
 
     def focus_list(self, pane: ListPane) -> None:
-        """The list's first row, or (Your games) Open Steam, or the pane's card while the list is empty."""
-        steam_row = self.steam_row if pane is self.games_pane and not self.steam_row.isHidden() else None
-        (pane.list.first() or steam_row or self.cards[pane]).setFocus()
+        """The list's first row, or the pane's card while the list is empty."""
+        (pane.list.first() or self.cards[pane]).setFocus()
 
     # Your games
 
@@ -520,6 +516,10 @@ class MainWindow(PortableWindow):
             except OSError as error:
                 self.in_steam = {}
                 self.log.error(f"Steam's shortcuts could not be read: {error}")
+        try:
+            self.outdated = shortcuts.outdated(self.steam_dir) if self.steam_dir is not None else set()
+        except OSError:
+            self.outdated = set()
         found = {g.name for g in self.games}
         self.marked = {n for n in self.marked if n in found} | {n for n in self.in_steam if n in found
                                                                   and n not in self._unmarked}
@@ -542,7 +542,8 @@ class MainWindow(PortableWindow):
 
     def game_text(self, game: Game) -> str:
         mark = "✓ Steam" if game.name in self.marked else ""
-        changed = (game.name in self.marked) != (game.name in self.in_steam)
+        changed = ((game.name in self.marked) != (game.name in self.in_steam)
+                   or game.name in self.marked and game.name in self.outdated)
         parts = (game.title, game.title_id, game.version, mark + (" (Update Steam)" if changed else ""))
         return "  ·  ".join(p for p in parts if p)
 
@@ -570,7 +571,7 @@ class MainWindow(PortableWindow):
         if self.steam_dir is None:
             self.games_pane.status.setText(NO_STEAM)
             return
-        if not library.pending(self.games, self.marked, self.in_steam):
+        if not library.pending(self.games, self.marked, self.in_steam, self.outdated):
             self.games_pane.status.setText(NOTHING_TO_CHANGE)
             return
         add, remove = library.plan(self.games, self.marked, self.in_steam)
@@ -592,11 +593,15 @@ class MainWindow(PortableWindow):
 
     def play_game(self) -> None:
         """X on a game: started through Steam (owner, 29-10-2026), which starts Vita3K with it full screen as its
-        shortcut says; Steam starts first when it does not run. A game not in Steam yet says how it gets there."""
+        shortcut says; Steam starts first when it does not run. A game not in Steam yet says how it gets there; on a
+        device without Steam Vita3K starts it itself."""
         key = self.games_pane.list.focused()
         game = next((g for g in self.games if g.name == key), None)
         if game is None:
             self.games_pane.status.setText(NO_GAME)
+            return
+        if self.steam_dir is None:
+            self.play_without_steam(game)
             return
         try:
             number = shortcuts.numbers(self.steam_dir).get(key) if self.steam_dir is not None else None
@@ -614,19 +619,25 @@ class MainWindow(PortableWindow):
             self.games_pane.status.setText(f"Steam could not be asked to start {game.title}: {error.strerror or error}")
             self.log.error(f"Starting {game.title} through Steam ({url}) failed: {error}")
             return
-        self.games_pane.status.setText(f"Starting {game.title} in Steam…")
+        self.games_pane.status.setText(f"Starting {game.title} in Steam… {play.QUIT_HINT}")
         self.log.info(f"Starting {game.title} in Steam ({url}).")
 
-    def open_steam(self) -> None:
-        """A on Open Steam: Steam's library (in Big Picture), started when Steam does not run."""
-        try:
-            self.play(steam.OPEN_URL)
-        except OSError as error:
-            self.games_pane.status.setText(f"Steam could not be opened: {error.strerror or error}")
-            self.log.error(f"Opening Steam ({steam.OPEN_URL}) failed: {error}")
+    def play_without_steam(self, game: Game) -> None:
+        """X on a game on a device without Steam (owner, 30-10-2026: a fallback): the game in the app's play mode, as
+        its Steam shortcut would start it (core's play: View and Menu held quit it), outside the app's bundle
+        (platform.start_program)."""
+        if not emulator.installed(self.home):
+            self.games_pane.status.setText(f"Install Vita3K first: it starts {game.title} on a device without Steam.")
             return
-        self.games_pane.status.setText("Opening Steam…")
-        self.log.info("Opening Steam.")
+        command = shortcuts.command(game)
+        try:
+            self.start_program(command, cwd=emulator.program(self.home).parent)
+        except OSError as error:
+            self.games_pane.status.setText(f"Vita3K could not start {game.title}: {error.strerror or error}")
+            self.log.error(f"Starting {game.title} in Vita3K failed: {error}")
+            return
+        self.games_pane.status.setText(f"Starting {game.title} in Vita3K… {play.QUIT_HINT}")
+        self.log.info(f"Starting {game.title} in Vita3K, without Steam.")
 
     # The browser (core's browse): the firmware file in Downloads, or a game to install
 

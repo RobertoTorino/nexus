@@ -1,19 +1,23 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The Steam shortcuts (shortcuts.py) on Windows: RPCS3's program with the game alone and full screen, paths in
+"""The Steam shortcuts (shortcuts.py) on Windows: the app's play mode with the game alone and full screen (owner,
+30-10-2026: View and Menu held quit it), one made before it that starts RPCS3 itself still the game's, paths in
 double quotes as Steam writes them, "[PS3] <title>" names made unique, the app's own shortcuts told from others,
 adding and taking out beside other shortcuts in a Steam folder made in a temp folder, and the artwork from the game's
 own pictures (the BC250 suite's RPCS3 Manager's tests)."""
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
+import pytest
 from conftest import make_disc_game, make_hdd_game
 
-from bc250_core import steam
-from rpcs3_manager import LOGO_PATH, shortcuts
+from bc250_core import play, steam
+from rpcs3_manager import LOGO_PATH, ROOT, shortcuts
 from rpcs3_manager.games import Game, read_game
 
+MANAGER = r"C:\Users\me\AppData\Local\windows-portable-suite\windows-portable-rpcs3\app\RPCS3-Manager.exe"
 PROGRAM = Path(r"C:\Users\me\AppData\Local\windows-portable-suite\windows-portable-rpcs3\emulator\rpcs3.exe")
 DEMON = Game(Path(r"D:\PS3\Demon's Souls\PS3_GAME\USRDIR\EBOOT.BIN"), "Demon's Souls", "BLUS30443", disc=True)
 OTHER = {"appid": -1234, "AppName": "RetroArch", "Exe": '"C:\\RetroArch\\retroarch.exe"',
@@ -27,16 +31,48 @@ def _steam(tmp_path: Path) -> Path:
     return tmp_path / "Steam"
 
 
-def test_a_shortcut_starts_rpcs3_with_the_game(tmp_path):
+@pytest.fixture
+def release(monkeypatch):
+    """The app as a release runs it: PyInstaller's program."""
+    monkeypatch.setattr(sys, "frozen", True, raising=False)
+    monkeypatch.setattr(sys, "executable", MANAGER)
+
+
+def test_a_shortcut_starts_the_play_mode_with_the_game(release):
     item = shortcuts.entry(DEMON, "[PS3] Demon's Souls", PROGRAM, LOGO_PATH)
-    assert item["Exe"] == f'"{PROGRAM}"' and item["StartDir"] == f'"{PROGRAM.parent}\\"'
-    assert item["LaunchOptions"] == '--no-gui --fullscreen "D:\\PS3\\Demon\'s Souls\\PS3_GAME\\USRDIR\\EBOOT.BIN"'
+    assert item["Exe"] == f'"{MANAGER}"' and item["StartDir"] == f'"{PROGRAM.parent}\\"'
+    assert item["LaunchOptions"] == ('--play --no-gui --fullscreen '
+                                     '"D:\\PS3\\Demon\'s Souls\\PS3_GAME\\USRDIR\\EBOOT.BIN"')
+    assert shortcuts.command(DEMON) == [MANAGER, "--play", "--no-gui", "--fullscreen", str(DEMON.eboot)]
     assert item["tags"] == {"0": "PS3", "1": "RPCS3 Manager"}
     assert shortcuts.ours(item) and shortcuts.for_game(DEMON)(item)
     assert shortcuts.for_game(Game(Path(r"d:\ps3\DEMON'S SOULS\PS3_GAME\USRDIR\eboot.bin"), "x"))(item)   # case
     assert not shortcuts.for_game(Game(Path(r"D:\PS3\Other\PS3_GAME\USRDIR\EBOOT.BIN"), "Other"))(item)
     lower = {key.lower(): value for key, value in item.items()}                            # as some Steam writes it
     assert shortcuts.ours(lower)
+
+
+def test_a_shortcut_made_before_the_play_mode_is_the_games_and_outdated(tmp_path, release):
+    """A shortcut that starts rpcs3.exe itself (1.0.1 and before) is the game's, so Update Steam replaces it, and
+    outdated() names it; one made from the checkout (PowerShell and run.ps1) is outdated in a release too."""
+    folder = _steam(tmp_path)
+    old = steam.shortcut_entry(f'"{PROGRAM}"', "[PS3] Demon's Souls", f'"{PROGRAM.parent}\\"', "",
+                               f'--no-gui --fullscreen "{DEMON.eboot}"', shortcuts.TAGS)
+    assert shortcuts.ours(old) and shortcuts.for_game(DEMON)(old)
+    two = r"D:\Two\PS3_GAME\USRDIR\EBOOT.BIN"
+    before = play.launcher(ROOT, frozen=False)[1]
+    checkout = steam.shortcut_entry(f'"{play.POWERSHELL}"', "[PS3] Two", '"x\\"', "",
+                                    play.launch_options(before, f'--no-gui --fullscreen "{two}"'), shortcuts.TAGS)
+    three = Game(Path(r"D:\Three\PS3_GAME\USRDIR\EBOOT.BIN"), "Three", "BLUS00003", disc=True)
+    config = steam.user_folders(folder)[0]
+    values = steam.read_vdf((config / "shortcuts.vdf").read_bytes())
+    values["shortcuts"].update({"1": old, "2": checkout,
+                                "3": shortcuts.entry(three, "[PS3] Three", PROGRAM, LOGO_PATH)})
+    (config / "shortcuts.vdf").write_bytes(steam.write_vdf(values))
+    assert set(shortcuts.in_steam(folder)) == {str(DEMON.eboot), two, str(three.eboot)}
+    assert shortcuts.outdated(folder) == {str(DEMON.eboot), two}
+    steam.write_shortcuts(folder, shortcuts.changes([DEMON], [], PROGRAM, LOGO_PATH, {}, art=False))
+    assert shortcuts.outdated(folder) == {two} and len(steam.shortcuts(folder)) == 4
 
 
 def test_other_shortcuts_are_not_ours():
@@ -46,6 +82,7 @@ def test_other_shortcuts_are_not_ours():
     assert not shortcuts.ours({"Exe": f'"{PROGRAM}"', "LaunchOptions": '--fullscreen "a\\EBOOT.BIN"'})
     assert not shortcuts.ours({"Exe": f'"{PROGRAM}"', "LaunchOptions": "--no-gui --fullscreen"})
     assert not shortcuts.ours({"Exe": f'"{PROGRAM}"', "LaunchOptions": '--no-gui "unclosed'})
+    assert not shortcuts.ours({"Exe": f'"{play.POWERSHELL}"', "LaunchOptions": '-File x.ps1 --no-gui "x\\EBOOT.BIN"'})
 
 
 def test_names_are_unique():

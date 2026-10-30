@@ -8,9 +8,9 @@ from pathlib import Path
 
 from PyQt6.QtCore import QSettings
 
-from bc250_core import steam
+from bc250_core import play, steam
 from conftest import make_disc
-from pcsx2_manager import LOGO_PATH, library, shortcuts
+from pcsx2_manager import LOGO_PATH, ROOT, library, shortcuts
 from pcsx2_manager.games import Game, scan
 
 PROGRAM = Path(r"C:\emu\pcsx2-qt.exe")
@@ -49,6 +49,7 @@ def test_the_plan(tmp_path):
     assert add == [a] and [g.file for g in remove] == [b.file, tmp_path / "gone.iso"]
     assert library.pending([a, b], {str(a.file)}, in_steam)
     assert not library.pending([b], {str(b.file)}, {str(b.file): "[PS2] B"})              # as it is in Steam
+    assert library.pending([b], {str(b.file)}, {str(b.file): "[PS2] B"}, {str(b.file)})  # not the play mode yet
 
 
 def test_update_steam_writes_the_shortcuts_with_steam_closed(qapp, tmp_path):
@@ -67,7 +68,8 @@ def test_update_steam_writes_the_shortcuts_with_steam_closed(qapp, tmp_path):
     assert ok and closed == [True] and "1 game(s) in Steam" in text
     assert found == shortcuts.in_steam(steam_dir) == {str(game.file): "[PS2] Lumines Plus"}   # read back at once
     item = steam.shortcuts(steam_dir)[0]
-    assert item["Exe"] == f'"{PROGRAM}"' and (config / "grid" / f"{item['appid'] & 0xFFFFFFFF}p.png").is_file()
+    assert item["Exe"] == f'"{play.launcher(ROOT)[0]}"'                                       # the play mode's
+    assert (config / "grid" / f"{item['appid'] & 0xFFFFFFFF}p.png").is_file()
     ok, text, found = library.update_steam(steam_dir, [], [game], PROGRAM, LOGO_PATH, shortcuts.in_steam(steam_dir),
                                            with_steam_closed)
     assert ok and found == shortcuts.in_steam(steam_dir) == {} and "1 taken out" in text

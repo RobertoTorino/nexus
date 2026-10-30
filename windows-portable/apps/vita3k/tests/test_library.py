@@ -24,6 +24,7 @@ def test_pending():
     assert not library.pending([ONE, TWO], set(), {})
     assert library.pending([ONE], {"PCSB00001"}, {})                                # in
     assert not library.pending([ONE], {"PCSB00001"}, {"PCSB00001": "[PS Vita] One"})
+    assert library.pending([ONE], {"PCSB00001"}, {"PCSB00001": "[PS Vita] One"}, {"PCSB00001"})   # not the play mode
     assert library.pending([ONE], {"PCSB00001"}, {"PCSB00001": "[PS Vita] Old name"})   # renamed
     assert library.pending([ONE], set(), {"PCSB00001": "[PS Vita] One"})            # out
 

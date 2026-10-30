@@ -1,7 +1,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The window: the categories as tabs (LB, RB), the tab's apps as two rows of four tiles, the strip under them with
 the focused app and its pills (A Install or Open, Y Update), X for the app's details (and Remove there), Menu for
-the Suite page (the portal's own update and the settings), B back, View to exit (core's buttons, owner 29-10-2026). An install downloads the app's release in the
+the Suite page (the portal's own update and the settings), B back, View to exit (core's buttons, owner 29-10-2026), RT
+Steam's library where Steam is installed (owner, 30-10-2026: out of the game managers, into the portal). An install downloads the app's release in the
 background, checks it and runs its install.ps1 in a PowerShell window; the portal waits for that window's exit
 status. Direction D's portal screen (the owner's, 26-10-2026)."""
 
@@ -21,7 +22,7 @@ from PyQt6.QtCore import QObject, QSettings, Qt, QTimer, pyqtSignal
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import QGridLayout, QStackedWidget, QVBoxLayout, QWidget
 
-from bc250_core import applog, portable, power
+from bc250_core import applog, portable, power, steam
 from bc250_core.gamepad import Gamepad
 from bc250_core.platform import expand, launch_in_terminal, private
 from bc250_core.portable import AMBER, DIM, MENU, VIEW, Card, Legend, PortableHeader, PortableWindow, px, status_clock
@@ -40,6 +41,7 @@ PROGRESS_MS = 500               # how often a download's size is shown (owner, 2
 TILE_W, TILE_H, GAP = 293, 176, 14      # the mock-up's tiles: two rows of four
 COLUMNS, PER_PAGE = 4, 8
 TAB_KEY = "window/tab"          # the settings: the tab shown last
+STEAM_MISSING = "Steam is not installed on this device: install it from store.steampowered.com, then RT opens it."
 WALLPAPER_KEY = "look/wallpaper"  # where portal 1.6.0 kept the wallpaper switch: now the suite's (core, suite.ini)
 
 
@@ -126,9 +128,11 @@ class MainWindow(PortableWindow):
                  launch: Callable[[list[str]], None] = start_app,
                  terminal: Callable[..., None] = launch_in_terminal, icons: Path = APP_ICONS,
                  exe: str = "", exit_dir: Path | None = None, intro_ms: int = INTRO_MS,
-                 wallpaper: Path | None = portable.WALLPAPER):
+                 wallpaper: Path | None = portable.WALLPAPER,
+                 steam_here: Callable[[], bool] = steam.installed, open_steam: Callable[[str], None] = steam.open_url):
         """*intro_ms*: how long the intro plays when the window starts (0: none). *wallpaper*: the picture behind
-        the page, darkened (None: the plain background); on or off for the whole suite (Settings)."""
+        the page, darkened (None: the plain background); on or off for the whole suite (Settings). *steam_here*:
+        whether Steam is installed; *open_steam*: hands a steam:// address to Steam (its library)."""
         old = QSettings()                               # portal 1.6.0 kept the switch in portal.ini: the suite's now
         if old.contains(WALLPAPER_KEY) and portable.look_settings(SUITE).value(portable.LOOK_KEY) is None:
             portable.set_wallpaper_on(SUITE, str(old.value(WALLPAPER_KEY)).lower() != "false")
@@ -137,6 +141,7 @@ class MainWindow(PortableWindow):
         self.setWindowTitle(f"{APP_NAME} {__version__}")
         self.log = applog.logger(APP_ID)
         self.entries, self.sources, self.records = entries, sources, records
+        self.steam_here, self.open_steam = steam_here, open_steam
         self.portal_check, self.battery, self.launch, self.terminal = portal_check, battery, launch, terminal
         self.exe = exe                                  # the installed portal's program, for a restart; "" from a checkout
         self.exit_dir = exit_dir or Path(tempfile.gettempdir())
@@ -203,6 +208,7 @@ class MainWindow(PortableWindow):
         self.bind("previous", lambda: self.tabs.step(-1))
         self.bind("next", lambda: self.tabs.step(1))
         self.bind("menu", self.show_suite)
+        self.bind("rt", self.steam_action)
         self.back.connect(self.on_back)
 
         self.worker = _Worker()
@@ -325,24 +331,43 @@ class MainWindow(PortableWindow):
         self.suite_pane.wallpaper.setFocus()
 
     def update_legend(self) -> None:
-        """The page's buttons, then core's B Back (on Details and Suite, and from the strip to its tile) and View Exit
-        app; while an exit is asked, only that."""
+        """The page's buttons, RT Steam where Steam is installed, then core's B Back (on Details and Suite, and from
+        the strip to its tile) and View Exit app; while an exit is asked, only that."""
         if not hasattr(self, "legend") or not hasattr(self, "stack"):
             return
+        steam_item = [("RT", "Steam")] if self.steam_here() else []
         if self.close_asked:
             self.legend.set_items([(VIEW, "Press again to exit")])
         elif self.stack.currentWidget() is self.apps_page:
             pane = self.app_pane
             self.legend.set_items([*([("A", pane.main)] if pane.main else []), ("X", "Details"),
-                                   *([("Y", pane.other)] if pane.other else []), (MENU, "Suite"),
+                                   *([("Y", pane.other)] if pane.other else []), (MENU, "Suite"), *steam_item,
                                    *self.common_items()])
         elif self.stack.currentWidget() is self.details_pane:
             pane = self.details_pane
             self.legend.set_items([*([("A", pane.open)] if pane.open else []),
-                                   *([("Y", pane.remove)] if pane.remove else []), *self.common_items(True)])
+                                   *([("Y", pane.remove)] if pane.remove else []), *steam_item,
+                                   *self.common_items(True)])
         else:
             self.legend.set_items([("A", "Change"), *([("Y", self.suite_pane.action)] if self.suite_pane.action
-                                                      else []), *self.common_items(True)])
+                                                      else []), *steam_item, *self.common_items(True)])
+
+    def steam_action(self) -> None:
+        """RT (or a tap on RT Steam): Steam's library in Big Picture, Steam started first when it does not run (owner,
+        30-10-2026: the game managers' Open Steam, now the suite's). Without Steam the line under the app says so."""
+        if not self.steam_here():
+            self.say(self.current_key, STEAM_MISSING)
+            self.refresh()
+            return
+        try:
+            self.open_steam(steam.OPEN_URL)
+        except OSError as exc:
+            self.say(self.current_key, f"Steam could not be opened: {exc.strerror or exc}")
+            self.log.error(f"Opening Steam ({steam.OPEN_URL}) failed: {exc}")
+        else:
+            self.say(self.current_key, "Opening Steam…")
+            self.log.info("Opening Steam.")
+        self.refresh()
 
     def exit_app(self) -> None:
         """View: the portal closes; while a download or an install runs it asks first."""

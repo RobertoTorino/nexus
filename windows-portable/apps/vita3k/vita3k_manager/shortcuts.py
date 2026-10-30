@@ -4,11 +4,13 @@ starts Vita3K with one game, Vita3K.exe -r <title ID>, named "[PS Vita] <title>"
 Picture mode. Vita3K boots the game full screen (emulator.GAME_ARGS: its own frontend, owner 29-10-2026, where the
 BC250 app's line is the SDL frontend's, whose window Game Mode's compositor fills).
 
-On Windows the shortcut runs Vita3K's own program in the app's emulator folder, as RPCS3 Manager's do: that folder
-stays the same when the app brings another Vita3K (one folder, emulator.py), so the shortcut's Steam number, from the
-program and the name, stays the same too. Vita3K finds its portable folder beside the program, wherever it starts.
-Windows paths are quoted the way Steam writes them, in double quotes (a Windows path holds no double quote). The file
-and its format are core's (bc250_core.steam).
+On Windows the shortcut runs the app's own program in its play mode (core's play.py; owner, 30-10-2026: one way out
+of every game, View and Menu held): Vita3K-Manager.exe --play -r <title ID> starts Vita3K in the app's emulator
+folder, watches the controller and ends with the game. The app's program stays where it is when the app is updated,
+so the shortcut's Steam number, from the program and the name, stays the same. Vita3K finds its portable folder beside
+its program. A shortcut made before, which runs Vita3K.exe itself, is still the game's (outdated(): Update Steam brings
+it to the play mode). Windows paths are quoted the way Steam writes them, in double quotes (a Windows path holds no
+double quote). The file and its format are core's (bc250_core.steam).
 
 The artwork comes from the game's own sce_sys folder, as the BC250 app draws it: icon0.png (128 × 128) on the
 portrait and the wide picture and as the logo on the banner (Steam's Properties > Customization > Logo), pic0.png
@@ -23,9 +25,9 @@ import shlex
 from collections.abc import Callable, Iterable
 from pathlib import Path
 
-from bc250_core import covers, steam
+from bc250_core import covers, play, steam
 
-from . import emulator
+from . import EXE_NAME, ROOT, emulator
 from .games import Game
 
 TAGS = ("PS Vita", "Vita3K Manager")
@@ -38,17 +40,24 @@ def launch_options(game: Game) -> str:
     return f"{' '.join(emulator.GAME_ARGS)} {game.name}"
 
 
+def command(game: Game) -> list[str]:
+    """The game in the play mode, as its shortcut starts it: for a device without Steam (owner, 30-10-2026)."""
+    program, before = play.launcher(ROOT)
+    return [program, *before, *emulator.GAME_ARGS, game.name]
+
+
 def _name(item: dict) -> str:
     """The game a shortcut of this app starts ("" for any other shortcut): the word after -r in the launch options
-    of a shortcut that runs Vita3K.exe. The fields by name whatever their case (steam.field): Steam has written them in
-    lower case in some versions."""
-    if ntpath.basename(str(steam.field(item, "Exe")).strip('"')).lower() != emulator.EXE.lower():
+    of a shortcut that runs the app's play mode, or Vita3K.exe itself (one made before it). The fields by name whatever
+    their case (steam.field): Steam has written them in lower case in some versions."""
+    program = ntpath.basename(str(steam.field(item, "Exe")).strip('"')).lower()
+    if program != emulator.EXE.lower() and program not in play.programs(EXE_NAME):
         return ""
     try:
-        words = shlex.split(str(steam.field(item, "LaunchOptions")))
+        words = shlex.split(str(steam.field(item, "LaunchOptions")).replace("\\", "/"))
     except ValueError:
         return ""
-    if "-r" not in words[:-1]:
+    if "-r" not in words[:-1] or (program != emulator.EXE.lower() and play.FLAG not in words):
         return ""
     found = words[words.index("-r") + 1]
     return "" if found.startswith("-") else found
@@ -75,9 +84,11 @@ def names(games: Iterable[Game]) -> dict[str, str]:
 
 
 def entry(game: Game, name: str, program: Path, logo: Path) -> dict:
+    """The game's shortcut: the play mode (play.launcher), started in Vita3K's folder, *program*'s."""
     icon = game.picture("icon0.png") or steam.shortcut_icon(logo)
-    return steam.shortcut_entry(f'"{program}"', name, f'"{program.parent}\\"', str(icon), launch_options(game),
-                                TAGS)
+    launcher, before = play.launcher(ROOT)
+    return steam.shortcut_entry(f'"{launcher}"', name, f'"{program.parent}\\"', str(icon),
+                                play.launch_options(before, launch_options(game)), TAGS)
 
 
 def in_steam(folder: Path) -> dict[str, str]:
@@ -85,6 +96,12 @@ def in_steam(folder: Path) -> dict[str, str]:
     the shortcut's name."""
     return {_name(item): str(steam.field(item, "AppName")) for item in steam.shortcuts(folder) if ours(item)}
 
+
+def outdated(folder: Path) -> set[str]:
+    """The games (by their title ID) whose shortcut does not start the play mode as it is now (one made before it, or
+    one made from the checkout on a device with the release): Update Steam writes them again."""
+    return {_name(item) for item in steam.shortcuts(folder) if ours(item)
+            and not play.played(str(steam.field(item, "Exe")), str(steam.field(item, "LaunchOptions")), ROOT)}
 
 
 def numbers(folder: Path) -> dict[str, int]:

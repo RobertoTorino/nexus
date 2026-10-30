@@ -35,16 +35,24 @@ The strip under the tiles shows the focused app: its name, its versions and what
 | Y | Update or reinstall the app, when the row at the bottom offers it |
 | X | The app's details |
 | ☰ (Menu) | The Suite page, with the settings |
+| RT | Steam's library, in Big Picture mode, when Steam is installed |
 | B | Back: from a page to the tiles; on a tile nothing |
 | ⧉ (View) | Exit the portal |
 
 Every action is a button, in the row at the bottom with what it does for the focused app (**A Install** or **A
-Open**, **X Details**, **Y Update**, **☰ Suite**, **⧉ Exit app**). Every tile works by touch, and so does the row: a
+Open**, **X Details**, **Y Update**, **☰ Suite**, **RT Steam**, **⧉ Exit app**). Every tile works by touch, and so does the row: a
 tap on an entry does what the button does. On a keyboard, the arrow keys move, Enter presses and
 Escape goes back.
 
 On the Suite page the setting with the focus has the amber edge; the d-pad stays on the page, and **B** goes back to
 the tiles.
+
+## Steam
+
+**RT Steam**, in the row at the bottom of every page, opens Steam's library in Big Picture mode, where the games the
+game managers put in Steam are played. A Steam that does not run is started first and opens its library once it has
+signed in. Pull RT past halfway, or tap the entry. Without Steam on the device the entry is not there; the game
+managers then start a game in its emulator themselves.
 
 ## Installing and updating an app
 

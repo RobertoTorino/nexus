@@ -95,6 +95,24 @@ def test_every_control_as_it_is(qapp):
     gamepad.stop()
 
 
+def test_rt_pulled_is_one_press(qapp):
+    """RT is the portal's Steam (owner, 30-10-2026): past halfway it is pressed, once, until it is let go (under 0.3);
+    LT does nothing yet."""
+    pad, clock = FakePad(), Clock()
+    gamepad, actions, _ = started(qapp, pad, clock)
+    pad.queue += [("axis", "righttrigger", 0.4), ("axis", "righttrigger", 0.6), ("axis", "righttrigger", 1.0),
+                  ("axis", "righttrigger", 0.4), ("axis", "righttrigger", 0.9), ("axis", "lefttrigger", 1.0)]
+    gamepad.poll()
+    assert actions == ["rt"]                            # 0.4 on the way back is not a release
+    pad.queue += [("axis", "righttrigger", 0.1), ("axis", "righttrigger", 0.7)]
+    gamepad.poll()
+    assert actions == ["rt", "rt"]
+    pad.queue += [("removed", "", False), ("axis", "righttrigger", 0.8)]
+    gamepad.poll()
+    assert actions == ["rt", "rt", "rt"]               # a pad unplugged with RT held: the next pull counts
+    gamepad.stop()
+
+
 def test_an_unplugged_pad_stops_a_held_direction(qapp):
     pad, clock = FakePad(), Clock()
     gamepad, actions, _ = started(qapp, pad, clock)

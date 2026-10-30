@@ -12,7 +12,7 @@ from PyQt6.QtWidgets import (QGraphicsDropShadowEffect, QGraphicsOpacityEffect, 
                              QWidget)
 
 from bc250_core import portable
-from bc250_core.portable import AMBER, Card, Legend, Pill, PortableHeader, PortableWindow, nearest
+from bc250_core.portable import AMBER, Card, InfoPopup, Legend, Pill, PortableHeader, PortableWindow, nearest
 
 
 class NoPad:
@@ -569,6 +569,29 @@ def test_a_long_popup_text_scrolls(qapp, monkeypatch):
     window.on_action("accept")                                      # A still closes it
     assert window.popup is None
     window.close()
+
+
+@pytest.mark.parametrize("size", [(1280, 720), (1920, 1080)])
+def test_a_popup_text_is_as_high_as_it_needs(qapp, size):
+    """The text box stayed four lines high with the window's room to spare (owner's Ally, 30-10-2026: Your games'
+    information, whose "[PS4] <title>" a label's measure took for HTML): a text shows whole when it fits in 0.7 of
+    the window, and a short one has no scroll bar."""
+    portable.scale(size)
+    window = PortableWindow(gamepad=portable.Gamepad(source_factory=NoPad))
+    window.resize(*size)
+    window.show()
+    try:
+        for paragraphs in (1, 6):
+            text = "\n\n".join("A game in Steam is \"[PS4] <title>\", a line long enough to wrap once or twice in the "
+                               "popup's panel at the handheld's size, as the information of a pane is."
+                               for _ in range(paragraphs))
+            popup = InfoPopup(window, "Title", text)
+            qapp.processEvents()
+            assert not popup.text.scrolls() and popup.text.height() < size[1] * portable.POPUP_TEXT
+            popup.deleteLater()
+    finally:
+        window.close()
+        portable.scale((1280, 720))
 
 
 def test_a_popup_legend_names_its_actions(qapp):

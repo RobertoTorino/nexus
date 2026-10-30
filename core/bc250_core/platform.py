@@ -23,6 +23,9 @@ import shlex
 import shutil
 import subprocess
 import sys
+import threading
+from collections.abc import Iterator, Sequence
+from contextlib import contextmanager
 from pathlib import Path, PurePath
 
 WINDOWS = sys.platform == "win32"
@@ -133,6 +136,68 @@ def open_path(target: str | Path) -> bool:
     except OSError:
         return False
     return True
+
+
+_OUTSIDE = threading.Lock()
+BUNDLE_VARIABLES = ("QT_PLUGIN_PATH", "QML2_IMPORT_PATH")     # what PyInstaller's PyQt6 hook sets for the app itself
+
+
+def _get_dll_directory() -> str:
+    import ctypes
+    buffer = ctypes.create_unicode_buffer(32768)
+    ctypes.windll.kernel32.GetDllDirectoryW(len(buffer), buffer)  # type: ignore[attr-defined]
+    return buffer.value
+
+
+def _set_dll_directory(folder: str | None) -> None:
+    import ctypes
+    ctypes.windll.kernel32.SetDllDirectoryW(folder)  # type: ignore[attr-defined]
+
+
+def without_folder(path: str, folder: str) -> str:
+    """PATH *path* without its entries that are *folder*."""
+    gone = os.path.normcase(os.path.normpath(folder))
+    return os.pathsep.join(p for p in path.split(os.pathsep) if p and os.path.normcase(os.path.normpath(p)) != gone)
+
+
+@contextmanager
+def outside_bundle() -> Iterator[None]:
+    """A program started within it does not see the app's own DLLs. In an app built with PyInstaller on Windows (the
+    Windows Portable Suite's) the bootloader sets the DLL directory to the app's _internal folder and the PyQt6 hook
+    puts that folder first on PATH, and a program the app starts inherits both: Windows searches the DLL directory
+    before System32, so Steam, whose folder has no VCRUNTIME140.dll, ucrtbase.dll or OpenSSL of its own, took the
+    app's (the owner's Ally, 30-10-2026: Steam started by a game manager never ran, where Steam started by hand did).
+    steam.py starts Steam within it, start_program() any other program.
+    Both are taken away while the program starts and put back after; elsewhere, and from the checkout, nothing."""
+    bundle = getattr(sys, "_MEIPASS", None)
+    if not WINDOWS or not getattr(sys, "frozen", False) or not bundle:
+        yield
+        return
+    with _OUTSIDE:
+        folder = _get_dll_directory()
+        saved = {name: os.environ.get(name) for name in ("PATH", *BUNDLE_VARIABLES)}
+        try:
+            _set_dll_directory(None)
+            os.environ["PATH"] = without_folder(saved["PATH"] or "", bundle)
+            for name in BUNDLE_VARIABLES:
+                os.environ.pop(name, None)
+            yield
+        finally:
+            _set_dll_directory(folder or None)
+            for name, value in saved.items():
+                if value is None:
+                    os.environ.pop(name, None)
+                else:
+                    os.environ[name] = value
+
+
+def start_program(argv: Sequence[str], cwd: Path | None = None) -> None:
+    """*argv* started on its own, outside the app's bundle, in folder *cwd* (a game manager's emulator with a game,
+    without Steam: owner, 30-10-2026); a thread collects it when it ends. OSError when it cannot start."""
+    with outside_bundle():
+        process = subprocess.Popen(list(argv), cwd=cwd, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                                   stderr=subprocess.DEVNULL, start_new_session=True)
+    threading.Thread(target=process.wait, name="program", daemon=True).start()
 
 
 def _ps_quote(text: str | PurePath) -> str:

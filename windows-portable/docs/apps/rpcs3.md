@@ -29,7 +29,8 @@ what others found; a PS3 game asks a lot of a handheld.
 - **Microsoft's Visual C++ runtime**, which Steam and most games install already. RPCS3 for Windows does not start
   without it; the RPCS3 pane says so when it is missing, and
   [vc_redist.x64.exe](https://aka.ms/vs/17/release/vc_redist.x64.exe) from Microsoft installs it.
-- **Steam**, started once on the device, to play the games from Steam (optional).
+- **Steam**, started once on the device, to play the games from Steam (optional: without Steam, **X Play** starts a
+  game in RPCS3 itself).
 
 ## The screen
 
@@ -80,7 +81,8 @@ RPCS3 on Windows keeps everything beside its program, in the app's `emulator` fo
 (`config.yml`, `games.yml`, the controller and the per-game settings), the PS3's drives `dev_hdd0` (the installed
 games, the saves) and `dev_flash` (the firmware), its window's settings in `GuiConfigs` and its own log in
 `log\RPCS3.log`. Before RPCS3's first start, and each time the app opens, the app sets up what RPCS3 would otherwise
-ask for in its window: its welcome dialog and its own update check off (a newer RPCS3 comes with the app), and the
+ask for in its window: its welcome dialog, its question before a game's window closes (View and Menu held close it)
+and its own update check off (a newer RPCS3 comes with the app), and the
 device's controller as player 1 through RPCS3's XInput handler, with RPCS3's own button layout for it (see
 [Controller](#controller)). What it set up goes to the log.
 
@@ -118,8 +120,9 @@ You play the games from Steam; the app puts them there.
   the games in Steam from that; should a game it wrote not be found, the status line and the log say which.
 - **X Play** on a game that is in Steam starts it, through Steam: Steam starts first when it does not run, then
   RPCS3 with the game, full screen, as from Steam's library. A game that is not in Steam yet says so: **A** marks
-  it, **Y** puts it there.
-- **Open Steam**, the row at the top of the list, opens Steam's library in Big Picture mode (**A Open Steam**).
+  it, **Y** puts it there. On a device without Steam (not installed, or never started), **X Play** starts the game
+  in RPCS3 itself, full screen, the same way Steam would.
+- Steam's library opens from the portal: **RT Steam** in its bottom row.
 - **LB Folders** shows your game folders instead of the games; **LB** or **B** goes back to the games. The usual
   places that are on the device (Games, Downloads and Documents in your user folder) and each removable drive, such as
   an SD card, are offered as **+ Add**. **A** twice on a folder takes it off the list: the first press asks, for five
@@ -129,10 +132,13 @@ You play the games from Steam; the app puts them there.
   places back to your folders), and **X Add this folder** adds the folder that is open. Every browser of the app opens again in the folder you last took a folder or picked a file in, while it is there.
 
 In a game started from Steam, RPCS3 takes the device's controller as player 1: A is Cross, B Circle, X Square, Y
-Triangle, View Select, Menu Start, LB and RB are L1 and R1, the triggers L2 and R2. **View and Menu together** open
-RPCS3's own menu over the game, with **Exit Game** in it: RPCS3 closes with the game, and you are back in Steam. RPCS3
-has no button chord that quits a game outright; that menu is its way out on the controller. The guide button opens it
-too, where Windows leaves that button to the game (on the ROG Xbox Ally the Xbox button is Windows' own).
+Triangle, View Select, Menu Start, LB and RB are L1 and R1, the triggers L2 and R2.
+
+To quit a game, **hold View and Menu together for two seconds**: RPCS3 closes as its window would close, and you are
+back in Steam, or in the app when it started the game. It works the same in every game manager of the suite, started
+from Steam's library or from the app. The line at the bottom of Your games says so when a game starts. A short press
+of View and Menu opens RPCS3's own menu over the game, with **Exit Game** in it; the guide button opens it too, where
+Windows leaves that button to the game (on the ROG Xbox Ally the Xbox button is Windows' own).
 
 The pictures in Steam come from inside the game: its icon (`ICON0.PNG`) on the cover, the wide picture and as the logo,
 its background (`PIC1.PNG`) on the banner; without them the title is drawn on a dark background. With a SteamGridDB
@@ -197,9 +203,14 @@ scrolls it, and **B** goes back. The newest lines show at the bottom of a box of
 
 ## How it works
 
-A game starts from Steam as `rpcs3.exe --no-gui --fullscreen "<game>\PS3_GAME\USRDIR\EBOOT.BIN"`: with `--no-gui`
-RPCS3 boots the game without its own window and ends when the game ends, so you are back in Steam; `--fullscreen` (which
-RPCS3 takes only with it) gives the game the whole screen. The app itself never starts a game.
+A game's shortcut in Steam starts the app itself in its play mode, `RPCS3-Manager.exe --play --no-gui --fullscreen
+"<game>\PS3_GAME\USRDIR\EBOOT.BIN"`, which shows no window: it starts `rpcs3.exe --no-gui --fullscreen
+"<game>\PS3_GAME\USRDIR\EBOOT.BIN"` in RPCS3's folder, watches the controller for View and Menu held, and ends when
+RPCS3 ends, so Steam sees the game end. With `--no-gui` RPCS3 boots the game without its own window and ends when the
+game ends; `--fullscreen` (which RPCS3 takes only with it) gives the game the whole screen. Asked to close, RPCS3 gets
+ten seconds before it is ended. On a device without Steam the app starts a game the same way. A shortcut made by an
+earlier version, which starts `rpcs3.exe` itself, shows **(Update Steam)** on its game: **Y Update Steam** writes it
+again.
 
 The firmware and the packages go to RPCS3 as `rpcs3.exe --headless --installfw "<PS3UPDAT.PUP>"` and `rpcs3.exe
 --headless --installpkg "<file>"`, one run per file, without any window; RPCS3 writes what it did to its log

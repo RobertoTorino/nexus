@@ -33,7 +33,8 @@ shows what others found.
   [vc_redist.x64.exe](https://aka.ms/vs/17/release/vc_redist.x64.exe) from Microsoft installs it.
 - **Windows 11**: Vita3K comes as a `.7z`, which the app unpacks with Windows' own `tar`; the `tar` of Windows 10
   cannot, and the pane says so.
-- **Steam**, started once on the device, to play the games from Steam (optional).
+- **Steam**, started once on the device, to play the games from Steam (optional: without Steam, **X Play** starts a
+  game in Vita3K itself).
 
 ## The screen
 
@@ -117,8 +118,9 @@ You play the games from Steam; the app puts them there.
   line and the log say which.
 - **X Play** on a game that is in Steam starts it, through Steam: Steam starts first when it does not run, then
   Vita3K with the game, full screen, as from Steam's library. A game that is not in Steam yet says so: **A** marks
-  it, **Y** puts it there.
-- **Open Steam**, the row at the top of the list, opens Steam's library in Big Picture mode (**A Open Steam**).
+  it, **Y** puts it there. On a device without Steam (not installed, or never started), **X Play** starts the game in
+  Vita3K itself, full screen, the same way Steam would.
+- Steam's library opens from the portal: **RT Steam** in its bottom row.
 
 The pictures in Steam come from inside the game: its icon (`sce_sys\icon0.png`) on the cover, the wide picture and as
 the logo, its LiveArea picture (`sce_sys\pic0.png`) on the banner; without them the title is drawn on a dark
@@ -129,10 +131,14 @@ saving). See [Steam artwork from SteamGridDB](covers.md).
 ### In a game
 
 A game from Steam starts full screen, with the device's controller as the PS Vita's: A is Cross, B Circle, X Square, Y
-Triangle, Menu Start, View Select, LB and RB are L and R. **Steam's own menu** (the Steam button, or the guide button)
-and its **Exit game** end the game and Vita3K with it, as for any game. Vita3K's own pause menu, on its PS button (the
-guide button, where Steam does not take it), has **Exit**, which ends the game but leaves Vita3K's window; Steam's
-**Exit game** closes that too.
+Triangle, Menu Start, View Select, LB and RB are L and R.
+
+To quit a game, **hold View and Menu together for two seconds**: Vita3K closes as its window would close, and you are
+back in Steam, or in the app when it started the game. It works the same in every game manager of the suite, started
+from Steam's library or from the app. The line at the bottom of Your games says so when a game starts. **Steam's own
+menu** (the Steam button, or the guide button where Windows does not take it) and its **Exit game** still end the game
+too. Vita3K's own pause menu, on its PS button, has **Exit**, which ends the game but leaves Vita3K's window; holding
+View and Menu closes that too.
 
 ## Settings
 
@@ -191,8 +197,12 @@ The newest lines show at the bottom of a box of their own, which a finger can sc
 
 ## How it works
 
-A game starts from Steam as `Vita3K.exe -r <ID>`, the game's ID as Vita3K installed it: Vita3K starts that game at
-once, full screen. The app itself never starts a game.
+A game's shortcut in Steam starts the app itself in its play mode, `Vita3K-Manager.exe --play -r <ID>`, which shows
+no window: it starts `Vita3K.exe -r <ID>` in Vita3K's folder, the game's ID as Vita3K installed it, so Vita3K starts
+that game at once, full screen; it watches the controller for View and Menu held, and ends when Vita3K ends, so Steam
+sees the game end. Asked to close, Vita3K gets ten seconds before it is ended. On a device without Steam the app starts
+a game the same way. A shortcut made by an earlier version, which starts `Vita3K.exe` itself, shows **(Update Steam)**
+on its game: **Y Update Steam** writes it again.
 
 Vita3K installs the firmware as `Vita3K.exe --firmware <file>` and a package as `Vita3K.exe --pkg <file> --zrif <key>`:
 it installs and quits, without a window. A `.vpk`, `.zip` or folder it installs only when started with the file, and

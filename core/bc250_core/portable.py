@@ -18,11 +18,12 @@ Escape into back."""
 from __future__ import annotations
 
 import datetime
+import math
 from pathlib import Path
 from collections.abc import Callable, Sequence
 
 from PyQt6.QtCore import QEvent, QPoint, QPointF, QRectF, QSize, Qt, pyqtSignal
-from PyQt6.QtGui import QColor, QFont, QGuiApplication, QKeyEvent, QPainter, QPen, QPixmap
+from PyQt6.QtGui import QColor, QFont, QGuiApplication, QKeyEvent, QPainter, QPen, QPixmap, QTextDocument
 from PyQt6.QtWidgets import (QApplication, QFrame, QGraphicsDropShadowEffect, QGraphicsOpacityEffect, QHBoxLayout,
                              QLabel, QPlainTextEdit, QPushButton, QScroller, QSizePolicy, QStackedWidget, QVBoxLayout,
                              QWidget)
@@ -220,8 +221,8 @@ class Glyph(QLabel):
 # The Ally's View and Menu buttons as it shows them: two squares, three lines (owner, 28-10-2026: not "Menu")
 VIEW, MENU = "⧉", "☰"
 # The legend's buttons and the window's actions they stand for (Gamepad's names)
-LEGEND_ACTIONS = {"A": "accept", "B": "back", "X": "x", "Y": "y", "LB": "previous", "RB": "next", MENU: "menu",
-                  VIEW: "view", "View": "view"}
+LEGEND_ACTIONS = {"A": "accept", "B": "back", "X": "x", "Y": "y", "LB": "previous", "RB": "next", "RT": "rt",
+                  MENU: "menu", VIEW: "view", "View": "view"}
 # Every window's last entries (owner, 29-10-2026: "Close" on B was not clear): Menu the pane's information, B back,
 # View leaves the app
 INFO, BACK, EXIT = (MENU, "Info"), ("B", "Back"), (VIEW, "Exit app")
@@ -851,8 +852,15 @@ class InfoPopup(QWidget):
         self.text.setFont(font(BODY + 1))
         self.text.setPlainText(text)
         self.text.setFixedWidth(inner)
-        measure = text_label(text, BODY + 1, wrap=True)                 # the height the whole text needs
-        needed = measure.heightForWidth(inner - px(24)) + px(28) + 2 * round(self.text.document().documentMargin())
+        # The height the whole text needs, laid out as the view lays it out: its font, its width less the padding, the
+        # edge and the scroll bar, as plain text (owner, 30-10-2026: a label measured "[PS4] <title>" as HTML, so it
+        # left out what followed, and the text box stayed four lines high with the window's room to spare)
+        measure = QTextDocument()
+        measure.setDefaultFont(self.text.font())
+        measure.setDocumentMargin(self.text.document().documentMargin())
+        measure.setPlainText(text)
+        measure.setTextWidth(inner - px(20) - px(6))
+        needed = math.ceil(measure.size().height()) + px(22)
         self.text.setFixedHeight(max(px(40), min(needed, round(window.height() * POPUP_TEXT))))
         self.panel.column.addWidget(self.text)
         self.panel.column.addSpacing(px(16))

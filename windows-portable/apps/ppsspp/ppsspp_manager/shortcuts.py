@@ -4,10 +4,13 @@ starts PPSSPP with the game alone and full screen, with an Exit entry in PPSSPP'
 PPSSPPWindows64.exe --fullscreen --pause-menu-exit "<game>", named "[PSP] <title>", in Steam's library and its Big
 Picture mode.
 
-On Windows the shortcut runs PPSSPP's own program in the app's emulator folder, as PCSX2 Manager's do: that folder
-stays the same when the app brings another PPSSPP (one folder, emulator.py), so the shortcut's Steam number, from the
-program and the name, stays the same too. Windows paths are quoted the way Steam writes them, in double quotes (a
-Windows path holds no double quote). The file and its format are core's (bc250_core.steam).
+On Windows the shortcut runs the app's own program in its play mode (core's play.py; owner, 30-10-2026: one way out
+of every game, View and Menu held): PPSSPP-Manager.exe --play --fullscreen --pause-menu-exit "<game>" starts PPSSPP
+in the app's emulator folder, watches the controller and ends with the game. The app's program stays where it is when
+the app is updated, so the shortcut's Steam number, from the program and the name, stays the same. The shortcut starts
+in the emulator folder. A shortcut made before, which runs PPSSPPWindows64.exe itself, is still the game's
+(outdated(): Update Steam brings it to the play mode). Windows paths are quoted the way Steam writes them, in double
+quotes (a Windows path holds no double quote). The file and its format are core's (bc250_core.steam).
 
 The artwork comes from inside the game's own image or PBP, as the BC250 app draws it: ICON0.PNG (144 × 80) on the
 portrait and the wide picture and as the logo on the banner (Steam's Properties > Customization > Logo), PIC1.PNG
@@ -22,9 +25,9 @@ import shlex
 from collections.abc import Callable, Iterable
 from pathlib import Path
 
-from bc250_core import covers, steam
+from bc250_core import covers, play, steam
 
-from . import emulator
+from . import EXE_NAME, ROOT, emulator
 from .games import Game
 
 TAGS = ("PSP", "PPSSPP Manager")
@@ -37,17 +40,27 @@ def launch_options(game: Game) -> str:
     return f'{" ".join(emulator.GAME_ARGS)} "{game.file}"'
 
 
+def command(game: Game) -> list[str]:
+    """The game in the play mode, as its shortcut starts it: for a device without Steam (owner, 30-10-2026)."""
+    program, before = play.launcher(ROOT)
+    return [program, *before, *emulator.GAME_ARGS, str(game.file)]
+
+
 def _file(item: dict) -> str:
     """The game a shortcut of this app starts ("" for any other shortcut): the last word of its launch options,
-    after --pause-menu-exit, of a shortcut that runs PPSSPPWindows64.exe. The fields by name whatever their case
-    (steam.field): Steam has written them in lower case in some versions."""
-    if ntpath.basename(str(steam.field(item, "Exe")).strip('"')).lower() != emulator.EXE.lower():
+    after --pause-menu-exit, of a shortcut that runs the app's play mode, or PPSSPPWindows64.exe itself (one made
+    before it). The fields by name whatever their case (steam.field): Steam has written them in lower case in some
+    versions."""
+    program = ntpath.basename(str(steam.field(item, "Exe")).strip('"')).lower()
+    if program != emulator.EXE.lower() and program not in play.programs(EXE_NAME):
         return ""
     try:
         words = shlex.split(str(steam.field(item, "LaunchOptions")).replace("\\", "/"))
     except ValueError:
         return ""
     if "--pause-menu-exit" not in words[:-1] or not words[-1] or words[-1].startswith("-"):
+        return ""
+    if program != emulator.EXE.lower() and play.FLAG not in words:
         return ""
     return words[-1].replace("/", "\\")
 
@@ -77,13 +90,22 @@ def names(games: Iterable[Game]) -> dict[Path, str]:
 
 
 def entry(game: Game, name: str, program: Path, logo: Path) -> dict:
-    return steam.shortcut_entry(f'"{program}"', name, f'"{program.parent}\\"', str(steam.shortcut_icon(logo)),
-                                launch_options(game), TAGS)
+    """The game's shortcut: the play mode (play.launcher), started in PPSSPP's folder, *program*'s."""
+    launcher, before = play.launcher(ROOT)
+    return steam.shortcut_entry(f'"{launcher}"', name, f'"{program.parent}\\"', str(steam.shortcut_icon(logo)),
+                                play.launch_options(before, launch_options(game)), TAGS)
 
 
 def in_steam(folder: Path) -> dict[str, str]:
     """The game files that have a shortcut of this app, for any Steam user, with the shortcut's name."""
     return {_file(item): str(steam.field(item, "AppName")) for item in steam.shortcuts(folder) if ours(item)}
+
+
+def outdated(folder: Path) -> set[str]:
+    """The game files whose shortcut does not start the play mode as it is now (one made before it, or one made from
+    the checkout on a device with the release): Update Steam writes them again."""
+    return {_file(item) for item in steam.shortcuts(folder) if ours(item)
+            and not play.played(str(steam.field(item, "Exe")), str(steam.field(item, "LaunchOptions")), ROOT)}
 
 
 def numbers(folder: Path) -> dict[str, int]:

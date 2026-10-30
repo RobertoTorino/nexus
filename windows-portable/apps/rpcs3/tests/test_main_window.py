@@ -5,21 +5,24 @@ pill is left (owner, 29-10-2026); B goes back and View exits; RPCS3 installed on
 megabytes counted, View asking first meanwhile, its files prepared after), updated from an older build, and removed
 with X pressed twice; the firmware and the packages given to RPCS3 without its window (stood in for) and the result
 read from its log; the Settings pane's rows, in tabs, step through their values, never while RPCS3 runs; Your games
-from the folders and RPCS3, marked for Steam with A, put in Steam and played through it with X, Open Steam; the
+from the folders and RPCS3, marked for Steam with A, put in Steam and played through it with X, without Steam in
+RPCS3 itself; the
 folder browser, which opens where it was left; the Log pane and the whole log read in the app; the SteamGridDB key; the version and the
 icons are where the checks expect them."""
 
 from __future__ import annotations
 
 import re
+import sys
 import tempfile
 import threading
 import time
 from pathlib import Path
 
+import pytest
 from PyQt6.QtCore import QSettings
 
-from bc250_core import portable
+from bc250_core import play, portable, steam
 from bc250_core.gamepad import Gamepad
 from bc250_core.portable import BACK, EXIT, VIEW
 from bc250_core.portable import INFO as MENU_INFO
@@ -52,6 +55,7 @@ def wait_for(qapp, predicate, seconds=5.0):
 
 def make(qapp, home=None, install=fake_install, running=lambda home: False, **more):
     more.setdefault("steam_dir", None)                  # never the real Steam
+    more.setdefault("start", lambda command, cwd=None: None)   # never a real RPCS3
     more.setdefault("drives", lambda: [])
     more.setdefault("roots", lambda: [])
     more.setdefault("runtime_missing", lambda: [])
@@ -440,7 +444,8 @@ def test_a_folder_without_packages_says_so(qapp, tmp_path):
 
 def test_your_games_are_marked_with_a_and_put_in_steam(qapp, tmp_path, monkeypatch):
     """The games are played from Steam (owner, 29-10-2026): A on a game is its Steam mark, Y Update Steam writes the
-    marks, X plays a game that is in Steam through Steam (steam://rungameid), Open Steam opens Steam's library."""
+    marks, X plays a game that is in Steam through Steam (steam://rungameid); Steam's library is the portal's (owner,
+    30-10-2026: no Open Steam row)."""
     home = tmp_path / "emulator"
     ready(home)
     hdd_game = make_hdd_game(home / "dev_hdd0" / "game" / "NPUB30001", "Flower", "NPUB30001")
@@ -464,20 +469,11 @@ def test_your_games_are_marked_with_a_and_put_in_steam(qapp, tmp_path, monkeypat
     qapp.processEvents()
     assert window.legend.items == [("A", "Steam mark"), ("Y", "Update Steam"), ("LB", "Folders"),
                                    ("RB", "Steam artwork"), MENU_INFO, EXIT]
-    window.on_action("accept")                                     # into the list
-    window.on_action("up")                                         # Open Steam, at the top
-    assert window.steam_row.hasFocus()
-    assert window.legend.items == [("A", "Open Steam"), ("Y", "Update Steam"), ("LB", "Folders"),
-                                   ("RB", "Steam artwork"), MENU_INFO, BACK, EXIT]
-    window.on_action("accept")
-    assert played == ["steam://open/bigpicture"] and window.games_pane.status.text() == "Opening Steam…"
-    window.games_card.setFocus()
-    qapp.processEvents()
+    assert not hasattr(window, "steam_row")
     assert "Press the A button on a game to mark it for Steam" in window.games_pane.info.info
     assert list(window.games_pane.list.pills) == [str(hdd_game)]                   # RPCS3's, no folder yet
     window.on_action("previous")                                   # LB Folders: the usual places, and Browse
     assert window.legend.items == [("A", "Choose"), ("LB", "Games"), ("RB", "Steam artwork"), MENU_INFO, BACK, EXIT]
-    assert window.steam_row.isHidden()                             # Open Steam is above the games only
     pills = window.games_pane.list.pills
     assert list(pills) == [f"add:{games}", f"add:{user / 'Downloads'}", "browse"]
     pills[f"add:{games}"].click()
@@ -489,10 +485,10 @@ def test_your_games_are_marked_with_a_and_put_in_steam(qapp, tmp_path, monkeypat
     assert window.games_pane.status.text() == NOTHING_TO_CHANGE
     pills[str(demon)].setFocus()
     qapp.processEvents()
-    assert ("X", "Play") in window.legend.items and not window.steam_row.isHidden()
+    assert ("X", "Play") in window.legend.items
     window.on_action("x")                                          # X: not in Steam yet
     assert window.games_pane.status.text() == ("Demon's Souls is not in Steam yet: A marks it, then Y Update Steam "
-                                               "puts it there.") and played == ["steam://open/bigpicture"]
+                                               "puts it there.") and played == []
     window.on_action("accept")                                     # A: the Steam mark
     assert "✓ Steam (Update Steam)" in window.games_pane.list.pills[str(demon)].label.text()
     window.on_action("y")                                          # Y on Your games: Update Steam
@@ -504,7 +500,42 @@ def test_your_games_are_marked_with_a_and_put_in_steam(qapp, tmp_path, monkeypat
     window.on_action("x")                                          # X: played through Steam
     number = shortcuts.numbers(steam_dir)[str(demon)]
     assert played[-1] == f"steam://rungameid/{(number << 32) | 0x02000000}"
-    assert window.games_pane.status.text() == "Starting Demon's Souls in Steam…"
+    assert window.games_pane.status.text() == ("Starting Demon's Souls in Steam… In the game, hold View and Menu "
+                                               "together to quit.")      # how to quit, on the screen (30-10-2026)
+    window.close()
+
+
+def test_without_steam_x_starts_the_game_in_rpcs3(qapp, tmp_path, monkeypatch):
+    """A device without Steam (owner, 30-10-2026: a fallback): X starts RPCS3 with the game full screen, as its
+    shortcut would, from RPCS3's folder; without RPCS3 it says to install it first."""
+    home = tmp_path / "emulator"
+    ready(home)
+    game = make_hdd_game(home / "dev_hdd0" / "game" / "NPUB30001", "Flower", "NPUB30001")
+    started, played = [], []
+    window = make(qapp, home, user_home=tmp_path / "me",
+                  start=lambda command, cwd=None: started.append((command, cwd)), play=played.append)
+    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
+    window.games_card.setFocus()
+    window.on_action("accept")
+    window.games_pane.list.pills[str(game)].setFocus()
+    qapp.processEvents()
+    assert ("X", "Play") in window.legend.items
+    window.on_action("x")
+    program = emulator.program(home)
+    launcher, before = play.launcher(ROOT)                      # the play mode, as the shortcut would start it
+    assert started == [([launcher, *before, "--no-gui", "--fullscreen", str(game)], program.parent)]
+    assert played == [] and window.games_pane.status.text() == ("Starting Flower in RPCS3… In the game, hold View "
+                                                                "and Menu together to quit.")
+
+    def fails(command, cwd=None):
+        raise PermissionError(13, "Access is denied")
+    window.start_program = fails
+    window.on_action("x")
+    assert window.games_pane.status.text() == "RPCS3 could not start Flower: Access is denied"
+    program.unlink()                                    # RPCS3 gone
+    window.on_action("x")
+    assert len(started) == 1 and window.games_pane.status.text() == ("Install RPCS3 first: it starts Flower on a "
+                                                                     "device without Steam.")
     window.close()
 
 
@@ -804,3 +835,51 @@ def test_x_plays_only_a_game_in_steam(qapp, tmp_path, monkeypatch):
     window.on_action("x")
     assert window.games_pane.status.text() == NO_GAME
     window.close()
+
+
+def test_a_shortcut_made_before_the_play_mode_asks_for_update_steam(qapp, tmp_path, monkeypatch):
+    """A game whose shortcut still starts RPCS3 itself (1.0.1's) says (Update Steam), and Y brings it to the play
+    mode (owner, 30-10-2026: View and Menu held quit every game)."""
+    home = tmp_path / "emulator"
+    ready(home)
+    game = make_hdd_game(home / "dev_hdd0" / "game" / "NPUB30001", "Flower", "NPUB30001")
+    steam_dir = tmp_path / "Steam"
+    config = steam_dir / "userdata" / "1" / "config"
+    config.mkdir(parents=True)
+    program = emulator.program(home)
+    old = steam.shortcut_entry(f'"{program}"', "[PS3] Flower", f'"{program.parent}\\"', "",
+                               f'--no-gui --fullscreen "{game}"', shortcuts.TAGS)
+    (config / "shortcuts.vdf").write_bytes(steam.write_vdf({"shortcuts": {"0": old}}))
+
+    def with_steam_closed(change):
+        change()
+        return False
+    window = make(qapp, home, steam_dir=steam_dir, steam_closed=with_steam_closed, user_home=tmp_path / "me")
+    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
+    assert window.games_pane.list.pills[str(game)].label.text().endswith("✓ Steam (Update Steam)")
+    window.games_card.setFocus()
+    window.on_action("y")
+    assert wait_for(qapp, lambda: not window.busy)
+    assert shortcuts.outdated(steam_dir) == set() and len(steam.shortcuts(steam_dir)) == 1
+    assert window.games_pane.list.pills[str(game)].label.text().endswith("✓ Steam")
+    window.close()
+
+
+def test_play_runs_the_game_without_a_window(monkeypatch, tmp_path):
+    """--play, as a shortcut starts the app: RPCS3 with the shortcut's arguments from its folder, through core's play
+    mode, before any window or the one-window check (the app's window may be open beside it)."""
+    from rpcs3_manager import __main__ as entry
+    ran = []
+    monkeypatch.setattr(emulator, "emulator_home", lambda: tmp_path / "emulator")
+    monkeypatch.setattr(entry.applog, "setup", lambda *a, **k: tmp_path / "log")
+    monkeypatch.setattr(entry.play, "run", lambda command, cwd, log: ran.append((command, cwd)) or 3)
+    monkeypatch.setattr(entry, "create_app", lambda *a, **k: pytest.fail("no window in the play mode"))
+    monkeypatch.setattr(sys, "argv", ["RPCS3-Manager.exe", "--play", "--no-gui", "--fullscreen", r"D:\G\EBOOT.BIN"])
+    assert entry.main() == 3
+    program = emulator.program(tmp_path / "emulator")
+    assert ran == [([str(program), "--no-gui", "--fullscreen", r"D:\G\EBOOT.BIN"], program.parent)]
+
+    def fails(command, cwd, log):
+        raise FileNotFoundError(2, "The system cannot find the file specified")
+    monkeypatch.setattr(entry.play, "run", fails)
+    assert entry.main() == 1

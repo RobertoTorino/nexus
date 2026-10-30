@@ -1,18 +1,22 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The Nexus release tab (owner, 30-10-2026): what the release holds, its one action Start new release, and what
-follows: the run on GitHub (stopped or resumed from here), the device test of each suite's draft portal and Publish.
-The logic is flow.py's; the window (main_window.py) holds the command line the commands run in and the GitHub runs
-the header reads."""
+"""The Nexus release tab (owner, 30-10-2026): the whole release as numbered steps in their order, from your own
+changes to the portal published (owner: "if I open NRT I want to see exactly what has to be done in their logical
+sequence"): Get up to date, Commit your changes, Push them, CI passes, Start new release (with what the release holds
+above it), the release on GitHub (Stop or Resume), Device test, Publish (or Not OK) and Bring in the pin commit. Each
+step says where it stands; only the step to do now has its pill lit (owner: "if that means I have to do 3 actions we
+make pills for them that can be clicked"). The logic is flow.py's (current_step, step_states); the window
+(main_window.py) holds the command line the commands run in and the GitHub runs the header reads."""
 
 from __future__ import annotations
 
+import shlex
 import sys
 from typing import TYPE_CHECKING
 
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor
-from PyQt6.QtWidgets import (QComboBox, QHBoxLayout, QHeaderView, QLabel, QLineEdit, QMessageBox, QPushButton,
-                             QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget)
+from PyQt6.QtWidgets import (QComboBox, QGridLayout, QHBoxLayout, QHeaderView, QLabel, QLineEdit, QMessageBox,
+                             QPushButton, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget)
 
 from bc250_core.theme import GREEN, GREY, ORANGE, RED
 from bc250_core.widgets import Terminal, accent_button, hint_label
@@ -26,10 +30,11 @@ if TYPE_CHECKING:
 COLUMNS = ("Release", "Now", "New version", "Why", "Notes")
 SEMVER_TIP = ("Breaking. (an entry that starts with it) -> major, Added. -> minor, Fixed. -> patch. auto: worked out "
               "when Start writes the release.")
+MARKS = {"done": ("✓", GREEN), "now": ("▶", ORANGE), "failed": ("✕", RED), "later": ("", GREY)}
 
 
 class ReleasePage(QWidget):
-    """The Nexus release: the rows to release, Start new release, and the run, device test and Publish after it."""
+    """The Nexus release: what it holds, and its steps in order, each with its pills."""
 
     def __init__(self, window: "ReleaseWindow"):
         super().__init__()
@@ -40,6 +45,17 @@ class ReleasePage(QWidget):
         header = self.table.horizontalHeader()
         header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         header.setSectionResizeMode(len(COLUMNS) - 1, QHeaderView.ResizeMode.Stretch)
+        self.pull_button = QPushButton("git pull")
+        self.pull_button.clicked.connect(self.pull)
+        self.commit_message = QLineEdit()
+        self.commit_message.setPlaceholderText("What these changes do (the commit message)")
+        self.commit_message.setMinimumWidth(420)
+        self.commit_message.textChanged.connect(self.show_state)
+        self.commit_button = accent_button("Commit", "Stage every change and new file and commit them, after the "
+                                           "version and manifest checks")
+        self.commit_button.clicked.connect(self.commit)
+        self.push_button = accent_button("Push", "Push your commits to GitHub; the pre-push hook checks them first")
+        self.push_button.clicked.connect(self.release_window.push)
         self.start_button = accent_button("Start new release", "Write the release, commit it, push it and start the "
                                           "release on GitHub")
         self.start_button.clicked.connect(self.start)
@@ -54,14 +70,12 @@ class ReleasePage(QWidget):
         self.stop_button.setToolTip("Stop the release on GitHub (gh run cancel). Safe until a portal is published: "
                                     "the portals see only portal tags")
         self.stop_button.clicked.connect(self.stop_run)
-        self.resume_button = QPushButton("Resume run")
-        self.resume_button.setToolTip("Start the jobs that failed or were stopped again (gh run rerun --failed): what "
-                                      "is out already is skipped, the draft made anew")
+        self.resume_button = accent_button("Resume run", "Start the jobs that failed or were stopped again (gh run "
+                                           "rerun --failed): what is out already is skipped, the draft made anew")
         self.resume_button.clicked.connect(self.resume_run)
         self.portal_choice = QComboBox()        # the suites' portal tags waiting for their device test
-        self.test_button = QPushButton("Device test")
-        self.test_button.setToolTip("Install the draft portal on this device from GitHub and start it "
-                                    "(check-release draft): test it as a user would")
+        self.test_button = accent_button("Device test", "Install the draft portal on this device from GitHub and "
+                                         "start it (check-release draft): test it as a user would")
         self.test_button.clicked.connect(self.device_test)
         self.publish_button = accent_button("Publish", "The device test passed: publish the draft, which makes the "
                                             "portal tag; the portals offer it from then on")
@@ -69,36 +83,51 @@ class ReleasePage(QWidget):
         self.reject_button = QPushButton("Not OK")
         self.reject_button.setToolTip("The device test failed: the draft stays unpublished")
         self.reject_button.clicked.connect(self.reject)
+        self.finish_button = accent_button("git pull", "Bring in the release's Pin ... commit")
+        self.finish_button.clicked.connect(self.pull)
         self.output = Terminal()                # the window shows it in Logs
         self.picks: list[flow.Pick] = []
         self.rows: list[tuple[flow.Pick, QComboBox, QLineEdit]] = []
+        self.facts = flow.Facts()
 
-        start_row = QHBoxLayout()
-        start_row.addWidget(self.why_not, 1)
-        start_row.addWidget(self.start_button)
-        after_row = QHBoxLayout()
-        after_row.addWidget(self.stop_button)
-        after_row.addWidget(self.resume_button)
-        after_row.addStretch(1)
-        after_row.addWidget(QLabel("Portal:"))
-        after_row.addWidget(self.portal_choice)
-        after_row.addWidget(self.test_button)
-        after_row.addWidget(self.publish_button)
-        after_row.addWidget(self.reject_button)
+        pills = {"pull": [self.pull_button], "commit": [self.commit_message, self.commit_button],
+                 "push": [self.push_button], "ci": [], "start": [self.start_button],
+                 "run": [self.stop_button, self.resume_button], "test": [self.portal_choice, self.test_button],
+                 "publish": [self.publish_button, self.reject_button], "finish": [self.finish_button]}
+        steps = QGridLayout()
+        steps.setColumnStretch(2, 1)
+        self.marks: dict[str, QLabel] = {}
+        self.titles: dict[str, QLabel] = {}
+        self.details: dict[str, QLabel] = {}
+        for row, (key, title, what) in enumerate(flow.STEPS):
+            mark = QLabel()
+            mark.setFixedWidth(22)
+            name = QLabel(f"{row + 1}. {title}")
+            detail = QLabel(what)
+            detail.setWordWrap(True)
+            detail.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
+            detail.setOpenExternalLinks(True)
+            box = QHBoxLayout()
+            box.setContentsMargins(0, 0, 0, 0)
+            for widget in pills[key]:
+                box.addWidget(widget, 1 if isinstance(widget, QLineEdit) else 0)
+            steps.addWidget(mark, row, 0)
+            steps.addWidget(name, row, 1)
+            steps.addWidget(detail, row, 2)
+            steps.addLayout(box, row, 3)
+            self.marks[key], self.titles[key], self.details[key] = mark, name, detail
         lay = QVBoxLayout(self)
         lay.addWidget(hint_label(
-            "One release for every suite on it: the apps that changed, their portal, core and Nexus's version. Check "
-            "the versions (type another to override; <b>auto</b> is worked out at Start), then <b>Start new "
-            "release</b>: it writes the release, commits and pushes it and starts it on GitHub, which builds, "
-            "publishes and pins the apps and makes each portal a draft. Then, on the suite's device: <b>Device "
-            "test</b> installs that draft; <b>Publish</b> when it works, which the portals then offer, or <b>Not "
-            "OK</b>. A run that failed: <b>Resume run</b>; one that must not go on: <b>Stop run</b>."))
+            "One release for every suite on it: the apps that changed, their portal, core and Nexus's version. Do the "
+            "steps below in their order: the one to do now has its pill lit and an orange ▶, done ones a green "
+            "✓. The versions in the table are offered by the CHANGELOG entries; type another to override "
+            "(<b>auto</b> is worked out at Start)."))
         lay.addWidget(self.table, 1)
-        lay.addLayout(start_row)
+        lay.addWidget(self.why_not)
+        lay.addLayout(steps)
         lay.addWidget(self.state)
-        lay.addLayout(after_row)
 
-    # --- before Start ---------------------------------------------------------------------------------------------
+    # --- what the release holds -----------------------------------------------------------------------------------
 
     def fill(self) -> None:
         """The rows of the release as the checkout is now; what was typed in a row that is still there stays."""
@@ -136,6 +165,117 @@ class ReleasePage(QWidget):
             pick.version, pick.notes = combo.currentText().strip(), notes.text()
         return [pick for pick, _combo, _notes in self.rows]
 
+    # --- the steps ------------------------------------------------------------------------------------------------
+
+    def read_facts(self) -> flow.Facts:
+        """What the steps stand on, from git and the runs the header fetched (it costs no request)."""
+        window = self.release_window
+        root, base = window.root, window.base()
+        runs = window.build.runs
+        head = (rp.git(root, "rev-parse", "HEAD") or "").strip()
+        run = flow.cycle_run(root, runs)
+        unstaged, staged, ahead = rp.git_state(root, base)
+        return flow.Facts(
+            behind=rp.behind(root, base), dirty=unstaged or staged, ahead=ahead,
+            ci=flow.ci_state(runs, head) if window.build.source is not None else "unknown",
+            unpushed=flow.unpushed_release(root, base), something=bool(self.picks), run=run,
+            drafts=[t for t in flow.waiting_portals(root) if not flow.published(root, runs, t)] if run else [])
+
+    def show_state(self) -> None:
+        """Each step's mark and line, and only the pills of the step to do now lit (none while a command runs)."""
+        window = self.release_window
+        idle = not window.commands.is_running() and bool(window.commands.bash)
+        facts = self.facts = self.read_facts()
+        states = flow.step_states(facts)
+        now = flow.current_step(facts)
+        for key, _title, what in flow.STEPS:
+            sign, color = MARKS[states[key]]
+            self.marks[key].setText(sign)
+            self.marks[key].setStyleSheet(f"color:{color}; font-weight:800;")
+            lit = states[key] in ("now", "failed")
+            self.titles[key].setStyleSheet(f"font-weight:800; color:{color};" if lit else
+                                           "font-weight:600;" if states[key] == "done" else f"color:{GREY};")
+            self.details[key].setText(self.detail(key, states[key], facts) or what)
+        reasons = flow.ready(window.root, window.base()) if self.picks and not facts.unpushed else []
+        self.why_not.setText("Nothing to release: no app of a suite on the Nexus release changed since its last "
+                             "release." if not self.picks and not now else "")
+        self.why_not.setVisible(bool(self.why_not.text()))
+        self.pull_button.setEnabled(idle and now == "pull")
+        self.commit_button.setEnabled(idle and now == "commit" and bool(self.commit_message.text().strip()))
+        self.commit_message.setEnabled(now == "commit")
+        self.push_button.setEnabled(idle and now == "push")
+        self.start_button.setText("Push and start" if facts.unpushed else "Start new release")
+        self.start_button.setEnabled(idle and now == "start" and (bool(facts.unpushed) or not reasons))
+        run = facts.run
+        self.stop_button.setEnabled(idle and now == "run" and run is not None and not run.done)
+        self.resume_button.setEnabled(idle and now == "run" and run is not None and run.done and not run.passed)
+        here = bool(facts.drafts) and rp.tests_here(window.root, self.waiting_suite())
+        self.portal_choice.setVisible(self.portal_choice.count() > 1)
+        self.test_button.setEnabled(idle and now == "test" and here)
+        self.test_button.setToolTip("Install the draft portal on this device and start it" if here or not facts.drafts
+                                    else "The device test runs on the suite's own system: " +
+                                    ("Linux (the board)" if sys.platform == "win32" else "Windows (the handheld)"))
+        self.publish_button.setEnabled(idle and now == "test")
+        self.reject_button.setEnabled(now == "test")
+        self.finish_button.setEnabled(idle and now == "finish")
+        last = flow.release_run(window.build.runs)
+        self.state.setText(f'Last {flow.WORKFLOW_NAME}: {last.outcome} on {last.sha[:7]}. <a href="{last.url}">Open '
+                           "the run</a>" if last is not None else "")
+        self.state.setStyleSheet(f"color:{GREY};")
+
+    def detail(self, key: str, state: str, facts: flow.Facts) -> str:
+        """The step's line while it is the one to do or failed: what is there to do, in words; "" for its usual
+        line."""
+        if state not in ("now", "failed"):
+            return ""
+        window = self.release_window
+        if key == "pull":
+            return f"{facts.behind} commit{'s' if facts.behind != 1 else ''} on GitHub that this checkout lacks."
+        if key == "commit":
+            files = len(flow.dirty_paths(window.root))
+            return f"{files} file{'s' if files != 1 else ''} changed. Type what they do, then Commit."
+        if key == "push":
+            return f"{facts.ahead} commit{'s' if facts.ahead != 1 else ''} to push."
+        if key == "ci":
+            if facts.ci == "failed":
+                return "CI failed on this commit: open the GitHub pill, fix what failed, then commit and push again."
+            return ("CI is running on this commit: wait until it passed." if facts.ci == "building" else
+                    "GitHub has no CI run on this commit yet: wait a moment.")
+        if key == "start":
+            return (f"The release commit is not pushed yet ({facts.unpushed}): Push and start." if facts.unpushed
+                    else "Check the versions in the table above, then Start new release.")
+        if key == "run" and facts.run is not None:
+            link = f' <a href="{facts.run.url}">Open the run</a>'
+            if not facts.run.done:
+                return f"{flow.WORKFLOW_NAME} is {facts.run.outcome} on {facts.run.sha[:7]}: wait, or Stop run.{link}"
+            return f"{flow.WORKFLOW_NAME} ended {facts.run.outcome}: fix what failed, then Resume run.{link}"
+        if key in ("test", "publish") and facts.drafts:
+            return (f"{', '.join(facts.drafts)} is a draft: Device test, then Publish when it works or Not OK."
+                    if key == "test" else "After the device test: Publish, or Not OK.")
+        if key == "finish":
+            return "The release is out: git pull brings in its Pin ... commit."
+        return ""
+
+    def waiting_suite(self) -> str | None:
+        tag = self.portal_choice.currentText()
+        root = self.release_window.root
+        return next((s for s in flow.release_suites(root) if tag.startswith(f"{rp.tag_prefix(root, s)}portal-v")),
+                    None)
+
+    # --- the pills ------------------------------------------------------------------------------------------------
+
+    def pull(self) -> None:
+        self.release_window.run_git(rp.pull_command())
+
+    def commit(self) -> None:
+        message = self.commit_message.text().strip()
+        if not message:
+            return
+        window = self.release_window
+        window.committing = True
+        window.run_git(flow.commit_work_command(window.root, message, window.base(), shlex.quote(sys.executable)))
+        self.commit_message.clear()
+
     def start(self) -> None:
         window = self.release_window
         pending = flow.unpushed_release(window.root, window.base())
@@ -160,63 +300,8 @@ class ReleasePage(QWidget):
         self.output.set_text("\n".join(log))
         window.run_git(flow.start_command(message))
 
-    # --- after Start ----------------------------------------------------------------------------------------------
-
     def run(self) -> rp.BuildRun | None:
         return flow.release_run(self.release_window.build.runs)
-
-    def show_state(self) -> None:
-        """Start only when it can go; the run's state and what to do next; its buttons only when they have
-        something to do. Read from the runs the header fetched, so it costs no request."""
-        window = self.release_window
-        idle = not window.commands.is_running() and bool(window.commands.bash)
-        pending = flow.unpushed_release(window.root, window.base())
-        reasons = flow.ready(window.root, window.base()) if self.picks and not pending else []
-        self.why_not.setText(f"The release commit is not pushed yet ({pending}): Push and start." if pending else
-                             " ".join(reasons))
-        self.start_button.setText("Push and start" if pending else "Start new release")
-        self.start_button.setEnabled(idle and (bool(pending) or bool(self.picks) and not reasons))
-        self.start_button.setToolTip("Push the release commit and start it on GitHub" if pending else
-                                     "Nothing to release: no app of a suite on the Nexus release changed since its "
-                                     "last release." if not self.picks else " ".join(reasons) or
-                                     "Write the release, commit it, push it and start it on GitHub")
-        run = self.run()
-        head = (rp.git(window.root, "rev-parse", "HEAD") or "").strip()
-        if run is None:
-            text, color = "No Nexus release has run on GitHub yet." if window.build.source is not None else "", GREY
-        elif not run.done:
-            text, color = f"{flow.WORKFLOW_NAME} is running on {run.sha[:7]} ({run.status.replace('_', ' ')}).", \
-                ORANGE
-        elif run.passed:
-            text = (f"{flow.WORKFLOW_NAME} on {run.sha[:7]} passed: each suite's portal is a draft. Device test on "
-                    "the suite's device, then Publish.")
-            color = GREEN
-        else:
-            text, color = (f"{flow.WORKFLOW_NAME} on {run.sha[:7]} ended {run.outcome}: open it, fix what failed, "
-                           "then Resume run (what is out already is skipped)."), RED
-        if run is not None:
-            text += f' <a href="{run.url}">Open the run</a>'
-            if run.sha != head and run.done:
-                text += " · git pull brings its pin commit"
-        self.state.setText(text)
-        self.state.setStyleSheet(f"color:{color}; font-weight:600;")
-        self.stop_button.setEnabled(idle and run is not None and not run.done)
-        self.resume_button.setEnabled(idle and run is not None and run.done and not run.passed)
-        waiting = self.portal_choice.count() > 0
-        windows = sys.platform == "win32"
-        here = waiting and rp.tests_here(window.root, self.waiting_suite())
-        self.test_button.setEnabled(idle and here)
-        self.test_button.setToolTip("Install the draft portal on this device and start it" if here else
-                                    "The device test runs on the suite's own system: " +
-                                    ("Linux (the board)" if windows else "Windows (the handheld)"))
-        self.publish_button.setEnabled(idle and waiting)
-        self.reject_button.setEnabled(waiting)
-
-    def waiting_suite(self) -> str | None:
-        tag = self.portal_choice.currentText()
-        root = self.release_window.root
-        return next((s for s in flow.release_suites(root) if tag.startswith(f"{rp.tag_prefix(root, s)}portal-v")),
-                    None)
 
     def stop_run(self) -> None:
         run = self.run()
@@ -252,7 +337,7 @@ class ReleasePage(QWidget):
 
     def reject(self) -> None:
         tag = self.portal_choice.currentText()
-        self.output.set_text(f"{tag} stays a draft: no portal sees it. Fix what the device test showed, commit and "
-                             "push the fix, then Start new release again: the apps already out are skipped and the "
-                             "portal is built anew.")
+        self.output.set_text(f"{tag} stays a draft: no portal sees it. Fix what the device test showed, then do the "
+                             "steps again from Commit your changes: the apps already out are skipped and the portal "
+                             "is built anew.")
         self.release_window.tabs.setCurrentWidget(self)

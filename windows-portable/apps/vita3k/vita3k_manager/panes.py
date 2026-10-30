@@ -134,9 +134,11 @@ GAMES_INFO = (
     "one). Press the A button on a game to mark it for Steam, or to take the mark away; then the Y button (Update "
     "Steam) makes Steam match the marks: each marked game becomes a non-Steam game, \"[PS Vita] <title>\", in "
     "Steam's library and its Big Picture mode, and a game without the mark is taken out. Steam closes for it and "
-    "starts again. A game from Steam starts full screen; Steam's own menu and its Exit game end it.\n\n"
+    "starts again. A game starts full screen. To quit a game, hold View and Menu together for two seconds: Vita3K "
+    "closes, and you are back where you started it. The same works in every game manager of the suite.\n\n"
     "The X button on a game that is in Steam starts it, through Steam (Steam starts first when it does not run). "
-    "Open Steam, the row at the top of the list, opens Steam's library.\n\n"
+    "On a device without Steam the X button starts the game in Vita3K itself. Steam's library opens from the "
+    "portal: RT Steam.\n\n"
     "The pictures in Steam come from inside each game (its icon and its LiveArea picture). With your own "
     "SteamGridDB API key (the RB button, Steam artwork; one key for the suite), Update Steam also fetches a cover for "
     "each game. Every entry of the row at the bottom also works by touch.")

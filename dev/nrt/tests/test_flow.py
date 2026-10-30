@@ -205,16 +205,79 @@ def test_start_writes_the_release_and_runs_the_one_command(release_window, monke
     assert "wp · test: 0.2.0" in page.output.toPlainText()
 
 
-def test_start_waits_for_a_clean_tree(release_window, monkeypatch):
+def test_changes_not_committed_make_commit_the_step_to_do(release_window, monkeypatch):
+    """The steps in their order (owner, 30-10-2026: "exactly what has to be done in their logical sequence"): with
+    changes in the tree, step 2 Commit is the one lit, and Start waits."""
     w = release_window
+    page = w.release_page
     (w.root / "wp/apps/test/app.py").write_text("changed\n")
     w.reload()
-    assert not w.release_page.start_button.isEnabled()
-    assert "working tree has changes" in w.release_page.why_not.text()
+    states = flow.step_states(page.facts)
+    assert states["pull"] == "done" and states["commit"] == "now" and states["start"] == "later"
+    assert page.marks["commit"].text() == "▶" and "1 file changed" in page.details["commit"].text()
+    assert not page.start_button.isEnabled() and not page.push_button.isEnabled()
+    assert not page.commit_button.isEnabled()                   # a message first
+    page.commit_message.setText("A greeting")
+    assert page.commit_button.isEnabled()
+    ran = []
+    monkeypatch.setattr(w, "run_git", ran.append)
+    page.commit()
+    assert ran[0].startswith("git add -A && tools/fix-modes.sh") and "git commit" in ran[0] and "A greeting" in ran[0]
+    assert "check_manifest.py" in ran[0] and w.committing
     warned = []
     monkeypatch.setattr("nexus_release_tool.release_page.QMessageBox.warning", lambda *a: warned.append(a[2]))
-    w.release_page.start()
+    page.start()
     assert warned and "working tree has changes" in warned[0]
+
+
+def _run(sha="abc1234", file="release-nexus.yml", workflow="Release Nexus", status="completed",
+         conclusion="success", ref="main"):
+    return rp.BuildRun(workflow, ref, status, conclusion, f"https://github.com/o/r/actions/runs/{abs(hash(sha+file))}",
+                       sha, "title", file=file)
+
+
+def test_the_step_to_do_follows_the_release():
+    """Every step in turn: pull, commit, push, CI, Start, the run, the device test and Publish, the pin commit."""
+    assert flow.current_step(flow.Facts(behind=2, dirty=True)) == "pull"
+    assert flow.current_step(flow.Facts(dirty=True, ahead=1)) == "commit"
+    assert flow.current_step(flow.Facts(ahead=1)) == "push"
+    assert flow.current_step(flow.Facts(ci="building", something=True)) == "ci"
+    states = flow.step_states(flow.Facts(ci="failed", something=True))
+    assert states["ci"] == "failed" and states["commit"] == "done" and states["start"] == "later"
+    assert flow.current_step(flow.Facts(ci="passed", something=True)) == "start"
+    assert flow.current_step(flow.Facts(ci="unknown", something=True)) == "start"      # no GitHub here: not held
+    assert flow.current_step(flow.Facts(ci="passed")) == ""                             # nothing to release
+    assert set(flow.step_states(flow.Facts(ci="passed")).values()) == {"done"}
+    assert flow.current_step(flow.Facts(ahead=1, unpushed="Release x")) == "start"     # Push and start
+    running = _run(status="in_progress", conclusion="")
+    assert flow.current_step(flow.Facts(run=running)) == "run"
+    failed = flow.step_states(flow.Facts(run=_run(conclusion="failure")))
+    assert failed["run"] == "failed" and failed["start"] == "done" and failed["test"] == "later"
+    states = flow.step_states(flow.Facts(run=_run(), drafts=["wp-portal-v2.0.0"]))
+    assert states["test"] == states["publish"] == "now" and states["run"] == "done"
+    assert flow.current_step(flow.Facts(run=_run(), behind=1)) == "finish"
+    assert flow.current_step(flow.Facts(run=_run())) == ""                               # out and pulled
+    assert flow.current_step(flow.Facts(run=_run(), drafts=["x"], dirty=True)) == "commit"  # a fix after Not OK
+
+
+def test_ci_state_reads_the_ci_runs_of_the_commit():
+    runs = [_run("aaa", "ci.yml", "CI"), _run("aaa", "ci-nexus.yml", "CI Nexus", "in_progress", ""),
+            _run("aaa", "release-nexus.yml"), _run("bbb", "ci.yml", "CI", conclusion="failure")]
+    assert flow.ci_state(runs, "aaa") == "building" and flow.ci_state(runs, "bbb") == "failed"
+    assert flow.ci_state(runs[:1], "aaa") == "passed" and flow.ci_state(runs, "ccc") == "none"
+
+
+def test_the_release_run_lasts_until_other_work_is_committed(nexus):
+    head = sh(nexus, "rev-parse", "HEAD").strip()
+    run = _run(head)
+    assert flow.cycle_run(nexus, [run]) is run
+    sh(nexus, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "--allow-empty", "-m", "Pin wp-test-v0.2.0")
+    assert flow.cycle_run(nexus, [run]) is run                    # the pin commit pulled: still this release
+    sh(nexus, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "--allow-empty", "-m", "Other work")
+    assert flow.cycle_run(nexus, [run]) is None
+    assert flow.cycle_run(nexus, []) is None
+    assert flow.published(nexus, [_run(ref="wp-portal-v9.9.9", file="nexus-index.yml")], "wp-portal-v9.9.9")
+    assert not flow.published(nexus, [], "wp-portal-v9.9.9")
 
 
 def test_the_device_test_and_publish(release_window, monkeypatch):

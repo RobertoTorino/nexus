@@ -22,9 +22,11 @@ What the app writes for RPCS3 (the BC250 suite's RPCS3 Manager's rule, owner 24-
 game, the manager does the rest), never while RPCS3 runs, since RPCS3 writes its own files when it closes:
 
 * RPCS3's GUI settings, GuiConfigs\\CurrentSettings.ini (a Qt INI, gui_settings.h): its welcome dialog off
-  (ib_show_welcome) and its own update check off (m_check_upd_start): the app never shows RPCS3's window, but a
-  game started from Steam with --no-gui is RPCS3's GUI application still, and RPCS3's update check would offer a
-  build the app was not tried with.
+  (ib_show_welcome), its question before a game's window closes off (ib_confirm_exit; owner, 30-10-2026: View and
+  Menu held close the game's window through the app's play mode, as Alt+F4 does, and RPCS3 would ask "Exit Game?"
+  first) and its own update check off (m_check_upd_start): the app never shows RPCS3's window, but a game started
+  from Steam with --no-gui is RPCS3's GUI application still, and RPCS3's update check would offer a build the app was
+  not tried with.
 * Player 1 on the handheld's controller, config\\input_configs\\global\\Default.yml (cfg_input in pad_config.h):
   RPCS3 starts a game with the keyboard as player 1 while that file is empty (cfg_input::load). The app writes
   RPCS3's XInput handler, the Windows handheld's own (the Ally's controller is an XInput pad), with RPCS3's own
@@ -207,6 +209,7 @@ def played(seconds: int) -> str:
 GUI_SETTINGS = Path("GuiConfigs") / "CurrentSettings.ini"
 # The GUI settings the app owns: section, key, value, and what it did in the app's words.
 GUI_OWNED = (("main_window", "infoBoxEnabledWelcome", "false", "its welcome dialog off"),
+             ("main_window", "confirmationBoxExitGame", "false", "its exit question off"),
              ("Meta", "checkUpdateStart", "false", "its own update check off"))
 INPUT_CONFIG = Path(CONFIG_DIR) / "input_configs" / "global" / "Default.yml"
 PAD_MARK = "# Written by RPCS3 Manager: player 1 on the handheld's controller, through RPCS3's XInput handler."

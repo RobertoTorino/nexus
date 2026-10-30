@@ -12,14 +12,16 @@ from __future__ import annotations
 
 import json
 import re
+import sys
 import tempfile
 import threading
 import time
 from pathlib import Path
 
+import pytest
 from PyQt6.QtCore import QSettings
 
-from bc250_core import portable, steam
+from bc250_core import play, portable, steam
 from bc250_core.gamepad import Gamepad
 from bc250_core.portable import BACK, EXIT, VIEW
 from bc250_core.portable import INFO as MENU_INFO
@@ -63,6 +65,7 @@ def wait_for(qapp, predicate, seconds=5.0):
 
 def make(qapp, home=None, install=fake_install, running=lambda home: False, **more):
     more.setdefault("steam_dir", None)                  # never the real Steam
+    more.setdefault("start", lambda command, cwd=None: None)   # never a real PPSSPP
     more.setdefault("drives", lambda: [])
     more.setdefault("roots", lambda: [])
     more.setdefault("settings", QSettings(str(Path(tempfile.mkdtemp()) / "app.ini"),
@@ -574,9 +577,9 @@ def test_no_path_on_the_screen_shows_the_users_name(qapp, tmp_path):
         shutil.rmtree(games, ignore_errors=True)
 
 
-def test_a_game_is_played_through_steam_and_steam_is_opened(qapp, tmp_path, monkeypatch):
-    """X on a game in Steam starts it through Steam, by its shortcut's appid; a game not in Steam yet says how; the
-    Open Steam row above the games opens Steam's library (owner, 29-10-2026)."""
+def test_a_game_is_played_through_steam(qapp, tmp_path, monkeypatch):
+    """X on a game in Steam starts it through Steam, by its shortcut's appid; a game not in Steam yet says how;
+    Steam's library is the portal's (owner, 30-10-2026: no Open Steam row)."""
     home = tmp_path / "emulator"
     fake_install(home)
     game = make_disc(tmp_path / "me" / "Games" / "Daxter.iso", "Daxter", "ULUS10044")
@@ -608,14 +611,92 @@ def test_a_game_is_played_through_steam_and_steam_is_opened(qapp, tmp_path, monk
     item = next(item for item in steam.shortcuts(steam_dir) if shortcuts.ours(item))
     number = shortcuts.numbers(steam_dir)[str(game)]
     assert number == steam.appid(str(steam.field(item, "Exe")), str(steam.field(item, "AppName")))
-    assert opened == [steam.play_url(number)] and window.games_pane.status.text() == f"Starting {title} in Steam…"
-    window.games_pane.list.pills[str(game)].setFocus()
-    window.on_action("up")                                         # above the games: Open Steam
-    assert window.open_steam.hasFocus()
-    assert window.legend.items[0] == ("A", "Open Steam") and ("X", "Play") not in window.legend.items
-    window.on_action("accept")
-    assert opened[-1] == steam.OPEN_URL and window.games_pane.status.text() == "Opening Steam…"
+    assert opened == [steam.play_url(number)]
+    assert window.games_pane.status.text() == f"Starting {title} in Steam… {play.QUIT_HINT}"   # how to quit
+    assert not hasattr(window, "open_steam")
     window.toggle_folders()                                        # X on the folders plays nothing
     window.on_action("x")
-    assert opened[-1] == steam.OPEN_URL and window.games_pane.status.text() == PICK_A_GAME
+    assert opened == [steam.play_url(number)] and window.games_pane.status.text() == PICK_A_GAME
     window.close()
+
+
+def test_without_steam_x_starts_the_game_in_ppsspp(qapp, tmp_path, monkeypatch):
+    """A device without Steam (owner, 30-10-2026: a fallback): X starts PPSSPP with the game full screen, as its
+    shortcut would, from PPSSPP's folder; without PPSSPP it says to install it first."""
+    home = tmp_path / "emulator"
+    game = make_disc(tmp_path / "me" / "Games" / "Daxter.iso", "Daxter", "ULUS10044")
+    started, opened = [], []
+    window = make(qapp, home, user_home=tmp_path / "me", start=lambda command, cwd=None: started.append((command, cwd)),
+                  open_url=opened.append)
+    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
+    window.add_folder(tmp_path / "me" / "Games")
+    window.games_card.setFocus()
+    window.games_pane.list.pills[str(game)].setFocus()
+    qapp.processEvents()
+    title = window.focused_game().title
+    assert ("X", "Play") in window.legend.items
+    window.on_action("x")
+    assert started == [] and window.games_pane.status.text() == (f"Install PPSSPP first: it starts {title} on a "
+                                                                 "device without Steam.")
+    fake_install(home)
+    window.on_action("x")
+    program = emulator.program(home)
+    launcher, before = play.launcher(ROOT)                      # the play mode, as the shortcut would start it
+    assert started == [([launcher, *before, *emulator.GAME_ARGS, str(game)], program.parent)]
+    assert opened == [] and window.games_pane.status.text() == f"Starting {title} in PPSSPP… {play.QUIT_HINT}"
+
+    def fails(command, cwd=None):
+        raise PermissionError(13, "Access is denied")
+    window.start_program = fails
+    window.on_action("x")
+    assert window.games_pane.status.text() == f"PPSSPP could not start {title}: Access is denied"
+    window.close()
+
+
+def test_a_shortcut_made_before_the_play_mode_asks_for_update_steam(qapp, tmp_path, monkeypatch):
+    """A game whose shortcut still starts PPSSPP itself (1.0.1's) says (Update Steam), and Y brings it to the play
+    mode (owner, 30-10-2026: View and Menu held quit every game)."""
+    home = tmp_path / "emulator"
+    fake_install(home)
+    game = make_disc(tmp_path / "me" / "Games" / "Daxter.iso", "Daxter", "ULUS10044")
+    steam_dir = tmp_path / "Steam"
+    config = steam_dir / "userdata" / "1" / "config"
+    config.mkdir(parents=True)
+    program = emulator.program(home)
+    old = steam.shortcut_entry(f'"{program}"', "[PSP] Daxter", f'"{program.parent}"', "",
+                               f'--fullscreen --pause-menu-exit "{game}"', shortcuts.TAGS)
+    (config / "shortcuts.vdf").write_bytes(steam.write_vdf({"shortcuts": {"0": old}}))
+
+    def with_steam_closed(change):
+        change()
+        return False
+    window = make(qapp, home, steam_dir=steam_dir, steam_closed=with_steam_closed, user_home=tmp_path / "me")
+    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
+    window.add_folder(tmp_path / "me" / "Games")
+    assert window.games_pane.list.pills[str(game)].label.text().endswith("✓ Steam (Update Steam)")
+    window.games_card.setFocus()
+    window.on_action("y")
+    assert wait_for(qapp, lambda: not window.busy)
+    assert shortcuts.outdated(steam_dir) == set() and len(steam.shortcuts(steam_dir)) == 1
+    assert window.games_pane.list.pills[str(game)].label.text().endswith("✓ Steam")
+    window.close()
+
+
+def test_play_runs_the_game_without_a_window(monkeypatch, tmp_path):
+    """--play, as a shortcut starts the app: PPSSPP with the shortcut's arguments from its folder, through core's
+    play mode, before any window or the one-window check (the app's window may be open beside it)."""
+    from ppsspp_manager import __main__ as entry
+    ran = []
+    monkeypatch.setattr(emulator, "emulator_home", lambda: tmp_path / "emulator")
+    monkeypatch.setattr(entry.applog, "setup", lambda *a, **k: tmp_path / "log")
+    monkeypatch.setattr(entry.play, "run", lambda command, cwd, log: ran.append((command, cwd)) or 3)
+    monkeypatch.setattr(entry, "create_app", lambda *a, **k: pytest.fail("no window in the play mode"))
+    monkeypatch.setattr(sys, "argv", ["PPSSPP-Manager.exe", "--play", "--fullscreen", "--pause-menu-exit", "D:/G.iso"])
+    assert entry.main() == 3
+    program = emulator.program(tmp_path / "emulator")
+    assert ran == [([str(program), "--fullscreen", "--pause-menu-exit", "D:/G.iso"], program.parent)]
+
+    def fails(command, cwd, log):
+        raise FileNotFoundError(2, "The system cannot find the file specified")
+    monkeypatch.setattr(entry.play, "run", fails)
+    assert entry.main() == 1

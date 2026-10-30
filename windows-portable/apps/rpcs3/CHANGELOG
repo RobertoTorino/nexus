@@ -1,3 +1,38 @@
+Changelog: 30-10-2026 14:55:47
+
+Breaking. A game's Steam shortcut starts the app's play mode (owner, 30-10-2026: "Hold View + Menu, everywhere"):
+RPCS3-Manager.exe --play --no-gui --fullscreen "<EBOOT.BIN>", which starts RPCS3 in its folder and ends with it, so
+its Steam number and artwork names change. A shortcut made before, which starts rpcs3.exe itself, is still the
+game's: it shows (Update Steam), and Y Update Steam writes it again (shortcuts.outdated()).
+
+Changelog: 30-10-2026 14:55:47
+
+Added. Hold View and Menu together for two seconds to quit a game (core's play mode): RPCS3 closes as its window
+would, from Steam's library, X Play or without Steam. The line at the bottom says so when a game starts ("In the game,
+hold View and Menu together to quit."), and Your games' information and the wiki chapter. A short press still opens
+RPCS3's own menu with Exit Game. The app turns RPCS3's question before a game's window closes off (CurrentSettings.ini,
+[main_window] confirmationBoxExitGame=false), so that close does not stop at "Exit Game?".
+
+Changelog: 30-10-2026 13:35:58
+
+Breaking. The Open Steam row at the top of Your games is gone (owner, 30-10-2026): Steam's library opens from the
+portal, RT Steam.
+
+Changelog: 30-10-2026 13:35:58
+
+Added. On a device without Steam (not installed, or never started), X Play starts the game in RPCS3 itself, full
+screen, with the command its Steam shortcut has (shortcuts.command(), core's platform.start_program() outside the
+app's bundle; owner, 30-10-2026: a fallback, as a game cannot be played without Steam otherwise). Without RPCS3
+installed it says to install it first. With Steam installed X plays through Steam as before.
+
+Changelog: 30-10-2026 12:54:34
+
+Fixed. Steam started by the app signs in (core, owner, 30-10-2026): X Play and the restart after Steam's shortcuts
+changed started steam.exe by the lower-case name in Steam's registry key, and a Steam started so never signed in, its
+login window off the screen; it is started by its name as on the disk now, outside the app's bundle. The information
+popup's text box is as high as its text, up to 0.7 of the window: a text with "[PS3] <title>" in it was measured as
+HTML and kept four lines high.
+
 Changelog: 30-10-2026 01:30:27
 
 Release 1.0.1.

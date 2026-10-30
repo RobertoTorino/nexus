@@ -13,14 +13,16 @@ from __future__ import annotations
 
 import os
 import re
+import sys
 import tempfile
 import threading
 import time
 from pathlib import Path
 
+import pytest
 from PyQt6.QtCore import QSettings
 
-from bc250_core import portable, steam
+from bc250_core import play, portable, steam
 from bc250_core.gamepad import Gamepad
 from bc250_core.portable import BACK, EXIT, VIEW
 from bc250_core.portable import INFO as MENU_INFO
@@ -52,6 +54,7 @@ def wait_for(qapp, predicate, seconds=5.0):
 
 def make(qapp, home=None, install=fake_install, running=lambda home: False, **more):
     more.setdefault("steam_dir", None)                  # never the real Steam
+    more.setdefault("start", lambda command, cwd=None: None)   # never a real Vita3K
     more.setdefault("roots", lambda: [])
     more.setdefault("runtime_missing", lambda: [])
     more.setdefault("newer_release", lambda: None)      # never GitHub
@@ -561,7 +564,8 @@ def test_view_while_vita3k_installs_asks_first(qapp, tmp_path, monkeypatch):
 
 def test_your_games_are_marked_with_a_and_put_in_steam(qapp, tmp_path, monkeypatch):
     """The games are played from Steam (owner, 29-10-2026): A on a game is its Steam mark, Y Update Steam writes the
-    marks, X plays a game that is in Steam through Steam (steam://rungameid), Open Steam opens Steam's library."""
+    marks, X plays a game that is in Steam through Steam (steam://rungameid); Steam's library is the portal's (owner,
+    30-10-2026: no Open Steam row)."""
     home = tmp_path / "emulator"
     ready(home)
     persona = make_game(fs(home), "Persona 4 Golden", "PCSB00245", pictures=True)
@@ -582,12 +586,7 @@ def test_your_games_are_marked_with_a_and_put_in_steam(qapp, tmp_path, monkeypat
     assert window.legend.items == [("A", "Steam mark"), ("Y", "Update Steam"), ("RB", "Steam artwork"), MENU_INFO,
                                    EXIT]
     window.on_action("accept")                                     # into the list
-    window.on_action("up")                                         # Open Steam, at the top
-    assert window.steam_row.hasFocus()
-    assert window.legend.items == [("A", "Open Steam"), ("Y", "Update Steam"), ("RB", "Steam artwork"), MENU_INFO,
-                                   BACK, EXIT]
-    window.on_action("accept")
-    assert played == ["steam://open/bigpicture"] and window.games_pane.status.text() == "Opening Steam…"
+    assert not hasattr(window, "steam_row")
     assert "Press the A button on a game to mark it for Steam" in window.games_pane.info.info
     assert window.games_pane.summary.text() == "2 game(s) installed in Vita3K, 0 in Steam"
     pills = window.games_pane.list.pills
@@ -600,7 +599,7 @@ def test_your_games_are_marked_with_a_and_put_in_steam(qapp, tmp_path, monkeypat
     assert ("X", "Play") in window.legend.items
     window.on_action("x")                                          # X: not in Steam yet
     assert window.games_pane.status.text() == ("Persona 4 Golden is not in Steam yet: A marks it, then Y Update "
-                                               "Steam puts it there.") and len(played) == 1
+                                               "Steam puts it there.") and played == []
     window.on_action("accept")                                     # A: the Steam mark
     assert "✓ Steam (Update Steam)" in window.games_pane.list.pills["PCSB00245"].label.text()
     assert window.games_pane.list.pills["PCSB00245"].hasFocus()
@@ -610,17 +609,53 @@ def test_your_games_are_marked_with_a_and_put_in_steam(qapp, tmp_path, monkeypat
     assert "1 game(s) in Steam" in window.games_pane.status.text() and "Read back" not in window.games_pane.status.text()
     assert window.games_pane.list.pills["PCSB00245"].label.text().endswith("✓ Steam")
     item = next(i for i in steam.shortcuts(steam_dir) if i.get("AppName"))
-    assert item["LaunchOptions"] == "-r PCSB00245" and item["Exe"] == f'"{emulator.program(home)}"'
+    launcher, before = play.launcher(ROOT)                         # the play mode (owner, 30-10-2026)
+    assert item["LaunchOptions"] == play.launch_options(before, "-r PCSB00245") and item["Exe"] == f'"{launcher}"'
     assert item["icon"] == str(persona / "sce_sys" / "icon0.png")
     window.games_pane.list.pills["PCSB00245"].setFocus()
     window.on_action("x")                                          # X: played through Steam
     number = shortcuts.numbers(steam_dir)["PCSB00245"]
     assert played[-1] == f"steam://rungameid/{(number << 32) | 0x02000000}"
     assert number == steam.appid(item["Exe"], item["AppName"]) & 0xFFFFFFFF
-    assert window.games_pane.status.text() == "Starting Persona 4 Golden in Steam…"
+    assert window.games_pane.status.text() == ("Starting Persona 4 Golden in Steam… In the game, hold View and Menu "
+                                               "together to quit.")    # how to quit, on the screen
     window.games_pane.list.pills["PCSB00245"].click()              # the mark off, and Steam again: taken out
     window.on_action("y")
     assert wait_for(qapp, lambda: not window.busy) and shortcuts.in_steam(steam_dir) == {}
+    window.close()
+
+
+def test_without_steam_x_starts_the_game_in_vita3k(qapp, tmp_path, monkeypatch):
+    """A device without Steam (owner, 30-10-2026: a fallback): X starts Vita3K with the game full screen, as its
+    shortcut would, from Vita3K's folder; without Vita3K it says to install it first."""
+    home = tmp_path / "emulator"
+    ready(home)
+    make_game(fs(home), "Persona 4 Golden", "PCSB00245")
+    started, played = [], []
+    window = make(qapp, home, start=lambda command, cwd=None: started.append((command, cwd)), play=played.append)
+    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
+    window.games_card.setFocus()
+    window.on_action("accept")
+    window.games_pane.list.pills["PCSB00245"].setFocus()
+    qapp.processEvents()
+    assert ("X", "Play") in window.legend.items
+    window.on_action("x")
+    program = emulator.program(home)
+    launcher, before = play.launcher(ROOT)                      # the play mode, as the shortcut would start it
+    assert started == [([launcher, *before, "-r", "PCSB00245"], program.parent)]
+    assert played == [] and window.games_pane.status.text() == ("Starting Persona 4 Golden in Vita3K… In the game, "
+                                                                "hold View and Menu together to quit.")
+
+    def fails(command, cwd=None):
+        raise PermissionError(13, "Access is denied")
+    window.start_program = fails
+    window.on_action("x")
+    assert window.games_pane.status.text() == "Vita3K could not start Persona 4 Golden: Access is denied"
+    program.unlink()                                              # Vita3K gone
+    window.on_action("x")
+    assert window.games_pane.status.text() == ("Install Vita3K first: it starts Persona 4 Golden on a device without "
+                                               "Steam.")
+    assert len(started) == 1
     window.close()
 
 
@@ -807,3 +842,51 @@ def test_the_browser_opens_where_it_was_left(qapp, tmp_path, monkeypatch):
     window.on_action("next")
     assert window.browser.path == folder
     window.close()
+
+
+def test_a_shortcut_made_before_the_play_mode_asks_for_update_steam(qapp, tmp_path, monkeypatch):
+    """A game whose shortcut still starts Vita3K itself (1.0.1's) says (Update Steam), and Y brings it to the play
+    mode (owner, 30-10-2026: View and Menu held quit every game)."""
+    home = tmp_path / "emulator"
+    ready(home)
+    make_game(fs(home), "Persona 4 Golden", "PCSB00245")
+    steam_dir = tmp_path / "Steam"
+    config = steam_dir / "userdata" / "1" / "config"
+    config.mkdir(parents=True)
+    program = emulator.program(home)
+    old = steam.shortcut_entry(f'"{program}"', "[PS Vita] Persona 4 Golden", f'"{program.parent}"', "",
+                               "-r PCSB00245", shortcuts.TAGS)
+    (config / "shortcuts.vdf").write_bytes(steam.write_vdf({"shortcuts": {"0": old}}))
+
+    def with_steam_closed(change):
+        change()
+        return False
+    window = make(qapp, home, steam_dir=steam_dir, steam_closed=with_steam_closed)
+    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
+    assert window.games_pane.list.pills["PCSB00245"].label.text().endswith("✓ Steam (Update Steam)")
+    window.games_card.setFocus()
+    window.on_action("y")
+    assert wait_for(qapp, lambda: not window.busy)
+    assert shortcuts.outdated(steam_dir) == set() and len(steam.shortcuts(steam_dir)) == 1
+    assert window.games_pane.list.pills["PCSB00245"].label.text().endswith("✓ Steam")
+    window.close()
+
+
+def test_play_runs_the_game_without_a_window(monkeypatch, tmp_path):
+    """--play, as a shortcut starts the app: Vita3K with the shortcut's arguments from its folder, through core's
+    play mode, before any window or the one-window check (the app's window may be open beside it)."""
+    from vita3k_manager import __main__ as entry
+    ran = []
+    monkeypatch.setattr(emulator, "emulator_home", lambda: tmp_path / "emulator")
+    monkeypatch.setattr(entry.applog, "setup", lambda *a, **k: tmp_path / "log")
+    monkeypatch.setattr(entry.play, "run", lambda command, cwd, log: ran.append((command, cwd)) or 3)
+    monkeypatch.setattr(entry, "create_app", lambda *a, **k: pytest.fail("no window in the play mode"))
+    monkeypatch.setattr(sys, "argv", ["Vita3K-Manager.exe", "--play", "-r", "PCSB00245"])
+    assert entry.main() == 3
+    program = emulator.program(tmp_path / "emulator")
+    assert ran == [([str(program), "-r", "PCSB00245"], program.parent)]
+
+    def fails(command, cwd, log):
+        raise FileNotFoundError(2, "The system cannot find the file specified")
+    monkeypatch.setattr(entry.play, "run", fails)
+    assert entry.main() == 1
