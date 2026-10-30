@@ -1,3 +1,7 @@
+Changelog: 30-10-2026 20:55:37
+
+Release 1.3.0.
+
 Changelog: 30-10-2026 20:30:42
 
 Fixed. Publishing a Nexus release's portal no longer ends in a failed Release Windows Portable run (owner,
