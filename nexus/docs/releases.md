@@ -54,7 +54,7 @@ the CHANGELOG entries, as in step 1; type another to override it. A portal's and
 are worked out when the release is written, at least what the app releases need, and can be typed too.
 
 Under that list are the release's steps, numbered, in the order you do them, each with its pill. The step to do now
-has an orange ▶ and its pill lit; a step done has a green ✓, one that failed a red ✕, and the line beside each says
+has an orange ▶ and its pill lit; a step done has a green ✓, one that failed a red !, and the line beside each says
 what there is to do. Only the lit pill does anything, so you never need a command or another tab:
 
 1. **Get up to date** (**git pull**): only when GitHub has commits this checkout lacks, pushed from the other machine.
@@ -72,7 +72,10 @@ what there is to do. Only the lit pill does anything, so you never need a comman
    on top of yours, and builds the portal as a **draft**: a draft has no tag yet, so no installed portal sees it.
    The line links the run; a run that ends badly gives a notification and lights **Resume run** (what is out already
    is skipped, the draft is made anew). **Stop run** stops a run that must not go on; stopping is safe until a
-   portal is published.
+   portal is published. When the code must change for the run to pass (CI failed on the release commit, say), never
+   start a new release: the release is written and pushed already. Fix it; the steps then light **Commit your
+   changes**, **Push them** and **CI passes** for the fix, and step 6 reads **Start again on this commit**, which runs
+   the release as it is written on the fix's commit.
 7. **Device test,** on the suite's own device (the handheld for the Windows Portable Suite): it downloads the draft
    portal, checks it against its `SHA256SUMS`, installs it and starts it (`check-release.ps1 draft`). Test it as a
    user would.

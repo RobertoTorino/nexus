@@ -212,6 +212,13 @@ def run_id(run: rp.BuildRun) -> str:
     return found[1] if found else ""
 
 
+def restart_command() -> str:
+    """A release whose run failed, started again on HEAD (its fix, pushed and passed CI): release-nexus.yml on that
+    commit, nothing written anew; what is out already is skipped."""
+    return (f'gh workflow run {NEXUS_WORKFLOW} --ref main -f commit="$(git rev-parse HEAD)" && echo \'Started '
+            f'{NEXUS_WORKFLOW} on \'"$(git rev-parse --short HEAD)"')
+
+
 def stop_command(run: rp.BuildRun) -> str:
     return f"gh run cancel {run_id(run)}"
 
@@ -250,6 +257,7 @@ class Facts:
     something: bool = False             # something to release
     run: rp.BuildRun | None = None      # the release run of this release, while it lasts
     drafts: list[str] = field(default_factory=list)     # its portals not published yet
+    restart: bool = False               # HEAD is not the run's commit: a failed run starts again on HEAD, the fix
 
 
 def ci_state(runs: list[rp.BuildRun], sha: str) -> str:
@@ -271,6 +279,8 @@ def cycle_run(root: Path, runs: list[rp.BuildRun]) -> rp.BuildRun | None:
         return None
     if rp.git(root, "merge-base", "--is-ancestor", run.sha, "HEAD") is None:
         return None
+    if run.done and not run.passed:
+        return run                          # written and pushed, not out: it lasts, fixes on top, until a run passes
     subjects = (rp.git(root, "log", "--format=%s", f"{run.sha}..HEAD") or "").splitlines()
     return run if all(s.startswith("Pin ") for s in subjects if s.strip()) else None
 
@@ -284,6 +294,16 @@ def published(root: Path, runs: list[rp.BuildRun], tag: str) -> bool:
 def current_step(facts: Facts) -> str:
     """The step to do now, its key in STEPS; "" when there is nothing to do."""
     run = facts.run
+    if run is not None and run.done and not run.passed:
+        # The release is written and pushed but its run failed (30-10-2026: CI failed on the release commit): its
+        # fix is committed, pushed and passes CI, and the run starts again on it (restart), never a new release
+        if facts.dirty:
+            return "commit"
+        if facts.ahead:
+            return "push"
+        if facts.restart and facts.ci in ("none", "building", "failed"):
+            return "ci"
+        return "run"
     if run is not None and not facts.dirty and not (facts.ahead and not facts.unpushed):
         if not run.passed:
             return "run"                    # running, or ended badly: Resume or Stop
@@ -317,6 +337,9 @@ def step_states(facts: Facts) -> dict[str, str]:
     if now in ("pull", "commit", "push", "ci", "start"):
         for key in ("run", "test", "publish", "finish"):
             states[key] = "later"
+    run = facts.run
+    if run is not None and run.done and not run.passed and now in ("commit", "push", "ci"):
+        states["start"], states["run"] = "done", "failed"     # written already; its fix goes through 2 to 4 first
     return states
 
 

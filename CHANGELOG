@@ -1,3 +1,11 @@
+Changelog: 30-10-2026 16:28:14
+
+Fixed. CI Windows Portable passes on a Nexus release's commit (owner, 30-10-2026: Release Nexus stopped at "CI
+passed on this commit", the portal's build "release not found"): that commit pins a Windows Portable Test release the
+release itself makes after CI, so the portal's bundle had nothing to download. A pinned test release that is not out
+yet, whose version is the test app's VERSION (as check_manifest.py allows), is built from the commit for the bundle;
+one that is neither stops CI as before.
+
 Changelog: 30-10-2026 16:11:25
 
 Release 1.1.0. Brings wp-pcsx2-v4.0.0, wp-portal-v5.0.0, wp-ppsspp-v2.0.0, wp-rpcs3-v2.0.0, wp-shadps4-v2.0.0, wp-test-v3.1.0, wp-vita3k-v2.0.0, wp-xenia-v2.0.0.

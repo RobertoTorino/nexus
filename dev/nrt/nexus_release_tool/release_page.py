@@ -30,7 +30,7 @@ if TYPE_CHECKING:
 COLUMNS = ("Release", "Now", "New version", "Why", "Notes")
 SEMVER_TIP = ("Breaking. (an entry that starts with it) -> major, Added. -> minor, Fixed. -> patch. auto: worked out "
               "when Start writes the release.")
-MARKS = {"done": ("✓", GREEN), "now": ("▶", ORANGE), "failed": ("✕", RED), "later": ("", GREY)}
+MARKS = {"done": ("✓", GREEN), "now": ("▶", ORANGE), "failed": ("!", RED), "later": ("", GREY)}
 
 
 class ReleasePage(QWidget):
@@ -179,7 +179,8 @@ class ReleasePage(QWidget):
             behind=rp.behind(root, base), dirty=unstaged or staged, ahead=ahead,
             ci=flow.ci_state(runs, head) if window.build.source is not None else "unknown",
             unpushed=flow.unpushed_release(root, base), something=bool(self.picks), run=run,
-            drafts=[t for t in flow.waiting_portals(root) if not flow.published(root, runs, t)] if run else [])
+            drafts=[t for t in flow.waiting_portals(root) if not flow.published(root, runs, t)] if run else [],
+            restart=run is not None and run.sha != head)
 
     def show_state(self) -> None:
         """Each step's mark and line, and only the pills of the step to do now lit (none while a command runs)."""
@@ -209,6 +210,7 @@ class ReleasePage(QWidget):
         run = facts.run
         self.stop_button.setEnabled(idle and now == "run" and run is not None and not run.done)
         self.resume_button.setEnabled(idle and now == "run" and run is not None and run.done and not run.passed)
+        self.resume_button.setText("Start again on this commit" if facts.restart else "Resume run")
         here = bool(facts.drafts) and rp.tests_here(window.root, self.waiting_suite())
         self.portal_choice.setVisible(self.portal_choice.count() > 1)
         self.test_button.setEnabled(idle and now == "test" and here)
@@ -248,7 +250,11 @@ class ReleasePage(QWidget):
             link = f' <a href="{facts.run.url}">Open the run</a>'
             if not facts.run.done:
                 return f"{flow.WORKFLOW_NAME} is {facts.run.outcome} on {facts.run.sha[:7]}: wait, or Stop run.{link}"
-            return f"{flow.WORKFLOW_NAME} ended {facts.run.outcome}: fix what failed, then Resume run.{link}"
+            if facts.restart:
+                return (f"{flow.WORKFLOW_NAME} ended {facts.run.outcome} on {facts.run.sha[:7]}; the fix is pushed and "
+                        f"passed CI: Start again on this commit (the release is not written anew).{link}")
+            return (f"{flow.WORKFLOW_NAME} ended {facts.run.outcome}: when it failed on something of GitHub's, Resume "
+                    f"run; when the code must change, fix it, then Commit, Push, and start it again here.{link}")
         if key in ("test", "publish") and facts.drafts:
             return (f"{', '.join(facts.drafts)} is a draft: Device test, then Publish when it works or Not OK."
                     if key == "test" else "After the device test: Publish, or Not OK.")
@@ -311,9 +317,19 @@ class ReleasePage(QWidget):
             self.release_window.run_git(flow.stop_command(run))
 
     def resume_run(self) -> None:
+        """Resume run: the failed jobs again on the same commit; with a fix on top (restart), the release started
+        again on HEAD, written as it is."""
         run = self.run()
-        if run is not None:
-            self.release_window.run_git(flow.resume_command(run))
+        if run is None:
+            return
+        if self.facts.restart:
+            window = self.release_window
+            if window.confirm_git("Start again on this commit", f"Start {flow.WORKFLOW_NAME} again on HEAD, the fix on "
+                                  f"top of {run.sha[:7]}: the release as it is written, nothing new is written.",
+                                  flow.restart_command()):
+                window.run_git(flow.restart_command())
+            return
+        self.release_window.run_git(flow.resume_command(run))
 
     def device_test(self) -> None:
         tag, suite = self.portal_choice.currentText(), self.waiting_suite()

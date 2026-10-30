@@ -130,6 +130,9 @@ jobs:
           cache-dependency-path: "windows-portable/**/requirements.txt"
       - name: Installer test
         run: powershell -NoProfile -ExecutionPolicy Bypass -File windows-portable/tools/installer-tests/${{ matrix.app }}.ps1
+      # A Nexus release's commit pins a test release the release itself makes after CI (30-10-2026: CI failed on
+      # wp-test-v3.1.0, "release not found", and Release Nexus waits for CI): one not out yet whose version is the
+      # test app's VERSION, as check_manifest.py allows, is built here from this commit instead.
       - name: The pinned Windows Portable Test release, for the portal's bundle
         if: matrix.app == 'portal'
         shell: bash
@@ -138,7 +141,16 @@ jobs:
         run: |
           bt=$(python -c 'import tomllib; print(tomllib.load(open("windows-portable/portal/apps.toml", "rb"))["apps"]["test"]["tag"])')
           mkdir -p bundle
-          gh release download "$bt" --pattern "$bt.zip" --pattern SHA256SUMS --dir bundle
+          if gh release view "$bt" > /dev/null 2>&1; then
+            gh release download "$bt" --pattern "$bt.zip" --pattern SHA256SUMS --dir bundle
+          elif [ "$bt" = "wp-test-v$(tr -d '[:space:]' < windows-portable/apps/test/VERSION)" ]; then
+            echo "$bt is not released yet (a release commit): built from this commit for the bundle"
+            python -m pip install -q -r windows-portable/apps/test/requirements.txt pyinstaller pillow
+            python windows-portable/tools/build_release.py "$bt" bundle
+          else
+            echo "$bt is pinned but neither released nor the test app's VERSION" >&2
+            exit 1
+          fi
       - name: Build the release zip, not published
         shell: bash
         run: |

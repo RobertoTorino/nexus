@@ -260,6 +260,29 @@ def test_the_step_to_do_follows_the_release():
     assert flow.current_step(flow.Facts(run=_run(), drafts=["x"], dirty=True)) == "commit"  # a fix after Not OK
 
 
+def test_a_failed_release_gets_its_fix_then_starts_again_on_it():
+    """CI failed on the release commit (30-10-2026): the release is written and pushed, so its fix goes through Commit,
+    Push and CI, then the run starts again on it; Start never writes it a second time."""
+    failed = _run(conclusion="failure")
+    states = flow.step_states(flow.Facts(run=failed, dirty=True, restart=True))
+    assert flow.current_step(flow.Facts(run=failed, dirty=True, restart=True)) == "commit"
+    assert states["start"] == "done" and states["run"] == "failed" and states["commit"] == "now"
+    assert flow.current_step(flow.Facts(run=failed, ahead=1, restart=True)) == "push"
+    assert flow.current_step(flow.Facts(run=failed, restart=True, ci="building")) == "ci"
+    assert flow.current_step(flow.Facts(run=failed, restart=True, ci="passed", something=True)) == "run"
+    assert flow.current_step(flow.Facts(run=failed, ci="passed")) == "run"             # no fix: Resume run
+    assert flow.restart_command().startswith('gh workflow run release-nexus.yml --ref main -f commit="$(git rev-parse '
+                                             'HEAD)"')
+
+
+def test_a_failed_release_run_lasts_with_fixes_on_top(nexus):
+    head = sh(nexus, "rev-parse", "HEAD").strip()
+    failed = _run(head, conclusion="failure")
+    sh(nexus, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "--allow-empty", "-m", "Fix CI")
+    assert flow.cycle_run(nexus, [failed]) is failed               # still that release: its fix is on top
+    assert flow.cycle_run(nexus, [_run(head)]) is None              # one that passed: other work ends it
+
+
 def test_ci_state_reads_the_ci_runs_of_the_commit():
     runs = [_run("aaa", "ci.yml", "CI"), _run("aaa", "ci-nexus.yml", "CI Nexus", "in_progress", ""),
             _run("aaa", "release-nexus.yml"), _run("bbb", "ci.yml", "CI", conclusion="failure")]

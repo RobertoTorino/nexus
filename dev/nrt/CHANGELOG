@@ -1,3 +1,11 @@
+Changelog: 30-10-2026 16:28:14
+
+Added. A Nexus release whose run failed gets its fix and starts again on it (owner, 30-10-2026: CI failed on the
+release commit; a second Start would have written every Release entry twice and moved Nexus's version on): while the
+release run failed, the steps go Commit your changes, Push them and CI passes for the fix, then step 6 lights Start
+again on this commit, which starts Release Nexus on HEAD (flow.restart_command()) with the release as it is written.
+Resume run stays for a run that failed on something of GitHub's, on the same commit.
+
 Changelog: 30-10-2026 15:58:58
 
 Added. The Nexus release tab shows the release as nine numbered steps in their order, each with its pill (owner,
@@ -6,7 +14,8 @@ them that can be clicked"): Get up to date (git pull), Commit your changes (a me
 and committed after the suites' version and manifest checks), Push them, CI passes (read from GitHub's runs of the
 commit), Start new release, the release on GitHub (Stop run, Resume run), Device test, Publish (or Not OK) and Bring
 in the pin commit. The step to do now has an orange arrow and its pill lit, done ones a green check, a failed one a red
-cross; the line beside each says what there is to do (flow.current_step(), step_states(), ci_state(), cycle_run()).
+exclamation mark; the line beside each says what there is to do (flow.current_step(), step_states(), ci_state(),
+cycle_run()).
 Before, committing and pushing your own work was left to the git row at the bottom, and Start stood alone.
 
 Changelog: 30-10-2026 04:04:06
