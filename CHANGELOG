@@ -1,3 +1,9 @@
+Changelog: 31-10-2026 15:32:10
+
+Fixed. The root .cache/ folder (the wiki's privacy plugin's downloaded fonts, 29 files) is no longer in the
+repository: it was committed in 619aa45 before .gitignore listed it, and its long file names broke a fresh clone on
+Windows ("Filename too long"). Each wiki build downloads the fonts again.
+
 Changelog: 31-10-2026 15:07:27
 
 Release 1.8.0. Brings wp-pcsx2-v5.2.0, wp-ppsspp-v3.2.0, wp-rpcs3-v3.2.0, wp-shadps4-v3.3.0, wp-test-v4.2.0, wp-vita3k-v3.2.0, wp-xenia-v3.2.0.

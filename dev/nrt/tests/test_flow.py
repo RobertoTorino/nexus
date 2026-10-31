@@ -205,6 +205,27 @@ def test_start_writes_the_release_and_runs_the_one_command(release_window, monke
     assert "wp · test: 0.2.0" in page.output.toPlainText()
 
 
+def test_start_fetches_the_tags_first_and_stops_when_new_ones_came(release_window, monkeypatch, tmp_path):
+    """A portal is tagged on GitHub when it is published: not fetched, the release took its version for the new one
+    (owner, 31-10-2026: Release 6.2.0 again, after 6.2.0 was out). Start fetches the tags, and with new ones it reads
+    the versions again and stops for a look."""
+    w = release_window
+    page = w.release_page
+    origin = tmp_path / "origin.git"
+    sh(tmp_path, "init", "-q", "--bare", str(origin))
+    sh(w.root, "remote", "add", "origin", str(origin))
+    sh(w.root, "push", "-q", "origin", "main")
+    sh(w.root, "push", "-q", "origin", "HEAD:refs/tags/wp-portal-v1.1.0")    # published on GitHub, not fetched
+    ran, said = [], []
+    monkeypatch.setattr(w, "confirm_git", lambda *a: True)
+    monkeypatch.setattr(w, "run_git", ran.append)
+    monkeypatch.setattr("nexus_release_tool.release_page.QMessageBox.information", lambda *a: said.append(a[2]))
+    page.start()
+    assert ran == [] and "wp-portal-v1.1.0" in said[0] and "check them" in said[0]
+    assert sh(w.root, "tag", "--list", "wp-portal-v1.1.0").strip() == "wp-portal-v1.1.0"
+    assert flow.fetch_tags(w.root) == []                            # nothing new the second time
+
+
 def test_changes_not_committed_make_commit_the_step_to_do(release_window, monkeypatch):
     """The steps in their order (owner, 30-10-2026: "exactly what has to be done in their logical sequence"): with
     changes in the tree, step 2 Commit is the one lit, and Start waits."""

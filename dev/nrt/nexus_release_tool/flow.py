@@ -176,6 +176,18 @@ def ready(root: Path, base: str = "origin/main") -> list[str]:
     return reasons
 
 
+def fetch_tags(root: Path) -> list[str] | None:
+    """git fetch --tags from origin: the tags it brought ([] none, or no origin), None when it failed (offline). The
+    release reads each part's last release from this checkout's tags, and a portal is tagged on GitHub when it is
+    published (owner, 31-10-2026: wp-portal-v6.2.0 not fetched, so the next release kept 6.2.0 and CI refused it)."""
+    if "origin" not in (rp.git(root, "remote") or "").split():
+        return []
+    before = set((rp.git(root, "tag", "--list") or "").split())
+    if rp.git(root, "fetch", "--tags", "--quiet", "origin") is None:
+        return None
+    return sorted(set((rp.git(root, "tag", "--list") or "").split()) - before)
+
+
 def unpushed_release(root: Path, base: str = "origin/main") -> str:
     """HEAD's subject when HEAD is a release commit Start made that is not pushed yet, right on top of *base* (the
     push stopped: the pre-push hook found something, or the network); "" otherwise."""

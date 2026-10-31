@@ -68,7 +68,9 @@ what there is to do. Only the lit pill does anything, so you never need a comman
 5. **Start new release:** check the versions in the list above, then press it. It writes the release (the versions
    and their copies, the `Release x.y.z.` entries, the new tags in `apps.toml`, the portal's version and its entry,
    Nexus's), commits it, pushes it and starts Release Nexus on that commit. If the push stops, fix what it says;
-   the pill then reads **Push and start**.
+   the pill then reads **Push and start**. It fetches GitHub's tags first: a portal is tagged on GitHub when you
+   publish it, and the last release of each part is read from the tags. If tags came in that this checkout did not
+   have, it reads the versions again and stops, so you can check them before you press it again.
 6. **The release on GitHub:** Release Nexus calls each changed suite's release workflow. It starts at once: your
    release commit only writes the release, so the CI that passed on your commit in step 4 counts for it, and CI
    does not have to run again first. A suite's run builds its

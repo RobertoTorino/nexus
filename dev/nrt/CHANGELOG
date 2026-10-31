@@ -1,3 +1,10 @@
+Changelog: 31-10-2026 15:27:28
+
+Fixed. Start new release fetches GitHub's tags first (owner, 31-10-2026: wp-portal-v6.2.0 was published, so tagged
+on GitHub, but not fetched here; the tool still read 6.1.0 as the last portal release, took the VERSION 6.2.0 for
+the new one without a bump, and CI's check_manifest.py refused the release commit). New tags read the versions
+again and stop Start, so the table can be checked first; a failed fetch stops it too (flow.fetch_tags).
+
 Changelog: 30-10-2026 23:55:24
 
 Fixed. Step 9, Bring in the pin commit, lights as soon as GitHub has the release's Pin ... commit (owner,

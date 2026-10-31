@@ -325,6 +325,18 @@ class ReleasePage(QWidget):
                                   flow.push_and_start_command()):
                 window.run_git(flow.push_and_start_command())
             return
+        # The last releases are read from the tags here: GitHub's first, so a portal published since counts
+        fetched = flow.fetch_tags(window.root)
+        if fetched is None:
+            QMessageBox.warning(self, "Start new release", "git fetch --tags failed: the release reads the last "
+                                "release of each part from the tags, so it waits until they can be fetched.")
+            return
+        if fetched:
+            window.reload()
+            QMessageBox.information(self, "Start new release", "Tags from GitHub this checkout did not have: "
+                                    f"{', '.join(fetched)}. The versions are read again: check them, then Start new "
+                                    "release again.")
+            return
         reasons = flow.ready(window.root, window.base())
         chosen = self.chosen()
         problems = flow.problems(chosen)
