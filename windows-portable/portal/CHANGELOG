@@ -1,3 +1,8 @@
+Changelog: 31-10-2026 14:05:11
+
+Fixed. The test of the helper's scripts expects CRLF, as .gitattributes checks a .ps1 out (CI failed on 8194131: the
+test wanted LF, which the scripts had only in the working tree they were written in).
+
 Changelog: 31-10-2026 12:59:38
 
 Added. The Operating Mode helper on the ROG Xbox Ally X (owner, 31-10-2026): the Operating Mode page's Watt limits

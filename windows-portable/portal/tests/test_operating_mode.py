@@ -169,4 +169,4 @@ def test_the_helper_s_scripts_parse():
                  f"'{script}', [ref]$null, [ref]$e) | Out-Null; $e | ForEach-Object {{ $_.ToString() }}")
         out = subprocess.run(["powershell.exe", "-NoProfile", "-Command", check], capture_output=True, text=True)
         assert out.returncode == 0 and out.stdout.strip() == "", (script.name, out.stdout)
-        assert b"\r" not in script.read_bytes()
+        assert b"\r\n" in script.read_bytes()   # a .ps1 is CRLF in the checkout, as .gitattributes says
