@@ -1,3 +1,7 @@
+Changelog: 31-10-2026 19:52:27
+
+Release 6.4.0. Pins wp-test-v4.3.1, wp-pcsx2-v5.3.1, wp-ppsspp-v3.3.1, wp-rpcs3-v3.3.1, wp-shadps4-v3.4.1, wp-vita3k-v3.3.1, wp-xenia-v3.3.1.
+
 Changelog: 31-10-2026 18:31:09
 
 Fixed. From the device test of 6.4.0 (owner, 31-10-2026): the Turbo letter is a hard red (#ff1f1f) and extra

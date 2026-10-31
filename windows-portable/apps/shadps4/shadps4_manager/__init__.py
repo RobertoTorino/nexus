@@ -8,7 +8,7 @@ APP_NAME = "shadPS4 Manager"
 APP_ID = "windows-portable-shadps4"
 EXE_NAME = "shadPS4-Manager"   # the program's file name in a release
 SUITE = "windows-portable-suite"
-__version__ = "3.4.0"
+__version__ = "3.4.1"
 
 from pathlib import Path
 

@@ -8,7 +8,7 @@ APP_NAME = "Vita3K Manager"
 APP_ID = "windows-portable-vita3k"
 EXE_NAME = "Vita3K-Manager"   # the program's file name in a release
 SUITE = "windows-portable-suite"
-__version__ = "3.3.0"
+__version__ = "3.3.1"
 
 from pathlib import Path
 
