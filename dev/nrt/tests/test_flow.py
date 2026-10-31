@@ -205,20 +205,27 @@ def test_start_writes_the_release_and_runs_the_one_command(release_window, monke
     assert "wp · test: 0.2.0" in page.output.toPlainText()
 
 
+def identity(monkeypatch) -> None:
+    """A committer for git rebase, which CI's runner has none of."""
+    for name in ("GIT_AUTHOR_NAME", "GIT_COMMITTER_NAME", "GIT_AUTHOR_EMAIL", "GIT_COMMITTER_EMAIL"):
+        monkeypatch.setenv(name, "t@t" if "EMAIL" in name else "t")
+
+
 def test_start_fetches_the_tags_and_main_first_and_goes_on(release_window, monkeypatch, tmp_path):
     """A portal is tagged on GitHub when it is published, and a release pins on main after it: neither is here until
     fetched (owner, 31-10-2026: Release 6.2.0 again after 6.2.0 was out; the Pin ... commit refused the push). Start
     fetches the tags and brings in main's commits under this checkout, reads the versions again and goes on to its
     question, with nothing to do by hand."""
+    identity(monkeypatch)
     w = release_window
     page = w.release_page
     origin = tmp_path / "origin.git"
-    sh(tmp_path, "init", "-q", "--bare", str(origin))
+    sh(tmp_path, "init", "-q", "--bare", "-b", "main", str(origin))
     sh(w.root, "remote", "add", "origin", str(origin))
     sh(w.root, "push", "-q", "origin", "main")
     sh(w.root, "push", "-q", "origin", "HEAD:refs/tags/wp-portal-v1.1.0")    # published on GitHub, not fetched
     other = tmp_path / "other"                                       # the release's Pin ... commit, on GitHub only
-    sh(tmp_path, "clone", "-q", str(origin), str(other))
+    sh(tmp_path, "clone", "-q", "-b", "main", str(origin), str(other))
     write(other / "wp/portal/apps.toml", (other / "wp/portal/apps.toml").read_text() + "\n")
     sh(other, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "-am", "Pin wp-test-v0.1.0")
     sh(other, "push", "-q", "origin", "HEAD:main")
@@ -233,15 +240,16 @@ def test_start_fetches_the_tags_and_main_first_and_goes_on(release_window, monke
     assert flow.fetch_tags(w.root) == []                            # nothing new the second time
 
 
-def test_catch_up_brings_in_mains_commits_under_this_checkouts(nexus, tmp_path):
+def test_catch_up_brings_in_mains_commits_under_this_checkouts(nexus, tmp_path, monkeypatch):
+    identity(monkeypatch)
     origin = tmp_path / "origin.git"
-    sh(tmp_path, "init", "-q", "--bare", str(origin))
+    sh(tmp_path, "init", "-q", "--bare", "-b", "main", str(origin))
     sh(nexus, "remote", "add", "origin", str(origin))
     sh(nexus, "push", "-q", "origin", "main")
     sh(nexus, "fetch", "-q", "origin")
     assert flow.catch_up(nexus) == 0                                # nothing to bring in
     other = tmp_path / "other"
-    sh(tmp_path, "clone", "-q", str(origin), str(other))
+    sh(tmp_path, "clone", "-q", "-b", "main", str(origin), str(other))
     write(other / "wp/portal/apps.toml", (other / "wp/portal/apps.toml").read_text() + "\n")
     sh(other, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "-am", "Pin wp-test-v0.1.0")
     sh(other, "push", "-q", "origin", "HEAD:main")

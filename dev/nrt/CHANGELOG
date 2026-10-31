@@ -1,3 +1,8 @@
+Changelog: 31-10-2026 19:41:52
+
+Fixed. The tests of Start's catch-up pass on CI's runner too: their origin is made with the branch main (the runner's
+git makes master, so the clone checked out nothing) and they give git rebase a committer, which the runner lacks.
+
 Changelog: 31-10-2026 19:30:03
 
 Fixed. A release no longer needs anything by hand after the last one (owner, 31-10-2026: "this is not gonna work
