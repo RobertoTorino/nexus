@@ -26,7 +26,7 @@ from .controller import ControllerPane
 
 STATUS_MS = 5_000               # the header's battery, temperatures and time: the temperatures live
 CARDS_WIDTH = 663               # the cards' column, as wide as its 5 of 9 parts of the page were: a long value wraps
-CONTROLLER_LEGEND = [("A", "Start the test")]   # then core's Info, Back and Exit app
+CONTROLLER_LEGEND = [("A", "Start the test")]   # then core's Info, Back and Exit
 
 
 class _Reader(QObject):
@@ -222,7 +222,7 @@ class MainWindow(PortableWindow):
         self.update_legend()
 
     def update_legend(self) -> None:
-        """The pane's buttons, then core's Menu Info, B Back (while the focus is in a pane) and View Exit app (the
+        """The pane's buttons, then core's Menu Info, B Back (while the focus is in a pane) and View Exit (the
         suite's rule, owner 29-10-2026); during the button test only B held, which ends it."""
         if self.testing or not hasattr(self, "legend"):
             return

@@ -95,7 +95,7 @@ yours. Once installed, the file is not needed any more.
 - **X Install this folder** gives Vita3K the folder that is open, when it is a dumped game's own folder (with
   `sce_sys\param.sfo` in it); on any other folder the status line says so.
 - **A** on a `.pkg` opens a page for its license key, with the touch keyboard: copy the zRIF in a browser on the device,
-  then **X Paste** puts it in the field (**R3 Keyboard** opens or closes Windows' touch keyboard to type it) and
+  then **X Paste** puts it in the field (**R3 ⌨** opens or closes Windows' touch keyboard to type it) and
   **A Install** has Vita3K install the package, without its window. **B**
   goes back to the folder without installing. The key is used for this install and kept nowhere.
 
@@ -126,7 +126,7 @@ You play the games from Steam; the app puts them there.
 The pictures in Steam come from inside the game: its icon (`sce_sys\icon0.png`) on the cover, the wide picture and as
 the logo, its LiveArea picture (`sce_sys\pic0.png`) on the banner; without them the title is drawn on a dark
 background. With a SteamGridDB API key, Update Steam also takes a cover for each game from SteamGridDB: **RB Steam
-artwork** opens the page that keeps the key (**X Paste**, **R3 Keyboard**, **A Save**, **Y Remove key** twice, **B** back without
+artwork** opens the page that keeps the key (**X Paste**, **R3 ⌨**, **A Save**, **Y Remove key** twice, **B** back without
 saving). See [Steam artwork from SteamGridDB](covers.md).
 
 ### In a game

@@ -108,7 +108,7 @@ You play the games from Steam; the app puts them there, and starts them there wi
 
 The app reads no pictures from a game, so the pictures in Steam are drawn from this app's icon, with the game's title.
 With a SteamGridDB API key, Update Steam takes all four of a game's pictures from SteamGridDB instead: **RB Steam
-artwork** opens the page that keeps the key (**X Paste**, **R3 Keyboard**, **A Save**, **Y Remove key** twice, **B** back without
+artwork** opens the page that keeps the key (**X Paste**, **R3 ⌨**, **A Save**, **Y Remove key** twice, **B** back without
 saving). See [Steam artwork from SteamGridDB](covers.md).
 
 ### In a game

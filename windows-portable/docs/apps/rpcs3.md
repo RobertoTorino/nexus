@@ -143,7 +143,7 @@ Windows leaves that button to the game (on the ROG Xbox Ally the Xbox button is 
 The pictures in Steam come from inside the game: its icon (`ICON0.PNG`) on the cover, the wide picture and as the logo,
 its background (`PIC1.PNG`) on the banner; without them the title is drawn on a dark background. With a SteamGridDB
 API key, Update Steam also takes a cover for each game from SteamGridDB: **RB Steam artwork** opens the page that
-keeps the key (**X Paste**, **R3 Keyboard**, **A Save**, **Y Remove key** twice, **B** back without saving). See
+keeps the key (**X Paste**, **R3 ⌨**, **A Save**, **Y Remove key** twice, **B** back without saving). See
 [Steam artwork from SteamGridDB](covers.md).
 
 ## Settings

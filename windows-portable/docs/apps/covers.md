@@ -25,7 +25,7 @@ Copy it in a browser on the device, then in PCSX2 Manager or PPSSPP Manager pres
 pane:
 
 - **X Paste** puts the copied key in the field; a tap on the field lets you type it instead.
-- **R3 Keyboard** (the right stick pressed) opens Windows' touch keyboard to type it; R3 again closes it.
+- **R3** with the keyboard symbol (the right stick pressed) opens Windows' touch keyboard to type it; R3 again closes it.
 - **A Save** keeps it. **Y Remove key** takes it out again, on a second press.
 - **B** goes back without saving.
 

@@ -759,7 +759,7 @@ class MainWindow(PortableWindow):
         self.header.set_status([power.text(self.battery()), *status_clock()])
 
     def update_legend(self) -> None:
-        """The page's buttons, then core's Menu Info, B Back and View Exit app (the suite's rule)."""
+        """The page's buttons, then core's Menu Info, B Back and View Exit (the suite's rule)."""
         if hasattr(self, "legend"):
             self.legend.set_items(self.common_items())
 

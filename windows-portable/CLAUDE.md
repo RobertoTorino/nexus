@@ -59,7 +59,7 @@ app is an optional tile. The wiki is at robertotorino.github.io/nexus/windows-po
     rows, A acts, B goes back (a pane to its card, a page to where it came from; nothing on a card; in a pane
     the d-pad stays in it, never jumping to the cards at a list's end: core's `move_focus()`), View (⧉)
     exits the app and Menu (☰) opens the information of the pane that shows (owner, 29-10-2026: "Close" on B was
-    not clear; core's `PortableWindow`, the legend ending with `common_items()`: ☰ Info, B Back, ⧉ Exit app). **The
+    not clear; core's `PortableWindow`, the legend ending with `common_items()`: ☰ Info, B Back, ⧉ Exit, owner 31-10-2026). **The
     legend at the bottom is the row of actions** (owner, 29-10-2026:
     "use that bottom row for actions"; then "one way everywhere"): **every action is a button and a legend entry,
     A too (A Install, A Read, A Steam mark, A View log), and a pane holds no pill** (no Install, Remove, Save or

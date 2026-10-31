@@ -172,11 +172,12 @@ def test_the_tabs_and_tiles_and_the_strip_for_the_focused_app(world, qapp):
     window.mode_marker = lambda: "T"
     window.update_status()
     assert plain(window.header.second) == "CPU 12% 48°  |  GPU 7% 47°  |  T  |  82%"
-    assert f'<span style="color: {portable.DOT}">T</span>' in window.header.second.text()     # Turbo red (owner)
+    assert f'<span style="color: {mw.TURBO_COLOR}; font-weight: 800">T</span>' in window.header.second.text()  # red
     window.mode_marker = lambda: "P"
     window.update_status()
     assert window.header.second.text() == "CPU 12% 48°  |  GPU 7% 47°  |  P  |  82%"          # the others plain
-    assert [text for _, text in window.legend.items][1:] == ["Details", "Settings", "Exit app"]
+    assert [text for _, text in window.legend.items][1:] == ["Details", "Settings", portable.KEYBOARD_ICON, "Exit"]
+    assert isinstance(window.legend.entries["R3"].label, portable.KeyboardIcon)   # a symbol, not a word (owner)
     assert window.legend.items[0][0] == "A" and window.app_pane.findChildren(portable.Pill) == []   # no pill (owner)
     window.tabs.step(1)
     assert window.tabs.current == "gaming" and window.tiles["pcsx2"].isVisible() and not window.tiles["test"].isVisible()
@@ -255,7 +256,7 @@ def test_rt_opens_steam_where_it_is_installed(world, qapp):
     while Steam is installed, by RT or a tap; without Steam no entry, and RT says why."""
     opened, here = [], [True]
     window = world.make(steam_here=lambda: here[0], open_steam=opened.append)
-    assert ("RT", "Steam") in window.legend.items and window.legend.items[-1] == (VIEW, "Exit app")
+    assert ("RT", "Steam") in window.legend.items and window.legend.items[-1] == (VIEW, "Exit")
     window.on_action("rt")
     assert opened == [steam.OPEN_URL] and window.app_pane.status.text() == "Opening Steam…"
     window.legend._tapped("RT")
@@ -410,7 +411,7 @@ def test_x_shows_the_details_and_remove_takes_a_second_press(world, qapp):
     window = world.make()
     window.on_action("x")
     assert window.stack.currentWidget() is window.details_pane
-    assert window.legend.items == [("A", "Open"), ("Y", "Remove"), ("B", "Back"), (VIEW, "Exit app")]
+    assert window.legend.items == [("A", "Open"), ("Y", "Remove"), portable.KEYBOARD, ("B", "Back"), (VIEW, "Exit")]
     rows = {window.details_pane.grid.itemAt(i).widget().text(): window.details_pane.grid.itemAt(i + 1).widget().text()
             for i in range(0, window.details_pane.grid.count(), 2)}
     assert rows["Installed"] == "0.1.0 (wp-test-v0.1.0)" and rows["This portal pins"] == "wp-test-v0.1.0"
@@ -430,7 +431,7 @@ def test_x_shows_the_details_and_remove_takes_a_second_press(world, qapp):
 
 def test_b_goes_back_and_view_exits(world, qapp, monkeypatch):
     """The suite's buttons (owner, 29-10-2026: "Close" on B was not clear): B goes back from a page to the tiles, and
-    on a tile does nothing; View (Exit app) closes the portal, a tap on its entry too."""
+    on a tile does nothing; View (Exit) closes the portal, a tap on its entry too."""
     window = world.make()
     closed = []
     monkeypatch.setattr(window, "close", lambda: closed.append(True))
@@ -641,7 +642,7 @@ def test_exit_during_a_download_asks_first(world, qapp, monkeypatch):
 
 def test_the_suite_page_switches_the_wallpaper(world, qapp, monkeypatch):
     # The wallpaper is a setting (owner, 28-10-2026: "a feature you can toggle, so a settings menu"), on the Suite
-    # page since View became Exit app (owner, 29-10-2026).
+    # page since View became Exit (owner, 29-10-2026).
     from bc250_core import portable
     window = world.make()
     monkeypatch.setattr(window, "isActiveWindow", lambda: True)
@@ -651,7 +652,7 @@ def test_the_suite_page_switches_the_wallpaper(world, qapp, monkeypatch):
     window.suite_pane.wallpaper.setFocus()
     assert window.suite_pane.wallpaper.label.text() == "Wallpaper: Built-in"
     assert window.legend.items == [("A", "Change"), ("Y", "Check again"), portable.KEYBOARD, (MENU, "Info"), ("B", "Back"),
-                                   (VIEW, "Exit app")]
+                                   (VIEW, "Exit")]
     window.on_action("menu")                                          # on the page: what the settings do
     assert window.popup is not None and "Transparency: how much" in window.suite_pane.info.info
     window.on_action("back")
@@ -837,7 +838,7 @@ def test_lt_moves_the_portal_with_a_second_screen(world, qapp, monkeypatch):
     monkeypatch.setattr(mw.QGuiApplication, "screens", staticmethod(lambda: [here, other]))
     window.screens_changed()                                        # a TV attached
     items = window.legend.items
-    assert ("LT", "Screen") in items and items.index(("LT", "Screen")) < items.index((VIEW, "Exit app"))
+    assert ("LT", "Screen") in items and items.index(("LT", "Screen")) < items.index((VIEW, "Exit"))
     assert window.legend.keys == (mw.SCREEN_KEYS[0], tuple(mw.SCREEN_KEYS[1]))
     assert [cap.text() for cap in window.legend.hint.caps] == [portable.WINDOWS_KEY, "Shift", "←", "→"]
     window.on_action("lt")
@@ -854,10 +855,13 @@ def test_lt_moves_the_portal_with_a_second_screen(world, qapp, monkeypatch):
     window.app_pane.other = "Update"
     window.update_legend()
     assert ("Y", "Update") in window.legend.items and ("RT", "Steam") in window.legend.items
-    assert window.legend.sizeHint().width() <= 1280 - left - right  # it fits the Ally's 1280 x 720
+    window.show()                                                   # laid out as on the screen
+    qapp.processEvents()
+    assert 1000 < window.legend.sizeHint().width() <= 1280 - left - right  # it fits the Ally's 1280 x 720
     window.show_suite()                                             # the Settings page: R3 Keyboard too
     window.suite_pane.action = "Check again"
     window.update_legend()
     assert portable.KEYBOARD in window.legend.items and ("Y", "Check again") in window.legend.items
-    assert window.legend.sizeHint().width() <= 1280 - left - right
+    qapp.processEvents()
+    assert 1000 < window.legend.sizeHint().width() <= 1280 - left - right
     window.close()

@@ -125,7 +125,7 @@ def test_the_device_is_read_and_shown(make, qapp):
     assert re.fullmatch(r"\w+day \d\d/\d\d/\d{4}  \|  \d\d:\d\d", window.header.status.text())
     assert window.header.second.text() == "CPU 47° GPU 45°  |  18 W  |  120 Hz  |  82%"   # under it (owner, 29-10-2026)
     assert window.header.icon is None                       # the screen is too small for it (owner, 27-10-2026)
-    assert [text for _, text in window.legend.items] == ["Read again", "Save report", "Exit app"]
+    assert [text for _, text in window.legend.items] == ["Read again", "Save report", "Exit"]
 
 
 def test_read_again_and_a_failed_read(make, qapp, ally_json):

@@ -16,7 +16,7 @@ Five cards on the left: Device, Hardware, Connected, Network and Controller; the
 card does. The d-pad or the left stick moves the amber focus between the cards, **A** runs the focused card, **B**
 goes back from a pane to its card (on a card it does nothing), **⧉** (View) exits the app and **☰** (Menu) opens the
 information of the pane that shows. Every action is a button, listed in the row at the bottom with what it does on the
-pane that shows (**A Read**, **X Save report**, **☰ Info**, **⧉ Exit app**): press the button, or
+pane that shows (**A Read**, **X Save report**, **☰ Info**, **⧉ Exit**): press the button, or
 tap the entry. Every card and entry also works by touch. The amber edge shows where you are: on a card with a glow
 under it, and on the pane at the right, with its card keeping only the edge, once the focus moves into it. The top
 right shows the date and the time, `Wednesday 28/10/2026 | 17:04`, and under them, live every five seconds, the CPU's

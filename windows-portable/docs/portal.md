@@ -37,12 +37,12 @@ The strip under the tiles shows the focused app: its name, its versions and what
 | ☰ (Menu) | The Settings page, with the settings; on it, what the settings do |
 | LT | The portal to the next screen, with a second screen attached |
 | RT | Steam's library, in Big Picture mode, when Steam is installed |
-| R3 (the right stick pressed) | Windows' touch keyboard, shown or hidden; the Settings page shows **R3 Keyboard** |
+| R3 (the right stick pressed) | Windows' touch keyboard, shown or hidden; the row at the bottom shows **R3** with a keyboard symbol (⌨) |
 | B | Back: from a page to the tiles; on a tile nothing |
 | ⧉ (View) | Exit the portal |
 
 Every action is a button, in the row at the bottom with what it does for the focused app (**A Install** or **A
-Open**, **X Details**, **Y Update**, **☰ Settings**, **RT Steam**, **⧉ Exit app**). Every tile works by touch, and so does the row: a
+Open**, **X Details**, **Y Update**, **☰ Settings**, **RT Steam**, **⧉ Exit**). Every tile works by touch, and so does the row: a
 tap on an entry does what the button does. On a keyboard, the arrow keys move, Enter presses and
 Escape goes back.
 
@@ -90,7 +90,7 @@ temperature), and the battery last, at the right: its percentage, or **Plugged i
 charger. The apps' status lines show the battery the same way. On the ROG Xbox Ally X, the operating mode's letter
 stands just before the battery: **S** Silent, **P** Performance, **T** Turbo or **W** Windows, read from Windows'
 power plan and power mode, which Armoury Crate's modes set (`CPU 12% 48°  |  GPU 7% 47°  |  T  |  82%`); the **T**
-of Turbo is red. No letter
+of Turbo is a bright red, in heavier letters. No letter
 shows when the plan and the power mode match none of them. Armoury Crate's Command Center keeps its own record of
 the mode, so it can show another one.
 
@@ -171,7 +171,7 @@ larger on a larger screen, such as a TV, and smaller on a smaller one.
 were last moved to, while it is attached, otherwise on Windows' main display. To move one to the other screen, use
 the Settings page's **Screen** row or **LT** (the row at the bottom shows **LT Screen** then), or press **Win +
 Shift + Left** (or **Right**) with its window in front, which works for every app of the suite; the row at the bottom
-shows those keys at its left, after **Switch screen**. The window cannot be dragged: it is full screen, without a title bar. On a screen
+shows those keys at its left, after a symbol of two screens with an arrow between them. The window cannot be dragged: it is full screen, without a title bar. On a screen
 of another size the app starts again there, sized for that screen, in a second or two; a download or an install
 finishes first, and the portal says it will move once that is done.
 

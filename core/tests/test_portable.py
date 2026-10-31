@@ -250,7 +250,7 @@ def test_the_header(qapp):
     header.set_status(["14:32"], ["CPU 9%", ("T", "#e5484d"), ("", "#e5484d"), "82% <"])   # a part in its own color
     assert header.status.textFormat() == Qt.TextFormat.PlainText and header.status.text() == "14:32"
     assert header.second.textFormat() == Qt.TextFormat.RichText and header.second.isVisibleTo(header)
-    assert header.second.text() == 'CPU 9%&nbsp;&nbsp;|&nbsp;&nbsp;<span style="color: #e5484d">T</span>'         '&nbsp;&nbsp;|&nbsp;&nbsp;82% &lt;'
+    assert header.second.text() == 'CPU 9%&nbsp;&nbsp;|&nbsp;&nbsp;<span style="color: #e5484d; font-weight: 800">T</span>'         '&nbsp;&nbsp;|&nbsp;&nbsp;82% &lt;'
     header.set_status(["14:32"], ["82%"])                      # plain again
     assert header.second.textFormat() == Qt.TextFormat.PlainText and header.second.text() == "82%"
     icon = QPixmap(8, 8)
@@ -662,8 +662,8 @@ def test_closing_a_popup_gives_the_focus_back_before_it_hides(qapp, monkeypatch)
 
 def test_b_goes_back_view_exits_and_menu_shows_the_information(qapp, monkeypatch):
     """Every window's buttons (owner, 29-10-2026: "Close" on B was not clear): B in a pane goes back to its card and
-    does nothing on a card; View is Exit app; Menu opens the information icon of the pane that shows (and closes it
-    again). The legend's last entries follow the focus: Menu Info, B Back while B can act, View Exit app."""
+    does nothing on a card; View is Exit; Menu opens the information icon of the pane that shows (and closes it
+    again). The legend's last entries follow the focus: Menu Info, B Back while B can act, View Exit."""
     window = PortableWindow(gamepad=portable.Gamepad(source_factory=NoPad))
     window.setFixedSize(900, 500)
     line = QHBoxLayout(window)
@@ -860,9 +860,18 @@ def test_the_legend_shows_a_keyboard_shortcut_as_key_caps(qapp):
     assert legend.hint is hint
     for cap in hint.caps:
         cap.grab()                                              # each paints, the Windows key's panes too
+    assert hint.what.text() == "Switch screen"
+    legend.set_items([("A", "Open")], (portable.SCREEN_ICON, ("Shift",)))   # a symbol instead of the words (owner)
+    assert isinstance(legend.hint.what, portable.ScreenIcon)
+    legend.hint.what.grab()
+    hint = legend.hint
     legend.set_items([("A", "Open")])
     assert legend.hint is None and legend.keys is None
     assert portable.LEGEND_ACTIONS["LT"] == "lt"
+    legend.set_items([portable.KEYBOARD])                      # R3 with a keyboard drawn, not the word (owner)
+    icon = legend.entries["R3"].label
+    assert isinstance(icon, portable.KeyboardIcon) and portable.KEYBOARD == ("R3", portable.KEYBOARD_ICON)
+    icon.grab()
 
 
 def test_r3_shows_windows_touch_keyboard(qapp):

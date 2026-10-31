@@ -368,11 +368,13 @@ VIEW, MENU = "⧉", "☰"
 # The legend's buttons and the window's actions they stand for (Gamepad's names)
 LEGEND_ACTIONS = {"A": "accept", "B": "back", "X": "x", "Y": "y", "LB": "previous", "RB": "next", "LT": "lt",
                   "RT": "rt", "R3": "keyboard", MENU: "menu", VIEW: "view", "View": "view"}
-KEYBOARD = ("R3", "Keyboard")   # the legend's entry for Windows' touch keyboard, where a page has a field to type in
+# The legend's entry for Windows' touch keyboard: R3 and a keyboard drawn (owner, 31-10-2026: a symbol, not the word)
+KEYBOARD_ICON = "⌨"
+KEYBOARD = ("R3", KEYBOARD_ICON)
 KEYBOARD_TRIES, KEYBOARD_WAIT = 12, 250   # its host just started: asked this often, so many ms apart
 # Every window's last entries (owner, 29-10-2026: "Close" on B was not clear): Menu the pane's information, B back,
-# View leaves the app
-INFO, BACK, EXIT = (MENU, "Info"), ("B", "Back"), (VIEW, "Exit app")
+# View leaves the app (owner, 31-10-2026: Exit, not Exit app)
+INFO, BACK, EXIT = (MENU, "Info"), ("B", "Back"), (VIEW, "Exit")
 
 
 # The Windows key as a KeyCap shows it: its four panes, drawn (no font has the logo)
@@ -385,7 +387,7 @@ class KeyCap(Glyph):
 
     def __init__(self, key: str, parent: QWidget | None = None):
         super().__init__(key, parent=parent)
-        self.setFixedSize(max(px(26), self.fontMetrics().horizontalAdvance(key) + px(14)) if key != WINDOWS_KEY
+        self.setFixedSize(max(px(26), self.fontMetrics().horizontalAdvance(key) + px(10)) if key != WINDOWS_KEY
                           else px(26), px(26))
 
     def paintEvent(self, event) -> None:
@@ -407,17 +409,47 @@ class KeyCap(Glyph):
         painter.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, self.text())
 
 
+# What a KeyHint does, drawn instead of written (owner, 31-10-2026: a symbol saves space): to the other screen
+SCREEN_ICON = "screens"
+
+
+class ScreenIcon(QLabel):
+    """Two screens with an arrow from the one to the other, in the dimmed color: a KeyHint's "switch screen"."""
+
+    def __init__(self, parent: QWidget | None = None):
+        super().__init__(SCREEN_ICON, parent)
+        self.setFixedSize(px(40), px(24))
+
+    def paintEvent(self, event) -> None:
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        line = max(1.5, px(2))
+        painter.setPen(QPen(QColor(DIM), line))
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        w, h = self.width(), self.height()
+        side, high = w * 0.3, h * 0.5
+        for left in (line / 2, w - side - line / 2):    # the screens, each on its stand
+            painter.drawRoundedRect(QRectF(left, h * 0.18, side, high), px(2), px(2))
+            painter.drawLine(QPointF(left + side / 2, h * 0.18 + high), QPointF(left + side / 2, h * 0.84))
+            painter.drawLine(QPointF(left + side * 0.25, h * 0.84), QPointF(left + side * 0.75, h * 0.84))
+        y, start, end = h * 0.43, side + px(4), w - side - px(4)
+        painter.drawLine(QPointF(start, y), QPointF(end, y))
+        painter.drawLine(QPointF(end - px(4), y - px(4)), QPointF(end, y))
+        painter.drawLine(QPointF(end - px(4), y + px(4)), QPointF(end, y))
+
+
 class KeyHint(QWidget):
-    """The legend's keyboard shortcut at its left: what it does, then its keys ("Switch screen", Win + Shift + ← →);
-    "+" and "/" between them are written, every other one is a KeyCap."""
+    """The legend's keyboard shortcut at its left: what it does (a word, or SCREEN_ICON drawn), then its keys
+    (Win + Shift + ← →); "+" and "/" between them are written, every other one is a KeyCap."""
 
     def __init__(self, text: str, keys: Sequence[str], parent: QWidget | None = None):
         super().__init__(parent)
         row = QHBoxLayout(self)
         row.setContentsMargins(0, px(2), 0, px(2))
-        row.setSpacing(px(4))
-        row.addWidget(text_label(text, LEGEND, QFont.Weight.DemiBold, DIM))
-        row.addSpacing(px(4))
+        row.setSpacing(px(3))
+        self.what = ScreenIcon() if text == SCREEN_ICON else text_label(text, LEGEND, QFont.Weight.DemiBold, DIM)
+        row.addWidget(self.what)
+        row.addSpacing(px(3))
         self.caps = []
         for key in keys:
             if key in ("+", "/"):
@@ -426,6 +458,34 @@ class KeyHint(QWidget):
                 cap = KeyCap(key)
                 row.addWidget(cap)
                 self.caps.append(cap)
+
+
+class KeyboardIcon(QLabel):
+    """A keyboard drawn in the legend's text color, the R3 entry's symbol: its outline, two rows of keys and the
+    space bar."""
+
+    def __init__(self, parent: QWidget | None = None):
+        super().__init__(KEYBOARD_ICON, parent)
+        self.setFixedSize(px(30), px(24))
+
+    def paintEvent(self, event) -> None:
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        line = max(1.5, px(2))
+        body = QRectF(self.rect()).adjusted(line / 2, px(2) + line / 2, -line / 2, -px(2) - line / 2)
+        painter.setPen(QPen(QColor(TEXT), line))
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.drawRoundedRect(body, px(4), px(4))
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(QColor(TEXT))
+        key, keys = body.height() * 0.16, 5
+        gap = (body.width() - 2 * px(5) - keys * key) / (keys - 1)
+        for row in (0, 1):
+            top = body.top() + body.height() * (0.24 + row * 0.24)
+            for i in range(keys):
+                painter.drawRect(QRectF(body.left() + px(5) + i * (key + gap), top, key, key))
+        painter.drawRect(QRectF(body.left() + body.width() * 0.3, body.top() + body.height() * 0.7,
+                                body.width() * 0.4, key))
 
 
 class LegendItem(QWidget):
@@ -441,7 +501,7 @@ class LegendItem(QWidget):
         row.setSpacing(px(8))
         self.glyph = Glyph(button)
         row.addWidget(self.glyph)
-        self.label = text_label(text, LEGEND, QFont.Weight.DemiBold)
+        self.label = KeyboardIcon() if text == KEYBOARD_ICON else text_label(text, LEGEND, QFont.Weight.DemiBold)
         row.addWidget(self.label)
 
     def mousePressEvent(self, event) -> None:
@@ -603,7 +663,7 @@ class PortableHeader(QWidget):
                    second: Sequence[str | tuple[str, str]] = ()) -> None:
         """The status line's *parts* joined by bars; *second* on a line of its own under it (owner, 28-10-2026: the
         test app's temperatures under the battery, the date and the time). A part may be (text, color), in that
-        color (owner, 31-10-2026: the portal's Turbo letter red)."""
+        color and extra bold (owner, 31-10-2026: the portal's Turbo letter, a hard red that stands out)."""
         _set_line(self.status, parts)
         self.second.setVisible(_set_line(self.second, second))
 
@@ -618,7 +678,7 @@ def _set_line(label: QLabel, parts: Sequence[str | tuple[str, str]]) -> bool:
         label.setTextFormat(Qt.TextFormat.RichText)
         label.setText("&nbsp;&nbsp;|&nbsp;&nbsp;".join(
             html.escape(part) if isinstance(part, str) else
-            f'<span style="color: {part[1]}">{html.escape(part[0])}</span>' for part in parts))
+            f'<span style="color: {part[1]}; font-weight: 800">{html.escape(part[0])}</span>' for part in parts))
     return bool(parts)
 
 
@@ -1215,7 +1275,7 @@ class PortableWindow(QWidget):
 
     def common_items(self, back: bool | None = None) -> list[tuple[str, str]]:
         """The legend's last entries: Menu Info while the pane that shows has an information icon, B Back when B
-        does something (*back*; default: the focus is in a pane, can_go_back()), and View Exit app."""
+        does something (*back*; default: the focus is in a pane, can_go_back()), and View Exit."""
         back = self.can_go_back() if back is None else back
         return [*([INFO] if self.info_pill() is not None else []), *([BACK] if back else []), EXIT]
 

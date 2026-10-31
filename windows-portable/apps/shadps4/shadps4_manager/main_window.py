@@ -491,7 +491,7 @@ class MainWindow(PortableWindow):
     def legend_items(self) -> list[tuple[str, str]]:
         """The legend for the pane that shows: its actions on the controller's buttons, A too (a tap on an entry does
         the same), then core's Menu Info, B Back (in a pane, and on the key page, a field's page and the whole log)
-        and View Exit app. A press that cannot act now says why on the status line."""
+        and View Exit. A press that cannot act now says why on the status line."""
         if self.close_asked:
             return [(VIEW, "Press again to exit")]
         pane = self.panes.currentWidget()

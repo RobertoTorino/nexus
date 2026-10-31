@@ -1,3 +1,11 @@
+Changelog: 31-10-2026 18:31:09
+
+Fixed. From the device test of 6.4.0 (owner, 31-10-2026): the Turbo letter is a hard red (#ff1f1f) and extra
+bold, it was too faint; the row at the bottom shows R3 with a keyboard symbol instead of the word, on every page.
+With a second screen attached, the keys Win + Shift + an arrow follow a symbol of two screens instead of the
+words Switch screen, and the arrows stand side by side, so the row fits the Ally's screen (owner, 31-10-2026: a
+symbol saves space). The last entry of the row at the bottom reads Exit instead of Exit app (owner, 31-10-2026).
+
 Changelog: 31-10-2026 18:10:30
 
 Release 6.4.0. Pins wp-test-v4.3.0, wp-pcsx2-v5.3.0, wp-ppsspp-v3.3.0, wp-rpcs3-v3.3.0, wp-shadps4-v3.4.0, wp-vita3k-v3.3.0, wp-xenia-v3.3.0.

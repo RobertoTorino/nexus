@@ -155,7 +155,7 @@ You play the games from Steam; the app puts them there.
 The pictures in Steam come from inside the game: its icon (`sce_sys\icon0.png`) on the cover, the wide picture and as
 the logo, its background (`sce_sys\pic1.png`) on the banner; without them the title is drawn on a dark background. With
 a SteamGridDB API key, Update Steam also takes a cover for each game from SteamGridDB: **LB Steam artwork** on Your
-games opens the page that keeps the key (**X Paste**, **R3 Keyboard**, **A Save**, **Y Remove key** twice, **B** back without saving). See
+games opens the page that keeps the key (**X Paste**, **R3 ⌨**, **A Save**, **Y Remove key** twice, **B** back without saving). See
 [Steam artwork from SteamGridDB](covers.md).
 
 ### In a game
@@ -237,7 +237,7 @@ users). Not while shadPS4 runs.
 | Registration key | Its page: only when a server asks for one to create an account; kept nowhere |
 
 A text row's page has the field alone, with the touch keyboard: **A Keep** keeps it and goes back to the row, **X
-Paste** puts in what you copied in a browser on the device, **R3 Keyboard** opens or closes Windows' touch keyboard,
+Paste** puts in what you copied in a browser on the device, **R3 ⌨** opens or closes Windows' touch keyboard,
 **B** goes back without keeping it.
 
 - **X Create account** creates the account on the server, with the name, the password and the email address (and the

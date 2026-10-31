@@ -109,7 +109,7 @@ def test_the_window_fits_the_handhelds_screen(qapp):
 
 def test_b_goes_back_and_view_exits(qapp, monkeypatch):
     """The suite's buttons (owner, 29-10-2026: "Close" on B was not clear): B goes back, from a pane to its card,
-    and does nothing on a card; View (Exit app) closes the app; Menu shows the pane's information (the BIOS)."""
+    and does nothing on a card; View (Exit) closes the app; Menu shows the pane's information (the BIOS)."""
     window = make(qapp)
     closed = []
     monkeypatch.setattr(window, "close", lambda: closed.append(True))

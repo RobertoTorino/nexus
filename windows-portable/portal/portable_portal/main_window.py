@@ -50,8 +50,8 @@ LOGO_PNG = ROOT / "images" / f"{APP_ID}-128.png"   # the suite's icon, its pictu
 STEAM_MISSING = "Steam is not installed on this device: install it from store.steampowered.com, then RT opens it."
 ONE_SCREEN = "There is one screen: attach a TV or a monitor, then LT moves the portal to it."
 # With a second screen, the legend's left end (owner, 31-10-2026: "Switch monitor: [] + Shift + < or >", with icons)
-SCREEN_KEYS = ("Switch screen", (portable.WINDOWS_KEY, "+", "Shift", "+", "←", "/", "→"))
-TURBO_COLOR = portable.DOT      # the Turbo letter in the header, red (owner, 31-10-2026)
+SCREEN_KEYS = (portable.SCREEN_ICON, (portable.WINDOWS_KEY, "+", "Shift", "+", "←", "→"))   # two screens drawn
+TURBO_COLOR = "#ff1f1f"         # the Turbo letter in the header: a hard red, extra bold (owner, 31-10-2026)
 WALLPAPER_KEY = "look/wallpaper"  # where portal 1.6.0 kept the wallpaper switch: now the suite's (core, suite.ini)
 
 
@@ -582,12 +582,13 @@ class MainWindow(PortableWindow):
 
     def update_legend(self) -> None:
         """The page's buttons, LT Screen with a second screen (and the keyboard's Win + Shift + an arrow at the
-        left), RT Steam where Steam is installed, then core's B Back (on Details and Suite, and from the strip to its
-        tile) and View Exit app; while an exit is asked, only that."""
+        left), RT Steam where Steam is installed, R3 the touch keyboard, then core's B Back (on Details and Suite, and from the strip to its
+        tile) and View Exit; while an exit is asked, only that."""
         if not hasattr(self, "legend") or not hasattr(self, "stack"):
             return
         screens = len(QGuiApplication.screens()) > 1
-        triggers = [*([("LT", "Screen")] if screens else []), *([("RT", "Steam")] if self.steam_here() else [])]
+        triggers = [*([("LT", "Screen")] if screens else []), *([("RT", "Steam")] if self.steam_here() else []),
+                    KEYBOARD]                       # R3 and a keyboard drawn: Windows' touch keyboard (owner)
         keys = SCREEN_KEYS if screens and not self.close_asked else None
         if self.close_asked:
             self.legend.set_items([(VIEW, "Press again to exit")])
@@ -605,7 +606,7 @@ class MainWindow(PortableWindow):
             self.legend.set_items([("A", "Set"), *triggers, *self.common_items(True)], keys)
         else:
             self.legend.set_items([("A", "Change"), *([("Y", self.suite_pane.action)] if self.suite_pane.action
-                                                      else []), *triggers, KEYBOARD, *self.common_items(True)], keys)
+                                                      else []), *triggers, *self.common_items(True)], keys)
 
     def steam_action(self) -> None:
         """RT (or a tap on RT Steam): Steam's library in Big Picture, Steam started first when it does not run (owner,

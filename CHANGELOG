@@ -1,3 +1,13 @@
+Changelog: 31-10-2026 18:48:05
+
+Fixed. The Windows Portable Suite's legend ends with ⧉ Exit, not ⧉ Exit app (owner, 31-10-2026): DESIGN.md and
+tools/new_app.py say so.
+
+Changelog: 31-10-2026 18:31:09
+
+Fixed. DESIGN.md lists the portal's Turbo letter as the hard red #ff1f1f (owner, 31-10-2026: #e5484d was too
+faint).
+
 Changelog: 31-10-2026 18:10:32
 
 Release 1.10.0. Brings wp-pcsx2-v5.3.0, wp-portal-v6.4.0, wp-ppsspp-v3.3.0, wp-rpcs3-v3.3.0, wp-shadps4-v3.4.0, wp-test-v4.3.0, wp-vita3k-v3.3.0, wp-xenia-v3.3.0.

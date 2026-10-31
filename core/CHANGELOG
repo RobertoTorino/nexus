@@ -1,3 +1,11 @@
+Changelog: 31-10-2026 18:31:09
+
+Fixed. The legend's R3 entry shows a keyboard drawn (KeyboardIcon) instead of the word Keyboard, and a status part
+given in a color of its own is extra bold (owner, 31-10-2026, from the device test: the red letter was too faint).
+The keyboard shortcut's key caps sit closer together, and KeyHint takes SCREEN_ICON for a symbol drawn instead of its
+words (ScreenIcon: two screens with an arrow between them), so the portal's row at the bottom fits with a second
+screen (owner, 31-10-2026: a symbol saves space). The last entry of the row at the bottom reads Exit instead of Exit app (owner, 31-10-2026).
+
 Changelog: 31-10-2026 18:10:30
 
 Version 2.3.0.

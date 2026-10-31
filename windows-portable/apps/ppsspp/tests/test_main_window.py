@@ -104,7 +104,7 @@ def test_the_window_fits_the_handhelds_screen(qapp):
 
 def test_b_goes_back_and_view_exits(qapp, monkeypatch):
     """The suite's buttons (owner, 29-10-2026: "Close" on B was not clear): B goes back, from a pane to its card,
-    and does nothing on a card; View (the Exit app entry) closes the app, a tap on the entry too."""
+    and does nothing on a card; View (the Exit entry) closes the app, a tap on the entry too."""
     window = make(qapp)
     closed = []
     monkeypatch.setattr(window, "close", lambda: closed.append(True))
@@ -118,7 +118,7 @@ def test_b_goes_back_and_view_exits(qapp, monkeypatch):
     window.on_action("back")
     qapp.processEvents()
     assert window.settings_card.hasFocus() and BACK not in window.legend.items and closed == []
-    window.legend.entries[VIEW].pressed.emit()                  # a tap on Exit app
+    window.legend.entries[VIEW].pressed.emit()                  # a tap on Exit
     assert closed == [True]
     window.on_action("view")
     assert closed == [True, True]

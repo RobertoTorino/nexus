@@ -116,7 +116,7 @@ the game; the two-second hold works either way.
 
 The pictures in Steam are drawn from the app's icon with the game's title. With a SteamGridDB API key, Update Steam
 takes each game's pictures from SteamGridDB instead: **RB Steam artwork** opens the page that keeps the key (**X
-Paste**, **R3 Keyboard**, **A Save**, **Y Remove key** twice, **B** back without saving). See
+Paste**, **R3 ⌨**, **A Save**, **Y Remove key** twice, **B** back without saving). See
 [Steam artwork from SteamGridDB](covers.md).
 
 ## Settings

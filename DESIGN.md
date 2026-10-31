@@ -52,7 +52,7 @@ Each design (a suite's, the Nexus page's) has its own; none is carried over to a
   (owner, 29-10-2026). The glyph paints its own circle (a stylesheet's radius showed a square on the Ally).
 - **The legend at the bottom is the row of actions** (owner, 29-10-2026): every action is an entry there, A too
   (A Steam mark, Y Update Steam, LB Folders, RB Steam artwork), its glyph gray, and every legend ends with the shared
-  ones: ☰ Info (the pane's information), B Back (while B can act) and ⧉ Exit app; a tap on an entry does what the
+  ones: ☰ Info (the pane's information), B Back (while B can act) and ⧉ Exit; a tap on an entry does what the
   button does. The information icon at a pane's top right is touch only, a ring with its sign.
 - **A tile is a card with an icon** (the portal's apps, 28-10-2026): the app's icon centered above its name and
   its status, two rows of four under the category tabs; a status that asks for something (an update, a reinstall,
@@ -355,9 +355,9 @@ Text colors:
 
   ![Sample text in #141414](design/colors/text-141414.svg)
 
-- `#e5484d` Red: the Turbo letter in the portal's status line (owner, 31-10-2026), as a card's dot.
+- `#ff1f1f` Hard red: the Turbo letter in the portal's status line, extra bold (owner, 31-10-2026).
 
-  ![Sample text in #e5484d](design/colors/text-e5484d.svg)
+  ![Sample text in #ff1f1f](design/colors/text-ff1f1f.svg)
 
 Background colors:
 
