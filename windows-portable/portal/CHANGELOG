@@ -1,3 +1,7 @@
+Changelog: 31-10-2026 18:10:30
+
+Release 6.4.0. Pins wp-test-v4.3.0, wp-pcsx2-v5.3.0, wp-ppsspp-v3.3.0, wp-rpcs3-v3.3.0, wp-shadps4-v3.4.0, wp-vita3k-v3.3.0, wp-xenia-v3.3.0.
+
 Changelog: 31-10-2026 17:55:40
 
 Added. R3, the right stick pressed, shows Windows' touch keyboard, or hides it, on every page (owner,

@@ -1,3 +1,7 @@
+Changelog: 31-10-2026 18:10:32
+
+Release 1.10.0. Brings wp-pcsx2-v5.3.0, wp-portal-v6.4.0, wp-ppsspp-v3.3.0, wp-rpcs3-v3.3.0, wp-shadps4-v3.4.0, wp-test-v4.3.0, wp-vita3k-v3.3.0, wp-xenia-v3.3.0.
+
 Changelog: 31-10-2026 17:38:51
 
 Added. DESIGN.md lists the Windows Portable Suite's red #e5484d, the portal's Turbo letter (tools/make_design.py).
