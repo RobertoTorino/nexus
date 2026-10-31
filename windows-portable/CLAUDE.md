@@ -46,6 +46,10 @@ app is an optional tile. The wiki is at robertotorino.github.io/nexus/windows-po
   device only with a new release of the app, tried first. Every Monday `tools/check_upstream.py` compares each pin
   with the newest stable release and with the file GitHub publishes, and keeps the "Upstream review (Windows
   Portable Suite)" issue up to date; a new emulator app's `emulator.py` with those constants is checked by itself.
+  **The suite follows the emulators' release cycle** (owner, 31-10-2026): the pin is always the newest stable
+  release, so a new one is taken up in the working tree as soon as it is out. Check it against the source the app
+  relies on (`emulator.py` and the other modules name the upstream files), the asset's layout and checksum, and say
+  in the handover that the app needs a release.
 - **Worked on and tested on Windows** (owner, 26-10-2026): the suite's tests, installer tests and release builds
   run on Windows (`./test.sh` runs them only there, unless `NEXUS_SYSTEM=windows`).
 - **A design of its own, with the weight on UX and UI** (owner, 25-10-2026): the portable design (direction D, B's
@@ -97,7 +101,10 @@ app is an optional tile. The wiki is at robertotorino.github.io/nexus/windows-po
   in `%LOCALAPPDATA%\windows-portable-suite\` (programs, logs, reports, the portal's state) and
   `%APPDATA%\windows-portable-suite\` (one `.ini` per app); nothing in the registry (tests must not write to it
   either). An app the portal installs gets a Start-menu entry in the Windows Portable Suite folder and no Desktop
-  shortcut (owner, 28-10-2026); one installed by hand gets both.
+  shortcut (owner, 28-10-2026); one installed by hand gets both. The one exception (owner, 31-10-2026): the
+  portal's Operating Mode helper on the ROG Xbox Ally X, a scheduled task that writes the watt limits as
+  administrator, installed with one administrator prompt, its script in `C:\Program Files\windows-portable-suite\`
+  so the user cannot change what it runs.
 - **Personal data is never read out**: no serial numbers, MAC addresses, network names (SSID) or access point
   addresses, no paired Bluetooth devices (they carry their owner's name).
 - **Unsigned for now** (code signing and an MSIX for Xbox mode's home app are on hold, MIGRATION.md).

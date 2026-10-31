@@ -8,12 +8,12 @@ written as shadPS4 writes them (indented by two, no newline at the end), and eve
 is; never while shadPS4 runs, which writes its own copy back.
 
 On the handheld shadPS4's own window never shows, so shadPS4 may not have run when the shadNet account is set up:
-users.json is then made with shadPS4 0.20.0's four default users (user_manager.cpp, CreateDefaultUsers), which shadPS4
+users.json is then made with shadPS4 0.21.0's four default users (user_manager.cpp, CreateDefaultUsers), which shadPS4
 reads as its own. The game folders are the app's (library.py), as in the suite's other managers: shadPS4 starts a game
 from its path and needs no list of them.
 
 System modules are libraries of the PS4's firmware (.sprx), which the app cannot ship: they come from the user's own
-console. shadPS4 0.20.0 loads these from the folder when a game asks for them (sysmodule_internal.cpp); for some it
+console. shadPS4 0.21.0 loads these from the folder when a game asks for them (sysmodule_internal.cpp); for some it
 has its own version and does without, for the others a game that needs one does not run without it."""
 
 from __future__ import annotations
@@ -26,14 +26,14 @@ from pathlib import Path
 
 from .shadnet import DEFAULT_SERVER
 
-# shadPS4 0.20.0 has no replacement of its own for these.
+# shadPS4 0.21.0 has no replacement of its own for these.
 NEEDED = (
     "libSceUlt.sprx", "libSceAvPlayerStreaming.sprx", "libSceJpegDec.sprx", "libSceJson.sprx", "libSceJson2.sprx",
     "libSceCesCs.sprx", "libSceAt9Enc.sprx", "libSceAudiodec.sprx", "libSceAudiodecCpu.sprx",
     "libSceAudiodecCpuDdp.sprx", "libSceAudiodecCpuM4aac.sprx", "libSceAudiodecCpuDtsHdLbr.sprx",
     "libSceAudiodecCpuHevag.sprx", "libSceFreeTypeOt.sprx", "libSceFreeTypeOl.sprx", "libSceFreeTypeOptOl.sprx",
-    "libSceBeisobmf.sprx", "libSceBemp2sys.sprx", "libSceWkFontConfig.sprx", "libScePsmKitSystem.sprx",
-    "libSceDepth.sprx", "libScePadTracker.sprx", "libSceMoveTracker.sprx", "libSceXml.sprx",
+    "libSceBeisobmf.sprx", "libSceBemp2sys.sprx", "libSceVideoNativeExtEssential.sprx", "libSceWkFontConfig.sprx",
+    "libScePsmKitSystem.sprx", "libSceDepth.sprx", "libScePadTracker.sprx", "libSceMoveTracker.sprx", "libSceXml.sprx",
 )
 # Used when they are there; shadPS4 has its own version of these.
 OPTIONAL = (
@@ -145,7 +145,7 @@ PLAY_TIME = "play_time.txt"
 
 
 def play_times(home: Path) -> dict[str, tuple[int, float]]:
-    """The time spent in each game, as shadPS4 0.20.0 counts it (Emulator::UpdatePlayTime): play_time.txt in its
+    """The time spent in each game, as shadPS4 0.21.0 counts it (Emulator::UpdatePlayTime): play_time.txt in its
     folder, a line per game, "<Id> <hours>:<mm>:<ss> <last played, Unix time>" (an older line without the last
     time is read too). Id to (seconds, last played or 0); {} without the file."""
     try:
@@ -227,7 +227,7 @@ class UserDataError(Exception):
 
 @dataclass(frozen=True)
 class User:
-    """One of shadPS4's users (users.json; 0.20.0 makes four, the first is player 1) with its shadNet account."""
+    """One of shadPS4's users (users.json; 0.21.0 makes four, the first is player 1) with its shadNet account."""
     user_id: int
     name: str
     npid: str = ""
@@ -237,7 +237,7 @@ class User:
 
 
 def default_users() -> dict:
-    """users.json as shadPS4 0.20.0 makes it before its first start (CreateDefaultUsers, every field of its User with
+    """users.json as shadPS4 0.21.0 makes it before its first start (CreateDefaultUsers, every field of its User with
     its default), without the commit_hash it adds: shadPS4 writes the file again with its own when it starts."""
     return {"Users": {"user": [
         {"user_id": 999 + n, "user_color": n, "user_name": "shadPS4" if n == 1 else f"shadPS4-{n}",

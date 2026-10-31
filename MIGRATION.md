@@ -692,7 +692,7 @@ gaming category first, RPCS3 Manager done in the working tree, then shadPS4, Vit
    `bc250-bazzite/docs/design/icons/`.
 
 On hold: the portal as Xbox mode's home app (MSIX), code signing, an app for the back buttons, the handheld's own
-tuning apps.
+tuning apps, a BIOS update check.
 
 ## BC-250 Bazzite Test against Windows Portable Test (29-10-2026, the owner: "list all tests in BC250 and check which ones we can port over ... list everything")
 
@@ -2012,6 +2012,69 @@ behavior and dependencies. Decided (owner, 25-10-2026):
   `release.yml` after the build; the release format stays.
 - **Own tuning apps** (TDP, fans, and the like) for the handheld, later: the board's tuning apps do not port (sysfs,
   GRUB, RADV), but the same kinds of apps on both give comparison data between the BC-250 and the handheld.
+- **The Operating Mode in the portal (owner, 31-10-2026: in the portal, only on the ROG Xbox Ally X, every mode).**
+  Designed; built so far (31-10-2026, not released): the header's marker (portal's `operating_mode.py`) and the
+  mode page (the Settings page's Operating mode row; it sets the plan and the power mode); next the helper, which the
+  page then asks for the watts. The findings are the owner's tests on the Ally X (31-10-2026: HWiNFO logs, PowerShell as
+  administrator and as the user); the logs hold the SSD's serial number and stay out of the repository.
+
+  What a mode is. Armoury Crate SE's five modes (ThrottleGear_RC73XA.xml, ModeSize 5: Windows, Silent,
+  Performance, Turbo, Manual) are three settings each:
+  - the watt limits, written through ASUS WMI as administrator only (`root\wmi`, `AsusAtkWmi_WMNB`, method DEVS:
+    0x001200A3 sustained, 0x001200A0 slow, 0x001200C1 fast, whole watts, result 1 = taken). The Ally X has no
+    `\\.\ATKACPI`; a normal user gets "Access to a CIM resource was not available". Nothing reads back: DSTS of the
+    mode (0x00120075) gives 0x00010007 in every mode, the limits 0x00010000. The firmware mode (DEVS 0x00120075)
+    alone sets no watts.
+  - the power plan: ASUS's Silent `64a64f24-65b9-4b56-befd-5ec1eaced9b3`, Performance
+    `27fa6203-3987-4dcc-918d-748559d549ec`, Turbo `6fecc5ae-f350-48a5-b669-b472cb895ccf`; Windows mode Windows'
+    Balanced `381b4222-f694-41f0-9685-ff5bb260df2e` (PD Turbo `62346f4c-22a8-45c0-adf0-24a1cb9f2739` unexplained).
+    The plans hold no watts and the same energy preference (PERFEPP 20 % on the charger, 90 % on battery).
+  - Windows' power mode (the overlay): Silent Best power efficiency `961cc777-2547-4f9d-8174-7d86181b8a7a`,
+    Performance Balanced (all zeros), Turbo Best performance `ded574b5-45a0-4f42-8737-46345c09c238`; Windows mode
+    whatever the player chose. It sets the processor's energy preference.
+
+  Measured (sustained / slow / fast W, energy preference):
+
+  | Mode | On the charger | On battery |
+  |---|---|---|
+  | Silent | 13 / ≈16 / 20, ≈72 % | 13 / ≈16 / 20, ≈90 % |
+  | Performance | 17 / ≈21 / 26, 20 % | 17 / ≈21 / 26, ≈60 % |
+  | Turbo | 35 / ≈44 / ≈55, 10 % | 25 / 30 / 36, ≈10-15 % |
+  | Windows | 17 / 21 / 26, 20 % (Best performance: 10 %, the watts the same) | 17 / ? / 26, follows Windows' power mode (≈97 / 80 / 40-60 %) |
+
+  The battery's slow limits and Windows mode on the charger are from the owner's log of 31-10-2026 05:51-05:59: Turbo
+  held the package at 30 W with the slow limit at 100 %; Silent's and Performance's come from the converged slow
+  filter (power ÷ PPT SLOW %); Windows mode held 21 W at 100 % until the 17 W sustained average caught up. The
+  Turbo pick at 05:55 changed nothing in that log (Performance's 17 / 26 W and 60 % stayed until the charger).
+
+  How Armoury Crate behaves. The last write wins: a pick in Command Center replaces the limits written through
+  WMI, and those writes replace a pick; they hold through a game, sleep and wake. Armoury Crate keeps a mode per
+  power source (the owner's: Silent on the charger, Turbo on battery) and applies it on every charger change and
+  when its services start; a game start changes nothing. Command Center keeps its own record of the mode: it does
+  not follow the plan or the power mode, so after the portal's change it may show another mode. Armoury Crate need
+  not be stopped. Setting the plan and the power mode from a normal window (PowerSetActiveScheme,
+  PowerSetActiveOverlayScheme) works: Silent's took the energy preference from ≈14 % to ≈90 % within 4 s, the
+  package power from ≈22 to ≈12 W and the battery drain from ≈30 to ≈20 W, at the game's same 60 FPS.
+
+  The design (owner, 31-10-2026):
+  - An Operating Mode page in the portal, shown only on the ROG Xbox Ally X (the model from one CIM query, RC73XA):
+    Silent, Performance, Turbo and Windows ("back to Windows"), each with its watts for the current power source.
+    Manual and PD Turbo are not offered.
+  - The portal sets the plan and the power mode itself, as the user, and asks the helper for the watts.
+  - The helper is a scheduled task that runs as administrator (owner's choice over a service). It writes the three
+    limits of the mode the portal recorded, and starts on two triggers: the portal's request, and a power-source
+    change (event Kernel-Power 105), a few seconds after Armoury Crate's own change. Its values are its own fixed
+    table; the portal only names the mode (S, P, T or W), checked against that table, never watts.
+  - The active mode is read from the plan and the power mode, and shown as its first letter, S, P, T or W, in the
+    header's status line just before the battery, which stays last (owner, 31-10-2026):
+    `Friday 31/10/2026 | 04:30 | T | 82%`. The page says Command Center may show another mode.
+  - The helper is the suite's one exception to "never as administrator" (owner, 31-10-2026): it is installed with
+    one administrator prompt, its script in `C:\Program Files\windows-portable-suite\`, where the user cannot
+    change it.
+  - The wiki explains the modes, the battery cost (Turbo bought nothing in a game at its frame cap) and that
+    Command Center keeps its own record.
+  Open: Windows mode's slow limit on battery (likely 21, as on the charger); whether a standard user may start the
+  task (its security descriptor).
 - **A network test in Windows Portable Test (owner, 28-10-2026: found out once the tests are built).** The portal's
   update downloaded its 94 MB release at about 0.8 MB/s on the Ally (17:04), where the same file came in at 69 MB/s
   with curl and 56 MB/s with the portal's own http_download an hour later, on mains power: the code is not the
@@ -2033,6 +2096,11 @@ behavior and dependencies. Decided (owner, 25-10-2026):
   LB or RB, or keys). Seen on the Ally (28-10-2026): SDL reports its pad with 16 buttons, and a 90 s listen with
   pygame-ce caught no press of M1 or M2. The idea: a suite app that programs them. The controller test shows them,
   and says on its card that they answer only once Armoury Crate maps them to a standard button.
+- **A BIOS update check (on hold, owner 31-10-2026: "we should definitely add a test to check for updates").** ASUS
+  has published a new BIOS for the ROG Xbox Ally X on its support page. The idea: a test that compares the
+  handheld's BIOS version (Windows reports it, `Win32_BIOS`) with the newest one ASUS publishes for the model, and
+  says when an update is out, without installing anything. To find out first: where ASUS publishes the list in a
+  form an app can read, and how the model is told apart (RC73XA and RC73YA).
 
 The scan (25-10-2026), what each BC-250 app means for Windows:
 

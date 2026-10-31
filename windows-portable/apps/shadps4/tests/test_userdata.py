@@ -43,7 +43,7 @@ def test_modules(tmp_path):
     for name in userdata.NEEDED:
         (folder / name).touch()
     assert userdata.check_modules(folder).complete
-    assert not set(userdata.NEEDED) & set(userdata.OPTIONAL) and len(userdata.NEEDED) + len(userdata.OPTIONAL) == 34
+    assert not set(userdata.NEEDED) & set(userdata.OPTIONAL) and len(userdata.NEEDED) + len(userdata.OPTIONAL) == 35
 
 
 def test_modules_copied_from_a_folder(tmp_path):

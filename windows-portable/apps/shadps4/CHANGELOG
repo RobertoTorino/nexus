@@ -1,3 +1,15 @@
+Changelog: 31-10-2026 00:18:03
+
+Added. The app installs shadPS4 0.21.0 (30-10-2026), the newest stable release, in place of 0.20.0 (owner,
+31-10-2026: the suite follows the emulators' release cycle): Install brings it where 0.20.0 is installed, and what
+the player made stays. The zip (shadps4-win64-sdl-0.21.0.zip, 32 MB; the name no longer has 2026- in it) matches the
+SHA-256 GitHub publishes for it and still holds shadPS4.exe alone, with the same Visual C++ runtime. shadPS4 0.21.0
+needs one more system module from the console, libSceVideoNativeExtEssential.sprx (sysmodule_internal.cpp), so the
+pane and the status line count 25 that shadPS4 cannot do without. The rest of what the app relies on is unchanged
+from 0.20.0: the portable user folder, the -UPDATE, -patch and -mods folders, shadNet's protocol 1, its default
+servers and the sign-in, the settings keys and their defaults (0.21.0 adds two the app leaves alone), the users,
+the play time and the quit hotkeys.
+
 Changelog: 30-10-2026 23:24:22
 
 Release 3.1.0.

@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """shadNet, shadPS4's online service (github.com/shadps4-emu/shadNet): creating an account on a shadNet server and
-trying a sign-in, as shadPS4 0.20.0's own client speaks to it (src/shadnet/client.cpp, shadnet.proto at that tag).
+trying a sign-in, as shadPS4 0.21.0's own client speaks to it (src/shadnet/client.cpp, shadnet.proto at that tag).
 
 shadPS4 signs in by itself when a game starts, with what its own files say (userdata.py): shadNet switched on, and
 for the user an NPID (the account's name) and password. It has no way to create an account; this does.
@@ -24,7 +24,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 
-DEFAULT_SERVER = "srv.shadps4.net:31313"        # shadPS4 0.20.0's own default (emulator_settings.h)
+DEFAULT_SERVER = "srv.shadps4.net:31313"        # shadPS4 0.21.0's own default (emulator_settings.h)
 PROTOCOL = 1
 HEADER = struct.Struct("<BHIQ")                 # packet type, command, total size, packet number
 REQUEST, REPLY, NOTIFICATION, SERVER_INFO = 0, 1, 2, 3
@@ -138,7 +138,7 @@ def _greeting(sock: socket.socket, server: Server) -> None:
     if kind != SERVER_INFO:
         raise ShadNetError(f"{server} is not a shadNet server.")
     if len(info) >= 4 and struct.unpack_from("<I", info)[0] != PROTOCOL:
-        raise ShadNetError(f"{server} speaks another shadNet version than shadPS4 0.20.0 "
+        raise ShadNetError(f"{server} speaks another shadNet version than shadPS4 0.21.0 "
                            f"({struct.unpack_from('<I', info)[0]}, not {PROTOCOL}).")
 
 
@@ -208,7 +208,7 @@ LOG_FILE = "shad_log.txt"               # shadPS4's log, unless it keeps a log p
 
 def session(log_folder: Path) -> tuple[str, str]:
     """What shadPS4's newest log says about its shadNet session: ("online", name), ("offline", why) or ("", "")
-    when it has not signed in or tried yet. shadPS4 0.20.0 logs a game into log/shad_log.txt, or into <Id>.log with
+    when it has not signed in or tried yet. shadPS4 0.21.0 logs a game into log/shad_log.txt, or into <Id>.log with
     its separate logs on (emulator.cpp)."""
     try:
         logs = [*log_folder.glob("*.log"), log_folder / LOG_FILE]

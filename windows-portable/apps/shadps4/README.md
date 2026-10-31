@@ -6,7 +6,7 @@
 
 # shadPS4 Manager
 
-Plays your PS4 games on a Windows handheld with shadPS4, the PS4 emulator: shadPS4 0.20.0 for Windows from shadPS4's
+Plays your PS4 games on a Windows handheld with shadPS4, the PS4 emulator: shadPS4 0.21.0 for Windows from shadPS4's
 own release, checked against the checksum this version of the app was tested with, for your own user; shadPS4 keeps
 its settings, your saves and the system modules in its portable folder beside its program, in the app's folder. You
 never choose a folder: it copies the system modules you put in Games\PS4\Modules into shadPS4, unpacks the packages

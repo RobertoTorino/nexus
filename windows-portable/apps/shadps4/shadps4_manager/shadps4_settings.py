@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The settings the Settings pane offers: the BC250 suite's shadPS4 Manager's (its shadps4_settings.py), each one key
 of shadPS4's config.json, which shadPS4 reads when it starts: the picture (GPU), the sound (Audio, General), the
-controller (Input) and what shadPS4 shows in a game (General). They are the settings shadPS4 0.20.0's own settings
+controller (Input) and what shadPS4 shows in a game (General). They are the settings shadPS4 0.21.0's own settings
 window (Big Picture) offers for every game, with its values and defaults (emulator_settings.h,
 big_picture/settings_dialog_imgui.h). A setting is read from the file (shadPS4's default while the file, or the key,
 is not there) and written one key at a time, every other key kept (userdata.write_config); shadPS4 merges the file

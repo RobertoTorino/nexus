@@ -9,7 +9,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from PyQt6 import sip
-from PyQt6.QtCore import QEvent, QObject, QPoint, QRect, Qt, pyqtSignal
+from PyQt6.QtCore import QEvent, QObject, QPoint, QRect, QSize, Qt, pyqtSignal
 from PyQt6.QtGui import QFontDatabase, QMouseEvent, QPixmap
 from PyQt6.QtWidgets import (
     QAbstractItemView, QApplication, QDialog, QDialogButtonBox, QFrame, QHBoxLayout, QHeaderView, QLabel,
@@ -355,7 +355,9 @@ class RoundedToolTip(QObject):
     _instance: RoundedToolTip | None = None
     _HIDE_ON = (QEvent.Type.MouseButtonPress, QEvent.Type.Wheel, QEvent.Type.KeyPress,
                 QEvent.Type.WindowDeactivate)
-    _FLAGS = Qt.WindowType.ToolTip | Qt.WindowType.FramelessWindowHint
+    # Clicks go through it to the widget below: a tooltip over a button took the click and only hid itself (Nexus
+    # Release Tool, 31-10-2026: a button needed two or three clicks).
+    _FLAGS = Qt.WindowType.ToolTip | Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowTransparentForInput
 
     def __init__(self, parent: QObject | None = None):
         super().__init__(parent)
@@ -422,15 +424,26 @@ class RoundedToolTip(QObject):
             self.label.setFixedWidth(self.MAX_WIDTH)
         self.label.adjustSize()
         self.popup.adjustSize()
-        pos = pos + QPoint(12, 16)
-        screen = QApplication.screenAt(pos) or QApplication.primaryScreen()
-        if screen is not None:
-            geo = screen.availableGeometry()
-            pos.setX(max(geo.left(), min(pos.x(), geo.right() - self.popup.width())))
-            pos.setY(max(geo.top(), min(pos.y(), geo.bottom() - self.popup.height())))
-        self.popup.move(pos)
+        self.popup.move(self._place(pos, self.popup.size()))
         self.popup.show()
         self.popup.raise_()
+
+    @staticmethod
+    def _place(cursor: QPoint, size: QSize) -> QPoint:
+        """Below and right of the cursor; above or left of it where the screen has no room, as Qt's own QToolTip
+        does. Clamped into the screen only after that, so it never comes to lie over the cursor."""
+        pos = cursor + QPoint(12, 16)
+        screen = QApplication.screenAt(cursor) or QApplication.primaryScreen()
+        if screen is None:
+            return pos
+        geo = screen.availableGeometry()
+        if pos.x() + size.width() > geo.right():
+            pos.setX(cursor.x() - 4 - size.width())
+        if pos.y() + size.height() > geo.bottom():
+            pos.setY(cursor.y() - 4 - size.height())
+        pos.setX(max(geo.left(), min(pos.x(), geo.right() - size.width())))
+        pos.setY(max(geo.top(), min(pos.y(), geo.bottom() - size.height())))
+        return pos
 
     def hide(self) -> None:
         self._owner = None

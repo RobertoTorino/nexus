@@ -6,7 +6,7 @@ Manager's (its games.py), unchanged but for a game's pictures on a card that was
 The scan follows the owner's Windows launcher Nexus (an eboot.bin found below a folder, the folder's name as the
 title without a leading "[PS4]", a path found twice counted once); here the title and ID come from param.sfo when it
 is there. Updates and mods are not games to start: shadPS4 lays them over the game from a folder beside it, named
-like the game's with "-UPDATE", "-patch" or "-mods" added (fs.cpp in 0.20.0). An update's param.sfo says category
+like the game's with "-UPDATE", "-patch" or "-mods" added (fs.cpp in 0.21.0). An update's param.sfo says category
 "gp", but so does a game with its update already in it (dumped from a PS4 that had the update installed): a "gp"
 folder is left out only when its game, with the same title ID, is found too.
 

@@ -1,3 +1,10 @@
+Changelog: 31-10-2026 00:13:44
+
+Fixed. RoundedToolTip: a tooltip with no room below the cursor opens above it (left of it with no room to the
+right), as Qt's own does, where it was pushed up over the cursor and the button under it; and clicks go
+through a tooltip to the widget below. A click on a button low in the window only hid the tooltip and took
+two or three tries (Nexus Release Tool, owner, 31-10-2026).
+
 Changelog: 30-10-2026 23:24:23
 
 Version 2.1.0.

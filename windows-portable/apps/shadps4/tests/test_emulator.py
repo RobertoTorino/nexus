@@ -37,11 +37,11 @@ def install(home: Path, data: bytes, **kwargs) -> str:
 
 
 def test_the_pin():
-    """The BC250 suite's shadPS4 Manager's release (0.20.0), its Windows build; GitHub's digest of the file."""
-    assert emulator.URL == ("https://github.com/shadps4-emu/shadPS4/releases/download/v.0.20.0/"
-                            "shadps4-win64-sdl-2026-0.20.0.zip")
-    assert emulator.SHA256 == "d5cdc55c57e85e5fe44ff867b420246dc832077356d943ccc43c5d950c878b37"
-    assert emulator.SIZE == 31_574_011 and emulator.EXE == "shadPS4.exe"
+    """shadPS4's newest stable release (0.21.0), its Windows build; GitHub's digest of the file."""
+    assert emulator.URL == ("https://github.com/shadps4-emu/shadPS4/releases/download/v.0.21.0/"
+                            "shadps4-win64-sdl-0.21.0.zip")
+    assert emulator.SHA256 == "95295b8f109663f70c2dac685e6232aa97be1353f6ed0a5d5e0c5dd24a797d88"
+    assert emulator.SIZE == 31_725_856 and emulator.EXE == "shadPS4.exe"
 
 
 def test_install_with_its_portable_folder_and_its_record(tmp_path):

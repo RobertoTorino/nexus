@@ -139,7 +139,7 @@ def test_nothing_is_installed_before_a(qapp, tmp_path):
     calls = []
     window = make(qapp, tmp_path / "emulator", install=lambda *a, **k: calls.append(True))
     assert calls == [] and window.shadps4_card.hasFocus()
-    assert dict(window.rows())["Installed"] == "not installed" and dict(window.rows())["System modules"] == "0 of 24"
+    assert dict(window.rows())["Installed"] == "not installed" and dict(window.rows())["System modules"] == "0 of 25"
     window.on_action("x")                                       # X Remove: says why, nothing happens
     assert "nothing to remove" in window.status.text() and calls == []
     assert ("LB", "Modules") not in window.legend.items         # no browsing (owner, 30-10-2026)
@@ -244,9 +244,9 @@ def test_the_system_modules_put_in_the_modules_folder_are_taken_in(qapp, tmp_pat
     (dump / "notes.txt").write_text("")
     window = make(qapp, home, user_home=user)
     monkeypatch.setattr(window, "isActiveWindow", lambda: True)
-    assert window.status.text() == ("21 system module(s) taken from the Modules folder: 20 of the 24 shadPS4 cannot do "
+    assert window.status.text() == ("21 system module(s) taken from the Modules folder: 20 of the 25 shadPS4 cannot do "
                                     "without are there now.")
-    assert dict(window.rows())["System modules"] == "20 of 24"
+    assert dict(window.rows())["System modules"] == "20 of 25"
     modules = emulator.user_folder(home) / "sys_modules"
     assert (modules / "libSceNgs2.sprx").is_file() and not (modules / "notes.txt").exists()
     for name in userdata.NEEDED[20:]:                           # the rest, put in while the app is open
@@ -254,8 +254,8 @@ def test_the_system_modules_put_in_the_modules_folder_are_taken_in(qapp, tmp_pat
     window.games_card.setFocus()
     window.shadps4_card.setFocus()                              # the card again: they are taken in
     qapp.processEvents()
-    assert window.status.text().startswith("4 system module(s) taken from the Modules folder: 24 of the 24")
-    assert dict(window.rows())["System modules"] == "all 24"
+    assert window.status.text().startswith("5 system module(s) taken from the Modules folder: 25 of the 25")
+    assert dict(window.rows())["System modules"] == "all 25"
     assert userdata.sync_modules(dump, modules) == []           # nothing new: nothing copied
     window.close()
 
@@ -608,7 +608,7 @@ def test_the_log_is_read_in_the_app(qapp, tmp_path, monkeypatch):
     window.log_card.setFocus()
     qapp.processEvents()
     texts = [label.text() for label in window.log_pane.findChildren(type(window.status))]
-    assert "System modules" in texts and "all 24" in texts and "Games" in texts
+    assert "System modules" in texts and "all 25" in texts and "Games" in texts
     lines = window.log_pane.lines
     assert lines.toPlainText().splitlines() == [f"line {n}" for n in range(288, 300)]
     assert lines.focusPolicy() == portable.Qt.FocusPolicy.NoFocus                 # the d-pad never lands on it

@@ -55,12 +55,12 @@ shadPS4 cannot do without are there, the time spent in your games (as shadPS4 co
 window is never opened: your games and their packages are on the **Your games** card, the modules are taken from
 here.
 
-- **A Install** (also **A** on the shadPS4 card) downloads shadPS4 0.20.0 for Windows from shadPS4's release on GitHub
+- **A Install** (also **A** on the shadPS4 card) downloads shadPS4 0.21.0 for Windows from shadPS4's release on GitHub
   (32 MB), checks it against the checksum this version of the app was tested with, and unpacks it. The page counts the
   megabytes while it downloads. Nothing is downloaded before you press A.
 - **The system modules** you put in `Games\PS4\Modules` are copied into shadPS4's module folder by the app itself,
   when it opens and each time the shadPS4 card gets the focus: only the new or changed ones, so a module put there
-  later is taken in too. The status line says how many it took, and the pane how many of the 24 that shadPS4 cannot
+  later is taken in too. The status line says how many it took, and the pane how many of the 25 that shadPS4 cannot
   do without are there; when some are missing, the status line names the folder to put them in.
 - **X Remove shadPS4** removes shadPS4's program. Press it twice: the first press only changes the entry to **Press
   again** for five seconds. shadPS4's folder, with your saves, its settings and the system modules, stays, so a new

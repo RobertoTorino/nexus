@@ -1,12 +1,12 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The shadPS4 this version of the app installs: the Windows build of a tagged release on GitHub (shadPS4.exe alone in
-a zip), pinned and checked against the SHA-256 this version of the app was tried with, the same release as the BC250
-suite's shadPS4 Manager pins. A newer shadPS4 comes with a new version of the app; the suite's weekly upstream check
-(windows-portable/tools/check_upstream.py) says when one is out.
+a zip), pinned and checked against the SHA-256 this version of the app was tried with: shadPS4's newest stable release
+(owner, 31-10-2026: the suite follows the emulators' release cycle). A newer shadPS4 comes with a new version of the
+app; the suite's weekly upstream check (windows-portable/tools/check_upstream.py) says when one is out.
 
 It goes to %LOCALAPPDATA%\\windows-portable-suite\\windows-portable-shadps4\\emulator\\, one folder, in shadPS4's
 portable mode: shadPS4 keeps its files in a folder named user in the folder it starts in (common/path_util.cpp in
-0.20.0; without one, in %APPDATA%\\shadPS4), so the app makes user\\ beside shadPS4.exe and the Steam shortcuts start
+0.21.0; without one, in %APPDATA%\\shadPS4), so the app makes user\\ beside shadPS4.exe and the Steam shortcuts start
 shadPS4 there. user\\ holds its settings (config.json, users.json), the saves, the system modules (sys_modules\\), the
 quit hotkeys (input_config\\global.ini), the play time (play_time.txt) and its log (log\\shad_log.txt). A newer
 shadPS4 replaces shadPS4.exe and what the player made stays; installed.json beside it records the version and the
@@ -32,11 +32,11 @@ from bc250_core.platform import suite_data
 
 from . import APP_ID, SUITE, __version__
 
-VERSION = "0.20.0"
-TAG = f"v.{VERSION}"                    # shadPS4 tags its releases "v.0.20.0"
-ASSET = "shadps4-win64-sdl-2026-0.20.0.zip"
-SHA256 = "d5cdc55c57e85e5fe44ff867b420246dc832077356d943ccc43c5d950c878b37"
-SIZE = 31_574_011                       # bytes
+VERSION = "0.21.0"
+TAG = f"v.{VERSION}"                    # shadPS4 tags its releases "v.0.21.0"
+ASSET = "shadps4-win64-sdl-0.21.0.zip"
+SHA256 = "95295b8f109663f70c2dac685e6232aa97be1353f6ed0a5d5e0c5dd24a797d88"
+SIZE = 31_725_856                       # bytes
 REPO = "shadps4-emu/shadPS4"
 URL = f"https://github.com/{REPO}/releases/download/{TAG}/{ASSET}"
 RELEASE_PAGE = f"https://github.com/{REPO}/releases/tag/{TAG}"
@@ -81,7 +81,7 @@ def program(home: Path) -> Path:
 
 
 def installed(home: Path) -> str:
-    """The installed version ("0.20.0"), "" when shadPS4 is not installed (or its program is gone)."""
+    """The installed version ("0.21.0"), "" when shadPS4 is not installed (or its program is gone)."""
     version = str(record(home).get("version") or "")
     return version if version and program(home).is_file() else ""
 

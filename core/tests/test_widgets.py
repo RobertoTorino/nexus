@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 from PyQt6 import sip
-from PyQt6.QtCore import QPoint, Qt
-from PyQt6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QTabBar, QTableWidget, QTableWidgetItem, QWidget
+from PyQt6.QtCore import QPoint, QRect, QSize, Qt
+from PyQt6.QtWidgets import (QApplication, QHBoxLayout, QLabel, QPushButton, QTabBar, QTableWidget, QTableWidgetItem,
+                             QWidget)
 
 from bc250_core import theme
 from bc250_core.widgets import (
@@ -172,6 +173,26 @@ def test_long_tooltip_wraps(qapp):
     owner.show()
     tip.show_text(QPoint(0, 0), "word " * 200, owner)
     assert tip.label.wordWrap() and tip.label.width() == RoundedToolTip.MAX_WIDTH
+
+
+def test_tooltip_never_covers_the_cursor(qapp):
+    geo = QApplication.primaryScreen().availableGeometry()
+    size = QSize(300, 200)
+    below = RoundedToolTip._place(geo.topLeft() + QPoint(50, 50), size)
+    assert below == geo.topLeft() + QPoint(62, 66)                # room below: below and right, as before
+    corner = geo.bottomRight() - QPoint(10, 10)                   # a button low in the window, by the screen's edge
+    above = RoundedToolTip._place(corner, size)
+    assert not QRect(above, size).contains(corner)
+    assert above.y() + size.height() < corner.y() and above.x() + size.width() < corner.x()
+
+
+def test_tooltip_lets_clicks_through(qapp):
+    tip = RoundedToolTip(qapp)
+    assert tip.popup.windowFlags() & Qt.WindowType.WindowTransparentForInput
+    owner = QWidget()
+    owner.show()
+    tip.show_text(QPoint(10, 10), "hello", owner)                 # also after it moved to another window
+    assert tip.popup.windowFlags() & Qt.WindowType.WindowTransparentForInput
 
 
 def test_item_view_tooltip_text(qapp):

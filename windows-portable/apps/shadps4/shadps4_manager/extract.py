@@ -8,7 +8,7 @@ unknown package).
 The packages are the ones put in the game folders (owner, 30-10-2026: drop them there, the manager takes care of
 them): waiting() finds those still to unpack, place() says where each goes. A game goes into a folder named by its
 title ID (CUSA00001) beside its package; an update (CATEGORY gp) beside its game, in a folder named like the game's
-with -UPDATE, which shadPS4 lays over the game when it starts (fs.cpp in 0.20.0), so the game stays as it was. Without
+with -UPDATE, which shadPS4 lays over the game when it starts (fs.cpp in 0.21.0), so the game stays as it was. Without
 its game a gp package goes into CUSA00001: a game with its update in it says gp too. A folder that is there already is
 never written into, except an older update: the new one is unpacked into a folder beside it and takes its place only
 when every file was written, else the old one stays."""
@@ -110,7 +110,7 @@ def _packages(root: Path, depth: int):
 
 
 def update_folder(game: Path) -> Path:
-    """Where shadPS4 0.20.0 looks for a game's update: a folder named like the game's with -UPDATE (fs.cpp)."""
+    """Where shadPS4 0.21.0 looks for a game's update: a folder named like the game's with -UPDATE (fs.cpp)."""
     return game.with_name(f"{game.name}-UPDATE")
 
 
