@@ -2133,6 +2133,22 @@ behavior and dependencies. Decided (owner, 25-10-2026):
   handheld's BIOS version (Windows reports it, `Win32_BIOS`) with the newest one ASUS publishes for the model, and
   says when an update is out, without installing anything. To find out first: where ASUS publishes the list in a
   form an app can read, and how the model is told apart (RC73XA and RC73YA).
+- **An HDMI-CEC app: retest with a new adapter (on hold, owner 31-10-2026: until the new adapter arrives).** The
+  idea: the BC250 suite's HDMI CEC Manager for the handheld, through the USB-C to HDMI adapter's CEC tunneling
+  (DPCD 0x3000 to 0x303F, as Linux's `drm_dp_cec` does). Windows has no CEC support of its own; AMD's
+  `atiadlxx.dll` exports `ADL_Display_NativeAUXChannel_Access(adapter, display, data)`, not in AMD's public SDK. Its
+  struct, from the driver's code: 36 bytes, `iSize` (0x24), `iStatus` (out), `iCommand` (0 native AUX read, 1 native
+  write, 2 and 3 I2C over AUX read and write), `iAddress`, `iDataSize` (up to 16) and 16 data bytes. Tried on the Ally
+  X (31-10-2026, Mi TV): reads and writes work, so the Windows side reaches the adapter's CEC. Adapter 1 (OUI
+  00-60-AD, id `cHDMIb`, DPCD 1.2) has no CEC tunneling. Adapter 2 (Parade PS176, OUI 00-1C-F8, id `176GB0`) reports
+  it (0x3000 = 0x07) and sends, but the TV acknowledged no message (flags 0x40, address NACK) on two TV inputs, with
+  two cables and both USB-C ports, and a 60 s listen with snooping heard nothing: its board does not wire the CEC
+  pin, as the kernel's CEC page says of most PS176 adapters. The retest, with a Club3D CAC-2504 (MegaChips 2900, on
+  the kernel's list of working USB-C adapters; also listed: Samsung EE-PW700, Kramer ADC-U31C/HF), with the TV on:
+  `.venv-windows\Scripts\python.exe windows-portable\tools\cec_probe.py --ping` (it reads 0x3000, turns tunneling
+  on, gives the logical address mask Playback 1 and 15, polls the TV, asks its power status and its name, and puts
+  0x3001 and 0x300E back; `--listen` then prints the line for 60 s). When the poll is acked and the TV gives its
+  name, the app can be built; else a Pulse-Eight USB-CEC adapter with libcec is the way left.
 
 The scan (25-10-2026), what each BC-250 app means for Windows:
 

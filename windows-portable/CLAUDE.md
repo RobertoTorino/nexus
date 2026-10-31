@@ -24,7 +24,8 @@ app is an optional tile. The wiki is at robertotorino.github.io/nexus/windows-po
 - `tools/`: `build_release.py` (an app's or the portal's release zip, on Windows), `check_manifest.py`,
   `suite_release.py` and `publish_release.sh` (the release workflow's plan, pin and publish steps),
   `check-release.ps1` (the release checks on the handheld, from the Nexus Release Tool's test buttons; `draft`: the
-  device test of a Nexus release), `mkdocs/`
+  device test of a Nexus release), `cec_probe.py` (can the handheld reach the TV's HDMI-CEC through its USB-C to
+  HDMI adapter: AMD's AUX channel to the adapter's CEC tunneling, `--ping` asks the TV), `mkdocs/`
   (the wiki's overrides), their tests in `tools/tests/`, and `tools/installer-tests/<name>.ps1` (an installer test
   per app and per manifest entry, and the Nexus Release Tool's `nrt.ps1`).
 - `docs/` and `mkdocs.yml`: the wiki; `icons/`: the suite's pictures and the category icons
