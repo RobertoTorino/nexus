@@ -1,3 +1,9 @@
+Changelog: 31-10-2026 14:38:50
+
+Fixed. The Windows Portable Suite's wiki home: the headline reads "Awesome tools to get more out of your portable."
+(owner, 31-10-2026), and One portal for every app shows the portal as it is now (6.2.0, rendered offscreen at the
+Ally's 1280 x 720 with Windows' fonts, so the legend's Menu and View glyphs show), where it showed 1.5.0.
+
 Changelog: 31-10-2026 14:11:34
 
 Release 1.7.0. Brings wp-portal-v6.2.0.

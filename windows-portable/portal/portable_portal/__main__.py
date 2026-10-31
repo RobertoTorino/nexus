@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 from pathlib import Path
 
@@ -11,7 +12,7 @@ from PyQt6.QtWidgets import QMessageBox
 
 from bc250_core import __version__ as CORE_VERSION, applog, instance
 from bc250_core.app import create_app, exec_app
-from bc250_core.portable import PORTABLE
+from bc250_core.portable import PORTABLE, RESTARTED
 from bc250_core.updates import repo_slug
 
 from . import APP_ID, APP_NAME, EXE_NAME, INFO, MANIFEST, __version__, portal_update, state_dir
@@ -68,10 +69,13 @@ def main() -> int:
     def portal_check():
         return portal_update.check(repo_slug(INFO.repo_url), INFO.tag_prefix, entries, INFO.user_agent)
 
+    from .intro import INTRO_MS
     from .main_window import MainWindow
     exe = sys.executable if getattr(sys, "frozen", False) else ""     # the installed program, for a restart
+    # Started again on another screen (core's PortableWindow): no second intro
+    intro = 0 if os.environ.pop(RESTARTED, None) else INTRO_MS
     window = MainWindow(entries, sources, Records(state_dir() / "installed.json"), portal_check=portal_check,
-                        exe=exe)
+                        exe=exe, intro_ms=intro)
     if args.windowed:
         window.resize(1280, 720)
         window.show()

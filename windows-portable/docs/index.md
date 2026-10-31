@@ -11,7 +11,7 @@ hide:
 ![A Windows portable device](images/home/device.webp){ .home-hero__device }
 </div>
 <div class="home-hero__text" markdown>
-# Awesome tools to get more out of your portable device. { .home-hero__lead }
+# Awesome tools to get more out of your portable. { .home-hero__lead }
 <p class="home-hero__claim">More control. More performance. More play.</p>
 <p class="home-hero__stage"><strong>Beta</strong> The suite is in active development: features and layout may still change between releases.</p>
 </div>

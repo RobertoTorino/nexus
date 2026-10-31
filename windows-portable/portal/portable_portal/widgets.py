@@ -129,7 +129,9 @@ class SuitePane(Pane):
         self.xbox = Row("Xbox menu: Add")
         self.mode = Row("Operating mode: Turbo")
         self.mode.hide()                                # on the ROG Xbox Ally X only
-        for row in (self.wallpaper, self.transparency, self.sound, self.xbox, self.mode):
+        self.screen_row = Row("Screen: Display 1")
+        self.screen_row.hide()                          # with a second screen attached
+        for row in (self.wallpaper, self.transparency, self.sound, self.xbox, self.mode, self.screen_row):
             self.column.addWidget(row)
             self.column.addSpacing(px(6))
         self.column.addStretch()
@@ -169,6 +171,11 @@ class SuitePane(Pane):
         if self.mode.isVisibleTo(self):
             parts.append("Operating mode: the ROG Xbox Ally X's mode, as Armoury Crate's Command Center offers them. "
                          "The A button opens its page.")
+        if self.screen_row.isVisibleTo(self):
+            parts.append("Screen: the screen the portal is on, with a second screen attached (a TV or a monitor). The A "
+                         "button moves it to the next screen: the portal starts again there, sized for it, after a "
+                         "download or an install has finished. The suite's apps open on that screen from then on, "
+                         "while it is attached. Win + Shift + an arrow key moves a window of the suite as well.")
         parts += ["Every setting is kept for the next start.",
                   "The buttons at the bottom: A changes the setting with the focus. Y looks for a newer portal on "
                   "GitHub (Check again), or downloads and installs it (Update to x.y.z). RT starts Steam's library in "
@@ -194,6 +201,13 @@ class SuitePane(Pane):
         self.xbox.setVisible(bool(state))
         if state:
             self.xbox.set_text(f"Xbox menu: {state}")
+        self._explain()
+
+    def set_screen(self, name: str) -> None:
+        """The Screen row: "" with one screen (hidden), else the name of the screen the portal is on."""
+        self.screen_row.setVisible(bool(name))
+        if name:
+            self.screen_row.set_text(f"Screen: {name}")
         self._explain()
 
     def set_mode(self, name: str) -> None:

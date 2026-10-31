@@ -19,14 +19,17 @@ from __future__ import annotations
 
 import datetime
 import math
+import os
+import subprocess
+import sys
 from pathlib import Path
 from collections.abc import Callable, Sequence
 
-from PyQt6.QtCore import QEvent, QPoint, QPointF, QRectF, QSize, Qt, pyqtSignal
-from PyQt6.QtGui import QColor, QFont, QGuiApplication, QKeyEvent, QPainter, QPen, QPixmap, QTextDocument
+from PyQt6.QtCore import QEvent, QPoint, QPointF, QRectF, QSize, Qt, QTimer, pyqtSignal
+from PyQt6.QtGui import QColor, QFont, QGuiApplication, QKeyEvent, QPainter, QPen, QPixmap, QScreen, QTextDocument
 from PyQt6.QtWidgets import (QApplication, QFrame, QGraphicsDropShadowEffect, QGraphicsOpacityEffect, QHBoxLayout,
-                             QLabel, QPlainTextEdit, QPushButton, QScroller, QSizePolicy, QStackedWidget, QVBoxLayout,
-                             QWidget)
+                             QLabel, QLayout, QPlainTextEdit, QPushButton, QScroller, QSizePolicy, QStackedWidget,
+                             QVBoxLayout, QWidget)
 
 from . import appinfo
 from .gamepad import Gamepad
@@ -83,6 +86,8 @@ PICTURE_SUFFIXES = (".png", ".jpg", ".jpeg", ".webp")
 PICTURE_MIN = (1280, 720)               # the Ally's screen: a smaller picture blurs when it fills the window
 PICTURE_RULES = "PNG, JPEG or WebP, wider than high, at least 1280 x 720 pixels"
 SOUND_KEY = "look/sound"                # the suite's sounds (the portal's intro) on or off: sound_on()
+SCREEN_KEY = "look/screen"              # the screen the suite's apps start on: start_screen() (owner, 31-10-2026)
+RESTARTED = "PORTABLE_RESTARTED"        # set for an app started again on another screen: no intro the second time
 _fonts_loaded = False
 
 
@@ -142,6 +147,57 @@ def set_sound_on(suite: str, on: bool) -> None:
     settings = look_settings(suite)
     settings.setValue(SOUND_KEY, "true" if on else "false")
     settings.sync()
+
+
+def start_screen(suite: str) -> QScreen | None:
+    """The screen the suite's apps open on: the one an app was last moved to (by name), while it is attached, else
+    Windows' main display (owner, 31-10-2026: moved to the Ally's own screen, it stays there)."""
+    name = str(look_settings(suite).value(SCREEN_KEY, "")) if suite else ""
+    return next((screen for screen in QGuiApplication.screens() if name and screen.name() == name),
+                QGuiApplication.primaryScreen())
+
+
+def set_start_screen(suite: str, screen: QScreen) -> None:
+    if suite:
+        settings = look_settings(suite)
+        settings.setValue(SCREEN_KEY, screen.name())
+        settings.sync()
+
+
+def screen_label(screen: QScreen) -> str:
+    """A screen's name for a person: its model as Windows names it (Mi TV), or Display 1 for one without a name (the
+    device's own screen, DISPLAY1 in Windows)."""
+    name = screen.name()
+    if name.startswith("\\\\.\\"):
+        return name[4:].replace("DISPLAY", "Display ")
+    if not name:                                        # no name at all: its place among the screens
+        screens = QGuiApplication.screens()
+        return f"Display {screens.index(screen) + 1}" if screen in screens else "Display"
+    return name
+
+
+def restart_command(pid: int, argv: Sequence[str], cwd: str) -> list[str]:
+    """PowerShell that waits for this app (*pid*) to end, then starts it again with its own command line (*argv*:
+    the program and its arguments), RESTARTED set: the new one finds no running instance to hand over to."""
+    def quote(text: str) -> str:
+        return "'" + text.replace("'", "''") + "'"
+    program, args = argv[0], list(argv[1:])
+    start = f"Start-Process -FilePath {quote(program)} -WorkingDirectory {quote(cwd)}"
+    if args:
+        start += " -ArgumentList " + ", ".join(quote(arg) for arg in args)
+    line = f"Wait-Process -Id {pid} -ErrorAction SilentlyContinue; $env:{RESTARTED} = '1'; {start}"
+    return ["powershell.exe", "-NoProfile", "-NonInteractive", "-WindowStyle", "Hidden", "-Command", line]
+
+
+def own_command() -> list[str]:
+    """This app's command line, to start it again: the installed program with its arguments, or from a checkout
+    Python's windowless pythonw.exe with the module (no console window)."""
+    argv = list(getattr(sys, "orig_argv", sys.argv))
+    if not getattr(sys, "frozen", False):
+        program = Path(sys.executable)
+        windowless = program.with_name("pythonw.exe")
+        argv[0] = str(windowless if windowless.is_file() else program)
+    return argv
 
 
 def wallpaper_folder(suite: str) -> Path:
@@ -1012,10 +1068,21 @@ class PortableWindow(QWidget):
         if not _fonts_loaded:                           # Inter, bundled with core, once per app
             load_fonts()
             _fonts_loaded = True
-        screen = QGuiApplication.primaryScreen()
-        if screen is not None and not _pinned:          # the whole screen: the apps run full screen, over the taskbar
+        info = appinfo.current()
+        self.suite = suite or (info.settings_org if info is not None else "") or ""
+        # The screen the suite's apps were last moved to, else the main display: the whole of it, as the apps run full
+        # screen over the taskbar. Everything is sized for it once; on a screen of another size the app starts again
+        # (screen_moved).
+        screen = start_screen(self.suite) if not _pinned else None
+        if screen is not None:
             size = screen.geometry().size()
             scale((size.width(), size.height()))
+            self.move(screen.geometry().topLeft())      # full screen on that screen, not on the main display
+        self.screen_size = screen.geometry().size() if screen is not None else QSize()
+        self.move_pending = False                       # moved to a screen of another size while busy: started again
+        self.move_timer = QTimer(self)                  # once done
+        self.move_timer.setInterval(1000)
+        self.move_timer.timeout.connect(self._move_when_free)
         self.setObjectName("portable")
         self.setStyleSheet(f"QWidget#portable {{ background: {BACKGROUND}; }}")
         self.setAutoFillBackground(True)
@@ -1023,8 +1090,6 @@ class PortableWindow(QWidget):
         self.gamepad = gamepad if gamepad is not None else Gamepad(self)
         self.gamepad.action.connect(self.on_action)
         self.popup: InfoPopup | None = None
-        info = appinfo.current()
-        self.suite = suite or (info.settings_org if info is not None else "") or ""
         if self.suite and wallpaper == WALLPAPER:       # the suite's own picture, or the one chosen for the suite
             wallpaper = wallpaper_picture(self.suite)
         self.wallpaper = QPixmap(str(wallpaper)) if wallpaper is not None else QPixmap()
@@ -1109,7 +1174,15 @@ class PortableWindow(QWidget):
 
     def showEvent(self, event) -> None:  # noqa: N802 (Qt override)
         """Every stack of the window, as the subclass made them, keeps to one visible page after each switch
-        (one_page)."""
+        (one_page). The screen sizes the window, never its layout: Qt takes a layout's minimum height with wrapped
+        text at the window's narrowest width, more lines than at the screen's, and made a full-screen window taller
+        than its screen (owner, 31-10-2026: the portal 1920 x 1099 on a 1080p TV, its bottom on the screen under it)."""
+        if self.layout() is not None:
+            self.layout().setSizeConstraint(QLayout.SizeConstraint.SetNoConstraint)
+        handle = self.windowHandle()
+        if handle is not None and not self.property("follows_screen"):
+            self.setProperty("follows_screen", True)
+            handle.screenChanged.connect(self.screen_moved)
         for stack in self.findChildren(QStackedWidget):
             if not stack.property("one_page"):
                 stack.setProperty("one_page", True)
@@ -1118,6 +1191,51 @@ class PortableWindow(QWidget):
 
     def shows_wallpaper(self) -> bool:
         return self.wallpaper_on and not self.wallpaper.isNull()
+
+    # The screen it is on (owner, 31-10-2026): moved to another screen (Win + Shift + an arrow, or the portal's Screen
+    # row), the suite's apps open there from then on; on a screen of another size the app starts again there, as
+    # everything is sized for its screen once.
+
+    def screen_moved(self, screen: QScreen | None) -> None:
+        if screen is None or _pinned:
+            return
+        set_start_screen(self.suite, screen)
+        if screen.geometry().size() != self.screen_size and self.isFullScreen():
+            self.move_to(screen)
+
+    def move_to(self, screen: QScreen) -> None:
+        """Start again on *screen*, remembered for the suite: at once, or once the app is no longer busy (a download
+        or an install), saying so meanwhile (waiting_to_move)."""
+        set_start_screen(self.suite, screen)
+        self.move_pending = True
+        self._move_when_free()
+
+    def can_restart(self) -> bool:
+        """Whether the app may end now to start again: not while it downloads or installs (the managers' busy)."""
+        return not getattr(self, "busy", False)
+
+    def waiting_to_move(self) -> None:
+        """Said while a move waits for the app to finish what it does; a subclass shows it on its page."""
+
+    def _move_when_free(self) -> None:
+        if not self.move_pending:
+            self.move_timer.stop()
+            return
+        if not self.can_restart():
+            if not self.move_timer.isActive():
+                self.waiting_to_move()
+                self.move_timer.start()
+            return
+        self.move_pending = False
+        self.move_timer.stop()
+        self.restart()
+
+    def restart(self) -> None:
+        """End and start again (Windows: PowerShell waits for this process, then starts the same command line)."""
+        if sys.platform == "win32":
+            subprocess.Popen(restart_command(os.getpid(), own_command(), os.getcwd()),
+                             creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000))
+        self.close()
 
     def set_wallpaper(self, on: bool) -> None:
         """The wallpaper on or off, for the whole suite (the next start of every app), and in this window at once."""

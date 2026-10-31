@@ -20,7 +20,7 @@ from dataclasses import dataclass
 from pathlib import Path, PurePath
 
 from PyQt6.QtCore import QObject, QSettings, Qt, QTimer, pyqtSignal
-from PyQt6.QtGui import QPixmap
+from PyQt6.QtGui import QGuiApplication, QPixmap
 from PyQt6.QtWidgets import QGridLayout, QStackedWidget, QVBoxLayout, QWidget
 
 from bc250_core import applog, chip, portable, power, steam, xbox
@@ -233,6 +233,7 @@ class MainWindow(PortableWindow):
         self.suite_pane.sound.activated.connect(self.toggle_sound)
         self.suite_pane.xbox.activated.connect(self.xbox_menu)
         self.suite_pane.mode.activated.connect(self.show_modes)
+        self.suite_pane.screen_row.activated.connect(self.next_screen)
         for letter, row in self.mode_pane.rows.items():
             row.activated.connect(lambda letter=letter: self.set_mode(letter))
         self.mode_pane.helper.activated.connect(self.helper_action)
@@ -562,6 +563,7 @@ class MainWindow(PortableWindow):
         self.suite_pane.set_sound(portable.sound_on(SUITE))
         self.suite_pane.set_xbox(self.xbox_state())
         self.suite_pane.set_mode(self.mode_name())
+        self.suite_pane.set_screen(self.screen_name())
         self.update_legend()
         self.refresh()
         (focus or self.suite_pane.wallpaper).setFocus()
@@ -951,6 +953,32 @@ class MainWindow(PortableWindow):
             return
         self.log.info(f"Portal update started from {result}; closing.")
         self.close()
+
+    # The screen it is on (owner, 31-10-2026): core's PortableWindow starts it again on a screen of another size
+
+    def screen_name(self) -> str:
+        """The Screen row's state: "" with one screen, else the name of the screen the portal is on."""
+        if len(QGuiApplication.screens()) < 2 or self.screen() is None:
+            return ""
+        return portable.screen_label(self.screen())
+
+    def next_screen(self) -> None:
+        """A on the Screen row: the portal on the next screen, started again there once nothing is being installed."""
+        screens = QGuiApplication.screens()
+        if len(screens) < 2:
+            return
+        names = [screen.name() for screen in screens]
+        here = self.screen().name() if self.screen() is not None else ""
+        target = screens[(names.index(here) + 1) % len(screens)] if here in names else screens[0]
+        self.log.info(f"Moving to the screen {portable.screen_label(target)}.")
+        self.move_to(target)
+
+    def can_restart(self) -> bool:
+        return self.job is None and self.pending is None
+
+    def waiting_to_move(self) -> None:
+        self.say(self.current_key, "The portal moves to the other screen once the download or install has finished.")
+        self.refresh()
 
     def closeEvent(self, event) -> None:
         self.poll.stop()

@@ -775,3 +775,32 @@ def test_the_chip_is_read_through_cores_chip_and_closed_with_the_window(world, q
     assert "CPU 9% 51°  |  GPU 33% 49°" in window.header.second.text() and len(opened) == 1
     window.close()
     assert opened[0].closed
+
+
+def test_the_screen_row_moves_the_portal_to_the_next_screen(world, qapp, monkeypatch):
+    """With a second screen (owner, 31-10-2026: a TV over the Ally), the Screen row moves the portal there; core's
+    window starts it again, sized for it, once no download or install runs."""
+    window = world.make()
+    window.on_action("menu")
+    assert not window.suite_pane.screen_row.isVisible()             # one screen
+    here = window.screen()
+
+    class Other:
+        def name(self):
+            return "Mi TV"
+    other = Other()
+    monkeypatch.setattr(mw.QGuiApplication, "screens", staticmethod(lambda: [here, other]))
+    moves = []
+    monkeypatch.setattr(window, "move_to", moves.append)
+    window.show_suite(window.suite_pane.wallpaper)
+    row = window.suite_pane.screen_row
+    assert row.isVisible() and row.label.text() == f"Screen: {portable.screen_label(here)}"
+    assert "Screen: the screen the portal is on" in window.suite_pane.info.info
+    row.activated.emit()
+    assert moves == [other]
+    assert window.can_restart()
+    window.job = (world.entries[1], "install")                       # a download: it waits, and says so
+    assert not window.can_restart()
+    window.waiting_to_move()
+    assert window.message.startswith("The portal moves to the other screen once")
+    window.job = None

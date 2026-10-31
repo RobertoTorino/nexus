@@ -6,10 +6,10 @@ the controller only while the window is active."""
 from __future__ import annotations
 
 import pytest
-from PyQt6.QtCore import QEvent, QPoint, QPointF, Qt
+from PyQt6.QtCore import QEvent, QPoint, QPointF, QSize, Qt
 from PyQt6.QtGui import QEnterEvent, QKeyEvent, QPixmap
-from PyQt6.QtWidgets import (QGraphicsDropShadowEffect, QGraphicsOpacityEffect, QGridLayout, QHBoxLayout, QVBoxLayout,
-                             QWidget)
+from PyQt6.QtWidgets import (QGraphicsDropShadowEffect, QGraphicsOpacityEffect, QGridLayout, QHBoxLayout, QLabel,
+                             QLayout, QVBoxLayout, QWidget)
 
 from bc250_core import portable
 from bc250_core.portable import AMBER, Card, InfoPopup, Legend, Pill, PortableHeader, PortableWindow, nearest
@@ -762,3 +762,78 @@ def test_the_wallpaper_dropped_in_the_suites_folder_and_its_transparency(qapp, t
     assert portable.wallpaper_veil(suite) is None and portable.shade(None) == portable.SHADE == 150
     portable.set_wallpaper_veil(suite, 120)
     assert portable.wallpaper_veil(suite) == portable.VEIL_MAX == 90 and portable.shade(90) == 230
+
+
+def test_a_full_screen_window_is_never_taller_than_its_screen(qapp):
+    """Wrapped text makes Qt take the layout's minimum height at the window's narrowest width: without the screen
+    sizing the window, the portal was 1920 x 1099 on a 1080p TV (owner, 31-10-2026)."""
+    window = PortableWindow(gamepad=portable.Gamepad(source_factory=NoPad))
+    screen = window.screen().geometry()
+    column = QVBoxLayout(window)
+    filler = QWidget()
+    filler.setMinimumSize(200, screen.height() - 80)
+    column.addWidget(filler)
+    summary = QLabel("What the focused app does, in a sentence long enough to wrap onto more lines when narrow. " * 3)
+    summary.setWordWrap(True)
+    column.addWidget(summary)
+    window.showFullScreen()
+    qapp.processEvents()
+    try:
+        # Offscreen Qt does not grow the window as Windows did (checked there, 31-10-2026): the setting is what counts
+        assert window.layout().sizeConstraint() == QLayout.SizeConstraint.SetNoConstraint
+        assert window.height() <= screen.height()
+    finally:
+        window.close()
+
+
+class FakeScreen:
+    def __init__(self, name, width, height):
+        self._name, self._size = name, QSize(width, height)
+
+    def name(self):
+        return self._name
+
+    def geometry(self):
+        from PyQt6.QtCore import QRect
+        return QRect(QPoint(0, 0), self._size)
+
+
+def test_the_screen_an_app_was_moved_to_is_kept_for_the_suite(qapp, monkeypatch):
+    """Moved to another screen, the suite's apps open there from then on, while it is attached (owner, 31-10-2026)."""
+    tv, ally = FakeScreen("Mi TV", 1920, 1080), FakeScreen("\\\\.\\DISPLAY1", 1280, 720)
+    monkeypatch.setattr(portable.QGuiApplication, "screens", staticmethod(lambda: [tv, ally]))
+    monkeypatch.setattr(portable.QGuiApplication, "primaryScreen", staticmethod(lambda: tv))
+    assert portable.start_screen("suite-test") is tv                      # nothing kept yet: the main display
+    portable.set_start_screen("suite-test", ally)
+    assert portable.start_screen("suite-test") is ally
+    monkeypatch.setattr(portable.QGuiApplication, "screens", staticmethod(lambda: [tv]))
+    assert portable.start_screen("suite-test") is tv                      # not attached now
+    assert portable.screen_label(ally) == "Display 1" and portable.screen_label(tv) == "Mi TV"
+
+
+def test_on_a_screen_of_another_size_the_app_starts_again_once_free(qapp, monkeypatch):
+    window = PortableWindow(gamepad=portable.Gamepad(source_factory=NoPad), suite="suite-test")
+    restarts = []
+    monkeypatch.setattr(window, "restart", lambda: restarts.append(True))
+    monkeypatch.setattr(window, "isFullScreen", lambda: True)
+    monkeypatch.setattr(portable, "_pinned", False)
+    window.screen_size = QSize(1920, 1080)
+    window.screen_moved(FakeScreen("Same size", 1920, 1080))
+    assert restarts == [] and portable.look_settings("suite-test").value(portable.SCREEN_KEY) == "Same size"
+    said = []
+    monkeypatch.setattr(window, "waiting_to_move", lambda: said.append(True))
+    window.busy = True                                                    # a manager's download
+    window.screen_moved(FakeScreen("Ally", 1280, 720))
+    assert restarts == [] and said == [True] and window.move_timer.isActive()
+    window.busy = False
+    window._move_when_free()
+    assert restarts == [True] and not window.move_timer.isActive() and not window.move_pending
+    window.close()
+
+
+def test_the_restart_waits_for_this_app_then_starts_its_command_again():
+    argv = portable.restart_command(4242, [r"C:\Apps\Portal.exe", "--x", "it's"], r"C:\Apps")
+    assert argv[:6] == ["powershell.exe", "-NoProfile", "-NonInteractive", "-WindowStyle", "Hidden", "-Command"]
+    assert argv[6] == ("Wait-Process -Id 4242 -ErrorAction SilentlyContinue; $env:PORTABLE_RESTARTED = '1'; "
+                       "Start-Process -FilePath 'C:\\Apps\\Portal.exe' -WorkingDirectory 'C:\\Apps' "
+                       "-ArgumentList '--x', 'it''s'")

@@ -1,3 +1,21 @@
+Changelog: 31-10-2026 14:56:28
+
+Added. PortableWindow follows the screen it is on (owner, 31-10-2026: moved from a TV to the Ally's own screen, the
+portal kept the TV's sizes and ran off the Ally's screen). Moved to another screen (Win + Shift + an arrow, or
+move_to()), the window remembers it for the suite (suite.ini, look/screen), and the suite's apps open on it from
+then on while it is attached (start_screen(); otherwise Windows' main display). On a screen of another size the app
+starts again there, sized for it: PowerShell waits for the app to end, then starts its own command line again
+(restart_command(), RESTARTED set). Not while it is busy (can_restart(): the managers' busy flag; the portal's
+download or install): it waits and says so (waiting_to_move()).
+
+Changelog: 31-10-2026 14:36:22
+
+Fixed. PortableWindow: the screen sizes a window, never its layout. With wrapped text in it (the portal's line
+under the tiles) Qt took the layout's minimum height at the window's narrowest width, where the text needs more
+lines, and made a full-screen window taller than its screen: the portal was 1920 x 1099 on a 1080p TV, its
+bottom 19 px on the Ally's screen under it (owner, 31-10-2026). The layout now sets no size on the window
+(SizeConstraint.SetNoConstraint).
+
 Changelog: 31-10-2026 12:33:29
 
 Version 2.1.1.
