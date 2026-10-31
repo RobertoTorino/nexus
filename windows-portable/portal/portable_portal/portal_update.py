@@ -1,19 +1,26 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """What a newer portal release brings: its apps.toml, read from GitHub at its tag, compared with the running
 portal's pins. App updates reach users through a portal update, so the Settings page can name them. After the BC250
-portal's portal_update.py, with the suite's tags and manifest path."""
+portal's portal_update.py, with the suite's tags and manifest path. The release's SHA256SUMS tells a new build of the
+running portal's own version (owner, 31-10-2026): a release built again under the same version, which the version
+alone never offers; install.ps1 writes the sha256 of the zip a portal came from beside its program (build.sha256)."""
 
 from __future__ import annotations
 
+import re
 import urllib.request
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from pathlib import Path
 
 from bc250_core.updates import ReleaseInfo, latest_release
 
 from .manifest import AppEntry, ManifestError, parse
+from .sources import expected_sha256
 
 RAW_URL = "https://raw.githubusercontent.com/{repo}/{tag}/windows-portable/portal/apps.toml"
+SUMS_URL = "https://github.com/{repo}/releases/download/{tag}/SHA256SUMS"
+BUILD_FILE = "build.sha256"                 # beside the installed program: the sha256 of the zip it came from
 TIMEOUT = 15
 
 
@@ -30,6 +37,7 @@ class AppChange:
 class PortalUpdate:
     release: ReleaseInfo
     changes: list[AppChange] | None = field(default=None)  # None: the new pins could not be read
+    sha256: str = ""                    # of the release's zip, from its SHA256SUMS; "" when it could not be read
 
     def summary(self) -> str:
         """ "updates Test and PCSX2 Manager", "updates 4 apps, adds Steam Deck Tools", or "" """
@@ -85,10 +93,24 @@ def fetch_text(url: str, user_agent: str) -> str:
         return response.read().decode("utf-8")
 
 
+def running_build(exe: str) -> str | None:
+    """The sha256 of the zip the running portal was installed from: None from a checkout (*exe* is ""), where there
+    is no build to compare; "" for an installed portal without build.sha256 (installed before it was written, or
+    unpacked without its zip), which the newest build is offered to once."""
+    if not exe:
+        return None
+    try:
+        text = (Path(exe).parent / BUILD_FILE).read_text(encoding="utf-8")
+    except OSError:
+        return ""
+    sha = (text.split() or [""])[0].lower()
+    return sha if re.fullmatch(r"[0-9a-f]{64}", sha) else ""
+
+
 def check(repo: str, tag_prefix: str, current: list[AppEntry], user_agent: str,
           release_of: Callable[..., ReleaseInfo] = latest_release,
           read: Callable[[str, str], str] = fetch_text) -> PortalUpdate:
-    """The newest portal release and, when there is one, what its pins change. Never raises."""
+    """The newest portal release, what its pins change and the sha256 of its zip. Never raises."""
     release = release_of(repo, tag_prefix, user_agent=user_agent)
     if release.error or not release.tag:
         return PortalUpdate(release)
@@ -96,4 +118,8 @@ def check(repo: str, tag_prefix: str, current: list[AppEntry], user_agent: str,
         changes = compare(current, parse(read(RAW_URL.format(repo=repo, tag=release.tag), user_agent)))
     except (OSError, ValueError, ManifestError):
         changes = None                          # offline, or an apps.toml this portal cannot read: no details
-    return PortalUpdate(release, changes)
+    try:
+        sha256 = expected_sha256(read(SUMS_URL.format(repo=repo, tag=release.tag), user_agent), f"{release.tag}.zip")
+    except (OSError, ValueError):
+        sha256 = ""                             # no build to compare: the version alone decides
+    return PortalUpdate(release, changes, sha256)

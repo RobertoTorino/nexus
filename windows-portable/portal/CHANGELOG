@@ -1,3 +1,18 @@
+Changelog: 31-10-2026 20:48:56
+
+Fixed. shadPS4 Manager's summary fits one line of the pane under the tiles: "shadPS4, the PlayStation 4 emulator:
+installed, sys modules, packages, its settings, shadNet, your games in Steam." (owner, 31-10-2026: the pane is the
+title and two lines). A test measures every summary in apps.toml against that line at 1280 x 720.
+
+Changelog: 31-10-2026 20:36:33
+
+Fixed. A release built again under the portal's own version is offered as an update (owner, 31-10-2026: the Ally
+kept the 6.4.0 draft its device test turned down, and the version alone never offered the 6.4.0 published after
+it). install.ps1 writes build.sha256 beside the program: the sha256 of the zip it installed from, read from the
+.complete of the portal's own update or from the zip beside the unpacked folder. The update check reads the newest
+release's SHA256SUMS too, and offers that release when it is this version and its zip's sha256 is another, or none
+was kept; the Settings page says a new build of this version. A portal run from the checkout compares versions only.
+
 Changelog: 31-10-2026 19:52:27
 
 Release 6.4.0. Pins wp-test-v4.3.1, wp-pcsx2-v5.3.1, wp-ppsspp-v3.3.1, wp-rpcs3-v3.3.1, wp-shadps4-v3.4.1, wp-vita3k-v3.3.1, wp-xenia-v3.3.1.

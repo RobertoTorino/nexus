@@ -200,6 +200,7 @@ class MainWindow(PortableWindow):
         self.controller_pane.set_pads(self.gamepad.names())
         self.controller_pane.set_back_buttons(self.back_reader.start())
         self.back_reader.changed.connect(lambda held: self.controller_pane.feed("button", controller.BACK, held))
+        self.back_reader.tapped.connect(self.controller_pane.tap)
         self.update_status()
         self.status_timer.start()
         self.device_card.setFocus()

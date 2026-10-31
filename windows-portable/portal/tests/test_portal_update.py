@@ -55,11 +55,15 @@ def test_check_reads_the_pins_at_the_release_tag():
 
     def read(url, _agent):
         urls.append(url)
+        if url.endswith("/SHA256SUMS"):
+            return f"{'a' * 64}  wp-portal-v99.0.0.zip\n{'b' * 64}  wp-test-v1.0.0.zip\n"
         return text_of([replace(current[0], tag="wp-test-v9.0.0")])
 
     update = pu.check("owner/repo", "wp-portal-v", current, "ua", release_of=lambda *a, **k: RELEASE, read=read)
-    assert urls == ["https://raw.githubusercontent.com/owner/repo/wp-portal-v99.0.0/windows-portable/portal/apps.toml"]
+    assert urls == ["https://raw.githubusercontent.com/owner/repo/wp-portal-v99.0.0/windows-portable/portal/apps.toml",
+                    "https://github.com/owner/repo/releases/download/wp-portal-v99.0.0/SHA256SUMS"]
     assert update.release is RELEASE and update.summary() == "updates Portable Test"
+    assert update.sha256 == "a" * 64                    # the portal's zip, not another line of the file
 
 
 def test_check_without_a_release_or_a_readable_manifest():
@@ -70,4 +74,15 @@ def test_check_without_a_release_or_a_readable_manifest():
     def offline(url, agent):
         raise OSError("offline")
     update = pu.check("o/r", "wp-portal-v", current, "ua", release_of=lambda *a, **k: RELEASE, read=offline)
-    assert update.release is RELEASE and update.changes is None and update.summary() == ""
+    assert update.release is RELEASE and update.changes is None and update.summary() == "" and update.sha256 == ""
+
+
+def test_running_build_reads_build_sha256_beside_the_program(tmp_path):
+    """install.ps1 writes the sha256 of the zip the portal came from beside its program (owner, 31-10-2026)."""
+    exe = tmp_path / "Windows-Portable-Suite.exe"
+    assert pu.running_build("") is None                 # from a checkout: no build to compare
+    assert pu.running_build(str(exe)) == ""             # installed without it: not known
+    (tmp_path / pu.BUILD_FILE).write_text(f"{'C' * 64}  wp-portal-v6.4.0.zip\n", encoding="utf-8")
+    assert pu.running_build(str(exe)) == "c" * 64
+    (tmp_path / pu.BUILD_FILE).write_text("not a checksum\n", encoding="utf-8")
+    assert pu.running_build(str(exe)) == ""

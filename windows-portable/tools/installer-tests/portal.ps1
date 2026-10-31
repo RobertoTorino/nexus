@@ -8,6 +8,7 @@
 # the administrator check, since CI's runner is one.
 # Also an update while a window has the program folder as its working directory, and a program running from it,
 # which is refused with nothing changed, and an install by hand from a download (the download removed on a yes).
+# build.sha256 beside the program: the sha256 of the zip from .complete or the zip beside the release folder.
 #
 #   powershell -ExecutionPolicy Bypass -File windows-portable\tools\installer-tests\portal.ps1
 #   ... portal.ps1 -Release dist\wp-portal-v0.1.0.zip   # the built release (with the real bundle) instead of a stand-in
@@ -91,12 +92,17 @@ Check 'the test app installed through its own installer' { (Test-Path $TestApp) 
 Check 'its release kept for the portal, complete' { (Test-Path (Join-Path $Releases "$TestTag\install.ps1")) -and (Test-Path (Join-Path $Releases "$TestTag\.complete")) }
 Check 'the wallpapers folder made, and named' { (Test-Path -PathType Container (Join-Path $SuiteHome 'wallpapers')) -and (Log 'log1') -match 'Your own wallpapers go in' }
 Check 'recorded in installed.json without a byte order mark' { ((RecordOf 'test') -eq $TestTag) -and ([IO.File]::ReadAllBytes($Records)[0] -eq 0x7B) }
+Check 'no build.sha256 without the zip it came from' { -not (Test-Path (Join-Path $A 'build.sha256')) }
 
 Write-Host '== 2. update without the Desktop shortcut'
 Set-Content -LiteralPath (Join-Path $A 'stale.txt') -Value 'from an older release' -Encoding ascii
 New-Item -ItemType Directory -Force -Path (Join-Path $Releases 'wp-test-v0.0.0-old') | Out-Null
+$Sha = 'ab' * 32
+[IO.File]::WriteAllText((Join-Path $R '.complete'), "$Sha`n")     # as the portal's own update unpacks a release
 $rc = Run 'log2' @('--no-desktop-shortcut')
+Remove-Item -LiteralPath (Join-Path $R '.complete')
 Check 'exit 0' { $rc -eq 0 }
+Check 'build.sha256 from .complete, beside the program' { (Get-Content -Raw -LiteralPath (Join-Path $A 'build.sha256')) -eq "$Sha  $(Split-Path -Leaf $R).zip`n" }
 Check 'the old program replaced, nothing left over' { -not (Test-Path (Join-Path $A 'stale.txt')) -and -not (Test-Path "$A.new") }
 Check 'Desktop shortcuts removed, Start-menu entries kept' { -not (Test-Path $Desk) -and -not (Test-Path $TestDesk) -and (Test-Path $Menu) -and (Test-Path $TestMenu) }
 Check 'the record kept' { (RecordOf 'test') -eq $TestTag }
@@ -187,6 +193,8 @@ Set-Content -LiteralPath (Join-Path $Dl 'SHA256SUMS') -Value 'def  wp-other-v1.0
 $env:WPS_REMOVE_DOWNLOAD = 'n'
 $rc = Run 'log6' @() (Join-Path $Dl "$Tag\install.ps1")
 Check 'exit 0, the download kept on a no' { $rc -eq 0 -and (Test-Path (Join-Path $Dl "$Tag.zip")) -and (Test-Path (Join-Path $Dl $Tag)) }
+$ZipSha = (Get-FileHash -LiteralPath (Join-Path $Dl "$Tag.zip") -Algorithm SHA256).Hash.ToLower()
+Check 'build.sha256: the sha256 of the zip beside the folder' { (Get-Content -Raw -LiteralPath (Join-Path $A 'build.sha256')) -eq "$ZipSha  $Tag.zip`n" }
 $env:WPS_REMOVE_DOWNLOAD = 'y'
 $rc = Run 'log6b' @() (Join-Path $Dl "$Tag\install.ps1")
 $env:WPS_REMOVE_DOWNLOAD = ''

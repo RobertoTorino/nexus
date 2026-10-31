@@ -1,3 +1,12 @@
+Changelog: 31-10-2026 21:16:41
+
+Added. The controller test has the Command Center button (owner, 31-10-2026: it had no test): two chips, Command
+for a short press and Armoury for a long one (Armoury Crate), read from the ASUS channel that reports M1 and M2,
+where the Ally X sends 5A A6 and 5A 38 when the button is let go (recorded on the owner's Ally X, 31-10-2026). Each
+chip lights for a moment, then keeps its amber label; like M1/M2 they show only with the ASUS channel. The pane's
+information, now titled M1, M2 and Command Center, also says that the Xbox button opens Steam while Steam runs
+(its setting Guide Button Focuses Steam).
+
 Changelog: 31-10-2026 19:52:26
 
 Release 4.3.1.

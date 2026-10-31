@@ -41,6 +41,7 @@ class FakeBack(QObject):
     """Stands in for the ASUS channel of the back buttons (back_buttons.Reader)."""
 
     changed = pyqtSignal(bool)
+    tapped = pyqtSignal(str)
 
     def __init__(self, available: bool):
         super().__init__()
@@ -281,19 +282,38 @@ def test_the_back_buttons_light_one_chip(make, qapp):
     back = FakeBack(True)
     window, _ = make(back=back)
     pane = window.controller_pane
-    assert pane.chips["m1m2"].isVisibleTo(pane) and pane.count.text() == "0 of 16 buttons answered"
+    assert pane.chips["m1m2"].isVisibleTo(pane) and pane.count.text() == "0 of 18 buttons answered"
     window.start_test()
     back.changed.emit(True)
     assert pane.chips["m1m2"].held
     back.changed.emit(False)
-    assert pane.seen() == ["m1m2"] and pane.count.text() == "1 of 16 buttons answered"
+    assert pane.seen() == ["m1m2"] and pane.count.text() == "1 of 18 buttons answered"
     assert "cannot tell them apart" in pane.back_buttons.info
+
+
+def test_the_command_center_button_lights_command_or_armoury(make, qapp):
+    # Reported only when it is let go (owner's Ally X, 31-10-2026): its chip flashes, then stays answered
+    back = FakeBack(True)
+    window, _ = make(back=back)
+    pane = window.controller_pane
+    assert pane.chips["command"].isVisibleTo(pane) and pane.chips["armoury"].isVisibleTo(pane)
+    back.tapped.emit("command")
+    assert pane.seen() == []                        # before the test: nothing
+    window.start_test()
+    back.tapped.emit("command")
+    assert pane.chips["command"].held
+    assert wait_for(qapp, lambda: not pane.chips["command"].held)
+    back.tapped.emit("armoury")
+    assert wait_for(qapp, lambda: pane.chips["armoury"].seen and not pane.chips["armoury"].held)
+    assert sorted(pane.seen()) == ["armoury", "command"] and pane.count.text() == "2 of 18 buttons answered"
+    assert "Command Center" in pane.back_buttons.title and "Guide Button Focuses Steam" in pane.back_buttons.info
 
 
 def test_without_the_asus_channel_there_is_no_back_buttons_chip(make, qapp):
     window, _ = make(back=FakeBack(False))
     pane = window.controller_pane
     assert not pane.chips["m1m2"].isVisibleTo(pane) and pane.count.text() == "0 of 15 buttons answered"
+    assert not pane.chips["command"].isVisibleTo(pane) and not pane.chips["armoury"].isVisibleTo(pane)
     assert "reports none" in pane.back_buttons.info
 
 

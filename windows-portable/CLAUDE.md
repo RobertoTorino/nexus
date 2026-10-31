@@ -82,6 +82,9 @@ app is an optional tile. The wiki is at robertotorino.github.io/nexus/windows-po
     (`portable.px()` scales it to a larger screen). Text that does not fit goes behind an information icon
     (`InfoPill`, at the top right of its pane) that shows it over the window (owner, 28-10-2026). Where space is
     short, an icon at the pane's top right opens a popup with the rest (text or controls), owner 29-10-2026.
+  - The portal's pane under the tiles is the title and two lines, the versions and the summary (owner, 31-10-2026):
+    an app's `summary` in `portal/apps.toml` fits one line at 1280 x 720, short words over a second line
+    (`portal/tests/test_main_window.py` measures every one).
   - The wallpaper is the suite's (owner, 29-10-2026): every window shows it behind see-through cards (core's
     `PortableWindow`), on or off for every app at once on the portal's Settings page
     (`%APPDATA%\windows-portable-suite\suite.ini`).

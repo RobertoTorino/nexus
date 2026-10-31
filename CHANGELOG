@@ -1,3 +1,11 @@
+Changelog: 31-10-2026 21:43:57
+
+Fixed. The Windows Portable Suite's windows-portable/tools/check_manifest.py lets a change to portal/apps.toml wait
+for the next portal release while portal/VERSION is still the last release's (owner, 31-10-2026): a work commit that
+changed shadPS4's summary could not pass the Nexus Release Tool's Commit, which runs the check, since the tool bumps
+portal/VERSION only in the release commit. Once portal/VERSION moves, the bump must be as large as before; an app
+moved back to an older release is refused either way.
+
 Changelog: 31-10-2026 19:52:28
 
 Release 1.11.0. Brings wp-pcsx2-v5.3.1, wp-ppsspp-v3.3.1, wp-rpcs3-v3.3.1, wp-shadps4-v3.4.1, wp-test-v4.3.1, wp-vita3k-v3.3.1, wp-xenia-v3.3.1.

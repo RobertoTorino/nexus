@@ -104,6 +104,13 @@ Secondary Function and choose a button); they then light that button. A device w
 M1/M2 chip, and the count leaves it out. The information icon at the top right of the Controller card's pane says so
 on the device; it is there before and after the test, not during it.
 
+The **Command Center** button comes through the same ASUS channel, and only when you let it go: a short press
+lights **Command** (it opens Command Center), a long press lights **Armoury** (it opens Armoury Crate). Each chip
+lights for a moment and then keeps its amber label. Like M1/M2, they show only on a device with ASUS's channel.
+
+The **Xbox** button lights **Xbox**. While Steam runs, it also opens Steam over the test: Steam's setting
+**Guide Button Focuses Steam** (Steam's Settings, Controller) takes it. Turn that off to keep the test in front.
+
 ## Stick lights
 
 The stick lights are tested with the buttons: while the controller test runs, **A**, **B**, **X** and **Y** light

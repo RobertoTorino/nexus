@@ -4,11 +4,14 @@
 # Rules (CI, windows-portable/tools/check_manifest.py):
 #  * a change to this file needs a portal/VERSION bump at least as large as the largest app bump it pins
 #    (an app patch release -> at least a portal patch release, an app minor -> at least a portal minor, ...);
+#    while portal/VERSION is still the last release's, a change waits for the next portal release, whose release
+#    commit makes the bump (owner, 31-10-2026);
 #  * every tag must exist when the portal is released; on main a tag may be one that is about to be released
 #    (its version equals that app's VERSION).
 #
 # Fields:
-#   name, summary   shown on the tile and in the detail pane
+#   name, summary   shown on the tile and in the detail pane; the summary fits one line under the versions there
+#                   (owner, 31-10-2026: the pane is the title and two lines; test_main_window.py measures it)
 #   short           optional: the name on the tile (default: name without its "Windows Portable " prefix)
 #   tag             the pinned release: wp-<name>-v<x.y.z>; asset <tag>.zip with SHA256SUMS on the suite release
 #   sha256          of <tag>.zip; filled in when the tag is released (empty: checked against SHA256SUMS only)
@@ -69,7 +72,7 @@ launch = [["Open", "%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-rpc
 
 [apps.shadps4]
 name = "shadPS4 Manager"
-summary = "shadPS4, the PlayStation 4 emulator: installed, the system modules and your packages, its settings and shadNet, your games put in Steam."
+summary = "shadPS4, the PlayStation 4 emulator: installed, sys modules, packages, its settings, shadNet, your games in Steam."
 tag = "wp-shadps4-v3.4.1"
 sha256 = "a534a4d8baee387379bfe4f2f22b02d56ac458edc8076376c9d4ffc71aaa1ff5"
 category = "gaming"

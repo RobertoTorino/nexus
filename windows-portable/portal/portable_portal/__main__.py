@@ -75,7 +75,7 @@ def main() -> int:
     # Started again on another screen (core's PortableWindow): no second intro
     intro = 0 if os.environ.pop(RESTARTED, None) else INTRO_MS
     window = MainWindow(entries, sources, Records(state_dir() / "installed.json"), portal_check=portal_check,
-                        exe=exe, intro_ms=intro)
+                        exe=exe, build=portal_update.running_build(exe), intro_ms=intro)
     if args.windowed:
         window.resize(1280, 720)
         window.show()

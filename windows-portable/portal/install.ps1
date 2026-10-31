@@ -12,7 +12,8 @@
 #
 # Run it as your own user, not as administrator: everything goes in your own folders.
 #  * %LOCALAPPDATA%\windows-portable-suite\portal\app: the program (Windows-Portable-Suite.exe with the Python, Qt
-#    and bc250_core it was tested with), its LICENSE and THIRD-PARTY-NOTICES.txt.
+#    and bc250_core it was tested with), its LICENSE and THIRD-PARTY-NOTICES.txt, and build.sha256: the sha256 of
+#    the zip it came from, when that is known, so the portal knows a new build of its own version.
 #  * %LOCALAPPDATA%\windows-portable-suite\portal: installed.json (which release of each app the portal
 #    installed), releases\<tag>\ (the extracted releases the apps were installed from, kept for their uninstallers)
 #    and portal.log.
@@ -108,6 +109,21 @@ function Remove-IfEmpty($folder) {
     if ((Test-Path -LiteralPath $folder) -and -not (Get-ChildItem -LiteralPath $folder -Force)) {
         Remove-Item -LiteralPath $folder -Force
     }
+}
+
+function Get-Build {
+    # The sha256 of the zip this release folder was unpacked from (owner, 31-10-2026: a release built again under the
+    # same version reaches the device as a new build): .complete, which the portal's own update and the bundled test
+    # app's folder carry, or <tag>.zip beside the folder (a download unpacked by hand, the release checks' cache).
+    # "" when neither is there: the portal then offers the newest build once.
+    $complete = Join-Path $Src '.complete'
+    if (Test-Path -LiteralPath $complete) {
+        $sha = ((Get-Content -Raw -LiteralPath $complete) -split '\s+')[0].ToLower()
+        if ($sha -match '^[0-9a-f]{64}$') { return $sha }
+    }
+    $zip = Join-Path (Split-Path -Parent $Src) "$(Split-Path -Leaf $Src).zip"
+    if (Test-Path -LiteralPath $zip) { return (Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash.ToLower() }
+    return ''
 }
 
 function Install-Folder($new, $dir, $name) {
@@ -304,6 +320,8 @@ Copy-Item -Path (Join-Path $Program '*') -Destination $New -Recurse -Force
 foreach ($file in 'LICENSE', 'THIRD-PARTY-NOTICES.txt') {
     if (Test-Path -LiteralPath (Join-Path $Src $file)) { Copy-Item -LiteralPath (Join-Path $Src $file) -Destination $New }
 }
+$Build = Get-Build
+if ($Build) { [IO.File]::WriteAllText((Join-Path $New 'build.sha256'), "$Build  $(Split-Path -Leaf $Src).zip`n") }
 Install-Folder $New $AppDir $AppName
 
 # --- Shortcuts ---------------------------------------------------------------------------------

@@ -83,6 +83,10 @@ instead of a dialog; the row at the bottom says **Press again to remove** meanwh
 changes (which apps it updates). With a newer release, the row at the bottom offers **Y Update to x.y.z**;
 otherwise **Y Check again**. A portal newer than every published release (a draft on its device test) says so: the
 newest release is **older than this portal, which is not published yet**.
+A release of this portal's own version that was built again shows as **a new build of this version** and is offered
+the same way: the portal compares the checksum (sha256) of the release's zip with the one it was installed from.
+A portal installed without that checksum (from before it was kept, or unpacked without its zip beside it) is offered
+the newest build once.
 The status line at the top right shows the date and the time, and **Suite x.y.z available** while there is one.
 The line under it shows the CPU and the GPU live, each with its load and its temperature (**CPU 12% 48°**, **GPU 7%
 47°**, read every two seconds from AMD's driver and Windows; on a device without AMD's driver the GPU shows only its
@@ -179,7 +183,7 @@ finishes first, and the portal says it will move once that is done.
 
 | Where | What |
 |---|---|
-| `%LOCALAPPDATA%\windows-portable-suite\portal\app\` | The portal's program |
+| `%LOCALAPPDATA%\windows-portable-suite\portal\app\` | The portal's program, and `build.sha256`: the checksum of the release zip it was installed from |
 | `%LOCALAPPDATA%\windows-portable-suite\portal\releases\<tag>\` | The release each app was installed from, kept for its uninstaller |
 | `%LOCALAPPDATA%\windows-portable-suite\portal\installed.json` | Which release of each app the portal installed |
 | `%LOCALAPPDATA%\windows-portable-suite\portal\portal.log` | The portal's log |

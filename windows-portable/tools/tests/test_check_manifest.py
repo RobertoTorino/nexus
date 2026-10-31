@@ -63,6 +63,19 @@ def test_an_app_bump_needs_a_portal_bump_as_large():
     assert errors and "since wp-portal-v0.1.0" in errors[0] and "minor bump" in errors[0]
 
 
+def test_a_change_waits_for_the_next_portal_release_while_the_version_is_the_last_ones():
+    """A work commit that changes apps.toml (owner, 31-10-2026: shadPS4's summary) passes while portal/VERSION is
+    still the last release's; the release commit then needs the bump. An app moved back is refused either way."""
+    summary = BASE.replace('required = true', 'required = true\nshort = "Test"')
+    assert cm.required_bump(BASE, summary) == (1, "apps.toml changed")
+    assert cm.bump_errors(BASE, summary, "0.1.0", "0.1.0") == []
+    newer = BASE.replace("wp-test-v0.1.0", "wp-test-v0.2.0")
+    assert cm.bump_errors(BASE, newer, "0.1.0", "0.1.0") == []
+    assert "minor bump" in cm.bump_errors(BASE, newer, "0.1.0", "0.1.1")[0]
+    older = BASE.replace("wp-test-v0.1.0", "wp-test-v0.0.9")
+    assert cm.bump_errors(BASE, older, "0.1.0", "0.1.0") == ["test moves back from wp-test-v0.1.0 to wp-test-v0.0.9"]
+
+
 def test_an_added_app_needs_a_minor_bump_and_a_checksum_a_patch():
     assert cm.required_bump(BASE, BASE + DEMO) == (2, "demo was added")
     assert cm.required_bump(BASE, BASE.replace('required = true', 'required = true\nsha256 = "' + "a" * 64 + '"')) \

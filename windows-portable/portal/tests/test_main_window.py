@@ -12,6 +12,7 @@ import re
 import shutil
 import time
 import zipfile
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -21,8 +22,9 @@ from bc250_core.portable import MENU, VIEW
 from bc250_core.gamepad import Gamepad
 from bc250_core.updates import ReleaseInfo
 
+from portable_portal import MANIFEST
 from portable_portal import main_window as mw
-from portable_portal.manifest import AppEntry
+from portable_portal.manifest import AppEntry, load
 from portable_portal.portal_update import AppChange, PortalUpdate
 from portable_portal.sources import Records, Sources
 from test_operating_mode import FakeHelper
@@ -492,6 +494,44 @@ def test_the_suite_page_without_an_update(world, qapp):
     window.legend.entries["Y"].pressed.emit()
     assert wait_for(qapp, lambda: window.update is offline)
     assert window.suite_pane.grid.itemAt(3).widget().text() == "not known: no connection (offline)"
+
+
+def test_a_new_build_of_this_version_is_offered(world, qapp):
+    """A release built again under the same version (owner, 31-10-2026: the Ally kept the 6.4.0 draft the device test
+    turned down, and the version alone never offered the 6.4.0 that replaced it): offered when its zip's sha256 is
+    not the one this portal came from, or that one is not known; never from a checkout."""
+    rebuilt = PortalUpdate(ReleaseInfo(version=mw.__version__, tag=f"wp-portal-v{mw.__version__}",
+                                       published="2026-10-31"), [AppChange("Windows Portable Test", "0.1.0", "0.2.0")],
+                           sha256="a" * 64)
+    window = world.make(portal_check=lambda: rebuilt, build="b" * 64)
+    assert wait_for(qapp, lambda: window.update is not None)
+    assert window.update_available() and f"Suite {mw.__version__} available" in window.header.status.text()
+    window.show_suite()
+    rows = {window.suite_pane.grid.itemAt(i).widget().text(): window.suite_pane.grid.itemAt(i + 1).widget().text()
+            for i in range(0, window.suite_pane.grid.count(), 2)}
+    assert rows["Newest release"] == f"{mw.__version__}, 2026-10-31: a new build of this version"
+    assert rows["It brings"] == "updates Test" and ("Y", f"Update to {mw.__version__}") in window.legend.items
+    window.build = ""                                   # installed before build.sha256: offered once
+    assert window.update_available()
+    window.build = "a" * 64                             # this build
+    assert not window.update_available()
+    window.build = None                                 # from a checkout
+    assert not window.update_available()
+    window.build = "b" * 64
+    window.update = replace(rebuilt, sha256="")         # SHA256SUMS not read: the version alone decides
+    assert not window.update_available()
+    window.update = replace(rebuilt, release=replace(rebuilt.release, version="0.0.1"))   # an older release
+    assert not window.update_available()
+
+
+def test_every_summary_fits_one_line_of_the_app_pane(world, qapp):
+    """The pane under the tiles is the title and two lines, the versions and the summary (owner, 31-10-2026:
+    shadPS4's wrapped to a third): every summary of apps.toml fits one line at 1280 x 720."""
+    window = world.make()
+    label = window.app_pane.summary
+    width = label.contentsRect().width()
+    for entry in load(MANIFEST):
+        assert label.fontMetrics().horizontalAdvance(entry.summary) <= width, f"{entry.key}: summary longer than a line"
 
 
 def test_ps_line_and_launch_argv(monkeypatch):

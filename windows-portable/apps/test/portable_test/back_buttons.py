@@ -4,7 +4,9 @@ Armoury Crate keeps them as its own modifiers. Its controller reports them on a 
 page 0xFF31, usage 0x76; Linux's hid-asus reads the ROG keys there), which opens for reading without administrator
 rights while Armoury Crate runs: report 5A A5 when either back button goes down and 5A 00 when it is let go. Both send
 the same code, so Windows cannot tell M1 from M2 (seen on the owner's Ally X, 28-10-2026); held with A they send A0,
-Armoury Crate's screenshot. Read with ctypes over setupapi, hid.dll and a blocking ReadFile in a thread."""
+Armoury Crate's screenshot. The Command Center button reports there too, only when it is let go, with 00 right after:
+A6 for a short press (Command Center) and 38 for a long one (Armoury Crate), owner's Ally X 31-10-2026. Read with
+ctypes over setupapi, hid.dll and a blocking ReadFile in a thread."""
 
 from __future__ import annotations
 
@@ -20,13 +22,14 @@ ASUS = 0x0B05                           # the vendor id: every ASUS handheld's c
 PAGE, USAGE = 0xFF31, 0x76              # the vendor channel's top collection
 REPORT = 0x5A                           # its report id
 PRESSED = 0xA5                          # a back button down (M1 and M2 alike); 0x00: let go
+TAPS = {0xA6: "command", 0x38: "armoury"}   # the Command Center button let go: after a short press, after a long one
 GENERIC_READ, SHARE, OPEN_EXISTING = 0x80000000, 0x3, 3
 PRESENT_INTERFACES = 0x12               # DIGCF_PRESENT | DIGCF_DEVICEINTERFACE
 
 
 def parse(report: bytes) -> bool | None:
     """True for a back button pressed, False for let go, None for a report about something else (a combination with
-    another button, the Armoury Crate key)."""
+    another button, the Command Center button)."""
     if len(report) < 2 or report[0] != REPORT:
         return None
     if report[1] == PRESSED:
@@ -34,6 +37,14 @@ def parse(report: bytes) -> bool | None:
     if report[1] == 0:
         return False
     return None
+
+
+def tap(report: bytes) -> str | None:
+    """"command" for the Command Center button let go after a short press, "armoury" after a long one (Armoury
+    Crate), None for any other report."""
+    if len(report) < 2 or report[0] != REPORT:
+        return None
+    return TAPS.get(report[1])
 
 
 class _Guid(ctypes.Structure):
@@ -125,9 +136,11 @@ def find() -> tuple[str, int] | None:
 
 
 class Reader(QObject):
-    """Reads the back buttons in a thread while the app runs; changed(held) arrives on the window's thread."""
+    """Reads the back buttons and the Command Center button in a thread while the app runs; changed(held) and
+    tapped(name) arrive on the window's thread."""
 
     changed = pyqtSignal(bool)
+    tapped = pyqtSignal(str)                    # the Command Center button let go: "command" or "armoury"
 
     def __init__(self):
         super().__init__()
@@ -151,9 +164,12 @@ class Reader(QObject):
     def _run(self, handle, length: int) -> None:
         buffer, got = ctypes.create_string_buffer(length), wintypes.DWORD()
         while self._kernel is not None and self._kernel.ReadFile(handle, buffer, length, ctypes.byref(got), None):
-            held = parse(buffer.raw[:got.value])
+            report = buffer.raw[:got.value]
+            held, tapped = parse(report), tap(report)
             if held is not None:
                 self.changed.emit(held)
+            elif tapped is not None:
+                self.tapped.emit(tapped)
 
     def stop(self) -> None:
         kernel, handle = self._kernel, self._handle

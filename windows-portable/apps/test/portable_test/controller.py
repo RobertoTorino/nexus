@@ -20,22 +20,29 @@ from . import lights
 
 HOLD = 1.5                      # s that B is held to end the test
 # The buttons as the chips show them, in rows: SDL's name and the label (the Ally's face: A B X Y, View, the Menu
-# button's ☰)
-ROWS = [[("leftshoulder", "LB"), ("back", "View"), ("guide", "Xbox"), ("start", "☰"), ("rightshoulder", "RB")],
+# button's ☰); the Command Center button's two chips one above the other, at the end of the first two rows
+ROWS = [[("leftshoulder", "LB"), ("back", "View"), ("guide", "Xbox"), ("start", "☰"), ("rightshoulder", "RB"),
+         ("command", "Command")],
         [("dpad_up", "Up"), ("dpad_down", "Down"), ("dpad_left", "Left"), ("dpad_right", "Right"),
-         ("m1m2", "M1/M2")],
+         ("m1m2", "M1/M2"), ("armoury", "Armoury")],
         [("a", "A"), ("b", "B"), ("x", "X"), ("y", "Y"), ("leftstick", "LS"), ("rightstick", "RS")]]
 BUTTONS = [name for row in ROWS for name, _ in row]
 BACK = "m1m2"                   # the back buttons' chip: only where the handheld's ASUS channel reports them
+# The Command Center button, through the same channel (owner's Ally X, 31-10-2026): reported only when it is let go,
+# Command after a short press, Armoury (Armoury Crate) after a long one, so its chips flash for TAP_MS
+ASUS_ONLY = (BACK, "command", "armoury")
+TAP_MS = 300
 # The Ally's back buttons are Armoury Crate's modifiers, never gamepad buttons; its ASUS channel reports either of them
 # as one code (back_buttons.py, owner's Ally X 28-10-2026). The text is behind the information icon at the pane's top
 # right: two lines of it did not fit the 720 px high screen
-BACK_TITLE = "The back buttons M1 and M2"
+BACK_TITLE = "M1, M2 and Command Center"
 BACK_BUTTONS = ("M1 and M2 light the M1/M2 chip: Armoury Crate reports either of them the same way, so Windows "
                 "cannot tell them apart. By default they are Armoury Crate's own modifiers: held with A a screenshot, "
                 "with Y a recording, with Up the on-screen keyboard. To use them as two buttons, map them in Armoury "
                 "Crate (Settings, Configure, M1 or M2: untick Secondary Function and choose a button); they then "
-                "light that button here.")
+                "light that button here. The Command Center button lights Command when it is let go after a short "
+                "press, Armoury after a long one (Armoury Crate). The Xbox button lights Xbox; while Steam runs, it also "
+                "opens Steam (Steam's Settings, Controller: Guide Button Focuses Steam).")
 NO_BACK_BUTTONS = ("The back buttons of an ASUS handheld show here as M1/M2. This handheld reports none: map its back "
                    "buttons to a controller button in its maker's app, and they light that button.")
 
@@ -263,12 +270,14 @@ class ControllerPane(Pane):
             self.lights_line.setText(f"{report} Now: {name} on {where}.")
 
     def buttons(self) -> list[str]:
-        """The buttons this controller can answer with: M1/M2 only where the ASUS channel reports them."""
-        return [name for name in BUTTONS if name != BACK or self.has_back]
+        """The buttons this controller can answer with: M1/M2 and the Command Center's only where the ASUS channel
+        reports them."""
+        return [name for name in BUTTONS if name not in ASUS_ONLY or self.has_back]
 
     def set_back_buttons(self, available: bool) -> None:
         self.has_back = available
-        self.chips[BACK].setVisible(available)
+        for name in ASUS_ONLY:
+            self.chips[name].setVisible(available)
         self.back_buttons.info = BACK_BUTTONS if available else NO_BACK_BUTTONS
         self.update_count()
 
@@ -304,6 +313,13 @@ class ControllerPane(Pane):
                 if max(abs(stick.x), abs(stick.y)) >= TILT:
                     self.light("White", lights.COLORS["White"], lights.LEFT if stick is self.sticks["left"]
                                else lights.RIGHT)
+
+    def tap(self, name: str) -> None:
+        """A button reported only when it is let go (the Command Center's): lit for TAP_MS, then answered."""
+        if not self.running or name not in self.chips:
+            return
+        self.feed("button", name, True)
+        QTimer.singleShot(TAP_MS, lambda: self.feed("button", name, False))
 
     def check_hold(self) -> None:
         if self.b_since is not None and self.clock() - self.b_since >= HOLD:

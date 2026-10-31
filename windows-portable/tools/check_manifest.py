@@ -12,7 +12,11 @@ The same rules as the BC250 suite's (bc250-bazzite/tools/check_manifest.py), wit
   the app's VERSION: the release that is about to be tagged. The portal release workflow passes --require-tags.
 * With --base REF: when apps.toml differs from the last portal release (the newest wp-portal-v<x.y.z> tag; REF while
   there is none), portal/VERSION must have been bumped from that release at least as much as the largest app bump it
-  pins. An added, removed or withdrawn app needs at least a minor bump; any other change at least a patch bump."""
+  pins. An added, removed or withdrawn app needs at least a minor bump; any other change at least a patch bump.
+  While portal/VERSION is still that release's, the change waits for the next portal release (owner, 31-10-2026: a
+  work commit that changed a summary could not be committed, since the Nexus Release Tool bumps portal/VERSION only
+  in the release commit); once it moves, the bump must be as large. An app moved back to an older release is
+  refused either way."""
 
 from __future__ import annotations
 
@@ -140,6 +144,8 @@ def bump_errors(old_text: str, new_text: str, old_portal: str, new_portal: str, 
         return []
     if need < 0:
         return [why]
+    if new_portal == old_portal:
+        return []                               # waits for the next portal release, which bumps portal/VERSION
     got = bump_level(old_portal, new_portal)
     if got < need:
         return [f"{MANIFEST} changed{f' since {since}' if since else ''} ({why}): portal/VERSION needs at least a "

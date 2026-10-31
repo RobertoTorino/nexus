@@ -137,16 +137,17 @@ class MainWindow(PortableWindow):
                  battery: Callable[[], tuple[int, bool] | None] = power.battery,
                  launch: Callable[[list[str]], None] = start_app,
                  terminal: Callable[..., None] = launch_in_terminal, icons: Path = APP_ICONS,
-                 exe: str = "", exit_dir: Path | None = None, intro_ms: int = INTRO_MS,
+                 exe: str = "", build: str | None = None, exit_dir: Path | None = None, intro_ms: int = INTRO_MS,
                  wallpaper: Path | None = portable.WALLPAPER,
                  steam_here: Callable[[], bool] = steam.installed, open_steam: Callable[[str], None] = steam.open_url,
                  xbox_local: Path | None = None, xbox_closed: Callable[[Callable[[], None]], None] | None = None,
                  chip_parts: Callable[[], list[str]] | None = None,
                  modes: Callable[[], operating_mode.PowerApi | None] = operating_mode.power_api,
                  helper: Callable[[], operating_mode.Helper] = operating_mode.Helper):
-        """*intro_ms*: how long the intro plays when the window starts (0: none). *wallpaper*: the picture behind
-        the page, darkened (None: the plain background); on or off for the whole suite (Settings). *steam_here*:
-        whether Steam is installed; *open_steam*: hands a steam:// address to Steam (its library). *xbox_local*:
+        """*build*: the sha256 of the zip this portal was installed from (build.sha256), "" when not known, None
+        from a checkout: a new build of the same version is offered when its sha256 differs. *intro_ms*: how long
+        the intro plays when the window starts (0: none). *wallpaper*: the picture behind the page, darkened (None:
+        the plain background); on or off for the whole suite (Settings). *steam_here*: whether Steam is installed; *open_steam*: hands a steam:// address to Steam (its library). *xbox_local*:
         where the Xbox app's package folder is (default %LOCALAPPDATA%); *xbox_closed*: runs a change with the Xbox
         app closed (core's xbox.with_xbox_closed). *chip_parts*: the CPU's and the GPU's load and temperature for the
         status line (default core's chip.py, AMD's driver opened once). *modes*: Windows' power API on the ROG Xbox
@@ -177,6 +178,7 @@ class MainWindow(PortableWindow):
         self.helper_timer.setInterval(HELPER_POLL_MS)
         self.helper_timer.timeout.connect(self._check_helper)
         self.exe = exe                                  # the installed portal's program, for a restart; "" from a checkout
+        self.build = build
         self.exit_dir = exit_dir or Path(tempfile.gettempdir())
         self.intro: Intro | None = None
         self.settings = QSettings()
@@ -885,7 +887,16 @@ class MainWindow(PortableWindow):
     def update_available(self) -> bool:
         release = self.update.release if self.update is not None else None
         return bool(release and release.tag and not release.error
-                    and power_version(release.version) > power_version(__version__))
+                    and (power_version(release.version) > power_version(__version__) or self.new_build()))
+
+    def new_build(self) -> bool:
+        """The newest release is this portal's version built again (owner, 31-10-2026: a device kept a draft the
+        device test turned down, and the version alone never offered the release that replaced it): its zip's
+        sha256 is not the one this portal was installed from, or that one is not known."""
+        update = self.update
+        return bool(update is not None and self.build is not None and update.sha256
+                    and power_version(update.release.version) == power_version(__version__)
+                    and update.sha256 != self.build)
 
     def check_portal(self) -> None:
         if self.portal_check is None or self.checking or self.worker.busy:
@@ -920,6 +931,8 @@ class MainWindow(PortableWindow):
                     # This portal is out of no release yet (owner, 30-10-2026: a draft on its device test read as
                     # "the newest is 5.0.0" under 6.0.0)
                     newest += ": older than this portal, which is not published yet"
+                elif self.new_build():
+                    newest += ": a new build of this version"
                 rows.append(("Newest release", newest))
                 if self.update_available():
                     summary = self.update.summary()
