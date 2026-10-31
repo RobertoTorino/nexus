@@ -1693,10 +1693,12 @@ def short_count(n: int) -> str:
 # --- The commands for the owner --------------------------------------------------------------------------------
 
 def push_command(linux: bool | None = None) -> str:
-    """git push, after CI's jobs passed here (tools/ci-local.sh runs on Linux only)."""
+    """git push, after what GitHub has that this checkout lacks is brought in under its commits (owner, 31-10-2026:
+    the release's Pin ... commit made the pre-push hook refuse the push) and CI's jobs passed here (tools/ci-local.sh
+    runs on Linux only)."""
     if linux is None:
         linux = sys.platform.startswith("linux")
-    return f"{CI_LOCAL} && git push" if linux else "git push"
+    return f"{pull_command()} && " + (f"{CI_LOCAL} && git push" if linux else "git push")
 
 
 def pull_command() -> str:

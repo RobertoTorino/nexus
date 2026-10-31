@@ -205,10 +205,11 @@ def test_start_writes_the_release_and_runs_the_one_command(release_window, monke
     assert "wp · test: 0.2.0" in page.output.toPlainText()
 
 
-def test_start_fetches_the_tags_first_and_stops_when_new_ones_came(release_window, monkeypatch, tmp_path):
-    """A portal is tagged on GitHub when it is published: not fetched, the release took its version for the new one
-    (owner, 31-10-2026: Release 6.2.0 again, after 6.2.0 was out). Start fetches the tags, and with new ones it reads
-    the versions again and stops for a look."""
+def test_start_fetches_the_tags_and_main_first_and_goes_on(release_window, monkeypatch, tmp_path):
+    """A portal is tagged on GitHub when it is published, and a release pins on main after it: neither is here until
+    fetched (owner, 31-10-2026: Release 6.2.0 again after 6.2.0 was out; the Pin ... commit refused the push). Start
+    fetches the tags and brings in main's commits under this checkout, reads the versions again and goes on to its
+    question, with nothing to do by hand."""
     w = release_window
     page = w.release_page
     origin = tmp_path / "origin.git"
@@ -216,14 +217,56 @@ def test_start_fetches_the_tags_first_and_stops_when_new_ones_came(release_windo
     sh(w.root, "remote", "add", "origin", str(origin))
     sh(w.root, "push", "-q", "origin", "main")
     sh(w.root, "push", "-q", "origin", "HEAD:refs/tags/wp-portal-v1.1.0")    # published on GitHub, not fetched
-    ran, said = [], []
-    monkeypatch.setattr(w, "confirm_git", lambda *a: True)
+    other = tmp_path / "other"                                       # the release's Pin ... commit, on GitHub only
+    sh(tmp_path, "clone", "-q", str(origin), str(other))
+    write(other / "wp/portal/apps.toml", (other / "wp/portal/apps.toml").read_text() + "\n")
+    sh(other, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "-am", "Pin wp-test-v0.1.0")
+    sh(other, "push", "-q", "origin", "HEAD:main")
+    w.portal_page.base_edit.setText("origin/main")
+    ran, asked = [], []
+    monkeypatch.setattr(w, "confirm_git", lambda *a: asked.append(a[1]) or True)
     monkeypatch.setattr(w, "run_git", ran.append)
-    monkeypatch.setattr("nexus_release_tool.release_page.QMessageBox.information", lambda *a: said.append(a[2]))
     page.start()
-    assert ran == [] and "wp-portal-v1.1.0" in said[0] and "check them" in said[0]
     assert sh(w.root, "tag", "--list", "wp-portal-v1.1.0").strip() == "wp-portal-v1.1.0"
+    assert "Pin wp-test-v0.1.0" in sh(w.root, "log", "--format=%s")       # brought in, under the release
+    assert len(ran) == 1 and "wp-portal-v1.2.0" in ran[0] and "wp · portal: 1.0.0 -> auto" in asked[0]
     assert flow.fetch_tags(w.root) == []                            # nothing new the second time
+
+
+def test_catch_up_brings_in_mains_commits_under_this_checkouts(nexus, tmp_path):
+    origin = tmp_path / "origin.git"
+    sh(tmp_path, "init", "-q", "--bare", str(origin))
+    sh(nexus, "remote", "add", "origin", str(origin))
+    sh(nexus, "push", "-q", "origin", "main")
+    sh(nexus, "fetch", "-q", "origin")
+    assert flow.catch_up(nexus) == 0                                # nothing to bring in
+    other = tmp_path / "other"
+    sh(tmp_path, "clone", "-q", str(origin), str(other))
+    write(other / "wp/portal/apps.toml", (other / "wp/portal/apps.toml").read_text() + "\n")
+    sh(other, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "-am", "Pin wp-test-v0.1.0")
+    sh(other, "push", "-q", "origin", "HEAD:main")
+    write(nexus / "wp/apps/test/app.py", "print('hello again')\n")   # this checkout's own commit, not pushed
+    sh(nexus, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "-am", "mine")
+    sh(nexus, "fetch", "-q", "origin")
+    write(nexus / "wp/apps/test/app.py", "not committed\n")
+    assert flow.catch_up(nexus) is None                             # changes not committed: nothing is done
+    sh(nexus, "checkout", "-q", "--", ".")
+    assert flow.catch_up(nexus) == 1
+    assert sh(nexus, "log", "--format=%s", "-2").split("\n")[:2] == ["mine", "Pin wp-test-v0.1.0"]
+
+
+def test_a_version_only_offered_follows_the_next_offer(release_window):
+    """After the tags are read again the table offers anew; what the owner typed stays (owner, 31-10-2026: the old
+    offer 5.3.0 stayed as if typed, and Start refused it)."""
+    page = release_window.release_page
+    pick, combo, _notes = page.rows[0]
+    pick.choices[0] = "0.1.5"                                       # what it offered before the tags were read
+    combo.setEditText("0.1.5")
+    page.fill()
+    assert page.rows[0][1].currentText() == "0.2.0"
+    page.rows[0][1].setEditText("0.4.0")                            # typed: stays
+    page.fill()
+    assert page.rows[0][1].currentText() == "0.4.0"
 
 
 def test_changes_not_committed_make_commit_the_step_to_do(release_window, monkeypatch):

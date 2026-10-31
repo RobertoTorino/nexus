@@ -188,6 +188,21 @@ def fetch_tags(root: Path) -> list[str] | None:
     return sorted(set((rp.git(root, "tag", "--list") or "").split()) - before)
 
 
+def catch_up(root: Path, base: str = "origin/main") -> int | None:
+    """What *base* has that HEAD lacks (fetched already) brought in under this checkout's commits (git rebase, as git
+    pull --rebase does) before Start writes the release: the commits it brought (0: none), None when git could not
+    (a conflict, or changes not committed)."""
+    behind = rp.behind(root, base)
+    if not behind:
+        return 0
+    if (rp.git(root, "status", "--porcelain") or "").strip():
+        return None
+    if rp.git(root, "rebase", "--quiet", base) is None:
+        rp.git(root, "rebase", "--abort")
+        return None
+    return behind
+
+
 def unpushed_release(root: Path, base: str = "origin/main") -> str:
     """HEAD's subject when HEAD is a release commit Start made that is not pushed yet, right on top of *base* (the
     push stopped: the pre-push hook found something, or the network); "" otherwise."""
@@ -246,7 +261,8 @@ def resume_command(run: rp.BuildRun) -> str:
 STEPS = (
     ("pull", "Get up to date", "Bring in what was pushed from the other machine."),
     ("commit", "Commit your changes", "Everything changed here, in one commit, after the version and manifest checks."),
-    ("push", "Push them", "Your commits to GitHub; the pre-push hook checks them first."),
+    ("push", "Push them", "Your commits to GitHub: what GitHub has that this checkout lacks comes in under them first "
+                          "(git pull --rebase), then the pre-push hook checks them."),
     ("ci", "CI passes", "GitHub's CI on that commit. Nothing to press: wait until it passed."),
     ("start", "Start new release", "Check the versions above, then start: it writes the release, commits and pushes "
                                    "it and starts Release Nexus."),

@@ -56,7 +56,8 @@ class ReleasePage(QWidget):
         self.commit_button = accent_button("Commit", "Stage every change and new file and commit them, after the "
                                            "version and manifest checks")
         self.commit_button.clicked.connect(self.commit)
-        self.push_button = accent_button("Push", "Push your commits to GitHub; the pre-push hook checks them first")
+        self.push_button = accent_button("Push", "Push your commits to GitHub: what GitHub has that this checkout "
+                                         "lacks comes in under them first, then the pre-push hook checks them")
         self.push_button.clicked.connect(self.release_window.push)
         self.rerun_ci_button = accent_button("Run CI again", "Start CI's failed jobs on this commit again: for a "
                                              "failure of GitHub's own; when the code is wrong, fix it and commit")
@@ -136,7 +137,10 @@ class ReleasePage(QWidget):
 
     def fill(self) -> None:
         """The rows of the release as the checkout is now; what was typed in a row that is still there stays."""
-        typed = {pick.label: (combo.currentText(), notes.text()) for pick, combo, notes in self.rows}
+        # What the owner typed stays; a version only offered does not (owner, 31-10-2026: after the tags were
+        # fetched, the old offer 5.3.0 stayed in the table as if typed, and Start refused it)
+        typed = {pick.label: (combo.currentText() if combo.currentText() != pick.choices[0] else "", notes.text())
+                 for pick, combo, notes in self.rows}
         root = self.release_window.root
         self.picks = flow.picks(root) if flow.release_suites(root) else []
         self.table.setRowCount(len(self.picks))
@@ -156,7 +160,8 @@ class ReleasePage(QWidget):
             notes = QLineEdit()
             notes.setPlaceholderText("What this release brings (optional)")
             if pick.label in typed:
-                combo.setEditText(typed[pick.label][0])
+                if typed[pick.label][0]:
+                    combo.setEditText(typed[pick.label][0])
                 notes.setText(typed[pick.label][1])
             self.table.setCellWidget(i, 2, combo)
             self.table.setCellWidget(i, 4, notes)
@@ -325,18 +330,21 @@ class ReleasePage(QWidget):
                                   flow.push_and_start_command()):
                 window.run_git(flow.push_and_start_command())
             return
-        # The last releases are read from the tags here: GitHub's first, so a portal published since counts
+        # The last releases are read from the tags here: GitHub's first, so a portal published since counts; what
+        # main has that this checkout lacks (the last release's Pin ... commit) comes in first, then the versions
+        # are read again and shown in the question below (owner, 31-10-2026: no second Start, nothing by hand)
         fetched = flow.fetch_tags(window.root)
         if fetched is None:
             QMessageBox.warning(self, "Start new release", "git fetch --tags failed: the release reads the last "
                                 "release of each part from the tags, so it waits until they can be fetched.")
             return
-        if fetched:
-            window.reload()
-            QMessageBox.information(self, "Start new release", "Tags from GitHub this checkout did not have: "
-                                    f"{', '.join(fetched)}. The versions are read again: check them, then Start new "
-                                    "release again.")
+        pulled = flow.catch_up(window.root, window.base())
+        if pulled is None:
+            QMessageBox.warning(self, "Start new release", f"{window.base()} has commits this checkout lacks, and "
+                                "git pull --rebase could not bring them in: Get up to date first.")
             return
+        if fetched or pulled:
+            window.reload()
         reasons = flow.ready(window.root, window.base())
         chosen = self.chosen()
         problems = flow.problems(chosen)

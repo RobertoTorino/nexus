@@ -1,3 +1,12 @@
+Changelog: 31-10-2026 19:30:03
+
+Fixed. A release no longer needs anything by hand after the last one (owner, 31-10-2026: "this is not gonna work
+like this", with seven apps refused as already tagged and a push refused). Push brings in what GitHub has first
+(git pull --rebase --autostash), such as the release's Pin ... commit, so the pre-push hook no longer refuses it.
+Start new release fetches the tags and main, puts what came in under this checkout (catch_up()), reads the versions
+again and goes straight on to its question, without a second Start. The table keeps only versions the owner typed:
+an offer made before the tags were fetched (5.3.0, already tagged) no longer stays as if typed.
+
 Changelog: 31-10-2026 15:27:28
 
 Fixed. Start new release fetches GitHub's tags first (owner, 31-10-2026: wp-portal-v6.2.0 was published, so tagged

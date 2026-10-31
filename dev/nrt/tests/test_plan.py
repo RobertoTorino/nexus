@@ -273,11 +273,11 @@ def test_commands():
     text = rp.app_commands(["alpha-v0.2.0", "beta-v0.1.0"])
     assert "tools/tag-release.sh alpha-v0.2.0 beta-v0.1.0" in text and "git push\n" in text
     assert text.index("git commit") < text.index("git push\n") < text.index("tag-release.sh")
-    assert "\ntools/ci-local.sh && git push\n" in rp.app_commands(["alpha-v0.2.0"], linux=True)  # CI's jobs first
+    assert " && tools/ci-local.sh && git push\n" in rp.app_commands(["alpha-v0.2.0"], linux=True)  # CI's jobs first
     text = rp.portal_commands("portal-v0.2.0")
     assert "\ntools/tag-release.sh portal-v0.2.0\n" in text
-    assert "\ntools/ci-local.sh && git push\n" in rp.portal_commands("portal-v0.2.0", linux=True)
-    assert "\ngit push\n" in rp.portal_commands("portal-v0.2.0", linux=False)
+    assert " && tools/ci-local.sh && git push\n" in rp.portal_commands("portal-v0.2.0", linux=True)
+    assert f"\n{rp.pull_command()} && git push\n" in rp.portal_commands("portal-v0.2.0", linux=False)
     assert text.endswith(f"{rp.CHECK_SCRIPT} release portal-v0.2.0   # installs and starts the published portal release")
     order = [text.index(s) for s in ("git commit", "check-release.sh local", "git push\n", "tag-release.sh",
                                      "check-release.sh release")]
@@ -722,7 +722,7 @@ def test_nexus_has_a_version_of_its_own(repo):
     assert rp.last_release("Changelog: x\n\nRelease 2.0.0. Notes.\n\nChangelog: y\n\nRelease 1.0.0.\n") == "2.0.0"
     commands = rp.nexus_commands("0.2.0", linux=False)
     assert commands.splitlines()[:3] == ["git add -A && tools/fix-modes.sh", 'git commit -m "Release nexus-v0.2.0"',
-                                         "git push"]
+                                         f"{rp.pull_command()} && git push"]
     assert "nexus-v0.2.0" in commands.splitlines()[-1] and rp.TAG_SCRIPT not in commands
 
 
@@ -2106,3 +2106,10 @@ def test_window_apply_greys_out_once_applied_and_pin_waits_for_the_builds(window
     assert not window.portal_page.pin_button.isEnabled()      # beta, ticked, is not tagged yet
     window.portal_page.candidates[1][1].setChecked(False)
     assert window.portal_page.pin_button.isEnabled()          # alpha alone: tagged (no GitHub runs here)
+
+
+def test_push_brings_in_what_github_has_first():
+    """The release's Pin ... commit is on main after every release (owner, 31-10-2026: the pre-push hook refused the
+    push): git pull --rebase runs before the push, and before CI's jobs on Linux."""
+    assert rp.push_command(linux=False) == "git pull --rebase --autostash && git push"
+    assert rp.push_command(linux=True) == f"git pull --rebase --autostash && {rp.CI_LOCAL} && git push"

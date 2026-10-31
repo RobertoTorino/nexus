@@ -60,7 +60,8 @@ what there is to do. Only the lit pill does anything, so you never need a comman
 1. **Get up to date** (**git pull**): only when GitHub has commits this checkout lacks, pushed from the other machine.
 2. **Commit your changes:** type what they do, then **Commit**. It stages every change and new file and commits
    them after the version and manifest checks of the suites they touch.
-3. **Push them** (**Push**): the pre-push hook checks them first.
+3. **Push them** (**Push**): what GitHub has that this checkout lacks, such as the last release's `Pin ...`
+   commit, comes in under your commits first (`git pull --rebase`); then the pre-push hook checks them.
 4. **CI passes:** the step waits until GitHub's CI passed on that commit. When it failed, the line says so. A test that
    failed: fix it, then commit and push again. GitHub's own trouble (an error of its servers, a job that never
    started; [githubstatus.com](https://www.githubstatus.com) says when Actions are degraded): **Run CI again** starts
@@ -68,9 +69,12 @@ what there is to do. Only the lit pill does anything, so you never need a comman
 5. **Start new release:** check the versions in the list above, then press it. It writes the release (the versions
    and their copies, the `Release x.y.z.` entries, the new tags in `apps.toml`, the portal's version and its entry,
    Nexus's), commits it, pushes it and starts Release Nexus on that commit. If the push stops, fix what it says;
-   the pill then reads **Push and start**. It fetches GitHub's tags first: a portal is tagged on GitHub when you
-   publish it, and the last release of each part is read from the tags. If tags came in that this checkout did not
-   have, it reads the versions again and stops, so you can check them before you press it again.
+   the pill then reads **Push and start**. It fetches GitHub's tags and `main` first: a portal is tagged on GitHub
+   when you publish it, the last release of each part is read from the tags, and a release ends with a `Pin ...`
+   commit on `main`. What came in is put under this checkout, the versions are read again, and the question before
+   it writes shows each part's version as it will be. Each version comes from the part's CHANGELOG entries since its
+   last tag (`Breaking.` major, `Added.` minor, `Fixed.` patch), so nothing is bumped by hand; type another one in
+   the list only to override it.
 6. **The release on GitHub:** Release Nexus calls each changed suite's release workflow. It starts at once: your
    release commit only writes the release, so the CI that passed on your commit in step 4 counts for it, and CI
    does not have to run again first. A suite's run builds its
