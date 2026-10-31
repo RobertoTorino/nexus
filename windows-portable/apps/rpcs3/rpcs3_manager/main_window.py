@@ -45,7 +45,7 @@ from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QStackedWidget, QVBoxLayou
 from bc250_core import applog, browse, covers, platform, play, power, steam
 from bc250_core.gamepad import Gamepad
 from bc250_core.platform import private
-from bc250_core.portable import (AMBER, BODY, DIM, EXIT, VIEW, Card, InfoPill, Legend, Pane, PortableHeader,
+from bc250_core.portable import (AMBER, BODY, DIM, EXIT, KEYBOARD, VIEW, Card, InfoPill, Legend, Pane, PortableHeader,
                                  PortableWindow, Row, Tabs, px, status_clock, text_label)
 
 from . import APP_ID, APP_NAME, LOGO_PATH, __version__, emulator, library, rpcs3_settings, shortcuts, userdata
@@ -500,7 +500,8 @@ class MainWindow(PortableWindow):
         elif pane is self.log_pane:
             items = [] if self.log_pane.viewing else [("A", "View log")]
         elif pane is self.key_pane:
-            items = [("A", "Save"), ("X", "Paste"), ("Y", "Press again" if self.confirm_key else "Remove key")]
+            items = [("A", "Save"), ("X", "Paste"), ("Y", "Press again" if self.confirm_key else "Remove key"),
+                     KEYBOARD]
         on_a_page = (pane in (self.key_pane, self.browse_pane) or self.log_pane.viewing
                      or (pane is self.games_pane and self.games_view == FOLDERS))
         return [*items, *self.common_items(True if on_a_page else None)]

@@ -157,7 +157,8 @@ SHADNET_INFO = (
     "shadPS4 signs in by itself when a game starts, with the account kept here for one of its four users (player 1 "
     "plays with the handheld's controller).\n\n"
     "The A button changes the row the focus is on: Sign in switches it on or off, Player picks the user, and a text "
-    "row opens its own page, with the touch keyboard. Each change is kept in shadPS4's own files at once. The X button "
+    "row opens its own page, with the touch keyboard (R3, the right stick pressed, opens or closes it). Each change "
+    "is kept in shadPS4's own files at once. The X button "
     "creates the account on the server (the name, the password and the email address; a registration key only when "
     "the server asks for one), the Y button tries the sign-in.\n\n"
     "The password goes over the network as it is: choose one you use nowhere else. A name has 3 to 16 letters, "
@@ -279,7 +280,8 @@ KEY_TEXT = (
     "The key is free with a SteamGridDB account: in your account click Preferences, then the API tab at the top, "
     f"then Generate API Key, and copy the key ({covers.KEY_PAGE}). Copied in a browser on this device, the X button "
     "(Paste) puts it in the field and the A button saves it; the Y button (Remove key) takes a kept key out, on a "
-    "second press. The B button goes back without saving.\n"
+    "second press. R3 (the right stick pressed) opens Windows' touch keyboard to type it, or closes it. The B button "
+    "goes back without saving.\n"
     "It is one key for every app of the suite. Leave it empty to look nothing up.")
 
 

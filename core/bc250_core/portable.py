@@ -18,6 +18,7 @@ Escape into back."""
 from __future__ import annotations
 
 import datetime
+import html
 import math
 import os
 import subprocess
@@ -31,7 +32,7 @@ from PyQt6.QtWidgets import (QApplication, QFrame, QGraphicsDropShadowEffect, QG
                              QLabel, QLayout, QPlainTextEdit, QPushButton, QScroller, QSizePolicy, QStackedWidget,
                              QVBoxLayout, QWidget)
 
-from . import appinfo
+from . import appinfo, platform
 from .gamepad import Gamepad
 from .theme import Theme, load_fonts
 
@@ -365,11 +366,66 @@ class Glyph(QLabel):
 # The Ally's View and Menu buttons as it shows them: two squares, three lines (owner, 28-10-2026: not "Menu")
 VIEW, MENU = "⧉", "☰"
 # The legend's buttons and the window's actions they stand for (Gamepad's names)
-LEGEND_ACTIONS = {"A": "accept", "B": "back", "X": "x", "Y": "y", "LB": "previous", "RB": "next", "RT": "rt",
-                  MENU: "menu", VIEW: "view", "View": "view"}
+LEGEND_ACTIONS = {"A": "accept", "B": "back", "X": "x", "Y": "y", "LB": "previous", "RB": "next", "LT": "lt",
+                  "RT": "rt", "R3": "keyboard", MENU: "menu", VIEW: "view", "View": "view"}
+KEYBOARD = ("R3", "Keyboard")   # the legend's entry for Windows' touch keyboard, where a page has a field to type in
+KEYBOARD_TRIES, KEYBOARD_WAIT = 12, 250   # its host just started: asked this often, so many ms apart
 # Every window's last entries (owner, 29-10-2026: "Close" on B was not clear): Menu the pane's information, B back,
 # View leaves the app
 INFO, BACK, EXIT = (MENU, "Info"), ("B", "Back"), (VIEW, "Exit app")
+
+
+# The Windows key as a KeyCap shows it: its four panes, drawn (no font has the logo)
+WINDOWS_KEY = "Win"
+
+
+class KeyCap(Glyph):
+    """A keyboard key as the legend shows it (owner, 31-10-2026: "with icons, not a long line of text"): its name on
+    a key cap, a rounded square where a controller button is a circle; WINDOWS_KEY draws the Windows key's panes."""
+
+    def __init__(self, key: str, parent: QWidget | None = None):
+        super().__init__(key, parent=parent)
+        self.setFixedSize(max(px(26), self.fontMetrics().horizontalAdvance(key) + px(14)) if key != WINDOWS_KEY
+                          else px(26), px(26))
+
+    def paintEvent(self, event) -> None:
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(QColor(self.colors[1]))
+        painter.drawRoundedRect(QRectF(self.rect()), px(5), px(5))
+        if self.text() == WINDOWS_KEY:
+            side, gap = self.height() * 0.2, self.height() * 0.06
+            left, top = (self.width() - 2 * side - gap) / 2, (self.height() - 2 * side - gap) / 2
+            painter.setBrush(QColor(self.colors[0]))
+            for col in (0, 1):
+                for row in (0, 1):
+                    painter.drawRect(QRectF(left + col * (side + gap), top + row * (side + gap), side, side))
+            return
+        painter.setPen(QColor(self.colors[0]))
+        painter.setFont(self.font())
+        painter.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, self.text())
+
+
+class KeyHint(QWidget):
+    """The legend's keyboard shortcut at its left: what it does, then its keys ("Switch screen", Win + Shift + ← →);
+    "+" and "/" between them are written, every other one is a KeyCap."""
+
+    def __init__(self, text: str, keys: Sequence[str], parent: QWidget | None = None):
+        super().__init__(parent)
+        row = QHBoxLayout(self)
+        row.setContentsMargins(0, px(2), 0, px(2))
+        row.setSpacing(px(4))
+        row.addWidget(text_label(text, LEGEND, QFont.Weight.DemiBold, DIM))
+        row.addSpacing(px(4))
+        self.caps = []
+        for key in keys:
+            if key in ("+", "/"):
+                row.addWidget(text_label(key, LEGEND, QFont.Weight.DemiBold, DIM))
+            else:
+                cap = KeyCap(key)
+                row.addWidget(cap)
+                self.caps.append(cap)
 
 
 class LegendItem(QWidget):
@@ -407,11 +463,15 @@ class Legend(QWidget):
         self.row.setContentsMargins(0, 0, 0, 0)
         self.entries: dict[str, LegendItem] = {}
         self.items: list[tuple[str, str]] | None = None  # None: nothing built yet
+        self.keys: tuple[str, tuple[str, ...]] | None = None
+        self.hint: KeyHint | None = None
         self.set_items(items)
 
-    def set_items(self, items: Sequence[tuple[str, str]]) -> None:
-        """The entries, in order; the same ones again change nothing (a page refreshes while it downloads)."""
-        if list(items) == self.items:
+    def set_items(self, items: Sequence[tuple[str, str]], keys: tuple[str, Sequence[str]] | None = None) -> None:
+        """The entries, in order, with *keys* (what a keyboard shortcut does, and its keys: KeyHint) at the left;
+        the same ones again change nothing (a page refreshes while it downloads)."""
+        keys = (keys[0], tuple(keys[1])) if keys else None
+        if list(items) == self.items and keys == self.keys:
             return
         while self.row.count():
             item = self.row.takeAt(0)
@@ -419,6 +479,9 @@ class Legend(QWidget):
             if widget is not None:
                 widget.hide()                           # gone now, not when Qt deletes it later
                 widget.deleteLater()
+        self.hint = KeyHint(*keys) if keys else None
+        if self.hint is not None:
+            self.row.addWidget(self.hint)
         self.row.addStretch()
         self.entries = {}
         for button, text in items:
@@ -427,7 +490,7 @@ class Legend(QWidget):
             self.row.addWidget(entry)
             self.row.addSpacing(px(18))
             self.entries[button] = entry
-        self.items = list(items)
+        self.items, self.keys = list(items), keys
 
     def _tapped(self, button: str) -> None:
         self.activated.emit(button)
@@ -536,13 +599,27 @@ class PortableHeader(QWidget):
         lines.addStretch()
         row.addLayout(lines)
 
-    def set_status(self, parts: Sequence[str], second: Sequence[str] = ()) -> None:
+    def set_status(self, parts: Sequence[str | tuple[str, str]],
+                   second: Sequence[str | tuple[str, str]] = ()) -> None:
         """The status line's *parts* joined by bars; *second* on a line of its own under it (owner, 28-10-2026: the
-        test app's temperatures under the battery, the date and the time)."""
-        self.status.setText("  |  ".join(part for part in parts if part))
-        below = "  |  ".join(part for part in second if part)
-        self.second.setText(below)
-        self.second.setVisible(bool(below))
+        test app's temperatures under the battery, the date and the time). A part may be (text, color), in that
+        color (owner, 31-10-2026: the portal's Turbo letter red)."""
+        _set_line(self.status, parts)
+        self.second.setVisible(_set_line(self.second, second))
+
+
+def _set_line(label: QLabel, parts: Sequence[str | tuple[str, str]]) -> bool:
+    """*parts* on *label* joined by bars, plain text unless a part has a color of its own; whether there is any."""
+    parts = [part for part in parts if part and (isinstance(part, str) or part[0])]
+    if all(isinstance(part, str) for part in parts):
+        label.setTextFormat(Qt.TextFormat.PlainText)
+        label.setText("  |  ".join(parts))
+    else:
+        label.setTextFormat(Qt.TextFormat.RichText)
+        label.setText("&nbsp;&nbsp;|&nbsp;&nbsp;".join(
+            html.escape(part) if isinstance(part, str) else
+            f'<span style="color: {part[1]}">{html.escape(part[0])}</span>' for part in parts))
+    return bool(parts)
 
 
 DAYS = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
@@ -1087,6 +1164,11 @@ class PortableWindow(QWidget):
         self.setStyleSheet(f"QWidget#portable {{ background: {BACKGROUND}; }}")
         self.setAutoFillBackground(True)
         self.handlers: dict[str, Callable[[], None]] = {}
+        self.toggle_keyboard, self.start_keyboard = platform.toggle_touch_keyboard, platform.start_touch_keyboard
+        self.keyboard_tries = 0                         # its host started: tries left
+        self.keyboard_timer = QTimer(self)
+        self.keyboard_timer.setInterval(KEYBOARD_WAIT)
+        self.keyboard_timer.timeout.connect(self._keyboard_again)
         self.gamepad = gamepad if gamepad is not None else Gamepad(self)
         self.gamepad.action.connect(self.on_action)
         self.popup: InfoPopup | None = None
@@ -1171,6 +1253,40 @@ class PortableWindow(QWidget):
     def exit_app(self) -> None:
         """View: the app closes. A subclass that is busy (a download) asks first."""
         self.close()
+
+    def show_keyboard(self) -> None:
+        """R3 (owner, 31-10-2026): Windows' touch keyboard shown, or hidden when it shows, over the window; what is
+        typed goes to the field with the focus. Its host is started first when it does not run; keyboard_problem()
+        says why when it cannot open."""
+        if self.keyboard_timer.isActive():
+            return
+        try:
+            self.toggle_keyboard()
+            return
+        except OSError:
+            pass
+        try:
+            self.start_keyboard()
+        except OSError as exc:
+            self.keyboard_problem(str(exc))
+            return
+        self.keyboard_tries = KEYBOARD_TRIES
+        self.keyboard_timer.start()
+
+    def _keyboard_again(self) -> None:
+        self.keyboard_tries -= 1
+        try:
+            self.toggle_keyboard()
+        except OSError as exc:
+            if self.keyboard_tries <= 0:
+                self.keyboard_timer.stop()
+                self.keyboard_problem(str(exc))
+            return
+        self.keyboard_timer.stop()
+
+    def keyboard_problem(self, text: str) -> None:
+        """Why the touch keyboard did not open, in a popup; a subclass may say it on its page instead."""
+        self.show_popup("Touch keyboard", f"Windows' touch keyboard could not be opened. {text}")
 
     def showEvent(self, event) -> None:  # noqa: N802 (Qt override)
         """Every stack of the window, as the subclass made them, keeps to one visible page after each switch
@@ -1375,6 +1491,8 @@ class PortableWindow(QWidget):
             self.exit_app()
         elif action == "menu":
             self.show_info()
+        elif action == "keyboard":
+            self.show_keyboard()
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
         keys = {Qt.Key.Key_Up: "up", Qt.Key.Key_Down: "down", Qt.Key.Key_Left: "left", Qt.Key.Key_Right: "right"}

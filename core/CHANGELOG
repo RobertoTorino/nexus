@@ -1,3 +1,20 @@
+Changelog: 31-10-2026 17:55:40
+
+Added. R3, the right stick pressed, shows Windows' touch keyboard in every portable window, or hides it (owner,
+31-10-2026): Gamepad reports it as the action keyboard, PortableWindow.show_keyboard() toggles the keyboard through
+its host's own interface (platform.toggle_touch_keyboard(), ITipInvocation; no administrator, nothing in the
+registry), starting the host TabTip.exe first when it does not answer and asking again for three seconds. When it
+cannot open, a popup says why (keyboard_problem()). KEYBOARD is the legend's R3 Keyboard entry.
+
+Changelog: 31-10-2026 17:38:51
+
+Added. The portable window's LT (owner, 31-10-2026): Gamepad reports a pull of the left trigger past halfway
+as the action lt, once until it is let go, as RT's rt, and a tap on a legend's LT entry does the same. Legend's
+set_items() takes a keyboard shortcut for its left end, what it does and its keys, drawn as key caps (KeyHint,
+KeyCap; WINDOWS_KEY draws the Windows key's four panes): owner, 31-10-2026, "with icons, not a long line of text".
+PortableHeader.set_status() takes a part as (text, color), shown in that color; a line without one stays plain
+text, as before.
+
 Changelog: 31-10-2026 15:07:26
 
 Version 2.2.0.

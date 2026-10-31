@@ -138,6 +138,60 @@ def open_path(target: str | Path) -> bool:
     return True
 
 
+# Windows' touch keyboard (owner, 31-10-2026: R3 in the portable window): its host's own interface, ITipInvocation,
+# shows or hides it; the host, TabTip.exe, is started first when it does not run. No administrator, no registry.
+TABTIP = r"%CommonProgramFiles%\microsoft shared\ink\TabTip.exe"
+TIP_HOST = "{4CE576FA-83DC-4F88-951C-9D0782B4E376}"         # UIHostNoLaunch: the running host only
+TIP_INVOCATION = "{37C994E7-432B-4834-A2F7-DCE1F13B834B}"   # ITipInvocation: Toggle(HWND), after IUnknown's three
+
+
+def toggle_touch_keyboard() -> None:
+    """Windows' touch keyboard shown, or hidden when it shows. OSError when its host does not run (start it with
+    start_touch_keyboard() and try again) or not on Windows."""
+    if not WINDOWS:
+        raise OSError("The touch keyboard is Windows'.")
+    import ctypes
+    from ctypes import wintypes
+
+    class Guid(ctypes.Structure):
+        _fields_ = [("data1", ctypes.c_ulong), ("data2", ctypes.c_ushort), ("data3", ctypes.c_ushort),
+                    ("data4", ctypes.c_ubyte * 8)]
+
+    ole32, user32 = ctypes.windll.ole32, ctypes.windll.user32  # type: ignore[attr-defined]
+    host, invocation = Guid(), Guid()
+    ole32.CLSIDFromString(TIP_HOST, ctypes.byref(host))
+    ole32.CLSIDFromString(TIP_INVOCATION, ctypes.byref(invocation))
+    started = ole32.CoInitialize(None) in (0, 1)              # S_OK, S_FALSE; Qt's thread has COM already
+    try:
+        tip = ctypes.c_void_p()
+        result = ole32.CoCreateInstance(ctypes.byref(host), None, 0x1 | 0x4, ctypes.byref(invocation),
+                                        ctypes.byref(tip))    # in-process or local server
+        if result != 0 or not tip:
+            raise OSError(f"The touch keyboard's host does not answer (0x{result & 0xFFFFFFFF:08x}).")
+        table = ctypes.cast(tip, ctypes.POINTER(ctypes.POINTER(ctypes.c_void_p))).contents
+        release = ctypes.WINFUNCTYPE(ctypes.c_ulong, ctypes.c_void_p)(table[2])
+        toggle = ctypes.WINFUNCTYPE(ctypes.c_long, ctypes.c_void_p, wintypes.HWND)(table[3])
+        try:
+            result = toggle(tip, user32.GetDesktopWindow())
+        finally:
+            release(tip)
+        if result != 0:
+            raise OSError(f"The touch keyboard did not open (0x{result & 0xFFFFFFFF:08x}).")
+    finally:
+        if started:
+            ole32.CoUninitialize()
+
+
+def start_touch_keyboard() -> None:
+    """The touch keyboard's host started (Windows' shell, as it asks for UI access); OSError when it cannot."""
+    if not WINDOWS:
+        raise OSError("The touch keyboard is Windows'.")
+    program = expand(TABTIP)
+    if not program.is_file():
+        raise OSError("This Windows has no touch keyboard.")
+    os.startfile(str(program))  # type: ignore[attr-defined]  # Windows only
+
+
 _OUTSIDE = threading.Lock()
 BUNDLE_VARIABLES = ("QT_PLUGIN_PATH", "QML2_IMPORT_PATH")     # what PyInstaller's PyQt6 hook sets for the app itself
 # What the app's own controller reader sets for SDL (gamepad.PygameSource), for itself only

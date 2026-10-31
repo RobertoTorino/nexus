@@ -210,6 +210,7 @@ PORTABLE_TEXT = [
     ("#f5a524", "Amber: an update in a tile or the detail pane, the selected tab."),
     ("#cd8b22", "The main pill's glyph letter, its pill's color."),
     ("#141414", "On the amber and the main pill: the main pill's label, a glyph on the amber."),
+    ("#e5484d", "Red: the Turbo letter in the portal's status line (owner, 31-10-2026), as a card's dot."),
 ]
 PORTABLE_BLOCKS = [
     ("#121214", "The window, behind everything; a disabled pill's glyph circle."),

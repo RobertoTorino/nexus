@@ -312,3 +312,21 @@ def test_a_program_started_outside_the_bundle_misses_its_dlls(monkeypatch, tmp_p
         assert platform._get_dll_directory() == str(tmp_path)       # put back for the app's own DLLs
     finally:
         platform._set_dll_directory(before or None)
+
+
+def test_the_touch_keyboard_is_windows_only_and_needs_its_host(monkeypatch, tmp_path):
+    """R3's touch keyboard (owner, 31-10-2026): elsewhere, or on a Windows without TabTip.exe, an OSError that says
+    why; the host is started with Windows' shell."""
+    monkeypatch.setattr(platform, "WINDOWS", False)
+    for call in (platform.toggle_touch_keyboard, platform.start_touch_keyboard):
+        with pytest.raises(OSError, match="Windows'"):
+            call()
+    monkeypatch.setattr(platform, "WINDOWS", True)
+    monkeypatch.setattr(platform, "TABTIP", str(tmp_path / "TabTip.exe"))
+    with pytest.raises(OSError, match="no touch keyboard"):
+        platform.start_touch_keyboard()
+    (tmp_path / "TabTip.exe").write_bytes(b"")
+    started = []
+    monkeypatch.setattr(platform.os, "startfile", started.append, raising=False)
+    platform.start_touch_keyboard()
+    assert started == [str(tmp_path / "TabTip.exe")]

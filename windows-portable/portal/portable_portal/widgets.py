@@ -173,13 +173,15 @@ class SuitePane(Pane):
                          "The A button opens its page.")
         if self.screen_row.isVisibleTo(self):
             parts.append("Screen: the screen the portal is on, with a second screen attached (a TV or a monitor). The A "
-                         "button moves it to the next screen: the portal starts again there, sized for it, after a "
-                         "download or an install has finished. The suite's apps open on that screen from then on, "
-                         "while it is attached. Win + Shift + an arrow key moves a window of the suite as well.")
+                         "button, or LT on any page, moves it to the next screen: the portal starts again there, sized "
+                         "for it, after a download or an install has finished. The suite's apps open on that screen "
+                         "from then on, while it is attached. Win + Shift + the left or right arrow key, shown at the "
+                         "bottom left, moves a window of the suite as well.")
         parts += ["Every setting is kept for the next start.",
                   "The buttons at the bottom: A changes the setting with the focus. Y looks for a newer portal on "
                   "GitHub (Check again), or downloads and installs it (Update to x.y.z). RT starts Steam's library in "
-                  "Big Picture, Steam first when it does not run (where Steam is installed). Menu (☰) shows this. B "
+                  "Big Picture, Steam first when it does not run (where Steam is installed). R3 (the right stick "
+                  "pressed) shows Windows' touch keyboard, or hides it. Menu (☰) shows this. B "
                   "goes back to the tiles. View (⧉) exits the portal."]
         self.info.info = "\n\n".join(parts)
 

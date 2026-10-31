@@ -23,7 +23,7 @@ from PyQt6.QtCore import QSettings
 
 from bc250_core import play, portable, steam
 from bc250_core.gamepad import Gamepad
-from bc250_core.portable import BACK, EXIT, VIEW
+from bc250_core.portable import BACK, EXIT, KEYBOARD, VIEW
 from bc250_core.portable import INFO as MENU_INFO
 from bc250_core.updates import ReleaseInfo
 from conftest import fake_install, make_iso, make_package, make_xex
@@ -526,7 +526,7 @@ def test_the_steamgriddb_key_is_pasted_saved_and_removed(qapp, tmp_path, monkeyp
     window.on_action("next")                                    # RB Steam artwork
     pane = window.key_pane
     assert window.panes.currentWidget() is pane and pane.field.hasFocus()
-    assert window.legend.items == [("A", "Save"), ("X", "Paste"), ("Y", "Remove key"), BACK, EXIT]
+    assert window.legend.items == [("A", "Save"), ("X", "Paste"), ("Y", "Remove key"), KEYBOARD, BACK, EXIT]
     assert pane.status.text().startswith("No key")
     window.on_action("y")                                       # no key: it says so
     assert pane.status.text().startswith("There is no key to remove")

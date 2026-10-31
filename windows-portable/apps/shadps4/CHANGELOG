@@ -1,3 +1,9 @@
+Changelog: 31-10-2026 17:55:40
+
+Added. R3 Keyboard on the Steam artwork page and on a shadNet text row's page: R3, the right stick pressed, shows
+Windows' touch keyboard to type in the field, or hides it (owner, 31-10-2026; core's PortableWindow, on every
+page).
+
 Changelog: 31-10-2026 15:07:25
 
 Release 3.3.0.

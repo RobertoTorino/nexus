@@ -232,14 +232,16 @@ KEY_TEXT = (
     "The key is free with a SteamGridDB account: in your account click Preferences, then the API tab at the top, "
     f"then Generate API Key, and copy the key ({covers.KEY_PAGE}). Copied in a browser on this device, the X button "
     "(Paste) puts it in the field and the A button saves it; the Y button (Remove key) takes a kept key out, on a "
-    "second press. The B button goes back without saving.\n"
+    "second press. R3 (the right stick pressed) opens Windows' touch keyboard to type it, or closes it. The B button "
+    "goes back without saving.\n"
     "It is one key for every app of the suite. Leave it empty to look nothing up.")
 # The package's license: the BC250 app's question for the zRIF, as a page
 ZRIF_TEXT = (
     "A .pkg installs only with its license key, a zRIF: a long line of letters and digits that starts with KO5i, as "
     "the list you got the package from gives it. Copy it in a browser on this device, then the X button (Paste) puts "
     "it in the field and the A button installs the package; Vita3K does it without its window. The key is used for "
-    "this install and kept nowhere. The B button goes back without installing.")
+    "this install and kept nowhere. R3 (the right stick pressed) opens Windows' touch keyboard to type it, or "
+    "closes it. The B button goes back without installing.")
 
 
 class FieldPane(Pane):

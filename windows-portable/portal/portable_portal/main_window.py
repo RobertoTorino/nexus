@@ -26,7 +26,8 @@ from PyQt6.QtWidgets import QGridLayout, QStackedWidget, QVBoxLayout, QWidget
 from bc250_core import applog, chip, portable, power, steam, xbox
 from bc250_core.gamepad import Gamepad
 from bc250_core.platform import expand, launch_in_terminal, private
-from bc250_core.portable import AMBER, DIM, MENU, VIEW, Card, Legend, PortableHeader, PortableWindow, px, status_clock
+from bc250_core.portable import (AMBER, DIM, KEYBOARD, MENU, VIEW, Card, Legend, PortableHeader, PortableWindow, px,
+                                 status_clock)
 
 from . import APP_ICONS, APP_ID, APP_NAME, EXE_NAME, INTRO_SOUND, ROOT, SUITE, __version__, operating_mode, state_dir
 from .intro import INTRO_MS, Intro
@@ -47,6 +48,10 @@ COLUMNS, PER_PAGE = 4, 8
 TAB_KEY = "window/tab"          # the settings: the tab shown last
 LOGO_PNG = ROOT / "images" / f"{APP_ID}-128.png"   # the suite's icon, its picture in the Xbox menu
 STEAM_MISSING = "Steam is not installed on this device: install it from store.steampowered.com, then RT opens it."
+ONE_SCREEN = "There is one screen: attach a TV or a monitor, then LT moves the portal to it."
+# With a second screen, the legend's left end (owner, 31-10-2026: "Switch monitor: [] + Shift + < or >", with icons)
+SCREEN_KEYS = ("Switch screen", (portable.WINDOWS_KEY, "+", "Shift", "+", "←", "/", "→"))
+TURBO_COLOR = portable.DOT      # the Turbo letter in the header, red (owner, 31-10-2026)
 WALLPAPER_KEY = "look/wallpaper"  # where portal 1.6.0 kept the wallpaper switch: now the suite's (core, suite.ini)
 
 
@@ -245,7 +250,12 @@ class MainWindow(PortableWindow):
         self.bind("next", lambda: self.tabs.step(1))
         self.bind("menu", self.show_suite)
         self.bind("rt", self.steam_action)
+        self.bind("lt", self.screen_action)
         self.back.connect(self.on_back)
+        app = QGuiApplication.instance()
+        if app is not None:                             # a TV attached or taken away: LT and the Screen row follow
+            app.screenAdded.connect(self.screens_changed)
+            app.screenRemoved.connect(self.screens_changed)
 
         self.worker = _Worker()
         self.download_at: Path | None = None            # the folder of the job's download, for its size
@@ -515,7 +525,9 @@ class MainWindow(PortableWindow):
         parts = status_clock()
         if self.update_available():
             parts.append(f"Suite {self.update.release.version} available")
-        self.header.set_status(parts, [*self.chip_parts(), self.mode_marker(), power.text(self.battery())])
+        marker = self.mode_marker()
+        self.header.set_status(parts, [*self.chip_parts(), (marker, TURBO_COLOR) if marker == "T" else marker,
+                                       power.text(self.battery())])
         if self.stack.currentWidget() is self.mode_pane:  # the watts follow the charger
             self.fill_modes()
 
@@ -569,28 +581,31 @@ class MainWindow(PortableWindow):
         (focus or self.suite_pane.wallpaper).setFocus()
 
     def update_legend(self) -> None:
-        """The page's buttons, RT Steam where Steam is installed, then core's B Back (on Details and Suite, and from
-        the strip to its tile) and View Exit app; while an exit is asked, only that."""
+        """The page's buttons, LT Screen with a second screen (and the keyboard's Win + Shift + an arrow at the
+        left), RT Steam where Steam is installed, then core's B Back (on Details and Suite, and from the strip to its
+        tile) and View Exit app; while an exit is asked, only that."""
         if not hasattr(self, "legend") or not hasattr(self, "stack"):
             return
-        steam_item = [("RT", "Steam")] if self.steam_here() else []
+        screens = len(QGuiApplication.screens()) > 1
+        triggers = [*([("LT", "Screen")] if screens else []), *([("RT", "Steam")] if self.steam_here() else [])]
+        keys = SCREEN_KEYS if screens and not self.close_asked else None
         if self.close_asked:
             self.legend.set_items([(VIEW, "Press again to exit")])
         elif self.stack.currentWidget() is self.apps_page:
             pane = self.app_pane
             self.legend.set_items([*([("A", pane.main)] if pane.main else []), ("X", "Details"),
-                                   *([("Y", pane.other)] if pane.other else []), (MENU, "Settings"), *steam_item,
-                                   *self.common_items()])
+                                   *([("Y", pane.other)] if pane.other else []), (MENU, "Settings"), *triggers,
+                                   *self.common_items()], keys)
         elif self.stack.currentWidget() is self.details_pane:
             pane = self.details_pane
             self.legend.set_items([*([("A", pane.open)] if pane.open else []),
-                                   *([("Y", pane.remove)] if pane.remove else []), *steam_item,
-                                   *self.common_items(True)])
+                                   *([("Y", pane.remove)] if pane.remove else []), *triggers,
+                                   *self.common_items(True)], keys)
         elif self.stack.currentWidget() is self.mode_pane:
-            self.legend.set_items([("A", "Set"), *steam_item, *self.common_items(True)])
+            self.legend.set_items([("A", "Set"), *triggers, *self.common_items(True)], keys)
         else:
             self.legend.set_items([("A", "Change"), *([("Y", self.suite_pane.action)] if self.suite_pane.action
-                                                      else []), *steam_item, *self.common_items(True)])
+                                                      else []), *triggers, KEYBOARD, *self.common_items(True)], keys)
 
     def steam_action(self) -> None:
         """RT (or a tap on RT Steam): Steam's library in Big Picture, Steam started first when it does not run (owner,
@@ -972,6 +987,20 @@ class MainWindow(PortableWindow):
         target = screens[(names.index(here) + 1) % len(screens)] if here in names else screens[0]
         self.log.info(f"Moving to the screen {portable.screen_label(target)}.")
         self.move_to(target)
+
+    def screen_action(self) -> None:
+        """LT (or a tap on LT Screen): the next screen, as the Screen row's A; with one screen the line under the app
+        says so."""
+        if len(QGuiApplication.screens()) < 2:
+            self.say(self.current_key, ONE_SCREEN)
+            self.refresh()
+            return
+        self.next_screen()
+
+    def screens_changed(self, _screen=None) -> None:
+        self.update_legend()
+        if self.stack.currentWidget() is self.suite_pane:
+            self.suite_pane.set_screen(self.screen_name())
 
     def can_restart(self) -> bool:
         return self.job is None and self.pending is None

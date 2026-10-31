@@ -247,6 +247,12 @@ def test_the_header(qapp):
     assert header.title.text() == "Windows Portable Test" and header.version.text() == "0.1.0"
     assert header.status.text() == "82 %  |  14:32"
     assert header.icon is None                                  # no icon unless one is given (owner, 27-10-2026)
+    header.set_status(["14:32"], ["CPU 9%", ("T", "#e5484d"), ("", "#e5484d"), "82% <"])   # a part in its own color
+    assert header.status.textFormat() == Qt.TextFormat.PlainText and header.status.text() == "14:32"
+    assert header.second.textFormat() == Qt.TextFormat.RichText and header.second.isVisibleTo(header)
+    assert header.second.text() == 'CPU 9%&nbsp;&nbsp;|&nbsp;&nbsp;<span style="color: #e5484d">T</span>'         '&nbsp;&nbsp;|&nbsp;&nbsp;82% &lt;'
+    header.set_status(["14:32"], ["82%"])                      # plain again
+    assert header.second.textFormat() == Qt.TextFormat.PlainText and header.second.text() == "82%"
     icon = QPixmap(8, 8)
     icon.fill()
     assert PortableHeader("Portal", "0.1.0", icon).icon is not None
@@ -837,3 +843,62 @@ def test_the_restart_waits_for_this_app_then_starts_its_command_again():
     assert argv[6] == ("Wait-Process -Id 4242 -ErrorAction SilentlyContinue; $env:PORTABLE_RESTARTED = '1'; "
                        "Start-Process -FilePath 'C:\\Apps\\Portal.exe' -WorkingDirectory 'C:\\Apps' "
                        "-ArgumentList '--x', 'it''s'")
+
+
+def test_the_legend_shows_a_keyboard_shortcut_as_key_caps(qapp):
+    """A keyboard shortcut at the legend's left (owner, 31-10-2026: "with icons, not a long line of text"): what it
+    does, then its keys as key caps, "+" and "/" written between them; the same again builds nothing new."""
+    legend = Legend([("A", "Open")])
+    assert legend.hint is None and legend.keys is None
+    legend.set_items([("A", "Open")], ("Switch screen", [portable.WINDOWS_KEY, "+", "Shift", "+", "←", "/", "→"]))
+    hint = legend.hint
+    assert [cap.text() for cap in hint.caps] == [portable.WINDOWS_KEY, "Shift", "←", "→"]
+    assert all(isinstance(cap, portable.KeyCap) for cap in hint.caps)
+    assert hint.caps[1].width() > hint.caps[0].width() == hint.caps[0].height()   # a wide key for a word
+    assert legend.row.indexOf(hint) == 0 and "A" in legend.entries
+    legend.set_items([("A", "Open")], ("Switch screen", (portable.WINDOWS_KEY, "+", "Shift", "+", "←", "/", "→")))
+    assert legend.hint is hint
+    for cap in hint.caps:
+        cap.grab()                                              # each paints, the Windows key's panes too
+    legend.set_items([("A", "Open")])
+    assert legend.hint is None and legend.keys is None
+    assert portable.LEGEND_ACTIONS["LT"] == "lt"
+
+
+def test_r3_shows_windows_touch_keyboard(qapp):
+    """R3 (owner, 31-10-2026): Windows' touch keyboard, its host started first when it does not answer, asked again
+    until it opens; when it cannot, a popup says why. A tap on R3 Keyboard does the same."""
+    window = PortableWindow(gamepad=portable.Gamepad(source_factory=NoPad))
+    calls = []
+
+    def toggle():
+        calls.append("toggle")
+        if "start" not in calls or calls.count("toggle") < 3:
+            raise OSError("no host")
+    window.toggle_keyboard, window.start_keyboard = toggle, lambda: calls.append("start")
+    window.act("keyboard")
+    assert calls == ["toggle", "start"] and window.keyboard_timer.isActive()
+    window.act("keyboard")                                      # pressed again while it starts: nothing more
+    assert calls == ["toggle", "start"]
+    window._keyboard_again()
+    assert window.keyboard_timer.isActive()
+    window._keyboard_again()                                    # it answers: shown
+    assert calls == ["toggle", "start", "toggle", "toggle"] and not window.keyboard_timer.isActive()
+    assert window.popup is None
+    calls.clear()
+    window.toggle_keyboard = lambda: calls.append("toggle")
+    Legend([portable.KEYBOARD], parent=window)._tapped("R3")   # running: shown or hidden at once
+    assert calls == ["toggle"]
+
+    def missing():
+        raise OSError("This Windows has no touch keyboard.")
+    window.toggle_keyboard, window.start_keyboard = missing, missing
+    window.act("keyboard")
+    assert window.popup is not None and "no touch keyboard" in window.popup.text.toPlainText()
+    window.popup.dismiss()
+    window.start_keyboard = lambda: None
+    window.act("keyboard")
+    for _ in range(portable.KEYBOARD_TRIES):
+        window._keyboard_again()
+    assert not window.keyboard_timer.isActive() and window.popup is not None
+    window.close()

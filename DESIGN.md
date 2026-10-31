@@ -355,6 +355,10 @@ Text colors:
 
   ![Sample text in #141414](design/colors/text-141414.svg)
 
+- `#e5484d` Red: the Turbo letter in the portal's status line (owner, 31-10-2026), as a card's dot.
+
+  ![Sample text in #e5484d](design/colors/text-e5484d.svg)
+
 Background colors:
 
 | Color | Hex | Used for |

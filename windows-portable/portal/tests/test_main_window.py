@@ -6,7 +6,9 @@ page with Remove's second press, the Settings page with the portal's own update,
 from __future__ import annotations
 
 import hashlib
+import html
 import os
+import re
 import shutil
 import time
 import zipfile
@@ -59,6 +61,11 @@ class FakeTerminal:
             self.app_dir.mkdir(parents=True, exist_ok=True)
             (self.app_dir / "X.exe").write_bytes(b"x")
         exit_file.write_text(self.status + "\n")
+
+
+def plain(label) -> str:
+    """A status line as it reads, also when a part of it is colored (rich text)."""
+    return html.unescape(re.sub(r"<[^>]+>", "", label.text())).replace(" ", " ")
 
 
 def make_zip(path: Path, top: str) -> str:
@@ -164,7 +171,11 @@ def test_the_tabs_and_tiles_and_the_strip_for_the_focused_app(world, qapp):
     # The Ally X's operating mode, its letter just before the battery (owner, 31-10-2026)
     window.mode_marker = lambda: "T"
     window.update_status()
-    assert window.header.second.text() == "CPU 12% 48°  |  GPU 7% 47°  |  T  |  82%"
+    assert plain(window.header.second) == "CPU 12% 48°  |  GPU 7% 47°  |  T  |  82%"
+    assert f'<span style="color: {portable.DOT}">T</span>' in window.header.second.text()     # Turbo red (owner)
+    window.mode_marker = lambda: "P"
+    window.update_status()
+    assert window.header.second.text() == "CPU 12% 48°  |  GPU 7% 47°  |  P  |  82%"          # the others plain
     assert [text for _, text in window.legend.items][1:] == ["Details", "Settings", "Exit app"]
     assert window.legend.items[0][0] == "A" and window.app_pane.findChildren(portable.Pill) == []   # no pill (owner)
     window.tabs.step(1)
@@ -310,7 +321,7 @@ def test_the_operating_mode_page_on_the_ally_x(world, qapp, monkeypatch):
     api = FakeApi(turbo.plan, turbo.overlay)
     window = world.make(modes=lambda: api)
     monkeypatch.setattr(window, "isActiveWindow", lambda: True)
-    assert window.header.second.text() == "CPU 12% 48°  |  GPU 7% 47°  |  T  |  82%"
+    assert plain(window.header.second) == "CPU 12% 48°  |  GPU 7% 47°  |  T  |  82%"
     window.on_action("menu")
     row = window.suite_pane.mode
     assert row.isVisible() and row.label.text() == "Operating mode: Turbo"
@@ -639,7 +650,8 @@ def test_the_suite_page_switches_the_wallpaper(world, qapp, monkeypatch):
     assert window.stack.currentWidget() is window.suite_pane
     window.suite_pane.wallpaper.setFocus()
     assert window.suite_pane.wallpaper.label.text() == "Wallpaper: Built-in"
-    assert window.legend.items == [("A", "Change"), ("Y", "Check again"), (MENU, "Info"), ("B", "Back"), (VIEW, "Exit app")]
+    assert window.legend.items == [("A", "Change"), ("Y", "Check again"), portable.KEYBOARD, (MENU, "Info"), ("B", "Back"),
+                                   (VIEW, "Exit app")]
     window.on_action("menu")                                          # on the page: what the settings do
     assert window.popup is not None and "Transparency: how much" in window.suite_pane.info.info
     window.on_action("back")
@@ -804,3 +816,48 @@ def test_the_screen_row_moves_the_portal_to_the_next_screen(world, qapp, monkeyp
     window.waiting_to_move()
     assert window.message.startswith("The portal moves to the other screen once")
     window.job = None
+
+
+def test_lt_moves_the_portal_with_a_second_screen(world, qapp, monkeypatch):
+    """LT is the Screen row's A on every page (owner, 31-10-2026), in the legend with a second screen only, which
+    then also shows the keyboard's Win + Shift + an arrow at its left, as key caps."""
+    window = world.make()
+    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
+    moves = []
+    monkeypatch.setattr(window, "move_to", moves.append)
+    assert ("LT", "Screen") not in window.legend.items and window.legend.hint is None
+    window.on_action("lt")                                          # one screen: nothing moves, the line says why
+    assert moves == [] and window.message == mw.ONE_SCREEN
+    here = window.screen()
+
+    class Other:
+        def name(self):
+            return "Mi TV"
+    other = Other()
+    monkeypatch.setattr(mw.QGuiApplication, "screens", staticmethod(lambda: [here, other]))
+    window.screens_changed()                                        # a TV attached
+    items = window.legend.items
+    assert ("LT", "Screen") in items and items.index(("LT", "Screen")) < items.index((VIEW, "Exit app"))
+    assert window.legend.keys == (mw.SCREEN_KEYS[0], tuple(mw.SCREEN_KEYS[1]))
+    assert [cap.text() for cap in window.legend.hint.caps] == [portable.WINDOWS_KEY, "Shift", "←", "→"]
+    window.on_action("lt")
+    assert moves == [other]
+    window.legend._tapped("LT")                                     # a tap on the entry does the same
+    assert len(moves) == 2
+    window.on_action("menu")                                        # on the Settings page too
+    assert ("LT", "Screen") in window.legend.items and window.legend.hint is not None
+    window.on_action("lt")
+    assert len(moves) == 3
+    left, _, right, _ = window.margins()
+    window.on_back()                                                # the widest row: a tile's, with Y and RT
+    window.steam_here = lambda: True
+    window.app_pane.other = "Update"
+    window.update_legend()
+    assert ("Y", "Update") in window.legend.items and ("RT", "Steam") in window.legend.items
+    assert window.legend.sizeHint().width() <= 1280 - left - right  # it fits the Ally's 1280 x 720
+    window.show_suite()                                             # the Settings page: R3 Keyboard too
+    window.suite_pane.action = "Check again"
+    window.update_legend()
+    assert portable.KEYBOARD in window.legend.items and ("Y", "Check again") in window.legend.items
+    assert window.legend.sizeHint().width() <= 1280 - left - right
+    window.close()

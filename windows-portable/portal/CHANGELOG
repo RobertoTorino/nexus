@@ -1,3 +1,16 @@
+Changelog: 31-10-2026 17:55:40
+
+Added. R3, the right stick pressed, shows Windows' touch keyboard, or hides it, on every page (owner,
+31-10-2026); the Settings page's row at the bottom shows R3 Keyboard, and its information says so.
+
+Changelog: 31-10-2026 17:38:51
+
+Added. LT moves the portal to the next screen on every page, as the Settings page's Screen row does (owner,
+31-10-2026: switching screens bound to a button). With a second screen attached the row at the bottom shows LT
+Screen, and at its left Switch screen with the keyboard's keys as key caps: Win + Shift + the left or right arrow.
+With one screen LT says there is one. The row follows a TV attached or taken away. The Turbo letter in the header
+is red (owner, 31-10-2026); the other letters keep the line's color.
+
 Changelog: 31-10-2026 16:55:19
 
 Release 6.3.0.

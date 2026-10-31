@@ -35,7 +35,9 @@ The strip under the tiles shows the focused app: its name, its versions and what
 | Y | Update or reinstall the app, when the row at the bottom offers it |
 | X | The app's details |
 | ☰ (Menu) | The Settings page, with the settings; on it, what the settings do |
+| LT | The portal to the next screen, with a second screen attached |
 | RT | Steam's library, in Big Picture mode, when Steam is installed |
+| R3 (the right stick pressed) | Windows' touch keyboard, shown or hidden; the Settings page shows **R3 Keyboard** |
 | B | Back: from a page to the tiles; on a tile nothing |
 | ⧉ (View) | Exit the portal |
 
@@ -87,7 +89,8 @@ The line under it shows the CPU and the GPU live, each with its load and its tem
 temperature), and the battery last, at the right: its percentage, or **Plugged in** while the device is on its
 charger. The apps' status lines show the battery the same way. On the ROG Xbox Ally X, the operating mode's letter
 stands just before the battery: **S** Silent, **P** Performance, **T** Turbo or **W** Windows, read from Windows'
-power plan and power mode, which Armoury Crate's modes set (`CPU 12% 48°  |  GPU 7% 47°  |  T  |  82%`). No letter
+power plan and power mode, which Armoury Crate's modes set (`CPU 12% 48°  |  GPU 7% 47°  |  T  |  82%`); the **T**
+of Turbo is red. No letter
 shows when the plan and the power mode match none of them. Armoury Crate's Command Center keeps its own record of
 the mode, so it can show another one.
 
@@ -108,7 +111,7 @@ bottom does.
 | Sound | The intro's sound when the portal starts. Off: the intro plays without it. |
 | Xbox menu | Only with the Xbox app on the device. **Add** puts the suite in the Xbox app's library, so Xbox mode starts the portal from its home; the Xbox app closes for a moment while its library changes. **In the menu** once it is there; **A** on it takes the suite out of the Xbox app's library again, the Xbox app closed for a moment as well. The Xbox app keeps its library in a file of its own that Microsoft does not document: when a newer Xbox app keeps it otherwise, the row says so and nothing is changed; add the suite in the Xbox app then (**My Library**, **+**). |
 | Operating mode | Only on the ROG Xbox Ally X: the active mode (**Other** when the power plan and the power mode match none of them). **A** opens the Operating Mode page, below. |
-| Screen | Only with a second screen attached, such as a TV or a monitor: the screen the portal is on. **A** moves it to the next screen (see below). |
+| Screen | Only with a second screen attached, such as a TV or a monitor: the screen the portal is on. **A**, or **LT** on any page, moves it to the next screen (see below). |
 
 **Your own wallpapers** go in the folder `%LOCALAPPDATA%\windows-portable-suite\wallpapers`, which the installer
 makes: paste that address in File Explorer's address bar and drop the pictures there. Only pictures in that folder
@@ -166,8 +169,9 @@ larger on a larger screen, such as a TV, and smaller on a smaller one.
 
 **With a second screen** attached, such as a TV or a monitor, the portal and the suite's apps open on the screen they
 were last moved to, while it is attached, otherwise on Windows' main display. To move one to the other screen, use
-the Settings page's **Screen** row, or press **Win + Shift + Left** (or **Right**) with its window in front, which
-works for every app of the suite. The window cannot be dragged: it is full screen, without a title bar. On a screen
+the Settings page's **Screen** row or **LT** (the row at the bottom shows **LT Screen** then), or press **Win +
+Shift + Left** (or **Right**) with its window in front, which works for every app of the suite; the row at the bottom
+shows those keys at its left, after **Switch screen**. The window cannot be dragged: it is full screen, without a title bar. On a screen
 of another size the app starts again there, sized for that screen, in a second or two; a download or an install
 finishes first, and the portal says it will move once that is done.
 

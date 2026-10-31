@@ -44,10 +44,11 @@ def started(qapp, pad: FakePad, clock: Clock) -> tuple[Gamepad, list[str], list[
 def test_the_buttons_the_window_acts_on(qapp):
     pad, clock = FakePad(), Clock()
     gamepad, actions, _ = started(qapp, pad, clock)
-    for name in ("a", "b", "x", "y", "leftshoulder", "rightshoulder", "start", "back", "guide", "leftstick"):
+    for name in ("a", "b", "x", "y", "leftshoulder", "rightshoulder", "start", "back", "guide", "leftstick",
+                 "rightstick"):
         pad.queue += [("button", name, True), ("button", name, False)]
     gamepad.poll()
-    assert actions == ["accept", "back", "x", "y", "previous", "next", "menu", "view"]   # guide, stick: no action
+    assert actions == ["accept", "back", "x", "y", "previous", "next", "menu", "view", "keyboard"]   # guide, L3: none
     gamepad.stop()
     assert pad.closed
 
@@ -96,12 +97,12 @@ def test_every_control_as_it_is(qapp):
 
 
 def test_rt_pulled_is_one_press(qapp):
-    """RT is the portal's Steam (owner, 30-10-2026): past halfway it is pressed, once, until it is let go (under 0.3);
-    LT does nothing yet."""
+    """RT is the portal's Steam (owner, 30-10-2026): past halfway it is pressed, once, until it is let go (under
+    0.3)."""
     pad, clock = FakePad(), Clock()
     gamepad, actions, _ = started(qapp, pad, clock)
     pad.queue += [("axis", "righttrigger", 0.4), ("axis", "righttrigger", 0.6), ("axis", "righttrigger", 1.0),
-                  ("axis", "righttrigger", 0.4), ("axis", "righttrigger", 0.9), ("axis", "lefttrigger", 1.0)]
+                  ("axis", "righttrigger", 0.4), ("axis", "righttrigger", 0.9)]
     gamepad.poll()
     assert actions == ["rt"]                            # 0.4 on the way back is not a release
     pad.queue += [("axis", "righttrigger", 0.1), ("axis", "righttrigger", 0.7)]
@@ -110,6 +111,17 @@ def test_rt_pulled_is_one_press(qapp):
     pad.queue += [("removed", "", False), ("axis", "righttrigger", 0.8)]
     gamepad.poll()
     assert actions == ["rt", "rt", "rt"]               # a pad unplugged with RT held: the next pull counts
+    gamepad.stop()
+
+
+def test_lt_pulled_is_one_press_of_its_own(qapp):
+    """LT is the portal's Screen (owner, 31-10-2026), pressed as RT is, each trigger on its own."""
+    pad, clock = FakePad(), Clock()
+    gamepad, actions, _ = started(qapp, pad, clock)
+    pad.queue += [("axis", "lefttrigger", 0.6), ("axis", "righttrigger", 1.0), ("axis", "lefttrigger", 1.0),
+                  ("axis", "lefttrigger", 0.1), ("axis", "lefttrigger", 0.8)]
+    gamepad.poll()
+    assert actions == ["lt", "rt", "lt"]
     gamepad.stop()
 
 

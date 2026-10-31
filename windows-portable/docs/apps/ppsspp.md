@@ -98,7 +98,7 @@ guide button) still opens PPSSPP's pause menu; its **Exit** ends the game and cl
 The pictures in Steam come from inside the game: its icon on the cover, the wide picture and as the logo, its
 background on the banner; a CHD gets its title on a dark background. With a SteamGridDB API key, Update Steam also
 takes a cover for each game from SteamGridDB: **RB Steam artwork** opens the page that keeps the key (**X Paste**,
-**A Save**, **Y Remove key** twice, **B** back without saving). See [Steam artwork from SteamGridDB](covers.md).
+**R3 Keyboard**, **A Save**, **Y Remove key** twice, **B** back without saving). See [Steam artwork from SteamGridDB](covers.md).
 
 ## Settings
 

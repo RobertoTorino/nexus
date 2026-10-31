@@ -37,8 +37,10 @@ ACTIONS = {                     # the buttons the window acts on
     "dpad_up": "up", "dpad_down": "down", "dpad_left": "left", "dpad_right": "right",
     "a": "accept", "b": "back", "x": "x", "y": "y",
     "leftshoulder": "previous", "rightshoulder": "next", "start": "menu", "back": "view",
+    "rightstick": "keyboard",   # R3, the right stick pressed: Windows' touch keyboard (owner, 31-10-2026)
 }
-TRIGGER_ACTIONS = {"righttrigger": "rt"}       # the triggers the window acts on (owner, 30-10-2026: RT Steam)
+TRIGGER_ACTIONS = {"lefttrigger": "lt", "righttrigger": "rt"}   # the triggers the window acts on (owner,
+                                                                  # 30-10-2026: RT Steam; 31-10-2026: LT Screen)
 
 
 def stick_direction(x: float, y: float) -> str | None:
@@ -114,8 +116,8 @@ class PygameSource:
 
 class Gamepad(QObject):
     """action(name): up, down, left, right (a held direction repeats), accept, back, x, y, previous, next, menu,
-    view, rt. raw(kind, name, value): every button ("button", name, pressed) and axis ("axis", name, value) as it is,
-    and ("added"/"removed", "", ...) when a pad comes or goes."""
+    view, lt, rt, keyboard. raw(kind, name, value): every button ("button", name, pressed) and axis ("axis", name, value) as it
+    is, and ("added"/"removed", "", ...) when a pad comes or goes."""
 
     action = pyqtSignal(str)
     raw = pyqtSignal(str, str, object)
