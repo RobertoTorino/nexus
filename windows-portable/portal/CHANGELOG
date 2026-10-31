@@ -1,3 +1,7 @@
+Changelog: 31-10-2026 14:11:33
+
+Release 6.2.0.
+
 Changelog: 31-10-2026 14:05:11
 
 Fixed. The test of the helper's scripts expects CRLF, as .gitattributes checks a .ps1 out (CI failed on 8194131: the
