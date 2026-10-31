@@ -19,7 +19,9 @@ GitHub (passed, failed, running, none): for the tests of tag-release.sh.
 With --release-commit (the release workflows, owner 30-10-2026): when the commit only writes a release
 (tools/release_commit.py: versions, Release and Version entries, apps.toml's tags and sha256), the CI of its parent,
 the work commit, answers for it, so a release does not wait for CI to run again on the same code. When the work
-commit has no run of the workflow (its push did not touch the workflow's paths), the commit's own CI answers."""
+commit has no run of the workflow (its push did not touch the workflow's paths), or its CI failed, the commit's own
+CI answers: a release commit can fix what failed there (owner, 31-10-2026: the portal's version, which
+check_manifest.py wanted bumped, failed on the work commit and passed on the release commit)."""
 
 from __future__ import annotations
 
@@ -134,15 +136,19 @@ def check_release_commit(sha: str, wait_minutes: float = 0, workflow: str = WORK
     work = None if os.environ.get("BC250_CI_STATE") else work_commit(sha)
     if work is not None:
         try:
-            has_run = bool(fetch(work) if workflow == WORKFLOW else fetch(work, workflow))
+            runs = fetch(work) if workflow == WORKFLOW else fetch(work, workflow)
         except (OSError, ValueError):
-            has_run = True                          # check() says it is unreachable
-        if has_run:
+            runs = None                             # check() says it is unreachable
+        if runs is not None and not runs:
+            print(f"{sha[:7]} only writes a release, but its work commit {work[:7]} has no run of {workflow}: the "
+                  "commit's own CI answers", file=sys.stderr)
+        elif runs is not None and state(runs) == "failed":
+            print(f"{sha[:7]} only writes a release, but CI failed on its work commit {work[:7]}: the commit's own "
+                  "CI answers (the release may fix what failed)", file=sys.stderr)
+        else:
             print(f"{sha[:7]} only writes a release: the CI of its work commit {work[:7]} answers for it",
                   file=sys.stderr)
             return check(work, wait_minutes, fetch=fetch, workflow=workflow, **kwargs)
-        print(f"{sha[:7]} only writes a release, but its work commit {work[:7]} has no run of {workflow}: the "
-              "commit's own CI answers", file=sys.stderr)
     return check(sha, wait_minutes, fetch=fetch, workflow=workflow, **kwargs)
 
 

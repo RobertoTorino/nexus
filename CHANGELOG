@@ -1,3 +1,10 @@
+Changelog: 31-10-2026 16:28:37
+
+Fixed. ci_state.py --release-commit: when CI failed on the work commit, the release commit's own CI answers, not the
+failure. A release commit can fix what failed there (owner, 31-10-2026: CI wanted the portal's version bumped on
+28f7da8; the release commit de9eb83 bumped it and its CI passed, but the seven app releases on it stopped at
+"CI passed on this commit", which asked 28f7da8).
+
 Changelog: 31-10-2026 16:17:11
 
 Release 1.9.0. Brings wp-portal-v6.3.0.

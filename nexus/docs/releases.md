@@ -297,7 +297,8 @@ release writes (`tools/release_commit.py`: `VERSION` files and their copies, `Re
 entries on top of the CHANGELOGs, the `tag` and `sha256` lines of `apps.toml`), the CI that passed on its parent,
 the commit you pushed before Start new release, counts for it (`ci_state.py --release-commit`). Any other change in
 it, a line of code or a file added, and the release waits for CI on the release commit itself, as does a commit
-whose parent CI did not run on (it changed nothing of the suite). CI still runs on the release commit; nothing
+whose parent CI did not run on (it changed nothing of the suite), or failed on: the release commit may fix what
+failed there, such as a version CI wanted bumped, so its own CI decides. CI still runs on the release commit; nothing
 waits for it.
 
 A repository has one **Latest** release, and Nexus holds several suites, so no suite's portal is it. Latest is the

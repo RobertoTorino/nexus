@@ -114,8 +114,14 @@ def test_a_release_commit_is_answered_by_its_work_commit(monkeypatch, capsys):
     parents["rel4567"] = "nocirun"
     assert ci_state.check_release_commit("rel4567", fetch=fetch, work_commit=parents.get) == 2   # its own: running
     assert asked[-1] == "rel4567" and "has no run of ci.yml" in capsys.readouterr().err
-    failed = {"work123": [run(conclusion="failure")]}
-    assert ci_state.check_release_commit("rel4567", fetch=lambda sha: failed.get(sha, []),
+    # CI failed on the work commit: the release commit's own CI answers, as the release may fix what failed (owner,
+    # 31-10-2026: the portal's version bump, which check_manifest.py wanted, came with the release commit)
+    failed = {"work123": [run(conclusion="failure")], "rel4567": [run()]}
+    assert ci_state.check_release_commit("rel4567", fetch=lambda sha: failed[sha],
+                                         work_commit={"rel4567": "work123"}.get) == 0
+    assert "CI failed on its work commit work123: the commit's own CI answers" in capsys.readouterr().err
+    failed["rel4567"] = [run(conclusion="failure")]
+    assert ci_state.check_release_commit("rel4567", fetch=lambda sha: failed[sha],
                                          work_commit={"rel4567": "work123"}.get) == 1
     calls = []
     monkeypatch.setattr(ci_state, "check_release_commit",
