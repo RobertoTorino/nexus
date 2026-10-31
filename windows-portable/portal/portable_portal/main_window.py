@@ -13,6 +13,7 @@ import subprocess
 import sys
 import tempfile
 import threading
+import time
 import uuid
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
@@ -27,17 +28,20 @@ from bc250_core.gamepad import Gamepad
 from bc250_core.platform import expand, launch_in_terminal, private
 from bc250_core.portable import AMBER, DIM, MENU, VIEW, Card, Legend, PortableHeader, PortableWindow, px, status_clock
 
-from . import APP_ICONS, APP_ID, APP_NAME, EXE_NAME, INTRO_SOUND, ROOT, SUITE, __version__, state_dir
+from . import APP_ICONS, APP_ID, APP_NAME, EXE_NAME, INTRO_SOUND, ROOT, SUITE, __version__, operating_mode, state_dir
 from .intro import INTRO_MS, Intro
 from .manifest import CATEGORIES, AppEntry
 from .portal_update import PortalUpdate, short
 from .sources import Records, SourceError, Sources, downloaded, fetch_release, is_installed
-from .widgets import AppPane, DetailsPane, SuitePane, Tabs
+from .widgets import AppPane, DetailsPane, ModePane, SuitePane, Tabs
 
 STATUS_MS = 2_000               # the header: the CPU and GPU live (owner, 30-10-2026), the battery and the time
 POLL_MS = 1000                  # how often the portal looks for the installer window's exit status
 CONFIRM_MS = 5000               # Remove, and B while the portal is busy, ask for a second press within this
 PROGRESS_MS = 500               # how often a download's size is shown (owner, 28-10-2026: 94 MB looked like a hang)
+HELPER_POLL_MS = 500            # how often the Operating Mode page looks for the helper's answer
+HELPER_ANSWER_S = 15            # the helper's answer to a mode, at most (PowerShell starts as SYSTEM, ASUS WMI)
+HELPER_INSTALL_S = 180          # its install or removal, with Windows' prompt answered first
 TILE_W, TILE_H, GAP = 293, 176, 14      # the mock-up's tiles: two rows of four
 COLUMNS, PER_PAGE = 4, 8
 TAB_KEY = "window/tab"          # the settings: the tab shown last
@@ -132,13 +136,17 @@ class MainWindow(PortableWindow):
                  wallpaper: Path | None = portable.WALLPAPER,
                  steam_here: Callable[[], bool] = steam.installed, open_steam: Callable[[str], None] = steam.open_url,
                  xbox_local: Path | None = None, xbox_closed: Callable[[Callable[[], None]], None] | None = None,
-                 chip_parts: Callable[[], list[str]] | None = None):
+                 chip_parts: Callable[[], list[str]] | None = None,
+                 modes: Callable[[], operating_mode.PowerApi | None] = operating_mode.power_api,
+                 helper: Callable[[], operating_mode.Helper] = operating_mode.Helper):
         """*intro_ms*: how long the intro plays when the window starts (0: none). *wallpaper*: the picture behind
         the page, darkened (None: the plain background); on or off for the whole suite (Settings). *steam_here*:
         whether Steam is installed; *open_steam*: hands a steam:// address to Steam (its library). *xbox_local*:
         where the Xbox app's package folder is (default %LOCALAPPDATA%); *xbox_closed*: runs a change with the Xbox
         app closed (core's xbox.with_xbox_closed). *chip_parts*: the CPU's and the GPU's load and temperature for the
-        status line (default core's chip.py, AMD's driver opened once)."""
+        status line (default core's chip.py, AMD's driver opened once). *modes*: Windows' power API on the ROG Xbox
+        Ally X, None elsewhere: the operating mode's letter before the battery and its page; *helper*: the Operating
+        Mode helper that writes its watts (the Ally X only)."""
         old = QSettings()                               # portal 1.6.0 kept the switch in portal.ini: the suite's now
         if old.contains(WALLPAPER_KEY) and portable.look_settings(SUITE).value(portable.LOOK_KEY) is None:
             portable.set_wallpaper_on(SUITE, str(old.value(WALLPAPER_KEY)).lower() != "false")
@@ -155,6 +163,14 @@ class MainWindow(PortableWindow):
             self.sensors, cpu_load = chip.Temperatures(), chip.CpuLoad()
             chip_parts = self.read_chip(self.sensors, cpu_load)
         self.chip_parts = chip_parts
+        self.modes = modes()                            # the Ally X's operating mode (owner, 31-10-2026)
+        self.mode_marker = (lambda: operating_mode.marker(self.modes)) if self.modes is not None else (lambda: "")
+        self.mode_message = ""                          # the last mode set, on its page
+        self.helper = helper() if self.modes is not None else None
+        self.helper_wait: tuple | None = None           # waiting for the helper: ("result", mode, since, until) or
+        self.helper_timer = QTimer(self)                # ("install", installed, until)
+        self.helper_timer.setInterval(HELPER_POLL_MS)
+        self.helper_timer.timeout.connect(self._check_helper)
         self.exe = exe                                  # the installed portal's program, for a restart; "" from a checkout
         self.exit_dir = exit_dir or Path(tempfile.gettempdir())
         self.intro: Intro | None = None
@@ -196,7 +212,8 @@ class MainWindow(PortableWindow):
         apps.addWidget(self.app_pane)
         self.details_pane = DetailsPane()
         self.suite_pane = SuitePane()
-        for widget in (self.apps_page, self.details_pane, self.suite_pane):
+        self.mode_pane = ModePane()
+        for widget in (self.apps_page, self.details_pane, self.suite_pane, self.mode_pane):
             self.stack.addWidget(widget)
         page.addWidget(self.stack, 1)
         page.addSpacing(px(8))
@@ -215,6 +232,10 @@ class MainWindow(PortableWindow):
         self.suite_pane.transparency.activated.connect(self.next_transparency)
         self.suite_pane.sound.activated.connect(self.toggle_sound)
         self.suite_pane.xbox.activated.connect(self.xbox_menu)
+        self.suite_pane.mode.activated.connect(self.show_modes)
+        for letter, row in self.mode_pane.rows.items():
+            row.activated.connect(lambda letter=letter: self.set_mode(letter))
+        self.mode_pane.helper.activated.connect(self.helper_action)
         self.tabs.changed.connect(self.show_tab)
         self.bind("accept", self.a_action)
         self.bind("x", self.show_details)
@@ -350,6 +371,120 @@ class MainWindow(PortableWindow):
         self.suite_pane.set_xbox(self.xbox_state())
         self.log.info(f"{'Added to' if adding else 'Removed from'} the Xbox menu (the Xbox app's library).")
 
+    def mode_name(self) -> str:
+        """The Operating mode row's state: "" off the Ally X, the active mode's name, or Other (a plan or a power mode
+        of none of them)."""
+        if self.modes is None:
+            return ""
+        mode = operating_mode.active(self.modes)
+        return mode.name if mode else "Other"
+
+    def show_modes(self) -> None:
+        """The Settings page's Operating mode row: the Operating Mode page, the focus on the active mode."""
+        if self.modes is None:
+            return
+        self.mode_message = ""
+        self.stack.setCurrentWidget(self.mode_pane)
+        self.fill_modes()
+        self.update_legend()
+        mode = operating_mode.active(self.modes)
+        self.mode_pane.rows[mode.letter if mode else operating_mode.MODES[0].letter].setFocus()
+
+    def fill_modes(self) -> None:
+        """Each mode's watts for the power source the device is on now (a device without a battery: the charger's)."""
+        if self.modes is None:
+            return
+        state = self.battery()
+        charger = state is None or state[1]
+        active = operating_mode.active(self.modes)
+        helper = "" if self.helper is None else "Installed" if self.helper.installed() else "Install"
+        self.mode_pane.fill("On the charger" if charger else "On battery",
+                            [(mode.letter, operating_mode.watts_text(mode.charger if charger else mode.battery),
+                              mode is active) for mode in operating_mode.MODES], self.mode_message, helper)
+
+    def set_mode(self, letter: str) -> None:
+        """A on a mode's row: its power plan and Windows' power mode, set as the user, then the helper asked for the
+        whole mode with its watts (when it is installed); said on the page, in the header's letter and in the log."""
+        if self.modes is None:
+            return
+        mode = operating_mode.BY_LETTER[letter]
+        if not operating_mode.apply(mode, self.modes):
+            self.mode_message = f"{mode.name} not set: Windows did not take its power plan or power mode."
+            self.log.error(f"Operating mode {mode.name} not set: Windows refused its power plan or power mode.")
+        elif self.helper is None or not self.helper.installed():
+            self.mode_message = (f"{mode.name} set: its power plan and power mode. The watts stay as Armoury Crate set "
+                                 "them until the helper is installed (Watt limits).")
+            self.log.info(f"Operating mode: {mode.name} (its power plan and power mode; no helper for the watts).")
+        else:
+            since, _ = self.helper.result()
+            error = self.helper.request(mode)
+            if error:
+                self.mode_message = f"{mode.name} set, but not its watts: {error}."
+                self.log.error(f"Operating mode {mode.name}: the helper was not asked: {error}.")
+            else:
+                self.mode_message = f"{mode.name} set; its watts are being written…"
+                self.log.info(f"Operating mode: {mode.name}, the helper asked for its watts.")
+                self.wait_helper(("result", mode, since), HELPER_ANSWER_S)
+        self.fill_modes()
+        self.update_status()
+
+    def helper_action(self) -> None:
+        """A on the Watt limits row: the helper installed, or removed when it is, with Windows' administrator prompt."""
+        if self.helper is None:
+            return
+        remove = self.helper.installed()
+        error = self.helper.install(remove)
+        if error:
+            self.mode_message = f"The helper was not {'removed' if remove else 'installed'}: {error}."
+            self.log.info(f"Operating Mode helper not {'removed' if remove else 'installed'}: {error}.")
+        else:
+            self.mode_message = f"{'Removing' if remove else 'Installing'} the helper: answer Windows' prompt…"
+            self.log.info(f"Operating Mode helper: {'removal' if remove else 'install'} started.")
+            self.wait_helper(("install", not remove), HELPER_INSTALL_S)
+        self.fill_modes()
+
+    def wait_helper(self, what: tuple, seconds: float) -> None:
+        self.helper_wait = (*what, time.monotonic() + seconds)
+        self.helper_timer.start()
+
+    def _check_helper(self) -> None:
+        """While the helper is waited for: its result after a mode was asked for, or its install or removal done."""
+        if self.helper_wait is None or self.helper is None:
+            self.helper_timer.stop()
+            return
+        *what, until = self.helper_wait
+        late = time.monotonic() > until
+        if what[0] == "result":
+            mode, since = what[1], what[2]
+            when, outcome = self.helper.result()
+            if when > since and outcome is not None and outcome.letter == mode.letter:
+                if outcome.ok:
+                    self.mode_message = f"{mode.name} set, with its watts: {outcome.text}."
+                    self.log.info(f"Operating mode: {mode.name}, the helper wrote {outcome.text}.")
+                else:
+                    self.mode_message = f"{mode.name} set, but not its watts: {outcome.text}."
+                    self.log.error(f"Operating mode {mode.name}: the helper failed: {outcome.text}.")
+            elif late:
+                self.mode_message = f"{mode.name} set; the helper did not answer, so its watts may not be written."
+                self.log.error(f"Operating mode {mode.name}: no answer from the helper.")
+            else:
+                return
+        else:
+            installed = what[1]
+            if self.helper.installed() == installed:
+                self.mode_message = ("The helper is installed: a mode set here sets its watts too." if installed
+                                     else "The helper is removed: Armoury Crate sets the watts again.")
+                self.log.info(f"Operating Mode helper {'installed' if installed else 'removed'}.")
+            elif late:
+                self.mode_message = f"The helper was not {'installed' if installed else 'removed'}."
+                self.log.info(self.mode_message)
+            else:
+                return
+        self.helper_wait = None
+        self.helper_timer.stop()
+        self.fill_modes()
+        self.update_status()
+
     def toggle_sound(self) -> None:
         """The Settings page's Sound row: the portal's intro sound on or off for the suite (owner, 29-10-2026), kept for
         the next start."""
@@ -374,11 +509,14 @@ class MainWindow(PortableWindow):
 
     def update_status(self) -> None:
         # The date and the time, and a portal update when there is one; under them the CPU's and the GPU's load and
-        # temperature (owner, 30-10-2026: two lines, one was wider than the screen) and the battery, last
+        # temperature (owner, 30-10-2026: two lines, one was wider than the screen), the Ally X's operating mode
+        # (S, P, T or W, owner 31-10-2026) and the battery, last
         parts = status_clock()
         if self.update_available():
             parts.append(f"Suite {self.update.release.version} available")
-        self.header.set_status(parts, [*self.chip_parts(), power.text(self.battery())])
+        self.header.set_status(parts, [*self.chip_parts(), self.mode_marker(), power.text(self.battery())])
+        if self.stack.currentWidget() is self.mode_pane:  # the watts follow the charger
+            self.fill_modes()
 
     def tab_entries(self, category: str) -> list[AppEntry]:
         return [entry for entry in self.entries if entry.category == category][:PER_PAGE]
@@ -413,18 +551,20 @@ class MainWindow(PortableWindow):
         self.update_legend()
         self.refresh()
 
-    def show_suite(self) -> None:
-        """Menu: the Settings page; on it, Menu shows what the settings do (its information icon)."""
-        if self.stack.currentWidget() is self.suite_pane:
+    def show_suite(self, focus: QWidget | None = None) -> None:
+        """Menu: the Settings page, the focus on *focus* (default its first row); on it, and on the Operating Mode
+        page, Menu shows what the page's settings do (its information icon)."""
+        if focus is None and self.stack.currentWidget() in (self.suite_pane, self.mode_pane):
             self.show_info()
             return
         self.stack.setCurrentWidget(self.suite_pane)
         self.show_wallpaper_rows()
         self.suite_pane.set_sound(portable.sound_on(SUITE))
         self.suite_pane.set_xbox(self.xbox_state())
+        self.suite_pane.set_mode(self.mode_name())
         self.update_legend()
         self.refresh()
-        self.suite_pane.wallpaper.setFocus()
+        (focus or self.suite_pane.wallpaper).setFocus()
 
     def update_legend(self) -> None:
         """The page's buttons, RT Steam where Steam is installed, then core's B Back (on Details and Suite, and from
@@ -444,6 +584,8 @@ class MainWindow(PortableWindow):
             self.legend.set_items([*([("A", pane.open)] if pane.open else []),
                                    *([("Y", pane.remove)] if pane.remove else []), *steam_item,
                                    *self.common_items(True)])
+        elif self.stack.currentWidget() is self.mode_pane:
+            self.legend.set_items([("A", "Set"), *steam_item, *self.common_items(True)])
         else:
             self.legend.set_items([("A", "Change"), *([("Y", self.suite_pane.action)] if self.suite_pane.action
                                                       else []), *steam_item, *self.common_items(True)])
@@ -473,10 +615,13 @@ class MainWindow(PortableWindow):
         self.close()
 
     def on_back(self) -> None:
-        """B goes back (owner, 29-10-2026): Details and Suite to the tiles, the strip's pills to their tile; on a
-        tile it does nothing (View exits)."""
+        """B goes back (owner, 29-10-2026): Details and Suite to the tiles, Operating Mode to Settings, the strip's pills
+        to their tile; on a tile it does nothing (View exits)."""
         if self.stack.currentWidget() is self.apps_page:
             self.go_back()
+            return
+        if self.stack.currentWidget() is self.mode_pane:
+            self.show_suite(self.suite_pane.mode)
             return
         self.stack.setCurrentWidget(self.apps_page)
         self.update_legend()

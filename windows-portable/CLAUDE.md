@@ -102,9 +102,10 @@ app is an optional tile. The wiki is at robertotorino.github.io/nexus/windows-po
   `%APPDATA%\windows-portable-suite\` (one `.ini` per app); nothing in the registry (tests must not write to it
   either). An app the portal installs gets a Start-menu entry in the Windows Portable Suite folder and no Desktop
   shortcut (owner, 28-10-2026); one installed by hand gets both. The one exception (owner, 31-10-2026): the
-  portal's Operating Mode helper on the ROG Xbox Ally X, a scheduled task that writes the watt limits as
-  administrator, installed with one administrator prompt, its script in `C:\Program Files\windows-portable-suite\`
-  so the user cannot change what it runs.
+  portal's Operating Mode helper on the ROG Xbox Ally X, a scheduled task that writes the watt limits as SYSTEM,
+  installed with one administrator prompt, its script in `C:\Program Files\windows-portable-suite\` so the user
+  cannot change what it runs, and its request (one letter the user may write), result and log in
+  `C:\ProgramData\windows-portable-suite\`.
 - **Personal data is never read out**: no serial numbers, MAC addresses, network names (SSID) or access point
   addresses, no paired Bluetooth devices (they carry their owner's name).
 - **Unsigned for now** (code signing and an MSIX for Xbox mode's home app are on hold, MIGRATION.md).

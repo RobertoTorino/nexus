@@ -26,6 +26,8 @@ $env:LOCALAPPDATA = Join-Path $T 'local'
 $env:APPDATA = Join-Path $T 'roaming'
 $env:WPS_DESKTOP_DIR = Join-Path $T 'desktop'
 $env:WPS_ELEVATED = '0'
+$env:WPS_HELPER_DIR = Join-Path $T 'programs'          # never this machine's own Operating Mode helper
+$env:WPS_RUNAS = 'n'
 $Exe = 'Windows-Portable-Suite.exe'
 $SuiteHome = Join-Path $env:LOCALAPPDATA 'windows-portable-suite'
 $PortalHome = Join-Path $SuiteHome 'portal'
@@ -162,8 +164,14 @@ Check 'settings, log and the records kept, the test app no longer recorded' { (T
 
 Write-Host '== 5. reinstall, then uninstall --all --purge'
 $rc = Run 'log5' @()
+# The Ally X's Operating Mode helper, installed from the portal: its own remover takes it out (owner, 31-10-2026)
+New-Item -ItemType Directory -Force -Path $env:WPS_HELPER_DIR | Out-Null
+$Removed = Join-Path $T 'helper-removed'
+Set-Content -LiteralPath (Join-Path $env:WPS_HELPER_DIR 'install-helper.ps1') -Encoding ascii -Value (
+    "if (`$args -contains '--uninstall') { Set-Content -LiteralPath '$Removed' -Value 'yes' }")
 if ($rc -eq 0) { $rc = Run 'log5b' @('--uninstall', '--all', '--purge') }
 Check 'exit 0' { $rc -eq 0 }
+Check 'the Operating Mode helper removed through its own remover' { (Test-Path $Removed) -and (Log 'log5b') -match 'Removing the Operating Mode helper' }
 Check 'the other app removed through its installer' { -not (Test-Path (Join-Path $SuiteHome 'windows-portable-other')) }
 Check 'settings, log, records and releases removed' { -not (Test-Path $Ini) -and -not (Test-Path $PortalHome) }
 Check 'the empty suite folders removed' { -not (Test-Path $SuiteHome) -and -not (Test-Path (Join-Path $env:APPDATA 'windows-portable-suite')) -and -not (Test-Path $MenuDir) }

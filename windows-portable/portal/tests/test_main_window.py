@@ -23,6 +23,7 @@ from portable_portal import main_window as mw
 from portable_portal.manifest import AppEntry
 from portable_portal.portal_update import AppChange, PortalUpdate
 from portable_portal.sources import Records, Sources
+from test_operating_mode import FakeHelper
 
 
 class FakePad:
@@ -123,6 +124,8 @@ def world(qapp, tmp_path, monkeypatch):
         kwargs.setdefault("steam_here", lambda: False)  # never this machine's own Steam
         kwargs.setdefault("xbox_local", tmp_path / "no-xbox")  # never this machine's own Xbox app
         kwargs.setdefault("chip_parts", lambda: ["CPU 12% 48°", "GPU 7% 47°"])   # never this machine's own chip
+        kwargs.setdefault("modes", lambda: None)        # never this machine's own operating mode
+        kwargs.setdefault("helper", lambda: FakeHelper(installed=False))   # nor its helper
         window = mw.MainWindow(w.entries, w.sources, w.records, portal_check=portal_check,
                                gamepad=Gamepad(source_factory=lambda: pad), battery=lambda: (82, False),
                                launch=w.launched.append, terminal=w.terminal, exit_dir=tmp_path / "exit", **kwargs)
@@ -158,6 +161,10 @@ def test_the_tabs_and_tiles_and_the_strip_for_the_focused_app(world, qapp):
     # lines, one was wider than the Ally's screen)
     assert window.header.second.text() == "CPU 12% 48°  |  GPU 7% 47°  |  82%" and "CPU" not in window.header.status.text()
     assert mw.STATUS_MS == 2_000
+    # The Ally X's operating mode, its letter just before the battery (owner, 31-10-2026)
+    window.mode_marker = lambda: "T"
+    window.update_status()
+    assert window.header.second.text() == "CPU 12% 48°  |  GPU 7% 47°  |  T  |  82%"
     assert [text for _, text in window.legend.items][1:] == ["Details", "Settings", "Exit app"]
     assert window.legend.items[0][0] == "A" and window.app_pane.findChildren(portable.Pill) == []   # no pill (owner)
     window.tabs.step(1)
@@ -288,6 +295,101 @@ def test_the_suite_page_adds_the_suite_to_the_xbox_menu(world, qapp, tmp_path, m
     row.activated.emit()
     assert row.label.text() == "Xbox menu: not added, the Xbox app keeps its library otherwise"
     assert xbox.manifest_path(local).read_text(encoding="utf-8") == '{"customApps": []}'
+
+
+def test_the_operating_mode_page_on_the_ally_x(world, qapp, monkeypatch):
+    """The ROG Xbox Ally X's operating mode (owner, 31-10-2026): a Settings row opens its page, a row per mode with
+    its watts for the power source now; A sets the plan and the power mode; B goes back to Settings."""
+    from portable_portal import operating_mode as om
+    from test_operating_mode import FakeApi
+    window = world.make()
+    window.on_action("menu")
+    assert not window.suite_pane.mode.isVisible()                   # not an Ally X
+    window.close()
+    turbo = om.BY_LETTER["T"]
+    api = FakeApi(turbo.plan, turbo.overlay)
+    window = world.make(modes=lambda: api)
+    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
+    assert window.header.second.text() == "CPU 12% 48°  |  GPU 7% 47°  |  T  |  82%"
+    window.on_action("menu")
+    row = window.suite_pane.mode
+    assert row.isVisible() and row.label.text() == "Operating mode: Turbo"
+    assert "Operating mode: the ROG Xbox Ally X's mode" in window.suite_pane.info.info
+    row.activated.emit()
+    pane = window.mode_pane
+    assert window.stack.currentWidget() is pane and pane.rows["T"].hasFocus()
+    assert pane.source.text() == "On battery"                       # the fixture's battery: 82 %, unplugged
+    assert [r.label.text() for r in pane.rows.values()] == [
+        "Silent: 13 / 16 / 20 W", "Performance: 17 / 21 / 26 W", "Turbo: 25 / 30 / 36 W  (active)",
+        "Windows: 17 / 21 / 26 W"]
+    assert window.legend.items[0] == ("A", "Set") and ("B", "Back") in window.legend.items
+    window.on_action("up")
+    window.on_action("up")
+    assert pane.rows["S"].hasFocus()
+    assert pane.helper.label.text() == "Watt limits: Install"
+    window.on_action("accept")
+    assert api.calls == [("plan", om.BY_LETTER["S"].plan), ("overlay", om.EFFICIENCY)]
+    assert pane.status.text().startswith("Silent set: its power plan and power mode. The watts stay as Armoury Crate")
+    assert pane.rows["S"].label.text().endswith("(active)")
+    assert window.header.second.text().endswith("|  S  |  82%")
+    window.battery = lambda: (82, True)                             # the charger in: its watts
+    window.update_status()
+    assert pane.source.text() == "On the charger" and pane.rows["T"].label.text() == "Turbo: 35 / 44 / 55 W"
+    api.fails = ("plan",)
+    pane.rows["T"].activated.emit()
+    assert pane.status.text() == "Turbo not set: Windows did not take its power plan or power mode."
+    window.on_action("menu")
+    assert window.popup is not None and "Command Center keeps its own record" in pane.info.info
+    window.on_action("back")
+    assert window.popup is None
+    window.on_action("back")
+    assert window.stack.currentWidget() is window.suite_pane and row.hasFocus()
+    assert row.label.text() == "Operating mode: Silent"
+    api._plan = "11111111-1111-1111-1111-111111111111"              # another plan
+    window.show_suite(row)
+    assert row.label.text() == "Operating mode: Other"
+    window.on_action("back")
+    assert window.stack.currentWidget() is window.apps_page
+
+
+def test_the_operating_mode_helper_writes_the_watts(world, qapp, monkeypatch):
+    """The helper (owner, 31-10-2026): installed from the Watt limits row with Windows' prompt, asked for the whole
+    mode after the portal set its plan and power mode, its answer on the page."""
+    from portable_portal import operating_mode as om
+    from test_operating_mode import FakeApi
+    monkeypatch.setattr(mw, "HELPER_ANSWER_S", -1)       # never waited for in the test
+    helper = FakeHelper(installed=False)
+    window = world.make(modes=lambda: FakeApi(), helper=lambda: helper)
+    window.on_action("menu")
+    window.suite_pane.mode.activated.emit()
+    pane = window.mode_pane
+    assert window.suite_pane.mode.label.text() == "Operating mode: Other" and pane.rows["S"].hasFocus()
+    pane.helper.activated.emit()
+    assert helper.installs == [False] and pane.status.text() == "Installing the helper: answer Windows' prompt…"
+    helper._installed = True
+    window._check_helper()
+    assert pane.status.text() == "The helper is installed: a mode set here sets its watts too."
+    assert pane.helper.label.text() == "Watt limits: Installed" and not window.helper_timer.isActive()
+    helper.answer = "T ok battery 25 / 30 / 36 W"
+    pane.rows["T"].activated.emit()
+    assert helper.requests == ["T"] and pane.status.text() == "Turbo set; its watts are being written…"
+    window._check_helper()
+    assert pane.status.text() == "Turbo set, with its watts: 25 / 30 / 36 W."
+    helper.answer = "S failed the firmware did not take 0x001200A3 (13 / 16 / 20 W)"
+    pane.rows["S"].activated.emit()
+    window._check_helper()
+    assert pane.status.text() == "Silent set, but not its watts: the firmware did not take 0x001200A3 (13 / 16 / 20 W)."
+    helper.answer = None                                            # no answer in time
+    pane.rows["P"].activated.emit()
+    window._check_helper()
+    assert pane.status.text() == "Performance set; the helper did not answer, so its watts may not be written."
+    helper.error = "the helper's task could not be started (schtasks: 1)"
+    pane.rows["W"].activated.emit()
+    assert pane.status.text() == "Windows set, but not its watts: the helper's task could not be started (schtasks: 1)."
+    helper.install_error = "administrator rights were not given"
+    pane.helper.activated.emit()
+    assert helper.installs == [False, True]
+    assert pane.status.text() == "The helper was not removed: administrator rights were not given."
 
 
 def test_x_shows_the_details_and_remove_takes_a_second_press(world, qapp):

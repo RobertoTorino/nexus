@@ -1,3 +1,35 @@
+Changelog: 31-10-2026 12:59:38
+
+Added. The Operating Mode helper on the ROG Xbox Ally X (owner, 31-10-2026): the Operating Mode page's Watt limits
+row installs it with one administrator prompt (helper/install-helper.ps1) and removes it again; install.ps1
+--uninstall removes it with its own remover. It is the scheduled task \Windows Portable Suite\Operating Mode, which
+runs helper/operating-mode.ps1 from C:\Program Files\windows-portable-suite\ as SYSTEM, when the portal starts it
+(users may start it, nothing more), 5 s after every change of the power source (Kernel-Power 105), and 20 s and 2
+minutes after a sign-in, so the portal's mode holds after a restart too, once Armoury Crate's services have applied
+theirs (owner, 31-10-2026). It applies
+the whole mode the portal names in C:\ProgramData\windows-portable-suite\operating-mode (one letter, the only file
+users may write there): the power plan, Windows' power mode and the three watt limits through ASUS WMI
+(AsusAtkWmi_WMNB DEVS), from its own table, which a test keeps equal to operating_mode.py's. Windows mode's slow
+limit on battery is measured now (31-10-2026, Cinebench on battery: 21 W held at the slow limit's 100 % for three
+minutes), so every mode has all three limits: 17 / 21 / 26 W, as on the charger. The page shows its
+answer (operating-mode-result): the watts written, or why not.
+
+Changelog: 31-10-2026 12:49:57
+
+Added. On the ROG Xbox Ally X the Settings page has an Operating mode row with the active mode, and A on it opens
+the Operating Mode page (owner, 31-10-2026): Silent, Performance, Turbo and Windows, each with its watt limits for
+the power source the device is on now (the owner's measurements), the active one marked and focused. A sets the
+mode's power plan and Windows' power mode as the user (operating_mode.apply); the header's letter follows, B goes
+back to Settings and Menu explains the modes and that Command Center keeps its own record. The watts follow with
+the helper.
+
+Changelog: 31-10-2026 12:49:57
+
+Added. On the ROG Xbox Ally X the header's second line shows the operating mode's letter just before the battery:
+S Silent, P Performance, T Turbo or W Windows (owner, 31-10-2026), read every two seconds from Windows' power plan
+and power mode, which Armoury Crate's modes set (operating_mode.py, Windows' power API). The first part of the
+Operating Mode; the page that sets a mode, and the helper that writes its watts, follow.
+
 Changelog: 31-10-2026 12:33:29
 
 Release 6.1.0. Pins wp-test-v4.1.1, wp-pcsx2-v5.1.1, wp-ppsspp-v3.1.1, wp-rpcs3-v3.1.1, wp-shadps4-v3.2.0, wp-vita3k-v3.1.1, wp-xenia-v3.1.1.

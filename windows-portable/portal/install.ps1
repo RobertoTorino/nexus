@@ -21,11 +21,15 @@
 #    Settings page offers (PNG, JPEG or WebP, wider than high, at least 1280 x 720). Your pictures in it always stay;
 #    an uninstall removes it only when it is empty.
 #  * A Start-menu entry in the Windows Portable Suite folder, and a Desktop shortcut.
+#  * On the ROG Xbox Ally X, the portal's Operating Mode helper, when its page installed it (as administrator, in
+#    C:\Program Files\windows-portable-suite\): --uninstall removes it with its own remover, Windows' administrator
+#    prompt first.
 #  * Windows Portable Test, which the suite always includes, from bundle\wp-test-v<x.y.z>.zip through its own
 #    installer (checked against bundle\SHA256SUMS), with its Start-menu entry and no Desktop shortcut: it is in the
 #    portal. The other apps are installed from the portal, the same way.
 # WPS_DESKTOP_DIR and WPS_ELEVATED stand in for the Desktop folder and the administrator check in the installer
-# tests (windows-portable/tools/installer-tests/portal.ps1).
+# tests (windows-portable/tools/installer-tests/portal.ps1); WPS_HELPER_DIR and WPS_RUNAS (n: no prompt) for the
+# helper's folder and Windows' administrator prompt.
 $ErrorActionPreference = 'Stop'
 
 $AppName = 'Windows Portable Suite'
@@ -78,6 +82,22 @@ function Elevated {
     if ($env:WPS_ELEVATED) { return $env:WPS_ELEVATED -eq '1' }
     $principal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
     return $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+}
+
+function Remove-Helper {
+    # The Operating Mode helper (ROG Xbox Ally X, owner 31-10-2026) is an administrator's: its own remover takes it
+    # out, Windows' administrator prompt first. A no leaves it, and says how to remove it later.
+    if ($env:WPS_HELPER_DIR) { $dir = $env:WPS_HELPER_DIR } else { $dir = Join-Path $env:ProgramFiles $Suite }
+    $remover = Join-Path $dir 'install-helper.ps1'
+    if (-not (Test-Path -LiteralPath $remover)) { return }
+    Info 'Removing the Operating Mode helper (Windows asks for administrator rights)'
+    $argv = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', "`"$remover`"", '--uninstall')
+    $later = "remove it as administrator with: powershell -ExecutionPolicy Bypass -File `"$remover`" --uninstall"
+    try {
+        if ($env:WPS_RUNAS -eq 'n') { $run = Start-Process powershell.exe -ArgumentList $argv -Wait -PassThru -WindowStyle Hidden }
+        else { $run = Start-Process powershell.exe -ArgumentList $argv -Verb RunAs -Wait -PassThru }
+        if ($run.ExitCode -ne 0) { Info "The Operating Mode helper stays (its remover ended with $($run.ExitCode)): $later" }
+    } catch { Info "The Operating Mode helper stays (administrator rights were not given): $later" }
 }
 
 function Remove-IfThere($path) {
@@ -218,6 +238,7 @@ if ($All -and -not $Uninstall) { Die '--all only goes with --uninstall.' }
 if (Elevated) { Die "Run this as your own user, not as administrator: the suite and its shortcuts belong in your own folders." }
 
 if ($Uninstall) {
+    Remove-Helper
     Info 'Removing the Start-menu entry, the Desktop shortcut and the portal'
     Remove-IfThere $MenuEntry
     Remove-IfThere $DesktopIcon

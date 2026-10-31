@@ -2013,9 +2013,27 @@ behavior and dependencies. Decided (owner, 25-10-2026):
 - **Own tuning apps** (TDP, fans, and the like) for the handheld, later: the board's tuning apps do not port (sysfs,
   GRUB, RADV), but the same kinds of apps on both give comparison data between the BC-250 and the handheld.
 - **The Operating Mode in the portal (owner, 31-10-2026: in the portal, only on the ROG Xbox Ally X, every mode).**
-  Designed; built so far (31-10-2026, not released): the header's marker (portal's `operating_mode.py`) and the
-  mode page (the Settings page's Operating mode row; it sets the plan and the power mode); next the helper, which the
-  page then asks for the watts. The findings are the owner's tests on the Ally X (31-10-2026: HWiNFO logs, PowerShell as
+  Built (31-10-2026, not released): the header's marker (portal's `operating_mode.py`), the mode page (the Settings
+  page's Operating mode row) and the helper (`portable_portal/helper/`: `operating-mode.ps1`, installed with
+  `install-helper.ps1` from the page's Watt limits row). Device-tested on the Ally X, all OK (owner, 31-10-2026
+  13:41-13:50: every mode on the charger and on battery written at the first try, the charger change and both logon
+  triggers after a restart in the helper's log, the task started from the portal's normal account, the removal);
+  next the portal release. The device test, the portal started from the checkout (`windows-portable/portal/run.ps1`),
+  HWiNFO logging:
+  1. Settings, Operating mode, the Watt limits row: A on Install, Yes at Windows' prompt; the row says Installed, and
+     Task Scheduler has Windows Portable Suite\Operating Mode.
+  2. On the charger, each mode in turn: the page says "<mode> set, with its watts: …" (not "could not be started":
+     that would mean the task's descriptor does not let the portal start it), the header's letter follows, and
+     HWiNFO's limits (package power ÷ PPT FAST, PPT SLOW and STAPM %) match the mode's row.
+  3. The same on battery.
+  4. A charger change: Armoury Crate's own mode for that power source first, then about 5 s later the portal's mode
+     again (plan, power mode and watts).
+  5. A restart: about 2 minutes after signing in, the portal's mode again.
+  6. A on Installed: Yes at the prompt removes it; the row says Install, and the task and both folders are gone.
+  7. Optional, it removes the installed portal too: install the helper again, then the installed portal's
+     `install.ps1 --uninstall` asks for the prompt and removes the helper with the portal; install the portal again
+     afterwards.
+  The findings are the owner's tests on the Ally X (31-10-2026: HWiNFO logs, PowerShell as
   administrator and as the user); the logs hold the SSD's serial number and stay out of the repository.
 
   What a mode is. Armoury Crate SE's five modes (ThrottleGear_RC73XA.xml, ModeSize 5: Windows, Silent,
@@ -2040,7 +2058,7 @@ behavior and dependencies. Decided (owner, 25-10-2026):
   | Silent | 13 / ≈16 / 20, ≈72 % | 13 / ≈16 / 20, ≈90 % |
   | Performance | 17 / ≈21 / 26, 20 % | 17 / ≈21 / 26, ≈60 % |
   | Turbo | 35 / ≈44 / ≈55, 10 % | 25 / 30 / 36, ≈10-15 % |
-  | Windows | 17 / 21 / 26, 20 % (Best performance: 10 %, the watts the same) | 17 / ? / 26, follows Windows' power mode (≈97 / 80 / 40-60 %) |
+  | Windows | 17 / 21 / 26, 20 % (Best performance: 10 %, the watts the same) | 17 / 21 / 26, follows Windows' power mode (≈97 / 80 / 40-60 %) |
 
   The battery's slow limits and Windows mode on the charger are from the owner's log of 31-10-2026 05:51-05:59: Turbo
   held the package at 30 W with the slow limit at 100 %; Silent's and Performance's come from the converged slow
@@ -2073,8 +2091,22 @@ behavior and dependencies. Decided (owner, 25-10-2026):
     change it.
   - The wiki explains the modes, the battery cost (Turbo bought nothing in a game at its frame cap) and that
     Command Center keeps its own record.
-  Open: Windows mode's slow limit on battery (likely 21, as on the charger); whether a standard user may start the
-  task (its security descriptor).
+  - On a charger change the helper restores the whole mode, plan and power mode too, not only the watts, so the
+    header's letter and the watts stay the portal's mode (owner, 31-10-2026). It runs as SYSTEM, so it works on a
+    standard account too: the request is a file in `C:\ProgramData\windows-portable-suite\` that users may only
+    write, the result and log there only SYSTEM and administrators (owner, 31-10-2026). It is installed and removed
+    from a Watt limits row on the mode page (owner, 31-10-2026); `install.ps1 --uninstall` removes it too.
+  - The task's security descriptor lets every signed-in user read and start it (`(A;;GRGX;;;AU)`), nothing more.
+    A limit the firmware does not take is written once more after the others (it may refuse one above the next).
+  - Windows mode's slow limit on battery measured (31-10-2026 13:22-13:26, HWiNFO, Cinebench 2026 multi-core after 3
+    minutes idle, Command Center's Windows picked on battery): the package held 21.0 W with PPT SLOW at 100 % for
+    three minutes until the 17 W sustained average caught up; package power ÷ limit % gave fast 26.0 W and
+    sustained 17.0 W in every sample. So 17 / 21 / 26 W, as on the charger.
+  - The GRGX descriptor lets the portal start the task from the user's normal (filtered) token (device test,
+    31-10-2026).
+  - After a restart (owner, 31-10-2026: yes, the most convenient): Armoury Crate applies its mode when its services
+    start, so the task also runs 20 s and 2 minutes after any sign-in (two logon triggers: a boot trigger would run
+    before Armoury Crate's services and be overwritten; the second covers a slow start).
 - **A network test in Windows Portable Test (owner, 28-10-2026: found out once the tests are built).** The portal's
   update downloaded its 94 MB release at about 0.8 MB/s on the Ally (17:04), where the same file came in at 69 MB/s
   with curl and 56 MB/s with the portal's own http_download an hour later, on mains power: the code is not the
