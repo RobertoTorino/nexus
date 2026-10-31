@@ -1,3 +1,7 @@
+Changelog: 31-10-2026 15:07:26
+
+Release 6.2.0. Pins wp-test-v4.2.0, wp-pcsx2-v5.2.0, wp-ppsspp-v3.2.0, wp-rpcs3-v3.2.0, wp-shadps4-v3.3.0, wp-vita3k-v3.2.0, wp-xenia-v3.2.0.
+
 Changelog: 31-10-2026 14:56:28
 
 Added. A Screen row on the Settings page, with a second screen attached (owner, 31-10-2026): the screen the portal is
