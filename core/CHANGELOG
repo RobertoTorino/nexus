@@ -1,3 +1,7 @@
+Changelog: 31-10-2026 12:33:29
+
+Version 2.1.1.
+
 Changelog: 31-10-2026 00:13:44
 
 Fixed. RoundedToolTip: a tooltip with no room below the cursor opens above it (left of it with no room to the

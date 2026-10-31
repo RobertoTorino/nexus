@@ -8,7 +8,7 @@ APP_NAME = "RPCS3 Manager"
 APP_ID = "windows-portable-rpcs3"
 EXE_NAME = "RPCS3-Manager"   # the program's file name in a release
 SUITE = "windows-portable-suite"
-__version__ = "3.1.0"
+__version__ = "3.1.1"
 
 from pathlib import Path
 
