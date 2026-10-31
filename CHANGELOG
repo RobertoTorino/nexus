@@ -1,3 +1,7 @@
+Changelog: 31-10-2026 16:17:11
+
+Release 1.9.0. Brings wp-portal-v6.3.0.
+
 Changelog: 31-10-2026 15:32:10
 
 Fixed. The root .cache/ folder (the wiki's privacy plugin's downloaded fonts, 29 files) is no longer in the
