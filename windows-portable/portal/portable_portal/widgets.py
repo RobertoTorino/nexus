@@ -8,12 +8,12 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QFont
-from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QVBoxLayout, QWidget
 
-from bc250_core.portable import (AMBER, BODY, DIM, PICTURE_RULES, TEXT, VEIL_MAX, VEIL_STEP, InfoPill, Pane, Row,
-                                 Tabs, px, text_label)
+from bc250_core.portable import (AMBER, BODY, DIM, ON_AMBER, PICTURE_RULES, RADIUS, TEXT, VEIL_MAX, VEIL_STEP,
+                                 InfoPill, Pane, Row, Tabs, font, px, text_label)
 
 from .operating_mode import BY_LETTER, MODES
 
@@ -51,6 +51,26 @@ class AppPane(Pane):
         self.status.setText(status)
         self.status.setVisible(bool(status))
         self.main, self.other = main, other
+
+
+class UpdateBanner(QLabel):
+    """The banner on the tabs' line while a newer portal is out (owner, 01-11-2026: the update was hidden on the
+    Settings page): amber with dark capitals, gone once there is no update. A tap does what Y does."""
+
+    pressed = pyqtSignal()
+
+    def __init__(self, parent: QWidget | None = None):
+        super().__init__(parent)
+        self.setFont(font(BODY, QFont.Weight.ExtraBold))
+        self.setStyleSheet(f"color: {ON_AMBER}; background: {AMBER}; border-radius: {px(RADIUS)}px;"
+                           f" padding: {px(6)}px {px(16)}px;")
+        self.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.hide()
+
+    def mousePressEvent(self, event) -> None:  # noqa: N802 (Qt override)
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.pressed.emit()
+        super().mousePressEvent(event)
 
 
 def _rows(grid: QGridLayout, rows: Sequence[tuple[str, str]]) -> None:
@@ -100,7 +120,8 @@ class DetailsPane(Pane):
 
 class SuitePane(Pane):
     """The Settings page (Menu): the portal's own version, the newest release on GitHub and what it changes, with Update
-    (Y) when there is a newer one; and the suite's settings, a row each that A changes (owner, 28-10-2026: the
+    (Y) when there is a newer one (the app by app list behind the information icon: owner, 01-11-2026, eight apps'
+    lines ran over each other); and the suite's settings, a row each that A changes (owner, 28-10-2026: the
     wallpaper on or off; 29-10-2026: the sound on or off; 30-10-2026: which wallpaper, and its transparency). What
     each does is behind the information icon (Menu), not in lines under the rows (owner, 30-10-2026: no long lines
     of text where the space is not there). They had a page of their own on View until View became the suite's Exit
@@ -139,21 +160,28 @@ class SuitePane(Pane):
         self.column.addWidget(self.status)
         self.action = ""                                # Y's text in the legend: Check again, Update to x.y.z
         self.refused: dict[str, str] = {}
+        self.brings = ""                                # what a newer portal changes, app by app, for the information
         self._explain()
 
-    def fill(self, name: str, version: str, rows: Sequence[tuple[str, str]], status: str, action: str) -> None:
+    def fill(self, name: str, version: str, rows: Sequence[tuple[str, str]], status: str, action: str,
+             brings: str = "") -> None:
+        """*brings*: a newer portal's changes, one line per app, in the information (Menu), "" for none."""
         self.name.setText(name)
         self.version.setText(version)
         _rows(self.grid, rows)
         self.status.setText(status)
         self.status.setVisible(bool(status))
         self.action = action
+        if brings != self.brings:
+            self.brings = brings
+            self._explain()
 
     def _explain(self) -> None:
         """The information icon's text: each setting, where your own wallpapers go and by which rules, the pictures in
         that folder that cannot be one with why, the Xbox menu only where the Xbox app is, and the buttons at the
         bottom (owner, 30-10-2026)."""
-        parts = [
+        parts = [f"The update brings:\n{self.brings}"] if self.brings else []
+        parts += [
             "Wallpaper: a picture behind the tiles, in every app of the suite (each from its next start). The A button "
             "picks the next: Off (the plain dark background), Built-in (the suite's own picture), then each of your "
             "own pictures, by file name.",
@@ -282,4 +310,4 @@ class ModePane(Pane):
         self.status.setVisible(bool(status))
 
 
-__all__ = ["AppPane", "DetailsPane", "ModePane", "SuitePane", "Tabs", "TEXT"]
+__all__ = ["AppPane", "DetailsPane", "ModePane", "SuitePane", "Tabs", "TEXT", "UpdateBanner"]

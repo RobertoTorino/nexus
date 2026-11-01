@@ -11,23 +11,48 @@ GetFirmwareEnvironmentVariableExW is called. A variable that may hold personal d
 boot entries, keys, passwords) is never asked for (owner, 29-10-2026: the privacy rule), by either copy.
 
 A BIOS keeps many variables to itself once Windows runs (AMI's Setup, for one): those are "not readable" and their
-settings show the file's value or default."""
+settings show the file's value or default.
+
+The setup screens are not on the device once Windows runs, but Windows keeps the BIOS it installed (owner,
+01-11-2026): a maker that delivers its BIOS through Windows Update ships it as a firmware package (an INF of class
+Firmware naming FirmwareId, FirmwareVersion and FirmwareFilename), which stays in the driver store. installed_bios()
+finds the package of the system firmware at the version Windows' firmware table (ESRT) says runs, with no
+administrator. newest_bios() asks the maker's support site for its newest BIOS: ASUS's only, by the model its BIOS
+version starts with (RC73XA.319: RC73XA), never anything personal."""
 
 from __future__ import annotations
 
 import base64
 import ctypes
 import json
+import os
 import re
 import subprocess
 import sys
+import urllib.request
 from collections.abc import Callable, Iterable
 from ctypes import wintypes as w
+from dataclasses import dataclass
 from pathlib import Path
 
+from . import APP_ID, __version__
 from .bios import Identity, Key
 
 BIOS_KEY = r"HARDWARE\DESCRIPTION\System\BIOS"
+ESRT_KEY = r"HARDWARE\UEFI\ESRT"            # Windows' copy of the firmware's resource table, readable by every user
+SYSTEM_FIRMWARE = 1                         # an ESRT entry's type: the system firmware, the BIOS
+DRIVER_STORE = Path(os.environ.get("SystemRoot", r"C:\Windows")) / "System32" / "DriverStore" / "FileRepository"
+INF_MOST = 256 * 1024                       # a firmware package's INF is a few KB; a display driver's is megabytes
+INF_CLASS = re.compile(r"^\s*Class\s*=\s*Firmware\s*$", re.MULTILINE | re.IGNORECASE)
+INF_ID = re.compile(r"^\s*HKR\s*,\s*,\s*FirmwareId\s*,[^,]*,\s*\{?([0-9a-f-]{36})\}?", re.MULTILINE | re.IGNORECASE)
+INF_VERSION = re.compile(r"^\s*HKR\s*,\s*,\s*FirmwareVersion\s*,[^,]*,\s*(0x[0-9a-f]+|\d+)",
+                         re.MULTILINE | re.IGNORECASE)
+INF_FILE = re.compile(r"^\s*HKR\s*,\s*,\s*FirmwareFilename\s*,[^,]*,\s*(?:%13%\\)?([^\s;]+)",
+                      re.MULTILINE | re.IGNORECASE)
+ASUS_BIOS = "https://www.asus.com/support/api/product.asmx/GetPDBIOS?website=global&model={model}&cpu=&pdhashedid="
+ASUS_VERSION = re.compile(r"([A-Za-z0-9_]+)\.(\d+)")     # RC73XA.319: the model and the BIOS's number
+ASUS_LISTS = ("BIOS", "BIOS Update(Windows)")           # the EZ Flash files first, then the updates for Windows
+TIMEOUT = 15
 PRIVATE = re.compile(r"wifi|wlan|bluetooth|network|vlan|lan(?!g)|tls|http|rtk|mac|serial|password|systemaccess|"
                      r"boot|driver|keys?$|^(pk|kek|db|dbx|dbt)$|legacy|usbmass|info$", re.IGNORECASE)
 REQUEST, RESULT = "variables-request.json", "variables.json"
@@ -74,6 +99,126 @@ def private(key: Key) -> bool:
 
 def wanted(stores: Iterable[Key]) -> list[Key]:
     return [key for key in stores if not private(key)]
+
+
+# --- The BIOS Windows installed, and the maker's newest -------------------------------------------------------
+
+@dataclass(frozen=True)
+class Firmware:
+    guid: str                           # the ESRT entry's GUID, in upper case
+    version: int                        # its version as the firmware reports it: 0x319 for RC73XA.319
+
+
+@dataclass(frozen=True)
+class Newest:
+    version: str                        # "319"
+    date: str                           # "29/09/2026", the suite's way; "" when the site names none
+
+
+def system_firmware(entries: Iterable[tuple[str, int, int]] | None = None) -> Firmware | None:
+    """The system firmware's entry of the ESRT, (GUID, type, version) each; None without one (not UEFI, not
+    Windows)."""
+    for guid, kind, version in _esrt() if entries is None else entries:
+        if kind == SYSTEM_FIRMWARE:
+            return Firmware(guid.strip("{}").upper(), version)
+    return None
+
+
+def _esrt() -> list[tuple[str, int, int]]:
+    if sys.platform != "win32":
+        return []
+    import winreg
+    out = []
+    try:
+        with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, ESRT_KEY) as key:
+            for n in range(winreg.QueryInfoKey(key)[0]):
+                name = winreg.EnumKey(key, n)
+                with winreg.OpenKey(key, name) as entry:
+                    out.append((name, int(winreg.QueryValueEx(entry, "Type")[0]),
+                                int(winreg.QueryValueEx(entry, "Version")[0])))
+    except OSError:
+        pass
+    return out
+
+
+def _inf_text(path: Path) -> str:
+    """An INF's text: UTF-16 with its byte order mark, else 8-bit; "" when it cannot be read or is too large."""
+    try:
+        if path.stat().st_size > INF_MOST:
+            return ""
+        data = path.read_bytes()
+    except OSError:
+        return ""
+    return data.decode("utf-16", "replace") if data[:2] in (b"\xff\xfe", b"\xfe\xff") else data.decode("latin-1")
+
+
+def packages(store: Path = DRIVER_STORE) -> Iterable[tuple[Firmware, Path]]:
+    """The firmware packages in the driver store: (what each installs, the file it brings)."""
+    for inf in sorted(store.glob("*/*.inf")):
+        text = _inf_text(inf)
+        if not INF_CLASS.search(text):
+            continue
+        guid, version, name = INF_ID.search(text), INF_VERSION.search(text), INF_FILE.search(text)
+        if guid and version and name:
+            yield Firmware(guid[1].upper(), int(version[1], 0)), inf.parent / name[1]
+
+
+def installed_bios(firmware: Firmware | None = None, store: Path = DRIVER_STORE) -> Path:
+    """The file of the BIOS this device runs, as Windows Update installed it; DeviceError says why there is none."""
+    firmware = firmware or system_firmware()
+    if firmware is None:
+        raise DeviceError("Windows names no system firmware on this device, so the BIOS it runs cannot be found.")
+    others = []
+    for found, path in packages(store):
+        if found.guid != firmware.guid:
+            continue
+        if found.version == firmware.version and path.is_file():
+            return path
+        others.append(path.name)
+    if others:
+        raise DeviceError(f"Windows keeps another version of this device's BIOS ({', '.join(others)}), not the one "
+                          "it runs: the X button picks the file of that one.")
+    raise DeviceError("Windows keeps no copy of the BIOS this device runs (its maker did not deliver it through "
+                      "Windows Update): the X button picks the maker's file.")
+
+
+def manufacturer(read: Callable[[str], str] | None = None) -> str:
+    return (read or _registry)("SystemManufacturer")
+
+
+def fetch_json(url: str) -> dict:
+    request = urllib.request.Request(url, headers={"User-Agent": f"{APP_ID}/{__version__}"})
+    with urllib.request.urlopen(request, timeout=TIMEOUT) as response:
+        return json.loads(response.read().decode("utf-8"))
+
+
+def newest_bios(found: Identity, maker: Callable[[], str] = manufacturer,
+                fetch: Callable[[str], dict] = fetch_json) -> Newest:
+    """The maker's newest BIOS for this device; DeviceError says why it is not known."""
+    if "asus" not in maker().lower():
+        raise DeviceError("only an ASUS device's newest BIOS can be looked up")
+    model = ASUS_VERSION.fullmatch(found.version)
+    if model is None:
+        raise DeviceError("Windows reports no BIOS version to look up")
+    try:
+        answer = fetch(ASUS_BIOS.format(model=model[1]))
+    except (OSError, ValueError) as error:
+        raise DeviceError(f"ASUS's support site did not answer ({getattr(error, 'reason', None) or error})") \
+            from error
+    lists = {item.get("Name"): item.get("Files") or [] for item in ((answer.get("Result") or {}).get("Obj") or [])}
+    files = next((lists[name] for name in ASUS_LISTS if lists.get(name)), [])
+    numbered = [f for f in files if str(f.get("Version", "")).isdigit()]
+    if not numbered:
+        raise DeviceError(f"ASUS's support site lists no BIOS for {model[1]}")
+    best = max(numbered, key=lambda f: int(f["Version"]))
+    date = re.fullmatch(r"(\d{4})/(\d\d)/(\d\d)", str(best.get("ReleaseDate", "")))
+    return Newest(best["Version"], f"{date[3]}/{date[2]}/{date[1]}" if date else "")
+
+
+def up_to_date(found: Identity, newest: Newest) -> bool | None:
+    """Whether the device runs the newest BIOS; None when its version has no number to compare."""
+    running = ASUS_VERSION.fullmatch(found.version)
+    return int(running[2]) >= int(newest.version) if running else None
 
 
 # --- The elevated copy -----------------------------------------------------------------------------------------

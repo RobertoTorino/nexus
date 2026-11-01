@@ -80,3 +80,21 @@ def test_a_setting_without_a_value(bios_file):
     mode = next(st for st in main.form.statements if st.prompt == "Mode")
     assert "Value: not known (the file has no Setup)" in screens.detail(sc, main.formset, main.form, mode)
     assert screens.summary(sc, main.formset, main.form, mode).startswith("Its value is not known")
+
+
+def test_a_link_without_a_name_takes_its_menus(bios_file):
+    """A link the BIOS names while it runs (its prompt AMI's placeholder, read as ""): named by the menu it opens."""
+    b, sc = load(bios_file)
+    main = screens.pages(sc)[0]
+    link = next(st for st in main.form.statements if st.kind == "ref")
+    link.prompt = ""
+    assert [(e.prompt, e.link) for e in screens.entries(sc, main.formset, main.form)][-1] == ("Sub", True)
+
+
+def test_the_pci_page_says_what_it_is(bios_file):
+    """AMI's page for a boot out of PCI resources is in every file: said not to be an error (owner, 01-11-2026)."""
+    b, _ = load(bios_file)
+    fs = b.formsets[0]
+    assert screens.note(fs) == ""
+    fs.module = "PciOutOfResourceSetupPage"
+    assert "not an error on this device" in screens.note(fs)

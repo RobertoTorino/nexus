@@ -5,8 +5,9 @@ line) for the pages and the file browser, and a ScreenPane for one menu of the s
 is, its lines with their values, the focused line's value and default, the status line), as USB HD Cam has them.
 
 A list is a ListArea: rows in a column that scrolls, the one with the focus kept in view, so the d-pad goes down a
-list of any length and a finger can drag it. A menu's subtitles are plain text between its rows: the d-pad never
-lands on them. Every action is a controller button in the window's legend, A too, never a pill (owner, 29-10-2026:
+list of any length and a finger can drag it. A menu's subtitles are plain text between its rows, wrapped to the
+pane's width: the d-pad never lands on them, so the first row shows the list's top and the last row its end (owner,
+01-11-2026: the lines after the last row could not be reached). Every action is a controller button in the window's legend, A too, never a pill (owner, 29-10-2026:
 one way everywhere); the information texts name a button "the A button"."""
 
 from __future__ import annotations
@@ -70,6 +71,7 @@ class ListArea(QScrollArea):
                            " QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical { background: none; }")
         self.setMinimumHeight(px(ROW_HEIGHT * 2 + 8))
         self.inner = QWidget()
+        self.inner.installEventFilter(self)             # grown or shrunk: the focused row kept in view
         self.column = QVBoxLayout(self.inner)
         self.column.setContentsMargins(0, 0, px(4), 0)
         self.column.setSpacing(px(6))
@@ -88,8 +90,8 @@ class ListArea(QScrollArea):
         """A menu's lines: a subtitle as text, every other line a row keyed by its place in *entries*."""
         rows: list[tuple[str, QWidget]] = []
         for n, entry in enumerate(entries):
-            if entry.statement is None:
-                heading = text_label(entry.prompt, BODY, QFont.Weight.Bold, AMBER)
+            if entry.statement is None:                 # a long one (AMD's warning) wraps, never wider than the pane
+                heading = text_label(entry.prompt.replace("\r\n", "\n"), BODY, QFont.Weight.Bold, AMBER, wrap=True)
                 heading.setContentsMargins(px(4), px(6), 0, 0)
                 rows.append(("", heading))
                 continue
@@ -105,6 +107,7 @@ class ListArea(QScrollArea):
         old, old_widgets = self.pills, self.widgets
         had = next((key for key, pill in old.items() if pill.hasFocus()), None)
         self.pills, self._keys, self.widgets = {}, {}, []
+        self.verticalScrollBar().setValue(0)            # a new list starts at its top
         for n, (key, widget) in enumerate(rows):
             self.column.insertWidget(n, widget)
             if self.isVisible():
@@ -126,9 +129,27 @@ class ListArea(QScrollArea):
 
     def eventFilter(self, obj, event) -> bool:
         if event.type() == QEvent.Type.FocusIn and obj in self._keys:
-            self.ensureWidgetVisible(obj, 0, px(8))
+            self.reveal(obj)
             self.current.emit(self._keys[obj])
+        elif event.type() == QEvent.Type.Resize and obj is self.inner and (row := self.pills.get(self.focused())):
+            self.reveal(row)
         return super().eventFilter(obj, event)
+
+    def resizeEvent(self, event) -> None:  # noqa: N802 (Qt override)
+        super().resizeEvent(event)
+        if (row := self.pills.get(self.focused())) is not None:
+            self.reveal(row)
+
+    def reveal(self, row: Row) -> None:
+        """*row* in view; the first row with the text above it (the list's top), the last with the text after it
+        (the list's end), as far as the row stays in view."""
+        rows = list(self.pills.values())
+        bar = self.verticalScrollBar()
+        if row is rows[0]:
+            bar.setValue(0)
+        elif row is rows[-1]:
+            bar.setValue(bar.maximum())
+        self.ensureWidgetVisible(row, 0, px(8))
 
     def first(self) -> Row | None:
         return next(iter(self.pills.values()), None)
@@ -218,7 +239,9 @@ class ScreenPane(Pane):
         self.column.addWidget(self.list, 1)
         self.column.addSpacing(px(6))
         self.line = text_label("", BODY + 1, color=TEXT, wrap=True)
-        self.line.setMinimumHeight(px(BODY * 2 * 1.5))
+        # Two lines high whatever it says (owner, 01-11-2026: a line growing as the focus moved shrank the list and
+        # cut the focused row off); the whole text is behind the information icon
+        self.line.setFixedHeight(self.line.fontMetrics().lineSpacing() * 2)
         self.line.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
         self.column.addWidget(self.line)
         self.status = text_label("", BODY + 1, QFont.Weight.DemiBold, AMBER, wrap=True)

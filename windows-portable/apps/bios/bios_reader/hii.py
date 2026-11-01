@@ -16,6 +16,9 @@ from dataclasses import dataclass, field
 
 PKG_FORMS, PKG_STRINGS, PKG_END = 0x02, 0x04, 0xDF
 LANGUAGE = b"en-US"
+# AMI's string 2: the text of a line the BIOS writes while it runs (a boot device's name) or leaves blank (a spacer
+# between rows). The setup screen never shows these words, so neither does the app (owner, 01-11-2026).
+PLACEHOLDER = "Can't add string"
 
 # Opcodes this reader uses
 OP_FORM, OP_SUBTITLE, OP_TEXT, OP_ONE_OF, OP_CHECKBOX, OP_NUMERIC = 0x01, 0x02, 0x03, 0x05, 0x06, 0x07
@@ -398,5 +401,5 @@ def read_module(module_bytes: bytes, module: str = "") -> list[FormSet]:
     strings: dict[int, str] = {}
     for pkg in find_string_packages(module_bytes):
         for sid, text in parse_strings(pkg).items():
-            strings.setdefault(sid, text)
+            strings.setdefault(sid, "" if text == PLACEHOLDER else text)
     return [parse_forms(pkg, strings, module) for pkg in forms]

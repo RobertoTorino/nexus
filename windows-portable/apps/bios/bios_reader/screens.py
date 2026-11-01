@@ -18,6 +18,10 @@ IDENTITY_TEXTS = {"BIOS Vendor": "vendor", "Project Version": "version", "BIOS V
                   "Build Date and Time": "date", "Build Date": "date"}
 SOURCES = {DEVICE: "this device", FILE: "the file", DEFAULT: "the default"}
 TITLE = 48                      # characters of a page's title
+# Pages a BIOS holds for a moment that may never come, said beside their title (owner, 01-11-2026: the PCI page read
+# as an error on the device): by the module they come from.
+NOTES = {"PciOutOfResourceSetupPage": "AMI's page for a boot that runs out of PCI resources: the BIOS shows it only "
+                                      "then, and every BIOS file holds it; it is not an error on this device"}
 
 
 @dataclass
@@ -111,15 +115,24 @@ def entries(screens: Screens, fs: FormSet, form: Form, show_hidden: bool = False
             if st.prompt.strip():
                 out.append(Entry(st.prompt))
             continue
-        if not st.prompt.strip():
+        prompt = st.prompt
+        if not prompt.strip() and st.kind == "ref":    # a link the BIOS names while it runs: named by its menu
+            opened = target(screens, fs, st)
+            prompt = short(opened[1].title) if opened is not None else ""
+        if not prompt.strip():
             continue
         value = ""
         if st.kind == "text":
             value = text_value(st, identity or screens.bios.identity)
         elif st.is_question:
             value = setting_value(screens, fs, st)
-        out.append(Entry(st.prompt, value, st, state.hidden or menu_hidden, state.grayed))
+        out.append(Entry(prompt, value, st, state.hidden or menu_hidden, state.grayed))
     return out
+
+
+def note(fs: FormSet) -> str:
+    """What a page of *fs* is, when it is one the BIOS shows only in a rare case ("" for the others)."""
+    return NOTES.get(fs.module, "")
 
 
 def text_value(st: Statement, identity: Identity) -> str:

@@ -1,3 +1,17 @@
+Changelog: 01-11-2026 10:32:28
+
+Added. The BIOS file card reads this device's own BIOS on A (owner, 01-11-2026): the copy Windows keeps of the BIOS it installed, the firmware package in the driver store whose FirmwareId and FirmwareVersion are the system firmware's in Windows' firmware table (ESRT), with no download and no administrator; X picks a file instead, and once the device's BIOS is read, A picks another.
+
+Added. This device says whether the BIOS is up to date (owner, 01-11-2026): on an ASUS device, A also asks ASUS's support site for the newest BIOS of the model the BIOS version starts with (RC73XA), and the card says up to date or which version is out; elsewhere, or offline, the pane says why the newest is not known.
+
+Changelog: 01-11-2026 10:12:39
+
+Fixed. AMI's placeholder string, Can't add string, no longer shows: a spacer between the rows is left out as the BIOS leaves it blank, and a link the BIOS names while it runs shows the name of the menu it opens.
+
+Fixed. A menu's lines after its last row (and before its first) could not be reached, and the focused row was cut off at the bottom when the line under the list grew: the first row shows the list's top, the last its end, the line under the list is two lines high whatever it says, and a new menu starts at its top. A long subtitle (AMD's overclocking warning) wraps to the pane instead of running past it.
+
+Added. AMI's PCI Resource ERROR page says beside its title that every BIOS file holds it and the BIOS shows it only for a boot out of PCI resources: it is not an error on the device.
+
 Changelog: 01-11-2026 09:16:58
 
 Release 0.1.0.

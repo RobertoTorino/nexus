@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The window: the categories as tabs (LB, RB), the tab's apps as two rows of four tiles, the strip under them with
-the focused app and its pills (A Install or Open, Y Update), X for the app's details (and Remove there), Menu for
+the focused app and its pills (A Install or Open, Y Update), a banner on the tabs' line while a newer portal is out
+(Y updates the portal then, owner 01-11-2026), X for the app's details (and Remove there), Menu for
 the Settings page (the portal's own update and the settings), B back, View to exit (core's buttons, owner 29-10-2026), RT
 Steam's library where Steam is installed (owner, 30-10-2026: out of the game managers, into the portal). An install downloads the app's release in the
 background, checks it and runs its install.ps1 in a PowerShell window; the portal waits for that window's exit
@@ -21,7 +22,7 @@ from pathlib import Path, PurePath
 
 from PyQt6.QtCore import QObject, QSettings, Qt, QTimer, pyqtSignal
 from PyQt6.QtGui import QGuiApplication, QPixmap
-from PyQt6.QtWidgets import QGridLayout, QStackedWidget, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QStackedWidget, QVBoxLayout, QWidget
 
 from bc250_core import applog, chip, portable, power, steam, xbox
 from bc250_core.gamepad import Gamepad
@@ -34,7 +35,7 @@ from .intro import INTRO_MS, Intro
 from .manifest import CATEGORIES, AppEntry
 from .portal_update import PortalUpdate, short
 from .sources import Records, SourceError, Sources, downloaded, fetch_release, is_installed
-from .widgets import AppPane, DetailsPane, ModePane, SuitePane, Tabs
+from .widgets import AppPane, DetailsPane, ModePane, SuitePane, Tabs, UpdateBanner
 
 STATUS_MS = 2_000               # the header: the CPU and GPU live (owner, 30-10-2026), the battery and the time
 POLL_MS = 1000                  # how often the portal looks for the installer window's exit status
@@ -52,6 +53,9 @@ ONE_SCREEN = "There is one screen: attach a TV or a monitor, then LT moves the p
 # With a second screen, the legend's left end (owner, 31-10-2026: "Switch monitor: [] + Shift + < or >", with icons)
 SCREEN_KEYS = (portable.SCREEN_ICON, (portable.WINDOWS_KEY, "+", "Shift", "+", "←", "→"))   # two screens drawn
 TURBO_COLOR = "#ff1f1f"         # the Turbo letter in the header: a hard red, extra bold (owner, 31-10-2026)
+BANNER = "UPDATE AVAILABLE, PRESS Y TO UPDATE"      # on the tabs' line (owner, 01-11-2026)
+INTRO_BANNER = "PORTAL UPDATE AVAILABLE"            # on the intro, when the check answers in time
+WAIT_UPDATE = "The portal's update starts once the download or install has finished."
 WALLPAPER_KEY = "look/wallpaper"  # where portal 1.6.0 kept the wallpaper switch: now the suite's (core, suite.ini)
 
 
@@ -200,7 +204,13 @@ class MainWindow(PortableWindow):
         page.addSpacing(px(10))
         self.tabs = Tabs([(key, name) for key, name in CATEGORIES.items()
                           if any(entry.category == key for entry in entries)])
-        page.addWidget(self.tabs)
+        tabs_line = QHBoxLayout()
+        tabs_line.setContentsMargins(0, 0, 0, 0)
+        tabs_line.addWidget(self.tabs, 1)
+        self.banner = UpdateBanner()                    # while a newer portal is out
+        self.banner.pressed.connect(self.portal_update_action)
+        tabs_line.addWidget(self.banner, 0, Qt.AlignmentFlag.AlignVCenter)
+        page.addLayout(tabs_line)
         page.addSpacing(px(10))
         self.stack = QStackedWidget()
         self.apps_page = QWidget()
@@ -588,6 +598,7 @@ class MainWindow(PortableWindow):
         tile) and View Exit; while an exit is asked, only that."""
         if not hasattr(self, "legend") or not hasattr(self, "stack"):
             return
+        self.show_banner()
         screens = len(QGuiApplication.screens()) > 1
         triggers = [*([("LT", "Screen")] if screens else []), *([("RT", "Steam")] if self.steam_here() else []),
                     KEYBOARD]                       # R3 and a keyboard drawn: Windows' touch keyboard (owner)
@@ -596,8 +607,9 @@ class MainWindow(PortableWindow):
             self.legend.set_items([(VIEW, "Press again to exit")])
         elif self.stack.currentWidget() is self.apps_page:
             pane = self.app_pane
+            other = "Update suite" if self.update_available() else pane.other      # the portal first
             self.legend.set_items([*([("A", pane.main)] if pane.main else []), ("X", "Details"),
-                                   *([("Y", pane.other)] if pane.other else []), (MENU, "Settings"), *triggers,
+                                   *([("Y", other)] if other else []), (MENU, "Settings"), *triggers,
                                    *self.common_items()], keys)
         elif self.stack.currentWidget() is self.details_pane:
             pane = self.details_pane
@@ -749,6 +761,8 @@ class MainWindow(PortableWindow):
     def y_action(self) -> None:
         if self.stack.currentWidget() is self.details_pane:
             self.remove_action(self.current_key)
+        elif self.stack.currentWidget() is self.apps_page and self.update_available():
+            self.portal_update_action()
         elif self.stack.currentWidget() is self.apps_page:
             self.update_action(self.current_key)
         elif self.stack.currentWidget() is self.suite_pane:
@@ -913,11 +927,35 @@ class MainWindow(PortableWindow):
                 self.log.info(f"Portal update check: {result.release.error}")
             else:
                 self.log.info(f"Portal update check: newest {result.release.tag or 'none'}.")
+        if self.intro is not None and self.update_available():
+            self.intro.set_banner(INTRO_BANNER)
         self.refresh()
 
+    def show_banner(self) -> None:
+        """The banner on the tabs' line: while a newer portal is out, on the tiles and the Settings page, where Y
+        updates it (Y removes an app on Details); while it downloads, how far it is; else none (owner, 01-11-2026)."""
+        portal_job = self.job is not None and self.job[0].key == ""
+        text = (f"DOWNLOADING THE UPDATE…{self.downloaded_text()}" if portal_job
+                else BANNER if self.update_available() else "")
+        self.banner.setText(text)
+        self.banner.setVisible(bool(text) and self.stack.currentWidget() in (self.apps_page, self.suite_pane))
+
+    def portal_update_action(self) -> None:
+        """Y on the tiles, or a tap on the banner, while a newer portal is out: its download and install; while an
+        app is downloaded or installed, the line under the app says it waits."""
+        if not self.update_available():
+            return
+        if self.job is not None or self.pending is not None:
+            if not (self.job is not None and self.job[0].key == ""):
+                self.say(self.current_key, WAIT_UPDATE)
+            return
+        self.install_portal_update()
+
     def fill_suite(self) -> None:
-        rows: list[tuple[str, str]] = [("This portal", __version__)]
-        status, action = "", "Check again"
+        # This portal's version is the line under the title; the app by app changes are in the information (owner,
+        # 01-11-2026: their lines ran over each other)
+        rows: list[tuple[str, str]] = []
+        status, action, brings = "", "Check again", ""
         if self.checking:
             status = "Looking for a newer release…"
             action = ""
@@ -937,14 +975,13 @@ class MainWindow(PortableWindow):
                 if self.update_available():
                     summary = self.update.summary()
                     rows.append(("It brings", summary or "the portal itself"))
-                    if self.update.details():
-                        rows.append(("", self.update.details()))
                     action = f"Update to {release.version}"
+                    brings = self.update.details()
         if self.job is not None and self.job[0].key == "":
             status, action = f"Downloading the portal…{self.downloaded_text()}", ""
         if self.message_key == "" and self.message:
             status = self.message
-        self.suite_pane.fill(APP_NAME, f"{__version__}, the portal of the suite", rows, status, action)
+        self.suite_pane.fill(APP_NAME, f"{__version__}, the portal of the suite", rows, status, action, brings)
 
     def suite_action(self) -> None:
         if self.update_available() and self.job is None and self.pending is None:

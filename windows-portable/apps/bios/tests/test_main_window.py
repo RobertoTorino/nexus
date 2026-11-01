@@ -13,7 +13,7 @@ from PyQt6.QtCore import QSettings
 from bc250_core import portable
 from bc250_core.gamepad import Gamepad
 from bc250_core.portable import EXIT, INFO as INFO_ITEM
-from bios_reader import APP_ID, APP_NAME, EXE_NAME, INFO, LOGO_PATH, ROOT, __version__, bios
+from bios_reader import APP_ID, APP_NAME, EXE_NAME, INFO, LOGO_PATH, ROOT, __version__, bios, device
 from bios_reader.bios import Identity
 from bios_reader.main_window import MainWindow
 
@@ -31,7 +31,15 @@ class FakePad:
         return []
 
 
-def make(qapp, tmp_path, identify=lambda: DEVICE, read_settings=None):
+def no_copy():
+    raise device.DeviceError("Windows keeps no copy of the BIOS this device runs: the X button picks the maker's file.")
+
+
+def not_asus(found):
+    raise device.DeviceError("only an ASUS device's newest BIOS can be looked up")
+
+
+def make(qapp, tmp_path, identify=lambda: DEVICE, read_settings=None, installed=no_copy, newest=not_asus):
     calls = []
 
     def read(keys, folder):
@@ -40,10 +48,12 @@ def make(qapp, tmp_path, identify=lambda: DEVICE, read_settings=None):
     window = MainWindow(gamepad=Gamepad(source_factory=FakePad), battery=lambda: (82, False),
                         identify=identify, read_settings=read_settings or read,
                         settings=QSettings(str(tmp_path / "bios.ini"), QSettings.Format.IniFormat),
-                        folder=tmp_path / "data", roots=lambda: [tmp_path / "files"], user_home=tmp_path / "home")
+                        folder=tmp_path / "data", roots=lambda: [tmp_path / "files"], user_home=tmp_path / "home",
+                        installed=installed, newest=newest)
     # Slow steps run here at once instead of on a thread
-    window.file_worker.start = lambda work: window.file_done(work()) or True
+    window.file_worker.start = lambda work: _run(work, window.file_done, window.file_failed)
     window.device_worker.start = lambda work: window.device_done(work()) or True
+    window.newest_worker.start = lambda work: _run(work, window.newest_done, window.newest_failed)
     portable.scale((1280, 720))
     window.resize(1280, 720)
     window.show()
@@ -53,10 +63,21 @@ def make(qapp, tmp_path, identify=lambda: DEVICE, read_settings=None):
     return window
 
 
+def _run(work, done, failed):
+    try:
+        result = work()
+    except Exception as error:  # noqa: BLE001
+        failed(str(error))
+    else:
+        done(result)
+    return True
+
+
 def pick(window, qapp, name):
-    """The file browser: A on the card, then the files folder (the only place), then the file."""
+    """The file browser: X on the card (A reads this device's own BIOS), then the files folder (the only place),
+    then the file."""
     window.file_card.setFocus()
-    window.act("accept")
+    window.act("x")
     rows = dict((text, key) for key, text in window.browser.rows())
     window.browse_picked(next(key for text, key in rows.items() if "files" in text))
     window.browse_picked(next(key for key, text in window.browser.rows() if text == name))
@@ -67,7 +88,7 @@ def test_the_window_opens_with_the_suites_header(qapp, tmp_path):
     window = make(qapp, tmp_path)
     assert window.header.title.text() == APP_NAME and window.header.version.text() == __version__
     assert re.fullmatch(r"\w+day \d\d/\d\d/\d{4}  \|  \d\d:\d\d  \|  82%", window.header.status.text())
-    assert window.legend.items == [("A", "Pick a file"), INFO_ITEM, EXIT]
+    assert window.legend.items == [("A", "This device's BIOS"), ("X", "Pick a file"), INFO_ITEM, EXIT]
     assert window.file_card.hasFocus() and window.bios is None
     window.close()
 
@@ -111,7 +132,7 @@ def test_a_file_is_picked_and_read(qapp, tmp_path, update_zip):
     assert window.file_pane.status.text().startswith("Read")
     assert window.screens_card.text.text() == "1 pages"
     window.file_card.setFocus()
-    window.act("accept")
+    window.act("x")
     assert window.browser.path == update_zip.parent                 # the browser opens where it was left
     window.close()
 
@@ -192,6 +213,55 @@ def test_y_shows_what_the_bios_hides(qapp, tmp_path, bios_file):
     assert window.screen_pane.title.text() == "Not linked"
     window.act("y")                                             # hidden ones off: the menu stays open
     assert window.screen_pane.title.text() == "Not linked" and [p.title for p in window.pages] == ["Main"]
+    window.close()
+
+
+def test_this_devices_own_bios_is_read(qapp, tmp_path, bios_file):
+    """A on the BIOS file card: the BIOS Windows installed on this device, no download (owner, 01-11-2026); then A
+    picks another file, and X is gone."""
+    window = make(qapp, tmp_path, installed=lambda: bios_file)
+    window.file_card.setFocus()
+    window.act("accept")
+    assert window.bios is not None and window.from_device
+    assert window.file_card.text.text() == "This device's BIOS, P9.99"
+    assert dict(window.file_pane.rows())["From"] == "Windows' copy of the BIOS it installed on this device"
+    assert window.legend.items[:2] == [("A", "Pick another file"), INFO_ITEM]
+    window.act("accept")
+    assert window.panes.currentWidget() is window.browse_pane
+    window.close()
+
+
+def test_without_a_copy_the_card_says_so_and_x_picks_a_file(qapp, tmp_path, bios_file):
+    window = make(qapp, tmp_path)
+    window.file_card.setFocus()
+    window.act("accept")
+    assert window.bios is None and "keeps no copy" in window.file_pane.status.text()
+    pick(window, qapp, bios_file.name)
+    assert window.bios is not None and not window.from_device
+    assert window.legend.items[:2] == [("A", "This device's BIOS"), ("X", "Pick a file")]
+    window.close()
+
+
+def test_the_card_says_whether_the_bios_is_up_to_date(qapp, tmp_path):
+    """A on This device: the version, and on an ASUS device the newest BIOS from ASUS's site (owner, 01-11-2026)."""
+    newest = device.Newest("99", "29/09/2026")
+    window = make(qapp, tmp_path, newest=lambda found: newest)
+    window.device_card.setFocus()
+    window.act("accept")
+    assert window.device_card.text.text() == "BIOS P9.99, up to date"
+    assert dict(window.device_pane.rows())["Newest BIOS"] == "99 of 29/09/2026: up to date"
+    window.identity = None
+    newest = device.Newest("100", "")
+    window.act("accept")
+    assert window.device_card.text.text() == "BIOS P9.99: 100 is out"
+    assert dict(window.device_pane.rows())["Newest BIOS"] == "100: an update is out, from the maker's site"
+    window.close()
+    window = make(qapp, tmp_path)
+    window.device_card.setFocus()
+    window.act("accept")
+    assert window.device_card.text.text() == "BIOS P9.99"
+    assert dict(window.device_pane.rows())["Newest BIOS"] == \
+        "Not known: only an ASUS device's newest BIOS can be looked up"
     window.close()
 
 

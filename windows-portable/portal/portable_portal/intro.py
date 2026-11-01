@@ -3,7 +3,8 @@
 Picture Mode with its sound, here with this suite's name, icon and amber; a handheld has no mode to switch to, so
 it plays at the start). Painted over the window: a light sweeps across a dark screen, rings open from the suite's
 icon, the name draws itself in wide letters and settles, and the screen clears to the tiles. Any key, tap or button
-skips it, and its sound with it (skip(), also called for the controller's buttons).
+skips it, and its sound with it (skip(), also called for the controller's buttons). When the portal's update check
+answers while it plays and a newer portal is out, a banner under the name says so (set_banner(), owner 01-11-2026).
 
 It covers the window from its first frame (cover(), before the window shows) and is dark from the start: the tiles
 show only as it clears at the end (owner, 28-10-2026: the page showed first, then the intro faded in over it)."""
@@ -17,12 +18,13 @@ from PyQt6.QtCore import QEasingCurve, QPointF, QRect, QRectF, Qt, QVariantAnima
 from PyQt6.QtGui import QColor, QFont, QLinearGradient, QPainter, QPen, QPixmap, QRadialGradient
 from PyQt6.QtWidgets import QWidget
 
-from bc250_core.portable import AMBER, BACKGROUND, font
+from bc250_core.portable import AMBER, BACKGROUND, ON_AMBER, font
 
 from . import APP_NAME, INTRO_SOUND, LOGO_PATH
 
 INTRO_MS = 3000                 # about three seconds, as the BC250 portal's
 LOGO_SHARE = 0.26               # the icon: this part of the screen's shorter side
+BANNER_IN = 0.08                # the banner fades in over this part of the intro
 
 
 def play(sound: Path | None) -> None:
@@ -57,6 +59,13 @@ class Intro(QWidget):
         self.animation.valueChanged.connect(self._step)
         self.animation.finished.connect(self._done)
         self.done = False
+        self.banner = ""                        # "PORTAL UPDATE AVAILABLE", from set_banner()
+        self.banner_at = 0.0                    # the progress when it came
+
+    def set_banner(self, text: str) -> None:
+        """A banner under the name for the rest of the intro (the portal's update check answered)."""
+        self.banner, self.banner_at = text, self.progress
+        self.update()
 
     def cover(self) -> None:
         """Over the whole window, dark: called before the window shows, so its first frame is the intro's."""
@@ -208,4 +217,23 @@ class Intro(QWidget):
             box = QRect(0, int(center.y() + min(w, h) * 0.17), w, face.pixelSize() * 2)
             painter.drawText(box, int(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignVCenter),
                              self.name.upper())
+
+        # The banner under the name: amber with dark capitals, fading in when the update check answers.
+        if self.banner:
+            face = font(10, QFont.Weight.ExtraBold)
+            face.setPixelSize(max(14, int(h * 0.03)))
+            face.setLetterSpacing(QFont.SpacingType.AbsoluteSpacing, face.pixelSize() * 0.12)
+            painter.setFont(face)
+            metrics = painter.fontMetrics()
+            pad = face.pixelSize()
+            width, height = metrics.horizontalAdvance(self.banner) + 2 * pad, metrics.height() + pad
+            top = center.y() + min(w, h) * 0.17 + h * 0.055 * 2 + h * 0.03
+            plate = QRectF((w - width) / 2, top, width, height)
+            painter.setOpacity(min(1.0, (p - self.banner_at) / BANNER_IN) * fade)
+            painter.setPen(Qt.PenStyle.NoPen)
+            painter.setBrush(QColor(AMBER))
+            painter.drawRoundedRect(plate, height / 4, height / 4)
+            painter.setPen(QColor(ON_AMBER))
+            painter.drawText(plate, int(Qt.AlignmentFlag.AlignCenter), self.banner)
+            painter.setOpacity(1.0)
         painter.end()

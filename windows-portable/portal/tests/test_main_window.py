@@ -467,9 +467,12 @@ def test_the_suite_page_offers_the_portals_own_update_and_installs_it(world, qap
     window.show_suite()
     rows = {window.suite_pane.grid.itemAt(i).widget().text(): window.suite_pane.grid.itemAt(i + 1).widget().text()
             for i in range(0, window.suite_pane.grid.count(), 2)}
-    assert rows["This portal"] == mw.__version__ and rows["Newest release"] == "9.9.9, 2030-01-01"
-    assert rows["It brings"] == "updates Test" and rows[""] == "Windows Portable Test: 0.1.0 → 0.2.0"
+    assert rows == {"Newest release": "9.9.9, 2030-01-01", "It brings": "updates Test"}    # this portal: the line
+    assert window.suite_pane.version.text() == f"{mw.__version__}, the portal of the suite"   # under the title
+    # App by app in the information (owner, 01-11-2026: eight apps' lines ran over each other)
+    assert window.suite_pane.info.info.startswith("The update brings:\nWindows Portable Test: 0.1.0 → 0.2.0\n\n")
     assert ("Y", "Update to 9.9.9") in window.legend.items           # A switches the setting, Y updates
+    assert window.banner.isVisible() and window.banner.text() == mw.BANNER
     closed = []
     monkeypatch.setattr(window, "close", lambda: closed.append(True))
     window.on_action("y")
@@ -480,6 +483,48 @@ def test_the_suite_page_offers_the_portals_own_update_and_installs_it(world, qap
     assert line.startswith("Wait-Process -Id ") and f"Set-Location -LiteralPath '{folder}'" in line
     assert "-File install.ps1" in line and line.endswith("Start-Process -FilePath 'C:\\portal\\Windows-Portable-Suite.exe'")
     assert world.terminal.exit_files == [None]
+
+
+def test_the_banner_offers_the_portals_update_on_the_tiles(world, qapp, monkeypatch):
+    """Owner, 01-11-2026: the portal's update was hidden on the Settings page. While a newer portal is out, a banner on
+    the tabs' line says so on the tiles and the Settings page (not on Details, where Y removes); Y on the tiles, or a
+    tap on the banner, updates the portal before an app; once there is no update, the banner is gone."""
+    world.app_dir.mkdir(parents=True)
+    (world.app_dir / "X.exe").write_bytes(b"x")
+    world.records.set("test", "wp-test-v0.0.9")         # an app update waits too: the portal goes first
+    window = world.make(portal_check=lambda: world.update, exe=r"C:\portal\Windows-Portable-Suite.exe")
+    assert wait_for(qapp, lambda: window.update is not None)
+    assert window.banner.isVisible() and window.banner.text() == "UPDATE AVAILABLE, PRESS Y TO UPDATE"
+    assert ("Y", "Update suite") in window.legend.items
+    window.on_action("x")
+    assert window.stack.currentWidget() is window.details_pane and not window.banner.isVisible()
+    window.on_action("back")
+    assert window.banner.isVisible()
+    window.pending = mw.Pending(world.entries[1], "install", world.sources.work / "x.exit", "t")   # an app installing
+    window.banner.pressed.emit()
+    assert window.app_pane.status.text() == mw.WAIT_UPDATE and window.job is None
+    window.pending = None
+    closed = []
+    monkeypatch.setattr(window, "close", lambda: closed.append(True))
+    window.on_action("y")
+    assert wait_for(qapp, lambda: closed == [True])
+    assert world.terminal.lines[0].startswith("Wait-Process -Id ") and world.records.get("test") == "wp-test-v0.0.9"
+    window.update = PortalUpdate(ReleaseInfo(version=mw.__version__, tag=f"wp-portal-v{mw.__version__}"))
+    window.refresh()
+    assert not window.banner.isVisible() and ("Y", "Update") in window.legend.items      # the app's own again
+
+
+def test_the_intro_says_a_portal_update_is_out(world, qapp):
+    """The banner on the intro when the update check answers while it plays (owner, 01-11-2026)."""
+    window = world.make(portal_check=lambda: world.update, intro_ms=60_000)
+    window.intro.player = lambda wav: None             # no sound in the tests
+    window.start()
+    assert wait_for(qapp, lambda: window.update is not None)
+    assert window.intro.banner == "PORTAL UPDATE AVAILABLE"
+    window.intro.progress = window.intro.banner_at + 0.2   # drawn, faded in
+    assert not window.intro.grab().isNull()
+    window.intro.skip()
+    assert window.intro is None
 
 
 def test_the_suite_page_without_an_update(world, qapp):
@@ -493,7 +538,8 @@ def test_the_suite_page_without_an_update(world, qapp):
     window.portal_check = lambda: offline
     window.legend.entries["Y"].pressed.emit()
     assert wait_for(qapp, lambda: window.update is offline)
-    assert window.suite_pane.grid.itemAt(3).widget().text() == "not known: no connection (offline)"
+    assert window.suite_pane.grid.itemAt(1).widget().text() == "not known: no connection (offline)"
+    assert not window.banner.isVisible() and not window.suite_pane.info.info.startswith("The update brings")
 
 
 def test_a_new_build_of_this_version_is_offered(world, qapp):

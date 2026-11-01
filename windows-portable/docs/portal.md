@@ -32,7 +32,7 @@ The strip under the tiles shows the focused app: its name, its versions and what
 | D-pad, left stick | Move the amber focus between the tiles |
 | LB, RB | The tab to the left or right |
 | A | Install the app, or open it once it is installed |
-| Y | Update or reinstall the app, when the row at the bottom offers it |
+| Y | Update the portal while a newer one is out (**Y Update suite**); otherwise update or reinstall the app, when the row at the bottom offers it |
 | X | The app's details |
 | ☰ (Menu) | The Settings page, with the settings; on it, what the settings do |
 | LT | The portal to the next screen, with a second screen attached |
@@ -71,6 +71,12 @@ you start it from the portal.
 
 **Y** updates an app whose tile says **Update x.y.z**: the portal installs the release it pins over the older one.
 
+While a newer portal is out, an amber banner on the line of the tabs says **UPDATE AVAILABLE, PRESS Y TO UPDATE**, on
+the tiles and on the Settings page. **Y**, or a tap on the banner, updates the portal first, since the new portal brings
+the apps' new releases; the row at the bottom says **Y Update suite**. While the portal downloads, the banner counts the
+megabytes. Once the portal is up to date the banner is gone, and **Y** updates an app again. When the portal finds the
+update while its intro plays, the intro shows **PORTAL UPDATE AVAILABLE** under the suite's name.
+
 ## The details page
 
 **X** shows the app's details: the version installed and the one this portal pins, its category and where its
@@ -79,8 +85,9 @@ instead of a dialog; the row at the bottom says **Press again to remove** meanwh
 
 ## The Settings page
 
-**☰** shows the Settings page: this portal's version, the newest portal release, and what that release
-changes (which apps it updates). With a newer release, the row at the bottom offers **Y Update to x.y.z**;
+**☰** shows the Settings page: this portal's version under its name, the newest portal release, and in one line
+what that release changes (**updates 8 apps, adds BIOS Reader**). **☰** on the page lists the changes app by app,
+from the old version to the new one, above what the settings do. With a newer release, the row at the bottom offers **Y Update to x.y.z**;
 otherwise **Y Check again**. A portal newer than every published release (a draft on its device test) says so: the
 newest release is **older than this portal, which is not published yet**.
 A release of this portal's own version that was built again shows as **a new build of this version** and is offered

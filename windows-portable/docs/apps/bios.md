@@ -4,9 +4,9 @@
 
 # BIOS Reader
 
-Shows the BIOS's setup screens, the menus with every setting, hidden menus included, from the BIOS file the
-device's maker publishes, with each setting's default and, once you allow it, the value your device has. It only
-reads: nothing in the file, the BIOS or Windows changes.
+Shows the BIOS's setup screens, the menus with every setting, hidden menus included, from your device's own BIOS or
+the BIOS file its maker publishes, with each setting's default and, once you allow it, the value your device has. It
+says whether your BIOS is the newest. It only reads: nothing in the file, the BIOS or Windows changes.
 
 BIOS Reader is on the [portal](../portal.md)'s **Utilities** tab: **A** on its tile installs it, and once it
 is installed, **A** opens it. It is also in the Start menu (**Windows Portable Suite**, **BIOS Reader**). It opens full
@@ -14,9 +14,11 @@ screen; **B** goes back and **⧉** (View) exits it.
 
 ## What you need
 
-- **The BIOS file of your device**, as its maker publishes it: for the ROG Xbox Ally X, ASUS's download on the
-  device's support page, a zip with a file named like `RC73XAAS.319` in it. The app takes the zip itself, that file,
-  or a `.cap`, `.bin` or `.rom`. Take the version your device runs: the This device card says which one that is.
+- **Nothing, on most devices:** when the maker delivers its BIOS through Windows Update (ASUS does), Windows keeps a
+  copy of the BIOS it installed, and the app reads that one.
+- **Otherwise the BIOS file of your device**, as its maker publishes it: for the ROG Xbox Ally X, ASUS's download on
+  the device's support page, a zip with a file named like `RC73XAAS.319` in it. The app takes the zip itself, that
+  file, or a `.cap`, `.bin` or `.rom`. Take the version your device runs: the This device card says which one that is.
 - **An administrator's password** (or a yes, when your own user is one) to read your own settings: see This device
   below. Without it the app shows the file's defaults.
 
@@ -33,8 +35,14 @@ icon** at a pane's top right does the same by touch. Nothing is read before you 
 
 ## BIOS file
 
-**A Pick a file** opens the file browser: your usual folders and every drive. **A** opens a folder or takes the file,
-**B** goes a level up; the browser opens where it was left the time before. The app reads the file in a few seconds
+**A This device's BIOS** reads the BIOS your device runs, from the copy Windows keeps of the BIOS it installed (in
+Windows' driver store, with no download and no administrator). The app picks the copy of the version Windows says
+runs; the card then says **This device's BIOS** with its version. Where Windows keeps no copy (the maker does not
+deliver its BIOS through Windows Update, or the BIOS was flashed another way), the pane says so.
+
+**X Pick a file** opens the file browser: your usual folders and every drive. **A** opens a folder or takes the file,
+**B** goes a level up; the browser opens where it was left the time before. Once your device's own BIOS is read, **A
+Pick another file** opens it. The app reads the file in a few seconds
 and shows its name, its version, how many setup screens and settings it has, how many menus the BIOS hides, and its
 SHA-256. A file the maker made for another chip (a controller's, a drive's) has no setup screens, and the app says
 so.
@@ -48,7 +56,13 @@ parts of the BIOS add (AMD Overclocking, network and storage pages).
   pages, then to the card.
 - **LB Page before** and **RB Next page** go to the page before or the next one.
 - Each line shows its setting's value. The line under the list says where the value comes from (this device, the
-  file, or the default) and the default.
+  file, or the default) and the default, in two lines at most; **☰** shows the rest.
+- The amber lines are the BIOS's own text between the settings, wrapped to the screen. The d-pad does not stop on
+  them: the first setting shows the text above it, the last setting the text after it. A finger drags the list too.
+- A line the BIOS names only while it runs (a boot device in **Boot Override**) has no name in the file: a link
+  shows the name of the menu it opens, and anything else is left out, as the BIOS leaves its blank spacers empty.
+- **!!!! PCI Resource ERROR !!!!** is AMI's page for a boot that runs out of PCI resources. Every BIOS file holds it,
+  and the BIOS shows it only in that case. It is not an error on your device, and the line under its title says so.
 - **☰** shows the whole of the focused line: its help, why it is hidden, its value and default, its options and where
   the BIOS stores it (for example `AmdSetup + 0x25F, 4 bytes`).
 - **Y Show hidden** also lists what the BIOS does not show, dimmed and in italics: settings and menus hidden always,
@@ -61,6 +75,11 @@ Nothing can be changed: **A** on a setting says so.
 
 **A Read** reads the BIOS your device runs, as Windows reports it: the device, the BIOS version, its date and its
 maker, and whether the BIOS file is that version. No administrator is needed for this.
+
+On an ASUS device it also asks ASUS's support site for the newest BIOS of the device. The card then says **BIOS
+RC73XA.319, up to date**, or which version is out (**BIOS RC73XA.317: 319 is out**), and the pane shows the newest
+version with its date. Only the model the BIOS version starts with (`RC73XA`) goes to the site. Offline, or on
+another maker's device, the pane says the newest is not known.
 
 With a BIOS file read, **A Read the settings** reads your device's own settings. Windows keeps them for an
 administrator, so it asks (its prompt may open behind the app); this is the app's only step as administrator, and it
