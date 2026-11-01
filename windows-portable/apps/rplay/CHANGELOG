@@ -1,0 +1,14 @@
+Changelog: 01-11-2026 12:36:16
+
+Added. Remote Play (apps/rplay, package remote_play, Gaming; owner, 01-11-2026): the BC250 Bazzite Suite's Console
+Link made for the handheld, on the portable window, its steps before the stream. Four cards: Consoles (X searches the
+network, Y one address typed on its row's page; A on a console chooses it for registering, or goes to it on My
+consoles), Register (the console, the PSN account ID from the PlayStation sign-in in the browser, taken from the
+clipboard as soon as the sign-in's last page's address is copied, or typed, and the console's PIN; X registers), My
+consoles (A wakes, X tests a session, RB puts the console in rest mode and Y removes it, each of those two on a second
+press, LB sets the login passcode) and Settings (the personal details shown or masked, and the log read in the app).
+The protocol code is Console Link's, ported from chiaki-ng (AGPL-3.0), so the app is AGPL-3.0 too. One change for
+Windows: a search at one address no longer ends at the "port unreachable" Windows hands to the next read
+(WSAECONNRESET), and registration says nothing listens there as on Linux. The registered consoles and their keys are
+in %LOCALAPPDATA%\windows-portable-suite\windows-portable-rplay\consoles.json, on this device only; uninstalling
+keeps them, --purge removes them. The personal details are masked in the log, always.

@@ -683,7 +683,8 @@ gaming category first, RPCS3 Manager done in the working tree, then shadPS4, Vit
    stay on hold instead), ACE Queues, Mesh Shaders, USB Wi-Fi, Console LinkB (the Xbox app does it),
    Decky Loader Manager (BIOS Reader was left out too; it comes after all, see "BIOS Reader for Windows" below). **HDMI CEC Manager first**: the owner tests it with a dock and a special USB-C adapter (how
    Windows reaches CEC over that adapter is to find out). **They come** (ported, the portable design): RPCS3,
-   shadPS4, PPSSPP, Vita3K and Xenia Managers (as PCSX2 Manager: never their own window), Console Link, Bazzite
+   shadPS4, PPSSPP, Vita3K and Xenia Managers (as PCSX2 Manager: never their own window), Console Link (as
+   Remote Play, see "Remote Play for Windows" below), Bazzite
    DatStation, BC-250 Upscaler Manager, System Overlay, USB IPS3.5, USB HD Control, Bazzite SFTP Tools, Media Tool,
    Dependency Checker, Bazzite NetcatGUI; USB HD Cam once the PS5 camera's driver on Windows is found out. Their
    Windows names (without BC-250/Bazzite) are the owner's to give with each.
@@ -693,6 +694,31 @@ gaming category first, RPCS3 Manager done in the working tree, then shadPS4, Vit
 
 On hold: the portal as Xbox mode's home app (MSIX), code signing, an app for the back buttons, the handheld's own
 tuning apps, a BIOS update check.
+
+## Remote Play for Windows (01-11-2026, the owner, on Console Link: "I want to port that over to Windows Portable suite")
+
+The BC250 suite's Console Link for the handheld (owner, 01-11-2026): **Remote Play**, `apps/rplay/`, package
+`remote_play`, Gaming, the Gaming category's icon as the other gaming apps. AGPL-3.0, as Console Link: its protocol
+code is chiaki-ng's. **In two phases** (owner, 01-11-2026: "Phase it"):
+
+1. **Done in the working tree, version 0.1.0, not released:** the steps before the stream, on the portable window:
+   Consoles (search the network or one address), Register (the console, the account ID from the PlayStation sign-in
+   through the clipboard as Console Link's dialog, or typed, the PIN), My consoles (wake, test session, rest mode,
+   login passcode, remove) and Settings (personal details shown or masked, the log). The protocol modules are
+   Console Link's, copied (`target`, `httpmsg`, `keys`, `rpcrypt`, `discovery`, `regist`, `session`, `psn`,
+   `privacy`, `consoles` without the stream settings), with one change for Windows: an ICMP "port unreachable"
+   reaches the next UDP read as WSAECONNRESET, which ended a search at one address (shown with Console Link's own
+   search, 01-11-2026). `consoles.json` is in `%LOCALAPPDATA%\windows-portable-suite\windows-portable-rplay\` (not
+   roaming); uninstall keeps it, `--purge` removes it. To try on the Ally: the search and the wake-up on a real
+   network (does Windows' firewall ask at the first search, and do the broadcast answers arrive without a rule),
+   the sign-in through the clipboard with the handheld's browser, registration with a PS5 and a PS4.
+2. **The stream (next):** Console Link's native core (Rust, `native/`) built for Windows: FFmpeg from its pinned
+   sources with D3D11VA (or DXVA2) in place of VA-API in `decoder.c` and `build.rs`, `build.sh`'s part for Windows
+   (MSYS2 or MSVC), the module as a `.pyd` in the PyInstaller program; SDL3 for the controllers (`SDL3.dll` in the
+   release: pygame-ce brings SDL2 only), the sound through Qt Multimedia, the OpenGL view; then the stream settings,
+   the controller test, the history and a Steam entry per console (core's `steam`, as the emulator apps). The
+   suite's CI and release workflow get the Rust and FFmpeg build. The owner approved installing Rust (rustup) and
+   MSYS2 on the Windows machine for it (01-11-2026).
 
 ## BIOS Reader for Windows (01-11-2026, the owner: "analyze if we can port the BIOS reader")
 

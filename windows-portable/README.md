@@ -48,6 +48,7 @@ By category, as the portal's tabs list them.
 - <img src="portal/images/apps/shadps4.webp" width="20" height="20" alt=""/> **[shadPS4 Manager](apps/shadps4)**: Installs shadPS4, the PS4 emulator, takes the system modules, unpacks your packages, and plays your PS4 games.
 - <img src="portal/images/apps/vita3k.webp" width="20" height="20" alt=""/> **[Vita3K Manager](apps/vita3k)**: Installs Vita3K, the PS Vita emulator, has it install the firmware and your games, and plays your PS Vita games.
 - <img src="portal/images/apps/xenia.webp" width="20" height="20" alt=""/> **[Xenia Manager](apps/xenia)**: Installs Xenia, the Xbox 360 emulator, and plays your Xbox 360 games.
+- <img src="portal/images/apps/rplay.webp" width="20" height="20" alt=""/> **[Remote Play](apps/rplay)**: Finds, wakes and registers your PS4 and PS5 on the network, for Remote Play from the handheld.
 
 How to install and use them: **[the wiki](https://robertotorino.github.io/nexus/windows-portable-suite/)**.
 

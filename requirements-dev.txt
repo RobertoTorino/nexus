@@ -15,6 +15,7 @@
 -r bc250-bazzite/apps/sftp/requirements-dev.txt     # paramiko: its tests import it
 -r bc250-bazzite/apps/mtool/requirements-dev.txt    # dbus-next: its tests import it
 -r windows-portable/apps/sftp/requirements-dev.txt  # paramiko: its tests import it
+-r windows-portable/apps/rplay/requirements-dev.txt # cryptography: its tests import it
 -r dev/nrt/requirements-dev.txt
 mkdocs-material
 mkdocs>=1.6,<2                  # MkDocs 2.0 drops the plugin and theme system Material needs

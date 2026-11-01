@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 Changelog: 01-11-2026 13:00:42
 
 Release 1.18.1.
@@ -8,6 +9,12 @@ Fixed. The setup list at the root of the repository is gone (owner, 01-11-2026):
 drive is the owner's own file, outside the repository. tools/dev-backup.sh's restore prints by itself what to
 install from the archive's lists, the Nexus page's machine chapter keeps the short order of a new drive with the
 script's commands, and the repository's map (CLAUDE.md, the Development chapter) no longer lists the file.
+=======
+Changelog: 01-11-2026 12:36:16
+
+Added. The Windows Portable Suite's Remote Play in Nexus's lists: requirements-dev.txt installs its requirements
+(cryptography, which its tests import), and ICONS.md lists it with the Gaming category's icon (tools/make_icons.py).
+>>>>>>> Stashed changes
 
 Changelog: 01-11-2026 11:46:02
 
