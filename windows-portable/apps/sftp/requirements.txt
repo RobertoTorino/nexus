@@ -1,0 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+PyQt6>=6.11,<7
+pygame-ce>=2.5,<3         # the controller (bc250_core.gamepad)
+paramiko>=3.4,<5          # SSH and SFTP, as the BC250 suite's SFTP Tools

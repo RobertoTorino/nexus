@@ -280,6 +280,7 @@ SYMBOLS = [
     ("★", "Bazzite DatStation", "Stars, a perfect round, trophies."),
     ("←", "Bazzite DatStation", "Back."),
     ("✓ !", "USB HD Cam", "A check found or missing."),
+    ("↑ ↓ ›", "sFTP Tools", "Uploads and downloads on the Transfers card; a folder that A opens."),
     ("✓ !", "USB HD Control", "A check known or not."),
     ("△ □ ✕ ○", "USB HD Control", "The face buttons."),
     ("↓ ↑", "USB IPS3.5", "The network tile: download and upload."),

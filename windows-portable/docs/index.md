@@ -60,6 +60,8 @@ screen and puts them in Steam.
 
 [BIOS Reader](apps/bios.md): The BIOS's setup screens and defaults, hidden menus included, from a BIOS file. It only
 reads.
+
+[sFTP Tools](apps/sftp.md): Moves files to and from another computer over SFTP, and starts or stops its SSH server.
 </div>
 </div>
 
