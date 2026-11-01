@@ -7,7 +7,7 @@ APP_NAME = "Remote Play"
 APP_ID = "windows-portable-rplay"
 EXE_NAME = "Remote-Play"   # the program's file name in a release
 SUITE = "windows-portable-suite"
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 
 from pathlib import Path
 

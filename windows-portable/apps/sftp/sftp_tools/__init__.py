@@ -5,7 +5,7 @@ APP_NAME = "sFTP Tools"
 APP_ID = "windows-portable-sftp"
 EXE_NAME = "sFTP-Tools"   # the program's file name in a release
 SUITE = "windows-portable-suite"
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 from pathlib import Path
 

@@ -1,3 +1,7 @@
+Changelog: 01-11-2026 18:11:40
+
+Version 2.5.0.
+
 Changelog: 01-11-2026 16:56:02
 
 Added. keep.py, deciding what to keep before anything is deleted (owner, 01-11-2026: before deleting anything, let
