@@ -1,3 +1,7 @@
+Changelog: 01-11-2026 02:37:09
+
+Release 1.14.0. Brings wp-hdcam-v0.1.0, wp-portal-v6.6.0.
+
 Changelog: 01-11-2026 02:10:48
 
 Fixed. tools/new_app.py's README templates, the BC250 Bazzite Suite's and the Windows Portable Suite's, put the
