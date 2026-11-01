@@ -1,3 +1,7 @@
+Changelog: 01-11-2026 11:46:02
+
+Release 1.18.0. Brings wp-portal-v6.9.0, wp-sftp-v0.1.0.
+
 Changelog: 01-11-2026 11:22:09
 
 Added. The Windows Portable Suite's sFTP Tools in Nexus's lists: requirements-dev.txt installs its requirements
