@@ -1,3 +1,7 @@
+Changelog: 01-11-2026 10:54:46
+
+Release 6.8.0. Pins wp-bios-v0.2.0.
+
 Changelog: 01-11-2026 10:12:39
 
 Added. A banner on the tabs' line while a newer portal is out, UPDATE AVAILABLE, PRESS Y TO UPDATE, on the tiles and the Settings page (owner, 01-11-2026: the update was hidden on the Settings page); Y on the tiles, or a tap on the banner, updates the portal before an app, and while it downloads the banner counts the megabytes. The intro shows PORTAL UPDATE AVAILABLE under the suite's name when the update check answers while it plays.

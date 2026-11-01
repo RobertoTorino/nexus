@@ -1,3 +1,7 @@
+Changelog: 01-11-2026 10:54:46
+
+Release 0.2.0.
+
 Changelog: 01-11-2026 10:32:28
 
 Added. The BIOS file card reads this device's own BIOS on A (owner, 01-11-2026): the copy Windows keeps of the BIOS it installed, the firmware package in the driver store whose FirmwareId and FirmwareVersion are the system firmware's in Windows' firmware table (ESRT), with no download and no administrator; X picks a file instead, and once the device's BIOS is read, A picks another.

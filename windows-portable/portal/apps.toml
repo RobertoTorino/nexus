@@ -117,8 +117,8 @@ launch = [["Open", "%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-hdc
 [apps.bios]
 name = "BIOS Reader"
 summary = "The BIOS's setup screens and defaults, hidden menus included, from a BIOS file. It only reads."
-tag = "wp-bios-v0.1.0"
-sha256 = "21f881b117721a30c92f1147ae04b69d3dcd695fcf65cb1ea2611945e4ed7b47"
+tag = "wp-bios-v0.2.0"
+sha256 = ""
 category = "utilities"
 install = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --no-desktop-shortcut"]
 uninstall = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --uninstall"]
