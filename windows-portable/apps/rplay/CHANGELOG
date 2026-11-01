@@ -1,3 +1,9 @@
+Changelog: 01-11-2026 15:23:16
+
+Fixed. The native core's GPU decoder test no longer takes an opened Direct3D device for decoding on the GPU: on
+GitHub's runners the device opens but has no video decoder, and FFmpeg decodes in software, as it should (CI:
+test_decoder_on_the_gpu_or_says_why failed). Each frame's picture now has to match where that frame was decoded.
+
 Changelog: 01-11-2026 14:20:49
 
 Added. The stream (owner, 01-11-2026: phase 2): A on a console of My consoles plays it, waking it when it rests,

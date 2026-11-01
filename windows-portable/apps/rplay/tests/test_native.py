@@ -206,16 +206,20 @@ def test_orientation_tracker_matches_reference():
 @pytest.mark.skipif(not getattr(core, "DECODER", False), reason="the native core is built without the video decoder")
 @pytest.mark.parametrize("codec", ["h264", "hevc"])
 def test_decoder_on_the_gpu_or_says_why(codec):
-    """Asked for the GPU, the decoder opens D3D11VA (else DXVA2) or runs in software and says why; the clip's pictures
-    are the same size either way, nv12 when they come back from the GPU."""
+    """Asked for the GPU, the decoder opens D3D11VA (else DXVA2) or runs in software and says why. An opened device
+    may still decode in software, when its video decoder does not take the stream (GitHub's runners: a Direct3D
+    device without a video decoder), so each frame says where it was decoded: from the GPU its picture is nv12, in
+    software yuv420p, the clip's size either way (the Ally X's Radeon 890M decodes these clips on the GPU)."""
     clip = json.loads((Path(__file__).parent / "video_vectors.json").read_text(encoding="utf-8"))["clips"][codec]
     decoder = core.Decoder(codec, hw=True)
     assert decoder.hw or decoder.hw_error
     frames = 0
     for sample in clip["samples"]:
         for frame in decoder.decode(base64.b64decode(sample)):
-            assert (frame["width"], frame["height"], frame["hw"]) == (clip["width"], clip["height"], decoder.hw)
+            assert (frame["width"], frame["height"]) == (clip["width"], clip["height"])
+            assert not frame["hw"] or decoder.hw                    # the GPU only with an opened device
             image = decoder.image()
-            assert (image["format"], image["width"], image["height"]) ==                 ("nv12" if decoder.hw else "yuv420p", clip["width"], clip["height"])
+            assert (image["format"], image["width"], image["height"]) == \
+                ("nv12" if frame["hw"] else "yuv420p", clip["width"], clip["height"])
             frames += 1
     assert frames == clip["frames"]
