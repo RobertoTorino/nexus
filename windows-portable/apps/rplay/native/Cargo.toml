@@ -5,7 +5,7 @@
 # "python" feature (pyproject.toml).
 [package]
 name = "windows-portable-rplay-core"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 license = "AGPL-3.0-only"
 publish = false

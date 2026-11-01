@@ -1,3 +1,7 @@
+Changelog: 01-11-2026 15:45:35
+
+Release 0.2.0.
+
 Changelog: 01-11-2026 15:23:16
 
 Fixed. The native core's GPU decoder test no longer takes an opened Direct3D device for decoding on the GPU: on
