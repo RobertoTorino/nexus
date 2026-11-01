@@ -1,3 +1,7 @@
+Changelog: 02-11-2026 00:48:53
+
+Release 7.1.0. Pins wp-test-v4.7.0, wp-pcsx2-v5.6.0, wp-ppsspp-v4.1.0, wp-rpcs3-v3.6.0, wp-shadps4-v4.1.0, wp-vita3k-v4.1.0, wp-xenia-v4.1.0, wp-rplay-v0.5.0, wp-hdcam-v0.4.0, wp-bios-v0.5.0, wp-sftp-v0.4.0.
+
 Changelog: 01-11-2026 22:54:19
 
 Fixed. Moved to another screen with Win + Shift + an arrow, where the portal does not start again (a screen of the same size), the Screen row on the Settings page names the screen it is on now; it kept the one before (owner, 01-11-2026: back on Display 1, it said Display 2).

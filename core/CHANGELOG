@@ -1,3 +1,7 @@
+Changelog: 02-11-2026 00:48:53
+
+Version 2.6.0.
+
 Changelog: 02-11-2026 00:23:01
 
 Added. heat.py, the play mode's heat warning (owner, 02-11-2026: the Ally got hot on the outside during a game in Xenia with a second screen attached): while a game runs, play.run() reads the CPU's and the GPU's temperature every two seconds (chip.Temperatures); when the hotter stays above 90 °C for 30 s, a banner in the portable design shows at the top of every screen for eight seconds, on top of the game without taking the focus or a press, and the controller rumbles three short times (PygameSource.rumble(), new); again at most every five minutes. The game is never touched. When the game ends, the log says the hottest reads and how long they were above the limit. A sensor or a banner that fails is logged and the game goes on.

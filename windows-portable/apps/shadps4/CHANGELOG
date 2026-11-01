@@ -1,3 +1,7 @@
+Changelog: 02-11-2026 00:48:53
+
+Release 4.1.0.
+
 Changelog: 02-11-2026 00:23:01
 
 Added. A warning when the device runs hot during a game (core's heat.py; owner, 02-11-2026): when the CPU or the GPU stays above 90 °C for half a minute, a banner shows at the top of the screen over shadPS4 and the controller rumbles three times, again at most every five minutes; the game goes on. When the game ends, the log says how hot the chip got and for how long. The wiki says so.
