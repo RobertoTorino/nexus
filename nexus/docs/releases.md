@@ -48,14 +48,15 @@ A Nexus release is the one release of the repository: Nexus's version with every
 release, and only those. A suite takes part once its release workflow can be called by **Release Nexus**
 (`release-nexus.yml`); the Windows Portable Suite does. The BC250 Bazzite Suite still releases with the steps below.
 
-The tab **Nexus release** lists what the release holds: each app of such a suite that ships something new since its
+The tab **Contents** lists what the release holds: each app of such a suite that ships something new since its
 last release, its portal, core when it changed since its last version, and Nexus. The version offered first follows
 the CHANGELOG entries, as in step 1; type another to override it. A portal's and Nexus's version say **auto**: they
 are worked out when the release is written, at least what the app releases need, and can be typed too.
 
-Under that list are the release's steps, numbered, in the order you do them, each with its pill. The step to do now
-has an orange ▶ and its pill lit; a step done has a green ✓, one that failed a red !, and the line beside each says
-what there is to do. Only the lit pill does anything, so you never need a command or another tab:
+The tab **Nexus release** holds the release's steps, numbered, in the order you do them, each with its pill. The step
+to do now has an orange ▶ and its pill lit; a step done has a green ✓, one that failed a red !, and the line beside
+each says what there is to do. Only the lit pill does anything, so you never need a command or another tab. Every
+tab explains itself behind the round **i** in its first row: click it to read the whole explanation.
 
 1. **Get up to date** (**git pull**): only when GitHub has commits this checkout lacks, pushed from the other machine.
 2. **Commit your changes:** type what they do, then **Commit**. It stages every change and new file and commits
@@ -66,7 +67,7 @@ what there is to do. Only the lit pill does anything, so you never need a comman
    failed: fix it, then commit and push again. GitHub's own trouble (an error of its servers, a job that never
    started; [githubstatus.com](https://www.githubstatus.com) says when Actions are degraded): **Run CI again** starts
    the failed jobs again on the same commit.
-5. **Start new release:** check the versions in the list above, then press it. It writes the release (the versions
+5. **Start new release:** check the versions on the Contents tab, then press it. It writes the release (the versions
    and their copies, the `Release x.y.z.` entries, the new tags in `apps.toml`, the portal's version and its entry,
    Nexus's), commits it, pushes it and starts Release Nexus on that commit. If the push stops, fix what it says;
    the pill then reads **Push and start**. It fetches GitHub's tags and `main` first: a portal is tagged on GitHub
@@ -99,7 +100,7 @@ what there is to do. Only the lit pill does anything, so you never need a comman
 9. **Bring in the pin commit** (**git pull**): the *Pin ...* commit is on main. It lights as soon as GitHub's runs
    show that commit, before git has fetched it. Then every step shows ✓.
 
-A tag pushed by hand (**git tag** in the steps below) still releases that one app or portal, published at once. The
+A tag pushed by hand (**git tag** on tabs 1 and 2 below) still releases that one app or portal, published at once. The
 portal tag Publish makes starts Release Windows Portable too, as any pushed tag does; that run sees the release is
 published already and ends at once.
 
@@ -117,9 +118,10 @@ published already and ends at once.
   pins a tag of that app that was never released, the pin moves to the new version. When `apps.toml` changed since
   the last portal release, for that or another reason (an app added or removed), CI wants a portal bump in the same push:
   Apply makes it too (the lowest portal version CI accepts, with a CHANGELOG entry that lists the changed pins) and
-  says so; the portal release itself stays step 2. It runs `bc250-bazzite/tools/check_manifest.py`. Then commit, push, and push the app tags (steps 1 and 2 of [the suite's release steps](https://robertotorino.github.io/nexus/bc250-bazzite-suite/portal/#appstoml-and-releases)),
-  with **git add**, **git commit**, **git push** and **git tag** at the bottom: on Linux the push runs
-  `tools/ci-local.sh` first and pushes only when CI's jobs pass. **Apply** is the pill in the header beside
+  says so; the portal release itself stays step 2. It runs `bc250-bazzite/tools/check_manifest.py`. Then commit and
+  push with **Commit your changes** and **Push them** on the Nexus release tab (on Linux the push runs
+  `tools/ci-local.sh` first and pushes only when CI's jobs pass), and **git tag** on this tab pushes the app tags
+  (steps 1 and 2 of [the suite's release steps](https://robertotorino.github.io/nexus/bc250-bazzite-suite/portal/#appstoml-and-releases)). **Apply** is the pill in the header beside
   **Refresh** (*New app releases*); from another tab it opens step 1. Once applied, it is greyed out: what it
   wrote is on top of each CHANGELOG, and an app left unticked then is not ticked again. It works again when another
   app is to be released, or when you tick one.
@@ -130,7 +132,7 @@ published already and ends at once.
   the last portal release (its tag; the last push, `origin/main`, while there is none), and offers the higher of that and what semantic versioning gives since the last
   portal tag (its CHANGELOG entries, and the apps added, removed or moved in `apps.toml`); **Bump** writes it, the portal's version on the first line and Nexus's on the second, with a CHANGELOG entry that lists the pinned app
   releases, and runs `bc250-bazzite/tools/check_manifest.py` (step 4). Then commit, test on a BC-250 ([before its tag](https://robertotorino.github.io/nexus/bc250-bazzite-suite/portal/#testing-a-portal-release-before-its-tag)), and only then push
-  and tag the portal (step 5). The window lists these commands in that order. While step 1's releases are
+  and tag the portal (step 5: **git tag** beside Bump). The window lists these commands in that order in **Commands**. While step 1's releases are
   not tagged yet, Bump portal lists step 1's commands with the bump in them instead (amending the release commit
   when it is already made and not pushed), and the portal release follows once the apps are pinned. A suite made
   for Windows (its `SYSTEM` file says `windows`) has no board and no `check-release.sh`: its commands test the
@@ -147,7 +149,7 @@ published already and ends at once.
   checkout before the push, and the published portal release after GitHub has built it. **Test withdrawal** does
   the first on a board with a withdrawn app installed. **Installer tests** opens BC-250 Installer Tests from the
   checkout. **Record portal tour** records the portal's video tour from the checkout as it is now, for the wiki and
-  YouTube (`bc250-bazzite/tools/record-tour.sh`, about a minute, its output in Logs), into
+  YouTube (`bc250-bazzite/tools/record-tour.sh`, about a minute, its output in Commands), into
   `~/Videos/bc250-portal-tour-v<portal version>.mp4`, and opens it in your video player. The tests run on the
   ticked suite's own system: the BC250 suite's on Linux (the board). For a Windows suite they run on Windows (the
   handheld), with its `tools\check-release.ps1` in a PowerShell window: **Test app updates** and **Test withdrawal**
@@ -183,29 +185,22 @@ published already and ends at once.
   ports 8785 and 8786, so a handheld, a laptop or the TV opens them too: the addresses for those devices show on
   the page once a wiki started. The computer's firewall has to let them in (see the Nexus page's
   [Design](design.md) chapter).
-- **Logs** shows the log of the step last open, the whole window wide: what Apply, Pin, Bump portal, Retract
-  or a test on this board wrote. A step that writes its log opens Logs; open the step again to go on.
-- **git pull**, **git add**, **git commit**, **git push** and **git tag**, under the tabs, commit, push and tag without typing a command, with
-  the checks in between. **git pull** brings in what was pushed from the other machine (`git pull --rebase
-  --autostash`: your own commits go on top of it, and changes you have not committed stay as they are). It runs
-  `tools/git-setup.sh` first, the checkout's git settings: the pre-push hook and the CHANGELOGs' merge driver, which
-  merges an entry written here and an entry released from the other machine by entry instead of by line, so the
-  pull no longer stops with a conflict in a CHANGELOG they both grew (the Nexus page's
-  [Development](development.md) chapter). It reads
-  **git pull (2)** when the remote's main, as git last fetched it, has two commits this checkout lacks, and **git
-  pull (new)** when the GitHub pill sees a push on main that is no commit here. Pull when you start working on a
-  machine, and when **git push** says the remote has commits this checkout does not. **git add** stages every change and new file and runs `tools/fix-modes.sh`, which sets
-  the exec bits CI checks. **git commit** runs `tools/check_versions.py` and `check_manifest.py` first, of the
-  suites the staged changes touch (`--suite bc250-bazzite` and `bc250-bazzite/tools/check_manifest.py` for a BC250
-  change; `--nexus`, core and `dev/`, when no suite changes), and commits only when they pass: one suite's failing
-  check never holds another suite's commit, as its CI never holds another suite's tags; Apply and Bump portal fill in its message, and tick **Amend** when their commands
-  add to the last commit (only a commit that is not pushed yet). **git push** runs `tools/ci-local.sh` first on
-  Linux and pushes only when CI's jobs pass. **git tag** runs `tools/tag-release.sh` (below) with the tags of the
-  step open: on tab 2 the portal's release, on the other tabs step 1's app releases that have no tag yet; it
-  works once what is staged is committed and HEAD is pushed. **git push** and **git tag** ask first, with the commits or tags they send and
-  the command. When the GitHub token on the machine is a `gh` login or a classic token, which reach every
-  repository of your account, they say so: a fine-grained token for this repository only is safer. Each button
-  works only when it has something to do, and none while a command runs; their output appears in **Commands**.
+- What a step writes (Apply, Pin, Bump portal, Retract, a test on this board) shows in **Commands**, under a line
+  that names the step, with the output of the commands: one output tab. A step that writes its log opens Commands;
+  open the step again to go on. The steps' logs go into the day's command log too (below).
+- **git tag** on tabs 1 and 2 runs `tools/tag-release.sh` (below) with the tags of that step: on tab 2 the
+  portal's release, on tab 1 the app releases that have no tag yet. It works once what is staged is committed and
+  HEAD is pushed, and never while a command runs; it asks first, with the tags it sends and the command. When the
+  GitHub token on the machine is a `gh` login or a classic token, which reach every repository of your account, it
+  says so: a fine-grained token for this repository only is safer. Committing and pushing are the Nexus release
+  tab's steps, also for a suite that releases by tags: **Commit your changes** stages every change and new file,
+  sets the exec bits CI checks (`tools/fix-modes.sh`), runs `tools/check_versions.py` and `check_manifest.py` of the
+  suites the changes touch (`--suite bc250-bazzite` and `bc250-bazzite/tools/check_manifest.py` for a BC250 change;
+  `--nexus`, core and `dev/`, when no suite changes), and commits only when they pass: one suite's failing check
+  never holds another suite's commit, as its CI never holds another suite's tags. **Push them** brings in what
+  GitHub has first and, on Linux, runs `tools/ci-local.sh` and pushes only when CI's jobs pass. A commit that must
+  join the last one (Bump portal before step 1's push: `git commit --amend`) is among the commands the step offers
+  in **Commands**.
 - **The command line** in **Commands** runs a command in the checkout, so you need no separate terminal for the
   commands the steps show. Type it and press Enter; its output appears above the line as it runs. **Commands**
   lists the commands the last step showed (Apply, Bump portal or Retract), one per line: pick one to put it on
@@ -215,7 +210,7 @@ published already and ends at once.
   Each command runs with `bash -lc` in the folder the last `cd` left; variables you set do not carry over to the
   next command. A command cannot read input, so nothing can ask you something: git does not prompt for a password,
   opens no editor (commit with `-m`) and pages nothing. For a command that must ask, use a terminal. After each
-  command the window reads the checkout again, as **Refresh** does. On Windows it needs Git Bash's `bash` on the
+  command that changed the checkout (a commit, a push, a tag) the window reads it again, as **Refresh** does. On Windows it needs Git Bash's `bash` on the
   PATH. Every command, its whole output and how it ended (its exit code) are also kept in a file of the day,
   `~/.cache/nexus-release-tool/commands/commands-<YYYY-MM-DD>.log` (on Windows under your user folder,
   `.cache\nexus-release-tool\commands`), so what a step said can be read again afterwards, or sent along when one went
@@ -237,7 +232,8 @@ build: those of the suite ticked in the Portals column and Nexus's own (CI Nexus
 releases. For each run that is still going it shows how many of its jobs are done, each job that runs with the step it
 is at (*pytest (core): Run tests (4/7)*) and the time since the run started; a run that failed names its job and
 step; a run that passed says so. The dot is blue while something runs, red when a run failed and green when all
-passed. Hover for every job of every run; click to open the job that runs (or failed) on GitHub. The jobs need a gh
+passed. The line wraps when it is longer than the window is wide, so its end is always visible. Hover for every
+job of every run; click to open the job that runs (or failed) on GitHub. The jobs need a gh
 login (`gh auth login`): it then reads them every 10 seconds while a run goes. Without one it shows the runs only,
 so the 60 requests an hour stay for the **GitHub** pill.
 

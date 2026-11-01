@@ -9,13 +9,14 @@ apps.toml changed since the last portal release needs a portal bump in the same 
 Step 2, Pin and release Portal: once GitHub has built the app releases, Pin fills in their tag and sha256 in apps.toml;
 Bump portal writes the portal version (at least what check_manifest.py asks) and its CHANGELOG entry, runs
 check_manifest.py and shows the git commands: the portal release's, or step 1's with the bump in them while step
-1's releases are not tagged yet (an app added to apps.toml needs the bump in the push that adds it). Under the tabs,
-git add, git commit, git push and git tag are buttons with their checks in between: add sets the exec bits
-(fix-modes.sh), commit runs check_versions.py and check_manifest.py first, push runs tools/ci-local.sh first (Linux)
-and pushes only when CI's jobs pass, tag runs tag-release.sh (a pushed HEAD that CI passed) with the tags of the step
-open: step 2's portal tag, else step 1's app tags. Push and tag ask first, with what they send, and warn when the
-GitHub token on the machine reaches every repository of the account.
-The header is a row of pills, as the apps' status boxes (owner, 20-10-2026): Refresh, the working tree, whether
+1's releases are not tagged yet (an app added to apps.toml needs the bump in the push that adds it). Committing and
+pushing are the Nexus release tab's steps (Commit your changes, Push them: git add with the exec bits, the version
+and manifest checks of the suites touched, tools/ci-local.sh before a push on Linux); git tag is a button on steps 1
+and 2 (owner, 01-11-2026: the git row under the tabs went, the steps had taken its work over): tag-release.sh (a
+pushed HEAD that CI passed) with step 1's app tags or step 2's portal tag. Push and tag ask first, with what they
+send, and warn when the GitHub token on the machine reaches every repository of the account. Each page's explanation
+sits behind a round "i" in its first row (parts.py), not in a paragraph on the page (owner, 01-11-2026).
+The header is a row of pills, as the apps' status boxes (owner, 20-10-2026): Refresh, Apply, whether
 GitHub built the last push (CI, Release, Manual; it notifies when a build it saw running passes or fails), how many
 of GitHub's API requests are left (green, orange under a tenth, red at none), GitHub status: green while
 githubstatus.com reports GitHub up, red while it reports a problem; a click opens that page, and Claude tokens today:
@@ -29,8 +30,9 @@ and closes the ticked ones with gh issue close in the Commands tab. Test local a
 checkout, to try it before its release (the portal is the first icon); a wiki's icon (one per mkdocs.yml) serves it
 from the checkout (mkdocs serve, a port each) and opens it with its design panel; Wikis on the network serves them
 for the other devices too.
-The Commands tab is a command line in the checkout (command_line.py), where the git buttons run too; its Commands
-menu offers the ones the last step showed."""
+The Commands tab is a command line in the checkout (command_line.py), where the steps' pills run their commands and
+what each step wrote shows under a line that names it (one output tab, owner, 01-11-2026); its Commands menu offers
+the commands the last step showed."""
 
 from __future__ import annotations
 
@@ -49,19 +51,19 @@ from PyQt6.QtNetwork import QLocalSocket
 from PyQt6.QtWidgets import (QApplication, QCheckBox, QComboBox, QDialog, QFrame, QGridLayout, QHBoxLayout, QHeaderView, QLabel,
                              QLineEdit, QListView,
                              QListWidget, QListWidgetItem, QMainWindow, QMessageBox, QPushButton, QSizePolicy,
-                             QStackedWidget, QSystemTrayIcon, QTableWidget, QTableWidgetItem, QTabWidget, QVBoxLayout,
+                             QSystemTrayIcon, QTableWidget, QTableWidgetItem, QTabWidget, QVBoxLayout,
                              QWidget)
 
 from bc250_core.instance import server_name
 from bc250_core.platform import launch_in_terminal
 from bc250_core.theme import BLUE, GREEN, GREY, ORANGE, RED
 from bc250_core.updates import UpdateChecker
-from bc250_core.widgets import AppHeader, MetricBox, Pill, Terminal, accent_button, hint_label, same_width
+from bc250_core.widgets import AppHeader, MetricBox, Pill, accent_button, hint_label, same_width
 
 from . import APP_NAME, LOGO_PATH, CHECKOUT, __version__
-from . import flow
 from . import plan as rp
 from .command_line import CommandLine
+from .parts import StepLog, info_row
 from .release_page import ReleasePage
 from .style import CHECK_STYLESHEET, NEXUS, TAB_TITLE_STYLESHEET, TEAL
 
@@ -140,9 +142,12 @@ class AppsPage(QWidget):
         self.tick_button = QPushButton("Tick what needs a release")
         self.tick_button.setToolTip("Tick every app whose shipped files changed since its last tag")
         self.tick_button.clicked.connect(self.tick_needed)
-        self.output = Terminal()                 # the window shows it under the steps, beside the command line
+        self.tag_button = QPushButton("git tag")        # step 1's app releases, once their commit is pushed
+        self.tag_button.clicked.connect(lambda: window.tag(self))
+        self.output = StepLog(self, "Release apps", window.step_wrote)      # shows in Commands
         lay = QVBoxLayout(self)
-        lay.addWidget(hint_label(
+        lay.addLayout(info_row(
+            "Tick the apps to release and enter their versions; Apply (in the header) writes them.",
             "The apps that need a release are ticked; untick what waits and enter their version: a never-tagged "
             "version can be released as it is. Apply writes VERSION, its copies (__version__, VERSION=, pyproject, Cargo.toml and Cargo.lock) and a "
             "\"Release x.y.z.\" CHANGELOG entry with the notes, which become the release notes on GitHub. Core is "
@@ -151,11 +156,13 @@ class AppsPage(QWidget):
             "CHANGELOG): no tag either, its push makes GitHub's Latest release nexus-v&lt;version&gt;. "
             "<b>Needs release</b> (orange): something the app ships (its "
             "folder without tests, the core it bundles, its manual chapter) differs from its last tag, committed or "
-            "not; hover it for the files."))
+            "not; hover it for the files. Then commit and push on the Nexus release tab, and <b>git tag</b> here "
+            "tags the releases once their commit is pushed; GitHub builds them."))
         lay.addWidget(self.table, 2)
         row = QHBoxLayout()
         row.addWidget(self.tick_button)
         row.addStretch(1)
+        row.addWidget(self.tag_button)
         lay.addLayout(row)
         self.rows: list[tuple[rp.Unit, QCheckBox, QComboBox, QLineEdit]] = []
         self.handled: set[tuple[str, str]] = set()  # (key, version) that needed a release when Apply was pressed
@@ -350,7 +357,9 @@ class PortalPage(QWidget):
         self.portal_state = QLabel()             # the portal's own release: not tagged yet, building, built
         self.portal_state.setWordWrap(True)
         self.portal_state.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-        self.output = Terminal()                 # the window shows it under the steps, beside the command line
+        self.tag_button = QPushButton("git tag")        # the portal's release, once its commit is pushed
+        self.tag_button.clicked.connect(lambda: window.tag(self))
+        self.output = StepLog(self, "Pin and release Portal", window.step_wrote)      # shows in Commands
 
         top = QHBoxLayout()
         top.addWidget(QLabel("Compare with:"))
@@ -372,16 +381,19 @@ class PortalPage(QWidget):
         portal_row.addLayout(versions, 1)
         portal_row.addSpacing(12)
         portal_row.addWidget(self.bump_button, 0, Qt.AlignmentFlag.AlignVCenter)
+        portal_row.addSpacing(12)
+        portal_row.addWidget(self.tag_button, 0, Qt.AlignmentFlag.AlignVCenter)
         lay = QVBoxLayout(self)
-        lay.addWidget(hint_label(
+        lay.addLayout(info_row(
+            "Pin the built app releases, then Bump the portal; commit, test on a BC-250, push, and git tag it.",
             "After step 1 is pushed and tagged, and GitHub has built those releases (the GitHub column says where "
             "each one stands; a desktop notification comes when one is ready to pin):<br>"
             "<b>1.</b> Pin: the new tags and their checksums go into apps.toml.<br>"
             "<b>2.</b> Bump portal: the portal version and a CHANGELOG entry that lists the pinned releases.<br>"
             "<b>3.</b> Commit, then <b>Test app updates</b> (tab Test on this board) on a BC-250: it installs the portal from the checkout and "
             "starts it with <code>--source release</code>, so the changed apps install from GitHub and must work.<br>"
-            "<b>4.</b> Only then push and tag the portal (<b>git push</b>, then <b>git tag</b> at the bottom): the tag "
-            "is what reaches the users. The commands appear in the log after Bump portal (done before step 1's "
+            "<b>4.</b> Only then push (Push them, on the Nexus release tab) and tag the portal (<b>git tag</b> "
+            "beside Bump): the tag is what reaches the users. The commands appear in Commands after Bump portal (done before step 1's "
             "push, for an added app, they are step 1's commands with the bump in them).<br>"
             "<b>5.</b> Once GitHub's release workflow has built the portal: <b>Test Portal release</b> (tab Test on "
             "this board) downloads and installs "
@@ -614,7 +626,7 @@ class WithdrawPage(QWidget):
         self.back_button = QPushButton("Take back")
         self.back_button.setToolTip("Remove the mark again (after a test, or a mistake)")
         self.back_button.clicked.connect(self.take_back)
-        self.output = Terminal()                 # the window shows it under the steps, beside the command line
+        self.output = StepLog(self, "Retract app", window.step_wrote)       # shows in Commands
         row = QHBoxLayout()
         row.addWidget(QLabel("App:"))
         row.addWidget(self.app_box)
@@ -624,7 +636,9 @@ class WithdrawPage(QWidget):
         reason_row.addWidget(self.withdraw_button)
         reason_row.addWidget(self.back_button)
         lay = QVBoxLayout(self)
-        lay.addWidget(hint_label(
+        lay.addLayout(info_row(
+            "Retract marks a pinned release withdrawn, with the reason the boards show; test it, then release the "
+            "portal.",
             "For a release that must not be used any more (privacy, security, any reason):<br>"
             "<b>1.</b> Retract: apps.toml marks the pinned release withdrawn, with the reason the boards show.<br>"
             "<b>2.</b> <b>Test withdrawal</b> (tab Test on this board) on a BC-250 that has the app installed: the portal from this checkout shows "
@@ -633,6 +647,7 @@ class WithdrawPage(QWidget):
             "check offers it), then release the portal in step 2: it removes the app from the boards."))
         lay.addLayout(row)
         lay.addLayout(reason_row)
+        lay.addStretch(1)
         self.units: list[rp.Unit] = []
 
     def fill(self, units: list[rp.Unit]) -> None:
@@ -810,7 +825,7 @@ class RunPage(QWidget):
                                     "the other devices on the network (a handheld, a laptop, the TV) open them too; "
                                     "their addresses show below once a wiki started")
         self.network_box.toggled.connect(lambda _on: self.release_window.reload())
-        self.output = Terminal()                 # the window shows it under the steps, beside the command line
+        self.output = StepLog(self, "Test on this board", window.step_wrote, opens=False)   # lines while you click
         checks = QHBoxLayout()
         for button in (self.local_button, self.release_button, self.withdraw_button, self.installer_button,
                        self.tour_button, self.issues_button):
@@ -823,7 +838,8 @@ class RunPage(QWidget):
         local_row.addStretch(1)
         local_row.addWidget(self.network_box)
         lay = QVBoxLayout(self)
-        lay.addWidget(hint_label(
+        lay.addLayout(info_row(
+            "The tests of a release on a BC-250, each in a terminal; Close issues handles GitHub's open issues.",
             "The tests of a release, on a BC-250. <b>Test app updates</b> (step 2, before the portal's push): the "
             "portal from this checkout, with the apps from their GitHub releases. <b>Test Portal release</b> (after "
             "GitHub built the portal): the published portal release. <b>Test withdrawal</b> (step 3): the portal from "
@@ -835,7 +851,8 @@ class RunPage(QWidget):
         lay.addLayout(checks)
         lay.addSpacing(8)
         lay.addLayout(local_row)
-        lay.addWidget(hint_label(
+        lay.addLayout(info_row(
+            "Click an app to start it from this checkout, to try it before its release; the last icons serve the wikis.",
             "Click an app to start it from this checkout, to try it before its release: <code>python -m</code> with "
             "this venv and the checkout's core, as <code>run.sh</code> starts this app. An app that changes how the "
             "board runs (an orange <b>!</b> on its icon) asks first; it uses the scripts in the checkout. Each app "
@@ -962,7 +979,7 @@ class RunPage(QWidget):
         return Path.home() / "Videos" / f"bc250-portal-tour-v{self.release_window.portal_version()}.mp4"
 
     def record_tour(self) -> None:
-        """The suite's tools/record-tour.sh in the background, its output in Logs; the video opens when it is done."""
+        """The suite's tools/record-tour.sh in the background, its output in Commands; the video opens when it is done."""
         path = rp.record_script(self.release_window.root, self.release_window.suite)
         script = self.release_window.root / path
         if not script.is_file():
@@ -978,7 +995,7 @@ class RunPage(QWidget):
         self.recorder.finished.connect(lambda code, _status: self._recorded(code, out))
         self.tour_button.setEnabled(False)
         self.output.appendPlainText(f"$ {path} {out}")
-        self.release_window._show_log(self)
+        self.release_window.tabs.setCurrentIndex(self.release_window.commands_tab)   # its lines come there
         self.recorder.start("bash", [str(script), str(out)])
 
     def _recorder_output(self) -> None:
@@ -1268,7 +1285,6 @@ class BuildIndicator(Pill):
         state = rp.build_state(latest)
         self.show_state(state, self.details(latest))
         self.release_window.ticker.show_runs(latest, self.signed_in)
-        self.release_window._show_git_state()          # a push from elsewhere: git pull says so
         running = any(not r.done for r in self.runs)
         self.timer.start(BUILD_BUSY_MS if running else BUILD_IDLE_MS)
 
@@ -1350,7 +1366,8 @@ class WorkflowTicker(QFrame):
     that passed says so. Signed in with gh it reads the jobs of every run that runs every 10 seconds, and of a run
     that failed once (unchanged answers do not count against GitHub's limit); without a token, the 60 requests an
     hour are the build pill's, so it shows the runs only. A click opens the job that runs (or failed), else the run.
-    Hidden until GitHub shows a run."""
+    Hidden until GitHub shows a run. The line wraps to as many lines as it needs, never wider than the window
+    (owner, 01-11-2026: cut off at one line, the end was not visible)."""
 
     def __init__(self, source):
         super().__init__()
@@ -1368,10 +1385,11 @@ class WorkflowTicker(QFrame):
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.dot = QLabel("●")
         self.text = QLabel()
-        self.text.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)  # elided, never wider
+        self.text.setWordWrap(True)                                             # wrapped, never wider
+        self.text.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
         lay = QHBoxLayout(self)
         lay.setContentsMargins(10, 4, 10, 4)
-        lay.addWidget(self.dot)
+        lay.addWidget(self.dot, 0, Qt.AlignmentFlag.AlignTop)
         lay.addWidget(self.text, 1)
         self.checker = UpdateChecker(self)
         self.checker.finished.connect(self.fetched)
@@ -1447,18 +1465,10 @@ class WorkflowTicker(QFrame):
             return
         self.dot.setStyleSheet(f"color:{BUILD_LOOK[state][0]};")
         self.line = rp.ticker_line(self.runs, self.jobs, now)
-        self._elide()
+        self.text.setText(self.line)
         sign_in = "" if self.signed_in or self.source is None else \
             "\n\nSigned in with gh (gh auth login), the ticker shows each job and the step it is at too."
         self.setToolTip(rp.ticker_details(self.runs, self.jobs, now) + sign_in + "\n\nClick to open it on GitHub.")
-
-    def _elide(self) -> None:
-        self.text.setText(self.text.fontMetrics().elidedText(self.line, Qt.TextElideMode.ElideRight,
-                                                             max(0, self.text.width())))
-
-    def resizeEvent(self, event) -> None:  # noqa: N802 (Qt override)
-        super().resizeEvent(event)
-        self._elide()
 
     def target(self) -> str:
         return rp.ticker_target(self.runs, self.jobs)
@@ -1671,7 +1681,6 @@ class ReleaseWindow(QMainWindow):
         self.refresh_pill = Pill("Refresh", "Click to refresh", "Read the checkout and its tags again, for changes "
                                  "made in a terminal; what you entered stays")
         self.refresh_pill.clicked.connect(self.refresh)
-        self.status = MetricBox("Working tree")    # clean or changed
         self.build = BuildIndicator(self, runs_source, notify)
         self.ticker = WorkflowTicker(jobs_source)       # between the pills and the tabs, fed by the build's looks
         self.ticker.hidden = rp.other_suites_workflows(root, self.suite)
@@ -1679,7 +1688,7 @@ class ReleaseWindow(QMainWindow):
         self.claude = ClaudeUsageIndicator(claude_source)
         self.tabs = QTabWidget()
         self.apps_page = AppsPage(self)                 # its Apply is the header's third pill
-        pills = [self.refresh_pill, self.status, self.apps_page.apply_button, self.build, self.build.rate,
+        pills = [self.refresh_pill, self.apps_page.apply_button, self.build, self.build.rate,
                  self.github_status, self.claude]
         for pill in pills:
             header.add_second(pill)
@@ -1690,6 +1699,8 @@ class ReleaseWindow(QMainWindow):
         # on it yet (bc250-bazzite) and for doing a step by hand.
         self.release_page = ReleasePage(self)
         self.tabs.addTab(self.release_page, "Nexus release")
+        # What the release holds, a tab of its own (owner, 01-11-2026: with the steps it was squeezed)
+        self.tabs.addTab(self.release_page.contents, "Contents")
         self.tabs.addTab(self.apps_page, "1. Release apps")
         self.tabs.addTab(self.portal_page, "2. Pin and release Portal")
         self.withdraw_page = WithdrawPage(self)
@@ -1700,24 +1711,17 @@ class ReleaseWindow(QMainWindow):
         # was typed in it.
         self.tabs.currentChanged.connect(lambda i: self.tabs.widget(i) is self.portal_page
                                          and self.portal_page.fill(rp.load_units(self.root, self.suite)))
-        self.commands = CommandLine(root, settings, finished=self.refresh,     # a commit or push: read it again
+        self.commands = CommandLine(root, settings, finished=self.command_finished,   # a commit or push: read it again
                                     log_dir=COMMAND_LOG_DIR if settings is not None else None)
-        # The logs are tabs of their own, each the whole tab area (owner, 17-10-2026: boxes under the steps were
-        # too flat to read). Logs shows the log of the step last open (what Apply, Pin, Bump portal, Retract or
-        # a started app wrote); a step that writes its log opens it. Commands is the command line with its output.
-        self.step_pages = (self.release_page, self.apps_page, self.portal_page, self.withdraw_page, self.run_page)
-        self.outputs = QStackedWidget()
-        for page in self.step_pages:
-            self.outputs.addWidget(page.output)
-        self.log_tab = self.tabs.addTab(self.outputs, "Logs")
+        # One output tab (owner, 01-11-2026: Logs was mostly empty): Commands is the command line with its output,
+        # where what a step wrote (Apply, Pin, Bump portal, Retract, a test on this board) shows too, under a line
+        # that names the step (step_wrote()).
         self.commands_tab = self.tabs.addTab(self.commands, "Commands")
-        self.tabs.setTabToolTip(self.log_tab, "The log of the step last open: what Apply, Pin, Bump portal, Retract "
-                                              "or a test on this board wrote")
         self.tabs.setTabToolTip(self.commands_tab, "The command line: runs a command in the checkout and shows its "
-                                                   "output; Commands offers what the last step showed")
-        self.tabs.currentChanged.connect(self._tab_changed)
-        for page in self.step_pages[:4]:                 # not Test on this board: its lines come while you click
-            page.output.textChanged.connect(lambda page=page: self._show_log(page))
+                                                   "output, with what each step wrote; Commands offers what the "
+                                                   "last step showed")
+        self.git_state = (False, False, 0)      # unstaged, staged, commits ahead of the last push (git tag)
+        self.seen = ""                          # the checkout as last read: fingerprint()
         central = QWidget()
         lay = QVBoxLayout(central)
         lay.addLayout(header)
@@ -1743,10 +1747,6 @@ class ReleaseWindow(QMainWindow):
         columns.addWidget(self.suite_column)
         columns.addWidget(self.tabs, 1)
         lay.addLayout(columns, 1)
-        lay.addLayout(self._git_row())
-        self.footer = QLabel()
-        self.footer.setStyleSheet("color:palette(placeholder-text);")
-        lay.addWidget(self.footer, 0, Qt.AlignmentFlag.AlignRight)
         self.setCentralWidget(central)
         self.reload()
         self.build.check()
@@ -1764,62 +1764,30 @@ class ReleaseWindow(QMainWindow):
         self.ticker.follow(rp.other_suites_workflows(self.root, name))
         self.refresh()
 
-    def _git_row(self) -> QHBoxLayout:
-        """git add, git commit, git push and git tag as buttons, each with its checks (owner, 19-10-2026: no commands
-        to type or copy; git tag, owner, 20-10-2026). They run in the command line, whose output opens."""
-        # git pull first (owner, 28-10-2026: a push from the other machine only showed as a push that failed).
-        self.pull_button = QPushButton("git pull")
-        self.pull_button.clicked.connect(lambda: self.run_git(rp.pull_command()))
-        self.add_button = QPushButton("git add")
-        self.add_button.setToolTip(f"{rp.add_command()}\n\nStages every change and new file, sets the exec bits CI "
-                                   "checks and lists what is staged")
-        self.add_button.clicked.connect(lambda: self.run_git(rp.add_command()))
-        self.commit_message = QLineEdit()
-        self.commit_message.setPlaceholderText("Commit message (Apply and Bump portal fill it in)")
-        self.amend_box = QCheckBox("Amend")
-        self.amend_box.setToolTip("Add the staged changes to the last commit, with its message: only for a commit "
-                                  "that is not pushed yet")
-        self.amend_box.toggled.connect(self._show_git_state)
-        self.commit_message.textChanged.connect(self._show_git_state)
-        self.commit_button = QPushButton("git commit")
-        self.commit_button.clicked.connect(self.commit)
-        self.push_button = QPushButton("git push")
-        self.push_button.clicked.connect(self.push)
-        self.tag_button = QPushButton("git tag")
-        self.tag_button.clicked.connect(self.tag)
-        self.git_state = (False, False, 0)
-        self.committing = False                 # the commit button's command runs: its message goes when it passes
-        row = QHBoxLayout()
-        row.addWidget(self.pull_button)
-        row.addWidget(self.add_button)
-        row.addWidget(self.commit_message, 1)
-        row.addWidget(self.amend_box)
-        row.addWidget(self.commit_button)
-        row.addWidget(self.push_button)
-        row.addWidget(self.tag_button)
-        return row
-
-    def tags_to_push(self) -> list[str]:
-        """What git tag tags: the portal's release on step 2's tab (once its VERSION has no tag), else step 1's app
+    def tags_to_push(self, page: QWidget) -> list[str]:
+        """What *page*'s git tag tags: step 2's the portal's release (once its VERSION has no tag), step 1's the app
         releases that have none yet."""
-        if self.tabs.currentWidget() is self.portal_page:
+        if page is self.portal_page:
             portal = self.portal_page.portal_unit
             return [portal.tag] if portal is not None and not portal.released else []
         return rp.untagged_releases(self.units)
 
     def offer(self, commands: str) -> None:
-        """A step showed the commands to run next: the Commands menu lists them, and their commit's message (or
-        amend) goes into the git row."""
+        """A step showed the commands to run next: the Commands menu lists them."""
         self.commands.offer(commands)
-        message, amend = rp.commit_message(commands)
-        if message or amend:
-            self.commit_message.setText(message)
-            self.amend_box.setChecked(amend)
+
+    def step_wrote(self, page: QWidget, name: str, text: str, opens: bool) -> None:
+        """A step's log (StepLog): it shows in Commands under the step's name, and Commands opens when the step
+        that wrote it is the tab open (*opens*; not for the board tests, whose lines come while you click)."""
+        self.commands.note(name, text)
+        if opens and self.tabs.currentWidget() is page and text.strip():
+            self.tabs.setCurrentIndex(self.commands_tab)
 
     def run_git(self, command: str) -> None:
         if self.commands.run_now(command):
             self.tabs.setCurrentIndex(self.commands_tab)
-        self._show_git_state()
+        self.release_page.show_state()          # the pills rest while the command runs
+        self.show_tag_buttons()
 
     def confirm_git(self, title: str, what: str, command: str) -> bool:
         """Push and tag reach GitHub: they ask first, with the command and what it sends, and say when the token on
@@ -1833,85 +1801,47 @@ class ReleaseWindow(QMainWindow):
         if self.confirm_git("git push", f"Push to GitHub:\n\n{commits}", rp.push_command()):
             self.run_git(rp.push_command())
 
-    def tag(self) -> None:
-        tags = self.tags_to_push()
-        if self.confirm_git("git tag", "Tag and push these releases; GitHub then builds and publishes them:\n\n"
-                            + "\n".join(tags),
-                            rp.tag_command(tags)):
+    def tag(self, page: QWidget) -> None:
+        tags = self.tags_to_push(page)
+        if tags and self.confirm_git("git tag", "Tag and push these releases; GitHub then builds and publishes "
+                                     "them:\n\n" + "\n".join(tags), rp.tag_command(tags)):
             self.run_git(rp.tag_command(tags))
 
-    def commit(self) -> None:
-        amend = self.amend_box.isChecked()
-        message = self.commit_message.text().strip()
-        if not message and not amend:
-            return
-        self.committing = True
-        touched = rp.staged_suites(self.root)           # the suites the commit changes: their checks alone
-        self.run_git(rp.commit_command(message, self.base(), amend, shlex.quote(sys.executable),
-                                       rp.manifest_checks(self.root, touched), rp.version_checks(touched)))
-
-    def _show_git_state(self) -> None:
-        """Each button only when it has something to do, and none while a command runs."""
-        unstaged, staged, ahead = self.git_state
+    def show_tag_buttons(self) -> None:
+        """git tag on steps 1 and 2 (owner, 20-10-2026; a button of each step since 01-11-2026): only when the step
+        has a release without a tag, what is staged is committed and HEAD is pushed, and never while a command
+        runs."""
+        _unstaged, staged, ahead = self.git_state
         idle = not self.commands.is_running() and bool(self.commands.bash)
-        amend = self.amend_box.isChecked()
-        message = self.commit_message.text().strip()
-        self.pull_button.setEnabled(idle)
-        waiting = rp.behind(self.root, self.base())
-        # The build pill sees every push on GitHub: its newest on main that is no commit here was pushed elsewhere.
-        pushed = flow.pushed_elsewhere(self.root, self.build.runs)
-        newer = pushed is not None
-        self.pull_button.setText(f"git pull ({waiting})" if waiting else "git pull (new)" if newer else "git pull")
-        self.pull_button.setToolTip(
-            rp.pull_command() + "\n\n" + (f"{self.base()} has {waiting} commit{'s' if waiting != 1 else ''} this "
-                                         "checkout does not: pull before you go on. " if waiting else
-                                         f"GitHub has a push this checkout does not ({pushed.sha[:7]} "
-                                         f"{pushed.title}): pull before you go on. " if newer else "") +
-            "Brings in what was pushed from the other machine (Linux or Windows), with this checkout's own commits on "
-            "top of it and the changes not committed yet kept. Pull when you start working here, and when git push "
-            "says the remote has commits this checkout does not.")
-        self.add_button.setEnabled(idle and unstaged)
-        if amend:                               # a pushed commit is never amended: its push would need --force
-            why = "" if ahead else f"The last commit is pushed already ({self.base()}): commit without Amend."
-        else:
-            why = "Nothing is staged: git add first." if not staged else \
-                "" if message else "Type a commit message first."
-        self.commit_button.setEnabled(idle and not why)
-        touched = rp.staged_suites(self.root)
-        self.commit_button.setToolTip(
-            rp.commit_command(message or "<message>", self.base(), amend, manifests=rp.manifest_checks(self.root, touched),
-                              versions=rp.version_checks(touched))
-            + "\n\n" + (why or "Runs check_versions.py and check_manifest.py first, of the suites the staged changes "
-                              "touch (one suite's checks never hold another's commit), and commits only when they "
-                              "pass"))
-        self.push_button.setEnabled(idle and ahead > 0)
-        linux = sys.platform.startswith("linux")
-        self.push_button.setToolTip(rp.push_command() + "\n\n" + (
-            f"Nothing to push: HEAD is at {self.base()}." if ahead == 0 else
-            f"{ahead} commit{'s' if ahead != 1 else ''} to push. " +
-            ("Runs CI's jobs here first (tools/ci-local.sh) and pushes only when they pass." if linux else
-             "CI's jobs run on GitHub.")))
-        tags = self.tags_to_push()
-        what = "the portal" if self.tabs.currentWidget() is self.portal_page else "step 1's apps"
-        why = f"Nothing to tag: every release of {what} has its tag." if not tags else \
-            "Commit first: the staged changes are not in a commit yet." if staged else \
-            "Push first: a tag goes only on a pushed commit." if ahead else ""
-        self.tag_button.setEnabled(idle and not why)
-        self.tag_button.setToolTip((rp.tag_command(tags) if tags else rp.TAG_SCRIPT) + "\n\n" + (
-            why or "Tags the releases and pushes the tags once CI passed on HEAD on GitHub (it waits while CI runs); "
-                   "GitHub then builds the releases"))
+        for page, what in ((self.apps_page, "step 1's apps"), (self.portal_page, "the portal")):
+            tags = self.tags_to_push(page)
+            why = f"Nothing to tag: every release of {what} has its tag." if not tags else \
+                "Commit first: the staged changes are not in a commit yet." if staged else \
+                "Push first: a tag goes only on a pushed commit." if ahead else ""
+            page.tag_button.setEnabled(idle and not why)
+            page.tag_button.setToolTip((rp.tag_command(tags) if tags else rp.TAG_SCRIPT) + "\n\n" + (
+                why or "Tags the releases and pushes the tags once CI passed on HEAD on GitHub (it waits while CI "
+                       "runs); GitHub then builds the releases"))
 
-    def _tab_changed(self, index: int) -> None:
-        """A step opened: Logs shows that step's log from now on (a log tab opened leaves it as it is)."""
-        if index < len(self.step_pages):
-            self.outputs.setCurrentIndex(index)
-        self._show_git_state()                  # git tag tags what the open step releases
+    def fingerprint(self) -> str:
+        """The checkout as the window reads it: HEAD, the last push, the working tree and the tags. A command that
+        left them as they were needs no reload (owner, 01-11-2026: the window was slow, and read the checkout again
+        after every command)."""
+        return "\n".join(rp.git(self.root, *args) or "" for args in (
+            ("rev-parse", "HEAD"), ("rev-parse", "-q", "--verify", self.base()), ("status", "--porcelain"),
+            ("for-each-ref", "--format=%(refname) %(objectname)", "refs/tags")))
 
-    def _show_log(self, page: QWidget) -> None:
-        """The open step wrote its log: show it in Logs, the whole window wide."""
-        if self.tabs.currentWidget() is page and page.output.toPlainText().strip():
-            self.outputs.setCurrentWidget(page.output)
-            self.tabs.setCurrentIndex(self.log_tab)
+    def command_finished(self) -> None:
+        """A command ended: the checkout is read again when it changed anything, else only the steps' pills and
+        GitHub's state."""
+        if self.fingerprint() != self.seen:
+            self.refresh()
+            return
+        self.release_page.show_state()
+        self.show_tag_buttons()
+        self.build.check()
+        self.github_status.check()
+        self.claude.check()
 
     def base(self) -> str:
         return self.portal_page.base_edit.text().strip() or "origin/main"
@@ -1935,11 +1865,6 @@ class ReleaseWindow(QMainWindow):
         if version is not None:
             combo.setEditText(version)
         self.portal_page.portal_notes.setText(notes)
-        if self.committing and not self.commands.is_running():
-            self.committing = False
-            if self.commands.last_code == 0:
-                self.commit_message.clear()
-                self.amend_box.setChecked(False)
         self.build.check()                      # a push from a terminal: its build
         self.github_status.check()
         self.claude.check()
@@ -1954,21 +1879,15 @@ class ReleaseWindow(QMainWindow):
         portal = rp.portal_target(self.root, self.suite)
         docs = rp.docs_targets(self.root, network=self.run_page.network_box.isChecked(), suite=self.suite)
         self.run_page.fill(([portal] if portal else []) + rp.launch_targets(self.root, self.suite) + docs)
-        self.footer.setText(f"{APP_NAME} {__version__} · edits {self.root}"
-                            + (f" · suite {self.suite}" if len(self.suites) > 1 else ""))
         problems = rp.bad_tags(self.root, units)
         self.bad_tags.setText("\n".join(
             f"\u26a0 {p}: release.yml cannot build it. Delete it (git tag -d {p.split()[0]} && git push origin "
             f":refs/tags/{p.split()[0]}), commit and push the bump, then tag again with {rp.TAG_SCRIPT} "
             f"{p.split()[0]}." for p in problems))
         self.bad_tags.setVisible(bool(problems))
-        dirty = rp.git(self.root, "status", "--porcelain")
-        self.status.set_colour(ORANGE if dirty else GREEN if dirty is not None else GREY)
-        self.status.set_value("Changed" if dirty else "Clean" if dirty is not None else "No git",
-                              "The working tree has changes." if dirty else "The working tree is clean."
-                              if dirty is not None else "This folder is not a git checkout.")
         self.git_state = rp.git_state(self.root, self.base())
-        self._show_git_state()
+        self.show_tag_buttons()
+        self.seen = self.fingerprint()
 
     def closeEvent(self, event) -> None:
         self.build.stop()

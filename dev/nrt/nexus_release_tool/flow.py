@@ -264,7 +264,7 @@ STEPS = (
     ("push", "Push them", "Your commits to GitHub: what GitHub has that this checkout lacks comes in under them first "
                           "(git pull --rebase), then the pre-push hook checks them."),
     ("ci", "CI passes", "GitHub's CI on that commit. Nothing to press: wait until it passed."),
-    ("start", "Start new release", "Check the versions above, then start: it writes the release, commits and pushes "
+    ("start", "Start new release", "Check the versions on the Contents tab, then start: it writes the release, commits and pushes "
                                    "it and starts Release Nexus."),
     ("run", "The release on GitHub", "Builds and publishes the apps, pins them and makes each portal a draft."),
     ("test", "Device test", "Installs the draft portal on this device and starts it: test it as a user would."),

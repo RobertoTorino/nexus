@@ -1,3 +1,7 @@
+Changelog: 01-11-2026 23:35:01
+
+Release 1.0.0.
+
 Changelog: 01-11-2026 13:21:36
 
 Added. The GTT limit on the kernel command line: a GTT limit box in the header row shows ttm.pages_limit (or the

@@ -14,6 +14,7 @@ from pathlib import Path
 
 import pytest
 
+from nexus_release_tool import flow
 from nexus_release_tool import plan as rp
 from nexus_release_tool.command_line import command_lines
 
@@ -382,11 +383,6 @@ def test_git_button_commands():
     two = rp.commit_command("m", "pushed", manifests=["a/tools/check_manifest.py", "b/tools/check_manifest.py"])
     assert two == (f"python3 {rp.VERSIONS_CHECK} && python3 a/tools/check_manifest.py --base pushed && "
                    "python3 b/tools/check_manifest.py --base pushed && git commit -m m")   # every suite's check
-    assert rp.commit_message(rp.app_commands(["alpha-v0.2.0", "beta-v0.1.0"])) == \
-        ("Release alpha-v0.2.0, beta-v0.1.0", False)
-    assert rp.commit_message(rp.app_commands(["alpha-v0.2.0"], amend=True)) == ("", True)
-    assert rp.commit_message(rp.portal_commands("portal-v0.2.0")) == ("Release portal-v0.2.0", False)
-    assert rp.commit_message(rp.withdraw_commands("beta-v0.1.0", "Privacy.")) == ("", False)
 
 
 def test_git_state(repo):
@@ -444,62 +440,14 @@ def test_window_bump_before_the_push_gives_step_ones_commands(window, repo):
     assert "portal-v0.2.0" not in out
 
 
-def test_window_git_buttons(window, repo, monkeypatch):
-    """git add, git commit and git push as buttons (owner, 19-10-2026): each only when it has something to do, with
-    the message of the commit the last step showed, and run in the command line, whose tab opens. Push asks first
-    (owner, 21-10-2026)."""
-    from PyQt6.QtWidgets import QMessageBox
+def test_window_get_up_to_date_counts_what_the_remote_has(window, repo, monkeypatch):
+    """Get up to date, the first step (owner, 28-10-2026: a push from the other machine only showed as a push that
+    failed): its pill runs git pull, its line counts what the remote has that HEAD does not, and it is the step to
+    do when GitHub's newest push on main is no commit here. The git row under the tabs is gone (owner, 01-11-2026)."""
     ran = []
     monkeypatch.setattr(window.commands, "run_now", lambda command: ran.append(command) or True)
-    add, commit, push = window.add_button, window.commit_button, window.push_button
-    assert (add.isEnabled(), commit.isEnabled(), push.isEnabled()) == (False, False, True)   # "work" not pushed
-    _, tick, _, _ = row(window, "alpha")
-    tick.setChecked(True)
-    window.apps_page.apply()
-    assert window.commit_message.text() == "Release alpha-v0.1.1, beta-v0.1.0" and not window.amend_box.isChecked()
-    assert add.isEnabled() and not commit.isEnabled()                # nothing staged yet
-    add.click()
-    assert ran[-1] == rp.add_command() and window.tabs.currentIndex() == window.commands_tab
-    sh(repo, "add", "-A")
-    window.reload()
-    assert not add.isEnabled() and commit.isEnabled()
-    window.commit_message.clear()
-    assert not commit.isEnabled() and "Type a commit message first." in commit.toolTip()
-    window.commit_message.setText("Release alpha-v0.1.1, beta-v0.1.0")
-    commit.click()
-    assert ran[-1].endswith(f" {rp.MANIFEST_CHECK} --base pushed && git commit -m 'Release alpha-v0.1.1, beta-v0.1.0'")
-    window.commands.last_code, window.committing = 1, True           # the checks failed: the message stays
-    window.refresh()
-    assert window.commit_message.text() == "Release alpha-v0.1.1, beta-v0.1.0"
-    window.commands.last_code, window.committing = 0, True
-    window.refresh()
-    assert window.commit_message.text() == ""
-    monkeypatch.setattr(rp, "_token", "github_pat_x")                    # fine-grained: no warning
-    with mock_question(QMessageBox.StandardButton.No) as asked:
-        push.click()                                                 # it asks first: no, nothing runs
-    text = asked.call_args.args[2]
-    assert asked.called and ran[-1] != rp.push_command() and "work" in text and rp.push_command() in text
-    assert "\u26a0" not in text
-    with mock_question(QMessageBox.StandardButton.Yes):
-        push.click()
-    assert ran[-1] == rp.push_command()
-    window.amend_box.setChecked(True)                                # HEAD is not pushed: it may be amended
-    assert commit.isEnabled()
-    window.portal_page.base_edit.setText("main")
-    window.reload()
-    assert not commit.isEnabled() and not push.isEnabled() and "pushed already" in commit.toolTip()
-
-
-def test_window_git_pull_button(window, repo, monkeypatch):
-    """git pull (owner, 28-10-2026: a push from the other machine only showed as a push that failed): always there
-    when no command runs; it counts what the remote has that HEAD does not, and says (new) when GitHub's newest
-    push on main is no commit here."""
-    ran = []
-    monkeypatch.setattr(window.commands, "run_now", lambda command: ran.append(command) or True)
-    pull = window.pull_button
-    assert pull.isEnabled() and pull.text() == "git pull" and rp.pull_command() in pull.toolTip()
-    pull.click()
-    assert ran[-1] == "tools/git-setup.sh && git pull --rebase --autostash" and window.tabs.currentIndex() == window.commands_tab
+    assert not hasattr(window, "pull_button") and not hasattr(window, "commit_message")
+    page = window.release_page
     sh(repo, "checkout", "-q", "pushed")                                 # the other machine pushes two commits
     for name in ("a", "b"):
         write(repo / f"{name}.txt", name)
@@ -508,32 +456,33 @@ def test_window_git_pull_button(window, repo, monkeypatch):
     sh(repo, "checkout", "-q", "main")
     assert rp.behind(repo, "pushed") == 2
     window.reload()
-    assert pull.text() == "git pull (2)" and "2 commits this checkout does not" in pull.toolTip()
+    assert page.pull_button.isEnabled() and "2 commits on GitHub that this checkout lacks" in page.details["pull"].text()
+    page.pull_button.click()
+    assert ran[-1] == rp.pull_command() and window.tabs.currentIndex() == window.commands_tab
     sh(repo, "branch", "-f", "pushed", "main")
     window.reload()
-    assert pull.text() == "git pull"
+    assert not page.pull_button.isEnabled()
     elsewhere = run(sha="f" * 40)                                         # GitHub saw a push this checkout lacks
     window.build.checked((rp.parse_runs({"workflow_runs": [elsewhere]}), "e1"))
-    assert pull.text() == "git pull (new)" and "GitHub has a push this checkout does not (fffffff Fix it)" in pull.toolTip()
-    here = run(sha=subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, capture_output=True, text=True).stdout.strip())
-    window.build.checked((rp.parse_runs({"workflow_runs": [here]}), "e2"))
-    assert pull.text() == "git pull"
+    page.show_state()
+    assert page.pull_button.isEnabled() and "1 commit on GitHub" in page.details["pull"].text()
 
 
-def test_window_git_tag_button(window, repo, monkeypatch):
-    """git tag after git push (owner, 20-10-2026): tag-release.sh with step 1's untagged app releases, or on step 2's
-    tab the portal's release; only once HEAD is pushed and something has no tag yet. It asks first, and warns about
-    a token that reaches every repository (owner, 21-10-2026)."""
+def test_window_tag_buttons_on_steps_1_and_2(window, repo, monkeypatch):
+    """git tag after the push (owner, 20-10-2026): a button of step 1, for its untagged app releases, and of step 2,
+    for the portal's release (owner, 01-11-2026: the git row went); only once HEAD is pushed and something has no
+    tag yet, never with something staged. It asks first, and warns about a token that reaches every repository
+    (owner, 21-10-2026)."""
     from PyQt6.QtWidgets import QMessageBox
     ran = []
     monkeypatch.setattr(window.commands, "run_now", lambda command: ran.append(command) or True)
-    tag = window.tag_button
-    assert window.tags_to_push() == ["beta-v0.1.0"]                  # beta was never tagged
-    assert not tag.isEnabled() and "Push first" in tag.toolTip()     # "work" is not pushed
+    tag = window.apps_page.tag_button
+    assert window.tags_to_push(window.apps_page) == ["beta-v0.1.0"]      # beta was never tagged
+    assert not tag.isEnabled() and "Push first" in tag.toolTip()         # "work" is not pushed
     window.portal_page.base_edit.setText("main")
     window.reload()
     assert tag.isEnabled() and tag.toolTip().startswith("tools/tag-release.sh beta-v0.1.0\n")
-    write(repo / "staged.txt", "x")                                  # git add, no commit (owner, 29-10-2026)
+    write(repo / "staged.txt", "x")                                      # git add, no commit (owner, 29-10-2026)
     sh(repo, "add", "staged.txt")
     window.reload()
     assert not tag.isEnabled() and "Commit first" in tag.toolTip()
@@ -548,13 +497,12 @@ def test_window_git_tag_button(window, repo, monkeypatch):
     with mock_question(QMessageBox.StandardButton.Yes):
         tag.click()
     assert ran[-1] == "tools/tag-release.sh beta-v0.1.0" and window.tabs.currentIndex() == window.commands_tab
-    window.tabs.setCurrentWidget(window.portal_page)
     portal = window.portal_page.portal_unit
-    assert window.tags_to_push() == ([] if portal.released else [portal.tag])
+    assert window.tags_to_push(window.portal_page) == ([] if portal.released else [portal.tag])
+    assert window.portal_page.tag_button.isEnabled() == (not portal.released)
     sh(repo, "tag", "beta-v0.1.0")
-    window.tabs.setCurrentWidget(window.apps_page)
     window.reload()
-    assert window.tags_to_push() == [] and not tag.isEnabled() and "Nothing to tag" in tag.toolTip()
+    assert window.tags_to_push(window.apps_page) == [] and not tag.isEnabled() and "Nothing to tag" in tag.toolTip()
 
 
 def test_window_apply_bumps_the_portal_when_the_push_needs_it(window, repo):
@@ -741,7 +689,7 @@ def test_window_releases_nexus(window, repo):
     assert (repo / "VERSION").read_text() == "0.2.0\n"
     assert (repo / "CHANGELOG").read_text().split("\n\n")[1] == "Release 0.2.0."
     assert 'git commit -m "Release nexus-v0.2.0"' in out and rp.TAG_SCRIPT not in out
-    assert window.commit_message.text() == "Release nexus-v0.2.0"
+    assert 'git commit -m "Release nexus-v0.2.0"' in window.commands.offered
 
 
 def test_window_reads_new_tags_when_step_2_opens(window, repo):
@@ -762,10 +710,10 @@ def test_window_refresh_reads_changes_and_keeps_what_was_typed(window, repo):
     combo.setEditText("0.2.0")
     notes.setText("Fixes.")
     window.portal_page.portal_notes.setText("Pins.")
-    assert window.status.value.text() == "Clean"
+    assert not window.git_state[0]                            # nothing changed yet
     rp.set_version(repo, unit(repo, "beta"), "0.1.1")         # changed in a terminal while the window is open
     window.refresh()
-    assert window.status.value.text() == "Changed" and "has changes" in window.status.toolTip()
+    assert window.git_state[0]                                # read again: the working tree changed
     _, tick, combo, notes = row(window, "alpha")
     assert (tick.isChecked(), combo.currentText(), notes.text()) == (True, "0.2.0", "Fixes.")
     _, btick, bcombo, _ = row(window, "beta")
@@ -956,7 +904,7 @@ def test_window_records_the_portal_tour(window, repo, tmp_path, monkeypatch):
         page.output.clear()
         window.tabs.setCurrentWidget(page)
         page.tour_button.click()
-        assert not page.tour_button.isEnabled() and window.tabs.currentIndex() == window.log_tab
+        assert not page.tour_button.isEnabled() and window.tabs.currentIndex() == window.commands_tab
         page.recorder.waitForFinished(10000)
         for _ in range(20):
             QApplication.processEvents()
@@ -1375,6 +1323,11 @@ def test_window_ticker_shows_the_jobs_of_the_runs(repo, tmp_path):
     ticker.checker.stop(5000)
     assert ticker.wanted() == [] and not ticker.clock.isActive()               # all passed: nothing more to read
     assert ticker.line == "CI on main: passed   |   CI on main: passed" and main_window.GREEN in ticker.dot.styleSheet()
+    # The whole line stays visible: it wraps instead of being cut off (owner, 01-11-2026).
+    assert ticker.text.text() == ticker.line and ticker.text.wordWrap()
+    short = ticker.text.heightForWidth(560)
+    ticker.text.setText("A line far too long for one line " * 12)
+    assert ticker.hasHeightForWidth() and ticker.text.heightForWidth(560) > short * 2
     w.close()
     assert not ticker.timer.isActive()
 
@@ -1856,7 +1809,7 @@ def test_window_suite_column(repo, tmp_path):
     app = QApplication.instance() or QApplication([])          # noqa: F841 (kept alive for the window)
     from nexus_release_tool import main_window
     one = main_window.ReleaseWindow(repo, status_source=None, runs_source=None, claude_source=None)
-    assert one.suite is None and one.suite_list.isHidden() and "· suite" not in one.footer.text()
+    assert one.suite is None and one.suite_list.isHidden()
     one.close()
     nexus = nexus_layout(repo, tmp_path, "zz-suite")
     write(nexus / "zz-suite/portal/bc250_portal/__init__.py", 'APP_NAME = "Zed Suite"\n__version__ = "0.1.0"\n')
@@ -1868,21 +1821,18 @@ def test_window_suite_column(repo, tmp_path):
     rows = [column.item(i) for i in range(column.count())]
     assert [r.text() for r in rows] == [f"{SUITE_DIR}\nportal-v0.1.0", "Zed Suite\nzz-portal-v0.1.0"]
     assert [r.checkState() for r in rows] == [Qt.CheckState.Checked, Qt.CheckState.Unchecked]
-    assert w.units[1].path == f"{SUITE_DIR}/portal" and f"suite {SUITE_DIR}" in w.footer.text()
-    tip = w.commit_button.toolTip()                               # nothing staged: no suite's check, core and dev/
-    assert "check_versions.py --nexus" in tip and "check_manifest.py" not in tip
+    assert w.units[1].path == f"{SUITE_DIR}/portal"
     write(nexus / "zz-suite/apps/alpha/new.txt", "x")
     sh(nexus, "add", "zz-suite/apps/alpha/new.txt")
-    w.reload()
-    tip = w.commit_button.toolTip()                               # the suite staged: its checks alone
-    assert "check_versions.py --suite zz-suite" in tip and "zz-suite/tools/check_manifest.py" in tip
-    assert f"{SUITE_DIR}/tools/check_manifest.py" not in tip
+    cmd = flow.commit_work_command(nexus, "m", "origin/main", "python")  # the suite changed: its checks alone
+    assert "check_versions.py --suite zz-suite" in cmd and "zz-suite/tools/check_manifest.py" in cmd
+    assert f"{SUITE_DIR}/tools/check_manifest.py" not in cmd
     sh(nexus, "reset", "-q", "zz-suite/apps/alpha/new.txt")
     (nexus / "zz-suite/apps/alpha/new.txt").unlink()
     w.reload()
     column.itemClicked.emit(rows[1])                              # a click on the row
     assert w.suite == "zz-suite" and column.current() == "zz-suite" and rows[0].checkState() == Qt.CheckState.Unchecked
-    assert w.units[1].path == "zz-suite/portal" and "suite zz-suite" in w.footer.text()
+    assert w.units[1].path == "zz-suite/portal"
     assert w.portal_page.portal_unit.path == "zz-suite/portal"
     assert settings.value("suite") == "zz-suite"
     rows[1].setCheckState(Qt.CheckState.Unchecked)                # its box unticked: one stays ticked
@@ -1931,7 +1881,9 @@ def test_the_git_questions_are_asked_once_or_side_by_side(repo, monkeypatch):
         return real(args, *a, **k)
     monkeypatch.setattr(rp.subprocess, "run", run)
     units = rp.load_units(repo)
-    assert calls.count("tag") == 1 and calls.count("ls-files") == 1     # once, not once per unit
+    assert calls.count("tag") == 1 and calls.count("for-each-ref") == 1 and calls.count("merge-base") == 1   # History: once
+    untagged = [u.key for u in units if u.kind != rp.NEXUS and not u.last_tag]
+    assert calls.count("rev-list") == len(untagged) and "beta" in untagged   # a never-tagged unit keeps its own count
     for unit in units:
         if unit.kind == "core":
             continue
@@ -1940,8 +1892,7 @@ def test_the_git_questions_are_asked_once_or_side_by_side(repo, monkeypatch):
         if unit.last_tag:
             assert unit.changed == rp.changed_since(repo, unit.last_tag,
                                                     rp.shipped_sources(repo, unit.key, unit.path)), unit.key
-    monkeypatch.setattr(rp, "GIT_WORKERS", 1)
-    assert [vars(u) for u in rp.load_units(repo)] == [vars(u) for u in units]       # side by side or one by one
+    assert [vars(u) for u in rp.load_units(repo)] == [vars(u) for u in units]       # the same every time
     shown = [u for u in units if u.kind != "portal"]
     calls.clear()
     blobs = rp.read_blobs(repo, rp.changelog_specs(shown))

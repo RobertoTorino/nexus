@@ -5,8 +5,8 @@ Each command is its own `bash -lc`, started in the folder the last `cd` left; on
 variables. Nothing can be typed into a running command (its input is closed), so a command that asks something gets
 no answer and stops: git is told not to prompt, opens no editor (commit with -m) and pages nothing. Stop (or
 Ctrl+C) interrupts the command and everything it started. The commands a step shows (Apply, Bump portal, Retract)
-are offered under Commands, one per line, to put on the line, not to run straight away. The window's git buttons
-run theirs here too (run_now). With a *log_dir*, every command, its output and how it ended are also written to
+are offered under Commands, one per line, to put on the line, not to run straight away. The steps' pills run
+theirs here too (run_now), and what a step wrote (its log) shows here under a line that names it (note()). With a *log_dir*, every command, its output and how it ended are also written to
 commands-<date>.log there, so what a release step said can be read afterwards (owner, 28-10-2026)."""
 
 from __future__ import annotations
@@ -162,6 +162,16 @@ class CommandLine(QWidget):
     def put(self, command: str) -> None:
         self.line.setText(command)
         self.line.setFocus()
+
+    def note(self, title: str, text: str) -> None:
+        """What a step wrote (its log), under a line that names the step, in the output and the day's log: the
+        steps' logs and the commands' output read as one (owner, 01-11-2026)."""
+        if not text.strip():
+            return
+        block = f"── {title}\n{text.rstrip()}\n"
+        done = self.output.toPlainText()
+        self._append(("" if not done or done.endswith("\n") else "\n") + block)
+        self._log(f"\n=== {datetime.datetime.now():%Y-%m-%d %H:%M:%S} {title}\n{text.rstrip()}\n")
 
     # --- running -----------------------------------------------------------------------------------------------
 

@@ -15,14 +15,15 @@ from typing import TYPE_CHECKING
 
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor
-from PyQt6.QtWidgets import (QComboBox, QGridLayout, QHBoxLayout, QHeaderView, QLabel, QLineEdit, QMessageBox,
-                             QPushButton, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget)
+from PyQt6.QtWidgets import (QComboBox, QFrame, QGridLayout, QHBoxLayout, QHeaderView, QLabel, QLineEdit, QMessageBox,
+                             QPushButton, QScrollArea, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget)
 
 from bc250_core.theme import GREEN, GREY, ORANGE, RED
-from bc250_core.widgets import Terminal, accent_button, hint_label
+from bc250_core.widgets import accent_button
 
 from . import flow
 from . import plan as rp
+from .parts import StepLog, info_row
 
 if TYPE_CHECKING:
     from .main_window import ReleaseWindow
@@ -32,6 +33,7 @@ SEMVER_TIP = ("Breaking. (an entry that starts with it) -> major, Added. -> mino
               "when Start writes the release.")
 MARKS = {"done": ("✓", GREEN), "now": ("▶", ORANGE), "failed": ("!", RED), "later": ("", GREY)}
 REJECTED_KEY = "release/rejected"     # "<run url>|<portal tag>" of each Not OK, the newest 20
+PILLS_PX = 360                        # the pills column of the steps: two pills side by side, or the message field
 
 
 class ReleasePage(QWidget):
@@ -51,7 +53,7 @@ class ReleasePage(QWidget):
         self.pull_button.clicked.connect(self.pull)
         self.commit_message = QLineEdit()
         self.commit_message.setPlaceholderText("What these changes do (the commit message)")
-        self.commit_message.setMinimumWidth(420)
+        self.commit_message.setMinimumWidth(200)
         self.commit_message.textChanged.connect(self.show_state)
         self.commit_button = accent_button("Commit", "Stage every change and new file and commit them, after the "
                                            "version and manifest checks")
@@ -91,7 +93,7 @@ class ReleasePage(QWidget):
         self.reject_button.clicked.connect(self.reject)
         self.finish_button = accent_button("git pull", "Bring in the release's Pin ... commit")
         self.finish_button.clicked.connect(self.pull)
-        self.output = Terminal()                # the window shows it in Logs
+        self.output = StepLog(self, "Nexus release", window.step_wrote)     # shows in Commands
         self.picks: list[flow.Pick] = []
         self.rows: list[tuple[flow.Pick, QComboBox, QLineEdit]] = []
         self.facts = flow.Facts()
@@ -101,7 +103,7 @@ class ReleasePage(QWidget):
                  "run": [self.stop_button, self.resume_button], "test": [self.portal_choice, self.test_button],
                  "publish": [self.publish_button, self.reject_button], "finish": [self.finish_button]}
         steps = QGridLayout()
-        steps.setColumnStretch(2, 1)
+        steps.setColumnStretch(2, 1)            # the step's line gets the width; the pills keep theirs
         self.marks: dict[str, QLabel] = {}
         self.titles: dict[str, QLabel] = {}
         self.details: dict[str, QLabel] = {}
@@ -113,25 +115,53 @@ class ReleasePage(QWidget):
             detail.setWordWrap(True)
             detail.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
             detail.setOpenExternalLinks(True)
-            box = QHBoxLayout()
+            holder = QWidget()                  # the step's pills, as wide as every step's (owner, 01-11-2026: the
+            holder.setFixedWidth(PILLS_PX)      # pills took the width and the lines beside them were cut)
+            box = QHBoxLayout(holder)
             box.setContentsMargins(0, 0, 0, 0)
             for widget in pills[key]:
                 box.addWidget(widget, 1 if isinstance(widget, QLineEdit) else 0)
             steps.addWidget(mark, row, 0)
             steps.addWidget(name, row, 1)
             steps.addWidget(detail, row, 2)
-            steps.addLayout(box, row, 3)
+            steps.addWidget(holder, row, 3)
             self.marks[key], self.titles[key], self.details[key] = mark, name, detail
+        # What the release holds is a tab of its own, Contents (owner, 01-11-2026: with the steps on one tab the
+        # table was squeezed); the steps have this tab, each with its pill.
+        self.contents = QWidget()
+        contents = QVBoxLayout(self.contents)
+        contents.addLayout(info_row(
+            "What the release holds: the versions offered follow the CHANGELOG entries; type another to override.",
+            "One release for every suite on it: each app of such a suite that ships something new since its last "
+            "release, its portal, core when it changed since its last version, and Nexus. The version offered first "
+            "follows the CHANGELOG entries since the last tag (<b>Breaking.</b> major, <b>Added.</b> minor, "
+            "<b>Fixed.</b> patch); type another to override it. A portal's and Nexus's version say <b>auto</b>: they "
+            "are worked out when the release is written, at least what the app releases need, and can be typed "
+            "too. Notes become the release notes on GitHub."))
+        contents.addWidget(self.table, 1)
         lay = QVBoxLayout(self)
-        lay.addWidget(hint_label(
-            "One release for every suite on it: the apps that changed, their portal, core and Nexus's version. Do the "
-            "steps below in their order: the one to do now has its pill lit and an orange ▶, done ones a green "
-            "✓. The versions in the table are offered by the CHANGELOG entries; type another to override "
-            "(<b>auto</b> is worked out at Start)."))
-        lay.addWidget(self.table, 1)
+        lay.addLayout(info_row(
+            "The release's steps in their order: the one to do now has its pill lit and an orange ▶.",
+            "The Nexus release, step by step: Get up to date, Commit your changes, Push them, CI passes, Start new "
+            "release (what it holds is on the Contents tab), the release on GitHub (Stop or Resume), Device "
+            "test, Publish (or Not OK) and Bring in the pin commit. Only the step to do now has its pill lit and an "
+            "orange ▶; a step done has a green ✓, one that failed a red !, and the line beside each says what there "
+            "is to do. Only the lit pill does anything, so you never need a command or another tab."))
         lay.addWidget(self.why_not)
-        lay.addLayout(steps)
-        lay.addWidget(self.state)
+        # The steps scroll when the window is lower than they are (owner, 01-11-2026: on a small screen the lines
+        # beside the pills were cut off), never sideways: the pills' width is fixed, the lines wrap.
+        inside = QWidget()
+        column = QVBoxLayout(inside)
+        column.setContentsMargins(0, 0, 0, 0)
+        column.addLayout(steps)
+        column.addWidget(self.state)
+        column.addStretch(1)
+        scroll = QScrollArea()
+        scroll.setWidget(inside)
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        lay.addWidget(scroll, 1)
 
     # --- what the release holds -----------------------------------------------------------------------------------
 
@@ -273,7 +303,7 @@ class ReleasePage(QWidget):
                     "GitHub has no CI run on this commit yet: wait a moment.")
         if key == "start":
             return (f"The release commit is not pushed yet ({facts.unpushed}): Push and start." if facts.unpushed
-                    else "Check the versions in the table above, then Start new release.")
+                    else "Check the versions on the Contents tab, then Start new release.")
         if key == "run" and facts.run is not None:
             link = f' <a href="{facts.run.url}">Open the run</a>'
             if not facts.run.done:
@@ -318,7 +348,6 @@ class ReleasePage(QWidget):
         if not message:
             return
         window = self.release_window
-        window.committing = True
         window.run_git(flow.commit_work_command(window.root, message, window.base(), shlex.quote(sys.executable)))
         self.commit_message.clear()
 

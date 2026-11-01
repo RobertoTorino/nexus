@@ -35,7 +35,6 @@ import subprocess
 import sys
 import threading
 import time
-from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from pathlib import Path
 from urllib.parse import urlparse
@@ -53,7 +52,6 @@ RECORD_SCRIPT = "tools/record-tour.sh"
 MANIFEST_CHECK = "tools/check_manifest.py"
 CHECKOUT_ONLY = ".checkout-only"        # an app folder with this marker runs from the checkout and is never released
 _VERSION = re.compile(r"^\d+\.\d+\.\d+$")
-GIT_WORKERS = 8                         # git processes load_units() runs at once
 
 
 def _load(name: str, folder: Path = TOOLS):
@@ -275,6 +273,101 @@ def commits_since(root: Path, tag: str | None, path: str) -> int | None:
     return int(out) if out and out.strip().isdigit() else None
 
 
+def tag_targets(root: Path) -> dict[str, str]:
+    """Every tag with the commit it points at (an annotated tag's dereferenced), in one git process."""
+    out = git(root, "for-each-ref", "--format=%(refname:short) %(objectname) %(*objectname)", "refs/tags") or ""
+    found = {}
+    for line in out.splitlines():
+        parts = line.split()
+        if len(parts) >= 2:
+            found[parts[0]] = parts[2] if len(parts) > 2 else parts[1]
+    return found
+
+
+def _under(path: str, folders: list[str]) -> bool:
+    return path in folders or path.startswith(tuple(f.rstrip("/") + "/" for f in folders))
+
+
+class History:
+    """The commits since the units' last tags, read once for every unit instead of two git processes per unit
+    (owner, 01-11-2026: the window was slow, a refresh started some 135 git processes, 20 ms each on Windows). One
+    git log from the common ancestor of the tags to HEAD gives each commit, its parents and its files; a unit's
+    commits since its tag are the ones of that log not reachable from the tag's commit. A file those commits
+    touched counts as changed only when it still differs from the tag (one git cat-file and one git ls-files for
+    all of them): a change made and undone since the tag is no change, as git diff says."""
+
+    def __init__(self, root: Path, tags: list[str]):
+        self.root = root
+        targets = tag_targets(root)
+        self.tip = {tag: targets.get(tag, "") for tag in tags}
+        bases = sorted({sha for sha in self.tip.values() if sha})
+        base = (git(root, "merge-base", "--octopus", *bases) or "").strip() if bases else ""
+        log = (git(root, "log", "--format=%x00%H %P", "--name-only", "--no-renames", f"{base}..HEAD")
+               if base else "")
+        self.order: list[str] = []              # newest first
+        self.parents: dict[str, list[str]] = {}
+        self.files: dict[str, list[str]] = {}
+        for block in log.split("\x00")[1:]:
+            header, _, body = block.partition("\n")
+            sha, *parents = header.split()
+            self.order.append(sha)
+            self.parents[sha] = parents
+            self.files[sha] = [line for line in body.splitlines() if line]
+        # What differs from HEAD in the index or the working tree: changed whatever the tag says.
+        self.uncommitted = set((git(root, "diff", "--name-only", "HEAD") or "").splitlines())
+
+    def since(self, tag: str) -> list[str]:
+        """The commits in tag..HEAD, newest first; every commit of the log for a tag that is not in it."""
+        tip = self.tip.get(tag, "")
+        seen, stack = set(), [tip]
+        while stack:
+            sha = stack.pop()
+            if sha in seen or sha not in self.parents:
+                continue
+            seen.add(sha)
+            stack.extend(self.parents[sha])
+        return [sha for sha in self.order if sha not in seen and sha != tip]
+
+    def touched(self, tag: str, path: str, paths: list[str]) -> tuple[int, set[str]]:
+        """How many commits since *tag* touched *path* (as git rev-list --count tag..HEAD -- path counts them), and
+        the files under *paths* those commits touched."""
+        folder, under = path.rstrip("/") + "/", tuple(p.rstrip("/") + "/" for p in paths)
+        count, files = 0, set()
+        for sha in self.since(tag):
+            listed = self.files[sha]
+            if any(f == path or f.startswith(folder) for f in listed):
+                count += 1
+            files.update(f for f in listed if f in paths or f.startswith(under))
+        return count, files
+
+    def verify(self, wanted: dict[str, set[str]]) -> dict[str, set[str]]:
+        """Of each tag's candidate files, those that differ from the tag now: a file in the index with another blob
+        than at the tag, or on one side only. Files changed in the working tree are different whatever the index
+        says and are not asked about."""
+        specs = sorted(f"{tag}:{f}" for tag, files in wanted.items() for f in files if f not in self.uncommitted)
+        if not specs:
+            return {tag: set(files) for tag, files in wanted.items()}
+        result = subprocess.run(["git", "cat-file", "--batch-check"], cwd=self.root, capture_output=True,
+                                text=True, encoding="utf-8", errors="replace",
+                                input="".join(f"{spec}\n" for spec in specs),
+                                env={**os.environ, "GIT_OPTIONAL_LOCKS": "0"})
+        at_tag: dict[str, str] = {}
+        for spec, line in zip(specs, result.stdout.splitlines()):
+            parts = line.split()
+            at_tag[spec] = parts[0] if len(parts) >= 3 and parts[1] == "blob" else ""
+        files = sorted({spec.split(":", 1)[1] for spec in specs})
+        listing = git(self.root, "ls-files", "-s", "--", *files) or ""
+        in_index = {line.split("\t", 1)[1]: line.split()[1] for line in listing.splitlines() if "\t" in line}
+        found = {}
+        for tag, candidates in wanted.items():
+            kept = set()
+            for f in candidates:
+                if f in self.uncommitted or at_tag.get(f"{tag}:{f}", "") != in_index.get(f, ""):
+                    kept.add(f)
+            found[tag] = kept
+        return found
+
+
 # --- The units -------------------------------------------------------------------------------------------------
 
 # Nexus's own version (owner, 28-10-2026): the root VERSION, bumped like an app's with a "Release x.y.z." entry in
@@ -447,18 +540,24 @@ def load_units(root: Path = CHECKOUT, suite: str | None = None) -> list[Unit]:
             unit.pinned_tag, unit.pinned_sha = pins[key].tag, pins[key].sha256
         units.append(unit)
 
-    # Each unit's two git questions (commits since its tag, files changed since it) depend on its own tag. They run
-    # side by side: a git process is mostly waiting to start, some 20 ms on Windows (owner, 27-10-2026: the window
-    # was slow there), and the answers are the same as one after the other.
-    def ask(unit: Unit) -> None:
-        if unit.kind == NEXUS:                  # its CHANGELOG says what changed, not its files (the whole checkout)
-            return
-        unit.commits = commits_since(root, unit.last_tag, unit.path)
-        if unit.last_tag:
-            unit.changed = changed_since(root, unit.last_tag, shipped_sources(root, unit.key, unit.path, suite),
-                                         new_files)
-    with ThreadPoolExecutor(max_workers=GIT_WORKERS) as pool:
-        list(pool.map(ask, units))
+    # Each unit's two git questions (commits since its tag, files changed since it) are answered from one reading of
+    # the history (History: a handful of git processes for all of them, not two per unit; owner, 01-11-2026: the
+    # window was slow). A unit without a tag keeps its own count, every commit of its folder.
+    tagged = [u for u in units if u.kind != NEXUS and u.last_tag]
+    history = History(root, [u.last_tag for u in tagged])
+    sources = {u.key: shipped_sources(root, u.key, u.path, suite) for u in tagged}
+    wanted = {}
+    for unit in tagged:
+        unit.commits, wanted[unit.last_tag] = history.touched(unit.last_tag, unit.path, sources[unit.key])
+    differing = history.verify(wanted)
+    for unit in tagged:
+        paths = sources[unit.key]
+        new = [f for f in new_files if _under(f, paths)]
+        changed = differing[unit.last_tag] | {f for f in history.uncommitted if _under(f, paths)} | set(new)
+        unit.changed = sorted(f for f in changed if f and is_shipped(f))
+    for unit in units:
+        if unit.kind != NEXUS and not unit.last_tag:
+            unit.commits = commits_since(root, None, unit.path)
     # Core is never tagged: it ships inside each app that imports it, so its changes are the core files those
     # apps' releases would carry.
     core = units[0]
@@ -1720,7 +1819,7 @@ def behind(root: Path, base: str) -> int:
 
 
 def add_command() -> str:
-    """The git add button: everything, the exec bits CI checks, and what is staged now."""
+    """The Commit step's git add: everything, the exec bits CI checks, and what is staged now."""
     return "git add -A && tools/fix-modes.sh && git status --short"
 
 
@@ -1731,7 +1830,7 @@ def tag_command(tags: list[str]) -> str:
 
 def commit_command(message: str, base: str, amend: bool = False, python: str = "python3",
                    manifests: list[str] | None = None, versions: list[str] | None = None) -> str:
-    """The git commit button: the version check and the suites' manifest checks first (CI's quick ones; *manifests*:
+    """The Commit step's git commit: the version check and the suites' manifest checks first (CI's quick ones; *manifests*:
     their paths, manifest_checks(), every suite's of the checkout by default; *versions*: version_checks(), every
     suite by default), the commit only when they pass. *amend*: the staged changes join HEAD, with its message."""
     checks = " && ".join([*(f"{python} {check}" for check in (versions or [VERSIONS_CHECK])),
@@ -1741,21 +1840,9 @@ def commit_command(message: str, base: str, amend: bool = False, python: str = "
     return f"{checks} && {commit}"
 
 
-def commit_message(text: str) -> tuple[str, bool]:
-    """The commit a step's commands make: its message, or ("", True) when they amend HEAD; ("", False) for none."""
-    for line in text.splitlines():
-        line = line.strip()
-        if line.startswith("git commit --amend"):
-            return "", True
-        if line.startswith("git commit -m "):
-            words = shlex.split(line, comments=True)
-            return words[3] if len(words) > 3 else "", False
-    return "", False
-
-
 def git_state(root: Path, base: str) -> tuple[bool, bool, int]:
-    """For the git buttons: whether something is not staged (changed or new), whether something is staged, and how
-    many commits HEAD has that *base* (the last push) does not."""
+    """For the steps and git tag: whether something is not staged (changed or new), whether something is staged, and
+    how many commits HEAD has that *base* (the last push) does not."""
     status = git(root, "status", "--porcelain") or ""
     lines = [line for line in status.splitlines() if len(line) > 2]
     unstaged = any(line[1] != " " for line in lines)
