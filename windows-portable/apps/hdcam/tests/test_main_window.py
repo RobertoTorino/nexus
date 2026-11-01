@@ -15,6 +15,7 @@ from PyQt6.QtGui import QImage
 from bc250_core import portable
 from bc250_core.portable import EXIT, INFO as INFO_ITEM, VIEW
 from bc250_core.gamepad import Gamepad
+from bc250_core.platform import private
 from usb_hd_cam import APP_ID, APP_NAME, EXE_NAME, INFO, LOGO_PATH, ROOT, __version__, camera, firmware, loader
 from usb_hd_cam.camera import Camera
 from usb_hd_cam.devices import Device, Speed
@@ -76,7 +77,8 @@ def settle(qapp, window) -> None:
     end = time.monotonic() + 5
     while time.monotonic() < end:
         qapp.processEvents()
-        if not window.camera_worker.busy and not window.firmware_worker.busy and not window.step:
+        if not window.camera_worker.busy and not window.firmware_worker.busy and not window.shot_worker.busy \
+                and not window.step:
             qapp.processEvents()
             return
         time.sleep(0.01)
@@ -354,6 +356,39 @@ class FakePreview(QObject):
         self.failed.emit(text)
 
 
+class FakeRecording(QObject):
+    """A recording without an encoder: what start() was asked for and the sizes of the pictures added; written()
+    ends it as Windows does once the file is written."""
+
+    finished = pyqtSignal(str)
+    failed = pyqtSignal(str)
+
+    def __init__(self):
+        super().__init__()
+        self.started: list[tuple] = []
+        self.added: list[tuple[int, int]] = []
+        self.running = self.busy = False
+
+    def start(self, path, width, height) -> str:
+        self.started.append((path, width, height))
+        self.running = self.busy = True
+        return ""
+
+    def add(self, image) -> None:
+        if self.running:
+            self.added.append((image.width(), image.height()))
+
+    def seconds(self) -> int:
+        return 75 if self.running else 0
+
+    def stop(self, wait_s: float = 0.0) -> None:
+        self.running = False
+
+    def written(self) -> None:
+        self.busy = False
+        self.finished.emit(str(self.started[-1][0]))
+
+
 MODES = [Mode(1920, 1080, 30), Mode(1280, 800, 60), Mode(2560, 800, 30), Mode(1920, 1080, 15)]
 
 
@@ -361,8 +396,24 @@ def picture_window(qapp, tmp_path, found=None):
     live = FakePreview()
     kept = []
     window = make(qapp, tmp_path, find=lambda: found if found is not None else [READY],
-                  keep=lambda video: kept.append(video) or Kept(kept), live=live, camera_modes=lambda: MODES)
+                  keep=lambda video: kept.append(video) or Kept(kept), live=live, camera_modes=lambda: MODES,
+                  recording=FakeRecording(), pictures=lambda: tmp_path / "Pictures", videos=lambda: tmp_path / "Videos")
     return window, live
+
+
+def full_screen(qapp, window):
+    """The camera found (A on the Camera card), then A on the Picture card: the picture full screen."""
+    press_a(qapp, window)
+    window.picture_card.setFocus()
+    qapp.processEvents()
+    window.a_action()
+    qapp.processEvents()
+
+
+def frame(width: int = 64, height: int = 36) -> QImage:
+    image = QImage(width, height, QImage.Format.Format_RGB32)
+    image.fill(0xFF3366CC)
+    return image
 
 
 def test_the_picture_waits_for_a_webcam(qapp, tmp_path):
@@ -375,7 +426,9 @@ def test_the_picture_waits_for_a_webcam(qapp, tmp_path):
     window.close()
 
 
-def test_the_picture_starts_stops_and_changes_mode(qapp, tmp_path):
+
+
+def test_the_picture_starts_full_screen_changes_mode_and_b_ends_it(qapp, tmp_path):
     window, live = picture_window(qapp, tmp_path)
     press_a(qapp, window)                                   # the Camera card: found, the picture kept
     window.picture_card.setFocus()
@@ -383,39 +436,150 @@ def test_the_picture_starts_stops_and_changes_mode(qapp, tmp_path):
     assert window.picture_pane.summary.text() == "1920 × 1080, 30 fps (one camera)"
     assert [m.key for m in window.modes] == ["1920x1080@30", "1280x800@60", "2560x800@30"]     # 15 fps: silent
     window.a_action()
-    assert live.started == ["1920x1080@30"] and legend(window)[0] == ("A", "Stop")
-    image = QImage(64, 36, QImage.Format.Format_RGB32)
+    qapp.processEvents()
+    assert live.started == ["1920x1080@30"] and window.full_screen
+    assert not window.header.isVisible() and not window.picture_card.isVisible() and window.full.isVisible()
+    assert window.full.hasFocus() and window.legend.isVisible()
+    assert legend(window) == [("A", "Screenshot"), ("X", "Record"), ("Y", "Gray"), ("LB", "Mode −"),
+                              ("RB", "Mode +"), ("LT", "Zoom −"), ("RT", "Zoom +"), INFO_ITEM,
+                              portable.BACK, EXIT]
+    image = frame()
     live.picture.emit(image)
-    assert window.picture_pane.view.image.size() == image.size()      # a copy: Qt passes it by value
-    window.step_mode(1)                                     # RB: the next mode, the picture restarts in it
+    assert window.full.view.image.size() == image.size()            # a copy: Qt passes it by value
+    assert window.full.summary.text() == "1920 × 1080, 30 fps (one camera)  |  1x"
+    window.step_mode(1)                                     # RB: the next mode, the picture starts again in it
     assert live.started == ["1920x1080@30", "1280x800@60"] and window.settings.value("mode") == "1280x800@60"
     window.step_mode(-1)
     window.step_mode(-1)                                    # LB from the first: the last
-    assert live.started[-1] == "2560x800@30"
-    window.a_action()
-    assert not live.running and legend(window)[0] == ("A", "Start")
+    assert live.started[-1] == "2560x800@30" and window.full_screen
+    window.on_back()                                        # B: the picture stops, the Picture card again
+    qapp.processEvents()
+    assert not live.running and not window.full_screen and window.header.isVisible()
+    assert window.picture_card.hasFocus() and legend(window)[0] == ("A", "Start")
     window.close()
 
 
-def test_the_picture_stops_on_another_card_and_says_why_it_failed(qapp, tmp_path):
+def test_the_full_screen_legend_fits_the_handhelds_screen(qapp, tmp_path):
+    """Ten entries in the window's width, recording or not, in color or black and white."""
     window, live = picture_window(qapp, tmp_path)
-    press_a(qapp, window)
-    window.picture_card.setFocus()
-    window.a_action()
+    full_screen(qapp, window)
+    for _ in range(2):
+        for _ in range(2):
+            qapp.processEvents()                            # the legend's new entries laid out
+            assert window.legend.sizeHint().width() <= 1280     # its own margins included, full screen
+            window.toggle_recording()
+        window.toggle_gray()
+    assert window.minimumSizeHint().height() <= 720
+    window.close()
+
+
+def test_a_failed_picture_stays_full_screen_so_another_mode_can_be_tried(qapp, tmp_path):
+    window, live = picture_window(qapp, tmp_path)
+    full_screen(qapp, window)
     live.fail("The camera sends nothing in this mode: choose another with LB or RB.")
-    assert "sends nothing" in window.picture_pane.status.text()
-    window.a_action()
-    assert live.running
-    window.firmware_card.setFocus()
-    qapp.processEvents()
-    assert not live.running
+    assert window.full_screen and "sends nothing" in window.full.status.text()
+    assert window.full.view.image is None and "sends nothing" in window.full.view.text
+    window.step_mode(1)
+    assert live.running and live.started[-1] == "1280x800@60"
     window.close()
 
 
-def test_the_chosen_mode_is_kept(qapp, tmp_path):
+def test_a_screenshot_is_what_shows(qapp, tmp_path):
     window, live = picture_window(qapp, tmp_path)
-    window.settings.setValue("mode", "2560x800@30")
-    window.picture_card.setFocus()
-    qapp.processEvents()
-    assert window.picture_pane.summary.text() == "2560 × 800, 30 fps (both cameras)"
+    full_screen(qapp, window)
+    window.a_action()
+    assert window.full.status.text() == "There is no picture to save yet."
+    live.picture.emit(frame(64, 36))
+    window.zoom(1)                                          # RT: 1.5x
+    window.toggle_gray()
+    press_a(qapp, window)
+    saved = list((tmp_path / "Pictures").glob("*.png"))
+    assert len(saved) == 1 and saved[0].name.startswith(f"{APP_NAME} 20")
+    shot = QImage(str(saved[0]))
+    assert (shot.width(), shot.height()) == (43, 24) and shot.isGrayscale()
+    assert window.full.status.text().startswith("Screenshot saved: ") and saved[0].name in window.full.status.text()
+    press_a(qapp, window)                                   # a second one in the same second: its own file
+    assert len(list((tmp_path / "Pictures").glob("*.png"))) == 2
     window.close()
+
+
+def test_zoom_pan_and_black_and_white(qapp, tmp_path):
+    window, live = picture_window(qapp, tmp_path)
+    full_screen(qapp, window)
+    live.picture.emit(frame(400, 200))
+    window.act("right")                                     # at 1x there is nothing to move
+    assert "Zoom in first" in window.full.status.text() and window.look.x == 0.5
+    window.act("rt")                                        # RT, as the controller sends it
+    window.act("rt")
+    assert window.look.zoom == 2.0 and window.full.view.image.width() == 200
+    assert window.full.summary.text().endswith("|  2x")
+    window.act("right")                                     # the d-pad moves the zoomed picture, not the focus
+    assert window.look.x > 0.5 and window.full.hasFocus()
+    for _ in range(20):
+        window.act("right")
+    assert window.look.x == 0.75                            # never past the picture's edge
+    window.full.view.dragged.emit(0.25, 0.0)                # a finger drags it back to the right
+    assert window.look.x == 0.625
+    for _ in range(6):
+        window.act("rt")
+    assert window.look.zoom == 4.0 and "largest, 4x" in window.full.status.text()
+    window.act("lt")
+    assert window.look.zoom == 3.0
+    window.act("y")
+    assert window.look.gray and window.full.view.image.isGrayscale() and legend(window)[2] == ("Y", "Color")
+    assert window.settings.value("black_and_white", type=bool) is True
+    assert window.full.summary.text().endswith("3x, black and white")
+    window.close()
+    again, _live = picture_window(qapp, tmp_path)           # black and white is kept for next time
+    assert again.look.gray
+    again.close()
+
+
+def test_a_recording_of_what_shows(qapp, tmp_path):
+    window, live = picture_window(qapp, tmp_path)
+    full_screen(qapp, window)
+    recording = window.recording
+    window.act("x")
+    path, width, height = recording.started[0]
+    assert path.parent == tmp_path / "Videos" and path.suffix == ".mp4" and (width, height) == (1920, 1080)
+    assert legend(window)[1] == ("X", "Stop") and window.full.recording.isVisible()
+    assert window.full.recording.text() == "● 1:15"
+    live.picture.emit(frame(1920, 1080))
+    window.zoom(1)
+    live.picture.emit(frame(1920, 1080))
+    assert recording.added == [(1920, 1080), (1280, 720)]  # zoomed: the part that shows (scaled up by Recording)
+    window.step_mode(1)                                     # a video keeps one mode
+    assert live.started == ["1920x1080@30"] and "Stop the recording first" in window.full.status.text()
+    window.act("x")
+    assert not recording.running and window.full.status.text() == "Writing the video …"
+    assert legend(window)[1] == ("X", "Record") and not window.full.recording.isVisible()
+    recording.written()
+    assert window.full.status.text() == f"Video saved: {private(path)}"
+    window.close()
+
+
+def test_b_while_recording_keeps_the_video(qapp, tmp_path):
+    window, live = picture_window(qapp, tmp_path)
+    full_screen(qapp, window)
+    window.toggle_recording()
+    window.on_back()
+    assert not window.recording.running and not live.running and not window.full_screen
+    assert window.picture_pane.status.text() == "Writing the video …"
+    window.recording.written()
+    assert window.picture_pane.status.text().startswith("Video saved: ")
+    window.close()
+
+
+def test_view_asks_again_while_recording(qapp, tmp_path, monkeypatch):
+    window, live = picture_window(qapp, tmp_path)
+    full_screen(qapp, window)
+    window.toggle_recording()
+    closed = []
+    monkeypatch.setattr(window, "close", lambda: closed.append(True))
+    window.exit_app()
+    assert closed == [] and "the recording stops and is saved" in window.full.status.text()
+    window._confirm_over()
+    assert window.full.status.text() == "" and legend(window)[-1] == EXIT
+    window.exit_app()
+    window.exit_app()
+    assert closed == [True]

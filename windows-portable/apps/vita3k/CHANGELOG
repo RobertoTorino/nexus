@@ -1,3 +1,15 @@
+Changelog: 02-11-2026 00:23:01
+
+Added. A warning when the device runs hot during a game (core's heat.py; owner, 02-11-2026): when the CPU or the GPU stays above 90 °C for half a minute, a banner shows at the top of the screen over Vita3K and the controller rumbles three times, again at most every five minutes; the game goes on. When the game ends, the log says how hot the chip got and for how long. The wiki says so.
+
+Changelog: 01-11-2026 23:28:28
+
+Added. The shortcut of a game no longer in Vita3K's storage no longer starts Vita3K: it shows a screen that says the game is no longer there (core's gone screen; owner, 01-11-2026). The pane's information and the wiki say so.
+
+Changelog: 01-11-2026 22:54:19
+
+Added. LT Refresh on Your games reads the game folders again: a game or a package put there while the app is open shows at once, and the status line says when Steam no longer matches the marks. Before, the list was read only when the app started (owner, 01-11-2026). The pane's information and the wiki say so.
+
 Changelog: 01-11-2026 21:51:44
 
 Release 4.0.1.

@@ -738,7 +738,11 @@ class Card(QFrame):
             for label in (self.title, self.text):
                 label.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         else:
-            column.setContentsMargins(px(20), px(12), px(20), px(12))
+            # The title at its own height and the rest for the text: two lines of it fit a card 100 high, where a
+            # g or a p of the second line was cut off before (owner, 01-11-2026)
+            column.setContentsMargins(px(20), px(8), px(20), px(8))
+            column.setSpacing(px(2))
+            self.title.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
         column.addWidget(self.title)
         column.addWidget(self.text)
         if self.icon is not None:

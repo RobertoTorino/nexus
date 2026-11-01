@@ -2,8 +2,9 @@
 """The window: the cards on the left (Camera, Picture, Firmware, Bandwidth), what the focused one shows on the right,
 the controller's buttons at the bottom. A on the Camera card does the camera's next step: look for it, Allow access (the
 driver, once per USB port, with Windows' administrator prompt), Load the firmware, look again. The Picture card shows
-the camera's picture (A starts and stops it, LB and RB change the mode; it stops when another card is chosen). The
-Firmware card gets
+the camera's picture full screen (A starts it, B stops it; LB and RB change the mode before and while it runs), with
+the legend at the bottom: A a screenshot, X a recording, Y black and white, LT and RT zoom, the d-pad (or a finger)
+moves the zoomed picture (record.py saves them). The Firmware card gets
 the pinned file (A) or takes one of yours (X, in core's browser); the Bandwidth card picks what the firmware asks of
 the USB controller. Nothing runs before A asks for it (owner, 28-10-2026). Slow steps run off the window's thread.
 
@@ -18,6 +19,7 @@ from collections.abc import Callable
 from pathlib import Path
 
 from PyQt6.QtCore import QObject, QSettings, QTimer, pyqtSignal
+from PyQt6.QtGui import QImage
 from PyQt6.QtWidgets import QHBoxLayout, QStackedWidget, QVBoxLayout, QWidget
 
 from bc250_core import applog, browse, power
@@ -25,18 +27,20 @@ from bc250_core.gamepad import Gamepad
 from bc250_core.platform import private
 from bc250_core.portable import VIEW, Card, Legend, PortableHeader, PortableWindow, px, status_clock
 
-from . import APP_ID, APP_NAME, __version__, camera, driver, firmware, loader, modes, picture, preview, winusb
+from . import APP_ID, APP_NAME, __version__, camera, driver, firmware, loader, modes, picture, preview, record, winusb
 from .camera import Camera
 from .modes import Mode
-from .panes import InfoPane, ListPane, PicturePane
+from .panes import FullPicture, InfoPane, ListPane, PicturePane
 
 STATUS_MS = 30_000              # the header's time and battery
 CONFIRM_MS = 5000               # View, while the app keeps the picture, asks for a second press within this
+RECORDING_MS = 1000             # the recording's time, under the full-screen picture
 KEPT = ("The picture stays right while USB HD Cam is open: leave it open in the background while you use the "
         "camera.")
 CARDS_WIDTH = 520
 BANDWIDTH_KEY = "bandwidth"     # the setting: loader.BANDWIDTHS
 MODE_KEY = "mode"               # the setting: the Picture card's mode (Mode.key)
+GRAY_KEY = "black_and_white"    # the setting: the full-screen picture in black and white
 BROWSED = "firmware"            # the browser's folder kept for next time (browse.remember)
 BANDWIDTH_NAMES = {
     "full": "Full: what the firmware asks for, every mode at its full rate",
@@ -58,10 +62,17 @@ CAMERA_INFO = (
     "The video needs a USB 3 port (5 Gbit/s). A PS4 Camera on Sony's adapter is found, but its firmware is not this "
     "app's yet.")
 PICTURE_INFO = (
-    "The camera's picture, as other apps get it. The A button starts it and stops it; LB and RB choose the mode before "
-    "or the next one: one camera's picture first, from the largest, then both cameras side by side, as the camera "
-    "sends them for depth. Only the modes that give a picture are listed. The picture stops when you choose another "
-    "card, and other apps can show the camera meanwhile.")
+    "The camera's picture, as other apps get it. The A button starts it full screen; the B button stops it and comes "
+    "back here. LB and RB choose the mode before or the next one, here and full screen: one camera's picture first, "
+    "from the largest, then both cameras side by side, as the camera sends them for depth. Only the modes that give a "
+    "picture are listed. Other apps can show the camera meanwhile.")
+FULL_INFO = (
+    "The A button saves a screenshot, the X button starts a recording and stops it, the Y button switches between "
+    "black and white and color. RT zooms in and LT out (up to 4x); the d-pad, the left stick or a finger moves the "
+    "zoomed picture. Screenshots and recordings are what the screen shows, zoom and black and white included: "
+    "screenshots go to your Pictures folder, recordings (MP4, at most 30 frames a second) to your Videos folder, each "
+    "in a USB HD Cam folder. LB and RB change the mode while nothing is recorded. The B button ends the full screen; "
+    "other apps get the camera's own color picture throughout.")
 FIRMWARE_INFO = (
     "The camera's firmware is Sony's, so the suite does not ship it. The A button downloads the file the app knows, "
     f"21.01-03.20.00.04 from {firmware.PINNED.source}, and uses it only when its SHA-256 is the expected one. The X "
@@ -117,7 +128,9 @@ class MainWindow(PortableWindow):
                  live: preview.Preview | None = None,
                  camera_modes: Callable[[], list[Mode]] = preview.camera_modes,
                  home: Path | None = None, settings: QSettings | None = None,
-                 roots: Callable[[], list[Path]] = browse.drives, user_home: Path | None = None):
+                 roots: Callable[[], list[Path]] = browse.drives, user_home: Path | None = None,
+                 recording: record.Recording | None = None, pictures: Callable[[], Path] = record.pictures,
+                 videos: Callable[[], Path] = record.videos):
         super().__init__(gamepad)
         self.setWindowTitle(f"{APP_NAME} {__version__}")
         self.log = applog.logger(APP_ID)
@@ -138,12 +151,22 @@ class MainWindow(PortableWindow):
         self.kept = None                                # the webcam's driver, kept open with Auto Exposure
         self.close_asked = False                        # View pressed once while the picture is kept
         self.browser: browse.Browser | None = None
+        self.recording = recording or record.Recording(parent=self)
+        self.pictures, self.videos = pictures, videos
+        self.look = preview.Look(gray=self.settings.value(GRAY_KEY, False, type=bool))
+        self.raw: QImage | None = None                  # the camera's newest picture, as it came
+        self.last: QImage | None = None                 # and as the full screen shows it (look): a screenshot's
 
-        page = QVBoxLayout(self)
-        page.setContentsMargins(*self.margins())
+        self.page = QVBoxLayout(self)
+        self.page.setContentsMargins(*self.margins())
+        self.pages = QStackedWidget()                   # the cards and panes, or the picture full screen
+        self.main_page = QWidget()
+        main = QVBoxLayout(self.main_page)
+        main.setContentsMargins(0, 0, 0, 0)
+        main.setSpacing(0)
         self.header = PortableHeader(APP_NAME, __version__)
-        page.addWidget(self.header)
-        page.addSpacing(px(14))
+        main.addWidget(self.header)
+        main.addSpacing(px(14))
         body = QHBoxLayout()
         column = QWidget()
         column.setFixedWidth(px(CARDS_WIDTH))
@@ -171,10 +194,14 @@ class MainWindow(PortableWindow):
         for pane in (self.camera_pane, self.picture_pane, self.firmware_pane, self.bandwidth_pane, self.browse_pane):
             self.panes.addWidget(pane)
         body.addWidget(self.panes, 1)
-        page.addLayout(body, 1)
-        page.addSpacing(px(8))
+        main.addLayout(body, 1)
+        self.full = FullPicture("Picture", FULL_INFO, preview.PictureView())
+        self.pages.addWidget(self.main_page)
+        self.pages.addWidget(self.full)
+        self.page.addWidget(self.pages, 1)
+        self.page.addSpacing(px(8))
         self.legend = Legend()
-        page.addWidget(self.legend)
+        self.page.addWidget(self.legend)
         self.cards = {self.camera_pane: self.camera_card, self.picture_pane: self.picture_card,
                       self.firmware_pane: self.firmware_card,
                       self.bandwidth_pane: self.bandwidth_card, self.browse_pane: self.firmware_card}
@@ -189,8 +216,18 @@ class MainWindow(PortableWindow):
         self.camera_card.activated.connect(self.camera_step)
         self.picture_card.focused.connect(lambda: self.show_pane(self.picture_pane))
         self.picture_card.activated.connect(self.toggle_picture)
-        self.live.picture.connect(self.picture_pane.view.show_image)
+        self.live.picture.connect(self.on_picture)
         self.live.failed.connect(self.picture_failed)
+        self.full.view.dragged.connect(lambda dx, dy: self.pan(-dx, -dy))   # the picture follows the finger
+        self.full.view.wheeled.connect(self.zoom)
+        self.shot_worker = _Worker()
+        self.shot_worker.done.connect(self.shot_done)
+        self.shot_worker.failed.connect(self.say)
+        self.recording.finished.connect(self.recorded)
+        self.recording.failed.connect(self.record_failed)
+        self.recording_timer = QTimer(self)
+        self.recording_timer.setInterval(RECORDING_MS)
+        self.recording_timer.timeout.connect(self.show_look)
         self.firmware_card.focused.connect(lambda: self.show_pane(self.firmware_pane))
         self.firmware_card.activated.connect(self.get_firmware)
         self.bandwidth_card.focused.connect(lambda: self.show_pane(self.bandwidth_pane))
@@ -199,8 +236,11 @@ class MainWindow(PortableWindow):
         self.browse_pane.list.picked.connect(self.browse_picked)
         self.bind("accept", self.a_action)
         self.bind("x", self.x_action)
+        self.bind("y", self.y_action)
         self.bind("previous", lambda: self.step_mode(-1))
         self.bind("next", lambda: self.step_mode(1))
+        self.bind("lt", lambda: self.zoom(-1))
+        self.bind("rt", lambda: self.zoom(1))
         self.back.connect(self.on_back)
         self.status_timer = QTimer(self)
         self.status_timer.setInterval(STATUS_MS)
@@ -243,6 +283,14 @@ class MainWindow(PortableWindow):
         if self.close_asked:
             self.legend.set_items([(VIEW, "Press again to exit")])
             return
+        if self.full_screen:
+            # Signs and short words, so ten entries fit the Ally's screen: Gray is black and white, and the
+            # recording's time under the picture says what X stops
+            items = [("A", "Screenshot"), ("X", "Stop" if self.recording.running else "Record"),
+                     ("Y", "Color" if self.look.gray else "Gray"), ("LB", "Mode −"), ("RB", "Mode +"),
+                     ("LT", "Zoom −"), ("RT", "Zoom +")]
+            self.legend.set_items([*items, *self.common_items(back=True)])
+            return
         pane = self.panes.currentWidget()
         if pane is self.camera_pane:
             items = [("A", self.camera_pane.action)]
@@ -251,13 +299,17 @@ class MainWindow(PortableWindow):
         elif pane is self.browse_pane:
             items = [("A", "Open")]
         elif pane is self.picture_pane:
-            items = [("A", "Stop" if self.live.running else "Start"), ("LB", "Mode before"), ("RB", "Next mode")]
+            items = [("A", "Start"), ("LB", "Mode before"), ("RB", "Next mode")]
         else:
             items = [("A", "Pick")]
         self.legend.set_items([*items, *self.common_items(back=True if pane is self.browse_pane else None)])
 
     def a_action(self) -> None:
-        """A beside a card (a tap on the legend's A, A in a pane): the pane's action, as A on its card."""
+        """A beside a card (a tap on the legend's A, A in a pane): the pane's action, as A on its card; full screen a
+        screenshot."""
+        if self.full_screen:
+            self.screenshot()
+            return
         pane = self.panes.currentWidget()
         if pane is self.camera_pane:
             self.camera_step()
@@ -271,11 +323,21 @@ class MainWindow(PortableWindow):
             self.focus_list(self.browse_pane)
 
     def x_action(self) -> None:
-        if self.panes.currentWidget() is self.firmware_pane:
+        if self.full_screen:
+            self.toggle_recording()
+        elif self.panes.currentWidget() is self.firmware_pane:
             self.show_browser()
 
+    def y_action(self) -> None:
+        if self.full_screen:
+            self.toggle_gray()
+
     def on_back(self) -> None:
-        """B: in the browser a level up, from its places back to the Firmware card; in a pane back to its card."""
+        """B: full screen, the picture stops and the Picture card comes back; in the browser a level up, from its
+        places back to the Firmware card; in a pane back to its card."""
+        if self.full_screen:
+            self.leave_full()
+            return
         if self.panes.currentWidget() is self.browse_pane and self.browser is not None:
             if self.browser.up():
                 self.show_browse()
@@ -447,61 +509,220 @@ class MainWindow(PortableWindow):
         chosen = self.mode()
         self.picture_pane.summary.setText(chosen.label if chosen else "The camera is not a webcam yet.")
         if not self.live.running:
-            self.picture_pane.view.clear("The A button starts the picture." if chosen else
+            self.picture_pane.view.clear("The A button starts the picture full screen." if chosen else
                                          "Make the camera a webcam on the Camera card first.")
 
     def toggle_picture(self) -> None:
+        """A on the Picture card: the picture full screen (B ends it)."""
         if self.live.running:
-            self.stop_picture()
-            self.picture_pane.status.setText("")
+            self.leave_full()
             return
         self.start_picture()
 
     def start_picture(self) -> None:
-        """A: the picture in the chosen mode, once the Camera card made the camera a webcam and set its picture."""
+        """A: the picture in the chosen mode, full screen, once the Camera card made the camera a webcam and set its
+        picture; LB and RB start it again in another mode."""
         found = self.camera
         if found is None or found.state != camera.READY_STATE:
-            self.picture_pane.status.setText("The camera is not a webcam yet: the A button on the Camera card makes it "
-                                             "one first.")
+            self.say("The camera is not a webcam yet: the A button on the Camera card makes it one first.")
             return
         self.show_picture()
         chosen = self.mode()
         if chosen is None:
-            self.picture_pane.status.setText("Windows does not list the webcam: look for the camera again on the "
-                                             "Camera card.")
+            self.say("Windows does not list the webcam: look for the camera again on the Camera card.")
             return
         problem = self.live.start(chosen)
         if problem:
-            self.picture_pane.status.setText(problem)
+            self.say(problem)
             return
-        self.picture_pane.view.clear("Starting the picture …")
-        self.picture_pane.status.setText("" if self.kept is not None else
-                                          "The camera's own exposure is set, so the picture may be dark.")
+        self.raw = self.last = None
+        self.full.view.clear("Starting the picture …")
+        self.enter_full()
+        self.say("" if self.kept is not None else "The camera's own exposure is set, so the picture may be dark.")
+        self.show_look()
         self.log.info(f"Picture started: {chosen.key}.")
         self.update_legend()
 
     def stop_picture(self) -> None:
         self.live.stop()
-        self.picture_pane.view.clear("The A button starts the picture.")
+        self.raw = self.last = None
+        self.picture_pane.view.clear("The A button starts the picture full screen.")
         self.update_legend()
 
     def picture_failed(self, text: str) -> None:
+        """The camera stopped on its own: a recording ends (and is kept), the full screen says why and stays, so LB
+        and RB can try another mode."""
+        if self.recording.running:
+            self.stop_recording()
+        self.raw = self.last = None
+        self.full.view.clear(text)
         self.picture_pane.view.clear(text)
-        self.picture_pane.status.setText(text)
+        self.say(text)
         self.log.warning(f"The picture stopped: {text}")
         self.update_legend()
 
     def step_mode(self, delta: int) -> None:
-        """LB and RB on the Picture card: the mode before or the next one; a running picture restarts in it."""
+        """LB and RB on the Picture card: the mode before or the next one; full screen, the picture starts again in
+        it, but not while it records (a video keeps one size)."""
         if self.panes.currentWidget() is not self.picture_pane or not self.modes:
+            return
+        if self.recording.busy:
+            self.say("Stop the recording first (the X button): a video keeps one mode.")
             return
         chosen = self.mode()
         at = self.modes.index(chosen) if chosen in self.modes else 0
         picked = self.modes[(at + delta) % len(self.modes)]
         self.settings.setValue(MODE_KEY, picked.key)
         self.picture_pane.summary.setText(picked.label)
-        if self.live.running:
+        if self.live.running or self.full_screen:
             self.start_picture()
+
+    def say(self, text: str) -> None:
+        """*text* on the status line of what shows: the full screen's, else the Picture pane's."""
+        (self.full.status if self.full_screen else self.picture_pane.status).setText(text)
+
+    # The picture full screen
+
+    @property
+    def full_screen(self) -> bool:
+        return self.pages.currentWidget() is self.full
+
+    def enter_full(self) -> None:
+        """The picture in the whole window above the legend, edge to edge; the focus on it, so no card takes it (a
+        card with the focus would stop the picture)."""
+        if self.full_screen:
+            return
+        self.pages.setCurrentWidget(self.full)
+        self.full.setFocus()
+        left, _top, right, bottom = self.margins()
+        self.page.setContentsMargins(0, 0, 0, bottom)
+        self.legend.setContentsMargins(left, 0, right, 0)
+        self.update_legend()
+
+    def leave_full(self) -> None:
+        """B: a recording ends (and is kept), the picture stops, and the Picture card has the focus again."""
+        if self.recording.running:
+            self.stop_recording()
+        status = self.full.status.text()
+        if self.full_screen:
+            self.pages.setCurrentWidget(self.main_page)
+            self.page.setContentsMargins(*self.margins())
+            self.legend.setContentsMargins(0, 0, 0, 0)
+        self.stop_picture()
+        self.picture_pane.status.setText(status)        # a screenshot or a video just saved, said again
+        self.picture_card.setFocus()
+        self.update_legend()
+
+    def on_picture(self, image: QImage) -> None:
+        """A picture from the camera: shown as the look has it, and recorded so."""
+        self.raw = image
+        self.draw_picture()
+        self.recording.add(self.last)
+
+    def draw_picture(self) -> None:
+        if self.raw is None:
+            return
+        self.last = preview.shown(self.raw, self.look)
+        self.full.view.show_image(self.last)
+
+    def show_look(self) -> None:
+        """Under the picture: the recording's time while it records, the mode and the look."""
+        chosen = self.mode()
+        self.full.summary.setText("  |  ".join(part for part in (chosen.label if chosen else "", self.look.label)
+                                              if part))
+        seconds = self.recording.seconds()
+        self.full.recording.setText(f"● {seconds // 60}:{seconds % 60:02d}")
+        self.full.recording.setVisible(self.recording.running)
+
+    def move_focus(self, direction: str):
+        """Full screen, the d-pad and the left stick move the zoomed picture; elsewhere they move the focus."""
+        if not self.full_screen or self.popup is not None:
+            return super().move_focus(direction)
+        dx, dy = {"left": (-1, 0), "right": (1, 0), "up": (0, -1), "down": (0, 1)}[direction]
+        self.pan(dx * preview.PAN_STEP, dy * preview.PAN_STEP)
+        return self.focusWidget()
+
+    def pan(self, dx: float, dy: float) -> None:
+        if not self.full_screen:
+            return
+        if self.look.pan(dx, dy):
+            self.draw_picture()
+        elif self.look.zoom == 1.0:
+            self.say("Zoom in first (RT): at 1x the whole picture shows.")
+
+    def zoom(self, delta: int) -> None:
+        """RT in, LT out, the mouse wheel either way: the next zoom, around the middle of what shows."""
+        if not self.full_screen:
+            return
+        if not self.look.step_zoom(delta):
+            self.say(f"The zoom is at its {'largest' if delta > 0 else 'smallest'}, {self.look.zoom:g}x.")
+            return
+        self.say("")
+        self.draw_picture()
+        self.show_look()
+
+    def toggle_gray(self) -> None:
+        """Y: black and white or color, kept for next time."""
+        self.look.gray = not self.look.gray
+        self.settings.setValue(GRAY_KEY, self.look.gray)
+        self.draw_picture()
+        self.show_look()
+        self.update_legend()
+
+    def screenshot(self) -> None:
+        """A: what shows now, saved as a PNG in the Pictures folder (off the window's thread)."""
+        if self.last is None:
+            self.say("There is no picture to save yet.")
+            return
+        if self.shot_worker.busy:
+            self.say("Still saving the screenshot before.")
+            return
+        image, path = self.last, record.new_path(self.pictures(), ".png")
+        self.shot_worker.start(lambda: record.save_picture(image, path))
+
+    def shot_done(self, path) -> None:
+        self.say(f"Screenshot saved: {private(path)}")
+        self.log.info(f"Screenshot saved: {private(path)}.")
+
+    def toggle_recording(self) -> None:
+        """X: a recording of what shows starts, at the mode's size, or it stops and is written to the Videos
+        folder."""
+        if self.recording.running:
+            self.stop_recording()
+            return
+        chosen = self.mode()
+        if not self.live.running or chosen is None:
+            self.say("There is no picture to record: choose a mode that gives one with LB or RB.")
+            return
+        path = record.new_path(self.videos(), ".mp4")
+        problem = self.recording.start(path, chosen.width, chosen.height)
+        if problem:
+            self.say(problem)
+            return
+        self.recording_timer.start()
+        self.say("Recording …")
+        self.log.info(f"Recording started: {chosen.key}, {self.look.label}.")
+        self.show_look()
+        self.update_legend()
+
+    def stop_recording(self) -> None:
+        """The recording ends; recorded() says where once its file is written."""
+        self.recording_timer.stop()
+        self.say("Writing the video …")
+        self.recording.stop()
+        self.show_look()
+        self.update_legend()
+
+    def recorded(self, path: str) -> None:
+        self.say(f"Video saved: {private(path)}")
+        self.log.info(f"Video saved: {private(path)}.")
+
+    def record_failed(self, text: str) -> None:
+        self.recording_timer.stop()
+        self.say(text)
+        self.log.error(text)
+        self.show_look()
+        self.update_legend()
 
     # The Firmware card
 
@@ -598,12 +819,14 @@ class MainWindow(PortableWindow):
         self.log.info(f"Bandwidth: {key}.")
 
     def exit_app(self) -> None:
-        """View: while the app keeps the picture, a second press within five seconds exits (the picture goes dark)."""
-        if self.kept is not None and not self.close_asked:
+        """View: while the app keeps the picture or records, a second press within five seconds exits (the picture
+        goes dark; the recording stops and is kept). Full screen, the full screen's status line says so."""
+        if (self.kept is not None or self.recording.busy) and not self.close_asked:
             self.close_asked = True
             self.confirm_timer.start()
-            self.camera_pane.status.setText("Press View again to exit: the camera's picture goes dark when the app "
-                                            "closes.")
+            (self.full.status if self.full_screen else self.camera_pane.status).setText(
+                "Press View again to exit: the recording stops and is saved." if self.recording.busy else
+                "Press View again to exit: the camera's picture goes dark when the app closes.")
             self.update_legend()
             return
         self.close()
@@ -612,13 +835,18 @@ class MainWindow(PortableWindow):
         self.confirm_timer.stop()
         if self.close_asked:
             self.close_asked = False
+            if self.full.status.text().startswith("Press View again"):
+                self.full.status.setText("")
             if self.camera_pane.status.text().startswith("Press View again"):
                 self.camera_pane.status.setText(KEPT)
             self.update_legend()
 
     def closeEvent(self, event) -> None:
+        """A recording is stopped and its file written before the app ends (record.CLOSE_WAIT_S at most)."""
         self.status_timer.stop()
         self.confirm_timer.stop()
+        self.recording_timer.stop()
+        self.recording.stop(wait_s=record.CLOSE_WAIT_S)
         self.live.stop()
         self.release_picture()
         super().closeEvent(event)

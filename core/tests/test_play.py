@@ -14,6 +14,12 @@ import pytest
 from bc250_core import play
 
 
+@pytest.fixture(autouse=True)
+def no_heat_guard(monkeypatch):
+    """The chip is not read here (test_heat.py has the play mode's heat warning)."""
+    monkeypatch.setattr(play, "_guard", lambda log: None)
+
+
 class Clock:
     def __init__(self):
         self.now = 0.0
@@ -223,3 +229,12 @@ def test_only_the_main_window_is_closed(tmp_path):
     finally:
         if process.poll() is None:
             process.kill()
+
+
+def test_a_game_no_longer_there_is_missing(tmp_path):
+    """A game renamed, moved or deleted after it was put in Steam (owner, 01-11-2026): the play mode shows core's gone
+    screen instead of starting the emulator. A file or a folder (an unpacked game's) that is there is not missing."""
+    game = tmp_path / "Game.iso"
+    game.write_bytes(b"game")
+    assert not play.missing(game) and not play.missing(str(tmp_path))
+    assert play.missing(tmp_path / "Renamed.iso") and play.missing(str(tmp_path / "Gone" / "eboot.bin"))

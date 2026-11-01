@@ -129,7 +129,12 @@ GAMES_INFO = (
     "a PBP are read for the title and the disc ID; a CHD keeps its file's name.\n\n"
     "The pictures in Steam come from inside each game (its icon and its background). With your own SteamGridDB API "
     "key (the LB button, Steam artwork; one key for the suite), Update Steam also fetches a cover for each game. "
-    "Every entry of the row at the bottom also works by touch.")
+    "Every entry of the row at the bottom also works by touch.\n\n"
+    "The LT button (Refresh) reads the game folders again: a game put there, renamed or taken away while the app is "
+    "open shows at once. A game in Steam that you rename or move keeps its mark when the app can tell it is the "
+    "same game (by its title ID or serial, or a disc image by its size): the Y button (Update Steam) then puts it "
+    "in Steam under its new name. Until then its shortcut shows a screen that says the game is no longer there, "
+    "instead of starting the emulator.")
 KEEP_INFO = (
     "What Remove game would delete, a row each with its size. Every row is marked Delete at first: the A button turns "
     "the row the focus is on to Keep, and back. The X button deletes the rows still marked Delete and keeps the "

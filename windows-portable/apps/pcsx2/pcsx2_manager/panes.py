@@ -123,7 +123,12 @@ GAMES_INFO = (
     "decide what to keep before anything is deleted. Its saves stay on the memory cards.\n\n"
     "Pictures for Steam: with your own SteamGridDB API key (the LB button, Steam artwork; one key for the suite), "
     "Update Steam fetches each game's pictures; without one, they are drawn from the app's icon. Every entry of the "
-    "row at the bottom also works by touch.")
+    "row at the bottom also works by touch.\n\n"
+    "The LT button (Refresh) reads the game folders again: a game put there, renamed or taken away while the app is "
+    "open shows at once. A game in Steam that you rename or move keeps its mark when the app can tell it is the "
+    "same game (by its title ID or serial, or a disc image by its size): the Y button (Update Steam) then puts it "
+    "in Steam under its new name. Until then its shortcut shows a screen that says the game is no longer there, "
+    "instead of starting the emulator.")
 CARDS_INFO = (
     "The PS2 memory cards in PCSX2's memcards folder, with the slot PCSX2 puts each in. The A button on a card shows "
     "its saves, and the B button goes back to the cards. The X button (New card) makes an 8 MB card, as the PS2's "

@@ -1,7 +1,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The panes beside the cards: an InfoPane (a heading with the information icon, the rows of what was found and the
-status line) for the Camera and Firmware cards, and a ListPane (a heading, a line, a list that scrolls and the status
-line) for the Bandwidth card and the file browser, as the suite's managers have them.
+status line) for the Camera and Firmware cards, a ListPane (a heading, a line, a list that scrolls and the status
+line) for the Bandwidth card and the file browser, as the suite's managers have them, and a PicturePane for the
+Picture card. FullPicture is the picture full screen, in the place of the header, the cards and the panes.
 
 A list is a ListArea: pills in a column that scrolls, the one with the focus kept in view, so the d-pad goes down a
 list of any length and a finger can drag it. Every action is a controller button in the window's legend, A too,
@@ -130,6 +131,35 @@ class ListPane(Pane):
         self.column.addWidget(self.list, 1)
         self.status = text_label("", BODY + 1, QFont.Weight.DemiBold, AMBER, wrap=True)
         self.column.addWidget(self.status)
+
+
+class FullPicture(QWidget):
+    """The picture full screen, in the whole window above the legend: the camera's picture (preview.PictureView) and
+    a line under it, the recording's time (amber, while it records), the mode and the look, the status line and the
+    information icon. It holds the focus while it shows, so A, X and the d-pad are the window's own (bind())."""
+
+    def __init__(self, title: str, info: str, view: QWidget, parent: QWidget | None = None):
+        super().__init__(parent)
+        column = QVBoxLayout(self)
+        column.setContentsMargins(0, 0, 0, 0)
+        column.setSpacing(px(8))
+        self.view = view
+        column.addWidget(view, 1)
+        line = QHBoxLayout()
+        line.setContentsMargins(px(32), 0, px(32), 0)
+        line.setSpacing(px(16))
+        self.recording = text_label("", BODY + 1, QFont.Weight.ExtraBold, AMBER)
+        self.recording.hide()
+        line.addWidget(self.recording)
+        self.summary = text_label("", BODY + 1, color=DIM)
+        line.addWidget(self.summary)
+        self.status = text_label("", BODY + 1, QFont.Weight.DemiBold, AMBER, wrap=True)
+        self.status.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        line.addWidget(self.status, 1)
+        self.info = InfoPill(title, info)
+        line.addWidget(self.info)
+        column.addLayout(line)
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
 
 
 class PicturePane(Pane):

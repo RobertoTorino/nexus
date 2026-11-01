@@ -336,7 +336,7 @@ def test_your_games_are_marked_with_a_and_put_in_steam(qapp, tmp_path, monkeypat
     monkeypatch.setattr(window, "isActiveWindow", lambda: True)
     window.games_card.setFocus()
     qapp.processEvents()
-    assert window.legend.items == [("A", "Steam mark"), ("Y", "Update Steam"), ("LB", "Steam artwork"), MENU_INFO,
+    assert window.legend.items == [("A", "Steam mark"), ("Y", "Update Steam"), ("LB", "Steam artwork"), ("LT", "Refresh"), MENU_INFO,
                                    EXIT]
     assert "Press the A button on a game to mark it for Steam" in window.games_pane.info.info
     assert window.games_pane.summary.text().startswith("3 game(s) in 2 folder(s)")    # the user's and the card's
@@ -772,6 +772,7 @@ def test_play_runs_the_game_without_a_window(monkeypatch, tmp_path):
     monkeypatch.setattr(entry.applog, "setup", lambda *a, **k: tmp_path / "log")
     monkeypatch.setattr(entry.play, "run", lambda command, cwd, log: ran.append((command, cwd)) or 3)
     monkeypatch.setattr(entry, "create_app", lambda *a, **k: pytest.fail("no window in the play mode"))
+    monkeypatch.setattr(entry.play, "missing", lambda game: False)    # the game is there (test_play_mode.py: not)
     monkeypatch.setattr(sys, "argv", ["Xenia-Manager.exe", "--play", "--fullscreen=true", r"D:\G\Halo 3.iso"])
     assert entry.main() == 3
     program = emulator.program(tmp_path / "emulator")
@@ -781,3 +782,66 @@ def test_play_runs_the_game_without_a_window(monkeypatch, tmp_path):
         raise FileNotFoundError(2, "The system cannot find the file specified")
     monkeypatch.setattr(entry.play, "run", fails)
     assert entry.main() == 1
+
+
+def test_lt_refresh_reads_the_game_folders_again(qapp, monkeypatch):
+    """LT Refresh on Your games reads the game folders again (owner, 01-11-2026: a game put there showed only after
+    the app started again); not while a job runs. The widest legend of the pane still fits 1280 x 720."""
+    window = make(qapp)
+    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
+    window.games_card.setFocus()
+    qapp.processEvents()
+    assert ("LT", "Refresh") in window.legend.items
+    read = []
+    refresh = window.refresh_games
+    monkeypatch.setattr(window, "refresh_games", lambda *args: (read.append(True), refresh(*args)))
+    window.on_action("lt")
+    assert read == [True] and window.games_pane.status.text().startswith("The game folders were read again: ")
+    window.busy, window._job = True, "install"
+    window.legend.entries["LT"].pressed.emit()                     # a tap on the entry: busy, says why
+    assert read == [True] and window.games_pane.status.text() == sys.modules[type(window).__module__].BUSY
+    window.busy = False
+    left, _, right, _ = window.margins()
+    window.legend.set_items([("A", "Steam mark"), ("X", "Play"), ("Y", "Update Steam"), ("LB", "Steam artwork"),
+                             ("RB", "Remove game"), ("LT", "Refresh"), MENU_INFO, BACK, EXIT])
+    qapp.processEvents()
+    assert window.legend.sizeHint().width() <= 1280 - left - right
+    window.close()
+
+
+def test_a_game_renamed_while_the_app_is_open(qapp, tmp_path, monkeypatch):
+    """A game in Steam renamed in its folder (owner, 01-11-2026: its Steam shortcut then started Xenia with a file no
+    longer there): LT Refresh finds it again under its new name with its mark (an .iso: by its size), and Update Steam
+    puts it in under that name, the old shortcut out. Taken off, the mark stays off."""
+    home = tmp_path / "emulator"
+    fake_install(home)
+    user = tmp_path / "me"
+    old = make_iso(user / "Games" / "Xbox360" / "Halo 3 [NTSC].iso")
+    steam_dir = tmp_path / "Steam"
+    (steam_dir / "userdata" / "1" / "config").mkdir(parents=True)
+    window = make(qapp, home, steam_dir=steam_dir, steam_closed=lambda change: change() or False, user_home=user)
+    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
+    window.games_card.setFocus()
+    qapp.processEvents()
+    window.mark_game(str(old))
+    window.on_action("y")
+    assert wait_for(qapp, lambda: not window.busy)
+    assert shortcuts.in_steam(steam_dir) == {str(old): "[X360] Halo 3 [NTSC]"}
+    new = old.rename(old.with_name("Halo 3.iso"))
+    window.on_action("lt")
+    assert list(window.games_pane.list.pills) == [str(new)] and str(new) in window.marked
+    assert window.moved == {str(new): str(old)}
+    assert window.games_pane.status.text() == ("The game folders were read again: 1 game(s). Found again under a new "
+                                               "name or in another folder, with its Steam mark: Halo 3. The Y button "
+                                               "updates Steam.")
+    assert window.games_pane.list.pills[str(new)].label.text().endswith("✓ Steam (Update Steam)")
+    window.mark_game(str(new))                                     # taken off: it stays off on the next refresh
+    window.on_action("lt")
+    assert str(new) not in window.marked
+    window.mark_game(str(new))
+    window.on_action("y")
+    assert wait_for(qapp, lambda: not window.busy)
+    assert shortcuts.in_steam(steam_dir) == {str(new): "[X360] Halo 3"}
+    window.on_action("lt")
+    assert window.moved == {} and str(new) in window.marked
+    window.close()

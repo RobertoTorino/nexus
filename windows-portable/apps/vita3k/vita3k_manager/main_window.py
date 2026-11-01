@@ -341,6 +341,7 @@ class MainWindow(PortableWindow):
         self.bind("x", self.x_action)
         self.bind("previous", self.lb_action)
         self.bind("next", self.rb_action)
+        self.bind("lt", self.lt_action)
         self.back.connect(self.on_back)
         self.status_timer = QTimer(self)
         self.status_timer.setInterval(STATUS_MS)
@@ -533,10 +534,11 @@ class MainWindow(PortableWindow):
         elif pane is self.games_pane:
             focused = self.games_pane.list.focused()
             if focused.startswith("add:"):
-                items = [("A", "Install"), ("X", "Install all"), ("Y", "Update Steam"), ("LB", "Steam artwork")]
+                items = [("A", "Install"), ("X", "Install all"), ("Y", "Update Steam"),
+                         ("LB", "Steam artwork"), ("LT", "Refresh")]
             else:
                 items = [("A", "Steam mark"), *([("X", "Play")] if focused else []), ("Y", "Update Steam"),
-                         ("LB", "Steam artwork"), *([("RB", "Remove game")] if focused else [])]
+                         ("LB", "Steam artwork"), *([("RB", "Remove game")] if focused else []), ("LT", "Refresh")]
         elif pane is self.keep_pane:
             focused = next((i for i in self.keep_items if i.key == self.keep_pane.list.focused()), None)
             items = [*([("A", "Keep" if focused.delete else "Delete")] if focused is not None else []),
@@ -656,6 +658,19 @@ class MainWindow(PortableWindow):
             self._unmarked = self._unmarked - {key}
         self.show_games()
         self.games_pane.list.pills[key].setFocus()
+
+    def rescan(self) -> None:
+        """LT Refresh: the game folders read again, for a game put there, renamed or taken away while the app is open
+        (owner, 01-11-2026: it showed only after the app started again); the focus stays on its game."""
+        if self.busy:
+            if self._job != "steam":                    # Steam's own job says so on the line already
+                self.games_pane.status.setText(BUSY)
+            return
+        self.refresh_games()
+        changed = library.pending(self.games, self.marked, self.in_steam, self.outdated)
+        self.games_pane.status.setText(f"The game folders were read again: {len(self.games)} game(s)."
+                                       + (" Steam does not match the marks yet: the Y button updates it."
+                                          if changed and self.steam_dir is not None else ""))
 
     def update_steam(self) -> None:
         """Y Update Steam: the marked games in Steam, the others out, off the window's thread. Y always answers: a
@@ -1039,6 +1054,10 @@ class MainWindow(PortableWindow):
             self.remove_game()
         elif pane is self.settings_pane:
             self.settings_pane.tabs.step(1)
+
+    def lt_action(self) -> None:
+        if self.panes.currentWidget() is self.games_pane:
+            self.rescan()
 
     # Log
 

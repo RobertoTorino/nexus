@@ -140,6 +140,10 @@ You play the games from Steam; the app puts them there.
 - **RB Remove game** shows what of a game would go, on the page described below: the game in Vita3K's storage, its
   update and its extra content, each on a row of its own, and its shortcut in Steam when it is in Steam. Its saves
   are never on the page; they stay in Vita3K's storage. It does not work while Vita3K runs.
+- **LT Refresh** reads the game folders again: a game or a package put there while the app is open shows at
+  once.
+- A game taken out of Vita3K's storage by hand keeps its shortcut in Steam until **Y Update Steam**; started,
+  it shows a screen that says the game is no longer there, instead of starting Vita3K. **A** closes it.
 - Steam's library opens from the portal: **RT Steam** in its bottom row.
 
 The pictures in Steam come from inside the game: its icon (`sce_sys\icon0.png`) on the cover, the wide picture and as
@@ -159,6 +163,15 @@ from Steam's library or from the app. The line at the bottom of Your games says 
 menu** (the Steam button, or the guide button where Windows does not take it) and its **Exit game** still end the game
 too. Vita3K's own pause menu, on its PS button, has **Exit**, which ends the game but leaves Vita3K's window; holding
 View, LB and RB closes that too.
+
+**When the device runs hot**, you are warned without the game stopping. While a game runs, the app reads the chip's
+temperature every two seconds. When the CPU or the GPU stays above 90 °C for half a minute, a banner shows at the top of
+the screen for a few seconds (on every screen, with a second one attached), and the controller rumbles three times; it
+warns again at most every five minutes while the chip stays that hot. The banner takes no press and does not take the
+focus from the game. A pause, or a lower operating mode (the portal's Operating Mode page), lets the device cool down.
+When the game ends, the log (**A View log** on the Log pane) says how hot the chip got and for how long. Windows cannot
+read how hot the outside of the device is: the chip's temperature is the closest reading, and the chip slows itself down
+at its own limit.
 
 ## Deciding what to keep
 

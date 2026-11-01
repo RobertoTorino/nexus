@@ -1,3 +1,17 @@
+Changelog: 02-11-2026 00:06:22
+
+Added. The picture full screen (owner, 01-11-2026): A on the Picture card starts it in the whole window, with its
+buttons in the row at the bottom. A Screenshot saves what shows as a PNG in the Pictures folder, X Record starts a
+recording of what shows and X Stop ends it (an MP4, H.264 through Windows' own encoder, at the mode's size and at most
+30 frames a second, in the Videos folder; both in a USB HD Cam folder, named with the date and the time), Y Gray and
+Y Color switch to black and white and back (remembered), LT Zoom − and RT Zoom + zoom from 1x to 4x, and the d-pad,
+the left stick or a finger moves the zoomed picture (the mouse wheel zooms). LB Mode − and RB Mode + change the mode
+there too, not while it records. B ends the full screen; a recording stops and is kept, and View asks for a second
+press while one runs. If the camera stops sending, the full screen says why and stays, so another mode can be tried.
+The line above the row shows the mode, the zoom and the recording's time. Signs and short words in the row, so its ten
+entries fit at 1280 x 720 (measured by a test in every state). New: record.py, preview.Look and shown(), the panes'
+FullPicture, with tests, among them a real recording read back.
+
 Changelog: 01-11-2026 21:51:43
 
 Release 0.3.1.

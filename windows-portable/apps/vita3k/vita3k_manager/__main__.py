@@ -8,6 +8,7 @@ import sys
 
 from bc250_core import __version__ as CORE_VERSION, applog, instance, play
 from bc250_core.app import create_app, exec_app
+from bc250_core.platform import private
 from bc250_core.portable import PORTABLE
 
 from . import APP_ID, APP_NAME, INFO, SUITE, __version__
@@ -18,8 +19,13 @@ def play_game(args: list[str]) -> int:
     play.run), without a window of the app's; Vita3K's exit code. Never the app's one window: it runs beside it."""
     applog.setup(APP_ID, suite=SUITE, private=True)
     log = applog.logger(APP_ID)
-    from . import emulator
+    from . import emulator, userdata
     program = emulator.program(emulator.emulator_home())
+    game = userdata.vita_fs(emulator.emulator_home()) / "ux0" / "app" / args[-1] if args else None   # -r <title ID>
+    if game is not None and play.missing(game):     # taken out of Vita3K after it was put in Steam
+        log.error(f"Play: {private(game)} is no longer there; Vita3K was not started.")
+        from bc250_core import gone
+        return gone.show(INFO, APP_NAME, __version__, game)
     try:
         return play.run([str(program), *args], program.parent, log=log.info)
     except OSError as error:

@@ -8,7 +8,8 @@ Makes the **PS5 HD Camera** (CFI-ZEY1) a webcam on Windows. The camera has no me
 boot loader and needs its firmware each time it is plugged in, as a PlayStation sends it. The app gets the firmware
 (a pinned, checked download, or a file of your own), gives the boot loader a driver once, and sends the firmware
 when you press **A**. Then Windows sees an ordinary webcam, **USB Camera-OV580**, for OBS, a browser, Discord or any
-other app. The Picture card shows it in the app itself. Keep the app open while you use the camera in another app: it
+other app. The Picture card shows it full screen in the app itself, with screenshots, recordings, zoom and black and
+white. Keep the app open while you use the camera in another app: it
 keeps the picture bright (see Keeping the picture bright). The camera has no microphone.
 
 USB HD Cam is on the [portal](../portal.md)'s **Utilities** tab: **A** on its tile installs it, and once it
@@ -54,13 +55,37 @@ A **PS4 Camera** on Sony's adapter is found and named, but the app does not load
 
 ## Picture
 
-The **Picture** card shows the camera's picture, once the Camera card has made it a webcam. **A Start** starts it and
-**A Stop** stops it; it also stops when you choose another card. **LB Mode before** and **RB Next mode** choose the
-mode, named under the title: one camera's picture first, from 1920 x 1080 down to 320 x 184, then both cameras side
-by side, as the camera sends them for depth (5148 x 1088 is both and smaller copies of them). Each size comes at its
-fastest rate that gives a picture; the modes in which the camera sends nothing are not listed. If the camera sends
-nothing in a mode anyway, the pane says so after a few seconds: choose another. The app remembers the mode. Other
-apps can show the camera while the picture runs.
+The **Picture** card shows the camera's picture full screen, once the Camera card has made it a webcam. **LB Mode
+before** and **RB Next mode** choose the mode, named under the title: one camera's picture first, from 1920 x 1080
+down to 320 x 184, then both cameras side by side, as the camera sends them for depth (5148 x 1088 is both and smaller
+copies of them). Each size comes at its fastest rate that gives a picture; the modes in which the camera sends nothing
+are not listed. The app remembers the mode. **A Start** starts the picture.
+
+### Full screen
+
+The picture fills the screen. The row at the bottom holds its buttons, and the line above it shows the mode, the
+zoom and, while it records, the recording's time in amber:
+
+| Button | What it does |
+|---|---|
+| **A Screenshot** | Saves what the screen shows as a PNG in your **Pictures** folder |
+| **X Record**, **X Stop** | Starts a recording of what the screen shows, and stops it; it goes to your **Videos** folder |
+| **Y Gray**, **Y Color** | Black and white, or color again; the app remembers it |
+| **LB Mode −**, **RB Mode +** | The mode before or the next one; the picture starts again in it |
+| **LT Zoom −**, **RT Zoom +** | Zooms out or in: 1x, 1.5x, 2x, 3x and 4x |
+| **d-pad**, left stick | Moves the zoomed picture |
+| **B Back** | Ends the full screen; a recording stops and is kept |
+
+By touch, tap an entry in the row, drag the picture with a finger to move it, or turn the mouse wheel to zoom.
+**☰** (Menu) or the information icon shows these buttons.
+
+Screenshots and recordings show what you see: zoomed in and black and white too. Each goes in a **USB HD Cam**
+folder, named with the date and the time (`USB HD Cam 2026-11-01 21-04-09.png`). A recording is an MP4 (H.264,
+written by Windows' own video encoder) at the mode's size, with at most 30 frames a second. The mode does not change
+while it records: stop it first. If the camera stops sending, the screen says so and stays: choose another mode with
+**LB** or **RB**. **⧉** (View) asks for a second press while a recording runs, then stops it and keeps the file.
+
+Other apps can show the camera while the picture runs; they get the camera's own picture, in color and not zoomed.
 
 ## Keeping the picture bright
 
@@ -138,3 +163,5 @@ remove the download.
 | `%LOCALAPPDATA%\windows-portable-suite\windows-portable-hdcam\windows-portable-hdcam.log` | The log |
 | `%LOCALAPPDATA%\windows-portable-suite\windows-portable-hdcam\firmware\cfi-zey1.bin` | The camera's firmware (kept by `--uninstall`, removed by `--purge`) |
 | `%APPDATA%\windows-portable-suite\windows-portable-hdcam.ini` | The settings |
+| `Pictures\USB HD Cam\` | The screenshots (your own Pictures folder, wherever Windows keeps it; `--uninstall --purge` leaves them) |
+| `Videos\USB HD Cam\` | The recordings (your own Videos folder; `--uninstall --purge` leaves them) |

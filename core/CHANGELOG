@@ -1,3 +1,15 @@
+Changelog: 02-11-2026 00:23:01
+
+Added. heat.py, the play mode's heat warning (owner, 02-11-2026: the Ally got hot on the outside during a game in Xenia with a second screen attached): while a game runs, play.run() reads the CPU's and the GPU's temperature every two seconds (chip.Temperatures); when the hotter stays above 90 °C for 30 s, a banner in the portable design shows at the top of every screen for eight seconds, on top of the game without taking the focus or a press, and the controller rumbles three short times (PygameSource.rumble(), new); again at most every five minutes. The game is never touched. When the game ends, the log says the hottest reads and how long they were above the limit. A sensor or a banner that fails is logged and the game goes on.
+
+Changelog: 01-11-2026 23:28:28
+
+Added. play.missing() and gone.py: the play mode no longer starts the emulator with a game that is no longer there (renamed, moved or deleted after it was put in Steam, or on an SD card that is not in); a screen in the portable design says which file and what to do, closed with A, B, View or a tap, and by itself after a minute. And renamed.py: a game manager remembers what each game in Steam is (its code, else its file's size), and a game found again under another name or in another folder takes the mark of the one no longer found when it is the only match (owner, 01-11-2026: Xenia opened without the game, its error under Steam's keyboard).
+
+Changelog: 01-11-2026 22:54:19
+
+Fixed. A portable card without an icon gives its text the room of two lines at 100 high: margins of 8 above and below, 2 between the title and the text, the title at its own height. The second line of a card's text was cut off at the bottom (a g or a p), in the game managers' cards and Windows Portable Test's Hardware card (owner, 01-11-2026).
+
 Changelog: 01-11-2026 21:51:44
 
 Version 2.5.1.

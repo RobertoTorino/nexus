@@ -492,7 +492,7 @@ def test_your_games_are_marked_with_a_and_put_in_steam(qapp, tmp_path, monkeypat
     assert dict(window.rows())["Play time"] == "1 h 22 min"
     window.games_card.setFocus()
     qapp.processEvents()
-    assert window.legend.items == [("A", "Steam mark"), ("Y", "Update Steam"), ("LB", "Steam artwork"), MENU_INFO,
+    assert window.legend.items == [("A", "Steam mark"), ("Y", "Update Steam"), ("LB", "Steam artwork"), ("LT", "Refresh"), MENU_INFO,
                                    EXIT]
     assert "Press the A button on a game to mark it for Steam" in window.games_pane.info.info
     assert not hasattr(window, "steam_row")
@@ -758,7 +758,7 @@ def test_a_game_is_removed_from_steam_and_the_disk(qapp, tmp_path, monkeypatch):
     window.on_action("accept")
     window.games_pane.list.pills[str(lumines)].setFocus()
     qapp.processEvents()
-    assert window.legend.items[-4] == ("RB", "Remove game")
+    assert window.legend.items[-5:-3] == [("RB", "Remove game"), ("LT", "Refresh")]
     window.on_action("next")                                    # RB: the keep page, nothing deleted yet
     page = window.keep_pane
     assert window.panes.currentWidget() is page and lumines.exists()
@@ -916,6 +916,7 @@ def test_play_runs_the_game_without_a_window(monkeypatch, tmp_path):
     monkeypatch.setattr(entry.applog, "setup", lambda *a, **k: tmp_path / "log")
     monkeypatch.setattr(entry.play, "run", lambda command, cwd, log, confirm: ran.append((command, cwd, confirm)) or 3)
     monkeypatch.setattr(entry, "create_app", lambda *a, **k: pytest.fail("no window in the play mode"))
+    monkeypatch.setattr(entry.play, "missing", lambda game: False)    # the game is there (test_play_mode.py: not)
     monkeypatch.setattr(sys, "argv", ["shadPS4-Manager.exe", "--play", "-f", "true", "-g", r"D:\G\eboot.bin"])
     assert entry.main() == 3
     program = emulator.program(tmp_path / "emulator")
@@ -925,3 +926,28 @@ def test_play_runs_the_game_without_a_window(monkeypatch, tmp_path):
         raise FileNotFoundError(2, "The system cannot find the file specified")
     monkeypatch.setattr(entry.play, "run", fails)
     assert entry.main() == 1
+
+
+def test_lt_refresh_reads_the_game_folders_again(qapp, monkeypatch):
+    """LT Refresh on Your games reads the game folders again (owner, 01-11-2026: a game put there showed only after
+    the app started again); not while a job runs. The widest legend of the pane still fits 1280 x 720."""
+    window = make(qapp)
+    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
+    window.games_card.setFocus()
+    qapp.processEvents()
+    assert ("LT", "Refresh") in window.legend.items
+    read = []
+    refresh = window.refresh_games
+    monkeypatch.setattr(window, "refresh_games", lambda *args: (read.append(True), refresh(*args)))
+    window.on_action("lt")
+    assert read == [True] and window.games_pane.status.text().startswith("The game folders were read again: ")
+    window.busy, window._job = True, "install"
+    window.legend.entries["LT"].pressed.emit()                     # a tap on the entry: busy, says why
+    assert read == [True] and window.games_pane.status.text() == sys.modules[type(window).__module__].BUSY
+    window.busy = False
+    left, _, right, _ = window.margins()
+    window.legend.set_items([("A", "Steam mark"), ("X", "Play"), ("Y", "Update Steam"), ("LB", "Steam artwork"),
+                             ("RB", "Remove game"), ("LT", "Refresh"), MENU_INFO, BACK, EXIT])
+    qapp.processEvents()
+    assert window.legend.sizeHint().width() <= 1280 - left - right
+    window.close()

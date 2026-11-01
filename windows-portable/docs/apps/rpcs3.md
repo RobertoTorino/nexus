@@ -148,6 +148,11 @@ You play the games from Steam; the app puts them there.
   RPCS3 with the game, full screen, as from Steam's library. A game that is not in Steam yet says so: **A** marks
   it, **Y** puts it there. On a device without Steam (not installed, or never started), **X Play** starts the game
   in RPCS3 itself, full screen, the same way Steam would.
+- **LT Refresh** reads the game folders again: a game put there, renamed or taken away while the app is open
+  shows at once. A game in Steam that you rename or move keeps its mark when the app can tell it is the same
+  game (by its title ID or serial, or a disc image by its size): **Y Update Steam** then puts it in Steam under
+  its new name and takes the old shortcut out. Until then, its shortcut in Steam shows a screen that says the
+  game is no longer there, instead of starting the emulator; **A** closes it.
 - Steam's library opens from the portal: **RT Steam** in its bottom row.
 - **RB Remove game** on a game shows what would go, on a page of its own (see
   [Deciding what to keep](#deciding-what-to-keep)): a disc game's folder in `Games\PS3` and its update in RPCS3's
@@ -167,6 +172,15 @@ back in Steam, or in the app when it started the game. It works the same in ever
 from Steam's library or from the app. The line at the bottom of Your games says so when a game starts. A short press
 of View and Menu opens RPCS3's own menu over the game, with **Exit Game** in it; the guide button opens it too, where
 Windows leaves that button to the game (on the ROG Xbox Ally the Xbox button is Windows' own).
+
+**When the device runs hot**, you are warned without the game stopping. While a game runs, the app reads the chip's
+temperature every two seconds. When the CPU or the GPU stays above 90 °C for half a minute, a banner shows at the top of
+the screen for a few seconds (on every screen, with a second one attached), and the controller rumbles three times; it
+warns again at most every five minutes while the chip stays that hot. The banner takes no press and does not take the
+focus from the game. A pause, or a lower operating mode (the portal's Operating Mode page), lets the device cool down.
+When the game ends, the log (**A View log** on the Log pane) says how hot the chip got and for how long. Windows cannot
+read how hot the outside of the device is: the chip's temperature is the closest reading, and the chip slows itself down
+at its own limit.
 
 The pictures in Steam come from inside the game: its icon (`ICON0.PNG`) on the cover, the wide picture and as the logo,
 its background (`PIC1.PNG`) on the banner; without them the title is drawn on a dark background. With a SteamGridDB

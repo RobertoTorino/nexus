@@ -141,7 +141,12 @@ GAMES_INFO = (
     "in the folders the console keeps them in (<title ID>\\00007000 or 000D0000).\n\n"
     "The pictures in Steam are drawn from this app's icon, with the game's title. With your own SteamGridDB API key "
     "(the LB button, Steam artwork; one key for the suite), Update Steam fetches each game's pictures instead. Every "
-    "entry of the row at the bottom also works by touch.")
+    "entry of the row at the bottom also works by touch.\n\n"
+    "The LT button (Refresh) reads the game folders again: a game put there, renamed or taken away while the app is "
+    "open shows at once. A game in Steam that you rename or move keeps its mark when the app can tell it is the "
+    "same game (by its title ID or serial, or a disc image by its size): the Y button (Update Steam) then puts it "
+    "in Steam under its new name. Until then its shortcut shows a screen that says the game is no longer there, "
+    "instead of starting the emulator.")
 LOG_INFO = (
     "Xenia's folder, where it keeps its settings, the content of your games and their saves, and the newest lines of "
     "this app's log. The A button, or a tap on this pane, shows the whole log here: the d-pad scrolls it, the B "

@@ -152,7 +152,12 @@ GAMES_INFO = (
     "licenses always stay.\n\n"
     "The pictures in Steam come from inside each game (its icon and its background). With your own SteamGridDB API "
     "key (the LB button, Steam artwork; one key for the suite), Update Steam also fetches a cover for each game. "
-    "Every entry of the row at the bottom also works by touch.")
+    "Every entry of the row at the bottom also works by touch.\n\n"
+    "The LT button (Refresh) reads the game folders again: a game put there, renamed or taken away while the app is "
+    "open shows at once. A game in Steam that you rename or move keeps its mark when the app can tell it is the "
+    "same game (by its title ID or serial, or a disc image by its size): the Y button (Update Steam) then puts it "
+    "in Steam under its new name. Until then its shortcut shows a screen that says the game is no longer there, "
+    "instead of starting the emulator.")
 KEEP_INFO = (
     "Nothing is deleted before you decide what to keep. The page lists what would go, a row each with its size: "
     "the A button turns a row from Delete to Keep and back, the X button deletes the rows still marked Delete, and "

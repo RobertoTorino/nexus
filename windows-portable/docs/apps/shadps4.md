@@ -145,6 +145,11 @@ You play the games from Steam; the app puts them there.
   Steam's library. A game that is not in Steam yet says so: **A** marks it, **Y** puts it there. On a device without
   Steam (not installed, or never started), **X Play** starts the game in shadPS4 itself, full screen, the same way
   Steam would.
+- **LT Refresh** reads the game folders again: a game put there, renamed or taken away while the app is open
+  shows at once. A game in Steam that you rename or move keeps its mark when the app can tell it is the same
+  game (by its title ID or serial, or a disc image by its size): **Y Update Steam** then puts it in Steam under
+  its new name and takes the old shortcut out. Until then, its shortcut in Steam shows a screen that says the
+  game is no longer there, instead of starting the emulator; **A** closes it.
 - Steam's library opens from the portal: **RT Steam** in its bottom row.
 - **RB Remove game** on a game shows the [keep page](#deciding-what-to-keep) of what would go: the game's folder,
   its update, patch and mods beside it, and its Steam shortcut. **X** deletes the rows marked Delete (for the
@@ -181,6 +186,15 @@ started from Steam's library or from the app. The line at the bottom of Your gam
 short press of View and Menu opens shadPS4's own quit window (**A** quits, **B** goes back to the game), as does
 Ctrl+Shift+End on a keyboard: the app adds these hotkeys to shadPS4's `input_config\global.ini`, since shadPS4 by
 itself opens it only from a keyboard; the file's other lines stay as they are.
+
+**When the device runs hot**, you are warned without the game stopping. While a game runs, the app reads the chip's
+temperature every two seconds. When the CPU or the GPU stays above 90 °C for half a minute, a banner shows at the top of
+the screen for a few seconds (on every screen, with a second one attached), and the controller rumbles three times; it
+warns again at most every five minutes while the chip stays that hot. The banner takes no press and does not take the
+focus from the game. A pause, or a lower operating mode (the portal's Operating Mode page), lets the device cool down.
+When the game ends, the log (**A View log** on the Log pane) says how hot the chip got and for how long. Windows cannot
+read how hot the outside of the device is: the chip's temperature is the closest reading, and the chip slows itself down
+at its own limit.
 
 ## Settings
 

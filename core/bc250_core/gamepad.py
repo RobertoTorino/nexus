@@ -105,6 +105,15 @@ class PygameSource:
                     found.append(("axis", name, max(-1.0, min(1.0, event.value / 32767))))
         return found
 
+    def rumble(self, low: float, high: float, ms: int) -> None:
+        """Every open controller's motors, the low and the high one from 0 to 1, for *ms* milliseconds (the play
+        mode's heat warning); a controller without them is left alone."""
+        for pad in self.pads.values():
+            try:
+                pad.rumble(low, high, ms)
+            except Exception:  # noqa: BLE001  (no motors, or the pad just went)
+                pass
+
     def close(self) -> None:
         self.pads.clear()
         try:

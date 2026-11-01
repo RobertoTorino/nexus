@@ -11,8 +11,14 @@ The emulators had five ways out (PCSX2's quit chord, shadPS4's and RPCS3's menus
 overlay for Vita3K and Xenia, which have none of their own), and none was on the screen. A press shorter than HOLD
 still does what the emulator does with it.
 
+A game that is no longer there (missing(): renamed, moved or deleted after it was put in Steam) is not started: the
+app's play mode shows core's gone screen instead (owner, 01-11-2026).
+
+While the game runs, core's heat.Guard watches the chip's temperatures: held above its limit, a banner over the game
+and a rumble warn, and the log says how hot it got when the game ends (owner, 02-11-2026).
+
 launcher() is what a shortcut starts: the app's program in a release, its run.ps1 from the checkout (in a hidden
-PowerShell window: Steam cannot set PYTHONPATH). Windows only; the standard library and core's gamepad reader."""
+PowerShell window: Steam cannot set PYTHONPATH). Windows only; the standard library, core's gamepad reader and its heat warning."""
 
 from __future__ import annotations
 
@@ -61,6 +67,16 @@ def played(exe: str, options: str, app_root: Path) -> bool:
     program, before = launcher(app_root)
     return (os.path.normcase(exe.strip('"')) == os.path.normcase(program)
             and options.startswith(subprocess.list2cmdline(before)))
+
+
+def missing(game: str | Path) -> bool:
+    """Whether the game a shortcut starts is no longer there: its file or folder renamed, moved or deleted, or on an
+    SD card that is not in. The play mode then shows core's gone screen instead of starting the emulator (owner,
+    01-11-2026: Xenia opened without the game, with an error the controller could not close)."""
+    try:
+        return not Path(game).exists()
+    except OSError:                                     # a drive letter without a card makes Windows raise
+        return True
 
 
 def _process_tree(pid: int) -> set[int]:
@@ -152,15 +168,22 @@ def _pad():
     return PygameSource()
 
 
+def _guard(log: Callable[[str], None]):
+    from .heat import Guard
+    return Guard(log)
+
+
 def run(command: Sequence[str], cwd: Path, log: Callable[[str], None] = lambda line: None,
         start: Callable[[Sequence[str], Path], subprocess.Popen] = _start, pad: Callable[[], object] = _pad,
         close: Callable[[int], int] = close_windows, clock: Callable[[], float] = time.monotonic,
         sleep: Callable[[float], None] = time.sleep, hold: float = HOLD, grace: float = GRACE,
-        confirm: Callable[[int], int] | None = None) -> int:
+        confirm: Callable[[int], int] | None = None, heat: Callable[[Callable[[str], None]], object] | None = None
+        ) -> int:
     """The emulator *command* run in *cwd* to its end, closed on View, LB and RB held for *hold* seconds; its exit
     code. *confirm*: for an emulator that asks before it quits (shadPS4), what answers yes (press_enter), ASK seconds
-    after the close while it still runs. Without a controller reader (no pygame-ce, no SDL) the game still runs, only
-    without the chord. OSError when the emulator cannot start."""
+    after the close while it still runs. *heat*: makes what watches the chip's temperatures from *log* (core's
+    heat.Guard; a test passes lambda log: None for none). Without a controller reader (no pygame-ce, no SDL) the
+    game still runs, only without the chord and the rumble. OSError when the emulator cannot start."""
     process = start(command, cwd)
     log(f"Play: {Path(command[0]).name} started; View, LB and RB held for {hold:g} s close it.")
     try:
@@ -168,6 +191,7 @@ def run(command: Sequence[str], cwd: Path, log: Callable[[str], None] = lambda l
     except Exception as error:  # noqa: BLE001  (no controller reader: the game runs, without the chord)
         source = None
         log(f"Play: no controller reader ({error}); the game runs without the quit chord.")
+    guard = (heat or _guard)(log)
     pressed: set[str] = set()
     since = asked = None
     try:
@@ -190,9 +214,15 @@ def run(command: Sequence[str], cwd: Path, log: Callable[[str], None] = lambda l
                 process.terminate()
                 process.wait()
                 break
+            if guard is not None:
+                guard.tick(now, source)
             sleep(POLL)
     finally:
+        if guard is not None:
+            guard.close()
         if source is not None:
             source.close()
     log(f"Play: the emulator ended (exit code {process.returncode}).")
+    if guard is not None and (note := guard.note()):
+        log(note)
     return process.returncode or 0

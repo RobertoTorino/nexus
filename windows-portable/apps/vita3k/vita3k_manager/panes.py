@@ -149,7 +149,10 @@ GAMES_INFO = (
     "Its saves are never deleted.\n\n"
     "The pictures in Steam come from inside each game (its icon and its LiveArea picture). With your own "
     "SteamGridDB API key (the LB button, Steam artwork; one key for the suite), Update Steam also fetches a cover for "
-    "each game. Every entry of the row at the bottom also works by touch.")
+    "each game. Every entry of the row at the bottom also works by touch.\n\n"
+    "The LT button (Refresh) reads the game folders again: a game or a package put there while the app is open "
+    "shows at once. A game taken out of Vita3K's storage by hand keeps its shortcut until Update Steam; started, "
+    "it shows a screen that says the game is no longer there, instead of starting Vita3K.")
 LOG_INFO = (
     "Vita3K's folder, where it keeps the firmware, your games, the saves and its settings, the app's Games\\Vita "
     "folder, and the newest lines of this app's log. The A button, or a tap on this pane, shows the whole log here: the d-pad scrolls it, the B "

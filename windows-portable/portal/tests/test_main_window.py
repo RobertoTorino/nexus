@@ -905,6 +905,28 @@ def test_the_screen_row_moves_the_portal_to_the_next_screen(world, qapp, monkeyp
     window.job = None
 
 
+def test_the_screen_row_follows_a_move_by_the_keyboard(world, qapp, monkeypatch):
+    """Moved by Win + Shift + an arrow to a screen of the same size, the portal does not start again: the Screen row
+    names the screen it is on now (owner, 01-11-2026: moved back to Display 1, it still said Display 2)."""
+    window = world.make()
+    here = window.screen()
+
+    class Other:
+        def name(self):
+            return "\\\\.\\DISPLAY2"
+    other = Other()
+    monkeypatch.setattr(mw.QGuiApplication, "screens", staticmethod(lambda: [here, other]))
+    monkeypatch.setattr(window, "move_to", lambda screen: None)
+    monkeypatch.setattr(window, "screen", lambda: other)
+    window.show_suite(window.suite_pane.wallpaper)
+    row = window.suite_pane.screen_row
+    assert row.label.text() == "Screen: Display 2"
+    monkeypatch.setattr(window, "screen", lambda: here)            # Win + Shift + an arrow
+    window.screen_moved(here)
+    assert row.label.text() == f"Screen: {portable.screen_label(here)}"
+    window.close()
+
+
 def test_lt_moves_the_portal_with_a_second_screen(world, qapp, monkeypatch):
     """LT is the Screen row's A on every page (owner, 31-10-2026), in the legend with a second screen only, which
     then also shows the keyboard's Win + Shift + an arrow at its left, as key caps."""

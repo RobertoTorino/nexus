@@ -1,3 +1,15 @@
+Changelog: 02-11-2026 00:23:01
+
+Added. A warning when the device runs hot during a game (core's heat.py; owner, 02-11-2026): when the CPU or the GPU stays above 90 °C for half a minute, a banner shows at the top of the screen over PPSSPP and the controller rumbles three times, again at most every five minutes; the game goes on. When the game ends, the log says how hot the chip got and for how long. The wiki says so.
+
+Changelog: 01-11-2026 23:28:28
+
+Added. A game in Steam renamed or moved keeps its mark when the app can tell it is the same game (its title ID or serial, or a disc image's size): LT Refresh, or the next start, shows it under its new name with the mark, and Update Steam puts it in Steam under that name and takes the old shortcut out (core's renamed.py). Its shortcut no longer starts the emulator with a file that is not there: it shows a screen that says the game is no longer there and what to do (core's gone screen; owner, 01-11-2026). The pane's information and the wiki say so.
+
+Changelog: 01-11-2026 22:54:19
+
+Added. LT Refresh on Your games reads the game folders again: a game put there, renamed or taken away while the app is open shows at once, and the status line says when Steam no longer matches the marks (a game in Steam renamed: its shortcut started the emulator with a file no longer there; mark it again, then Update Steam takes the old shortcut out). Before, the list was read only when the app started (owner, 01-11-2026). The pane's information and the wiki say so.
+
 Changelog: 01-11-2026 21:51:43
 
 Release 4.0.1.

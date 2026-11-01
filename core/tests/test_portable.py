@@ -623,6 +623,26 @@ def test_a_card_shows_a_red_dot_for_an_update(qapp):
     assert card.grab().toImage().pixelColor(x, y).name() != portable.DOT
 
 
+def test_two_lines_of_a_card_100_high_are_not_cut_off(qapp):
+    """The managers' cards are 100 high in a column 460 wide: a line of text that wraps keeps its second line whole,
+    a g or a p included (owner, 01-11-2026: cut off at the bottom). In Inter, as the windows draw it."""
+    portable.load_fonts()
+    holder = QWidget()
+    column = QVBoxLayout(holder)
+    column.setContentsMargins(0, 0, 0, 0)
+    card = Card("Settings", "The picture, the controllers and how PCSX2 opens, and a word more.")
+    card.setFixedHeight(portable.px(100))
+    column.addWidget(card)
+    holder.resize(portable.px(460), portable.px(100))
+    holder.show()
+    qapp.processEvents()
+    text = card.text
+    assert text.heightForWidth(text.width()) > text.fontMetrics().lineSpacing()             # it wraps
+    assert text.height() >= text.heightForWidth(text.width())
+    assert text.geometry().bottom() < card.height() - portable.px(2)                  # inside the edge
+    holder.close()
+
+
 def test_the_suite_sound_switch(qapp):
     suite = "test-suite-sound"
     portable.look_settings(suite).remove(portable.SOUND_KEY)

@@ -46,7 +46,7 @@ from PyQt6.QtCore import QObject, QSettings, Qt, QTimer, pyqtSignal
 from PyQt6.QtGui import QFont, QGuiApplication
 from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QStackedWidget, QVBoxLayout, QWidget
 
-from bc250_core import applog, covers, keep, platform, play, power, steam
+from bc250_core import applog, covers, keep, platform, play, power, renamed, steam
 from bc250_core.gamepad import Gamepad
 from bc250_core.platform import private
 from bc250_core.portable import (AMBER, BODY, DIM, EXIT, KEYBOARD, VIEW, Card, InfoPill, Legend, Pane, PortableHeader,
@@ -227,6 +227,7 @@ class MainWindow(PortableWindow):
         self.in_steam: dict[str, str] = {}
         self.outdated: set[str] = set()                 # games whose shortcut does not start the play mode yet
         self.marked: set[str] = set()
+        self.moved: dict[str, str] = {}                 # a game found again: its file in Steam (renamed)
         self.keeping: list[keep.Item] = []              # the keep page's rows, while it shows (core's keep)
         self.keep_game: Game | None = None              # the game Remove game shows them for; None: the BIOS
         self.keep_note = ""                             # what the keep page says stays anyway
@@ -319,6 +320,7 @@ class MainWindow(PortableWindow):
         self.bind("x", self.x_action)
         self.bind("previous", self.lb_action)
         self.bind("next", self.rb_action)
+        self.bind("lt", self.lt_action)
         self.back.connect(self.on_back)
         self.status_timer = QTimer(self)
         self.status_timer.setInterval(STATUS_MS)
@@ -512,7 +514,7 @@ class MainWindow(PortableWindow):
             focused = self.focused_game()
             items = [("A", "Steam mark"), *([("X", "Play")] if focused else []), ("Y", "Update Steam"),
                      ("LB", "Steam artwork"),
-                     *([("RB", "Remove game")] if focused else [])]
+                     *([("RB", "Remove game")] if focused else []), ("LT", "Refresh")]
         elif pane is self.settings_pane:
             items = [("A", "Change"), ("LB", "Previous tab"), ("RB", "Next tab")]
         elif pane is self.cards_pane:
@@ -559,10 +561,19 @@ class MainWindow(PortableWindow):
             self.outdated = shortcuts.outdated(self.steam_dir) if self.steam_dir is not None else set()
         except OSError:
             self.outdated = set()
-        found = {str(g.file) for g in self.games}
-        self.marked = {f for f in self.marked if f in found} | {f for f in self.in_steam if f in found
-                                                                  and f not in self._unmarked}
+        found = {str(g.file): renamed.identity(g.serial, g.file) for g in self.games}
+        known = renamed.load(self.settings)
+        self.moved = renamed.follow(known, found, self.in_steam)     # renamed or moved: the mark goes along
+        renamed.remember(self.settings, known, found, self.in_steam)
+        self.marked = ({f for f in self.marked if f in found}
+                       | {f for f in [*self.in_steam, *self.moved] if f in found and f not in self._unmarked})
         self.show_games()
+        if self.moved:
+            self.games_pane.status.setText(self.moved_text())
+
+    def moved_text(self) -> str:
+        """The status line for the games in Steam found again under a new name or in another folder."""
+        return renamed.said(g.title for g in self.games if str(g.file) in self.moved)
 
     _unmarked: set[str] = set()                         # games in Steam the user took the mark off, until Update
 
@@ -872,19 +883,37 @@ class MainWindow(PortableWindow):
         elif pane is self.settings_pane:
             self.settings_pane.tabs.step(1)
 
+    def lt_action(self) -> None:
+        if self.panes.currentWidget() is self.games_pane:
+            self.rescan()
+
     def mark_game(self, key: str) -> None:
         """A on a game: mark it for Steam, or take the mark away."""
         if key not in {str(g.file) for g in self.games}:
             return
         if key in self.marked:
             self.marked.discard(key)
-            if key in self.in_steam:
+            if key in self.in_steam or key in self.moved:
                 self._unmarked = self._unmarked | {key}
         else:
             self.marked.add(key)
             self._unmarked = self._unmarked - {key}
         self.show_games()
         self.games_pane.list.pills[key].setFocus()
+
+    def rescan(self) -> None:
+        """LT Refresh: the game folders read again, for a game put there, renamed or taken away while the app is open
+        (owner, 01-11-2026: it showed only after the app started again); the focus stays on its game."""
+        if self.busy:
+            if self._job != "steam":                    # Steam's own job says so on the line already
+                self.games_pane.status.setText(BUSY)
+            return
+        self.refresh_games()
+        changed = library.pending(self.games, self.marked, self.in_steam, self.outdated)
+        self.games_pane.status.setText(f"The game folders were read again: {len(self.games)} game(s)."
+                                       + (f" {self.moved_text()}" if self.moved else
+                                          " Steam does not match the marks yet: the Y button updates it."
+                                          if changed and self.steam_dir is not None else ""))
 
     def update_steam(self) -> None:
         """Y Update Steam: the marked games in Steam, the others out, off the window's thread. Y always answers: a

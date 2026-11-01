@@ -5,9 +5,11 @@ from __future__ import annotations
 
 import argparse
 import sys
+from pathlib import Path
 
 from bc250_core import __version__ as CORE_VERSION, applog, instance, play
 from bc250_core.app import create_app, exec_app
+from bc250_core.platform import private
 from bc250_core.portable import PORTABLE
 
 from . import APP_ID, APP_NAME, INFO, SUITE, __version__
@@ -21,6 +23,11 @@ def play_game(args: list[str]) -> int:
     log = applog.logger(APP_ID)
     from . import emulator
     program = emulator.program(emulator.emulator_home())
+    game = Path(args[-1]) if args else None         # the game's file, the last argument
+    if game is not None and play.missing(game):     # renamed or moved after it was put in Steam
+        log.error(f"Play: {private(game)} is no longer there; Xenia was not started.")
+        from bc250_core import gone
+        return gone.show(INFO, APP_NAME, __version__, game)
     try:
         return play.run([str(program), *args], program.parent, log=log.info)
     except OSError as error:

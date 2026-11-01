@@ -163,7 +163,7 @@ edited by hand, the sounds with generative AI tools; all are under the license o
 like its code.
 
 Each release also carries `THIRD-PARTY-NOTICES.txt`: the licenses of what its program bundles, such as Python, Qt
-and the fonts, and FFmpeg in USB HD Cam, whose picture Qt shows with FFmpeg's libraries.
+and the fonts, and FFmpeg in USB HD Cam, whose picture Qt shows and records with FFmpeg's libraries.
 
 </div>
 </section>

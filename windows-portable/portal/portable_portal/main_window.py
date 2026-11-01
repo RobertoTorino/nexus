@@ -1053,6 +1053,12 @@ class MainWindow(PortableWindow):
         if self.stack.currentWidget() is self.suite_pane:
             self.suite_pane.set_screen(self.screen_name())
 
+    def screen_moved(self, screen) -> None:
+        """Moved to another screen by the keyboard (Win + Shift + an arrow) without starting again (a screen of the
+        same size): the Screen row names the screen it is on now (owner, 01-11-2026: it still said Display 2)."""
+        super().screen_moved(screen)
+        self.screens_changed()
+
     def can_restart(self) -> bool:
         return self.job is None and self.pending is None
 
