@@ -1,3 +1,7 @@
+Changelog: 01-11-2026 21:51:44
+
+Release 1.23.0. Brings wp-bios-v0.4.1, wp-hdcam-v0.3.1, wp-pcsx2-v5.5.1, wp-portal-v7.0.1, wp-ppsspp-v4.0.1, wp-rpcs3-v3.5.1, wp-rplay-v0.4.1, wp-sftp-v0.3.1, wp-shadps4-v4.0.1, wp-test-v4.6.1, wp-vita3k-v4.0.1, wp-xenia-v4.0.1.
+
 Changelog: 01-11-2026 21:20:00
 
 Added. tools/merge_changelog.py, git's merge driver for every CHANGELOG (.gitattributes: CHANGELOG merge=changelog),

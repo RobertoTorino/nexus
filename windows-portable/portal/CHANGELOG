@@ -1,3 +1,7 @@
+Changelog: 01-11-2026 21:51:44
+
+Release 7.0.1. Pins wp-test-v4.6.1, wp-pcsx2-v5.5.1, wp-ppsspp-v4.0.1, wp-rpcs3-v3.5.1, wp-shadps4-v4.0.1, wp-vita3k-v4.0.1, wp-xenia-v4.0.1, wp-rplay-v0.4.1, wp-hdcam-v0.3.1, wp-bios-v0.4.1, wp-sftp-v0.3.1.
+
 Changelog: 01-11-2026 18:11:40
 
 Release 7.0.0. Pins wp-test-v4.6.0, wp-pcsx2-v5.5.0, wp-ppsspp-v4.0.0, wp-rpcs3-v3.5.0, wp-shadps4-v4.0.0, wp-vita3k-v4.0.0, wp-xenia-v4.0.0, wp-rplay-v0.4.0, wp-hdcam-v0.3.0, wp-bios-v0.4.0, wp-sftp-v0.3.0.
