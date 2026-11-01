@@ -101,11 +101,14 @@ app is an optional tile. The wiki is at robertotorino.github.io/nexus/windows-po
 - **Not limited to the owner's handheld.** The Ally X is one case, not the target: an app reads what Windows
   reports, works on another Windows handheld, and says so where something does not apply (no AMD driver, no Wi-Fi,
   no back buttons).
-- **For your own user, never as administrator.** The installers refuse an administrator's window; everything goes
+- **For your own user; administrator per use case.** The installers refuse an administrator's window; everything goes
   in `%LOCALAPPDATA%\windows-portable-suite\` (programs, logs, reports, the portal's state) and
   `%APPDATA%\windows-portable-suite\` (one `.ini` per app); nothing in the registry (tests must not write to it
   either). An app the portal installs gets a Start-menu entry in the Windows Portable Suite folder and no Desktop
-  shortcut (owner, 28-10-2026); one installed by hand gets both. Two exceptions. The first (owner, 31-10-2026): the
+  shortcut (owner, 28-10-2026); one installed by hand gets both. An action that needs an administrator is the
+  owner's to approve, one use case at a time (owner, 01-11-2026: no rule against it, each case assessed on its own):
+  ask before building one, and keep it to one Windows prompt for that action only, never the whole app running as
+  administrator. Approved so far. The first (owner, 31-10-2026): the
   portal's Operating Mode helper on the ROG Xbox Ally X, a scheduled task that writes the watt limits as SYSTEM,
   installed with one administrator prompt, its script in `C:\Program Files\windows-portable-suite\` so the user
   cannot change what it runs, and its request (one letter the user may write), result and log in
@@ -113,6 +116,10 @@ app is an optional tile. The wiki is at robertotorino.github.io/nexus/windows-po
   Microsoft's in-box WinUSB driver (winusb.inf, section WINUSB) to the PS5 HD Camera's boot loader (05a9:0580) with
   one administrator prompt per USB port: the app starts its own program again with `--bind <instance ID>`, which
   binds only that device and ends (`apps/hdcam/usb_hd_cam/driver.py`). No certificate, no driver of anyone else's.
+  The third (owner, 01-11-2026): BIOS Reader's Read the settings, the device's UEFI variables read by the app's own
+  program started again with `--read-variables <request> <result>` (Windows' firmware variable calls need an
+  administrator's privilege; `apps/bios/bios_reader/device.py`): only GetFirmwareEnvironmentVariableExW, never a
+  write, and never a variable that may hold personal data (`device.PRIVATE`).
 - **Personal data is never read out**: no serial numbers, MAC addresses, network names (SSID) or access point
   addresses, no paired Bluetooth devices (they carry their owner's name).
 - **Unsigned for now** (code signing and an MSIX for Xbox mode's home app are on hold, MIGRATION.md).

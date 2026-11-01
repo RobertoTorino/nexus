@@ -1969,6 +1969,20 @@ def test_git_answers_are_utf8_on_every_system(repo):
     assert rp.new_entries(repo, beta) == []                             # nothing new since its tag
 
 
+def test_git_takes_no_optional_locks(repo, monkeypatch):
+    """git() runs with GIT_OPTIONAL_LOCKS=0: the build pill's poll runs git status, which took .git/index.lock to
+    refresh the index, and a poll during the Commands tab's git add -A or git commit made that fail."""
+    seen = []
+    real = rp.subprocess.run
+
+    def run(*args, **kwargs):
+        seen.append(kwargs.get("env") or {})
+        return real(*args, **kwargs)
+    monkeypatch.setattr(rp.subprocess, "run", run)
+    assert rp.git(repo, "status", "--porcelain") is not None
+    assert seen and seen[0].get("GIT_OPTIONAL_LOCKS") == "0" and "PATH" in seen[0]
+
+
 def test_a_suites_release_moves_nexus(two_suites):
     """Latest, the Nexus index, lists every suite's newest portal: a suite's release since Nexus's last version
     needs a Nexus release too, minor; a new suite major (owner, 28-10-2026)."""

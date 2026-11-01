@@ -57,6 +57,9 @@ screen and puts them in Steam.
 #### :material-toolbox: Utilities
 
 [USB HD Cam](apps/hdcam.md): Makes the PS5 HD Camera a webcam: its driver once, then its firmware with the A button.
+
+[BIOS Reader](apps/bios.md): The BIOS's setup screens and defaults, hidden menus included, from a BIOS file. It only
+reads.
 </div>
 </div>
 
@@ -104,9 +107,10 @@ Manager and PPSSPP Manager install their emulator in its own folder and write it
 ### Do I need administrator rights?
 
 No. Everything installs for your own user, and the installers refuse an administrator's window. Nothing goes into
-the Windows registry. Two things ask Windows for an administrator once, when you choose them: the portal's watt
-limits helper ([the portal](portal.md)) and USB HD Cam's Allow access, which gives the camera Microsoft's own USB
-driver ([USB HD Cam](apps/hdcam.md)).
+the Windows registry. Three things ask Windows for an administrator, when you choose them: the portal's watt
+limits helper ([the portal](portal.md)), USB HD Cam's Allow access, which gives the camera Microsoft's own USB
+driver ([USB HD Cam](apps/hdcam.md)), and BIOS Reader's Read the settings, which reads your device's BIOS settings
+and changes nothing ([BIOS Reader](apps/bios.md)).
 
 ### Where do the apps keep their files?
 

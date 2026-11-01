@@ -680,8 +680,8 @@ gaming category first, RPCS3 Manager done in the working tree, then shadPS4, Vit
    core's `Tabs` (PCSX2 Manager's Settings pane uses it the same way).
 3. The BC250 apps for the Ally (owner, 29-10-2026): **left out** the board's and Linux's: GPU Governor Manager, CU
    Bisect, Cores Bisect, GPU OC Bisect, Persistent ACPI, Memory Manager, Fan Control (the handheld's own tuning apps
-   stay on hold instead), ACE Queues, Mesh Shaders, BIOS Reader, USB Wi-Fi, Console LinkB (the Xbox app does it),
-   Decky Loader Manager. **HDMI CEC Manager first**: the owner tests it with a dock and a special USB-C adapter (how
+   stay on hold instead), ACE Queues, Mesh Shaders, USB Wi-Fi, Console LinkB (the Xbox app does it),
+   Decky Loader Manager (BIOS Reader was left out too; it comes after all, see "BIOS Reader for Windows" below). **HDMI CEC Manager first**: the owner tests it with a dock and a special USB-C adapter (how
    Windows reaches CEC over that adapter is to find out). **They come** (ported, the portable design): RPCS3,
    shadPS4, PPSSPP, Vita3K and Xenia Managers (as PCSX2 Manager: never their own window), Console Link, Bazzite
    DatStation, BC-250 Upscaler Manager, System Overlay, USB IPS3.5, USB HD Control, Bazzite SFTP Tools, Media Tool,
@@ -694,6 +694,38 @@ gaming category first, RPCS3 Manager done in the working tree, then shadPS4, Vit
 On hold: the portal as Xbox mode's home app (MSIX), code signing, an app for the back buttons, the handheld's own
 tuning apps, a BIOS update check.
 
+## BIOS Reader for Windows (01-11-2026, the owner: "analyze if we can port the BIOS reader")
+
+The owner drops the rule "never as administrator" (01-11-2026): each use case is assessed on its own, and reading
+UEFI variables for BIOS Reader is approved. Built (owner, 01-11-2026: "BIOS Reader", `apps/bios/`, package
+`bios_reader`, Utilities, the category's icon as USB HD Cam), version 0.1.0, not released: three cards, BIOS file
+(core's browser, a zip too), Setup screens (the pages, A opens, B back, LB/RB pages, Y hidden, Menu the line's
+whole text) and This device (A: the identity from Windows' SMBIOS copy, no prompt; A again: the variables through
+the elevated `--read-variables` copy, only read, the private ones never asked for). Tried offscreen on RC73XA 319:
+16 pages, 22 with the hidden ones; the elevated read itself is still to try on the Ally (which variables ASUS lets
+Windows read).
+
+Tried on ASUS's ROG Xbox Ally X BIOS RC73XA 319 (`RC73XAAS.319` from ASUS's zip, 32 MiB plus a 2 KiB AMI Aptio
+capsule header), with the BC250 suite's `bios_reader` unchanged:
+
+- Parses in 2 s: 7 firmware volumes, 569 files; 17 form sets (Setup, AMD CBS 72 forms, AMD PBS, AMD PMF, AMD
+  Overclocking 29 forms, PCI, network, RAIDXpert2, ...), 2,760 options, 2,281 of them with a default.
+- No NVRAM store with values (a vendor file has none); StdDefaults holds 20 variables (`Setup`, `AmdSetup`,
+  `AodSetupStx`, `AMD_PBS_SETUP`, `PmfSetupVar`, `AsusCbsConfig`, ...). With the defaults taken as the values, 109
+  forms are hidden: Main, Advanced, Chipset and most of AMD Overclocking (Curve Optimizer, Manual iGPU
+  Overclocking, the DDR timings), AMD PMF's APTS states; 23 forms no menu links to.
+- To change for a vendor file: the version is not in SMBIOS type 0 (the image holds AMI's template, "5.35",
+  12/12/2012), but as `RC73XA.319` in the image; with no stored values the conditions should use the defaults.
+  One section is not unpacked: a GUID-defined section (GUID `ce3233f5-2cd6-4d87-9152-4a238bb6d1c4`, 624 KB, in
+  file `3e3b6dc0-064d-4b01-9203-7836c9b498e7`, twice), a compression the reader does not know.
+- The device itself: SMBIOS (`GetSystemFirmwareTable`) without administrator; the UEFI variables
+  (`GetFirmwareEnvironmentVariableExW`, SeSystemEnvironmentPrivilege) with one administrator prompt, read only.
+  Which variables ASUS leaves readable after boot (`AmdSetup`? `Setup` is hidden on AMI boards) is to try on the
+  Ally. No flash read: flashrom has no internal programmer on Windows.
+- What ports unchanged: `firmware.py`, `hii.py`, `table.py` and `Screens` in `bios.py`, as a copy (each suite
+  stands apart). The BC-250's parts stay behind (the P5.00 table and fingerprints, the stock/modded verdict,
+  flashrom). The window is new: `PortableWindow`, the file picked in core's `browse.Browser`.
+
 ## BC-250 Bazzite Test against Windows Portable Test (29-10-2026, the owner: "list all tests in BC250 and check which ones we can port over ... list everything")
 
 What BC-250 Bazzite Test has (`bc250-bazzite/docs/apps/check.md`), and what each means on a Windows handheld, read
@@ -702,7 +734,8 @@ same idea works on Windows; **Part** = only part of it, or it needs a decision; 
 board only. What comes, and in which order, is the owner's to pick. Decided (owner, 29-10-2026):
 
 - **No test that needs administrator rights:** what only an administrator can read is left out (marked *dropped*
-  below), no UAC helper. The suite never runs as administrator.
+  below), no UAC helper. (Since 01-11-2026 the suite has no rule against administrator rights: the owner assesses
+  each use case on its own, so a dropped test may be asked about again.)
 - **Tabs for the categories,** as the portal's (LB and RB step through them, a tap picks one): each tab a category
   (System, Network, Storage, Logs, Graphics, Stability, Gaming, Updates, ...), its tests as cards or rows with
   their result color, the pane on the right with the result and its hint; Run all in the header or a tab of its

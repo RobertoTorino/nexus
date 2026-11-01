@@ -1,0 +1,8 @@
+Changelog: 01-11-2026 05:34:24
+
+Added. BIOS Reader: the BIOS's setup screens from the maker's BIOS file (the file itself or its zip, picked in core's
+browser), hidden menus included (Y), with each setting's default; the BIOS file card names the file's version (ASUS's
+version marker), its setup screens and how many menus the BIOS hides. This device reads the device's BIOS version
+without an administrator, and its settings (UEFI variables) with one administrator prompt (owner, 01-11-2026), only
+reading, never a variable that may hold personal data. The parsers (firmware.py, hii.py) are the BC250 Bazzite
+Suite's BIOS Reader's, unchanged. Written from tools/new_app.py's template.

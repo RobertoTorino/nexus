@@ -86,7 +86,8 @@ jobs:
               windows-portable/apps/shadps4,
               windows-portable/apps/vita3k,
               windows-portable/apps/xenia,
-              windows-portable/apps/hdcam]   # every folder of the suite with tests/, and core, which its apps bundle
+              windows-portable/apps/hdcam,
+              windows-portable/apps/bios]   # every folder of the suite with tests/, and core, which its apps bundle
     defaults:
       run:
         working-directory: ${{ matrix.dir }}
@@ -117,7 +118,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        app: [test, pcsx2, ppsspp, rpcs3, shadps4, vita3k, xenia, hdcam, portal]   # every app of the suite, and the portal
+        app: [test, pcsx2, ppsspp, rpcs3, shadps4, vita3k, xenia, hdcam, bios, portal]   # every app of the suite, and the portal
     env:
       APP: ${{ matrix.app }}
     steps:

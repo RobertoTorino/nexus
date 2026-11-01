@@ -157,8 +157,8 @@ in or out, after Armoury Crate has set its own mode for that power source. **A**
 the same prompt; uninstalling the suite removes it too. Without the helper, a mode set here leaves the watts as
 Armoury Crate set them.
 
-The helper is one of the suite's two parts that run as administrator (the other is [USB HD Cam](apps/hdcam.md)'s
-Allow access, which installs one driver). It is a script in
+The helper is one of the suite's three parts that run as administrator (the others are [USB HD Cam](apps/hdcam.md)'s
+Allow access, which installs one driver, and [BIOS Reader](apps/bios.md)'s Read the settings, which only reads). It is a script in
 `C:\Program Files\windows-portable-suite\`, which only an administrator may change, run by the scheduled task
 **Windows Portable Suite\Operating Mode** (Task Scheduler) as the system account. The portal only names the mode, in
 `C:\ProgramData\windows-portable-suite\operating-mode` (one letter); the watts are the helper's own table. What it

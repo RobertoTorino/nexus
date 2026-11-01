@@ -1,3 +1,9 @@
+Changelog: 01-11-2026 09:07:39
+
+Fixed. The commit command no longer fails now and then with "Unable to create .git/index.lock: File exists": the
+build pill's poll ran git status, which took the index lock to refresh the index, and a poll that came during git
+add -A or git commit held it. Nexus Release Tool's own git reads now take no optional locks (GIT_OPTIONAL_LOCKS=0).
+
 Changelog: 31-10-2026 19:41:52
 
 Fixed. The tests of Start's catch-up pass on CI's runner too: their origin is made with the branch main (the runner's
