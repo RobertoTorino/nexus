@@ -1,3 +1,10 @@
+Changelog: 01-11-2026 12:04:10
+
+Fixed. The setup list at the root of the repository is gone (owner, 01-11-2026): the order of things on a new
+drive is the owner's own file, outside the repository. tools/dev-backup.sh's restore prints by itself what to
+install from the archive's lists, the Nexus page's machine chapter keeps the short order of a new drive with the
+script's commands, and the repository's map (CLAUDE.md, the Development chapter) no longer lists the file.
+
 Changelog: 01-11-2026 11:46:02
 
 Release 1.18.0. Brings wp-portal-v6.9.0, wp-sftp-v0.1.0.

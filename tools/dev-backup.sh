@@ -5,7 +5,7 @@
 # SSH keys (~/.ssh), the GitHub CLI's configuration (~/.config/gh), VS Code's settings, the settings of the
 # suite's apps (~/.config/bc250-*, bazzite-*, nexus-release-tool), and lists of what to install again: a Brewfile,
 # the Flatpaks, VS Code's extensions, the image's layered packages and kernel arguments, the user timers and the
-# Rust toolchain. SETUP.md says when to run it and what to do with the lists.
+# Rust toolchain. The restore prints what to install from the lists.
 #
 #   tools/dev-backup.sh pack [folder]       # writes nexus-dev-backup-<date>.tar.gz in the folder (default: ~)
 #   tools/dev-backup.sh list <archive>      # what the archive holds
@@ -140,7 +140,7 @@ restore() {
     tar -C "$lists" -xzf "$archive" --strip-components=1 --overwrite lists || die "extracting the lists failed"
     info "The files are back in $HOME; the lists are in $lists:"
     ls "$lists" | sed 's/^/    /'
-    info "What to install from them, in this order, is in SETUP.md. In short:"
+    info "What to install from them, in this order:"
     cat <<EOT
     brew bundle --file=$lists/Brewfile
     xargs -a <(grep -v '^#' $lists/flatpaks.txt | cut -f1) flatpak install -y flathub

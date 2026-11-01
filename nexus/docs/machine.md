@@ -29,14 +29,15 @@ terminal) may need it on `PATH`.
 
 ## Moving to a new drive
 
-`SETUP.md` at the root of the repository is the order of things when the machine gets a new drive or a fresh
-Bazzite: what to pack first, then the layered packages, Homebrew's packages, the Flatpaks, Rust, the checkout,
-Claude Code, VS Code and the suite. `tools/dev-backup.sh` packs what the repository does not hold and restores it:
+When the machine gets a new drive or a fresh Bazzite, `tools/dev-backup.sh` packs what the repository does not
+hold and restores it on the new one; the restore then prints what to install from the archive's lists. The order:
+pack first, then on the new drive the layered packages, Homebrew's packages, the Flatpaks, the checkout, the
+restore, Claude Code, VS Code and the suite.
 
 ```bash
-tools/dev-backup.sh pack /run/media/$USER/<stick>            # the archive: home files and the lists of what is installed
-tools/dev-backup.sh list <archive>                          # what it holds
-tools/dev-backup.sh restore <archive>                       # into the new home folder; existing files are kept
+tools/dev-backup.sh pack ~/Downloads                                   # the archive: home files and the lists of what is installed
+tools/dev-backup.sh list ~/Downloads/nexus-dev-backup-*.tar.gz         # what it holds
+tools/dev-backup.sh restore ~/Downloads/nexus-dev-backup-*.tar.gz      # into the new home folder; existing files are kept
 ```
 
 The archive holds Claude Code's memory and sign-in, the git identity, the SSH keys, the GitHub CLI's and the

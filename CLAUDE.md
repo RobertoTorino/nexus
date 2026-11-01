@@ -58,8 +58,6 @@ default suite of the tools (`tools/suites.py`). The root keeps what is Nexus's:
   apps); each has an installer test in each suite's `tools/installer-tests/`. `dev/nrt/` is the **Nexus
   Release Tool** (NRT), the release front end (see Releases), with `install.ps1` and `run.ps1` for Windows; its manual is the
   Nexus page's Releases chapter.
-- `SETUP.md`: what to take from the development machine before a drive change and what to install on the new
-  one, in order (`tools/dev-backup.sh` packs and restores what the repository does not hold).
 - `DESIGN.md` and `ICONS.md`: every color and every icon, per suite and the Nexus page; `test.sh` runs every test
   suite (core, tools, `dev/`, and the portal, tools and apps of each suite made for the system it runs on); `portal/apps.toml` at the root is a copy of the
   BC250 suite's for the portals installed before the move (`bc250-bazzite/tools/check_manifest.py` keeps it

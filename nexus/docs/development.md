@@ -25,7 +25,6 @@ bc250-bazzite/                the BC250 Bazzite Suite
 windows-portable/             the Windows Portable Suite (its tags start with wp-, TAG_PREFIX)
 nexus/                        the Nexus page
 DESIGN.md ICONS.md            every color and every icon, per suite and the Nexus page
-SETUP.md                      what to take from the development machine and install on the next one
 .github/workflows/            every workflow: ci-nexus.yml (Nexus's checks), ci.yml and release.yml (the BC250
                               Bazzite Suite), each other suite's ci-<suite>.yml and release-<suite>.yml,
                               nexus-index.yml, docs.yml (the wikis)

@@ -125,7 +125,7 @@ def test_restore_puts_the_files_back_and_keeps_existing_ones(tmp_path: Path):
     assert (new / ".gitconfig").read_text(encoding="utf-8") == "[user]\n\tname = Fresh\n", "an existing file is kept"
     lists = stick / "nexus-dev-backup-lists"
     assert (lists / "Brewfile").is_file() and (lists / "kargs.txt").is_file()
-    assert "SETUP.md" in result.stdout
+    assert "What to install from them" in result.stdout
 
     forced = run(new, "restore", str(archive), "--force")
     assert forced.returncode == 0, forced.stderr
