@@ -1,3 +1,24 @@
+Changelog: 01-11-2026 16:35:57
+
+Breaking. No folder is chosen or browsed to any more (owner, 30-10-2026: fixed folders, no folder selecting, as in
+shadPS4 Manager): LB Folders, with its added folders, usual places and folder browser, is gone; Your games looks only
+in the app's own Games\PSP folder in your user folder, made when the app opens, in Games\PSP on each SD card or USB
+drive that has one, and on PPSSPP's memory stick as before (library.fixed()). Folders added before are no longer
+looked in. LB on Your games is Steam artwork now (it was RB). The Log pane shows where Games\PSP is
+(library.folders(), set_folders() and suggested() removed).
+
+Added. RB Remove game on a game of Your games (owner, 30-10-2026, as in shadPS4 Manager), with a page of what would
+go (owner, 01-11-2026: before deleting anything, let the user decide what to keep; core's keep.py): the game's file
+or folder, with its size, and its shortcut in Steam when it is there, each marked Delete at first. A turns a row to
+Keep and back, X Delete marked deletes the rows still marked Delete off the window's thread (the shortcut taken out
+of Steam first, read-only files too) and the status line on Your games says what was deleted and what was kept; B
+goes back and deletes nothing. The game is a disc image's file alone, or a memory stick game's own folder, in
+Games\PSP or in PSP\GAME on PPSSPP's memory stick (library.removal()). The saves and save states in PSP\SAVEDATA and
+PSP\PPSSPP_STATE are never on the page. A game whose folder is a game folder itself, a drive, or holds another game
+is never offered: the status line says to delete it by hand. Not while PPSSPP runs.
+
+Fixed. The newest lines on the Log pane stay in sight when a long folder above them wraps onto more lines.
+
 Changelog: 01-11-2026 17:36:48
 
 Release 3.4.0.

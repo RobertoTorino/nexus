@@ -5,28 +5,37 @@ button opened), what the focused one shows on the right, the controller's button
 
 Every action is a controller button in the legend at the bottom, A too, and a tap on the entry does the same; there
 are no pills (owner, 29-10-2026: one way everywhere). Core's rule ends the legend: B goes back (a pane to its card,
-the browser a level up, a field's page to its pane), View exits the app and Menu shows the information of the pane
-that shows.
+a field's page to its pane), View exits the app and Menu shows the information of the pane that shows. Nothing is
+browsed to (owner, 30-10-2026): the games and the firmware are put in the app's own folders (library.fixed:
+Games\\Vita and Games\\Vita\\Firmware in your user folder, Games\\Vita on an SD card), and the app takes care of them.
 
 The Vita3K pane: what is installed, the firmware's parts, the games and where, and when a newer build is out; A
-Install until Vita3K is installed, Y Update when another build is there, X Remove Vita3K (a second press), LB
-Firmware (the browser in Downloads, showing the .PUP files; A on one gives it to Vita3K, which installs it without
-any window: --firmware) and RB Install a game (the browser showing the .vpk, .zip and .pkg files: A on a .vpk or .zip
-gives it to Vita3K, X the open folder as a dumped game, which Vita3K installs and the app closes before the game
-starts; A on a .pkg asks for its license key on a page of its own, then Vita3K installs it without any window: --pkg
---zrif). A press that cannot act now says why on the status line. Nothing downloads before A. The download, the
-unpacking and Vita3K's installs run off the window's thread; the pane counts the megabytes. View (exit) while a job
-runs asks first, as the portal does. What the app owns in Vita3K's config.yml (userdata.prepare: games full screen,
-its welcome window and update check off) is set after an install, when the window opens and before each of Vita3K's
-installs, while Vita3K does not run.
+Install until Vita3K is installed, Y Update when another build is there, X Remove Vita3K (a second press). The
+firmware files put in Games\\Vita\\Firmware are given to Vita3K, which installs them without any window (--firmware),
+when the app opens and when the Vita3K card gets the focus, each file once while it stays the same (owner,
+01-11-2026: taken in automatically; sync_firmware). A press that cannot act now says why on the status line. Nothing
+downloads before A. The download, the unpacking and Vita3K's installs run off the window's thread; the pane counts
+the megabytes. View (exit) while a job runs asks first, as the portal does. What the app owns in Vita3K's config.yml
+(userdata.prepare: games full screen, its welcome window and update check off) is set after an install, when the
+window opens and before each of Vita3K's installs, while Vita3K does not run.
 
 The Your games pane (panes.py, library.py): the games installed in Vita3K, played from Steam (owner, 29-10-2026); A
 marks one for Steam, X plays one that is in Steam, through Steam (steam://rungameid), and on a device without Steam
 starts Vita3K with it itself (owner, 30-10-2026: a fallback, as its shortcut would start it), Y Update Steam makes
-Steam's shortcuts match the marks; RB Steam artwork keeps the SteamGridDB key; Steam's library is the portal's RT
-Steam (owner, 30-10-2026: Open Steam moved there). The browser opens where the last one of its kind was left
-(browse.remembered). The Log pane: Vita3K's folder and the newest lines of the app's log; A (or a
-tap on the pane) shows the whole log in the pane.
+Steam's shortcuts match the marks, RB Remove game shows the keep page for a game; LB Steam artwork keeps the
+SteamGridDB key; Steam's library is the portal's RT Steam (owner, 30-10-2026: Open Steam moved there). A game put in
+the Games\\Vita folders and not installed yet (library.waiting: a .vpk, .zip or .pkg, or a dumped game's folder) is
+a row of its own: A installs it (a .pkg asks for its license key on a page of its own first: --pkg --zrif), X
+Install all installs every .vpk, .zip and folder one after the other; a folder stays. The Log pane: Vita3K's
+folder, the app's folder and the newest lines of the app's log; A (or a tap on the pane) shows the whole log in the
+pane.
+
+Nothing is deleted before the user decides what to keep (owner, 01-11-2026; core's keep): the keep page lists what
+would go, a row each with its size and marked Delete at first; A turns a row to Keep and back, X deletes the rows
+still marked Delete, off the window's thread, B goes back and deletes nothing. Remove game lists the game's folders
+in Vita3K's storage and its Steam shortcut (library.removal_items; never its saves); an install that went well
+lists the .vpk, .zip and .pkg files it installed, and a file kept there is not listed to install again until it
+changes (KEPT_KEY).
 
 The Settings pane: Vita3K's settings that matter on the handheld, in tabs (LB and RB: Picture, Speed, Sound,
 System), a row each with its value; A steps to the next value and writes it into config.yml at once
@@ -44,7 +53,7 @@ from PyQt6.QtCore import QObject, QSettings, Qt, QTimer, pyqtSignal
 from PyQt6.QtGui import QFont, QGuiApplication
 from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QStackedWidget, QVBoxLayout, QWidget
 
-from bc250_core import applog, browse, covers, platform, play, power, steam
+from bc250_core import applog, covers, keep, platform, play, power, steam
 from bc250_core.gamepad import Gamepad
 from bc250_core.platform import private
 from bc250_core.portable import (AMBER, BODY, DIM, EXIT, KEYBOARD, VIEW, Card, InfoPill, Legend, Pane, PortableHeader,
@@ -53,7 +62,8 @@ from bc250_core.updates import ReleaseInfo
 
 from . import APP_ID, APP_NAME, LOGO_PATH, __version__, emulator, library, shortcuts, userdata, vita3k_settings
 from .games import Game, installed as installed_games, read_game
-from .panes import BROWSE_INFO, GAMES_INFO, VITA3K_INFO, ZRIF_TEXT, FieldPane, KeyPane, ListPane, LogPane
+from .library import Waiting
+from .panes import GAMES_INFO, KEEP_INFO, VITA3K_INFO, ZRIF_TEXT, FieldPane, KeyPane, ListPane, LogPane
 from .vita3k_settings import TABS, Setting
 
 STATUS_MS = 30_000              # the header's battery and time
@@ -65,15 +75,19 @@ ABOUT = ("Vita3K, the PS Vita emulator, installed for your own user: the firmwar
          "settings stay in its folder.")
 LOG_LINES = 12                  # the newest lines of the app's log in the Log pane
 LOG_MAX = 2000                  # the lines of the log the whole view shows, the newest
-FIRMWARE, GAME = "firmware", "game"     # what the browser looks for, and browse.remembered's keys
+FIRMWARE_KEY = "firmware/installed"    # the firmware files given to Vita3K: path to size and time (library.stamp)
+KEPT_KEY = "games/kept"         # the installed files the user kept on the keep page: path to size and time
+REMOVE, INSTALLED = "remove", "installed"      # what the keep page is for
+NOTHING_MARKED = "Nothing is marked Delete: B goes back, and nothing is deleted."
 RUNNING = "Vita3K is open: close it first, it would write its own settings over the change."
 NOT_INSTALLED = "Install Vita3K first: the settings are in its folder."
 NEEDS_VITA3K = "Install Vita3K first (the A button): it is Vita3K that installs the firmware and your games."
-NO_FIRMWARE = ("Install the PS Vita's firmware and its font package first (the LB button on the Vita3K pane): "
-               "without them most games do not start.")
+NO_FIRMWARE = ("Install the PS Vita's firmware and its font package first (put them in the Firmware folder of "
+               "Games\\Vita): without them most games do not start.")
 BUSY = "Wait a moment: the app is still busy with the step before."
-OPEN_A_FOLDER = "Open the game's folder first: the A button opens the one the focus is on, then the X button takes it."
 NO_GAME = "Put the focus on a game first: the X button starts it."
+NOTHING_TO_INSTALL = ("Nothing to install: put your .vpk or .zip files or dumped game folders in your Games\\Vita "
+                      "folder, then the X button installs them.")
 ALL_SETTINGS = vita3k_settings.SETTINGS
 # The Settings pane's information, per tab: what each setting of the tab does
 TAB_INFO = {key: ("The A button changes the setting the focus is on, the LB and RB buttons change the tab; Vita3K "
@@ -199,16 +213,16 @@ class MainWindow(PortableWindow):
                  newer_release: Callable[[], ReleaseInfo | None] = emulator.newer_release,
                  steam_dir: Path | None | bool = False,
                  steam_closed: Callable[[Callable[[], None]], bool] = steam.with_steam_closed,
-                 user_home: Path | None = None, roots: Callable[[], list[Path]] = browse.drives,
+                 user_home: Path | None = None, drives: Callable[[], list[Path]] = library.removable_drives,
                  settings: QSettings | None = None, play: Callable[[str], None] = steam.open_url,
                  start: Callable[..., None] = platform.start_program):
         """*steam_dir*: Steam's folder (False: found on this system, None: no Steam); *run_quiet*: Vita3K installing
         a firmware file or a package without a window, *install_content*: Vita3K installing a .vpk, .zip or folder
         (tests pass their own); *runtime_missing*: the Visual C++ runtime's files that are missing; *newer_release*:
-        asks GitHub for a newer Vita3K build; *user_home*: the user's folder (the browser's places); *roots*: every
-        drive the browser offers; *settings*: the app's (its .ini, create_app's), where the browsers' last folders
-        are kept; *play*: hands a steam:// address to Steam (a game); *start*: starts a program on its own (Vita3K
-        with a game, without Steam)."""
+        asks GitHub for a newer Vita3K build; *user_home*: the user's folder (where Games\\Vita is); *drives*: the
+        removable drives, whose Games\\Vita is looked in too; *settings*: the app's (its .ini, create_app's), where
+        the firmware files given to Vita3K are kept; *play*: hands a steam:// address to Steam (a game); *start*:
+        starts a program on its own (Vita3K with a game, without Steam)."""
         super().__init__(gamepad)
         self.setWindowTitle(f"{APP_NAME} {__version__}")
         self.log = applog.logger(APP_ID)
@@ -228,15 +242,20 @@ class MainWindow(PortableWindow):
         self.message = ""                               # the last outcome
         self.confirm_remove = self.close_asked = False
         self.steam_closed = steam_closed
-        self._job = ""                                  # "install", "steam", "firmware", "content" or "package"
+        self._job = ""                                  # "install", "steam", "firmware", "content", "package", "delete"
         self.steam_dir = steam.find_steam() if steam_dir is False else steam_dir
-        self.user_home, self.roots = user_home, roots
+        self.user_home, self.drives = user_home, drives
         self.games: list[Game] = []
         self.in_steam: dict[str, str] = {}
         self.outdated: set[str] = set()                 # games whose shortcut does not start the play mode yet
         self.marked: set[str] = set()
-        self.browser: browse.Browser | None = None      # the browser, while it shows
-        self.browsing = FIRMWARE                        # what it looks for
+        self.waiting: list[Waiting] = []                # the games in the game folders not installed yet
+        self.keep_items: list[keep.Item] = []           # the keep page's rows, while it shows
+        self.keep_for = REMOVE                          # what the keep page is for
+        self.keep_game: Game | None = None              # the game Remove game is for
+        self.firmware_queue: list[Path] = []            # the firmware files still to give to Vita3K, one after another
+        self.firmware_said: list[str] = []              # what each of them came to
+        self.firmware_file = Path()                     # the one Vita3K installs now
         self.package: Path | None = None                # the .pkg whose license key the field's page asks for
         self.fs = userdata.vita_fs(self.home)
         self.firmware = userdata.Firmware(False, False, False)
@@ -282,17 +301,17 @@ class MainWindow(PortableWindow):
         self.pane.column.addWidget(self.status)
         self.settings_pane = SettingsPane()
         self.games_pane = ListPane("Your games", "Your games", GAMES_INFO)
-        self.browse_pane = ListPane("Choose a file", "Choosing a file", BROWSE_INFO)
         self.key_pane = KeyPane()
         self.zrif_pane = FieldPane()
+        self.keep_pane = ListPane("Delete", "What to keep", KEEP_INFO)
         self.log_pane = LogPane()
         for pane in (self.pane, self.games_pane, self.settings_pane, self.log_pane, self.key_pane, self.zrif_pane,
-                     self.browse_pane):
+                     self.keep_pane):
             self.panes.addWidget(pane)
         self.cards = {self.pane: self.vita3k_card, self.games_pane: self.games_card,
                       self.settings_pane: self.settings_card, self.log_pane: self.log_card,
-                      self.key_pane: self.games_card, self.zrif_pane: self.vita3k_card,
-                      self.browse_pane: self.vita3k_card}
+                      self.key_pane: self.games_card, self.zrif_pane: self.games_card,
+                      self.keep_pane: self.games_card}
         body.addWidget(self.panes, 1)
         page.addLayout(body, 1)
         page.addSpacing(px(8))
@@ -303,7 +322,7 @@ class MainWindow(PortableWindow):
         self.worker.done.connect(self._done)
         self.worker.said.connect(self._said)
         self.release_found.connect(self._release_found)
-        self.vita3k_card.focused.connect(lambda: self.show_pane(self.pane))
+        self.vita3k_card.focused.connect(self.show_vita3k)
         self.vita3k_card.activated.connect(self.main_action)
         self.settings_card.focused.connect(lambda: self.show_pane(self.settings_pane))
         self.settings_card.activated.connect(self.focus_settings)
@@ -312,8 +331,8 @@ class MainWindow(PortableWindow):
         self.log_card.focused.connect(lambda: self.show_pane(self.log_pane))
         self.log_card.activated.connect(self.view_log)
         self.log_pane.tapped.connect(self.view_log)
-        self.games_pane.list.picked.connect(self.mark_game)
-        self.browse_pane.list.picked.connect(self.browse_picked)
+        self.games_pane.list.picked.connect(self.game_picked)
+        self.keep_pane.list.picked.connect(self.toggle_keep)
         self.confirm_key = False                        # Remove key pressed once
         for setting in ALL_SETTINGS:
             self.settings_pane.pills[setting.key].activated.connect(lambda s=setting: self.step_setting(s))
@@ -347,6 +366,7 @@ class MainWindow(PortableWindow):
         self.refresh()
         self.refresh_games()
         self.vita3k_card.setFocus()
+        self.sync_firmware()
         ask = self.newer_release
         threading.Thread(target=lambda: self.release_found.emit(ask()), daemon=True).start()
 
@@ -372,6 +392,34 @@ class MainWindow(PortableWindow):
             self.log.info(f"Vita3K set up: {', '.join(done)}.")
         return True
 
+    def show_vita3k(self) -> None:
+        self.sync_firmware()
+        self.show_pane(self.pane)
+
+    def given(self) -> dict[str, str]:
+        """The firmware files given to Vita3K before, each with its size and time then (library.stamp)."""
+        stored = self.settings.value(FIRMWARE_KEY, [])
+        stored = [stored] if isinstance(stored, str) else list(stored or [])
+        return dict(line.rsplit("|", 1) for line in stored if "|" in line)
+
+    def remember_given(self, pup: Path) -> None:
+        given = self.given()
+        given[str(pup)] = library.stamp(pup)
+        self.settings.setValue(FIRMWARE_KEY, [f"{path}|{when}" for path, when in given.items()])
+
+    def sync_firmware(self) -> None:
+        """The firmware files put in Games\\Vita\\Firmware (owner, 01-11-2026: taken in automatically) given to Vita3K
+        one after the other while it is installed and closed and the app is not busy: each new or changed file once
+        (one that failed too, so it is not tried again at every focus; a file put there anew is). The files stay."""
+        if self.busy or not emulator.installed(self.home) or self.running(self.home):
+            return
+        given = self.given()
+        todo = [p for p in library.firmware_files(self.user_home) if given.get(str(p)) != library.stamp(p)]
+        if not todo:
+            return
+        self.firmware_queue, self.firmware_said = todo[1:], []
+        self.install_firmware(todo[0])
+
     def _release_found(self, release: object) -> None:
         self.newer = release if isinstance(release, ReleaseInfo) else None
         if self.newer is not None:
@@ -385,6 +433,8 @@ class MainWindow(PortableWindow):
         """The status line (amber), A's entry (Install) and Y's (Update); "" leaves either out."""
         if self.busy and self._job == "steam":
             return "Steam's shortcuts are being changed (Your games).", "", ""
+        if self.busy and self._job == "delete":
+            return "What you chose is being deleted (Your games).", "", ""
         if self.busy and self._job in ("firmware", "content", "package"):
             return self.stage, "", ""
         if self.busy:
@@ -402,8 +452,9 @@ class MainWindow(PortableWindow):
             return (f"Vita3K needs Microsoft's Visual C++ runtime ({', '.join(missing)} missing in System32): "
                     "install vc_redist.x64.exe from Microsoft, then open the app again.", "", "")
         if not self.firmware.ready:
-            return ("Vita3K needs the PS Vita's firmware and its font package to start most games: the LB button "
-                    "takes each PSP2UPDAT.PUP you downloaded.", "", "")
+            return ("Vita3K needs the PS Vita's firmware and its font package to start most games: put each "
+                    f"PSP2UPDAT.PUP you downloaded in {private(library.firmware_home(self.user_home))} (the fonts' "
+                    "renamed or in a folder of its own), and the app gives them to Vita3K.", "", "")
         return "", "", ""
 
     def firmware_text(self) -> str:
@@ -441,6 +492,8 @@ class MainWindow(PortableWindow):
             status = ("Press the X button again to remove Vita3K: its folder, with the firmware, your games and your "
                       "saves, stays.")
         self.status.setText(self.message or status)
+        if self.busy and self._job in ("content", "package") and self.stage:
+            self.games_pane.status.setText(self.stage)  # the games are installed from Your games: their line there
         self.refresh_settings()
         self.update_legend()
 
@@ -465,8 +518,8 @@ class MainWindow(PortableWindow):
 
     def legend_items(self) -> list[tuple[str, str]]:
         """The legend for the pane that shows: its actions on the controller's buttons, A too (a tap on an entry does
-        the same), then core's Menu Info, B Back (in a pane, and on the browser, a field's page and the whole log) and
-        View Exit. A press that cannot act now says why on the pane's status line."""
+        the same), then core's Menu Info, B Back (in a pane, and on a field's page and the whole log) and View Exit. A
+        press that cannot act now says why on the pane's status line."""
         if self.close_asked:
             return [(VIEW, "Press again to exit")]
         pane = self.panes.currentWidget()
@@ -476,13 +529,18 @@ class MainWindow(PortableWindow):
             installed = not self.busy and bool(emulator.installed(self.home))
             items = [*([("A", main)] if main else []),
                      *([("X", "Press again" if self.confirm_remove else "Remove Vita3K")] if installed else []),
-                     *([("Y", other)] if other else []),
-                     *([("LB", "Firmware"), ("RB", "Install a game")] if installed else [])]
+                     *([("Y", other)] if other else [])]
         elif pane is self.games_pane:
-            items = [("A", "Steam mark"), *([("X", "Play")] if self.games_pane.list.focused() else []),
-                     ("Y", "Update Steam"), ("RB", "Steam artwork")]
-        elif pane is self.browse_pane:
-            items = [("A", "Open")] + ([("X", "Install this folder")] if self.browsing == GAME else [])
+            focused = self.games_pane.list.focused()
+            if focused.startswith("add:"):
+                items = [("A", "Install"), ("X", "Install all"), ("Y", "Update Steam"), ("LB", "Steam artwork")]
+            else:
+                items = [("A", "Steam mark"), *([("X", "Play")] if focused else []), ("Y", "Update Steam"),
+                         ("LB", "Steam artwork"), *([("RB", "Remove game")] if focused else [])]
+        elif pane is self.keep_pane:
+            focused = next((i for i in self.keep_items if i.key == self.keep_pane.list.focused()), None)
+            items = [*([("A", "Keep" if focused.delete else "Delete")] if focused is not None else []),
+                     ("X", "Delete marked")]
         elif pane is self.settings_pane:
             items = [("A", "Change"), ("LB", "Previous tab"), ("RB", "Next tab")]
         elif pane is self.log_pane:
@@ -492,7 +550,7 @@ class MainWindow(PortableWindow):
                      KEYBOARD]
         elif pane is self.zrif_pane:
             items = [("A", "Install"), ("X", "Paste"), KEYBOARD]
-        on_a_page = pane in (self.key_pane, self.zrif_pane, self.browse_pane) or self.log_pane.viewing
+        on_a_page = pane in (self.key_pane, self.zrif_pane, self.keep_pane) or self.log_pane.viewing
         return [*items, *self.common_items(True if on_a_page else None)]
 
     def update_legend(self) -> None:
@@ -505,10 +563,18 @@ class MainWindow(PortableWindow):
 
     # Your games
 
+    def game_folders(self) -> list[Path]:
+        """The app's own Games\\Vita folders (made when missing): the user's, then each SD card's."""
+        return library.fixed(self.user_home, self.drives)
+
     def refresh_games(self, in_steam: dict[str, str] | None = None) -> None:
         """The games, which are in Steam (*in_steam* when given: what Update Steam read back, else Steam's file now),
-        and the list."""
+        what waits in the game folders to be installed, and the list."""
         self.games = installed_games(self.fs)
+        kept = self.kept()
+        self.waiting = [w for w in library.waiting(self.game_folders(), {g.title_id for g in self.games}
+                                                   | {g.name for g in self.games})
+                        if w.kind == "Folder" or kept.get(str(w.path)) != library.stamp(w.path)]
         if in_steam is not None:
             self.in_steam = in_steam
         else:
@@ -532,14 +598,29 @@ class MainWindow(PortableWindow):
         pane = self.games_pane
         in_steam = sum(1 for g in self.games if g.name in self.in_steam)
         pane.summary.setText(f"{len(self.games)} game(s) installed in Vita3K"
+                             + (f", {len(self.waiting)} to install" if self.waiting else "")
                              + (f", {in_steam} in Steam" if self.steam_dir is not None else
                                 ". Steam was never started on this device: start it once to put games in it."))
         rows = [(g.name, self.game_text(g)) for g in self.games]
+        rows += [(f"add:{w.path}", "  ·  ".join(t for t in (w.title or w.path.name, w.title_id, w.kind) if t))
+                 for w in self.waiting]                 # short, or the row is cut off (owner, 30-10-2026)
         if not rows:
-            pane.status.setText(pane.status.text() or "No games yet: the RB button on the Vita3K pane installs "
-                                                       "one of your games in Vita3K.")
+            pane.status.setText(pane.status.text() or
+                                f"No games yet: put your .vpk or .zip files, .pkg files or dumped game folders in "
+                                f"{private(self.game_folders()[0])}, then the X button installs them.")
         pane.list.set_items(rows)
         self.update_legend()
+
+    def kept(self) -> dict[str, str]:
+        """The installed files the user kept on the keep page, each with its size and time then (library.stamp);
+        the ones no longer there are left out."""
+        stored = self.settings.value(KEPT_KEY, [])
+        stored = [stored] if isinstance(stored, str) else list(stored or [])
+        return {path: when for path, when in (line.rsplit("|", 1) for line in stored if "|" in line)
+                if library.stamp(Path(path))}
+
+    def set_kept(self, kept: dict[str, str]) -> None:
+        self.settings.setValue(KEPT_KEY, [f"{path}|{when}" for path, when in kept.items()])
 
     def game_text(self, game: Game) -> str:
         mark = "✓ Steam" if game.name in self.marked else ""
@@ -547,6 +628,20 @@ class MainWindow(PortableWindow):
                    or game.name in self.marked and game.name in self.outdated)
         parts = (game.title, game.title_id, game.version, mark + (" (Update Steam)" if changed else ""))
         return "  ·  ".join(p for p in parts if p)
+
+    def game_picked(self, key: str) -> None:
+        """A on a row: a game's Steam mark, or a waiting game installed (a .pkg asks for its license key first)."""
+        if not key.startswith("add:"):
+            self.mark_game(key)
+            return
+        item = next((w for w in self.waiting if str(w.path) == key[4:]), None)
+        if item is None:
+            return
+        if item.package:
+            if self._ready_for_vita3k(self.games_pane):
+                self.ask_zrif(item.path)
+        else:
+            self.install_waiting([item])
 
     def mark_game(self, key: str) -> None:
         """A on a game: mark it for Steam, or take the mark away."""
@@ -640,76 +735,172 @@ class MainWindow(PortableWindow):
         self.games_pane.status.setText(f"Starting {game.title} in Vita3K… {play.QUIT_HINT}")
         self.log.info(f"Starting {game.title} in Vita3K, without Steam.")
 
-    # The browser (core's browse): the firmware file in Downloads, or a game to install
+    # The games put in the game folders (owner, 30-10-2026: no browsing): installed through Vita3K from Your games
 
-    def show_browser(self, looking_for: str) -> None:
-        """The browser for *looking_for*, opened where the last one of its kind was left (owner, 29-10-2026), else
-        in Downloads."""
-        self.browsing = looking_for
-        start = browse.places(self.user_home, self.roots)
-        downloads = (self.user_home or Path.home()) / "Downloads"
-        at = browse.remembered(self.settings, looking_for) or (downloads if downloads.is_dir() else None)
-        if looking_for == FIRMWARE:
-            self.browser = browse.Browser(start, userdata.FIRMWARE_SUFFIXES, at)
-            self.browse_pane.heading.setText("Choose the firmware file")
-        else:
-            self.browser = browse.Browser(start, userdata.ARCHIVE_SUFFIXES + userdata.PACKAGE_SUFFIXES, at)
-            self.browse_pane.heading.setText("Choose a game to install")
-        self.browse_pane.status.setText("")
-        self.show_pane(self.browse_pane)
-        self.show_browse()
+    def install_waiting(self, items: list[Waiting]) -> None:
+        """A on a waiting .vpk, .zip or folder, or X Install all (owner, 30-10-2026: drop the games in the folder, the
+        manager takes care of them): given to Vita3K one after the other off the window's thread, as one job
+        (emulator.install_content, which closes Vita3K before the game starts). The .vpk and .zip files that brought
+        something into Vita3K's storage are offered on the keep page when the job ends (owner, 01-11-2026: the user
+        decides what to keep); a folder stays. A .pkg needs its license key: A on it asks for it."""
+        todo = [w for w in items if not w.package]
+        if not todo:
+            self.games_pane.status.setText("A .pkg installs with its license key: press the A button on it."
+                                           if items else NOTHING_TO_INSTALL)
+            return
+        if not self._ready_for_vita3k(self.games_pane):
+            return
+        skipped = len(items) - len(todo)
+        home, fs, install, say = self.home, self.fs, self.install_content, self.worker.said.emit
 
-    def show_browse(self) -> None:
-        path = self.browser.path if self.browser is not None else None
-        hint = ("Where is PSP2UPDAT.PUP? Open the folder you downloaded it into, then the A button on it."
-                if self.browsing == FIRMWARE else
-                "Where is the game? Open its folder, then the A button on a .vpk, .zip or .pkg file, or the X button "
-                "on a dumped game's folder.")
-        self.browse_pane.summary.setText(wrappable(path) if path is not None else hint)
-        self.browse_pane.list.set_items(self.browser.rows() if self.browser is not None else [])
-        self.focus_list(self.browse_pane)
+        def one(item: Waiting) -> tuple[bool, str, str]:
+            """(installed whole, what to say of it alone, what to say of it in a list)."""
+            name = item.title or item.path.name
+            start = time.time() - 1
+            try:
+                install(home, item.path)
+            except (OSError, emulator.EmulatorError) as error:
+                return False, f"Vita3K could not install {item.path.name}: {error}", f"{name} ({error})"
+            ok, text = content_message(userdata.content_written(fs, start), fs, item.path.name)
+            if not ok:
+                return False, text, f"{name} (nothing came into Vita3K's storage)"
+            return True, text, name
+
+        def job() -> tuple[bool, str, list[Path]]:
+            results, installed = [], []
+            for n, item in enumerate(todo, 1):
+                if len(todo) > 1:
+                    say(f"Vita3K installs {n} of {len(todo)}: {item.title or item.path.name}… a large game takes "
+                        "minutes.")
+                results.append(one(item))
+                if results[-1][0] and item.kind != "Folder":
+                    installed.append(item.path)
+            failed = [listed for ok, _alone, listed in results if not ok]
+            if len(todo) == 1:
+                text = results[0][1]
+            else:
+                text = f"{len(todo) - len(failed)} of {len(todo)} game(s) installed in Vita3K."
+                if failed:
+                    text += " Not done: " + "; ".join(failed) + "."
+            if skipped:
+                text += f" {skipped} .pkg file(s) wait: the A button on each asks for its license key."
+            return not failed, text, installed
+        self.log.info(f"Vita3K installs {len(todo)} game(s): {', '.join(str(w.path) for w in todo)}.")
+        self._run_job("content", f"Vita3K installs {todo[0].path.name}… a large game takes minutes; Vita3K's window "
+                                 "may show for a moment at the end." if len(todo) == 1 else
+                      f"Vita3K installs 1 of {len(todo)}: {todo[0].title or todo[0].path.name}…", job)
+
+    def remove_game(self) -> None:
+        """RB on a game (owner, 30-10-2026: a game that no longer plays goes): the keep page with what of it would go
+        (owner, 01-11-2026: before deleting anything, let the user decide what to keep): its folders in Vita3K's
+        storage, its update and extra content each a row (library.removal_items), and its Steam shortcut when it is in
+        Steam. Its saves are never on the page."""
+        key = self.games_pane.list.focused()
+        game = next((g for g in self.games if g.name == key), None)
+        if game is None:
+            return
+        if self.busy:
+            self.games_pane.status.setText(BUSY)
+            return
+        if self.running(self.home):
+            self.games_pane.status.setText("Vita3K is open: quit the game first, then remove it.")
+            return
+        folders = library.removal(game, self.fs)
+        if not folders:
+            self.games_pane.status.setText(f"{game.title} is not in Vita3K's storage: there is nothing to delete.")
+            return
+        self.keep_game = game
+        self.show_keep(REMOVE, f"Remove {game.title}", library.removal_items(folders, key in self.in_steam))
+
+    # The keep page (core's keep; owner, 01-11-2026: before deleting anything, let the user decide what to keep)
+
+    def show_keep(self, kind: str, heading: str, items: list[keep.Item]) -> None:
+        """The keep page for Remove game (*kind* REMOVE) or the files an install left (INSTALLED): every row marked
+        Delete at first, the sizes measured now."""
+        keep.measure(items)
+        self.keep_for, self.keep_items = kind, items
+        self.keep_pane.heading.setText(heading)
+        self.keep_pane.status.setText("")
+        self.show_keep_rows()
+        self.show_pane(self.keep_pane)
+        self.focus_list(self.keep_pane)
+
+    def show_keep_rows(self) -> None:
+        freed = keep.total(self.keep_items)
+        self.keep_pane.summary.setText(
+            (f"The X button deletes the rows marked Delete ({keep.human(freed)})" if keep.chosen(self.keep_items)
+             else "Nothing is marked Delete") + "; the A button keeps a row or deletes it after all. The B button "
+                                                "goes back and deletes nothing.")
+        self.keep_pane.list.set_items(keep.rows(self.keep_items))
         self.update_legend()
 
-    def browse_picked(self, key: str) -> None:
-        if self.browser is None:
+    def toggle_keep(self, key: str) -> None:
+        """A on a row of the keep page: Delete to Keep, or back; the focus stays on the row."""
+        if keep.toggle(self.keep_items, key) is None:
             return
-        picked = self.browser.open(key)
-        if picked is not None:
-            browse.remember(self.settings, self.browsing, picked.parent)
-        if picked is not None and self.browsing == FIRMWARE:
-            self.leave_browser()
-            self.install_firmware(picked)
-            return
-        if picked is not None:
-            if picked.suffix.lower() in userdata.PACKAGE_SUFFIXES:
-                self.ask_zrif(picked)
-            else:
-                self.leave_browser()
-                self.install_game(picked)
-            return
-        self.browse_pane.status.setText("")
-        self.show_browse()
+        self.keep_pane.status.setText("")
+        self.show_keep_rows()
+        row = self.keep_pane.list.pills.get(key)
+        if row is not None:
+            row.setFocus()
 
-    def install_browsed(self) -> None:
-        """X in the browser for a game: the open folder installed as a dumped game (back to the Vita3K pane)."""
-        if self.browsing != GAME:
+    def delete_marked(self) -> None:
+        """X on the keep page: the rows still marked Delete deleted as the window's job, a Steam shortcut through
+        Update Steam's plan (library.update_steam), then back to Your games, whose line says what went and what was
+        kept."""
+        chosen = keep.chosen(self.keep_items)
+        if not chosen:
+            self.keep_pane.status.setText(NOTHING_MARKED)
             return
-        if self.browser is None or self.browser.path is None:
-            self.browse_pane.status.setText(OPEN_A_FOLDER)
+        if self.busy:
+            self.keep_pane.status.setText(BUSY)
             return
-        folder = self.browser.path
-        if not userdata.is_dump(folder):
-            self.browse_pane.status.setText(f"No PS Vita game in {folder.name or folder}: open the game's own folder "
-                                            "(with sce_sys and eboot.bin), then the X button.")
+        if self.keep_for == REMOVE and self.running(self.home):
+            self.keep_pane.status.setText("Vita3K is open: quit the game first, then remove it.")
             return
-        browse.remember(self.settings, GAME, folder.parent)    # the folder the dumped games are in
-        self.leave_browser()
-        self.install_game(folder)
+        kept = [i for i in self.keep_items if not i.delete]
+        game, for_steam = self.keep_game, any(i.key == library.STEAM_ITEM for i in chosen)
+        steam_dir = self.steam_dir if for_steam and game is not None else None
+        closed, program, existing = self.steam_closed, emulator.program(self.home), self.in_steam
+        paths = [path for item in chosen for path in item.paths]
+        what = self.keep_pane.heading.text()
 
-    def leave_browser(self) -> None:
-        self.browser = None
-        self.show_pane(self.pane)
-        self.vita3k_card.setFocus()
+        def job() -> tuple[bool, str, dict[str, str] | None]:
+            found = None
+            if steam_dir is not None:
+                ok, said, found = library.update_steam(steam_dir, [], [game], program, LOGO_PATH, existing, closed)
+                if not ok:
+                    return False, f"Nothing was deleted: {said}", None
+            failed = keep.delete(paths)
+            gone = ", ".join(i.label for i in chosen)
+            text = (f"Deleted: {gone}." if not failed else
+                    f"Not everything was deleted: not {', '.join(failed)}.")
+            if kept:
+                text += f" Kept: {', '.join(i.label for i in kept)}."
+            return not failed, text, found
+        self.busy, self.message = True, ""
+        self._job = "delete"
+        self.log.info(f"{what}: deleting {', '.join(str(p) for p in paths) or 'nothing on the disk'}"
+                      + (", and the Steam shortcut" if steam_dir is not None else "")
+                      + (f"; kept {', '.join(i.label for i in kept)}." if kept else "."))
+        self.back_to_games(f"Deleting… ({what})")
+        self.keep_items, self.keep_game = [], None
+        self.worker.run(job)
+
+    def leave_keep(self) -> None:
+        """B on the keep page: back to Your games, nothing deleted (the files an install left stay kept)."""
+        self.keep_items, self.keep_game = [], None
+        self.back_to_games("Nothing was deleted." + (" The installed files stay where they are and are not listed "
+                                                     "again." if self.keep_for == INSTALLED else ""))
+
+    def offer_installed(self, files: list[Path]) -> None:
+        """After an install that went well: the files it installed kept by the app's record first (so they are not
+        listed to install again whatever the user does next), then the keep page with them, Delete at first."""
+        kept = self.kept()
+        kept.update({str(f): library.stamp(f) for f in files})
+        self.set_kept(kept)
+        items = [keep.Item(str(f), f.name, (f,)) for f in files]
+        self.show_keep(INSTALLED, "Installed: delete the files?", items)
 
     # The package's license key (the BC250 app's question for the zRIF, as a page)
 
@@ -720,7 +911,8 @@ class MainWindow(PortableWindow):
         self.zrif_pane.field.setFocus()
 
     def keep_zrif(self) -> None:
-        """A on the license's page: the package installed with the key given, which must look like a zRIF."""
+        """A on the license's page: the package installed with the key given, which must look like a zRIF; back to
+        Your games, where its line shows."""
         zrif = "".join(self.zrif_pane.field.text().split())
         why = userdata.check_zrif(zrif)
         if why:
@@ -729,7 +921,7 @@ class MainWindow(PortableWindow):
         package = self.package
         self.zrif_pane.field.clear()                    # the key is not left in the window
         self.package = None
-        self.leave_browser()
+        self.back_to_games()
         if package is not None:
             self.install_package(package, zrif)
 
@@ -815,12 +1007,15 @@ class MainWindow(PortableWindow):
         pane = self.panes.currentWidget()
         if pane is self.pane:
             self.remove_action()
-        elif pane is self.browse_pane:
-            self.install_browsed()
         elif pane in (self.key_pane, self.zrif_pane):
             self.paste(pane)
+        elif pane is self.keep_pane:
+            self.delete_marked()
         elif pane is self.games_pane:
-            self.play_game()
+            if self.games_pane.list.focused().startswith("add:"):
+                self.install_waiting(self.waiting)
+            else:
+                self.play_game()
 
     def y_action(self) -> None:
         pane = self.panes.currentWidget()
@@ -833,17 +1028,15 @@ class MainWindow(PortableWindow):
 
     def lb_action(self) -> None:
         pane = self.panes.currentWidget()
-        if pane is self.pane:
-            self.choose_firmware()
+        if pane is self.games_pane:
+            self.show_key()
         elif pane is self.settings_pane:
             self.settings_pane.tabs.step(-1)
 
     def rb_action(self) -> None:
         pane = self.panes.currentWidget()
-        if pane is self.pane:
-            self.choose_game()
-        elif pane is self.games_pane:
-            self.show_key()
+        if pane is self.games_pane:
+            self.remove_game()
         elif pane is self.settings_pane:
             self.settings_pane.tabs.step(1)
 
@@ -853,6 +1046,7 @@ class MainWindow(PortableWindow):
         rows: list[tuple[str, str]] = [("Vita3K's folder", wrappable(emulator.portable_folder(self.home)))]
         if emulator.installed(self.home):
             rows += [("Firmware", self.firmware_text()), ("Installed games", str(len(installed_games(self.fs))))]
+        rows.append(("Games", wrappable(self.game_folders()[0])))     # Firmware is in it
         self.log_pane.fill(rows, [private(line) for line in self.log_lines()[-LOG_LINES:]])
 
     def log_lines(self) -> list[str]:
@@ -934,6 +1128,14 @@ class MainWindow(PortableWindow):
         self.progress_timer.stop()
         if self.close_asked:
             self._confirm_over()
+        if job == "delete":
+            ok, text, found = result if isinstance(result, tuple) else (False, f"Nothing was deleted: {result}", None)
+            self.games_pane.status.setText(private(text))
+            (self.log.info if ok else self.log.error)(text)
+            self.refresh()
+            self.refresh_games(found)
+            self.focus_list(self.games_pane)
+            return
         if job == "install":
             if isinstance(result, Exception):
                 self.message = private(f"Vita3K could not be installed: {result}")
@@ -942,13 +1144,27 @@ class MainWindow(PortableWindow):
                 self.message = f"Vita3K build {result} is installed."
                 self.log.info(f"Vita3K build {result} installed.")
                 self.prepare()                          # before its first start
-        else:                                           # the firmware or a game: (ok, what to say)
-            ok, text = result if isinstance(result, tuple) else (False, f"Vita3K could not do it: {result}")
-            self.message = private(text)
+        else:                                           # the firmware or a game: (ok, what to say[, files installed])
+            ok, text, *more = result if isinstance(result, tuple) else (False, f"Vita3K could not do it: {result}")
+            installed = more[0] if more else []
             (self.log.info if ok else self.log.error)(text)
+            if job == "firmware":
+                self.remember_given(self.firmware_file)     # tried: not again while it stays the same
+                self.firmware_said.append(text)
+                self.message = private(" ".join(self.firmware_said))
+            else:                                       # a game, installed from Your games: its line there
+                self.games_pane.status.setText(private(text))
         self.read_vita3k()
+        if job in ("content", "package") and installed:
+            self.offer_installed(installed)             # before the list, which leaves the kept files out
         self.refresh_games()
         self.refresh()
+        if job in ("content", "package") and installed:
+            self.keep_pane.status.setText(private(text))
+        if job == "firmware" and self.firmware_queue and not self.close_asked:
+            self.install_firmware(self.firmware_queue.pop(0))
+        elif job == "install" and not isinstance(result, Exception):
+            self.sync_firmware()                        # the firmware put there before Vita3K was installed
 
     def _steam_done(self, result: object) -> None:
         """What Update Steam did, and the games in Steam as it read them back right after the write (PCSX2
@@ -1006,33 +1222,25 @@ class MainWindow(PortableWindow):
             self.log.info("Vita3K removed.")
         self.refresh()
 
-    def _ready_for_vita3k(self) -> bool:
-        """Whether Vita3K can be given a job now (the firmware or a game); else the status line says why."""
+    def _ready_for_vita3k(self, pane: Pane | None = None) -> bool:
+        """Whether Vita3K can be given a job now (the firmware or a game); else the status line says why, *pane*'s
+        when given (Your games), else the Vita3K pane's."""
         if self.busy:
-            self.message = BUSY
+            why = BUSY
         elif not emulator.installed(self.home):
-            self.message = NEEDS_VITA3K
+            why = NEEDS_VITA3K
         elif self.running(self.home):
-            self.message = "Vita3K is open: close it first; it installs while it is closed."
+            why = "Vita3K is open: close it first; it installs while it is closed."
         else:
             return True
+        if pane is not None:
+            pane.status.setText(why)
+            return False
+        self.message = why
         self.refresh()
         return False
 
-    def choose_firmware(self) -> None:
-        """LB Firmware: the browser in Downloads, showing the .PUP files; A on one gives it to Vita3K."""
-        if self._ready_for_vita3k():
-            self.message = ""
-            self.show_browser(FIRMWARE)
-
-    def choose_game(self) -> None:
-        """RB Install a game: the browser showing the .vpk, .zip and .pkg files; A on one installs it, X the open
-        folder."""
-        if self._ready_for_vita3k():
-            self.message = ""
-            self.show_browser(GAME)
-
-    def _run_job(self, job: str, stage: str, work: Callable[[], tuple[bool, str]]) -> None:
+    def _run_job(self, job: str, stage: str, work: Callable[[], tuple]) -> None:
         self.prepare()
         self.busy, self.message, self._job, self.stage = True, "", job, stage
         self.refresh()
@@ -1045,6 +1253,7 @@ class MainWindow(PortableWindow):
             return
         home, fs, run = self.home, self.fs, self.run_quiet
         start = time.time() - 1                         # a second's room for the file system's clock
+        self.firmware_file = pup
 
         def job() -> tuple[bool, str]:
             try:
@@ -1060,40 +1269,24 @@ class MainWindow(PortableWindow):
         self._run_job("firmware", f"Vita3K installs {pup.name}, without its window… it takes a minute or two.", job)
 
     def install_package(self, pkg: Path, zrif: str) -> None:
-        """A .pkg with its zRIF through Vita3K (--pkg, --zrif), which installs it without a window and quits."""
-        if not self._ready_for_vita3k():
+        """A .pkg with its zRIF through Vita3K (--pkg, --zrif), which installs it without a window and quits; a
+        package that brought something into Vita3K's storage is offered on the keep page (owner, 01-11-2026)."""
+        if not self._ready_for_vita3k(self.games_pane):
             return
         home, fs, run = self.home, self.fs, self.run_quiet
         start = time.time() - 1
 
-        def job() -> tuple[bool, str]:
+        def job() -> tuple[bool, str, list[Path]]:
             try:
                 run(home, "--pkg", str(pkg), "--zrif", zrif)
             except (OSError, subprocess.TimeoutExpired) as error:
-                return False, f"Vita3K could not install {pkg.name}: {error}"
+                return False, f"Vita3K could not install {pkg.name}: {error}", []
             ok, text = content_message(userdata.content_written(fs, start), fs, pkg.name)
-            return ok, text if ok else (f"Vita3K did not install {pkg.name}: is the license key the package's "
-                                        "own?")
+            if not ok:
+                return False, f"Vita3K did not install {pkg.name}: is the license key the package's own?", []
+            return True, text, [pkg]
         self.log.info(f"Vita3K installs the package {pkg}.")          # the key is not logged
         self._run_job("package", f"Vita3K installs {pkg.name}, without its window… a large game takes minutes.", job)
-
-    def install_game(self, content: Path) -> None:
-        """A .vpk, .zip or dumped folder through Vita3K, which the app closes once the game is installed
-        (emulator.install_content); what came into Vita3K's storage is named."""
-        if not self._ready_for_vita3k():
-            return
-        home, fs, install = self.home, self.fs, self.install_content
-        start = time.time() - 1
-
-        def job() -> tuple[bool, str]:
-            try:
-                install(home, content)
-            except (OSError, emulator.EmulatorError) as error:
-                return False, f"Vita3K could not install {content.name}: {error}"
-            return content_message(userdata.content_written(fs, start), fs, content.name)
-        self.log.info(f"Vita3K installs {content}.")
-        self._run_job("content", f"Vita3K installs {content.name}… a large game takes minutes; Vita3K's window may "
-                                 "show for a moment at the end.", job)
 
     def _confirm_over(self) -> None:
         self.confirm_timer.stop()
@@ -1112,26 +1305,25 @@ class MainWindow(PortableWindow):
     # B
 
     def on_back(self) -> None:
-        """B goes back (the suite's rule, owner 29-10-2026): the whole log to its summary, the browser a level up (from
-        the places to where it came from), the key page to Your games (nothing saved), the license's page to the
-        browser (nothing installed), a pane to its card; on a card it does nothing (View exits)."""
+        """B goes back (the suite's rule, owner 29-10-2026): the whole log to its summary, the key page, the keep page
+        and the license's page to Your games (nothing saved, deleted or installed), a pane to its card; on a card it
+        does nothing (View exits)."""
         pane = self.panes.currentWidget()
         if pane is self.log_pane and self.log_pane.viewing:
             self.log_pane.show_summary()
             self.log_card.setFocus()
             self.update_legend()
-        elif pane is self.browse_pane:
-            if self.browser is not None and self.browser.up():
-                self.show_browse()
-            else:
-                self.leave_browser()
         elif pane is self.key_pane:
             self.back_to_games()
-        elif pane is self.zrif_pane:                    # back to the folder the package is in
+        elif pane is self.keep_pane:                    # nothing deleted
+            self.leave_keep()
+        elif pane is self.zrif_pane:                    # back to the package's row
             self.zrif_pane.field.clear()
-            self.package = None
-            self.show_pane(self.browse_pane)
-            self.show_browse()
+            package, self.package = self.package, None
+            self.back_to_games()
+            row = self.games_pane.list.pills.get(f"add:{package}")
+            if row is not None:
+                row.setFocus()
         else:
             self.go_back()
 
@@ -1144,6 +1336,7 @@ class MainWindow(PortableWindow):
             self.message = {"steam": "Press View again to exit: Steam's shortcuts may be left half changed.",
                             "firmware": "Press View again to exit: Vita3K goes on installing the firmware by itself.",
                             "package": "Press View again to exit: Vita3K goes on installing the package by itself.",
+                            "delete": "Press View again to exit: what you chose may be left half deleted.",
                             "content": "Press View again to exit: Vita3K goes on installing the game, and then "
                                        "starts it in its window."}.get(
                 self._job, "Press View again to exit: the download stops.")

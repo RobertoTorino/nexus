@@ -1,12 +1,10 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Your games (library.py): the game folders kept, the usual places offered, Update Steam's plan, and Steam's
+"""Your games (library.py): the app's own folders, Update Steam's plan, what Remove game deletes, and Steam's
 shortcuts written into a Steam folder of a test (never the real one), with Steam closed around it."""
 
 from __future__ import annotations
 
 from pathlib import Path
-
-from PyQt6.QtCore import QSettings
 
 from bc250_core import play, steam
 from conftest import make_disc
@@ -16,30 +14,41 @@ from ppsspp_manager.games import Game, scan
 PROGRAM = Path(r"C:\emu\PPSSPPWindows64.exe")
 
 
-def test_the_folders_are_kept(qapp, tmp_path):
-    settings = QSettings(str(tmp_path / "s.ini"), QSettings.Format.IniFormat)
-    assert library.folders(settings) == []
-    library.set_folders(settings, [tmp_path / "a", tmp_path / "b"])
-    assert library.folders(QSettings(str(tmp_path / "s.ini"), QSettings.Format.IniFormat)) == [tmp_path / "a",
-                                                                                               tmp_path / "b"]
-
-
-def test_the_usual_places_are_offered(tmp_path):
+def test_the_apps_own_folders(tmp_path):
+    r"""The app's own folders (owner, 30-10-2026: the games are put there, no folder is chosen): Games\PSP in the
+    user's folder, made when missing, then Games\PSP on a removable drive that has one; an empty card slot is none."""
     home = tmp_path / "me"
-    (home / "Downloads").mkdir(parents=True)
-    (home / "Games").mkdir()
-    card = tmp_path / "E"
-    card.mkdir()
-    assert library.suggested([], home, lambda: [card]) == [home / "Games", home / "Downloads", card]
-    assert library.suggested([home / "Games"], home, lambda: []) == [home / "Downloads"]   # chosen already
+    card, empty = tmp_path / "E", tmp_path / "F"
+    (card / "Games" / "PSP").mkdir(parents=True)
+    empty.mkdir()
 
     class EmptySlot:                    # a card reader without a card: Windows raises when asked about it
+        def __truediv__(self, other):
+            return self
+
         def is_dir(self):
             raise OSError(22, "The volume does not contain a recognized file system.")
+    assert library.fixed(home, lambda: [EmptySlot(), card, empty]) == [home / "Games" / "PSP", card / "Games" / "PSP"]
+    assert (home / "Games" / "PSP").is_dir()
 
-        def __str__(self):
-            return "E:\\"
-    assert library.suggested([], home, lambda: [EmptySlot(), card]) == [home / "Games", home / "Downloads", card]
+
+def test_what_remove_game_deletes(tmp_path):
+    """A disc image is its file alone; a memory stick game its own folder; never a game folder of the list, a folder
+    holding another game, or a drive."""
+    games = tmp_path / "Games" / "PSP"
+    disc = Game(games / "Sub" / "Daxter.iso", "Daxter", kind="iso")
+    homebrew = Game(games / "Homebrew" / "EBOOT.PBP", "Homebrew", kind="pbp")
+    loose = Game(games / "EBOOT.PBP", "Loose", kind="pbp")
+    outer = Game(games / "Pack" / "EBOOT.PBP", "Outer", kind="pbp")
+    inner = Game(games / "Pack" / "Inner" / "EBOOT.PBP", "Inner", kind="pbp")
+    found = [disc, homebrew, loose, outer, inner]
+    assert library.removal(disc, [games], found) == ([disc.file], "")
+    assert library.removal(homebrew, [games], found) == ([games / "Homebrew"], "")
+    assert library.removal(loose, [games], found)[1].startswith("Loose is in PSP, one of the app's game folders")
+    assert library.removal(outer, [games], found)[1] == ("Pack holds another game too (Inner): delete Outer's files "
+                                                         "by hand.")
+    top = Game(Path(tmp_path.anchor) / "EBOOT.PBP", "Top", kind="pbp")
+    assert library.removal(top, [], [top])[0] == []
 
 
 def test_the_plan(tmp_path):

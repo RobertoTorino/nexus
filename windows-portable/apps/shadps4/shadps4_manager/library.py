@@ -11,8 +11,6 @@ from __future__ import annotations
 
 import ctypes
 import os
-import shutil
-import stat
 import string
 import sys
 from collections.abc import Callable
@@ -124,9 +122,10 @@ def update_steam(steam_dir: Path, add: list[Game], remove: list[Game], program: 
 
 
 def removal(game: Game, chosen: list[Path], found: list[Game]) -> tuple[list[Path], str]:
-    """The folders Remove game deletes (owner, 30-10-2026: a game that no longer plays goes, files and all): the
-    game's folder, then its update, patch and mods beside it. With none, why not: a drive, a game folder of the list
-    (or one holding one) or a folder holding another game is never deleted by the app."""
+    """The folders Remove game offers to delete (owner, 30-10-2026: a game that no longer plays goes, files and all;
+    01-11-2026: the user decides what to keep, core's keep page): the game's folder, then its update, patch and mods
+    beside it. With none, why not: a drive, a game folder of the list (or one holding one) or a folder holding another
+    game is never offered."""
     folder = game.folder
     if folder.parent == folder:
         return [], f"{game.title} is at the top of {folder}: delete its files by hand."
@@ -140,16 +139,3 @@ def removal(game: Game, chosen: list[Path], found: list[Game]) -> tuple[list[Pat
     overlays = [folder.with_name(folder.name + suffix) for suffix in OVERLAYS]
     return [folder, *[f for f in overlays if _is_dir(f)]], ""
 
-
-def delete(folders: list[Path]) -> list[str]:
-    """The folders deleted, read-only files too (an unpacked game's may be); what could not be, each with why."""
-    def writable(function, path, _error) -> None:
-        os.chmod(path, stat.S_IWRITE)
-        function(path)
-    failed = []
-    for folder in folders:
-        try:
-            shutil.rmtree(folder, onexc=writable)
-        except OSError as error:
-            failed.append(f"{folder.name} ({error.strerror or error})")
-    return failed

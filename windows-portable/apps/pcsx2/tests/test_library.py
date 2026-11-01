@@ -1,45 +1,49 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Your games (library.py): the game folders kept, the usual places offered, Update Steam's plan, and Steam's
-shortcuts written into a Steam folder of a test (never the real one), with Steam closed around it."""
+"""Your games (library.py): the app's own folders, the BIOS taken from its folder, Remove game, Update Steam's plan,
+and Steam's shortcuts written into a Steam folder of a test (never the real one), with Steam closed around it."""
 
 from __future__ import annotations
 
 from pathlib import Path
 
-from PyQt6.QtCore import QSettings
-
 from bc250_core import play, steam
 from conftest import make_disc
-from pcsx2_manager import LOGO_PATH, ROOT, library, shortcuts
+from pcsx2_manager import LOGO_PATH, ROOT, library, shortcuts, userdata
 from pcsx2_manager.games import Game, scan
 
 PROGRAM = Path(r"C:\emu\pcsx2-qt.exe")
 
 
-def test_the_folders_are_kept(qapp, tmp_path):
-    settings = QSettings(str(tmp_path / "s.ini"), QSettings.Format.IniFormat)
-    assert library.folders(settings) == []
-    library.set_folders(settings, [tmp_path / "a", tmp_path / "b"])
-    assert library.folders(QSettings(str(tmp_path / "s.ini"), QSettings.Format.IniFormat)) == [tmp_path / "a",
-                                                                                               tmp_path / "b"]
-
-
-def test_the_usual_places_are_offered(tmp_path):
+def test_the_apps_own_folders(tmp_path):
+    r"""Fixed folders (owner, 30-10-2026): Games\PS2 in the user's folder, made with its BIOS folder, then Games\PS2
+    on each removable drive that has one; an empty card slot (Windows raises when asked about it) is no place."""
     home = tmp_path / "me"
-    (home / "Downloads").mkdir(parents=True)
-    (home / "Games").mkdir()
-    card = tmp_path / "E"
-    card.mkdir()
-    assert library.suggested([], home, lambda: [card]) == [home / "Games", home / "Downloads", card]
-    assert library.suggested([home / "Games"], home, lambda: []) == [home / "Downloads"]   # chosen already
+    card, bare = tmp_path / "E", tmp_path / "F"
+    (card / "Games" / "PS2").mkdir(parents=True)
+    bare.mkdir()
 
-    class EmptySlot:                    # a card reader without a card: Windows raises when asked about it
+    class EmptySlot:
+        def __truediv__(self, other):
+            return self
+
         def is_dir(self):
             raise OSError(22, "The volume does not contain a recognized file system.")
+    assert library.fixed(home, lambda: [EmptySlot(), card, bare]) == [home / "Games" / "PS2", card / "Games" / "PS2"]
+    assert library.bios_home(home) == home / "Games" / "PS2" / "BIOS" and library.bios_home(home).is_dir()
 
-        def __str__(self):
-            return "E:\\"
-    assert library.suggested([], home, lambda: [EmptySlot(), card]) == [home / "Games", home / "Downloads", card]
+
+def test_the_bios_is_synced_new_or_changed_only(tmp_path):
+    source, target = tmp_path / "Games" / "PS2" / "BIOS", tmp_path / "emulator" / "bios"
+    assert userdata.sync_bios(source, target) == []                              # no folder: nothing
+    source.mkdir(parents=True)
+    (source / "SCPH-70012.bin").write_bytes(b"\0" * 64)
+    (source / "SCPH-70012.nvm").write_bytes(b"\0" * 16)
+    (source / "readme.txt").write_text("not a dump's")
+    assert userdata.sync_bios(source, target) == ["SCPH-70012.bin", "SCPH-70012.nvm"]
+    assert sorted(p.name for p in target.iterdir()) == ["SCPH-70012.bin", "SCPH-70012.nvm"]
+    assert userdata.sync_bios(source, target) == []                              # unchanged: nothing copied
+    (source / "SCPH-70012.nvm").write_bytes(b"\1" * 32)
+    assert userdata.sync_bios(source, target) == ["SCPH-70012.nvm"]
 
 
 def test_the_plan(tmp_path):

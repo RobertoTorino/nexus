@@ -7,7 +7,7 @@ the program RPCS3 starts. There are two kinds, as RPCS3 0.0.43 lists them (game_
 * an installed game (from a package): a folder in RPCS3's dev_hdd0/game with PARAM.SFO and USRDIR.
 
 The games found are those in dev_hdd0\\game, the disc games RPCS3 knows (its games.yml) and the disc games in the
-folders chosen in the app (up to five folders deep). The reading is the BC250 suite's RPCS3 Manager's (its games.py),
+app's own Games\\PS3 folders (up to five folders deep). The reading is the BC250 suite's RPCS3 Manager's (its games.py),
 unchanged. Updates are not games to start: they install into
 dev_hdd0/game in a folder named by the game's ID, with category "GD" (game data), and RPCS3 starts the update's
 EBOOT.BIN by itself when it starts the disc game.
@@ -146,7 +146,7 @@ def known(paths: list[str]) -> list[Game]:
 
 
 def scan(folders: list[Path], hdd0_game: Path | None = None, known_paths: list[str] = ()) -> list[Game]:
-    """Every game: installed in RPCS3, known to it, and below the chosen folders (a game found twice counted once),
+    """Every game: installed in RPCS3, known to it, and below the game folders (a game found twice counted once),
     sorted by title."""
     found = installed(hdd0_game) if hdd0_game else []
     found += known(list(known_paths))

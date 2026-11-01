@@ -5,28 +5,36 @@ the controller's buttons at the bottom.
 
 Every action is a controller button in the legend at the bottom, A too, and a tap on the entry does the same; there
 are no pills (owner, 29-10-2026: one way everywhere). Core's rule ends the legend: B goes back (a pane to its card,
-the folders to the games, the browser a level up), View exits the app and Menu shows the information of the pane that
-shows.
+the key page to Your games), View exits the app and Menu shows the information of the pane that shows. Nothing is
+browsed to (owner, 30-10-2026): the games, the packages and the firmware are put in the app's own folders
+(library.fixed: Games\\PS3 and Games\\PS3\\Firmware in your user folder, Games\\PS3 on an SD card), and the app takes
+care of them.
 
 The RPCS3 pane: what is installed, the firmware and where; A Install until RPCS3 is installed, Y Update when an older
-build is there, X Remove RPCS3 (a second press), LB Firmware (the browser in Downloads, showing the .PUP files; A on
-one gives it to RPCS3, which installs it without any window: --headless --installfw, the result read from its log)
-and RB Packages (the browser showing the .pkg files and the licenses; X installs the open folder's, or the files Y
-marked in it, A on a file that one: --headless --installpkg, one run per file, the updates last). A press that cannot act now says why on the status
-line. Nothing downloads before A. The download and the unpacking run off the window's thread; the pane counts the
-megabytes. View (exit) while a job runs asks first, as the portal does. RPCS3's own window is never shown: what the
-app owns in RPCS3's files (userdata: its welcome dialog, exit question and update check off, player 1 on the
-handheld's controller) is set after an install and when the window opens, while RPCS3 does not run.
+build is there and X Remove RPCS3 (a second press). The firmware put in Games\\PS3\\Firmware is given to RPCS3 when the
+app opens, when the RPCS3 card gets the focus and after RPCS3 is installed (owner, 01-11-2026: taken in
+automatically), once per file: RPCS3 installs it without any window (--headless --installfw, the result read from its
+log); a file whose version is installed already, or that was given to RPCS3 before as it is, is left alone. A press
+that cannot act now says why on the status line. Nothing downloads before A. The download, the unpacking and RPCS3's
+installs run off the window's thread; the pane counts the megabytes. View (exit) while a job runs asks first, as the
+portal does. RPCS3's own window is never shown: what the app owns in RPCS3's files (userdata: its welcome dialog,
+exit question and update check off, player 1 on the handheld's controller) is set after an install and when the
+window opens, while RPCS3 does not run.
 
-The Your games pane (panes.py, library.py): the disc games in the chosen folders, the games installed in RPCS3 and
-the disc games it knows, played from Steam (owner, 29-10-2026); A marks one for Steam, X plays one that is in Steam,
-through Steam (steam://rungameid), and on a device without Steam starts it in the app's play mode itself (owner,
-30-10-2026: a fallback, as its shortcut would start it; core's play: View, LB and RB held quit any game), Y Update
-Steam makes Steam's shortcuts match the marks and brings a shortcut made before the play mode to it; Steam's library
-is the portal's RT Steam (owner, 30-10-2026: Open Steam moved there); LB Folders lists the folders, the usual places
-and a drive to add, and Browse, which opens the folder browser (core's browse, which opens where it was left:
-browse.remembered); LB Games goes back; RB Steam artwork keeps the SteamGridDB key. The Log pane: RPCS3's folder and
-the newest lines of the app's log; A (or a tap on the pane) shows the whole log in the pane.
+The Your games pane (panes.py, library.py): the disc games in the app's own Games\\PS3 folders (an SD card's too),
+the games installed in RPCS3 and the disc games it knows, played from Steam (owner, 29-10-2026); A marks one for
+Steam, X plays one that is in Steam, through Steam (steam://rungameid), and on a device without Steam starts it in the
+app's play mode itself (owner, 30-10-2026: a fallback, as its shortcut would start it; core's play: View, LB and RB
+held quit any game), Y Update Steam makes Steam's shortcuts match the marks and brings a shortcut made before the play
+mode to it; RB Remove game shows the keep page with what would go (library.removal: the game's folders, its Steam
+shortcut); LB Steam artwork keeps the SteamGridDB key. A package or a license put in the game folders
+(userdata.waiting) is a row of its own, PKG, PKG update or License; A installs it, X Install all every one, the
+licenses first, the updates last, each in a run of RPCS3 without its window (--headless --installpkg); the keep page
+then lists the packages RPCS3 installed without a problem, and one kept is not listed again (PACKAGES_KEPT); the
+licenses stay. Nothing is deleted before the user decides what to keep (owner, 01-11-2026; core's keep): the keep
+page marks each row Delete, A keeps one, X deletes the marked, B deletes nothing. Steam's library is the portal's RT Steam (owner, 30-10-2026). The Log
+pane: RPCS3's folder, the app's Games\\PS3 folder and the newest lines of the app's log; A (or a tap on the pane) shows
+the whole log in the pane.
 
 The Settings pane: RPCS3's settings that matter on the handheld, in tabs (LB and RB: Picture, Speed, Sound,
 Messages; Screen, how the games fill it, among the Picture's), a row each with its value; A steps to the next value and writes it into config.yml at once
@@ -42,7 +50,7 @@ from PyQt6.QtCore import QObject, QSettings, Qt, QTimer, pyqtSignal
 from PyQt6.QtGui import QFont, QGuiApplication
 from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QStackedWidget, QVBoxLayout, QWidget
 
-from bc250_core import applog, browse, covers, platform, play, power, steam
+from bc250_core import applog, covers, keep, platform, play, power, steam
 from bc250_core.gamepad import Gamepad
 from bc250_core.platform import private
 from bc250_core.portable import (AMBER, BODY, DIM, EXIT, KEYBOARD, VIEW, Card, InfoPill, Legend, Pane, PortableHeader,
@@ -50,7 +58,7 @@ from bc250_core.portable import (AMBER, BODY, DIM, EXIT, KEYBOARD, VIEW, Card, I
 
 from . import APP_ID, APP_NAME, LOGO_PATH, __version__, emulator, library, rpcs3_settings, shortcuts, userdata
 from .games import Game, installed as installed_games, scan
-from .panes import BROWSE_INFO, GAMES_INFO, RPCS3_INFO, KeyPane, ListPane, LogPane
+from .panes import GAMES_INFO, KEEP_INFO, RPCS3_INFO, KeyPane, ListPane, LogPane
 from .rpcs3_settings import TABS, Setting
 
 STATUS_MS = 30_000              # the header's battery and time
@@ -62,19 +70,19 @@ ABOUT = ("RPCS3, the PS3 emulator, installed for your own user: the firmware, yo
 CARD_HEIGHT = 100               # the cards and their gaps fit the column at 720 px high
 LOG_LINES = 12                  # the newest lines of the app's log in the Log pane
 LOG_MAX = 2000                  # the lines of the log the whole view shows, the newest
-FOLDERS, GAMES_VIEW = "folders", "games"
-BROWSE_KEY = "browse"           # the folders' last row: the folder browser
-FOLDER, FIRMWARE, PACKAGES = "folder", "firmware", "packages"   # what the browser looks for
 RUNNING = "RPCS3 is open: close it first, it would write its own settings over the change."
 NOT_INSTALLED = "Install RPCS3 first: the settings are in its folder."
-NEEDS_RPCS3 = "Install RPCS3 first (the A button): it is RPCS3 that installs the firmware and the packages."
-NO_FIRMWARE = ("Install the PS3's firmware first (the LB button on the RPCS3 pane): without it no game starts from "
-               "Steam.")
+NEEDS_RPCS3 = "Install RPCS3 first (the RPCS3 card): it is RPCS3 that installs the firmware and the packages."
+NO_FIRMWARE = ("The PS3's firmware is not installed yet: put PS3UPDAT.PUP in your Games\\PS3\\Firmware folder, and "
+               "RPCS3 installs it when the RPCS3 card gets the focus. Without it no game starts from Steam.")
 BUSY = "Wait a moment: the app is still busy with the step before."
-OPEN_A_FOLDER = "Open a folder first: the A button opens the one the focus is on, then the X button takes it."
 NO_GAME = "Put the focus on a game first: the X button starts it."
-NO_FILE = "Put the focus on a file first: the Y button marks it, the X button then installs the marked ones."
-BROWSE_KEYS = {FOLDER: "folders", FIRMWARE: "firmware", PACKAGES: "packages"}   # browse.remembered's, per kind
+NOTHING_TO_INSTALL = ("Nothing to install: put .pkg files and .rap licenses in your Games\\PS3 folder, then the X "
+                      "button installs them.")
+FIRMWARE_TAKEN = "firmware/taken"   # the settings' key: the firmware file last given to RPCS3 (library.file_key)
+PACKAGES_KEPT = "packages/kept"    # the settings' key: the installed packages the user kept (library.kept_key)
+STEAM_ITEM = "steam"                # the keep page's row for a game's Steam shortcut
+NOTHING_MARKED = "Nothing is marked Delete: B goes back, and nothing is deleted."
 ALL_SETTINGS = rpcs3_settings.SETTINGS
 # The Settings pane's information, per tab: what each setting of the tab does
 TAB_INFO = {key: ("The A button changes the setting the focus is on, the LB and RB buttons change the tab; RPCS3 "
@@ -82,7 +90,6 @@ TAB_INFO = {key: ("The A button changes the setting the focus is on, the LB and 
                   "before these.\n\n"
                   + "\n".join(f"{setting.label}: {setting.tip}" for setting in group))
             for key, _name, group in TABS}
-NOT_THE_GAMES = "Update Steam works on the games: the LB button shows them again."
 NO_STEAM = "Steam was never started on this device: start it once, then Update Steam puts the marked games in it."
 NOTHING_TO_CHANGE = ("Nothing to change in Steam: the A button on a game marks it for Steam or takes the mark away, "
                      "then the Y button updates Steam.")
@@ -215,14 +222,14 @@ class MainWindow(PortableWindow):
                  steam_dir: Path | None | bool = False,
                  steam_closed: Callable[[Callable[[], None]], bool] = steam.with_steam_closed,
                  user_home: Path | None = None, drives: Callable[[], list[Path]] = library.removable_drives,
-                 roots: Callable[[], list[Path]] = browse.drives, settings: QSettings | None = None,
+                 settings: QSettings | None = None,
                  play: Callable[[str], None] = steam.open_url,
                  start: Callable[..., None] = platform.start_program):
         """*steam_dir*: Steam's folder (False: found on this system, None: no Steam); *run_headless*: RPCS3 without a
         window for a firmware or package install (tests pass their own); *runtime_missing*: the Visual C++ runtime's
-        files that are missing; *user_home*: the user's folder (the usual places); *drives*: the removable drives
-        offered as folders, *roots*: every drive the browser offers; *settings*: the app's (its .ini, create_app's),
-        where the game folders are kept; *play*: hands a steam:// address to Steam (a game); *start*: starts a program
+        files that are missing; *user_home*: the user's folder (where Games\\PS3 is); *drives*: the removable
+        drives, whose Games\\PS3 is looked in too; *settings*: the app's (its .ini, create_app's), where the firmware
+        file last given to RPCS3 is kept; *play*: hands a steam:// address to Steam (a game); *start*: starts a program
         on its own (RPCS3 with a game, without Steam)."""
         super().__init__(gamepad)
         self.setWindowTitle(f"{APP_NAME} {__version__}")
@@ -238,21 +245,20 @@ class MainWindow(PortableWindow):
         self.message = ""                               # the last outcome
         self.confirm_remove = self.close_asked = False
         self.steam_closed = steam_closed
-        self._job = ""                                  # "install", "steam", "firmware" or "packages" while one runs
+        self._job = ""                                  # "install", "steam", "firmware", "packages" or "delete"
         self.steam_dir = steam.find_steam() if steam_dir is False else steam_dir
-        self.user_home, self.drives, self.roots = user_home, drives, roots
+        self.user_home, self.drives = user_home, drives
         self.settings = settings if settings is not None else QSettings()
         self.play, self.start_program = play, start
         self.games: list[Game] = []
         self.in_steam: dict[str, str] = {}
         self.outdated: set[str] = set()                 # games whose shortcut does not start the play mode yet
         self.marked: set[str] = set()
-        self.games_view = GAMES_VIEW
-        self.forget_asked = ""                          # a folder pressed once: A again takes it off the list
-        self.browser: browse.Browser | None = None      # the browser, while it shows
-        self.browsing = FOLDER                          # what it looks for
-        self.picked_files: set[str] = set()             # the packages browser's rows Y marked ("file:<path>")
-        self.marks_in: Path | None = None               # the folder they are in: marks go when another opens
+        self.keep_items: list[keep.Item] = []           # the keep page's rows (Remove game, the packages installed)
+        self.keep_game: Game | None = None              # the game Remove game is about; None for the packages
+        self.deleting: list[Path] = []                  # what the delete job is deleting
+        self.packages: list[userdata.PackageInfo] = []  # the packages in the game folders, waiting for RPCS3
+        self.licenses: list[Path] = []                  # the licenses there RPCS3 does not keep yet
         self.firmware = ""
         self.known: list[str] = []
         self.hdd0_game, self.dev_flash = userdata.drives(self.home)
@@ -268,8 +274,8 @@ class MainWindow(PortableWindow):
         cards = QVBoxLayout(column)
         cards.setContentsMargins(0, 0, 0, 0)
         cards.setSpacing(px(12))
-        self.rpcs3_card = Card("RPCS3", "Install it, the PS3's firmware and your packages.")
-        self.games_card = Card("Your games", "Mark them for Steam, play them, their folders.")
+        self.rpcs3_card = Card("RPCS3", "Install it; it takes the PS3's firmware.")
+        self.games_card = Card("Your games", "Mark them for Steam, play them, install packages.")
         self.settings_card = Card("Settings", "The picture, the speed and the sound.")
         self.log_card = Card("Log", "RPCS3's folder, and this app's log.")
         for card in (self.rpcs3_card, self.games_card, self.settings_card, self.log_card):
@@ -298,14 +304,14 @@ class MainWindow(PortableWindow):
         self.pane.column.addWidget(self.status)
         self.settings_pane = SettingsPane()
         self.games_pane = ListPane("Your games", "Your games", GAMES_INFO)
-        self.browse_pane = ListPane("Choose a folder", "Choosing a folder or a file", BROWSE_INFO)
         self.key_pane = KeyPane()
         self.log_pane = LogPane()
-        for pane in (self.pane, self.games_pane, self.settings_pane, self.log_pane, self.key_pane, self.browse_pane):
+        self.keep_pane = ListPane("Remove", "Deciding what to keep", KEEP_INFO)
+        for pane in (self.pane, self.games_pane, self.settings_pane, self.log_pane, self.key_pane, self.keep_pane):
             self.panes.addWidget(pane)
         self.cards = {self.pane: self.rpcs3_card, self.games_pane: self.games_card,
                       self.settings_pane: self.settings_card, self.log_pane: self.log_card,
-                      self.key_pane: self.games_card, self.browse_pane: self.games_card}
+                      self.key_pane: self.games_card, self.keep_pane: self.games_card}
         body.addWidget(self.panes, 1)
         page.addLayout(body, 1)
         page.addSpacing(px(8))
@@ -315,7 +321,7 @@ class MainWindow(PortableWindow):
         self.worker = _Worker()
         self.worker.done.connect(self._done)
         self.worker.said.connect(self._said)
-        self.rpcs3_card.focused.connect(lambda: self.show_pane(self.pane))
+        self.rpcs3_card.focused.connect(self.show_rpcs3)
         self.rpcs3_card.activated.connect(self.main_action)
         self.settings_card.focused.connect(lambda: self.show_pane(self.settings_pane))
         self.settings_card.activated.connect(self.focus_settings)
@@ -325,7 +331,7 @@ class MainWindow(PortableWindow):
         self.log_card.activated.connect(self.view_log)
         self.log_pane.tapped.connect(self.view_log)
         self.games_pane.list.picked.connect(self.game_picked)
-        self.browse_pane.list.picked.connect(self.browse_picked)
+        self.keep_pane.list.picked.connect(self.toggle_keep)
         self.confirm_key = False                        # Remove key pressed once
         for setting in ALL_SETTINGS:
             self.settings_pane.pills[setting.key].activated.connect(lambda s=setting: self.step_setting(s))
@@ -359,6 +365,7 @@ class MainWindow(PortableWindow):
         self.refresh()
         self.refresh_games()
         self.rpcs3_card.setFocus()
+        self.take_firmware()
 
     def update_status(self) -> None:
         self.header.set_status([*status_clock(), power.text(self.battery())])   # the battery last (owner, 30-10-2026)
@@ -368,6 +375,27 @@ class MainWindow(PortableWindow):
         self.hdd0_game, self.dev_flash = userdata.drives(self.home)
         self.firmware = userdata.firmware_version(self.dev_flash)
         self.known = list(userdata.known_games(self.home).values())
+
+    def show_rpcs3(self) -> None:
+        self.show_pane(self.pane)
+        self.take_firmware()
+
+    def take_firmware(self) -> None:
+        """The firmware put in Games\\PS3\\Firmware (owner, 01-11-2026: taken in automatically) given to RPCS3 while
+        it is installed and closed and the app is not busy, once per file: a file whose version is installed already
+        is left alone, and so is the file given to RPCS3 last, as it is (FIRMWARE_TAKEN, its name, size and time), so
+        one RPCS3 refused is not given again on every focus; a changed or other file is."""
+        if self.busy or not emulator.installed(self.home):
+            return
+        pup = library.firmware_file(self.user_home)
+        key = library.file_key(pup) if pup is not None else ""
+        if not key or key == self.settings.value(FIRMWARE_TAKEN, ""):
+            return
+        version = userdata.pup_version(pup)
+        if version and version == self.firmware or self.running(self.home):
+            return
+        self.settings.setValue(FIRMWARE_TAKEN, key)
+        self.install_firmware(pup)
 
     def prepare(self) -> bool:
         """RPCS3's files brought to what the app owns (userdata.prepare_gui and write_pads) while RPCS3 is installed
@@ -391,6 +419,8 @@ class MainWindow(PortableWindow):
         """The status line (amber), A's entry (Install) and Y's (Update); "" leaves either out."""
         if self.busy and self._job == "steam":
             return "Steam's shortcuts are being changed (Your games).", "", ""
+        if self.busy and self._job == "delete":
+            return "Files are being deleted (Your games).", "", ""
         if self.busy and self._job in ("firmware", "packages"):
             return self.stage, "", ""
         if self.busy:
@@ -408,7 +438,8 @@ class MainWindow(PortableWindow):
             return (f"RPCS3 needs Microsoft's Visual C++ runtime ({', '.join(missing)} missing in System32): "
                     "install vc_redist.x64.exe from Microsoft, then open the app again.", "", "")
         if not self.firmware:
-            return "No firmware yet: the LB button takes the PS3UPDAT.PUP you downloaded.", "", ""
+            return (f"No firmware yet: put PS3UPDAT.PUP in {private(library.firmware_home(self.user_home))}, and "
+                    "RPCS3 installs it.", "", "")
         return "", "", ""
 
     def rows(self) -> list[tuple[str, str]]:
@@ -440,6 +471,8 @@ class MainWindow(PortableWindow):
         if self.confirm_remove:
             status = "Press the X button again to remove RPCS3: its folder, with the firmware and your saves, stays."
         self.status.setText(self.message or status)
+        if self.busy and self._job == "packages":
+            self.games_pane.status.setText(status)      # the packages are installed from Your games: the run there
         self.refresh_settings()
         self.update_legend()
 
@@ -464,8 +497,8 @@ class MainWindow(PortableWindow):
 
     def legend_items(self) -> list[tuple[str, str]]:
         """The legend for the pane that shows: its actions on the controller's buttons, A too (a tap on an entry does
-        the same), then core's Menu Info, B Back (in a pane, and on the folders, the browser, the key page and the
-        whole log) and View Exit. A press that cannot act now says why on the pane's status line."""
+        the same), then core's Menu Info, B Back (in a pane, and on the key page and the whole log) and View Exit. A
+        press that cannot act now says why on the pane's status line."""
         if self.close_asked:
             return [(VIEW, "Press again to exit")]
         pane = self.panes.currentWidget()
@@ -475,26 +508,14 @@ class MainWindow(PortableWindow):
             installed = not self.busy and bool(emulator.installed(self.home))
             items = [*([("A", main)] if main else []),
                      *([("X", "Press again" if self.confirm_remove else "Remove RPCS3")] if installed else []),
-                     *([("Y", other)] if other else []),
-                     *([("LB", "Firmware"), ("RB", "Packages")] if installed else [])]
+                     *([("Y", other)] if other else [])]
         elif pane is self.games_pane:
-            if self.games_view != GAMES_VIEW:
-                items = [("A", "Choose"), ("LB", "Games")]
+            focused = self.games_pane.list.focused()
+            if focused.startswith("pkg:"):
+                items = [("A", "Install"), ("X", "Install all"), ("Y", "Update Steam"), ("LB", "Steam artwork")]
             else:
-                items = [("A", "Steam mark"), *([("X", "Play")] if self.games_pane.list.focused() else []),
-                         ("Y", "Update Steam"), ("LB", "Folders")]
-            items.append(("RB", "Steam artwork"))
-        elif pane is self.browse_pane:
-            focused = self.browse_pane.list.focused()
-            on_file = focused.startswith("file:")
-            items = [("A", "Install" if on_file else "Open")]
-            if self.browsing == FOLDER:
-                items.append(("X", "Add this folder"))
-            elif self.browsing == PACKAGES:
-                marked = len(self.picked_files)
-                items.append(("X", f"Install marked ({marked})" if marked else "Install from this folder"))
-                if on_file:
-                    items.append(("Y", "Unmark" if focused in self.picked_files else "Mark"))
+                items = [("A", "Steam mark"), *([("X", "Play")] if focused else []), ("Y", "Update Steam"),
+                         ("LB", "Steam artwork"), *([("RB", "Remove game")] if focused else [])]
         elif pane is self.settings_pane:
             items = [("A", "Change"), ("LB", "Previous tab"), ("RB", "Next tab")]
         elif pane is self.log_pane:
@@ -502,8 +523,11 @@ class MainWindow(PortableWindow):
         elif pane is self.key_pane:
             items = [("A", "Save"), ("X", "Paste"), ("Y", "Press again" if self.confirm_key else "Remove key"),
                      KEYBOARD]
-        on_a_page = (pane in (self.key_pane, self.browse_pane) or self.log_pane.viewing
-                     or (pane is self.games_pane and self.games_view == FOLDERS))
+        elif pane is self.keep_pane:
+            item = next((i for i in self.keep_items if i.key == self.keep_pane.list.focused()), None)
+            items = [*([("A", "Keep" if item.delete else "Delete")] if item is not None else []),
+                     ("X", "Delete marked")]
+        on_a_page = pane in (self.key_pane, self.keep_pane) or self.log_pane.viewing
         return [*items, *self.common_items(True if on_a_page else None)]
 
     def update_legend(self) -> None:
@@ -516,14 +540,21 @@ class MainWindow(PortableWindow):
 
     # Your games
 
+    def game_folders(self) -> list[Path]:
+        """The app's own Games\\PS3 folders (made when missing): the user's, then each SD card's."""
+        return library.fixed(self.user_home, self.drives)
+
     def scan(self) -> list[Game]:
-        """The games in the chosen folders, installed in RPCS3 and known to it."""
-        return scan(library.folders(self.settings), self.hdd0_game, self.known)
+        """The games in the app's Games\\PS3 folders, installed in RPCS3 and known to it."""
+        return scan(self.game_folders(), self.hdd0_game, self.known)
 
     def refresh_games(self, in_steam: dict[str, str] | None = None) -> None:
-        """The games, which are in Steam (*in_steam* when given: what Update Steam read back, else Steam's file now),
-        and the list as the view shows it."""
+        """The games, the packages and licenses that wait, which games are in Steam (*in_steam* when given: what
+        Update Steam read back, else Steam's file now), and the list."""
         self.games = self.scan()
+        self.packages, self.licenses = userdata.waiting(self.game_folders(), self.hdd0_game.parent)
+        kept = self.kept_packages()
+        self.packages = [p for p in self.packages if library.kept_key(p.path) not in kept]   # the user kept them
         if in_steam is not None:
             self.in_steam = in_steam
         else:
@@ -545,22 +576,21 @@ class MainWindow(PortableWindow):
 
     def show_games(self) -> None:
         pane = self.games_pane
-        chosen = library.folders(self.settings)
+        own = self.game_folders()
         in_steam = sum(1 for g in self.games if str(g.eboot) in self.in_steam)
-        pane.summary.setText(f"{len(self.games)} game(s) in {len(chosen)} folder(s) and in RPCS3"
+        waiting = len(self.packages) + len(self.licenses)
+        pane.summary.setText(f"{len(self.games)} game(s) in {len(own)} folder(s) and in RPCS3"
+                             + (f", {waiting} to install" if waiting else "")
                              + (f", {in_steam} in Steam" if self.steam_dir is not None else
                                 ". Steam was never started on this device: start it once to put games in it."))
-        if self.games_view == FOLDERS:
-            rows = [(f"folder:{f}", ("Press A again to take it off the list" if self.forget_asked == str(f)
-                                     else f"{private(f)}  ·  {len(scan([f]))} game(s)")) for f in chosen]
-            rows += [(f"add:{p}", f"+ Add {private(p)}") for p in library.suggested(chosen, self.user_home, self.drives)]
-            rows.append((BROWSE_KEY, "+ Browse to a folder…"))
-        else:
-            rows = [(str(g.eboot), self.game_text(g)) for g in self.games]
-            if not rows:
-                pane.status.setText(pane.status.text() or "No games yet: the LB button shows your game folders, "
-                                                           "to add the one your disc games are in; the RB button "
-                                                           "on the RPCS3 pane installs packages.")
+        rows = [(str(g.eboot), self.game_text(g)) for g in self.games]
+        rows += [(f"pkg:{p.path}", "  ·  ".join(t for t in (p.path.stem, p.serial, "PKG update" if p.patch else "PKG")
+                                               if t)) for p in self.packages]
+        rows += [(f"pkg:{p}", f"{p.name}  ·  License") for p in self.licenses]   # short, or the row is cut off
+        if not rows:
+            pane.status.setText(pane.status.text() or
+                                f"No games yet: put your disc games, .pkg files and .rap licenses in "
+                                f"{private(own[0])}, then the X button installs the packages.")
         pane.list.set_items(rows)
         self.update_legend()
 
@@ -573,48 +603,12 @@ class MainWindow(PortableWindow):
         return "  ·  ".join(p for p in parts if p)
 
     def game_picked(self, key: str) -> None:
-        """A on a row: a game's Steam mark, a folder's second press, a place to add, or the browser."""
-        if key == BROWSE_KEY:
-            self.show_browser(FOLDER)
-        elif key.startswith("add:"):
-            self.add_folder(Path(key[4:]))
-        elif key.startswith("folder:"):
-            self.forget_folder(Path(key[7:]))
+        """A on a row: a game's Steam mark, or a package or license installed."""
+        if key.startswith("pkg:"):
+            path = Path(key[4:])
+            self.install_waiting([p for p in self.packages if p.path == path], [p for p in self.licenses if p == path])
         else:
             self.mark_game(key)
-
-    def toggle_folders(self) -> None:
-        self.games_view = GAMES_VIEW if self.games_view == FOLDERS else FOLDERS
-        self.forget_asked = ""
-        self.games_pane.status.setText("")
-        self.show_games()
-        self.show_pane(self.games_pane)
-        self.focus_list(self.games_pane)
-
-    def add_folder(self, folder: Path) -> None:
-        chosen = library.folders(self.settings)
-        if str(folder) not in {str(f) for f in chosen}:
-            library.set_folders(self.settings, chosen + [folder])
-        self.refresh_games()
-        found = sum(1 for g in self.games if g.folder == folder or folder in g.eboot.parents)
-        self.games_pane.status.setText(f"{folder.name or folder} is a game folder now: {found} game(s) in it.")
-        self.log.info(f"Game folder added: {folder} ({found} game(s)).")
-
-    def forget_folder(self, folder: Path) -> None:
-        """A on a folder asks for a second press (no dialog on a handheld); the second takes it off the list."""
-        if self.forget_asked != str(folder):
-            self.forget_asked = str(folder)
-            self.confirm_timer.start()
-            self.show_games()
-            self.games_pane.list.pills[f"folder:{folder}"].setFocus()
-            return
-        self.forget_asked = ""
-        library.set_folders(self.settings, [f for f in library.folders(self.settings) if f != folder])
-        self.refresh_games()
-        self.games_pane.status.setText(f"{folder.name or folder} is no longer a game folder; its games stay where "
-                                       "they are.")
-        self.log.info(f"Game folder taken off the list: {folder}.")
-        self.focus_list(self.games_pane)
 
     def play_game(self) -> None:
         """X on a game: started through Steam (owner, 29-10-2026), which starts RPCS3 with it full screen as its
@@ -663,109 +657,190 @@ class MainWindow(PortableWindow):
         self.games_pane.status.setText(f"Starting {game.title} in RPCS3… {play.QUIT_HINT}")
         self.log.info(f"Starting {game.title} in RPCS3, without Steam.")
 
-    # The browser (core's browse): a game folder, the firmware file in Downloads, or a folder with packages
+    # The packages and licenses in the game folders, and Remove game
 
-    def show_browser(self, looking_for: str) -> None:
-        """The browser for *looking_for*, opened where the last one of its kind was left (owner, 29-10-2026), else
-        in Downloads (the firmware, the packages) or at the places (a game folder)."""
-        self.browsing = looking_for
-        self.picked_files, self.marks_in = set(), None
-        start = browse.places(self.user_home, self.roots)
-        downloads = (self.user_home or Path.home()) / "Downloads"
-        remembered = browse.remembered(self.settings, BROWSE_KEYS[looking_for])
-        at = remembered or (downloads if downloads.is_dir() else None)
-        if looking_for == FIRMWARE:
-            self.browser = browse.Browser(start, userdata.FIRMWARE_SUFFIXES, at)
-            self.browse_pane.heading.setText("Choose the firmware file")
-            self.cards[self.browse_pane] = self.rpcs3_card
-        elif looking_for == PACKAGES:
-            self.browser = browse.Browser(start, userdata.PACKAGE_SUFFIXES + userdata.LICENSE_SUFFIXES, at)
-            self.browse_pane.heading.setText("Choose the folder with your packages")
-            self.cards[self.browse_pane] = self.rpcs3_card
+    def install_waiting(self, packages: list[userdata.PackageInfo], licenses: list[Path]) -> None:
+        """A on a PKG or a License row, or X Install all (owner, 30-10-2026: drop the packages in the folder, the
+        manager takes care of them): through RPCS3 itself, without its window (--headless --installpkg), once per
+        file: the licenses (.rap, .edat) first, which RPCS3 copies into its exdata, then the packages in
+        userdata.install_order (the games and DLC, then the updates: an update needs its game installed), each into
+        RPCS3's dev_hdd0\\game. RPCS3's exit code says nothing of the outcome, so each run's result is read from
+        RPCS3's log, and the games and licenses that came are counted. A package RPCS3 installed without a problem
+        is not deleted by itself (owner, 01-11-2026: before deleting anything, let the user decide what to keep): the
+        keep page lists them when the job ends (show_installed); the licenses stay."""
+        status = self.games_pane.status
+        if self.busy:
+            status.setText(BUSY)
+            return
+        if not emulator.installed(self.home):
+            status.setText(NEEDS_RPCS3)
+            return
+        if self.running(self.home):
+            status.setText("RPCS3 is open: close it first; it installs while it is closed.")
+            return
+        if not packages and not licenses:
+            status.setText(NOTHING_TO_INSTALL)
+            return
+        self.prepare()
+        ordered = [*licenses, *(info.path for info in userdata.install_order([p.path for p in packages]))]
+        what = " and ".join(part for part in (f"{len(packages)} package(s)" if packages else "",
+                                              f"{len(licenses)} license(s)" if licenses else "") if part)
+        name = ordered[0].name if len(ordered) == 1 else "the Games\\PS3 folders"
+        hdd0, home, run = self.hdd0_game, self.home, self.run_headless
+        log_path = userdata.rpcs3_log(home)
+        before = _packages_in(hdd0)
+
+        def job() -> tuple[bool, str, list[Path]]:
+            report = userdata.InstallReport()
+            installed: list[Path] = []
+            for n, file in enumerate(ordered, 1):
+                if len(ordered) > 1:
+                    self.stage = (f"RPCS3 installs {n} of {len(ordered)}: {file.name}, without its window… a large "
+                                  "package takes minutes.")
+                try:
+                    run(home, "--installpkg", str(file))
+                except OSError as error:
+                    return False, f"RPCS3 could not be started: {error}", installed
+                one = userdata.read_install_report(log_path)
+                report.extend(one)
+                if file.suffix.lower() in userdata.PACKAGE_SUFFIXES and one.installed and not one.problems:
+                    installed.append(file)
+            games, copied = _packages_in(hdd0)
+            ok, text = install_message(report, len(games - before[0]), len(copied - before[1]), name)
+            return ok, text, installed
+        self.busy, self.message = True, ""
+        self._job = "packages"
+        self.stage = (f"RPCS3 installs {what}, without its window… it starts once per file, and a large package "
+                      "takes minutes.")
+        self.progress_timer.start()                     # the line says which file it is on
+        self.refresh()
+        self.log.info(f"RPCS3 installs {what}: {', '.join(str(f) for f in ordered)}.")
+        self.worker.run(job)
+
+    def remove_game(self) -> None:
+        """RB on a game (owner, 30-10-2026: a game that no longer plays goes): the keep page lists what would go
+        (owner, 01-11-2026: before deleting anything, let the user decide what to keep): a disc game's folder in
+        Games\\PS3 and its update in dev_hdd0\\game, or an installed game's folder there (library.removal), and its
+        Steam shortcut. Its saves and the licenses are never listed: they stay in RPCS3's folder."""
+        key = self.games_pane.list.focused()
+        game = next((g for g in self.games if str(g.eboot) == key), None)
+        if game is None:
+            return
+        if self.busy:
+            self.games_pane.status.setText(BUSY)
+            return
+        if self.running(self.home):
+            self.games_pane.status.setText("RPCS3 is open: quit the game first, then remove it.")
+            return
+        folders, why = library.removal(game, self.game_folders(), self.games, self.hdd0_game)
+        if not folders:
+            self.games_pane.status.setText(private(why))
+            return
+        if game.disc:
+            labels = [f"{folders[0].name}, the game", *(f"{f.name}, its update in RPCS3" for f in folders[1:])]
         else:
-            self.browser = browse.Browser(start, (), remembered)
-            self.browse_pane.heading.setText("Choose a folder")
-            self.cards[self.browse_pane] = self.games_card
-        self.browse_pane.status.setText("")
-        self.show_pane(self.browse_pane)
-        self.show_browse()
+            labels = [f"{folders[0].name}, the game in RPCS3 with its update and add-ons"]
+        items = [keep.Item(str(f), label, (f,)) for f, label in zip(folders, labels)]
+        if key in self.in_steam and self.steam_dir is not None:
+            items.append(keep.Item(STEAM_ITEM, "Steam shortcut"))
+        self.show_keep(f"Remove {game.title}", items, game)
 
-    def show_browse(self) -> None:
-        path = self.browser.path if self.browser is not None else None
-        hint = {FIRMWARE: "Where is PS3UPDAT.PUP? Open the folder you downloaded it into, then the A button on it.",
-                PACKAGES: "Where are your packages? Open the folder with the .pkg files (and the .rap licenses), "
-                          "then the X button; the Y button marks some of them first."}.get(self.browsing,
-                                                    "Where are your games? Open a place, then the folder they are in.")
-        self.browse_pane.summary.setText(wrappable(path) if path is not None else hint)
-        self.browse_pane.list.set_items(self.browse_rows())
-        self.focus_list(self.browse_pane)
+    def show_installed(self, packages: list[Path]) -> None:
+        """The packages RPCS3 installed without a problem, on the keep page (owner, 01-11-2026): each marked Delete
+        at first; B keeps them all. They are kept in the settings already (PACKAGES_KEPT), so one kept is no row of
+        Your games and X Install all leaves it alone, until the file changes."""
+        self.set_kept(self.kept_packages() | {library.kept_key(p) for p in packages})
+        self.refresh_games()
+        self.show_keep("Installed: delete the packages?",
+                       [keep.Item(str(p), f"{p.name}, installed in RPCS3", (p,)) for p in packages], None)
+
+    # The keep page (core's keep): what would go, a row each, every one marked Delete at first
+
+    def show_keep(self, heading: str, items: list[keep.Item], game: Game | None) -> None:
+        keep.measure(items)
+        self.keep_items, self.keep_game = items, game
+        self.keep_pane.heading.setText(heading)
+        self.keep_pane.status.setText("")
+        self.show_keep_rows()
+        self.show_pane(self.keep_pane)
+        self.focus_list(self.keep_pane)
         self.update_legend()
 
-    def browse_rows(self) -> list[tuple[str, str]]:
-        """The browser's rows, a file Y marked with a ✓; the marks go when another folder opens."""
-        if self.browser is None:
-            return []
-        if self.browser.path != self.marks_in:
-            self.picked_files, self.marks_in = set(), self.browser.path
-        return [(key, f"✓ {text}" if key in self.picked_files else text) for key, text in self.browser.rows()]
+    def show_keep_rows(self) -> None:
+        self.keep_pane.summary.setText(f"The X button deletes the rows marked Delete and frees "
+                                       f"{keep.human(keep.total(self.keep_items))}; the A button keeps a row. The B "
+                                       "button goes back and deletes nothing.")
+        self.keep_pane.list.set_items(keep.rows(self.keep_items))
 
-    def mark_file(self) -> None:
-        """Y on a package or a license in the packages browser: marked for X, or the mark taken away (owner,
-        29-10-2026: several packages at once, not one by one)."""
-        key = self.browse_pane.list.focused()
-        if not key.startswith("file:"):
-            self.browse_pane.status.setText(NO_FILE)
+    def toggle_keep(self, key: str) -> None:
+        """A on a row: Delete becomes Keep and back; the focus stays on the row."""
+        if keep.toggle(self.keep_items, key) is None:
             return
-        self.picked_files ^= {key}
-        self.browse_pane.status.setText("")
-        self.browse_pane.list.set_items(self.browse_rows())     # the focus stays on the row
+        self.show_keep_rows()
+        self.keep_pane.list.pills[key].setFocus()
         self.update_legend()
 
-    def browse_picked(self, key: str) -> None:
-        if self.browser is None:
-            return
-        picked = self.browser.open(key)
-        if picked is not None:
-            browse.remember(self.settings, BROWSE_KEYS[self.browsing], picked.parent)
-        if picked is not None and self.browsing == FIRMWARE:
-            self.leave_browser()
-            self.install_firmware(picked)
-            return
-        if picked is not None and self.browsing == PACKAGES:
-            self.leave_browser()
-            self.install_packages(picked.parent, [picked])
-            return
-        self.browse_pane.status.setText("")
-        self.show_browse()
+    def leave_keep(self, said: str = "") -> None:
+        self.keep_items, self.keep_game = [], None
+        self.show_pane(self.games_pane)
+        self.games_pane.status.setText(said)
+        self.focus_list(self.games_pane)
 
-    def add_browsed(self) -> None:
-        """X in the browser: the open folder becomes a game folder (back to the folders), or its packages are
-        installed, the marked ones only when Y marked some (back to the RPCS3 pane)."""
-        if self.browser is None or self.browser.path is None:
-            self.browse_pane.status.setText(OPEN_A_FOLDER)
-            return
-        folder = self.browser.path
-        if self.browsing in BROWSE_KEYS:
-            browse.remember(self.settings, BROWSE_KEYS[self.browsing], folder)
-        if self.browsing == PACKAGES:
-            marked = [Path(key[5:]) for key in sorted(self.picked_files)]
-            self.leave_browser()
-            self.install_packages(folder, marked or None)
-        elif self.browsing == FOLDER:
-            self.leave_browser()
-            self.add_folder(folder)
+    def back_from_keep(self) -> None:
+        """B on the keep page: nothing deleted."""
+        packages = self.keep_game is None
+        self.leave_keep("Nothing was deleted." + (" The packages stay, and are not listed again." if packages else ""))
 
-    def leave_browser(self) -> None:
-        self.browser = None
-        self.picked_files, self.marks_in = set(), None
-        if self.browsing == FOLDER:
-            self.games_view = FOLDERS
-            self.show_games()
-            self.show_pane(self.games_pane)
-            self.focus_list(self.games_pane)
-        else:
-            self.show_pane(self.pane)
-            self.rpcs3_card.setFocus()
+    def delete_marked(self) -> None:
+        """X on the keep page: the rows marked Delete go, off the window's thread: the Steam shortcut first (Steam
+        closed for it), then the files and folders (keep.delete, read-only ones too); then back to Your games, where
+        the status line says what was deleted and what was kept."""
+        chosen = keep.chosen(self.keep_items)
+        if not chosen:
+            self.keep_pane.status.setText(NOTHING_MARKED)
+            return
+        if self.busy:
+            self.keep_pane.status.setText(BUSY)
+            return
+        if self.running(self.home):
+            self.keep_pane.status.setText("RPCS3 is open: quit the game first, then delete.")
+            return
+        game = self.keep_game
+        kept = [i.label for i in self.keep_items if not i.delete]
+        deleted = [i.label for i in chosen]
+        paths = [p for i in chosen for p in i.paths]
+        steam_dir = self.steam_dir if game is not None and any(i.key == STEAM_ITEM for i in chosen) else None
+        closed, program, existing = self.steam_closed, emulator.program(self.home), self.in_steam
+        what = f"{game.title}: " if game is not None else ""
+        saves = " Its saves stay in RPCS3's folder." if game is not None else ""
+
+        def job() -> tuple[bool, str, dict[str, str] | None]:
+            found = None
+            if steam_dir is not None:
+                ok, said, found = library.update_steam(steam_dir, [], [game], program, LOGO_PATH, existing, closed)
+                if not ok:
+                    return False, f"{what}nothing was deleted. {said}", None
+            failed = keep.delete(paths)
+            rest = f" Kept: {', '.join(kept)}." if kept else ""
+            if failed:
+                return False, f"{what}not everything was deleted: not {', '.join(failed)}.{rest}{saves}", found
+            return True, f"{what}deleted {', '.join(deleted)}.{rest}{saves}", found
+        self.deleting = paths
+        self.leave_keep(f"Deleting {', '.join(deleted)}…")
+        self.busy, self.message = True, ""
+        self._job = "delete"
+        self.log.info(f"Deleting {', '.join(str(p) for p in paths)}"
+                      + (", and a Steam shortcut." if steam_dir is not None else "."))
+        self.worker.run(job)
+
+    def kept_packages(self) -> set[str]:
+        """The installed packages the user kept (library.kept_key each), from the app's settings."""
+        stored = self.settings.value(PACKAGES_KEPT, [])
+        stored = [stored] if isinstance(stored, str) else list(stored or [])
+        return {s for s in stored if s}
+
+    def set_kept(self, kept: set[str]) -> None:
+        self.settings.setValue(PACKAGES_KEPT, sorted(kept))
 
     # The SteamGridDB key (the BC250 app's Covers… and core's covers.edit_key, as a page)
 
@@ -846,12 +921,15 @@ class MainWindow(PortableWindow):
         pane = self.panes.currentWidget()
         if pane is self.pane:
             self.remove_action()
-        elif pane is self.browse_pane:
-            self.add_browsed()
         elif pane is self.key_pane:
             self.paste_key()
-        elif pane is self.games_pane and self.games_view == GAMES_VIEW:
-            self.play_game()
+        elif pane is self.keep_pane:
+            self.delete_marked()
+        elif pane is self.games_pane:
+            if self.games_pane.list.focused().startswith("pkg:"):
+                self.install_waiting(self.packages, self.licenses)
+            else:
+                self.play_game()
 
     def y_action(self) -> None:
         pane = self.panes.currentWidget()
@@ -859,26 +937,20 @@ class MainWindow(PortableWindow):
             self.other_action()
         elif pane is self.games_pane:
             self.update_steam()
-        elif pane is self.browse_pane and self.browsing == PACKAGES:
-            self.mark_file()
         elif pane is self.key_pane:
             self.remove_key()
 
     def lb_action(self) -> None:
         pane = self.panes.currentWidget()
-        if pane is self.pane:
-            self.choose_firmware()
-        elif pane is self.games_pane:
-            self.toggle_folders()
+        if pane is self.games_pane:
+            self.show_key()
         elif pane is self.settings_pane:
             self.settings_pane.tabs.step(-1)
 
     def rb_action(self) -> None:
         pane = self.panes.currentWidget()
-        if pane is self.pane:
-            self.choose_packages()
-        elif pane is self.games_pane:
-            self.show_key()
+        if pane is self.games_pane:
+            self.remove_game()
         elif pane is self.settings_pane:
             self.settings_pane.tabs.step(1)
 
@@ -902,9 +974,6 @@ class MainWindow(PortableWindow):
         if self.busy:
             if self._job != "steam":                    # Steam's own job says so on the line already
                 self.games_pane.status.setText(BUSY)
-            return
-        if self.games_view != GAMES_VIEW:
-            self.games_pane.status.setText(NOT_THE_GAMES)
             return
         if self.steam_dir is None:
             self.games_pane.status.setText(NO_STEAM)
@@ -937,8 +1006,8 @@ class MainWindow(PortableWindow):
             rows += [("Firmware", self.firmware or "none yet"),
                      ("Installed games", str(len(installed_games(self.hdd0_game)))),
                      ("Saves", str(userdata.saves(self.hdd0_game)))]
+        rows.append(("Games", wrappable(self.game_folders()[0])))   # Firmware is in it
         self.log_pane.fill(rows, [private(line) for line in self.log_lines()[-LOG_LINES:]])
-
     def log_lines(self) -> list[str]:
         if self.log_path is None:
             return []
@@ -1014,6 +1083,19 @@ class MainWindow(PortableWindow):
         self.progress_timer.stop()
         if self.close_asked:
             self._confirm_over()
+        if job == "delete":
+            ok, text, found = result if isinstance(result, tuple) else (False, f"Nothing was deleted: {result}", None)
+            self.games_pane.status.setText(private(text))
+            (self.log.info if ok else self.log.error)(text)
+            gone = {library.kept_path(p) for p in self.deleting if not p.exists()}
+            if gone:                                    # a package deleted: no longer kept
+                self.set_kept({k for k in self.kept_packages() if k.split("|")[0] not in gone})
+            self.deleting = []
+            self.refresh()
+            self.refresh_games(found)
+            if self.panes.currentWidget() is self.games_pane:
+                self.focus_list(self.games_pane)
+            return
         if job == "install":
             if isinstance(result, Exception):
                 self.message = private(f"RPCS3 could not be installed: {result}")
@@ -1022,13 +1104,21 @@ class MainWindow(PortableWindow):
                 self.message = f"RPCS3 {result} is installed."
                 self.log.info(f"RPCS3 {result} installed.")
                 self.prepare()                          # before its first start
-        else:                                           # the firmware or the packages: (ok, what to say)
-            ok, text = result if isinstance(result, tuple) else (False, f"RPCS3 could not be started: {result}")
-            self.message = text
+        else:                                           # the firmware or the packages: (ok, what to say[, installed])
+            ok, text, *rest = result if isinstance(result, tuple) else (False, f"RPCS3 could not be started: {result}")
+            installed = rest[0] if job == "packages" and rest else []
+            if job == "packages":
+                self.games_pane.status.setText(private(text))
+            else:
+                self.message = text
             (self.log.info if ok else self.log.error)(text)
         self.read_rpcs3()
         self.refresh()
         self.refresh_games()
+        if job == "install":
+            self.take_firmware()                        # RPCS3 is there now: the firmware put in for it
+        elif job == "packages" and installed:
+            self.show_installed(installed)              # the user decides what to keep (owner, 01-11-2026)
 
     def _steam_done(self, result: object) -> None:
         """What Update Steam did, and the games in Steam as it read them back right after the write (PCSX2
@@ -1099,21 +1189,10 @@ class MainWindow(PortableWindow):
         self.refresh()
         return False
 
-    def choose_firmware(self) -> None:
-        """LB Firmware: the browser in Downloads, showing the .PUP files; A on one gives it to RPCS3."""
-        if self._ready_for_rpcs3():
-            self.message = ""
-            self.show_browser(FIRMWARE)
-
-    def choose_packages(self) -> None:
-        """RB Packages: the browser showing the packages and the licenses; X installs the open folder's, A a file."""
-        if self._ready_for_rpcs3():
-            self.message = ""
-            self.show_browser(PACKAGES)
-
     def install_firmware(self, pup: Path) -> None:
-        """Through RPCS3 itself, without its window (--headless --installfw), as the window's job; the result from
-        RPCS3's log and the firmware's version file."""
+        """The firmware put in Games\\PS3\\Firmware (take_firmware) through RPCS3 itself, without its window
+        (--headless --installfw), as the window's job; the result from RPCS3's log and the firmware's version file.
+        The file stays where it is."""
         if not self._ready_for_rpcs3():
             return
         self.prepare()
@@ -1138,54 +1217,8 @@ class MainWindow(PortableWindow):
         self.log.info(f"RPCS3 installs the firmware {pup}.")
         self.worker.run(job)
 
-    def install_packages(self, folder: Path, files: list[Path] | None = None) -> None:
-        """Through RPCS3 itself, without its window (--headless --installpkg), once per file: the licenses (.rap,
-        .edat) first, which RPCS3 copies into its exdata, then the packages in userdata.install_order (the games and
-        DLC, then the updates: an update needs its game installed), each into RPCS3's dev_hdd0\\game; *files* names
-        the files instead of the folder's own. RPCS3's exit code says nothing of the outcome, so each run's result is
-        read from RPCS3's log, and the games and licenses that came are counted."""
-        if not self._ready_for_rpcs3():
-            return
-        if files is None:
-            pkgs, licenses = userdata.packages(folder)
-        else:
-            pkgs = [f for f in files if f.suffix.lower() in userdata.PACKAGE_SUFFIXES]
-            licenses = [f for f in files if f.suffix.lower() in userdata.LICENSE_SUFFIXES]
-        if not pkgs and not licenses:
-            self.message = f"No .pkg, .rap or .edat file in {folder.name or folder}."
-            self.refresh()
-            return
-        self.prepare()
-        ordered = [*licenses, *(info.path for info in userdata.install_order(pkgs))]
-        what = " and ".join(part for part in (f"{len(pkgs)} package(s)" if pkgs else "",
-                                              f"{len(licenses)} license(s)" if licenses else "") if part)
-        name, hdd0, home, run = folder.name or str(folder), self.hdd0_game, self.home, self.run_headless
-        log_path = userdata.rpcs3_log(home)
-        before = _packages_in(hdd0)
-
-        def job() -> tuple[bool, str]:
-            report = userdata.InstallReport()
-            for file in ordered:
-                try:
-                    run(home, "--installpkg", str(file))
-                except OSError as error:
-                    return False, f"RPCS3 could not be started: {error}"
-                report.extend(userdata.read_install_report(log_path))
-            games, copied = _packages_in(hdd0)
-            return install_message(report, len(games - before[0]), len(copied - before[1]), name)
-        self.busy, self.message = True, ""
-        self._job = "packages"
-        self.stage = (f"RPCS3 installs {what} from {name}, without its window… it starts once per file, and a "
-                      "large package takes minutes.")
-        self.refresh()
-        self.log.info(f"RPCS3 installs {what} from {folder}.")
-        self.worker.run(job)
-
     def _confirm_over(self) -> None:
         self.confirm_timer.stop()
-        if self.forget_asked:
-            self.forget_asked = ""
-            self.show_games()
         if self.confirm_key:
             self.confirm_key = False
             if self.key_pane.status.text().startswith("Press the Y button again"):
@@ -1201,23 +1234,17 @@ class MainWindow(PortableWindow):
     # B
 
     def on_back(self) -> None:
-        """B goes back (the suite's rule, owner 29-10-2026): the whole log to its summary, the browser a level up (from
-        the places to where it came from), the key page to Your games (nothing saved), the folders to the games, a
-        pane to its card; on a card it does nothing (View exits)."""
+        """B goes back (the suite's rule, owner 29-10-2026): the whole log to its summary, the key page to Your games
+        (nothing saved), a pane to its card; on a card it does nothing (View exits)."""
         pane = self.panes.currentWidget()
         if pane is self.log_pane and self.log_pane.viewing:
             self.log_pane.show_summary()
             self.log_card.setFocus()
             self.update_legend()
-        elif pane is self.browse_pane:
-            if self.browser is not None and self.browser.up():
-                self.show_browse()
-            else:
-                self.leave_browser()
         elif pane is self.key_pane:
             self.back_to_games()
-        elif pane is self.games_pane and self.games_view == FOLDERS:
-            self.toggle_folders()
+        elif pane is self.keep_pane:
+            self.back_from_keep()
         else:
             self.go_back()
 
@@ -1230,7 +1257,8 @@ class MainWindow(PortableWindow):
             self.message = {"steam": "Press View again to exit: Steam's shortcuts may be left half changed.",
                             "firmware": "Press View again to exit: RPCS3 goes on installing the firmware by itself.",
                             "packages": "Press View again to exit: RPCS3 goes on with the package it is on, "
-                                        "the rest waits for the next time."}.get(
+                                        "the rest waits for the next time.",
+                            "delete": "Press View again to exit: what is being deleted is left half deleted."}.get(
                 self._job, "Press View again to exit: the download stops.")
             self.refresh()                              # the legend says so too
             return

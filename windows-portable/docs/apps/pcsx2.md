@@ -6,7 +6,8 @@
 
 Gets your PS2 games ready to play from Steam with PCSX2, the PlayStation 2 emulator, and takes care of everything
 around it: it installs one tested release of PCSX2 for your own user, sets it up, takes your BIOS, finds your games
-in the folders you choose, puts them in Steam, shows your memory cards and keeps a log of what was played. You play
+in its own `Games\PS2` folder, puts them in Steam, shows your memory cards and keeps a log of what was played. You
+never choose a folder: you put the games and the BIOS in the app's folders, and it takes care of them. You play
 from Steam, and never need PCSX2's own window: a game starts alone and full screen, and when it ends you are back in
 Steam.
 
@@ -19,10 +20,9 @@ screen; **⧉** (View) exits it.
 - **The PS2's BIOS, from your own console.** PCSX2 cannot start a game without it, and it is not the app's to give.
   Dump it from your PlayStation 2 with biosdrain, a homebrew tool, as
   [PCSX2's BIOS page](https://pcsx2.net/docs/setup/bios) says, and copy the dump (a `.bin` of 4 MB, often with
-  `.nvm` and `.mec` files beside it) to the device, for instance into Downloads. **X Choose BIOS** on the PCSX2
-  card takes it from there.
-- **Your PS2 games** as disc images (ISO, CHD, CSO, ZSO or GZ), dumped from your own discs, in a folder on the device
-  or an SD card.
+  `.nvm` and `.mec` files beside it) into `Games\PS2\BIOS` on the device: the app gives it to PCSX2 by itself.
+- **Your PS2 games** as disc images (ISO, CHD, CSO, ZSO or GZ), dumped from your own discs, put in `Games\PS2` on the
+  device or on an SD card (see [Where your games go](#where-your-games-go)).
 - **Steam**, started once on the device, to play the games from Steam (optional: without Steam, **X Play** starts a
   game in PCSX2 itself).
 
@@ -62,26 +62,47 @@ PCSX2's own window is never opened: your games are on the **Your games** card.
 PCSX2 runs in **portable mode** (an empty `portable.txt` beside `pcsx2-qt.exe`): it keeps its settings, the BIOS, the
 memory cards and the save states in its own folder, not in Documents.
 
-The **BIOS** row says which dump PCSX2 uses, or **No BIOS yet** (the PCSX2 card says so too):
+The **BIOS** row says which dump PCSX2 uses, or **No BIOS yet** with the folder to put it in (the PCSX2 card and the
+status line say so too):
 
-- **X Choose BIOS** opens the app's own browser, made for the controller, in your Downloads: it shows the folders and
-  the BIOS dumps (`.bin`, `.rom`). **A** opens a folder, **B** goes a level up, and **A** on the dump chooses it: the
-  app copies it, with the files beside it under the same name (`.nvm`, `.mec`, `.erom`), into PCSX2's `bios` folder
-  and makes PCSX2 use it. The next time the browser opens in the folder you took the dump from.
-- **LB Remove BIOS** takes the dump PCSX2 uses out of that folder again, with its files. Press it twice: the first
-  press only asks, for five seconds. The dump you chose it from stays where it is; with another dump in the folder,
-  PCSX2 uses that one.
+- **The BIOS dump** (`.bin` or `.rom`) you put in `Games\PS2\BIOS` is copied by the app itself, with the files beside
+  it under the same name (`.nvm`, `.mec`, `.erom`), into PCSX2's `bios` folder, when the app opens and each time the
+  PCSX2 card gets the focus. Only what is new or changed is copied, and the status line says how many files it took.
+  When PCSX2's settings name no dump that is there, PCSX2 uses the one copied.
+- **LB Remove BIOS** shows a page of what would go: the dump PCSX2 uses in PCSX2's `bios` folder, and the one in
+  `Games\PS2\BIOS`, each with its files and its size. Nothing is deleted before you decide what to keep (see
+  [Deciding what to keep](#deciding-what-to-keep)). A copy you keep in `Games\PS2\BIOS` goes into PCSX2 again the
+  next time the PCSX2 card gets the focus. With another dump there, PCSX2 uses that one.
 
-Both work once PCSX2 is installed and not while it runs (it writes its settings back when it closes); pressed then,
-they say why. Without a BIOS no game starts from Steam: PCSX2 would stop at its own error window, so Update Steam asks
-for one first. The information says where a BIOS comes from.
+Both work once PCSX2 is installed and not while it runs (it writes its settings back when it closes); the copy waits
+until PCSX2 is closed, and **LB** pressed then says why. Without a BIOS no game starts from Steam: PCSX2 would stop at
+its own error window, so Update Steam asks for one first. The information says where a BIOS comes from.
 
 A newer PCSX2 never reaches the device by itself: a new release of PCSX2 may change how games run, so it comes only
 with a new version of PCSX2 Manager, tried first, which the portal offers as an update. Then **Y Update** puts it in.
 
+## Where your games go
+
+The app has folders of its own, which it makes when it opens; you never choose or browse to a folder:
+
+- `Games\PS2` in your user folder (`C:\Users\<you>\Games\PS2`): put your disc images there, or in folders in it, and
+  they show on **Your games**. On an SD card or a USB drive, make a folder `Games\PS2` on it, and the app looks there
+  too.
+- `Games\PS2\BIOS`: put your console's BIOS dump there, and the app copies it into PCSX2.
+
+The **Log** card shows where the folder is.
+
+```
+Games\PS2\
+├── BIOS\                     the BIOS dump you put here: SCPH-70012.bin, SCPH-70012.nvm, ...
+├── SLUS_215.53.Lumines.iso   a game you put here
+└── Puzzle\Tetris.chd         a game in a folder of its own
+```
+
 ## Your games
 
-The games are the PS2 disc images in your game folders and up to five folders below them: ISO, CHD, CSO, ZSO and GZ.
+The games are the PS2 disc images in the app's `Games\PS2` folders and up to five folders below them: ISO, CHD, CSO,
+ZSO and GZ.
 An ISO is read for its serial (SLUS-21553), and the title comes from PCSX2's own list of games; a compressed image
 is listed under its file's name. **A** on the Your games card goes to the list.
 
@@ -96,17 +117,13 @@ You play the games from Steam; the app puts them there, and starts them there wi
 - **X Play** on a game that is in Steam starts it through Steam, as its tile in Steam's library would; Steam
   starts first when it is not open. A game that is not in Steam yet says so: mark it with **A**, then
   **Y Update Steam**. On a device without Steam (not installed, or never started), **X Play** starts the game in PCSX2
-  itself, full screen, the same way Steam would. Without a BIOS, **X Play** starts nothing and says to choose one
-  first (**X Choose BIOS** on the PCSX2 card): PCSX2 cannot start a game without it.
+  itself, full screen, the same way Steam would. Without a BIOS, **X Play** starts nothing and says to put one in
+  `Games\PS2\BIOS` first: PCSX2 cannot start a game without it.
 - Steam's library opens from the portal: **RT Steam** in its bottom row.
-- **LB Folders** shows your game folders instead of the games; **LB** or **B** goes back to the games. The usual
-  places that are on the device (Games, Downloads and Documents in your user folder) and each removable drive, such as
-  an SD card, are offered as **+ Add**. **A** twice on a folder takes it off the list: the first press asks, for five
-  seconds. Its games stay where they are.
-- **+ Browse to a folder…** opens the app's own browser, made for the controller: your Games, Downloads, Documents and
-  Desktop folders and every drive first. **A** opens the folder the focus is on, **B** goes a level up (and from the
-  places back to your folders), and **X Add this folder** adds the folder that is open. The browser opens again in
-  the folder you added last, while it is there.
+- **RB Remove game** on a game shows a page of what would go: its disc image and, when it is in Steam, its shortcut
+  there. Nothing is deleted before you decide what to keep (see [Deciding what to keep](#deciding-what-to-keep)).
+  Taking the shortcut out closes Steam and starts it again. The folder the game was in stays, and your saves stay on
+  the memory cards. While PCSX2 runs, **RB** says to quit the game first.
 
 To quit a game, **hold View, LB and RB together for two seconds**: PCSX2 closes as its window would close, and you
 are back in Steam, or in the app when it started the game. It works the same in every game manager of the suite,
@@ -115,9 +132,24 @@ With **Quit with View + Menu** on (see Settings), PCSX2's own quit chord, a shor
 the game; the two-second hold works either way.
 
 The pictures in Steam are drawn from the app's icon with the game's title. With a SteamGridDB API key, Update Steam
-takes each game's pictures from SteamGridDB instead: **RB Steam artwork** opens the page that keeps the key (**X
+takes each game's pictures from SteamGridDB instead: **LB Steam artwork** opens the page that keeps the key (**X
 Paste**, **R3 ⌨**, **A Save**, **Y Remove key** twice, **B** back without saving). See
 [Steam artwork from SteamGridDB](covers.md).
+
+## Deciding what to keep
+
+The app deletes nothing of yours before you decide what to keep. **RB Remove game** and **LB Remove BIOS** open a
+page that lists what would go, a row each with its size, for example:
+
+| Row | What it is |
+| --- | --- |
+| `Delete · Lumines.iso (the disc image) · 1.2 GB` | the game's file in `Games\PS2` |
+| `Delete · The shortcut in Steam` | the game's entry in Steam's library |
+| `Delete · SCPH-70012.bin in Games\PS2\BIOS · 4.0 MB` | your BIOS dump, with its files |
+
+Every row starts as **Delete**. **A** on a row turns it to **Keep**, and back. **X Delete marked** deletes the rows
+still marked Delete and keeps the others; the status line then says what was deleted and what was kept. **B** goes
+back and deletes nothing. With every row on Keep, **X** says so and deletes nothing.
 
 ## Settings
 
@@ -206,7 +238,7 @@ cards are listed with the reason they are not read.
 ## Log
 
 PCSX2's last run as its own log tells it: when, which game, how long it was played and which controllers PCSX2
-opened; the play time PCSX2 counted in all; and the newest lines of this app's log (Steam's changes, the installs,
+opened; the play time PCSX2 counted in all; where your `Games\PS2` folder is; and the newest lines of this app's log (Steam's changes, the installs,
 the settings changed). **A View log**, or a tap on the pane, shows the whole log in the pane: the d-pad scrolls it,
 and **B** goes back.
 
@@ -249,10 +281,11 @@ remove the download.
 
 | Where | What |
 |---|---|
+| `%USERPROFILE%\Games\PS2\` | Your games; `BIOS\` in it, the BIOS dump you put there |
 | `%LOCALAPPDATA%\windows-portable-suite\windows-portable-pcsx2\app\` | The program, `PCSX2-Manager.exe` |
 | `%LOCALAPPDATA%\windows-portable-suite\windows-portable-pcsx2\emulator\` | PCSX2 (`pcsx2-qt.exe`), its settings, BIOS, memory cards and save states, and `installed.json` (the version and the files the app installed) |
 | `%LOCALAPPDATA%\windows-portable-suite\windows-portable-pcsx2\covers\` | The pictures from SteamGridDB, per game |
 | `%LOCALAPPDATA%\windows-portable-suite\windows-portable-pcsx2\windows-portable-pcsx2.log` | The log |
-| `%APPDATA%\windows-portable-suite\windows-portable-pcsx2.ini` | The settings, with your game folders |
+| `%APPDATA%\windows-portable-suite\windows-portable-pcsx2.ini` | The app's settings |
 | `%APPDATA%\windows-portable-suite\steamgriddb-key` | Your SteamGridDB API key, when you put one there |
 | Steam's `userdata\<user>\config\shortcuts.vdf` and `grid\` | The games in Steam and their pictures |

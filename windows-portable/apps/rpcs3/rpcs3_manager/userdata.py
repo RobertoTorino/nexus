@@ -427,19 +427,6 @@ def write_screen(path: Path, screen: str) -> None:
 
 # --- Packages ---------------------------------------------------------------------------------------------------
 
-def packages(folder: Path) -> tuple[list[Path], list[Path]]:
-    """(the .pkg files, the .rap and .edat licenses) in *folder* itself, by name: the files RPCS3 takes from a
-    folder (main_window::InstallPackages with gui::utils::get_dir_entries, QDir::Files: the folder's own files, not
-    its subfolders')."""
-    try:
-        found = sorted((p for p in folder.iterdir() if p.is_file()), key=lambda p: p.name.lower())
-    except OSError:
-        return [], []
-    pkgs = [p for p in found if p.suffix.lower() in PACKAGE_SUFFIXES]
-    licenses = [p for p in found if p.suffix.lower() in LICENSE_SUFFIXES]
-    return pkgs, licenses
-
-
 @dataclass(frozen=True)
 class PackageInfo:
     """What a PKG file's header says of it, unencrypted (unpkg.h: PKGHeader, then the metadata items; RPCS3's
@@ -497,6 +484,90 @@ def licenses(hdd0: Path) -> list[Path]:
         return sorted(p for p in (hdd0 / "home").glob("*/exdata/*") if p.suffix.lower() in LICENSE_SUFFIXES)
     except OSError:
         return []
+
+
+_read: dict[tuple[str, int, int], PackageInfo] = {}    # a package's header, read once while the file stays the same
+
+
+def _files(root: Path, depth: int):
+    """The packages and licenses in *root* and up to *depth* folders below it, not inside a disc game's PS3_GAME."""
+    try:
+        entries = sorted(os.scandir(root), key=lambda e: e.name.lower())
+    except OSError:
+        return
+    for entry in entries:
+        try:
+            if entry.name.lower().endswith(PACKAGE_SUFFIXES + LICENSE_SUFFIXES) and entry.is_file():
+                yield entry
+        except OSError:
+            continue
+    if depth > 0:
+        for entry in entries:
+            try:
+                inside = entry.is_dir(follow_symlinks=False)
+            except OSError:
+                continue
+            if inside and not entry.name.startswith(".") and entry.name not in ("PS3_GAME", "USRDIR"):
+                yield from _files(Path(entry.path), depth - 1)
+
+
+def waiting(folders: list[Path], hdd0: Path, depth: int = 5) -> tuple[list[PackageInfo], list[Path]]:
+    """What waits in the game folders (and up to *depth* folders below them, as games.scan looks) for RPCS3 to
+    install it (owner, 30-10-2026: drop the packages in the folder, the manager takes care of them): (the PS3
+    packages, in install_order; the .rap and .edat licenses RPCS3 does not keep yet in its exdata, by name). A
+    package installed without a problem is deleted afterwards, so the packages there all wait; a file that is no PS3
+    package is left out. A package's header is read once while the file stays the same."""
+    kept = {p.name.casefold() for p in licenses(hdd0)}
+    pkgs: dict[str, PackageInfo] = {}
+    found: dict[str, Path] = {}
+    for folder in folders:
+        for entry in _files(folder, depth):
+            path = Path(entry.path)
+            if path.suffix.lower() in LICENSE_SUFFIXES:
+                if path.name.casefold() not in kept:
+                    found.setdefault(path.name.casefold(), path)
+                continue
+            try:
+                info = entry.stat()
+            except OSError:
+                continue
+            key = (os.path.normcase(entry.path), info.st_size, info.st_mtime_ns)
+            if key not in _read:
+                _read[key] = package_info(path)
+            if _read[key].valid:
+                pkgs.setdefault(key[0], _read[key])
+    ordered = sorted(pkgs.values(), key=lambda i: (i.patch, i.path.name.lower(), str(i.path)))
+    return ordered, sorted(found.values(), key=lambda p: p.name.lower())
+
+
+# --- The firmware file ------------------------------------------------------------------------------------------
+
+PUP_MAGIC = b"SCEUF\0\0\0"
+PUP_VERSION = 0x100                     # the file in a PUP that holds its version's text
+
+
+def pup_version(path: Path) -> str:
+    """The firmware version a PUP holds ("4.92"), as RPCS3 reads it before it installs one (pup_object's file 0x100,
+    main_window::HandlePupInstallation): the header (magic "SCEUF", the package and image versions, the number of
+    files, the header's and the data's length; u64 each, big-endian), then 32 bytes per file (its ID, where its data
+    starts, its length, room). "" for a file that is no PUP or cannot be read."""
+    try:
+        with open(path, "rb") as handle:
+            head = handle.read(48)
+            if len(head) < 48 or head[:8] != PUP_MAGIC:
+                return ""
+            count = struct.unpack(">Q", head[24:32])[0]
+            for _ in range(min(count, 256)):
+                entry = handle.read(32)
+                if len(entry) < 32:
+                    return ""
+                entry_id, offset, length = struct.unpack(">QQQ", entry[:24])
+                if entry_id == PUP_VERSION:
+                    handle.seek(offset)
+                    return handle.read(min(length, 64)).decode("ascii", "replace").split("\n", 1)[0].strip()
+    except (OSError, struct.error):
+        return ""
+    return ""
 
 
 # --- RPCS3's log: what a headless install did -----------------------------------------------------------------

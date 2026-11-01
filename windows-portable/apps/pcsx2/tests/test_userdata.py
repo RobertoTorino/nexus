@@ -4,7 +4,7 @@ words: the BC250 suite's PCSX2 Manager's tests of the same functions."""
 
 from __future__ import annotations
 
-from pcsx2_manager.userdata import Session, bios_files, copy_bios, last_session, log_file, played, remove_bios
+from pcsx2_manager.userdata import Session, bios_files, bios_set, copy_bios, last_session, log_file, played
 
 
 def test_the_bios_dumps(tmp_path):
@@ -17,9 +17,9 @@ def test_the_bios_dumps(tmp_path):
     assert bios_files(folder) == [dump]
 
 
-def test_a_dump_is_copied_and_removed_with_the_files_beside_it(tmp_path):
+def test_a_dump_is_copied_and_offered_with_the_files_beside_it(tmp_path):
     """As the BC250 app's: the dump and the files under its name (any case) go into the bios folder together, and
-    come out together; others stay."""
+    Remove BIOS offers them together (bios_set); others are not among them."""
     downloads = tmp_path / "Downloads"
     downloads.mkdir()
     dump = downloads / "SCPH10000.BIN"
@@ -31,8 +31,9 @@ def test_a_dump_is_copied_and_removed_with_the_files_beside_it(tmp_path):
     assert placed == folder / "SCPH10000.BIN"
     assert sorted(p.name for p in folder.iterdir()) == ["SCPH10000.BIN", "SCPH10000.nvm"]
     assert copy_bios(placed, folder) == placed                                 # in the folder already: as it is
-    assert remove_bios(placed) == ["SCPH10000.BIN", "SCPH10000.nvm"]
-    assert list(folder.iterdir()) == [] and dump.is_file()                     # the chosen dump stays
+    assert [p.name for p in bios_set(placed)] == ["SCPH10000.BIN", "SCPH10000.nvm"]
+    assert sorted(p.name for p in folder.iterdir()) == ["SCPH10000.BIN", "SCPH10000.nvm"]      # nothing deleted
+    assert bios_set(tmp_path / "gone" / "SCPH10000.BIN") == []
 
 
 EMULOG = """\

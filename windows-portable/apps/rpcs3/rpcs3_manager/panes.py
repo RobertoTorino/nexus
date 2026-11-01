@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The panes beside the RPCS3 and Settings panes, as PPSSPP Manager has them: Your games (the games in the chosen
-folders, installed in RPCS3 and known to it, marked for Steam with A), the browser (a game folder, the firmware file,
-a folder with packages), Log (RPCS3's folder and the app's own log, read in the app) and the SteamGridDB key.
+"""The panes beside the RPCS3 and Settings panes, as PPSSPP Manager has them: Your games (the games in the app's
+Games\\PS3 folders, installed in RPCS3 and known to it, marked for Steam with A, and the packages and licenses that
+wait there), Log (RPCS3's folder and the app's own log, read in the app) and the SteamGridDB key.
 
 A long list is a ListArea: rows in a column that scrolls, the one with the focus kept in view, so the d-pad goes down
 a list of any length and a finger can drag it. Every action is a controller button in the window's legend, A too,
@@ -116,11 +116,13 @@ RPCS3_INFO = (
     "saves, its settings and the games installed from packages. The A button installs the build this version of "
     "the app was tried with; a newer RPCS3 comes with a new version of the app.\n\n"
     "RPCS3 needs the PS3's firmware (PS3UPDAT.PUP) to start any game, which the app cannot give you: download it "
-    f"from PlayStation's firmware page ({userdata.FIRMWARE_PAGE}) in a browser on this device, into Downloads, then "
-    "the LB button (Firmware) finds it there and RPCS3 installs it, without opening its window.\n\n"
-    "A game bought digitally comes as a package (.pkg), with its license (.rap) for a PSN game: put them in one "
-    "folder, then the RB button (Packages) finds the folder and RPCS3 installs them, each in a run of its own, a "
-    "game's update last; the Y button on a file marks it, and the X button then installs the marked ones only. A disc game is a folder copied from the disc (PS3_DISC.SFB and PS3_GAME): see Your games.\n\n"
+    f"from PlayStation's firmware page ({userdata.FIRMWARE_PAGE}) in a browser on this device, and put it in the "
+    "Firmware folder in Games\\PS3 in your user folder. The app gives it to RPCS3 by itself, when it opens and when "
+    "the RPCS3 card gets the focus, and RPCS3 installs it without opening its window; it takes a minute or two. A "
+    "firmware that is installed already is not given again, nor is a file RPCS3 refused, until you put in another "
+    "one. The file stays in the folder.\n\n"
+    "Your games and the games bought digitally as packages (.pkg, with the .rap license of a PSN game) go in "
+    "Games\\PS3: see Your games.\n\n"
     "RPCS3 for Windows needs Microsoft's Visual C++ runtime, which Steam and most games bring; the pane says when "
     "it is missing (vc_redist.x64.exe from Microsoft installs it). The X button removes RPCS3's program; its "
     "folder, with the firmware and your saves, stays.")
@@ -130,26 +132,32 @@ GAMES_INFO = (
     "\"[PS3] <title>\", in Steam's library and its Big Picture mode, and a game without the mark is taken out. Steam "
     "closes for it and starts again. To quit a game, hold View, LB and RB together for two seconds: RPCS3 closes, "
     "and you are back where you started it. The same works in every game manager of the suite.\n\n"
-    "The games are the disc games in your game folders and up to five folders below them (each in a folder of its "
+    "Put your games in Games\\PS3 in your user folder, or in Games\\PS3 on an SD card: the app makes the first one "
+    "and looks in both. The games are the disc games there and up to five folders below (each in a folder of its "
     "own, as copied from the disc: PS3_DISC.SFB and the PS3_GAME folder; RPCS3 does not start one without its "
     "PS3_DISC.SFB), the games installed from packages (in RPCS3's dev_hdd0) and the disc games RPCS3 knows from "
     "before.\n\n"
+    "A package (.pkg) or a license (.rap, .edat) put there is a row of its own: PKG for a game or an add-on, PKG "
+    "update for a game's update, License. The A button on one has RPCS3 install it, without its window; the X "
+    "button (Install all) installs every one, the licenses first and the updates last, each in a run of its own. "
+    "Then a page lists the packages RPCS3 installed without a problem, as each takes as much room as its game: the "
+    "X button deletes the ones marked Delete, the A button keeps one, the B button keeps them all. A package kept "
+    "is not listed again; the licenses stay.\n\n"
     "The X button on a game that is in Steam starts it, through Steam (Steam starts first when it does not run). "
     "On a device without Steam the X button starts the game in RPCS3 itself. Steam's library opens from the "
     "portal: RT Steam.\n\n"
-    "The LB button (Folders) shows your game folders: add one of the usual places or a drive (an SD card), or browse "
-    "to any folder with the controller. The A button twice on a folder takes it off the list; its games stay where "
-    "they are. The LB button again shows the games.\n\n"
+    "The RB button (Remove game) shows what would go: a disc game's folder in Games\\PS3 and its update, or a game "
+    "installed from a package in RPCS3's folder, and its Steam shortcut. Each is marked Delete; the A button keeps "
+    "one, the X button deletes the ones marked Delete, the B button goes back and deletes nothing. Its saves and the "
+    "licenses always stay.\n\n"
     "The pictures in Steam come from inside each game (its icon and its background). With your own SteamGridDB API "
-    "key (the RB button, Steam artwork; one key for the suite), Update Steam also fetches a cover for each game. "
+    "key (the LB button, Steam artwork; one key for the suite), Update Steam also fetches a cover for each game. "
     "Every entry of the row at the bottom also works by touch.")
-BROWSE_INFO = (
-    "Find the folder or the file. The A button opens the folder the focus is on, or picks the file; the B button "
-    "goes a level up, and from the places back to where you came from. The X button takes the folder that is open: "
-    "as a game folder, or as the folder whose packages RPCS3 installs. With packages, the Y button marks the file "
-    "the focus is on (a ✓ before it) and the X button installs the marked ones; the marks go when you open another "
-    "folder. The places are your Games, Downloads, Documents and Desktop folders and every drive, such as an SD "
-    "card. The browser opens again in the folder you took or picked a file in last.")
+KEEP_INFO = (
+    "Nothing is deleted before you decide what to keep. The page lists what would go, a row each with its size: "
+    "the A button turns a row from Delete to Keep and back, the X button deletes the rows still marked Delete, and "
+    "the B button goes back and deletes nothing. A Steam shortcut taken out closes Steam for a moment; it starts "
+    "again signed in. Your saves and the licenses are never on the page: they stay in RPCS3's folder.")
 LOG_INFO = (
     "RPCS3's folder, where it keeps the firmware, the saves, its settings and the games installed from packages, "
     "and the newest lines of this app's log. The A button, or a tap on this pane, shows the whole log here: the "
@@ -179,6 +187,9 @@ class LogPane(Pane):
         self.lines = TextView()
         self.lines.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.lines.viewport().installEventFilter(self)
+        # The end kept in view when the view's height changes (a folder above it that wraps to two lines, once laid
+        # out); a finger scrolling it does not change the range
+        self.lines.verticalScrollBar().rangeChanged.connect(lambda _low, _high: self.lines.show_end())
         self.column.addWidget(self.lines, 1)
         self.view = TextView()
         self.view.hide()

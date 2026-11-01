@@ -5,8 +5,9 @@ opened), what the focused one shows on the right, the controller's buttons at th
 
 Every action is a controller button in the legend at the bottom, A too, and a tap on the entry does the same; there
 are no pills (owner, 29-10-2026: one way everywhere). Core's rule ends the legend: B goes back (a pane to its card,
-the folders to the games, the browser a level up, the key's page to Your games), View exits the app and Menu shows the
-information of the pane that shows.
+the key's page to Your games), View exits the app and Menu shows the information of the pane that shows. Nothing is
+browsed to (owner, 30-10-2026: fixed folders, no folder selecting): the games are put in the app's own folders
+(library.fixed: Games\\Xbox360 in your user folder, and on an SD card).
 
 The Xenia pane: what is installed, the games and where, and when a newer build is out; A Install until Xenia is
 installed, Y Update when another build is there, X Remove Xenia (a second press). A press that cannot act now says why
@@ -14,14 +15,17 @@ on the status line. Nothing downloads before A. The download and the unpacking r
 counts the megabytes. View (exit) while a job runs asks first, as the portal does. Xenia needs nothing set up: it is
 portable by itself on Windows, and a game's line gives it full screen.
 
-The Your games pane (panes.py, library.py): the games in the chosen folders, played from Steam (owner, 29-10-2026: the
-app starts one in Steam, X Play; on a device without Steam X Play starts it in the app's play mode itself, owner
-30-10-2026: a fallback, as its shortcut would start it; core's play: View, LB and RB held quit any game); A marks one
-for Steam, Y Update Steam makes Steam's shortcuts match the marks and brings a shortcut made before the play mode to
-it; LB Folders lists the folders, the usual places and a drive to add, and Browse, which opens the folder browser
-(core's browse); LB Games goes back; RB Steam artwork keeps the SteamGridDB key; Steam's library is the portal's RT
-Steam (owner, 30-10-2026: Open Steam moved there). The Log pane: Xenia's folder and the newest lines of the app's log;
-A (or a tap on the pane) shows the whole log in the pane.
+The Your games pane (panes.py, library.py): the games in the app's own Games\\Xbox360 folders (owner, 30-10-2026: the
+games are dropped there; library.fixed, an SD card's too), played from Steam (owner, 29-10-2026: the app starts one
+in Steam, X Play; on a device without Steam X Play starts it in the app's play mode itself, owner 30-10-2026: a
+fallback, as its shortcut would start it; core's play: View, LB and RB held quit any game); A marks one for Steam, Y
+Update Steam makes Steam's shortcuts match the marks and brings a shortcut made before the play mode to it; RB Remove
+game shows the keep page (owner, 01-11-2026: before deleting anything, let the user decide what to keep; core's
+keep.py): a row for each part of the game (library.removal) and its Steam shortcut, every row marked Delete at
+first, A Keep or Delete, X deletes the marked ones off the window's thread, B deletes nothing; LB Steam artwork keeps
+the SteamGridDB key; Steam's library is the portal's RT Steam (owner, 30-10-2026: Open Steam moved there). The Log
+pane: Xenia's folder, where Games\\Xbox360 is and the newest lines of the app's log; A (or a tap on the pane) shows the
+whole log in the pane.
 
 The Settings pane: Xenia's settings that matter on the handheld, in tabs (LB and RB: Picture, Speed, Sound, Console), a
 row each with its value; A steps to the next value and writes it into xenia-canary.config.toml at once
@@ -37,7 +41,7 @@ from PyQt6.QtCore import QObject, QSettings, Qt, QTimer, pyqtSignal
 from PyQt6.QtGui import QFont, QGuiApplication
 from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QStackedWidget, QVBoxLayout, QWidget
 
-from bc250_core import applog, browse, covers, platform, play, power, steam
+from bc250_core import applog, covers, keep, platform, play, power, steam
 from bc250_core.gamepad import Gamepad
 from bc250_core.platform import private
 from bc250_core.portable import (AMBER, BODY, DIM, EXIT, KEYBOARD, VIEW, Card, InfoPill, Legend, Pane, PortableHeader,
@@ -46,7 +50,7 @@ from bc250_core.updates import ReleaseInfo
 
 from . import APP_ID, APP_NAME, LOGO_PATH, __version__, emulator, library, shortcuts, xenia_settings
 from .games import Game, scan
-from .panes import BROWSE_INFO, GAMES_INFO, XENIA_INFO, KeyPane, ListPane, LogPane
+from .panes import GAMES_INFO, KEEP_INFO, XENIA_INFO, KeyPane, ListPane, LogPane
 from .xenia_settings import TABS, Setting
 
 STATUS_MS = 30_000              # the header's battery and time
@@ -58,22 +62,19 @@ ABOUT = ("Xenia, the Xbox 360 emulator, installed for your own user: its setting
          "their saves stay in its folder.")
 LOG_LINES = 12                  # the newest lines of the app's log in the Log pane
 LOG_MAX = 2000                  # the lines of the log the whole view shows, the newest
-FOLDERS, GAMES_VIEW = "folders", "games"
-FOLDERS_BROWSED = "folders"     # the browser's folder kept for next time (browse.remember)
-BROWSE_KEY = "browse"           # the folders' last row: the folder browser
 KINDS = {"iso": "ISO", "xex": "XEX", "zar": "ZAR", "god": "Games on Demand", "xbla": "Arcade"}
 RUNNING = "Xenia is open: close it first, it would write its own settings over the change."
 NOT_INSTALLED = "Install Xenia first: the settings are in its folder."
 BUSY = "Wait a moment: the app is still busy with the step before."
-OPEN_A_FOLDER = "Open a folder first: the A button opens the one the focus is on, then the X button takes it."
 ALL_SETTINGS = xenia_settings.SETTINGS
 # The Settings pane's information, per tab: what each setting of the tab does
 TAB_INFO = {key: ("The A button changes the setting the focus is on, the LB and RB buttons change the tab; Xenia "
                   "reads the settings when a game starts. A game's own settings in Xenia come before these.\n\n"
                   + "\n".join(f"{setting.label}: {setting.tip}" for setting in group))
             for key, _name, group in TABS}
-NOT_THE_GAMES = "Update Steam works on the games: the LB button shows them again."
 PICK_A_GAME = "Put the focus on a game first: the X button starts it in Steam."
+STEAM_ITEM = "steam"            # the keep page's row of the game's Steam shortcut
+NOTHING_MARKED = "Nothing is marked Delete: B goes back, and nothing is deleted."
 NO_STEAM = "Steam was never started on this device: start it once, then Update Steam puts the marked games in it."
 NOTHING_TO_CHANGE = ("Nothing to change in Steam: the A button on a game marks it for Steam or takes the mark away, "
                      "then the Y button updates Steam.")
@@ -175,15 +176,14 @@ class MainWindow(PortableWindow):
                  steam_dir: Path | None | bool = False,
                  steam_closed: Callable[[Callable[[], None]], bool] = steam.with_steam_closed,
                  user_home: Path | None = None, drives: Callable[[], list[Path]] = library.removable_drives,
-                 roots: Callable[[], list[Path]] = browse.drives, settings: QSettings | None = None,
+                 settings: QSettings | None = None,
                  open_url: Callable[[str], None] = steam.open_url,
                  start: Callable[..., None] = platform.start_program):
         """*steam_dir*: Steam's folder (False: found on this system, None: no Steam); *runtime_missing*: the Visual
         C++ runtime's files that are missing; *newer_release*: asks GitHub for a newer Xenia build; *user_home*: the
-        user's folder (the usual places); *drives*: the removable drives offered as folders, *roots*: every drive the
-        browser offers; *settings*: the app's (its .ini, create_app's), where the game folders are kept;
-        *open_url*: hands a steam:// address to Steam (Play); *start*: starts a program on its own (Xenia with a
-        game, without Steam)."""
+        user's folder (where Games\\Xbox360 is); *drives*: the removable drives, whose Games\\Xbox360 is looked in
+        too; *settings*: the app's (its .ini, create_app's); *open_url*: hands a steam:// address to Steam (Play);
+        *start*: starts a program on its own (Xenia with a game, without Steam)."""
         super().__init__(gamepad)
         self.setWindowTitle(f"{APP_NAME} {__version__}")
         self.log = applog.logger(APP_ID)
@@ -200,19 +200,18 @@ class MainWindow(PortableWindow):
         self.message = ""                               # the last outcome
         self.confirm_remove = self.close_asked = False
         self.steam_closed = steam_closed
-        self._job = ""                                  # "install" or "steam" while one runs
+        self._job = ""                                  # "install", "steam" or "remove" while one runs
         self.steam_dir = steam.find_steam() if steam_dir is False else steam_dir
         self.start_program = start
-        self.user_home, self.drives, self.roots = user_home, drives, roots
+        self.user_home, self.drives = user_home, drives
         self.settings = settings if settings is not None else QSettings()
         self.open_url = open_url
         self.games: list[Game] = []
         self.in_steam: dict[str, str] = {}
         self.outdated: set[str] = set()                 # games whose shortcut does not start the play mode yet
         self.marked: set[str] = set()
-        self.games_view = GAMES_VIEW
-        self.forget_asked = ""                          # a folder pressed once: A again takes it off the list
-        self.browser: browse.Browser | None = None      # the folder browser, while it shows
+        self.removing: Game | None = None               # the game the keep page shows
+        self.keeping: list[keep.Item] = []              # its rows: what would go, each marked Delete or Keep
 
         page = QVBoxLayout(self)
         page.setContentsMargins(*self.margins())
@@ -226,7 +225,7 @@ class MainWindow(PortableWindow):
         cards.setContentsMargins(0, 0, 0, 0)
         cards.setSpacing(px(12))
         self.xenia_card = Card("Xenia", "Install it.")
-        self.games_card = Card("Your games", "Mark them for Steam, and their folders.")
+        self.games_card = Card("Your games", "Mark them for Steam, play them, remove them.")
         self.settings_card = Card("Settings", "The picture, the speed, the sound and the console.")
         self.log_card = Card("Log", "Xenia's folder, and this app's log.")
         for card in (self.xenia_card, self.games_card, self.settings_card, self.log_card):
@@ -255,14 +254,14 @@ class MainWindow(PortableWindow):
         self.pane.column.addWidget(self.status)
         self.settings_pane = SettingsPane()
         self.games_pane = ListPane("Your games", "Your games", GAMES_INFO)
-        self.browse_pane = ListPane("Choose a folder", "Choosing a folder", BROWSE_INFO)
         self.key_pane = KeyPane()
         self.log_pane = LogPane()
-        for pane in (self.pane, self.games_pane, self.settings_pane, self.log_pane, self.key_pane, self.browse_pane):
+        self.keep_pane = ListPane("Remove", "Keep or delete", KEEP_INFO)
+        for pane in (self.pane, self.games_pane, self.settings_pane, self.log_pane, self.key_pane, self.keep_pane):
             self.panes.addWidget(pane)
         self.cards = {self.pane: self.xenia_card, self.games_pane: self.games_card,
                       self.settings_pane: self.settings_card, self.log_pane: self.log_card,
-                      self.key_pane: self.games_card, self.browse_pane: self.games_card}
+                      self.key_pane: self.games_card, self.keep_pane: self.games_card}
         body.addWidget(self.panes, 1)
         page.addLayout(body, 1)
         page.addSpacing(px(8))
@@ -283,7 +282,7 @@ class MainWindow(PortableWindow):
         self.log_card.activated.connect(self.view_log)
         self.log_pane.tapped.connect(self.view_log)
         self.games_pane.list.picked.connect(self.game_picked)
-        self.browse_pane.list.picked.connect(self.browse_picked)
+        self.keep_pane.list.picked.connect(self.keep_picked)
         self.confirm_key = False                        # Remove key pressed once
         for setting in ALL_SETTINGS:
             self.settings_pane.pills[setting.key].activated.connect(lambda s=setting: self.step_setting(s))
@@ -333,6 +332,8 @@ class MainWindow(PortableWindow):
         """The status line (amber), A's entry (Install) and Y's (Update); "" leaves either out."""
         if self.busy and self._job == "steam":
             return "Steam's shortcuts are being changed (Your games).", "", ""
+        if self.busy and self._job == "remove":
+            return "A game is being removed (Your games).", "", ""
         if self.busy:
             if self.stage:
                 return self.stage, "", ""
@@ -399,8 +400,8 @@ class MainWindow(PortableWindow):
 
     def legend_items(self) -> list[tuple[str, str]]:
         """The legend for the pane that shows: its actions on the controller's buttons, A too (a tap on an entry does
-        the same), then core's Menu Info, B Back (in a pane, and on the folders, the browser, the key page and the
-        whole log) and View Exit. A press that cannot act now says why on the pane's status line."""
+        the same), then core's Menu Info, B Back (in a pane, and on the key page and the whole log) and View Exit. A
+        press that cannot act now says why on the pane's status line."""
         if self.close_asked:
             return [(VIEW, "Press again to exit")]
         pane = self.panes.currentWidget()
@@ -412,12 +413,12 @@ class MainWindow(PortableWindow):
                      *([("X", "Press again" if self.confirm_remove else "Remove Xenia")] if installed else []),
                      *([("Y", other)] if other else [])]
         elif pane is self.games_pane:
-            items = ([("A", "Steam mark"), *([("X", "Play")] if self.focused_game() else []),
-                      ("Y", "Update Steam"), ("LB", "Folders")]
-                     if self.games_view == GAMES_VIEW else [("A", "Choose"), ("LB", "Games")]) + \
-                    [("RB", "Steam artwork")]
-        elif pane is self.browse_pane:
-            items = [("A", "Open"), ("X", "Add this folder")]
+            game = self.focused_game()
+            items = [("A", "Steam mark"), *([("X", "Play")] if game else []), ("Y", "Update Steam"),
+                     ("LB", "Steam artwork"), *([("RB", "Remove game")] if game else [])]
+        elif pane is self.keep_pane:
+            item = next((i for i in self.keeping if i.key == self.keep_pane.list.focused()), None)
+            items = [*([("A", "Keep" if item.delete else "Delete")] if item else []), ("X", "Delete marked")]
         elif pane is self.settings_pane:
             items = [("A", "Change"), ("LB", "Previous tab"), ("RB", "Next tab")]
         elif pane is self.log_pane:
@@ -425,8 +426,7 @@ class MainWindow(PortableWindow):
         elif pane is self.key_pane:
             items = [("A", "Save"), ("X", "Paste"), ("Y", "Press again" if self.confirm_key else "Remove key"),
                      KEYBOARD]
-        on_a_page = (pane in (self.key_pane, self.browse_pane) or self.log_pane.viewing
-                     or (pane is self.games_pane and self.games_view == FOLDERS))
+        on_a_page = pane in (self.key_pane, self.keep_pane) or self.log_pane.viewing
         return [*items, *self.common_items(True if on_a_page else None)]
 
     def update_legend(self) -> None:
@@ -439,8 +439,12 @@ class MainWindow(PortableWindow):
 
     # Your games
 
+    def game_folders(self) -> list[Path]:
+        """The app's own Games\\Xbox360 folders (made when missing): the user's, then each SD card's."""
+        return library.fixed(self.user_home, self.drives)
+
     def scan(self) -> list[Game]:
-        return scan(library.folders(self.settings))
+        return scan(self.game_folders())
 
     def refresh_games(self, in_steam: dict[str, str] | None = None) -> None:
         """The games, which are in Steam (*in_steam* when given: what Update Steam read back, else Steam's file now),
@@ -467,21 +471,16 @@ class MainWindow(PortableWindow):
 
     def show_games(self) -> None:
         pane = self.games_pane
-        chosen = library.folders(self.settings)
+        own = self.game_folders()
         in_steam = sum(1 for g in self.games if str(g.file) in self.in_steam)
-        pane.summary.setText(f"{len(self.games)} game(s) in {len(chosen)} folder(s)"
+        pane.summary.setText(f"{len(self.games)} game(s) in {len(own)} folder(s)"
                              + (f", {in_steam} in Steam" if self.steam_dir is not None else
                                 ". Steam was never started on this device: start it once to put games in it."))
-        if self.games_view == FOLDERS:
-            rows = [(f"folder:{f}", ("Press A again to take it off the list" if self.forget_asked == str(f)
-                                     else f"{private(f)}  ·  {len(scan([f]))} game(s)")) for f in chosen]
-            rows += [(f"add:{p}", f"+ Add {private(p)}") for p in library.suggested(chosen, self.user_home, self.drives)]
-            rows.append((BROWSE_KEY, "+ Browse to a folder…"))
-        else:
-            rows = [(str(g.file), self.game_text(g)) for g in self.games]
-            if not rows:
-                pane.status.setText(pane.status.text() or "No games yet: the LB button shows your game folders, to "
-                                                           "add the one your games are in.")
+        rows = [(str(g.file), self.game_text(g)) for g in self.games]
+        if not rows:
+            pane.status.setText(pane.status.text() or
+                                f"No games yet: put your Xbox 360 games in {private(own[0])}, or in Games\\Xbox360 "
+                                "on an SD card.")
         pane.list.set_items(rows)
         self.update_legend()
 
@@ -493,21 +492,12 @@ class MainWindow(PortableWindow):
         return "  ·  ".join(p for p in parts if p)
 
     def game_picked(self, key: str) -> None:
-        """A on a row: a game's Steam mark, a folder's second press, a place to add, or the browser."""
-        if key == BROWSE_KEY:
-            self.show_browser()
-        elif key.startswith("add:"):
-            self.add_folder(Path(key[4:]))
-        elif key.startswith("folder:"):
-            self.forget_folder(Path(key[7:]))
-        else:
-            self.mark_game(key)
+        """A on a row: a game's Steam mark."""
+        self.mark_game(key)
 
     def focused_game(self) -> Game | None:
-        """The game whose row has the focus, on the games' view."""
-        if self.games_view != GAMES_VIEW:
-            return None
-        key = next((key for key, pill in self.games_pane.list.pills.items() if pill.hasFocus()), None)
+        """The game whose row has the focus."""
+        key = self.games_pane.list.focused()
         return next((game for game in self.games if str(game.file) == key), None)
 
     def play(self) -> None:
@@ -555,41 +545,106 @@ class MainWindow(PortableWindow):
         self.games_pane.status.setText(f"Starting {game.title} in Xenia… {play.QUIT_HINT}")
         self.log.info(f"Play: {game.title}, started in Xenia, without Steam.")
 
-    def toggle_folders(self) -> None:
-        self.games_view = GAMES_VIEW if self.games_view == FOLDERS else FOLDERS
-        self.forget_asked = ""
-        self.games_pane.status.setText("")
-        self.show_games()
-        self.show_pane(self.games_pane)
-        self.focus_list(self.games_pane)
-
-    def add_folder(self, folder: Path) -> None:
-        browse.remember(self.settings, FOLDERS_BROWSED, folder)        # the browser opens here next time
-        chosen = library.folders(self.settings)
-        if str(folder) not in {str(f) for f in chosen}:
-            library.set_folders(self.settings, chosen + [folder])
-        self.refresh_games()
-        found = sum(1 for g in self.games if folder in g.file.parents)
-        self.games_pane.status.setText(f"{folder.name or folder} is a game folder now: {found} game(s) in it.")
-        self.log.info(f"Game folder added: {folder} ({found} game(s)).")
-        self.refresh()
-
-    def forget_folder(self, folder: Path) -> None:
-        """A on a folder asks for a second press (no dialog on a handheld); the second takes it off the list."""
-        if self.forget_asked != str(folder):
-            self.forget_asked = str(folder)
-            self.confirm_timer.start()
-            self.show_games()
-            self.games_pane.list.pills[f"folder:{folder}"].setFocus()
+    def remove_game(self) -> None:
+        """RB on a game (owner, 30-10-2026: a game that no longer plays goes; owner, 01-11-2026: before deleting
+        anything, let the user decide what to keep): the keep page, a row for each part of the game
+        (library.removal: its file or folder, or a console title's game, title updates and add-ons) and one for its
+        Steam shortcut, every row marked Delete at first. Its saves and content in Xenia's folder are never listed."""
+        game = self.focused_game()
+        if game is None:
             return
-        self.forget_asked = ""
-        library.set_folders(self.settings, [f for f in library.folders(self.settings) if f != folder])
-        self.refresh_games()
-        self.games_pane.status.setText(f"{folder.name or folder} is no longer a game folder; its games stay where "
-                                       "they are.")
-        self.log.info(f"Game folder taken off the list: {folder}.")
+        if self.busy:
+            self.games_pane.status.setText(BUSY)
+            return
+        if self.running(self.home):
+            self.games_pane.status.setText("Xenia is open: quit the game first, then remove it.")
+            return
+        items, why = library.removal(game, self.game_folders(), self.games)
+        if not items:
+            self.games_pane.status.setText(private(why))
+            return
+        if str(game.file) in self.in_steam:
+            items.append(keep.Item(STEAM_ITEM, "Steam shortcut"))
+        keep.measure(items)
+        self.removing, self.keeping = game, items
+        self.keep_pane.heading.setText(f"Remove {game.title}")
+        self.keep_pane.status.setText("")
+        self.show_keep()
+        self.show_pane(self.keep_pane)
+        self.focus_list(self.keep_pane)
+        self.update_legend()
+
+    def show_keep(self) -> None:
+        """The keep page's rows and what the X button frees."""
+        marked = keep.chosen(self.keeping)
+        self.keep_pane.summary.setText(
+            (f"The X button deletes the rows marked Delete ({keep.human(keep.total(self.keeping))})"
+             if marked else "Every row is marked Keep") +
+            ". The A button keeps a row or deletes it; the B button goes back and deletes nothing. Your saves stay "
+            "in Xenia's folder.")
+        self.keep_pane.list.set_items(keep.rows(self.keeping))
+
+    def keep_picked(self, key: str) -> None:
+        """A on a row of the keep page: Delete becomes Keep, Keep Delete; the focus stays on the row."""
+        if keep.toggle(self.keeping, key) is None:
+            return
+        self.keep_pane.status.setText("")
+        self.show_keep()
+        pill = self.keep_pane.list.pills.get(key)
+        if pill is not None:
+            pill.setFocus()
+        self.update_legend()
+
+    def leave_keep(self, said: str = "") -> None:
+        self.removing, self.keeping = None, []
+        self.show_pane(self.games_pane)
+        self.games_pane.status.setText(said)
         self.focus_list(self.games_pane)
-        self.refresh()
+
+    def delete_marked(self) -> None:
+        """X on the keep page: the rows marked Delete deleted off the window's thread, the Steam shortcut first
+        (through Update Steam's change, Steam closed around it); then back to Your games, saying what was deleted
+        and what was kept."""
+        game, items = self.removing, list(self.keeping)
+        if game is None:
+            return
+        chosen = keep.chosen(items)
+        if not chosen:
+            self.keep_pane.status.setText(NOTHING_MARKED)
+            return
+        if self.busy:
+            self.keep_pane.status.setText(BUSY)
+            return
+        if self.running(self.home):
+            self.keep_pane.status.setText("Xenia is open: quit the game first, then remove it.")
+            return
+        out_of_steam = any(i.key == STEAM_ITEM for i in chosen)
+        steam_dir = self.steam_dir if out_of_steam else None
+        paths = [p for i in chosen for p in i.paths]
+        kept = [i.label for i in items if not i.delete]
+        deleted = [i.label for i in chosen]
+        closed, program, existing = self.steam_closed, emulator.program(self.home), self.in_steam
+
+        def job() -> tuple[bool, str, dict[str, str] | None]:
+            found = None
+            if steam_dir is not None:
+                ok, said, found = library.update_steam(steam_dir, [], [game], program, LOGO_PATH, existing, closed)
+                if not ok:
+                    return False, f"{game.title}: nothing was deleted. {said}", None
+            failed = keep.delete(paths)
+            library.tidy(game)
+            if failed:
+                return False, f"{game.title}: not deleted {', '.join(failed)}.", found
+            return True, (f"{game.title}: deleted {', '.join(deleted)}"
+                          + (f"; kept {', '.join(kept)}" if kept else "")
+                          + ". Your saves stay in Xenia's folder."), found
+        self.busy, self.message = True, ""
+        self._job = "remove"
+        self.leave_keep(f"Removing {game.title}…")
+        self.log.info(f"Removing {game.title}: {', '.join(str(p) for p in paths) or 'nothing on the disk'}"
+                      + (", and its Steam shortcut" if steam_dir is not None else "")
+                      + (f"; kept {', '.join(kept)}." if kept else "."))
+        self.worker.run(job)
 
     def mark_game(self, key: str) -> None:
         """A on a game: mark it for Steam, or take the mark away."""
@@ -612,9 +667,6 @@ class MainWindow(PortableWindow):
             if self._job != "steam":                    # Steam's own job says so on the line already
                 self.games_pane.status.setText(BUSY)
             return
-        if self.games_view != GAMES_VIEW:
-            self.games_pane.status.setText(NOT_THE_GAMES)
-            return
         if self.steam_dir is None:
             self.games_pane.status.setText(NO_STEAM)
             return
@@ -634,46 +686,6 @@ class MainWindow(PortableWindow):
         self._job = "steam"
         self._steam_plan = (add, remove)
         self.worker.run(lambda: library.update_steam(folder, add, remove, program, LOGO_PATH, existing, closed, key))
-
-    # The folder browser (core's browse)
-
-    def show_browser(self) -> None:
-        self.browser = browse.Browser(browse.places(self.user_home, self.roots),
-                                      path=browse.remembered(self.settings, FOLDERS_BROWSED))
-        self.browse_pane.status.setText("")
-        self.show_pane(self.browse_pane)
-        self.show_browse()
-
-    def show_browse(self) -> None:
-        path = self.browser.path if self.browser is not None else None
-        self.browse_pane.summary.setText(wrappable(path) if path is not None else
-                                         "Where are your games? Open a place, then the folder they are in.")
-        self.browse_pane.list.set_items(self.browser.rows() if self.browser is not None else [])
-        self.focus_list(self.browse_pane)
-        self.update_legend()
-
-    def browse_picked(self, key: str) -> None:
-        if self.browser is None:
-            return
-        self.browser.open(key)
-        self.browse_pane.status.setText("")
-        self.show_browse()
-
-    def add_browsed(self) -> None:
-        """X in the browser: the open folder becomes a game folder (back to the folders)."""
-        if self.browser is None or self.browser.path is None:
-            self.browse_pane.status.setText(OPEN_A_FOLDER)
-            return
-        folder = self.browser.path
-        self.leave_browser()
-        self.add_folder(folder)
-
-    def leave_browser(self) -> None:
-        self.browser = None
-        self.games_view = FOLDERS
-        self.show_games()
-        self.show_pane(self.games_pane)
-        self.focus_list(self.games_pane)
 
     # The SteamGridDB key (the BC250 app's Covers… and core's covers.edit_key, as a page)
 
@@ -754,12 +766,12 @@ class MainWindow(PortableWindow):
         pane = self.panes.currentWidget()
         if pane is self.pane:
             self.remove_action()
-        elif pane is self.browse_pane:
-            self.add_browsed()
         elif pane is self.games_pane:
             self.play()
         elif pane is self.key_pane:
             self.paste_key()
+        elif pane is self.keep_pane:
+            self.delete_marked()
 
     def y_action(self) -> None:
         pane = self.panes.currentWidget()
@@ -773,14 +785,14 @@ class MainWindow(PortableWindow):
     def lb_action(self) -> None:
         pane = self.panes.currentWidget()
         if pane is self.games_pane:
-            self.toggle_folders()
+            self.show_key()
         elif pane is self.settings_pane:
             self.settings_pane.tabs.step(-1)
 
     def rb_action(self) -> None:
         pane = self.panes.currentWidget()
         if pane is self.games_pane:
-            self.show_key()
+            self.remove_game()
         elif pane is self.settings_pane:
             self.settings_pane.tabs.step(1)
 
@@ -789,7 +801,7 @@ class MainWindow(PortableWindow):
     def refresh_log(self) -> None:
         rows: list[tuple[str, str]] = [("Xenia's folder", wrappable(self.home))]
         if emulator.installed(self.home):
-            rows += [("Game folders", str(len(library.folders(self.settings)))), ("Games", str(len(self.games)))]
+            rows += [("Games", wrappable(self.game_folders()[0])), ("Games found", str(len(self.games)))]
         self.log_pane.fill(rows, [private(line) for line in self.log_lines()[-LOG_LINES:]])
 
     def log_lines(self) -> list[str]:
@@ -871,6 +883,15 @@ class MainWindow(PortableWindow):
         self.progress_timer.stop()
         if self.close_asked:
             self._confirm_over()
+        if job == "remove":
+            ok, text, found = result if isinstance(result, tuple) else (False, f"The game was not removed: {result}",
+                                                                        None)
+            self.games_pane.status.setText(private(text))
+            (self.log.info if ok else self.log.error)(text)
+            self.refresh()
+            self.refresh_games(found)
+            self.focus_list(self.games_pane)
+            return
         if isinstance(result, Exception):
             self.message = private(f"Xenia could not be installed: {result}")
             self.log.error(f"Installing Xenia failed: {result}")
@@ -937,9 +958,6 @@ class MainWindow(PortableWindow):
 
     def _confirm_over(self) -> None:
         self.confirm_timer.stop()
-        if self.forget_asked:
-            self.forget_asked = ""
-            self.show_games()
         if self.confirm_key:
             self.confirm_key = False
             if self.key_pane.status.text().startswith("Press the Y button again"):
@@ -955,23 +973,17 @@ class MainWindow(PortableWindow):
     # B
 
     def on_back(self) -> None:
-        """B goes back (the suite's rule, owner 29-10-2026): the whole log to its summary, the browser a level up (from
-        the places to the folders), the key page to Your games (nothing saved), the folders to the games, a pane to its
-        card; on a card it does nothing (View exits)."""
+        """B goes back (the suite's rule, owner 29-10-2026): the whole log to its summary, the key page to Your games
+        (nothing saved), a pane to its card; on a card it does nothing (View exits)."""
         pane = self.panes.currentWidget()
         if pane is self.log_pane and self.log_pane.viewing:
             self.log_pane.show_summary()
             self.log_card.setFocus()
             self.update_legend()
-        elif pane is self.browse_pane:
-            if self.browser is not None and self.browser.up():
-                self.show_browse()
-            else:
-                self.leave_browser()
         elif pane is self.key_pane:
             self.back_to_games()
-        elif pane is self.games_pane and self.games_view == FOLDERS:
-            self.toggle_folders()
+        elif pane is self.keep_pane:
+            self.leave_keep("Nothing was deleted.")
         else:
             self.go_back()
 
@@ -981,8 +993,9 @@ class MainWindow(PortableWindow):
         if self.busy and not self.close_asked:          # exiting drops the job (the portal's rule: ask first)
             self.close_asked = True
             self.confirm_timer.start()
-            self.message = ("Press View again to exit: Steam's shortcuts may be left half changed."
-                            if self._job == "steam" else "Press View again to exit: the download stops.")
+            self.message = {"steam": "Press View again to exit: Steam's shortcuts may be left half changed.",
+                            "remove": "Press View again to exit: the game is left half deleted."
+                            }.get(self._job, "Press View again to exit: the download stops.")
             self.refresh()                              # the legend says so too
             return
         self.close()

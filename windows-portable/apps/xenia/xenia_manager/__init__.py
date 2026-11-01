@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Xenia Manager: installs Xenia, the Xbox 360 emulator, on the handheld (one tested Xenia Canary build, its files beside
-it), offers its settings, finds your games in the folders you choose and puts them in Steam, where they are played full
-screen; the log. The BC250 suite's Xenia Manager's parts in the portable window."""
+it), offers its settings, finds your games in its own Games\\Xbox360 folders and puts them in Steam, where they are
+played full screen; the log. The BC250 suite's Xenia Manager's parts in the portable window."""
 
 APP_NAME = "Xenia Manager"
 APP_ID = "windows-portable-xenia"

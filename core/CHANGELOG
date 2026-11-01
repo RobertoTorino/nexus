@@ -1,3 +1,11 @@
+Changelog: 01-11-2026 16:56:02
+
+Added. keep.py, deciding what to keep before anything is deleted (owner, 01-11-2026: before deleting anything, let
+the user decide what to keep): the rows of a page that lists what would go (a game's folder, its update, a package,
+a BIOS file, a Steam shortcut), each with its size and marked Delete at first; A turns a row to Keep and back, X
+deletes the rows still marked Delete, B deletes nothing (keep.Item, rows(), toggle(), chosen(), measure(), human(),
+delete(), read-only files too). The game managers of the Windows Portable Suite use it.
+
 Changelog: 01-11-2026 17:36:48
 
 Version 2.4.0.

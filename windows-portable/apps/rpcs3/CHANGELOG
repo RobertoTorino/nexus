@@ -1,3 +1,37 @@
+Changelog: 01-11-2026 16:37:12
+
+Added. The app's own game folder (owner, 30-10-2026: fixed folders, no folder selecting): Games\PS3 in the user's
+folder, made when the app opens with Games\PS3\Firmware in it, and Games\PS3 on each SD card or USB drive that has
+one; Your games looks there, in RPCS3's dev_hdd0 and in the disc games RPCS3 knows (library.fixed()). The PS3's
+firmware put in Games\PS3\Firmware is given to RPCS3 by itself (owner, 01-11-2026: firmware taken in automatically)
+when the app opens, when the RPCS3 card gets the focus and after RPCS3 is installed, while RPCS3 is closed: a file
+whose version (read from the PUP, its file 0x100) is installed already is left alone, and so is the file given to
+RPCS3 last as it is (its name, size and time in the app's settings), so a file RPCS3 refused is not given again until
+it changes (userdata.pup_version(), library.firmware_file()). The file stays. A package (.pkg) or a license (.rap,
+.edat) put in the game folders is a short row of Your games, "PKG", "PKG update" or "License"; A installs that one,
+X Install all every one, the licenses first and the updates last, each in a run of RPCS3 without its window; a
+license is a row only while RPCS3 does not keep it (userdata.waiting()). Nothing is deleted before the user decides
+what to keep (owner, 01-11-2026: before deleting anything, let the user decide what to keep; core's keep.py): a page
+lists what would go, a row each with its size, every row marked Delete at first; A turns a row to Keep and back, X
+deletes the rows still marked Delete off the window's thread, B goes back and deletes nothing. After an install it
+lists the packages RPCS3 installed without a problem (they take as much room as their game); a package kept is
+noted in the app's settings (its place, size and time: library.kept_key()) and is no row of Your games, nor
+installed again by X Install all, until the file changes; the licenses stay. RB Remove game on a game (owner,
+30-10-2026, as shadPS4 Manager's) opens the same page: a disc game's folder in Games\PS3 and its update in
+dev_hdd0\game as rows of their own, or an installed game's folder in dev_hdd0\game, and its Steam shortcut, taken out
+with Steam closed for it (library.removal()). The saves and the licenses are never on the page. A game whose folder
+is a game folder itself, or a disc game outside the app's folders, is never offered: the status line says to delete
+it by hand.
+
+Breaking. No folder is chosen or browsed to any more (owner, 30-10-2026): LB Folders with its added folders, usual
+places and folder browser, LB Firmware with its browser and RB Packages with its browser and its Y marks are gone;
+folders added before are no longer looked in (library.folders(), set_folders(), suggested() and userdata.packages()
+removed, MainWindow's roots argument too). LB on Your games is Steam artwork now, RB Remove game. The Log pane shows
+where Games\PS3 is.
+
+Fixed. The newest lines of the Log pane stay at its bottom when the rows above them wrap to two lines once laid out
+(a long folder): they were scrolled before the layout was done.
+
 Changelog: 01-11-2026 17:36:48
 
 Release 3.4.0.

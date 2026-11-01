@@ -9,8 +9,8 @@
 Plays your PSP games on a Windows handheld with PPSSPP, the PSP emulator: PPSSPP 1.20.4 for Windows from PPSSPP's own
 release, checked against the checksum this version of the app was tested with, for your own user and in PPSSPP's
 portable mode, so its settings, the saves and the save states stay on its memory stick in its folder. It offers
-PPSSPP's settings that matter on the handheld, finds your PSP games in the folders you choose and on PPSSPP's memory
-stick, plays them and puts them in Steam (with the game's own pictures, and a cover from SteamGridDB when you give it
+PPSSPP's settings that matter on the handheld, finds your PSP games in its own Games\PSP folder (and on an SD card) and
+on PPSSPP's memory stick, plays them and puts them in Steam (with the game's own pictures, and a cover from SteamGridDB when you give it
 your key), and keeps a log. PPSSPP's own window is never needed: a game starts alone and full screen, and the pause
 menu's Exit closes PPSSPP. Remove takes PPSSPP's program away and leaves what you made.
 

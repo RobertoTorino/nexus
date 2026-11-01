@@ -3,12 +3,12 @@
 battery, date and time, fits the handheld's screen; every action is a button in the row at the bottom, A too, and no
 pill is left (owner, 29-10-2026); B goes back and View exits; RPCS3 installed on A (off the window's thread, the
 megabytes counted, View asking first meanwhile, its files prepared after), updated from an older build, and removed
-with X pressed twice; the firmware and the packages given to RPCS3 without its window (stood in for) and the result
-read from its log; the Settings pane's rows, in tabs, step through their values, never while RPCS3 runs; Your games
-from the folders and RPCS3, marked for Steam with A, put in Steam and played through it with X, without Steam in
-RPCS3 itself; the
-folder browser, which opens where it was left; the Log pane and the whole log read in the app; the SteamGridDB key; the version and the
-icons are where the checks expect them."""
+with X pressed twice; the firmware put in Games/PS3/Firmware and the packages put in Games/PS3 given to RPCS3
+without its window (stood in for), the result read from its log, a package installed whole deleted; the Settings
+pane's rows, in tabs, step through their values, never while RPCS3 runs; Your games from the app's Games/PS3 folders
+and RPCS3, marked for Steam with A, put in Steam and played through it with X, without Steam in RPCS3 itself, and
+removed with RB pressed twice; the Log pane and the whole log read in the app; the SteamGridDB key; the version and
+the icons are where the checks expect them."""
 
 from __future__ import annotations
 
@@ -22,14 +22,15 @@ from pathlib import Path
 import pytest
 from PyQt6.QtCore import QSettings
 
-from bc250_core import play, portable, steam
+from bc250_core import keep, play, portable, steam
 from bc250_core.gamepad import Gamepad
 from bc250_core.portable import BACK, EXIT, KEYBOARD, VIEW
 from bc250_core.portable import INFO as MENU_INFO
 from conftest import fake_install, make_disc_game, make_hdd_game, write_rpcs3_files
 from rpcs3_manager import APP_ID, APP_NAME, EXE_NAME, INFO, LOGO_PATH, ROOT, __version__, emulator, shortcuts, userdata
-from rpcs3_manager.main_window import (NEEDS_RPCS3, NO_FIRMWARE, NO_STEAM, NOT_THE_GAMES, NOTHING_TO_CHANGE,
-                                       OPEN_A_FOLDER, MainWindow)
+from bc250_core.platform import private
+from rpcs3_manager.main_window import (FIRMWARE_TAKEN, NEEDS_RPCS3, NO_FIRMWARE, NO_STEAM, NOTHING_MARKED,
+                                       NOTHING_TO_CHANGE, NOTHING_TO_INSTALL, MainWindow)
 
 FIRMWARE = "release:04.9200:\nbuild:...\n"
 
@@ -56,8 +57,8 @@ def wait_for(qapp, predicate, seconds=5.0):
 def make(qapp, home=None, install=fake_install, running=lambda home: False, **more):
     more.setdefault("steam_dir", None)                  # never the real Steam
     more.setdefault("start", lambda command, cwd=None: None)   # never a real RPCS3
+    more.setdefault("user_home", Path(tempfile.mkdtemp()) / "me")   # never the real Games\PS3
     more.setdefault("drives", lambda: [])
-    more.setdefault("roots", lambda: [])
     more.setdefault("runtime_missing", lambda: [])
     more.setdefault("run_headless", lambda home, *args: 0)
     more.setdefault("settings", QSettings(str(Path(tempfile.mkdtemp()) / "app.ini"),
@@ -138,8 +139,6 @@ def test_nothing_is_installed_before_a(qapp, tmp_path):
     assert dict(window.rows())["Installed"] == "not installed" and dict(window.rows())["Firmware"] == "none yet"
     window.on_action("x")                                       # X Remove: says why, nothing happens
     assert "nothing to remove" in window.status.text() and calls == []
-    window.on_action("previous")                                # LB Firmware: RPCS3 first
-    assert window.status.text() == NEEDS_RPCS3 and window.panes.currentWidget() is window.pane
     window.close()
 
 
@@ -160,7 +159,7 @@ def test_a_installs_off_the_windows_thread_and_counts_the_megabytes(qapp, tmp_pa
     gate.set()
     assert wait_for(qapp, lambda: not window.busy)
     assert window.status.text() == f"RPCS3 {emulator.VERSION} is installed."
-    assert window.legend.items == [("X", "Remove RPCS3"), ("LB", "Firmware"), ("RB", "Packages"), MENU_INFO, EXIT]
+    assert window.legend.items == [("X", "Remove RPCS3"), MENU_INFO, EXIT]       # no browser (owner, 30-10-2026)
     assert userdata.pad_device(tmp_path / "emulator") == "XInput Pad #1"          # prepared before its first start
     assert "checkUpdateStart=false" in (tmp_path / "emulator" / userdata.GUI_SETTINGS).read_text()
     window.on_action("view")
@@ -185,8 +184,7 @@ def test_update_and_remove_with_x_pressed_twice(qapp, tmp_path):
     save.parent.mkdir(parents=True)
     save.write_bytes(b"x")
     window = make(qapp, home)
-    assert window.legend.items == [("X", "Remove RPCS3"), ("Y", "Update"), ("LB", "Firmware"), ("RB", "Packages"),
-                                   MENU_INFO, EXIT]
+    assert window.legend.items == [("X", "Remove RPCS3"), ("Y", "Update"), MENU_INFO, EXIT]
     assert window.status.text() == f"This app installs RPCS3 {emulator.VERSION}: the Y button updates it."
     window.act("y")
     assert wait_for(qapp, lambda: not window.busy) and emulator.installed(home) == emulator.VERSION
@@ -218,8 +216,10 @@ def test_the_runtime_and_the_firmware_are_asked_for(qapp, tmp_path):
     window = make(qapp, home, runtime_missing=lambda: ["msvcp140.dll"])
     assert window.status.text().startswith("RPCS3 needs Microsoft's Visual C++ runtime (msvcp140.dll missing")
     window.close()
-    window = make(qapp, home)
-    assert window.status.text() == "No firmware yet: the LB button takes the PS3UPDAT.PUP you downloaded."
+    window = make(qapp, home, user_home=tmp_path / "me")
+    firmware = tmp_path / "me" / "Games" / "PS3" / "Firmware"
+    assert window.status.text() == f"No firmware yet: put PS3UPDAT.PUP in {private(firmware)}, and RPCS3 installs it."
+    assert (tmp_path / "me" / "Games" / "PS3" / "Firmware").is_dir()                # made by the app
     window.close()
 
 
@@ -312,7 +312,7 @@ def test_the_window_fits_a_smaller_screen(qapp, tmp_path):
     portable.pin_scale((1097, 617))
     try:
         window = MainWindow(gamepad=Gamepad(source_factory=FakePad), battery=lambda: (82, False), steam_dir=None,
-                            home=tmp_path / "emulator", roots=lambda: [], runtime_missing=lambda: [],
+                            home=tmp_path / "emulator", user_home=tmp_path / "me", runtime_missing=lambda: [],
                             settings=QSettings(str(tmp_path / "app.ini"), QSettings.Format.IniFormat))
         window.resize(1097, 617)
         window.show()
@@ -323,83 +323,130 @@ def test_the_window_fits_a_smaller_screen(qapp, tmp_path):
         portable.pin_scale((1280, 720))
 
 
-def test_the_firmware_is_installed_by_rpcs3_without_its_window(qapp, tmp_path, monkeypatch):
-    """LB Firmware opens the browser in Downloads with the .PUP files; A on one runs RPCS3 headless (stood in for:
-    it writes the log and the version file RPCS3 would), and the RPCS3 pane shows the version."""
+def make_pup(path: Path, version: str = "4.92", extra: bytes = b"") -> Path:
+    """A PUP as the PS3's firmware file is laid out: the header, its files' entries, the version text (file 0x100)."""
+    import struct
+    text = f"{version}\n".encode() + extra
+    head = b"SCEUF\0\0\0" + struct.pack(">5Q", 1, 1, 1, 48 + 32, len(text))
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(head + struct.pack(">3Q", 0x100, 48 + 32, len(text)) + b"\0" * 8 + text)
+    return path
+
+
+def firmware_run(runs: list, version: str = "4.92"):
+    """RPCS3 without its window, stood in for: it writes the log and the version file RPCS3 would."""
+    def run_headless(home_, *args):
+        runs.append(args)
+        write_rpcs3_files(home_, f"release:0{version}00:\nbuild:...\n")
+        log = userdata.rpcs3_log(home_)
+        log.parent.mkdir(parents=True, exist_ok=True)
+        log.write_text(f"·S 0:01:40.9 GUI: Successfully installed PS3 firmware version {version}.\n",
+                       encoding="utf-8")
+        return -1073740791                                      # RPCS3's own fault at teardown
+    return run_headless
+
+
+def test_the_firmware_in_its_folder_is_installed_by_itself(qapp, tmp_path, monkeypatch):
+    r"""The firmware is put in Games\PS3\Firmware (owner, 30-10-2026: no browsing; 01-11-2026: taken in
+    automatically): RPCS3 installs it without its window when the app opens, and the RPCS3 pane shows the version;
+    the card's focus again gives it no second time, a file of the installed version neither, another file does."""
     home = tmp_path / "emulator"
     fake_install(home)
     user = tmp_path / "me"
-    (user / "Downloads").mkdir(parents=True)
-    pup = user / "Downloads" / "PS3UPDAT.PUP"
-    pup.write_bytes(b"pup")
-    (user / "Downloads" / "notes.txt").write_text("")
+    pup = make_pup(user / "Games" / "PS3" / "Firmware" / "PS3UPDAT.PUP", "4.90")
+    (pup.parent / "notes.txt").write_text("")
+    runs = []
+    window = make(qapp, home, user_home=user, run_headless=firmware_run(runs, "4.90"))
+    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
+    assert window.busy and window.status.text().startswith("RPCS3 installs PS3UPDAT.PUP, without its window")
+    assert window.legend.items == [MENU_INFO, EXIT]
+    assert wait_for(qapp, lambda: not window.busy)
+    assert runs == [("--installfw", str(pup))] and pup.is_file()           # the file stays
+    assert window.status.text() == "PS3 firmware 4.90 is installed." and window.firmware == "4.90"
+    assert dict(window.rows())["Firmware"] == "4.90"
+    window.games_card.setFocus()
+    window.rpcs3_card.setFocus()                                # the card again: the same file is not given again
+    qapp.processEvents()
+    assert runs == [("--installfw", str(pup))] and not window.busy
+    window.settings.remove(FIRMWARE_TAKEN)                      # even unrecorded: 4.90 is installed already
+    window.games_card.setFocus()
+    window.rpcs3_card.setFocus()
+    assert len(runs) == 1 and not window.busy
+    make_pup(pup, "4.92", b"x")                                 # a newer firmware put in
+    window.run_headless = firmware_run(runs, "4.92")
+    window.games_card.setFocus()
+    window.rpcs3_card.setFocus()
+    assert window.busy and wait_for(qapp, lambda: not window.busy)
+    assert len(runs) == 2 and window.firmware == "4.92"
+    window.close()
+
+
+def test_the_firmware_waits_for_rpcs3(qapp, tmp_path):
+    """Without RPCS3, or while it runs, the firmware waits; once RPCS3 is installed, it is given to it."""
+    home = tmp_path / "emulator"
+    user = tmp_path / "me"
+    pup = make_pup(user / "Games" / "PS3" / "Firmware" / "PS3UPDAT.PUP")
+    runs = []
+    window = make(qapp, home, user_home=user, run_headless=firmware_run(runs))
+    assert not window.busy and runs == []                       # no RPCS3 yet
+    window.act("accept")                                        # A Install: then the firmware
+    assert wait_for(qapp, lambda: runs and not window.busy)
+    assert runs == [("--installfw", str(pup))] and window.firmware == "4.92"
+    window.close()
+    other = tmp_path / "other"
+    fake_install(other)
+    window = make(qapp, other, user_home=user, running=lambda h: True, run_headless=firmware_run(runs))
+    assert not window.busy and len(runs) == 1                   # RPCS3 is open: it waits
+    window.close()
+
+
+def test_a_firmware_rpcs3_refuses_is_said_and_not_given_again(qapp, tmp_path, monkeypatch):
+    home = tmp_path / "emulator"
+    fake_install(home)
+    user = tmp_path / "me"
+    pup = user / "Games" / "PS3" / "Firmware" / "x.pup"
+    pup.parent.mkdir(parents=True)
+    pup.write_bytes(b"not a pup")
     runs = []
 
     def run_headless(home_, *args):
         runs.append(args)
-        write_rpcs3_files(home_, FIRMWARE)
-        log = userdata.rpcs3_log(home_)
-        log.parent.mkdir(parents=True, exist_ok=True)
-        log.write_text("·S 0:01:40.9 GUI: Successfully installed PS3 firmware version 4.92.\n", encoding="utf-8")
-        return -1073740791                                      # RPCS3's own fault at teardown
-    window = make(qapp, home, user_home=user, run_headless=run_headless)
-    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
-    window.on_action("previous")                                # LB Firmware
-    assert window.panes.currentWidget() is window.browse_pane and window.browser.path == user / "Downloads"
-    assert window.browse_pane.heading.text() == "Choose the firmware file"
-    assert window.legend.items == [("A", "Open"), MENU_INFO, BACK, EXIT]
-    rows = window.browse_pane.list.pills
-    assert list(rows)[1:] == [f"file:{pup}"]                    # the .PUP, not the text file
-    window.on_action("x")                                       # X does nothing here
-    rows[f"file:{pup}"].click()                                 # A on it
-    assert window.busy and window.panes.currentWidget() is window.pane
-    assert window.status.text().startswith("RPCS3 installs PS3UPDAT.PUP, without its window")
-    assert wait_for(qapp, lambda: not window.busy)
-    assert runs == [("--installfw", str(pup))]
-    assert window.status.text() == "PS3 firmware 4.92 is installed." and window.firmware == "4.92"
-    assert dict(window.rows())["Firmware"] == "4.92"
-    window.close()
-
-
-def test_a_firmware_rpcs3_refuses_is_said(qapp, tmp_path, monkeypatch):
-    home = tmp_path / "emulator"
-    fake_install(home)
-
-    def run_headless(home_, *args):
         log = userdata.rpcs3_log(home_)
         log.parent.mkdir(parents=True, exist_ok=True)
         log.write_text("·E 0:00:00.1 GUI: Error while installing firmware: provided file is not a PUP file.\n",
                        encoding="utf-8")
         return -1073740791
-    window = make(qapp, home, run_headless=run_headless)
-    window.install_firmware(tmp_path / "x.pup")
+    window = make(qapp, home, user_home=user, run_headless=run_headless)
+    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
     assert wait_for(qapp, lambda: not window.busy)
     assert window.status.text() == ("RPCS3 did not install the firmware: Error while installing firmware: provided "
                                     "file is not a PUP file.")
+    window.games_card.setFocus()
+    window.rpcs3_card.setFocus()                                # refused once: not on every focus
+    assert len(runs) == 1 and not window.busy
     window.close()
 
 
-def test_packages_are_installed_one_run_each_the_updates_last(qapp, tmp_path, monkeypatch):
-    """RB Packages opens the browser; X installs the open folder's licenses and packages, each in a run of RPCS3
-    without its window (stood in for), the game before its update; the result from RPCS3's log."""
-    home = tmp_path / "emulator"
-    ready(home)
-    user = tmp_path / "me"
-    pkgs = user / "Downloads" / "lumines"
-    pkgs.mkdir(parents=True)
-    fixtures = Path(__file__).resolve().parents[4] / "bc250-bazzite" / "apps" / "rpcs3" / "tests" / "fixtures"
-    (pkgs / "A-Update.pkg").write_bytes((fixtures / "update.pkg.head").read_bytes())
-    (pkgs / "Game.pkg").write_bytes((fixtures / "game.pkg.head").read_bytes())
-    (pkgs / "Game.rap").write_bytes(b"")
-    runs = []
+FIXTURES = Path(__file__).resolve().parents[4] / "bc250-bazzite" / "apps" / "rpcs3" / "tests" / "fixtures"
 
+
+def package_run(runs: list, failing: str = ""):
+    """RPCS3 without its window, stood in for, for packages: a license copied into exdata, the game installed into
+    dev_hdd0, its update over it; *failing* names a file RPCS3 could not install."""
     def run_headless(home_, *args):
-        runs.append(Path(args[1]).name)
+        name = Path(args[1]).name
+        runs.append(name)
         log = userdata.rpcs3_log(home_)
         log.parent.mkdir(parents=True, exist_ok=True)
-        if args[1].endswith(".rap"):
-            log.write_text("·S 0:00:00.1 GUI: Successfully copied rap file: Game.rap\n", encoding="utf-8")
-        elif args[1].endswith("Game.pkg"):
+        if name == failing:
+            log.write_text(f"·E 0:01:03.1 GUI: Failed to install {args[1]} (title_id=NPUB30048, title=LUMINES "
+                           "Supernova, version=01.00).\n", encoding="utf-8")
+        elif name.endswith(".rap"):
+            exdata = home_ / "dev_hdd0" / "home" / "00000001" / "exdata"
+            exdata.mkdir(parents=True, exist_ok=True)
+            (exdata / name).write_bytes(b"")
+            log.write_text(f"·S 0:00:00.1 GUI: Successfully copied rap file: {name}\n", encoding="utf-8")
+        elif "Update" not in name:
             make_hdd_game(home_ / "dev_hdd0" / "game" / "NPUB30048", "LUMINES Supernova", "NPUB30048")
             log.write_text("·S 0:01:03.1 GUI: Successfully installed x (title_id=NPUB30048, title=LUMINES Supernova, "
                            "version=01.00).\n", encoding="utf-8")
@@ -407,38 +454,128 @@ def test_packages_are_installed_one_run_each_the_updates_last(qapp, tmp_path, mo
             log.write_text("·S 0:01:03.1 GUI: Successfully installed y (title_id=NPUB30048, title=LUMINES Supernova, "
                            "version=01.02).\n", encoding="utf-8")
         return 0
-    window = make(qapp, home, user_home=user, run_headless=run_headless)
+    return run_headless
+
+
+def test_the_packages_in_games_ps3_are_installed_from_your_games(qapp, tmp_path, monkeypatch):
+    r"""The packages and licenses are put in Games\PS3 (owner, 30-10-2026: no browsing): each a short row, PKG, PKG
+    update or License; X Install all has RPCS3 install them without its window (stood in for), one run each, the
+    license first, the game before its update. Nothing is deleted by itself (owner, 01-11-2026: before deleting
+    anything, let the user decide what to keep): the keep page lists the packages installed whole, each marked Delete;
+    A keeps one, X deletes the marked ones only. The license stays and is no row once RPCS3 keeps it; a package kept
+    is no row either, and X Install all leaves it alone, until the file changes."""
+    home = tmp_path / "emulator"
+    ready(home)
+    user = tmp_path / "me"
+    pkgs = user / "Games" / "PS3" / "lumines"
+    pkgs.mkdir(parents=True)
+    update = pkgs / "A-Update.pkg"
+    update.write_bytes((FIXTURES / "update.pkg.head").read_bytes())
+    game = pkgs / "Game.pkg"
+    game.write_bytes((FIXTURES / "game.pkg.head").read_bytes())
+    rap = pkgs / "Game.rap"
+    rap.write_bytes(b"")
+    runs = []
+    window = make(qapp, home, user_home=user, run_headless=package_run(runs))
     monkeypatch.setattr(window, "isActiveWindow", lambda: True)
-    window.on_action("next")                                    # RB Packages
-    assert window.panes.currentWidget() is window.browse_pane
-    assert window.legend.items == [("A", "Open"), ("X", "Install from this folder"), MENU_INFO, BACK, EXIT]
-    assert window.browser.path == user / "Downloads"
-    window.browse_pane.list.pills[f"dir:{pkgs}"].click()       # into the folder: its files show
-    assert sorted(k for k in window.browse_pane.list.pills if k.startswith("file:")) == sorted(
-        f"file:{pkgs / n}" for n in ("A-Update.pkg", "Game.pkg", "Game.rap"))
-    window.on_action("x")                                       # X: install the folder's
-    assert window.busy and window.panes.currentWidget() is window.pane
-    assert "RPCS3 installs 2 package(s) and 1 license(s) from lumines" in window.status.text()
+    window.games_card.setFocus()
+    window.on_action("accept")
+    pane = window.games_pane
+    assert pane.summary.text().startswith("0 game(s) in 1 folder(s) and in RPCS3, 3 to install")
+    assert [p.label.text() for p in pane.list.pills.values()] == ["Game  ·  NPUB30048  ·  PKG",
+                                                                  "A-Update  ·  NPUB30048  ·  PKG update",
+                                                                  "Game.rap  ·  License"]
+    assert pane.list.focused() == f"pkg:{game}"
+    assert window.legend.items == [("A", "Install"), ("X", "Install all"), ("Y", "Update Steam"),
+                                   ("LB", "Steam artwork"), MENU_INFO, BACK, EXIT]
+    window.on_action("x")                                       # X Install all
+    assert window.busy and window.panes.currentWidget() is pane
+    assert "RPCS3 installs 2 package(s) and 1 license(s), without its window" in pane.status.text()
     assert wait_for(qapp, lambda: not window.busy)
     assert runs == ["Game.rap", "Game.pkg", "A-Update.pkg"]
-    assert window.status.text() == ("2 game(s) installed in RPCS3: LUMINES Supernova (NPUB30048), LUMINES Supernova "
-                                    "(NPUB30048); 1 license(s) copied into RPCS3.")
-    window.games_card.setFocus()
-    qapp.processEvents()
-    assert [p.label.text() for p in window.games_pane.list.pills.values()] == ["LUMINES Supernova  ·  NPUB30048"]
-    window.rpcs3_card.setFocus()
-    window.on_action("next")                                    # RB again: the folder of before (owner, 29-10-2026)
-    assert window.browser.path == pkgs
+    assert pane.status.text() == ("2 game(s) installed in RPCS3: LUMINES Supernova (NPUB30048), LUMINES Supernova "
+                                  "(NPUB30048); 1 license(s) copied into RPCS3.")
+    page = window.keep_pane                                     # the user decides what to keep
+    assert window.panes.currentWidget() is page and game.is_file() and update.is_file() and rap.is_file()
+    assert page.heading.text() == "Installed: delete the packages?"
+    assert [p.label.text() for p in page.list.pills.values()] == [
+        f"Delete  ·  Game.pkg, installed in RPCS3  ·  {keep.human(game.stat().st_size)}",
+        f"Delete  ·  A-Update.pkg, installed in RPCS3  ·  {keep.human(update.stat().st_size)}"]
+    assert page.summary.text().endswith("The B button goes back and deletes nothing.")
+    assert page.list.focused() == str(game)
+    assert window.legend.items == [("A", "Keep"), ("X", "Delete marked"), MENU_INFO, BACK, EXIT]
+    window.on_action("accept")                                  # A: Game.pkg kept
+    assert page.list.pills[str(game)].label.text().startswith("Keep  ·  Game.pkg") and page.list.focused() == str(game)
+    assert window.legend.items[0] == ("A", "Delete")
+    window.on_action("x")                                       # X: only the one marked Delete
+    assert wait_for(qapp, lambda: not window.busy)
+    assert game.is_file() and not update.exists() and rap.is_file()
+    assert window.panes.currentWidget() is pane
+    assert pane.status.text() == ("deleted A-Update.pkg, installed in RPCS3. Kept: Game.pkg, installed in RPCS3.")
+    assert [p.label.text() for p in pane.list.pills.values()] == ["LUMINES Supernova  ·  NPUB30048"]   # kept: no row
+    window.install_waiting(window.packages, window.licenses)    # X Install all: the kept one is not installed again
+    assert runs == ["Game.rap", "Game.pkg", "A-Update.pkg"] and pane.status.text() == NOTHING_TO_INSTALL
+    window.close()
+    game.write_bytes(game.read_bytes() + b"\0")                 # the file changed: it waits again
+    window = make(qapp, home, user_home=user, settings=window.settings, run_headless=package_run(runs))
+    assert list(window.games_pane.list.pills)[-1] == f"pkg:{game}"
     window.close()
 
 
-def test_a_folder_without_packages_says_so(qapp, tmp_path):
+def test_b_on_the_installed_packages_keeps_them_all(qapp, tmp_path, monkeypatch):
+    """B on the keep page after an install deletes nothing, and the packages kept are not listed again."""
     home = tmp_path / "emulator"
     ready(home)
-    (tmp_path / "empty").mkdir()
-    window = make(qapp, home)
-    window.install_packages(tmp_path / "empty")
-    assert window.status.text() == "No .pkg, .rap or .edat file in empty." and not window.busy
+    user = tmp_path / "me"
+    own = user / "Games" / "PS3"
+    own.mkdir(parents=True)
+    game = own / "Game.pkg"
+    game.write_bytes((FIXTURES / "game.pkg.head").read_bytes())
+    runs = []
+    window = make(qapp, home, user_home=user, run_headless=package_run(runs))
+    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
+    window.games_card.setFocus()
+    window.games_pane.list.pills[f"pkg:{game}"].click()
+    assert wait_for(qapp, lambda: not window.busy) and window.panes.currentWidget() is window.keep_pane
+    window.on_action("accept")                                  # A: kept
+    window.on_action("x")                                       # X with nothing marked: says so, deletes nothing
+    assert window.keep_pane.status.text() == NOTHING_MARKED and game.is_file() and not window.busy
+    window.on_action("accept")                                  # marked Delete again
+    window.on_action("back")                                    # B: nothing deleted
+    assert window.panes.currentWidget() is window.games_pane and game.is_file()
+    assert window.games_pane.status.text() == ("Nothing was deleted. The packages stay, and are not listed "
+                                               "again.")
+    assert f"pkg:{game}" not in window.games_pane.list.pills
+    window.close()
+
+
+def test_a_package_rpcs3_could_not_install_stays(qapp, tmp_path, monkeypatch):
+    """A on a package installs that one alone; one RPCS3 could not install stays, and says so."""
+    home = tmp_path / "emulator"
+    ready(home)
+    user = tmp_path / "me"
+    own = user / "Games" / "PS3"
+    own.mkdir(parents=True)
+    game = own / "Game.pkg"
+    game.write_bytes((FIXTURES / "game.pkg.head").read_bytes())
+    dlc = own / "Extra.pkg"
+    dlc.write_bytes((FIXTURES / "dlc.pkg.head").read_bytes())
+    runs = []
+    window = make(qapp, home, user_home=user, run_headless=package_run(runs, failing="Game.pkg"))
+    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
+    window.games_card.setFocus()
+    window.games_pane.list.pills[f"pkg:{game}"].click()       # A on one: that one
+    assert wait_for(qapp, lambda: not window.busy)
+    assert runs == ["Game.pkg"] and game.is_file() and dlc.is_file()
+    assert window.games_pane.status.text() == ("1 package(s) RPCS3 could not install: LUMINES Supernova (NPUB30048). "
+                                               "RPCS3's log (log\\RPCS3.log in its folder) has the details.")
+    assert list(window.games_pane.list.pills) == [f"pkg:{dlc}", f"pkg:{game}"]
+    window.install_waiting([], [])
+    assert window.games_pane.status.text() == NOTHING_TO_INSTALL
+    window.close()
+    window = make(qapp, tmp_path / "bare", user_home=user)      # no RPCS3: says so
+    window.install_waiting(window.packages, [])
+    assert window.games_pane.status.text() == NEEDS_RPCS3 and not window.busy
     window.close()
 
 
@@ -467,18 +604,10 @@ def test_your_games_are_marked_with_a_and_put_in_steam(qapp, tmp_path, monkeypat
     monkeypatch.setattr(window, "isActiveWindow", lambda: True)
     window.games_card.setFocus()
     qapp.processEvents()
-    assert window.legend.items == [("A", "Steam mark"), ("Y", "Update Steam"), ("LB", "Folders"),
-                                   ("RB", "Steam artwork"), MENU_INFO, EXIT]
+    assert window.legend.items == [("A", "Steam mark"), ("Y", "Update Steam"), ("LB", "Steam artwork"), MENU_INFO,
+                                   EXIT]
     assert not hasattr(window, "steam_row")
     assert "Press the A button on a game to mark it for Steam" in window.games_pane.info.info
-    assert list(window.games_pane.list.pills) == [str(hdd_game)]                   # RPCS3's, no folder yet
-    window.on_action("previous")                                   # LB Folders: the usual places, and Browse
-    assert window.legend.items == [("A", "Choose"), ("LB", "Games"), ("RB", "Steam artwork"), MENU_INFO, BACK, EXIT]
-    pills = window.games_pane.list.pills
-    assert list(pills) == [f"add:{games}", f"add:{user / 'Downloads'}", "browse"]
-    pills[f"add:{games}"].click()
-    assert "1 game(s) in it" in window.games_pane.status.text()
-    window.on_action("back")                                       # B on the folders: the games
     pills = window.games_pane.list.pills
     assert [pill.label.text() for pill in pills.values()] == ["Demon's Souls  ·  BLUS30443", "Flower  ·  NPUB30001"]
     window.legend.entries["Y"].pressed.emit()                      # a tap on Y Update Steam: nothing to change yet
@@ -542,13 +671,11 @@ def test_without_steam_x_starts_the_game_in_rpcs3(qapp, tmp_path, monkeypatch):
 def test_update_steam_needs_rpcs3_and_its_firmware(qapp, tmp_path, monkeypatch):
     home = tmp_path / "emulator"
     fake_install(home)                                             # no firmware
-    folder = tmp_path / "games"
-    make_disc_game(folder / "A", "A", "BLUS00001")
+    make_disc_game(tmp_path / "me" / "Games" / "PS3" / "A", "A", "BLUS00001")
     steam_dir = tmp_path / "Steam"
     (steam_dir / "userdata" / "1" / "config").mkdir(parents=True)
     window = make(qapp, home, steam_dir=steam_dir, user_home=tmp_path / "me")
     monkeypatch.setattr(window, "isActiveWindow", lambda: True)
-    window.add_folder(folder)
     window.games_card.setFocus()
     window.games_pane.list.first().setFocus()
     qapp.processEvents()
@@ -559,49 +686,37 @@ def test_update_steam_needs_rpcs3_and_its_firmware(qapp, tmp_path, monkeypatch):
 
 
 def test_a_disc_game_without_its_sfb_is_marked_so(qapp, tmp_path):
-    folder = tmp_path / "games"
-    make_disc_game(folder / "A", "A", "BLUS00001", sfb=None)
+    make_disc_game(tmp_path / "me" / "Games" / "PS3" / "A", "A", "BLUS00001", sfb=None)
     window = make(qapp, tmp_path / "emulator", user_home=tmp_path / "me")
-    window.add_folder(folder)
     assert [p.label.text() for p in window.games_pane.list.pills.values()] == ["A  ·  BLUS00001  ·  no PS3_DISC.SFB"]
     window.close()
 
 
-def test_the_folder_browser_goes_by_the_controller(qapp, tmp_path, monkeypatch):
-    """Windows' own folder window cannot be used with the controller (owner, 29-10-2026): the app's browser lists the
-    places and the folders; A opens one, X adds the open folder, B goes up and, from the places, back."""
+def test_the_games_are_in_the_apps_own_folders(qapp, tmp_path, monkeypatch):
+    r"""No folder is chosen (owner, 30-10-2026): the games are in Games\PS3 in the user's folder, which the app makes,
+    and in Games\PS3 on an SD card; a card without it, or an empty card slot, is no place; the old game folders of
+    the settings are no longer looked in."""
     user = tmp_path / "me"
-    target = user / "Games" / "PS3"
-    make_disc_game(target / "DeS", "Demon's Souls", "BLUS30443")
-    card = tmp_path / "E"
-    (card / "roms").mkdir(parents=True)
-    window = make(qapp, tmp_path / "emulator", user_home=user, roots=lambda: [card])
+    card, bare = tmp_path / "E", tmp_path / "F"
+    des = make_disc_game(card / "Games" / "PS3" / "DeS", "Demon's Souls", "BLUS30443")
+    make_disc_game(bare / "roms" / "Other", "Other", "BLUS00002")
+
+    class EmptySlot(type(tmp_path)):        # a card reader without a card: Windows raises when asked about it
+        def is_dir(self):
+            raise OSError(22, "The volume does not contain a recognized file system.")
+    settings = QSettings(str(tmp_path / "app.ini"), QSettings.Format.IniFormat)
+    settings.setValue("games/folders", [str(bare / "roms")])        # chosen before
+    window = make(qapp, tmp_path / "emulator", user_home=user, settings=settings,
+                  drives=lambda: [card, bare, EmptySlot(tmp_path / "G")])
     monkeypatch.setattr(window, "isActiveWindow", lambda: True)
-    window.games_card.setFocus()
-    window.on_action("previous")                                   # LB Folders
-    window.games_pane.list.pills["browse"].click()
-    assert window.panes.currentWidget() is window.browse_pane
-    assert window.legend.items == [("A", "Open"), ("X", "Add this folder"), MENU_INFO, BACK, EXIT]
-    rows = window.browse_pane.list.pills
-    assert list(rows) == [f"dir:{user / 'Games'}", f"dir:{card}"]
-    window.on_action("x")                                          # nothing open yet: says how
-    assert window.browse_pane.status.text() == OPEN_A_FOLDER
-    rows[f"dir:{user / 'Games'}"].setFocus()
-    window.on_action("accept")                                     # A opens it
-    assert window.browser.path == user / "Games" and list(window.browse_pane.list.pills)[1] == f"dir:{target}"
-    window.on_action("back")                                       # B: up, to the places
-    assert window.browser.path is None and window.panes.currentWidget() is window.browse_pane
-    window.browse_pane.list.pills[f"dir:{user / 'Games'}"].click()
-    window.browse_pane.list.pills[f"dir:{target}"].click()
-    window.on_action("x")                                          # X: this folder
-    assert window.panes.currentWidget() is window.games_pane and window.games_view == "folders"
-    assert f"folder:{target}" in window.games_pane.list.pills and "1 game(s) in it" in window.games_pane.status.text()
-    window.games_pane.list.pills["browse"].click()                 # again: where it was left
-    assert window.browser.path == target
-    window.on_action("back")                                       # B: up, Games, a place
-    window.on_action("back")                                       # the places
-    window.on_action("back")                                       # B at the places: back to the folders
-    assert window.panes.currentWidget() is window.games_pane and window.browser is None
+    assert (user / "Games" / "PS3" / "Firmware").is_dir()
+    assert window.game_folders() == [user / "Games" / "PS3", card / "Games" / "PS3"]
+    assert list(window.games_pane.list.pills) == [str(des)]
+    assert window.games_pane.summary.text().startswith("1 game(s) in 2 folder(s) and in RPCS3")
+    window.log_card.setFocus()
+    qapp.processEvents()
+    texts = [label.text().replace("\u200b", "") for label in window.log_pane.findChildren(type(window.status))]
+    assert "Games" in texts and private(user / "Games" / "PS3") in texts
     window.close()
 
 
@@ -609,7 +724,7 @@ def test_a_game_written_but_not_read_back_is_said_and_logged(qapp, tmp_path, mon
     from rpcs3_manager import library
     home = tmp_path / "emulator"
     ready(home)
-    make_disc_game(tmp_path / "me" / "Games" / "A", "A")
+    make_disc_game(tmp_path / "me" / "Games" / "PS3" / "A", "A")
     steam_dir = tmp_path / "Steam"
     (steam_dir / "userdata" / "1" / "config").mkdir(parents=True)
     monkeypatch.setattr(library, "update_steam", lambda *a, **k: (True, "1 game(s) in Steam.", {}))
@@ -617,7 +732,6 @@ def test_a_game_written_but_not_read_back_is_said_and_logged(qapp, tmp_path, mon
     monkeypatch.setattr(window, "isActiveWindow", lambda: True)
     logged = []
     monkeypatch.setattr(window.log, "error", lambda text: logged.append(text))
-    window.add_folder(tmp_path / "me" / "Games")
     window.games_card.setFocus()
     window.games_pane.list.first().setFocus()
     qapp.processEvents()
@@ -629,18 +743,85 @@ def test_a_game_written_but_not_read_back_is_said_and_logged(qapp, tmp_path, mon
     window.close()
 
 
-def test_a_folder_is_taken_off_the_list_with_a_second_press(qapp, tmp_path):
-    folder = tmp_path / "games"
-    make_disc_game(folder / "A", "A")
-    window = make(qapp, tmp_path / "emulator", user_home=tmp_path / "me")
-    window.add_folder(folder)
-    window.toggle_folders()
-    key = f"folder:{folder}"
-    window.games_pane.list.pills[key].click()
-    assert window.games_pane.list.pills[key].label.text() == "Press A again to take it off the list"
-    window.games_pane.list.pills[key].click()
-    assert key not in window.games_pane.list.pills and (folder / "A" / "PS3_DISC.SFB").is_file()
-    assert "no longer a game folder" in window.games_pane.status.text()
+def test_a_game_is_removed_from_steam_and_the_disk(qapp, tmp_path, monkeypatch):
+    """RB Remove game (owner, 30-10-2026: a game that no longer plays goes) shows the keep page (owner, 01-11-2026:
+    before deleting anything, let the user decide what to keep): a disc game's folder and its update in dev_hdd0 as
+    rows of their own, and its Steam shortcut, each marked Delete; A keeps one, B deletes nothing, X deletes the
+    marked ones off the window's thread, the shortcut through Steam closed for it. An installed game's folder in
+    dev_hdd0 goes the same way; the saves and the licenses are never on the page. A game that is a game folder
+    itself, or outside the app's folders, is never offered."""
+    home = tmp_path / "emulator"
+    ready(home)
+    hdd0 = home / "dev_hdd0"
+    games = tmp_path / "me" / "Games" / "PS3"
+    demon = make_disc_game(games / "DeS", "Demon's Souls", "BLUS30443")
+    (demon.parent / "EBOOT.BIN").chmod(0o444)                                     # read-only goes too
+    make_hdd_game(hdd0 / "game" / "BLUS30443", "Demon's Souls", "BLUS30443", "01.04", category="GD")   # its update
+    flower = make_hdd_game(hdd0 / "game" / "NPUB30001", "Flower", "NPUB30001")
+    save = hdd0 / "home" / "00000001" / "savedata" / "BLUS30443-S01"
+    save.mkdir(parents=True)
+    rap = hdd0 / "home" / "00000001" / "exdata" / "NPUB30001.rap"
+    rap.parent.mkdir(parents=True)
+    rap.write_bytes(b"")
+    elsewhere = make_disc_game(tmp_path / "old" / "Other", "Other", "BLUS00002")   # known to RPCS3 from before
+    write_rpcs3_files(home, FIRMWARE, games={"BLUS00002": f"{elsewhere.parents[2].as_posix()}/"})
+    steam_dir = tmp_path / "Steam"
+    (steam_dir / "userdata" / "1" / "config").mkdir(parents=True)
+    closed = []
+
+    def with_steam_closed(change):
+        closed.append(True)
+        change()
+        return True
+    card = tmp_path / "E"
+    loose = make_disc_game(card / "Games" / "PS3", "Alone", "BLUS00003")           # a game folder itself
+    window = make(qapp, home, steam_dir=steam_dir, steam_closed=with_steam_closed, user_home=tmp_path / "me",
+                  drives=lambda: [card])
+    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
+    window.mark_game(str(demon))
+    window.mark_game(str(flower))
+    window.update_steam()
+    assert wait_for(qapp, lambda: not window.busy) and len(shortcuts.in_steam(steam_dir)) == 2
+    window.games_card.setFocus()
+    window.on_action("accept")
+    window.games_pane.list.pills[str(demon)].setFocus()
+    qapp.processEvents()
+    assert window.legend.items[4] == ("RB", "Remove game")
+    window.on_action("next")                                    # RB: the page, nothing deleted yet
+    page = window.keep_pane
+    assert window.panes.currentWidget() is page and page.heading.text() == "Remove Demon's Souls" and demon.exists()
+    rows = [p.label.text() for p in page.list.pills.values()]
+    assert rows[0].startswith("Delete  ·  DeS, the game  ·  ")
+    assert rows[1].startswith("Delete  ·  BLUS30443, its update in RPCS3  ·  ")
+    assert rows[2] == "Delete  ·  Steam shortcut" and len(rows) == 3
+    window.on_action("back")                                    # B: nothing deleted
+    assert window.games_pane.status.text() == "Nothing was deleted." and demon.exists()
+    assert shortcuts.in_steam(steam_dir).keys() == {str(demon), str(flower)}
+    window.games_pane.list.pills[str(demon)].setFocus()
+    window.legend.entries["RB"].pressed.emit()                  # RB as a tap: the page again
+    window.keep_pane.list.pills[str(hdd0 / "game" / "BLUS30443")].click()   # the update kept
+    window.on_action("x")
+    assert wait_for(qapp, lambda: not window.busy)
+    assert not (games / "DeS").exists() and (hdd0 / "game" / "BLUS30443").is_dir() and flower.exists()
+    assert shortcuts.in_steam(steam_dir) == {str(flower): "[PS3] Flower"} and len(closed) == 2
+    assert window.games_pane.status.text() == ("Demon's Souls: deleted DeS, the game, Steam shortcut. Kept: BLUS30443, "
+                                               "its update in RPCS3. Its saves stay in RPCS3's folder.")
+    assert save.is_dir()
+    window.games_pane.list.pills[str(flower)].setFocus()
+    window.on_action("next")                                    # an installed game: its folder in dev_hdd0
+    assert [p.label.text().split("  ·  ")[1] for p in page.list.pills.values()] == [
+        "NPUB30001, the game in RPCS3 with its update and add-ons", "Steam shortcut"]
+    window.keep_pane.list.pills["steam"].click()                # the shortcut kept
+    window.on_action("x")
+    assert wait_for(qapp, lambda: not window.busy)
+    assert not (hdd0 / "game" / "NPUB30001").exists() and rap.is_file() and len(closed) == 2
+    for game, said in ((loose, "Alone is in PS3, one of the app's game folders itself"),
+                       (elsewhere, "Other is in ")):
+        window.games_pane.list.pills[str(game)].setFocus()
+        window.on_action("next")
+        assert window.games_pane.status.text().startswith(said) and game.exists() and not window.busy
+        assert window.panes.currentWidget() is window.games_pane
+    assert "outside the app's Games\\PS3 folders" in window.games_pane.status.text()
     window.close()
 
 
@@ -682,7 +863,7 @@ def test_the_log_is_read_in_the_app(qapp, tmp_path, monkeypatch):
 def test_the_steamgriddb_key_is_pasted_saved_and_removed(qapp, tmp_path, monkeypatch):
     r"""The BC250 app's Covers… key, as PCSX2 Manager has it on a page: one key for the suite in
     %APPDATA%\windows-portable-suite\steamgriddb-key, X Paste from the clipboard, A Save, Y Remove key with a second
-    press, B back without saving, the page on RB."""
+    press, B back without saving, the page on LB."""
     from bc250_core import covers
     from PyQt6.QtGui import QGuiApplication
     from rpcs3_manager import library
@@ -692,7 +873,7 @@ def test_the_steamgriddb_key_is_pasted_saved_and_removed(qapp, tmp_path, monkeyp
     monkeypatch.setattr(window, "isActiveWindow", lambda: True)
     window.games_card.setFocus()
     qapp.processEvents()
-    window.on_action("next")                                    # RB Steam artwork
+    window.on_action("previous")                                # LB Steam artwork
     pane = window.key_pane
     assert window.panes.currentWidget() is pane and pane.field.hasFocus()
     assert window.legend.items == [("A", "Save"), ("X", "Paste"), ("Y", "Remove key"), KEYBOARD, BACK, EXIT]
@@ -704,12 +885,12 @@ def test_the_steamgriddb_key_is_pasted_saved_and_removed(qapp, tmp_path, monkeyp
     assert pane.field.text() == "0123456789abcdef0123456789abcdef"
     window.on_action("back")                                    # B: back, nothing saved
     assert window.panes.currentWidget() is window.games_pane and not key_file.exists()
-    window.legend.entries["RB"].pressed.emit()                  # a tap on RB Steam artwork
+    window.legend.entries["LB"].pressed.emit()                  # a tap on LB Steam artwork
     window.key_pane.field.setText("0123456789abcdef0123456789abcdef")
     window.on_action("accept")                                  # A Save
     assert covers.read_key(key_file) == "0123456789abcdef0123456789abcdef"
     assert window.games_pane.status.text() == "The SteamGridDB key was changed." and pane.field.text() == ""
-    window.on_action("next")
+    window.on_action("previous")
     window.on_action("y")
     assert window.legend.items[2] == ("Y", "Press again") and key_file.exists()
     window.legend.entries["Y"].pressed.emit()                   # the second press, as a tap
@@ -718,16 +899,10 @@ def test_the_steamgriddb_key_is_pasted_saved_and_removed(qapp, tmp_path, monkeyp
 
 
 def test_y_on_your_games_always_says_what_it_did(qapp, tmp_path, monkeypatch):
-    folder = tmp_path / "games"
-    make_disc_game(folder / "A", "A")
+    make_disc_game(tmp_path / "me" / "Games" / "PS3" / "A", "A")
     window = make(qapp, tmp_path / "emulator", user_home=tmp_path / "me")
     monkeypatch.setattr(window, "isActiveWindow", lambda: True)
-    window.add_folder(folder)
     window.games_card.setFocus()
-    window.toggle_folders()
-    window.on_action("y")                                          # the folders: Update Steam is the games'
-    assert window.games_pane.status.text() == NOT_THE_GAMES
-    window.toggle_folders()
     window.games_pane.list.first().setFocus()
     qapp.processEvents()
     window.on_action("accept")
@@ -759,71 +934,21 @@ def test_menu_shows_the_panes_information_and_the_icon_is_touch_only(qapp, tmp_p
 
 
 def test_no_path_on_the_screen_shows_the_users_name(qapp, tmp_path):
-    """The privacy rule (owner, 29-10-2026): the folder, the game folders and the places to add show the user's
-    folders by their variable (%LOCALAPPDATA%, %USERPROFILE%)."""
+    """The privacy rule (owner, 29-10-2026): the folder and the game folder show the user's folders by their variable
+    (%LOCALAPPDATA%, %USERPROFILE%)."""
     import os
     user = Path(os.environ.get("USERPROFILE") or Path.home())
     games = user / "AppData" / "Local" / "Temp" / f"wps-private-test-{os.getpid()}"
     (games / "Games").mkdir(parents=True, exist_ok=True)
     try:
         window = make(qapp, tmp_path / "emulator", user_home=games)
-        window.add_folder(games / "Games")
-        window.toggle_folders()
-        shown = [value for _label, value in window.rows()] + [pill.label.text() for pill in
-                                                              window.games_pane.list.pills.values()]
+        shown = [value for _label, value in window.rows()] + [window.games_pane.status.text(), window.status.text()]
         assert shown and not any(str(user).lower() in text.replace("​", "").lower() for text in shown)
         assert any("%LOCALAPPDATA%" in text or "%USERPROFILE%" in text for text in shown)
         window.close()
     finally:
         import shutil
         shutil.rmtree(games, ignore_errors=True)
-
-
-def test_marked_packages_are_installed_together(qapp, tmp_path, monkeypatch):
-    """Owner, 29-10-2026: not one package at a time. Y marks a file in the packages browser (a ✓ before it), X then
-    installs the marked ones only, licenses first; the marks go when another folder opens."""
-    home = tmp_path / "emulator"
-    ready(home)
-    user = tmp_path / "me"
-    pkgs = user / "Downloads" / "psn"
-    pkgs.mkdir(parents=True)
-    for name in ("A.pkg", "B.pkg", "C.pkg", "B.rap"):
-        (pkgs / name).write_bytes(b"")
-    runs = []
-
-    def run_headless(home_, *args):
-        runs.append(Path(args[1]).name)
-        return 0
-    window = make(qapp, home, user_home=user, run_headless=run_headless)
-    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
-    window.on_action("next")                                    # RB Packages
-    window.browse_pane.list.pills[f"dir:{pkgs}"].click()
-    rows = window.browse_pane.list.pills
-    rows[f"file:{pkgs / 'B.pkg'}"].setFocus()
-    qapp.processEvents()
-    assert window.legend.items[:3] == [("A", "Install"), ("X", "Install from this folder"), ("Y", "Mark")]
-    window.on_action("y")
-    assert window.browse_pane.list.pills[f"file:{pkgs / 'B.pkg'}"].label.text() == "✓ B.pkg"
-    assert window.browse_pane.list.pills[f"file:{pkgs / 'B.pkg'}"].hasFocus()
-    assert window.legend.items[:3] == [("A", "Install"), ("X", "Install marked (1)"), ("Y", "Unmark")]
-    window.on_action("down")
-    window.on_action("y")                                       # B.rap too
-    window.on_action("up")
-    window.on_action("up")
-    assert window.browse_pane.list.focused() == f"file:{pkgs / 'A.pkg'}"
-    window.on_action("y")
-    window.on_action("y")                                       # marked and unmarked again
-    assert window.legend.items[1] == ("X", "Install marked (2)")
-    window.on_action("x")
-    assert wait_for(qapp, lambda: not window.busy)
-    assert runs == ["B.rap", "B.pkg"]
-    window.rpcs3_card.setFocus()
-    window.on_action("next")                                    # the same folder again: no marks left
-    assert window.browser.path == pkgs and not window.picked_files
-    window.browse_pane.list.pills["up"].setFocus()
-    window.on_action("y")                                       # Y on the way up: says how
-    assert window.browse_pane.status.text().startswith("Put the focus on a file first")
-    window.close()
 
 
 def test_x_plays_only_a_game_in_steam(qapp, tmp_path, monkeypatch):

@@ -122,6 +122,11 @@ app is an optional tile. The wiki is at robertotorino.github.io/nexus/windows-po
   write, and never a variable that may hold personal data (`device.PRIVATE`).
 - **Personal data is never read out**: no serial numbers, MAC addresses, network names (SSID) or access point
   addresses, no paired Bluetooth devices (they carry their owner's name).
+- **The user decides what to keep before anything is deleted** (owner, 01-11-2026): an app never deletes a game, a
+  package, a BIOS file or anything else of the user's on its own; it shows a page of what would go (core's
+  `keep.py`: a row each with its size, every row marked Delete at first, A turns one to Keep and back, X deletes the
+  rows still marked Delete, B deletes nothing). The game managers use it for Remove game, for the packages a clean
+  install leaves, and for PCSX2's Remove BIOS.
 - **Unsigned for now** (code signing and an MSIX for Xbox mode's home app are on hold, MIGRATION.md).
 
 ## How an app is built

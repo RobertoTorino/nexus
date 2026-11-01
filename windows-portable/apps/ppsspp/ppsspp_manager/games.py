@@ -6,8 +6,9 @@ PARAM.SFO inside them. There are two kinds, as PPSSPP lists them:
   with /PSP_GAME/PARAM.SFO and the game's pictures (ICON0.PNG, PIC1.PNG) beside it. A CHD holds the same disc in
   MAME's archive format, which the app does not look into: it lists the file under its own name.
 * a memory stick game (homebrew or bought digitally): a folder with an EBOOT.PBP, on PPSSPP's memory stick in
-  PSP/GAME or in the chosen folders. A PBP is a container ("\\0PBP", a version and eight offsets, little-endian):
-  PARAM.SFO first, then ICON0.PNG, ICON1.PMF, PIC0.PNG, PIC1.PNG, SND0.AT3 and the program itself. A folder whose
+  PSP/GAME or in the game folders (Games\\PSP). A PBP is a container ("\\0PBP", a version and eight offsets,
+  little-endian): PARAM.SFO first, then ICON0.PNG, ICON1.PMF, PIC0.PNG, PIC1.PNG, SND0.AT3 and the program itself.
+  A folder whose
   PARAM.SFO says category "PG" is a game's update, not a game: PPSSPP lays it over the disc game by itself.
 
 PPSSPP's memory stick is memstick\\ in the app's PPSSPP folder (portable mode, emulator.py), with the PSP's own
@@ -254,7 +255,7 @@ def installed(game_dir: Path) -> list[Game]:
 
 
 def scan(folders: list[Path], game_dir: Path | None = None) -> list[Game]:
-    """Every game: on PPSSPP's memory stick and below the chosen folders (a game found twice counted once), sorted
+    """Every game: on PPSSPP's memory stick and below the game folders (a game found twice counted once), sorted
     by title."""
     found = installed(game_dir) if game_dir else []
     for folder in folders:

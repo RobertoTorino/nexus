@@ -1,7 +1,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The panes beside the PPSSPP and Settings panes, as PCSX2 Manager has them: Your games (the games in the chosen
-folders and on PPSSPP's memory stick, marked for Steam with A), the folder browser, Log (PPSSPP's memory stick and the
-app's own log, read in the app) and the SteamGridDB key.
+"""The panes beside the PPSSPP and Settings panes, as PCSX2 Manager has them: Your games (the games in the app's own
+Games\\PSP folders and on PPSSPP's memory stick, marked for Steam with A), Log (PPSSPP's memory stick, the game folder
+and the app's own log, read in the app), the SteamGridDB key and the page of what to keep before Remove game deletes
+anything (a ListPane, core's keep).
 
 A long list is a ListArea: pills in a column that scrolls, the one with the focus kept in view, so the d-pad goes
 down a list of any length and a finger can drag it. Every action is a controller button in the window's legend, A
@@ -116,23 +117,28 @@ GAMES_INFO = (
     "The X button starts the game the focus is on, through Steam, once Update Steam has put it there; Steam "
     "starts first when it is not open. On a device without Steam the X button starts the game in PPSSPP itself. "
     "Steam's library opens from the portal: RT Steam.\n\n"
-    "The games are the disc images (ISO, CSO, CHD) and the memory stick games (a folder with an EBOOT.PBP) in your game "
-    "folders and up to five folders below them, and the games on PPSSPP's memory stick. An ISO, a CSO and a PBP are "
-    "read for the title and the disc ID; a CHD keeps its file's name.\n\n"
-    "The LB button (Folders) shows your game folders: add one of the usual places or a drive (an SD card), or browse "
-    "to any folder with the controller. The A button twice on a folder takes it off the list; its games stay where "
-    "they are. The LB button again shows the games.\n\n"
+    "The RB button (Remove game) on a game shows what would go: a disc image's file, or a memory stick game's own "
+    "folder, and its shortcut in Steam, each with its size and marked Delete. You decide what to keep: the A button "
+    "turns a row to Keep, the X button deletes the rows still marked Delete, the B button goes back and deletes "
+    "nothing. Your saves and save states stay on PPSSPP's memory stick.\n\n"
+    "Where your games go: the Games\\PSP folder in your user folder, which the app makes, or Games\\PSP on an SD card "
+    "(make that folder on the card). Put your disc images or memory stick games there, and they show here; there is "
+    "no folder to choose. The Log card shows where the folder is.\n\n"
+    "The games are the disc images (ISO, CSO, CHD) and the memory stick games (a folder with an EBOOT.PBP) in the "
+    "Games\\PSP folders and up to five folders below them, and the games on PPSSPP's memory stick. An ISO, a CSO and "
+    "a PBP are read for the title and the disc ID; a CHD keeps its file's name.\n\n"
     "The pictures in Steam come from inside each game (its icon and its background). With your own SteamGridDB API "
-    "key (the RB button, Steam artwork; one key for the suite), Update Steam also fetches a cover for each game. "
+    "key (the LB button, Steam artwork; one key for the suite), Update Steam also fetches a cover for each game. "
     "Every entry of the row at the bottom also works by touch.")
-BROWSE_INFO = (
-    "Find the folder your games are in. The A button opens the folder the focus is on, the B button goes a level up, "
-    "and from the places back to your game folders. The X button adds the folder that is open as a game folder. The "
-    "places are your Games, Downloads, Documents and Desktop folders and every drive, such as an SD card.")
+KEEP_INFO = (
+    "What Remove game would delete, a row each with its size. Every row is marked Delete at first: the A button turns "
+    "the row the focus is on to Keep, and back. The X button deletes the rows still marked Delete and keeps the "
+    "others; the B button goes back and deletes nothing. A shortcut marked Delete is taken out of Steam (Steam closes "
+    "for it and starts again). Your saves and save states on PPSSPP's memory stick are never on this page.")
 LOG_INFO = (
-    "PPSSPP's memory stick, where it keeps the saves, the save states and its settings, and the newest lines of this "
-    "app's log. The A button, or a tap on this pane, shows the whole log here: the d-pad scrolls it, the B button goes "
-    "back.")
+    "PPSSPP's memory stick, where it keeps the saves, the save states and its settings, the Games\\PSP folder your "
+    "games go in, and the newest lines of this app's log. The A button, or a tap on this pane, shows the whole log "
+    "here: the d-pad scrolls it, the B button goes back.")
 
 
 class LogPane(Pane):
@@ -158,6 +164,8 @@ class LogPane(Pane):
         self.lines = TextView(background="transparent")
         self.lines.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.lines.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        # and kept in sight when the rows above take more room once laid out (a long folder wraps)
+        self.lines.verticalScrollBar().rangeChanged.connect(lambda _low, _high: self.lines.show_end())
         self.column.addWidget(self.lines, 1)
         self.view = TextView()
         self.view.hide()

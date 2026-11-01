@@ -166,7 +166,17 @@ makes, one per system with the required files in a subfolder (`Games\PS4`, `Game
 are taken in automatically (when the app opens and when its card gets the focus); no browser and no added folders.
 Done in **shadPS4 Manager** first (owner: "shadPS4 first"), with X Unpack all, PKG rows, packages deleted after a clean
 unpack, RB Remove game and LB Steam artwork; the owner tests it on the Ally, then PCSX2, PPSSPP, RPCS3, Vita3K and
-Xenia Manager follow the same way. Also in the tree: core's `steam.open_url()` starts a Steam that does not run as a
+Xenia Manager follow the same way. **The other five (owner, 01-11-2026; in the working tree, not released):**
+`Games\PS2` with `BIOS\` (PCSX2), `Games\PSP` (PPSSPP), `Games\PS3` with `Firmware\` (RPCS3), `Games\Vita` with
+`Firmware\` (Vita3K), `Games\Xbox360` (Xenia), each with RB Remove game and LB Steam artwork. The firmware is
+installed automatically (RPCS3's and Vita3K's PUPs, when new or changed, through the emulator without its window);
+RPCS3's .pkg and Vita3K's .vpk, .zip and .pkg are rows of Your games, A installs one and X all, and a package or
+archive installed cleanly is offered for deletion, while licenses (.rap, .edat) and dumped Vita folders stay.
+**Then (owner, 01-11-2026): "before deleting anything let the user decide what to keep"**: in all six managers,
+shadPS4 too, Remove game, the packages after a clean install and PCSX2's Remove BIOS show a page of what would go
+(core's `keep.py`, every row marked Delete at first; A Keep/Delete, X deletes the marked, B deletes nothing);
+nothing is deleted without it. Releases this adds: core (Added.). Releases this asks
+for (the owner's numbers): the five managers, each with a `Breaking.` entry. Also in the tree: core's `steam.open_url()` starts a Steam that does not run as a
 plain steam.exe and hands over the address once it is signed in (a steam:// address as Steam's first start never
 signed in on the Ally), core's `with_steam_closed()` restarts Steam without `-silent` on Windows, and the information
 popup is larger (900 wide, 0.7 of the window). Not handled: add-on (DLC) packages, which the app never installed;

@@ -1,23 +1,19 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Your games, as the BC250 suite's PCSX2 Manager keeps them: the game folders (the app's settings), the games found
-in them (games.scan, titled by PCSX2's catalog), which have a Steam shortcut of this app, and the plan Update Steam
-carries out: the marked games in Steam, the others out, and the shortcuts of games no longer found out too.
-
-On a handheld a folder is mostly one of a few places, so the usual ones are offered as they are (Games, Downloads and
-Documents in your user folder) with every removable drive (an SD card, a USB stick); any other folder is chosen in
-Windows' own folder window, which works by touch. The suite's SteamGridDB key and the pictures found are in the
-suite's folders (%APPDATA%\\windows-portable-suite\\steamgriddb-key, the app's covers\\)."""
+"""Your games: the app's own folders (owner, 30-10-2026: the games and the BIOS are put there, nothing is browsed
+to; the BC250 suite's PCSX2 Manager keeps chosen folders): Games\\PS2 in your user folder, made when it is missing,
+and Games\\PS2 on a removable drive (an SD card, a USB stick) that has one (fixed), with Games\\PS2\\BIOS for your
+console's BIOS dump (bios_home). Then the games found in them (games.scan, titled by PCSX2's catalog), which have a
+Steam shortcut of this app, and the plan Update Steam carries out: the marked games in Steam, the others out, and the
+shortcuts of games no longer found out too. The suite's SteamGridDB key and the pictures
+found are in the suite's folders (%APPDATA%\\windows-portable-suite\\steamgriddb-key, the app's covers\\)."""
 
 from __future__ import annotations
 
 import ctypes
-import os
 import string
 import sys
 from collections.abc import Callable
 from pathlib import Path
-
-from PyQt6.QtCore import QSettings
 
 from bc250_core import covers, steam
 from bc250_core.platform import suite_config, suite_data
@@ -25,7 +21,8 @@ from bc250_core.platform import suite_config, suite_data
 from . import APP_ID, SUITE, shortcuts
 from .games import Game
 
-FOLDERS_KEY = "games/folders"
+GAMES_HOME = Path("Games") / "PS2"      # the app's own game folder, in the user's folder and on a removable drive
+BIOS = "BIOS"                           # the BIOS dump's folder in it
 DRIVE_REMOVABLE = 2                     # GetDriveTypeW
 
 
@@ -36,16 +33,6 @@ def key_file() -> Path:
 
 def covers_home() -> Path:
     return suite_data(SUITE) / APP_ID / "covers"
-
-
-def folders(settings: QSettings) -> list[Path]:
-    stored = settings.value(FOLDERS_KEY, [])
-    stored = [stored] if isinstance(stored, str) else list(stored or [])
-    return [Path(f) for f in stored if f]
-
-
-def set_folders(settings: QSettings, chosen: list[Path]) -> None:
-    settings.setValue(FOLDERS_KEY, [str(f) for f in chosen])
 
 
 def removable_drives() -> list[Path]:
@@ -61,14 +48,20 @@ def removable_drives() -> list[Path]:
     return found
 
 
-def suggested(chosen: list[Path], home: Path | None = None,
-              drives: Callable[[], list[Path]] = removable_drives) -> list[Path]:
-    """The usual places for games that are there and not chosen yet: Games, Downloads and Documents in the user's
-    folder, then each removable drive."""
-    home = home or Path.home()
-    taken = {os.path.normcase(str(f)) for f in chosen}
-    places = [home / "Games", home / "Downloads", home / "Documents", *drives()]
-    return [p for p in places if _is_dir(p) and os.path.normcase(str(p)) not in taken]
+def bios_home(home: Path | None = None) -> Path:
+    """Where the BIOS dump is put: Games\\PS2\\BIOS in the user's folder."""
+    return (home or Path.home()) / GAMES_HOME / BIOS
+
+
+def fixed(home: Path | None = None, drives: Callable[[], list[Path]] = removable_drives) -> list[Path]:
+    """The app's own game folders (owner, 30-10-2026: drop the games there, no browsing): Games\\PS2 in the user's
+    folder, made with its BIOS folder when they are missing, then Games\\PS2 on each removable drive that has one."""
+    own = (home or Path.home()) / GAMES_HOME
+    try:
+        bios_home(home).mkdir(parents=True, exist_ok=True)
+    except OSError:
+        pass
+    return [own, *[d / GAMES_HOME for d in drives() if _is_dir(d / GAMES_HOME)]]
 
 
 def _is_dir(place: Path) -> bool:
@@ -124,3 +117,4 @@ def update_steam(steam_dir: Path, add: list[Game], remove: list[Game], program: 
     again = " Steam was closed for it and started again, signed in." if restarted else ""
     return True, "\n".join([*notes, f"{len(add)} game(s) in Steam, under Non-Steam in its library"
                                       f"{f'; {len(remove)} taken out' if remove else ''}.{again}"]), found
+

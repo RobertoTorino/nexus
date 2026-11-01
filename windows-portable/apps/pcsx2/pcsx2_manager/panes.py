@@ -1,8 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The panes beside the PCSX2 and Settings panes, the BC250 suite's PCSX2 Manager's tabs in the portable design: Your
-games (the games in the chosen folders, marked for Steam with A), the browser (a game folder, the BIOS dump), Memory
-cards (the cards in PCSX2's memcards folder and the saves on each) and Log (PCSX2's last run and the app's own log,
-read in the app).
+games (the games in the app's own Games\\PS2 folders, marked for Steam with A), Memory cards (the cards in PCSX2's
+memcards folder and the saves on each) and Log (PCSX2's last run and the app's own log, read in the app).
 
 A long list is a ListArea: pills in a column that scrolls, the one with the focus kept in view, so the d-pad goes
 down a list of any length and a finger can drag it. Every action is a controller button in the window's legend, A
@@ -116,25 +115,25 @@ GAMES_INFO = (
     "The X button starts the game the focus is on, through Steam, once Update Steam has put it there; Steam "
     "starts first when it is not open. On a device without Steam the X button starts the game in PCSX2 itself. "
     "Steam's library opens from the portal: RT Steam.\n\n"
-    "The games are the disc images (ISO, CHD, CSO, ZSO, GZ) in your game folders and up to five folders below them. "
-    "An ISO is read for its serial, and the title comes from PCSX2's own list of games; a compressed image keeps its "
-    "file's name.\n\n"
-    "The LB button (Folders) shows your game folders: add one of the usual places or a drive (an SD card), or browse "
-    "to any folder with the controller. The A button twice on a folder takes it off the list; its games stay where "
-    "they are. The LB button again shows the games.\n\n"
-    "Pictures for Steam: with your own SteamGridDB API key (the RB button, Steam artwork; one key for the suite), "
+    "The games are the disc images (ISO, CHD, CSO, ZSO, GZ) in your Games\\PS2 folder (in your user folder; the app "
+    "makes it) and up to five folders below it, and in Games\\PS2 on an SD card or a USB drive that has one: put "
+    "them there, nothing is browsed to. An ISO is read for its serial, and the title comes from PCSX2's own list of "
+    "games; a compressed image keeps its file's name. Your console's BIOS goes in Games\\PS2\\BIOS.\n\n"
+    "The RB button (Remove game) on a game shows what would go, its disc image and its shortcut in Steam, and you "
+    "decide what to keep before anything is deleted. Its saves stay on the memory cards.\n\n"
+    "Pictures for Steam: with your own SteamGridDB API key (the LB button, Steam artwork; one key for the suite), "
     "Update Steam fetches each game's pictures; without one, they are drawn from the app's icon. Every entry of the "
     "row at the bottom also works by touch.")
-BROWSE_INFO = (
-    "Find the folder your games are in, or your BIOS dump. The A button opens the folder the focus is on (on a BIOS "
-    "dump it chooses it), the B button goes a level up, and from the places back. When looking for a game folder, "
-    "the X button adds the folder that is open. The places are your Games, Downloads, Documents and Desktop folders "
-    "and every drive, such as an SD card.")
 CARDS_INFO = (
     "The PS2 memory cards in PCSX2's memcards folder, with the slot PCSX2 puts each in. The A button on a card shows "
     "its saves, and the B button goes back to the cards. The X button (New card) makes an 8 MB card, as the PS2's "
     "own; the Y button (Copy card) copies the card the focus was on last, under a new name, with its saves. A card is "
     "never changed while PCSX2 runs: it keeps the card in memory and would write its own copy over the change.")
+KEEP_INFO = (
+    "Nothing is deleted before you decide what to keep. Each row is something that would go, with its size: a disc "
+    "image, a BIOS file, a shortcut in Steam. Every row starts as Delete; the A button on a row turns it to Keep, "
+    "and back. The X button deletes the rows still marked Delete and keeps the others. The B button goes back and "
+    "deletes nothing.")
 LOG_INFO = (
     "PCSX2's last run as its own log tells it (it writes the log over at every start), the play time it counted, and "
     "the newest lines of this app's log. The A button, or a tap on this pane, shows the whole log here: the d-pad "

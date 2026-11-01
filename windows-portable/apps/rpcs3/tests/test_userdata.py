@@ -165,24 +165,46 @@ def test_the_screen_in_a_settings_file(tmp_path):
     assert userdata.SCREENS == {"wide": "16:9", "narrow": "4:3", "fill": "Fill screen"}
 
 
-def test_packages_and_licenses_in_a_folder(tmp_path):
-    """The folder's own files, by name, as RPCS3 takes them from a folder: not a subfolder's."""
-    (tmp_path / "pkgs" / "sub").mkdir(parents=True)
-    (tmp_path / "pkgs" / "b.pkg").write_bytes(b"")
-    (tmp_path / "pkgs" / "A.PKG").write_bytes(b"")
-    (tmp_path / "pkgs" / "sub" / "c.pkg").write_bytes(b"")
-    (tmp_path / "pkgs" / "a.rap").write_bytes(b"")
-    (tmp_path / "pkgs" / "d.EDAT").write_bytes(b"")
-    (tmp_path / "pkgs" / "readme.txt").write_bytes(b"")
-    pkgs, licenses = userdata.packages(tmp_path / "pkgs")
-    assert [p.name for p in pkgs] == ["A.PKG", "b.pkg"] and [p.name for p in licenses] == ["a.rap", "d.EDAT"]
-    assert userdata.packages(tmp_path / "none") == ([], [])
+def test_the_packages_and_licenses_that_wait_in_the_game_folders(tmp_path):
+    r"""What waits in Games\PS3 for RPCS3 (owner, 30-10-2026: drop them there): the PS3 packages there and below,
+    the games before the updates, not a file that is no package nor anything in a disc game's PS3_GAME; the licenses
+    RPCS3 does not keep yet."""
+    games, card = tmp_path / "me" / "Games" / "PS3", tmp_path / "E" / "Games" / "PS3"
+    (games / "psn").mkdir(parents=True)
+    (games / "DeS" / "PS3_GAME" / "USRDIR").mkdir(parents=True)
+    card.mkdir(parents=True)
+    (games / "psn" / "A-Update.pkg").write_bytes((FIXTURES / "update.pkg.head").read_bytes())
+    (games / "Game.pkg").write_bytes((FIXTURES / "game.pkg.head").read_bytes())
+    (card / "dlc.pkg").write_bytes((FIXTURES / "dlc.pkg.head").read_bytes())
+    (games / "broken.pkg").write_bytes(b"\0" * 0x200)
+    (games / "DeS" / "PS3_GAME" / "USRDIR" / "data.edat").write_bytes(b"")
+    (games / "psn" / "Game.rap").write_bytes(b"")
+    (card / "Old.RAP").write_bytes(b"")
+    (games / "readme.txt").write_bytes(b"")
     hdd0 = tmp_path / "dev_hdd0"
     assert userdata.licenses(hdd0) == []
-    (hdd0 / "home" / "00000001" / "exdata").mkdir(parents=True)
-    (hdd0 / "home" / "00000001" / "exdata" / "x.rap").write_bytes(b"")
-    (hdd0 / "home" / "00000001" / "exdata" / "y.txt").write_bytes(b"")
-    assert [p.name for p in userdata.licenses(hdd0)] == ["x.rap"]
+    exdata = hdd0 / "home" / "00000001" / "exdata"
+    exdata.mkdir(parents=True)
+    (exdata / "old.rap").write_bytes(b"")
+    (exdata / "y.txt").write_bytes(b"")
+    assert [p.name for p in userdata.licenses(hdd0)] == ["old.rap"]
+    pkgs, licenses = userdata.waiting([games, card], hdd0)
+    assert [i.path.name for i in pkgs] == ["dlc.pkg", "Game.pkg", "A-Update.pkg"]
+    assert licenses == [games / "psn" / "Game.rap"]                     # Old.RAP is in RPCS3 already
+    assert userdata.waiting([tmp_path / "none"], hdd0) == ([], [])
+
+
+def test_the_firmware_version_in_a_pup(tmp_path):
+    """The version a PUP holds, its file 0x100, as RPCS3 reads it; nothing for what is no PUP."""
+    import struct
+    text = b"4.92\n"
+    entries = [(0x100, 48 + 64, len(text)), (0x200, 48 + 64 + len(text), 3)]
+    pup = (b"SCEUF\0\0\0" + struct.pack(">5Q", 1, 1, len(entries), 48 + 64, len(text) + 3)
+           + b"".join(struct.pack(">3Q", *e) + b"\0" * 8 for e in entries) + text + b"abc")
+    (tmp_path / "PS3UPDAT.PUP").write_bytes(pup)
+    assert userdata.pup_version(tmp_path / "PS3UPDAT.PUP") == "4.92"
+    (tmp_path / "other.pup").write_bytes(b"\0" * 64)
+    assert userdata.pup_version(tmp_path / "other.pup") == userdata.pup_version(tmp_path / "missing.pup") == ""
 
 
 def test_a_packages_header(tmp_path):

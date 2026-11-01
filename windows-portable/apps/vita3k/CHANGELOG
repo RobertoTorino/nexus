@@ -1,3 +1,42 @@
+Changelog: 01-11-2026 16:39:16
+
+Breaking. No folder or file is browsed to any more (owner, 30-10-2026: fixed folders, no folder selecting): LB
+Firmware and RB Install a game on the Vita3K pane, with their browser (core's browse) and the folders it remembered,
+are gone. The firmware files and the games are put in the app's own folders instead. LB on Your games is Steam artwork
+now (it was RB), since RB on a game removes it.
+
+Added. The app's own folders: Games\Vita in the user's folder, made with Games\Vita\Firmware when the app opens, and
+Games\Vita on each SD card or USB drive that has one (library.fixed(), removable_drives(); an empty card slot is
+none). The .PUP files put in Games\Vita\Firmware, or in a folder right below it (Sony names all three
+PSP2UPDAT.PUP), are given to Vita3K by itself, the largest first, one after the other, when the app opens, when the
+Vita3K card gets the focus and after Vita3K is installed (owner, 01-11-2026: firmware taken in automatically;
+sync_firmware(), library.firmware_files()). Each file is given
+once while it stays the same (its size and time kept in the app's settings), one Vita3K could not use too; a file
+replaced is given again. The files stay. While the firmware is missing, the status line names the folder.
+
+Added. The games put in the Games\Vita folders (and up to three folders below) that are not installed yet are short
+rows of Your games, "VPK", "ZIP", "PKG" or "Folder" (a dumped game's folder; library.waiting(): the title and ID read
+from its param.sfo, a .pkg's ID from its header; a game installed already is left out, an update and a .pkg not):
+A installs one, X Install all installs every .vpk, .zip and folder one after the other, and A on a .pkg asks for its
+license key on its page first (B goes back to its row). Nothing is deleted on its own (owner, 01-11-2026: before
+deleting anything, let the user decide what to keep; core's keep.py): once the install ends, a page lists the .vpk,
+.zip and .pkg files that brought something into Vita3K's storage, each with its size and marked Delete; A turns a
+row to Keep and back, X deletes the rows still marked Delete, B goes back and deletes nothing. A file kept there is
+not listed to install again until it changes (its size and time kept in the app's settings). A dumped folder is
+never offered: it stays. The summary counts the games to install, and the Log
+pane shows where Games\Vita is.
+
+Added. RB Remove game on a game of Your games: a page lists what of the game would go, each on a row with its size
+and marked Delete (owner, 01-11-2026: before deleting anything, let the user decide what to keep; core's keep.py):
+the game in Vita3K's storage (ux0\app\<ID>), its update (ux0\patch) and extra content (ux0\addcont) when they are
+there, and its shortcut in Steam when it is in Steam (library.removal(), removal_items()). A turns a row to Keep
+and back; X deletes the rows still marked Delete, the shortcut through Steam, off the window's thread, read-only
+files too, and the line says what was deleted and what was kept; B goes back and deletes nothing. The saves
+(ux0\user\00\savedata) are never on the page. It does not work while Vita3K runs.
+
+Fixed. The newest line of the Log pane stays in view when the rows above it take more room once laid out (the scroll
+range grew after the box was scrolled to its end).
+
 Changelog: 01-11-2026 17:36:48
 
 Release 3.4.0.

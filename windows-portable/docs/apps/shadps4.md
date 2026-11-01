@@ -114,7 +114,9 @@ The app unpacks them with the same extractor as the BC250 suite's shadPS4 Manage
   replaces it: the new one is unpacked first, and the old one goes only when every file of the new one was written. An
   update whose game is still a package waits for it: **A** on it says so, and **X** unpacks both. An update without its
   game goes into `CUSA00001`, as a game with its update in it.
-- **The package is deleted** once it was unpacked without an error, as it takes as much room as its game. A package
+- **You decide whether the package goes.** When the unpacking ends, the [keep page](#deciding-what-to-keep) lists
+  the packages unpacked without an error, as each takes as much room as its game: **X** deletes the ones marked
+  Delete, **B** keeps them all. A kept package is not listed or unpacked again while it stays the same file. A package
   that failed stays, and the status line says why.
 - **A folder that is there already** is never written into: the status line says so; remove that folder first.
 - **Add-ons** (DLC) are not unpacked by the app, and do not show.
@@ -144,13 +146,23 @@ You play the games from Steam; the app puts them there.
   Steam (not installed, or never started), **X Play** starts the game in shadPS4 itself, full screen, the same way
   Steam would.
 - Steam's library opens from the portal: **RT Steam** in its bottom row.
-- **RB Remove game** on a game, pressed twice, removes it: the first press asks, for five seconds, and names the
-  folders that go. The second takes the game out of Steam (Steam closes for it and starts again) and deletes its
-  folder from the disk, with its update, patch and mods beside it. Your saves and the play time stay in shadPS4's
-  folder. The app deletes no game whose folder is one of the app's `Games\PS4` folders itself, a drive, or a folder
-  holding another game: the status line says to delete it by hand.
+- **RB Remove game** on a game shows the [keep page](#deciding-what-to-keep) of what would go: the game's folder,
+  its update, patch and mods beside it, and its Steam shortcut. **X** deletes the rows marked Delete (for the
+  shortcut, Steam closes and starts again), **B** goes back and deletes nothing. Your saves and the play time stay in
+  shadPS4's folder and are never on the page. The app offers no game whose folder is one of the app's `Games\PS4`
+  folders itself, a drive, or a folder holding another game: the status line says to delete it by hand.
 - A package that waits is a row of its own, **PKG** or **PKG update**: **A Unpack** and **X Unpack all**, see
   [Packages](#packages).
+
+### Deciding what to keep
+
+The app deletes nothing before you decide what to keep. The keep page lists what would go, a row each with its size,
+and every row starts as **Delete**:
+
+- **A** on a row turns it to **Keep**, and back to **Delete**.
+- **X Delete marked** deletes the rows still marked Delete; the status line on Your games then says what went and
+  what was kept. With every row on Keep, **X** says so and deletes nothing.
+- **B** goes back to Your games and deletes nothing.
 
 The pictures in Steam come from inside the game: its icon (`sce_sys\icon0.png`) on the cover, the wide picture and as
 the logo, its background (`sce_sys\pic1.png`) on the banner; without them the title is drawn on a dark background. With

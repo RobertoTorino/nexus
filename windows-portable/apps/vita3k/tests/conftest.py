@@ -62,6 +62,36 @@ def make_game(vita_fs: Path, title: str = "Game", title_id: str = "PCSB00001", v
     return game
 
 
+def _sfo(title: str, title_id: str, category: str = "gd") -> bytes:
+    return make_sfo({"APP_VER": "01.00", "CATEGORY": category, "STITLE": title[:10], "TITLE": title,
+                     "TITLE_ID": title_id})
+
+
+def make_vpk(path: Path, title: str, title_id: str, category: str = "gd") -> Path:
+    """A .vpk (or .zip: the same archive) of a dumped game: eboot.bin and sce_sys\\param.sfo."""
+    import zipfile
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with zipfile.ZipFile(path, "w") as archive:
+        archive.writestr("eboot.bin", b"SCE\0")
+        archive.writestr("sce_sys/param.sfo", _sfo(title, title_id, category))
+    return path
+
+
+def make_dump(folder: Path, title: str, title_id: str) -> Path:
+    """A dumped game's folder, as it is put in Games\\Vita: eboot.bin and sce_sys\\param.sfo."""
+    (folder / "sce_sys").mkdir(parents=True)
+    (folder / "eboot.bin").write_bytes(b"SCE\0")
+    (folder / "sce_sys" / "param.sfo").write_bytes(_sfo(title, title_id))
+    return folder
+
+
+def make_pkg(path: Path, title_id: str) -> Path:
+    """The head of a PS Vita .pkg: its magic and, at 0x30, its content ID with the title ID in it."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(b"\x7fPKG" + b"\0" * (0x30 - 4) + f"UP0001-{title_id}_00-0000000000000000".encode() + b"\0" * 16)
+    return path
+
+
 def write_config(home: Path) -> Path:
     """Vita3K's portable folder with the config.yml build 4186 writes on its first start."""
     path = home / "portable" / "config.yml"

@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The panes beside the Xenia and Settings panes, as RPCS3 Manager has them: Your games (the games in the chosen
-folders, marked for Steam with A), the folder browser, Log (Xenia's folder and the app's own log, read in the app) and
+"""The panes beside the Xenia and Settings panes, as RPCS3 Manager has them: Your games (the games in the app's
+Games\\Xbox360 folders, marked for Steam with A), Log (Xenia's folder and the app's own log, read in the app) and
 the SteamGridDB key.
 
 A long list is a ListArea: rows in a column that scrolls, the one with the focus kept in view, so the d-pad goes down
@@ -129,23 +129,28 @@ GAMES_INFO = (
     "The X button starts the game the focus is on, through Steam, once Update Steam has put it there; Steam "
     "starts first when it is not open. On a device without Steam the X button starts the game in Xenia itself. "
     "Steam's library opens from the portal: RT Steam.\n\n"
-    "The games are found in your game folders and up to six folders below them: a disc image (.iso), an unpacked "
-    "disc (the default.xex in its folder), a .zar, and the packages of Games on Demand and Arcade titles, in the "
-    "folders the console keeps them in (<title ID>\\00007000 or 000D0000).\n\n"
-    "The LB button (Folders) shows your game folders: add one of the usual places or a drive (an SD card), or browse "
-    "to any folder with the controller. The A button twice on a folder takes it off the list; its games stay where "
-    "they are. The LB button again shows the games.\n\n"
+    "The RB button (Remove game) on a game shows what would go, and you decide what to keep: its file or its "
+    "folder (an unpacked disc's), or for a Games on Demand or Arcade title the game, its title updates and its "
+    "add-ons each on a row of their own, and its Steam shortcut. Nothing is deleted before you press the X button "
+    "there. Your saves stay in Xenia's folder.\n\n"
+    "Where your games go: the Games\\Xbox360 folder in your user folder, which the app makes, or Games\\Xbox360 on an "
+    "SD card (make that folder on the card). Put your games there and they show here; there is no folder to choose. "
+    "The Log card shows where the folder is.\n\n"
+    "The games are found in the Games\\Xbox360 folders and up to six folders below them: a disc image (.iso), an "
+    "unpacked disc (the default.xex in its folder), a .zar, and the packages of Games on Demand and Arcade titles, "
+    "in the folders the console keeps them in (<title ID>\\00007000 or 000D0000).\n\n"
     "The pictures in Steam are drawn from this app's icon, with the game's title. With your own SteamGridDB API key "
-    "(the RB button, Steam artwork; one key for the suite), Update Steam fetches each game's pictures instead. Every "
+    "(the LB button, Steam artwork; one key for the suite), Update Steam fetches each game's pictures instead. Every "
     "entry of the row at the bottom also works by touch.")
-BROWSE_INFO = (
-    "Find the folder. The A button opens the folder the focus is on; the B button goes a level up, and from the "
-    "places back to your folders. The X button takes the folder that is open as a game folder. The places are your "
-    "Games, Downloads, Documents and Desktop folders and every drive, such as an SD card.")
 LOG_INFO = (
     "Xenia's folder, where it keeps its settings, the content of your games and their saves, and the newest lines of "
     "this app's log. The A button, or a tap on this pane, shows the whole log here: the d-pad scrolls it, the B "
     f"button goes back. Xenia's own log is {emulator.LOG} in its folder, written anew each time it starts.")
+KEEP_INFO = (
+    "Before anything is deleted, you decide what to keep. Each row is a part of the game, with its size: the game "
+    "itself, its title updates, its add-ons, its Steam shortcut. Every row starts as Delete; the A button turns the "
+    "row the focus is on to Keep, and back. The X button deletes the rows marked Delete and keeps the others; the B "
+    "button goes back and deletes nothing. Your saves are never on the list: they stay in Xenia's folder.")
 
 
 class LogPane(Pane):

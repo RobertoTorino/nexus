@@ -5,8 +5,8 @@
 # PPSSPP Manager
 
 Gets your PSP games ready to play from Steam with PPSSPP, the PSP emulator, and takes care of everything around it:
-it installs one tested release of PPSSPP for your own user, offers its settings, finds your games in the folders you
-choose and on PPSSPP's memory stick, puts them in Steam, and keeps a log. You play from Steam, and never need PPSSPP's
+it installs one tested release of PPSSPP for your own user, offers its settings, finds your games in its own `Games\PSP`
+folder and on PPSSPP's memory stick, puts them in Steam, and keeps a log. You play from Steam, and never need PPSSPP's
 own window: a game starts alone and full screen, and when you leave it you are back in Steam.
 
 PPSSPP Manager is on the [portal](../portal.md)'s **Gaming** tab: **A** on its tile installs it, and once it
@@ -16,7 +16,7 @@ screen; **⧉** (View) exits it.
 ## What you need
 
 - **Your PSP games**, dumped from your own UMDs as disc images (ISO, CSO or CHD), or memory stick games (a folder with
-  an `EBOOT.PBP`), in a folder on the device or an SD card. PPSSPP needs no BIOS.
+  an `EBOOT.PBP`), put in the app's `Games\PSP` folder on the device or an SD card. PPSSPP needs no BIOS.
 - **Steam**, started once on the device, to play the games from Steam (optional: without Steam, **X Play** starts a
   game in PPSSPP itself).
 
@@ -58,10 +58,27 @@ A newer PPSSPP never reaches the device by itself: a new release of PPSSPP may c
 with a new version of PPSSPP Manager, tried first, which the portal offers as an update. Then **Y Update** unpacks
 it over the older one, and what you made stays.
 
+## Where your games go
+
+The app has a folder of its own, which it makes when it opens; you never choose or browse to a folder:
+
+- `Games\PSP` in your user folder (`C:\Users\<you>\Games\PSP`): put your disc images and memory stick games there,
+  and they show on **Your games**. On an SD card or a USB drive, make a folder `Games\PSP` on it, and the app looks
+  there too.
+
+PPSSPP needs nothing from the console, so there is no folder for system files. The **Log** card shows where the folder
+is.
+
+```
+Games\PSP\
+├── Daxter.iso            a disc image you put here (ISO, CSO or CHD)
+└── Homebrew\             a memory stick game: its folder with EBOOT.PBP
+```
+
 ## Your games
 
-The games are the PSP disc images (ISO, CSO and CHD) and the memory stick games (a folder with an `EBOOT.PBP`) in your
-game folders and up to five folders below them, and the games on PPSSPP's memory stick. An ISO, a CSO and a PBP are
+The games are the PSP disc images (ISO, CSO and CHD) and the memory stick games (a folder with an `EBOOT.PBP`) in the
+`Games\PSP` folders and up to five folders below them, and the games on PPSSPP's memory stick. An ISO, a CSO and a PBP are
 read for the game's title and disc ID (ULUS10044); a CHD is listed under its file's name. A game's update on the
 memory stick is no game of its own: PPSSPP lays it over the game. **A** on the Your games card goes to the list.
 
@@ -78,14 +95,17 @@ You play the games from Steam; the app puts them there, and starts them there wi
   **Y Update Steam**. On a device without Steam (not installed, or never started), **X Play** starts the game in
   PPSSPP itself, full screen, the same way Steam would.
 - Steam's library opens from the portal: **RT Steam** in its bottom row.
-- **LB Folders** shows your game folders instead of the games; **LB** or **B** goes back to the games. The usual
-  places that are on the device (Games, Downloads and Documents in your user folder) and each removable drive, such as
-  an SD card, are offered as **+ Add**. **A** twice on a folder takes it off the list: the first press asks, for five
-  seconds. Its games stay where they are.
-- **+ Browse to a folder…** opens the app's own browser, made for the controller: your Games, Downloads, Documents and
-  Desktop folders and every drive first. **A** opens the folder the focus is on, **B** goes a level up (and from the
-  places back to your folders), and **X Add this folder** adds the folder that is open. The browser opens again in
-  the folder you added last, while it is there.
+- **RB Remove game** on a game shows a page of what would go, and you decide what to keep. Its rows are the game,
+  a disc image's file or a memory stick game's own folder (on PPSSPP's memory stick too), with its size, and its
+  shortcut in Steam when it is there. Every row starts as **Delete**:
+    - **A** turns the row the focus is on to **Keep**, and back to **Delete**.
+    - **X Delete marked** deletes the rows still marked **Delete** and keeps the others. A shortcut marked **Delete**
+      is taken out of Steam first (Steam closes for it and starts again). The status line on Your games then says
+      what was deleted and what was kept.
+    - **B** goes back to Your games and deletes nothing.
+    - Your saves and save states stay on PPSSPP's memory stick; they are never on the page. The app offers no game
+      whose folder is one of the app's `Games\PSP` folders itself, a drive, or a folder holding another game: the
+      status line says to delete it by hand. Not while PPSSPP is open.
 
 In a game started from Steam, PPSSPP takes the device's controller as it is: A is Cross, B Circle, X Square, Y
 Triangle, View Select, Menu Start, LB and RB the PSP's L and R, RT fast forward.
@@ -97,7 +117,7 @@ guide button) still opens PPSSPP's pause menu; its **Exit** ends the game and cl
 
 The pictures in Steam come from inside the game: its icon on the cover, the wide picture and as the logo, its
 background on the banner; a CHD gets its title on a dark background. With a SteamGridDB API key, Update Steam also
-takes a cover for each game from SteamGridDB: **RB Steam artwork** opens the page that keeps the key (**X Paste**,
+takes a cover for each game from SteamGridDB: **LB Steam artwork** opens the page that keeps the key (**X Paste**,
 **R3 ⌨**, **A Save**, **Y Remove key** twice, **B** back without saving). See [Steam artwork from SteamGridDB](covers.md).
 
 ## Settings
@@ -152,7 +172,8 @@ in PPSSPP's settings that the app does not offer is shown as it is, and **A** go
 
 ## Log
 
-PPSSPP's memory stick, with how many saves and save states are on it, and the newest lines of this app's log (the
+PPSSPP's memory stick, with how many saves and save states are on it, where your `Games\PSP` folder is, and the
+newest lines of this app's log (the
 Steam changes, the installs, the settings changed). **A View log**, or a tap on the pane, shows the whole log in the
 pane: the d-pad scrolls it, and **B** goes back.
 
@@ -199,6 +220,6 @@ remove the download.
 | `%LOCALAPPDATA%\windows-portable-suite\windows-portable-ppsspp\emulator\` | PPSSPP (`PPSSPPWindows64.exe`), its memory stick (`memstick\`: settings, saves, save states, memory stick games), and `installed.json` (the version and the files the app installed) |
 | `%LOCALAPPDATA%\windows-portable-suite\windows-portable-ppsspp\covers\` | The covers from SteamGridDB, per game |
 | `%LOCALAPPDATA%\windows-portable-suite\windows-portable-ppsspp\windows-portable-ppsspp.log` | The log |
-| `%APPDATA%\windows-portable-suite\windows-portable-ppsspp.ini` | The settings, with your game folders |
+| `%APPDATA%\windows-portable-suite\windows-portable-ppsspp.ini` | The app's settings |
 | `%APPDATA%\windows-portable-suite\steamgriddb-key` | Your SteamGridDB API key, when you put one there |
 | Steam's `userdata\<user>\config\shortcuts.vdf` and `grid\` | The games in Steam and their pictures |

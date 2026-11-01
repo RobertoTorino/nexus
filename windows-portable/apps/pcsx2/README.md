@@ -9,11 +9,12 @@
 Installs PCSX2, the PlayStation 2 emulator, on a Windows handheld and opens it: PCSX2 2.8.2 for Windows from
 PCSX2's own release, checked against the checksum this version of the app was tested with, for your own user and in
 PCSX2's portable mode, so its settings, the BIOS, the memory cards and the save states stay in its folder. It sets
-PCSX2 up for the handheld's controller, takes your own console's BIOS (Choose BIOS), offers PCSX2's settings that
-matter on the handheld, finds your PS2 games in the folders you choose, plays them and puts them in Steam (with
-pictures from SteamGridDB when you give it your key), shows your memory cards with their saves, and keeps a log of
-what was played. PCSX2's own window is never needed: a game starts alone and full screen, and PCSX2 closes with it. Remove takes PCSX2's program away and leaves
-what you made.
+PCSX2 up for the handheld's controller, takes your own console's BIOS from `Games\PS2\BIOS`, offers PCSX2's settings
+that matter on the handheld, finds your PS2 games in its own `Games\PS2` folder (and on an SD card's), plays them,
+removes them and puts them in Steam (with pictures from SteamGridDB when you give it your key), shows your memory
+cards with their saves, and keeps a log of what was played. PCSX2's own window is never needed: a game starts alone
+and full screen, and PCSX2 closes with it. Remove takes PCSX2's program away and leaves what you made. Nothing of
+yours is deleted before you decide what to keep: removing a game or the BIOS shows a page of what would go.
 
 Made for the handheld in your hands: full screen, the controller moves the amber focus, B goes back, View (⧉) exits
 the app, and everything also works by touch. How to install and use it:
@@ -30,6 +31,7 @@ windows-portable\apps\pcsx2\run.ps1 --windowed  # in a window
 
 The settings are in `%APPDATA%\windows-portable-suite\windows-portable-pcsx2.ini`, the log in
 `%LOCALAPPDATA%\windows-portable-suite\windows-portable-pcsx2\`, and PCSX2 with its own files in `emulator\` there.
+The app makes `Games\PS2` and `Games\PS2\BIOS` in your user folder when it opens.
 
 ## License
 

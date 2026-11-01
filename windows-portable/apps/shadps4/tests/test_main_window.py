@@ -5,9 +5,9 @@ pill is left (owner, 29-10-2026); B goes back and View exits; shadPS4 installed 
 megabytes counted, View asking first meanwhile, its quit hotkeys set after), updated from another version, and removed
 with X pressed twice; the system modules put in Games\\PS4\\Modules taken in by themselves; the packages put in the
 app's Games\\PS4 folder unpacked from Your games (Extract PKG, with the synthetic package), a game and its update beside
-it, each package deleted after; a game removed; the Settings pane's rows, in tabs, step through their values in
-config.json, never while shadPS4 runs; the shadNet pane's rows and field pages, the account kept in shadPS4's files,
-created and tried on a fake server; Your games from Games\\PS4 (no folder is chosen), marked for Steam with A (never
+it, then the keep page for the packages; a game removed through the keep page; the Settings pane's rows, in tabs,
+step through their values in config.json, never while shadPS4 runs; the shadNet pane's rows and field pages, the
+account kept in shadPS4's files, created and tried on a fake server; Your games from Games\\PS4 (no folder is chosen), marked for Steam with A (never
 played from the app) and put in Steam; the Log pane and the whole log read in the app; the SteamGridDB key; the
 version and the icons are where the checks expect them."""
 
@@ -724,9 +724,11 @@ def test_no_path_on_the_screen_shows_the_users_name(qapp, tmp_path):
 
 
 def test_a_game_is_removed_from_steam_and_the_disk(qapp, tmp_path, monkeypatch):
-    """RB Remove game (owner, 30-10-2026: Lumines no longer plays on 0.20.0): the first press asks, naming the
-    folders, and lapses; the second takes the game out of Steam and deletes its folder with its update beside it, off
-    the window's thread; the saves stay. A game that is a game folder itself is never deleted."""
+    """RB Remove game (owner, 30-10-2026: Lumines no longer plays on 0.20.0; 01-11-2026: before deleting anything,
+    the user decides what to keep): the keep page lists the game's folder, its update beside it and its Steam
+    shortcut, each marked Delete with its size; A turns a row to Keep and back, B goes back and deletes nothing, X
+    deletes only the rows still marked Delete, off the window's thread; the saves stay. A game that is a game folder
+    itself is never offered."""
     home = tmp_path / "emulator"
     shad = ready(home)
     games = tmp_path / "me" / "Games" / "PS4"
@@ -756,26 +758,50 @@ def test_a_game_is_removed_from_steam_and_the_disk(qapp, tmp_path, monkeypatch):
     window.on_action("accept")
     window.games_pane.list.pills[str(lumines)].setFocus()
     qapp.processEvents()
-    window.on_action("next")                                    # RB: it asks first
-    assert window.legend.items[-4] == ("RB", "Press again") and lumines.exists()
-    assert window.games_pane.status.text() == ("Press the RB button again to delete CUSA11624, CUSA11624-UPDATE from "
-                                               "the disk and take the game out of Steam. Its saves stay in shadPS4's "
-                                               "folder.")
-    assert window.games_pane.list.pills[str(lumines)].label.text().startswith("Press RB again")
-    window._confirm_over()                                      # five seconds later: asked no more
-    assert window.games_pane.status.text() == "" and window.legend.items[-4] == ("RB", "Remove game")
+    assert window.legend.items[-4] == ("RB", "Remove game")
+    window.on_action("next")                                    # RB: the keep page, nothing deleted yet
+    page = window.keep_pane
+    assert window.panes.currentWidget() is page and lumines.exists()
+    game_row, update_row = f"path:{games / 'CUSA11624'}", f"path:{games / 'CUSA11624-UPDATE'}"
+    assert list(page.list.pills) == [game_row, update_row, "steam"]
+    assert [p.label.text().split("  ·  ")[:2] for p in page.list.pills.values()] == [
+        ["Delete", "CUSA11624 (the game)"], ["Delete", "CUSA11624-UPDATE (its update)"], ["Delete", "Steam shortcut"]]
+    assert page.list.pills[game_row].label.text().endswith(" B")   # its size
+    assert window.legend.items[:2] == [("A", "Keep"), ("X", "Delete marked")] and BACK in window.legend.items
+    window.on_action("back")                                    # B: nothing deleted
+    assert window.panes.currentWidget() is window.games_pane
+    assert window.games_pane.status.text() == "Nothing was deleted." and lumines.exists()
+    assert len(shortcuts.in_steam(steam_dir)) == 2
     window.games_pane.list.pills[str(lumines)].setFocus()
     window.on_action("next")
-    window.legend.entries["RB"].pressed.emit()                  # the second press, as a tap
+    page.list.pills[update_row].setFocus()
+    page.list.pills[update_row].activated.emit()                # A on the update: Keep
+    assert page.list.pills[update_row].label.text().startswith("Keep  ·  CUSA11624-UPDATE")
+    assert page.list.pills[update_row].hasFocus() and window.legend.items[0] == ("A", "Delete")
+    page.list.pills[update_row].activated.emit()                # and back: Delete
+    assert page.list.pills[update_row].label.text().startswith("Delete")
+    page.list.pills[update_row].activated.emit()                # Keep the update after all
+    window.legend.entries["X"].pressed.emit()                   # X Delete marked, as a tap
     assert wait_for(qapp, lambda: not window.busy)
-    assert not (games / "CUSA11624").exists() and not (games / "CUSA11624-UPDATE").exists() and other.exists()
+    assert not (games / "CUSA11624").exists() and (games / "CUSA11624-UPDATE").is_dir() and other.exists()
     assert shortcuts.in_steam(steam_dir) == {str(other): "[PS4] Galaga"} and len(closed) == 2
-    assert window.games_pane.status.text() == ("LUMINES REMASTERED is removed: CUSA11624, CUSA11624-UPDATE deleted, "
-                                               "its shortcut taken out of Steam. Its saves stay in shadPS4's folder.")
+    assert window.panes.currentWidget() is window.games_pane
+    assert window.games_pane.status.text() == (
+        "LUMINES REMASTERED: CUSA11624 (the game) deleted, its shortcut taken out of Steam; kept: CUSA11624-UPDATE "
+        "(its update). Its saves stay in shadPS4's folder.")
     assert (shad / "savedata" / "1" / "CUSA11624").is_dir()
     assert list(window.games_pane.list.pills) == [str(loose), str(other)]
+    window.games_pane.list.pills[str(other)].setFocus()
+    window.on_action("next")
+    for key in list(page.list.pills):
+        page.list.pills[key].activated.emit()                   # everything Keep
+    window.on_action("x")
+    assert page.status.text() == "Nothing is marked Delete: B goes back, and nothing is deleted."
+    assert other.exists() and not window.busy
+    window.on_action("back")
     window.games_pane.list.pills[str(loose)].setFocus()
     window.on_action("next")
+    assert window.panes.currentWidget() is window.games_pane
     assert window.games_pane.status.text().startswith("Alone is in PS4, one of the app's game folders itself")
     assert loose.exists() and not window.busy
     window.close()
@@ -784,8 +810,9 @@ def test_a_game_is_removed_from_steam_and_the_disk(qapp, tmp_path, monkeypatch):
 def test_the_packages_in_games_ps4_are_unpacked_from_your_games(qapp, tmp_path, monkeypatch, built_pkg):
     r"""The packages are dropped in the app's own Games\PS4 folder (owner, 30-10-2026: no browsing, the manager takes
     care of them): each a short row, PKG or PKG update; an update alone waits for its game; X Unpack all unpacks the
-    game into its ID's folder, then its update beside it, the files counted on the pane's line, and deletes each
-    package."""
+    game into its ID's folder, then its update beside it, the files counted on the pane's line. Then the keep page
+    offers the packages for deletion (owner, 01-11-2026: the user decides what to keep): a kept one stays on the disk
+    and is no waiting row any more."""
     from pkg_builder import build_pkg, default_tree
     home = tmp_path / "emulator"
     ready(home)
@@ -822,19 +849,32 @@ def test_the_packages_in_games_ps4_are_unpacked_from_your_games(qapp, tmp_path, 
     assert window.busy and window.panes.currentWidget() is window.games_pane
     gate.set()
     assert wait_for(qapp, lambda: not window.busy)
-    assert window.games_pane.status.text() == "2 of 2 package(s) unpacked, each package deleted after."
     assert (own / title_id / "eboot.bin").read_bytes() == built_pkg.expected_files["eboot.bin"]
     assert (own / f"{title_id}-UPDATE" / "eboot.bin").read_bytes() == update.expected_files["eboot.bin"]
-    assert not game.exists() and not update.path.exists()
+    page = window.keep_pane                                     # the packages: the user decides
+    assert window.panes.currentWidget() is page and game.exists() and update.path.exists()
+    assert page.status.text() == "2 of 2 package(s) unpacked."
+    assert [p.label.text().split("  ·  ")[:2] for p in page.list.pills.values()] == [
+        ["Delete", "galaga.pkg (Synthetic Test Title)"], ["Delete", "update.pkg (Synthetic Test Title)"]]
+    page.list.pills[f"path:{update.path}"].activated.emit()     # keep the update's package
+    window.on_action("x")
+    assert wait_for(qapp, lambda: not window.busy)
+    assert not game.exists() and update.path.exists()
+    assert window.games_pane.status.text() == ("galaga.pkg (Synthetic Test Title) deleted; kept: update.pkg "
+                                               "(Synthetic Test Title).")
     assert [p.label.text() for p in window.games_pane.list.pills.values()] == [f"Synthetic Test Title  ·  {title_id}"]
     newer = build_pkg(own / "newer.pkg", default_tree(), category="gp", app_ver="01.02")
     window.refresh_games()
+    assert list(window.games_pane.list.pills)[1:] == [f"pkg:{newer.path}"]   # the kept one waits no more
     assert window.games_pane.list.pills[f"pkg:{newer.path}"].label.text().endswith("·  PKG update")
     window.games_pane.list.pills[f"pkg:{newer.path}"].setFocus()
     window.on_action("accept")                                  # A: the newer update replaces the one there
     assert wait_for(qapp, lambda: not window.busy)
-    assert window.games_pane.status.text() == "Synthetic Test Title is unpacked, and its package is deleted."
+    assert page.status.text() == "Synthetic Test Title is unpacked."
+    window.on_action("back")                                    # B: the package stays
+    assert window.games_pane.status.text() == "Nothing was deleted." and newer.path.exists()
     assert (own / f"{title_id}-UPDATE" / "eboot.bin").read_bytes() == newer.expected_files["eboot.bin"]
+    assert list(window.games_pane.list.pills) == [str(own / title_id / "eboot.bin")]   # kept, not waiting
     window.close()
 
 

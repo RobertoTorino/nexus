@@ -136,15 +136,17 @@ GAMES_INFO = (
     "The X button on a game that is in Steam starts it, through Steam (Steam starts first when it does not run). "
     "On a device without Steam the X button starts the game in shadPS4 itself. Steam's library opens from the "
     "portal: RT Steam.\n\n"
-    "The RB button (Remove game) on a game, pressed twice, takes it out of Steam and deletes it from the disk: its "
-    "folder, and its update, patch and mods beside it. Your saves stay in shadPS4's folder.\n\n"
+    "The RB button (Remove game) on a game shows what would go: its folder, its update, patch and mods beside it, "
+    "and its Steam shortcut, a row each with its size. You decide what to keep there; nothing is deleted before "
+    "that page. Your saves stay in shadPS4's folder.\n\n"
     "Where your games go: the Games\\PS4 folder in your user folder, which the app makes, or Games\\PS4 on an SD "
     "card (make that folder on the card). Put your .pkg files there, or games that are unpacked already (a folder "
     "with eboot.bin), and they show here; there is no folder to choose. The Log card shows where the folder is.\n\n"
     "PKG after a game means it is a package: a game that needs to be unpacked to play. PKG update is an update for a "
     "game you have. The X button (Unpack all) unpacks every package that waits, the games first, then each update "
-    "beside its game (an older update there is replaced); the A button on one unpacks only that one. A package "
-    "unpacked without an error is deleted, as it takes as much room as its game. Add-ons (DLC) are not unpacked.\n\n"
+    "beside its game (an older update there is replaced); the A button on one unpacks only that one. Then a page "
+    "lists the packages unpacked without an error, which take as much room as their games: you decide which to "
+    "delete and which to keep, and a kept one is not unpacked again. Add-ons (DLC) are not unpacked.\n\n"
     "The games are the folders with an eboot.bin in the Games\\PS4 folders and up to five folders below them, each in "
     "a folder of its own. An update or a mod beside a game (a folder named like it with -UPDATE, -patch or -mods) is "
     "no game of its own: shadPS4 lays it over the game.\n\n"
@@ -152,6 +154,11 @@ GAMES_INFO = (
     "The pictures in Steam come from inside each game (its icon and its background). With your own SteamGridDB API "
     "key (the LB button, Steam artwork; one key for the suite), Update Steam also fetches a cover for each game. "
     "Every entry of the row at the bottom also works by touch.")
+KEEP_INFO = (
+    "Nothing is deleted before you decide what to keep. This page lists what would go, a row each with its size, and "
+    "every row starts as Delete. The A button on a row turns it to Keep, and back. The X button deletes the rows "
+    "still marked Delete; the B button goes back and deletes nothing. Your saves are never on the list: they stay "
+    "in shadPS4's folder.")
 SHADNET_INFO = (
     "shadNet is shadPS4's online service, for online trophies, friends and online play in the games it supports. "
     "shadPS4 signs in by itself when a game starts, with the account kept here for one of its four users (player 1 "

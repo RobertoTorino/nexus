@@ -5,17 +5,20 @@ buttons at the bottom.
 
 Every action is a controller button in the legend at the bottom, A too, and a tap on the entry does the same; there
 are no pills (owner, 29-10-2026: one way everywhere). Core's rule ends the legend: B goes back (a pane to its card,
-the folders to the games, the browser a level up), View exits the app and Menu shows the information of the pane that
-shows.
+a page to its pane), View exits the app and Menu shows the information of the pane that shows. Nothing is browsed to
+(owner, 30-10-2026: fixed folders, no folder selecting): the games are put in the app's own folders (library.fixed:
+Games\\PSP in your user folder, and on an SD card).
 
-The Your games pane (panes.py, library.py): the games in the chosen folders and on PPSSPP's memory stick, played from
-Steam (owner, 29-10-2026: X Play starts one in Steam), and on a device without Steam X Play starts it in the app's
-play mode itself (owner, 30-10-2026: a fallback, as its shortcut would start it; core's play: View, LB and RB held quit
-any game); A marks one for Steam, Y Update Steam makes Steam's shortcuts match the marks and brings a shortcut made
-before the play mode to it; LB Folders lists the folders, the usual places and a drive to add, and Browse, which opens
-the folder browser (core's browse: the controller's own way to a folder, where Windows' folder window is not); LB
-Games goes back; RB Steam artwork keeps the SteamGridDB key; Steam's library is the portal's RT Steam (owner,
-30-10-2026: Open Steam moved there). The Log pane: PPSSPP's memory stick and the newest lines
+The Your games pane (panes.py, library.py): the games in the app's own Games\\PSP folders and on PPSSPP's memory
+stick, played from Steam (owner, 29-10-2026: X Play starts one in Steam), and on a device without Steam X Play starts
+it in the app's play mode itself (owner, 30-10-2026: a fallback, as its shortcut would start it; core's play: View,
+LB and RB held quit any game); A marks one for Steam, Y Update Steam makes Steam's shortcuts match the marks and
+brings a shortcut made before the play mode to it; LB Steam artwork keeps the SteamGridDB key; RB Remove game opens
+a page of what would go (owner, 01-11-2026: before deleting anything, let the user decide what to keep; core's keep):
+the game's file or folder (library.removal: a disc image's file, a memory stick game's folder) and its Steam shortcut,
+each marked Delete at first; A turns a row to Keep and back, X deletes the rows still marked Delete off the window's
+thread, B goes back and deletes nothing; the saves stay; Steam's library is the portal's RT Steam (owner,
+30-10-2026: Open Steam moved there). The Log pane: PPSSPP's memory stick, the app's game folder and the newest lines
 of the app's log; A (or a tap on the pane) shows the whole log in the pane, B goes back.
 
 The PPSSPP pane: what is installed and where; A Install until PPSSPP is installed, Y Update when an older PPSSPP is
@@ -38,7 +41,7 @@ from PyQt6.QtCore import QObject, QSettings, Qt, QTimer, pyqtSignal
 from PyQt6.QtGui import QFont, QGuiApplication
 from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QStackedWidget, QVBoxLayout, QWidget
 
-from bc250_core import applog, browse, covers, platform, play, power, steam
+from bc250_core import applog, covers, keep, platform, play, power, steam
 from bc250_core.gamepad import Gamepad
 from bc250_core.platform import private
 from bc250_core.portable import (AMBER, BODY, DIM, EXIT, KEYBOARD, VIEW, Card, InfoPill, Legend, Pane, PortableHeader,
@@ -46,7 +49,7 @@ from bc250_core.portable import (AMBER, BODY, DIM, EXIT, KEYBOARD, VIEW, Card, I
 
 from . import APP_ID, APP_NAME, LOGO_PATH, __version__, emulator, library, ppsspp_settings, shortcuts
 from .games import Game, memstick_game, scan
-from .panes import BROWSE_INFO, GAMES_INFO, KeyPane, ListPane, LogPane
+from .panes import GAMES_INFO, KEEP_INFO, KeyPane, ListPane, LogPane
 from .ppsspp_settings import TABS, Setting
 
 STATUS_MS = 30_000              # the header's battery and time
@@ -58,13 +61,9 @@ ABOUT = ("PPSSPP, the PSP emulator, installed for your own user in portable mode
 CARD_HEIGHT = 100               # the cards and their gaps fit the column at 720 px high
 LOG_LINES = 12                  # the newest lines of the app's log in the Log pane
 LOG_MAX = 2000                  # the lines of the log the whole view shows, the newest
-FOLDERS, GAMES_VIEW = "folders", "games"
-FOLDERS_BROWSED = "folders"     # the browser's folder kept for next time (browse.remember)
-BROWSE_KEY = "browse"           # the folders' last row: the folder browser
 RUNNING = "PPSSPP is open: close it first, it would write its own settings over the change."
 NOT_INSTALLED = "Install PPSSPP first: the settings are in its folder."
 BUSY = "Wait a moment: the app is still busy with the step before."
-OPEN_A_FOLDER = "Open a folder first: the A button opens the one the focus is on, then the X button adds it."
 ALL_SETTINGS = ppsspp_settings.SETTINGS
 # The Settings pane's information, per tab: what each setting of the tab does
 TAB_INFO = {key: ("The A button changes the setting the focus is on, the LB and RB buttons change the tab; PPSSPP "
@@ -114,8 +113,8 @@ class _Worker(QObject):
         self.done.emit(result)
 
 
-NOT_THE_GAMES = "Update Steam works on the games: the LB button shows them again."
 PICK_A_GAME = "Put the focus on a game first: the X button starts it."
+STEAM_ITEM = "steam"            # the page of what to keep: the row of the game's shortcut in Steam
 NO_STEAM = "Steam was never started on this device: start it once, then Update Steam puts the marked games in it."
 NOTHING_TO_CHANGE = ("Nothing to change in Steam: the A button on a game marks it for Steam or takes the mark away, "
                      "then the Y button updates Steam.")
@@ -180,14 +179,13 @@ class MainWindow(PortableWindow):
                  steam_dir: Path | None | bool = False,
                  steam_closed: Callable[[Callable[[], None]], bool] = steam.with_steam_closed,
                  user_home: Path | None = None, drives: Callable[[], list[Path]] = library.removable_drives,
-                 roots: Callable[[], list[Path]] = browse.drives, settings: QSettings | None = None,
+                 settings: QSettings | None = None,
                  open_url: Callable[[str], None] = steam.open_url,
                  start: Callable[..., None] = platform.start_program):
         """*steam_dir*: Steam's folder (False: found on this system, None: no Steam); *user_home*: the user's folder
-        (the usual places); *drives*: the removable drives offered as folders, *roots*: every drive the browser
-        offers; *settings*: the app's (its .ini, create_app's), where the game folders are kept;
-        *open_url*: hands a steam:// address to Steam (Play); *start*: starts a program on its own (PPSSPP with a
-        game, without Steam)."""
+        (where Games\\PSP is); *drives*: the removable drives, whose Games\\PSP is looked in too; *settings*: the
+        app's (its .ini, create_app's); *open_url*: hands a steam:// address to Steam (Play); *start*: starts a
+        program on its own (PPSSPP with a game, without Steam)."""
         super().__init__(gamepad)
         self.setWindowTitle(f"{APP_NAME} {__version__}")
         self.log = applog.logger(APP_ID)
@@ -201,9 +199,9 @@ class MainWindow(PortableWindow):
         self.message = ""                               # the last outcome
         self.confirm_remove = self.close_asked = False
         self.steam_closed = steam_closed
-        self._job = ""                                  # "steam" while Update Steam runs in the worker
+        self._job = ""                                  # "steam" or "remove" while one runs in the worker
         self.steam_dir = steam.find_steam() if steam_dir is False else steam_dir
-        self.user_home, self.drives, self.roots = user_home, drives, roots
+        self.user_home, self.drives = user_home, drives
         self.settings = settings if settings is not None else QSettings()
         self.open_url = open_url
         self.start_program = start
@@ -211,9 +209,8 @@ class MainWindow(PortableWindow):
         self.in_steam: dict[str, str] = {}
         self.outdated: set[str] = set()                 # games whose shortcut does not start the play mode yet
         self.marked: set[str] = set()
-        self.games_view = GAMES_VIEW
-        self.forget_asked = ""                          # a folder pressed once: A again takes it off the list
-        self.browser: browse.Browser | None = None      # the folder browser, while it shows
+        self.keeping: list[keep.Item] = []              # what Remove game would delete, while its page shows
+        self.keep_game: Game | None = None              # the game the page is about
 
         page = QVBoxLayout(self)
         page.setContentsMargins(*self.margins())
@@ -227,7 +224,7 @@ class MainWindow(PortableWindow):
         cards.setContentsMargins(0, 0, 0, 0)
         cards.setSpacing(px(12))
         self.ppsspp_card = Card("PPSSPP", "Install, update or remove it.")
-        self.games_card = Card("Your games", "Mark them for Steam, and their folders.")
+        self.games_card = Card("Your games", "Mark them for Steam, or remove them.")
         self.settings_card = Card("Settings", "The picture, the game and the controller.")
         self.log_card = Card("Log", "PPSSPP's memory stick, and this app's log.")
         for card in (self.ppsspp_card, self.games_card, self.settings_card, self.log_card):
@@ -251,14 +248,14 @@ class MainWindow(PortableWindow):
         self.pane.column.addWidget(self.status)
         self.settings_pane = SettingsPane()
         self.games_pane = ListPane("Your games", "Your games", GAMES_INFO)
-        self.browse_pane = ListPane("Choose a folder", "Choosing a folder", BROWSE_INFO)
         self.key_pane = KeyPane()
+        self.keep_pane = ListPane("Remove", "Choosing what to keep", KEEP_INFO)
         self.log_pane = LogPane()
-        for pane in (self.pane, self.games_pane, self.settings_pane, self.log_pane, self.key_pane, self.browse_pane):
+        for pane in (self.pane, self.games_pane, self.settings_pane, self.log_pane, self.key_pane, self.keep_pane):
             self.panes.addWidget(pane)
         self.cards = {self.pane: self.ppsspp_card, self.games_pane: self.games_card,
                       self.settings_pane: self.settings_card, self.log_pane: self.log_card,
-                      self.key_pane: self.games_card, self.browse_pane: self.games_card}
+                      self.key_pane: self.games_card, self.keep_pane: self.games_card}
         body.addWidget(self.panes, 1)
         page.addLayout(body, 1)
         page.addSpacing(px(8))
@@ -277,8 +274,9 @@ class MainWindow(PortableWindow):
         self.log_card.focused.connect(lambda: self.show_pane(self.log_pane))
         self.log_card.activated.connect(self.view_log)
         self.log_pane.tapped.connect(self.view_log)
-        self.games_pane.list.picked.connect(self.game_picked)
-        self.browse_pane.list.picked.connect(self.browse_picked)
+        self.games_pane.list.picked.connect(self.mark_game)
+        self.keep_pane.list.picked.connect(self.toggle_keep)
+        self.keep_pane.list.current.connect(lambda _key: self.update_legend())
         self.confirm_key = False                        # Remove key pressed once
         for setting in ALL_SETTINGS:
             self.settings_pane.pills[setting.key].activated.connect(lambda s=setting: self.step_setting(s))
@@ -333,6 +331,8 @@ class MainWindow(PortableWindow):
         """The status line (amber), A's entry (Install) and Y's (Update); "" leaves either out."""
         if self.busy and self._job == "steam":
             return "Steam's shortcuts are being changed (Your games).", "", ""
+        if self.busy and self._job == "remove":
+            return "A game is being removed (Your games).", "", ""
         if self.busy:
             if self.stage:
                 return self.stage, "", ""
@@ -394,8 +394,9 @@ class MainWindow(PortableWindow):
 
     def legend_items(self) -> list[tuple[str, str]]:
         """The legend for the pane that shows: its actions on the controller's buttons, A too (a tap on an entry does
-        the same), then core's Menu Info, B Back (in a pane, and on the folders, the browser, the key page and the
-        whole log) and View Exit. A press that cannot act now says why on the pane's status line."""
+        the same), then core's Menu Info, B Back (in a pane, and on the key page, the page of what to keep and the
+        whole log) and View Exit. A
+        press that cannot act now says why on the pane's status line."""
         if self.close_asked:
             return [(VIEW, "Press again to exit")]
         pane = self.panes.currentWidget()
@@ -407,12 +408,9 @@ class MainWindow(PortableWindow):
                      *([("X", "Press again" if self.confirm_remove else "Remove PPSSPP")] if installed else []),
                      *([("Y", other)] if other else [])]
         elif pane is self.games_pane:
-            items = ([("A", "Steam mark"), *([("X", "Play")] if self.focused_game() else []),
-                      ("Y", "Update Steam"), ("LB", "Folders")]
-                     if self.games_view == GAMES_VIEW else [("A", "Choose"), ("LB", "Games")]) + \
-                    [("RB", "Steam artwork")]
-        elif pane is self.browse_pane:
-            items = [("A", "Open"), ("X", "Add this folder")]
+            game = self.focused_game()
+            items = [("A", "Steam mark"), *([("X", "Play")] if game else []), ("Y", "Update Steam"),
+                     ("LB", "Steam artwork"), *([("RB", "Remove game")] if game else [])]
         elif pane is self.settings_pane:
             items = [("A", "Change"), ("LB", "Previous tab"), ("RB", "Next tab")]
         elif pane is self.log_pane:
@@ -420,8 +418,10 @@ class MainWindow(PortableWindow):
         elif pane is self.key_pane:
             items = [("A", "Save"), ("X", "Paste"), ("Y", "Press again" if self.confirm_key else "Remove key"),
                      KEYBOARD]
-        on_a_page = (pane in (self.key_pane, self.browse_pane) or self.log_pane.viewing
-                     or (pane is self.games_pane and self.games_view == FOLDERS))
+        elif pane is self.keep_pane:
+            item = self.focused_item()
+            items = [*([("A", "Keep" if item.delete else "Delete")] if item else []), ("X", "Delete marked")]
+        on_a_page = pane in (self.key_pane, self.keep_pane) or self.log_pane.viewing
         return [*items, *self.common_items(True if on_a_page else None)]
 
     def update_legend(self) -> None:
@@ -434,9 +434,13 @@ class MainWindow(PortableWindow):
 
     # Your games
 
+    def game_folders(self) -> list[Path]:
+        """The app's own Games\\PSP folders (made when missing): the user's, then each SD card's."""
+        return library.fixed(self.user_home, self.drives)
+
     def scan(self) -> list[Game]:
-        """The games in the chosen folders and on PPSSPP's memory stick."""
-        return scan(library.folders(self.settings), memstick_game(emulator.memstick(self.home)))
+        """The games in the app's own folders and on PPSSPP's memory stick."""
+        return scan(self.game_folders(), memstick_game(emulator.memstick(self.home)))
 
     def refresh_games(self, in_steam: dict[str, str] | None = None) -> None:
         """The games, which are in Steam (*in_steam* when given: what Update Steam read back, else Steam's file now),
@@ -463,21 +467,16 @@ class MainWindow(PortableWindow):
 
     def show_games(self) -> None:
         pane = self.games_pane
-        chosen = library.folders(self.settings)
+        own = self.game_folders()
         in_steam = sum(1 for g in self.games if str(g.file) in self.in_steam)
-        pane.summary.setText(f"{len(self.games)} game(s) in {len(chosen)} folder(s) and on PPSSPP's memory stick"
+        pane.summary.setText(f"{len(self.games)} game(s) in {len(own)} folder(s) and on PPSSPP's memory stick"
                              + (f", {in_steam} in Steam" if self.steam_dir is not None else
                                 ". Steam was never started on this device: start it once to put games in it."))
-        if self.games_view == FOLDERS:
-            rows = [(f"folder:{f}", ("Press A again to take it off the list" if self.forget_asked == str(f)
-                                     else f"{private(f)}  ·  {len(scan([f]))} game(s)")) for f in chosen]
-            rows += [(f"add:{p}", f"+ Add {private(p)}") for p in library.suggested(chosen, self.user_home, self.drives)]
-            rows.append((BROWSE_KEY, "+ Browse to a folder…"))
-        else:
-            rows = [(str(g.file), self.game_text(g)) for g in self.games]
-            if not rows:
-                pane.status.setText(pane.status.text() or "No games yet: the LB button shows your game folders, "
-                                                           "to add the one your games are in.")
+        rows = [(str(g.file), self.game_text(g)) for g in self.games]
+        if not rows:
+            pane.status.setText(pane.status.text() or
+                                f"No games yet: put your disc images (ISO, CSO, CHD) or memory stick games in "
+                                f"{private(own[0])}, and they show here.")
         pane.list.set_items(rows)
         self.update_legend()
 
@@ -487,21 +486,8 @@ class MainWindow(PortableWindow):
                    or str(game.file) in self.marked and str(game.file) in self.outdated)
         return "  ·  ".join(p for p in (game.title, game.disc_id, mark + (" (Update Steam)" if changed else "")) if p)
 
-    def game_picked(self, key: str) -> None:
-        """A on a row: a game's Steam mark, a folder's second press, a place to add, or the browser."""
-        if key == BROWSE_KEY:
-            self.show_browser()
-        elif key.startswith("add:"):
-            self.add_folder(Path(key[4:]))
-        elif key.startswith("folder:"):
-            self.forget_folder(Path(key[7:]))
-        else:
-            self.mark_game(key)
-
     def focused_game(self) -> Game | None:
-        """The game whose row has the focus, on the games' view."""
-        if self.games_view != GAMES_VIEW:
-            return None
+        """The game whose row has the focus."""
         key = next((key for key, pill in self.games_pane.list.pills.items() if pill.hasFocus()), None)
         return next((game for game in self.games if str(game.file) == key), None)
 
@@ -550,78 +536,108 @@ class MainWindow(PortableWindow):
         self.games_pane.status.setText(f"Starting {game.title} in PPSSPP… {play.QUIT_HINT}")
         self.log.info(f"Play: {game.title}, started in PPSSPP, without Steam.")
 
-    def toggle_folders(self) -> None:
-        self.games_view = GAMES_VIEW if self.games_view == FOLDERS else FOLDERS
-        self.forget_asked = ""
-        self.games_pane.status.setText("")
-        self.show_games()
-        self.show_pane(self.games_pane)
-        self.focus_list(self.games_pane)
-
-    def add_folder(self, folder: Path) -> None:
-        browse.remember(self.settings, FOLDERS_BROWSED, folder)        # the browser opens here next time
-        chosen = library.folders(self.settings)
-        if str(folder) not in {str(f) for f in chosen}:
-            library.set_folders(self.settings, chosen + [folder])
-        self.refresh_games()
-        found = sum(1 for g in self.games if g.folder == folder or folder in g.file.parents)
-        self.games_pane.status.setText(f"{folder.name or folder} is a game folder now: {found} game(s) in it.")
-        self.log.info(f"Game folder added: {folder} ({found} game(s)).")
-
-    def forget_folder(self, folder: Path) -> None:
-        """A on a folder asks for a second press (no dialog on a handheld); the second takes it off the list."""
-        if self.forget_asked != str(folder):
-            self.forget_asked = str(folder)
-            self.confirm_timer.start()
-            self.show_games()
-            self.games_pane.list.pills[f"folder:{folder}"].setFocus()
+    def remove_game(self) -> None:
+        """RB on a game (owner, 30-10-2026: a game that no longer plays goes): the page of what would go (owner,
+        01-11-2026: before deleting anything, let the user decide what to keep; core's keep): the game's file or
+        folder (library.removal: a disc image's file, a memory stick game's folder) and its shortcut in Steam, each
+        marked Delete at first. Its saves and save states on PPSSPP's memory stick are never among them."""
+        game = self.focused_game()
+        if game is None:
             return
-        self.forget_asked = ""
-        library.set_folders(self.settings, [f for f in library.folders(self.settings) if f != folder])
-        self.refresh_games()
-        self.games_pane.status.setText(f"{folder.name or folder} is no longer a game folder; its games stay where "
-                                       "they are.")
-        self.log.info(f"Game folder taken off the list: {folder}.")
-        self.focus_list(self.games_pane)
+        key = str(game.file)
+        if self.busy:
+            self.games_pane.status.setText(BUSY)
+            return
+        if self.running(self.home):
+            self.games_pane.status.setText("PPSSPP is open: quit the game first, then remove it.")
+            return
+        stick = memstick_game(emulator.memstick(self.home))
+        paths, why = library.removal(game, [*self.game_folders(), stick], self.games)
+        if not paths:
+            self.games_pane.status.setText(private(why))
+            return
+        self.keep_game = game
+        self.keeping = [keep.Item(f"path:{p}", f"{p.name} ({'its folder' if p.is_dir() else 'the game'})", (p,))
+                        for p in paths]
+        if key in self.in_steam:
+            self.keeping.append(keep.Item(STEAM_ITEM, "Its shortcut in Steam"))
+        keep.measure(self.keeping)
+        self.keep_pane.heading.setText(f"Remove {game.title}")
+        self.keep_pane.status.setText("")
+        self.show_keep()
+        self.show_pane(self.keep_pane)
+        self.focus_list(self.keep_pane)
 
-    # The folder browser (core's browse)
-
-    def show_browser(self) -> None:
-        self.browser = browse.Browser(browse.places(self.user_home, self.roots),
-                                      path=browse.remembered(self.settings, FOLDERS_BROWSED))
-        self.browse_pane.status.setText("")
-        self.show_pane(self.browse_pane)
-        self.show_browse()
-
-    def show_browse(self) -> None:
-        path = self.browser.path if self.browser is not None else None
-        self.browse_pane.summary.setText(wrappable(path) if path is not None else
-                                         "Where are your games? Open a place, then the folder they are in.")
-        self.browse_pane.list.set_items(self.browser.rows() if self.browser is not None else [])
-        self.focus_list(self.browse_pane)
+    def show_keep(self) -> None:
+        """The page's rows and what the X button frees."""
+        self.keep_pane.summary.setText(f"The X button deletes the rows marked Delete and frees "
+                                       f"{keep.human(keep.total(self.keeping))}; the A button keeps a row. The B "
+                                       "button goes back and deletes nothing. Your saves and save states stay.")
+        self.keep_pane.list.set_items(keep.rows(self.keeping))
         self.update_legend()
 
-    def browse_picked(self, key: str) -> None:
-        if self.browser is not None:
-            self.browser.open(key)
-            self.browse_pane.status.setText("")
-            self.show_browse()
+    def focused_item(self) -> keep.Item | None:
+        key = next((key for key, pill in self.keep_pane.list.pills.items() if pill.hasFocus()), None)
+        return next((item for item in self.keeping if item.key == key), None)
 
-    def add_browsed(self) -> None:
-        """X in the browser: the open folder becomes a game folder; back to the folders."""
-        if self.browser is None or self.browser.path is None:
-            self.browse_pane.status.setText(OPEN_A_FOLDER)
+    def toggle_keep(self, key: str) -> None:
+        """A on a row: Delete becomes Keep and Keep Delete; the focus stays on the row."""
+        if keep.toggle(self.keeping, key) is None:
             return
-        folder = self.browser.path
-        self.leave_browser()
-        self.add_folder(folder)
+        self.keep_pane.status.setText("")
+        self.show_keep()
+        self.keep_pane.list.pills[key].setFocus()
 
-    def leave_browser(self) -> None:
-        self.browser = None
-        self.games_view = FOLDERS
-        self.show_games()
+    def delete_marked(self) -> None:
+        """X on the page: the rows still marked Delete deleted off the window's thread, the shortcut taken out of
+        Steam first (Update Steam's way); then Your games, whose status line says what went and what stayed."""
+        game, chosen = self.keep_game, keep.chosen(self.keeping)
+        if game is None:
+            return
+        if not chosen:
+            self.keep_pane.status.setText("Nothing is marked Delete: B goes back, and nothing is deleted.")
+            return
+        if self.busy:
+            self.keep_pane.status.setText(BUSY)
+            return
+        if self.running(self.home):
+            self.keep_pane.status.setText("PPSSPP is open: quit the game first, then remove it.")
+            return
+        kept = [item.label for item in self.keeping if not item.delete]
+        gone = [item.label for item in chosen]
+        paths = [path for item in chosen for path in item.paths]
+        steam_dir = self.steam_dir if any(item.key == STEAM_ITEM for item in chosen) else None
+        closed, program, existing = self.steam_closed, emulator.program(self.home), self.in_steam
+
+        def job() -> tuple[bool, str, dict[str, str] | None]:
+            found = None
+            if steam_dir is not None:
+                ok, said, found = library.update_steam(steam_dir, [], [game], program, LOGO_PATH, existing, closed)
+                if not ok:
+                    return False, f"Nothing of {game.title} was deleted: {said}", None
+            failed = keep.delete(paths)
+            if failed:
+                return False, f"{game.title} was not removed completely: not deleted {', '.join(failed)}.", found
+            return True, (f"{game.title}: deleted {', '.join(gone)}"
+                          + (f"; kept {', '.join(kept)}" if kept else "")
+                          + ". Your saves stay on PPSSPP's memory stick."), found
+        self.keeping, self.keep_game = [], None
+        self.busy, self.message = True, ""
+        self._job = "remove"
+        if steam_dir is not None:
+            self._unmarked = self._unmarked | {str(game.file)}
         self.show_pane(self.games_pane)
         self.focus_list(self.games_pane)
+        self.games_pane.status.setText(f"Removing {game.title}…")
+        self.log.info(f"Removing {game.title}: {', '.join(str(p) for p in paths) or 'nothing on the disk'}"
+                      + (", and its Steam shortcut." if steam_dir is not None else ".")
+                      + (f" Kept: {', '.join(kept)}." if kept else ""))
+        self.worker.run(job)
+
+    def leave_keep(self) -> None:
+        """B on the page: back to Your games, nothing deleted."""
+        self.keeping, self.keep_game = [], None
+        self.back_to_games("Nothing was deleted.")
 
     # The SteamGridDB key (the BC250 app's Covers… and core's covers.edit_key, as a page)
 
@@ -702,12 +718,12 @@ class MainWindow(PortableWindow):
         pane = self.panes.currentWidget()
         if pane is self.pane:
             self.remove_action()
-        elif pane is self.browse_pane:
-            self.add_browsed()
         elif pane is self.games_pane:
             self.play()
         elif pane is self.key_pane:
             self.paste_key()
+        elif pane is self.keep_pane:
+            self.delete_marked()
 
     def y_action(self) -> None:
         pane = self.panes.currentWidget()
@@ -721,14 +737,14 @@ class MainWindow(PortableWindow):
     def lb_action(self) -> None:
         pane = self.panes.currentWidget()
         if pane is self.games_pane:
-            self.toggle_folders()
+            self.show_key()
         elif pane is self.settings_pane:
             self.settings_pane.tabs.step(-1)
 
     def rb_action(self) -> None:
         pane = self.panes.currentWidget()
         if pane is self.games_pane:
-            self.show_key()
+            self.remove_game()
         elif pane is self.settings_pane:
             self.settings_pane.tabs.step(1)
 
@@ -752,9 +768,6 @@ class MainWindow(PortableWindow):
         if self.busy:
             if self._job != "steam":                    # Steam's own job says so on the line already
                 self.games_pane.status.setText(BUSY)
-            return
-        if self.games_view != GAMES_VIEW:
-            self.games_pane.status.setText(NOT_THE_GAMES)
             return
         if self.steam_dir is None:
             self.games_pane.status.setText(NO_STEAM)
@@ -780,7 +793,8 @@ class MainWindow(PortableWindow):
 
     def refresh_log(self) -> None:
         stick = emulator.memstick(self.home)
-        rows: list[tuple[str, str]] = [("Memory stick", wrappable(stick))]
+        rows: list[tuple[str, str]] = [("Memory stick", wrappable(stick)),
+                                       ("Games", wrappable(self.game_folders()[0]))]
         if emulator.installed(self.home):
             rows += [("Saves", str(count(stick / "PSP" / "SAVEDATA"))),
                      ("Save states", str(count(stick / "PSP" / "PPSSPP_STATE")))]
@@ -856,6 +870,10 @@ class MainWindow(PortableWindow):
             self._job = ""
             self._steam_done(result)
             return
+        if self._job == "remove":
+            self._job = ""
+            self._removed(result)
+            return
         self.busy, self.stage = False, ""
         self.progress_timer.stop()
         if self.close_asked:
@@ -894,6 +912,18 @@ class MainWindow(PortableWindow):
         self._unmarked = set()
         self.refresh_games(found)
 
+    def _removed(self, result: object) -> None:
+        """What Remove game did; the games read again, with Steam's file as Update Steam read it back."""
+        self.busy = False
+        if self.close_asked:
+            self._confirm_over()
+        ok, text, found = result if isinstance(result, tuple) else (False, f"The game was not removed: {result}", None)
+        self.games_pane.status.setText(private(text))
+        (self.log.info if ok else self.log.error)(text)
+        self.refresh()
+        self.refresh_games(found)
+        self.focus_list(self.games_pane)
+
     def remove_action(self) -> None:
         """X Remove PPSSPP asks for a second press (no dialog on a handheld): the legend and the status line say so
         for a few seconds."""
@@ -927,9 +957,6 @@ class MainWindow(PortableWindow):
 
     def _confirm_over(self) -> None:
         self.confirm_timer.stop()
-        if self.forget_asked:
-            self.forget_asked = ""
-            self.show_games()
         if self.confirm_key:
             self.confirm_key = False
             if self.key_pane.status.text().startswith("Press the Y button again"):
@@ -945,23 +972,18 @@ class MainWindow(PortableWindow):
     # B
 
     def on_back(self) -> None:
-        """B goes back (the suite's rule, owner 29-10-2026): the whole log to its summary, the browser a level up (from
-        the places to the folders), the key page to Your games (nothing saved), the folders to the games, a pane to its
-        card; on a card it does nothing (View exits)."""
+        """B goes back (the suite's rule, owner 29-10-2026): the whole log to its summary, the key page to Your games
+        (nothing saved), the page of what to keep to Your games (nothing deleted), a pane to its card; on a card it
+        does nothing (View exits)."""
         pane = self.panes.currentWidget()
         if pane is self.log_pane and self.log_pane.viewing:
             self.log_pane.show_summary()
             self.log_card.setFocus()
             self.update_legend()
-        elif pane is self.browse_pane:
-            if self.browser is not None and self.browser.up():
-                self.show_browse()
-            else:
-                self.leave_browser()
         elif pane is self.key_pane:
             self.back_to_games()
-        elif pane is self.games_pane and self.games_view == FOLDERS:
-            self.toggle_folders()
+        elif pane is self.keep_pane:
+            self.leave_keep()
         else:
             self.go_back()
 
@@ -972,7 +994,9 @@ class MainWindow(PortableWindow):
             self.close_asked = True
             self.confirm_timer.start()
             self.message = ("Press View again to exit: Steam's shortcuts may be left half changed."
-                            if self._job == "steam" else "Press View again to exit: the download stops.")
+                            if self._job == "steam" else
+                            "Press View again to exit: the game may be left half deleted." if self._job == "remove"
+                            else "Press View again to exit: the download stops.")
             self.refresh()                              # the legend says so too
             return
         self.close()

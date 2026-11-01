@@ -1,3 +1,23 @@
+Changelog: 01-11-2026 16:31:38
+
+Breaking. No folder is chosen or browsed to any more (owner, 30-10-2026: fixed folders, no folder selecting): LB
+Folders, with its added folders, usual places and folder browser, is gone; Your games looks only in Games\Xbox360 in
+the user's folder, which the app makes when it opens, and in Games\Xbox360 on each SD card or USB drive that has one
+(library.fixed(); folders(), set_folders() and suggested() removed), and folders added before are no longer looked
+in. LB on Your games is Steam artwork now, as in shadPS4 Manager. The Log pane shows where Games\Xbox360 is.
+
+Added. RB Remove game on a game of Your games (owner, 30-10-2026: a game that no longer plays goes, as in shadPS4
+Manager; owner, 01-11-2026: before deleting anything, let the user decide what to keep; core's keep.py): a page of
+what would go, a row each with its size, every row marked Delete at first; A turns a row to Keep and back, X Delete
+marked deletes the rows still marked Delete off the window's thread, read-only files too, and B goes back and deletes
+nothing. The rows (library.removal()): an .iso, a .zar or a single .xex is its file, an unpacked disc (default.xex)
+its folder, a Games on Demand or Arcade package in its title ID folder as the console keeps it a row for the game,
+one for its title updates and one for its add-ons (so the add-ons can be kept; the title ID folder goes once nothing
+is left in it, library.tidy()), a package elsewhere its file with its .data folder, and a game in Steam its Steam
+shortcut, taken out through Steam. The status line says what was deleted and what was kept. Xenia's content folder,
+with the saves, is never listed. A game whose folder is one of the app's Games\Xbox360 folders itself, a drive, or a
+folder holding another game is never offered: the status line says to delete it by hand.
+
 Changelog: 01-11-2026 17:36:48
 
 Release 3.4.0.

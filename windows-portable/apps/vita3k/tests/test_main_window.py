@@ -1,10 +1,12 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The window (main_window.py), as RPCS3 Manager's is tested: it opens on the portable window with the header's
+r"""The window (main_window.py), as RPCS3 Manager's is tested: it opens on the portable window with the header's
 battery, date and time, fits the handheld's screen; every action is a button in the row at the bottom, A too, and no
 pill is left (owner, 29-10-2026); B goes back and View exits; Vita3K installed on A (off the window's thread, the
 megabytes counted, View asking first meanwhile, its config.yml prepared after), updated from another build, and
-removed with X pressed twice; a newer build on GitHub shown; the firmware, a .vpk, a dumped folder and a .pkg with its
-license key given to Vita3K (stood in for) and the result read from what it wrote; the Settings pane's rows, in tabs,
+removed with X pressed twice; a newer build on GitHub shown; the firmware put in Games\Vita\Firmware given to
+Vita3K by itself, each file once (owner, 01-11-2026), and the games put in Games\Vita (a .vpk, a .zip, a dumped folder
+and a .pkg with its license key) installed from Your games, each file deleted after (stood in for: the result read from
+what Vita3K wrote); a game removed with RB pressed twice; the Settings pane's rows, in tabs,
 step through their values, never while Vita3K runs; Your games from Vita3K's storage, marked for Steam with A (never
 played from the app) and put in Steam; the Log pane and the whole log read in the app; the SteamGridDB key; the
 version and the icons are where the checks expect them."""
@@ -27,9 +29,10 @@ from bc250_core.gamepad import Gamepad
 from bc250_core.portable import BACK, EXIT, KEYBOARD, VIEW
 from bc250_core.portable import INFO as MENU_INFO
 from bc250_core.updates import ReleaseInfo
-from conftest import fake_install, install_firmware, make_game
+from conftest import fake_install, install_firmware, make_dump, make_game, make_pkg, make_vpk
 from vita3k_manager import APP_ID, APP_NAME, EXE_NAME, INFO, LOGO_PATH, ROOT, __version__, emulator, shortcuts, userdata
-from vita3k_manager.main_window import (NEEDS_VITA3K, NO_FIRMWARE, NO_STEAM, NOTHING_TO_CHANGE, OPEN_A_FOLDER,
+from vita3k_manager.library import Waiting
+from vita3k_manager.main_window import (NEEDS_VITA3K, NO_FIRMWARE, NO_STEAM, NOTHING_TO_CHANGE, NOTHING_TO_INSTALL,
                                         MainWindow)
 
 
@@ -55,7 +58,8 @@ def wait_for(qapp, predicate, seconds=5.0):
 def make(qapp, home=None, install=fake_install, running=lambda home: False, **more):
     more.setdefault("steam_dir", None)                  # never the real Steam
     more.setdefault("start", lambda command, cwd=None: None)   # never a real Vita3K
-    more.setdefault("roots", lambda: [])
+    more.setdefault("user_home", Path(tempfile.mkdtemp()) / "me")   # never the real Games\\Vita
+    more.setdefault("drives", lambda: [])
     more.setdefault("runtime_missing", lambda: [])
     more.setdefault("newer_release", lambda: None)      # never GitHub
     more.setdefault("run_quiet", lambda home, *args: 0)
@@ -86,6 +90,14 @@ def ready(home: Path) -> None:
 
 def fs(home: Path) -> Path:
     return home / "portable" / "fs"
+
+
+def aged(folder: Path) -> None:
+    """Every file below *folder* written long ago, so a stand-in's files count as Vita3K's newest (the app reads
+    what an install wrote from the files' times, with a second's room)."""
+    for file in folder.rglob("*"):
+        if file.is_file():
+            os.utime(file, (1_000_000_000, 1_000_000_000))
 
 
 def test_the_window_opens_with_the_suites_header(qapp):
@@ -144,8 +156,10 @@ def test_nothing_is_installed_before_a(qapp, tmp_path):
     assert rows["Firmware"] == "no system software and no font package" and rows["Games"] == "0"
     window.on_action("x")                                       # X Remove: says why, nothing happens
     assert "nothing to remove" in window.status.text() and calls == []
-    window.on_action("previous")                                # LB Firmware: Vita3K first
-    assert window.status.text() == NEEDS_VITA3K and window.panes.currentWidget() is window.pane
+    window.games_card.setFocus()
+    qapp.processEvents()
+    window.install_waiting([Waiting(tmp_path / "Game.vpk", "VPK")])   # a game: Vita3K first
+    assert window.games_pane.status.text() == NEEDS_VITA3K and not window.busy
     window.close()
 
 
@@ -166,8 +180,7 @@ def test_a_installs_off_the_windows_thread_and_counts_the_megabytes(qapp, tmp_pa
     gate.set()
     assert wait_for(qapp, lambda: not window.busy)
     assert window.status.text() == f"Vita3K build {emulator.VERSION} is installed."
-    assert window.legend.items == [("X", "Remove Vita3K"), ("LB", "Firmware"), ("RB", "Install a game"), MENU_INFO,
-                                   EXIT]
+    assert window.legend.items == [("X", "Remove Vita3K"), MENU_INFO, EXIT]
     config = userdata.read_map(userdata.config_path(tmp_path / "emulator"))   # prepared before its first start
     assert config == {"boot-apps-full-screen": "true", "show-welcome": "false", "check-for-updates-mode": "0"}
     window.on_action("view")
@@ -192,8 +205,7 @@ def test_update_and_remove_with_x_pressed_twice(qapp, tmp_path):
     save.parent.mkdir(parents=True)
     save.write_bytes(b"x")
     window = make(qapp, home)
-    assert window.legend.items == [("X", "Remove Vita3K"), ("Y", "Update"), ("LB", "Firmware"),
-                                   ("RB", "Install a game"), MENU_INFO, EXIT]
+    assert window.legend.items == [("X", "Remove Vita3K"), ("Y", "Update"), MENU_INFO, EXIT]
     assert window.status.text() == f"This app installs Vita3K build {emulator.VERSION}: the Y button updates it."
     window.act("y")
     assert wait_for(qapp, lambda: not window.busy) and emulator.installed(home) == emulator.VERSION
@@ -338,7 +350,8 @@ def test_the_window_fits_a_smaller_screen(qapp, tmp_path):
     portable.pin_scale((1097, 617))
     try:
         window = MainWindow(gamepad=Gamepad(source_factory=FakePad), battery=lambda: (82, False), steam_dir=None,
-                            home=tmp_path / "emulator", roots=lambda: [], runtime_missing=lambda: [])
+                            home=tmp_path / "emulator", user_home=tmp_path / "me", drives=lambda: [],
+                            runtime_missing=lambda: [])
         window.resize(1097, 617)
         window.show()
         qapp.processEvents()
@@ -348,39 +361,58 @@ def test_the_window_fits_a_smaller_screen(qapp, tmp_path):
         portable.pin_scale((1280, 720))
 
 
-def test_the_firmware_is_installed_by_vita3k_without_its_window(qapp, tmp_path, monkeypatch):
-    """LB Firmware opens the browser in Downloads with the .PUP files; A on one runs Vita3K with --firmware (stood in
-    for: it writes the files Vita3K would), and the Vita3K pane names the parts it wrote."""
+def test_the_firmware_put_in_its_folder_is_given_to_vita3k_by_itself(qapp, tmp_path, monkeypatch):
+    r"""The firmware files put in Games\Vita\Firmware (owner, 01-11-2026: taken in automatically, no browsing) are
+    given to Vita3K with --firmware (stood in for: it writes the files Vita3K would) when the app opens and when the
+    Vita3K card gets the focus, the largest first, one after the other; each once while it stays the same, a file
+    that failed too, and a replaced one again. The files stay."""
     home = tmp_path / "emulator"
     fake_install(home)
     user = tmp_path / "me"
-    (user / "Downloads").mkdir(parents=True)
-    pup = user / "Downloads" / "PSP2UPDAT.PUP"
-    pup.write_bytes(b"pup")
-    (user / "Downloads" / "notes.txt").write_text("")
+    firmware = user / "Games" / "Vita" / "Firmware"
+    (firmware / "Fonts").mkdir(parents=True)
+    system = firmware / "PSP2UPDAT.PUP"
+    system.write_bytes(b"s" * 200)
+    fonts = firmware / "Fonts" / "PSP2UPDAT.PUP"                 # the same name: in a folder of its own
+    fonts.write_bytes(b"f" * 100)
+    (firmware / "notes.txt").write_text("")
     runs = []
 
     def run_quiet(home_, *args):
         runs.append(args)
-        install_firmware(fs(home_))
+        aged(fs(home_))
+        install_firmware(fs(home_), system=args[1] == str(system), fonts=args[1] == str(fonts))
         return 0
     window = make(qapp, home, user_home=user, run_quiet=run_quiet)
     monkeypatch.setattr(window, "isActiveWindow", lambda: True)
-    window.on_action("previous")                                # LB Firmware
-    assert window.panes.currentWidget() is window.browse_pane and window.browser.path == user / "Downloads"
-    assert window.browse_pane.heading.text() == "Choose the firmware file"
-    assert window.legend.items == [("A", "Open"), MENU_INFO, BACK, EXIT]
-    rows = window.browse_pane.list.pills
-    assert list(rows)[1:] == [f"file:{pup}"]                    # the .PUP, not the text file
-    window.on_action("x")                                       # X does nothing here
-    rows[f"file:{pup}"].click()                                 # A on it
-    assert window.busy and window.panes.currentWidget() is window.pane
-    assert window.status.text().startswith("Vita3K installs PSP2UPDAT.PUP, without its window")
-    assert wait_for(qapp, lambda: not window.busy)
-    assert runs == [("--firmware", str(pup))]
-    assert window.status.text() == "PSP2UPDAT.PUP: the system software and the font package installed."
+    assert window.busy and window.status.text().startswith("Vita3K installs PSP2UPDAT.PUP, without its window")
+    assert wait_for(qapp, lambda: not window.busy and not window.firmware_queue)
+    assert runs == [("--firmware", str(system)), ("--firmware", str(fonts))]
+    assert window.status.text() == ("PSP2UPDAT.PUP: the system software installed. PSP2UPDAT.PUP: the font package "
+                                    "installed.")
     assert dict(window.rows())["Firmware"] == "installed" and window.firmware.ready
+    assert window.legend.items == [("X", "Remove Vita3K"), MENU_INFO, EXIT]       # no LB Firmware any more
+    assert system.exists() and fonts.exists()
+    window.games_card.setFocus()
+    window.vita3k_card.setFocus()
+    qapp.processEvents()
+    assert len(runs) == 2 and not window.busy                   # each given once
+    (firmware / "bad.pup").write_bytes(b"x")                    # Vita3K writes nothing for it
+    fonts.write_bytes(b"f" * 120)                               # replaced
+    window.games_card.setFocus()
+    window.vita3k_card.setFocus()
+    assert wait_for(qapp, lambda: not window.busy and not window.firmware_queue)
+    assert runs[2:] == [("--firmware", str(fonts)), ("--firmware", str(firmware / "bad.pup"))]
+    assert window.status.text().endswith("Vita3K did not install bad.pup: nothing of the firmware was written. Is "
+                                         "it one of the PS Vita's PSP2UPDAT.PUP files?")
+    window.games_card.setFocus()
+    window.vita3k_card.setFocus()
+    qapp.processEvents()
+    assert len(runs) == 4 and not window.busy                   # the failed one is not tried again
     window.close()
+    again = make(qapp, home, user_home=user, run_quiet=run_quiet, settings=window.settings)
+    assert not again.busy and len(runs) == 4                    # kept across starts
+    again.close()
 
 
 def test_a_file_vita3k_cannot_use_is_said(qapp, tmp_path):
@@ -394,82 +426,79 @@ def test_a_file_vita3k_cannot_use_is_said(qapp, tmp_path):
     window.close()
 
 
-def test_a_vpk_is_installed_and_vita3k_closed_before_the_game(qapp, tmp_path, monkeypatch):
-    """RB Install a game opens the browser with the .vpk, .zip and .pkg files; A on a .vpk gives it to Vita3K (stood
-    in for: it installs the game and the app closes it), and the game shows in Your games."""
+def test_the_games_put_in_games_vita_are_installed_from_your_games(qapp, tmp_path, monkeypatch):
+    r"""The games are put in Games\Vita, the user's and an SD card's (owner, 30-10-2026: no browsing): each .vpk,
+    .zip, .pkg and dumped folder not installed yet is a short row of Your games; A installs one, X Install all every
+    .vpk, .zip and folder (a .pkg waits for its license key), through Vita3K (stood in for: it installs the game and
+    the app closes it). Nothing is deleted on its own (owner, 01-11-2026: the user decides what to keep): after an
+    install the keep page lists the .vpk and .zip files installed, Delete at first; X deletes the marked ones, B
+    keeps them all, and a kept file is not listed again. A folder is never offered."""
     home = tmp_path / "emulator"
     ready(home)
+    make_game(fs(home), "Gravity Rush", "PCSA00011")
     user = tmp_path / "me"
-    (user / "Downloads").mkdir(parents=True)
-    vpk = user / "Downloads" / "Persona.vpk"
-    vpk.write_bytes(b"PK")
-    (user / "Downloads" / "Game.pkg").write_bytes(b"\x7fPKG")
-    (user / "Downloads" / "readme.txt").write_text("")
+    own = user / "Games" / "Vita"
+    own.mkdir(parents=True)
+    persona = make_vpk(own / "Persona.vpk", "Persona 4 Golden", "PCSB00245")
+    make_vpk(own / "Gravity.vpk", "Gravity Rush", "PCSA00011")              # installed already: not listed
+    dump = make_dump(own / "dumps" / "PCSE00001", "Uncharted", "PCSE00001")  # a folder down
+    pkg = make_pkg(own / "Tearaway.pkg", "PCSA00099")
+    (own / "readme.txt").write_text("")
+    card = tmp_path / "E"
+    (card / "Games" / "Vita").mkdir(parents=True)
+    zipped = make_vpk(card / "Games" / "Vita" / "Wipeout.zip", "WipEout 2048", "PCSA00015")
+    games = {persona: ("Persona 4 Golden", "PCSB00245"), dump: ("Uncharted", "PCSE00001"),
+             zipped: ("WipEout 2048", "PCSA00015")}
     installs = []
 
     def install_content(home_, content):
         installs.append(content)
-        make_game(fs(home_), "Persona 4 Golden", "PCSB00245", pictures=True)
+        aged(fs(home_))
+        make_game(fs(home_), *games[content])
         return True
-    window = make(qapp, home, user_home=user, install_content=install_content)
+    window = make(qapp, home, user_home=user, drives=lambda: [card], install_content=install_content)
     monkeypatch.setattr(window, "isActiveWindow", lambda: True)
-    window.on_action("next")                                    # RB Install a game
-    assert window.panes.currentWidget() is window.browse_pane
-    assert window.browse_pane.heading.text() == "Choose a game to install"
-    assert window.legend.items == [("A", "Open"), ("X", "Install this folder"), MENU_INFO, BACK, EXIT]
-    rows = window.browse_pane.list.pills
-    assert sorted(k for k in rows if k.startswith("file:")) == sorted(f"file:{user / 'Downloads' / n}"
-                                                                     for n in ("Game.pkg", "Persona.vpk"))
-    rows[f"file:{vpk}"].click()
-    assert window.busy and window.status.text().startswith("Vita3K installs Persona.vpk…")
-    assert wait_for(qapp, lambda: not window.busy)
-    assert installs == [vpk]
-    assert window.status.text() == "Installed in Vita3K: Persona 4 Golden (PCSB00245)."
-    assert dict(window.rows())["Games"] == "1"
+    assert (own / "Firmware").is_dir()                          # made by the app
     window.games_card.setFocus()
     qapp.processEvents()
-    assert [p.label.text() for p in window.games_pane.list.pills.values()] == [
-        "Persona 4 Golden  ·  PCSB00245  ·  1.00"]
-    window.close()
-
-
-def test_a_dumped_folder_is_installed_with_x(qapp, tmp_path, monkeypatch):
-    home = tmp_path / "emulator"
-    ready(home)
-    user = tmp_path / "me"
-    dump = user / "Downloads" / "PCSE00001"
-    (dump / "sce_sys").mkdir(parents=True)
-    (dump / "sce_sys" / "param.sfo").write_bytes(b"\0PSF")
-    installs = []
-
-    def install_content(home_, content):
-        installs.append(content)
-        make_game(fs(home_), "Update", "PCSE00001", kind="patch")
-        return False                                            # an update starts no game: Vita3K ends by itself
-    window = make(qapp, home, user_home=user, install_content=install_content)
-    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
-    window.on_action("next")
-    window.on_action("x")                                       # the Downloads folder is open, not the game's
-    assert window.browse_pane.status.text().startswith("No PS Vita game in Downloads: open the game's own folder")
-    assert installs == [] and not window.busy
-    window.browse_pane.list.pills[f"dir:{dump}"].click()
-    window.on_action("x")
+    assert window.games_pane.summary.text().startswith("1 game(s) installed in Vita3K, 4 to install")
+    rows = window.games_pane.list.pills
+    assert [p.label.text() for p in rows.values()] == [
+        "Gravity Rush  ·  PCSA00011  ·  1.00", "Persona 4 Golden  ·  PCSB00245  ·  VPK",
+        "Tearaway.pkg  ·  PCSA00099  ·  PKG", "Uncharted  ·  PCSE00001  ·  Folder", "WipEout 2048  ·  PCSA00015  ·  ZIP"]
+    rows[f"add:{persona}"].setFocus()
+    qapp.processEvents()
+    assert window.legend.items[:4] == [("A", "Install"), ("X", "Install all"), ("Y", "Update Steam"),
+                                       ("LB", "Steam artwork")]
+    window.on_action("accept")                                  # A: this one
+    assert window.busy and window.games_pane.status.text().startswith("Vita3K installs Persona.vpk…")
     assert wait_for(qapp, lambda: not window.busy)
-    assert installs == [dump]
-    assert window.status.text() == "Installed in Vita3K: an update for PCSE00001."
-    window.close()
-
-
-def test_x_in_the_browser_needs_an_open_folder(qapp, tmp_path, monkeypatch):
-    home = tmp_path / "emulator"
-    ready(home)
-    window = make(qapp, home, user_home=tmp_path / "nobody")    # no Downloads: the browser starts at the places
-    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
-    window.on_action("next")
-    window.on_action("x")
-    assert window.browse_pane.status.text() == OPEN_A_FOLDER and not window.busy
-    window.on_action("back")                                    # B at the places: back to the Vita3K pane
-    assert window.panes.currentWidget() is window.pane and window.browser is None
+    assert installs == [persona] and persona.exists()           # not deleted on its own
+    page = window.keep_pane
+    assert window.panes.currentWidget() is page and page.heading.text() == "Installed: delete the files?"
+    assert page.status.text() == "Installed in Vita3K: Persona 4 Golden (PCSB00245)."
+    assert [p.label.text() for p in page.list.pills.values()] == ["Delete  ·  Persona.vpk  ·  426 B"]
+    assert window.legend.items == [("A", "Keep"), ("X", "Delete marked"), MENU_INFO, BACK, EXIT]
+    window.on_action("x")                                       # X: the marked one goes
+    assert wait_for(qapp, lambda: not window.busy)
+    assert not persona.exists() and window.panes.currentWidget() is window.games_pane
+    assert window.games_pane.status.text() == "Deleted: Persona.vpk."
+    window.games_pane.list.pills[f"add:{dump}"].setFocus()
+    qapp.processEvents()
+    window.on_action("x")                                       # X Install all: the .pkg waits
+    assert wait_for(qapp, lambda: not window.busy)
+    assert installs[1:] == [dump, zipped]
+    assert page.status.text() == ("2 of 2 game(s) installed in Vita3K. 1 .pkg file(s) wait: the A button on each asks "
+                                  "for its license key.")
+    assert list(page.list.pills) == [str(zipped)]               # the folder is never offered
+    window.on_action("back")                                    # B: nothing deleted, kept
+    assert window.games_pane.status.text() == ("Nothing was deleted. The installed files stay where they are and are "
+                                               "not listed again.")
+    assert dump.is_dir() and zipped.exists() and pkg.exists()
+    assert list(window.games_pane.list.pills) == ["PCSA00011", "PCSB00245", "PCSE00001", "PCSA00015", f"add:{pkg}"]
+    window.refresh_games()                                      # kept: not listed again, until it changes
+    assert f"add:{zipped}" not in window.games_pane.list.pills
+    assert dict(window.rows())["Games"] == "4"
     window.close()
 
 
@@ -477,48 +506,63 @@ def test_nothing_installed_is_said(qapp, tmp_path):
     home = tmp_path / "emulator"
     ready(home)
     window = make(qapp, home, install_content=lambda home_, content: True)
-    window.install_game(tmp_path / "Vitamin.vpk")
+    window.install_waiting([])
+    assert window.games_pane.status.text() == NOTHING_TO_INSTALL
+    vitamin = tmp_path / "Vitamin.vpk"
+    vitamin.write_bytes(b"PK")
+    window.install_waiting([Waiting(vitamin, "VPK")])
     assert wait_for(qapp, lambda: not window.busy)
-    assert window.status.text().startswith("Vita3K installed nothing from Vitamin.vpk: is it a PS Vita game")
+    assert window.games_pane.status.text().startswith("Vita3K installed nothing from Vitamin.vpk: is it a PS Vita "
+                                                      "game")
+    assert vitamin.exists()                                     # kept: nothing came of it
     failing = make(qapp, home, install_content=lambda h, c: (_ for _ in ()).throw(
         emulator.EmulatorError("Vita3K did not finish installing Big.vpk in 15 minutes")))
-    failing.install_game(tmp_path / "Big.vpk")
+    failing.install_waiting([Waiting(tmp_path / "Big.vpk", "VPK")])
     assert wait_for(qapp, lambda: not failing.busy)
-    assert failing.status.text() == ("Vita3K could not install Big.vpk: Vita3K did not finish installing Big.vpk in "
-                                     "15 minutes")
+    assert failing.games_pane.status.text() == ("Vita3K could not install Big.vpk: Vita3K did not finish installing "
+                                                "Big.vpk in 15 minutes")
     window.close()
     failing.close()
 
 
 def test_a_package_is_installed_with_its_pasted_license(qapp, tmp_path, monkeypatch):
-    """A on a .pkg asks for its license key on a page of its own (X pastes it, B goes back to the folder); A installs
-    it through Vita3K without its window, the key on its command line and in no log line."""
+    """A on a .pkg row asks for its license key on a page of its own (X pastes it, B goes back to the row; X Install
+    all says to press A); A installs it through Vita3K without its window, the key on its command line and in no log
+    line; the keep page offers the package after, and A keeps it (owner, 01-11-2026: the user decides what to
+    keep)."""
     from PyQt6.QtGui import QGuiApplication
     home = tmp_path / "emulator"
     ready(home)
     user = tmp_path / "me"
-    (user / "Downloads").mkdir(parents=True)
-    pkg = user / "Downloads" / "Game.pkg"
-    pkg.write_bytes(b"\x7fPKG")
+    own = user / "Games" / "Vita"
+    own.mkdir(parents=True)
+    pkg = make_pkg(own / "Game.pkg", "PCSA00011")
     runs = []
 
     def run_quiet(home_, *args):
         runs.append(args)
+        aged(fs(home_))
         make_game(fs(home_), "Gravity Rush", "PCSA00011")
         return 0
     window = make(qapp, home, user_home=user, run_quiet=run_quiet)
     monkeypatch.setattr(window, "isActiveWindow", lambda: True)
     logged = []
     monkeypatch.setattr(window.log, "info", lambda text: logged.append(text))
-    window.on_action("next")
-    window.browse_pane.list.pills[f"file:{pkg}"].click()        # A on the .pkg: its license's page
+    window.games_card.setFocus()
+    qapp.processEvents()
+    window.games_pane.list.pills[f"add:{pkg}"].setFocus()
+    qapp.processEvents()
+    window.on_action("x")                                       # X Install all: its key first
+    assert window.games_pane.status.text() == "A .pkg installs with its license key: press the A button on it."
+    window.on_action("accept")                                  # A on the .pkg: its license's page
     pane = window.zrif_pane
     assert window.panes.currentWidget() is pane and pane.field.hasFocus()
     assert pane.heading.text() == "The license of Game.pkg"
     assert window.legend.items == [("A", "Install"), ("X", "Paste"), KEYBOARD, BACK, EXIT]
-    window.on_action("back")                                    # B: the folder again, nothing installed
-    assert window.panes.currentWidget() is window.browse_pane and window.browser.path == user / "Downloads"
-    window.browse_pane.list.pills[f"file:{pkg}"].click()
+    window.on_action("back")                                    # B: the row again, nothing installed
+    assert window.panes.currentWidget() is window.games_pane
+    assert window.games_pane.list.pills[f"add:{pkg}"].hasFocus() and runs == []
+    window.on_action("accept")
     window.on_action("accept")                                  # empty: says why
     assert "empty" in pane.status.text() and runs == []
     pane.field.setText("not a key")
@@ -528,10 +572,18 @@ def test_a_package_is_installed_with_its_pasted_license(qapp, tmp_path, monkeypa
     window.on_action("x")                                       # X Paste
     assert pane.field.text() == "KO5ifR1dQ+eHBlOi4mY2h6aW0="
     window.on_action("accept")                                  # A Install
-    assert window.panes.currentWidget() is window.pane and pane.field.text() == ""
+    assert window.panes.currentWidget() is window.games_pane and pane.field.text() == ""
     assert wait_for(qapp, lambda: not window.busy)
     assert runs == [("--pkg", str(pkg), "--zrif", "KO5ifR1dQ+eHBlOi4mY2h6aW0=")]
-    assert window.status.text() == "Installed in Vita3K: Gravity Rush (PCSA00011)."
+    page = window.keep_pane
+    assert window.panes.currentWidget() is page and page.status.text() == "Installed in Vita3K: Gravity Rush (PCSA00011)."
+    window.on_action("accept")                                  # A: Delete becomes Keep, the focus stays
+    assert page.list.pills[str(pkg)].label.text().startswith("Keep  ·  Game.pkg") and page.list.pills[str(pkg)].hasFocus()
+    assert window.legend.items[0] == ("A", "Delete")
+    window.on_action("x")                                       # X with nothing marked: says so, deletes nothing
+    assert page.status.text() == "Nothing is marked Delete: B goes back, and nothing is deleted."
+    window.on_action("back")
+    assert pkg.exists() and list(window.games_pane.list.pills) == ["PCSA00011"]
     assert not any("KO5i" in text for text in logged)
     window.close()
 
@@ -540,9 +592,11 @@ def test_a_package_with_the_wrong_license_is_said(qapp, tmp_path):
     home = tmp_path / "emulator"
     ready(home)
     window = make(qapp, home)
-    window.install_package(tmp_path / "Game.pkg", "KO5iwrong")
+    pkg = make_pkg(tmp_path / "Game.pkg", "PCSA00011")
+    window.install_package(pkg, "KO5iwrong")
     assert wait_for(qapp, lambda: not window.busy)
-    assert window.status.text() == "Vita3K did not install Game.pkg: is the license key the package's own?"
+    assert window.games_pane.status.text() == "Vita3K did not install Game.pkg: is the license key the package's own?"
+    assert pkg.exists()                                         # kept: it did not install
     window.close()
 
 
@@ -554,10 +608,9 @@ def test_view_while_vita3k_installs_asks_first(qapp, tmp_path, monkeypatch):
     monkeypatch.setattr(window, "isActiveWindow", lambda: True)
     closed = []
     monkeypatch.setattr(window, "close", lambda: closed.append(True))
-    window.install_game(tmp_path / "Game.vpk")
+    window.install_waiting([Waiting(tmp_path / "Game.vpk", "VPK")])
     window.on_action("view")
     assert closed == [] and window.status.text().startswith("Press View again to exit: Vita3K goes on installing")
-    window.on_action("next")                                    # busy: RB says so
     gate.set()
     assert wait_for(qapp, lambda: not window.busy)
 
@@ -583,7 +636,7 @@ def test_your_games_are_marked_with_a_and_put_in_steam(qapp, tmp_path, monkeypat
     monkeypatch.setattr(window, "isActiveWindow", lambda: True)
     window.games_card.setFocus()
     qapp.processEvents()
-    assert window.legend.items == [("A", "Steam mark"), ("Y", "Update Steam"), ("RB", "Steam artwork"), MENU_INFO,
+    assert window.legend.items == [("A", "Steam mark"), ("Y", "Update Steam"), ("LB", "Steam artwork"), MENU_INFO,
                                    EXIT]
     window.on_action("accept")                                     # into the list
     assert not hasattr(window, "steam_row")
@@ -751,7 +804,7 @@ def test_the_log_is_read_in_the_app(qapp, tmp_path, monkeypatch):
 def test_the_steamgriddb_key_is_pasted_saved_and_removed(qapp, tmp_path, monkeypatch):
     r"""The BC250 app's Covers… key, as the suite's other apps have it on a page: one key for the suite in
     %APPDATA%\windows-portable-suite\steamgriddb-key, X Paste from the clipboard, A Save, Y Remove key with a second
-    press, B back without saving, the page on RB."""
+    press, B back without saving, the page on LB."""
     from bc250_core import covers
     from PyQt6.QtGui import QGuiApplication
     from vita3k_manager import library
@@ -761,7 +814,7 @@ def test_the_steamgriddb_key_is_pasted_saved_and_removed(qapp, tmp_path, monkeyp
     monkeypatch.setattr(window, "isActiveWindow", lambda: True)
     window.games_card.setFocus()
     qapp.processEvents()
-    window.on_action("next")                                    # RB Steam artwork
+    window.on_action("previous")                                # LB Steam artwork
     pane = window.key_pane
     assert window.panes.currentWidget() is pane and pane.field.hasFocus()
     assert window.legend.items == [("A", "Save"), ("X", "Paste"), ("Y", "Remove key"), KEYBOARD, BACK, EXIT]
@@ -773,12 +826,12 @@ def test_the_steamgriddb_key_is_pasted_saved_and_removed(qapp, tmp_path, monkeyp
     assert pane.field.text() == "0123456789abcdef0123456789abcdef"
     window.on_action("back")                                    # B: back, nothing saved
     assert window.panes.currentWidget() is window.games_pane and not key_file.exists()
-    window.legend.entries["RB"].pressed.emit()                  # a tap on RB Steam artwork
+    window.legend.entries["LB"].pressed.emit()                  # a tap on LB Steam artwork
     window.key_pane.field.setText("0123456789abcdef0123456789abcdef")
     window.on_action("accept")                                  # A Save
     assert covers.read_key(key_file) == "0123456789abcdef0123456789abcdef"
     assert window.games_pane.status.text() == "The SteamGridDB key was changed." and pane.field.text() == ""
-    window.on_action("next")
+    window.on_action("previous")
     window.on_action("y")
     assert window.legend.items[2] == ("Y", "Press again") and key_file.exists()
     window.legend.entries["Y"].pressed.emit()                   # the second press, as a tap
@@ -814,7 +867,7 @@ def test_no_path_on_the_screen_shows_the_users_name(qapp):
     local = Path(os.environ.get("LOCALAPPDATA") or Path.home())
     home = local / "windows-portable-suite" / "windows-portable-vita3k" / "emulator"
     user = Path(os.environ.get("USERPROFILE") or Path.home())
-    window = make(qapp, home)
+    window = make(qapp, home, user_home=local / "me")          # Games\\Vita shown too
     window.log_card.setFocus()
     qapp.processEvents()
     shown = [value for _label, value in window.rows()] + [label.text() for label in
@@ -823,24 +876,62 @@ def test_no_path_on_the_screen_shows_the_users_name(qapp):
     window.close()
 
 
-def test_the_browser_opens_where_it_was_left(qapp, tmp_path, monkeypatch):
-    """Owner, 29-10-2026: a file picked in a folder, the next browser of its kind opens in that folder."""
+def test_a_game_is_removed_from_steam_and_vita3k(qapp, tmp_path, monkeypatch):
+    """RB Remove game (owner, 30-10-2026: a game that no longer plays goes) shows the keep page (owner, 01-11-2026:
+    before deleting anything, let the user decide what to keep): the game, its update and its Steam shortcut, each
+    marked Delete; B goes back and deletes nothing; A keeps a row; X takes the game out of Steam and deletes the
+    marked rows off the window's thread; the kept row and the saves stay."""
     home = tmp_path / "emulator"
     ready(home)
-    user = tmp_path / "me"
-    folder = user / "Downloads" / "vita"
-    folder.mkdir(parents=True)
-    (folder / "Persona.vpk").write_bytes(b"PK")
-    window = make(qapp, home, user_home=user)
+    persona = make_game(fs(home), "Persona 4 Golden", "PCSB00245")
+    patch = make_game(fs(home), "Persona 4 Golden", "PCSB00245", kind="patch")
+    (persona / "eboot.bin").chmod(0o444)                        # read-only goes too
+    other = make_game(fs(home), "Gravity Rush", "PCSA00011")
+    saves = fs(home) / "ux0" / "user" / "00" / "savedata" / "PCSB00245"
+    saves.mkdir(parents=True)
+    steam_dir = tmp_path / "Steam"
+    (steam_dir / "userdata" / "1" / "config").mkdir(parents=True)
+    closed = []
+
+    def with_steam_closed(change):
+        closed.append(True)
+        change()
+        return True
+    window = make(qapp, home, steam_dir=steam_dir, steam_closed=with_steam_closed)
     monkeypatch.setattr(window, "isActiveWindow", lambda: True)
-    window.on_action("next")                                    # RB Install a game: Downloads
-    assert window.browser.path == user / "Downloads"
-    window.browse_pane.list.pills[f"dir:{folder}"].click()
-    window.browse_pane.list.pills[f"file:{folder / 'Persona.vpk'}"].click()
-    assert wait_for(qapp, lambda: not window.busy)
-    window.vita3k_card.setFocus()
+    window.mark_game("PCSB00245")
+    window.update_steam()
+    assert wait_for(qapp, lambda: not window.busy) and len(shortcuts.in_steam(steam_dir)) == 1
+    window.games_card.setFocus()
+    qapp.processEvents()
+    window.games_pane.list.pills["PCSB00245"].setFocus()
+    qapp.processEvents()
+    assert ("RB", "Remove game") in window.legend.items
+    window.on_action("next")                                    # RB: the keep page, nothing deleted yet
+    page = window.keep_pane
+    assert window.panes.currentWidget() is page and page.heading.text() == "Remove Persona 4 Golden"
+    assert [p.label.text().rsplit("  ·  ", 1)[0] if "ux0" in p.label.text() else p.label.text()
+            for p in page.list.pills.values()] == [
+        "Delete  ·  The game, ux0\\app\\PCSB00245", "Delete  ·  Its update, ux0\\patch\\PCSB00245",
+        "Delete  ·  Its shortcut in Steam"]
+    assert window.cards[page] is window.games_card and persona.exists()
+    window.on_action("back")                                    # B: nothing deleted
+    assert window.panes.currentWidget() is window.games_pane
+    assert window.games_pane.status.text() == "Nothing was deleted."
+    assert persona.exists() and patch.exists() and len(shortcuts.in_steam(steam_dir)) == 1
+    window.games_pane.list.pills["PCSB00245"].setFocus()
     window.on_action("next")
-    assert window.browser.path == folder
+    page.list.pills[str(patch)].setFocus()
+    qapp.processEvents()
+    window.on_action("accept")                                  # A: the update is kept
+    assert page.list.pills[str(patch)].label.text().startswith("Keep  ·  Its update")
+    window.legend.entries["X"].pressed.emit()                   # X Delete marked, as a tap
+    assert wait_for(qapp, lambda: not window.busy)
+    assert not persona.exists() and patch.is_dir() and other.exists() and saves.is_dir()
+    assert shortcuts.in_steam(steam_dir) == {} and len(closed) == 2
+    assert window.games_pane.status.text() == ("Deleted: The game, ux0\\app\\PCSB00245, Its shortcut in Steam. Kept: "
+                                               "Its update, ux0\\patch\\PCSB00245.")
+    assert list(window.games_pane.list.pills) == ["PCSA00011"]
     window.close()
 
 

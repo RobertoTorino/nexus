@@ -9,10 +9,11 @@
 Plays your PS3 games on a Windows handheld with RPCS3, the PS3 emulator: RPCS3 0.0.43 (build 20395) for Windows from
 RPCS3's own builds, checked against the checksum this version of the app was tested with, for your own user; RPCS3
 keeps the firmware, your saves, its settings and the games installed from packages beside its program, in the app's
-folder. It takes the PS3's firmware and your packages and has RPCS3 install them without its window, offers RPCS3's
-settings that matter on the handheld, finds your disc games in the folders you choose and the games installed in
-RPCS3, sets each game's screen and puts them in Steam (with the game's own pictures, and a cover from SteamGridDB when
-you give it your key), and keeps a log. RPCS3's own window is never needed: a game starts alone and full screen from
+folder. You put your games, packages and the firmware in its own folder, `Games\PS3` in your user folder (or on an SD
+card), and it takes care of them: RPCS3 installs the firmware and the packages without its window, and you decide
+whether a package installed is deleted. Nothing is deleted before you decide what to keep. It offers RPCS3's settings that matter on the handheld, finds your disc games there and
+the games installed in RPCS3, puts them in Steam (with the game's own pictures, and a cover from SteamGridDB when you
+give it your key), removes a game you no longer want, and keeps a log. RPCS3's own window is never needed: a game starts alone and full screen from
 Steam, and View and Menu together open RPCS3's menu with Exit Game. Remove takes RPCS3's program away and leaves what
 you made.
 

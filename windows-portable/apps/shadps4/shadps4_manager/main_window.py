@@ -22,11 +22,14 @@ games and packages are dropped there; library.fixed, an SD card's too), played f
 marks one for Steam, X plays one that is in Steam, through Steam (steam://rungameid), and on a device without Steam
 starts it in the app's play mode itself (owner, 30-10-2026: a fallback, as its shortcut would start it; core's play:
 View, LB and RB held quit any game), Y Update Steam makes Steam's shortcuts match the marks and brings a shortcut made
-before the play mode to it, RB Remove game (a second press) takes a game out of Steam and deletes its folder with its
-update. A package that waits there (extract.waiting: a game not unpacked, an update its game lacks) is a row of its
-own, PKG; A unpacks it, X Unpack all every one, the games first and each update beside its game (extract.place), and a
-package unpacked whole is deleted (extract.py, Extract PKG of the BC250 app). LB Steam artwork keeps the SteamGridDB key; Steam's library is the portal's RT Steam (owner,
-30-10-2026: Open Steam moved there).
+before the play mode to it, RB Remove game shows the keep page of what would go (the game's folder, its update,
+patch and mods, its Steam shortcut). A package that waits there (extract.waiting: a game not unpacked, an update its
+game lacks) is a row of its own, PKG; A unpacks it, X Unpack all every one, the games first and each update beside
+its game (extract.place; extract.py, Extract PKG of the BC250 app), and the keep page then offers the packages
+unpacked whole for deletion. Nothing is deleted without the keep page (owner, 01-11-2026: before deleting anything,
+let the user decide what to keep; core's keep): every row marked Delete at first, A Keep or Delete, X deletes the
+marked ones, B goes back and deletes nothing. LB Steam artwork keeps the SteamGridDB key; Steam's library is the
+portal's RT Steam (owner, 30-10-2026: Open Steam moved there).
 The Log pane: shadPS4's folder, the app's folders and the newest lines of the app's log; A (or a tap on the pane)
 shows the whole log in the pane.
 
@@ -46,7 +49,7 @@ from PyQt6.QtCore import QObject, QSettings, Qt, QTimer, pyqtSignal
 from PyQt6.QtGui import QFont, QGuiApplication
 from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QStackedWidget, QVBoxLayout, QWidget
 
-from bc250_core import applog, covers, platform, play, power, steam
+from bc250_core import applog, covers, keep, platform, play, power, steam
 from bc250_core.gamepad import Gamepad
 from bc250_core.platform import private
 from bc250_core.portable import (AMBER, BODY, DIM, EXIT, KEYBOARD, VIEW, Card, InfoPill, Legend, Pane, PortableHeader,
@@ -55,12 +58,12 @@ from bc250_core.portable import (AMBER, BODY, DIM, EXIT, KEYBOARD, VIEW, Card, I
 from . import (APP_ID, APP_NAME, LOGO_PATH, __version__, emulator, extract, library, shadnet, shadps4_settings,
                shortcuts, userdata)
 from .games import Game, scan
-from .panes import GAMES_INFO, SHADPS4_INFO, FieldPane, KeyPane, ListPane, LogPane, ShadNetPane
+from .panes import GAMES_INFO, KEEP_INFO, SHADPS4_INFO, FieldPane, KeyPane, ListPane, LogPane, ShadNetPane
 from .shadps4_settings import TABS, Setting
 
 STATUS_MS = 30_000              # the header's battery and time
 PROGRESS_MS = 500               # the megabytes of a download, the files of an extraction
-CONFIRM_MS = 5000               # Remove, a replaced update, and View (exit) while a job runs, ask for a second press
+CONFIRM_MS = 5000               # Remove shadPS4, Remove key and View (exit) while a job runs ask for a second press
 CARDS_WIDTH = 460               # the cards' column; the panes take the rest
 CARD_HEIGHT = 100               # five cards and their gaps fit the column at 720 px high
 ABOUT = ("shadPS4, the PS4 emulator, installed for your own user: its settings, your saves and the system modules "
@@ -72,6 +75,9 @@ NOT_INSTALLED = "Install shadPS4 first: the settings are in its folder."
 BUSY = "Wait a moment: the app is still busy with the step before."
 NO_GAME = "Put the focus on a game first: the X button starts it."
 NOTHING_TO_UNPACK = "Nothing to unpack: put .pkg files in your Games\\PS4 folder, then the X button unpacks them."
+NOTHING_MARKED = "Nothing is marked Delete: B goes back, and nothing is deleted."
+UNPACKED_KEY = "packages/unpacked"     # the packages unpacked whole (path|size|time): no longer waiting rows
+OVERLAY_NAMES = {"-UPDATE": "its update", "-patch": "its patch", "-mods": "its mods"}
 ALL_SETTINGS = shadps4_settings.SETTINGS
 # The Settings pane's information, per tab: what each setting of the tab does
 TAB_INFO = {key: ("The A button changes the setting the focus is on, the LB and RB buttons change the tab; shadPS4 "
@@ -100,6 +106,15 @@ def wrappable(path: Path) -> str:
     """A path as the screen shows it: the user's folders by their variable (%LOCALAPPDATA%: never the user's name,
     owner 29-10-2026), wrapping after each backslash, as a long one would make the pane wider than the screen."""
     return private(path).replace("\\", "\\​")
+
+
+def _stamp(path: Path) -> str:
+    """A file as the app knows it again: path|size|time; "" for one that cannot be read."""
+    try:
+        info = path.stat()
+    except OSError:
+        return ""
+    return f"{path}|{info.st_size}|{info.st_mtime_ns}"
 
 
 class _Worker(QObject):
@@ -217,7 +232,7 @@ class MainWindow(PortableWindow):
         self.message = ""                               # the last outcome
         self.confirm_remove = self.close_asked = False
         self.steam_closed = steam_closed
-        self._job = ""                                  # "install", "steam", "extract" or "shadnet" while one runs
+        self._job = ""                                  # "install", "steam", "extract", "delete" or "shadnet"
         self.steam_dir = steam.find_steam() if steam_dir is False else steam_dir
         self.user_home, self.drives = user_home, drives
         self.settings = settings if settings is not None else QSettings()
@@ -226,7 +241,9 @@ class MainWindow(PortableWindow):
         self.in_steam: dict[str, str] = {}
         self.outdated: set[str] = set()                 # games whose shortcut does not start the play mode yet
         self.marked: set[str] = set()
-        self.remove_asked = ""                          # a game RB pressed once: RB again deletes it
+        self.keeping: list[keep.Item] = []              # the keep page's rows, while it shows
+        self.keep_purpose = ""                          # "game" (Remove game) or "packages" (after an unpacking)
+        self.keep_game: Game | None = None              # the game Remove game is for
         self.waiting: list[extract.Package] = []        # the game packages in the game folders not unpacked yet
         self.config: dict = {}
         self.modules = userdata.check_modules(self.shad_home / "sys_modules")
@@ -281,13 +298,14 @@ class MainWindow(PortableWindow):
         self.key_pane = KeyPane()
         self.field_pane = FieldPane()
         self.log_pane = LogPane()
+        self.keep_pane = ListPane("Remove game", "Deleting", KEEP_INFO)
         for pane in (self.pane, self.games_pane, self.settings_pane, self.shadnet_pane, self.log_pane, self.key_pane,
-                     self.field_pane):
+                     self.field_pane, self.keep_pane):
             self.panes.addWidget(pane)
         self.cards = {self.pane: self.shadps4_card, self.games_pane: self.games_card,
                       self.settings_pane: self.settings_card, self.shadnet_pane: self.shadnet_card,
                       self.log_pane: self.log_card, self.key_pane: self.games_card,
-                      self.field_pane: self.shadnet_card}
+                      self.field_pane: self.shadnet_card, self.keep_pane: self.games_card}
         body.addWidget(self.panes, 1)
         page.addLayout(body, 1)
         page.addSpacing(px(8))
@@ -309,6 +327,7 @@ class MainWindow(PortableWindow):
         self.log_card.activated.connect(self.view_log)
         self.log_pane.tapped.connect(self.view_log)
         self.games_pane.list.picked.connect(self.game_picked)
+        self.keep_pane.list.picked.connect(self.keep_picked)
         self.confirm_key = False                        # Remove key pressed once
         for setting in ALL_SETTINGS:
             self.settings_pane.pills[setting.key].activated.connect(lambda s=setting: self.step_setting(s))
@@ -405,8 +424,8 @@ class MainWindow(PortableWindow):
             return "Steam's shortcuts are being changed (Your games).", "", ""
         if self.busy and self._job == "shadnet":
             return "Asking the shadNet server (shadNet).", "", ""
-        if self.busy and self._job == "remove":
-            return "A game is being removed (Your games).", "", ""
+        if self.busy and self._job == "delete":
+            return "Files are being deleted (Your games).", "", ""
         if self.busy and self._job == "extract":
             done, total = self.files
             files = f" {done} of {total} files" if total else ""
@@ -508,9 +527,7 @@ class MainWindow(PortableWindow):
                 items = [("A", "Unpack"), ("X", "Unpack all"), ("Y", "Update Steam"), ("LB", "Steam artwork")]
             else:
                 items = [("A", "Steam mark"), *([("X", "Play")] if focused else []), ("Y", "Update Steam"),
-                         ("LB", "Steam artwork"),
-                         *([("RB", "Press again" if self.remove_asked == focused else "Remove game")]
-                           if focused else [])]
+                         ("LB", "Steam artwork"), *([("RB", "Remove game")] if focused else [])]
         elif pane is self.settings_pane:
             items = [("A", "Change"), ("LB", "Previous tab"), ("RB", "Next tab")]
         elif pane is self.shadnet_pane:
@@ -522,7 +539,11 @@ class MainWindow(PortableWindow):
                      KEYBOARD]
         elif pane is self.field_pane:
             items = [("A", "Keep"), ("X", "Paste"), KEYBOARD]
-        on_a_page = pane in (self.key_pane, self.field_pane) or self.log_pane.viewing
+        elif pane is self.keep_pane:
+            item = next((i for i in self.keeping if i.key == self.keep_pane.list.focused()), None)
+            items = [*([("A", "Keep" if item.delete else "Delete")] if item is not None else []),
+                     ("X", "Delete marked")]
+        on_a_page = pane in (self.key_pane, self.field_pane, self.keep_pane) or self.log_pane.viewing
         return [*items, *self.common_items(True if on_a_page else None)]
 
     def update_legend(self) -> None:
@@ -551,7 +572,9 @@ class MainWindow(PortableWindow):
         """The games, which are in Steam (*in_steam* when given: what Update Steam read back, else Steam's file now),
         and the list as the view shows it."""
         self.games = self.scan()
-        self.waiting = extract.waiting(self.game_folders(), self.unpacked())
+        done = self.unpacked_packages()
+        self.waiting = [p for p in extract.waiting(self.game_folders(), self.unpacked())
+                        if _stamp(p.path) not in done]
         if in_steam is not None:
             self.in_steam = in_steam
         else:
@@ -592,9 +615,23 @@ class MainWindow(PortableWindow):
         pane.list.set_items(rows)
         self.update_legend()
 
+    def unpacked_packages(self) -> set[str]:
+        """The packages unpacked whole (path|size|time): a kept one is no longer a waiting row while it is the same
+        file (an update unpacked as a game of its own would be offered again)."""
+        stored = self.settings.value(UNPACKED_KEY, [])
+        stored = [stored] if isinstance(stored, str) else list(stored or [])
+        return {s for s in stored if s}
+
+    def remember_unpacked(self, paths: list[Path]) -> None:
+        """The packages just unpacked whole kept, and those deleted or changed since forgotten."""
+        if not paths and not self.settings.contains(UNPACKED_KEY):
+            return
+        old = self.unpacked_packages()
+        still = {s for s in old if _stamp(Path(s.rsplit("|", 2)[0])) == s}
+        stamps = still | {stamp for stamp in map(_stamp, paths) if stamp}
+        self.settings.setValue(UNPACKED_KEY, sorted(stamps))
+
     def game_text(self, game: Game) -> str:
-        if self.remove_asked == str(game.eboot):
-            return f"Press RB again to delete {game.title} from the disk"
         mark = "✓ Steam" if str(game.eboot) in self.marked else ""
         changed = ((str(game.eboot) in self.marked) != (str(game.eboot) in self.in_steam)
                    or str(game.eboot) in self.marked and str(game.eboot) in self.outdated)
@@ -645,8 +682,9 @@ class MainWindow(PortableWindow):
     def unpack_packages(self, packages: list[extract.Package]) -> None:
         """A on a PKG, or X Unpack all (owner, 30-10-2026: drop the packages in the folder, the manager takes care of
         them): unpacked one after the other off the window's thread, the games first, each update beside its game (an
-        older one there replaced), the files counted on the pane's line. A package unpacked without a missing file is
-        deleted (owner, 30-10-2026: it takes as much room as its game)."""
+        older one there replaced), the files counted on the pane's line. The packages unpacked without a missing file
+        are offered for deletion on the keep page after (owner, 30-10-2026: a package takes as much room as its game;
+        01-11-2026: the user decides what to keep), and are no longer waiting rows."""
         if self.busy:
             self.games_pane.status.setText(BUSY)
             return
@@ -668,8 +706,9 @@ class MainWindow(PortableWindow):
         def progress(done: int, total: int) -> None:
             self.files = (done, total)                  # read by refresh() on the window's thread
 
-        def job() -> tuple[bool, str]:
+        def job() -> tuple[bool, str, list[extract.Package]]:
             done: list[str] = []
+            whole: list[extract.Package] = []
             failed: list[str] = []
             for n, package in enumerate(todo, 1):
                 what = package.title or package.title_id or package.path.name
@@ -689,20 +728,15 @@ class MainWindow(PortableWindow):
                     continue
                 if package.category == "gd":
                     unpacked[package.title_id] = final
-                try:
-                    package.path.unlink()
-                except OSError as error:
-                    failed.append(f"{what} (unpacked, but {package.path.name} was not deleted: "
-                                  f"{error.strerror or error})")
-                    continue
                 done.append(what)
+                whole.append(package)
             if len(todo) == 1 and done:
-                text = f"{done[0]} is unpacked, and its package is deleted."
+                text = f"{done[0]} is unpacked."
             else:
-                text = f"{len(done)} of {len(todo)} package(s) unpacked, each package deleted after."
+                text = f"{len(done)} of {len(todo)} package(s) unpacked."
             if failed:
                 text += " Not done: " + "; ".join(failed) + "."
-            return not failed, text
+            return not failed, text, whole
         self.busy, self.message, self.files = True, "", (0, 0)
         self._job = "extract"
         self.stage = f"Unpacking 1 of {len(todo)}…" if len(todo) > 1 else "Unpacking…"
@@ -712,10 +746,11 @@ class MainWindow(PortableWindow):
         self.worker.run(job)
 
     def remove_game(self) -> None:
-        """RB on a game (owner, 30-10-2026: a game that no longer plays goes): with a second press (no dialog on a
-        handheld), its shortcut taken out of Steam, then its folder deleted with its update, patch and mods beside it
-        (library.removal), off the window's thread. Its saves and play time stay in shadPS4's folder; the package it
-        came from is not touched."""
+        """RB on a game (owner, 30-10-2026: a game that no longer plays goes): the keep page of what would go
+        (owner, 01-11-2026: before deleting anything, the user decides what to keep; core's keep): the game's folder,
+        its update, patch and mods beside it (library.removal) and its Steam shortcut, each a row marked Delete. Its
+        saves and play time stay in shadPS4's folder and are never on the page; the package it came from is not
+        touched."""
         key = self.games_pane.list.focused()
         game = next((g for g in self.games if str(g.eboot) == key), None)
         if game is None:
@@ -730,38 +765,98 @@ class MainWindow(PortableWindow):
         if not folders:
             self.games_pane.status.setText(private(why))
             return
-        if self.remove_asked != key:
-            self.remove_asked = key
-            self.confirm_timer.start()
-            self.show_games()
-            self.games_pane.list.pills[key].setFocus()
-            self.games_pane.status.setText(
-                f"Press the RB button again to delete {', '.join(f.name for f in folders)} from the disk"
-                + (" and take the game out of Steam" if key in self.in_steam else "")
-                + ". Its saves stay in shadPS4's folder.")
-            self.update_legend()
+        items = [keep.Item(f"path:{folders[0]}", f"{folders[0].name} (the game)", (folders[0],))]
+        for folder in folders[1:]:
+            suffix = next((s for s in OVERLAY_NAMES if folder.name.endswith(s)), "")
+            items.append(keep.Item(f"path:{folder}", f"{folder.name} ({OVERLAY_NAMES.get(suffix, 'beside it')})",
+                                   (folder,)))
+        if key in self.in_steam and self.steam_dir is not None:
+            items.append(keep.Item("steam", "Steam shortcut"))
+        self.keep_game = game
+        self.show_keep("Remove game", f"{game.title}: what goes?", items, "game")
+
+    # The keep page (core's keep): what would be deleted, a row each, before anything is
+
+    def show_keep(self, heading: str, what: str, items: list[keep.Item], purpose: str) -> None:
+        """The page of what would go, every row marked Delete (owner, 01-11-2026: let the user decide what to keep);
+        A turns a row to Keep and back, X deletes the marked ones, B goes back and deletes nothing."""
+        keep.measure(items)
+        self.keeping, self.keep_purpose = items, purpose
+        self.keep_pane.heading.setText(heading)
+        self._keep_what = what
+        self.keep_pane.status.setText("")
+        self.show_keep_rows()
+        self.show_pane(self.keep_pane)
+        self.focus_list(self.keep_pane)
+        self.update_legend()
+
+    def show_keep_rows(self) -> None:
+        self.keep_pane.summary.setText(f"{self._keep_what} X deletes the rows marked Delete and frees "
+                                       f"{keep.human(keep.total(self.keeping))}; B goes back, and nothing is deleted.")
+        self.keep_pane.list.set_items(keep.rows(self.keeping))
+
+    _keep_what = ""
+
+    def keep_picked(self, key: str) -> None:
+        """A on a row: Delete becomes Keep, and back."""
+        if keep.toggle(self.keeping, key) is None:
             return
-        self.remove_asked = ""
-        steam_dir = self.steam_dir if key in self.in_steam else None
+        self.keep_pane.status.setText("")
+        self.show_keep_rows()
+        if key in self.keep_pane.list.pills:
+            self.keep_pane.list.pills[key].setFocus()
+        self.update_legend()
+
+    def leave_keep(self, said: str) -> None:
+        self.keeping, self.keep_purpose, self.keep_game = [], "", None
+        self.show_pane(self.games_pane)
+        self.games_pane.status.setText(said)
+        self.focus_list(self.games_pane)
+
+    def delete_marked(self) -> None:
+        """X on the keep page: the rows still marked Delete deleted off the window's thread (a game's Steam shortcut
+        taken out first), then back to Your games, the status line saying what went and what stayed."""
+        if self.busy:
+            self.keep_pane.status.setText(BUSY)
+            return
+        chosen = keep.chosen(self.keeping)
+        if not chosen:
+            self.keep_pane.status.setText(NOTHING_MARKED)
+            return
+        kept = [i.label for i in self.keeping if not i.delete]
+        game, purpose = self.keep_game, self.keep_purpose
+        if purpose == "game" and game is not None and self.running(self.home):
+            self.keep_pane.status.setText("shadPS4 is open: quit the game first, then remove it.")
+            return
+        steam_dir = self.steam_dir if any(i.key == "steam" for i in chosen) else None
+        paths = [p for i in chosen for p in i.paths]
+        names = [i.label for i in chosen if i.paths]
         closed, program, existing = self.steam_closed, emulator.program(self.home), self.in_steam
 
         def job() -> tuple[bool, str, dict[str, str] | None]:
             found = None
-            if steam_dir is not None:
+            what = f"{game.title}: " if game is not None else ""
+            if steam_dir is not None and game is not None:
                 ok, said, found = library.update_steam(steam_dir, [], [game], program, LOGO_PATH, existing, closed)
                 if not ok:
-                    return False, f"{game.title} was not removed: {said}", None
-            failed = library.delete(folders)
+                    return False, f"{what}nothing was deleted. {said}", None
+            failed = keep.delete(paths)
+            parts = [*([f"{', '.join(names)} deleted"] if names else []),
+                     *(["its shortcut taken out of Steam"] if steam_dir is not None else [])]
+            text = what + ", ".join(parts)
+            if kept:
+                text += f"; kept: {', '.join(kept)}"
+            text += "."
+            if purpose == "game":
+                text += " Its saves stay in shadPS4's folder."
             if failed:
-                return False, f"{game.title} was not removed completely: not deleted {', '.join(failed)}.", found
-            return True, (f"{game.title} is removed: {', '.join(f.name for f in folders)} deleted"
-                          + (", its shortcut taken out of Steam" if steam_dir is not None else "")
-                          + ". Its saves stay in shadPS4's folder."), found
+                return False, f"{text} Not deleted: {', '.join(failed)}.", found
+            return True, text, found
         self.busy, self.message = True, ""
-        self._job = "remove"
-        self.games_pane.status.setText(f"Removing {game.title}…")
-        self.log.info(f"Removing {game.title}: {', '.join(str(f) for f in folders)}"
-                      + (", and its Steam shortcut." if steam_dir is not None else "."))
+        self._job = "delete"
+        self.keep_pane.status.setText("Deleting…")
+        self.log.info(f"Deleting {', '.join(str(p) for p in paths) or 'nothing on the disk'}"
+                      + (", and the Steam shortcut." if steam_dir is not None else "."))
         self.worker.run(job)
 
     def play_without_steam(self, game: Game) -> None:
@@ -1050,6 +1145,8 @@ class MainWindow(PortableWindow):
             self.paste(self.field_pane)
         elif pane is self.shadnet_pane:
             self.shadnet_job(create=True)
+        elif pane is self.keep_pane:
+            self.delete_marked()
         elif pane is self.games_pane:
             focused = self.games_pane.list.focused()
             if focused.startswith("pkg:"):
@@ -1217,14 +1314,12 @@ class MainWindow(PortableWindow):
             (self.log.info if ok else self.log.error)(text)
             self.update_legend()
             return
-        if job == "remove":
-            ok, text, found = result if isinstance(result, tuple) else (False, f"The game was not removed: {result}",
-                                                                        None)
-            self.games_pane.status.setText(private(text))
+        if job == "delete":
+            ok, text, found = result if isinstance(result, tuple) else (False, f"Nothing was deleted: {result}", None)
             (self.log.info if ok else self.log.error)(text)
             self.refresh()
             self.refresh_games(found)
-            self.focus_list(self.games_pane)
+            self.leave_keep(private(text))
             return
         if job == "install":
             if isinstance(result, Exception):
@@ -1235,10 +1330,22 @@ class MainWindow(PortableWindow):
                 self.log.info(f"shadPS4 {result} installed.")
                 self.prepare()                          # before its first start
         elif job == "extract":
-            ok, text = result if isinstance(result, tuple) else (False, f"The packages were not unpacked: {result}")
+            ok, text, whole = result if isinstance(result, tuple) else (
+                False, f"The packages were not unpacked: {result}", [])
             self.games_pane.status.setText(private(text))
             (self.log.info if ok else self.log.error)(text)
             self.files = (0, 0)
+            self.remember_unpacked([package.path for package in whole])
+            self.read_shadps4()
+            self.refresh()
+            self.refresh_games()
+            if whole:                                   # the user decides whether the packages go (01-11-2026)
+                self.show_keep("Delete the packages?", f"{text} Their packages are not needed to play now.",
+                               [keep.Item(f"path:{package.path}",
+                                          f"{package.path.name} ({package.title or package.title_id})",
+                                          (package.path,)) for package in whole], "packages")
+                self.keep_pane.status.setText(private(text))
+            return
         self.read_shadps4()
         self.refresh()
         self.refresh_games()
@@ -1300,11 +1407,6 @@ class MainWindow(PortableWindow):
 
     def _confirm_over(self) -> None:
         self.confirm_timer.stop()
-        if self.remove_asked:
-            if self.games_pane.status.text().startswith("Press the RB button again"):
-                self.games_pane.status.setText("")
-            self.remove_asked = ""
-            self.show_games()
         if self.confirm_key:
             self.confirm_key = False
             if self.key_pane.status.text().startswith("Press the Y button again"):
@@ -1321,7 +1423,8 @@ class MainWindow(PortableWindow):
 
     def on_back(self) -> None:
         """B goes back (the suite's rule, owner 29-10-2026): the whole log to its summary, the key page to Your games
-        and a field's page to shadNet (nothing kept), a pane to its card; on a card it does nothing (View exits)."""
+        and a field's page to shadNet (nothing kept), the keep page to Your games (nothing deleted), a pane to its
+        card; on a card it does nothing (View exits)."""
         pane = self.panes.currentWidget()
         if pane is self.log_pane and self.log_pane.viewing:
             self.log_pane.show_summary()
@@ -1331,6 +1434,9 @@ class MainWindow(PortableWindow):
             self.back_to_games()
         elif pane is self.field_pane:
             self.back_to_shadnet()
+        elif pane is self.keep_pane:
+            if not self.busy:
+                self.leave_keep("Nothing was deleted.")
         else:
             self.go_back()
 
@@ -1344,7 +1450,7 @@ class MainWindow(PortableWindow):
                             "extract": "Press View again to exit: the unpacking stops, and the game's folder is left "
                                        "half written.",
                             "shadnet": "Press View again to exit: the answer of the shadNet server is not waited for.",
-                            "remove": "Press View again to exit: the game is left half deleted."
+                            "delete": "Press View again to exit: what was marked Delete is left half deleted."
                             }.get(self._job, "Press View again to exit: the download stops.")
             self.refresh()                              # the legend says so too
             return

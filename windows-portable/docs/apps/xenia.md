@@ -6,7 +6,7 @@
 
 Gets your Xbox 360 games ready to play from Steam with [Xenia](https://xenia.jp), the Xbox 360 emulator, in its Xenia
 Canary builds, and takes care of everything around it: it installs one tested build of Xenia for your own user,
-offers Xenia's settings, finds your games in the folders you choose, puts them in Steam, and keeps a log. You play
+offers Xenia's settings, finds your games in its own `Games\Xbox360` folder, puts them in Steam, and keeps a log. You play
 from Steam, and never need Xenia's own window: a game starts full screen.
 
 Xenia Manager is on the [portal](../portal.md)'s **Gaming** tab: **A** on its tile installs it, and once it is
@@ -68,10 +68,27 @@ A newer Xenia never reaches the device by itself: Xenia Canary publishes a new b
 change how games run, so it comes only with a new version of Xenia Manager, tried first, which the portal offers as an
 update. Then **Y Update** puts in its program, and what you made stays.
 
+## Where your games go
+
+The app has a folder of its own, which it makes when it opens; you never choose or browse to a folder:
+
+- `Games\Xbox360` in your user folder (`C:\Users\<you>\Games\Xbox360`): put your games there and they show on **Your
+  games**. On an SD card or a USB drive, make a folder `Games\Xbox360` on it, and the app looks there too.
+
+Xenia needs no firmware or other files from the console, so there is nothing else to put anywhere. The **Log** card
+shows where the folder is.
+
+```
+Games\Xbox360\
+├── Halo 3.iso                  a disc image
+├── Gears of War\               an unpacked disc: default.xex and its files
+└── 4D5307E6\00007000\…         a Games on Demand package, as the console keeps it
+```
+
 ## Your games
 
-The games are found in your game folders and up to six folders below them, each listed with its title, its title ID
-where the app can read it (4D5307E6) and its kind:
+The games are found in the `Games\Xbox360` folders (see [Where your games go](#where-your-games-go)) and up to six
+folders below them, each listed with its title, its title ID where the app can read it (4D5307E6) and its kind:
 
 | Kind | What it is |
 |---|---|
@@ -97,17 +114,18 @@ You play the games from Steam; the app puts them there, and starts them there wi
   **Y Update Steam**. On a device without Steam (not installed, or never started), **X Play** starts the game in
   Xenia itself, full screen, the same way Steam would.
 - Steam's library opens from the portal: **RT Steam** in its bottom row.
-- **LB Folders** shows your game folders instead of the games; **LB** or **B** goes back to the games. The usual
-  places that are on the device (Games, Downloads and Documents in your user folder) and each removable drive, such as
-  an SD card, are offered as **+ Add**. **A** twice on a folder takes it off the list: the first press asks, for five
-  seconds. Its games stay where they are.
-- **+ Browse to a folder…** opens the app's own browser, made for the controller: your Games, Downloads, Documents and
-  Desktop folders and every drive first. **A** opens the folder the focus is on, **B** goes a level up (and from the
-  places back to your folders), and **X Add this folder** adds the folder that is open. The browser opens again in
-  the folder you added last, while it is there.
+- **RB Remove game** on a game shows what would go, and you decide what to keep before anything is deleted. Each
+  part is a row with its size: a disc image (`.iso`, `.zar`) or a single `.xex` is its file, an unpacked disc its
+  folder; a Games on Demand or Arcade package has a row for the game, one for its title updates and one for its
+  add-ons, so you can keep the add-ons; a game in Steam also has a row for its Steam shortcut. Every row starts as
+  **Delete**: **A** turns the row to **Keep**, and back. **X Delete marked** deletes the rows still marked Delete
+  (the shortcut through Steam, which closes for it and starts again) and keeps the others; **B** goes back and
+  deletes nothing. Your saves are never on the list: they stay in Xenia's `content` folder. The app offers no game
+  whose folder is one of the app's `Games\Xbox360` folders itself, a drive, or a folder holding another game: the
+  status line says to delete it by hand.
 
 The app reads no pictures from a game, so the pictures in Steam are drawn from this app's icon, with the game's title.
-With a SteamGridDB API key, Update Steam takes all four of a game's pictures from SteamGridDB instead: **RB Steam
+With a SteamGridDB API key, Update Steam takes all four of a game's pictures from SteamGridDB instead: **LB Steam
 artwork** opens the page that keeps the key (**X Paste**, **R3 ⌨**, **A Save**, **Y Remove key** twice, **B** back without
 saving). See [Steam artwork from SteamGridDB](covers.md).
 
@@ -167,8 +185,8 @@ Xenia's settings that the app does not offer is shown as it is, and **A** goes o
 
 ## Log
 
-Xenia's folder, how many game folders you have and how many games are in them, and the newest lines of this app's log
-(the install, the folders, the Steam changes and the settings changed). **A View log**, or a tap on the pane, shows
+Xenia's folder, where your `Games\Xbox360` folder is and how many games are found, and the newest lines of this app's
+log (the install, the Steam changes, the games removed and the settings changed). **A View log**, or a tap on the pane, shows
 the whole log in the pane: the d-pad scrolls it, and **B** goes back.
 
 ## How it works
@@ -212,6 +230,7 @@ remove the download.
 | `%LOCALAPPDATA%\windows-portable-suite\windows-portable-xenia\emulator\` | Xenia (`xenia_canary.exe`), `installed.json` (the build the app installed), and everything Xenia keeps beside it: `xenia-canary.config.toml` (its settings), `content\` (your games' content and the saves), its caches, `xenia_canary.log` (its own log) |
 | `%LOCALAPPDATA%\windows-portable-suite\windows-portable-xenia\covers\` | The pictures from SteamGridDB, per game |
 | `%LOCALAPPDATA%\windows-portable-suite\windows-portable-xenia\windows-portable-xenia.log` | The log |
-| `%APPDATA%\windows-portable-suite\windows-portable-xenia.ini` | The settings, with your game folders |
+| `%USERPROFILE%\Games\Xbox360\` | Your games, and `Games\Xbox360` on an SD card or USB drive |
+| `%APPDATA%\windows-portable-suite\windows-portable-xenia.ini` | The settings |
 | `%APPDATA%\windows-portable-suite\steamgriddb-key` | Your SteamGridDB API key, when you put one there |
 | Steam's `userdata\<user>\config\shortcuts.vdf` and `grid\` | The games in Steam and their pictures |

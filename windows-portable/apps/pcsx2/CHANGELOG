@@ -1,3 +1,27 @@
+Changelog: 01-11-2026 17:05:14
+
+Added. The app's own game folder (owner, 30-10-2026: fixed folders, no folder selecting): Games\PS2 in the user's
+folder, made with Games\PS2\BIOS when the app opens, and Games\PS2 on each SD card or USB drive that has one, always
+looked in (library.fixed(); an empty card slot is skipped). The BIOS dump put in Games\PS2\BIOS is copied, with the
+files beside it under the same name, into PCSX2's bios folder by the app itself when it opens and each time the PCSX2
+card gets the focus, only what is new or changed and never while PCSX2 runs (userdata.sync_bios(),
+library.bios_home()); PCSX2 is made to use it when PCSX2.ini names no dump that is there. The status line says how
+many files it took, and names the folder while there is no BIOS. RB Remove game on a game of Your games shows a page
+of what would go, its disc image and its shortcut in Steam, each with its size, and nothing is deleted before the
+user decides what to keep (owner, 01-11-2026: before deleting anything, let the user decide what to keep; core's
+keep.py): every row starts as Delete, A turns one to Keep and back, X deletes the rows still marked Delete off the
+window's thread (read-only files too), B goes back and deletes nothing. The game's folder and the memory cards stay.
+The Log pane shows where Games\PS2 is.
+
+Breaking. No folder is chosen or browsed to any more (owner, 30-10-2026): LB Folders with its added folders, usual
+places and folder browser, and X Choose BIOS with its browser in Downloads, are gone; Your games looks only in
+Games\PS2 (the user's and each SD card's), and folders added before are no longer looked in (library.folders(),
+set_folders() and suggested() removed). LB on Your games is Steam artwork now, since RB removes a game. LB Remove BIOS
+no longer asks for a second press: it shows the same page (owner, 01-11-2026: before deleting anything, let the user
+decide what to keep; core's keep.py), a row for the dump PCSX2 uses in its bios folder and one for the dump in
+Games\PS2\BIOS, each with the files beside it; a copy kept in Games\PS2\BIOS goes into PCSX2 again when the PCSX2
+card gets the focus (userdata.remove_bios() replaced by bios_set(), library.delete() by core's keep.delete()).
+
 Changelog: 01-11-2026 17:36:48
 
 Release 5.4.0.

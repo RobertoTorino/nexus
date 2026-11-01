@@ -9,8 +9,10 @@
 Plays your PS Vita games on a Windows handheld with Vita3K, the PS Vita emulator: Vita3K build 4186 for Windows from
 Vita3K's own builds, checked against the checksum this version of the app was tested with, for your own user; Vita3K
 keeps its settings, the firmware, your games and your saves in its portable folder beside its program, in the app's
-folder. Vita3K installs the PS Vita's firmware and your own games (a .vpk, a .zip, a dumped game folder, or a .pkg with
-its license key), without its window. The app offers Vita3K's settings, puts the games installed in Vita3K in Steam
+folder. You put the PS Vita's firmware in Games\Vita\Firmware and your own games (a .vpk, a .zip, a dumped game
+folder, or a .pkg with its license key) in Games\Vita, in your user folder or on an SD card; Vita3K installs them,
+without its window. The app deletes nothing on its own: after an install, and when you remove a game, a page lists
+what would go, and you decide what to keep. The app offers Vita3K's settings, puts the games installed in Vita3K in Steam
 (with the game's own pictures, and a cover from SteamGridDB when you give it your key), and keeps a log. Vita3K's own
 window is never needed: a game starts full screen from Steam. Remove takes Vita3K's program away and leaves what you
 made.

@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The panes beside the Vita3K and Settings panes, as shadPS4 Manager has them: Your games (the games installed in
-Vita3K, marked for Steam with A), the browser (the firmware file, a game to install), Log (Vita3K's folder and the
-app's own log, read in the app) and the page with one text field (the package's license key, and the SteamGridDB
-key).
+Vita3K, marked for Steam with A, and the games put in Games\\Vita that wait to be installed), Log (Vita3K's folder,
+the app's folder and the app's own log, read in the app) and the page with one text field (the package's license
+key, and the SteamGridDB key).
 
 A long list is a ListArea: rows in a column that scrolls, the one with the focus kept in view, so the d-pad goes down
 a list of any length and a finger can drag it. Every action is a controller button in the window's legend, A too,
@@ -118,40 +118,52 @@ VITA3K_INFO = (
     "its program), the firmware, your games, your saves and its settings. The A button installs the build this "
     "version of the app was tried with; a newer Vita3K comes with a new version of the app.\n\n"
     "Vita3K needs the PS Vita's firmware to start most games, which the app cannot give you: download the system "
-    f"software from PlayStation's page ({userdata.FIRMWARE_PAGE}) and the font package from Sony "
-    "(the pane's link), each a PSP2UPDAT.PUP, in a browser on this device, into Downloads. Then the LB button "
-    "(Firmware) finds each file there and Vita3K installs it, without opening its window. The preinstalled apps are "
-    "a third file, optional.\n\n"
-    "The RB button (Install a game) finds your own dumps: a .vpk or .zip, or a dumped game folder (the X button on "
-    "the open folder), which Vita3K installs and the app closes before the game starts; or a .pkg with its license "
-    "key (a zRIF, starting with KO5i), which you paste on the next page. Vita3K installs a game in its storage, so "
-    "the file may go afterwards.\n\n"
+    f"software from PlayStation's page ({userdata.FIRMWARE_PAGE}) and the font package from Sony, each a "
+    "PSP2UPDAT.PUP, in a browser on this device, and put them in the Firmware folder of Games\\Vita in your user "
+    "folder (the app makes it). Both have the same name: rename the font package (PSP2UPDAT-fonts.PUP), or put it in "
+    "a folder of its own in Firmware. The app gives each file to Vita3K, which installs it without opening its "
+    "window, when the app opens and when this card gets the focus; a file is given once, and again only when it is "
+    "replaced. The files stay where you put them. The preinstalled apps are a third file, optional.\n\n"
+    "Your games are put in Games\\Vita too, and installed from Your games.\n\n"
     "Vita3K for Windows needs Microsoft's Visual C++ runtime, which Steam and most games bring; the pane says when "
     "it is missing (vc_redist.x64.exe from Microsoft installs it). The X button removes Vita3K's program; its "
     "folder, with the firmware, your games and your saves, stays.")
 GAMES_INFO = (
-    "Your PS Vita games, to play from Steam: the games installed in Vita3K (the RB button on the Vita3K pane installs "
-    "one). Press the A button on a game to mark it for Steam, or to take the mark away; then the Y button (Update "
-    "Steam) makes Steam match the marks: each marked game becomes a non-Steam game, \"[PS Vita] <title>\", in "
-    "Steam's library and its Big Picture mode, and a game without the mark is taken out. Steam closes for it and "
-    "starts again. A game starts full screen. To quit a game, hold View, LB and RB together for two seconds: Vita3K "
-    "closes, and you are back where you started it. The same works in every game manager of the suite.\n\n"
+    "Your PS Vita games, to play from Steam: the games installed in Vita3K. Put your own dumps in the Games\\Vita "
+    "folder in your user folder (the app makes it), or in Games\\Vita on an SD card: a .vpk or .zip, a .pkg, or a "
+    "dumped game's folder (with sce_sys and eboot.bin). Each shows here until it is installed: the A button installs "
+    "it, the X button (Install all) installs every .vpk, .zip and folder one after the other. Vita3K installs a game "
+    "in its own storage, and the app closes Vita3K before the game starts. A .pkg installs only with its license key "
+    "(a zRIF, starting with KO5i), which you paste on the next page after the A button. Once installed, the app "
+    "asks what to do with the .vpk, .zip or .pkg files: a page lists them, and you decide which to delete and which "
+    "to keep (a kept one is not listed again). A dumped folder always stays.\n\n"
+    "Press the A button on a game to mark it for Steam, or to take the mark away; then the Y button (Update Steam) "
+    "makes Steam match the marks: each marked game becomes a non-Steam game, \"[PS Vita] <title>\", in Steam's "
+    "library and its Big Picture mode, and a game without the mark is taken out. Steam closes for it and starts "
+    "again. A game starts full screen. To quit a game, hold View, LB and RB together for two seconds: Vita3K closes, "
+    "and you are back where you started it. The same works in every game manager of the suite.\n\n"
     "The X button on a game that is in Steam starts it, through Steam (Steam starts first when it does not run). "
     "On a device without Steam the X button starts the game in Vita3K itself. Steam's library opens from the "
-    "portal: RT Steam.\n\n"
+    "portal: RT Steam. The RB button (Remove game) shows what of a game would go: the game in Vita3K, its "
+    "update, its extra content and its shortcut in Steam, each on a row of its own; you decide there what to keep. "
+    "Its saves are never deleted.\n\n"
     "The pictures in Steam come from inside each game (its icon and its LiveArea picture). With your own "
-    "SteamGridDB API key (the RB button, Steam artwork; one key for the suite), Update Steam also fetches a cover for "
+    "SteamGridDB API key (the LB button, Steam artwork; one key for the suite), Update Steam also fetches a cover for "
     "each game. Every entry of the row at the bottom also works by touch.")
-BROWSE_INFO = (
-    "Find the file. The A button opens the folder the focus is on, or picks the file; the B button goes a level up, "
-    "and from the places back to where you came from. When a game is a dumped folder (with sce_sys and eboot.bin), "
-    "open that folder and press the X button. The places are your Games, Downloads, Documents and Desktop folders "
-    "and every drive, such as an SD card. The browser opens again in the folder you took or picked a file in last.")
 LOG_INFO = (
-    "Vita3K's folder, where it keeps the firmware, your games, the saves and its settings, and the newest lines of "
-    "this app's log. The A button, or a tap on this pane, shows the whole log here: the d-pad scrolls it, the B "
+    "Vita3K's folder, where it keeps the firmware, your games, the saves and its settings, the app's Games\\Vita "
+    "folder, and the newest lines of this app's log. The A button, or a tap on this pane, shows the whole log here: the d-pad scrolls it, the B "
     f"button goes back. Vita3K's own log is {emulator.PORTABLE}\\{userdata.LOG} in its folder, written anew each time "
     "it starts.")
+
+KEEP_INFO = (
+    "Nothing is deleted before you decide what to keep. Each row is something that would be deleted, with its "
+    "size; every row starts as Delete. The A button on a row turns it to Keep, and back to Delete. The X button "
+    "deletes the rows still marked Delete and keeps the others. The B button goes back and deletes nothing.\n\n"
+    "Remove game lists the game in Vita3K's storage, its update, its extra content and its shortcut in Steam; the "
+    "game's saves are never on the list. After an install, the page lists the .vpk, .zip and .pkg files that were "
+    "installed: a file you keep stays where you put it and is not offered for installing again, until it is "
+    "replaced.")
 
 
 class LogPane(Pane):
@@ -177,6 +189,7 @@ class LogPane(Pane):
         self.lines = TextView()
         self.lines.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.lines.viewport().installEventFilter(self)
+        self.lines.verticalScrollBar().rangeChanged.connect(lambda _low, _high: self.lines.show_end())  # laid out late
         self.column.addWidget(self.lines, 1)
         self.view = TextView()
         self.view.hide()
