@@ -34,7 +34,7 @@ uses. You do not need them.
 
 ## The apps
 
-By category, as the portal's tabs list them.
+By category, as the portal lists them.
 
 **Sustainable**: the board itself: test it, tune it, unlock it, cool it, and keep it running well.
 

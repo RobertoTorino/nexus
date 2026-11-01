@@ -68,7 +68,7 @@ def corrupt(offset, value):
 
 
 @pytest.mark.parametrize("data, message", [
-    (corrupt(0x90, 0x00), "signature"),
+    (corrupt(0x90, 0x00), "may not be a memory block"),      # a signature that is none of the six
     (corrupt(0x94, 0x11), "checksum"),
     (corrupt(0x98, 0x40), "tCL = 64"),               # out of range (checksum also wrong, both are reported)
 ])
@@ -85,6 +85,29 @@ def test_linux_tool_signature_is_trusted():
     data = bank(BOARD_1)
     struct.pack_into("<I", data, 0x90, cmos.SIG_LINUX_TOOL)
     assert cmos.Block(bytes(data[BLOCK])).problems() == []
+
+
+def test_firmware_note_in_the_signature_is_written_over():
+    """The owner's board, 01-11-2026: WATCH_DOG_TIMER_FIRED with intact values. The numbers decide, not the
+    signature (owner: the rule by the case, not generic): the block is written, and the note is gone."""
+    data = bank(BOARD_1)
+    struct.pack_into("<I", data, 0x90, 0x46544457)
+    block = cmos.Block(bytes(data[BLOCK]))
+    assert block.signature_name == "WATCH_DOG_TIMER_FIRED" and block.problems() == []
+    assert block.notes() == ["signature 0x46544457 (WATCH_DOG_TIMER_FIRED): the firmware's watchdog fired at a "
+                             "boot, during the memory setup; the values below are intact, so a write replaces the "
+                             "note"]
+    assert block.to_json()["notes"] == block.notes()
+    result = cmos.do_set_uma(cmos.Bank(FakePort(data)), 4096)
+    after = cmos.Block(bytes(data[BLOCK]))
+    assert result["ok"] and after.signature == cmos.SIG_LINUX_TOOL and after.uma_mb == 4096 and after.notes() == []
+    # The same note with a wrong checksum: the numbers are not intact, nothing is written.
+    data = bank(BOARD_1)
+    struct.pack_into("<I", data, 0x90, 0x454B4843)
+    data[0x94] ^= 0xFF
+    with pytest.raises(cmos.CmosError, match="checksum"):
+        cmos.do_set_uma(cmos.Bank(FakePort(data)), 4096)
+    assert cmos.Block(bytes(data[BLOCK])).notes()[0].startswith("signature 0x454B4843 (CHECKSUM_ERROR)")
 
 
 def test_write_that_does_not_stick():

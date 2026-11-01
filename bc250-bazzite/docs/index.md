@@ -79,9 +79,9 @@ between computers, [USB HD Cam](apps/hdcam.md) makes the PS5 HD Camera a webcam,
 <div markdown>
 ## One portal for every app
 
-The portal installs, opens, updates and removes the apps. Each app is a tile: click its icon to open it, and use
-the buttons beside it to install or uninstall. A red dot shows an update. Apps that **change the board** are
-marked, and the portal asks before it installs or opens them.
+The portal installs, opens, updates and removes the apps, fullscreen, with the keyboard, the mouse or a
+controller. Each app is a tile: press it to open it, and its menu installs or uninstalls. A red dot shows an update.
+Apps that **change the board** are marked, and the portal asks before it installs or opens them.
 
 [About the portal](portal.md){ .md-button }
 </div>

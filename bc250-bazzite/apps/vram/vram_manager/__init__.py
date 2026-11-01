@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Sets the memory layout of the BC-250: the VRAM split in CMOS, and shows the GTT, the TTM limit and the swap
-layout that go with it. The board changes only when you apply a split, and only after a reboot."""
+"""Sets the memory layout of the BC-250: the VRAM split in CMOS and the GTT limit (ttm.pages_limit) on the kernel
+command line, and shows the GTT, the TTM limit and the swap layout that go with them. The board changes only when
+you apply one, and only after a reboot."""
 
 APP_NAME = "BC-250 Memory Manager"
 APP_ID = "bc250-memory-manager"

@@ -8,7 +8,8 @@
 #   ./install.sh --uninstall --purge     # also remove its settings and CMOS backups
 #
 # Run it as your own user; nothing here needs root. The app reads the memory figures without root; it reads or
-# writes the CMOS memory block only when you ask, through a password prompt (pkexec) and the system python3.
+# writes the CMOS memory block only when you ask, through a password prompt (pkexec) and the system python3, and
+# the kernel arguments of the next boot with rpm-ostree, which asks for the password itself.
 #  * ~/.local/share/bc250-memory-manager/app: the app, with the bc250_core it was tested with (bundled in the
 #    release; taken from the suite checkout when run from there).
 #  * ~/.local/share/bc250-bazzite-suite/venv, the BC250 Bazzite Suite's shared venv with PyQt6 (the wheels bundle
@@ -134,7 +135,7 @@ Type=Application
 Version=1.0
 Name=$APP_NAME
 GenericName=BC-250 memory manager
-Comment=The VRAM split of the BC-250 in CMOS, with the GTT, TTM limit and swap layout
+Comment=The VRAM split of the BC-250 in CMOS and its GTT limit, with the swap layout
 Exec=$LAUNCHER
 Icon=$APP_DIR/images/$APP_ID-128.png
 Terminal=false

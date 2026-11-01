@@ -1,6 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""How the portal draws its pictures, shared by the desktop window and Suite Big Picture Mode: the wallpaper behind
-the window, and an app's icon grayed (not installed) or dimmed (under the mouse)."""
+"""How the portal draws its pictures: the wallpaper behind the view, and an app's icon grayed (not installed)."""
 
 from __future__ import annotations
 
@@ -10,7 +9,6 @@ from PyQt6.QtCore import QRect, Qt
 from PyQt6.QtGui import QColor, QImage, QPainter, QPalette, QPixmap
 from PyQt6.QtWidgets import QWidget
 
-HOVER_OPACITY = 0.75            # an app icon under the mouse is dimmed this much: no border
 VEIL = 60                       # % of the theme's window color over the wallpaper, so the text on it stays readable
 
 
@@ -24,17 +22,6 @@ def greyed(pixmap: QPixmap) -> QPixmap:
     painter = QPainter(out)
     painter.setOpacity(0.45)
     painter.drawImage(0, 0, grey)
-    painter.end()
-    return out
-
-
-def dimmed(pixmap: QPixmap, opacity: float = HOVER_OPACITY) -> QPixmap:
-    """The icon under the mouse: a little fainter, so the window's color shows through."""
-    out = QPixmap(pixmap.size())
-    out.fill(Qt.GlobalColor.transparent)
-    painter = QPainter(out)
-    painter.setOpacity(opacity)
-    painter.drawPixmap(0, 0, pixmap)
     painter.end()
     return out
 

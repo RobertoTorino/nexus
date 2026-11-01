@@ -7,7 +7,7 @@
 #   icons         the app's icons, without extension: <icon>.webp gets the 512 px one, <icon>-128.png the 128 px one
 #   tile          optional: the portal's tile, portal/images/apps/<key>.webp, gets the 256 px one
 #
-# Each category's 512 px icon is also copied to portal/images/categories/<category>.webp, for Suite Big Picture Mode.
+# Each category's 512 px icon is also copied to portal/images/categories/<category>.webp, for the portal's tiles.
 #
 # To replace a category's icons, drop the new images in icons/<category>/ and run python3 tools/sync_icons.py: one
 # named <category>-<size>.<any extension> becomes that size, one by another name all four. It converts them (scaled,

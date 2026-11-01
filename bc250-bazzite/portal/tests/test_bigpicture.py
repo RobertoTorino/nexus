@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Suite Big Picture Mode, the sound and the controller: the view, the modes, the pills, what is kept, the keys."""
+"""The view, the intro, the sound and the controller: the header, the pills, the tiles and their menu, the keys."""
 
 from __future__ import annotations
 
@@ -8,10 +8,10 @@ from pathlib import Path
 
 import pytest
 from PyQt6.QtCore import QEvent, QRect, Qt
-from PyQt6.QtGui import QKeyEvent
+from PyQt6.QtGui import QColor, QKeyEvent
 from PyQt6.QtWidgets import QApplication, QMessageBox
 
-from bc250_portal import MANIFEST, audio, bigpicture
+from bc250_portal import APP_NAME, MANIFEST, audio, bigpicture
 from bc250_portal import main_window as mw
 from bc250_portal.gamepad import DEADZONE, FIRST_REPEAT, Gamepad, stick_direction
 from bc250_portal.manifest import load
@@ -87,23 +87,30 @@ def key(window, which, modifiers=Qt.KeyboardModifier.NoModifier):
     QApplication.sendEvent(target, QKeyEvent(QEvent.Type.KeyPress, which, modifiers))
 
 
+def start(window):
+    """The portal as it opens: shown, the intro skipped, the focus on the first tile."""
+    window.show()
+    window.start_up()
+    window.intro.skip()
+
+
 # ---------------------------------------------------------------------------------------------------- the files
-@pytest.mark.parametrize("name, low, high", [("swoosh", 0.5, 1.5), ("bigpicture", 2.8, 3.6)])
-def test_the_sounds_are_there_and_the_right_length(name, low, high):
-    with wave.open(str(audio.SOUNDS / f"{name}.wav"), "rb") as sound:
+def test_the_sound_is_there_and_the_right_length():
+    with wave.open(str(audio.SOUNDS / "bigpicture.wav"), "rb") as sound:
         seconds = sound.getnframes() / sound.getframerate()
-        assert low <= seconds <= high
+        assert 2.8 <= seconds <= 3.6
         assert sound.getnchannels() == 2 and sound.getsampwidth() == 2
+    assert not (audio.SOUNDS / "swoosh.wav").exists()                   # the desktop's swoosh is gone
 
 
 def test_sounds_stay_silent_without_output_or_when_off(tmp_path):
     sounds = audio.Sounds(tmp_path)                 # no files here
     sounds.available = lambda: True
-    assert not sounds.play(audio.SWOOSH)            # no file: silent, no error
+    assert not sounds.play(audio.INTRO)             # no file: silent, no error
     sounds.enabled = False
-    assert not sounds.play(audio.SWOOSH)
+    assert not sounds.play(audio.INTRO)
     sounds.enabled, sounds.available = True, lambda: False
-    assert not sounds.play(audio.SWOOSH)
+    assert not sounds.play(audio.INTRO)
     sounds.stop()
 
 
@@ -126,7 +133,7 @@ def test_buttons_become_actions_and_a_held_direction_repeats():
                  ("button", "leftshoulder", True), ("button", "rightshoulder", True), ("button", "y", True),
                  ("button", "start", True)]
     gamepad.poll()
-    assert got == ["accept", "back", "previous", "next", "mode", "mode"]
+    assert got == ["accept", "back", "menu", "previous", "next"]          # Y and Start do nothing: no mode to switch
     got.clear()
     pad.queue = [("button", "dpad_down", True)]
     gamepad.poll()
@@ -182,57 +189,74 @@ def test_nearest_tile_in_a_direction():
 
 def test_view_has_a_tile_per_app_and_shows_each_state(made):
     window, _ = made()
-    assert set(window.big.tiles) == set(window.cards)
+    assert set(window.big.tiles) == set(window.states)
     check = window.big.tiles["check"]
     assert check.name == "Bazzite Test" and check.pixmap and not check.pixmap.isNull()
-    window.cards["check"].show_state(False, "")
-    window.big.sync(window.cards)
+    window.states["check"].show_state(False, "")
+    window.big.sync(window.states)
     assert window.big.tiles["check"].status == "Not installed"
-    window.cards["check"].show_state(True, "check-v0.0.1")      # not the pinned tag
-    window.big.sync(window.cards)
+    window.states["check"].show_state(True, "check-v0.0.1")     # not the pinned tag
+    window.big.sync(window.states)
     assert window.big.tiles["check"].marker == "update" and window.big.tiles["check"].status == "Update"
-    window.cards["check"].show_state(True, "")
-    window.big.sync(window.cards)
+    window.states["check"].show_state(True, "")
+    window.big.sync(window.states)
     assert window.big.tiles["check"].marker == "reinstall"
+    window.states["check"].show_state(True, "local", busy="Installing…")
+    window.big.sync(window.states)
+    assert window.big.tiles["check"].status == "Installing…" and window.big.tiles["check"].status_colour == bigpicture.BLUE
 
 
-# ---------------------------------------------------------------------------------------------------- the modes
-def test_it_starts_in_desktop_mode_with_the_pills(made):
+def test_the_view_is_the_window_with_the_suites_name_and_a_big_icon(made):
+    """One view (owner, 01-11-2026): the window's central widget, the header with the suite's icon larger than the
+    96 px of an app's header, the suite's name as the title with the version and the stage."""
     window, _ = made()
-    assert not window.in_big_picture() and not window.isFullScreen()
-    assert window.mode_pill.value.text() == "Desktop" and window.sound_box.isChecked()
-    assert window.settings.value(mw.MODE_KEY) is None
-    assert bigpicture.NAME in window.mode_pill.toolTip() and bigpicture.DESKTOP_NAME in window.mode_pill.toolTip()
+    assert window.centralWidget() is window.big
+    assert window.big.title.text() == APP_NAME == "BC250 Bazzite Suite"
+    assert window.big.version.text() == f"v{mw.__version__}"
+    assert window.big.logo.width() == window.big.logo.height() == bigpicture.LOGO_PX == bigpicture.ICON_PX
+    assert "wiki" in window.big.logo.toolTip()
+    import bc250_portal
+    assert window.big.stage.text() == bc250_portal.STAGE
+    assert window.big.stage.toolTip() == bc250_portal.STAGE_NOTE
+    assert window.big.stage.isVisibleTo(window) == bool(bc250_portal.STAGE)
+    assert "verified by checksum" in window.big.info.text_ and mw.CORE_VERSION in window.big.info.text_
 
 
-def test_the_mode_pill_switches_to_big_picture_with_an_intro_and_back(made):
+def test_the_logo_opens_the_wiki(made, monkeypatch):
+    from bc250_core import SUITE_MANUAL_URL
+    window, _ = made()
+    opened = []
+    monkeypatch.setattr(mw.QDesktopServices, "openUrl", lambda url: opened.append(url.toString()))
+    window.big.logo.clicked.emit()
+    assert opened == [SUITE_MANUAL_URL]
+
+
+# ----------------------------------------------------------------------------------------------- the intro
+def test_the_portal_opens_with_the_intro_and_its_sound(made):
+    """The intro plays before the portal shows itself (owner, 01-11-2026): dark from its first frame, the suite's
+    name in capitals; its sound plays; when it ends the focus is on the first tile and the controller listens."""
     sounds = FakeSounds()
     window, pad = made(sounds=sounds)
     window.show()
-    window.mode_pill.click()
-    assert window.in_big_picture() and window.isFullScreen()
-    assert window.stack.currentWidget() is window.big
-    assert window.intro is not None and sounds.played == [audio.INTRO]
-    assert window.mode_pill.value.text() == "BPM mode"
-    assert window.pill_box.parent() is window.big and window.pill_box.isVisibleTo(window.big)   # the same pills
-    assert window.gamepad.source is pad and window.settings.value(mw.MODE_KEY) == "bigpicture"
-    window.intro.skip()                                      # any key, click or button
-    assert window.intro is None and sounds.stopped >= 1
+    assert window.intro is None
+    window.start_up()
+    intro = window.intro
+    assert intro is not None and intro.isVisible() and sounds.played == [audio.INTRO]
+    assert window.gamepad.source is pad
+    intro.progress = 0.0
+    picture = intro.grab().toImage()
+    assert picture.pixelColor(5, 5) == QColor("#04060c")                   # opaque from the first frame
+    intro.animation.setCurrentTime(intro.animation.duration())
+    assert window.intro is None
     assert window.big.focused_tile() is window.big.current_tiles()[0]
-    window.mode_pill.click()                                 # the same pill, in Big Picture Mode
-    assert not window.in_big_picture() and not window.isFullScreen()
-    assert window.pill_box.parent() is window.backdrop and window.header_words.indexOf(window.pill_box) >= 0
-    assert window.mode_pill.value.text() == "Desktop" and window.gamepad.source is None and pad.closed
-    assert window.settings.value(mw.MODE_KEY) == "desktop"
-    assert sounds.played == [audio.INTRO, audio.SWOOSH]       # back on the desktop: the start-up swoosh again
 
 
-def test_the_intro_draws_the_1024_px_icon_and_scales_it_once(made):
+def test_the_intro_draws_the_suites_name_in_capitals_and_the_1024_px_icon(made):
     from PyQt6.QtGui import QPixmap
     assert bigpicture.INTRO_LOGO.is_file() and QPixmap(str(bigpicture.INTRO_LOGO)).width() == 1024
     window, _ = made()
     window.show()
-    window.enter_big_picture()
+    window.start_up()
     intro = window.intro
     assert intro.logo.width() == 1024
     intro.progress = 0.5
@@ -242,56 +266,69 @@ def test_the_intro_draws_the_1024_px_icon_and_scales_it_once(made):
     intro.progress = 0.55
     intro.grab()
     assert intro._logo_scaled is first                          # not scaled again on the next frame
+    assert intro.title == "BC250 BAZZITE SUITE"
     intro.skip()
 
 
-def test_f11_switches_both_ways(made):
-    window, _ = made()
+def test_any_key_skips_the_intro_and_stops_its_sound(made):
+    sounds = FakeSounds()
+    window, _ = made(sounds=sounds)
     window.show()
-    from PyQt6.QtGui import QShortcut
-    shortcut = next(s for s in window.findChildren(QShortcut) if s.key().toString() == "F11")
-    shortcut.activated.emit()
-    assert window.in_big_picture()
-    shortcut.activated.emit()
-    assert not window.in_big_picture()
-
-
-def test_any_key_skips_the_intro(made):
-    window, _ = made()
-    window.show()
-    window.enter_big_picture()
+    window.start_up()
     assert window.intro.hasFocus() or window.intro.isVisible()
     QApplication.sendEvent(window.intro, QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_Space,
                                                    Qt.KeyboardModifier.NoModifier))
+    assert window.intro is None and sounds.stopped >= 1
+
+
+def test_the_controller_skips_the_intro(made, monkeypatch):
+    window, pad = made()
+    window.show()
+    window.start_up()
+    monkeypatch.setattr(QApplication, "activeWindow", staticmethod(lambda: window))
+    pad.queue = [("button", "a", True)]
+    window.gamepad.poll()
     assert window.intro is None
 
 
-def test_the_intro_runs_to_its_end_by_itself(made):
+def test_no_mode_is_kept_and_nothing_switches(made):
+    """No Suite Desktop Mode (owner, 01-11-2026): no mode pill, no F11, no setting."""
+    from PyQt6.QtGui import QShortcut
     window, _ = made()
+    assert not hasattr(window, "mode_pill") and not hasattr(window, "toggle_mode")
+    assert not any(s.key().toString() == "F11" for s in window.findChildren(QShortcut))
+    assert window.settings.value("portal/mode") is None
+    assert "Y" not in bigpicture.LEGEND and "F11" not in bigpicture.LEGEND
+
+
+def test_escape_and_b_close_the_portal_but_skip_the_intro_first(made, monkeypatch):
+    """Escape closes the portal (owner, 01-11-2026: "ESC does not close the board"), B too with nothing open; while
+    the intro plays, either skips it instead."""
+    from PyQt6.QtGui import QShortcut
+    window, pad = made()
     window.show()
-    window.enter_big_picture()
-    window.intro.animation.setCurrentTime(window.intro.animation.duration())
-    assert window.intro is None
+    window.start_up()
+    # A window shortcut, so it works from any widget; it fires only in the active window, which an offscreen test
+    # has none of, so the test fires it.
+    shortcut = next(s for s in window.findChildren(QShortcut) if s.key().toString() == "Esc")
+    shortcut.activated.emit()                                # while the intro plays: it skips, nothing closes
+    assert window.intro is None and window.isVisible()
+    shortcut.activated.emit()
+    assert not window.isVisible()
+    again, pad = made()
+    start(again)
+    monkeypatch.setattr(QApplication, "activeWindow", staticmethod(lambda: again))
+    pad.queue = [("button", "b", True)]
+    again.gamepad.poll()
+    assert not again.isVisible()
 
 
-def test_it_opens_in_the_last_mode_and_keeps_the_desktop_size(made, tmp_path):
-    window, _ = made()
-    window.show()
-    window.enter_big_picture()
-    window.close()
-    assert window.settings.value("window/geometry") is not None
-    again, _ = made(sounds=FakeSounds())
-    again.show()
-    assert not again.isFullScreen()                          # the saved size is the window's, not the screen's
-    again.start_up()
-    assert again.in_big_picture() and again.sounds.played == [audio.INTRO]
-
-
-def test_the_swoosh_plays_at_start_unless_sound_is_off(made):
+def test_sound_off_is_kept_and_silences_the_intro(made):
     sounds = FakeSounds()
     window, _ = made(sounds=sounds)
     window.start_up()
-    assert sounds.played == [audio.SWOOSH]
+    assert sounds.played == [audio.INTRO]
+    window.intro.skip()
     window.sound_box.click()
     assert not window.sound_box.isChecked() and window.settings.value(mw.SOUND_KEY, type=bool) is False
     again_sounds = FakeSounds()
@@ -299,40 +336,74 @@ def test_the_swoosh_plays_at_start_unless_sound_is_off(made):
     assert not again.sound_box.isChecked()                   # the choice is kept
     again.start_up()
     assert again_sounds.played == []
-    again.enter_big_picture()
-    assert again_sounds.played == []                         # off is off for the intro too
+    again.intro.skip()
 
 
-def test_every_header_pill_is_in_big_picture_mode_too(made):
-    window, _ = made()
-    window.show()
-    window.enter_big_picture()
+def test_without_an_audio_output_the_pill_is_disabled_with_a_reason(made):
+    sounds = FakeSounds(available=False)
+    window, _ = made(sounds=sounds)
+    window.start_up()
     window.intro.skip()
-    assert all(window.big.isAncestorOf(pill) for pill in window.header_pills)
-    assert len(window.header_pills) == 9
-    window.sound_box.click()                                 # a click there works as on the desktop
-    assert not window.sounds.enabled
-    window.leave_big_picture()
-    assert all(window.backdrop.isAncestorOf(pill) for pill in window.header_pills)
+    assert not window.sound_box.isEnabled() and window.sound_box.value.text() == "No"
+    assert window.sound_box.toolTip() == audio.NO_OUTPUT and sounds.played == []
+    assert window.settings.value(mw.SOUND_KEY, True, type=bool) is True          # the choice itself is untouched
+    window.sounds.output = True                                                   # an output turns up
+    window._show_sound()
+    assert window.sound_box.isEnabled() and window.sound_box.isChecked()
 
 
-def test_the_local_build_banner_is_in_big_picture_mode_too(made, tmp_path):
+# ------------------------------------------------------------------------------------------------ the header
+def test_the_pills_are_rounded_rectangles_that_show_the_wallpaper_through(made):
+    """The pills (owner, 01-11-2026): rounded rectangles, all the same size, their row ending at the bottom of the
+    suite's icon, half transparent when not active, solid and framed in the accent with the focus or under the
+    mouse."""
     window, _ = made()
-    assert window.big.banner.isHidden()                      # not a local build: no banner
-    local = mw.MainWindow(load(MANIFEST), Sources(tmp_path / "w2"), Records(tmp_path / "i2.json"),
-                          local_build=tmp_path, sounds=FakeSounds())
-    local.show()
-    local.enter_big_picture()
-    local.intro.skip()
-    assert not local.big.banner.isHidden() and str(tmp_path) in local.big.banner.text()
-    assert local.big.banner.text() == local.local_banner.text()
-    local.close()
+    pills = window.header_pills
+    assert len(pills) == 9 and all(isinstance(p, bigpicture.HeaderPill) for p in pills)
+    assert [p.caption.text() for p in pills] == [
+        "Click to refresh", "Installed apps", "All updates", "All apps", "Icons on Desktop",
+        "Sound", "Theme switcher", "Wallpaper", "Click to view"]
+    assert all(window.big.isAncestorOf(p) for p in pills)
+    window.show()
+    window.resize(1920, 1080)
+    QApplication.processEvents()
+    QApplication.processEvents()
+    big = window.big
+    sizes = {(p.width(), p.height()) for p in pills}
+    assert len(sizes) == 1
+    width, height = sizes.pop()
+    assert width == bigpicture.PILL_W and bigpicture.PILL_MIN_H <= height < width
+    bottom = lambda w: w.mapTo(big, w.rect().bottomLeft()).y()  # noqa: E731
+    assert abs(bottom(pills[0]) - bottom(big.logo)) <= 1                  # the row ends at the icon's bottom
+    assert big.logo.mapTo(big, big.logo.rect().topLeft()).y() <= big.title.mapTo(big, big.title.rect().topLeft()).y()
+    sheet = pills[0].styleSheet()
+    assert f"rgba(" in sheet and f",{bigpicture.PILL_ALPHA});" in sheet and f"border-radius:{bigpicture.PILL_RADIUS}px" in sheet
+    assert "#pill:hover, #pill:focus" in sheet and "border-left" not in sheet
+    assert window.refresh_pill.caption.wordWrap()
+    window.resize(1280, 720)
+    QApplication.processEvents()
+    QApplication.processEvents()
+    assert window.big.scale < 1 and {p.width() for p in pills} == {round(bigpicture.PILL_W * window.big.scale)}
+    assert abs(bottom(pills[0]) - bottom(big.logo)) <= 1                  # scaled with the view, still aligned
+
+
+def test_the_pills_work_as_before(made):
+    window, _ = made()
+    refreshed = []
+    window.refresh_pill.clicked.connect(lambda: refreshed.append(1))
+    window.refresh_pill.keyPressEvent(QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_Space, Qt.KeyboardModifier.NoModifier))
+    assert refreshed == [1]
+    toggled = []
+    window.icons_box.toggled.connect(toggled.append)
+    window.icons_box.click()
+    assert window.icons_box.isChecked() and window.icons_box.value.text() == "Yes" and toggled == [True]
+    window.icons_box.setChecked(True)                       # no change: no signal
+    assert toggled == [True]
 
 
 def test_the_focus_reaches_the_pills_and_back_with_the_controller(made, monkeypatch):
     window, pad = made()
-    enter(window)
-    window.show()
+    start(window)
     window.resize(1500, 1000)
     QApplication.processEvents()
     QApplication.processEvents()
@@ -352,40 +423,46 @@ def test_the_focus_reaches_the_pills_and_back_with_the_controller(made, monkeypa
     assert window.sound_box.isChecked() is (not before)        # A presses the focused pill
 
 
-def test_an_install_leaves_big_picture_for_the_terminal(made, monkeypatch):
+def test_the_arrow_keys_move_from_a_pill_and_enter_presses_a_button(made):
     window, _ = made()
-    enter(window)
-    monkeypatch.setattr(window.worker, "start", lambda job: None)
-    window._start(window.entries[0], "install")
-    assert not window.in_big_picture()
+    start(window)
+    window.resize(1500, 1000)
+    QApplication.processEvents()
+    QApplication.processEvents()
+    window.refresh_pill.setFocus()
+    key(window, Qt.Key.Key_Right)
+    # Installed apps only shows and Install all updates is disabled without updates: both are skipped.
+    assert window.focusWidget() is window.apps_pill
+    key(window, Qt.Key.Key_Down)
+    assert isinstance(window.focusWidget(), bigpicture.BigTile)
+    window.portal_button.setText("● Portal 99.0.0 available")
+    window.portal_button.show()
+    pressed = []
+    window.portal_button.clicked.connect(lambda: pressed.append(1))
+    window.portal_button.setFocus()
+    key(window, Qt.Key.Key_Return)
+    assert pressed == [1]                                      # Enter presses a title-row button
+    key(window, Qt.Key.Key_Down)
+    assert window.focusWidget() is not window.portal_button
 
 
-def test_without_an_audio_output_the_pill_is_disabled_with_a_reason(made):
-    sounds = FakeSounds(available=False)
-    window, _ = made(sounds=sounds)
-    window.start_up()
-    assert not window.sound_box.isEnabled() and window.sound_box.value.text() == "No"
-    assert window.sound_box.toolTip() == audio.NO_OUTPUT and sounds.played == []
-    assert window.settings.value(mw.SOUND_KEY, True, type=bool) is True          # the choice itself is untouched
-    window.sounds.output = True                                                   # an output turns up
-    window.start_up()
-    assert window.sound_box.isEnabled() and window.sound_box.isChecked()
+def test_the_local_build_banner_is_in_the_view(made, tmp_path):
+    window, _ = made()
+    assert window.big.banner.isHidden()                      # not a local build: no banner
+    local = mw.MainWindow(load(MANIFEST), Sources(tmp_path / "w2"), Records(tmp_path / "i2.json"),
+                          local_build=tmp_path, sounds=FakeSounds())
+    assert not local.big.banner.isHidden() and str(tmp_path) in local.big.banner.text()
+    local.close()
 
 
 # ----------------------------------------------------------------------------------------- keys and the controller
-def enter(window):
-    window.show()
-    window.enter_big_picture()
-    window.intro.skip()
-
-
 def test_arrow_keys_move_between_tiles_and_enter_opens(made, monkeypatch):
     window, _ = made()
-    enter(window)
+    start(window)
     opened = []
     monkeypatch.setattr(window, "open_app", lambda entry, command: opened.append(entry.key))
-    window.cards["check"].show_state(True, "local")
-    window.big.sync(window.cards)
+    window.states["check"].show_state(True, "local")
+    window.big.sync(window.states)
     tiles = window.big.current_tiles()
     assert window.focusWidget() is tiles[0]
     window.big.resize(1600, 900)
@@ -399,7 +476,7 @@ def test_arrow_keys_move_between_tiles_and_enter_opens(made, monkeypatch):
 
 def test_the_controller_moves_opens_and_switches_category(made, monkeypatch):
     window, pad = made()
-    enter(window)
+    start(window)
     window.big.resize(1600, 900)
     window.big.reflow()
     tiles = window.big.current_tiles()
@@ -413,57 +490,95 @@ def test_the_controller_moves_opens_and_switches_category(made, monkeypatch):
     pad.queue = [("button", "leftshoulder", True)]
     window.gamepad.poll()
     assert window.big.bar.currentIndex() == 0
-    pad.queue = [("button", "y", True)]
-    window.gamepad.poll()
-    assert not window.in_big_picture()
+    key(window, Qt.Key.Key_PageDown)                         # on a tile: the category, not the page's scroll
+    assert window.big.bar.currentIndex() == 1
+    window.refresh_pill.setFocus()
+    key(window, Qt.Key.Key_PageUp)                           # on a pill too
+    assert window.big.bar.currentIndex() == 0
 
 
 def test_the_controller_is_ignored_while_the_portal_has_no_focus(made, monkeypatch):
     window, pad = made()
-    enter(window)
+    start(window)
     monkeypatch.setattr(QApplication, "activeWindow", staticmethod(lambda: None))
-    pad.queue = [("button", "y", True)]
+    first = window.focusWidget()
+    pad.queue = [("button", "dpad_right", True)]
     window.gamepad.poll()
-    assert window.in_big_picture()                           # a game's input never moves the portal
+    assert window.focusWidget() is first                     # a game's input never moves the portal
 
 
-def test_the_controller_skips_the_intro(made, monkeypatch):
-    window, pad = made()
-    window.show()
-    window.enter_big_picture()
-    monkeypatch.setattr(QApplication, "activeWindow", staticmethod(lambda: window))
-    pad.queue = [("button", "a", True)]
-    window.gamepad.poll()
-    assert window.intro is None and window.in_big_picture()
-
-
-def test_a_tile_that_is_not_installed_asks_and_goes_to_the_desktop_to_install(made, monkeypatch):
+def test_a_tile_that_is_not_installed_offers_to_install_it(made, monkeypatch):
     window, _ = made()
-    enter(window)
-    installed = []
-    monkeypatch.setattr(window, "install", lambda entry: installed.append(entry.key))
-    window.cards["gpu"].show_state(False, "")
+    start(window)
+    started = []
+    monkeypatch.setattr(window, "_start", lambda entry, action: started.append((entry.key, action)))
+    overlay = next(e for e in window.entries if e.key == "overlay")       # not installed, no board change
+    assert not window.states["overlay"].installed and not overlay.changes_board
+    asked = []
     answers = iter([QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes])
-    monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: next(answers))
-    window.big.tiles["gpu"].click()
-    assert window.in_big_picture() and installed == []
-    window.big.tiles["gpu"].click()
-    assert not window.in_big_picture() and installed == ["gpu"]
+    monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: (asked.append(a[2]), next(answers))[1])
+    window.big.tiles["overlay"].click()
+    assert asked[0].startswith(f"Install {overlay.name}?") and "terminal" in asked[0] and started == []
+    window.big.tiles["overlay"].click()
+    assert started == [("overlay", "install")]
+    # An app that changes the board: its board warning is the question.
+    warned = []
+    monkeypatch.setattr(QMessageBox, "warning", lambda *a, **k: (warned.append(a[2]), QMessageBox.StandardButton.Yes)[1])
+    window.big.tiles["acpi"].click()
+    assert len(asked) == 2 and "changes how your BC-250 runs" in warned[0] and started[-1] == ("acpi", "install")
 
 
 def test_an_app_with_several_ways_to_open_offers_a_menu(made, monkeypatch):
     window, _ = made()
-    enter(window)
-    window.cards["compute"].show_state(True, "local")
+    start(window)
+    window.states["compute"].show_state(True, "local")
     shown = []
     monkeypatch.setattr(mw.QMenu, "exec", lambda self, *a: shown.append([a.text() for a in self.actions()]))
     window.big.tiles["compute"].click()
-    assert shown and len(shown[0]) == len(window.cards["compute"].entry.launch) > 1
+    assert shown == [["Bisect", "Unlock"]]
+
+
+def test_the_tile_menu_holds_every_action(made, monkeypatch, home):
+    """X, the Menu key or a right click (owner, 01-11-2026: the desktop's buttons are gone): Open, Install (Update,
+    Reinstall) and Uninstall, grayed out where they cannot act now; check has no Uninstall."""
+    window, pad = made()
+    start(window)
+    names = lambda menu: [(a.text(), a.isEnabled()) for a in menu.actions() if not a.isSeparator()]  # noqa: E731
+    gpu = next(e for e in window.entries if e.key == "gpu")
+    assert names(window.tile_menu(gpu)) == [("Open", False), ("Install", True), ("Uninstall", False)]
+    (home / ".local" / "bin" / "bc250-governor-manager").write_text("#!/bin/sh\n")
+    window.records.set("gpu", "gpu-v0.0.9")
+    window.refresh()
+    menu = window.tile_menu(gpu)
+    assert names(menu) == [("Open", True), ("Update", True), ("Uninstall", True)]
+    assert menu.actions()[2].toolTip().startswith("Update BC-250 GPU Governor Manager v")
+    check = window.entries[0]                                  # check goes with the portal: no Uninstall
+    assert [a.text() for a in window.tile_menu(check).actions() if not a.isSeparator()] == ["Open", "Install"]
+    compute = next(e for e in window.entries if e.key == "compute")
+    assert [a.text() for a in window.tile_menu(compute).actions()][:2] == ["Bisect", "Unlock"]
+    shown = []
+    monkeypatch.setattr(mw.QMenu, "exec", lambda self, *a: shown.append([a.text() for a in self.actions()]))
+    window.big.tiles["gpu"].setFocus()
+    key(window, Qt.Key.Key_Menu)
+    assert shown and "Uninstall" in shown[-1]
+    monkeypatch.setattr(QApplication, "activeWindow", staticmethod(lambda: window))
+    pad.queue = [("button", "x", True)]
+    window.gamepad.poll()
+    assert len(shown) == 2
+    from PyQt6.QtGui import QContextMenuEvent
+    from PyQt6.QtCore import QPoint
+    tile = window.big.tiles["gpu"]
+    QApplication.sendEvent(tile, QContextMenuEvent(QContextMenuEvent.Reason.Mouse, QPoint(5, 5)))
+    assert len(shown) == 3
+    installed = []
+    monkeypatch.setattr(window, "install", lambda entry: installed.append(entry.key))
+    window.tile_menu(gpu).actions()[2].trigger()
+    assert installed == ["gpu"]
 
 
 def test_the_controller_drives_a_menu_with_keys(made, monkeypatch):
     window, _ = made()
-    enter(window)
+    start(window)
     seen = []
     monkeypatch.setattr(QApplication, "activeWindow", staticmethod(lambda: window))
     popup = mw.QMenu(window)
@@ -481,62 +596,58 @@ def test_the_controller_drives_a_menu_with_keys(made, monkeypatch):
     assert all(target is popup for target, _, _ in sent)
 
 
-def test_wallpaper_and_veil_reach_big_picture_too(made):
+def test_an_install_stays_in_the_view(made, monkeypatch):
+    window, _ = made()
+    start(window)
+    monkeypatch.setattr(window.worker, "start", lambda job: None)
+    window._start(window.entries[0], "install")
+    assert window.centralWidget() is window.big and window.states["check"].busy == "Downloading…"
+    assert window.big.tiles["check"].status == "Downloading…"
+
+
+def test_the_legend_names_the_keys(made):
+    window, _ = made()
+    text = window.big.keys.text()
+    assert "A / Enter" in text and "X / Right click" in text and "LB / RB" in text and "B / Esc" in text
+    assert "font-size:24px" in window.big.keys.styleSheet()                   # readable from the couch
+
+
+def test_wallpaper_and_veil_reach_the_view(made):
     window, _ = made()
     window.set_transparency(75)
-    assert window.big.veil == 75 and window.backdrop.veil == 75
+    assert window.big.veil == 75
     window.apply_wallpaper(Path(mw.wallpaper.EXAMPLE))
     assert not window.big.picture.isNull()
 
 
 # ------------------------------------------------------------------------------------- a handheld's 1280 px screen
-@pytest.mark.parametrize("width, columns", [(1280, 5), (1000, 5), (700, 3), (1900, 9)])
-def test_the_header_pills_wrap_to_the_width_in_even_rows(made, width, columns):
-    window, _ = made()
-    window.show()
-    window.resize(width, 800)
-    QApplication.processEvents()
-    assert window.pill_columns == columns
-    rows = {window.pill_grid.getItemPosition(i)[0] for i in range(window.pill_grid.count())
-            if window.pill_grid.itemAt(i).widget() in window.header_pills}
-    assert len(rows) == -(-len(window.header_pills) // columns)
-    assert window.minimumSizeHint().width() <= 700                     # the window may be narrower than the pills
-
-
-def test_the_theme_note_follows_the_last_pill(made):
-    window, _ = made()
-    window.show()
-    window.resize(1280, 800)
-    QApplication.processEvents()
-    row, column, _, span = window.pill_grid.getItemPosition(window.pill_grid.indexOf(window.theme_note))
-    assert (row, column) == (1, 4) and span == 1                        # five and four pills: it follows the fourth
-
-
 @pytest.mark.parametrize("height, small", [(720, True), (800, True), (1080, False)])
-def test_big_picture_scales_down_for_a_handheld_screen(made, height, small):
+def test_the_view_scales_down_for_a_handheld_screen(made, height, small):
     window, _ = made()
-    window.big.setParent(None)
-    window.big.resize(1280 if small else 1920, height)
-    window.big.show()
+    window.resize(1280 if small else 1920, height)
+    window.show()
     QApplication.processEvents()
     tile = window.big.tiles["check"]
     assert (window.big.scale < 1.0) is small and window.big.scale >= bigpicture.SMALLEST
     assert (tile.width() < bigpicture.TILE_W) is small
     assert window.big.columns["sustainable"] * tile.width() <= window.big.width()
     assert window.big.minimumSizeHint().width() <= 640 or window.big.minimumWidth() <= 640
+    assert (window.big.logo.width() < bigpicture.LOGO_PX) is small
+    pills = window.header_pills
+    row = sum(p.width() for p in pills) + (len(pills) - 1) * window.big.pill_row.spacing()
+    assert row <= window.big.width() - 2 * window.big.outer.contentsMargins().left()   # one row of pills fits
 
 
 def test_each_category_keeps_its_own_columns(made):
     window, _ = made()
     big = window.big
-    big.setParent(None)
-    big.show()
-    big.resize(1900, 1000)
+    window.show()
+    window.resize(1900, 1000)
     QApplication.processEvents()
     QApplication.processEvents()
     wide = big.columns["sustainable"]
     big.bar.setCurrentIndex(1)
-    big.resize(900, 1000)
+    window.resize(900, 1000)
     QApplication.processEvents()
     QApplication.processEvents()
     big.bar.setCurrentIndex(0)                          # it was laid out for 1900 px; now the window is narrower

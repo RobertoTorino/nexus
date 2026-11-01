@@ -3,8 +3,8 @@
 the GTT the GPU may borrow from that RAM, and the swap that holds pages compressed (zram, zswap) or on disk.
 
 It shows the figures of system.read_memory() (fixed for this boot) and system.read_usage() (live), and, for a split
-picked but not booted yet, a preview of the next boot. Hover a part for what it is. It only reads; nothing here
-changes the board."""
+or a TTM limit picked but not booted yet, a preview of the next boot. Hover a part for what it is. It only reads;
+nothing here changes the board."""
 
 from __future__ import annotations
 
@@ -21,6 +21,7 @@ from .system import TOTAL_MIB, Memory, Usage, mib_text
 
 FIRMWARE = "#5f6368"
 ZSWAP = "#00838f"
+KEEP = -1                               # a TTM limit for the preview: the one the kernel command line has now
 BAR_H = 30
 ROW_H = 18                              # one line of text
 GAP = 8
@@ -115,16 +116,29 @@ def swap_tip(key: str, usage: Usage) -> str:
     return TIPS[key].format(stored=mib_text(stored), ram=mib_text(ram))
 
 
-def gtt_ceiling(memory: Memory, split_mib: int | None = None) -> int | None:
+def gtt_ceiling(memory: Memory, split_mib: int | None = None, ttm_mib: int | None = KEEP) -> int | None:
     """The most RAM the GPU may borrow: the TTM limit, but never more than the RAM. For the next boot with
-    *split_mib*: a TTM limit on the kernel command line stays; the kernel's default is half the RAM."""
-    if split_mib is None:
+    *split_mib* (None: the split of this boot) and *ttm_mib*, the TTM limit then: KEEP for the one on the kernel
+    command line now, None for the kernel's default, half the RAM."""
+    if split_mib is None and ttm_mib == KEEP:
         return memory.gtt_mib
     if not memory.vram_mib or not memory.ram_mib:
         return None
-    ram = max(memory.ram_mib + memory.vram_mib - split_mib, 0)
-    ttm = memory.ttm_limit_mib if memory.ttm_on_cmdline and memory.ttm_limit_mib else ram // 2
-    return min(ttm, ram)
+    split = split_mib if split_mib is not None else memory.vram_mib
+    ram = max(memory.ram_mib + memory.vram_mib - split, 0)
+    if ttm_mib == KEEP:
+        ttm_mib = memory.ttm_limit_mib if memory.ttm_on_cmdline else None
+    return min(ttm_mib or ram // 2, ram)
+
+
+def preview_title(memory: Memory, split_mib: int | None, ttm_mib: int | None) -> str:
+    """The preview's caption: what the next boot would have that this one has not."""
+    parts = []
+    if split_mib is not None:
+        parts.append(f"a {mib_text(split_mib)} split")
+    if ttm_mib != KEEP:
+        parts.append(f"a {mib_text(ttm_mib)} TTM limit" if ttm_mib else "the kernel's default TTM limit")
+    return f"After a reboot with {' and '.join(parts)} (preview)"
 
 
 def gtt_text(memory: Memory, usage: Usage | None) -> tuple[str, str]:
@@ -196,7 +210,8 @@ class MemoryMap(QWidget):
         super().__init__(parent)
         self.memory = memory
         self.usage: Usage | None = None
-        self.preview: int | None = None
+        self.preview: int | None = None         # the next boot's split, when it differs from this boot's
+        self.preview_ttm: int | None = KEEP     # the next boot's TTM limit in MiB, when it differs (None: default)
         self.zones: list[tuple[QRectF, str]] = []
         self.setMouseTracking(True)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
@@ -207,15 +222,22 @@ class MemoryMap(QWidget):
         self._fit()
         self.update()
 
-    def set_preview(self, split_mib: int | None) -> None:
-        """Show the next boot with this split, or nothing (None, or the split the system has now)."""
+    def set_preview(self, split_mib: int | None, ttm_mib: int | None = KEEP) -> None:
+        """Show the next boot with this split and TTM limit, or nothing when both are what the system has now
+        (split None or the split of this boot; ttm_mib KEEP, or the limit of this boot, None for its default)."""
         self.preview = split_mib if split_mib and split_mib != self.memory.vram_mib else None
+        now = self.memory.ttm_limit_mib if self.memory.ttm_on_cmdline else None
+        self.preview_ttm = KEEP if ttm_mib == now else ttm_mib
         self._fit()
         self.update()
 
+    @property
+    def previewing(self) -> bool:
+        return self.preview is not None or self.preview_ttm != KEEP
+
     def content_height(self) -> int:
         h = ROW_H + BAR_H + GAP + 2 * ROW_H + ROW_H             # caption, bar, GTT bracket, legend
-        if self.preview is not None:
+        if self.previewing:
             h += GAP + ROW_H + BAR_H + GAP + ROW_H
         rows = swap_rows(self.memory, self.usage)
         h += GAP + ROW_H + sum(ROW_H + (10 if stored or ram else 0) + 4 for _, _, stored, ram, _ in rows)
@@ -322,14 +344,15 @@ class MemoryMap(QWidget):
         self._legend(p, y, self.unlabelled)
         y += ROW_H
 
-        if self.preview is not None:
+        if self.previewing:
             y += GAP
-            self._text(p, 0, y, f"After a reboot with a {mib_text(self.preview)} split (preview)", bold=True)
+            self._text(p, 0, y, preview_title(self.memory, self.preview, self.preview_ttm), bold=True)
             y += ROW_H
-            drawn = self._bar(p, y, ram_layout(self.memory, split_mib=self.preview), dashed=True)
+            split = self.preview if self.preview is not None else self.memory.vram_mib
+            drawn = self._bar(p, y, ram_layout(self.memory, split_mib=split), dashed=True)
             y += BAR_H
             ram_x = drawn[1][1].x()
-            new_ceiling = gtt_ceiling(self.memory, self.preview) or 0
+            new_ceiling = gtt_ceiling(self.memory, self.preview, self.preview_ttm) or 0
             self._bracket(p, y + 2, ram_x, self.width() * new_ceiling / TOTAL_MIB)
             y += GAP
             self._text(p, ram_x, y, f"GTT: up to about {mib_text(new_ceiling)} of the RAM")

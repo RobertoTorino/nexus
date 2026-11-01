@@ -24,7 +24,7 @@ check "portal in /opt without the dependency checker catalog" "[ -f $T/opt/bc250
 check "portal symlink" "[ \"\$(readlink $T/opt/bc250-bazzite-suite)\" = bc250-bazzite-suite-v$V ]"
 check "core bundled with portal" "[ -f $T/opt/bc250-bazzite-suite/bc250_core/platform.py ]"
 check "no tests in /opt" "[ ! -d $T/opt/bc250-bazzite-suite/tests ]"
-check "the sounds are in /opt" "[ -s $T/opt/bc250-bazzite-suite/bc250_portal/sounds/swoosh.wav ] && [ -s $T/opt/bc250-bazzite-suite/bc250_portal/sounds/bigpicture.wav ]"
+check "the sound is in /opt" "[ -s $T/opt/bc250-bazzite-suite/bc250_portal/sounds/bigpicture.wav ] && [ ! -e $T/opt/bc250-bazzite-suite/bc250_portal/sounds/swoosh.wav ]"
 check "the controller reader is in the requirements" "grep -q '^pygame-ce' $T/opt/bc250-bazzite-suite/requirements.txt"
 check "check installed too" "[ -f $T/opt/bc250-bazzite-test/test-bazzite.sh ] && [ -x $HOME/.local/bin/bc250-bazzite-test ]"
 check "check has its manual" "cmp -s $SUITE/docs/apps/check.md $T/opt/bc250-bazzite-test/MANUAL.md"
@@ -43,7 +43,7 @@ sed -i "s/^__version__ = \"$V\"\$/__version__ = \"$NEXT\"/" "$R/bc250_portal/__i
 bash "$R/install.sh" --no-desktop-shortcut > "$T/log2" 2>&1; rc=$?; logs+=("$T/log2")
 check "exit 0" "[ $rc -eq 0 ]"
 check "new portal version, old removed" "[ \"\$(readlink $T/opt/bc250-bazzite-suite)\" = bc250-bazzite-suite-v$NEXT ] && [ ! -d $T/opt/bc250-bazzite-suite-v$V ]"
-check "the release has the sounds" "[ -s $T/opt/bc250-bazzite-suite/bc250_portal/sounds/swoosh.wav ] && [ -s $T/opt/bc250-bazzite-suite/bc250_portal/sounds/bigpicture.wav ]"
+check "the release has the sound" "[ -s $T/opt/bc250-bazzite-suite/bc250_portal/sounds/bigpicture.wav ]"
 check "bundled/ not copied to /opt" "[ ! -d $T/opt/bc250-bazzite-suite/bundled ]"
 check "portal installs apps from releases" "[ ! -e $T/opt/bc250-bazzite-suite/suite-checkout ]"
 check "record has the bundled tag" "grep -q '\"check\": \"$BT\"' $D/bc250-bazzite-suite/portal/installed.json"

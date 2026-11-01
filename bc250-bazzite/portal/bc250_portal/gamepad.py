@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""A game controller for Suite Big Picture Mode, read with pygame-ce (SDL's game controller layer, which gives every
-pad the same button names): d-pad and left stick move, A accepts, B goes back, the shoulder buttons change the
-category, Y or Start switch to Suite Desktop Mode. The portal only listens while its own window has the focus, so a
-game's input never moves it. Without pygame-ce, or without a controller, nothing happens."""
+"""A game controller for the portal, read with pygame-ce (SDL's game controller layer, which gives every pad the
+same button names): d-pad and left stick move, A accepts, B goes back, X opens the focused tile's menu, the shoulder
+buttons change the category. The portal only listens while its own window has the focus, so a game's input never
+moves it. Without pygame-ce, or without a controller, nothing happens."""
 
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ DIRECTIONS = ("up", "down", "left", "right")
 
 BUTTONS = {                     # SDL's button names (pygame's CONTROLLER_BUTTON_*, in lower case) to actions
     "dpad_up": "up", "dpad_down": "down", "dpad_left": "left", "dpad_right": "right",
-    "a": "accept", "b": "back", "y": "mode", "start": "mode",
+    "a": "accept", "b": "back", "x": "menu",
     "leftshoulder": "previous", "rightshoulder": "next",
 }
 
@@ -95,7 +95,7 @@ class PygameSource:
 
 class Gamepad(QObject):
     """Turns what the controllers do into actions (action(name)): up, down, left, right (a held direction repeats),
-    accept, back, previous, next, mode."""
+    accept, back, menu, previous, next."""
 
     action = pyqtSignal(str)
 

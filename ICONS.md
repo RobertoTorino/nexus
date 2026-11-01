@@ -10,8 +10,8 @@ there and run it. The paths of the BC250 Bazzite Suite's section are relative to
 
 | Icon | File | Used for |
 | --- | --- | --- |
-| <img src="bc250-bazzite/portal/images/bc250-bazzite-suite.webp" width="48" alt=""> | `portal/images/bc250-bazzite-suite.webp` (512 px) | The portal's window header (a click opens the wiki) and its window icon; Suite Big Picture Mode's header; the portal's release in Nexus Release Tool. |
-| <img src="bc250-bazzite/portal/images/bc250-bazzite-suite-1024.webp" width="48" alt=""> | `portal/images/bc250-bazzite-suite-1024.webp` | The intro of Suite Big Picture Mode. |
+| <img src="bc250-bazzite/portal/images/bc250-bazzite-suite.webp" width="48" alt=""> | `portal/images/bc250-bazzite-suite.webp` (512 px) | The portal's header, as large as a tile's icon (a click opens the wiki), its window icon, and the portal's release in Nexus Release Tool. |
+| <img src="bc250-bazzite/portal/images/bc250-bazzite-suite-1024.webp" width="48" alt=""> | `portal/images/bc250-bazzite-suite-1024.webp` | The portal's intro. |
 | <img src="bc250-bazzite/portal/images/bc250-bazzite-suite-128.png" width="48" alt=""> | `portal/images/bc250-bazzite-suite-128.png` | The portal's menu entry and Desktop icon. |
 | <img src="bc250-bazzite/portal/images/apps/portal.webp" width="48" alt=""> | `portal/images/apps/portal.webp` (128 px) | The portal's own tile. |
 | <img src="bc250-bazzite/docs/images/wiki-icon.webp" width="48" alt=""> | `docs/images/wiki-icon.webp`, `.png` | The wiki's header logo, its home page's footer and its favicon. |
@@ -24,8 +24,9 @@ category's icon (`icons/<category>/`, at 1024, 512, 256 and 128 px) to these pla
 - `apps/<app>/images/<icon>.webp` (512 px): the app's window header (96 px), its window and tray icon, and the
   logo at the top of its chapter in the wiki.
 - `apps/<app>/images/<icon>-128.png`: the app's menu entry and Desktop icon.
-- `portal/images/apps/<key>.webp` (256 px): the app's tile in the portal, and its icon in the wiki's app tables.
-- `portal/images/categories/<category>.webp` (512 px): the category in Suite Big Picture Mode.
+- `portal/images/apps/<key>.webp` (256 px): the app's icon in a tile's menu and in the notice, and in the wiki's app
+  tables.
+- `portal/images/categories/<category>.webp` (512 px): the app's tile in the portal, drawn large.
 - In the wiki, the category's own icon (256 px) in the table of categories.
 
 | Icon | Category | Apps |
@@ -42,11 +43,11 @@ Drawn with QPainter in `portal/bc250_portal/glyphs.py`, in the theme's text colo
 
 | Icon | Name | Used for |
 | --- | --- | --- |
-| <img src="bc250-bazzite/docs/design/icons/portal-install.png" width="48" alt=""> | Install | An app's install button: an arrow down into a tray. |
-| <img src="bc250-bazzite/docs/design/icons/portal-install-update.png" width="48" alt=""> | Install, update | The same button in red when an update is waiting. |
-| <img src="bc250-bazzite/docs/design/icons/portal-reinstall.png" width="48" alt=""> | Reinstall | The install button of an app whose version the portal does not know (red), a circular arrow. |
-| <img src="bc250-bazzite/docs/design/icons/portal-reinstall-badge.png" width="48" alt=""> | Reinstall badge | On a tile, in the portal and in Suite Big Picture Mode: the app needs a reinstall. |
-| <img src="bc250-bazzite/docs/design/icons/portal-uninstall.png" width="48" alt=""> | Uninstall | An app's uninstall button: a waste bin. |
+| <img src="bc250-bazzite/docs/design/icons/portal-install.png" width="48" alt=""> | Install | Install in a tile's menu: an arrow down into a tray. |
+| <img src="bc250-bazzite/docs/design/icons/portal-install-update.png" width="48" alt=""> | Install, update | The same entry, Update, in red when an update is waiting. |
+| <img src="bc250-bazzite/docs/design/icons/portal-reinstall.png" width="48" alt=""> | Reinstall | Reinstall in the menu of an app whose version the portal does not know (red), a circular arrow. |
+| <img src="bc250-bazzite/docs/design/icons/portal-reinstall-badge.png" width="48" alt=""> | Reinstall badge | On a tile in the portal: the app needs a reinstall. |
+| <img src="bc250-bazzite/docs/design/icons/portal-uninstall.png" width="48" alt=""> | Uninstall | Uninstall in a tile's menu: a waste bin. |
 
 ### Icons in the apps
 

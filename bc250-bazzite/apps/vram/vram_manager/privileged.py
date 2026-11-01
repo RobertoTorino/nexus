@@ -1,12 +1,16 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Running the CMOS helper (cmos.py) as root through polkit, and the report of a CMOS read.
+"""Running the CMOS helper (cmos.py) as root through polkit, rpm-ostree for the kernel arguments (kargs.py), and
+the report of a CMOS read.
 
 The helper runs with the system Python in isolated mode (-I), so nothing from the user's environment or the
-current folder is imported into the root process; it needs only the standard library."""
+current folder is imported into the root process; it needs only the standard library. run_command() runs any
+command while the window stays responsive: the password dialog (pkexec's, or the desktop's polkit agent for
+rpm-ostree) is another process's, and the window must keep painting under it."""
 
 from __future__ import annotations
 
 import json
+import shutil
 import socket
 import sys
 import time
@@ -17,6 +21,9 @@ from . import cmos
 
 CMOS_SCRIPT = Path(cmos.__file__).resolve()
 SYSTEM_PYTHON = Path("/usr/bin/python3")
+NOT_INSTALLED = -2                      # run_command: the command is not on this system (kargs.py has the same)
+FAILED = -1                             # run_command: it did not start, or did not end in time
+TIMEOUT_MS = 600_000                    # rpm-ostree kargs makes a new deployment: 84 s seen with 11 layered packages
 
 
 @dataclass(frozen=True)
@@ -45,21 +52,38 @@ def parse(code: int, stdout: str) -> Result:
     return Result(False, {}, f"The helper stopped with exit code {code} without an answer:\n{stdout.strip()}")
 
 
-def run(args: list[str]) -> Result:
-    """Runs the helper and waits for it, keeping the window responsive while the password dialog is up."""
-    from PyQt6.QtCore import QEventLoop, QProcess
+def run_command(cmd: list[str], timeout_ms: int = TIMEOUT_MS) -> tuple[int, str, str]:
+    """Runs *cmd* and waits for it, keeping the window responsive: (exit code, stdout, stderr). A command that is
+    not installed answers NOT_INSTALLED without starting; one that does not start or end in ten minutes answers
+    FAILED, with the reason in stderr."""
+    from PyQt6.QtCore import QEventLoop, QProcess, QTimer
+    if shutil.which(cmd[0]) is None:
+        return NOT_INSTALLED, "", f"{cmd[0]} is not installed."
     process = QProcess()
     loop = QEventLoop()
     process.finished.connect(loop.quit)
     process.errorOccurred.connect(lambda _e: loop.quit())
-    cmd = command(args)
     process.start(cmd[0], cmd[1:])
     if not process.waitForStarted(5000):
-        return Result(False, {}, f"Could not start pkexec: {process.errorString()}")
+        return FAILED, "", f"Could not start {cmd[0]}: {process.errorString()}"
+    QTimer.singleShot(timeout_ms, loop.quit)
     loop.exec()
+    if process.state() != QProcess.ProcessState.NotRunning:
+        process.kill()
+        process.waitForFinished(5000)
+        return FAILED, "", f"{cmd[0]} did not finish in {timeout_ms // 1000} seconds and was stopped."
     out = bytes(process.readAllStandardOutput()).decode("utf-8", "replace")
     err = bytes(process.readAllStandardError()).decode("utf-8", "replace")
-    return parse(process.exitCode(), out + ("\n" + err if err.strip() and not out.strip() else ""))
+    return process.exitCode(), out, err
+
+
+def run(args: list[str]) -> Result:
+    """Runs the helper and waits for it, keeping the window responsive while the password dialog is up."""
+    cmd = command(args)
+    code, out, err = run_command(cmd)
+    if code in (NOT_INSTALLED, FAILED):
+        return Result(False, {}, err)
+    return parse(code, out + ("\n" + err if err.strip() and not out.strip() else ""))
 
 
 def report(data: dict, sys_root: Path = Path("/sys"), now: float | None = None) -> str:
@@ -81,6 +105,7 @@ def report(data: dict, sys_root: Path = Path("/sys"), now: float | None = None) 
         f"UMA_SIZE   {block['uma_mb']} MB",
     ]
     lines += [f"{name:<10} {value}" for name, value in block["fields"].items()]
+    lines += [f"note       {n}" for n in block.get("notes", [])]
     lines += [f"problem    {p}" for p in block["problems"]]
     lines += ["", "bank 2:", "     " + " ".join(f"{i:02X}" for i in range(16))]
     lines += [f"{row:02X}0  " + " ".join(f"{b:02X}" for b in bank[row * 16:row * 16 + 16]) for row in range(16)]

@@ -1,10 +1,11 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Suite Big Picture Mode: the portal for a TV and a controller (owner, 21-10-2026), as Steam's Big Picture is for
-Steam. Fullscreen, large icons and type, a category strip, and a focus that moves with the arrow keys, a controller's
-d-pad or its stick (gamepad.py). Suite Desktop Mode is the portal's window as it always was; a pill switches between
-the two, and the portal remembers the last one.
+"""The portal's view (owner, 01-11-2026: the one view; Suite Desktop Mode, the window of tabs, is gone), as Steam's
+Big Picture is for Steam: fullscreen, for a TV and a controller as much as for a desk. Large icons and type, the
+header with the suite's icon, its name and the square pills, a category strip, and a focus that moves with the
+arrow keys, a controller's d-pad or its stick (gamepad.py), with the mouse working as always.
 
-A short animated intro (Intro) plays when the mode opens, with its sound; any key, click or button skips it."""
+A short animated intro (Intro) plays before the portal shows itself, with its sound; any key, click or button skips
+it."""
 
 from __future__ import annotations
 
@@ -12,18 +13,22 @@ from PyQt6.QtCore import QEasingCurve, QEvent, QPointF, QRect, QRectF, QSize, Qt
 from PyQt6.QtGui import QColor, QFont, QFontMetrics, QLinearGradient, QPainter, QPen, QPixmap, QRadialGradient
 from PyQt6.QtWidgets import (
     QAbstractButton, QFrame, QGridLayout, QHBoxLayout, QLabel, QScrollArea, QScroller, QStackedWidget, QTabBar,
-    QSizePolicy, QVBoxLayout, QWidget,
+    QSizePolicy, QToolButton, QVBoxLayout, QWidget,
 )
 
-from bc250_core.theme import ACCENT, ORANGE, RED, header_font, muted
+from bc250_core.theme import ACCENT, BLUE, ORANGE, RED, header_font, muted
+from bc250_core.widgets import InfoButton, Pill, current_theme
 
-from . import APP_ICONS, CATEGORY_ICONS, INTRO_LOGO, LOGO_PATH, glyphs
+from . import APP_ICONS, APP_NAME, CATEGORY_ICONS, INTRO_LOGO, LOGO_PATH, glyphs
 from .looks import Backdrop, greyed
 
-NAME = "Suite Big Picture Mode"
-DESKTOP_NAME = "Suite Desktop Mode"
 TILE_W, TILE_H = 244, 316
 ICON_PX = 184
+LOGO_PX = ICON_PX               # the suite's icon in the header: as large as a tile's icon (owner, 01-11-2026)
+PILL_W = 128                    # a header pill: a rounded rectangle (owner, 01-11-2026) as wide as this, and as high as
+PILL_MIN_H = 64                 # the room under the title down to the icon's bottom, at least this
+PILL_RADIUS = 16
+PILL_ALPHA = 150                # a pill that is not active (no focus, no mouse) shows the wallpaper through it
 GAP = 20
 MARGIN = 48
 FULL_HEIGHT = 1000             # a window this high or higher is drawn at full size, a lower one smaller
@@ -38,6 +43,9 @@ SHORT_HINTS = {
     "utilities": "Overlay, BIOS, Wi-Fi, HDMI-CEC, file transfer.",
 }
 KEYS = {Qt.Key.Key_Up: "up", Qt.Key.Key_Down: "down", Qt.Key.Key_Left: "left", Qt.Key.Key_Right: "right"}
+CATEGORY_KEYS = {Qt.Key.Key_PageUp: "previous", Qt.Key.Key_Q: "previous", Qt.Key.Key_PageDown: "next",
+                 Qt.Key.Key_E: "next"}
+LEGEND = "A / Enter  Open      X / Right click  App menu      LB / RB  Category      B / Esc  Close the portal"
 
 
 def next_in_direction(current: QRect, others: list[QRect], direction: str) -> int | None:
@@ -81,10 +89,79 @@ class ElidedLabel(QLabel):
         painter.end()
 
 
+class Logo(QLabel):
+    """The suite's icon in the header, drawn at the view's scale; a click opens the wiki."""
+
+    clicked = pyqtSignal()
+
+    def __init__(self, path):
+        super().__init__()
+        self.picture = QPixmap(str(path))
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.set_side(LOGO_PX)
+
+    def set_side(self, side: int) -> None:
+        self.setFixedSize(side, side)
+        if not self.picture.isNull():
+            self.setPixmap(self.picture.scaled(side, side, Qt.AspectRatioMode.KeepAspectRatio,
+                                               Qt.TransformationMode.SmoothTransformation))
+
+    def mouseReleaseEvent(self, event) -> None:  # noqa: N802 (Qt override)
+        if event.button() == Qt.MouseButton.LeftButton and self.rect().contains(event.position().toPoint()):
+            self.clicked.emit()
+        super().mouseReleaseEvent(event)
+
+
+class HeaderPill(Pill):
+    """A header pill as a rounded rectangle (owner, 01-11-2026): the value in large type over its caption, both
+    centered; the row of them ends at the bottom of the suite's icon, so a pill is as high as the room under the
+    title leaves. Not active (no focus, no mouse) it is half transparent, so the wallpaper shows through it; with
+    the focus or under the mouse it is solid, framed in the accent, as a tile with the focus is. The same clicked,
+    set_value and setEnabled as every pill."""
+
+    scale = 1.0
+
+    def __init__(self, value: str, caption: str, tooltip: str = "", colour: str = BLUE):
+        super().__init__(value, caption, tooltip, colour)
+        self.caption.setWordWrap(True)
+        layout = self.layout()
+        layout.insertStretch(0, 1)
+        layout.addStretch(1)
+        self.set_scale(1.0)
+
+    def set_colour(self, colour: str) -> None:
+        """The accent frames the active pill, whatever the color given: these pills have no colored edge."""
+        theme = current_theme()
+        window, edge = QColor(theme.window), QColor(theme.edge)
+        radius = round(PILL_RADIUS * self.scale)
+        self.setStyleSheet(
+            f"#pill {{ background:rgba({window.red()},{window.green()},{window.blue()},{PILL_ALPHA});"
+            f" border:2px solid rgba({edge.red()},{edge.green()},{edge.blue()},{PILL_ALPHA});"
+            f" border-radius:{radius}px; }}"
+            f"#pill:hover, #pill:focus {{ background:{theme.window}; border-color:{theme.accent}; }}"
+            f"#pill QLabel {{ background:transparent; border:none; color:{theme.text}; }}"
+            f"#pill QLabel:disabled {{ color:{muted(theme)}; }}")
+
+    def set_scale(self, scale: float) -> None:
+        self.scale = scale
+        s = scale
+        self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Expanding)   # the row's height
+        self.setFixedWidth(round(PILL_W * s))
+        self.setMinimumHeight(round(PILL_MIN_H * s))
+        self.setMaximumHeight(16777215)
+        pad = round(6 * s)
+        self.layout().setContentsMargins(pad, pad, pad, pad)
+        self.value.setStyleSheet(header_font() + f"font-size:{max(14, round(22 * s))}px; font-weight:800;")
+        self.caption.setStyleSheet(f"font-size:{max(11, round(13 * s))}px; font-weight:600;")
+        self.set_colour("")
+
+
 class BigTile(QAbstractButton):
-    """One app: a large icon, its name, and its state under it. The focus is a bright frame around the whole tile."""
+    """One app: a large icon, its name, and its state under it. The focus is a bright frame around the whole tile.
+    A click, Enter or A opens it (clicked); the Menu key, a right click or X asks for its menu (menu_requested)."""
 
     navigate = pyqtSignal(str)
+    menu_requested = pyqtSignal()
 
     def __init__(self, key: str, parent: QWidget | None = None):
         super().__init__(parent)
@@ -130,10 +207,18 @@ class BigTile(QAbstractButton):
     def keyPressEvent(self, event) -> None:  # noqa: N802 (Qt override)
         if event.key() in KEYS:
             self.navigate.emit(KEYS[event.key()])
+        elif event.key() in CATEGORY_KEYS:                  # the page would scroll on Page Up and Page Down
+            self.navigate.emit(CATEGORY_KEYS[event.key()])
         elif event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
             self.click()
+        elif event.key() == Qt.Key.Key_Menu:
+            self.menu_requested.emit()
         else:
             super().keyPressEvent(event)
+
+    def contextMenuEvent(self, event) -> None:  # noqa: N802 (Qt override)
+        self.setFocus()
+        self.menu_requested.emit()
 
     def focusInEvent(self, event) -> None:  # noqa: N802 (Qt override)
         super().focusInEvent(event)
@@ -199,14 +284,44 @@ class BigTile(QAbstractButton):
         painter.end()
 
 
+class NoticeButton(QToolButton):
+    """A short colored line beside the category strip (the updates the portal found, the ones outside the suite); a
+    click, Enter or A opens the list of them as a menu. Hidden while there is nothing to say."""
+
+    def __init__(self, colour: str):
+        super().__init__()
+        self.colour = colour
+        self.setAutoRaise(True)
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.set_scale(1.0)
+        self.hide()
+
+    def set_scale(self, scale: float) -> None:
+        self.setStyleSheet(
+            f"QToolButton {{ color:{self.colour}; font-weight:700; font-size:{max(13, round(18 * scale))}px;"
+            f" background:transparent; border:2px solid transparent; border-radius:{round(8 * scale)}px;"
+            f" padding:{round(4 * scale)}px {round(10 * scale)}px; }}"
+            f"QToolButton:hover, QToolButton:focus {{ border-color:{ACCENT}; }}")
+
+    def set_notice(self, text: str, tooltip: str = "") -> None:
+        self.setText(text)
+        self.setToolTip(tooltip)
+        self.setVisible(bool(text))
+
+
 class BigPicture(Backdrop):
-    """The Big Picture view: the header (the window's own pills move into it), the category strip, the tiles of the
-    open category, and under them what the buttons do. It shows what the window's tiles know (sync); a tile opens
-    its app by open_requested(entry)."""
+    """The view: the header (the suite's icon, its name with the version and the stage, the line under it, the
+    square pills), the category strip with the notices beside it, the tiles of the open category, and under them
+    what the buttons do. It shows what the window knows of each app (sync); a tile opens its app by
+    open_requested(entry) and asks for its menu by menu_requested(entry)."""
 
     open_requested = pyqtSignal(object)         # an AppEntry
+    menu_requested = pyqtSignal(object)         # an AppEntry
+    wiki_requested = pyqtSignal()
 
-    def __init__(self, entries, categories: dict[str, str], hints: dict[str, str]):
+    def __init__(self, entries, categories: dict[str, str], hints: dict[str, str], version: str = "",
+                 stage: str = "", stage_note: str = ""):
         super().__init__()
         self.setAutoFillBackground(True)
         self.setMinimumSize(640, 360)               # the layout's own minimum is for a big screen: it scales down
@@ -221,29 +336,55 @@ class BigPicture(Backdrop):
         outer.addWidget(self.banner)
 
         top = QHBoxLayout()
-        top.setSpacing(24)
         self.top = top
-        self.logo = QLabel()
-        self.logo_picture = QPixmap(str(LOGO_PATH))
-        top.addWidget(self.logo)
-        words = self.words = QVBoxLayout()
+        self.logo = Logo(LOGO_PATH)
+        self.logo.setToolTip("Open the wiki in the browser")
+        self.logo.clicked.connect(self.wiki_requested)
+        top.addWidget(self.logo, 0, Qt.AlignmentFlag.AlignTop)
+        words = self.words = QVBoxLayout()           # as high as the icon: the pills take what the title leaves
         words.setSpacing(2)
-        self.title = QLabel(NAME)
-        words.addWidget(self.title)
+        title_row = self.title_row = QHBoxLayout()
+        self.title = QLabel(APP_NAME)
+        title_row.addWidget(self.title)
+        self.version = QLabel(f"v{version}" if version else "")
+        title_row.addWidget(self.version, 0, Qt.AlignmentFlag.AlignBottom)
+        self.stage = QLabel(stage)
+        self.stage.setObjectName("stage")
+        self.stage.setToolTip(stage_note)
+        self.stage.setVisible(bool(stage))
+        title_row.addWidget(self.stage, 0, Qt.AlignmentFlag.AlignVCenter)
+        self.info = InfoButton("", "About this portal")
+        title_row.addWidget(self.info, 0, Qt.AlignmentFlag.AlignVCenter)
+        title_row.addStretch(1)
+        words.addLayout(title_row)
         self.hint = ElidedLabel()
         words.addWidget(self.hint)
+        self.pill_row = QHBoxLayout()
+        self.pill_row.addStretch(1)
+        words.addLayout(self.pill_row, 1)
         top.addLayout(words, 1)
-        self.pills: list[QWidget] = []
+        self.controls: list[QWidget] = [self.info]   # the header's widgets the focus can reach, the pills among them
+        self.info.installEventFilter(self)
+        self.pills: list[HeaderPill] = []
         outer.addLayout(top)
 
+        strip = QHBoxLayout()
         self.bar = QTabBar()
         self.bar.setDrawBase(False)
         self.bar.setExpanding(False)
         self.bar.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        outer.addWidget(self.bar)
+        strip.addWidget(self.bar)
+        strip.addStretch(1)
+        self.outside = NoticeButton(ORANGE)         # newer programs outside the suite an installed app can install
+        self.notice = NoticeButton(RED)             # the updates and reinstalls the portal found
+        for button in (self.outside, self.notice):
+            self.add_control(button)
+            strip.addWidget(button, 0, Qt.AlignmentFlag.AlignVCenter)
+        outer.addLayout(strip)
         self.stack = QStackedWidget()
         outer.addWidget(self.stack, 1)
         self.categories: list[str] = []
+        self.labels: dict[str, str] = {}
         self.pages: dict[str, QScrollArea] = {}
         self.grids: dict[str, QGridLayout] = {}
         self.tiles: dict[str, BigTile] = {}
@@ -252,6 +393,7 @@ class BigPicture(Backdrop):
             if not keys:
                 continue
             self.categories.append(category)
+            self.labels[category] = label
             content = QWidget()
             column = QVBoxLayout(content)
             column.setContentsMargins(4, 8, 4, 8)
@@ -275,13 +417,14 @@ class BigPicture(Backdrop):
             self.bar.setTabToolTip(self.bar.count() - 1, hints.get(category, ""))
             for key in keys:
                 tile = BigTile(key)
-                tile.navigate.connect(self.move_focus)
+                tile.navigate.connect(self.navigate)
                 tile.clicked.connect(lambda _=False, k=key: self.open_requested.emit(self.entries[k]))
+                tile.menu_requested.connect(lambda k=key: self.menu_requested.emit(self.entries[k]))
                 self.tiles[key] = tile
         self.hints = {category: SHORT_HINTS.get(category, text) for category, text in hints.items()}
         self.full_hints = hints
         self.bar.currentChanged.connect(self._category_changed)
-        self.keys = QLabel("A / Enter  Open      B  Back      LB / RB  Category      Y / F11  " + DESKTOP_NAME)
+        self.keys = QLabel(LEGEND)
         self.keys.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         outer.addWidget(self.keys)
         self._category_changed(0)
@@ -292,28 +435,42 @@ class BigPicture(Backdrop):
         self.banner.setText(text)
         self.banner.setVisible(bool(text))
 
-    def place_pills(self, box: QWidget, pills: list[QWidget]) -> None:
-        """The window's row of pills (*box*, holding *pills*) goes under the title: the same pills as in Suite Desktop
-        Mode, and the focus can reach them."""
-        self.words.addWidget(box)
+    def set_about(self, text: str) -> None:
+        """What the small "i" beside the title opens: where the apps install from, the versions."""
+        self.info.set_text(text)
+
+    def add_control(self, widget: QWidget) -> None:
+        """A header widget the focus can reach with the arrow keys or the d-pad, and press with Enter or A."""
+        widget.installEventFilter(self)
+        self.controls.append(widget)
+
+    def add_title_widget(self, widget: QWidget) -> None:
+        """A button in the title row, after the stage (a newer portal, a restart)."""
+        self.title_row.insertWidget(self.title_row.count() - 1, widget, 0, Qt.AlignmentFlag.AlignVCenter)
+        self.add_control(widget)
+
+    def place_pills(self, pills: list[HeaderPill]) -> None:
+        """The window's pills, in a row under the title; the focus can reach them."""
+        for pill in pills:
+            self.pill_row.insertWidget(self.pill_row.count() - 1, pill)
+            self.add_control(pill)
         self.pills = pills
+        self.set_scale(self.scale)
 
-    def release_pills(self, box: QWidget) -> None:
-        self.words.removeWidget(box)
-        self.pills = []
-
-    def sync(self, cards: dict) -> None:
-        """Show each app as its tile in the desktop window knows it: icon, name, state."""
+    def sync(self, states: dict) -> None:
+        """Show each app as its tile in the window's state of it (AppState): icon, name, state."""
         for key, tile in self.tiles.items():
-            card = cards[key]
-            entry = card.entry
-            pixmap = self.art(entry.category, key, card.installed)
-            marker = "update" if not card.dot.isHidden() else "reinstall" if not card.badge.isHidden() else ""
-            status = card.status if card.status != "Installed" else ("changes the board" if entry.changes_board else "")
-            colour = RED if card.status in ("Update", "Reinstall needed", "App not available") else \
-                ORANGE if status == "changes the board" else muted()
-            tile.set_look(card.title.text(), pixmap, status, colour, marker)
-            tile.setToolTip(card.icon.toolTip())
+            state = states[key]
+            entry = state.entry
+            pixmap = self.art(entry.category, key, state.installed)
+            marker = "update" if state.update else "reinstall" if state.reinstall else ""
+            status = state.status if state.status != "Installed" else state.outside or (
+                "changes the board" if entry.changes_board else "")
+            colour = BLUE if state.busy else \
+                RED if state.status in ("Update", "Reinstall needed", "App not available") else \
+                ORANGE if status and state.status == "Installed" else muted()
+            tile.set_look(state.title, pixmap, status, colour, marker)
+            tile.setToolTip(state.tooltip)
 
     def art(self, category: str, key: str, installed: bool) -> QPixmap:
         """The app's picture, from its category's 512 px icon (else the app's own 256 px tile), gray when not
@@ -327,11 +484,22 @@ class BigPicture(Backdrop):
             self._art[name] = pixmap if installed or pixmap.isNull() else greyed(pixmap)
         return self._art[name]
 
+    def set_counts(self, counts: dict[str, int]) -> None:
+        """On each category's tab, in red, how many of its apps the notice names, so none goes unseen on a
+        category that is not open."""
+        for index, category in enumerate(self.categories):
+            n = counts.get(category, 0)
+            self.bar.setTabText(index, f"{self.labels[category]}  ● {n}" if n else self.labels[category])
+            self.bar.setTabTextColor(index, QColor(RED) if n else QColor())
+
     def _category_changed(self, index: int) -> None:
         if 0 <= index < self.stack.count():
             self.stack.setCurrentIndex(index)
             self.hint.setText(self.hints.get(self.categories[index], ""))
             self.reflow()
+
+    def current_category(self) -> str:
+        return self.categories[self.bar.currentIndex()] if self.categories else ""
 
     def current_page(self) -> QScrollArea | None:
         return self.stack.currentWidget()
@@ -342,6 +510,16 @@ class BigPicture(Backdrop):
         category = self.categories[self.bar.currentIndex()]
         return [self.tiles[e.key] for e in self.entries.values() if e.category == category]
 
+    def show_app(self, key: str) -> None:
+        """Open the category of the app and put the focus on its tile: a line of the notice."""
+        entry = self.entries.get(key)
+        if entry is None or entry.category not in self.categories:
+            return
+        self.bar.setCurrentIndex(self.categories.index(entry.category))
+        tile = self.tiles[key]
+        tile.setFocus()
+        self.current_page().ensureWidgetVisible(tile, 0, 24)
+
     # --------------------------------------------------------------------------------------------- layout
     def set_scale(self, scale: float) -> None:
         """Everything at *scale* of its size for a 1080 p screen: a handheld's 1280 x 720 or 1280 x 800 shows the
@@ -351,21 +529,30 @@ class BigPicture(Backdrop):
         self.outer.setContentsMargins(round(MARGIN * s), round(28 * s), round(MARGIN * s), round(20 * s))
         self.outer.setSpacing(round(16 * s))
         self.top.setSpacing(round(24 * s))
-        side = round(96 * s)
-        if not self.logo_picture.isNull():
-            self.logo.setPixmap(self.logo_picture.scaled(side, side, Qt.AspectRatioMode.KeepAspectRatio,
-                                                         Qt.TransformationMode.SmoothTransformation))
+        self.words.setSpacing(round(6 * s))
+        self.title_row.setSpacing(round(12 * s))
+        self.pill_row.setSpacing(round(12 * s))
+        self.logo.set_side(round(LOGO_PX * s))
         self.banner.setStyleSheet(f"background:{ORANGE}; color:white; font-weight:700; padding:6px 10px;"
                                   f" font-size:{max(12, round(16 * s))}px;")
         self.title.setStyleSheet(header_font() + f"font-size:{round(44 * s)}px; font-weight:800;")
+        self.version.setStyleSheet(f"color:{muted()}; font-size:{max(13, round(20 * s))}px; padding-bottom:"
+                                   f"{round(6 * s)}px;")
+        self.stage.setStyleSheet(f"background:{ACCENT}; color:white; font-weight:700;"
+                                 f" font-size:{max(11, round(14 * s))}px; border-radius:{round(6 * s)}px;"
+                                 f" padding:{round(2 * s)}px {round(8 * s)}px;")
         self.hint.setStyleSheet(f"color:{muted()}; font-size:{max(13, round(18 * s))}px;")
-        self.keys.setStyleSheet(f"color:{muted()}; font-size:{max(13, round(18 * s))}px; font-weight:600;")
+        self.keys.setStyleSheet(f"color:{muted()}; font-size:{max(16, round(24 * s))}px; font-weight:600;")
         self.bar.setStyleSheet(
             f"QTabBar::tab {{ font-size:{max(15, round(24 * s))}px; font-weight:700;"
             f" padding:{round(10 * s)}px {round(26 * s)}px; margin-right:6px; background:transparent; border:none;"
             " border-bottom:4px solid transparent; }"
             f"QTabBar::tab:selected {{ border-bottom:4px solid {ACCENT}; }}"
             "QTabBar::tab:hover { background:rgba(128,128,128,40); }")
+        for button in (self.notice, self.outside):
+            button.set_scale(s)
+        for pill in self.pills:
+            pill.set_scale(s)
         for grid in self.grids.values():
             grid.setSpacing(round(GAP * s))
         for tile in self.tiles.values():
@@ -395,6 +582,16 @@ class BigPicture(Backdrop):
         if event.type() == QEvent.Type.Resize and watched in self.pages.values():
             self.columns.clear()
             self.reflow()
+        elif event.type() == QEvent.Type.KeyPress and watched in self.controls:
+            # The arrow keys move the focus from a header control as from a tile, Page Up and Page Down change the
+            # category; Enter presses a button (a pill presses itself).
+            key = event.key()
+            if key in KEYS or key in CATEGORY_KEYS:
+                self.navigate(KEYS.get(key) or CATEGORY_KEYS[key])
+                return True
+            if key in (Qt.Key.Key_Return, Qt.Key.Key_Enter) and isinstance(watched, QAbstractButton):
+                watched.click()
+                return True
         return super().eventFilter(watched, event)
 
     def resizeEvent(self, event) -> None:  # noqa: N802 (Qt override)
@@ -412,10 +609,11 @@ class BigPicture(Backdrop):
         return focus if isinstance(focus, BigTile) and focus in self.current_tiles() else None
 
     def focus_items(self) -> list[QWidget]:
-        """What the focus can be on: the tiles of the open category and the header's pills."""
-        pills = [p for p in self.pills if p.isVisibleTo(self) and p.isEnabled()
-                and p.focusPolicy() != Qt.FocusPolicy.NoFocus]
-        return [t for t in self.current_tiles() if t.isVisibleTo(self)] + pills
+        """What the focus can be on: the tiles of the open category and the header's controls (the pills, the
+        notices, the buttons of the title row)."""
+        controls = [c for c in self.controls if c.isVisibleTo(self) and c.isEnabled()
+                    and c.focusPolicy() != Qt.FocusPolicy.NoFocus]
+        return [t for t in self.current_tiles() if t.isVisibleTo(self)] + controls
 
     def focused_item(self) -> QWidget | None:
         focus = self.window().focusWidget()
@@ -426,8 +624,15 @@ class BigPicture(Backdrop):
         if tiles:
             tiles[0].setFocus()
 
+    def navigate(self, where: str) -> None:
+        """A key on a tile or a control: a direction moves the focus, previous and next change the category."""
+        if where in CATEGORY_KEYS.values():
+            self.change_category(-1 if where == "previous" else 1)
+        else:
+            self.move_focus(where)
+
     def move_focus(self, direction: str) -> None:
-        """Move the focus to the nearest tile or pill that way; with nothing focused, to the first tile."""
+        """Move the focus to the nearest tile or control that way; with nothing focused, to the first tile."""
         current = self.focused_item()
         if current is None:
             self.focus_first()
@@ -447,20 +652,17 @@ class BigPicture(Backdrop):
 
     def keyPressEvent(self, event) -> None:  # noqa: N802 (Qt override)
         key = event.key()
-        if key in KEYS:
-            self.move_focus(KEYS[key])
-        elif key in (Qt.Key.Key_PageUp, Qt.Key.Key_Q):
-            self.change_category(-1)
-        elif key in (Qt.Key.Key_PageDown, Qt.Key.Key_E):
-            self.change_category(1)
+        if key in KEYS or key in CATEGORY_KEYS:
+            self.navigate(KEYS.get(key) or CATEGORY_KEYS[key])
         else:
             super().keyPressEvent(event)
 
 
 class Intro(QWidget):
-    """The intro of Suite Big Picture Mode, about three seconds, painted over the window: a light sweeps across a dark
-    screen, rings open from the portal's icon, the name draws itself in wide letters and settles, and the screen
-    clears to the mode. Any key, click or button skips it (skip(), also called by the gamepad)."""
+    """The portal's intro, about three seconds, painted over the window before it shows itself: on a dark screen a
+    light sweeps across, rings open from the suite's icon, the suite's name draws itself in wide letters and
+    settles, and the screen clears to the portal. Any key, click or button skips it (skip(), also called by the
+    gamepad)."""
 
     finished = pyqtSignal()
     skipped = pyqtSignal()                      # cut short: its sound stops too
@@ -468,6 +670,7 @@ class Intro(QWidget):
     def __init__(self, parent: QWidget, duration: int = INTRO_MS):
         super().__init__(parent)
         self.progress = 0.0
+        self.title = APP_NAME.upper()           # the suite's name in capitals, as the owner wrote it
         self.logo = QPixmap(str(INTRO_LOGO if INTRO_LOGO.is_file() else LOGO_PATH))
         self._logo_at: tuple[int, float] | None = None
         self._logo_scaled = QPixmap()
@@ -534,8 +737,9 @@ class Intro(QWidget):
         ease = QEasingCurve(QEasingCurve.Type.OutCubic)
         painter = QPainter(self)
         painter.setRenderHints(QPainter.RenderHint.Antialiasing | QPainter.RenderHint.SmoothPixmapTransform)
+        # Dark from the first frame (the portal is not shown before the intro), clearing at the end.
         backdrop = QColor("#04060c")
-        backdrop.setAlphaF(min(1.0, p / 0.12) * (1 - self._phase(p, 0.86, 1.0)))
+        backdrop.setAlphaF(1 - self._phase(p, 0.86, 1.0))
         painter.fillRect(self.rect(), backdrop)
         centre = QPointF(w / 2, h / 2 - h * 0.06)
         accent = QColor(ACCENT)
@@ -611,7 +815,7 @@ class Intro(QWidget):
                                self._logo_for(int(min(w, h) * LOGO_SHARE)))
             painter.setOpacity(1.0)
 
-        # The name, in wide letters that close up as it lands.
+        # The suite's name, in wide letters that close up as it lands.
         text = self._phase(p, 0.38, 0.75)
         if text > 0:
             font = QFont(self.font())
@@ -624,5 +828,5 @@ class Intro(QWidget):
             colour.setAlphaF(ease.valueForProgress(text) * fade)
             painter.setPen(colour)
             box = QRect(0, int(centre.y() + min(w, h) * 0.17), w, font.pixelSize() * 2)
-            painter.drawText(box, int(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignVCenter), NAME.upper())
+            painter.drawText(box, int(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignVCenter), self.title)
         painter.end()

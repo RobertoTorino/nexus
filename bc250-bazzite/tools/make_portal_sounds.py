@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Synthesise the portal's two sounds into portal/bc250_portal/sounds/, from nothing but arithmetic (the files are
-original work; replace them with any WAV of the same name to change the sound):
+"""Synthesise the portal's sound into portal/bc250_portal/sounds/, from nothing but arithmetic (the file is
+original work; replace it with any WAV of the same name to change the sound):
 
-    python3 tools/make_portal_sounds.py            # write swoosh.wav and bigpicture.wav
+    python3 tools/make_portal_sounds.py            # write bigpicture.wav
 
-swoosh.wav        the start-up swoosh: band-passed noise whose center rises and falls, about 0.9 s.
-bigpicture.wav    the Suite Big Picture Mode intro: a low thump, a rising sweep and a bell arpeggio, about 3 s."""
+bigpicture.wav    the portal's intro: a low thump, a rising sweep and a bell arpeggio, about 3 s."""
 
 from __future__ import annotations
 
@@ -26,35 +25,6 @@ PEAK = 0.8                       # of full scale: no clipping on any device
 def _smooth(x: float) -> float:
     x = min(1.0, max(0.0, x))
     return x * x * (3 - 2 * x)
-
-
-def swoosh() -> list[tuple[float, float]]:
-    """A low, soft swoosh: noise through a band-pass whose center rises from 70 Hz to about 900 Hz and falls again,
-    then a low-pass, so there is little above 2 kHz; under it a sine sliding down from 140 to 70 Hz, for the weight (low
-    enough to be bass, high enough for a laptop or a handheld speaker)."""
-    rng = random.Random(250)
-    seconds = 1.0
-    low = band = 0.0
-    smooth = 0.0
-    phase = 0.0
-    frames = []
-    for n in range(int(seconds * RATE)):
-        t = n / RATE / seconds
-        centre = 70 * (13 ** math.sin(math.pi * t ** 0.8))              # 70 Hz up to 900 Hz and back
-        f = 2 * math.sin(math.pi * centre / RATE)
-        q = 0.45
-        noise = rng.uniform(-1, 1)
-        low += f * band
-        high = noise - low - q * band
-        band += f * high
-        smooth += (1 - math.exp(-2 * math.pi * 1400 / RATE)) * (band - smooth)     # nothing bright
-        envelope = math.sin(math.pi * t) ** 1.4 * (1 - 0.2 * t)
-        phase += 2 * math.pi * (140 - 70 * _smooth(t)) / RATE
-        weight = math.sin(phase) * math.sin(math.pi * min(1.0, t * 1.15)) ** 2 * 0.9
-        value = smooth * envelope * 0.9 + weight * 0.55
-        pan = _smooth(t)
-        frames.append((value * (1 - 0.5 * pan), value * (0.5 + 0.5 * pan)))
-    return frames
 
 
 def _bell(frames: list[list[float]], start: float, hz: float, length: float, gain: float, pan: float) -> None:
@@ -131,7 +101,7 @@ def write(path: Path, frames: list[tuple[float, float]]) -> None:
 
 def main() -> int:
     OUT.mkdir(parents=True, exist_ok=True)
-    for name, make in (("swoosh.wav", swoosh), ("bigpicture.wav", big_picture)):
+    for name, make in (("bigpicture.wav", big_picture),):
         path = OUT / name
         frames = make()
         write(path, frames)

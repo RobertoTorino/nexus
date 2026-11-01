@@ -1,3 +1,17 @@
+Changelog: 01-11-2026 16:27:14
+
+Fixed. ICONS.md and DESIGN.md (tools/make_icons.py, tools/make_design.py) describe the BC250 Bazzite Suite's
+portal as it is since its one view (owner, 01-11-2026): the suite's icon at 160 px in the header, the glyphs in a
+tile's menu, the category icons drawn on the tiles, the intro's colors, and the portal's square pills as the
+exception to the blue edge of a neutral pill.
+
+Changelog: 01-11-2026 15:47:04
+
+Added. The owner's new gaming icon (01-11-2026), the steel controller, replaces the blue one in the BC250 Bazzite
+Suite: the picture, 834 x 1024 px, centered on a transparent 1024 px square by its height, converted by
+bc250-bazzite/tools/sync_icons.py to icons/gaming/ (WebP at 1024, 512 and 256 px, the 128 px one PNG), which
+wrote the copies of the ten gaming apps, their portal tiles and Suite Big Picture Mode's gaming category icon.
+
 Changelog: 01-11-2026 15:45:37
 
 Release 1.20.0. Brings wp-portal-v6.11.0, wp-rplay-v0.2.0.
@@ -23,10 +37,14 @@ Changelog: 01-11-2026 13:15:47
 
 Release 1.19.0. Brings wp-portal-v6.10.0, wp-rplay-v0.1.0.
 
-<<<<<<< Updated upstream
 Changelog: 01-11-2026 13:00:42
 
 Release 1.18.1.
+
+Changelog: 01-11-2026 12:36:16
+
+Added. The Windows Portable Suite's Remote Play in Nexus's lists: requirements-dev.txt installs its requirements
+(cryptography, which its tests import), and ICONS.md lists it with the Gaming category's icon (tools/make_icons.py).
 
 Changelog: 01-11-2026 12:04:10
 
@@ -34,12 +52,6 @@ Fixed. The setup list at the root of the repository is gone (owner, 01-11-2026):
 drive is the owner's own file, outside the repository. tools/dev-backup.sh's restore prints by itself what to
 install from the archive's lists, the Nexus page's machine chapter keeps the short order of a new drive with the
 script's commands, and the repository's map (CLAUDE.md, the Development chapter) no longer lists the file.
-=======
-Changelog: 01-11-2026 12:36:16
-
-Added. The Windows Portable Suite's Remote Play in Nexus's lists: requirements-dev.txt installs its requirements
-(cryptography, which its tests import), and ICONS.md lists it with the Gaming category's icon (tools/make_icons.py).
->>>>>>> Stashed changes
 
 Changelog: 01-11-2026 11:46:02
 

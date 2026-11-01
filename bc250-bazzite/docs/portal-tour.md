@@ -2,9 +2,9 @@
 
 # Portal Tour
 
-Two minutes through the portal: the header and its pills, the notice of updates, the tiles and the tabs of the
-categories, a wallpaper and its transparency, Suite Big Picture Mode and the three themes. It also shows that a
-click on the portal's icon opens this wiki.
+Two minutes through the portal: the intro, the header and its square pills, the notice of updates, the tiles and
+their menu, the categories, the focus moved as a controller moves it, a wallpaper and its transparency, and the
+three themes. It also shows that a click on the suite's icon opens this wiki.
 
 <figure markdown>
 <video class="board-video" controls playsinline preload="metadata" poster="../images/portal/portal-tour-poster.webp">

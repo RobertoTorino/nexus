@@ -13,8 +13,8 @@
 # Run it as your own user, not with sudo: only the copies to /opt ask for the sudo password.
 #  * /opt/bc250-bazzite-suite-v<version>, root-owned, with /opt/bc250-bazzite-suite pointing at it: the portal,
 #    its apps.toml and the bc250_core it was tested with. Older versions are removed.
-#  * ~/.local/share/bc250-bazzite-suite/venv: the suite's shared venv with PyQt6 and pygame-ce (the controller of
-#    Suite Big Picture Mode), removed with the last suite app that uses it.
+#  * ~/.local/share/bc250-bazzite-suite/venv: the suite's shared venv with PyQt6 and pygame-ce (the portal's
+#    controller reader), removed with the last suite app that uses it.
 #  * ~/.local/bin/bc250-bazzite-suite, an app menu entry and a Desktop icon.
 #  * BC-250 Bazzite Test, which the suite always includes, through its own installer (bundled in the release).
 # The other apps are installed from the portal, each with its own installer.

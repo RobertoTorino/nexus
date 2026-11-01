@@ -13,7 +13,7 @@ from PyQt6.QtCore import QEvent, QObject, QPoint, QRect, QSize, Qt, pyqtSignal
 from PyQt6.QtGui import QFontDatabase, QMouseEvent, QPixmap
 from PyQt6.QtWidgets import (
     QAbstractItemView, QApplication, QDialog, QDialogButtonBox, QFrame, QHBoxLayout, QHeaderView, QLabel,
-    QPlainTextEdit, QPushButton, QSizePolicy, QTabBar, QToolTip, QVBoxLayout, QWidget,
+    QPlainTextEdit, QPushButton, QSizePolicy, QTabBar, QToolButton, QToolTip, QVBoxLayout, QWidget,
 )
 
 from .text import plain_tooltip, window_title
@@ -313,6 +313,57 @@ def hint_label(text: str, follow_height: bool = False) -> QLabel:
     label.setStyleSheet("color:palette(placeholder-text);")
     label.setOpenExternalLinks(True)
     return label
+
+
+class InfoButton(QToolButton):
+    """A small round "i" that shows an explanation when clicked, where a line of hint text would take the room
+    (owner, 01-11-2026: where space is limited, an info symbol that opens the text, instead of long lines of text
+    in the window). The text is rich text, as hint_label()'s, with its links clickable; it opens below the button
+    in the tooltip's style and stays until a click anywhere, so it can be read at leisure."""
+
+    SIZE = 22
+    MAX_WIDTH = 380                         # as RoundedToolTip.MAX_WIDTH
+
+    def __init__(self, text: str, tooltip: str = "What this does", parent: QWidget | None = None):
+        super().__init__(parent)
+        self.text_ = text
+        self.popup: QWidget | None = None
+        self.setText("i")
+        self.setToolTip(tooltip)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setFixedSize(self.SIZE, self.SIZE)
+        self.setStyleSheet(
+            f"QToolButton {{ border:1px solid {accent()}; border-radius:{self.SIZE // 2}px; color:{accent()}; "
+            "background:transparent; font-weight:800; font-family:Georgia, serif; font-style:italic; padding:0; }"
+            f"QToolButton:hover, QToolButton:focus {{ background:{accent()}; color:white; }}")
+        self.clicked.connect(self.show_text)
+
+    def set_text(self, text: str) -> None:
+        self.text_ = text
+
+    def show_text(self) -> None:
+        """Opens the text below the button. A Qt popup closes by itself on a click outside it or Escape."""
+        if self.popup is not None and not sip.isdeleted(self.popup):
+            self.popup.deleteLater()
+        # Wayland maps a popup relative to a parent surface, so it is a child of the button's window.
+        self.popup = QWidget(self.window(), Qt.WindowType.Popup | Qt.WindowType.FramelessWindowHint)
+        self.popup.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.popup.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
+        box = QVBoxLayout(self.popup)
+        box.setContentsMargins(0, 0, 0, 0)
+        label = QLabel(self.text_)
+        label.setWordWrap(True)
+        label.setOpenExternalLinks(True)
+        label.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
+        label.setStyleSheet(
+            f"QLabel {{ background:palette(window); color:palette(window-text); border:1px solid {accent()}; "
+            "border-radius:6px; padding:8px 10px; }")
+        label.setFixedWidth(min(self.MAX_WIDTH, max(label.sizeHint().width(), 200)))
+        label.linkActivated.connect(lambda _url: self.popup.close())
+        box.addWidget(label)
+        self.popup.adjustSize()
+        self.popup.move(RoundedToolTip._place(self.mapToGlobal(QPoint(-12, self.height() - 12)), self.popup.size()))
+        self.popup.show()
 
 
 def set_button_active(button: QPushButton, active: bool) -> None:

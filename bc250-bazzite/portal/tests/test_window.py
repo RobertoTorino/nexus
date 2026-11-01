@@ -58,174 +58,131 @@ def wait_for(predicate, ms=5000):
     return predicate()
 
 
+def entry_of(window, key):
+    return next(e for e in window.entries if e.key == key)
+
+
+def menu_texts(window, key) -> list[str]:
+    return [a.text() for a in window.tile_menu(entry_of(window, key)).actions() if not a.isSeparator()]
+
+
 def test_bazzite_test_first_without_uninstall(window):
-    keys = list(window.cards)
+    keys = list(window.states)
     assert keys[0] == "check"
-    assert window.cards["check"].uninstall_button.isHidden()
-    assert not window.cards["gpu"].uninstall_button.isHidden()
-    assert not window.cards["acpi"].open_button.isHidden()
-    assert window.cards["compute"].open_button.menu() is not None        # Bisect / Unlock
+    assert "Uninstall" not in menu_texts(window, "check")
+    assert "Uninstall" in menu_texts(window, "gpu")
+    assert "Open" in menu_texts(window, "acpi")
+    assert menu_texts(window, "compute")[:2] == ["Bisect", "Unlock"]                  # two windows
 
 
-def test_every_card_has_its_icon(qapp, home, settings_dir, tmp_path, launched):
+def test_every_app_has_its_icon(qapp, home, settings_dir, tmp_path, launched):
     entries = load(MANIFEST)
     w = mw.MainWindow(entries, FakeSources(tmp_path / "work"), Records(tmp_path / "installed.json"))
-    for key, card in w.cards.items():
+    for key, state in w.states.items():
         assert (mw.APP_ICONS / f"{key}.webp").is_file(), key
-        assert card.has_icon and card.icon.iconSize().width() == mw.ICON_PX, key
+        assert state.has_icon, key
+        assert not w.big.tiles[key].pixmap.isNull(), key
     w.close()
 
 
 def test_open_menu_shows_each_window_icon(window):
     for key in ("compute", "cores"):
-        actions = window.cards[key].icon.menu().actions()
+        actions = window.tile_menu(entry_of(window, key)).actions()[:2]
         assert [a.text() for a in actions] == ["Bisect", "Unlock"]
         assert all(not a.icon().isNull() for a in actions), key
         assert (mw.APP_ICONS / f"{mw.LAUNCH_ICON_FILES[(key, 'Unlock')]}.webp").is_file()
 
 
-def test_card_without_icon_file_shows_its_initial(qapp, home, settings_dir, tmp_path, launched, monkeypatch):
+def test_an_app_without_an_icon_file_still_has_a_tile(qapp, home, settings_dir, tmp_path, launched, monkeypatch):
     monkeypatch.setattr(mw, "APP_ICONS", tmp_path / "no-icons")
     w = mw.MainWindow(load(MANIFEST), FakeSources(tmp_path / "work"), Records(tmp_path / "installed.json"))
-    assert all(not card.has_icon and not card.icon.isHidden() for card in w.cards.values())
+    assert all(not state.has_icon for state in w.states.values())
+    assert all(not tile.pixmap.isNull() for tile in w.big.tiles.values())      # the category's icon
     w.close()
-
-
-def test_the_logo_opens_the_wiki(window, monkeypatch):
-    from bc250_core import SUITE_MANUAL_URL
-    opened = []
-    monkeypatch.setattr(mw.QDesktopServices, "openUrl", lambda url: opened.append(url.toString()))
-    window.logo.clicked.emit()
-    assert opened == [SUITE_MANUAL_URL]
-    assert "wiki" in window.logo.toolTip()
-
-
-def test_the_header_shows_the_suite_stage(window):
-    """Beside the version, with what it means on hover; hidden once STAGE is ""."""
-    import bc250_portal
-    assert window.stage.text() == bc250_portal.STAGE
-    assert window.stage.toolTip() == bc250_portal.STAGE_NOTE
-    assert window.stage.isVisibleTo(window) == bool(bc250_portal.STAGE)
-
-
-def test_the_tiles_icon_hover_and_press(window, home):
-    """Under the mouse the icon dims a little, with no border (owner, 20-10-2026); pressed, it sinks, with no color
-    behind it (no purple flash on a click)."""
-    from PyQt6.QtCore import QEvent
-    card = window.cards["gpu"]
-    style = card.icon.styleSheet()
-    assert "QToolButton:hover { background:transparent; border-color:transparent; }" in style
-    assert "pressed:enabled" in style and "padding-top:2px" in style        # the icon sinks while pressed
-    assert "QToolButton:pressed:enabled { background:transparent;" in style and "B39DDB" not in style
-    (home / ".local" / "bin" / "bc250-governor-manager").write_text("#!/bin/sh\n")
-    window.refresh()
-    assert card.icon.isEnabled()
-
-    def alpha() -> int:
-        image = card.icon.icon().pixmap(mw.QSize(mw.ICON_PX, mw.ICON_PX)).toImage()
-        return max(image.pixelColor(x, y).alpha() for x in range(0, mw.ICON_PX, 8) for y in range(0, mw.ICON_PX, 8))
-
-    full = alpha()
-    card.eventFilter(card.icon, QEvent(QEvent.Type.Enter))
-    assert alpha() == round(full * mw.HOVER_OPACITY) or abs(alpha() - full * mw.HOVER_OPACITY) <= 1
-    card.eventFilter(card.icon, QEvent(QEvent.Type.Leave))
-    assert alpha() == full
-
-
-def test_icons_and_symbols_keep_their_size(window):
-    """The theme gives every tool button a padding: on the tiles it shrank the 128 px icon and left the Install and
-    Uninstall symbols a third of their size (19-10-2026). Rendered: the symbol fills its SYMBOL_PX."""
-    card = window.cards["gpu"]
-    for button in (card.icon, card.install_button, card.uninstall_button):
-        assert "padding:0;" in button.styleSheet() and "background:transparent;" in button.styleSheet()
-    from bc250_core.theme import stylesheet
-    window.setStyleSheet(stylesheet())                      # the theme's sheet, as create_app() puts it on the app
-    window.show()
-    image = card.install_button.grab().toImage()
-    ink = [x for x in range(image.width()) for y in range(image.height()) if image.pixelColor(x, y).alpha() > 128]
-    assert max(ink) - min(ink) >= mw.SYMBOL_PX * 0.6                          # was about 10 px of a 28 px symbol
 
 
 def test_short_names_drop_the_suite_prefix(window):
     assert mw.short_name("BC-250 Bazzite Test") == "Bazzite Test"
     assert mw.short_name("BC250 Suite Releases") == "Suite Releases"
     assert mw.short_name("Media Tool") == "Media Tool"
-    assert window.cards["gpu"].title.text() == "GPU Governor Manager"
-    assert "BC-250 GPU Governor Manager" in window.cards["gpu"].icon.toolTip()     # the full name on hover
-    assert window.cards["cec"].title.text() == "HDMI-CEC"                          # apps.toml's short
+    assert window.states["gpu"].title == "GPU Governor Manager"
+    assert "BC-250 GPU Governor Manager" in window.states["gpu"].tooltip     # the full name on hover
+    assert window.big.tiles["gpu"].toolTip() == window.states["gpu"].tooltip
+    assert window.states["cec"].title == "HDMI-CEC"                          # apps.toml's short
 
 
-def test_icon_opens_only_an_installed_program(qapp, home, settings_dir, tmp_path, launched, monkeypatch):
+def test_a_tile_opens_only_an_installed_program(qapp, home, settings_dir, tmp_path, launched, monkeypatch):
     entries = [replace(e, launch=()) if e.key == "gpu" else e for e in load(MANIFEST)]
     w = mw.MainWindow(entries, FakeSources(tmp_path / "work"), Records(tmp_path / "installed.json"))
-    acpi = w.cards["acpi"]
-    assert not acpi.icon.isEnabled() and "Not installed" in acpi.icon.toolTip()
+    acpi = w.states["acpi"]
+    assert not acpi.opens and "Not installed" in acpi.tooltip
     for name in ("bc250-governor-manager", "bc250-persistent-acpi-gui"):
         (home / ".local" / "bin" / name).write_text("#!/bin/sh\n")
     w.refresh()
-    assert acpi.icon.isEnabled() and "Click to open it." in acpi.icon.toolTip()
-    assert not w.cards["gpu"].icon.isEnabled()                         # not a program
+    assert acpi.opens and "Press it to open it." in acpi.tooltip
+    assert not w.states["gpu"].opens                                   # not a program
+    assert "Open" not in menu_texts(w, "gpu")
     opened = []
     monkeypatch.setattr(w, "open_app", lambda entry, command: opened.append(command))
-    acpi.open_clicked.disconnect()
-    acpi.open_clicked.connect(w.open_app)
-    acpi.icon.click()
+    monkeypatch.setattr(QMessageBox, "warning", lambda *a, **k: YES)
+    w.big.tiles["acpi"].click()
     assert opened == ["~/.local/bin/bc250-persistent-acpi-gui"]
     w.close()
 
 
 def test_icon_is_greyed_until_installed(window, home):
-    card = window.cards["overlay"]
-    assert card.icon.icon().cacheKey() == card._icons[1].cacheKey()
+    tile = window.big.tiles["overlay"]
+    grey = tile.pixmap.cacheKey()
+    assert grey == window.big.art("utilities", "overlay", False).cacheKey()
     (home / ".local" / "bin" / "bc250-system-overlay").write_text("#!/bin/sh\n")
     window.refresh()
-    assert card.icon.icon().cacheKey() == card._icons[0].cacheKey()
+    assert tile.pixmap.cacheKey() == window.big.art("utilities", "overlay", True).cacheKey() != grey
 
 
-def test_board_warning_under_the_icon(window):
-    assert not window.cards["gpu"].board.isHidden()
-    assert window.cards["overlay"].board.isHidden()
+def test_board_warning_under_the_icon(window, home):
+    (home / ".local" / "bin" / "bc250-governor-manager").write_text("#!/bin/sh\n")
+    window.records.set("gpu", entry_of(window, "gpu").tag)
+    window.refresh()
+    assert window.big.tiles["gpu"].status == "changes the board"
+    assert window.big.tiles["gpu"].status_colour == mw.ORANGE
+    assert window.big.tiles["overlay"].status == "Not installed"
 
 
 def test_states_follow_detection_and_records(window, home):
-    card = window.cards["gpu"]
-    assert card.status == "Not installed" and card.install_button.toolTip().startswith("Install ")
-    assert not card.uninstall_button.isEnabled()
+    state = window.states["gpu"]
+    assert state.status == "Not installed" and state.action == "Install"
+    assert "Uninstall" in menu_texts(window, "gpu")
+    assert not [a for a in window.tile_menu(state.entry).actions() if a.text() == "Uninstall"][0].isEnabled()
     (home / ".local" / "bin" / "bc250-governor-manager").write_text("#!/bin/sh\n")
     window.refresh()
-    assert card.status == "Reinstall needed" and card.install_button.toolTip().startswith("Reinstall ")
-    assert card.uninstall_button.isEnabled()
-    window.records.set("gpu", next(e.tag for e in window.entries if e.key == "gpu"))
+    assert state.status == "Reinstall needed" and state.action == "Reinstall"
+    assert [a for a in window.tile_menu(state.entry).actions() if a.text() == "Uninstall"][0].isEnabled()
+    window.records.set("gpu", entry_of(window, "gpu").tag)
     window.refresh()
-    assert card.status == "Installed" and card.install_button.toolTip().startswith("Reinstall ")
+    assert state.status == "Installed" and state.action == "Reinstall"
     window.records.set("gpu", "gpu-v0.0.9")
     window.refresh()
-    assert card.status == "Update" and card.install_button.toolTip().startswith("Update ")
-
-
-def _same_icon(button, icon) -> bool:
-    size = mw.QSize(mw.SYMBOL_PX, mw.SYMBOL_PX)
-    return button.icon().pixmap(size).toImage() == icon.pixmap(size).toImage()
+    assert state.status == "Update" and state.action == "Update"
 
 
 def test_bazzite_test_has_only_reinstall(window, home):
     """With the arrow into a tray, as every app (owner, 14-10-2026), and the version it reinstalls."""
-    card = window.cards["check"]
+    state = window.states["check"]
     (home / ".local" / "bin" / "bc250-bazzite-test").write_text("#!/bin/sh\n")
-    window.records.set("check", card.entry.tag)
+    window.records.set("check", state.entry.tag)
     window.refresh()
-    assert card.install_button.toolTip() == f"Reinstall BC-250 Bazzite Test v{card.entry.version}"
-    assert card.uninstall_button.isHidden()
-    assert _same_icon(card.install_button, mw.glyphs.install(card._ink()))
+    assert state.action_tip == f"Reinstall BC-250 Bazzite Test v{state.entry.version}"
+    assert menu_texts(window, "check") == ["Open", "Reinstall"]
+    assert not state.reinstall
     window.records.set("check", "")                                      # not installed by the portal
     window.refresh()
-    assert _same_icon(card.install_button, mw.glyphs.reinstall(mw.RED))
+    assert state.reinstall and window.big.tiles["check"].marker == "reinstall"
 
 
 def test_board_change_needs_confirmation(window, launched, monkeypatch):
     asked = []
     monkeypatch.setattr(QMessageBox, "warning", lambda *a, **k: (asked.append(a[2]), CANCEL)[1])
-    window.install(next(e for e in window.entries if e.key == "acpi"))
+    window.install(entry_of(window, "acpi"))
     assert asked and "changes how your BC-250 runs" in asked[0]
     assert window.sources.prepared == [] and launched == []                 # canceled: nothing happens
 
@@ -236,14 +193,15 @@ def test_no_warning_for_bazzite_test(window, launched, monkeypatch):
     assert wait_for(lambda: launched)
     line, exit_file = launched[0]
     assert line.endswith("&& bash install.sh") and "local-check" not in line
-    assert window.pending is not None and window.cards["check"].status == "Installing…"
-    assert not window.cards["check"].busy_label.isHidden()
-    assert not window.cards["gpu"].install_button.isEnabled()          # one action at a time
+    assert window.pending is not None and window.states["check"].status == "Installing…"
+    assert window.big.tiles["check"].status == "Installing…"
+    install = [a for a in window.tile_menu(entry_of(window, "gpu")).actions() if a.text() == "Install"][0]
+    assert not install.isEnabled()                                      # one action at a time
 
 
 def test_install_success_records_tag(window, launched, monkeypatch, home):
     monkeypatch.setattr(QMessageBox, "warning", lambda *a, **k: YES)
-    entry = next(e for e in window.entries if e.key == "gpu")
+    entry = entry_of(window, "gpu")
     window.install(entry)
     assert wait_for(lambda: launched)
     _, exit_file = launched[0]
@@ -255,12 +213,12 @@ def test_install_success_records_tag(window, launched, monkeypatch, home):
     assert window.pending is None
     assert window.records.get("gpu") == entry.tag
     assert not old.exists() and window.sources.folder(entry).is_dir()      # only the installed release stays
-    assert window.cards["gpu"].status == "Installed"
+    assert window.states["gpu"].status == "Installed"
 
 
 def test_failed_install_warns_and_records_nothing(window, launched, monkeypatch):
     monkeypatch.setattr(QMessageBox, "warning", lambda *a, **k: YES)
-    entry = next(e for e in window.entries if e.key == "upscaler")
+    entry = entry_of(window, "upscaler")
     window.install(entry)
     assert wait_for(lambda: launched)
     shown = []
@@ -271,12 +229,12 @@ def test_failed_install_warns_and_records_nothing(window, launched, monkeypatch)
 
 
 def test_uninstall_forgets_release(window, launched, monkeypatch, home):
-    entry = next(e for e in window.entries if e.key == "upscaler")
+    entry = entry_of(window, "upscaler")
     (home / ".local" / "bin" / "bc250-upscaler").write_text("#!/bin/sh\n")
     window.records.set("upscaler", entry.tag)
     window.refresh()
     monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: YES)
-    window.uninstall(entry)
+    [a for a in window.tile_menu(entry).actions() if a.text() == "Uninstall"][0].trigger()
     assert wait_for(lambda: launched)
     line, exit_file = launched[0]
     assert line.endswith("&& bash install.sh --uninstall")
@@ -291,7 +249,8 @@ def test_closed_terminal_can_be_abandoned(window, launched, monkeypatch):
     assert wait_for(lambda: launched)
     monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: YES)
     window._on_refresh()
-    assert window.pending is None and window.cards["gpu"].install_button.isEnabled()
+    assert window.pending is None
+    assert [a for a in window.tile_menu(entry_of(window, "gpu")).actions() if a.text() == "Install"][0].isEnabled()
 
 
 def test_shell_line_quotes_folder():
@@ -299,25 +258,31 @@ def test_shell_line_quotes_folder():
     assert line == "cd '/tmp/a b' && bash x.sh && bash y.sh"
 
 
+def tab_text(window, category: str) -> str:
+    return window.big.bar.tabText(window.big.categories.index(category))
+
+
 def test_red_dot_and_count_for_updates(window, home):
     for name in ("bc250-governor-manager", "bc250-upscaler"):
         (home / ".local" / "bin" / name).write_text("#!/bin/sh\n")
     window.records.set("gpu", "gpu-v0.0.9")              # older than the pin: an update
-    window.records.set("upscaler", next(e.tag for e in window.entries if e.key == "upscaler"))   # the pinned one
+    window.records.set("upscaler", entry_of(window, "upscaler").tag)   # the pinned one
     window.refresh()
-    assert not window.cards["gpu"].dot.isHidden()
-    assert window.cards["upscaler"].dot.isHidden()
-    assert "gpu-v0.0.9" in window.cards["gpu"].dot.toolTip()
-    notice = window.notice.text()
-    assert "\u25cf 1 update</b>" in notice and "<a href='gpu'>GPU Governor Manager</a> (Sustainable): update to v" in notice
-    assert "installed from gpu-v0.0.9" in notice and "HelixSR" not in notice
-    sustainable = window.tabs.indexOf(window.pages["sustainable"])
-    assert window.tabs.tabText(sustainable) == "Sustainable  \u25cf 1"                # the count on its tab
-    assert window.tabs.tabText(window.tabs.indexOf(window.pages["graphics"])) == "Graphics"
-    window.records.set("gpu", next(e.tag for e in window.entries if e.key == "gpu"))
+    assert window.states["gpu"].update and window.big.tiles["gpu"].marker == "update"
+    assert not window.states["upscaler"].update
+    assert "gpu-v0.0.9" in window.states["gpu"].tooltip
+    assert window.big.notice.text() == "● 1 update" and window.big.notice.isVisibleTo(window.big)
+    assert window.notice_lines == [("gpu", "GPU Governor Manager (Sustainable): update to v"
+                                    f"{entry_of(window, 'gpu').version}, installed from gpu-v0.0.9")]
+    assert [a.text() for a in window.notice_menu().actions()] == [window.notice_lines[0][1]]
+    assert "HelixSR" not in window.big.notice.text()
+    assert tab_text(window, "sustainable") == "Sustainable  ● 1"                # the count on its tab
+    assert tab_text(window, "graphics") == "Graphics"
+    window.records.set("gpu", entry_of(window, "gpu").tag)
     window.refresh()
-    assert window.cards["gpu"].dot.isHidden() and window.notice.text().startswith("<span style='color:gray;'>No updates")
-    assert window.tabs.tabText(sustainable) == "Sustainable"
+    assert not window.states["gpu"].update and window.big.notice.isHidden() and window.notice_lines == []
+    assert tab_text(window, "sustainable") == "Sustainable"
+    assert "No updates" in window.updates_pill.toolTip()
 
 
 def test_installed_apps_pill_counts_installed_of_listed(qapp, home, settings_dir, tmp_path, launched):
@@ -344,8 +309,9 @@ def test_install_all_updates_one_after_the_other(window, launched, monkeypatch, 
     window.refresh()                                         # acpi: installed, not recorded: a reinstall
     keys = [entry.key for entry, _ in window.marked]
     assert set(keys) == {"gpu", "upscaler", "acpi"}
+    assert window.big.notice.text() == "● 2 updates, 1 reinstall"
     pill = window.updates_pill
-    assert pill.value.text() == "3" and pill.isEnabled() and "all 3" in pill.toolTip()
+    assert pill.value.text() == "Install" and pill.isEnabled() and "all 3" in pill.toolTip()
     asked = []
     monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: (asked.append(a[2]), CANCEL)[1])
     pill.click()
@@ -371,9 +337,9 @@ def test_install_all_updates_one_after_the_other(window, launched, monkeypatch, 
     window._check_pending()
     assert window.batch is None and not window.busy() and window.sources.prepared == keys
     assert len(shown) == 1 and "1 of the 3 updates did not install" in shown[0] and "exit status 1" in shown[0]
-    failed = next(e for e in window.entries if e.key == keys[1])
+    failed = entry_of(window, keys[1])
     assert failed.name in shown[0] and [e.key for e, _ in window.marked] == [keys[1]]
-    assert pill.value.text() == "1" and pill.isEnabled()
+    assert pill.value.text() == "Install" and pill.isEnabled() and "1 the notice names" in pill.toolTip()
 
 
 def test_stop_waiting_ends_the_batch(window, launched, monkeypatch, home):
@@ -390,38 +356,31 @@ def test_stop_waiting_ends_the_batch(window, launched, monkeypatch, home):
     window._on_refresh()                                     # its terminal was closed
     assert "The rest of the batch (1) is not installed then." in asked[-1]
     assert window.batch is None and window.pending is None and len(launched) == 1
-    assert window.updates_pill.value.text() == "2" and window.updates_pill.isEnabled()
+    assert window.updates_pill.value.text() == "Install" and window.updates_pill.isEnabled()
 
 
-def test_install_all_apps_is_the_last_tab_and_fills_the_open_category(window, launched, monkeypatch, qapp):
-    """Install all apps (owner, 26-10-2026): the last tab is a button that looks like a tab. A click installs every
-    app of the open category not installed yet as one batch with one question; the tab shows the batch's progress;
-    it never opens; it is disabled once every app of the category is installed."""
-    from PyQt6.QtCore import QPoint, Qt
-    from PyQt6.QtTest import QTest
-    bar, last = window.tabs.tabBar(), window.install_tab
-    assert last == window.tabs.count() - 1 and window.tabs.tabText(last) == "Install all apps"
-    assert bar.action_index == last and not window.tabs.tabIcon(last).isNull()
+def test_install_all_apps_is_a_pill_that_fills_the_open_category(window, launched, monkeypatch, qapp):
+    """Install all apps (owner, 26-10-2026; a pill since the tabs went, 01-11-2026, reading Install over All apps,
+    the number of apps of the open category not installed yet in its tooltip). A click installs them as one batch
+    with one question; the pill shows the batch's progress; it is disabled once every app of the category is
+    installed."""
+    pill = window.apps_pill
     expected = [e for e in window.entries if e.category == "sustainable"]
     assert window.shown_category() == "sustainable" and window.missing("sustainable") == expected
-    assert window.tabs.isTabEnabled(last) and f"all {len(expected)} apps on Sustainable" in window.tabs.tabToolTip(last)
-    window.show()
-    qapp.processEvents()
-    window.tabs.setCurrentIndex(last)                        # the keyboard landing on it: it goes back
-    assert window.tabs.currentIndex() == 0 and window.shown_category() == "sustainable"
+    assert pill.value.text() == "Install" and pill.caption.text() == "All apps" and pill.isEnabled()
+    assert f"all {len(expected)} apps on Sustainable" in pill.toolTip()
     asked = []
     monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: (asked.append(a[2]), CANCEL)[1])
-    QTest.mouseClick(bar, Qt.MouseButton.LeftButton, pos=bar.tabRect(last).center())
-    assert window.tabs.currentIndex() == 0                   # a click does not open it
+    pill.click()
     assert f"Install these {len(expected)} apps on Sustainable" in asked[0] and "change how your BC-250 runs" in asked[0]
     assert "Fan Control" in asked[0] and "Upscaler" not in asked[0]
     assert window.batch is None and launched == []
     monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: YES)
-    QTest.mouseClick(bar, Qt.MouseButton.LeftButton, pos=bar.tabRect(last).center())
+    pill.click()
     assert wait_for(lambda: len(launched) == 1)
     assert window.sources.prepared == [expected[0].key]
-    assert window.tabs.tabText(last) == f"Installing 1 of {len(expected)}" and not window.tabs.isTabEnabled(last)
-    assert window.updates_pill.value.text() == "0" and not window.updates_pill.isEnabled()
+    assert pill.value.text() == f"1/{len(expected)}" and not pill.isEnabled()
+    assert window.updates_pill.value.text() == "Install" and not window.updates_pill.isEnabled()
     done: set[str] = set()                                   # some detect paths are under /opt: not writable here
     monkeypatch.setattr(mw, "is_installed", lambda entry: entry.key in done)
     for i, entry in enumerate(expected):
@@ -432,50 +391,52 @@ def test_install_all_apps_is_the_last_tab_and_fills_the_open_category(window, la
             assert wait_for(lambda: len(launched) == i + 2)
     assert window.batch is None and not window.busy()
     assert window.sources.prepared == [e.key for e in expected]
-    assert window.tabs.tabText(last) == "Install all apps" and not window.tabs.isTabEnabled(last)
-    assert window.tabs.tabToolTip(last) == "Every app on Sustainable is installed."
-    window.tabs.setCurrentWidget(window.pages["graphics"])
-    assert window.tabs.isTabEnabled(last) and "on Graphics" in window.tabs.tabToolTip(last)
-    window.tabs.setCurrentWidget(window.pages["sustainable"])
-    QTest.mouseClick(bar, Qt.MouseButton.LeftButton, pos=bar.tabRect(last).center())
+    assert pill.value.text() == "Install" and not pill.isEnabled()
+    assert pill.toolTip() == "Every app on Sustainable is installed."
+    window.big.bar.setCurrentIndex(window.big.categories.index("graphics"))
+    assert pill.isEnabled() and "on Graphics" in pill.toolTip()
+    window.big.bar.setCurrentIndex(0)
+    pill.click()
     assert window.batch is None and len(launched) == len(expected)         # disabled: nothing happens
 
 
 def test_no_updates_no_batch(window, launched):
-    assert window.updates_pill.value.text() == "0" and not window.updates_pill.isEnabled()
+    assert window.updates_pill.value.text() == "Install" and not window.updates_pill.isEnabled()
     assert "No updates" in window.updates_pill.toolTip()
     window.install_all()
     assert window.batch is None and launched == []
 
 
 def test_updates_outside_the_suite(window, home):
+    """In orange beside the category strip, and on the app's tile (owner, 01-11-2026: the notice is a menu)."""
     from bc250_core import upstream
     helix = upstream.Outside("HelixSR", "1.8.1", "1.9.3", "2026-10-16", "https://x/v1.9.3",
                              "Get HelixSR… on the Setup page updates it.")
     upstream.publish("upscaler", [helix])
     upstream.publish("pcsx2", [upstream.Outside("PCSX2 nightly", "2.9.127", "2.9.128")])
     window.refresh()
-    assert "Outside" not in window.notice.text()                        # neither app is installed
+    assert window.big.outside.isHidden() and window.outside_lines == []       # neither app is installed
     (home / ".local" / "bin" / "bc250-upscaler").write_text("#!/bin/sh\n")
-    window.records.set("upscaler", next(e.tag for e in window.entries if e.key == "upscaler"))
+    window.records.set("upscaler", entry_of(window, "upscaler").tag)
     window.refresh()
-    notice = window.notice.text()
-    assert "No updates" not in notice and "\u25cf Outside the suite</b>" in notice
-    assert ("<a href='upscaler'>Upscaler Manager</a> (Graphics): HelixSR 1.9.3 is out (2026-10-16), installed 1.8.1. "
-            "Get HelixSR… on the Setup page updates it.") in notice
-    assert "PCSX2" not in notice and "Outside the suite" in window.notice.toolTip()
-    sustainable_tabs = [window.tabs.tabText(i) for i in range(window.tabs.count())]
-    assert not any("\u25cf" in t for t in sustainable_tabs)              # the tab dots are the suite's updates
+    assert window.big.notice.isHidden() and window.big.outside.text() == "● 1 outside the suite"
+    assert window.outside_lines == [("upscaler", "Upscaler Manager (Graphics): HelixSR 1.9.3 is out (2026-10-16), "
+                                     "installed 1.8.1. Get HelixSR… on the Setup page updates it.")]
+    assert [a.text() for a in window.outside_menu().actions()] == [window.outside_lines[0][1]]
+    assert "Outside the suite" in window.big.outside.toolTip()
+    tile = window.big.tiles["upscaler"]
+    assert tile.status == "HelixSR 1.9.3 is out" and tile.status_colour == mw.ORANGE
+    assert not any("●" in tab_text(window, c) for c in window.big.categories)   # the dots are the suite's updates
     # Beside an update of the suite's own:
     (home / ".local" / "bin" / "bc250-governor-manager").write_text("#!/bin/sh\n")
     window.records.set("gpu", "gpu-v0.0.9")
     window.refresh()
-    notice = window.notice.text()
-    assert notice.index("\u25cf 1 update</b>") < notice.index("Outside the suite")
+    assert window.big.notice.text() == "● 1 update" and window.big.outside.text() == "● 1 outside the suite"
+    assert window.big.tiles["gpu"].status == "Update"                     # the suite's update comes first
     # The app found nothing more to install; the portal sees it when its window is active again.
     upstream.publish("upscaler", [])
     window.show_notice(window.marked)
-    assert "Outside the suite" not in window.notice.text() and "Outside" not in window.notice.toolTip()
+    assert window.big.outside.isHidden() and tile.status == ""
 
 
 def test_circular_arrow_and_count_for_reinstalls(window, home):
@@ -485,20 +446,20 @@ def test_circular_arrow_and_count_for_reinstalls(window, home):
         (home / ".local" / "bin" / name).write_text("#!/bin/sh\n")
     window.records.set("upscaler", "upscaler-v0.0.1")                          # an update, for the count
     window.refresh()
-    card = window.cards["gpu"]
-    assert card.status == "Reinstall needed" and not card.badge.isHidden() and card.dot.isHidden()
-    assert "Reinstall needed" in card.icon.toolTip() and "version is unknown" in card.badge.toolTip()
-    assert card.install_button.toolTip().startswith("Reinstall ")
-    assert window.cards["upscaler"].badge.isHidden() and not window.cards["upscaler"].dot.isHidden()
-    assert "\u25cf 1 update, 1 reinstall</b>" in window.notice.text()
-    assert "<a href='gpu'>GPU Governor Manager</a> (Sustainable): reinstall needed" in window.notice.text()
+    state = window.states["gpu"]
+    assert state.status == "Reinstall needed" and state.reinstall and not state.update
+    assert "Reinstall needed" in state.tooltip and "version is unknown" in state.tooltip
+    assert state.action_tip.startswith("Reinstall ") and window.big.tiles["gpu"].marker == "reinstall"
+    assert not window.states["upscaler"].reinstall and window.states["upscaler"].update
+    assert window.big.notice.text() == "● 1 update, 1 reinstall"
+    assert ("gpu", "GPU Governor Manager (Sustainable): reinstall needed, its version is unknown") in window.notice_lines
     window.records.remove("upscaler")
     (home / ".local" / "bin" / "bc250-upscaler").unlink()
     window.refresh()
-    assert "\u25cf 1 reinstall</b>" in window.notice.text()
-    window.records.set("gpu", next(e.tag for e in window.entries if e.key == "gpu"))
+    assert window.big.notice.text() == "● 1 reinstall"
+    window.records.set("gpu", entry_of(window, "gpu").tag)
     window.refresh()
-    assert card.badge.isHidden() and card.status == "Installed" and "No updates" in window.notice.text()
+    assert not state.reinstall and state.status == "Installed" and window.big.notice.isHidden()
 
 
 def test_not_installed_and_withdrawn_need_no_reinstall(qapp, home, settings_dir, tmp_path, launched):
@@ -506,17 +467,17 @@ def test_not_installed_and_withdrawn_need_no_reinstall(qapp, home, settings_dir,
     w = mw.MainWindow(entries, FakeSources(tmp_path / "work"), Records(tmp_path / "installed.json"))
     (home / ".local" / "bin" / "bc250-governor-manager").write_text("#!/bin/sh\n")
     w.refresh()
-    assert w.cards["gpu"].badge.isHidden()                              # the portal removes it instead
-    assert w.cards["overlay"].badge.isHidden()                               # not installed
+    assert not w.states["gpu"].reinstall                                # the portal removes it instead
+    assert not w.states["overlay"].reinstall                             # not installed
     w.close()
 
 
 def test_local_build_banner(qapp, home, settings_dir, tmp_path, launched, window):
-    assert window.local_banner.isHidden()                       # a published release: no banner
+    assert window.big.banner.isHidden()                         # a published release: no banner
     w = mw.MainWindow(load(MANIFEST), FakeSources(tmp_path / "work"), Records(tmp_path / "installed.json"),
                       local_build=Path("/home/me/bc250-bazzite-suite"))
-    assert not w.local_banner.isHidden()
-    assert "checkout /home/me/bc250-bazzite-suite" in w.local_banner.text()
+    assert not w.big.banner.isHidden()
+    assert "checkout /home/me/bc250-bazzite-suite" in w.big.banner.text()
     w.close()
 
 
@@ -532,6 +493,7 @@ def test_newer_portal_release_is_offered(qapp, home, settings_dir, tmp_path, lau
     w = portal_window(tmp_path, release)
     assert wait_for(lambda: not w.portal_button.isHidden())
     assert w.portal_button.text().endswith("Portal 99.0.0 available")
+    assert w.big.isAncestorOf(w.portal_button) and w.portal_button in w.big.controls    # in the title row
     w.portal_button.click()
     assert opened == ["https://example.invalid/r"]
     w.close()
@@ -548,74 +510,71 @@ def test_no_portal_offer_when_not_newer_or_offline(qapp, home, settings_dir, tmp
 
 def test_tiles_flow_in_file_order(window, qapp):
     window.show()
+    big = window.big
     for category in ("sustainable", "gaming"):
-        window.tabs.setCurrentWidget(window.pages[category])
-        tiles = [card for card in window.cards.values() if card.entry.category == category]
-        for width in (1400, 700, 300, 1400):
-            window.resize(width, 720)
+        big.bar.setCurrentIndex(big.categories.index(category))
+        tiles = [big.tiles[e.key] for e in window.entries if e.category == category]
+        for width in (1400, 700, 1400):
+            window.resize(width, 900)
             qapp.processEvents()
-            page = window.pages[category]
-            columns = window.columns
-            assert columns == window.column_count(page.width() - page.verticalScrollBar().sizeHint().width()
-                                                  - mw.PAGE_MARGIN), width
-            grid = window.grids[category]
-            places = [grid.getItemPosition(grid.indexOf(card))[:2] for card in tiles]
-            assert places == [(i // columns, i % columns) for i in range(len(tiles))]   # file order, by rows
-    step = mw.TILE_WIDTH + mw.TILE_SPACING
-    assert window.column_count(0) == 1
-    assert window.column_count(3 * step - mw.TILE_SPACING) == 3 and window.column_count(3 * step - 13) == 2
+            columns = big.columns[category]
+            grid = big.grids[category]
+            places = [grid.getItemPosition(grid.indexOf(tile))[:2] for tile in tiles]
+            assert places == [(i // columns, i % columns) for i in range(len(tiles))], width   # file order, by rows
 
 
-def test_a_tab_per_category_in_order(window):
-    assert [window.tabs.tabText(i) for i in range(window.tabs.count())] == [
-        "Sustainable", "Graphics", "Gaming", "Utilities", "Install all apps"]    # the last: a button; no Development
-    for key, card in window.cards.items():
-        inside = [c for c, grid in window.grids.items() if grid.indexOf(card) >= 0]
-        assert inside == [card.entry.category], key
-    assert {k for k, c in window.cards.items() if c.entry.category == "graphics"} == {"upscaler", "ace", "mesh"}
-    assert window.tabs.currentWidget() is window.pages["sustainable"]           # the first tab, the first time
+def test_a_category_per_tab_in_order(window):
+    assert [window.big.bar.tabText(i) for i in range(window.big.bar.count())] == [
+        "Sustainable", "Graphics", "Gaming", "Utilities"]                   # no Development, no action tab
+    assert window.big.categories == ["sustainable", "graphics", "gaming", "utilities"]
+    for key, tile in window.big.tiles.items():
+        inside = [c for c, grid in window.big.grids.items() if grid.indexOf(tile) >= 0]
+        assert inside in ([window.states[key].entry.category], []), key    # laid out once its category opens
+    assert {k for k, s in window.states.items() if s.entry.category == "graphics"} == {"upscaler", "ace", "mesh"}
+    assert window.big.bar.currentIndex() == 0                               # the first category, the first time
 
 
 def test_bazzite_test_is_the_first_tile_on_sustainable(window):
-    """Bazzite Test is pinned as the first tile on the Sustainable tab; the notice of updates stays above the tabs
-    (owner, 20-10-2026)."""
-    grid = window.grids["sustainable"]
-    assert grid.itemAtPosition(0, 0).widget() is window.cards["check"]
-    assert window.tabs.isAncestorOf(window.cards["check"]) and not window.tabs.isAncestorOf(window.notice)
+    """Bazzite Test is pinned as the first tile on Sustainable (owner, 20-10-2026)."""
+    assert window.big.current_tiles()[0] is window.big.tiles["check"]
+    assert window.big.grids["sustainable"].itemAtPosition(0, 0).widget() is window.big.tiles["check"]
 
 
-def test_the_portal_always_opens_on_the_first_tab(qapp, home, settings_dir, tmp_path, launched):
-    """Whatever tab was open last (owner, 20-10-2026)."""
+def test_the_portal_always_opens_on_the_first_category(qapp, home, settings_dir, tmp_path, launched):
+    """Whatever category was open last (owner, 20-10-2026)."""
     w = mw.MainWindow(load(MANIFEST), FakeSources(tmp_path / "work"), Records(tmp_path / "installed.json"))
-    w.tabs.setCurrentWidget(w.pages["gaming"])
+    w.big.bar.setCurrentIndex(w.big.categories.index("gaming"))
     w.close()
     again = mw.MainWindow(load(MANIFEST), FakeSources(tmp_path / "work"), Records(tmp_path / "installed.json"))
-    assert again.tabs.currentIndex() == 0 and again.tabs.currentWidget() is again.pages["sustainable"]
+    assert again.big.bar.currentIndex() == 0 and again.big.current_category() == "sustainable"
     again.close()
 
 
-def test_a_link_in_the_notice_opens_the_tab_of_its_app(window, home):
+def test_a_line_of_the_notice_goes_to_the_tile_of_its_app(window, home, qapp):
+    window.show()
+    qapp.processEvents()
     (home / ".local" / "bin" / "bc250-rpcs3-manager").write_text("#!/bin/sh\n")
     window.records.set("rpcs3", "rpcs3-v0.0.1")
     window.refresh()
-    assert "<a href='rpcs3'>RPCS3 Manager</a> (Gaming)" in window.notice.text()
-    window.notice.linkActivated.emit("rpcs3")
-    assert window.tabs.currentWidget() is window.pages["gaming"]
-    window.notice.linkActivated.emit("check")                                   # on Sustainable
-    assert window.tabs.currentWidget() is window.pages["sustainable"]
+    assert window.notice_lines[0][0] == "rpcs3" and "RPCS3 Manager (Gaming)" in window.notice_lines[0][1]
+    window.notice_menu().actions()[0].trigger()
+    assert window.big.current_category() == "gaming" and window.focusWidget() is window.big.tiles["rpcs3"]
+    window.show_app("check")                                                    # on Sustainable
+    assert window.big.current_category() == "sustainable" and window.focusWidget() is window.big.tiles["check"]
 
 
 def test_the_tools_of_the_development_tab_are_utilities(window):
     """No Development tab (owner, 27-10-2026): its released apps are on Utilities, and its hint names them."""
-    assert "development" not in window.pages
-    assert {"mtool", "package", "ncgui"} <= {k for k, c in window.cards.items() if c.entry.category == "utilities"}
-    assert "a graphical netcat" in window.pages["utilities"].widget().findChild(mw.QLabel).text()
+    assert "development" not in window.big.categories
+    assert {"mtool", "package", "ncgui"} <= {k for k, s in window.states.items() if s.entry.category == "utilities"}
+    assert "a graphical netcat" in window.big.full_hints["utilities"]
+    assert window.big.bar.tabToolTip(window.big.categories.index("utilities")) == mw.CATEGORY_HINTS["utilities"]
 
 
-def test_no_tab_without_its_apps(qapp, home, settings_dir, tmp_path, launched):
+def test_no_category_without_its_apps(qapp, home, settings_dir, tmp_path, launched):
     entries = [e for e in load(MANIFEST) if e.category != "gaming"]
     w = mw.MainWindow(entries, FakeSources(tmp_path / "work"), Records(tmp_path / "installed.json"))
-    assert list(w.pages) == ["sustainable", "graphics", "utilities"]
+    assert w.big.categories == ["sustainable", "graphics", "utilities"]
     w.close()
 
 
@@ -704,14 +663,17 @@ def _withdrawn_window(home, tmp_path, installed: bool):
 def test_a_withdrawn_app_is_not_available(qapp, home, settings_dir, tmp_path, launched, monkeypatch):
     w = _withdrawn_window(home, tmp_path, installed=False)
     try:
-        card = w.cards["upscaler"]
-        assert not card.withdrawn.isHidden() and card.withdrawn.text() == "App not available"
-        assert card.status == "App not available" and not card.install_button.isEnabled()
-        assert "Privacy: shows the account ID." in card.install_button.toolTip()
-        assert "It cannot be installed." in card.icon.toolTip()
-        assert w.cards["gpu"].withdrawn.isHidden()
+        state = w.states["upscaler"]
+        assert state.status == "App not available" and w.big.tiles["upscaler"].status == "App not available"
+        assert w.big.tiles["upscaler"].status_colour == mw.RED
+        install = [a for a in w.tile_menu(state.entry).actions() if a.text() == "Install"][0]
+        assert not install.isEnabled() and "Privacy: shows the account ID." in install.toolTip()
+        assert "It cannot be installed." in state.tooltip
+        assert w.states["gpu"].status != "App not available"
         w.remove_withdrawn()                                # not installed: nothing to remove
         assert launched == []
+        w.big.tiles["upscaler"].click()                     # nothing to open or install
+        assert launched == [] and w.sources.prepared == []
     finally:
         w.close()
 
@@ -725,12 +687,12 @@ def test_the_portal_removes_a_withdrawn_app(qapp, home, settings_dir, tmp_path, 
         assert told and "is not available any more" in told[0] and "Privacy: shows the account ID." in told[0]
         line, exit_file = launched[0]
         assert line.endswith("&& bash install.sh --uninstall")
-        card = w.cards["upscaler"]
-        assert not card.icon.isEnabled() and card.dot.isHidden()          # no opening, no update
+        state = w.states["upscaler"]
+        assert not state.opens and not state.update          # no opening, no update
         (home / ".local" / "bin" / "bc250-upscaler").unlink()
         exit_file.write_text("0\n")
         w._check_pending()
-        assert card.status == "App not available" and "It cannot be installed." in card.icon.toolTip()
+        assert state.status == "App not available" and "It cannot be installed." in state.tooltip
         w.remove_withdrawn()
         assert len(launched) == 1 and len(told) == 1        # removed: not again
     finally:
@@ -748,9 +710,10 @@ def test_a_withdrawn_app_that_could_not_be_removed_stays_removable(qapp, home, s
         launched[0][1].write_text("1\n")
         w._check_pending()
         assert warned and "exit status 1" in warned[0]
-        card = w.cards["upscaler"]
-        assert card.uninstall_button.isEnabled()            # the user can try again by hand
-        assert "The portal removes it from the board." in card.icon.toolTip()
+        state = w.states["upscaler"]
+        uninstall = [a for a in w.tile_menu(state.entry).actions() if a.text() == "Uninstall"][0]
+        assert uninstall.isEnabled()                        # the user can try again by hand
+        assert "The portal removes it from the board." in state.tooltip
         assert len(launched) == 1                           # tried once per start, not in a loop
     finally:
         w.close()
@@ -773,7 +736,7 @@ def test_restart_into_a_portal_installed_meanwhile(qapp, home, settings_dir, tmp
     assert not w.portal_button.isHidden()
     _installed(tmp_path, "99.0.0")                                           # its install.sh ran in a terminal
     w.check_installed()
-    assert w.restart_button.text() == "\u25cf Restart: portal 99.0.0 is installed"
+    assert w.restart_button.text() == "● Restart: portal 99.0.0 is installed"
     assert w.restart_button.isEnabled() and w.portal_button.isHidden()
     w.pending = object()                                                     # an install runs: wait for it
     w.check_installed()
@@ -803,62 +766,33 @@ def test_no_restart_from_a_checkout(window):
 
 
 def test_one_theme_for_every_app(window, home):
-    """The theme pill shows the chosen theme; a click takes the next one, for every app; the portal says when it
+    """The theme pill shows the chosen theme; a click takes the next one, for every app; its tooltip says when it
     shows."""
     from bc250_core import theme
     pill = window.theme_pill
     assert theme.theme_name() == "gunmetal" and pill.value.text() == "Gunmetal"
-    assert pill.caption.text() == "Theme switcher"
-    assert window.theme_note.isHidden()
+    assert pill.caption.text() == "Theme switcher" and "next time it starts" in pill.toolTip()
     seen = []
     for _ in range(3):
         pill.click()
         seen.append((theme.theme_name(), pill.value.text()))
     assert seen == [("silver", "Silver"), ("warm", "Warm"), ("gunmetal", "Gunmetal")]
-    assert theme.theme_file().is_relative_to(home) and not window.theme_note.isHidden()
+    assert theme.theme_file().is_relative_to(home)
 
 
 def test_the_header_is_an_apps_header_with_pills(window):
-    """The portal's icon as large as the tiles' icons; beside it the name, where the apps install from, and the
-    pills: Refresh, Installed apps, Install all updates, the Desktop icons, the theme, the wallpaper and Sys info
-    (owner, 20-10-2026 and 21-10-2026)."""
-    from PyQt6.QtCore import Qt
-    from PyQt6.QtGui import QKeyEvent
-    from PyQt6.QtCore import QEvent
-    assert window.logo.width() == window.logo.height() == mw.ICON_PX
-    pills = (window.refresh_pill, window.installed_pill, window.updates_pill, window.icons_box, window.theme_pill,
-             window.wallpaper_pill, window.sysinfo_pill)
+    """The suite's icon, spanning the name and the pills: Refresh, Installed apps, Install all updates, Install all
+    apps, the Desktop icons, Sound, the theme, the wallpaper and Sys info (owner, 20-10-2026, 21-10-2026 and
+    01-11-2026)."""
+    pills = window.header_pills
     listed = len(window.entries)
+    sound = "Yes" if window.sounds.available() else "No"             # No on a machine without an audio output
     assert [(p.value.text(), p.caption.text()) for p in pills] == [
-        ("Refresh", "Click to refresh"), (f"0/{listed}", "Installed apps"), ("0", "Install all updates"),
-        ("No", "Icons on Desktop"), ("Gunmetal", "Theme switcher"), ("None", "Wallpaper"), ("Sys info", "Click to view")]
-    assert all(f"border-left:4px solid {mw.BLUE}" in p.styleSheet() for p in pills)     # as the apps' boxes
-    widths = {p.width() for p in pills}                     # all as wide as the widest (owner, 20-10-2026)
-    assert len(widths) == 1 and widths.pop() >= max(p.sizeHint().width() for p in pills)
-    refreshed = []
-    window.refresh_pill.clicked.connect(lambda: refreshed.append(1))
-    window.refresh_pill.keyPressEvent(QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_Space, Qt.KeyboardModifier.NoModifier))
-    assert refreshed == [1]
-    toggled = []
-    window.icons_box.toggled.connect(toggled.append)
-    window.icons_box.click()
-    assert window.icons_box.isChecked() and window.icons_box.value.text() == "Yes" and toggled == [True]
-    window.icons_box.setChecked(True)                       # no change: no signal
-    assert toggled == [True]
-
-
-def test_the_tabs_are_as_large_as_the_pills(window, qapp):
-    """Each category tab as wide and as high as a header pill (owner, 21-10-2026), also after the pills widen; a gap
-    above the tabs, so the line over them is a divider."""
-    window.show()
-    qapp.processEvents()
-    bar, pill = window.tabs.tabBar(), window.refresh_pill
-    categories = range(len(window.pages))                    # the action tab is as wide as its text needs
-    assert {bar.tabRect(i).width() for i in categories} == {pill.width()}
-    assert {bar.tabRect(i).height() for i in range(bar.count())} == {pill.height() + mw.PillTabBar.GAP}  # the gap
-    window.theme_pill.set_value("A much longer theme name")
-    qapp.processEvents()
-    assert pill.minimumWidth() > 0 and bar.tabRect(0).width() == pill.minimumWidth()
+        ("Refresh", "Click to refresh"), (f"0/{listed}", "Installed apps"), ("Install", "All updates"),
+        ("Install", "All apps"), ("No", "Icons on Desktop"), (sound, "Sound"),
+        ("Gunmetal", "Theme switcher"), ("None", "Wallpaper"), ("Sys info", "Click to view")]
+    assert window.big.pill_row.indexOf(pills[0]) == 0 and window.big.pill_row.indexOf(pills[-1]) == len(pills) - 1
+    assert "verified by checksum" in window.source_text
 
 
 def test_the_sys_info_pill_opens_one_window_read_each_time(window, qapp, monkeypatch):
@@ -907,14 +841,14 @@ def test_the_wallpaper(window, home, tmp_path, monkeypatch):
         window.choose_wallpaper()
     assert len(warned) == 1 and "smaller than" in warned[0] and wallpaper.RULES in warned[0]
     assert wallpaper.current() == state_dir() / "wallpaper.jpg" and state_dir().is_relative_to(home)
-    assert window.wallpaper_pill.value.text() == "Custom" and not window.backdrop.picture.isNull()
+    assert window.wallpaper_pill.value.text() == "Custom" and not window.big.picture.isNull()
     good.unlink()                                           # the portal keeps its own copy
     window.resize(900, 700)
     window.show()
-    assert QColor(window.backdrop.grab().toImage().pixel(450, 600)).red() > 60      # red under the veil
+    assert QColor(window.big.grab().toImage().pixel(10, 350)).red() > 60       # red under the veil, in the margin
     window.remove_wallpaper()
     assert wallpaper.current() is None and window.wallpaper_pill.value.text() == "None"
-    assert window.backdrop.picture.isNull()
+    assert window.big.picture.isNull()
 
 
 def test_the_example_wallpaper(window):
@@ -928,11 +862,11 @@ def test_the_example_wallpaper(window):
 
     assert wallpaper.EXAMPLE.is_file() and wallpaper.problem(wallpaper.EXAMPLE) == ""
     assert wallpaper.shown() is None and window.wallpaper_pill.value.text() == "None"   # none at first
-    assert window.backdrop.picture.isNull() and menu()["Example wallpaper"] == (False, True)
+    assert window.big.picture.isNull() and menu()["Example wallpaper"] == (False, True)
     assert not menu()["No wallpaper"][1]
     window.example_wallpaper()
     assert wallpaper.shown() == wallpaper.EXAMPLE and wallpaper.current() is None
-    assert window.wallpaper_pill.value.text() == "Example" and not window.backdrop.picture.isNull()
+    assert window.wallpaper_pill.value.text() == "Example" and not window.big.picture.isNull()
     assert menu()["Example wallpaper"] == (True, False) and menu()["No wallpaper"] == (False, True)
     assert wallpaper.saved() == []                          # not among the pictures used before
     window.remove_wallpaper()
@@ -1006,12 +940,12 @@ def test_the_wallpapers_transparency(window):
     veil = QColor(window.palette().color(QPalette.ColorRole.Window))
 
     def distance() -> int:
-        pixel = QColor(window.backdrop.grab().toImage().pixel(450, 600))
+        pixel = QColor(window.big.grab().toImage().pixel(10, 350))
         return sum(abs(a - b) for a, b in zip(pixel.getRgb()[:3], veil.getRgb()[:3]))
 
     before = distance()
     window.transparency_slider.setValue(88)                 # rounded to the step
-    assert window.backdrop.veil == 90 and window.settings.value(mw.VEIL_KEY, type=int) == 90
+    assert window.big.veil == 90 and window.settings.value(mw.VEIL_KEY, type=int) == 90
     assert distance() < before                              # nearer the theme's own color
     assert "Transparency 90 %" in window.wallpaper_pill.toolTip()
     window.settings.setValue(mw.VEIL_KEY, 250)              # a value from elsewhere: kept within the slider's range
@@ -1022,22 +956,22 @@ def test_a_checkout_install_is_compared_by_its_version(window, home):
     """A portal from a release, an app installed from a checkout (owner, 26-10-2026): the recorded version against
     the pin, as a tag's; a record without one (portal 9.2.0 and earlier) needs a reinstall."""
     (home / ".local" / "bin" / "bc250-governor-manager").write_text("#!/bin/sh\n")
-    card = window.cards["gpu"]
+    state = window.states["gpu"]
     window.records.set("gpu", "local-v0.0.9")
     window.refresh()
-    assert card.status == "Update" and not card.dot.isHidden() and card.badge.isHidden()
-    assert "installed from the suite checkout (v0.0.9), this portal pins" in card.icon.toolTip()
-    assert "installed from the suite checkout (v0.0.9)" in window.notice.text()
-    window.records.set("gpu", f"local-v{card.entry.version}")
+    assert state.status == "Update" and state.update and not state.reinstall
+    assert "installed from the suite checkout (v0.0.9), this portal pins" in state.tooltip
+    assert "installed from the suite checkout (v0.0.9)" in window.notice_lines[0][1]
+    window.records.set("gpu", f"local-v{state.entry.version}")
     window.refresh()
-    assert card.status == "Installed" and card.dot.isHidden() and card.badge.isHidden()
-    assert f"Installed from the suite checkout (v{card.entry.version})." in card.icon.toolTip()
-    assert "No updates" in window.notice.text()
+    assert state.status == "Installed" and not state.update and not state.reinstall
+    assert f"Installed from the suite checkout (v{state.entry.version})." in state.tooltip
+    assert window.big.notice.isHidden()
     window.records.set("gpu", "local")
     window.refresh()
-    assert card.status == "Reinstall needed" and not card.badge.isHidden() and card.dot.isHidden()
-    assert "without recording its version" in card.icon.toolTip() and "suite checkout" in card.badge.toolTip()
-    assert "1 reinstall" in window.notice.text()
+    assert state.status == "Reinstall needed" and state.reinstall and not state.update
+    assert "without recording its version" in state.tooltip
+    assert window.big.notice.text() == "● 1 reinstall"
 
 
 def test_a_checkout_portal_shows_its_own_installs_as_installed(qapp, home, settings_dir, tmp_path, launched):
@@ -1045,17 +979,18 @@ def test_a_checkout_portal_shows_its_own_installs_as_installed(qapp, home, setti
     sources.checkout = Path("/checkout")                                    # a portal from a checkout
     w = mw.MainWindow(load(MANIFEST), sources, Records(tmp_path / "installed.json"))
     (home / ".local" / "bin" / "bc250-governor-manager").write_text("#!/bin/sh\n")
-    card = w.cards["gpu"]
+    state = w.states["gpu"]
     for record in ("local-v0.0.9", "local"):
         w.records.set("gpu", record)
         w.refresh()
-        assert card.status == "Installed" and card.dot.isHidden() and card.badge.isHidden()
-        assert "No updates" in w.notice.text()
-    assert "Installed from the suite checkout (v0.0.9)." not in card.icon.toolTip()
-    assert "Installed from the suite checkout." in card.icon.toolTip()
+        assert state.status == "Installed" and not state.update and not state.reinstall
+        assert w.big.notice.isHidden()
+    assert "Installed from the suite checkout (v0.0.9)." not in state.tooltip
+    assert "Installed from the suite checkout." in state.tooltip
+    assert "local checkout /checkout" in w.source_text
     w.records.set("gpu", "gpu-v0.0.9")                                      # from a release: an update, as before
     w.refresh()
-    assert card.status == "Update"
+    assert state.status == "Update"
     w.close()
 
 
@@ -1064,7 +999,7 @@ def test_a_checkout_install_records_the_staged_version(qapp, home, settings_dir,
     sources = FakeSources(tmp_path / "work")
     sources.checkout = Path("/checkout")
     w = mw.MainWindow(load(MANIFEST), sources, Records(tmp_path / "installed.json"))
-    entry = w.cards["upscaler"].entry
+    entry = w.states["upscaler"].entry
     folder = sources.folder(entry)
     folder.mkdir(parents=True)
     (folder / "VERSION").write_text("1.2.3\n")

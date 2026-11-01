@@ -118,6 +118,9 @@ default suite of the tools (`tools/suites.py`). The root keeps what is Nexus's:
   from `tools/make_icons.py`). Never carry one system's design over to another. The Windows Portable Suite's
   apps put far more weight on UX and UI than the board's: a small screen held in the hands, touch and a controller
   instead of a mouse and keyboard.
+- **An info symbol where space is limited** (owner, 01-11-2026): a window never carries long lines of explanation.
+  Where a line of hint text would take the room, a small round "i" (core's `InfoButton`) opens the text on a click,
+  with its links; a short line under a control stays a `hint_label`. The Nexus page's Design chapter says so.
 - **Consistent architecture** (the suite's CLAUDE.md has the layout): every app of a suite is built the same way;
   `tools/tests/test_layout.py` checks every suite. The rules that are a suite's (the board warnings, reboots, the
   baseline, the owner's setup, the scope, the names not to use) are in that suite's CLAUDE.md.

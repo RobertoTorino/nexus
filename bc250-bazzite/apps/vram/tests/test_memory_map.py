@@ -5,8 +5,9 @@ from PyQt6.QtCore import QPointF
 
 from vram_manager import system
 from vram_manager.main_window import MainWindow
-from vram_manager.memory_map import MemoryMap, gtt_ceiling, gtt_text, ram_layout, swap_rows
+from vram_manager.memory_map import KEEP, MemoryMap, gtt_ceiling, gtt_text, preview_title, ram_layout, swap_rows
 from vram_manager.system import TOTAL_MIB, Usage
+from conftest import FakeOstree
 
 
 def test_usage_of_the_owner_board(sys_root, proc_root):
@@ -65,9 +66,15 @@ def test_preview_of_the_next_boot(sys_root, proc_root):
     assert sum(p.mib for p in parts) == TOTAL_MIB
     assert gtt_ceiling(memory, 4096) == 11698                 # ttm.pages_limit 11.5 GiB stays; the RAM is lower
     assert gtt_ceiling(memory, 8192) == 7602
-    default = replace(memory, ttm_on_cmdline=False)
+    default = replace(memory, ttm_cmdline_pages=None)
     assert gtt_ceiling(default, 4096) == 11698 // 2           # the kernel's default: half the RAM
     assert gtt_ceiling(memory) == 9650
+    assert gtt_ceiling(memory, None, None) == 9650 // 2       # this split, the argument removed
+    assert gtt_ceiling(memory, 512, 11776) == 11776           # a small split: the limit is below the RAM
+    assert gtt_ceiling(memory, 512, 16384) == 15282 and gtt_ceiling(memory, 4096, None) == 11698 // 2
+    assert preview_title(memory, 4096, KEEP) == "After a reboot with a 4.0 GiB split (preview)"
+    assert preview_title(memory, None, None) == "After a reboot with the kernel's default TTM limit (preview)"
+    assert preview_title(memory, 512, 16384) == "After a reboot with a 512 MiB split and a 16.0 GiB TTM limit (preview)"
 
 
 def test_gtt_and_swap_texts(sys_root, proc_root):
@@ -102,16 +109,25 @@ def test_widget_draws_and_explains(qapp, sys_root, proc_root):
     assert m.preview == 4096 and m.height() > plain
     m.grab()
     m.set_preview(6144)                                       # the split it has now: no preview
-    assert m.preview is None and m.height() == plain
+    assert m.preview is None and not m.previewing and m.height() == plain
+    m.set_preview(6144, None)                                 # the same split, the kernel's default limit
+    assert m.preview is None and m.preview_ttm is None and m.previewing and m.height() > plain
+    m.grab()
+    m.set_preview(6144, 11776)                                # the limit it has now
+    assert not m.previewing and m.height() == plain
 
 
 def test_window_previews_the_picked_split(qapp, sys_root, proc_root):
-    w = MainWindow(sys_root, proc_root, runner=lambda args: None)
-    assert w.map.usage.vram_used_mib == 924 and w.map.preview is None and w.timer.isActive()
+    w = MainWindow(sys_root, proc_root, runner=lambda args: None, commands=FakeOstree())
+    assert w.map.usage.vram_used_mib == 924 and not w.map.previewing and w.timer.isActive()
     w.combo.setCurrentIndex(w.combo.findData(4096))
-    assert w.map.preview == 4096
+    assert w.map.preview == 4096 and w.map.preview_ttm == KEEP
+    w.ttm_combo.setCurrentIndex(w.ttm_combo.findData(4194304))
+    assert w.map.preview == 4096 and w.map.preview_ttm == 16384
     w.combo.setCurrentIndex(w.combo.findData(6144))
-    assert w.map.preview is None
+    assert w.map.preview is None and w.map.previewing
+    w.ttm_combo.setCurrentIndex(w.ttm_combo.findData(3014656))
+    assert not w.map.previewing
     dev = sys_root / "class/drm/card1/device"
     (dev / "mem_info_vram_used").write_text(str(3000 * system.MIB))
     w.refresh_usage()                                         # what the timer does every 2 s

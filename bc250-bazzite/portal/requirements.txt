@@ -1,4 +1,4 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 PyQt6>=6.11,<7
-# The controller of Suite Big Picture Mode; wheels, so no compiler is needed.
+# The portal's controller reader; wheels, so no compiler is needed.
 pygame-ce>=2.5,<3

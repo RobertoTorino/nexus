@@ -1,3 +1,10 @@
+Changelog: 01-11-2026 14:10:30
+
+Added. InfoButton (widgets.py): a small round "i" in the accent that opens its explanation below it on a click,
+in the tooltip's style, with the links in it clickable; it stays until a click elsewhere or Escape. For the places
+where a line of hint text would take the room (owner, 01-11-2026: where space is limited, an info symbol that
+opens the text instead of long lines of text in the window); BC-250 Memory Manager is the first to use it.
+
 Changelog: 01-11-2026 04:54:34
 
 Version 2.3.2.

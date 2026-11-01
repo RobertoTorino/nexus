@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The BC250 Bazzite Suite portal: installs, opens and removes the suite's apps, one pill per app."""
+"""The BC250 Bazzite Suite portal: installs, opens and removes the suite's apps, one tile per app."""
 
 APP_NAME = "BC250 Bazzite Suite"
 APP_ID = "bc250-bazzite-suite"
@@ -19,9 +19,9 @@ SUITE_DIR = "bc250-bazzite"                             # the suite's folder in 
 CHECKOUT_FILE = "suite-checkout"                        # in ROOT, written by install.sh when installed from a checkout
 MANIFEST = ROOT / "apps.toml"
 LOGO_PATH = ROOT / "images" / f"{APP_ID}.webp"
-INTRO_LOGO = ROOT / "images" / f"{APP_ID}-1024.webp"      # the same picture at 1024 px, for the intro of Big Picture Mode
+INTRO_LOGO = ROOT / "images" / f"{APP_ID}-1024.webp"      # the same picture at 1024 px, for the intro
 APP_ICONS = ROOT / "images" / "apps"                    # <key>.webp: the small icon on each app's card
-CATEGORY_ICONS = ROOT / "images" / "categories"         # <category>.webp: the 512 px icon, for Suite Big Picture Mode
+CATEGORY_ICONS = ROOT / "images" / "categories"         # <category>.webp: the 512 px icon, drawn on the tiles
 INFO = AppInfo(app_id=APP_ID, name=APP_NAME, version=__version__, logo=LOGO_PATH, tag_prefix="portal-v",
                settings_app="bc250-bazzite-suite-portal")
 

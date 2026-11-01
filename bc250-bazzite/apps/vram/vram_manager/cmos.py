@@ -10,8 +10,12 @@ The firmware keeps the memory settings in CMOS bank 2 (index port 0x72, data por
 
 The layout is the one of fanoush/bc250_memcfg (MIT), confirmed on two boards with BIOS P5.00. A write goes like
 that tool's: the whole block, from 0x90 upwards, with the Linux tool signature and a new checksum. Unlike it, this
-module only writes a block it can trust (a known signature, a matching checksum, every timing in range), changes
-UMA_SIZE and nothing else, and reads the block back.
+module only writes a block it can trust, changes UMA_SIZE and nothing else, and reads the block back. Trust is
+decided by the block's own numbers (owner, 01-11-2026: by the case, not by a generic rule): a matching checksum
+and every value in range. The signature only says who wrote the block last: the firmware ("$ABL"), a Linux tool,
+or one of the firmware's error codes, a note it leaves when a boot went wrong (its watchdog fired, a bad
+checksum); a block with such a note and intact numbers is written, and the write replaces the note. Only a
+signature that is none of these is refused: the block may not be a memory block at all.
 
 Run as root (through pkexec) with the system Python, standard library only:
 
@@ -38,7 +42,14 @@ SIG_LINUX_TOOL = 0x42435041
 SIG_ABL = 0x4C424124
 SIGNATURES = {SIG_LINUX_TOOL: "LINUX_TOOL", SIG_ABL: "ABL", 0x42534D43: "CMOS_BAD", 0x46544457: "WATCH_DOG_TIMER_FIRED",
               0x454B4843: "CHECKSUM_ERROR", 0x45474953: "SIGNATURE_ERROR"}
-TRUSTED = (SIG_ABL, SIG_LINUX_TOOL)
+WRITTEN_BY = (SIG_ABL, SIG_LINUX_TOOL)  # a block as the firmware or a tool leaves it after a good boot
+# The firmware's error codes: what each says went wrong at a boot. The block's numbers decide whether it is good.
+FIRMWARE_NOTES = {
+    0x42534D43: "the firmware found CMOS bad at a boot",
+    0x46544457: "the firmware's watchdog fired at a boot, during the memory setup",
+    0x454B4843: "the firmware found the block's checksum wrong at a boot",
+    0x45474953: "the firmware found the block's signature wrong at a boot",
+}
 
 # name, offset in the block, size, allowed range (from bc250_memcfg's table; None: any value)
 FIELDS = (
@@ -101,12 +112,19 @@ class Block:
             out[name] = self.raw[offset] if size == 1 else struct.unpack_from("<H", self.raw, offset)[0]
         return out
 
+    def notes(self) -> list[str]:
+        """What the firmware noted in the signature field; a note alone is no reason not to write the block."""
+        if self.signature in FIRMWARE_NOTES:
+            return [f"signature 0x{self.signature:08X} ({self.signature_name}): {FIRMWARE_NOTES[self.signature]}; "
+                    "the values below are intact, so a write replaces the note"]
+        return []
+
     def problems(self) -> list[str]:
         """Why this block must not be written back; empty when it can be trusted."""
         out = []
-        if self.signature not in TRUSTED:
-            out.append(f"signature 0x{self.signature:08X} ({self.signature_name}) is not one the firmware or a "
-                       "Linux tool writes after a good boot")
+        if self.signature not in SIGNATURES:
+            out.append(f"signature 0x{self.signature:08X} is none the firmware or a Linux tool writes: this may not "
+                       "be a memory block")
         if self.checksum != self.computed_checksum:
             out.append(f"checksum 0x{self.checksum:04X} does not match the bytes (0x{self.computed_checksum:04X})")
         values = self.fields()
@@ -120,7 +138,7 @@ class Block:
     def to_json(self) -> dict:
         return {"hex": self.raw.hex(), "signature": f"0x{self.signature:08X}", "signature_name": self.signature_name,
                 "checksum": f"0x{self.checksum:04X}", "computed_checksum": f"0x{self.computed_checksum:04X}",
-                "uma_mb": self.uma_mb, "fields": self.fields(), "problems": self.problems()}
+                "uma_mb": self.uma_mb, "fields": self.fields(), "problems": self.problems(), "notes": self.notes()}
 
 
 def checksum(raw: bytes) -> int:

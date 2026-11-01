@@ -1,3 +1,28 @@
+Changelog: 01-11-2026 13:21:36
+
+Added. The GTT limit on the kernel command line: a GTT limit box in the header row shows ttm.pages_limit (or the
+kernel default), with the limit that waits for a reboot in its caption, and a new box under the VRAM split sets it in
+the next boot's kernel arguments with rpm-ostree (the kernel default, half the RAM, with the argument removed; 11.5
+GiB, the suite's value; 16 GiB, all the RAM with any split; a limit set by hand appears as a fourth choice), the
+memory map previews the next boot with it as it does with a split, the status says Reboot to apply while it waits, and
+after the reboot the app says whether the kernel got it. While rpm-ostree writes the deployment (a minute or two: it
+puts the layered packages on it again) the status says Writing… with a wait cursor, the note under the row counts the
+seconds, and the buttons are off.
+rpm-ostree asks for the password itself, without pkexec; the box is off with the reason where rpm-ostree is missing or
+cannot be reached (vram_manager/kargs.py, privileged.run_command; the wiki chapter's section The GTT limit and the
+internals chapter). Apply is off while the split or the limit picked is the one written already (owner,
+01-11-2026), and the explanations under the two rows moved behind an info symbol at the end of each row (core's
+InfoButton, owner, 01-11-2026: no long lines of text in a window). Two profile buttons (owner, 01-11-2026) write
+the split and the limit at once, each where it differs from the board, after one question: Default profile (the
+firmware's 512 MB split, the kernel's limit) and Games profile (the 6 GB split with the 11.5 GiB limit). The
+vm.swappiness line has a tooltip saying what it is. A block whose signature is one of the firmware's error codes
+(the owner's board showed WATCH_DOG_TIMER_FIRED, 01-11-2026, with every value intact) is written when its
+checksum matches and every value is in range, where the helper refused on the signature alone (owner,
+01-11-2026: trust by the block's numbers, not by a generic rule); Read CMOS shows the note. The kernel default is
+written with --delete naming the whole argument, key and value: --delete-if-present with the key alone matched
+nothing on the owner's board (01-11-2026), rpm-ostree answered "unchanged" and the app took it for done; every
+change now reads the next boot's arguments back and reports when they do not hold what was asked.
+
 Changelog: 28-10-2026 12:34:13
 
 Release 0.16.0.

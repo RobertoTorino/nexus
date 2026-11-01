@@ -2,8 +2,8 @@
 
 # Memory Manager internals
 
-How BC-250 Memory Manager reads and writes the VRAM split in CMOS, and the board dumps the layout was checked
-against. The user's side is in [its chapter](../apps/vram.md).
+How BC-250 Memory Manager reads and writes the VRAM split in CMOS and the GTT limit on the kernel command line,
+and the board dumps the CMOS layout was checked against. The user's side is in [its chapter](../apps/vram.md).
 
 ## Where the split is stored
 
@@ -42,10 +42,10 @@ Signatures:
 |---|---|---|---|
 | 0x4C424124 | `24 41 42 4C` ("$ABL") | ABL | written by the firmware |
 | 0x42435041 | `41 50 43 42` | LINUX_TOOL | written by a Linux tool (bc250_memcfg, this app) |
-| 0x42534D43 | | CMOS_BAD | error codes the firmware leaves after a failed boot |
-| 0x46544457 | | WATCH_DOG_TIMER_FIRED | |
-| 0x454B4843 | | CHECKSUM_ERROR | |
-| 0x45474953 | | SIGNATURE_ERROR | |
+| 0x42534D43 | | CMOS_BAD | notes the firmware leaves in the field when a boot went wrong: CMOS found bad |
+| 0x46544457 | | WATCH_DOG_TIMER_FIRED | its watchdog fired during the memory setup (seen on the owner's board, 01-11-2026, with the values intact and the board booting as before) |
+| 0x454B4843 | | CHECKSUM_ERROR | the block's checksum was wrong |
+| 0x45474953 | | SIGNATURE_ERROR | the block's signature was wrong |
 
 The layout, the ranges and the signatures come from
 [fanoush/bc250_memcfg](https://github.com/fanoush/bc250_memcfg) (MIT), which credits an earlier tool by ethkey.
@@ -106,9 +106,12 @@ off.
 `--set-uma MB`:
 
 1. Checks the split: a multiple of 16 MB, from 512 to 10240 MB. Above 10 GB the system keeps less than 6 GB.
-2. Reads the block and checks that it can be trusted: signature ABL or LINUX_TOOL, a matching checksum, every
-   timing in range, UMA_SIZE 256-16383. If not, it writes nothing. bc250_memcfg writes back whatever it read, so a
-   damaged block would reach the firmware with its wrong timings.
+2. Reads the block and checks that it can be trusted: a matching checksum, every timing in range, UMA_SIZE
+   256-16383, and one of the six signatures. If not, it writes nothing. bc250_memcfg writes back whatever it read,
+   so a damaged block would reach the firmware with its wrong timings. The block's own numbers decide (owner,
+   01-11-2026: by the case, not a generic rule): a firmware note in the signature field with intact numbers is
+   written, and the write replaces the note; a read shows the note as a `note` line. Only a signature that is none
+   of the six refuses, since the block may not be a memory block at all.
 3. Builds the new block: the same timings, the new UMA_SIZE, the LINUX_TOOL signature and a new checksum.
 4. Writes the whole block from 0x90 upwards, as bc250_memcfg does, so the bytes the firmware finds are the same as
    with that tool.
@@ -132,10 +135,44 @@ whether the kernel got it. Undo writes back the UMA_SIZE of the block before the
 | Split | `/sys/class/drm/card*/device/mem_info_vram_total` |
 | GTT | `/sys/class/drm/card*/device/mem_info_gtt_total` |
 | System RAM | `MemTotal` in `/proc/meminfo` |
-| TTM limit | `/sys/module/ttm/parameters/pages_limit` (4 KiB pages), and whether it is on `/proc/cmdline` |
+| TTM limit | `/sys/module/ttm/parameters/pages_limit` (4 KiB pages), and its value on `/proc/cmdline` |
 | Swap | `/proc/swaps` (zram and disk swap) and `/sys/module/zswap/parameters/enabled`, as Bazzite Test's test 14 |
 | Swappiness | `/proc/sys/vm/swappiness` |
 
 amdgpu sizes GTT from the TTM limit and caps it at the RAM on this APU (`amdgpu_ttm_init`: "Capping GTT to …M to
 not exceed available system memory"). When the split is smaller than GTT, amdgpu also prefers GTT for the GPU's
 allocations (`apu_prefer_gtt`).
+
+## The GTT limit on the kernel command line
+
+`vram_manager/kargs.py` reads and changes `ttm.pages_limit` in the next boot's kernel arguments with rpm-ostree,
+which keeps the arguments per deployment:
+
+```
+rpm-ostree kargs --deploy-index=0                                           # the next boot's arguments, no root
+rpm-ostree kargs --append-if-missing=ttm.pages_limit=N --unchanged-exit-77  # the argument is not there yet
+rpm-ostree kargs --replace=ttm.pages_limit=N --unchanged-exit-77            # it is there
+rpm-ostree kargs --delete=ttm.pages_limit=OLD --unchanged-exit-77           # the kernel default: the whole argument
+```
+
+The delete names the whole argument, key and value. `--delete-if-present=ttm.pages_limit` with the key alone
+matched nothing on the owner's board (01-11-2026): rpm-ostree answered "unchanged" within a second, wrote no
+deployment, and the app took that for done. So every change is checked: the app reads the next boot's arguments
+again and they must hold what was asked, else it reports that nothing changed, with the command to run by hand.
+
+A change makes a new deployment with the argument, on top of a staged update when one waits. rpm-ostree's daemon
+asks polkit for it (`org.projectatomic.rpmostree1.bootconfig`, `auth_admin_keep` on Bazzite), so the desktop's
+password dialog appears by itself; the app runs rpm-ostree as the user, without pkexec. Exit code 77 means nothing
+changed and counts as done. The window runs every command through `privileged.run_command`, a QProcess with its
+own event loop, so the window keeps painting under the password dialog; a command that is not installed answers
+without starting, and one that does not end in ten minutes is stopped (84 seconds were seen on a board with 11
+layered packages: rpm-ostree puts them on the new deployment again).
+
+The value is in 4 KiB pages (256 per MiB): the presets are 3014656 (11.5 GiB, Bazzite Test's value) and 4194304
+(16 GiB, all the RAM with any split); the kernel default removes the argument. The GTT amdgpu then makes is
+`min(limit, RAM)`, which the memory map's preview shows with `gtt_ceiling()`.
+
+"Waiting for a reboot" is not a setting: it is the next boot's value differing from `/proc/cmdline`, so a limit
+set by hand with `rpm-ostree kargs` shows the same way. The settings keep only what the app itself wrote
+(`pending_ttm`, with the boot ID), for the message after the reboot: the command line got the limit, or the board
+started another deployment.

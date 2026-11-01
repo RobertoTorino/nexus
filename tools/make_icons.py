@@ -30,10 +30,10 @@ LAUNCHES = {"cu-unlock": "CU Unlock (the CU Bisect app's Unlock)",
 
 SUITE_ICON = [
     ("bc250-bazzite/portal/images/bc250-bazzite-suite.webp", "`portal/images/bc250-bazzite-suite.webp` (512 px)",
-     "The portal's window header (a click opens the wiki) and its window icon; Suite Big Picture Mode's header; the "
-     "portal's release in Nexus Release Tool."),
+     "The portal's header, as large as a tile's icon (a click opens the wiki), its window icon, and the portal's release in Nexus "
+     "Release Tool."),
     ("bc250-bazzite/portal/images/bc250-bazzite-suite-1024.webp", "`portal/images/bc250-bazzite-suite-1024.webp`",
-     "The intro of Suite Big Picture Mode."),
+     "The portal's intro."),
     ("bc250-bazzite/portal/images/bc250-bazzite-suite-128.png", "`portal/images/bc250-bazzite-suite-128.png`",
      "The portal's menu entry and Desktop icon."),
     ("bc250-bazzite/portal/images/apps/portal.webp", "`portal/images/apps/portal.webp` (128 px)", "The portal's own tile."),
@@ -43,14 +43,14 @@ SUITE_ICON = [
 
 # name, the glyph function, its color ("ink" is the theme's text, "red" the update red), a red circle behind it
 GLYPHS = [
-    ("portal-install", "install", "ink", False, "Install", "An app's install button: an arrow down into a tray."),
+    ("portal-install", "install", "ink", False, "Install", "Install in a tile's menu: an arrow down into a tray."),
     ("portal-install-update", "install", "red", False, "Install, update",
-     "The same button in red when an update is waiting."),
+     "The same entry, Update, in red when an update is waiting."),
     ("portal-reinstall", "reinstall", "red", False, "Reinstall",
-     "The install button of an app whose version the portal does not know (red), a circular arrow."),
+     "Reinstall in the menu of an app whose version the portal does not know (red), a circular arrow."),
     ("portal-reinstall-badge", "reinstall", "white", True, "Reinstall badge",
-     "On a tile, in the portal and in Suite Big Picture Mode: the app needs a reinstall."),
-    ("portal-uninstall", "uninstall", "ink", False, "Uninstall", "An app's uninstall button: a waste bin."),
+     "On a tile in the portal: the app needs a reinstall."),
+    ("portal-uninstall", "uninstall", "ink", False, "Uninstall", "Uninstall in a tile's menu: a waste bin."),
 ]
 
 APP_ICONS = [
@@ -330,9 +330,9 @@ def build(root: Path = ROOT) -> str:
             "- `apps/<app>/images/<icon>.webp` (512 px): the app's window header (96 px), its window and tray icon, "
             "and the\n  logo at the top of its chapter in the wiki.",
             "- `apps/<app>/images/<icon>-128.png`: the app's menu entry and Desktop icon.",
-            "- `portal/images/apps/<key>.webp` (256 px): the app's tile in the portal, and its icon in the wiki's app "
-            "tables.",
-            "- `portal/images/categories/<category>.webp` (512 px): the category in Suite Big Picture Mode.",
+            "- `portal/images/apps/<key>.webp` (256 px): the app's icon in a tile's menu and in the notice, and in the "
+            "wiki's app\n  tables.",
+            "- `portal/images/categories/<category>.webp` (512 px): the app's tile in the portal, drawn large.",
             "- In the wiki, the category's own icon (256 px) in the table of categories.", ""]
     out += table("Icon,Category,Apps", (
         (img(f"{SUITE_DIR}/icons/{category}/{category}-128.png", 64), category.title(),

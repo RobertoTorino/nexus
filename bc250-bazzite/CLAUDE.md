@@ -25,8 +25,9 @@ appearing in the portal.
   (Console LinkB, Xbox) is GPL-3.0-or-later with protocol code ported from Greenlight and xal-node, MIT, whose notice
   its README keeps; the rest GPL-3.0-or-later), .gitignore. Every app
   has a `category` in `portal/apps.toml`, the same as its icon's in `icons/categories.toml` (sustainable, graphics,
-  gaming, utilities): the portal shows a tab per category, with the notice of updates above the tabs
-  (owner, 18-10-2026) and check as the first tile on Sustainable (owner, 20-10-2026). There is no Development tab
+  gaming, utilities): the portal, one fullscreen view for the keyboard, the mouse and a controller (owner,
+  01-11-2026: Suite Desktop Mode is gone), shows a category strip with the notice of updates beside it and check
+  as the first tile on Sustainable (owner, 20-10-2026). There is no Development category
   (owner, 27-10-2026): the portal lists only released apps, and Media Tool, the Dependency Checker and Bazzite
   NetcatGUI are on Utilities. Nexus Release Tool (the release front end, `../dev/nrt/`, a Nexus app, its manual on
   the Nexus page) and BC-250 Installer Tests (`tools/installer-tests/gui`, whose icon keeps the `development`
@@ -84,7 +85,9 @@ appearing in the portal.
     `~/.local/bin` whose exec line names the app's python, a menu entry and an optional Desktop icon; every app has
     its installer test (see Checks in the root's CLAUDE.md).
   - Window: the first line is the app's icon at 96 px on the left, spanning the title (with the version) and a
-    second line below it (status boxes or the app's main controls).
+    second line below it (status boxes or the app's main controls). No long lines of text in the window (owner,
+    01-11-2026): where space is limited, an info symbol (core's `InfoButton`) opens the explanation; what is
+    applied already cannot be applied again (its Apply is off).
   A new app copies the structure of an existing one; any deviation is the owner's decision. The manual's
   [Architecture and consistency](docs/development/architecture.md) describes it all, with the steps for a new app.
 - **The Bazzite design** (owner, 25-10-2026: a design per system): this suite keeps the Bazzite design (purple, the

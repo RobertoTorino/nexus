@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The portal's two sounds (sounds/, made by tools/make_portal_sounds.py): the swoosh at start and the intro of Suite
-Big Picture Mode. Without an audio output, or without Qt's multimedia, the portal stays silent and says nothing."""
+"""The portal's sound (sounds/, made by tools/make_portal_sounds.py): the intro's, when the portal opens. Without an
+audio output, or without Qt's multimedia, the portal stays silent and says nothing."""
 
 from __future__ import annotations
 
@@ -9,14 +9,13 @@ from pathlib import Path
 from PyQt6.QtCore import QUrl
 
 SOUNDS = Path(__file__).resolve().parent / "sounds"
-SWOOSH = "swoosh"
 INTRO = "bigpicture"
 VOLUME = 0.7
 NO_OUTPUT = "No audio output was found, so the portal stays silent."
 
 
 class Sounds:
-    """Plays the portal's sounds; *enabled* is the user's choice (the Sound pill), available() whether the board has
+    """Plays the portal's sound; *enabled* is the user's choice (the Sound pill), available() whether the board has
     an audio output to play on."""
 
     def __init__(self, folder: Path = SOUNDS):

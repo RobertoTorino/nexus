@@ -4,9 +4,9 @@
 
     python3 tools/portal_screenshot.py [--out FILE]
 
-It opens the portal's window offscreen on the apps.toml and the icons of this checkout, in a home folder of its
+It opens the portal's view offscreen on the apps.toml and the icons of this checkout, in a home folder of its
 own (nothing is installed or changed on this computer), with a fixed demo state: every app installed but two, one
-update (the notice and the red count on its tab) and the Sustainable tab open. Then it saves the window as WebP,
+update (the notice and the red count on its category) and Sustainable open. Then it saves the window as WebP,
 by default over docs/images/home/portal.webp. The wiki's workflow runs it before every build, so the published
 picture always shows the portal as it is on main; run it by hand to see the same picture locally."""
 
@@ -21,9 +21,9 @@ from pathlib import Path
 SUITE = Path(__file__).resolve().parent.parent      # the suite: bc250-bazzite/
 ROOT = SUITE.parent
 OUT = SUITE / "docs" / "images" / "home" / "portal.webp"
-SIZE = (1000, 780)              # the window, in logical pixels
-SCALE = 1.6                     # the picture is this much larger, for sharp text on high-DPI screens
-TAB = "sustainable"             # the tab that is open
+SIZE = (1280, 800)              # the window, in logical pixels: a handheld's screen
+SCALE = 1.5                     # the picture is this much larger, for sharp text on high-DPI screens
+CATEGORY = "sustainable"        # the category that is open
 UPDATED = "gpu"                 # the app with an update
 NOT_INSTALLED = {"oc", "acpi"}  # gray on the open tab, as an app that is not installed looks
 WEBP_QUALITY = 85
@@ -77,11 +77,13 @@ def render(home: Path):
         records.set(entry.key, f"{entry.key}-v{older(entry.version)}" if entry.key == UPDATED
                     else entry.tag or "local")
     window = mw.MainWindow(entries, Sources(home / "work"), records, desktop=home / "Desktop", menu=home / "menu")
-    window.tabs.setCurrentWidget(window.pages[TAB])
+    window.big.bar.setCurrentIndex(window.big.categories.index(CATEGORY))
     window.resize(*SIZE)
     window.show()
     for _ in range(3):                                  # the layout, the reflow it starts, the start-up timers
         QCoreApplication.processEvents()
+    window.big.focus_first()                            # as after the intro: the focus on the first tile
+    QCoreApplication.processEvents()
     image = QImage(round(SIZE[0] * SCALE), round(SIZE[1] * SCALE), QImage.Format.Format_ARGB32)
     image.setDevicePixelRatio(SCALE)
     image.fill(window.palette().window().color())

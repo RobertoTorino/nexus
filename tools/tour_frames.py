@@ -33,7 +33,7 @@ def prepare_home(home: Path) -> None:
                      ("XDG_STATE_HOME", ".local/state"), ("XDG_CACHE_HOME", ".cache")):
         (home / sub).mkdir(parents=True, exist_ok=True)
         os.environ[var] = str(home / sub)
-    # One screen of the video's size, so Big Picture Mode's fullscreen is the window's 1600 x 900 at 120 %.
+    # One screen of the video's size, so the portal's fullscreen view is the window's 1600 x 900 at 120 %.
     screen = {"screens": [{"name": "tour", "x": 0, "y": 0, "width": WIDTH, "height": HEIGHT,
                            "logicalDpi": 96, "logicalBaseDpi": 96, "dpr": 1}]}
     (home / "screen.json").write_text(json.dumps(screen), encoding="utf-8")

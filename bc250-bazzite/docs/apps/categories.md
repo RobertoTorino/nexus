@@ -16,7 +16,7 @@ a utility, or a tool for working on the suite.
   category and gets its icon; a new icon for a category reaches every app in it. How that works is in
   [Architecture and consistency](../development/architecture.md#icons).
 
-The categories are also the [portal's](../portal.md) tabs: an app's tile is on the tab of its category.
+The categories are also the [portal's](../portal.md) categories: an app's tile is under its category's name.
 
 ## Legend
 

@@ -28,6 +28,18 @@ app's README and manual chapter, which its release ships as `MANUAL.md` as it is
 the hook's text word for word, so a change to the disclaimer is made in the hook and in each of them, and the apps
 whose README or chapter changed need a release.
 
+## In the apps
+
+Every app's window is built from core's widgets (`core/bc250_core/widgets.py`), themed per system. Two rules hold
+for every suite:
+
+- **No long lines of text in a window.** A short line under a control is a hint (`hint_label`). An explanation
+  that needs more goes behind a small round **i** at the end of the control's row (`InfoButton`): a click opens the
+  text below it, in the tooltip's style, with its links, and it stays until a click elsewhere or Escape. The wiki
+  chapter has the rest.
+- **What is applied is not offered again.** When the value picked is the one already written (or waiting for a
+  reboot), its Apply is off until another value is picked.
+
 ## Try a design in the wiki
 
 ### Live preview

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""A video tour of the portal, for the wiki and YouTube: the real portal window from this checkout, driven by a
+"""A video tour of the portal, for the wiki and YouTube: the real portal view from this checkout, driven by a
 script and rendered frame by frame into an MP4 (H.264, 1920 x 1080, 30 fps), with music under it that fades out over
 the last two seconds (tools/sounds/the_quiet_engine_remix_3min.mp3, made with generative AI tools).
 
@@ -110,12 +110,12 @@ class Tour(Recorder):
         self.overlay = title
         self.emit(title, round(3.5 * self.fps))
         self.overlay = None
-        self.fade(title, self.frame(), 0.8)
+        self.intro(title)
 
         self.say("The portal installs, updates and starts every app of the suite for the AMD BC-250 on Bazzite.")
         self.hold(3.5)
-        self.say("Its header: the portal's icon and name, and where the apps install from.")
-        self.move(self.at(w.logo))
+        self.say("One fullscreen view, for the keyboard, the mouse or a controller: its header, the suite's icon and name.")
+        self.move(self.at(w.big.logo))
         self.hold(3)
         self.say("A click on the icon opens the wiki in the browser: everything about each app.")
         self.hold(1.2)
@@ -126,41 +126,44 @@ class Tour(Recorder):
         self.fade(shown, wiki, 0.6)
         self.emit(wiki, round(2.8 * self.fps))
         self.fade(wiki, shown, 0.6)
-        for pill, text in ((w.refresh_pill, "Refresh looks again at which apps are installed."),
+        for pill, text in ((w.refresh_pill, "The square pills: Refresh looks again at which apps are installed."),
                            (w.icons_box, "Icons on Desktop: one icon per app on the Desktop, or only the portal's."),
                            (w.theme_pill, "The theme switcher: one look for every app in the suite."),
-                           (w.wallpaper_pill, "And a wallpaper of your own behind the portal.")):
+                           (w.wallpaper_pill, "And a wallpaper of your own behind the portal, seen through the pills.")):
             self.say(text)
             self.move(self.at(pill), 0.6)
             self.hold(2.6)
 
-        self.say("An app with a newer release gets a red dot, and the notice above the tabs names it.")
-        self.move(self.at(w.notice, 0.2, 0.5))
+        self.say("An app with a newer release gets a red dot, and the notice beside the categories counts it.")
+        self.move(self.at(w.big.notice))
         self.hold(3.5)
-        first = w.cards["check"]
+        first = w.big.tiles["check"]
         self.say("Bazzite Test checks the board. It is always installed, as the first tile on Sustainable.")
         self.move(self.at(first, 0.5, 0.3))
         self.hold(3.5)
-        self.say("Every tile installs, opens, updates and uninstalls its app; the installer runs in a terminal.")
-        self.move(self.at(first, 0.5, 0.92))
+        self.say("A press on a tile opens its app; its menu installs, updates and uninstalls it, in a terminal.")
+        self.move(self.at(first, 0.5, 0.6))
+        self.click(lambda: self.open_tile_menu(first))
         self.hold(3.5)
-        board = next((c for k, c in w.cards.items() if c.entry.changes_board and c.isVisible()), None)
+        self.popup.close()
+        self.popup = None
+        self.pump()
+        board = next((w.big.tiles[k] for k, s in w.states.items() if s.entry.changes_board and s.installed), None)
         if board is not None:
             self.say("Apps that change how the board runs carry a mark, and the portal asks first. "
                      "All of them are software-only and can be undone.")
-            self.move(self.at(board, 0.5, 0.4))
+            self.move(self.at(board, 0.5, 0.9))
             self.hold(4)
 
         self.say("")
-        for category, page in list(w.pages.items())[1:]:   # the last tab, Install all apps, is a button
-            index = w.tabs.indexOf(page)
-            self.move(self.tab_at(w.tabs.tabBar(), index), 0.7)
-            self.click(lambda i=index: w.tabs.setCurrentIndex(i))
+        for index, category in enumerate(w.big.categories[1:], 1):
+            self.move(self.tab_at(w.big.bar, index), 0.7)
+            self.click(lambda i=index: w.big.bar.setCurrentIndex(i))
             self.say(f"{CATEGORIES[category]}: {CATEGORY_HINTS[category]}")
             self.hold(3.8)
         self.say("")
-        self.move(self.tab_at(w.tabs.tabBar(), 0), 0.7)
-        self.click(lambda: w.tabs.setCurrentIndex(0))
+        self.move(self.tab_at(w.big.bar, 0), 0.7)
+        self.click(lambda: w.big.bar.setCurrentIndex(0))
         self.hold(0.6)
 
         self.say("The Wallpaper pill: your own picture, the example, one used before, or none.")
@@ -171,7 +174,7 @@ class Tour(Recorder):
         self.move(self.at_action(example), 0.6)
         self.click(lambda: (self.popup.close(), w.example_wallpaper()))
         self.popup = None
-        self.say("It fills the window, under a veil of the theme's color so the text stays readable.")
+        self.say("It fills the screen, under a veil of the theme's color so the text stays readable.")
         self.hold(3.5)
         self.say("")
         self.move(self.at(w.wallpaper_pill), 0.6)
@@ -183,13 +186,13 @@ class Tour(Recorder):
         for target in (90, 25, 60):
             self.drag(slider, target, 1.6)
             self.hold(0.8)
-        self.say("The window changes while you move it, and the portal remembers it.")
+        self.say("The view changes while you move it, and the portal remembers it.")
         self.hold(2)
         self.popup.close()
         self.popup = None
         self.pump()
 
-        self.big_picture()
+        self.controller()
 
         self.say("Gunmetal, Silver or Warm: each app takes the theme the next time it starts.")
         self.move(self.at(w.theme_pill))
@@ -207,20 +210,20 @@ class Tour(Recorder):
         self.fade(last, end, 0.8)
         self.emit(end, round(5 * self.fps))
 
-    def big_picture(self) -> None:
-        """Suite Big Picture Mode: in by the Suite mode pill, its intro, the focus moved as a controller moves it,
-        and back to the desktop."""
+    def intro(self, before) -> None:
+        """The intro the portal opens with, frame by frame from the title card (the intro follows the video's
+        frames, not the clock), ending with the focus on the first tile."""
         from bc250_portal.bigpicture import INTRO_MS
 
         w = self.window
-        self.say("Suite mode switches to Big Picture Mode: fullscreen with large icons, for a TV and a controller.")
-        self.move(self.at(w.mode_pill))
-        self.hold(3.5)
-        self.click(w.enter_big_picture)
+        w.start_up()
         intro = w.intro
-        intro.animation.stop()                      # the intro follows the video's frames, not the clock
+        intro.animation.stop()
         pointer, self.pointer = self.pointer, (-100, -100)
         self.say("")
+        intro._step(0.0)
+        self.pump()
+        self.fade(before, self.frame(), 0.8)
         frames = round(INTRO_MS / 1000 * self.fps)
         for i in range(1, frames + 1):
             intro._step(i / frames)
@@ -228,7 +231,16 @@ class Tour(Recorder):
             self.emit(self.frame())
         intro._done()
         self.pump()
-        self.say("The d-pad, the stick or the arrow keys move the focus; A or Enter opens the app.")
+        self.hold(0.8)
+        self.pointer = pointer
+
+    def controller(self) -> None:
+        """The focus moved as a controller moves it, and the categories changed with the shoulder buttons."""
+        w = self.window
+        pointer, self.pointer = self.pointer, (-100, -100)
+        w.big.focus_first()
+        self.pump()
+        self.say("The d-pad, the stick or the arrow keys move the focus; A or Enter opens the app, X its menu.")
         self.hold(1.2)
         for direction in ("right", "right", "right", "right", "left", "left"):     # the top row: above the captions
             w.big.move_focus(direction)
@@ -240,14 +252,17 @@ class Tour(Recorder):
             self.hold(1.8)
         w.big.change_category(-2)
         self.hold(0.6)
-        self.say("Y or F11 goes back to Suite Desktop Mode, and the portal opens in the mode it was last in.")
-        self.hold(3.5)
-        last = self.frame()
-        w.leave_big_picture()
+        self.say("Up from the top row reaches the pills and the notices; everything works the same with a mouse.")
+        w.big.move_focus("up")
+        self.hold(2.5)
+        w.big.focus_first()
+        self.hold(0.8)
         self.pointer = pointer
+
+    def open_tile_menu(self, tile) -> None:
+        self.popup = self.window.tile_menu(self.window.states[tile.key].entry)
+        self.popup.popup(tile.mapToGlobal(tile.rect().bottomLeft()))
         self.pump()
-        self.fade(last, self.frame(), 0.5)
-        self.hold(0.5)
 
     def open_menu(self) -> None:
         self.popup = self.window.wallpaper_menu()

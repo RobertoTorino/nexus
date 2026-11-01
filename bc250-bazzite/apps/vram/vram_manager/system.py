@@ -11,6 +11,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from .kargs import pages_in
+
 MIB = 1024 * 1024
 PAGE = 4096
 TOTAL_MIB = 16384                       # the BC-250's 16 GB of GDDR6, shared by the CPU and the GPU
@@ -36,12 +38,16 @@ class Memory:
     gtt_mib: int | None                 # system RAM the GPU may borrow (GTT)
     ram_mib: int | None                 # MemTotal: what is left for the system
     ttm_limit_mib: int | None           # ttm.pages_limit, in MiB
-    ttm_on_cmdline: bool
+    ttm_cmdline_pages: int | None       # ttm.pages_limit on the kernel command line, in pages; None: not there
     zram: bool
     zswap: bool
     disk_swap: bool
     swappiness: int | None
     boot_id: str
+
+    @property
+    def ttm_on_cmdline(self) -> bool:
+        return self.ttm_cmdline_pages is not None
 
     @property
     def gtt_capped(self) -> bool:
@@ -76,7 +82,7 @@ def read_memory(sys_root: Path = Path("/sys"), proc_root: Path = Path("/proc")) 
         gtt_mib=gtt // MIB if gtt else None,
         ram_mib=ram_kib // 1024 if ram_kib else None,
         ttm_limit_mib=ttm * PAGE // MIB if ttm else None,
-        ttm_on_cmdline="ttm.pages_limit=" in (_read(proc_root / "cmdline") or ""),
+        ttm_cmdline_pages=pages_in(_read(proc_root / "cmdline")),
         zram=any(Path(n).name.startswith("zram") for n in names),
         zswap=_read(sys_root / "module/zswap/parameters/enabled") in ("Y", "1"),
         disk_swap=any(not Path(n).name.startswith("zram") for n in names),

@@ -271,9 +271,12 @@ Each design (a suite's, the Nexus page's) has its own; none is carried over to a
   surfaces, text and accent below. An app adds no surface or text color of its own.
 - **One state family,** the same in every theme: green `#2e7d32` ok, orange `#ef6c00` warn, red `#c62828` bad,
   blue `#1565c0` info, yellow `#fdd835` running, gray `#3a3f4b` neutral. A state is an edge or a dot on the theme's
-  surface; a header box or pill in the neutral state shows the blue as its edge, as the portal's pills (owner,
-  26-10-2026), never the theme's dark edge color. A red button is the red with `#b71c1c` pressed. Active red `#8b0000` (`#a00000` under the pointer) is a
-  toggled-on state, never an error.
+  surface; a header box or pill in the neutral state shows the blue as its edge (owner, 26-10-2026), never the
+  theme's dark edge color. The portal's pills are the exception (owner, 01-11-2026): rounded rectangles in a row
+  that ends level with the suite's icon, the theme's window color at 59 % so the wallpaper shows through, solid
+  and framed in the accent when active. A
+  red button is the red with `#b71c1c` pressed. Active red `#8b0000` (`#a00000` under the pointer) is a toggled-on
+  state, never an error.
 - **Text in a state color sits on a dark surface** in the next lighter tint of the same hue (Material's 300:
   red `#e57373`, orange `#ffb74d`, green `#81c784`, blue `#64b5f6`, purple `#ce93d8`), because the state fills read
   poorly as text on the dark views. The log in the check app uses them; a second tint of a hue is a deviation.
@@ -552,9 +555,9 @@ OTHER_BLOCKS = [
     ("#3c7dd9", "NetcatGUI tab: blue."),
     ("#8e5bd0", "NetcatGUI tab: purple."),
     ("#8a8f98", "NetcatGUI tab: gray."),
-    ("#04060c", "Portal Big Picture: the backdrop."),
-    ("#1b1b1b", "Portal Big Picture: the outline of the update badge."),
-    ("#808080", "Portal Big Picture: a tab on hover (16 %)."),
+    ("#04060c", "Portal: the intro's backdrop."),
+    ("#1b1b1b", "Portal: the outline of the update badge on a tile."),
+    ("#808080", "Portal: a category tab on hover (16 %)."),
 ]
 
 SCREENSHOT_TEXT = [

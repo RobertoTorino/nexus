@@ -1,3 +1,25 @@
+Changelog: 01-11-2026 16:27:14
+
+Breaking. One view (owner, 01-11-2026): Suite Desktop Mode, the window of apps in tabs, is gone, and with it the
+Suite mode pill, F11, Y and Start on the controller, the remembered mode and the window's saved size. The portal
+opens fullscreen in what was Suite Big Picture Mode, and shows its intro before the view appears: dark from its
+first frame, the suite's name as BC250 BAZZITE SUITE. The start-up swoosh is gone (swoosh.wav,
+tools/make_portal_sounds.py); the Sound pill switches the intro's sound. The header: the suite's icon as large
+as a tile's icon (184 px, from 96), the title BC250 Bazzite Suite with the version and the Beta stage, a small i with where the apps
+install from (the source line), and the pills as rounded rectangles in a row that ends level with the icon's bottom,
+half transparent when not active so the wallpaper shows through them, solid and framed in the accent with the
+focus or under the mouse. Install all updates reads Install over All updates and Install all apps, a pill now (it
+was the last tab), Install over All apps: no number on either, the count in the tooltip; during a batch the pill
+shows which one of how many. The line of keys at the bottom is larger. The notice of
+updates is a red line beside the category strip whose menu lists each app (choosing one goes to its tile), and an
+orange one lists the updates outside the suite, which the app's tile shows under its name too; a category's name
+still counts its updates. A tile's menu (a right click, the Menu key or X on the controller) holds Open, Install
+(Update, Reinstall) and Uninstall, the desktop's buttons; pressing a tile that is not installed offers to install
+it, and an install no longer leaves the view: the terminal opens over it. Everything is reached with the keyboard,
+the mouse or a controller; the arrow keys and Enter work on the pills, the notices and the title row's buttons too,
+and Escape, or B with nothing open, closes the portal. The wiki's Portal chapter and the tour page describe it; tools/portal_screenshot.py takes the view at 1280 x 800
+and tools/portal_tour.py tours it, the intro first.
+
 Changelog: 28-10-2026 15:02:12
 
 Release 12.1.1. Pins rpcs3-v2.3.2, consoles-v1.17.2, clb-v0.12.2, shadps4-v2.3.2, ppsspp-v0.17.2, pcsx2-v2.3.2, vita3k-v0.16.2, xenia-v0.12.2.

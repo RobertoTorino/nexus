@@ -1,7 +1,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Shared fixtures: an offscreen QApplication, settings and data in a temp folder, and a fake /sys and /proc of a
+"""Shared fixtures: an offscreen QApplication, settings and data in a temp folder, a fake /sys and /proc of a
 BC-250 with a 6 GB split (as on the owner's boards), with the live figures of one of them: 924 MiB of VRAM and 280
-MiB of GTT in use, 3 GiB of RAM available and zram holding 2.2 GiB in 663 MiB of RAM."""
+MiB of GTT in use, 3 GiB of RAM available and zram holding 2.2 GiB in 663 MiB of RAM, and a fake rpm-ostree with
+the kernel arguments of that boot."""
 
 from __future__ import annotations
 
@@ -73,3 +74,44 @@ def proc_root(tmp_path) -> Path:
     write(root / "sys/vm/swappiness", "10")
     write(root / "sys/kernel/random/boot_id", "boot-1")
     return root
+
+
+class FakeOstree:
+    """rpm-ostree kargs as the window runs it (privileged.run_command's answer): the next boot's arguments, which
+    the modifying calls change as rpm-ostree does. error: what every call answers instead; code: its exit code."""
+
+    def __init__(self, arguments: str = "BOOT_IMAGE=x rw mitigations=off ttm.pages_limit=3014656 zswap.enabled=0"):
+        self.arguments = arguments
+        self.calls: list[list[str]] = []
+        self.error = ""
+        self.code = 1
+
+    def __call__(self, cmd: list[str]) -> tuple[int, str, str]:
+        self.calls.append(cmd)
+        if self.error:
+            return self.code, "", self.error
+        assert cmd[:2] == ["rpm-ostree", "kargs"]
+        if cmd[2] == "--deploy-index=0":
+            return 0, self.arguments + "\n", ""
+        option, _, value = cmd[2].partition("=")
+        key, _, given = value.partition("=")
+        words = self.arguments.split()
+        if option == "--delete-if-present":           # libostree: the whole argument must match, key and value
+            kept = [w for w in words if w != value]
+        elif option == "--delete":                    # the key alone matches one argument; a value must match
+            kept = [w for w in words if not (w.startswith(key + "=") and (not given or w == value))]
+            if len(kept) == len(words):
+                return 1, "", f"error: No key '{key}' found"
+        else:
+            kept = [w for w in words if not w.startswith(key + "=")]
+            if option == "--replace" and len(kept) == len(words):
+                return 1, "", f"error: No key '{key}' found"
+            kept.append(value)
+        changed = kept != words
+        self.arguments = " ".join(kept)
+        return 0 if changed else 77, "", ""
+
+
+@pytest.fixture
+def ostree() -> FakeOstree:
+    return FakeOstree()

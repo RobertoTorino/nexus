@@ -2,14 +2,14 @@
 from __future__ import annotations
 
 from PyQt6 import sip
-from PyQt6.QtCore import QPoint, QRect, QSize, Qt
+from PyQt6.QtCore import QEvent, QPoint, QRect, QSize, Qt
 from PyQt6.QtWidgets import (QApplication, QHBoxLayout, QLabel, QPushButton, QTabBar, QTableWidget, QTableWidgetItem,
                              QWidget)
 
 from bc250_core import theme
 from bc250_core.widgets import (
-    AppHeader, MetricBox, Pill, RoundedToolTip, StatusPill, StatusText, Terminal, TextDialog, accent_button,
-    hide_tooltip, same_width, set_button_active, show_tooltip,
+    AppHeader, InfoButton, MetricBox, Pill, RoundedToolTip, StatusPill, StatusText, Terminal, TextDialog,
+    accent_button, hide_tooltip, same_width, set_button_active, show_tooltip,
 )
 
 
@@ -353,3 +353,27 @@ def test_an_apps_own_theme(qapp):
         widgets.set_theme(theme.THEME)
         theme.apply_theme(qapp)
     assert f"border-left:4px solid {theme.THEME.edge}" in StatusPill().styleSheet()
+
+
+def test_info_button_opens_its_text_below_it(qapp):
+    """The info symbol (owner, 01-11-2026): a click opens the text in a popup that stays; links work in it."""
+    owner = QWidget()
+    button = InfoButton("The split is the part of the 16 GB the GPU keeps. <a href='https://example.org/'>Manual</a>",
+                        parent=owner)
+    owner.show()
+    assert button.text() == "i" and button.toolTip() == "What this does"
+    assert button.width() == button.height() == InfoButton.SIZE and theme.ACCENT in button.styleSheet()
+    button.click()
+    assert button.popup is not None and button.popup.isVisible()
+    assert button.popup.windowFlags() & Qt.WindowType.Popup
+    label = button.popup.findChild(QLabel)
+    assert "the GPU keeps" in label.text() and label.wordWrap() and label.openExternalLinks()
+    assert label.width() <= InfoButton.MAX_WIDTH
+    first = button.popup
+    button.set_text("Shorter.")
+    button.click()                                                 # a second click replaces the popup
+    qapp.sendPostedEvents(None, QEvent.Type.DeferredDelete)
+    assert sip.isdeleted(first) and button.popup.findChild(QLabel).text() == "Shorter."
+    button.popup.close()
+    qapp.processEvents()
+    owner.close()

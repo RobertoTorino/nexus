@@ -4,39 +4,77 @@
 
 # Portal
 
-The BC250 Bazzite Suite's front door: one window that installs, opens, updates and removes the suite's apps.
-The [Portal Tour](portal-tour.md) shows it in a two-minute video.
-**The header**: the portal's icon (click it to open this wiki), its name and version, where the apps install from,
-and nine pills of the same width: **Refresh** (look again at which apps are installed), **Installed apps**,
-**Install all updates**, **Icons on Desktop**, **Sound**, **Theme switcher**, **Wallpaper**, **Suite mode** and
-**Sys info**, each described below. The pills are in one row when the window is wide enough; on a narrower
-window, such as the 1280 px screen of a Steam Deck or an ROG Xbox Ally X, they wrap into two rows of about equal
-length.
+The BC250 Bazzite Suite's front door: one fullscreen view that installs, opens, updates and removes the suite's
+apps, for a TV and a controller as much as for a desk, as Steam's Big Picture is for Steam. It works with the
+keyboard, the mouse or a controller alike. The [Portal Tour](portal-tour.md) shows it in a two-minute video.
 
-**Bazzite Test** is always installed with the portal; every other app is optional. The notice of updates is at the
-top, on every tab. Below it is a tab for each [category](apps/categories.md): Sustainable, Graphics, Gaming and
-Utilities. Each app is a tile on its category's tab, left to right in the order of `apps.toml` and as many to a
-row as the window fits; Bazzite Test is always the first tile on Sustainable:
+The portal opens with a short animated intro, about three seconds, with its own sound: the suite's icon and its
+name, **BC250 BAZZITE SUITE**, before the view appears. Press any key, click, or press any button on the controller
+to skip it.
 
+**The header**: the suite's icon, as large as a tile's (click it to open this wiki), its name with the version and the **Beta** stage,
+a small **i** that says where the apps install from, and a line that says in a few words what the open category is
+for. Under them, in a row that ends level with the icon's bottom, nine pills with rounded corners: **Refresh**
+(look again at which apps are installed), **Installed apps**, **Install All updates**, **Install All apps**,
+**Icons on Desktop**, **Sound**, **Theme switcher**, **Wallpaper** and **Sys info**, each described below. A pill
+that is not active is half transparent, so the wallpaper shows through it; the one with the focus or under the
+mouse is solid, framed in the theme's accent. The line at the bottom says what the keys and the controller's
+buttons do.
+
+**Bazzite Test** is always installed with the portal; every other app is optional. Below the header is a strip
+with a name for each [category](apps/categories.md): Sustainable, Graphics, Gaming and Utilities, and beside it
+the notice of updates. Each app is a large tile under its category, left to right in the order of `apps.toml`
+and as many to a row as the screen fits; Bazzite Test is always the first tile on Sustainable. The tile with the
+focus is framed in the accent; move it with the arrow keys, the d-pad or the stick, or point at a tile with the
+mouse:
+
+- **The icon**, its category's, drawn from a 512 px picture so it stays sharp on a 4K screen. It is gray while
+  the app is not installed. Hover over the tile to see what the app does, its state and the release this portal
+  pins.
 - **The name**, without the suite's "BC-250" prefix.
-- **The icon.** Click it to open the app; an app with two windows (CU Bisect, Cores Bisect) asks which one. The
-  icon is gray while the app is not installed, and dims a little under the mouse while it opens the app. Hover over
-  it to see what the app does, its state and the release this portal pins.
-- **A red dot** in the icon: an update is available.
-- **A red circular arrow** in the icon: reinstall the app. It is installed, but not by this portal (by hand, or
-  under an earlier name of the app), so the portal does not know its version. Its red button reinstalls the version
-  this portal pins. An app installed from a checkout of the repository without its version recorded shows it too.
-- **changes the board**, in orange under the icon, for apps that change how the board runs.
-- **App not available**, in red under the icon: the release of this app was withdrawn because of a problem
-  (privacy, security or another reason; hover over it to read which). It cannot be installed or opened. When it is
-  installed, the portal says so at start and removes it with the app's own uninstaller in a terminal. If that
-  fails, the Uninstall button stays, to try again.
-- **The buttons beside the icon:** Install (an arrow into a tray) and Uninstall (a bin). For an installed app,
-  Install reinstalls it, or updates it when the arrow is red; hover over it to see the version it installs. Bazzite
-  Test has only Install, which reinstalls it: it is removed together with the portal.
+- **Press the tile** (click it, Enter, or A on the controller) to open the app; an app with two windows (CU Bisect,
+  Cores Bisect) asks which one. Pressing a tile that is not installed offers to install it.
+- **The tile's menu** (a right click, the Menu key, or X on the controller) holds every action: **Open** (or the
+  app's two windows), **Install** (an arrow into a tray; **Update**, in red, when an update is waiting;
+  **Reinstall** for an installed app, in red with a circular arrow when its version is unknown) and
+  **Uninstall** (a bin). What cannot be done now is grayed out. Bazzite Test has no Uninstall: it is removed
+  together with the portal.
+- **A red dot** in the icon and **Update** under the name: an update is available.
+- **A red circular arrow** in the icon and **Reinstall needed** under the name: reinstall the app. It is
+  installed, but not by this portal (by hand, or under an earlier name of the app), so the portal does not know its
+  version. Reinstall in its menu installs the version this portal pins. An app installed from a checkout of the
+  repository without its version recorded shows it too.
+- **changes the board**, in orange under the name, for apps that change how the board runs.
+- **App not available**, in red under the name: the release of this app was withdrawn because of a problem
+  (privacy, security or another reason; hover over the tile to read which). It cannot be installed or opened. When
+  it is installed, the portal says so at start and removes it with the app's own uninstaller in a terminal. If that
+  fails, Uninstall stays in its menu, to try again.
+- **Installing…**, **Removing…** or **Downloading…** in blue under the name while that runs on the app.
 
-**The tabs.** Each tab says at its top what its apps are for; [The apps](apps/index.md) lists them by tab. The portal
-always opens on the first tab, Sustainable.
+**The categories.** The line under the title says what the open category is for, and [The apps](apps/index.md)
+lists the apps by category. Click a name in the strip, press LB or RB on the controller, or Page Up and Page Down
+on the keyboard, to change the category. The portal always opens on the first one, Sustainable.
+
+| Keyboard | Controller | Mouse | Does |
+|---|---|---|---|
+| Arrow keys | D-pad or left stick | Point | Move the focus between the tiles, the pills and the notices |
+| Enter | A | Click | Open the app, press a pill, open a notice |
+| Menu key | X | Right click | The tile's menu: Open, Install, Update, Reinstall, Uninstall |
+| Page Up, Page Down | LB, RB | Click a name | The category before and after |
+| Escape | B | | Close a menu or a question; with none open, close the portal |
+
+The controller is read with [pygame-ce](https://pypi.org/project/pygame-ce/), which the portal's installer adds to
+the suite's venv; it takes any controller SDL knows (Xbox, PlayStation, Switch Pro and most others). The portal
+listens to the controller only while its own window has the focus, so a game's input never moves it. Without a
+controller, the keyboard and the mouse work as always.
+
+**Handhelds.** The view is made for a TV at 1080 p or 4K as much as for the Steam Deck (1280 x 800) and the ROG
+Xbox Ally X (1920 x 1080, shown at 1280 x 720 with the desktop's scaling): below 1000 px of height the icons, the
+type, the header and the pills are drawn smaller, down to about two thirds, so a row of pills, two rows of icons
+and the line of keys fit on the screen. You can also swipe a page with a finger on the touch screen. The built-in
+controls are controllers like any other. Where Steam Input already turns them into keys (the Deck's desktop
+layout does: d-pad to the arrow keys, A to Enter, B to Escape), the keyboard column above applies and works as it
+is.
 
 The tools for working on the suite are not in the portal: [Nexus Release Tool](https://robertotorino.github.io/nexus/releases/)
 and BC-250 Installer Tests (`bc250-bazzite/tools/installer-tests/gui`, a window that runs the installer tests one at
@@ -45,34 +83,35 @@ their own `install.sh`.
 
 - `apps/` may also contain standalone tools (with a `.standalone` marker) that do not appear in `apps.toml`
   and that the portal does not install or open.
-- Install, update and uninstall run **the app's own installer** in a terminal window, because installers may ask
-  for the sudo password and print what they do. The portal watches for the result and refreshes. A terminal whose
-  installer ended well closes by itself; one that failed stays open with what happened until you press Enter.
+- Install, update and uninstall run **the app's own installer** in a terminal window, which opens over the portal,
+  because installers may ask for the sudo password and print what they do. The portal watches for the result and
+  refreshes. A terminal whose installer ended well closes by itself; one that failed stays open with what happened
+  until you press Enter.
 - Apps that change how the board runs (CU/core unlocks, the GPU governor, GPU overclocking, the ACPI override, the VRAM
   split, a patched GPU driver) are marked **changes the board**. The portal warns before installing or opening them.
 - Each portal release pins one tested release of every app in [`apps.toml`](https://github.com/RobertoTorino/nexus/blob/main/bc250-bazzite/portal/apps.toml). The portal downloads
   exactly those tarballs from the suite's GitHub releases and checks each against the SHA-256 pinned there, or
   against the release's `SHA256SUMS` until one is pinned. Then it unpacks the tarball without ever writing
   outside its folder.
-- **Updates:** a red dot marks every app whose installed version differs from the one this portal pins; its red
-  Install button installs the pinned version. An app installed from a checkout of the repository counts as well:
+- **Updates:** a red dot marks every app whose installed version differs from the one this portal pins; Update in
+  its menu installs the pinned version. An app installed from a checkout of the repository counts as well:
   the portal records the checkout's version of it and compares that with the one it pins. A portal that runs from a
-  checkout shows what it installed from there as installed, whatever it pins. The notice beside Bazzite Test counts
-  them and the apps that need a reinstall, and names each one with its tab and versions. Click a name to go to its
-  tile. A tab with such an app
-  shows their number in red after its name, so none goes unseen on a tab that is not open. Newer app versions come with a newer portal
-  release: at start the portal looks for one on GitHub and, when there is one, shows a red button that opens its
-  release page. The button names what that release brings, for example **Portal 0.9.1: updates ACE Queues and
-  Memory Manager**, and its tooltip lists each app with its old and new version. After the portal update, the
-  installed apps among them show the red dot. When the new pins cannot be read (offline, for example), the button
-  says **Portal x.y.z available**.
-- **Outside the suite**, in orange below the updates: a newer release of a program that an installed app installs
-  in its newest version, so the app can install it now, for example **BC-250 Upscaler Manager (Graphics): HelixSR 1.9.3
-  is out**, with what to do in the app. Today this is HelixSR (the BC-250 Upscaler Manager). The portal shows what
-  the app found the last time it looked, so open
-  the app now and then; when you come back to the portal, the notice follows. Programs an app pins (Decky Loader,
-  shadPS4, PPSSPP, RPCS3, Vita3K, PCSX2's stable release, Xenia, DirectMesh) are not listed: a newer one
-  comes with a new version of the app, as an update above.
+  checkout shows what it installed from there as installed, whatever it pins. The red notice beside the category
+  strip counts them and the apps that need a reinstall, for example **● 2 updates, 1 reinstall**. Press it to list
+  each one with its category and versions, and choose one to go to its tile. A category with such an app shows
+  their number in red after its name, so none goes unseen on a category that is not open. Newer app versions come
+  with a newer portal release: at start the portal looks for one on GitHub and, when there is one, shows a red
+  button beside the title that opens its release page. The button names what that release brings, for example
+  **Portal 0.9.1: updates ACE Queues and Memory Manager**, and its tooltip lists each app with its old and new
+  version. After the portal update, the installed apps among them show the red dot. When the new pins cannot be
+  read (offline, for example), the button says **Portal x.y.z available**.
+- **Outside the suite**, in orange beside the red notice: a newer release of a program that an installed app
+  installs in its newest version, so the app can install it now. Press it to list them, for example **Upscaler
+  Manager (Graphics): HelixSR 1.9.3 is out**, with what to do in the app, and choose one to go to its tile; the
+  tile says it too under the name. Today this is HelixSR (the BC-250 Upscaler Manager). The portal shows what the
+  app found the last time it looked, so open the app now and then; when you come back to the portal, the notice
+  follows. Programs an app pins (Decky Loader, shadPS4, PPSSPP, RPCS3, Vita3K, PCSX2's stable release, Xenia,
+  DirectMesh) are not listed: a newer one comes with a new version of the app, as an update above.
 - **Restart: portal x.y.z is installed:** a portal window that is open while you install a newer portal keeps
   running the old one, with its old app versions, and starting the portal again only brings that window to the
   front. When you come back to the window, it sees the newer portal and shows this red button: click it to restart
@@ -80,16 +119,16 @@ their own `install.sh`.
   the button waits for it to end.
 - **Installed apps**, a pill at the top: how many of the portal's apps are installed, for example **12/27**. An app
   that is not available any more is not counted.
-- **Install all updates**, a pill at the top: the number of apps the notice names, updates and reinstalls. Click it
-  to install them all, one after the other. The portal asks once, with the list, and warns when one of them changes
+- **Install All updates**, a pill at the top, enabled when the notice names any app (its tooltip says how many).
+  Click it to install them all, updates and reinstalls, one after the other. The portal asks once, with the list, and warns when one of them changes
   the board. Each app's installer runs in its own terminal, as a single install does. When one asks for your
   password, type it in that terminal: the next one waits until it has ended. While it runs, the pill shows which one
   of how many it is at, for example **2/5**. An install that fails does not stop the others; at the end the portal
-  names those that failed, and the Install button on their tiles tries again. **Refresh**, while it waits for a
+  names those that failed, and Install in their tiles' menus tries again. **Refresh**, while it waits for a
   terminal that was closed, can stop waiting, and then stops the rest too.
-- **Install all apps**, the last tab: a button that looks like a tab. It installs every app of the open category
-  that is not installed yet, one after the other, the same way as **Install all updates**: one question with the
-  list and the board warning, each installer in its own terminal, the tab showing which one of how many. It is
+- **Install All apps**, a pill at the top, enabled when the open category has apps that are not installed yet
+  (its tooltip says how many). Click it to install them, one after the other, the same way as **Install all updates**: one question with the
+  list and the board warning, each installer in its own terminal, the pill showing which one of how many. It is
   disabled once every app of the category is installed. A portal installed for the first time fills a category with
   one click.
 - **Icons on Desktop**, a pill at the top (Yes or No; click it to switch): on, every installed app has an icon on the Desktop; off, only the
@@ -98,16 +137,15 @@ their own `install.sh`.
   the Desktop, it asks whether to keep them. While the switch is off, the portal removes the icons the apps'
   installers put there, at start and after each install. It only touches the icons of the suite's apps, never its
   own or anything else on the Desktop.
-- **Sound**, a pill at the top (Yes or No; click it to switch): a short swoosh plays when the portal opens, and
-  [Suite Big Picture Mode](#suite-big-picture-mode) has its own sound when it opens. No switches all of them off. The swoosh plays again
-  when you switch back from Suite Big Picture Mode to Suite Desktop Mode.
-  The portal remembers the choice. When the board has no audio output, the pill says No and is disabled, and the
-  portal stays silent.
+- **Sound**, a pill at the top (Yes or No; click it to switch): the intro plays its sound when the portal opens;
+  No switches it off. The portal remembers the choice. When the board has no audio output, the pill says No and is
+  disabled, and the portal stays silent.
 - **Theme switcher**, a pill at the top showing the theme; click it for the next one: the look of every app in the
   suite. **Gunmetal** (dark, cool blue-gray, the default), **Silver** (light) or **Warm** (dark warm gray with a
   bronze accent). It is one choice for all the apps, kept in `~/.config/bc250-bazzite-suite/theme`; each app takes
   it the next time it starts, the portal too.
-- **Wallpaper**, a pill at the top: a picture behind the portal, none until you choose one. Click the pill, then
+- **Wallpaper**, a pill at the top: a picture behind the portal, none until you choose one, and seen through the
+  pills that are not active. Click the pill, then
   **Choose a picture…** for your own (**Custom**), **Example wallpaper** to see how one looks with the picture that
   comes with the portal (**Example**), or **No wallpaper** for none. Your picture must be a PNG, JPEG or WebP of at least 1920 x 1080 pixels, in 16:9 (1920 x
   1080, 2560 x 1440, 3840 x 2160); the portal refuses another and says why. It fills the window, under a veil of the
@@ -118,9 +156,6 @@ their own `install.sh`.
   removes it. The menu also lists the last 10 wallpapers you chose, newest first, under **Used before**: click one to
   use it again. The portal remembers only where each picture was (in `wallpapers.json` in the same folder), so one
   moved or deleted since shows as not found until it is back.
-- **Suite mode**, a pill at the top: the portal is in **Suite Desktop Mode** (this window, **Desktop**) or in
-  **Suite Big Picture Mode** (**Big Picture**). Click it, or press **F11**, to switch to the other one. The portal
-  remembers the last mode and opens in it.
 - **Sys info**, a pill at the top: a small window with what the system reports about the board: the board, the BIOS
   (with UEFI and Secure Boot), the CPU (model, cores and threads online, top clock, microcode), each GPU (name,
   driver, VRAM, shared memory, clock levels, VBIOS, PCIe link), the memory, the drives with the free space in your
@@ -168,41 +203,6 @@ only those of the apps you kept stay, with the release each one's uninstaller ne
 goes too. To remove the whole suite at once, `--uninstall --all` asks one question instead of one per app, after a
 warning that names every app it will remove; with `--purge` the apps' own settings, history and results go as
 well.
-
-### Suite Big Picture Mode
-
-For a TV and a controller, as Steam has its Big Picture. The portal goes fullscreen and shows the apps as large
-icons with large type: the category names across the top, the apps of the open category below, and what the keys do
-at the bottom. It opens with a short animated intro, about three seconds, with its own sound; press any key, click or
-press any button on the controller to skip it. The header has the same pills as Suite Desktop Mode, under the title (the mode pill reads **BPM mode** here; click
-it to go back to Suite Desktop Mode), and, in a portal that runs from a checkout, the orange local-build banner. Press
-up on the top row of icons to reach the pills, and A or Enter to press one. The wallpaper and its transparency are the
-same. The line under the title says in a few words what the open category is
-for. The icons are drawn from a 512 px picture, so they stay sharp on a 4K screen.
-
-| Keyboard | Controller | Does |
-|---|---|---|
-| Arrow keys | D-pad or left stick | Move between the icons |
-| Enter | A | Open the app; an app with two windows asks which one |
-| Page Up, Page Down | LB, RB | The category before and after |
-| F11 | Y or Start | Back to Suite Desktop Mode |
-| Escape | B | Back, in a menu or a question |
-
-An app that is not installed is gray. Installing runs the app's installer in a terminal, so the portal asks, and
-then goes back to Suite Desktop Mode to do it. A red dot or a red circular arrow marks an update or a reinstall as in
-Suite Desktop Mode; to update, switch back to it.
-
-**Handhelds.** Suite Big Picture Mode is made for the Steam Deck (1280 x 800) and the ROG Xbox Ally X (1920 x 1080,
-shown at 1280 x 720 with the desktop's scaling): below 1000 px of height the icons, the type and the header are
-drawn smaller, down to about two thirds, so two rows of icons and the bar of keys fit on the screen. You can also
-swipe a page with a finger on the touch screen. The built-in controls are controllers like any other. Where Steam
-Input already turns them into keys (the Deck's desktop layout does: d-pad to the arrow keys, A to Enter, B to
-Escape), the keyboard column above applies and works as it is.
-
-The controller is read with [pygame-ce](https://pypi.org/project/pygame-ce/), which the portal's installer adds to
-the suite's venv; it takes any controller SDL knows (Xbox, PlayStation, Switch Pro and most others). The portal
-listens to the controller only while its own window has the focus, so a game's input never moves it. Without a
-controller, the keyboard and the mouse work as always.
 
 ### What stays after an uninstall
 
@@ -364,7 +364,7 @@ never released also gets `.checkout-only` and stays out of `apps.toml`: the port
 Add an install.sh that supports --uninstall and puts a launcher in ~/.local/bin/, plus tests under tests/.        
 Add the app to ./test.sh, the CI shellcheck list and an installer test in bc250-bazzite/tools/installer-tests/.       
 Add its [apps.<name>] card to bc250-bazzite/portal/apps.toml: name, summary, changes_board, category (the same as its icon's in
-bc250-bazzite/icons/categories.toml: it is the app's tab in the portal), install/uninstall/detect/launch,          
+bc250-bazzite/icons/categories.toml: it is the app's category in the portal), install/uninstall/detect/launch,          
 and tag = "<name>-v<VERSION>" with sha256 left empty. CI accepts a tag that doesn't exist yet as long as it matches the app's VERSION.        
 Run all the checks and hand over.
 
