@@ -21,7 +21,17 @@ This is the suite's own tool (owner, 27-10-2026: a change to one suite never tou
 BC250 Bazzite Suite's releases are built by tools/build_release.py. It uses the Nexus tools' staging and the
 third-party notices of tools/build_windows_exe.py, without changing them. A program that carries FFmpeg's libraries
 (Qt Multimedia's: USB HD Cam's picture) gets FFmpeg's notice too, from tools/licenses/ffmpeg.txt, with the version
-the library itself names (owner, 01-11-2026)."""
+the library itself names (owner, 01-11-2026).
+
+An app with a native core (native/Cargo.toml, Remote Play's Rust module) is built with it: the module, built and
+installed in this Python first (its native/pyproject.toml), goes in as a hidden import, at the app's version, and
+FFmpeg's notice names the FFmpeg linked into it. An app's binaries.toml pins the third-party programs it carries
+(Remote Play's SDL3.dll): each download is checked against its SHA-256, the file goes beside the program's modules
+and its license into the notices. From a checkout,
+
+    python windows-portable/tools/build_release.py --binaries <app>
+
+fetches them to %LOCALAPPDATA%\\windows-portable-suite\\build\\<app id>\\, where the app finds them."""
 
 from __future__ import annotations
 
@@ -35,6 +45,7 @@ import sys
 import tempfile
 import time
 import tomllib
+import urllib.request
 import zipfile
 from pathlib import Path
 
@@ -143,7 +154,7 @@ def exe_name_of(src: Path, package: str) -> str:
 
 
 def pyinstaller_args(stage: Path, launcher: Path, package: str, exe_name: str, icon: Path, work: Path, dist: Path,
-                     sep: str = os.pathsep) -> list[str]:
+                     sep: str = os.pathsep, native: str = "", binaries: list[Path] | None = None) -> list[str]:
     # The portal reads apps.toml from next to its package too (portable_portal.MANIFEST).
     manifest = [("--add-data", f"{stage / 'apps.toml'}{sep}.")] if (stage / "apps.toml").is_file() else []
     # And its intro's sound from sounds/ (portable_portal.INTRO_SOUND).
@@ -168,6 +179,9 @@ def pyinstaller_args(stage: Path, launcher: Path, package: str, exe_name: str, i
         # The wallpaper every window of the suite can show (core's portable window)
         "--add-data", f"{stage / 'bc250_core' / 'images'}{sep}bc250_core/images",
         *(part for pair in manifest + sounds + data for part in pair),
+        # The native core, imported only when a stream starts, and the pinned binaries beside the modules
+        *(["--hidden-import", native] if native else []),
+        *(part for path in binaries or [] for part in ("--add-binary", f"{path}{sep}.")),
     ]
 
 
@@ -207,14 +221,87 @@ def ffmpeg_notices(program: Path | None) -> list[tuple[str, Path]]:
     return [(f"{name} (LGPL-2.1-or-later)", FFMPEG_LICENSE)]
 
 
-def notices(stage: Path, exe_name: str, program: Path | None = None) -> str:
+BINARIES = "binaries.toml"
+
+
+def binaries_of(src: Path) -> list[dict]:
+    """The app's pinned binaries (binaries.toml), each with name, url, sha256, file and license; none without one."""
+    path = src / BINARIES
+    if not path.is_file():
+        return []
+    entries = tomllib.loads(path.read_text(encoding="utf-8")).get("binary", [])
+    for entry in entries:
+        missing = {"name", "url", "sha256", "file", "license"} - set(entry)
+        if missing:
+            raise SystemExit(f"{path}: an entry without {', '.join(sorted(missing))}")
+    return entries
+
+
+def binaries_home(app_id: str) -> Path:
+    """Where --binaries fetches an app's binaries to, for a checkout: the app looks there when it is not frozen."""
+    local = os.environ.get("LOCALAPPDATA") or str(Path.home())
+    return Path(local) / "windows-portable-suite" / "build" / app_id
+
+
+def _download(url: str, dest: Path) -> None:
+    with urllib.request.urlopen(url, timeout=60) as response, open(dest, "wb") as out:
+        shutil.copyfileobj(response, out)
+
+
+def fetch_binaries(src: Path, dest: Path, download=_download) -> list[tuple[str, Path, Path]]:
+    """The app's binaries in *dest*, each download checked against its pin (one there already is used again when it
+    matches): (name, the file, its license) per entry."""
+    found = []
+    for entry in binaries_of(src):
+        archive = dest / "downloads" / entry["url"].rsplit("/", 1)[1]
+        want = entry["sha256"].lower()
+        if not archive.is_file() or sha256_of(archive) != want:
+            archive.parent.mkdir(parents=True, exist_ok=True)
+            download(entry["url"], archive)
+        got = sha256_of(archive)
+        if got != want:
+            archive.unlink()
+            raise SystemExit(f"{entry['url']} does not match its pin in {BINARIES} (got {got[:16]}...)")
+        file, license_file = dest / entry["file"], dest / f"{Path(entry['file']).stem}-{entry['license']}"
+        with zipfile.ZipFile(archive) as zf:
+            file.write_bytes(zf.read(entry["file"]))
+            license_file.write_bytes(zf.read(entry["license"]))
+        found.append((entry["name"], file, license_file))
+    return found
+
+
+def native_module(src: Path) -> str:
+    """The module of the app's native core (native/Cargo.toml's [lib] name), "" for an app without one."""
+    cargo = src / "native" / "Cargo.toml"
+    if not cargo.is_file():
+        return ""
+    return str(tomllib.loads(cargo.read_text(encoding="utf-8")).get("lib", {}).get("name", ""))
+
+
+def check_native(module: str, version: str):
+    """The installed native module, at the app's *version* and with its decoders (FFmpeg linked in)."""
+    try:
+        native = importlib.import_module(module)
+    except ImportError:
+        raise SystemExit(f"the app's native core {module} is not installed in this Python: build its wheel (native/"
+                         "pyproject.toml, with the decoder feature) and pip install it first") from None
+    if getattr(native, "__version__", "") != version:
+        raise SystemExit(f"{module} is {getattr(native, '__version__', '?')}, the app {version}: build it again")
+    if not getattr(native, "DECODER", False):
+        raise SystemExit(f"{module} is built without its decoders: build it with the decoder feature")
+    return native
+
+
+def notices(stage: Path, exe_name: str, program: Path | None = None,
+            extra: list[tuple[str, Path]] | None = None) -> str:
     """THIRD-PARTY-NOTICES.txt: Python, the fonts core registers, FFmpeg when *program* (the built one-folder
-    program) carries it, and the packages requirements.txt pulls in."""
+    program) carries it, the packages requirements.txt pulls in, and *extra* (the pinned binaries, the FFmpeg in a
+    native core)."""
     fonts = sorted((stage / "bc250_core" / "fonts").glob("*LICENSE*"))
     return windows_exe.notices_text(exe_name, windows_exe.bundled_distributions(stage / "requirements.txt"),
                                     [(f"Python {sys.version.split()[0]}", windows_exe.python_license())]
                                     + [(f"Font: {font.name.split('-')[0]}", font) for font in fonts]
-                                    + ffmpeg_notices(program))
+                                    + ffmpeg_notices(program) + list(extra or []))
 
 
 def write_zip(root: Path, top: str, dest: Path, epoch: int) -> None:
@@ -240,15 +327,27 @@ def build_zip(app: str, tag: str, out: Path, epoch: int, bundle: Path | None = N
     exe_name = exe_name_of(src, package)
     bundled = bundled_test(bundle) if app == "portal" else None
     out.mkdir(parents=True, exist_ok=True)
+    native = native_module(src)
+    others: list[tuple[str, Path]] = []                 # notices beyond the usual ones
+    if native:
+        linked = getattr(check_native(native, (src / "VERSION").read_text(encoding="utf-8").strip()),
+                         "FFMPEG_VERSION", "")
+        name = " ".join(part for part in ("FFmpeg", linked) if part)
+        # The license beside the core's FFmpeg build (native/ffmpeg/), not the one about Qt Multimedia's libraries
+        others.append((f"{name} (LGPL-2.1-or-later), linked into {native}",
+                       src / "native" / "ffmpeg" / "COPYING.LGPLv2.1"))
     with tempfile.TemporaryDirectory() as tmp:
         work = Path(tmp)
+        fetched = fetch_binaries(src, work / "binaries")
+        others += [(name, license_file) for name, _file, license_file in fetched]
         stage = stage_app.stage(app, work / "stage", SUITE)
         launcher = work / f"{exe_name}.py"
         launcher.write_text(windows_exe.launcher_source(package), encoding="utf-8")
         import PyInstaller.__main__ as pyinstaller      # only the build needs it
         pyinstaller.run(pyinstaller_args(stage, launcher, package, exe_name,
                                          stage / "images" / f"{windows_exe.app_id(src, package)}.webp",
-                                         work / "build", work / "dist"))
+                                         work / "build", work / "dist", native=native,
+                                         binaries=[file for _name, file, _license in fetched]))
         program = work / "dist" / exe_name
         if not (program / f"{exe_name}.exe").is_file():
             raise SystemExit(f"PyInstaller made no {exe_name}.exe")
@@ -258,7 +357,8 @@ def build_zip(app: str, tag: str, out: Path, epoch: int, bundle: Path | None = N
         for extra in ("install.ps1", "LICENSE", "MANUAL.md"):
             if (stage / extra).is_file():
                 shutil.copyfile(stage / extra, release / extra)
-        (release / windows_exe.NOTICES).write_text(notices(stage, exe_name, release / "program"), encoding="utf-8")
+        (release / windows_exe.NOTICES).write_text(notices(stage, exe_name, release / "program", others),
+                                                   encoding="utf-8")
         if bundled is not None:
             test_zip, digest = bundled
             (release / "bundle").mkdir()
@@ -308,6 +408,12 @@ def build(tag: str, out: Path, bundle: Path | None = None) -> Path:
 
 
 def main(argv: list[str]) -> int:
+    if len(argv) == 2 and argv[0] == "--binaries":
+        src = stage_app.source_dir(argv[1], SUITE)
+        app_id = windows_exe.app_id(src, suite_package(src))
+        for name, file, _license in fetch_binaries(src, binaries_home(app_id)):
+            print(f"{name}: {file}")
+        return 0
     bundle = None
     if len(argv) == 4 and argv[2] == "--bundle":
         bundle, argv = Path(argv[3]), argv[:2]

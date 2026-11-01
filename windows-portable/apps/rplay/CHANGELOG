@@ -1,3 +1,19 @@
+Changelog: 01-11-2026 14:20:49
+
+Added. The stream (owner, 01-11-2026: phase 2): A on a console of My consoles plays it, waking it when it rests,
+full screen with the handheld's controls as the console's controller, until View, LB and RB are held for two seconds
+(the suite's way out of a game, core's play mode) or the screen is touched and held. Console Link's native core
+(native/, Rust) built for Windows with Rust's GNU toolchain and MSYS2's MINGW64 GCC, its FFmpeg decoding on the GPU
+with Direct3D 11 (D3D11VA, else DXVA2) in place of VA-API (both of FFmpeg's D3D11VA hwaccels are needed: the decoders
+offer the pixel format only with the older one); the controllers through SDL3 (SDL3.dll, pinned in binaries.toml);
+the sound, the picture, the network test and the stream as Console Link has them. X opens a console's page: wake, test
+session, test stream, the stream's settings stepped with A (resolution, frame rate, bitrate, picture, sound delay, low
+latency), the login passcode, its Steam entry (Remote-Play.exe --stream <console>, the direct start, with artwork
+drawn from the icon; Y takes it out), rest mode and remove on a second press. A History card lists the games played
+and clears them. Each stream writes its statistics, with Windows' processor figures. Changes for Windows: the network
+test times its pings with perf_counter (monotonic ticks every 15.6 ms on Windows, which measured a round trip as 0),
+and so does the history's clock; the stream's files are in the app's %LOCALAPPDATA% folder.
+
 Changelog: 01-11-2026 13:15:46
 
 Release 0.1.0.

@@ -1,8 +1,10 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
-"""The window: the cards on the left (Consoles, Register, My consoles, Settings), what the focused one shows on the
-right, the controller's buttons at the bottom. It is the BC250 suite's Console Link made for the handheld, its steps
-before the stream: find the consoles on the network (or at one address), register the handheld with one, then wake
-it, test a session with it or put it in rest mode.
+"""The window: the cards on the left (Consoles, Register, My consoles, History, Settings), what the focused one shows
+on the right, the controller's buttons at the bottom. It is the BC250 suite's Console Link made for the handheld:
+find the consoles on the network (or at one address), register the handheld with one, then play it: A on a console of
+My consoles wakes it when it rests and streams it full screen (stream_window.py), until View, LB and RB are held
+(the suite's way out of a game) or the screen is touched and held. X opens the console's page: waking, the test
+session and stream, its stream settings, its login passcode, its Steam entry, rest mode and removing it.
 
 Console Link's fields are a row each here, a row's page with the touch keyboard: the address, the PSN account ID, the
 PIN and a console's login passcode. The account ID can come from the PlayStation sign-in in the browser: the app
@@ -13,6 +15,7 @@ network runs off the window's thread (jobs.py)."""
 
 from __future__ import annotations
 
+import datetime
 import threading
 from collections.abc import Callable
 from dataclasses import replace
@@ -23,22 +26,25 @@ from PyQt6.QtCore import QEvent, QObject, QSettings, QTimer, pyqtSignal
 from PyQt6.QtGui import QGuiApplication
 from PyQt6.QtWidgets import QHBoxLayout, QStackedWidget, QVBoxLayout, QWidget
 
-from bc250_core import applog, platform, power
+from bc250_core import applog, platform, power, steam
 from bc250_core.gamepad import Gamepad
 from bc250_core.platform import private, suite_data
 from bc250_core.portable import KEYBOARD, Card, Legend, Pane, PortableHeader, PortableWindow, px, status_clock
 
-from . import APP_ID, APP_NAME, SUITE, __version__, jobs, privacy, psn
+from . import APP_ID, APP_NAME, LOGO_PATH, SUITE, __version__, jobs, privacy, psn, steam_shortcuts, stream_stats
 from .consoles import ConsoleStore, RegisteredConsole, parse_account_id, parse_login_pin, parse_pin
 from .discovery import Console
+from .history import HistoryStore, duration, newest_first
 from .jobs import Outcome
 from .panes import FieldPane, ListPane
+from .stream_options import AUTO, FRAME_RATES, RESOLUTIONS, SCREENS, StreamOptions
+from .stream_window import PlayWindow
 from .target import rp_version, software_version
 
 STATUS_MS = 30_000              # the header's time and battery
-CONFIRM_MS = 5000               # Remove and Rest mode ask for a second press
+CONFIRM_MS = 5000               # Remove, Rest mode, Take out of Steam and Clear ask for a second press
 CARDS_WIDTH = 400
-CARD_HEIGHT = 84
+CARD_HEIGHT = 84                # five cards and their gaps fit the column at 720 px high
 LOG_MAX = 2000                  # the lines of the log the view shows, the newest
 APART = "  ·  "
 OPENS = "  ›"
@@ -47,6 +53,11 @@ SHOWN_KEY = "privacy/shown"     # the personal details shown on the screen: "on"
 ACCOUNT_KEY = "account_id"      # the PSN account ID, as typed or from the sign-in (Console Link's setting)
 ADDRESS_KEY = "address"         # the console's address searched last
 NOT_FOUND = "Search first: the X button searches the network, the address row one console."
+
+# A console's stream settings, each stepped by A on its row of the console's page (Console Link's dialog's choices)
+BITRATE_STEPS = (AUTO, 5000, 10000, 15000, 20000, 30000, 40000, 50000)      # kbit/s
+AUDIO_DELAY_STEPS = (0, 50, 100, 150, 200, 300, 500)                         # ms
+OPTION_ROWS = ("resolution", "fps", "bitrate", "screen", "audio_delay", "low_latency")
 
 CONSOLES_INFO = (
     "The PS4 and PS5 consoles on this network. The X button searches the network: every console with Remote Play "
@@ -65,13 +76,27 @@ REGISTER_INFO = (
     "The PIN: on a PS5 under Settings > System > Remote Play > Link Device, on a PS4 under Settings > Remote Play "
     "Connection Settings > Add Device. The X button registers while the console shows it.")
 MINE_INFO = (
-    "The consoles this handheld is registered with. The A button wakes the console from rest mode: it takes about 20 "
-    "seconds. The X button starts a session with it and closes it again, which proves the registration. RB puts it "
-    "in rest mode, on a second press. LB sets the login passcode of the PSN account, when the account has one. The Y "
-    "button removes the console, on a second press: to use it again, register again.\n\n"
+    "The consoles this handheld is registered with. The A button plays one: it wakes the console when it rests "
+    "(about 20 seconds), then streams it full screen, the handheld's controls as the console's controller. To end the "
+    "stream, hold View, LB and RB together, or touch and hold the screen. The X button opens the console's page: "
+    "waking, a test, the stream's settings, the login passcode, its Steam entry, rest mode and removing it.\n\n"
     "Waking from rest mode needs the console's rest-mode settings: PS5, Settings > System > Power Saving > Features "
     "Available in Rest Mode, Stay Connected to the Internet and Enable Turning On PS5 from Network; PS4, Settings > "
     "Power Saving Settings > Set Features Available in Rest Mode, the same two.")
+CONSOLE_INFO = (
+    "The A button acts on the row the focus is on. Wake turns the console on from rest mode. Test session starts a "
+    "session and closes it again, which proves the registration; Test stream also runs the stream for five seconds "
+    "without showing it, which proves the network and the decoding.\n\n"
+    "The stream's settings step to their next value: the resolution and the bitrate (Automatic: 1080p at 15 Mbit/s "
+    "from a PS5 or a PS4 Pro, 720p at 10 Mbit/s from a PS4, which streams 720p at most), the frame rate, how the "
+    "picture fills the screen, how much later the sound plays (to meet a late picture) and low latency (a shorter "
+    "sound buffer). They count from the next stream.\n\n"
+    "In Steam adds the console to Steam's library, to play it from there: Steam closes for it and starts again. Y "
+    "takes it out again, on a second press. Rest mode and Remove ask for a second press.")
+HISTORY_INFO = (
+    "The games played through the app and how long, counted while a console streams to this handheld (from Steam "
+    "too): the console is asked what it runs every 30 seconds. Play on the console itself is not seen. Kept only on "
+    "this handheld; the X button forgets it all, on a second press.")
 SETTINGS_INFO = (
     "The A button changes a setting. Personal details: the account ID, the online ID and the consoles' addresses, "
     "masked on the screen (only their end shows) until shown here; the log always masks them. The last row shows the "
@@ -89,6 +114,48 @@ FIELDS = {
     "passcode": ("Login passcode", "The 4-digit login passcode of the PSN account on {console}, when the account has "
                  "one; empty when it has none. Kept with the console's keys.", True, "", 4),
 }
+
+
+def _next(values: tuple, value):
+    return values[(values.index(value) + 1) % len(values)] if value in values else values[0]
+
+
+def step_option(options: StreamOptions, key: str) -> StreamOptions:
+    """The stream setting *key* stepped to its next value."""
+    if key == "resolution":
+        return replace(options, resolution=_next((AUTO, *RESOLUTIONS), options.resolution))
+    if key == "fps":
+        return replace(options, fps=_next(FRAME_RATES, options.fps))
+    if key == "bitrate":
+        return replace(options, bitrate=_next(BITRATE_STEPS, options.bitrate))
+    if key == "screen":
+        return replace(options, screen=_next(tuple(SCREENS), options.screen))
+    if key == "audio_delay":
+        return replace(options, audio_delay=_next(AUDIO_DELAY_STEPS, options.audio_delay))
+    return replace(options, low_latency=not options.low_latency)
+
+
+def option_text(options: StreamOptions, key: str, console: RegisteredConsole, server_type: str = "") -> str:
+    height = options.height(console.ps5, server_type)
+    if key == "resolution":
+        return f"Resolution: {'Automatic (' + str(height) + 'p)' if options.resolution == AUTO else str(height) + 'p'}"
+    if key == "fps":
+        return f"Frame rate: {options.fps} fps"
+    if key == "bitrate":
+        mbit = f"{options.kbps(height) / 1000:g} Mbit/s"
+        return f"Bitrate: {'Automatic (' + mbit + ')' if options.bitrate == AUTO else mbit}"
+    if key == "screen":
+        return f"Picture: {SCREENS[options.screen].split(':')[0]}"
+    if key == "audio_delay":
+        return f"Sound later by: {options.audio_delay} ms"
+    return f"Low latency: {'On' if options.low_latency else 'Off'}"
+
+
+def _when(text: str) -> str:
+    try:
+        return f"{datetime.datetime.fromisoformat(text):%d/%m/%Y %H:%M}"
+    except ValueError:
+        return text
 
 
 class _Worker(QObject):
@@ -126,33 +193,42 @@ class MainWindow(PortableWindow):
     def __init__(self, log_path: Path | None = None, gamepad: Gamepad | None = None,
                  battery: Callable[[], tuple[int, bool] | None] = power.battery, folder: Path | None = None,
                  settings: QSettings | None = None, ops: ModuleType = jobs,
-                 open_url: Callable[[str], bool] = platform.open_path):
+                 open_url: Callable[[str], bool] = platform.open_path, steam_dir: Path | None | bool = False,
+                 play_window: Callable[..., PlayWindow] = PlayWindow, stats_dir: Path | None = None):
         super().__init__(gamepad)
         self.setWindowTitle(f"{APP_NAME} {__version__}")
         self.log = applog.logger(APP_ID)
         self.log_path = log_path
         self.battery = battery
         self.settings = settings or QSettings()
-        self.ops, self.open_url = ops, open_url
-        self.store = ConsoleStore(folder or suite_data(SUITE) / APP_ID)   # the keys: in the user's local folder
+        self.ops, self.open_url, self.play_window = ops, open_url, play_window
+        self.steam_dir = steam.find_steam() if steam_dir is False else steam_dir
+        self.stats_dir = stats_dir
+        folder = folder or suite_data(SUITE) / APP_ID                   # the keys: in the user's local folder
+        self.store = ConsoleStore(folder)
+        self.history = HistoryStore(folder)
         self.registered: list[RegisteredConsole] = self.store.load()
         self.found: list[Console] = []
         self.searched = False
         self.chosen = ""                                # the found console to register: its key
         self.pin = ""                                   # used once, never saved
         self.passcode_for = ""                          # the registered console whose passcode the field page sets
+        self.page_console = ""                          # the registered console the console's page shows
+        self.in_steam: set[str] = self.steam_keys()
         self.masker = privacy.Masker()
         self.masker.remember(account=self.account(), address=self.address())
         for console in self.registered:
             self.masker.remember(address=console.address)
         self.signing_in = False                         # watching the clipboard for the sign-in's last page
         self.clipboard_before = ""
-        self.job = ""                                   # what the worker does: find, account, register, wake, ...
+        self.job = ""                                   # what the worker does: find, account, register, play, ...
         self.job_console = ""                           # the registered console it does it for
         self.job_pane: ListPane | None = None           # the pane whose status line shows it
         self.one_address = False                        # the search was at one address: the others found stay
         self.asked = ""                                 # the action pressed once, waiting for its second press
         self.session_info: dict[str, str] = {}         # a registered console's model, as its last session said
+        self.stream_window: PlayWindow | None = None
+        self.stream_stop: threading.Event | None = None
 
         page = QVBoxLayout(self)
         page.setContentsMargins(*self.margins())
@@ -168,8 +244,9 @@ class MainWindow(PortableWindow):
         self.consoles_card = Card("Consoles", "")
         self.register_card = Card("Register", "")
         self.mine_card = Card("My consoles", "")
+        self.history_card = Card("History", "")
         self.settings_card = Card("Settings", "Personal details, and the log.")
-        for card in (self.consoles_card, self.register_card, self.mine_card, self.settings_card):
+        for card in (self.consoles_card, self.register_card, self.mine_card, self.history_card, self.settings_card):
             card.setFixedHeight(px(CARD_HEIGHT))
             cards.addWidget(card)
         cards.addStretch()
@@ -179,9 +256,12 @@ class MainWindow(PortableWindow):
         self.consoles_pane = ListPane("Consoles", CONSOLES_INFO)
         self.register_pane = ListPane("Register", REGISTER_INFO)
         self.mine_pane = ListPane("My consoles", MINE_INFO)
+        self.console_pane = ListPane("Console", CONSOLE_INFO)
+        self.history_pane = ListPane("History", HISTORY_INFO)
         self.settings_pane = ListPane("Settings", SETTINGS_INFO)
         self.field_pane = FieldPane()
-        for pane in (self.consoles_pane, self.register_pane, self.mine_pane, self.settings_pane, self.field_pane):
+        for pane in (self.consoles_pane, self.register_pane, self.mine_pane, self.console_pane, self.history_pane,
+                     self.settings_pane, self.field_pane):
             self.panes.addWidget(pane)
         body.addWidget(self.panes, 1)
         page.addLayout(body, 1)
@@ -189,7 +269,8 @@ class MainWindow(PortableWindow):
         self.legend = Legend()
         page.addWidget(self.legend)
         self.cards = {self.consoles_pane: self.consoles_card, self.register_pane: self.register_card,
-                      self.mine_pane: self.mine_card, self.settings_pane: self.settings_card}
+                      self.mine_pane: self.mine_card, self.history_pane: self.history_card,
+                      self.settings_pane: self.settings_card}
         self.field_back = self.consoles_pane            # the pane a field's page goes back to
 
         self.worker = _Worker()
@@ -199,18 +280,18 @@ class MainWindow(PortableWindow):
             card.activated.connect(lambda pane=pane: self.focus_list(pane))
         self.consoles_pane.list.picked.connect(self.consoles_row)
         self.register_pane.list.picked.connect(self.register_row)
-        self.mine_pane.list.picked.connect(lambda key: self.wake())
+        self.mine_pane.list.picked.connect(lambda key: self.play())
         self.mine_pane.list.current.connect(lambda key: self.show_console_details())
+        self.console_pane.list.picked.connect(self.console_row)
+        self.history_pane.list.picked.connect(lambda key: None)
         self.settings_pane.list.picked.connect(self.settings_row)
-        for pane in self.cards:
+        for pane in (*self.cards, self.console_pane):
             pane.list.current.connect(lambda key: self.update_legend())
         self.field_pane.field.returnPressed.connect(self.keep_field)
         QGuiApplication.clipboard().dataChanged.connect(self.check_clipboard)
         self.bind("accept", self.a_action)
         self.bind("x", self.x_action)
         self.bind("y", self.y_action)
-        self.bind("previous", self.lb_action)
-        self.bind("next", self.rb_action)
         self.back.connect(self.on_back)
         self.status_timer = QTimer(self)
         self.status_timer.setInterval(STATUS_MS)
@@ -219,10 +300,7 @@ class MainWindow(PortableWindow):
         self.confirm_timer.setSingleShot(True)
         self.confirm_timer.setInterval(CONFIRM_MS)
         self.confirm_timer.timeout.connect(self._confirm_over)
-        self.show_consoles()
-        self.show_register()
-        self.show_mine()
-        self.show_settings()
+        self.show_all()
         self.show_pane(self.consoles_pane)
 
     def start(self) -> None:
@@ -264,6 +342,8 @@ class MainWindow(PortableWindow):
         self.show_consoles()
         self.show_register()
         self.show_mine()
+        self.show_console_page()
+        self.show_history()
         self.show_settings()
 
     # Panes and the legend
@@ -282,6 +362,8 @@ class MainWindow(PortableWindow):
         if not pane.list.focus(""):
             if pane is self.mine_pane:
                 pane.status.setText("No console registered yet: the Register card registers one.")
+            elif pane is self.history_pane:
+                pane.status.setText("Nothing played yet: A on a console of My consoles plays it.")
             self.cards[pane].setFocus()
 
     def enter(self, pane: ListPane, row: str) -> None:
@@ -313,17 +395,32 @@ class MainWindow(PortableWindow):
             a = {"console": "Next console", "signin": "Sign in", "account": "Change", "pin": "Change"}.get(row)
             items = [*([("A", a)] if a else []), ("X", "Register")]
         elif pane is self.mine_pane:
-            console = self.registered_console(pane.list.focused())
-            if console is not None:
-                items = [("A", "Wake"), ("X", "Test session"),
-                         ("Y", "Press again" if self.asked == f"remove:{console.key}" else "Remove"),
-                         ("LB", "Login passcode"),
-                         ("RB", "Press again" if self.asked == f"rest:{console.key}" else "Rest mode")]
+            if self.registered_console(pane.list.focused()) is not None:
+                items = [("A", "Play"), ("X", "Its page")]
+        elif pane is self.console_pane:
+            items = self.console_items(pane.list.focused())
+        elif pane is self.history_pane:
+            items = [("X", "Press again" if self.asked == "clear" else "Clear")]
         elif pane is self.settings_pane:
             row = pane.list.focused()
             items = [("A", "View the log" if row == "log" else "Change" if row else "Open")]
-        on_a_page = pane is self.field_pane or getattr(pane, "viewing", False)
+        on_a_page = pane in (self.field_pane, self.console_pane) or getattr(pane, "viewing", False)
         return [*items, *self.common_items(True if on_a_page else None)]
+
+    def console_items(self, row: str) -> list[tuple[str, str]]:
+        """The console page's legend for *row*: A acts on it; Y takes the entry out of Steam on its row."""
+        console = self.page()
+        if console is None or not row:
+            return []
+        again = self.asked == f"{row}:{console.key}"
+        a = {"wake": "Wake", "test": "Test session", "teststream": "Test stream", "passcode": "Change",
+             "steam": "Update in Steam" if console.key in self.in_steam else "Add to Steam",
+             "rest": "Press again" if again else "Rest mode",
+             "remove": "Press again" if again else "Remove"}.get(row, "Change")
+        items = [("A", a)]
+        if row == "steam" and console.key in self.in_steam:
+            items.append(("Y", "Press again" if self.asked == f"unsteam:{console.key}" else "Take out of Steam"))
+        return items
 
     def update_legend(self) -> None:
         if hasattr(self, "legend"):
@@ -340,7 +437,7 @@ class MainWindow(PortableWindow):
             row = pane.list.focused()
             if row:
                 pane.list.picked.emit(row)
-            else:
+            elif pane is not self.console_pane:
                 self.focus_list(pane)
 
     def x_action(self) -> None:
@@ -354,7 +451,9 @@ class MainWindow(PortableWindow):
         elif pane is self.register_pane:
             self.register()
         elif pane is self.mine_pane:
-            self.test_session()
+            self.open_page()
+        elif pane is self.history_pane:
+            self.clear_history()
 
     def y_action(self) -> None:
         pane = self.panes.currentWidget()
@@ -362,23 +461,19 @@ class MainWindow(PortableWindow):
             return
         if pane is self.consoles_pane:
             self.search_address()
-        elif pane is self.mine_pane:
-            self.remove()
-
-    def lb_action(self) -> None:
-        if self.panes.currentWidget() is self.mine_pane:
-            self.edit_passcode()
-
-    def rb_action(self) -> None:
-        if self.panes.currentWidget() is self.mine_pane:
-            self.rest_mode()
+        elif pane is self.console_pane and pane.list.focused() == "steam":
+            self.steam_entry(remove=True)
 
     def on_back(self) -> None:
         """B goes back (the suite's rule, owner 29-10-2026): a field's page to its row (nothing kept), the log to its
-        pane, a pane to its card; on a card it does nothing (View exits)."""
+        pane, the console's page to its row on My consoles, a pane to its card; on a card it does nothing (View
+        exits)."""
         pane = self.panes.currentWidget()
         if pane is self.field_pane:
             self.back_from_field()
+        elif pane is self.console_pane:
+            self.show_pane(self.mine_pane)
+            self.mine_pane.list.focus(f"mine:{self.page_console}")
         elif getattr(pane, "viewing", False):
             pane.show_body()
             if not pane.list.focused():
@@ -400,8 +495,10 @@ class MainWindow(PortableWindow):
 
     def _confirm_over(self, keep_status: bool = False) -> None:
         self.confirm_timer.stop()
-        if self.asked and not keep_status and self.mine_pane.status.text().startswith("Press "):
-            self.mine_pane.status.setText("")
+        if self.asked and not keep_status:
+            for pane in (self.console_pane, self.history_pane):
+                if pane.status.text().startswith("Press "):
+                    pane.status.setText("")
         self.asked = ""
         self.update_legend()
 
@@ -432,9 +529,14 @@ class MainWindow(PortableWindow):
                 self.account_found(outcome.value)
             elif job == "register":
                 self.registered_with(outcome.value)
-        if job in ("test", "rest") and outcome.value is not None and getattr(outcome.value, "server_type", ""):
+            elif job == "steam":
+                self.in_steam = self.steam_keys()
+                self.show_console_page()
+        if job in ("test", "teststream", "rest", "play") and getattr(outcome.value, "server_type", ""):
             self.session_info[self.job_console] = outcome.value.server_type
             self.show_console_details()
+        if job == "play":
+            self.stream_over()
         if self.job_pane is not None:
             self.job_pane.status.setText(self.shown(outcome.message))
         self.update_legend()
@@ -653,7 +755,7 @@ class MainWindow(PortableWindow):
         back = self.field_back
         self.show_pane(back)
         back.status.setText(said)
-        back.list.focus({"passcode": f"mine:{self.passcode_for}"}.get(key, key))
+        back.list.focus(key)
 
     def keep_field(self) -> None:
         """A on a field's page: the value checked and kept, back to its row."""
@@ -687,6 +789,7 @@ class MainWindow(PortableWindow):
                 said = "Login passcode " + ("kept." if value else "removed.")
                 self.note(f"Login passcode {'saved' if value else 'removed'} for {console.nickname or 'a console'}.")
                 self.show_mine()
+                self.show_console_page()
         self.back_from_field(said)
 
     def paste(self) -> None:
@@ -704,30 +807,24 @@ class MainWindow(PortableWindow):
         rows = [(f"mine:{c.key}", self.shown(self.mine_text(c))) for c in self.registered]
         self.mine_pane.list.set_items(rows)
         count = len(self.registered)
-        self.mine_card.set_text(f"{count} registered." if count else "None registered yet.")
+        self.mine_card.set_text(f"{count} registered: A plays one." if count else "None registered yet.")
         self.show_console_details()
 
     def mine_text(self, console: RegisteredConsole) -> str:
         found = self.found_for(console)
         state = STATES[found.state] if found is not None else "Not searched"
         parts = [console.nickname or console.address, console.target.console, state]
-        if console.login_pin:
-            parts.append("passcode set")
+        if console.key in self.in_steam:
+            parts.append("in Steam")
         return APART.join(parts)
 
     def registered_console(self, row: str) -> RegisteredConsole | None:
         key = row.removeprefix("mine:") if row.startswith("mine:") else None
         return next((c for c in self.registered if c.key == key), None)
 
-    def show_console_details(self) -> None:
-        """The line under My consoles' heading: the focused console's model (exact once a session said it, PS4
-        Pro), system software, what runs and its Remote Play version."""
-        console = self.registered_console(self.mine_pane.list.focused())
-        if console is None:
-            self.mine_pane.summary.setText("The consoles this handheld is registered with." if self.registered else
-                                           "None yet: the Register card registers this handheld with one.")
-            self.update_legend()
-            return
+    def details(self, console: RegisteredConsole) -> str:
+        """The console's model (exact once a session said it, PS4 Pro), system software, what runs and its Remote
+        Play version."""
         found = self.found_for(console)
         parts = [self.session_info.get(console.key) or console.target.console]
         version = software_version(found.system_version, console.ps5) if found is not None else ""
@@ -736,7 +833,16 @@ class MainWindow(PortableWindow):
         if found is not None and found.state == "ready":
             parts.append(f"running {found.running_app}" if found.running_app else "on the home screen")
         parts.append(f"Remote Play {rp_version(console.target) or 'unknown'}")
-        self.mine_pane.summary.setText(self.shown(f"{console.nickname or console.address}: " + APART.join(parts)))
+        return self.shown(f"{console.nickname or console.address}: " + APART.join(parts))
+
+    def show_console_details(self) -> None:
+        """The line under My consoles' heading: the focused console's details."""
+        console = self.registered_console(self.mine_pane.list.focused())
+        if console is None:
+            self.mine_pane.summary.setText("The consoles this handheld is registered with." if self.registered else
+                                           "None yet: the Register card registers this handheld with one.")
+        else:
+            self.mine_pane.summary.setText(self.details(console))
         self.update_legend()
 
     def focused_console(self) -> RegisteredConsole | None:
@@ -746,48 +852,176 @@ class MainWindow(PortableWindow):
                                           "No console registered yet: the Register card registers one.")
         return console
 
-    def wake(self) -> None:
-        console = self.focused_console()
-        if console is not None:
-            self.run("wake", self.mine_pane, lambda: self.ops.wake(console),
-                     f"Waking {console.nickname or console.address} …", console.key)
-
-    def test_session(self) -> None:
-        console = self.focused_console()
-        if console is not None:
-            self.run("test", self.mine_pane, lambda: self.ops.test_session(console),
-                     f"Starting a session with {console.nickname or console.address} …", console.key)
-
-    def rest_mode(self) -> None:
+    def play(self) -> None:
+        """A: the console woken when it rests, then streamed full screen until the stream window closes."""
         console = self.focused_console()
         if console is None:
             return
-        name = console.nickname or console.address
-        if not self.ask(f"rest:{console.key}", self.mine_pane,
-                        self.shown(f"Press RB again to put {name} in rest mode: a game on it stops.")):
+        if self.worker.busy:
+            self.mine_pane.status.setText("Still busy with the step before: a moment.")
             return
-        self.run("rest", self.mine_pane, lambda: self.ops.rest_mode(console), f"Putting {name} in rest mode …",
-                 console.key)
+        name = self.shown(console.nickname or console.address)
+        stop = threading.Event()
+        window = self.play_window(f"{name} · {APP_NAME}", stop.set, console.options)
+        self.stream_window, self.stream_stop = window, stop
+        window.showFullScreen()
+        window.bring_forward()
+        window.say(f"Looking for {name}…")
+        stats_dir = self.stats_dir or stream_stats.folder()
 
-    def edit_passcode(self) -> None:
+        def work() -> Outcome:
+            on = self.ops.wake_and_wait(console, lambda text: window.say(self.shown(text)))
+            if not on.ok:
+                return on
+            window.say(self.shown(f"{on.message} Starting the stream…"))
+            return self.ops.watch_stream(on.value, window.deliver, window.wanted, stop, window.play,
+                                         figures=window.figures, stats_dir=stats_dir, played=self.history,
+                                         on_quit=window.end)
+
+        self.run("play", self.mine_pane, work, f"Playing {name} …", console.key)
+
+    def stream_over(self) -> None:
+        """The stream ended (its window closed, the console ended it, or it failed): back to the window."""
+        window, self.stream_window, self.stream_stop = self.stream_window, None, None
+        if window is not None and window.isVisible():
+            window.close()
+        self.show_history()
+        self.raise_()
+        self.activateWindow()
+
+    def open_page(self) -> None:
+        """X: the console's page."""
         console = self.focused_console()
-        if console is not None:
+        if console is None:
+            return
+        self.page_console = console.key
+        self.show_console_page()
+        self.show_pane(self.console_pane)
+        self.console_pane.list.focus("wake")
+
+    # The console's page
+
+    def page(self) -> RegisteredConsole | None:
+        return self.registered_console(f"mine:{self.page_console}")
+
+    def steam_keys(self) -> set[str]:
+        try:
+            return steam_shortcuts.in_steam(self.steam_dir) if self.steam_dir is not None else set()
+        except OSError:
+            return set()
+
+    def show_console_page(self) -> None:
+        console = self.page()
+        if console is None:
+            self.console_pane.list.set_items([])
+            return
+        server = self.session_info.get(console.key, "")
+        steam_text = ("In Steam: Added" if console.key in self.in_steam else "In Steam: Not added"
+                      ) if self.steam_dir is not None else "In Steam: Steam is not installed"
+        rows = [("wake", "Wake from rest mode"), ("test", "Test session"),
+                ("teststream", "Test stream: five seconds, not shown"),
+                *((key, option_text(console.options, key, console, server)) for key in OPTION_ROWS),
+                ("passcode", f"Login passcode: {'Set' if console.login_pin else 'None'}"),
+                ("steam", steam_text), ("rest", "Rest mode"), ("remove", "Remove this console")]
+        self.console_pane.list.set_items(rows)
+        self.console_pane.heading.setText(self.shown(console.nickname or console.address))
+        self.console_pane.summary.setText(self.details(console))
+        self.update_legend()
+
+    def console_row(self, key: str) -> None:
+        """A on a row of the console's page."""
+        console = self.page()
+        if console is None:
+            return
+        pane, name = self.console_pane, console.nickname or console.address
+        if key == "wake":
+            self.run("wake", pane, lambda: self.ops.wake(console), f"Waking {name} …", console.key)
+        elif key == "test":
+            self.run("test", pane, lambda: self.ops.test_session(console), f"Starting a session with {name} …",
+                     console.key)
+        elif key == "teststream":
+            self.run("teststream", pane, lambda: self.ops.test_stream(console),
+                     f"Starting a test stream with {name} …", console.key)
+        elif key in OPTION_ROWS:
+            options = step_option(console.options, key)
+            self.registered = self.store.put(replace(console, options=options))
+            self.show_console_page()
+            pane.status.setText(f"{option_text(options, key, console, self.session_info.get(console.key, ''))}"
+                                ", from the next stream.")
+            self.note(f"Stream settings for {name}: {options.describe(console.ps5)}.")
+        elif key == "passcode":
             self.passcode_for = console.key
-            self.open_field("passcode", self.mine_pane, console.login_pin)
+            self.open_field("passcode", pane, console.login_pin)
+        elif key == "steam":
+            self.steam_entry(remove=False)
+        elif key == "rest":
+            if self.ask(f"rest:{console.key}", pane, self.shown(f"Press A again to put {name} in rest mode: a game on "
+                                                                "it stops.")):
+                self.run("rest", pane, lambda: self.ops.rest_mode(console), f"Putting {name} in rest mode …",
+                         console.key)
+        elif key == "remove":
+            steam_too = " Its Steam entry goes too: Steam closes for it." if console.key in self.in_steam else ""
+            if self.ask(f"remove:{console.key}", pane, self.shown(f"Press A again to remove {name}: to use it again, "
+                                                                  f"register again.{steam_too}")):
+                self.remove(console)
 
-    def remove(self) -> None:
-        console = self.focused_console()
+    def steam_entry(self, remove: bool) -> None:
+        console = self.page()
         if console is None:
             return
-        name = console.nickname or console.address
-        if not self.ask(f"remove:{console.key}", self.mine_pane,
-                        self.shown(f"Press the Y button again to remove {name}: to use it again, register again.")):
+        pane = self.console_pane
+        if self.steam_dir is None:
+            pane.status.setText("Steam is not installed, or was never signed in on this handheld.")
             return
+        if remove and not self.ask(f"unsteam:{console.key}", pane, "Press Y again to take the console out of Steam: "
+                                                                   "Steam closes for it and starts again."):
+            return
+        steam_dir = self.steam_dir
+        self.run("steam", pane, lambda: self.ops.steam_entry(console, steam_dir, LOGO_PATH, remove),
+                 "Changing Steam's library …", console.key)
+
+    def remove(self, console: RegisteredConsole) -> None:
+        name = console.nickname or console.address
         self.registered = self.store.remove(console.key)
         self.note(f"Removed {name}.")
+        if console.key in self.in_steam and self.steam_dir is not None:
+            steam_dir = self.steam_dir
+            self.run("steam", self.mine_pane, lambda: self.ops.steam_entry(console, steam_dir, LOGO_PATH, True),
+                     f"{name} is removed; taking it out of Steam …", console.key)
+        else:
+            self.mine_pane.status.setText(self.shown(f"{name} is removed."))
+        self.page_console = ""
         self.show_all()
-        self.mine_pane.status.setText(self.shown(f"{name} is removed."))
+        self.show_pane(self.mine_pane)
         self.focus_list(self.mine_pane)
+
+    # The History card
+
+    def show_history(self) -> None:
+        games = newest_first(self.history.load())
+        rows = [(f"game:{n}", APART.join((game.title, game.console_name, duration(game.seconds),
+                                          f"last {_when(game.last_played)}")))
+                for n, game in enumerate(games)]
+        self.history_pane.list.set_items(rows)
+        total = sum(game.seconds for game in games)
+        text = (f"{len(games)} game{'s' if len(games) != 1 else ''}, {duration(total)} in all." if games else
+                "Nothing played yet.")
+        self.history_pane.summary.setText(text)
+        self.history_card.set_text(text)
+        self.update_legend()
+
+    def clear_history(self) -> None:
+        pane = self.history_pane
+        if not self.history.load():
+            pane.status.setText("Nothing to clear.")
+            return
+        if not self.ask("clear", pane, "Press X again to forget every game and its time."):
+            return
+        self.history.clear()
+        self.note("The history was cleared.")
+        self.show_history()
+        pane.status.setText("The history is cleared.")
+        self.history_card.setFocus()
 
     # The Settings card
 
@@ -832,4 +1066,8 @@ class MainWindow(PortableWindow):
         self.status_timer.stop()
         self.confirm_timer.stop()
         self.signing_in = False
+        if self.stream_stop is not None:
+            self.stream_stop.set()
+        if self.stream_window is not None:
+            self.stream_window.close()
         super().closeEvent(event)

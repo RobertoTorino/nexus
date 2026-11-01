@@ -155,6 +155,20 @@ jobs:
             echo "$bt is pinned but neither released nor the test app's VERSION" >&2
             exit 1
           fi
+      # An app with a native core (Remote Play's): FFmpeg kept in the cache until its build.sh changes, then the
+      # module built and installed for build_release.py (windows-portable/tools/build_native.sh)
+      - name: FFmpeg cache
+        if: hashFiles(format('windows-portable/apps/{0}/native/Cargo.toml', matrix.app)) != ''
+        uses: actions/cache@v6
+        with:
+          path: ~\AppData\Local\windows-portable-suite\build
+          key: ffmpeg-windows-${{ hashFiles(format('windows-portable/apps/{0}/native/ffmpeg/build.sh', matrix.app)) }}
+      - name: Native core
+        if: hashFiles(format('windows-portable/apps/{0}/native/Cargo.toml', matrix.app)) != ''
+        shell: bash
+        run: |
+          python -m pip install -q "maturin>=1.5,<2"
+          bash windows-portable/tools/build_native.sh "$APP" --setup
       - name: Build the release zip, not published
         shell: bash
         run: |
@@ -170,6 +184,46 @@ jobs:
         run: >-
           powershell -NoProfile -ExecutionPolicy Bypass -File windows-portable/tools/installer-tests/${{ matrix.app }}.ps1
           -Release (Get-Item wpdist/*.zip).FullName
+
+  native:
+    # Remote Play's native core (Rust, windows-portable/apps/rplay/native, Console Link's for Windows): its own tests,
+    # clippy with and without the video decoder, and the Python module built into a wheel and tested from Python,
+    # with FFmpeg from native/ffmpeg/build.sh (D3D11VA; kept in the cache until the script changes). Built with Rust's
+    # x86_64-pc-windows-gnu toolchain and MSYS2's MINGW64 GCC (windows-portable/tools/build_native.sh). The pytest job
+    # above skips the tests that need the built module.
+    runs-on: windows-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: "windows-portable/apps/rplay/requirements-dev.txt"
+      - name: FFmpeg cache
+        uses: actions/cache@v6
+        with:
+          path: ~\AppData\Local\windows-portable-suite\build
+          key: ffmpeg-windows-${{ hashFiles('windows-portable/apps/rplay/native/ffmpeg/build.sh') }}
+      - name: Build the module
+        run: |
+          python -m pip install -q -r windows-portable/apps/rplay/requirements-dev.txt "maturin>=1.5,<2"
+          bash windows-portable/tools/build_native.sh rplay --setup
+      - name: cargo test and clippy
+        working-directory: windows-portable/apps/rplay/native
+        run: |
+          export PATH="/c/msys64/mingw64/bin:$PATH" RUSTUP_TOOLCHAIN=stable-x86_64-pc-windows-gnu
+          cargo test --locked --features decoder
+          cargo clippy --locked --all-targets --features python,decoder -- -D warnings
+          cargo clippy --locked --all-targets --features python -- -D warnings
+      - name: Test the module from Python
+        working-directory: windows-portable/apps/rplay
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: python -X faulthandler -m pytest -v tests/test_native.py tests/test_stream.py tests/test_senkusha.py tests/test_play.py
 
   nexus-release-tool-installer:
     # the Nexus Release Tool's Windows installer (dev/nrt/install.ps1) is tested here: this suite is the one on Windows.

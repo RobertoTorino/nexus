@@ -53,8 +53,8 @@ games, plays your PS Vita games full screen and puts them in Steam.
 [Xenia Manager](apps/xenia.md) installs Xenia, the Xbox 360 emulator, finds your Xbox 360 games, plays them full
 screen and puts them in Steam.
 
-[Remote Play](apps/rplay.md) finds your PS4 and PS5 on the network, registers the handheld with them, wakes
-them from rest mode and tests a Remote Play session with them.
+[Remote Play](apps/rplay.md) plays your PS4 and PS5 on the handheld: it finds them on the network, registers the
+handheld with them, wakes them from rest mode and streams them full screen, and puts them in Steam.
 </div>
 <div class="home-card" markdown>
 #### :material-toolbox: Utilities

@@ -1,3 +1,4 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 -r requirements.txt
 pytest>=8
+maturin>=1.5,<2                 # builds the native core: see native/pyproject.toml

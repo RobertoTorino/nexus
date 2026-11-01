@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """The consoles the handheld is registered with, and the input the window takes for registering: the PSN account
-ID, the console's PIN and the optional login passcode. Ported from the BC250 Bazzite Suite's Console Link, the
-same file.
+ID, the console's PIN and the optional login passcode, and each console's stream settings. Ported from the BC250
+Bazzite Suite's Console Link, the same file.
 
 The keys a console hands out at registration let anyone on the network start a session as this account, so they
 live in their own file, in the user's own folder that only the user can read:
@@ -18,6 +18,7 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 
 from .regist import Registration
+from .stream_options import StreamOptions
 from .target import Target
 
 FILE_NAME = "consoles.json"
@@ -34,6 +35,7 @@ class RegisteredConsole:
     mac: bytes = b""
     rp_key_type: int = 0
     login_pin: str = ""
+    options: StreamOptions = StreamOptions()   # the stream settings (stream_options.py)
 
     @property
     def ps5(self) -> bool:
@@ -55,6 +57,7 @@ class RegisteredConsole:
         data["target"] = int(self.target)
         for name in ("regist_key", "rp_key", "mac"):
             data[name] = getattr(self, name).hex()
+        data["options"] = self.options.to_json()
         return data
 
     @classmethod
@@ -63,7 +66,8 @@ class RegisteredConsole:
                    address=str(data["address"]), target=Target(int(data["target"])),
                    regist_key=bytes.fromhex(data["regist_key"]), rp_key=bytes.fromhex(data["rp_key"]),
                    mac=bytes.fromhex(data.get("mac", "")), rp_key_type=int(data.get("rp_key_type", 0)),
-                   login_pin=str(data.get("login_pin", "")))
+                   login_pin=str(data.get("login_pin", "")),
+                   options=StreamOptions.from_json(data.get("options")))
 
 
 class ConsoleStore:

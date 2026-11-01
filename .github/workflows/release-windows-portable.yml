@@ -147,6 +147,25 @@ jobs:
           app=${TAG#wp-}; app=${app%-v*}
           python -m pip install -q -r "windows-portable/apps/$app/requirements.txt" pyinstaller pillow
 
+      # An app with a native core (Remote Play's): FFmpeg kept in the cache until its build.sh changes, then the
+      # module built and installed for build_release.py (windows-portable/tools/build_native.sh)
+      - name: The app
+        id: app
+        run: |
+          app=${TAG#wp-}; app=${app%-v*}
+          echo "name=$app" >> "$GITHUB_OUTPUT"
+      - name: FFmpeg cache
+        if: hashFiles(format('windows-portable/apps/{0}/native/Cargo.toml', steps.app.outputs.name)) != ''
+        uses: actions/cache@v6
+        with:
+          path: ~\AppData\Local\windows-portable-suite\build
+          key: ffmpeg-windows-${{ hashFiles(format('windows-portable/apps/{0}/native/ffmpeg/build.sh', steps.app.outputs.name)) }}
+      - name: Native core
+        if: hashFiles(format('windows-portable/apps/{0}/native/Cargo.toml', steps.app.outputs.name)) != ''
+        run: |
+          python -m pip install -q "maturin>=1.5,<2"
+          bash windows-portable/tools/build_native.sh "${{ steps.app.outputs.name }}" --setup
+
       - name: Build
         run: |
           python windows-portable/tools/build_release.py "$TAG" dist

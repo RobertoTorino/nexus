@@ -4,3 +4,7 @@ __pycache__/
 *.pyc
 
 .pytest_cache/
+
+# The native core's build output (cargo, maturin)
+/native/target/
+/native/dist/

@@ -9,8 +9,9 @@
 # Run it as your own user, not as administrator: everything goes in your own folders.
 #  * %LOCALAPPDATA%\windows-portable-suite\windows-portable-rplay\app: the program (Remote-Play.exe with the Python, Qt and bc250_core it was
 #    tested with), its LICENSE and THIRD-PARTY-NOTICES.txt.
-#  * %LOCALAPPDATA%\windows-portable-suite\windows-portable-rplay: the log, and consoles.json: the registered consoles
-#    and their keys (a registration is this device's, so not in %APPDATA%, which roams).
+#  * %LOCALAPPDATA%\windows-portable-suite\windows-portable-rplay: the log, consoles.json (the registered consoles and
+#    their keys: a registration is this device's, so not in %APPDATA%, which roams), history.json (the games played)
+#    and streams\ (each stream's statistics, the newest 20).
 #  * %APPDATA%\windows-portable-suite\windows-portable-rplay.ini: the settings.
 #  * A Start-menu entry in the Windows Portable Suite folder, and a Desktop shortcut.
 # WPS_DESKTOP_DIR and WPS_ELEVATED stand in for the Desktop folder and the administrator check in the installer

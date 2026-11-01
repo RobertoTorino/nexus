@@ -1,3 +1,14 @@
+Changelog: 01-11-2026 14:20:49
+
+Added. The Windows Portable Suite builds an app's native core (Remote Play's): windows-portable/tools/build_native.sh
+builds FFmpeg from the app's native/ffmpeg/build.sh when needed and the Rust module with maturin, and installs its
+wheel (--setup installs MSYS2's MINGW64 toolchain and Rust's GNU toolchain first). windows-portable/tools/
+build_release.py puts the module in as a hidden import (at the app's version, with its decoders) with FFmpeg's notice,
+and takes the third-party programs an app's binaries.toml pins (Remote Play's SDL3.dll), each checked against its
+SHA-256, beside the program with their licenses; --binaries <app> fetches them for a checkout. ci-windows-portable.yml
+has a native job (cargo test, clippy, the wheel and the tests that need it), and its installers job and
+release-windows-portable.yml build the module before an app with one, FFmpeg kept in the cache. With tests.
+
 Changelog: 01-11-2026 13:15:47
 
 Release 1.19.0. Brings wp-portal-v6.10.0, wp-rplay-v0.1.0.

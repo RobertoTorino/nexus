@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
-"""Remote Play for the handheld: find the PS4 and PS5 consoles on the network, wake them, register the handheld with
-one, and test a session with it. The BC250 Bazzite Suite's Console Link made for the handheld; its protocol code is
+"""Remote Play for the handheld: find the PS4 and PS5 consoles on the network, register the handheld with one, wake
+it and stream it full screen. The BC250 Bazzite Suite's Console Link made for the handheld; its protocol code is
 ported from the reference implementation, chiaki-ng (AGPL-3.0; see the README's License section)."""
 
 APP_NAME = "Remote Play"

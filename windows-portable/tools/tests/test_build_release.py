@@ -178,3 +178,56 @@ def test_ffmpegs_notice_goes_with_its_libraries(tmp_path):
     text = license_file.read_text(encoding="utf-8")
     assert "https://ffmpeg.org/download.html" in text and "GNU LESSER GENERAL PUBLIC LICENSE" in text
     assert "Version 2.1, February 1999" in text
+
+
+# An app's native core and pinned binaries (Remote Play's)
+
+def test_an_apps_pinned_binaries_are_checked_and_taken_from_their_zip(tmp_path):
+    app = tmp_path / "app"
+    app.mkdir()
+    payload = tmp_path / "SDL3-win32-x64.zip"
+    with zipfile.ZipFile(payload, "w") as zf:
+        zf.writestr("SDL3.dll", b"MZ the library")
+        zf.writestr("LICENSE.txt", "zlib license")
+    digest = hashlib.sha256(payload.read_bytes()).hexdigest()
+    (app / "binaries.toml").write_text(
+        '[[binary]]\nname = "SDL 3 (Zlib)"\nurl = "https://example.com/x/SDL3-win32-x64.zip"\n'
+        f'sha256 = "{digest}"\nfile = "SDL3.dll"\nlicense = "LICENSE.txt"\n', encoding="utf-8")
+    downloads = []
+
+    def download(url, dest):
+        downloads.append(url)
+        dest.write_bytes(payload.read_bytes())
+    [(name, file, license_file)] = br.fetch_binaries(app, tmp_path / "out", download)
+    assert name == "SDL 3 (Zlib)" and file.read_bytes() == b"MZ the library"
+    assert license_file.name == "SDL3-LICENSE.txt" and license_file.read_text() == "zlib license"
+    br.fetch_binaries(app, tmp_path / "out", download)
+    assert downloads == ["https://example.com/x/SDL3-win32-x64.zip"]          # the kept download used again
+    (app / "binaries.toml").write_text((app / "binaries.toml").read_text().replace(digest, "0" * 64))
+    with pytest.raises(SystemExit, match="does not match its pin"):
+        br.fetch_binaries(app, tmp_path / "other", download)
+    (app / "binaries.toml").write_text('[[binary]]\nname = "x"\n')
+    with pytest.raises(SystemExit, match="without file, license, sha256, url"):
+        br.binaries_of(app)
+    assert br.binaries_of(tmp_path) == []                                    # an app without any
+
+
+def test_the_native_core_goes_in_as_a_hidden_import_at_the_apps_version(tmp_path, monkeypatch):
+    assert br.native_module(br.SUITE / "apps" / "rplay") == "remote_play_core"
+    assert br.native_module(br.SUITE / "apps" / "test") == ""
+    args = br.pyinstaller_args(tmp_path, tmp_path / "l.py", "remote_play", "Remote-Play", tmp_path / "i.webp",
+                               tmp_path / "w", tmp_path / "d", sep=";", native="remote_play_core",
+                               binaries=[tmp_path / "SDL3.dll"])
+    assert args[args.index("--hidden-import") + 1] == "remote_play_core"
+    assert args[args.index("--add-binary") + 1] == f"{tmp_path / 'SDL3.dll'};."
+    fake = type(sys)("fake_native_core")
+    fake.__version__, fake.DECODER = "0.1.0", True
+    monkeypatch.setitem(sys.modules, "fake_native_core", fake)
+    assert br.check_native("fake_native_core", "0.1.0") is fake
+    with pytest.raises(SystemExit, match="is 0.1.0, the app 0.2.0"):
+        br.check_native("fake_native_core", "0.2.0")
+    fake.DECODER = False
+    with pytest.raises(SystemExit, match="without its decoders"):
+        br.check_native("fake_native_core", "0.1.0")
+    with pytest.raises(SystemExit, match="not installed in this Python"):
+        br.check_native("no_such_native_core", "0.1.0")

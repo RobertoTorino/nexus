@@ -712,13 +712,28 @@ code is chiaki-ng's. **In two phases** (owner, 01-11-2026: "Phase it"):
    roaming); uninstall keeps it, `--purge` removes it. To try on the Ally: the search and the wake-up on a real
    network (does Windows' firewall ask at the first search, and do the broadcast answers arrive without a rule),
    the sign-in through the clipboard with the handheld's browser, registration with a PS5 and a PS4.
-2. **The stream (next):** Console Link's native core (Rust, `native/`) built for Windows: FFmpeg from its pinned
-   sources with D3D11VA (or DXVA2) in place of VA-API in `decoder.c` and `build.rs`, `build.sh`'s part for Windows
-   (MSYS2 or MSVC), the module as a `.pyd` in the PyInstaller program; SDL3 for the controllers (`SDL3.dll` in the
-   release: pygame-ce brings SDL2 only), the sound through Qt Multimedia, the OpenGL view; then the stream settings,
-   the controller test, the history and a Steam entry per console (core's `steam`, as the emulator apps). The
-   suite's CI and release workflow get the Rust and FFmpeg build. The owner approved installing Rust (rustup) and
-   MSYS2 on the Windows machine for it (01-11-2026).
+2. **The stream: done in the working tree (owner, 01-11-2026: "you can go ahead with phase 2"), still 0.1.0, not
+   released.** Rust (rustup, the `stable-x86_64-pc-windows-gnu` toolchain) and MSYS2 (MINGW64: gcc, make, pkgconf,
+   nasm) are installed on the Ally X, as approved. The native core is Console Link's, renamed `remote_play_core`; its
+   65 Rust tests passed on Windows unchanged. Built with the GNU toolchain and MINGW64's GCC (both msvcrt; no Visual
+   Studio needed); FFmpeg 7.1.2 from its pinned sources (`native/ffmpeg/build.sh`, its download kept beside the
+   builds: ffmpeg.org reset MSYS2's curl several times on 01-11-2026) with D3D11VA and DXVA2 in place of VA-API. Both
+   of FFmpeg's D3D11VA hwaccels are needed: `d3d11va2` works from a device context, and the H.264 and HEVC decoders
+   offer the D3D11 pixel format only with the older `d3d11va` enabled. On the Ally X's Radeon 890M the decoder runs
+   on the GPU (nv12, as VA-API gave). The module needs only Windows' DLLs and `python3.dll`. SDL3 3.4.18 is pinned
+   in `apps/rplay/binaries.toml` and comes with the release; SDL3 sees the Ally X's controls as an XInput controller.
+   Tried on the Ally X with the built release against the test fakes on localhost at the consoles' own ports (a
+   scratch harness): the direct start streamed, decoded on the GPU, read the controller about 200 times a second and
+   wrote its statistics with Windows' processor figures. Windows differences found and fixed: the network test's
+   ping timer (monotonic ticks every 15.6 ms), the history's clock, `/proc` (Windows' own processor figures), and
+   WSAECONNRESET (phase 1). A network search on 01-11-2026 found no console (none on, or the firewall: to see).
+   **Left out:** Console Link's controller test with its genuine-or-fake check (it reads HID reports through Linux's
+   hidraw; on Windows SDL3's HID calls could), its several-players experiment and simulated loss (not for users),
+   and Steam's Guide Button setting (Game Mode's). **The ways out of a stream** follow core's play mode: View, LB and
+   RB held two seconds, or the screen touched and held. **To try on the Ally with a console:** registering and
+   playing a PS5 and a PS4 over Wi-Fi (the picture, the sound, the controls, the quit chord, a DualSense on the
+   handheld), the firewall's question at the first search, the Steam entry from Steam's full-screen mode, and a
+   stream's statistics. The weekly upstream check reads only `emulator.py` files, so the SDL3 pin is not watched yet.
 
 ## BIOS Reader for Windows (01-11-2026, the owner: "analyze if we can port the BIOS reader")
 
