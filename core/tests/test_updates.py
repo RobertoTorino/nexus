@@ -54,6 +54,49 @@ def test_prefix_without_match():
     assert info.version == "" and "cu-bisect-v*" in info.error
 
 
+def test_prefix_follows_pages_until_found():
+    # Page 1 is full of another suite's releases (the Windows Portable Suite's on 01-11-2026); the portal's are on
+    # page 2, which is the last page. Nothing is read after the page that holds the prefix.
+    pages = {1: [_rel(f"wp-test-v4.{i}.0") for i in range(100)],
+             2: [_rel("portal-v12.1.1"), _rel("portal-v13.0.0"), _rel("portal-v12.0.0")],
+             3: [_rel("portal-v99.0.0")]}
+    urls = []
+
+    def fetch(url):
+        urls.append(url)
+        return pages[int(url.rsplit("page=", 1)[1])]
+
+    info = latest_release(REPO, "portal-v", fetch=fetch)
+    assert (info.version, info.tag, info.error) == ("13.0.0", "portal-v13.0.0", "")
+    assert urls == [f"https://api.github.com/repos/{REPO}/releases?per_page=100&page={n}" for n in (1, 2)]
+
+
+def test_prefix_stops_at_the_last_page():
+    # Two full pages without the prefix, then a short one: the list ended, no fourth request.
+    pages = {1: [_rel(f"wp-a-v{i}.0.0") for i in range(100)], 2: [_rel(f"wp-b-v{i}.0.0") for i in range(100)],
+             3: [_rel("wp-c-v1.0.0")]}
+    urls = []
+
+    def fetch(url):
+        urls.append(url)
+        return pages[int(url.rsplit("page=", 1)[1])]
+
+    info = latest_release(REPO, "portal-v", fetch=fetch)
+    assert "portal-v*" in info.error and len(urls) == 3
+
+
+def test_prefix_gives_up_after_max_pages():
+    from bc250_core.updates import MAX_PAGES
+    urls = []
+
+    def fetch(url):
+        urls.append(url)
+        return [_rel(f"wp-a-v{i}.0.0") for i in range(100)]
+
+    info = latest_release(REPO, "portal-v", fetch=fetch)
+    assert "portal-v*" in info.error and len(urls) == MAX_PAGES
+
+
 @pytest.mark.parametrize("exc, word", [
     (urllib.error.HTTPError("u", 403, "rate limited", None, None), "403"),
     (urllib.error.URLError("Name or service not known: x"), "no connection"),

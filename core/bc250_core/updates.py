@@ -22,6 +22,8 @@ from .text import fmt
 
 API = "https://api.github.com/repos/{repo}"
 TIMEOUT = 15
+PAGE_SIZE = 100                 # releases a page of GitHub's list
+MAX_PAGES = 10                  # pages followed for a tag prefix before giving up
 _VERSION_RE = re.compile(r"(\d+)\.(\d+)\.(\d+)")
 
 Fetch = Callable[[str], object]         # url -> decoded JSON
@@ -77,17 +79,23 @@ def latest_release(repo: str, tag_prefix: str = "", *, fetch: Fetch | None = Non
     base = API.format(repo=repo)
     try:
         if tag_prefix:
-            data = fetch(f"{base}/releases?per_page=100")
-            if not isinstance(data, list):
-                raise ValueError("not a release list")
+            # GitHub lists releases newest first, PAGE_SIZE a page. Another suite's releases can fill the first
+            # pages (the Windows Portable Suite's did on 01-11-2026), so the pages are followed until one holds
+            # this prefix, or the list ends, or MAX_PAGES are read.
             candidates = []
-            for item in data:
-                tag = str(item.get("tag_name", ""))
-                if item.get("draft") or item.get("prerelease") or not tag.startswith(tag_prefix):
-                    continue
-                version = version_tuple(tag[len(tag_prefix):])
-                if version:
-                    candidates.append((version, item))
+            for page in range(1, MAX_PAGES + 1):
+                data = fetch(f"{base}/releases?per_page={PAGE_SIZE}&page={page}")
+                if not isinstance(data, list):
+                    raise ValueError("not a release list")
+                for item in data:
+                    tag = str(item.get("tag_name", ""))
+                    if item.get("draft") or item.get("prerelease") or not tag.startswith(tag_prefix):
+                        continue
+                    version = version_tuple(tag[len(tag_prefix):])
+                    if version:
+                        candidates.append((version, item))
+                if candidates or len(data) < PAGE_SIZE:
+                    break
             if not candidates:
                 return ReleaseInfo(url=page_url, error=fmt("no release tagged %1 yet", f"{tag_prefix}*"))
             version, item = max(candidates, key=lambda c: c[0])

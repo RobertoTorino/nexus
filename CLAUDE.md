@@ -45,7 +45,9 @@ default suite of the tools (`tools/suites.py`). The root keeps what is Nexus's:
   (`tools/stage_app.py`), so each app runs on the core it was tested with; the BC250 suite's shared venv
   `~/.local/share/bc250-bazzite-suite/venv` holds only PyQt6 and pygame-ce (the portal's controller reader).
 - `tools/`: the Nexus tools: release and CI (`stage_app.py`, `build_release.py`, `check_versions.py`,
-  `check_changelogs.py`, `tag-release.sh`, `release.sh`, `ci-local.sh`, `pre-push.sh`, `fix-modes.sh`,
+  `check_changelogs.py`, `tag-release.sh`, `release.sh`, `ci-local.sh`, `pre-push.sh`, `git-setup.sh` (once per
+  checkout: the pre-push hook and `merge_changelog.py`, git's merge driver for the CHANGELOGs, which merges two
+  machines' new entries by entry; owner, 01-11-2026), `fix-modes.sh`,
   `backlog.py`, `nexus_index.py` (GitHub's Latest release: the Nexus index, every suite's newest portal),
   `dev-updates.sh`, `dev-backup.sh`), `new_app.py` (a new app of a suite from the architecture chapter, listed
   everywhere the suite lists its apps, with the checks run on it), the design and icon catalogs (`make_design.py`, `make_icons.py`, `apply_design.py`), the tours
@@ -160,7 +162,7 @@ the full venv on a newer Python cannot show; run it before saying work is ready:
 
 ```bash
 tools/ci-local.sh                                   # every job of both workflows as GitHub runs it (podman); --list shows them
-tools/pre-push.sh                                   # CI's quick checks against origin/main (git's pre-push hook)
+tools/pre-push.sh                                   # CI's quick checks against origin/main (git's pre-push hook, tools/git-setup.sh once per checkout)
 ./test.sh                                           # every test suite of this system, offscreen
 python3 tools/check_versions.py                     # versions = VERSION, every suite
 python3 bc250-bazzite/tools/check_manifest.py --base origin/main  # the suite's apps.toml rules, the bump since the last portal release

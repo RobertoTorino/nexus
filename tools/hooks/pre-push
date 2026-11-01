@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
-# git's pre-push hook for this checkout (git config core.hooksPath tools/hooks): the checks are tools/pre-push.sh.
+# git's pre-push hook for this checkout (tools/git-setup.sh sets core.hooksPath to tools/hooks): the checks are
+# tools/pre-push.sh.
 exec bash "$(dirname "${BASH_SOURCE[0]}")/../pre-push.sh" "$@"

@@ -16,7 +16,8 @@ are written from the root of the repository.
 ```
 core/bc250_core/              shared Python package, every suite's; bundled into each app at release time (below)
 tools/                        the Nexus tools: release and CI (build_release, stage_app, check_versions,
-                              check_changelogs, tag-release.sh, release.sh, ci-local.sh, pre-push.sh, nexus_index),
+                              check_changelogs, tag-release.sh, release.sh, ci-local.sh, pre-push.sh, git-setup.sh,
+                              merge_changelog, nexus_index),
                               new_app, the design and icon catalogs, the tours, the design panel
 dev/<name>/                   the Nexus development apps, run from the checkout: dev/nrt/ is Nexus Release Tool
 test.sh                       runs every test suite (core, tools, dev/, and the portal, tools and apps of each suite
@@ -68,7 +69,7 @@ Code shared by every suite's apps (`core/`). Nothing in it imports an app: each 
 | `app` | `create_app()` / `run_app()` / `exec_app()`: names, Fusion with the theme, tooltip, icon, SIGTERM | the apps' `__main__` |
 | `settings` | `open_settings(info)` at each app's existing file, geometry helpers, `SettingsStore` (typed defaults) | bazzite-test's `AppSettings` |
 | `help` | `HelpView` (the content stays in the app) | upscaler |
-| `updates` | `latest_release()` (with a tag prefix for the suite's per-app tags), `UpdateStatus`, `UpdateChecker` (any job, off the GUI thread) | upscaler + governor |
+| `updates` | `latest_release()` (with a tag prefix for the suite's per-app tags: GitHub's release pages, newest first, are followed until one holds the prefix, since another suite's releases can fill the first page), `UpdateStatus`, `UpdateChecker` (any job, off the GUI thread) | upscaler + governor |
 | `platform` | XDG folders, `xdg_open()`, `launch_in_terminal()` (with an exit file the caller can watch); for Windows, a suite's folders under `%LOCALAPPDATA%` and `%APPDATA%`, `open_path()`, a PowerShell window and Start-menu shortcuts; `private()`, a path or a text with the user's folders as `%LOCALAPPDATA%`, `%APPDATA%` and `%USERPROFILE%` (`~` on Linux), never the user's name, which `applog.setup(private=True)` applies to every line of a log; `outside_bundle()` and `start_program()`: a program a PyInstaller-built app starts (Steam, an emulator) without the app's own DLL directory and PATH, which it would otherwise inherit | the bisect GUIs' `terminal.py` |
 | `steam` | Steam's folders and users, `installed()`, `with_steam_closed()`, `open_url()`, `shortcuts.vdf` and the shortcuts' artwork in `grid/` (standard library only) | consoles |
 | `play` | A game manager's play mode (Windows): `run()` starts the emulator outside the app's bundle, watches the controller and closes the emulator's windows when View, LB and RB are held for two seconds; `launcher()`, what a game's Steam shortcut starts (the app's own program with `--play`, or its `run.ps1` from the checkout); `played()`, whether a shortcut does that yet | new |
@@ -148,13 +149,24 @@ portal bump it needs against what the remote has, the CHANGELOGs keeping every e
 checked only when the push changes that suite (its folder), so a failing check of the Windows Portable Suite never
 holds a push of the BC250 suite, and the other way round; core and `dev/` are checked on every push. The checks read
 the commit that is pushed, in a checkout of it of their own (a few seconds more), as CI does: a fix that is in the
-working tree but not committed never lets a push through. Make it git's pre-push hook once per checkout, and every
-`git push` runs it first:
+working tree but not committed never lets a push through. `tools/git-setup.sh`, once per checkout, makes it git's
+pre-push hook (`core.hooksPath`), and every `git push` runs it first:
 
 ```bash
-git config core.hooksPath tools/hooks   # once per checkout
+tools/git-setup.sh                      # once per checkout: the hook and the CHANGELOGs' merge driver
 BC250_PRE_PUSH=full git push            # also every CI job (tools/ci-local.sh)
 ```
+
+The same script registers `tools/merge_changelog.py` as git's merge driver for every CHANGELOG (`.gitattributes`:
+`CHANGELOG merge=changelog`). Every CHANGELOG grows at the top, so an entry written on this machine and an entry a
+release wrote on the other one both sit above the same old entry, and git's line merge stops with a conflict at the
+pull that brings them together. The driver merges by entry instead: the other side's new entries go in above the
+entry they sat above there, and above this side's new entries that are older, so the new ones read newest first;
+an entry changed on one side is taken as changed, one removed is left out, and nothing that was there before moves.
+Only when both sides changed the same entry does git mark a conflict, as it always did. Git uses the driver in a
+pull with `--rebase`, a merge, a cherry-pick, and when an autostash or `git stash pop` comes back. The pre-push
+hook says so when the driver is not set in a checkout. Nexus Release Tool's **git pull** runs `tools/git-setup.sh`
+first, so a checkout it pulls in is set up.
 
 When the hook stops a push, CI would fail on the same commit: fix it, commit, and push again. Pushing past it with
 `git push --no-verify` sends the failure to GitHub, and the release tags wait until a new push passes CI.

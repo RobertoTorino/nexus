@@ -1,3 +1,11 @@
+Changelog: 01-11-2026 20:36:00
+
+Fixed. latest_release() (updates.py) follows GitHub's release pages until one holds the app's tag prefix, instead
+of reading the first 100 releases only. The Windows Portable Suite's releases of 01-11-2026 filled that first page,
+so every installed BC250 app, and the installed portal, said "no release tagged <prefix>* yet" and would not have
+offered its next release. The pages are read newest first, 100 a page, until the prefix is found, the list ends or
+ten pages were read.
+
 Changelog: 01-11-2026 18:11:40
 
 Version 2.5.0.

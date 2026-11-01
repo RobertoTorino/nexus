@@ -187,7 +187,11 @@ published already and ends at once.
   or a test on this board wrote. A step that writes its log opens Logs; open the step again to go on.
 - **git pull**, **git add**, **git commit**, **git push** and **git tag**, under the tabs, commit, push and tag without typing a command, with
   the checks in between. **git pull** brings in what was pushed from the other machine (`git pull --rebase
-  --autostash`: your own commits go on top of it, and changes you have not committed stay as they are). It reads
+  --autostash`: your own commits go on top of it, and changes you have not committed stay as they are). It runs
+  `tools/git-setup.sh` first, the checkout's git settings: the pre-push hook and the CHANGELOGs' merge driver, which
+  merges an entry written here and an entry released from the other machine by entry instead of by line, so the
+  pull no longer stops with a conflict in a CHANGELOG they both grew (the Nexus page's
+  [Development](development.md) chapter). It reads
   **git pull (2)** when the remote's main, as git last fetched it, has two commits this checkout lacks, and **git
   pull (new)** when the GitHub pill sees a push on main that is no commit here. Pull when you start working on a
   machine, and when **git push** says the remote has commits this checkout does not. **git add** stages every change and new file and runs `tools/fix-modes.sh`, which sets
@@ -332,4 +336,5 @@ wp-portal-v1.3.0.*). There is nothing to tag: the index takes the number `nexus-
 
 `/releases/latest`, which the suites' READMEs and wikis link to, opens the index, and app release notes start by
 pointing to it. Installed portals do not use it: they find their releases by their tag prefix (`portal-v`,
-`wp-portal-v`).
+`wp-portal-v`), reading GitHub's release list page by page, newest first, until a page holds the prefix. A run of
+another suite's releases at the top of the list therefore does not hide a portal's, or an app's, own newest release.

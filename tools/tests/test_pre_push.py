@@ -56,6 +56,16 @@ def hook(root: Path, lines: list[str], **env: str) -> subprocess.CompletedProces
                           capture_output=True, text=True, env=dict(ENV, CALLS=str(root / "calls.txt"), **env))
 
 
+def test_hints_at_git_setup_when_the_changelog_merge_driver_is_missing(repo):
+    """The merge driver of the CHANGELOGs (tools/merge_changelog.py) is a setting of the checkout, as the hook is:
+    the hook says so when it is missing, and still pushes."""
+    result = hook(repo, [f"refs/heads/main {git(repo, 'rev-parse', 'HEAD')} refs/heads/main {ZERO}"])
+    assert result.returncode == 0 and "tools/git-setup.sh once" in result.stdout
+    git(repo, "config", "--local", "merge.changelog.driver", "python3 tools/merge_changelog.py %O %A %B")
+    result = hook(repo, [f"refs/heads/main {git(repo, 'rev-parse', 'HEAD')} refs/heads/main {ZERO}"])
+    assert result.returncode == 0 and "git-setup" not in result.stdout
+
+
 def calls(root: Path) -> list[str]:
     path = root / "calls.txt"
     return path.read_text().splitlines() if path.exists() else []

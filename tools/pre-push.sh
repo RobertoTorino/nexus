@@ -4,7 +4,7 @@
 # VERSION, apps.toml with its portal bump against what the remote has (the check a release push failed on), the
 # CHANGELOGs keeping every entry the remote has, the scripts' exec bits and the line endings. A few seconds; tools/ci-local.sh runs every job (a minute or two).
 #
-# As git's pre-push hook, once per checkout:   git config core.hooksPath tools/hooks
+# As git's pre-push hook, once per checkout:   tools/git-setup.sh   (git config core.hooksPath tools/hooks)
 # By hand:                                     tools/pre-push.sh [BASE]        (BASE: default origin/main)
 #
 # BC250_PRE_PUSH=full also runs tools/ci-local.sh (Linux); BC250_PRE_PUSH=off skips the hook, as git push --no-verify
@@ -27,6 +27,10 @@ for candidate in "$ROOT/.venv-linux/bin/python" "$ROOT/.venv-windows/Scripts/pyt
     if "$candidate" -c '' >/dev/null 2>&1; then python=$candidate; break; fi
 done
 [ -n "$python" ] || { echo "pre-push: no Python found, the checks did not run" >&2; exit 1; }
+# The CHANGELOGs' merge driver (tools/merge_changelog.py) is a setting of the checkout, as this hook is: without
+# it, the next pull with an entry on both machines ends in a conflict. A hint, not a failure.
+git config --local --get merge.changelog.driver >/dev/null 2>&1 ||
+    info "the CHANGELOG merge driver is not set in this checkout: run tools/git-setup.sh once"
 
 # The branch commits being pushed, each with what the remote has ("" for a new branch: CI then has no base either).
 # git hands them over on stdin; by hand, HEAD against BASE.

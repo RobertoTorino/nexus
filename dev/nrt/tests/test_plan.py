@@ -499,7 +499,7 @@ def test_window_git_pull_button(window, repo, monkeypatch):
     pull = window.pull_button
     assert pull.isEnabled() and pull.text() == "git pull" and rp.pull_command() in pull.toolTip()
     pull.click()
-    assert ran[-1] == "git pull --rebase --autostash" and window.tabs.currentIndex() == window.commands_tab
+    assert ran[-1] == "tools/git-setup.sh && git pull --rebase --autostash" and window.tabs.currentIndex() == window.commands_tab
     sh(repo, "checkout", "-q", "pushed")                                 # the other machine pushes two commits
     for name in ("a", "b"):
         write(repo / f"{name}.txt", name)
@@ -2125,5 +2125,6 @@ def test_window_apply_greys_out_once_applied_and_pin_waits_for_the_builds(window
 def test_push_brings_in_what_github_has_first():
     """The release's Pin ... commit is on main after every release (owner, 31-10-2026: the pre-push hook refused the
     push): git pull --rebase runs before the push, and before CI's jobs on Linux."""
-    assert rp.push_command(linux=False) == "git pull --rebase --autostash && git push"
-    assert rp.push_command(linux=True) == f"git pull --rebase --autostash && {rp.CI_LOCAL} && git push"
+    pull = "tools/git-setup.sh && git pull --rebase --autostash"
+    assert rp.push_command(linux=False) == f"{pull} && git push"
+    assert rp.push_command(linux=True) == f"{pull} && {rp.CI_LOCAL} && git push"

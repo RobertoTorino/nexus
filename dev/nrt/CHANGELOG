@@ -1,3 +1,9 @@
+Changelog: 01-11-2026 21:20:00
+
+Fixed. git pull (and the pull before git push) runs tools/git-setup.sh first, the checkout's git settings: the
+pre-push hook and the CHANGELOGs' merge driver, so a pull that brings in an entry from the other machine while an
+entry is written here no longer ends in a conflict (owner, 01-11-2026: "I have this every time").
+
 Changelog: 01-11-2026 09:07:39
 
 Fixed. The commit command no longer fails now and then with "Unable to create .git/index.lock: File exists": the

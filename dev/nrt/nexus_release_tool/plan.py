@@ -1705,8 +1705,11 @@ def push_command(linux: bool | None = None) -> str:
 
 def pull_command() -> str:
     """The git pull button: what was pushed from the other machine, with this checkout's own commits put on top of
-    it (--rebase: no merge commit) and its changes not committed yet kept as they are (--autostash)."""
-    return "git pull --rebase --autostash"
+    it (--rebase: no merge commit) and its changes not committed yet kept as they are (--autostash). The checkout's
+    git settings come first (tools/git-setup.sh: the hook and the CHANGELOGs' merge driver, which lets an entry
+    written here and one pushed from the other machine merge; owner, 01-11-2026: the pull ended in that conflict
+    every time)."""
+    return "tools/git-setup.sh && git pull --rebase --autostash"
 
 
 def behind(root: Path, base: str) -> int:
