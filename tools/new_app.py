@@ -698,7 +698,7 @@ if __name__ == "__main__":
 '''
 
 W_WINDOW_PY = r'''# SPDX-License-Identifier: GPL-3.0-or-later
-"""The window: the suite's portable window, the header with the battery, the date and the time, the app's page, and
+"""The window: the suite's portable window, the header with the date, the time and the battery, the app's page, and
 the controller's buttons at the bottom."""
 
 from __future__ import annotations
@@ -756,7 +756,7 @@ class MainWindow(PortableWindow):
         self.status_timer.start()
 
     def update_status(self) -> None:
-        self.header.set_status([power.text(self.battery()), *status_clock()])
+        self.header.set_status([*status_clock(), power.text(self.battery())])   # the battery last (owner, 30-10-2026)
 
     def update_legend(self) -> None:
         """The page's buttons, then core's Menu Info, B Back and View Exit (the suite's rule)."""
@@ -844,7 +844,7 @@ def make(qapp):
 def test_the_window_opens_with_the_suites_header(qapp):
     window = make(qapp)
     assert window.header.title.text() == APP_NAME and window.header.version.text() == __version__
-    assert re.fullmatch(r"82%  \|  \w+day \d\d/\d\d/\d{4}  \|  \d\d:\d\d", window.header.status.text())
+    assert re.fullmatch(r"\w+day \d\d/\d\d/\d{4}  \|  \d\d:\d\d  \|  82%", window.header.status.text())
     assert window.legend.items == [EXIT]
     window.close()
 

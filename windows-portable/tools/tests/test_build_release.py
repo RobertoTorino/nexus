@@ -163,3 +163,18 @@ def test_the_zip_unpacks_into_the_tag_in_the_same_order_with_the_same_times(tmp_
         assert zf.namelist() == ["wp-test-v0.1.0/LICENSE", "wp-test-v0.1.0/install.ps1",
                                  "wp-test-v0.1.0/program/X.exe", "wp-test-v0.1.0/program/_internal/b.txt"]
         assert {info.date_time for info in zf.infolist()} == {time.gmtime(1790000000)[:6]}
+
+
+def test_ffmpegs_notice_goes_with_its_libraries(tmp_path):
+    """A program that carries FFmpeg's libraries (Qt Multimedia's) gets FFmpeg's notice, named by the library's own
+    version; one without them gets none (owner, 01-11-2026)."""
+    program = tmp_path / "program"
+    (program / "_internal" / "PyQt6" / "Qt6" / "bin").mkdir(parents=True)
+    assert br.ffmpeg_notices(program) == []
+    assert br.ffmpeg_notices(None) == []
+    (program / "_internal" / "PyQt6" / "Qt6" / "bin" / "avcodec-61.dll").write_bytes(b"MZ")    # no version resource
+    [(name, license_file)] = br.ffmpeg_notices(program)
+    assert name == "FFmpeg (LGPL-2.1-or-later)" and license_file == br.FFMPEG_LICENSE
+    text = license_file.read_text(encoding="utf-8")
+    assert "https://ffmpeg.org/download.html" in text and "GNU LESSER GENERAL PUBLIC LICENSE" in text
+    assert "Version 2.1, February 1999" in text

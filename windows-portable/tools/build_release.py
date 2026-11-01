@@ -19,7 +19,9 @@ from there. Every pinned tag must exist (check_manifest.py --require-tags, in th
 
 This is the suite's own tool (owner, 27-10-2026: a change to one suite never touches another's release): the
 BC250 Bazzite Suite's releases are built by tools/build_release.py. It uses the Nexus tools' staging and the
-third-party notices of tools/build_windows_exe.py, without changing them."""
+third-party notices of tools/build_windows_exe.py, without changing them. A program that carries FFmpeg's libraries
+(Qt Multimedia's: USB HD Cam's picture) gets FFmpeg's notice too, from tools/licenses/ffmpeg.txt, with the version
+the library itself names (owner, 01-11-2026)."""
 
 from __future__ import annotations
 
@@ -169,12 +171,50 @@ def pyinstaller_args(stage: Path, launcher: Path, package: str, exe_name: str, i
     ]
 
 
-def notices(stage: Path, exe_name: str) -> str:
-    """THIRD-PARTY-NOTICES.txt: Python, the fonts core registers and the packages requirements.txt pulls in."""
+FFMPEG_LICENSE = SUITE / "tools" / "licenses" / "ffmpeg.txt"
+FFMPEG_LIBRARY = "avcodec-*.dll"            # one of the five FFmpeg libraries Qt Multimedia ships
+
+
+def product_version(path: Path) -> str:
+    """The product version a Windows file names in its version resource ("7.1.5"); "" when it names none."""
+    if sys.platform != "win32":
+        return ""
+    import ctypes
+    version = ctypes.WinDLL("version")
+    size = version.GetFileVersionInfoSizeW(str(path), None)
+    if not size:
+        return ""
+    data = ctypes.create_string_buffer(size)
+    if not version.GetFileVersionInfoW(str(path), 0, size, data):
+        return ""
+    pointer, length = ctypes.c_void_p(), ctypes.c_uint()
+    if not version.VerQueryValueW(data, "\\VarFileInfo\\Translation", ctypes.byref(pointer), ctypes.byref(length)) \
+            or length.value < 4:
+        return ""
+    language, codepage = ctypes.cast(pointer, ctypes.POINTER(ctypes.c_ushort * 2)).contents
+    key = f"\\StringFileInfo\\{language:04x}{codepage:04x}\\ProductVersion"
+    if not version.VerQueryValueW(data, key, ctypes.byref(pointer), ctypes.byref(length)) or not length.value:
+        return ""
+    return ctypes.wstring_at(pointer.value, length.value).rstrip("\0").strip()
+
+
+def ffmpeg_notices(program: Path | None) -> list[tuple[str, Path]]:
+    """FFmpeg's entry when *program* carries its libraries, else none."""
+    found = sorted(program.rglob(FFMPEG_LIBRARY)) if program is not None else []
+    if not found:
+        return []
+    name = " ".join(part for part in ("FFmpeg", product_version(found[0])) if part)
+    return [(f"{name} (LGPL-2.1-or-later)", FFMPEG_LICENSE)]
+
+
+def notices(stage: Path, exe_name: str, program: Path | None = None) -> str:
+    """THIRD-PARTY-NOTICES.txt: Python, the fonts core registers, FFmpeg when *program* (the built one-folder
+    program) carries it, and the packages requirements.txt pulls in."""
     fonts = sorted((stage / "bc250_core" / "fonts").glob("*LICENSE*"))
     return windows_exe.notices_text(exe_name, windows_exe.bundled_distributions(stage / "requirements.txt"),
                                     [(f"Python {sys.version.split()[0]}", windows_exe.python_license())]
-                                    + [(f"Font: {font.name.split('-')[0]}", font) for font in fonts])
+                                    + [(f"Font: {font.name.split('-')[0]}", font) for font in fonts]
+                                    + ffmpeg_notices(program))
 
 
 def write_zip(root: Path, top: str, dest: Path, epoch: int) -> None:
@@ -218,7 +258,7 @@ def build_zip(app: str, tag: str, out: Path, epoch: int, bundle: Path | None = N
         for extra in ("install.ps1", "LICENSE", "MANUAL.md"):
             if (stage / extra).is_file():
                 shutil.copyfile(stage / extra, release / extra)
-        (release / windows_exe.NOTICES).write_text(notices(stage, exe_name), encoding="utf-8")
+        (release / windows_exe.NOTICES).write_text(notices(stage, exe_name, release / "program"), encoding="utf-8")
         if bundled is not None:
             test_zip, digest = bundled
             (release / "bundle").mkdir()

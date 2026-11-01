@@ -1,3 +1,22 @@
+Changelog: 01-11-2026 01:16:05
+
+Added. The Windows Portable Suite's windows-portable/tools/build_release.py adds FFmpeg's notice to a release's
+THIRD-PARTY-NOTICES.txt when its program carries FFmpeg's libraries (Qt Multimedia's, which USB HD Cam's picture
+uses): named with the version the library gives (7.1.5), with the LGPL 2.1 text and where its source is, from
+windows-portable/tools/licenses/ffmpeg.txt (owner, 01-11-2026). With a test.
+
+Changelog: 01-11-2026 00:47:20
+
+Fixed. tools/new_app.py's Windows Portable Suite template puts the battery last in the header's status line,
+after the date and the time, as every app of the suite has it (owner, 30-10-2026; the suite's CLAUDE.md still named
+the old order).
+
+Changelog: 01-11-2026 00:15:25
+
+Added. The Windows Portable Suite's Utilities category icon, the owner's picture of a circuit board (01-11-2026):
+tools/make_icons.py describes it and lists the Utilities card's toolbox icon of the suite's wiki; ICONS.md lists
+both.
+
 Changelog: 31-10-2026 23:22:33
 
 Release 1.13.0.

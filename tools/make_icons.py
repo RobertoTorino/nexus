@@ -163,6 +163,7 @@ WINDOWS_PORTABLE_CATEGORIES = {
     "gaming": "the owner's pictures of the handheld (29-10-2026), wide (2:1: 1024 x 512 down to 128 x 64): the tile and "
               "the wiki show them as they are, the window, program and Start-menu icons centered on a transparent "
               "square",
+    "utilities": "the owner's picture of a circuit board (01-11-2026), square (1024 x 1024 down to 128 x 128)",
 }
 
 
@@ -248,6 +249,7 @@ def write_copies(root: Path, exact: list[tuple[str, str]], page: list[tuple[str,
 WINDOWS_PORTABLE_MATERIAL = [
     ("stethoscope", "Home: the card \"Sustainable\"."),
     ("gamepad-variant", "Home: the card \"Gaming\"."),
+    ("toolbox", "Home: the card \"Utilities\"."),
     ("download", "Home: the Download button."),
 ]
 

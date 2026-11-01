@@ -93,8 +93,8 @@ app is an optional tile. The wiki is at robertotorino.github.io/nexus/windows-po
   - **No user name on the screen or in a log** (owner, 29-10-2026: the privacy rule): a path is shown through core's
     `platform.private()` (`%LOCALAPPDATA%\...`, `%USERPROFILE%\...`), and every app logs with
     `applog.setup(..., private=True)`.
-  - The header's status line: the battery, the date and the time, `82% | Wednesday 28/10/2026 | 17:04` (owner,
-    28-10-2026: no space before %); Windows Portable Test shows the date and the time, and under them
+  - The header's status line: the date, the time and the battery, `Wednesday 28/10/2026 | 17:04 | 82%` (owner,
+    28-10-2026: no space before %; 30-10-2026: the battery last); Windows Portable Test shows the date and the time, and under them
     the temperatures, the power draw, the screen's refresh rate and the battery, `CPU 47° GPU 45° | 18 W | 120 Hz |
     82%` (owner, 29-10-2026). No icon in the
     test app's header (the screen is too small for it).
@@ -105,11 +105,14 @@ app is an optional tile. The wiki is at robertotorino.github.io/nexus/windows-po
   in `%LOCALAPPDATA%\windows-portable-suite\` (programs, logs, reports, the portal's state) and
   `%APPDATA%\windows-portable-suite\` (one `.ini` per app); nothing in the registry (tests must not write to it
   either). An app the portal installs gets a Start-menu entry in the Windows Portable Suite folder and no Desktop
-  shortcut (owner, 28-10-2026); one installed by hand gets both. The one exception (owner, 31-10-2026): the
+  shortcut (owner, 28-10-2026); one installed by hand gets both. Two exceptions. The first (owner, 31-10-2026): the
   portal's Operating Mode helper on the ROG Xbox Ally X, a scheduled task that writes the watt limits as SYSTEM,
   installed with one administrator prompt, its script in `C:\Program Files\windows-portable-suite\` so the user
   cannot change what it runs, and its request (one letter the user may write), result and log in
-  `C:\ProgramData\windows-portable-suite\`.
+  `C:\ProgramData\windows-portable-suite\`. The second (owner, 31-10-2026): USB HD Cam's Allow access, which binds
+  Microsoft's in-box WinUSB driver (winusb.inf, section WINUSB) to the PS5 HD Camera's boot loader (05a9:0580) with
+  one administrator prompt per USB port: the app starts its own program again with `--bind <instance ID>`, which
+  binds only that device and ends (`apps/hdcam/usb_hd_cam/driver.py`). No certificate, no driver of anyone else's.
 - **Personal data is never read out**: no serial numbers, MAC addresses, network names (SSID) or access point
   addresses, no paired Bluetooth devices (they carry their owner's name).
 - **Unsigned for now** (code signing and an MSIX for Xbox mode's home app are on hold, MIGRATION.md).

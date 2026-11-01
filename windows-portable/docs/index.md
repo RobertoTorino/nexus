@@ -53,6 +53,11 @@ games, plays your PS Vita games full screen and puts them in Steam.
 [Xenia Manager](apps/xenia.md) installs Xenia, the Xbox 360 emulator, finds your Xbox 360 games, plays them full
 screen and puts them in Steam.
 </div>
+<div class="home-card" markdown>
+#### :material-toolbox: Utilities
+
+[USB HD Cam](apps/hdcam.md): Makes the PS5 HD Camera a webcam: its driver once, then its firmware with the A button.
+</div>
 </div>
 
 [Install](install.md){ .md-button }
@@ -99,7 +104,9 @@ Manager and PPSSPP Manager install their emulator in its own folder and write it
 ### Do I need administrator rights?
 
 No. Everything installs for your own user, and the installers refuse an administrator's window. Nothing goes into
-the Windows registry.
+the Windows registry. Two things ask Windows for an administrator once, when you choose them: the portal's watt
+limits helper ([the portal](portal.md)) and USB HD Cam's Allow access, which gives the camera Microsoft's own USB
+driver ([USB HD Cam](apps/hdcam.md)).
 
 ### Where do the apps keep their files?
 
@@ -145,6 +152,9 @@ Open an issue on [GitHub](https://github.com/RobertoTorino/nexus/issues).
 GPL-3.0-or-later. Each app has its own `LICENSE`. The icons and pictures were made with generative AI tools and
 edited by hand, the sounds with generative AI tools; all are under the license of the app or tool they come with,
 like its code.
+
+Each release also carries `THIRD-PARTY-NOTICES.txt`: the licenses of what its program bundles, such as Python, Qt
+and the fonts, and FFmpeg in USB HD Cam, whose picture Qt shows with FFmpeg's libraries.
 
 </div>
 </section>

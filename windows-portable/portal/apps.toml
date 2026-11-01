@@ -102,3 +102,14 @@ install = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --no
 uninstall = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --uninstall"]
 detect = ["%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-xenia\\app\\Xenia-Manager.exe"]
 launch = [["Open", "%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-xenia\\app\\Xenia-Manager.exe"]]
+
+[apps.hdcam]
+name = "USB HD Cam"
+summary = "Makes the PS5 HD Camera a webcam: its driver once, then its firmware with the A button."
+tag = "wp-hdcam-v0.1.0"
+sha256 = ""
+category = "utilities"
+install = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --no-desktop-shortcut"]
+uninstall = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --uninstall"]
+detect = ["%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-hdcam\\app\\USB-HD-Cam.exe"]
+launch = [["Open", "%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-hdcam\\app\\USB-HD-Cam.exe"]]
