@@ -1348,13 +1348,27 @@ class PortableWindow(QWidget):
         """Why the touch keyboard did not open, in a popup; a subclass may say it on its page instead."""
         self.show_popup("Touch keyboard", f"Windows' touch keyboard could not be opened. {text}")
 
+    def setVisible(self, visible: bool) -> None:  # noqa: N802 (Qt override)
+        """The screen sizes the window, never its layout: Qt takes a layout's minimum height with wrapped text at the
+        window's narrowest width, more lines than at the screen's, and with every page of a stack, the hidden ones
+        too, and made a full-screen window taller than its screen (owner, 31-10-2026: the portal 1920 x 1099 on a
+        1080p TV, its bottom on the screen under it). Set before the show, which activates the layout before
+        showEvent, and the minimum an earlier one set taken away."""
+        if visible and self.layout() is not None:
+            self.layout().setSizeConstraint(QLayout.SizeConstraint.SetNoConstraint)
+            self.setMinimumSize(0, 0)
+        super().setVisible(visible)
+
+    def showFullScreen(self) -> None:  # noqa: N802 (Qt's name)
+        """Full screen without Windows' frame, set before the window state: with it, a window whose layout asks for
+        more width than the screen came out a title bar taller than its screen (owner, 01-11-2026: shadPS4 Manager
+        1280 x 755 on the Ally, 1920 x 1110 on a 1080p TV, its row at the bottom cut off)."""
+        self.setWindowFlag(Qt.WindowType.FramelessWindowHint)
+        super().showFullScreen()
+
     def showEvent(self, event) -> None:  # noqa: N802 (Qt override)
         """Every stack of the window, as the subclass made them, keeps to one visible page after each switch
-        (one_page). The screen sizes the window, never its layout: Qt takes a layout's minimum height with wrapped
-        text at the window's narrowest width, more lines than at the screen's, and made a full-screen window taller
-        than its screen (owner, 31-10-2026: the portal 1920 x 1099 on a 1080p TV, its bottom on the screen under it)."""
-        if self.layout() is not None:
-            self.layout().setSizeConstraint(QLayout.SizeConstraint.SetNoConstraint)
+        (one_page)."""
         handle = self.windowHandle()
         if handle is not None and not self.property("follows_screen"):
             self.setProperty("follows_screen", True)

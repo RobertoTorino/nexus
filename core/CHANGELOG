@@ -1,3 +1,12 @@
+Changelog: 01-11-2026 04:33:13
+
+Fixed. A full-screen portable window is never taller than its screen (owner, 01-11-2026: shadPS4 Manager's row at
+the bottom was cut off, 1280 x 755 on the Ally and 1920 x 1110 on a 1080p TV). PortableWindow.showFullScreen() takes
+Windows' frame away first: with it, a window whose layout asks for more width than the screen came out a title bar
+taller than its screen. PortableWindow also sets its layout free of a minimum in setVisible(), before the show,
+instead of in showEvent(): Qt activates the layout during the show, and the window kept the minimum height it set
+then, the hidden pages of a stack counted too.
+
 Changelog: 31-10-2026 19:52:27
 
 Version 2.3.1.

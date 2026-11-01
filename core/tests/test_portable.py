@@ -9,7 +9,7 @@ import pytest
 from PyQt6.QtCore import QEvent, QPoint, QPointF, QSize, Qt
 from PyQt6.QtGui import QEnterEvent, QKeyEvent, QPixmap
 from PyQt6.QtWidgets import (QGraphicsDropShadowEffect, QGraphicsOpacityEffect, QGridLayout, QHBoxLayout, QLabel,
-                             QLayout, QVBoxLayout, QWidget)
+                             QLayout, QStackedWidget, QVBoxLayout, QWidget)
 
 from bc250_core import portable
 from bc250_core.portable import AMBER, Card, InfoPopup, Legend, Pill, PortableHeader, PortableWindow, nearest
@@ -771,8 +771,10 @@ def test_the_wallpaper_dropped_in_the_suites_folder_and_its_transparency(qapp, t
 
 
 def test_a_full_screen_window_is_never_taller_than_its_screen(qapp):
-    """Wrapped text makes Qt take the layout's minimum height at the window's narrowest width: without the screen
-    sizing the window, the portal was 1920 x 1099 on a 1080p TV (owner, 31-10-2026)."""
+    """Wrapped text makes Qt take the layout's minimum height at the window's narrowest width, and a stack's from its
+    hidden pages too: without the screen sizing the window, the portal was 1920 x 1099 on a 1080p TV (owner,
+    31-10-2026). Full screen it has no frame: with Windows' frame, shadPS4 Manager was a title bar taller than its
+    screen, its row at the bottom cut off (owner, 01-11-2026)."""
     window = PortableWindow(gamepad=portable.Gamepad(source_factory=NoPad))
     screen = window.screen().geometry()
     column = QVBoxLayout(window)
@@ -782,11 +784,19 @@ def test_a_full_screen_window_is_never_taller_than_its_screen(qapp):
     summary = QLabel("What the focused app does, in a sentence long enough to wrap onto more lines when narrow. " * 3)
     summary.setWordWrap(True)
     column.addWidget(summary)
+    stack = QStackedWidget()                    # a hidden page taller than the screen
+    stack.addWidget(QWidget())
+    tall = QWidget()
+    tall.setMinimumHeight(screen.height() + 100)
+    stack.addWidget(tall)
+    column.addWidget(stack)
     window.showFullScreen()
     qapp.processEvents()
     try:
         # Offscreen Qt does not grow the window as Windows did (checked there, 31-10-2026): the setting is what counts
         assert window.layout().sizeConstraint() == QLayout.SizeConstraint.SetNoConstraint
+        assert window.minimumSize().height() <= screen.height()   # what Windows grows a full-screen window to
+        assert window.windowFlags() & Qt.WindowType.FramelessWindowHint   # checked on the Ally and a TV, 01-11-2026
         assert window.height() <= screen.height()
     finally:
         window.close()
