@@ -1,3 +1,9 @@
+Changelog: 01-11-2026 02:10:48
+
+Fixed. tools/new_app.py's README templates, the BC250 Bazzite Suite's and the Windows Portable Suite's, put the
+three badges above the title (Beta in the suite's color, its CI workflow and the license), so a new app's README
+passes tools/tests/test_readme_badges.py; USB HD Cam's came out without them and failed CI.
+
 Changelog: 01-11-2026 01:16:05
 
 Added. The Windows Portable Suite's windows-portable/tools/build_release.py adds FFmpeg's notice to a release's
