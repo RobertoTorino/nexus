@@ -29,14 +29,18 @@ fi
 export PATH="$msys/mingw64/bin:$HOME/.cargo/bin:$PATH"     # MINGW64's gcc, pkg-config and dlltool first
 
 version=$(sed -n 's/^FFMPEG_VERSION=//p' "$native/ffmpeg/build.sh")
-ffmpeg=${RPLAY_FFMPEG_DIR:-$(cygpath -u "$LOCALAPPDATA")/windows-portable-suite/build/ffmpeg-$version}
+ffmpeg=$(cygpath -u "${RPLAY_FFMPEG_DIR:-$LOCALAPPDATA/windows-portable-suite/build/ffmpeg-$version}")
+# The folder is named to build.sh and build.rs: MSYS2's login shell does not pass LOCALAPPDATA on (GitHub's runner)
 if [ ! -f "$ffmpeg/lib/pkgconfig/libavcodec.pc" ]; then
-    MSYSTEM=MINGW64 CHERE_INVOKING=1 "$msys/usr/bin/bash.exe" -lc "bash '$(cygpath -u "$PWD")/$native/ffmpeg/build.sh'"
+    MSYSTEM=MINGW64 CHERE_INVOKING=1 "$msys/usr/bin/bash.exe" -lc \
+        "bash '$(cygpath -u "$PWD")/$native/ffmpeg/build.sh' '$(cygpath -m "$ffmpeg")'"
 fi
 
 rm -rf "$native/dist"
-(cd "$native" && RUSTUP_TOOLCHAIN=$toolchain python -m maturin build --release --locked \
-    --features python,pyo3/extension-module,decoder -i "$(command -v python)" -o dist)
+(cd "$native" && RPLAY_FFMPEG_DIR=$(cygpath -w "$ffmpeg") RUSTUP_TOOLCHAIN=$toolchain \
+    python -m maturin build --release --locked --features python,pyo3/extension-module,decoder \
+    -i "$(command -v python)" -o dist)
 python -m pip install -q --force-reinstall --no-deps "$native"/dist/*.whl
-python -c "import importlib; m = importlib.import_module('$(sed -n 's/^name = "\(.*_core\)"$/\1/p' "$native/Cargo.toml")'); \
+module=$(sed -n 's/^name = "\(.*_core\)"$/\1/p' "$native/Cargo.toml")
+python -c "import importlib; m = importlib.import_module('$module'); \
 print(m.__name__, m.__version__, 'with FFmpeg', m.FFMPEG_VERSION)"

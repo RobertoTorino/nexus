@@ -1,3 +1,9 @@
+Changelog: 01-11-2026 15:02:12
+
+Fixed. windows-portable/tools/build_native.sh names the FFmpeg folder to native/ffmpeg/build.sh and to cargo's
+build.rs instead of leaving them to find it from LOCALAPPDATA, which MSYS2's login shell did not pass on on
+GitHub's runner (CI: "build.sh: LOCALAPPDATA is not set"). Tried with LOCALAPPDATA unset.
+
 Changelog: 01-11-2026 14:20:49
 
 Added. The Windows Portable Suite builds an app's native core (Remote Play's): windows-portable/tools/build_native.sh
