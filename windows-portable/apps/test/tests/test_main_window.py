@@ -89,7 +89,7 @@ def make(qapp, tmp_path, ally_json):
 def measured(power, say):
     say("Downloading for up to 10 seconds ...")
     return network.Network(power=power, adapter="MediaTek", link=network.Link(5280, 56, 10, 85, -54, 2402, 2402),
-                           downloaded=4_521_984, seconds=10.05)
+                           downloads=[network.Download(downloaded=4_521_984, seconds=10.05)])
 
 
 def values(window, pane=None) -> dict[str, str]:
@@ -212,12 +212,13 @@ def test_one_read_fills_the_device_hardware_and_connected_cards(make, qapp, monk
     window.connected_card.setFocus()
     qapp.processEvents()
     connected = window.connected_pane.grid
-    assert connected.itemAt(1).widget().text() == "Realtek USB hub (USB 3, USB 2)"
+    assert connected.itemAt(1).widget().text() == "Realtek hub chip (USB 3, USB 2)"
+    assert window.minimumSizeHint().height() <= 720                 # every docked row fits the Ally's screen
     assert all(p.action == "Read again" for p in window.info_panes)
     monkeypatch.setattr(window, "isActiveWindow", lambda: True)
     saved = window.save_report().read_text(encoding="utf-8")
     assert "\nDevice\nDevice: ROG Xbox Ally X\n" in saved and "\nHardware\nPanel: about 7 inches" in saved
-    assert "\nConnected\nDock or hub: Realtek USB hub (USB 3, USB 2)\n" in saved
+    assert "\nConnected\nDock or hub: Realtek hub chip (USB 3, USB 2)\n" in saved
     assert private(window.reports) in window.connected_pane.status.text()      # every card says where it went
 
 
@@ -260,7 +261,7 @@ def test_the_network_is_measured_on_a_and_saved_with_x(make, qapp, monkeypatch):
 
 def test_a_failed_download_and_a_failed_measurement(make, qapp):
     def failed(power, say):
-        return network.Network(power=power, error="timed out")
+        return network.Network(power=power, downloads=[network.Download(error="timed out")])
     window, _ = make(measure=failed)
     window.measure_network()
     assert wait_for(qapp, lambda: window.network is not None)
@@ -337,7 +338,7 @@ def test_read_while_a_read_runs_says_so(make, qapp, ally_json):
     """Read and Test are never grayed out (owner, 29-10-2026): pressed again while they run, the pane says so."""
     gate = threading.Event()
     window, _ = make(read=lambda: gate.wait(10) and device.parse(ally_json),
-                     measure=lambda power, say: gate.wait(10) and network.Network(power=power, error="timed out"))
+                     measure=lambda power, say: gate.wait(10) and network.Network(power=power))
     window.read_device()
     window.read_device()
     assert window.device_pane.status.text() == "Reading ... Windows is still answering the read before."

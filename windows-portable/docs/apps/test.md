@@ -37,7 +37,7 @@ and its driver, the memory (installed and usable), the storage, the screen the w
 scaling and the refresh rate), Windows' version, the firmware and the battery. No serial numbers.
 
 Nothing is read until you ask: press **A** on the Device, Hardware or Connected card, or tap **A Read** in the row
-at the bottom. One read fills all three; Windows takes about four seconds to answer. **A Read again** reads it once
+at the bottom. One read fills all three; Windows takes about five seconds to answer. **A Read again** reads it once
 more.
 
 **X** saves what the three cards show as one text report in
@@ -47,25 +47,42 @@ card, with the Network card's last when it was measured; the card says where.
 ## Hardware
 
 What is built in: the panel's size (Windows gives it in whole centimeters, so the inches are rounded), the touch
-screen and how many touch points it takes, the Wi-Fi adapter with its driver, the Bluetooth adapter, audio, the
-fingerprint reader, a camera, the sensors (such as the accelerometer) and the USB controllers (USB4 shows here). Of
-Bluetooth only the adapter is listed, never a paired device, and no MAC address is read.
+screen and how many touch points it takes, the built-in controller, the Wi-Fi adapter with its driver, the Bluetooth
+adapter, audio, the fingerprint reader, a camera, the sensors (such as the accelerometer) and the USB controllers
+(USB4 shows here). Of Bluetooth only the adapter is listed, never a paired device, and no MAC address is read.
+
+**Problems** lists the built-in devices that Device Manager marks with a yellow sign, with what is wrong: no driver,
+disabled, cannot start. Without such a device the row is left out.
 
 ## Connected
 
-What is plugged in: a dock or a hub, the screens beside the built-in one (with how they are connected, such as
-DisplayPort or HDMI), network adapters on USB (a dock's Ethernet port) and drives on USB. Windows does not tell a dock
-from a hub: a dock is a USB hub with ports behind it, so the card shows the hub's maker (such as Realtek, USB 3 and
-USB 2) and what is behind it. With nothing plugged in, the card says so.
+What is plugged in, as Windows keeps it apart from what is built in. With nothing plugged in, the card says so.
+
+| Row | What it shows |
+|---|---|
+| Dock or hub | The dock's or hub's chip and its speeds, such as **Realtek hub chip (USB 3, USB 2)** |
+| Devices | Every other USB device: a camera, a USB screen, a controller, a keyboard. **via the hub** means it is plugged into the dock or hub, not into the device itself; Device Manager's problem shows beside it, such as **no driver** |
+| Screens | The screens beside the built-in one, with how they are connected, such as DisplayPort or HDMI |
+| Network | Network adapters on USB, with their state (**connected, 1 Gbps** or **no cable**) and whether they are on the dock |
+| Drives | Drives on USB |
+
+A dock tells Windows only who made the chip inside it, never its own brand: a JSAUX dock, for one, shows as a Realtek hub chip.
+Network adapters show by their chip too: a Ugreen adapter is an **ASIX AX88179**, many docks carry a **Realtek USB
+GbE** chip. Such a chip shows even when the dock has no Ethernet port of its own; with no cable in it, it says **no
+cable**. Adapters that were plugged in once but are not now are never listed (Device Manager shows them only under
+View, Show hidden devices).
+
+Windows Portable Suite's own devices are named: the PS5 HD Camera (**PlayStation camera without its firmware** until
+USB HD Cam loads it; Windows has no driver for it until then) and the Turzx USB screen that Smart Screen drives.
 
 A screen on a dock's or a stand's HDMI port shows as **DisplayPort**: the device sends the picture as DisplayPort
 over USB-C, and the dock turns it into HDMI.
 
 ## Network
 
-How the network does at this moment, to compare a slow moment with a fast one, on mains and on battery. **A** on the
-Network card, or **A Test** in the row at the bottom, measures it; it takes about fifteen seconds. **A Test
-again** measures once more.
+How the network does at this moment, to compare a slow moment with a fast one, on mains and on battery, and Wi-Fi
+with a cable. **A** on the Network card, or **A Test** in the row at the bottom, measures it; it takes about fifteen
+seconds, and ten more for each further connected adapter. **A Test again** measures once more.
 
 | Row | What it shows |
 |---|---|
@@ -73,15 +90,17 @@ again** measures once more.
 | Standard | Wi-Fi 6 (802.11ax), Wi-Fi 5 (802.11ac) and so on |
 | Signal | The signal in percent and in dBm |
 | Rate | The link's rate down and up, in Mbps: what the adapter and the access point agreed, not the download speed |
+| Wired | The Ethernet adapter that is connected (on USB or a dock) and its link speed, such as 1 Gbps |
 | Power | Mains or battery, and the power plan |
 | Wi-Fi on mains, Wi-Fi on battery | The power plan's Wi-Fi setting: Maximum Performance to Maximum Power Saving |
 | Other traffic | What the device received in the two seconds before the download |
 | Also running | Delivery Optimization's downloads (Windows Update, the Microsoft Store and the Xbox app's games) and the programs that download on their own: Steam, the Xbox app, the Epic Games Launcher, Windows Update and others |
-| Download | The speed of a timed download: Windows Portable Test's newest release from GitHub, as the portal downloads it, for ten seconds at most. Nothing is kept |
+| Download, wired; Download, Wi-Fi | The speed of a timed download over each connected adapter in turn: Windows Portable Test's newest release from GitHub, as the portal downloads it, for ten seconds at most each. Nothing is kept |
 
 A slow download with a good link (a high rate and signal) points past the device: the access point, the internet
-connection or GitHub at that moment. Without Wi-Fi (on a dock's Ethernet port) the card says so and still times the
-download. The network's name and the access point's address are never read out.
+connection or GitHub at that moment. With a cable and Wi-Fi both connected, each gets a download of its own, so the
+two can be compared; without Wi-Fi the card says so and times the wired download. The network's name, the access
+point's address and the device's IP addresses are never shown.
 
 **X** saves the measurement in the same report as the device, as its Network section.
 

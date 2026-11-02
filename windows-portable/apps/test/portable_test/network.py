@@ -1,8 +1,12 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The network, measured on A: the Wi-Fi link (band, channel, standard, signal, rates), the power plan's Wi-Fi setting
-on mains and on battery, what else is downloading, and a timed download of this app's newest release from GitHub, so
-a slow moment can be compared with a fast one (the owner's Ally, 28-10-2026: the portal's update came in at 0.8 MB/s
-where curl had 69 MB/s an hour later).
+"""The network, measured on A: the Wi-Fi link (band, channel, standard, signal, rates), a wired link (an Ethernet
+adapter on USB or a dock's port, and its speed), the power plan's Wi-Fi setting on mains and on battery, what else is
+downloading, and a timed download of this app's newest release from GitHub over each connected adapter in turn, so a
+slow moment can be compared with a fast one and Wi-Fi with the cable (the owner's Ally, 28-10-2026: the portal's
+update came in at 0.8 MB/s where curl had 69 MB/s an hour later).
+
+Each download goes out from its adapter's IPv4 address, which makes Windows send it over that adapter. The address is
+only used for that: it is never shown, logged or saved.
 
 The link and the power setting come from Windows' own APIs (wlanapi, powrprof) rather than netsh and powercfg, whose
 labels are in Windows' language. The network's name and its access point's address are never read out: the access
@@ -11,6 +15,8 @@ point is only matched in Windows' list to find the frequency it is on."""
 from __future__ import annotations
 
 import ctypes
+import functools
+import http.client
 import json
 import subprocess
 import sys
@@ -24,10 +30,11 @@ from bc250_core.appinfo import SUITE_REPO_URL
 from bc250_core.platform import powershell_argv
 from bc250_core.updates import latest_release, repo_slug
 
-from .device import run_powershell
+from .device import names, rate, run_powershell
 
 # What else is downloading: the bytes every connected adapter received in SAMPLE seconds, Delivery Optimization's
-# downloads (Windows Update, the Microsoft Store and the Xbox app's games) and the programs that download on their own
+# downloads (Windows Update, the Microsoft Store and the Xbox app's games) and the programs that download on their own;
+# and the adapters that reach the internet (a default gateway), Windows' first choice first
 QUERY = r"""
 $ErrorActionPreference = 'SilentlyContinue'
 $names = @(Get-NetAdapter -Physical | Where-Object Status -eq 'Up' | ForEach-Object Name)
@@ -40,6 +47,10 @@ $after = Received
   received = $after - $before; seconds = $clock.Elapsed.TotalSeconds
   delivery = @(Get-DeliveryOptimizationStatus | Where-Object Status -eq 'Downloading').Count
   running = @(Get-Process -Name PROCESSES | ForEach-Object Name | Sort-Object -Unique)
+  adapters = @(Get-NetIPConfiguration | Where-Object { $_.IPv4DefaultGateway -and $_.NetAdapter.Status -eq 'Up' } |
+          Sort-Object { $_.NetIPv4Interface.InterfaceMetric } | ForEach-Object { [pscustomobject]@{
+          name = $_.InterfaceDescription; media = [string]$_.NetAdapter.PhysicalMediaType
+          speed = [int64]$_.NetAdapter.ReceiveLinkSpeed; source = @($_.IPv4Address)[0].IPAddress } })
 } | ConvertTo-Json -Compress
 """
 SAMPLE = 2.0                            # s: what the adapters receive before the download
@@ -58,6 +69,7 @@ STANDARDS = {4: "802.11a", 5: "802.11b", 6: "802.11g", 7: "Wi-Fi 4 (802.11n)", 8
 WIRELESS_SUBGROUP = "19cbb8fa-5279-450e-9fac-8a3d5fedd0c1"
 POWER_SAVING_MODE = "12bbebe6-58d6-4636-95bb-3217ef867c1a"
 POWER_SAVING = {0: "Maximum Performance", 1: "Low Power Saving", 2: "Medium Power Saving", 3: "Maximum Power Saving"}
+WIRELESS = "Native 802.11"              # Get-NetAdapter's PhysicalMediaType of a Wi-Fi adapter
 
 
 @dataclass
@@ -80,6 +92,40 @@ class Link:
 
 
 @dataclass
+class Adapter:
+    """An adapter that reaches the internet."""
+
+    name: str
+    media: str = ""                                     # Get-NetAdapter's PhysicalMediaType
+    speed: int = 0                                      # bit/s
+    source: str = field(default="", repr=False)         # its IPv4 address: the download's, never shown
+
+    @property
+    def kind(self) -> str:
+        return "Wi-Fi" if self.media == WIRELESS else "wired"
+
+
+@dataclass
+class Download:
+    """One timed download; *kind* is the adapter's (Wi-Fi, wired), "" when Windows chose it."""
+
+    kind: str = ""
+    downloaded: int = 0                                 # bytes
+    seconds: float = 0.0
+    error: str = ""                                     # why it failed
+
+    @property
+    def speed(self) -> float:
+        """MB/s."""
+        return self.downloaded / MB / self.seconds if self.seconds else 0.0
+
+    def text(self) -> str:
+        if self.error:
+            return f"failed: {self.error}"
+        return f"{self.speed:.1f} MB/s ({self.downloaded / MB:.1f} MB in {self.seconds:.1f} s)" if self.seconds else ""
+
+
+@dataclass
 class Network:
     power: str = ""                                     # "mains, 100%" or "battery, 82%" (power_text)
     adapter: str = ""                                   # the Wi-Fi adapter, "" without one
@@ -89,9 +135,8 @@ class Network:
     other: float | None = None                          # MB/s the adapters received before the download
     delivery: int = 0                                   # Delivery Optimization's downloads
     running: list[str] = field(default_factory=list)    # the programs that download on their own
-    downloaded: int = 0                                 # bytes
-    seconds: float = 0.0
-    error: str = ""                                     # why the download failed
+    adapters: list[Adapter] = field(default_factory=list)    # the ones that reach the internet, Windows' first first
+    downloads: list[Download] = field(default_factory=list)  # one per adapter
 
     def rows(self) -> list[tuple[str, str]]:
         """What the Network card shows, a label and a value each."""
@@ -104,6 +149,8 @@ class Network:
             signal = f"{link.signal}%" + (f", {link.rssi} dBm" if link.rssi else "")
             rows = [("Wi-Fi", where), ("Standard", STANDARDS.get(link.standard, "")), ("Signal", signal),
                     ("Rate", f"{link.receive} Mbps down, {link.transmit} up")]
+        rows.append(("Wired", ", ".join(f"{adapter.name}, {rate(adapter.speed)}" if adapter.speed else adapter.name
+                                        for adapter in self.adapters if adapter.kind == "wired")))
         rows.append(("Power", ", ".join(part for part in (self.power, f"{self.plan} plan" if self.plan else "")
                                         if part)))
         if self.wifi_power is not None:
@@ -114,16 +161,20 @@ class Network:
         busy = ([f"Delivery Optimization ({self.delivery} download{'s' if self.delivery != 1 else ''})"]
                 if self.delivery else []) + self.running
         rows.append(("Also running", ", ".join(busy) or "nothing that downloads"))
-        if self.error:
-            rows.append(("Download", f"failed: {self.error}"))
-        elif self.seconds:
-            rows.append(("Download", f"{self.speed:.1f} MB/s ({self.downloaded / MB:.1f} MB in {self.seconds:.1f} s)"))
+        kinds = [download.kind for download in self.downloads]
+        for n, download in enumerate(self.downloads):
+            label = f"Download, {download.kind}" if download.kind else "Download"
+            if kinds.count(download.kind) > 1:
+                label += f" {kinds[:n + 1].count(download.kind)}"                   # two wired adapters
+            rows.append((label, download.text()))
         return [(label, value) for label, value in rows if value]
 
     @property
-    def speed(self) -> float:
-        """MB/s of the timed download."""
-        return self.downloaded / MB / self.seconds if self.seconds else 0.0
+    def error(self) -> str:
+        """Why the downloads failed, "" when one of them worked."""
+        if any(not download.error for download in self.downloads):
+            return ""
+        return "; ".join(names([download.error for download in self.downloads]))
 
 
 def power_text(state: tuple[int, bool] | None) -> str:
@@ -135,7 +186,8 @@ def power_text(state: tuple[int, bool] | None) -> str:
 
 
 def parse_traffic(text: str, network: Network) -> None:
-    """The query's JSON into *network*: the other traffic, Delivery Optimization and the programs running."""
+    """The query's JSON into *network*: the other traffic, Delivery Optimization, the programs running and the
+    adapters that reach the internet."""
     data = json.loads(text)
     seconds = float(data.get("seconds") or 0)
     if seconds > 0:
@@ -145,6 +197,11 @@ def parse_traffic(text: str, network: Network) -> None:
     names = {name.lower(): shown for name, shown in DOWNLOADERS.items()}
     network.running = [names[name.lower()] for name in (running if isinstance(running, list) else [running])
                        if str(name).lower() in names]
+    adapters = data.get("adapters") or []
+    network.adapters = [Adapter((adapter.get("name") or "").strip(), media=adapter.get("media") or "",
+                                speed=int(adapter.get("speed") or 0), source=adapter.get("source") or "")
+                        for adapter in (adapters if isinstance(adapters, list) else [adapters])
+                        if adapter.get("source")]
 
 
 def traffic_query() -> str:
@@ -297,12 +354,26 @@ def release_url() -> str:
     return release.asset_url
 
 
-def timed_download(url: str, seconds: float = DOWNLOAD_SECONDS,
+class _Through(urllib.request.HTTPSHandler):
+    """HTTPS from one address of the device: Windows sends it over the adapter that has the address."""
+
+    def __init__(self, source: str):
+        super().__init__()
+        self.source = source
+
+    def https_open(self, req):
+        return self.do_open(functools.partial(http.client.HTTPSConnection, source_address=(self.source, 0)), req,
+                            context=self._context)
+
+
+def timed_download(url: str, source: str = "", seconds: float = DOWNLOAD_SECONDS,
                    clock: Callable[[], float] = time.perf_counter) -> tuple[int, float]:
-    """The bytes *url* gave in at most *seconds*, and the seconds it took from the request on. Nothing is kept."""
+    """The bytes *url* gave in at most *seconds*, and the seconds it took from the request on, over the adapter with
+    the address *source* ("": the one Windows chooses). Nothing is kept."""
     request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
     start, got = clock(), 0
-    with urllib.request.urlopen(request, timeout=30) as response:
+    opened = urllib.request.build_opener(_Through(source)).open if source else urllib.request.urlopen
+    with opened(request, timeout=30) as response:
         while chunk := response.read(1 << 16):
             got += len(chunk)
             if clock() - start >= seconds:
@@ -313,10 +384,10 @@ def timed_download(url: str, seconds: float = DOWNLOAD_SECONDS,
 def measure(power: str, *, link: Callable[[], tuple[str, Link | None]] = wifi,
             plan: Callable[[], tuple[str, tuple[int, int] | None]] = wifi_power,
             run: Callable[[list[str]], str] = run_powershell, url: Callable[[], str] = release_url,
-            download: Callable[[str], tuple[int, float]] = timed_download,
+            download: Callable[[str, str], tuple[int, float]] = timed_download,
             say: Callable[[str], None] = lambda text: None) -> Network:
-    """The network, measured now (a few seconds, plus the download's ten at most: call it off the window's
-    thread). *say* tells what it is doing."""
+    """The network, measured now (a few seconds, plus ten at most for each adapter's download: call it off the
+    window's thread). *say* tells what it is doing."""
     network = Network(power=power)
     say("Reading the Wi-Fi link ...")
     network.adapter, network.link = link()
@@ -326,9 +397,24 @@ def measure(power: str, *, link: Callable[[], tuple[str, Link | None]] = wifi,
         parse_traffic(run(powershell_argv(traffic_query())), network)
     except (OSError, ValueError, RuntimeError, subprocess.SubprocessError):
         pass                            # the rows leave it out
-    say(f"Downloading for up to {DOWNLOAD_SECONDS} seconds ...")
     try:
-        network.downloaded, network.seconds = download(url())
+        address = url()
     except OSError as error:
-        network.error = str(getattr(error, "reason", "") or error) or type(error).__name__
+        network.downloads = [Download(error=reason(error))]
+        return network
+    # Each adapter in turn; without the list (the query failed), the one Windows chooses
+    for adapter in network.adapters or [Adapter("")]:
+        found = Download(adapter.kind if adapter.source else "")
+        over = f" over {adapter.kind}" if adapter.source else ""
+        say(f"Downloading{over} for up to {DOWNLOAD_SECONDS} seconds ...")
+        try:
+            found.downloaded, found.seconds = download(address, adapter.source)
+        except OSError as error:
+            found.error = reason(error)
+        network.downloads.append(found)
     return network
+
+
+def reason(error: OSError) -> str:
+    """Why a download failed: urllib's reason, else the error."""
+    return str(getattr(error, "reason", "") or error) or type(error).__name__

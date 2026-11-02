@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The network (network.py): the link, the power plan's Wi-Fi setting, what else is downloading and the timed
-download as the Network card shows them, a failed download, the query, and Windows' own APIs answering."""
+download as the Network card shows them, a download over each adapter, a failed download, the query, and Windows'
+own APIs answering."""
 
 from __future__ import annotations
 
@@ -23,7 +24,7 @@ def measure(**changes) -> network.Network:
     fakes = dict(link=lambda: ("MediaTek Wi-Fi 6E MT7922 (RZ616) 160MHz Wireless LAN Card", ALLY_LINK),
                  plan=lambda: ("Turbo", (0, 2)), run=lambda argv: json.dumps(TRAFFIC),
                  url=lambda: "https://example.invalid/wp-test-v1.3.0.zip",
-                 download=lambda url: (4_521_984, 10.05))
+                 download=lambda url, source: (4_521_984, 10.05))
     fakes.update(changes)
     return network.measure("battery, 82%", **fakes)
 
@@ -72,11 +73,55 @@ def test_a_failed_download():
     def offline():
         raise OSError("no connection (getaddrinfo failed)")
 
-    def refused(url):
+    def refused(url, source):
         raise urllib.error.URLError("timed out")
     assert measure(url=offline).error == "no connection (getaddrinfo failed)"
     found = measure(download=refused)
     assert found.error == "timed out" and dict(found.rows())["Download"] == "failed: timed out"
+
+
+# The owner's Ally on 02-11-2026, with its Ugreen adapter (ASIX) on a cable and Wi-Fi beside it: a download over each
+ADAPTERS = [{"name": "ASIX AX88179 USB 3.0 to Gigabit Ethernet Adapter", "media": "802.3", "speed": 1_000_000_000,
+             "source": "192.0.2.10"},
+            {"name": "MediaTek Wi-Fi 6E MT7922 (RZ616) 160MHz Wireless LAN Card", "media": "Native 802.11",
+             "speed": 2_402_000_000, "source": "192.0.2.11"}]
+
+
+def test_a_download_over_each_adapter():
+    sources, said = [], []
+
+    def download(url, source):
+        sources.append(source)
+        return (48_800_000, 0.8) if source == "192.0.2.10" else (4_521_984, 10.05)
+    found = measure(run=lambda argv: json.dumps(dict(TRAFFIC, adapters=ADAPTERS)), download=download, say=said.append)
+    assert sources == ["192.0.2.10", "192.0.2.11"]                  # Windows' first choice first
+    rows = found.rows()
+    assert ("Wired", "ASIX AX88179 USB 3.0 to Gigabit Ethernet Adapter, 1 Gbps") in rows
+    assert rows[-2:] == [("Download, wired", "61.0 MB/s (48.8 MB in 0.8 s)"),
+                         ("Download, Wi-Fi", "0.4 MB/s (4.5 MB in 10.1 s)")]
+    assert "Downloading over wired for up to 10 seconds ..." in said
+    assert "192.0.2" not in repr(found) + repr(rows)                 # the address is never shown or logged
+
+
+def test_two_wired_adapters_and_one_that_failed():
+    def download(url, source):
+        if source == "192.0.2.11":
+            raise urllib.error.URLError("timed out")
+        return 1_000_000, 1.0
+    wired = [dict(adapter, media="802.3", speed=0) for adapter in ADAPTERS] + [{"name": "No address", "source": None}]
+    found = measure(run=lambda argv: json.dumps(dict(TRAFFIC, adapters=wired)), download=download)
+    rows = dict(found.rows())
+    assert rows["Download, wired 1"] == "1.0 MB/s (1.0 MB in 1.0 s)"
+    assert rows["Download, wired 2"] == "failed: timed out"
+    assert rows["Wired"].count(", ") == 1 and found.error == ""      # one worked: the status line says nothing
+
+
+def test_https_goes_out_from_the_adapters_address(monkeypatch):
+    seen = {}
+    handler = network._Through("192.0.2.10")
+    monkeypatch.setattr(handler, "do_open", lambda connection, req, **kwargs: seen.update(connection.keywords))
+    handler.https_open(network.urllib.request.Request("https://example.invalid/a.zip"))
+    assert seen == {"source_address": ("192.0.2.10", 0)}
 
 
 def test_it_says_what_it_does():
@@ -91,6 +136,7 @@ def test_the_query():
     script = base64.b64decode(seen[0][-1]).decode("utf-16-le")
     assert "Start-Sleep -Milliseconds 2000" in script and "Get-DeliveryOptimizationStatus" in script
     assert "Get-Process -Name steam, XboxPcApp," in script and "SAMPLE_MS" not in script
+    assert "IPv4DefaultGateway" in script and "InterfaceMetric" in script                # the adapters, in order
     assert "MacAddress" not in script and "SSID" not in script                 # nothing personal is asked for
 
 

@@ -1,3 +1,18 @@
+Changelog: 02-11-2026 11:58:48
+
+Added. The Connected card lists every USB device plugged in, as Windows keeps them apart from the built-in ones (their
+container), not only hubs, screens, network adapters and drives: the PS5 HD Camera and the Turzx USB screen behind
+the owner's dock were missing. A device says "via the hub" when it is plugged into the dock, and Device Manager's
+problem beside it ("no driver"). The suite's own devices are named (the camera's boot loader as "PlayStation camera
+without its firmware", the screen as "Turzx USB screen"). The dock shows as its hub chip ("Realtek hub chip (USB 3,
+USB 2)"): Windows never learns a dock's brand. A network adapter on USB gives its state and speed ("connected,
+1 Gbps", "no cable", "via the hub"): the second adapter on the owner's Ally was the dock's own Realtek network chip
+without a cable, not the adapter unplugged earlier, which Windows no longer lists. Hubs and drives are found by their
+driver, so in any Windows language. Added. The Hardware card shows the built-in controller, and a Problems row with
+the built-in devices Device Manager marks (no driver, disabled, cannot start). Added. The Network card shows a wired
+link and its speed, and times the download over each connected adapter in turn (Download, wired and Download, Wi-Fi),
+sent from that adapter's address, which is never shown or saved.
+
 Changelog: 02-11-2026 01:29:42
 
 Release 4.8.0.

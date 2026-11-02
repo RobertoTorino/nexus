@@ -7,8 +7,8 @@
 # Windows Portable Test
 
 Gets to know a **Windows handheld** (first the ASUS ROG Xbox Ally X): what Windows reports about the device, how its
-network does (the Wi-Fi link, what else is downloading and a timed download from GitHub), and every button, stick and
-trigger of its controller as you press them. It reads and shows; it changes nothing on the device.
+network does (the Wi-Fi and wired links, what else is downloading and a timed download from GitHub over each), and
+every button, stick and trigger of its controller as you press them. It reads and shows; it changes nothing on the device.
 
 Made for the handheld in your hands: full screen, the controller moves the amber focus between the cards (A to run,
 X to save the report, B to go back, View (⧉) to exit), and every card and button also works by touch.

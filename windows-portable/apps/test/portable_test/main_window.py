@@ -139,9 +139,9 @@ class MainWindow(PortableWindow):
         cards.setContentsMargins(0, 0, 0, 0)
         cards.setSpacing(px(12))
         self.device_card = Card("Device", "Processor, graphics, memory, storage, screen and battery.")
-        self.hardware_card = Card("Hardware", "Panel, touch, Wi-Fi, Bluetooth, audio, fingerprint, sensors and USB.")
-        self.connected_card = Card("Connected", "A dock or hub, screens, network and drives plugged in.")
-        self.network_card = Card("Network", "The Wi-Fi link, its power setting and a timed download.")
+        self.hardware_card = Card("Hardware", "Panel, touch, controller, Wi-Fi, Bluetooth, audio, sensors and USB.")
+        self.connected_card = Card("Connected", "A dock or hub and what is on it, screens, network and drives.")
+        self.network_card = Card("Network", "Wi-Fi and wired links, the power setting and a timed download.")
         self.controller_card = Card("Controller", "Every button, stick and trigger, shown as you press them.")
         self.info_cards = (self.device_card, self.hardware_card, self.connected_card)
         for card in (*self.info_cards, self.network_card, self.controller_card):
@@ -153,13 +153,14 @@ class MainWindow(PortableWindow):
         self.panes = QStackedWidget()
         self.device_pane = InfoPane("Device", "What Windows reports about this handheld. It changes nothing.")
         self.hardware_pane = InfoPane("Hardware", "What is built in, as Windows reports it.")
-        self.connected_pane = InfoPane("Connected", "What is plugged in: a dock or a hub, screens, network adapters "
-                                       "and drives. Windows does not tell a dock from a hub: the hub's maker and "
-                                       "what is behind it show.", empty="Nothing is plugged in.")
+        self.connected_pane = InfoPane("Connected", "What is plugged in: a dock or a hub and what is on it, screens, "
+                                       "network adapters and drives. A dock reports only its hub chip's maker, never "
+                                       "its brand; an adapter shows by its chip.", empty="Nothing is plugged in.")
         self.info_panes = (self.device_pane, self.hardware_pane, self.connected_pane)
-        self.network_pane = InfoPane("Network", "The Wi-Fi link, what else is downloading, and a timed download "
-                                     f"from GitHub ({network.DOWNLOAD_SECONDS} seconds at most, nothing is kept). "
-                                     "Compare a slow moment with a fast one.", action="Test")
+        self.network_pane = InfoPane("Network", "The Wi-Fi and wired links, what else is downloading, and a timed "
+                                     "download from GitHub over each connected adapter "
+                                     f"({network.DOWNLOAD_SECONDS} seconds at most each, nothing is kept).",
+                                     action="Test")
         self.report_panes = (*self.info_panes, self.network_pane)      # what X saves
         self.controller_pane = ControllerPane(clock=clock, lamps=self.lights)
         for pane in (*self.report_panes, self.controller_pane):
