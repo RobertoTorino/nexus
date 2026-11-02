@@ -47,8 +47,9 @@ def test_expressions_and_selection():
     assert [j.name for j in ci_local.selected(jobs, ["nexus-pytest/tools"])] == ["nexus-pytest/tools"]
     assert [j.name for j in ci_local.selected(jobs, ["shell"])] == ["shell"]                  # not nexus-shell too
     assert all(j.name.startswith("pytest/") for j in ci_local.selected(jobs, ["pytest"]))    # the suite's only
-    assert [j.name for j in ci_local.selected(jobs, ["nexus-pytest"])] == ["nexus-pytest/core", "nexus-pytest/tools",
-                                                                             "nexus-pytest/dev/nrt"]
+    assert [j.name for j in ci_local.selected(jobs, ["nexus-pytest"])] == [
+        "nexus-pytest/core", "nexus-pytest/tools", "nexus-pytest/dev/dash", "nexus-pytest/dev/demo",
+        "nexus-pytest/dev/itests", "nexus-pytest/dev/nrt"]
     assert ci_local.selected(jobs, []) == jobs
 
 

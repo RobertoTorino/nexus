@@ -1,3 +1,20 @@
+Changelog: 02-11-2026 01:18:34
+
+Release 13.0.0.
+
+Changelog: 02-11-2026 01:17:06
+
+Release 12.2.0.
+
+Changelog: 02-11-2026 01:00:58
+
+Breaking. Media Tool is no longer an app of the suite (owner, 02-11-2026): every part of it was work on a checkout,
+not on a board, so its [apps.mtool] entry is gone from apps.toml (and from the root's copy). Its OBS demo recording
+is Nexus Demo Recorder (dev/demo), its video tours and its icons are in Nexus Dashboard (dev/dash), both run from
+a checkout and never released. A portal with this manifest shows no Media Tool tile; a Media Tool installed on a
+board stays until its own uninstall (~/.local/bin/media-tool --uninstall) or Nexus Demo Recorder's install.sh,
+which removes it. Its releases up to mtool-v1.0.1 stay on GitHub as history.
+
 Changelog: 01-11-2026 16:27:14
 
 Breaking. One view (owner, 01-11-2026): Suite Desktop Mode, the window of apps in tabs, is gone, and with it the

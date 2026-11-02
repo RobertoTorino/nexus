@@ -1,3 +1,13 @@
+Changelog: 02-11-2026 01:17:06
+
+Release 3.0.0.
+
+Changelog: 02-11-2026 01:07:50
+
+Fixed. The catalog (dependencies.toml) no longer lists Media Tool, gone from the suite on 02-11-2026 (its OBS
+recording is Nexus Demo Recorder, a Nexus app that runs from a checkout), nor the packages only it used:
+obsws-python, dbus-next and pillow. The tests' example of an app with a venv of its own is Bazzite SFTP Tools now.
+
 Changelog: 01-11-2026 23:35:01
 
 Release 3.0.0.

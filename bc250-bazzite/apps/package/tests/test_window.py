@@ -14,7 +14,7 @@ from package_checker.dependencies import (
 from package_checker.main_window import DependencyWindow, about_text, tool_advice
 
 SHARED = "/home/test/.local/share/bc250-bazzite-suite/venv"
-DEMO = "/home/test/.local/share/media-tool/venv"
+SFTP = "/home/test/.local/share/bc250-bazzite-sftp-tools/venv"   # an app with a venv of its own
 
 
 def _wait_for(predicate, ms=3000):
@@ -44,24 +44,24 @@ def test_window_displays_package_and_tool_results(qapp):
     dependencies, tools = _catalog()
     result = CheckResult(
         [DependencyStatus(dependencies["PyQt6"], (EnvironmentVersion(SHARED, ("portal", "check"), "6.11.0"),
-                                                  EnvironmentVersion(DEMO, ("mtool",), "6.11.0")), "6.12.0"),
-         DependencyStatus(dependencies["obsws-python"], (EnvironmentVersion(DEMO, ("mtool",), "1.8.0"),),
-                          "1.8.0"),
-         DependencyStatus(dependencies["dbus-next"], (), "0.2.3")],
+                                                  EnvironmentVersion(SFTP, ("sftp",), "6.11.0")), "6.12.0"),
+         DependencyStatus(dependencies["paramiko"], (EnvironmentVersion(SFTP, ("sftp",), "4.0.0"),),
+                          "4.0.0"),
+         DependencyStatus(dependencies["pygame-ce"], (), "2.5.8")],
         [ToolStatus(tools["flashrom"], "/home/test/flashrom/usr/bin/flashrom"),
          ToolStatus(tools["speedtest"], "/home/test/.local/bin/speedtest"),
          ToolStatus(tools["mprime"]),
          ToolStatus(tools["setpci"])],
-        frozenset({"portal", "check", "mtool", "bios", "cores"}),
+        frozenset({"portal", "check", "sftp", "bios", "cores"}),
     )
     window = _window(result)
     try:
         pyqt = window.cards["PyQt6"]
         assert pyqt.status.text() == "Update available"
         assert pyqt.latest.text() == "Latest on PyPI: 6.12.0"
-        assert "BC-250 Bazzite Test" in pyqt.installed.text() and "Media Tool" in pyqt.installed.text()
-        assert window.cards["obsws-python"].status.text() == "Up to date"
-        assert window.cards["dbus-next"].status.text() == "Not needed"
+        assert "BC-250 Bazzite Test" in pyqt.installed.text() and "Bazzite SFTP Tools" in pyqt.installed.text()
+        assert window.cards["paramiko"].status.text() == "Up to date"
+        assert window.cards["pygame-ce"].status.text() == "Not needed"
         assert window.tool_cards["flashrom"].status.text() == "Available"
         assert window.tool_cards["flashrom"].location.text().endswith("/flashrom")
         assert window.tool_cards["speedtest"].status.text() == "Available"
@@ -79,13 +79,13 @@ def test_window_displays_package_and_tool_results(qapp):
 def test_missing_package_in_an_app_environment_is_reported(qapp):
     dependencies, _tools = _catalog()
     result = CheckResult(
-        [DependencyStatus(dependencies["dbus-next"], (EnvironmentVersion(DEMO, ("mtool",), ""),), "0.2.3")],
-        [], frozenset({"mtool"}))
+        [DependencyStatus(dependencies["pygame-ce"], (EnvironmentVersion(SFTP, ("sftp",), ""),), "2.5.8")],
+        [], frozenset({"sftp"}))
     window = _window(result)
     try:
-        assert window.cards["dbus-next"].status.text() == "Missing"
-        assert "missing" in window.cards["dbus-next"].installed.text()
-        assert "Packages missing or at a wrong version:</b> dbus-next" in window.result_label.text()
+        assert window.cards["pygame-ce"].status.text() == "Missing"
+        assert "missing" in window.cards["pygame-ce"].installed.text()
+        assert "Packages missing or at a wrong version:</b> pygame-ce" in window.result_label.text()
     finally:
         window.close()
 
@@ -111,10 +111,10 @@ def test_about_popup_describes_the_purpose(qapp):
     assert "Needs root." in about_text(tools["umr"], apps)
     window = _window(CheckResult([], [], frozenset()))
     try:
-        card = window.cards["obsws-python"]
+        card = window.cards["paramiko"]
         card.about_button.click()
         assert card.about_box is not None and card.about_box.isVisible()
-        assert "OBS" in card.about_box.text() and "Media Tool" in card.about_box.text()
+        assert "SSH" in card.about_box.text() and "Bazzite SFTP Tools" in card.about_box.text()
         card.about_box.close()
     finally:
         window.close()
@@ -127,10 +127,10 @@ def test_cve_marks(qapp):
     result = CheckResult(
         [DependencyStatus(dependencies["PyQt6"], (EnvironmentVersion(SHARED, ("portal",), "6.11.0", (), (cve,)),),
                           "6.12.1"),
-         DependencyStatus(dependencies["obsws-python"], (EnvironmentVersion(DEMO, ("mtool",), "1.8.0"),), "1.8.0"),
-         DependencyStatus(dependencies["dbus-next"], (EnvironmentVersion(DEMO, ("mtool",), "0.2.3"),), "0.2.3",
+         DependencyStatus(dependencies["paramiko"], (EnvironmentVersion(SFTP, ("sftp",), "4.0.0"),), "4.0.0"),
+         DependencyStatus(dependencies["pygame-ce"], (EnvironmentVersion(SFTP, ("sftp",), "2.5.8"),), "2.5.8",
                           cve_error="offline")],
-        [], frozenset({"portal", "mtool"}))
+        [], frozenset({"portal", "sftp"}))
     window = _window(result)
     try:
         pyqt = window.cards["PyQt6"]
@@ -139,12 +139,12 @@ def test_cve_marks(qapp):
             pyqt.vulnerabilities.text()
         assert "fixed in 6.12.1" in pyqt.vulnerabilities.text()
         assert "Update PyQt6 6.11.0 to 6.12.1 or newer for Portal" in pyqt.advice.text()
-        assert "✓ CVE" in window.cards["obsws-python"].cve.text()
-        assert window.cards["obsws-python"].advice.isHidden()
-        assert "CVE ?" in window.cards["dbus-next"].cve.text()
+        assert "✓ CVE" in window.cards["paramiko"].cve.text()
+        assert window.cards["paramiko"].advice.isHidden()
+        assert "CVE ?" in window.cards["pygame-ce"].cve.text()
         assert window.box_cves.value.text() == "1"
         assert "Known vulnerabilities:</b> PyQt6 6.11.0 (CVE-2099-1234)" in window.result_label.text()
-        assert "Vulnerability check failed: dbus-next" in window.result_label.text()
+        assert "Vulnerability check failed: pygame-ce" in window.result_label.text()
     finally:
         window.close()
 
@@ -161,14 +161,14 @@ def test_missing_tools_advise_what_they_are_needed_for(qapp):
                                                            "No internal programmer found.")
     assert tool_advice(tools["radeontop"], installed, load_apps(CATALOG)) == ""   # the governor is not installed
     window = _window(CheckResult(
-        [DependencyStatus(dependencies["dbus-next"], (EnvironmentVersion(DEMO, ("mtool",), ""),), "0.2.3")],
-        [ToolStatus(tools["mprime"]), ToolStatus(tools["umr"], "/usr/bin/umr")], installed | {"mtool"}))
+        [DependencyStatus(dependencies["pygame-ce"], (EnvironmentVersion(SFTP, ("sftp",), ""),), "2.5.8")],
+        [ToolStatus(tools["mprime"]), ToolStatus(tools["umr"], "/usr/bin/umr")], installed | {"sftp"}))
     try:
         assert "Install mprime to be able to use <a href=" in window.tool_cards["mprime"].advice.text()
         assert "Prime95 torture test for a longer burn-in." in window.tool_cards["mprime"].advice.text()
         assert window.tool_cards["umr"].advice.isHidden()
-        assert "Install Media Tool again from the portal to be able to use it" in \
-            window.cards["dbus-next"].advice.text()
+        assert "Install Bazzite SFTP Tools again from the portal to be able to use it" in \
+            window.cards["pygame-ce"].advice.text()
     finally:
         window.close()
 
@@ -177,6 +177,7 @@ def test_needs_update_when_an_app_wants_newer_or_a_release_fixes_a_vulnerability
     dependencies, _tools = _catalog()
     link = "/home/test/.local/share/bc250-console-link/venv"
     sftp = "/home/test/.local/share/bc250-sftp-tools/venv"
+    CLB = "/home/test/.local/share/bc250-console-linkb/venv"
     fixed = Vulnerability("CVE-2026-1", "a hole", "3.4.1")
     unfixed = Vulnerability("CVE-2026-2", "another hole")
     result = CheckResult(
@@ -185,11 +186,11 @@ def test_needs_update_when_an_app_wants_newer_or_a_release_fixes_a_vulnerability
                                               ("consoles",)),), "46.0.0"),
          DependencyStatus(dependencies["paramiko"], (EnvironmentVersion(sftp, ("sftp",), "3.4.0", (),
                                                                         (fixed,)),), "3.5.0"),
-         DependencyStatus(dependencies["obsws-python"], (EnvironmentVersion(DEMO, ("mtool",), "1.8.0", (),
-                                                                            (unfixed,)),), "1.8.0"),
-         DependencyStatus(dependencies["PyQt6"], (EnvironmentVersion(DEMO, ("mtool",), "7.0.0",
-                                                                     ("mtool",)),), "7.0.0")],
-        [], frozenset({"consoles", "sftp", "mtool"}))
+         DependencyStatus(dependencies["aiortc"], (EnvironmentVersion(CLB, ("clb",), "1.14.0", (),
+                                                                       (unfixed,)),), "1.14.0"),
+         DependencyStatus(dependencies["PyQt6"], (EnvironmentVersion(SFTP, ("sftp",), "7.0.0",
+                                                                     ("sftp",)),), "7.0.0")],
+        [], frozenset({"consoles", "sftp", "clb"}))
     window = _window(result)
     try:
         crypto, paramiko = window.cards["cryptography"], window.cards["paramiko"]
@@ -197,7 +198,7 @@ def test_needs_update_when_an_app_wants_newer_or_a_release_fixes_a_vulnerability
         assert "Console Link needs >=42,<51, installed is 41.0.0." in crypto.status.toolTip()
         assert paramiko.status.text() == "Needs update"
         assert "3.4.1 fixes known vulnerabilities in 3.4.0." in paramiko.status.toolTip()
-        assert window.cards["obsws-python"].status.text() == "Vulnerable"     # no release fixes it yet
+        assert window.cards["aiortc"].status.text() == "Vulnerable"       # no release fixes it yet
         assert window.cards["PyQt6"].status.text() == "Wrong version"          # too new: no update helps
         assert window.box_needs_update.value.text() == "2"
         text = window.result_label.text()

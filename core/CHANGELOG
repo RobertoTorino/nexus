@@ -1,3 +1,9 @@
+Changelog: 02-11-2026 01:00:58
+
+Added. nexus.py: Nexus's design (the theme NEXUS and its colors ink, silver and teal) for the Nexus apps in dev/,
+Nexus Dashboard, Nexus Release Tool, Nexus Demo Recorder and Nexus Installer Tests, with create_app(theme=NEXUS).
+It was Nexus Release Tool's style.py alone; the suites' apps keep their own themes.
+
 Changelog: 02-11-2026 00:48:53
 
 Version 2.6.0.

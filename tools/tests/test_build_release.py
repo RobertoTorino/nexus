@@ -25,7 +25,7 @@ pin_spec.loader.exec_module(pin_app)
 
 BT_TAG = f"check-v{(br.SUITE / 'apps' / 'check' / 'VERSION').read_text().strip()}"
 PORTAL_TAG = f"portal-v{(br.SUITE / 'portal' / 'VERSION').read_text().strip()}"
-MEDIA_TOOL_TAG = f"mtool-v{(br.SUITE / 'apps' / 'mtool' / 'VERSION').read_text().strip()}"
+NCGUI_TAG = f"ncgui-v{(br.SUITE / 'apps' / 'ncgui' / 'VERSION').read_text().strip()}"     # an app with no .standalone
 
 
 @pytest.fixture(autouse=True)
@@ -117,15 +117,16 @@ def test_version_must_match(tmp_path):
         br.build("check-9.9.9", tmp_path)
 
 
-def test_media_tool_release_has_the_standard_layout_and_omits_suite_marker(tmp_path):
-    br.build(MEDIA_TOOL_TAG, tmp_path)
-    names = members(tmp_path / f"{MEDIA_TOOL_TAG}.tar.gz")
+def test_an_apps_release_has_the_standard_layout_and_omits_suite_marker(tmp_path):
+    """Bazzite NetcatGUI (the Media Tool until 02-11-2026, which left the suite): an app with no .standalone."""
+    br.build(NCGUI_TAG, tmp_path)
+    names = members(tmp_path / f"{NCGUI_TAG}.tar.gz")
 
-    assert f"{MEDIA_TOOL_TAG}/install.sh" in names
-    assert f"{MEDIA_TOOL_TAG}/media_tool/__main__.py" in names
-    assert f"{MEDIA_TOOL_TAG}/images/media-tool.webp" in names
-    assert f"{MEDIA_TOOL_TAG}/install" not in names
-    assert f"{MEDIA_TOOL_TAG}/.standalone" not in names
+    assert f"{NCGUI_TAG}/install.sh" in names
+    assert f"{NCGUI_TAG}/netcat_gui/__main__.py" in names
+    assert f"{NCGUI_TAG}/images/bazzite-netcatgui.webp" in names
+    assert f"{NCGUI_TAG}/install" not in names
+    assert f"{NCGUI_TAG}/.standalone" not in names
     assert not any("/tests/" in name for name in names)
 
 

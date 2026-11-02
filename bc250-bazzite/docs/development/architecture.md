@@ -173,18 +173,19 @@ The icons are WebP, a fraction of the size of PNG, which the apps (through Qt) a
 is PNG: the menu entry, the Desktop icon, a Steam shortcut and a notification use it, because a desktop or Steam may
 not read WebP. In code, `LOGO_PATH` is the WebP icon; `steam.shortcut_icon()` gives the PNG beside it.
 
-To give a category a new icon, drop the new images in `bc250-bazzite/icons/<category>/` and run `python3 bc250-bazzite/tools/sync_icons.py`.
+To give a category a new icon, drop the new images in `bc250-bazzite/icons/<category>/` and run `python3 tools/sync_icons.py`
+(the Nexus tool: this suite is its default, `--suite` names another).
 An image named `<category>-<size>` (any extension) replaces that size only; an image by any other name replaces all
 four. The tool scales each to its size, saves it as WebP (the 128 px one as PNG) under the category's names, removes
 the dropped file, then writes the copies. Images must be square. An image elsewhere works too:
 
 ```bash
-python3 bc250-bazzite/tools/sync_icons.py --category sustainable --from ~/Pictures/leaf.png              # all four sizes
-python3 bc250-bazzite/tools/sync_icons.py --category sustainable --from ~/Pictures/leaf-small.png --size 128
+python3 tools/sync_icons.py --category sustainable --from ~/Pictures/leaf.png              # all four sizes
+python3 tools/sync_icons.py --category sustainable --from ~/Pictures/leaf-small.png --size 128
 ```
 
-[Media Tool](../other-tools/media-tool.md#convert-the-suites-icons) does the same from a window.
-`python3 bc250-bazzite/tools/sync_icons.py --check` lists what is not converted or copied yet, and `bc250-bazzite/tools/tests/test_icons.py`
+[Nexus Dashboard](https://robertotorino.github.io/nexus/dashboard/#convert-icons) does the same from a window.
+`python3 tools/sync_icons.py --check` lists what is not converted or copied yet, and `bc250-bazzite/tools/tests/test_icons.py`
 fails when a copy is out of date or an app icon has no category.
 
 ## Shared code: bc250_core
@@ -309,8 +310,8 @@ an extracted release, and needs no network except for pip.
   the pytest matrix of `.github/workflows/ci.yml`.
 - **The installer test:** `bc250-bazzite/tools/installer-tests/<name>.sh` installs from the checkout and from a staged release,
   with and without the Desktop icon, and uninstalls. It runs without root or network: `shims.sh` turns sudo into
-  fakeroot and pip into a stub. CI runs each installer test in its own step. BC-250 Installer Tests lists the
-  scripts in that folder by itself.
+  fakeroot and pip into a stub. CI runs each installer test in its own step. [Nexus Installer
+  Tests](https://robertotorino.github.io/nexus/dashboard/#installer-tests) lists the scripts in that folder by itself.
 - **`./test.sh`** runs every test suite in the repository: core, tools, `dev/`, and the suites made for the
   system it runs on (this suite's `SYSTEM` says `bazzite`).
 
@@ -359,7 +360,7 @@ installer step and shellcheck list. What it does by hand, step by step, for an a
 
 1. Copy the folder of the app closest to yours, rename the package, and set `APP_NAME`, `APP_ID`, `VERSION`
    (0.1.0) and `__version__`. Clear its `CHANGELOG` and start it with one entry.
-2. Add the app to `bc250-bazzite/icons/categories.toml` with its category and run `python3 bc250-bazzite/tools/sync_icons.py`: it writes the
+2. Add the app to `bc250-bazzite/icons/categories.toml` with its category and run `python3 tools/sync_icons.py`: it writes the
    icons in `images/` and the portal's tile ([Icons](#icons)).
 3. Build the window on `AppHeader` and core's widgets.
 4. Write `install.sh` from the copied one, with the same options and launcher.

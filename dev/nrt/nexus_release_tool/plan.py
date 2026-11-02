@@ -1120,17 +1120,19 @@ def portal_target(root: Path = CHECKOUT, suite: str | None = None) -> Launch | N
 
 
 def installer_tests_target(root: Path = CHECKOUT, suite: str | None = None) -> Launch | None:
-    """The suite's installer tests window (tools/installer-tests/gui, BC-250 Installer Tests), started from the
-    checkout as its run.sh does. None when the suite has no such window."""
-    folder = suite_dir(root, suite) / "tools" / "installer-tests" / "gui"
+    """The installer tests window, Nexus Installer Tests (dev/itests, every suite's since 02-11-2026; it was the
+    BC250 suite's tools/installer-tests/gui), started from the checkout on the suite as its run.sh does. None when
+    the checkout has no such app."""
+    folder = root / "dev" / "itests"
     try:
         version = (folder / "VERSION").read_text(encoding="utf-8").strip()
-        consts = dict(_CONSTANT.findall((folder / "installer_test_gui" / "__init__.py").read_text(encoding="utf-8")))
+        consts = dict(_CONSTANT.findall((folder / "installer_tests" / "__init__.py").read_text(encoding="utf-8")))
     except OSError:
         return None
-    icon = folder / "images" / "bc250-installer-test-gui.webp"
-    return Launch("installer-tests", "installer_test_gui", consts.get("APP_NAME", "installer_test_gui"), folder,
-                  version, False, icon if icon.is_file() else None)
+    icon = folder / "images" / f"{consts.get('APP_ID', 'nexus-installer-tests')}.webp"
+    return Launch("installer-tests", "installer_tests", consts.get("APP_NAME", "installer_tests"), folder,
+                  version, False, icon if icon.is_file() else None,
+                  args=("--suite", suite) if suite else (), app_id=consts.get("APP_ID", ""))
 
 
 DOCS_HOST = "127.0.0.1"

@@ -920,20 +920,30 @@ def test_window_records_the_portal_tour(window, repo, tmp_path, monkeypatch):
     record('echo "ffmpeg is needed" >&2\nexit 1\n')
     log = page.output.toPlainText()
     assert "ffmpeg is needed" in log and "stopped with exit code 1" in log and len(opened) == 1
+    # the size box beside the button: 2160p (4K, for YouTube) passes --size and names the video -2160p
+    assert page.tour_size.currentText() == "1080p" and page.tour_size.isEnabled() == page.tour_button.isEnabled()
+    page.tour_size.setCurrentText("2160p")
+    out = tmp_path / "home" / "Videos" / "bc250-portal-tour-v0.1.0-2160p.mp4"
+    record('echo "size: $*"\nmkdir -p "$(dirname "$1")"\necho video > "$1"\n')
+    log = page.output.toPlainText()
+    assert f"$ {rp.RECORD_SCRIPT} {out} --size 2160p" in log and f"size: {out} --size 2160p" in log
+    assert out.read_text() == "video\n" and opened[-1] == out.as_uri()
 
 
 # --- Run from the checkout ------------------------------------------------------------------------------------------
 
 def test_installer_tests_target(repo):
-    assert rp.installer_tests_target(repo) is None                   # no tools/installer-tests/gui
-    gui = repo / "tools/installer-tests/gui"
-    write(gui / "VERSION", "0.3.0\n")
-    write(gui / "installer_test_gui/__init__.py", 'APP_NAME = "BC-250 Installer Tests"\n')
-    target = rp.installer_tests_target(repo)
-    assert (target.module, target.label, target.folder, target.changes_board) == \
-        ("installer_test_gui", "BC-250 Installer Tests 0.3.0", gui, False)
+    """Nexus Installer Tests (dev/itests, every suite's since 02-11-2026), started on the ticked suite."""
+    assert rp.installer_tests_target(repo) is None                   # no dev/itests
+    app = repo / "dev/itests"
+    write(app / "VERSION", "0.3.0\n")
+    write(app / "installer_tests/__init__.py", 'APP_NAME = "Nexus Installer Tests"\nAPP_ID = "nexus-installer-tests"\n')
+    target = rp.installer_tests_target(repo, "bc250-bazzite")
+    assert (target.module, target.label, target.folder, target.changes_board, target.args, target.app_id) == \
+        ("installer_tests", "Nexus Installer Tests 0.3.0", app, False, ("--suite", "bc250-bazzite"),
+         "nexus-installer-tests")
     real = rp.installer_tests_target()                              # this checkout's
-    assert real is not None and real.icon is not None and real.icon.is_file()
+    assert real is not None and real.icon is not None and real.icon.is_file() and real.args == ()
 
 
 def add_windows(root: Path) -> None:

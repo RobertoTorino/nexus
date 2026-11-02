@@ -18,8 +18,11 @@ core/bc250_core/              shared Python package, every suite's; bundled into
 tools/                        the Nexus tools: release and CI (build_release, stage_app, check_versions,
                               check_changelogs, tag-release.sh, release.sh, ci-local.sh, pre-push.sh, git-setup.sh,
                               merge_changelog, nexus_index),
-                              new_app, the design and icon catalogs, the tours, the design panel
-dev/<name>/                   the Nexus development apps, run from the checkout: dev/nrt/ is Nexus Release Tool
+                              new_app, the design and icon catalogs, sync_icons (a suite's category icons), the
+                              tours, the design panel
+dev/<name>/                   the Nexus development apps, run from the checkout: dev/dash/ is Nexus Dashboard (the
+                              door to the others), dev/nrt/ Nexus Release Tool, dev/demo/ Nexus Demo Recorder,
+                              dev/itests/ Nexus Installer Tests
 test.sh                       runs every test suite (core, tools, dev/, and the portal, tools and apps of each suite
                               made for the system it runs on: SYSTEM in the suite's folder)
 bc250-bazzite/                the BC250 Bazzite Suite

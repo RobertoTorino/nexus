@@ -147,10 +147,12 @@ published already and ends at once.
 - **Test on this board** holds the tests of a release on a BC-250. **Test app updates** and **Test Portal
   release** run the two [board tests](https://robertotorino.github.io/nexus/bc250-bazzite-suite/portal/#testing-a-portal-release-before-its-tag) in a terminal, with the suite's `bc250-bazzite/tools/check-release.sh`: the portal from the
   checkout before the push, and the published portal release after GitHub has built it. **Test withdrawal** does
-  the first on a board with a withdrawn app installed. **Installer tests** opens BC-250 Installer Tests from the
-  checkout. **Record portal tour** records the portal's video tour from the checkout as it is now, for the wiki and
+  the first on a board with a withdrawn app installed. **Installer tests** opens [Nexus Installer
+  Tests](dashboard.md#installer-tests) from the checkout on the ticked suite. **Record portal tour** records the portal's video tour from the checkout as it is now, for the wiki and
   YouTube (`bc250-bazzite/tools/record-tour.sh`, about a minute, its output in Commands), into
-  `~/Videos/bc250-portal-tour-v<portal version>.mp4`, and opens it in your video player. The tests run on the
+  `~/Videos/bc250-portal-tour-v<portal version>.mp4`, and opens it in your video player. The box beside it is the
+  video's size: 1080p, the wiki's, or 2160p (4K) for YouTube, which shows a 4K upload far sharper (about four times
+  the time, `-2160p` before `.mp4`); 1440p is the step between. The tests run on the
   ticked suite's own system: the BC250 suite's on Linux (the board). For a Windows suite they run on Windows (the
   handheld), with its `tools\check-release.ps1` in a PowerShell window: **Test app updates** and **Test withdrawal**
   start the portal from the checkout (`check-release.ps1 local`), **Test Portal release** downloads the published

@@ -1,0 +1,2 @@
+This app runs from the checkout it lives in and has no releases of its own: build_release.py refuses its tags
+and the release tool leaves it out.

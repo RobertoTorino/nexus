@@ -1,6 +1,36 @@
+Changelog: 02-11-2026 01:18:34
+
+Release 1.26.0.
+
+Changelog: 02-11-2026 01:17:06
+
+Release 1.25.0.
+
+Changelog: 02-11-2026 01:00:58
+
+Added. The tools for working on the suites are centralized in Nexus (owner, 02-11-2026): Nexus Dashboard
+(dev/dash), one door to them all, with the suite chosen in its header; Nexus Demo Recorder (dev/demo), the OBS
+demo recording that was the Media Tool's; Nexus Installer Tests (dev/itests), BC-250 Installer Tests made every
+suite's (bc250-bazzite/tools/installer-tests/gui moved out of the suite; its development category icon is gone);
+the Media Tool's video tours and icons as the dashboard's dialogs; tools/sync_icons.py moved from the BC250 suite's
+tools to the Nexus tools with --suite (the Windows Portable Suite's apps take no category icons, and it says so).
+The suites' own scripts stay in their folders (each suite stands apart). Each Nexus app has an installer test in
+each suite's tools/installer-tests (dash.sh, demo.sh, itests.sh; dash.ps1), is in ci-nexus.yml's matrix, and its
+chapter is the Nexus page's Dashboard chapter.
+Breaking. Media Tool is gone from the BC250 Bazzite Suite (bc250-bazzite/apps/mtool, its manifest entry, its
+chapter and its installer test): see the portal's CHANGELOG.
+
 Changelog: 02-11-2026 00:48:55
 
 Release 1.24.0. Brings ace-v1.0.0, acpi-v0.4.1, bios-v1.0.0, cec-v1.0.0, check-v1.0.0, clb-v1.0.0, compute-v0.4.1, consoles-v2.0.0, cores-v0.4.1, datstation-v3.0.0, decky-v1.0.0, fan-v1.0.0, gpu-v0.4.1, hdcam-v1.0.0, hdcontrol-v1.0.0, ips35-v1.0.0, mesh-v1.0.0, mtool-v1.0.2, ncgui-v1.0.0, oc-v0.3.1, overlay-v1.0.0, package-v3.0.0, pcsx2-v3.0.0, ppsspp-v1.0.0, rpcs3-v3.0.0, sftp-v1.0.0, shadps4-v3.0.0, upscaler-v2.0.0, vita3k-v1.0.0, vram-v1.0.0, wdriver-v1.0.0, wp-bios-v0.5.0, wp-hdcam-v0.4.0, wp-pcsx2-v5.6.0, wp-portal-v7.1.0, wp-ppsspp-v4.1.0, wp-rpcs3-v3.6.0, wp-rplay-v0.5.0, wp-sftp-v0.4.0, wp-shadps4-v4.1.0, wp-test-v4.7.0, wp-vita3k-v4.1.0, wp-xenia-v4.1.0, xenia-v1.0.0.
+
+Changelog: 01-11-2026 23:49:36
+
+Added. The video tours take --size 1080p (as before, the default), 1440p or 2160p (tools/tour_frames.py: the
+window is drawn at a higher scale, 240 % for 2160p, so the text stays crisp; tools/app_tour.py,
+bc250-bazzite/tools/portal_tour.py, record-tour.sh and record-app-tour.sh pass it on, and name the file
+...-2160p.mp4). A 4K video for YouTube, which shows it far sharper than a 1080p upload; the 1080p video is pixel for
+pixel what it was, and the wiki's 720p copy is the same whatever the size.
 
 Changelog: 01-11-2026 21:51:44
 

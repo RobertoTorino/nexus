@@ -44,22 +44,33 @@ default suite of the tools (`tools/suites.py`). The root keeps what is Nexus's:
 - `core/bc250_core/`: shared Python code, every suite's. It is **bundled per app** at release time
   (`tools/stage_app.py`), so each app runs on the core it was tested with; the BC250 suite's shared venv
   `~/.local/share/bc250-bazzite-suite/venv` holds only PyQt6 and pygame-ce (the portal's controller reader).
+  `nexus.py` in it is Nexus's design for the Nexus apps (the theme `NEXUS`, `create_app(theme=NEXUS)`).
 - `tools/`: the Nexus tools: release and CI (`stage_app.py`, `build_release.py`, `check_versions.py`,
   `check_changelogs.py`, `tag-release.sh`, `release.sh`, `ci-local.sh`, `pre-push.sh`, `git-setup.sh` (once per
   checkout: the pre-push hook and `merge_changelog.py`, git's merge driver for the CHANGELOGs, which merges two
   machines' new entries by entry; owner, 01-11-2026), `fix-modes.sh`,
   `backlog.py`, `nexus_index.py` (GitHub's Latest release: the Nexus index, every suite's newest portal),
   `dev-updates.sh`, `dev-backup.sh`), `new_app.py` (a new app of a suite from the architecture chapter, listed
-  everywhere the suite lists its apps, with the checks run on it), the design and icon catalogs (`make_design.py`, `make_icons.py`, `apply_design.py`), the tours
+  everywhere the suite lists its apps, with the checks run on it), the design and icon catalogs (`make_design.py`, `make_icons.py`, `apply_design.py`),
+  `sync_icons.py` (a suite's category icons and their copies in its apps; owner, 02-11-2026: a Nexus tool, the
+  BC250 suite's before), the tours
   (`app_tour.py`, `tour_frames.py`), `build_windows_exe.py`, `mkdocs/` (the design panel) and `tools/tests/`.
   A tool that works on a suite takes it with `--suite` (`tools/suites.py`: the folders with `portal/apps.toml`);
   with one suite in the checkout it is the default.
 - `dev/<name>/`: the Nexus-level development apps, laid out as a suite's apps are (the package, `images/`,
   `tests/`, `install.sh`, `run.sh` and the four files; `.standalone` and `.checkout-only`: never released). They
   run from the checkout and are in no portal (owner, 27-10-2026: no Development tab, a portal lists only released
-  apps); each has an installer test in each suite's `tools/installer-tests/`. `dev/nrt/` is the **Nexus
+  apps); each has an installer test in each suite's `tools/installer-tests/` (`<name>.sh`; `<name>.ps1` where it
+  has an `install.ps1`), takes Nexus's design and icon, and its manual is on the Nexus page. **The tools for
+  working on the suites are Nexus's, in one place** (owner, 02-11-2026): `dev/dash/` is the **Nexus Dashboard**,
+  the one door to them (its tiles start the other Nexus apps and open the chosen suite's video tours and icons;
+  manual: the Nexus page's Dashboard chapter); `dev/nrt/` is the **Nexus
   Release Tool** (NRT), the release front end (see Releases), with `install.ps1` and `run.ps1` for Windows; its manual is the
-  Nexus page's Releases chapter.
+  Nexus page's Releases chapter; `dev/demo/` is **Nexus Demo Recorder** (a portal installation recorded with OBS,
+  Linux; the OBS part of the BC250 suite's Media Tool, which is gone from the suite); `dev/itests/` is **Nexus
+  Installer Tests** (a suite's installer tests one at a time; BC-250 Installer Tests, made every suite's). A
+  suite's own scripts (its manifest, pins, board checks, tours, installer tests) stay in its `tools/`: the
+  dashboard runs them there.
 - `DESIGN.md` and `ICONS.md`: every color and every icon, per suite and the Nexus page; `test.sh` runs every test
   suite (core, tools, `dev/`, and the portal, tools and apps of each suite made for the system it runs on); `portal/apps.toml` at the root is a copy of the
   BC250 suite's for the portals installed before the move (`bc250-bazzite/tools/check_manifest.py` keeps it
@@ -116,7 +127,7 @@ default suite of the tools (`tools/suites.py`). The root keeps what is Nexus's:
 - **A design per system** (owner, 25-10-2026): the Bazzite suites keep the Bazzite design (purple, the apps' theme and
   the wiki's), the Windows suites get a design of their own, and Nexus has its own
   (`nexus/docs/stylesheets/nexus.css`); a Nexus app (`dev/`) takes Nexus's design and icon, as Nexus Release Tool
-  does (`dev/nrt/nexus_release_tool/style.py`, a core `Theme` set with `create_app(theme=)`; its icon copies
+  does (core's `nexus.py`, the theme `NEXUS`, set with `create_app(theme=)`; its icon copies
   from `tools/make_icons.py`). Never carry one system's design over to another. The Windows Portable Suite's
   apps put far more weight on UX and UI than the board's: a small screen held in the hands, touch and a controller
   instead of a mouse and keyboard.
@@ -178,7 +189,7 @@ shellcheck -S warning $S/apps/oc/bc250-gpu-oc-bisect.sh $S/apps/oc/install.sh
 shellcheck -S warning $S/apps/acpi/bc250-acpi-override.sh $S/apps/acpi/install.sh \
   $S/apps/overlay/install.sh $S/apps/bios/install.sh $S/apps/vram/install.sh $S/apps/fan/install.sh \
   $S/apps/cec/install.sh $S/apps/sftp/install.sh $S/apps/ips35/install.sh $S/apps/hdcam/install.sh $S/apps/hdcontrol/install.sh \
-  $S/apps/consoles/install.sh $S/apps/clb/install.sh $S/apps/mtool/install.sh dev/nrt/*.sh $S/tools/check-release.sh
+  $S/apps/consoles/install.sh $S/apps/clb/install.sh dev/*/*.sh $S/tools/check-release.sh
 shellcheck -S warning $S/apps/ace/bc250-ace-queues.sh $S/apps/ace/bc250-ace-queues-run \
   $S/apps/ace/install.sh $S/apps/ace/mesa/build-in-container.sh
 shellcheck -S warning $S/apps/mesh/bc250-mesh-shaders.sh $S/apps/mesh/bc250-mesh-shaders-run \
@@ -209,13 +220,13 @@ powershell -NoProfile -ExecutionPolicy Bypass -File windows-portable\tools\insta
 
 Every app (and every `portal/apps.toml` entry) has an installer test, `<suite>/tools/installer-tests/<name>.sh`
 (`<name>.ps1` in a Windows suite), and CI runs each one in its own step (in a Windows suite, in a job of its own: the
-`installers` matrix); a new app adds both (each suite's `tools/tests/test_installer_tests.py` checks it). BC-250 Installer Tests lists the scripts in that folder by itself. The installer tests need `fakeroot` (Linux). On Bazzite, `brew install shellcheck fakeroot node` (Node.js runs the design panel's script in
+`installers` matrix); a new app adds both (each suite's `tools/tests/test_installer_tests.py` checks it). Nexus Installer Tests lists the scripts in that folder by itself. The installer tests need `fakeroot` (Linux). On Bazzite, `brew install shellcheck fakeroot node` (Node.js runs the design panel's script in
 `tools/tests/test_design_panel.py`; the test skips without it); brew's folder
 `/home/linuxbrew/.linuxbrew/bin` may need adding to PATH in a non-interactive shell. CI also checks the layout rules above: no CRLF in the index, every
 `.sh` is 100755, every former repo folder has its four files, workflows only in the root `.github/`. The pytest
 matrices of the CI workflows list every folder with `tests/` (`tools/tests/test_layout.py` checks it): `core`,
-`tools` and each `dev/<name>` in `ci-nexus.yml`, each suite's `portal`, `tools`, `apps/<name>` and
-`tools/installer-tests/gui` in the suite's CI. CI results
+`tools` and each `dev/<name>` in `ci-nexus.yml`, each suite's `portal`, `tools` and `apps/<name>` in the suite's
+CI. CI results
 can be read without `gh` through the public API:
 `curl -s https://api.github.com/repos/RobertoTorino/nexus/actions/runs?per_page=3`.
 

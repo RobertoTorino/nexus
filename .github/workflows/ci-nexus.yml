@@ -41,7 +41,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        dir: [core, tools, dev/nrt]   # every folder with tests/ of Nexus; a suite's folders: its own CI
+        dir: [core, tools, dev/dash, dev/demo, dev/itests, dev/nrt]   # every folder with tests/ of Nexus;
+                                      # a suite's folders: its own CI
     defaults:
       run:
         working-directory: ${{ matrix.dir }}
@@ -89,7 +90,7 @@ jobs:
       - name: shellcheck (warnings, the Nexus tools, test.sh and dev/)
         run: |
           shellcheck -x -S warning tools/*.sh test.sh tools/hooks/pre-push
-          shellcheck -S warning dev/nrt/*.sh
+          shellcheck -S warning dev/*/*.sh
 
       - name: Line endings
         run: |

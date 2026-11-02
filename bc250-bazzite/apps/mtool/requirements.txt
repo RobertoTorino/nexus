@@ -1,5 +1,0 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
-PyQt6>=6.11,<7
-obsws-python>=1.8,<2
-dbus-next>=0.2.3,<1
-pillow>=12,<13

@@ -5,6 +5,30 @@
 Working notes for moving the seven BC-250 tools into this suite. Not part of the manual or the READMEs, which
 describe only what exists.
 
+## The tools centralized in Nexus (02-11-2026, in the working tree for the owner to commit)
+
+The owner: the Media Tool out of the suite (it was dev work released as an app), all the tools for working on the
+suites in one place under Nexus, a small dashboard that stays local like NRT. Done, every check passing:
+
+- **`dev/dash/` Nexus Dashboard** (0.1.0): the suite in its header, tiles for the Nexus apps (started with their
+  run scripts, in their own windows) and the suite's tools as dialogs (the Media Tool's tours and icons, moved
+  there). Linux and Windows (`install.ps1`, `run.ps1`; `windows-portable/tools/installer-tests/dash.ps1` and its
+  CI step, not run here: no Windows). Manual: `nexus/docs/dashboard.md`.
+- **`dev/demo/` Nexus Demo Recorder** (0.1.0): the OBS part of the Media Tool (workflow, the global shortcut) on
+  core, Nexus's theme and icon; the recordings in `~/Videos/demos` (they were `~/MediaToolRecordings`, left as it
+  is). Linux only. Its `install.sh` removes the Media Tool's own copy and venv.
+- **`dev/itests/` Nexus Installer Tests** (0.2.0): `bc250-bazzite/tools/installer-tests/gui` moved and made every
+  suite's (a Suite box; `.ps1` tests on Windows through PowerShell, not tried on Windows yet), on core.
+- **`tools/sync_icons.py`** with `--suite` (from the BC250 suite's tools; its tests in `tools/tests/test_sync_icons.py`).
+- **core `nexus.py`**: the NEXUS theme, every Nexus app's (it was NRT's style.py). NRT's Installer tests button
+  opens `dev/itests` on the ticked suite.
+- **Gone from the BC250 suite:** `apps/mtool` (Breaking in the portal's CHANGELOG, the manifest entry in both
+  apps.toml, its wiki chapter, installer test, CI steps, `icons/development/`). The GitHub releases `mtool-v*` stay.
+- **Open (owner):** the names of the three new apps and their folders; the portal's major bump (an app removed:
+  Breaking) and Nexus's; a device test of the dashboard's Windows scripts on the handheld; whether the Media Tool
+  installed on the boards is uninstalled by hand (`~/.local/bin/media-tool --uninstall`) or by the Demo Recorder's
+  `install.sh`; the NRT's Test on this board launcher part moving into the dashboard later (my proposal).
+
 ## Resume here (30-10-2026 20:20, for a new chat)
 
 The owner: "make a note for a new chat". Where things stand:

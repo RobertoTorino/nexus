@@ -24,7 +24,7 @@ what Claude Code on this machine used, from its transcripts; a click opens Claud
 ticker says where the newest push's workflow runs stand: the job that runs and its step (owner, 28-10-2026).
 Test on this board: Test app updates and Test withdrawal install the portal from the checkout and start it with the
 apps from their releases, Test Portal release installs the published portal release (check-release.sh, in a
-terminal); Installer tests opens BC-250 Installer Tests; Record portal tour records the portal's video tour
+terminal); Installer tests opens Nexus Installer Tests on the suite; Record portal tour records the portal's video tour
 from this checkout (tools/record-tour.sh) into ~/Videos and opens it; Close issues lists the open GitHub issues,
 and closes the ticked ones with gh issue close in the Commands tab. Test local apps: click an app's icon to start it from this
 checkout, to try it before its release (the portal is the first icon); a wiki's icon (one per mkdocs.yml) serves it
@@ -733,6 +733,7 @@ def log_tail(log: Path, lines: int = 20) -> str:
 
 
 ICON_PX = 64                            # the apps' icons under Test local apps
+TOUR_SIZES = ("1080p", "1440p", "2160p")   # the portal tour's size (tools/tour_frames.py); the first is the default
 BADGE_PX = 26                           # the warning in the corner of an app's icon that changes the board
 
 
@@ -797,13 +798,17 @@ class RunPage(QWidget):
                                         "and remove it")
         self.withdraw_button.clicked.connect(lambda: self.check("withdrawal"))
         self.installer_button = QPushButton("Installer tests")
-        self.installer_button.setToolTip("Open BC-250 Installer Tests from this checkout: every installer test, one "
-                                         "at a time, with its output live")
+        self.installer_button.setToolTip("Open Nexus Installer Tests from this checkout on this suite: every "
+                                         "installer test, one at a time, with its output live")
         self.installer_button.clicked.connect(self.installer_tests)
         self.tour_button = QPushButton("Record portal tour")
         self.tour_button.setToolTip("Record the portal's video tour from this checkout, for the wiki and YouTube "
                                     f"({rp.RECORD_SCRIPT}, about a minute), into ~/Videos, and open it")
         self.tour_button.clicked.connect(self.record_tour)
+        self.tour_size = QComboBox()                # the video's size, as record-tour.sh takes it
+        self.tour_size.addItems(TOUR_SIZES)
+        self.tour_size.setToolTip("The tour's size: 1080p for the wiki, 2160p (4K) for YouTube, which shows it far "
+                                  "sharper (about four times the time)")
         self.recorder: QProcess | None = None
         self.issues_button = QPushButton("Close issues")
         self.issues_button.setToolTip("The open issues on GitHub: tick the ones that are handled, and Run closes "
@@ -828,7 +833,7 @@ class RunPage(QWidget):
         self.output = StepLog(self, "Test on this board", window.step_wrote, opens=False)   # lines while you click
         checks = QHBoxLayout()
         for button in (self.local_button, self.release_button, self.withdraw_button, self.installer_button,
-                       self.tour_button, self.issues_button):
+                       self.tour_button, self.tour_size, self.issues_button):
             checks.addWidget(button)
         checks.addStretch(1)
         local = QLabel("Test local apps")
@@ -844,7 +849,8 @@ class RunPage(QWidget):
             "portal from this checkout, with the apps from their GitHub releases. <b>Test Portal release</b> (after "
             "GitHub built the portal): the published portal release. <b>Test withdrawal</b> (step 3): the portal from "
             "this checkout on a board with the withdrawn app installed. Each runs in a terminal; close the portal "
-            "there to finish. <b>Installer tests</b> opens BC-250 Installer Tests. <b>Record portal tour</b> records "
+            "there to finish. <b>Installer tests</b> opens Nexus Installer Tests on the suite. <b>Record portal tour</b> "
+            "records "
             "the portal's video tour from this checkout, as it is now, and opens it when it is done. <b>Close "
             "issues</b> lists the open issues on GitHub, such as the weekly Upstream review, and closes the ones "
             "you tick once they are handled."))
@@ -899,6 +905,8 @@ class RunPage(QWidget):
         for button, tip in self.tooltips.items():
             on = here and not (button is self.tour_button and windows)
             button.setEnabled(on)
+            if button is self.tour_button:
+                self.tour_size.setEnabled(on)       # the size box goes with the button
             if on:
                 button.setToolTip(WINDOWS_TIPS.get(button.text(), tip) if windows else tip)
             elif button is self.tour_button and windows:
@@ -957,7 +965,7 @@ class RunPage(QWidget):
             return
         target = rp.installer_tests_target(self.release_window.root, self.release_window.suite)
         if target is None:
-            self.output.appendPlainText("This suite has no tools/installer-tests/gui.")
+            self.output.appendPlainText("This checkout has no dev/itests (Nexus Installer Tests).")
             return
         self.run(target)
 
@@ -976,7 +984,10 @@ class RunPage(QWidget):
             self.output.appendPlainText("Close issues: the command line is busy or has no bash; nothing was closed.")
 
     def tour_file(self) -> Path:
-        return Path.home() / "Videos" / f"bc250-portal-tour-v{self.release_window.portal_version()}.mp4"
+        """~/Videos/bc250-portal-tour-v<portal version>.mp4, as record-tour.sh names it: -2160p before .mp4 at 4K."""
+        size = self.tour_size.currentText()
+        suffix = "" if size == TOUR_SIZES[0] else f"-{size}"
+        return Path.home() / "Videos" / f"bc250-portal-tour-v{self.release_window.portal_version()}{suffix}.mp4"
 
     def record_tour(self) -> None:
         """The suite's tools/record-tour.sh in the background, its output in Commands; the video opens when it is done."""
@@ -988,15 +999,17 @@ class RunPage(QWidget):
         if self.recorder is not None:
             return
         out = self.tour_file()
+        size = self.tour_size.currentText()
+        options = [] if size == TOUR_SIZES[0] else ["--size", size]   # left out for the default: older scripts
         self.recorder = QProcess(self)
         self.recorder.setWorkingDirectory(str(self.release_window.root))
         self.recorder.setProcessChannelMode(QProcess.ProcessChannelMode.MergedChannels)
         self.recorder.readyReadStandardOutput.connect(self._recorder_output)
         self.recorder.finished.connect(lambda code, _status: self._recorded(code, out))
         self.tour_button.setEnabled(False)
-        self.output.appendPlainText(f"$ {path} {out}")
+        self.output.appendPlainText(" ".join([f"$ {path}", str(out), *options]))
         self.release_window.tabs.setCurrentIndex(self.release_window.commands_tab)   # its lines come there
-        self.recorder.start("bash", [str(script), str(out)])
+        self.recorder.start("bash", [str(script), str(out), *options])
 
     def _recorder_output(self) -> None:
         if self.recorder is not None:

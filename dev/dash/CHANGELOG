@@ -1,0 +1,13 @@
+Changelog: 02-11-2026 00:56:43
+
+Added. Nexus Dashboard, a Nexus app in dev/dash/ (owner, 02-11-2026: the tools for working on the suites were
+spread over the suites and the root; one door to them, with the tools kept where their suite's rules put them).
+The window: the suite chosen in the header (remembered; --suite NAME opens one), tiles for the Nexus apps of the
+checkout (Nexus Release Tool, Nexus Demo Recorder, Nexus Installer Tests: a click starts the app with its run
+script in a window of its own, with the suite where the app takes one, and says where its log is), then the
+suite's tools as dialogs: Portal video tour and Apps video tour (from the Media Tool, on the suite's record-tour.sh
+and record-app-tour.sh, with the size 1080p, 1440p or 2160p) and Convert icons (tools/sync_icons.py on the suite).
+A tile is greyed out where it does not run here: the Demo Recorder on Windows, a suite's tours on the other
+system, the icons for a suite whose apps take no category icons. It runs from the checkout with the dev venv
+(run.sh, run.ps1), takes Nexus's design and icon (core's nexus.py), and is never released (.checkout-only).
+install.sh and install.ps1 write the launcher, the menu entry and the Desktop icon for this checkout.

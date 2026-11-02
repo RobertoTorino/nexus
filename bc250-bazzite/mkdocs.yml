@@ -109,8 +109,6 @@ nav:
   - History:
       - What is Bazzite: history/bazzite.md
       - What is BC-250: history/bc250.md
-  - Other tools:
-      - Media tool: other-tools/media-tool.md
 validation:
   links:
     anchors: warn

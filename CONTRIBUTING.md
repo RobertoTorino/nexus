@@ -21,7 +21,8 @@ request. Say so when something was made with generative AI tools.
 ## Icons
 
 Every app in a category has the same icon. A new or changed icon goes in `bc250-bazzite/icons/<category>/`;
-`python3 bc250-bazzite/tools/sync_icons.py` writes the copies the apps, the portal and the wiki use. The wiki's
+`python3 tools/sync_icons.py` writes the copies the apps, the portal and the wiki use (`--suite` names another
+suite; Nexus Dashboard's Convert icons does the same from a window). The wiki's
 [Architecture and consistency](bc250-bazzite/docs/development/architecture.md) page describes it, and how a new app is built.
 
 ## Before a pull request

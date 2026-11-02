@@ -1,7 +1,12 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """What the video tours share (bc250-bazzite/tools/portal_tour.py, tools/app_tour.py): a temporary home for an offscreen Qt, and
-Recorder, which renders a window frame by frame into an MP4 (H.264, 1920 x 1080, no sound) with a pointer, clicks,
-captions and title cards drawn in, and add_music(), which lays a track under a finished video."""
+Recorder, which renders a window frame by frame into an MP4 (H.264, 1920 x 1080 by default, no sound) with a pointer,
+clicks, captions and title cards drawn in, and add_music(), which lays a track under a finished video.
+
+The tours lay everything out in 1920 x 1080 (WIDTH, HEIGHT: the window is 1600 x 900 at 120 %). set_size() picks
+the size of the video itself: 1080p, or 1440p or 2160p for YouTube, which shows a 4K upload far sharper than a
+1080p one. A bigger video is the same picture rendered at a higher scale (Qt draws the window at 240 % for 2160p),
+not an enlarged one, so the text stays crisp; it takes about four times as long."""
 
 from __future__ import annotations
 
@@ -24,8 +29,21 @@ def _suites():
 
 suites = _suites()
 SUITE = suites.suite()                              # the default suite (the tours take --suite)
-WIDTH, HEIGHT = 1920, 1080
+WIDTH, HEIGHT = 1920, 1080                          # the layout: every position in the tours is in these pixels
 SCALE = 1.2                                         # the window is 1600 x 900 at 120 %: readable on a phone too
+SIZES = {"1080p": 1.0, "1440p": 4 / 3, "2160p": 2.0}  # the video's size, as a multiple of the layout
+ZOOM = 1.0                                          # the chosen multiple (set_size, before the window is made)
+
+
+def set_size(name: str) -> None:
+    """The video's size by name (SIZES); before prepare_home(), which sizes the screen and the window by it."""
+    global ZOOM
+    ZOOM = SIZES[name]
+
+
+def size() -> tuple[int, int]:
+    """The video's width and height in pixels."""
+    return round(WIDTH * ZOOM), round(HEIGHT * ZOOM)
 
 
 def prepare_home(home: Path) -> None:
@@ -33,12 +51,14 @@ def prepare_home(home: Path) -> None:
                      ("XDG_STATE_HOME", ".local/state"), ("XDG_CACHE_HOME", ".cache")):
         (home / sub).mkdir(parents=True, exist_ok=True)
         os.environ[var] = str(home / sub)
-    # One screen of the video's size, so the portal's fullscreen view is the window's 1600 x 900 at 120 %.
-    screen = {"screens": [{"name": "tour", "x": 0, "y": 0, "width": WIDTH, "height": HEIGHT,
+    # One screen of the video's size, so the portal's fullscreen view is the window's 1600 x 900 (at 120 % for
+    # 1080p, 240 % for 2160p).
+    width, height = size()
+    screen = {"screens": [{"name": "tour", "x": 0, "y": 0, "width": width, "height": height,
                            "logicalDpi": 96, "logicalBaseDpi": 96, "dpr": 1}]}
     (home / "screen.json").write_text(json.dumps(screen), encoding="utf-8")
     os.environ["QT_QPA_PLATFORM"] = f"offscreen:configfile={home / 'screen.json'}"
-    os.environ["QT_SCALE_FACTOR"] = str(SCALE)
+    os.environ["QT_SCALE_FACTOR"] = str(SCALE * ZOOM)
     os.environ.pop("QT_SCREEN_SCALE_FACTORS", None)
     sys.path[:0] = [str(ROOT / "core")]
 
@@ -74,8 +94,10 @@ class Recorder:
         self.popup = None
         self.overlay = None                         # a whole frame drawn instead of the window (title cards)
         self.frames = 0                             # written so far: the video's length is frames / fps
+        self.width, self.height = size()            # the video's pixels; the layout below is in WIDTH x HEIGHT
         self.ffmpeg = subprocess.Popen(
-            ["ffmpeg", "-loglevel", "error", "-y", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{WIDTH}x{HEIGHT}",
+            ["ffmpeg", "-loglevel", "error", "-y", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s",
+             f"{self.width}x{self.height}",
              "-r", str(fps), "-i", "-", "-c:v", "libx264", "-preset", "slow", "-crf", "18", "-pix_fmt", "yuv420p",
              "-movflags", "+faststart", str(out)], stdin=subprocess.PIPE)
 
@@ -88,20 +110,21 @@ class Recorder:
         from PyQt6.QtCore import QPointF, QRectF, Qt
         from PyQt6.QtGui import QColor, QFont, QImage, QPainter, QPainterPath, QPen
 
-        image = QImage(WIDTH, HEIGHT, QImage.Format.Format_RGB888)
+        image = QImage(self.width, self.height, QImage.Format.Format_RGB888)
         painter = QPainter(image)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
         if self.overlay is not None:
-            painter.drawImage(0, 0, self.overlay)
-        else:
-            shot = self.window.grab()
+            painter.drawImage(0, 0, self.overlay)   # a whole frame, the video's size
+        painter.scale(ZOOM, ZOOM)                   # from here on in the layout's pixels
+        if self.overlay is None:
+            shot = self.window.grab()               # the window's pixels: the video's size, crisp at every ZOOM
             painter.drawPixmap(QRectF(0, 0, WIDTH, HEIGHT), shot, QRectF(shot.rect()))
             if self.popup is not None and self.popup.isVisible():
                 menu = self.popup.grab()
                 top_left = self.popup.pos() - self.window.pos()
-                painter.drawPixmap(QRectF(top_left.x() * SCALE, top_left.y() * SCALE, menu.width(), menu.height()),
-                                   menu, QRectF(menu.rect()))
+                painter.drawPixmap(QRectF(top_left.x() * SCALE, top_left.y() * SCALE,
+                                          menu.width() / ZOOM, menu.height() / ZOOM), menu, QRectF(menu.rect()))
             if self.click_at is not None:
                 x, y, age = self.click_at
                 radius = 12 + age * 3
@@ -137,8 +160,8 @@ class Recorder:
     def emit(self, image, count: int = 1) -> None:
         data = image.constBits().asstring(image.sizeInBytes())
         stride = image.bytesPerLine()
-        if stride != WIDTH * 3:
-            data = b"".join(data[row * stride: row * stride + WIDTH * 3] for row in range(HEIGHT))
+        if stride != self.width * 3:
+            data = b"".join(data[row * stride: row * stride + self.width * 3] for row in range(self.height))
         assert self.ffmpeg.stdin is not None
         for _ in range(count):
             self.ffmpeg.stdin.write(data)
@@ -201,11 +224,12 @@ class Recorder:
         from PyQt6.QtCore import QRectF, Qt
         from PyQt6.QtGui import QColor, QFont, QImage, QPainter, QPalette, QPixmap
 
-        image = QImage(WIDTH, HEIGHT, QImage.Format.Format_RGB888)
+        image = QImage(self.width, self.height, QImage.Format.Format_RGB888)
         image.fill(self.window.palette().color(QPalette.ColorRole.Window))
         painter = QPainter(image)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
+        painter.scale(ZOOM, ZOOM)                   # the card is laid out in WIDTH x HEIGHT
         logo = QPixmap(str(self.logo)) if self.logo is not None else QPixmap()
         if not logo.isNull():
             painter.drawPixmap(QRectF(WIDTH / 2 - 128, 190, 256, 256), logo, QRectF(logo.rect()))

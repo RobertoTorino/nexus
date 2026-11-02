@@ -20,7 +20,7 @@ Nexus page ([Layout](https://robertotorino.github.io/nexus/development/#layout))
 bc250-bazzite/                the BC250 Bazzite Suite:
   portal/                       the portal: app, apps.toml (the pinned app releases) and install.sh
   apps/<name>/                  one folder per app, each with its own VERSION and CHANGELOG
-  tools/                        the suite's tools: pin_app, check_manifest, sync_icons, the installer tests,
+  tools/                        the suite's tools: pin_app, check_manifest, the installer tests,
                                 the screenshot and tour scripts
   docs/ mkdocs.yml              this wiki (MkDocs Material)
   icons/ install.sh             the category icons; the portal's installer for a checkout
@@ -45,11 +45,17 @@ same picture in `mkdocs serve`:
 python bc250-bazzite/tools/portal_screenshot.py          # from the venv; --out FILE to save it elsewhere
 ```
 
-The video tours are made the same way, frame by frame from the real windows, offscreen. `bc250-bazzite/tools/record-tour.sh`
+The video tours are made the same way, frame by frame from the real windows, offscreen, from a terminal as below
+or from [Nexus Dashboard](https://robertotorino.github.io/nexus/dashboard/#video-tours). `bc250-bazzite/tools/record-tour.sh`
 records the portal's tour, about two minutes, with music under it that fades out over the last two seconds
 (`bc250-bazzite/tools/sounds/the_quiet_engine_remix_3min.mp3`, made with generative AI tools; `--no-music` leaves it out).
 `bc250-bazzite/tools/record-tour.sh --wiki` also writes the copy on the [Portal Tour](../portal-tour.md) page,
 `bc250-bazzite/docs/videos/portal-tour.mp4` (1280 × 720, about 6 MB) and its poster: run it after a change to the portal's window.
+The video itself goes to `~/Videos`, outside the repository, at 1920 × 1080. For YouTube, record it at 4K:
+`--size 2160p` renders the same tour at 3840 × 2160 (the window drawn at 240 % instead of 120 %, so the text stays
+crisp; about three minutes, around 35 MB) into `~/Videos/bc250-portal-tour-v<portal version>-2160p.mp4`.
+YouTube shows a 4K upload far sharper than a 1080p one, since it gives it a better codec and more bits. `--size
+1440p` is the step between. The wiki's copy is the same whatever the size.
 `bc250-bazzite/tools/record-app-tour.sh` records one app's, about 40 seconds, the same script for every app, with music under it
 that fades out over the last two seconds (`bc250-bazzite/tools/sounds/the_quiet_engine.mp3`, made with generative AI tools):
 
@@ -58,6 +64,7 @@ bc250-bazzite/tools/record-app-tour.sh fan                          # ~/Videos/b
 bc250-bazzite/tools/record-app-tour.sh compute --package cu_unlock  # compute and cores have two programs
 bc250-bazzite/tools/record-app-tour.sh cec cec.mp4 --seconds 30     # another file, another length
 bc250-bazzite/tools/record-app-tour.sh fan --no-music               # without sound; --music FILE for another track
+bc250-bazzite/tools/record-app-tour.sh fan --size 2160p             # at 4K for YouTube: ...-tour-v<version>-2160p.mp4
 ```
 
 The app starts from the checkout in a home folder of its own. The tour points at the controls of its header, with

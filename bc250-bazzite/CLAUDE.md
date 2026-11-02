@@ -19,7 +19,7 @@ appearing in the portal.
 
 - `apps/<name>/`: check, gpu, upscaler, compute, cores, oc, acpi,
   overlay, ips35, hdcam, hdcontrol, bios, ace, mesh, vram, fan, wdriver, cec, sftp, consoles, clb, shadps4, rpcs3,
-  ppsspp, pcsx2, vita3k, xenia, decky, mtool, package, ncgui, datstation. Each has its
+  ppsspp, pcsx2, vita3k, xenia, decky, package, ncgui, datstation. Each has its
   own VERSION, CHANGELOG, LICENSE (acpi is MIT; consoles is AGPL-3.0, its protocol code ported from
   chiaki-ng: those files AGPL-3.0-only, its own AGPL-3.0-or-later; ncgui is GPL-2.0-only, a port of NetcatGUI; clb
   (Console LinkB, Xbox) is GPL-3.0-or-later with protocol code ported from Greenlight and xal-node, MIT, whose notice
@@ -28,11 +28,14 @@ appearing in the portal.
   gaming, utilities): the portal, one fullscreen view for the keyboard, the mouse and a controller (owner,
   01-11-2026: Suite Desktop Mode is gone), shows a category strip with the notice of updates beside it and check
   as the first tile on Sustainable (owner, 20-10-2026). There is no Development category
-  (owner, 27-10-2026): the portal lists only released apps, and Media Tool, the Dependency Checker and Bazzite
-  NetcatGUI are on Utilities. Nexus Release Tool (the release front end, `../dev/nrt/`, a Nexus app, its manual on
-  the Nexus page) and BC-250 Installer Tests (`tools/installer-tests/gui`, whose icon keeps the `development`
-  category) have `.checkout-only`: they run from the checkout, are never released and are in no portal; start
-  them there, or give them a menu entry with their own `install.sh`. A portal that runs from the checkout, or was
+  (owner, 27-10-2026): the portal lists only released apps, and the Dependency Checker and Bazzite NetcatGUI are
+  on Utilities. The tools for working on the suite are Nexus's (owner, 02-11-2026), in `../dev/`, each with
+  `.checkout-only`: they run from the checkout, are never released and are in no portal. Nexus Dashboard
+  (`../dev/dash/`) opens them all: Nexus Release Tool (the release front end), Nexus Installer Tests (this suite's
+  `tools/installer-tests/*.sh` one at a time; it was BC-250 Installer Tests in `tools/installer-tests/gui`), Nexus
+  Demo Recorder (a portal installation recorded with OBS; it was the OBS part of Media Tool, `apps/mtool`, which is
+  gone from the suite: Breaking in the portal's CHANGELOG), the video tours and the icons. Their manuals are on
+  the Nexus page. A portal that runs from the checkout, or was
   installed from one, installs the released apps from that checkout's source (the checkout it records is the
   repository, the suite's folder in it `bc250-bazzite/`, `SUITE_DIR`): that is how a release is tried on a board
   before its tag. Install every app through the portal, so what is installed stays in step.
@@ -45,11 +48,11 @@ appearing in the portal.
   their update notice; `tools/check_manifest.py` keeps it identical. The owner removes the copy once the first
   portal release after the move has been out for a while.
 - `tools/`: the suite's tools: `pin_app.py`, `check_manifest.py`, `check-release.sh` (the board checks of a
-  portal release, run from the Nexus Release Tool's Test on this board), `sync_icons.py`, `portal_screenshot.py`,
-  `portal_tour.py`, `record-tour.sh`, `record-app-tour.sh`, `make_portal_sounds.py`, `sounds/`,
-  `check_upstream.py`, `mkdocs/` (the wiki's hooks and overrides), their tests in `tools/tests/`, and
-  `tools/installer-tests/` (installers on Linux with fakeroot shims). The Nexus tools (release and CI, the design
-  panel) are in `../tools/`.
+  portal release, run from the Nexus Release Tool's Test on this board), `portal_screenshot.py`,
+  `portal_tour.py`, `record-tour.sh`, `record-app-tour.sh` (run from Nexus Dashboard too), `make_portal_sounds.py`,
+  `sounds/`, `check_upstream.py`, `mkdocs/` (the wiki's hooks and overrides), their tests in `tools/tests/`, and
+  `tools/installer-tests/` (installers on Linux with fakeroot shims; Nexus Installer Tests runs them one at a
+  time). The Nexus tools (release and CI, the design panel, `sync_icons.py`) are in `../tools/`.
 - `docs/` and `mkdocs.yml`: the wiki; `icons/`: the category icons; `install.sh`: the portal's installer from a
   checkout.
 
@@ -79,8 +82,8 @@ appearing in the portal.
     MIGRATION.md says which did; a renamed app's old key goes in `RENAMED` in the portal's manifest.py),
     `images/`, `tests/`, `install.sh` and the four files; data the package reads (a catalog, tables) sits in
     the package or beside it in the app folder. `../tools/tests/test_layout.py` checks the layout of every suite.
-    An app's icons are copies of its category's icon: `icons/categories.toml` assigns them, `tools/sync_icons.py`
-    writes them.
+    An app's icons are copies of its category's icon: `icons/categories.toml` assigns them, `../tools/sync_icons.py`
+    (the Nexus tool; this suite is its default) writes them.
   - Code: shared code comes from `bc250_core` (bundled per app); the installer writes a launcher in
     `~/.local/bin` whose exec line names the app's python, a menu entry and an optional Desktop icon; every app has
     its installer test (see Checks in the root's CLAUDE.md).
@@ -117,8 +120,8 @@ mkdocs build --strict -f bc250-bazzite/mkdocs.yml      # the wiki, from the venv
 ```
 
 Every app (and every `portal/apps.toml` entry) has an installer test, `tools/installer-tests/<name>.sh`, and CI runs
-each one in its own step; a new app adds both (`tools/tests/test_installer_tests.py` checks it). BC-250 Installer
-Tests lists the scripts in that folder by itself.
+each one in its own step; a new app adds both (`tools/tests/test_installer_tests.py` checks it). Nexus Installer
+Tests (`../dev/itests/`) lists the scripts in that folder by itself.
 
 ## Releases
 

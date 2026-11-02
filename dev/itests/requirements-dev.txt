@@ -1,0 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# The app runs in the checkout's dev venv (requirements-dev.txt in the root), so it has no requirements.txt.
+PyQt6>=6.11,<7
+pytest>=8

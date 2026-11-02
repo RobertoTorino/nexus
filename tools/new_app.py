@@ -1459,10 +1459,11 @@ def write_app(root: Path, suite: Suite, app: NewApp) -> list[Path]:
         change(copy, new)
     categories = suite.folder / "icons" / "categories.toml"
     change(categories, categories.read_text(encoding="utf-8").rstrip("\n") + "\n" + fill(CATEGORIES_ENTRY, app, suite))
-    sync = suite.folder / "tools" / "sync_icons.py"
-    result = subprocess.run([sys.executable, str(sync)], cwd=root, capture_output=True, text=True)
+    sync = Path(__file__).resolve().parent / "sync_icons.py"          # the Nexus tool, on the suite's folder
+    result = subprocess.run([sys.executable, str(sync), "--root", str(suite.folder)], cwd=root,
+                            capture_output=True, text=True)
     if result.returncode != 0:
-        raise SystemExit(f"{sync.relative_to(root)} failed:\n{result.stdout}{result.stderr}")
+        raise SystemExit(f"{sync.relative_to(ROOT)} failed:\n{result.stdout}{result.stderr}")
     written += [folder / "images" / f"{app.app_id}.webp", folder / "images" / f"{app.app_id}-128.png",
                 suite.folder / "portal" / "images" / "apps" / f"{app.name}.webp"]
     # The wiki: the nav, the apps overview (its category's table), the categories table.

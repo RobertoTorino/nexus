@@ -76,10 +76,10 @@ controls are controllers like any other. Where Steam Input already turns them in
 layout does: d-pad to the arrow keys, A to Enter, B to Escape), the keyboard column above applies and works as it
 is.
 
-The tools for working on the suite are not in the portal: [Nexus Release Tool](https://robertotorino.github.io/nexus/releases/)
-and BC-250 Installer Tests (`bc250-bazzite/tools/installer-tests/gui`, a window that runs the installer tests one at
-a time) run from a checkout of the repository and have no release. Start them there, or give them a menu entry with
-their own `install.sh`.
+The tools for working on the suite are not in the portal: they are Nexus's, in `dev/` of the repository, run from a
+checkout and have no release. [Nexus Dashboard](https://robertotorino.github.io/nexus/dashboard/) opens them all:
+Nexus Release Tool, Nexus Installer Tests (the installer tests one at a time), Nexus Demo Recorder, the video tours
+and the icons. Start it from the checkout, or give it a menu entry with its `install.sh`.
 
 - `apps/` may also contain standalone tools (with a `.standalone` marker) that do not appear in `apps.toml`
   and that the portal does not install or open.

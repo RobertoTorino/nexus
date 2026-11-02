@@ -46,7 +46,7 @@ for suite in */SYSTEM; do                           # each suite: bc250-bazzite/
         echo "== $suite: made for ${suite_system:-no system}, left out on $system (NEXUS_SYSTEM=${suite_system:-...} ./test.sh runs it)"
         continue
     fi
-    dirs+=("$suite/portal" "$suite/tools" "$suite/tools/installer-tests/gui" "$suite"/apps/*)
+    dirs+=("$suite/portal" "$suite/tools" "$suite"/apps/*)
 done
 for dir in "${dirs[@]}"; do
     [[ -d "$dir/tests" ]] || continue

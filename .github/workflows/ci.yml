@@ -68,7 +68,7 @@ jobs:
       matrix:
         dir: [bc250-bazzite/portal, bc250-bazzite/tools,
               bc250-bazzite/apps/check, bc250-bazzite/apps/gpu, bc250-bazzite/apps/upscaler, bc250-bazzite/apps/acpi,
-              bc250-bazzite/apps/compute, bc250-bazzite/apps/cores, bc250-bazzite/apps/oc, bc250-bazzite/apps/mtool,
+              bc250-bazzite/apps/compute, bc250-bazzite/apps/cores, bc250-bazzite/apps/oc,
               bc250-bazzite/apps/package, bc250-bazzite/apps/ncgui,
               bc250-bazzite/apps/overlay, bc250-bazzite/apps/ips35, bc250-bazzite/apps/hdcam,
               bc250-bazzite/apps/hdcontrol, bc250-bazzite/apps/bios, bc250-bazzite/apps/ace, bc250-bazzite/apps/vram,
@@ -76,8 +76,8 @@ jobs:
               bc250-bazzite/apps/mesh, bc250-bazzite/apps/shadps4, bc250-bazzite/apps/rpcs3,
               bc250-bazzite/apps/decky, bc250-bazzite/apps/datstation, bc250-bazzite/apps/ppsspp,
               bc250-bazzite/apps/pcsx2, bc250-bazzite/apps/vita3k, bc250-bazzite/apps/fan,
-              bc250-bazzite/apps/wdriver, bc250-bazzite/apps/xenia,
-              bc250-bazzite/tools/installer-tests/gui]   # every folder with tests/ of this suite (new_app.py adds here)
+              bc250-bazzite/apps/wdriver, bc250-bazzite/apps/xenia]   # every folder with tests/ of this suite
+              # (new_app.py adds here)
               # Nexus's (core, tools, dev/): ci-nexus.yml; the Windows Portable Suite's: ci-windows-portable.yml
     defaults:
       run:
@@ -197,7 +197,6 @@ jobs:
           shellcheck -S warning bc250-bazzite/apps/vita3k/install.sh bc250-bazzite/apps/vita3k/bc250-vita3k-run
           shellcheck -S warning bc250-bazzite/apps/xenia/install.sh bc250-bazzite/apps/xenia/bc250-xenia-run
           shellcheck -S warning bc250-bazzite/apps/decky/install.sh
-          shellcheck -S warning bc250-bazzite/apps/mtool/install.sh
           shellcheck -S warning bc250-bazzite/apps/package/install.sh
           shellcheck -S warning bc250-bazzite/apps/ncgui/install.sh
           shellcheck -S warning bc250-bazzite/apps/datstation/install.sh
@@ -207,7 +206,7 @@ jobs:
       - name: Every former repo has its LICENSE, .gitignore, VERSION and CHANGELOG
         run: |
           rc=0
-          for d in bc250-bazzite/portal bc250-bazzite/apps/* bc250-bazzite/tools/installer-tests/gui; do
+          for d in bc250-bazzite/portal bc250-bazzite/apps/*; do
             for f in LICENSE .gitignore VERSION CHANGELOG; do
               [ -f "$d/$f" ] || { echo "::error::$d/$f missing"; rc=1; }
             done
@@ -280,8 +279,6 @@ jobs:
         run: bash bc250-bazzite/tools/installer-tests/consoles.sh
       - name: clb installer
         run: bash bc250-bazzite/tools/installer-tests/clb.sh
-      - name: Media Tool installer
-        run: bash bc250-bazzite/tools/installer-tests/mtool.sh
       - name: Dependency checker installer
         run: bash bc250-bazzite/tools/installer-tests/package.sh
       - name: NetcatGUI installer
@@ -290,8 +287,12 @@ jobs:
         run: bash bc250-bazzite/tools/installer-tests/datstation.sh
       - name: Nexus Release Tool installer
         run: bash bc250-bazzite/tools/installer-tests/nrt.sh
-      - name: Installer Tests installer
-        run: bash bc250-bazzite/tools/installer-tests/installer-tests.sh
+      - name: Nexus Dashboard installer
+        run: bash bc250-bazzite/tools/installer-tests/dash.sh
+      - name: Nexus Demo Recorder installer
+        run: bash bc250-bazzite/tools/installer-tests/demo.sh
+      - name: Nexus Installer Tests installer
+        run: bash bc250-bazzite/tools/installer-tests/itests.sh
       - name: release tarballs, end to end
         run: bash bc250-bazzite/tools/installer-tests/release.sh
 

@@ -76,13 +76,12 @@ By category, as the portal lists them.
 - <img src="portal/images/apps/wdriver.webp" width="20" height="20" alt=""/> **[BC-250 USB Wi-Fi](apps/wdriver)**: The driver for AIC8800D80 USB Wi-Fi sticks: built for the running kernel, loaded at boot, rebuilt after a kernel update.
 - <img src="portal/images/apps/cec.webp" width="20" height="20" alt=""/> **[HDMI CEC Manager](apps/cec)**: Turn the TV on and off with the board, switch its input and use its remote, over HDMI-CEC.
 - <img src="portal/images/apps/sftp.webp" width="20" height="20" alt=""/> **[Bazzite SFTP Tools](apps/sftp)**: Move files between computers over SFTP, and manage the SSH server of a Bazzite host.
-- <img src="portal/images/apps/mtool.webp" width="20" height="20" alt=""/> **[Media Tool](apps/mtool)**: Record a BC250 Bazzite Suite installation demo with OBS, and convert the suite's icons.
 - <img src="portal/images/apps/package.webp" width="20" height="20" alt=""/> **[Dependency Checker](apps/package)**: The suite's Python packages and external tools, which apps use them, and whether newer ones exist; and whether a Bazzite update waits for a reboot.
 - <img src="portal/images/apps/ncgui.webp" width="20" height="20" alt=""/> **[Bazzite NetcatGUI](apps/ncgui)**: A graphical netcat: connect to a host or listen on a port, TCP, UDP or TLS, one session per tab.
 
-The tools for working on the suite run from a checkout of the repository and are not in the portal:
-**[Nexus Release Tool](../dev/nrt)** (Nexus's, every suite's) and
-**[BC-250 Installer Tests](tools/installer-tests/gui)**.
+The tools for working on the suite are Nexus's, every suite's: they run from a checkout of the repository and are
+not in the portal. **[Nexus Dashboard](../dev/dash)** opens them all: Nexus Release Tool, Nexus Installer Tests,
+Nexus Demo Recorder, the video tours and the icons.
 
 How to install and use them: **[the manual](https://robertotorino.github.io/nexus/bc250-bazzite-suite/)**.
 

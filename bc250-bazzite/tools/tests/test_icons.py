@@ -12,10 +12,9 @@ from pathlib import Path
 import pytest
 from PIL import Image
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-import sync_icons  # noqa: E402
-
 SUITE = Path(__file__).resolve().parent.parent.parent
+sys.path.insert(0, str(SUITE.parent / "tools"))         # the Nexus tools: sync_icons.py (every suite's)
+import sync_icons  # noqa: E402
 INSTALLERS = sorted([SUITE / "portal" / "install.sh", *SUITE.glob("apps/*/install.sh")])
 
 
@@ -30,8 +29,8 @@ def test_installer_icon_exists(installer):
 
 
 def test_icon_copies_match_their_category():
-    """Every copy in icons/categories.toml is its category's icon: run tools/sync_icons.py after changing icons/."""
-    assert [p.relative_to(SUITE).as_posix() for p in sync_icons.stale()] == []
+    """Every copy in icons/categories.toml is its category's icon: run ../tools/sync_icons.py after changing icons/."""
+    assert [p.relative_to(SUITE).as_posix() for p in sync_icons.stale(SUITE)] == []
 
 
 @pytest.mark.parametrize("category", sorted(p.name for p in (SUITE / "icons").iterdir() if p.is_dir()))
@@ -45,145 +44,20 @@ def test_category_has_every_size(category):
 def test_every_app_icon_comes_from_a_category():
     """No app icon, portal tile or Big Picture category icon outside icons/categories.toml: one left there keeps an
     old icon. An app's icons are found by their PNG (the screenshots beside them are WebP too)."""
-    icons = {*SUITE.glob("apps/*/images/*.png"), *SUITE.glob("tools/installer-tests/gui/images/*.png"),
+    icons = {*SUITE.glob("apps/*/images/*.png"),
              *(p for p in SUITE.glob("portal/images/apps/*.*") if p.name != "portal.webp"),
              *SUITE.glob("portal/images/categories/*.*")}
-    assert sorted(p.relative_to(SUITE).as_posix() for p in icons - set(sync_icons.copies())) == []
+    assert sorted(p.relative_to(SUITE).as_posix() for p in icons - set(sync_icons.copies(SUITE))) == []
 
 
 def test_portal_tabs_follow_the_icon_categories():
     """An app's tab in the portal (category in portal/apps.toml) is the category of its icon, and the portal knows
-    every category of icons/ but development: BC-250 Installer Tests' icon, which runs from the checkout and is not in
-    the portal (owner, 27-10-2026: no Development tab)."""
+    every category of icons/ (owner, 27-10-2026: no Development tab; its development icon went with BC-250 Installer
+    Tests to dev/itests on 02-11-2026, where it takes Nexus's)."""
     import tomllib
     import check_manifest
     table = tomllib.loads((SUITE / "icons" / "categories.toml").read_text(encoding="utf-8"))
     entries = check_manifest.manifest.load(SUITE / check_manifest.MANIFEST)
     assert {e.key: e.category for e in entries} == {e.key: table[e.key]["category"] for e in entries}
     folders = {p.name for p in (SUITE / "icons").iterdir() if p.is_dir()}
-    assert folders - set(check_manifest.manifest.CATEGORIES) == {"development"}
-    assert [key for key, entry in table.items() if entry["category"] == "development"] == ["installer-tests"]
-    assert set(check_manifest.manifest.CATEGORIES) <= folders
-
-
-def _suite(tmp_path):
-    """A checkout with one category, its four icons and one app: what sync_icons reads."""
-    (tmp_path / "icons" / "leaf").mkdir(parents=True)
-    (tmp_path / "icons" / "categories.toml").write_text(
-        '[app]\ncategory = "leaf"\nicons = ["apps/app/images/app"]\ntile = "portal/images/apps/app.webp"\n',
-        encoding="utf-8")
-    for size in sync_icons.SIZES:
-        _image(sync_icons.icon_path(tmp_path / "icons" / "leaf", size), size, "red")
-    return tmp_path
-
-
-def _image(path, size, color, width=None):
-    Image.new("RGBA", (width or size, size), color).save(path)
-    return path
-
-
-def _color(path):
-    """The color in the middle, each channel 0 or 255: WebP is lossy."""
-    with Image.open(path) as image:
-        pixel = image.convert("RGB").getpixel((image.width // 2, image.height // 2))
-    return tuple(255 if channel > 127 else 0 for channel in pixel)
-
-
-def test_category_icons_need_no_conversion(tmp_path):
-    assert sync_icons.dropped(_suite(tmp_path)) == {}
-
-
-def test_an_image_by_another_name_becomes_every_size(tmp_path):
-    root = _suite(tmp_path)
-    source = _image(root / "icons" / "leaf" / "new leaf.png", 700, "blue")
-
-    written = sync_icons.convert_dropped(root)
-
-    assert written == [sync_icons.icon_path(root / "icons" / "leaf", size) for size in sync_icons.SIZES]
-    assert not source.exists()
-    for size in sync_icons.SIZES:
-        assert sync_icons.is_icon(sync_icons.icon_path(root / "icons" / "leaf", size))
-        assert _color(sync_icons.icon_path(root / "icons" / "leaf", size)) == (0, 0, 255)
-    assert sync_icons.dropped(root) == {}
-
-
-def test_an_image_named_by_its_size_replaces_only_that_size(tmp_path):
-    """leaf-512.png becomes leaf-512.webp; a 128 px PNG at the wrong size is scaled in place; the rest stays."""
-    root = _suite(tmp_path)
-    folder = root / "icons" / "leaf"
-    _image(folder / "leaf-512.png", 512, "blue")
-    _image(folder / "leaf-128.png", 300, "lime")
-
-    sync_icons.convert_dropped(root)
-
-    assert sorted(p.name for p in folder.iterdir()) == ["leaf-1024.webp", "leaf-128.png", "leaf-256.webp",
-                                                        "leaf-512.webp"]
-    assert all(sync_icons.is_icon(p) for p in folder.iterdir())
-    assert _color(folder / "leaf-512.webp") == (0, 0, 255)
-    assert _color(folder / "leaf-128.png") == (0, 255, 0)
-    assert _color(folder / "leaf-1024.webp") == _color(folder / "leaf-256.webp") == (255, 0, 0)
-
-
-def test_a_size_of_its_own_wins_over_the_whole_set(tmp_path):
-    root = _suite(tmp_path)
-    folder = root / "icons" / "leaf"
-    _image(folder / "set.png", 1024, "blue")
-    _image(folder / "leaf-256.png", 256, "lime")
-
-    sync_icons.convert_dropped(root)
-
-    assert _color(folder / "leaf-1024.webp") == (0, 0, 255)
-    assert _color(folder / "leaf-256.webp") == (0, 255, 0)
-
-
-def test_two_images_for_every_size_are_refused(tmp_path):
-    root = _suite(tmp_path)
-    _image(root / "icons" / "leaf" / "a.png", 512, "blue")
-    _image(root / "icons" / "leaf" / "b.png", 512, "lime")
-    with pytest.raises(SystemExit, match="more than one image for all sizes: a.png, b.png"):
-        sync_icons.dropped(root)
-
-
-def test_a_wide_image_is_refused(tmp_path):
-    root = _suite(tmp_path)
-    source = _image(tmp_path / "wide.png", 256, "blue", width=512)
-    with pytest.raises(SystemExit, match="512 x 256 px, an icon must be square"):
-        sync_icons.convert(source, root / "icons" / "leaf")
-
-
-def test_from_converts_the_sizes_named_and_writes_the_copies(tmp_path, capsys):
-    root = _suite(tmp_path)
-    source = _image(tmp_path / "outside.png", 1024, "blue")
-
-    assert sync_icons.main(["--category", "leaf", "--from", str(source), "--size", "256", "--size", "128"], root) == 0
-
-    assert source.exists()   # an image from outside icons/ is left where it is
-    assert _color(root / "icons" / "leaf" / "leaf-256.webp") == (0, 0, 255)
-    assert _color(root / "icons" / "leaf" / "leaf-1024.webp") == (255, 0, 0)
-    assert _color(root / "portal" / "images" / "apps" / "app.webp") == (0, 0, 255)
-    assert _color(root / "apps" / "app" / "images" / "app-128.png") == (0, 0, 255)
-    assert "updated: portal/images/apps/app.webp" in capsys.readouterr().out
-    assert sync_icons.main(["--check"], root) == 0
-
-
-@pytest.mark.parametrize("argv", [["--from", "x.png"], ["--category", "leaf"], ["--size", "512"],
-                                  ["--check", "--category", "leaf", "--from", "x.png"], ["--size", "64"]])
-def test_from_options_that_do_not_go_together_are_refused(argv):
-    with pytest.raises(SystemExit) as stop:
-        sync_icons.main(argv)
-    assert stop.value.code == 2
-
-
-def test_check_lists_what_is_not_converted(tmp_path, capsys):
-    root = _suite(tmp_path)
-    assert sync_icons.main([], root) == 0
-    _image(root / "icons" / "leaf" / "leaf-512.png", 512, "blue")
-    (root / "icons" / "leaf" / "leaf-512.webp").unlink()
-
-    assert sync_icons.main(["--check"], root) == 1
-    out = capsys.readouterr()
-    assert "not converted: icons/leaf/leaf-512.png" in out.out
-    assert "missing: icons/leaf/leaf-512.webp" in out.err
-    assert (root / "icons" / "leaf" / "leaf-512.png").exists()
-    assert sync_icons.main([], root) == 0
-    assert sync_icons.main(["--check"], root) == 0
+    assert folders == set(check_manifest.manifest.CATEGORIES)

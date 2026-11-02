@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Every installable part of the suite has an installer test, and CI runs every installer test. BC-250 Installer
+"""Every installable part of the suite has an installer test, and CI runs every installer test. Nexus Installer
 Tests finds the scripts by itself (tools/installer-tests/*.sh), so a new script appears there without a change."""
 
 from __future__ import annotations
@@ -25,9 +25,9 @@ def test_every_app_has_an_installer_test():
 
 
 def _from_the_checkout() -> set[str]:
-    """The tools that run from the checkout, outside the portal: the suite's BC-250 Installer Tests and the Nexus
-    apps in dev/ (Nexus Release Tool), each with an install.sh."""
-    return {"installer-tests"} | {path.parent.name for path in (SUITE.parent / "dev").glob("*/install.sh")}
+    """The tools that run from the checkout, outside the portal: the Nexus apps in dev/ (Nexus Dashboard, Nexus
+    Release Tool, Nexus Demo Recorder, Nexus Installer Tests), each with an install.sh."""
+    return {path.parent.name for path in (SUITE.parent / "dev").glob("*/install.sh")}
 
 
 def test_every_portal_entry_and_checkout_tool_has_an_installer_test():
@@ -35,7 +35,7 @@ def test_every_portal_entry_and_checkout_tool_has_an_installer_test():
     names = set(manifest.get("apps", {})) | _from_the_checkout()
     missing = sorted(name for name in names if not (TESTS / f"{name}.sh").is_file())
     assert not missing, f"no tools/installer-tests/<name>.sh for: {', '.join(missing)}"
-    assert {"installer-tests", "nrt"} <= _from_the_checkout()
+    assert {"dash", "demo", "itests", "nrt"} <= _from_the_checkout()
 
 
 def test_every_installer_test_is_for_something_that_exists():

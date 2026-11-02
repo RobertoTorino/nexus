@@ -54,13 +54,12 @@ other app is optional. They are listed by category, as the portal's tabs list th
 | ![](../assets/apps/wdriver.webp){ .app-icon } [BC-250 USB Wi-Fi](wdriver.md) | The driver for AIC8800D80 USB Wi-Fi sticks: built for the running kernel, loaded at boot, rebuilt after a kernel update. **Changes the board.** |
 | ![](../assets/apps/cec.webp){ .app-icon } [HDMI CEC Manager](cec.md) | Turn the TV on and off with the board, switch its input and use its remote, over HDMI-CEC. |
 | ![](../assets/apps/sftp.webp){ .app-icon } [Bazzite SFTP Tools](sftp.md) | Move files between computers over SFTP, and manage the SSH server of a Bazzite host. |
-| ![](../assets/apps/mtool.webp){ .app-icon } [Media Tool](../other-tools/media-tool.md) | Record a BC250 Bazzite Suite installation demo with OBS, and convert the suite's icons. |
 | ![](../assets/apps/package.webp){ .app-icon } [Dependency Checker](package.md) | The suite's Python packages and external tools, which apps use them, and whether newer ones exist; and whether a Bazzite update waits for a reboot. |
 | ![](../assets/apps/ncgui.webp){ .app-icon } [Bazzite NetcatGUI](ncgui.md) | A graphical netcat: connect to a host or listen on a port, TCP, UDP or TLS, one session per tab. |
 
-The tools for working on the suite run from a checkout of the repository and are not in the portal:
-[Nexus Release Tool](https://robertotorino.github.io/nexus/releases/) and BC-250 Installer Tests
-([Tests](../development/architecture.md#tests)).
+The tools for working on the suite are Nexus's, run from a checkout of the repository and are not in the portal:
+[Nexus Dashboard](https://robertotorino.github.io/nexus/dashboard/) opens them all (Nexus Release Tool, Nexus
+Installer Tests, Nexus Demo Recorder, the video tours and the icons).
 
 Apps that **change the board** (unlocks, the GPU governor, GPU overclocking, the ACPI override, the VRAM split,
 a patched GPU driver) change how the BC-250 runs. They are software-only and can be undone; the portal asks before it installs or opens them. Read an

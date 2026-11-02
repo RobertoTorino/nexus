@@ -6,8 +6,11 @@ that fades out over the last two seconds (the suite's tools/sounds/the_quiet_eng
 same script for every app: only the name changes.
 
     python3 tools/app_tour.py APP [OUT.mp4] [--package PACKAGE] [--seconds 40] [--music FILE | --no-music] [--fps 30]
+                              [--size 1080p|1440p|2160p]
 
-Default output: ~/Videos/bc250-<app>-tour-v<its VERSION>.mp4 (with the package for compute and cores).
+Default output: ~/Videos/bc250-<app>-tour-v<its VERSION>.mp4 (with the package for compute and cores; -2160p or
+-1440p before .mp4 for another size). --size 2160p renders the same tour at 3840 x 2160 for YouTube, which shows a
+4K upload far sharper than a 1080p one (about four times the time).
 
 APP is the app's key in the suite's portal/apps.toml (fan, cec, ...) or its folder under its apps/ (--suite names the
 suite; with one suite in the checkout it is the default). An app with two programs
@@ -304,8 +307,11 @@ def main() -> int:
     parser.add_argument("--music", type=Path, default=MUSIC, help="the track under the video (default: the suite's)")
     parser.add_argument("--no-music", action="store_true", help="a video without sound")
     parser.add_argument("--fps", type=int, default=30)
+    parser.add_argument("--size", choices=tuple(tour_frames.SIZES), default="1080p",
+                        help="the video's size: 1080p (the default), 1440p or 2160p (4K, for YouTube)")
     tour_frames.suites.add_argument(parser)
     args = parser.parse_args()
+    tour_frames.set_size(args.size)
     if not shutil.which("ffmpeg"):
         print("ffmpeg is needed", file=sys.stderr)
         return 1
@@ -320,7 +326,8 @@ def main() -> int:
     else:
         version = (folder / "VERSION").read_text(encoding="utf-8").strip() if (folder / "VERSION").is_file() else ""
         name = key if args.package is None else f"{key}-{package}"
-        out = Path.home() / "Videos" / f"bc250-{name}-tour{f'-v{version}' if version else ''}.mp4"
+        size = "" if args.size == "1080p" else f"-{args.size}"
+        out = Path.home() / "Videos" / f"bc250-{name}-tour{f'-v{version}' if version else ''}{size}.mp4"
     out.parent.mkdir(parents=True, exist_ok=True)
 
     with tempfile.TemporaryDirectory(prefix="app-tour-") as temp:

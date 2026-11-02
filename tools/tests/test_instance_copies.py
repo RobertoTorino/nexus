@@ -10,11 +10,11 @@ import pytest
 
 SUITE = Path(__file__).resolve().parents[2]
 CORE = SUITE / "core" / "bc250_core" / "instance.py"
-COPIES = sorted([*SUITE.glob("*/apps/*/*/instance.py"), *SUITE.glob("*/tools/installer-tests/gui/*/instance.py")])
+COPIES = sorted(SUITE.glob("*/apps/*/*/instance.py"))
 UPSTREAM = SUITE / "core" / "bc250_core" / "upstream.py"
 UPSTREAM_COPIES = sorted(SUITE.glob("*/apps/*/*/upstream.py"))
 THEME = SUITE / "core" / "bc250_core" / "theme.py"
-THEME_COPIES = sorted([*SUITE.glob("*/apps/*/*/theme.py"), *SUITE.glob("*/tools/installer-tests/gui/*/theme.py")])
+THEME_COPIES = sorted(SUITE.glob("*/apps/*/*/theme.py"))
 
 
 def body(path: Path) -> str:
@@ -26,7 +26,7 @@ def body(path: Path) -> str:
 def test_copies_exist():
     packages = {p.parent.name for p in COPIES}
     assert {"upscaler", "cu_bisect", "cu_unlock", "cores_bisect",
-            "cores_unlock", "oc_bisect", "locked_acpi", "media_tool", "installer_test_gui"} <= packages
+            "cores_unlock", "oc_bisect", "locked_acpi"} <= packages
     assert {p.parent.name for p in UPSTREAM_COPIES} >= {"upscaler"}
     assert {p.parent.name for p in THEME_COPIES} == {p.parent.name for p in COPIES}
 

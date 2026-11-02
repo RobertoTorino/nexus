@@ -47,7 +47,7 @@ def test_only_pictures_a_page_names_are_converted(tmp_path):
 def test_every_app_chapter_shows_its_icon():
     """An app's chapter starts with the app's icon beside its heading (two chapters once lacked it)."""
     docs = SUITE / "docs"
-    chapters = [p for folder in ("apps", "other-tools") for p in (docs / folder).glob("*.md") if p.name not in ("index.md", "categories.md", "covers.md")]
+    chapters = [p for folder in ("apps",) for p in (docs / folder).glob("*.md") if p.name not in ("index.md", "categories.md", "covers.md")]
     missing = [p.relative_to(docs).as_posix() for p in sorted(chapters) if "{ .app-logo }" not in p.read_text("utf-8")]
     assert not missing, f"no icon beside the heading: {', '.join(missing)}"
 

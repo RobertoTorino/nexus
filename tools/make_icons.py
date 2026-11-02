@@ -26,7 +26,7 @@ MDI = "https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg"      # Material Design 
 # suite's tool that runs from the checkout.
 LAUNCHES = {"cu-unlock": "CU Unlock (the CU Bisect app's Unlock)",
             "cores-unlock": "Cores Unlock (the Cores Bisect app's Unlock)",
-            "installer-tests": "BC-250 Installer Tests"}
+            "installer-tests": "Nexus Installer Tests"}
 
 SUITE_ICON = [
     ("bc250-bazzite/portal/images/bc250-bazzite-suite.webp", "`portal/images/bc250-bazzite-suite.webp` (512 px)",
@@ -133,14 +133,19 @@ NEXUS_ICON = [
      "drawing, transparent (owner, 27-10-2026: no more dark tile), both written by this tool."),
     ("nexus/docs/images/nexus-hero.webp", "`nexus/docs/images/nexus-hero.webp` (1024 px)",
      "The Nexus page's home: the icon under the headline, a WebP copy of the 1024 px drawing."),
-    ("dev/nrt/images/nexus-release-tool.webp", "`dev/nrt/images/nexus-release-tool.webp` (512 px), `-128.png`",
-     "Nexus Release Tool, Nexus's app (owner, 26-10-2026: it takes Nexus's icon, not a category's): its window header "
-     "and window icon, its menu entry and Desktop icon. Lossless copies of the drawing, written by this tool."),
+    ("dev/nrt/images/nexus-release-tool.webp", "`dev/<name>/images/<app id>.webp` (512 px), `-128.png`",
+     "The Nexus apps (owner, 26-10-2026: a Nexus app takes Nexus's icon, not a category's): Nexus Dashboard "
+     "(`dev/dash`), Nexus Release Tool (`dev/nrt`), Nexus Demo Recorder (`dev/demo`) and Nexus Installer Tests "
+     "(`dev/itests`), each its window header and window icon, its menu entry and Desktop icon. Lossless copies of "
+     "the drawing, written by this tool."),
 ]
-# the Nexus Release Tool's icons: the drawing at each size, lossless (the pixels stay the drawing's), by this tool.
+# the Nexus apps' icons (dev/<name>/images/<app id>): the drawing at each size, lossless (the pixels stay the
+# drawing's), by this tool.
+NEXUS_APPS = {"dash": "nexus-dashboard", "nrt": "nexus-release-tool", "demo": "nexus-demo-recorder",
+              "itests": "nexus-installer-tests"}
 NEXUS_COPIES = [
-    ("nexus/images/nexus-512.png", "dev/nrt/images/nexus-release-tool.webp"),
-    ("nexus/images/nexus-128.png", "dev/nrt/images/nexus-release-tool-128.png"),
+    *((f"nexus/images/nexus-{size}.png", f"dev/{folder}/images/{app_id}{'-128' if size == 128 else ''}.{kind}")
+      for folder, app_id in NEXUS_APPS.items() for size, kind in ((512, "webp"), (128, "png"))),
     ("nexus/images/nexus-256.png", "nexus/docs/images/nexus.png"),      # the Nexus page's favicon
 ]
 # The Nexus page's logo and hero: pictures on a web page, so lossy WebP at this quality, by this tool since
@@ -199,7 +204,7 @@ def windows_portable_app_copies(root: Path = ROOT) -> tuple[list[tuple[str, str]
 
 
 def nexus_copies(root: Path = ROOT) -> list[Path]:
-    """Writes the Nexus Release Tool's icon copies and the Nexus page's favicon from the Nexus drawings (NEXUS_COPIES) and
+    """Writes the Nexus apps' icon copies and the Nexus page's favicon from the Nexus drawings (NEXUS_COPIES) and
     Windows Portable Test's and the Windows portal's from the suite's (WINDOWS_PORTABLE_COPIES), lossless, so a
     copy's pixels are the drawing's (tests compare them); and the Nexus page's logo and hero (NEXUS_PAGE_COPIES),
     lossy; and every Windows Portable Suite app's category icon (windows_portable_icons()). The paths written."""
@@ -291,7 +296,7 @@ SYMBOLS = [
     ("↑ ↓", "Nexus Release Tool", "Earlier commands, in the command line's placeholder."),
     ("●", "Every app on core", "The dot of a status box (`bc250_core/widgets.py`)."),
     ("●", "Portal", "Outside the suite."),
-    ("✓ ✗", "BC-250 Installer Tests", "A test passed, failed."),
+    ("✓ ✗", "Nexus Installer Tests", "A test passed, failed."),
 ]
 
 

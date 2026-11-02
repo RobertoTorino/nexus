@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Every app of every suite has the same layout: its Python package(s) and images/ directly in <suite>/apps/<name>/, no
-wrapper folder; the Nexus apps in dev/<name>/ (Nexus Release Tool) the same."""
+wrapper folder; the Nexus apps in dev/<name>/ (Nexus Dashboard, Nexus Release Tool, Nexus Demo Recorder, Nexus
+Installer Tests) the same."""
 
 from __future__ import annotations
 
@@ -51,12 +52,12 @@ def _installer(app: Path) -> Path:
 
 
 def _installers() -> list[Path]:
-    """Every installer, with the install.ps1 a Nexus app has beside its install.sh (Nexus Release Tool on Windows)."""
+    """Every installer, with the install.ps1 a Nexus app has beside its install.sh (Nexus Release Tool and Nexus
+    Dashboard on Windows)."""
     return [*(_installer(app) for app in _apps()),
             *(app / "install.ps1" for app in _apps() if _installer(app).name != "install.ps1"
               and (app / "install.ps1").is_file()),
-            *(p for suite in _suites() if not _windows(suite)
-              for p in (suite / "portal" / "install.sh", suite / "tools" / "installer-tests" / "gui" / "install.sh"))]
+            *(suite / "portal" / "install.sh" for suite in _suites() if not _windows(suite))]
 
 
 def test_every_app_has_an_installer_at_its_root():

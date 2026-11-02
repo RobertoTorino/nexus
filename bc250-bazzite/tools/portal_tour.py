@@ -4,7 +4,10 @@
 script and rendered frame by frame into an MP4 (H.264, 1920 x 1080, 30 fps), with music under it that fades out over
 the last two seconds (tools/sounds/the_quiet_engine_remix_3min.mp3, made with generative AI tools).
 
-    python3 tools/portal_tour.py [OUT.mp4] [--music FILE | --no-music] [--wiki] [--fps 30]
+    python3 tools/portal_tour.py [OUT.mp4] [--music FILE | --no-music] [--wiki] [--fps 30] [--size 1080p|1440p|2160p]
+
+--size 2160p renders the same tour at 3840 x 2160 for YouTube, which shows a 4K upload far sharper than a 1080p one
+(about four times the time, around 35 MB); the wiki's copy is the same whatever the size.
 
 --wiki also writes the copy on the wiki's Portal Tour page: docs/videos/portal-tour.mp4 (1280 x 720, smaller) and its
 poster, docs/images/portal/portal-tour-poster.webp (the title card).
@@ -300,7 +303,8 @@ class Tour(Recorder):
         """The portal in another theme: a fresh process (the theme is read at start) renders one frame."""
         from PyQt6.QtGui import QImage
         out = self.home / f"still-{theme}.png"
-        subprocess.run([sys.executable, __file__, "--still", theme, str(out)], check=True)
+        size = next(name for name, zoom in tour_frames.SIZES.items() if zoom == tour_frames.ZOOM)
+        subprocess.run([sys.executable, __file__, "--still", theme, str(out), "--size", size], check=True)
         return QImage(str(out)).convertToFormat(QImage.Format.Format_RGB888)
 
 
@@ -343,8 +347,11 @@ def main() -> int:
     parser.add_argument("--no-music", action="store_true", help="a video without sound")
     parser.add_argument("--wiki", action="store_true", help="also write the copy on the wiki's Portal Tour page")
     parser.add_argument("--fps", type=int, default=30)
+    parser.add_argument("--size", choices=tuple(tour_frames.SIZES), default="1080p",
+                        help="the video's size: 1080p (the default), 1440p or 2160p (4K, for YouTube)")
     parser.add_argument("--still", nargs=2, metavar=("THEME", "PNG"), help=argparse.SUPPRESS)
     args = parser.parse_args()
+    tour_frames.set_size(args.size)
     if args.still:
         render_still(args.still[0], Path(args.still[1]))
         return 0

@@ -1,3 +1,17 @@
+Changelog: 02-11-2026 01:00:58
+
+Added. Installer tests (Test on this board) opens Nexus Installer Tests (dev/itests, every suite's since
+02-11-2026, where BC-250 Installer Tests was the BC250 suite's tools/installer-tests/gui) on the ticked suite
+(--suite). Nexus's theme comes from core's nexus.py, every Nexus app's; style.py keeps the window's own style
+sheets on it.
+
+Changelog: 02-11-2026 00:13:54
+
+Added. A size box beside Record portal tour: 1080p (as before, the default), 1440p or 2160p (4K, for YouTube,
+which shows a 4K upload far sharper than a 1080p one). It passes --size to the suite's record-tour.sh (only for a
+size other than 1080p) and names the video as the script does, -2160p before .mp4. The box is greyed out with the
+button.
+
 Changelog: 01-11-2026 23:22:00
 
 Breaking. The git row under the tabs (git pull, git add, the commit message, Amend, git commit, git push, git tag)

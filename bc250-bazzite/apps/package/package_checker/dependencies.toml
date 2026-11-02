@@ -132,10 +132,6 @@ launchers = ["~/.local/bin/bc250-xenia-manager"]
 name = "Decky Loader Manager"
 launchers = ["~/.local/bin/bc250-decky-manager"]
 
-[app.mtool]
-name = "Media Tool"
-launchers = ["~/.local/bin/media-tool"]
-
 [app.package]
 name = "Dependency Checker"
 launchers = ["~/.local/bin/bc250-portal-dependency-checker"]
@@ -1134,10 +1130,6 @@ owner = "clb"
 specifier = ">=6.11,<7"
 
 [[dependency.source]]
-owner = "mtool"
-specifier = ">=6.11,<7"
-
-[[dependency.source]]
 owner = "package"
 specifier = ">=6.11,<7"
 
@@ -1244,30 +1236,6 @@ owner = "hdcam"
 need = "required"
 usage = "Applies the rule that gives your user the camera's boot loader, at once, without unplugging it."
 anchor = "access-to-the-camera"
-
-[[dependency]]
-name = "obsws-python"
-description = "A client for OBS Studio's WebSocket interface. Media Tool starts and stops OBS recordings with it."
-
-[[dependency.source]]
-owner = "mtool"
-specifier = ">=1.8,<2"
-
-[[dependency]]
-name = "dbus-next"
-description = "A pure-Python D-Bus library. Media Tool uses it for the desktop's global shortcut portal, so its recording shortcut works while another window has the focus."
-
-[[dependency.source]]
-owner = "mtool"
-specifier = ">=0.2.3,<1"
-
-[[dependency]]
-name = "pillow"
-description = "An imaging library for Python. Media Tool converts the suite's category icons with it (WebP and PNG, scaled to each size)."
-
-[[dependency.source]]
-owner = "mtool"
-specifier = ">=12,<13"
 
 [[dependency]]
 name = "paramiko"

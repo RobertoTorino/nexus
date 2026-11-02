@@ -155,7 +155,7 @@ def write(path: Path, text: str) -> None:
 @pytest.fixture
 def checkout(tmp_path) -> Path:
     """A repository laid out as Nexus is: core at the root, one suite with the files the generator lists an app
-    in, the suite's sync_icons.py (the real one) and one category's icons."""
+    in, and one category's icons (tools/sync_icons.py, the real one, writes the copies)."""
     root = tmp_path / "nexus"
     suite = root / SUITE
     write(root / "core" / "bc250_core" / "__init__.py", "")
@@ -172,7 +172,6 @@ def checkout(tmp_path) -> Path:
     for size, kind in ((1024, "webp"), (512, "webp"), (256, "webp"), (128, "png")):   # real pictures: sync_icons reads them
         shutil.copy(ICONS / f"utilities-{size}.{kind}", suite / "icons" / "utilities" / f"utilities-{size}.{kind}")
     (suite / "tools" / "installer-tests").mkdir(parents=True)
-    shutil.copy(ROOT / SUITE / "tools" / "sync_icons.py", suite / "tools" / "sync_icons.py")
     write(suite / "apps" / "package" / "package_checker" / "dependencies.toml", CATALOG)
     write(root / ".github" / "workflows" / "ci.yml", CI)
     return root

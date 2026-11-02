@@ -1,0 +1,12 @@
+Changelog: 02-11-2026 00:44:49
+
+Added. Nexus Demo Recorder, a Nexus app in dev/demo/ (owner, 02-11-2026: the tools for working on the suites are
+Nexus's, in one place, and the Media Tool, released as an app of the BC250 Bazzite Suite, was dev work in a
+portal): the OBS part of the Media Tool (mtool-v1.0.1, its last release) as an app of its own. It records a demo of
+a portal installation with OBS: an extracted portal release in Downloads, found by itself, or, without one, the
+BC250 Bazzite Suite in this checkout; the optional app to show; the global shortcut of the desktop portal that
+stops the recording and brings the window back; Recent recordings with the player. It runs from the checkout with
+the dev venv (run.sh, bc250_core from core/), takes Nexus's design and icon (core's nexus.py), and is never
+released (.checkout-only). The recordings go to ~/Videos/demos (they went to ~/MediaToolRecordings, which stays).
+install.sh writes the launcher, menu entry and Desktop icon for this checkout, and removes the Media Tool's own
+copy, venv and entries (and Simple Demo Tool's before it). The video tours and the icons went to Nexus Dashboard.

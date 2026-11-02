@@ -226,10 +226,13 @@ jobs:
         run: python -X faulthandler -m pytest -v tests/test_native.py tests/test_stream.py tests/test_senkusha.py tests/test_play.py
 
   nexus-release-tool-installer:
-    # the Nexus Release Tool's Windows installer (dev/nrt/install.ps1) is tested here: this suite is the one on Windows.
+    # the Windows installers of the Nexus apps (dev/nrt/install.ps1, dev/dash/install.ps1) are tested here: this
+    # suite is the one on Windows.
     runs-on: windows-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
       - name: "Installer test: nrt"
         run: powershell -NoProfile -ExecutionPolicy Bypass -File windows-portable/tools/installer-tests/nrt.ps1
+      - name: "Installer test: dash"
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File windows-portable/tools/installer-tests/dash.ps1

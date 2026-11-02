@@ -22,7 +22,7 @@
 #   detect          paths whose existence means "installed" (any of them)
 #   launch          [[label, command]] to open the app; none for apps that are not programs
 #
-# Only released apps are listed: the tools that run from the checkout (Nexus Releases, BC-250 Installer Tests) are
+# Only released apps are listed: the tools that run from the checkout (the Nexus apps in dev/) are
 # started there (owner, 27-10-2026: no Development tab).
 
 [apps.check]
@@ -273,19 +273,6 @@ install = ["bash install.sh"]
 uninstall = ["bash install.sh --uninstall"]
 detect = ["~/.local/bin/bc250-usb-hdcontrol"]
 launch = [["Open", "~/.local/bin/bc250-usb-hdcontrol"]]
-
-[apps.mtool]
-name = "Media Tool"
-summary = "Record a BC250 Bazzite Suite installation demo with OBS, and convert the suite's icons."
-tag = "mtool-v1.0.1"
-sha256 = "fd47505e49d9dec1953db77ebd143793599dacc03c9b41372bd95cbb35b0a60d"
-required = false
-changes_board = false
-category = "utilities"
-install = ["bash install.sh"]
-uninstall = ["bash install.sh --uninstall"]
-detect = ["~/.local/bin/media-tool"]
-launch = [["Open", "~/.local/bin/media-tool"]]
 
 [apps.package]
 name = "Dependency Checker"

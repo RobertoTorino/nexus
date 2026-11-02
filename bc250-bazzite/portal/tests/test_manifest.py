@@ -80,7 +80,7 @@ def test_no_development_tab_but_earlier_manifests_still_read():
 def test_shipped_manifest_has_a_category_for_every_app():
     entries = load(MANIFEST)
     assert all(e.category in CATEGORIES for e in entries)
-    assert {"mtool", "package", "ncgui"} <= {e.key for e in entries if e.category == "utilities"}
+    assert {"package", "ncgui"} <= {e.key for e in entries if e.category == "utilities"}
     assert "[checkout." not in MANIFEST.read_text(encoding="utf-8")           # only released apps
 
 

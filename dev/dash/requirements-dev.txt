@@ -1,0 +1,5 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# The app runs in the checkout's dev venv (requirements-dev.txt in the root), so it has no requirements.txt.
+PyQt6>=6.11,<7
+pytest>=8
+pillow>=12,<13                  # tests/test_icons.py converts real images through tools/sync_icons.py
