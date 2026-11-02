@@ -1,3 +1,7 @@
+Changelog: 02-11-2026 14:09:47
+
+Release 1.31.0. Brings wp-bios-v0.7.0, wp-hdcam-v0.6.0, wp-pcsx2-v6.0.0, wp-portal-v8.0.0, wp-ppsspp-v5.0.0, wp-rpcs3-v4.0.0, wp-rplay-v0.7.0, wp-sftp-v0.6.0, wp-shadps4-v5.0.0, wp-smart-v0.2.0, wp-test-v4.10.0, wp-vita3k-v5.0.0, wp-xenia-v5.0.0.
+
 Changelog: 02-11-2026 12:58:05
 
 Fixed. The video tours (tools/tour_frames.py) record on Windows: the screen file in QT_QPA_PLATFORM's options kept its drive letter, which Qt took for the end of the option ("Could not find platform config file C"), so a portal or app tour stopped with exit code 127. The path goes in without the drive now (tools/tests/test_tour_frames.py).
