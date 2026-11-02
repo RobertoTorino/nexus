@@ -48,7 +48,7 @@ python bc250-bazzite/tools/portal_screenshot.py          # from the venv; --out 
 The video tours are made the same way, frame by frame from the real windows, offscreen, from a terminal as below
 or from [Nexus Dashboard](https://robertotorino.github.io/nexus/dashboard/#video-tours). `bc250-bazzite/tools/record-tour.sh`
 records the portal's tour, about two minutes, with music under it that fades out over the last two seconds
-(`bc250-bazzite/tools/sounds/the_quiet_engine_remix_3min.mp3`, made with generative AI tools; `--no-music` leaves it out).
+(`tools/sounds/the_quiet_engine_remix_3min.mp3`, every suite's, made with generative AI tools; `--no-music` leaves it out).
 `bc250-bazzite/tools/record-tour.sh --wiki` also writes the copy on the [Portal Tour](../portal-tour.md) page,
 `bc250-bazzite/docs/videos/portal-tour.mp4` (1280 × 720, about 6 MB) and its poster: run it after a change to the portal's window.
 The video itself goes to `~/Videos`, outside the repository, at 1920 × 1080. For YouTube, record it at 4K:
@@ -57,7 +57,7 @@ crisp; about three minutes, around 35 MB) into `~/Videos/bc250-portal-tour-v<por
 YouTube shows a 4K upload far sharper than a 1080p one, since it gives it a better codec and more bits. `--size
 1440p` is the step between. The wiki's copy is the same whatever the size.
 `bc250-bazzite/tools/record-app-tour.sh` records one app's, about 40 seconds, the same script for every app, with music under it
-that fades out over the last two seconds (`bc250-bazzite/tools/sounds/the_quiet_engine.mp3`, made with generative AI tools):
+that fades out over the last two seconds (`tools/sounds/the_quiet_engine.mp3`, made with generative AI tools):
 
 ```bash
 bc250-bazzite/tools/record-app-tour.sh fan                          # ~/Videos/bc250-fan-tour-v<version>.mp4

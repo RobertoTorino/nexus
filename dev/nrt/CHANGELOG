@@ -1,3 +1,12 @@
+Changelog: 02-11-2026 01:47:18
+
+Added. Commit (the Nexus release tab) offers the portal bump when its manifest check would refuse the commit
+(owner, 02-11-2026: a suite's apps.toml had changed since its last portal release, an app removed, and the step
+only refused with the check's message; the bump was step 1's Apply or step 2's Bump portal). It asks per touched
+suite: the version step 2 would suggest (the portal's CHANGELOG entries count: a Breaking entry makes it major), or
+the least the check accepts, whichever is higher, and writes it with its CHANGELOG entry on a yes, then commits; a
+no leaves the commit where it is and says why. Step 1's Apply writes its minimum bump through the same code.
+
 Changelog: 02-11-2026 01:00:58
 
 Added. Installer tests (Test on this board) opens Nexus Installer Tests (dev/itests, every suite's since

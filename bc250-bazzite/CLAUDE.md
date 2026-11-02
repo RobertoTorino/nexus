@@ -49,8 +49,8 @@ appearing in the portal.
   portal release after the move has been out for a while.
 - `tools/`: the suite's tools: `pin_app.py`, `check_manifest.py`, `check-release.sh` (the board checks of a
   portal release, run from the Nexus Release Tool's Test on this board), `portal_screenshot.py`,
-  `portal_tour.py`, `record-tour.sh`, `record-app-tour.sh` (run from Nexus Dashboard too), `make_portal_sounds.py`,
-  `sounds/`, `check_upstream.py`, `mkdocs/` (the wiki's hooks and overrides), their tests in `tools/tests/`, and
+  `portal_tour.py`, `record-tour.sh`, `record-app-tour.sh` (run from Nexus Dashboard too; the tours' music is the
+  Nexus tools' `sounds/`), `make_portal_sounds.py`, `check_upstream.py`, `mkdocs/` (the wiki's hooks and overrides), their tests in `tools/tests/`, and
   `tools/installer-tests/` (installers on Linux with fakeroot shims; Nexus Installer Tests runs them one at a
   time). The Nexus tools (release and CI, the design panel, `sync_icons.py`) are in `../tools/`.
 - `docs/` and `mkdocs.yml`: the wiki; `icons/`: the category icons; `install.sh`: the portal's installer from a

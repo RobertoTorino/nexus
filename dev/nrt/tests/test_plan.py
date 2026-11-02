@@ -2043,7 +2043,9 @@ def test_window_runs_a_windows_suites_checks_on_windows(two_suites, tmp_path, mo
                                   runs_source=None, status_source=None, suite="wp")
     w.reload()
     page = w.run_page
-    assert page.local_button.isEnabled() and page.installer_button.isEnabled() and not page.tour_button.isEnabled()
+    assert page.local_button.isEnabled() and page.installer_button.isEnabled()
+    assert page.tour_button.isEnabled() and page.tour_size.isEnabled()      # since 02-11-2026: the suite's own tour
+    assert page.tour_file().name == "wp-portal-tour-v0.1.0.mp4"             # named with the suite's prefix
     assert "check-release.ps1 local" in page.local_button.toolTip()
     launched.clear()
     page.local_button.click()

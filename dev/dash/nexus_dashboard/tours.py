@@ -43,6 +43,15 @@ def size_suffix(size: str) -> str:
     return "" if size == SIZES[0] else f"-{size}"
 
 
+def video_prefix(suite: Path) -> str:
+    """What the suite's tour videos start with: its tag prefix (wp-), or bc250- for the suite without one, as the
+    tour scripts name them."""
+    try:
+        return (suite / "TAG_PREFIX").read_text(encoding="utf-8").strip() or "bc250-"
+    except OSError:
+        return "bc250-"
+
+
 def size_options(size: str) -> list[str]:
     """The --size the scripts take, left out for the default so an older checkout's scripts still run."""
     return [] if size == SIZES[0] else ["--size", size]
@@ -56,6 +65,7 @@ class TourApp:
     name: str
     package: str | None = None                      # only for an app with two programs
     version: str = ""
+    prefix: str = "bc250-"                          # the suite's: what its videos' names start with
 
     @property
     def label(self) -> str:
@@ -69,7 +79,7 @@ class TourApp:
     def video(self, size: str = SIZES[0]) -> str:
         """The video's name at *size*: -2160p before .mp4 for 4K, as tools/app_tour.py names it."""
         name = self.key if self.package is None else f"{self.key}-{self.package}"
-        return f"bc250-{name}-tour{f'-v{self.version}' if self.version else ''}{size_suffix(size)}.mp4"
+        return f"{self.prefix}{name}-tour{f'-v{self.version}' if self.version else ''}{size_suffix(size)}.mp4"
 
 
 def videos_dir() -> Path:
@@ -79,6 +89,7 @@ def videos_dir() -> Path:
 def tour_apps(checkout: Path) -> list[TourApp]:
     """The apps of the checkout's portal manifest, each program once, in the manifest's order."""
     manifest = tomllib.loads((checkout / MANIFEST).read_text(encoding="utf-8"))
+    prefix = video_prefix(checkout)
     apps = []
     for table in ("apps", "checkout"):
         for key, entry in manifest.get(table, {}).items():
@@ -89,16 +100,16 @@ def tour_apps(checkout: Path) -> list[TourApp]:
                 continue
             name = entry.get("name", key)
             if len(packages) == 1:
-                apps.append(TourApp(key, name, None, version))
+                apps.append(TourApp(key, name, None, version, prefix))
             else:
-                apps += [TourApp(key, name, package, version) for package in packages]
+                apps += [TourApp(key, name, package, version, prefix) for package in packages]
     return apps
 
 
 def portal_video(checkout: Path, size: str = SIZES[0]) -> Path:
     """Where tools/record-tour.sh writes the portal's tour (-2160p before .mp4 for 4K)."""
     version = (checkout / "portal" / "VERSION").read_text(encoding="utf-8").strip()
-    return videos_dir() / f"bc250-portal-tour-v{version}{size_suffix(size)}.mp4"
+    return videos_dir() / f"{video_prefix(checkout)}portal-tour-v{version}{size_suffix(size)}.mp4"
 
 
 def portal_command(checkout: Path, out: Path, music: bool, wiki: bool, size: str = SIZES[0]) -> list[str]:

@@ -62,17 +62,20 @@ same tour, drawn at twice the scale so the text stays crisp, about four times th
 in its name (1440p is the step between). A recording runs in the background; its output shows in the dialog,
 **Stop** ends it, and **Play** opens the video in your video player.
 
-- **Portal video tour** records the portal's tour, about two minutes: `bc250-portal-tour-v<portal version>.mp4`.
+- **Portal video tour** records the portal's tour, about two minutes: `bc250-portal-tour-v<portal version>.mp4`
+  (`wp-portal-tour-...` for the Windows Portable Suite: its videos start with its tag prefix).
   Tick **Also write the copy on the wiki's Portal Tour page** to write the suite's `docs/videos/portal-tour.mp4` and
   its poster in the checkout too, for you to review and commit.
 - **Apps video tour** lists every app of the suite, each of the two programs of CU Bisect and Cores Bisect apart.
   Tick the apps (**All**, **None**), set the **Length** (40 seconds by default) and choose **Record**: each tour
-  takes a few seconds, `bc250-<app>-tour-v<version>.mp4`. Double-click an app to play its video. What an app reads
+  takes a few seconds, `bc250-<app>-tour-v<version>.mp4` (`wp-...`). Double-click an app to play its video. What an app reads
   from the board is real, so watch a video before you publish it.
 
-The dialogs run the suite's `tools/record-tour.sh` and `tools/record-app-tour.sh` (the BC250 Bazzite Suite's; a
-suite without them has the tiles off) with the checkout's development environment; they need ffmpeg. The same
-scripts run from a terminal: [the suite's Development chapter](bc250-bazzite-suite/development/) says how.
+The dialogs run the suite's `tools/record-tour.sh` and `tools/record-app-tour.sh` (the BC250 Bazzite Suite's;
+the Windows Portable Suite has its `tools/record-tour.sh`, run on the handheld from Git Bash, and its apps' tours
+through the Nexus app tour) with the checkout's development environment; they need ffmpeg. The same scripts run
+from a terminal: [the BC250 suite's Development chapter](bc250-bazzite-suite/development/) says how. The music
+under every tour is the Nexus tools' `tools/sounds/`, every suite's.
 
 ## Convert icons
 

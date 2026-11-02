@@ -445,3 +445,43 @@ def test_not_ok_is_the_runs_and_a_fix_goes_on_from_commit():
     assert flow.step_states(flow.Facts(run=run, drafts=["wp-portal-v6.0.0"]))["test"] == "now"   # a run made anew
     assert flow.current_step(flow.Facts(run=run, drafts=["wp-portal-v6.0.0"], rejected=["wp-portal-v6.0.0"],
                                         dirty=True)) == "commit"
+
+
+def test_commit_offers_the_portal_bump_when_apps_toml_changed(release_window, monkeypatch):
+    """apps.toml changed since the last portal release (an app added): the commit's manifest check would refuse
+    the commit, so Commit offers the portal bump (owner, 02-11-2026) and writes it with its CHANGELOG entry on a
+    yes; on a no nothing is committed and the output says why."""
+    w = release_window
+    page = w.release_page
+    extra = APPS_TOML.replace("apps.test", "apps.extra").replace('"T"', '"E"').replace("wp-test-v0.1.0", "wp-extra-v0.1.0") \
+        .replace("required = true", "required = false")
+    (w.root / "wp/portal/apps.toml").write_text(APPS_TOML + "\n" + extra, encoding="utf-8")
+    w.reload()
+    assert rp.portal_offer(w.root, "HEAD", "wp") == ("1.1.0", "the least the manifest check accepts",
+                                                      "extra was added")
+    page.commit_message.setText("An app")
+    ran, asked = [], []
+    monkeypatch.setattr(w, "run_git", ran.append)
+    from PyQt6.QtWidgets import QMessageBox
+    monkeypatch.setattr("nexus_release_tool.release_page.QMessageBox.question",
+                        lambda *a, **k: asked.append(a[2]) or QMessageBox.StandardButton.No)
+    page.commit()
+    assert ran == [] and "extra was added" in asked[0] and "1.1.0" in asked[0]
+    assert "Not committed" in page.output.toPlainText()
+    assert (w.root / "wp/portal/VERSION").read_text() == "1.0.0\n"
+
+    monkeypatch.setattr("nexus_release_tool.release_page.QMessageBox.question",
+                        lambda *a, **k: QMessageBox.StandardButton.Yes)
+    page.commit()
+    assert len(ran) == 1 and "git commit" in ran[0] and "An app" in ran[0]
+    assert (w.root / "wp/portal/VERSION").read_text() == "1.1.0\n"
+    assert "Release 1.1.0." in (w.root / "wp/portal/CHANGELOG").read_text()
+    assert "portal 1.1.0" in page.output.toPlainText()
+    assert rp.portal_offer(w.root, "HEAD", "wp") is None            # the bump is there: nothing to offer
+
+    # A Breaking entry in the portal's CHANGELOG: the offer is step 2's major, above the least the check accepts.
+    (w.root / "wp/portal/VERSION").write_text("1.0.0\n")
+    (w.root / "wp/portal/CHANGELOG").write_text("Changelog: 03-01-2026 00:00:00\n\nBreaking. Gone.\n\n"
+                                                "Changelog: 01-01-2026 00:00:00\n\nRelease 1.0.0.\n")
+    w.reload()
+    assert rp.portal_offer(w.root, "HEAD", "wp")[0] == "2.0.0"

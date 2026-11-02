@@ -60,7 +60,11 @@ tab explains itself behind the round **i** in its first row: click it to read th
 
 1. **Get up to date** (**git pull**): only when GitHub has commits this checkout lacks, pushed from the other machine.
 2. **Commit your changes:** type what they do, then **Commit**. It stages every change and new file and commits
-   them after the version and manifest checks of the suites they touch.
+   them after the version and manifest checks of the suites they touch. When a suite's `apps.toml` changed since
+   its last portal release (an app added, removed or withdrawn, a pin moved), that check needs a portal bump: the
+   step asks first, with the version step 2 would suggest (the portal's CHANGELOG entries count: a Breaking entry
+   makes it major), or the least the check accepts, whichever is higher, and writes it with its CHANGELOG entry
+   on a yes, then commits. A no leaves the commit where it is.
 3. **Push them** (**Push**): what GitHub has that this checkout lacks, such as the last release's `Pin ...`
    commit, comes in under your commits first (`git pull --rebase`); then the pre-push hook checks them.
 4. **CI passes:** the step waits until GitHub's CI passed on that commit. When it failed, the line says so. A test that
@@ -150,7 +154,8 @@ published already and ends at once.
   the first on a board with a withdrawn app installed. **Installer tests** opens [Nexus Installer
   Tests](dashboard.md#installer-tests) from the checkout on the ticked suite. **Record portal tour** records the portal's video tour from the checkout as it is now, for the wiki and
   YouTube (`bc250-bazzite/tools/record-tour.sh`, about a minute, its output in Commands), into
-  `~/Videos/bc250-portal-tour-v<portal version>.mp4`, and opens it in your video player. The box beside it is the
+  `~/Videos/<prefix>portal-tour-v<portal version>.mp4` (`bc250-`, or the suite's tag prefix, `wp-`), on the
+  suite's own system, and opens it in your video player. The box beside it is the
   video's size: 1080p, the wiki's, or 2160p (4K) for YouTube, which shows a 4K upload far sharper (about four times
   the time, `-2160p` before `.mp4`); 1440p is the step between. The tests run on the
   ticked suite's own system: the BC250 suite's on Linux (the board). For a Windows suite they run on Windows (the

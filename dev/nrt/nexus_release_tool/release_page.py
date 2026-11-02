@@ -348,8 +348,39 @@ class ReleasePage(QWidget):
         if not message:
             return
         window = self.release_window
+        if not self.offer_portal_bumps():
+            return
         window.run_git(flow.commit_work_command(window.root, message, window.base(), shlex.quote(sys.executable)))
         self.commit_message.clear()
+
+    def offer_portal_bumps(self) -> bool:
+        """A suite whose apps.toml changed since its last portal release needs a portal bump, or the commit's
+        manifest check refuses the commit (owner, 02-11-2026: the step only refused): the bump is offered here, as
+        step 2 would suggest it, and written with its CHANGELOG entry on a yes. False when a no leaves the commit
+        where it is."""
+        window = self.release_window
+        root, base = window.root, window.base()
+        for suite in rp.touched_suites(root, flow.dirty_paths(root)) or []:
+            offer = rp.portal_offer(root, base, suite)
+            if offer is None:
+                continue
+            version, reason, why = offer
+            name = rp.suite_name(root, suite)
+            answer = QMessageBox.question(
+                self, "Commit", f"{name}: apps.toml changed since its last portal release ({why}), so the commit's "
+                f"manifest check refuses the commit until the portal is bumped.\n\nBump the portal to {version} "
+                f"({reason}) and write its CHANGELOG entry, then commit?")
+            if answer != QMessageBox.StandardButton.Yes:
+                self.output.set_text(f"Not committed: {name}'s portal needs a bump first (apps.toml changed: {why}). "
+                                     "Bump portal on step 2 writes it, or say yes here.")
+                return False
+            changed, text = rp.write_portal_bump(root, suite, base, version)
+            self.output.set_text(f"{name}: portal {version} in " + ", ".join(p.relative_to(root).as_posix()
+                                 for p in changed) + f" and CHANGELOG entry \"{text}\" ({reason}): apps.toml changed "
+                                 f"({why}), so the commit's manifest check needs this bump. The portal release itself "
+                                 "follows in the Nexus release.")
+            window.reload()
+        return True
 
     def start(self) -> None:
         window = self.release_window

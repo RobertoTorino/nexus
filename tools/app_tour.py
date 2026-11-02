@@ -2,13 +2,14 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """A video tour of one app, for the wiki and YouTube: the app's real window from this checkout, rendered frame by
 frame into an MP4 (H.264, 1920 x 1080, 30 fps) of about 40 seconds, one short video per app, with music under it
-that fades out over the last two seconds (the suite's tools/sounds/the_quiet_engine.mp3, made with generative AI tools). The
-same script for every app: only the name changes.
+that fades out over the last two seconds (tools/sounds/the_quiet_engine.mp3, every suite's, made with generative AI
+tools). The same script for every app: only the name changes.
 
     python3 tools/app_tour.py APP [OUT.mp4] [--package PACKAGE] [--seconds 40] [--music FILE | --no-music] [--fps 30]
                               [--size 1080p|1440p|2160p]
 
-Default output: ~/Videos/bc250-<app>-tour-v<its VERSION>.mp4 (with the package for compute and cores; -2160p or
+Default output: ~/Videos/<prefix><app>-tour-v<its VERSION>.mp4, the prefix the suite's tag prefix (wp-) or bc250-
+for the suite without one (with the package for compute and cores; -2160p or
 -1440p before .mp4 for another size). --size 2160p renders the same tour at 3840 x 2160 for YouTube, which shows a
 4K upload far sharper than a 1080p one (about four times the time).
 
@@ -40,13 +41,12 @@ import tomllib
 from pathlib import Path
 
 import tour_frames
-from tour_frames import SCALE, SUITE, Recorder
+from tour_frames import SCALE, Recorder
 
-MANIFEST = SUITE / "portal" / "apps.toml"
 SECONDS = 40                                        # the whole video, title and end cards included
 HEADER_SHARE = 0.4                                  # of the time after the summary and the icon, with pages to show
 END = 0.5 + 0.8 + 3.5                               # the end card: a pause, the fade, the card
-MUSIC = SUITE / "tools" / "sounds" / "the_quiet_engine.mp3"
+MUSIC = tour_frames.MUSIC_DIR / "the_quiet_engine.mp3"      # the tours' track, every suite's
 FADE = 2.0                                          # the music fades out over the video's last seconds
 
 
@@ -60,12 +60,13 @@ class Done(BaseException):
 
 def find_app(name: str) -> tuple[Path, str, dict]:
     """The app's folder, its key and its table in the manifest (empty for an app the portal does not list)."""
-    manifest = tomllib.loads(MANIFEST.read_text(encoding="utf-8"))
+    suite = tour_frames.SUITE
+    manifest = tomllib.loads((suite / "portal" / "apps.toml").read_text(encoding="utf-8"))
     for table in ("apps", "checkout"):
         entry = manifest.get(table, {}).get(name)
         if entry is not None:
-            return SUITE / entry.get("folder", f"apps/{name}"), name, entry
-    folder = SUITE / "apps" / name
+            return suite / entry.get("folder", f"apps/{name}"), name, entry
+    folder = suite / "apps" / name
     if not folder.is_dir():
         raise SystemExit(f"No app {name!r}: give its key in portal/apps.toml or its folder under apps/.")
     return folder, name, {}
@@ -289,7 +290,7 @@ class AppTour(Recorder):
 
 def chapter_of(key: str, name: str) -> str:
     """The app's page in the wiki, relative to its home: docs/apps/<key>.md, else the page headed with its name."""
-    docs = SUITE / "docs"
+    docs = tour_frames.SUITE / "docs"
     if (docs / "apps" / f"{key}.md").is_file():
         return f"apps/{key}/"
     for page in sorted(docs.rglob("*.md")):
@@ -304,7 +305,7 @@ def main() -> int:
     parser.add_argument("out", nargs="?", help="default: ~/Videos/bc250-<app>-tour-v<version>.mp4")
     parser.add_argument("--package", help="which program, for an app with two (compute, cores)")
     parser.add_argument("--seconds", type=float, default=SECONDS, help="the length of the video (default 40)")
-    parser.add_argument("--music", type=Path, default=MUSIC, help="the track under the video (default: the suite's)")
+    parser.add_argument("--music", type=Path, default=MUSIC, help="the track under the video (default: the_quiet_engine.mp3)")
     parser.add_argument("--no-music", action="store_true", help="a video without sound")
     parser.add_argument("--fps", type=int, default=30)
     parser.add_argument("--size", choices=tuple(tour_frames.SIZES), default="1080p",
@@ -312,6 +313,10 @@ def main() -> int:
     tour_frames.suites.add_argument(parser)
     args = parser.parse_args()
     tour_frames.set_size(args.size)
+    try:
+        tour_frames.set_suite(args.suite)
+    except LookupError as error:
+        parser.error(str(error))
     if not shutil.which("ffmpeg"):
         print("ffmpeg is needed", file=sys.stderr)
         return 1
@@ -327,7 +332,8 @@ def main() -> int:
         version = (folder / "VERSION").read_text(encoding="utf-8").strip() if (folder / "VERSION").is_file() else ""
         name = key if args.package is None else f"{key}-{package}"
         size = "" if args.size == "1080p" else f"-{args.size}"
-        out = Path.home() / "Videos" / f"bc250-{name}-tour{f'-v{version}' if version else ''}{size}.mp4"
+        prefix = tour_frames.suites.tag_prefix(tour_frames.SUITE) or "bc250-"     # the suite's: wp-, or bc250-
+        out = Path.home() / "Videos" / f"{prefix}{name}-tour{f'-v{version}' if version else ''}{size}.mp4"
     out.parent.mkdir(parents=True, exist_ok=True)
 
     with tempfile.TemporaryDirectory(prefix="app-tour-") as temp:

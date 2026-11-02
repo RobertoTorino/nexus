@@ -860,6 +860,33 @@ def portal_suggestion(root: Path, portal: Unit, suite: str | None = None) -> tup
     return next_versions(_tagged_version(portal))[level], reason
 
 
+def write_portal_bump(root: Path, suite: str | None, base: str, version: str) -> tuple[list[Path], str]:
+    """The portal's version written with its CHANGELOG entry (the pins and the withdrawals that changed since
+    *base*): step 1's Apply writes the least CI accepts this way, the Commit step's offer the version it offers.
+    The paths changed and the entry's text."""
+    portal = next(u for u in load_units(root, suite) if u.kind == "portal")
+    changed = set_version(root, portal, version)
+    text = portal_text(version, changed_pins(root, base, suite), "", changed_withdrawals(root, base, suite))
+    add_changelog_entry(root, portal, text, base=base)
+    return changed, text
+
+
+def portal_offer(root: Path, base: str, suite: str | None = None) -> tuple[str, str, str] | None:
+    """What the Commit step offers when its manifest check would refuse the commit (owner, 02-11-2026: it only
+    refused, and the bump was step 1's or step 2's): the portal version to write, why that one, and what changed
+    in apps.toml. The version is step 2's suggestion (the portal's CHANGELOG entries count: a Breaking entry makes
+    it major) or the least the check accepts, whichever is higher. None when no bump is needed."""
+    version = (suite_dir(root, suite) / "portal" / "VERSION").read_text(encoding="utf-8").strip()
+    minimum, why = portal_minimum(root, base, version, suite)
+    if not minimum or minimum == version:
+        return None
+    portal = next(u for u in load_units(root, suite) if u.kind == "portal")
+    suggested, reason = portal_suggestion(root, portal, suite)
+    if version_tuple(suggested) > version_tuple(minimum):
+        return suggested, reason, why
+    return minimum, "the least the manifest check accepts", why
+
+
 def portal_text(version: str, pins: list[str], notes: str, withdrawn: list[tuple[str, str]] = ()) -> str:
     text = f"Release {version}."
     if pins:

@@ -8,7 +8,7 @@
 #                                           [--size 1080p|1440p|2160p]
 #
 # APP: its key in portal/apps.toml (fan, cec, ...). compute and cores have two programs: --package says which.
-# Music: bc250-bazzite/tools/sounds/the_quiet_engine.mp3 (made with generative AI tools), faded out over the last two seconds.
+# Music: tools/sounds/the_quiet_engine.mp3 (the Nexus tools', every suite's; made with generative AI tools), faded out over the last two seconds.
 # Default output: ~/Videos/bc250-<app>-tour-v<its version>.mp4 (an earlier file of that name is replaced;
 # -2160p or -1440p before .mp4 with --size, which renders the tour at that size for YouTube).
 # Interpreter: $PYTHON if set, else the venv for this OS, as test.sh. Needs ffmpeg with libx264.

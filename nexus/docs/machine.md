@@ -18,7 +18,7 @@ checks before a push are in [Development](development.md#ci-on-your-own-machine)
 | fakeroot | the installer tests (`bc250-bazzite/tools/installer-tests/`) | `brew install fakeroot` | Linux only |
 | Node.js | the design panel's test (`tools/tests/test_design_panel.py`, skipped without it) | `brew install node` | `winget install OpenJS.NodeJS.LTS` |
 | GitHub CLI (`gh`) | the runs and releases from a terminal, the Nexus Release Tool's sign-in | `brew install gh` | `winget install GitHub.cli` |
-| ffmpeg | the video tours (`bc250-bazzite/tools/record-tour.sh`, `bc250-bazzite/tools/record-app-tour.sh`) | `brew install ffmpeg` | `winget install Gyan.FFmpeg` |
+| ffmpeg | the video tours (each suite's `tools/record-tour.sh` and `tools/record-app-tour.sh`, on its own system) | `brew install ffmpeg` | `winget install Gyan.FFmpeg` |
 | Rust (rustup with cargo and clippy), maturin, nasm, the libva headers | Console Link's native core, only to run `cargo test` or `maturin build` on the machine itself; the container of `tools/ci-local.sh` has them all | rustup from rustup.rs, `brew install nasm`, maturin with pip in the venv | `winget install Rustlang.Rustup`; the decoder builds on Linux only |
 | PyInstaller and Pillow | `tools/build_windows_exe.py`, the Windows executable of Bazzite SFTP | not used | in `.venv-windows/`, `pip install pyinstaller pillow` |
 | notify-send | `tools/dev-updates.sh --notify` (below) | comes with Bazzite | not used |

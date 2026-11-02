@@ -9,7 +9,7 @@
 # --size 2160p renders the tour at 3840 x 2160 for YouTube (about four times the time); the file is then named
 # ...-2160p.mp4 unless OUT says otherwise.
 #
-# Music: bc250-bazzite/tools/sounds/the_quiet_engine_remix_3min.mp3 (made with generative AI tools), faded out over the last two
+# Music: tools/sounds/the_quiet_engine_remix_3min.mp3 (the Nexus tools', every suite's; made with generative AI tools), faded out over the last two
 # seconds.
 # Default output: ~/Videos/bc250-portal-tour-v<portal version>.mp4 (an earlier file of that name is replaced).
 # Interpreter: $PYTHON if set, else the venv for this OS, as test.sh. Needs ffmpeg with libx264.

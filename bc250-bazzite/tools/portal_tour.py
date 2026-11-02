@@ -2,7 +2,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """A video tour of the portal, for the wiki and YouTube: the real portal view from this checkout, driven by a
 script and rendered frame by frame into an MP4 (H.264, 1920 x 1080, 30 fps), with music under it that fades out over
-the last two seconds (tools/sounds/the_quiet_engine_remix_3min.mp3, made with generative AI tools).
+the last two seconds (the Nexus tools' sounds/the_quiet_engine_remix_3min.mp3, every suite's, made with generative AI
+tools).
 
     python3 tools/portal_tour.py [OUT.mp4] [--music FILE | --no-music] [--wiki] [--fps 30] [--size 1080p|1440p|2160p]
 
@@ -38,7 +39,7 @@ from tour_frames import SCALE, Recorder  # noqa: E402
 
 INSTALLED = ("check", "gpu", "upscaler", "shadps4", "rpcs3", "cec", "package")
 BEHIND = "shadps4"                                  # installed from an older release: the red dot and the notice
-MUSIC = SUITE / "tools" / "sounds" / "the_quiet_engine_remix_3min.mp3"
+MUSIC = tour_frames.MUSIC_DIR / "the_quiet_engine_remix_3min.mp3"
 FADE = 2.0                                          # the music fades out over the video's last seconds
 WIKI_VIDEO = SUITE / "docs" / "videos" / "portal-tour.mp4"
 WIKI_POSTER = SUITE / "docs" / "images" / "portal" / "portal-tour-poster.webp"

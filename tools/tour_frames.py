@@ -28,9 +28,24 @@ def _suites():
 
 
 suites = _suites()
-SUITE = suites.suite()                              # the default suite (the tours take --suite)
+SUITE = suites.suite()                              # the default suite; set_suite() for another (--suite)
+
+
+def set_scale(scale: float) -> None:
+    """How large the window is drawn in the layout: 1.2 (1600 x 900 logical, the BC250 portal's) or 1.5 (1280 x
+    720, the Windows Portable Suite's handheld). Before prepare_home(); read it as tour_frames.SCALE afterwards."""
+    global SCALE
+    SCALE = scale
+
+
+def set_suite(name: str | None) -> None:
+    """The suite the tour works on, by its folder name (tools/suites.py); None keeps the default. Read it as
+    tour_frames.SUITE afterwards, not as a name imported before."""
+    global SUITE
+    SUITE = suites.suite(name)
 WIDTH, HEIGHT = 1920, 1080                          # the layout: every position in the tours is in these pixels
 SCALE = 1.2                                         # the window is 1600 x 900 at 120 %: readable on a phone too
+MUSIC_DIR = ROOT / "tools" / "sounds"               # the tours' music, every suite's (owner, 02-11-2026)
 SIZES = {"1080p": 1.0, "1440p": 4 / 3, "2160p": 2.0}  # the video's size, as a multiple of the layout
 ZOOM = 1.0                                          # the chosen multiple (set_size, before the window is made)
 

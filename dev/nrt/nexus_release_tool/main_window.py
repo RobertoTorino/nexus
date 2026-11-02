@@ -293,11 +293,7 @@ class AppsPage(QWidget):
         base, portal_version = self.release_window.base(), self.release_window.portal_version()
         minimum, why = rp.portal_minimum(root, base, portal_version, suite)
         if minimum and minimum != portal_version:
-            portal = next(u for u in rp.load_units(root, suite) if u.kind == "portal")
-            changed = rp.set_version(root, portal, minimum)
-            text = rp.portal_text(minimum, rp.changed_pins(root, base, suite), "",
-                                  rp.changed_withdrawals(root, base, suite))
-            rp.add_changelog_entry(root, portal, text, base=base)
+            changed, text = rp.write_portal_bump(root, suite, base, minimum)
             log.append(f"portal: {minimum} in " + ", ".join(p.relative_to(root).as_posix() for p in changed)
                        + f" and CHANGELOG entry \"{text}\": apps.toml changed since {base} ({why}), so CI needs this "
                        "bump in the same push. The portal release follows in step 2, once the apps are pinned.")
@@ -898,19 +894,17 @@ class RunPage(QWidget):
 
     def enable_tests(self) -> None:
         """The board tests of the ticked suite, on its own system (owner, 28-10-2026: on Windows they were all off):
-        a Bazzite suite's on Linux, a Windows suite's on Windows (its check-release.ps1). The portal tour is recorded
-        on Linux only."""
+        a Bazzite suite's on Linux, a Windows suite's on Windows (its check-release.ps1). The portal tour too, since
+        02-11-2026: a Windows suite's on the handheld (its tools/record-tour.sh, from Git Bash)."""
         here = rp.tests_here(self.release_window.root, self.release_window.suite)
         windows = self.windows_suite()
         for button, tip in self.tooltips.items():
-            on = here and not (button is self.tour_button and windows)
+            on = here
             button.setEnabled(on)
             if button is self.tour_button:
                 self.tour_size.setEnabled(on)       # the size box goes with the button
             if on:
                 button.setToolTip(WINDOWS_TIPS.get(button.text(), tip) if windows else tip)
-            elif button is self.tour_button and windows:
-                button.setToolTip("The portal tour is recorded on Linux, for the BC250 suite")
             else:
                 button.setToolTip("This suite's tests run on " + ("Windows (the handheld)" if windows else
                                                                   "Linux (the board)"))
@@ -984,10 +978,12 @@ class RunPage(QWidget):
             self.output.appendPlainText("Close issues: the command line is busy or has no bash; nothing was closed.")
 
     def tour_file(self) -> Path:
-        """~/Videos/bc250-portal-tour-v<portal version>.mp4, as record-tour.sh names it: -2160p before .mp4 at 4K."""
+        """~/Videos/<prefix>portal-tour-v<portal version>.mp4, as the suite's record-tour.sh names it (the suite's tag
+        prefix, wp-; bc250- for the suite without one): -2160p before .mp4 at 4K."""
         size = self.tour_size.currentText()
         suffix = "" if size == TOUR_SIZES[0] else f"-{size}"
-        return Path.home() / "Videos" / f"bc250-portal-tour-v{self.release_window.portal_version()}{suffix}.mp4"
+        prefix = rp.tag_prefix(self.release_window.root, self.release_window.suite) or "bc250-"
+        return Path.home() / "Videos" / f"{prefix}portal-tour-v{self.release_window.portal_version()}{suffix}.mp4"
 
     def record_tour(self) -> None:
         """The suite's tools/record-tour.sh in the background, its output in Commands; the video opens when it is done."""

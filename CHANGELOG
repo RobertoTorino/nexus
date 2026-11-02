@@ -1,3 +1,22 @@
+Changelog: 02-11-2026 02:04:55
+
+Added. The Windows Portable Suite's portal tour (owner, 02-11-2026: the same tour as the BC250 suite's, on its
+portal): windows-portable/tools/portal_tour.py and record-tour.sh (--wiki writes the wiki's Portal Tour page's copy
+and poster; recorded on the handheld, from Git Bash), record-app-tour.sh for one app's tour through
+tools/app_tour.py, and the Portal Tour page of its wiki (the copy in it was recorded from the checkout on Linux,
+the handheld's reads stood in for: the owner records it again on the handheld). The tours' music is every
+suite's: tools/sounds/ (the two tracks moved from the BC250 suite's tools/sounds/). A suite's tour videos are named
+with its tag prefix (wp-portal-tour-v..., wp-<app>-tour-v...; bc250- for the suite without one) by the tour
+scripts, the Nexus Release Tool (whose Record portal tour works for a Windows suite on the handheld now) and the
+Nexus Dashboard. tour_frames.set_scale(): the Windows portal is drawn at 150 % (1280 x 720 fills the video).
+
+Changelog: 02-11-2026 01:52:28
+
+Fixed. tools/app_tour.py applies --suite (owner, 02-11-2026: no Windows Portable Suite tour was ever made; the
+option was parsed and ignored, so the tour always read the BC250 suite's manifest and said "No app"): the
+manifest, the app folders, the wiki chapter and the default music track are the named suite's
+(tour_frames.set_suite). A suite without tools/sounds/the_quiet_engine.mp3 needs --music or --no-music.
+
 Changelog: 02-11-2026 01:29:42
 
 Release 1.27.0. Brings wp-bios-v0.6.0, wp-hdcam-v0.5.0, wp-pcsx2-v5.7.0, wp-portal-v7.2.0, wp-ppsspp-v4.2.0, wp-rpcs3-v3.7.0, wp-rplay-v0.6.0, wp-sftp-v0.5.0, wp-shadps4-v4.2.0, wp-test-v4.8.0, wp-vita3k-v4.2.0, wp-xenia-v4.2.0.

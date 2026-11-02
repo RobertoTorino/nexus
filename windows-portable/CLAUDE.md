@@ -25,9 +25,12 @@ app is an optional tile. The wiki is at robertotorino.github.io/nexus/windows-po
   `suite_release.py` and `publish_release.sh` (the release workflow's plan, pin and publish steps),
   `check-release.ps1` (the release checks on the handheld, from the Nexus Release Tool's test buttons; `draft`: the
   device test of a Nexus release), `cec_probe.py` (can the handheld reach the TV's HDMI-CEC through its USB-C to
-  HDMI adapter: AMD's AUX channel to the adapter's CEC tunneling, `--ping` asks the TV), `mkdocs/`
+  HDMI adapter: AMD's AUX channel to the adapter's CEC tunneling, `--ping` asks the TV), `portal_tour.py` and
+  `record-tour.sh` (the portal's video tour, the same tour as the BC250 suite's on this portal, recorded on the
+  handheld from Git Bash; `--wiki` writes the wiki's Portal Tour copy; owner, 02-11-2026), `record-app-tour.sh`
+  (one app's tour, through the Nexus `tools/app_tour.py`), `mkdocs/`
   (the wiki's overrides), their tests in `tools/tests/`, and `tools/installer-tests/<name>.ps1` (an installer test
-  per app and per manifest entry, and the Nexus Release Tool's `nrt.ps1`).
+  per app and per manifest entry, and the Nexus apps' `nrt.ps1` and `dash.ps1`).
 - `docs/` and `mkdocs.yml`: the wiki; `icons/`: the suite's pictures and the category icons
   (`icons/<category>/<category>-<size>.png`), the PNG sources of their copies: every optional app takes its
   category's icon (`../tools/make_icons.py` writes the copies, `../ICONS.md` lists them).

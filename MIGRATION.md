@@ -28,6 +28,14 @@ suites in one place under Nexus, a small dashboard that stays local like NRT. Do
   Breaking) and Nexus's; a device test of the dashboard's Windows scripts on the handheld; whether the Media Tool
   installed on the boards is uninstalled by hand (`~/.local/bin/media-tool --uninstall`) or by the Demo Recorder's
   `install.sh`; the NRT's Test on this board launcher part moving into the dashboard later (my proposal).
+- **Also after the release (02-11-2026, in the working tree):** the Windows Portable Suite's portal tour
+  (`windows-portable/tools/portal_tour.py`, `record-tour.sh`, `record-app-tour.sh`, the wiki's Portal Tour
+  page; the copy in `docs/videos/` recorded on Linux: the owner records it on the handheld with `--wiki`),
+  the tours' music moved to `tools/sounds/` (every suite's), `tools/app_tour.py --suite` fixed (it was
+  ignored), the videos named with the suite's prefix.
+- **Done after the release (02-11-2026, in the working tree):** the Nexus release tab's Commit step offers the
+  portal bump when its manifest check would refuse the commit (owner: it only refused during the release of
+  portal-v13.0.0); `plan.portal_offer()`, `plan.write_portal_bump()` (step 1's Apply too).
 
 ## Resume here (30-10-2026 20:20, for a new chat)
 
