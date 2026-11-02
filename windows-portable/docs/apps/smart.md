@@ -99,6 +99,10 @@ The weather comes from [Open-Meteo](https://open-meteo.com/), free and without a
 opens a page to type a city or a town; the places found are listed under it, and **A** on one uses it and puts the
 Weather tile on the screen. **No weather** forgets the place.
 
+When Open-Meteo is busy (it sometimes answers 503, the service is overloaded) or cannot be reached, the Weather card
+says so, and the weather is asked for again 30 minutes later. Until then the tile keeps the last weather it had, or
+says **unavailable now** when it has none yet.
+
 What is sent: the name you search for, and then the place's coordinates every 30 minutes, only while the Weather
 tile is on the screen. Nothing else about you. Without a place nothing goes over the network.
 

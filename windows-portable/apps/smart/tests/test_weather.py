@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import io
 import urllib.error
 
 import pytest
@@ -53,7 +54,13 @@ def test_place_round_trip():
 
 
 @pytest.mark.parametrize("error, text", [
-    (urllib.error.HTTPError("u", 429, "Too Many Requests", {}, None), "429 Too Many Requests"),
+    (urllib.error.HTTPError("u", 429, "Too Many Requests", {}, None),
+     r"unavailable for now \(429: Too Many Requests\)"),
+    (urllib.error.HTTPError("u", 503, "Service Unavailable", {},       # recorded 02-11-2026
+                            io.BytesIO(b'{"reason":"The service is overloaded","error":true}')),
+     r"unavailable for now \(503: The service is overloaded\)"),
+    (urllib.error.HTTPError("u", 400, "Bad Request", {}, io.BytesIO(b'{"reason":"Latitude must be in range"}')),
+     "answered 400: Latitude must be in range"),
     (urllib.error.URLError("no route"), "cannot be reached"),
 ])
 def test_fetch_failures_say_what_happened(monkeypatch, error, text):

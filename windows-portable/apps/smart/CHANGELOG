@@ -1,3 +1,11 @@
+Changelog: 02-11-2026 16:05:54
+
+Fixed. When Open-Meteo is busy or down (429, 502, 503 or 504) the Weather card says it is unavailable for now, with
+Open-Meteo's own reason (503: The service is overloaded) instead of the bare HTTP status, and that it asks again in 30
+minutes. Until then the Weather tile on the screen says unavailable now when it has no weather yet, and keeps the last
+weather it had otherwise. A tile's caption is cut short with an ellipsis where it would run into the detail beside it
+(a long place name).
+
 Changelog: 02-11-2026 14:09:45
 
 Release 0.2.0.

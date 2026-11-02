@@ -92,7 +92,8 @@ WEATHER_INFO = (
     "opens a page to type a city or a town (R3 for the touch keyboard); the places found are listed under it, and the "
     "A button on one uses it and puts the Weather tile on the screen. Search sends the name you type; then the "
     "place's coordinates go to Open-Meteo every 30 minutes, only while the Weather tile is on the screen. Nothing "
-    "else about you is sent. No weather forgets the place.")
+    "else about you is sent. No weather forgets the place. When Open-Meteo is busy or out of reach, the tile keeps "
+    "the last weather it had, or says unavailable now, until the next try.")
 START_INFO = (
     "Start with Windows puts a shortcut in your Startup folder (nothing in the registry): the app starts minimized "
     "when you sign in, and the screen shows the values from then on. Only the app installed from the portal starts "
@@ -209,6 +210,7 @@ class MainWindow(PortableWindow):
         self.place = weather.Place.from_json(self.settings.get("weather_place"))
         self.weather: weather.Weather | None = None
         self.weather_text = ""                  # the weather's last news, for the Weather pane
+        self.weather_unavailable = False        # the last ask for the weather failed
         self.places: list[weather.Place] = []
         self.image: QImage | None = None        # the screen's picture as last drawn, upright
         self.screen_off = False                 # the backlight switched off (not kept: on at every start)
@@ -472,7 +474,8 @@ class MainWindow(PortableWindow):
         width, height = self.picture_size()
         return render.draw(self.reading, self.shown_tiles(), width, height, QColor(AMBER), title=self.title(),
                            clock=when, theme=self.theme(), picture=self.picture, weather=self.weather,
-                           place=self.place.name if self.place else "", style=self.clock_style())
+                           place=self.place.name if self.place else "", style=self.clock_style(),
+                           unavailable=self.weather_unavailable)
 
     def refresh(self, read: bool = True) -> None:
         if read or self.reading is None:
@@ -568,7 +571,7 @@ class MainWindow(PortableWindow):
     def report_text(self, when: float | None = None) -> str:
         name = self.settings.get("interface")
         return render.report(self.reading, when, self.weather, self.place.name if self.place else "",
-                             name or ALL_ADAPTERS.lower(), self.title())
+                             name or ALL_ADAPTERS.lower(), self.title(), self.weather_unavailable)
 
     def save_report(self) -> None:
         """Every value at this moment, with the date and time, as a text file in Documents\\Smart Screen."""
@@ -864,7 +867,7 @@ class MainWindow(PortableWindow):
         self.weather_pane.list.focus("place")
 
     def set_place(self, place: weather.Place | None) -> None:
-        self.place, self.weather, self.weather_text = place, None, ""
+        self.place, self.weather, self.weather_text, self.weather_unavailable = place, None, "", False
         self.settings.set("weather_place", place.to_json() if place else "")
         self.weather_pane.status.setText(f"{place.label}." if place else "No weather: nothing is sent.")
         self.log.info("Weather place chosen." if place else "Weather place forgotten.")
@@ -880,7 +883,7 @@ class MainWindow(PortableWindow):
         self.weather_worker.start(lambda: weather.current(place, self.fetch))
 
     def _weather_done(self, result: weather.Weather) -> None:
-        self.weather = result
+        self.weather, self.weather_unavailable = result, False
         wind = f", wind {result.wind_kmh:.0f} km/h" if result.wind_kmh is not None else ""
         humidity = f", humidity {result.humidity} %" if result.humidity is not None else ""
         self.weather_text = f"Now: {result.temperature:.0f} °C, {result.description.lower()}{wind}{humidity}."
@@ -888,8 +891,12 @@ class MainWindow(PortableWindow):
         self.refresh(read=False)
 
     def _weather_failed(self, error) -> None:
-        self.weather_text = f"{error} The screen keeps the last weather it had."
+        self.weather_unavailable = True
+        kept = ("the screen keeps the last weather it had" if self.weather is not None else
+                "the screen says unavailable now")
+        self.weather_text = f"{error} Asked again in {weather.INTERVAL_S // 60} minutes; until then {kept}."
         self.show_weather()
+        self.refresh(read=False)
 
     # The Start card
 

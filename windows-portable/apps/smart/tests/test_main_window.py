@@ -289,6 +289,33 @@ def test_the_weather_is_found_used_and_fetched_only_when_shown(qapp, tmp_path, m
     window.close()
 
 
+def test_the_weather_says_when_open_meteo_is_unavailable(qapp, tmp_path):
+    answers = [weather.WeatherError("Open-Meteo is unavailable for now (503: The service is overloaded)."),
+               {"current": {"temperature_2m": 11.8, "weather_code": 2, "is_day": 1}}, weather.WeatherError("Again.")]
+
+    def fetch(url, params):
+        answer = answers.pop(0)
+        if isinstance(answer, Exception):
+            raise answer
+        return answer
+
+    window = make(qapp, tmp_path, fetch=fetch)
+    window.settings.set("tiles", "weather")
+    from conftest import wait_until
+    window.set_place(weather.Place("Berlin", "", "Germany", 52.5, 13.4))
+    assert wait_until(qapp, lambda: window.weather_unavailable)
+    assert window.weather_pane.summary.text() == ("Open-Meteo is unavailable for now (503: The service is overloaded). "
+                                                  "Asked again in 30 minutes; until then the screen says unavailable now.")
+    assert "unavailable now" in window.report_text()
+    window.update_weather()
+    assert wait_until(qapp, lambda: window.weather is not None and not window.weather_unavailable)
+    window.update_weather()
+    assert wait_until(qapp, lambda: window.weather_unavailable)
+    assert window.weather_pane.summary.text().endswith("until then the screen keeps the last weather it had.")
+    assert "12 °C" in window.report_text()
+    window.close()
+
+
 def test_start_with_windows_needs_the_installed_app(qapp, tmp_path, monkeypatch):
     window = make(qapp, tmp_path)
     into(window, window.start_card, "autostart")

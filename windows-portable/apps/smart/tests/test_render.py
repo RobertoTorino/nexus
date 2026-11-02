@@ -88,6 +88,9 @@ def test_weather_tile():
     night = render.tiles(ALLY, ["weather"], weather.Weather(9.0, 61, is_day=False), "Berlin")[0]
     assert (night.icon, night.night) == ("rain", True)
     assert render.tiles(ALLY, ["weather"])[0] == render.Tile("Weather", render.DASH, "choose a place")
+    assert render.tiles(ALLY, ["weather"], None, "Berlin", unavailable=True)[0] == render.Tile(
+        "Berlin", render.DASH, "unavailable now")
+    assert render.tiles(ALLY, ["weather"], sunny, "Berlin", unavailable=True)[0].value == "22 °C"   # the last one
 
 
 @pytest.mark.parametrize("code", [0, 2, 3, 45, 61, 71, 95])

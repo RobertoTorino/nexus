@@ -197,16 +197,18 @@ def _battery(state: tuple[int, bool] | None) -> Tile:
                 alert)
 
 
-def _weather(weather: Weather | None, place: str) -> Tile:
+def _weather(weather: Weather | None, place: str, unavailable: bool = False) -> Tile:
     if weather is None:
-        return Tile(place or "Weather", DASH, "" if place else "choose a place")
+        return Tile(place or "Weather", DASH, "unavailable now" if place and unavailable else
+                    "" if place else "choose a place")
     return Tile(place or "Weather", f"{weather.temperature:.0f} °C", weather.description, icon=weather.icon,
                 night=not weather.is_day)
 
 
 def tiles(r: Reading, keys: tuple[str, ...] | list[str], weather: Weather | None = None,
-          place: str = "") -> list[Tile]:
-    """The tiles for *keys*, in the screen's order; *place* is the weather's place, as the tile's caption."""
+          place: str = "", unavailable: bool = False) -> list[Tile]:
+    """The tiles for *keys*, in the screen's order; *place* is the weather's place, as the tile's caption;
+    *unavailable*: Open-Meteo did not answer and there is no weather to show yet."""
     made = {
         "cpu": lambda: Tile("CPU", f"{r.cpu_load:.0f} %" if r.cpu_load is not None else DASH,
                             _join(f"{r.cpu_mhz} MHz" if r.cpu_mhz else None, _temp(r.cpu_temp)),
@@ -222,18 +224,18 @@ def tiles(r: Reading, keys: tuple[str, ...] | list[str], weather: Weather | None
                             f"↑ {_rate(r.net[1])}" if r.net else ""),
         "disk": lambda: Tile("Disk", f"R {_rate(r.disk[0])}" if r.disk else DASH,
                              f"W {_rate(r.disk[1])}" if r.disk else ""),
-        "weather": lambda: _weather(weather, place),
+        "weather": lambda: _weather(weather, place, unavailable),
     }
     return [made[key]() for key, _ in TILES if key in keys]
 
 
 def report(r: Reading, when: float | None = None, weather: Weather | None = None, place: str = "",
-           network: str = "", title: str = TITLE) -> str:
+           network: str = "", title: str = TITLE, unavailable: bool = False) -> str:
     """Every value at *when*, as text: the date and time with its offset from UTC, then a line per tile. *network*
     says which adapter the Network line measures."""
     local = time.localtime(when)
     lines = [title or TITLE, time.strftime("%d-%m-%Y %H:%M:%S", local) + f" {offset(local)}", ""]
-    for tile in tiles(r, [k for k, _ in TILES], weather, place):
+    for tile in tiles(r, [k for k, _ in TILES], weather, place, unavailable):
         caption = f"{tile.caption} ({network})" if tile.caption == "Network" and network else tile.caption
         lines.append(f"{caption:<22} {_join(tile.value, tile.detail)}")
     return "\n".join(lines) + "\n"
@@ -325,8 +327,12 @@ def _draw_tile(p: QPainter, box: QRectF, tile: Tile, theme: Theme, accent: QColo
     caption_px, value_px = unit * 0.17, unit * 0.34
     p.setPen(theme.muted)
     p.setFont(_font(caption_px, QFont.Weight.DemiBold))
+    room = inner.width()                        # the caption gives way to the detail: a long place name is cut short
+    if tile.detail:
+        room -= p.fontMetrics().horizontalAdvance(tile.detail) + caption_px
     p.drawText(QRectF(inner.left(), inner.top(), inner.width(), caption_px * 1.4),
-               Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter, tile.caption)
+               Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
+               p.fontMetrics().elidedText(tile.caption, Qt.TextElideMode.ElideRight, max(0, round(room))))
     if tile.detail:
         p.drawText(QRectF(inner.left(), inner.top(), inner.width(), caption_px * 1.4),
                    Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter, tile.detail)
@@ -354,7 +360,7 @@ def _draw_tile(p: QPainter, box: QRectF, tile: Tile, theme: Theme, accent: QColo
 def draw(reading: Reading, keys: tuple[str, ...] | list[str], width: int, height: int, accent: QColor,
          title: str = TITLE, clock: float | None = None, theme: Theme = THEMES[DEFAULT_THEME],
          picture: QImage | None = None, weather: Weather | None = None, place: str = "",
-         style: Clock = Clock()) -> QImage:
+         style: Clock = Clock(), unavailable: bool = False) -> QImage:
     """The picture upright, *width* x *height* as it is seen (landscape: wider than high). *accent* is used when the
     theme has none of its own; *picture* fills the background, cut to the screen's shape; *clock* is the moment
     shown (None: now), in *style*."""
@@ -394,7 +400,7 @@ def draw(reading: Reading, keys: tuple[str, ...] | list[str], width: int, height
     p.drawText(title_box, Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
                p.fontMetrics().elidedText(title, Qt.TextElideMode.ElideRight, round(title_box.width())))
 
-    shown = tiles(reading, keys, weather, place)
+    shown = tiles(reading, keys, weather, place, unavailable)
     if shown:
         columns = 2 if width > height else 1
         rows = -(-len(shown) // columns)
