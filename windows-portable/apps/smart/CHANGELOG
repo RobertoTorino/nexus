@@ -1,3 +1,7 @@
+Changelog: 02-11-2026 16:54:42
+
+Release 0.2.1.
+
 Changelog: 02-11-2026 16:05:54
 
 Fixed. When Open-Meteo is busy or down (429, 502, 503 or 504) the Weather card says it is unavailable for now, with
