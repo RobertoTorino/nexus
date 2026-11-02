@@ -42,7 +42,7 @@ app downloads its Python packages from PyPI.
 - [Console Link](apps/consoles.md#privacy) talks to your own consoles on your own network, and to PlayStation
   (PSN) only for **Find my account ID**; the sign-in happens in your browser. Its window masks your account ID,
   online ID and the consoles' addresses.
-- [Console LinkB](apps/clb.md#privacy) talks to Microsoft's Xbox services when you sign in, refresh, wake a
+- [Console LinkB](apps/clb.md#privacy) talks to Microsoft's XBOX services when you sign in, refresh, wake a
   console or stream; the sign-in happens in your browser. Its log masks the account's tokens, your gamertag, the
   consoles' IDs and network addresses.
 - [shadPS4 Manager](apps/shadps4.md#shadnet): shadPS4 signs in to the shadNet server you set, with the

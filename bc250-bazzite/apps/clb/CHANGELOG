@@ -98,13 +98,13 @@ Release 0.1.0.
 
 Changelog: 21-10-2026 23:08:55
 
-Added. Console LinkB: Xbox games on the BC-250. Signing in with a Microsoft account goes with a code entered on
+Added. Console LinkB: XBOX games on the BC-250. Signing in with a Microsoft account goes with a code entered on
 microsoft.com/link (on a phone or any computer), so no password passes through the app; only the refresh token is
-kept, in ~/.config/bc250-console-linkb/account.json (mode 0600). The app lists the account's Xbox consoles (model,
-power state, whether remote play is on), wakes one from sleep (Instant-on), and lists the games of Xbox Cloud
+kept, in ~/.config/bc250-console-linkb/account.json (mode 0600). The app lists the account's XBOX consoles (model,
+power state, whether remote play is on), wakes one from sleep (Instant-on), and lists the games of XBOX Cloud
 Gaming the account may play: all of Game Pass Ultimate's, or the free-to-play games without it. A console or a
 cloud game streams in a full-screen window: the session with Microsoft's streaming service (with the queue for a
-cloud server), WebRTC with aiortc (H.264 video, Opus sound), the first controller through pygame-ce as the Xbox
+cloud server), WebRTC with aiortc (H.264 video, Opus sound), the first controller through pygame-ce as the XBOX
 pad (with its rumble) and the keyboard as a pad. The stream ends with Ctrl+Q, by holding View and Menu for 2 s, or
 by closing the window, and the session is ended with the service. The protocol is ported from Greenlight and
 xal-node (MIT). Tested on this machine against a stand-in for the service (the handshake, the input reports, video

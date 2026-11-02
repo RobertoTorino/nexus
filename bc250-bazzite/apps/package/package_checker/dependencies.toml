@@ -1259,7 +1259,7 @@ specifier = ">=42,<51"
 
 [[dependency]]
 name = "aiortc"
-description = "WebRTC for Python, on asyncio. Console LinkB's streams from an Xbox or Xbox Cloud Gaming run on it: the connection, the H.264 video and Opus sound (decoded with PyAV, whose wheels include FFmpeg, which aiortc installs with it) and the data channels for the controller."
+description = "WebRTC for Python, on asyncio. Console LinkB's streams from an XBOX or XBOX Cloud Gaming run on it: the connection, the H.264 video and Opus sound (decoded with PyAV, whose wheels include FFmpeg, which aiortc installs with it) and the data channels for the controller."
 
 [[dependency.source]]
 owner = "clb"

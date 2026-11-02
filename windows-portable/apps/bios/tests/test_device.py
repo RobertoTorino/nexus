@@ -21,7 +21,7 @@ WIFI = ("EC87D643-EBA4-4BB5-A1E5-3F3E36B20DA9", "WifiSetupManageNetwork")
 
 def test_identity():
     values = {"BIOSVendor": "AMI", "BIOSVersion": "RC73XA.319", "BIOSReleaseDate": "09/23/2026",
-              "SystemProductName": "ROG Xbox Ally X RC73XA_RC73XA"}
+              "SystemProductName": "ROG XBOX Ally X RC73XA_RC73XA"}
     found, model = device.identity(lambda name: values.get(name, ""))
     assert (found.vendor, found.version, found.date, model) == ("AMI", "RC73XA.319", "09/23/2026", values[
         "SystemProductName"])

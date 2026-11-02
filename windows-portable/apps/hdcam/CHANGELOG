@@ -54,11 +54,11 @@ own program again with --bind, which binds only the boot loader), Load the firmw
 libusb), look again. It shows the camera's USB speed as its hub reports it, its driver and the name apps list it by,
 and names a port slower than USB 3 and a PS4 Camera on Sony's adapter, whose firmware it does not load. The Firmware
 card downloads the pinned firmware 21.01-03.20.00.04 (checked by size and SHA-256) or takes a file of yours from
-core's browser; the Bandwidth card picks full (the default: every mode streams on the ROG Xbox Ally X) or reduced.
+core's browser; the Bandwidth card picks full (the default: every mode streams on the ROG XBOX Ally X) or reduced.
 Once the camera is a webcam, the app sets its exposure
 to automatic through Windows' webcam driver and keeps the driver open while it runs: left to itself the camera keeps a
 very short exposure (a black picture at 1920 x 1080), and Windows switches an unused camera off, after which it wakes
-with that exposure again (owner's ROG Xbox Ally X, 01-11-2026); View asks for a second press while it keeps the
+with that exposure again (owner's ROG XBOX Ally X, 01-11-2026); View asks for a second press while it keeps the
 picture. The Picture card shows the camera's picture
 through Qt Multimedia: A starts and stops it, LB and RB choose the mode (each size at its fastest rate that gives a
 picture; the silent modes left out), and the pane says when the camera sends nothing. Written by tools/new_app.py

@@ -175,7 +175,7 @@ of the server, and git ignores it. The panel is never part of `mkdocs build` or 
 
 | Screen | Size in the browser | The screen |
 | --- | --- | --- |
-| ASUS ROG Xbox Ally X | 1280 × 720 | 7 inch, 1920 × 1080 at 150 % scaling |
+| ASUS ROG XBOX Ally X | 1280 × 720 | 7 inch, 1920 × 1080 at 150 % scaling |
 | Laptop | 1366 × 768 | 1366 × 768 |
 | Laptop | 1536 × 864 | 1920 × 1080 at 125 % scaling |
 | Laptop | 1440 × 900 | 16:10, 2880 × 1800 at 200 % scaling |

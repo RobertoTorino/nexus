@@ -118,10 +118,10 @@ Release 0.1.0.
 
 Changelog: 21-10-2026 13:23:31
 
-Added. Xenia Manager: Xbox 360 games on the BC-250 with Xenia. Xenia has no stable releases, so the app pins one Xenia
+Added. Xenia Manager: XBOX 360 games on the BC-250 with Xenia. Xenia has no stable releases, so the app pins one Xenia
 Canary build, e6cd2e4 (20-10-2026), the Linux AppImage of its GitHub release, checked against its SHA-256, and says
 when a build was published after it. The window says that Xenia's Linux build is experimental. It finds the games in
-the chosen folders (Xbox 360 disc images, told by the disc's mark where Xenia looks for it; .xex files with their title
+the chosen folders (XBOX 360 disc images, told by the disc's mark where Xenia looks for it; .xex files with their title
 ID, an unpacked disc's default.xex under its folder's name; .zar archives; Games on Demand and Arcade packages under
 the name in their header) and puts the ticked ones in Steam for Game Mode, "[X360] Title", the artwork drawn from the
 app's icon. The Game Mode shortcuts run ~/.local/bin/bc250-xenia-run, which starts Xenia full screen

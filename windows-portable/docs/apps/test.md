@@ -94,7 +94,7 @@ seconds, and ten more for each further connected adapter. **A Test again** measu
 | Power | Mains or battery, and the power plan |
 | Wi-Fi on mains, Wi-Fi on battery | The power plan's Wi-Fi setting: Maximum Performance to Maximum Power Saving |
 | Other traffic | What the device received in the two seconds before the download |
-| Also running | Delivery Optimization's downloads (Windows Update, the Microsoft Store and the Xbox app's games) and the programs that download on their own: Steam, the Xbox app, the Epic Games Launcher, Windows Update and others |
+| Also running | Delivery Optimization's downloads (Windows Update, the Microsoft Store and the XBOX app's games) and the programs that download on their own: Steam, the XBOX app, the Epic Games Launcher, Windows Update and others |
 | Download, wired; Download, Wi-Fi | The speed of a timed download over each connected adapter in turn: Windows Portable Test's newest release from GitHub, as the portal downloads it, for ten seconds at most each. Nothing is kept |
 
 A slow download with a good link (a high rate and signal) points past the device: the access point, the internet
@@ -114,8 +114,8 @@ During the test every button is the test's, B too: **hold B** for a second and a
 in the row at the bottom, to end it.
 On a keyboard, Escape ends it.
 
-The buttons on the card are those Windows reports for an Xbox controller: LB, View, Xbox, ☰ (Menu), RB, the d-pad,
-A, B, X, Y and the two stick presses, and on an ASUS device such as the ROG Xbox Ally X the **back buttons M1 and
+The buttons on the card are those Windows reports for an XBOX controller: LB, View, XBOX, ☰ (Menu), RB, the d-pad,
+A, B, X, Y and the two stick presses, and on an ASUS device such as the ROG XBOX Ally X the **back buttons M1 and
 M2** as one chip, **M1/M2**. They are Armoury Crate's own modifiers (held with A a screenshot, with Y a recording),
 never gamepad buttons, and Armoury Crate reports either of them the same way, so Windows cannot tell M1 from M2: the
 chip lights for both. To use them as two buttons, map them in Armoury Crate (Settings, Configure, M1 or M2: untick
@@ -127,7 +127,7 @@ The **Command Center** button comes through the same ASUS channel, and only when
 lights **Command** (it opens Command Center), a long press lights **Armoury** (it opens Armoury Crate). Each chip
 lights for a moment and then keeps its amber label. Like M1/M2, they show only on a device with ASUS's channel.
 
-The **Xbox** button lights **Xbox**. While Steam runs, it also opens Steam over the test: Steam's setting
+The **XBOX** button lights **XBOX**. While Steam runs, it also opens Steam over the test: Steam's setting
 **Guide Button Focuses Steam** (Steam's Settings, Controller) takes it. Turn that off to keep the test in front.
 
 ## Stick lights
@@ -135,7 +135,7 @@ The **Xbox** button lights **Xbox**. While Steam runs, it also opens Steam over 
 The stick lights are tested with the buttons: while the controller test runs, **A**, **B**, **X** and **Y** light
 both sticks in their color (green, red, blue and yellow), and a stick moved or pressed lights its own ring white with
 the other dark. The line under the count says what Windows reports, the controller and its lamps (four on the ROG
-Xbox Ally X, two around each stick), and what is lit now.
+XBOX Ally X, two around each stick), and what is lit now.
 
 The app sets the lights through Windows' Dynamic Lighting, and Windows lets it do so only while its window is in
 front; the end of the test gives them back to the app that sets them otherwise, such as Armoury Crate. When the line

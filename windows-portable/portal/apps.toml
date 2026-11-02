@@ -94,7 +94,7 @@ launch = [["Open", "%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-vit
 
 [apps.xenia]
 name = "Xenia Manager"
-summary = "Xenia, the Xbox 360 emulator: installed, its settings, your games found in your folders and put in Steam."
+summary = "Xenia, the XBOX 360 emulator: installed, its settings, your games found in your folders and put in Steam."
 tag = "wp-xenia-v4.2.0"
 sha256 = "37f051a954ad8283e1d9395fdca080cac5f704283f2f39354b6a16c1677e9d86"
 category = "gaming"

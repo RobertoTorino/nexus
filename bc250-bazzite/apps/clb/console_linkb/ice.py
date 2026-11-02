@@ -5,7 +5,7 @@
 """The ICE candidates of the stream, in the form the streaming service exchanges them.
 
 aiortc gathers the board's candidates before the offer and puts them in its SDP, so they are read from there. The
-service's candidates come back as "a=candidate:..." lines. An Xbox at home announces a Teredo address (2001::/32)
+service's candidates come back as "a=candidate:..." lines. An XBOX at home announces a Teredo address (2001::/32)
 among them; as in the reference, the IPv4 address and port inside it are added as two more candidates (the port the
 Teredo address names, and 9002), since that is where the console answers."""
 

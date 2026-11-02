@@ -7,7 +7,7 @@
 # Windows Portable Suite
 
 The portal of the **Windows Portable Suite**: it installs, updates, opens and removes the suite's apps on a Windows
-handheld (first the ASUS ROG Xbox Ally X), each from its own GitHub release, checked against the checksum the
+handheld (first the ASUS ROG XBOX Ally X), each from its own GitHub release, checked against the checksum the
 portal carries. Windows Portable Test is always installed with the portal and listed first.
 
 It opens with a short intro, about three seconds, with the suite's name and its sound; any button, key or tap

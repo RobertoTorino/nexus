@@ -199,7 +199,7 @@ class Device:
 
     @property
     def name(self) -> str:
-        """The device's name: the family Windows gives (ROG Xbox Ally X), else the maker and model."""
+        """The device's name: the family Windows gives (ROG XBOX Ally X), else the maker and model."""
         return self.family or " ".join(part for part in (self.maker, self.model) if part)
 
     def rows(self) -> list[tuple[str, str]]:

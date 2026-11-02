@@ -33,7 +33,7 @@ game, the manager does the rest), never while RPCS3 runs, since RPCS3 writes its
   default mapping for it (xinput_pad_handler::init_config) and the first XInput pad as RPCS3 names it ("XInput Pad
   #1", xinput_pad_handler: m_name_string + the number). In that mapping the PS Button is "Guide,Back&Start": the
   guide button, or View (Back) and Menu (Start) together, open RPCS3's home menu in the game, with Exit Game in it;
-  on the Ally the Xbox button is Windows' own, so View and Menu together are the way (pad_thread::open_home_menu is
+  on the Ally the XBOX button is Windows' own, so View and Menu together are the way (pad_thread::open_home_menu is
   the only pad way out: RPCS3 has no chord that quits a game outright). The file starts with a comment of the app's,
   which RPCS3's own Pads settings drop when they save: a file RPCS3 wrote is never touched.
 * How the games fill the screen, in config\\config.yml (the Settings pane's Screen): the PS3's picture for a wide

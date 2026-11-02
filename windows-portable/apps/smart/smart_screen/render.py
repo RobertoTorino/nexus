@@ -44,7 +44,7 @@ TILE_HINTS = {
 
 
 def default_title(family: str | None = None) -> str:
-    """The handheld's family as its firmware names it ("ROG Xbox Ally X"), else TITLE."""
+    """The handheld's family as its firmware names it ("ROG XBOX Ally X"), else TITLE."""
     if family is None and sys.platform == "win32":
         import winreg
         try:

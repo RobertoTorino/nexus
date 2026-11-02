@@ -4,12 +4,12 @@ time the camera is plugged in, and so does this app, on A. The protocol is the o
 Move API uses, as the BC250 Bazzite Suite's USB HD Cam sends it: the file in 512-byte vendor control transfers, each
 at its offset (wValue: the low 16 bits; wIndex: 0x14 plus the rest), then one byte, 0x5b, at 0x2200/0x8018, which
 starts the firmware. The boot loader then leaves the bus and the camera comes back under its own ID within a second
-(the owner's ROG Xbox Ally X, 31-10-2026: 0.5 s).
+(the owner's ROG XBOX Ally X, 31-10-2026: 0.5 s).
 
 The firmware's own USB 3 descriptor asks for the largest isochronous video endpoint there is: 1024-byte packets,
 bursts of 16, 3 bursts every 125 us (49152 bytes). Some USB controllers cannot schedule that (the BC-250's); then the
 largest modes give no picture. Reduced bandwidth sends the firmware with 2 bursts instead (32768 bytes): the copy
-that goes to the camera changes, the file does not. On the owner's ROG Xbox Ally X full bandwidth streams every mode
+that goes to the camera changes, the file does not. On the owner's ROG XBOX Ally X full bandwidth streams every mode
 at its full rate, side by side up to 5148x1088 at 30 fps; reduced every mode but the three largest side-by-side ones
 (31-10-2026). Full is the default."""
 

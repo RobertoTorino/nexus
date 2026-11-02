@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The main window: the Microsoft account as the first step (sign in with a code, sign out), then the account's
-Xbox consoles and the games of Xbox Cloud Gaming, each list with its buttons. Every call to Microsoft runs off the
+XBOX consoles and the games of XBOX Cloud Gaming, each list with its buttons. Every call to Microsoft runs off the
 GUI thread; the stream opens in a window of its own. The look is the app's own blue (style.py)."""
 
 from __future__ import annotations
@@ -66,7 +66,7 @@ class MainWindow(QMainWindow):
         self.pill = StatusText()
         header.add_state(self.pill)
         self.refresh_button = QPushButton("Refresh")
-        self.refresh_button.setToolTip("Ask Xbox Live again for the consoles and the cloud games")
+        self.refresh_button.setToolTip("Ask XBOX Live again for the consoles and the cloud games")
         self.refresh_button.clicked.connect(self.refresh)
         header.add_action(self.refresh_button)
         self.account_box = MetricBox("Account", style.BLUE)
@@ -75,7 +75,7 @@ class MainWindow(QMainWindow):
         for box in (self.account_box, self.consoles_box, self.cloud_box):
             header.add_second(box)
         intro = hint_label(
-            "Xbox games on the BC-250: stream your own Xbox (Remote Play) or a game from Xbox Cloud Gaming. Sign "
+            "XBOX games on the BC-250: stream your own XBOX (Remote Play) or a game from XBOX Cloud Gaming. Sign "
             "in with your Microsoft account; the app never sees your password. " + style.link(self, MANUAL_URL,
                                                                                             "Manual"))
 
@@ -125,7 +125,7 @@ class MainWindow(QMainWindow):
         self.title_table = self._table(["Game"])
         self.title_table.doubleClicked.connect(lambda _index: self.on_stream_title())
         self.title_table.itemSelectionChanged.connect(self._update_buttons)
-        self.stream_title_button = style.primary_button("Stream", "Play the game from Xbox Cloud Gaming")
+        self.stream_title_button = style.primary_button("Stream", "Play the game from XBOX Cloud Gaming")
         self.stream_title_button.clicked.connect(self.on_stream_title)
         cloud_tab = QWidget()
         lay = QVBoxLayout(cloud_tab)
@@ -234,7 +234,7 @@ class MainWindow(QMainWindow):
     def _fill_consoles(self) -> None:
         self.console_table.setRowCount(len(self.consoles))
         for row, console in enumerate(self.consoles):
-            remote = "On" if console.streaming_enabled else "Off: switch it on on the Xbox"
+            remote = "On" if console.streaming_enabled else "Off: switch it on on the XBOX"
             for column, text in enumerate((console.name, console.type_name, console.power_name, remote)):
                 self.console_table.setItem(row, column, QTableWidgetItem(text))
 
@@ -329,7 +329,7 @@ class MainWindow(QMainWindow):
             except (AuthError, HttpError) as error:
                 cloud_note = f"No cloud games: {error}"
             return "refresh", True, (web.gamertag, consoles, [t for t in titles if t.entitled], cloud_note, notes)
-        self._start("Asking Xbox Live for the consoles and the cloud games…", job)
+        self._start("Asking XBOX Live for the consoles and the cloud games…", job)
 
     def on_sign_in(self) -> None:
         if self.code is not None:
@@ -403,7 +403,7 @@ class MainWindow(QMainWindow):
         if console is None or self.stream_view is not None:
             return
         if not console.streaming_enabled:
-            self.say(f"Remote play is off on {console.name}: switch it on in the Xbox's Settings, Devices & "
+            self.say(f"Remote play is off on {console.name}: switch it on in the XBOX's Settings, Devices & "
                      "connections, Remote features.", error=True)
             return
         self.open_stream("home", console.id, console.name)

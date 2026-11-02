@@ -89,7 +89,7 @@ def test_screens_shows_pc_laptop_and_handheld_sizes(tmp_path):
     html = body.decode("utf-8")
     assert status == "200 OK" and "<iframe" not in html                    # the frames are made by its script
     sizes = set(re.findall(r"w: (\d+), h: (\d+)", html))
-    assert ("1280", "720") in sizes and "ASUS ROG Xbox Ally X" in html      # 1920 x 1080 at 150 %
+    assert ("1280", "720") in sizes and "ASUS ROG XBOX Ally X" in html      # 1920 x 1080 at 150 %
     assert all(int(w) >= 1280 for w, _ in sizes)                            # no phone sizes
     assert not (tmp_path / ".design-mock.json").exists()
 

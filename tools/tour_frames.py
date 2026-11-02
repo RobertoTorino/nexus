@@ -61,6 +61,19 @@ def size() -> tuple[int, int]:
     return round(WIDTH * ZOOM), round(HEIGHT * ZOOM)
 
 
+def platform_path(path: Path) -> str:
+    """*path* as QT_QPA_PLATFORM's options can take it: Qt splits them at every ':', so a Windows drive letter
+    (C:\\...) left only "C" of it. Without the drive there, from the working folder's drive; on another drive the
+    working folder moves to the file's folder (the tours resolve their own paths before)."""
+    drive, rest = os.path.splitdrive(str(path))
+    if not drive:
+        return str(path)
+    if drive.lower() != os.path.splitdrive(os.getcwd())[0].lower():
+        os.chdir(path.parent)
+        return path.name
+    return rest
+
+
 def prepare_home(home: Path) -> None:
     for var, sub in (("HOME", ""), ("XDG_DATA_HOME", ".local/share"), ("XDG_CONFIG_HOME", ".config"),
                      ("XDG_STATE_HOME", ".local/state"), ("XDG_CACHE_HOME", ".cache")):
@@ -72,7 +85,7 @@ def prepare_home(home: Path) -> None:
     screen = {"screens": [{"name": "tour", "x": 0, "y": 0, "width": width, "height": height,
                            "logicalDpi": 96, "logicalBaseDpi": 96, "dpr": 1}]}
     (home / "screen.json").write_text(json.dumps(screen), encoding="utf-8")
-    os.environ["QT_QPA_PLATFORM"] = f"offscreen:configfile={home / 'screen.json'}"
+    os.environ["QT_QPA_PLATFORM"] = f"offscreen:configfile={platform_path(home / 'screen.json')}"
     os.environ["QT_SCALE_FACTOR"] = str(SCALE * ZOOM)
     os.environ.pop("QT_SCREEN_SCALE_FACTORS", None)
     sys.path[:0] = [str(ROOT / "core")]

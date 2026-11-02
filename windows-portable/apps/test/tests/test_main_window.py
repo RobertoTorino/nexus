@@ -120,7 +120,7 @@ def test_the_device_is_read_and_shown(make, qapp):
     assert read(window, qapp)
     assert window.device_pane.action == "Read again"
     shown = values(window)
-    assert shown["Device"] == "ROG Xbox Ally X" and shown["Memory"] == "24 GB, 15.6 GB usable"
+    assert shown["Device"] == "ROG XBOX Ally X" and shown["Memory"] == "24 GB, 15.6 GB usable"
     assert "Screen" in shown and "% scaling, " in shown["Screen"]
     assert list(shown).index("Screen") == list(shown).index("Memory") - 1
     assert re.fullmatch(r"\w+day \d\d/\d\d/\d{4}  \|  \d\d:\d\d", window.header.status.text())
@@ -144,7 +144,7 @@ def test_x_saves_the_report(make, qapp, tmp_path, monkeypatch):
     monkeypatch.setattr(window, "isActiveWindow", lambda: True)
     window.on_action("x")
     saved = list((tmp_path / "reports").glob("device-*.txt"))
-    assert len(saved) == 1 and "Device: ROG Xbox Ally X" in saved[0].read_text(encoding="utf-8")
+    assert len(saved) == 1 and "Device: ROG XBOX Ally X" in saved[0].read_text(encoding="utf-8")
     assert private(saved[0]) in window.device_pane.status.text() and str(Path.home()) not in window.device_pane.status.text()
 
 
@@ -217,7 +217,7 @@ def test_one_read_fills_the_device_hardware_and_connected_cards(make, qapp, monk
     assert all(p.action == "Read again" for p in window.info_panes)
     monkeypatch.setattr(window, "isActiveWindow", lambda: True)
     saved = window.save_report().read_text(encoding="utf-8")
-    assert "\nDevice\nDevice: ROG Xbox Ally X\n" in saved and "\nHardware\nPanel: about 7 inches" in saved
+    assert "\nDevice\nDevice: ROG XBOX Ally X\n" in saved and "\nHardware\nPanel: about 7 inches" in saved
     assert "\nConnected\nDock or hub: Realtek hub chip (USB 3, USB 2)\n" in saved
     assert private(window.reports) in window.connected_pane.status.text()      # every card says where it went
 

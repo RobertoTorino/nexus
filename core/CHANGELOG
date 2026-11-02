@@ -144,8 +144,8 @@ Version 2.1.0.
 
 Changelog: 30-10-2026 22:46:16
 
-Added. xbox.remove(): a program taken out of the Xbox app's library again, every entry of it, the others kept, the
-file backed up and written with the Xbox app closed as add() does (owner, 30-10-2026: the portal's Xbox menu row
+Added. xbox.remove(): a program taken out of the XBOX app's library again, every entry of it, the others kept, the
+file backed up and written with the XBOX app closed as add() does (owner, 30-10-2026: the portal's XBOX menu row
 removes the suite too); False, nothing written, when it is not there. add() and remove() write through one _write().
 
 Changelog: 30-10-2026 21:48:01
@@ -176,18 +176,18 @@ Version 1.1.0.
 
 Changelog: 30-10-2026 19:09:13
 
-Fixed. xbox.py reads and writes the Xbox app's paths as Windows paths on any system (ntpath, PureWindowsPath): on Linux a
+Fixed. xbox.py reads and writes the XBOX app's paths as Windows paths on any system (ntpath, PureWindowsPath): on Linux a
 Windows path was one name without folders, so an app added was never found as listed (CI Nexus, pytest (core), on the
 push of 30-10-2026). On Windows as before.
 
 Changelog: 30-10-2026 18:17:38
 
-Added. xbox.py, the Xbox app's library on Windows (owner, 30-10-2026: the Windows Portable Suite in the Xbox menu):
-the apps added there with My Library's + are in the Xbox app's own JSON file,
+Added. xbox.py, the XBOX app's library on Windows (owner, 30-10-2026: the Windows Portable Suite in the XBOX menu):
+the apps added there with My Library's + are in the XBOX app's own JSON file,
 LocalState\ThirdPartyLibraries\CustomLibraryManagement\CustomLibraryManagement.manifest in its package folder (as
-the Xbox app 2611.1001.9.0 wrote it on the owner's Ally; the CustomLibraryManagement\ beside ThirdPartyLibraries\ stays
-empty). add() writes an entry as the Xbox app writes one (gameCache, {guid}: id, title, installLocation,
-executableName, imagePath, the dates), never twice, the file backed up (.bak) first and written with the Xbox app
+the XBOX app 2611.1001.9.0 wrote it on the owner's Ally; the CustomLibraryManagement\ beside ThirdPartyLibraries\ stays
+empty). add() writes an entry as the XBOX app writes one (gameCache, {guid}: id, title, installLocation,
+executableName, imagePath, the dates), never twice, the file backed up (.bak) first and written with the XBOX app
 closed (with_xbox_closed(), started again after); a file in another shape is never written (FormatError).
 
 Changelog: 30-10-2026 17:55:08
@@ -208,7 +208,7 @@ Changelog: 30-10-2026 17:18:10
 Fixed. A program an app starts on Windows never gets the controller reader's SDL variables (platform.outside_bundle(),
 APP_VARIABLES: SDL_VIDEODRIVER=dummy, SDL_AUDIODRIVER, SDL_JOYSTICK_ALLOW_BACKGROUND_EVENTS, PYGAME_HIDE_SUPPORT_PROMPT),
 from a release and from the checkout alike. Steam draws with SDL3: started with SDL_VIDEODRIVER=dummy it made its login
-window without a window and never signed in, in Desktop and in Xbox mode (the owner's Ally, 30-10-2026: started so,
+window without a window and never signed in, in Desktop and in XBOX mode (the owner's Ally, 30-10-2026: started so,
 Logged Off; without them, signed in within 15 s). That, not the lower-case name of Steam's program (windows_steam(),
 1.0.0), kept the game managers' Steam from signing in: every start that failed had the variables. An emulator that
 draws with SDL, started without Steam, would have shown no game either.

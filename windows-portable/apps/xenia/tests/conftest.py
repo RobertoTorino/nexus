@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Shared fixtures: an offscreen QApplication with bc250_core from the checkout, and the settings and the suite's folders
-in a temp folder (never Windows' registry); and, as the BC250 suite's Xenia Manager's tests make them, Xbox 360 games
+in a temp folder (never Windows' registry); and, as the BC250 suite's Xenia Manager's tests make them, XBOX 360 games
 made here: a disc image with its game partition's magic (sparse, at the partition's place), an XEX with its execution
 info, and an STFS package with its content type, name and title ID."""
 
@@ -22,7 +22,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 
 def make_iso(path: Path, partition: int = 0) -> Path:
-    """An Xbox 360 disc image: "MICROSOFT*XBOX*MEDIA" in sector 32 of a game partition at *partition* (a sparse
+    """An XBOX 360 disc image: "MICROSOFT*XBOX*MEDIA" in sector 32 of a game partition at *partition* (a sparse
     file where the file system makes one)."""
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("wb") as file:

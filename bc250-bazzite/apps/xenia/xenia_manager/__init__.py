@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Xbox 360 games on the BC-250 with Xenia: installs a tested Xenia Canary build, finds the games in the chosen
+"""XBOX 360 games on the BC-250 with Xenia: installs a tested Xenia Canary build, finds the games in the chosen
 folders and adds them to Steam for Game Mode."""
 
 APP_NAME = "Xenia Manager"

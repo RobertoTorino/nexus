@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Your games: the app's own folders (owner, 30-10-2026: fixed folders, no folder selecting; the games are put there,
-nothing is browsed to; the BC250 suite's Xenia Manager keeps chosen folders): Games\\Xbox360 in your user folder,
-made when it is missing, and Games\\Xbox360 on a removable drive (an SD card, a USB stick) that has one (fixed).
+nothing is browsed to; the BC250 suite's Xenia Manager keeps chosen folders): Games\\XBOX360 in your user folder,
+made when it is missing, and Games\\XBOX360 on a removable drive (an SD card, a USB stick) that has one (fixed).
 Xenia needs no system files, so there is no folder for them. Then the games found in them (games.scan), which have a
 Steam shortcut of this app, the plan Update Steam carries out (the marked games in Steam, the others out, and the
 shortcuts of games no longer found out too), and what Remove game offers to delete (removal, tidy; core's keep.py
@@ -24,7 +24,7 @@ from bc250_core.platform import suite_config, suite_data
 from . import APP_ID, SUITE, shortcuts
 from .games import PACKAGE_FOLDERS, Game
 
-GAMES_HOME = Path("Games") / "Xbox360"  # the app's own game folder, in the user's folder and on a removable drive
+GAMES_HOME = Path("Games") / "XBOX360"  # the app's own game folder, in the user's folder and on a removable drive
 DRIVE_REMOVABLE = 2                     # GetDriveTypeW
 
 
@@ -51,8 +51,8 @@ def removable_drives() -> list[Path]:
 
 
 def fixed(home: Path | None = None, drives: Callable[[], list[Path]] = removable_drives) -> list[Path]:
-    """The app's own game folders (owner, 30-10-2026: drop the games there, no browsing): Games\\Xbox360 in the
-    user's folder, made when it is missing, then Games\\Xbox360 on each removable drive that has one."""
+    """The app's own game folders (owner, 30-10-2026: drop the games there, no browsing): Games\\XBOX360 in the
+    user's folder, made when it is missing, then Games\\XBOX360 on each removable drive that has one."""
     own = (home or Path.home()) / GAMES_HOME
     try:
         own.mkdir(parents=True, exist_ok=True)

@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The controller through pygame-ce, with a stand-in for pygame: SDL's buttons to the Xbox pad's, the sticks and
+"""The controller through pygame-ce, with a stand-in for pygame: SDL's buttons to the XBOX pad's, the sticks and
 triggers, a pad connected later or taken out, and rumble."""
 
 from __future__ import annotations

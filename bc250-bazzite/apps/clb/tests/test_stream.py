@@ -64,7 +64,7 @@ class FakeAccount:
 
     def cloud_token(self):
         if self.fail:
-            raise AuthError("Xbox Cloud Gaming is not open to this account")
+            raise AuthError("XBOX Cloud Gaming is not open to this account")
         return "CLOUD"
 
     def transfer_token(self):
@@ -86,7 +86,7 @@ def test_state_texts():
         "In the queue for a cloud server: about 2 minutes…"
     assert state_text(State("WaitingForResources", wait_s=30)) == "In the queue for a cloud server: about 1 minute…"
     assert state_text(State("WaitingForResources")) == "In the queue for a cloud server…"
-    assert state_text(State("Provisioning")) == "Getting the Xbox ready…"
+    assert state_text(State("Provisioning")) == "Getting the XBOX ready…"
     assert state_text(State("Odd")) == "Odd…"
 
 
@@ -148,7 +148,7 @@ def test_a_stream_that_cannot_start_says_why(qapp):
     stream.ended.connect(ended.append)
     stream.start()
     assert process(qapp, lambda: ended)
-    assert ended == ["Xbox Cloud Gaming is not open to this account"]
+    assert ended == ["XBOX Cloud Gaming is not open to this account"]
     assert not FakeSession.instances
 
 

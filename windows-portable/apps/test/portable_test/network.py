@@ -33,7 +33,7 @@ from bc250_core.updates import latest_release, repo_slug
 from .device import names, rate, run_powershell
 
 # What else is downloading: the bytes every connected adapter received in SAMPLE seconds, Delivery Optimization's
-# downloads (Windows Update, the Microsoft Store and the Xbox app's games) and the programs that download on their own;
+# downloads (Windows Update, the Microsoft Store and the XBOX app's games) and the programs that download on their own;
 # and the adapters that reach the internet (a default gateway), Windows' first choice first
 QUERY = r"""
 $ErrorActionPreference = 'SilentlyContinue'
@@ -59,7 +59,7 @@ TAG_PREFIX = "wp-test-v"                # this app's releases: about 50 MB, from
 USER_AGENT = "windows-portable-test"
 MB = 1_000_000                          # MB as the portal shows a download
 # The programs that download on their own, by their process name
-DOWNLOADERS = {"steam": "Steam", "XboxPcApp": "Xbox app", "EpicGamesLauncher": "Epic Games Launcher",
+DOWNLOADERS = {"steam": "Steam", "XBOXPcApp": "XBOX app", "EpicGamesLauncher": "Epic Games Launcher",
                "GalaxyClient": "GOG Galaxy", "Battle.net": "Battle.net", "EADesktop": "EA app",
                "upc": "Ubisoft Connect", "MoUsoCoreWorker": "Windows Update"}
 # DOT11_PHY_TYPE: the Wi-Fi standard of the link

@@ -58,8 +58,8 @@ class FakeHelper:
 
 
 def test_the_ally_x_is_told_by_its_product_name():
-    assert om.is_ally_x(lambda: "ROG Xbox Ally X RC73XA_RC73XA")
-    assert not om.is_ally_x(lambda: "ROG Xbox Ally RC73YA_RC73YA")     # the Ally without the X: not measured
+    assert om.is_ally_x(lambda: "ROG XBOX Ally X RC73XA_RC73XA")
+    assert not om.is_ally_x(lambda: "ROG XBOX Ally RC73YA_RC73YA")     # the Ally without the X: not measured
     assert not om.is_ally_x(lambda: "")
 
 
@@ -100,7 +100,7 @@ def test_the_watts_as_a_row_shows_them():
 
 
 def test_only_the_ally_x_gets_the_power_api():
-    assert om.power_api(lambda: "ROG Xbox Ally RC73YA_RC73YA") is None
+    assert om.power_api(lambda: "ROG XBOX Ally RC73YA_RC73YA") is None
 
 
 def test_a_guid_goes_both_ways():

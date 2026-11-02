@@ -21,7 +21,7 @@ class NoPad:
 def test_the_gone_screen_says_which_game_and_closes_on_a_b_or_a_tap(qapp, monkeypatch):
     portable.pin_scale((1280, 720))
     monkeypatch.setenv("USERPROFILE", str(Path.home()))
-    game = Path.home() / "Games" / "Xbox360" / "Halo 3 [NTSC].iso"
+    game = Path.home() / "Games" / "XBOX360" / "Halo 3 [NTSC].iso"
     for close in ("accept", "back", "tap"):
         window = gone.GoneWindow("Xenia Manager", "4.1.0", game, Gamepad(source_factory=NoPad))
         window.resize(1280, 720)

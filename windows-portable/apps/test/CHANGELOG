@@ -51,7 +51,7 @@ Added. The controller test has the Command Center button (owner, 31-10-2026: it 
 for a short press and Armoury for a long one (Armoury Crate), read from the ASUS channel that reports M1 and M2,
 where the Ally X sends 5A A6 and 5A 38 when the button is let go (recorded on the owner's Ally X, 31-10-2026). Each
 chip lights for a moment, then keeps its amber label; like M1/M2 they show only with the ASUS channel. The pane's
-information, now titled M1, M2 and Command Center, also says that the Xbox button opens Steam while Steam runs
+information, now titled M1, M2 and Command Center, also says that the XBOX button opens Steam while Steam runs
 (its setting Guide Button Focuses Steam).
 
 Changelog: 31-10-2026 19:52:26
@@ -247,7 +247,7 @@ Added. A Network card (owner, 28-10-2026: the portal's update once came in at 0.
 hour later). A on it measures the network in about fifteen seconds: the Wi-Fi link (band, channel, standard, signal
 in percent and dBm, the rate down and up), mains or battery with the power plan, the plan's Wi-Fi setting on mains
 and on battery, what the handheld received in the two seconds before, Delivery Optimization's downloads and the
-programs that download on their own (Steam, the Xbox app and others), and a timed download of the app's newest
+programs that download on their own (Steam, the XBOX app and others), and a timed download of the app's newest
 release from GitHub, ten seconds at most, kept nowhere. The link and the power setting come from Windows' own APIs
 (wlanapi, powrprof), so they read the same in every Windows language; the network's name and the access point's
 address are never read out. X saves it in the report as its Network section, after the device's.

@@ -10,7 +10,7 @@ with `../`.
 ## What this is
 
 The **Windows Portable Suite** (exactly that name): tools for Windows 10/11 on portable gaming devices, any Windows
-handheld, first the owner's ASUS ROG Xbox Ally X. Its `SYSTEM` is `windows` and its `TAG_PREFIX` `wp-` (owner,
+handheld, first the owner's ASUS ROG XBOX Ally X. Its `SYSTEM` is `windows` and its `TAG_PREFIX` `wp-` (owner,
 26-10-2026): tags are `wp-<app>-v<x.y.z>` and `wp-portal-v<x.y.z>`. A **portal** installs and starts the apps listed
 in its manifest. **test** (Windows Portable Test) is always installed and always listed first; every other listed
 app is an optional tile. The wiki is at robertotorino.github.io/nexus/windows-portable-suite/.
@@ -112,7 +112,7 @@ app is an optional tile. The wiki is at robertotorino.github.io/nexus/windows-po
   owner's to approve, one use case at a time (owner, 01-11-2026: no rule against it, each case assessed on its own):
   ask before building one, and keep it to one Windows prompt for that action only, never the whole app running as
   administrator. Approved so far. The first (owner, 31-10-2026): the
-  portal's Operating Mode helper on the ROG Xbox Ally X, a scheduled task that writes the watt limits as SYSTEM,
+  portal's Operating Mode helper on the ROG XBOX Ally X, a scheduled task that writes the watt limits as SYSTEM,
   installed with one administrator prompt, its script in `C:\Program Files\windows-portable-suite\` so the user
   cannot change what it runs, and its request (one letter the user may write), result and log in
   `C:\ProgramData\windows-portable-suite\`. The second (owner, 31-10-2026): USB HD Cam's Allow access, which binds
@@ -130,7 +130,7 @@ app is an optional tile. The wiki is at robertotorino.github.io/nexus/windows-po
   `keep.py`: a row each with its size, every row marked Delete at first, A turns one to Keep and back, X deletes the
   rows still marked Delete, B deletes nothing). The game managers use it for Remove game, for the packages a clean
   install leaves, and for PCSX2's Remove BIOS.
-- **Unsigned for now** (code signing and an MSIX for Xbox mode's home app are on hold, MIGRATION.md).
+- **Unsigned for now** (code signing and an MSIX for XBOX mode's home app are on hold, MIGRATION.md).
 
 ## How an app is built
 

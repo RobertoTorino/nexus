@@ -202,21 +202,21 @@ Check 'exit 0, installed' { $rc -eq 0 -and (Test-Path (Join-Path $A $Exe)) }
 Check 'the zip, its SHA256SUMS and the unpacked folder removed' { -not (Test-Path (Join-Path $Dl "$Tag.zip")) -and -not (Test-Path (Join-Path $Dl 'SHA256SUMS (1)')) -and -not (Test-Path (Join-Path $Dl $Tag)) }
 Check 'another release''s SHA256SUMS kept' { Test-Path (Join-Path $Dl 'SHA256SUMS') }
 
-Write-Host '== 7. the Xbox menu: asked on a first install only, --xbox-menu and --no-xbox-menu without the question'
+Write-Host '== 7. the XBOX menu: asked on a first install only, --xbox-menu and --no-xbox-menu without the question'
 $rc = Run 'log7' @()
-Check 'no Xbox app: not a word of it' { $rc -eq 0 -and (Log 'log7') -notmatch 'Xbox menu' }
+Check 'no XBOX app: not a word of it' { $rc -eq 0 -and (Log 'log7') -notmatch 'XBOX menu' }
 New-Item -ItemType Directory -Force -Path (Join-Path $env:LOCALAPPDATA 'Packages\Microsoft.GamingApp_8wekyb3d8bbwe') | Out-Null
 $env:WPS_XBOX_MENU = 'y'
 $rc = Run 'log7b' @()
-Check 'an update is not asked' { $rc -eq 0 -and (Log 'log7b') -notmatch 'Xbox menu' }
+Check 'an update is not asked' { $rc -eq 0 -and (Log 'log7b') -notmatch 'XBOX menu' }
 $rc = Run 'log7c' @('--xbox-menu')
-Check '--xbox-menu adds it; a portal that cannot do it does not fail the install' { $rc -eq 0 -and (Log 'log7c') -match 'Adding Windows Portable Suite to the Xbox menu' -and (Log 'log7c') -match '(is in|Not added to) the Xbox menu' }
+Check '--xbox-menu adds it; a portal that cannot do it does not fail the install' { $rc -eq 0 -and (Log 'log7c') -match 'Adding Windows Portable Suite to the XBOX menu' -and (Log 'log7c') -match '(is in|Not added to) the XBOX menu' }
 Remove-Item -LiteralPath (Join-Path $A $Exe) -Force
 $env:WPS_XBOX_MENU = 'n'
 $rc = Run 'log7d' @()
-Check 'a first install asked, a no kept' { $rc -eq 0 -and (Log 'log7d') -match 'Not added to the Xbox menu \(the Settings page' }
+Check 'a first install asked, a no kept' { $rc -eq 0 -and (Log 'log7d') -match 'Not added to the XBOX menu \(the Settings page' }
 $rc = Run 'log7e' @('--no-xbox-menu')
-Check '--no-xbox-menu: not asked' { $rc -eq 0 -and (Log 'log7e') -notmatch 'Xbox menu' }
+Check '--no-xbox-menu: not asked' { $rc -eq 0 -and (Log 'log7e') -notmatch 'XBOX menu' }
 $env:WPS_XBOX_MENU = ''
 
 if ($script:fail -eq 0) {

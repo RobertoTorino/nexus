@@ -6,19 +6,19 @@ from __future__ import annotations
 from conftest import FakeTransport
 
 from console_linkb import xbox
-from console_linkb.auth import Region, StreamToken, XboxToken
+from console_linkb.auth import Region, StreamToken, XBOXToken
 from console_linkb.net import Client
 
-WEB = XboxToken("XSTS", "1234567890", 0, "Player One")
+WEB = XBOXToken("XSTS", "1234567890", 0, "Player One")
 CLOUD = StreamToken("xgpuweb", "CLOUD", "NL", [Region("WestEurope", "https://weu.core.gssv-play-prod.xboxlive.com",
                                                      True)], 0)
 DEVICES = "https://xccs.xboxlive.com/lists/devices"
 CONSOLES = {"status": {"errorCode": "OK"}, "agentUserId": None, "result": [
-    {"id": "F4001234ABCD5678", "name": "Living room", "locale": "en-US", "region": "", "consoleType": "XboxSeriesX",
+    {"id": "F4001234ABCD5678", "name": "Living room", "locale": "en-US", "region": "", "consoleType": "XBOXSeriesX",
      "powerState": "ConnectedStandby", "digitalAssistantRemoteControlEnabled": False,
      "remoteManagementEnabled": True, "consoleStreamingEnabled": True, "wirelessWarning": False,
      "outOfHomeWarning": False, "storageDevices": []},
-    {"id": "FD009876DCBA4321", "name": "", "consoleType": "XboxOne", "powerState": "Off",
+    {"id": "FD009876DCBA4321", "name": "", "consoleType": "XBOXOne", "powerState": "Off",
      "remoteManagementEnabled": False, "consoleStreamingEnabled": False},
     {"name": "no id, left out"}]}
 
@@ -27,7 +27,7 @@ def test_consoles_are_read_from_xbox_live():
     transport = FakeTransport({("GET", DEVICES): (200, CONSOLES)})
     found = xbox.consoles(Client(transport), WEB)
     assert [(c.id, c.name, c.type_name, c.power_name) for c in found] == [
-        ("F4001234ABCD5678", "Living room", "Xbox Series X", "Sleep"), ("FD009876DCBA4321", "Xbox", "Xbox One", "Off")]
+        ("F4001234ABCD5678", "Living room", "XBOX Series X", "Sleep"), ("FD009876DCBA4321", "XBOX", "XBOX One", "Off")]
     assert found[0].streaming_enabled and found[0].can_wake
     assert not found[1].streaming_enabled and not found[1].can_wake
     headers = transport.headers("GET", DEVICES)[0]
@@ -36,16 +36,16 @@ def test_consoles_are_read_from_xbox_live():
 
 
 def test_a_console_that_is_on_needs_no_wake():
-    on = xbox.Console("F1", "X", "XboxSeriesS", "On", True, True)
-    assert not on.can_wake and on.type_name == "Xbox Series S" and on.power_name == "On"
+    on = xbox.Console("F1", "X", "XBOXSeriesS", "On", True, True)
+    assert not on.can_wake and on.type_name == "XBOX Series S" and on.power_name == "On"
 
 
 def test_wake_sends_the_power_command():
     transport = FakeTransport({("POST", "https://xccs.xboxlive.com/commands"): (200, {"result": None})})
     xbox.wake(Client(transport), WEB, "F4001234ABCD5678")
     sent = transport.sent("POST", "https://xccs.xboxlive.com/commands")[0]
-    assert (sent["type"], sent["command"], sent["linkedXboxId"]) == ("Power", "WakeUp", "F4001234ABCD5678")
-    assert sent["destination"] == "Xbox" and sent["sessionId"]
+    assert (sent["type"], sent["command"], sent["linkedXBOXId"]) == ("Power", "WakeUp", "F4001234ABCD5678")
+    assert sent["destination"] == "XBOX" and sent["sessionId"]
 
 
 def test_cloud_titles_and_their_names_in_batches():

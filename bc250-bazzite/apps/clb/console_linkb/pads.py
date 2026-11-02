@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The controller for the stream, read with pygame-ce (SDL's game controller layer, which names every pad's
-buttons the same way, as the portal reads them): the first controller connected is the Xbox's pad. SDL's names
-are the Xbox pad's own: back is View, start is Menu, guide the Xbox button. The rumble the stream sends goes to
+buttons the same way, as the portal reads them): the first controller connected is the XBOX's pad. SDL's names
+are the XBOX pad's own: back is View, start is Menu, guide the XBOX button. The rumble the stream sends goes to
 its motors (the strong, low-frequency one left, the weak one right); a pad without motors ignores it."""
 
 from __future__ import annotations

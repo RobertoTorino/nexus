@@ -1,3 +1,7 @@
+Changelog: 02-11-2026 14:00:16
+
+Release 7.5.0.
+
 Changelog: 02-11-2026 12:32:45
 
 Release 7.4.0. Pins wp-test-v4.9.0.
@@ -167,7 +171,7 @@ test wanted LF, which the scripts had only in the working tree they were written
 
 Changelog: 31-10-2026 12:59:38
 
-Added. The Operating Mode helper on the ROG Xbox Ally X (owner, 31-10-2026): the Operating Mode page's Watt limits
+Added. The Operating Mode helper on the ROG XBOX Ally X (owner, 31-10-2026): the Operating Mode page's Watt limits
 row installs it with one administrator prompt (helper/install-helper.ps1) and removes it again; install.ps1
 --uninstall removes it with its own remover. It is the scheduled task \Windows Portable Suite\Operating Mode, which
 runs helper/operating-mode.ps1 from C:\Program Files\windows-portable-suite\ as SYSTEM, when the portal starts it
@@ -183,7 +187,7 @@ answer (operating-mode-result): the watts written, or why not.
 
 Changelog: 31-10-2026 12:49:57
 
-Added. On the ROG Xbox Ally X the Settings page has an Operating mode row with the active mode, and A on it opens
+Added. On the ROG XBOX Ally X the Settings page has an Operating mode row with the active mode, and A on it opens
 the Operating Mode page (owner, 31-10-2026): Silent, Performance, Turbo and Windows, each with its watt limits for
 the power source the device is on now (the owner's measurements), the active one marked and focused. A sets the
 mode's power plan and Windows' power mode as the user (operating_mode.apply); the header's letter follows, B goes
@@ -192,7 +196,7 @@ the helper.
 
 Changelog: 31-10-2026 12:49:57
 
-Added. On the ROG Xbox Ally X the header's second line shows the operating mode's letter just before the battery:
+Added. On the ROG XBOX Ally X the header's second line shows the operating mode's letter just before the battery:
 S Silent, P Performance, T Turbo or W Windows (owner, 31-10-2026), read every two seconds from Windows' power plan
 and power mode, which Armoury Crate's modes set (operating_mode.py, Windows' power API). The first part of the
 Operating Mode; the page that sets a mode, and the helper that writes its watts, follow.
@@ -207,8 +211,8 @@ Release 6.0.0. Pins wp-test-v4.1.0, wp-pcsx2-v5.1.0, wp-ppsspp-v3.1.0, wp-rpcs3-
 
 Changelog: 30-10-2026 22:46:16
 
-Added. The Xbox menu row takes the suite out of the Xbox app's library again (owner, 30-10-2026): A on Xbox menu: In
-the menu removes it, the Xbox app closed for a moment as when it is added (core's xbox.remove()).
+Added. The XBOX menu row takes the suite out of the XBOX app's library again (owner, 30-10-2026): A on XBOX menu: In
+the menu removes it, the XBOX app closed for a moment as when it is added (core's xbox.remove()).
 
 Changelog: 30-10-2026 22:46:16
 
@@ -251,8 +255,8 @@ Release 5.0.0. Pins wp-test-v3.2.0, wp-pcsx2-v4.1.0, wp-ppsspp-v2.1.0, wp-rpcs3-
 
 Changelog: 30-10-2026 18:17:38
 
-Added. The suite in the Xbox menu (owner, 30-10-2026): the Suite page's row Xbox menu (only with the Xbox app):
-Add puts the installed portal in the Xbox app's library, so Xbox mode starts it from its home, In the menu once it is
+Added. The suite in the XBOX menu (owner, 30-10-2026): the Suite page's row XBOX menu (only with the XBOX app):
+Add puts the installed portal in the XBOX app's library, so XBOX mode starts it from its home, In the menu once it is
 there (core's xbox.py). install.ps1 asks on a first install (Y/n), --xbox-menu and --no-xbox-menu answer without the
 question (WPS_XBOX_MENU in the installer tests), and runs the installed portal with --xbox-menu, which adds it without a
 window; a portal that cannot never fails the install.

@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The panes beside the Xenia and Settings panes, as RPCS3 Manager has them: Your games (the games in the app's
-Games\\Xbox360 folders, marked for Steam with A), Log (Xenia's folder and the app's own log, read in the app) and
+Games\\XBOX360 folders, marked for Steam with A), Log (Xenia's folder and the app's own log, read in the app) and
 the SteamGridDB key.
 
 A long list is a ListArea: rows in a column that scrolls, the one with the focus kept in view, so the d-pad goes down
@@ -112,7 +112,7 @@ class ListPane(Pane):
 
 
 XENIA_INFO = (
-    "Xenia, the Xbox 360 emulator, installed for your own user: it keeps everything beside its program, its "
+    "Xenia, the XBOX 360 emulator, installed for your own user: it keeps everything beside its program, its "
     "settings, the content of your games and their saves. The A button installs the build this version of the app "
     "was tried with; a newer Xenia comes with a new version of the app.\n\n"
     "Xenia needs no firmware: your games are all it needs (see Your games). Xenia for Windows needs Microsoft's "
@@ -120,7 +120,7 @@ XENIA_INFO = (
     "Microsoft installs it). The X button removes Xenia's program; its folder, with your saves and its settings, "
     "stays.")
 GAMES_INFO = (
-    "Your Xbox 360 games, to play from Steam. Press the A button on a game to mark it for Steam, or to take the mark "
+    "Your XBOX 360 games, to play from Steam. Press the A button on a game to mark it for Steam, or to take the mark "
     "away; then the Y button (Update Steam) makes Steam match the marks: each marked game becomes a non-Steam game, "
     "\"[X360] <title>\", in Steam's library and its Big Picture mode, and a game without the mark is taken out. Steam "
     "closes for it and starts again. A game starts full screen. To quit a game, hold View, LB and RB together for two "
@@ -133,10 +133,10 @@ GAMES_INFO = (
     "folder (an unpacked disc's), or for a Games on Demand or Arcade title the game, its title updates and its "
     "add-ons each on a row of their own, and its Steam shortcut. Nothing is deleted before you press the X button "
     "there. Your saves stay in Xenia's folder.\n\n"
-    "Where your games go: the Games\\Xbox360 folder in your user folder, which the app makes, or Games\\Xbox360 on an "
+    "Where your games go: the Games\\XBOX360 folder in your user folder, which the app makes, or Games\\XBOX360 on an "
     "SD card (make that folder on the card). Put your games there and they show here; there is no folder to choose. "
     "The Log card shows where the folder is.\n\n"
-    "The games are found in the Games\\Xbox360 folders and up to six folders below them: a disc image (.iso), an "
+    "The games are found in the Games\\XBOX360 folders and up to six folders below them: a disc image (.iso), an "
     "unpacked disc (the default.xex in its folder), a .zar, and the packages of Games on Demand and Arcade titles, "
     "in the folders the console keeps them in (<title ID>\\00007000 or 000D0000).\n\n"
     "The pictures in Steam are drawn from this app's icon, with the game's title. With your own SteamGridDB API key "

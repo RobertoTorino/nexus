@@ -77,8 +77,8 @@ def test_without_a_controller(qapp):
 
 
 def test_a_controller_that_is_not_sony(qapp):
-    pad = FakePad("Xbox Wireless Controller")
-    pad.info = PadInfo("Xbox Wireless Controller", 0x045E, 0x0B12, 0, "/dev/hidraw5", "cable", (), 0, True, False)
+    pad = FakePad("XBOX Wireless Controller")
+    pad.info = PadInfo("XBOX Wireless Controller", 0x045E, 0x0B12, 0, "/dev/hidraw5", "cable", (), 0, True, False)
     sdl = FakeSdl({1: pad})
     dialog = ControllerTest(backend=sdl, check=genuine.check_device)
     try:

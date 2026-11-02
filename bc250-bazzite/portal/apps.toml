@@ -331,7 +331,7 @@ launch = [["Open", "~/.local/bin/bc250-console-link"]]
 [apps.clb]
 name = "Console LinkB"
 short = "Console LinkB"
-summary = "Stream your Xbox (Remote Play) or games from Xbox Cloud Gaming to the board, signed in with your Microsoft account."
+summary = "Stream your XBOX (Remote Play) or games from XBOX Cloud Gaming to the board, signed in with your Microsoft account."
 tag = "clb-v0.12.2"
 sha256 = "55403a26e91ad7356a248b24e332187aabfa588154413db0ab5a47a0fcf51887"
 required = false
@@ -423,7 +423,7 @@ launch = [["Open", "~/.local/bin/bc250-vita3k-manager"]]
 
 [apps.xenia]
 name = "Xenia Manager"
-summary = "Xbox 360 games with the Xenia emulator (experimental on Linux): a tested Xenia build, your games found and added to Game Mode."
+summary = "XBOX 360 games with the Xenia emulator (experimental on Linux): a tested Xenia build, your games found and added to Game Mode."
 tag = "xenia-v0.12.2"
 sha256 = "783888aea3920cfa808f9a28137eab0891e055753026b6e2bb71b121f167d4cb"
 required = false

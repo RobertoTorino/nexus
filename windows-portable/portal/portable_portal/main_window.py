@@ -47,7 +47,7 @@ HELPER_INSTALL_S = 180          # its install or removal, with Windows' prompt a
 TILE_W, TILE_H, GAP = 293, 176, 14      # the mock-up's tiles: two rows of four
 COLUMNS, PER_PAGE = 4, 8
 TAB_KEY = "window/tab"          # the settings: the tab shown last
-LOGO_PNG = ROOT / "images" / f"{APP_ID}-128.png"   # the suite's icon, its picture in the Xbox menu
+LOGO_PNG = ROOT / "images" / f"{APP_ID}-128.png"   # the suite's icon, its picture in the XBOX menu
 STEAM_MISSING = "Steam is not installed on this device: install it from store.steampowered.com, then RT opens it."
 ONE_SCREEN = "There is one screen: attach a TV or a monitor, then LT moves the portal to it."
 # With a second screen, the legend's left end (owner, 31-10-2026: "Switch monitor: [] + Shift + < or >", with icons)
@@ -152,9 +152,9 @@ class MainWindow(PortableWindow):
         from a checkout: a new build of the same version is offered when its sha256 differs. *intro_ms*: how long
         the intro plays when the window starts (0: none). *wallpaper*: the picture behind the page, darkened (None:
         the plain background); on or off for the whole suite (Settings). *steam_here*: whether Steam is installed; *open_steam*: hands a steam:// address to Steam (its library). *xbox_local*:
-        where the Xbox app's package folder is (default %LOCALAPPDATA%); *xbox_closed*: runs a change with the Xbox
+        where the XBOX app's package folder is (default %LOCALAPPDATA%); *xbox_closed*: runs a change with the XBOX
         app closed (core's xbox.with_xbox_closed). *chip_parts*: the CPU's and the GPU's load and temperature for the
-        status line (default core's chip.py, AMD's driver opened once). *modes*: Windows' power API on the ROG Xbox
+        status line (default core's chip.py, AMD's driver opened once). *modes*: Windows' power API on the ROG XBOX
         Ally X, None elsewhere: the operating mode's letter before the battery and its page; *helper*: the Operating
         Mode helper that writes its watts (the Ally X only)."""
         old = QSettings()                               # portal 1.6.0 kept the switch in portal.ini: the suite's now
@@ -361,18 +361,18 @@ class MainWindow(PortableWindow):
         self.log.info(f"Wallpaper transparency {percent} %, for the suite.")
 
     def xbox_state(self) -> str:
-        """The Xbox menu row's state: "" without the Xbox app, In the menu, or Add."""
+        """The XBOX menu row's state: "" without the XBOX app, In the menu, or Add."""
         if not xbox.installed(self.xbox_local):
             return ""
         return "In the menu" if xbox.listed(self.program(), self.xbox_local) else "Add"
 
     def program(self) -> Path:
-        """The installed portal, what the Xbox menu starts (never a checkout's Python)."""
+        """The installed portal, what the XBOX menu starts (never a checkout's Python)."""
         return state_dir() / "app" / f"{EXE_NAME}.exe"
 
     def xbox_menu(self) -> None:
-        """The Settings page's Xbox menu row (owner, 30-10-2026): A puts the suite in the Xbox app's library, and A on
-        In the menu takes it out again, the Xbox app closed for a moment either way (core's xbox.py); said on the row
+        """The Settings page's XBOX menu row (owner, 30-10-2026): A puts the suite in the XBOX app's library, and A on
+        In the menu takes it out again, the XBOX app closed for a moment either way (core's xbox.py); said on the row
         and in the log."""
         state = self.xbox_state()
         if not state:
@@ -384,15 +384,15 @@ class MainWindow(PortableWindow):
             else:
                 xbox.remove(self.program(), local=self.xbox_local, closed=self.xbox_closed)
         except xbox.FormatError as exc:
-            self.suite_pane.set_xbox(f"not {'added' if adding else 'removed'}, the Xbox app keeps its library otherwise")
-            self.log.error(f"Not {'added to' if adding else 'removed from'} the Xbox menu: {exc}")
+            self.suite_pane.set_xbox(f"not {'added' if adding else 'removed'}, the XBOX app keeps its library otherwise")
+            self.log.error(f"Not {'added to' if adding else 'removed from'} the XBOX menu: {exc}")
             return
         except OSError as exc:
             self.suite_pane.set_xbox(f"not {'added' if adding else 'removed'} ({exc.strerror or exc})")
-            self.log.error(f"Not {'added to' if adding else 'removed from'} the Xbox menu: {exc}")
+            self.log.error(f"Not {'added to' if adding else 'removed from'} the XBOX menu: {exc}")
             return
         self.suite_pane.set_xbox(self.xbox_state())
-        self.log.info(f"{'Added to' if adding else 'Removed from'} the Xbox menu (the Xbox app's library).")
+        self.log.info(f"{'Added to' if adding else 'Removed from'} the XBOX menu (the XBOX app's library).")
 
     def mode_name(self) -> str:
         """The Operating mode row's state: "" off the Ally X, the active mode's name, or Other (a plan or a power mode

@@ -3,7 +3,7 @@
 the console's controller state.
 
 SDL names the buttons by position (south, east, ...) for every kind of gamepad, so a DualShock 4, a DualSense, an
-Xbox pad or a Steam Deck's controls all map the same way: south is cross, east circle, west square, north triangle,
+XBOX pad or a Steam Deck's controls all map the same way: south is cross, east circle, west square, north triangle,
 back is Share, start Options, guide the PS button, as in the reference. The triggers go from 0 to 255, the sticks
 as they are, the touchpad's fingers scaled to the console's touchpad (1920 × 942 on a PS4, 1919 × 1079 on a PS5;
 the reference scales a gamepad's fingers to 1920 × 1079 for both). With several controllers connected, their

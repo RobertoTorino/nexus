@@ -6,7 +6,7 @@
 
 # Windows Portable Suite
 
-Tools for Windows 10/11 on portable gaming devices, first the ASUS ROG Xbox Ally X, a suite of
+Tools for Windows 10/11 on portable gaming devices, first the ASUS ROG XBOX Ally X, a suite of
 [Nexus](../README.md). The apps are made for the device in your hands: full screen, a small screen, a controller and
 touch. The **[portal](portal)** installs, opens, updates and removes them: Windows Portable Test is always installed,
 every other app is optional.
@@ -47,7 +47,7 @@ By category, as the portal's tabs list them.
 - <img src="portal/images/apps/rpcs3.webp" width="20" height="20" alt=""/> **[RPCS3 Manager](apps/rpcs3)**: Installs RPCS3, the PS3 emulator, takes the PS3's firmware and your packages, and plays your PS3 games.
 - <img src="portal/images/apps/shadps4.webp" width="20" height="20" alt=""/> **[shadPS4 Manager](apps/shadps4)**: Installs shadPS4, the PS4 emulator, takes the system modules, unpacks your packages, and plays your PS4 games.
 - <img src="portal/images/apps/vita3k.webp" width="20" height="20" alt=""/> **[Vita3K Manager](apps/vita3k)**: Installs Vita3K, the PS Vita emulator, has it install the firmware and your games, and plays your PS Vita games.
-- <img src="portal/images/apps/xenia.webp" width="20" height="20" alt=""/> **[Xenia Manager](apps/xenia)**: Installs Xenia, the Xbox 360 emulator, and plays your Xbox 360 games.
+- <img src="portal/images/apps/xenia.webp" width="20" height="20" alt=""/> **[Xenia Manager](apps/xenia)**: Installs Xenia, the XBOX 360 emulator, and plays your XBOX 360 games.
 - <img src="portal/images/apps/rplay.webp" width="20" height="20" alt=""/> **[Remote Play](apps/rplay)**: Plays your PS4 and PS5 on the handheld: finds them on the network, registers, wakes and streams them.
 
 How to install and use them: **[the wiki](https://robertotorino.github.io/nexus/windows-portable-suite/)**.
@@ -63,7 +63,7 @@ they are in, like the code beside them.
 Nexus and its suites are independent community projects, not affiliated with or endorsed by AMD, ASRock, the Bazzite
 / Universal Blue project, Sony, Microsoft, Nintendo, Valve, or the makers of the emulators and the other programs the
 apps work with. BC-250 is AMD's product name and Bazzite the Universal Blue project's. PlayStation, PS4, PS5, PS3,
-PS2, PSP, PS Vita, PSN, DualSense and Remote Play are Sony's; Xbox, Xbox 360, Xbox Cloud Gaming, Game Pass and
+PS2, PSP, PS Vita, PSN, DualSense and Remote Play are Sony's; XBOX, XBOX 360, XBOX Cloud Gaming, Game Pass and
 Windows are Microsoft's; Steam, Steam Deck and Big Picture are Valve's; the names of Nintendo's consoles, of the
 emulators (shadPS4, RPCS3, PPSSPP, PCSX2, Vita3K, Xenia) and of Decky Loader, HelixSR and DirectMesh belong to their
 owners. The suites use them only to say what their apps work with.

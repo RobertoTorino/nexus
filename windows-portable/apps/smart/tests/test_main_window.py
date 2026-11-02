@@ -80,7 +80,7 @@ class FakeLink(QObject):
 def make(qapp, tmp_path, fetch=None, **kwargs):
     portable.scale((1280, 720))
     window = MainWindow(gamepad=Gamepad(source_factory=FakePad), battery=lambda: (82, False), values=FakeValues(),
-                        link=FakeLink(), fetch=fetch or (lambda url, params: {}), family="ROG Xbox Ally X",
+                        link=FakeLink(), fetch=fetch or (lambda url, params: {}), family="ROG XBOX Ally X",
                         startup=tmp_path / "Startup", roots=lambda: [], user_home=tmp_path / "home",
                         pictures=tmp_path / "Pictures", documents=tmp_path / "Documents", **kwargs)
     window.resize(1280, 720)
@@ -184,7 +184,7 @@ def test_the_picture_and_the_report_are_saved_without_a_dialog(qapp, tmp_path, m
     into(window, window.screen_card, "report")
     act(window, monkeypatch, "accept")
     report = next((tmp_path / "Documents").glob(f"{APP_NAME} *.txt")).read_text(encoding="utf-8")
-    assert report.startswith("ROG Xbox Ally X\n") and "Battery                82 % · on battery" in report
+    assert report.startswith("ROG XBOX Ally X\n") and "Battery                82 % · on battery" in report
     window.close()
 
 
@@ -221,11 +221,11 @@ def test_the_look_steps_and_the_theme_comes_back_with_x(qapp, tmp_path, monkeypa
 
 def test_the_header_text_on_its_own_page(qapp, tmp_path, monkeypatch):
     window = make(qapp, tmp_path)
-    assert window.title() == "ROG Xbox Ally X"                        # the family until one is kept
+    assert window.title() == "ROG XBOX Ally X"                        # the family until one is kept
     into(window, window.look_card, "title")
     act(window, monkeypatch, "accept")
     assert window.panes.currentWidget() is window.field_pane
-    assert window.field_pane.field.text() == "ROG Xbox Ally X"
+    assert window.field_pane.field.text() == "ROG XBOX Ally X"
     window.field_pane.field.setText("")
     act(window, monkeypatch, "accept")
     assert window.title() == "" and window.panes.currentWidget() is window.look_pane

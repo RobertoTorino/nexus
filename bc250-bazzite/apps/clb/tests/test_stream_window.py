@@ -145,8 +145,8 @@ def test_a_frame_drawn_is_reported(window):
 def test_status_and_end(window):
     view, stream, _source, _clock = window
     view.show()
-    stream.status.emit("Getting the Xbox ready…")
-    assert view.message == "Getting the Xbox ready…"
+    stream.status.emit("Getting the XBOX ready…")
+    assert view.message == "Getting the XBOX ready…"
     stream.ready.emit()
     assert view.message == ""
     stream.ended.emit("the connection to the stream was lost")

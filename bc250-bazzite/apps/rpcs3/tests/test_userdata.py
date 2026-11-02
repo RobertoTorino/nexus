@@ -112,8 +112,8 @@ def test_the_pad_file_for_player_1(tmp_path):
     """Player 1 on the first controller as SDL names it, with RPCS3's default SDL mapping; two controllers of one
     name are " 1" and " 2"; a pad file RPCS3 wrote is never touched, an empty one (RPCS3's keyboard fallback) is."""
     assert userdata.pad_devices(["DualSense Edge Wireless Controller", "DualSense Edge Wireless Controller",
-                                 "Xbox Series X Controller"]) == [
-        "DualSense Edge Wireless Controller 1", "DualSense Edge Wireless Controller 2", "Xbox Series X Controller 1"]
+                                 "XBOX Series X Controller"]) == [
+        "DualSense Edge Wireless Controller 1", "DualSense Edge Wireless Controller 2", "XBOX Series X Controller 1"]
     path = tmp_path / userdata.INPUT_CONFIG
     assert userdata.pads_ours(tmp_path) and userdata.pad_device(tmp_path) == ""
     assert userdata.write_pads(tmp_path, []) is False and not path.exists()

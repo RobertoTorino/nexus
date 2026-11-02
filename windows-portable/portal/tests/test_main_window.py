@@ -131,7 +131,7 @@ def world(qapp, tmp_path, monkeypatch):
         pad = FakePad()
         kwargs.setdefault("intro_ms", 0)                # the intro has its own tests
         kwargs.setdefault("steam_here", lambda: False)  # never this machine's own Steam
-        kwargs.setdefault("xbox_local", tmp_path / "no-xbox")  # never this machine's own Xbox app
+        kwargs.setdefault("xbox_local", tmp_path / "no-xbox")  # never this machine's own XBOX app
         kwargs.setdefault("chip_parts", lambda: ["CPU 12% 48°", "GPU 7% 47°"])   # never this machine's own chip
         kwargs.setdefault("modes", lambda: None)        # never this machine's own operating mode
         kwargs.setdefault("helper", lambda: FakeHelper(installed=False))   # nor its helper
@@ -280,13 +280,13 @@ def test_rt_opens_steam_where_it_is_installed(world, qapp):
 
 
 def test_the_suite_page_adds_the_suite_to_the_xbox_menu(world, qapp, tmp_path, monkeypatch):
-    """The Xbox menu row (owner, 30-10-2026): only with the Xbox app; A adds the installed portal to its library,
-    and A again takes it out, with the Xbox app closed for each change; a library kept otherwise is left alone and
+    """The XBOX menu row (owner, 30-10-2026): only with the XBOX app; A adds the installed portal to its library,
+    and A again takes it out, with the XBOX app closed for each change; a library kept otherwise is left alone and
     said."""
     from bc250_core import xbox
     window = world.make()
     window.on_action("menu")
-    assert not window.suite_pane.xbox.isVisible()                  # no Xbox app here
+    assert not window.suite_pane.xbox.isVisible()                  # no XBOX app here
     window.close()
     local = tmp_path / "local"
     (local / "Packages" / xbox.PACKAGE).mkdir(parents=True)
@@ -295,24 +295,24 @@ def test_the_suite_page_adds_the_suite_to_the_xbox_menu(world, qapp, tmp_path, m
     window = world.make(xbox_local=local, xbox_closed=lambda change: closed.append(True) or change())
     window.on_action("menu")
     row = window.suite_pane.xbox
-    assert row.isVisible() and row.label.text() == "Xbox menu: Add"
+    assert row.isVisible() and row.label.text() == "XBOX menu: Add"
     row.activated.emit()
     program = tmp_path / "portal" / "app" / "Windows-Portable-Suite.exe"
-    assert closed == [True] and xbox.listed(program, local) and row.label.text() == "Xbox menu: In the menu"
+    assert closed == [True] and xbox.listed(program, local) and row.label.text() == "XBOX menu: In the menu"
     row.activated.emit()                                            # A on In the menu takes it out (30-10-2026)
-    assert closed == [True, True] and not xbox.listed(program, local) and row.label.text() == "Xbox menu: Add"
+    assert closed == [True, True] and not xbox.listed(program, local) and row.label.text() == "XBOX menu: Add"
     row.activated.emit()
     assert closed == [True, True, True] and xbox.listed(program, local)
     assert xbox.remove(program, local=local, closed=lambda change: change())
     xbox.manifest_path(local).write_text('{"customApps": []}', encoding="utf-8")
     window.suite_pane.set_xbox("Add")
     row.activated.emit()
-    assert row.label.text() == "Xbox menu: not added, the Xbox app keeps its library otherwise"
+    assert row.label.text() == "XBOX menu: not added, the XBOX app keeps its library otherwise"
     assert xbox.manifest_path(local).read_text(encoding="utf-8") == '{"customApps": []}'
 
 
 def test_the_operating_mode_page_on_the_ally_x(world, qapp, monkeypatch):
-    """The ROG Xbox Ally X's operating mode (owner, 31-10-2026): a Settings row opens its page, a row per mode with
+    """The ROG XBOX Ally X's operating mode (owner, 31-10-2026): a Settings row opens its page, a row per mode with
     its watts for the power source now; A sets the plan and the power mode; B goes back to Settings."""
     from portable_portal import operating_mode as om
     from test_operating_mode import FakeApi
@@ -328,7 +328,7 @@ def test_the_operating_mode_page_on_the_ally_x(world, qapp, monkeypatch):
     window.on_action("menu")
     row = window.suite_pane.mode
     assert row.isVisible() and row.label.text() == "Operating mode: Turbo"
-    assert "Operating mode: the ROG Xbox Ally X's mode" in window.suite_pane.info.info
+    assert "Operating mode: the ROG XBOX Ally X's mode" in window.suite_pane.info.info
     row.activated.emit()
     pane = window.mode_pane
     assert window.stack.currentWidget() is pane and pane.rows["T"].hasFocus()

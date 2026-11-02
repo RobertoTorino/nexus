@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """A game controller for the portable window (the Windows Portable Suite, owner 26-10-2026: a handheld is used with
 its controller, often without a keyboard), read with pygame-ce: SDL's game controller layer gives every pad the same
-button names, the Ally's built-in pad as an Xbox controller.
+button names, the Ally's built-in pad as an XBOX controller.
 
 Gamepad turns what the pads do into actions for the window: the d-pad and left stick move (a held direction repeats),
 A accepts, B goes back, X and Y are the page's own (Details, Update), LB and RB change the tab, Start and View are the

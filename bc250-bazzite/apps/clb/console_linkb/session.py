@@ -75,7 +75,7 @@ class Session:
         self.path = ""                      # v5/sessions/home/<session id>, once started
 
     def _headers(self) -> dict[str, str]:
-        return {"Authorization": f"Bearer {self.token.token}", "X-Gssv-Client": "XboxComBrowser",
+        return {"Authorization": f"Bearer {self.token.token}", "X-Gssv-Client": "XBOXComBrowser",
                 "X-MS-Device-Info": DEVICE_INFO}
 
     def _url(self, part: str = "") -> str:

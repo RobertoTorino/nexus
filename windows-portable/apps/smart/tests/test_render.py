@@ -48,7 +48,7 @@ def test_a_battery_running_low_turns_orange_then_red(state, alert):
 
 
 def test_the_default_header_is_the_handhelds_family():
-    assert render.default_title("ROG Xbox Ally X") == "ROG Xbox Ally X"
+    assert render.default_title("ROG XBOX Ally X") == "ROG XBOX Ally X"
     assert render.default_title("Default string") == render.TITLE == render.default_title("")
 
 

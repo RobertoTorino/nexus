@@ -30,9 +30,9 @@ def test_the_controllers_connected(tmp_path):
     devices.write_text(STEAM_ONLY)                                              # Steam's virtual one only
     assert controllers.connected(devices) == []
     devices.write_text(DS4_AND_STEAM + "\nI: Bus=0005 Vendor=045e Product=0b13 Version=0509\n"
-                       'N: Name="Xbox Wireless Controller"\nH: Handlers=event20 js2\n')
+                       'N: Name="XBOX Wireless Controller"\nH: Handlers=event20 js2\n')
     assert controllers.connected(devices) == ["Sony Interactive Entertainment Wireless Controller",
-                                              "Xbox Wireless Controller"]
+                                              "XBOX Wireless Controller"]
     devices.write_text('N: Name="Dell Keybd KB740"\nH: Handlers=sysrq kbd event3\n')
     assert controllers.connected(devices) == []
     devices.write_text(BLUETOOTH_EDGE)                                          # the motion sensors: a js too

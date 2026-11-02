@@ -80,7 +80,7 @@ class MainWindow(QMainWindow):
         for box in (self.emulator_box, self.games_box, self.steam_box):
             header.add_second(box)
         intro = hint_label(
-            "Xbox 360 games on the BC-250 with the Xenia emulator (Xenia Canary, experimental on Linux). The app "
+            "XBOX 360 games on the BC-250 with the Xenia emulator (Xenia Canary, experimental on Linux). The app "
             "installs a tested Xenia build, finds your games and puts them in Steam, so they start from Game Mode. "
             "Games come from your own discs and console; the app never downloads them. "
             + style.link(self, MANUAL_URL, "Manual"))

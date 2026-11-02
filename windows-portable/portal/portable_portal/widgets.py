@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The portal's own widgets on the portable window: the strip under the tiles (what the focused app is and does,
 with its pills), the details page of an app, the Settings page (the portal's own version and update) and the ROG
-Xbox Ally X's Operating Mode page. The tabs
+XBOX Ally X's Operating Mode page. The tabs
 (LB and RB step through the categories) are core's Tabs. Direction D's portal screen (the owner's, 26-10-2026)."""
 
 from __future__ import annotations
@@ -147,9 +147,9 @@ class SuitePane(Pane):
         self.wallpaper = Row("Wallpaper: Built-in")
         self.transparency = Row("Transparency: 59 %")
         self.sound = Row("Sound: On")
-        self.xbox = Row("Xbox menu: Add")
+        self.xbox = Row("XBOX menu: Add")
         self.mode = Row("Operating mode: Turbo")
-        self.mode.hide()                                # on the ROG Xbox Ally X only
+        self.mode.hide()                                # on the ROG XBOX Ally X only
         self.screen_row = Row("Screen: Display 1")
         self.screen_row.hide()                          # with a second screen attached
         for row in (self.wallpaper, self.transparency, self.sound, self.xbox, self.mode, self.screen_row):
@@ -178,7 +178,7 @@ class SuitePane(Pane):
 
     def _explain(self) -> None:
         """The information icon's text: each setting, where your own wallpapers go and by which rules, the pictures in
-        that folder that cannot be one with why, the Xbox menu only where the Xbox app is, and the buttons at the
+        that folder that cannot be one with why, the XBOX menu only where the XBOX app is, and the buttons at the
         bottom (owner, 30-10-2026)."""
         parts = [f"The update brings:\n{self.brings}"] if self.brings else []
         parts += [
@@ -194,10 +194,10 @@ class SuitePane(Pane):
                   f"read. The A button adds {VEIL_STEP} %, up to {VEIL_MAX} %, then starts at 0 %.",
                   "Sound: the portal's intro sound, for the suite."]
         if self.xbox.isVisibleTo(self):
-            parts.append("Xbox menu: the suite in the Xbox app's library, so Xbox mode starts it from its home. The A "
-                         "button adds it, and on In the menu takes it out again; the Xbox app closes for a moment.")
+            parts.append("XBOX menu: the suite in the XBOX app's library, so XBOX mode starts it from its home. The A "
+                         "button adds it, and on In the menu takes it out again; the XBOX app closes for a moment.")
         if self.mode.isVisibleTo(self):
-            parts.append("Operating mode: the ROG Xbox Ally X's mode, as Armoury Crate's Command Center offers them. "
+            parts.append("Operating mode: the ROG XBOX Ally X's mode, as Armoury Crate's Command Center offers them. "
                          "The A button opens its page.")
         if self.screen_row.isVisibleTo(self):
             parts.append("Screen: the screen the portal is on, with a second screen attached (a TV or a monitor). The A "
@@ -227,10 +227,10 @@ class SuitePane(Pane):
         self.sound.set_text(f"Sound: {'On' if on else 'Off'}")
 
     def set_xbox(self, state: str) -> None:
-        """The Xbox menu row: "" without the Xbox app (hidden), else what it says after "Xbox menu: "."""
+        """The XBOX menu row: "" without the XBOX app (hidden), else what it says after "XBOX menu: "."""
         self.xbox.setVisible(bool(state))
         if state:
-            self.xbox.set_text(f"Xbox menu: {state}")
+            self.xbox.set_text(f"XBOX menu: {state}")
         self._explain()
 
     def set_screen(self, name: str) -> None:
@@ -241,7 +241,7 @@ class SuitePane(Pane):
         self._explain()
 
     def set_mode(self, name: str) -> None:
-        """The Operating mode row: "" off the ROG Xbox Ally X (hidden), else the active mode's name."""
+        """The Operating mode row: "" off the ROG XBOX Ally X (hidden), else the active mode's name."""
         self.mode.setVisible(bool(name))
         if name:
             self.mode.set_text(f"Operating mode: {name}")
@@ -249,7 +249,7 @@ class SuitePane(Pane):
 
 
 class ModePane(Pane):
-    """The ROG Xbox Ally X's Operating Mode page (owner, 31-10-2026): Silent, Performance, Turbo and Windows, a row each
+    """The ROG XBOX Ally X's Operating Mode page (owner, 31-10-2026): Silent, Performance, Turbo and Windows, a row each
     with its watts for the power source the device is on now; A sets the mode with the focus. Under them the Watt
     limits row installs or removes the helper that writes the watts. Shown only on the Ally X, from the Settings
     page's Operating mode row."""
@@ -278,7 +278,7 @@ class ModePane(Pane):
         self.status = text_label("", BODY + 1, QFont.Weight.DemiBold, AMBER, wrap=True)
         self.column.addWidget(self.status)
         self.info.info = "\n\n".join([
-            "The ROG Xbox Ally X's operating modes, as Armoury Crate's Command Center offers them. Each row shows the "
+            "The ROG XBOX Ally X's operating modes, as Armoury Crate's Command Center offers them. Each row shows the "
             "mode's watt limits on the power source the device is on now: sustained, slow and fast. Armoury Crate "
             "keeps one set for the charger and one for the battery.",
             "Silent: the least power, the coolest and the quietest. Performance: the middle. Turbo: the most power; on "

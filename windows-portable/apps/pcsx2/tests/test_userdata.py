@@ -42,7 +42,7 @@ EMULOG = """\
 [    0.5080]   Serial: SLUS-20328
 [    0.5080]   CRC: 833fe0a4
 [    1.0259] SDLInputSource: Opened gamepad 1 (instance id 1, player id 0): DualSense Edge Wireless Controller
-[    9.0259] SDLInputSource: Opened gamepad 2 (instance id 2, player id 1): Xbox Series X Controller
+[    9.0259] SDLInputSource: Opened gamepad 2 (instance id 2, player id 1): XBOX Series X Controller
 [    9.5000] SDLInputSource: Opened gamepad 1 (instance id 3, player id 0): DualSense Edge Wireless Controller
 [  352.6112] Add 346 seconds play time to SLUS-20328 -> now 346
 [  352.7374] Releasing host memory for virtual systems...
@@ -61,7 +61,7 @@ def test_pcsx2s_last_run(tmp_path):
     log.write_text(EMULOG)
     session = last_session(tmp_path)
     assert session == Session(log.stat().st_mtime, "2.8.2", "SLUS-20328", "833FE0A4", 346, True,
-                              ("DualSense Edge Wireless Controller", "Xbox Series X Controller"))
+                              ("DualSense Edge Wireless Controller", "XBOX Series X Controller"))
     log.write_text(EMULOG.replace("[  352.6112] Add 346 seconds play time to SLUS-20328 -> now 346\n", ""))
     session = last_session(tmp_path)
     assert (session.seconds, session.counted) == (352, False)

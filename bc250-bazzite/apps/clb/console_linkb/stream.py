@@ -29,7 +29,7 @@ def state_text(state: State) -> str:
             minutes = max(1, round(state.wait_s / 60))
             return f"In the queue for a cloud server: about {minutes} minute{'s' if minutes != 1 else ''}…"
         return "In the queue for a cloud server…"
-    return {"Provisioning": "Getting the Xbox ready…", "ReadyToConnect": "Signing the stream in…",
+    return {"Provisioning": "Getting the XBOX ready…", "ReadyToConnect": "Signing the stream in…",
             "Provisioned": "Connecting…"}.get(state.name, f"{state.name}…")
 
 

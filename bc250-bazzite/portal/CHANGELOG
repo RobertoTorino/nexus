@@ -383,7 +383,7 @@ tools/sync_icons.py), scaled once to the screen's own pixels, instead of the 256
 
 Changelog: 21-10-2026 11:08:05
 
-Added. The portal fits a 1280 px handheld screen, the Steam Deck's (1280 x 800) and the ROG Xbox Ally X's (1280 x 720
+Added. The portal fits a 1280 px handheld screen, the Steam Deck's (1280 x 800) and the ROG XBOX Ally X's (1280 x 720
 with the desktop's scaling) (owner, 21-10-2026). The header's pills are in one row where there is room, else in
 rows of about equal length, so the window is no longer 1390 px wide at least; the window opens at most as wide as the
 screen. Suite Big Picture Mode draws its icons, type and header smaller on a screen under 1000 px high, swipes with a

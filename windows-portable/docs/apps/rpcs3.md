@@ -171,7 +171,7 @@ To quit a game, **hold View, LB and RB together for two seconds**: RPCS3 closes 
 back in Steam, or in the app when it started the game. It works the same in every game manager of the suite, started
 from Steam's library or from the app. The line at the bottom of Your games says so when a game starts. A short press
 of View and Menu opens RPCS3's own menu over the game, with **Exit Game** in it; the guide button opens it too, where
-Windows leaves that button to the game (on the ROG Xbox Ally the Xbox button is Windows' own).
+Windows leaves that button to the game (on the ROG XBOX Ally the XBOX button is Windows' own).
 
 **When the device runs hot**, you are warned without the game stopping. While a game runs, the app reads the chip's
 temperature every two seconds. When the CPU or the GPU stays above 90 °C for half a minute, a banner shows at the top of

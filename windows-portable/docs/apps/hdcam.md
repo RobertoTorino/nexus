@@ -118,7 +118,7 @@ The file is kept in the suite's folder (see Files) and used for every load.
 The firmware asks the USB controller for the most video bandwidth USB 3 has. Some controllers refuse it; then the
 largest modes give no picture. **A** on a row picks it:
 
-- **Full**, the default: on the ROG Xbox Ally X every mode runs at its full rate, side by side up to 5148 x 1088 at
+- **Full**, the default: on the ROG XBOX Ally X every mode runs at its full rate, side by side up to 5148 x 1088 at
   30 fps.
 - **Reduced**: two thirds of it, for a controller that refuses full. Every one-camera mode still runs at its full rate,
   side by side up to 2560 x 800 at 30 fps; the three largest side-by-side modes give no picture.

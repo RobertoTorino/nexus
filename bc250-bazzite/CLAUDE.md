@@ -22,7 +22,7 @@ appearing in the portal.
   ppsspp, pcsx2, vita3k, xenia, decky, package, ncgui, datstation. Each has its
   own VERSION, CHANGELOG, LICENSE (acpi is MIT; consoles is AGPL-3.0, its protocol code ported from
   chiaki-ng: those files AGPL-3.0-only, its own AGPL-3.0-or-later; ncgui is GPL-2.0-only, a port of NetcatGUI; clb
-  (Console LinkB, Xbox) is GPL-3.0-or-later with protocol code ported from Greenlight and xal-node, MIT, whose notice
+  (Console LinkB, XBOX) is GPL-3.0-or-later with protocol code ported from Greenlight and xal-node, MIT, whose notice
   its README keeps; the rest GPL-3.0-or-later), .gitignore. Every app
   has a `category` in `portal/apps.toml`, the same as its icon's in `icons/categories.toml` (sustainable, graphics,
   gaming, utilities): the portal, one fullscreen view for the keyboard, the mouse and a controller (owner,

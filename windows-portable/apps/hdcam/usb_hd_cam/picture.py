@@ -4,7 +4,7 @@ the camera keeps a short exposure and the picture is close to black (1920 x 1080
 a dim room); in Auto it is a normal picture (112). The BC250 Bazzite Suite's USB HD Cam sets Auto once after the load.
 On Windows that does not last: Windows' webcam driver powers the camera down as soon as no program has it open (D3,
 within seconds, whatever the power plan's USB selective suspend says), and the camera, which has no memory, wakes in
-Shutter Priority again (the owner's ROG Xbox Ally X, 01-11-2026). So the app sets Auto through the driver and keeps
+Shutter Priority again (the owner's ROG XBOX Ally X, 01-11-2026). So the app sets Auto through the driver and keeps
 the camera's driver open, without taking its picture, while it runs: every app that shows the camera meanwhile gets
 the bright picture.
 

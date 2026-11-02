@@ -21,7 +21,7 @@ hide:
 <div class="home-section__inner" markdown>
 ## In the suite
 
-Apps for a Windows portable device, first the ASUS ROG Xbox Ally X, made for the device in your hands: full screen,
+Apps for a Windows portable device, first the ASUS ROG XBOX Ally X, made for the device in your hands: full screen,
 a small screen, a controller and touch. The amber focus shows where the next press of A goes.
 
 <div class="home-grid" markdown>
@@ -50,7 +50,7 @@ unpacks your packages, plays your PS4 games full screen and puts them in Steam.
 [Vita3K Manager](apps/vita3k.md) installs Vita3K, the PS Vita emulator, has it install the PS Vita's firmware and your
 games, plays your PS Vita games full screen and puts them in Steam.
 
-[Xenia Manager](apps/xenia.md) installs Xenia, the Xbox 360 emulator, finds your Xbox 360 games, plays them full
+[Xenia Manager](apps/xenia.md) installs Xenia, the XBOX 360 emulator, finds your XBOX 360 games, plays them full
 screen and puts them in Steam.
 
 [Remote Play](apps/rplay.md) plays your PS4 and PS5 on the handheld: it finds them on the network, registers the
@@ -131,7 +131,7 @@ No. Install the portal; it installs, updates and removes the apps. See [Install]
 
 ### Does it work on other devices?
 
-The suite is made and tested on the ROG Xbox Ally X with Windows 11, for any Windows portable device: the apps read what
+The suite is made and tested on the ROG XBOX Ally X with Windows 11, for any Windows portable device: the apps read what
 Windows reports, and say so where something does not apply, such as the back buttons on another maker's device.
 
 ### How do I check a download?

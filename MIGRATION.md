@@ -48,15 +48,15 @@ The owner: "make a note for a new chat". Where things stand:
   index Nexus v1.2.0 is GitHub's Latest release.
 - **What this release brought, to keep an eye on with use on the Ally:** Steam started by the apps signs in (core's
   platform.outside_bundle() keeps the controller reader's SDL_VIDEODRIVER=dummy away from started programs: it, not
-  the lower-case name of steam.exe, kept Steam Logged Off, in Desktop and Xbox mode); X Play without Steam (each
+  the lower-case name of steam.exe, kept Steam Logged Off, in Desktop and XBOX mode); X Play without Steam (each
   manager's emulator through the play mode); View + Menu held 2 s quits a game in every manager (core's play.py,
   the managers' --play, Steam shortcuts start it: an old shortcut shows (Update Steam), Y rewrites it once); shadPS4's
   "Are you sure you want to quit?" answered with Enter (play.press_enter, not yet seen in the game itself) and the
   close sent to the main window only (Steam's overlay opened over the game before); the portal's RT Steam (Open
   Steam moved out of the managers); the battery last in the status line, Plugged in on the charger; the Suite page's
-  Xbox menu row and install.ps1's question (core's xbox.py, the Xbox app's undocumented
-  `ThirdPartyLibraries\CustomLibraryManagement\CustomLibraryManagement.manifest`; writing it with the Xbox app
-  running in Xbox mode is not tested yet: the owner's Ally has the suite there already, added by hand); RPCS3's exit
+  XBOX menu row and install.ps1's question (core's xbox.py, the XBOX app's undocumented
+  `ThirdPartyLibraries\CustomLibraryManagement\CustomLibraryManagement.manifest`; writing it with the XBOX app
+  running in XBOX mode is not tested yet: the owner's Ally has the suite there already, added by hand); RPCS3's exit
   question off (confirmationBoxExitGame=false, not seen yet); the device test closes an open portal; PCSX2's X Play
   checks the BIOS.
 - **Option 2, in the working tree (30-10-2026 20:25, for the owner to commit):** `tools/release_commit.py` (the
@@ -200,7 +200,7 @@ Done in **shadPS4 Manager** first (owner: "shadPS4 first"), with X Unpack all, P
 unpack, RB Remove game and LB Steam artwork; the owner tests it on the Ally, then PCSX2, PPSSPP, RPCS3, Vita3K and
 Xenia Manager follow the same way. **The other five (owner, 01-11-2026; in the working tree, not released):**
 `Games\PS2` with `BIOS\` (PCSX2), `Games\PSP` (PPSSPP), `Games\PS3` with `Firmware\` (RPCS3), `Games\Vita` with
-`Firmware\` (Vita3K), `Games\Xbox360` (Xenia), each with RB Remove game and LB Steam artwork. The firmware is
+`Firmware\` (Vita3K), `Games\XBOX360` (Xenia), each with RB Remove game and LB Steam artwork. The firmware is
 installed automatically (RPCS3's and Vita3K's PUPs, when new or changed, through the emulator without its window);
 RPCS3's .pkg and Vita3K's .vpk, .zip and .pkg are rows of Your games, A installs one and X all, and a package or
 archive installed cleanly is offered for deletion, while licenses (.rap, .edat) and dumped Vita folders stay.
@@ -462,7 +462,7 @@ was found out and decided, in order:
   `config\input_configs\global\Default.yml` (with its mark, as the BC250 app) for RPCS3's **XInput** handler, device
   "XInput Pad #1", with RPCS3's default XInput mapping (`xinput_pad_handler::init_config` at the commit: XInput's
   deadzones 7849/8689, trigger threshold 30, anti-deadzone 13 %); PS Button "Guide,Back&Start", so **View + Menu
-  together** open RPCS3's home menu with Exit Game (the Ally's Xbox button is Windows'). No controller detection (the
+  together** open RPCS3's home menu with Exit Game (the Ally's XBOX button is Windows'). No controller detection (the
   handheld's is built in). To check on the Ally.
 - The RPCS3 pane says when Microsoft's **Visual C++ runtime** is missing (vcruntime140.dll, vcruntime140_1.dll,
   msvcp140.dll in System32; the wiki links vc_redist.x64.exe); the games are played from Steam only once RPCS3
@@ -722,7 +722,7 @@ gaming category first, RPCS3 Manager done in the working tree, then shadPS4, Vit
    core's `Tabs` (PCSX2 Manager's Settings pane uses it the same way).
 3. The BC250 apps for the Ally (owner, 29-10-2026): **left out** the board's and Linux's: GPU Governor Manager, CU
    Bisect, Cores Bisect, GPU OC Bisect, Persistent ACPI, Memory Manager, Fan Control (the handheld's own tuning apps
-   stay on hold instead), ACE Queues, Mesh Shaders, USB Wi-Fi, Console LinkB (the Xbox app does it),
+   stay on hold instead), ACE Queues, Mesh Shaders, USB Wi-Fi, Console LinkB (the XBOX app does it),
    Decky Loader Manager (BIOS Reader was left out too; it comes after all, see "BIOS Reader for Windows" below). **HDMI CEC Manager first**: the owner tests it with a dock and a special USB-C adapter (how
    Windows reaches CEC over that adapter is to find out). **They come** (ported, the portable design): RPCS3,
    shadPS4, PPSSPP, Vita3K and Xenia Managers (as PCSX2 Manager: never their own window), Console Link (as
@@ -734,7 +734,7 @@ gaming category first, RPCS3 Manager done in the working tree, then shadPS4, Vit
    at start: wp-portal-v1.5.0 was published 9 s after the check, 28-10-2026); the drawn icons of ICONS.md in
    `bc250-bazzite/docs/design/icons/`.
 
-On hold: the portal as Xbox mode's home app (MSIX), code signing, an app for the back buttons, the handheld's own
+On hold: the portal as XBOX mode's home app (MSIX), code signing, an app for the back buttons, the handheld's own
 tuning apps, a BIOS update check.
 
 ## Remote Play for Windows (01-11-2026, the owner, on Console Link: "I want to port that over to Windows Portable suite")
@@ -788,7 +788,7 @@ the elevated `--read-variables` copy, only read, the private ones never asked fo
 16 pages, 22 with the hidden ones; the elevated read itself is still to try on the Ally (which variables ASUS lets
 Windows read).
 
-Tried on ASUS's ROG Xbox Ally X BIOS RC73XA 319 (`RC73XAAS.319` from ASUS's zip, 32 MiB plus a 2 KiB AMI Aptio
+Tried on ASUS's ROG XBOX Ally X BIOS RC73XA 319 (`RC73XAAS.319` from ASUS's zip, 32 MiB plus a 2 KiB AMI Aptio
 capsule header), with the BC250 suite's `bios_reader` unchanged:
 
 - Parses in 2 s: 7 firmware volumes, 569 files; 17 form sets (Setup, AMD CBS 72 forms, AMD PBS, AMD PMF, AMD
@@ -872,7 +872,7 @@ Each line one test (BC250's number in brackets when it comes from there). **Has*
 - Modern Standby (28)
 
 **Gaming**
-- Steam, Xbox app, Gaming Services, Game Mode, Game Bar, Armoury Crate; library folders and free space (38)
+- Steam, XBOX app, Gaming Services, Game Mode, Game Bar, Armoury Crate; library folders and free space (38)
 - Audio: default output, its format, the devices (39)
 - Memory integrity and VBS, which cost FPS (24)
 
@@ -936,7 +936,7 @@ The full comparison, test by test:
 | 34 | Previous Boot Shutdown Integrity | Ports | Unexpected shutdowns: Kernel-Power 41 and EventLog 6008 in the System log. |
 | 35 | GPU Hang and Reset History | Ports | Display driver resets (TDR, Display 4101) in the System log. |
 | 36 | Kernel Panic and Crash Dump | Part | Blue screens (BugCheck 1001 events); the minidumps need admin: dropped. |
-| 38 | Steam and Gaming Stack | Ports | Steam, the Xbox app, Gaming Services, Game Mode, Game Bar, Armoury Crate; library folders and their free space. |
+| 38 | Steam and Gaming Stack | Ports | Steam, the XBOX app, Gaming Services, Game Mode, Game Bar, Armoury Crate; library folders and their free space. |
 | 39 | Audio Stack | Ports | Default output, its format, the audio devices. |
 | 48 | Real-Game Frametime | Part | No MangoHud; PresentMon needs admin or the Performance Log Users group: dropped, unless a way without admin turns up. |
 | 41 | CPU + GPU Stress and Telemetry | Part | CPU load from our own code; a GPU load needs a shader workload (Qt's OpenGL); the telemetry from ADL. Bigger. |
@@ -1892,7 +1892,7 @@ releases are the owner's. Open (owner): whether the app should watch for the mut
 
 ## Windows Portable Suite (owner, 25-10-2026)
 
-A second suite for Windows handhelds, first the owner's ASUS ROG Xbox Ally X (RC73XA), built on the blueprint of
+A second suite for Windows handhelds, first the owner's ASUS ROG XBOX Ally X (RC73XA), built on the blueprint of
 this one: the same app layout, core, portal with a manifest, installer tests and CHANGELOG rules, with Windows' own
 behavior and dependencies. Decided (owner, 25-10-2026):
 
@@ -2024,7 +2024,7 @@ behavior and dependencies. Decided (owner, 25-10-2026):
 - **Windows Portable Test 0.1.0 (26-10-2026)**, `windows-portable/apps/test/` (package `portable_test`, app id
   `windows-portable-test`, tags `wp-test-v<x.y.z>`; owner, 26-10-2026: the names, the order window, then the test
   app, then the suite, and this first scope). Two cards: Device (one PowerShell CIM query, about two seconds on the
-  Ally: ROG Xbox Ally X, Ryzen AI Z2 Extreme 8 cores 16 threads, Radeon 890M and its driver, 24 GB installed of
+  Ally: ROG XBOX Ally X, Ryzen AI Z2 Extreme 8 cores 16 threads, Radeon 890M and its driver, 24 GB installed of
   which 15.6 usable, the 1 TB Samsung drive, Windows 11 Home build 26300, firmware RC73XA.319, the battery; no
   serial numbers) with the screen the window is on from Qt, X saves the report in
   `%LOCALAPPDATA%\windows-portable-suite\windows-portable-test\reports\`; Controller (every button, stick and
@@ -2114,8 +2114,8 @@ behavior and dependencies. Decided (owner, 25-10-2026):
   video tour list. Open (owner): the releases, portal (Breaking.: the tab and the two tools removed) and mtool,
   package and ncgui (Fixed.: the icon); the Linux checks (`tools/ci-local.sh`, the installer tests, portal.sh among
   them) on Bazzite.
-- **The portal as Xbox mode's home app (on hold, owner 28-10-2026).** Windows 11 (24H2 and later, the Full Handheld
-  edition of Xbox mode, as on the Ally) offers apps under Settings, Gaming, Xbox mode, Choose home app. OmniConsole
+- **The portal as XBOX mode's home app (on hold, owner 28-10-2026).** Windows 11 (24H2 and later, the Full Handheld
+  edition of XBOX mode, as on the Ally) offers apps under Settings, Gaming, XBOX mode, Choose home app. OmniConsole
   (github.com/8bit2qubit/OmniConsole) does it: an MSIX package whose manifest declares the `windows.gamingApp` app
   extension (`uap3:AppExtension`) and the custom capability `Microsoft.appCategory.gamingHome_8wekyb3d8bbwe`, with
   runFullTrust. Without a Store-signed package the user turns on Developer Mode and trusts the package's
@@ -2128,7 +2128,7 @@ behavior and dependencies. Decided (owner, 25-10-2026):
   `release.yml` after the build; the release format stays.
 - **Own tuning apps** (TDP, fans, and the like) for the handheld, later: the board's tuning apps do not port (sysfs,
   GRUB, RADV), but the same kinds of apps on both give comparison data between the BC-250 and the handheld.
-- **The Operating Mode in the portal (owner, 31-10-2026: in the portal, only on the ROG Xbox Ally X, every mode).**
+- **The Operating Mode in the portal (owner, 31-10-2026: in the portal, only on the ROG XBOX Ally X, every mode).**
   Built (31-10-2026, not released): the header's marker (portal's `operating_mode.py`), the mode page (the Settings
   page's Operating mode row) and the helper (`portable_portal/helper/`: `operating-mode.ps1`, installed with
   `install-helper.ps1` from the page's Watt limits row). Device-tested on the Ally X, all OK (owner, 31-10-2026
@@ -2191,7 +2191,7 @@ behavior and dependencies. Decided (owner, 25-10-2026):
   package power from ≈22 to ≈12 W and the battery drain from ≈30 to ≈20 W, at the game's same 60 FPS.
 
   The design (owner, 31-10-2026):
-  - An Operating Mode page in the portal, shown only on the ROG Xbox Ally X (the model from one CIM query, RC73XA):
+  - An Operating Mode page in the portal, shown only on the ROG XBOX Ally X (the model from one CIM query, RC73XA):
     Silent, Performance, Turbo and Windows ("back to Windows"), each with its watts for the current power source.
     Manual and PD Turbo are not offered.
   - The portal sets the plan and the power mode itself, as the user, and asks the helper for the watts.
@@ -2229,7 +2229,7 @@ behavior and dependencies. Decided (owner, 25-10-2026):
   cause, the connection at that moment was. Seen then: the MediaTek MT7922 (Wi-Fi 6E) at 5 GHz, 802.11ax, 2402 Mbps,
   signal 84 %; the power plan's wireless power saving off on mains and Medium Power Saving on battery. A card that
   shows the link (band, rate, signal), the power plan's Wi-Fi setting on mains and on battery, what else is
-  downloading (Windows Update's Delivery Optimization, the Xbox app, Steam) and a timed download, so a slow moment
+  downloading (Windows Update's Delivery Optimization, the XBOX app, Steam) and a timed download, so a slow moment
   can be compared with a fast one, on mains and on battery. Built (28-10-2026): `portable_test/network.py`, the
   link through wlanapi and the plan's Power Saving Mode through powrprof (ctypes: netsh and powercfg answer in
   Windows' language), one PowerShell query for the bytes received over 2 s, Delivery Optimization's jobs that are Downloading and the
@@ -2245,7 +2245,7 @@ behavior and dependencies. Decided (owner, 25-10-2026):
   pygame-ce caught no press of M1 or M2. The idea: a suite app that programs them. The controller test shows them,
   and says on its card that they answer only once Armoury Crate maps them to a standard button.
 - **A BIOS update check (on hold, owner 31-10-2026: "we should definitely add a test to check for updates").** ASUS
-  has published a new BIOS for the ROG Xbox Ally X on its support page. The idea: a test that compares the
+  has published a new BIOS for the ROG XBOX Ally X on its support page. The idea: a test that compares the
   handheld's BIOS version (Windows reports it, `Win32_BIOS`) with the newest one ASUS publishes for the model, and
   says when an update is out, without installing anything. To find out first: where ASUS publishes the list in a
   form an app can read, and how the model is told apart (RC73XA and RC73YA).
@@ -2270,7 +2270,7 @@ The scan (25-10-2026), what each BC-250 app means for Windows:
 
 - Not ported (Linux, the board or Bazzite does the work): gpu, compute, cores, oc, acpi, vram, ace, mesh, bios,
   wdriver, decky, cec (no CEC on the handheld itself; a dock at most), clb (dropped by the owner, 25-10-2026: the
-  Xbox app on the handheld already streams from an Xbox and from Xbox Cloud). Their place is taken by the handheld's
+  XBOX app on the handheld already streams from an XBOX and from XBOX Cloud). Their place is taken by the handheld's
   own tuning apps above.
 - Ported (the logic stays, the OS layer changes): the six emulator managers (Windows builds exist; Game Mode becomes
   a Steam shortcut, which `steam.py` already writes), consoles (PS4/PS5 Remote Play on the handheld), hdcontrol (HID
@@ -2772,7 +2772,7 @@ installers, docs, native and shell jobs, both catalogs' --check, the wiki's stri
   `system` folder (names from the core's info file). Release (owner): `swanstation-v0.1.0`, then pin it and bump the
   portal (an added app needs a minor bump).
 - **More emulator managers (owner, 21-10-2026; built 21-10-2026, not tried on the board).** After SwanStation
-  Manager: mGBA (Game Boy Advance, MPL-2.0), SameBoy (Game Boy and Color, MIT) and Xenia (Xbox 360, BSD-3-Clause).
+  Manager: mGBA (Game Boy Advance, MPL-2.0), SameBoy (Game Boy and Color, MIT) and Xenia (XBOX 360, BSD-3-Clause).
   Mesen (NES and SNES) was built and then dropped by the owner (21-10-2026): too complicated for this case. Licenses
   checked 21-10-2026 against each project's LICENSE. All are downloaded by an app, as the existing managers do: none
   has to be bundled. Ryujinx (Switch) was dropped by the owner. Each app has the layout of the others, its installer
@@ -2796,12 +2796,12 @@ installers, docs, native and shell jobs, both catalogs' --check, the wiki's stri
   - Release (owner): `mgba-v0.1.0`, `sameboy-v0.1.0`, `xenia-v0.1.0` (and `swanstation-v0.1.0`), then pin them and
     bump the portal (added apps need a minor bump).
 - **Console LinkB (owner, 21-10-2026; built 21-10-2026, not tried with Microsoft's services or on the board).**
-  Xbox Remote Play and Xbox Cloud Gaming, a separate app beside Console Link (`apps/clb`, package `console_linkb`,
+  XBOX Remote Play and XBOX Cloud Gaming, a separate app beside Console Link (`apps/clb`, package `console_linkb`,
   tag prefix `clb-v`; the owner chose the name "for now"). GPL-3.0-or-later; the protocol is ported from Greenlight
   (`packages/desktop`, the released 2.4.2 client's session calls, and `packages/player`) and xal-node (the MSAL
   sign-in), both MIT with LICENSE files; their MIT notice is in the app's README, and each ported file says where it
   comes from. xbox-xcloud-player was not used: it declares MIT only in its package.json, with no LICENSE file.
-  The name: "Console Xlink" was dropped for its likeness to XLink Kai (Team XLink's Xbox tunnelling tool); no
+  The name: "Console Xlink" was dropped for its likeness to XLink Kai (Team XLink's XBOX tunnelling tool); no
   trademark search was done for "Console LinkB" either.
   - How it works: device code sign-in (microsoft.com/link), only the refresh token kept (`account.json`, 0600); the
     console list and the wake command from xccs.xboxlive.com; cloud titles from the gssv service, named by
@@ -2812,12 +2812,12 @@ installers, docs, native and shell jobs, both catalogs' --check, the wiki's stri
     report, rumble to the pad; the first controller through pygame-ce, the keyboard as a pad.
   - Tested on this machine only: recorded-style answers for every call, and a whole WebRTC connection against an
     aiortc stand-in for the service (handshake, control, input, video, sound, rumble, a dialog, the end).
-  - To try on the board (owner; the owner has an Xbox account but no Xbox): sign in; Fortnite from the cloud
+  - To try on the board (owner; the owner has an XBOX account but no XBOX): sign in; Fortnite from the cloud
     without Game Pass (Epic says it needs none; reported limit 60 min a session); the picture's smoothness at
     1080p60 (the frames are turned into images in Python, with PyAV's swscale: may need a faster path), the sound's
     delay, the controller. aiortc offers only H.264 Baseline profiles, where a browser offers Main too: the
     service accepted Firefox's (Baseline) offers, so it should accept these. A stream from a console at home stays
-    untested until someone with an Xbox tries it.
+    untested until someone with an XBOX tries it.
   - Not in this version: Game Mode shortcuts (Console Link's Steam pattern), the stream's statistics, a choice of
     region, the microphone (chat channel), touch and mouse/keyboard input for games that take them.
   - Release (owner): `clb-v0.1.0` and a Dependency Checker release (its catalog lists the app), then pin `clb`
@@ -2831,7 +2831,7 @@ installers, docs, native and shell jobs, both catalogs' --check, the wiki's stri
   batch like Install all updates, disabled on Development; a terminal whose installer ended well closes by itself, one that failed stays open (core's
   `keep_open="on_error"`); Sys info lists the input devices (keyboards, mice, controllers, with their bus) beside the
   displays, audio, network, Bluetooth and USB it had since 20-10-2026 ("see what hardware is connected": the owner
-  says if more is wanted, and where); the disclaimer on the wiki's Home page and in the README names Xbox, Valve and
+  says if more is wanted, and where); the disclaimer on the wiki's Home page and in the README names XBOX, Valve and
   the rest; the README is Nexus's with the suite as its first section. The mesh patch (`bc250-suite-mesa-26.2.1.patch`)
   stays: it is built into the driver but does nothing unless `RADV_BC250_MESH_SPLIT_WRITES=1` is set per game in
   Switches…, so other games are not touched; on, it only admits mesh shaders that write memory, which DirectMesh

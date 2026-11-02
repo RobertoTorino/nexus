@@ -2,11 +2,11 @@
 """The controllers on the handheld, read with SDL3 (SDL3.dll, through ctypes) and passed to the stream as the
 console's controller state. Console Link's reader; on Windows SDL3.dll comes with the program (binaries.toml
 pins it), beside it in PyInstaller's _internal, and from a checkout from the folder build_release.py --binaries
-fetches it to. The handheld's own controls are an Xbox controller to SDL (XInput); a DualShock 4 or DualSense
+fetches it to. The handheld's own controls are an XBOX controller to SDL (XInput); a DualShock 4 or DualSense
 brings its touchpad and motion through SDL's own HID driver.
 
 SDL names the buttons by position (south, east, ...) for every kind of gamepad, so a DualShock 4, a DualSense, an
-Xbox pad or a Steam Deck's controls all map the same way: south is cross, east circle, west square, north triangle,
+XBOX pad or a Steam Deck's controls all map the same way: south is cross, east circle, west square, north triangle,
 back is Share, start Options, guide the PS button, as in the reference. The triggers go from 0 to 255, the sticks
 as they are, the touchpad's fingers scaled to the console's touchpad (1920 × 942 on a PS4, 1919 × 1079 on a PS5;
 the reference scales a gamepad's fingers to 1920 × 1079 for both). With several controllers connected, their

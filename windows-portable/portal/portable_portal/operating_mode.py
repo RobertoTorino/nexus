@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The ROG Xbox Ally X's operating modes, as Armoury Crate SE's Command Center offers them (owner, 31-10-2026: in the
+"""The ROG XBOX Ally X's operating modes, as Armoury Crate SE's Command Center offers them (owner, 31-10-2026: in the
 portal, only on the Ally X, every mode). A mode is three settings: ASUS's power plan and Windows' power mode, which
 the user may set (here), and the three watt limits, which only an administrator may write: the helper
 (helper/operating-mode.ps1, a scheduled task that runs as SYSTEM, installed with one administrator prompt), which
@@ -20,7 +20,7 @@ from pathlib import Path
 
 from bc250_core.platform import NO_WINDOW
 
-MODEL = "RC73XA"                # the ROG Xbox Ally X in Windows' product name ("ROG Xbox Ally X RC73XA_RC73XA")
+MODEL = "RC73XA"                # the ROG XBOX Ally X in Windows' product name ("ROG XBOX Ally X RC73XA_RC73XA")
 BIOS_KEY = r"HARDWARE\DESCRIPTION\System\BIOS"
 SUITE_FOLDER = "windows-portable-suite"
 TASK = r"\Windows Portable Suite\Operating Mode"      # the helper's scheduled task (helper/install-helper.ps1)
@@ -138,7 +138,7 @@ def watts_text(watts: Watts) -> str:
 
 
 def power_api(product: Callable[[], str] = product_name) -> PowerApi | None:
-    """Windows' power API on the ROG Xbox Ally X, powrprof opened once; None on any other device (no marker, no
+    """Windows' power API on the ROG XBOX Ally X, powrprof opened once; None on any other device (no marker, no
     Operating mode row)."""
     return PowerApi() if sys.platform == "win32" and is_ally_x(product) else None
 

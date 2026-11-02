@@ -74,7 +74,7 @@ class DeviceError(Exception):
 
 
 def identity(read: Callable[[str], str] | None = None) -> tuple[Identity, str]:
-    """(the device's BIOS, its model: "ROG Xbox Ally X RC73XA_RC73XA"); "" for what Windows does not report."""
+    """(the device's BIOS, its model: "ROG XBOX Ally X RC73XA_RC73XA"); "" for what Windows does not report."""
     read = read or _registry
     model = read("SystemProductName") or read("BaseBoardProduct")
     return Identity(read("BIOSVendor"), read("BIOSVersion"), read("BIOSReleaseDate")), model

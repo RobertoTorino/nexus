@@ -16,7 +16,7 @@ screen; **B** goes back and **⧉** (View) exits it.
 
 - **Nothing, on most devices:** when the maker delivers its BIOS through Windows Update (ASUS does), Windows keeps a
   copy of the BIOS it installed, and the app reads that one.
-- **Otherwise the BIOS file of your device**, as its maker publishes it: for the ROG Xbox Ally X, ASUS's download on
+- **Otherwise the BIOS file of your device**, as its maker publishes it: for the ROG XBOX Ally X, ASUS's download on
   the device's support page, a zip with a file named like `RC73XAAS.319` in it. The app takes the zip itself, that
   file, or a `.cap`, `.bin` or `.rom`. Take the version your device runs: the This device card says which one that is.
 - **An administrator's password** (or a yes, when your own user is one) to read your own settings: see This device

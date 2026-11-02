@@ -29,10 +29,10 @@ Release 4.0.0.
 Changelog: 01-11-2026 16:31:38
 
 Breaking. No folder is chosen or browsed to any more (owner, 30-10-2026: fixed folders, no folder selecting): LB
-Folders, with its added folders, usual places and folder browser, is gone; Your games looks only in Games\Xbox360 in
-the user's folder, which the app makes when it opens, and in Games\Xbox360 on each SD card or USB drive that has one
+Folders, with its added folders, usual places and folder browser, is gone; Your games looks only in Games\XBOX360 in
+the user's folder, which the app makes when it opens, and in Games\XBOX360 on each SD card or USB drive that has one
 (library.fixed(); folders(), set_folders() and suggested() removed), and folders added before are no longer looked
-in. LB on Your games is Steam artwork now, as in shadPS4 Manager. The Log pane shows where Games\Xbox360 is.
+in. LB on Your games is Steam artwork now, as in shadPS4 Manager. The Log pane shows where Games\XBOX360 is.
 
 Added. RB Remove game on a game of Your games (owner, 30-10-2026: a game that no longer plays goes, as in shadPS4
 Manager; owner, 01-11-2026: before deleting anything, let the user decide what to keep; core's keep.py): a page of
@@ -43,7 +43,7 @@ its folder, a Games on Demand or Arcade package in its title ID folder as the co
 one for its title updates and one for its add-ons (so the add-ons can be kept; the title ID folder goes once nothing
 is left in it, library.tidy()), a package elsewhere its file with its .data folder, and a game in Steam its Steam
 shortcut, taken out through Steam. The status line says what was deleted and what was kept. Xenia's content folder,
-with the saves, is never listed. A game whose folder is one of the app's Games\Xbox360 folders itself, a drive, or a
+with the saves, is never listed. A game whose folder is one of the app's Games\XBOX360 folders itself, a drive, or a
 folder holding another game is never offered: the status line says to delete it by hand.
 
 Changelog: 01-11-2026 17:36:48
@@ -93,7 +93,7 @@ Changelog: 30-10-2026 21:19:45
 
 Breaking. A game quits with View, LB and RB held together for two seconds, no longer View and Menu (owner,
 30-10-2026): View and Menu are Windows' and Steam's guide button (Windows' "Use View + Menu as Guide button in
-apps", Steam Input's Select + Start), so holding them opened the Xbox overlay or Steam's over the game, which took
+apps", Steam Input's Select + Start), so holding them opened the XBOX overlay or Steam's over the game, which took
 the focus and left the game's own quit question unreachable. The play mode closes the emulator on the new chord
 (core's play.py); the line at the bottom of Your games, the help and the wiki say so.
 
@@ -108,7 +108,7 @@ Added. The battery is last in the status line at the top, at the right, and says
 
 Changelog: 30-10-2026 17:18:10
 
-Fixed. Steam started by the app signs in, in Desktop and in Xbox mode (core's outside_bundle(), owner, 30-10-2026): it
+Fixed. Steam started by the app signs in, in Desktop and in XBOX mode (core's outside_bundle(), owner, 30-10-2026): it
 inherited the controller reader's SDL_VIDEODRIVER=dummy, so Steam made its login window without a window and stayed
 Logged Off. X Play, the restart after Update Steam and a game started without Steam no longer get those variables.
 

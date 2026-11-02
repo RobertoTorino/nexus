@@ -4,8 +4,8 @@
 #
 #   powershell -ExecutionPolicy Bypass -File install.ps1                          # install or update
 #   powershell -ExecutionPolicy Bypass -File install.ps1 --no-desktop-shortcut    # the Start-menu entry only
-#   powershell -ExecutionPolicy Bypass -File install.ps1 --xbox-menu              # also into the Xbox menu, unasked
-#   powershell -ExecutionPolicy Bypass -File install.ps1 --no-xbox-menu           # not into the Xbox menu, unasked
+#   powershell -ExecutionPolicy Bypass -File install.ps1 --xbox-menu              # also into the XBOX menu, unasked
+#   powershell -ExecutionPolicy Bypass -File install.ps1 --no-xbox-menu           # not into the XBOX menu, unasked
 #   powershell -ExecutionPolicy Bypass -File install.ps1 --uninstall              # remove the portal and Windows Portable Test; the other apps stay
 #   powershell -ExecutionPolicy Bypass -File install.ps1 --uninstall --all        # the whole suite: every app the portal installed too
 #   powershell -ExecutionPolicy Bypass -File install.ps1 --uninstall --purge      # also remove the settings, the log and the records
@@ -22,7 +22,7 @@
 #    Settings page offers (PNG, JPEG or WebP, wider than high, at least 1280 x 720). Your pictures in it always stay;
 #    an uninstall removes it only when it is empty.
 #  * A Start-menu entry in the Windows Portable Suite folder, and a Desktop shortcut.
-#  * On the ROG Xbox Ally X, the portal's Operating Mode helper, when its page installed it (as administrator, in
+#  * On the ROG XBOX Ally X, the portal's Operating Mode helper, when its page installed it (as administrator, in
 #    C:\Program Files\windows-portable-suite\): --uninstall removes it with its own remover, Windows' administrator
 #    prompt first.
 #  * Windows Portable Test, which the suite always includes, from bundle\wp-test-v<x.y.z>.zip through its own
@@ -56,27 +56,27 @@ function Info($text) { Write-Host '==> ' -ForegroundColor Magenta -NoNewline; Wr
 function Die($text) { Write-Host "ERROR: $text" -ForegroundColor Red; exit 1 }
 function Usage { Get-Content -LiteralPath $PSCommandPath | Select-Object -Skip 1 -First 10 | ForEach-Object { $_ -replace '^# ?', '' } }
 
-function Add-ToXboxMenu($program) {
-    # The suite in the Xbox app's library, so Xbox mode starts it from its home (owner, 30-10-2026): asked on a
+function Add-ToXBOXMenu($program) {
+    # The suite in the XBOX app's library, so XBOX mode starts it from its home (owner, 30-10-2026): asked on a
     # first install (an update keeps what was chosen; the Settings page adds it any time), --xbox-menu and
     # --no-xbox-menu answer without the question, WPS_XBOX_MENU (y or n) in the installer tests. The portal itself
-    # writes it (--xbox-menu, core's xbox.py): the Xbox app closes for a moment.
-    if ($XboxMenu -eq $false) { return }
+    # writes it (--xbox-menu, core's xbox.py): the XBOX app closes for a moment.
+    if ($XBOXMenu -eq $false) { return }
     if (-not (Test-Path -LiteralPath (Join-Path $env:LOCALAPPDATA 'Packages\Microsoft.GamingApp_8wekyb3d8bbwe'))) { return }
-    if ($XboxMenu -ne $true) {
+    if ($XBOXMenu -ne $true) {
         if (-not $FirstInstall) { return }
         $answer = $env:WPS_XBOX_MENU
         if (-not $answer) {
             if (-not [Environment]::UserInteractive -or [Console]::IsInputRedirected) { return }
-            $answer = Read-Host "Add $AppName to the Xbox menu, so Xbox mode starts it from its home? The Xbox app closes for a moment. [Y/n]"
+            $answer = Read-Host "Add $AppName to the XBOX menu, so XBOX mode starts it from its home? The XBOX app closes for a moment. [Y/n]"
         }
-        if ($answer -and $answer -notmatch '^\s*y') { Info 'Not added to the Xbox menu (the Settings page adds it any time)'; return }
+        if ($answer -and $answer -notmatch '^\s*y') { Info 'Not added to the XBOX menu (the Settings page adds it any time)'; return }
     }
-    Info "Adding $AppName to the Xbox menu"
+    Info "Adding $AppName to the XBOX menu"
     try { $run = Start-Process -FilePath $program -ArgumentList '--xbox-menu' -Wait -PassThru -WindowStyle Hidden }
-    catch { Info "Not added to the Xbox menu: $_ (the Settings page tries again)"; return }
-    if ($run.ExitCode -eq 0) { Info "$AppName is in the Xbox menu" }
-    else { Info "Not added to the Xbox menu: $PortalHome\portal.log says why (the Settings page tries again)" }
+    catch { Info "Not added to the XBOX menu: $_ (the Settings page tries again)"; return }
+    if ($run.ExitCode -eq 0) { Info "$AppName is in the XBOX menu" }
+    else { Info "Not added to the XBOX menu: $PortalHome\portal.log says why (the Settings page tries again)" }
 }
 
 function Elevated {
@@ -86,7 +86,7 @@ function Elevated {
 }
 
 function Remove-Helper {
-    # The Operating Mode helper (ROG Xbox Ally X, owner 31-10-2026) is an administrator's: its own remover takes it
+    # The Operating Mode helper (ROG XBOX Ally X, owner 31-10-2026) is an administrator's: its own remover takes it
     # out, Windows' administrator prompt first. A no leaves it, and says how to remove it later.
     if ($env:WPS_HELPER_DIR) { $dir = $env:WPS_HELPER_DIR } else { $dir = Join-Path $env:ProgramFiles $Suite }
     $remover = Join-Path $dir 'install-helper.ps1'
@@ -232,15 +232,15 @@ function Invoke-AppInstaller($tag, [string[]]$options) {
 }
 
 $DesktopShortcut = $true
-$XboxMenu = $null                               # $null: asked on a first install
+$XBOXMenu = $null                               # $null: asked on a first install
 $Uninstall = $false
 $All = $false
 $Purge = $false
 foreach ($arg in $args) {
     switch -CaseSensitive ($arg) {
         '--no-desktop-shortcut' { $DesktopShortcut = $false }
-        '--xbox-menu' { $XboxMenu = $true }
-        '--no-xbox-menu' { $XboxMenu = $false }
+        '--xbox-menu' { $XBOXMenu = $true }
+        '--no-xbox-menu' { $XBOXMenu = $false }
         '--uninstall' { $Uninstall = $true }
         '--all' { $All = $true }
         '--purge' { $Purge = $true }
@@ -362,6 +362,6 @@ if ($TestZip) {
 }
 New-Item -ItemType Directory -Force -Path $Wallpapers | Out-Null
 Info "Your own wallpapers go in $Wallpapers (the portal's Settings page offers them)"
-Add-ToXboxMenu $Target
+Add-ToXBOXMenu $Target
 Info "$AppName is installed. Start it from the Start menu, or run $Target"
 Remove-Download

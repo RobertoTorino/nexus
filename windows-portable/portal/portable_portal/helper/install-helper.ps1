@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-# Installs the portal's Operating Mode helper on the ROG Xbox Ally X (owner, 31-10-2026), as administrator: the
+# Installs the portal's Operating Mode helper on the ROG XBOX Ally X (owner, 31-10-2026), as administrator: the
 # portal starts it with one administrator prompt (the Operating Mode page's Watt limits row), and the portal's
 # install.ps1 --uninstall starts the copy in Program Files to remove it.
 #
@@ -22,7 +22,7 @@ $Data = Join-Path $env:ProgramData $Suite
 $Request = Join-Path $Data 'operating-mode'
 $TaskFolder = '\Windows Portable Suite\'
 $TaskName = 'Operating Mode'
-$Model = 'RC73XA'                                           # the ROG Xbox Ally X, as operating_mode.MODEL
+$Model = 'RC73XA'                                           # the ROG XBOX Ally X, as operating_mode.MODEL
 # The task: SYSTEM and the administrators may do anything with it, every signed-in user may read and start it
 $TaskSddl = 'D:P(A;;FA;;;SY)(A;;FA;;;BA)(A;;GRGX;;;AU)'
 
@@ -50,7 +50,7 @@ if ($args -contains '--uninstall') {
 }
 
 $product = (Get-ItemProperty 'HKLM:\HARDWARE\DESCRIPTION\System\BIOS').SystemProductName
-if ($product -notmatch $Model) { Die "This is not a ROG Xbox Ally X ($product): the helper's watt limits are the Ally X's." }
+if ($product -notmatch $Model) { Die "This is not a ROG XBOX Ally X ($product): the helper's watt limits are the Ally X's." }
 
 Info "Copying the helper to $Programs"
 New-Item -ItemType Directory -Force -Path $Programs | Out-Null

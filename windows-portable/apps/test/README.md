@@ -6,7 +6,7 @@
 
 # Windows Portable Test
 
-Gets to know a **Windows handheld** (first the ASUS ROG Xbox Ally X): what Windows reports about the device, how its
+Gets to know a **Windows handheld** (first the ASUS ROG XBOX Ally X): what Windows reports about the device, how its
 network does (the Wi-Fi and wired links, what else is downloading and a timed download from GitHub over each), and
 every button, stick and trigger of its controller as you press them. It reads and shows; it changes nothing on the device.
 

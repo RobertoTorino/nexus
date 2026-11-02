@@ -4,7 +4,7 @@ battery, date and time, fits the handheld's screen; every action is a button in 
 pill is left (owner, 29-10-2026); B goes back and View exits; Xenia installed on A (off the window's thread, the
 megabytes counted, View asking first meanwhile), updated from another build, and removed with X pressed twice; a newer
 build on GitHub shown; the Settings pane's rows, in tabs, step through their values, never while Xenia runs; Your games
-from the app's Games\\Xbox360 folders, marked for Steam with A and put in Steam, removed with RB on the keep page;
+from the app's Games\\XBOX360 folders, marked for Steam with A and put in Steam, removed with RB on the keep page;
 the Log pane and the whole log read in the app; the SteamGridDB key; the version and the icons are where the checks
 expect them."""
 
@@ -54,7 +54,7 @@ def make(qapp, home=None, install=fake_install, running=lambda home: False, **mo
     more.setdefault("steam_dir", None)                  # never the real Steam
     more.setdefault("start", lambda command, cwd=None: None)   # never a real Xenia
     more.setdefault("drives", lambda: [])
-    more.setdefault("user_home", Path(tempfile.mkdtemp()) / "me")   # never the real Games\\Xbox360
+    more.setdefault("user_home", Path(tempfile.mkdtemp()) / "me")   # never the real Games\\XBOX360
     more.setdefault("runtime_missing", lambda: [])
     more.setdefault("newer_release", lambda: None)      # never GitHub
     more.setdefault("settings", QSettings(str(Path(tempfile.mkdtemp()) / "app.ini"),
@@ -315,12 +315,12 @@ def test_your_games_are_marked_with_a_and_put_in_steam(qapp, tmp_path, monkeypat
     home = tmp_path / "emulator"
     fake_install(home)
     user = tmp_path / "me"
-    games = user / "Games" / "Xbox360"
+    games = user / "Games" / "XBOX360"
     card = tmp_path / "E"
     halo = make_iso(games / "Halo 3.iso")
     gears = make_xex(games / "Gears of War" / "default.xex", 0x4D5307D5)
-    braid = make_package(card / "Games" / "Xbox360" / "Content", "Braid", 0x000D0000, 0x58410954)   # on the SD card
-    make_iso(user / "Games" / "Elsewhere.iso")                     # not in Games\Xbox360: not looked in
+    braid = make_package(card / "Games" / "XBOX360" / "Content", "Braid", 0x000D0000, 0x58410954)   # on the SD card
+    make_iso(user / "Games" / "Elsewhere.iso")                     # not in Games\XBOX360: not looked in
     old = QSettings(str(tmp_path / "app.ini"), QSettings.Format.IniFormat)
     old.setValue("games/folders", [str(user / "Games")])           # a folder added before: no longer read
     steam_dir = tmp_path / "Steam"
@@ -364,7 +364,7 @@ def test_your_games_are_marked_with_a_and_put_in_steam(qapp, tmp_path, monkeypat
 
 
 def test_update_steam_needs_xenia(qapp, tmp_path, monkeypatch):
-    make_iso(tmp_path / "me" / "Games" / "Xbox360" / "A.iso")
+    make_iso(tmp_path / "me" / "Games" / "XBOX360" / "A.iso")
     steam_dir = tmp_path / "Steam"
     (steam_dir / "userdata" / "1" / "config").mkdir(parents=True)
     window = make(qapp, tmp_path / "emulator", steam_dir=steam_dir, user_home=tmp_path / "me")
@@ -387,7 +387,7 @@ def test_a_game_is_removed_from_steam_and_the_disk(qapp, tmp_path, monkeypatch):
     home = tmp_path / "emulator"
     fake_install(home)
     (home / "content" / "4D5307D5").mkdir(parents=True)          # the game's saves, in Xenia's folder
-    games = tmp_path / "me" / "Games" / "Xbox360"
+    games = tmp_path / "me" / "Games" / "XBOX360"
     gears = make_xex(games / "Gears of War" / "default.xex", 0x4D5307D5)
     (games / "Gears of War" / "media.xex").write_bytes(b"XEX2")
     halo = make_iso(games / "Halo 3.iso")
@@ -400,7 +400,7 @@ def test_a_game_is_removed_from_steam_and_the_disk(qapp, tmp_path, monkeypatch):
         change()
         return True
     card = tmp_path / "E"
-    loose = make_xex(card / "Games" / "Xbox360" / "default.xex", 0x41560817)   # a game that is a game folder itself
+    loose = make_xex(card / "Games" / "XBOX360" / "default.xex", 0x41560817)   # a game that is a game folder itself
     window = make(qapp, home, steam_dir=steam_dir, steam_closed=with_steam_closed, user_home=tmp_path / "me",
                   drives=lambda: [card])
     monkeypatch.setattr(window, "isActiveWindow", lambda: True)
@@ -456,7 +456,7 @@ def test_a_game_is_removed_from_steam_and_the_disk(qapp, tmp_path, monkeypatch):
     assert list(window.games_pane.list.pills) == [str(loose)]
     window.games_pane.list.pills[str(loose)].setFocus()
     window.on_action("next")
-    assert window.games_pane.status.text().startswith("Xbox360 is in Xbox360, one of the app's game folders itself")
+    assert window.games_pane.status.text().startswith("XBOX360 is in XBOX360, one of the app's game folders itself")
     assert loose.exists() and not window.busy
     window.close()
 
@@ -466,7 +466,7 @@ def test_a_console_titles_add_ons_can_be_kept(qapp, tmp_path, monkeypatch):
     the keep page; the add-ons kept, the rest deleted, and the title ID folder stays for them."""
     home = tmp_path / "emulator"
     fake_install(home)
-    games = tmp_path / "me" / "Games" / "Xbox360"
+    games = tmp_path / "me" / "Games" / "XBOX360"
     make_package(games, "Fable II", title_id=0x4D5307E6)
     title = games / "4D5307E6"
     (title / "000B0000").mkdir()
@@ -495,7 +495,7 @@ def test_a_console_titles_add_ons_can_be_kept(qapp, tmp_path, monkeypatch):
 def test_remove_game_while_xenia_runs_says_so(qapp, tmp_path, monkeypatch):
     home = tmp_path / "emulator"
     fake_install(home)
-    halo = make_iso(tmp_path / "me" / "Games" / "Xbox360" / "Halo 3.iso")
+    halo = make_iso(tmp_path / "me" / "Games" / "XBOX360" / "Halo 3.iso")
     window = make(qapp, home, running=lambda home: True, user_home=tmp_path / "me")
     monkeypatch.setattr(window, "isActiveWindow", lambda: True)
     window.games_card.setFocus()
@@ -511,7 +511,7 @@ def test_a_game_written_but_not_read_back_is_said_and_logged(qapp, tmp_path, mon
     from xenia_manager import library
     home = tmp_path / "emulator"
     fake_install(home)
-    make_iso(tmp_path / "me" / "Games" / "Xbox360" / "A.iso")
+    make_iso(tmp_path / "me" / "Games" / "XBOX360" / "A.iso")
     steam_dir = tmp_path / "Steam"
     (steam_dir / "userdata" / "1" / "config").mkdir(parents=True)
     monkeypatch.setattr(library, "update_steam", lambda *a, **k: (True, "1 game(s) in Steam.", {}))
@@ -532,7 +532,7 @@ def test_a_game_written_but_not_read_back_is_said_and_logged(qapp, tmp_path, mon
 
 
 def test_y_on_your_games_always_says_what_it_did(qapp, tmp_path, monkeypatch):
-    make_iso(tmp_path / "me" / "Games" / "Xbox360" / "A.iso")
+    make_iso(tmp_path / "me" / "Games" / "XBOX360" / "A.iso")
     window = make(qapp, tmp_path / "emulator", user_home=tmp_path / "me")
     monkeypatch.setattr(window, "isActiveWindow", lambda: True)
     window.games_card.setFocus()
@@ -659,7 +659,7 @@ def test_a_game_is_played_through_steam(qapp, tmp_path, monkeypatch):
     Steam's library is the portal's (owner, 30-10-2026: no Open Steam row)."""
     home = tmp_path / "emulator"
     fake_install(home)
-    game = make_iso(tmp_path / "me" / "Games" / "Xbox360" / "Halo 3.iso")
+    game = make_iso(tmp_path / "me" / "Games" / "XBOX360" / "Halo 3.iso")
     steam_dir = tmp_path / "Steam"
     (steam_dir / "userdata" / "1" / "config").mkdir(parents=True)
     opened = []
@@ -703,7 +703,7 @@ def test_without_steam_x_starts_the_game_in_xenia(qapp, tmp_path, monkeypatch):
     """A device without Steam (owner, 30-10-2026: a fallback): X starts Xenia with the game full screen, as its
     shortcut would, from Xenia's folder; without Xenia it says to install it first."""
     home = tmp_path / "emulator"
-    game = make_iso(tmp_path / "me" / "Games" / "Xbox360" / "Halo 3.iso")
+    game = make_iso(tmp_path / "me" / "Games" / "XBOX360" / "Halo 3.iso")
     started, opened = [], []
     window = make(qapp, home, user_home=tmp_path / "me", start=lambda command, cwd=None: started.append((command, cwd)),
                   open_url=opened.append)
@@ -739,7 +739,7 @@ def test_a_shortcut_made_before_the_play_mode_asks_for_update_steam(qapp, tmp_pa
     home = tmp_path / "emulator"
     fake_install(home)
     user = tmp_path / "me"
-    game = make_iso(user / "Games" / "Xbox360" / "Halo 3.iso")
+    game = make_iso(user / "Games" / "XBOX360" / "Halo 3.iso")
     steam_dir = tmp_path / "Steam"
     config = steam_dir / "userdata" / "1" / "config"
     config.mkdir(parents=True)
@@ -816,7 +816,7 @@ def test_a_game_renamed_while_the_app_is_open(qapp, tmp_path, monkeypatch):
     home = tmp_path / "emulator"
     fake_install(home)
     user = tmp_path / "me"
-    old = make_iso(user / "Games" / "Xbox360" / "Halo 3 [NTSC].iso")
+    old = make_iso(user / "Games" / "XBOX360" / "Halo 3 [NTSC].iso")
     steam_dir = tmp_path / "Steam"
     (steam_dir / "userdata" / "1" / "config").mkdir(parents=True)
     window = make(qapp, home, steam_dir=steam_dir, steam_closed=lambda change: change() or False, user_home=user)

@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Shared fixtures: an offscreen QApplication, settings and XDG folders in a temp folder, and Xbox 360 games made
+"""Shared fixtures: an offscreen QApplication, settings and XDG folders in a temp folder, and XBOX 360 games made
 here: a disc image with its game partition's magic (sparse, at the partition's place), an XEX with its execution
 info, and an STFS package with its content type, name and title ID."""
 
@@ -19,7 +19,7 @@ if str(CORE) not in sys.path:
 
 
 def make_iso(path: Path, partition: int = 0) -> Path:
-    """An Xbox 360 disc image: "MICROSOFT*XBOX*MEDIA" in sector 32 of a game partition at *partition* (a sparse
+    """An XBOX 360 disc image: "MICROSOFT*XBOX*MEDIA" in sector 32 of a game partition at *partition* (a sparse
     file, so a real disc's place costs no space)."""
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("wb") as file:

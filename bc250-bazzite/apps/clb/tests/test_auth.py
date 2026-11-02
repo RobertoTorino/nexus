@@ -151,7 +151,7 @@ def test_a_new_refresh_token_from_microsoft_is_kept(account, transport, tmp_path
 
 def test_xsts_errors_are_said_plainly(account, transport):
     transport.add("POST", "https://xsts.auth.xboxlive.com/xsts/authorize", (401, {"XErr": 2148916233}))
-    with pytest.raises(AuthError, match="no Xbox profile"):
+    with pytest.raises(AuthError, match="no XBOX profile"):
         account.web_token()
 
 
@@ -185,5 +185,5 @@ def test_no_connection_is_an_http_error_with_status_zero():
 
 def test_xbox_token_without_claims_is_an_auth_error():
     with pytest.raises(AuthError):
-        auth.XboxToken.from_json({"Token": "x"})
-    assert auth.XboxToken.from_json(xbox_token("T")).not_after > 0
+        auth.XBOXToken.from_json({"Token": "x"})
+    assert auth.XBOXToken.from_json(xbox_token("T")).not_after > 0

@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-# The Operating Mode helper of the Windows Portable Suite on the ROG Xbox Ally X (owner, 31-10-2026). The scheduled
+# The Operating Mode helper of the Windows Portable Suite on the ROG XBOX Ally X (owner, 31-10-2026). The scheduled
 # task \Windows Portable Suite\Operating Mode runs it as SYSTEM from C:\Program Files\windows-portable-suite\, where
 # the user cannot change it, when the portal asks (A on a mode of its Operating Mode page) and a few seconds after
 # every change of the power source (Kernel-Power 105), after Armoury Crate has applied its own mode for it, and 20 s

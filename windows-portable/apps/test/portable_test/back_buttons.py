@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The back buttons M1 and M2 of an ASUS handheld (the ROG Xbox Ally X), which never reach Windows as gamepad buttons:
+"""The back buttons M1 and M2 of an ASUS handheld (the ROG XBOX Ally X), which never reach Windows as gamepad buttons:
 Armoury Crate keeps them as its own modifiers. Its controller reports them on a vendor HID channel of its own (usage
 page 0xFF31, usage 0x76; Linux's hid-asus reads the ROG keys there), which opens for reading without administrator
 rights while Armoury Crate runs: report 5A A5 when either back button goes down and 5A 00 when it is let go. Both send

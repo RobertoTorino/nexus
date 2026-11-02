@@ -11,7 +11,7 @@ service, and shows whether it runs and which plugins it has.
 Decky's own menu is in Steam's Quick Access menu, in Game Mode and in Big Picture Mode; Steam's desktop window has
 no Quick Access menu, so Decky does not show there. Open the Quick Access menu, the panel on the right, with the
 **…** button, or **Ctrl + 2** on a keyboard; a controller without a **…** button has its own combination, which
-Steam lists under **Show Controller Shortcuts** in its Power menu (hold the controller's Steam, PS or Xbox button).
+Steam lists under **Show Controller Shortcuts** in its Power menu (hold the controller's Steam, PS or XBOX button).
 Decky is the plug icon at the bottom of the menu's row of icons. There you open Decky's store, install plugins,
 switch them off and set them up. What a plugin does, and whether it works on the
 BC-250, is up to the plugin. A plugin that sets power limits or clocks changes how the board runs: that is your

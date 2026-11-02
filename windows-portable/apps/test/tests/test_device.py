@@ -16,13 +16,13 @@ from portable_test import device
 
 def test_the_ally_as_windows_reported_it(ally_json):
     found = device.parse(ally_json)
-    assert found.name == "ROG Xbox Ally X"
+    assert found.name == "ROG XBOX Ally X"
     assert dict(found.rows()) == {
-        "Device": "ROG Xbox Ally X", "Processor": "AMD Ryzen AI Z2 Extreme", "Cores": "8 cores, 16 threads",
+        "Device": "ROG XBOX Ally X", "Processor": "AMD Ryzen AI Z2 Extreme", "Cores": "8 cores, 16 threads",
         "Graphics": "AMD Radeon(TM) 890M Graphics", "Driver": "32.0.32015.7029", "Memory": "24 GB, 15.6 GB usable",
         "Storage": "1024 GB, SAMSUNG MZVMA1T0HCLD-00BTW", "System": "Windows 11 Home, build 26300",
         "Firmware": "RC73XA.319", "Battery": "82%, on battery"}
-    assert found.report().splitlines()[0] == "Device: ROG Xbox Ally X"
+    assert found.report().splitlines()[0] == "Device: ROG XBOX Ally X"
 
 
 def test_lists_of_several(ally_json):
@@ -55,7 +55,7 @@ def test_read_runs_the_query_in_powershell(ally_json):
     def run(argv):
         seen.append(argv)
         return ally_json
-    assert device.read(run).name == "ROG Xbox Ally X"
+    assert device.read(run).name == "ROG XBOX Ally X"
     script = base64.b64decode(seen[0][-1]).decode("utf-16-le")
     assert seen[0][0] == "powershell.exe" and "Win32_ComputerSystem" in script and "ConvertTo-Json" in script
     assert "SerialNumber" not in script                                  # nothing personal is asked for
@@ -70,7 +70,7 @@ def test_the_hardware_card():
     assert found.hardware_rows() == [
         ("Panel", "about 7 inches (15 x 9 cm)"),                       # the built-in one, not the TV
         ("Touch", "NOVATEK TouchPanel, 10 touch points"),                # not Windows' generic name beside it
-        ("Controller", "ROG Xbox Ally Device Gamepad"),                  # the built-in one
+        ("Controller", "ROG XBOX Ally Device Gamepad"),                  # the built-in one
         ("Wi-Fi", "MediaTek Wi-Fi 6E MT7922 (RZ616) 160MHz Wireless LAN Card, driver 3.6.2.1438"),
         ("Bluetooth", "MediaTek Bluetooth Adapter"),
         ("Audio", "Realtek High Definition Audio, AMD High Definition Audio Device"),

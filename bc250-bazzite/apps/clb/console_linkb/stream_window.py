@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The stream's window: the picture (scaled to fit, black around it), the sound on the default output, and the
-controller and the keyboard as the Xbox's pad.
+controller and the keyboard as the XBOX's pad.
 
 Full screen from the start. F11 switches between full screen and a window. The stream ends when the window is
-closed, with Ctrl+Q, or by holding View and Menu on the controller for 2 s (the Xbox button stays the console's).
+closed, with Ctrl+Q, or by holding View and Menu on the controller for 2 s (the XBOX button stays the console's).
 The keyboard as a pad: the arrow keys are the d-pad, Enter A, Backspace B, X and Y their buttons, Tab View, M Menu
-and Home the Xbox button."""
+and Home the XBOX button."""
 
 from __future__ import annotations
 

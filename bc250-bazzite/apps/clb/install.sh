@@ -7,7 +7,7 @@
 #   ./install.sh --uninstall             # remove the app; keeps its settings and the signed-in account
 #   ./install.sh --uninstall --purge     # also remove its settings and forget the account
 #
-# Run it as your own user; installing needs no root. The app talks to Microsoft's Xbox services over the internet.
+# Run it as your own user; installing needs no root. The app talks to Microsoft's XBOX services over the internet.
 #  * ~/.local/share/bc250-console-linkb/app: the app, with the bc250_core it was tested with (bundled in the
 #    release; taken from the suite checkout when run from there).
 #  * ~/.local/share/bc250-console-linkb/venv: the app's own venv with PyQt6, aiortc (WebRTC, with PyAV and the
@@ -122,12 +122,12 @@ Type=Application
 Version=1.0
 Name=$APP_NAME
 GenericName=Console LinkB
-Comment=Stream your Xbox or Xbox Cloud Gaming to the BC-250
+Comment=Stream your XBOX or XBOX Cloud Gaming to the BC-250
 Exec=$LAUNCHER
 Icon=$APP_DIR/images/$APP_ID-128.png
 Terminal=false
 Categories=Game;Network;
-Keywords=BC-250;Bazzite;Remote Play;Xbox;Cloud Gaming;stream;
+Keywords=BC-250;Bazzite;Remote Play;XBOX;Cloud Gaming;stream;
 StartupNotify=true
 StartupWMClass=$APP_ID"
 

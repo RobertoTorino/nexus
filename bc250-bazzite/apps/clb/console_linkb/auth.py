@@ -2,11 +2,11 @@
 # Ported from xal-node (src/msal.ts and src/lib/tokens/), MIT, Copyright (c) 2023 UnknownSKL (Jim Kroon); the MIT
 # notice is in the README's License section.
 """The Microsoft account: signing in with a code (the person enters it on microsoft.com/link, on a phone or any
-browser, so no password passes through the app), and the tokens the Xbox services want.
+browser, so no password passes through the app), and the tokens the XBOX services want.
 
 The chain, as the reference has it:
 1. Microsoft's device code sign-in gives a user token (an hour) and a refresh token (kept, to sign in again later).
-2. The user token buys an Xbox Live user token (user.auth.xboxlive.com).
+2. The user token buys an XBOX Live user token (user.auth.xboxlive.com).
 3. That buys an XSTS token per service (xsts.auth.xboxlive.com): http://xboxlive.com for the console list and the
    wake command, http://gssv.xboxlive.com/ for streaming.
 4. The gssv token buys the streaming tokens: xhome for the consoles, xgpuweb for the cloud with Game Pass, or
@@ -32,14 +32,14 @@ from bc250_core.platform import config_home
 from . import APP_ID
 from .net import Client, HttpError
 
-CLIENT_ID = "1f907974-e22b-4810-a9de-d9647380c97e"         # Xbox's web client, as the reference uses
+CLIENT_ID = "1f907974-e22b-4810-a9de-d9647380c97e"         # XBOX's web client, as the reference uses
 SCOPE = "xboxlive.signin openid profile offline_access"
 LOGIN = "https://login.microsoftonline.com/consumers/oauth2/v2.0"
 TRANSFER_SCOPE = "service::http://Passport.NET/purpose::PURPOSE_XBOX_CLOUD_CONSOLE_TRANSFER_TOKEN"
 WEB_PARTY = "http://xboxlive.com"
 GSSV_PARTY = "http://gssv.xboxlive.com/"
 HOME = "xhome"
-CLOUD = "xgpuweb"                           # Xbox Cloud Gaming with Game Pass Ultimate
+CLOUD = "xgpuweb"                           # XBOX Cloud Gaming with Game Pass Ultimate
 CLOUD_FREE = "xgpuwebf2p"                   # the free-to-play games, without Game Pass
 MARGIN = 60                                 # s: a token closer than this to its end is renewed first
 XBOX_HEADERS = {"x-xbl-contract-version": "1", "Cache-Control": "no-cache", "Origin": "https://www.xbox.com",
@@ -87,7 +87,7 @@ class UserToken:
 
 
 def _not_after(text: str) -> float:
-    """An Xbox token's NotAfter ("2026-10-22T10:00:00.1234567Z") as time.time(); 0 when unreadable."""
+    """An XBOX token's NotAfter ("2026-10-22T10:00:00.1234567Z") as time.time(); 0 when unreadable."""
     text = str(text or "").strip()
     if not text:
         return 0.0
@@ -102,8 +102,8 @@ def _not_after(text: str) -> float:
 
 
 @dataclass
-class XboxToken:
-    """An Xbox Live user token or an XSTS token: the token, the user hash (uhs) and its end."""
+class XBOXToken:
+    """An XBOX Live user token or an XSTS token: the token, the user hash (uhs) and its end."""
 
     token: str
     uhs: str
@@ -111,16 +111,16 @@ class XboxToken:
     gamertag: str = ""
 
     @classmethod
-    def from_json(cls, data: dict) -> XboxToken:
+    def from_json(cls, data: dict) -> XBOXToken:
         try:
             claims = data["DisplayClaims"]["xui"][0]
             return cls(str(data["Token"]), str(claims.get("uhs", "")), _not_after(data.get("NotAfter", "")),
                        str(claims.get("gtg", "")))
         except (KeyError, IndexError, TypeError) as error:
-            raise AuthError(f"Xbox Live's answer has no token ({error})") from error
+            raise AuthError(f"XBOX Live's answer has no token ({error})") from error
 
     def header(self) -> str:
-        """The Authorization header of the Xbox Live web API."""
+        """The Authorization header of the XBOX Live web API."""
         return f"XBL3.0 x={self.uhs};{self.token}"
 
 
@@ -240,24 +240,24 @@ def refresh_user_token(client: Client, refresh_token: str, now: float) -> UserTo
     return UserToken.from_json(response.data if isinstance(response.data, dict) else {}, now)
 
 
-def xbox_user_token(client: Client, access_token: str) -> XboxToken:
+def xbox_user_token(client: Client, access_token: str) -> XBOXToken:
     response = client.post("https://user.auth.xboxlive.com/user/authenticate", headers=XBOX_HEADERS,
                            json_body={"Properties": {"AuthMethod": "RPS", "RpsTicket": f"d={access_token}",
                                                      "SiteName": "user.auth.xboxlive.com"},
                                       "RelyingParty": "http://auth.xboxlive.com", "TokenType": "JWT"})
-    return XboxToken.from_json(response.data if isinstance(response.data, dict) else {})
+    return XBOXToken.from_json(response.data if isinstance(response.data, dict) else {})
 
 
 XSTS_ERRORS = {                             # XErr codes of xsts.auth.xboxlive.com
-    2148916233: "this Microsoft account has no Xbox profile yet: sign in once on xbox.com to create one",
-    2148916235: "Xbox Live is not available in this account's country",
+    2148916233: "this Microsoft account has no XBOX profile yet: sign in once on xbox.com to create one",
+    2148916235: "XBOX Live is not available in this account's country",
     2148916236: "this account needs adult verification on xbox.com first",
     2148916237: "this account needs adult verification on xbox.com first",
     2148916238: "this is a child account: an adult has to add it to a Microsoft family first",
 }
 
 
-def xsts_token(client: Client, user: XboxToken, relying_party: str) -> XboxToken:
+def xsts_token(client: Client, user: XBOXToken, relying_party: str) -> XBOXToken:
     try:
         response = client.post("https://xsts.auth.xboxlive.com/xsts/authorize",
                                headers={**XBOX_HEADERS, "Accept": "*/*", "ms-cv": "0"},
@@ -268,13 +268,13 @@ def xsts_token(client: Client, user: XboxToken, relying_party: str) -> XboxToken
         if reason:
             raise AuthError(reason) from error
         raise
-    return XboxToken.from_json(response.data if isinstance(response.data, dict) else {})
+    return XBOXToken.from_json(response.data if isinstance(response.data, dict) else {})
 
 
-def stream_token(client: Client, gssv: XboxToken, offering: str, now: float) -> StreamToken:
+def stream_token(client: Client, gssv: XBOXToken, offering: str, now: float) -> StreamToken:
     response = client.post(f"https://{offering}.gssv-play-prod.xboxlive.com/v2/login/user",
                            headers={"Cache-Control": "no-store, must-revalidate, no-cache",
-                                    "x-gssv-client": "XboxComBrowser"},
+                                    "x-gssv-client": "XBOXComBrowser"},
                            json_body={"token": gssv.token, "offeringId": offering})
     return StreamToken.from_json(offering, response.data if isinstance(response.data, dict) else {}, now)
 
@@ -305,8 +305,8 @@ class Account:
         self._lock = threading.RLock()
         self._refresh = load_refresh_token(self.path)
         self._user: UserToken | None = None
-        self._xbox: XboxToken | None = None
-        self._xsts: dict[str, XboxToken] = {}
+        self._xbox: XBOXToken | None = None
+        self._xsts: dict[str, XBOXToken] = {}
         self._streams: dict[str, StreamToken] = {}
         self.cloud_offering = ""            # CLOUD or CLOUD_FREE, once a cloud token was got; "" when none
 
@@ -352,20 +352,20 @@ class Account:
                     save_refresh_token(self._refresh, self.path)
             return self._user
 
-    def xbox_token(self) -> XboxToken:
+    def xbox_token(self) -> XBOXToken:
         with self._lock:
             if self._xbox is None or not self._fresh(self._xbox.not_after):
                 self._xbox = xbox_user_token(self.client, self.user_token().access_token)
             return self._xbox
 
-    def xsts(self, relying_party: str) -> XboxToken:
+    def xsts(self, relying_party: str) -> XBOXToken:
         with self._lock:
             token = self._xsts.get(relying_party)
             if token is None or not self._fresh(token.not_after):
                 token = self._xsts[relying_party] = xsts_token(self.client, self.xbox_token(), relying_party)
             return token
 
-    def web_token(self) -> XboxToken:
+    def web_token(self) -> XBOXToken:
         """For the console list and the wake command; its gamertag is the account's."""
         return self.xsts(WEB_PARTY)
 
@@ -382,7 +382,7 @@ class Account:
 
     def cloud_token(self) -> StreamToken:
         """Game Pass's cloud when the account has it, else the free-to-play games (as the reference tries them).
-        Raises AuthError when neither is open to the account (a country without Xbox Cloud Gaming)."""
+        Raises AuthError when neither is open to the account (a country without XBOX Cloud Gaming)."""
         with self._lock:
             offerings = [self.cloud_offering] if self.cloud_offering else [CLOUD, CLOUD_FREE]
             last: Exception | None = None
@@ -394,7 +394,7 @@ class Account:
                     continue
                 self.cloud_offering = offering
                 return token
-            raise AuthError(f"Xbox Cloud Gaming is not open to this account ({last})")
+            raise AuthError(f"XBOX Cloud Gaming is not open to this account ({last})")
 
     def transfer_token(self) -> str:
         with self._lock:

@@ -31,7 +31,7 @@ def test_play_starts_a_home_session_with_the_console():
     assert sent["serverId"] == "F4001234ABCD5678" and sent["titleId"] == ""
     assert sent["settings"]["locale"] == "nl-NL" and sent["settings"]["nanoVersion"] == "V3;WebrtcTransport.dll"
     headers = transport.headers("POST", f"{BASE}/v5/sessions/home/play")[0]
-    assert headers["Authorization"] == "Bearer HOME" and headers["X-Gssv-Client"] == "XboxComBrowser"
+    assert headers["Authorization"] == "Bearer HOME" and headers["X-Gssv-Client"] == "XBOXComBrowser"
     assert json.loads(headers["X-MS-Device-Info"])["dev"]["os"]["platform"] == "desktop"
 
 

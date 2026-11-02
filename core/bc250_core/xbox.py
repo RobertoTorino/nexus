@@ -1,14 +1,14 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The Xbox app's library on Windows (owner, 30-10-2026: the Windows Portable Suite in the Xbox menu, Xbox mode's
-home): an app added there with My Library's + is kept in the Xbox app's own file, read here and added to the same way.
+"""The XBOX app's library on Windows (owner, 30-10-2026: the Windows Portable Suite in the XBOX menu, XBOX mode's
+home): an app added there with My Library's + is kept in the XBOX app's own file, read here and added to the same way.
 
-The file is the Xbox app's and undocumented. As the Xbox app 2611.1001.9.0 wrote it on the owner's Ally (30-10-2026):
+The file is the XBOX app's and undocumented. As the XBOX app 2611.1001.9.0 wrote it on the owner's Ally (30-10-2026):
 LocalState\\ThirdPartyLibraries\\CustomLibraryManagement\\CustomLibraryManagement.manifest in its package folder, JSON:
 {"version": 1, "provider": {"version": 1, "enabled": true}, "gameCache": {"version": 1, "{<guid>}": {"id": "{<guid>}",
 "lastPlayedDate": "<ms>", "addedDate": "<ms>", "imagePath": "...", "title": "...", "installLocation": "<folder>\\\\",
 "executableName": "<name>.exe", "executableCommandArgs": ""}}}. A file in another shape is never written (FormatError):
-a later Xbox app may keep it otherwise. The file is backed up beside it first (.bak), an app already listed is not
-added again, and the Xbox app is closed while it changes (it keeps the file in memory) and started again after.
+a later XBOX app may keep it otherwise. The file is backed up beside it first (.bak), an app already listed is not
+added again, and the XBOX app is closed while it changes (it keeps the file in memory) and started again after.
 Only the standard library here."""
 
 from __future__ import annotations
@@ -23,13 +23,13 @@ from collections.abc import Callable
 from pathlib import Path, PurePath, PureWindowsPath
 
 PACKAGE = "Microsoft.GamingApp_8wekyb3d8bbwe"
-APP_ID = f"{PACKAGE}!Microsoft.Xbox.App"               # its Start-menu app, what starts it again
-PROCESSES = ("XboxPcApp.exe", "XboxPcAppCE.exe", "XboxPcAppFT.exe")     # the Xbox app, and Xbox mode's
+APP_ID = f"{PACKAGE}!Microsoft.XBOX.App"               # its Start-menu app, what starts it again
+PROCESSES = ("XBOXPcApp.exe", "XBOXPcAppCE.exe", "XBOXPcAppFT.exe")     # the XBOX app, and XBOX mode's
 EMPTY = {"version": 1, "provider": {"version": 1, "enabled": True}, "gameCache": {"version": 1}}
 
 
 class FormatError(Exception):
-    """The Xbox app's file is not in the shape known: nothing is written."""
+    """The XBOX app's file is not in the shape known: nothing is written."""
 
 
 def package_folder(local: Path | None = None) -> Path:
@@ -42,31 +42,31 @@ def manifest_path(local: Path | None = None) -> Path:
 
 
 def installed(local: Path | None = None) -> bool:
-    """Whether the Xbox app is here (its package folder): without it there is no Xbox menu to add to."""
+    """Whether the XBOX app is here (its package folder): without it there is no XBOX menu to add to."""
     return package_folder(local).is_dir()
 
 
 def read(path: Path) -> dict:
-    """The file as the Xbox app keeps it; EMPTY when there is none yet (or it is empty). FormatError otherwise."""
+    """The file as the XBOX app keeps it; EMPTY when there is none yet (or it is empty). FormatError otherwise."""
     text = path.read_text(encoding="utf-8-sig") if path.is_file() else ""
     if not text.strip():
         return json.loads(json.dumps(EMPTY))
     try:
         data = json.loads(text)
     except ValueError as error:
-        raise FormatError(f"the Xbox app's library file is not JSON: {error}") from error
+        raise FormatError(f"the XBOX app's library file is not JSON: {error}") from error
     cache = data.get("gameCache") if isinstance(data, dict) else None
     if not isinstance(cache, dict):
-        raise FormatError("the Xbox app's library file has no gameCache: a newer Xbox app keeps it otherwise")
+        raise FormatError("the XBOX app's library file has no gameCache: a newer XBOX app keeps it otherwise")
     for key, entry in cache.items():
         if key != "version" and not (isinstance(entry, dict) and "executableName" in entry
                                      and "installLocation" in entry):
-            raise FormatError(f"an entry of the Xbox app's library is not as known ({key})")
+            raise FormatError(f"an entry of the XBOX app's library is not as known ({key})")
     return data
 
 
 def _windows(program: PurePath) -> PureWindowsPath:
-    """*program* as the Windows path the Xbox app's file holds, on any system (the tests run on Linux too)."""
+    """*program* as the Windows path the XBOX app's file holds, on any system (the tests run on Linux too)."""
     return PureWindowsPath(str(program))
 
 
@@ -78,7 +78,7 @@ def _same(entry: dict, program: PurePath) -> bool:
 
 
 def listed(program: Path, local: Path | None = None) -> bool:
-    """Whether *program* is in the Xbox app's library (False also when its file is not as known)."""
+    """Whether *program* is in the XBOX app's library (False also when its file is not as known)."""
     try:
         cache = read(manifest_path(local))["gameCache"]
     except (OSError, FormatError):
@@ -88,7 +88,7 @@ def listed(program: Path, local: Path | None = None) -> bool:
 
 def entry(program: Path, title: str, image: Path | None = None, now: float | None = None,
           new_id: Callable[[], str] = lambda: f"{{{uuid.uuid4()}}}") -> dict:
-    """The library entry of *program*, as the Xbox app writes one it was given."""
+    """The library entry of *program*, as the XBOX app writes one it was given."""
     stamp = str(int((time.time() if now is None else now) * 1000))
     key = new_id()
     win = _windows(program)
@@ -99,8 +99,8 @@ def entry(program: Path, title: str, image: Path | None = None, now: float | Non
 
 def add(program: Path, title: str, image: Path | None = None, local: Path | None = None,
         closed: Callable[[Callable[[], None]], None] | None = None, now: float | None = None) -> bool:
-    """*program* added to the Xbox app's library as *title*: False when it is there already (nothing written).
-    The file is backed up (.bak) and written with the Xbox app closed (*closed*: with_xbox_closed). FormatError
+    """*program* added to the XBOX app's library as *title*: False when it is there already (nothing written).
+    The file is backed up (.bak) and written with the XBOX app closed (*closed*: with_xbox_closed). FormatError
     when the file is not as known; OSError when it cannot be written."""
     path = manifest_path(local)
     data = read(path)                                   # FormatError before anything is closed or written
@@ -109,7 +109,7 @@ def add(program: Path, title: str, image: Path | None = None, local: Path | None
     new = entry(program, title, image, now)
 
     def change() -> None:
-        current = read(path)                            # as the Xbox app left it once closed
+        current = read(path)                            # as the XBOX app left it once closed
         current["gameCache"][new["id"]] = new
         _write(path, current)
     (closed or with_xbox_closed)(change)
@@ -118,8 +118,8 @@ def add(program: Path, title: str, image: Path | None = None, local: Path | None
 
 def remove(program: Path, local: Path | None = None,
            closed: Callable[[Callable[[], None]], None] | None = None) -> bool:
-    """*program* taken out of the Xbox app's library (owner, 30-10-2026: the portal's Xbox menu row removes it too),
-    every entry of it: False when it is not there (nothing written). Backed up and written with the Xbox app closed,
+    """*program* taken out of the XBOX app's library (owner, 30-10-2026: the portal's XBOX menu row removes it too),
+    every entry of it: False when it is not there (nothing written). Backed up and written with the XBOX app closed,
     as add(); FormatError when the file is not as known; OSError when it cannot be written."""
     path = manifest_path(local)
     data = read(path)
@@ -165,7 +165,7 @@ def with_xbox_closed(change: Callable[[], None], running: Callable[[], list[int]
                      start: Callable[[], None] = lambda: subprocess.Popen(
                          ["explorer.exe", f"shell:AppsFolder\\{APP_ID}"]),
                      sleep: Callable[[float], None] = time.sleep) -> None:
-    """*change* with the Xbox app closed: ended when it runs (it writes its library back when it ends), started
+    """*change* with the XBOX app closed: ended when it runs (it writes its library back when it ends), started
     again after."""
     was = running()
     for pid in was:

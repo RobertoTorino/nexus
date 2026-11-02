@@ -107,7 +107,7 @@ Changelog: 30-10-2026 21:19:45
 
 Breaking. A game quits with View, LB and RB held together for two seconds, no longer View and Menu (owner,
 30-10-2026): View and Menu are Windows' and Steam's guide button (Windows' "Use View + Menu as Guide button in
-apps", Steam Input's Select + Start), so holding them opened the Xbox overlay or Steam's over the game, which took
+apps", Steam Input's Select + Start), so holding them opened the XBOX overlay or Steam's over the game, which took
 the focus and left the game's own quit question unreachable. The play mode closes the emulator on the new chord
 (core's play.py); the line at the bottom of Your games, the help and the wiki say so. A short press of View and Menu
 still opens RPCS3's own menu, where Windows and Steam leave them to it.
@@ -123,7 +123,7 @@ Added. The battery is last in the status line at the top, at the right, and says
 
 Changelog: 30-10-2026 17:18:10
 
-Fixed. Steam started by the app signs in, in Desktop and in Xbox mode (core's outside_bundle(), owner, 30-10-2026): it
+Fixed. Steam started by the app signs in, in Desktop and in XBOX mode (core's outside_bundle(), owner, 30-10-2026): it
 inherited the controller reader's SDL_VIDEODRIVER=dummy, so Steam made its login window without a window and stayed
 Logged Off. X Play, the restart after Update Steam and a game started without Steam no longer get those variables.
 

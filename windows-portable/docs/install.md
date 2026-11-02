@@ -30,12 +30,12 @@ The installer puts:
 - Windows Portable Test, from the release inside the portal's zip, with its Start-menu entry. It gets no Desktop
   shortcut: you start it from the portal.
 
-## The Xbox menu
+## The XBOX menu
 
-On a first install, with the Xbox app on the device, the installer asks whether to add the suite to the Xbox menu:
-the Xbox app's library, so Xbox mode starts the portal from its home. Answer **Y** (or press Enter) to add it; the Xbox
+On a first install, with the XBOX app on the device, the installer asks whether to add the suite to the XBOX menu:
+the XBOX app's library, so XBOX mode starts the portal from its home. Answer **Y** (or press Enter) to add it; the XBOX
 app closes for a moment while its library changes and starts again. An update does not ask again, and the portal's
-Settings page adds it any time (**Xbox menu: Add**) and takes it out again (**A** on **Xbox menu: In the menu**).
+Settings page adds it any time (**XBOX menu: Add**) and takes it out again (**A** on **XBOX menu: In the menu**).
 
 ## Remove the download
 
@@ -50,8 +50,8 @@ Add them to the last line, after `install.ps1`:
 | Option | |
 |---|---|
 | `--no-desktop-shortcut` | the portal's Start-menu entry only, no Desktop shortcut |
-| `--xbox-menu` | also into the Xbox menu, without the question |
-| `--no-xbox-menu` | not into the Xbox menu, without the question |
+| `--xbox-menu` | also into the XBOX menu, without the question |
+| `--no-xbox-menu` | not into the XBOX menu, without the question |
 | `--uninstall` | remove the portal and Windows Portable Test; the other apps stay (it names them); the settings, the log and the records stay |
 | `--uninstall --all` | the whole suite: every app the portal installed too |
 | `--uninstall --purge` | also remove the settings, the log, the records and the downloaded releases |

@@ -120,12 +120,12 @@ TABS: tuple[tuple[str, str, tuple[Setting, ...]], ...] = (
     )),
     ("console", "Console", (
         Setting("license", "Arcade license", "Content", ("license_mask",), "0", NUMBER, LICENSES,
-                "for an Xbox Live Arcade game: Full version unlocks the whole game where its package has the trial "
+                "for an XBOX Live Arcade game: Full version unlocks the whole game where its package has the trial "
                 "alone licensed; All licenses also its other content."),
         Setting("achievements", "Achievement messages", "UI", ("show_achievement_notification",), FALSE, SWITCH,
                 tip="a message in the game when an achievement is won."),
         Setting("guide", "Guide button to the game", "HID", ("guide_button",), TRUE, SWITCH,
-                tip="the controller's guide button reaches the game (the Xbox 360's guide); off, Steam or Windows "
+                tip="the controller's guide button reaches the game (the XBOX 360's guide); off, Steam or Windows "
                     "keeps it."),
     )),
 )

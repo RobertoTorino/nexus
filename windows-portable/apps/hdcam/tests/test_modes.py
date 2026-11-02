@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from usb_hd_cam.modes import Mode, chosen, offered
 
-# What the PS5 HD Camera reports through Windows (the owner's ROG Xbox Ally X, 01-11-2026)
+# What the PS5 HD Camera reports through Windows (the owner's ROG XBOX Ally X, 01-11-2026)
 REPORTED = [Mode(w, h, f) for w, h, f in (
     (896, 256, 120), (1920, 1080, 30), (1920, 1080, 15), (1920, 1080, 8), (960, 520, 60), (448, 256, 120),
     (1280, 800, 60), (1280, 800, 30), (1280, 800, 15), (1280, 800, 8), (640, 376, 120), (320, 184, 240),

@@ -17,7 +17,7 @@ from portable_test import network
 
 # The owner's Ally on 28-10-2026: the link as netsh showed it, the Turbo plan, and the slow download of that evening
 ALLY_LINK = network.Link(frequency=5280, channel=56, standard=10, signal=85, rssi=-54, receive=2402, transmit=2402)
-TRAFFIC = {"received": 2_000_000, "seconds": 2.0, "delivery": 2, "running": ["XboxPcApp", "steam"]}
+TRAFFIC = {"received": 2_000_000, "seconds": 2.0, "delivery": 2, "running": ["XBOXPcApp", "steam"]}
 
 
 def measure(**changes) -> network.Network:
@@ -35,7 +35,7 @@ def test_the_ally_as_measured():
         ("Rate", "2402 Mbps down, 2402 up"), ("Power", "battery, 82%, Turbo plan"),
         ("Wi-Fi on mains", "Maximum Performance"), ("Wi-Fi on battery", "Medium Power Saving"),
         ("Other traffic", "1.00 MB/s before the download"),
-        ("Also running", "Delivery Optimization (2 downloads), Xbox app, Steam"),
+        ("Also running", "Delivery Optimization (2 downloads), XBOX app, Steam"),
         ("Download", "0.4 MB/s (4.5 MB in 10.1 s)")]
 
 
@@ -135,7 +135,7 @@ def test_the_query():
     measure(run=lambda argv: seen.append(argv) or json.dumps(TRAFFIC))
     script = base64.b64decode(seen[0][-1]).decode("utf-16-le")
     assert "Start-Sleep -Milliseconds 2000" in script and "Get-DeliveryOptimizationStatus" in script
-    assert "Get-Process -Name steam, XboxPcApp," in script and "SAMPLE_MS" not in script
+    assert "Get-Process -Name steam, XBOXPcApp," in script and "SAMPLE_MS" not in script
     assert "IPv4DefaultGateway" in script and "InterfaceMetric" in script                # the adapters, in order
     assert "MacAddress" not in script and "SSID" not in script                 # nothing personal is asked for
 

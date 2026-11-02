@@ -30,9 +30,9 @@ def test_the_controllers_connected(tmp_path):
     devices.write_text(STEAM_ONLY)                                              # Steam's virtual one only
     assert controllers.connected(devices) == []
     devices.write_text(DS4_AND_STEAM + "\nI: Bus=0005 Vendor=045e Product=0b13 Version=0509\n"
-                       'N: Name="Xbox Wireless Controller"\nH: Handlers=event20 js2\n')
+                       'N: Name="XBOX Wireless Controller"\nH: Handlers=event20 js2\n')
     assert controllers.connected(devices) == ["Sony Interactive Entertainment Wireless Controller",
-                                              "Xbox Wireless Controller"]
+                                              "XBOX Wireless Controller"]
     devices.write_text('N: Name="Dell Keybd KB740"\nH: Handlers=sysrq kbd event3\n')
     assert controllers.connected(devices) == []
     devices.write_text(BLUETOOTH_EDGE)                                          # the motion sensors: a js too
@@ -44,9 +44,9 @@ def test_the_controllers_as_sdl_names_them(tmp_path):
     when SDL3 is not there (the probe exits 3), when Python fails or when it does not answer in time."""
     fake = tmp_path / "python"
     fake.write_text('#!/bin/sh\n[ "$1" = -I ] && [ "$2" = -c ] || exit 9\n'
-                    'printf "DualSense Edge Wireless Controller\\nXbox Series X Controller\\n"\n')
+                    'printf "DualSense Edge Wireless Controller\\nXBOX Series X Controller\\n"\n')
     fake.chmod(0o755)
-    assert controllers.sdl_names(str(fake)) == ["DualSense Edge Wireless Controller", "Xbox Series X Controller"]
+    assert controllers.sdl_names(str(fake)) == ["DualSense Edge Wireless Controller", "XBOX Series X Controller"]
     fake.write_text("#!/bin/sh\nexit 3\n")
     assert controllers.sdl_names(str(fake)) is None
     fake.write_text("#!/bin/sh\nprintf ''\n")

@@ -78,7 +78,7 @@ def test_a_dualsense():
 
 
 def test_other_controllers_are_not_checked():
-    assert genuine.check(0x045E, 0x0B12, BUS_USB, reader({}), TODAY) is None           # an Xbox controller
+    assert genuine.check(0x045E, 0x0B12, BUS_USB, reader({}), TODAY) is None           # an XBOX controller
     assert genuine.check(SONY, 0x0268, BUS_USB, reader({}), TODAY) is None              # a DualShock 3
     assert genuine.check_device("/dev/input/event3") is None
     assert genuine.check_device("/dev/hidraw-none") is None

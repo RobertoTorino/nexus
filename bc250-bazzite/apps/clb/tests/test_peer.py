@@ -164,7 +164,7 @@ def test_a_whole_connection_with_a_stand_in_service():
         service.send("message", json.dumps({"type": "TransactionStart", "target": channels.DISCONNECT, "id": "T9",
                                             "content": "{}"}))
         assert wait_for(lambda: got["closed"])
-        assert "ended by the Xbox" in got["closed"][0]
+        assert "ended by the XBOX" in got["closed"][0]
         assert wait_for(lambda: any('"T9"' in m for m in service.received["message"]))
     finally:
         peer.close()

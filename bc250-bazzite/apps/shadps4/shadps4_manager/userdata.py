@@ -165,7 +165,7 @@ def played(seconds: int) -> str:
 
 # shadPS4's quit window (Cross or Enter quits, Circle or Escape cancels) opens only on Ctrl+Shift+End by default: the
 # End key alone, not the keypad's End (a keyboard without an End key of its own), and from no controller button.
-# Back + Start (Share + Options on a DualShock 4 or DualSense, View + Menu on an Xbox controller) is a pair every
+# Back + Start (Share + Options on a DualShock 4 or DualSense, View + Menu on an XBOX controller) is a pair every
 # controller has; shadPS4 gives a combination priority over its single buttons, so Share alone stays the touchpad.
 # shadPS4 reads controllers without the window's focus too, so a game Steam started takes them while the keyboard
 # stays with Big Picture. Its own default goes in as well: shadPS4 adds it only to a global.ini with no hotkey_quit.

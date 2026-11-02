@@ -617,7 +617,7 @@ futureproofness:
   the first loaded minute vs the last minute; under 97% is thermal sag, under 90% a throttling
   warning with airflow hints.
 - Test 42 now prints a comparison ladder after the baseline score: the measured FP32 GFLOPS as a
-  percentage of published theoretical peaks of known systems (Steam Deck, Xbox Series S, stock
+  percentage of published theoretical peaks of known systems (Steam Deck, XBOX Series S, stock
   BC-250 ceiling, announced Steam Machine, PS5, RTX 4060/4090), with explicit caveats that FP32
   positioning is not an FPS prediction and that RDNA3 dual-issue peaks overstate the reference.
 

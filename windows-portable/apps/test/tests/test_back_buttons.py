@@ -25,7 +25,7 @@ def test_the_reports(report, held):
     (bytes.fromhex("5aa600000000"), "command"),     # the Command Center button let go after a short press
     (bytes.fromhex("5a3800000000"), "armoury"),     # after a long one: Armoury Crate (owner's Ally X, 31-10-2026)
     (bytes.fromhex("5aa500000000"), None), (bytes.fromhex("5a0000000000"), None),
-    (bytes.fromhex("5aec00000000"), None),          # the Xbox button: SDL reports it as guide
+    (bytes.fromhex("5aec00000000"), None),          # the XBOX button: SDL reports it as guide
     (bytes.fromhex("5d38"), None), (b"", None)])
 def test_the_command_center_reports(report, name):
     assert back_buttons.tap(report) == name

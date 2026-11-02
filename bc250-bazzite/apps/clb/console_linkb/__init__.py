@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Console LinkB for the BC-250: signs in with a Microsoft account, lists the Xbox consoles on it and the games of
-Xbox Cloud Gaming, wakes a console and streams it or a cloud game to the board. The protocol code is ported from
+"""Console LinkB for the BC-250: signs in with a Microsoft account, lists the XBOX consoles on it and the games of
+XBOX Cloud Gaming, wakes a console and streams it or a cloud game to the board. The protocol code is ported from
 Greenlight and xal-node (MIT; see the README's License section)."""
 
 APP_NAME = "Console LinkB"

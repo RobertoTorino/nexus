@@ -3,7 +3,7 @@
 one sensor's picture (1920 x 1080, 1280 x 800, ...) and both side by side in one frame (3840 x 1080, 2560 x 800,
 ...), for depth; 5148 x 1088 is both and smaller copies of them. A mode that gives no picture is left out: every
 1080-line mode at 15 fps (the camera sends nothing, as on the BC-250), and with reduced bandwidth the three largest
-side-by-side modes (measured on the owner's ROG Xbox Ally X, 31-10-2026). Each size is offered once, at its fastest
+side-by-side modes (measured on the owner's ROG XBOX Ally X, 31-10-2026). Each size is offered once, at its fastest
 rate that gives a picture: LB and RB go through a dozen modes, not two dozen, and Qt's camera backend ran
 1920 x 1080 at 8 fps at 30 anyway (01-11-2026)."""
 

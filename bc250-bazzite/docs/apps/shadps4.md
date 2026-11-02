@@ -120,7 +120,7 @@ controller's buttons, a game's own settings and shadPS4's game list.
 shadPS4's quit window asks whether to quit: **Cross** or **Enter** quits, **Circle** or **Esc** goes back to the game.
 Open it with:
 
-- **Share + Options** on a DualShock 4 or DualSense (Back + Start on other controllers: View + Menu on an Xbox
+- **Share + Options** on a DualShock 4 or DualSense (Back + Start on other controllers: View + Menu on an XBOX
   controller), pressed together;
 - **Ctrl+Shift+End** on the keyboard, also with the keypad's End (the 1 key with Num Lock off) on a keyboard without
   an End key of its own.
@@ -397,7 +397,7 @@ Installing the app also removes the standalone Bazzite pkgxtractor, whose packag
 Nexus and its suites are independent community projects, not affiliated with or endorsed by AMD, ASRock, the Bazzite
 / Universal Blue project, Sony, Microsoft, Nintendo, Valve, or the makers of the emulators and the other programs the
 apps work with. BC-250 is AMD's product name and Bazzite the Universal Blue project's. PlayStation, PS4, PS5, PS3,
-PS2, PSP, PS Vita, PSN, DualSense and Remote Play are Sony's; Xbox, Xbox 360, Xbox Cloud Gaming, Game Pass and
+PS2, PSP, PS Vita, PSN, DualSense and Remote Play are Sony's; XBOX, XBOX 360, XBOX Cloud Gaming, Game Pass and
 Windows are Microsoft's; Steam, Steam Deck and Big Picture are Valve's; the names of Nintendo's consoles, of the
 emulators (shadPS4, RPCS3, PPSSPP, PCSX2, Vita3K, Xenia) and of Decky Loader, HelixSR and DirectMesh belong to their
 owners. The suites use them only to say what their apps work with.

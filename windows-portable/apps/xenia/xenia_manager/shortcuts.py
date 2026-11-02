@@ -11,7 +11,7 @@ runs xenia_canary.exe itself, is still the game's (outdated(): Update Steam brin
 are quoted the way Steam writes them, in double quotes (a Windows path holds no double quote). The file and its format
 are core's (bc250_core.steam).
 
-The app reads no pictures from a game (an Xbox 360 game keeps them inside its disc or package), so the artwork is
+The app reads no pictures from a game (an XBOX 360 game keeps them inside its disc or package), so the artwork is
 drawn from the app's icon by core's steam_art, as the BC250 app draws it: a background in the icon's color, the icon
 and the game's title. The pictures from SteamGridDB (core's covers), when they are kept for the game, replace the
 drawn ones they cover: all four."""

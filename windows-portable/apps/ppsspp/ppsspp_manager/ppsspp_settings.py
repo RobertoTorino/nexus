@@ -11,7 +11,7 @@ their case, booleans as True and False, floats with six decimals (0.150000), the
 
 What the app owns, set after an install, when the window opens and before PPSSPP starts (prepare): PPSSPP's notice
 of a newer release off ([General] CheckForNewVersion; a newer PPSSPP comes with the app, and the notice is on PPSSPP's
-main screen, which the app never shows). The controller needs nothing: PPSSPP maps an Xbox controller (XInput), the
+main screen, which the app never shows). The controller needs nothing: PPSSPP maps an XBOX controller (XInput), the
 handheld's own, at its first start, with LT and the guide button for its pause menu (Core\\KeyMapDefaults.cpp).
 
 The settings the Settings pane offers, in tabs (TABS below: Picture, Game, Controller, On screen): each one key of

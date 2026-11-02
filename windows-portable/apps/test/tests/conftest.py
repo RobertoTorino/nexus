@@ -18,7 +18,7 @@ if str(CORE) not in sys.path:
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 GB = 1024 ** 3
-ALLY = {"maker": "ASUSTeK COMPUTER INC.", "model": "ROG Xbox Ally X RC73XA_RC73XA", "family": "ROG Xbox Ally X",
+ALLY = {"maker": "ASUSTeK COMPUTER INC.", "model": "ROG XBOX Ally X RC73XA_RC73XA", "family": "ROG XBOX Ally X",
         "usable": 16_750_000_000, "installed": 24 * GB, "windows": "Microsoft Windows 11 Home",
         "version": "10.0.26300", "build": "26300",
         "cpu": {"name": "AMD Ryzen AI Z2 Extreme", "cores": 8, "threads": 16},
@@ -49,7 +49,7 @@ PLUGGED = [
      "own": "BT_FUNCTION", "parent": 4, "box": 0, "local": True, "problem": 0},
     {"id": "VID_05A9&PID_0580", "class": None, "name": "USB Boot", "service": None, "own": "USB Boot", "parent": 3,
      "box": 5, "local": False, "problem": 28},
-    {"id": "VID_0B05&PID_1B4C&MI_05", "class": "HIDClass", "name": "ROG Xbox Ally Device Gamepad", "service": "HidUsb",
+    {"id": "VID_0B05&PID_1B4C&MI_05", "class": "HIDClass", "name": "ROG XBOX Ally Device Gamepad", "service": "HidUsb",
      "own": "ASUSTeK Computer Inc.", "parent": 11, "box": 0, "local": True, "problem": 0},
     {"id": "VID_0B05&PID_1B4C&MI_00", "class": "HIDClass", "name": "USB Input Device", "service": "HidUsb",
      "own": "ASUSTeK Computer Inc.", "parent": 11, "box": 0, "local": True, "problem": 0},

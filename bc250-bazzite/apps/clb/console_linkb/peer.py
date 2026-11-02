@@ -200,7 +200,7 @@ class Peer:
                 self.events.dialog(incoming.dialog)
             if incoming.disconnect and not self.ended:
                 self.ended = True
-                self.events.closed("the stream was ended by the Xbox or the streaming service")
+                self.events.closed("the stream was ended by the XBOX or the streaming service")
         elif name == "input" and isinstance(data, bytes):
             report = inputs.parse(data)
             if isinstance(report, inputs.Vibration):

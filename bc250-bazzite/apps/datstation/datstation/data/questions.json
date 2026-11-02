@@ -6947,7 +6947,7 @@
     "options": [
       "PlayStation consoles",
       "Nintendo handhelds",
-      "Xbox consoles",
+      "XBOX consoles",
       "Sega arcade systems"
     ],
     "correct_answer": "PlayStation consoles",
@@ -8527,7 +8527,7 @@
     ],
     "correct_answer": "False",
     "points": 5,
-    "explanation": "Halo 2 was an Xbox game, not a PlayStation 2 release."
+    "explanation": "Halo 2 was an XBOX game, not a PlayStation 2 release."
   },
   {
     "id": "qz-0618",
@@ -13961,7 +13961,7 @@
   },
   {
     "id": "qz-1041",
-    "text": "Which tri-Ace RPG came to the PlayStation 3 as an \"International\" edition after debuting on Xbox 360?",
+    "text": "Which tri-Ace RPG came to the PlayStation 3 as an \"International\" edition after debuting on XBOX 360?",
     "type": "MC",
     "category": "PlayStation3",
     "options": [
@@ -18558,7 +18558,7 @@
     "category": "PlayStationPortable",
     "options": [
       "PocketStation",
-      "Xbox Live Gold",
+      "XBOX Live Gold",
       "Nintendo eShop card",
       "Steam Wallet"
     ],
@@ -19344,7 +19344,7 @@
       "PlayStation App",
       "Game Center",
       "Joy-Con App",
-      "Xbox App"
+      "XBOX App"
     ],
     "correct_answer": "PlayStation App",
     "points": 5
@@ -19356,7 +19356,7 @@
     "category": "PlayStationVita",
     "options": [
       "PlayTV",
-      "Xbox Video",
+      "XBOX Video",
       "Nintendo Video",
       "SteamTV"
     ],
@@ -19680,7 +19680,7 @@
       "Wake-up Club",
       "Steam Deck Planner",
       "Nintendo Alarm",
-      "Xbox Music"
+      "XBOX Music"
     ],
     "correct_answer": "Wake-up Club",
     "points": 10

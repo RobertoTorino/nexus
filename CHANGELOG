@@ -1,3 +1,7 @@
+Changelog: 02-11-2026 12:58:05
+
+Fixed. The video tours (tools/tour_frames.py) record on Windows: the screen file in QT_QPA_PLATFORM's options kept its drive letter, which Qt took for the end of the option ("Could not find platform config file C"), so a portal or app tour stopped with exit code 127. The path goes in without the drive now (tools/tests/test_tour_frames.py).
+
 Changelog: 02-11-2026 12:32:47
 
 Release 1.30.0. Brings wp-portal-v7.4.0, wp-test-v4.9.0.
@@ -1147,7 +1151,7 @@ Changelog: 26-10-2026 03:19:06
 The README is Nexus's (owner, 26-10-2026: on GitHub the repository is nexus, and the README still presented the
 BC250 Bazzite Suite alone): the name and the structure, a link to the Nexus page, the list of suites, and the
 BC250 Bazzite Suite as its first section with everything it said before. The disclaimer at the bottom of the
-suite's wiki Home page and of the README names Xbox, Xbox 360, Xbox Cloud Gaming and Windows as Microsoft's, Valve's
+suite's wiki Home page and of the README names XBOX, XBOX 360, XBOX Cloud Gaming and Windows as Microsoft's, Valve's
 Steam, Steam Deck and Big Picture, Sony's consoles, DualSense and Remote Play, the emulators, Decky Loader, HelixSR
 and DirectMesh (owner, 26-10-2026). tools/type_specimen.py draws the suite's text styles (the title, a pill's value
 and caption, a page title, a state, a status pill and running text) in every weight and letter-spacing, as a picture
@@ -1262,7 +1266,7 @@ is on every page while mkdocs serve runs, never in a build: the stylesheet's CSS
 picker, a slider or a text field each, a change shown at once on every device on the same server, and Copy
 CSS for the stylesheet. The mock is kept in .design-mock.json beside the mkdocs.yml, which git ignores. The
 Nexus page's server also watches the wiki's stylesheet it shares. The panel's Screens (design_screens.html) shows
-the page at PC, laptop and handheld sizes, the ASUS ROG Xbox Ally X's 1280 x 720 (1920 x 1080 at 150 %) first,
+the page at PC, laptop and handheld sizes, the ASUS ROG XBOX Ally X's 1280 x 720 (1920 x 1080 at 150 %) first,
 each a real page of that size scaled down to fit.
 
 Changelog: 25-10-2026 10:22:56
@@ -1427,7 +1431,7 @@ gzip files as binary.
 
 Changelog: 21-10-2026 23:13:19
 
-Added. Console LinkB (apps/clb): Xbox Remote Play and Xbox Cloud Gaming on the board, a separate app beside Console
+Added. Console LinkB (apps/clb): XBOX Remote Play and XBOX Cloud Gaming on the board, a separate app beside Console
 Link (owner, 21-10-2026). Its icon, installer test, CI jobs, wiki chapter, and entries in the Dependency Checker's
 catalog, the portal's manifest, the README, the wiki's app lists and its privacy page. The root
 requirements-dev.txt takes the app's requirements (aiortc, pygame-ce). CLAUDE.md lists the app, its license and its
@@ -1436,7 +1440,7 @@ shellcheck line.
 Changelog: 21-10-2026 13:46:48
 
 Added. mGBA Manager (apps/mgba, Game Boy Advance), SameBoy Manager (apps/sameboy, Game Boy and Game Boy Color) and Xenia
-Manager (apps/xenia, Xbox 360), after SwanStation Manager the emulator managers the owner asked for (21-10-2026): their
+Manager (apps/xenia, XBOX 360), after SwanStation Manager the emulator managers the owner asked for (21-10-2026): their
 installer tests, CI jobs, wiki chapters and entries in the Dependency Checker's catalog and the portal's manifest.
 tools/check_upstream.py checks the mGBA pin weekly, as it does PPSSPP's. CLAUDE.md lists SwanStation and the three new
 apps and their shellcheck lines; the wiki's portal chapter and the development chapter name their pins; the disclaimer

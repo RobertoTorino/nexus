@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Your games (library.py), as shadPS4 Manager's are tested: the app's own Games\\Xbox360 folders (an empty card slot
+"""Your games (library.py), as shadPS4 Manager's are tested: the app's own Games\\XBOX360 folders (an empty card slot
 left out), what Remove game deletes, Update Steam's plan, and Steam's shortcuts written into a Steam folder of a test
 (never the real one), with Steam closed around it."""
 
@@ -16,11 +16,11 @@ PROGRAM = Path(r"C:\emu\xenia_canary.exe")
 
 
 def test_the_apps_own_folders(tmp_path):
-    r"""The app's own folders (owner, 30-10-2026: fixed folders, no folder selecting): Games\Xbox360 in the user's
-    folder, made when missing, then Games\Xbox360 on a removable drive that has one; an empty card slot is none."""
+    r"""The app's own folders (owner, 30-10-2026: fixed folders, no folder selecting): Games\XBOX360 in the user's
+    folder, made when missing, then Games\XBOX360 on a removable drive that has one; an empty card slot is none."""
     home = tmp_path / "me"
     card, empty = tmp_path / "E", tmp_path / "F"
-    (card / "Games" / "Xbox360").mkdir(parents=True)
+    (card / "Games" / "XBOX360").mkdir(parents=True)
     empty.mkdir()
 
     class EmptySlot:                    # a card reader without a card: Windows raises when asked about it
@@ -29,9 +29,9 @@ def test_the_apps_own_folders(tmp_path):
 
         def is_dir(self):
             raise OSError(22, "The volume does not contain a recognized file system.")
-    assert library.fixed(home, lambda: [EmptySlot(), card, empty]) == [home / "Games" / "Xbox360",
-                                                                        card / "Games" / "Xbox360"]
-    assert (home / "Games" / "Xbox360").is_dir()
+    assert library.fixed(home, lambda: [EmptySlot(), card, empty]) == [home / "Games" / "XBOX360",
+                                                                        card / "Games" / "XBOX360"]
+    assert (home / "Games" / "XBOX360").is_dir()
 
 
 def test_what_remove_game_offers_to_delete(tmp_path):
@@ -39,7 +39,7 @@ def test_what_remove_game_offers_to_delete(tmp_path):
     unpacked disc its folder, a console package's title ID folder a row per part (the game, its title updates, its
     add-ons), so the add-ons can be kept; a package elsewhere is the file with its .data folder. A game folder of the
     list, or a folder holding another game, is never offered."""
-    own = tmp_path / "Games" / "Xbox360"
+    own = tmp_path / "Games" / "XBOX360"
     make_iso(own / "Halo 3.iso")
     make_xex(own / "Gears" / "default.xex", 0x4D5307D5)
     make_xex(own / "Gears" / "media.xex", 0x4D5307D5)
@@ -63,7 +63,7 @@ def test_what_remove_game_offers_to_delete(tmp_path):
                                    ("Add-ons (00000002)", [title / "00000002"]),
                                    ("Title updates (000B0000)", [title / "000B0000"])]
     assert offered("Lone") == [("123456 (the game)", [loose, loose.parent / "123456.data"])]
-    alone = Game(own / "default.xex", "Xbox360", "41560817", "xex")    # an unpacked disc that is the game folder
+    alone = Game(own / "default.xex", "XBOX360", "41560817", "xex")    # an unpacked disc that is the game folder
     items, why = library.removal(alone, [own], [alone])
     assert items == [] and "one of the app's game folders itself" in why
     inner = Game(own / "Gears" / "Extra" / "default.xex", "Extra", "", "xex")
@@ -73,7 +73,7 @@ def test_what_remove_game_offers_to_delete(tmp_path):
 
 def test_the_title_folder_goes_once_it_is_empty(tmp_path):
     """tidy: the console's title ID folder is taken away when Remove game left nothing in it, kept with a part."""
-    own = tmp_path / "Games" / "Xbox360"
+    own = tmp_path / "Games" / "XBOX360"
     make_package(own, "Fable II", title_id=0x4D5307E6)
     (own / "4D5307E6" / "00000002").mkdir()
     game = scan([own])[0]

@@ -80,7 +80,7 @@ a fan.
 |---|---|
 | Theme | Dark (with the suite's amber), Light, Midnight, Ember, Forest or Mono. |
 | Text, Tiles, Accent and Background color | Your own color instead of the theme's, from a palette of fourteen. **X** puts the theme's back. |
-| Header text | Your own text in the screen's header, up to 24 characters: **A** opens a page with a field, **R3** (the right stick pressed) Windows' touch keyboard, **X** pastes what you copied, **A** keeps it. At first it is the handheld's name as its firmware gives it (ROG Xbox Ally X); empty, the header shows only the time. |
+| Header text | Your own text in the screen's header, up to 24 characters: **A** opens a page with a field, **R3** (the right stick pressed) Windows' touch keyboard, **X** pastes what you copied, **A** keeps it. At first it is the handheld's name as its firmware gives it (ROG XBOX Ally X); empty, the header shows only the time. |
 | Background | A picture of your own behind the tiles, cut to the screen's shape: **A** opens the browser (your usual folders and every drive; **A** opens a folder or takes the picture, **B** goes up), **X** takes it away. PNG, JPEG, WebP or BMP. The app keeps where the picture is, not a copy: leave it there. |
 
 ## Clock

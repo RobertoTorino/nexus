@@ -13,7 +13,7 @@ poster, docs/images/portal/portal-tour-poster.webp (the title card). --size 2160
 3840 x 2160 for YouTube, which shows a 4K upload far sharper than a 1080p one (about four times the time).
 
 It runs offscreen in a temporary home folder (the suite's folders under it, on Windows too: nothing of the handheld
-it runs on is read, no user name, no Steam, no Xbox app, no operating mode): a few apps "installed" (their records),
+it runs on is read, no user name, no Steam, no XBOX app, no operating mode): a few apps "installed" (their records),
 one of them behind its pinned release so the update shows, no network, no sound and no controller. The pointer, the
 clicks and the captions are drawn into the frames. Needs PyQt6 (the dev venv) and ffmpeg with libx264. The frames are
 drawn by tools/tour_frames.py, which the BC250 suite's tour and tools/app_tour.py use too. Record it on the handheld
@@ -177,7 +177,7 @@ class Tour(Recorder):
         self.hold(3)
 
         self.say("Menu opens the Settings page: the wallpaper, its transparency, the sound; on the handheld also the "
-                 "Xbox menu, the operating mode and the screen.")
+                 "XBOX menu, the operating mode and the screen.")
         self.click(lambda: w.show_suite())
         self.hold(3.5)
         self.move(self.at(w.suite_pane.wallpaper, 0.3, 0.5), 0.6)

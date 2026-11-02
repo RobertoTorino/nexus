@@ -98,7 +98,7 @@ The status line at the top right shows the date and the time, and **Suite x.y.z 
 The line under it shows the CPU and the GPU live, each with its load and its temperature (**CPU 12% 48°**, **GPU 7%
 47°**, read every two seconds from AMD's driver and Windows; on a device without AMD's driver the GPU shows only its
 temperature), and the battery last, at the right: its percentage, or **Plugged in** while the device is on its
-charger. The apps' status lines show the battery the same way. On the ROG Xbox Ally X, the operating mode's letter
+charger. The apps' status lines show the battery the same way. On the ROG XBOX Ally X, the operating mode's letter
 stands just before the battery: **S** Silent, **P** Performance, **T** Turbo or **W** Windows, read from Windows'
 power plan and power mode, which Armoury Crate's modes set (`CPU 12% 48°  |  GPU 7% 47°  |  T  |  82%`); the **T**
 of Turbo is a bright red, in heavier letters. No letter
@@ -120,8 +120,8 @@ bottom does.
 | Wallpaper | A picture behind the tiles, which show it through them, in every app of the suite, each from its next start. **A** picks the next: **Off** (the plain dark background), **Built-in** (the suite's own picture), then each of your own pictures, by file name (see below). |
 | Transparency | How much of the dark background lies over the picture, so the text stays easy to read. **A** adds 10 %, up to 90 %, then starts at 0 %. It starts at 59 %. |
 | Sound | The intro's sound when the portal starts. Off: the intro plays without it. |
-| Xbox menu | Only with the Xbox app on the device. **Add** puts the suite in the Xbox app's library, so Xbox mode starts the portal from its home; the Xbox app closes for a moment while its library changes. **In the menu** once it is there; **A** on it takes the suite out of the Xbox app's library again, the Xbox app closed for a moment as well. The Xbox app keeps its library in a file of its own that Microsoft does not document: when a newer Xbox app keeps it otherwise, the row says so and nothing is changed; add the suite in the Xbox app then (**My Library**, **+**). |
-| Operating mode | Only on the ROG Xbox Ally X: the active mode (**Other** when the power plan and the power mode match none of them). **A** opens the Operating Mode page, below. |
+| XBOX menu | Only with the XBOX app on the device. **Add** puts the suite in the XBOX app's library, so XBOX mode starts the portal from its home; the XBOX app closes for a moment while its library changes. **In the menu** once it is there; **A** on it takes the suite out of the XBOX app's library again, the XBOX app closed for a moment as well. The XBOX app keeps its library in a file of its own that Microsoft does not document: when a newer XBOX app keeps it otherwise, the row says so and nothing is changed; add the suite in the XBOX app then (**My Library**, **+**). |
+| Operating mode | Only on the ROG XBOX Ally X: the active mode (**Other** when the power plan and the power mode match none of them). **A** opens the Operating Mode page, below. |
 | Screen | Only with a second screen attached, such as a TV or a monitor: the screen the portal is on. **A**, or **LT** on any page, moves it to the next screen (see below). |
 
 **Your own wallpapers** go in the folder `%LOCALAPPDATA%\windows-portable-suite\wallpapers`, which the installer
@@ -134,7 +134,7 @@ one again. Your pictures stay when the suite is uninstalled.
 
 ## The Operating Mode page
 
-On the ROG Xbox Ally X, the Settings page's **Operating mode** row opens a page with the operating modes Armoury
+On the ROG XBOX Ally X, the Settings page's **Operating mode** row opens a page with the operating modes Armoury
 Crate's Command Center offers: **Silent**, **Performance**, **Turbo** and **Windows**. Each row shows the mode's
 watt limits on the power source the device is on now (the line under the title: **On the charger** or **On
 battery**): sustained, slow and fast, as measured on the Ally X. Armoury Crate keeps one set for the charger and one
@@ -196,5 +196,5 @@ finishes first, and the portal says it will move once that is done.
 | `%LOCALAPPDATA%\windows-portable-suite\portal\installed.json` | Which release of each app the portal installed |
 | `%LOCALAPPDATA%\windows-portable-suite\portal\portal.log` | The portal's log |
 | `%APPDATA%\windows-portable-suite\portal.ini` | Its settings: the last tab |
-| `C:\Program Files\windows-portable-suite\` | The Operating Mode helper, on the ROG Xbox Ally X once installed from its page |
+| `C:\Program Files\windows-portable-suite\` | The Operating Mode helper, on the ROG XBOX Ally X once installed from its page |
 | `C:\ProgramData\windows-portable-suite\` | The mode the helper applies, its last result and its log |

@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The Xbox 360 games: what Xenia opens, with the title ID (4D5307E6) where the app can read it, and the title a
+"""The XBOX 360 games: what Xenia opens, with the title ID (4D5307E6) where the app can read it, and the title a
 package names. What is one game here:
 
-* an .iso that is an Xbox 360 disc: "MICROSOFT*XBOX*MEDIA" in sector 32 of the game partition, at one of the places
+* an .iso that is an XBOX 360 disc: "MICROSOFT*XBOX*MEDIA" in sector 32 of the game partition, at one of the places
   Xenia looks for it (the disc's video partition before it, or none: an ISO with the game partition alone). Named
   after its file.
 * an .xex executable ("XEX2"), with the title ID from its execution info header (key 0x00040006). In a folder with a
@@ -45,7 +45,7 @@ class Game:
 
 
 def is_disc(path: Path) -> bool:
-    """Whether an ISO is an Xbox 360 disc. OSError is the caller's."""
+    """Whether an ISO is an XBOX 360 disc. OSError is the caller's."""
     with path.open("rb") as file:
         for partition in GAME_PARTITIONS:
             file.seek(partition + 32 * SECTOR)

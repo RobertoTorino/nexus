@@ -9,7 +9,7 @@ with them, wakes them from rest mode and streams them full screen, with the hand
 controller. It is the BC250 Bazzite Suite's
 [Console Link](https://robertotorino.github.io/nexus/bc250-bazzite-suite/apps/consoles/) made for the handheld, with
 the same protocol code. The picture is decoded by the handheld's graphics chip where it has a video decoder (the
-ROG Xbox Ally X's has).
+ROG XBOX Ally X's has).
 
 Remote Play is on the [portal](../portal.md)'s **Gaming** tab: **A** on its tile installs it, and once it
 is installed, **A** opens it. It is also in the Start menu (**Windows Portable Suite**, **Remote Play**). It opens full

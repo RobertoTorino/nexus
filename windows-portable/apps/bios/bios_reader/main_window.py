@@ -34,7 +34,7 @@ BROWSED = "bios"                # the browser's folder kept for next time (brows
 FILE_INFO = (
     "The A button reads this device's own BIOS: the copy Windows keeps of the BIOS it installed, when the device's "
     "maker delivers its BIOS through Windows Update (ASUS does). No download and no administrator are needed.\n\n"
-    "A BIOS file is the update the device's maker publishes: for the ROG Xbox Ally X, ASUS's zip with RC73XAAS.319 "
+    "A BIOS file is the update the device's maker publishes: for the ROG XBOX Ally X, ASUS's zip with RC73XAAS.319 "
     "in it. The X button picks one with the controller: the zip itself, a .cap, .bin or .rom, or a file named like "
     "RC73XAAS.319. The app reads its setup screens, the BIOS's menus with every setting, and their defaults.\n\n"
     "It only reads: nothing is written, not to the file and not to the device. The file holds the defaults, not "

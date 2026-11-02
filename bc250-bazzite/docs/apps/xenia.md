@@ -4,7 +4,7 @@
 
 # Xenia Manager
 
-Plays **Xbox 360 games** on the **AMD BC-250** with [Xenia](https://xenia.jp), an Xbox 360 emulator, in its
+Plays **XBOX 360 games** on the **AMD BC-250** with [Xenia](https://xenia.jp), an XBOX 360 emulator, in its
 [Xenia Canary](https://github.com/xenia-canary/xenia-canary) builds. The app installs a tested build, finds your
 games and adds them to Steam, so they start from **Game Mode** like any other game.
 
@@ -33,7 +33,7 @@ The window has two steps, then the list of games.
 
 The table lists every game found:
 
-- A **disc image** is a game when it is an Xbox 360 disc (the app looks for the disc's mark where Xenia looks for
+- A **disc image** is a game when it is an XBOX 360 disc (the app looks for the disc's mark where Xenia looks for
   it), listed under its file's name.
 - An **unpacked disc** is its `default.xex`, listed under its folder's name; the other `.xex` files in that folder
   are its parts. Any other `.xex` is listed under its own name.
@@ -140,7 +140,7 @@ Game Mode then no longer start: take them out first by unticking them and pressi
 Nexus and its suites are independent community projects, not affiliated with or endorsed by AMD, ASRock, the Bazzite
 / Universal Blue project, Sony, Microsoft, Nintendo, Valve, or the makers of the emulators and the other programs the
 apps work with. BC-250 is AMD's product name and Bazzite the Universal Blue project's. PlayStation, PS4, PS5, PS3,
-PS2, PSP, PS Vita, PSN, DualSense and Remote Play are Sony's; Xbox, Xbox 360, Xbox Cloud Gaming, Game Pass and
+PS2, PSP, PS Vita, PSN, DualSense and Remote Play are Sony's; XBOX, XBOX 360, XBOX Cloud Gaming, Game Pass and
 Windows are Microsoft's; Steam, Steam Deck and Big Picture are Valve's; the names of Nintendo's consoles, of the
 emulators (shadPS4, RPCS3, PPSSPP, PCSX2, Vita3K, Xenia) and of Decky Loader, HelixSR and DirectMesh belong to their
 owners. The suites use them only to say what their apps work with.

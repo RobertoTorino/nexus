@@ -7,7 +7,7 @@ Every action is a controller button in the legend at the bottom, A too, and a ta
 are no pills (owner, 29-10-2026: one way everywhere). Core's rule ends the legend: B goes back (a pane to its card,
 the key's page to Your games), View exits the app and Menu shows the information of the pane that shows. Nothing is
 browsed to (owner, 30-10-2026: fixed folders, no folder selecting): the games are put in the app's own folders
-(library.fixed: Games\\Xbox360 in your user folder, and on an SD card).
+(library.fixed: Games\\XBOX360 in your user folder, and on an SD card).
 
 The Xenia pane: what is installed, the games and where, and when a newer build is out; A Install until Xenia is
 installed, Y Update when another build is there, X Remove Xenia (a second press). A press that cannot act now says why
@@ -15,7 +15,7 @@ on the status line. Nothing downloads before A. The download and the unpacking r
 counts the megabytes. View (exit) while a job runs asks first, as the portal does. Xenia needs nothing set up: it is
 portable by itself on Windows, and a game's line gives it full screen.
 
-The Your games pane (panes.py, library.py): the games in the app's own Games\\Xbox360 folders (owner, 30-10-2026: the
+The Your games pane (panes.py, library.py): the games in the app's own Games\\XBOX360 folders (owner, 30-10-2026: the
 games are dropped there; library.fixed, an SD card's too), played from Steam (owner, 29-10-2026: the app starts one
 in Steam, X Play; on a device without Steam X Play starts it in the app's play mode itself, owner 30-10-2026: a
 fallback, as its shortcut would start it; core's play: View, LB and RB held quit any game); A marks one for Steam, Y
@@ -24,7 +24,7 @@ game shows the keep page (owner, 01-11-2026: before deleting anything, let the u
 keep.py): a row for each part of the game (library.removal) and its Steam shortcut, every row marked Delete at
 first, A Keep or Delete, X deletes the marked ones off the window's thread, B deletes nothing; LB Steam artwork keeps
 the SteamGridDB key; Steam's library is the portal's RT Steam (owner, 30-10-2026: Open Steam moved there). The Log
-pane: Xenia's folder, where Games\\Xbox360 is and the newest lines of the app's log; A (or a tap on the pane) shows the
+pane: Xenia's folder, where Games\\XBOX360 is and the newest lines of the app's log; A (or a tap on the pane) shows the
 whole log in the pane.
 
 The Settings pane: Xenia's settings that matter on the handheld, in tabs (LB and RB: Picture, Speed, Sound, Console), a
@@ -58,7 +58,7 @@ PROGRESS_MS = 500               # the megabytes of a download
 CONFIRM_MS = 5000               # Remove, and View (exit) while a job runs, ask for a second press within this
 CARDS_WIDTH = 460               # the cards' column; the panes take the rest
 CARD_HEIGHT = 100               # the cards and their gaps fit the column at 720 px high
-ABOUT = ("Xenia, the Xbox 360 emulator, installed for your own user: its settings, the content of your games and "
+ABOUT = ("Xenia, the XBOX 360 emulator, installed for your own user: its settings, the content of your games and "
          "their saves stay in its folder.")
 LOG_LINES = 12                  # the newest lines of the app's log in the Log pane
 LOG_MAX = 2000                  # the lines of the log the whole view shows, the newest
@@ -181,7 +181,7 @@ class MainWindow(PortableWindow):
                  start: Callable[..., None] = platform.start_program):
         """*steam_dir*: Steam's folder (False: found on this system, None: no Steam); *runtime_missing*: the Visual
         C++ runtime's files that are missing; *newer_release*: asks GitHub for a newer Xenia build; *user_home*: the
-        user's folder (where Games\\Xbox360 is); *drives*: the removable drives, whose Games\\Xbox360 is looked in
+        user's folder (where Games\\XBOX360 is); *drives*: the removable drives, whose Games\\XBOX360 is looked in
         too; *settings*: the app's (its .ini, create_app's); *open_url*: hands a steam:// address to Steam (Play);
         *start*: starts a program on its own (Xenia with a game, without Steam)."""
         super().__init__(gamepad)
@@ -442,7 +442,7 @@ class MainWindow(PortableWindow):
     # Your games
 
     def game_folders(self) -> list[Path]:
-        """The app's own Games\\Xbox360 folders (made when missing): the user's, then each SD card's."""
+        """The app's own Games\\XBOX360 folders (made when missing): the user's, then each SD card's."""
         return library.fixed(self.user_home, self.drives)
 
     def scan(self) -> list[Game]:
@@ -490,7 +490,7 @@ class MainWindow(PortableWindow):
         rows = [(str(g.file), self.game_text(g)) for g in self.games]
         if not rows:
             pane.status.setText(pane.status.text() or
-                                f"No games yet: put your Xbox 360 games in {private(own[0])}, or in Games\\Xbox360 "
+                                f"No games yet: put your XBOX 360 games in {private(own[0])}, or in Games\\XBOX360 "
                                 "on an SD card.")
         pane.list.set_items(rows)
         self.update_legend()

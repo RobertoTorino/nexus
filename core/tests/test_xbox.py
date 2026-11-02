@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The Xbox app's library (xbox.py), on a file in a temp folder shaped as the Xbox app 2611.1001.9.0 wrote it on the
+"""The XBOX app's library (xbox.py), on a file in a temp folder shaped as the XBOX app 2611.1001.9.0 wrote it on the
 owner's Ally (30-10-2026): an app added once, never twice, the file backed up, one in another shape left alone, and
-the Xbox app closed while it changes."""
+the XBOX app closed while it changes."""
 
 from __future__ import annotations
 
@@ -45,8 +45,8 @@ def test_an_app_is_added_once_beside_the_others(tmp_path):
 
 
 def test_an_app_is_removed_and_the_others_kept(tmp_path):
-    """The portal's Xbox menu row takes the suite out again (owner, 30-10-2026): only its entry goes, the file backed
-    up, the Xbox app closed while it changes; not there, nothing is written."""
+    """The portal's XBOX menu row takes the suite out again (owner, 30-10-2026): only its entry goes, the file backed
+    up, the XBOX app closed while it changes; not there, nothing is written."""
     path = xbox.manifest_path(tmp_path)
     path.parent.mkdir(parents=True)
     path.write_text(json.dumps({"version": 1, "provider": {"version": 1, "enabled": True},
@@ -62,7 +62,7 @@ def test_an_app_is_removed_and_the_others_kept(tmp_path):
 
 
 def test_the_first_app_makes_the_file(tmp_path):
-    """No file yet (nothing added by hand), or an empty one: the shape the Xbox app writes."""
+    """No file yet (nothing added by hand), or an empty one: the shape the XBOX app writes."""
     assert xbox.add(PROGRAM, "Windows Portable Suite", local=tmp_path, closed=ran)
     data = json.loads(xbox.manifest_path(tmp_path).read_text(encoding="utf-8"))
     assert data["version"] == 1 and data["gameCache"]["version"] == 1 and len(data["gameCache"]) == 2

@@ -22,7 +22,7 @@ from .sources import Records, Sources, http_download
 
 def xbox_menu() -> int:
     """--xbox-menu, as install.ps1 runs it once the portal is installed (owner, 30-10-2026): the installed portal in
-    the Xbox app's library, without a window; 0 when it is there now, 1 when it could not be added (said why)."""
+    the XBOX app's library, without a window; 0 when it is there now, 1 when it could not be added (said why)."""
     from bc250_core import xbox
 
     from .main_window import LOGO_PNG
@@ -30,16 +30,16 @@ def xbox_menu() -> int:
     log = applog.logger(APP_ID)
     program = state_dir() / "app" / f"{EXE_NAME}.exe"
     if not xbox.installed():
-        print("The Xbox app is not installed: there is no Xbox menu to add the suite to.")
+        print("The XBOX app is not installed: there is no XBOX menu to add the suite to.")
         return 1
     try:
         added = xbox.add(program, APP_NAME, LOGO_PNG)
     except (xbox.FormatError, OSError) as exc:
-        print(f"Not added to the Xbox menu: {exc}")
-        log.error(f"Not added to the Xbox menu: {exc}")
+        print(f"Not added to the XBOX menu: {exc}")
+        log.error(f"Not added to the XBOX menu: {exc}")
         return 1
-    print("Added to the Xbox menu." if added else "Already in the Xbox menu.")
-    log.info("Added to the Xbox menu (the Xbox app's library)." if added else "Already in the Xbox menu.")
+    print("Added to the XBOX menu." if added else "Already in the XBOX menu.")
+    log.info("Added to the XBOX menu (the XBOX app's library)." if added else "Already in the XBOX menu.")
     return 0
 
 

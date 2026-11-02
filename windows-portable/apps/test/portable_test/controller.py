@@ -21,7 +21,7 @@ from . import lights
 HOLD = 1.5                      # s that B is held to end the test
 # The buttons as the chips show them, in rows: SDL's name and the label (the Ally's face: A B X Y, View, the Menu
 # button's ☰); the Command Center button's two chips one above the other, at the end of the first two rows
-ROWS = [[("leftshoulder", "LB"), ("back", "View"), ("guide", "Xbox"), ("start", "☰"), ("rightshoulder", "RB"),
+ROWS = [[("leftshoulder", "LB"), ("back", "View"), ("guide", "XBOX"), ("start", "☰"), ("rightshoulder", "RB"),
          ("command", "Command")],
         [("dpad_up", "Up"), ("dpad_down", "Down"), ("dpad_left", "Left"), ("dpad_right", "Right"),
          ("m1m2", "M1/M2"), ("armoury", "Armoury")],
@@ -41,7 +41,7 @@ BACK_BUTTONS = ("M1 and M2 light the M1/M2 chip: Armoury Crate reports either of
                 "with Y a recording, with Up the on-screen keyboard. To use them as two buttons, map them in Armoury "
                 "Crate (Settings, Configure, M1 or M2: untick Secondary Function and choose a button); they then "
                 "light that button here. The Command Center button lights Command when it is let go after a short "
-                "press, Armoury after a long one (Armoury Crate). The Xbox button lights Xbox; while Steam runs, it also "
+                "press, Armoury after a long one (Armoury Crate). The XBOX button lights XBOX; while Steam runs, it also "
                 "opens Steam (Steam's Settings, Controller: Guide Button Focuses Steam).")
 NO_BACK_BUTTONS = ("The back buttons of an ASUS handheld show here as M1/M2. This handheld reports none: map its back "
                    "buttons to a controller button in its maker's app, and they light that button.")
@@ -334,7 +334,7 @@ FACE_COLORS = {"a": ("Green", (0, 255, 0)), "b": ("Red", (255, 0, 0)), "x": ("Bl
                "y": ("Yellow", (255, 200, 0))}
 TILT = 0.5                      # a stick this far from the middle lights its ring
 LIGHTS_HINT = "A, B, X and Y light both sticks in their color; a stick moved or pressed lights its own ring."
-NO_LIGHTS = ("Stick lights: Windows reports none it can set. Where the controller has them (the ROG Xbox Ally's "
+NO_LIGHTS = ("Stick lights: Windows reports none it can set. Where the controller has them (the ROG XBOX Ally's "
              f"rings around the sticks), switch Dynamic Lighting on in {lights.SETTINGS}, with the controller "
              "listed and on, then start the test again.")
 NOT_IN_FRONT = ("Windows lets the app set them only while its window is in front: close what is over it (Armoury "

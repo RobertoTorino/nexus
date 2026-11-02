@@ -2932,7 +2932,7 @@ if [ -n "$B_GPU_FP32" ]; then
         log_result "INFO:   ~${PCT}% of a $REF_NAME ($(awk -v r="$REF_GF" 'BEGIN {printf "%.1f", r / 1000}') TFLOPS theoretical)"
     done <<'LADDER'
 Steam Deck (RDNA2, 8 CU)|1600
-Xbox Series S (RDNA2, 20 CU)|4000
+XBOX Series S (RDNA2, 20 CU)|4000
 stock BC-250 ceiling (24 CU at 1850 MHz)|5680
 Steam Machine (announced, RDNA3 semi-custom, 28 CU)|8600
 PS5 (RDNA2, 36 CU)|10300

@@ -26,7 +26,7 @@ board.
   also takes the number itself (for example `4782394583276428394`) or the 12-character code that ends with `=`, as
   other Remote Play apps show it. It is the same for every console you register with this account.
 - **A controller on the board:** connected by USB cable or paired over Bluetooth with the board, not with the
-  console. A DualShock 4 or DualSense works best, but any controller the system knows will do (an Xbox controller,
+  console. A DualShock 4 or DualSense works best, but any controller the system knows will do (an XBOX controller,
   a Steam Deck's controls): the app reads them with SDL3, which Bazzite includes. A controller that is paired with
   the console connects to the console itself when you press its PS button, and the console then ends Remote Play.
   To pair a DualShock 4 with the board, hold Share and PS until the light bar flashes; it then no longer connects
@@ -303,7 +303,7 @@ native core, everything but **Test stream** works; without the decoder, Test str
 Nexus and its suites are independent community projects, not affiliated with or endorsed by AMD, ASRock, the Bazzite
 / Universal Blue project, Sony, Microsoft, Nintendo, Valve, or the makers of the emulators and the other programs the
 apps work with. BC-250 is AMD's product name and Bazzite the Universal Blue project's. PlayStation, PS4, PS5, PS3,
-PS2, PSP, PS Vita, PSN, DualSense and Remote Play are Sony's; Xbox, Xbox 360, Xbox Cloud Gaming, Game Pass and
+PS2, PSP, PS Vita, PSN, DualSense and Remote Play are Sony's; XBOX, XBOX 360, XBOX Cloud Gaming, Game Pass and
 Windows are Microsoft's; Steam, Steam Deck and Big Picture are Valve's; the names of Nintendo's consoles, of the
 emulators (shadPS4, RPCS3, PPSSPP, PCSX2, Vita3K, Xenia) and of Decky Loader, HelixSR and DirectMesh belong to their
 owners. The suites use them only to say what their apps work with.

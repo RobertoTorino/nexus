@@ -64,12 +64,12 @@ on the keyboard, to change the category. The portal always opens on the first on
 | Escape | B | | Close a menu or a question; with none open, close the portal |
 
 The controller is read with [pygame-ce](https://pypi.org/project/pygame-ce/), which the portal's installer adds to
-the suite's venv; it takes any controller SDL knows (Xbox, PlayStation, Switch Pro and most others). The portal
+the suite's venv; it takes any controller SDL knows (XBOX, PlayStation, Switch Pro and most others). The portal
 listens to the controller only while its own window has the focus, so a game's input never moves it. Without a
 controller, the keyboard and the mouse work as always.
 
 **Handhelds.** The view is made for a TV at 1080 p or 4K as much as for the Steam Deck (1280 x 800) and the ROG
-Xbox Ally X (1920 x 1080, shown at 1280 x 720 with the desktop's scaling): below 1000 px of height the icons, the
+XBOX Ally X (1920 x 1080, shown at 1280 x 720 with the desktop's scaling): below 1000 px of height the icons, the
 type, the header and the pills are drawn smaller, down to about two thirds, so a row of pills, two rows of icons
 and the line of keys fit on the screen. You can also swipe a page with a finger on the touch screen. The built-in
 controls are controllers like any other. Where Steam Input already turns them into keys (the Deck's desktop

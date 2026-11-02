@@ -139,13 +139,13 @@ DESKTOP_FILE_CONTENT="[Desktop Entry]
 Type=Application
 Version=1.0
 Name=$APP_NAME
-GenericName=Xbox 360 emulator manager
-Comment=Install Xenia, find your Xbox 360 games and add them to Steam for Game Mode
+GenericName=XBOX 360 emulator manager
+Comment=Install Xenia, find your XBOX 360 games and add them to Steam for Game Mode
 Exec=$LAUNCHER
 Icon=$APP_DIR/images/$APP_ID-128.png
 Terminal=false
 Categories=Game;Emulator;
-Keywords=BC-250;Bazzite;Xenia;Xbox 360;X360;emulator;Game Mode;
+Keywords=BC-250;Bazzite;Xenia;XBOX 360;X360;emulator;Game Mode;
 StartupNotify=true
 StartupWMClass=$APP_ID"
 

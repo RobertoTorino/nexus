@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The game scan (games.py): Xbox 360 disc images at each of the game partition's places, XEX files with their title
+"""The game scan (games.py): XBOX 360 disc images at each of the game partition's places, XEX files with their title
 ID and an unpacked disc's default.xex, .zar archives, Games on Demand and Arcade packages with their name, the other
 packages and files that are no game left out, a game found twice and depth."""
 
