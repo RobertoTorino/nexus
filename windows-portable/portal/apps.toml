@@ -146,3 +146,14 @@ install = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --no
 uninstall = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --uninstall"]
 detect = ["%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-sftp\\app\\sFTP-Tools.exe"]
 launch = [["Open", "%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-sftp\\app\\sFTP-Tools.exe"]]
+
+[apps.smart]
+name = "Smart Screen"
+summary = "Your handheld's live values on a Turzx USB screen, such as the Turing Smart Screen 3.5 inch, in your look."
+tag = "wp-smart-v0.1.0"
+sha256 = ""
+category = "utilities"
+install = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --no-desktop-shortcut"]
+uninstall = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --uninstall"]
+detect = ["%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-smart\\app\\Smart-Screen.exe"]
+launch = [["Open", "%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-smart\\app\\Smart-Screen.exe"]]

@@ -65,6 +65,9 @@ handheld with them, wakes them from rest mode and streams them full screen, and 
 reads.
 
 [sFTP Tools](apps/sftp.md): Moves files to and from another computer over SFTP, and starts or stops its SSH server.
+
+[Smart Screen](apps/smart.md): Your handheld's live values on a Turzx USB screen, such as the Turing Smart Screen
+3.5 inch, in your look.
 </div>
 </div>
 

@@ -1,0 +1,19 @@
+Changelog: 02-11-2026 02:04:49
+
+Added. Smart Screen, the BC250 suite's USB IPS3.5 made for the handheld: the handheld's live values on a Turzx USB IPS
+screen (the Turing Smart Screen 3.5" and the UsbMonitor 3.5", 5" and 7"), with the time, the date and the weather,
+in six themes or your own colors. The screen's protocol, the link that sends only what changed, the reset at the
+first connection, the drawing and the weather are the BC250 app's; Windows gives the screen its in-box usbser
+driver, so the app finds it as a COM port (by its USB ID and the port name in its Device Parameters) and needs no
+driver and no administrator. The values are Windows': the temperatures, the chip's power and the GPU's load from
+AMD's driver (core's chip.py), the CPU's clock, the network, the disks and the GPU's load without AMD's driver from
+Windows' performance counters by their English names, the memory and the battery; the board's fan, VRM, NVMe and
+VRAM tiles gave way to Power and Battery. Six cards: Screen (brightness, orientation, backlight, the picture and a
+report saved to Pictures and Documents), Values, Look (theme, four colors from a palette, the header's text on a
+page with the touch keyboard, a background picture chosen in core's browser), Clock (the time zone as its offset:
+Windows' zone names are too long), Weather (Open-Meteo, searched on a page with the touch keyboard) and Start (start
+with Windows minimized through a shortcut in the Startup folder, the screen dark or not when the app closes, run in
+the background, the log). The picture the screen shows is beside the panes, as large as the room allows: the whole
+height standing, the screen's own 480 x 320 lying down. The screen's header text starts as the
+handheld's family (ROG Xbox Ally X). Tried on the owner's Turing 3.5" through the Ally X's dock (COM3, 02-11-2026):
+the reset, the connection and a full picture in 1.8 s, as on the BC-250.

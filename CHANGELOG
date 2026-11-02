@@ -14,6 +14,10 @@ with its tag prefix (wp-portal-tour-v..., wp-<app>-tour-v...; bc250- for the sui
 scripts, the Nexus Release Tool (whose Record portal tour works for a Windows suite on the handheld now) and the
 Nexus Dashboard. tour_frames.set_scale(): the Windows portal is drawn at 150 % (1280 x 720 fills the video).
 
+Changelog: 02-11-2026 02:04:49
+
+Added. The Windows Portable Suite's Smart Screen in Nexus's lists: ICONS.md lists its symbols (tools/make_icons.py).
+
 Changelog: 02-11-2026 01:52:28
 
 Fixed. tools/app_tour.py applies --suite (owner, 02-11-2026: no Windows Portable Suite tour was ever made; the
