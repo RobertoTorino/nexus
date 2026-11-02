@@ -28,8 +28,8 @@
 name = "Windows Portable Test"
 short = "Portable Test"         # the whole name does not fit a tile at the Ally's size (owner, 30-10-2026)
 summary = "What Windows reports about the handheld, and a test of every button of its controller. Always installed."
-tag = "wp-test-v4.8.0"
-sha256 = "2151fb70c1fdd1e891e95532b88f7b7f50b56f14ecb1ed37bf871e75636d0576"
+tag = "wp-test-v4.9.0"
+sha256 = ""
 required = true
 category = "sustainable"
 install = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --no-desktop-shortcut"]
