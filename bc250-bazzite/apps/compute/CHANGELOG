@@ -1,3 +1,10 @@
+Changelog: 03-11-2026 12:02:47
+
+Fixed. Checking Unattended with the auto-resume unit enabled the unit with --now, which started a second run
+of the script 20 seconds after the one the window opens in a terminal, both on the same state folder. The unit
+is now enabled without --now, as Cores Bisect's is: it fires at the next login, after the first auto-reboot.
+The wiki chapter says so.
+
 Changelog: 02-11-2026 02:08:07
 
 Release 0.4.1.

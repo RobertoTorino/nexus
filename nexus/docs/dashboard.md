@@ -43,6 +43,7 @@ own that keeps running when the dashboard closes; the suite goes along where the
 | **Nexus Release Tool** | The release front end: a release's versions, CHANGELOG entries, pins and portal bump, and the board checks ([Releases](releases.md)). |
 | **Nexus Demo Recorder** | A portal installation recorded with OBS ([below](#demo-recorder)). Linux only: on Windows the tile is off. |
 | **Nexus Installer Tests** | A suite's installer tests, one at a time ([below](#installer-tests)). |
+| **Nexus Sound Lab** | Short sound effects for the suites' windows, made from sliders ([below](#sound-lab)). |
 
 The other tiles work on the chosen suite:
 
@@ -118,3 +119,25 @@ the suites of the checkout with tests that run on this system, and remembers the
 does on a device and removes it again, in a temporary home: nothing of yours is touched. The tests use fixed
 temporary folders under `/tmp`, so the same test is never run twice at once. `dev/itests/run.sh` (`--suite NAME`)
 and `dev/itests/install.sh` start and install it on their own.
+
+## Sound Lab
+
+**Nexus Sound Lab** (`dev/sounds/`) makes and tries the short sound effects a window plays, such as the tick when
+the controller moves the focus in a portal. Choose a **Preset** to start from (Tick, High tick, Blip, Thock, Click,
+Select, Back, Error, Tick after silence) and a **Waveform** (sine, triangle, square, saw or noise), then shape the
+sound with the sliders: the pitch at the start and the end of a tone (a sweep when they differ), the length of a
+tone, the attack (the rise to full volume) and the decay (how fast it dies away, per second), the number of tones
+and the interval between them in semitones (two tones a fifth apart make a blip), the noise over the tone and its
+own decay, the silence before the sound, and the volume (its peak). The sound is drawn beside the sliders and plays
+each time a slider is let go, with **Play**, or when the focus moves between the buttons of **Try it** (Tab, the
+arrow keys or a controller's d-pad; A plays it again), the way a window plays it while you navigate. Once a slider
+has left the preset the box says Custom. **Save as WAV…** writes the sound as 16-bit mono at 44.1 kHz, for a
+suite's sounds folder (the BC250 portal's `portal/bc250_portal/sounds/`, where it plays a sound by its file name).
+The last sound, the preset and the save folder are remembered.
+
+**Keep the audio link awake**, on by default, plays a silent loop while the window is open. Without it a short
+sound can stay silent on a TV: PipeWire pauses the output when nothing plays, and an HDMI TV mutes a moment after
+the stream stops and needs time to unmute when it starts again, so a 50 ms tick is over before it is heard. The
+preset Tick after silence shows the same from the other side: with the link asleep, only its tick comes through. A
+window that plays such sounds needs the same loop while it is open. `dev/sounds/run.sh` and
+`dev/sounds/install.sh` start and install it on their own.

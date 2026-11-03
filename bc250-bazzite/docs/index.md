@@ -110,7 +110,10 @@ installs from the portal.
 
 Only the apps marked **changes the board**: the unlocks, the GPU governor, GPU overclocking, the ACPI override, the
 VRAM split and the patched GPU drivers. They are software-only and can be undone, and the portal asks before it
-installs or opens them. BC-250 Bazzite Test and BIOS Reader only read.
+installs or opens them. Each of their chapters opens with a **Changes the board** box that says what the app
+touches, what stays after a reboot or a power off, what it never touches (the BIOS, the firmware) and how the
+change is undone; the portal shows the same text when you hover over the tile. BC-250 Bazzite Test and BIOS
+Reader only read.
 
 ### How do I undo a change?
 

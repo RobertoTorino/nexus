@@ -1,3 +1,18 @@
+Changelog: 03-11-2026 12:10:33
+
+Release 13.1.0.
+
+Changelog: 03-11-2026 11:50:55
+
+Added. Every app that changes the board says what it changes (owner, 03-11-2026): a board_change text in apps.toml
+for each [apps.<key>] with changes_board = true (gpu, compute, cores, oc, acpi, ace, mesh, vram, fan, wdriver), a
+few plain sentences on what the app touches, what stays after a reboot or a power off, what it never touches (the
+BIOS, the firmware) and how it is undone, written from the code. The tile's tooltip shows it in orange under
+"Changes the board", between the summary and the installed line. The parser reads the field (AppEntry.board_change,
+"" in an older manifest), and tools/check_manifest.py requires it for every app marked changes_board, refuses it
+for any other, and compares it word for word with the "Changes the board" box that opens the app's wiki chapter.
+The root's copy of apps.toml follows.
+
 Changelog: 02-11-2026 22:37:34
 
 Release 13.0.0.

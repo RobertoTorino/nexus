@@ -22,7 +22,7 @@ tools/                        the Nexus tools: release and CI (build_release, st
                               tours, the design panel
 dev/<name>/                   the Nexus development apps, run from the checkout: dev/dash/ is Nexus Dashboard (the
                               door to the others), dev/nrt/ Nexus Release Tool, dev/demo/ Nexus Demo Recorder,
-                              dev/itests/ Nexus Installer Tests
+                              dev/itests/ Nexus Installer Tests, dev/sounds/ Nexus Sound Lab
 test.sh                       runs every test suite (core, tools, dev/, and the portal, tools and apps of each suite
                               made for the system it runs on: SYSTEM in the suite's folder)
 bc250-bazzite/                the BC250 Bazzite Suite

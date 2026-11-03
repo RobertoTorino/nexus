@@ -157,7 +157,7 @@ Every app is built the same way; Windows Portable Test is the model:
 
 ## Checks of the suite
 
-From PowerShell at the repository root, as the root's CLAUDE.md lists them:
+From PowerShell at the repository root, as the root's `.claude/checks.md` lists them:
 
 ```powershell
 .venv-windows\Scripts\python.exe tools\check_versions.py --suite windows-portable

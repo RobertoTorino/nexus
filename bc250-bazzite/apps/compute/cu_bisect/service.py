@@ -48,4 +48,7 @@ def install(script_path: str, time_secs: int, rounds: int) -> None:
     if not shutil.which("systemctl"):
         raise RuntimeError("systemctl not found; install the unit manually (see the manual).")
     subprocess.run(["systemctl", "--user", "daemon-reload"], check=True)
-    subprocess.run(["systemctl", "--user", "enable", "--now", UNIT_NAME], check=True)
+    # Deliberately "enable" and not "enable --now": the GUI starts the run in a terminal right
+    # after this, and a second concurrent instance would fight it over the same state dir. The
+    # unit only needs to fire on the *next* login, after the script's first auto-reboot.
+    subprocess.run(["systemctl", "--user", "enable", UNIT_NAME], check=True)

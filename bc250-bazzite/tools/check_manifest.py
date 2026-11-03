@@ -9,6 +9,9 @@
   released) must not be listed. Every app has a category (its tab in the portal); the parser accepts none, and the
   Development tab's, only to read the manifests of earlier portal releases. No [checkout.<name>] tables: the
   portal lists only released apps (owner, 27-10-2026).
+* Every app marked changes_board has a board_change text (what it touches, what stays, what it never touches, how
+  it is undone), and its wiki chapter, docs/apps/<key>.md, opens with that text word for word in a box right after
+  its title (``!!! warning "Changes the board"``); an app not so marked has no board_change (owner, 03-11-2026).
 * The copy at the repository root, portal/apps.toml, which the portals installed before the suite moved into
   bc250-bazzite/ read at a tag for their update notice, is identical (while the root keeps one).
 * Every pinned tag exists. Without --require-tags a tag that does not exist yet is accepted when its version equals
@@ -93,6 +96,53 @@ def check_entries(entries, require_tags: bool) -> list[str]:
         elif entry.version != current:
             errors.append(f"{entry.tag} does not exist and is not the next release either "
                           f"(apps/{entry.key}/VERSION is {current})")
+    return errors
+
+
+BOARD_BOX = '!!! warning "Changes the board"'
+_TITLE = re.compile(r"^# .+$", re.M)
+
+
+def wiki_board_box(text: str) -> str | None:
+    """The text of the "Changes the board" box that opens a wiki chapter: the block right after its title (# ...),
+    with its lines joined; None when the chapter does not open with one."""
+    match = _TITLE.search(text)
+    if not match:
+        return None
+    lines = iter(text[match.end():].split("\n"))
+    for line in lines:
+        if line.strip():
+            break
+    else:
+        return None
+    if line.strip() != BOARD_BOX:
+        return None
+    body = []
+    for line in lines:
+        if not line.strip():
+            break
+        body.append(line.strip())
+    return " ".join(" ".join(body).split())
+
+
+def check_board_changes(entries) -> list[str]:
+    """Every app that changes the board says what it changes, in apps.toml and at the top of its wiki chapter."""
+    errors = []
+    for entry in entries:
+        if not entry.changes_board:
+            if entry.board_change:
+                errors.append(f"[apps.{entry.key}] has a board_change but changes_board is false")
+            continue
+        if not entry.board_change:
+            errors.append(f"[apps.{entry.key}] changes the board: it needs a board_change text")
+            continue
+        chapter = SUITE / "docs" / "apps" / f"{entry.key}.md"
+        box = wiki_board_box(chapter.read_text(encoding="utf-8")) if chapter.is_file() else None
+        if box is None:
+            errors.append(f"docs/apps/{entry.key}.md must open with a {BOARD_BOX} box right after its title")
+        elif box != entry.board_change:
+            errors.append(f"docs/apps/{entry.key}.md: the \"Changes the board\" box differs from "
+                          f"[apps.{entry.key}] board_change")
     return errors
 
 
@@ -182,7 +232,7 @@ def main(argv: list[str]) -> int:
     except (OSError, manifest.ManifestError) as exc:
         print(exc, file=sys.stderr)
         return 1
-    errors = (check_entries(entries, args.require_tags)
+    errors = (check_entries(entries, args.require_tags) + check_board_changes(entries)
               + check_no_checkout_tables((SUITE / MANIFEST).read_text(encoding="utf-8")) + check_root_copy())
     if args.base and set(args.base) != {"0"}:   # GitHub sends 000… for a new branch
         errors += check_bump(args.base)

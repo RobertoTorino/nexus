@@ -1,3 +1,34 @@
+Changelog: 03-11-2026 12:02:47
+
+Fixed. The BC-250 GPU Governor Manager chapter of the BC250 Bazzite Suite's wiki said four things need root and
+listed three: the config write, the systemctl actions and the safe-point test. It says three.
+
+Changelog: 03-11-2026 11:50:55
+
+Added. Every app of the BC250 Bazzite Suite that changes the board opens its wiki chapter with a "Changes the
+board" box right after its title (owner, 03-11-2026): what the app touches, what stays after a reboot or a power
+off, what it never touches (the BIOS, the firmware) and how it is undone, the same text the portal shows when you
+hover over the tile (the portal's board_change in apps.toml; tools/check_manifest.py keeps the two the same).
+The boxes of ACE Queues and Mesh Shaders replace their earlier "Changes the board" boxes, and the intro sentences
+of Memory Manager, Fan Control and USB Wi-Fi that said the same move into the box. The wiki's Portal chapter, the
+home page's questions and the Architecture chapter's steps for a new app say so; the suite's CLAUDE.md has the
+rule. The word Disclaimer stays the wikis' liability notice.
+
+Changelog: 03-11-2026 11:30:02
+
+Fixed. The root CLAUDE.md is half its size: it keeps the rules most tasks need and points to .claude/repository.md
+(the repository in full, the four files, the disclaimer), .claude/checks.md (every check as CI runs it) and
+.claude/releases.md (a Nexus release, Nexus's version, the CHANGELOG kinds, the owner's steps), which hold the moved
+text as it was. The suites' CLAUDE.md files point to .claude/checks.md for the full list.
+
+Changelog: 03-11-2026 02:11:57
+
+Added. Nexus Sound Lab (dev/sounds), a Nexus app that makes and tries short sound effects for the suites' windows
+from sliders and saves them as WAV (owner, 03-11-2026; its CHANGELOG has the details): in ci-nexus.yml's pytest
+matrix, with its installer test (bc250-bazzite/tools/installer-tests/sounds.sh, a step of ci.yml), its icon copies
+from tools/make_icons.py (ICONS.md), and its Sound Lab chapter on the Nexus page's Dashboard page, where the
+dashboard lists it among the Nexus apps.
+
 Changelog: 02-11-2026 22:37:34
 
 Release 1.33.0.

@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Nexus's design for the Nexus apps (dev/: Nexus Dashboard, Nexus Release Tool, Nexus Demo Recorder, Nexus
-Installer Tests; owner, 26-10-2026: a Nexus app takes Nexus's look, not a suite's): the colors of the Nexus page
+Installer Tests, Nexus Sound Lab; owner, 26-10-2026: a Nexus app takes Nexus's look, not a suite's): the colors of the Nexus page
 (nexus/docs/stylesheets/nexus.css), ink, silver and teal, as a theme for core's widgets, set with
 create_app(theme=NEXUS). The states (the working tree, a build, a release) keep the state family every app shares.
 One place for every Nexus app since 02-11-2026 (it was Nexus Release Tool's style.py alone)."""

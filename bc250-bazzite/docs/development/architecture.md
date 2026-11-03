@@ -367,11 +367,15 @@ installer step and shellcheck list. What it does by hand, step by step, for an a
 5. Write `tests/` and `requirements-dev.txt`, and add the app folder to the pytest matrix in
    `.github/workflows/ci.yml`. Write `bc250-bazzite/tools/installer-tests/<name>.sh` and add its step to the same file.
 6. Add the app to `bc250-bazzite/portal/apps.toml` (name, summary, `changes_board`, `category` (its icon's: the portal's tab for
-   it), install, uninstall, detect, launch).
+   it), install, uninstall, detect, launch). An app that changes the board also gets a `board_change`: what it
+   touches, what stays after a reboot or a power off, what it never touches and how it is undone, in a few plain
+   sentences; the tile's popup shows it.
 7. Add the app to the Dependency Checker's catalog (`[app.<name>]` with its launchers), its Python packages and
    the external tools it runs (`bc250-bazzite/apps/package/package_checker/dependencies.toml`).
 8. Write its manual chapter, `bc250-bazzite/docs/apps/<name>.md`, add it to `mkdocs.yml`, and give it a row in the apps overview,
-   `bc250-bazzite/docs/apps/index.md`.
+   `bc250-bazzite/docs/apps/index.md`. An app that changes the board opens its chapter, right after the title, with
+   a `!!! warning "Changes the board"` box holding its `board_change` text word for word
+   (`tools/check_manifest.py` compares the two).
 9. Run the checks from [Development](index.md) and every installer test.
 
 The tests in step 9 tell you what you missed: an app without an installer test, a catalog that does not match

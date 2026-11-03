@@ -6,6 +6,7 @@ from __future__ import annotations
 import json
 
 from dataclasses import replace
+from html import escape
 from pathlib import Path, PurePosixPath
 
 import pytest
@@ -146,6 +147,10 @@ def test_board_warning_under_the_icon(window, home):
     assert window.big.tiles["gpu"].status == "changes the board"
     assert window.big.tiles["gpu"].status_colour == mw.ORANGE
     assert window.big.tiles["overlay"].status == "Not installed"
+    # On hover, what the app changes and how that is undone (apps.toml's board_change), in orange
+    assert f"<p style='color:{mw.ORANGE};'><b>Changes the board.</b> " + \
+        escape(entry_of(window, "gpu").board_change) in window.states["gpu"].tooltip
+    assert "Changes the board." not in window.states["overlay"].tooltip
 
 
 def test_states_follow_detection_and_records(window, home):

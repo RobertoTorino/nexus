@@ -4,6 +4,16 @@
 
 # BC-250 ACE Queues
 
+!!! warning "Changes the board"
+    The app builds a patched RADV, Mesa's Vulkan driver, in a container and installs it under
+    /usr/local/lib/bc250-ace-queues, beside the system Mesa, which is never changed, with a wrapper in
+    /usr/local/bin. A game uses it only through the wrapper in its launch options, and only after the app's test
+    passed on the running kernel. All apps adds an environment file under /etc and a small boot service that
+    switches it off again when the kernel or the driver changes. The files stay across reboots, power offs and
+    Bazzite updates. Nothing is written to the BIOS, the firmware, the kernel or its arguments. Remove takes the
+    driver, the wrapper and the All apps files away: every app is back on the system Mesa, and the launch
+    options you gave games must go by hand.
+
 Lets games on the **AMD BC-250** use its dedicated compute queues (**async compute**). Games split a frame into
 graphics work and compute work (lighting, particles, post-processing, upscaling). With a compute queue of its own,
 the compute work runs beside the graphics work on shader cores that would otherwise wait.
@@ -16,10 +26,6 @@ on the running kernel.
 
 The upstream project measured +21 to +25 % in Cyberpunk 2077 (1440p, Medium, with the 40-CU unlock). The gain
 depends on the game: only games that use async compute gain anything.
-
-!!! warning "Changes the board"
-    The app installs a GPU driver and can make it the driver of every app. It is software-only and can be
-    undone: **Remove** takes the driver out again, and the system Mesa stays as it was. Read this chapter first.
 
 ## Before you start
 

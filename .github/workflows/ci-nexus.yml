@@ -41,7 +41,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        dir: [core, tools, dev/dash, dev/demo, dev/itests, dev/nrt]   # every folder with tests/ of Nexus;
+        dir: [core, tools, dev/dash, dev/demo, dev/itests, dev/nrt, dev/sounds]   # every folder with tests/ of Nexus;
                                       # a suite's folders: its own CI
     defaults:
       run:

@@ -2,6 +2,14 @@
 
 # BC-250 Persistent ACPI
 
+!!! warning "Changes the board"
+    The app copies three ACPI tables to /boot/acpi_override.cpio and adds one line to /etc/default/grub, then
+    regenerates the GRUB configuration. At every boot GRUB hands the tables to the kernel, which uses them in
+    memory instead of the BIOS's own. Both files stay across reboots, power offs and Bazzite updates. Nothing is
+    written to the BIOS, the firmware or the CMOS: the BIOS keeps its own tables, and the override is gone the
+    moment the two files are. Uninstall removes the file and the line, puts back any line that was there before,
+    and regenerates GRUB; after the next reboot the board runs on the BIOS's tables again.
+
 Safe alternative to BIOS flashing: a **persistent** ACPI fix for the AMD BC-250 that gives the
 board CPU C-states (idle) and frequency scaling (800 MHz – 3.2 GHz, 8 steps) on Linux —
 without the P3.00 MeiMeiDXE v3 modded BIOS.
@@ -27,7 +35,8 @@ Works on stock 6-core and unlocked 8-core boards, on all stock BIOS versions
 * `/boot/acpi_override.cpio` — extra files in `/boot` are left alone by `rpm-ostree`
   / bootc image updates; only `/boot/ostree` and `/boot/loader` are managed.
 * `/etc/default/grub` — `/etc` is machine-local state on ostree systems and is
-  3-way-merged across deployments, so the `GRUB_EARLY_INITRD_LINUX_CUSTOM` line stays.
+  3-way-merged across deployments, so the `GRUB_EARLY_INITRD_LINUX_CUSTOM` line stays. An early-initrd
+  line that was in the file before is kept beside it as a comment, and Uninstall puts it back.
 * **Kernel updates**: Fedora's `blscfg` GRUB module prepends the early initrd to **every**
   BLS boot entry at boot time, including kernels installed later. No re-install, no
   regeneration needed after a kernel or image update.

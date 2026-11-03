@@ -1,3 +1,8 @@
+Changelog: 03-11-2026 12:02:47
+
+Fixed. Cores Unlock's --uninstall left the empty /etc/bc250-cores-bisect folder behind; it removes it with the
+guard file.
+
 Changelog: 02-11-2026 02:08:07
 
 Release 0.4.1.

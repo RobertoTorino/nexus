@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import importlib.util
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -138,6 +139,56 @@ def test_shipped_manifest_passes_without_required_tags():
     assert cm.check_entries(entries, require_tags=False) == []
     assert {"package", "ncgui"} <= {entry.key for entry in entries if entry.category == "utilities"}
     assert cm.check_no_checkout_tables((cm.SUITE / cm.MANIFEST).read_text(encoding="utf-8")) == []
+
+
+CHAPTER = """<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+
+![Gov](../assets/gpu/gov.webp){ .app-logo }
+
+# BC-250 GPU Governor Manager
+
+!!! warning "Changes the board"
+    Writes the governor's settings.
+    Undo: Restore.
+
+## Using it
+"""
+
+
+def test_wiki_board_box():
+    """The box right after the chapter's title, its lines joined; none when the chapter opens with anything else."""
+    assert cm.wiki_board_box(CHAPTER) == "Writes the governor's settings. Undo: Restore."
+    assert cm.wiki_board_box(CHAPTER.replace("# BC-250 GPU Governor Manager\n\n", "# BC-250 GPU Governor Manager\n"
+                                             "\nA front end.\n\n")) is None          # a paragraph first
+    assert cm.wiki_board_box(CHAPTER.replace('!!! warning "Changes the board"', '!!! note "Changes the board"')) is None
+    assert cm.wiki_board_box("no title\n") is None
+
+
+def test_every_board_changing_app_says_what_it_changes(tmp_path, monkeypatch):
+    """An app marked changes_board has a board_change, and its wiki chapter opens with the same text in the box; an
+    app not so marked has none (owner, 03-11-2026)."""
+    monkeypatch.setattr(cm, "SUITE", tmp_path)
+    (tmp_path / "docs" / "apps").mkdir(parents=True)
+    (tmp_path / "docs" / "apps" / "gpu.md").write_text(CHAPTER, encoding="utf-8")
+    entry = cm.manifest.AppEntry
+    gpu = entry(key="gpu", name="Gov", summary="s", tag="gpu-v0.0.1", changes_board=True,
+                board_change="Writes the governor's settings. Undo: Restore.")
+    plain = entry(key="overlay", name="O", summary="s", tag="overlay-v0.0.1")
+    assert cm.check_board_changes([gpu, plain]) == []
+    assert cm.check_board_changes([replace(gpu, board_change="")]) == [
+        "[apps.gpu] changes the board: it needs a board_change text"]
+    assert cm.check_board_changes([replace(plain, board_change="Nothing.")]) == [
+        "[apps.overlay] has a board_change but changes_board is false"]
+    assert cm.check_board_changes([replace(gpu, board_change="Writes nothing.")]) == [
+        'docs/apps/gpu.md: the "Changes the board" box differs from [apps.gpu] board_change']
+    assert cm.check_board_changes([replace(gpu, key="oc", tag="oc-v0.0.1")]) == [
+        'docs/apps/oc.md must open with a !!! warning "Changes the board" box right after its title']
+
+
+def test_shipped_manifest_and_wiki_say_what_each_app_changes():
+    entries = cm.manifest.load(cm.SUITE / cm.MANIFEST)
+    assert cm.check_board_changes(entries) == []
+    assert all(e.board_change for e in entries if e.changes_board)
 
 
 def test_every_app_needs_a_category():

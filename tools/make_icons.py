@@ -135,14 +135,14 @@ NEXUS_ICON = [
      "The Nexus page's home: the icon under the headline, a WebP copy of the 1024 px drawing."),
     ("dev/nrt/images/nexus-release-tool.webp", "`dev/<name>/images/<app id>.webp` (512 px), `-128.png`",
      "The Nexus apps (owner, 26-10-2026: a Nexus app takes Nexus's icon, not a category's): Nexus Dashboard "
-     "(`dev/dash`), Nexus Release Tool (`dev/nrt`), Nexus Demo Recorder (`dev/demo`) and Nexus Installer Tests "
-     "(`dev/itests`), each its window header and window icon, its menu entry and Desktop icon. Lossless copies of "
+     "(`dev/dash`), Nexus Release Tool (`dev/nrt`), Nexus Demo Recorder (`dev/demo`), Nexus Installer Tests "
+     "(`dev/itests`) and Nexus Sound Lab (`dev/sounds`), each its window header and window icon, its menu entry and Desktop icon. Lossless copies of "
      "the drawing, written by this tool."),
 ]
 # the Nexus apps' icons (dev/<name>/images/<app id>): the drawing at each size, lossless (the pixels stay the
 # drawing's), by this tool.
 NEXUS_APPS = {"dash": "nexus-dashboard", "nrt": "nexus-release-tool", "demo": "nexus-demo-recorder",
-              "itests": "nexus-installer-tests"}
+              "itests": "nexus-installer-tests", "sounds": "nexus-sound-lab"}
 NEXUS_COPIES = [
     *((f"nexus/images/nexus-{size}.png", f"dev/{folder}/images/{app_id}{'-128' if size == 128 else ''}.{kind}")
       for folder, app_id in NEXUS_APPS.items() for size, kind in ((512, "webp"), (128, "png"))),

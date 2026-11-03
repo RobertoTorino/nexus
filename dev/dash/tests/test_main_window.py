@@ -27,8 +27,9 @@ def test_the_checkout_has_the_suites_and_the_nexus_apps():
     assert checkout.here(CHECKOUT, "bc250-bazzite", "linux") and not checkout.here(CHECKOUT, "bc250-bazzite", "win32")
     assert checkout.here(CHECKOUT, "windows-portable", "win32")
     apps = checkout.dev_apps(CHECKOUT)
-    assert [app.key for app in apps] == ["nrt", "demo", "itests"]          # the release tool first, then by name
-    assert [app.name for app in apps] == ["Nexus Release Tool", "Nexus Demo Recorder", "Nexus Installer Tests"]
+    assert [app.key for app in apps] == ["nrt", "demo", "itests", "sounds"]   # the release tool first, then by name
+    assert [app.name for app in apps] == ["Nexus Release Tool", "Nexus Demo Recorder", "Nexus Installer Tests",
+                                          "Nexus Sound Lab"]
     assert all(app.icon is not None and app.icon.is_file() and app.script.is_file() for app in apps)
     assert apps[1].log.name == "demo.log"
 
@@ -39,14 +40,14 @@ def test_the_window_lists_the_apps_then_the_suites_tools(qapp):
 
     assert window.windowTitle() == APP_NAME
     names = [window.tiles.item(i).text() for i in range(window.tiles.count())]
-    assert names == ["Nexus Release Tool", "Nexus Demo Recorder", "Nexus Installer Tests", "Portal video tour",
-                     "Apps video tour", "Convert icons"]
+    assert names == ["Nexus Release Tool", "Nexus Demo Recorder", "Nexus Installer Tests", "Nexus Sound Lab",
+                     "Portal video tour", "Apps video tour", "Convert icons"]
     assert window.suite_box.currentText() == "BC250 Bazzite Suite" and settings.value(SUITE_KEY) is None
     enabled = [bool(window.tiles.item(i).flags() & Qt.ItemFlag.ItemIsEnabled) for i in range(window.tiles.count())]
     if sys.platform == "win32":
-        assert enabled == [True, False, True, False, False, True]
+        assert enabled == [True, False, True, False, False, False, True]
     else:
-        assert enabled == [True] * 6
+        assert enabled == [True] * 7
     window.close()
 
 

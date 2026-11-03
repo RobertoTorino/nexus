@@ -4,13 +4,20 @@
 
 # BC-250 USB Wi-Fi
 
+!!! warning "Changes the board"
+    The app builds the AIC8800D80 driver as your user against the running kernel's headers and installs it as
+    root under /var/lib/bc250-usb-wifi, with a system service, bc250-usb-wifi.service, that loads the two
+    modules with insmod at every boot, and a udev rule that switches a stick out of its storage mode. Nothing
+    goes into /usr, and no kernel argument, BIOS, firmware or CMOS setting changes; the firmware files it
+    carries are uploaded to the stick, never to the board. The files stay across reboots, power offs and kernel
+    updates: after a kernel update the service builds the driver again at boot. Remove unloads the modules,
+    disables the service and deletes every file under /etc and /var/lib; the board is as before, and the build
+    in your home folder stays until the app's uninstall.
+
 The driver for **AIC8800D80 USB Wi-Fi sticks** on the **AMD BC-250** with **Bazzite**. The UGREEN AX900 and many
 other small Wi-Fi 6 sticks use this chip, and Bazzite's kernel has no driver for it: the stick shows up, and no
 `wlan0` comes. The app builds the driver on the board for the running kernel, installs it with a system service
 that loads it at every boot, and builds it again after a kernel update.
-
-The driver is a kernel module, so this app **changes the board**. It is software-only: Remove unloads it and takes
-every file away, and the board is as before.
 
 ## What you need
 

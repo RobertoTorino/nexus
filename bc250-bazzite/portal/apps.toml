@@ -14,6 +14,10 @@
 #   sha256          of <tag>.tar.gz; filled in when the tag is released (empty: checked against SHA256SUMS only)
 #   required        installed with the portal and always listed first (only check)
 #   changes_board   true: the portal warns before installing or opening it
+#   board_change    with changes_board: what the app touches on the board, what stays after a reboot or a power
+#                   off, what it never touches and how it is undone, in a few plain sentences (no Markdown). The
+#                   tile's tooltip shows it, and the app's wiki chapter opens with the same text in a
+#                   "Changes the board" box (check_manifest.py keeps them the same)
 #   category        sustainable, graphics, gaming or utilities: the app's tab in the portal; the same
 #                   category as its icon in icons/categories.toml (tools/tests/test_icons.py)
 #   withdrawn       optional: "<reason>" when the pinned release was withdrawn; the portal removes the app
@@ -45,6 +49,16 @@ tag = "gpu-v0.4.1"
 sha256 = "d5cea94cd6cd8360a495ac777e30b6030a92b02a8d0f4c27696f05b375001c89"
 required = false
 changes_board = true
+board_change = """
+The app edits the governor's settings file, /etc/cyan-skillfish-governor-smu/config.toml, and makes a dated
+backup of it beside it before every write; it starts, stops, enables and disables the governor's service, and
+sends it clock, voltage and range requests over D-Bus. The governor is what sets the GPU's clocks and voltages;
+the app never writes a register itself. The settings file stays across reboots and power offs, and the governor
+reads it whenever it starts; what the app sets over D-Bus, test mode included, lasts until the governor
+restarts. Nothing is written to the BIOS, the firmware, the CMOS or the kernel's arguments. Restore on the
+Backups page makes any earlier settings file the current one again, and Stop test ends a test; uninstalling the
+app leaves the settings file and its backups as they are.
+"""
 category = "sustainable"
 install = ["bash install.sh"]
 uninstall = ["bash install.sh --uninstall"]
@@ -71,6 +85,16 @@ tag = "compute-v0.4.1"
 sha256 = "2de16c0a9b1449aba560bd6459d10d8028df19e96860661eb92dfa39fc488837"
 required = false
 changes_board = true
+board_change = """
+The app writes the GPU's shader array and WGP mask registers with umr, as root, while the driver runs: that is
+the CU unlock. The registers are volatile: any reboot puts the stock 24 CUs back, and nothing is burned into the
+chip. The unlock stays across reboots and power offs only through the root service that CU Unlock installs,
+bc250-cu-unlock.service with the masks in /etc/bc250-cu-bisect, which writes the registers again early at every
+boot. Nothing is written to the BIOS, the firmware, the CMOS or the kernel's arguments. Uninstall in CU Unlock
+disables the service and removes its files; the unlock lasts until the next reboot, and the board is then stock.
+CU Bisect reboots the board between its rounds, by itself with the unattended option, after a question
+otherwise.
+"""
 category = "sustainable"
 install = ["bash packaging/bazzite/install-bisect-gui.sh", "bash packaging/bazzite/install-gui.sh"]
 uninstall = ["bash packaging/bazzite/uninstall-bisect-gui.sh", "bash packaging/bazzite/uninstall-gui.sh"]
@@ -84,6 +108,17 @@ tag = "cores-v0.4.1"
 sha256 = "2d2f83f9f4f5761a596497b2191ee6c3ffb21ff8d78816f9d315bc0229484ebc"
 required = false
 changes_board = true
+board_change = """
+The app sends the SoC's SMU one mailbox message over PCI configuration space with setpci, which sets the core
+presence mask to 0xFF in the SMU's own memory; the governor's service is stopped around the message, as it
+shares the mailbox, and started again. The mask takes effect on the next warm reboot, survives warm reboots, and
+a full power off reverts it to the stock 6 cores. The 8 cores stay across power offs only through the root
+service that Cores Unlock installs, bc250-cores-unlock.service, which sends the message again after a cold boot
+and warm-reboots once, with a guard against reboot loops. Nothing is written to the BIOS, the firmware, the CMOS
+or the kernel's arguments. Uninstall in Cores Unlock disables the service and removes its files; the cores stay
+on until the next full power off, and the board is then stock. Cores Bisect reboots the board between its
+rounds, by itself with the unattended option, after a question otherwise.
+"""
 category = "sustainable"
 install = ["bash install.sh"]
 uninstall = ["bash install.sh --uninstall"]
@@ -97,6 +132,16 @@ tag = "oc-v0.3.1"
 sha256 = "63775195f0eafae19eda8e2a3c27b692e4b8c7f666c6f7169548af052f6ae4af"
 required = false
 changes_board = true
+board_change = """
+The app only changes the GPU governor's settings file, /etc/cyan-skillfish-governor-smu/config.toml: for each
+attempt it puts a test clock and voltage in it and restarts the governor, which applies them, and puts your own
+file back after the attempt, on a temperature abort and when it exits. It never writes a register itself.
+Install writes the found safe point into the file, with a copy of the file from before it beside it, and
+restarts the governor; the file stays across reboots and power offs. A crash during an attempt can leave the
+test settings in the file until the script runs again and restores it first. Nothing is written to the BIOS, the
+firmware, the CMOS or the kernel's arguments. Uninstall copies the file from before the install back and
+restarts the governor.
+"""
 category = "sustainable"
 install = ["bash install.sh"]
 uninstall = ["bash install.sh --uninstall"]
@@ -110,6 +155,14 @@ tag = "acpi-v0.4.1"
 sha256 = "a6852a8d0c901bc88f6fff72352b84bae417a090bccb82e6365e25e8494b63ba"
 required = false
 changes_board = true
+board_change = """
+The app copies three ACPI tables to /boot/acpi_override.cpio and adds one line to /etc/default/grub, then
+regenerates the GRUB configuration. At every boot GRUB hands the tables to the kernel, which uses them in memory
+instead of the BIOS's own. Both files stay across reboots, power offs and Bazzite updates. Nothing is written to
+the BIOS, the firmware or the CMOS: the BIOS keeps its own tables, and the override is gone the moment the two
+files are. Uninstall removes the file and the line, puts back any line that was there before, and regenerates
+GRUB; after the next reboot the board runs on the BIOS's tables again.
+"""
 category = "sustainable"
 install = ["bash install.sh"]
 uninstall = ["bash install.sh --uninstall"]
@@ -149,6 +202,16 @@ tag = "ace-v1.0.0"
 sha256 = "05b3787d32b3fc209660550864a4a7406810fba1bb886ee40b6b5c9ca7213cf9"
 required = false
 changes_board = true
+board_change = """
+The app builds a patched RADV, Mesa's Vulkan driver, in a container and installs it under
+/usr/local/lib/bc250-ace-queues, beside the system Mesa, which is never changed, with a wrapper in
+/usr/local/bin. A game uses it only through the wrapper in its launch options, and only after the app's test
+passed on the running kernel. All apps adds an environment file under /etc and a small boot service that
+switches it off again when the kernel or the driver changes. The files stay across reboots, power offs and
+Bazzite updates. Nothing is written to the BIOS, the firmware, the kernel or its arguments. Remove takes the
+driver, the wrapper and the All apps files away: every app is back on the system Mesa, and the launch options
+you gave games must go by hand.
+"""
 category = "graphics"
 install = ["bash install.sh"]
 uninstall = ["bash install.sh --uninstall"]
@@ -162,6 +225,15 @@ tag = "mesh-v1.0.0"
 sha256 = "fcde3adbdeb615a123c7b35619fb132ca0d45904dd038807a726d77929222cb9"
 required = false
 changes_board = true
+board_change = """
+The app builds RADV, Mesa's Vulkan driver, with DirectMesh in a container and installs it under
+/usr/local/lib/bc250-mesh-shaders, beside the system Mesa, which is never changed, with a wrapper in
+/usr/local/bin. A game uses it only through the wrapper in its launch options, and only after the app's test
+passed on the running kernel; nothing is set for every app. The files stay across reboots, power offs and
+Bazzite updates. Nothing is written to the BIOS, the firmware, the kernel or its arguments. Remove takes the
+driver and the wrapper away: games are back on the system Mesa, and the launch options you gave them must go by
+hand.
+"""
 category = "graphics"
 install = ["bash install.sh"]
 uninstall = ["bash install.sh --uninstall"]
@@ -175,6 +247,16 @@ tag = "vram-v1.0.0"
 sha256 = "1cd76182042c0b878f06ca319b6e76427d620b39fd188c67fb4e8ab29071033b"
 required = false
 changes_board = true
+board_change = """
+The app writes the VRAM split into the board's CMOS: the firmware's own memory block of 28 bytes in bank 2, with
+its checksum, and never a byte outside it. The firmware reads the split at the next boot. CMOS is kept by the
+board's battery, so the split stays across reboots and power offs until it is written again or the CMOS is
+cleared with the jumper or the battery, which brings the firmware's 512 MB back. The GTT limit is a kernel
+argument, set with rpm-ostree kargs in the next deployment. Nothing is written to the BIOS itself, the firmware
+or the real-time clock, and the app refuses to write when the block's signature or checksum does not match or
+the kernel is locked down. Undo writes the previous split back, and the Default profile writes 512 MB and
+removes the kernel argument; both take effect after a reboot.
+"""
 category = "sustainable"
 install = ["bash install.sh"]
 uninstall = ["bash install.sh --uninstall"]
@@ -188,6 +270,16 @@ tag = "fan-v1.0.0"
 sha256 = "c105d99ec5330561f8874687fa31bb426e5b0cc05e6b42fa4bca56dda8f5dbf5"
 required = false
 changes_board = true
+board_change = """
+The thermal guard is a root system service, bc250-fan-control-guard.service with its files in
+/etc/bc250-fan-control, that reads the temperatures every two seconds. At the cool limit it sets every fan to
+full speed in sysfs and switches the GPU governor's performance mode off; at the shutdown limit, held for the
+set number of seconds, it powers the board off cleanly with systemctl poweroff. The service stays enabled across
+reboots and power offs. The fan settings are written in memory only, and the guard puts the saved values back
+when it re-arms or stops. Nothing is written to the BIOS, the firmware, the CMOS or the kernel's arguments. Turn
+off disables the service and removes its files; the fans are back on their previous setting, and performance
+mode, once the guard switched it off, stays off until you switch it on again.
+"""
 category = "sustainable"
 install = ["bash install.sh"]
 uninstall = ["bash install.sh --uninstall"]
@@ -201,6 +293,16 @@ tag = "wdriver-v1.0.0"
 sha256 = "a750e221687bdeaa61dfee5806cf21c03f203eeb5070bf7dc599f9e97f4f7f60"
 required = false
 changes_board = true
+board_change = """
+The app builds the AIC8800D80 driver as your user against the running kernel's headers and installs it as root
+under /var/lib/bc250-usb-wifi, with a system service, bc250-usb-wifi.service, that loads the two modules with
+insmod at every boot, and a udev rule that switches a stick out of its storage mode. Nothing goes into /usr, and
+no kernel argument, BIOS, firmware or CMOS setting changes; the firmware files it carries are uploaded to the
+stick, never to the board. The files stay across reboots, power offs and kernel updates: after a kernel update
+the service builds the driver again at boot. Remove unloads the modules, disables the service and deletes every
+file under /etc and /var/lib; the board is as before, and the build in your home folder stays until the app's
+uninstall.
+"""
 category = "utilities"
 install = ["bash install.sh"]
 uninstall = ["bash install.sh --uninstall"]

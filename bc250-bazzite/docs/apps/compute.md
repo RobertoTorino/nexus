@@ -4,6 +4,16 @@
 
 # BC-250 CU Bisect
 
+!!! warning "Changes the board"
+    The app writes the GPU's shader array and WGP mask registers with umr, as root, while the driver runs: that
+    is the CU unlock. The registers are volatile: any reboot puts the stock 24 CUs back, and nothing is burned
+    into the chip. The unlock stays across reboots and power offs only through the root service that CU Unlock
+    installs, bc250-cu-unlock.service with the masks in /etc/bc250-cu-bisect, which writes the registers again
+    early at every boot. Nothing is written to the BIOS, the firmware, the CMOS or the kernel's arguments.
+    Uninstall in CU Unlock disables the service and removes its files; the unlock lasts until the next reboot,
+    and the board is then stock. CU Bisect reboots the board between its rounds, by itself with the unattended
+    option, after a question otherwise.
+
 Tells **bad CUs** apart from an **unstable CU unlock** on the AMD BC-250 (Cyan Skillfish, gfx1013).
 
 Every BC-250 die differs: AMD fuses off WGPs that failed validation. But a crash after a CU unlock doesn't
@@ -492,8 +502,8 @@ other 4-mask value (validated live, same format `--baseline` takes).
 
 Checking **Unattended** also offers to install the `--auto` resume-after-reboot systemd `--user` unit
 for you (writing `~/.config/systemd/user/bc250-cu-bisect-auto.service` and running
-`systemctl --user enable --now`) - the same steps as the "Running truly unattended" checklist above,
-just automated. **Show status** runs `--status` in a terminal without starting anything.
+`systemctl --user enable`; the run itself starts in the terminal, and the unit takes over after the first
+reboot) - the same steps as the "Running truly unattended" checklist above, just automated. **Show status** runs `--status` in a terminal without starting anything.
 
 Run it straight from a clone (any distro):
 

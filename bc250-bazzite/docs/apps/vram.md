@@ -4,11 +4,18 @@
 
 # BC-250 Memory Manager
 
+!!! warning "Changes the board"
+    The app writes the VRAM split into the board's CMOS: the firmware's own memory block of 28 bytes in bank 2,
+    with its checksum, and never a byte outside it. The firmware reads the split at the next boot. CMOS is kept
+    by the board's battery, so the split stays across reboots and power offs until it is written again or the
+    CMOS is cleared with the jumper or the battery, which brings the firmware's 512 MB back. The GTT limit is a
+    kernel argument, set with rpm-ostree kargs in the next deployment. Nothing is written to the BIOS itself,
+    the firmware or the real-time clock, and the app refuses to write when the block's signature or checksum
+    does not match or the kernel is locked down. Undo writes the previous split back, and the Default profile
+    writes 512 MB and removes the kernel argument; both take effect after a reboot.
+
 Sets the **VRAM split** of the **AMD BC-250** on **Bazzite** and the **GTT limit** on its kernel command line, and
 shows the memory figures that go with them: the GTT, the TTM limit, the system RAM and the swap layout.
-
-The split is stored in the board's CMOS and the GTT limit in the next boot's kernel arguments, so this app
-**changes the board**. Both are software-only and can be undone: in the app, by clearing CMOS, or with rpm-ostree.
 
 ## The split, GTT and RAM
 

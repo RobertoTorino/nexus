@@ -293,6 +293,8 @@ jobs:
         run: bash bc250-bazzite/tools/installer-tests/demo.sh
       - name: Nexus Installer Tests installer
         run: bash bc250-bazzite/tools/installer-tests/itests.sh
+      - name: Nexus Sound Lab installer
+        run: bash bc250-bazzite/tools/installer-tests/sounds.sh
       - name: release tarballs, end to end
         run: bash bc250-bazzite/tools/installer-tests/release.sh
 

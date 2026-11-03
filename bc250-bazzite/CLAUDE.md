@@ -34,7 +34,8 @@ appearing in the portal.
   (`../dev/dash/`) opens them all: Nexus Release Tool (the release front end), Nexus Installer Tests (this suite's
   `tools/installer-tests/*.sh` one at a time; it was BC-250 Installer Tests in `tools/installer-tests/gui`), Nexus
   Demo Recorder (a portal installation recorded with OBS; it was the OBS part of Media Tool, `apps/mtool`, which is
-  gone from the suite: Breaking in the portal's CHANGELOG), the video tours and the icons. Their manuals are on
+  gone from the suite: Breaking in the portal's CHANGELOG), Nexus Sound Lab (short sound effects for the windows,
+  from sliders), the video tours and the icons. Their manuals are on
   the Nexus page. A portal that runs from the checkout, or was
   installed from one, installs the released apps from that checkout's source (the checkout it records is the
   repository, the suite's folder in it `bc250-bazzite/`, `SUITE_DIR`): that is how a release is tried on a board
@@ -61,7 +62,12 @@ appearing in the portal.
 - **Warn before board changes.** Apps that change how the board runs (CU/core unlocks, GPU governor, GPU
   overclocking, ACPI override, the patched RADV of ace, the DirectMesh RADV of mesh, the VRAM split of vram, the
   thermal guard of fan, the kernel module of wdriver) are marked `changes_board` and the portal asks first. Frame it
-  as standard caution: the apps are software-only and reversible, not "risky".
+  as standard caution: the apps are software-only and reversible, not "risky". Every such app says what it changes
+  (owner, 03-11-2026): its `board_change` in `portal/apps.toml`, a few plain sentences on what it touches, what
+  stays after a reboot or a power off, what it never touches (the BIOS, the firmware) and how it is undone, written
+  from the code, not from the README. The tile's tooltip shows it under "Changes the board", and the app's wiki
+  chapter opens with the same text, word for word, in a `!!! warning "Changes the board"` box right after its
+  title; `tools/check_manifest.py` compares the two (the word Disclaimer stays the wikis' liability notice).
 - **Advice, not reboots.** No app reboots, powers off or logs out the board; when one is needed, the app says so
   (and which command does it). The exception, by design (owner, 15-10-2026): CU Bisect and Cores Bisect, whose
   rounds each need a fresh boot (they ask, or reboot by themselves with `--auto`), and Cores Unlock's boot service,
@@ -86,7 +92,7 @@ appearing in the portal.
     (the Nexus tool; this suite is its default) writes them.
   - Code: shared code comes from `bc250_core` (bundled per app); the installer writes a launcher in
     `~/.local/bin` whose exec line names the app's python, a menu entry and an optional Desktop icon; every app has
-    its installer test (see Checks in the root's CLAUDE.md).
+    its installer test (see the root's `.claude/checks.md`).
   - Window: the first line is the app's icon at 96 px on the left, spanning the title (with the version) and a
     second line below it (status boxes or the app's main controls). No long lines of text in the window (owner,
     01-11-2026): where space is limited, an info symbol (core's `InfoButton`) opens the explanation; what is
@@ -111,7 +117,7 @@ appearing in the portal.
 
 ## Checks of the suite
 
-The root's CLAUDE.md lists every check as CI runs it. Those of this suite alone, from the repository root:
+The root's `.claude/checks.md` lists every check as CI runs it. Those of this suite alone, from the repository root:
 
 ```bash
 python3 bc250-bazzite/tools/check_manifest.py --base origin/main   # portal/apps.toml rules, the bump since the last portal release

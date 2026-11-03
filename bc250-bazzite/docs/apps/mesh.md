@@ -4,6 +4,15 @@
 
 # BC-250 Mesh Shaders
 
+!!! warning "Changes the board"
+    The app builds RADV, Mesa's Vulkan driver, with DirectMesh in a container and installs it under
+    /usr/local/lib/bc250-mesh-shaders, beside the system Mesa, which is never changed, with a wrapper in
+    /usr/local/bin. A game uses it only through the wrapper in its launch options, and only after the app's test
+    passed on the running kernel; nothing is set for every app. The files stay across reboots, power offs and
+    Bazzite updates. Nothing is written to the BIOS, the firmware, the kernel or its arguments. Remove takes the
+    driver and the wrapper away: games are back on the system Mesa, and the launch options you gave them must go
+    by hand.
+
 Gives games on the **AMD BC-250** **mesh shaders**. Newer DirectX 12 games (DirectX 12 Ultimate) draw their scenes
 with mesh shaders. Some need them to start; others fall back to an older path without them.
 
@@ -15,10 +24,6 @@ so, and only after the app's test passed on the running kernel.
 
 The DirectMesh project reports Final Fantasy VII Rebirth, Control, Hellblade 2, Alan Wake 2 and Crimson Desert
 running with it on a BC-250. Only games that use mesh shaders gain anything.
-
-!!! warning "Changes the board"
-    The app installs a GPU driver that games use instead of the system's. It is software-only and can be undone:
-    **Remove** takes the driver out again, and the system Mesa stays as it was. Read this chapter first.
 
 ## Before you start
 

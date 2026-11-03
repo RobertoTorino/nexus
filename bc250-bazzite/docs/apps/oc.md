@@ -4,6 +4,16 @@
 
 # BC-250 GPU OC Bisect
 
+!!! warning "Changes the board"
+    The app only changes the GPU governor's settings file, /etc/cyan-skillfish-governor-smu/config.toml: for
+    each attempt it puts a test clock and voltage in it and restarts the governor, which applies them, and puts
+    your own file back after the attempt, on a temperature abort and when it exits. It never writes a register
+    itself. Install writes the found safe point into the file, with a copy of the file from before it beside it,
+    and restarts the governor; the file stays across reboots and power offs. A crash during an attempt can leave
+    the test settings in the file until the script runs again and restores it first. Nothing is written to the
+    BIOS, the firmware, the CMOS or the kernel's arguments. Uninstall copies the file from before the install
+    back and restarts the governor.
+
 Finds your **AMD BC-250's** (Cyan Skillfish, gfx1013) safe **GPU overclock and undervolt**, one step at a time.
 
 There is no formula for the right GPU clock and voltage: the stable ceiling depends on your specific die
@@ -143,7 +153,8 @@ chmod +x bc250-gpu-oc-bisect.sh
 
 When the sweep is complete, `--install` writes the recommended (margin) point into the real governor
 config, after an explicit confirmation. A backup of your config is kept at
-`/etc/cyan-skillfish-governor-smu/config.toml.pre-oc-bisect`; `--uninstall` restores it.
+`/etc/cyan-skillfish-governor-smu/config.toml.pre-oc-bisect`; `--uninstall` restores it and removes the backup,
+so a later `--install` backs up the config as it is then.
 
 ## State and report
 

@@ -61,6 +61,17 @@ def test_a_withdrawn_release():
         parse(MINIMAL.replace('name = "BT"', 'name = "BT"\nwithdrawn = "broken"', 1))
 
 
+def test_board_change_text():
+    """What an app changes on the board, for its tooltip and the box at the top of its wiki chapter: one line of
+    plain sentences, however the manifest wraps it; "" in a manifest from before it."""
+    assert parse(MINIMAL)[1].board_change == ""
+    cu = parse(MINIMAL.replace('name = "CU"', 'name = "CU"\nchanges_board = true\nboard_change = """\n'
+                               'Writes GPU registers.\n  Undo: a cold boot.\n"""', 1))[1]
+    assert cu.changes_board and cu.board_change == "Writes GPU registers. Undo: a cold boot."
+    with pytest.raises(ManifestError, match="board_change must be a string"):
+        parse(MINIMAL.replace('name = "CU"', 'name = "CU"\nboard_change = true', 1))
+
+
 def test_a_category_for_its_tab():
     assert parse(MINIMAL)[1].category == ""                                # a manifest from before categories
     cu = parse(MINIMAL.replace('name = "CU"', 'name = "CU"\ncategory = "gaming"', 1))[1]

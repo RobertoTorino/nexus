@@ -1,3 +1,8 @@
+Changelog: 03-11-2026 02:11:57
+
+Added. The About text names Nexus Sound Lab (dev/sounds) among the Nexus apps the tiles start; the tiles found it
+by themselves.
+
 Changelog: 02-11-2026 00:56:43
 
 Added. Nexus Dashboard, a Nexus app in dev/dash/ (owner, 02-11-2026: the tools for working on the suites were

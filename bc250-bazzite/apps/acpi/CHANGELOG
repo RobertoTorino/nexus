@@ -1,3 +1,10 @@
+Changelog: 03-11-2026 12:02:47
+
+Fixed. A GRUB_EARLY_INITRD_LINUX_CUSTOM line that was in /etc/default/grub before the install was overwritten,
+and --uninstall deleted the line instead of putting it back. The install now keeps the earlier line beside its own
+as a comment (#bc250-persistent-acpi kept: ...), and --uninstall puts it back; a second install changes nothing.
+The wiki chapter says so.
+
 Changelog: 02-11-2026 02:08:07
 
 Release 0.4.1.

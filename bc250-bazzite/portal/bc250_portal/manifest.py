@@ -45,6 +45,11 @@ class AppEntry:
     sha256: str = ""
     required: bool = False
     changes_board: bool = False
+    # board_change: for an app that changes the board, what it touches, what stays after a reboot or a power off,
+    # what it never touches (the BIOS, the firmware) and how it is undone, in a few plain sentences: the tile's
+    # tooltip shows it under "Changes the board", and the app's wiki chapter opens with the same text in a box
+    # (tools/check_manifest.py keeps the two the same). "" in a manifest from before it (owner, 03-11-2026).
+    board_change: str = ""
     category: str = ""                          # a key of CATEGORIES; "" only in a manifest from before categories
     install: tuple[str, ...] = ()
     uninstall: tuple[str, ...] = ()
@@ -92,6 +97,9 @@ def _entry(key: str, raw: dict) -> AppEntry:
     short = raw.get("short", "")
     if not isinstance(short, str):
         raise ManifestError(f"[{table}.{key}] short must be a string")
+    board_change = raw.get("board_change", "")
+    if not isinstance(board_change, str):
+        raise ManifestError(f"[{table}.{key}] board_change must be a string")
     withdrawn = raw.get("withdrawn", "")
     if "withdrawn" in raw and (not isinstance(withdrawn, str) or not withdrawn.strip()):
         raise ManifestError(f"[{table}.{key}] withdrawn must say why the release was withdrawn")
@@ -104,7 +112,7 @@ def _entry(key: str, raw: dict) -> AppEntry:
         raise ManifestError(f"[{table}.{key}] launch must be a list of [label, command] pairs")
     entry = AppEntry(key=key, name=raw["name"], summary=raw["summary"], tag=raw["tag"], sha256=sha,
                      required=bool(raw.get("required", False)), changes_board=bool(raw.get("changes_board", False)),
-                     category=category,
+                     board_change=" ".join(board_change.split()), category=category,
                      install=_strings(key, "install", raw.get("install")),
                      uninstall=_strings(key, "uninstall", raw.get("uninstall")),
                      detect=_strings(key, "detect", raw.get("detect")),

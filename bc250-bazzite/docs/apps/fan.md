@@ -4,12 +4,19 @@
 
 # BC-250 Fan Control
 
+!!! warning "Changes the board"
+    The thermal guard is a root system service, bc250-fan-control-guard.service with its files in
+    /etc/bc250-fan-control, that reads the temperatures every two seconds. At the cool limit it sets every fan
+    to full speed in sysfs and switches the GPU governor's performance mode off; at the shutdown limit, held for
+    the set number of seconds, it powers the board off cleanly with systemctl poweroff. The service stays
+    enabled across reboots and power offs. The fan settings are written in memory only, and the guard puts the
+    saved values back when it re-arms or stops. Nothing is written to the BIOS, the firmware, the CMOS or the
+    kernel's arguments. Turn off disables the service and removes its files; the fans are back on their previous
+    setting, and performance mode, once the guard switched it off, stays off until you switch it on again.
+
 Shows the temperatures and fans of the **AMD BC-250** on **Bazzite**, and runs a **thermal guard**: a system
 service that watches the GPU and the CPU, also when no app is open, and warns, cools and at a critical temperature
 shuts the board down cleanly.
-
-While the guard is on, it can turn the fans to full speed, turn performance mode off and power the board off, so
-this app **changes the board**. It is software-only. Turn the guard off and everything is as before.
 
 ## Using it
 

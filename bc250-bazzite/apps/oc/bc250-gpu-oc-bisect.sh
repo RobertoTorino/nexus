@@ -327,7 +327,10 @@ if [[ $MODE == install || $MODE == uninstall ]]; then
   if [[ $MODE == uninstall ]]; then
     sudo -n test -f "$INSTALL_BAK" || die "no backup at $INSTALL_BAK; nothing to uninstall."
     sudo -n cp "$INSTALL_BAK" "$GOV_CONF" && gov_restart || die "restore failed."
-    say "Restored $GOV_CONF from $INSTALL_BAK and restarted the governor."
+    # The backup is the config now. Left behind, a later --install would keep it instead of backing up the
+    # config as it is then, and --uninstall would restore a config from before every change made since.
+    sudo -n rm -f "$INSTALL_BAK"
+    say "Restored $GOV_CONF from $INSTALL_BAK, removed the backup and restarted the governor."
     exit 0
   fi
   # install: the best GOOD step, preferring the margin pick (one step back from the edge).

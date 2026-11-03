@@ -187,6 +187,7 @@ uninstall_service() {
   need_root "--uninstall"
   systemctl disable "$UNIT_NAME" 2>/dev/null || true
   rm -f "$UNIT_PATH" "$GUARD" "$INSTALL_BIN"
+  rmdir "$CONF_DIR" 2>/dev/null || true
   systemctl daemon-reload
   say "Removed. The unlock is still active until the next full power off (cold boot)."
 }

@@ -29,10 +29,25 @@ def test_install_twice_keeps_one_grub_line(board):
     assert grub_lines(board).count(GRUB_LINE) == 1
 
 
-def test_install_replaces_another_early_initrd_line(board):
-    board.grub.write_text('GRUB_TIMEOUT=5\nGRUB_EARLY_INITRD_LINUX_CUSTOM="other.cpio"\n')
+OTHER_LINE = 'GRUB_EARLY_INITRD_LINUX_CUSTOM="other.cpio"'
+KEPT = "#bc250-persistent-acpi kept: " + OTHER_LINE
+
+
+def test_install_replaces_another_early_initrd_line_and_keeps_it(board):
+    board.grub.write_text(f"GRUB_TIMEOUT=5\n{OTHER_LINE}\n")
     assert board.run("--install").returncode == 0
-    assert grub_lines(board) == ["GRUB_TIMEOUT=5", GRUB_LINE]
+    assert grub_lines(board) == ["GRUB_TIMEOUT=5", KEPT, GRUB_LINE]
+    assert board.run("--install").returncode == 0                     # again: one line, kept once
+    assert grub_lines(board) == ["GRUB_TIMEOUT=5", KEPT, GRUB_LINE]
+
+
+def test_uninstall_puts_the_other_early_initrd_line_back(board):
+    board.grub.write_text(f"GRUB_TIMEOUT=5\n{OTHER_LINE}\n")
+    assert board.run("--install").returncode == 0
+    r = board.run("--uninstall")
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert grub_lines(board) == ["GRUB_TIMEOUT=5", OTHER_LINE]
+    assert "Put back" in r.stdout
 
 
 def test_uninstall_reverses_install(board):

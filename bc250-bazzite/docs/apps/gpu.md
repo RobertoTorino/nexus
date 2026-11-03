@@ -4,6 +4,16 @@
 
 # BC-250 GPU Governor Manager
 
+!!! warning "Changes the board"
+    The app edits the governor's settings file, /etc/cyan-skillfish-governor-smu/config.toml, and makes a dated
+    backup of it beside it before every write; it starts, stops, enables and disables the governor's service,
+    and sends it clock, voltage and range requests over D-Bus. The governor is what sets the GPU's clocks and
+    voltages; the app never writes a register itself. The settings file stays across reboots and power offs, and
+    the governor reads it whenever it starts; what the app sets over D-Bus, test mode included, lasts until the
+    governor restarts. Nothing is written to the BIOS, the firmware, the CMOS or the kernel's arguments. Restore
+    on the Backups page makes any earlier settings file the current one again, and Stop test ends a test;
+    uninstalling the app leaves the settings file and its backups as they are.
+
 PyQt6 front-end for **cyan-skillfish-governor-smu**, the GPU governor of an **AMD BC-250** board (Cyan
 Skillfish APU, `gfx1013`) running **Bazzite** (Fedora Atomic / rpm-ostree).
 
@@ -66,7 +76,7 @@ When no source is usable it shows **N/A**, never a misleading 0%, and the toolti
 
 ## Privilege model
 
-The app runs as your normal desktop user. Only four things need root and go through `pkexec`, one prompt
+The app runs as your normal desktop user. Only three things need root and go through `pkexec`, one prompt
 each: the backup plus write of `config.toml` (a single call), the `systemctl` actions, and the safe-point test
 (`busctl` on the governor's root-only TestMode interface). The password is
 handled by the desktop's polkit agent; the app never sees it.

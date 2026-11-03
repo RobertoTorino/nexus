@@ -44,7 +44,9 @@ mouse:
   installed, but not by this portal (by hand, or under an earlier name of the app), so the portal does not know its
   version. Reinstall in its menu installs the version this portal pins. An app installed from a checkout of the
   repository without its version recorded shows it too.
-- **changes the board**, in orange under the name, for apps that change how the board runs.
+- **changes the board**, in orange under the name, for apps that change how the board runs. Hover over the tile:
+  the popup says what the app touches, what stays after a reboot or a power off, what it never touches and how the
+  change is undone, the same text that opens the app's chapter of this wiki.
 - **App not available**, in red under the name: the release of this app was withdrawn because of a problem
   (privacy, security or another reason; hover over the tile to read which). It cannot be installed or opened. When
   it is installed, the portal says so at start and removes it with the app's own uninstaller in a terminal. If that
@@ -78,8 +80,8 @@ is.
 
 The tools for working on the suite are not in the portal: they are Nexus's, in `dev/` of the repository, run from a
 checkout and have no release. [Nexus Dashboard](https://robertotorino.github.io/nexus/dashboard/) opens them all:
-Nexus Release Tool, Nexus Installer Tests (the installer tests one at a time), Nexus Demo Recorder, the video tours
-and the icons. Start it from the checkout, or give it a menu entry with its `install.sh`.
+Nexus Release Tool, Nexus Installer Tests (the installer tests one at a time), Nexus Demo Recorder, Nexus Sound Lab
+(short sound effects for the windows), the video tours and the icons. Start it from the checkout, or give it a menu entry with its `install.sh`.
 
 - `apps/` may also contain standalone tools (with a `.standalone` marker) that do not appear in `apps.toml`
   and that the portal does not install or open.
@@ -88,7 +90,8 @@ and the icons. Start it from the checkout, or give it a menu entry with its `ins
   refreshes. A terminal whose installer ended well closes by itself; one that failed stays open with what happened
   until you press Enter.
 - Apps that change how the board runs (CU/core unlocks, the GPU governor, GPU overclocking, the ACPI override, the VRAM
-  split, a patched GPU driver) are marked **changes the board**. The portal warns before installing or opening them.
+  split, a patched GPU driver) are marked **changes the board**. The portal warns before installing or opening them,
+  and the tile's popup says what each one changes and how that is undone.
 - Each portal release pins one tested release of every app in [`apps.toml`](https://github.com/RobertoTorino/nexus/blob/main/bc250-bazzite/portal/apps.toml). The portal downloads
   exactly those tarballs from the suite's GitHub releases and checks each against the SHA-256 pinned there, or
   against the release's `SHA256SUMS` until one is pinned. Then it unpacks the tarball without ever writing

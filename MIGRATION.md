@@ -19,6 +19,10 @@ suites in one place under Nexus, a small dashboard that stays local like NRT. Do
   is). Linux only. Its `install.sh` removes the Media Tool's own copy and venv.
 - **`dev/itests/` Nexus Installer Tests** (0.2.0): `bc250-bazzite/tools/installer-tests/gui` moved and made every
   suite's (a Suite box; `.ps1` tests on Windows through PowerShell, not tried on Windows yet), on core.
+- **`dev/sounds/` Nexus Sound Lab** (0.1.0, 03-11-2026): the owner's click-sound demo (`dev/click-sounds`, which the
+  owner removes) grown into a sound generator with sliders, presets, a waveform view, a Try it row with the
+  controller, Save as WAV and the silent keep-awake loop (a 50 ms tick was lost on the HDMI TV: the sink pauses and
+  the TV mutes). Linux here; no `run.ps1` yet, so the dashboard's tile is off on Windows. Open (owner): the name.
 - **`tools/sync_icons.py`** with `--suite` (from the BC250 suite's tools; its tests in `tools/tests/test_sync_icons.py`).
 - **core `nexus.py`**: the NEXUS theme, every Nexus app's (it was NRT's style.py). NRT's Installer tests button
   opens `dev/itests` on the ticked suite.

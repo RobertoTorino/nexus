@@ -23,6 +23,8 @@ CPIO_SRC="$(cd "$(dirname "$0")" && pwd)/tables/acpi_override.cpio"
 CPIO_DST="$ROOT_DIR/boot/acpi_override.cpio"
 GRUB_DEFAULT="$ROOT_DIR/etc/default/grub"
 GRUB_LINE='GRUB_EARLY_INITRD_LINUX_CUSTOM="../../acpi_override.cpio"'
+# An early-initrd line that was in the file before ours is kept behind this, as a comment, for --uninstall.
+GRUB_PREVIOUS='#bc250-persistent-acpi kept: '
 CPU0="$ROOT_DIR/sys/devices/system/cpu/cpu0"
 NEEDS_CONFIRMATION=3
 
@@ -91,9 +93,15 @@ do_install() {
     install -m 0644 "$CPIO_SRC" "$CPIO_DST"
     info "Installed $CPIO_DST"
 
-    if grep -q '^GRUB_EARLY_INITRD_LINUX_CUSTOM=' "$GRUB_DEFAULT" 2>/dev/null; then
-        sed -i "s|^GRUB_EARLY_INITRD_LINUX_CUSTOM=.*|$GRUB_LINE|" "$GRUB_DEFAULT"
-        info "Updated existing GRUB_EARLY_INITRD_LINUX_CUSTOM in $GRUB_DEFAULT"
+    if grep -qxF "$GRUB_LINE" "$GRUB_DEFAULT" 2>/dev/null; then
+        info "Early-initrd line already in $GRUB_DEFAULT"
+    elif grep -q '^GRUB_EARLY_INITRD_LINUX_CUSTOM=' "$GRUB_DEFAULT" 2>/dev/null; then
+        if grep -qF "$GRUB_PREVIOUS" "$GRUB_DEFAULT"; then
+            sed -i "s|^GRUB_EARLY_INITRD_LINUX_CUSTOM=.*|$GRUB_LINE|" "$GRUB_DEFAULT"
+        else
+            sed -i "s|^GRUB_EARLY_INITRD_LINUX_CUSTOM=.*|$GRUB_PREVIOUS&\n$GRUB_LINE|" "$GRUB_DEFAULT"
+        fi
+        info "Replaced another GRUB_EARLY_INITRD_LINUX_CUSTOM in $GRUB_DEFAULT (kept as a comment; --uninstall puts it back)"
     else
         printf '%s\n' "$GRUB_LINE" >> "$GRUB_DEFAULT"
         info "Appended early-initrd line to $GRUB_DEFAULT"
@@ -115,6 +123,10 @@ do_uninstall() {
 
     sed -i '/^GRUB_EARLY_INITRD_LINUX_CUSTOM=/d' "$GRUB_DEFAULT"
     info "Removed early-initrd line from $GRUB_DEFAULT"
+    if grep -qF "$GRUB_PREVIOUS" "$GRUB_DEFAULT"; then
+        sed -i "s|^$GRUB_PREVIOUS||" "$GRUB_DEFAULT"
+        info "Put back the early-initrd line that was there before"
+    fi
 
     regenerate_grub
 

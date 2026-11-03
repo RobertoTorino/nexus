@@ -7,8 +7,8 @@
 # Nexus Dashboard
 
 One door to the tools for working on the suites. Its tiles start the Nexus apps of the checkout, each in a window
-of its own ([Nexus Release Tool](../nrt), [Nexus Installer Tests](../itests), [Nexus Demo Recorder](../demo)), and
-open the tools of the suite chosen in the header: the portal's and the apps' video tours, and the category icons.
+of its own ([Nexus Release Tool](../nrt), [Nexus Installer Tests](../itests), [Nexus Demo Recorder](../demo),
+[Nexus Sound Lab](../sounds)), and open the tools of the suite chosen in the header: the portal's and the apps' video tours, and the category icons.
 A Nexus app: it runs from the checkout it lives in and has no releases of its own.
 
 ## Start it

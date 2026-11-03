@@ -81,7 +81,7 @@ By category, as the portal lists them.
 
 The tools for working on the suite are Nexus's, every suite's: they run from a checkout of the repository and are
 not in the portal. **[Nexus Dashboard](../dev/dash)** opens them all: Nexus Release Tool, Nexus Installer Tests,
-Nexus Demo Recorder, the video tours and the icons.
+Nexus Demo Recorder, Nexus Sound Lab, the video tours and the icons.
 
 How to install and use them: **[the manual](https://robertotorino.github.io/nexus/bc250-bazzite-suite/)**.
 

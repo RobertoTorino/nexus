@@ -203,8 +203,12 @@ class AppState:
                "Press it to open: " + ", ".join(label for label, _ in entry.launch) + "." if entry.launch else
                "Not a program: nothing to open.")
         source = entry.tag or "runs from the suite checkout"
-        self.tooltip = (f"<p><b>{escape(entry.name)}</b></p><p>{escape(entry.summary)}</p>"
-                        f"<p style='color:gray;'>{escape(detail)}<br>{escape(source)}"
+        # An app that changes the board says on hover what it touches and how that is undone (apps.toml's
+        # board_change), under the orange line its tile shows.
+        board = (f"<p style='color:{ORANGE};'><b>Changes the board.</b> {escape(entry.board_change)}</p>"
+                 if entry.changes_board and entry.board_change else "")
+        self.tooltip = (f"<p><b>{escape(entry.name)}</b></p><p>{escape(entry.summary)}</p>" + board
+                        + f"<p style='color:gray;'>{escape(detail)}<br>{escape(source)}"
                         + (f"<br>{escape(how)}" if installed else "") + "</p>")
         self.action = "Update" if update else "Reinstall" if (reinstall or installed) else "Install"
         self.action_tip = (f"{self.action} {entry.name}" + (f" v{entry.version}" if entry.tag else "")

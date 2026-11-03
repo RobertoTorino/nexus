@@ -59,7 +59,7 @@ other app is optional. They are listed by category, as the portal's tabs list th
 
 The tools for working on the suite are Nexus's, run from a checkout of the repository and are not in the portal:
 [Nexus Dashboard](https://robertotorino.github.io/nexus/dashboard/) opens them all (Nexus Release Tool, Nexus
-Installer Tests, Nexus Demo Recorder, the video tours and the icons).
+Installer Tests, Nexus Demo Recorder, Nexus Sound Lab, the video tours and the icons).
 
 Apps that **change the board** (unlocks, the GPU governor, GPU overclocking, the ACPI override, the VRAM split,
 a patched GPU driver) change how the BC-250 runs. They are software-only and can be undone; the portal asks before it installs or opens them. Read an

@@ -1,3 +1,10 @@
+Changelog: 03-11-2026 12:02:47
+
+Fixed. --uninstall (Uninstall in the window) left config.toml.pre-oc-bisect behind after restoring it. A later
+--install kept that old backup instead of backing up the config as it was then, so its --uninstall restored a
+config from before every change made in between. --uninstall now removes the backup it restored; the wiki chapter
+says so.
+
 Changelog: 02-11-2026 02:08:07
 
 Release 0.3.1.

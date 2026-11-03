@@ -16,7 +16,8 @@ def test_unit_resumes_the_run_with_its_settings(home):
     assert service.unit_path() == home / ".config" / "systemd" / "user" / "bc250-cu-bisect-auto.service"
 
 
-def test_install_writes_and_enables_the_unit(monkeypatch):
+def test_install_writes_and_enables_the_unit_without_starting_it(monkeypatch):
+    """The GUI starts the run in a terminal right after: the unit fires at the next login, not now."""
     calls = []
     monkeypatch.setattr(service.shutil, "which", lambda name: f"/usr/bin/{name}")
     monkeypatch.setattr(service.subprocess, "run", lambda args, check: calls.append(args))
@@ -24,7 +25,7 @@ def test_install_writes_and_enables_the_unit(monkeypatch):
     service.install("/opt/x/bc250-cu-bisect.sh", 180, 3)
     assert service.is_installed()
     assert calls == [["systemctl", "--user", "daemon-reload"],
-                     ["systemctl", "--user", "enable", "--now", "bc250-cu-bisect-auto.service"]]
+                     ["systemctl", "--user", "enable", "bc250-cu-bisect-auto.service"]]
 
 
 def test_without_systemctl_the_unit_is_written_and_the_error_says_so(monkeypatch):
