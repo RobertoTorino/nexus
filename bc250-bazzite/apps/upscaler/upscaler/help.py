@@ -8,6 +8,7 @@ from PyQt6.QtWidgets import QTextBrowser, QWidget
 from . import APP_NAME, HELIXSR_RELEASES_URL, HELIXSR_URL, OPTISCALER_URL, REPO_URL, __version__
 from .acquire import FALLBACK_VERSION
 from .backend import HELIXSR_DLL, INI, KERNELS, SECOND_UPSCALER_DLL, UPSCALER_DLL, WEIGHTS
+from bc250_core.platform import private
 
 
 def help_html(payload_dir: str, deployments_file: str,
@@ -15,8 +16,8 @@ def help_html(payload_dir: str, deployments_file: str,
     """The Help page. The paths and URLs are filled into the paragraphs afterwards."""
     values = dict(app_name=APP_NAME, version=__version__, helixsr_url=HELIXSR_URL, releases_url=HELIXSR_RELEASES_URL,
                   optiscaler_url=OPTISCALER_URL, repo_url=REPO_URL, upscaler_dll=UPSCALER_DLL, helixsr_dll=HELIXSR_DLL,
-                  weights=WEIGHTS, kernels=KERNELS, ini=INI, payload_dir=payload_dir,
-                  deployments_file=deployments_file, work_dir=work_dir, second=SECOND_UPSCALER_DLL,
+                  weights=WEIGHTS, kernels=KERNELS, ini=INI, payload_dir=private(payload_dir),
+                  deployments_file=private(deployments_file), work_dir=private(work_dir), second=SECOND_UPSCALER_DLL,
                   fallback=FALLBACK_VERSION)
     parts = [
         '<h1>{app_name} <small>v{version}</small></h1>',

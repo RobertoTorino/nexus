@@ -117,6 +117,34 @@ def known_games(home: Path) -> dict[str, str]:
     return read_map(home / "games.yml")
 
 
+PUP_MAGIC = b"SCEUF\0\0\0"
+PUP_VERSION = 0x100                     # the file in a PUP that holds its version's text
+
+
+def pup_version(path: Path) -> str:
+    """The firmware version a PUP holds ("4.92"), as RPCS3 reads it before it installs one (pup_object's file 0x100,
+    main_window::HandlePupInstallation): the header (magic "SCEUF", the package and image versions, the number of
+    files, the header's and the data's length; u64 each, big-endian), then 32 bytes per file (its ID, where its data
+    starts, its length, room). "" for a file that is no PUP or cannot be read."""
+    try:
+        with open(path, "rb") as handle:
+            head = handle.read(48)
+            if len(head) < 48 or head[:8] != PUP_MAGIC:
+                return ""
+            count = struct.unpack(">Q", head[24:32])[0]
+            for _ in range(min(count, 256)):
+                entry = handle.read(32)
+                if len(entry) < 32:
+                    return ""
+                entry_id, offset, length = struct.unpack(">QQQ", entry[:24])
+                if entry_id == PUP_VERSION:
+                    handle.seek(offset)
+                    return handle.read(min(length, 64)).decode("ascii", "replace").split("\n", 1)[0].strip()
+    except (OSError, struct.error):
+        return ""
+    return ""
+
+
 def firmware_version(dev_flash: Path) -> str:
     """The installed firmware's version as RPCS3 shows it ("4.92"); "" when none is installed. version.txt starts
     "release:04.9200:", the version between the first two colons (sysinfo.cpp: get_firmware_version)."""

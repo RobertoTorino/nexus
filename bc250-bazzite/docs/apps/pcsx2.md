@@ -35,23 +35,42 @@ again. Beside the title, next to the app's state, stands the controller's: **Con
 **No controller** when none is, looked at again every few seconds. A game started from Steam reads the controller
 that is connected when it starts, so switch yours on, or press its PS button to wake it, before starting a game.
 When Steam starts a game without one, the app also says so in a desktop notification.
-Under the introduction, which links to **PCSX2's release notes** and to this wiki, a row of six pills does the
-setting up, each with what it is for on top and what it does under it: **PCSX2 Install** and **PCSX2 Uninstall**,
-**BIOS Install** and **BIOS Uninstall**, **Games Add folder** and **Games Remove folder**. Three lines below them
-say where each stands, and then come four tabs: **Your games**, **Settings**, **Memory cards** and **Log**.
+Under the introduction, which links to **PCSX2's release notes** and to this wiki, a row of three pills does the
+setting up, each with what it is for on top and what it does under it: **PCSX2 Install**, **PCSX2 Uninstall** and
+**BIOS Uninstall**. Your games and your BIOS dump go into the app's own folder (see [Where your games
+go](#where-your-games-go)); nothing is chosen or browsed to. Three lines below the pills say where each stands,
+and then come four tabs: **Your games**, **Settings**, **Memory cards** and **Log**.
 
 - **PCSX2**: **Install** downloads PCSX2 from its GitHub release (about 57 MB): the stable release this version
   of the app was tried with, checked against its checksum before it is installed. The app then sets PCSX2 up; see
   [PCSX2's settings](#pcsx2s-settings). **Uninstall** takes it out again; PCSX2's own folder, with the BIOS, your
   memory cards and settings, stays.
-- **BIOS**: the BIOS PCSX2 uses, by name. **Install** takes your dump: the app copies it into PCSX2's `bios`
-  folder, with the files beside it under the same name (such as `.NVM` and `.MEC`), and PCSX2 uses it. Only the
-  `.bin` is needed. **Uninstall** takes a dump out of that folder again, with those files; the dump you chose it
-  from stays where it is, and PCSX2 uses another dump in the folder when there is one. The folder's path is in the
-  tooltip.
-- **Game folders**: the folders the app looks for games in, by name (the whole path is in the tooltip).
-  **Add folder** adds one, **Remove folder** stops looking in one (the games stay where they are). Games in
-  subfolders are found too, up to five folders deep, so one folder with a folder per game is enough.
+- **BIOS**: the BIOS PCSX2 uses, by name. Put your dump in `~/Games/PS2/BIOS`, with the files beside it under
+  the same name (such as `.NVM` and `.MEC`; only the `.bin` is needed): the app copies it into PCSX2's `bios`
+  folder by itself, when the window opens and on **Refresh**, and PCSX2 uses it. **Uninstall** takes a dump out
+  of PCSX2's folder and out of `~/Games/PS2/BIOS` again, with those files, and PCSX2 uses another dump in the
+  folder when there is one. PCSX2's folder is in the tooltip.
+- **Game folder**: where the app looks for games, `~/Games/PS2` and a removable drive's `Games/PS2`. Games in
+  subfolders are found too, up to five folders deep, so a folder per game is fine.
+
+### Where your games go
+
+The app has folders of its own, which it makes when it opens; you never choose or browse to a folder:
+
+- `~/Games/PS2`: put your disc images there, or in folders in it, and they show on **Your games**. On a USB drive
+  or an SD card, make a folder `Games/PS2` on it, and the app looks there too while the drive is mounted (under
+  `/run/media` or `/media`, as Bazzite mounts it).
+- `~/Games/PS2/BIOS`: put your console's BIOS dump there, and the app copies it into PCSX2.
+
+```
+~/Games/PS2/
+├── BIOS/                     the BIOS dump you put here: SCPH-70012.bin, SCPH-70012.nvm, ...
+├── SLUS_215.53.Lumines.iso   a game you put here
+└── Puzzle/Tetris.chd         a game in a folder of its own
+```
+
+Folders added in the app before (**Add folder**, until version 3.1) are no longer looked in: move those games to
+`~/Games/PS2`.
 
 ### Your games
 
@@ -66,6 +85,11 @@ The table lists every game found:
 A PS2 disc carries no title of its own. The app takes it from PCSX2's own catalog of PS2 games, by the serial,
 and a game PCSX2 does not know gets its file's name, without a serial in it: `SLUS_215.53.Lumines Plus.iso` is
 **Lumines Plus**.
+
+**Remove game…** deletes the chosen game from the disk. A window first lists what would go, a row each with its
+size: the disc image, and its Steam shortcut when it is in Steam. Every row is ticked; untick what you want to keep, then
+**Delete marked**; **Cancel** deletes nothing. The memory cards stay. A game the app will not delete (one at the top of a
+drive, or in a folder that holds another game) is said so under the tabs: delete it by hand.
 
 #### Screen
 
@@ -128,22 +152,28 @@ tab.
   the **Internal resolution** (Native is the PS2's; 3x fills a 1080p screen sharply, 6x a 4K one; a higher one
   asks more of the GPU), **Texture filtering**, **Anisotropic filtering**, **FXAA**, **Integer scaling**, **VSync**,
   **Blending accuracy** (how exactly the PS2's blending of transparent layers is copied; Basic suits most games, a
-  higher level fixes glitches in some at a cost to the GPU), **Video (FMV) shape** (a game's videos as the game's
-  screen setting, or 4:3 so Fill screen does not stretch them) and **Show FPS**.
+  higher level fixes glitches in some at a cost to the GPU) and **Video (FMV) shape** (a game's videos as the
+  game's screen setting, or 4:3 so Fill screen does not stretch them).
 - **Emulation**: **Fast boot** (skips the PS2's start-up screen), **Cheats** (PCSX2's `.pnach` cheat files for a
-  game) and **No-interlacing patches** (a progressive picture instead of an interlaced one, sharper and without
-  shimmer, for the games PCSX2 has a patch for).
+  game), **No-interlacing patches** (a progressive picture instead of an interlaced one, sharper and without
+  shimmer, for the games PCSX2 has a patch for) and **Save state when quitting** (a save state when a game ends,
+  to load from PCSX2's pause menu, **Esc**, next time).
 - **Sound**: the **Volume**. Beside it stands **Bazzite's volume for PCSX2**, which is not PCSX2's: Bazzite's sound
   settings remember a volume and a mute per application, also once it is closed, so a game plays without a sound
   while PCSX2 is muted there. The app says so, in red, when PCSX2 is muted or turned down to nothing. **Unmute**
   beside it turns a muted PCSX2 on again, and Bazzite keeps it on from then on; a volume turned down is changed in
   the sound applet (the speaker in the panel, under Applications) while a game plays.
-- **Controllers**: **Vibration**; **Player 2 on the second controller**: a second controller connected is
-  player 2, with the same buttons as player 1; and **Quit a game with Select + Start**: the first controller's
+- **Controllers**: **Vibration**; **Stick dead zone** (how far a stick moves before the game sees it, for a stick
+  that drifts); **Stick range** (how the stick's travel maps onto the PS2's: PCSX2's 1.33 reaches the edge
+  sooner, As the stick is 1:1, Wider 1.66); **Player 2 on the second controller**: a second controller connected
+  is player 2, with the same buttons as player 1; and **Quit a game with Select + Start**: the first controller's
   Select (Share, Create or View on other controllers) and Start (Options or Menu) pressed together end the game
   and close PCSX2, without a question, as Steam's **Exit game** does. It is on from the start. Turn it off for a
   game that uses the two buttons together itself; a game is then left through Steam's menu, or **Esc** on a
   keyboard opens PCSX2's own menu.
+- **On screen**: what PCSX2 writes over the picture: **Show FPS**, **Show speed** (the game's speed in percent),
+  **Show resolution**, **Show CPU and GPU use**, **Show frame times** (a graph of how long each frame took),
+  **Show inputs** (the controller's buttons as they are pressed) and the **Text size** of it all.
 
 Each setting shows what PCSX2's settings file holds; a value set in PCSX2 that the app does not offer is shown as
 it is. Nothing is written while PCSX2 runs: PCSX2 writes its settings back when it closes, over any change.
@@ -257,6 +287,14 @@ app starts from PCSX2's own defaults, as PCSX2 writes them at its first start, w
 **Esc** opens PCSX2's pause menu, **F6** changes the picture's shape. While PCSX2 runs nothing is written, since
 PCSX2 writes its settings back when it closes.
 
+### A game renamed, moved or gone
+
+A game renamed or moved after it was put in Steam keeps its mark: the app knows each game in Steam by its code (or,
+without one, its file's size), so on **Refresh** it finds the game again under its new name, ticked, and says so
+under the tabs; **Update Steam** then takes the old shortcut out and puts the game in under its new name. A
+shortcut to a game that is no longer there (deleted, or on a drive that is not in) does not start PCSX2: a
+window says which file is missing and what to do, and closes by itself, so Steam sees the game end.
+
 ### Steam's overlay on the desktop
 
 The KDE desktop of Bazzite is a Wayland session. PCSX2 (a Qt program) opens its windows through Wayland when it
@@ -277,7 +315,8 @@ through X11 already.
 | Each game's screen | `~/.config/PCSX2/gamesettings/<serial>_<CRC>.ini`, PCSX2's own settings per game |
 | PCSX2's catalog (titles, patches) | Beside PCSX2, in `~/.local/share/bc250-pcsx2-manager/emulator` |
 | The memory cards' backups | Beside each card, in PCSX2's memory card folder |
-| The app's settings, with the game folders | `~/.config/bc250-pcsx2-manager` |
+| Your games and your BIOS dump | `~/Games/PS2` and `~/Games/PS2/BIOS` (the app's own folder), and `Games/PS2` on a removable drive |
+| The app's settings | `~/.config/bc250-pcsx2-manager` |
 | The app's log | `~/.local/share/bc250-pcsx2-manager/bc250-pcsx2-manager.log` |
 | The Steam shortcuts | Steam's `shortcuts.vdf` and `grid` folder, per Steam user |
 | The pictures found on SteamGridDB | `~/.local/share/bc250-pcsx2-manager/covers` |

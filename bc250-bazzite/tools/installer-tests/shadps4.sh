@@ -66,7 +66,7 @@ check "CLI launcher imports the app's package, not the folder's" "printf '%s\n' 
 check "CLI launcher passes relative paths as given" "printf '%s\n' \"$out\" | grep -qxF 'args=game 1.pkg|sub/out'"
 check "launchers executable" "[ -x $HOME/.local/bin/$APP ] && [ -x $CLI ]"
 check "run wrapper installed, executable" "[ -x $RUN ] && cmp -s $RUN $SUITE/apps/shadps4/bc250-shadps4-run"
-check "menu entry opens a package" "grep -qx 'Exec=$HOME/.local/bin/$APP %f' $D/applications/$APP.desktop"
+check "menu entry opens packages" "grep -qx 'Exec=$HOME/.local/bin/$APP %F' $D/applications/$APP.desktop"
 check "desktop icon, executable" "[ -x $HOME/Desktop/$APP.desktop ]"
 check "core imports from the app copy" "(cd $A && /usr/bin/python3 -c 'import importlib.util as u, sys; s=u.find_spec(\"bc250_core\"); sys.exit(0 if s and s.origin.startswith(\"$A\") else 1)')"
 check "standalone pkgxtractor removed" "[ ! -e $D/$OLD ] && [ ! -e $HOME/.local/bin/$OLD ] && [ ! -e $HOME/.local/bin/$OLD-cli ] && [ ! -e $D/applications/$OLD.desktop ] && [ ! -e $HOME/Desktop/$OLD.desktop ] && grep -q 'Removing the standalone Bazzite pkgxtractor' $T/log1"
@@ -79,10 +79,11 @@ mkdir -p "$D/$APP/emulator/0.19.0"
 printf '#!/bin/sh\necho "args: $*"\necho "dir: $(pwd)"\n' > "$D/$APP/emulator/0.19.0/Shadps4-sdl.AppImage"
 chmod +x "$D/$APP/emulator/0.19.0/Shadps4-sdl.AppImage"
 ln -sfn 0.19.0 "$D/$APP/emulator/current"
-(cd "$T" && bash "$RUN" -f true -g "/games/My Game/eboot.bin") > "$T/run.log" 2>&1; rc=$?
-check "starts the current shadPS4 with the arguments as given" "[ $rc -eq 0 ] && grep -qxF 'args: -f true -g /games/My Game/eboot.bin' $T/run.log"
+mkdir -p "$T/games/My Game" && touch "$T/games/My Game/eboot.bin"           # a game that is there (the wrapper's gone check)
+(cd "$T" && bash "$RUN" -f true -g "$T/games/My Game/eboot.bin") > "$T/run.log" 2>&1; rc=$?
+check "starts the current shadPS4 with the arguments as given" "[ $rc -eq 0 ] && grep -qxF 'args: -f true -g $T/games/My Game/eboot.bin' $T/run.log"
 check "started beside the AppImage (no portable user folder)" "grep -qxF \"dir: $D/$APP/emulator/0.19.0\" $T/run.log || grep -qxF \"dir: $D/$APP/emulator/current\" $T/run.log"
-check "the game started goes to the app's log, by its folder's name" "grep -q ' INFO Started My Game from a terminal, with' $D/$APP/$APP.log && ! grep -q '/games/' $D/$APP/$APP.log"
+check "the game started goes to the app's log, by its folder's name" "grep -q ' INFO Started My Game from a terminal, with' $D/$APP/$APP.log && ! grep -q '$T/games/' $D/$APP/$APP.log"
 (cd "$T" && bash "$RUN" -b) > "$T/run.log" 2>&1; rc=$?
 check "shadPS4's own window is passed on and not logged as a game" "[ $rc -eq 0 ] && grep -qxF 'args: -b' $T/run.log && [ \$(grep -c Started $D/$APP/$APP.log) -eq 1 ]"
 

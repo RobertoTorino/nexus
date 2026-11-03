@@ -49,4 +49,19 @@ if [ -n "${SteamGameId:-}" ] && [ -n "${WAYLAND_DISPLAY:-}" ] && [ -n "${DISPLAY
     export SDL_VIDEODRIVER=x11
     export SDL_VIDEO_DRIVER=x11
 fi
+# A game that is no longer there (owner, 03-11-2026, from the Windows Portable Suite's managers): renamed, moved or
+# deleted after it was put in Steam, or on a drive that is not in. PPSSPP is not started; the app says so in a
+# window of its own (its package with the suite's Python, when the app is installed), and here, so Steam sees the
+# game end.
+game=""
+for arg in "$@"; do game=$arg; done
+if [ -n "${game:-}" ] && [ "${game#-}" = "$game" ] && [ ! -e "$game" ]; then
+    echo "This game is no longer there: $game. Open PPSSPP Manager, press Refresh and then Update Steam." >&2
+    APP_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/bc250-ppsspp-manager/app"
+    PYTHON="${XDG_DATA_HOME:-$HOME/.local/share}/bc250-bazzite-suite/venv/bin/python"
+    if [ -x "$PYTHON" ] && [ -d "$APP_DIR" ]; then
+        (cd "$APP_DIR" && exec "$PYTHON" -m ppsspp_manager --gone "$game") || true
+    fi
+    exit 1
+fi
 exec "$APPIMAGE" "$@"

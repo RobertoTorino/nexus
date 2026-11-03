@@ -22,7 +22,7 @@ from conftest import make_game
 
 from bc250_core import steam
 from bc250_core.theme import GREEN, RED
-from shadps4_manager import LOGO_PATH, emulator, shortcuts, style, userdata
+from shadps4_manager import library, LOGO_PATH, emulator, shortcuts, style, userdata
 from shadps4_manager.games import Game
 from shadps4_manager.main_window import RUNNING, STEAM_URL, MainWindow
 from shadps4_manager.settings_page import SOUND_MUTED
@@ -30,13 +30,13 @@ from shadps4_manager.settings_page import SOUND_MUTED
 
 @pytest.fixture
 def folders(tmp_path):
-    games = tmp_path / "games"
+    games = tmp_path / "Games" / "PS4"                                         # the app's own folder
     make_game(games / "one", "One", "CUSA00001")
     make_game(games / "two", "Two", "CUSA00002")
     shad = tmp_path / "shadPS4"
     shad.mkdir()
     (shad / "config.json").write_text(json.dumps({"General": {"install_dirs": [{"enabled": True,
-                                                                                 "path": str(games)}]}}))
+                                                                                 "path": str(tmp_path / "old")}]}}))
     config = tmp_path / "Steam" / "userdata" / "1000" / "config"
     config.mkdir(parents=True)
     run = tmp_path / "bin" / "bc250-shadps4-run"
@@ -45,7 +45,7 @@ def folders(tmp_path):
     log = tmp_path / "data" / "bc250-shadps4-manager" / "bc250-shadps4-manager.log"
     log.parent.mkdir(parents=True)
     return {"home": tmp_path / "emulator", "shad_home": shad, "steam_dir": tmp_path / "Steam", "run": run,
-            "log_path": log}
+            "log_path": log, "user_home": tmp_path, "drives": lambda: []}
 
 
 def _install(home: Path) -> None:
@@ -85,21 +85,20 @@ def test_before_installing(qapp, folders):
     assert window.pill.text() == "Not installed"
     assert "Not installed" in window.emulator_state.text()
     assert window.install_pill.isEnabled() and not window.remove_pill.isEnabled()
-    assert not window.folder_pill.isEnabled() and not window.shad_button.isEnabled()
-    assert window.refresh_pill.isEnabled() and window.modules_pill.isEnabled() and window.package_pill.isEnabled()
+    assert not window.shad_button.isEnabled()
+    assert window.refresh_pill.isEnabled() and window.package_pill.isEnabled()
     assert window.table.rowCount() == 2                                         # the folders are read all the same
     assert [window.tabs.tabText(i) for i in range(window.tabs.count())] == ["Your games", "Settings", "Log"]
     assert [b.caption.text() for b in window.header_pills[1:]] == ["shadPS4 version", "Your games",
                                                                     "Available in Steam", "Play time"]
     for name in ("play_button", "nightly_check", "refresh_button", "install_button", "remove_button",
                  "modules_button", "folder_button", "extract_button", "shadnet_button", "modules_box", "latest",
-                 "extract_pill"):
+                 "extract_pill", "modules_pill", "folder_pill"):                     # the last two: fixed folders
         assert not hasattr(window, name), name                               # gone (the PCSX2 pattern, the owner)
     # The action pills: what it is for in large type, what the pill does under it, the header pills' size and all
     # one width, in the owner's order (24-10-2026).
     assert [(p.value.text(), p.caption.text()) for p in window.actions] == [
-        ("shadPS4", "Install"), ("shadPS4", "Uninstall"), ("Modules", "Install"), ("Games", "Install"),
-        ("Games", "Add folder"), ("shadNet", "Account")]
+        ("shadPS4", "Install"), ("shadPS4", "Uninstall"), ("Games", "Install"), ("shadNet", "Account")]
     assert all(p.sizeHint().height() == window.refresh_pill.sizeHint().height() for p in window.actions)
     window.show()                                       # spread over the width: all one width, no gap at the end
     window.centralWidget().layout().activate()
@@ -136,8 +135,8 @@ def test_installed_with_games(qapp, folders):
         "In Steam", "Game title", "Id", "Version", "Folder"]
     assert [window.table.item(r, 1).text() for r in range(2)] == ["One", "Two"]
     assert window.table.item(0, 2).text() == "CUSA00001" and window.table.item(0, 4).text() == "one"
-    assert window.table.item(0, 4).toolTip() == str(folders["shad_home"].parent / "games" / "one")
-    assert not window.install_pill.isEnabled() and window.remove_pill.isEnabled() and window.folder_pill.isEnabled()
+    assert window.table.item(0, 4).toolTip() == str(folders["shad_home"].parent / "Games" / "PS4" / "one")
+    assert not window.install_pill.isEnabled() and window.remove_pill.isEnabled()
     assert not window.steam_button.isEnabled()                                  # nothing to change
     modules = folders["shad_home"] / "sys_modules"
     modules.mkdir()
@@ -154,25 +153,30 @@ def test_installed_with_games(qapp, folders):
     window.close()
 
 
-def test_system_modules_installed_from_a_folder(qapp, folders, tmp_path):
-    """Modules Install copies the .sprx files of the chosen folder into shadPS4's module folder (owner's BIOS
-    remark for PCSX2 Manager, 23-10-2026: point the app at the files rather than copy them into an open folder);
-    the state follows at once."""
+def test_system_modules_are_taken_from_the_apps_folder(qapp, folders, tmp_path, monkeypatch):
+    """The .sprx files put in Games/PS4/Modules are copied into shadPS4's module folder when the window opens and on
+    Refresh, only what is new or changed (owner, 03-11-2026); the state follows at once."""
+    monkeypatch.setenv("HOME", str(tmp_path))
     _install(folders["home"])
-    window = _window(folders)
-    dump = tmp_path / "my ps4" / "sys_modules"
+    dump = library.modules_home(tmp_path)
     dump.mkdir(parents=True)
-    window.install_modules(dump)
-    assert window.running.text() == "No system module (.sprx) in sys_modules."
     for name in (*userdata.NEEDED[:2], "libSceNgs2.sprx"):
         (dump / name).write_bytes(b"module")
     (dump / "notes.txt").write_text("")
-    window.install_modules(dump)
-    assert window.running.text() == (f"3 system module(s) copied into shadPS4's module folder: 2 of the "
-                                     f"{len(userdata.NEEDED)} it cannot do without are there now.")
+    window = _window(folders)
+    assert window.running.text() == ("3 system module(s) taken from ~/Games/PS4/Modules into shadPS4's module "
+                                     "folder.")
     target = folders["shad_home"] / "sys_modules"
     assert sorted(p.name for p in target.iterdir()) == sorted((*userdata.NEEDED[:2], "libSceNgs2.sprx"))
-    assert window.modules_state.toolTip().startswith("2 of the 24 modules")
+    assert window.modules_state.toolTip().startswith("2 of the 25 modules")
+    assert "~/Games/PS4/Modules" in window.modules_state.toolTip()
+    window.running.setText("")
+    window.refresh()
+    assert window.running.text() == ""                                          # unchanged: nothing copied again
+    (dump / userdata.NEEDED[2]).write_bytes(b"module")
+    window.refresh()
+    assert window.running.text().startswith("1 system module(s) taken from")
+    assert window.modules_state.toolTip().startswith("3 of the 25 modules")
     window.close()
 
 
@@ -235,7 +239,7 @@ def test_steam_added_and_taken_out(qapp, folders, monkeypatch):
 def test_a_shortcut_without_its_logo_is_brought_up_to_date(qapp, folders, monkeypatch):
     """A shortcut made before the app set a logo: Update Steam is on for it until the logo is there."""
     _install(folders["home"])
-    game = Game(make_game(folders["shad_home"].parent / "games" / "three", "Three", "CUSA00003", pictures=True),
+    game = Game(make_game(folders["shad_home"].parent / "Games" / "PS4" / "three", "Three", "CUSA00003", pictures=True),
                 "Three", "CUSA00003", "01.00")
     steam.write_shortcuts(folders["steam_dir"], shortcuts.changes([game], [], folders["run"], LOGO_PATH, {}, art=False))
     monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: QMessageBox.StandardButton.Yes)
@@ -251,7 +255,7 @@ def test_a_shortcut_with_the_tags_of_the_old_name_is_brought_up_to_date(qapp, fo
     """A shortcut made while the app was called BC-250 shadPS4 Manager: Update Steam is on for it until it has
     the tags of now."""
     _install(folders["home"])
-    game = Game(make_game(folders["shad_home"].parent / "games" / "four", "Four", "CUSA00004"), "Four", "CUSA00004",
+    game = Game(make_game(folders["shad_home"].parent / "Games" / "PS4" / "four", "Four", "CUSA00004"), "Four", "CUSA00004",
                 "01.00")
     old = shortcuts.entry(game, "Four", folders["run"], LOGO_PATH)
     old["tags"] = {"0": "PS4", "1": "BC-250 shadPS4 Manager"}
@@ -324,61 +328,34 @@ def test_no_steam_game_mode_or_no_wrapper(qapp, folders, monkeypatch):
     window.close()
 
 
-def test_add_folder_through_shadps4(qapp, folders, tmp_path):
+def test_the_apps_own_game_folders(qapp, folders, tmp_path, monkeypatch):
+    """The games are put in Games/PS4 in the home folder, made with its Modules folder when the app opens, and in
+    Games/PS4 on a removable drive that has one (owner, 03-11-2026: fixed folders, no folder choosing); shadPS4's
+    own game folders (config.json) are made the same, so its own window lists the games too, not while it runs."""
+    monkeypatch.setenv("HOME", str(tmp_path))
     _install(folders["home"])
-    log = tmp_path / "args"
-    folders["run"].write_text(f'#!/bin/sh\necho "$@" > "{log}"\n')
-    folders["run"].chmod(0o755)
-    window = _window(folders)
-    window.add_folder(tmp_path / "games")
-    assert log.read_text().strip() == f"--add-game-folder {tmp_path / 'games'}"
-    assert window.running.text() == "games is a game folder now: 2 game(s) in it."
-    folders["run"].write_text("#!/bin/sh\necho no >&2\nexit 3\n")
-    window.add_folder(tmp_path / "x")
-    assert "exit code 3" in window.running.text() and "no" in window.running.text()
-    assert "c62828" in window.running.styleSheet()
-    window.close()
-
-
-def test_game_folders_by_name_and_taken_out(qapp, folders, tmp_path):
-    """The Game folders line: the folders' names alone, each a link that takes it out of shadPS4's game folders
-    after a question (as RPCS3 Manager's Disc games line, owner, 24-10-2026); the rest of config.json stays, and
-    nothing is written while shadPS4 runs."""
-    _install(folders["home"])
+    make_game(tmp_path / "sd" / "Games" / "PS4" / "three", "Three", "CUSA00003")
+    (tmp_path / "stick").mkdir()                                                # a drive without the folder
     config_path = folders["shad_home"] / "config.json"
     config = json.loads(config_path.read_text())
-    config["General"]["install_dirs"].append({"enabled": True, "path": str(tmp_path / "more")})
     config["GPU"] = {"present_mode": "Fifo"}
     config_path.write_text(json.dumps(config, indent=2))
-    running = [False]
-    window = _window(folders, shad_running=lambda: running[0])
-    assert window.folders_state.text() == ", ".join(f"<b>{style.link(window, f'forget:{n}', name)}</b>"
-                                                   for n, name in enumerate(("games", "more")))
-    assert window.folders_state.toolTip().startswith(f"{tmp_path / 'games'}\n{tmp_path / 'more'}\n2 game(s) found")
-    asked = []
-    original = QMessageBox.question
-    QMessageBox.question = staticmethod(lambda *a, **k: (asked.append(a[2]), QMessageBox.StandardButton.No)[1])
-    try:
-        window.show()
-        _click_link(qapp, window.folders_state)                                 # a real click on "games"
-        assert asked == [f"Stop looking for games in {tmp_path / 'games'}?\n\nIts games stay where they are."]
-        asked.clear()
-        window.folders_state.linkActivated.emit("forget:1")
-        assert len(window.folders) == 2                                         # No: kept
-        QMessageBox.question = staticmethod(lambda *a, **k: QMessageBox.StandardButton.Yes)
-        window.folders_state.linkActivated.emit("forget:7")                     # no such folder: nothing
-        running[0] = True
-        window.folders_state.linkActivated.emit("forget:1")
-        assert window.running.text() == RUNNING and len(window.folders) == 2
-        running[0] = False
-        window.folders_state.linkActivated.emit("forget:1")
-    finally:
-        QMessageBox.question = original
-    assert asked == [f"Stop looking for games in {tmp_path / 'more'}?\n\nIts games stay where they are."]
-    assert window.folders == [tmp_path / "games"] and window.table.rowCount() == 2
-    assert window.running.text() == "more is no longer a game folder; its games stay where they are."
+    running = [True]
+    window = _window({**folders, "drives": lambda: [tmp_path / "sd", tmp_path / "stick", tmp_path / "gone"]},
+                     shad_running=lambda: running[0])
+    assert window.folders == [tmp_path / "Games" / "PS4", tmp_path / "sd" / "Games" / "PS4"]
+    assert (tmp_path / "Games" / "PS4" / "Modules").is_dir()                   # made for the modules
+    assert [window.table.item(r, 1).text() for r in range(3)] == ["One", "Three", "Two"]
+    assert userdata.game_folders(json.loads(config_path.read_text())) == [tmp_path / "old"]   # shadPS4 runs: kept
+    running[0] = False
+    window.refresh()
     saved = json.loads(config_path.read_text())
-    assert saved["GPU"] == {"present_mode": "Fifo"} and not config_path.read_text().endswith("\n")   # as shadPS4's
+    assert userdata.game_folders(saved) == window.folders and saved["GPU"] == {"present_mode": "Fifo"}
+    text = window.folders_state.text()
+    assert "<b>~/Games/PS4</b>" in text and "<b>~/sd/Games/PS4</b>" in text and "forget:" not in text
+    assert str(tmp_path) not in text and window.folders_state.toolTip().startswith("~/Games/PS4\n~/sd/Games/PS4\n3 game(s)")
+    for name in ("add_folder", "forget_folder", "install_modules"):
+        assert not hasattr(window, name), name
     window.close()
 
 
@@ -771,4 +748,39 @@ def test_unmute_bazzites_volume(qapp, folders, tmp_path):
     qapp.processEvents()
     assert page.status.text().startswith("pactl is not installed") and "c62828" in page.status.styleSheet()
     assert page.unmute_button.isVisible() and page.unmute_button.isEnabled()
+    window.close()
+
+
+def test_remove_game_asks_what_to_keep(qapp, folders, monkeypatch, tmp_path):
+    """Remove game… (owner, 03-11-2026): the keep window lists what would go; Cancel deletes nothing, Delete marked
+    deletes the rows still ticked off the window's thread and says what went and what stayed."""
+    from PyQt6.QtWidgets import QDialog
+    from bc250_core.keep_dialog import KeepDialog
+    _install(folders["home"])
+    window = _window(folders)
+    assert not window.remove_game_button.isEnabled()                            # nothing chosen yet
+    window.table.selectRow(0)
+    game = window.chosen()
+    assert game.title == "One" and window.remove_game_button.isEnabled()
+    target = tmp_path / "Games" / "PS4" / "one"
+    assert target.exists()
+    seen = []
+    monkeypatch.setattr(KeepDialog, "exec", lambda self: (seen.append(self.items), QDialog.DialogCode.Rejected)[1])
+    window.on_remove_game()
+    assert [item.label for item in seen[0]] == ["one (the game's folder)"] and target.exists()
+    assert window.running.text() == "Nothing was deleted."
+
+    def keep_it(self):
+        self.items[0].delete = False
+        return QDialog.DialogCode.Accepted
+    monkeypatch.setattr(KeepDialog, "exec", keep_it)
+    window.on_remove_game()
+    _wait(window, qapp)
+    assert target.exists() and window.running.text() == "One: deleted nothing. Kept: one (the game's folder)."
+    window.table.selectRow(0)
+    monkeypatch.setattr(KeepDialog, "exec", lambda self: QDialog.DialogCode.Accepted)
+    window.on_remove_game()
+    _wait(window, qapp)
+    assert not target.exists() and window.running.text() == "One: deleted one (the game's folder)."
+    assert "One" not in [window.table.item(r, 1).text() for r in range(window.table.rowCount())]
     window.close()

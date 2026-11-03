@@ -40,8 +40,10 @@ R="$T/release/portal-v$NEXT"; rm -rf "$T/release"; mkdir -p "$T/release"
 /usr/bin/python3 "$NEXUS/tools/stage_app.py" portal "$R" > /dev/null
 /usr/bin/python3 "$NEXUS/tools/stage_app.py" check "$R/bundled/$BT" > /dev/null
 sed -i "s/^__version__ = \"$V\"\$/__version__ = \"$NEXT\"/" "$R/bc250_portal/__init__.py"
+(cd "$T/release" && tar -czf "portal-v$NEXT.tar.gz" "portal-v$NEXT")      # the tarball beside it, as a download leaves it
 bash "$R/install.sh" --no-desktop-shortcut > "$T/log2" 2>&1; rc=$?; logs+=("$T/log2")
 check "exit 0" "[ $rc -eq 0 ]"
+check "the tarball's sha256 is kept beside the program" "[ \"\$(cut -c1-64 $T/opt/bc250-bazzite-suite/build.sha256)\" = \"\$(sha256sum $T/release/portal-v$NEXT.tar.gz | cut -c1-64)\" ]"
 check "new portal version, old removed" "[ \"\$(readlink $T/opt/bc250-bazzite-suite)\" = bc250-bazzite-suite-v$NEXT ] && [ ! -d $T/opt/bc250-bazzite-suite-v$V ]"
 check "the release has the sound" "[ -s $T/opt/bc250-bazzite-suite/bc250_portal/sounds/bigpicture.wav ]"
 check "bundled/ not copied to /opt" "[ ! -d $T/opt/bc250-bazzite-suite/bundled ]"

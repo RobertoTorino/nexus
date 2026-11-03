@@ -59,7 +59,9 @@ def main() -> int:
     def portal_check():
         return portal_update.check(repo_slug(INFO.repo_url), INFO.tag_prefix, entries, INFO.user_agent)
 
+    build = portal_update.running_build(ROOT) if installed_copy() else None       # None: from a checkout
     window = MainWindow(entries, sources, Records(state_dir() / "installed.json"), portal_check=portal_check,
+                        build=build,
                         local_build=local_build, installed=installed_copy())
     window.showFullScreen()                          # the portal's one view is fullscreen; the intro first
     window.start_up()

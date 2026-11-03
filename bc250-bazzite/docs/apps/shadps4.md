@@ -33,10 +33,11 @@ stand shadNet's state (see [shadNet](#shadnet)) and the controller's: **Controll
 controller** when none is, looked at again every few seconds. A game started from Steam reads the controller that
 is connected when it starts, so switch yours on, or press its PS button to wake it, before starting a game. When
 Steam starts a game without one, the app also says so in a desktop notification. Under the introduction, which
-links to **shadPS4's release notes** and to this wiki, a row of six pills does the setting up, each with what it is
-for on top and what it does under it: **shadPS4 Install** and **shadPS4 Uninstall**, **Modules Install**, **Games
-Install** and **Games Add folder**, and **shadNet Account**. Four lines below them say where each stands, short,
-with more in their tooltips, and then come three tabs: **Your games**, **Settings** and **Log**.
+links to **shadPS4's release notes** and to this wiki, a row of four pills does the setting up, each with what it is
+for on top and what it does under it: **shadPS4 Install** and **shadPS4 Uninstall**, **Games Install** and
+**shadNet Account**. Your games and the system modules go into the app's own folder (see [Where your games
+go](#where-your-games-go)); nothing is chosen or browsed to for them. Four lines below the pills say where each
+stands, short, with more in their tooltips, and then come three tabs: **Your games**, **Settings** and **Log**.
 
 - **shadPS4**: the version installed (when this version of the app brings another one, the tooltip and the log say
   so, and **Install** puts it in). **Install** downloads shadPS4 from its GitHub release (about 31 MB) and checks it
@@ -44,14 +45,28 @@ with more in their tooltips, and then come three tabs: **Your games**, **Setting
   again; shadPS4's own folder, with your saves, settings and system modules, stays.
 - **Sys modules**: **Ok** in green when every module that shadPS4 cannot do without is in its module folder,
   **Missing sys modules** in red when one is not (how many there are, which are missing and the folder's path are in
-  the tooltip). Many games run without them. **Install** asks for the folder with the modules (`.sprx` files) you
-  copied from your own PS4's firmware and copies them into shadPS4's module folder.
-- **Game folders**: the folders shadPS4 looks for games in, by name (the paths and how many games were found are
-  in the tooltip). **Add folder** adds one through shadPS4 itself, so its own window lists the games too; clicking
-  a folder's name in the line stops looking in it, after a question (the games stay where they are). A game may sit
-  up to five folders deep. **Install** unpacks a package file into one of them: see [Extract PKG](#extract-pkg).
+  the tooltip). Many games run without them. Put the modules (`.sprx` files) you copied from your own PS4's
+  firmware in `~/Games/PS4/Modules`: the app copies them into shadPS4's module folder by itself, when the window
+  opens and on **Refresh**, only what is new or changed.
+- **Game folders**: where the app looks for games, `~/Games/PS4` and a removable drive's `Games/PS4`, each game
+  in a folder of its own (the paths and how many games were found are in the tooltip). The app makes them
+  shadPS4's own game folders too, so shadPS4's window lists the games. A game may sit up to five folders deep.
+  **Install** unpacks a package file into one of them: see [Extract PKG](#extract-pkg).
 - **shadNet**: the name of the account shadPS4 signs in with, **Off** while none is set up, **—** while shadPS4 has
   not run yet (the server is in the tooltip). **Account** sets it up: see [shadNet](#shadnet).
+
+### Where your games go
+
+The app has folders of its own, which it makes when it opens; you never choose or browse to a folder for them:
+
+- `~/Games/PS4`: put your games there, each in a folder of its own (with its `eboot.bin`), and they show on **Your
+  games**. On a USB drive or an SD card, make a folder `Games/PS4` on it, and the app looks there too while the
+  drive is mounted (under `/run/media` or `/media`, as Bazzite mounts it). The app makes these shadPS4's own game
+  folders as well, in its `config.json`, so shadPS4's window lists the games too.
+- `~/Games/PS4/Modules`: put the system modules from your own PS4 there, and the app copies them into shadPS4.
+
+Folders added in the app before (**Add folder**, until version 3.1) are no longer looked in: move those games to
+`~/Games/PS4`.
 
 ### Your games
 
@@ -59,6 +74,11 @@ The table lists every game found: its title and **Id** (CUSA…) from the game's
 **Folder** (the folder's name; the path is in the tooltip). Updates and mods are not listed as games: see
 [Game updates and mods](#game-updates-and-mods). A PS4 game draws its picture for a wide screen itself, so there is
 no screen setting per game as in the PS2 and PS3 managers.
+
+**Remove game…** deletes the chosen game from the disk. A window first lists what would go, a row each with its
+size: the game's folder, and its update, patch and mods beside it, and its Steam shortcut when it is in Steam. Every row is ticked; untick what you want to keep, then
+**Delete marked**; **Cancel** deletes nothing. The saves, the play time and the package stay. A game the app will not delete (one at the top of a
+drive, or in a folder that holds another game) is said so under the tabs: delete it by hand.
 
 #### Game updates and mods
 
@@ -73,7 +93,7 @@ shadps4_games/
 └── CUSA11624-mods/       mods for it
 ```
 
-Nothing more is needed: you do not add these folders as game folders, and the table lists the game once. An update
+Nothing more is needed, and the table lists the game once. An update
 found beside its game (the same ID, CUSA…) is left out of the table whatever its folder is called. A game copied
 from a PS4 that had its update installed already has the update in it: it needs no `-UPDATE` folder and is listed
 with the update's version.
@@ -208,6 +228,13 @@ roughly its package size, so the output folder needs that much room.
 Drop a `.pkg` on the window or **Browse** to it: the icon and the SFO preview fill in at once, before anything is
 extracted.
 
+Several packages at once: choose more than one in **Browse**, drop them together, or open them together from the
+file manager. The first is loaded as above and the rest wait their turn, listed under the PKG line, the games
+first, then their updates and add-on content. **Extract PKG** then unpacks the loaded package and every waiting
+one after it, into the same output folder, with the log running on from one to the next; a package you do not
+want to replace an update with is skipped. **Preview Only**, the rename and the comparisons work on the loaded
+package alone and leave the others waiting.
+
 - **SFO Preview:** five keys from `param.sfo`: CATEGORY (`gd` game, `gp` patch, `ac` add-on content), CONTENT_ID,
   TITLE, TITLE_ID and VERSION. When the package has no readable `param.sfo`, CONTENT_ID and TITLE_ID come from the
   package header. Right-click the preview to copy a line, only its value, or everything.
@@ -299,8 +326,9 @@ bc250-shadps4-run -g "/path/to/game/eboot.bin"           # a game, as shadPS4's 
 bc250-shadps4-run -b                                     # shadPS4's own window
 ```
 
-The app itself takes a package: `bc250-shadps4-manager file.pkg` opens it in Extract PKG, as opening a package with
-the app from the file manager does. When the app is open already, the package goes to the open window.
+The app itself takes packages: `bc250-shadps4-manager file.pkg` opens it in Extract PKG, as opening a package with
+the app from the file manager does; `bc250-shadps4-manager a.pkg b.pkg` opens the first and queues the rest. When
+the app is open already, the packages go to the open window.
 `bc250-shadps4-pkg-cli` extracts without a window:
 
 ```bash
@@ -345,6 +373,14 @@ So the run wrapper undoes it: while a real controller is connected, shadPS4 read
 Steam's virtual one (USB ID `28DE:11FF`) out. The PS button stays Steam's. Without a real controller, as on a Steam
 Deck whose own controls exist only as Steam's virtual controller, the wrapper leaves Steam's choice as it is.
 
+### A game renamed, moved or gone
+
+A game renamed or moved after it was put in Steam keeps its mark: the app knows each game in Steam by its code (or,
+without one, its file's size), so on **Refresh** it finds the game again under its new name, ticked, and says so
+under the tabs; **Update Steam** then takes the old shortcut out and puts the game in under its new name. A
+shortcut to a game that is no longer there (deleted, or on a drive that is not in) does not start shadPS4: a
+window says which file is missing and what to do, and closes by itself, so Steam sees the game end.
+
 ### Steam's overlay on the desktop
 
 The KDE desktop of Bazzite is a Wayland session. shadPS4 opens its window through Wayland when it can, but Steam on
@@ -365,6 +401,7 @@ through X11 already.
 | Its Python, with PyQt6 and cryptography | `~/.local/share/bc250-shadps4-manager/venv` |
 | shadPS4 | `~/.local/share/bc250-shadps4-manager/emulator` |
 | Extract PKG's log, and its crash marker and progress while it is open | `~/.local/share/bc250-shadps4-manager/pkgxtractor.log`, `.state`, `.progress` |
+| Your games and the system modules you put there | `~/Games/PS4` and `~/Games/PS4/Modules` (the app's own folder), and `Games/PS4` on a removable drive |
 | shadPS4's saves, settings, system modules | `~/.local/share/shadPS4` (shadPS4's own folder) |
 | shadPS4's settings (the Settings tab) | `~/.local/share/shadPS4/config.json`, shadPS4's own |
 | shadPS4's play time per game | `~/.local/share/shadPS4/play_time.txt`, shadPS4's own |

@@ -18,22 +18,25 @@ from __future__ import annotations
 
 import time
 from html import escape
+from collections.abc import Callable
 from pathlib import Path
 
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QCloseEvent, QResizeEvent
-from PyQt6.QtWidgets import (QAbstractItemView, QComboBox, QFileDialog, QGridLayout, QHBoxLayout, QHeaderView,
+from PyQt6.QtWidgets import (QAbstractItemView, QDialog, QComboBox, QGridLayout, QHBoxLayout, QHeaderView,
                              QInputDialog, QLabel, QMainWindow, QMessageBox, QPushButton, QSizePolicy,
                              QTableWidget, QTableWidgetItem, QTabWidget, QVBoxLayout, QWidget)
 
 from bc250_core import SUITE_MANUAL_URL, applog, covers, sound, steam, upstream, window_title
 from bc250_core import __version__ as CORE_VERSION
-from bc250_core.platform import bin_home
+from bc250_core import keep, renamed
+from bc250_core.keep_dialog import KeepDialog
+from bc250_core.platform import bin_home, private
 from bc250_core.settings import SettingsStore
 from bc250_core.updates import ReleaseInfo, UpdateChecker
 from bc250_core.widgets import AppHeader, MetricBox, StatusText, Terminal, WrappedLabel, hint_label
 
-from . import APP_ID, APP_NAME, INFO, LOGO_PATH, __version__, catalogue, controllers, emulator, memcards
+from . import APP_ID, APP_NAME, INFO, LOGO_PATH, __version__, catalogue, controllers, emulator, library, memcards
 from . import pcsx2_settings
 from . import shortcuts, style, userdata
 from .games import Game, scan
@@ -49,9 +52,11 @@ STEAM, GAME, SERIAL, KIND, FILE, SCREEN = range(6)          # the table's column
 GAMES, SETTINGS, MEMCARDS, LOG = range(4)                   # the tabs
 
 
+RUNNING_REMOVE = "PCSX2 is running: close it first, then remove the game."
+
+
 class Pcsx2Settings(SettingsStore):
-    DEFAULTS: dict = {"folders": [],            # the game folders chosen in the app
-                      "session_logged": ""}     # PCSX2's log as last written into the app's log (its time)
+    DEFAULTS: dict = {"session_logged": ""}     # PCSX2's log as last written into the app's log (its time)
 
 
 class MainWindow(QMainWindow):
@@ -63,7 +68,8 @@ class MainWindow(QMainWindow):
                  newer_release=emulator.newer_release, pcsx2_running=memcards.pcsx2_running,
                  covers_home: Path | None = None, covers_get: covers.Get = covers._get,
                  covers_key: Path | None = None, log_path: Path | None = None,
-                 devices: Path = controllers.DEVICES, sound_state: Path | None = None):
+                 devices: Path = controllers.DEVICES, sound_state: Path | None = None,
+                 user_home: Path | None = None, drives: Callable[[], list[Path]] = library.removable_drives):
         """*home*: where the app installs PCSX2; *pcsx2_home*: PCSX2's own folder; *steam_dir*: Steam's folder
         (None: looked up); *run*: the run wrapper the shortcuts start; *fetch*: the download; *steam_closed* and
         *steam_running*: closing Steam for a change and asking whether it runs; *newer_release*: asks GitHub for a
@@ -71,7 +77,9 @@ class MainWindow(QMainWindow):
         *covers_get* and *covers_key*: where the SteamGridDB pictures are kept, how SteamGridDB is asked and the
         suite's key file (tests never touch the real ones); *log_path*: the app's log file, as the Log tab shows
         it (__main__ set it up); *devices*: the kernel's list of input devices, for the controller state;
-        *sound_state*: WirePlumber's file with the volume the desktop remembers for PCSX2 (tests pass their own)."""
+        *sound_state*: WirePlumber's file with the volume the desktop remembers for PCSX2 (tests pass their own);
+        *user_home*: the home folder with the app's own game folder, Games/PS2 (library.fixed); *drives*: the
+        removable drives looked at for one."""
         super().__init__()
         self.resize(980, 800)
         self.home = home or emulator.emulator_home()
@@ -85,6 +93,8 @@ class MainWindow(QMainWindow):
         self.covers_get = covers_get
         self.covers_key = covers_key
         self.pcsx2_running = pcsx2_running
+        self.user_home = user_home or Path.home()
+        self.drives = drives
         self.log_path = log_path or applog.log_file(APP_ID)
         self.devices = devices
         self.sound_state = sound_state or sound.stream_properties()
@@ -101,6 +111,8 @@ class MainWindow(QMainWindow):
         self.worker.finished.connect(self._job_done)
         self.games: list[Game] = []
         self.in_steam: dict[str, str] = {}
+        self.moved: dict[str, str] = {}               # a game found again under another name: its file in Steam
+        self._moved_said: set[str] = set()
         self.no_cover: set[str] = set()               # games in Steam not yet looked up on SteamGridDB, with a key
         self.version = ""
         self.replaced = False                       # PCSX2 updated itself to a build the app was not tried with
@@ -143,29 +155,20 @@ class MainWindow(QMainWindow):
             + style.link(self, MANUAL_URL, "Wiki"), follow_height=True)       # its lines count in the minimum
 
         # What there is to do, as pills the size of the header's, spread over the window's width (owner,
-        # 24-10-2026): what it is for in large type (PCSX2, BIOS, Games), what the pill does under it (Install,
-        # Uninstall, Add folder, Remove folder).
+        # 24-10-2026): what it is for in large type (PCSX2, BIOS), what the pill does under it (Install,
+        # Uninstall). The games and the BIOS dump are put in the app's own folder, Games/PS2 (owner, 03-11-2026:
+        # fixed folders, no folder choosing): no pill chooses a folder or a file.
         self.install_pill = style.action_pill("PCSX2", "Install", f"Download PCSX2 {emulator.VERSION} from GitHub "
                                                                   f"(about {emulator.SIZE_MB} MB) and check it")
         self.install_pill.clicked.connect(self.on_install)
         self.remove_pill = style.action_pill("PCSX2", "Uninstall", "Remove the installed PCSX2; its own folder "
                                                                    "(BIOS, memory cards, settings) stays")
         self.remove_pill.clicked.connect(self.on_remove)
-        self.bios_pill = style.action_pill("BIOS", "Install", "Choose your BIOS dump (.bin): the app copies it into "
-                                                              "PCSX2's BIOS folder and PCSX2 uses it")
-        self.bios_pill.clicked.connect(self.on_choose_bios)
         self.bios_remove_pill = style.action_pill("BIOS", "Uninstall", "Take a BIOS dump out of PCSX2's BIOS "
-                                                                       "folder, with the files beside it; your own "
-                                                                       "copy stays")
+                                                                       "folder and out of Games/PS2/BIOS, with the files "
+                                                                       "beside it")
         self.bios_remove_pill.clicked.connect(self.on_remove_bios)
-        self.folder_pill = style.action_pill("Games", "Add folder", "Add a folder with your games (ISO, CHD, CSO, "
-                                                                    "ZSO or GZ images)")
-        self.folder_pill.clicked.connect(self.on_add_folder)
-        self.forget_pill = style.action_pill("Games", "Remove folder", "Stop looking for games in one of the "
-                                                                       "folders; the games stay where they are")
-        self.forget_pill.clicked.connect(self.on_forget_folder)
-        self.actions = [self.install_pill, self.remove_pill, self.bios_pill, self.bios_remove_pill,
-                        self.folder_pill, self.forget_pill]
+        self.actions = [self.install_pill, self.remove_pill, self.bios_remove_pill]
         actions = QHBoxLayout()
         actions.setSpacing(8)
         for pill in self.actions:                       # each a sixth of the width, whatever the window's
@@ -178,7 +181,7 @@ class MainWindow(QMainWindow):
         grid.setVerticalSpacing(6)
         self.emulator_state, self.bios_state, self.folders_state = (self._state_label() for _ in range(3))
         for row, (name, state) in enumerate((("PCSX2", self.emulator_state), ("BIOS", self.bios_state),
-                                             ("Game folders", self.folders_state))):
+                                             ("Game folder", self.folders_state))):
             label = QLabel(name)
             label.setStyleSheet("font-weight:700;")
             label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
@@ -192,6 +195,7 @@ class MainWindow(QMainWindow):
         self.table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.table.verticalHeader().setVisible(False)
+        self.table.itemSelectionChanged.connect(self._update_buttons)
         self.table.setAlternatingRowColors(True)
         self.table.setShowGrid(False)
         head = self.table.horizontalHeader()
@@ -202,6 +206,10 @@ class MainWindow(QMainWindow):
             head.setSectionResizeMode(column, mode)
         self.table.itemChanged.connect(lambda _item: self._update_buttons())
 
+        self.remove_game_button = QPushButton("Remove game…")
+        self.remove_game_button.setToolTip("Delete the chosen game from the disk: a window lists what would go, and you "
+                                      "untick what to keep; nothing is deleted before you confirm")
+        self.remove_game_button.clicked.connect(self.on_remove_game)
         self.covers_button = QPushButton("Steam artwork…")
         self.covers_button.setToolTip("The SteamGridDB API key, one for the whole suite: with it, Update Steam "
                                       "gives each game its cover, banner and logo from SteamGridDB in Steam")
@@ -211,6 +219,7 @@ class MainWindow(QMainWindow):
         buttons = QHBoxLayout()
         buttons.addWidget(hint_label("Tick a game to put it in Steam; Screen setting sets how it fills the screen. "
                                      "A game is started from Steam."), 1)
+        buttons.addWidget(self.remove_game_button)
         buttons.addWidget(self.covers_button)
         buttons.addWidget(self.steam_button)
         games_page = QWidget()
@@ -231,7 +240,7 @@ class MainWindow(QMainWindow):
         log.setContentsMargins(0, 8, 0, 0)
         log.addWidget(hint_label(f"Everything the app said and did, newest last, and each game started from Steam "
                                  f"with what PCSX2 logged about the run; the same lines are in "
-                                 f"{escape(str(self.log_path))}, which turns over at 1 MB."))
+                                 f"{escape(private(self.log_path))}, which turns over at 1 MB."))
         log.addWidget(self.output, 1)
         self.tabs = QTabWidget()
         self.tabs.addTab(games_page, "Your games")
@@ -284,8 +293,9 @@ class MainWindow(QMainWindow):
         if self.version and catalogue.missing(self.catalogue_dir):     # a PCSX2 installed before the app took it out
             emulator.take_catalogue(self.home)
         self.bios_dir = userdata.bios_dir(self.pcsx2_home)
+        self.folders = library.fixed(self.user_home, self.drives)
+        self.sync_bios()
         self.bios = userdata.bios_files(self.bios_dir)
-        self.folders = [Path(f) for f in self.settings.get("folders") if f]
         titles = catalogue.titles(self.catalogue_dir)
         self.games = scan(self.folders, titles)
         self.prepare_pcsx2()
@@ -297,8 +307,19 @@ class MainWindow(QMainWindow):
                              if covers.read_key(self.covers_key) else set())
         except OSError:
             self.in_steam, self.no_cover = {}, set()
+        # A game renamed or moved after it was put in Steam keeps its mark (owner, 03-11-2026, from the Windows
+        # Portable Suite's managers, 01-11-2026; core's renamed): known by its code, else its file's size.
+        found = {str(g.file): renamed.identity(g.serial, g.file) for g in self.games}
+        known = renamed.load(self.settings.qsettings)
+        self.moved = renamed.follow(known, found, self.in_steam)
+        renamed.remember(self.settings.qsettings, known, found, self.in_steam)
         self._show_state()
         self._fill_table()
+        if self.moved and set(self.moved) != self._moved_said:
+            self._moved_said = set(self.moved)
+            titles = [g.title for g in self.games if str(g.file) in self.moved]
+            self.say(f"Found again under a new name or in another folder, with its Steam mark: {', '.join(titles)}. "
+                     "Update Steam brings the shortcut in Steam up to date.")
         self.settings_page.load()
         self.memcard_page.load()
         self.show_controller()
@@ -375,6 +396,20 @@ class MainWindow(QMainWindow):
             self.say(f"PCSX2 set up: {', '.join(done)}.")
         return True
 
+    def sync_bios(self) -> None:
+        """The BIOS dump put in Games/PS2/BIOS copied into PCSX2's bios folder, with the files beside it, once PCSX2
+        is installed and while it does not run (owner, 03-11-2026: the app takes care of it); PCSX2 is made to use it
+        when it names no dump that is there (prepare_pcsx2, which follows in refresh)."""
+        if not self.version or self.pcsx2_running():
+            return
+        try:
+            copied = userdata.sync_bios(library.bios_home(self.user_home), self.bios_dir)
+        except OSError as error:
+            self.say(f"The BIOS was not taken from {private(library.bios_home(self.user_home))}: {error}", ok=False)
+            return
+        if copied:
+            self.say(f"BIOS taken from {private(library.bios_home(self.user_home))} into PCSX2: {', '.join(copied)}.")
+
     def _show_state(self) -> None:
         pinned = emulator.VERSION
         if not self.version:
@@ -409,16 +444,18 @@ class MainWindow(QMainWindow):
                                     + (f"; also there: {escape(', '.join(others))}." if others else "."))
         else:
             self.bios_state.setText("No BIOS yet. PCSX2 needs the PS2's BIOS to start any game: dump it from your "
-                                    f"own console ({page} says how), then pick the .bin with BIOS Install.")
+                                    f"own console ({page} says how), then put the .bin, with the files beside it, in "
+                                    f"<b>{escape(private(library.bios_home(self.user_home)))}</b>: the app copies it "
+                                    "into PCSX2.")
         self.bios_state.setToolTip(f"PCSX2's BIOS folder: {self.bios_dir}")
         self.bios_state.setOpenExternalLinks(True)
 
-        if self.folders:
-            self.folders_state.setText(", ".join(f"<b>{escape(f.name or str(f))}</b>" for f in self.folders) + ".")
-            self.folders_state.setToolTip("\n".join(str(f) for f in self.folders))
-        else:
-            self.folders_state.setText("None yet: add the folder with your games (ISO, CHD, CSO, ZSO or GZ images).")
-            self.folders_state.setToolTip("")
+        # The app's own folders (owner, 03-11-2026): the home folder's, and a removable drive's when it has one.
+        where = ", ".join(f"<b>{escape(private(f))}</b>" for f in self.folders)
+        self.folders_state.setText(f"{where}: put your games there (ISO, CHD, CSO, ZSO or GZ images, in folders too), "
+                                   f"and your BIOS dump in <b>{escape(private(library.bios_home(self.user_home)))}</b>. "
+                                   "A USB drive or an SD card with a Games/PS2 folder on it is looked in too.")
+        self.folders_state.setToolTip("\n".join(private(f) for f in self.folders))
         self.games_box.set_value(str(len(self.games)))
         found = {str(g.file) for g in self.games}
         self.steam_box.set_value(str(len(found & set(self.in_steam))))
@@ -456,14 +493,22 @@ class MainWindow(QMainWindow):
             self._show_state()
             self._update_buttons()
 
+    def chosen(self) -> Game | None:
+        """The game whose row is selected."""
+        rows = self.table.selectionModel().selectedRows()
+        return self.games[rows[0].row()] if rows and rows[0].row() < len(self.games) else None
+
     def _fill_table(self) -> None:
         self.table.blockSignals(True)
         self.table.setRowCount(len(self.games))
         for row, game in enumerate(self.games):
             box = QTableWidgetItem()
             box.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
-            box.setCheckState(Qt.CheckState.Checked if str(game.file) in self.in_steam else Qt.CheckState.Unchecked)
-            box.setToolTip("In Steam" if str(game.file) in self.in_steam else "Not in Steam")
+            box.setCheckState(Qt.CheckState.Checked if str(game.file) in self.in_steam or str(game.file) in self.moved
+                              else Qt.CheckState.Unchecked)
+            box.setToolTip("In Steam" if str(game.file) in self.in_steam else
+                           f"Found again under a new name: in Steam as {self.in_steam.get(self.moved[str(game.file)], '?')}; "
+                           "Update Steam brings the shortcut up to date" if str(game.file) in self.moved else "Not in Steam")
             self.table.setItem(row, STEAM, box)
             kind = KINDS.get(game.kind, game.kind)
             for column, text in ((GAME, game.title), (SERIAL, game.serial), (KIND, kind), (FILE, game.file.name)):
@@ -517,11 +562,9 @@ class MainWindow(QMainWindow):
         self.refresh_pill.setEnabled(idle)
         self.install_pill.setEnabled(idle and (self.version != emulator.VERSION or self.replaced))
         self.remove_pill.setEnabled(idle and installed_)
-        self.bios_pill.setEnabled(idle)
         self.bios_remove_pill.setEnabled(idle and bool(self.bios))
-        self.folder_pill.setEnabled(idle)
-        self.forget_pill.setEnabled(idle and bool(self.folders))
         self.covers_button.setEnabled(idle)
+        self.remove_game_button.setEnabled(idle and self.chosen() is not None)
         add, remove = self.steam_plan()
         named = shortcuts.names(add)        # a name in Steam that differs (one from before the prefix) is renamed
         changed = bool(remove) or any(self.in_steam.get(str(g.file)) != named[g.file] or str(g.file) in self.no_cover
@@ -549,7 +592,7 @@ class MainWindow(QMainWindow):
             self._update_buttons()
 
     def _job_done(self, result: tuple[bool, str]) -> None:
-        ok, message = result
+        ok, message = result[0], private(result[1])     # a path in an error: the user's folders as ~
         self.refresh()
         self.say(message, ok)
 
@@ -577,35 +620,15 @@ class MainWindow(QMainWindow):
             self.refresh()
             self.say("PCSX2 was removed.")
 
-    def on_choose_bios(self) -> None:
-        path, _ = QFileDialog.getOpenFileName(self, window_title("Choose your BIOS dump"), str(Path.home()),
-                                              "PS2 BIOS dumps (*.bin *.BIN *.rom *.ROM);;All files (*)")
-        if path:
-            self.choose_bios(Path(path))
-
-    def choose_bios(self, dump: Path) -> None:
-        """Copies the dump, with the files beside it, into PCSX2's bios folder and makes it the one PCSX2 uses."""
-        if self.pcsx2_running():
-            self.say(RUNNING, ok=False)
-            return
-        try:
-            placed = userdata.copy_bios(dump, self.bios_dir)
-            pcsx2_settings.choose_bios(self.pcsx2_home, placed.name)
-        except OSError as error:
-            self.say(f"The BIOS was not taken: {error}", ok=False)
-            return
-        self.refresh()
-        self.say(f"PCSX2 uses {placed.name} now.")
-
     def on_remove_bios(self) -> None:
         names = [p.name for p in self.bios]
         if not names:
             return
         name, ok = QInputDialog.getItem(self, window_title("Remove a BIOS"), "Take out of PCSX2's BIOS folder:",
                                         names, 0, False)
-        if ok and name and self._ask("Remove a BIOS", f"Remove {name} from PCSX2's BIOS folder, with the files "
-                                                      "beside it under the same name?\n\nThe dump you chose it "
-                                                      "from stays where it is."):
+        if ok and name and self._ask("Remove a BIOS", f"Remove {name} from PCSX2's BIOS folder and from "
+                                                      f"{private(library.bios_home(self.user_home))}, with the files "
+                                                      "beside it under the same name?"):
             self.remove_bios(self.bios_dir / name)
 
     def remove_bios(self, dump: Path) -> None:
@@ -615,6 +638,9 @@ class MainWindow(QMainWindow):
             return
         try:
             removed = userdata.remove_bios(dump)
+            own = library.bios_home(self.user_home) / dump.name       # else the app would copy it in again
+            if own.is_file():
+                userdata.remove_bios(own)
         except OSError as error:
             self.say(f"{dump.name} was not removed: {error}", ok=False)
             return
@@ -635,32 +661,48 @@ class MainWindow(QMainWindow):
             return
         self.say(f"{game.title}: {pcsx2_settings.SCREENS[screen].lower()}.")
 
-    def on_add_folder(self) -> None:
-        folder = QFileDialog.getExistingDirectory(self, window_title("Add a game folder"), str(Path.home()))
-        if folder:
-            self.add_folder(Path(folder))
-
-    def add_folder(self, folder: Path) -> None:
-        folders = [str(f) for f in self.folders]
-        if str(folder) not in folders:
-            self.settings.set("folders", folders + [str(folder)])
-        self.refresh()
-        found = scan([folder])
-        self.say(f"{folder.name or folder} is a game folder now: {len(found)} game(s) in it.")
-
-    def on_forget_folder(self) -> None:
-        folders = [str(f) for f in self.folders]
-        if not folders:
+    def on_remove_game(self) -> None:
+        """Remove game… (owner, 03-11-2026, from the Windows Portable Suite's managers: before deleting anything, let
+        the user decide what to keep): a window lists what of the chosen game would go, a row each with its size,
+        every row ticked; unticking keeps it, Delete marked deletes the rows still ticked (read-only files too) off
+        the window's thread, its Steam shortcut through Steam, and Cancel deletes nothing. The memory cards stay."""
+        game = self.chosen()
+        if game is None:
             return
-        folder, ok = QInputDialog.getItem(self, window_title("Remove a game folder"),
-                                          "Stop looking for games in:", folders, 0, False)
-        if ok and folder:
-            self.forget_folder(Path(folder))
+        if self.pcsx2_running():
+            self.say(RUNNING_REMOVE, ok=False)
+            return
+        items, why = library.removal_items(game, str(game.file) in self.in_steam)
+        if not items:
+            self.say(why, ok=False)
+            return
+        if KeepDialog(f"Remove {game.title}", items, self).exec() != QDialog.DialogCode.Accepted:
+            self.say("Nothing was deleted.")
+            return
+        chosen = keep.chosen(items)
+        kept = [item.label for item in items if not item.delete]
+        paths = [path for item in chosen for path in item.paths]
+        take_out = any(item.key == library.STEAM_ITEM for item in chosen)
+        folder, closed, run, existing = self.steam_dir, self.steam_closed, self.run_path, self.in_steam
+        title = game.title
 
-    def forget_folder(self, folder: Path) -> None:
-        self.settings.set("folders", [str(f) for f in self.folders if f != folder])
-        self.refresh()
-        self.say(f"{folder.name or folder} is no longer a game folder; its games stay where they are.")
+        def job() -> tuple[bool, str]:
+            failed = keep.delete(paths)
+            gone = [item.label for item in chosen if item.paths and not any(item.label.startswith(f.split(" (")[0])
+                                                                                for f in failed)]
+            if take_out and folder is not None:
+                try:
+                    closed(lambda: steam.write_shortcuts(folder, shortcuts.changes([], [game], run, LOGO_PATH, existing)))
+                    gone.append("its shortcut in Steam")
+                except (steam.SteamError, steam.ShortcutError, OSError) as error:
+                    failed.append(f"its Steam shortcut ({error})")
+            text = f"{title}: deleted {', '.join(gone) if gone else 'nothing'}."
+            if kept:
+                text += f" Kept: {', '.join(kept)}."
+            if failed:
+                text += f" Not deleted: {', '.join(failed)}."
+            return not failed, text
+        self._start(f"Deleting {title}…", job)
 
     def on_update_steam(self) -> None:
         if self.steam_dir is None:
@@ -687,13 +729,33 @@ class MainWindow(QMainWindow):
                                   get) if key else [])
             changes = shortcuts.changes(add, remove, run, LOGO_PATH, existing,
                                         found=lambda g: covers.art(home, shortcuts.cover_name(g), shortcuts.COVERS))
+            found: dict[str, str] | None = {}
+            extra: list[str] = []
+
+            def change() -> None:
+                # Read back right after the write, while Steam is still closed (owner, 03-11-2026, from the Windows
+                # Portable Suite's managers: "it still says 0 games in Steam"): whether the shortcuts were written
+                # as the app reads them, before Steam touches the file. A failed read is said, not passed over.
+                nonlocal found
+                steam.write_shortcuts(folder, changes)
+                try:
+                    found = shortcuts.in_steam(folder)
+                except OSError as error:
+                    found = None
+                    extra.append(f"Steam's file could not be read back: {error}")
+
             try:
-                restarted = closed(lambda: steam.write_shortcuts(folder, changes))
+                restarted = closed(change)
             except (steam.SteamError, steam.ShortcutError, OSError) as error:
                 return False, "\n".join([*notes, f"Steam was not changed: {error}"])
+            if found is not None:
+                missing = [g.title for g in add if str(g.file) not in found]
+                if missing:
+                    extra.append(f"Read back from Steam's file, {len(add) - len(missing)} of the {len(add)} game(s) "
+                                 f"are there: not {', '.join(missing)}.")
             again = " Steam was closed for it and starts again in the background." if restarted else ""
             return True, "\n".join([*notes, f"{len(add)} game(s) in Steam, under Non-Steam in the library"
-                                              f"{f'; {len(remove)} taken out' if remove else ''}.{again}"])
+                                              f"{f'; {len(remove)} taken out' if remove else ''}.{again}", *extra])
         self._start("Looking up covers and changing Steam's shortcuts…" if key else "Changing Steam's shortcuts…",
                     job)
 

@@ -31,8 +31,16 @@ The window has two steps, then the list of games.
 1. **PPSSPP**: **Install** downloads PPSSPP from its GitHub release (about 48 MB) and checks it against the
    checksum this version of the app was tried with before installing it. **Remove** takes it out again; PPSSPP's
    own folder, with your saves and settings, stays.
-2. **Game folders**: the folders the app looks for games in. **Add folder…** adds one, **Remove folder…** stops
-   looking in one (the games stay where they are). A game may sit up to five folders deep.
+2. **Game folder**: where the app looks for games, `~/Games/PSP` and a removable drive's `Games/PSP` (see [Where
+   your games go](#where-your-games-go)); nothing is chosen or browsed to. A game may sit up to five folders deep.
+
+### Where your games go
+
+The app has a folder of its own, which it makes when it opens; you never choose or browse to a folder: `~/Games/PSP`.
+Put your disc images and your `EBOOT.PBP` folders there, or in folders in it, and they show in the table. On a USB
+drive or an SD card, make a folder `Games/PSP` on it, and the app looks there too while the drive is mounted (under
+`/run/media` or `/media`, as Bazzite mounts it). Folders added in the app before (**Add folder…**, until version
+1.0) are no longer looked in: move those games to `~/Games/PSP`.
 
 The table lists every game found: its title and ID (ULUS…, UCES…) from the `PARAM.SFO` inside the image, its kind
 and its file. It has two kinds of games:
@@ -44,10 +52,37 @@ and its file. It has two kinds of games:
   (`~/.config/ppsspp/PSP/GAME`), where PPSSPP keeps homebrew and installed games. A game's update there (its
   `PARAM.SFO` says category PG) is not a game to start: PPSSPP lays it over the disc game by itself.
 
+**Remove game…** deletes the chosen game from the disk. A window first lists what would go, a row each with its
+size: the disc image, or a memory stick game's own folder, and its Steam shortcut when it is in Steam. Every row is ticked; untick what you want to keep, then
+**Delete marked**; **Cancel** deletes nothing. The saves on the memory stick stay. A game the app will not delete (one at the top of a
+drive, or in a folder that holds another game) is said so under the tabs: delete it by hand.
+
 - **Play** (or a double-click) starts the chosen game on the desktop, as PPSSPP is set up.
 - **PPSSPP settings** opens PPSSPP's own window, with its settings, its controller settings and its game list.
+- **Settings…** opens the settings that matter for playing, in the app: see [Settings](#settings).
 - **Rename files…** renames the ISO and CSO images after their `PARAM.SFO`: see
   [Renaming the files](#renaming-the-files).
+
+### Settings
+
+**Settings…** opens a window with PPSSPP's settings that matter for playing, written into PPSSPP's own settings
+file the moment you change one. Everything else is in PPSSPP's own window (**PPSSPP settings**).
+
+- **Picture**: the **Renderer** (Vulkan, PPSSPP's own choice on the BC-250, or OpenGL when a game shows faults),
+  the **Internal resolution** (Automatic follows the screen; 3x fills a 1080p screen sharply, 6x a 4K one; a higher
+  one asks more of the GPU), **Stretch to the screen**, **Integer scaling**, **Texture filtering** (Nearest keeps
+  pixel art sharp), **Anisotropic filtering** and **VSync**.
+- **Game**: **Frame skipping** (frames left out to keep a slow game at full speed) and **Cheats** (the cheats in
+  PPSSPP's cheats folder).
+- **Sound**: the **Volume**.
+- **Controller**: the **Stick dead zone** (how far a stick moves before the game sees it, for a stick that drifts)
+  and the **Stick sensitivity** (how far the PSP's stick goes for the stick's travel: PPSSPP's 1.10 reaches the
+  edge a little sooner).
+- **On screen**: **Show FPS** and **Show speed**, in a corner of the picture.
+
+Each setting shows what PPSSPP's settings file holds, or PPSSPP's own default while the file does not name it; a
+value set in PPSSPP that the app does not offer is shown as it is. Nothing is written while PPSSPP runs: PPSSPP
+writes its settings back when it closes, over any change.
 
 ### Game Mode
 
@@ -110,12 +145,16 @@ Each version of the app installs one PPSSPP release, the one it was tried with. 
 asks GitHub for PPSSPP's newest release. When that one is newer, the first step says so, with a link to what is
 new; the app does not install it. A newer PPSSPP comes with a newer version of the app, once it has been tried,
 from the [portal](../portal.md): after updating the app, the first step says so, and **Install** brings it.
-PPSSPP's own window also says when a new release is out; on Linux it does not update itself.
+PPSSPP's own notice of a new release is turned off by the app (see below); on Linux PPSSPP does not update itself.
 
 ## How it works
 
 The Game Mode shortcuts start `bc250-ppsspp-run`, which starts PPSSPP. Two things change when Steam is the one
 that starts it. Started with **Play**, from outside Steam, PPSSPP runs as it is.
+
+Once PPSSPP is installed, each time the window opens and while PPSSPP does not run, the app turns off PPSSPP's
+notice of a newer release in its settings (`PSP/SYSTEM/ppsspp.ini` on its memory stick): a newer PPSSPP comes with
+the app. Everything else in the file stays as PPSSPP wrote it, and what changed shows in the window's output.
 
 ### Controllers
 
@@ -128,6 +167,14 @@ So the run wrapper undoes it: while a real controller is connected, PPSSPP reads
 Steam's virtual one (USB ID `28DE:11FF`) out. The PS button stays Steam's. Without a real controller, as on a Steam
 Deck whose own controls exist only as Steam's virtual controller, the wrapper leaves Steam's choice as it is.
 Controls are mapped in PPSSPP's own window (**PPSSPP settings**, then **Settings > Controls**).
+
+### A game renamed, moved or gone
+
+A game renamed or moved after it was put in Steam keeps its mark: the app knows each game in Steam by its code (or,
+without one, its file's size), so on **Refresh** it finds the game again under its new name, ticked, and says so
+under the tabs; **Update Steam** then takes the old shortcut out and puts the game in under its new name. A
+shortcut to a game that is no longer there (deleted, or on a drive that is not in) does not start PPSSPP: a
+window says which file is missing and what to do, and closes by itself, so Steam sees the game end.
 
 ### Steam's overlay on the desktop
 
@@ -146,7 +193,8 @@ already.
 | The app | `~/.local/share/bc250-ppsspp-manager/app` |
 | PPSSPP | `~/.local/share/bc250-ppsspp-manager/emulator` |
 | PPSSPP's saves, settings, memory stick games | `~/.config/ppsspp` (the PSP's memory stick) |
-| The app's settings, with the game folders | `~/.config/bc250-ppsspp-manager` |
+| Your games | `~/Games/PSP` (the app's own folder), and `Games/PSP` on a removable drive |
+| The app's settings | `~/.config/bc250-ppsspp-manager` |
 | The Game Mode shortcuts | Steam's `shortcuts.vdf` and `grid` folder, per Steam user |
 | The pictures found on SteamGridDB | `~/.local/share/bc250-ppsspp-manager/covers` |
 | Launchers | `~/.local/bin/bc250-ppsspp-manager`, `~/.local/bin/bc250-ppsspp-run` |

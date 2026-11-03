@@ -8,6 +8,7 @@ from __future__ import annotations
 import os
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 import pytest
@@ -34,6 +35,11 @@ N: Name="Microsoft X-Box 360 pad 0"
 H: Handlers=event14 js1
 """
 STEAM_ONLY = DS4_AND_STEAM.split("\n\n")[-1]
+# Game files that are there (the wrapper refuses one that is not, 03-11-2026), with a space in a path as before.
+_GAMES = Path(tempfile.mkdtemp(prefix="bc250-wrapper-")) / "games"
+for _name in ("a b/eboot.bin", "x", "a b/CUSA11624/eboot.bin", "CUSA00001/eboot.bin", "CUSA00002/eboot.bin"):
+    (_GAMES / _name).parent.mkdir(parents=True, exist_ok=True)
+    (_GAMES / _name).write_text("")
 STEAM_LIST = "0x054C/0x09CC"
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="a bash script for Linux")
@@ -61,14 +67,14 @@ def run(tmp_path):
 
 
 def test_started_by_steam_with_a_real_controller(run):
-    out = run(DS4_AND_STEAM, "-f", "true", "-g", "/games/a b/eboot.bin", SDL_GAMECONTROLLER_IGNORE_DEVICES=STEAM_LIST,
+    out = run(DS4_AND_STEAM, "-f", "true", "-g", f"{_GAMES}/a b/eboot.bin", SDL_GAMECONTROLLER_IGNORE_DEVICES=STEAM_LIST,
               SDL_GAMECONTROLLER_IGNORE_DEVICES_EXCEPT="0x28DE/0x1205")
-    assert out == {"args": "-f true -g /games/a b/eboot.bin", "ignore": "0x28DE/0x11FF", "except": "unset",
+    assert out == {"args": f"-f true -g {_GAMES}/a b/eboot.bin", "ignore": "0x28DE/0x11FF", "except": "unset",
                    "video": "unset"}
 
 
 def test_started_by_steam_with_only_steams_controller(run):
-    out = run(STEAM_ONLY, "-g", "x", SDL_GAMECONTROLLER_IGNORE_DEVICES=STEAM_LIST)
+    out = run(STEAM_ONLY, "-g", f"{_GAMES}/x", SDL_GAMECONTROLLER_IGNORE_DEVICES=STEAM_LIST)
     assert out["ignore"] == STEAM_LIST                                  # Steam's choice stands
 
 
@@ -80,10 +86,10 @@ def test_started_outside_steam(run):
 
 def test_started_by_steam_on_a_wayland_desktop(run):
     desktop = {"WAYLAND_DISPLAY": "wayland-0", "DISPLAY": ":0"}
-    assert run(DS4_AND_STEAM, "-g", "x", SteamGameId="3710761059", **desktop)["video"] == "x11"
-    assert run(DS4_AND_STEAM, "-g", "x", **desktop)["video"] == "unset"                     # Play, outside Steam
-    assert run(DS4_AND_STEAM, "-g", "x", SteamGameId="1", DISPLAY=":0")["video"] == "unset"  # X11 only
-    assert run(DS4_AND_STEAM, "-g", "x", SteamGameId="1", SDL_VIDEO_DRIVER="wayland",
+    assert run(DS4_AND_STEAM, "-g", f"{_GAMES}/x", SteamGameId="3710761059", **desktop)["video"] == "x11"
+    assert run(DS4_AND_STEAM, "-g", f"{_GAMES}/x", **desktop)["video"] == "unset"                     # Play, outside Steam
+    assert run(DS4_AND_STEAM, "-g", f"{_GAMES}/x", SteamGameId="1", DISPLAY=":0")["video"] == "unset"  # X11 only
+    assert run(DS4_AND_STEAM, "-g", f"{_GAMES}/x", SteamGameId="1", SDL_VIDEO_DRIVER="wayland",
                **desktop)["video"] == "wayland"                                             # a choice of the user's
 
 
@@ -102,12 +108,27 @@ def test_the_game_started_goes_to_the_apps_log(run, tmp_path):
     log = tmp_path / "data" / "bc250-shadps4-manager" / "bc250-shadps4-manager.log"
     run(DS4_AND_STEAM, "-b", PATH=path)
     assert not log.exists()
-    run(DS4_AND_STEAM, "-f", "true", "-g", "/games/a b/CUSA11624/eboot.bin", SteamGameId="3710761059", PATH=path)
-    run(DS4_AND_STEAM, "--game", "/games/CUSA00001/eboot.bin", PATH=path)
-    run(STEAM_ONLY, "-g", "/games/CUSA00002/eboot.bin", SteamGameId="3710761059", PATH=path)   # no real controller
+    run(DS4_AND_STEAM, "-f", "true", "-g", f"{_GAMES}/a b/CUSA11624/eboot.bin", SteamGameId="3710761059", PATH=path)
+    run(DS4_AND_STEAM, "--game", f"{_GAMES}/CUSA00001/eboot.bin", PATH=path)
+    run(STEAM_ONLY, "-g", f"{_GAMES}/CUSA00002/eboot.bin", SteamGameId="3710761059", PATH=path)   # no real controller
     lines = log.read_text().splitlines()
     assert [line[20:] for line in lines] == ["INFO Started CUSA11624 from Steam, with a controller.",
                                              "INFO Started CUSA00001 from a terminal, with a controller.",
                                              "INFO Started CUSA00002 from Steam, without a controller."]
     assert all(re.fullmatch(r"\d\d-\d\d-\d{4} \d\d:\d\d:\d\d", line[:19]) for line in lines)
     assert "/games/" not in log.read_text() and "eboot" not in log.read_text()
+
+
+def test_a_game_that_is_gone_is_not_started(tmp_path):
+    """A shortcut to a game renamed, moved or deleted (owner, 03-11-2026): the emulator is not started, the wrapper
+    says so and ends with 1, so Steam sees the game end; without the app's Python, the words go to stderr alone."""
+    appimage = tmp_path / "data" / "bc250-shadps4-manager" / "emulator" / "current" / "Shadps4-sdl.AppImage"
+    appimage.parent.mkdir(parents=True)
+    appimage.write_text('#!/bin/sh\necho started\n')
+    appimage.chmod(0o755)
+    gone = tmp_path / "Games" / "gone.iso"
+    done = subprocess.run(["/bin/bash", str(WRAPPER), "-f", "true", "-g", str(gone)], capture_output=True, text=True,
+                          env={**os.environ, "XDG_DATA_HOME": str(tmp_path / "data"), "HOME": str(tmp_path),
+                               "BC250_INPUT_DEVICES": str(tmp_path / "none")})
+    assert done.returncode == 1 and "started" not in done.stdout
+    assert "This game is no longer there" in done.stderr and str(gone) in done.stderr

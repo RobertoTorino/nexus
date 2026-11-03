@@ -1,3 +1,60 @@
+Changelog: 03-11-2026 21:57:27
+
+Added. The Settings tab offers more of PCSX2's settings (owner, 03-11-2026, from the Windows Portable Suite's
+PCSX2 Manager): under Emulation, Save state when quitting; under Controllers, the Stick dead zone and the Stick
+range of the first controller; and a new On screen box for what PCSX2 writes over the picture: Show FPS (moved
+from Picture), Show speed, Show resolution, Show CPU and GPU use, Show frame times, Show inputs and the Text size
+of it all. Each is written into PCSX2's settings file the moment it is changed, as the others; the tab now has
+three columns. Widescreen stays per game, in the Your games tab. The wiki says so.
+
+Changelog: 03-11-2026 21:43:44
+
+Added. A game renamed or moved after it was put in Steam keeps its mark when the app can tell it is the same game
+(its code, else its file's size; core's renamed, the app's settings remember what each game in Steam is): Refresh,
+or the next start, shows it under its new name, ticked and said so under the tabs, and Update Steam puts it in
+Steam under that name and takes the old shortcut out (owner, 03-11-2026, from the Windows Portable Suite's managers,
+01-11-2026). A shortcut to a game that is no longer there no longer starts PCSX2 with a file that is not
+there: the run wrapper says so and ends with 1, and shows a message box of the app's own (--gone, core's gone),
+which closes by itself, so Steam sees the game end. The wiki says so.
+
+Changelog: 03-11-2026 21:35:02
+
+Added. Remove game… on Your games (owner, 03-11-2026, from the Windows Portable Suite's managers, 30-10-2026 and
+01-11-2026: a game that no longer plays goes, files and all, and before deleting anything the user decides what to
+keep; core's keep and keep_dialog): a window lists what of the chosen game would go, a row each with its size, every
+row ticked; unticking a row keeps it, Delete marked deletes the rows still ticked off the window's thread (read-only
+files too) and takes its Steam shortcut out through Steam when that row is ticked, and Cancel deletes nothing
+(library.removal_items(); the memory cards never among the rows). A game the app will not delete is said so.
+The wiki says so.
+
+Changelog: 03-11-2026 21:14:03
+
+Breaking. No folder or file is chosen or browsed to any more (owner, 03-11-2026, from the Windows Portable Suite's
+PCSX2 Manager, 30-10-2026: fixed folders, no folder selecting): the pills Games Add folder, Games Remove folder and
+BIOS Install, with their file windows, are gone, and the folders added before are no longer looked in (the
+settings' folders key is dropped; library.py). Added. The app's own game folder: ~/Games/PS2, made with
+~/Games/PS2/BIOS when the window opens, and Games/PS2 on each removable drive that has one (mounted under
+/run/media or /media), always looked in (library.fixed(), removable_drives()). The BIOS dump put in
+~/Games/PS2/BIOS is copied, with the files beside it under the same name, into PCSX2's bios folder by the app
+itself when the window opens and on Refresh, only what is new or changed and never while PCSX2 runs
+(userdata.sync_bios()); PCSX2 is made to use it when its settings name no dump that is there. The Log tab says what
+was taken. BIOS Uninstall takes a dump out of PCSX2's folder and out of ~/Games/PS2/BIOS, else the app would copy
+it in again. The Game folder line names the folders (the home folder as ~); the BIOS line says where to put the
+dump. The wiki has a chapter for it, Where your games go.
+
+Changelog: 03-11-2026 21:04:45
+
+Fixed. Update Steam reads Steam's file back right after writing it, while Steam is still closed, and says on the
+status line and in the output when a game it wrote is not found there, by name (owner, 03-11-2026, from the Windows
+Portable Suite's managers, 29-10-2026: "it still says 0 games in Steam"), so the message tells whether the file or
+the reading is at fault; a failed read of the file is said too instead of passed over. Nothing changes when the
+shortcuts read back as written.
+
+Changelog: 03-11-2026 20:54:32
+
+Fixed. No user name on the screen or in the log (owner, 03-11-2026: the suite's privacy rule, as the Windows Portable
+Suite's apps keep it since 29-10-2026): the Log tab's line that names the log file, every message under the tabs and in the Log tab, and every line of the log file (core's applog with private=True) show your home folder as ~ (core's platform.private).
+
 Changelog: 03-11-2026 16:16:30
 
 Release 3.0.1.

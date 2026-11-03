@@ -2,7 +2,14 @@
 """The Extract PKG window: PKG file and output folder, icon and param.sfo preview, the extraction worker with its
 progress and log, preview-only / salvage mode, rename to CONTENT_ID, and the extraction comparison.
 Port of ``tools/pkgxtractor/gui.cpp``. Once the standalone Bazzite pkgxtractor's main window; here a dialog of the
-manager, whose game folders it offers as the output, so an extracted game shows up in the list."""
+manager, whose game folders it offers as the output, so an extracted game shows up in the list.
+
+Several packages at once (owner, 03-11-2026, as the Windows Portable Suite's, 29-10-2026): Browse, a drop or a
+launch may bring more than one package. The first is loaded as always; the rest wait in a queue (queued()), the
+games first, then their updates and add-on content, shown under the PKG line. Extract PKG unpacks the loaded
+package and then the queue, one after the other, into the same output folder, the log running on; a package the
+user does not want to replace an update with is skipped. Preview Only, the rename and the comparisons work on the
+loaded package alone and leave the queue as it is."""
 
 from __future__ import annotations
 
@@ -40,6 +47,7 @@ FILE_STEM = "pkgxtractor"               # pkgxtractor.log, .state and .progress 
 OLD_APP_ID = "bazzite-pkgxtractor"      # the standalone app; its last used folders are adopted once
 PKG_FOLDER_KEY = "pkg/last_pkg_folder"
 OUTPUT_FOLDER_KEY = "pkg/last_output_folder"
+CATEGORY_ORDER = {"gd": 0, "gp": 1, "ac": 2}       # a game before its update, an update before add-on content
 
 
 # ---------------------------------------------------------------------------
@@ -102,6 +110,19 @@ def directory_has_entries(directory: Path) -> tuple[bool, list[str], str]:
         return True, [], "Failed to inspect target directory"
 
 
+def ordered(paths: list[str]) -> list[str]:
+    """*paths* with the games first, then updates, then add-on content, each kept in the order given; a package
+    that does not open goes last."""
+    def key(path: str) -> int:
+        with PKG() as pkg:
+            try:
+                ok, _ = open_pkg_with_retry(pkg, Path(path), 1, 0)
+            except OSError:
+                ok = False
+            return CATEGORY_ORDER.get(pkg_category(pkg), 3) if ok else 3
+    return sorted(paths, key=key)
+
+
 def pkg_category(pkg: PKG) -> str:
     """CATEGORY from the package's param.sfo, lower case (gd a game, gp an update, ac add-on content); "" without."""
     if not pkg.sfo:
@@ -116,7 +137,7 @@ def pkg_category(pkg: PKG) -> str:
 def extraction_target(output_root: Path, title_id: str, category: str) -> tuple[Path, bool]:
     """The folder a package goes into, and whether it is an update beside its game. A game goes into its TITLE_ID
     folder; an update (CATEGORY gp) into TITLE_ID-UPDATE beside the game's folder, which shadPS4 lays over the game
-    (fs.cpp in 0.20.0), so the game stays as it was. Without the game's folder there a gp package goes into TITLE_ID:
+    (fs.cpp in 0.21.0), so the game stays as it was. Without the game's folder there a gp package goes into TITLE_ID:
     a game with its update in it says gp too."""
     game = output_root / sanitize_folder_name(title_id or "unknown_title")
     if category == "gp" and directory_has_entries(game)[0] and game.is_dir():
@@ -710,7 +731,7 @@ class ExtractDialog(QDialog):
     caller knows to look for games again."""
 
     def __init__(self, settings, game_folders: list[Path], parent: Optional[QWidget] = None,
-                 initial_pkg: Optional[str] = None) -> None:
+                 initial_pkg: str | list[str] | None = None) -> None:
         super().__init__(parent)
         self.setWindowTitle(window_title(TITLE))
         self.resize(760, 680)
@@ -721,6 +742,8 @@ class ExtractDialog(QDialog):
         self._worker: Optional[QObject] = None
         self.game_folders = list(game_folders)
         self.extracted = False
+        self.queue: list[str] = []              # the packages to extract after the loaded one
+        self._extracting = False                # the running worker extracts (not a preview or a comparison)
 
         # Log file, crash marker and progress checkpoint live in the app's data folder.
         data_dir = app_data_dir()
@@ -751,7 +774,8 @@ class ExtractDialog(QDialog):
         QApplication.instance().aboutToQuit.connect(self._on_about_to_quit)
 
         if initial_pkg:
-            QTimer.singleShot(0, lambda: self.open_pkg(initial_pkg))
+            first = [initial_pkg] if isinstance(initial_pkg, str) else list(initial_pkg)
+            QTimer.singleShot(0, lambda: self.open_pkgs(first))
 
     def default_output(self) -> str:
         """The last used output folder while it is there, else the first game folder."""
@@ -799,6 +823,30 @@ class ExtractDialog(QDialog):
         self.pkg_input.setText(file_path)
         self.update_sfo_preview(file_path)
 
+    def open_pkgs(self, paths: list[str]) -> None:
+        """Several packages: the first loaded (the queue's games first), the rest queued after what waits
+        already. While a package is extracting, every one of them is queued."""
+        paths = ordered([p for p in paths if p not in self.queue and p != self.pkg_input.text().strip()])
+        if not paths:
+            return
+        if self.is_busy() and self._extracting:
+            self.queue += paths
+        else:
+            self.open_pkg(paths[0])
+            self.queue += paths[1:]
+        self._show_queue()
+
+    def queued(self) -> list[str]:
+        return list(self.queue)
+
+    def _show_queue(self) -> None:
+        if not self.queue:
+            self.queue_note.hide()
+            return
+        names = ", ".join(Path(p).name for p in self.queue)
+        self.queue_note.setText(f"Then, one after the other ({len(self.queue)}): {names}")
+        self.queue_note.show()
+
     # -- UI construction ------------------------------------------------------
 
     def _build_ui(self) -> None:
@@ -817,6 +865,11 @@ class ExtractDialog(QDialog):
         self.rename_btn.clicked.connect(self.on_rename_pkg_to_content_id)
         pkg_row.addWidget(self.rename_btn)
         main_layout.addLayout(pkg_row)
+        self.queue_note = QLabel()              # the packages waiting their turn (open_pkgs)
+        self.queue_note.setWordWrap(True)
+        self.queue_note.setStyleSheet("color:palette(placeholder-text);")
+        self.queue_note.hide()
+        main_layout.addWidget(self.queue_note)
 
         # Output row: a game folder of shadPS4 by default, so the game shows up in the list
         out_row = QHBoxLayout()
@@ -934,12 +987,9 @@ class ExtractDialog(QDialog):
             event.acceptProposedAction()
 
     def dropEvent(self, event: QDropEvent) -> None:  # noqa: N802
-        urls = event.mimeData().urls()
-        if not urls:
-            return
-        file_path = urls[0].toLocalFile()
-        if file_path.lower().endswith(".pkg"):
-            self.open_pkg(file_path)
+        paths = [url.toLocalFile() for url in event.mimeData().urls() if url.toLocalFile().lower().endswith(".pkg")]
+        if paths:
+            self.open_pkgs(paths)
             event.acceptProposedAction()
 
     # -- logging ---------------------------------------------------------------
@@ -969,13 +1019,12 @@ class ExtractDialog(QDialog):
                 initial = info.absolutePath() if info.isFile() else info.absoluteFilePath()
         if not initial and self._last_pkg_dir and QDir(self._last_pkg_dir).exists():
             initial = self._last_pkg_dir
-        file_name, _ = QFileDialog.getOpenFileName(
-            self, "Select PKG File", initial, "PKG Files (*.pkg *.PKG);;All Files (*)")
-        if file_name:
-            self.pkg_input.setText(file_name)
-            self._last_pkg_dir = QFileInfo(file_name).absolutePath()
+        file_names, _ = QFileDialog.getOpenFileNames(
+            self, "Select PKG Files", initial, "PKG Files (*.pkg *.PKG);;All Files (*)")
+        if file_names:
+            self._last_pkg_dir = QFileInfo(file_names[0]).absolutePath()
             self._settings.qsettings.setValue(PKG_FOLDER_KEY, self._last_pkg_dir)
-            self.update_sfo_preview(file_name)
+            self.open_pkgs(file_names)
 
     def on_browse_output(self) -> None:
         initial = ""
@@ -1017,8 +1066,22 @@ class ExtractDialog(QDialog):
         self._thread = None
         self._worker = None
         self._set_busy(False)
+        if self._extracting and self.queue:
+            self._extracting = False
+            QTimer.singleShot(0, self._extract_next)
+        self._extracting = False
 
-    def start_worker(self, preview_only: bool) -> None:
+    def _extract_next(self) -> None:
+        """The next package of the queue, into the same output folder; one the user does not want to replace an
+        update with is skipped."""
+        while self.queue and self._thread is None:
+            path = self.queue.pop(0)
+            self._show_queue()
+            self.on_log(f"=== Next package: {Path(path).name} ===")
+            self.open_pkg(path)
+            self.start_worker(False, keep_log=True)
+
+    def start_worker(self, preview_only: bool, keep_log: bool = False) -> None:
         if self._thread is not None:
             return
         if not self.pkg_input.text().strip():
@@ -1037,8 +1100,10 @@ class ExtractDialog(QDialog):
 
         self._set_busy(True)
         self.progress_bar.setValue(0)
-        self.log_output.clear()
+        if not keep_log:
+            self.log_output.clear()
         self.extracted = self.extracted or not preview_only       # the caller looks for games again
+        self._extracting = not preview_only
 
         worker = ExtractionWorker(pkg_path, output_root, self._progress_path, preview_only,
                                   self.salvage_check.isChecked(), replace_update)

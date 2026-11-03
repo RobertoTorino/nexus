@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The Settings tab: PCSX2's settings that matter for playing, in the app (owner, 24-10-2026: every setting through
 the manager, PCSX2's own window is not opened). One box per group (pcsx2_settings.SETTINGS: the picture, the
-emulation, the sound, the controllers), each setting a choice, a switch or a percentage, read from PCSX2.ini and
+emulation, the sound, the controllers, what PCSX2 shows on the screen), each setting a choice, a switch or a percentage, read from PCSX2.ini and
 written the moment it is changed, while PCSX2 does not run. Player 2 on the second controller and quitting a game
 with Select + Start are here too, each written with its own function. The Sound box also shows, beside PCSX2's
 volume, the volume Bazzite's sound settings remember for PCSX2 (core's sound; owner, 24-10-2026: as RPCS3
@@ -65,23 +65,26 @@ class SettingsPage(QWidget):
         self.status.setWordWrap(True)
         self.status.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
 
-        # The picture's box on the left, the whole height; the three others under each other on the right. (A box
-        # placed under the picture's span lay over it and hid its lower rows; owner, 24-10-2026.)
+        # The picture's box on the left, the whole height; the emulation, the sound and the controllers under each
+        # other in the middle; the on-screen box on the right, the whole height. (A box placed under the picture's
+        # span lay over it and hid its lower rows; owner, 24-10-2026.)
         groups: dict[str, QFormLayout] = {}
         grid = QGridLayout()
         grid.setHorizontalSpacing(14)
-        others = (pcsx2_settings.EMULATION, pcsx2_settings.SOUND, pcsx2_settings.CONTROLLERS)
-        for n, name in enumerate((pcsx2_settings.PICTURE, *others)):
+        middle = (pcsx2_settings.EMULATION, pcsx2_settings.SOUND, pcsx2_settings.CONTROLLERS)
+        for name in (pcsx2_settings.PICTURE, *middle, pcsx2_settings.ON_SCREEN):
             box = QGroupBox(name)
             form = QFormLayout(box)
             form.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
             groups[name] = form
-            if n == 0:
-                grid.addWidget(box, 0, 0, len(others), 1, Qt.AlignmentFlag.AlignTop)
+            if name == pcsx2_settings.PICTURE:
+                grid.addWidget(box, 0, 0, len(middle), 1, Qt.AlignmentFlag.AlignTop)
+            elif name == pcsx2_settings.ON_SCREEN:
+                grid.addWidget(box, 0, 2, len(middle), 1, Qt.AlignmentFlag.AlignTop)
             else:
-                grid.addWidget(box, n - 1, 1, Qt.AlignmentFlag.AlignTop)
-        grid.setColumnStretch(0, 1)
-        grid.setColumnStretch(1, 1)
+                grid.addWidget(box, middle.index(name), 1, Qt.AlignmentFlag.AlignTop)
+        for column in range(3):
+            grid.setColumnStretch(column, 1)
         self.system_sound = QLabel("—")             # Bazzite's volume for PCSX2, read only (show_sound)
         self.system_sound.setToolTip(sound.tip(STREAM))
         for setting in (*pcsx2_settings.SETTINGS, *OWN):

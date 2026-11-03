@@ -78,6 +78,9 @@ from .looks import VEIL
 from . import APP_ICONS, APP_ID, APP_NAME, INFO, STAGE, STAGE_NOTE, __version__
 from .manifest import CATEGORIES, AppEntry
 from .portal_update import PortalUpdate
+
+PROGRESS_MS = 500                       # how often a download's size is shown (a 90 MB release looked like a hang)
+CONFIRM_MS = 5000                       # a second Escape (B) within this closes the portal while something runs
 from .sources import Records, SourceError, Sources, installed_from, is_installed, is_local, local_record, local_version
 
 POLL_MS = 1000
@@ -312,8 +315,11 @@ class MainWindow(QMainWindow):
                  portal_check: Callable[[], ReleaseInfo] | None = None, local_build: Path | None = None,
                  desktop: Path | None = None, menu: Path | None = None, parent: QWidget | None = None,
                  installed: Path | None = None, launch: Callable[[list[str]], bool] | None = None,
-                 sounds: audio.Sounds | None = None, gamepad: Gamepad | None = None):
-        """*portal_check* returns the newest portal release (run once, off the GUI thread); None: no check.
+                 sounds: audio.Sounds | None = None, gamepad: Gamepad | None = None, build: str | None = None):
+        """*portal_check* returns the newest portal release (run once, off the GUI thread); None: no check. *build*
+        is the sha256 of the tarball this portal was installed from (portal_update.running_build), "" when not
+        known, None from a checkout: a release built again under this portal's own version is offered when it
+        differs.
         *local_build* is the suite checkout this portal runs from or was installed from: a banner says so.
         *desktop* and *menu* are the Desktop folder and the app menu entries' folder (default: the user's).
         *installed* is where the installed portal is (installed_copy()): a newer one there offers a restart; None: no
@@ -325,7 +331,17 @@ class MainWindow(QMainWindow):
         self.menu = menu or desktop_icons.menu_dir()
         self.sources = sources
         self.records = records
+        self.build = build
         self.pending: Pending | None = None
+        self.close_asked = False                        # Escape (B) pressed once while a download or an install runs
+        self.confirm_timer = QTimer(self)               # a second press within CONFIRM_MS closes the portal
+        self.confirm_timer.setSingleShot(True)
+        self.confirm_timer.setInterval(CONFIRM_MS)
+        self.confirm_timer.timeout.connect(self._confirm_over)
+        self.banner_before = ""                         # the banner the question replaced
+        self.progress_timer = QTimer(self)              # while a release downloads: its size on the tile
+        self.progress_timer.setInterval(PROGRESS_MS)
+        self.progress_timer.timeout.connect(self.refresh)
         self.worker = UpdateChecker(self)               # generic: runs one job off the GUI thread
         self.worker.finished.connect(self._prepared)
         self._job: tuple[AppEntry, str] | None = None
@@ -449,7 +465,7 @@ class MainWindow(QMainWindow):
         for entry in self.entries:
             busy = ""
             if self._job and self._job[0] is entry:
-                busy = "Downloading…" if not self.sources.local else "Preparing…"
+                busy = f"Downloading…{self.downloaded_text(entry)}" if not self.sources.local else "Preparing…"
             elif self.pending and self.pending.entry is entry:
                 busy = "Installing…" if self.pending.action == "install" else "Removing…"
             state = self.states[entry.key].show_state(is_installed(entry), self.records.get(entry.key), busy,
@@ -460,6 +476,15 @@ class MainWindow(QMainWindow):
         self.show_notice(marked)
         self.show_counts()
         self.check_installed()
+
+    def downloaded_text(self, entry: AppEntry) -> str:
+        """How much of the release has come in: " 40 MB", or "" before the first bytes (the part file the download
+        writes, sources.prepare)."""
+        try:
+            size = (self.sources.work / f".{entry.tag}.part" / entry.asset).stat().st_size
+        except OSError:
+            return ""
+        return f" {size / 1_000_000:.0f} MB" if size else ""
 
     def show_counts(self) -> None:
         """The Installed apps pill (installed / listed, a withdrawn app not counted), the Install all updates pill
@@ -600,11 +625,15 @@ class MainWindow(QMainWindow):
         release = update.release if update else None
         if release is None or release.error or not release.version:
             return                                      # offline or no release yet: nothing to announce
-        if version_tuple(release.version) <= version_tuple(__version__):
+        if version_tuple(release.version) < version_tuple(__version__):
             return
+        new_build = version_tuple(release.version) == version_tuple(__version__)
+        if new_build and not (self.build is not None and update.sha256 and update.sha256 != self.build):
+            return                                      # this version, and the build this portal came from
         self.portal_release = release
         summary = update.summary()
-        self.portal_button.setText(f"● Portal {release.version}" + (f": {summary}" if summary else " available"))
+        self.portal_button.setText(f"● Portal {release.version}" + (": a new build of this version" if new_build
+                                                                   else f": {summary}" if summary else " available"))
         if update.changes:
             tip = (f"Released {release.published}. App updates come with the portal: once it is updated, the "
                    f"installed apps among these show Update.\n\n{update.details()}\n\nClick to open its release page.")
@@ -858,11 +887,42 @@ class MainWindow(QMainWindow):
         self.big.focus_first()
 
     def escape(self) -> None:
-        """Escape, or B with nothing open: skip the intro while it plays, else close the portal."""
+        """Escape, or B with nothing open: skip the intro while it plays, else close the portal; while a download or
+        an install runs it asks first (owner, 03-11-2026, as the Windows Portable Suite's portal since 28-10-2026):
+        the download stops, or the installer finishes in its terminal, unrecorded. A second press within CONFIRM_MS
+        closes."""
         if self.intro is not None:
             self.intro.skip()
+        elif self.busy() and not self.close_asked:
+            self.ask_close()
         else:
             self.close()
+
+    def ask_close(self) -> None:
+        self.close_asked = True
+        self.banner_before = self.big.banner.text() if not self.big.banner.isHidden() else ""
+        what = ("the download stops" if self._job is not None else
+                "the installer finishes in its terminal window, unrecorded")
+        self.big.set_banner(f"Press Escape (or B) again to close the portal: {what}.")
+        self.confirm_timer.start()
+
+    def _confirm_over(self) -> None:
+        self.confirm_timer.stop()
+        if self.close_asked:
+            self.close_asked = False
+            self.big.set_banner(self.banner_before)
+
+    def closeEvent(self, event) -> None:  # noqa: N802 (Qt override)
+        """The window closed by the desktop (its close button, Alt+F4) while a download or an install runs asks
+        first; Escape and B ask through escape()."""
+        if event.spontaneous() and self.busy() and not self.close_asked:
+            what = ("the download stops" if self._job is not None else
+                    "the installer finishes in its terminal window, but the portal does not record it")
+            answer = QMessageBox.question(self, APP_NAME, f"Close the portal? {what[0].upper()}{what[1:]}.")
+            if answer != QMessageBox.StandardButton.Yes:
+                event.ignore()
+                return
+        self._close_window(event)
 
     # ---------------------------------------------------------------------------------------- the tiles
     def _open_tile(self, entry: AppEntry) -> None:
@@ -1064,6 +1124,8 @@ class MainWindow(QMainWindow):
 
     def _start(self, entry: AppEntry, action: str) -> None:
         self._job = (entry, action)
+        if not self.sources.local:
+            self.progress_timer.start()
         self.refresh()
         self.worker.start(lambda: self._prepare(entry))
 
@@ -1077,6 +1139,7 @@ class MainWindow(QMainWindow):
     def _prepared(self, result: object) -> None:
         entry, action = self._job or (None, "")
         self._job = None
+        self.progress_timer.stop()
         if entry is None:
             return
         if isinstance(result, Exception):
@@ -1177,7 +1240,7 @@ class MainWindow(QMainWindow):
         except OSError as exc:
             QMessageBox.critical(self, APP_NAME, f"{entry.name} could not be started:\n\n{exc}")
 
-    def closeEvent(self, event) -> None:
+    def _close_window(self, event) -> None:
         if self.intro is not None:
             self.intro.skip()
         self.gamepad.stop()

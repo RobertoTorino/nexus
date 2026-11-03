@@ -163,6 +163,29 @@ a second, fewer in the largest modes; other apps get every frame the camera send
 While the preview runs, the app holds the camera, and other apps cannot use it. **Stop preview** (or closing the
 window) gives it back.
 
+### Full screen
+
+**Full screen** shows the picture over the whole screen, and starts the preview when it was not running. The row
+at the bottom holds its buttons, and the line above it shows the mode, the zoom and, while it records, the
+recording's time:
+
+| Button | What it does |
+|---|---|
+| **Screenshot** (S) | Saves what the screen shows as a PNG in your **Pictures** folder |
+| **Record**, **Stop** (R) | Starts a recording of what the screen shows, and stops it; it goes to your **Videos** folder |
+| **Gray**, **Color** (G) | Black and white, or color again; the app remembers it |
+| **Zoom −**, **Zoom +** (−, +, or the mouse wheel) | Zooms out or in: 1x, 1.5x, 2x, 3x and 4x |
+| the arrow keys, or a drag with the mouse | Move the zoomed picture |
+| **Mode −**, **Mode +** (PageUp, PageDown) | The mode before or the next one; the picture starts again in it |
+| **Close** (Esc) | Back to the window; a recording stops and is kept |
+
+Screenshots and recordings show what you see: zoomed in and black and white too. Each goes in a **USB HD Cam**
+folder, named with the date and the time (`USB HD Cam 2026-11-01 21-04-09.png`). A recording is an MP4 at the
+mode's size (or the half **Show** picks), with at most 30 frames a second, written with the video encoder Qt
+brings (MPEG-4; H.264 where the system has one). The mode does not change while it records: stop it first. If the
+camera stops sending, the screen says so and stays: choose another mode with **Mode −** or **Mode +**. Closing the
+app while it records stops the recording and writes its file first.
+
 ## Picture settings
 
 Beside the preview, **Picture settings** shows the camera's own settings, as it reports them: on the PS5 HD Camera

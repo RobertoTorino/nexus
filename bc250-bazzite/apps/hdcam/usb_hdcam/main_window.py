@@ -1,7 +1,9 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The window: the camera's state in the header (model, USB speed, firmware, video node), access to its boot loader
 (a udev rule, once), its firmware (the pinned download or a file of the user's own, and whether it is sent by itself
-at plug-in) and a preview of its picture in every mode it reports. Every second it looks in /sys for the camera. The
+at plug-in) and a preview of its picture in every mode it reports, also full screen (full_picture.py; owner,
+03-11-2026: screenshots, recordings, zoom and black and white, as the Windows Portable Suite's USB HD Cam has them;
+the window owns the look, preview.Look, and the recording, record.Recording). Every second it looks in /sys for the camera. The
 load service sends the firmware when the camera is plugged in; the window sends it when the service could not (no
 access or no firmware yet at that moment), once per plug-in, and on Load firmware."""
 
@@ -18,13 +20,16 @@ from PyQt6.QtWidgets import (QCheckBox, QComboBox, QFileDialog, QGridLayout, QGr
                              QMessageBox, QPushButton, QSizePolicy, QVBoxLayout, QWidget)
 
 from bc250_core import window_title
+from bc250_core.platform import private
 from bc250_core.settings import restore_geometry, save_geometry
 from bc250_core.theme import GREY, STATE_COLORS
 from bc250_core.updates import UpdateChecker
 from bc250_core.widgets import AppHeader, MetricBox, Pill, StatusText, accent_button, hint_label, same_width
 
-from . import APP_NAME, INFO, LOGO_PATH, __version__, access, camera, controls, firmware, loader, modes, runner
+from . import APP_NAME, INFO, LOGO_PATH, __version__, access, camera, controls, firmware, loader, modes, record, runner
+from . import preview as picture_look
 from .camera import Camera
+from .full_picture import FullPicture
 from .settings import BANDWIDTH_NAMES, CONTROL_DEFAULTS, VIEWS, CameraSettings
 
 INTERVAL_MS = 1000
@@ -67,7 +72,11 @@ class MainWindow(QWidget):
                  get: firmware.Get | None = None, load: Callable[..., loader.Outcome] = loader.load,
                  preview=None, clock: Callable[[], float] = time.monotonic,
                  writable: Callable[[Path], bool] = camera.writable,
-                 open_controls: Callable[[str], controls.Camera] = controls.Camera):
+                 open_controls: Callable[[str], controls.Camera] = controls.Camera,
+                 recording: record.Recording | None = None, pictures: Callable[[], Path] = record.pictures,
+                 videos: Callable[[], Path] = record.videos):
+        """*preview*: the camera's frames (tests pass a fake); *recording*, *pictures* and *videos*: the full screen's
+        recording and where its screenshots and videos go (tests pass their own)."""
         super().__init__()
         self.setWindowTitle(APP_NAME)
         self.settings = CameraSettings(INFO, self)
@@ -94,6 +103,16 @@ class MainWindow(QWidget):
         self.node = ""                      # the preview's /dev/video<n>
         self.modes: list[modes.Mode] = []
         self.image: QImage | None = None    # the last frame, whole
+        self.look = picture_look.Look(gray=bool(self.settings.get("gray")))   # how the full screen shows it
+        self.last: QImage | None = None     # what the full screen shows now (the view, the look): recorded so
+        self.full: FullPicture | None = None
+        self.recording = recording or record.Recording(parent=self)
+        self.recording.finished.connect(self._recorded)
+        self.recording.failed.connect(self._record_failed)
+        self.recording_timer = QTimer(self, interval=500)   # the recording's time on the full screen
+        self.recording_timer.timeout.connect(self._show_look)
+        self.pictures = pictures
+        self.videos = videos
 
         layout = QVBoxLayout(self)
         header = AppHeader(LOGO_PATH, APP_NAME, __version__)
@@ -187,13 +206,18 @@ class MainWindow(QWidget):
         self.save_button = QPushButton("Save picture…")
         self.save_button.setToolTip("Saves what the preview shows, at the camera's own size, as a PNG.")
         self.save_button.clicked.connect(self.save_picture)
+        self.full_button = QPushButton("Full screen")
+        self.full_button.setToolTip("The picture over the whole screen, with screenshots, recordings, zoom and black "
+                                    "and white; Esc comes back")
+        self.full_button.clicked.connect(self.enter_full)
         controls.addWidget(QLabel("Mode"), 0, 0)
         controls.addWidget(self.mode_combo, 0, 1)
         controls.addWidget(QLabel("Show"), 0, 2)
         controls.addWidget(self.view_combo, 0, 3)
         controls.addWidget(self.preview_button, 0, 4)
         controls.addWidget(self.save_button, 0, 5)
-        controls.setColumnStretch(6, 1)
+        controls.addWidget(self.full_button, 0, 6)
+        controls.setColumnStretch(7, 1)
         picture_layout.addLayout(controls)
         self.picture = QLabel()
         self.picture.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -315,7 +339,7 @@ class MainWindow(QWidget):
         self.firmware_box.set_value(firmware.short(data), f"{check}\nSHA-256 {digest}")
         self.firmware_box.set_colour(colour)
         self.firmware_text.setText(f"{html.escape(model_name)}: {html.escape(firmware.describe(data))}, in "
-                                   f"{html.escape(str(where))}<br>"
+                                   f"{html.escape(private(where))}<br>"
                                    f"<span style='color:{colour}'>{'✓' if found else '!'} {check}</span> "
                                    f"SHA-256 <code>{digest}</code>")
 
@@ -531,6 +555,9 @@ class MainWindow(QWidget):
                                  f"No camera found.\n\n{camera.NOT_FOUND}")
         self.mode_combo.setEnabled(bool(self.modes))
         self.preview_button.setEnabled(bool(node))
+        self.full_button.setEnabled(bool(node))
+        if self.full is not None and not node:
+            self.full.view.clear("The camera is gone.")
         mode = self.mode()
         self.view_combo.setEnabled(mode is not None and mode.stereo)
         self.save_button.setEnabled(self.image is not None)
@@ -573,6 +600,9 @@ class MainWindow(QWidget):
         self.image = image
         self._show_image()
         self.save_button.setEnabled(True)
+        if self.full is not None:
+            self._draw_full()
+            self.recording.add(self.last)
 
     def _show_image(self) -> None:
         image = self.shown_image()
@@ -583,6 +613,10 @@ class MainWindow(QWidget):
     def _preview_failed(self, text: str) -> None:
         self.preview_button.setChecked(False)
         self.picture.setText(text)
+        if self.full is not None:                       # the full screen stays, so another mode can be tried
+            self.full.view.clear(text)
+            if self.recording.running:
+                self.stop_recording()
 
     def save_picture(self) -> None:
         image = self.shown_image()
@@ -593,15 +627,179 @@ class MainWindow(QWidget):
         if path and not image.save(path, "PNG"):
             QMessageBox.warning(self, window_title("Save picture"), f"{path} could not be written.")
 
+    # ------------------------------------------------------------ full screen
+    def enter_full(self) -> None:
+        """The picture over the whole screen (FullPicture), the preview started when it was not running."""
+        if self.full is not None:
+            self.full.raise_()
+            self.full.activateWindow()
+            return
+        if not self.node:
+            return
+        self.full = FullPicture(self)
+        self.full.screenshot.connect(self.screenshot)
+        self.full.record.connect(self.toggle_recording)
+        self.full.gray.connect(self.toggle_gray)
+        self.full.zoomed.connect(self.zoom)
+        self.full.panned.connect(self.pan)
+        self.full.mode_step.connect(self.step_mode)
+        self.full.closed.connect(self.leave_full)
+        self.full.show_gray(self.look.gray)
+        self._show_look()
+        if not self.preview.running:
+            self.preview_button.setChecked(True)        # toggle_preview starts it
+        if self.last is not None or self.image is not None:
+            self._draw_full()
+        else:
+            self.full.view.clear("The picture shows here as soon as the camera sends it.")
+        self.full.showFullScreen()
+        self.full.setFocus()
+
+    def leave_full(self) -> None:
+        """The full screen closed (Esc, Close): a recording ends and is kept; the preview runs on in the window."""
+        full, self.full = self.full, None
+        if full is None:
+            return
+        if self.recording.running:
+            self.stop_recording()
+        full.deleteLater()
+
+    def _draw_full(self) -> None:
+        image = self.shown_image()
+        if image is None or self.full is None:
+            return
+        self.last = picture_look.shown(image, self.look)
+        self.full.view.show_image(self.last)
+
+    def _show_look(self) -> None:
+        """The line above the row: the mode and the look, and the recording's time while it records."""
+        if self.full is None:
+            return
+        chosen = self.mode()
+        self.full.summary.setText("  |  ".join(part for part in (chosen.label if chosen else "", self.look.label)
+                                              if part))
+        self.full.show_recording(self.recording.running, self.recording.seconds())
+
+    def pan(self, dx: float, dy: float) -> None:
+        if self.full is None:
+            return
+        if self.look.pan(dx, dy):
+            self._draw_full()
+        elif self.look.zoom == 1.0:
+            self.full.say("Zoom in first: at 1x the whole picture shows.")
+
+    def zoom(self, delta: int) -> None:
+        """Zoom + in, Zoom − out, the mouse wheel either way: the next zoom, around the middle of what shows."""
+        if self.full is None:
+            return
+        if not self.look.step_zoom(delta):
+            self.full.say(f"The zoom is at its {'largest' if delta > 0 else 'smallest'}, {self.look.zoom:g}x.")
+            return
+        self.full.say("")
+        self._draw_full()
+        self._show_look()
+
+    def toggle_gray(self) -> None:
+        """Black and white or color, kept for next time."""
+        self.look.gray = not self.look.gray
+        self.settings.set("gray", self.look.gray)
+        if self.full is not None:
+            self.full.show_gray(self.look.gray)
+        self._draw_full()
+        self._show_look()
+
+    def step_mode(self, delta: int) -> None:
+        """Mode − and Mode + on the full screen: the mode before or the next one, the preview started again in it;
+        not while it records."""
+        if self.full is None:
+            return
+        if self.recording.running:
+            self.full.say("Stop the recording first: the mode does not change while it records.")
+            return
+        at = self.mode_combo.currentIndex() + delta
+        if at < 0 or at >= self.mode_combo.count():
+            self.full.say("That is the last mode." if delta > 0 else "That is the first mode.")
+            return
+        self.mode_combo.setCurrentIndex(at)
+        self.set_mode(at)
+        self.look.zoom, self.look.x, self.look.y = 1.0, 0.5, 0.5
+        self.full.view.clear("Starting the camera in this mode …")
+        self.full.say("")
+        self._show_look()
+
+    def screenshot(self) -> None:
+        """What the full screen shows now, saved as a PNG in the Pictures folder."""
+        if self.full is None:
+            return
+        if self.last is None:
+            self.full.say("There is no picture to save yet.", ok=False)
+            return
+        path = record.new_path(self.pictures(), ".png")
+        try:
+            record.save_picture(self.last, path)
+        except OSError as error:
+            self.full.say(str(error), ok=False)
+            return
+        self.full.say(f"Screenshot saved: {private(path)}")
+
+    def toggle_recording(self) -> None:
+        """A recording of what the full screen shows starts, at the mode's size, or it stops and is written to the
+        Videos folder."""
+        if self.full is None:
+            return
+        if self.recording.running:
+            self.stop_recording()
+            return
+        chosen = self.mode()
+        if not self.preview.running or chosen is None or self.image is None:
+            self.full.say("There is no picture to record: choose a mode that gives one.", ok=False)
+            return
+        _x, _y, width, height = modes.crop(self.image.width(), self.image.height(), self.view())
+        problem = self.recording.start(record.new_path(self.videos(), ".mp4"), width, height)
+        if problem:
+            self.full.say(problem, ok=False)
+            return
+        self.recording_timer.start()
+        self.full.say("Recording …")
+        self._show_look()
+
+    def stop_recording(self) -> None:
+        """The recording ends; _recorded says where once its file is written."""
+        self.recording_timer.stop()
+        if self.full is not None:
+            self.full.say("Writing the video …")
+        self.recording.stop()
+        self._show_look()
+
+    def _recorded(self, path: str) -> None:
+        if self.full is not None:
+            self.full.say(f"Video saved: {private(Path(path))}")
+        self._show_look()
+
+    def _record_failed(self, text: str) -> None:
+        self.recording_timer.stop()
+        if self.full is not None:
+            self.full.say(text, ok=False)
+        self._show_look()
+
     # ------------------------------------------------------------------- quit
     def shut_down(self) -> None:
         self.timer.stop()
+        if self.recording.busy:
+            self.recording.stop(wait_s=record.CLOSE_WAIT_S)
+        if self.full is not None:
+            self.full.close()
         self.preview.stop()
         self._close_controls()
         self.load_job.stop(15000)
         self.download_job.stop(1000)
 
     def closeEvent(self, event) -> None:  # noqa: N802 (Qt override)
+        """A recording is stopped and its file written before the app ends (record.CLOSE_WAIT_S at most)."""
         save_geometry(self, self.settings.qsettings)
+        if self.recording.busy:
+            self.recording.stop(wait_s=record.CLOSE_WAIT_S)
+        if self.full is not None:
+            self.full.close()
         self.preview.stop()
         super().closeEvent(event)

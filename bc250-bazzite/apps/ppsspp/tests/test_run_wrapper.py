@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import os
 import subprocess
+import tempfile
 import sys
 from pathlib import Path
 
@@ -36,7 +37,11 @@ H: Handlers=event14 js1
 """
 STEAM_ONLY = DS4_AND_STEAM.split("\n\n")[-1]
 STEAM_LIST = "0x054C/0x09CC"
-GAME = "/games/a b.iso"
+# A game file that is there (the wrapper refuses one that is not, 03-11-2026), with a space in its path as before.
+_GAMES = Path(tempfile.mkdtemp(prefix="bc250-wrapper-")) / "games"
+GAME = str(_GAMES / "a b.iso")
+Path(GAME).parent.mkdir(parents=True)
+Path(GAME).write_text("")
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="a bash script for Linux")
 
@@ -115,3 +120,18 @@ def test_not_installed(tmp_path):
     done = subprocess.run(["/bin/bash", str(WRAPPER), GAME], capture_output=True, text=True,
                           env={**os.environ, "XDG_DATA_HOME": str(tmp_path)})
     assert done.returncode == 1 and "PPSSPP is not installed" in done.stderr
+
+
+def test_a_game_that_is_gone_is_not_started(tmp_path):
+    """A shortcut to a game renamed, moved or deleted (owner, 03-11-2026): the emulator is not started, the wrapper
+    says so and ends with 1, so Steam sees the game end; without the app's Python, the words go to stderr alone."""
+    appimage = tmp_path / "data" / "bc250-ppsspp-manager" / "emulator" / "current" / "ppsspp.AppImage"
+    appimage.parent.mkdir(parents=True)
+    appimage.write_text('#!/bin/sh\necho started\n')
+    appimage.chmod(0o755)
+    gone = tmp_path / "Games" / "gone.iso"
+    done = subprocess.run(["/bin/bash", str(WRAPPER), "--fullscreen", str(gone)], capture_output=True, text=True,
+                          env={**os.environ, "XDG_DATA_HOME": str(tmp_path / "data"), "HOME": str(tmp_path),
+                               "BC250_INPUT_DEVICES": str(tmp_path / "none")})
+    assert done.returncode == 1 and "started" not in done.stdout
+    assert "This game is no longer there" in done.stderr and str(gone) in done.stderr

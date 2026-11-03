@@ -26,6 +26,9 @@ def test_the_defaults_and_a_change(qapp, tmp_path):
     assert not widgets["fxaa"].isChecked() and not widgets["vsync"].isChecked() and widgets["fastboot"].isChecked()
     assert widgets["volume"].value() == 100 and widgets["vibration"].isChecked()
     assert not widgets["player2"].isChecked()
+    assert widgets["deadzone"].currentText() == "Off" and widgets["stick_range"].currentText() == "PCSX2's (1.33)"
+    assert widgets["osd_size"].currentText() == "Normal" and not widgets["savestate"].isChecked()
+    assert not widgets["fps"].isChecked() and not widgets["load"].isChecked()
     assert not pcsx2_settings.settings_path(tmp_path).exists()                   # reading made no file
     widgets["resolution"].setCurrentIndex(widgets["resolution"].findData("3"))
     assert page.status.text() == "Internal resolution: 3x (1080p)."
@@ -38,6 +41,12 @@ def test_the_defaults_and_a_change(qapp, tmp_path):
     assert ini.get("SPU2/Output", "StandardVolume") == "60"
     assert ini.get("Pad1", "LargeMotorScale") == "0" and ini.get("Pad1", "SmallMotorScale") == "0"
     assert ini.get("Pad1", "Cross") == "Keyboard/K"                              # the rest of the file as it was
+    widgets["osd_size"].setCurrentIndex(widgets["osd_size"].findData("150"))
+    assert page.status.text() == "Text size: Larger."
+    widgets["load"].setChecked(True)
+    assert page.status.text() == "Show CPU and GPU use: on."
+    ini = _ini(tmp_path)
+    assert ini.get("EmuCore/GS", "OsdScale") == "150" and ini.get("EmuCore/GS", "OsdShowGPU") == "true"
 
 
 def test_player_2(qapp, tmp_path):

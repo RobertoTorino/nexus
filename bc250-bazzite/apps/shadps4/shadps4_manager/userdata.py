@@ -8,7 +8,7 @@ input_config/global.ini. Both JSON files are written as shadPS4 writes them (ind
 end), and every other setting in them stays as it is; never while shadPS4 runs, which writes its own copy back.
 
 System modules are libraries of the PS4's firmware (.sprx), which the app cannot ship: they come from the user's own
-console. shadPS4 0.20.0 loads these from the folder when a game asks for them (sysmodule_internal.cpp); for some it
+console. shadPS4 0.21.0 loads these from the folder when a game asks for them (sysmodule_internal.cpp); for some it
 has its own version and does without, for the others a game that needs one does not run without it."""
 
 from __future__ import annotations
@@ -23,14 +23,14 @@ from bc250_core.platform import data_home
 
 from .shadnet import DEFAULT_SERVER
 
-# shadPS4 0.20.0 has no replacement of its own for these.
+# shadPS4 0.21.0 has no replacement of its own for these (libSceVideoNativeExtEssential since 0.21.0).
 NEEDED = (
     "libSceUlt.sprx", "libSceAvPlayerStreaming.sprx", "libSceJpegDec.sprx", "libSceJson.sprx", "libSceJson2.sprx",
     "libSceCesCs.sprx", "libSceAt9Enc.sprx", "libSceAudiodec.sprx", "libSceAudiodecCpu.sprx",
     "libSceAudiodecCpuDdp.sprx", "libSceAudiodecCpuM4aac.sprx", "libSceAudiodecCpuDtsHdLbr.sprx",
     "libSceAudiodecCpuHevag.sprx", "libSceFreeTypeOt.sprx", "libSceFreeTypeOl.sprx", "libSceFreeTypeOptOl.sprx",
-    "libSceBeisobmf.sprx", "libSceBemp2sys.sprx", "libSceWkFontConfig.sprx", "libScePsmKitSystem.sprx",
-    "libSceDepth.sprx", "libScePadTracker.sprx", "libSceMoveTracker.sprx", "libSceXml.sprx",
+    "libSceBeisobmf.sprx", "libSceBemp2sys.sprx", "libSceVideoNativeExtEssential.sprx", "libSceWkFontConfig.sprx",
+    "libScePsmKitSystem.sprx", "libSceDepth.sprx", "libScePadTracker.sprx", "libSceMoveTracker.sprx", "libSceXml.sprx",
 )
 # Used when they are there; shadPS4 has its own version of these.
 OPTIONAL = (
@@ -121,6 +121,37 @@ def install_modules(source: Path, target: Path) -> list[str]:
             shutil.copy2(module, destination)
         copied.append(module.name)
     return copied
+
+
+def sync_modules(source: Path, target: Path) -> list[str]:
+    """The system modules (.sprx) put in *source*, the app's Modules folder (Games/PS4/Modules; owner, 03-11-2026:
+    drop them there, the app takes care of them), copied into shadPS4's module folder *target* when they are new or
+    changed (another size or time; copy2 keeps the time), so an unchanged folder copies nothing. Returns the names
+    copied, sorted; [] when *source* is missing or holds no module. OSError when a file cannot be read or written."""
+    try:
+        found = sorted((entry for entry in source.iterdir() if entry.is_file() and entry.suffix.lower() == ".sprx"),
+                       key=lambda entry: entry.name.casefold())
+    except OSError:
+        return []
+    copied = []
+    for module in found:
+        destination = target / module.name
+        try:
+            there, here = destination.stat(), module.stat()
+            if there.st_size == here.st_size and int(there.st_mtime) == int(here.st_mtime):
+                continue
+        except OSError:
+            pass
+        target.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(module, destination)
+        copied.append(module.name)
+    return copied
+
+
+def set_game_folders(home: Path, folders: list[Path]) -> None:
+    """shadPS4's game folders (General.install_dirs in config.json) made the app's own folders, so shadPS4's own
+    window lists the games too. UserDataError as write_config; the caller makes sure shadPS4 does not run."""
+    write_config(home, "General", "install_dirs", [{"enabled": True, "path": str(folder)} for folder in folders])
 
 
 # --- Play time -------------------------------------------------------------------------------------------------

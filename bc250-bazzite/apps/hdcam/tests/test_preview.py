@@ -7,6 +7,9 @@ from __future__ import annotations
 import errno
 import time
 
+from PyQt6.QtCore import QRect, QRectF, Qt
+from PyQt6.QtGui import QColor, QImage
+
 from usb_hdcam import preview, v4l2
 from usb_hdcam.modes import Mode
 
@@ -115,3 +118,62 @@ def test_no_mode(qapp):
     view = preview.Preview(open_camera=lambda node: FakeCamera())
     view.failed.connect(failed.append)
     assert not view.start("/dev/video1", None) and failed and not view.running
+
+
+def test_the_zoom_steps_and_stops_at_its_ends():
+    look = preview.Look()
+    assert look.zoom == 1.0 and look.label == "1x" and not look.step_zoom(-1)
+    assert look.step_zoom(1) and look.zoom == 1.5 and look.label == "1.5x"
+    for _ in range(10):
+        look.step_zoom(1)
+    assert look.zoom == 4.0 and not look.step_zoom(1)
+    look.gray = True
+    assert look.label == "4x, black and white"
+
+
+def test_the_zoomed_part_moves_within_the_picture():
+    look = preview.Look()
+    assert not look.pan(0.1, 0) and (look.x, look.y) == (0.5, 0.5)       # at 1x nothing moves
+    look.step_zoom(1)                                                     # 2x: a third of the width each side
+    look.step_zoom(1)
+    assert look.pan(1, 0) and look.x == 0.75 and look.y == 0.5             # as far right as it goes
+    assert not look.pan(1, 0)
+    assert look.area(1920, 1080) == QRect(960, 270, 960, 540)
+    look.step_zoom(-1)
+    look.step_zoom(-1)
+    assert look.area(1920, 1080) == QRect(0, 0, 1920, 1080) and (look.x, look.y) == (0.5, 0.5)
+
+
+def test_shown_cuts_and_grays(qapp):
+    image = QImage(400, 200, QImage.Format.Format_RGB32)
+    image.fill(QColor("red"))
+    look = preview.Look()
+    assert preview.shown(image, look).size() == image.size()
+    look.step_zoom(1)
+    cut = preview.shown(image, look)
+    assert (cut.width(), cut.height()) == (267, 133) and cut.pixelColor(0, 0) == QColor("red")
+    look.gray = True
+    gray = preview.shown(image, look)
+    assert gray.format() == QImage.Format.Format_Grayscale8 and gray.width() == 267
+
+
+def test_a_drag_is_a_part_of_the_picture_drawn(qapp):
+    from PyQt6.QtCore import QPointF
+    from PyQt6.QtGui import QMouseEvent
+    view = preview.PictureView()
+    view.resize(400, 300)
+    dragged, wheeled = [], []
+    view.dragged.connect(lambda dx, dy: dragged.append((round(dx, 2), round(dy, 2))))
+    view.wheeled.connect(wheeled.append)
+    image = QImage(200, 100, QImage.Format.Format_RGB32)
+    view.show_image(image)
+    assert view.drawn() == QRectF(0, 50, 400, 200)                       # whole, as large as fits, centered
+    press = QMouseEvent(QMouseEvent.Type.MouseButtonPress, QPointF(100, 100), Qt.MouseButton.LeftButton,
+                        Qt.MouseButton.LeftButton, Qt.KeyboardModifier.NoModifier)
+    move = QMouseEvent(QMouseEvent.Type.MouseMove, QPointF(140, 120), Qt.MouseButton.LeftButton,
+                       Qt.MouseButton.LeftButton, Qt.KeyboardModifier.NoModifier)
+    view.mousePressEvent(press)
+    view.mouseMoveEvent(move)
+    assert dragged == [(0.1, 0.1)]
+    view.clear("No picture.")
+    assert view.image is None and view.text == "No picture." and view.drawn().isEmpty()

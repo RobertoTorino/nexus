@@ -18,7 +18,7 @@ from PyQt6.QtWidgets import QLabel, QMessageBox
 from conftest import make_bios, make_disc
 
 from bc250_core import steam
-from pcsx2_manager import LOGO_PATH, catalogue, emulator, pcsx2_settings, shortcuts, style
+from pcsx2_manager import library, LOGO_PATH, catalogue, emulator, pcsx2_settings, shortcuts, style
 from pcsx2_manager.games import Game
 from pcsx2_manager import main_window as window_module
 from pcsx2_manager.main_window import MainWindow
@@ -29,14 +29,14 @@ from pcsx2_manager.userdata import bios_dir
 def folders(tmp_path):
     pcsx2 = tmp_path / "PCSX2"
     pcsx2.mkdir()
-    make_disc(tmp_path / "games" / "Two.iso", "SLUS_000.02")
+    make_disc(tmp_path / "Games" / "PS2" / "Two.iso", "SLUS_000.02")       # the app's own folder
     config = tmp_path / "Steam" / "userdata" / "1000" / "config"
     config.mkdir(parents=True)
     run = tmp_path / "bin" / "bc250-pcsx2-run"
     run.parent.mkdir()
     run.write_text("#!/bin/sh\n")
     return {"home": tmp_path / "emulator", "pcsx2_home": pcsx2, "steam_dir": tmp_path / "Steam", "run": run,
-            "log_path": tmp_path / "app.log"}
+            "log_path": tmp_path / "app.log", "user_home": tmp_path, "drives": lambda: []}
 
 
 @pytest.fixture(autouse=True)
@@ -76,10 +76,11 @@ def test_before_installing(qapp, folders):
     assert window.pill.text() == "Not installed"
     assert "Not installed" in window.emulator_state.text() and "No BIOS" in window.bios_state.text()
     assert window.install_pill.isEnabled() and not window.remove_pill.isEnabled()
-    assert window.bios_pill.isEnabled() and not window.bios_remove_pill.isEnabled()      # no dump to remove
+    assert not window.bios_remove_pill.isEnabled()                               # no dump to remove
     assert window.refresh_pill.isEnabled()
-    assert window.folder_pill.isEnabled() and not window.forget_pill.isEnabled()
-    assert window.table.rowCount() == 0                                          # no folders chosen yet
+    assert window.table.rowCount() == 1                                          # the game in Games/PS2
+    for name in ("bios_pill", "folder_pill", "forget_pill"):
+        assert not hasattr(window, name), name                               # gone (owner, 03-11-2026): fixed folders
     assert [window.tabs.tabText(i) for i in range(window.tabs.count())] == ["Your games", "Settings",
                                                                              "Memory cards", "Log"]
     assert [b.caption.text() for b in window.header_pills[1:]] == ["PCSX2 version", "Your games",
@@ -90,14 +91,13 @@ def test_before_installing(qapp, folders):
     # The action pills (owner, 24-10-2026): what it is for in large type, what the pill does under it, the header
     # pills' size and all one width.
     assert [(p.value.text(), p.caption.text()) for p in window.actions] == [
-        ("PCSX2", "Install"), ("PCSX2", "Uninstall"), ("BIOS", "Install"), ("BIOS", "Uninstall"),
-        ("Games", "Add folder"), ("Games", "Remove folder")]
+        ("PCSX2", "Install"), ("PCSX2", "Uninstall"), ("BIOS", "Uninstall")]
     assert all(p.sizeHint().height() == window.refresh_pill.sizeHint().height() for p in window.actions)
     window.show()                                       # spread over the width: all one width, no gap at the end
     window.centralWidget().layout().activate()
     assert len({p.width() for p in window.actions}) <= 2            # equal but for a pixel of rounding
     assert abs(window.tabs.tabBar().tabRect(0).height() - window.install_pill.height()) <= 2   # tabs as big
-    assert window.forget_pill.geometry().right() >= window.tabs.geometry().right() - 1
+    assert window.bios_remove_pill.geometry().right() >= window.tabs.geometry().right() - 1
     assert len({p.width() for p in window.header_pills}) <= 2       # the header's pills spread the same way
     assert window.time_box.geometry().right() >= window.tabs.geometry().right() - 1
     window.place_states()                               # the states end at the middle of the last pill (owner)
@@ -117,7 +117,7 @@ def test_installed_with_bios_and_games(qapp, folders, tmp_path):
     assert window.pill.text() == "No BIOS" and not hasattr(window, "bios_box")       # the BIOS line says which
     assert "pcsx2.net" in window.bios_state.text()
     make_bios(bios_dir(folders["pcsx2_home"]))
-    window.add_folder(tmp_path / "games")
+    window.refresh()
     assert window.pill.text() == "Ready"
     assert "SCPH-70012.bin" in window.bios_state.text()
     assert str(bios_dir(folders["pcsx2_home"])) not in window.bios_state.text()    # the name, not the path
@@ -132,7 +132,7 @@ def test_installed_with_bios_and_games(qapp, folders, tmp_path):
         "In Steam", "Game title", "Id", "Type", "File name", "Screen setting"]        # owner, 24-10-2026
     assert window.table.item(0, 2).text() == "SLUS-00002"
     assert window.table.item(0, 4).text() == "Two.iso"                          # the file's name; the path as tip
-    assert window.table.item(0, 4).toolTip() == str(tmp_path / "games" / "Two.iso")
+    assert window.table.item(0, 4).toolTip() == str(tmp_path / "Games" / "PS2" / "Two.iso")
     assert not window.steam_button.isEnabled()                                  # nothing to change
     window.close()
 
@@ -168,7 +168,7 @@ def test_the_play_time_in_the_header(qapp, folders, tmp_path):
     (folders["pcsx2_home"] / "inis" / "playtime.dat").write_text(
         f"{'SLUS-00002':<32} {'1482':<20} {'1792814410':<20}\n{'SLUS-99999':<32} {'2400':<20} {'1792814849':<20}\n"
         f"{'SLUS-00000':<32} {'0':<20} {'0':<20}\nbroken line\n")
-    window.add_folder(tmp_path / "games")
+    window.refresh()
     assert window.time_box.value.text() == "1 h 4 min"
     tip = window.time_box.toolTip().splitlines()
     assert tip[1].startswith("SLUS-99999: 40 min, last played ") and tip[2].startswith("Two: 24 min 42 s, last ")
@@ -185,31 +185,34 @@ def test_pcsx2_updated_itself(qapp, folders):
     window.close()
 
 
-def test_a_bios_is_chosen_and_removed(qapp, folders, tmp_path):
-    """Install under BIOS copies the dump with the files beside it into PCSX2's bios folder and PCSX2 uses it; a
-    dump already there is not copied again; Remove takes a dump out with its files and PCSX2 uses another; nothing
-    is written while PCSX2 runs."""
+def test_the_bios_is_taken_from_the_apps_folder(qapp, folders, tmp_path, monkeypatch):
+    """The dump put in Games/PS2/BIOS is copied into PCSX2's bios folder with the files beside it, once PCSX2 is
+    installed and while it does not run (owner, 03-11-2026), and PCSX2 uses it; an unchanged folder copies nothing
+    again. Remove takes a dump out of PCSX2's folder and of Games/PS2/BIOS, with its files."""
+    monkeypatch.setenv("HOME", str(tmp_path))
     _install(folders["home"])
-    dumps = tmp_path / "my-bios"
-    dump = make_bios(dumps, "SCPH10000.BIN")
+    dumps = library.bios_home(tmp_path)
+    make_bios(dumps, "SCPH10000.BIN")
     (dumps / "SCPH10000.MEC").write_bytes(b"\0" * 4)
     (dumps / "other.txt").write_text("not the dump's")
     running = [True]
     window = _window(folders, pcsx2_running=lambda: running[0])
-    window.choose_bios(dump)
-    assert window.running.text() == window_module.RUNNING
-    assert not bios_dir(folders["pcsx2_home"]).exists()
+    assert not bios_dir(folders["pcsx2_home"]).exists() and window.pill.text() == "No BIOS"
+    assert "<b>~/Games/PS2/BIOS</b>" in window.bios_state.text()
     running[0] = False
-    window.choose_bios(dump)
+    window.refresh()
     folder = bios_dir(folders["pcsx2_home"])
     assert sorted(p.name for p in folder.iterdir()) == ["SCPH10000.BIN", "SCPH10000.MEC", "SCPH10000.nvm"]
     assert pcsx2_settings.chosen_bios(folders["pcsx2_home"]) == "SCPH10000.BIN"
-    assert window.running.text() == "PCSX2 uses SCPH10000.BIN now."
-    assert "PCSX2 uses <b>SCPH10000.BIN</b>" in window.bios_state.text() and window.pill.text() == "No games"
-    second = make_bios(folder, "SCPH-70004.BIN")                                # already in the folder
-    window.choose_bios(second)
-    assert pcsx2_settings.chosen_bios(folders["pcsx2_home"]) == "SCPH-70004.BIN"
-    assert "also there: SCPH10000.BIN" in window.bios_state.text()
+    assert ("BIOS taken from ~/Games/PS2/BIOS into PCSX2: SCPH10000.BIN, SCPH10000.MEC, SCPH10000.nvm."
+            in window.output.toPlainText())
+    assert "PCSX2 uses <b>SCPH10000.BIN</b>" in window.bios_state.text() and window.pill.text() == "Ready"
+    said = window.output.toPlainText().count("BIOS taken from")
+    window.refresh()
+    assert window.output.toPlainText().count("BIOS taken from") == said         # unchanged: nothing copied again
+    second = make_bios(folder, "SCPH-70004.BIN")                                # one put in PCSX2's folder by hand
+    window.refresh()
+    assert "also there: SCPH-70004.BIN" in window.bios_state.text()
     running[0] = True
     window.remove_bios(second)
     assert window.running.text() == window_module.RUNNING and second.is_file()
@@ -218,9 +221,9 @@ def test_a_bios_is_chosen_and_removed(qapp, folders, tmp_path):
     assert sorted(p.name for p in folder.iterdir()) == ["SCPH10000.BIN", "SCPH10000.MEC", "SCPH10000.nvm"]
     assert window.running.text() == ("SCPH-70004.BIN, SCPH-70004.nvm removed from PCSX2's BIOS folder. "
                                      "PCSX2 uses SCPH10000.BIN now.")
-    assert pcsx2_settings.chosen_bios(folders["pcsx2_home"]) == "SCPH10000.BIN"    # prepare() picked it
     window.remove_bios(folder / "SCPH10000.BIN")
     assert list(folder.iterdir()) == [] and window.running.text().endswith("PCSX2 has no BIOS now.")
+    assert sorted(p.name for p in dumps.iterdir()) == ["other.txt"]             # the copy in Games/PS2/BIOS went too
     assert window.pill.text() == "No BIOS" and not window.bios_remove_pill.isEnabled()
     window.close()
 
@@ -254,9 +257,8 @@ def test_pcsx2s_titles_name_the_games(qapp, folders, tmp_path):
     current = emulator.appimage(folders["home"]).parent
     (current / catalogue.GAME_INDEX).write_text('SLUS-00002:\n  name: "Two Of Them"\n  region: "NTSC-U"\n')
     (current / catalogue.PATCHES).write_bytes(_patches({}))
-    make_disc(tmp_path / "games" / "SLUS_000.07.Seven.iso", "SLUS_000.07")
+    make_disc(tmp_path / "Games" / "PS2" / "SLUS_000.07.Seven.iso", "SLUS_000.07")
     window = _window(folders)
-    window.add_folder(tmp_path / "games")
     titles = [window.table.item(r, 1).text() for r in range(window.table.rowCount())]
     assert titles == ["Seven", "Two Of Them"]
     assert sorted(shortcuts.names(window.games).values()) == ["[PS2] Seven", "[PS2] Two Of Them"]
@@ -280,15 +282,14 @@ def test_each_games_screen(qapp, folders, tmp_path):
     _install(folders["home"])
     program = b"\x7fELF" + bytes(range(60))
     crc = elf_crc(program)
-    make_disc(tmp_path / "games" / "Wide.iso", "SLUS_000.08", program=program)
-    make_disc(tmp_path / "games" / "Two.iso", "SLUS_000.02", program=b"\x7fELF two")    # no patch for this one
-    (tmp_path / "games" / "Packed.chd").write_bytes(b"MComprHD")
+    make_disc(tmp_path / "Games" / "PS2" / "Wide.iso", "SLUS_000.08", program=program)
+    make_disc(tmp_path / "Games" / "PS2" / "Two.iso", "SLUS_000.02", program=b"\x7fELF two")    # no patch for this one
+    (tmp_path / "Games" / "PS2" / "Packed.chd").write_bytes(b"MComprHD")
     current = emulator.appimage(folders["home"]).parent
     (current / catalogue.GAME_INDEX).write_text("")
     (current / catalogue.PATCHES).write_bytes(_patches({f"SLUS-00008_{crc:08X}.pnach": "[Widescreen 16:9]\n"}))
     running = [False]
     window = _window(folders, pcsx2_running=lambda: running[0])
-    window.add_folder(tmp_path / "games")
     rows = {window.table.item(r, 1).text(): r for r in range(window.table.rowCount())}
     wide, two, packed = (window.table.cellWidget(rows[t], 5) for t in ("Wide", "Two", "Packed"))
     assert [wide.itemText(i) for i in range(wide.count())] == ["Original", "Widescreen", "Fill screen"]
@@ -307,32 +308,30 @@ def test_each_games_screen(qapp, folders, tmp_path):
     window.close()
 
 
-def test_game_folders_added_and_removed(qapp, folders, tmp_path):
+def test_the_apps_own_game_folders(qapp, folders, tmp_path, monkeypatch):
+    """The games are put in Games/PS2 in the home folder, made with its BIOS folder when the app opens, and in
+    Games/PS2 on a removable drive that has one (owner, 03-11-2026: fixed folders, no folder choosing); no folder is
+    chosen or remembered any more."""
+    monkeypatch.setenv("HOME", str(tmp_path))
     _install(folders["home"])
-    make_disc(tmp_path / "more" / "One.iso", "SLUS_000.01")
-    window = _window(folders)
-    window.add_folder(tmp_path / "more")
-    assert window.running.text() == "more is a game folder now: 1 game(s) in it."
-    assert "<b>more</b>" in window.folders_state.text() and str(tmp_path) not in window.folders_state.text()
-    assert window.folders_state.toolTip() == str(tmp_path / "more")             # the whole path as the tip
-    assert [window.table.item(r, 1).text() for r in range(1)] == ["One"]
-    assert window.table.item(0, 2).text() == "SLUS-00001" and window.forget_pill.isEnabled()
-    window.add_folder(tmp_path / "more")                                        # once only
-    assert window.folders == [tmp_path / "more"]
-    window.close()
-    window = _window(folders)                                                   # remembered
-    assert window.folders == [tmp_path / "more"] and window.games_box.value.text() == "1"
-    window.forget_folder(tmp_path / "more")
-    assert window.folders == [] and window.table.rowCount() == 0 and not window.forget_pill.isEnabled()
-    assert window.running.text() == "more is no longer a game folder; its games stay where they are."
+    make_disc(tmp_path / "sd" / "Games" / "PS2" / "Deep" / "One.iso", "SLUS_000.01")
+    (tmp_path / "stick").mkdir()                                                # a drive without the folder
+    window = _window({**folders, "drives": lambda: [tmp_path / "sd", tmp_path / "stick", tmp_path / "gone"]})
+    assert window.folders == [tmp_path / "Games" / "PS2", tmp_path / "sd" / "Games" / "PS2"]
+    assert (tmp_path / "Games" / "PS2" / "BIOS").is_dir()                      # made for the dump
+    assert [window.table.item(r, 1).text() for r in range(2)] == ["One", "Two"]
+    assert window.games_box.value.text() == "2"
+    text = window.folders_state.text()
+    assert "<b>~/Games/PS2</b>" in text and "<b>~/sd/Games/PS2</b>" in text and "<b>~/Games/PS2/BIOS</b>" in text
+    assert str(tmp_path) not in text and window.folders_state.toolTip() == "~/Games/PS2\n~/sd/Games/PS2"
+    assert "folders" not in window.settings.DEFAULTS
     window.close()
 
 
 def test_a_compressed_image_is_marked(qapp, folders, tmp_path):
     _install(folders["home"])
-    (tmp_path / "games" / "Lumines.chd").write_bytes(b"MComprHD")
+    (tmp_path / "Games" / "PS2" / "Lumines.chd").write_bytes(b"MComprHD")
     window = _window(folders)
-    window.add_folder(tmp_path / "games")
     row = [window.table.item(r, 1).text() for r in range(window.table.rowCount())].index("Lumines")
     assert window.table.item(row, 3).text() == "CHD" and "not looked into" in window.table.item(row, 3).toolTip()
     window.close()
@@ -358,7 +357,6 @@ def test_steam_added_and_taken_out(qapp, folders, monkeypatch, tmp_path):
     monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: QMessageBox.StandardButton.Yes)
     closed = []
     window = _window(folders, closed=closed)
-    window.add_folder(tmp_path / "games")
     window.table.item(0, 0).setCheckState(Qt.CheckState.Checked)
     assert window.steam_button.isEnabled()
     add, remove = window.steam_plan()
@@ -378,13 +376,38 @@ def test_steam_added_and_taken_out(qapp, folders, monkeypatch, tmp_path):
     window.close()
 
 
+def test_update_steam_reads_the_file_back(qapp, folders, monkeypatch, tmp_path):
+    """Right after the write, while Steam is closed, Steam's file is read back (owner, 03-11-2026): a game written
+    but not found is named on the status line, and a file that cannot be read back is said."""
+    _install(folders["home"])
+    monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: QMessageBox.StandardButton.Yes)
+    real = shortcuts.in_steam
+    answers: list = []
+    window = _window(folders)
+    window.table.item(0, 0).setCheckState(Qt.CheckState.Checked)
+    monkeypatch.setattr(shortcuts, "in_steam", lambda folder: answers.pop() if answers else real(folder))
+    answers.append({})                                          # what the read-back finds; refresh reads for real
+    window.on_update_steam()
+    _wait(window, qapp)
+    assert "Read back from Steam's file, 0 of the 1 game(s) are there: not Two." in window.running.text()
+    assert list(real(folders["steam_dir"]).values()) == ["[PS2] Two"]                  # written all the same
+    def broken(folder):
+        raise OSError("unreadable")
+    window.table.item(0, 0).setCheckState(Qt.CheckState.Unchecked)
+    monkeypatch.setattr(shortcuts, "in_steam", lambda folder: broken(folder) if answers and answers.pop() else real(folder))
+    answers.append(True)
+    window.on_update_steam()
+    _wait(window, qapp)
+    assert "Steam's file could not be read back: unreadable" in window.running.text()
+    window.close()
+
+
 def test_a_shortcut_named_before_the_system_prefix_is_renamed(qapp, folders, monkeypatch, tmp_path):
     """A shortcut named by the title alone, as before "[PS2] ": Update Steam is on for it and renames it, with
     its play time; the artwork under its old number goes."""
     _install(folders["home"])
     monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: QMessageBox.StandardButton.Yes)
     window = _window(folders)
-    window.add_folder(tmp_path / "games")
     game = window.games[0]
     old = steam.Change(shortcuts.entry(game, game.title, folders["run"], Path("/i.png")), shortcuts.for_game(game),
                        {"p": b"P"})
@@ -419,7 +442,6 @@ def test_no_steam_game_mode_or_no_wrapper(qapp, folders, monkeypatch, tmp_path):
     _install(folders["home"])
     monkeypatch.setattr(steam, "find_steam", lambda: None)                       # None: looked up, and not found
     window = _window({**folders, "steam_dir": None})
-    window.add_folder(tmp_path / "games")
     window.table.item(0, 0).setCheckState(Qt.CheckState.Checked)
     assert not window.steam_button.isEnabled() and "never started" in window.steam_button.toolTip()
     window.close()
@@ -497,10 +519,8 @@ def test_the_log_tab(qapp, folders, tmp_path):
                              "the mouse pointer hidden in a game, player 1 on the first controller, Select + Start "
                              "quits a game.")
     assert lines[1][:19].count("-") == 2 and lines[1][10] == " "                 # DD-MM-YYYY HH:MM:SS
-    window.add_folder(tmp_path / "games")
     window.say("Steam was not changed: no Steam", ok=False)
     lines = window.output.toPlainText().splitlines()
-    assert lines[-2].endswith(" INFO games is a game folder now: 1 game(s) in it.")
     assert lines[-1].endswith(" ERROR Steam was not changed: no Steam") and "c62828" in window.running.styleSheet()
     assert str(folders["log_path"]) in window.tabs.widget(3).findChildren(QLabel)[0].text()
     window.settings_page.widgets["fps"].setChecked(True)
@@ -601,7 +621,6 @@ def test_covers_with_the_suites_key(qapp, folders, monkeypatch, tmp_path):
     monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: QMessageBox.StandardButton.Yes)
     key = tmp_path / "key"
     window = _window(folders, covers_home=tmp_path / "covers", covers_get=get, covers_key=key)
-    window.add_folder(tmp_path / "games")
     window.table.item(0, 0).setCheckState(Qt.CheckState.Checked)
     window.on_update_steam()
     _wait(window, qapp)
@@ -714,4 +733,39 @@ def test_unmute_bazzites_volume(qapp, folders, tmp_path):
     qapp.processEvents()
     assert page.status.text().startswith("pactl is not installed") and "c62828" in page.status.styleSheet()
     assert page.unmute_button.isVisible() and page.unmute_button.isEnabled()
+    window.close()
+
+
+def test_remove_game_asks_what_to_keep(qapp, folders, monkeypatch, tmp_path):
+    """Remove game… (owner, 03-11-2026): the keep window lists what would go; Cancel deletes nothing, Delete marked
+    deletes the rows still ticked off the window's thread and says what went and what stayed."""
+    from PyQt6.QtWidgets import QDialog
+    from bc250_core.keep_dialog import KeepDialog
+    _install(folders["home"])
+    window = _window(folders)
+    assert not window.remove_game_button.isEnabled()                            # nothing chosen yet
+    window.table.selectRow(0)
+    game = window.chosen()
+    assert game.title == "Two" and window.remove_game_button.isEnabled()
+    target = tmp_path / "Games" / "PS2" / "Two.iso"
+    assert target.exists()
+    seen = []
+    monkeypatch.setattr(KeepDialog, "exec", lambda self: (seen.append(self.items), QDialog.DialogCode.Rejected)[1])
+    window.on_remove_game()
+    assert [item.label for item in seen[0]] == ["Two.iso (the disc image)"] and target.exists()
+    assert window.running.text() == "Nothing was deleted."
+
+    def keep_it(self):
+        self.items[0].delete = False
+        return QDialog.DialogCode.Accepted
+    monkeypatch.setattr(KeepDialog, "exec", keep_it)
+    window.on_remove_game()
+    _wait(window, qapp)
+    assert target.exists() and window.running.text() == "Two: deleted nothing. Kept: Two.iso (the disc image)."
+    window.table.selectRow(0)
+    monkeypatch.setattr(KeepDialog, "exec", lambda self: QDialog.DialogCode.Accepted)
+    window.on_remove_game()
+    _wait(window, qapp)
+    assert not target.exists() and window.running.text() == "Two: deleted Two.iso (the disc image)."
+    assert "Two" not in [window.table.item(r, 1).text() for r in range(window.table.rowCount())]
     window.close()

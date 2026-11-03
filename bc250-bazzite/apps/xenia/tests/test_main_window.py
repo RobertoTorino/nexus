@@ -23,14 +23,15 @@ from xenia_manager.main_window import MainWindow
 
 @pytest.fixture
 def folders(tmp_path):
-    make_iso(tmp_path / "games" / "One.iso")
-    make_package(tmp_path / "games", "Two")
+    make_iso(tmp_path / "Games" / "XBOX360" / "One.iso")                        # the app's own folder
+    make_package(tmp_path / "Games" / "XBOX360", "Two")
     config = tmp_path / "Steam" / "userdata" / "1000" / "config"
     config.mkdir(parents=True)
     run = tmp_path / "bin" / "bc250-xenia-run"
     run.parent.mkdir()
     run.write_text("#!/bin/sh\n")
-    return {"home": tmp_path / "emulator", "steam_dir": tmp_path / "Steam", "run": run}
+    return {"home": tmp_path / "emulator", "steam_dir": tmp_path / "Steam", "run": run, "user_home": tmp_path,
+            "drives": lambda: []}
 
 
 def _install(home: Path) -> None:
@@ -64,16 +65,16 @@ def test_before_installing(qapp, folders):
     assert "Not installed. Install downloads Xenia e6cd2e4" in window.emulator_state.text()
     assert window.install_button.isEnabled() and not window.remove_button.isEnabled()
     assert not window.xenia_button.isEnabled() and not window.play_button.isEnabled()
-    assert window.folder_button.isEnabled() and not window.forget_button.isEnabled()
-    assert window.table.rowCount() == 0                                          # no game folder yet
+    for name in ("folder_button", "forget_button"):
+        assert not hasattr(window, name), name                               # gone (owner, 03-11-2026): fixed folders
+    assert window.table.rowCount() == 2                                          # the games in Games/XBOX360
     window.close()
 
 
 def test_installed_with_games(qapp, folders, tmp_path):
     _install(folders["home"])
     window = _window(folders)
-    assert window.pill.text() == "No games"
-    window.add_folder(tmp_path / "games")
+    assert window.pill.text() == "Ready"                                       # the games in Games/XBOX360
     assert window.pill.text() == "Ready" and window.emulator_box.value.text() == emulator.VERSION
     assert "experimental on Linux" in window.emulator_state.text()
     assert window.games_box.value.text() == "2" and window.steam_box.value.text() == "0"
@@ -97,18 +98,19 @@ def test_an_older_build_is_offered_the_pinned_one(qapp, folders):
     window.close()
 
 
-def test_game_folders_added_and_removed(qapp, folders, tmp_path):
-    window = _window(folders)
-    window.add_folder(tmp_path / "games")
-    assert window.running.text() == f"{tmp_path / 'games'} is a game folder now: 2 game(s) in it."
-    assert _titles(window) == ["One", "Two"] and window.forget_button.isEnabled()
-    window.add_folder(tmp_path / "games")                                         # once only
-    assert window.folders == [tmp_path / "games"]
-    window.close()
-    window = _window(folders)                                                     # remembered
-    assert window.folders == [tmp_path / "games"] and window.games_box.value.text() == "2"
-    window.forget_folder(tmp_path / "games")
-    assert window.folders == [] and window.table.rowCount() == 0 and not window.forget_button.isEnabled()
+def test_the_apps_own_game_folders(qapp, folders, tmp_path, monkeypatch):
+    """The games are put in Games/XBOX360 in the home folder, made when the app opens, and in Games/XBOX360 on a
+    removable drive that has one (owner, 03-11-2026: fixed folders, no folder choosing); no folder is chosen or
+    remembered any more."""
+    monkeypatch.setenv("HOME", str(tmp_path))
+    _install(folders["home"])
+    (tmp_path / "sd" / "Games" / "XBOX360").mkdir(parents=True)
+    (tmp_path / "stick").mkdir()                                                # a drive without the folder
+    window = _window({**folders, "drives": lambda: [tmp_path / "sd", tmp_path / "stick", tmp_path / "gone"]})
+    assert window.folders == [tmp_path / "Games" / "XBOX360", tmp_path / "sd" / "Games" / "XBOX360"]
+    text = window.folders_state.text()
+    assert "<code>~/Games/XBOX360</code>" in text and "<code>~/sd/Games/XBOX360</code>" in text
+    assert str(tmp_path) not in text and "folders" not in window.settings.DEFAULTS
     window.close()
 
 
@@ -121,7 +123,7 @@ def test_install_runs_off_the_window(qapp, folders, monkeypatch):
     assert not window.install_button.isEnabled()                                  # busy
     _wait(window, qapp)
     assert window.running.text() == f"Xenia {emulator.VERSION} is installed."
-    assert window.version == emulator.VERSION and window.pill.text() == "No games"
+    assert window.version == emulator.VERSION and window.pill.text() == "Ready"
     window.close()
 
 
@@ -150,14 +152,13 @@ def test_play_and_xenias_window(qapp, folders, tmp_path):
     folders["run"].write_text(f'#!/bin/sh\necho "$@" >> "{log}"\n')
     folders["run"].chmod(0o755)
     window = _window(folders)
-    window.add_folder(tmp_path / "games")
     window.table.selectRow(0)
     window.on_play()
     window.on_open_xenia()
     deadline = time.monotonic() + 10
     while (not log.exists() or len(log.read_text().splitlines()) < 2) and time.monotonic() < deadline:
         time.sleep(0.01)
-    assert sorted(log.read_text().splitlines()) == sorted([str(tmp_path / "games" / "One.iso"), ""])
+    assert sorted(log.read_text().splitlines()) == sorted([str(tmp_path / "Games" / "XBOX360" / "One.iso"), ""])
     assert window.running.text() == "Started One."
     window.close()
 
@@ -167,7 +168,6 @@ def test_game_mode_added_and_taken_out(qapp, folders, tmp_path, monkeypatch):
     monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: QMessageBox.StandardButton.Yes)
     closed = []
     window = _window(folders, closed=closed)
-    window.add_folder(tmp_path / "games")
     window.table.item(1, 0).setCheckState(Qt.CheckState.Checked)
     assert window.steam_button.isEnabled()
     add, remove = window.steam_plan()
@@ -200,7 +200,6 @@ def test_a_shortcut_of_a_game_no_longer_found_is_taken_out(qapp, folders):
 
 def test_games_need_xenia_for_game_mode(qapp, folders, tmp_path):
     window = _window(folders)
-    window.add_folder(tmp_path / "games")
     window.table.item(0, 0).setCheckState(Qt.CheckState.Checked)
     window.on_update_steam()
     assert "Install Xenia first" in window.running.text() and not window.worker.running
@@ -211,7 +210,6 @@ def test_no_steam_game_mode_or_no_wrapper(qapp, folders, tmp_path, monkeypatch):
     _install(folders["home"])
     monkeypatch.setattr(steam, "find_steam", lambda: None)                       # None: looked up, and not found
     window = _window({**folders, "steam_dir": None})
-    window.add_folder(tmp_path / "games")
     window.table.item(0, 0).setCheckState(Qt.CheckState.Checked)
     assert not window.steam_button.isEnabled() and "never started" in window.steam_button.toolTip()
     window.close()
@@ -237,7 +235,7 @@ def test_the_blue_look(qapp, folders):
     assert window.install_button.property("primary") and window.steam_button.property("primary")
     assert style.BLUE in window.emulator_box.styleSheet()
     assert f"color:{style.BLUE}" in window.emulator_state.text()                   # the release link
-    steps = (window.install_button, window.remove_button, window.folder_button, window.forget_button)
+    steps = (window.install_button, window.remove_button)
     assert len({(b.width(), b.height()) for b in steps}) == 1                       # one size, padding included
     window.close()
 
@@ -286,7 +284,6 @@ def test_covers_with_the_suites_key(qapp, folders, monkeypatch, tmp_path):
     monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: QMessageBox.StandardButton.Yes)
     key = tmp_path / "key"
     window = _window(folders, covers_home=tmp_path / "covers", covers_get=get, covers_key=key)
-    window.add_folder(tmp_path / "games")
     row = _titles(window).index("Two")
     window.table.item(row, 0).setCheckState(Qt.CheckState.Checked)
     window.on_update_steam()
@@ -311,4 +308,62 @@ def test_covers_with_the_suites_key(qapp, folders, monkeypatch, tmp_path):
         assert image.pixelColor(image.width() // 2, image.height() // 2).name() == "#0000ff", suffix
     assert QImage(str(grid / f"{number}_logo.png")).size() == picture.size()
     assert window.no_cover == set() and not window.steam_button.isEnabled()
+    window.close()
+
+
+def test_remove_game_asks_what_to_keep(qapp, folders, monkeypatch, tmp_path):
+    """Remove game… (owner, 03-11-2026): the keep window lists what would go; Cancel deletes nothing, Delete marked
+    deletes the rows still ticked off the window's thread and says what went and what stayed."""
+    from PyQt6.QtWidgets import QDialog
+    from bc250_core.keep_dialog import KeepDialog
+    _install(folders["home"])
+    window = _window(folders)
+    assert not window.remove_game_button.isEnabled()                            # nothing chosen yet
+    window.table.selectRow(0)
+    game = window.chosen()
+    assert game.title == "One" and window.remove_game_button.isEnabled()
+    target = tmp_path / "Games" / "XBOX360" / "One.iso"
+    assert target.exists()
+    seen = []
+    monkeypatch.setattr(KeepDialog, "exec", lambda self: (seen.append(self.items), QDialog.DialogCode.Rejected)[1])
+    window.on_remove_game()
+    assert [item.label for item in seen[0]] == ["One.iso (the game)"] and target.exists()
+    assert window.running.text() == "Nothing was deleted."
+
+    def keep_it(self):
+        self.items[0].delete = False
+        return QDialog.DialogCode.Accepted
+    monkeypatch.setattr(KeepDialog, "exec", keep_it)
+    window.on_remove_game()
+    _wait(window, qapp)
+    assert target.exists() and window.running.text() == "One: deleted nothing. Kept: One.iso (the game)."
+    window.table.selectRow(0)
+    monkeypatch.setattr(KeepDialog, "exec", lambda self: QDialog.DialogCode.Accepted)
+    window.on_remove_game()
+    _wait(window, qapp)
+    assert not target.exists() and window.running.text() == "One: deleted One.iso (the game)."
+    assert "One" not in [window.table.item(r, 1).text() for r in range(window.table.rowCount())]
+    window.close()
+
+
+def test_the_settings_window(qapp, folders, monkeypatch, tmp_path):
+    """Settings… opens Xenia's settings in the app (core's settings_page): Xenia's defaults while there is no file,
+    a change written into Xenia's own folder at once, and nothing while Xenia runs."""
+    from bc250_core.settings_page import SettingsDialog
+    xenia_home = tmp_path / "Xenia"
+    running = [False]
+    window = _window(folders, xenia_home=xenia_home, xenia_running=lambda: running[0])
+    opened = []
+    monkeypatch.setattr(SettingsDialog, "exec", lambda dialog: opened.append(dialog))
+    window.settings_button.click()
+    page = opened[0].page
+    assert opened[0].windowTitle() == "Xenia settings" and page.widgets["gpu"].currentText() == "Automatic (Vulkan)"
+    assert page.widgets["letterbox"].isChecked() and page.widgets["license"].currentData() == "0"
+    page.widgets["scale"].setCurrentIndex(page.widgets["scale"].findData("2"))
+    text = (xenia_home / emulator.CONFIG).read_text()
+    assert "draw_resolution_scale_x = 2" in text and "draw_resolution_scale_y = 2" in text
+    assert page.status.text() == "Resolution scale: 2x (1440p)."
+    running[0] = True
+    page.widgets["mute"].setChecked(True)
+    assert "mute" not in (xenia_home / emulator.CONFIG).read_text() and "Xenia is running" in page.status.text()
     window.close()

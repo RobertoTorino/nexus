@@ -1,3 +1,8 @@
+Changelog: 03-11-2026 20:54:32
+
+Fixed. No user name on the screen or in the log (owner, 03-11-2026: the suite's privacy rule, as the Windows Portable
+Suite's apps keep it since 29-10-2026): your home and the Steam Deck's on the Deck step show your home folder as ~ (core's platform.private).
+
 Changelog: 03-11-2026 16:16:30
 
 Release 1.0.1.

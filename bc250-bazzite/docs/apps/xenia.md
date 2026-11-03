@@ -28,8 +28,17 @@ The window has two steps, then the list of games.
 1. **Xenia**: **Install** downloads Xenia (about 18 MB) and checks it against the checksum of the build the app was
    tried with before installing it. **Remove** takes it out again; Xenia's own folder, with its settings, saves and
    installed content, stays.
-2. **Game folders**: the folders the app looks for games in. **Add folder…** adds one, **Remove folder…** stops
-   looking in one (the games stay where they are). A game may sit up to six folders deep.
+2. **Game folder**: where the app looks for games, `~/Games/XBOX360` and a removable drive's `Games/XBOX360` (see
+   [Where your games go](#where-your-games-go)); nothing is chosen or browsed to. A game may sit up to six folders
+   deep.
+
+### Where your games go
+
+The app has a folder of its own, which it makes when it opens; you never choose or browse to a folder:
+`~/Games/XBOX360`. Put your games there, or in folders in it, and they show in the table. On a USB drive or an SD
+card, make a folder `Games/XBOX360` on it, and the app looks there too while the drive is mounted (under
+`/run/media` or `/media`, as Bazzite mounts it). Folders added in the app before (**Add folder…**, until version
+1.0) are no longer looked in: move those games to `~/Games/XBOX360`.
 
 The table lists every game found:
 
@@ -44,8 +53,35 @@ The table lists every game found:
 
 The **Title ID** column shows the game's ID (4D5307E6), from the `.xex` or the package, where the app can read it.
 
+**Remove game…** deletes the chosen game from the disk. A window first lists what would go, a row each with its
+size: the game's file or folder; for a Games on Demand or Arcade title in the console's layout a row per part of its title ID folder (the game, its title updates, its add-ons), so the add-ons can stay, and its Steam shortcut when it is in Steam. Every row is ticked; untick what you want to keep, then
+**Delete marked**; **Cancel** deletes nothing. Xenia's content folder, with the saves stay. A game the app will not delete (one at the top of a
+drive, or in a folder that holds another game) is said so under the tabs: delete it by hand.
+
 - **Play** (or a double-click) starts the chosen game on the desktop, in a window.
 - **Xenia settings** opens Xenia's own window, with its settings, profiles and installed content.
+- **Settings…** opens the settings that matter for playing, in the app: see [Settings](#settings).
+
+### Settings
+
+**Settings…** opens a window with Xenia's settings that matter for playing, written into Xenia's own settings file
+(`xenia-canary.config.toml` in its folder) the moment you change one; Xenia reads it when it starts. A game's own
+settings file in Xenia comes before these; everything else is in Xenia's own window (**Xenia settings**).
+
+- **Picture**: **Graphics** (Vulkan, the Linux build's; Automatic picks it), the **Resolution scale** (a multiple
+  of the game's own picture, mostly 1280 × 720; a higher one asks much more of the GPU, and breaks some games),
+  **Anti-aliasing** (FXAA smooths jagged edges after the game has drawn), **Scaling and sharpening** (Bilinear,
+  Contrast Adaptive Sharpening or FidelityFX Super Resolution), **Keep the picture's shape** (bars where the
+  screen's shape differs; off, the picture is stretched) and **VSync**.
+- **Speed**: the **Frame limit** (As the game is 60 with VSync on) and **Readback resolve** (for a game that shows
+  wrong or missing effects: Fast reads them a frame late, Full exactly and slowly).
+- **Sound**: the **Sound output** (SDL, the Linux build's; Automatic picks it) and **Mute**.
+- **Console**: the **Arcade license** (for an XBOX Live Arcade game: Full version unlocks the whole game where its
+  package has the trial alone licensed; All licenses also its other content), **Achievement messages** and **Guide
+  button to the game** (the controller's guide button reaches the game; off, Steam keeps it).
+
+Each setting shows what Xenia's settings file holds, or Xenia's own default while there is no file or line; a value
+set in Xenia that the app does not offer is shown as it is. Nothing is written while Xenia runs.
 
 ### Game Mode
 
@@ -105,6 +141,14 @@ So the run wrapper undoes it: while a real controller is connected, Xenia reads 
 Steam's virtual one (USB ID `28DE:11FF`) out. Without a real controller, as on a Steam Deck whose own controls exist
 only as Steam's virtual controller, the wrapper leaves Steam's choice as it is.
 
+### A game renamed, moved or gone
+
+A game renamed or moved after it was put in Steam keeps its mark: the app knows each game in Steam by its code (or,
+without one, its file's size), so on **Refresh** it finds the game again under its new name, ticked, and says so
+under the tabs; **Update Steam** then takes the old shortcut out and puts the game in under its new name. A
+shortcut to a game that is no longer there (deleted, or on a drive that is not in) does not start Xenia: a
+window says which file is missing and what to do, and closes by itself, so Steam sees the game end.
+
 ### Steam's overlay on the desktop
 
 Xenia's window goes through X11 (XWayland on the KDE desktop of Bazzite) by itself, so Steam's overlay sees it on
@@ -117,7 +161,8 @@ the desktop too, and the run wrapper has nothing to change for it.
 | The app | `~/.local/share/bc250-xenia-manager/app` |
 | Xenia | `~/.local/share/bc250-xenia-manager/emulator` |
 | Xenia's settings, saves and installed content | `~/.local/share/Xenia` (Xenia's own folder) |
-| The app's settings, with the game folders | `~/.config/bc250-xenia-manager` |
+| Your games | `~/Games/XBOX360` (the app's own folder), and `Games/XBOX360` on a removable drive |
+| The app's settings | `~/.config/bc250-xenia-manager` |
 | The Game Mode shortcuts | Steam's `shortcuts.vdf` and `grid` folder, per Steam user |
 | The pictures found on SteamGridDB | `~/.local/share/bc250-xenia-manager/covers` |
 | Launchers | `~/.local/bin/bc250-xenia-manager`, `~/.local/bin/bc250-xenia-run` |

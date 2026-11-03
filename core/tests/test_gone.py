@@ -1,43 +1,15 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The play mode's screen for a game that is no longer there (gone.py): which file, without the user's name, what to
-do, A, B or a tap on A Close closing it, and closing by itself."""
+"""The screen for a game that is no longer there: the BC250 suite's desktop wording (gone.py; owner, 03-11-2026)."""
 
 from __future__ import annotations
 
 from pathlib import Path
 
-from bc250_core import gone, portable
-from bc250_core.gamepad import Gamepad
+from bc250_core import gone
 
 
-class NoPad:
-    def events(self):
-        return []
-
-    def close(self) -> None:
-        pass
-
-
-def test_the_gone_screen_says_which_game_and_closes_on_a_b_or_a_tap(qapp, monkeypatch):
-    portable.pin_scale((1280, 720))
-    monkeypatch.setenv("USERPROFILE", str(Path.home()))
-    game = Path.home() / "Games" / "XBOX360" / "Halo 3 [NTSC].iso"
-    for close in ("accept", "back", "tap"):
-        window = gone.GoneWindow("Xenia Manager", "4.1.0", game, Gamepad(source_factory=NoPad))
-        window.resize(1280, 720)
-        window.show()
-        qapp.processEvents()
-        text = window.text.text()
-        assert "Halo 3 [NTSC].iso" in text and Path.home().name not in text.replace("Halo 3", "")
-        assert "Open Xenia Manager" in text and "LT Refresh" in text and "Update Steam" in text
-        assert window.legend.items == [("A", "Close"), portable.EXIT]
-        assert window.timer.isActive() and window.timer.interval() == gone.CLOSE_MS
-        if close == "tap":
-            window.legend.entries["A"].pressed.emit()
-        else:
-            window.act(close)
-        assert not window.isVisible()
-    window = gone.GoneWindow("Xenia Manager", "4.1.0", game, Gamepad(source_factory=NoPad))
-    window.show()
-    window.timer.timeout.emit()                                     # no button pressed: it closes by itself
-    assert not window.isVisible()
+def test_the_desktop_message_names_the_file_and_what_to_do(tmp_path, monkeypatch):
+    monkeypatch.setenv("HOME", str(tmp_path))
+    text = gone.desktop_message("PCSX2 Manager", tmp_path / "Games" / "PS2" / "Two.iso")
+    assert text.startswith("~/Games/PS2/Two.iso\n\n") and str(tmp_path) not in text
+    assert "Open PCSX2 Manager: Refresh finds the game again" in text and "Update Steam" in text

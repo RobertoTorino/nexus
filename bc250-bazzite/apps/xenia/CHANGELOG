@@ -1,3 +1,56 @@
+Changelog: 03-11-2026 22:09:14
+
+Added. Settings…, a window with Xenia's settings that matter for playing, in the app (owner, 03-11-2026, from the
+Windows Portable Suite's Xenia Manager; core's settings_page over xenia_settings): graphics (Vulkan, the Linux
+build's), the resolution scale, anti-aliasing, scaling and sharpening, the picture's shape and VSync; the frame
+limit and readback resolve; the sound output (SDL) and mute; the arcade license, achievement messages and the
+guide button. Each is read from xenia-canary.config.toml in Xenia's folder (build e6cd2e4's default while it names
+none) and written one value at a time in Xenia's own layout, the rest kept, never while Xenia runs
+(emulator.running, new). The wiki says so.
+
+Changelog: 03-11-2026 21:47:23
+
+Added. A game renamed or moved after it was put in Steam keeps its mark when the app can tell it is the same game
+(its code, else its file's size; core's renamed, the app's settings remember what each game in Steam is): Refresh,
+or the next start, shows it under its new name, ticked and said so under the tabs, and Update Steam puts it in
+Steam under that name and takes the old shortcut out (owner, 03-11-2026, from the Windows Portable Suite's managers,
+01-11-2026). A shortcut to a game that is no longer there no longer starts Xenia with a file that is not
+there: the run wrapper says so and ends with 1, and shows a message box of the app's own (--gone, core's gone),
+which closes by itself, so Steam sees the game end. The wiki says so.
+
+Changelog: 03-11-2026 21:37:27
+
+Added. Remove game… on Your games (owner, 03-11-2026, from the Windows Portable Suite's managers, 30-10-2026 and
+01-11-2026: a game that no longer plays goes, files and all, and before deleting anything the user decides what to
+keep; core's keep and keep_dialog): a window lists what of the chosen game would go, a row each with its size, every
+row ticked; unticking a row keeps it, Delete marked deletes the rows still ticked off the window's thread (read-only
+files too) and takes its Steam shortcut out through Steam when that row is ticked, and Cancel deletes nothing
+(library.removal_items(); Xenia's content folder, with the saves never among the rows). A game the app will not delete is said so.
+The wiki says so.
+
+Changelog: 03-11-2026 21:17:50
+
+Breaking. No folder is chosen or browsed to any more (owner, 03-11-2026, from the Windows Portable Suite's Xenia
+Manager, 30-10-2026: fixed folders, no folder selecting): the buttons Add folder… and Remove folder…, with their
+windows, are gone, and the folders added before are no longer looked in (the settings' folders key is dropped;
+library.py). Added. The app's own game folder: ~/Games/XBOX360, made when the window opens, and Games/XBOX360 on each
+removable drive that has one (mounted under /run/media or /media; core's drives), always looked in
+(library.fixed()). The Game folder line names the folders (the home folder as ~). The wiki has a chapter for it,
+Where your games go.
+
+Changelog: 03-11-2026 21:04:45
+
+Fixed. Update Steam reads Steam's file back right after writing it, while Steam is still closed, and says on the
+status line and in the output when a game it wrote is not found there, by name (owner, 03-11-2026, from the Windows
+Portable Suite's managers, 29-10-2026: "it still says 0 games in Steam"), so the message tells whether the file or
+the reading is at fault; a failed read of the file is said too instead of passed over. Nothing changes when the
+shortcuts read back as written.
+
+Changelog: 03-11-2026 20:54:32
+
+Fixed. No user name on the screen or in the log (owner, 03-11-2026: the suite's privacy rule, as the Windows Portable
+Suite's apps keep it since 29-10-2026): the game folders on the first step, and every message under the tabs and in the output show your home folder as ~ (core's platform.private).
+
 Changelog: 03-11-2026 16:16:30
 
 Release 1.0.1.

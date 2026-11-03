@@ -146,6 +146,9 @@ def test_the_settings_of_the_tab(tmp_path):
     assert values["blending"] == "1" and values["fmv"] == "Off" and values["nointerlace"] == "false"
     assert values["fxaa"] == "false" and values["fastboot"] == "true" and values["volume"] == "100"
     assert values["vibration"] == "true" and not settings_path(tmp_path).exists()
+    assert values["savestate"] == "false" and values["deadzone"] == "0" and values["stick_range"] == "1.33"
+    assert values["fps"] == "false" and values["load"] == "false" and values["osd_size"] == "100"
+    assert {s.group for s in pcsx2_settings.SETTINGS if s.key in {"fps", "speed", "inputs"}} == {"On screen"}
     pcsx2_settings.write_setting(tmp_path, by_key["renderer"], "14")
     ini = IniFile(settings_path(tmp_path).read_text())
     assert ini.get("EmuCore/GS", "Renderer") == "14" and ini.get("Hotkeys", "OpenPauseMenu") == "Keyboard/Escape"
@@ -155,6 +158,11 @@ def test_the_settings_of_the_tab(tmp_path):
     assert pcsx2_settings.read_setting(tmp_path, by_key["vibration"]) == "false"
     pcsx2_settings.write_setting(tmp_path, by_key["vibration"], "true")
     assert IniFile(settings_path(tmp_path).read_text()).get("Pad1", "LargeMotorScale") == "1"
+    pcsx2_settings.write_setting(tmp_path, by_key["load"], "true")       # one switch, two keys
+    ini = IniFile(settings_path(tmp_path).read_text())
+    assert ini.get("EmuCore/GS", "OsdShowCPU") == "true" and ini.get("EmuCore/GS", "OsdShowGPU") == "true"
+    pcsx2_settings.write_setting(tmp_path, by_key["deadzone"], "0.2")
+    assert IniFile(settings_path(tmp_path).read_text()).get("Pad1", "Deadzone") == "0.2"
     for setting in pcsx2_settings.SETTINGS:                 # every choice names a value, and the default is one
         if setting.kind == pcsx2_settings.CHOICE:
             assert values[setting.key] in {v for v, _ in setting.choices}, setting.key

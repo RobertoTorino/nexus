@@ -249,3 +249,16 @@ def test_whether_rpcs3_runs(tmp_path):
     (proc / "11" / "stat").write_text("11 (AppRun.wrapped) S 1 1\n")
     (proc / "12" / "stat").write_text("12 (rpcs3) X 1 1\n")
     assert not userdata.rpcs3_running(proc)
+
+
+def test_the_version_a_pup_holds(tmp_path):
+    """pup_version reads file 0x100 of a PUP as RPCS3 does (owner, 03-11-2026); anything else gives ""."""
+    import struct
+    text = b"4.92\n"
+    header = userdata.PUP_MAGIC + struct.pack(">QQQQQ", 1, 1, 2, 48 + 64, len(text) + 4)
+    entries = struct.pack(">QQQQ", 0x101, 48 + 64, 4, 0) + struct.pack(">QQQQ", userdata.PUP_VERSION, 48 + 64 + 4, len(text), 0)
+    pup = tmp_path / "PS3UPDAT.PUP"
+    pup.write_bytes(header + entries + b"abcd" + text)
+    assert userdata.pup_version(pup) == "4.92"
+    (tmp_path / "no.pup").write_bytes(b"not a pup at all")
+    assert userdata.pup_version(tmp_path / "no.pup") == "" and userdata.pup_version(tmp_path / "gone.pup") == ""

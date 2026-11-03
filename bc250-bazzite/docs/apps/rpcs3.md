@@ -20,7 +20,7 @@ what others found.
 - **The PS3's firmware** (`PS3UPDAT.PUP`), the PS3's system software. RPCS3 needs it to start any game.
   The app cannot ship it: download the firmware from
   [PlayStation's firmware page](https://www.playstation.com/en-us/support/hardware/ps3/system-software/), then
-  pick it with **Firmware Install**.
+  put it in `~/Games/PS3/Firmware`: the app gives it to RPCS3.
 - **Steam**, started at least once: a game is started from Steam.
 - About 80 MB for RPCS3 itself. Its firmware, saves, settings and installed games go in `~/.config/rpcs3`, its
   shader cache in `~/.cache/rpcs3`.
@@ -36,11 +36,12 @@ tooltip. **Refresh** reads everything again. Beside the title, next to the app's
 from Steam reads the controller that is connected when it starts, so switch yours on, or press its PS button to
 wake it, before starting a game. When Steam starts a game without one, the app also says so in a desktop
 notification. A controller that switches off during a game (its idle timer, its battery) is not picked up again
-by this RPCS3 build when it comes back: quit the game and start it again (see [Controllers](#controllers)). Under the introduction, which links to **RPCS3's release notes** and to this wiki, a row of five
-pills does the setting up, each with what it is for on top and what it does under it: **RPCS3 Install** and
-**RPCS3 Uninstall**, **Firmware Install**, **Games Install** and **Games Add folder**. Four lines below them say
-where each stands, short, with more in their tooltips, and then come three tabs: **Your games**, **Settings**
-and **Log**.
+by this RPCS3 build when it comes back: quit the game and start it again (see [Controllers](#controllers)). Under the introduction, which links to **RPCS3's release notes** and to this wiki, a row of three
+pills does the setting up, each with what it is for on top and what it does under it: **RPCS3 Install**, **RPCS3
+Uninstall** and **Games Install**. Your disc games and the firmware go into the app's own folder (see [Where your
+games go](#where-your-games-go)); nothing is chosen or browsed to for them. Four lines below the pills say where
+each stands, short, with more in their tooltips, and then come three tabs: **Your games**, **Settings** and
+**Log**.
 
 - **RPCS3**: the version installed (the build is in the tooltip; when this version of the app brings another
   build, the tooltip and the log say so, and **Install** puts it in). **Install** downloads RPCS3 from GitHub
@@ -48,13 +49,13 @@ and **Log**.
   installed.
   **Uninstall** takes it out again; RPCS3's own folder, with the firmware, your saves, settings and installed
   games, stays.
-- **Firmware**: which version of the PS3's firmware RPCS3 has (the folder's path is in the tooltip). **Install**
-  asks for the `PS3UPDAT.PUP` you downloaded and gives it to RPCS3, which installs it in its own window. Close
-  that window when it is done; the line shows the new version.
-- **Disc games**: the folders the app looks for disc games in, by name (the paths and how many disc games were
-  found are in the tooltip). **Add folder** adds one; clicking a folder's name in the line stops looking in it,
-  after a question (the games stay where they are). Games in subfolders are found too, up to five folders deep,
-  so one folder with a folder per game is enough.
+- **Firmware**: which version of the PS3's firmware RPCS3 has (the folder's path is in the tooltip). Put the
+  `PS3UPDAT.PUP` you downloaded in `~/Games/PS3/Firmware`: once RPCS3 is installed, the app gives it to RPCS3 by
+  itself, when the window opens and on **Refresh**, and RPCS3 installs it in its own window. Close that window
+  when it is done; the line shows the new version. A file whose version RPCS3 has already is left alone, and so
+  is a file RPCS3 refused, until it changes. The file stays in the folder.
+- **Disc games**: where the app looks for disc games, `~/Games/PS3` and a removable drive's `Games/PS3`, each
+  game in a folder of its own. Games in subfolders are found too, up to five folders deep.
 - **PKG games**: RPCS3's games folder, `dev_hdd0/game/` within RPCS3's own folder, while a game is installed in
   it, or **—** while none is (the whole path and the count are in the tooltip). **Install** asks for the folder
   with your `.pkg` files and has RPCS3 install them without opening its window: the `.rap` (or `.edat`) license of
@@ -63,6 +64,19 @@ and **Log**.
   the line under the tabs says what came, and the line and the table follow. The files in the folder itself are
   taken, not those in its subfolders. A game's update is a package too: RPCS3 uses it when it starts the game,
   and the table lists the game once.
+
+### Where your games go
+
+The app has folders of its own, which it makes when it opens; you never choose or browse to a folder for them:
+
+- `~/Games/PS3`: put your disc games there, each in a folder of its own, and they show on **Your games**. On a
+  USB drive or an SD card, make a folder `Games/PS3` on it, and the app looks there too while the drive is
+  mounted (under `/run/media` or `/media`, as Bazzite mounts it).
+- `~/Games/PS3/Firmware`: put `PS3UPDAT.PUP` there, and the app gives it to RPCS3.
+
+Packages (`.pkg`, with their `.rap` or `.edat` licenses) are still installed from a folder you choose with
+**Games Install**; its window opens in `~/Games/PS3`. Folders added in the app before (**Add folder**, until
+version 3.1) are no longer looked in: move those games to `~/Games/PS3`.
 
 ### Your games
 
@@ -81,6 +95,11 @@ PS3/
     ├── PS3_DISC.SFB
     └── PS3_GAME/          PARAM.SFO, ICON0.PNG, USRDIR/EBOOT.BIN, ...
 ```
+
+**Remove game…** deletes the chosen game from the disk. A window first lists what would go, a row each with its
+size: a disc game's folder and its update in RPCS3's games folder, or a package game's folder there, and its Steam shortcut when it is in Steam. Every row is ticked; untick what you want to keep, then
+**Delete marked**; **Cancel** deletes nothing. The saves and the licenses stay. A game the app will not delete (one at the top of a
+drive, or in a folder that holds another game) is said so under the tabs: delete it by hand.
 
 #### Screen setting
 
@@ -240,6 +259,14 @@ matched by name and serial); a later version of the app brings a build with it, 
 board. Until then, quit the game (Steam's menu, or **Share + Options** and **Exit Game**) and start it again from
 Steam with the controller on.
 
+### A game renamed, moved or gone
+
+A game renamed or moved after it was put in Steam keeps its mark: the app knows each game in Steam by its code (or,
+without one, its file's size), so on **Refresh** it finds the game again under its new name, ticked, and says so
+under the tabs; **Update Steam** then takes the old shortcut out and puts the game in under its new name. A
+shortcut to a game that is no longer there (deleted, or on a drive that is not in) does not start RPCS3: a
+window says which file is missing and what to do, and closes by itself, so Steam sees the game end.
+
 ### Steam's overlay on the desktop
 
 The KDE desktop of Bazzite is a Wayland session. RPCS3 opens its windows through Wayland when it can, but Steam on
@@ -264,7 +291,8 @@ through X11 already.
 | Each game's screen setting | `~/.config/rpcs3/custom_configs/config_<Id>.yml`, RPCS3's own |
 | RPCS3's shader cache and its own log (`RPCS3.log`, read for what an install did) | `~/.cache/rpcs3` |
 | The volume Bazzite remembers for RPCS3 (read only) | `~/.local/state/wireplumber/stream-properties`, WirePlumber's |
-| The app's settings, with the game folders | `~/.config/bc250-rpcs3-manager` |
+| Your disc games and the firmware file | `~/Games/PS3` and `~/Games/PS3/Firmware` (the app's own folder), and `Games/PS3` on a removable drive |
+| The app's settings | `~/.config/bc250-rpcs3-manager` |
 | The app's log | `~/.local/share/bc250-rpcs3-manager/bc250-rpcs3-manager.log` |
 | The Steam shortcuts | Steam's `shortcuts.vdf` and `grid` folder, per Steam user |
 | The covers found on SteamGridDB | `~/.local/share/bc250-rpcs3-manager/covers` |

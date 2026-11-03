@@ -1,3 +1,72 @@
+Changelog: 03-11-2026 22:21:03
+
+Added. Extract PKG takes several packages at once (owner, 03-11-2026, as the Windows Portable Suite's, 29-10-2026):
+more than one chosen in Browse, dropped together on the window or opened together from the file manager (the menu
+entry takes several files; a launch of the app with several packages, too). The first is loaded as before, the
+rest wait under the PKG line, the games first, then their updates and add-on content, and Extract PKG unpacks the
+loaded one and then the waiting ones, one after the other, into the same output folder, the log running on;
+Preview Only, the rename and the comparisons work on the loaded package alone. The wiki says so.
+
+Changelog: 03-11-2026 21:47:23
+
+Added. A game renamed or moved after it was put in Steam keeps its mark when the app can tell it is the same game
+(its code, else its file's size; core's renamed, the app's settings remember what each game in Steam is): Refresh,
+or the next start, shows it under its new name, ticked and said so under the tabs, and Update Steam puts it in
+Steam under that name and takes the old shortcut out (owner, 03-11-2026, from the Windows Portable Suite's managers,
+01-11-2026). A shortcut to a game that is no longer there no longer starts shadPS4 with a file that is not
+there: the run wrapper says so and ends with 1, and shows a message box of the app's own (--gone, core's gone),
+which closes by itself, so Steam sees the game end. The wiki says so.
+
+Changelog: 03-11-2026 21:37:27
+
+Added. Remove game… on Your games (owner, 03-11-2026, from the Windows Portable Suite's managers, 30-10-2026 and
+01-11-2026: a game that no longer plays goes, files and all, and before deleting anything the user decides what to
+keep; core's keep and keep_dialog): a window lists what of the chosen game would go, a row each with its size, every
+row ticked; unticking a row keeps it, Delete marked deletes the rows still ticked off the window's thread (read-only
+files too) and takes its Steam shortcut out through Steam when that row is ticked, and Cancel deletes nothing
+(library.removal_items(); the saves, the play time and the package never among the rows). A game the app will not delete is said so.
+The wiki says so.
+
+Changelog: 03-11-2026 21:27:37
+
+Breaking. No folder is chosen or browsed to for the games and the system modules any more (owner, 03-11-2026, from
+the Windows Portable Suite's shadPS4 Manager, 30-10-2026: fixed folders, no folder selecting): the pills Modules
+Install and Games Add folder, with their windows, and the links in the Game folders line that took a folder out of
+shadPS4's are gone (library.py). Added. The app's own game folder: ~/Games/PS4, made with ~/Games/PS4/Modules when
+the window opens, and Games/PS4 on each removable drive that has one (mounted under /run/media or /media; core's
+drives), always looked in (library.fixed()); the app makes them shadPS4's own game folders too (config.json's
+install_dirs, userdata.set_game_folders()), so shadPS4's window lists the games, not while shadPS4 runs. The system
+modules put in ~/Games/PS4/Modules are copied into shadPS4's module folder by the app itself when the window opens
+and on Refresh, only what is new or changed (userdata.sync_modules()); the status line says how many it took. The
+Game folders line names the folders (the home folder as ~), the Sys modules tooltip says where to put the
+modules. The wiki has a chapter for it, Where your games go.
+
+Changelog: 03-11-2026 21:04:45
+
+Fixed. Update Steam reads Steam's file back right after writing it, while Steam is still closed, and says on the
+status line and in the output when a game it wrote is not found there, by name (owner, 03-11-2026, from the Windows
+Portable Suite's managers, 29-10-2026: "it still says 0 games in Steam"), so the message tells whether the file or
+the reading is at fault; a failed read of the file is said too instead of passed over. Nothing changes when the
+shortcuts read back as written.
+
+Changelog: 03-11-2026 20:54:32
+
+Fixed. No user name on the screen or in the log (owner, 03-11-2026: the suite's privacy rule, as the Windows Portable
+Suite's apps keep it since 29-10-2026): the Log tab's line that names the log file, every message under the tabs and in the Log tab, and every line of the log file (core's applog with private=True) show your home folder as ~ (core's platform.private).
+
+Changelog: 03-11-2026 20:40:12
+
+Added. The app installs shadPS4 0.21.0 (30-10-2026), the newest stable release, in place of 0.20.0 (owner,
+03-11-2026, as the Windows Portable Suite's shadPS4 Manager since 31-10-2026: the suite follows the emulators'
+release cycle). With 0.20.0 installed the shadPS4 line's tooltip and the log say that this version of the app brings
+0.21.0 and Install puts it in, as before for a new pin; what the player made stays in shadPS4's own folder. The zip
+(shadps4-linux-sdl-0.21.0.zip, 32 MB) matches the SHA-256 GitHub publishes for it and still holds the one AppImage.
+shadPS4 0.21.0 needs one more system module from the console, libSceVideoNativeExtEssential.sprx
+(sysmodule_internal.cpp), so the Modules line and its tooltip count 25 that shadPS4 cannot do without. The rest of
+what the app relies on is unchanged from 0.20.0: shadPS4's own folder, the -UPDATE, -patch and -mods folders,
+shadNet's protocol 1, its default server and the sign-in, the settings keys and their defaults (0.21.0 adds two the
+app leaves alone), the users, the play time and the quit hotkeys.
+
 Changelog: 03-11-2026 16:16:30
 
 Release 3.0.1.

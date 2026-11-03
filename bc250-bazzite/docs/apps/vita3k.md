@@ -41,9 +41,13 @@ The window has three steps, then the list of games.
    of the app was tried with before installing it. **Remove** takes it out again; Vita3K's own folders, with the
    firmware, your games, saves and settings, stay.
 2. **Firmware**: which parts of the PS Vita's firmware Vita3K has: the system software, the font package and the
-   preinstalled apps. **Install firmware…** asks for a `PSP2UPDAT.PUP` you downloaded and has Vita3K install it,
-   without a window; the step then says which part it was.
-3. **Games**: how many games Vita3K has installed. **Install game…** installs one of yours:
+   preinstalled apps. Put the `PSP2UPDAT.PUP` files you downloaded in `~/Games/Vita/Firmware` (each in a folder of
+   its own there if you like, since Sony names all three the same): once Vita3K is installed, the app gives them to
+   Vita3K by itself, the largest first, one after the other, when the window opens and on **Refresh**; the step
+   then says which part each was. A file is given once as it is, also one Vita3K could not use; a file you replace
+   is given again. The files stay in the folder.
+3. **Games**: how many games Vita3K has installed. **Install game…** installs one of yours; its window opens in
+   `~/Games/Vita`, the app's own folder (also on a USB drive or an SD card with a `Games/Vita` folder on it):
     - **From a file**: a `.vpk` or `.zip` is handed to Vita3K, which installs it and then starts it in its own
       window; a `.pkg` asks for the game's zRIF license key, and Vita3K installs it without a window.
     - **From a dumped folder**: Vita3K installs the folder's game and starts it in its own window.
@@ -53,8 +57,38 @@ The window has three steps, then the list of games.
 The table lists every game Vita3K has installed: its title and ID (PCSB…, PCSE…) from the game's own files, its
 version and its folder in Vita3K's storage (`ux0/app`).
 
+**Remove game…** deletes the chosen game from the disk. A window first lists what would go, a row each with its
+size: the game in Vita3K's storage, and its update and extra content when they are there, and its Steam shortcut when it is in Steam. Every row is ticked; untick what you want to keep, then
+**Delete marked**; **Cancel** deletes nothing. The saves stay. A game the app will not delete (one at the top of a
+drive, or in a folder that holds another game) is said so under the tabs: delete it by hand.
+
 - **Play** (or a double-click) starts the chosen game on the desktop, alone in a window. Closing the window ends it.
 - **Vita3K settings** opens Vita3K's own window, with its settings, its controls and its game list.
+- **Settings…** opens the settings that matter for playing, in the app: see [Settings](#settings).
+
+### Settings
+
+**Settings…** opens a window with Vita3K's settings that matter for playing, written into Vita3K's own settings
+file (`config.yml`) the moment you change one. A game's own settings in Vita3K come before these; everything else
+is in Vita3K's own window (**Vita3K settings**).
+
+- **Picture**: the **Renderer** (Vulkan; OpenGL helps only a game that fails with Vulkan), the **Resolution** (a
+  multiple of the PS Vita's 960 × 544: 2x fills a 1080p screen sharply; a higher one asks more of the GPU), the
+  **Screen filter** (Bilinear smooth, Nearest sharp pixels, Bicubic sharper, FXAA smooths edges, FidelityFX Super
+  Resolution with Vulkan only), **Anisotropic filtering**, **Fill the screen** (the picture stretched to the whole
+  screen; off, the PS Vita's shape with borders) and **VSync**.
+- **Speed**: **High accuracy** (draws more exactly, for a game that shows errors; slower), **Compile shaders in
+  the background** (the game goes on while Vita3K compiles, with a stutter less), the **FPS hack** (may double a
+  30 FPS game to 60, but makes some run twice as fast), the **Performance overlay** (the frames per second over the
+  game) and the **Shader compilation message**.
+- **Sound**: the **Volume**, the **Sound output** (SDL, Vita3K's own choice, or Cubeb when the sound crackles) and
+  **NGS sound** (the PS Vita's sound engine; off, many games are silent, for one that hangs on it).
+- **System**: the **Confirm button** (Cross as on a PS Vita sold outside Japan, Circle as in Japan) and the
+  **Language** of the PS Vita, which a game with that language shows.
+
+Each setting shows what Vita3K's settings file holds, or Vita3K's own default while the file does not name it; a
+value set in Vita3K that the app does not offer is shown as it is. Nothing is written while Vita3K runs: Vita3K
+writes its settings back when it closes, over any change.
 
 ### Game updates and extra content
 
@@ -110,9 +144,9 @@ GitHub for Vita3K's newest build. When that one is newer, the first step says so
 does not install it. A newer Vita3K comes with a newer version of the app, once it has been tried, from the
 [portal](../portal.md): after updating the app, the first step says so, and **Install** brings it.
 
-Vita3K's own window (**Vita3K settings**) also looks for a newer build when it opens, and says when there is one, with
-a link to its download page; it does not replace itself. The AppImage Vita3K comes in can update itself, but the app
-starts Vita3K with that turned off. Should Vita3K have been updated all the same, the first step says so, and
+Vita3K's own window (**Vita3K settings**) would look for a newer build when it opens; the app turns that check off
+in Vita3K's settings, with Vita3K's welcome window (see below). The AppImage Vita3K comes in can update itself, but
+the app starts Vita3K with that turned off. Should Vita3K have been updated all the same, the first step says so, and
 **Install** puts the tried build back.
 
 ## How it works
@@ -120,6 +154,11 @@ starts Vita3K with that turned off. Should Vita3K have been updated all the same
 The Game Mode shortcuts start `bc250-vita3k-run`, which starts Vita3K with its plain game window: the game alone, and
 Vita3K quits with it, so Steam sees the game end. Two things change when Steam is the one that starts it. Started
 with **Play**, from outside Steam, Vita3K runs as it is.
+
+Once Vita3K is installed, each time the window opens and while Vita3K does not run, the app sets two lines of
+Vita3K's settings (`config.yml` in its settings folder): its welcome window off, which would wait for a click
+before a game, and its own update check off, which would offer a build the app was not tried with. Everything else
+in the file stays as Vita3K wrote it, and what changed shows in the window's output.
 
 ### Controllers
 
@@ -149,6 +188,7 @@ game. Game Mode runs every game through X11 already.
 |---|---|
 | The app | `~/.local/share/bc250-vita3k-manager/app` |
 | Vita3K | `~/.local/share/bc250-vita3k-manager/emulator` |
+| The firmware files you put there, and your games to install | `~/Games/Vita/Firmware` and `~/Games/Vita` (the app's own folder) |
 | Vita3K's settings | `~/.config/Vita3K` (Vita3K's own folder) |
 | The PS Vita's storage: firmware, installed games, saves | `~/.local/share/Vita3K/Vita3K` (Vita3K's own folder) |
 | Vita3K's shader cache and log | `~/.cache/AppImage-Cache/Vita3K` |

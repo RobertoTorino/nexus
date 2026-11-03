@@ -370,6 +370,13 @@ else
         # repository, two levels up from <checkout>/bc250-bazzite/portal.
         (cd "$SRC/../.." && pwd -P) | as_root tee "$STAGE/suite-checkout" >/dev/null
     fi
+    # The release's tarball beside the unpacked folder, as the install steps and check-release.sh leave it: its
+    # sha256 goes beside the program, so the portal can tell a release built again under this version from the
+    # build it runs (build.sha256; the portal's update check reads the newest release's SHA256SUMS).
+    tarball="$SRC/../$(basename "$SRC").tar.gz"
+    if [ -f "$tarball" ]; then
+        sha256sum "$tarball" | as_root tee "$STAGE/build.sha256" >/dev/null
+    fi
     as_root chown -R root:root "$STAGE"
     as_root find "$STAGE" -type d -exec chmod 755 {} +
     as_root find "$STAGE" -type f -exec chmod go-w,a+r {} +

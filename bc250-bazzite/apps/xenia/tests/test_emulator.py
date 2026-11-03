@@ -110,3 +110,15 @@ def test_a_newer_xenia():
     def offline(url: str):
         raise urllib.error.URLError("no network")
     assert emulator.newer_release(offline) is None                                 # nothing to say then
+
+
+def test_xenia_running_sees_the_appimages_process(tmp_path):
+    proc = tmp_path / "proc"
+    for pid, comm, state in (("10", "steam", "S"), ("11", "xenia.AppImage", "Z")):
+        (proc / pid).mkdir(parents=True)
+        (proc / pid / "comm").write_text(comm + "\n")
+        (proc / pid / "stat").write_text(f"{pid} ({comm}) {state} 1 1 1\n")
+    assert not emulator.running(proc)                                                # a zombie does not count
+    (proc / "11" / "stat").write_text("11 (xenia.AppImage) S 1 1 1\n")
+    assert emulator.running(proc)
+    assert not emulator.running(Path("/nonexistent"))

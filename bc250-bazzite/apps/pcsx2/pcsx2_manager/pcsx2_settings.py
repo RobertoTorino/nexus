@@ -19,8 +19,10 @@ PCSX2.ini (inis/ in PCSX2's folder):
   is the bottom face button. The chord is set only while PCSX2.ini has no ShutdownVM line at all: the Settings tab's
   switch turns it off by leaving the line empty, which PCSX2 reads as no binding, so it stays off.
 * The settings the app's Settings tab offers (SETTINGS below; owner, 24-10-2026: every setting through the app,
-  PCSX2's own window is not opened): the picture, the emulation, the sound and the controllers, each one key of
-  PCSX2.ini, read from the file (or from the defaults while there is none) and written one at a time. The memory
+  PCSX2's own window is not opened): the picture, the emulation, the sound, the controllers and what PCSX2 shows on
+  the screen (owner, 03-11-2026: the sticks, the save state and the on-screen readouts as the Windows Portable
+  Suite's), each one key of PCSX2.ini (or a few set alike), read from the file (or from the defaults while there is
+  none) and written one at a time. The memory
   card in each slot ([MemoryCards]), player 2 on the second controller ([Pad2]) and the quit chord above are
   written the same way.
 
@@ -81,7 +83,7 @@ class Setting:
         return next((value for value, text in self.choices if text == shown), shown)
 
 
-PICTURE, EMULATION, SOUND, CONTROLLERS = "Picture", "Emulation", "Sound", "Controllers"
+PICTURE, EMULATION, SOUND, CONTROLLERS, ON_SCREEN = "Picture", "Emulation", "Sound", "Controllers", "On screen"
 RENDERERS = (("-1", "Automatic (Vulkan)"), ("14", "Vulkan"), ("12", "OpenGL"), ("13", "Software"))
 RESOLUTIONS = (("1", "Native (the PS2's)"), ("2", "2x (720p)"), ("3", "3x (1080p)"), ("4", "4x (1440p)"),
                ("5", "5x (1800p)"), ("6", "6x (2160p)"), ("8", "8x (2880p)"))
@@ -90,6 +92,9 @@ FILTERS = (("0", "Nearest"), ("1", "Bilinear (forced)"), ("2", "Bilinear (as the
 ANISOTROPY = (("0", "Off"), ("2", "2x"), ("4", "4x"), ("8", "8x"), ("16", "16x"))
 BLENDING = (("0", "Minimum"), ("1", "Basic"), ("2", "Medium"), ("3", "High"), ("4", "Full"), ("5", "Maximum"))
 FMV_SCREENS = (("Off", "As the game"), ("4:3", "4:3"), ("16:9", "16:9"))
+DEADZONES = (("0", "Off"), ("0.1", "Small"), ("0.2", "Medium"), ("0.3", "Large"))
+STICK_RANGES = (("1.33", "PCSX2's (1.33)"), ("1", "As the stick (1.00)"), ("1.66", "Wider (1.66)"))
+OSD_SIZES = (("100", "Normal"), ("150", "Larger"), ("200", "Largest"))
 SETTINGS: tuple[Setting, ...] = (
     Setting("renderer", PICTURE, "Renderer", "EmuCore/GS", ("Renderer",), CHOICE, RENDERERS,
             "How PCSX2 draws: Automatic picks Vulkan on the BC-250. Software draws on the CPU, exact but slow."),
@@ -113,8 +118,6 @@ SETTINGS: tuple[Setting, ...] = (
     Setting("fmv", PICTURE, "Video (FMV) shape", "EmuCore/GS", ("FMVAspectRatioSwitch",), CHOICE, FMV_SCREENS,
             "The shape of a game's videos: as the game's screen setting, or 4:3 so a video is not stretched by Fill "
             "screen."),
-    Setting("fps", PICTURE, "Show FPS", "EmuCore/GS", ("OsdShowFPS",), SWITCH,
-            tip="The frames a second in the corner of the picture."),
     Setting("nointerlace", EMULATION, "No-interlacing patches", "EmuCore", ("EnableNoInterlacingPatches",), SWITCH,
             tip="PCSX2's patch that makes a game draw a progressive picture instead of an interlaced one: sharper "
                 "and without shimmer, for the games PCSX2 has one for."),
@@ -122,10 +125,30 @@ SETTINGS: tuple[Setting, ...] = (
             tip="Skips the PS2's start-up screen and goes into the game."),
     Setting("cheats", EMULATION, "Cheats", "EmuCore", ("EnableCheats",), SWITCH,
             tip="PCSX2's cheat files (.pnach) for a game, from its cheats folder."),
+    Setting("savestate", EMULATION, "Save state when quitting", "EmuCore", ("SaveStateOnShutdown",), SWITCH,
+            tip="A save state when a game ends, to load from PCSX2's pause menu (Esc) next time."),
     Setting("volume", SOUND, "Volume", "SPU2/Output", ("StandardVolume",), PERCENT,
             tip="The game's sound, in percent."),
     Setting("vibration", CONTROLLERS, "Vibration", "Pad1", ("LargeMotorScale", "SmallMotorScale"), SWITCH,
             tip="The controller's rumble motors in a game that uses them."),
+    Setting("deadzone", CONTROLLERS, "Stick dead zone", "Pad1", ("Deadzone",), CHOICE, DEADZONES,
+            "How far a stick moves before the game sees it: for a stick that drifts."),
+    Setting("stick_range", CONTROLLERS, "Stick range", "Pad1", ("AxisScale",), CHOICE, STICK_RANGES,
+            "How the stick's travel maps onto the PS2's: PCSX2's 1.33 reaches the edge sooner."),
+    Setting("fps", ON_SCREEN, "Show FPS", "EmuCore/GS", ("OsdShowFPS",), SWITCH,
+            tip="The frames a second in a corner of the picture."),
+    Setting("speed", ON_SCREEN, "Show speed", "EmuCore/GS", ("OsdShowSpeed",), SWITCH,
+            tip="The game's speed in percent."),
+    Setting("show_resolution", ON_SCREEN, "Show resolution", "EmuCore/GS", ("OsdShowResolution",), SWITCH,
+            tip="The picture's size in pixels."),
+    Setting("load", ON_SCREEN, "Show CPU and GPU use", "EmuCore/GS", ("OsdShowCPU", "OsdShowGPU"), SWITCH,
+            tip="How busy the processor and the graphics chip are."),
+    Setting("frametimes", ON_SCREEN, "Show frame times", "EmuCore/GS", ("OsdShowFrameTimes",), SWITCH,
+            tip="A graph of how long each frame took."),
+    Setting("inputs", ON_SCREEN, "Show inputs", "EmuCore/GS", ("OsdShowInputs",), SWITCH,
+            tip="The controller's buttons as they are pressed."),
+    Setting("osd_size", ON_SCREEN, "Text size", "EmuCore/GS", ("OsdScale",), CHOICE, OSD_SIZES,
+            "The size of PCSX2's text on the screen."),
 )
 SWITCH_VALUES = {"vibration": ("1", "0")}               # a SWITCH whose keys are not true/false: (on, off)
 

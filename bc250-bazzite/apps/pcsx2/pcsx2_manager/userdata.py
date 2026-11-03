@@ -60,6 +60,33 @@ def copy_bios(dump: Path, folder: Path) -> Path:
     return folder / dump.name
 
 
+def sync_bios(source: Path, target: Path) -> list[str]:
+    """The BIOS dumps put in *source*, the app's BIOS folder (Games/PS2/BIOS; owner, 03-11-2026: drop them there, the
+    app takes care of them), copied into PCSX2's bios folder *target* with the files beside them under the same name
+    (.nvm, .mec, .erom) when they are new or changed (another size or time; copy2 keeps the time), so an unchanged
+    folder copies nothing. Returns the names copied, sorted; [] when *source* is missing or holds no dump. OSError
+    when a file cannot be read or written."""
+    stems = {dump.stem.lower() for dump in bios_files(source)}
+    try:
+        found = sorted((entry for entry in source.iterdir() if entry.is_file() and entry.stem.lower() in stems),
+                       key=lambda entry: entry.name.casefold())
+    except OSError:
+        return []
+    copied = []
+    for item in found:
+        destination = target / item.name
+        try:
+            there, here = destination.stat(), item.stat()
+            if there.st_size == here.st_size and int(there.st_mtime) == int(here.st_mtime):
+                continue
+        except OSError:
+            pass
+        target.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(item, destination)
+        copied.append(item.name)
+    return copied
+
+
 def remove_bios(dump: Path) -> list[str]:
     """Removes the dump from PCSX2's bios folder with the files beside it under the same name; the names removed.
     OSError is the caller's."""

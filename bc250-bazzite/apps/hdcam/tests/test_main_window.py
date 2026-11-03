@@ -410,3 +410,140 @@ def test_show_names_the_lens_of_each_half(make, tmp_path):
     assert texts == {"both": "Whole frame", "left": "Left half: the lens on your left",
                      "right": "Right half: the lens on your right"}
     assert "as you face the camera" in window.view_combo.toolTip()
+
+
+class FakeRecording(QObject):
+    """A recording that keeps what it got: started (path, width, height), the pictures added, stopped."""
+    finished = pyqtSignal(str)
+    failed = pyqtSignal(str)
+
+    def __init__(self, problem: str = ""):
+        super().__init__()
+        self.problem = problem
+        self.started: list[tuple] = []
+        self.added: list[QImage] = []
+        self.running = False
+        self.stops = 0
+
+    @property
+    def busy(self):
+        return self.running
+
+    def seconds(self):
+        return 7 if self.running else 0
+
+    def start(self, path, width, height):
+        if self.problem:
+            return self.problem
+        self.started.append((path, width, height))
+        self.running = True
+        return ""
+
+    def add(self, image):
+        if self.running:
+            self.added.append(image)
+
+    def stop(self, wait_s=0.0):
+        self.stops += 1
+        if self.running:
+            self.running = False
+            self.finished.emit(str(self.started[-1][0]))
+
+
+def _full_window(make, tmp_path, recording=None):
+    plug(tmp_path / "sys", product="058c", address=4, videos=(2,))
+    window = make(recording=recording or FakeRecording(), pictures=lambda: tmp_path / "Pictures" / "USB HD Cam",
+                  videos=lambda: tmp_path / "Videos" / "USB HD Cam")
+    window.full_button.click()
+    return window
+
+
+def test_full_screen_shows_the_picture_and_starts_the_preview(make, tmp_path):
+    window = _full_window(make, tmp_path)
+    full = window.full
+    assert full is not None and window.preview.running and window.preview_button.isChecked()
+    assert full.summary.text() == "1920 × 1080, 30 fps (one camera)  |  1x" and full.view.image is None
+    frame = QImage(1920, 1080, QImage.Format.Format_RGB32)
+    frame.fill(QColor("blue"))
+    window.preview.frame.emit(frame)
+    assert full.view.image is not None and full.view.image.size() == frame.size() and window.last is not None
+    full.close()
+    assert window.full is None and window.preview.running                  # the window's preview runs on
+
+
+def test_full_screen_zoom_pan_and_gray(make, tmp_path):
+    window = _full_window(make, tmp_path)
+    full = window.full
+    frame = QImage(1920, 1080, QImage.Format.Format_RGB32)
+    frame.fill(QColor("blue"))
+    window.preview.frame.emit(frame)
+    full.zoom_in_button.click()
+    assert window.look.zoom == 1.5 and full.summary.text().endswith("|  1.5x")
+    assert (window.last.width(), window.last.height()) == (1280, 720)
+    full.zoom_in_button.click()
+    full.panned.emit(1.0, 0)                                              # as far right as it goes
+    assert window.look.x == 0.75 and full.status.text() == ""
+    for _ in range(5):
+        full.zoom_out_button.click()
+    assert window.look.zoom == 1.0 and "smallest" in full.status.text()
+    full.panned.emit(0.1, 0)
+    assert full.status.text() == "Zoom in first: at 1x the whole picture shows."
+    full.gray_button.click()
+    assert window.look.gray and full.gray_button.text() == "Color" and window.last.format() == QImage.Format.Format_Grayscale8
+    assert main_window.CameraSettings(main_window.INFO).get("gray") is True
+    assert full.summary.text() == "1920 × 1080, 30 fps (one camera)  |  1x, black and white"
+    full.gray_button.click()
+    assert not window.look.gray and full.gray_button.text() == "Gray"
+
+
+def test_full_screen_screenshot_and_recording(make, tmp_path):
+    recording = FakeRecording()
+    window = _full_window(make, tmp_path, recording)
+    full = window.full
+    full.screenshot_button.click()
+    assert full.status.text() == "There is no picture to save yet."
+    frame = QImage(1920, 1080, QImage.Format.Format_RGB32)
+    frame.fill(QColor("green"))
+    window.preview.frame.emit(frame)
+    full.screenshot_button.click()
+    shots = list((tmp_path / "Pictures" / "USB HD Cam").glob("USB HD Cam *.png"))
+    assert len(shots) == 1 and QImage(str(shots[0])).width() == 1920
+    assert full.status.text() == f"Screenshot saved: {shots[0]}"            # ~ for a path in the home folder
+    full.record_button.click()
+    assert recording.started[-1][1:] == (1920, 1080) and recording.started[-1][0].suffix == ".mp4"
+    assert full.record_button.text() == "Stop"
+    assert full.recording.text() == "● 0:07" and not full.mode_up_button.isEnabled()
+    assert full.status.text() == "Recording …"
+    window.preview.frame.emit(frame)
+    assert len(recording.added) == 1
+    full.mode_step.emit(1)                                                # PageDown: the buttons are off
+    assert "Stop the recording first" in full.status.text() and window.mode_combo.currentData() == "1920x1080@30"
+    full.record_button.click()
+    assert not recording.running and full.record_button.text() == "Record" and full.mode_up_button.isEnabled()
+    assert full.status.text().startswith("Video saved: ") and "Videos" in full.status.text()
+
+
+def test_full_screen_mode_steps_and_a_failure_stays(make, tmp_path):
+    window = _full_window(make, tmp_path)
+    full = window.full
+    full.mode_down_button.click()
+    assert full.status.text() == "That is the first mode."
+    full.mode_up_button.click()
+    assert window.mode_combo.currentIndex() == 1 and window.preview.started[-1][1] == window.mode_combo.currentData()
+    assert full.view.text == "Starting the camera in this mode …" and full.summary.text().startswith(window.mode().label)
+    window.preview.failed.emit("The camera sends no picture in this mode.")
+    assert window.full is full and full.view.text == "The camera sends no picture in this mode."
+    assert not window.preview_button.isChecked()
+    full.close()
+    assert window.full is None
+
+
+def test_closing_the_window_ends_a_recording(make, tmp_path):
+    recording = FakeRecording()
+    window = _full_window(make, tmp_path, recording)
+    frame = QImage(1920, 1080, QImage.Format.Format_RGB32)
+    window.preview.frame.emit(frame)
+    window.full.record_button.click()
+    assert recording.running
+    window.close()
+    assert not recording.running and recording.stops >= 1 and window.full is None

@@ -15,7 +15,13 @@ from . import APP_NAME, INFO, __version__
 def main() -> int:
     parser = argparse.ArgumentParser(prog="xenia_manager", description=f"{APP_NAME} {__version__}")
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__} (core {CORE_VERSION})")
-    _args, qt_args = parser.parse_known_args()
+    parser.add_argument("--gone", metavar="GAME", help="say that this game is no longer there, instead of starting "
+                                                        "Xenia (the run wrapper, for a Steam shortcut)")
+    args, qt_args = parser.parse_known_args()
+    if args.gone:
+        from pathlib import Path
+        from bc250_core import gone
+        return gone.show_dialog(INFO, APP_NAME, Path(args.gone), qt_args)
 
     app = create_app(INFO, qt_args)
     if instance.already_running(INFO.app_id):

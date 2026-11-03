@@ -8,7 +8,17 @@ import sys
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
+from bc250_core.platform import private
+
 LOGGER_NAME = "bc250-bazzite-sftp-tools"
+
+
+class _Private(logging.Formatter):
+    """Every line with the user's home folder written as ~ (bc250_core.platform.private): no user name in the log
+    (owner, 03-11-2026: the privacy rule, as the Windows Portable Suite's apps keep it)."""
+
+    def format(self, record: logging.LogRecord) -> str:
+        return private(super().format(record))
 
 
 def get_logger() -> logging.Logger:
@@ -36,7 +46,7 @@ def setup_logging(log_file: Path, log_max_mb: int = 10) -> None:
     except OSError:
         handler = logging.StreamHandler()
     handler.setFormatter(
-        logging.Formatter("%(asctime)s %(levelname)s %(message)s")
+        _Private("%(asctime)s %(levelname)s %(message)s")
     )
     logger.addHandler(handler)
 

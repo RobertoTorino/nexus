@@ -22,22 +22,25 @@ from __future__ import annotations
 import subprocess
 import time
 from html import escape
+from collections.abc import Callable
 from pathlib import Path
 
 from PyQt6.QtCore import QProcess, Qt, QTimer
 from PyQt6.QtGui import QBrush, QCloseEvent, QColor, QResizeEvent
-from PyQt6.QtWidgets import (QAbstractItemView, QComboBox, QFileDialog, QGridLayout, QHBoxLayout, QHeaderView,
+from PyQt6.QtWidgets import (QAbstractItemView, QDialog, QComboBox, QFileDialog, QGridLayout, QHBoxLayout, QHeaderView,
                              QLabel, QMainWindow, QMessageBox, QPushButton, QSizePolicy, QTableWidget,
                              QTableWidgetItem, QTabWidget, QVBoxLayout, QWidget)
 
 from bc250_core import SUITE_MANUAL_URL, applog, covers, sound, steam, window_title
 from bc250_core import __version__ as CORE_VERSION
-from bc250_core.platform import bin_home, xdg_open
+from bc250_core import keep, renamed
+from bc250_core.keep_dialog import KeepDialog
+from bc250_core.platform import bin_home, private, xdg_open
 from bc250_core.settings import SettingsStore
 from bc250_core.updates import ReleaseInfo, UpdateChecker
 from bc250_core.widgets import AppHeader, MetricBox, StatusText, Terminal, WrappedLabel, hint_label
 
-from . import APP_ID, APP_NAME, INFO, LOGO_PATH, ROOT, __version__, controllers, emulator, shortcuts, style, userdata
+from . import APP_ID, APP_NAME, INFO, LOGO_PATH, ROOT, __version__, controllers, emulator, library, shortcuts, style, userdata
 from .games import Game, installed, scan
 from . import settings_page
 from .settings_page import SettingsPage
@@ -88,9 +91,12 @@ def install_message(report: userdata.InstallReport, new_games: int, new_licenses
     return True, text
 
 
+RUNNING_REMOVE = "RPCS3 is running: close it first, then remove the game."
+
+
 class RpcsSettings(SettingsStore):
-    DEFAULTS: dict = {"folders": [],            # the game folders chosen in the app
-                      "pads_for": []}           # the controllers (the kernel's names) the pad file was written for
+    DEFAULTS: dict = {"pads_for": [],           # the controllers (the kernel's names) the pad file was written for
+                      "firmware_given": ""}     # the PUP in Games/PS3/Firmware given to RPCS3 last (library.file_key)
 
 
 class MainWindow(QMainWindow):
@@ -103,7 +109,8 @@ class MainWindow(QMainWindow):
                  covers_get: covers.Get = covers._get, covers_key: Path | None = None,
                  log_path: Path | None = None, devices: Path = controllers.DEVICES,
                  rpcs3_running=userdata.rpcs3_running, sdl_names=controllers.sdl_names, open_url=xdg_open,
-                 rpcs3_log: Path | None = None, sound_state: Path | None = None):
+                 rpcs3_log: Path | None = None, sound_state: Path | None = None,
+                 user_home: Path | None = None, drives: Callable[[], list[Path]] = library.removable_drives):
         """*home*: where the app installs RPCS3; *rpcs3_home*: RPCS3's own folder; *steam_dir*: Steam's folder
         (None: looked up); *run*: the run wrapper the shortcuts start; *fetch*: the download; *steam_closed* and
         *steam_running*: closing Steam for a change and asking whether it runs; *newer_release*: asks GitHub for a
@@ -113,7 +120,9 @@ class MainWindow(QMainWindow):
         *rpcs3_running*: whether RPCS3 runs (its files are not written then); *sdl_names*: the controllers as SDL
         names them, for RPCS3's pad file; *open_url*: opens a URL on the desktop (the Steam link); *rpcs3_log*:
         RPCS3's own log, read for what a headless install did; *sound_state*: WirePlumber's file with the volume
-        the desktop remembers for RPCS3 (tests pass their own)."""
+        the desktop remembers for RPCS3 (tests pass their own); *user_home*: the home
+        folder with the app's own game folder, Games/PS3 (library.fixed); *drives*: the removable drives looked at
+        for one."""
         super().__init__()
         self.resize(980, 800)
         self.home = home or emulator.emulator_home()
@@ -121,6 +130,8 @@ class MainWindow(QMainWindow):
         self.steam_dir = steam_dir if steam_dir is not None else steam.find_steam()
         self.run_path = run or bin_home() / shortcuts.RUN_NAME
         self.fetch = fetch
+        self.user_home = user_home or Path.home()
+        self.drives = drives
         self.steam_closed = steam_closed
         self.steam_running = steam_running
         self.covers_home = covers_home or covers.covers_home(APP_ID)
@@ -153,6 +164,8 @@ class MainWindow(QMainWindow):
         self.worker.finished.connect(self._job_done)
         self.games: list[Game] = []
         self.in_steam: dict[str, str] = {}
+        self.moved: dict[str, str] = {}               # a game found again under another name: its file in Steam
+        self._moved_said: set[str] = set()
         self.no_cover: set[str] = set()               # games in Steam not yet looked up on SteamGridDB, with a key
         self.version = ""
         self.replaced = False                       # RPCS3 updated itself to a build the app was not tried with
@@ -193,8 +206,9 @@ class MainWindow(QMainWindow):
             + style.link(self, MANUAL_URL, "Wiki"), follow_height=True)       # its lines count in the minimum
 
         # What there is to do, as pills the size of the header's, spread over the window's width (owner,
-        # 24-10-2026): what it is for in large type (RPCS3, Firmware, Games), what the pill does under it (Install,
-        # Uninstall, Add folder, Remove folder).
+        # 24-10-2026): what it is for in large type (RPCS3, Games), what the pill does under it (Install, Uninstall).
+        # The disc games and the firmware are put in the app's own folder, Games/PS3 (owner, 03-11-2026: fixed
+        # folders, no folder choosing); the packages are still chosen from a folder.
         self.install_pill = style.action_pill("RPCS3", "Install", f"Download RPCS3 {emulator.VERSION} from GitHub "
                                                                   f"(about {emulator.SIZE_MB} MB) and check it")
         self.install_pill.clicked.connect(self.on_install)
@@ -202,17 +216,11 @@ class MainWindow(QMainWindow):
                                                                    "(firmware, saves, settings, installed games) "
                                                                    "stays")
         self.remove_pill.clicked.connect(self.on_remove)
-        self.firmware_pill = style.action_pill("Firmware", "Install", "Choose the PS3UPDAT.PUP you downloaded; "
-                                                                      "RPCS3 installs it in its own window")
-        self.firmware_pill.clicked.connect(self.on_install_firmware)
         self.package_pill = style.action_pill("Games", "Install", "Choose the folder with your .pkg files (and "
                                                                   "the .rap license of a PSN game); RPCS3 installs "
                                                                   "them, without opening its window")
         self.package_pill.clicked.connect(self.on_install_packages)
-        self.folder_pill = style.action_pill("Games", "Add folder", "Add a folder with your disc games (each with "
-                                                                    "PS3_GAME and PS3_DISC.SFB)")
-        self.folder_pill.clicked.connect(self.on_add_folder)
-        self.actions = [self.install_pill, self.remove_pill, self.firmware_pill, self.package_pill, self.folder_pill]
+        self.actions = [self.install_pill, self.remove_pill, self.package_pill]
         actions = QHBoxLayout()
         actions.setSpacing(8)
         for pill in self.actions:                       # each a fifth of the width, whatever the window's
@@ -226,7 +234,6 @@ class MainWindow(QMainWindow):
         self.emulator_state, self.firmware_state, self.disc_state, self.pkg_state = (self._state_label()
                                                                                      for _ in range(4))
         self.disc_state.setOpenExternalLinks(False)     # a folder's name is a link that takes it out
-        self.disc_state.linkActivated.connect(self.on_forget_folder)
         for row, (name, state) in enumerate((("RPCS3", self.emulator_state), ("Firmware", self.firmware_state),
                                              ("Disc games", self.disc_state), ("PKG games", self.pkg_state))):
             label = QLabel(name)
@@ -241,6 +248,7 @@ class MainWindow(QMainWindow):
         self.table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.table.verticalHeader().setVisible(False)
+        self.table.itemSelectionChanged.connect(self._update_buttons)
         self.table.setAlternatingRowColors(True)
         self.table.setShowGrid(False)
         head = self.table.horizontalHeader()
@@ -255,6 +263,10 @@ class MainWindow(QMainWindow):
         self.rpcs3_button.setToolTip("Open RPCS3's own window for what the app does not set yet: its settings, "
                                      "the controllers (Pads) and game updates (File > Install Packages)")
         self.rpcs3_button.clicked.connect(self.on_open_rpcs3)
+        self.remove_game_button = QPushButton("Remove game…")
+        self.remove_game_button.setToolTip("Delete the chosen game from the disk: a window lists what would go, and "
+                                           "you untick what to keep; nothing is deleted before you confirm")
+        self.remove_game_button.clicked.connect(self.on_remove_game)
         self.covers_button = QPushButton("Steam artwork…")
         self.covers_button.setToolTip("The SteamGridDB API key, one for the whole suite: with it, Update Steam "
                                       "gives each game its cover from SteamGridDB in Steam; the wide picture, the "
@@ -269,6 +281,7 @@ class MainWindow(QMainWindow):
         self.steam_hint.linkActivated.connect(lambda _url: self.open_steam())
         buttons.addWidget(self.steam_hint, 1)
         buttons.addWidget(self.rpcs3_button)
+        buttons.addWidget(self.remove_game_button)
         buttons.addWidget(self.covers_button)
         buttons.addWidget(self.steam_button)
         games_page = QWidget()
@@ -287,7 +300,7 @@ class MainWindow(QMainWindow):
         log = QVBoxLayout(log_page)
         log.setContentsMargins(0, 8, 0, 0)
         log.addWidget(hint_label(f"Everything the app said and did, newest last, and each game started from Steam; "
-                                 f"the same lines are in {escape(str(self.log_path))}, which turns over at 1 MB."))
+                                 f"the same lines are in {escape(private(self.log_path))}, which turns over at 1 MB."))
         log.addWidget(self.output, 1)
         self.tabs = QTabWidget()
         self.tabs.addTab(games_page, "Your games")
@@ -340,9 +353,10 @@ class MainWindow(QMainWindow):
         self.hdd0_game = userdata.drive(self.rpcs3_home, vfs, "/dev_hdd0/") / "game"
         self.firmware = userdata.firmware_version(self.dev_flash)
         self.known = list(userdata.known_games(self.rpcs3_home).values())
-        self.folders = [Path(f) for f in self.settings.get("folders") if f]
+        self.folders = library.fixed(self.user_home, self.drives)
         self.games = scan(self.folders, self.hdd0_game, self.known)
         self.prepare_rpcs3()
+        self.sync_firmware()
         try:
             self.in_steam = shortcuts.in_steam(self.steam_dir) if self.steam_dir else {}
             self.no_cover = ({str(g.eboot) for g in self.games if str(g.eboot) in self.in_steam
@@ -350,8 +364,19 @@ class MainWindow(QMainWindow):
                              if covers.read_key(self.covers_key) else set())
         except OSError:
             self.in_steam, self.no_cover = {}, set()
+        # A game renamed or moved after it was put in Steam keeps its mark (owner, 03-11-2026, from the Windows
+        # Portable Suite's managers, 01-11-2026; core's renamed): known by its code, else its file's size.
+        found = {str(g.eboot): renamed.identity(g.title_id, g.eboot) for g in self.games}
+        known = renamed.load(self.settings.qsettings)
+        self.moved = renamed.follow(known, found, self.in_steam)
+        renamed.remember(self.settings.qsettings, known, found, self.in_steam)
         self._show_state()
         self._fill_table()
+        if self.moved and set(self.moved) != self._moved_said:
+            self._moved_said = set(self.moved)
+            titles = [g.title for g in self.games if str(g.eboot) in self.moved]
+            self.say(f"Found again under a new name or in another folder, with its Steam mark: {', '.join(titles)}. "
+                     "Update Steam brings the shortcut in Steam up to date.")
         self.settings_page.load()
         self.show_controller()
         self.show_sound()
@@ -480,29 +505,21 @@ class MainWindow(QMainWindow):
             self.firmware_state.setText(f"<b>{escape(self.firmware)}</b>")
         else:
             self.firmware_state.setText("No firmware yet. RPCS3 needs the PS3's firmware to start any game: download "
-                                        f"PS3UPDAT.PUP from {page}, then pick it with Firmware Install; RPCS3 "
-                                        "installs it in its own window.")
+                                        f"PS3UPDAT.PUP from {page} and put it in "
+                                        f"<b>{escape(private(library.firmware_home(self.user_home)))}</b>: the app "
+                                        "gives it to RPCS3, which installs it in its own window.")
         self.firmware_state.setToolTip(f"PS3 firmware {self.firmware or 'none'} in RPCS3's firmware folder: "
                                        f"{self.dev_flash}")
         self.firmware_state.setOpenExternalLinks(True)
 
         discs = [g for g in self.games if g.disc]
         pkgs = [g for g in self.games if not g.disc]
-        if self.folders:                        # the folders' names alone (owner, 24-10-2026), each a link that
-            self.disc_state.setText(", ".join(    # takes the folder out; the paths and the count in the tip
-                f"<b>{style.link(self, f'forget:{n}', escape(f.name or str(f)))}</b>"
-                for n, f in enumerate(self.folders)))
-            self.disc_state.setToolTip("\n".join(str(f) for f in self.folders)
-                                       + f"\n{len(discs)} disc game(s) found. Click a folder to stop looking "
-                                       "for games in it; its games stay where they are.")
-        elif discs:                             # none chosen here, but RPCS3 knows some (its games.yml)
-            self.disc_state.setText(f"{len(discs)} disc game(s) RPCS3 knows. Add folder takes the folder with your "
-                                    "disc games (each in a folder of its own, with PS3_GAME and PS3_DISC.SFB).")
-            self.disc_state.setToolTip("")
-        else:
-            self.disc_state.setText("None yet: Add folder takes the folder with your disc games (each in a folder of "
-                                    "its own, with PS3_GAME and PS3_DISC.SFB).")
-            self.disc_state.setToolTip("")
+        # The app's own folders (owner, 03-11-2026): the home folder's, and a removable drive's when it has one.
+        where = ", ".join(f"<b>{escape(private(f))}</b>" for f in self.folders)
+        self.disc_state.setText(f"{where}: put your disc games there, each in a folder of its own (with PS3_GAME and "
+                                "PS3_DISC.SFB). A USB drive or an SD card with a Games/PS3 folder on it is looked in "
+                                f"too. {len(discs)} disc game(s) found.")
+        self.disc_state.setToolTip("\n".join(private(f) for f in self.folders))
         # RPCS3's games folder by its path within RPCS3's own folder (dev_hdd0/game/; the whole path when it is
         # elsewhere) while a game is installed in it, "—" while none is (owner, 24-10-2026); the count and what
         # Install takes in the tip.
@@ -556,14 +573,22 @@ class MainWindow(QMainWindow):
             self.note(f"RPCS3 {release.version} is out ({release.published}); a later version of this app brings "
                       f"it, once it has been tried on the board: {release.url}")
 
+    def chosen(self) -> Game | None:
+        """The game whose row is selected."""
+        rows = self.table.selectionModel().selectedRows()
+        return self.games[rows[0].row()] if rows and rows[0].row() < len(self.games) else None
+
     def _fill_table(self) -> None:
         self.table.blockSignals(True)
         self.table.setRowCount(len(self.games))
         for row, game in enumerate(self.games):
             box = QTableWidgetItem()
             box.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
-            box.setCheckState(Qt.CheckState.Checked if str(game.eboot) in self.in_steam else Qt.CheckState.Unchecked)
-            box.setToolTip("In Steam" if str(game.eboot) in self.in_steam else "Not in Steam")
+            box.setCheckState(Qt.CheckState.Checked if str(game.eboot) in self.in_steam or str(game.eboot) in self.moved
+                              else Qt.CheckState.Unchecked)
+            box.setToolTip("In Steam" if str(game.eboot) in self.in_steam else
+                           f"Found again under a new name: in Steam as {self.in_steam.get(self.moved[str(game.eboot)], '?')}; "
+                           "Update Steam brings the shortcut up to date" if str(game.eboot) in self.moved else "Not in Steam")
             self.table.setItem(row, STEAM, box)
             for column, text in ((GAME, game.title), (SERIAL, game.title_id), (VERSION, game.version),
                                  (FOLDER, game.folder.name or str(game.folder))):
@@ -613,11 +638,10 @@ class MainWindow(QMainWindow):
         self.refresh_pill.setEnabled(idle)
         self.install_pill.setEnabled(idle and (self.version != emulator.VERSION or self.replaced))
         self.remove_pill.setEnabled(idle and installed_)
-        self.firmware_pill.setEnabled(idle and installed_)
         self.package_pill.setEnabled(idle and installed_)
-        self.folder_pill.setEnabled(idle)
         self.rpcs3_button.setEnabled(idle and installed_)
         self.covers_button.setEnabled(idle)
+        self.remove_game_button.setEnabled(idle and self.chosen() is not None)
         add, remove = self.steam_plan()
         named = shortcuts.names(add)        # a name in Steam that differs (one from before the prefix) is renamed
         changed = bool(remove) or any(self.in_steam.get(str(g.eboot)) != named[g.eboot]
@@ -645,7 +669,7 @@ class MainWindow(QMainWindow):
             self._update_buttons()
 
     def _job_done(self, result: tuple[bool, str]) -> None:
-        ok, message = result
+        ok, message = result[0], private(result[1])     # a path in an error: the user's folders as ~
         self.refresh()
         self.say(message, ok)
 
@@ -673,11 +697,28 @@ class MainWindow(QMainWindow):
             self.refresh()
             self.say("RPCS3 was removed.")
 
-    def on_install_firmware(self) -> None:
-        name, _ = QFileDialog.getOpenFileName(self, window_title("Install the PS3 firmware"), str(Path.home()),
-                                              "PS3 firmware (*.PUP *.pup);;All files (*)")
-        if name:
-            self.install_firmware(Path(name))
+    def sync_firmware(self) -> None:
+        """The PS3's firmware put in Games/PS3/Firmware given to RPCS3 by itself (owner, 03-11-2026, from the
+        Windows Portable Suite's RPCS3 Manager: firmware taken in automatically), once RPCS3 is installed and while
+        it does not run: a file whose version (read from the PUP) is installed already is left alone, and so is the
+        file given last as it is (its name, size and time in the settings), so a file RPCS3 refused is not given
+        again until it changes. The file stays."""
+        if not self.version or self.rpcs3_running() or self.worker.running or self.firmware_watch.isActive():
+            return
+        pup = library.firmware_file(self.user_home)
+        if pup is None:
+            return
+        key = library.file_key(pup)
+        if not key or key == self.settings.get("firmware_given"):
+            return
+        version = userdata.pup_version(pup)
+        if version and self.firmware and version.lstrip("0") == self.firmware.lstrip("0"):
+            self.settings.set("firmware_given", key)        # installed already: left alone
+            return
+        self.settings.set("firmware_given", key)
+        self.note(f"PS3 firmware {version or pup.name} found in {private(library.firmware_home(self.user_home))}: "
+                  "given to RPCS3.")
+        self.install_firmware(pup)
 
     def install_firmware(self, pup: Path) -> None:
         """Through RPCS3 itself (--installfw): it shows its progress in its own window. The state follows when the
@@ -703,7 +744,7 @@ class MainWindow(QMainWindow):
 
     def on_install_packages(self) -> None:
         folder = QFileDialog.getExistingDirectory(self, window_title("Install packages from a folder"),
-                                                  str(Path.home()))
+                                                  str(self.folders[0] if self.folders else Path.home()))
         if folder:
             self.install_packages(Path(folder))
 
@@ -762,34 +803,6 @@ class MainWindow(QMainWindow):
         else:
             self.say("Steam could not be opened: xdg-open is missing.", ok=False)
 
-    def on_add_folder(self) -> None:
-        folder = QFileDialog.getExistingDirectory(self, window_title("Add a game folder"), str(Path.home()))
-        if folder:
-            self.add_folder(Path(folder))
-
-    def add_folder(self, folder: Path) -> None:
-        folders = [str(f) for f in self.folders]
-        if str(folder) not in folders:
-            self.settings.set("folders", folders + [str(folder)])
-        self.refresh()
-        found = scan([folder])
-        self.say(f"{folder.name or folder} is a game folder now: {len(found)} game(s) in it.")
-
-    def on_forget_folder(self, url: str) -> None:
-        """A folder's name in the Disc games line was clicked ("forget:<n>"): asked first."""
-        try:
-            folder = self.folders[int(url.partition(":")[2])]
-        except (ValueError, IndexError):
-            return
-        if self._ask("Remove a game folder", f"Stop looking for games in {folder}?\n\nIts games stay where they "
-                                             "are."):
-            self.forget_folder(folder)
-
-    def forget_folder(self, folder: Path) -> None:
-        self.settings.set("folders", [str(f) for f in self.folders if f != folder])
-        self.refresh()
-        self.say(f"{folder.name or folder} is no longer a game folder; its games stay where they are.")
-
     def rpcs3_command(self, *args: str) -> list[str]:
         """The installed RPCS3 through the run wrapper (from the app folder when it is not installed yet)."""
         run = self.run_path if self.run_path.is_file() else ROOT / shortcuts.RUN_NAME
@@ -802,6 +815,50 @@ class MainWindow(QMainWindow):
             self.note("RPCS3's own window was opened.")
         else:
             self.say(f"RPCS3 could not be started: {command[0]} did not run.", ok=False)
+
+    def on_remove_game(self) -> None:
+        """Remove game… (owner, 03-11-2026, from the Windows Portable Suite's managers: before deleting anything, let
+        the user decide what to keep): a window lists what of the chosen game would go, a row each with its size,
+        every row ticked; unticking keeps it, Delete marked deletes the rows still ticked (read-only files too) off
+        the window's thread, its Steam shortcut through Steam, and Cancel deletes nothing. The saves and the licenses
+        stay."""
+        game = self.chosen()
+        if game is None:
+            return
+        if self.rpcs3_running():
+            self.say(RUNNING_REMOVE, ok=False)
+            return
+        items, why = library.removal_items(game, self.folders, self.games, self.hdd0_game, str(game.eboot) in self.in_steam)
+        if not items:
+            self.say(why, ok=False)
+            return
+        if KeepDialog(f"Remove {game.title}", items, self).exec() != QDialog.DialogCode.Accepted:
+            self.say("Nothing was deleted.")
+            return
+        chosen = keep.chosen(items)
+        kept = [item.label for item in items if not item.delete]
+        paths = [path for item in chosen for path in item.paths]
+        take_out = any(item.key == library.STEAM_ITEM for item in chosen)
+        folder, closed, run, existing = self.steam_dir, self.steam_closed, self.run_path, self.in_steam
+        title = game.title
+
+        def job() -> tuple[bool, str]:
+            failed = keep.delete(paths)
+            gone = [item.label for item in chosen if item.paths and not any(item.label.startswith(f.split(" (")[0])
+                                                                                for f in failed)]
+            if take_out and folder is not None:
+                try:
+                    closed(lambda: steam.write_shortcuts(folder, shortcuts.changes([], [game], run, LOGO_PATH, existing)))
+                    gone.append("its shortcut in Steam")
+                except (steam.SteamError, steam.ShortcutError, OSError) as error:
+                    failed.append(f"its Steam shortcut ({error})")
+            text = f"{title}: deleted {', '.join(gone) if gone else 'nothing'}."
+            if kept:
+                text += f" Kept: {', '.join(kept)}."
+            if failed:
+                text += f" Not deleted: {', '.join(failed)}."
+            return not failed, text
+        self._start(f"Deleting {title}…", job)
 
     def on_update_steam(self) -> None:
         if self.steam_dir is None:
@@ -828,13 +885,33 @@ class MainWindow(QMainWindow):
                                   get) if key else [])
             changes = shortcuts.changes(add, remove, run, LOGO_PATH, existing,
                                         found=lambda g: covers.art(home, shortcuts.cover_name(g), shortcuts.COVERS))
+            found: dict[str, str] | None = {}
+            extra: list[str] = []
+
+            def change() -> None:
+                # Read back right after the write, while Steam is still closed (owner, 03-11-2026, from the Windows
+                # Portable Suite's managers: "it still says 0 games in Steam"): whether the shortcuts were written
+                # as the app reads them, before Steam touches the file. A failed read is said, not passed over.
+                nonlocal found
+                steam.write_shortcuts(folder, changes)
+                try:
+                    found = shortcuts.in_steam(folder)
+                except OSError as error:
+                    found = None
+                    extra.append(f"Steam's file could not be read back: {error}")
+
             try:
-                restarted = closed(lambda: steam.write_shortcuts(folder, changes))
+                restarted = closed(change)
             except (steam.SteamError, steam.ShortcutError, OSError) as error:
                 return False, "\n".join([*notes, f"Steam was not changed: {error}"])
+            if found is not None:
+                missing = [g.title for g in add if str(g.eboot) not in found]
+                if missing:
+                    extra.append(f"Read back from Steam's file, {len(add) - len(missing)} of the {len(add)} game(s) "
+                                 f"are there: not {', '.join(missing)}.")
             again = " Steam was closed for it and starts again in the background." if restarted else ""
             return True, "\n".join([*notes, f"{len(add)} game(s) in Steam, under Non-Steam in the library"
-                                              f"{f'; {len(remove)} taken out' if remove else ''}.{again}"])
+                                              f"{f'; {len(remove)} taken out' if remove else ''}.{again}", *extra])
         self._start("Looking up covers and changing Steam's shortcuts…" if key else "Changing Steam's shortcuts…",
                     job)
 

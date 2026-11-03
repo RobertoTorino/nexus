@@ -15,12 +15,18 @@ from . import APP_ID, APP_NAME, INFO, __version__
 def main() -> int:
     parser = argparse.ArgumentParser(prog="pcsx2_manager", description=f"{APP_NAME} {__version__}")
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__} (core {CORE_VERSION})")
-    _args, qt_args = parser.parse_known_args()
+    parser.add_argument("--gone", metavar="GAME", help="say that this game is no longer there, instead of starting "
+                                                        "PCSX2 (the run wrapper, for a Steam shortcut)")
+    args, qt_args = parser.parse_known_args()
+    if args.gone:
+        from pathlib import Path
+        from bc250_core import gone
+        return gone.show_dialog(INFO, APP_NAME, Path(args.gone), qt_args)
 
     app = create_app(INFO, qt_args)
     if instance.already_running(INFO.app_id):
         return 0
-    log_path = applog.setup(APP_ID)
+    log_path = applog.setup(APP_ID, private=True)         # the user's folders as ~: no user name in the log
     applog.logger(APP_ID).info("%s %s started (core %s)", APP_NAME, __version__, CORE_VERSION)
     from .main_window import MainWindow
     window = MainWindow(log_path=log_path)

@@ -29,6 +29,7 @@ from bc250_core.steam import find_steam
 from . import ROOT, plain_tooltip
 from . import gamecfg, gamecheck, steamlines
 from .graph import show_graph
+from bc250_core.platform import private
 
 MUTED = "#9aa0a6"
 ACCENT = "#ce93d8"
@@ -652,7 +653,7 @@ class InGamePage(QWidget):
         try:
             enable_mango_logging()
         except OSError as exc:
-            self.fps_note.setText(f"Could not update MangoHud.conf: {html.escape(str(exc))}")
+            self.fps_note.setText(f"Could not update MangoHud.conf: {html.escape(private(str(exc)))}")
             return
         self._update_fps_state()
 
@@ -660,7 +661,7 @@ class InGamePage(QWidget):
         try:
             style_mangohud()
         except OSError as exc:
-            self.fps_note.setText(f"Could not update MangoHud.conf: {html.escape(str(exc))}")
+            self.fps_note.setText(f"Could not update MangoHud.conf: {html.escape(private(str(exc)))}")
             return
         self.fps_note.setText("MangoHud is styled like the overlay (takes effect at the next game start).")
 

@@ -2,7 +2,7 @@
 """The settings of the Settings tab (owner, 24-10-2026: every manager takes the Settings tab when it is rebuilt on
 PCSX2 Manager's), each one key of shadPS4's config.json, which shadPS4 reads when it starts: the picture (GPU), the
 sound (Audio, General), the controller (Input) and what shadPS4 shows in a game (General). They are the settings
-shadPS4 0.20.0's own settings window (Big Picture) offers for every game, with its values and defaults
+shadPS4 0.21.0's own settings window (Big Picture) offers for every game, with its values and defaults
 (emulator_settings.h, big_picture/settings_dialog_imgui.h); what shadPS4 keeps there for experiments (per game only)
 and its window's size stay out. A setting is read from the file (shadPS4's default while the file, or the key, is
 not there) and written one key at a time, every other key kept (userdata.write_config); shadPS4 merges the file

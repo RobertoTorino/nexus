@@ -7,22 +7,26 @@ SteamGridDB API key, with which Update Game Mode looks up each game's pictures f
 from __future__ import annotations
 
 from html import escape
+from collections.abc import Callable
 from pathlib import Path
 
 from PyQt6.QtCore import QProcess, Qt
 from PyQt6.QtGui import QCloseEvent
-from PyQt6.QtWidgets import (QAbstractItemView, QFileDialog, QGridLayout, QHBoxLayout, QHeaderView, QInputDialog,
+from PyQt6.QtWidgets import (QAbstractItemView, QDialog, QGridLayout, QHBoxLayout, QHeaderView,
                              QLabel, QMainWindow, QMessageBox, QPushButton, QTableWidget, QTableWidgetItem,
                              QVBoxLayout, QWidget)
 
 from bc250_core import SUITE_MANUAL_URL, covers, steam, window_title
 from bc250_core import __version__ as CORE_VERSION
-from bc250_core.platform import bin_home
+from bc250_core import keep, renamed
+from bc250_core.keep_dialog import KeepDialog
+from bc250_core.platform import bin_home, private
 from bc250_core.settings import SettingsStore
+from bc250_core.settings_page import SettingsDialog
 from bc250_core.updates import ReleaseInfo, UpdateChecker
 from bc250_core.widgets import AppHeader, MetricBox, StatusText, Terminal, hint_label
 
-from . import APP_ID, APP_NAME, INFO, LOGO_PATH, ROOT, __version__, emulator, shortcuts, style
+from . import APP_ID, APP_NAME, INFO, LOGO_PATH, ROOT, __version__, emulator, library, shortcuts, style, xenia_settings
 from .games import Game, scan
 
 MANUAL_URL = f"{SUITE_MANUAL_URL}apps/xenia/"
@@ -31,25 +35,34 @@ KINDS = {"iso": "ISO", "xex": "XEX", "zar": "ZAR", "god": "Games on Demand", "xb
 
 
 class XeniaSettings(SettingsStore):
-    DEFAULTS: dict = {"folders": []}            # the game folders chosen in the app
+    DEFAULTS: dict = {}
 
 
 class MainWindow(QMainWindow):
     def __init__(self, home: Path | None = None, steam_dir: Path | None = None, run: Path | None = None,
                  fetch: emulator.Download = emulator.download, steam_closed=steam.with_steam_closed,
                  steam_running=steam.steam_running, newer_release=emulator.newer_release,
-                 covers_home: Path | None = None, covers_get: covers.Get = covers._get, covers_key: Path | None = None):
-        """*home*: where the app installs Xenia; *steam_dir*: Steam's folder (None: looked up); *run*: the run
+                 covers_home: Path | None = None, covers_get: covers.Get = covers._get, covers_key: Path | None = None,
+                 user_home: Path | None = None, drives: Callable[[], list[Path]] = library.removable_drives,
+                 xenia_home: Path | None = None, xenia_running=emulator.running):
+        """*home*: where the app installs Xenia; *xenia_home*: Xenia's own folder, with its settings file;
+        *xenia_running*: whether Xenia runs (its settings are left alone then); *steam_dir*: Steam's folder (None:
+        looked up); *run*: the run
         wrapper the shortcuts start; *fetch*: the download of Xenia; *steam_closed* and *steam_running*: closing
         Steam for a change and asking whether it runs; *newer_release*: asks GitHub for a newer Xenia;
         *covers_home*, *covers_get* and *covers_key*: where the pictures from SteamGridDB are kept, how SteamGridDB
-        is asked and the suite's key file (tests never touch the real ones)."""
+        is asked and the suite's key file (tests never touch the real ones); *user_home*: the home folder
+        with the app's own game folder (library.fixed); *drives*: the removable drives looked at for one."""
         super().__init__()
         self.resize(980, 680)
         self.home = home or emulator.emulator_home()
+        self.xenia_home = xenia_home or emulator.xenia_home()
+        self.xenia_running = xenia_running
         self.steam_dir = steam_dir if steam_dir is not None else steam.find_steam()
         self.run_path = run or bin_home() / shortcuts.RUN_NAME
         self.fetch = fetch
+        self.user_home = user_home or Path.home()
+        self.drives = drives
         self.steam_closed = steam_closed
         self.steam_running = steam_running
         self.covers_home = covers_home or covers.covers_home(APP_ID)
@@ -63,6 +76,8 @@ class MainWindow(QMainWindow):
         self.worker.finished.connect(self._job_done)
         self.games: list[Game] = []
         self.in_steam: dict[str, str] = {}
+        self.moved: dict[str, str] = {}               # a game found again under another name: its file in Steam
+        self._moved_said: set[str] = set()
         self.no_cover: set[str] = set()               # games in Steam not yet looked up on SteamGridDB, with a key
         self.version = ""                               # the installed Xenia, "" when none is
         self.folders: list[Path] = []
@@ -96,15 +111,8 @@ class MainWindow(QMainWindow):
         self.remove_button = QPushButton("Remove")
         self.remove_button.setToolTip("Remove the installed Xenia; its settings, saves and installed content stay")
         self.remove_button.clicked.connect(self.on_remove)
-        self.folder_button = QPushButton("Add folder…")
-        self.folder_button.setToolTip("Add a folder with your games (ISO images, unpacked discs with a default.xex, "
-                                      ".zar archives, Games on Demand and Arcade packages)")
-        self.folder_button.clicked.connect(self.on_add_folder)
-        self.forget_button = QPushButton("Remove folder…")
-        self.forget_button.setToolTip("Stop looking for games in one of the folders; the games stay where they are")
-        self.forget_button.clicked.connect(self.on_forget_folder)
         rows = [("Xenia", self.emulator_state, [self.install_button, self.remove_button]),
-                ("Game folders", self.folders_state, [self.folder_button, self.forget_button])]
+                ("Game folder", self.folders_state, [])]
         centre = Qt.AlignmentFlag.AlignVCenter
         for row, (name, state, buttons) in enumerate(rows):
             label = QLabel(name)
@@ -140,6 +148,14 @@ class MainWindow(QMainWindow):
         self.xenia_button = QPushButton("Xenia settings")
         self.xenia_button.setToolTip("Open Xenia's own window: its settings, profiles and installed content")
         self.xenia_button.clicked.connect(self.on_open_xenia)
+        self.settings_button = QPushButton("Settings…")
+        self.settings_button.setToolTip("Xenia's settings that matter for playing, written into Xenia's own "
+                                        "settings file the moment you change one, while Xenia does not run")
+        self.settings_button.clicked.connect(self.on_settings)
+        self.remove_game_button = QPushButton("Remove game…")
+        self.remove_game_button.setToolTip("Delete the chosen game from the disk: a window lists what would go, and "
+                                           "you untick what to keep; nothing is deleted before you confirm")
+        self.remove_game_button.clicked.connect(self.on_remove_game)
         self.covers_button = QPushButton("Covers…")
         self.covers_button.setToolTip("The SteamGridDB API key, one for the whole suite: with it, Update Game Mode "
                                       "gives each game its cover, banner and logo from SteamGridDB in Steam")
@@ -149,7 +165,9 @@ class MainWindow(QMainWindow):
         buttons = QHBoxLayout()
         buttons.addWidget(self.play_button)
         buttons.addWidget(self.xenia_button)
+        buttons.addWidget(self.settings_button)
         buttons.addStretch(1)
+        buttons.addWidget(self.remove_game_button)
         buttons.addWidget(self.covers_button)
         buttons.addWidget(self.steam_button)
 
@@ -205,7 +223,7 @@ class MainWindow(QMainWindow):
 
     def refresh(self) -> None:
         self.version = emulator.installed_version(self.home)
-        self.folders = [Path(f) for f in self.settings.get("folders") if f]
+        self.folders = library.fixed(self.user_home, self.drives)
         self.games = scan(self.folders)
         try:
             self.in_steam = shortcuts.in_steam(self.steam_dir) if self.steam_dir else {}
@@ -214,8 +232,19 @@ class MainWindow(QMainWindow):
                              if covers.read_key(self.covers_key) else set())
         except OSError:
             self.in_steam, self.no_cover = {}, set()
+        # A game renamed or moved after it was put in Steam keeps its mark (owner, 03-11-2026, from the Windows
+        # Portable Suite's managers, 01-11-2026; core's renamed): known by its code, else its file's size.
+        found = {str(g.file): renamed.identity(g.title_id, g.file) for g in self.games}
+        known = renamed.load(self.settings.qsettings)
+        self.moved = renamed.follow(known, found, self.in_steam)
+        renamed.remember(self.settings.qsettings, known, found, self.in_steam)
         self._show_state()
         self._fill_table()
+        if self.moved and set(self.moved) != self._moved_said:
+            self._moved_said = set(self.moved)
+            titles = [g.title for g in self.games if str(g.file) in self.moved]
+            self.tell(f"Found again under a new name or in another folder, with its Steam mark: {', '.join(titles)}. "
+                     "Update Steam brings the shortcut in Steam up to date.")
 
     def _show_state(self) -> None:
         pinned = emulator.VERSION
@@ -239,11 +268,11 @@ class MainWindow(QMainWindow):
                 "on the board. " + style.link(self, self.newer.url, "What is new"))
         self.emulator_state.setOpenExternalLinks(True)
 
-        if self.folders:
-            self.folders_state.setText("<br>".join(f"<code>{escape(str(f))}</code>" for f in self.folders))
-        else:
-            self.folders_state.setText("None yet: add the folder with your games (ISO images, unpacked discs, .zar "
-                                       "archives, Games on Demand and Arcade packages).")
+        # The app's own folders (owner, 03-11-2026): the home folder's, and a removable drive's when it has one.
+        where = ", ".join(f"<code>{escape(private(f))}</code>" for f in self.folders)
+        self.folders_state.setText(f"{where}: put your games there (ISO images, unpacked discs, .zar archives, Games "
+                                   "on Demand and Arcade packages; in folders too). A USB drive or an SD card with a "
+                                   "Games/XBOX360 folder on it is looked in too.")
         self.games_box.set_value(str(len(self.games)))
         found = {str(g.file) for g in self.games}
         self.steam_box.set_value(str(len(found & set(self.in_steam))))
@@ -266,7 +295,8 @@ class MainWindow(QMainWindow):
         for row, game in enumerate(self.games):
             box = QTableWidgetItem()
             box.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
-            box.setCheckState(Qt.CheckState.Checked if str(game.file) in self.in_steam else Qt.CheckState.Unchecked)
+            box.setCheckState(Qt.CheckState.Checked if str(game.file) in self.in_steam or str(game.file) in self.moved
+                              else Qt.CheckState.Unchecked)
             box.setToolTip("In Steam for Game Mode" if str(game.file) in self.in_steam else "Not in Steam")
             self.table.setItem(row, 0, box)
             kind = KINDS.get(game.kind, game.kind)
@@ -298,10 +328,9 @@ class MainWindow(QMainWindow):
         self.refresh_button.setEnabled(idle)
         self.install_button.setEnabled(idle and self.version != emulator.VERSION)
         self.remove_button.setEnabled(idle and installed_)
-        self.folder_button.setEnabled(idle)
-        self.forget_button.setEnabled(idle and bool(self.folders))
         self.play_button.setEnabled(idle and installed_ and self.chosen() is not None)
         self.covers_button.setEnabled(idle)
+        self.remove_game_button.setEnabled(idle and self.chosen() is not None)
         self.xenia_button.setEnabled(idle and installed_)
         add, remove = self.steam_plan()
         named = shortcuts.names(add)        # a name in Steam that differs is renamed
@@ -327,7 +356,7 @@ class MainWindow(QMainWindow):
             self._update_buttons()
 
     def _job_done(self, result: tuple[bool, str]) -> None:
-        ok, message = result
+        ok, message = result[0], private(result[1])     # a path in an error: the user's folders as ~
         self.running.setText(message)
         self.output.appendPlainText(message)
         self.refresh()
@@ -359,35 +388,6 @@ class MainWindow(QMainWindow):
             self.output.appendPlainText("Xenia was removed.")
             self.refresh()
 
-    def on_add_folder(self) -> None:
-        folder = QFileDialog.getExistingDirectory(self, window_title("Add a game folder"), str(Path.home()))
-        if folder:
-            self.add_folder(Path(folder))
-
-    def add_folder(self, folder: Path) -> None:
-        folders = [str(f) for f in self.folders]
-        if str(folder) not in folders:
-            self.settings.set("folders", folders + [str(folder)])
-        self.refresh()
-        found = scan([folder])
-        self.running.setStyleSheet("font-weight:600;")
-        self.running.setText(f"{folder} is a game folder now: {len(found)} game(s) in it.")
-
-    def on_forget_folder(self) -> None:
-        folders = [str(f) for f in self.folders]
-        if not folders:
-            return
-        folder, ok = QInputDialog.getItem(self, window_title("Remove a game folder"),
-                                          "Stop looking for games in:", folders, 0, False)
-        if ok and folder:
-            self.forget_folder(Path(folder))
-
-    def forget_folder(self, folder: Path) -> None:
-        self.settings.set("folders", [str(f) for f in self.folders if f != folder])
-        self.refresh()
-        self.running.setStyleSheet("font-weight:600;")
-        self.running.setText(f"{folder} is no longer a game folder; its games stay where they are.")
-
     def xenia_command(self, *args: str) -> list[str]:
         """Xenia through the run wrapper (from the app folder when it is not installed yet)."""
         run = self.run_path if self.run_path.is_file() else ROOT / shortcuts.RUN_NAME
@@ -407,6 +407,65 @@ class MainWindow(QMainWindow):
         command = self.xenia_command()
         if not QProcess.startDetached(command[0], command[1:])[0]:
             self.running.setText(f"Xenia could not be started: {command[0]} did not run.")
+
+    def on_settings(self) -> None:
+        """The Settings window (core's settings_page over xenia_settings): Xenia's settings in the app."""
+        dialog = SettingsDialog(window_title("Xenia settings"), "Xenia", xenia_settings.SETTINGS,
+                                lambda: xenia_settings.read_settings(self.xenia_home),
+                                lambda setting, value: xenia_settings.write_setting(self.xenia_home, setting, value),
+                                self.xenia_running, "Xenia's settings that matter for playing, written into Xenia's "
+                                "own settings file the moment you change one, while Xenia does not run. A game's own "
+                                "settings file in Xenia comes before these; everything else is in Xenia's own window "
+                                "(Xenia settings).", parent=self)
+        dialog.exec()
+
+    def tell(self, text: str, ok: bool = True) -> None:
+        """What the window has to say: the line under the tabs and the output."""
+        self.running.setStyleSheet("font-weight:600;" + ("" if ok else "color:#c62828;"))
+        self.running.setText(text)
+        self.output.appendPlainText(text)
+
+    def on_remove_game(self) -> None:
+        """Remove game… (owner, 03-11-2026, from the Windows Portable Suite's managers: before deleting anything, let
+        the user decide what to keep): a window lists what of the chosen game would go, a row each with its size,
+        every row ticked; unticking keeps it, Delete marked deletes the rows still ticked (read-only files too) off
+        the window's thread, its Steam shortcut through Steam, and Cancel deletes nothing. Xenia's content folder, with the saves
+        stay."""
+        game = self.chosen()
+        if game is None:
+            return
+        items, why = library.removal_items(game, self.folders, self.games, str(game.file) in self.in_steam)
+        if not items:
+            self.tell(why, ok=False)
+            return
+        if KeepDialog(f"Remove {game.title}", items, self).exec() != QDialog.DialogCode.Accepted:
+            self.tell("Nothing was deleted.")
+            return
+        chosen = keep.chosen(items)
+        kept = [item.label for item in items if not item.delete]
+        paths = [path for item in chosen for path in item.paths]
+        take_out = any(item.key == library.STEAM_ITEM for item in chosen)
+        folder, closed, run, existing = self.steam_dir, self.steam_closed, self.run_path, self.in_steam
+        title = game.title
+
+        def job() -> tuple[bool, str]:
+            failed = keep.delete(paths)
+            library.tidy(game)
+            gone = [item.label for item in chosen if item.paths and not any(item.label.startswith(f.split(" (")[0])
+                                                                                for f in failed)]
+            if take_out and folder is not None:
+                try:
+                    closed(lambda: steam.write_shortcuts(folder, shortcuts.changes([], [game], run, LOGO_PATH, existing)))
+                    gone.append("its shortcut in Steam")
+                except (steam.SteamError, steam.ShortcutError, OSError) as error:
+                    failed.append(f"its Steam shortcut ({error})")
+            text = f"{title}: deleted {', '.join(gone) if gone else 'nothing'}."
+            if kept:
+                text += f" Kept: {', '.join(kept)}."
+            if failed:
+                text += f" Not deleted: {', '.join(failed)}."
+            return not failed, text
+        self._start(f"Deleting {title}…", job)
 
     def on_update_steam(self) -> None:
         if self.steam_dir is None:
@@ -433,13 +492,33 @@ class MainWindow(QMainWindow):
                                   get) if key else [])
             changes = shortcuts.changes(add, remove, run, LOGO_PATH, existing,
                                         found=lambda g: covers.art(home, shortcuts.cover_name(g), shortcuts.COVERS))
+            found: dict[str, str] | None = {}
+            extra: list[str] = []
+
+            def change() -> None:
+                # Read back right after the write, while Steam is still closed (owner, 03-11-2026, from the Windows
+                # Portable Suite's managers: "it still says 0 games in Steam"): whether the shortcuts were written
+                # as the app reads them, before Steam touches the file. A failed read is said, not passed over.
+                nonlocal found
+                steam.write_shortcuts(folder, changes)
+                try:
+                    found = shortcuts.in_steam(folder)
+                except OSError as error:
+                    found = None
+                    extra.append(f"Steam's file could not be read back: {error}")
+
             try:
-                restarted = closed(lambda: steam.write_shortcuts(folder, changes))
+                restarted = closed(change)
             except (steam.SteamError, steam.ShortcutError, OSError) as error:
                 return False, "\n".join([*notes, f"Steam was not changed: {error}"])
+            if found is not None:
+                missing = [g.title for g in add if str(g.file) not in found]
+                if missing:
+                    extra.append(f"Read back from Steam's file, {len(add) - len(missing)} of the {len(add)} game(s) "
+                                 f"are there: not {', '.join(missing)}.")
             again = " Steam was closed for it and starts again in the background." if restarted else ""
             return True, "\n".join([*notes, f"{len(add)} game(s) in Steam, under Non-Steam in the library"
-                                              f"{f'; {len(remove)} taken out' if remove else ''}.{again}"])
+                                              f"{f'; {len(remove)} taken out' if remove else ''}.{again}", *extra])
         self._start("Looking up covers and changing Steam's shortcuts…" if key else "Changing Steam's shortcuts…",
                     job)
 

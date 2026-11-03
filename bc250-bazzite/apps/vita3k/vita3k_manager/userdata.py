@@ -1,8 +1,10 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Vita3K's own folders as build 4186 lays them out on Linux (app::init_paths): its settings in ~/.config/Vita3K
 (config.yml), and the PS Vita's storage, its "Vita FS", in ~/.local/share/Vita3K/Vita3K, or where config.yml's
-pref-path says (Settings > Emulator > storage folder). The app reads config.yml and never writes it; Vita3K does
-that.
+pref-path says (Settings > Emulator > storage folder). The app reads config.yml, and writes the two lines it owns
+(OWNED; owner, 03-11-2026, from the Windows Portable Suite's Vita3K Manager): Vita3K's welcome window off
+(show-welcome) and its own update check off (check-for-updates-mode 0, UPDATE_STARTUP_OFF), which would offer a
+build the app was not tried with. Never while Vita3K runs: it writes its settings back when it closes.
 
 config.yml is a YAML map as Vita3K writes it (yaml-cpp, between "---" and "..."): one "key: value" a line at the top
 level, lists below their key indented. The app reads only the top level, so it needs no YAML library.
@@ -31,6 +33,9 @@ FONTS_URL = ("http://dus01.psp2.update.playstation.net/update/psp2/image/2019_09
              "sd_8b5f60b56c3da8365b973dba570c53a5/PSP2UPDAT.PUP?dest=us")
 PREINSTALL_URL = ("http://dus01.psp2.update.playstation.net/update/psp2/image/2022_0209/"
                   "pre_efd1ef6c1cc2fe92e72e9e783e421237/PSP2UPDAT.PUP?dest=us")
+# The lines of config.yml the app owns: key, value, and what it did in the app's words.
+OWNED = (("show-welcome", "false", "its welcome window off"),
+         ("check-for-updates-mode", "0", "its update check off"))
 
 
 def config_dir() -> Path:
@@ -39,6 +44,11 @@ def config_dir() -> Path:
 
 def default_storage() -> Path:
     return data_home() / APP_NAME / APP_NAME
+
+
+def config_path(config: Path) -> Path:
+    """config.yml in Vita3K's settings folder *config*."""
+    return config / "config.yml"
 
 
 def _scalar(text: str) -> str:
@@ -50,21 +60,54 @@ def _scalar(text: str) -> str:
     return text
 
 
+def _lines(path: Path) -> list[str]:
+    try:
+        return path.read_text(encoding="utf-8").splitlines()
+    except (OSError, UnicodeDecodeError):
+        return []
+
+
 def read_map(path: Path) -> dict[str, str]:
     """The top level of a YAML map as Vita3K writes it; {} when the file is not there or cannot be read. A key whose
     value is a list or a map below it is left out."""
-    try:
-        lines = path.read_text(encoding="utf-8").splitlines()
-    except (OSError, UnicodeDecodeError):
-        return {}
     found = {}
-    for line in lines:
+    for line in _lines(path):
         if not line or line[0] in " \t#-." or line.startswith("---"):
             continue
         key, sep, value = line.partition(": ")
         if sep and value.strip():
             found[_scalar(key)] = _scalar(value)
     return found
+
+
+def set_values(path: Path, values: dict[str, str]) -> list[str]:
+    """Top-level lines of *path* set to *values* ("key: value"), every other line kept; a key the file does not name
+    goes before its end ("..."), and a file that is not there is made. The keys changed; the file is written only
+    when one did. OSError is the caller's; the caller makes sure Vita3K does not run."""
+    lines = _lines(path) or ["---", "..."]
+    changed = []
+    for key, value in values.items():
+        line = f"{key}: {value}"
+        at = next((n for n, text in enumerate(lines) if text.partition(":")[0] == key), None)
+        if at is not None:
+            if _scalar(lines[at].partition(":")[2]) != value:
+                lines[at] = line
+                changed.append(key)
+            continue
+        end = next((n for n, text in enumerate(lines) if text.strip() == "..."), len(lines))
+        lines.insert(end, line)
+        changed.append(key)
+    if changed:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
+    return changed
+
+
+def prepare(config: Path) -> list[str]:
+    """config.yml's lines the app owns (OWNED) set; what was changed, for the output. The caller makes sure Vita3K
+    does not run."""
+    changed = set(set_values(config_path(config), {key: value for key, value, _what in OWNED}))
+    return [what for key, _value, what in OWNED if key in changed]
 
 
 def storage(config: Path) -> Path:

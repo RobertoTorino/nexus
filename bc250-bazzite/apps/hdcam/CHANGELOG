@@ -1,3 +1,21 @@
+Changelog: 03-11-2026 22:14:57
+
+Added. The picture full screen (owner, 03-11-2026, from the Windows Portable Suite's USB HD Cam, 01-11-2026): Full
+screen in the Picture box shows the picture over the whole screen, with a row of buttons at the bottom. Screenshot
+saves what shows as a PNG in the Pictures folder, Record and Stop record it as an MP4 in the Videos folder (at the
+mode's size, at most 30 frames a second, with the encoder Qt brings: MPEG-4, or H.264 where there is one), Gray and
+Color switch to black and white and back (remembered), Zoom − and Zoom + zoom from 1x to 4x, the arrow keys or a
+drag move the zoomed picture (the mouse wheel zooms), Mode − and Mode + change the mode there too, not while it
+records, and Close or Esc comes back, a recording stopped and kept. Both go in a USB HD Cam folder, named with the
+date and the time. If the camera stops sending, the full screen says why and stays, so another mode can be tried;
+closing the app while it records writes the file first. New: record.py, full_picture.py, preview's Look, shown()
+and PictureView, with tests, among them a real recording read back. The wiki says so.
+
+Changelog: 03-11-2026 20:54:32
+
+Fixed. No user name on the screen or in the log (owner, 03-11-2026: the suite's privacy rule, as the Windows Portable
+Suite's apps keep it since 29-10-2026): the firmware file's folder on the Firmware step show your home folder as ~ (core's platform.private).
+
 Changelog: 03-11-2026 16:16:30
 
 Release 1.0.1.

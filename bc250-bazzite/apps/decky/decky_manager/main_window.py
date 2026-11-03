@@ -17,7 +17,7 @@ from PyQt6.QtWidgets import (QAbstractItemView, QCheckBox, QGridLayout, QHBoxLay
 
 from bc250_core import SUITE_MANUAL_URL, steam, window_title
 from bc250_core import __version__ as CORE_VERSION
-from bc250_core.platform import xdg_open
+from bc250_core.platform import private, xdg_open
 from bc250_core.settings import SettingsStore
 from bc250_core.updates import ReleaseInfo, UpdateChecker, latest_release, version_tuple
 from bc250_core.widgets import AppHeader, MetricBox, StatusText, TextDialog, Terminal, hint_label
@@ -259,8 +259,8 @@ class MainWindow(QMainWindow):
                                      "on; so does Switch on.")
             self.steam_box.set_value("Off")
 
-        home = escape(str(self.paths.home))
-        deck = escape(str(self.paths.deck))
+        home = escape(private(self.paths.home))                    # the user's folders as ~: no user name shown
+        deck = escape(private(self.paths.deck))
         self.deck_state.setText({
             "own": f"Your home is {deck}: plugins written for the Steam Deck find it as they are.",
             "linked": f"{deck} points to your home ({home}), for plugins written for the Steam Deck.",

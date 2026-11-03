@@ -3,7 +3,11 @@
 YUYV conversion and handed to the window, at most 30 a second. Every mode the camera reports can be chosen, at each
 of its rates. A frame the driver could not complete is not shown: when only those come, the mode needs more USB
 bandwidth than the camera has, and the preview says so. While the preview runs, the app holds the camera, and other
-apps cannot use it: it runs only when asked, and stops when the window closes."""
+apps cannot use it: it runs only when asked, and stops when the window closes.
+
+A Look is how the full-screen picture is shown (zoomed in, moved, black and white) and shown() makes a picture so;
+PictureView draws the result, whole and centered on black, and passes a drag and the mouse wheel on (owner,
+03-11-2026, from the Windows Portable Suite's USB HD Cam, 01-11-2026)."""
 
 from __future__ import annotations
 
@@ -12,9 +16,10 @@ import threading
 import time
 from collections.abc import Callable
 
-from PyQt6.QtCore import QObject, QSize, pyqtSignal
-from PyQt6.QtGui import QImage
+from PyQt6.QtCore import QObject, QPointF, QRect, QRectF, QSize, Qt, pyqtSignal
+from PyQt6.QtGui import QColor, QImage, QPainter
 from PyQt6.QtMultimedia import QVideoFrame, QVideoFrameFormat
+from PyQt6.QtWidgets import QWidget
 
 from . import v4l2
 from .modes import Mode
@@ -30,6 +35,125 @@ DAMAGED = ("The frames arrive damaged: this mode needs more USB bandwidth than t
            "or a smaller mode; with Full bandwidth, try Reduced and plug the camera in again.")
 BUSY = "Another app is using the camera. Close it, then start the preview again."
 FORMATS = {"YUYV": QVideoFrameFormat.PixelFormat.Format_YUYV}
+ZOOMS = (1.0, 1.5, 2.0, 3.0, 4.0)           # Zoom − and Zoom + go through these
+PAN_STEP = 0.1                              # an arrow key moves the picture this much of what shows
+
+
+class Look:
+    """How the picture is shown: *zoom* (ZOOMS), the middle of what shows (*x*, *y*: 0 to 1 of the picture's width
+    and height, kept so that the zoomed part stays inside the picture) and *gray* (black and white)."""
+
+    def __init__(self, gray: bool = False):
+        self.zoom, self.x, self.y, self.gray = 1.0, 0.5, 0.5, gray
+
+    def step_zoom(self, delta: int) -> bool:
+        """The next zoom in (+1) or out (-1); whether it changed (not past the first or the last)."""
+        at = ZOOMS.index(self.zoom) if self.zoom in ZOOMS else 0
+        picked = ZOOMS[max(0, min(len(ZOOMS) - 1, at + delta))]
+        changed, self.zoom = picked != self.zoom, picked
+        self._keep_inside()
+        return changed
+
+    def pan(self, dx: float, dy: float) -> bool:
+        """Moves the middle by *dx*, *dy* of what shows (an arrow key: PAN_STEP); whether it moved. At 1x there is
+        nothing to move."""
+        before = (self.x, self.y)
+        self.x += dx / self.zoom
+        self.y += dy / self.zoom
+        self._keep_inside()
+        return (self.x, self.y) != before
+
+    def _keep_inside(self) -> None:
+        half = 0.5 / self.zoom
+        self.x = min(max(self.x, half), 1 - half)
+        self.y = min(max(self.y, half), 1 - half)
+
+    def area(self, width: int, height: int) -> QRect:
+        """The part of a *width* x *height* picture that shows, in its pixels."""
+        w, h = max(1, round(width / self.zoom)), max(1, round(height / self.zoom))
+        left = min(max(0, round(self.x * width - w / 2)), width - w)
+        top = min(max(0, round(self.y * height - h / 2)), height - h)
+        return QRect(left, top, w, h)
+
+    @property
+    def label(self) -> str:
+        zoom = f"{self.zoom:g}x"
+        return f"{zoom}, black and white" if self.gray else zoom
+
+
+def shown(image: QImage, look: Look) -> QImage:
+    """*image* as *look* shows it: the zoomed part only, at the camera's own pixels, gray when it is black and white."""
+    if look.zoom != 1.0:
+        image = image.copy(look.area(image.width(), image.height()))
+    if look.gray:
+        image = image.convertToFormat(QImage.Format.Format_Grayscale8)
+    return image
+
+
+class PictureView(QWidget):
+    """The newest picture, whole and centered on black; a line of text when there is none. The mouse dragged over it
+    sends dragged(dx, dy), how far as a part of the picture drawn; the mouse wheel sends wheeled(+1 or -1)."""
+
+    dragged = pyqtSignal(float, float)
+    wheeled = pyqtSignal(int)
+
+    def __init__(self, parent: QWidget | None = None):
+        super().__init__(parent)
+        self.image: QImage | None = None
+        self.text = ""
+        self.pressed_at: QPointF | None = None
+        self.setMinimumHeight(200)
+
+    def drawn(self) -> QRectF:
+        """Where the picture is drawn: whole, as large as fits, centered."""
+        if self.image is None or self.image.isNull():
+            return QRectF()
+        scale = min(self.width() / self.image.width(), self.height() / self.image.height())
+        width, height = self.image.width() * scale, self.image.height() * scale
+        return QRectF((self.width() - width) / 2, (self.height() - height) / 2, width, height)
+
+    def mousePressEvent(self, event) -> None:  # noqa: N802 (Qt override)
+        self.pressed_at = event.position()
+        event.accept()
+
+    def mouseMoveEvent(self, event) -> None:  # noqa: N802 (Qt override)
+        area = self.drawn()
+        if self.pressed_at is None or area.isEmpty():
+            return
+        moved = event.position() - self.pressed_at
+        self.pressed_at = event.position()
+        self.dragged.emit(moved.x() / area.width(), moved.y() / area.height())
+
+    def mouseReleaseEvent(self, event) -> None:  # noqa: N802 (Qt override)
+        self.pressed_at = None
+
+    def wheelEvent(self, event) -> None:  # noqa: N802 (Qt override)
+        turned = event.angleDelta().y()
+        if turned:
+            self.wheeled.emit(1 if turned > 0 else -1)
+        event.accept()
+
+    def show_image(self, image: QImage) -> None:
+        self.image, self.text = image, ""
+        self.update()
+
+    def clear(self, text: str = "") -> None:
+        self.image, self.text = None, text
+        self.update()
+
+    def paintEvent(self, event) -> None:  # noqa: N802 (Qt override)
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
+        painter.fillRect(self.rect(), QColor("black"))
+        if self.image is None:
+            painter.setPen(QColor("#bdbdbd"))
+            font = painter.font()
+            font.setPointSize(14)
+            painter.setFont(font)
+            painter.drawText(self.rect().adjusted(32, 0, -32, 0),
+                             Qt.AlignmentFlag.AlignCenter | Qt.TextFlag.TextWordWrap, self.text)
+            return
+        painter.drawImage(self.drawn(), self.image)
 
 
 def to_image(data: bytes, width: int, height: int, pixel_format: str = "YUYV") -> QImage:

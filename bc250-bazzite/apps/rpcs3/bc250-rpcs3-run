@@ -83,4 +83,17 @@ if [ -n "$game" ] && [ "${game#-}" = "$game" ] && [ -z "$install" ]; then
         printf '%s INFO Started %s %s, %s.\n' "$stamp" "${name:-$game}" "$from" "$pad" >>"$LOG" 2>/dev/null || true
     fi
 fi
+# A game that is no longer there (owner, 03-11-2026, from the Windows Portable Suite's managers): renamed, moved or
+# deleted after it was put in Steam, or on a drive that is not in. RPCS3 is not started; the app says so in a
+# window of its own (its package with the suite's Python, when the app is installed), and here, so Steam sees the
+# game end.
+if [ -n "${game:-}" ] && [ "${game#-}" = "$game" ] && [ -z "${install:-}" ] && [ ! -e "$game" ]; then
+    echo "This game is no longer there: $game. Open RPCS3 Manager, press Refresh and then Update Steam." >&2
+    APP_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/bc250-rpcs3-manager/app"
+    PYTHON="${XDG_DATA_HOME:-$HOME/.local/share}/bc250-bazzite-suite/venv/bin/python"
+    if [ -x "$PYTHON" ] && [ -d "$APP_DIR" ]; then
+        (cd "$APP_DIR" && exec "$PYTHON" -m rpcs3_manager --gone "$game") || true
+    fi
+    exit 1
+fi
 exec "$APPIMAGE" "$@"

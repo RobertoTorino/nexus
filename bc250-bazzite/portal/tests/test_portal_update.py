@@ -71,7 +71,8 @@ def test_check_reads_the_pins_at_the_release_tag():
         return text_of(bumped(current, gpu="gpu-v9.0.0"))
 
     update = pu.check("owner/repo", "portal-v", current, "ua", release_of=lambda *a, **k: RELEASE, read=read)
-    assert urls == ["https://raw.githubusercontent.com/owner/repo/portal-v99.0.0/bc250-bazzite/portal/apps.toml"]
+    assert urls == ["https://raw.githubusercontent.com/owner/repo/portal-v99.0.0/bc250-bazzite/portal/apps.toml",
+                    "https://github.com/owner/repo/releases/download/portal-v99.0.0/SHA256SUMS"]
     assert update.release is RELEASE and update.summary() == "updates GPU Governor Manager"
 
 
@@ -88,7 +89,8 @@ def test_check_falls_back_to_the_manifest_at_the_root_for_a_tag_from_before_the_
 
     update = pu.check("owner/repo", "portal-v", current, "ua", release_of=lambda *a, **k: RELEASE, read=read)
     assert urls == ["https://raw.githubusercontent.com/owner/repo/portal-v99.0.0/bc250-bazzite/portal/apps.toml",
-                    "https://raw.githubusercontent.com/owner/repo/portal-v99.0.0/portal/apps.toml"]
+                    "https://raw.githubusercontent.com/owner/repo/portal-v99.0.0/portal/apps.toml",
+                    "https://github.com/owner/repo/releases/download/portal-v99.0.0/SHA256SUMS"]
     assert update.summary() == "updates GPU Governor Manager"
 
 
@@ -106,3 +108,28 @@ def test_check_without_details_or_release():
     result = pu.check("o/r", "portal-v", current, "ua", release_of=lambda *a, **k: empty,
                       read=lambda *a: asked.append(a) or "")
     assert result.release is empty and result.changes is None and asked == []
+
+
+def test_check_reads_the_tarballs_sha256_and_the_running_build(tmp_path):
+    """The newest release's SHA256SUMS tells a new build of this version (owner, 03-11-2026); build.sha256 beside
+    the program is what this portal came from."""
+    sums = "a" * 64 + "  portal-v99.0.0.tar.gz\n" + "b" * 64 + "  other.tar.gz\n"
+
+    def read(url, user_agent):
+        if url.endswith("/SHA256SUMS"):
+            return sums
+        return text_of(load(MANIFEST))
+    update = pu.check("owner/repo", "portal-v", load(MANIFEST), "ua", release_of=lambda *a, **k: RELEASE, read=read)
+    assert update.sha256 == "a" * 64 and update.changes == []
+
+    def no_sums(url, user_agent):
+        if url.endswith("/SHA256SUMS"):
+            raise OSError("offline")
+        return text_of(load(MANIFEST))
+    assert pu.check("owner/repo", "portal-v", load(MANIFEST), "ua", release_of=lambda *a, **k: RELEASE,
+                    read=no_sums).sha256 == ""
+    assert pu.running_build(tmp_path) == ""                                   # no file: offered once
+    (tmp_path / pu.BUILD_FILE).write_text("C" * 64 + "  portal-v1.0.0.tar.gz\n")
+    assert pu.running_build(tmp_path) == "c" * 64
+    (tmp_path / pu.BUILD_FILE).write_text("not a checksum\n")
+    assert pu.running_build(tmp_path) == ""

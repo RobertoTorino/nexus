@@ -1,3 +1,27 @@
+Changelog: 03-11-2026 21:00:41
+
+Added. A release built again under the portal's own version is offered as an update (owner, 03-11-2026, as the
+Windows Portable Suite's portal since 31-10-2026): install.sh writes build.sha256 beside the program, the sha256 of
+the tarball it installed from when that lies beside the unpacked folder (the install steps and check-release.sh
+leave it there). The update check reads the newest release's SHA256SUMS too, and the red button says "Portal
+x.y.z: a new build of this version" when that release is this version and its tarball's sha256 is another, or none
+was kept (portal_update.running_build(), PortalUpdate.sha256; MainWindow(build=)). A portal run from a checkout
+compares versions only. The installer test checks the file; the wiki says so.
+
+Changelog: 03-11-2026 21:00:41
+
+Added. Escape, or B, while a download or an install runs asks first (owner, 03-11-2026, as the Windows Portable
+Suite's portal since 28-10-2026): the banner says what closing does (the download stops; an installer finishes in
+its terminal window, unrecorded), and a second press within five seconds closes the portal. The window closed by
+the desktop (its close button, Alt+F4) asks the same in a dialog. Before, the portal closed at once and dropped the
+download.
+
+Changelog: 03-11-2026 21:00:41
+
+Fixed. A download shows how far it is on the tile (Downloading… 40 MB), read from the part file every half second
+(owner, 03-11-2026, as the Windows Portable Suite's portal since 28-10-2026: Downloading… alone looked like a hang
+for a large release).
+
 Changelog: 03-11-2026 17:38:38
 
 Release 13.1.2.

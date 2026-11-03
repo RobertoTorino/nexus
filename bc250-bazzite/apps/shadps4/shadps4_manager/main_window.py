@@ -22,23 +22,26 @@ import re
 import subprocess
 import time
 from html import escape
+from collections.abc import Callable
 from pathlib import Path
 
 from PyQt6.QtCore import QProcess, Qt, QTimer
 from PyQt6.QtGui import QCloseEvent, QDragEnterEvent, QDropEvent, QResizeEvent
-from PyQt6.QtWidgets import (QAbstractItemView, QFileDialog, QGridLayout, QHBoxLayout, QHeaderView, QLabel,
+from PyQt6.QtWidgets import (QAbstractItemView, QDialog, QFileDialog, QGridLayout, QHBoxLayout, QHeaderView, QLabel,
                              QMainWindow, QMessageBox, QPushButton, QSizePolicy, QTableWidget, QTableWidgetItem,
                              QTabWidget, QVBoxLayout, QWidget)
 
 from bc250_core import SUITE_MANUAL_URL, applog, covers, sound, steam, window_title
 from bc250_core import __version__ as CORE_VERSION
-from bc250_core.platform import bin_home, xdg_open
+from bc250_core import keep, renamed
+from bc250_core.keep_dialog import KeepDialog
+from bc250_core.platform import bin_home, private, xdg_open
 from bc250_core.theme import GREEN, RED
 from bc250_core.settings import SettingsStore
 from bc250_core.updates import ReleaseInfo, UpdateChecker
 from bc250_core.widgets import AppHeader, MetricBox, StatusText, Terminal, WrappedLabel, hint_label
 
-from . import (APP_ID, APP_NAME, INFO, LOGO_PATH, ROOT, __version__, controllers, emulator, settings_page, shadnet,
+from . import (APP_ID, APP_NAME, INFO, LOGO_PATH, ROOT, __version__, controllers, emulator, library, settings_page, shadnet,
                shortcuts, style, userdata)
 from .games import MAX_DEPTH, Game, scan
 from .settings_page import SettingsPage
@@ -55,6 +58,9 @@ GAMES, SETTINGS, LOG = range(3)                             # the tabs
 _NUMBERED = re.compile(r"\d+(\.\d+)*")
 
 
+RUNNING_REMOVE = "shadPS4 is running: close it first, then remove the game."
+
+
 class ShadSettings(SettingsStore):
     DEFAULTS: dict = {}
 
@@ -69,7 +75,8 @@ class MainWindow(QMainWindow):
                  shad_running=userdata.shadps4_running, covers_home: Path | None = None,
                  covers_get: covers.Get = covers._get, covers_key: Path | None = None,
                  log_path: Path | None = None, devices: Path = controllers.DEVICES, open_url=xdg_open,
-                 sound_state: Path | None = None):
+                 sound_state: Path | None = None, user_home: Path | None = None,
+                 drives: Callable[[], list[Path]] = library.removable_drives):
         """*home*: where the app installs shadPS4; *shad_home*: shadPS4's own folder; *steam_dir*: Steam's folder
         (None: looked up); *run*: the run wrapper the shortcuts start; *fetch*: the download; *steam_closed* and
         *steam_running*: closing Steam for a change and asking whether it runs; *newer_release*: asks GitHub for a
@@ -78,7 +85,8 @@ class MainWindow(QMainWindow):
         kept, how SteamGridDB is asked and the suite's key file (tests never touch the real ones); *log_path*: the
         app's log file, as the Log tab shows it (__main__ set it up); *devices*: the kernel's list of input
         devices, for the controller state; *open_url*: opens a URL on the desktop (the Steam link); *sound_state*:
-        WirePlumber's file with the volume the desktop remembers for shadPS4 (tests pass their own)."""
+        WirePlumber's file with the volume the desktop remembers for shadPS4 (tests pass their own); *user_home*: the home folder with the app's own game
+        folder, Games/PS4 (library.fixed); *drives*: the removable drives looked at for one."""
         super().__init__()
         self.resize(980, 800)
         self.home = home or emulator.emulator_home()
@@ -86,6 +94,8 @@ class MainWindow(QMainWindow):
         self.steam_dir = steam_dir if steam_dir is not None else steam.find_steam()
         self.run_path = run or bin_home() / shortcuts.RUN_NAME
         self.fetch = fetch
+        self.user_home = user_home or Path.home()
+        self.drives = drives
         self.steam_closed = steam_closed
         self.steam_running = steam_running
         self.shadnet_connect = shadnet_connect
@@ -117,6 +127,8 @@ class MainWindow(QMainWindow):
         self.worker.finished.connect(self._job_done)
         self.games: list[Game] = []
         self.in_steam: dict[str, str] = {}
+        self.moved: dict[str, str] = {}               # a game found again under another name: its file in Steam
+        self._moved_said: set[str] = set()
         self.no_logo: set[str] = set()                # games in Steam whose shortcut has no logo yet
         self.old_tags: set[str] = set()               # games in Steam whose shortcut has the tags of an older name
         self.no_cover: set[str] = set()               # games in Steam not yet looked up on SteamGridDB, with a key
@@ -161,7 +173,9 @@ class MainWindow(QMainWindow):
             + " · " + style.link(self, MANUAL_URL, "Wiki"), follow_height=True)   # its lines count in the minimum
 
         # What there is to do, as pills the size of the header's, spread over the window's width (owner,
-        # 24-10-2026): what it is for in large type (shadPS4, Modules, Games, shadNet), what the pill does under it.
+        # 24-10-2026): what it is for in large type (shadPS4, Games, shadNet), what the pill does under it. The games
+        # and the system modules are put in the app's own folder, Games/PS4 (owner, 03-11-2026: fixed folders, no
+        # folder choosing); a package is still chosen for Extract PKG.
         self.install_pill = style.action_pill("shadPS4", "Install", f"Download shadPS4 {emulator.VERSION} from "
                                                                     f"GitHub (about {emulator.SIZE_MB} MB) and "
                                                                     "check it")
@@ -169,24 +183,15 @@ class MainWindow(QMainWindow):
         self.remove_pill = style.action_pill("shadPS4", "Uninstall", "Remove the installed shadPS4; its own folder "
                                                                      "(saves, settings, system modules) stays")
         self.remove_pill.clicked.connect(self.on_remove)
-        self.modules_pill = style.action_pill("Modules", "Install", "Choose the folder with the system modules "
-                                                                    "(.sprx) from your own PS4's firmware; the app "
-                                                                    "copies them into shadPS4's module folder")
-        self.modules_pill.clicked.connect(self.on_install_modules)
         self.package_pill = style.action_pill("Games", "Install", "Choose a package file (.pkg: a game, its update "
                                                                   "or add-on content); Extract PKG unpacks it into "
                                                                   "a game folder, in the layout shadPS4 loads")
         self.package_pill.clicked.connect(lambda: self.open_extract())
         self.extract_dialog = None                      # the Extract PKG window while it is open
-        self.folder_pill = style.action_pill("Games", "Add folder", "Add a folder with your games (each in a folder "
-                                                                    "of its own, with eboot.bin) to shadPS4's game "
-                                                                    "folders")
-        self.folder_pill.clicked.connect(self.on_add_folder)
         self.account_pill = style.action_pill("shadNet", "Account", "Your shadNet account: create one, try it, and "
                                                                     "have shadPS4 sign in with it")
         self.account_pill.clicked.connect(self.on_shadnet)
-        self.actions = [self.install_pill, self.remove_pill, self.modules_pill, self.package_pill, self.folder_pill,
-                        self.account_pill]                  # in the owner's order (24-10-2026)
+        self.actions = [self.install_pill, self.remove_pill, self.package_pill, self.account_pill]
         actions = QHBoxLayout()
         actions.setSpacing(8)
         for pill in self.actions:                       # each a sixth of the width, whatever the window's
@@ -200,7 +205,6 @@ class MainWindow(QMainWindow):
         self.emulator_state, self.modules_state, self.folders_state, self.shadnet_state = (self._state_label()
                                                                                            for _ in range(4))
         self.folders_state.setOpenExternalLinks(False)  # a folder's name is a link that takes it out
-        self.folders_state.linkActivated.connect(self.on_forget_folder)
         for row, (name, state) in enumerate((("shadPS4", self.emulator_state),
                                              ("Sys modules", self.modules_state),
                                              ("Game folders", self.folders_state), ("shadNet", self.shadnet_state))):
@@ -216,6 +220,7 @@ class MainWindow(QMainWindow):
         self.table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.table.verticalHeader().setVisible(False)
+        self.table.itemSelectionChanged.connect(self._update_buttons)
         self.table.setAlternatingRowColors(True)
         self.table.setShowGrid(False)
         head = self.table.horizontalHeader()
@@ -229,6 +234,10 @@ class MainWindow(QMainWindow):
         self.shad_button.setToolTip("Open shadPS4's own window (Big Picture) for what the app does not set: the "
                                     "controller's buttons, a game's own settings, its game list")
         self.shad_button.clicked.connect(self.on_open_shadps4)
+        self.remove_game_button = QPushButton("Remove game…")
+        self.remove_game_button.setToolTip("Delete the chosen game from the disk: a window lists what would go, and "
+                                           "you untick what to keep; nothing is deleted before you confirm")
+        self.remove_game_button.clicked.connect(self.on_remove_game)
         self.covers_button = QPushButton("Steam artwork…")
         self.covers_button.setToolTip("The SteamGridDB API key, one for the whole suite: with it, Update Steam "
                                       "gives each game its cover from SteamGridDB in Steam; the wide picture, the "
@@ -243,6 +252,7 @@ class MainWindow(QMainWindow):
         self.steam_hint.linkActivated.connect(lambda _url: self.open_steam())
         buttons.addWidget(self.steam_hint, 1)
         buttons.addWidget(self.shad_button)
+        buttons.addWidget(self.remove_game_button)
         buttons.addWidget(self.covers_button)
         buttons.addWidget(self.steam_button)
         games_page = QWidget()
@@ -261,7 +271,7 @@ class MainWindow(QMainWindow):
         log = QVBoxLayout(log_page)
         log.setContentsMargins(0, 8, 0, 0)
         log.addWidget(hint_label(f"Everything the app said and did, newest last, and each game started from Steam; "
-                                 f"the same lines are in {escape(str(self.log_path))}, which turns over at 1 MB."))
+                                 f"the same lines are in {escape(private(self.log_path))}, which turns over at 1 MB."))
         log.addWidget(self.output, 1)
         self.tabs = QTabWidget()
         self.tabs.addTab(games_page, "Your games")
@@ -309,8 +319,10 @@ class MainWindow(QMainWindow):
     def refresh(self) -> None:
         self.version = emulator.installed_version(self.home)
         self.config = userdata.read_config(self.shad_home)
+        self.folders = library.fixed(self.user_home, self.drives)
+        self.sync_folders()
+        self.sync_modules()
         self.modules = userdata.check_modules(userdata.modules_folder(self.shad_home, self.config))
-        self.folders = userdata.game_folders(self.config)
         self.users = userdata.read_users(self.shad_home)
         self.prepare_shadps4()
         self.games = scan(self.folders)
@@ -324,8 +336,19 @@ class MainWindow(QMainWindow):
                              if covers.read_key(self.covers_key) else set())
         except OSError:
             self.in_steam, self.no_logo, self.old_tags, self.no_cover = {}, set(), set(), set()
+        # A game renamed or moved after it was put in Steam keeps its mark (owner, 03-11-2026, from the Windows
+        # Portable Suite's managers, 01-11-2026; core's renamed): known by its code, else its file's size.
+        found = {str(g.eboot): renamed.identity(g.title_id, g.eboot) for g in self.games}
+        known = renamed.load(self.settings.qsettings)
+        self.moved = renamed.follow(known, found, self.in_steam)
+        renamed.remember(self.settings.qsettings, known, found, self.in_steam)
         self._show_state()
         self._fill_table()
+        if self.moved and set(self.moved) != self._moved_said:
+            self._moved_said = set(self.moved)
+            titles = [g.title for g in self.games if str(g.eboot) in self.moved]
+            self.say(f"Found again under a new name or in another folder, with its Steam mark: {', '.join(titles)}. "
+                     "Update Steam brings the shortcut in Steam up to date.")
         self.settings_page.load()
         self.show_controller()
         self.show_sound()
@@ -380,6 +403,32 @@ class MainWindow(QMainWindow):
         stamp = time.strftime(applog.DATE)
         self.output.appendPlainText(f"{stamp} {'INFO' if ok else 'ERROR'} {text}")
 
+    def sync_folders(self) -> None:
+        """shadPS4's own game folders (config.json) made the app's (owner, 03-11-2026), so shadPS4's own window lists
+        the games too; not while shadPS4 runs, and nothing written while they match."""
+        if userdata.game_folders(self.config) == self.folders or self.shad_running():
+            return
+        try:
+            userdata.set_game_folders(self.shad_home, self.folders)
+        except userdata.UserDataError as error:
+            self.say(f"shadPS4's game folders were not set: {error}", ok=False)
+            return
+        self.config = userdata.read_config(self.shad_home)
+
+    def sync_modules(self) -> None:
+        """The system modules put in Games/PS4/Modules copied into shadPS4's module folder, only what is new or
+        changed (owner, 03-11-2026: the app takes care of them); shadPS4 reads them when a game asks for one."""
+        try:
+            copied = userdata.sync_modules(library.modules_home(self.user_home),
+                                           userdata.modules_folder(self.shad_home, self.config))
+        except OSError as error:
+            self.say(f"The system modules were not taken from {private(library.modules_home(self.user_home))}: "
+                     f"{error}", ok=False)
+            return
+        if copied:
+            self.say(f"{len(copied)} system module(s) taken from {private(library.modules_home(self.user_home))} "
+                     "into shadPS4's module folder.")
+
     def _show_state(self) -> None:
         pinned = emulator.VERSION
         if not self.version:
@@ -412,26 +461,18 @@ class MainWindow(QMainWindow):
         tip = (f"{len(m.needed)} of the {needed} modules shadPS4 cannot do without are in its module folder: "
                f"{m.folder}")
         if m.missing:
-            tip += ("\nMany games run without them; a game that needs a missing one does not start. Modules Install "
-                    "takes those of your own PS4. Missing: " + ", ".join(m.missing))
+            tip += ("\nMany games run without them; a game that needs a missing one does not start. Put those of your "
+                    f"own PS4 in {private(library.modules_home(self.user_home))}: the app copies them in. Missing: "
+                    + ", ".join(m.missing))
         self.modules_state.setToolTip(tip)
 
-        if self.folders:                        # the folders' names alone (owner, 24-10-2026), each a link that
-            self.folders_state.setText(", ".join(  # takes the folder out; the paths and the count in the tip
-                f"<b>{style.link(self, f'forget:{n}', escape(f.name or str(f)))}</b>"
-                for n, f in enumerate(self.folders)))
-            self.folders_state.setToolTip("\n".join(str(f) for f in self.folders)
-                                          + f"\n{len(self.games)} game(s) found, up to {MAX_DEPTH} folders "
-                                          "deep. Click a folder to stop looking for games in it; its games stay "
-                                          "where they are.")
-        elif not self.version:
-            self.folders_state.setText("None yet: install shadPS4 first, then Add folder takes the folder with your "
-                                       "games.")
-            self.folders_state.setToolTip("")
-        else:
-            self.folders_state.setText("None yet: Add folder takes the folder with your games (each in a folder of "
-                                       "its own, with eboot.bin); Games Install unpacks a package into one.")
-            self.folders_state.setToolTip("")
+        # The app's own folders (owner, 03-11-2026): the home folder's, and a removable drive's when it has one.
+        where = ", ".join(f"<b>{escape(private(f))}</b>" for f in self.folders)
+        self.folders_state.setText(f"{where}: put your games there, each in a folder of its own (with eboot.bin); "
+                                   "Games Install unpacks a package into one. A USB drive or an SD card with a "
+                                   "Games/PS4 folder on it is looked in too.")
+        self.folders_state.setToolTip("\n".join(private(f) for f in self.folders)
+                                      + f"\n{len(self.games)} game(s) found, up to {MAX_DEPTH} folders deep.")
         self._show_shadnet()
         self.games_box.set_value(str(len(self.games)))
         found = {str(g.eboot) for g in self.games}
@@ -539,14 +580,22 @@ class MainWindow(QMainWindow):
             self.note(f"shadPS4 {release.version} is out ({release.published}); a later version of this app brings "
                       f"it, once it has been tried on the board: {release.url}")
 
+    def chosen(self) -> Game | None:
+        """The game whose row is selected."""
+        rows = self.table.selectionModel().selectedRows()
+        return self.games[rows[0].row()] if rows and rows[0].row() < len(self.games) else None
+
     def _fill_table(self) -> None:
         self.table.blockSignals(True)
         self.table.setRowCount(len(self.games))
         for row, game in enumerate(self.games):
             box = QTableWidgetItem()
             box.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
-            box.setCheckState(Qt.CheckState.Checked if str(game.eboot) in self.in_steam else Qt.CheckState.Unchecked)
-            box.setToolTip("In Steam" if str(game.eboot) in self.in_steam else "Not in Steam")
+            box.setCheckState(Qt.CheckState.Checked if str(game.eboot) in self.in_steam or str(game.eboot) in self.moved
+                              else Qt.CheckState.Unchecked)
+            box.setToolTip("In Steam" if str(game.eboot) in self.in_steam else
+                           f"Found again under a new name: in Steam as {self.in_steam.get(self.moved[str(game.eboot)], '?')}; "
+                           "Update Steam brings the shortcut up to date" if str(game.eboot) in self.moved else "Not in Steam")
             self.table.setItem(row, STEAM, box)
             for column, text in ((GAME, game.title), (SERIAL, game.title_id), (VERSION, game.version),
                                  (FOLDER, game.folder.name or str(game.folder))):
@@ -574,12 +623,11 @@ class MainWindow(QMainWindow):
         self.refresh_pill.setEnabled(idle)
         self.install_pill.setEnabled(idle and self.version != emulator.VERSION)
         self.remove_pill.setEnabled(idle and installed)
-        self.modules_pill.setEnabled(idle)
-        self.folder_pill.setEnabled(idle and installed)
         self.package_pill.setEnabled(idle)
         self.account_pill.setEnabled(idle)
         self.shad_button.setEnabled(idle and installed)
         self.covers_button.setEnabled(idle)
+        self.remove_game_button.setEnabled(idle and self.chosen() is not None)
         add, remove = self.steam_plan()
         stale = self.no_logo | self.old_tags | self.no_cover
         named = shortcuts.names(add)        # a name in Steam that differs (one from before the prefix) is renamed
@@ -608,7 +656,7 @@ class MainWindow(QMainWindow):
             self._update_buttons()
 
     def _job_done(self, result: tuple[bool, str]) -> None:
-        ok, message = result
+        ok, message = result[0], private(result[1])     # a path in an error: the user's folders as ~
         self.refresh()
         self.say(message, ok)
 
@@ -635,77 +683,13 @@ class MainWindow(QMainWindow):
             self.refresh()
             self.say("shadPS4 was removed.")
 
-    def on_install_modules(self) -> None:
-        folder = QFileDialog.getExistingDirectory(self, window_title("Install the system modules"),
-                                                  str(Path.home()))
-        if folder:
-            self.install_modules(Path(folder))
-
-    def install_modules(self, source: Path) -> None:
-        """The .sprx files of *source* copied into shadPS4's module folder, which shadPS4 reads when a game asks
-        for a module (so it may run meanwhile); the state follows at once."""
-        target = self.modules.folder
-        try:
-            copied = userdata.install_modules(source, target)
-        except OSError as error:
-            self.say(f"The system modules were not copied: {error}", ok=False)
-            return
-        if not copied:
-            self.say(f"No system module (.sprx) in {source.name or source}.", ok=False)
-            return
-        self.refresh()
-        m = self.modules
-        self.say(f"{len(copied)} system module(s) copied into shadPS4's module folder: {len(m.needed)} of the "
-                 f"{len(userdata.NEEDED)} it cannot do without are there now.")
-
-    def on_add_folder(self) -> None:
-        folder = QFileDialog.getExistingDirectory(self, window_title("Add a game folder"), str(Path.home()))
-        if folder:
-            self.add_folder(Path(folder))
-
-    def add_folder(self, folder: Path) -> None:
-        """Through shadPS4 itself (--add-game-folder), so its own window lists the games too."""
-        try:
-            done = subprocess.run(self.shadps4_command("--add-game-folder", str(folder)), capture_output=True,
-                                  text=True, timeout=FOLDER_TIMEOUT, cwd=self.home)
-            ok = done.returncode == 0
-            message = "" if ok else \
-                f"shadPS4 did not add {folder} (exit code {done.returncode}): {done.stderr.strip()[-300:]}"
-        except (OSError, subprocess.SubprocessError) as error:
-            ok, message = False, f"shadPS4 did not add {folder}: {error}"
-        self.refresh()
-        if ok:
-            message = f"{folder.name or folder} is a game folder now: {len(scan([folder]))} game(s) in it."
-        self.say(message, ok)
-
-    def on_forget_folder(self, url: str) -> None:
-        """A folder's name in the Game folders line was clicked ("forget:<n>"): asked first."""
-        try:
-            folder = self.folders[int(url.partition(":")[2])]
-        except (ValueError, IndexError):
-            return
-        if self._ask("Remove a game folder", f"Stop looking for games in {folder}?\n\nIts games stay where they "
-                                             "are."):
-            self.forget_folder(folder)
-
-    def forget_folder(self, folder: Path) -> None:
-        """Out of shadPS4's game folders, as shadPS4's own Remove Folder does; not while shadPS4 runs."""
-        if self.shad_running():
-            self.say(RUNNING, ok=False)
-            return
-        try:
-            userdata.remove_game_folder(self.shad_home, folder)
-        except userdata.UserDataError as error:
-            self.say(f"{folder.name or folder} was not taken out: {error}", ok=False)
-            return
-        self.refresh()
-        self.say(f"{folder.name or folder} is no longer a game folder; its games stay where they are.")
-
-    def open_extract(self, pkg: str | None = None) -> None:
-        """The Extract PKG window, with *pkg* loaded; when it is open already, *pkg* goes into it."""
+    def open_extract(self, pkg: str | list[str] | None = None) -> None:
+        """The Extract PKG window, with *pkg* loaded (several: the first loaded, the rest queued); when it is open
+        already, they go into it."""
+        pkgs = [pkg] if isinstance(pkg, str) else list(pkg or [])
         if self.extract_dialog is not None:
-            if pkg:
-                self.extract_dialog.open_pkg(pkg)
+            if pkgs:
+                self.extract_dialog.open_pkgs(pkgs)
             self.extract_dialog.raise_()
             self.extract_dialog.activateWindow()
             return
@@ -715,7 +699,7 @@ class MainWindow(QMainWindow):
             self.say(f"Extract PKG needs the cryptography package ({error}): install {APP_NAME} again through the "
                      "portal.", ok=False)
             return
-        self.extract_dialog = ExtractDialog(self.settings, self.folders, self, pkg)
+        self.extract_dialog = ExtractDialog(self.settings, self.folders, self, pkgs)
         try:
             self.extract_dialog.exec()
             extracted = self.extract_dialog.extracted
@@ -733,7 +717,7 @@ class MainWindow(QMainWindow):
         pkgs = [url.toLocalFile() for url in event.mimeData().urls() if url.toLocalFile().lower().endswith(".pkg")]
         if pkgs:
             event.acceptProposedAction()
-            QTimer.singleShot(0, lambda: self.open_extract(pkgs[0]))   # after the drop has ended
+            QTimer.singleShot(0, lambda: self.open_extract(pkgs))      # after the drop has ended
 
     def shadps4_command(self, *args: str) -> list[str]:
         """The installed shadPS4 through the run wrapper (from the app folder when it is not installed yet)."""
@@ -761,6 +745,50 @@ class MainWindow(QMainWindow):
         else:
             self.say(f"shadPS4 could not be started: {command[0]} did not run.", ok=False)
 
+    def on_remove_game(self) -> None:
+        """Remove game… (owner, 03-11-2026, from the Windows Portable Suite's managers: before deleting anything, let
+        the user decide what to keep): a window lists what of the chosen game would go, a row each with its size,
+        every row ticked; unticking keeps it, Delete marked deletes the rows still ticked (read-only files too) off
+        the window's thread, its Steam shortcut through Steam, and Cancel deletes nothing. The saves, the play time and the package
+        stay."""
+        game = self.chosen()
+        if game is None:
+            return
+        if self.shad_running():
+            self.say(RUNNING_REMOVE, ok=False)
+            return
+        items, why = library.removal_items(game, self.folders, self.games, str(game.eboot) in self.in_steam)
+        if not items:
+            self.say(why, ok=False)
+            return
+        if KeepDialog(f"Remove {game.title}", items, self).exec() != QDialog.DialogCode.Accepted:
+            self.say("Nothing was deleted.")
+            return
+        chosen = keep.chosen(items)
+        kept = [item.label for item in items if not item.delete]
+        paths = [path for item in chosen for path in item.paths]
+        take_out = any(item.key == library.STEAM_ITEM for item in chosen)
+        folder, closed, run, existing = self.steam_dir, self.steam_closed, self.run_path, self.in_steam
+        title = game.title
+
+        def job() -> tuple[bool, str]:
+            failed = keep.delete(paths)
+            gone = [item.label for item in chosen if item.paths and not any(item.label.startswith(f.split(" (")[0])
+                                                                                for f in failed)]
+            if take_out and folder is not None:
+                try:
+                    closed(lambda: steam.write_shortcuts(folder, shortcuts.changes([], [game], run, LOGO_PATH, existing)))
+                    gone.append("its shortcut in Steam")
+                except (steam.SteamError, steam.ShortcutError, OSError) as error:
+                    failed.append(f"its Steam shortcut ({error})")
+            text = f"{title}: deleted {', '.join(gone) if gone else 'nothing'}."
+            if kept:
+                text += f" Kept: {', '.join(kept)}."
+            if failed:
+                text += f" Not deleted: {', '.join(failed)}."
+            return not failed, text
+        self._start(f"Deleting {title}…", job)
+
     def on_update_steam(self) -> None:
         if self.steam_dir is None:
             return
@@ -786,13 +814,33 @@ class MainWindow(QMainWindow):
                                   get) if key else [])
             changes = shortcuts.changes(add, remove, run, LOGO_PATH, existing,
                                         found=lambda g: covers.art(home, shortcuts.cover_name(g), shortcuts.COVERS))
+            found: dict[str, str] | None = {}
+            extra: list[str] = []
+
+            def change() -> None:
+                # Read back right after the write, while Steam is still closed (owner, 03-11-2026, from the Windows
+                # Portable Suite's managers: "it still says 0 games in Steam"): whether the shortcuts were written
+                # as the app reads them, before Steam touches the file. A failed read is said, not passed over.
+                nonlocal found
+                steam.write_shortcuts(folder, changes)
+                try:
+                    found = shortcuts.in_steam(folder)
+                except OSError as error:
+                    found = None
+                    extra.append(f"Steam's file could not be read back: {error}")
+
             try:
-                restarted = closed(lambda: steam.write_shortcuts(folder, changes))
+                restarted = closed(change)
             except (steam.SteamError, steam.ShortcutError, OSError) as error:
                 return False, "\n".join([*notes, f"Steam was not changed: {error}"])
+            if found is not None:
+                missing = [g.title for g in add if str(g.eboot) not in found]
+                if missing:
+                    extra.append(f"Read back from Steam's file, {len(add) - len(missing)} of the {len(add)} game(s) "
+                                 f"are there: not {', '.join(missing)}.")
             again = " Steam was closed for it and starts again in the background." if restarted else ""
             return True, "\n".join([*notes, f"{len(add)} game(s) in Steam, under Non-Steam in the library"
-                                              f"{f'; {len(remove)} taken out' if remove else ''}.{again}"])
+                                              f"{f'; {len(remove)} taken out' if remove else ''}.{again}", *extra])
         self._start("Looking up covers and changing Steam's shortcuts…" if key else "Changing Steam's shortcuts…",
                     job)
 

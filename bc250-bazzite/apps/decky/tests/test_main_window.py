@@ -71,6 +71,14 @@ def setup(tmp_path, monkeypatch):
     return paths, FakeSystem(paths), [steam_dir], tmp_path / "download"
 
 
+def test_no_user_name_on_the_screen(qapp, setup, tmp_path, monkeypatch):
+    """The user's home shows as ~ on the Deck step (owner, 03-11-2026: the privacy rule)."""
+    monkeypatch.setenv("HOME", str(tmp_path / "home"))
+    window = _window(setup)
+    assert "your home (~)" in window.deck_state.text() and str(tmp_path / "home") not in window.deck_state.text()
+    window.close()
+
+
 def _window(setup, latest=ReleaseInfo, fetch=None) -> MainWindow:
     paths, system, steam_dirs, download_dir = setup
 

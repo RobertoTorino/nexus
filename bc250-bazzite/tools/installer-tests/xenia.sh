@@ -42,8 +42,9 @@ mkdir -p "$D/$APP/emulator/e6cd2e4"
 printf '#!/bin/sh\necho "args: $*"\n' > "$D/$APP/emulator/e6cd2e4/xenia.AppImage"
 chmod +x "$D/$APP/emulator/e6cd2e4/xenia.AppImage"
 ln -sfn e6cd2e4 "$D/$APP/emulator/current"
-bash "$RUN" --fullscreen=true "/games/My Game.iso" > "$T/run.log" 2>&1; rc=$?
-check "starts the current Xenia with the arguments as given" "[ $rc -eq 0 ] && grep -qxF 'args: --fullscreen=true /games/My Game.iso' $T/run.log"
+mkdir -p "$T/games" && touch "$T/games/My Game.iso"                           # a game that is there (the wrapper's gone check)
+bash "$RUN" --fullscreen=true "$T/games/My Game.iso" > "$T/run.log" 2>&1; rc=$?
+check "starts the current Xenia with the arguments as given" "[ $rc -eq 0 ] && grep -qxF 'args: --fullscreen=true $T/games/My Game.iso' $T/run.log"
 
 echo "== 3. install a staged release (core bundled in the tarball) without the Desktop icon"
 rm -rf "$T/stage"; /usr/bin/python3 "$NEXUS/tools/stage_app.py" xenia "$T/stage" > /dev/null

@@ -24,6 +24,7 @@ class CameraSettings(SettingsStore):
                 "bandwidth": "reduced",     # loader.BANDWIDTHS: the video endpoint the firmware is sent with
                 "mode": "",                 # the preview's mode, "<width>x<height>@<fps>"; "": the camera's default
                 "view": "both",             # VIEWS: what the preview shows of a stereo mode
+                "gray": False,              # the full screen in black and white
                 "controls": ""}             # JSON {control key: value}: the picture settings the user chose
 
     def controls(self) -> dict[str, int]:

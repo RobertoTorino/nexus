@@ -44,9 +44,10 @@ mkdir -p "$D/$APP/emulator/2.8.2"
 printf '#!/bin/sh\necho "args: $*"\n' > "$D/$APP/emulator/2.8.2/pcsx2.AppImage"
 chmod +x "$D/$APP/emulator/2.8.2/pcsx2.AppImage"
 ln -sfn 2.8.2 "$D/$APP/emulator/current"
-bash "$RUN" -nogui -fullscreen -- "/games/My Game.iso" > "$T/run.log" 2>&1; rc=$?
-check "starts the current PCSX2 with the arguments as given" "[ $rc -eq 0 ] && grep -qxF 'args: -nogui -fullscreen -- /games/My Game.iso' $T/run.log"
-check "the game started goes to the app's log, by name" "grep -q ' INFO Started My Game.iso from a terminal, with' $D/$APP/$APP.log && ! grep -q '/games/' $D/$APP/$APP.log"
+mkdir -p "$T/games" && touch "$T/games/My Game.iso"                           # a game that is there (the wrapper's gone check)
+bash "$RUN" -nogui -fullscreen -- "$T/games/My Game.iso" > "$T/run.log" 2>&1; rc=$?
+check "starts the current PCSX2 with the arguments as given" "[ $rc -eq 0 ] && grep -qxF 'args: -nogui -fullscreen -- $T/games/My Game.iso' $T/run.log"
+check "the game started goes to the app's log, by name" "grep -q ' INFO Started My Game.iso from a terminal, with' $D/$APP/$APP.log && ! grep -q '$T/games/' $D/$APP/$APP.log"
 
 echo "== 3. install a staged release (core bundled in the tarball) without the Desktop icon"
 rm -rf "$T/stage"; /usr/bin/python3 "$NEXUS/tools/stage_app.py" pcsx2 "$T/stage" > /dev/null

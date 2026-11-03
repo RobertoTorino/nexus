@@ -62,3 +62,37 @@ def test_what_one_install_wrote(tmp_path):
     now = userdata.firmware_written(vita_fs, 2000)
     assert (now.system, now.fonts, now.preinstalled) == (True, True, False)
     assert not userdata.firmware_written(tmp_path / "none", 0).system
+
+
+def test_the_lines_the_app_owns_are_set_in_place(tmp_path):
+    """The welcome window and the update check off (owner, 03-11-2026): the lines set where build 4186 wrote them,
+    every other line kept; a second run changes nothing; a missing key goes before the end, a missing file is made."""
+    config = write_vita3k_files(tmp_path / "Vita3K")
+    path = userdata.config_path(config)
+    before = path.read_text(encoding="utf-8").splitlines()
+    assert userdata.prepare(config) == ["its welcome window off", "its update check off"]
+    after = path.read_text(encoding="utf-8").splitlines()
+    assert len(after) == len(before) and after[0] == "---" and after[-1] == "..."
+    assert [a for a, b in zip(after, before) if a != b] == ["show-welcome: false", "check-for-updates-mode: 0"]
+    assert userdata.read_map(path)["show-welcome"] == "false" and userdata.read_map(path)["user-id"] == ""
+    stamp = path.stat().st_mtime_ns
+    assert userdata.prepare(config) == [] and path.stat().st_mtime_ns == stamp
+    assert userdata.set_values(path, {"new-key": "1"}) == ["new-key"] and after[-2] != "new-key: 1"
+    assert path.read_text(encoding="utf-8").splitlines()[-2:] == ["new-key: 1", "..."]
+    fresh = tmp_path / "fresh"
+    assert userdata.prepare(fresh) == ["its welcome window off", "its update check off"]
+    assert userdata.config_path(fresh).read_text() == "---\nshow-welcome: false\ncheck-for-updates-mode: 0\n...\n"
+
+
+def test_vita3k_running_sees_the_appimages_process(tmp_path):
+    from pathlib import Path
+    from vita3k_manager import emulator
+    proc = tmp_path / "proc"
+    for pid, comm, state in (("10", "steam", "S"), ("11", "vita3k.AppImage", "Z")):
+        (proc / pid).mkdir(parents=True)
+        (proc / pid / "comm").write_text(comm + "\n")
+        (proc / pid / "stat").write_text(f"{pid} ({comm}) {state} 1 1 1\n")
+    assert not emulator.running(proc)                                                # a zombie does not count
+    (proc / "11" / "stat").write_text("11 (vita3k.AppImage) S 1 1 1\n")
+    assert emulator.running(proc)
+    assert not emulator.running(Path("/nonexistent"))

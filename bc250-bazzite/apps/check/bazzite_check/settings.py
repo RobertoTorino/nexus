@@ -19,6 +19,7 @@ from PyQt6.QtWidgets import (
 )
 
 from bc250_core import __version__ as CORE_VERSION
+from bc250_core.platform import private
 from bc250_core.settings import SettingsStore
 
 from . import APP_NAME, INFO, LOGO_PATH, REPO_URL, ROOT, __version__
@@ -131,8 +132,8 @@ class PrivacyPage(QWidget):
             "result is stored on speedtest.net; their privacy policy applies. The GUI asks before it runs.</li></ul>"))
         layout.addWidget(_text(
             "<b>What is stored on this computer:</b><ul>"
-            f"<li>GUI run logs: <code>{log_dir()}</code></li>"
-            f"<li>Test history: <code>{db_path()}</code> (status and hint count per test, benchmark, "
+            f"<li>GUI run logs: <code>{private(log_dir())}</code></li>"
+            f"<li>Test history: <code>{private(db_path())}</code> (status and hint count per test, benchmark, "
             "stress, disk and speed numbers; no test output)</li>"
             "<li>Full test reports: <code>/var/log/bc250-bazzite-test</code> (readable by root only) "
             "and a copy in <code>~/Desktop/bc250-bazzite-test</code>. Test 45 adds the names and versions of "

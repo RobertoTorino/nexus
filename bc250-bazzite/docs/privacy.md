@@ -71,7 +71,8 @@ the exact list. Nothing of it is uploaded. Uninstalling with `--purge` removes t
 Some of it can identify you: host and user names, serial numbers, MAC and IP addresses, account IDs. Where an app
 shows or saves such details, it masks them: [Bazzite Test](apps/check.md) masks them in saved logs (on by default,
 in **Settings › Privacy**), [Console Link](apps/consoles.md#privacy) in its window and log, and
-[Console LinkB](apps/clb.md#privacy) in its log. Before you share a log or a screenshot, for example in an issue,
+[Console LinkB](apps/clb.md#privacy) in its log. Where an app shows a path on its screen or writes one in its
+log, your home folder is written as `~`, so your user name is not in it. Before you share a log or a screenshot, for example in an issue,
 look it over for anything you would rather keep to yourself.
 
 ## This wiki

@@ -53,7 +53,7 @@ def test_modules(tmp_path):
     for name in userdata.NEEDED:
         (folder / name).touch()
     assert userdata.check_modules(folder).complete
-    assert not set(userdata.NEEDED) & set(userdata.OPTIONAL) and len(userdata.NEEDED) + len(userdata.OPTIONAL) == 34
+    assert not set(userdata.NEEDED) & set(userdata.OPTIONAL) and len(userdata.NEEDED) + len(userdata.OPTIONAL) == 35
 
 
 def test_the_users_and_shadnet(shad_files):
@@ -186,3 +186,29 @@ def test_play_time_as_shadps4_writes_it(tmp_path):
     assert userdata.play_times(tmp_path) == {"CUSA11624": (4967, 1792613335.0), "CUSA53672": (2611, 1792710015.0),
                                              "CUSA00001": (62, 0.0)}
     assert [userdata.played(s) for s in (4967, 2611, 62, 40)] == ["1 h 22 min", "43 min 31 s", "1 min 2 s", "40 s"]
+
+
+def test_sync_modules_copies_what_is_new_or_changed(tmp_path):
+    """The modules put in Games/PS4/Modules go into shadPS4's folder once (owner, 03-11-2026); a changed one again."""
+    source, target = tmp_path / "Modules", tmp_path / "sys_modules"
+    assert userdata.sync_modules(source, target) == []                          # no folder yet
+    source.mkdir()
+    (source / "libSceUlt.sprx").write_bytes(b"a")
+    (source / "libSceNgs2.sprx").write_bytes(b"b")
+    (source / "readme.txt").write_text("")
+    assert userdata.sync_modules(source, target) == ["libSceNgs2.sprx", "libSceUlt.sprx"]
+    assert sorted(p.name for p in target.iterdir()) == ["libSceNgs2.sprx", "libSceUlt.sprx"]
+    assert userdata.sync_modules(source, target) == []
+    (source / "libSceUlt.sprx").write_bytes(b"aa")
+    assert userdata.sync_modules(source, target) == ["libSceUlt.sprx"]
+
+
+def test_set_game_folders_writes_install_dirs(tmp_path):
+    home = tmp_path / "shadPS4"
+    home.mkdir()
+    (home / "config.json").write_text(json.dumps({"General": {"install_dirs": [{"enabled": True, "path": "/old"}],
+                                                              "other": 1}}))
+    userdata.set_game_folders(home, [tmp_path / "Games" / "PS4"])
+    saved = json.loads((home / "config.json").read_text())
+    assert saved["General"]["install_dirs"] == [{"enabled": True, "path": str(tmp_path / "Games" / "PS4")}]
+    assert saved["General"]["other"] == 1

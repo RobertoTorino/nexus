@@ -41,4 +41,19 @@ if [ -n "${SDL_GAMECONTROLLER_IGNORE_DEVICES:-}${SDL_GAMECONTROLLER_IGNORE_DEVIC
 fi
 # Xenia's window is an X11 one on a Wayland desktop too (it sets GDK_BACKEND=x11 for GTK unless it is set), so
 # Steam's overlay sees it: nothing to set for that.
+# A game that is no longer there (owner, 03-11-2026, from the Windows Portable Suite's managers): renamed, moved or
+# deleted after it was put in Steam, or on a drive that is not in. Xenia is not started; the app says so in a
+# window of its own (its package with the suite's Python, when the app is installed), and here, so Steam sees the
+# game end.
+game=""
+for arg in "$@"; do game=$arg; done
+if [ -n "${game:-}" ] && [ "${game#-}" = "$game" ] && [ ! -e "$game" ]; then
+    echo "This game is no longer there: $game. Open Xenia Manager, press Refresh and then Update Steam." >&2
+    APP_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/bc250-xenia-manager/app"
+    PYTHON="${XDG_DATA_HOME:-$HOME/.local/share}/bc250-bazzite-suite/venv/bin/python"
+    if [ -x "$PYTHON" ] && [ -d "$APP_DIR" ]; then
+        (cd "$APP_DIR" && exec "$PYTHON" -m xenia_manager --gone "$game") || true
+    fi
+    exit 1
+fi
 exec "$APPIMAGE" "$@"

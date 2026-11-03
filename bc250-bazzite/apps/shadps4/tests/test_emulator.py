@@ -39,8 +39,8 @@ def pinned(monkeypatch):
 
 
 def test_the_pin_points_at_the_release():
-    assert emulator.URL == ("https://github.com/shadps4-emu/shadPS4/releases/download/v.0.20.0/"
-                            "shadps4-linux-sdl-0.20.0.zip")
+    assert emulator.URL == ("https://github.com/shadps4-emu/shadPS4/releases/download/v.0.21.0/"
+                            "shadps4-linux-sdl-0.21.0.zip")
     assert len(emulator.SHA256) == 64 and emulator.TAG.endswith(emulator.VERSION)
 
 
@@ -53,7 +53,7 @@ def test_install_and_remove(tmp_path, pinned):
     image = emulator.appimage(home)
     assert image.read_bytes().startswith(b"#!/bin/sh") and image.stat().st_mode & 0o777 == 0o755
     assert (home / "current").is_symlink() and emulator.installed_version(home) == emulator.VERSION
-    assert sorted(p.name for p in home.iterdir()) == ["0.20.0", "current"]       # no download left behind
+    assert sorted(p.name for p in home.iterdir()) == ["0.21.0", "current"]       # no download left behind
     emulator.remove(home)
     assert not home.exists() and emulator.installed_version(home) == ""
 
@@ -109,8 +109,8 @@ def _releases(tag: str):
 
 
 def test_a_newer_shadps4_release():
-    newer = emulator.newer_release(_releases("v.0.21.0"))
-    assert (newer.version, newer.published) == ("0.21.0", "2026-11-20") and newer.url.endswith("/v.0.21.0")
+    newer = emulator.newer_release(_releases("v.0.22.0"))
+    assert (newer.version, newer.published) == ("0.22.0", "2026-11-20") and newer.url.endswith("/v.0.22.0")
     assert emulator.newer_release(_releases(emulator.TAG)) is None                 # the one the app brings
     assert emulator.newer_release(_releases("v.0.19.0")) is None
 

@@ -155,3 +155,19 @@ def newer_release(fetch: Fetch | None = None) -> ReleaseInfo | None:
         return None
     return ReleaseInfo(tag, tag, str(data.get("html_url") or f"https://github.com/{BUILDS}/releases/tag/{tag}"),
                        str(data.get("published_at", ""))[:10])
+
+
+def running(proc: Path = Path("/proc")) -> bool:
+    """Whether the installed Vita3K runs: the AppImage's own process, named after the file (comm holds the first 15
+    characters: "vita3k.AppImage"), stays while the program it unpacked runs. A finished one not collected yet (a zombie)
+    does not count. Vita3K writes its settings back when it closes, so nothing in them is written while it runs."""
+    for folder in proc.glob("[0-9]*"):
+        try:
+            if (folder / "comm").read_text().strip() != MEMBER[:15]:
+                continue
+            state = (folder / "stat").read_text().rsplit(")", 1)[1].split()[0]
+        except (OSError, IndexError):
+            continue
+        if state not in ("Z", "X"):
+            return True
+    return False

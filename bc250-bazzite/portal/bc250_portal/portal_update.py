@@ -1,21 +1,29 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """What a newer portal release brings: its apps.toml, read from GitHub at its tag, compared with the running
-portal's pins. App updates reach users through a portal update, so the portal's update button can name them."""
+portal's pins. App updates reach users through a portal update, so the portal's update button can name them. The
+release's SHA256SUMS tells a new build of the running portal's own version (owner, 03-11-2026, as the Windows
+Portable Suite's portal since 31-10-2026): a release built again under the same version, which the version alone
+never offers; install.sh writes the sha256 of the tarball a portal came from beside its program (build.sha256)."""
 
 from __future__ import annotations
 
+import re
 import urllib.request
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from pathlib import Path
 
 from bc250_core.updates import ReleaseInfo, latest_release
 
 from .manifest import AppEntry, ManifestError, parse
+from .sources import expected_sha256
 
 # The newer portal's manifest at its tag: in the suite's folder (bc250-bazzite/, since the suite moved there on
 # 26-10-2026), before that at the root of the repository, which keeps a copy for the portals installed before the move.
 RAW_URLS = ("https://raw.githubusercontent.com/{repo}/{tag}/bc250-bazzite/portal/apps.toml",
             "https://raw.githubusercontent.com/{repo}/{tag}/portal/apps.toml")
+SUMS_URL = "https://github.com/{repo}/releases/download/{tag}/SHA256SUMS"
+BUILD_FILE = "build.sha256"                 # beside the installed program: the sha256 of the tarball it came from
 TIMEOUT = 15
 
 
@@ -32,6 +40,7 @@ class AppChange:
 class PortalUpdate:
     release: ReleaseInfo
     changes: list[AppChange] | None = field(default=None)  # None: the new pins could not be read
+    sha256: str = ""                    # of the release's tarball, from its SHA256SUMS; "" when it could not be read
 
     def summary(self) -> str:
         """ "updates ACE Queues and Memory Manager", "updates 4 apps, adds BIOS Reader", or "" """
@@ -87,10 +96,23 @@ def fetch_text(url: str, user_agent: str) -> str:
         return response.read().decode("utf-8")
 
 
+def running_build(root: Path) -> str | None:
+    """The sha256 of the tarball the running portal was installed from (build.sha256 beside its program): None from
+    a checkout (no build to compare), "" for an installed portal without the file (installed before it was written,
+    or from a folder without its tarball beside it), which a new build is offered to once."""
+    try:
+        text = (root / BUILD_FILE).read_text(encoding="utf-8")
+    except OSError:
+        return ""
+    sha = (text.split() or [""])[0].lower()
+    return sha if re.fullmatch(r"[0-9a-f]{64}", sha) else ""
+
+
 def check(repo: str, tag_prefix: str, current: list[AppEntry], user_agent: str,
           release_of: Callable[..., ReleaseInfo] = latest_release,
           read: Callable[[str, str], str] = fetch_text) -> PortalUpdate:
-    """The newest portal release and, when there is one, what its pins change. Never raises."""
+    """The newest portal release and, when there is one, what its pins change and the sha256 of its tarball. Never
+    raises."""
     release = release_of(repo, tag_prefix, user_agent=user_agent)
     if release.error or not release.tag:
         return PortalUpdate(release)
@@ -101,4 +123,9 @@ def check(repo: str, tag_prefix: str, current: list[AppEntry], user_agent: str,
             break
         except (OSError, ValueError, ManifestError):
             continue                            # a tag from before the move: the next address
-    return PortalUpdate(release, changes)
+    try:
+        sha256 = expected_sha256(read(SUMS_URL.format(repo=repo, tag=release.tag), user_agent),
+                                 f"{release.tag}.tar.gz")
+    except (OSError, ValueError):
+        sha256 = ""                             # no build to compare: the version alone decides
+    return PortalUpdate(release, changes, sha256)

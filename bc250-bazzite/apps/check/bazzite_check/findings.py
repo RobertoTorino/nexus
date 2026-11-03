@@ -19,6 +19,7 @@ from PyQt6.QtWidgets import QDialog, QHBoxLayout, QLabel, QPushButton, QTextBrow
 from . import window_title
 from .catalog import TESTS
 from .runner import ERROR, INFO, WARNING
+from bc250_core.platform import private
 
 MAX_LOG_BYTES = 4 * 1024 * 1024
 
@@ -122,7 +123,7 @@ def render(kind: str, entries: list[Entry]) -> tuple[str, int]:
             rows = ["<li style='color:#9aa0a6;'>No details in the log.</li>"]
         parts.append("<ul style='margin-top:0;'>" + "".join(rows) + "</ul>")
         parts.append(f"<p style='color:#9aa0a6; font-size:small; margin-top:-6px;'>From "
-                     f"{html.escape(str(path))} · <a href='log:{e.test_id}:{quote(str(path))}' "
+                     f"{html.escape(private(path))} · <a href='log:{e.test_id}:{quote(str(path))}' "
                      f"style='color:#ce93d8;'>Show in log</a></p>")
     return "".join(parts), len(shown)
 

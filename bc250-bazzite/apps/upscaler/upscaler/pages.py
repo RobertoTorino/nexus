@@ -23,6 +23,7 @@ from .backend import (
 )
 from .style import accent_button
 from .widgets import STATE_COLORS, StatusPill, Terminal, hint_label, page_header
+from bc250_core.platform import private
 
 POLL_MS = 5000
 
@@ -189,7 +190,7 @@ class OverviewPage(QWidget):
                     "release and import the folder again.").format(version=version)
         else:
             text = "No payload yet: import an extracted HelixSR release."
-        self.payload_info.setText(text + "\n" + "Folder: {0}".format(status.path))
+        self.payload_info.setText(text + "\n" + "Folder: {0}".format(private(status.path)))
 
     def show_deployments(self, deployments: list[Deployment], payload_dir: Path) -> None:
         selected = self.selected()

@@ -10,22 +10,27 @@ import shlex
 import subprocess
 import time
 from html import escape
+from collections.abc import Callable
 from pathlib import Path
 
 from PyQt6.QtCore import QProcess, Qt, QTimer
 from PyQt6.QtGui import QCloseEvent
-from PyQt6.QtWidgets import (QAbstractItemView, QFileDialog, QGridLayout, QHBoxLayout, QHeaderView, QInputDialog,
+from PyQt6.QtWidgets import (QAbstractItemView, QDialog, QFileDialog, QGridLayout, QHBoxLayout, QHeaderView, QInputDialog,
                              QLabel, QLineEdit, QMainWindow, QMenu, QMessageBox, QPushButton, QTableWidget,
                              QTableWidgetItem, QVBoxLayout, QWidget)
 
 from bc250_core import SUITE_MANUAL_URL, covers, steam, window_title
 from bc250_core import __version__ as CORE_VERSION
-from bc250_core.platform import bin_home
+from bc250_core import keep
+from bc250_core.keep_dialog import KeepDialog
+from bc250_core.platform import bin_home, private
 from bc250_core.settings import SettingsStore
+from bc250_core.settings_page import SettingsDialog
 from bc250_core.updates import ReleaseInfo, UpdateChecker
 from bc250_core.widgets import AppHeader, MetricBox, StatusText, Terminal, hint_label
 
-from . import APP_ID, APP_NAME, INFO, LOGO_PATH, ROOT, __version__, emulator, shortcuts, style, userdata
+from . import (APP_ID, APP_NAME, INFO, LOGO_PATH, ROOT, __version__, emulator, library, shortcuts, style, userdata,
+               vita3k_settings)
 from .games import Game, installed, names
 
 MANUAL_URL = f"{SUITE_MANUAL_URL}apps/vita3k/"
@@ -35,18 +40,29 @@ INSTALL_TIMEOUT = 900                   # seconds for Vita3K to install a firmwa
 STEAM_TIP = "Add the ticked games to Steam and take out the others; Steam closes for it and starts again"
 
 
+RUNNING_REMOVE = "Vita3K is running: close it first, then remove the game."
+
+
+class Vita3kSettings(SettingsStore):
+    DEFAULTS: dict = {"firmware_given": []}     # the PUPs in Games/Vita/Firmware given to Vita3K (library.file_key)
+
+
 class MainWindow(QMainWindow):
     def __init__(self, home: Path | None = None, vita3k_config: Path | None = None, steam_dir: Path | None = None,
                  run: Path | None = None, fetch: emulator.Download = emulator.download,
                  steam_closed=steam.with_steam_closed, steam_running=steam.steam_running,
                  newer_release=emulator.newer_release, covers_home: Path | None = None,
-                 covers_get: covers.Get = covers._get, covers_key: Path | None = None):
+                 covers_get: covers.Get = covers._get, covers_key: Path | None = None,
+                 vita3k_running=emulator.running, user_home: Path | None = None,
+                 drives: Callable[[], list[Path]] = library.removable_drives):
         """*home*: where the app installs Vita3K; *vita3k_config*: Vita3K's settings folder (its config.yml says
         where its storage is); *steam_dir*: Steam's folder (None: looked up); *run*: the run wrapper the shortcuts
         start; *fetch*: the download; *steam_closed* and *steam_running*: closing Steam for a change and asking
         whether it runs; *newer_release*: asks GitHub for a newer Vita3K; *covers_home*, *covers_get* and
         *covers_key*: where the covers are kept, how SteamGridDB is asked and the suite's key file (tests never touch
-        the real ones)."""
+        the real ones); *vita3k_running*: whether Vita3K runs (its settings are left alone then); *user_home*: the
+        home folder with the app's own folder, Games/Vita (library.fixed); *drives*: the removable drives looked at
+        for one."""
         super().__init__()
         self.resize(980, 760)
         self.home = home or emulator.emulator_home()
@@ -54,8 +70,12 @@ class MainWindow(QMainWindow):
         self.steam_dir = steam_dir if steam_dir is not None else steam.find_steam()
         self.run_path = run or bin_home() / shortcuts.RUN_NAME
         self.fetch = fetch
+        self.user_home = user_home or Path.home()
+        self.drives = drives
+        self.folders: list[Path] = []
         self.steam_closed = steam_closed
         self.steam_running = steam_running
+        self.vita3k_running = vita3k_running
         self.covers_home = covers_home or covers.covers_home(APP_ID)
         self.covers_get = covers_get
         self.covers_key = covers_key
@@ -67,7 +87,7 @@ class MainWindow(QMainWindow):
         self.install_watch.timeout.connect(self._watch_install)
         self._install_checks = 0
         self._names_before: set[str] = set()
-        self.settings = SettingsStore(INFO, self)    # the window's size only
+        self.settings = Vita3kSettings(INFO, self)
         self.worker = UpdateChecker(self)            # one job at a time off the GUI thread
         self.worker.finished.connect(self._job_done)
         self.games: list[Game] = []
@@ -109,10 +129,6 @@ class MainWindow(QMainWindow):
         self.remove_button.setToolTip("Remove the installed Vita3K; its own folders (firmware, games, saves, "
                                       "settings) stay")
         self.remove_button.clicked.connect(self.on_remove)
-        self.firmware_button = QPushButton("Install firmware…")
-        self.firmware_button.setToolTip("Choose a PSP2UPDAT.PUP you downloaded: the firmware, its font package or the "
-                                        "preinstalled apps; Vita3K installs it")
-        self.firmware_button.clicked.connect(self.on_install_firmware)
         self.game_button = QPushButton("Install game…")
         self.game_button.setToolTip("Install one of your own games in Vita3K: a .vpk or .zip, a .pkg with its zRIF "
                                     "license key, or a dumped game folder")
@@ -121,7 +137,7 @@ class MainWindow(QMainWindow):
         menu.addAction("From a dumped folder…", self.on_install_game_folder)
         self.game_button.setMenu(menu)
         rows = [("Vita3K", self.emulator_state, [self.install_button, self.remove_button]),
-                ("Firmware", self.firmware_state, [self.firmware_button]),
+                ("Firmware", self.firmware_state, []),
                 ("Games", self.games_state, [self.game_button])]
         centre = Qt.AlignmentFlag.AlignVCenter
         for row, (name, state, buttons) in enumerate(rows):
@@ -158,6 +174,14 @@ class MainWindow(QMainWindow):
         self.vita3k_button = QPushButton("Vita3K settings")
         self.vita3k_button.setToolTip("Open Vita3K's own window: its settings, controls and game list")
         self.vita3k_button.clicked.connect(self.on_open_vita3k)
+        self.settings_button = QPushButton("Settings…")
+        self.settings_button.setToolTip("Vita3K's settings that matter for playing, written into Vita3K's own "
+                                        "settings file the moment you change one, while Vita3K does not run")
+        self.settings_button.clicked.connect(self.on_settings)
+        self.remove_game_button = QPushButton("Remove game…")
+        self.remove_game_button.setToolTip("Delete the chosen game from the disk: a window lists what would go, and "
+                                           "you untick what to keep; nothing is deleted before you confirm")
+        self.remove_game_button.clicked.connect(self.on_remove_game)
         self.covers_button = QPushButton("Covers…")
         self.covers_button.setToolTip("The SteamGridDB API key, one for the whole suite: with it, Update Game Mode "
                                       "gives each game a cover from SteamGridDB in Steam's library")
@@ -167,7 +191,9 @@ class MainWindow(QMainWindow):
         buttons = QHBoxLayout()
         buttons.addWidget(self.play_button)
         buttons.addWidget(self.vita3k_button)
+        buttons.addWidget(self.settings_button)
         buttons.addStretch(1)
+        buttons.addWidget(self.remove_game_button)
         buttons.addWidget(self.covers_button)
         buttons.addWidget(self.steam_button)
 
@@ -224,8 +250,11 @@ class MainWindow(QMainWindow):
     def refresh(self) -> None:
         self.version = emulator.installed_version(self.home)
         self.replaced = bool(self.version) and emulator.replaced(self.home)
+        self.prepare_vita3k()
+        self.folders = library.fixed(self.user_home, self.drives)
         self.vita_fs = userdata.storage(self.vita3k_config)
         self.firmware = userdata.firmware(self.vita_fs)
+        self.sync_firmware()
         self.games = installed(self.vita_fs)
         try:
             self.in_steam = shortcuts.in_steam(self.steam_dir) if self.steam_dir else {}
@@ -236,6 +265,31 @@ class MainWindow(QMainWindow):
             self.in_steam, self.no_cover = {}, set()
         self._show_state()
         self._fill_table()
+
+    def on_settings(self) -> None:
+        """The Settings window (core's settings_page over vita3k_settings): Vita3K's settings in the app."""
+        dialog = SettingsDialog(window_title("Vita3K settings"), "Vita3K", vita3k_settings.SETTINGS,
+                                lambda: vita3k_settings.read_settings(self.vita3k_config),
+                                lambda setting, value: vita3k_settings.write_setting(self.vita3k_config, setting,
+                                                                                    value),
+                                self.vita3k_running, "Vita3K's settings that matter for playing, written into "
+                                "Vita3K's own settings file the moment you change one, while Vita3K does not run. A "
+                                "game's own settings in Vita3K come before these; everything else is in Vita3K's "
+                                "own window (Vita3K settings).", parent=self)
+        dialog.exec()
+
+    def prepare_vita3k(self) -> None:
+        """The lines of config.yml the app owns (userdata.prepare), once Vita3K is installed and while it does not
+        run; what changed goes to the output."""
+        if not self.version or self.vita3k_running():
+            return
+        try:
+            done = userdata.prepare(self.vita3k_config)
+        except OSError as exc:
+            self.output.appendPlainText(f"Vita3K's settings could not be written: {exc}")
+            return
+        if done:
+            self.output.appendPlainText("Vita3K set up: " + ", ".join(done) + ".")
 
     def _show_state(self) -> None:
         pinned = emulator.VERSION
@@ -272,16 +326,16 @@ class MainWindow(QMainWindow):
                                       f"<b>not installed</b>: download it {fonts} (Sony's file)"),
                  "Preinstalled apps (optional): " + ("installed" if fw.preinstalled else
                                                       f"not installed: download them {preinstall} (Sony's file)")]
-        tail = (f"In <code>{escape(str(self.vita_fs))}</code>." if fw.ready else
-                "Vita3K needs the firmware and its font package to start most games: press Install firmware for "
-                "each file.")
+        tail = (f"In <code>{escape(private(self.vita_fs))}</code>." if fw.ready else
+                "Vita3K needs the firmware and its font package to start most games: put the PSP2UPDAT.PUP files in "
+                f"<b>{escape(private(library.firmware_home(self.user_home)))}</b>, and the app gives them to Vita3K.")
         self.firmware_state.setText("<br>".join(lines) + "<br>" + tail)
         self.firmware_state.setOpenExternalLinks(True)
         self.firmware_box.set_value("Ready" if fw.ready else "Partly" if fw.system or fw.fonts else "—")
 
         if self.games:
             self.games_state.setText(f"{len(self.games)} installed in Vita3K's storage, "
-                                     f"<code>{escape(str(self.vita_fs))}</code>.")
+                                     f"<code>{escape(private(self.vita_fs))}</code>.")
         else:
             self.games_state.setText("None installed yet. Install game takes your own dumps: a .vpk or .zip, a .pkg "
                                      "with its zRIF license key, or a dumped game folder.")
@@ -340,11 +394,11 @@ class MainWindow(QMainWindow):
         self.refresh_button.setEnabled(idle)
         self.install_button.setEnabled(idle and (self.version != emulator.VERSION or self.replaced))
         self.remove_button.setEnabled(idle and installed_)
-        self.firmware_button.setEnabled(idle and installed_)
         self.game_button.setEnabled(idle and installed_)
         self.play_button.setEnabled(idle and installed_ and self.chosen() is not None)
         self.vita3k_button.setEnabled(idle and installed_)
         self.covers_button.setEnabled(idle)
+        self.remove_game_button.setEnabled(idle and self.chosen() is not None)
         add, remove = self.steam_plan()
         named = shortcuts.names(add)
         changed = bool(remove) or any(self.in_steam.get(g.name) != named[g.name] or g.name in self.no_cover
@@ -369,7 +423,7 @@ class MainWindow(QMainWindow):
             self._update_buttons()
 
     def _job_done(self, result: tuple[bool, str]) -> None:
-        ok, message = result
+        ok, message = result[0], private(result[1])     # a path in an error: the user's folders as ~
         self.running.setText(message)
         self.output.appendPlainText(message)
         self.refresh()
@@ -422,11 +476,24 @@ class MainWindow(QMainWindow):
             return done(result.returncode, lines[-1] if lines else "")
         self._start("Vita3K is installing it…", job)
 
-    def on_install_firmware(self) -> None:
-        name, _ = QFileDialog.getOpenFileName(self, window_title("Install the PS Vita firmware"), str(Path.home()),
-                                              "PS Vita firmware (*.PUP *.pup);;All files (*)")
-        if name:
-            self.install_firmware(Path(name))
+    def sync_firmware(self) -> None:
+        """The PS Vita's firmware files put in Games/Vita/Firmware given to Vita3K by itself (owner, 03-11-2026,
+        from the Windows Portable Suite's Vita3K Manager: firmware taken in automatically), the largest first, one
+        after the other (the next one when the window reads the state again, after the install), once Vita3K is
+        installed and while it does not run; each file once while it stays the same (its place, size and time in
+        the settings), one Vita3K could not use too; a file replaced is given again. The files stay."""
+        if not self.version or self.vita3k_running() or self.worker.running:
+            return
+        given = list(self.settings.get("firmware_given"))
+        for pup in library.firmware_files(self.user_home):
+            key = library.file_key(pup)
+            if not key or key in given:
+                continue
+            self.settings.set("firmware_given", [*given, key])
+            self.output.appendPlainText(f"Firmware file found in {private(library.firmware_home(self.user_home))}: "
+                                        f"{private(pup)} is given to Vita3K.")
+            self.install_firmware(pup)
+            return
 
     def install_firmware(self, pup: Path) -> None:
         """Through Vita3K itself (--firmware), which installs it and quits; the parts it wrote are named. Vita3K
@@ -448,7 +515,8 @@ class MainWindow(QMainWindow):
         self._run_vita3k(["--firmware", str(pup)], done)
 
     def on_install_game_file(self) -> None:
-        name, _ = QFileDialog.getOpenFileName(self, window_title("Install a game"), str(Path.home()),
+        name, _ = QFileDialog.getOpenFileName(self, window_title("Install a game"),
+                                              str(self.folders[0] if self.folders else Path.home()),
                                               "PS Vita games (*.vpk *.zip *.pkg);;All files (*)")
         if not name:
             return
@@ -463,7 +531,8 @@ class MainWindow(QMainWindow):
             self.install_game(path)
 
     def on_install_game_folder(self) -> None:
-        folder = QFileDialog.getExistingDirectory(self, window_title("Install a dumped game"), str(Path.home()))
+        folder = QFileDialog.getExistingDirectory(self, window_title("Install a dumped game"),
+                                                  str(self.folders[0] if self.folders else Path.home()))
         if folder:
             self.install_game(Path(folder))
 
@@ -518,6 +587,56 @@ class MainWindow(QMainWindow):
         if not QProcess.startDetached(command[0], command[1:])[0]:
             self.running.setText(f"Vita3K could not be started: {command[0]} did not run.")
 
+    def tell(self, text: str, ok: bool = True) -> None:
+        """What the window has to say: the line under the tabs and the output."""
+        self.running.setStyleSheet("font-weight:600;" + ("" if ok else "color:#c62828;"))
+        self.running.setText(text)
+        self.output.appendPlainText(text)
+
+    def on_remove_game(self) -> None:
+        """Remove game… (owner, 03-11-2026, from the Windows Portable Suite's managers: before deleting anything, let
+        the user decide what to keep): a window lists what of the chosen game would go, a row each with its size,
+        every row ticked; unticking keeps it, Delete marked deletes the rows still ticked (read-only files too) off
+        the window's thread, its Steam shortcut through Steam, and Cancel deletes nothing. The saves
+        stay."""
+        game = self.chosen()
+        if game is None:
+            return
+        if self.vita3k_running():
+            self.tell(RUNNING_REMOVE, ok=False)
+            return
+        items, why = library.removal_items(game, self.vita_fs, game.name in self.in_steam)
+        if not items:
+            self.tell(why, ok=False)
+            return
+        if KeepDialog(f"Remove {game.title}", items, self).exec() != QDialog.DialogCode.Accepted:
+            self.tell("Nothing was deleted.")
+            return
+        chosen = keep.chosen(items)
+        kept = [item.label for item in items if not item.delete]
+        paths = [path for item in chosen for path in item.paths]
+        take_out = any(item.key == library.STEAM_ITEM for item in chosen)
+        folder, closed, run, existing = self.steam_dir, self.steam_closed, self.run_path, self.in_steam
+        title = game.title
+
+        def job() -> tuple[bool, str]:
+            failed = keep.delete(paths)
+            gone = [item.label for item in chosen if item.paths and not any(item.label.startswith(f.split(" (")[0])
+                                                                                for f in failed)]
+            if take_out and folder is not None:
+                try:
+                    closed(lambda: steam.write_shortcuts(folder, shortcuts.changes([], [game], run, LOGO_PATH, existing)))
+                    gone.append("its shortcut in Steam")
+                except (steam.SteamError, steam.ShortcutError, OSError) as error:
+                    failed.append(f"its Steam shortcut ({error})")
+            text = f"{title}: deleted {', '.join(gone) if gone else 'nothing'}."
+            if kept:
+                text += f" Kept: {', '.join(kept)}."
+            if failed:
+                text += f" Not deleted: {', '.join(failed)}."
+            return not failed, text
+        self._start(f"Deleting {title}…", job)
+
     def on_update_steam(self) -> None:
         if self.steam_dir is None:
             return
@@ -543,13 +662,33 @@ class MainWindow(QMainWindow):
                                   get) if key else [])
             changes = shortcuts.changes(add, remove, run, LOGO_PATH, existing,
                                         found=lambda g: covers.art(home, shortcuts.cover_name(g), shortcuts.COVERS))
+            found: dict[str, str] | None = {}
+            extra: list[str] = []
+
+            def change() -> None:
+                # Read back right after the write, while Steam is still closed (owner, 03-11-2026, from the Windows
+                # Portable Suite's managers: "it still says 0 games in Steam"): whether the shortcuts were written
+                # as the app reads them, before Steam touches the file. A failed read is said, not passed over.
+                nonlocal found
+                steam.write_shortcuts(folder, changes)
+                try:
+                    found = shortcuts.in_steam(folder)
+                except OSError as error:
+                    found = None
+                    extra.append(f"Steam's file could not be read back: {error}")
+
             try:
-                restarted = closed(lambda: steam.write_shortcuts(folder, changes))
+                restarted = closed(change)
             except (steam.SteamError, steam.ShortcutError, OSError) as error:
                 return False, "\n".join([*notes, f"Steam was not changed: {error}"])
+            if found is not None:
+                missing = [g.title for g in add if g.name not in found]
+                if missing:
+                    extra.append(f"Read back from Steam's file, {len(add) - len(missing)} of the {len(add)} game(s) "
+                                 f"are there: not {', '.join(missing)}.")
             again = " Steam was closed for it and starts again in the background." if restarted else ""
             return True, "\n".join([*notes, f"{len(add)} game(s) in Steam, under Non-Steam in the library"
-                                              f"{f'; {len(remove)} taken out' if remove else ''}.{again}"])
+                                              f"{f'; {len(remove)} taken out' if remove else ''}.{again}", *extra])
         self._start("Looking up covers and changing Steam's shortcuts…" if key else "Changing Steam's shortcuts…",
                     job)
 

@@ -1,3 +1,23 @@
+Changelog: 03-11-2026 22:09:14
+
+Added. settings_page.py: a settings page for the BC250 suite's emulator managers whose window has no tabs, and
+the window that holds it (SettingsDialog; owner, 03-11-2026, from the Windows Portable Suite's settings panes):
+one box per group, each setting a choice, a switch or a percentage, read through the app's own model and written
+the moment it is changed, while the emulator does not run; a value the app does not offer is shown as it is.
+
+Changelog: 03-11-2026 21:16:12
+
+Added. drives.py, for the BC250 suite's game managers (owner, 03-11-2026, from the Windows Portable Suite's
+managers: fixed folders, no folder choosing): removable_drives(), the mounted removable drives under /run/media
+(udisks' <user>/<drive>, Bazzite's media-automount's system/<drive>, each once) and /media, and game_folders(), an
+app's own game folder in the home folder (made with its subfolders) and the same folder on each drive that has one.
+Added. keep_dialog.py: the keep page as a window of its own for the BC250 suite's desktop apps (owner,
+03-11-2026, from the Windows Portable Suite's managers: before deleting anything, let the user decide what to
+keep): core's keep.Item rows with their sizes, each ticked (Delete) at first, Delete marked and Cancel.
+Added. gone.desktop_message() and gone.show_dialog(): the BC250 suite's desktop apps' message for a game that
+is no longer there, a message box in the suite's design that closes by itself, which the run wrappers show
+instead of the emulator (owner, 03-11-2026).
+
 Changelog: 03-11-2026 12:29:35
 
 Version 2.7.2.

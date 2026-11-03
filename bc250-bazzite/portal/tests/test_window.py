@@ -504,6 +504,63 @@ def test_newer_portal_release_is_offered(qapp, home, settings_dir, tmp_path, lau
     w.close()
 
 
+def test_a_new_build_of_this_version_is_offered(qapp, home, settings_dir, tmp_path, launched):
+    """A release built again under the portal's own version (owner, 03-11-2026): offered when its tarball's sha256
+    differs from the build this portal came from; not from a checkout, not for the same build."""
+    from bc250_portal import __version__
+    from bc250_portal.portal_update import PortalUpdate
+    same = ReleaseInfo(version=__version__, tag=f"portal-v{__version__}", url="https://example.invalid/r")
+    update = PortalUpdate(same, [], "a" * 64)
+    for build, shown in ((None, False), ("a" * 64, False), ("b" * 64, True), ("", True)):
+        w = mw.MainWindow(load(MANIFEST), FakeSources(tmp_path / "work"), Records(tmp_path / "installed.json"),
+                          portal_check=lambda: update, build=build)
+        assert wait_for(lambda: not w.portal_checker.running, 3000)
+        assert w.portal_button.isHidden() is not shown, build
+        if shown:
+            assert w.portal_button.text() == f"● Portal {__version__}: a new build of this version"
+        w.close()
+    w = mw.MainWindow(load(MANIFEST), FakeSources(tmp_path / "work"), Records(tmp_path / "installed.json"),
+                      portal_check=lambda: PortalUpdate(same, [], ""), build="b" * 64)   # no SHA256SUMS: no offer
+    assert wait_for(lambda: not w.portal_checker.running, 3000) and w.portal_button.isHidden()
+    w.close()
+
+
+def test_a_download_counts_its_megabytes(window, tmp_path):
+    """The tile says how far a download is (owner, 03-11-2026: Downloading… for a 90 MB release looked like a hang):
+    the part file's size, read every PROGRESS_MS while the job runs."""
+    entry = entry_of(window, "gpu")
+    part = tmp_path / "work" / f".{entry.tag}.part" / entry.asset
+    window._job = (entry, "install")
+    window.refresh()
+    assert window.states["gpu"].busy == "Downloading…"
+    part.parent.mkdir(parents=True)
+    with part.open("wb") as fh:
+        fh.truncate(40_000_000)
+    window.refresh()
+    assert window.states["gpu"].busy == "Downloading… 40 MB"
+    window._job = None
+    window.refresh()
+    assert window.states["gpu"].busy == ""
+
+
+def test_escape_asks_while_something_runs(window):
+    """Escape (B) while a download or an install runs asks first (owner, 03-11-2026): the banner says what closing
+    does, a second press within CONFIRM_MS closes, and after that time the question is withdrawn."""
+    closed = []
+    window.close = lambda: closed.append(1)
+    window._job = (entry_of(window, "gpu"), "install")
+    window.escape()
+    assert closed == [] and window.close_asked
+    assert window.big.banner.text() == "Press Escape (or B) again to close the portal: the download stops."
+    window.escape()
+    assert closed == [1]
+    window._confirm_over()
+    assert not window.close_asked and window.big.banner.isHidden()
+    window._job = None
+    window.escape()
+    assert closed == [1, 1]                                     # nothing runs: closes at once
+
+
 @pytest.mark.parametrize("release", [ReleaseInfo(version="0.0.1", tag="portal-v0.0.1"),
                                      ReleaseInfo(error="no connection (offline)"), ReleaseInfo()])
 def test_no_portal_offer_when_not_newer_or_offline(qapp, home, settings_dir, tmp_path, launched, release):

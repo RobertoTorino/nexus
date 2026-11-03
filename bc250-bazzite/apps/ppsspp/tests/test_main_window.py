@@ -26,13 +26,14 @@ from ppsspp_manager.main_window import MainWindow
 def folders(tmp_path):
     memstick = make_memstick(tmp_path / "ppsspp")
     make_pbp(memstick_game(memstick) / "HOMEBREW", "Two")
-    make_disc(tmp_path / "games" / "one.iso", "One", "ULUS00001")
+    make_disc(tmp_path / "Games" / "PSP" / "one.iso", "One", "ULUS00001")       # the app's own folder
     config = tmp_path / "Steam" / "userdata" / "1000" / "config"
     config.mkdir(parents=True)
     run = tmp_path / "bin" / "bc250-ppsspp-run"
     run.parent.mkdir()
     run.write_text("#!/bin/sh\n")
-    return {"home": tmp_path / "emulator", "memstick": memstick, "steam_dir": tmp_path / "Steam", "run": run}
+    return {"home": tmp_path / "emulator", "memstick": memstick, "steam_dir": tmp_path / "Steam", "run": run,
+            "user_home": tmp_path, "drives": lambda: []}
 
 
 def _install(home: Path) -> None:
@@ -56,14 +57,48 @@ def _window(folders, **kwargs) -> MainWindow:
                       steam_running=lambda: False, **kwargs)
 
 
+def test_ppsspp_is_set_up_once_installed(qapp, folders):
+    """Once PPSSPP is installed, and while it does not run, the app turns its notice of a newer release off in
+    ppsspp.ini (owner, 03-11-2026); the output says so once, and nothing is written while PPSSPP runs."""
+    ini = folders["memstick"] / "PSP" / "SYSTEM" / "ppsspp.ini"
+    window = _window(folders)
+    assert ini.read_text() == "[General]\n"                                           # not installed: left alone
+    window.close()
+    _install(folders["home"])
+    running = [True]
+    window = _window(folders, ppsspp_running=lambda: running[0])
+    assert ini.read_text() == "[General]\n"                                           # PPSSPP runs: left alone
+    running[0] = False
+    window.refresh()
+    assert ini.read_text() == "[General]\nCheckForNewVersion = False\n"
+    assert window.output.toPlainText().splitlines()[-1] == "PPSSPP set up: its notice of a newer release off."
+    lines = len(window.output.toPlainText().splitlines())
+    window.refresh()
+    assert len(window.output.toPlainText().splitlines()) == lines                      # said once
+    window.close()
+
+
+def test_no_user_name_on_the_screen(qapp, folders, tmp_path, monkeypatch):
+    """The user's folders show as ~ (owner, 03-11-2026: the privacy rule): the memory stick and the game folders on
+    the first step, and a message with a path in it."""
+    monkeypatch.setenv("HOME", str(tmp_path))
+    window = _window(folders)
+    assert "<code>~/ppsspp/PSP/GAME</code>" in window.folders_state.text()
+    assert str(tmp_path) not in window.folders_state.text()
+    window._job_done((False, f"PPSSPP could not be installed: {tmp_path}/emulator is read-only"))
+    assert window.running.text() == "PPSSPP could not be installed: ~/emulator is read-only"
+    window.close()
+
+
 def test_before_installing(qapp, folders):
     window = _window(folders)
     assert window.pill.text() == "Not installed"
     assert "Not installed" in window.emulator_state.text()
     assert window.install_button.isEnabled() and not window.remove_button.isEnabled()
     assert not window.ppsspp_button.isEnabled()
-    assert window.folder_button.isEnabled() and not window.forget_button.isEnabled()
-    assert [window.table.item(r, 1).text() for r in range(window.table.rowCount())] == ["Two"]   # the memory stick
+    for name in ("folder_button", "forget_button"):
+        assert not hasattr(window, name), name                               # gone (owner, 03-11-2026): fixed folders
+    assert [window.table.item(r, 1).text() for r in range(window.table.rowCount())] == ["One", "Two"]   # Games/PSP and the memory stick
     window.close()
 
 
@@ -71,48 +106,47 @@ def test_installed_with_games(qapp, folders):
     _install(folders["home"])
     window = _window(folders)
     assert window.pill.text() == "Ready" and window.emulator_box.value.text() == emulator.VERSION
-    assert window.games_box.value.text() == "1" and window.steam_box.value.text() == "0"
+    assert window.games_box.value.text() == "2" and window.steam_box.value.text() == "0"
     assert not window.install_button.isEnabled() and window.remove_button.isEnabled()
     assert not window.play_button.isEnabled()                                   # nothing chosen yet
     window.table.selectRow(0)
-    assert window.play_button.isEnabled() and window.chosen().title == "Two"
+    assert window.play_button.isEnabled() and window.chosen().title == "One"
     assert not window.steam_button.isEnabled()                                  # nothing to change
-    assert window.table.item(0, 3).text() == "Memory Stick"
+    assert window.table.item(0, 3).text() == "ISO" and window.table.item(1, 3).text() == "Memory Stick"
     window.close()
 
 
-def test_game_folders_added_and_removed(qapp, folders, tmp_path):
+def test_the_apps_own_game_folders(qapp, folders, tmp_path, monkeypatch):
+    """The games are put in Games/PSP in the home folder, made when the app opens, and in Games/PSP on a
+    removable drive that has one (owner, 03-11-2026: fixed folders, no folder choosing); no folder is chosen or
+    remembered any more."""
+    monkeypatch.setenv("HOME", str(tmp_path))
     _install(folders["home"])
-    window = _window(folders)
-    window.add_folder(tmp_path / "games")
-    assert window.running.text() == f"{tmp_path / 'games'} is a game folder now: 1 game(s) in it."
-    assert [window.table.item(r, 1).text() for r in range(2)] == ["One", "Two"]
-    assert window.table.item(0, 2).text() == "ULUS00001" and window.forget_button.isEnabled()
-    assert window.table.item(0, 3).text() == "ISO"
-    window.add_folder(tmp_path / "games")                                       # once only
-    assert window.folders == [tmp_path / "games"]
-    window.close()
-    window = _window(folders)                                                   # remembered
-    assert window.folders == [tmp_path / "games"] and window.games_box.value.text() == "2"
-    window.forget_folder(tmp_path / "games")
-    assert window.folders == [] and window.table.rowCount() == 1 and not window.forget_button.isEnabled()
+    (tmp_path / "sd" / "Games" / "PSP").mkdir(parents=True)
+    (tmp_path / "stick").mkdir()                                                # a drive without the folder
+    window = _window({**folders, "drives": lambda: [tmp_path / "sd", tmp_path / "stick", tmp_path / "gone"]})
+    assert window.folders == [tmp_path / "Games" / "PSP", tmp_path / "sd" / "Games" / "PSP"]
+    text = window.folders_state.text()
+    assert "<code>~/Games/PSP</code>" in text and "<code>~/sd/Games/PSP</code>" in text
+    assert str(tmp_path) not in text and "folders" not in window.settings.DEFAULTS
     window.close()
 
 
 def test_rename_files_needs_a_disc_image(qapp, folders, tmp_path):
     _install(folders["home"])
+    (tmp_path / "Games" / "PSP" / "one.iso").unlink()
     window = _window(folders)
     assert not window.rename_button.isEnabled()                                 # only the memory stick game (a PBP)
-    window.add_folder(tmp_path / "games")
+    make_disc(tmp_path / "Games" / "PSP" / "one.iso", "One", "ULUS00001")
+    window.refresh()
     assert window.rename_button.isEnabled()
     window.close()
 
 
 def test_a_chd_is_marked(qapp, folders, tmp_path):
     _install(folders["home"])
-    (tmp_path / "games" / "Lumines.chd").write_bytes(b"MComprHD")
+    (tmp_path / "Games" / "PSP" / "Lumines.chd").write_bytes(b"MComprHD")
     window = _window(folders)
-    window.add_folder(tmp_path / "games")
     row = [window.table.item(r, 1).text() for r in range(window.table.rowCount())].index("Lumines")
     assert window.table.item(row, 3).text() == "CHD" and "not looked into" in window.table.item(row, 3).toolTip()
     window.close()
@@ -143,9 +177,9 @@ def test_play_and_ppsspps_window(qapp, folders, tmp_path):
     deadline = time.monotonic() + 10
     while (not log.exists() or len(log.read_text().splitlines()) < 2) and time.monotonic() < deadline:
         time.sleep(0.01)
-    pbp = memstick_game(folders["memstick"]) / "HOMEBREW" / "EBOOT.PBP"
-    assert sorted(log.read_text().splitlines()) == sorted([f"{pbp}", ""])
-    assert window.running.text() == "Started Two."
+    iso = tmp_path / "Games" / "PSP" / "one.iso"                                # the first row: the disc image
+    assert sorted(log.read_text().splitlines()) == sorted([f"{iso}", ""])
+    assert window.running.text() == "Started One."
     window.close()
 
 
@@ -157,15 +191,15 @@ def test_game_mode_added_and_taken_out(qapp, folders, monkeypatch):
     window.table.item(0, 0).setCheckState(Qt.CheckState.Checked)
     assert window.steam_button.isEnabled()
     add, remove = window.steam_plan()
-    assert [g.title for g in add] == ["Two"] and remove == []
+    assert [g.title for g in add] == ["One"] and remove == []
     window.on_update_steam()
     _wait(window, qapp)
     assert closed == [1] and window.running.text().startswith("1 game(s) in Steam")
-    assert list(shortcuts.in_steam(folders["steam_dir"]).values()) == ["[PSP] Two"]
+    assert list(shortcuts.in_steam(folders["steam_dir"]).values()) == ["[PSP] One"]
     assert window.steam_box.value.text() == "1" and window.table.item(0, 0).checkState() == Qt.CheckState.Checked
     window.table.item(0, 0).setCheckState(Qt.CheckState.Unchecked)
     add, remove = window.steam_plan()
-    assert add == [] and [g.title for g in remove] == ["Two"]
+    assert add == [] and [g.title for g in remove] == ["One"]
     window.on_update_steam()
     _wait(window, qapp)
     assert shortcuts.in_steam(folders["steam_dir"]) == {} and "1 taken out" in window.running.text()
@@ -237,9 +271,8 @@ def test_the_blue_look(qapp, folders):
     assert window.install_button.property("primary") and window.steam_button.property("primary")
     assert style.BLUE in window.emulator_box.styleSheet()
     assert f"color:{style.BLUE}" in window.emulator_state.text()                   # the release link
-    steps = (window.install_button, window.remove_button, window.folder_button, window.forget_button)
+    steps = (window.install_button, window.remove_button)
     assert len({(b.width(), b.height()) for b in steps}) == 1                       # one size, padding included
-    assert window.folder_button.width() >= window.folder_button.sizeHint().width()
     window.close()
 
 
@@ -295,8 +328,65 @@ def test_covers_with_the_suites_key(qapp, folders, monkeypatch, tmp_path):
     assert window.running.text().startswith("Covers: SteamGridDB had pictures for 1 of 1 game(s).\n1 game(s) in")
     assert not any("heroes/" in url or "logos/" in url for url in asked)        # the portrait alone
     assert "0123456789abcdef" not in window.output.toPlainText()
-    number = shortcuts.entry(game, "[PSP] Two", folders["run"], LOGO_PATH)["appid"] & 0xFFFFFFFF
+    number = shortcuts.entry(game, "[PSP] One", folders["run"], LOGO_PATH)["appid"] & 0xFFFFFFFF
     grid = steam.user_folders(folders["steam_dir"])[0] / "grid"
     assert QImage(str(grid / f"{number}p.png")).pixelColor(300, 450).name() == "#0000ff"
     assert window.no_cover == set() and not window.steam_button.isEnabled()
+    window.close()
+
+
+def test_remove_game_asks_what_to_keep(qapp, folders, monkeypatch, tmp_path):
+    """Remove game… (owner, 03-11-2026): the keep window lists what would go; Cancel deletes nothing, Delete marked
+    deletes the rows still ticked off the window's thread and says what went and what stayed."""
+    from PyQt6.QtWidgets import QDialog
+    from bc250_core.keep_dialog import KeepDialog
+    _install(folders["home"])
+    window = _window(folders)
+    assert not window.remove_game_button.isEnabled()                            # nothing chosen yet
+    window.table.selectRow(0)
+    game = window.chosen()
+    assert game.title == "One" and window.remove_game_button.isEnabled()
+    target = tmp_path / "Games" / "PSP" / "one.iso"
+    assert target.exists()
+    seen = []
+    monkeypatch.setattr(KeepDialog, "exec", lambda self: (seen.append(self.items), QDialog.DialogCode.Rejected)[1])
+    window.on_remove_game()
+    assert [item.label for item in seen[0]] == ["one.iso (the disc image)"] and target.exists()
+    assert window.running.text() == "Nothing was deleted."
+
+    def keep_it(self):
+        self.items[0].delete = False
+        return QDialog.DialogCode.Accepted
+    monkeypatch.setattr(KeepDialog, "exec", keep_it)
+    window.on_remove_game()
+    _wait(window, qapp)
+    assert target.exists() and window.running.text() == "One: deleted nothing. Kept: one.iso (the disc image)."
+    window.table.selectRow(0)
+    monkeypatch.setattr(KeepDialog, "exec", lambda self: QDialog.DialogCode.Accepted)
+    window.on_remove_game()
+    _wait(window, qapp)
+    assert not target.exists() and window.running.text() == "One: deleted one.iso (the disc image)."
+    assert "One" not in [window.table.item(r, 1).text() for r in range(window.table.rowCount())]
+    window.close()
+
+
+def test_the_settings_window(qapp, folders, monkeypatch):
+    """Settings… opens PPSSPP's settings in the app (core's settings_page): the values as ppsspp.ini holds them, a
+    change written into it at once, and nothing while PPSSPP runs."""
+    from bc250_core.settings_page import SettingsDialog
+    ini = folders["memstick"] / "PSP" / "SYSTEM" / "ppsspp.ini"
+    ini.write_text("[General]\n[Graphics]\nInternalResolution = 3\n")
+    running = [False]
+    window = _window(folders, ppsspp_running=lambda: running[0])
+    opened = []
+    monkeypatch.setattr(SettingsDialog, "exec", lambda dialog: opened.append(dialog))
+    window.settings_button.click()
+    page = opened[0].page
+    assert opened[0].windowTitle() == "PPSSPP settings" and page.widgets["resolution"].currentData() == "3"
+    assert page.widgets["renderer"].currentText() == "Vulkan" and page.widgets["volume"].value() == 100
+    page.widgets["vsync"].setChecked(False)
+    assert "VerticalSync = False" in ini.read_text() and page.status.text() == "VSync: off."
+    running[0] = True
+    page.widgets["fps"].setChecked(True)
+    assert "iShowStatusFlags" not in ini.read_text() and "PPSSPP is running" in page.status.text()
     window.close()

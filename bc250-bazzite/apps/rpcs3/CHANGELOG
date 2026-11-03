@@ -1,3 +1,52 @@
+Changelog: 03-11-2026 21:43:44
+
+Added. A game renamed or moved after it was put in Steam keeps its mark when the app can tell it is the same game
+(its code, else its file's size; core's renamed, the app's settings remember what each game in Steam is): Refresh,
+or the next start, shows it under its new name, ticked and said so under the tabs, and Update Steam puts it in
+Steam under that name and takes the old shortcut out (owner, 03-11-2026, from the Windows Portable Suite's managers,
+01-11-2026). A shortcut to a game that is no longer there no longer starts RPCS3 with a file that is not
+there: the run wrapper says so and ends with 1, and shows a message box of the app's own (--gone, core's gone),
+which closes by itself, so Steam sees the game end. The wiki says so.
+
+Changelog: 03-11-2026 21:37:27
+
+Added. Remove game… on Your games (owner, 03-11-2026, from the Windows Portable Suite's managers, 30-10-2026 and
+01-11-2026: a game that no longer plays goes, files and all, and before deleting anything the user decides what to
+keep; core's keep and keep_dialog): a window lists what of the chosen game would go, a row each with its size, every
+row ticked; unticking a row keeps it, Delete marked deletes the rows still ticked off the window's thread (read-only
+files too) and takes its Steam shortcut out through Steam when that row is ticked, and Cancel deletes nothing
+(library.removal_items(); the saves and the licenses never among the rows). A game the app will not delete is said so.
+The wiki says so.
+
+Changelog: 03-11-2026 21:23:42
+
+Breaking. No folder is chosen or browsed to for the disc games and the firmware any more (owner, 03-11-2026, from
+the Windows Portable Suite's RPCS3 Manager, 30-10-2026: fixed folders, no folder selecting): the pills Firmware
+Install and Games Add folder, with their windows, and the links in the Disc games line that took a folder out are
+gone, and the folders added before are no longer looked in (the settings' folders key is dropped; library.py).
+Added. The app's own game folder: ~/Games/PS3, made with ~/Games/PS3/Firmware when the window opens, and Games/PS3
+on each removable drive that has one (mounted under /run/media or /media; core's drives), always looked in
+(library.fixed()). The PS3's firmware put in ~/Games/PS3/Firmware is given to RPCS3 by itself (--installfw, in
+RPCS3's own window as before) once RPCS3 is installed, when the window opens and on Refresh, while RPCS3 does not
+run: a file whose version (read from the PUP, its file 0x100: userdata.pup_version()) RPCS3 has already is left
+alone, and so is the file given last as it is (its name, size and time in the settings, firmware_given), so a file
+RPCS3 refused is not given again until it changes; the file stays (sync_firmware(), library.firmware_file()). The
+Games Install window for packages opens in ~/Games/PS3. The Disc games line names the folders (the home folder as
+~), the Firmware line says where to put the file. The wiki has a chapter for it, Where your games go.
+
+Changelog: 03-11-2026 21:04:45
+
+Fixed. Update Steam reads Steam's file back right after writing it, while Steam is still closed, and says on the
+status line and in the output when a game it wrote is not found there, by name (owner, 03-11-2026, from the Windows
+Portable Suite's managers, 29-10-2026: "it still says 0 games in Steam"), so the message tells whether the file or
+the reading is at fault; a failed read of the file is said too instead of passed over. Nothing changes when the
+shortcuts read back as written.
+
+Changelog: 03-11-2026 20:54:32
+
+Fixed. No user name on the screen or in the log (owner, 03-11-2026: the suite's privacy rule, as the Windows Portable
+Suite's apps keep it since 29-10-2026): the Log tab's line that names the log file, every message under the tabs and in the Log tab, and every line of the log file (core's applog with private=True) show your home folder as ~ (core's platform.private).
+
 Changelog: 03-11-2026 17:26:31
 
 Release 3.1.0.

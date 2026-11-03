@@ -1,3 +1,66 @@
+Changelog: 03-11-2026 22:09:14
+
+Added. Settings…, a window with PPSSPP's settings that matter for playing, in the app (owner, 03-11-2026, from the
+Windows Portable Suite's PPSSPP Manager; core's settings_page over ppsspp_settings): the renderer (Vulkan or
+OpenGL, the Linux build's), the internal resolution, stretch, integer scaling, texture and anisotropic filtering
+and VSync; frame skipping and cheats; the volume; the stick's dead zone and sensitivity; FPS and speed on the
+screen. Each is read from ppsspp.ini (PPSSPP's default while it names none) and written the moment it is changed,
+the rest of the file kept, never while PPSSPP runs. The wiki says so.
+Fixed. PPSSPP writes ppsspp.ini with a UTF-8 byte order mark: the app now reads the first section behind it and
+keeps the mark when it writes, where before its own line could have gone into a second [General] section at the
+end of the file, which PPSSPP would not have read (found while porting the settings, 03-11-2026).
+
+Changelog: 03-11-2026 21:43:44
+
+Added. A game renamed or moved after it was put in Steam keeps its mark when the app can tell it is the same game
+(its code, else its file's size; core's renamed, the app's settings remember what each game in Steam is): Refresh,
+or the next start, shows it under its new name, ticked and said so under the tabs, and Update Steam puts it in
+Steam under that name and takes the old shortcut out (owner, 03-11-2026, from the Windows Portable Suite's managers,
+01-11-2026). A shortcut to a game that is no longer there no longer starts PPSSPP with a file that is not
+there: the run wrapper says so and ends with 1, and shows a message box of the app's own (--gone, core's gone),
+which closes by itself, so Steam sees the game end. The wiki says so.
+
+Changelog: 03-11-2026 21:37:27
+
+Added. Remove game… on Your games (owner, 03-11-2026, from the Windows Portable Suite's managers, 30-10-2026 and
+01-11-2026: a game that no longer plays goes, files and all, and before deleting anything the user decides what to
+keep; core's keep and keep_dialog): a window lists what of the chosen game would go, a row each with its size, every
+row ticked; unticking a row keeps it, Delete marked deletes the rows still ticked off the window's thread (read-only
+files too) and takes its Steam shortcut out through Steam when that row is ticked, and Cancel deletes nothing
+(library.removal_items(); the saves on the memory stick never among the rows). A game the app will not delete is said so.
+The wiki says so.
+
+Changelog: 03-11-2026 21:17:50
+
+Breaking. No folder is chosen or browsed to any more (owner, 03-11-2026, from the Windows Portable Suite's PPSSPP
+Manager, 30-10-2026: fixed folders, no folder selecting): the buttons Add folder… and Remove folder…, with their
+windows, are gone, and the folders added before are no longer looked in (the settings' folders key is dropped;
+library.py). Added. The app's own game folder: ~/Games/PSP, made when the window opens, and Games/PSP on each
+removable drive that has one (mounted under /run/media or /media; core's drives), always looked in
+(library.fixed()). The Game folder line names the folders (the home folder as ~). The wiki has a chapter for it,
+Where your games go.
+
+Changelog: 03-11-2026 21:04:45
+
+Fixed. Update Steam reads Steam's file back right after writing it, while Steam is still closed, and says on the
+status line and in the output when a game it wrote is not found there, by name (owner, 03-11-2026, from the Windows
+Portable Suite's managers, 29-10-2026: "it still says 0 games in Steam"), so the message tells whether the file or
+the reading is at fault; a failed read of the file is said too instead of passed over. Nothing changes when the
+shortcuts read back as written.
+
+Changelog: 03-11-2026 20:54:32
+
+Fixed. No user name on the screen or in the log (owner, 03-11-2026: the suite's privacy rule, as the Windows Portable
+Suite's apps keep it since 29-10-2026): the game folders and the memory stick on the first step, and every message under the tabs and in the output show your home folder as ~ (core's platform.private).
+
+Changelog: 03-11-2026 20:50:37
+
+Added. PPSSPP's notice of a newer release is turned off by the app ([General] CheckForNewVersion = False in
+PSP/SYSTEM/ppsspp.ini on its memory stick), once PPSSPP is installed, each time the window opens and never while
+PPSSPP runs, since it writes its settings back when it closes (owner, 03-11-2026, from the Windows Portable Suite's
+PPSSPP Manager): a newer PPSSPP comes with the app, once it has been tried on the board. Every other line of the file
+stays as PPSSPP wrote it; the window's output says what changed (userdata.py, emulator.running()). The wiki says so.
+
 Changelog: 03-11-2026 16:16:30
 
 Release 1.0.1.

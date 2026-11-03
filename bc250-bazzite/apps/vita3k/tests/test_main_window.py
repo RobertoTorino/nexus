@@ -18,7 +18,7 @@ from PyQt6.QtWidgets import QMessageBox
 from conftest import install_firmware, make_game, write_vita3k_files
 
 from bc250_core import steam
-from vita3k_manager import LOGO_PATH, emulator, shortcuts, style
+from vita3k_manager import library, LOGO_PATH, emulator, shortcuts, style
 from vita3k_manager.games import Game
 from vita3k_manager.main_window import MainWindow
 
@@ -33,7 +33,8 @@ def folders(tmp_path):
     run = tmp_path / "bin" / "bc250-vita3k-run"
     run.parent.mkdir()
     run.write_text("#!/bin/sh\n")
-    return {"home": tmp_path / "emulator", "vita3k_config": config, "steam_dir": tmp_path / "Steam", "run": run}
+    return {"home": tmp_path / "emulator", "vita3k_config": config, "steam_dir": tmp_path / "Steam", "run": run,
+            "user_home": tmp_path, "drives": lambda: []}
 
 
 @pytest.fixture(autouse=True)
@@ -69,13 +70,48 @@ def _window(folders, **kwargs) -> MainWindow:
                       steam_running=lambda: False, **kwargs)
 
 
+def test_vita3k_is_set_up_once_installed(qapp, folders):
+    """Once Vita3K is installed, and while it does not run, the app turns its welcome window and its update check
+    off in config.yml (owner, 03-11-2026); the output says so once, and nothing is written while Vita3K runs."""
+    path = folders["vita3k_config"] / "config.yml"
+    before = path.read_text()
+    window = _window(folders)
+    assert path.read_text() == before                                                 # not installed: left alone
+    window.close()
+    _install(folders["home"])
+    running = [True]
+    window = _window(folders, vita3k_running=lambda: running[0])
+    assert path.read_text() == before                                                 # Vita3K runs: left alone
+    running[0] = False
+    window.refresh()
+    assert "show-welcome: false\n" in path.read_text() and "check-for-updates-mode: 0\n" in path.read_text()
+    assert window.output.toPlainText().splitlines()[-1] == ("Vita3K set up: its welcome window off, its update "
+                                                            "check off.")
+    lines = len(window.output.toPlainText().splitlines())
+    window.refresh()
+    assert len(window.output.toPlainText().splitlines()) == lines                      # said once
+    assert window.vita_fs == folders["vita3k_config"].parent / "storage"               # pref-path still read
+    window.close()
+
+
+def test_no_user_name_on_the_screen(qapp, folders, tmp_path, monkeypatch):
+    """The user's folders show as ~ (owner, 03-11-2026: the privacy rule): Vita3K's storage on the games step, and
+    a message with a path in it."""
+    monkeypatch.setenv("HOME", str(tmp_path))
+    window = _window(folders)
+    assert "<code>~/storage</code>" in window.games_state.text() and str(tmp_path) not in window.games_state.text()
+    window._job_done((False, f"Vita3K could not be installed: {tmp_path}/emulator is read-only"))
+    assert window.running.text() == "Vita3K could not be installed: ~/emulator is read-only"
+    window.close()
+
+
 def test_before_installing(qapp, folders, tmp_path):
     window = _window(folders)
     assert window.pill.text() == "Not installed" and window.vita_fs == tmp_path / "storage"   # pref-path
     assert "Not installed" in window.emulator_state.text()
     assert window.firmware_state.text().count("not installed") == 3
     assert window.install_button.isEnabled() and not window.remove_button.isEnabled()
-    assert not window.firmware_button.isEnabled() and not window.game_button.isEnabled()
+    assert not window.game_button.isEnabled() and not hasattr(window, "firmware_button")
     assert not window.vita3k_button.isEnabled()
     assert [window.table.item(r, 1).text() for r in range(window.table.rowCount())] == ["Two"]
     window.close()
@@ -85,7 +121,7 @@ def test_installed_with_firmware_and_games(qapp, folders, tmp_path):
     _install(folders["home"])
     window = _window(folders)
     assert window.pill.text() == "No firmware" and window.firmware_box.value.text() == "—"
-    assert window.firmware_button.isEnabled() and window.game_button.isEnabled()
+    assert window.game_button.isEnabled()
     text = window.firmware_state.text()
     assert "playstation.com/en-us/support/hardware/psvita/system-software" in text and "(official page)" in text
     assert "sd_8b5f60b56c3da8365b973dba570c53a5/PSP2UPDAT.PUP" in text and "(Sony's file)" in text
@@ -139,6 +175,42 @@ def test_install_runs_off_the_window(qapp, folders, monkeypatch):
     _wait(window, qapp)
     assert window.running.text() == "Vita3K build 4186 is installed."
     assert window.version == "4186" and window.pill.text() == "No firmware"
+    window.close()
+
+
+def test_the_firmware_is_taken_from_the_apps_folder(qapp, folders, tmp_path, monkeypatch):
+    """The PUP files put in Games/Vita/Firmware are given to Vita3K by themselves, the largest first, one after the
+    other, once Vita3K is installed (owner, 03-11-2026): each file once as it is, not while Vita3K runs."""
+    monkeypatch.setenv("HOME", str(tmp_path))
+    _install(folders["home"])
+    log = tmp_path / "args"
+    storage = tmp_path / "storage"
+    _fake_vita3k(folders["run"], log, f'mkdir -p "{storage}/vs0/vsh" "{storage}/os0" && touch "{storage}/vs0/vsh/x"')
+    home = library.firmware_home(tmp_path)
+    (home / "fonts").mkdir(parents=True)
+    (home / "PSP2UPDAT.PUP").write_bytes(b"\0" * 300)                          # the system software: largest
+    (home / "fonts" / "PSP2UPDAT.PUP").write_bytes(b"\0" * 100)
+    running = [True]
+    window = _window(folders, vita3k_running=lambda: running[0])
+    assert not log.exists() and window.settings.get("firmware_given") == []    # Vita3K runs: nothing yet
+    running[0] = False
+    window.refresh()
+    _wait(window, qapp)                                                         # both files, one after the other
+    assert log.read_text().splitlines() == [f"--firmware {home / 'PSP2UPDAT.PUP'}",
+                                            f"--firmware {home / 'fonts' / 'PSP2UPDAT.PUP'}"]
+    assert window.running.text() == "PSP2UPDAT.PUP: the system software installed."
+    assert f"{home / 'PSP2UPDAT.PUP'}" not in window.output.toPlainText()       # the home folder as ~
+    assert "~/Games/Vita/Firmware/PSP2UPDAT.PUP is given to Vita3K." in window.output.toPlainText()
+    assert window.firmware.system and len(window.settings.get("firmware_given")) == 2
+    log.unlink()
+    window.refresh()
+    _wait(window, qapp)
+    assert not log.exists()                                                     # given once
+    _fake_vita3k(folders["run"], log, f'mkdir -p "{storage}/sa0" && touch "{storage}/sa0/f"')
+    (home / "fonts" / "PSP2UPDAT.PUP").write_bytes(b"\0" * 120)                 # replaced: given again
+    window.refresh()
+    _wait(window, qapp)
+    assert log.read_text().strip().endswith("fonts/PSP2UPDAT.PUP") and window.firmware.fonts
     window.close()
 
 
@@ -298,9 +370,9 @@ def test_the_blue_look(qapp, folders):
     assert window.install_button.property("primary") and window.steam_button.property("primary")
     assert style.BLUE in window.emulator_box.styleSheet()
     assert f"color:{style.BLUE}" in window.emulator_state.text()                # the release link
-    steps = (window.install_button, window.remove_button, window.firmware_button, window.game_button)
+    steps = (window.install_button, window.remove_button, window.game_button)
     assert len({(b.width(), b.height()) for b in steps}) == 1                       # one size, padding included
-    assert window.firmware_button.width() >= window.firmware_button.sizeHint().width()
+    assert window.game_button.width() >= window.game_button.sizeHint().width()
     assert [a.text() for a in window.game_button.menu().actions()] == ["From a file (.vpk, .zip, .pkg)…",
                                                                          "From a dumped folder…"]
     window.close()
@@ -361,4 +433,60 @@ def test_covers_with_the_suites_key(qapp, folders, monkeypatch, tmp_path):
     grid = steam.user_folders(folders["steam_dir"])[0] / "grid"
     assert QImage(str(grid / f"{number}p.png")).pixelColor(300, 450).name() == "#0000ff"
     assert window.no_cover == set() and not window.steam_button.isEnabled()
+    window.close()
+
+
+def test_remove_game_asks_what_to_keep(qapp, folders, monkeypatch, tmp_path):
+    """Remove game… (owner, 03-11-2026): the keep window lists what would go; Cancel deletes nothing, Delete marked
+    deletes the rows still ticked off the window's thread and says what went and what stayed."""
+    from PyQt6.QtWidgets import QDialog
+    from bc250_core.keep_dialog import KeepDialog
+    _install(folders["home"])
+    window = _window(folders)
+    assert not window.remove_game_button.isEnabled()                            # nothing chosen yet
+    window.table.selectRow(0)
+    game = window.chosen()
+    assert game.title == "Two" and window.remove_game_button.isEnabled()
+    target = tmp_path / "storage" / "ux0" / "app" / "PCSE00002"
+    assert target.exists()
+    seen = []
+    monkeypatch.setattr(KeepDialog, "exec", lambda self: (seen.append(self.items), QDialog.DialogCode.Rejected)[1])
+    window.on_remove_game()
+    assert [item.label for item in seen[0]] == ["The game, ux0/app/PCSE00002"] and target.exists()
+    assert window.running.text() == "Nothing was deleted."
+
+    def keep_it(self):
+        self.items[0].delete = False
+        return QDialog.DialogCode.Accepted
+    monkeypatch.setattr(KeepDialog, "exec", keep_it)
+    window.on_remove_game()
+    _wait(window, qapp)
+    assert target.exists() and window.running.text() == "Two: deleted nothing. Kept: The game, ux0/app/PCSE00002."
+    window.table.selectRow(0)
+    monkeypatch.setattr(KeepDialog, "exec", lambda self: QDialog.DialogCode.Accepted)
+    window.on_remove_game()
+    _wait(window, qapp)
+    assert not target.exists() and window.running.text() == "Two: deleted The game, ux0/app/PCSE00002."
+    assert "Two" not in [window.table.item(r, 1).text() for r in range(window.table.rowCount())]
+    window.close()
+
+
+def test_the_settings_window(qapp, folders, monkeypatch):
+    """Settings… opens Vita3K's settings in the app (core's settings_page): the values as config.yml holds them, a
+    change written into it at once, and nothing while Vita3K runs."""
+    from bc250_core.settings_page import SettingsDialog
+    path = folders["vita3k_config"] / "config.yml"
+    running = [False]
+    window = _window(folders, vita3k_running=lambda: running[0])
+    opened = []
+    monkeypatch.setattr(SettingsDialog, "exec", lambda dialog: opened.append(dialog))
+    window.settings_button.click()
+    page = opened[0].page
+    assert opened[0].windowTitle() == "Vita3K settings" and page.widgets["scale"].currentData() == "1"
+    assert page.widgets["renderer"].currentText() == "Vulkan" and page.widgets["vsync"].isChecked()
+    page.widgets["scale"].setCurrentIndex(page.widgets["scale"].findData("2"))
+    assert "resolution-multiplier: 2" in path.read_text() and page.status.text() == "Resolution: 2x (1088p)."
+    running[0] = True
+    page.widgets["stretch"].setChecked(True)
+    assert "stretch_the_display_area: false" in path.read_text() and "Vita3K is running" in page.status.text()
     window.close()

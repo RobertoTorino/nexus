@@ -51,7 +51,8 @@ mouse:
   (privacy, security or another reason; hover over the tile to read which). It cannot be installed or opened. When
   it is installed, the portal says so at start and removes it with the app's own uninstaller in a terminal. If that
   fails, Uninstall stays in its menu, to try again.
-- **Installing…**, **Removing…** or **Downloading…** in blue under the name while that runs on the app.
+- **Installing…**, **Removing…** or **Downloading…** in blue under the name while that runs on the app; a download
+  counts its megabytes as it comes in (**Downloading… 40 MB**).
 
 **The categories.** The line under the title says what the open category is for, and [The apps](apps/index.md)
 lists the apps by category. Click a name in the strip, press LB or RB on the controller, or Page Up and Page Down
@@ -63,7 +64,7 @@ on the keyboard, to change the category. The portal always opens on the first on
 | Enter | A | Click | Open the app, press a pill, open a notice |
 | Menu key | X | Right click | The tile's menu: Open, Install, Update, Reinstall, Uninstall |
 | Page Up, Page Down | LB, RB | Click a name | The category before and after |
-| Escape | B | | Close a menu or a question; with none open, close the portal |
+| Escape | B | | Close a menu or a question; with none open, close the portal (while a download or an install runs, it asks: press again within five seconds) |
 
 The controller is read with [pygame-ce](https://pypi.org/project/pygame-ce/), which the portal's installer adds to
 the suite's venv; it takes any controller SDL knows (XBOX, PlayStation, Switch Pro and most others). The portal
@@ -107,7 +108,10 @@ Nexus Release Tool, Nexus Installer Tests (the installer tests one at a time), N
   button beside the title that opens its release page. The button names what that release brings, for example
   **Portal 0.9.1: updates ACE Queues and Memory Manager**, and its tooltip lists each app with its old and new
   version. After the portal update, the installed apps among them show the red dot. When the new pins cannot be
-  read (offline, for example), the button says **Portal x.y.z available**.
+  read (offline, for example), the button says **Portal x.y.z available**. A release built again under the
+  portal's own version is offered too, as **Portal x.y.z: a new build of this version**: the installer keeps the
+  checksum of the tarball it installed from (`build.sha256` beside the program, when the tarball is next to the
+  unpacked folder, as the install steps leave it), and the portal compares it with the newest release's.
 - **Outside the suite**, in orange beside the red notice: a newer release of a program that an installed app
   installs in its newest version, so the app can install it now. Press it to list them, for example **Upscaler
   Manager (Graphics): HelixSR 1.9.3 is out**, with what to do in the app, and choose one to go to its tile; the

@@ -11,8 +11,9 @@ It goes to ~/.local/share/bc250-xenia-manager/emulator/<build>/xenia.AppImage, w
 run wrapper (~/.local/bin/bc250-xenia-run) starts "current", so the Steam shortcuts keep working when the build
 changes. The AppImage does not update itself (its AppRun is the program).
 
-Xenia keeps its settings (xenia-canary.config.toml), saves and installed content in $XDG_DATA_HOME/Xenia,
-~/.local/share/Xenia by default."""
+Xenia keeps its settings (CONFIG, xenia-canary.config.toml), saves and installed content in $XDG_DATA_HOME/Xenia,
+~/.local/share/Xenia by default. running() says whether the installed Xenia runs (the app's Settings window leaves
+its settings alone then; owner, 03-11-2026)."""
 
 from __future__ import annotations
 
@@ -38,6 +39,7 @@ SHA256 = "bdb83b3b30b9c0a84db4a36aa9c4b08bfaa0968ccb0e8e95bc52da88b1406b63"
 SIZE = 18790904                         # bytes of the AppImage
 SIZE_MB = round(SIZE / (1 << 20))       # for the question before downloading
 MEMBER = "xenia.AppImage"               # the name it is installed under, the same for every build
+CONFIG = "xenia-canary.config.toml"     # Xenia's settings file, in xenia_home()
 REPO = "xenia-canary/xenia-canary"
 URL = f"https://github.com/{REPO}/releases/download/{BUILD}/{ASSET}"
 RELEASE_PAGE = f"https://github.com/{REPO}/releases/tag/{BUILD}"
@@ -59,6 +61,22 @@ def emulator_home() -> Path:
 def xenia_home() -> Path:
     """Xenia's own folder: its settings, saves and installed content."""
     return data_home() / "Xenia"
+
+
+def running(proc: Path = Path("/proc")) -> bool:
+    """Whether the installed Xenia runs: the AppImage's own process, named after the file (comm holds the first 15
+    characters: "xenia.AppImage"). A finished one not collected yet (a zombie) does not count. Xenia writes its
+    settings when it starts and keeps them while it runs, so nothing in them is written then."""
+    for folder in proc.glob("[0-9]*"):
+        try:
+            if (folder / "comm").read_text().strip() != MEMBER[:15]:
+                continue
+            state = (folder / "stat").read_text().rsplit(")", 1)[1].split()[0]
+        except (OSError, IndexError):
+            continue
+        if state not in ("Z", "X"):
+            return True
+    return False
 
 
 def appimage(home: Path) -> Path:

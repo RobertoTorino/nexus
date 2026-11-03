@@ -148,3 +148,19 @@ def newer_release(fetch: Fetch | None = None) -> ReleaseInfo | None:
     if not found or found <= version_tuple(VERSION):
         return None
     return ReleaseInfo(".".join(map(str, found)), tag, url, published)
+
+
+def running(proc: Path = Path("/proc")) -> bool:
+    """Whether the installed PPSSPP runs: the AppImage's own process, named after the file (comm holds the first 15
+    characters: "ppsspp.AppImage"), stays while the program it unpacked runs. A finished one not collected yet (a zombie)
+    does not count. PPSSPP writes its settings back when it closes, so nothing in them is written while it runs."""
+    for folder in proc.glob("[0-9]*"):
+        try:
+            if (folder / "comm").read_text().strip() != MEMBER[:15]:
+                continue
+            state = (folder / "stat").read_text().rsplit(")", 1)[1].split()[0]
+        except (OSError, IndexError):
+            continue
+        if state not in ("Z", "X"):
+            return True
+    return False

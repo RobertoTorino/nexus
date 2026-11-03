@@ -334,15 +334,13 @@ def test_the_crash_marker_lives_while_it_is_open(qapp, state, monkeypatch):
 
 @pytest.fixture
 def manager(qapp, tmp_path, state):
-    games = tmp_path / "games"
-    games.mkdir()
+    games = tmp_path / "Games" / "PS4"                                         # the app's own folder (03-11-2026)
     shad = tmp_path / "shadPS4"
     shad.mkdir()
-    (shad / "config.json").write_text(json.dumps({"General": {"install_dirs": [{"enabled": True,
-                                                                                 "path": str(games)}]}}))
     win = MainWindow(home=tmp_path / "emulator", shad_home=shad, steam_dir=tmp_path / "Steam",
                      run=tmp_path / "bin" / "bc250-shadps4-run", newer_release=lambda: None,
-                     devices=tmp_path / "no-devices", sound_state=tmp_path / "no-sound")
+                     devices=tmp_path / "no-devices", sound_state=tmp_path / "no-sound", user_home=tmp_path,
+                     drives=lambda: [])
     win.release_check.stop()
     yield win, games
     win.close()
@@ -379,12 +377,13 @@ def test_a_later_package_goes_into_the_open_window(manager, built_pkg, monkeypat
     loaded: list[str] = []
 
     def run(dialog):
-        monkeypatch.setattr(dialog, "open_pkg", loaded.append)
+        monkeypatch.setattr(dialog, "open_pkgs", loaded.extend)
         win.open_extract("/second/launch.pkg")                   # a launch with a package while it is open
+        win.open_extract(["/third/a.pkg", "/third/b.pkg"])       # several: one after the other
         return QDialog.DialogCode.Rejected
     monkeypatch.setattr(ExtractDialog, "exec", run)
     win.open_extract()
-    assert loaded == ["/second/launch.pkg"]
+    assert loaded == ["/second/launch.pkg", "/third/a.pkg", "/third/b.pkg"]
 
 
 def test_a_package_dropped_on_the_window(qapp, manager, monkeypatch):
@@ -397,7 +396,7 @@ def test_a_package_dropped_on_the_window(qapp, manager, monkeypatch):
                        Qt.KeyboardModifier.NoModifier)
     win.dropEvent(event)
     pump(qapp, lambda: bool(opened), 2000)
-    assert opened == ["/downloads/Game.PKG"]
+    assert opened == [["/downloads/Game.PKG"]]
 
 
 def test_without_cryptography_it_says_what_to_do(manager, monkeypatch):
@@ -412,3 +411,56 @@ def test_without_cryptography_it_says_what_to_do(manager, monkeypatch):
     monkeypatch.setattr(builtins, "__import__", no_crypto)
     win.open_extract()
     assert "needs the cryptography package" in win.output.toPlainText()
+
+
+def test_several_packages_are_extracted_one_after_the_other(qapp, window, built_pkg, tmp_path, monkeypatch):
+    """Browse (or a drop) with several packages: the first is loaded, the rest wait, games before updates, and
+    Extract PKG runs through them into the same folder, the log running on."""
+    from pkg_builder import build_pkg, default_tree
+    monkeypatch.setattr(QDesktopServices, "openUrl", lambda url: None)
+    update = build_pkg(tmp_path / "update.pkg", default_tree(), content_id="UP9000-CUSA99999_00-SYNTHETICPKG0002",
+                       category="gp")
+    other = build_pkg(tmp_path / "other.pkg", default_tree(), content_id="UP9000-CUSA88888_00-SYNTHETICPKG0003")
+    out_dir = tmp_path / "out"
+    out_dir.mkdir()
+    window.output_input.setText(str(out_dir))
+    monkeypatch.setattr(QFileDialog, "getOpenFileNames",
+                        lambda *a, **k: ([str(update.path), str(built_pkg.path), str(other.path)], ""))
+    window.on_browse_pkg()
+    assert window.pkg_input.text() == str(built_pkg.path)                        # a game first
+    assert window.queued() == [str(other.path), str(update.path)]
+    assert window.queue_note.isVisible() and "(2): other.pkg, update.pkg" in window.queue_note.text()
+    window.on_preview_only()                                                    # the loaded one alone
+    pump(qapp, lambda: window._thread is None)
+    assert window.queued() == [str(other.path), str(update.path)]
+    (out_dir / built_pkg.title_id).rename(out_dir / "preview")                  # a fresh folder for the game
+
+    window.on_extract()
+    pump(qapp, lambda: window._thread is None and not window.queue and not window.is_busy(), 60000)
+    log = window.log_output.toPlainText()
+    assert log.count("=== Extraction complete! ===") == 3 and "=== Next package: other.pkg ===" in log
+    assert (out_dir / built_pkg.title_id / "eboot.bin").is_file()
+    assert (out_dir / "CUSA88888" / "eboot.bin").is_file()
+    assert (out_dir / "CUSA99999-UPDATE" / "eboot.bin").is_file()               # the update beside its game
+    assert window.pkg_input.text() == str(update.path) and not window.queue_note.isVisible()
+    assert window.extract_btn.isEnabled()
+
+
+def test_packages_dropped_or_given_later_join_the_queue(qapp, window, built_pkg, tmp_path, monkeypatch):
+    from pkg_builder import build_pkg, default_tree
+    other = build_pkg(tmp_path / "other.pkg", default_tree(), content_id="UP9000-CUSA88888_00-SYNTHETICPKG0003")
+    data = QMimeData()
+    data.setUrls([QUrl.fromLocalFile(str(built_pkg.path)), QUrl.fromLocalFile(str(tmp_path / "readme.txt")),
+                  QUrl.fromLocalFile(str(other.path))])
+    event = QDropEvent(QPointF(5, 5), Qt.DropAction.CopyAction, data, Qt.MouseButton.LeftButton,
+                       Qt.KeyboardModifier.NoModifier)
+    window.dropEvent(event)
+    assert window.pkg_input.text() == str(built_pkg.path) and window.queued() == [str(other.path)]
+    window.open_pkgs([str(other.path), str(built_pkg.path)])                    # known already: nothing changes
+    assert window.queued() == [str(other.path)]
+    monkeypatch.setattr(extract_dialog, "app_data_dir", lambda: tmp_path / "state2")   # not the first window's
+    (tmp_path / "state2").mkdir()                                                    # crash marker
+    started = ExtractDialog(ShadSettings(INFO), [], initial_pkg=[str(other.path), str(built_pkg.path)])
+    pump(qapp, lambda: bool(started.pkg_input.text()), 2000)
+    assert started.pkg_input.text() == str(other.path) and started.queued() == [str(built_pkg.path)]
+    started.reject()
