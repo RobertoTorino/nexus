@@ -4,7 +4,7 @@ memory, fan, temperatures, network and disk."""
 
 APP_NAME = "USB IPS3.5"
 APP_ID = "bc250-usb-ips35"
-__version__ = "1.0.1"
+__version__ = "1.1.0"
 
 from pathlib import Path
 

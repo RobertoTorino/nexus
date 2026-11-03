@@ -4,7 +4,7 @@ and which plugins it has, and links /home/deck for plugins that need it. Decky's
 
 APP_NAME = "Decky Loader Manager"
 APP_ID = "bc250-decky-manager"
-__version__ = "1.0.1"
+__version__ = "1.1.0"
 
 from pathlib import Path
 
