@@ -1,3 +1,7 @@
+Changelog: 03-11-2026 13:15:37
+
+Release 1.34.1.
+
 Changelog: 03-11-2026 12:57:20
 
 Fixed. bc250-bazzite/tools/portal_screenshot.py, the portal's picture for the wiki's home page, crashed now and
