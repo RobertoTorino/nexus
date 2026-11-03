@@ -69,3 +69,12 @@ def test_string_blocks():
 
 def test_module_without_forms():
     assert hii.read_module(b"MZ" + bytes(100)) == []
+
+
+def test_amis_placeholder_string_reads_as_none():
+    """AMI's string 2, "Can't add string": a line the BIOS fills in while it runs, or a blank spacer (owner,
+    01-11-2026: the words showed between the Save & Exit rows of the Windows Portable Suite's BIOS Reader)."""
+    module = fake_bios.string_package(["English", hii.PLACEHOLDER, "Main"]) + fake_bios.form_package()
+    strings = {st.prompt for fs in hii.read_module(module) for form in fs.forms for st in form.statements}
+    assert hii.PLACEHOLDER not in strings
+    assert hii.parse_strings(fake_bios.string_package(["English", hii.PLACEHOLDER]))[2] == hii.PLACEHOLDER

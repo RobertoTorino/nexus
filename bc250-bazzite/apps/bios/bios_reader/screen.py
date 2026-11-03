@@ -8,10 +8,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from html import escape
 
-from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QBrush, QColor, QKeyEvent
-from PyQt6.QtWidgets import (QAbstractItemView, QFrame, QHBoxLayout, QHeaderView, QLabel, QTabBar, QTextBrowser,
-                             QTreeWidget, QTreeWidgetItem, QVBoxLayout, QWidget)
+from PyQt6.QtCore import QModelIndex, QRect, QSize, Qt, pyqtSignal
+from PyQt6.QtGui import QBrush, QColor, QKeyEvent, QResizeEvent
+from PyQt6.QtWidgets import (QAbstractItemView, QFrame, QHBoxLayout, QHeaderView, QLabel, QStyledItemDelegate,
+                             QStyleOptionViewItem, QTabBar, QTextBrowser, QTreeWidget, QTreeWidgetItem, QVBoxLayout,
+                             QWidget)
 
 from .bios import SETUP_FORMSET, Bios, Screens, value_text
 from .hii import Form, FormSet, Statement
@@ -24,6 +25,16 @@ LEGEND = ("→←: Select Screen    ↑↓: Select Item    Enter: Open    Esc: B
 UNLINKED, UNLINKED_FORM = "Not linked", 0x10000      # the extra tab; the id is outside the 16-bit form ids
 # Text items the BIOS fills in while it runs; the app shows the BIOS's own version data there.
 DMI_TEXTS = {"BIOS Vendor": "vendor", "Project Version": "version", "Build Date and Time": "date"}
+TITLE = 48                      # characters of a menu's title where it names a link
+
+
+def short(title: str, most: int = TITLE) -> str:
+    """A title's first line, cut at a word to *most* characters: AMD's overclocking module is titled with its whole
+    warning ("WARNING - DAMAGE CAUSED BY USE OF YOUR AMD PROCESSOR ...")."""
+    line = title.strip().split("\n", 1)[0].strip()
+    if len(line) <= most:
+        return line
+    return line[:most].rsplit(" ", 1)[0].rstrip(" ,.-") + " …"
 
 
 @dataclass
@@ -35,9 +46,39 @@ class Page:
     hidden_reason: str = ""
 
 
+class _Wrapped(QStyledItemDelegate):
+    """Rows as high as their wrapped text. The tree wraps a line (setWordWrap) but asks its delegate for the row's
+    height without a width, so a long line (AMD's overclocking warning, 184 characters) stayed one line high and was
+    cut off; the height is measured here at the column's width, the whole list's for a line spanning both columns."""
+
+    MARGIN = 8                  # px the style keeps beside the text
+
+    def sizeHint(self, option: QStyleOptionViewItem, index: QModelIndex) -> QSize:
+        size = super().sizeHint(option, index)
+        view, text = self.parent(), index.data()
+        if not isinstance(view, QTreeWidget) or not text:
+            return size
+        spanned = view.isFirstColumnSpanned(index.row(), index.parent())
+        width = (view.viewport().width() if spanned else view.header().sectionSize(index.column())) - self.MARGIN
+        if width <= 0:
+            return size
+        metrics = option.fontMetrics
+        wrapped = metrics.boundingRect(QRect(0, 0, width, 0), Qt.TextFlag.TextWordWrap, text).height()
+        lines = max(1, round(wrapped / max(1, metrics.lineSpacing())))
+        return QSize(size.width(), size.height() + (lines - 1) * metrics.lineSpacing())
+
+
 class _Items(QTreeWidget):
     back = pyqtSignal()
     tab_step = pyqtSignal(int)
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.setItemDelegate(_Wrapped(self))
+
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        super().resizeEvent(event)
+        self.scheduleDelayedItemsLayout()              # the rows' heights follow the new width
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
         key = event.key()
@@ -86,6 +127,7 @@ class BiosScreen(QFrame):
         self.items.setHeaderHidden(True)
         self.items.setRootIsDecorated(False)
         self.items.setIndentation(0)
+        self.items.setWordWrap(True)                   # a long line (AMD's warning) wraps instead of being cut off
         self.items.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self.items.header().setStretchLastSection(True)
         self.items.header().setSectionResizeMode(0, QHeaderView.ResizeMode.Interactive)
@@ -226,11 +268,18 @@ class BiosScreen(QFrame):
         if not data:
             return
         fs, st = data
-        if st.kind == "ref" and self._bios is not None:
-            target_fs = self._bios.formset(st.target_formset) if st.target_formset else fs
-            target = target_fs.form(st.target_form) if target_fs else None
-            if target_fs is not None and target is not None:
-                self.open_form(target_fs, target)
+        if st.kind == "ref":
+            opened = self._target(fs, st)
+            if opened is not None:
+                self.open_form(*opened)
+
+    def _target(self, fs: FormSet, st: Statement) -> tuple[FormSet, Form] | None:
+        """The menu a link opens."""
+        if self._bios is None:
+            return None
+        target_fs = self._bios.formset(st.target_formset) if st.target_formset else fs
+        target = target_fs.form(st.target_form) if target_fs is not None else None
+        return (target_fs, target) if target_fs is not None and target is not None else None
 
     def current_form(self) -> tuple[FormSet, Form] | None:
         return self._stack[-1] if self._stack else None
@@ -249,6 +298,8 @@ class BiosScreen(QFrame):
             if item is None:
                 continue
             self.items.addTopLevelItem(item)
+            if st.kind == "subtitle":
+                item.setFirstColumnSpanned(True)       # the BIOS's own text, over the value column too
             if first is None and item.flags() & Qt.ItemFlag.ItemIsSelectable:
                 first = item
         if first is not None:
@@ -262,11 +313,16 @@ class BiosScreen(QFrame):
         state = self._screens.item_state(fs, st)
         if state.hidden and not self._show_hidden:
             return None
-        if st.kind == "subtitle" and not st.prompt:
+        if st.kind == "subtitle" and not st.prompt.strip():
             item = QTreeWidgetItem(["", ""])
             item.setFlags(Qt.ItemFlag.NoItemFlags)
             return item
         prompt, value = st.prompt, ""
+        if not prompt.strip() and st.kind == "ref":        # a link the BIOS names while it runs: named by its menu
+            opened = self._target(fs, st)
+            prompt = short(opened[1].title) if opened is not None else ""
+        if not prompt.strip():                             # a line the BIOS fills in while it runs: left out
+            return None
         if st.kind == "subtitle":
             item = QTreeWidgetItem([prompt, ""])
             item.setFlags(Qt.ItemFlag.ItemIsEnabled)
@@ -278,7 +334,7 @@ class BiosScreen(QFrame):
         if st.kind == "text":
             value = self._text_value(st)
         elif st.kind == "ref":
-            prompt = "▶ " + st.prompt
+            prompt = "▶ " + prompt
         elif st.is_question:
             value = "[" + self._value(fs, st) + "]"
         item = QTreeWidgetItem([prompt, value])

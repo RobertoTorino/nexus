@@ -17,6 +17,9 @@ The window opens on **this board**: the setup screens of its BIOS release and th
   recovery). Left and Right switch tabs.
 - **Items:** Up and Down select, Enter opens a submenu, Esc goes back. The right side shows the item's help, its
   value and default, its options and where it is stored (for example `AmdSetup + 0x25F, 4 bytes`).
+- **Lines without a name:** a line the BIOS names only while it runs (a boot device in Boot Override) has no name
+  in the file. A link shows the name of the menu it opens, anything else is left out, and a blank spacer stays
+  blank, as on the BIOS's own screen. The BIOS's own text between the settings wraps to the list's width.
 - **Show hidden items** (or H): also lists what the BIOS does not show, in gray italics, with the reason: hidden
   always, hidden by the value of another setting, or a menu no link leads to. The extra **Not linked** tab opens
   the menus that no menu links to.

@@ -80,3 +80,47 @@ def test_show_hidden_is_remembered(qapp, sys_root, tables_dir, stock):
     again = MainWindow(sys_root, tables_dir)
     assert again.hidden_box.isChecked()
     again.close()
+
+
+def statement(window, form_id: int, prompt: str):
+    return next(st for st in window.bios.formsets[0].form(form_id).statements if st.prompt == prompt)
+
+
+def test_a_link_without_a_name_takes_its_menus(window, dump_file):
+    """A link the BIOS names while it runs (its prompt AMI's placeholder, read as ""): named by the menu it opens."""
+    assert window.load_dump_file(dump_file)
+    statement(window, 2, "Sub").prompt = ""
+    window.screen._fill()
+    assert rows(window)[-1] == ("▶ Sub", "")
+    open_row(window, "▶ Sub")
+    assert rows(window) == [("Deep", "[Disabled]")]
+
+
+def test_a_line_without_a_name_is_left_out(window, dump_file):
+    """A setting or a text the BIOS names while it runs has no line; a blank subtitle stays a spacer."""
+    assert window.load_dump_file(dump_file)
+    before = rows(window)
+    statement(window, 2, "Level").prompt = ""
+    statement(window, 2, "BIOS Vendor").prompt = ""
+    window.screen._fill()
+    after = rows(window)
+    assert ("Level", "[0x1234]") in before and ("BIOS Vendor", "Vendor Inc.") in before
+    assert after == [row for row in before if row[0] not in ("Level", "BIOS Vendor")]
+    statement(window, 2, "BIOS Info").prompt = " "
+    window.screen._fill()
+    assert rows(window)[0] == ("", "")
+
+
+def test_a_long_subtitle_wraps_over_both_columns(window, dump_file):
+    """AMD's overclocking warning, 184 characters in the P5.00 table: wrapped over the whole list, not cut off at
+    the prompt column's edge (owner, 01-11-2026, from the Windows Portable Suite's BIOS Reader)."""
+    assert window.load_dump_file(dump_file)
+    window.resize(1100, 720)
+    window.show()
+    items = window.screen.items
+    one_line = items.visualItemRect(items.topLevelItem(0)).height()
+    statement(window, 2, "BIOS Info").prompt = "WARNING: " + "Changes made here may damage the processor. " * 5
+    window.screen._fill()
+    assert items.isFirstColumnSpanned(0, items.rootIndex())
+    assert items.visualItemRect(items.topLevelItem(0)).height() >= 2 * one_line
+    assert items.visualItemRect(items.topLevelItem(1)).height() == one_line

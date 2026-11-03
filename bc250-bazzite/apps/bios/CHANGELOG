@@ -1,3 +1,13 @@
+Changelog: 03-11-2026 14:40:15
+
+Fixed. AMI's placeholder string, Can't add string, no longer shows (from the Windows Portable Suite's BIOS Reader,
+owner, 01-11-2026): a spacer between the rows is left blank as the BIOS leaves it, a link the BIOS names while it
+runs shows the name of the menu it opens (Boot Override's link read "▶ " on the board), and a setting or a text
+without a name is left out, as the BIOS leaves such lines empty (hii.py's PLACEHOLDER, the same as the Windows
+app's; screen.py). The BIOS's own text between the settings wraps to the list's width over both columns instead of
+being cut off at the prompt column's edge: the SIO Configuration warning of P5.00 is 184 characters (a delegate
+measures the row, the tree asked for the height without a width).
+
 Changelog: 02-11-2026 02:08:07
 
 Release 1.0.0.
