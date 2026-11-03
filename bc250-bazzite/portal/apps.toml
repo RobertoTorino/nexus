@@ -185,8 +185,8 @@ launch = [["Open", "~/.local/bin/bc250-system-overlay"]]
 [apps.bios]
 name = "BC-250 BIOS Reader"
 summary = "The BIOS settings as the setup screen shows them, hidden menus included. Stock or modded BIOS. Read-only."
-tag = "bios-v1.0.0"
-sha256 = "d2d5c80798e656ac4d6cf2ae8d0f461fe1c557948dbd44c51a32ca02d225a9e1"
+tag = "bios-v1.0.1"
+sha256 = "b0bff637cbecc06bace67650ac463a2ed507e0bffb7b22c1c857238d2a70c944"
 required = false
 changes_board = false
 category = "utilities"
