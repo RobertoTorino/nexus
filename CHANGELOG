@@ -1,3 +1,7 @@
+Changelog: 03-11-2026 16:44:37
+
+Release 1.36.0. Brings ace-v1.0.1, acpi-v0.4.2, cec-v1.0.1, check-v1.0.1, clb-v1.0.1, compute-v0.4.2, consoles-v2.0.1, cores-v0.4.2, datstation-v3.0.1, decky-v1.0.1, fan-v1.0.1, gpu-v0.4.2, hdcam-v1.0.1, hdcontrol-v1.0.1, ips35-v1.0.1, mesh-v1.0.1, ncgui-v1.0.1, oc-v0.3.2, overlay-v1.0.1, package-v3.0.1, pcsx2-v3.0.1, portal-v13.1.1, ppsspp-v1.0.1, rpcs3-v3.0.1, sftp-v1.0.1, shadps4-v3.0.1, upscaler-v2.0.1, vita3k-v1.0.1, vram-v1.0.1, wdriver-v1.0.1, xenia-v1.0.1.
+
 Changelog: 03-11-2026 15:33:35
 
 Release 1.35.0. Brings bios-v1.0.1.
