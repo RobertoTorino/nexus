@@ -14,7 +14,7 @@ from bc250_core import __version__ as CORE_VERSION, instance
 from bc250_core.app import create_app, exec_app
 from bc250_core.updates import repo_slug
 
-from . import APP_NAME, INFO, MANIFEST, __version__, installed_copy, state_dir, suite_checkout
+from . import APP_NAME, INFO, MANIFEST, ROOT, __version__, installed_copy, state_dir, suite_checkout
 from . import portal_update
 from .main_window import MainWindow
 from .manifest import ManifestError, load
