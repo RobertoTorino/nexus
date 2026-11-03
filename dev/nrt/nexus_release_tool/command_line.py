@@ -39,6 +39,10 @@ NO_PROMPTS = {
     "TERM": "dumb",
 }
 _ANSI = re.compile(r"\x1b\[[0-?]*[ -/]*[@-~]|\x1b\][^\x07]*\x07|\x1b[@-Z\\-_]")
+# Scripts that must run in a terminal: the suite's board checks ask for the sudo password (the portal's installer
+# calls sudo for every copy to /opt) and keep the portal running. Run here, without a terminal, sudo asked through
+# KDE's dialog at every call instead of once (owner, 03-11-2026: "I keep getting this popup").
+ASKS = ("check-release.sh", "check-release.ps1")
 
 
 def plain(text: str) -> str:
@@ -69,16 +73,25 @@ def find_bash() -> str | None:
     return shutil.which("bash")
 
 
+def needs_terminal(command: str) -> str:
+    """The name of the script *command* starts with when it is one that must run in a terminal (ASKS); "" otherwise."""
+    first = command.strip().split(maxsplit=1)[0] if command.strip() else ""
+    name = first.replace("\\", "/").rsplit("/", 1)[-1]
+    return name if name in ASKS else ""
+
+
 class CommandLine(QWidget):
     """The output, and below it the line to type in with Commands, Run/Stop and Clear."""
 
     def __init__(self, root: Path, settings: QSettings | None = None, bash: str | None = None, finished=None,
-                 log_dir: Path | None = None):
+                 log_dir: Path | None = None, terminal=None):
         """*settings* keeps the history between sessions (None: this session only); *finished* is called after each
         command, so the window can read the checkout again; *log_dir* keeps each command's output in a file of the
-        day (None: none)."""
+        day (None: none); *terminal* runs a command line in a terminal window (launch_in_terminal), for the commands
+        that must ask (needs_terminal(); None: they run here like any other)."""
         super().__init__()
         self.root = root
+        self.terminal = terminal
         self.cwd = root
         self.settings = settings
         self.bash = bash if bash is not None else find_bash()
@@ -193,6 +206,8 @@ class CommandLine(QWidget):
         if command == "clear":
             self.output.clear()
             return
+        if self._in_terminal(command):
+            return
         self.run(command)
 
     def run_now(self, command: str) -> bool:
@@ -200,7 +215,26 @@ class CommandLine(QWidget):
         if self.is_running() or not self.bash:
             return False
         self._remember(command)
+        if self._in_terminal(command):
+            return True
         self.run(command)
+        return True
+
+    def _in_terminal(self, command: str) -> bool:
+        """A command that must ask (needs_terminal) goes to a terminal window instead, and the output says why;
+        True when it did. Without a terminal to hand it to, it runs here."""
+        script = needs_terminal(command)
+        if not script or self.terminal is None:
+            return False
+        why = (f"{self._prompt_text()} {command}\n→ Runs in a terminal: {script} asks for the sudo password there, "
+               "once, and keeps the portal running. The Commands line cannot take input, so here sudo would ask at "
+               "every call through the desktop's dialog, or fail.\n")
+        try:
+            self.terminal(command)
+        except RuntimeError as exc:
+            why += f"{exc}\n"
+        self._append(why)
+        self._log(f"\n=== {datetime.datetime.now():%Y-%m-%d %H:%M:%S} in {self.cwd}\n{why}")
         return True
 
     def log_file(self) -> Path | None:

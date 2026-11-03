@@ -194,6 +194,9 @@ def played(seconds: int) -> str:
 GUI_SETTINGS = Path("GuiConfigs") / "CurrentSettings.ini"
 # The GUI settings the app owns: section, key, value, and what it did in the app's words.
 GUI_OWNED = (("main_window", "infoBoxEnabledWelcome", "false", "its welcome dialog off"),
+             # "Exit Game?" before a game's window closes (owner, 03-11-2026, from the Windows Portable Suite's
+             # RPCS3 Manager): a close from Steam or the wrapper would stop at it, with no way to answer it
+             ("main_window", "confirmationBoxExitGame", "false", "its exit question off"),
              ("Meta", "checkUpdateStart", "false", "its own update check off"))
 DARK_STYLE = "Darker Style by TheMitoSan"      # RPCS3's own dark style (gui::DarkStylesheet)
 INPUT_CONFIG = Path("input_configs") / "global" / "Default.yml"

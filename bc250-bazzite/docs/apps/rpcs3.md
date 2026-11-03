@@ -158,7 +158,8 @@ window (**RPCS3 settings**).
 **RPCS3 settings** opens RPCS3's own window for what the app does not set: its other settings, its controllers
 beyond player 1 and 2 (**Pads**) and its online service (RPCN). What the app sets by itself, before RPCS3's
 window first opens: RPCS3's welcome dialog off (it would wait for a tick in "I have read the Quickstart guide"
-first), RPCS3's own update check off (see [New RPCS3 builds](#new-rpcs3-builds)), RPCS3's dark style when the
+first), RPCS3's question before a game's window closes off ("Exit Game?": a game closed from Steam would stop at
+it), RPCS3's own update check off (see [New RPCS3 builds](#new-rpcs3-builds)), RPCS3's dark style when the
 suite's theme is dark (the welcome dialog would have offered it) and player 1 on your controller (see
 [Controllers](#controllers)). What the app set up goes to the log.
 
@@ -258,7 +259,7 @@ through X11 already.
 | RPCS3's firmware, saves, settings, installed games | `~/.config/rpcs3` (RPCS3's own folder) |
 | RPCS3's play time per game | `~/.config/rpcs3/GuiConfigs/persistent_settings.dat`, RPCS3's own |
 | RPCS3's settings (the Settings tab) | `~/.config/rpcs3/config.yml`, RPCS3's own |
-| RPCS3's GUI settings (the welcome dialog, the update check, the style) | `~/.config/rpcs3/GuiConfigs/CurrentSettings.ini`, RPCS3's own |
+| RPCS3's GUI settings (the welcome dialog, the exit question, the update check, the style) | `~/.config/rpcs3/GuiConfigs/CurrentSettings.ini`, RPCS3's own |
 | Player 1 and 2 on your controllers | `~/.config/rpcs3/input_configs/global/Default.yml`, RPCS3's own |
 | Each game's screen setting | `~/.config/rpcs3/custom_configs/config_<Id>.yml`, RPCS3's own |
 | RPCS3's shader cache and its own log (`RPCS3.log`, read for what an install did) | `~/.cache/rpcs3` |

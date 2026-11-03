@@ -87,6 +87,33 @@ def test_commands_offered_go_on_the_line_not_run(app, tmp_path):
     assert pane.line.text() == "git push" and not pane.is_running()
 
 
+def test_the_board_checks_go_to_a_terminal(app, tmp_path):
+    """check-release.sh asks for the sudo password and keeps the portal running, which the line cannot do (owner,
+    03-11-2026: run here, sudo asked through KDE's dialog at every one of the installer's 14 calls)."""
+    from nexus_release_tool.command_line import needs_terminal
+    assert needs_terminal("bc250-bazzite/tools/check-release.sh release portal-v13.1.1") == "check-release.sh"
+    assert needs_terminal("./tools/check-release.sh local") == "check-release.sh"
+    assert needs_terminal("wp\\tools\\check-release.ps1 local") == "check-release.ps1"
+    assert needs_terminal("git push") == "" and needs_terminal("") == ""
+    launched: list[str] = []
+    pane = CommandLine(tmp_path, bash="/bin/bash", terminal=launched.append)
+    command = "bc250-bazzite/tools/check-release.sh release portal-v13.1.1"
+    pane.line.setText(command)
+    pane.submit()
+    assert launched == [command] and not pane.is_running() and pane.history[-1] == command
+    assert "Runs in a terminal: check-release.sh asks for the sudo password there, once" in pane.output.toPlainText()
+    assert pane.run_now(command) and launched == [command, command]
+    pane_without = CommandLine(tmp_path, bash="")                  # no terminal to hand it to: not refused
+    pane_without.line.setText(command)
+    pane_without.submit()
+    assert launched == [command, command]
+
+    def no_terminal(line):
+        raise RuntimeError("No terminal emulator found")
+    pane = CommandLine(tmp_path, bash="/bin/bash", terminal=no_terminal)
+    assert pane.run_now(command) and "No terminal emulator found" in pane.output.toPlainText()
+
+
 def test_without_bash_it_says_so(app, tmp_path, monkeypatch):
     monkeypatch.setattr("nexus_release_tool.command_line.find_bash", lambda: None)
     pane = CommandLine(tmp_path)

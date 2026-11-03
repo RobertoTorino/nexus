@@ -219,7 +219,9 @@ published already and ends at once.
   empties the output.
   Each command runs with `bash -lc` in the folder the last `cd` left; variables you set do not carry over to the
   next command. A command cannot read input, so nothing can ask you something: git does not prompt for a password,
-  opens no editor (commit with `-m`) and pages nothing. For a command that must ask, use a terminal. After each
+  opens no editor (commit with `-m`) and pages nothing. For a command that must ask, use a terminal; the suite's
+  `check-release` script, which asks for the sudo password and keeps the portal running, is handed to a terminal
+  by itself when it is run from the line, and the output says so. After each
   command that changed the checkout (a commit, a push, a tag) the window reads it again, as **Refresh** does. On Windows it needs Git Bash's `bash` on the
   PATH. Every command, its whole output and how it ended (its exit code) are also kept in a file of the day,
   `~/.cache/nexus-release-tool/commands/commands-<YYYY-MM-DD>.log` (on Windows under your user folder,

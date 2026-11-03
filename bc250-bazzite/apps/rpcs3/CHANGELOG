@@ -1,3 +1,11 @@
+Changelog: 03-11-2026 17:06:47
+
+Added. The app turns RPCS3's question before a game's window closes off (GuiConfigs/CurrentSettings.ini,
+[main_window] confirmationBoxExitGame=false), as it does the welcome dialog and the update check, before RPCS3's
+window first opens: a game's window closed from Steam or by the wrapper no longer stops at "Exit Game?" (owner,
+03-11-2026, from the Windows Portable Suite's RPCS3 Manager). The log's "RPCS3 set up" line names it, and the wiki
+says so.
+
 Changelog: 03-11-2026 16:16:30
 
 Release 3.0.1.

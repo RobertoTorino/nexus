@@ -1741,7 +1741,7 @@ class ReleaseWindow(QMainWindow):
         self.tabs.currentChanged.connect(lambda i: self.tabs.widget(i) is self.portal_page
                                          and self.portal_page.fill(rp.load_units(self.root, self.suite)))
         self.commands = CommandLine(root, settings, finished=self.command_finished,   # a commit or push: read it again
-                                    log_dir=COMMAND_LOG_DIR if settings is not None else None)
+                                    log_dir=COMMAND_LOG_DIR if settings is not None else None, terminal=self.launch)
         # One output tab (owner, 01-11-2026: Logs was mostly empty): Commands is the command line with its output,
         # where what a step wrote (Apply, Pin, Bump portal, Retract, a test on this board) shows too, under a line
         # that names the step (step_wrote()).

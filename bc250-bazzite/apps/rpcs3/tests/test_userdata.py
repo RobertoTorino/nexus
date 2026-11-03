@@ -87,11 +87,13 @@ def test_the_play_time_rpcs3_counted(tmp_path):
 # --- What the app writes for RPCS3 (owner, 24-10-2026) ----------------------------------------------------------
 
 def test_rpcs3s_gui_settings_get_what_the_app_owns(tmp_path):
-    """No CurrentSettings.ini yet: the two keys in their sections. One RPCS3 wrote: the keys set, every other line
-    kept; a second run changes nothing."""
-    assert userdata.prepare_gui(tmp_path, dark=False) == ["its welcome dialog off", "its own update check off"]
+    """No CurrentSettings.ini yet: the three keys in their sections. One RPCS3 wrote: the keys set, every other
+    line kept; a second run changes nothing."""
+    assert userdata.prepare_gui(tmp_path, dark=False) == ["its welcome dialog off", "its exit question off",
+                                                          "its own update check off"]
     path = tmp_path / userdata.GUI_SETTINGS
-    assert path.read_text() == "[main_window]\ninfoBoxEnabledWelcome=false\n\n[Meta]\ncheckUpdateStart=false\n"
+    assert path.read_text() == ("[main_window]\ninfoBoxEnabledWelcome=false\nconfirmationBoxExitGame=false\n\n"
+                                "[Meta]\ncheckUpdateStart=false\n")
     stamp = path.stat().st_mtime_ns
     assert userdata.prepare_gui(tmp_path, dark=False) == [] and path.stat().st_mtime_ns == stamp
     assert userdata.prepare_gui(tmp_path, dark=True) == ["its dark style"]      # once, while none is chosen
@@ -100,11 +102,13 @@ def test_rpcs3s_gui_settings_get_what_the_app_owns(tmp_path):
     path.write_text("[GSFrame]\nvisibility=Windowed\n\n[Meta]\nattachCommandLine=false\ncheckUpdateStart=true\n"
                     "currentStylesheet=Darker Style by TheMitoSan\n\n[main_window]\nguiVolume=1\n"
                     "infoBoxEnabledWelcome=true\nlastExplorePathPUP=/somewhere\n")
-    assert userdata.prepare_gui(tmp_path, dark=True) == ["its welcome dialog off", "its own update check off"]
+    assert userdata.prepare_gui(tmp_path, dark=True) == ["its welcome dialog off", "its exit question off",
+                                                         "its own update check off"]
     assert path.read_text() == ("[GSFrame]\nvisibility=Windowed\n\n[Meta]\nattachCommandLine=false\n"
                                 "checkUpdateStart=false\ncurrentStylesheet=Darker Style by TheMitoSan\n\n"
-                                "[main_window]\nguiVolume=1\ninfoBoxEnabledWelcome=false\nlastExplorePathPUP=/somewhere\n")
-    path.write_text("[main_window]\ninfoBoxEnabledWelcome=false\n")                # one of the two set already
+                                "[main_window]\nguiVolume=1\ninfoBoxEnabledWelcome=false\nlastExplorePathPUP=/somewhere\n"
+                                "confirmationBoxExitGame=false\n")
+    path.write_text("[main_window]\ninfoBoxEnabledWelcome=false\nconfirmationBoxExitGame=false\n")   # two set already
     assert userdata.prepare_gui(tmp_path, dark=False) == ["its own update check off"]
 
 

@@ -1,3 +1,13 @@
+Changelog: 03-11-2026 17:05:01
+
+Fixed. The suite's check-release script run from the Commands line goes to a terminal window instead, and the
+output says why (owner, 03-11-2026: step 4 of Bump's commands, bc250-bazzite/tools/check-release.sh release
+portal-v13.1.1, run on the line, asked for the sudo password through KDE's dialog at every one of the portal
+installer's 14 sudo calls, since the line has no terminal for sudo to remember the password in; in a terminal it
+asks once). The same for a pill that runs it (run_now) and for a Windows suite's check-release.ps1. Without a
+terminal to hand it to, the line says so (command_line.needs_terminal, CommandLine(terminal=)). The Nexus page's
+Releases chapter says so.
+
 Changelog: 03-11-2026 15:55:10
 
 Fixed. Bump portal pressed again with nothing new changes nothing and says so in a popup (owner, 03-11-2026: a

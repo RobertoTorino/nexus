@@ -178,13 +178,14 @@ def test_rpcs3_is_set_up_once_installed(qapp, folders, tmp_path):
     assert not gui.exists() and not pads.exists() and asked == []
     running[0] = False
     window.refresh()
-    assert gui.read_text() == ("[main_window]\ninfoBoxEnabledWelcome=false\n\n[Meta]\ncheckUpdateStart=false\n"
+    assert gui.read_text() == ("[main_window]\ninfoBoxEnabledWelcome=false\nconfirmationBoxExitGame=false\n\n"
+                               "[Meta]\ncheckUpdateStart=false\n"
                                "currentStylesheet=Darker Style by TheMitoSan\n")      # the suite's theme is dark
     assert asked == [1] and pads.read_text().startswith(userdata.PAD_MARK)
     assert '  Device: "DualShock 4 Wireless Controller 1"' in pads.read_text()
     assert "    Cross: South" in pads.read_text() and "Player 2 Input" not in pads.read_text()
     lines = window.output.toPlainText().splitlines()
-    assert lines[-2].endswith("RPCS3 set up: its welcome dialog off, its own update check off, its dark style.")
+    assert lines[-2].endswith("RPCS3 set up: its welcome dialog off, its exit question off, its own update check off, its dark style.")
     assert lines[-1].endswith("RPCS3 set up: player 1 on DualShock 4 Wireless Controller 1.")
     window.refresh()                                                            # nothing more to do or ask
     assert asked == [1] and len(window.output.toPlainText().splitlines()) == len(lines)
@@ -200,7 +201,7 @@ def test_rpcs3_is_set_up_once_installed(qapp, folders, tmp_path):
     devices.write_text(DS4_AND_STEAM)
     window.refresh()
     assert pads.read_text().startswith("Player 1 Input:\n  Handler: DualSense") and asked == [1, 1]
-    assert gui.read_text() == ("[main_window]\ngeometry=@ByteArray(x)\ninfoBoxEnabledWelcome=false\n\n"
+    assert gui.read_text() == ("[main_window]\ngeometry=@ByteArray(x)\ninfoBoxEnabledWelcome=false\nconfirmationBoxExitGame=false\n\n"
                                "[Meta]\ncheckUpdateStart=false\ncurrentStylesheet=Darker Style by TheMitoSan\n")
     window.close()
 
@@ -659,8 +660,8 @@ def test_the_log_tab(qapp, folders, tmp_path):
     window = _window(folders)
     lines = window.output.toPlainText().splitlines()
     assert lines[0] == "24-10-2026 22:14:00 INFO RPCS3 Manager 0.9.0 started"
-    assert len(lines) == 2 and lines[1].endswith(" INFO RPCS3 set up: its welcome dialog off, its own update check "
-                                                 "off, its dark style.")
+    assert len(lines) == 2 and lines[1].endswith(" INFO RPCS3 set up: its welcome dialog off, its exit question off, "
+                                                 "its own update check off, its dark style.")
     window.add_folder(tmp_path / "games")
     window.say("Steam was not changed: no Steam", ok=False)
     lines = window.output.toPlainText().splitlines()
