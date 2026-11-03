@@ -1,3 +1,7 @@
+Changelog: 03-11-2026 16:16:30
+
+Release 0.4.2.
+
 Changelog: 03-11-2026 12:02:47
 
 Fixed. Checking Unattended with the auto-resume unit enabled the unit with --now, which started a second run

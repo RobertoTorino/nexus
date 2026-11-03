@@ -4,7 +4,7 @@
 
 APP_NAME = "BC-250 CU Unlock"
 APP_ID = "bc250-cu-unlock"
-__version__ = "0.4.1"
+__version__ = "0.4.2"
 
 from pathlib import Path
 
