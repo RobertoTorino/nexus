@@ -1,3 +1,16 @@
+Changelog: 04-11-2026 00:12:32
+
+Fixed. The CI passes step saw no CI run on a commit whose release started more runs than the header's page holds
+(owner, 04-11-2026: the release of 26 apps started 26 Release runs and as many Nexus index runs after the CI runs
+on 899c722f, so the step said "GitHub has no CI run on this commit yet" while CI had passed). When that page is
+full and ends on a run of HEAD, the header now reads the rest of HEAD's runs from GitHub's list of that commit's
+runs, with an ETag of its own, so the CI runs under the page are seen, the GitHub pill counts every run of the
+push and a CI run started again (Run CI again) is followed to its end. The same page held Pin: step 2 showed "no
+run seen" for the 20 releases of the night under it and for five releases of the morning (acpi-v0.4.2,
+compute-v0.4.2, cores-v0.4.2, gpu-v0.4.2, oc-v0.3.2, published but never pinned, their runs long gone from the
+page), so Pin stayed gray. A release step 2 waits for whose run is not among the runs read now gets its own list
+from GitHub, the runs on its tag, so every published release reads as ready.
+
 Changelog: 03-11-2026 17:05:01
 
 Fixed. The suite's check-release script run from the Commands line goes to a terminal window instead, and the

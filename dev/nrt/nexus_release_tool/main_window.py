@@ -1241,7 +1241,7 @@ class BuildIndicator(Pill):
     def __init__(self, window: "ReleaseWindow", source, notify):
         super().__init__("—", "GitHub build")
         self.release_window = window
-        self.source = source            # rp.fetch_runs: (runs | None when unchanged, etag)
+        self.source = source            # rp.fetch_runs(etag, head, tags): (runs | None when unchanged, etag)
         self.notify = notify
         self.etag = ""
         self.runs: list[rp.BuildRun] = []
@@ -1262,13 +1262,16 @@ class BuildIndicator(Pill):
     def check(self) -> None:
         if self.source is None:
             return
-        etag = self.etag
-        self.checker.start(lambda: self._fetch(etag))
+        etag, head = self.etag, (rp.git(self.release_window.root, "rev-parse", "HEAD") or "").strip()
+        page = getattr(self.release_window, "portal_page", None)       # not built yet at the first look
+        waiting = tuple(page.waiting_tags()) if page is not None else ()
+        self.checker.start(lambda: self._fetch(etag, head, waiting))
 
-    def _fetch(self, etag: str) -> object:
-        """Worker thread: the runs, or the error to show."""
+    def _fetch(self, etag: str, head: str, waiting: tuple[str, ...]) -> object:
+        """Worker thread: the runs (those of HEAD and of the releases waited for complete, rp.fetch_runs), or the
+        error to show."""
         try:
-            return self.source(etag)
+            return self.source(etag, head, waiting)
         except (OSError, ValueError) as exc:
             return exc
 

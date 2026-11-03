@@ -12,7 +12,7 @@ from PyQt6.QtWidgets import QApplication, QLabel, QWidget
 def window():
     app = QApplication.instance() or QApplication([])
     from nexus_release_tool.main_window import ReleaseWindow
-    w = ReleaseWindow(runs_source=lambda etag: ([], ""), launch=lambda line: None, notify=lambda s, b: True,
+    w = ReleaseWindow(runs_source=lambda etag, head="", tags=(): ([], ""), launch=lambda line: None, notify=lambda s, b: True,
                       status_source=None)
     w.build.checker.stop(2000)
     yield w, app

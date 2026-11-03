@@ -231,7 +231,10 @@ published already and ends at once.
   new "Release x.y.z." takes the place of the same release's entry on top, with the notes of the second Apply.
 
 **GitHub** in the header shows whether GitHub built your last push: every workflow run (CI, Release, Manual) on
-its commit, tags included. It reads **building** while one runs, then **passed** or **failed**; hover for each
+its commit, tags included. It reads the newest 30 runs of the repository; when they all belong to your commit (a
+release of many apps starts a Release run and an index run per app), it reads the rest of that commit's runs too,
+so the CI runs under them count; a release step 2 waits for whose run is older than those gets its own look, so
+Pin never waits for a release that is out already. It reads **building** while one runs, then **passed** or **failed**; hover for each
 run, click to open the run that failed (or still runs) on GitHub. A run GitHub canceled because a later run of the
 same workflow on the same commit took its place (the Nexus index, which each release run of a push starts) is no
 failure: hover says **replaced by a later run**. It looks every 30 seconds while a build runs and

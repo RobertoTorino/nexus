@@ -1297,7 +1297,10 @@ def launch_command(root: Path, target: Launch, python: str = sys.executable) -> 
 
 # --- GitHub Actions: did the push build? -----------------------------------------------------------------------
 
-RUNS_URL = "https://api.github.com/repos/{repo}/actions/runs?per_page=30"
+RUNS_URL = "https://api.github.com/repos/{repo}/actions/runs?per_page={page}"
+RUNS_PAGE = 30
+HEAD_RUNS_URL = "https://api.github.com/repos/{repo}/actions/runs?head_sha={sha}&per_page=100"
+TAG_RUNS_URL = "https://api.github.com/repos/{repo}/actions/runs?branch={tag}&per_page=5"   # a tag's runs: its release
 ACTIONS_URL = "{repo_url}/actions"
 OK_CONCLUSIONS = ("success", "skipped", "neutral")
 
@@ -1456,11 +1459,45 @@ def github_get(url: str, etag: str = "") -> tuple[object | None, str, RateInfo |
         raise
 
 
-def fetch_runs(etag: str = "") -> tuple[list[BuildRun] | None, str, RateInfo | None]:
+_pages: dict[str, tuple[str, list[BuildRun]]] = {}     # the runs read last at each url: its ETag and its runs
+
+
+def runs_at(url: str, etag: str) -> tuple[list[BuildRun], str, bool, RateInfo | None]:
+    """The runs at *url*, the ETag to send next time, whether they changed since *etag* and GitHub's limit; when
+    GitHub says nothing changed (304, which costs no request), the runs read last at that url."""
+    data, etag, rate = github_get(url, etag)
+    runs = parse_runs(data) if data is not None else _pages.get(url, ("", []))[1]
+    _pages[url] = (etag, runs)
+    return runs, etag, data is not None, rate
+
+
+def fetch_runs(etag: str = "", sha: str = "", tags: tuple[str, ...] = ()) -> tuple[list[BuildRun] | None, str,
+                                                                                    RateInfo | None]:
     """The newest workflow runs (newest first), the ETag to send next time and GitHub's hourly limit as it stands;
-    runs None when nothing changed since *etag* (github_get)."""
-    data, etag, rate = github_get(RUNS_URL.format(repo=repo_slug()), etag)
-    return (None if data is None else parse_runs(data)), etag, rate
+    runs None when nothing changed since *etag* (github_get). With *sha*, the checkout's HEAD: when the page is
+    full and ends on a run of that commit, its older runs are under the page, so they come from GitHub's list of
+    that commit's runs too (one more request, with an ETag of its own). With *tags*, the releases step 2 waits for:
+    a tag whose release run is not among those runs gets its own list (the runs on that ref), so a release
+    published before the page's oldest run still reads as built. A release of 26 apps started 26 Release runs and
+    as many Nexus index runs after the CI runs on its commit, which filled the page, so the CI passes step saw no
+    CI run and never lit, and Pin stayed gray for five releases of the morning that were never pinned (owner,
+    04-11-2026)."""
+    repo = repo_slug()
+    runs, etag, changed, rate = runs_at(RUNS_URL.format(repo=repo, page=RUNS_PAGE), etag)
+    more: list[BuildRun] = []
+    if sha and len(runs) >= RUNS_PAGE and runs[-1].sha == sha:
+        url = HEAD_RUNS_URL.format(repo=repo, sha=sha)
+        found, _etag, found_changed, rate = runs_at(url, _pages.get(url, ("", []))[0])
+        more, changed = more + found, changed or found_changed
+    for tag in tags:
+        if release_run(runs + more, tag) is None:
+            url = TAG_RUNS_URL.format(repo=repo, tag=tag)
+            found, _etag, found_changed, rate = runs_at(url, _pages.get(url, ("", []))[0])
+            more, changed = more + found, changed or found_changed
+    if not changed:
+        return None, etag, rate
+    seen = {r.url for r in runs}
+    return runs + [r for r in more if r.url not in seen], etag, rate
 
 
 def latest_push(runs: list[BuildRun]) -> list[BuildRun]:

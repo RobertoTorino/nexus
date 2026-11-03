@@ -297,7 +297,7 @@ def test_ticker_follows_the_suite_ticked(two_suites, tmp_path):
     QSettings.setPath(QSettings.Format.IniFormat, QSettings.Scope.UserScope, str(tmp_path / "settings"))
     app = QApplication.instance() or QApplication([])          # noqa: F841 (kept alive for the window)
     from nexus_release_tool import main_window
-    w = main_window.ReleaseWindow(two_suites, status_source=None, runs_source=lambda etag: (None, etag),
+    w = main_window.ReleaseWindow(two_suites, status_source=None, runs_source=lambda etag, head="", tags=(): (None, etag),
                                   notify=lambda *a: None, claude_source=None, jobs_source=None, suite="bc")
     runs = [run("CI Windows Portable", status="in_progress", n=4), run("CI Nexus", n=3), run(n=2),
             run("Release", "portal-v3.0.1", status="in_progress", n=1)]
@@ -322,7 +322,7 @@ def test_notifications_follow_the_suite_ticked(two_suites, tmp_path):
     app = QApplication.instance() or QApplication([])          # noqa: F841 (kept alive for the window)
     from nexus_release_tool import main_window
     notes = []
-    w = main_window.ReleaseWindow(two_suites, status_source=None, runs_source=lambda etag: (None, etag),
+    w = main_window.ReleaseWindow(two_suites, status_source=None, runs_source=lambda etag, head="", tags=(): (None, etag),
                                   notify=lambda *a: notes.append(a), claude_source=None, jobs_source=None, suite="bc")
 
     def runs(status, conclusion="success"):
@@ -1310,7 +1310,7 @@ def test_window_ticker_shows_the_jobs_of_the_runs(repo, tmp_path):
                                             steps=[("Run tests", "in_progress", None)])]}), "j1", None)
 
     w = main_window.ReleaseWindow(repo, status_source=None, sha256_source=lambda tag: SHA, launch=launched.append,
-                                  runs_source=lambda etag: (None, etag), notify=lambda *a: None, claude_source=None,
+                                  runs_source=lambda etag, head="", tags=(): (None, etag), notify=lambda *a: None, claude_source=None,
                                   jobs_source=jobs_source)
     ticker = w.ticker
     assert ticker.isHidden()                                                   # no runs seen yet
@@ -1405,6 +1405,66 @@ def test_fetch_runs_sends_the_etag(monkeypatch):
     assert rp.RateInfo.from_headers({}, False) is None
 
 
+def test_fetch_runs_follows_a_full_page_with_the_rest_of_heads_runs(monkeypatch):
+    """A release of 26 apps started 26 Release runs and as many index runs on its commit, so the page of 30 ended on
+    that commit and the CI runs under them were never seen: the CI passes step never lit (owner, 04-11-2026)."""
+    import io
+    import urllib.error
+    import urllib.parse
+    sent: list[tuple[str, str | None]] = []
+    page = [run("Release", f"app{n}-v1.0.0", n=100 + n, sha="head") for n in range(rp.RUNS_PAGE)]
+    head = [*page, run(n=2, sha="head"), run("CI Nexus", n=1, sha="head")]
+    old_release = [run("Release", "gpu-v0.4.2", n=7, sha="old")]
+    answers = {"": page, "head": head, "gpu-v0.4.2": old_release, "oc-v0.3.2": []}
+    etags = {"": 'W/"page"', "head": 'W/"head"', "gpu-v0.4.2": 'W/"gpu"', "oc-v0.3.2": 'W/"oc"'}
+
+    class Response(io.BytesIO):
+        def __init__(self, body: bytes, etag: str):
+            super().__init__(body)
+            self.headers = {"ETag": etag}
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+    def urlopen(request, timeout):
+        query = urllib.parse.parse_qs(urllib.parse.urlparse(request.full_url).query)
+        sha = query.get("head_sha", query.get("branch", [""]))[0]
+        sent.append((sha, request.get_header("If-none-match")))
+        if sent[-1][1] == etags[sha]:
+            raise urllib.error.HTTPError(request.full_url, 304, "Not Modified", {}, None)
+        return Response(json.dumps({"workflow_runs": answers[sha]}).encode(), etags[sha])
+
+    monkeypatch.setattr(rp.urllib.request, "urlopen", urlopen)
+    monkeypatch.setattr(rp, "_token", "")
+    monkeypatch.setattr(rp, "_pages", {})
+    runs, etag, _limit = rp.fetch_runs(sha="head")
+    assert len(runs) == rp.RUNS_PAGE + 2 and [r.workflow for r in runs[-2:]] == ["CI", "CI Nexus"]
+    assert sent == [("", None), ("head", None)] and etag == 'W/"page"'
+    assert flow.ci_state(runs, "head") == "passed"
+    # Nothing changed on either page: None, as before, and the second page's ETag made its request free too.
+    assert rp.fetch_runs(etag, sha="head")[0] is None and sent[2:] == [("", 'W/"page"'), ("head", 'W/"head"')]
+    # A CI run under the page finished (Run CI again): the page is unchanged, the runs of HEAD are not.
+    head[-2] = run(n=2, sha="head", conclusion="failure")
+    etags["head"] = 'W/"head2"'
+    runs, etag, _limit = rp.fetch_runs(etag, sha="head")
+    assert runs is not None and flow.ci_state(runs, "head") == "failed" and etag == 'W/"page"'
+    # Without HEAD, or when the page does not end on HEAD, the one request as before.
+    answers[""] = [*page[:-1], run("Release", "app-v0.9.0", n=50, sha="older")]
+    etags[""] = 'W/"page2"'
+    runs, _etag, _limit = rp.fetch_runs(etag, sha="head")
+    assert len(runs) == rp.RUNS_PAGE and sent[-1] == ("", 'W/"page"')
+    assert len(rp.fetch_runs()[0]) == rp.RUNS_PAGE
+    # The releases step 2 waits for: a tag whose run is not in the list (published before the page's oldest run,
+    # or not pushed yet) gets its own list, so an old release reads as built and Pin is not held by it.
+    runs, etag, _limit = rp.fetch_runs(sha="head", tags=("gpu-v0.4.2", "oc-v0.3.2", "app1-v1.0.0"))
+    assert rp.release_state(runs, "gpu-v0.4.2") == "passed" and rp.release_state(runs, "oc-v0.3.2") == ""
+    assert [s for s, _etag in sent[-2:]] == ["gpu-v0.4.2", "oc-v0.3.2"]           # app1's run is in the page
+    assert rp.fetch_runs(etag, sha="head", tags=("gpu-v0.4.2", "oc-v0.3.2"))[0] is None   # all 304: unchanged
+
+
 def test_github_token_from_the_environment_or_a_gh_login(monkeypatch):
     monkeypatch.setattr(rp, "_token", None)
     monkeypatch.setenv("GH_TOKEN", "from-env")
@@ -1490,7 +1550,7 @@ def test_window_build_indicator_notifies_when_a_run_ends(repo, tmp_path):
     from nexus_release_tool import main_window
     notes = []
     w = main_window.ReleaseWindow(repo, status_source=None, sha256_source=lambda tag: SHA, launch=launched.append,
-                                  runs_source=lambda etag: (None, etag), notify=lambda *a: notes.append(a))
+                                  runs_source=lambda etag, head="", tags=(): (None, etag), notify=lambda *a: notes.append(a))
     build = w.build
     assert not build.isHidden()
     build.checked((rp.parse_runs({"workflow_runs": [run(n=2), run("Release", "governor-v0.1.1", "in_progress")]}),
@@ -1544,7 +1604,7 @@ def test_window_tells_when_a_release_is_ready_to_pin(repo, tmp_path):
         return SHA
 
     w = main_window.ReleaseWindow(repo, status_source=None, sha256_source=sha256, launch=launched.append,
-                                  runs_source=lambda etag: (None, etag), notify=lambda *a: notes.append(a))
+                                  runs_source=lambda etag, head="", tags=(): (None, etag), notify=lambda *a: notes.append(a))
     w.portal_page.base_edit.setText("pushed")
     page, build = w.portal_page, w.build
     assert page.waiting_tags() == ["alpha-v0.1.0"]                            # tagged, no checksum yet
@@ -1586,7 +1646,7 @@ def test_window_tells_when_a_release_is_ready_to_pin(repo, tmp_path):
     notes.clear()
     rp.pin(repo, unit(repo, "alpha"), "")
     w = main_window.ReleaseWindow(repo, status_source=None, sha256_source=sha256, launch=launched.append,
-                                  runs_source=lambda etag: (None, etag), notify=lambda *a: notes.append(a))
+                                  runs_source=lambda etag, head="", tags=(): (None, etag), notify=lambda *a: notes.append(a))
     w.build.checked((rp.parse_runs({"workflow_runs": [run("Release", "alpha-v0.1.0", n=5)]}), "f1"))
     assert [n[0] for n in notes] == ["alpha-v0.1.0 is ready to pin"]
     w.build.checked((rp.parse_runs({"workflow_runs": [run("Release", "alpha-v0.1.0", conclusion="failure", n=6)]}),
