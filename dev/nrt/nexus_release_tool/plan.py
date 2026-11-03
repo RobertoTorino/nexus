@@ -741,6 +741,27 @@ def entry_body(entry: str) -> str:
     return entry.split("\n", 1)[1].strip() if "\n" in entry else ""
 
 
+def newest_entry(root: Path, unit: Unit) -> str:
+    """The text of the newest entry of the unit's CHANGELOG (without its Changelog: line); "" without one."""
+    path = root / unit.path / "CHANGELOG"
+    entries = changelog_entries(path.read_text(encoding="utf-8")) if path.is_file() else []
+    return entry_body(entries[0]) if entries else ""
+
+
+def release_version(body: str) -> str:
+    """The version of a release entry ("Release x.y.z. ..."); "" for any other entry."""
+    found = _RELEASE.match(body.strip())
+    return found[1] if found else ""
+
+
+def newest_entry_pushed(root: Path, unit: Unit, base: str = "origin/main") -> bool:
+    """Whether the newest entry of the unit's CHANGELOG is in *base* (the last push) already: history."""
+    path = root / unit.path / "CHANGELOG"
+    entries = changelog_entries(path.read_text(encoding="utf-8")) if path.is_file() else []
+    pushed = git(root, "show", f"{base}:{Path(unit.path).as_posix()}/CHANGELOG") if entries else None
+    return bool(entries) and entries[0] in changelog_entries(pushed or "")
+
+
 def change_word(body: str) -> str:
     """The entry's kind (Breaking., Added., Fixed.), "" when it has none."""
     return next((word for word in CHANGE_WORDS if body.startswith(word + " ") or body == word), "")

@@ -126,8 +126,10 @@ says CEST (UTC+2) in summer and CET (UTC+1) in winter.
 - The tab shows the current weather in more detail: temperature, sky, wind and humidity.
 - The weather comes from [Open-Meteo](https://open-meteo.com/), free and without an account or key. Search sends
   the name you typed; after that, the place's coordinates go to Open-Meteo every 30 minutes, and only while the
-  Weather tile is on the screen. Without a place nothing is sent. If Open-Meteo cannot be reached, the screen keeps
-  the last weather it had. See [Privacy](../privacy.md).
+  Weather tile is on the screen. Without a place nothing is sent. If Open-Meteo cannot be reached, or is busy (it
+  answers 429, 502, 503 or 504), the tab says so with Open-Meteo's own reason and that it asks again in 30 minutes;
+  until then the screen keeps the last weather it had, or says *unavailable* while it has none yet. A long place name
+  is cut short on the tile, so it never runs into the weather beside it. See [Privacy](../privacy.md).
 
 **Start**
 

@@ -17,6 +17,7 @@ GEOCODE_URL = "https://geocoding-api.open-meteo.com/v1/search"
 FORECAST_URL = "https://api.open-meteo.com/v1/forecast"
 TIMEOUT_S = 10
 INTERVAL_S = 30 * 60                    # Open-Meteo updates its current values every 15 minutes
+BUSY = {429, 502, 503, 504}             # Open-Meteo is overloaded or down for a while: no fault of the request
 RESULTS = 10
 
 # WMO weather codes, as Open-Meteo reports them.
@@ -84,13 +85,25 @@ class Weather:
         return None
 
 
+def _reason(error: urllib.error.HTTPError) -> str:
+    """Open-Meteo's own reason in its JSON answer ({"reason": ..., "error": true}), or the HTTP status's."""
+    try:
+        reason = json.loads(error.read().decode("utf-8")).get("reason")
+    except (AttributeError, OSError, ValueError):
+        reason = None
+    return str(reason or error.reason or "").strip().rstrip(".")
+
+
 def fetch_json(url: str, params: dict, user_agent: str = "bc250-usb-ips35") -> dict:
     request = urllib.request.Request(f"{url}?{urllib.parse.urlencode(params)}", headers={"User-Agent": user_agent})
     try:
         with urllib.request.urlopen(request, timeout=TIMEOUT_S) as response:
             return json.loads(response.read().decode("utf-8"))
     except urllib.error.HTTPError as exc:
-        raise WeatherError(f"Open-Meteo answered {exc.code} {exc.reason}.") from exc
+        reason = _reason(exc)
+        if exc.code in BUSY:
+            raise WeatherError(f"Open-Meteo is unavailable for now ({exc.code}: {reason}).") from exc
+        raise WeatherError(f"Open-Meteo answered {exc.code}: {reason}.") from exc
     except (urllib.error.URLError, OSError) as exc:
         raise WeatherError("Open-Meteo cannot be reached: check the network.") from exc
     except ValueError as exc:

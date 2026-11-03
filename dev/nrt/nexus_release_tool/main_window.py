@@ -568,23 +568,41 @@ class PortalPage(QWidget):
             QMessageBox.warning(self, "Bump portal", problem)
             return
         log = []
-        if new != portal.version:
-            changed = rp.set_version(root, portal, new)
-            log.append(f"portal: {new} in " + ", ".join(p.relative_to(root).as_posix() for p in changed))
         pins = rp.changed_pins(root, self.release_window.base(), suite)
         withdrawn = rp.changed_withdrawals(root, self.release_window.base(), suite)
         text = rp.portal_text(new, pins, self.portal_notes.text(), withdrawn)
-        rp.add_changelog_entry(root, portal, text, base=self.release_window.base())
-        log.append(f"portal: CHANGELOG entry \"{text}\"")
+        # Pressed again with nothing new (owner, 03-11-2026: a second Bump after the commit moved the entry's time,
+        # so the tag script refused the uncommitted portal, and bumped Nexus once more, 1.35.0 to 1.36.0): the
+        # portal is at this version with this entry on top already: the entry Bump would write, or, once the commit
+        # is pushed (the pins are read against the push then, so the text differs), this release's entry as history.
+        # Nothing is written; the commands show again.
+        newest = rp.newest_entry(root, portal)
+        already = new == portal.version and (newest == text or (
+            rp.release_version(newest) == new and rp.newest_entry_pushed(root, portal, self.release_window.base())))
         nexus = ""
-        if not self.nexus_too.isHidden() and self.nexus_too.isChecked():
-            nexus = self.nexus_version.currentText().strip()
-            entry = rp.bump_nexus(root, nexus, base=self.release_window.base())
-            log.append(f"nexus: {nexus}, CHANGELOG entry \"{entry}\": the Nexus index lists this portal, so its "
-                       "number moves with it")
-        log += ["",
-                run_check(root, rp.VERSIONS_CHECK),
-                run_check(root, rp.manifest_check(root, suite), "--base", self.release_window.base())]
+        if already:
+            QMessageBox.information(
+                self, "Bump portal",
+                f"Bumped already: the portal is at {new}, and the newest entry of its CHANGELOG is this release's "
+                f"(\"{newest}\"). A second Bump is not needed: it would only give that entry a new time, or a "
+                "copy on top once it is pushed, which leaves the portal uncommitted again, and bump Nexus once "
+                "more.\n\nNothing was changed. The next steps are the commands shown: commit, test on a board, "
+                "push, then tag the portal.")
+            log.append(f"portal: bumped already ({new}, \"{newest}\" on top of its CHANGELOG); nothing written")
+        else:
+            if new != portal.version:
+                changed = rp.set_version(root, portal, new)
+                log.append(f"portal: {new} in " + ", ".join(p.relative_to(root).as_posix() for p in changed))
+            rp.add_changelog_entry(root, portal, text, base=self.release_window.base())
+            log.append(f"portal: CHANGELOG entry \"{text}\"")
+            if not self.nexus_too.isHidden() and self.nexus_too.isChecked():
+                nexus = self.nexus_version.currentText().strip()
+                entry = rp.bump_nexus(root, nexus, base=self.release_window.base())
+                log.append(f"nexus: {nexus}, CHANGELOG entry \"{entry}\": the Nexus index lists this portal, so "
+                           "its number moves with it")
+            log += ["",
+                    run_check(root, rp.VERSIONS_CHECK),
+                    run_check(root, rp.manifest_check(root, suite), "--base", self.release_window.base())]
         # Bumped before step 1's push (an app added, a pin moved): the bump goes into that push, with the app tags
         # after it; the portal release comes after Pin. Otherwise commit, test on a board, push and tag the portal.
         pending = rp.untagged_releases(units)

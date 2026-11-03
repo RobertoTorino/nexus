@@ -249,6 +249,36 @@ def test_no_weather_and_nothing_sent_without_a_place(make, qapp):
     assert fetch.requests == [] and "None chosen" in window.place_label.text()
 
 
+def test_the_weather_says_when_open_meteo_is_unavailable(make, qapp):
+    """Open-Meteo busy or down (02-11-2026, the Windows Portable Suite's Smart Screen: 503): the tab says so and
+    that it asks again in 30 minutes; the screen says unavailable now without weather, keeps the last otherwise."""
+    answers = [weather.WeatherError("Open-Meteo is unavailable for now (503: The service is overloaded)."),
+               {"current": {"temperature_2m": 11.8, "weather_code": 2, "is_day": 1}}, weather.WeatherError("Again.")]
+
+    def fetch(url, params):
+        answer = answers.pop(0)
+        if isinstance(answer, Exception):
+            raise answer
+        return answer
+
+    window, link = make(fetch=fetch)
+    window.tile_boxes["weather"].setChecked(True)
+    window.set_place(BERLIN)
+    assert wait_until(qapp, lambda: window.weather_unavailable)
+    assert window.weather_status.text() == ("Open-Meteo is unavailable for now (503: The service is overloaded). "
+                                            "Asked again in 30 minutes; until then the screen says unavailable.")
+    assert "unavailable" in window.report_text()
+    window.update_weather()
+    assert wait_until(qapp, lambda: window.weather is not None and not window.weather_unavailable)
+    assert "unavailable" not in window.report_text() and "12 °C" in window.report_text()
+    window.update_weather()
+    assert wait_until(qapp, lambda: window.weather_unavailable)
+    assert window.weather_status.text().endswith("until then the screen keeps the last weather it had.")
+    assert "12 °C" in window.report_text()
+    window.set_place(None)
+    assert not window.weather_unavailable
+
+
 def test_weather_search_choose_and_show(make, qapp):
     fetch = FakeOpenMeteo()
     window, link = make(fetch=fetch)

@@ -1,3 +1,12 @@
+Changelog: 03-11-2026 15:55:10
+
+Fixed. Bump portal pressed again with nothing new changes nothing and says so in a popup (owner, 03-11-2026: a
+second Bump after the commit gave the portal's "Release 13.1.0. Pins bios-v1.0.1." entry a new time, so
+tag-release.sh refused the uncommitted portal, and bumped Nexus once more, 1.35.0 to 1.36.0, which had to be thrown
+away). When the portal is at the version chosen and the newest entry of its CHANGELOG is the one Bump would write,
+Bump writes nothing, not Nexus either, says it is bumped already and shows the commands again (commit, test, push,
+tag). The Nexus page's Releases chapter says so.
+
 Changelog: 03-11-2026 12:57:20
 
 Fixed. Start new release and the Fetch tags pill only said that git fetch --tags failed (owner, 03-11-2026:

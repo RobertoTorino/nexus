@@ -89,6 +89,7 @@ class MainWindow(QWidget):
         self.picture: QImage | None = None
         self.place = weather.Place.from_json(self.settings.get("weather_place"))
         self.weather: weather.Weather | None = None
+        self.weather_unavailable = False        # the last ask for the weather failed
         self.places: list[weather.Place] = []
         self.trial: dict[str, str] = {}         # LOOK settings being tried: in the preview only, not on the screen
         self.image: QImage | None = None        # the screen's picture as last drawn, upright
@@ -398,7 +399,7 @@ class MainWindow(QWidget):
         return render.draw(self.reading, self.shown_tiles(), width, height, QColor(ACCENT),
                            title=self.settings.get("title"), clock=when, theme=theme, picture=self.picture,
                            weather=self.weather, place=self.place.name if self.place else "",
-                           style=self.clock_style())
+                           style=self.clock_style(), unavailable=self.weather_unavailable)
 
     def refresh(self, read: bool = True) -> None:
         if read or self.reading is None:
@@ -525,7 +526,7 @@ class MainWindow(QWidget):
         name = self.settings.get("interface")
         return render.report(self.reading, when, self.weather, self.place.name if self.place else "",
                              network.label(name, self.net_root) if name else ALL_INTERFACES.lower(),
-                             self.settings.get("title"))
+                             self.settings.get("title"), self.weather_unavailable)
 
     def save_report(self) -> None:
         text = self.report_text()
@@ -570,7 +571,7 @@ class MainWindow(QWidget):
                 self.tile_boxes["weather"].setChecked(True)     # chose a place: show it
 
     def set_place(self, place: weather.Place | None) -> None:
-        self.place, self.weather = place, None
+        self.place, self.weather, self.weather_unavailable = place, None, False
         self.settings.set("weather_place", place.to_json() if place else "")
         self._show_place()
         self.weather_status.setText("")
@@ -585,9 +586,16 @@ class MainWindow(QWidget):
 
     def _weather_done(self, result) -> None:
         if isinstance(result, weather.WeatherError):
-            self.weather_status.setText(f"{result} The screen keeps the last weather it had.")
+            # Open-Meteo busy or down (02-11-2026, the Windows Portable Suite's Smart Screen: 503, "The service is
+            # overloaded"): the tab says so and when it asks again; the screen keeps the last weather, or says so
+            self.weather_unavailable = True
+            kept = ("the screen keeps the last weather it had" if self.weather is not None else
+                    "the screen says unavailable")
+            self.weather_status.setText(f"{result} Asked again in {weather.INTERVAL_S // 60} minutes; until then "
+                                        f"{kept}.")
+            self.refresh(read=False)
             return
-        self.weather = result
+        self.weather, self.weather_unavailable = result, False
         wind = f", wind {result.wind_kmh:.0f} km/h" if result.wind_kmh is not None else ""
         humidity = f", humidity {result.humidity} %" if result.humidity is not None else ""
         self.weather_status.setText(f"Now: {result.temperature:.0f} °C, {result.description.lower()}{wind}{humidity}.")

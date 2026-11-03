@@ -2018,6 +2018,34 @@ def test_window_an_apps_release_takes_nexus_along(window, repo):
     assert "nexus-v0.3.0" in page.output.toPlainText()
 
 
+def test_window_a_second_bump_changes_nothing_and_says_so(window, repo, monkeypatch):
+    """Bump pressed again with nothing new (owner, 03-11-2026: the second press moved the portal entry's time, which
+    left the portal uncommitted for the tag script, and bumped Nexus from 1.35.0 to 1.36.0): a popup says it is
+    bumped already, no file changes, and the commands show again."""
+    from PyQt6.QtWidgets import QMessageBox
+    popups = []
+    monkeypatch.setattr(QMessageBox, "information", lambda _p, _t, text: popups.append(text))
+    test_window_an_apps_release_takes_nexus_along(window, repo)             # the first Bump: 0.1.1, Nexus 0.3.0
+    files = {p: (repo / p).read_text() for p in ("portal/VERSION", "portal/CHANGELOG", "VERSION", "CHANGELOG")}
+    page = window.portal_page
+    window.reload()
+    page.portal_version.setEditText("0.1.1")
+    assert page.nexus_too.isChecked() and page.nexus_version.currentText() == "0.4.0"
+    page.bump()
+    assert len(popups) == 1 and popups[0].startswith("Bumped already: the portal is at 0.1.1")
+    assert "Release 0.1.1. Pins alpha-v0.1.1." in popups[0] and "A second Bump is not needed" in popups[0]
+    assert {p: (repo / p).read_text() for p in files} == files                # not even the entry's time
+    out = page.output.toPlainText()
+    assert "bumped already" in out and "tools/tag-release.sh portal-v0.1.1" in out
+    sh(repo, "add", "-A")
+    sh(repo, "commit", "-q", "-m", "Release portal-v0.1.1")
+    sh(repo, "branch", "-f", "pushed", "HEAD")                               # pushed: the entry is history now
+    window.reload()
+    page.portal_version.setEditText("0.1.1")
+    page.bump()
+    assert len(popups) == 2 and (repo / "portal/CHANGELOG").read_text().count("Release 0.1.1.") == 1
+
+
 def test_a_windows_suites_release_checks(two_suites):
     """A Windows suite's board tests are its check-release.ps1, run on Windows (owner, 28-10-2026: on Windows every
     test button was off); a Bazzite suite's stay check-release.sh, on Linux."""

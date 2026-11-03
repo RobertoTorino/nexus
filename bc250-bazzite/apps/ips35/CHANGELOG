@@ -1,3 +1,13 @@
+Changelog: 03-11-2026 16:07:22
+
+Fixed. When Open-Meteo is busy or down (429, 502, 503 or 504) the Weather tab says it is unavailable for now, with
+Open-Meteo's own reason (503: The service is overloaded) instead of the bare HTTP status, and that it asks again in
+30 minutes (from the Windows Portable Suite's Smart Screen, 02-11-2026). Until then the Weather tile on the screen
+says unavailable when it has no weather yet, and keeps the last weather it had otherwise; before, the tile
+stayed at a dash with nothing said. A tile's caption is cut short with an ellipsis where it would run into the
+detail beside it (a long place name), keeping a third of the row at least; a detail longer than the rest is cut
+instead, so the place stays readable.
+
 Changelog: 02-11-2026 02:08:07
 
 Release 1.0.0.

@@ -77,6 +77,21 @@ def test_weather_tile():
     night = render.tiles(BOARD, ["weather"], weather.Weather(9.0, 61, is_day=False), "Berlin")[0]
     assert (night.icon, night.night) == ("rain", True)
     assert render.tiles(BOARD, ["weather"])[0] == render.Tile("Weather", render.DASH, "choose a place")
+    assert render.tiles(BOARD, ["weather"], None, "Berlin")[0] == render.Tile("Berlin", render.DASH, "")
+    assert render.tiles(BOARD, ["weather"], None, "Berlin", unavailable=True)[0] == render.Tile(
+        "Berlin", render.DASH, "unavailable")
+    assert render.tiles(BOARD, ["weather"], sunny, "Berlin", unavailable=True)[0].value == "22 °C"   # the last one
+
+
+def test_a_long_place_name_gives_way_to_the_detail(qapp):
+    """The caption is cut short with an ellipsis where it would run into the detail beside it (02-11-2026, the
+    Windows Portable Suite's Smart Screen): the detail stays whole, so the two never overlap."""
+    from PyQt6.QtGui import QColor
+    long = "Sankt Peter-Ording an der Nordsee"
+    short = render.draw(BOARD, ["weather"], 480, 320, QColor("#ff8800"), weather=weather.Weather(21.6, 0),
+                        place="Berlin")
+    cut = render.draw(BOARD, ["weather"], 480, 320, QColor("#ff8800"), weather=weather.Weather(21.6, 0), place=long)
+    assert short.size() == cut.size() and short != cut
 
 
 @pytest.mark.parametrize("code", [0, 2, 3, 45, 61, 71, 95])
