@@ -61,6 +61,7 @@ from bc250_core.updates import UpdateChecker
 from bc250_core.widgets import AppHeader, MetricBox, Pill, accent_button, hint_label, same_width
 
 from . import APP_NAME, LOGO_PATH, CHECKOUT, __version__
+from . import flow
 from . import plan as rp
 from .command_line import CommandLine
 from .parts import StepLog, info_row
@@ -520,8 +521,9 @@ class PortalPage(QWidget):
         self.portal_state.setStyleSheet(f"color:{color}; font-weight:600;")
 
     def fetch_tags(self) -> None:
-        out = rp.git(self.release_window.root, "fetch", "--tags", "--quiet")
-        self.output.set_text("Tags fetched." if out is not None else "git fetch --tags failed.")
+        fetched = flow.fetch_tags(self.release_window.root)
+        self.output.set_text(fetched.explain() if isinstance(fetched, flow.FetchFailed) else
+                             "Tags fetched: " + ", ".join(fetched) + "." if fetched else "Tags fetched: nothing new.")
         self.release_window.reload()
 
     def pin(self) -> None:

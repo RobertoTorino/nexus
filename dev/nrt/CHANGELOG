@@ -1,3 +1,13 @@
+Changelog: 03-11-2026 12:57:20
+
+Fixed. Start new release and the Fetch tags pill only said that git fetch --tags failed (owner, 03-11-2026:
+nexus-v1.33.0 was tagged here on the commit before the one GitHub's release was published from, so git refused to
+move it, "would clobber existing tag", and the window gave no reason). The message now carries git's own words and,
+for a tag here that points to another commit than GitHub's, names the tag and gives the two commands that drop it
+and fetch again (git tag -d <tag>; git fetch --tags), GitHub's tag being the published one. flow.fetch_tags returns
+a FetchFailed with that text instead of None; plan.git_run is git() with git's exit code and words. The Nexus
+page's release chapter says so.
+
 Changelog: 02-11-2026 01:47:18
 
 Added. Commit (the Nexus release tab) offers the portal bump when its manifest check would refuse the commit

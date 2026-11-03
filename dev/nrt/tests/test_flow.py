@@ -240,6 +240,45 @@ def test_start_fetches_the_tags_and_main_first_and_goes_on(release_window, monke
     assert flow.fetch_tags(w.root) == []                            # nothing new the second time
 
 
+def test_fetch_tags_names_a_tag_here_that_git_will_not_move(nexus, tmp_path, monkeypatch):
+    """A tag here on another commit than GitHub's: git refuses to move it ("would clobber existing tag"), and the
+    message says which tag and what to do (owner, 03-11-2026: nexus-v1.33.0, and Start only said the fetch failed)."""
+    identity(monkeypatch)
+    origin = tmp_path / "origin.git"
+    sh(tmp_path, "init", "-q", "--bare", "-b", "main", str(origin))
+    sh(nexus, "remote", "add", "origin", str(origin))
+    sh(nexus, "push", "-q", "origin", "main", "--tags")
+    assert flow.fetch_tags(nexus) == []
+    sh(nexus, "push", "-q", "-f", "origin", "HEAD:refs/tags/wp-test-v0.1.0")   # GitHub's tag moved on; this one stays
+    failed = flow.fetch_tags(nexus)
+    assert isinstance(failed, flow.FetchFailed) and failed.clobbered == ("wp-test-v0.1.0",)
+    text = failed.explain()
+    assert "would clobber existing tag" in text and "The tag wp-test-v0.1.0 here points to another commit" in text
+    assert "git tag -d wp-test-v0.1.0\ngit fetch --tags" in text and text.endswith(flow.WAITS)
+    assert flow.FetchFailed("fatal: unable to access").explain().startswith(
+        "git fetch --tags failed:\n\nfatal: unable to access\n\nThe release reads")        # offline: no tag to drop
+    two = flow.FetchFailed("", ("a-v1.0.0", "b-v2.0.0")).explain()
+    assert "The tags a-v1.0.0, b-v2.0.0 here point to another commit" in two and "git tag -d b-v2.0.0" in two
+
+
+def test_start_shows_why_the_fetch_failed(release_window, monkeypatch, tmp_path):
+    identity(monkeypatch)
+    w = release_window
+    origin = tmp_path / "origin.git"
+    sh(tmp_path, "init", "-q", "--bare", "-b", "main", str(origin))
+    sh(w.root, "remote", "add", "origin", str(origin))
+    sh(w.root, "push", "-q", "origin", "main", "--tags")
+    sh(w.root, "push", "-q", "-f", "origin", "HEAD:refs/tags/wp-test-v0.1.0")
+    from PyQt6.QtWidgets import QMessageBox
+    shown, ran = [], []
+    monkeypatch.setattr(QMessageBox, "warning", lambda *a, **k: shown.append(a[2]))
+    monkeypatch.setattr(w, "run_git", ran.append)
+    w.release_page.start()
+    assert ran == [] and len(shown) == 1 and "git tag -d wp-test-v0.1.0" in shown[0]
+    w.portal_page.fetch_tags()                                       # the Fetch tags pill says the same
+    assert "git tag -d wp-test-v0.1.0" in w.portal_page.output.toPlainText()
+
+
 def test_catch_up_brings_in_mains_commits_under_this_checkouts(nexus, tmp_path, monkeypatch):
     identity(monkeypatch)
     origin = tmp_path / "origin.git"

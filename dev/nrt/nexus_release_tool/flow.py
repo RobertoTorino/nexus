@@ -176,15 +176,41 @@ def ready(root: Path, base: str = "origin/main") -> list[str]:
     return reasons
 
 
-def fetch_tags(root: Path) -> list[str] | None:
-    """git fetch --tags from origin: the tags it brought ([] none, or no origin), None when it failed (offline). The
-    release reads each part's last release from this checkout's tags, and a portal is tagged on GitHub when it is
-    published (owner, 31-10-2026: wp-portal-v6.2.0 not fetched, so the next release kept 6.2.0 and CI refused it)."""
+_CLOBBER = re.compile(r"^\s*!\s*\[rejected\]\s+(\S+)\s+->\s+\S+\s+\(would clobber existing tag\)", re.M)
+WAITS = "The release reads the last release of each part from the tags, so it waits until they can be fetched."
+
+
+@dataclass(frozen=True)
+class FetchFailed:
+    """git fetch --tags failed: git's own words, and the tags here that point to another commit than GitHub's, which
+    git refuses to move ("would clobber existing tag"; owner, 03-11-2026: nexus-v1.33.0 tagged here on the commit
+    before the one the release was published from, and Start only said the fetch failed)."""
+    error: str
+    clobbered: tuple[str, ...] = ()
+
+    def explain(self) -> str:
+        """The message for the window: why, and for a clobbered tag what to do (GitHub's tag is the published one)."""
+        text = "git fetch --tags failed:\n\n" + (self.error.strip() or "(git said nothing)")
+        if self.clobbered:
+            one = len(self.clobbered) == 1
+            text += (f"\n\nThe tag{'' if one else 's'} {', '.join(self.clobbered)} here point{'s' if one else ''} to "
+                     f"another commit than GitHub's. GitHub's is the one the release was published from, so drop "
+                     f"{'this one' if one else 'these'} and fetch again:\n\n"
+                     + "\n".join(f"git tag -d {tag}" for tag in self.clobbered) + "\ngit fetch --tags")
+        return text + "\n\n" + WAITS
+
+
+def fetch_tags(root: Path) -> list[str] | FetchFailed:
+    """git fetch --tags from origin: the tags it brought ([] none, or no origin), FetchFailed when it failed (offline,
+    or a tag here that git will not move). The release reads each part's last release from this checkout's tags,
+    and a portal is tagged on GitHub when it is published (owner, 31-10-2026: wp-portal-v6.2.0 not fetched, so the
+    next release kept 6.2.0 and CI refused it)."""
     if "origin" not in (rp.git(root, "remote") or "").split():
         return []
     before = set((rp.git(root, "tag", "--list") or "").split())
-    if rp.git(root, "fetch", "--tags", "--quiet", "origin") is None:
-        return None
+    result = rp.git_run(root, "fetch", "--tags", "origin")
+    if result.returncode != 0:
+        return FetchFailed(result.stderr, tuple(_CLOBBER.findall(result.stderr)))
     return sorted(set((rp.git(root, "tag", "--list") or "").split()) - before)
 
 

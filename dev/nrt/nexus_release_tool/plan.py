@@ -228,13 +228,19 @@ def check_new_version(current: str, new: str, released: bool) -> str:
 
 # --- git (read-only) -------------------------------------------------------------------------------------------
 
-def git(root: Path, *args: str) -> str | None:
+def git_run(root: Path, *args: str) -> subprocess.CompletedProcess:
+    """git *args in *root*, finished: its exit code, what it printed and what it said (stderr), for a caller that
+    shows git's own words when it failed. git() is the same with only the output."""
     # UTF-8, as git writes it: Windows' own encoding (cp1252) garbled every é and × of a CHANGELOG read at a tag, so
     # its entries no longer matched and step 1 counted them all as new. No optional locks: the build pill's poll runs
     # git status here, which otherwise takes .git/index.lock to refresh the index, and a poll that came while the
     # Commands tab ran git add -A or git commit made that fail ("Unable to create .git/index.lock: File exists").
-    result = subprocess.run(["git", *args], cwd=root, capture_output=True, text=True, encoding="utf-8",
-                            errors="replace", env={**os.environ, "GIT_OPTIONAL_LOCKS": "0"})
+    return subprocess.run(["git", *args], cwd=root, capture_output=True, text=True, encoding="utf-8",
+                          errors="replace", env={**os.environ, "GIT_OPTIONAL_LOCKS": "0"})
+
+
+def git(root: Path, *args: str) -> str | None:
+    result = git_run(root, *args)
     return result.stdout if result.returncode == 0 else None
 
 

@@ -76,7 +76,9 @@ tab explains itself behind the round **i** in its first row: click it to read th
    Nexus's), commits it, pushes it and starts Release Nexus on that commit. If the push stops, fix what it says;
    the pill then reads **Push and start**. It fetches GitHub's tags and `main` first: a portal is tagged on GitHub
    when you publish it, the last release of each part is read from the tags, and a release ends with a `Pin ...`
-   commit on `main`. What came in is put under this checkout, the versions are read again, and the question before
+   commit on `main`. When that fetch fails, the message gives git's own words; for a tag here that points to
+   another commit than GitHub's (git refuses to move it: "would clobber existing tag") it names the tag and the
+   two commands that drop it and fetch again, since GitHub's tag is the one the release was published from. What came in is put under this checkout, the versions are read again, and the question before
    it writes shows each part's version as it will be. Each version comes from the part's CHANGELOG entries since its
    last tag (`Breaking.` major, `Added.` minor, `Fixed.` patch), so nothing is bumped by hand; type another one in
    the list only to override it.

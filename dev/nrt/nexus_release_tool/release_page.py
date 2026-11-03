@@ -394,9 +394,8 @@ class ReleasePage(QWidget):
         # main has that this checkout lacks (the last release's Pin ... commit) comes in first, then the versions
         # are read again and shown in the question below (owner, 31-10-2026: no second Start, nothing by hand)
         fetched = flow.fetch_tags(window.root)
-        if fetched is None:
-            QMessageBox.warning(self, "Start new release", "git fetch --tags failed: the release reads the last "
-                                "release of each part from the tags, so it waits until they can be fetched.")
+        if isinstance(fetched, flow.FetchFailed):
+            QMessageBox.warning(self, "Start new release", fetched.explain())
             return
         pulled = flow.catch_up(window.root, window.base())
         if pulled is None:

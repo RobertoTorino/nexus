@@ -8,7 +8,12 @@ It opens the portal's view offscreen on the apps.toml and the icons of this chec
 own (nothing is installed or changed on this computer), with a fixed demo state: every app installed but two, one
 update (the notice and the red count on its category) and Sustainable open. Then it saves the window as WebP,
 by default over docs/images/home/portal.webp. The wiki's workflow runs it before every build, so the published
-picture always shows the portal as it is on main; run it by hand to see the same picture locally."""
+picture always shows the portal as it is on main; run it by hand to see the same picture locally.
+
+The window and the application are deleted here, in that order, once the picture is saved: left to the
+interpreter's exit, Qt's multimedia backend (the portal's sound asks it for an audio output) and SDL (its controller
+reader) went down in whatever order came, and on a runner without an audio device that crashed the process now and
+then after the picture was written (03-11-2026, the wiki's workflow)."""
 
 from __future__ import annotations
 
@@ -57,6 +62,7 @@ def dark_palette():
 def render(home: Path):
     """The portal's window in the demo state, as a QImage SCALE times SIZE. Needs a QApplication; *home* is the home
     folder the portal sees (HOME and XDG_* must point into it already)."""
+    from PyQt6 import sip
     from PyQt6.QtCore import QCoreApplication
     from PyQt6.QtGui import QImage
 
@@ -88,7 +94,8 @@ def render(home: Path):
     image.setDevicePixelRatio(SCALE)
     image.fill(window.palette().window().color())
     window.render(image)
-    window.close()
+    window.close()                                      # stops the intro, the sound, the controller and the workers
+    sip.delete(window)                                  # and the window goes now, with the application still up
     return image
 
 
@@ -103,17 +110,22 @@ def main(argv: list[str]) -> int:
         os.environ["XDG_DATA_HOME"] = str(home / ".local" / "share")
         os.environ["XDG_CONFIG_HOME"] = str(home / ".config")
         os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+        from PyQt6 import sip
         from bc250_core.app import create_app
         from bc250_portal import INFO
         app = create_app(INFO)
         app.setPalette(dark_palette())
         image = render(home)
     args.out.parent.mkdir(parents=True, exist_ok=True)
-    if not image.save(str(args.out), "WEBP", WEBP_QUALITY):
+    saved = image.save(str(args.out), "WEBP", WEBP_QUALITY)
+    if saved:
+        print(f"{args.out}: {image.width()} x {image.height()}")
+    else:
         print(f"{args.out}: could not be saved (no WebP support in this Qt?)", file=sys.stderr)
-        return 1
-    print(f"{args.out}: {image.width()} x {image.height()}")
-    return 0
+    del image
+    app.processEvents()
+    sip.delete(app)                                     # Qt goes down here, in order, not while Python exits
+    return 0 if saved else 1
 
 
 if __name__ == "__main__":
