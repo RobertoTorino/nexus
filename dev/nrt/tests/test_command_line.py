@@ -100,13 +100,14 @@ def test_the_board_checks_go_to_a_terminal(app, tmp_path):
     command = "bc250-bazzite/tools/check-release.sh release portal-v13.1.1"
     pane.line.setText(command)
     pane.submit()
-    assert launched == [command] and not pane.is_running() and pane.history[-1] == command
+    in_checkout = f"cd {tmp_path} && {command}"             # the terminal opens in the home folder, not here
+    assert launched == [in_checkout] and not pane.is_running() and pane.history[-1] == command
     assert "Runs in a terminal: check-release.sh asks for the sudo password there, once" in pane.output.toPlainText()
-    assert pane.run_now(command) and launched == [command, command]
+    assert pane.run_now(command) and launched == [in_checkout, in_checkout]
     pane_without = CommandLine(tmp_path, bash="")                  # no terminal to hand it to: not refused
     pane_without.line.setText(command)
     pane_without.submit()
-    assert launched == [command, command]
+    assert launched == [in_checkout, in_checkout]
 
     def no_terminal(line):
         raise RuntimeError("No terminal emulator found")

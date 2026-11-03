@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import os
 import re
+import shlex
 import shutil
 import signal
 import datetime
@@ -229,8 +230,8 @@ class CommandLine(QWidget):
         why = (f"{self._prompt_text()} {command}\n→ Runs in a terminal: {script} asks for the sudo password there, "
                "once, and keeps the portal running. The Commands line cannot take input, so here sudo would ask at "
                "every call through the desktop's dialog, or fail.\n")
-        try:
-            self.terminal(command)
+        try:                                    # from this line's folder: the terminal opens in the home folder
+            self.terminal(f"cd {shlex.quote(str(self.cwd))} && {command}")
         except RuntimeError as exc:
             why += f"{exc}\n"
         self._append(why)
