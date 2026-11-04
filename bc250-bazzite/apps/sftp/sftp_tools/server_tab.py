@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The Server Manager tab: the sshd service of a Bazzite host, and its sshd_config."""
+"""The Server Manager tab: the sshd service of a Bazzite host, and its sshd_config; and the sshd of this computer,
+so it can be the host."""
 
 from __future__ import annotations
 
@@ -7,6 +8,7 @@ from collections.abc import Callable
 from typing import Any
 
 import paramiko
+from bc250_core.widgets import InfoButton
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import QHBoxLayout, QLabel, QMessageBox, QPlainTextEdit, QPushButton, QVBoxLayout, QWidget
 
@@ -27,6 +29,7 @@ from .connection import (
     validate_password_requirements,
     write_sshd_config,
 )
+from .local_host import LocalSshd, describe, local_status, set_local_sshd, supported
 from .settings import current_settings
 
 
@@ -48,6 +51,12 @@ class ServerManagerTab(QWidget):
         self._pending_connection_error: Exception | None = None
         self._worker: TaskRunner | None = None
         self._workers: set[TaskRunner] = set()
+        self._local_worker: TaskRunner | None = None
+        self._local_active: bool | None = None
+        self.local_status = QLabel("Checking…")
+        self.local_status.setWordWrap(True)
+        self.local_button = QPushButton("Start sshd here")
+        self.local_button.setEnabled(False)
 
         self.load_config_button = QPushButton("Load sshd_config")
         self.save_config_button = QPushButton("Save sshd_config")
@@ -70,6 +79,17 @@ class ServerManagerTab(QWidget):
         controls.addLayout(actions)
         controls.addWidget(QLabel("OpenSSH sshd status:"))
         controls.addWidget(self.status)
+        if supported():
+            local_title = QHBoxLayout()
+            local_title.addWidget(QLabel("This computer as host:"))
+            local_title.addWidget(InfoButton(
+                "Start sshd on this computer, so another computer can connect to it. Start enables sshd, so it "
+                "also starts at boot, and opens the firewall for ssh when it is closed. Stop disables sshd and "
+                "leaves the firewall as it is. Both ask for your password."))
+            local_title.addStretch()
+            controls.addLayout(local_title)
+            controls.addWidget(self.local_status)
+            controls.addWidget(self.local_button)
         controls.addStretch()
 
         layout = QVBoxLayout(self)
@@ -83,8 +103,11 @@ class ServerManagerTab(QWidget):
         self.connect_button.clicked.connect(self.toggle_connection)
         self.refresh_button.clicked.connect(lambda: self.perform_action("status"))
         self.toggle_service_button.clicked.connect(self.toggle_service)
+        self.local_button.clicked.connect(self.toggle_local_service)
         self._set_controls_connected(False)
         self.status_changed.emit("Not checked", "neutral")
+        if supported():
+            self._run_local(local_status)
 
     def _set_controls_connected(self, connected: bool) -> None:
         self.refresh_button.setEnabled(connected)
@@ -294,3 +317,40 @@ class ServerManagerTab(QWidget):
                 f"sshd state: {result or 'unknown'}",
                 "warning",
             )
+
+    def _run_local(self, operation: Callable[[], LocalSshd]) -> None:
+        if self._local_worker is not None:
+            return
+        worker = TaskRunner(operation, self)
+        self._local_worker = worker
+        self._workers.add(worker)
+        self.local_button.setEnabled(False)
+        worker.succeeded.connect(self._show_local)
+        worker.failed.connect(self._local_failed)
+        worker.finished.connect(lambda worker=worker: self._release_local(worker))
+        worker.finished.connect(worker.deleteLater)
+        worker.start()
+
+    def _release_local(self, worker: TaskRunner) -> None:
+        self._local_worker = None
+        self._workers.discard(worker)
+
+    def _show_local(self, state: LocalSshd) -> None:
+        self._local_active = state.active if state.installed else None
+        self.local_status.setText(describe(state))
+        self.local_button.setText("Stop sshd here" if state.active else "Start sshd here")
+        self.local_button.setEnabled(state.installed)
+
+    def _local_failed(self, message: str) -> None:
+        self.local_status.setText("The change failed.")
+        self.local_button.setEnabled(self._local_active is not None)
+        PlainMessageBox.critical(self, "sshd on this computer", message)
+        self._local_worker = None
+        self._run_local(local_status)
+
+    def toggle_local_service(self) -> None:
+        if self._local_active is None:
+            return
+        start = not self._local_active
+        self.local_status.setText("Starting sshd…" if start else "Stopping sshd…")
+        self._run_local(lambda: set_local_sshd(start))

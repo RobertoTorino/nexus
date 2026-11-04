@@ -34,3 +34,10 @@ def config_dirs(tmp_path, monkeypatch):
     monkeypatch.setattr(settings, "_store", None)
     monkeypatch.setattr(settings, "_current", settings.AppSettings())
     return tmp_path
+
+
+@pytest.fixture(autouse=True)
+def no_local_sshd(monkeypatch):
+    """The Server Manager does not read this computer's sshd in tests (systemctl, rpm, firewall-cmd)."""
+    from sftp_tools import server_tab
+    monkeypatch.setattr(server_tab, "supported", lambda: False)

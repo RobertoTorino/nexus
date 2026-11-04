@@ -10,13 +10,13 @@ SFTP Tools moves files between your computer and another one over SSH, and manag
 - **SFTP Client:** your folders on the left, the server's on the right. Upload and download files and whole
   folders, with a transfer queue, a speed limit and a choice of what to do when a file already exists.
 - **Server Manager:** connect to a Bazzite host, see whether `sshd` runs, start or stop it, and edit
-  `/etc/ssh/sshd_config`.
+  `/etc/ssh/sshd_config`; start or stop `sshd` on this computer too, to make it the host.
 
 The app is a client. Install it on the computer you connect **from**. The host you connect **to** only needs a
 reachable `sshd`; it does not need the app.
 
 The app does not change how the board runs. The Server Manager changes the SSH server of the host you connect to,
-and asks before it saves.
+and asks before it saves, and starts or stops the SSH server of this computer when you press its button.
 
 ## What it needs
 
@@ -60,9 +60,16 @@ Connect, and the app asks `sshd` for its state: running or stopped. The button n
 These steps need `sudo` without a password on the host (`sudo -n`). When the host asks for one, the app shows
 the error and changes nothing.
 
+**This computer as host.** Under the status, the Server Manager shows the state of `sshd` on the computer the app
+runs on, with **Start sshd here** or **Stop sshd here** beside it. Use it to make this computer the host another
+computer connects to. Start enables `sshd`, so it also starts at boot, and opens the firewall for ssh when
+firewalld runs and ssh is not open yet: the commands of [Set up the host](#set-up-the-host). Stop disables and
+stops `sshd` and leaves the firewall as it is. Both ask for your password in the system's password dialog. When
+`openssh-server` is not installed, the app says which command installs it; the reboot after it is yours.
+
 ## Set up the host
 
-On the Bazzite host, once, in a terminal:
+On the Bazzite host, once, in a terminal (or with **Start sshd here** in the app on the host itself):
 
 ```sh
 rpm -q openssh-server                       # if it is missing: sudo rpm-ostree install openssh-server, then reboot

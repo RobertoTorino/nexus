@@ -1,3 +1,10 @@
+Changelog: 04-11-2026 21:37:57
+
+Added. The Server Manager shows the state of sshd on this computer, with Start sshd here and Stop sshd here: Start
+enables and starts sshd and opens the firewall for ssh when firewalld runs and ssh is not open yet, Stop disables
+and stops sshd; both ask for the password through pkexec (local_host.py). When openssh-server is missing, the app
+says which command installs it.
+
 Changelog: 04-11-2026 11:32:10
 
 Release 1.1.1.
