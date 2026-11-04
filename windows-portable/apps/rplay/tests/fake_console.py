@@ -24,18 +24,24 @@ SESSION_ID = b"\x4a" + b"Ab1" * 24 + b"Xy"   # the length byte, then 74 characte
 
 
 def free_port() -> int:
-    """A port number free for both TCP and UDP on localhost (registration uses both on one port)."""
-    for _attempt in range(50):
-        with socket.socket() as tcp:
-            tcp.bind(("127.0.0.1", 0))
-            port = tcp.getsockname()[1]
-            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp:
+    """A port number free for both TCP and UDP on localhost (registration uses both on one port). Every other try
+    asks for a free UDP port first: Windows hands out TCP ports in order, and on GitHub's runners a run of them can
+    be reserved for UDP, so fifty TCP-first tries could all fail (CI Windows Portable, 04-11-2026)."""
+    last: OSError | None = None
+    for attempt in range(50):
+        first, second = (socket.SOCK_STREAM, socket.SOCK_DGRAM) if attempt % 2 == 0 else \
+            (socket.SOCK_DGRAM, socket.SOCK_STREAM)
+        with socket.socket(socket.AF_INET, first) as one:
+            one.bind(("127.0.0.1", 0))
+            port = one.getsockname()[1]
+            with socket.socket(socket.AF_INET, second) as other:
                 try:
-                    udp.bind(("127.0.0.1", port))
-                except OSError:
+                    other.bind(("127.0.0.1", port))
+                except OSError as exc:
+                    last = exc
                     continue
             return port
-    raise RuntimeError("no free port")
+    raise RuntimeError(f"no port free for both TCP and UDP on localhost (last: {last})")
 
 
 def _read_request(conn: socket.socket) -> tuple[str, dict[str, str], bytes]:

@@ -1,3 +1,10 @@
+Changelog: 04-11-2026 21:23:19
+
+Fixed. The tests' fake console finds a port free for both TCP and UDP also on GitHub's Windows runners, where CI
+Windows Portable failed once (04-11-2026, no free port): Windows hands out TCP ports in order and a run of them can
+be reserved for UDP, so every other try now asks for a free UDP port first, and the error names the last refusal.
+The app itself is unchanged.
+
 Changelog: 04-11-2026 02:22:10
 
 Release 0.8.0.
