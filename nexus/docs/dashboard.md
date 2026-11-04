@@ -26,12 +26,23 @@ dev/dash/install.sh --uninstall             # remove them; the checkout stays
 dev/dash/install.sh --uninstall --purge     # also remove the settings
 ```
 
-On Windows (PowerShell), `dev\dash\run.ps1` and `dev\dash\install.ps1` with the same options: a Start-menu entry
-and a Desktop shortcut.
+On Windows, in PowerShell:
+
+```powershell
+dev\dash\run.ps1                                                                    # open it
+powershell -ExecutionPolicy Bypass -File dev\dash\install.ps1                       # Start-menu entry and Desktop shortcut
+powershell -ExecutionPolicy Bypass -File dev\dash\install.ps1 --no-desktop-shortcut # Start-menu entry only
+powershell -ExecutionPolicy Bypass -File dev\dash\install.ps1 --uninstall           # remove them; the checkout stays
+powershell -ExecutionPolicy Bypass -File dev\dash\install.ps1 --uninstall --purge   # also remove the settings
+```
+
+Run the installer as your own user, not as administrator. Then a double-click on **Nexus Dashboard** on the
+Desktop, or its Start-menu entry, opens the dashboard without a console window. From Git Bash, `dev/dash/run.sh`
+opens it too.
 
 ## The window
 
-The header: Nexus's icon, the name and the version, and the **Suite** box: the suite the tours and the icons work
+The header: Nexus's icon (a click opens the Nexus page), the name and the version, and the **Suite** box: the suite the tours and the icons work
 on (the Nexus apps are every suite's). The choice is remembered. Below it the tiles, then
 [Test local apps](#test-local-apps), and under them a line for each click: which app started and where its log is,
 or why a tile is off.
@@ -42,7 +53,7 @@ own that keeps running when the dashboard closes; the suite goes along where the
 | Tile | What it opens |
 |---|---|
 | **Nexus Release Tool** | The release front end: a release's versions, CHANGELOG entries, pins and portal bump, and the board checks ([Releases](releases.md)). |
-| **Nexus Demo Recorder** | A portal installation recorded with OBS ([below](#demo-recorder)). Linux only: on Windows the tile is off. |
+| **Nexus Demo Recorder** | A portal installation recorded with OBS ([below](#demo-recorder)): the BC250 Bazzite Suite's on Linux, the Windows Portable Suite's on Windows. |
 | **Nexus Installer Tests** | A suite's installer tests, one at a time ([below](#installer-tests)). |
 | **Nexus Sound Lab** | Short sound effects for the suites' windows, made from sliders ([below](#sound-lab)). |
 
@@ -54,6 +65,7 @@ The other tiles work on the chosen suite:
 | **Apps video tour** | Records a short tour of each app you tick ([below](#video-tours)). |
 | **Convert icons** | Makes a category's icons from your images ([below](#convert-icons)). |
 | **Close issues** | Closes the open issues on GitHub you tick; the repository's, whatever the suite ([below](#close-issues)). |
+| **Dev app versions** | Sets the versions of the Nexus apps in `dev/`, whatever the suite ([below](#dev-app-versions)). |
 
 ## Test local apps
 
@@ -89,6 +101,29 @@ started. The computer's firewall has to let them in (see the [Design](design.md)
 tick box. **Run** closes the ticked ones with `gh issue close`, one after the other, with a comment when you write
 one; their output shows below, and when one fails the ones after it stay open. It needs the GitHub CLI with a login
 (`gh auth login`). A double click opens an issue on GitHub.
+
+## Dev app versions
+
+The Nexus apps in `dev/` are never released or tagged, so Nexus Release Tool does not list them. Their versions are
+set here instead, as core's are: an app's `VERSION`, the `__version__` copy beside it, and a **Version x.y.z.** entry
+on top of its CHANGELOG.
+
+**Dev app versions** lists each app with its version and what its CHANGELOG entries since its last **Version** entry
+ask for, by their kind: `Breaking.` major, `Added.` minor, `Fixed.` patch (an entry without a kind counts as a fix).
+Pick an app: **Version** offers that version first, with the next patch, minor and major after it, and you can type
+another. **Note** adds a sentence after **Version x.y.z.** in the entry. **Set version** writes the three files; the
+line under the tiles names them. Commit and push them as any change.
+
+A version set and not pushed yet shows *set, not pushed yet*: set it again and the new one takes its place, its
+entry too. A pushed one is history and stays. An app with nothing new since its last version has nothing to set.
+
+In a terminal, `tools/dev_versions.py` does the same:
+
+```bash
+python3 tools/dev_versions.py                            # every dev app: its version, what changed, the offer
+python3 tools/dev_versions.py dash                       # gives Nexus Dashboard the version offered
+python3 tools/dev_versions.py dash 0.3.0 --notes "..."   # this version, with a note in its entry
+```
 
 ## Video tours
 
@@ -131,17 +166,48 @@ commit. A suite whose apps take no category icons (the Windows Portable Suite: i
 The **Nexus Demo Recorder** (`dev/demo/`) records a demo of a portal installation with OBS: a portal release
 extracted in Downloads (found by itself; **Find in Downloads** looks again, **Choose folder…** takes another, or a
 suite's folder in a checkout), or, without one, the BC250 Bazzite Suite in this checkout, whose `portal/install.sh`
-installs the released apps from the checkout's source. It runs on Linux (OBS and the desktop portal's global
-shortcut); `dev/demo/run.sh` and `dev/demo/install.sh` start and install it on their own.
+installs the released apps from the checkout's source. `dev/demo/run.sh` and `dev/demo/install.sh` start and
+install it on their own.
 
-1. **OBS setup:** OBS needs a scene with a screen-capture source (on Wayland, Screen Capture through PipeWire) and
-   its WebSocket server enabled (Tools, WebSocket Server Settings); **Setup instructions** has the steps. Enter the
-   port and the password and **Test connection**: the recordings go to `~/Videos/demos`.
+On Windows it records the Windows Portable Suite's portal: a portal release (`wp-portal-v<x.y.z>.zip`) extracted in
+Downloads, or chosen with **Choose folder…**. There is no install from the checkout on Windows: the portal's program
+is built when it is released. The installer (`install.ps1`) runs in a PowerShell window of its own, the portal it
+opens afterwards is the installed `Windows-Portable-Suite.exe`, and Ctrl+Alt+F12 is a hot key of Windows' own.
+OBS is OBS Studio for Windows (`winget install OBSProject.OBSStudio`), found in Program Files. `dev\demo\run.ps1`
+starts it on its own, and the dashboard's tile does the same.
+
+Before you record, have:
+
+- **The checkout's venv** with `requirements-dev.txt` installed: it brings the OBS WebSocket client (`obsws-python`)
+  and, for Linux, the desktop portal's client (`dbus-next`).
+- **OBS Studio 30 or newer**, running, which has WebSocket 5.3 built in: the recorder sets the recordings folder
+  through it. On Bazzite the flatpak `com.obsproject.Studio` (or an `obs` on the PATH); on Windows
+  `winget install OBSProject.OBSStudio`. **Open OBS** starts it.
+- **In OBS, a scene with a screen-capture source** (Wayland: Screen Capture through PipeWire; Windows: Display
+  Capture of the screen the portal shows on) whose preview shows your desktop.
+- **OBS's WebSocket server on:** Tools, WebSocket Server Settings, **Enable WebSocket server**, with a password.
+  Note the port (4455 unless you changed it) and the password for step 1.
+- **A portal release:** on Linux an extracted BC250 Bazzite Suite portal release in Downloads, or the suite in this
+  checkout; on Windows an extracted Windows Portable Suite portal release (`wp-portal-v<x.y.z>.zip`) in Downloads.
+  **Open the releases page** goes to them.
+- **A clean system for a fresh install:** the portal not installed, and the app you want to show not installed.
+  The recorder checks both and keeps **Start recording and install portal** off until they are gone.
+- **On Linux:** a terminal emulator (Konsole, GNOME Terminal, Ptyxis, Xfce Terminal, foot, Alacritty, kitty or
+  xterm, or the one `$TERMINAL` names) for the installer and its password prompts, and a desktop whose portal
+  offers global shortcuts (KDE Plasma, as on Bazzite) for the stop shortcut.
+- **On Windows:** Ctrl+Alt+F12 not taken by another program (the recorder says so when it is), and the recorder
+  run as your own user, not as administrator: the portal's installer refuses an administrator.
+
+1. **OBS setup:** OBS needs a scene with a screen-capture source (on Wayland, Screen Capture through PipeWire; on
+   Windows, Display Capture) and its WebSocket server enabled (Tools, WebSocket Server Settings); **Setup
+   instructions** has the steps. Enter the port and the password and **Test connection**: the recordings go to
+   `~/Videos/demos` (on Windows, `Videos\demos` in your user folder).
 2. **Portal release and app:** the release and the optional app to show; the portal and that app must not be
    installed yet, since the demo is a fresh install.
 3. **Record:** **Start recording and install portal** starts the OBS recording and the portal's installer in a
-   terminal, for its output and its password prompts; the window hides. Once the installer is done the portal
-   opens: show BC-250 Bazzite Test, install the chosen app and open it. The global shortcut the window named
+   terminal, for its output and its password prompts (on Windows a PowerShell window); the window hides. Once the
+   installer is done the portal opens: show BC-250 Bazzite Test (on Windows, Windows Portable Test), install the
+   chosen app and open it. The global shortcut the window named
    (Ctrl+Alt+F12 by default) stops the recording and brings the window back; **Recent recordings…** lists the
    videos and plays one.
 
@@ -155,7 +221,8 @@ opens it on the suite chosen there. Tick the tests and **Run selected**, or **Ru
 **Stop** ends the one that runs and skips the rest. Each test installs an app from the checkout as its installer
 does on a device and removes it again, in a temporary home: nothing of yours is touched. The tests use fixed
 temporary folders under `/tmp`, so the same test is never run twice at once. `dev/itests/run.sh` (`--suite NAME`)
-and `dev/itests/install.sh` start and install it on their own.
+and `dev/itests/install.sh` start and install it on their own; on Windows (PowerShell) `dev\itests\run.ps1`
+(`--suite NAME`) starts it, and the dashboard's tile does the same.
 
 ## Sound Lab
 

@@ -31,7 +31,8 @@ def test_the_checkout_has_the_suites_and_the_nexus_apps():
     assert [app.key for app in apps] == ["nrt", "demo", "itests", "sounds"]   # the release tool first, then by name
     assert [app.name for app in apps] == ["Nexus Release Tool", "Nexus Demo Recorder", "Nexus Installer Tests",
                                           "Nexus Sound Lab"]
-    assert all(app.icon is not None and app.icon.is_file() and app.script.is_file() for app in apps)
+    assert all(app.icon is not None and app.icon.is_file() for app in apps)
+    assert all(app.script.is_file() for app in apps)
     assert apps[1].log.name == "demo.log"
 
 
@@ -42,13 +43,13 @@ def test_the_window_lists_the_apps_then_the_suites_tools(qapp):
     assert window.windowTitle() == APP_NAME
     names = [window.tiles.item(i).text() for i in range(window.tiles.count())]
     assert names == ["Nexus Release Tool", "Nexus Demo Recorder", "Nexus Installer Tests", "Nexus Sound Lab",
-                     "Portal video tour", "Apps video tour", "Convert icons", "Close issues"]
+                     "Portal video tour", "Apps video tour", "Convert icons", "Close issues", "Dev app versions"]
     assert window.suite_box.currentText() == "BC250 Bazzite Suite" and settings.value(SUITE_KEY) is None
     enabled = [bool(window.tiles.item(i).flags() & Qt.ItemFlag.ItemIsEnabled) for i in range(window.tiles.count())]
     if sys.platform == "win32":
-        assert enabled == [True, False, True, False, False, False, True, True]
+        assert enabled == [True, True, True, True, False, False, True, True, True]
     else:
-        assert enabled == [True] * 8
+        assert enabled == [True] * 9
     window.close()
 
 
@@ -81,12 +82,7 @@ def test_a_click_on_an_app_starts_it_with_the_suite_and_says_so(qapp, tmp_path):
     window.click(tiles["Nexus Installer Tests"].data(Qt.ItemDataRole.UserRole))
     window.click(tiles["Nexus Demo Recorder"].data(Qt.ItemDataRole.UserRole))
 
-    if sys.platform == "win32":
-        assert started == [("nrt", ("--suite", "bc250-bazzite")), ("itests", ("--suite", "bc250-bazzite"))]
-        assert "runs on Linux" in window.output.toPlainText()
-    else:
-        assert started == [("nrt", ("--suite", "bc250-bazzite")), ("itests", ("--suite", "bc250-bazzite")),
-                           ("demo", ())]
+    assert started == [("nrt", ("--suite", "bc250-bazzite")), ("itests", ("--suite", "bc250-bazzite")), ("demo", ())]
     assert "Nexus Release Tool" in window.output.toPlainText() and "started from" in window.output.toPlainText()
 
     def refuse(app, args):
@@ -122,7 +118,8 @@ def test_a_checkout_without_suites_or_apps(qapp, tmp_path):
     assert window.suite is None and window.apps == []
     assert [window.tiles.item(i).text() for i in range(window.tiles.count())] == ["Portal video tour",
                                                                                   "Apps video tour", "Convert icons",
-                                                                                  "Close issues"]
+                                                                                  "Close issues",
+                                                                                  "Dev app versions"]
     assert all(not window.tiles.item(i).flags() & Qt.ItemFlag.ItemIsEnabled for i in range(3))
     assert window.tiles.item(3).flags() & Qt.ItemFlag.ItemIsEnabled          # the repository's, every suite's
     assert window.local_apps.count() == 0
@@ -166,3 +163,15 @@ def test_a_second_launch_opens_no_window(qapp, monkeypatch):
     monkeypatch.setattr(entry.instance, "already_running", lambda app_id: asked.append(app_id) or True)
     monkeypatch.setattr("sys.argv", ["nexus_dashboard"])
     assert entry.main() == 0 and asked == [entry.APP_ID]
+
+
+def test_a_click_on_the_nexus_icon_opens_the_nexus_page(qapp, monkeypatch):
+    opened = []
+    monkeypatch.setattr(main_window, "open_url", opened.append)
+    window = MainWindow(settings=None, suite="bc250-bazzite")
+
+    assert window.header.logo.cursor().shape() == Qt.CursorShape.PointingHandCursor
+    window.header.logo.clicked.emit()
+
+    assert opened == ["https://robertotorino.github.io/nexus/"]
+    window.close()

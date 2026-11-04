@@ -165,7 +165,7 @@ re-released on its own, a withdrawal); a release of what changed is the Nexus re
   unless that entry is already pushed (it is in the last push, `origin/main`): a pushed entry is history, so the
   new one goes on top of it. Bump pressed again with nothing new (the portal at that version, its entry on top)
   changes nothing and says so in a popup: the next steps are commit, test, push and tag.
-- **3. Retract app:** withdraws a release (see [Withdrawing a release](https://robertotorino.github.io/nexus/bc250-bazzite-suite/portal/#withdrawing-a-release)).
+- **3. Retract app:** withdraws a release (see [Withdrawing a release](#withdrawing-a-release)).
   For a Windows suite, its commands test the withdrawal with `portal\run.ps1` on the handheld, as above.
 - **Test on this board** holds the tests of a release on a BC-250. **Test app updates** and **Test Portal
   release** run the two [board tests](https://robertotorino.github.io/nexus/bc250-bazzite-suite/portal/#testing-a-portal-release-before-its-tag) in a terminal, with the suite's `bc250-bazzite/tools/check-release.sh`: the portal from the
@@ -280,6 +280,43 @@ release. It then builds and publishes the release without an approval on GitHub 
 [GitHub settings](github-settings.md#environments)).
 
 `tools/nrt.sh --list` lists every app with its version, its last tag and its pin, without Qt.
+
+## Withdrawing a release
+
+A release that must not be used any more, because of a privacy, security or any other problem, is withdrawn.
+The release stays on GitHub, so its history is kept, but nothing installs it any more:
+
+1. In Nexus Release Tool, tab **3. Retract app**: choose the app's pinned release, write why, and press
+   **Retract**. This adds `withdrawn = "<reason>"` to its entry in the suite's `portal/apps.toml` and a CHANGELOG
+   entry to the app. **Take back** removes it again.
+2. **Test withdrawal** (tab **Test on this board**) with the app installed, on the suite's own system. On a BC-250
+   it installs the portal from the checkout and starts it (`check-release.sh local`): the portal must say the app
+   is not available any more, remove it, and then show **App not available** on its tile. For the Windows Portable
+   Suite it starts the portal from the checkout on the handheld (`check-release.ps1 local`): the app's tile must
+   say **Withdrawn**, and **Not available** once the app is removed.
+3. Mark the release on GitHub with the command the tab shows: `gh release edit <tag> --prerelease --title
+   "Withdrawn: <tag>" --notes "..."`. A pre-release is skipped by every update check, so no app offers it.
+4. Release the portal (tab **2**, at least a minor version): its CHANGELOG entry names the withdrawal. A portal
+   that updates to it removes the app; the portal update button says so beforehand ("withdraws ...").
+
+## Checking a release
+
+A release that `tools/build_release.py` built has the same content when you build its tag yourself, but usually
+not the same checksum. For a BC250 Bazzite Suite release (a `.tar.gz`), the gzip compression differs between zlib
+builds (Fedora uses zlib-ng, GitHub's Ubuntu runners zlib), so compare the unpacked files, not the `.tar.gz`. Bazzite
+Test's build time in `bazzite_check/_build_info.py` is the commit time too; older Bazzite Test releases recorded the
+clock, and there only that line differs:
+
+```bash
+git archive <tag> | tar -x -C /tmp/src
+SOURCE_DATE_EPOCH=$(git log -1 --format=%ct <tag>) python3 /tmp/src/tools/build_release.py <tag> /tmp/local
+curl -LO https://github.com/RobertoTorino/nexus/releases/download/<tag>/<tag>.tar.gz
+mkdir -p /tmp/a /tmp/b && tar -xzf <tag>.tar.gz -C /tmp/a && tar -xzf /tmp/local/<tag>.tar.gz -C /tmp/b
+diff -r /tmp/a /tmp/b
+```
+
+The checksum pinned in `apps.toml` is always the one of the published release. That is also why the release
+tests pin their own local builds instead of the published ones.
 
 ## The releases on GitHub
 

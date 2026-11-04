@@ -27,6 +27,25 @@ def qapp():
     return QApplication.instance() or QApplication([])
 
 
+def _system(monkeypatch, windows: bool) -> None:
+    from demo_recorder import main_window, workflow
+    monkeypatch.setattr(workflow, "WINDOWS", windows)
+    monkeypatch.setattr(workflow, "INSTALLER", "install.ps1" if windows else "install.sh")
+    monkeypatch.setattr(main_window, "WINDOWS", windows)
+
+
+@pytest.fixture(autouse=True)
+def on_linux(monkeypatch):
+    """The app as on Linux (the BC250 suite, install.sh), on either system; on_windows makes it Windows'."""
+    _system(monkeypatch, windows=False)
+
+
+@pytest.fixture
+def on_windows(monkeypatch):
+    """The app as on Windows: the Windows Portable Suite's portal release (install.ps1), on either system."""
+    _system(monkeypatch, windows=True)
+
+
 @pytest.fixture(autouse=True)
 def settings_in_a_temp_folder(tmp_path):
     """The .ini settings in a temp folder: no test reads the user's own."""

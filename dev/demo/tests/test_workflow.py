@@ -81,7 +81,7 @@ def test_validate_release_and_detect_installed_paths(tmp_path):
     (tmp_path / "install.sh").write_text("#!/bin/bash\n", encoding="utf-8")
     launcher = tmp_path / "launcher"
     (tmp_path / "apps.toml").write_text(
-        f'[apps.overlay]\nname = "Overlay"\ndetect = ["{launcher}"]\nlaunch = [["Open", "{launcher}"]]\n',
+        f'[apps.overlay]\nname = "Overlay"\ndetect = ["{launcher.as_posix()}"]\nlaunch = [["Open", "{launcher.as_posix()}"]]\n',
         encoding="utf-8",
     )
 
@@ -280,3 +280,84 @@ def test_connect_obs_reports_when_obs_is_not_running(monkeypatch):
 
     with pytest.raises(workflow.WorkflowError, match="Warning! OBS is not running, start OBS first\\."):
         workflow.connect_obs("127.0.0.1", 4455, "")
+
+
+def _windows_release(folder, detect: str):
+    folder.mkdir(parents=True, exist_ok=True)
+    (folder / "install.ps1").touch()
+    (folder / "apps.toml").write_text(
+        "[apps.test]\nrequired = true\n"
+        f"[apps.pcsx2]\nname = 'PCSX2'\ndetect = ['{detect}']\nlaunch = [['Open', '{detect}']]\n",
+        encoding="utf-8",
+    )
+    return folder
+
+
+def test_on_windows_a_release_has_install_ps1_and_its_detect_paths_expand(on_windows, tmp_path, monkeypatch):
+    """The Windows Portable Suite's apps.toml names %LOCALAPPDATA%; there is no install from a checkout there."""
+    monkeypatch.setenv("LOCALAPPDATA", str(tmp_path / "local"))
+    monkeypatch.setattr(workflow.os.path, "expandvars",
+                        lambda path: path.replace("%LOCALAPPDATA%", str(tmp_path / "local")))
+    release = _windows_release(tmp_path / "wp-portal-v1.0.0", "%LOCALAPPDATA%/pcsx2/PCSX2-Manager.exe")
+
+    installer, apps = workflow.validate_release(release)
+
+    assert installer == release / "install.ps1"
+    assert apps[0].detect_paths == (tmp_path / "local" / "pcsx2" / "PCSX2-Manager.exe",)
+    (tmp_path / "suite" / "portal").mkdir(parents=True)               # a BC250 suite's folder: not on Windows
+    (tmp_path / "suite" / "install.sh").touch()
+    (tmp_path / "suite" / "portal" / "apps.toml").write_text((release / "apps.toml").read_text(), encoding="utf-8")
+    with pytest.raises(workflow.WorkflowError, match="Windows Portable Suite portal release"):
+        workflow.validate_release(tmp_path / "suite")
+    assert workflow.find_portal_release(tmp_path) == release
+
+
+def test_on_windows_the_installer_runs_in_a_powershell_window_of_its_own(on_windows, tmp_path, monkeypatch):
+    captured = []
+    monkeypatch.setattr(workflow.subprocess, "Popen", lambda argv, **kwargs: captured.append((argv, kwargs)))
+    installer = tmp_path / "it's a release" / "install.ps1"
+
+    exit_file = workflow.launch_installer(installer)
+
+    argv, kwargs = captured[0]
+    assert argv[:5] == ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command"]
+    assert "-File '" + str(installer).replace("'", "''") + "'" in argv[5]     # quoted for PowerShell
+    assert str(exit_file) in argv[5] and "$LASTEXITCODE" in argv[5]
+    assert kwargs["cwd"] == installer.parent
+    assert kwargs["creationflags"] == getattr(workflow.subprocess, "CREATE_NEW_CONSOLE", 0)
+    assert not exit_file.exists()
+
+
+def test_on_windows_obs_is_found_in_program_files(on_windows, tmp_path, monkeypatch):
+    monkeypatch.setattr(workflow.shutil, "which", lambda _name: None)
+    for variable in ("ProgramFiles", "ProgramW6432", "ProgramFiles(x86)"):
+        monkeypatch.delenv(variable, raising=False)
+    assert workflow.obs_install_command() is None
+    obs = tmp_path / "obs-studio" / "bin" / "64bit" / "obs64.exe"
+    obs.parent.mkdir(parents=True)
+    obs.touch()
+    monkeypatch.setenv("ProgramFiles", str(tmp_path))
+    assert workflow.obs_install_command() == [str(obs)]
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="Windows' installer and PowerShell")
+def test_on_windows_the_installer_window_writes_the_installers_status(on_windows, tmp_path, monkeypatch):
+    """The real window, without its console (the test cannot press Enter): the status file has the exit code."""
+    installer = tmp_path / "release" / "install.ps1"
+    installer.parent.mkdir()
+    installer.write_text("exit 3\n", encoding="utf-8")
+    real = workflow.subprocess.Popen
+    started = []
+    monkeypatch.setattr(workflow.subprocess, "Popen", lambda argv, **kwargs: started.append(
+        real(argv, **{**kwargs, "creationflags": workflow.subprocess.CREATE_NO_WINDOW})))
+
+    exit_file = workflow.launch_installer(installer)
+    try:
+        import time
+        end = time.monotonic() + 30
+        while not exit_file.exists() and time.monotonic() < end:
+            time.sleep(0.1)
+        assert exit_file.read_text(encoding="ascii") == "3"
+    finally:
+        started[0].kill()
+        exit_file.unlink(missing_ok=True)

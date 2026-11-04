@@ -5,6 +5,7 @@ remembered in the settings; the player plays what it is given and the icons are 
 
 from __future__ import annotations
 
+import time
 import wave
 from pathlib import Path
 
@@ -200,6 +201,14 @@ def test_the_wave_view_draws_without_frames_and_with_them(qapp):
     assert found
 
 
+def _loaded(qapp, effect, seconds: float = 5) -> None:
+    from PyQt6.QtMultimedia import QSoundEffect
+    end = time.monotonic() + seconds
+    while effect.status() == QSoundEffect.Status.Loading and time.monotonic() < end:
+        qapp.processEvents()
+        time.sleep(0.01)
+
+
 def test_the_real_player_plays_a_file_of_its_own_per_sound_and_cleans_up(qapp, tmp_path):
     """QSoundEffect keeps a loaded file by its address: each render gets a file of its own, the one before goes."""
     p = player_module.Player(folder=tmp_path / "play")
@@ -208,11 +217,16 @@ def test_the_real_player_plays_a_file_of_its_own_per_sound_and_cleans_up(qapp, t
     assert p.play(render(Sound()))
     first = Path(p.effect.source().toLocalFile())
     assert first.is_file() and first.parent == tmp_path / "play"
+    _loaded(qapp, p.effect)                                              # as before the next click
     assert p.play(render(Sound(length_ms=20)))
     second = Path(p.effect.source().toLocalFile())
     assert second != first and second.is_file() and not first.exists()
+    # one right after another, while the sound before still loads (Windows keeps its file open then): each plays
+    assert all(p.play(render(Sound(length_ms=20))) for _ in range(4))
     assert p.keep_awake(True) and p.keeper is not None and p.keeper.loopCount() == -2
+    _loaded(qapp, p.keeper)
     assert not p.keep_awake(False) and p.keeper is None
+    _loaded(qapp, p.effect)
     p.close()
     assert not (tmp_path / "play").exists()
 

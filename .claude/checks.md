@@ -6,7 +6,9 @@ The long form of the root [CLAUDE.md](../CLAUDE.md)'s Checks: every check as CI 
 The same checks as CI (`.github/workflows/ci-nexus.yml` and `ci.yml`). `tools/ci-local.sh` runs them as CI does
 (Python 3.12, each job with only its own requirements, in a container), which `./test.sh` in the full venv on a
 newer Python cannot show; run it before saying work is ready. The BC250 suite's checks (its tests, installer tests,
-`tools/ci-local.sh`) run on Bazzite and in CI.
+`tools/ci-local.sh`) run on Bazzite and in CI. On Windows, `tools/ci-local.sh` runs in podman's machine (Fedora in
+WSL) as its user, not root (the installers refuse root):
+`podman machine ssh "su - user -c 'cd /mnt/c/Projects/nexus && bash tools/ci-local.sh'"`.
 
 ```bash
 tools/ci-local.sh                                   # every job of both workflows as GitHub runs it (podman); --list shows them

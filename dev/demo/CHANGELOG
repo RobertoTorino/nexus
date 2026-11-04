@@ -1,3 +1,24 @@
+Changelog: 04-11-2026 21:04:25
+
+Version 0.2.0.
+
+Changelog: 04-11-2026 20:08:16
+
+Added. Nexus Demo Recorder runs on Windows (owner, 04-11-2026), where it records the Windows Portable Suite's
+portal: a portal release (wp-portal-v<x.y.z>.zip) extracted in Downloads, or chosen, whose install.ps1 runs in a
+PowerShell window of its own; the status it ends with goes back to the window as install.sh's does. There is no
+install from the checkout on Windows. Ctrl+Alt+F12, which stops the recording, is a hot key of Windows' own
+(RegisterHotKey, in a thread of its own) and says so when another program holds it. OBS is found in Program Files
+and started from its own folder, as it needs to be, and the portal opened after the install is the installed
+Windows-Portable-Suite.exe. The window's texts name PowerShell, Display Capture and Windows Portable Test there.
+run.ps1 starts it, and run.sh from Git Bash takes .venv-windows. On Linux nothing changes; the tests run both
+systems' paths on either system.
+
+Changelog: 04-11-2026 19:05:17
+
+Fixed. Two tests pass on Windows: the player's file is compared as a path, and the test manifest writes its paths
+with forward slashes (a backslash in a TOML string is an escape).
+
 Changelog: 02-11-2026 00:44:49
 
 Added. Nexus Demo Recorder, a Nexus app in dev/demo/ (owner, 02-11-2026: the tools for working on the suites are

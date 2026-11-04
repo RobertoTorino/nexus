@@ -274,6 +274,11 @@
   margin: 0 auto;
 }
 
+/* The big icon has no outline under the pointer, as the pictures that link elsewhere have (owner, 04-11-2026). */
+.md-typeset .home-hero__play:hover > .home-hero__icon {
+  box-shadow: none;
+}
+
 .home-video {
   position: fixed;
   inset: 0;

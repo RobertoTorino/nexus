@@ -24,7 +24,7 @@ From the repository's root, with the checkout's venv for the system (see the roo
 Both installers take `--no-desktop-shortcut`, `--uninstall` and `--uninstall --purge` (the settings too). Nothing is
 copied: the entry starts the app of the checkout you installed it from.
 
-How to use it: [The release front end in the BC250 Bazzite Suite's wiki](https://robertotorino.github.io/nexus/bc250-bazzite-suite/portal/#the-release-front-end).
+How to use it: [Releases on the Nexus page](https://robertotorino.github.io/nexus/releases/).
 
 ## License
 

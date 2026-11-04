@@ -1,3 +1,19 @@
+Changelog: 04-11-2026 21:04:33
+
+Version 0.2.0.
+
+Changelog: 04-11-2026 19:48:43
+
+Fixed. run.sh starts Nexus Sound Lab from Git Bash on Windows too: it looked only for the Linux venv, and now takes
+.venv-windows there, as Nexus Release Tool's run.sh does.
+
+Changelog: 04-11-2026 19:05:17
+
+Fixed. On Windows a sound often did not play right after another: the sound before was deleted later, and until
+then Windows kept its WAV open, so removing it failed and the new sound was given up. The sound before is now
+deleted at once, a file still in use stays until the window closes and the folder goes, and the silent loop and
+close() delete theirs at once too.
+
 Changelog: 04-11-2026 02:52:00
 
 Added. run.ps1 starts Nexus Sound Lab on Windows with the checkout's Windows venv, as run.sh does on Linux (owner,

@@ -18,8 +18,6 @@ from . import APP_ID, CHECKOUT
 LOG_DIR = Path(os.environ.get("XDG_CACHE_HOME") or Path.home() / ".cache") / APP_ID / "apps"
 _CONSTANT = re.compile(r'^(APP_NAME|APP_ID)\s*=\s*"([^"]+)"', re.M)
 WINDOWS = sys.platform == "win32"
-# The apps that run on one system only: Nexus Demo Recorder needs OBS and the desktop portal (Linux).
-LINUX_ONLY = {"demo"}
 
 
 def _suites_module(root: Path = CHECKOUT):
@@ -82,7 +80,7 @@ class DevApp:
 
     @property
     def runs_here(self) -> bool:
-        return self.script.is_file() and not (WINDOWS and self.key in LINUX_ONLY)
+        return self.script.is_file()
 
     @property
     def log(self) -> Path:

@@ -10,7 +10,7 @@ from bc250_core import AppInfo
 
 APP_NAME = "Nexus Demo Recorder"
 APP_ID = "nexus-demo-recorder"
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 ROOT = Path(__file__).resolve().parent.parent
 CHECKOUT = ROOT.parents[1]                  # the repository (Nexus), dev/demo/ in it

@@ -1,7 +1,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The Demo Recorder's window: OBS, the portal release and the app to show, and the recording. The release is an
 extracted portal release in Downloads, found by itself, or the suite in the checkout the app lives in; while the
-recording runs the window hides, and the global shortcut (the desktop portal's) stops it and brings it back."""
+recording runs the window hides, and the global shortcut (the desktop portal's, on Windows a hot key of Windows')
+stops it and brings it back."""
 
 from __future__ import annotations
 
@@ -38,6 +39,7 @@ from . import APP_NAME, CHECKOUT, LOGO_PATH, __version__
 from .global_shortcut import GlobalShortcutManager
 from .workflow import (
     PORTAL_LAUNCHER,
+    WINDOWS,
     DemoApp,
     WorkflowError,
     connect_obs,
@@ -63,6 +65,18 @@ ABOUT = ("The demo is a real portal installation recorded with OBS: a portal rel
          "OBS needs a screen-capture source and its WebSocket server (Setup instructions). The portal and the "
          "chosen app must not be installed yet: the demo is a fresh install. While it records, this window hides; "
          "the global shortcut stops the recording and brings it back. The recordings are in ~/Videos/demos.")
+INSTRUCTIONS = ("The installer runs in a terminal, for its output and its password prompts. This window then hides "
+                "and opens the portal; the global shortcut shown stops the recording and brings it back.")
+# On Windows: the Windows Portable Suite, from a portal release only, installed in a PowerShell window
+WINDOWS_ABOUT = ("The demo is a real portal installation recorded with OBS: a Windows Portable Suite portal release "
+                 "extracted in Downloads (found by itself), installed in a PowerShell window while OBS records the "
+                 "screen, then the portal opened and one optional app installed and shown.\n\n"
+                 "OBS needs a Display Capture source and its WebSocket server (Setup instructions). The portal and "
+                 "the chosen app must not be installed yet: the demo is a fresh install. While it records, this "
+                 "window hides; Ctrl+Alt+F12 stops the recording and brings it back. The recordings are in "
+                 "Videos\\demos.")
+WINDOWS_INSTRUCTIONS = ("The installer runs in a PowerShell window, for its output. This window then hides and "
+                        "opens the portal; the global shortcut shown stops the recording and brings it back.")
 
 
 class MainWindow(QMainWindow):
@@ -92,7 +106,7 @@ class MainWindow(QMainWindow):
         central = QWidget()
         layout = QVBoxLayout(central)
         header = AppHeader(LOGO_PATH, APP_NAME, __version__)
-        header.add_action(InfoButton(ABOUT, "What this app does"))
+        header.add_action(InfoButton(WINDOWS_ABOUT if WINDOWS else ABOUT, "What this app does"))
         header.add_second(QLabel("A portal installation, recorded with OBS."))
         header.second_row.addStretch(1)
         layout.addLayout(header)
@@ -130,7 +144,8 @@ class MainWindow(QMainWindow):
         choose_row = QHBoxLayout()
         self.release_path = QLineEdit()
         self.release_path.setReadOnly(True)
-        self.release_path.setPlaceholderText("An extracted portal release, or the suite's folder in a checkout")
+        self.release_path.setPlaceholderText("An extracted portal release" if WINDOWS else
+                                             "An extracted portal release, or the suite's folder in a checkout")
         choose_row.addWidget(self.release_path, 1)
         choose_button = QPushButton("Choose folder…")
         choose_button.clicked.connect(self._choose_release)
@@ -158,10 +173,7 @@ class MainWindow(QMainWindow):
 
         action_box = QGroupBox("3. Record")
         action_layout = QVBoxLayout(action_box)
-        self.instructions = QLabel(
-            "The installer runs in a terminal, for its output and its password prompts. This window then hides "
-            "and opens the portal; the global shortcut shown stops the recording and brings it back."
-        )
+        self.instructions = QLabel(WINDOWS_INSTRUCTIONS if WINDOWS else INSTRUCTIONS)
         self.instructions.setWordWrap(True)
         action_layout.addWidget(self.instructions)
         self.start_button = QPushButton("Start recording and install portal")
@@ -201,17 +213,21 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, "OBS not found", "Install OBS Studio, then use this button to open it.")
             return
         try:
-            subprocess.Popen(command, stdin=subprocess.DEVNULL, start_new_session=True)
+            # on Windows OBS starts only from its own folder (it finds its data from there)
+            subprocess.Popen(command, stdin=subprocess.DEVNULL, start_new_session=True,
+                             cwd=Path(command[0]).parent if WINDOWS else None)
         except OSError as exc:
             QMessageBox.critical(self, "Could not open OBS", str(exc))
 
     def _show_obs_help(self) -> None:
+        capture = ("2. Choose Display Capture and the screen the portal shows on.\n" if WINDOWS else
+                   "2. On Wayland, choose Screen Capture (PipeWire) and approve the sharing prompt.\n")
         QMessageBox.information(
             self,
             "Prepare OBS",
             "In OBS:\n"
             "1. Create a scene and add a screen-capture source.\n"
-            "2. On Wayland, choose Screen Capture (PipeWire) and approve the sharing prompt.\n"
+            f"{capture}"
             "3. Open Tools → WebSocket Server Settings and enable the server.\n"
             "4. Note the server port (usually 4455) and password, then test the connection here.\n\n"
             f"{APP_NAME} does not change OBS settings or select a capture source for you.",
@@ -350,7 +366,8 @@ class MainWindow(QMainWindow):
         return True
 
     def _choose_release(self) -> None:
-        selected = QFileDialog.getExistingDirectory(self, "Choose a portal release or a suite's folder in a checkout")
+        selected = QFileDialog.getExistingDirectory(self, "Choose a portal release" if WINDOWS else
+                                                    "Choose a portal release or a suite's folder in a checkout")
         if not selected:
             return
         try:
@@ -360,8 +377,14 @@ class MainWindow(QMainWindow):
             return
 
     def _find_release_automatically(self) -> None:
-        """The newest extracted portal release in Downloads; without one, the suite in this checkout."""
+        """The newest extracted portal release in Downloads; without one, the suite in this checkout (Linux)."""
         release = find_portal_release()
+        if release is None and WINDOWS:
+            self.release_status.setText(
+                f"No extracted portal release found in {downloads_dir()}. Download a Windows Portable Suite portal "
+                "release (wp-portal-v<x.y.z>.zip), extract it there, then choose Find in Downloads."
+            )
+            return
         if release is None:
             try:
                 self._set_release(SUITE_IN_CHECKOUT)
@@ -517,7 +540,8 @@ class MainWindow(QMainWindow):
             self._update_start_button()
             return
         self.instructions.setText(
-            "The portal is installed. Open it, show BC-250 Bazzite Test, install the selected optional app, "
+            f"The portal is installed. Open it, show {'Windows Portable Test' if WINDOWS else 'BC-250 Bazzite Test'}, "
+            "install the selected optional app, "
             "then open that app for the peek."
         )
         self.open_portal_button.setEnabled(True)

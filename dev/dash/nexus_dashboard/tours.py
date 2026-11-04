@@ -7,6 +7,8 @@ from __future__ import annotations
 
 import os
 import signal
+import subprocess
+import sys
 import tomllib
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -36,6 +38,7 @@ MANIFEST = Path("portal") / "apps.toml"
 SECONDS = 40                                        # an app's tour, as tools/app_tour.py makes it by default
 SIZES = ("1080p", "1440p", "2160p")                 # the video's size (tools/tour_frames.py); the first is the default
 SIZE_HINT = "1080p for the wiki, 2160p (4K) for YouTube: about four times the time"
+WINDOWS = sys.platform == "win32"                   # the scripts run with Git Bash there, without setsid
 
 
 def size_suffix(size: str) -> str:
@@ -255,8 +258,11 @@ class TourDialog(QDialog):
         process.readyReadStandardOutput.connect(self._read)
         process.finished.connect(self._ended)
         process.errorOccurred.connect(self._error)
-        # its own process group (setsid), so Stop ends the script and the Python and ffmpeg it started
-        process.start("setsid", command)
+        if WINDOWS:                 # no setsid on Windows: Stop ends the script's process tree instead
+            process.start(command[0], command[1:])
+        else:
+            # its own process group (setsid), so Stop ends the script and the Python and ffmpeg it started
+            process.start("setsid", command)
         self.update_buttons()
 
     def _read(self) -> None:
@@ -292,7 +298,11 @@ class TourDialog(QDialog):
         if process is None:
             return
         try:
-            os.killpg(int(process.processId()), signal.SIGTERM)
+            if WINDOWS:
+                subprocess.run(["taskkill", "/T", "/F", "/PID", str(int(process.processId()))],
+                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
+            else:
+                os.killpg(int(process.processId()), signal.SIGTERM)
         except (OSError, ValueError):
             process.terminate()
         process.waitForFinished(5000)

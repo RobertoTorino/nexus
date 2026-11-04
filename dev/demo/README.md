@@ -8,13 +8,14 @@
 
 Records a demo of a portal installation with OBS: a portal release extracted in Downloads, or the BC250 Bazzite
 Suite in this checkout, installed in a terminal while OBS records the screen, then the portal opened and one
-optional app installed and shown. A Nexus app: it runs from the checkout it lives in, on Linux (OBS and the desktop
-portal's global shortcut), and has no releases of its own. Start it from [Nexus Dashboard](../dash), or:
+optional app installed and shown. On Windows it records the Windows Portable Suite's portal from an extracted
+portal release, installed in a PowerShell window. A Nexus app: it runs from the checkout it lives in and has no
+releases of its own. Start it from [Nexus Dashboard](../dash), or:
 
-| | |
-|---|---|
-| Open it | `dev/demo/run.sh` |
-| Menu entry and Desktop icon | `dev/demo/install.sh` (`--no-desktop-shortcut`, `--uninstall`, `--uninstall --purge`) |
+| | Linux | Windows |
+|---|---|---|
+| Open it | `dev/demo/run.sh` | `dev\demo\run.ps1` (PowerShell), or `dev/demo/run.sh` (Git Bash) |
+| Menu entry and Desktop icon | `dev/demo/install.sh` (`--no-desktop-shortcut`, `--uninstall`, `--uninstall --purge`) | |
 
 Nothing is copied: the entry starts the app of the checkout you installed it from.
 

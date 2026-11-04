@@ -19,8 +19,11 @@ import ci_local  # noqa: E402
 SUITE = Path(__file__).resolve().parents[2]
 CI = SUITE / ".github" / "workflows" / "ci.yml"
 CI_NEXUS = SUITE / ".github" / "workflows" / "ci-nexus.yml"
+# ci.yml's plan job runs python3 tools/ci_matrix.py, as in the container; Windows' python3 is the Store's stand-in
+PLAN_JOB = pytest.mark.skipif(sys.platform == "win32", reason="ci.yml's plan job runs python3, as in the container")
 
 
+@PLAN_JOB
 def test_every_job_of_ci_yml_and_every_matrix_entry():
     jobs = {j.name: j for j in ci_local.load_jobs(CI)}
     assert {"versions", "native", "shell", "installers", "docs", "windows-exe"} <= set(jobs)
@@ -61,6 +64,7 @@ def test_a_matrix_from_a_plan_job_is_read_by_running_it(tmp_path):
     assert not list(tmp_path.glob(".ci-local*"))                   # nothing written into the checkout
 
 
+@PLAN_JOB
 def test_nexus_jobs_come_after_the_suites_with_their_prefix():
     """ci-nexus.yml's jobs (core, tools, dev/, the repository's rules) run too, as nexus-<job>: both workflows have
     a versions, pytest, shell and docs job."""
@@ -72,6 +76,7 @@ def test_nexus_jobs_come_after_the_suites_with_their_prefix():
     assert names == [j.name for j in ci_local.load_jobs(CI)] + list(nexus) and len(set(names)) == len(names)
 
 
+@PLAN_JOB
 def test_expressions_and_selection():
     jobs = ci_local.all_jobs(SUITE)
     governor = next(j for j in jobs if j.name == "pytest/bc250-bazzite/apps/gpu")

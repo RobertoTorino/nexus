@@ -17,7 +17,7 @@ are written from the root of the repository.
 core/bc250_core/              shared Python package, every suite's; bundled into each app at release time (below)
 tools/                        the Nexus tools: release and CI (build_release, stage_app, check_versions,
                               check_changelogs, tag-release.sh, release.sh, ci-local.sh, pre-push.sh, git-setup.sh,
-                              merge_changelog, nexus_index),
+                              merge_changelog, nexus_index), dev_versions (the dev/ apps' versions),
                               new_app, the design and icon catalogs, sync_icons (a suite's category icons), the
                               tours, the design panel
 dev/<name>/                   the Nexus development apps, run from the checkout: dev/dash/ is Nexus Dashboard (the
@@ -148,6 +148,14 @@ first run builds the image from `tools/ci-local/Containerfile` (Python 3.12 and 
 and Console Link's FFmpeg; both are kept, with the venvs and the logs, in `~/.cache/bc250-ci-local`. It works on a
 copy of the checkout with every change staged, as the commit will have it. Only the Windows job does not run here.
 The push commands Nexus Release Tool shows run it first (`tools/ci-local.sh && git push`): no push when a job fails.
+
+On Windows it runs in podman's machine, a small Fedora in WSL that reaches the checkout under `/mnt/c`. Install
+podman once (`winget install RedHat.Podman`, then `podman machine init` and `podman machine start`), and run it
+from Git Bash as the machine's own user, not root: the installers refuse root.
+
+```bash
+podman machine ssh "su - user -c 'cd /mnt/c/Projects/nexus && bash tools/ci-local.sh'"   # your checkout's folder
+```
 
 `tools/pre-push.sh` runs CI's quick checks in a few seconds: the versions, each suite's `portal/apps.toml` with the
 portal bump it needs against what the remote has, the CHANGELOGs keeping every entry the remote has

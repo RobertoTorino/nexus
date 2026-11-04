@@ -42,6 +42,9 @@ handover says which app and why; the owner decides the number.
 
 - **VERSION is the single source** of each app's version (all started at 0.1.0). Copies in code (`__version__`,
   shell `VERSION=`, pyproject) must match: `tools/check_versions.py`.
+- **The dev/ apps' versions** (owner, 04-11-2026): never released or tagged, so not in Nexus Release Tool; the
+  owner sets them with Nexus Dashboard's **Dev app versions** tile (`tools/dev_versions.py`): VERSION, the
+  `__version__` copy and a "Version x.y.z." CHANGELOG entry, as core's. Claude doesn't run it.
 - **Nexus's version** (owner, 28-10-2026): the root `VERSION`, with the root CHANGELOG, is Nexus's own; the owner
   bumps it (the Nexus Release Tool's step 1 row **nexus**). It is never tagged by hand: `nexus-index.yml` publishes GitHub's
   Latest release, the Nexus index, as `nexus-v<VERSION>` titled `Nexus v<VERSION>`. A suite's release (an app or a

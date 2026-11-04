@@ -1,3 +1,12 @@
+Changelog: 04-11-2026 21:04:31
+
+Version 1.0.0.
+
+Changelog: 04-11-2026 19:05:17
+
+Fixed. The test of the board checks' terminal expects the checkout's folder quoted as shlex quotes it, which a
+Windows path needs.
+
 Changelog: 04-11-2026 14:09:55
 
 Fixed. A release lasts while one of its portal drafts waits for its device test, also when other work is pushed

@@ -1,3 +1,31 @@
+Changelog: 04-11-2026 20:53:37
+
+Added. tools/dev_versions.py sets the versions of the Nexus apps in dev/ (owner, 04-11-2026: by hand they go wrong),
+which are never released and so not in Nexus Release Tool: as core's, an app's VERSION, the copies
+tools/check_versions.py checks and a Version x.y.z. CHANGELOG entry, the version offered following the kinds of its
+entries since the last one. A version not pushed yet can be set again; a pushed one stays. The Nexus page's
+Dashboard chapter has Dev app versions.
+
+Changelog: 04-11-2026 20:28:29
+
+Fixed. The big Nexus icon on the Nexus page's front page has no outline under the pointer any more (owner,
+04-11-2026); the other pictures that link somewhere keep theirs.
+
+Changelog: 04-11-2026 20:23:03
+
+Added. What is Nexus's is on the Nexus page (owner, 04-11-2026): Withdrawing a release and Checking a release moved
+from the BC250 Bazzite Suite wiki's Portal page to the Nexus page's Releases chapter, written for both suites, and
+the BC250 page keeps what its portal does with a link there; Nexus Release Tool's README links to the Releases
+chapter. The Dashboard chapter's Demo Recorder section lists what a recording needs before it starts, on Linux and
+on Windows.
+
+Changelog: 04-11-2026 19:05:17
+
+Fixed. ./test.sh passes on Windows: the tests of tools/ci_local.py that run ci.yml's plan job (python3, as in the
+container) are skipped there, and the tests of Nexus Dashboard, Nexus Demo Recorder, Nexus Installer Tests, Nexus
+Release Tool and Nexus Sound Lab no longer assume Linux (their CHANGELOGs). tools/ci-local.sh runs on Windows from
+the podman machine, as a user that is not root (the Nexus page's Development chapter).
+
 Changelog: 04-11-2026 14:34:58
 
 Release 1.43.0.

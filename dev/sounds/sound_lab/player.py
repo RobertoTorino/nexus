@@ -15,6 +15,7 @@ import os
 import shutil
 from pathlib import Path
 
+from PyQt6 import sip
 from PyQt6.QtCore import QObject, QUrl
 
 from . import APP_ID
@@ -74,9 +75,16 @@ class Player(QObject):
             return False
         try:
             if self.effect is not None:
+                last = Path(self.effect.source().toLocalFile())
                 self.effect.stop()
-                self.effect.deleteLater()
-                Path(self.effect.source().toLocalFile()).unlink(missing_ok=True)
+                # deleted now, not later: on Windows the effect keeps its file open until then. One still loading
+                # can hold it a moment longer; it stays, and close() removes the folder
+                sip.delete(self.effect)
+                self.effect = None
+                try:
+                    last.unlink(missing_ok=True)
+                except OSError:
+                    pass
             self.effect = self._effect(frames)
         except Exception:  # noqa: BLE001  (a sound that cannot play never gets in the way)
             self.effect = None
@@ -92,7 +100,7 @@ class Player(QObject):
         """The silent loop on or off; False when it could not start."""
         if self.keeper is not None:
             self.keeper.stop()
-            self.keeper.deleteLater()
+            sip.delete(self.keeper)             # now: on Windows it keeps its file open until then
             self.keeper = None
         if not on or not self.available():
             return False
@@ -107,7 +115,7 @@ class Player(QObject):
         for effect in (self.effect, self.keeper):
             if effect is not None:
                 effect.stop()
-                effect.deleteLater()
+                sip.delete(effect)              # now, so their files are closed before the folder goes (Windows)
         self.effect = self.keeper = None
         shutil.rmtree(self.folder, ignore_errors=True)
 

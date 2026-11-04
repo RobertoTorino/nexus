@@ -52,8 +52,9 @@ def test_runner_adds_homebrew_fakeroot_directory_to_path(tmp_path: Path, monkeyp
     fakeroot.chmod(0o755)
     monkeypatch.setattr(runner, "HOMEBREW_BIN_DIRS", (fake_homebrew_bin,))
 
-    assert runner._path_with_fakeroot("/usr/bin:/bin") == f"{fake_homebrew_bin}:/usr/bin:/bin"
-    assert runner._path_with_fakeroot(f"{fake_homebrew_bin}:/usr/bin") == f"{fake_homebrew_bin}:/usr/bin"
+    sep = os.pathsep
+    assert runner._path_with_fakeroot(f"/usr/bin{sep}/bin") == f"{fake_homebrew_bin}{sep}/usr/bin{sep}/bin"
+    assert runner._path_with_fakeroot(f"{fake_homebrew_bin}{sep}/usr/bin") == f"{fake_homebrew_bin}{sep}/usr/bin"
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="bash scripts")

@@ -49,7 +49,7 @@ The root keeps what is Nexus's:
 - `tools/`: the Nexus tools: release and CI (`stage_app.py`, `build_release.py`, `check_versions.py`,
   `check_changelogs.py`, `tag-release.sh`, `release.sh`, `ci-local.sh`, `pre-push.sh`, `git-setup.sh` (once per
   checkout: the pre-push hook and `merge_changelog.py`, git's merge driver for the CHANGELOGs, which merges two
-  machines' new entries by entry; owner, 01-11-2026), `fix-modes.sh`,
+  machines' new entries by entry; owner, 01-11-2026), `fix-modes.sh`, `dev_versions.py` (the dev/ apps' versions),
   `backlog.py`, `nexus_index.py` (GitHub's Latest release: the Nexus index, every suite's newest portal),
   `dev-updates.sh`, `dev-backup.sh`), `new_app.py` (a new app of a suite from the architecture chapter, listed
   everywhere the suite lists its apps, with the checks run on it), the design and icon catalogs (`make_design.py`, `make_icons.py`, `apply_design.py`),
@@ -68,7 +68,7 @@ The root keeps what is Nexus's:
   manual: the Nexus page's Dashboard chapter); `dev/nrt/` is the **Nexus
   Release Tool** (NRT), the release front end (see [releases.md](releases.md)), with `install.ps1` and `run.ps1` for Windows; its manual is the
   Nexus page's Releases chapter; `dev/demo/` is **Nexus Demo Recorder** (a portal installation recorded with OBS,
-  Linux; the OBS part of the BC250 suite's Media Tool, which is gone from the suite); `dev/itests/` is **Nexus
+  the BC250 suite's on Linux and the Windows Portable Suite's on Windows, with `run.ps1`; the OBS part of the BC250 suite's Media Tool, which is gone from the suite); `dev/itests/` is **Nexus
   Installer Tests** (a suite's installer tests one at a time; BC-250 Installer Tests, made every suite's);
   `dev/sounds/` is **Nexus Sound Lab** (short sound effects for the suites' windows, such as the tick when the
   controller moves the focus, made from sliders and saved as WAV; owner, 03-11-2026). A

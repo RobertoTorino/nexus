@@ -13,7 +13,7 @@ checks before a push are in [Development](development.md#ci-on-your-own-machine)
 | Git | everything; `tools/hooks/pre-push` as the pre-push hook | comes with Bazzite | Git for Windows (`winget install Git.Git`); Git Bash runs the `.sh` scripts |
 | Python 3.11 or newer (CI runs 3.12) | the venvs, every tool in `tools/` | comes with Bazzite (`python3`, without PyQt6) | python.org or `winget install Python.Python.3.12`, with the `py` launcher |
 | The development venv (`requirements-dev.txt`) | `./test.sh`, `mkdocs`, the tools; it brings pytest, PyQt6, MkDocs Material and Pillow | `.venv-linux/`, see [Development](development.md#set-up-and-test) | `.venv-windows/` |
-| podman (or docker) | `tools/ci-local.sh`: CI's jobs in a container, with Python 3.12, shellcheck, fakeroot, Rust and Console Link's build tools inside | comes with Bazzite | not used; CI's Windows job runs only on GitHub |
+| podman (or docker) | `tools/ci-local.sh`: CI's jobs in a container, with Python 3.12, shellcheck, fakeroot, Rust and Console Link's build tools inside | comes with Bazzite | `winget install RedHat.Podman`; it runs in podman's machine, see [Development](development.md) |
 | shellcheck | the shell checks of CI | `brew install shellcheck` | `winget install koalaman.shellcheck` |
 | fakeroot | the installer tests (`bc250-bazzite/tools/installer-tests/`) | `brew install fakeroot` | Linux only |
 | Node.js | the design panel's test (`tools/tests/test_design_panel.py`, skipped without it) | `brew install node` | `winget install OpenJS.NodeJS.LTS` |
@@ -21,6 +21,7 @@ checks before a push are in [Development](development.md#ci-on-your-own-machine)
 | ffmpeg | the video tours (each suite's `tools/record-tour.sh` and `tools/record-app-tour.sh`, on its own system) | `brew install ffmpeg` | `winget install Gyan.FFmpeg` |
 | Rust (rustup with cargo and clippy), maturin, nasm, the libva headers | Console Link's native core, only to run `cargo test` or `maturin build` on the machine itself; the container of `tools/ci-local.sh` has them all | rustup from rustup.rs, `brew install nasm`, maturin with pip in the venv | `winget install Rustlang.Rustup`; the decoder builds on Linux only |
 | PyInstaller and Pillow | `tools/build_windows_exe.py`, the Windows executable of Bazzite SFTP | not used | in `.venv-windows/`, `pip install pyinstaller pillow` |
+| OBS Studio, with its WebSocket server on | Nexus Demo Recorder (`dev/demo/`) | flatpak `com.obsproject.Studio`, or `obs` | `winget install OBSProject.OBSStudio` |
 | notify-send | `tools/dev-updates.sh --notify` (below) | comes with Bazzite | not used |
 | zip, tar, sha256sum | `tools/build_release.py` | come with Bazzite | come with Git Bash |
 

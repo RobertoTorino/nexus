@@ -352,37 +352,16 @@ banner at the top, "Local build"; the published release has none.
 
 ### Withdrawing a release
 
-A release that must not be used any more, because of a privacy, security or any other problem, is withdrawn.
-The release stays on GitHub, so its history is kept, but nothing installs it any more:
-
-1. In Nexus Release Tool, tab **3. Retract app**: choose the app's pinned release, write why, and press
-   **Retract**. This adds `withdrawn = "<reason>"` to its entry in `apps.toml` and a CHANGELOG entry to the app.
-   **Take back** removes it again.
-2. **Test withdrawal** (tab **Test on this board**) on a BC-250 with the app installed: it installs the portal from the checkout and starts it
-   (`check-release.sh local`). The portal must say the app is not available any more, remove it, and then show
-   **App not available** on its tile.
-3. Mark the release on GitHub with the command the tab shows: `gh release edit <tag> --prerelease --title
-   "Withdrawn: <tag>" --notes "..."`. A pre-release is skipped by every update check, so no app offers it.
-4. Release the portal (tab **2**, at least a minor version): its CHANGELOG entry names the withdrawal. A board
-   that updates to it removes the app; the portal update button says so beforehand ("withdraws ...").
+A release that must not be used any more is withdrawn with Nexus Release Tool: the steps are in
+[Withdrawing a release](https://robertotorino.github.io/nexus/releases/#withdrawing-a-release) on the Nexus page.
+On a BC-250, **Test withdrawal** installs the portal from the checkout and starts it (`check-release.sh local`):
+the portal says the app is not available any more, removes it, and then shows **App not available** on its tile.
+Bazzite Test, which is always installed, cannot be withdrawn.
 
 ### Checking a release
 
-A release tarball has the same content when you build its tag yourself, but usually not the same checksum: the
-gzip compression differs between zlib builds (Fedora uses zlib-ng, GitHub's Ubuntu runners zlib), so compare the
-unpacked files, not the `.tar.gz`. Bazzite Test's build time in `bazzite_check/_build_info.py` is the commit time too;
-older Bazzite Test releases recorded the clock, and there only that line differs:
-
-```bash
-git archive <tag> | tar -x -C /tmp/src
-SOURCE_DATE_EPOCH=$(git log -1 --format=%ct <tag>) python3 /tmp/src/tools/build_release.py <tag> /tmp/local
-curl -LO https://github.com/RobertoTorino/nexus/releases/download/<tag>/<tag>.tar.gz
-mkdir -p /tmp/a /tmp/b && tar -xzf <tag>.tar.gz -C /tmp/a && tar -xzf /tmp/local/<tag>.tar.gz -C /tmp/b
-diff -r /tmp/a /tmp/b
-```
-
-The checksum pinned in `apps.toml` is always the one of the published tarball. That is also why the release
-tests pin their own local builds instead of the published ones.
+How to build a release's tag yourself and compare it with the published tarball:
+[Checking a release](https://robertotorino.github.io/nexus/releases/#checking-a-release) on the Nexus page.
 
 ---
 

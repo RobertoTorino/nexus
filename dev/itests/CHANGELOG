@@ -1,3 +1,18 @@
+Changelog: 04-11-2026 21:04:28
+
+Version 0.2.0.
+
+Changelog: 04-11-2026 19:48:43
+
+Fixed. run.sh starts Nexus Installer Tests from Git Bash on Windows too: it looked only for the Linux venv, and now
+takes .venv-windows there, as Nexus Release Tool's run.sh does.
+
+Changelog: 04-11-2026 19:05:17
+
+Added. run.ps1 starts Nexus Installer Tests on Windows with the checkout's Windows venv, as run.sh does on Linux,
+so Nexus Dashboard's tile for it is on there too and opens it on the suite chosen there (--suite NAME). The
+runner's PATH test uses this system's path separator.
+
 Changelog: 02-11-2026 00:49:20
 
 Added. Nexus Installer Tests, a Nexus app in dev/itests/ (owner, 02-11-2026: the tools for working on the suites

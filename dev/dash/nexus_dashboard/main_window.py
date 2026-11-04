@@ -3,8 +3,8 @@
 suite's tours and icons and Close issues), Test local apps (the suite's portal and apps from the checkout, and the
 wikis), and what happened below. A click on an app's tile starts it with its run script, in its own session, and
 says where its log is; a click on a tool's tile opens its dialog on the chosen suite. A tile is greyed out where it
-does not run here: Nexus Demo Recorder on Windows, a suite's tours where its scripts need the other system, the
-icons for a suite whose apps take no category icons. Test local apps and Close issues came from Nexus Release
+does not run here: a Nexus app without the run script of this system, a suite's tours where its scripts need
+the other system, the icons for a suite whose apps take no category icons. Test local apps and Close issues came from Nexus Release
 Tool's Test on this board (owner, 04-11-2026: the release tool is the release, the dashboard the place for working
 on a suite)."""
 
@@ -32,21 +32,24 @@ from .checkout import DevApp, dev_apps, here, start, suite_name, suites
 from .icons import IconsDialog, has_category_icons
 from .issues import IssuesDialog, close_commands, fetch_open_issues, gh_program
 from .tours import RECORD_APP_TOUR, RECORD_TOUR, AppsTourDialog, PortalTourDialog
+from .versions import VersionsDialog
 
 SUITE_KEY = "suite"                     # the chosen suite, in the settings
 ICON_PX = 64
 BADGE_PX = 26                           # the warning in the corner of an app's icon that changes the board
+NEXUS_PAGE = "https://robertotorino.github.io/nexus/"     # the Nexus page, opened by a click on the header's icon
 # Each local app's output, a log per app (the Nexus apps' logs are in checkout.LOG_DIR)
 LOCAL_LOG_DIR = Path(os.environ.get("XDG_CACHE_HOME") or Path.home() / ".cache") / APP_ID / "local"
 ABOUT = ("One door to the tools for working on the suites. The first tiles are the Nexus apps of this checkout, "
          "each a window of its own that keeps running when the dashboard closes: Nexus Release Tool (a release's "
          "versions, CHANGELOG entries, pins and the board checks), Nexus Installer Tests (a suite's installer tests "
-         "one at a time), Nexus Demo Recorder (a portal installation recorded with OBS, Linux) and Nexus Sound Lab (short "
+         "one at a time), Nexus Demo Recorder (a portal installation recorded with OBS) and Nexus Sound Lab (short "
          "sound effects for the windows, made from sliders and saved as WAV).\n\n"
          "The other tiles work on the suite chosen in the header: Portal video tour and Apps video tour record the "
          "suite's tours from this checkout (its tools/record-tour.sh and record-app-tour.sh), Convert icons makes "
          "a category's icons from your images (tools/sync_icons.py). Close issues is the repository's: it lists "
-         "the open issues on GitHub and closes the ones you tick. A tile is greyed out where it does not run on "
+         "the open issues on GitHub and closes the ones you tick. Dev app versions sets the Nexus apps' versions "
+         "(tools/dev_versions.py). A tile is greyed out where it does not run on "
          "this system or for this suite.\n\n"
          "Test local apps, below the tiles: the suite's portal and apps as they are in this checkout, to try them "
          "before their release, then the suite's wiki and the Nexus page served from the checkout.")
@@ -156,6 +159,10 @@ class MainWindow(QMainWindow):
         central = QWidget()
         layout = QVBoxLayout(central)
         header = AppHeader(LOGO_ICON, APP_NAME, __version__)
+        header.logo.setCursor(Qt.CursorShape.PointingHandCursor)
+        header.logo.setToolTip("Open the Nexus page")
+        header.logo.clicked.connect(lambda: open_url(NEXUS_PAGE))
+        self.header = header
         header.add_action(InfoButton(ABOUT, "What this app does"))
         self.suite_box = QComboBox()
         for name in self.suites:
@@ -233,7 +240,7 @@ class MainWindow(QMainWindow):
         """The tiles in their order: the Nexus apps, then the suite's tools; each with why it is off, when it is."""
         found = []
         for app in self.apps:
-            off = "" if app.runs_here else f"{app.name} runs on Linux (OBS and the desktop portal)."
+            off = "" if app.runs_here else f"{app.name} has no {app.script.name} for this system."
             found.append(Tile(app.key, app.name, app.icon, f"{app.name} {app.version}: {app.script.name} in "
                               f"{app.folder}", app, off))
         suite = self.suite_dir
@@ -255,6 +262,9 @@ class MainWindow(QMainWindow):
                  "in the suite's apps", off=off_icons),
             Tile("issues", "Close issues", LOGO_ICON, "The open issues on GitHub, such as the weekly Upstream "
                  "review: tick the ones that are handled, and Run closes them (gh issue close)"),
+            Tile("versions", "Dev app versions", LOGO_ICON, "The Nexus apps' versions: what changed since each "
+                 "one's last version and the version that asks for, set with one click (VERSION, its copies and "
+                 "the CHANGELOG entry)"),
         ]
         return found
 
@@ -302,6 +312,10 @@ class MainWindow(QMainWindow):
             dialog = IssuesDialog(self, self.issues_source)
             if dialog.exec() == QDialog.DialogCode.Accepted:
                 self.close_issues(dialog.numbers(), dialog.comment.text())
+        elif tile.key == "versions":
+            VersionsDialog(self.root, self, self.output.appendPlainText).exec()
+            self.apps = dev_apps(self.root)     # the tiles' tooltips name the versions
+            self.fill()
 
     def run(self, app: DevApp) -> None:
         """Starts *app* in a window of its own; the suite goes along where the app takes one."""

@@ -1,3 +1,35 @@
+Changelog: 04-11-2026 21:04:23
+
+Version 0.2.0.
+
+Changelog: 04-11-2026 20:53:37
+
+Added. The Dev app versions tile (owner, 04-11-2026): the Nexus apps with their versions, what changed since each
+one's last version and the version that asks for, set with Set version (the checkout's tools/dev_versions.py),
+another one typed or with a note.
+
+Changelog: 04-11-2026 20:28:29
+
+Added. A click on Nexus's icon in the header opens the Nexus page (owner, 04-11-2026). What this app does no longer
+calls Nexus Demo Recorder Linux only.
+
+Changelog: 04-11-2026 20:08:16
+
+Added. The Nexus Demo Recorder tile is on on Windows too: the recorder runs there (its run.ps1). A Nexus app's tile
+is now off only where the app has no run script for this system, and its tooltip says so.
+
+Changelog: 04-11-2026 19:48:43
+
+Fixed. run.sh starts Nexus Dashboard from Git Bash on Windows too: it looked only for the Linux venv, and now takes
+.venv-windows there, as Nexus Release Tool's run.sh does.
+
+Changelog: 04-11-2026 19:05:17
+
+Fixed. On Windows the Portal video tour and Apps video tour of a Windows suite only said "Could not start": the
+dialogs started the suite's script with setsid, which Windows does not have. There they start it with bash (Git
+Bash) directly, and Stop ends the script and what it started with taskkill /T. The tests no longer expect Linux
+paths on Windows, and expect the Installer Tests and Sound Lab tiles on there.
+
 Changelog: 04-11-2026 15:05:00
 
 Fixed. On Windows a click on Nexus Release Tool or Nexus Sound Lab started nothing: the dashboard started

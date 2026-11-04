@@ -5,7 +5,7 @@ suites in the first column when the checkout holds several), so it is not part o
 
 APP_NAME = "Nexus Release Tool"
 APP_ID = "nexus-release-tool"
-__version__ = "0.1.0"
+__version__ = "1.0.0"
 
 from pathlib import Path
 

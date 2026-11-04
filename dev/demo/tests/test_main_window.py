@@ -233,7 +233,7 @@ def test_open_recording_starts_inline_player(qapp, monkeypatch, tmp_path):
 
     assert window._open_recording(video)
     assert len(players) == 1
-    assert players[0].source.toLocalFile() == str(video)
+    assert Path(players[0].source.toLocalFile()) == video
     assert players[0].audio_output is not None
     assert isinstance(players[0].video_output, main_window.QVideoWidget)
     assert players[0].playbackState() == FakeMediaPlayer.PlaybackState.PlayingState
@@ -338,3 +338,32 @@ def test_a_second_launch_opens_no_window(qapp, monkeypatch):
     monkeypatch.setattr(entry.instance, "already_running", lambda app_id: asked.append(app_id) or True)
     monkeypatch.setattr("sys.argv", ["demo_recorder"])
     assert entry.main() == 0 and asked == [entry.APP_ID]
+
+
+def test_on_windows_no_release_in_downloads_says_where_to_get_one(qapp, on_windows, monkeypatch, tmp_path):
+    """The Windows Portable Suite's portal installs from a release only: no fallback to the checkout."""
+    monkeypatch.setattr(main_window, "obs_install_command", lambda: None)
+    monkeypatch.setattr(main_window, "find_portal_release", lambda: None)
+    monkeypatch.setattr(main_window, "downloads_dir", lambda: tmp_path / "Downloads")
+
+    window = main_window.MainWindow()
+
+    assert window.release_dir is None
+    assert "wp-portal-v<x.y.z>.zip" in window.release_status.text()
+    assert "PowerShell window" in window.instructions.text()
+    window.close()
+
+
+def test_on_windows_obs_starts_from_its_own_folder(qapp, on_windows, monkeypatch, tmp_path):
+    obs = tmp_path / "obs-studio" / "bin" / "64bit" / "obs64.exe"
+    started = []
+    no_release(monkeypatch, tmp_path)
+    window = main_window.MainWindow()
+    monkeypatch.setattr(main_window, "obs_install_command", lambda: [str(obs)])
+    monkeypatch.setattr(main_window.subprocess, "Popen", lambda argv, **kwargs: started.append((argv, kwargs)))
+
+    window._open_obs()
+
+    assert started == [([str(obs)], {"stdin": main_window.subprocess.DEVNULL, "start_new_session": True,
+                                     "cwd": obs.parent})]
+    window.close()

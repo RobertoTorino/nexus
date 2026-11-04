@@ -30,10 +30,11 @@ def test_whole_set_runs_first_then_each_size_in_order(tmp_path):
     _checkout(tmp_path)
     tool = [sys.executable, str(tmp_path / "tools" / "sync_icons.py"), "--suite", "suite", "--category", "leaf"]
 
-    assert icons.convert_commands(tmp_path, "suite", "leaf", Path("/a.png"), {128: Path("/s.png"), 512: Path("/m.png")}) == [
-        tool + ["--from", "/a.png"],
-        tool + ["--from", "/m.png", "--size", "512"],
-        tool + ["--from", "/s.png", "--size", "128"],
+    whole, small, medium = Path("/a.png"), Path("/s.png"), Path("/m.png")
+    assert icons.convert_commands(tmp_path, "suite", "leaf", whole, {128: small, 512: medium}) == [
+        tool + ["--from", str(whole)],
+        tool + ["--from", str(medium), "--size", "512"],
+        tool + ["--from", str(small), "--size", "128"],
     ]
     assert icons.convert_commands(tmp_path, "suite", "leaf", None, {}) == []
 

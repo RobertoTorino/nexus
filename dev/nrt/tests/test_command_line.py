@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import shlex
 import shutil
 import sys
 import time
@@ -100,7 +101,7 @@ def test_the_board_checks_go_to_a_terminal(app, tmp_path):
     command = "bc250-bazzite/tools/check-release.sh release portal-v13.1.1"
     pane.line.setText(command)
     pane.submit()
-    in_checkout = f"cd {tmp_path} && {command}"             # the terminal opens in the home folder, not here
+    in_checkout = f"cd {shlex.quote(str(tmp_path))} && {command}"   # the terminal opens in the home folder, not here
     assert launched == [in_checkout] and not pane.is_running() and pane.history[-1] == command
     assert "Runs in a terminal: check-release.sh asks for the sudo password there, once" in pane.output.toPlainText()
     assert pane.run_now(command) and launched == [in_checkout, in_checkout]
