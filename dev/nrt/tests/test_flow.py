@@ -415,6 +415,25 @@ def test_failed_ci_runs_again(release_window, monkeypatch):
     assert ran and ran[0].startswith("gh run rerun ") and ran[0].endswith(" --failed")
 
 
+def test_a_suite_is_on_the_nexus_release_through_its_own_workflow(tmp_path):
+    """release-<suite>.yml for a suite with a tag prefix, release.yml for the one without (the BC250 Bazzite Suite,
+    on the Nexus release since 04-11-2026), each when it can be called."""
+    for name, prefix in (("bc", ""), ("wp", "wp-")):
+        (tmp_path / name / "portal").mkdir(parents=True)
+        (tmp_path / name / "portal" / "apps.toml").write_text("", encoding="utf-8")
+        if prefix:
+            (tmp_path / name / "TAG_PREFIX").write_text(prefix, encoding="utf-8")
+    workflows = tmp_path / ".github" / "workflows"
+    workflows.mkdir(parents=True)
+    assert flow.release_suites(tmp_path) == []
+    (workflows / "release.yml").write_text("on:\n  push:\n", encoding="utf-8")
+    (workflows / "release-wp.yml").write_text("on:\n  push:\n  workflow_call:\n", encoding="utf-8")
+    assert flow.release_suites(tmp_path) == ["wp"]
+    (workflows / "release.yml").write_text("on:\n  push:\n  workflow_call:\n", encoding="utf-8")
+    (workflows / "release-bc.yml").write_text("on:\n  push:\n", encoding="utf-8")     # not the plain suite's
+    assert flow.release_suites(tmp_path) == ["bc", "wp"]
+
+
 def test_ci_state_reads_the_ci_runs_of_the_commit():
     runs = [_run("aaa", "ci.yml", "CI"), _run("aaa", "ci-nexus.yml", "CI Nexus", "in_progress", ""),
             _run("aaa", "release-nexus.yml"), _run("bbb", "ci.yml", "CI", conclusion="failure")]

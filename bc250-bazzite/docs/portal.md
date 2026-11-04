@@ -262,7 +262,17 @@ The comment at the top of [`apps.toml`](https://github.com/RobertoTorino/nexus/b
 - **Withdrawn releases.** `withdrawn = "<reason>"` in an app's entry withdraws its pinned release (see
   [Withdrawing a release](#withdrawing-a-release)). Not for Bazzite Test, which is always installed.
 
-Releasing an app and pinning it in the portal:
+A release of the suite is a **Nexus release**, made from the Nexus Release Tool's Nexus release tab with one action,
+**Start new release**: it writes the versions, the CHANGELOG entries and the new tags in `apps.toml`, commits and
+pushes, and [`release.yml`](https://github.com/RobertoTorino/nexus/blob/main/.github/workflows/release.yml), called
+by Release Nexus, builds every new app release side by side, publishes each, pins its checksum in a commit *Pin ...*
+on `main` and builds the portal as a draft. The draft is installed on a board by the **Device test** (below, [Testing
+a portal release before its tag](#testing-a-portal-release-before-its-tag)) and published from the tool when it
+works, which makes the portal tag. The steps, one by one, are on the Nexus page:
+[The Nexus release](https://robertotorino.github.io/nexus/releases/#the-nexus-release). The same workflow still
+builds a tag pushed by hand, one release at a time, which is the way below.
+
+Releasing one app by hand and pinning it in the portal:
 
 1. Bump `bc250-bazzite/apps/<app>/VERSION` (and the copies that `tools/check_versions.py` lists), and update its CHANGELOG.
 2. Commit and push, then tag with `tools/tag-release.sh <app>-v<x.y.z>` (it waits until CI passed on that
@@ -287,7 +297,21 @@ start and use it: [Releases](https://robertotorino.github.io/nexus/releases/) on
 
 A portal release promises one set of app releases, each with its checksum. Once its tag is out, every installed
 portal offers those releases as updates. So before the tag, check on a BC-250 that exactly those pinned releases
-install and run:
+install and run.
+
+In a Nexus release the portal is a **draft** on GitHub, built by the workflow with the pins already in it, and the
+check is the tool's **Device test** on the Nexus release tab, or by hand:
+
+```bash
+bc250-bazzite/tools/check-release.sh draft                 # the draft of bc250-bazzite/portal/VERSION
+bc250-bazzite/tools/check-release.sh draft portal-v14.1.0
+```
+
+It downloads the draft's tarball and `SHA256SUMS` with `gh` (a draft needs the sign-in: `gh auth login`), checks the
+checksum, installs it and starts it, as a user's board will once it is published. Test it as a user would, then
+**Publish** in the tool, or **Not OK**, which leaves it a draft. The portal tag exists only once it is published.
+
+For a release by hand, before the portal tag:
 
 1. Bump the portal (step 4) and commit. Pushing is not needed for this test.
 2. Click **Test app updates** on the release front end's **Test on this board** tab, or run `bc250-bazzite/tools/check-release.sh local`. It installs the portal

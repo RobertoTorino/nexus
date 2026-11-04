@@ -9,8 +9,8 @@ what the app releases need, check_manifest.py's rule), unless one is typed. Star
 and 2 would (the versions and their copies, the "Release x.y.z." entries, the new tags in apps.toml with their
 sha256 left for the workflow, the portal's version and its entry, Nexus's), then one command commits it, pushes it
 (the pre-push hook checks it) and starts release-nexus.yml on that commit. The workflow builds, publishes and pins;
-each suite's portal ends as a draft. The device test installs that draft on the handheld (check-release.ps1 draft);
-Publish makes it a release, which makes the portal tag and the Nexus index. A run that failed is started again from
+each suite's portal ends as a draft. The device test installs that draft on the suite's device (check-release.sh
+draft on a board, check-release.ps1 draft on the handheld); Publish makes it a release, which makes the portal tag and the Nexus index. A run that failed is started again from
 where it stopped (gh run rerun --failed); one that should not go on is stopped (gh run cancel)."""
 
 from __future__ import annotations
@@ -29,8 +29,11 @@ _RUN_ID = re.compile(r"/actions/runs/(\d+)")
 
 
 def on_nexus_release(root: Path, suite: str) -> bool:
-    """Whether release-nexus.yml carries the suite: its release-<suite>.yml can be called (workflow_call)."""
-    workflow = root / ".github" / "workflows" / f"release-{suite}.yml"
+    """Whether release-nexus.yml carries the suite: its release workflow can be called (workflow_call):
+    release-<suite>.yml, or release.yml for the suite whose tags have no prefix (rp.suite_workflows; the BC250
+    Bazzite Suite, on the Nexus release since 04-11-2026)."""
+    name = next(f for f in rp.suite_workflows(root, suite) if f.startswith("release"))
+    workflow = root / ".github" / "workflows" / name
     return workflow.is_file() and "workflow_call:" in workflow.read_text(encoding="utf-8")
 
 
@@ -58,10 +61,10 @@ def picks(root: Path) -> list[Pick]:
     """What a Nexus release would hold now: per suite on the release, each portal app that needs a release and the
     portal; core when it changed since its last version; Nexus whenever anything is released."""
     found: list[Pick] = []
-    shared: list[rp.Unit] = []
+    loaded: list[list[rp.Unit]] = []        # each suite's units: core and Nexus are read per suite
     for suite in release_suites(root):
         units = rp.load_units(root, suite)
-        shared = shared or units
+        loaded.append(units)
         blobs = rp.read_blobs(root, rp.changelog_specs(units))
         apps = [u for u in units if u.kind == "app" and not u.standalone and u.needs_release]
         for unit in apps:
@@ -72,12 +75,14 @@ def picks(root: Path) -> list[Pick]:
             found.append(Pick(portal, suite, [AUTO, *rp.next_versions(portal.version).values()],
                               "worked out at Start: at least what its app releases ask (check_manifest.py) and its "
                               "own CHANGELOG entries", AUTO))
-    shared = shared or rp.load_units(root)
-    core = next((u for u in shared if u.kind == "core"), None)
-    if core is not None and not core.current and core.in_apps:
+    loaded = loaded or [rp.load_units(root)]
+    # Core when it changed since its last version and an app of any suite on the release bundles that change (its
+    # in_apps is that suite's: a suite whose apps were all released on the current core has none, another may)
+    core = next((u for units in loaded for u in units if u.kind == "core" and not u.current and u.in_apps), None)
+    if core is not None:
         choices, why = rp.version_choices(root, core)
         found.append(Pick(core, "", choices, why, choices[0]))
-    nexus = next((u for u in shared if u.kind == rp.NEXUS), None)
+    nexus = next((u for units in loaded for u in units if u.kind == rp.NEXUS), None)
     if nexus is not None and (found or nexus.needs_release):
         found.append(Pick(nexus, "", [AUTO, *rp.next_versions(nexus.version).values()],
                           "worked out at Start: a suite's release is at least minor (owner, 28-10-2026), and its own "

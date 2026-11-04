@@ -1,3 +1,16 @@
+Changelog: 04-11-2026 02:05:35
+
+Added. The BC250 Bazzite Suite is on the Nexus release (owner, 04-11-2026: the same steps for every suite; stage 3
+of the release redesign): release.yml can be called by release-nexus.yml with the release commit, as
+release-windows-portable.yml can, and then builds every new app release side by side and publishes it, adds the
+Windows executable of an app that has one, pins the checksums in a commit "Pin ..." on main (bc250-bazzite/portal/
+apps.toml and the root's copy, only while main is still the release commit) and makes the portal a draft
+(bc250-bazzite/tools/suite_release.py and publish_release.sh); check-release.sh draft is the device test on a
+board, and Publish in the Nexus Release Tool makes the portal tag. A tag pushed by hand still releases that one
+app or portal, published at once, and a tag whose release is published already ends at once. tools/nexus_release.py
+and the tool know that the suite without a tag prefix has release.yml. The Nexus page's Releases chapter and the
+suite's wiki (apps.toml and releases) say so.
+
 Changelog: 04-11-2026 00:49:43
 
 Release 1.40.0. Brings portal-v14.0.0.

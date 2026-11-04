@@ -1,35 +1,58 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 name: Release
 
-# One GitHub release per tag. Tags are made by hand, one per app: <app>-v<x.y.z> (check-v0.1.0,
-# gpu-v0.4.0, ...) or portal-v<x.y.z>. The tag's version must equal that app's VERSION file.
+# The releases of the BC250 Bazzite Suite, in one of two ways (owner, 04-11-2026: the same steps for every suite;
+# the Windows Portable Suite's release-windows-portable.yml is the model, stage 3 of the release redesign):
 #
-# The assets are <tag>.tar.gz, SHA256SUMS and the notes, all built by tools/build_release.py, so a local build
-# has the same content (see docs/portal.md, "Checking a release"). A portal release bundles the release of Bazzite Test (check) that bc250-bazzite/portal/apps.toml pins (downloaded
-# from its own release and checked against the pin) and requires every pinned tag to exist.
+# * A Nexus release (owner, 30-10-2026): release-nexus.yml calls this workflow with the release commit that the Nexus
+#   Release Tool pushed (the versions, the CHANGELOG entries, the new tags in apps.toml, portal/VERSION). One run
+#   releases the suite: it builds every app tag apps.toml pins that has no release yet, side by side, and publishes
+#   each (the tag made on the release commit); writes their sha256 into apps.toml (and the root's copy, while there
+#   is one) in one commit "Pin ..." on top of it; and builds the portal from that commit as a draft release (no tag
+#   yet, so no portal sees it). The Nexus Release Tool installs that draft on a board (check-release.sh draft) and
+#   publishes it after the owner's yes, which makes the portal tag; the Nexus index follows (nexus-index.yml).
+#   Started again, the run skips what is out already and makes the draft anew. The pin commit is pushed only while
+#   main is still the release commit, so no other commit gets into a portal tag.
+# * A tag pushed by hand, <app>-v<x.y.z> or portal-v<x.y.z> (check-v0.1.0, gpu-v0.4.0): that one release, published
+#   at once, as before the Nexus release. The tag's version must equal that app's VERSION. wp- tags are the Windows
+#   Portable Suite's (release-windows-portable.yml). A tag whose release is published already is left alone: the
+#   Nexus Release Tool's Publish makes the portal tag of a Nexus release that way, on the pin commit, which has no CI
+#   run (a push with the workflow's token starts no workflow), so the run would only wait for CI in vain.
+#
+# The assets are <tag>.tar.gz, SHA256SUMS and the notes, all built by tools/build_release.py, so a local build has
+# the same content (the suite's wiki, "Checking a release"). A portal release bundles the release of Bazzite Test
+# (check) that bc250-bazzite/portal/apps.toml pins (downloaded from its own release and checked against the pin) and
+# requires every pinned tag to exist. Never GitHub's "Latest": that is the Nexus index (nexus-index.yml), which
+# points at every suite's newest portal.
 #
 # Console Link ships the wheel of its native core in the tarball (native/wheel, build_release.py checks it is
 # there): built here from the tag, with FFmpeg from its pinned sources (native/ffmpeg/build.sh), so installing
 # needs only pip.
 #
-# An app that ships a Windows executable (tools/build_windows_exe.py, WINDOWS_APPS) gets a second job on its tag:
-# it builds the .exe on Windows and adds <app-id>-<version>-windows.zip and its .sha256 to the release the first job
-# made. They are separate downloads; the portal and SHA256SUMS only know the tarball.
+# An app that ships a Windows executable (tools/build_windows_exe.py, WINDOWS_APPS; the plan step lists its tags
+# as windows=) gets a second job on Windows after its tarball is published: it builds the .exe and adds
+# <app-id>-<version>-windows.zip and its .sha256 to the release. They are separate downloads; the portal and
+# SHA256SUMS only know the tarball.
 #
-# After an app release: python3 bc250-bazzite/tools/pin_app.py <tag>, bump bc250-bazzite/portal/VERSION as bc250-bazzite/tools/check_manifest.py asks, and
-# tag the portal when the combination is tested.
+# Only a commit that CI passed becomes a release: the first job waits for the suite's CI (ci.yml) on the commit and
+# for Nexus's ci-nexus.yml (core, which every app bundles, the release tools and the repository's rules), up to 75
+# minutes each. A release commit that only writes the release (versions, Release entries, apps.toml's tags:
+# tools/release_commit.py) takes the CI that passed on its work commit, the parent (owner, 30-10-2026: CI ran twice
+# on the same code); anything more waits for CI on the commit itself. The pin commit changes only sha256 lines and is
+# checked here (check_manifest.py --require-tags). tools/tag-release.sh asks the same before it tags.
 #
-# Only a commit that CI passed becomes a release: the first job waits for every CI run on the tagged commit (the
-# push to main; a tag starts no CI of its own), up to 75 minutes each for the suite's CI (ci.yml) and Nexus's
-# (ci-nexus.yml: core, which every app bundles, the release tools and the repository's rules), and stops everything
-# when one did not pass. tools/tag-release.sh asks the same before it tags.
-#
-# The release job runs in no environment, so GitHub asks no approval before it builds and publishes (owner,
-# 23-10-2026: approving every tag took too long when one change to core makes many app releases).
+# The jobs run in no environment, so GitHub asks no approval before it builds and publishes (owner, 23-10-2026:
+# approving every tag took too long when one change to core makes many app releases).
 
 on:
   push:
     tags: ["*-v[0-9]*.[0-9]*.[0-9]*", "!wp-*"]   # wp-: the Windows Portable Suite's, release-windows-portable.yml
+  workflow_call:
+    inputs:
+      commit:
+        description: The release commit (main when the Nexus release started)
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -45,49 +68,98 @@ jobs:
     permissions:                        # the second wait is mostly over already)
       actions: read
       contents: read
-    steps:
-      - uses: actions/checkout@v7
-      - name: CI passed on this commit
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: python3 tools/ci_state.py --wait 75 "$GITHUB_SHA"
-      - name: Nexus's CI passed on this commit
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: python3 tools/ci_state.py --workflow ci-nexus.yml --wait 75 "$GITHUB_SHA"
-
-  release:
-    needs: ci
-    runs-on: ubuntu-latest
+    outputs:
+      out: ${{ steps.out.outputs.out }}
     env:
-      TAG: ${{ github.ref_name }}
+      COMMIT: ${{ inputs.commit || github.sha }}
+    steps:
+      - name: Not published already
+        id: out
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          if [ "$(gh release view "$TAG" --json isDraft --jq .isDraft 2>/dev/null)" = false ]; then
+            echo "$TAG is published already (the Nexus Release Tool's Publish made the tag): nothing to do."
+            echo "out=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v7
+        if: steps.out.outputs.out != 'true'
+        with:
+          ref: ${{ inputs.commit || github.sha }}
+          fetch-depth: 2                # the parent: a release commit's work commit
+      - name: CI passed on this commit
+        if: steps.out.outputs.out != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 tools/ci_state.py --release-commit --wait 75 "$COMMIT"
+      - name: Nexus's CI passed on this commit
+        if: steps.out.outputs.out != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 tools/ci_state.py --workflow ci-nexus.yml --release-commit --wait 75 "$COMMIT"
+
+  plan:
+    needs: ci
+    if: needs.ci.outputs.out != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      apps: ${{ steps.plan.outputs.apps }}
+      windows: ${{ steps.plan.outputs.windows }}
+      portal: ${{ steps.plan.outputs.portal }}
+      draft: ${{ steps.plan.outputs.draft }}
+    env:
       GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
     steps:
       - uses: actions/checkout@v7
         with:
+          ref: ${{ inputs.commit || github.sha }}
+          fetch-depth: 0                # tags, for check_manifest
+      - name: Checks
+        env:
+          TAG: ${{ github.event_name == 'push' && github.ref_name || '' }}
+        run: |
+          python3 tools/check_versions.py --suite bc250-bazzite
+          case "$TAG" in
+            portal-v*) python3 bc250-bazzite/tools/check_manifest.py --require-tags ;;
+            *)         python3 bc250-bazzite/tools/check_manifest.py ;;
+          esac
+      - name: What this run releases
+        id: plan
+        env:
+          TAG: ${{ github.event_name == 'push' && github.ref_name || '' }}
+        run: |
+          python3 bc250-bazzite/tools/suite_release.py plan ${TAG:+--tag "$TAG"} | tee -a "$GITHUB_OUTPUT"
+
+  apps:
+    needs: plan
+    if: needs.plan.outputs.apps != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false                  # one app's failure leaves the others' releases: a run started again skips them
+      matrix:
+        tag: ${{ fromJSON(needs.plan.outputs.apps) }}
+    env:
+      TAG: ${{ matrix.tag }}
+      COMMIT: ${{ inputs.commit || github.sha }}
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.commit || github.sha }}
           fetch-depth: 0                # tags, for check_manifest and the reproducible mtime
 
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 
-      - name: Checks
-        run: |
-          python tools/check_versions.py
-          case "$TAG" in
-            portal-v*) python bc250-bazzite/tools/check_manifest.py --require-tags ;;
-            *)         python bc250-bazzite/tools/check_manifest.py ;;
-          esac
-
-      - name: Bundled Bazzite Test (portal releases)
-        if: startsWith(github.ref_name, 'portal-v')
-        run: |
-          bt=$(python -c 'import tomllib; print(tomllib.load(open("bc250-bazzite/portal/apps.toml", "rb"))["apps"]["check"]["tag"])')
-          mkdir -p bundle
-          gh release download "$bt" --pattern "$bt.tar.gz" --pattern SHA256SUMS --dir bundle
-
       - name: Native wheel (consoles releases)
-        if: startsWith(github.ref_name, 'consoles-v')
+        if: startsWith(matrix.tag, 'consoles-v')
         working-directory: bc250-bazzite/apps/consoles/native
         run: |
           sudo apt-get update -q && sudo apt-get install -y -q nasm libva-dev
@@ -98,44 +170,33 @@ jobs:
 
       - name: Build
         run: |
-          args=()
-          [ -d bundle ] && args+=(--bundle bundle)
-          python tools/build_release.py "$TAG" dist "${args[@]}"
+          python tools/build_release.py "$TAG" dist
           cat dist/SHA256SUMS
 
       - name: Publish
-        run: |
-          title=$(cat dist/title.txt)   # the suite's and the app's names: "BC250 Bazzite Suite: Portal 12.0.0"
-          # Never GitHub's "Latest", a portal neither: that is the Nexus index, written by nexus-index.yml once this
-          # run succeeded, which points at every suite's newest portal.
-          # GitHub's API now and then answers one request with a 500 (26-10-2026: one of 32 releases published
-          # in the same minute). Up to five tries, a growing pause between them. When a try made the release but
-          # its answer was lost (or a re-run finds the release of an earlier run), the next adds the assets to it.
-          for attempt in 1 2 3 4 5; do
-            if gh release view "$TAG" >/dev/null 2>&1; then
-              gh release upload "$TAG" "dist/$TAG.tar.gz" dist/SHA256SUMS --clobber && exit 0
-            elif gh release create "$TAG" "dist/$TAG.tar.gz" dist/SHA256SUMS \
-                   --title "$title" --notes-file dist/notes.md --verify-tag --latest=false; then
-              exit 0
-            fi
-            [ "$attempt" = 5 ] && break
-            echo "Publishing failed (try $attempt of 5); again in $((attempt * 30)) s" >&2
-            sleep $((attempt * 30))
-          done
-          echo "Publishing $TAG failed five times." >&2
-          exit 1
+        run: bash bc250-bazzite/tools/publish_release.sh "$TAG" "$COMMIT" dist
 
   windows:
-    # sftp; add the tag of every app in WINDOWS_APPS (tools/tests/test_build_windows_exe.py checks it is here)
-    if: startsWith(github.ref_name, 'sftp-v')
-    needs: release
+    # The Windows executable of each app in tools/build_windows_exe.py's WINDOWS_APPS (sftp), added to the release
+    # its tarball job made
+    needs: [plan, apps]
+    if: ${{ !cancelled() && !failure() && needs.plan.outputs.windows != '[]' }}
     runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        tag: ${{ fromJSON(needs.plan.outputs.windows) }}
     env:
-      TAG: ${{ github.ref_name }}
+      TAG: ${{ matrix.tag }}
       GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@v7
         with:
+          ref: ${{ inputs.commit || github.sha }}
           fetch-depth: 0
 
       - uses: actions/setup-python@v7
@@ -143,11 +204,107 @@ jobs:
           python-version: "3.12"
 
       - name: Install
-        run: python -m pip install -q -r bc250-bazzite/apps/sftp/requirements.txt pyinstaller pillow
+        run: |
+          app=${TAG%-v*}
+          python -m pip install -q -r "bc250-bazzite/apps/$app/requirements.txt" pyinstaller pillow
 
       - name: Build the executable
-        run: python tools/build_windows_exe.py sftp windist
+        run: python tools/build_windows_exe.py "${TAG%-v*}" windist
 
       - name: Add it to the release
-        shell: bash
         run: gh release upload "$TAG" windist/*.zip windist/*.zip.sha256 --clobber
+
+  pin:
+    needs: [plan, apps]
+    if: ${{ !cancelled() && !failure() && needs.plan.outputs.portal != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      commit: ${{ steps.pin.outputs.commit }}
+    env:
+      COMMIT: ${{ inputs.commit || github.sha }}
+      APPS: ${{ needs.plan.outputs.apps }}
+      DRAFT: ${{ needs.plan.outputs.draft }}
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.commit || github.sha }}
+          fetch-depth: 0
+      - name: Pin the new app releases
+        id: pin
+        run: |
+          mapfile -t tags < <(python3 -c 'import json, os; print("\n".join(json.loads(os.environ["APPS"])))')
+          if [ "$DRAFT" != true ] || [ ${#tags[@]} -eq 0 ] || [ -z "${tags[0]}" ]; then
+            echo "commit=$COMMIT" >> "$GITHUB_OUTPUT"          # a tag pushed by hand, or nothing to pin
+            exit 0
+          fi
+          git fetch -q origin main
+          head=$(git rev-parse origin/main)
+          if [ "$head" != "$COMMIT" ]; then
+            # Started again after the pins were pushed: main is that pin commit, right on top of the release commit.
+            if [ "$(git rev-parse "$head^")" = "$COMMIT" ] && git log -1 --format=%s "$head" | grep -q '^Pin '; then
+              echo "Pinned already in $head"
+              echo "commit=$head" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            echo "main moved on from the release commit $COMMIT to $head: nothing is pinned or tagged." >&2
+            echo "Start the release again from the Nexus Release Tool on the new main." >&2
+            exit 1
+          fi
+          for tag in "${tags[@]}"; do
+            gh release download "$tag" --pattern SHA256SUMS --dir "sums/$tag"
+          done
+          python3 bc250-bazzite/tools/suite_release.py pin sums "${tags[@]}"
+          rm -rf sums
+          python3 bc250-bazzite/tools/check_manifest.py --require-tags
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add bc250-bazzite/portal/apps.toml
+          [ -f portal/apps.toml ] && git add portal/apps.toml       # the root's copy, while there is one
+          git commit -q -m "Pin ${tags[*]}"
+          git push origin "HEAD:refs/heads/main"         # refused when main moved meanwhile: nothing is tagged
+          echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+  portal:
+    needs: [plan, pin]
+    if: ${{ !cancelled() && !failure() && needs.plan.outputs.portal != '' }}
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ needs.plan.outputs.portal }}
+      COMMIT: ${{ needs.pin.outputs.commit }}
+      DRAFT: ${{ needs.plan.outputs.draft }}
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.pin.outputs.commit }}
+          fetch-depth: 0                # tags, for check_manifest and the reproducible mtime
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Checks
+        run: |
+          python tools/check_versions.py --suite bc250-bazzite
+          python bc250-bazzite/tools/check_manifest.py --require-tags
+
+      - name: Bundled Bazzite Test
+        run: |
+          bt=$(python -c 'import tomllib; print(tomllib.load(open("bc250-bazzite/portal/apps.toml", "rb"))["apps"]["check"]["tag"])')
+          mkdir -p bundle
+          gh release download "$bt" --pattern "$bt.tar.gz" --pattern SHA256SUMS --dir bundle
+
+      - name: Build
+        run: |
+          python tools/build_release.py "$TAG" dist --bundle bundle
+          cat dist/SHA256SUMS
+
+      - name: Publish
+        run: |
+          args=()
+          [ "$DRAFT" = true ] && args+=(--draft)
+          bash bc250-bazzite/tools/publish_release.sh "$TAG" "$COMMIT" dist "${args[@]}"

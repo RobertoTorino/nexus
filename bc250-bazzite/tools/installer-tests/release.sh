@@ -86,6 +86,23 @@ check "release: downloads and verifies portal/VERSION's tag" "[ $rc -eq 0 ] && g
 check "release: installed it, bundled Bazzite Test included" "grep -q \"\\\"check\\\": \\\"$BT\\\"\" $R && [ -f $T/opt/bc250-bazzite-suite/bc250_core/__init__.py ]"
 BC250_RELEASE_URL="file://$T/gh" bash "$S/bc250-bazzite/tools/check-release.sh" release portal-v9.9.9 --no-start > "$T/check-missing.log" 2>&1; rc=$?
 check "release: a tag GitHub has not built yet is reported" "[ $rc -ne 0 ] && grep -q 'finished the release workflow' $T/check-missing.log"
+# The device test of a Nexus release (check-release.sh draft): the draft's assets come through gh, stood in for
+# here by a script that copies them from the "GitHub" folder, as before.
+cat > "$T/shims/gh" <<'X'
+#!/bin/sh
+# gh release download TAG --pattern A --pattern B --dir DIR --repo R: the draft's files from the test's folder
+[ "$1 $2" = "release download" ] || { echo "unexpected gh $*" >&2; exit 2; }
+tag=$3; dir=.
+while [ $# -gt 0 ]; do [ "$1" = --dir ] && dir=$2; shift; done
+[ -d "$GH_DRAFTS/$tag" ] || { echo "release not found" >&2; exit 1; }
+cp "$GH_DRAFTS/$tag"/* "$dir/"
+X
+chmod +x "$T/shims/gh"
+bash "$S/bc250-bazzite/tools/check-release.sh" local --no-start > /dev/null 2>&1
+GH_DRAFTS="$T/gh" bash "$S/bc250-bazzite/tools/check-release.sh" draft --no-start > "$T/check-draft.log" 2>&1; rc=$?
+check "draft: downloads portal/VERSION's draft with gh, verifies and installs it" "[ $rc -eq 0 ] && grep -q 'draft of $PORTAL' $T/check-draft.log && grep -q '$PORTAL.tar.gz: OK' $T/check-draft.log && grep -q \"\\\"check\\\": \\\"$BT\\\"\" $R"
+GH_DRAFTS="$T/gh" bash "$S/bc250-bazzite/tools/check-release.sh" draft portal-v9.9.9 --no-start > "$T/check-nodraft.log" 2>&1; rc=$?
+check "draft: no draft to download is reported" "[ $rc -ne 0 ] && grep -q 'No draft of portal-v9.9.9' $T/check-nodraft.log"
 bash "$S/bc250-bazzite/tools/check-release.sh" nonsense > "$T/check-usage.log" 2>&1; rc=$?
 check "unknown mode refused" "[ $rc -ne 0 ] && grep -q 'Usage' $T/check-usage.log"
 

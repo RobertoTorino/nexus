@@ -12,8 +12,10 @@ A **Nexus release** (owner, 30-10-2026) is the one release of the repository: Ne
 changed, started by the owner with the Nexus Release Tool's one action, Start new release
 (`.github/workflows/release-nexus.yml` calls each changed suite's own release workflow, which builds, publishes and
 pins; each portal ends as a draft the owner device-tests and publishes from the tool). A suite takes part once its
-release workflow has `workflow_call` (the Windows Portable Suite; the BC250 Bazzite Suite still releases by tags).
-The plan and its stages are in MIGRATION.md.
+release workflow has `workflow_call`: both suites do (the Windows Portable Suite's `release-windows-portable.yml`
+since 30-10-2026, the BC250 Bazzite Suite's `release.yml` since 04-11-2026, stage 3), so every suite releases with
+the same steps (owner, 04-11-2026). A tag pushed by hand still releases that one app or portal. The plan and its
+stages are in MIGRATION.md.
 
 The owner does every step of a release; Claude does none of them, and doesn't offer to:
 

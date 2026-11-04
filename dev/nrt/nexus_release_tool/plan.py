@@ -118,8 +118,8 @@ def rel(root: Path, *parts: str, suite: str | None = None) -> str:
 
 
 def check_script(root: Path, suite: str | None = None) -> str:
-    """The suite's board checks of a portal release (check-release.sh local|release), relative to the checkout; a
-    Windows suite's are check-release.ps1 (local|release|installer), run on the handheld."""
+    """The suite's board checks of a portal release (check-release.sh local|release|draft), relative to the checkout;
+    a Windows suite's are check-release.ps1 (local|release|draft|installer), run on the handheld."""
     if suite_system(root, suite) == "windows":
         return rel(root, *WINDOWS_CHECK_SCRIPT.split("/"), suite=suite)
     return rel(root, *CHECK_SCRIPT.split("/"), suite=suite)

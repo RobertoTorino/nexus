@@ -46,7 +46,10 @@ the settings.
 
 A Nexus release is the one release of the repository: Nexus's version with every suite that changed since its last
 release, and only those. A suite takes part once its release workflow can be called by **Release Nexus**
-(`release-nexus.yml`); the Windows Portable Suite does. The BC250 Bazzite Suite still releases with the steps below.
+(`release-nexus.yml`): the Windows Portable Suite (`release-windows-portable.yml`) and the BC250 Bazzite Suite
+(`release.yml`) both are, so every suite is released with the same steps, those of the Nexus release tab. The
+numbered tabs after it are the release by hand, one tag at a time, for the odd single release outside a Nexus
+release.
 
 The tab **Contents** lists what the release holds: each app of such a suite that ships something new since its
 last release, its portal, core when it changed since its last version, and Nexus. The version offered first follows
@@ -95,10 +98,12 @@ tab explains itself behind the round **i** in its first row: click it to read th
    start a new release: the release is written and pushed already. Fix it; the steps then light **Commit your
    changes**, **Push them** and **CI passes** for the fix, and step 6 reads **Start again on this commit**, which runs
    the release as it is written on the fix's commit.
-7. **Device test,** on the suite's own device (the handheld for the Windows Portable Suite): it downloads the draft
-   portal, checks it against its `SHA256SUMS`, installs it and starts it (`check-release.ps1 draft`). An installed
-   portal that is open is closed first, as its window would close (ended when it has not closed within 10 seconds):
-   a program that runs cannot be replaced. Test it as a user would.
+7. **Device test,** on the suite's own device, a BC-250 for the BC250 Bazzite Suite and the handheld for the Windows
+   Portable Suite: it downloads the draft portal with `gh` (a draft needs the sign-in), checks it against its
+   `SHA256SUMS`, installs it and starts it (`check-release.sh draft` on the board, `check-release.ps1 draft` on the
+   handheld). On Windows an installed portal that is open is closed first, as its window would close (ended when it
+   has not closed within 10 seconds): a program that runs cannot be replaced. Test it as a user would. When a release
+   holds both suites, each has its device test on its own device, and each portal is published on its own yes.
 8. **Publish** when it works: the draft becomes a release, which makes its portal tag, and the portals offer it from
    then on; the Nexus index follows. **Not OK** leaves the draft unpublished: the Device test step turns red and
    says what comes next. Fix what the test showed; the steps start again from **Commit your changes**, then **Push
@@ -109,10 +114,15 @@ tab explains itself behind the round **i** in its first row: click it to read th
    show that commit, before git has fetched it. Then every step shows ✓.
 
 A tag pushed by hand (**git tag** on tabs 1 and 2 below) still releases that one app or portal, published at once. The
-portal tag Publish makes starts Release Windows Portable too, as any pushed tag does; that run sees the release is
-published already and ends at once.
+portal tag Publish makes starts the suite's release workflow too, as any pushed tag does; that run sees the release
+is published already and ends at once.
 
 ## The window
+
+The tabs **1. Release apps**, **2. Pin and release Portal** and **3. Retract app** are the release by hand, a tag at a
+time, the way of before the Nexus release: an app's version applied and tagged, its release pinned, the portal bumped
+and tagged, each tag pushed with **git tag**. They stay for a single release outside a Nexus release (one app
+re-released on its own, a withdrawal); a release of what changed is the Nexus release tab above.
 
 - **1. Release apps:** the **Needs release** column marks in orange every app that ships something new since its last
   tag: a changed file in its folder (tests and `requirements-dev.txt` do not count), in the core it bundles, or in

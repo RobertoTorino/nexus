@@ -1,12 +1,15 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
-# The two portal checks of a release of the BC250 Bazzite Suite, as the Nexus Release Tool's buttons run them (Linux):
+# The portal checks of a release of the BC250 Bazzite Suite, as the Nexus Release Tool's buttons run them (Linux):
 #
 #   check-release.sh local             # before the push: install the portal from this checkout and start it
 #                                      # with the apps from the pinned GitHub releases (--source release)
 #   check-release.sh release [TAG]     # after release.yml built the portal: download the published portal
 #                                      # release (default portal-v<portal/VERSION>), verify it, install it
 #                                      # and start it, so this board runs the official release again
+#   check-release.sh draft [TAG]       # the device test of a Nexus release: the portal's draft release the
+#                                      # release workflow made (default portal-v<portal/VERSION>), downloaded
+#                                      # with gh (a draft needs the sign-in), then as release
 #   ... --no-start                     # install only, do not start the portal
 #
 # The release is downloaded into ~/.cache/bc250-release-check/, emptied first. Installing it replaces the portal
@@ -16,6 +19,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."                 # the suite's folder: its install.sh and portal/VERSION
 REPO=$PWD
 URL=${BC250_RELEASE_URL:-https://github.com/RobertoTorino/nexus/releases/download}
+GH_REPO_NAME=RobertoTorino/nexus
 CACHE="${XDG_CACHE_HOME:-$HOME/.cache}/bc250-release-check"
 PORTAL="$HOME/.local/bin/bc250-bazzite-suite"
 
@@ -41,22 +45,28 @@ case "$mode" in
         info "Starting it with the apps from the pinned GitHub releases. Close the portal to finish."
         exec "$PORTAL" --source release
         ;;
-    release)
+    release|draft)
         tag=${tag:-portal-v$(tr -d '[:space:]' < portal/VERSION)}
         rm -rf "$CACHE"; mkdir -p "$CACHE"; cd "$CACHE"
-        info "Downloading $tag"
-        for file in "$tag.tar.gz" SHA256SUMS; do
-            curl -fsSL -o "$file" "$URL/$tag/$file" ||
-                die "$tag has no $file yet. Is the tag pushed, and has GitHub finished the release workflow?"
-        done
+        if [ "$mode" = draft ]; then
+            info "Downloading the draft of $tag"
+            gh release download "$tag" --pattern "$tag.tar.gz" --pattern SHA256SUMS --dir . --repo "$GH_REPO_NAME" ||
+                die "No draft of $tag to download (gh ended with $?). Has the release workflow built it, and is gh signed in?"
+        else
+            info "Downloading $tag"
+            for file in "$tag.tar.gz" SHA256SUMS; do
+                curl -fsSL -o "$file" "$URL/$tag/$file" ||
+                    die "$tag has no $file yet. Is the tag pushed, and has GitHub finished the release workflow?"
+            done
+        fi
         info "Verifying the checksum"
         sha256sum --check SHA256SUMS || die "$tag.tar.gz does not match its SHA256SUMS."
         tar -xzf "$tag.tar.gz"
         info "Installing $tag"
         (cd "$tag" && ./install.sh)
         [ $start -eq 1 ] || exit 0
-        info "Starting the released portal. Close it to finish; ./install.sh in the checkout goes back to it."
+        info "Starting the installed portal. Close it to finish; ./install.sh in the checkout goes back to it."
         exec "$PORTAL"
         ;;
-    *) die "Usage: check-release.sh local|release [portal-vX.Y.Z] [--no-start]" ;;
+    *) die "Usage: check-release.sh local|release|draft [portal-vX.Y.Z] [--no-start]" ;;
 esac

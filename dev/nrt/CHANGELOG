@@ -1,3 +1,12 @@
+Changelog: 04-11-2026 02:05:35
+
+Added. The BC250 Bazzite Suite is on the Nexus release (owner, 04-11-2026: the same steps for every suite): the
+suite whose tags have no prefix is on it when release.yml can be called (flow.on_nexus_release(), as
+tools/nexus_release.py reads it), so the Nexus release tab's steps, the Contents tab, the device test
+(check-release.sh draft on the board) and Publish work for it as for the Windows Portable Suite. With two suites
+on the release, core is offered when an app of either bundles its change (it was read from the first suite's apps
+alone, which left core out once that suite's apps were all released on the current core).
+
 Changelog: 04-11-2026 01:02:52
 
 Fixed. The CI passes step and Run CI again counted another suite's CI (owner, 04-11-2026: CI Windows Portable

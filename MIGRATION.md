@@ -86,9 +86,8 @@ The owner: "make a note for a new chat". Where things stand:
   nexus-v1.1.0 so that release could go: put it back in a later release with its portal CHANGELOG entry (the whole
   name, Windows Portable Test, does not fit a tile at the Ally's size; Portable Test does).
 - **Not run on this machine:** `tools/ci-local.sh` and the BC250 installer tests (Linux): run them on Bazzite.
-- **Then:** stage 2 (the CI test matrix read from the suites' folders), stage 3 (the BC250 suite on the Nexus
-  release); the fixed folders for the other five game managers (the paragraph "Fixed folders, no folder selecting"
-  below).
+- **Then:** stage 2 (the CI test matrix read from the suites' folders); the fixed folders for the other five game
+  managers (the paragraph "Fixed folders, no folder selecting" below). Stage 3 is done (04-11-2026, below).
 
 ## Release redesign: a Nexus release carries the changed suites (owner, 30-10-2026; stage 1 in use since nexus-v1.1.0)
 
@@ -192,6 +191,18 @@ main, the draft, the device test and the publish, and that installed portals see
 3. The BC250 suite on the same run, after the Windows suite has used it for a few releases; the baseline: prove that
    a BC250 portal installed before reads the release as it does now (`bc250-bazzite/tools/installer-tests/release.sh`).
    The next new suite starts on the new run.
+   **Done (04-11-2026, in the working tree for the owner to commit; owner: "the same NRT steps for every suite").**
+   `release.yml` has `workflow_call` beside its tag trigger, with the jobs ci, plan, apps (a matrix, Console Link's
+   wheel built in it), windows (the executables of `WINDOWS_APPS`, from the plan's `windows=` list), pin (both
+   copies of `apps.toml` in the *Pin ...* commit) and portal (a draft on a Nexus release), after
+   `release-windows-portable.yml`; `bc250-bazzite/tools/suite_release.py` and `publish_release.sh`;
+   `check-release.sh draft` is the device test on the board; `release-nexus.yml` calls `release.yml`;
+   `tools/nexus_release.py` and NRT's `flow.on_nexus_release()` know the plain-tag suite's workflow is
+   `release.yml`. A tag pushed by hand releases as before (the plan step with `--tag`); a tag whose release is
+   published already (Publish's portal tag) ends at once. Checked here: the tests, actionlint with shellcheck on the
+   three workflows, `installer-tests/release.sh` with the draft mode (gh stood in for). The first BC250 Nexus release
+   is its test on GitHub: watch the run, the pin commit on main (both `apps.toml`), the draft, the device test on the
+   board and the publish, and that an installed portal sees the new portal as before. Not run yet: a real run.
 
 ## Resume here (29-10-2026, for a new chat): the Windows Portable Suite
 

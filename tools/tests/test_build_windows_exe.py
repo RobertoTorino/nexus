@@ -57,12 +57,16 @@ def test_an_app_without_a_windows_build_is_refused(tmp_path):
 
 
 def test_release_workflow_builds_and_uploads_each_windows_app():
+    """release.yml's windows job builds the executable of each tag the plan step lists as windows= (the tags of
+    WINDOWS_APPS among the run's releases: bc250-bazzite/tools/suite_release.py reads this list, so the workflow
+    names no app itself) and adds it to that release."""
     workflow = (SUITE / ".github" / "workflows" / "release.yml").read_text(encoding="utf-8")
-    assert "runs-on: windows-latest" in workflow
-    for app in bwe.WINDOWS_APPS:
-        assert re.search(rf"startsWith\(github\.ref_name, '{re.escape(app)}-v'\)", workflow), app
-    assert "tools/build_windows_exe.py" in workflow
-    assert "gh release upload" in workflow
+    job = re.search(r"^  windows:\n(.*?)(?=^  \S|\Z)", workflow, re.M | re.S)
+    assert job and "runs-on: windows-latest" in job[1]
+    assert "needs.plan.outputs.windows != '[]'" in job[1]
+    assert "tag: ${{ fromJSON(needs.plan.outputs.windows) }}" in job[1]
+    assert "tools/build_windows_exe.py" in job[1] and "gh release upload" in job[1]
+    assert "windows=" in (SUITE / "bc250-bazzite" / "tools" / "suite_release.py").read_text(encoding="utf-8")
 
 
 def _names(dists):

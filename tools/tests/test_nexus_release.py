@@ -27,7 +27,8 @@ def suite(root: Path, name: str, prefix: str, portal: str, called: bool) -> None
     workflows = root / ".github" / "workflows"
     workflows.mkdir(parents=True, exist_ok=True)
     trigger = "on:\n  push:\n" + ("  workflow_call:\n" if called else "")
-    (workflows / f"release-{name}.yml").write_text(trigger, encoding="utf-8")
+    workflow = f"release-{name}.yml" if prefix else "release.yml"     # the plain-tag suite's is release.yml
+    (workflows / workflow).write_text(trigger, encoding="utf-8")
 
 
 def test_only_the_suites_on_the_nexus_release_with_a_portal_not_out_yet(tmp_path):
@@ -39,20 +40,23 @@ def test_only_the_suites_on_the_nexus_release_with_a_portal_not_out_yet(tmp_path
     assert nr.carried(tmp_path, released=lambda tag: True) == []
 
 
-def test_a_suite_without_a_prefix_has_plain_portal_tags(tmp_path):
+def test_a_suite_without_a_prefix_has_plain_portal_tags_and_release_yml(tmp_path):
     suite(tmp_path, "plain", "", "1.2.3", called=True)
     assert nr.portal_tag(tmp_path / "plain") == "portal-v1.2.3"
+    assert nr.release_workflow(tmp_path, tmp_path / "plain").name == "release.yml"
+    assert nr.on_nexus_release(tmp_path, tmp_path / "plain")
+    assert nr.carried(tmp_path, released=lambda tag: False) == ["plain"]
 
 
 def test_every_suite_on_the_nexus_release_has_its_job():
     nexus = (WORKFLOWS / "release-nexus.yml").read_text(encoding="utf-8")
     on = [folder for folder in nr.nexus_suites.suites(ROOT) if nr.on_nexus_release(ROOT, folder)]
-    assert [folder.name for folder in on] == ["windows-portable"]  # bc250-bazzite joins in stage 3
+    assert [folder.name for folder in on] == ["bc250-bazzite", "windows-portable"]   # every suite, since stage 3
     for folder in on:
         job = re.search(rf"^  {re.escape(folder.name)}:\n(.*?)(?=^  \S|\Z)", nexus, re.M | re.S)
         assert job, f"release-nexus.yml has no job {folder.name}"
         assert f"contains(fromJSON(needs.plan.outputs.suites), '{folder.name}')" in job[1]
-        assert f"uses: ./.github/workflows/release-{folder.name}.yml" in job[1]
+        assert f"uses: ./.github/workflows/{nr.release_workflow(ROOT, folder).name}" in job[1]
         assert "commit: ${{ inputs.commit }}" in job[1]
 
 

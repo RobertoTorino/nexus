@@ -5,11 +5,12 @@ Nexus workflow and that suite's workflow will run"), for .github/workflows/relea
 
     python3 tools/nexus_release.py suites       # suites=<JSON list>, for $GITHUB_OUTPUT
 
-A suite is carried when it is on the Nexus release (its release-<suite>.yml can be called: workflow_call) and its
-portal version (<suite>/portal/VERSION) has no published release yet: every app release of a suite comes with a
-portal release that pins it, so a suite whose portal is out has nothing to release. A draft counts as not released
-(the device test did not say yes yet). A suite not on the Nexus release yet (bc250-bazzite, until stage 3 of the
-release redesign) keeps releasing by the tags pushed by hand. GitHub is asked with the gh CLI (GH_TOKEN)."""
+A suite is carried when it is on the Nexus release (its release workflow can be called: workflow_call in
+release-<suite>.yml, or release.yml for the suite whose tags have no prefix, bc250-bazzite) and its portal version
+(<suite>/portal/VERSION) has no published release yet: every app release of a suite comes with a portal release
+that pins it, so a suite whose portal is out has nothing to release. A draft counts as not released (the device
+test did not say yes yet). A suite not on the Nexus release releases by the tags pushed by hand. GitHub is asked
+with the gh CLI (GH_TOKEN)."""
 
 from __future__ import annotations
 
@@ -42,7 +43,10 @@ def published(tag: str) -> bool:
 
 
 def release_workflow(root: Path, folder: Path) -> Path:
-    return root / ".github" / "workflows" / f"release-{folder.name}.yml"
+    """The suite's release workflow: release-<suite>.yml, or release.yml for the suite without a tag prefix (the
+    BC250 Bazzite Suite; tools/suites.py)."""
+    name = f"release-{folder.name}.yml" if nexus_suites.tag_prefix(folder) else "release.yml"
+    return root / ".github" / "workflows" / name
 
 
 def on_nexus_release(root: Path, folder: Path) -> bool:
