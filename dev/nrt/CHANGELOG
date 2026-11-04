@@ -1,3 +1,10 @@
+Changelog: 04-11-2026 01:02:52
+
+Fixed. The CI passes step and Run CI again counted another suite's CI (owner, 04-11-2026: CI Windows Portable
+failed on the portal-v14.0.0 commit, over a core test that expects Linux's path masking, and the step said CI
+failed while the BC250 suite's CI and Nexus's had passed). They now follow the ticked suite's CI and Nexus's, as
+the ticker and the notifications do: a suite's releases wait for its own CI, never another suite's.
+
 Changelog: 04-11-2026 00:12:32
 
 Fixed. The CI passes step saw no CI run on a commit whose release started more runs than the header's page holds

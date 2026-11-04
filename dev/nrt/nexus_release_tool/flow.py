@@ -315,10 +315,20 @@ class Facts:
     rejected: list[str] = field(default_factory=list)   # its drafts the device test failed (Not OK), still drafts
 
 
-def ci_state(runs: list[rp.BuildRun], sha: str) -> str:
-    """CI on *sha* (ci*.yml, every suite's and Nexus's): building while one runs, passed when every one passed,
-    failed when one failed; none before GitHub has one."""
-    found = [r for r in runs if r.sha == sha and (r.file.startswith("ci") or r.workflow.startswith("CI"))]
+def ci_runs(runs: list[rp.BuildRun], sha: str, hidden: set[str] = frozenset()) -> list[rp.BuildRun]:
+    """The CI runs on *sha* (ci*.yml) that the release waits for: the suite's own and Nexus's, not those of the
+    workflows in *hidden*, the other suites' (rp.other_suites_workflows, as the ticker leaves them out): every push
+    starts every suite's CI, and a suite's releases wait for its own CI and Nexus's, never another suite's (owner,
+    27-10-2026; 04-11-2026: CI Windows Portable failed on the portal-v14.0.0 commit and the step said CI failed,
+    while the BC250 suite's CI and Nexus's had passed)."""
+    return [r for r in runs if r.sha == sha and (r.file.startswith("ci") or r.workflow.startswith("CI"))
+            and r.file not in hidden]
+
+
+def ci_state(runs: list[rp.BuildRun], sha: str, hidden: set[str] = frozenset()) -> str:
+    """CI on *sha* (ci_runs): building while one runs, passed when every one passed, failed when one failed; none
+    before GitHub has one."""
+    found = ci_runs(runs, sha, hidden)
     if not found:
         return "none"
     if any(not r.done for r in found):
@@ -326,10 +336,9 @@ def ci_state(runs: list[rp.BuildRun], sha: str) -> str:
     return "passed" if all(r.passed for r in found) else "failed"
 
 
-def failed_ci(runs: list[rp.BuildRun], sha: str) -> list[rp.BuildRun]:
+def failed_ci(runs: list[rp.BuildRun], sha: str, hidden: set[str] = frozenset()) -> list[rp.BuildRun]:
     """The CI runs on *sha* that ended badly: what Run CI again starts again."""
-    return [r for r in runs if r.sha == sha and (r.file.startswith("ci") or r.workflow.startswith("CI"))
-            and r.done and not r.passed]
+    return [r for r in ci_runs(runs, sha, hidden) if r.done and not r.passed]
 
 
 def rerun_ci_command(runs: list[rp.BuildRun]) -> str:

@@ -277,6 +277,8 @@ def test_a_started_program_never_sees_the_controller_readers_sdl_variables(monke
     checkout, and back for the app's own reader after."""
     monkeypatch.setattr(platform, "WINDOWS", True)
     monkeypatch.setattr(sys, "frozen", False, raising=False)
+    for name in [k for k in os.environ if k.startswith(("SDL_", "PYGAME_"))]:
+        monkeypatch.delenv(name)        # the desktop's own, not the app's: SDL_VIDEO_MINIMIZE_ON_FOCUS_LOSS on a board
     for name, value in (("SDL_VIDEODRIVER", "dummy"), ("SDL_AUDIODRIVER", "dummy"),
                         ("SDL_JOYSTICK_ALLOW_BACKGROUND_EVENTS", "1"), ("PYGAME_HIDE_SUPPORT_PROMPT", "1")):
         monkeypatch.setenv(name, value)

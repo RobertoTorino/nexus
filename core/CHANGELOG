@@ -1,3 +1,12 @@
+Changelog: 04-11-2026 01:02:52
+
+Fixed. The test of the desktop message for a game that is gone (tests/test_gone.py) expected the Linux masking, ~,
+and failed in the Windows Portable Suite's CI, which runs core's tests on Windows, where the temp folder is masked
+as %LOCALAPPDATA% (the two runs of 03-11-2026 on 2de865e9 and 8d0b5784). It now expects what platform.private()
+writes on the system it runs on. The test of the controller reader's SDL variables (tests/test_platform.py) took
+the desktop's own SDL variable for the app's (SDL_VIDEO_MINIMIZE_ON_FOCUS_LOSS, set on the board's session after a
+reboot, 04-11-2026) and failed there: it now starts from an environment without any.
+
 Changelog: 03-11-2026 22:09:14
 
 Added. settings_page.py: a settings page for the BC250 suite's emulator managers whose window has no tabs, and

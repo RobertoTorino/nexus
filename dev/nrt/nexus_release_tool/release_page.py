@@ -217,7 +217,7 @@ class ReleasePage(QWidget):
         unstaged, staged, ahead = rp.git_state(root, base)
         return flow.Facts(
             behind=rp.behind(root, base) or int(flow.pushed_elsewhere(root, runs) is not None), dirty=unstaged or staged, ahead=ahead,
-            ci=flow.ci_state(runs, head) if window.build.source is not None else "unknown",
+            ci=flow.ci_state(runs, head, window.ticker.hidden) if window.build.source is not None else "unknown",
             unpushed=flow.unpushed_release(root, base), something=bool(self.picks), run=run,
             drafts=[t for t in flow.waiting_portals(root) if not flow.published(root, runs, t)] if run else [],
             restart=run is not None and run.sha != head, rejected=self.rejected(run))
@@ -336,7 +336,7 @@ class ReleasePage(QWidget):
     def rerun_ci(self) -> None:
         window = self.release_window
         head = (rp.git(window.root, "rev-parse", "HEAD") or "").strip()
-        failed = flow.failed_ci(window.build.runs, head)
+        failed = flow.failed_ci(window.build.runs, head, window.ticker.hidden)
         if failed:
             window.run_git(flow.rerun_ci_command(failed))
 

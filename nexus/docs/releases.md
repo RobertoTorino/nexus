@@ -67,7 +67,9 @@ tab explains itself behind the round **i** in its first row: click it to read th
    on a yes, then commits. A no leaves the commit where it is.
 3. **Push them** (**Push**): what GitHub has that this checkout lacks, such as the last release's `Pin ...`
    commit, comes in under your commits first (`git pull --rebase`); then the pre-push hook checks them.
-4. **CI passes:** the step waits until GitHub's CI passed on that commit. When it failed, the line says so. A test that
+4. **CI passes:** the step waits until GitHub's CI passed on that commit: the ticked suite's own CI and Nexus's
+   (CI Nexus). Every push starts every suite's CI, but another suite's run never holds this step, as it never holds
+   the suite's releases. When it failed, the line says so. A test that
    failed: fix it, then commit and push again. GitHub's own trouble (an error of its servers, a job that never
    started; [githubstatus.com](https://www.githubstatus.com) says when Actions are degraded): **Run CI again** starts
    the failed jobs again on the same commit.

@@ -420,6 +420,12 @@ def test_ci_state_reads_the_ci_runs_of_the_commit():
             _run("aaa", "release-nexus.yml"), _run("bbb", "ci.yml", "CI", conclusion="failure")]
     assert flow.ci_state(runs, "aaa") == "building" and flow.ci_state(runs, "bbb") == "failed"
     assert flow.ci_state(runs[:1], "aaa") == "passed" and flow.ci_state(runs, "ccc") == "none"
+    # Another suite's CI, which every push starts too, never holds the step or Run CI again (owner, 27-10-2026).
+    other = _run("aaa", "ci-windows-portable.yml", "CI Windows Portable", conclusion="failure")
+    assert flow.ci_state([runs[0], other], "aaa") == "failed" and flow.failed_ci([runs[0], other], "aaa") == [other]
+    hidden = {"ci-windows-portable.yml", "release-windows-portable.yml"}
+    assert flow.ci_state([runs[0], other], "aaa", hidden) == "passed"
+    assert flow.failed_ci([runs[0], other], "aaa", hidden) == [] and flow.ci_state([other], "aaa", hidden) == "none"
 
 
 def test_the_release_run_lasts_until_other_work_is_committed(nexus):
