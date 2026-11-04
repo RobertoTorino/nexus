@@ -64,6 +64,7 @@ def test_release_workflow_builds_and_uploads_each_windows_app():
     job = re.search(r"^  windows:\n(.*?)(?=^  \S|\Z)", workflow, re.M | re.S)
     assert job and "runs-on: windows-latest" in job[1]
     assert "needs.plan.outputs.windows != '[]'" in job[1]
+    assert "needs.plan.result == 'success'" in job[1]     # skipped plan (a published tag): no fromJSON('')
     assert "tag: ${{ fromJSON(needs.plan.outputs.windows) }}" in job[1]
     assert "tools/build_windows_exe.py" in job[1] and "gh release upload" in job[1]
     assert "windows=" in (SUITE / "bc250-bazzite" / "tools" / "suite_release.py").read_text(encoding="utf-8")

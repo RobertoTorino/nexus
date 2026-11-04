@@ -16,6 +16,9 @@
 # installed from the checkout; run ./install.sh in the checkout to go back. BC250_RELEASE_URL overrides the
 # download address (tests).
 set -euo pipefail
+# Homebrew's own folder (gh), which the terminal NRT opens lacks: a login shell does not read .bashrc, where brew
+# shellenv adds it. HOMEBREW_PREFIX names another.
+export PATH="$PATH:${HOMEBREW_PREFIX:-/home/linuxbrew/.linuxbrew}/bin"
 cd "$(dirname "$0")/.."                 # the suite's folder: its install.sh and portal/VERSION
 REPO=$PWD
 URL=${BC250_RELEASE_URL:-https://github.com/RobertoTorino/nexus/releases/download}

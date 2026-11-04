@@ -180,7 +180,8 @@ jobs:
     # The Windows executable of each app in tools/build_windows_exe.py's WINDOWS_APPS (sftp), added to the release
     # its tarball job made
     needs: [plan, apps]
-    if: ${{ !cancelled() && !failure() && needs.plan.outputs.windows != '[]' }}
+    # needs.plan.result: a tag whose release is out already skips plan, and its empty windows= is no list
+    if: ${{ !cancelled() && !failure() && needs.plan.result == 'success' && needs.plan.outputs.windows != '[]' }}
     runs-on: windows-latest
     strategy:
       fail-fast: false
