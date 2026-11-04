@@ -1,3 +1,10 @@
+Changelog: 04-11-2026 15:05:00
+
+Fixed. On Windows a click on Nexus Release Tool or Nexus Sound Lab started nothing: the dashboard started
+run.ps1 with PowerShell as a detached process, and PowerShell without a console quits at once with code 0
+without running the script, so the log stayed empty. It now starts without a console window, in a process
+group of its own, and keeps running when the dashboard closes; a test runs a run.ps1 through it.
+
 Changelog: 04-11-2026 10:54:41
 
 Added. Test local apps and Close issues, from Nexus Release Tool's Test on this board (owner, 04-11-2026: the

@@ -7,6 +7,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import pytest
 from PyQt6.QtCore import QSettings, Qt
 from PyQt6.QtGui import QImage
 
@@ -141,6 +142,21 @@ def test_start_runs_the_apps_script_in_its_folder_with_a_log(tmp_path, monkeypat
     assert process.returncode == 0
     assert (tmp_path / "logs" / "x.log").read_text(encoding="utf-8") == "hello --suite\n"
 
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="run.ps1 runs with Windows PowerShell")
+def test_start_runs_the_apps_powershell_script_on_windows(tmp_path, monkeypatch):
+    """The script really runs: PowerShell started without a console (DETACHED_PROCESS) quit at once with code 0."""
+    app = checkout.DevApp(tmp_path / "x", "nexus-x", "X", "0.1.0", None)
+    (tmp_path / "x").mkdir()
+    (tmp_path / "x" / "run.ps1").write_text("Write-Output \"hello $($args[0])\"\nexit 3\n", encoding="utf-8")
+    monkeypatch.setattr(checkout, "LOG_DIR", tmp_path / "logs")
+
+    process = checkout.start(app, ("--suite", "s"))
+    process.wait(30)
+
+    assert process.returncode == 3
+    assert (tmp_path / "logs" / "x.log").read_text(encoding="utf-8").strip() == "hello --suite"
 
 def test_a_second_launch_opens_no_window(qapp, monkeypatch):
     """A double-click on the Desktop icon starts the app twice: the second launch hands over to the first."""

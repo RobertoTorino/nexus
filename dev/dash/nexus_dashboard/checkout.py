@@ -115,7 +115,10 @@ def start(app: DevApp, args: tuple[str, ...] = ()) -> subprocess.Popen:
         command = ["bash", str(app.script), *args]
     with open(app.log, "wb") as out:
         if WINDOWS:
+            # No console window, in a group of its own. Not DETACHED_PROCESS: PowerShell without a console exits
+            # at once with code 0 and never runs the script.
             return subprocess.Popen(command, cwd=app.folder, stdin=subprocess.DEVNULL, stdout=out,
-                                    stderr=subprocess.STDOUT, creationflags=subprocess.DETACHED_PROCESS)
+                                    stderr=subprocess.STDOUT,
+                                    creationflags=subprocess.CREATE_NO_WINDOW | subprocess.CREATE_NEW_PROCESS_GROUP)
         return subprocess.Popen(command, cwd=app.folder, stdin=subprocess.DEVNULL, stdout=out,
                                 stderr=subprocess.STDOUT, start_new_session=True)

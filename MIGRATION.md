@@ -2284,7 +2284,7 @@ behavior and dependencies. Decided (owner, 25-10-2026):
   handheld's BIOS version (Windows reports it, `Win32_BIOS`) with the newest one ASUS publishes for the model, and
   says when an update is out, without installing anything. To find out first: where ASUS publishes the list in a
   form an app can read, and how the model is told apart (RC73XA and RC73YA).
-- **An HDMI-CEC app: retest with a new adapter (on hold, owner 31-10-2026: until the new adapter arrives).** The
+- **An HDMI-CEC app: Club3D firmware first (on hold, owner 04-11-2026: other adapters after the firmware).** The
   idea: the BC250 suite's HDMI CEC Manager for the handheld, through the USB-C to HDMI adapter's CEC tunneling
   (DPCD 0x3000 to 0x303F, as Linux's `drm_dp_cec` does). Windows has no CEC support of its own; AMD's
   `atiadlxx.dll` exports `ADL_Display_NativeAUXChannel_Access(adapter, display, data)`, not in AMD's public SDK. Its
@@ -2299,7 +2299,24 @@ behavior and dependencies. Decided (owner, 25-10-2026):
   `.venv-windows\Scripts\python.exe windows-portable\tools\cec_probe.py --ping` (it reads 0x3000, turns tunneling
   on, gives the logical address mask Playback 1 and 15, polls the TV, asks its power status and its name, and puts
   0x3001 and 0x300E back; `--listen` then prints the line for 60 s). When the poll is acked and the TV gives its
-  name, the app can be built; else a Pulse-Eight USB-CEC adapter with libcec is the way left.
+  name, the app can be built; else a Pulse-Eight USB-CEC adapter with libcec is the way left. Retested on the Ally X
+  (04-11-2026, Mi TV on): the Club3D CAC-2504 (OUI 00-60-AD, id `cHDMIb`, hw 0x95, fw 21.150, DPCD 1.4) reads the
+  TV's EDID (physical address 3.0.0.0) but reports no CEC tunneling (0x3000 = 0x00, 0x3001 = 0x00), so the probe
+  sent nothing. Next (owner, 04-11-2026): a firmware update for the CAC-2504. Club3D publishes none for it (only for
+  other models, such as the CAC-1087); its support is reached through its RMA email address. With new firmware, run
+  the probe again. On hold until then: a Samsung EE-PW700 or Kramer ADC-U31C/HF, or the Pulse-Eight adapter.
+- **An original XBOX emulator manager on xbased (on hold, owner 03-11-2026: too new to pin).** xbased
+  (`github.com/crazyriddler/xbased`, GPL-3.0-or-later by its README; GitHub detects its license as "Other", so read
+  its LICENSE first) is the PC edition of hakuX (the Android/arm64 fork of xemu): it needs no BIOS, MCPX ROM or
+  hard-disk image, which xemu does. Each release has `xbased-<v>-windows-x64.zip` (portable `xbased.exe`),
+  `xbased-<v>-x86_64.AppImage` and `SHA256SUMS.txt`; it needs Vulkan 1.1 (1.3 recommended) and SSE4.1, and
+  `xbased <image.iso>` starts a game, so Steam can start it. The fit: a gaming app built as Xenia Manager is, Windows
+  Portable first (`emulator.py` pins the zip, games in `Games\XBOX`, Steam shortcuts, the weekly upstream check),
+  the BC250 suite after (the AppImage; the board's FUSE to check). Why it waits: the repository was made on
+  03-11-2026 and had five releases (v1.0 to v1.0.4) that same day, 9 commits and 15 stars, with no compatibility
+  list for the PC; the suite pins the newest stable release, which would mean an app release every few hours. To
+  look at again: whether releases have slowed down, compatibility reports, what the 9 commits hold against hakuX's
+  history, and xemu (established, but needs the user's own BIOS dumps) as the alternative.
 
 The scan (25-10-2026), what each BC-250 app means for Windows:
 
