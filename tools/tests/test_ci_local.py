@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 
 import pytest
+import yaml
 
 pytest.importorskip("yaml")
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -26,6 +27,38 @@ def test_every_job_of_ci_yml_and_every_matrix_entry():
     assert "pytest/bc250-bazzite/apps/gpu" in jobs and "pytest" not in jobs
     assert jobs["pytest/bc250-bazzite/apps/gpu"].matrix == {"dir": "bc250-bazzite/apps/gpu"}
     assert not jobs["windows-exe"].runs_here and jobs["shell"].runs_here
+
+
+def test_a_matrix_from_a_plan_job_is_read_by_running_it(tmp_path):
+    """ci.yml's pytest matrix is the plan job's output (tools/ci_matrix.py, fromJSON): the plan job's steps run
+    here and their $GITHUB_OUTPUT lines give the entries; the plan job itself is a job too."""
+    workflows = tmp_path / ".github" / "workflows"
+    workflows.mkdir(parents=True)
+    (workflows / "ci.yml").write_text('''jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      dirs: ${{ steps.plan.outputs.dirs }}
+    steps:
+      - uses: actions/checkout@v7
+      - id: plan
+        run: echo 'dirs=["a/one", "a/two"]' | tee -a "$GITHUB_OUTPUT"
+      - run: echo 'word=plain' >> "$GITHUB_OUTPUT"
+  pytest:
+    needs: plan
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        dir: ${{ fromJSON(needs.plan.outputs.dirs) }}
+    steps:
+      - run: echo ${{ matrix.dir }}
+''', encoding="utf-8")
+    jobs = {j.name: j for j in ci_local.load_jobs(workflows / "ci.yml")}
+    assert set(jobs) == {"plan", "pytest/a/one", "pytest/a/two"}
+    assert jobs["pytest/a/two"].matrix == {"dir": "a/two"}
+    assert ci_local.job_outputs(yaml.safe_load((workflows / "ci.yml").read_text())["jobs"], "plan", tmp_path) == {
+        "dirs": ["a/one", "a/two"], "word": "plain"}
+    assert not list(tmp_path.glob(".ci-local*"))                   # nothing written into the checkout
 
 
 def test_nexus_jobs_come_after_the_suites_with_their_prefix():

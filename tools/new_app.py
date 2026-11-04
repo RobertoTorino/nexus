@@ -10,7 +10,8 @@ the requirements, VERSION 0.1.0, CHANGELOG, LICENSE, .gitignore and README.md), 
 <suite>/tools/installer-tests/<name>.sh and the wiki chapter <suite>/docs/apps/<name>.md, and lists the app wherever
 the suite lists its apps: portal/apps.toml (and the root's copy while there is one), icons/categories.toml (with the
 icon copies, tools/sync_icons.py), mkdocs.yml, docs/apps/index.md and categories.md, the suite README, the Dependency
-Checker's catalog, and the pytest matrix, the installer step and the shellcheck list of .github/workflows/ci.yml.
+Checker's catalog. The suite's CI needs no edit: its matrices come from the folders (tools/ci_matrix.py), its
+installer tests from tools/installer-tests/ and its shellcheck from the installers' and wrappers' names.
 Then it runs the checks on it (the layout test, the app's tests, the suite's installer, icon and manifest tests, the
 catalog tests) unless --no-check. The portal bump the new entry asks for, the app's CHANGELOG and its release stay
 the owner's.
@@ -18,8 +19,8 @@ the owner's.
 Each suite has its template behind the same command: the BC250 Bazzite Suite's (a Linux app on the shared venv, with
 the suite's installer) and a Windows suite's (the Windows Portable Suite's: an app on the portable window with
 install.ps1 and run.ps1, the installer test <name>.ps1, its category's icon copied by tools/make_icons.py, the
-wiki's nav and home table, and ci-<suite>.yml's pytest matrix and its installers matrix, a job per app that runs
-the installer test, builds the release and installs it). A suite without one is refused."""
+wiki's nav and home table; ci-<suite>.yml reads its pytest and installers matrices from the folders, so the new
+app is in them at once). A suite without one is refused."""
 
 from __future__ import annotations
 
@@ -1492,16 +1493,8 @@ def write_app(root: Path, suite: Suite, app: NewApp) -> list[Path]:
         end = len(text) if end < 0 else end + 1
         text = text[:end].rstrip("\n") + "\n\n" + fill(CATALOG_SOURCE, app, suite) + "\n" + text[end:]
         change(catalog, text)
-    # CI: the pytest matrix, the installer step and the shellcheck list.
-    ci = root / ".github" / "workflows" / "ci.yml"
-    text = ci.read_text(encoding="utf-8")
-    text = insert_before(text, "]   # every folder with tests/", f", {suite.folder.name}/apps/{app.name}", "ci.yml")
-    text = insert_before(text, "      - name: release tarballs, end to end\n",
-                         f"      - name: {app.name} installer\n"
-                         f"        run: bash {suite.folder.name}/tools/installer-tests/{app.name}.sh\n", "ci.yml")
-    text = insert_before(text, "\n\n      # The repository's rules",
-                         f"\n          shellcheck -S warning {suite.folder.name}/apps/{app.name}/install.sh", "ci.yml")
-    change(ci, text)
+    # CI (ci.yml) needs no edit: the pytest matrix comes from the folders with tests/ (tools/ci_matrix.py), the
+    # installers step runs every tools/installer-tests/*.sh, and shellcheck takes every apps/*/install.sh.
     return [p.relative_to(root) for p in written]
 
 
@@ -1568,14 +1561,8 @@ def write_windows_app(root: Path, suite: Suite, app: NewApp) -> list[Path]:
     if readme.is_file() and f"**{app.category_title}**" in readme.read_text(encoding="utf-8"):
         put(readme, insert_after_list(readme.read_text(encoding="utf-8"), f"**{app.category_title}**",
                                       fill(README_ROW, app, suite), "README.md"))
-    # The suite's CI: the pytest matrix, and the installers matrix (a job per app: its installer test, its release
-    # built and installed), the portal last.
-    ci = root / ".github" / "workflows" / f"ci-{suite.folder.name}.yml"
-    text = ci.read_text(encoding="utf-8")
-    text = insert_before(text, "]   # every folder of the suite with tests/", f",\n              {suite.folder.name}/apps/{app.name}",
-                         ci.name)
-    text = insert_before(text, ", portal]   # every app of the suite, and the portal", f", {app.name}", ci.name)
-    put(ci, text)
+    # The suite's CI (ci-<suite>.yml) needs no edit: its pytest and installers matrices come from the folders
+    # (tools/ci_matrix.py), so the new app's tests, installer test and release build run at once.
     return [p.relative_to(root) for p in dict.fromkeys(written)]
 
 

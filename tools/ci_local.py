@@ -9,7 +9,8 @@ pass in the suite's full venv on a newer Python can still fail in CI; this shows
     e.g.  tools/ci-local.sh pytest/bc250-bazzite/apps/gpu shell nexus-pytest/tools
 
 The jobs come from the workflows themselves, so a new app in the matrix or a new installer step is run without
-changing this. ci-nexus.yml's jobs are listed with nexus- before their name (nexus-shell, nexus-pytest/core), as
+changing this; a matrix a plan job reads from the suite's folders (tools/ci_matrix.py, fromJSON(needs.plan.outputs.x))
+is read the same way here, by running that job's steps. ci-nexus.yml's jobs are listed with nexus- before their name (nexus-shell, nexus-pytest/core), as
 both workflows have a versions, pytest, shell and docs job.
 What cannot run here is reported, not hidden: a job for another system (windows-latest), apt-get steps (the image
 has those packages) and actions/cache (its folder is kept in ~/.cache/bc250-ci-local instead). The work happens on a
@@ -20,11 +21,13 @@ from __future__ import annotations
 import concurrent.futures
 import hashlib
 import itertools
+import json
 import os
 import re
 import shutil
 import subprocess
 import sys
+import tempfile
 import threading
 import time
 from dataclasses import dataclass, field
@@ -39,6 +42,7 @@ WORKFLOWS = (("ci.yml", ""), ("ci-nexus.yml", "nexus-"))     # each workflow run
 COPY_EXCLUDES = (".venv*", "target", "site", "__pycache__", ".pytest_cache", "dist", "node_modules")
 SHELL = ["bash", "--noprofile", "--norc", "-eo", "pipefail", "-c"]      # GitHub's shell for run steps on Linux
 EXPR = re.compile(r"\$\{\{\s*(.*?)\s*\}\}")
+NEEDS = re.compile(r"^\$\{\{\s*fromJSON\(needs\.(\w[\w-]*)\.outputs\.(\w+)\)\s*\}\}$")   # a plan job's output
 _venv_locks: dict[str, threading.Lock] = {}
 _locks_lock = threading.Lock()
 
@@ -65,11 +69,40 @@ class Result:
     skipped: bool = False               # a job for another system: neither passed nor failed
 
 
+def job_outputs(jobs: dict, name: str, root: Path) -> dict[str, object]:
+    """The outputs of the job *name* as its steps write them to $GITHUB_OUTPUT (key=value lines), run here in
+    *root*: the plan job of a suite's CI, which reads the matrix from the suite's folders (tools/ci_matrix.py).
+    A value that is JSON is parsed, as fromJSON would."""
+    found: dict[str, object] = {}
+    with tempfile.NamedTemporaryFile("w+", encoding="utf-8", prefix="ci-local-outputs-") as output:   # not in root:
+        for step in jobs[name].get("steps", []):                                          # the checkout is read-only
+            if "run" in step:
+                subprocess.run([*SHELL, str(step["run"])], cwd=root, check=True,
+                               env=dict(os.environ, GITHUB_OUTPUT=output.name), stdout=subprocess.DEVNULL)
+        output.seek(0)
+        for line in output.read().splitlines():
+            key, _, value = line.partition("=")
+            try:
+                found[key] = json.loads(value)
+            except ValueError:
+                found[key] = value
+    return found
+
+
 def load_jobs(workflow: Path, prefix: str = "") -> list[Job]:
-    """Every job of the workflow, a matrix job once per combination ("pytest/apps/gpu"), *prefix* before each name."""
+    """Every job of the workflow, a matrix job once per combination ("pytest/apps/gpu"), *prefix* before each name.
+    A matrix given as ${{ fromJSON(needs.plan.outputs.dirs) }} is the plan job's output, read by running it."""
     jobs = []
-    for name, spec in yaml.safe_load(workflow.read_text(encoding="utf-8"))["jobs"].items():
-        matrix = (spec.get("strategy") or {}).get("matrix") or {}
+    specs = yaml.safe_load(workflow.read_text(encoding="utf-8"))["jobs"]
+    outputs: dict[str, dict[str, object]] = {}
+    for name, spec in specs.items():
+        matrix = dict((spec.get("strategy") or {}).get("matrix") or {})
+        for key, value in matrix.items():
+            if isinstance(value, str) and (ref := NEEDS.match(value.strip())):
+                plan, out = ref.groups()
+                if plan not in outputs:
+                    outputs[plan] = job_outputs(specs, plan, workflow.resolve().parents[2])
+                matrix[key] = outputs[plan].get(out, [])
         keys = [k for k, v in matrix.items() if isinstance(v, list)]
         if not keys:
             jobs.append(Job(prefix + name, spec))
@@ -152,8 +185,10 @@ def run_job(job: Job, base: str) -> Result:
     log_path = CACHE / "logs" / (job.name.replace("/", "_") + ".log")
     log_path.parent.mkdir(parents=True, exist_ok=True)
     defaults = (job.spec.get("defaults") or {}).get("run", {})
+    outputs = log_path.with_suffix(".outputs")             # $GITHUB_OUTPUT: a plan job writes its matrix there
+    outputs.write_text("", encoding="utf-8")
     env = dict(os.environ, PATH=f"{venv}/bin:{os.environ['PATH']}", VIRTUAL_ENV=str(venv),
-               PIP_CACHE_DIR=str(CACHE / "pip"), CI="true", GITHUB_ACTIONS="true")
+               PIP_CACHE_DIR=str(CACHE / "pip"), CI="true", GITHUB_ACTIONS="true", GITHUB_OUTPUT=str(outputs))
     env.update({k: expand(v, job, base) for k, v in (job.spec.get("env") or {}).items()})
     result = Result(job.name, True, 0)
     with log_path.open("w", encoding="utf-8") as log:

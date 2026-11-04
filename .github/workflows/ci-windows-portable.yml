@@ -72,25 +72,32 @@ jobs:
       - run: python -m pip install -q mkdocs-material "mkdocs>=1.6,<2"
       - run: mkdocs build --strict -f windows-portable/mkdocs.yml
 
+  plan:
+    # The pytest and installers matrices, read from the suite's folders (tools/ci_matrix.py: every folder with
+    # tests/, and core, which its apps bundle; every app and the portal), so a new app needs no edit here (stage 2
+    # of the release redesign, 04-11-2026).
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      dirs: ${{ steps.dirs.outputs.dirs }}
+      apps: ${{ steps.apps.outputs.apps }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: The folders with tests
+        id: dirs
+        run: python3 tools/ci_matrix.py --suite windows-portable pytest | tee -a "$GITHUB_OUTPUT"
+      - name: The apps and the portal
+        id: apps
+        run: python3 tools/ci_matrix.py --suite windows-portable installers | tee -a "$GITHUB_OUTPUT"
+
   pytest:
+    needs: plan
     runs-on: windows-latest
     timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
-        dir: [core, windows-portable/portal, windows-portable/tools,
-              windows-portable/apps/test,
-              windows-portable/apps/pcsx2,
-              windows-portable/apps/ppsspp,
-              windows-portable/apps/rpcs3,
-              windows-portable/apps/shadps4,
-              windows-portable/apps/vita3k,
-              windows-portable/apps/xenia,
-              windows-portable/apps/hdcam,
-              windows-portable/apps/bios,
-              windows-portable/apps/sftp,
-              windows-portable/apps/rplay,
-              windows-portable/apps/smart]   # every folder of the suite with tests/, and core, which its apps bundle
+        dir: ${{ fromJSON(needs.plan.outputs.dirs) }}
     defaults:
       run:
         working-directory: ${{ matrix.dir }}
@@ -115,13 +122,14 @@ jobs:
     # fifteen minutes, the longest wait of every push and so of every release): its installer test, then its release
     # built as release-windows-portable.yml builds it (not published) and installed by the installer test on that
     # release. The portal's bundles the pinned Windows Portable Test release, downloaded from GitHub as the release
-    # workflow does. new_app.py adds a new app to the matrix.
+    # workflow does. The matrix is the plan job's: every app of the suite, and the portal.
+    needs: plan
     runs-on: windows-latest
     timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
-        app: [test, pcsx2, ppsspp, rpcs3, shadps4, vita3k, xenia, hdcam, bios, sftp, rplay, smart, portal]   # every app of the suite, and the portal
+        app: ${{ fromJSON(needs.plan.outputs.apps) }}
     env:
       APP: ${{ matrix.app }}
     steps:

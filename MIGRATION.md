@@ -28,10 +28,13 @@ suites in one place under Nexus, a small dashboard that stays local like NRT. Do
   opens `dev/itests` on the ticked suite.
 - **Gone from the BC250 suite:** `apps/mtool` (Breaking in the portal's CHANGELOG, the manifest entry in both
   apps.toml, its wiki chapter, installer test, CI steps, `icons/development/`). The GitHub releases `mtool-v*` stay.
-- **Open (owner):** the names of the three new apps and their folders; the portal's major bump (an app removed:
-  Breaking) and Nexus's; a device test of the dashboard's Windows scripts on the handheld; whether the Media Tool
-  installed on the boards is uninstalled by hand (`~/.local/bin/media-tool --uninstall`) or by the Demo Recorder's
-  `install.sh`; the NRT's Test on this board launcher part moving into the dashboard later (my proposal).
+- **Decided (owner, 04-11-2026):** the names and folders stay (Nexus Dashboard, Nexus Demo Recorder, Nexus Sound
+  Lab); the Media Tool on the boards goes by the Demo Recorder's `install.sh` (which already removes its copy,
+  launcher, menu entry and Desktop icon); Nexus Sound Lab has `run.ps1`, so the dashboard's tile is on on Windows
+  (the window not tried on Windows yet). **Open (owner):** the portal's major bump (an app removed: Breaking) and
+  Nexus's (done with portal-v14.0.0); a device test of the dashboard's Windows scripts on the handheld (open the
+  dashboard there once with `dev\dash\run.ps1` and `install.ps1`: the tiles, the dialogs); the NRT's Test on this
+  board launcher part moving into the dashboard (my proposal, explained 04-11-2026, not decided).
 - **Also after the release (02-11-2026, in the working tree):** the Windows Portable Suite's portal tour
   (`windows-portable/tools/portal_tour.py`, `record-tour.sh`, `record-app-tour.sh`, the wiki's Portal Tour
   page; the copy in `docs/videos/` recorded on Linux: the owner records it on the handheld with `--wiki`),
@@ -86,8 +89,8 @@ The owner: "make a note for a new chat". Where things stand:
   nexus-v1.1.0 so that release could go: put it back in a later release with its portal CHANGELOG entry (the whole
   name, Windows Portable Test, does not fit a tile at the Ally's size; Portable Test does).
 - **Not run on this machine:** `tools/ci-local.sh` and the BC250 installer tests (Linux): run them on Bazzite.
-- **Then:** stage 2 (the CI test matrix read from the suites' folders); the fixed folders for the other five game
-  managers (the paragraph "Fixed folders, no folder selecting" below). Stage 3 is done (04-11-2026, below).
+- **Then:** the fixed folders for the other five game managers (the paragraph "Fixed folders, no folder selecting"
+  below). Stages 2 and 3 are done (04-11-2026, below).
 
 ## Release redesign: a Nexus release carries the changed suites (owner, 30-10-2026; stage 1 in use since nexus-v1.1.0)
 
@@ -188,6 +191,14 @@ main, the draft, the device test and the publish, and that installed portals see
    suite keeps its tags and `release.yml` as they are, and `release-nexus.yml` leaves it out. Its first use is the
    next release.
 2. The test matrix read from the folders (`new_app.py` stops editing workflows), both suites.
+   **Done (04-11-2026, in the working tree for the owner to commit).** `tools/ci_matrix.py` (`--suite NAME
+   pytest|installers`) lists the folders with `tests/` (core first for a Windows suite) and the apps with the
+   portal last; a `plan` job in `ci.yml` and `ci-windows-portable.yml` writes them to its outputs and the matrices
+   read them with `fromJSON`. The BC250 suite's installers job runs every `installer-tests/*.sh` it finds (each a
+   log group, every one run, the failed ones named), the release tarballs last, and its shellcheck takes every
+   `apps/*/install.sh` and `bc250-*-run` by glob (the bisect scripts and test-bazzite.sh stay out of the warning
+   level: they do not hold to it, the baseline). `tools/ci_local.py` reads such a matrix by running the plan job.
+   `new_app.py` edits no workflow any more. The lists are exactly what the workflows listed by hand (checked).
 3. The BC250 suite on the same run, after the Windows suite has used it for a few releases; the baseline: prove that
    a BC250 portal installed before reads the release as it does now (`bc250-bazzite/tools/installer-tests/release.sh`).
    The next new suite starts on the new run.

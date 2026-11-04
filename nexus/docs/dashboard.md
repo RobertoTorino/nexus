@@ -140,4 +140,5 @@ sound can stay silent on a TV: PipeWire pauses the output when nothing plays, an
 the stream stops and needs time to unmute when it starts again, so a 50 ms tick is over before it is heard. The
 preset Tick after silence shows the same from the other side: with the link asleep, only its tick comes through. A
 window that plays such sounds needs the same loop while it is open. `dev/sounds/run.sh` and
-`dev/sounds/install.sh` start and install it on their own.
+`dev/sounds/install.sh` start and install it on their own; on Windows (PowerShell) `dev\sounds\run.ps1` starts it,
+and the dashboard's tile does the same.

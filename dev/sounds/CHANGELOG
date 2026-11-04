@@ -1,3 +1,9 @@
+Changelog: 04-11-2026 02:52:00
+
+Added. run.ps1 starts Nexus Sound Lab on Windows with the checkout's Windows venv, as run.sh does on Linux (owner,
+04-11-2026), so Nexus Dashboard's tile for it is on there too. Sound and the controller go through Qt and pygame
+as on Linux; not tried on Windows yet.
+
 Changelog: 03-11-2026 02:11:57
 
 Added. Nexus Sound Lab, a Nexus app in dev/sounds/ (owner, 03-11-2026: a sound generator with sliders to make and

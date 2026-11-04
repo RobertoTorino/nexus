@@ -56,13 +56,15 @@ powershell -NoProfile -ExecutionPolicy Bypass -File windows-portable\tools\insta
 ```
 
 Every app (and every `portal/apps.toml` entry) has an installer test, `<suite>/tools/installer-tests/<name>.sh`
-(`<name>.ps1` in a Windows suite), and CI runs each one in its own step (in a Windows suite, in a job of its own: the
-`installers` matrix); a new app adds both (each suite's `tools/tests/test_installer_tests.py` checks it). Nexus Installer Tests lists the scripts in that folder by itself. The installer tests need `fakeroot` (Linux). On Bazzite, `brew install shellcheck fakeroot node` (Node.js runs the design panel's script in
+(`<name>.ps1` in a Windows suite), and CI runs every one it finds in that folder (the BC250 suite's in one job, each
+in a group of the log; a Windows suite's in a job of its own, the `installers` matrix); a new app adds its test and
+nothing to a workflow (each suite's `tools/tests/test_installer_tests.py` checks it). Nexus Installer Tests lists the scripts in that folder by itself. The installer tests need `fakeroot` (Linux). On Bazzite, `brew install shellcheck fakeroot node` (Node.js runs the design panel's script in
 `tools/tests/test_design_panel.py`; the test skips without it); brew's folder
 `/home/linuxbrew/.linuxbrew/bin` may need adding to PATH in a non-interactive shell. CI also checks the layout rules of the root CLAUDE.md: no CRLF in the index, every
 `.sh` is 100755, every former repo folder has its four files, workflows only in the root `.github/`. The pytest
-matrices of the CI workflows list every folder with `tests/` (`tools/tests/test_layout.py` checks it): `core`,
-`tools` and each `dev/<name>` in `ci-nexus.yml`, each suite's `portal`, `tools` and `apps/<name>` in the suite's
-CI. CI results
+matrices of the CI workflows cover every folder with `tests/` (`tools/tests/test_layout.py` checks it): `core`,
+`tools` and each `dev/<name>` listed in `ci-nexus.yml`; each suite's `portal`, `tools` and `apps/<name>` read from
+the suite's folders by the plan job of its CI (`tools/ci_matrix.py --suite <name> pytest`, and `installers` for
+a Windows suite's job per app), so a new app needs no workflow edit (stage 2 of the release redesign, 04-11-2026). CI results
 can be read without `gh` through the public API:
 `curl -s https://api.github.com/repos/RobertoTorino/nexus/actions/runs?per_page=3`.

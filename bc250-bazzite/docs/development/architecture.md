@@ -306,8 +306,8 @@ an extracted release, and needs no network except for pip.
   `qapp` fixture, and points QSettings and the XDG folders at a temp folder, so tests never touch your settings or
   the Windows registry. Fake `/sys`, `/proc` and command runners stand in for the board; data recorded on a real
   board makes good fixtures. Tests also cover other setups.
-- **Every app has `tests/`** and a `requirements-dev.txt` (its `requirements.txt` plus pytest), and is listed in
-  the pytest matrix of `.github/workflows/ci.yml`.
+- **Every app has `tests/`** and a `requirements-dev.txt` (its `requirements.txt` plus pytest); CI's pytest matrix
+  is read from the folders with `tests/` (`tools/ci_matrix.py`), so the app is in it at once.
 - **The installer test:** `bc250-bazzite/tools/installer-tests/<name>.sh` installs from the checkout and from a staged release,
   with and without the Desktop icon, and uninstalls. It runs without root or network: `shims.sh` turns sudo into
   fakeroot and pip into a stub. CI runs each installer test in its own step. [Nexus Installer
@@ -354,9 +354,9 @@ It writes `bc250-bazzite/apps/<name>/` (the package with `__main__.py` and a win
 `tests/`, `install.sh`, the requirements, `VERSION` 0.1.0, `CHANGELOG`, `LICENSE`, `.gitignore`, `README.md`),
 the installer test `bc250-bazzite/tools/installer-tests/<name>.sh` and the chapter `bc250-bazzite/docs/apps/<name>.md`,
 and adds the app to `portal/apps.toml`, `icons/categories.toml` (with the icon copies), `mkdocs.yml`, the apps
-overview and categories tables, the suite README, the Dependency Checker's catalog and CI's pytest matrix,
-installer step and shellcheck list. What it does by hand, step by step, for an app that does not fit the template
-(the owner's decision):
+overview and categories tables, the suite README and the Dependency Checker's catalog; CI needs no edit, as its
+pytest matrix, its installer tests and its shellcheck come from the folders. What it does by hand, step by step,
+for an app that does not fit the template (the owner's decision):
 
 1. Copy the folder of the app closest to yours, rename the package, and set `APP_NAME`, `APP_ID`, `VERSION`
    (0.1.0) and `__version__`. Clear its `CHANGELOG` and start it with one entry.
@@ -364,8 +364,8 @@ installer step and shellcheck list. What it does by hand, step by step, for an a
    icons in `images/` and the portal's tile ([Icons](#icons)).
 3. Build the window on `AppHeader` and core's widgets.
 4. Write `install.sh` from the copied one, with the same options and launcher.
-5. Write `tests/` and `requirements-dev.txt`, and add the app folder to the pytest matrix in
-   `.github/workflows/ci.yml`. Write `bc250-bazzite/tools/installer-tests/<name>.sh` and add its step to the same file.
+5. Write `tests/` and `requirements-dev.txt`, and `bc250-bazzite/tools/installer-tests/<name>.sh`: CI finds both
+   by itself (every folder with `tests/`, every script in `installer-tests/`), and shellchecks `install.sh`.
 6. Add the app to `bc250-bazzite/portal/apps.toml` (name, summary, `changes_board`, `category` (its icon's: the portal's tab for
    it), install, uninstall, detect, launch). An app that changes the board also gets a `board_change`: what it
    touches, what stays after a reboot or a power off, what it never touches and how it is undone, in a few plain

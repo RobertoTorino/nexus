@@ -14,7 +14,7 @@ its own. Start it from [Nexus Dashboard](../dash), or:
 
 | | Linux | Windows (Git Bash) |
 |---|---|---|
-| Open it | `dev/sounds/run.sh` | `dev/sounds/run.sh` |
+| Open it | `dev/sounds/run.sh` | `dev/sounds/run.sh` (PowerShell: `dev\sounds\run.ps1`) |
 | Menu entry and Desktop icon | `dev/sounds/install.sh` (`--no-desktop-shortcut`, `--uninstall`, `--uninstall --purge`) | |
 
 Nothing is copied: the entry starts the app of the checkout you installed it from.

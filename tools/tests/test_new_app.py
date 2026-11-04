@@ -261,14 +261,8 @@ def test_writes_the_app_and_lists_it_everywhere(checkout, capsys):
     import tomllib
     assert tomllib.loads(catalog)["app"]["fan2"]["name"] == "BC-250 Fan Two"
     assert tomllib.loads(manifest)["apps"]["fan2"]["category"] == "utilities"
-    # CI: the pytest matrix, the installer step and the shellcheck list.
-    ci = (checkout / ".github" / "workflows" / "ci.yml").read_text()
-    assert "bc250-bazzite/apps/alpha, bc250-bazzite/apps/fan2]   # every folder with tests/" in ci
-    assert ("shellcheck -S warning bc250-bazzite/tools/check-release.sh\n"
-            "          shellcheck -S warning bc250-bazzite/apps/fan2/install.sh"
-            "\n\n      # The repository's rules") in ci
-    assert ("      - name: fan2 installer\n        run: bash bc250-bazzite/tools/installer-tests/fan2.sh\n"
-            "      - name: release tarballs") in ci
+    # CI needs no edit (stage 2, 04-11-2026): its matrix, installer tests and shellcheck come from the folders.
+    assert (checkout / ".github" / "workflows" / "ci.yml").read_text() == CI
 
 
 def test_names_are_the_owners(checkout):
@@ -433,9 +427,8 @@ def test_a_windows_suites_app(windows_checkout, capsys):
         (suite / "mkdocs.yml").read_text()
     assert "| The handheld. |\n| [Emu Manager](apps/emu.md) | An emulator. |\n\n## Get started" in \
         (suite / "docs" / "index.md").read_text()
-    ci = (root / ".github" / "workflows" / "ci-windows-portable.yml").read_text()
-    assert "windows-portable/apps/test,\n              windows-portable/apps/emu]   # every folder" in ci
-    assert "app: [test, emu, portal]   # every app of the suite, and the portal" in ci   # its installers job
+    # CI needs no edit (stage 2, 04-11-2026): its pytest and installers matrices come from the folders.
+    assert (root / ".github" / "workflows" / "ci-windows-portable.yml").read_text() == W_CI
 
 
 W_HOME_CARDS = '''# Windows Portable Suite

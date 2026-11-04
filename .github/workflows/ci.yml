@@ -60,25 +60,28 @@ jobs:
           BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: python bc250-bazzite/tools/check_manifest.py ${BASE:+--base "$BASE"}
 
+  plan:
+    # The pytest matrix, read from the suite's folders (tools/ci_matrix.py: every folder with tests/), so a new app
+    # needs no edit here (stage 2 of the release redesign, 04-11-2026). Nexus's folders (core, tools, dev/):
+    # ci-nexus.yml; the Windows Portable Suite's: ci-windows-portable.yml.
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      dirs: ${{ steps.plan.outputs.dirs }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: The folders with tests
+        id: plan
+        run: python3 tools/ci_matrix.py --suite bc250-bazzite pytest | tee -a "$GITHUB_OUTPUT"
+
   pytest:
+    needs: plan
     runs-on: ubuntu-latest
     timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
-        dir: [bc250-bazzite/portal, bc250-bazzite/tools,
-              bc250-bazzite/apps/check, bc250-bazzite/apps/gpu, bc250-bazzite/apps/upscaler, bc250-bazzite/apps/acpi,
-              bc250-bazzite/apps/compute, bc250-bazzite/apps/cores, bc250-bazzite/apps/oc,
-              bc250-bazzite/apps/package, bc250-bazzite/apps/ncgui,
-              bc250-bazzite/apps/overlay, bc250-bazzite/apps/ips35, bc250-bazzite/apps/hdcam,
-              bc250-bazzite/apps/hdcontrol, bc250-bazzite/apps/bios, bc250-bazzite/apps/ace, bc250-bazzite/apps/vram,
-              bc250-bazzite/apps/cec, bc250-bazzite/apps/sftp, bc250-bazzite/apps/consoles, bc250-bazzite/apps/clb,
-              bc250-bazzite/apps/mesh, bc250-bazzite/apps/shadps4, bc250-bazzite/apps/rpcs3,
-              bc250-bazzite/apps/decky, bc250-bazzite/apps/datstation, bc250-bazzite/apps/ppsspp,
-              bc250-bazzite/apps/pcsx2, bc250-bazzite/apps/vita3k, bc250-bazzite/apps/fan,
-              bc250-bazzite/apps/wdriver, bc250-bazzite/apps/xenia]   # every folder with tests/ of this suite
-              # (new_app.py adds here)
-              # Nexus's (core, tools, dev/): ci-nexus.yml; the Windows Portable Suite's: ci-windows-portable.yml
+        dir: ${{ fromJSON(needs.plan.outputs.dirs) }}
     defaults:
       run:
         working-directory: ${{ matrix.dir }}
@@ -173,34 +176,17 @@ jobs:
       # that their own release workflows already held to it. The Nexus tools, test.sh and dev/: ci-nexus.yml.
       - name: shellcheck (errors, all scripts)
         run: find bc250-bazzite -name '*.sh' -print0 | xargs -0 shellcheck -x -S error
-      - name: shellcheck (warnings, cores, oc, acpi, overlay, ips35, hdcam, hdcontrol, bios, ace, vram, fan, wdriver, cec, sftp, consoles, clb, mesh, shadps4, rpcs3, ppsspp, pcsx2, vita3k, xenia, decky, netcatgui, datstation and the suite's own scripts)
+      - name: shellcheck (warnings, the installers, the run wrappers, the suite's own scripts and the app scripts that hold to it)
+        # Every install.sh and bc250-*-run wrapper by glob, so a new app's are checked without an edit here; the
+        # rest by name: scripts the baseline holds to it (test-bazzite.sh and the bisect scripts do not).
         run: |
-          shellcheck -x -S warning bc250-bazzite/portal/install.sh bc250-bazzite/apps/check/install.sh bc250-bazzite/tools/*.sh \
-            bc250-bazzite/tools/installer-tests/*.sh bc250-bazzite/install.sh
+          shellcheck -x -S warning bc250-bazzite/install.sh bc250-bazzite/portal/install.sh bc250-bazzite/apps/*/install.sh \
+            bc250-bazzite/apps/*/bc250-*-run bc250-bazzite/tools/*.sh bc250-bazzite/tools/installer-tests/*.sh
           shellcheck -S warning bc250-bazzite/apps/cores/bc250-cores-bisect.sh bc250-bazzite/apps/cores/bc250-cores-unlock.sh \
-            bc250-bazzite/apps/cores/install.sh bc250-bazzite/apps/cores/packaging/bazzite/*.sh
-          shellcheck -S warning bc250-bazzite/apps/oc/bc250-gpu-oc-bisect.sh bc250-bazzite/apps/oc/install.sh
-          shellcheck -S warning bc250-bazzite/apps/acpi/bc250-acpi-override.sh bc250-bazzite/apps/acpi/install.sh
-          shellcheck -S warning bc250-bazzite/apps/overlay/install.sh bc250-bazzite/apps/ips35/install.sh bc250-bazzite/apps/hdcam/install.sh bc250-bazzite/apps/bios/install.sh \
-            bc250-bazzite/apps/vram/install.sh bc250-bazzite/apps/hdcontrol/install.sh
-          shellcheck -S warning bc250-bazzite/apps/fan/install.sh bc250-bazzite/apps/wdriver/install.sh
-          shellcheck -S warning bc250-bazzite/apps/cec/install.sh bc250-bazzite/apps/sftp/install.sh bc250-bazzite/apps/consoles/install.sh \
-            bc250-bazzite/apps/clb/install.sh
-          shellcheck -S warning bc250-bazzite/apps/ace/bc250-ace-queues.sh bc250-bazzite/apps/ace/bc250-ace-queues-run \
-            bc250-bazzite/apps/ace/install.sh bc250-bazzite/apps/ace/mesa/build-in-container.sh
-          shellcheck -S warning bc250-bazzite/apps/mesh/bc250-mesh-shaders.sh bc250-bazzite/apps/mesh/bc250-mesh-shaders-run \
-            bc250-bazzite/apps/mesh/install.sh bc250-bazzite/apps/mesh/mesa/build-in-container.sh
-          shellcheck -S warning bc250-bazzite/apps/shadps4/install.sh bc250-bazzite/apps/shadps4/bc250-shadps4-run
-          shellcheck -S warning bc250-bazzite/apps/rpcs3/install.sh bc250-bazzite/apps/rpcs3/bc250-rpcs3-run
-          shellcheck -S warning bc250-bazzite/apps/ppsspp/install.sh bc250-bazzite/apps/ppsspp/bc250-ppsspp-run
-          shellcheck -S warning bc250-bazzite/apps/pcsx2/install.sh bc250-bazzite/apps/pcsx2/bc250-pcsx2-run
-          shellcheck -S warning bc250-bazzite/apps/vita3k/install.sh bc250-bazzite/apps/vita3k/bc250-vita3k-run
-          shellcheck -S warning bc250-bazzite/apps/xenia/install.sh bc250-bazzite/apps/xenia/bc250-xenia-run
-          shellcheck -S warning bc250-bazzite/apps/decky/install.sh
-          shellcheck -S warning bc250-bazzite/apps/package/install.sh
-          shellcheck -S warning bc250-bazzite/apps/ncgui/install.sh
-          shellcheck -S warning bc250-bazzite/apps/datstation/install.sh
-          shellcheck -S warning bc250-bazzite/tools/check-release.sh
+            bc250-bazzite/apps/cores/packaging/bazzite/*.sh
+          shellcheck -S warning bc250-bazzite/apps/oc/bc250-gpu-oc-bisect.sh bc250-bazzite/apps/acpi/bc250-acpi-override.sh
+          shellcheck -S warning bc250-bazzite/apps/ace/bc250-ace-queues.sh bc250-bazzite/apps/ace/mesa/build-in-container.sh \
+            bc250-bazzite/apps/mesh/bc250-mesh-shaders.sh bc250-bazzite/apps/mesh/mesa/build-in-container.sh
 
       # The repository's rules (line endings, exec bits, workflows only at the root): ci-nexus.yml.
       - name: Every former repo has its LICENSE, .gitignore, VERSION and CHANGELOG
@@ -221,82 +207,18 @@ jobs:
       - uses: actions/checkout@v7
       - name: fakeroot
         run: sudo apt-get install -y -q fakeroot
-      - name: check installer
-        run: bash bc250-bazzite/tools/installer-tests/check.sh
-      - name: gpu installer
-        run: bash bc250-bazzite/tools/installer-tests/gpu.sh
-      - name: upscaler installer
-        run: bash bc250-bazzite/tools/installer-tests/upscaler.sh
-      - name: compute installers
-        run: bash bc250-bazzite/tools/installer-tests/compute.sh
-      - name: cores installer
-        run: bash bc250-bazzite/tools/installer-tests/cores.sh
-      - name: oc installer
-        run: bash bc250-bazzite/tools/installer-tests/oc.sh
-      - name: portal installer
-        run: bash bc250-bazzite/tools/installer-tests/portal.sh
-      - name: acpi installer
-        run: bash bc250-bazzite/tools/installer-tests/acpi.sh
-      - name: overlay installer
-        run: bash bc250-bazzite/tools/installer-tests/overlay.sh
-      - name: ips35 installer
-        run: bash bc250-bazzite/tools/installer-tests/ips35.sh
-      - name: hdcam installer
-        run: bash bc250-bazzite/tools/installer-tests/hdcam.sh
-      - name: hdcontrol installer
-        run: bash bc250-bazzite/tools/installer-tests/hdcontrol.sh
-      - name: bios installer
-        run: bash bc250-bazzite/tools/installer-tests/bios.sh
-      - name: ace installer
-        run: bash bc250-bazzite/tools/installer-tests/ace.sh
-      - name: mesh installer
-        run: bash bc250-bazzite/tools/installer-tests/mesh.sh
-      - name: shadps4 installer
-        run: bash bc250-bazzite/tools/installer-tests/shadps4.sh
-      - name: rpcs3 installer
-        run: bash bc250-bazzite/tools/installer-tests/rpcs3.sh
-      - name: ppsspp installer
-        run: bash bc250-bazzite/tools/installer-tests/ppsspp.sh
-      - name: pcsx2 installer
-        run: bash bc250-bazzite/tools/installer-tests/pcsx2.sh
-      - name: vita3k installer
-        run: bash bc250-bazzite/tools/installer-tests/vita3k.sh
-      - name: xenia installer
-        run: bash bc250-bazzite/tools/installer-tests/xenia.sh
-      - name: decky installer
-        run: bash bc250-bazzite/tools/installer-tests/decky.sh
-      - name: vram installer
-        run: bash bc250-bazzite/tools/installer-tests/vram.sh
-      - name: fan installer
-        run: bash bc250-bazzite/tools/installer-tests/fan.sh
-      - name: wdriver installer
-        run: bash bc250-bazzite/tools/installer-tests/wdriver.sh
-      - name: cec installer
-        run: bash bc250-bazzite/tools/installer-tests/cec.sh
-      - name: sftp installer
-        run: bash bc250-bazzite/tools/installer-tests/sftp.sh
-      - name: consoles installer
-        run: bash bc250-bazzite/tools/installer-tests/consoles.sh
-      - name: clb installer
-        run: bash bc250-bazzite/tools/installer-tests/clb.sh
-      - name: Dependency checker installer
-        run: bash bc250-bazzite/tools/installer-tests/package.sh
-      - name: NetcatGUI installer
-        run: bash bc250-bazzite/tools/installer-tests/ncgui.sh
-      - name: DatStation installer
-        run: bash bc250-bazzite/tools/installer-tests/datstation.sh
-      - name: Nexus Release Tool installer
-        run: bash bc250-bazzite/tools/installer-tests/nrt.sh
-      - name: Nexus Dashboard installer
-        run: bash bc250-bazzite/tools/installer-tests/dash.sh
-      - name: Nexus Demo Recorder installer
-        run: bash bc250-bazzite/tools/installer-tests/demo.sh
-      - name: Nexus Installer Tests installer
-        run: bash bc250-bazzite/tools/installer-tests/itests.sh
-      - name: Nexus Sound Lab installer
-        run: bash bc250-bazzite/tools/installer-tests/sounds.sh
-      - name: release tarballs, end to end
-        run: bash bc250-bazzite/tools/installer-tests/release.sh
+      - name: Every installer test (bc250-bazzite/tools/installer-tests/*.sh), then the release tarballs end to end
+        # Read from the folder, so a new app's test runs without an edit here (stage 2, 04-11-2026); each in a
+        # group of its own in the log, every one run, the failed ones named at the end.
+        run: |
+          failed=()
+          run() { echo "::group::${1##*/}"; bash "$1" || { echo "::error file=$1::${1##*/} failed"; failed+=("${1##*/}"); }; echo "::endgroup::"; }
+          for t in bc250-bazzite/tools/installer-tests/*.sh; do
+            case "${t##*/}" in shims.sh|release.sh) continue ;; esac
+            run "$t"
+          done
+          run bc250-bazzite/tools/installer-tests/release.sh
+          [ ${#failed[@]} -eq 0 ] || { echo "Failed: ${failed[*]}" >&2; exit 1; }
 
   docs:
     runs-on: ubuntu-latest

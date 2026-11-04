@@ -125,10 +125,12 @@ alone. A suite's release tags wait for its own CI and for Nexus's, never for ano
 never holds another's releases; a commit that has no run of the suite's CI (nothing of the suite changed) gets no
 tag: `tools/ci_state.py` says so within five minutes instead of waiting the hour.
 
-The Windows Portable Suite's CI runs its installer tests and release builds as one job per app and the portal
-(`installers`, a matrix): each installs the app from the checkout, builds its release zip as the release workflow
-does (never published) and installs it from that zip. A new app is one more entry in that matrix
-(`tools/new_app.py` adds it).
+Each suite's CI reads its matrices from the suite's folders in a first job, `plan` (`tools/ci_matrix.py`): the
+pytest matrix is every folder with `tests/`, and the Windows Portable Suite's `installers` matrix every app and the
+portal, one job each, which installs the app from the checkout, builds its release zip as the release workflow does
+(never published) and installs it from that zip. The BC250 suite's installers job runs every
+`tools/installer-tests/*.sh` it finds. So a new app needs no edit to a workflow: its folder, its installer test
+and its `install.sh` are in CI at once.
 
 `./test.sh` runs every suite in one venv that holds everything, on whatever Python your system has. GitHub's CI runs
 each job on Python 3.12 with only that job's own requirements, so a test can pass here and still fail there: a
@@ -141,7 +143,7 @@ tools/ci-local.sh shell nexus-pytest/tools   # some jobs; a matrix job by its va
 tools/ci-local.sh --list                     # the jobs; ci-nexus.yml's have nexus- before the name (nexus-shell)
 ```
 
-It reads the jobs from the workflows themselves, so a new app in the matrix or a new installer step needs no change. The
+It reads the jobs from the workflows themselves, a matrix from the folders as the plan job does, so a new app needs no change. The
 first run builds the image from `tools/ci-local/Containerfile` (Python 3.12 and the packages GitHub's runner has)
 and Console Link's FFmpeg; both are kept, with the venvs and the logs, in `~/.cache/bc250-ci-local`. It works on a
 copy of the checkout with every change staged, as the commit will have it. Only the Windows job does not run here.

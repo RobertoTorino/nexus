@@ -45,6 +45,11 @@ def test_every_installer_test_is_for_something_that_exists():
 
 
 def test_ci_runs_every_installer_test():
+    """CI's installers job runs every tools/installer-tests/*.sh it finds (stage 2, 04-11-2026: a new app's test
+    runs without an edit to the workflow), the helper left out and the release tarballs last."""
     ci = (SUITE.parent / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
-    run = set(re.findall(r"bash bc250-bazzite/tools/installer-tests/([\w.-]+\.sh)", ci))
-    assert run == _scripts(), f"CI misses {sorted(_scripts() - run)}, runs unknown {sorted(run - _scripts())}"
+    step = re.search(r"for t in bc250-bazzite/tools/installer-tests/\*\.sh; do\n(.*?)done\n(.*?)\n", ci, re.S)
+    assert step, "no loop over bc250-bazzite/tools/installer-tests/*.sh"
+    assert "shims.sh|release.sh) continue" in step.group(1) and 'run "$t"' in step.group(1)
+    assert step.group(2).strip() == "run bc250-bazzite/tools/installer-tests/release.sh"
+    assert not re.findall(r"bash bc250-bazzite/tools/installer-tests/[\w.-]+\.sh", ci)     # no step by name

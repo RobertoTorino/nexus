@@ -121,11 +121,20 @@ def test_every_app_has_tests_and_ci_runs_them():
     for app in _apps():
         assert (app / "tests").is_dir(), f"{app.name}: no tests/"
         assert (app / "requirements-dev.txt").is_file(), f"{app.name}: no requirements-dev.txt (CI installs it)"
-    # ci-nexus.yml (core, tools, dev/), ci.yml (the BC250 Bazzite Suite) and a suite's own ci-<suite>.yml
+    # ci-nexus.yml (core, tools, dev/) lists its matrix; ci.yml (the BC250 Bazzite Suite) and a suite's own
+    # ci-<suite>.yml read theirs from the suite's folders in a plan job (tools/ci_matrix.py, stage 2)
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("ci_matrix", SUITE / "tools" / "ci_matrix.py")
+    ci_matrix = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(ci_matrix)
     listed = set()
     for workflow in sorted((SUITE / ".github" / "workflows").glob("ci*.yml")):
-        matrix = re.search(r"dir: \[([^\]]*)\]", workflow.read_text(encoding="utf-8")).group(1)
-        listed |= {entry.strip() for entry in matrix.replace("\n", " ").split(",")}
+        text = workflow.read_text(encoding="utf-8")
+        if static := re.search(r"dir: \[([^\]]*)\]", text):
+            listed |= {entry.strip() for entry in static.group(1).replace("\n", " ").split(",")}
+        for name in re.findall(r"tools/ci_matrix\.py --suite (\S+) pytest", text):
+            assert "dir: ${{ fromJSON(needs.plan.outputs.dirs) }}" in text, workflow.name
+            listed |= set(ci_matrix.pytest_dirs(SUITE / name, SUITE))
     folders = {path.parent.relative_to(SUITE).as_posix() for path in SUITE.glob("**/tests")
                if path.is_dir() and not (set(path.relative_to(SUITE).parts) & {".git", "site", "node_modules"})
                and not any(part.startswith(".venv") for part in path.relative_to(SUITE).parts)}
@@ -170,11 +179,13 @@ def test_nexus_checks_have_a_workflow_of_their_own():
     shared = {"core", "tools"} | {f"dev/{p.name}" for p in (SUITE / "dev").iterdir() if (p / "tests").is_dir()}
     matrix = re.search(r"dir: \[([^\]]*)\]", nexus).group(1)
     assert {entry.strip() for entry in matrix.split(",")} == shared
-    for folder in _suites():
-        own = workflows / (f"ci-{folder.name}.yml" if (workflows / f"ci-{folder.name}.yml").is_file() else "ci.yml")
-        matrix = re.search(r"dir: \[([^\]]*)\]", own.read_text(encoding="utf-8")).group(1)
-        entries = {entry.strip() for entry in matrix.split(",")}
-        assert not entries & (shared - {"core"}), f"{own.name} runs Nexus's tests"   # core: a suite may run it too
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("ci_matrix", SUITE / "tools" / "ci_matrix.py")
+    ci_matrix = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(ci_matrix)
+    for folder in _suites():                # a suite's matrix is read from its folders (tools/ci_matrix.py)
+        entries = set(ci_matrix.pytest_dirs(folder, SUITE))
+        assert not entries & (shared - {"core"}), f"{folder.name} runs Nexus's tests"   # core: a suite may run it too
     for release in sorted(workflows.glob("release*.yml")):
         assert "ci_state.py --workflow ci-nexus.yml" in release.read_text(encoding="utf-8"), release.name
     assert "workflows+=(ci-nexus.yml)" in (SUITE / "tools" / "tag-release.sh").read_text(encoding="utf-8")

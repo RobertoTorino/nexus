@@ -45,11 +45,16 @@ def test_ci_runs_each_installer_test_and_each_release_in_a_job_of_its_own():
     """The installers job is a matrix, one job per app and the portal (29-10-2026: one job doing them all in a row
     took six to fifteen minutes): each runs the installer test, builds the release (never published, owner
     28-10-2026) and installs it; the Nexus Release Tool's Windows installer has a job of its own."""
-    import re
+    import importlib.util
     ci = CI.read_text(encoding="utf-8")
-    matrix = re.search(r"app: \[([^\]]*)\]", ci).group(1)
-    assert {entry.strip() for entry in matrix.split(",")} == _apps()
-    assert matrix.strip().endswith("portal")                   # the portal last: new_app.py puts an app before it
+    # The matrix is read from the suite's folders by the plan job (tools/ci_matrix.py, stage 2, 04-11-2026)
+    spec = importlib.util.spec_from_file_location("ci_matrix", REPO / "tools" / "ci_matrix.py")
+    ci_matrix = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(ci_matrix)
+    assert "app: ${{ fromJSON(needs.plan.outputs.apps) }}" in ci
+    assert "tools/ci_matrix.py --suite windows-portable installers" in ci
+    matrix = ci_matrix.installer_apps(SUITE)
+    assert set(matrix) == _apps() and matrix[-1] == "portal"
     for step in ("- name: Installer test\n", "- name: Build the release zip, not published\n",
                  "- name: Installer test on the release\n"):
         assert step in ci, step
