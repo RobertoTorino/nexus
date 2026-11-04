@@ -5,6 +5,117 @@
 Working notes for moving the seven BC-250 tools into this suite. Not part of the manual or the READMEs, which
 describe only what exists.
 
+## Resume here (04-11-2026 23:13, for a new chat): work on the roadmap
+
+The owner: "we start working on the roadmap items." The roadmap below is the work list: three chapters (Bazzite,
+Windows, Bazzite/Windows), each entry with its place in the code and the change. Agreed with the owner on
+04-11-2026:
+
+- **The backlog was gone through:** 18 items dropped or done (each marked where it stood), two moved onto the
+  roadmap (Bazzite 10 and 11), 7 wait as before; the Backlog review issue (#6) can be closed, it lists those 7 next
+  Monday. The Upstream review issue (#5) is covered by Bazzite 9; close it once those versions are released.
+- **Corrections by the owner:** Bazzite/Windows 3 is the Nexus Release Tool's suite field only, not core's theme;
+  Vita3K and Xenia come into the upstream checks (Bazzite/Windows 5).
+- **Which item first is the owner's to say.** Items that need the owner before code: Bazzite 1 (the UGREEN stick's
+  `lsusb` ID and kernel log), Bazzite 6 (which Linux keyboard), Bazzite 7 (what the pinned programs' notices do),
+  Windows 1, 3, 4 and 6 (to reproduce on the Ally), Windows 9 and Bazzite 11 (the names), Windows 10 (which
+  tuning apps).
+- **Ready to start without the owner:** Bazzite 2, 3, 4, 5, 8 and 10; Windows 2, 7 and 8; Bazzite/Windows 1, 2, 3, 4
+  and 5. Each change keeps to its suite (two suites, two changes), with its CHANGELOG entry and wiki chapter.
+
+## Roadmap (owner, 04-11-2026)
+
+From the owner's observations of 04-11-2026, checked against the code and the two review issues (Backlog review,
+Upstream review). Only what is still to do and can be started; what was done or dropped is left out (the drops are
+noted where each item stood). Each entry says where it is in the code and what the change is.
+
+### Bazzite
+
+1. **USB Wi-Fi: the UGREEN stick is not recognized.** The app knows only the AIC8800D80's USB IDs (vendors A69C and
+   368B; `apps/wdriver/usb_wifidriver/stick.py:22-26`); any other stick shows "None" in the Stick box, even when
+   core's `wifi.py` lists it under Wi-Fi adapters. First the stick's `lsusb` ID and kernel log from the owner. Then
+   either add its IDs (and a driver for its chip), or have the Stick box point to the Wi-Fi adapters box instead of
+   saying "None".
+2. **USB Wi-Fi: the header boxes cut their text off.** The four `MetricBox`es (Stick, Chip, Driver, Wi-Fi;
+   `main_window.py:123-131`) shrink below their text; give them `same_width()` as other apps do and shorter values
+   ("waiting for its firmware", "legacy-mcu1 (newest)").
+3. **USB Wi-Fi: the notice to the right, long text behind the info symbol.** The driver note
+   (`main_window.py:162-172`) and the adapters hint (186-188) become core's `InfoButton`; the note moves to the
+   right side.
+4. **Portal: Y updates.** Y on the focused tile installs its update; the portal's own update as the Windows
+   Portable portal does it (`windows-portable/portal/portable_portal/main_window.py:260`). Today the BC250 portal's
+   gamepad maps no Y (`bc250_portal/gamepad.py:21-25`), and its portal button only opens the release page.
+5. **Portal: a Settings page behind ☰.** As the Windows Portable portal's: the pills Desktop icons, Sound, Theme and
+   Wallpaper (`main_window.py:402-431`) move there; Refresh, Install all, the updates and Sys info stay on top.
+6. **Portal: R3 brings up an on-screen keyboard.** Core maps R3 to Windows' touch keyboard only
+   (`core/bc250_core/gamepad.py:40`, `platform.py:141-191`); on Bazzite it needs a Linux keyboard (Steam's,
+   `steam://open/keyboard`, or another): the owner picks.
+7. **Updates outside the suite get an action.** The portal's "outside the suite" notice only shows the tile
+   (`main_window.py:549-608`); it should open the app at its update. For programs an app pins (Decky Loader, Xenia,
+   PPSSPP, Vita3K, RPCS3, DirectMesh) the update comes with a new app version: the owner decides whether those
+   lines stay, with what action.
+8. **Bazzite Test: a preview of the results card.** Settings → Print results saves the PNG at once
+   (`apps/check/bazzite_check/main_window.py:324-339`); first a preview, then Save, Copy (to the clipboard) or Share.
+9. **The Upstream review (issue #5).** Each a new app version, tried on the board: Decky Loader 3.3.1 (Decky Loader
+   Manager), shadPS4 v.0.21.0 (shadPS4 Manager), DirectMesh v131 (Mesh Shaders), HelixSR 3.1.0 (a new major: the
+   BC-250 Upscaler Manager moves to it, `SUPPORTED_MAJOR`).
+10. **shadPS4 Manager: several packages at once**, as the Windows Portable Suite's does (`extract.read_all()`,
+    `extract.plan()`, the marks, the games first, then their updates and add-ons); the BC250 app's Extract PKG window
+    takes one at a time (`apps/shadps4/shadps4_manager/extract_dialog.py`). Its entry below has the details.
+11. **SSD health check**, a new Utilities app: the health percentage, power cycles and power-on hours through
+    udisks2 over D-Bus (no root). Its entry under "Candidates for new apps" has the details; the name is the owner's.
+
+### Windows
+
+1. **Quitting a game in an app closes the portal too.** The likely path: the portal reads the controller in the
+   background (`core/bc250_core/gamepad.py:60-63`) and View closes it whenever Windows still counts it as the
+   active window (`core/bc250_core/portable.py:1544-1569`). Reproduce on the Ally with the log, then ignore View
+   while a game runs and just after the portal is active again.
+2. **A Yes/No question before the portal exits.** "Do you really want to exit the Portal?" every time, not only
+   during a download (`portal/portable_portal/main_window.py:639-644`, `784-794`).
+3. **The second screen is gray in XBOX mode** (sound still goes there). Not known yet; find out on the Ally whether
+   it is Windows' own behavior and whether the portal can do anything about it (`start_screen`, LT Screen).
+4. **Xenia: quitting a game shows Xenia's UI and the profile question.** The quit sends a close to Xenia's windows
+   (`apps/xenia/xenia_manager/__main__.py:18-35`); find out on the Ally which window takes it, then end Xenia the
+   way it needs.
+5. **Xenia: create a profile.** Saves need a profile; the settings have none (`xenia_settings.py:87-131`). Look up
+   Xenia Canary's profiles at the pinned commit, then a Create profile action.
+6. **Vita3K: quitting a game shows Vita3K's UI.** The close reaches the game window only, Vita3K's main window
+   stays (`apps/vita3k/vita3k_manager/__main__.py:17-31`); close it too.
+7. **Paging in a portal tab from a ninth app.** A ninth app is cut off now (`COLUMNS, PER_PAGE = 4, 8`,
+   `main_window.py:48`, `546-547`); pages, a page marker, turning pages past the edge, a test. No tab has nine yet
+   (Gaming has seven).
+8. **The portal checks for its own update again**, not only at start (`main_window.py:295-305`): when it becomes
+   active again or on a timer.
+9. **The ports:** Bazzite DatStation, BC-250 Upscaler Manager, USB HD Control (hidapi instead of hidraw),
+   Dependency Checker (a Windows tool list). Each with the owner's Windows name.
+10. **The handheld's own tuning apps** (TDP, fans and the like). First: which apps (the owner).
+
+### Bazzite/Windows
+
+1. **The disclaimer without Nintendo.** `tools/mkdocs/disclaimer.py:13,16-17` and every copy that
+   `tools/tests/test_disclaimer.py` holds to it: the READMEs (root, both suites, eight BC250 apps) and eight BC250 wiki
+   chapters. Three changes: Nexus's, the BC250 suite's and the Windows Portable Suite's.
+2. **Nexus Release Tool: the device test's selection follows the release.** The list comes from the working
+   tree's portal VERSIONs (`flow.waiting_portals`, `dev/nrt/nexus_release_tool/release_page.py:199-200`) and is
+   filled once; fill it from the run's unpublished drafts on every state, this device's suite first.
+3. **Nexus Release Tool: room before the text in the device test's suite field.** The field where the suite is
+   picked (`portal_choice`, `dev/nrt/nexus_release_tool/release_page.py:84`) shows its text against the left border;
+   padding on that field only (owner, 04-11-2026: not the theme, which every app shares).
+4. **Convert icons on Windows, and a gaming icon per suite.** The dashboard's Convert icons (`dev/dash/
+   nexus_dashboard/icons.py`, `tools/sync_icons.py`) needs a suite's `icons/categories.toml`, which the Windows
+   Portable Suite lacks; its gaming icon is wide and PNG (`tools/make_icons.py:163-180`). Make the tool take that
+   suite, and any suite's own gaming icon; try it on the Ally with the dashboard's other tools that do not start
+   there (above).
+5. **More in the Upstream review.** Not checked yet: the USB Wi-Fi driver (aic8800d80, both branches' commits,
+   `apps/wdriver/usb_wifidriver/builder.py:28,45-50`), Mesa (Mesh Shaders, ACE Queues), FFmpeg and libva (Console
+   Link, Remote Play), USB HD Cam's firmware sources, the speedtest CLI, and Vita3K and Xenia on both suites (owner,
+   04-11-2026: they come in; the Windows Portable check skips them now for their daily builds, `CADENCE = "daily"`,
+   and the BC250 check has neither).
+6. **Best settings for a game, found automatically.** Emulated and regular games. First an analysis: what can be
+   measured, per emulator and for a regular game, and whether WindowManager (`github.com/RobertoTorino/
+   WindowManager`) can be used for it or join the gaming category.
+
 ## The tools centralized in Nexus (02-11-2026, in the working tree for the owner to commit)
 
 The owner: the Media Tool out of the suite (it was dev work released as an app), all the tools for working on the
@@ -700,7 +811,7 @@ prepared, after the owner's first round with wp-pcsx2-v1.0.0 and wp-test-v1.7.0 
   the amber ring on the information icon.
 - The cards' glass at 160 of 255 (owner, 29-10-2026, picked from a rendered comparison: 200 read as solid on the
   Ally): judge it on the device's own panel, brighter than a monitor.
-- **The focused tile see-through (on hold, owner 29-10-2026: "leave it for now").** The card with the focus is
+- **The focused tile see-through (dropped, owner 04-11-2026).** The card with the focus is
   solid by design (28-10-2026: its amber glow under a see-through card would tint it); the owner meant that tile
   when asking about transparency, not the strip, which was glass already. One line in `Card._paint` when wanted.
 
@@ -757,20 +868,22 @@ gaming category first, RPCS3 Manager done in the working tree, then shadPS4, Vit
    core's `Tabs` (PCSX2 Manager's Settings pane uses it the same way).
 3. The BC250 apps for the Ally (owner, 29-10-2026): **left out** the board's and Linux's: GPU Governor Manager, CU
    Bisect, Cores Bisect, GPU OC Bisect, Persistent ACPI, Memory Manager, Fan Control (the handheld's own tuning apps
-   stay on hold instead), ACE Queues, Mesh Shaders, USB Wi-Fi, Console LinkB (the XBOX app does it),
+   come instead: the roadmap, 04-11-2026), ACE Queues, Mesh Shaders, USB Wi-Fi, Console LinkB (the XBOX app does it),
    Decky Loader Manager (BIOS Reader was left out too; it comes after all, see "BIOS Reader for Windows" below). **HDMI CEC Manager first**: the owner tests it with a dock and a special USB-C adapter (how
    Windows reaches CEC over that adapter is to find out). **They come** (ported, the portable design): RPCS3,
    shadPS4, PPSSPP, Vita3K and Xenia Managers (as PCSX2 Manager: never their own window), Console Link (as
    Remote Play, see "Remote Play for Windows" below), Bazzite
    DatStation, BC-250 Upscaler Manager, System Overlay, USB IPS3.5, USB HD Control, Bazzite SFTP Tools, Media Tool,
    Dependency Checker, Bazzite NetcatGUI; USB HD Cam once the PS5 camera's driver on Windows is found out. Their
-   Windows names (without BC-250/Bazzite) are the owner's to give with each.
+   Windows names (without BC-250/Bazzite) are the owner's to give with each. Dropped (owner, 04-11-2026): System
+   Overlay, Media Tool, Bazzite NetcatGUI. Ported since: USB IPS3.5 (Smart Screen), Bazzite SFTP Tools.
 4. Smaller: paging in a portal tab from a ninth app; a portal that checks for its own update again (it checks once
    at start: wp-portal-v1.5.0 was published 9 s after the check, 28-10-2026); the drawn icons of ICONS.md in
    `bc250-bazzite/docs/design/icons/`.
 
-On hold: the portal as XBOX mode's home app (MSIX), code signing, an app for the back buttons, the handheld's own
-tuning apps, a BIOS update check.
+Dropped (owner, 04-11-2026): the portal as XBOX mode's home app (MSIX), code signing, an app for the back buttons,
+the HDMI-CEC app. Done: the BIOS update check (BIOS Reader's Newest BIOS row, wp-bios-v0.8.0). The handheld's own
+tuning apps are on the roadmap.
 
 ## Remote Play for Windows (01-11-2026, the owner, on Console Link: "I want to port that over to Windows Portable suite")
 
@@ -1190,7 +1303,7 @@ motion, rumble, light bar), the controller test, privacy, Game Mode, the statist
    until the owner's second PS4 Pro arrives: remove that one, with its shortcut, so the first stays registered); the PS
    button in Game Mode (stays with Steam; combinations dropped by the owner); the open board tests below.
 Added since the plan (owner's): controller combinations, the window redesign, several players, stream settings,
-internet streaming, handhelds, a Steam release (on hold). Order (owner, 13-10-2026): the several-players
+internet streaming, handhelds, a Steam release (dropped, owner 04-11-2026). Order (owner, 13-10-2026): the several-players
 experiment, then stream settings; recovery from lost packets recommended right after.
 
 Controller button combinations: dropped (owner, 13-10-2026: Escape covers leaving full screen; in Game Mode Steam's
@@ -1262,7 +1375,7 @@ triggers, manual bitrate, low-latency modes, audio delay): ideas to weigh, the o
 - **Internet streaming** (PSN hole punching): on the list already (owner, 13-10-2026: good).
 - **A release on Steam** (Steamworks: a fee per app and Valve's review): a Game Mode entry, Steam's updates and
   Steam Input without our shortcut; a large decision, more for a handheld version than for the board. Owner
-  (13-10-2026): on hold until the handheld version.
+  (13-10-2026): until the handheld version; dropped (owner, 04-11-2026).
 - **Not recommended: PS Plus Premium cloud streaming.** It uses Sony's servers without Sony's consent; for an
   open-source app in a public repository a legal and takedown risk.
 - Not worth it here: frame generation, 2D-to-3D, screen filters, upscaling to 4K.
@@ -2149,14 +2262,14 @@ behavior and dependencies. Decided (owner, 25-10-2026):
   video tour list. Open (owner): the releases, portal (Breaking.: the tab and the two tools removed) and mtool,
   package and ncgui (Fixed.: the icon); the Linux checks (`tools/ci-local.sh`, the installer tests, portal.sh among
   them) on Bazzite.
-- **The portal as XBOX mode's home app (on hold, owner 28-10-2026).** Windows 11 (24H2 and later, the Full Handheld
+- **The portal as XBOX mode's home app (dropped, owner 04-11-2026).** Windows 11 (24H2 and later, the Full Handheld
   edition of XBOX mode, as on the Ally) offers apps under Settings, Gaming, XBOX mode, Choose home app. OmniConsole
   (github.com/8bit2qubit/OmniConsole) does it: an MSIX package whose manifest declares the `windows.gamingApp` app
   extension (`uap3:AppExtension`) and the custom capability `Microsoft.appCategory.gamingHome_8wekyb3d8bbwe`, with
   runFullTrust. Without a Store-signed package the user turns on Developer Mode and trusts the package's
   certificate in the machine's Trusted People, both as administrator (the suite's installers refuse administrator).
   So it takes an MSIX release format beside the zip, and ties into code signing below.
-- **Code signing (on hold, owner 27-10-2026).** The apps are unsigned: SmartScreen asks once for a file a browser
+- **Code signing (dropped, owner 04-11-2026).** The apps are unsigned: SmartScreen asks once for a file a browser
   downloaded (not for what the portal will download itself); Smart App Control, when on, blocks an unsigned exe
   with no way past it, and it may be on on other people's handhelds. Options: SignPath Foundation (free for open
   source, by application) or Microsoft's Artifact Signing (paid; check who can use it). Either is one step in
@@ -2273,18 +2386,18 @@ behavior and dependencies. Decided (owner, 25-10-2026):
   (19:00 to 19:20, mains, the same link throughout: 5 GHz, channel 56, 2402 Mbps, 85 %): 0.4, 22.8 and 7.3 MB/s with
   the app's download and 1.2, 1.9 and 64 MB/s with curl, one after the other. The slowness comes and goes on an
   unchanged link, so it lies past the handheld: the access point, the line or GitHub's servers.
-- **An app for the back buttons (on hold, owner 28-10-2026).** The Ally X's M1 and M2 never reach Windows as buttons
+- **An app for the back buttons (dropped, owner 04-11-2026).** The Ally X's M1 and M2 never reach Windows as buttons
   by default: they are Armoury Crate's modifiers (held with A a screenshot, with Y a recording, with Up the on-screen
   keyboard), mapped in Armoury Crate (Settings, Configure, M1 or M2; untick Secondary Function to map one alone, as
   LB or RB, or keys). Seen on the Ally (28-10-2026): SDL reports its pad with 16 buttons, and a 90 s listen with
   pygame-ce caught no press of M1 or M2. The idea: a suite app that programs them. The controller test shows them,
   and says on its card that they answer only once Armoury Crate maps them to a standard button.
-- **A BIOS update check (on hold, owner 31-10-2026: "we should definitely add a test to check for updates").** ASUS
+- **A BIOS update check (done: BIOS Reader's Newest BIOS row, released in wp-bios-v0.8.0).** ASUS
   has published a new BIOS for the ROG XBOX Ally X on its support page. The idea: a test that compares the
   handheld's BIOS version (Windows reports it, `Win32_BIOS`) with the newest one ASUS publishes for the model, and
   says when an update is out, without installing anything. To find out first: where ASUS publishes the list in a
   form an app can read, and how the model is told apart (RC73XA and RC73YA).
-- **An HDMI-CEC app: Club3D firmware first (on hold, owner 04-11-2026: other adapters after the firmware).** The
+- **An HDMI-CEC app: Club3D firmware first (dropped, owner 04-11-2026).** The
   idea: the BC250 suite's HDMI CEC Manager for the handheld, through the USB-C to HDMI adapter's CEC tunneling
   (DPCD 0x3000 to 0x303F, as Linux's `drm_dp_cec` does). Windows has no CEC support of its own; AMD's
   `atiadlxx.dll` exports `ADL_Display_NativeAUXChannel_Access(adapter, display, data)`, not in AMD's public SDK. Its
@@ -2304,7 +2417,7 @@ behavior and dependencies. Decided (owner, 25-10-2026):
   TV's EDID (physical address 3.0.0.0) but reports no CEC tunneling (0x3000 = 0x00, 0x3001 = 0x00), so the probe
   sent nothing. Next (owner, 04-11-2026): a firmware update for the CAC-2504. Club3D publishes none for it (only for
   other models, such as the CAC-1087); its support is reached through its RMA email address. With new firmware, run
-  the probe again. On hold until then: a Samsung EE-PW700 or Kramer ADC-U31C/HF, or the Pulse-Eight adapter.
+  the probe again. The alternatives were: a Samsung EE-PW700 or Kramer ADC-U31C/HF, or the Pulse-Eight adapter.
 - **An original XBOX emulator manager on xbased (on hold, owner 03-11-2026: too new to pin).** xbased
   (`github.com/crazyriddler/xbased`, GPL-3.0-or-later by its README; GitHub detects its license as "Other", so read
   its LICENSE first) is the PC edition of hakuX (the Android/arm64 fork of xemu): it needs no BIOS, MCPX ROM or
@@ -2559,14 +2672,14 @@ installers, docs, native and shell jobs, both catalogs' --check, the wiki's stri
   `~/.config/gh`, the IDE settings, a Brewfile (`brew bundle dump`) and the Flatpak list, and restores them on the
   new system before the checkout is cloned back to the same path, /var/home/admin/Projects/Nexus (Claude's memory is
   keyed on it). The wiki's machine page gets the section that goes with it.
-- **SILENT HILL further in the emulators (on hold, owner 21-10-2026).** Its mesh shaders run with the suite's patch
+- **SILENT HILL further in the emulators (dropped, owner 04-11-2026).** Its mesh shaders run with the suite's patch
   (see mesh-shaders above), but AnyPS5 and KytyPS5 are killed when memory runs out, also with a 4 GB split: the GPU
   borrowed 5.7 GB of RAM besides, and memory seems to grow during a run. AnyPS5's host memory imports fail on this
   board (`VK_ERROR_INVALID_EXTERNAL_HANDLE`), so it copies instead. The game's options menu was not reached.
-- **A license badge in the README (on hold, owner 19-10-2026).** The suite has several licenses (GPL-3.0-or-later
+- **A license badge in the README (dropped, owner 04-11-2026).** The suite has several licenses (GPL-3.0-or-later
   for most apps, MIT for acpi, AGPL-3.0 for consoles, GPL-2.0-only for ncgui), so one GPL-3.0 badge would be wrong:
   a "multiple licenses" badge that links to the license overview.
-- **Acknowledgements in the wiki (on hold, owner 19-10-2026).** A page naming the people to thank. Names are personal
+- **Acknowledgements in the wiki (dropped, owner 04-11-2026).** A page naming the people to thank. Names are personal
   data, so each person agrees first or is named by their public handle; the reference implementation is named only
   where CLAUDE.md allows it, which this page is not unless the owner adds it there.
 - **Gamescope scaling in BC-250 Upscaler Manager (on hold, owner 21-10-2026: for a next release).** A spatial
@@ -2580,14 +2693,14 @@ installers, docs, native and shell jobs, both catalogs' --check, the wiki's stri
   (github.com/Blinue/Magpie, 21-10-2026), which is not a candidate: Windows-only, it captures windows through
   Windows' compositor (Graphics Capture, Desktop Duplication, GDI, DwmSharedSurface), which Wine does not have, and
   it is a spatial upscaler like gamescope's FSR 1.
-- **Our own shadPS4 build (on hold, owner 22-10-2026).** shadPS4 Manager installs shadPS4's own release; built by
+- **Our own shadPS4 build (dropped, owner 04-11-2026).** shadPS4 Manager installs shadPS4's own release; built by
   the suite (the owner built shadPS4 for Windows before), with ace's and mesh's Mesa builds as the pattern. In it:
   shadPS4's quit window (`Overlay::ToggleQuitWindow`) as the suite's: a "Suite Control" header, the suite's icon
   (128 px, if it fits), the black background 75 % opaque. Perhaps also Extract PKG inside shadPS4 (installing a
   package from shadPS4 itself): shadPS4 is GPL-2.0-or-later, the Manager GPL-3.0-or-later, so a build with both is
   GPL-3.0; to check before starting. The quit window itself opens from any controller and keyboard since
   22-10-2026 (the Manager's quit hotkeys in shadPS4's `input_config/global.ini`).
-- **Several packages at once in the BC250 suite's shadPS4 Manager (on hold, owner 29-10-2026: "we will also
+- **Several packages at once in the BC250 suite's shadPS4 Manager (on the roadmap, owner 04-11-2026; owner 29-10-2026: "we will also
   implement this on Bazzite").** The Windows Portable Suite's shadPS4 Manager unpacks several packages in one go
   (`windows-portable/apps/shadps4`: `extract.read_all()` and `extract.plan()`, the marks in RB Packages, the page of
   what each package does in the place chosen, the games first, then their updates and add-ons). The BC250 app's
@@ -2595,7 +2708,7 @@ installers, docs, native and shell jobs, both catalogs' --check, the wiki's stri
   Port the planning there as a change of the BC250 suite of its own (the suites stand apart), shaped for its desktop
   window (a list with tick boxes rather than the controller's marks), with its own tests, CHANGELOG entry and
   release.
-- **A PS4 Camera for USB HD Cam (on hold, owner 23-10-2026: when there is one at the board).** The app handles the
+- **A PS4 Camera for USB HD Cam (dropped, owner 04-11-2026).** The app handles the
   PS4 Camera on Sony's PlayStation Camera Adapter (CFI-ZAA1), but nothing of it was tried: there is no PS4 Camera at
   the board. To try then: the adapter's hub (054c:0d0b) shows it as PS4 Camera; Download gets its firmware (PS4
   system software 1.50 to 3.15, psxdev/luke_firmwares) and the box turns green; the load with Reduced bandwidth (the
@@ -2618,7 +2731,7 @@ installers, docs, native and shell jobs, both catalogs' --check, the wiki's stri
   and switched between; run from the checkout on Windows and Bazzite, to see a mock with each system's fonts,
   scaling and style. The Nexus page's Design chapter describes it once it exists.
 
-- **Descriptions for the games in Steam (on hold, owner 22-10-2026: after the release of the covers).** A non-Steam
+- **Descriptions for the games in Steam (dropped, owner 04-11-2026).** A non-Steam
   game's page shows Steam's fixed notice where a Steam game has its description, developer and release date:
   shortcuts.vdf has no field for them, so no manager can write one. Only a Decky plugin can fill that panel. The
   owner tries MetaDeck (Decky's plugin store; it looks non-Steam games up on IGDB) on the board, with the managers'
@@ -2754,9 +2867,9 @@ installers, docs, native and shell jobs, both catalogs' --check, the wiki's stri
   follows Fn + Square and Fn + Triangle; Cross set to Circle lights Circle; R2 set to 0 to 50 % (read back 0 to 128)
   fills like L2: the controller does not apply the trigger range on Linux (a PS5 may, or the reference's reading of
   bytes 4 to 7 is wrong); the editor keeps it with a note (owner). The curves work: the left stick on Digital jumped
-  to the edge, the right one on Default moved smoothly. Edit works (several edits by the owner). Open: a profile with a shorter trigger made on a PS5, compared byte for byte (with the PS5 test on hold below). Still the
+  to the edge, the right one on Default moved smoothly. Edit works (several edits by the owner). Open: a profile with a shorter trigger made on a PS5, compared byte for byte (with the PS5 test of Export and import, below). Still the
   next step for the app (owner, 23-10-2026: in the next chat), with the
-  two items on hold below: the battery runtime test and the plain DualSense's specifications; then the idle switch-off
+  the battery runtime test and the plain DualSense's specifications (both dropped, owner 04-11-2026); then the idle switch-off
   (decided, below). Then (owner, 23-10-2026): the drawing live from the input reports, the light bar's
   color, a vibration test, the update's data flow, turning with the mouse, the drawing redone (85 % wide, larger
   d-pad and face buttons in the first pads' colors, the gaming blue). Open on the board (the owner): press every
@@ -2794,10 +2907,10 @@ installers, docs, native and shell jobs, both catalogs' --check, the wiki's stri
   16-byte ID, a CRC), so it can be shared as a file: Export… on a card writes one profile, Import… on an empty slot
   writes one through the same path as Create (backup, write, read back, a new ID), also from a backup file (a
   restore). Open: whether a PS5 accepts a profile written this way as its own, and what it does with the ID.
-- **Specifications of the plain DualSense in USB HD Control (on hold, owner 23-10-2026: when an official spec
-  sheet is found).** The info sheet lists only facts with an official source; Sony's DualSense manual was not found
+- **Specifications of the plain DualSense in USB HD Control (dropped, owner 04-11-2026; it waited for an
+  official spec sheet).** The info sheet lists only facts with an official source; Sony's DualSense manual was not found
   online, and shops disagree on its battery. The owner will look for one.
-- **Battery tests for USB HD Control (on hold, owner 23-10-2026: a later iteration).** The owner's Edge does not last
+- **Battery tests for USB HD Control (dropped, owner 04-11-2026).** The owner's Edge does not last
   long on its battery. Measure it over Bluetooth (on USB it charges): log the level hid-playstation reports (steps of
   10 %) and the time, with the light bar, the player LEDs, rumble and the adaptive triggers on and off, before and
   after the firmware update, and see whether any of them (they are host-set: the light bar's brightness is
@@ -3338,11 +3451,11 @@ Things already decided against were left out (the Bluetooth helper, the exploit 
   MIT/GPLv3), its source self-hosted, builds as a tarball from builds.lsfg-vk.dev. The developer allows use and
   reuploads but no derivatives, and wants integrations agreed with them first; the owner does not take on a project
   kept under such guard.
-- **Power adapter information (on hold, owner 19-10-2026).** What can be read from the FSP500-30AS. As far as known
+- **Power adapter information (dropped, owner 04-11-2026).** What can be read from the FSP500-30AS. As far as known
   it has no data interface (no PMBus or USB), so nothing can be read from the adapter itself; to check against its
   datasheet. What the board reports (amdgpu's power and voltages, hwmon sensors) is readable: run `sensors` on the
   board to see what is there.
-- **SSD health check (on hold, owner 19-10-2026).** Much simpler than CrystalDiskInfo: only the health percentage,
+- **SSD health check (on the roadmap, owner 04-11-2026).** Much simpler than CrystalDiskInfo: only the health percentage,
   the power cycle count and the power-on hours. Through udisks2 over D-Bus, which reads SMART without root (the board
   has no passwordless sudo). NVMe gives all three (health = 100 - "percentage used"); a SATA SSD gives the hours and
   cycles, but its health attribute differs per vendor, so an unknown drive shows "health not reported". "Start/stop
