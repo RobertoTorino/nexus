@@ -331,44 +331,6 @@ def test_claude_usage_is_a_pill_that_opens_the_usage_page(window, monkeypatch):
     assert main_window.ClaudeUsageIndicator(None).isHidden()
 
 
-def test_close_issues_lists_the_open_ones_and_closes_the_ticked(window):
-    """Close issues (Test on this board): the open issues with a tick box each; Run closes the ticked ones with gh
-    issue close in the Commands tab."""
-    from PyQt6.QtCore import Qt
-    from nexus_release_tool import main_window
-    from nexus_release_tool import plan as rp
-    w, _app = window
-    issues = [rp.Issue(12, "Upstream review", "https://github.com/o/r/issues/12", "2026-10-20"),
-              rp.Issue(9, "Backlog review", "https://github.com/o/r/issues/9", "2026-10-19")]
-    dialog = main_window.IssuesDialog(w, lambda: issues)
-    dialog.checker.stop(2000)
-    dialog.fill(dialog._fetch(lambda: issues))
-    assert dialog.list.count() == 2 and dialog.list.item(0).text() == "#12 Upstream review (updated 2026-10-20)"
-    assert dialog.state.text() == "2 open issues on GitHub." and not dialog.run_button.isEnabled()
-    dialog.list.item(0).setCheckState(Qt.CheckState.Checked)
-    assert dialog.numbers() == [12] and dialog.run_button.isEnabled()
-    dialog.reject()
-
-    failed = main_window.IssuesDialog(w, lambda: [])
-    failed.checker.stop(2000)
-    failed.fill(failed._fetch(lambda: (_ for _ in ()).throw(OSError("offline"))))
-    assert "offline" in failed.state.text() and failed.list.count() == 0 and not failed.run_button.isEnabled()
-    failed.fill([])
-    assert failed.state.text() == "No open issues on GitHub."
-    failed.reject()
-
-    ran = []
-    w.commands.run_now = lambda command: ran.append(command) or True
-    w.run_page.run_close([12], "Decky pinned at v3.3.0")
-    assert ran == [rp.close_issues_command([12], "Decky pinned at v3.3.0")]
-    assert w.tabs.currentIndex() == w.commands_tab
-    w.run_page.run_close([], "")
-    assert len(ran) == 1
-    w.commands.run_now = lambda command: False
-    w.run_page.run_close([9], "")
-    assert "nothing was closed" in w.run_page.output.toPlainText()
-
-
 def test_the_window_has_nexus_design(window):
     """A Nexus app, not a suite's (owner, 26-10-2026): create_app() puts Nexus's theme on the application (ink,
     silver, teal: nexus/docs/stylesheets/nexus.css), the widgets draw with it, and the icon is the Nexus drawing."""

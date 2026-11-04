@@ -17,7 +17,9 @@
 set -uo pipefail
 
 ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)
-export PATH="$PATH:/home/linuxbrew/.linuxbrew/bin"
+# Homebrew's own folder, which a shell that is not interactive may lack; HOMEBREW_PREFIX (brew shellenv) names
+# another.
+export PATH="$PATH:${HOMEBREW_PREFIX:-/home/linuxbrew/.linuxbrew}/bin"
 
 info() { printf '\033[1;35m==>\033[0m %s\n' "$1"; }
 warn() { printf '\033[1;33mWARNING:\033[0m %s\n' "$1" >&2; }

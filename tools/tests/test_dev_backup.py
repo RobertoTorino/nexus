@@ -20,8 +20,17 @@ pytestmark = pytest.mark.skipif(os.name != "posix" or shutil.which("bash") is No
                                 reason="needs bash and tar")
 
 
-def run(home: Path, *args: str, path: str = "/usr/bin:/bin") -> subprocess.CompletedProcess[str]:
-    env = {"HOME": str(home), "PATH": path, "LANG": "C.UTF-8"}
+def run(home: Path, *args: str, brew: bool = True) -> subprocess.CompletedProcess[str]:
+    """The script with a stub brew, or none: a real brew (GitHub's runner has one) fills its empty cache in a fresh
+    home over the network, which took from seconds to minutes."""
+    stubs = home.parent / "stubs"
+    if brew and not (stubs / "bin" / "brew").exists():
+        (stubs / "bin").mkdir(parents=True, exist_ok=True)
+        (stubs / "bin" / "brew").write_text('#!/bin/sh\nfor arg; do case $arg in --file=*) echo \'brew "git"\' '
+                                            '>"${arg#--file=}";; esac; done\n', encoding="utf-8")
+        (stubs / "bin" / "brew").chmod(0o755)
+    env = {"HOME": str(home), "PATH": "/usr/bin:/bin", "LANG": "C.UTF-8",
+           "HOMEBREW_PREFIX": str(stubs if brew else home.parent / "no-brew")}
     return subprocess.run(["bash", str(SCRIPT), *args], capture_output=True, text=True, env=env, timeout=120,
                           check=False)
 
@@ -49,15 +58,15 @@ def make_home(home: Path) -> None:
 
 
 def test_help_prints_the_header_comment():
-    result = run(Path("/nonexistent"), "--help")
+    result = run(Path("/nonexistent"), "--help", brew=False)
     assert result.returncode == 0, result.stderr
     assert result.stdout.startswith("Packs what the repository does not hold")
     assert "SPDX" not in result.stdout and "tools/dev-backup.sh pack" in result.stdout
 
 
 def test_no_command_is_an_error():
-    assert run(Path("/nonexistent")).returncode == 2
-    assert run(Path("/nonexistent"), "nonsense").returncode == 2
+    assert run(Path("/nonexistent"), brew=False).returncode == 2
+    assert run(Path("/nonexistent"), "nonsense", brew=False).returncode == 2
 
 
 def test_pack_takes_the_files_and_writes_the_lists(tmp_path: Path):
@@ -91,17 +100,26 @@ def test_pack_takes_the_files_and_writes_the_lists(tmp_path: Path):
 def test_lists_say_which_tool_is_missing(tmp_path: Path):
     home = tmp_path / "home"
     make_home(home)
-    result = run(home, "pack", str(tmp_path))
+    out = tmp_path / "stick"
+    out.mkdir()
+    result = run(home, "pack", str(out), brew=False)
     assert result.returncode == 0, result.stderr
-    archive = next(tmp_path.glob("nexus-dev-backup-*.tar.gz"))
+    archive = next(out.glob("nexus-dev-backup-*.tar.gz"))
     with tarfile.open(archive) as tar:
         brewfile = tar.extractfile("lists/Brewfile").read().decode()
         ssh_files = tar.extractfile("lists/ssh-files.txt").read().decode()
-    if shutil.which("brew", path="/usr/bin:/bin:/home/linuxbrew/.linuxbrew/bin") is None:  # the script adds brew's folder
-        assert "brew is not installed" in brewfile
-    else:                       # brew bundle dump wrote it: empty where brew installed nothing (GitHub's runner)
-        assert "brew is not installed" not in brewfile
+    assert "brew is not installed" in brewfile
     assert "ps2-bios" in ssh_files, "the files not packed are listed so the owner can copy them by hand"
+
+
+def test_the_brewfile_is_brews_own_dump(tmp_path: Path):
+    home = tmp_path / "home"
+    make_home(home)
+    out = tmp_path / "stick"
+    out.mkdir()
+    assert run(home, "pack", str(out)).returncode == 0
+    with tarfile.open(next(out.glob("nexus-dev-backup-*.tar.gz"))) as tar:
+        assert tar.extractfile("lists/Brewfile").read().decode() == 'brew "git"\n'
 
 
 def test_restore_puts_the_files_back_and_keeps_existing_ones(tmp_path: Path):

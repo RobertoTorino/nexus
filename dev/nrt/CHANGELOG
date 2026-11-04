@@ -1,3 +1,13 @@
+Changelog: 04-11-2026 10:54:41
+
+Breaking. Test on this board holds the board tests of a release alone: Test app updates, Test Portal release
+and Test withdrawal (owner, 04-11-2026: the release tool is the release). Test local apps (the suite's apps and
+wikis from the checkout, Wikis on the network) and Close issues moved to Nexus Dashboard, with their code
+(plan.launch_targets, portal_target, docs_targets, fetch_open_issues and the rest) and tests. Installer tests and
+Record portal tour are gone: the dashboard's Nexus Installer Tests and Portal video tour tiles do the same on the
+suite chosen there (on a Windows suite, Nexus Installer Tests runs its .ps1 tests; check-release.ps1 installer
+still runs them all from PowerShell). The local apps' logs are no longer in ~/.cache/nexus-release-tool/run/.
+
 Changelog: 04-11-2026 02:05:35
 
 Added. The BC250 Bazzite Suite is on the Nexus release (owner, 04-11-2026: the same steps for every suite): the

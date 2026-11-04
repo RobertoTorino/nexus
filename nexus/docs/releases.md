@@ -166,47 +166,14 @@ re-released on its own, a withdrawal); a release of what changed is the Nexus re
 - **Test on this board** holds the tests of a release on a BC-250. **Test app updates** and **Test Portal
   release** run the two [board tests](https://robertotorino.github.io/nexus/bc250-bazzite-suite/portal/#testing-a-portal-release-before-its-tag) in a terminal, with the suite's `bc250-bazzite/tools/check-release.sh`: the portal from the
   checkout before the push, and the published portal release after GitHub has built it. **Test withdrawal** does
-  the first on a board with a withdrawn app installed. **Installer tests** opens [Nexus Installer
-  Tests](dashboard.md#installer-tests) from the checkout on the ticked suite. **Record portal tour** records the portal's video tour from the checkout as it is now, for the wiki and
-  YouTube (`bc250-bazzite/tools/record-tour.sh`, about a minute, its output in Commands), into
-  `~/Videos/<prefix>portal-tour-v<portal version>.mp4` (`bc250-`, or the suite's tag prefix, `wp-`), on the
-  suite's own system, and opens it in your video player. The box beside it is the
-  video's size: 1080p, the wiki's, or 2160p (4K) for YouTube, which shows a 4K upload far sharper (about four times
-  the time, `-2160p` before `.mp4`); 1440p is the step between. The tests run on the
-  ticked suite's own system: the BC250 suite's on Linux (the board). For a Windows suite they run on Windows (the
-  handheld), with its `tools\check-release.ps1` in a PowerShell window: **Test app updates** and **Test withdrawal**
-  start the portal from the checkout (`check-release.ps1 local`), **Test Portal release** downloads the published
-  portal release, checks it against its SHA256SUMS, installs it and starts it (`check-release.ps1 release`), and
-  **Installer tests** runs every installer test of the suite in turn (`check-release.ps1 installer`). **Record
-  portal tour** is the BC250 suite's, on Linux. A button greyed out says on which system its tests run. Then
-  **Close issues**: it lists the open issues on GitHub, such as the weekly Upstream review, each with a tick box.
-  **Run** closes the ticked ones with `gh issue close` in the Commands tab, with a comment when you write one; it
-  needs a gh login (`gh auth login`). A double click opens an issue on GitHub.
-- **Test local apps**, on the same tab: the ticked suite's portal and every app window of it in the checkout, as an
-  icon (the portal first; the Windows Portable Suite's portal too, which starts full screen as on the handheld:
-  View exits it).
-  When the portal is already open, its icon warns instead of starting: a second portal never opens (starting it only
-  brings the open window to the front), so close it first. A click starts that app from the checkout,
-  to try a change before its release: `python -m <package>` with the checkout's venv and its `core`, as `run.sh`
-  starts Nexus Release Tool. An app that changes how the board runs asks first, as in the portal; started from the
-  checkout it uses the scripts in the checkout. Each app writes its output to
-  `~/.cache/nexus-release-tool/run/<package>.log`. When an app stops with an error, the end of its log shows on the page.
-  The apps keep running when you close the window. The last icons are the ticked suite's wiki and the Nexus page
-  (another suite's wiki shows when that suite is ticked; each keeps its port): **BC250 Bazzite Suite wiki
-  (local)** serves this wiki from the checkout with `mkdocs serve` (the
-  development venv has MkDocs) and opens it in the browser at `http://127.0.0.1:8765/nexus/bc250-bazzite-suite/`, with
-  its design panel open; **Nexus wiki (local)** does the same for the Nexus page, at port 8766, and **Windows
-  Portable Suite wiki (local)** for that suite's wiki, at port 8767. Each rebuilds on
-  every save; its log is `mkdocs-<wiki>-local.log` there. When one is already running, a click only opens the page
-  again. The wikis, like the apps, keep running when you close the window, and Nexus Release Tool has no button that
-  stops them. A wiki started before the checkout changed (after a pull, or a change to its `mkdocs.yml` or the
-  design panel) can still show the old setup: stop it, then click its icon again. `pkill -f "mkdocs serve"` stops
-  every wiki on Linux; on Windows, in PowerShell:
-  `Get-CimInstance Win32_Process -Filter "Name='python.exe'" | Where-Object { $_.CommandLine -like '*mkdocs serve*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }`.
-  With **Wikis on the network** ticked, the icons serve the wikis on every address of the computer, at
-  ports 8785 and 8786, so a handheld, a laptop or the TV opens them too: the addresses for those devices show on
-  the page once a wiki started. The computer's firewall has to let them in (see the Nexus page's
-  [Design](design.md) chapter).
+  the first on a board with a withdrawn app installed. The tests run on the ticked suite's own system: the BC250
+  suite's on Linux (the board). For a Windows suite they run on Windows (the handheld), with its
+  `tools\check-release.ps1` in a PowerShell window: **Test app updates** and **Test withdrawal** start the portal
+  from the checkout (`check-release.ps1 local`), **Test Portal release** downloads the published portal release,
+  checks it against its SHA256SUMS, installs it and starts it (`check-release.ps1 release`). A button greyed out
+  says on which system its tests run. What is no release step is in the [Dashboard](dashboard.md): the suite's
+  apps and wikis from the checkout ([Test local apps](dashboard.md#test-local-apps)), the installer tests, the
+  portal's video tour and [Close issues](dashboard.md#close-issues).
 - What a step writes (Apply, Pin, Bump portal, Retract, a test on this board) shows in **Commands**, under a line
   that names the step, with the output of the commands: one output tab. A step that writes its log opens Commands;
   open the step again to go on. The steps' logs go into the day's command log too (below).

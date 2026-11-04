@@ -1,3 +1,16 @@
+Changelog: 04-11-2026 10:54:41
+
+Added. The Nexus page's Dashboard chapter has Test local apps and Close issues, moved there from Releases (Test on
+this board keeps the board tests); Design says the wikis are served from Nexus Dashboard, and the BC250 wiki's
+Development chapter points Close issues to it.
+
+Changelog: 04-11-2026 10:44:09
+
+Fixed. tools/dev-backup.sh's tests ran the runner's own Homebrew, whose brew bundle dump fills an empty cache over
+the network in a fresh home folder: from seconds to over two minutes, so CI Nexus timed out on GitHub (run
+41758185002). The tests now use a stub brew, or none, and the script takes Homebrew's folder from HOMEBREW_PREFIX
+(as brew shellenv sets it), with /home/linuxbrew/.linuxbrew as before.
+
 Changelog: 04-11-2026 02:52:00
 
 Added. Each suite's CI reads its matrices from the suite's folders (stage 2 of the release redesign, owner

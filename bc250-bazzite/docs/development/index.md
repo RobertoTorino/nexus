@@ -110,8 +110,8 @@ SHA-256 GitHub publishes for the pinned binary, and Decky's `plugin_loader-relea
 could not check. The Upstream workflow (`.github/workflows/upstream.yml`) runs it every Monday and can be started by
 hand. What moved goes into the open **Upstream review** issue (a new one when none is open, else its list is
 updated with a comment), which notifies everyone who watches the repository. The workflow never closes it: close
-it once every item on it is handled on `main`, else next Monday's run opens it again. **Close issues** in Suite
-Releases (tab Test on this board) does it, or a command with a gh login:
+it once every item on it is handled on `main`, else next Monday's run opens it again. **Close issues** in [Nexus
+Dashboard](https://robertotorino.github.io/nexus/dashboard/#close-issues) does it, or a command with a gh login:
 
 ```bash
 gh issue list                                                  # the open issues, with their numbers

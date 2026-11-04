@@ -41,13 +41,13 @@ def test_the_window_lists_the_apps_then_the_suites_tools(qapp):
     assert window.windowTitle() == APP_NAME
     names = [window.tiles.item(i).text() for i in range(window.tiles.count())]
     assert names == ["Nexus Release Tool", "Nexus Demo Recorder", "Nexus Installer Tests", "Nexus Sound Lab",
-                     "Portal video tour", "Apps video tour", "Convert icons"]
+                     "Portal video tour", "Apps video tour", "Convert icons", "Close issues"]
     assert window.suite_box.currentText() == "BC250 Bazzite Suite" and settings.value(SUITE_KEY) is None
     enabled = [bool(window.tiles.item(i).flags() & Qt.ItemFlag.ItemIsEnabled) for i in range(window.tiles.count())]
     if sys.platform == "win32":
-        assert enabled == [True, False, True, False, False, False, True]
+        assert enabled == [True, False, True, False, False, False, True, True]
     else:
-        assert enabled == [True] * 7
+        assert enabled == [True] * 8
     window.close()
 
 
@@ -120,8 +120,11 @@ def test_a_checkout_without_suites_or_apps(qapp, tmp_path):
     window = MainWindow(tmp_path, settings=None)
     assert window.suite is None and window.apps == []
     assert [window.tiles.item(i).text() for i in range(window.tiles.count())] == ["Portal video tour",
-                                                                                  "Apps video tour", "Convert icons"]
+                                                                                  "Apps video tour", "Convert icons",
+                                                                                  "Close issues"]
     assert all(not window.tiles.item(i).flags() & Qt.ItemFlag.ItemIsEnabled for i in range(3))
+    assert window.tiles.item(3).flags() & Qt.ItemFlag.ItemIsEnabled          # the repository's, every suite's
+    assert window.local_apps.count() == 0
     window.close()
 
 

@@ -32,9 +32,18 @@ suites in one place under Nexus, a small dashboard that stays local like NRT. Do
   Lab); the Media Tool on the boards goes by the Demo Recorder's `install.sh` (which already removes its copy,
   launcher, menu entry and Desktop icon); Nexus Sound Lab has `run.ps1`, so the dashboard's tile is on on Windows
   (the window not tried on Windows yet). **Open (owner):** the portal's major bump (an app removed: Breaking) and
-  Nexus's (done with portal-v14.0.0); a device test of the dashboard's Windows scripts on the handheld (open the
-  dashboard there once with `dev\dash\run.ps1` and `install.ps1`: the tiles, the dialogs); the NRT's Test on this
-  board launcher part moving into the dashboard (my proposal, explained 04-11-2026, not decided).
+  Nexus's (done with portal-v14.0.0).
+- **Device test on the handheld (owner, 04-11-2026):** the dashboard's `run.ps1` and `install.ps1` were tried on
+  the Ally, and Nexus Sound Lab's tile; some of the dashboard's tools do not start there. **Open (owner):** which
+  ones and why, looked into by the owner on the Windows machine.
+- **Decided and done (owner, 04-11-2026, in the working tree):** NRT's Test on this board launchers moved into the
+  dashboard: Test local apps (the suite's apps and wikis from the checkout) and Close issues (`dev/dash/
+  nexus_dashboard/local.py`, `issues.py`); NRT's Installer tests and Record portal tour buttons went, the dashboard's
+  Nexus Installer Tests and Portal video tour tiles do the same. Test on this board keeps the three board tests.
+  No release (dev apps); a VERSION bump of each is the owner's: NRT's entry is Breaking, the dashboard's Added.
+- **CI Nexus run 41758185002 failed (04-11-2026):** `tools/tests/test_dev_backup.py` ran the runner's own Homebrew
+  (`brew bundle dump` filling an empty cache over the network, 120 s timeout); fixed in the working tree with a
+  stub brew and `HOMEBREW_PREFIX`.
 - **Also after the release (02-11-2026, in the working tree):** the Windows Portable Suite's portal tour
   (`windows-portable/tools/portal_tour.py`, `record-tour.sh`, `record-app-tour.sh`, the wiki's Portal Tour
   page; the copy in `docs/videos/` recorded on Linux: the owner records it on the handheld with `--wiki`),

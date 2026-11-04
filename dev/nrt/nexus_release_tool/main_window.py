@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The window: enter the new versions, and it edits the files of a release (plan.py) of the suite ticked in the
 first column (every suite in the checkout, tools/suites.py, with its portal's tag; hidden while there is one). The
-steps, the pins and the board tests are the ticked suite's; the git buttons, the wikis and GitHub are the repository's.
+steps, the pins and the board tests are the ticked suite's; the git buttons and GitHub are the repository's.
 
 Step 1, Release apps: tick the apps to release, enter their versions and notes, Apply. It writes VERSION, the copies
 check_versions.py checks and a "Release x.y.z." CHANGELOG entry, runs check_versions.py and check_manifest.py (an
@@ -24,12 +24,9 @@ what Claude Code on this machine used, from its transcripts; a click opens Claud
 ticker says where the newest push's workflow runs stand: the job that runs and its step (owner, 28-10-2026).
 Test on this board: Test app updates and Test withdrawal install the portal from the checkout and start it with the
 apps from their releases, Test Portal release installs the published portal release (check-release.sh, in a
-terminal); Installer tests opens Nexus Installer Tests on the suite; Record portal tour records the portal's video tour
-from this checkout (tools/record-tour.sh) into ~/Videos and opens it; Close issues lists the open GitHub issues,
-and closes the ticked ones with gh issue close in the Commands tab. Test local apps: click an app's icon to start it from this
-checkout, to try it before its release (the portal is the first icon); a wiki's icon (one per mkdocs.yml) serves it
-from the checkout (mkdocs serve, a port each) and opens it with its design panel; Wikis on the network serves them
-for the other devices too.
+terminal). The launchers that are no release steps (the local apps and the wikis, the installer tests, the portal
+tour, Close issues) are Nexus Dashboard's since 04-11-2026 (owner: the release tool is the release, the dashboard
+the place for working on a suite).
 The Commands tab is a command line in the checkout (command_line.py), where the steps' pills run their commands and
 what each step wrote shows under a line that names it (one output tab, owner, 01-11-2026); its Commands menu offers
 the commands the last step showed."""
@@ -39,22 +36,18 @@ from __future__ import annotations
 import os
 import shlex
 import shutil
-import socket
 import subprocess
 import sys
 import time
 from pathlib import Path
 
-from PyQt6.QtCore import QProcess, QRectF, QSize, Qt, QTimer, QUrl
-from PyQt6.QtGui import QColor, QDesktopServices, QIcon, QPainter, QPen, QPixmap
-from PyQt6.QtNetwork import QLocalSocket
-from PyQt6.QtWidgets import (QApplication, QCheckBox, QComboBox, QDialog, QFrame, QGridLayout, QHBoxLayout, QHeaderView, QLabel,
-                             QLineEdit, QListView,
-                             QListWidget, QListWidgetItem, QMainWindow, QMessageBox, QPushButton, QSizePolicy,
+from PyQt6.QtCore import QProcess, QSize, Qt, QTimer, QUrl
+from PyQt6.QtGui import QColor, QDesktopServices, QIcon
+from PyQt6.QtWidgets import (QApplication, QCheckBox, QComboBox, QFrame, QGridLayout, QHBoxLayout, QHeaderView, QLabel,
+                             QLineEdit, QListWidget, QListWidgetItem, QMainWindow, QMessageBox, QPushButton, QSizePolicy,
                              QSystemTrayIcon, QTableWidget, QTableWidgetItem, QTabWidget, QVBoxLayout,
                              QWidget)
 
-from bc250_core.instance import server_name
 from bc250_core.platform import launch_in_terminal
 from bc250_core.theme import BLUE, GREEN, GREY, ORANGE, RED
 from bc250_core.updates import UpdateChecker
@@ -73,8 +66,8 @@ SUITE_KEY = "suite"                     # the chosen suite, in the settings
 VERSION_FIELD_PX = 130                  # the portal version field: a version like 10.1.0 and room to type
 SEMVER_TIP = ("Breaking. (an entry that starts with it) -> major: something removed or no longer working as "
               "before. Added. -> minor: a new feature. Fixed. -> patch: a bug or security fix.")
-LOG_DIR = Path(os.environ.get("XDG_CACHE_HOME") or Path.home() / ".cache") / "nexus-release-tool" / "run"
-COMMAND_LOG_DIR = LOG_DIR.parent / "commands"   # every command line's output, a file a day (command_line.py)
+# every command line's output, a file a day (command_line.py)
+COMMAND_LOG_DIR = Path(os.environ.get("XDG_CACHE_HOME") or Path.home() / ".cache") / "nexus-release-tool" / "commands"
 # A selected cell and the input field being typed in: a teal outline (Nexus's accent) with rounded corners on a
 # transparent background, not the desktop's solid highlight. The line edit inside an editable combo box keeps the
 # combo's frame. The tables' grid lines are the thin dimmed-silver edge of the theme, as the border around a table
@@ -719,69 +712,8 @@ class WithdrawPage(QWidget):
         self.release_window.reload()
 
 
-def start_app(command: list[str], env: dict[str, str], cwd: Path, log: Path) -> subprocess.Popen:
-    """Starts an app in its own session, so it keeps running when this window closes; its output goes to *log*."""
-    log.parent.mkdir(parents=True, exist_ok=True)
-    with open(log, "wb") as out:
-        return subprocess.Popen(command, cwd=cwd, env=env, stdin=subprocess.DEVNULL, stdout=out,
-                                stderr=subprocess.STDOUT, start_new_session=True)
-
-
-def answers(url: str) -> bool:
-    """True when something listens at the host and port of *url* (a local server that is up)."""
-    address = QUrl(url)
-    try:
-        with socket.create_connection((address.host(), address.port(80)), timeout=0.2):
-            return True
-    except OSError:
-        return False
-
-
 def open_url(url: str) -> None:
     QDesktopServices.openUrl(QUrl(url))
-
-
-def log_tail(log: Path, lines: int = 20) -> str:
-    try:
-        return "\n".join(log.read_text(encoding="utf-8", errors="replace").splitlines()[-lines:])
-    except OSError:
-        return ""
-
-
-ICON_PX = 64                            # the apps' icons under Test local apps
-TOUR_SIZES = ("1080p", "1440p", "2160p")   # the portal tour's size (tools/tour_frames.py); the first is the default
-BADGE_PX = 26                           # the warning in the corner of an app's icon that changes the board
-
-
-def board_badge(icon: QIcon) -> QIcon:
-    """*icon* with a warning in its lower right corner: the app changes how the board runs. On the icon, not in the
-    label, so a name that wraps never pushes it out of the grid's cell."""
-    pixmap = QPixmap(ICON_PX, ICON_PX)
-    pixmap.fill(Qt.GlobalColor.transparent)
-    painter = QPainter(pixmap)
-    painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-    icon.paint(painter, 0, 0, ICON_PX, ICON_PX)
-    corner = QRectF(ICON_PX - BADGE_PX, ICON_PX - BADGE_PX, BADGE_PX, BADGE_PX)
-    painter.setPen(QPen(QColor("white"), 2))
-    painter.setBrush(QColor(ORANGE))
-    painter.drawEllipse(corner.adjusted(1, 1, -1, -1))
-    font = painter.font()
-    font.setBold(True)
-    font.setPixelSize(BADGE_PX - 8)
-    painter.setFont(font)
-    painter.drawText(corner, Qt.AlignmentFlag.AlignCenter, "!")
-    painter.end()
-    return QIcon(pixmap)
-
-
-def instance_running(app_id: str) -> bool:
-    """Whether *app_id* is open for this user: something listens on its instance socket (core's instance.py). It only
-    connects and lets go, so the open window is not asked to show itself."""
-    connection = QLocalSocket()
-    connection.connectToServer(server_name(app_id))
-    found = connection.waitForConnected(500)
-    connection.abort()
-    return found
 
 
 # What the test buttons do for a Windows suite (its check-release.ps1, on the handheld)
@@ -790,14 +722,13 @@ WINDOWS_TIPS = {
                         "apps.toml pins from their GitHub releases",
     "Test withdrawal": "Start the portal from this checkout on a handheld with the withdrawn app installed "
                        "(check-release.ps1 local); it must show the app as not available and remove it",
-    "Installer tests": "Run every installer test of the suite in turn, in a PowerShell window "
-                       "(check-release.ps1 installer)",
 }
 
 
 class RunPage(QWidget):
-    """Test on this board: the board checks of a release (check-release.sh in a terminal), the installer tests, and
-    every app window in the checkout as an icon: a click starts it from the checkout, as it is before a release."""
+    """Test on this board: the board checks of a release (check-release.sh in a terminal). The local apps, the
+    wikis, the installer tests, the portal tour and Close issues are Nexus Dashboard's since 04-11-2026 (owner: the
+    release tool is the release)."""
 
     def __init__(self, window: "ReleaseWindow"):
         super().__init__()
@@ -813,98 +744,31 @@ class RunPage(QWidget):
                                         "and start it (check-release.sh local); it must show the app as not available "
                                         "and remove it")
         self.withdraw_button.clicked.connect(lambda: self.check("withdrawal"))
-        self.installer_button = QPushButton("Installer tests")
-        self.installer_button.setToolTip("Open Nexus Installer Tests from this checkout on this suite: every "
-                                         "installer test, one at a time, with its output live")
-        self.installer_button.clicked.connect(self.installer_tests)
-        self.tour_button = QPushButton("Record portal tour")
-        self.tour_button.setToolTip("Record the portal's video tour from this checkout, for the wiki and YouTube "
-                                    f"({rp.RECORD_SCRIPT}, about a minute), into ~/Videos, and open it")
-        self.tour_button.clicked.connect(self.record_tour)
-        self.tour_size = QComboBox()                # the video's size, as record-tour.sh takes it
-        self.tour_size.addItems(TOUR_SIZES)
-        self.tour_size.setToolTip("The tour's size: 1080p for the wiki, 2160p (4K) for YouTube, which shows it far "
-                                  "sharper (about four times the time)")
-        self.recorder: QProcess | None = None
-        self.issues_button = QPushButton("Close issues")
-        self.issues_button.setToolTip("The open issues on GitHub: tick the ones that are handled, and Run closes "
-                                      "them (gh issue close, in the Commands tab)")
-        self.issues_button.clicked.connect(self.close_issues)
         self.tooltips = {button: button.toolTip() for button in (self.local_button, self.release_button,
-                                                                 self.withdraw_button, self.installer_button,
-                                                                 self.tour_button)}
-        self.apps = QListWidget()
-        self.apps.setViewMode(QListView.ViewMode.IconMode)
-        self.apps.setIconSize(QSize(ICON_PX, ICON_PX))
-        self.apps.setGridSize(QSize(150, 120))
-        self.apps.setResizeMode(QListView.ResizeMode.Adjust)
-        self.apps.setMovement(QListView.Movement.Static)
-        self.apps.setWordWrap(True)
-        self.apps.itemClicked.connect(lambda item: self.run(item.data(Qt.ItemDataRole.UserRole)))
-        self.network_box = QCheckBox("Wikis on the network")
-        self.network_box.setToolTip("Serve the wikis on every address of this computer, on ports of their own, so "
-                                    "the other devices on the network (a handheld, a laptop, the TV) open them too; "
-                                    "their addresses show below once a wiki started")
-        self.network_box.toggled.connect(lambda _on: self.release_window.reload())
+                                                                 self.withdraw_button)}
         self.output = StepLog(self, "Test on this board", window.step_wrote, opens=False)   # lines while you click
         checks = QHBoxLayout()
-        for button in (self.local_button, self.release_button, self.withdraw_button, self.installer_button,
-                       self.tour_button, self.tour_size, self.issues_button):
+        for button in (self.local_button, self.release_button, self.withdraw_button):
             checks.addWidget(button)
         checks.addStretch(1)
-        local = QLabel("Test local apps")
-        local.setStyleSheet("font-weight:700;")
-        local_row = QHBoxLayout()
-        local_row.addWidget(local)
-        local_row.addStretch(1)
-        local_row.addWidget(self.network_box)
         lay = QVBoxLayout(self)
         lay.addLayout(info_row(
-            "The tests of a release on a BC-250, each in a terminal; Close issues handles GitHub's open issues.",
+            "The tests of a release on a BC-250, each in a terminal.",
             "The tests of a release, on a BC-250. <b>Test app updates</b> (step 2, before the portal's push): the "
             "portal from this checkout, with the apps from their GitHub releases. <b>Test Portal release</b> (after "
             "GitHub built the portal): the published portal release. <b>Test withdrawal</b> (step 3): the portal from "
             "this checkout on a board with the withdrawn app installed. Each runs in a terminal; close the portal "
-            "there to finish. <b>Installer tests</b> opens Nexus Installer Tests on the suite. <b>Record portal tour</b> "
-            "records "
-            "the portal's video tour from this checkout, as it is now, and opens it when it is done. <b>Close "
-            "issues</b> lists the open issues on GitHub, such as the weekly Upstream review, and closes the ones "
-            "you tick once they are handled."))
+            "there to finish. The apps and the wikis from this checkout, the installer tests, the portal tour and "
+            "Close issues are in Nexus Dashboard."))
         lay.addLayout(checks)
-        lay.addSpacing(8)
-        lay.addLayout(local_row)
-        lay.addLayout(info_row(
-            "Click an app to start it from this checkout, to try it before its release; the last icons serve the wikis.",
-            "Click an app to start it from this checkout, to try it before its release: <code>python -m</code> with "
-            "this venv and the checkout's core, as <code>run.sh</code> starts this app. An app that changes how the "
-            "board runs (an orange <b>!</b> on its icon) asks first; it uses the scripts in the checkout. Each app "
-            f"writes its output to <code>{LOG_DIR}</code>; when it stops with an error, the end of that log shows below. "
-            "The ticked suite's portal is the first icon; when a portal is already open it warns instead, as a second one "
-            "would only show the open one. The last icons are the ticked suite's wiki and the Nexus page: each is "
-            "served with <code>mkdocs serve</code> on a port of its own and opens in the browser with its design "
-            "panel; it rebuilds on every save. With <b>Wikis on the network</b> they are served for the other devices "
-            "too, on ports of their own; the addresses show below."))
-        lay.addWidget(self.apps, 2)
-        self.running: list[tuple[rp.Launch, subprocess.Popen, Path]] = []
-        self.waiting: list[str] = []            # servers started, whose page opens once they answer
-        self.timer = QTimer(self, interval=1000)
-        self.timer.timeout.connect(self.poll)
+        lay.addStretch(1)
 
-    def fill(self, targets: list[rp.Launch]) -> None:
+    def fill(self) -> None:
         self.enable_tests()
         if self.release_button.isEnabled():
             self.release_button.setToolTip(
                 f"After GitHub built {self.release_window.portal_tag()}: download it, check it against "
                 f"its SHA256SUMS, install it and start it ({Path(self._check_path()).name} release)")
-        self.apps.clear()
-        for target in targets:
-            icon = QIcon(str(target.icon)) if target.icon else QIcon()
-            item = QListWidgetItem(board_badge(icon) if target.changes_board else icon, target.label)
-            item.setData(Qt.ItemDataRole.UserRole, target)
-            item.setToolTip(("\u26a0 Changes how the board runs: it asks first.\n" if target.changes_board else "") +
-                            " ".join(("python -m", target.module, *target.args)) + f" in {target.folder}" +
-                            (f"\nopens {target.url}" if target.url else ""))
-            self.apps.addItem(item)
 
     def _check_path(self) -> str:
         return rp.check_script(self.release_window.root, self.release_window.suite)
@@ -914,16 +778,12 @@ class RunPage(QWidget):
 
     def enable_tests(self) -> None:
         """The board tests of the ticked suite, on its own system (owner, 28-10-2026: on Windows they were all off):
-        a Bazzite suite's on Linux, a Windows suite's on Windows (its check-release.ps1). The portal tour too, since
-        02-11-2026: a Windows suite's on the handheld (its tools/record-tour.sh, from Git Bash)."""
+        a Bazzite suite's on Linux, a Windows suite's on Windows (its check-release.ps1)."""
         here = rp.tests_here(self.release_window.root, self.release_window.suite)
         windows = self.windows_suite()
         for button, tip in self.tooltips.items():
-            on = here
-            button.setEnabled(on)
-            if button is self.tour_button:
-                self.tour_size.setEnabled(on)       # the size box goes with the button
-            if on:
+            button.setEnabled(here)
+            if here:
                 button.setToolTip(WINDOWS_TIPS.get(button.text(), tip) if windows else tip)
             else:
                 button.setToolTip("This suite's tests run on " + ("Windows (the handheld)" if windows else
@@ -968,213 +828,6 @@ class RunPage(QWidget):
                           "the portal says it is not available any more and removes it; its tile then shows \"App not "
                           "available\". Close the portal there to finish."}[test])
 
-    def installer_tests(self) -> None:
-        if self.windows_suite():                    # no window of its own: every .ps1 in turn, in PowerShell
-            try:
-                self.release_window.launch(self._script_line("installer"))
-            except RuntimeError as exc:
-                self.output.appendPlainText(str(exc))
-                return
-            self.output.appendPlainText("A PowerShell window runs every installer test of the suite in turn.")
-            return
-        target = rp.installer_tests_target(self.release_window.root, self.release_window.suite)
-        if target is None:
-            self.output.appendPlainText("This checkout has no dev/itests (Nexus Installer Tests).")
-            return
-        self.run(target)
-
-    def close_issues(self) -> None:
-        dialog = IssuesDialog(self, self.release_window.issues_source)
-        if dialog.exec() == QDialog.DialogCode.Accepted:
-            self.run_close(dialog.numbers(), dialog.comment.text())
-
-    def run_close(self, numbers: list[int], comment: str) -> None:
-        """gh issue close for each ticked issue, in the Commands tab, as the git buttons run."""
-        if not numbers:
-            return
-        if self.release_window.commands.run_now(rp.close_issues_command(numbers, comment)):
-            self.release_window.tabs.setCurrentIndex(self.release_window.commands_tab)
-        else:
-            self.output.appendPlainText("Close issues: the command line is busy or has no bash; nothing was closed.")
-
-    def tour_file(self) -> Path:
-        """~/Videos/<prefix>portal-tour-v<portal version>.mp4, as the suite's record-tour.sh names it (the suite's tag
-        prefix, wp-; bc250- for the suite without one): -2160p before .mp4 at 4K."""
-        size = self.tour_size.currentText()
-        suffix = "" if size == TOUR_SIZES[0] else f"-{size}"
-        prefix = rp.tag_prefix(self.release_window.root, self.release_window.suite) or "bc250-"
-        return Path.home() / "Videos" / f"{prefix}portal-tour-v{self.release_window.portal_version()}{suffix}.mp4"
-
-    def record_tour(self) -> None:
-        """The suite's tools/record-tour.sh in the background, its output in Commands; the video opens when it is done."""
-        path = rp.record_script(self.release_window.root, self.release_window.suite)
-        script = self.release_window.root / path
-        if not script.is_file():
-            self.output.appendPlainText(f"This suite has no {path}.")
-            return
-        if self.recorder is not None:
-            return
-        out = self.tour_file()
-        size = self.tour_size.currentText()
-        options = [] if size == TOUR_SIZES[0] else ["--size", size]   # left out for the default: older scripts
-        self.recorder = QProcess(self)
-        self.recorder.setWorkingDirectory(str(self.release_window.root))
-        self.recorder.setProcessChannelMode(QProcess.ProcessChannelMode.MergedChannels)
-        self.recorder.readyReadStandardOutput.connect(self._recorder_output)
-        self.recorder.finished.connect(lambda code, _status: self._recorded(code, out))
-        self.tour_button.setEnabled(False)
-        self.output.appendPlainText(" ".join([f"$ {path}", str(out), *options]))
-        self.release_window.tabs.setCurrentIndex(self.release_window.commands_tab)   # its lines come there
-        self.recorder.start("bash", [str(script), str(out), *options])
-
-    def _recorder_output(self) -> None:
-        if self.recorder is not None:
-            text = bytes(self.recorder.readAllStandardOutput()).decode(errors="replace").rstrip("\n")
-            if text:
-                self.output.appendPlainText(text)
-
-    def _recorded(self, code: int, out: Path) -> None:
-        self._recorder_output()
-        self.recorder.deleteLater()
-        self.recorder = None
-        self.tour_button.setEnabled(True)
-        if code == 0 and out.is_file():
-            self.output.appendPlainText(f"The portal tour is in {out}; it opens in your video player.")
-            open_url(QUrl.fromLocalFile(str(out)).toString())
-        else:
-            self.output.appendPlainText(f"Recording the portal tour stopped with exit code {code}; see above.")
-
-    def run(self, target: rp.Launch) -> None:
-        if target.changes_board and QMessageBox.question(
-                self, "Local app test",
-                f"{target.name} changes how the board runs. Like every app of the suite it is software-only and "
-                f"reversible; started from the checkout it uses the scripts in {target.folder}.\n\nStart it?") \
-                != QMessageBox.StandardButton.Yes:
-            return
-        if target.app_id and instance_running(target.app_id):
-            QMessageBox.warning(
-                self, "Local app test",
-                f"{target.name} is already open (the installed one, or one started here).\n\nA second one never "
-                "opens: starting it again only brings the open window to the front, so the checkout would not be "
-                f"tested. Close {target.name} first, then click its icon again.")
-            return
-        if target.url and answers(target.url):
-            # Already up (started here or before): mkdocs would only fail on the taken port.
-            open_url(target.url)
-            self.output.appendPlainText(f"{target.label} is already running: opened {target.url}" +
-                                        (f"\n{target.note}" if target.note else ""))
-            return
-        command, env = rp.launch_command(self.release_window.root, target)
-        log = LOG_DIR / target.log_name
-        try:
-            process = self.release_window.start(command, env, target.folder, log)
-        except OSError as exc:
-            self.output.appendPlainText(f"{target.label}: could not start ({exc})")
-            return
-        self.running.append((target, process, log))
-        if target.url:
-            self.waiting.append(target.url)
-        self.timer.start()
-        self.output.appendPlainText(f"{target.label} started from {target.folder} (log: {log})" +
-                                    (f"; {target.url} opens once it is up" if target.url else "") +
-                                    (f"\n{target.note}" if target.note else ""))
-
-    def poll(self) -> None:
-        for entry in list(self.running):
-            target, process, log = entry
-            code = process.poll()
-            if code is None:
-                if target.url in self.waiting and answers(target.url):
-                    self.waiting.remove(target.url)
-                    open_url(target.url)
-                continue
-            self.running.remove(entry)
-            if target.url in self.waiting:
-                self.waiting.remove(target.url)
-            if code == 0:
-                self.output.appendPlainText(f"{target.label} closed.")
-            else:
-                tail = log_tail(log)
-                self.output.appendPlainText(f"{target.label} stopped with exit code {code}" +
-                                        (f"; the end of {log}:\n{tail}" if tail else "."))
-        if not self.running:
-            self.timer.stop()
-
-
-class IssuesDialog(QDialog):
-    """The open issues on GitHub, read in the background (plan.fetch_open_issues), each with a tick box; Run closes
-    the ticked ones."""
-
-    def __init__(self, parent: QWidget, source):
-        super().__init__(parent)
-        self.setWindowTitle("Close issues")
-        self.resize(640, 420)
-        self.state = QLabel("Reading the open issues on GitHub…")
-        self.state.setWordWrap(True)
-        self.list = QListWidget()
-        self.list.itemChanged.connect(self._show_state)
-        self.list.itemDoubleClicked.connect(lambda item: open_url(item.data(Qt.ItemDataRole.UserRole + 1)))
-        self.comment = QLineEdit()
-        self.comment.setPlaceholderText("Comment on each (optional), e.g. Decky pinned at v3.3.0")
-        self.run_button = accent_button("Run", "Close the ticked issues with gh issue close; it needs a gh login "
-                                               "(gh auth login)")
-        self.run_button.clicked.connect(self.accept)
-        cancel = QPushButton("Cancel")
-        cancel.clicked.connect(self.reject)
-        buttons = QHBoxLayout()
-        buttons.addStretch(1)
-        buttons.addWidget(cancel)
-        buttons.addWidget(self.run_button)
-        lay = QVBoxLayout(self)
-        lay.addWidget(hint_label(
-            "Tick the issues that are handled and press <b>Run</b>: it closes them with <code>gh issue close</code> "
-            "in the Commands tab, with the comment when you write one. A double click opens an issue on GitHub. "
-            "The weekly Upstream review and Backlog review open a new issue when they have something again."))
-        lay.addWidget(self.state)
-        lay.addWidget(self.list, 1)
-        lay.addWidget(self.comment)
-        lay.addLayout(buttons)
-        self.run_button.setEnabled(False)
-        self.checker = UpdateChecker(self)
-        self.checker.finished.connect(self.fill)
-        self.checker.start(lambda: self._fetch(source))
-
-    @staticmethod
-    def _fetch(source) -> object:
-        """Worker thread: the issues, or the error to show."""
-        try:
-            return source()
-        except (OSError, ValueError) as exc:
-            return exc
-
-    def fill(self, result: object) -> None:
-        if isinstance(result, Exception):
-            self.state.setText(f"Could not read the issues from GitHub: {result}")
-            return
-        self.list.blockSignals(True)
-        for issue in result:
-            item = QListWidgetItem(issue.label)
-            item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
-            item.setCheckState(Qt.CheckState.Unchecked)
-            item.setData(Qt.ItemDataRole.UserRole, issue.number)
-            item.setData(Qt.ItemDataRole.UserRole + 1, issue.url)
-            item.setToolTip(issue.url)
-            self.list.addItem(item)
-        self.list.blockSignals(False)
-        self.state.setText(f"{len(result)} open issue{'' if len(result) == 1 else 's'} on GitHub." if result
-                           else "No open issues on GitHub.")
-        self._show_state()
-
-    def numbers(self) -> list[int]:
-        return [self.list.item(i).data(Qt.ItemDataRole.UserRole) for i in range(self.list.count())
-                if self.list.item(i).checkState() == Qt.CheckState.Checked]
-
-    def _show_state(self) -> None:
-        self.run_button.setEnabled(bool(self.numbers()))
-
-    def done(self, code: int) -> None:
-        self.checker.stop(2000)
-        super().done(code)
 
 
 NOTIFY_MS = 10_000                      # how long a notification from the tray icon shows
@@ -1682,14 +1335,14 @@ class SuiteList(QListWidget):
 
 class ReleaseWindow(QMainWindow):
     def __init__(self, root: Path = CHECKOUT, sha256_source=rp.fetch_sha256, launch=launch_in_terminal,
-                 start=start_app, runs_source=rp.fetch_runs, notify=desktop_notify, settings=None,
+                 runs_source=rp.fetch_runs, notify=desktop_notify, settings=None,
                  status_source=rp.fetch_github_status, claude_source=rp.fetch_claude_usage,
-                 issues_source=rp.fetch_open_issues, suite: str | None = None, jobs_source=rp.fetch_jobs):
+                 suite: str | None = None, jobs_source=rp.fetch_jobs):
         """*runs_source* reads the GitHub Actions runs (None: no build indicator and no ticker); *jobs_source* the
         jobs of a run, for the ticker (None: the runs only); *notify* shows a desktop
         notification; *settings* keeps the command line's history and the chosen suite (None: this session only);
         *status_source* reads githubstatus.com (None: no GitHub status); *claude_source* reads Claude Code's usage
-        (None: no Claude pill); *issues_source* reads the open GitHub issues for Close issues; *suite* is the suite
+        (None: no Claude pill); *suite* is the suite
         to open with (a folder name from plan.suites(); None: the one remembered, else the first)."""
         super().__init__()
         self.root = root
@@ -1697,10 +1350,8 @@ class ReleaseWindow(QMainWindow):
         self.suites = rp.suites(root)
         remembered = str(settings.value(SUITE_KEY, "")) if settings is not None else ""
         self.suite = suite or (remembered if remembered in self.suites else self.suites[0] if self.suites else None)
-        self.issues_source = issues_source
         self.sha256_source = sha256_source
         self.launch = launch
-        self.start = start
         self.units: list[rp.Unit] = []
         self.setWindowTitle(APP_NAME)
         self.resize(1100, 760)
@@ -1908,9 +1559,7 @@ class ReleaseWindow(QMainWindow):
         self.apps_page.fill(units)
         self.portal_page.fill(units)
         self.withdraw_page.fill(units)
-        portal = rp.portal_target(self.root, self.suite)
-        docs = rp.docs_targets(self.root, network=self.run_page.network_box.isChecked(), suite=self.suite)
-        self.run_page.fill(([portal] if portal else []) + rp.launch_targets(self.root, self.suite) + docs)
+        self.run_page.fill()
         problems = rp.bad_tags(self.root, units)
         self.bad_tags.setText("\n".join(
             f"\u26a0 {p}: release.yml cannot build it. Delete it (git tag -d {p.split()[0]} && git push origin "
@@ -1929,9 +1578,4 @@ class ReleaseWindow(QMainWindow):
         self.github_status.stop()
         self.claude.stop()
         self.commands.shutdown()
-        recorder = self.run_page.recorder
-        if recorder is not None:                         # a tour being recorded: stopped, not left half-written
-            recorder.finished.disconnect()
-            recorder.kill()
-            recorder.waitForFinished(3000)
         super().closeEvent(event)

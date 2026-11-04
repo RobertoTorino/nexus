@@ -62,14 +62,14 @@ never reaches the others:
 | BC250 Bazzite Suite | `mkdocs.yml` | `bc250-bazzite/docs/stylesheets/suite.css` | `bc250-bazzite/tools/mkdocs/overrides/` |
 | Nexus | `nexus/mkdocs.yml` | `nexus/docs/stylesheets/nexus.css` | `nexus/overrides/` |
 
-Without a terminal: in Nexus Release Tool (`dev/nrt`), on **Test on this board** under **Test local apps**, the last icons are
-the wikis, one for each `mkdocs.yml` in the checkout. A click serves that wiki and opens it with the design panel
+Without a terminal: in [Nexus Dashboard](dashboard.md#test-local-apps) (`dev/dash`), under **Test local apps**, the
+last icons are the chosen suite's wiki and the Nexus page. A click serves that wiki and opens it with the design panel
 open; a second click only opens the page again.
 
 ### Stop a wiki
 
-`mkdocs serve` in a terminal stops with Ctrl+C. A wiki Nexus Release Tool started keeps running when you close the Nexus
-Release Tool, and a click on its icon only opens the page again, so a wiki started before the checkout changed (after a
+`mkdocs serve` in a terminal stops with Ctrl+C. A wiki Nexus Dashboard started keeps running when you close the
+dashboard, and a click on its icon only opens the page again, so a wiki started before the checkout changed (after a
 pull, or a change to its `mkdocs.yml` or the design panel) can still show the old setup. Stop it, then click its
 icon again. On Linux:
 
@@ -96,7 +96,7 @@ mkdocs serve -f nexus/mkdocs.yml -a 0.0.0.0:8000
 ```
 
 Then open `http://<the computer's address>:8000` on each device. `ipconfig` (Windows) or `hostname -I` (Linux) shows
-the address. In Nexus Release Tool, tick **Wikis on the network** before clicking a wiki's icon: it serves the wiki that
+the address. In Nexus Dashboard, tick **Wikis on the network** before clicking a wiki's icon: it serves the wiki that
 way, on a port of its own (8785 for the BC250 Bazzite Suite's wiki, 8786 for the Nexus page), and shows the
 addresses for the other devices. Every device shows the live version, so you see a design in real browsers, on real
 screens and at real sizes at once.

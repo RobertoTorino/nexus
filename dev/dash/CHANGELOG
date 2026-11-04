@@ -1,3 +1,15 @@
+Changelog: 04-11-2026 10:54:41
+
+Added. Test local apps and Close issues, from Nexus Release Tool's Test on this board (owner, 04-11-2026: the
+release tool is the release, the dashboard the place for working on a suite). Under the tiles, Test local apps
+shows the chosen suite's portal and app windows from the checkout (an orange ! on an app that changes the board,
+which asks first; an open portal is warned about, not started again) and the suite's wiki and the Nexus page served
+with mkdocs serve (Wikis on the network serves them for the other devices too); a click starts one with the dev
+venv and the checkout's core, its log in ~/.cache/nexus-dashboard/local/, the end of it shown when it stops with an
+error. The Close issues tile lists the open GitHub issues and closes the ticked ones with gh issue close, one after
+the other, its output in the window (it ran in the release tool's Commands tab). The tiles keep two rows; the
+window is 900 by 820. The code is local.py and issues.py, moved from the release tool's plan.py, with their tests.
+
 Changelog: 03-11-2026 02:11:57
 
 Added. The About text names Nexus Sound Lab (dev/sounds) among the Nexus apps the tiles start; the tiles found it

@@ -886,338 +886,10 @@ def test_window_check_buttons(window, repo):
 
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="the tour is a bash script that records a Linux desktop")
-def test_window_records_the_portal_tour(window, repo, tmp_path, monkeypatch):
-    """Record portal tour runs the suite's record-tour.sh in the background, its output in Logs, into
-    ~/Videos/bc250-portal-tour-v<portal version>.mp4, and opens the video (owner, 20-10-2026)."""
-    from PyQt6.QtWidgets import QApplication
-    from nexus_release_tool import main_window
-    page = window.run_page
-    monkeypatch.setenv("HOME", str(tmp_path / "home"))
-    opened = []
-    monkeypatch.setattr(main_window, "open_url", opened.append)
-    page.tour_button.click()
-    assert f"has no {rp.RECORD_SCRIPT}" in page.output.toPlainText() and page.recorder is None
-
-    def record(script: str) -> None:
-        write(repo / rp.RECORD_SCRIPT, script)
-        page.output.clear()
-        window.tabs.setCurrentWidget(page)
-        page.tour_button.click()
-        assert not page.tour_button.isEnabled() and window.tabs.currentIndex() == window.commands_tab
-        page.recorder.waitForFinished(10000)
-        for _ in range(20):
-            QApplication.processEvents()
-            if page.recorder is None:
-                break
-        assert page.recorder is None and page.tour_button.isEnabled()
-
-    out = tmp_path / "home" / "Videos" / "bc250-portal-tour-v0.1.0.mp4"
-    record('echo "Recording the portal tour into $1"\nmkdir -p "$(dirname "$1")"\necho video > "$1"\n')
-    log = page.output.toPlainText()
-    assert f"$ {rp.RECORD_SCRIPT} {out}" in log and f"Recording the portal tour into {out}" in log
-    assert out.read_text() == "video\n" and opened == [out.as_uri()]
-    record('echo "ffmpeg is needed" >&2\nexit 1\n')
-    log = page.output.toPlainText()
-    assert "ffmpeg is needed" in log and "stopped with exit code 1" in log and len(opened) == 1
-    # the size box beside the button: 2160p (4K, for YouTube) passes --size and names the video -2160p
-    assert page.tour_size.currentText() == "1080p" and page.tour_size.isEnabled() == page.tour_button.isEnabled()
-    page.tour_size.setCurrentText("2160p")
-    out = tmp_path / "home" / "Videos" / "bc250-portal-tour-v0.1.0-2160p.mp4"
-    record('echo "size: $*"\nmkdir -p "$(dirname "$1")"\necho video > "$1"\n')
-    log = page.output.toPlainText()
-    assert f"$ {rp.RECORD_SCRIPT} {out} --size 2160p" in log and f"size: {out} --size 2160p" in log
-    assert out.read_text() == "video\n" and opened[-1] == out.as_uri()
-
-
-# --- Run from the checkout ------------------------------------------------------------------------------------------
-
-def test_installer_tests_target(repo):
-    """Nexus Installer Tests (dev/itests, every suite's since 02-11-2026), started on the ticked suite."""
-    assert rp.installer_tests_target(repo) is None                   # no dev/itests
-    app = repo / "dev/itests"
-    write(app / "VERSION", "0.3.0\n")
-    write(app / "installer_tests/__init__.py", 'APP_NAME = "Nexus Installer Tests"\nAPP_ID = "nexus-installer-tests"\n')
-    target = rp.installer_tests_target(repo, "bc250-bazzite")
-    assert (target.module, target.label, target.folder, target.changes_board, target.args, target.app_id) == \
-        ("installer_tests", "Nexus Installer Tests 0.3.0", app, False, ("--suite", "bc250-bazzite"),
-         "nexus-installer-tests")
-    real = rp.installer_tests_target()                              # this checkout's
-    assert real is not None and real.icon is not None and real.icon.is_file() and real.args == ()
-
-
-def add_windows(root: Path) -> None:
-    """alpha and beta get a window each, beta changes the board, the standalone app keeps its package a level deeper
-    (like mtool), and the checkout-only app has one too (like this app)."""
-    for key in ("alpha", "beta"):
-        write(root / f"apps/{key}/{key}/__main__.py", "print('hi')\n")
-    write(root / "apps/alpha/alpha/__init__.py",
-          'APP_NAME = "Alpha App"\nAPP_ID = "alpha-app"\nLOGO = ROOT / "images" / "alpha-logo.png"\n')
-    for name in ("01-screenshot.png", "alpha-app.png", "alpha-logo.png"):
-        write(root / f"apps/alpha/images/{name}", "png")
-    write(root / "apps/alpha/tests/fake/__main__.py", "")                         # tests are never listed
-    write(root / "apps/standalone/tool-dir/tool/__main__.py", "")
-    write(root / "apps/releases/rel/__main__.py", "")
-    toml = root / "portal/apps.toml"
-    text = toml.read_text().replace('[apps.beta]\nname = "beta"\nsummary = "s"\ntag = "beta-v0.1.0"\nsha256 = ""\n'
-                                    'required = false\nchanges_board = false',
-                                    '[apps.beta]\nname = "beta"\nsummary = "s"\ntag = "beta-v0.1.0"\nsha256 = ""\n'
-                                    'required = false\nchanges_board = true')
-    assert "changes_board = true" in text
-    toml.write_text(text)
-
-
-def test_launch_targets(repo):
-    add_windows(repo)
-    targets = {t.module: t for t in rp.launch_targets(repo)}
-    assert sorted(targets) == ["alpha", "beta", "tool"]                        # not the checkout-only app, not tests
-    alpha, beta, tool = targets["alpha"], targets["beta"], targets["tool"]
-    assert (alpha.name, alpha.label, alpha.folder) == ("Alpha App", "Alpha App 0.1.0", repo / "apps/alpha")
-    assert alpha.icon == repo / "apps/alpha/images/alpha-logo.png"            # the one its __init__ names
-    assert beta.changes_board and not alpha.changes_board and beta.name == "beta" and beta.icon is None
-    assert tool.key == "standalone" and tool.folder == repo / "apps/standalone/tool-dir"
-    command, env = rp.launch_command(repo, alpha, python="/venv/python")
-    assert command == ["/venv/python", "-m", "alpha"]
-    assert env["PYTHONPATH"].split(os.pathsep)[0] == str(repo / "core")
-
-
-def test_portal_target(repo):
-    assert rp.portal_target(repo) is None                                     # the fixture's portal has no window
-    write(repo / "portal/bc250_portal/__main__.py", "print('portal')\n")
-    write(repo / "portal/bc250_portal/__init__.py", 'APP_NAME = "Suite Portal"\n__version__ = "0.1.0"\n')
-    write(repo / "portal/images/suite-suite.webp", "webp")                  # named after the suite's folder
-    portal = rp.portal_target(repo)
-    assert (portal.key, portal.module, portal.folder, portal.label) == (
-        "portal", "bc250_portal", repo / "portal", "Suite Portal 0.1.0")
-    assert portal.icon == repo / "portal/images/suite-suite.webp" and not portal.changes_board
-    command, env = rp.launch_command(repo, portal, python="/venv/python")
-    assert command == ["/venv/python", "-m", "bc250_portal"]                  # --source auto: from the checkout
-    assert env["PYTHONPATH"].split(os.pathsep)[0] == str(repo / "core")
-    assert rp.portal_target() is not None and rp.portal_target().module == "bc250_portal"      # this checkout's
-
-
-def test_the_portal_is_the_first_icon_under_test_local_apps(window, repo, tmp_path, monkeypatch):
-    from nexus_release_tool import main_window
-    add_windows(repo)
-    write(repo / "portal/bc250_portal/__main__.py", "print('portal')\n")
-    monkeypatch.setattr(main_window, "LOG_DIR", tmp_path / "logs")
-    started = []
-    window.start = lambda command, env, cwd, log: started.append((command, cwd, log)) or FakeProcess()
-    window.reload()
-    page = window.run_page
-    modules = [page.apps.item(i).data(0x0100).module for i in range(page.apps.count())]
-    assert modules[0] == "bc250_portal" and modules[1:] == ["alpha", "beta", "tool"]
-    monkeypatch.setattr(main_window, "instance_running", lambda app_id: False)
-    page.apps.itemClicked.emit(page.apps.item(0))
-    assert started == [([sys.executable, "-m", "bc250_portal"], repo / "portal", tmp_path / "logs/bc250_portal.log")]
-
-
-def test_an_open_portal_is_warned_about_and_not_started_again(window, repo, tmp_path, monkeypatch):
-    from PyQt6.QtWidgets import QMessageBox
-    from nexus_release_tool import main_window
-    write(repo / "portal/bc250_portal/__main__.py", "print('portal')\n")
-    write(repo / "portal/bc250_portal/__init__.py", 'APP_NAME = "Suite Portal"\nAPP_ID = "suite-portal"\n')
-    monkeypatch.setattr(main_window, "LOG_DIR", tmp_path / "logs")
-    started, asked = [], []
-    window.start = lambda command, env, cwd, log: started.append(command) or FakeProcess()
-    monkeypatch.setattr(QMessageBox, "warning", lambda *args: asked.append(args[2]))
-    seen = []
-    monkeypatch.setattr(main_window, "instance_running", lambda app_id: seen.append(app_id) or True)
-    window.reload()
-    page = window.run_page
-    page.apps.itemClicked.emit(page.apps.item(0))
-    assert seen == ["suite-portal"] and started == []                          # open: warned, not started
-    assert len(asked) == 1 and "already open" in asked[0] and "Close Suite Portal first" in asked[0]
-    monkeypatch.setattr(main_window, "instance_running", lambda app_id: False)
-    page.apps.itemClicked.emit(page.apps.item(0))
-    assert len(started) == 1 and len(asked) == 1
-
-
-def test_instance_running_sees_a_listening_app_and_does_not_disturb_it():
-    pytest.importorskip("PyQt6.QtWidgets")
-    os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
-    from PyQt6.QtNetwork import QLocalServer
-    from PyQt6.QtWidgets import QApplication
-    app = QApplication.instance() or QApplication([])          # noqa: F841 (kept alive for the sockets)
-    from bc250_core.instance import server_name
-    from nexus_release_tool import main_window
-    name = server_name("suite-test-instance")
-    QLocalServer.removeServer(name)
-    assert not main_window.instance_running("suite-test-instance")
-    server = QLocalServer()
-    assert server.listen(name)
-    try:
-        assert main_window.instance_running("suite-test-instance")
-    finally:
-        server.close()
-    assert not main_window.instance_running("suite-test-instance")
-
-
-def test_docs_targets(repo):
-    assert rp.docs_targets(repo) == []                                        # no mkdocs.yml
-    write(repo / "mkdocs.yml", "site_name: S\nsite_url: https://example.invalid/suite/\n")
-    write(repo / "nexus/mkdocs.yml", "INHERIT: ../mkdocs.yml\nsite_name: Nexus\nsite_url: https://example.invalid/\n")
-    docs, nexus = rp.docs_targets(repo)
-    assert (docs.module, docs.folder, docs.label) == ("mkdocs", repo, "S wiki (local)")
-    assert docs.url == f"http://127.0.0.1:{rp.DOCS_PORT}/suite/?design"       # site_url's path, the design panel open
-    command, _ = rp.launch_command(repo, docs, python="/venv/python")
-    assert command == ["/venv/python", "-m", "mkdocs", "serve", "-f", "mkdocs.yml",
-                       "--dev-addr", f"127.0.0.1:{rp.DOCS_PORT}"]
-    assert nexus.label == "Nexus wiki (local)" and nexus.url == f"http://127.0.0.1:{rp.DOCS_PORT + 1}/?design"
-    assert nexus.args[:3] == ("serve", "-f", "nexus/mkdocs.yml") and docs.log_name != nexus.log_name
-    assert not docs.note
-    write(repo / "mkdocs.yml", "site_name: S\n")
-    assert rp.docs_targets(repo)[0].url == f"http://127.0.0.1:{rp.DOCS_PORT}/?design"
-
-
-def test_a_suite_shows_its_own_wiki_and_the_nexus_page(two_suites):
-    """The BC250 wiki showed under the Windows suite (owner, 29-10-2026): a suite ticked lists its own wiki and the
-    Nexus page, never another suite's, each on the port it has whichever suite is ticked."""
-    for folder, name in (("bc", "BC"), ("nexus", "Nexus"), ("wp", "WP")):
-        write(two_suites / folder / "mkdocs.yml", f"site_name: {name}\n")
-    everything = {t.label: t.args[-1] for t in rp.docs_targets(two_suites)}
-    assert list(everything) == ["BC wiki (local)", "Nexus wiki (local)", "WP wiki (local)"]
-    for suite, other in (("bc", "WP wiki (local)"), ("wp", "BC wiki (local)")):
-        shown = rp.docs_targets(two_suites, suite=suite)
-        assert other not in [t.label for t in shown] and "Nexus wiki (local)" in [t.label for t in shown]
-        assert all(everything[t.label] == t.args[-1] for t in shown)
-
-
-def test_a_windows_suites_portal_is_tried_from_the_checkout(two_suites):
-    """A Windows suite's portal had no local test (owner, 29-10-2026): its own package, its own icon."""
-    assert rp.portal_target(two_suites, "wp") is None                         # no window yet
-    write(two_suites / "wp/portal/portable_portal/__main__.py", "print('portal')\n")
-    write(two_suites / "wp/portal/portable_portal/__init__.py", 'APP_NAME = "WP Suite"\nAPP_ID = "wp-suite"\n')
-    write(two_suites / "wp/portal/images/wp-suite.webp", "webp")
-    portal = rp.portal_target(two_suites, "wp")
-    assert (portal.module, portal.folder, portal.label, portal.app_id) == (
-        "portable_portal", two_suites / "wp/portal", "WP Suite 0.1.0", "wp-suite")
-    assert portal.icon == two_suites / "wp/portal/images/wp-suite.webp"
-    assert rp.portal_target(two_suites, "bc") is None                         # the other suite's has none
-    assert rp.portal_target(rp.CHECKOUT, "windows-portable").module == "portable_portal"   # this checkout's
-
-
-def test_docs_targets_on_the_network(repo):
-    write(repo / "mkdocs.yml", "site_name: S\nsite_url: https://example.invalid/suite/\n")
-    (docs,) = rp.docs_targets(repo, network=True, addresses=["192.0.2.7"])
-    port = rp.NETWORK_PORT                                                    # not the local one: both can run
-    assert docs.label == "S wiki (network)" and docs.args[-1] == f"0.0.0.0:{port}"
-    assert docs.url == f"http://127.0.0.1:{port}/suite/?design"               # this computer's browser
-    assert docs.note == f"On the other devices: http://192.0.2.7:{port}/suite/"
-    assert docs.log_name != rp.docs_targets(repo)[0].log_name
-    assert "no network address" in rp.docs_targets(repo, network=True, addresses=[])[0].note
-
-
-def test_network_addresses_leave_out_loopback():
-    assert all(not a.startswith("127.") for a in rp.network_addresses())
-
-
-def test_window_serves_the_manual(window, repo, tmp_path, monkeypatch):
-    from nexus_release_tool import main_window
-    write(repo / "mkdocs.yml", "site_name: S\nsite_url: https://example.invalid/suite/\n")
-    monkeypatch.setattr(main_window, "LOG_DIR", tmp_path / "logs")
-    started, opened, up = [], [], [False]
-    monkeypatch.setattr(main_window, "answers", lambda url: up[0])
-    monkeypatch.setattr(main_window, "open_url", opened.append)
-    window.start = lambda command, env, cwd, log: started.append((command, cwd)) or FakeProcess()
-    window.reload()
-    page = window.run_page
-    items = [page.apps.item(i) for i in range(page.apps.count())]
-    docs = items[-1]                                                          # after the apps
-    assert docs.text() == "S wiki (local)"
-    page.apps.itemClicked.emit(docs)
-    assert started == [([sys.executable, "-m", "mkdocs", "serve", "-f", "mkdocs.yml",
-                         "--dev-addr", f"127.0.0.1:{rp.DOCS_PORT}"], repo)]
-    page.poll()
-    assert opened == []                                                       # not up yet
-    up[0] = True
-    page.poll()
-    page.poll()
-    assert opened == [f"http://127.0.0.1:{rp.DOCS_PORT}/suite/?design"]       # once
-    page.apps.itemClicked.emit(docs)                                          # already up: only the page again
-    assert len(started) == 1 and len(opened) == 2
-
-
-def test_window_serves_the_wikis_on_the_network(window, repo, tmp_path, monkeypatch):
-    from nexus_release_tool import main_window
-    write(repo / "mkdocs.yml", "site_name: S\n")
-    monkeypatch.setattr(main_window, "LOG_DIR", tmp_path / "logs")
-    monkeypatch.setattr(rp, "network_addresses", lambda: ["192.0.2.7"])
-    monkeypatch.setattr(main_window, "answers", lambda url: False)
-    started = []
-    window.start = lambda command, env, cwd, log: started.append((command, log)) or FakeProcess()
-    window.reload()
-    page = window.run_page
-    page.network_box.setChecked(True)                                         # the icons follow
-    docs = page.apps.item(page.apps.count() - 1)
-    assert docs.text() == "S wiki (network)"
-    page.apps.itemClicked.emit(docs)
-    assert started[0][0][-1] == f"0.0.0.0:{rp.NETWORK_PORT}"
-    assert started[0][1].name == "mkdocs-root-network.log"
-    assert f"http://192.0.2.7:{rp.NETWORK_PORT}/" in page.output.toPlainText()
-
-
-class FakeProcess:
-    def __init__(self, code=None):
-        self.code = code
-
-    def poll(self):
-        return self.code
-
-
-def test_window_runs_an_app_from_the_checkout(window, repo, tmp_path, monkeypatch):
-    from PyQt6.QtWidgets import QMessageBox
-    from nexus_release_tool import main_window
-    add_windows(repo)
-    monkeypatch.setattr(main_window, "LOG_DIR", tmp_path / "logs")
-    started = []
-    window.start = lambda command, env, cwd, log: started.append((command, cwd, log)) or FakeProcess()
-    window.reload()
-    page = window.run_page
-    items = {page.apps.item(i).data(0x0100).module: page.apps.item(i) for i in range(page.apps.count())}
-    assert sorted(items) == ["alpha", "beta", "tool"] and "Changes how the board runs" in items["beta"].toolTip()
-    assert "Changes how the board runs" not in items["alpha"].toolTip()
-    assert "\n" not in items["beta"].text()                         # the warning is on the icon, not in the label
-
-    from PyQt6.QtGui import QColor
-
-    def corner(item) -> str:                                        # the badge's orange, low right on the icon
-        image = item.icon().pixmap(main_window.ICON_PX, main_window.ICON_PX).toImage()
-        edge = main_window.ICON_PX - main_window.BADGE_PX // 2
-        return QColor(image.pixel(edge - 6, edge)).name()
-
-    assert corner(items["beta"]) == QColor(main_window.ORANGE).name() != corner(items["alpha"])
-    page.apps.itemClicked.emit(items["alpha"])
-    assert started == [([sys.executable, "-m", "alpha"], repo / "apps/alpha", tmp_path / "logs/alpha.log")]
-    with mock_question(QMessageBox.StandardButton.No) as asked:
-        page.apps.itemClicked.emit(items["beta"])                              # a board app asks first
-    assert asked.called and len(started) == 1
-    with mock_question(QMessageBox.StandardButton.Yes):
-        page.apps.itemClicked.emit(items["beta"])
-    assert len(started) == 2 and page.timer.isActive()
-    # alpha stops with an error: the end of its log shows; beta closes normally
-    (tmp_path / "logs").mkdir()
-    (tmp_path / "logs/alpha.log").write_text("Traceback (most recent call last):\nImportError: no module x\n")
-    page.running[0][1].code, page.running[1][1].code = 1, 0
-    page.poll()
-    out = page.output.toPlainText()
-    assert "Alpha App 0.1.0 stopped with exit code 1" in out and "ImportError: no module x" in out
-    assert "beta 0.1.0 closed." in out and not page.running and not page.timer.isActive()
-
-
 def mock_question(answer):
     from unittest import mock
     from PyQt6.QtWidgets import QMessageBox
     return mock.patch.object(QMessageBox, "question", return_value=answer)
-
-
-def test_start_app_keeps_the_output_in_a_log(tmp_path):
-    from nexus_release_tool import main_window
-    log = tmp_path / "logs" / "x.log"
-    process = main_window.start_app([sys.executable, "-c", "print('hello'); raise SystemExit(3)"], dict(os.environ),
-                                    tmp_path, log)
-    assert process.wait(30) == 3
-    assert main_window.log_tail(log) == "hello"
 
 
 # --- GitHub builds ----------------------------------------------------------------------------------------------
@@ -1757,25 +1429,6 @@ def test_the_portal_counts_apps_toml_since_its_last_tag(repo):
     assert rp.portal_suggestion(repo, unit(repo, "portal"))[0] == "1.0.0"
 
 
-def test_open_issues_without_pull_requests():
-    """GitHub's issues list holds the pull requests too: Close issues shows the issues only."""
-    data = [{"number": 12, "title": "Upstream review", "html_url": "https://github.com/o/r/issues/12",
-             "updated_at": "2026-10-20T06:01:02Z"},
-            {"number": 13, "title": "A pull request", "pull_request": {}, "html_url": "", "updated_at": ""},
-            "not an issue"]
-    assert rp.parse_issues(data) == [rp.Issue(12, "Upstream review", "https://github.com/o/r/issues/12", "2026-10-20")]
-    assert rp.parse_issues(data)[0].label == "#12 Upstream review (updated 2026-10-20)"
-    assert rp.parse_issues({"message": "Not Found"}) == []
-
-
-def test_close_issues_command():
-    repo = rp.repo_slug()
-    assert rp.close_issues_command([12]) == f"gh issue close 12 --repo {repo}"
-    assert rp.close_issues_command([12, 14], " Decky pinned at v3.3.0, it's in step ") == (
-        f"gh issue close 12 --repo {repo} --comment 'Decky pinned at v3.3.0, it'\"'\"'s in step' && "
-        f"gh issue close 14 --repo {repo} --comment 'Decky pinned at v3.3.0, it'\"'\"'s in step'")
-
-
 def test_the_root_copy_of_apps_toml_follows_the_suites(repo, tmp_path):
     """Nexus keeps a copy of apps.toml at the root for the portals installed before the suite moved into
     bc250-bazzite/ (check_manifest.py wants it identical; the owner's portal-v10.0.0 commit stopped on it,
@@ -1834,7 +1487,6 @@ def test_the_suites_of_a_checkout(repo, tmp_path):
     assert rp.suites(nexus) == [SUITE_DIR, "zz-suite"]
     assert rp.suite_dir(nexus) == nexus / SUITE_DIR and rp.suite_dir(nexus, "zz-suite") == nexus / "zz-suite"
     assert rp.check_script(nexus) == f"{SUITE_DIR}/tools/check-release.sh"
-    assert rp.record_script(nexus, "zz-suite") == "zz-suite/tools/record-tour.sh"
     assert rp.manifest_checks(nexus) == [f"{SUITE_DIR}/tools/check_manifest.py", "zz-suite/tools/check_manifest.py"]
     # The commit checks the suites it changes alone (owner, 28-10-2026: one suite's checks never hold another's).
     assert rp.touched_suites(repo, ["apps/alpha/x.py"]) is None                  # no suite folders: every check
@@ -1854,8 +1506,6 @@ def test_the_suites_of_a_checkout(repo, tmp_path):
     first, second = rp.load_units(nexus), rp.load_units(nexus, "zz-suite")
     assert [u.path for u in first][:3] == ["core", f"{SUITE_DIR}/portal", f"{SUITE_DIR}/apps/alpha"]
     assert [u.path for u in second][:3] == ["core", "zz-suite/portal", "zz-suite/apps/alpha"]
-    write(nexus / "zz-suite/apps/alpha/alpha/__main__.py", "")
-    assert [t.folder for t in rp.launch_targets(nexus, "zz-suite")] == [nexus / "zz-suite/apps/alpha"]
     (nexus / "portal").mkdir()
     shutil.copy(nexus / SUITE_DIR / "portal/apps.toml", nexus / "portal/apps.toml")
     assert rp.manifest_copy(nexus) == nexus / "portal/apps.toml"      # the root's copy is the first suite's
@@ -2131,16 +1781,13 @@ def test_window_runs_a_windows_suites_checks_on_windows(two_suites, tmp_path, mo
                                   runs_source=None, status_source=None, suite="wp")
     w.reload()
     page = w.run_page
-    assert page.local_button.isEnabled() and page.installer_button.isEnabled()
-    assert page.tour_button.isEnabled() and page.tour_size.isEnabled()      # since 02-11-2026: the suite's own tour
-    assert page.tour_file().name == "wp-portal-tour-v0.1.0.mp4"             # named with the suite's prefix
+    assert page.local_button.isEnabled() and page.withdraw_button.isEnabled()
     assert "check-release.ps1 local" in page.local_button.toolTip()
     launched.clear()
     page.local_button.click()
     page.release_button.click()
-    page.installer_button.click()
     script = str(two_suites / "wp/tools/check-release.ps1")
-    assert launched == [f"& '{script}' local", f"& '{script}' release", f"& '{script}' installer"]
+    assert launched == [f"& '{script}' local", f"& '{script}' release"]
     w.choose_suite("bc")                                        # the board's suite: its tests run on Linux
     assert not page.local_button.isEnabled() and "Linux (the board)" in page.local_button.toolTip()
     w.close()
