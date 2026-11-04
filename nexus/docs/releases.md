@@ -83,7 +83,9 @@ tab explains itself behind the round **i** in its first row: click it to read th
    when you publish it, the last release of each part is read from the tags, and a release ends with a `Pin ...`
    commit on `main`. When that fetch fails, the message gives git's own words; for a tag here that points to
    another commit than GitHub's (git refuses to move it: "would clobber existing tag") it names the tag and the
-   two commands that drop it and fetch again, since GitHub's tag is the one the release was published from. What came in is put under this checkout, the versions are read again, and the question before
+   two commands that drop it and fetch again, since GitHub's tag is the one the release was published from. The
+   Nexus index's own tag (`nexus-v...`) is made anew on `main`'s newest commit each time the index runs, so it is
+   always taken as GitHub has it. What came in is put under this checkout, the versions are read again, and the question before
    it writes shows each part's version as it will be. Each version comes from the part's CHANGELOG entries since its
    last tag (`Breaking.` major, `Added.` minor, `Fixed.` patch), so nothing is bumped by hand; type another one in
    the list only to override it.
@@ -104,6 +106,8 @@ tab explains itself behind the round **i** in its first row: click it to read th
    handheld). On Windows an installed portal that is open is closed first, as its window would close (ended when it
    has not closed within 10 seconds): a program that runs cannot be replaced. Test it as a user would. When a release
    holds both suites, each has its device test on its own device, and each portal is published on its own yes.
+   Work pushed in the meantime (a fix found during the first device test) does not end the release: while a draft
+   waits, Device test and Publish stay at hand for it, on the device of its suite.
 8. **Publish** when it works: the draft becomes a release, which makes its portal tag, and the portals offer it from
    then on; the Nexus index follows. **Not OK** leaves the draft unpublished: the Device test step turns red and
    says what comes next. Fix what the test showed; the steps start again from **Commit your changes**, then **Push

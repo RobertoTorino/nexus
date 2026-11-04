@@ -213,7 +213,7 @@ class ReleasePage(QWidget):
         root, base = window.root, window.base()
         runs = window.build.runs
         head = (rp.git(root, "rev-parse", "HEAD") or "").strip()
-        run = flow.cycle_run(root, runs)
+        run = flow.cycle_run(root, runs, self.rejected(flow.release_run(runs)))
         unstaged, staged, ahead = rp.git_state(root, base)
         return flow.Facts(
             behind=rp.behind(root, base) or int(flow.pushed_elsewhere(root, runs) is not None), dirty=unstaged or staged, ahead=ahead,

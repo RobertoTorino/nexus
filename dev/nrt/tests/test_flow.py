@@ -255,6 +255,13 @@ def test_fetch_tags_names_a_tag_here_that_git_will_not_move(nexus, tmp_path, mon
     text = failed.explain()
     assert "would clobber existing tag" in text and "The tag wp-test-v0.1.0 here points to another commit" in text
     assert "git tag -d wp-test-v0.1.0\ngit fetch --tags" in text and text.endswith(flow.WAITS)
+    sh(nexus, "tag", "nexus-v0.5.0")                                 # the Nexus index, fetched once
+    sh(nexus, "push", "-q", "origin", "nexus-v0.5.0")
+    sh(nexus, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "--allow-empty", "-m", "Later")
+    sh(nexus, "push", "-q", "-f", "origin", "HEAD:refs/tags/nexus-v0.5.0")    # made anew on main's newest commit
+    sh(nexus, "tag", "-d", "wp-test-v0.1.0")
+    assert flow.fetch_tags(nexus) == ["wp-test-v0.1.0"]                # the index tag follows GitHub's, no refusal
+    assert sh(nexus, "rev-parse", "nexus-v0.5.0^{commit}") == sh(nexus, "rev-parse", "HEAD")
     assert flow.FetchFailed("fatal: unable to access").explain().startswith(
         "git fetch --tags failed:\n\nfatal: unable to access\n\nThe release reads")        # offline: no tag to drop
     two = flow.FetchFailed("", ("a-v1.0.0", "b-v2.0.0")).explain()
@@ -458,6 +465,20 @@ def test_the_release_run_lasts_until_other_work_is_committed(nexus):
     assert flow.cycle_run(nexus, []) is None
     assert flow.published(nexus, [_run(ref="wp-portal-v9.9.9", file="nexus-index.yml")], "wp-portal-v9.9.9")
     assert not flow.published(nexus, [], "wp-portal-v9.9.9")
+
+
+def test_a_release_with_a_draft_to_test_lasts_with_other_work_on_top(nexus):
+    """Other work pushed before a portal draft's device test (owner, 04-11-2026: the Windows portal's, after a fix
+    to the board's): the release lasts until the draft is published or Not OK, so Start never replaces it."""
+    head = sh(nexus, "rev-parse", "HEAD").strip()
+    run = _run(head)
+    write(nexus / "wp/portal/VERSION", "1.1.0\n")                  # what the release wrote: wp-portal-v1.1.0, a draft
+    sh(nexus, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "-am", "Other work")
+    assert flow.cycle_run(nexus, [run]) is run
+    assert flow.cycle_run(nexus, [run], ["wp-portal-v1.1.0"]) is None      # Not OK: a new release may replace it
+    assert flow.cycle_run(nexus, [_run(head, conclusion="failure")]) is not None   # a failed run lasted already
+    sh(nexus, "tag", "wp-portal-v1.1.0")                             # published: its tag fetched
+    assert flow.cycle_run(nexus, [run]) is None
 
 
 def test_a_push_git_has_not_fetched_lights_the_pull(release_window, monkeypatch):

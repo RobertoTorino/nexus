@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import re
 import shlex
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -213,6 +214,9 @@ def fetch_tags(root: Path) -> list[str] | FetchFailed:
     if "origin" not in (rp.git(root, "remote") or "").split():
         return []
     before = set((rp.git(root, "tag", "--list") or "").split())
+    # The Nexus index is made anew on each run, its tag on main's newest commit: GitHub's moves by design, so it is
+    # taken as it is there (owner, 04-11-2026: nexus-v1.42.0 would clobber, after the Windows portal's Publish)
+    rp.git_run(root, "fetch", "--no-tags", "origin", f"+refs/tags/{rp.NEXUS}-v*:refs/tags/{rp.NEXUS}-v*")
     result = rp.git_run(root, "fetch", "--tags", "origin")
     if result.returncode != 0:
         return FetchFailed(result.stderr, tuple(_CLOBBER.findall(result.stderr)))
@@ -352,9 +356,11 @@ def rerun_ci_command(runs: list[rp.BuildRun]) -> str:
     return " && ".join(f"gh run rerun {run_id(r)} --failed" for r in runs)
 
 
-def cycle_run(root: Path, runs: list[rp.BuildRun]) -> rp.BuildRun | None:
+def cycle_run(root: Path, runs: list[rp.BuildRun], rejected: Iterable[str] = ()) -> rp.BuildRun | None:
     """The newest release run, while its release lasts: HEAD is its commit, or that commit with only the release's
-    Pin ... commits on top (after git pull). None once other work is committed on top."""
+    Pin ... commits on top (after git pull). Once other work is committed on top, it lasts while a portal draft of
+    it is neither published nor *rejected* (Not OK): the device test and Publish stay to do (owner, 04-11-2026: a fix
+    pushed before the Windows portal's device test, and NRT offered a new release instead). None after that."""
     run = release_run(runs)
     if run is None or not run.sha:
         return None
@@ -363,7 +369,10 @@ def cycle_run(root: Path, runs: list[rp.BuildRun]) -> rp.BuildRun | None:
     if run.done and not run.passed:
         return run                          # written and pushed, not out: it lasts, fixes on top, until a run passes
     subjects = (rp.git(root, "log", "--format=%s", f"{run.sha}..HEAD") or "").splitlines()
-    return run if all(s.startswith("Pin ") for s in subjects if s.strip()) else None
+    if all(s.startswith("Pin ") for s in subjects if s.strip()):
+        return run
+    waiting = [t for t in waiting_portals(root) if not published(root, runs, t) and t not in set(rejected)]
+    return run if run.passed and waiting else None
 
 
 def published(root: Path, runs: list[rp.BuildRun], tag: str) -> bool:

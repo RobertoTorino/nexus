@@ -1,3 +1,14 @@
+Changelog: 04-11-2026 14:09:55
+
+Fixed. A release lasts while one of its portal drafts waits for its device test, also when other work is pushed
+on top: Device test and Publish stay lit for it, and Start new release does not offer to replace it (owner,
+04-11-2026: a fix pushed before the Windows portal's device test, and NRT offered a new release). A draft marked
+Not OK still ends it, so a new release can replace it.
+
+Fixed. Start and Fetch tags take the Nexus index's tag (nexus-v...) as GitHub has it: the index makes it anew on
+main's newest commit each time it runs, so the copy here no longer stops the fetch with "would clobber existing
+tag".
+
 Changelog: 04-11-2026 10:54:41
 
 Breaking. Test on this board holds the board tests of a release alone: Test app updates, Test Portal release
