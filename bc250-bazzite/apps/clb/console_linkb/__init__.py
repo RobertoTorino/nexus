@@ -5,7 +5,7 @@ Greenlight and xal-node (MIT; see the README's License section)."""
 
 APP_NAME = "Console LinkB"
 APP_ID = "bc250-console-linkb"
-__version__ = "1.1.0"
+__version__ = "1.1.1"
 
 from pathlib import Path
 

@@ -1,3 +1,7 @@
+Changelog: 04-11-2026 11:32:11
+
+Release 1.42.0. Brings ace-v1.1.1, bios-v1.1.1, cec-v1.1.1, check-v1.1.1, clb-v1.1.1, consoles-v2.1.1, datstation-v3.1.1, decky-v1.1.1, fan-v1.1.1, hdcam-v1.1.1, hdcontrol-v1.1.1, ips35-v1.1.1, mesh-v1.1.1, ncgui-v1.1.1, overlay-v1.1.1, package-v3.1.1, pcsx2-v4.0.1, portal-v14.0.1, ppsspp-v2.0.1, rpcs3-v4.0.1, sftp-v1.1.1, shadps4-v4.0.1, upscaler-v2.1.1, vita3k-v2.0.1, vram-v1.1.1, wdriver-v1.1.1, xenia-v2.0.1.
+
 Changelog: 04-11-2026 10:54:41
 
 Added. The Nexus page's Dashboard chapter has Test local apps and Close issues, moved there from Releases (Test on
