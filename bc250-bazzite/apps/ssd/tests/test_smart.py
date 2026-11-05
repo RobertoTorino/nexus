@@ -10,6 +10,13 @@ from fakes import CRUCIAL, ENCLOSED, FWUPD_DEVICES, OTHER, SAMSUNG, SETUPS, Fake
 from ssd_check import smart
 
 
+@pytest.fixture(autouse=True)
+def no_real_sysfs(tmp_path, monkeypatch):
+    """A test that passes no sysfs gets an empty one, not the machine's /sys: a drive plugged into the board (an
+    enclosure at sdc) would otherwise give the fake drive of that name its link."""
+    monkeypatch.setattr(smart.read_drives, "__defaults__", (smart.run, tmp_path / "no-sys"))
+
+
 def test_the_boards_nvme_drive_gives_all_three_values():
     bus = FakeBus()
     [drive] = smart.read_drives(bus)

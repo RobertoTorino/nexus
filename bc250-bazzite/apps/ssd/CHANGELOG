@@ -1,3 +1,8 @@
+Changelog: 05-11-2026 16:20:03
+
+Fixed. The tests of the drive list no longer read the machine's /sys: with a USB drive plugged into the board as
+sdc, the test of the USB stick saw that drive's link and failed. Only the tests changed, not the app.
+
 Changelog: 05-11-2026 15:44:27
 
 Added. The top row holds the health, the serial (hidden; a click shows it in a popup below its pill, so the pill
