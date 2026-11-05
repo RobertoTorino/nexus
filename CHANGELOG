@@ -1,3 +1,7 @@
+Changelog: 05-11-2026 21:41:34
+
+Release 1.49.0. Brings portal-v15.3.0.
+
 Changelog: 05-11-2026 20:41:56
 
 Added. Release Nexus takes the suites it releases as its suites input (owner, 05-11-2026: each suite stands apart):
