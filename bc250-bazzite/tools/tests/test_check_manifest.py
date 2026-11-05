@@ -145,7 +145,7 @@ CHAPTER = """<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 
 ![Gov](../assets/gpu/gov.webp){ .app-logo }
 
-# BC-250 GPU Governor Manager
+# BC-250 GPU Manager
 
 !!! warning "Changes the board"
     Writes the governor's settings.
@@ -158,7 +158,7 @@ CHAPTER = """<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 def test_wiki_board_box():
     """The box right after the chapter's title, its lines joined; none when the chapter opens with anything else."""
     assert cm.wiki_board_box(CHAPTER) == "Writes the governor's settings. Undo: Restore."
-    assert cm.wiki_board_box(CHAPTER.replace("# BC-250 GPU Governor Manager\n\n", "# BC-250 GPU Governor Manager\n"
+    assert cm.wiki_board_box(CHAPTER.replace("# BC-250 GPU Manager\n\n", "# BC-250 GPU Manager\n"
                                              "\nA front end.\n\n")) is None          # a paragraph first
     assert cm.wiki_board_box(CHAPTER.replace('!!! warning "Changes the board"', '!!! note "Changes the board"')) is None
     assert cm.wiki_board_box("no title\n") is None

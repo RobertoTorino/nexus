@@ -36,7 +36,7 @@ hide:
 <div class="home-card" markdown>
 #### :material-speedometer: Tuning
 
-[GPU Governor Manager](apps/gpu.md) tunes the GPU governor, [GPU OC Bisect](apps/oc.md) finds your
+[GPU Manager](apps/gpu.md) tunes the GPU governor, [GPU OC Bisect](apps/oc.md) finds your
 board's safe overclock and undervolt, and [Persistent ACPI](apps/acpi.md) gives the CPU its C-states and
 frequency scaling.
 </div>

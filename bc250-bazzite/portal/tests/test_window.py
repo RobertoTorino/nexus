@@ -106,8 +106,8 @@ def test_short_names_drop_the_suite_prefix(window):
     assert mw.short_name("BC-250 Bazzite Test") == "Bazzite Test"
     assert mw.short_name("BC250 Suite Releases") == "Suite Releases"
     assert mw.short_name("Media Tool") == "Media Tool"
-    assert window.states["gpu"].title == "GPU Governor Manager"
-    assert "BC-250 GPU Governor Manager" in window.states["gpu"].tooltip     # the full name on hover
+    assert window.states["gpu"].title == "GPU Manager"
+    assert "BC-250 GPU Manager" in window.states["gpu"].tooltip     # the full name on hover
     assert window.big.tiles["gpu"].toolTip() == window.states["gpu"].tooltip
     assert window.states["cec"].title == "HDMI-CEC"                          # apps.toml's short
 
@@ -277,7 +277,7 @@ def test_red_dot_and_count_for_updates(window, home):
     assert not window.states["upscaler"].update
     assert "gpu-v0.0.9" in window.states["gpu"].tooltip
     assert window.big.notice.text() == "● 1 update" and window.big.notice.isVisibleTo(window.big)
-    assert window.notice_lines == [("gpu", "GPU Governor Manager (Sustainable): update to v"
+    assert window.notice_lines == [("gpu", "GPU Manager (Sustainable): update to v"
                                     f"{entry_of(window, 'gpu').version}, installed from gpu-v0.0.9")]
     assert [a.text() for a in window.notice_menu().actions()] == [window.notice_lines[0][1]]
     assert "HelixSR" not in window.big.notice.text()
@@ -457,7 +457,7 @@ def test_circular_arrow_and_count_for_reinstalls(window, home):
     assert state.action_tip.startswith("Reinstall ") and window.big.tiles["gpu"].marker == "reinstall"
     assert not window.states["upscaler"].reinstall and window.states["upscaler"].update
     assert window.big.notice.text() == "● 1 update, 1 reinstall"
-    assert ("gpu", "GPU Governor Manager (Sustainable): reinstall needed, its version is unknown") in window.notice_lines
+    assert ("gpu", "GPU Manager (Sustainable): reinstall needed, its version is unknown") in window.notice_lines
     window.records.remove("upscaler")
     (home / ".local" / "bin" / "bc250-upscaler").unlink()
     window.refresh()
@@ -990,13 +990,17 @@ def test_one_theme_for_every_app(window, home):
 
 def test_the_header_is_an_apps_header_with_symbols(window):
     """The suite's icon, spanning the name, ☰ at the top right and the row of big symbols (owner, 05-11-2026, in
-    place of the pills): Refresh, Sys info, Install all apps and Install all updates, what each does in its tooltip;
-    on their right the installed count over the status line. The Desktop icons, Sound, the theme and the wallpaper
-    on the Settings page behind ☰ (owner, 04-11-2026)."""
+    place of the pills): Refresh, Sys info, Install all apps and Install all updates, what each does in its tooltip,
+    then the weather (hidden without a place); on their right the installed count over the status line. The Desktop
+    icons, Sound, the theme, the wallpaper, the clock and the weather on the Settings page behind ☰ (owner,
+    04-11-2026 and 05-11-2026)."""
     symbols = window.header_buttons
     listed = len(window.entries)
     sound = "Yes" if window.sounds.available() else "No"             # No on a machine without an audio output
-    assert symbols == [window.refresh_button, window.sysinfo_button, window.apps_button, window.updates_button]
+    assert symbols == [window.refresh_button, window.sysinfo_button, window.apps_button, window.updates_button,
+                       window.weather_button]
+    assert window.weather_button.isHidden()                             # no place chosen: no weather
+    symbols = symbols[:4]
     assert all(isinstance(s, mw.SymbolButton) for s in [*symbols, window.settings_button])
     assert [s.toolTip().split(":")[0].split(".")[0] for s in [*symbols, window.settings_button]] == [
         "Refresh", "Sys info", "Install all apps", "Install all updates", "Settings"]
@@ -1005,7 +1009,8 @@ def test_the_header_is_an_apps_header_with_symbols(window):
     assert window.big.installed.text() == f"0/{listed} installed"
     assert " | " in window.big.status.text()
     assert [(p.value.text(), p.caption.text()) for p in window.setting_pills] == [
-        ("No", "Icons on Desktop"), (sound, "Sound"), ("Gunmetal", "Theme switcher"), ("None", "Wallpaper")]
+        ("No", "Icons on Desktop"), (sound, "Sound"), ("Gunmetal", "Theme switcher"), ("None", "Wallpaper"),
+        ("12 h", "Clock"), ("None", "Weather"), ("100 %", "Touchpad")]
     assert "verified by checksum" in window.source_text
 
 
@@ -1222,3 +1227,176 @@ def test_a_checkout_install_records_the_staged_version(qapp, home, settings_dir,
     assert w.pending.tag == "local-v1.2.3"
     w.cancel_pending()
     w.close()
+
+
+# ------------------------------------------------------------------------- an app to the front (owner, 05-11-2026)
+class FakeRaiser:
+    def __init__(self):
+        self.asked: list[tuple[list[str], list[int]]] = []
+
+    def bring_to_front(self, app_ids, pids=()):
+        self.asked.append((list(app_ids), list(pids)))
+        return True
+
+    def close(self):
+        pass
+
+
+class FakeProcess:
+    count = 100
+
+    def __init__(self, argv, **_kw):
+        FakeProcess.count += 1
+        self.pid, self.argv, self.ended = FakeProcess.count, argv, False
+
+    def poll(self):
+        return 0 if self.ended else None
+
+
+def test_a_running_app_comes_to_the_front_without_a_second_warning(qapp, home, settings_dir, tmp_path, launched,
+                                                                   monkeypatch):
+    """Pressing the tile of an app that runs (behind the portal) starts it again, which asks it to show itself, and
+    has KWin make its window the active one: by its app id, the launcher's name, and the process the portal started.
+    The board warning comes when it is opened, not each time it comes back to the front."""
+    raiser = FakeRaiser()
+    w = mw.MainWindow(load(MANIFEST), FakeSources(tmp_path / "work"), Records(tmp_path / "installed.json"),
+                      raiser=raiser)
+    started = []
+    monkeypatch.setattr(mw.subprocess, "Popen", lambda argv, **kw: started.append(FakeProcess(argv, **kw))
+                        or started[-1])
+    warnings = []
+    monkeypatch.setattr(QMessageBox, "warning", lambda *a, **k: warnings.append(a[2]) or YES)
+    gpu = w.states["gpu"].entry
+    command = gpu.launch[0][1]
+    w.open_app(gpu, command)
+    first = started[0]
+    assert len(warnings) == 1 and raiser.asked == [(["bc250-governor-manager"], [first.pid])]
+    w.open_app(gpu, command)                            # it runs: to the front, no second warning
+    assert len(warnings) == 1 and len(started) == 2 and raiser.asked[-1] == (["bc250-governor-manager"], [first.pid])
+    first.ended = True                                  # closed since: opening it warns again
+    w.open_app(gpu, command)
+    assert len(warnings) == 2 and raiser.asked[-1] == (["bc250-governor-manager"], [started[2].pid])
+    w.close()
+
+
+# -------------------------------------------------------------------------- clock and weather (owner, 05-11-2026)
+class FakeMouse:
+    def __init__(self):
+        self.moves, self.presses, self.closed = [], [], False
+
+    def move(self, dx, dy):
+        self.moves.append((dx, dy))
+
+    def press(self, button, down):
+        self.presses.append((button, down))
+
+    def close(self):
+        self.closed = True
+
+
+def test_the_clock_pill_sets_the_hours_the_seconds_and_the_zone(window):
+    assert window.clock_style() == mw.status.ClockStyle()        # as the clock always was
+    menu = window.clock_menu()
+    texts = [a.text() for a in menu.actions() if not a.isSeparator()]
+    assert texts[:3] == ["12-hour clock (AM/PM)", "24-hour clock", "Seconds"]
+    assert texts[-2:] == ["CET, Central European Time (CEST in summer)", "UTC"] and texts[-3].startswith("The board's")
+    for action in menu.actions():
+        if action.data() in (("hours", 24), ("seconds", True), ("zone", "utc")):
+            window._clock_action(action)
+    menu.deleteLater()
+    assert window.clock_style() == mw.status.ClockStyle(24, True, "utc")
+    assert window.clock_pill.value.text() == "24 h" and "UTC" in window.clock_pill.toolTip()
+    line = window.big.status.text().replace("\n", " | ")
+    assert line.endswith(" UTC") and line.count(":") == 2                    # 18:44:07 UTC: with the seconds
+    window.settings.setValue(mw.CLOCK_KEYS[2], "mars")                      # an unknown zone: the board's
+    assert window.clock_style().zone == "local"
+
+
+def test_the_status_line_takes_a_second_line_when_one_is_too_narrow(qapp):
+    """The clock goes under the loads when the room on the right of the symbols is too narrow for one line (owner,
+    05-11-2026), and back on the same line when there is room again."""
+    from bc250_portal.bigpicture import StatusLine
+    status = StatusLine()
+    status.show()
+    status.set_parts("CPU 12% 54°C | GPU 3% 61°C", "Thursday 11/5/26 | 07:44:05 PM CEST")
+    status.resize(status.sizeHint())
+    assert status.text() == "CPU 12% 54°C | GPU 3% 61°C | Thursday 11/5/26 | 07:44:05 PM CEST" and not status.two
+    status.resize(status.minimumSizeHint().width(), 80)
+    assert status.text() == "CPU 12% 54°C | GPU 3% 61°C\nThursday 11/5/26 | 07:44:05 PM CEST" and status.two
+    assert status.minimumSizeHint().width() < status.sizeHint().width()
+    status.resize(status.sizeHint().width() + 40, 40)
+    assert not status.two and "\n" not in status.text()
+    status.close()
+
+
+def test_the_weather_shows_beside_the_symbols_once_a_place_is_chosen(qapp, home, settings_dir, tmp_path, launched):
+    """No place: no weather, nothing asked. A place: its weather from Open-Meteo, the symbol and the name beside
+    Install all updates; Open-Meteo down keeps the last weather and says why in the tooltip; No weather removes it."""
+    asked = []
+
+    def fetch(url, params):
+        asked.append(url)
+        if fetch.down:
+            raise mw.weather.WeatherError("Open-Meteo is unavailable for now (503: overloaded).")
+        return {"current": {"temperature_2m": 8.2, "weather_code": 3, "is_day": 1}}
+    fetch.down = False
+    w = mw.MainWindow(load(MANIFEST), FakeSources(tmp_path / "work"), Records(tmp_path / "installed.json"),
+                      weather_fetch=fetch)
+    assert w.weather_button.isHidden() and w.weather_pill.value.text() == "None" and asked == []
+    w.set_place(mw.weather.Place("Amsterdam", "North Holland", "Netherlands", 52.37, 4.89))
+    assert wait_for(lambda: w.weather is not None)
+    assert asked == [mw.weather.FORECAST_URL] and w.weather_timer.isActive()
+    assert not w.weather_button.isHidden() and w.weather_button.place == "Amsterdam" and w.weather_button.known
+    assert "Overcast, 8°C" in w.weather_button.toolTip() and w.weather_pill.full_value == "Amsterdam"
+    assert mw.weather.Place.from_json(w.settings.value(mw.PLACE_KEY)).name == "Amsterdam"
+    fetch.down = True
+    w.update_weather()
+    assert wait_for(lambda: w.weather_error != "")
+    assert w.weather is not None and "unavailable for now" in w.weather_button.toolTip()
+    menu = w.weather_menu()
+    assert [a.text() for a in menu.actions()] == ["Choose a place…", "Update the weather now", "No weather"]
+    w._weather_action(menu.actions()[2])
+    menu.deleteLater()
+    assert w.weather_button.isHidden() and not w.weather_timer.isActive() and w.settings.value(mw.PLACE_KEY) == ""
+    w.close()
+
+
+def test_a_long_place_name_ends_in_an_ellipsis_on_its_pill(window):
+    window.set_place(mw.weather.Place("Llanfairpwllgwyngyll", "Wales", "United Kingdom", 53.2, -4.2))
+    pill = window.weather_pill
+    assert pill.full_value == "Llanfairpwllgwyngyll" and pill.value.text().endswith("…")
+    assert pill.value.fontMetrics().horizontalAdvance(pill.value.text()) < pill.width()
+    window.set_place(None)
+
+
+def test_the_touchpad_moves_the_pointer_only_while_the_portal_has_the_focus(qapp, home, settings_dir, tmp_path,
+                                                                             launched, monkeypatch):
+    mouse = FakeMouse()
+    w = mw.MainWindow(load(MANIFEST), FakeSources(tmp_path / "work"), Records(tmp_path / "installed.json"),
+                      mouse=mouse)
+    monkeypatch.setattr(mw.QApplication, "activeWindow", staticmethod(lambda: None))
+    w.gamepad.pointer_moved.emit(10.0, 5.0)
+    w.gamepad.pointer_pressed.emit(False, True)
+    assert mouse.moves == [] and mouse.presses == []                    # a game has the focus: not ours
+    w.gamepad.pointer_pressed.emit(False, False)
+    assert mouse.presses == [(mw.pointer.BTN_LEFT, False)]              # a release always goes through
+    monkeypatch.setattr(mw.QApplication, "activeWindow", staticmethod(lambda: w))
+    w.gamepad.pointer_moved.emit(10.0, 5.0)
+    w.gamepad.pointer_pressed.emit(True, True)
+    assert mouse.moves == [(10.0, 5.0)] and mouse.presses[-1] == (mw.pointer.BTN_RIGHT, True)
+    w.close()
+    assert mouse.closed
+
+
+def test_the_touchpad_pill_steps_through_the_speeds(window):
+    """The Touchpad pill (owner, 05-11-2026): a click for the next speed, at once and kept, round to the slowest."""
+    assert window.touch_speed() == 100 and window.gamepad.touch_speed == mw.TOUCH_SPEED
+    window.touch_pill.click()
+    assert window.touch_speed() == 125 and window.gamepad.touch_speed == mw.TOUCH_SPEED * 1.25
+    assert window.touch_pill.full_value == "125 %" and window.settings.value(mw.TOUCH_KEY, type=int) == 125
+    window.touch_pill.click()
+    window.touch_pill.click()
+    assert window.touch_speed() == 50 and window.touch_pill.full_value == "50 %"
+    window.settings.setValue(mw.TOUCH_KEY, 333)                 # not a step: the normal speed
+    assert window.touch_speed() == 100
+

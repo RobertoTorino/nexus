@@ -43,7 +43,7 @@ detect = ["~/.local/bin/bc250-bazzite-test"]
 launch = [["Open", "~/.local/bin/bc250-bazzite-test"]]
 
 [apps.gpu]
-name = "BC-250 GPU Governor Manager"
+name = "BC-250 GPU Manager"
 summary = "Manage the cyan-skillfish GPU governor: tuning, safe points, profiles, backups."
 tag = "gpu-v0.4.3"
 sha256 = "51d7f6efaec174cee59df9f6c9d3b9ad642d28c6b9d499c7413f70e329da0b63"

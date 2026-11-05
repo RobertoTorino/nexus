@@ -18,10 +18,12 @@ for, with **☰ Settings** at the top right. Under them, in a row that ends leve
 symbols: **Refresh** (two circling arrows: look again at which apps are installed), **Sys info** (a chip),
 **Install All apps** (a grid of apps with an arrow down) and **Install All updates** (a circular arrow around an
 arrow down), each described below. Hover a symbol to see what it does. The one with the focus is framed in silver,
-as a tile is; a symbol that has nothing to do is grayed out. On the right of the symbols, how many apps are
+as a tile is; a symbol that has nothing to do is grayed out. When you have chosen a place on the Settings page, the
+weather follows the symbols: its symbol and the place's name. On the right of the symbols, how many apps are
 installed, and under it the status line: the CPU's and the GPU's load and temperature, then the date and the time,
-for example **CPU 12% 54°C | GPU 3% 61°C | Thursday 11/5/26 | 07:44 PM CEST**. The line at the bottom says what the
-keys and the controller's buttons do.
+for example **CPU 12% 54°C | GPU 3% 61°C | Thursday 11/5/26 | 07:44 PM CEST**. When the line does not fit beside
+the symbols, the date and the time move to a second line under the loads. The line at the bottom says what the keys
+and the controller's buttons do.
 
 **Bazzite Test** is always installed with the portal; every other app is optional. Below the header is a strip
 with a name for each [category](apps/categories.md): Sustainable, Graphics, Gaming and Utilities, and beside it
@@ -35,7 +37,9 @@ mouse:
   pins.
 - **The name**, without the suite's "BC-250" prefix.
 - **Press the tile** (click it, Enter, or A on the controller) to open the app; an app with two windows (CU Bisect,
-  Cores Bisect) asks which one. Pressing a tile that is not installed offers to install it.
+  Cores Bisect) asks which one. Pressing a tile that is not installed offers to install it. An app that is open
+  already, also one behind the portal or minimized, comes to the front instead, without the board warning again;
+  that needs KDE's desktop (KWin), which Bazzite's desktop is.
 - **Update** (a right click, or Y on the controller): installs the tile's update or reinstall at once; an app
   that changes the board asks first. While a newer portal is out, they update the portal instead (see
   **Updates** below). A right click on a tile with nothing to update opens its menu.
@@ -93,6 +97,14 @@ The controller is read with [pygame-ce](https://pypi.org/project/pygame-ce/), wh
 the suite's venv; it takes any controller SDL knows (XBOX, PlayStation, Switch Pro and most others). The portal
 listens to the controller only while its own window has the focus, so a game's input never moves it. Without a
 controller, the keyboard and the mouse work as always.
+
+**The touchpad as the mouse.** On a DualShock 4, a DualSense or a DualSense Edge the touchpad moves the mouse
+pointer, as Steam does for the Steam Controller: slide a finger to move it, press the pad to click, and press it
+with two fingers on it for a right click. **Touchpad** on the Settings page sets how fast the pointer goes. Like the
+rest of the controller it works while the portal has the focus, in its menus and questions too. The portal makes a
+mouse of its own for it (Wayland lets no program move the pointer), which the desktop lists as **BC250 Bazzite Suite
+touchpad** while the portal runs; Bazzite gives you the access it needs. A controller Steam Input owns has the
+touchpad of Steam's desktop layout instead.
 
 **Handhelds.** The view is made for a TV at 1080 p or 4K as much as for the Steam Deck (1280 x 800) and the ROG
 XBOX Ally X (1920 x 1080, shown at 1280 x 720 with the desktop's scaling): below 1000 px of height the icons, the
@@ -172,11 +184,12 @@ Nexus Release Tool, Nexus Installer Tests (the installer tests one at a time), N
 - **Installed apps**, on the right of the symbols: how many of the portal's apps are installed, for example
   **12/27 installed**. An app that is not available any more is not counted.
 - **The status line**, under it: the CPU's load and temperature, the GPU's load and temperature, the day, the date
-  (month/day/year) and the time with its time zone, read every two seconds (not while the portal is minimized). The
-  load is the share of the last two seconds. The GPU's load comes from the kernel's load sensor where there is
-  one; the BC-250's stock kernel has none, so the portal adds up the GPU time of your own programs (the games and
-  the desktop among them), or reads GPU Governor's corrected metrics when it has set them up. What the system does
-  not report is left out of the line.
+  (month/day/year) and the time with its time zone, the loads read every two seconds and the time every second (not
+  while the portal is minimized). **Clock** on the Settings page sets how the time reads. When the line does not fit
+  beside the symbols, the date and the time go on a second line. The load is the share of the last two seconds.
+  The GPU's load comes from the kernel's load sensor where there is one; the BC-250's stock kernel has none, so the
+  portal adds up the GPU time of your own programs (the games and the desktop among them), or reads GPU Governor's
+  corrected metrics when it has set them up. What the system does not report is left out of the line.
 - **Install All updates**, a symbol at the top, enabled when the notice names any app; a red badge on it says how
   many, and its tooltip what it does.
   Click it to install them all, updates and reinstalls, one after the other. The portal asks once, with the list, and warns when one of them changes
@@ -192,7 +205,8 @@ Nexus Release Tool, Nexus Installer Tests (the installer tests one at a time), N
   one click.
 - **☰ Settings**, the symbol at the top right, or the ☰ button on the controller (Start, Options on a PlayStation
   controller): the Settings page, in place of the category strip and the tiles, under the same header. It holds
-  the four settings below, each a pill with a short line beside it. Move between them with the arrow keys, the
+  the seven settings below, each a pill with a short line beside it; on a small screen the page scrolls, following
+  the focus. Move between them with the arrow keys, the
   d-pad or the stick, and press A or Enter to change one. B, Escape or ☰ again goes back to the apps.
 - **Icons on Desktop**, on the Settings page (Yes or No; click it to switch): on, every installed app has an icon on the Desktop; off, only the
   portal's icon is there and you start the apps from the portal. The apps stay in the app menu either way, so KDE's
@@ -222,6 +236,22 @@ Nexus Release Tool, Nexus Installer Tests (the installer tests one at a time), N
   removes it. The menu also lists the last 10 wallpapers you chose, newest first, under **Used before**: click one to
   use it again. The portal remembers only where each picture was (in `wallpapers.json` in the same folder), so one
   moved or deleted since shows as not found until it is back.
+- **Clock**, on the Settings page, showing **12 h** or **24 h**: how the time in the status line reads. Click it for
+  its menu: **12-hour clock (AM/PM)** or **24-hour clock**, **Seconds** on or off, and the time zone: **the board's
+  own** (the system's, as at first), **CET** (Central European Time, CEST in summer) or **UTC**. The date follows
+  the zone too. The portal remembers the choice.
+- **Weather**, on the Settings page, showing the place or **None**: the weather beside the symbols at the top, from
+  [Open-Meteo](https://open-meteo.com/), free and without an account. Click it, then **Choose a place…**: type a
+  city or town (R3 brings the on-screen keyboard), **Search**, pick the right one from the list and **Use this
+  place**. Its symbol (sun or moon, clouds, fog, rain, snow or thunder) and its name then show beside **Install all
+  updates**; hover over it for the sky, the temperature, the wind and the humidity, and click it for the same menu.
+  The weather comes again every 30 minutes while the portal is not minimized, and **Update the weather now** asks at
+  once. When Open-Meteo cannot be reached, the last weather stays and its tooltip says why. **No weather** removes
+  it, and nothing goes to Open-Meteo any more. Until you choose a place nothing is sent; see
+  [Privacy](privacy.md).
+- **Touchpad**, on the Settings page, showing the speed: how fast the touchpad of a DualShock 4 or a DualSense moves
+  the mouse pointer. Click it for the next speed: 50, 75, 100 (the normal speed, at first), 125 and 150 %, then 50
+  again. The new speed applies at once, and the portal remembers it.
 - **Sys info**, a symbol at the top: a small window with what the system reports about the board: the board, the BIOS
   (with UEFI and Secure Boot), the CPU (model, cores and threads online, top clock, microcode), each GPU (name,
   driver, VRAM, shared memory, clock levels, VBIOS, PCIe link), the memory, the drives with the free space in your
@@ -288,7 +318,7 @@ removes.
 | ACE Queues | An installed patched driver | **Remove** in the app |
 | Memory Manager | The VRAM split in CMOS | Set the split back in the app (or **Undo**) and reboot |
 
-The GPU Governor Manager changes nothing of its own: the governor and its `config.toml` belong to the governor
+The GPU Manager changes nothing of its own: the governor and its `config.toml` belong to the governor
 package, which stays installed. HelixSR keeps the imported payload (`~/.local/share/bc250-upscaler`) and
 leaves the games it deployed to as they are; **Remove** each deployment in the app first.
 

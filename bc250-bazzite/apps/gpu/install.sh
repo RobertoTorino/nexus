@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
-# Installs BC-250 GPU Governor Manager for the current user: a private venv with PyQt6, the app
+# Installs BC-250 GPU Manager for the current user: a private venv with PyQt6, the app
 # in ~/.local/share, a launcher in ~/.local/bin and a desktop entry with icon, so it shows up in
 # the application menu like any other app. Nothing is layered with rpm-ostree, no root needed.
 #
@@ -108,7 +108,7 @@ rm -f "$DATA_HOME/icons/hicolor/512x512/apps/$APP_ID.png"   # the 512 px icon of
 command -v update-desktop-database >/dev/null && update-desktop-database -q "$APPS_DIR" || true
 command -v gtk-update-icon-cache >/dev/null && gtk-update-icon-cache -q -t "$DATA_HOME/icons/hicolor" 2>/dev/null || true
 
-say "Installed. Find \"BC-250 GPU Governor Manager\" in the application menu$($DESKTOP_SHORTCUT && echo ' or on the Desktop'), or run: $BIN_DIR/$APP_ID"
+say "Installed. Find \"BC-250 GPU Manager\" in the application menu$($DESKTOP_SHORTCUT && echo ' or on the Desktop'), or run: $BIN_DIR/$APP_ID"
 case ":$PATH:" in
     *":$BIN_DIR:"*) ;;
     *) echo "    (note: $BIN_DIR is not on your PATH in this shell)" ;;

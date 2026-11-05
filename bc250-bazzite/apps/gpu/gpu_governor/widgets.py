@@ -215,7 +215,7 @@ class RoundedToolTip(QObject):
         tip = cls(app)
         app.installEventFilter(tip)
         # Off again when the app quits: the filter sees every event, also those of widgets destroyed after the
-        # event loop has ended, when Python is tearing down (the Governor Manager crashed at exit on them, 15-10-2026).
+        # event loop has ended, when Python is tearing down (the GPU Manager crashed at exit on them, 15-10-2026).
         app.aboutToQuit.connect(lambda: app.removeEventFilter(tip))
         cls._instance = tip
         return tip

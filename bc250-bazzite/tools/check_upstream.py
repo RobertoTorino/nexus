@@ -33,7 +33,7 @@ PPSSPP and PCSX2's stable channel, RPCS3's LANDMARK, DIRECTMESH in bc250-mesh-sh
 importing the app:
  * the latest stable release (DirectMesh: the newest directmesh-v<version> tag; a tag with more after the version is a
    development candidate and skipped): newer than the pin means a new version of the app, tried on the board first. Their checksums are checked by the apps themselves when they download.
-The governor's version is whatever COPR built, nothing in the repository pins it: the GPU Governor Manager says when
+The governor's version is whatever COPR built, nothing in the repository pins it: the GPU Manager says when
 filippor's release is newer than the installed package.
 
 The Vita3K and Xenia Managers bring one build each (BUILD, SHA256 in their emulator.py; Xenia's PUBLISHED), read here

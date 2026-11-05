@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The line on the right of the portal's header (owner, 05-11-2026): the CPU's and the GPU's load and temperature,
-then the date and the time, as in "CPU 12% 54°C | GPU 3% 61°C | Thursday 11/5/26 | 07:44 PM CEST".
+then the date and the time, as in "CPU 12% 54°C | GPU 3% 61°C | Thursday 11/5/26 | 07:44 PM CEST". The clock is set
+on the Settings page (ClockStyle, owner 05-11-2026): a 12- or 24-hour clock, with or without the seconds, in the
+board's own time zone, Central European Time (CET, CEST in summer) or UTC.
 
 Read as Bazzite Test's status bar reads them, so it costs next to nothing: plain file reads from /proc and sysfs, no
 helper programs, a sample every 2 s (the window skips them while it is minimized). The load is the change since the
@@ -19,6 +21,8 @@ import os
 import re
 import struct
 import time
+import zoneinfo
+from dataclasses import dataclass
 from pathlib import Path
 
 SCAN_S = 10                     # the processes that hold the GPU are found again this often
@@ -36,12 +40,40 @@ def _read(path: Path) -> str:
         return ""
 
 
-def clock_text(now: datetime.datetime | None = None) -> str:
-    """'Thursday 11/5/26 | 07:44 PM CEST': the weekday, month/day/year, the time and its zone, in the board's own
-    time zone."""
-    now = now or datetime.datetime.now().astimezone()
-    zone = now.tzname() or ""
-    return f"{now:%A} {now.month}/{now.day}/{now:%y} | {now:%I:%M %p}{' ' + zone if zone else ''}"
+# The clock's time zones: the board's own, Central European Time (summer time included) or UTC.
+ZONES = {"local": "The board's", "cet": "CET", "utc": "UTC"}
+CET = "Europe/Amsterdam"        # CET in winter, CEST in summer, as every Central European zone
+
+
+@dataclass(frozen=True)
+class ClockStyle:
+    """How the clock reads: 12 or 24 hours, the seconds or not, and the zone (a key of ZONES). The default is the
+    clock as it always was."""
+    hours: int = 12
+    seconds: bool = False
+    zone: str = "local"
+
+
+def zone_of(style: ClockStyle) -> datetime.tzinfo | None:
+    """The style's time zone; None for the board's own (and when the system lacks the zone's data)."""
+    try:
+        return datetime.timezone.utc if style.zone == "utc" else zoneinfo.ZoneInfo(CET) if style.zone == "cet" \
+            else None
+    except zoneinfo.ZoneInfoNotFoundError:
+        return None
+
+
+def clock_text(now: datetime.datetime | None = None, style: ClockStyle = ClockStyle()) -> str:
+    """'Thursday 11/5/26 | 07:44 PM CEST': the weekday, month/day/year, the time and its zone, in the style's time
+    zone (the board's own by default); '19:44:05 CEST' with 24 hours and the seconds."""
+    zone = zone_of(style)
+    now = now or datetime.datetime.now().astimezone()       # the board's own, as it always was
+    if zone is not None:
+        now = now.astimezone(zone)
+    name = now.tzname() or ""
+    form = ("%H:%M" if style.hours == 24 else "%I:%M") + (":%S" if style.seconds else "") \
+        + (" %p" if style.hours != 24 else "")
+    return f"{now:%A} {now.month}/{now.day}/{now:%y} | {now:{form}}{' ' + name if name else ''}"
 
 
 def _temperature(chip: Path, labels: tuple[str, ...] = ()) -> float | None:
@@ -149,7 +181,11 @@ class Status:
         load = self._sensor()
         return load if load is not None else self._engines()
 
-    def line(self, now: datetime.datetime | None = None) -> str:
+    def loads(self) -> str:
+        """The CPU's and the GPU's part of the line, sampled now: 'CPU 12% 54°C | GPU 3% 61°C'."""
         cpu = _part("CPU", self.cpu_load(), _temperature(self.cpu_chip, CPU_LABELS) if self.cpu_chip else None)
         gpu = _part("GPU", self.gpu_load(), _temperature(self.gpu_chip, ("edge",)) if self.gpu_chip else None)
-        return " | ".join(part for part in (cpu, gpu, clock_text(now)) if part)
+        return " | ".join(part for part in (cpu, gpu) if part)
+
+    def line(self, now: datetime.datetime | None = None, style: ClockStyle = ClockStyle()) -> str:
+        return " | ".join(part for part in (self.loads(), clock_text(now, style)) if part)

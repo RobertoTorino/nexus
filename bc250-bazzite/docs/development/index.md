@@ -132,7 +132,7 @@ also holds the size of the pinned AppImage (`SIZE`), by which the app sees that 
 build, so a new pin moves it too.
 The same tool reports a newer stable release than the pin (for DirectMesh the newest `directmesh-v<version>` tag; a tag
 with more after the version is a development candidate and skipped); the apps check the checksum of what they download
-themselves. The governor has no pin in the repository (its version is the one COPR built); the GPU Governor Manager
+themselves. The governor has no pin in the repository (its version is the one COPR built); the GPU Manager
 compares the installed package with filippor's latest release.
 
 The BC-250 Upscaler Manager pins no HelixSR release: it gets the latest of one major version (`SUPPORTED_MAJOR`), or the

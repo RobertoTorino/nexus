@@ -8,7 +8,7 @@ from __future__ import annotations
 import math
 
 from PyQt6.QtCore import QPointF, QRectF, Qt
-from PyQt6.QtGui import QColor, QIcon, QPainter, QPen, QPixmap, QPolygonF
+from PyQt6.QtGui import QColor, QIcon, QPainter, QPainterPath, QPen, QPixmap, QPolygonF
 
 SIZE = 64
 BIG = 256
@@ -136,3 +136,70 @@ def menu(color: str) -> QIcon:
         for y in (16, 32, 48):
             _line(p, (12, y), (52, y))
     return _icon(color, draw, BIG)
+
+
+# The weather beside the symbols (owner, 05-11-2026): a symbol for each kind of weather.py, a sun by day and a moon
+# by night where the sky shows.
+def _sun(p: QPainter, cx: float, cy: float, r: float) -> None:
+    p.drawEllipse(QPointF(cx, cy), r, r)
+    for step in range(8):
+        angle = math.radians(step * 45)
+        _line(p, (cx + (r + 5) * math.cos(angle), cy + (r + 5) * math.sin(angle)),
+              (cx + (r + 11) * math.cos(angle), cy + (r + 11) * math.sin(angle)))
+
+
+def _moon(p: QPainter, cx: float, cy: float, r: float) -> None:
+    """A crescent: the disc without a disc moved to its upper right."""
+    disc, bite = QPainterPath(), QPainterPath()
+    disc.addEllipse(QPointF(cx, cy), r, r)
+    bite.addEllipse(QPointF(cx + r * 0.55, cy - r * 0.4), r * 0.85, r * 0.85)
+    p.drawPath(disc.subtracted(bite))
+
+
+def _cloud(p: QPainter, x: float, y: float, w: float, h: float) -> None:
+    """A cloud in the box (x, y, w, h), its inside cleared, so what lies behind it (the sun) does not show through."""
+    path = QPainterPath()
+    path.setFillRule(Qt.FillRule.WindingFill)       # the parts as one outline, not where they overlap
+    path.addRoundedRect(QRectF(x, y + h * 0.45, w, h * 0.55), h * 0.27, h * 0.27)
+    path.addEllipse(QPointF(x + w * 0.32, y + h * 0.55), h * 0.3, h * 0.3)
+    path.addEllipse(QPointF(x + w * 0.62, y + h * 0.42), h * 0.42, h * 0.42)
+    path = path.simplified()
+    p.save()
+    p.setCompositionMode(QPainter.CompositionMode.CompositionMode_Clear)
+    p.fillPath(path, QColor("black"))
+    p.restore()
+    p.drawPath(path)
+
+
+def weather(kind: str, day: bool = True):
+    """The symbol of *kind* (weather.Weather.symbol): clear, partly, cloudy, fog, rain, snow or thunder; a function
+    of the color, as the others."""
+    def icon(color: str) -> QIcon:
+        def draw(p: QPainter) -> None:
+            pen = p.pen()
+            pen.setWidthF(4.5)
+            p.setPen(pen)
+            if kind == "clear":
+                (_sun(p, 32, 32, 12) if day else _moon(p, 32, 32, 20))
+            elif kind == "partly":
+                (_sun(p, 40, 22, 9) if day else _moon(p, 42, 20, 13))
+                _cloud(p, 6, 26, 42, 30)
+            elif kind == "fog":
+                _cloud(p, 10, 6, 44, 30)
+                for y, (a, b) in zip((44, 52, 60), ((8, 50), (14, 56), (10, 44))):
+                    _line(p, (a, y - 2), (b, y - 2))
+            elif kind in ("rain", "snow", "thunder"):
+                _cloud(p, 8, 4, 48, 34)
+                if kind == "rain":
+                    for x in (20, 32, 44):
+                        _line(p, (x + 3, 44), (x - 3, 58))
+                elif kind == "snow":
+                    p.setBrush(QColor(color))
+                    for x, y in ((20, 47), (32, 55), (44, 47)):
+                        p.drawEllipse(QPointF(x, y), 2.5, 2.5)
+                else:
+                    _line(p, (36, 40), (28, 50), (36, 50), (28, 60))
+            else:                               # cloudy
+                _cloud(p, 6, 14, 52, 38)
+        return _icon(color, draw, BIG)
+    return icon

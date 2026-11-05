@@ -1,8 +1,8 @@
 [Desktop Entry]
 # SPDX-License-Identifier: GPL-3.0-or-later
 Type=Application
-Name=BC-250 GPU Governor Manager
-GenericName=GPU Governor Manager
+Name=BC-250 GPU Manager
+GenericName=GPU Manager
 Comment=Configure and control the cyan-skillfish-governor-smu GPU governor on an AMD BC-250
 Exec=bc250-governor-manager
 Icon=bc250-governor-manager

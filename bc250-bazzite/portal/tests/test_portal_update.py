@@ -30,7 +30,7 @@ def test_compare_names_the_changed_apps():
     current = load(MANIFEST)
     new = bumped(current, gpu="gpu-v9.0.0", upscaler="upscaler-v9.1.0")
     changes = pu.compare(current, new)
-    assert [(c.name, c.new) for c in changes] == [("BC-250 GPU Governor Manager", "9.0.0"),
+    assert [(c.name, c.new) for c in changes] == [("BC-250 GPU Manager", "9.0.0"),
                                                   ("BC-250 Upscaler Manager", "9.1.0")]
     assert all(c.old for c in changes)
     assert pu.compare(current, current) == []
@@ -73,7 +73,7 @@ def test_check_reads_the_pins_at_the_release_tag():
     update = pu.check("owner/repo", "portal-v", current, "ua", release_of=lambda *a, **k: RELEASE, read=read)
     assert urls == ["https://raw.githubusercontent.com/owner/repo/portal-v99.0.0/bc250-bazzite/portal/apps.toml",
                     "https://github.com/owner/repo/releases/download/portal-v99.0.0/SHA256SUMS"]
-    assert update.release is RELEASE and update.summary() == "updates GPU Governor Manager"
+    assert update.release is RELEASE and update.summary() == "updates GPU Manager"
 
 
 def test_check_falls_back_to_the_manifest_at_the_root_for_a_tag_from_before_the_move():
@@ -91,7 +91,7 @@ def test_check_falls_back_to_the_manifest_at_the_root_for_a_tag_from_before_the_
     assert urls == ["https://raw.githubusercontent.com/owner/repo/portal-v99.0.0/bc250-bazzite/portal/apps.toml",
                     "https://raw.githubusercontent.com/owner/repo/portal-v99.0.0/portal/apps.toml",
                     "https://github.com/owner/repo/releases/download/portal-v99.0.0/SHA256SUMS"]
-    assert update.summary() == "updates GPU Governor Manager"
+    assert update.summary() == "updates GPU Manager"
 
 
 def test_check_without_details_or_release():

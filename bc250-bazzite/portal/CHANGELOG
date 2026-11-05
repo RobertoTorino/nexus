@@ -1,3 +1,44 @@
+Changelog: 05-11-2026 22:27:18
+
+Added. The GPU Governor Manager is the GPU Manager now (owner, 05-11-2026): its tile, its tooltip and the notice
+say GPU Manager, its full name in apps.toml BC-250 GPU Manager (the root's copy of apps.toml too). Its key, gpu,
+and its launcher stay.
+
+Added. An app that runs already comes to the front when its tile is pressed (owner, 05-11-2026: one moved behind
+the portal had no way back). Its second start asks it to show itself as before, and the portal has KWin make its
+window the active one, unminimized (kwin.py: a short KWin script over the session bus, the window found by the
+app's id or by the process the portal started), since on Wayland the app cannot take the focus by itself. The
+board warning comes when an app is opened, not each time it comes back. Without KWin nothing more happens than
+before.
+
+Added. The touchpad of a DualShock 4 or a DualSense moves the mouse pointer while the portal has the focus (owner,
+05-11-2026: as Steam Input does for the Steam Controller): a finger moves it, a press of the pad clicks, a press
+with two fingers on it is a right click (gamepad.py). The pointer is a virtual mouse of the portal's own through
+/dev/uinput (pointer.py), made at the first touch and gone when the portal closes; without access to uinput the
+touchpad does nothing. Tried on the owner's board with a DualShock 4 over USB, a DualSense and a DualSense Edge
+(05-11-2026), all moving the pointer and clicking alike: the finger is pygame-ce's finger_id, and a finger across the whole pad moves
+the pointer 1000 pixels at the normal speed.
+
+Added. Touchpad on the Settings page (owner, 05-11-2026): the touchpad pointer's speed, 50, 75, 100, 125 or 150 %
+of the normal speed, a click for the next one, kept. The Settings page scrolls when its pills do not fit (seven at
+1280 x 720), the focus taking it along.
+
+Added. Clock on the Settings page (owner, 05-11-2026): the time in the status line with a 12- or 24-hour clock,
+with or without the seconds, in the board's own time zone, CET (CEST in summer) or UTC; the date follows the zone.
+The default is the clock as it was. The time is drawn every second now, the loads still sampled every two seconds.
+
+Added. Weather on the Settings page (owner, 05-11-2026): a place searched for at Open-Meteo, as USB IPS3.5 has it
+(weather.py), and its weather beside Install all updates: its symbol (glyphs.weather: sun or moon, clouds, fog,
+rain, snow, thunder) and the place's name, the sky, the temperature, the wind and the humidity in its tooltip.
+Asked every 30 minutes while the portal is not minimized; Open-Meteo down keeps the last weather and says why.
+Nothing is sent until a place is chosen, and No weather stops it.
+
+Added. The status line takes a second line when it does not fit beside the symbols (owner, 05-11-2026): the date
+and the time under the loads. A value too wide for its pill on the Settings page ends in … (a long place name).
+
+The wiki's portal and privacy chapters follow; tools/portal_screenshot.py sets the demo status line as its two
+parts.
+
 Changelog: 05-11-2026 21:41:33
 
 Release 15.3.0.

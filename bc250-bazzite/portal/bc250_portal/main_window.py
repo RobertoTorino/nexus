@@ -6,22 +6,25 @@ category is for, ☰ at the top right, and under them a row of big symbols (owne
 Refresh, Sys info (a small window with what the system reports about the board, sysinfo.py), Install all apps and
 Install all updates (the counts in their tooltips, the updates waiting on a red badge). On the right of the symbols
 how many apps are installed (installed / listed), and under it the CPU's and the GPU's load and temperature with the
-date and time (status.py, every 2 s). ☰ opens the Settings page (owner, 04-11-2026, as the Windows Portable Suite's
-portal; the ☰ button on the controller too, B back): the Desktop icons (Yes or No; a click switches), Sound, the
-theme (a click goes to the next one) and the wallpaper, each pill with a short line. Then a category strip (the category of the apps' icons, apps.toml) with the notice of updates beside it, and the tiles of
+date and time (status.py: the loads every 2 s, the clock every second), the clock on a second line when one is too
+narrow. With a place chosen, the weather follows the symbols (weather.py, from Open-Meteo every 30 minutes): its
+symbol and the place's name. ☰ opens the Settings page (owner, 04-11-2026, as the Windows Portable Suite's portal;
+the ☰ button on the controller too, B back): the Desktop icons (Yes or No; a click switches), Sound, the theme (a
+click goes to the next one), the wallpaper, the clock (12 or 24 hours, the seconds, the board's time zone, CET or
+UTC), the weather's place and the touchpad's speed, each pill with a short line. Then a category strip (the category of the apps' icons, apps.toml) with the notice of updates beside it, and the tiles of
 the open category; check is the first tile on Sustainable (owner, 20-10-2026). The portal always opens on the
 first category (owner, 20-10-2026). Everything is reached with the keyboard, the mouse or a controller
 (gamepad.py).
 
-A tile: a click, Enter or A opens the app (an app with two windows asks which one), or offers to install one that
-is not installed. Its menu (the Menu key or X) holds every action: Open, Install (Update, Reinstall) and Uninstall.
-A right click or Y updates (owner, 04-11-2026, as the Windows Portable Suite's portal): the portal itself while a
-newer one is out, else the app's update or reinstall; a right click on a tile with nothing to update opens its
-menu. Install, update and uninstall run the app's own installer in a terminal window (they may ask for the
-sudo password and print what they do); the portal watches for the exit file the terminal writes and then refreshes.
-A terminal whose installer ended well closes by itself (owner, 26-10-2026); one that failed stays open with what
-happened until Enter is pressed. An app that changes the board (unlocks, governor, ACPI) gets a warning before it
-is installed or opened.
+A tile: a click, Enter or A opens the app (an app with two windows asks which one), or offers to install one that is
+not installed. An app that runs already comes to the front (kwin.py), also from behind the portal. Its menu (the
+Menu key or X) holds every action: Open, Install (Update, Reinstall) and Uninstall. A right click or Y updates
+(owner, 04-11-2026, as the Windows Portable Suite's portal): the portal itself while a newer one is out, else the
+app's update or reinstall; a right click on a tile with nothing to update opens its menu. Install, update and
+uninstall run the app's own installer in a terminal window (they may ask for the sudo password and print what they
+do); the portal watches for the exit file the terminal writes and then refreshes. A terminal whose installer ended
+well closes by itself (owner, 26-10-2026); one that failed stays open with what happened until Enter is pressed. An
+app that changes the board (unlocks, governor, ACPI) gets a warning before it is installed or opened.
 
 Updates: a red dot marks every tile whose installed app differs from the version this portal pins, a red circular
 arrow every installed app the portal has no record of (installed by hand, or under an earlier name of the app: its
@@ -53,12 +56,16 @@ so the icons on it stand out. A pill that is not active is half transparent, so 
 Sound (owner, 21-10-2026): the intro plays with its sound, and the Sound pill turns it off (the choice is kept;
 without an audio output the pill is disabled and the portal silent). Every action plays a short sound (owner,
 05-11-2026), whatever it comes from: a controller SDL reads, a key (a controller Steam turns into keys too) or a
-click on something that acts (_input_sound, the window's filter over the whole application)."""
+click on something that acts (_input_sound, the window's filter over the whole application).
+
+The touchpad of a DualShock 4 or a DualSense moves the mouse pointer while the portal has the focus (gamepad.py, a
+virtual mouse of pointer.py), as Steam Input does for the Steam Controller."""
 
 from __future__ import annotations
 
 import shlex
 import subprocess
+import time
 from html import escape
 import tempfile
 import uuid
@@ -67,7 +74,9 @@ from dataclasses import dataclass
 from pathlib import Path, PurePath
 
 from PyQt6.QtCore import QCoreApplication, QEvent, QProcess, QTimer, Qt, QUrl, pyqtSignal
-from PyQt6.QtGui import QColor, QDesktopServices, QIcon, QKeyEvent, QKeySequence, QPainter, QPalette, QShortcut
+from PyQt6.QtGui import (
+    QActionGroup, QColor, QDesktopServices, QIcon, QKeyEvent, QKeySequence, QPainter, QPalette, QShortcut,
+)
 from PyQt6.QtWidgets import (
     QAbstractButton, QAbstractSpinBox, QApplication, QComboBox, QDialog, QDialogButtonBox, QFileDialog, QGridLayout,
     QHBoxLayout, QLabel, QLineEdit, QMainWindow, QMenu, QMessageBox, QPlainTextEdit, QPushButton, QSlider, QTabBar,
@@ -81,9 +90,9 @@ from bc250_core.theme import BLUE, ORANGE, RED, THEMES, muted, save_theme_name, 
 from bc250_core.updates import ReleaseInfo, UpdateChecker, version_tuple
 from bc250_core.widgets import Pill
 
-from . import audio, desktop_icons, glyphs, keyboard, status, sysinfo, wallpaper
-from .bigpicture import INTRO_BANNER, UPDATE_BANNER, BigPicture, HeaderPill, Intro, SymbolButton
-from .gamepad import Gamepad
+from . import audio, desktop_icons, glyphs, keyboard, kwin, pointer, status, sysinfo, wallpaper, weather
+from .bigpicture import INTRO_BANNER, UPDATE_BANNER, BigPicture, HeaderPill, Intro, SymbolButton, WeatherButton
+from .gamepad import TOUCH_SPEED, Gamepad
 from .looks import VEIL
 from . import APP_ICONS, APP_ID, APP_NAME, INFO, STAGE, STAGE_NOTE, __version__
 from .manifest import CATEGORIES, AppEntry
@@ -106,18 +115,27 @@ from .sources import (Records, SourceError, Sources, fetch_portal, installed_fro
                       local_version)
 
 POLL_MS = 1000
-STATUS_MS = 2000                # the status line on the right of the symbols: load, temperatures, date and time
+STATUS_MS = 2000                # the status line on the right of the symbols: load and temperatures this often,
+CLOCK_MS = 1000                 # the date and time this often (the seconds may show)
 WAIT_UPDATE = "The portal's update starts once the download or install that runs now has finished."
 VEIL_MAX = 90                   # the slider's end: the picture still shows; "No wallpaper" takes it away
 VEIL_STEP = 5
 VEIL_KEY = "portal/wallpaper_transparency"
 DESKTOP_ICONS_KEY = "portal/desktop_icons"
 SOUND_KEY = "portal/sound"
-# The Settings page: a short line beside each pill (Icons on Desktop, Sound, the theme, the wallpaper)
+CLOCK_KEYS = ("portal/clock_hours", "portal/clock_seconds", "portal/clock_zone")
+PLACE_KEY = "portal/weather_place"
+TOUCH_KEY = "portal/touchpad_speed"
+TOUCH_SPEEDS = (50, 75, 100, 125, 150)    # % of gamepad.TOUCH_SPEED: the Touchpad pill's steps, a click the next
+# The Settings page: a short line beside each pill (Icons on Desktop, Sound, the theme, the wallpaper, the clock, the
+# weather)
 SETTING_LINES = ("An icon on the Desktop for every installed app, or only the portal's.",
                  "The intro's sound, and a short one for each action.",
                  "The look of every app in the suite, from its next start.",
-                 "A picture behind the portal, and how much of it shows through.")
+                 "A picture behind the portal, and how much of it shows through.",
+                 "12 or 24 hours, the seconds, and the time zone of the clock.",
+                 "The weather where you are, beside the symbols, from Open-Meteo.",
+                 "How fast a controller's touchpad moves the mouse pointer.")
 VALUE_PX = 300                  # a value in the Sys info window wraps beyond this width
 SYSINFO_OPACITY = 85            # % of the window color behind the Sys info text: what lies behind shows through
 LAUNCH_ICON_FILES = {("compute", "Unlock"): "cu-unlock", ("cores", "Unlock"): "cores-unlock"}  # else the app's
@@ -339,13 +357,93 @@ class SysInfoDialog(QDialog):
         painter.end()
 
 
+class PlaceDialog(QDialog):
+    """The weather's place: a name searched for at Open-Meteo (off the GUI thread), the places it finds in a list,
+    and Use this place. With a controller: Tab between the field, Search, the list and the buttons, R3 for the
+    keyboard."""
+
+    def __init__(self, fetch: weather.Fetch, parent: QWidget | None = None):
+        super().__init__(parent)
+        self.setWindowTitle(f"{APP_NAME}: Weather")
+        self.fetch = fetch
+        self.places: list[weather.Place] = []
+        self.chosen: weather.Place | None = None
+        layout = QVBoxLayout(self)
+        row = QHBoxLayout()
+        self.name = QLineEdit()
+        self.name.setPlaceholderText("City or town")
+        self.name.returnPressed.connect(self.search)
+        self.search_button = QPushButton("Search")
+        self.search_button.setAutoDefault(False)
+        self.search_button.clicked.connect(self.search)
+        row.addWidget(self.name, 1)
+        row.addWidget(self.search_button)
+        layout.addLayout(row)
+        self.results = QComboBox()
+        self.results.setEnabled(False)
+        layout.addWidget(self.results)
+        self.note = QLabel("The name you search for goes to Open-Meteo, then the place's coordinates every 30 "
+                           "minutes while the portal shows. Nothing else about you is sent.")
+        self.note.setWordWrap(True)
+        self.note.setStyleSheet(f"color:{muted()};")
+        layout.addWidget(self.note)
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Cancel)
+        self.use_button = buttons.addButton("Use this place", QDialogButtonBox.ButtonRole.AcceptRole)
+        self.use_button.setEnabled(False)
+        buttons.accepted.connect(self.use)
+        buttons.rejected.connect(self.reject)
+        layout.addWidget(buttons)
+        self.job = UpdateChecker(self)
+        self.job.finished.connect(self._found)
+        self.setMinimumWidth(520)
+
+    def search(self) -> None:
+        name = self.name.text().strip()
+        fetch = self.fetch
+
+        def find() -> list[weather.Place] | weather.WeatherError:
+            try:
+                return weather.search(name, fetch)
+            except weather.WeatherError as exc:
+                return exc
+        if name and self.job.start(find):
+            self.search_button.setEnabled(False)
+            self.note.setText(f"Looking for {name}…")
+
+    def _found(self, result: object) -> None:
+        self.search_button.setEnabled(True)
+        if isinstance(result, weather.WeatherError):
+            self.note.setText(str(result))
+            return
+        self.places = list(result or [])
+        self.results.clear()
+        self.results.addItems([place.label for place in self.places])
+        self.results.setEnabled(bool(self.places))
+        self.use_button.setEnabled(bool(self.places))
+        self.note.setText(f"{len(self.places)} found: choose one, then Use this place." if self.places else
+                          "Nothing found by that name.")
+        if self.places:
+            self.results.setFocus()
+
+    def use(self) -> None:
+        if 0 <= self.results.currentIndex() < len(self.places):
+            self.chosen = self.places[self.results.currentIndex()]
+            self.accept()
+
+    def done(self, result: int) -> None:  # Qt override: the search stops with the dialog
+        self.job.stop(2000)
+        super().done(result)
+
+
 
 class MainWindow(QMainWindow):
     def __init__(self, entries: list[AppEntry], sources: Sources, records: Records,
                  portal_check: Callable[[], ReleaseInfo] | None = None, local_build: Path | None = None,
                  desktop: Path | None = None, menu: Path | None = None, parent: QWidget | None = None,
                  installed: Path | None = None, launch: Callable[[list[str]], bool] | None = None,
-                 sounds: audio.Sounds | None = None, gamepad: Gamepad | None = None, build: str | None = None):
+                 sounds: audio.Sounds | None = None, gamepad: Gamepad | None = None, build: str | None = None,
+                 weather_fetch: weather.Fetch | None = None, raiser: kwin.Raiser | None = None,
+                 mouse: pointer.VirtualMouse | None = None):
         """*portal_check* returns the newest portal release (run once, off the GUI thread); None: no check. *build*
         is the sha256 of the tarball this portal was installed from (portal_update.running_build), "" when not
         known, None from a checkout: a release built again under this portal's own version is offered when it
@@ -354,7 +452,8 @@ class MainWindow(QMainWindow):
         *desktop* and *menu* are the Desktop folder and the app menu entries' folder (default: the user's).
         *installed* is where the installed portal is (installed_copy()): a newer one there offers a restart; None: no
         check. *launch* starts a program detached (default QProcess.startDetached; tests pass a fake). *sounds* and
-        *gamepad* are the portal's sound player and controller reader (tests pass fakes)."""
+        *gamepad* are the portal's sound player and controller reader, *weather_fetch* asks Open-Meteo, *raiser* brings
+        a running app to the front and *mouse* is the touchpad's pointer (tests pass fakes)."""
         super().__init__(parent)
         self.entries = entries
         self.desktop = desktop or desktop_icons.desktop_dir()
@@ -387,6 +486,17 @@ class MainWindow(QMainWindow):
         self.gamepad = gamepad or Gamepad(self)
         self.keyboard = keyboard.OnScreenKeyboard()                       # R3 (tests give it a fake bus)
         self.gamepad.action.connect(self._gamepad_action)
+        self.mouse = mouse or pointer.VirtualMouse()                     # made at the first touch
+        self.gamepad.pointer_moved.connect(self._pointer_moved)
+        self.gamepad.pointer_pressed.connect(self._pointer_pressed)
+        self.raiser = raiser or kwin.Raiser()
+        self.started: dict[str, subprocess.Popen] = {}  # each launch command: the process the portal started for it
+        self.weather_fetch = weather_fetch or weather.http_fetch(INFO.user_agent)
+        self.place = weather.Place.from_json(self.settings.value(PLACE_KEY, "", type=str))
+        self.weather: weather.Weather | None = None
+        self.weather_error = ""
+        self.weather_at = ""                            # when the weather shown came: "14:32"
+        self.weather_skipped = False                    # a time to ask came while the portal was minimized
         self.intro: Intro | None = None
         self.installed = installed
         self.launch = launch or (lambda argv: QProcess.startDetached(argv[0], argv[1:])[0])
@@ -438,8 +548,10 @@ class MainWindow(QMainWindow):
         self.apps_button.clicked.connect(self.install_missing)               # 01-11-2026)
         self.updates_button = SymbolButton(glyphs.install_updates)
         self.updates_button.clicked.connect(self.install_all)
-        self.settings_button = SymbolButton(glyphs.menu, "Settings: Desktop icons, sound, theme and wallpaper. The ☰ "
-                                            "button on the controller opens them too.")
+        self.weather_button = WeatherButton()           # beside Install all updates, with a place chosen
+        self.weather_button.clicked.connect(self._weather_menu)
+        self.settings_button = SymbolButton(glyphs.menu, "Settings: Desktop icons, sound, theme, wallpaper, clock, "
+                                            "weather and touchpad. The ☰ button on the controller opens them too.")
         self.settings_button.clicked.connect(self.toggle_settings)
         self.icons_box = TogglePill(
             "Icons on Desktop", "On: every installed app gets an icon on the Desktop. Off: only the portal's icon is "
@@ -456,21 +568,39 @@ class MainWindow(QMainWindow):
         self.theme_pill.clicked.connect(self._next_theme)
         self.wallpaper_pill = HeaderPill("None", "Wallpaper")
         self.wallpaper_pill.clicked.connect(self._wallpaper_menu)
+        self.clock_pill = HeaderPill("12 h", "Clock")
+        self.clock_pill.clicked.connect(self._clock_menu)
+        self.weather_pill = HeaderPill("None", "Weather")
+        self.weather_pill.clicked.connect(self._weather_menu)
+        self.touch_pill = HeaderPill("100 %", "Touchpad")
+        self.touch_pill.clicked.connect(self._next_touch_speed)
         # The settings have a page of their own behind ☰ (owner, 04-11-2026, as the Windows Portable Suite's portal);
         # what acts on the apps stays in the header, as big symbols (owner, 05-11-2026), ☰ at the top right.
-        self.header_buttons = [self.refresh_button, self.sysinfo_button, self.apps_button, self.updates_button]
+        self.header_buttons = [self.refresh_button, self.sysinfo_button, self.apps_button, self.updates_button,
+                               self.weather_button]
         self.big.place_symbols(self.header_buttons, self.settings_button)
         self.status = status.Status()
-        self.status_timer = QTimer(self)
-        self.status_timer.setInterval(STATUS_MS)
+        self.loads = self.status.loads()                # the first line at once, the load from the next sample
+        self.loads_at = time.monotonic()
+        self.status_timer = QTimer(self)                # the clock every second, the loads every STATUS_MS
+        self.status_timer.setInterval(CLOCK_MS)
         self.status_timer.timeout.connect(self.show_status)
         self.status_timer.start()
-        self.big.set_status(self.status.line())         # the first line at once, the load from the next one
-        self.setting_pills = [self.icons_box, self.sound_box, self.theme_pill, self.wallpaper_pill]
+        self._show_clock()
+        self.weather_timer = QTimer(self)
+        self.weather_timer.setInterval(weather.INTERVAL_S * 1000)
+        self.weather_timer.timeout.connect(self.update_weather)
+        self.weather_job = UpdateChecker(self)
+        self.weather_job.finished.connect(self._weather_came)
+        self.setting_pills = [self.icons_box, self.sound_box, self.theme_pill, self.wallpaper_pill, self.clock_pill,
+                              self.weather_pill, self.touch_pill]
         self.big.place_settings(list(zip(self.setting_pills, SETTING_LINES)))
 
         self._show_sound()
         self._show_wallpaper()
+        self._show_weather()
+        self.update_weather()
+        self._show_touch_speed()
         self.poll = QTimer(self)
         self.poll.setInterval(POLL_MS)
         self.poll.timeout.connect(self._check_pending)
@@ -902,13 +1032,18 @@ class MainWindow(QMainWindow):
         QCoreApplication.quit()
 
     def show_status(self) -> None:
-        """The status line on the right of the symbols, every STATUS_MS; none while the portal is minimized or hidden,
-        so it costs nothing behind a game."""
+        """The status line on the right of the symbols: the clock every CLOCK_MS, the loads sampled every STATUS_MS;
+        none while the portal is minimized or hidden, so it costs nothing behind a game."""
         if self.isMinimized() or not self.isVisible():
             return
-        self.big.set_status(self.status.line())
+        now = time.monotonic()
+        if now - self.loads_at >= STATUS_MS / 1000 - 0.1:
+            self.loads, self.loads_at = self.status.loads(), now
+        self.big.set_status(self.loads, status.clock_text(style=self.clock_style()))
 
     def changeEvent(self, event) -> None:  # noqa: N802 (Qt override)
+        if event.type() == QEvent.Type.WindowStateChange and not self.isMinimized() and self.weather_skipped:
+            self.update_weather()                       # restored: the weather skipped while it was minimized
         if event.type() == QEvent.Type.ActivationChange and self.isActiveWindow():
             self.check_installed()                      # back from the terminal that installed a new portal
             self.show_notice(self.marked)               # back from an app that checked its program's newest
@@ -1071,6 +1206,186 @@ class MainWindow(QMainWindow):
     def example_wallpaper(self) -> None:
         wallpaper.use_example()
         self._show_wallpaper()
+
+    # ------------------------------------------------------------------------------------- clock and weather
+    def clock_style(self) -> status.ClockStyle:
+        """The clock as the Settings page sets it; the clock as it always was until it is set."""
+        hours, seconds, zone = CLOCK_KEYS
+        style = status.ClockStyle()
+        zone_key = self.settings.value(zone, style.zone, type=str)
+        return status.ClockStyle(24 if self.settings.value(hours, style.hours, type=int) == 24 else 12,
+                                 self.settings.value(seconds, style.seconds, type=bool),
+                                 zone_key if zone_key in status.ZONES else style.zone)
+
+    def _show_clock(self) -> None:
+        """The Clock pill and the status line in the clock's style."""
+        style = self.clock_style()
+        zone = status.ZONES[style.zone]
+        self.clock_pill.set_value(f"{style.hours} h", (
+            f"The clock in the header: {style.hours} hours, {'with' if style.seconds else 'without'} the seconds, in "
+            + ("the board's own time zone" if style.zone == "local" else zone) + ". Click to change it."))
+        self.big.set_status(self.loads, status.clock_text(style=style))
+
+    def clock_menu(self) -> QMenu:
+        """The Clock pill's menu: 12 or 24 hours, the seconds, and the time zone (the board's, CET or UTC)."""
+        style = self.clock_style()
+        menu = QMenu(self)
+        hours = QActionGroup(menu)
+        for value in (12, 24):
+            action = menu.addAction(f"{value}-hour clock" + (" (AM/PM)" if value == 12 else ""))
+            action.setCheckable(True)
+            action.setChecked(style.hours == value)
+            action.setData(("hours", value))
+            hours.addAction(action)
+        menu.addSeparator()
+        seconds = menu.addAction("Seconds")
+        seconds.setCheckable(True)
+        seconds.setChecked(style.seconds)
+        seconds.setData(("seconds", not style.seconds))
+        menu.addSection("Time zone")
+        zones = QActionGroup(menu)
+        local = status.clock_text(style=status.ClockStyle()).rpartition(" ")[2]
+        for key, label in status.ZONES.items():
+            text = {"local": f"The board's own ({local})", "cet": "CET, Central European Time (CEST in summer)",
+                    "utc": "UTC"}[key]
+            action = menu.addAction(text)
+            action.setCheckable(True)
+            action.setChecked(style.zone == key)
+            action.setData(("zone", key))
+            zones.addAction(action)
+        menu.triggered.connect(self._clock_action)
+        return menu
+
+    def _clock_menu(self) -> None:
+        self._show_menu(self.clock_menu(), self.clock_pill)
+
+    def _clock_action(self, action) -> None:
+        what, value = action.data()
+        self.settings.setValue(CLOCK_KEYS[("hours", "seconds", "zone").index(what)], value)
+        self._show_clock()
+
+    def weather_menu(self) -> QMenu:
+        """The Weather pill's menu, and the weather symbol's: choose a place, the weather again now, or none."""
+        menu = QMenu(self)
+        menu.addAction("Choose a place…").setData("choose")
+        menu.addAction("Update the weather now").setData("update")
+        menu.addAction("No weather").setData("none")
+        for action in menu.actions()[1:]:
+            action.setEnabled(self.place is not None)
+        menu.triggered.connect(self._weather_action)
+        return menu
+
+    def _weather_menu(self) -> None:
+        under = self.weather_pill if self.big.in_settings() else self.weather_button
+        self._show_menu(self.weather_menu(), under)
+
+    def _weather_action(self, action) -> None:
+        what = action.data()
+        if what == "choose":
+            self.choose_place()
+        elif what == "update":
+            self.update_weather()
+        elif what == "none":
+            self.set_place(None)
+
+    def choose_place(self) -> None:
+        dialog = PlaceDialog(self.weather_fetch, self)
+        if dialog.exec() == QDialog.DialogCode.Accepted and dialog.chosen is not None:
+            self.set_place(dialog.chosen)
+        dialog.deleteLater()
+
+    def set_place(self, place: weather.Place | None) -> None:
+        """The weather's place, kept; None: no weather, and nothing goes to Open-Meteo any more."""
+        self.place, self.weather, self.weather_error = place, None, ""
+        self.settings.setValue(PLACE_KEY, place.to_json() if place else "")
+        self._show_weather()
+        self.update_weather()
+
+    def update_weather(self) -> None:
+        """The weather of the place, off the GUI thread; every INTERVAL_S, and not while the portal is minimized.
+        Without a place nothing is asked."""
+        if self.place is None:
+            self.weather_timer.stop()
+            return
+        self.weather_timer.start()
+        self.weather_skipped = self.isMinimized()
+        if self.weather_skipped:
+            return
+        place, fetch = self.place, self.weather_fetch
+
+        def ask() -> weather.Weather | weather.WeatherError:
+            try:
+                return weather.current(place, fetch)
+            except weather.WeatherError as exc:
+                return exc
+        self.weather_job.start(ask)
+
+    def _weather_came(self, result: object) -> None:
+        if self.place is None:
+            return
+        if isinstance(result, weather.WeatherError):
+            # Open-Meteo busy or down, or no network: the last weather stays, the tooltip says why it is old
+            self.weather_error = str(result)
+        elif isinstance(result, weather.Weather):
+            self.weather, self.weather_error = result, ""
+            self.weather_at = time.strftime("%H:%M")
+        self._show_weather()
+
+    def _show_weather(self) -> None:
+        """The Weather pill (the place, or None) and the weather symbol beside the symbols: the sky's symbol and the
+        place's name, the temperature and the sky in its tooltip; hidden without a place."""
+        place, now = self.place, self.weather
+        name = place.name if place else ""
+        self.weather_pill.set_value(name or "None",
+            (f"The weather at {place.label}, beside the symbols at the top. " if place else
+             "No weather: nothing is sent to Open-Meteo. ")
+            + "Click to choose a place, to update the weather now, or for no weather.")
+        if place is None:
+            self.weather_button.set_weather("", glyphs.weather("cloudy"), False, "")
+            return
+        if now is not None:
+            wind = f", wind {now.wind_kmh:.0f} km/h" if now.wind_kmh is not None else ""
+            humidity = f", humidity {now.humidity} %" if now.humidity is not None else ""
+            tip = (f"{place.label}: {now.description or 'weather code ' + str(now.code)}, {now.temperature:.0f}°C"
+                   f"{wind}{humidity}. From Open-Meteo at {self.weather_at}.")
+            glyph = glyphs.weather(now.symbol, now.is_day)
+        else:
+            tip, glyph = f"{place.label}: the weather is on its way from Open-Meteo.", glyphs.weather("cloudy")
+        if self.weather_error:
+            tip += f"\n\n{self.weather_error} Asked again in {weather.INTERVAL_S // 60} minutes."
+        self.weather_button.set_weather(name, glyph, now is not None, tip + "\n\nClick to update it or to change "
+                                        "the place.")
+
+    # ------------------------------------------------------------------------------------------- the touchpad
+    def touch_speed(self) -> int:
+        """The touchpad's speed in % of gamepad.TOUCH_SPEED, one of TOUCH_SPEEDS; 100 until it is set."""
+        value = self.settings.value(TOUCH_KEY, 100, type=int)
+        return value if value in TOUCH_SPEEDS else 100
+
+    def _show_touch_speed(self) -> None:
+        percent = self.touch_speed()
+        self.gamepad.touch_speed = TOUCH_SPEED * percent / 100
+        self.touch_pill.set_value(f"{percent} %", (
+            f"The touchpad of a DualShock 4 or a DualSense moves the mouse pointer at {percent} % of its normal "
+            "speed. Click for the next speed: " + ", ".join(f"{p} %" for p in TOUCH_SPEEDS) + "."))
+
+    def _next_touch_speed(self) -> None:
+        """The Touchpad pill: the next speed, at once, and kept."""
+        steps = TOUCH_SPEEDS
+        self.settings.setValue(TOUCH_KEY, steps[(steps.index(self.touch_speed()) + 1) % len(steps)])
+        self._show_touch_speed()
+
+    def _pointer_moved(self, dx: float, dy: float) -> None:
+        """A finger on the controller's touchpad: the mouse pointer moves, while the portal has the focus."""
+        if QApplication.activeWindow() is not None and self.intro is None:
+            self.mouse.move(dx, dy)
+
+    def _pointer_pressed(self, right: bool, down: bool) -> None:
+        """The touchpad pressed: a click (with two fingers on it, a right click). A release always goes through, so
+        no button stays down."""
+        if down and (QApplication.activeWindow() is None or self.intro is not None):
+            return
+        self.mouse.press(pointer.BTN_RIGHT if right else pointer.BTN_LEFT, down)
 
     def _show_icons(self, show: bool) -> None:
         self.settings.setValue(DESKTOP_ICONS_KEY, show)
@@ -1503,15 +1818,25 @@ class MainWindow(QMainWindow):
         self.refresh()
 
     def open_app(self, entry: AppEntry, command: str) -> None:
-        if not self._confirm_board_change(entry, f"Open {entry.name}"):
-            return
+        """Start the app. One that runs already gets its window to the front (owner, 05-11-2026): its second start
+        asks it to show itself, and KWin, asked by the portal, makes it the active window (kwin.py): Wayland does not
+        let the app take the focus by itself."""
         argv = shlex.split(command)
         argv[0] = str(expand(argv[0]))
+        running = self.started.get(command)
+        if not (running is not None and running.poll() is None) and \
+                not self._confirm_board_change(entry, f"Open {entry.name}"):
+            return
         try:
-            subprocess.Popen(argv, start_new_session=True, stdin=subprocess.DEVNULL,
-                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            process = subprocess.Popen(argv, start_new_session=True, stdin=subprocess.DEVNULL,
+                                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         except OSError as exc:
             QMessageBox.critical(self, APP_NAME, f"{entry.name} could not be started:\n\n{exc}")
+            return
+        if running is None or running.poll() is not None:
+            self.started[command] = process             # the app's own process: its launcher execs it
+        own = self.started[command]
+        self.raiser.bring_to_front([PurePath(argv[0]).name], [own.pid] if own.poll() is None else [])
 
     def _close_window(self, event) -> None:
         if self.intro is not None:
@@ -1522,6 +1847,10 @@ class MainWindow(QMainWindow):
             pass
         QApplication.instance().removeEventFilter(self)
         self.gamepad.stop()
+        self.mouse.close()
+        self.raiser.close()
+        self.weather_timer.stop()
+        self.weather_job.stop(2000)
         self.sounds.stop()
         self.worker.stop(2000)
         self.portal_checker.stop(2000)

@@ -278,7 +278,7 @@ SYMBOLS = [
     ("↓ ↑", "BC-250 Bazzite Test", "Live status: download and upload."),
     ("🎮", "BC-250 Bazzite Test", "Live status: the game that runs."),
     ("✕", "BC-250 Bazzite Test", "The round close button (drawn, not a font glyph)."),
-    ("✖ ⚠ ●", "BC-250 GPU Governor Manager", "Safe points: an error, a warning, a test that runs."),
+    ("✖ ⚠ ●", "BC-250 GPU Manager", "Safe points: an error, a warning, a test that runs."),
     ("✓ ✗", "Console Link", "The controller test's checks."),
     ("△ ○ □ ◇ ◆ ★", "Bazzite DatStation", "The front page's features: Quiz, History, Region Codes, User Guides, "
                                             "PS News, Scores & Trophies."),

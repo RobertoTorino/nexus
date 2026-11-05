@@ -31,7 +31,7 @@ SCALE = 1.5                     # the picture is this much larger, for sharp tex
 CATEGORY = "sustainable"        # the category that is open
 UPDATED = "gpu"                 # the app with an update
 NOT_INSTALLED = {"oc", "acpi"}  # gray on the open tab, as an app that is not installed looks
-STATUS = "CPU 12% 54°C | GPU 3% 61°C | Thursday 11/5/26 | 07:44 PM CEST"   # not the runner's own readings and clock
+LOADS, CLOCK = "CPU 12% 54°C | GPU 3% 61°C", "Thursday 11/5/26 | 07:44 PM CEST"   # not the runner's own
 WEBP_QUALITY = 85
 
 sys.path[:0] = [str(SUITE / "portal"), str(ROOT / "core")]
@@ -86,7 +86,7 @@ def render(home: Path):
     window = mw.MainWindow(entries, Sources(home / "work"), records, desktop=home / "Desktop", menu=home / "menu")
     window.big.bar.setCurrentIndex(window.big.categories.index(CATEGORY))
     window.status_timer.stop()
-    window.big.set_status(STATUS)
+    window.big.set_status(LOADS, CLOCK)
     window.resize(*SIZE)
     window.show()
     for _ in range(3):                                  # the layout, the reflow it starts, the start-up timers

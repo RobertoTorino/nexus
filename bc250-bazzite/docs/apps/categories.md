@@ -34,7 +34,7 @@ Every app with its icon and its category.
 | App | Category |
 |---|---|
 | ![](../assets/apps/check.webp){ .app-icon } [BC-250 Bazzite Test](check.md) | Sustainable |
-| ![](../assets/apps/gpu.webp){ .app-icon } [BC-250 GPU Governor Manager](gpu.md) | Sustainable |
+| ![](../assets/apps/gpu.webp){ .app-icon } [BC-250 GPU Manager](gpu.md) | Sustainable |
 | ![](../assets/apps/compute.webp){ .app-icon } [BC-250 CU Bisect](compute.md), with its Unlock window | Sustainable |
 | ![](../assets/apps/cores.webp){ .app-icon } [BC-250 Cores Bisect](cores.md), with its Unlock window | Sustainable |
 | ![](../assets/apps/oc.webp){ .app-icon } [BC-250 GPU OC Bisect](oc.md) | Sustainable |

@@ -33,7 +33,7 @@ category's icon (`icons/<category>/`, at 1024, 512, 256 and 128 px) to these pla
 | --- | --- | --- |
 | <img src="bc250-bazzite/icons/gaming/gaming-128.png" width="64" alt=""> | Gaming | RPCS3 Manager (`rpcs3`)<br>Console Link (`consoles`)<br>Console LinkB (`clb`)<br>shadPS4 Manager (`shadps4`)<br>Decky Loader Manager (`decky`)<br>Bazzite DatStation (`datstation`)<br>PPSSPP Manager (`ppsspp`)<br>PCSX2 Manager (`pcsx2`)<br>Xenia Manager (`xenia`)<br>Vita3K Manager (`vita3k`) |
 | <img src="bc250-bazzite/icons/graphics/graphics-128.png" width="64" alt=""> | Graphics | BC-250 Upscaler Manager (`upscaler`)<br>BC-250 ACE Queues (`ace`)<br>BC-250 Mesh Shaders (`mesh`) |
-| <img src="bc250-bazzite/icons/sustainable/sustainable-128.png" width="64" alt=""> | Sustainable | BC-250 Bazzite Test (`check`)<br>BC-250 GPU Governor Manager (`gpu`)<br>BC-250 CU Bisect (`compute`)<br>CU Unlock (the CU Bisect app's Unlock) (`cu-unlock`)<br>BC-250 Cores Bisect (`cores`)<br>Cores Unlock (the Cores Bisect app's Unlock) (`cores-unlock`)<br>BC-250 GPU OC Bisect (`oc`)<br>BC-250 Persistent ACPI (`acpi`)<br>BC-250 Memory Manager (`vram`)<br>BC-250 Fan Control (`fan`) |
+| <img src="bc250-bazzite/icons/sustainable/sustainable-128.png" width="64" alt=""> | Sustainable | BC-250 Bazzite Test (`check`)<br>BC-250 GPU Manager (`gpu`)<br>BC-250 CU Bisect (`compute`)<br>CU Unlock (the CU Bisect app's Unlock) (`cu-unlock`)<br>BC-250 Cores Bisect (`cores`)<br>Cores Unlock (the Cores Bisect app's Unlock) (`cores-unlock`)<br>BC-250 GPU OC Bisect (`oc`)<br>BC-250 Persistent ACPI (`acpi`)<br>BC-250 Memory Manager (`vram`)<br>BC-250 Fan Control (`fan`) |
 | <img src="bc250-bazzite/icons/utilities/utilities-128.png" width="64" alt=""> | Utilities | System Overlay (`overlay`)<br>BC-250 BIOS Reader (`bios`)<br>BC-250 USB Wi-Fi (`wdriver`)<br>HDMI CEC Manager (`cec`)<br>Bazzite SFTP Tools (`sftp`)<br>USB IPS3.5 (`ips35`)<br>USB HD Cam (`hdcam`)<br>USB HD Control (`hdcontrol`)<br>Dependency Checker (`package`)<br>Bazzite NetcatGUI (`ncgui`)<br>SSD Check (`ssd`) |
 
 ### The portal's symbols
@@ -100,7 +100,7 @@ Characters of the font, used as icons in labels and buttons.
 | ↓ ↑ | BC-250 Bazzite Test | Live status: download and upload. |
 | 🎮 | BC-250 Bazzite Test | Live status: the game that runs. |
 | ✕ | BC-250 Bazzite Test | The round close button (drawn, not a font glyph). |
-| ✖ ⚠ ● | BC-250 GPU Governor Manager | Safe points: an error, a warning, a test that runs. |
+| ✖ ⚠ ● | BC-250 GPU Manager | Safe points: an error, a warning, a test that runs. |
 | ✓ ✗ | Console Link | The controller test's checks. |
 | △ ○ □ ◇ ◆ ★ | Bazzite DatStation | The front page's features: Quiz, History, Region Codes, User Guides, PS News, Scores & Trophies. |
 | ★ | Bazzite DatStation | Stars, a perfect round, trophies. |

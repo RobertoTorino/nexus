@@ -375,8 +375,9 @@ def test_the_header_has_big_symbols_with_the_status_on_their_right(made):
     of the suite's icon; ☰ at the top right, level with the title; on the right of the symbols the installed count
     over the status line. Scaled with the view on a handheld's screen."""
     window, _ = made()
-    symbols = window.header_buttons
+    symbols = window.header_buttons[:4]                 # the weather follows them, with a place chosen
     assert len(symbols) == 4 and all(isinstance(s, bigpicture.SymbolButton) for s in symbols)
+    assert isinstance(window.header_buttons[4], bigpicture.WeatherButton) and window.weather_button.isHidden()
     window.show()
     window.resize(1920, 1080)
     QApplication.processEvents()
@@ -453,14 +454,15 @@ def test_the_focus_reaches_the_symbols_and_back_with_the_controller(made, monkey
 def test_the_settings_page_holds_the_settings(made, monkeypatch):
     """The Settings page behind ☰ (owner, 04-11-2026, as the Windows Portable Suite's portal): the ☰ pill or the
     controller's ☰ button shows it in place of the category strip and the tiles, under the same header; its pills
-    (Desktop icons, Sound, the theme, the wallpaper), each with a short line, work as before; B, Escape or ☰ again
-    go back to the tiles."""
+    (Desktop icons, Sound, the theme, the wallpaper, the clock, the weather and the touchpad, owner 05-11-2026), each
+    with a short line, work as before; B, Escape or ☰ again go back to the tiles."""
     window, pad = made()
     start(window)
     window.resize(1500, 1000)
     QApplication.processEvents()
     big = window.big
-    assert window.setting_pills == [window.icons_box, window.sound_box, window.theme_pill, window.wallpaper_pill]
+    assert window.setting_pills == [window.icons_box, window.sound_box, window.theme_pill, window.wallpaper_pill,
+                                    window.clock_pill, window.weather_pill, window.touch_pill]
     assert not any(p in window.header_buttons for p in window.setting_pills)
     assert all(big.settings_page.isAncestorOf(p) for p in window.setting_pills)
     assert [label.text() for label in big.setting_lines] == list(mw.SETTING_LINES)
@@ -631,7 +633,7 @@ def test_the_tile_menu_holds_every_action(made, monkeypatch, home):
     window.refresh()
     menu = window.tile_menu(gpu)
     assert names(menu) == [("Open", True), ("Update", True), ("Uninstall", True)]
-    assert menu.actions()[2].toolTip().startswith("Update BC-250 GPU Governor Manager v")
+    assert menu.actions()[2].toolTip().startswith("Update BC-250 GPU Manager v")
     check = window.entries[0]                                  # check goes with the portal: no Uninstall
     assert [a.text() for a in window.tile_menu(check).actions() if not a.isSeparator()] == ["Open", "Install"]
     compute = next(e for e in window.entries if e.key == "compute")
@@ -849,3 +851,24 @@ def test_the_key_that_skips_the_intro_is_silent(made):
     window.start_up()
     QTest.keyClick(window.intro, Qt.Key.Key_Return)
     assert window.sounds.played == [audio.INTRO]
+
+
+def test_the_settings_page_scrolls_to_the_pill_with_the_focus(made, monkeypatch):
+    """Seven settings do not fit a handheld's screen (1280 x 720): the page scrolls, and the focus takes it along."""
+    window, pad = made()
+    start(window)
+    window.resize(1280, 720)
+    QApplication.processEvents()
+    window.toggle_settings()
+    QApplication.processEvents()
+    bar = window.big.settings_scroll.verticalScrollBar()
+    assert window.focusWidget() is window.icons_box and bar.value() == 0
+    monkeypatch.setattr(QApplication, "activeWindow", staticmethod(lambda: window))
+    for _ in window.setting_pills[1:]:
+        pad.queue = [("button", "dpad_down", True), ("button", "dpad_down", False)]
+        window.gamepad.poll()
+    QApplication.processEvents()
+    assert window.focusWidget() is window.touch_pill
+    viewport = window.big.settings_scroll.viewport()
+    top = window.touch_pill.mapTo(viewport, window.touch_pill.rect().topLeft()).y()
+    assert 0 <= top and top + window.touch_pill.height() <= viewport.height()      # in sight

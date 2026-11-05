@@ -72,3 +72,15 @@ def no_session_bus(monkeypatch):
     def refuse(*_args):
         raise keyboard.KeyboardError("the tests have no session bus")
     monkeypatch.setattr(keyboard, "dbus_call", refuse)
+
+
+@pytest.fixture(autouse=True)
+def no_kwin_no_uinput(monkeypatch, tmp_path):
+    """No test brings a real window to the front through KWin, or adds a mouse to the machine through uinput: KWin's
+    calls fail, and the virtual mouse finds no device. A test that wants them gives the window fakes."""
+    from bc250_portal import kwin, pointer
+
+    def refuse(*_args):
+        raise kwin.KWinError("the tests have no session bus")
+    monkeypatch.setattr(kwin, "dbus_call", refuse)
+    monkeypatch.setattr(pointer, "DEVICE", str(tmp_path / "no-uinput"))

@@ -25,7 +25,7 @@ name = "BC-250 Bazzite Test"
 launchers = ["~/.local/bin/bc250-bazzite-test"]
 
 [app.gpu]
-name = "BC-250 GPU Governor Manager"
+name = "BC-250 GPU Manager"
 launchers = ["~/.local/bin/bc250-governor-manager"]
 
 [app.upscaler]
@@ -733,7 +733,7 @@ probe = "path"
 [[tool.source]]
 owner = "gpu"
 need = "required"
-usage = "System service and configuration managed by the GPU Governor Manager."
+usage = "System service and configuration managed by the GPU Manager."
 
 [[tool.source]]
 owner = "oc"
@@ -784,7 +784,7 @@ anchor = "the-controller-box"
 
 [[tool]]
 name = "radeontop"
-description = "Shows the load of the parts of an AMD GPU (shaders, memory, video). The Governor Manager reads the GPU load from it when the kernel's own reading is missing."
+description = "Shows the load of the parts of an AMD GPU (shaders, memory, video). The GPU Manager reads the GPU load from it when the kernel's own reading is missing."
 executables = ["radeontop"]
 
 [[tool.source]]
@@ -1168,7 +1168,7 @@ specifier = ">=2.5,<3"
 
 [[dependency]]
 name = "PyQt6-Charts"
-description = "Qt's chart module for PyQt6. Bazzite Test draws its benchmark and history graphs with it, the Governor Manager its clock, load and temperature graphs."
+description = "Qt's chart module for PyQt6. Bazzite Test draws its benchmark and history graphs with it, the GPU Manager its clock, load and temperature graphs."
 
 [[dependency.source]]
 owner = "check"

@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """PyQt6 front-end for cyan-skillfish-governor-smu (AMD BC-250 on Bazzite)."""
 
-APP_NAME = "BC-250 GPU Governor Manager"
+APP_NAME = "BC-250 GPU Manager"
 APP_ID = "bc250-governor-manager"
 __version__ = "0.4.3"
 

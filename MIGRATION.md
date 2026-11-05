@@ -1000,7 +1000,7 @@ gaming category first, RPCS3 Manager done in the working tree, then shadPS4, Vit
 2. Windows Portable Test's tabs and tests: the plan below ("The plan: Windows Portable Test's tabs"), the owner
    picks the order. Decided: no test needing administrator rights; tabs per category as the portal's (LB/RB), with
    core's `Tabs` (PCSX2 Manager's Settings pane uses it the same way).
-3. The BC250 apps for the Ally (owner, 29-10-2026): **left out** the board's and Linux's: GPU Governor Manager, CU
+3. The BC250 apps for the Ally (owner, 29-10-2026): **left out** the board's and Linux's: GPU Manager, CU
    Bisect, Cores Bisect, GPU OC Bisect, Persistent ACPI, Memory Manager, Fan Control (the handheld's own tuning apps
    come instead: the roadmap, 04-11-2026), ACE Queues, Mesh Shaders, USB Wi-Fi, Console LinkB (the XBOX app does it),
    Decky Loader Manager (BIOS Reader was left out too; it comes after all, see "BIOS Reader for Windows" below). **HDMI CEC Manager first**: the owner tests it with a dock and a special USB-C adapter (how

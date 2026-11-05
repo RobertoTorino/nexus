@@ -39,7 +39,7 @@ By category, as the portal lists them.
 **Sustainable**: the board itself: test it, tune it, unlock it, cool it, and keep it running well.
 
 - <img src="portal/images/apps/check.webp" width="20" height="20" alt=""/> **[BC-250 Bazzite Test](apps/check)**: Read-only diagnostics, stress test and benchmarks. Always installed.
-- <img src="portal/images/apps/gpu.webp" width="20" height="20" alt=""/> **[BC-250 GPU Governor Manager](apps/gpu)**: Manage the cyan-skillfish GPU governor: tuning, safe points, profiles, backups.
+- <img src="portal/images/apps/gpu.webp" width="20" height="20" alt=""/> **[BC-250 GPU Manager](apps/gpu)**: Manage the cyan-skillfish GPU governor: tuning, safe points, profiles, backups.
 - <img src="portal/images/apps/compute.webp" width="20" height="20" alt=""/> **[BC-250 CU Bisect](apps/compute)**: Tell bad CUs apart from an unstable CU unlock, and apply a tested unlock.
 - <img src="portal/images/apps/cores.webp" width="20" height="20" alt=""/> **[BC-250 Cores Bisect](apps/cores)**: Tell bad CPU cores apart from an unstable core unlock, before you persist the 8C/16T unlock.
 - <img src="portal/images/apps/oc.webp" width="20" height="20" alt=""/> **[BC-250 GPU OC Bisect](apps/oc)**: Find your board's safe GPU overclock and undervolt, one step at a time.

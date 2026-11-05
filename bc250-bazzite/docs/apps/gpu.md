@@ -1,8 +1,8 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 
-![BC-250 GPU Governor Manager](../assets/gpu/bc250-governor-manager.webp){ .app-logo }
+![BC-250 GPU Manager](../assets/gpu/bc250-governor-manager.webp){ .app-logo }
 
-# BC-250 GPU Governor Manager
+# BC-250 GPU Manager
 
 !!! warning "Changes the board"
     The app edits the governor's settings file, /etc/cyan-skillfish-governor-smu/config.toml, and makes a dated
@@ -105,7 +105,7 @@ cd gpu-v*/
 It installs the app for your user only, no root and no `rpm-ostree` layering: a private venv with PyQt6 and
 the app under `~/.local/share/bc250-governor-manager`, the launcher `~/.local/bin/bc250-governor-manager`,
 a desktop entry, the icon and a Desktop icon (`./install.sh --no-desktop-shortcut` leaves the Desktop icon
-out). **BC-250 GPU Governor Manager** then appears in the application menu (and in
+out). **BC-250 GPU Manager** then appears in the application menu (and in
 Steam's Game Mode via *Add a Non-Steam Game* if you want it there). Run `./install.sh` again from a newer
 release to update, `./install.sh --uninstall` to remove it, `./install.sh --uninstall --purge` to also remove its
 settings, profiles and start-at-login entry. The governor's `config.toml` and its backups are never touched.

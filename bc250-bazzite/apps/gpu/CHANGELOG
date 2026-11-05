@@ -1,3 +1,9 @@
+Changelog: 05-11-2026 22:27:18
+
+Added. The app is called BC-250 GPU Manager now (owner, 05-11-2026), in its window, its menu entry (GPU Manager as
+the generic name), its installer's messages, its README and its wiki chapter. Its id, launcher, menu entry's file
+and settings keep their names (bc250-governor-manager), so an installed copy updates in place.
+
 Changelog: 05-11-2026 18:44:37
 
 Release 0.4.3.

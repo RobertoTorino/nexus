@@ -47,7 +47,7 @@ Every two seconds the guard takes the hotter of the GPU and the CPU temperature,
 
 - **Back to normal:** 5 °C below the warning (80 °C with the defaults) the warning re-arms and the fans go back to
   what they were: the firmware's curve, or the manual value they had. **Performance mode stays off**: turn it on
-  again in the GPU Governor Manager when you want it.
+  again in the GPU Manager when you want it.
 - **The shutdown waits.** Only a temperature that stays at the shutdown limit for the whole time shuts the board
   down; one that drops below it in time stops the countdown. The guard says when the countdown starts.
 - **A broken sensor never shuts the board down.** A reading below 1 °C or above 150 °C counts as no reading. With

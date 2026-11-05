@@ -2,7 +2,8 @@
 """The portal's view (owner, 01-11-2026: the one view; Suite Desktop Mode, the window of tabs, is gone), as Steam's
 Big Picture is for Steam: fullscreen, for a TV and a controller as much as for a desk. Large icons and type, the
 header with the suite's icon, its name, ☰ at the top right and a row of big symbols (owner, 05-11-2026: in place of
-the pills) with the board's load, temperatures, date and time on its right, a category strip, and a focus that moves
+the pills) with the board's load, temperatures, date and time on its right (on two lines when one is too narrow), the
+weather beside the symbols when a place is chosen, a category strip, and a focus that moves
 with the arrow keys, a controller's d-pad or its stick (gamepad.py), with the mouse working as always. The Settings
 page (the ☰ symbol or the controller's ☰ button, owner 04-11-2026, as the Windows Portable Suite's portal) takes the
 place of the category strip and the tiles: the pills of the settings, each with a short line, under the same
@@ -35,6 +36,7 @@ PILL_RADIUS = 16
 PILL_ALPHA = 150                # a pill that is not active (no focus, no mouse) shows the wallpaper through it
 SYMBOL_PX = 84                  # a header symbol (owner, 05-11-2026): a square this large, its glyph GLYPH_PX
 GLYPH_PX = 56
+PLACE_W = 220                   # the weather's place name: at most this wide, else it ends in …
 GAP = 20
 MARGIN = 48
 FULL_HEIGHT = 1000             # a window this high or higher is drawn at full size, a lower one smaller
@@ -104,6 +106,58 @@ class ElidedLabel(QLabel):
         painter.end()
 
 
+class StatusLine(QLabel):
+    """The status line: the loads and the clock on one line, "CPU 12% 54°C | GPU 3% 61°C | Thursday 11/5/26 |
+    07:44 PM CEST", or the clock on a second line under the loads when the room on the right of the symbols is too
+    narrow for one (owner, 05-11-2026: a second line rather than a cramped one)."""
+
+    def __init__(self):
+        super().__init__()
+        self.parts = ("", "")
+        self.two = False
+        self.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+
+    def set_parts(self, loads: str, clock: str) -> None:
+        if (loads, clock) == self.parts:
+            return
+        self.parts = (loads, clock)
+        self.updateGeometry()
+        self._fit()
+
+    def one_line(self) -> str:
+        return " | ".join(part for part in self.parts if part)
+
+    def _advance(self, text: str) -> int:
+        self.ensurePolished()                       # the style sheet's font size
+        return self.fontMetrics().horizontalAdvance(text) + 2 * self.margin() + 2
+
+    def sizeHint(self) -> QSize:  # noqa: N802 (Qt override)
+        lines = 2 if self.two else 1
+        return QSize(self._advance(self.one_line()), self.fontMetrics().lineSpacing() * lines + 2 * self.margin())
+
+    def minimumSizeHint(self) -> QSize:  # noqa: N802 (Qt override)
+        width = max(self._advance(part) for part in self.parts)
+        return QSize(width, self.fontMetrics().lineSpacing() * (2 if self.two else 1) + 2 * self.margin())
+
+    def _fit(self) -> None:
+        """One line when it fits the width the layout gave, else the clock under the loads."""
+        two = all(self.parts) and self.width() < self._advance(self.one_line())
+        self.setText("\n".join(self.parts) if two else self.one_line())
+        if two != self.two:
+            self.two = two
+            self.updateGeometry()
+
+    def resizeEvent(self, event) -> None:  # noqa: N802 (Qt override)
+        super().resizeEvent(event)
+        self._fit()
+
+    def changeEvent(self, event) -> None:  # noqa: N802 (Qt override)
+        super().changeEvent(event)
+        if event.type() == QEvent.Type.StyleChange:     # a new size of the type: measure again
+            self.updateGeometry()
+            self._fit()
+
+
 class Logo(QLabel):
     """The suite's icon in the header, drawn at the view's scale; a click opens the wiki."""
 
@@ -131,17 +185,26 @@ class HeaderPill(Pill):
     """A pill of the Settings page as a rounded rectangle (owner, 01-11-2026): the value in large type over its
     caption, both centered. Not active (no focus, no mouse) it is half transparent, so the wallpaper shows through
     it; with the focus or under the mouse it is solid, framed in silver (the theme's outline, owner 05-11-2026), as a
-    tile with the focus is. The same clicked, set_value and setEnabled as every pill."""
+    tile with the focus is. The same clicked, set_value and setEnabled as every pill; a value too wide for the pill
+    (a place's name) ends in …, its whole text kept in full_value."""
 
     scale = 1.0
+    full_value = ""
 
     def __init__(self, value: str, caption: str, tooltip: str = "", colour: str = BLUE):
+        self.full_value = value
         super().__init__(value, caption, tooltip, colour)
         self.caption.setWordWrap(True)
         layout = self.layout()
         layout.insertStretch(0, 1)
         layout.addStretch(1)
         self.set_scale(1.0)
+
+    def set_value(self, text: str, tooltip: str = "") -> None:
+        self.full_value = text
+        self.value.ensurePolished()                     # the style sheet's size of the type
+        room = round(PILL_W * self.scale) - 2 * round(6 * self.scale) - 4
+        super().set_value(self.value.fontMetrics().elidedText(text, Qt.TextElideMode.ElideRight, room), tooltip)
 
     def set_colour(self, colour: str) -> None:
         """The outline frames the active pill, whatever the color given: these pills have no colored edge."""
@@ -168,6 +231,7 @@ class HeaderPill(Pill):
         self.value.setStyleSheet(header_font() + f"font-size:{max(14, round(22 * s))}px; font-weight:800;")
         self.caption.setStyleSheet(f"font-size:{max(11, round(13 * s))}px; font-weight:600;")
         self.set_colour("")
+        self.set_value(self.full_value, self.toolTip())     # elided again at the new size
 
 
 class BigTile(QAbstractButton):
@@ -385,6 +449,64 @@ class SymbolButton(QAbstractButton):
         painter.end()
 
 
+class WeatherButton(SymbolButton):
+    """The weather beside the symbols (owner, 05-11-2026): its symbol and the place's name on its right; the
+    temperature and the sky in its tooltip. Muted until the first weather has come; hidden without a place."""
+
+    def __init__(self):
+        self.place = ""                         # before the button's size is taken, which shows it
+        self.known = False
+        super().__init__(glyphs.weather("cloudy"))
+        self.hide()
+
+    def set_weather(self, place: str, glyph, known: bool, tooltip: str) -> None:
+        self.place, self.known = place, known
+        self.glyph = glyph
+        self._icons.clear()
+        self.setToolTip(tooltip)
+        self.setVisible(bool(place))
+        self.setFixedSize(self.sizeHint())
+        self.update()
+
+    def _font(self) -> QFont:
+        font = QFont(self.font())
+        font.setPixelSize(max(14, round(22 * self.scale)))
+        font.setBold(True)
+        return font
+
+    def shown_place(self) -> str:
+        """The place's name, ending in … beyond PLACE_W: a long name never takes the status line's room."""
+        return QFontMetrics(self._font()).elidedText(self.place, Qt.TextElideMode.ElideRight,
+                                                     round(PLACE_W * self.scale))
+
+    def sizeHint(self) -> QSize:  # noqa: N802 (Qt override)
+        side = round(SYMBOL_PX * self.scale)
+        text = QFontMetrics(self._font()).horizontalAdvance(self.shown_place()) if self.place else 0
+        return QSize(side + (text + round(18 * self.scale) if text else 0), side)
+
+    def paintEvent(self, event) -> None:  # noqa: N802 (Qt override)
+        s = self.scale
+        painter = QPainter(self)
+        painter.setRenderHints(QPainter.RenderHint.Antialiasing | QPainter.RenderHint.SmoothPixmapTransform
+                               | QPainter.RenderHint.TextAntialiasing)
+        focused = self.hasFocus()
+        if focused or self.underMouse():
+            fill = QColor(ACCENT)
+            fill.setAlpha(60 if focused else 28)
+            painter.setBrush(fill)
+            painter.setPen(QPen(QColor(OUTLINE), 3) if focused else Qt.PenStyle.NoPen)
+            painter.drawRoundedRect(QRectF(self.rect()).adjusted(2, 2, -2, -2), 16 * s, 16 * s)
+        theme = current_theme()
+        colour = theme.text if self.known else muted(theme)
+        side, square = round(GLYPH_PX * s), round(SYMBOL_PX * s)
+        self._icon(colour).paint(painter, QRect((square - side) // 2, (self.height() - side) // 2, side, side))
+        painter.setFont(self._font())
+        painter.setPen(QColor(colour))
+        painter.drawText(QRect(square, 0, self.width() - square - round(12 * s), self.height()),
+                         int(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter), self.shown_place())
+        painter.end()
+
+
 class NoticeButton(QToolButton):
     """A short colored line beside the category strip (the updates the portal found, the ones outside the suite); a
     click, Enter or A opens the list of them as a menu. Hidden while there is nothing to say."""
@@ -501,8 +623,7 @@ class BigPicture(Backdrop):
         self.installed = QLabel()
         self.installed.setAlignment(Qt.AlignmentFlag.AlignRight)
         readout.addWidget(self.installed)
-        self.status = QLabel()
-        self.status.setAlignment(Qt.AlignmentFlag.AlignRight)
+        self.status = StatusLine()
         readout.addWidget(self.status)
         self.symbol_row.addLayout(readout)
         words.addLayout(self.symbol_row)
@@ -541,9 +662,20 @@ class BigPicture(Backdrop):
         self.settings_heading.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.settings_heading.addTab("Settings")
         page.addWidget(self.settings_heading, 0, Qt.AlignmentFlag.AlignLeft)
+        rows = QWidget()                            # the rows scroll when they do not fit (a handheld's screen)
+        column = QVBoxLayout(rows)
+        column.setContentsMargins(0, 0, 0, 0)
         self.settings_grid = QGridLayout()
-        page.addLayout(self.settings_grid)
-        page.addStretch(1)
+        column.addLayout(self.settings_grid)
+        column.addStretch(1)
+        self.settings_scroll = QScrollArea()
+        self.settings_scroll.setWidgetResizable(True)
+        self.settings_scroll.setFrameShape(QFrame.Shape.NoFrame)
+        self.settings_scroll.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.settings_scroll.setStyleSheet("QScrollArea, QScrollArea > QWidget > QWidget { background:transparent; }")
+        self.settings_scroll.setWidget(rows)
+        QScroller.grabGesture(self.settings_scroll.viewport(), QScroller.ScrollerGestureType.TouchGesture)
+        page.addWidget(self.settings_scroll, 1)
         self.settings_page.hide()
         outer.addWidget(self.settings_page, 1)
         self.setting_pills: list[HeaderPill] = []
@@ -631,9 +763,10 @@ class BigPicture(Backdrop):
         self.installed.setText(text)
         self.installed.setToolTip(tooltip)
 
-    def set_status(self, text: str) -> None:
-        """The line on the right of the symbols: the CPU's and the GPU's load and temperature, the date and time."""
-        self.status.setText(text)
+    def set_status(self, loads: str, clock: str = "") -> None:
+        """The line on the right of the symbols: the CPU's and the GPU's load and temperature, then the date and
+        time, on a second line when one does not fit."""
+        self.status.set_parts(loads, clock)
 
     def place_settings(self, rows: list[tuple[HeaderPill, str]]) -> None:
         """The Settings page's rows: a pill and its short line; the focus reaches the pills there."""
@@ -845,6 +978,7 @@ class BigPicture(Backdrop):
         if self.in_settings():
             if self.setting_pills:
                 self.setting_pills[0].setFocus()
+                self.settings_scroll.ensureWidgetVisible(self.setting_pills[0], 0, 8)
             return
         tiles = self.current_tiles()
         if tiles:
@@ -870,6 +1004,8 @@ class BigPicture(Backdrop):
             others[found].setFocus()
             if isinstance(others[found], BigTile):
                 self.current_page().ensureWidgetVisible(others[found], 0, 24)
+            elif others[found] in self.setting_pills:
+                self.settings_scroll.ensureWidgetVisible(others[found], 0, 8)
 
     def change_category(self, step: int) -> None:
         if self.categories and not self.in_settings():

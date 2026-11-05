@@ -86,3 +86,26 @@ def test_the_patched_gpu_metrics_count_only_when_mounted(tmp_path):
 def test_what_the_system_does_not_report_is_left_out(tmp_path):
     reader = status.Status(tmp_path / "sys", tmp_path / "proc")
     assert reader.line(THURSDAY) == "Thursday 11/5/26 | 07:44 PM CET"
+
+
+def test_the_clock_as_the_settings_set_it():
+    """The Settings page's clock (owner, 05-11-2026): 12 or 24 hours, the seconds, the board's zone, CET or UTC. The
+    default reads as the clock always did."""
+    at = datetime.datetime(2026, 11, 5, 19, 44, 7, tzinfo=AMSTERDAM)
+    assert status.clock_text(at, status.ClockStyle()) == "Thursday 11/5/26 | 07:44 PM CET"
+    assert status.clock_text(at, status.ClockStyle(hours=24)) == "Thursday 11/5/26 | 19:44 CET"
+    assert status.clock_text(at, status.ClockStyle(seconds=True)) == "Thursday 11/5/26 | 07:44:07 PM CET"
+    assert status.clock_text(at, status.ClockStyle(24, True, "utc")) == "Thursday 11/5/26 | 18:44:07 UTC"
+    late = datetime.datetime(2026, 11, 5, 23, 30, tzinfo=datetime.timezone.utc)      # the date follows the zone
+    assert status.clock_text(late, status.ClockStyle(24, False, "cet")) == "Friday 11/6/26 | 00:30 CET"
+    summer = datetime.datetime(2026, 7, 2, 7, 5, tzinfo=datetime.timezone.utc)
+    assert status.clock_text(summer, status.ClockStyle(24, False, "cet")) == "Thursday 7/2/26 | 09:05 CEST"
+    assert set(status.ZONES) == {"local", "cet", "utc"}
+
+
+def test_the_loads_without_the_clock(tmp_path):
+    """The window samples the loads every 2 s and draws the clock every second: loads() is the line's first part."""
+    sys_root, proc = board(tmp_path)
+    reader = status.Status(sys_root, proc)
+    assert reader.loads() == "CPU 55°C | GPU 37% 61°C"
+    assert reader.line(THURSDAY, status.ClockStyle(hours=24)).endswith(" | Thursday 11/5/26 | 19:44 CET")

@@ -25,7 +25,7 @@ The servers see your IP address, as any website you open does.
 - The shadPS4, RPCS3, PPSSPP, PCSX2 and Xenia Managers and the Decky Loader Manager ask for the
   emulator's or Decky's newest release when their window opens, and download the release you install.
 - [BC-250 Upscaler Manager](apps/upscaler.md), [BC-250 Mesh Shaders](apps/mesh.md) and the
-  [GPU Governor Manager](apps/gpu.md) look for a newer release of what they install at start; each can be
+  [GPU Manager](apps/gpu.md) look for a newer release of what they install at start; each can be
   told not to in its settings.
 
 **Sony** (`fwupdater.dl.playstation.net`): [USB HD Control](apps/hdcontrol.md#the-firmware-update) asks Sony's
@@ -52,6 +52,9 @@ app downloads its Python packages from PyPI.
 - [Bazzite DatStation](apps/datstation.md#privacy) loads the PlayStation Blog's feed on its PS News page.
 - [BC-250 Bazzite Test](apps/check.md): its network test resolves and pings `google.com` and asks
   `www.example.com` for a page header; the optional speed test uses Ookla's servers and about 1 GB of data.
+- The [portal](portal.md) shows the weather beside its symbols only for a place you choose on its Settings page:
+  the name you search for, then that place's coordinates every 30 minutes while the portal is not minimized, go to
+  Open-Meteo (`geocoding-api.open-meteo.com`, `api.open-meteo.com`), which needs no account.
 - [USB IPS3.5](apps/ips35.md#settings) shows the weather only for a place you choose: the name you search for,
   then that place's coordinates every 30 minutes while its Weather tile is shown, go to Open-Meteo
   (`geocoding-api.open-meteo.com`, `api.open-meteo.com`), which needs no account.
