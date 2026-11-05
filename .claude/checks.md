@@ -60,7 +60,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File windows-portable\tools\insta
 Every app (and every `portal/apps.toml` entry) has an installer test, `<suite>/tools/installer-tests/<name>.sh`
 (`<name>.ps1` in a Windows suite), and CI runs every one it finds in that folder (the BC250 suite's in one job, each
 in a group of the log; a Windows suite's in a job of its own, the `installers` matrix); a new app adds its test and
-nothing to a workflow (each suite's `tools/tests/test_installer_tests.py` checks it). Nexus Installer Tests lists the scripts in that folder by itself. The installer tests need `fakeroot` (Linux). On Bazzite, `brew install shellcheck fakeroot node` (Node.js runs the design panel's script in
+nothing to a workflow (each suite's `tools/tests/test_installer_tests.py` checks it). Nexus Installer Tests lists the scripts in that folder by itself. The installer tests need `fakeroot` (Linux). Every tool, as a prerequisite or optional, is in the Nexus page's [The development machine](../nexus/docs/machine.md). On Bazzite, `brew install shellcheck fakeroot node` (Node.js runs the design panel's script in
 `tools/tests/test_design_panel.py`; the test skips without it); brew's folder
 `/home/linuxbrew/.linuxbrew/bin` may need adding to PATH in a non-interactive shell. CI also checks the layout rules of the root CLAUDE.md: no CRLF in the index, every
 `.sh` is 100755, every former repo folder has its four files, workflows only in the root `.github/`. The pytest

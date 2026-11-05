@@ -5,23 +5,36 @@
 Working notes for moving the seven BC-250 tools into this suite. Not part of the manual or the READMEs, which
 describe only what exists.
 
-## Resume here (04-11-2026 23:13, for a new chat): work on the roadmap
+## Resume here (05-11-2026 03:41, for a new chat): the roadmap after the Bazzite items
 
-The owner: "we start working on the roadmap items." The roadmap below is the work list: three chapters (Bazzite,
-Windows, Bazzite/Windows), each entry with its place in the code and the change. Agreed with the owner on
-04-11-2026:
+The Bazzite items of the roadmap are done in the working tree, not committed: the owner commits, releases and tries
+them on the board. `tools/ci-local.sh` passes every job but one: check_manifest wants the portal's minor bump for
+SSD Check's new entry in `apps.toml` (the owner's). Each app's CHANGELOG says what its release carries:
 
-- **The backlog was gone through:** 18 items dropped or done (each marked where it stood), two moved onto the
-  roadmap (Bazzite 10 and 11), 7 wait as before; the Backlog review issue (#6) can be closed, it lists those 7 next
-  Monday. The Upstream review issue (#5) is covered by Bazzite 9; close it once those versions are released.
-- **Corrections by the owner:** Bazzite/Windows 3 is the Nexus Release Tool's suite field only, not core's theme;
-  Vita3K and Xenia come into the upstream checks (Bazzite/Windows 5).
-- **Which item first is the owner's to say.** Items that need the owner before code: Bazzite 1 (the UGREEN stick's
-  `lsusb` ID and kernel log), Bazzite 6 (which Linux keyboard), Bazzite 7 (what the pinned programs' notices do),
-  Windows 1, 3, 4 and 6 (to reproduce on the Ally), Windows 9 and Bazzite 11 (the names), Windows 10 (which
-  tuning apps).
-- **Ready to start without the owner:** Bazzite 2, 3, 4, 5, 8 and 10; Windows 2, 7 and 8; Bazzite/Windows 1, 2, 3, 4
-  and 5. Each change keeps to its suite (two suites, two changes), with its CHANGELOG entry and wiki chapter.
+- **portal**: the self-update (Y or a right click, the orange banners; Breaking: the red release-page button is gone),
+  the Settings page behind ☰, R3's on-screen keyboard (Plasma Keyboard over KWin's D-Bus, mode 2 while shown),
+  the controller sound (the owner's `blob.wav`), the bolder legend; a minor bump at least, for SSD Check's entry.
+- **wdriver**: the modules labeled `modules_object_t` for SELinux before insmod (the UGREEN stick did not load), the
+  header boxes, the info symbols. Update in the window installs the new service on the board.
+- **check**: the results card's preview with Save…, Copy and Share.
+- **shadps4**: packages in a game folder as rows, Unpack and Unpack all, the keep window; a Fixed disclaimer entry.
+- **ssd**: SSD Check, new (0.1.0), in the portal's Utilities.
+- **package**: the catalog lists SSD Check.
+- **decky**: Decky Loader 3.3.1.
+- **clb, consoles, rpcs3, ppsspp, pcsx2, vita3k, xenia**: the disclaimer without Nintendo (with shadps4), nothing
+  urgent: whenever each is next released.
+
+Without a release (in the repository only): the disclaimer hook and READMEs, the upstream check (vita3k, xenia,
+wdriver; DirectMesh candidates skipped), the machine chapter's tool tables and CLAUDE.md's rule that frequently
+needed tools are installed for good.
+
+Waiting on the owner: the driver's mirror `RobertoTorino/aic8800d80` is not on GitHub (404, missing or private), so
+BC-250 USB Wi-Fi fetches the driver from the upstream alone; create it or make it public. Both aic8800d80 branches,
+Vita3K and Xenia are past their pins (the weekly Upstream review lists them); moving a pin is a board test.
+
+Next: the Windows chapter of the roadmap, or Bazzite/Windows (ready to start without the owner: Windows 2, 5, 7 and 8
+and Bazzite/Windows 1 to 4; Windows 1, 3, 4 and 6 need the Ally; Windows 9, 10 and 11 and Bazzite/Windows 5 need the
+owner's choices or an analysis first, which each entry names). The owner says which first.
 
 ## Roadmap (owner, 04-11-2026)
 
@@ -31,40 +44,42 @@ noted where each item stood). Each entry says where it is in the code and what t
 
 ### Bazzite
 
-1. **USB Wi-Fi: the UGREEN stick is not recognized.** The app knows only the AIC8800D80's USB IDs (vendors A69C and
-   368B; `apps/wdriver/usb_wifidriver/stick.py:22-26`); any other stick shows "None" in the Stick box, even when
-   core's `wifi.py` lists it under Wi-Fi adapters. First the stick's `lsusb` ID and kernel log from the owner. Then
-   either add its IDs (and a driver for its chip), or have the Stick box point to the Wi-Fi adapters box instead of
-   saying "None".
-2. **USB Wi-Fi: the header boxes cut their text off.** The four `MetricBox`es (Stick, Chip, Driver, Wi-Fi;
-   `main_window.py:123-131`) shrink below their text; give them `same_width()` as other apps do and shorter values
-   ("waiting for its firmware", "legacy-mcu1 (newest)").
-3. **USB Wi-Fi: the notice to the right, long text behind the info symbol.** The driver note
-   (`main_window.py:162-172`) and the adapters hint (186-188) become core's `InfoButton`; the note moves to the
-   right side.
-4. **Portal: Y updates.** Y on the focused tile installs its update; the portal's own update as the Windows
-   Portable portal does it (`windows-portable/portal/portable_portal/main_window.py:260`). Today the BC250 portal's
-   gamepad maps no Y (`bc250_portal/gamepad.py:21-25`), and its portal button only opens the release page.
-5. **Portal: a Settings page behind ☰.** As the Windows Portable portal's: the pills Desktop icons, Sound, Theme and
-   Wallpaper (`main_window.py:402-431`) move there; Refresh, Install all, the updates and Sys info stay on top.
-6. **Portal: R3 brings up an on-screen keyboard.** Core maps R3 to Windows' touch keyboard only
-   (`core/bc250_core/gamepad.py:40`, `platform.py:141-191`); on Bazzite it needs a Linux keyboard (Steam's,
-   `steam://open/keyboard`, or another): the owner picks.
-7. **Updates outside the suite get an action.** The portal's "outside the suite" notice only shows the tile
-   (`main_window.py:549-608`); it should open the app at its update. For programs an app pins (Decky Loader, Xenia,
-   PPSSPP, Vita3K, RPCS3, DirectMesh) the update comes with a new app version: the owner decides whether those
-   lines stay, with what action.
-8. **Bazzite Test: a preview of the results card.** Settings → Print results saves the PNG at once
-   (`apps/check/bazzite_check/main_window.py:324-339`); first a preview, then Save, Copy (to the clipboard) or Share.
-9. **The Upstream review (issue #5).** Each a new app version, tried on the board: Decky Loader 3.3.1 (Decky Loader
-   Manager), shadPS4 v.0.21.0 (shadPS4 Manager), DirectMesh v131 (Mesh Shaders), HelixSR 3.1.0 (a new major: the
-   BC-250 Upscaler Manager moves to it, `SUPPORTED_MAJOR`).
-10. **shadPS4 Manager: several packages at once**, as the Windows Portable Suite's does (`extract.read_all()`,
-    `extract.plan()`, the marks, the games first, then their updates and add-ons); the BC250 app's Extract PKG window
-    takes one at a time (`apps/shadps4/shadps4_manager/extract_dialog.py`). Its entry below has the details.
-11. **SSD health check**, a new Utilities app: the health percentage, power cycles and power-on hours through
-    udisks2 over D-Bus (no root). Its entry under "Candidates for new apps" has the details; the name is the owner's.
+1. **HelixSR 3 for the BC-250 Upscaler Manager**: on hold (owner, 05-11-2026: wait for a stable HelixSR 3.2.0, then
+   decide). The app stays on 2.x (`SUPPORTED_MAJOR = 2`); the weekly Upstream review keeps listing 3.x until then.
+   3.2.0 was a pre-release on 29-10-2026.
 
+   The analysis (05-11-2026, read from the 2.0.0 and 3.1.0 zips, nothing run). 3.x drops what
+   the app is built on: 2.x put HelixSR's DLSS network in an FFX DLL (`HelixSR-fsrfg/amd_fidelityfx_dx12.dll`) that
+   the app swaps for a game's FSR 3.1 DLL; 3.x has no such file (`HELIXSR_DLL`, `backend.py:28`). Its network is now
+   `HelixSR/helixsr.dll` (NGX exports, used only through HelixSR Scaler, which is OptiScaler), and its FSR drop-in is
+   HLX FSR 4 (`HLX-FSR4/amd_fidelityfx_upscaler_dx12.dll`), AMD's FSR 4 network on HelixSR's pipeline, not HelixSR's.
+   - Build: `setup/helixsr_setup.py` still builds without touching games, but takes the release folder (the app passes
+     `HelixSR-fsrfg`, `acquire.py:731-743`, which 3.x lacks), needs a second shader compiler (DXC v1.9.2609, a pin
+     `parse_pins` lacks) and AMD's driver file, which it fetches itself (about 420 MB, ranged, checked by SHA-256;
+     `--amd FILE` is the only way to hand it one). The app's Wine wrapper is not one the builder recognizes, so HLX
+     would be skipped with exit 0: pass `--dxc-dir`, `--dxc2609-dir`, `--wine`, `--wineprefix` as its script does.
+     About 7 minutes on a BC-250 (release notes), about 600 MB of memory per compiler process.
+   - Payload and games: `payload_folder`, `import_payload`, `dll_version`, `inspect_dll` and the OptiScaler import
+     (`backend.py:124-144, 211-273, 356, 520-649`) all expect 2.x; an HLX game would show as "the game's own DLL
+     again". 3.x installs a game one of two ways: HLX in place of the game's upscaler DLL (the original kept as
+     `*.original.dll`, close to the app's Deploy), or HelixSR Scaler with `HelixSR/helixsr.dll` (OptiScaler.ini
+     `Dx12Upscaler=dlss`, `[DLSS] HelixSR=true`; a `HelixSR-Scaler.files` record and a backup folder that HelixSR's own
+     setup recognizes). HelixSR's settings move into OptiScaler.ini `[HelixSR]`; the app's `HelixIni` fits neither.
+     3.x's setup takes games with the app's 2.0 drop-in as its own and keeps them in `HelixSR-previous.zip` for Go back.
+   - Lost with 3.x: HelixSR's DLSS network as a plain FSR swap, the `[Forwarding]` second upscaler. Frame generation
+     is not lost to the app's users: the app never deployed it (`--no-fg`).
+   - A replaced zip under the same tag (3.1.0, 28-10-2026) breaks nothing for long (the digest is read at each
+     lookup), but the app never offers it, as only version numbers are compared.
+   - 3.2.0 (pre-release, 29-10-2026) ships HLX already built (from AMD's MIT FSR SDK): no AMD download, no HLX build,
+     possibly no second compiler. If it becomes stable, most of the hard part goes.
+   - A code path to check in the released app: `payload_version` looks for `**Version` in the README
+     (`backend.py:185`), which neither 2.0.0's nor 3.1.0's README has, so 2.0's installed version may read as unknown.
+   - Decisions for the owner when 3.2.0 is stable: HLX drop-in, HelixSR Scaler, or both per game; keep
+     2.x beside 3.x, and the fallback 2.0.0 instead of 1.8.1; Go back for games moved from 2.x (the app's own copy, or
+     HelixSR's zip); offer a zip replaced under the same version. Work, roughly: acquire.py 80-120 lines, backend.py
+     300-500 rewritten, the Deploy, Games and Settings pages, help, the wiki chapter, 400-600 lines of tests; a
+     Breaking entry. Only the board shows: the HLX build under Proton (memory, time), HLX's speed and picture on RDNA 2
+     against 2.0, HelixSR Scaler offering DLSS in FSR-only games, a game's FSR frame generation with HLX in place.
 ### Windows
 
 1. **Quitting a game in an app closes the portal too.** The likely path: the portal reads the controller in the
@@ -90,29 +105,33 @@ noted where each item stood). Each entry says where it is in the code and what t
 9. **The ports:** Bazzite DatStation, BC-250 Upscaler Manager, USB HD Control (hidapi instead of hidraw),
    Dependency Checker (a Windows tool list). Each with the owner's Windows name.
 10. **The handheld's own tuning apps** (TDP, fans and the like). First: which apps (the owner).
+11. **A short sound on every controller action** (owner, 05-11-2026: "it has to be done there also"), as the BC250
+    portal has since 05-11-2026: the owner's own `blob.wav` (made in Audacity, the suite's own; the BC250 copy is
+    `bc250-bazzite/portal/bc250_portal/sounds/blob.wav`, 0.25 s), a copy in `windows-portable/portal/sounds/`, off
+    with the suite's Sound setting, silent on the button that skips the intro. Two things to settle in the change:
+    the Windows portal plays with `winsound` (`portal/portable_portal/intro.py:30`), one sound at a time, so a
+    controller sound during the intro would cut the intro's off (skip it while the intro plays, or another player);
+    and the controller reaches every Windows app through core's `PortableWindow.on_action`
+    (`core/bc250_core/portable.py:1237`), so the portal alone or every app is the owner's to say.
 
 ### Bazzite/Windows
 
-1. **The disclaimer without Nintendo.** `tools/mkdocs/disclaimer.py:13,16-17` and every copy that
-   `tools/tests/test_disclaimer.py` holds to it: the READMEs (root, both suites, eight BC250 apps) and eight BC250 wiki
-   chapters. Three changes: Nexus's, the BC250 suite's and the Windows Portable Suite's.
-2. **Nexus Release Tool: the device test's selection follows the release.** The list comes from the working
+1. **Nexus Release Tool: the device test's selection follows the release.** The list comes from the working
    tree's portal VERSIONs (`flow.waiting_portals`, `dev/nrt/nexus_release_tool/release_page.py:199-200`) and is
    filled once; fill it from the run's unpublished drafts on every state, this device's suite first.
-3. **Nexus Release Tool: room before the text in the device test's suite field.** The field where the suite is
+2. **Nexus Release Tool: room before the text in the device test's suite field.** The field where the suite is
    picked (`portal_choice`, `dev/nrt/nexus_release_tool/release_page.py:84`) shows its text against the left border;
    padding on that field only (owner, 04-11-2026: not the theme, which every app shares).
-4. **Convert icons on Windows, and a gaming icon per suite.** The dashboard's Convert icons (`dev/dash/
+3. **Convert icons on Windows, and a gaming icon per suite.** The dashboard's Convert icons (`dev/dash/
    nexus_dashboard/icons.py`, `tools/sync_icons.py`) needs a suite's `icons/categories.toml`, which the Windows
    Portable Suite lacks; its gaming icon is wide and PNG (`tools/make_icons.py:163-180`). Make the tool take that
    suite, and any suite's own gaming icon; try it on the Ally with the dashboard's other tools that do not start
    there (above).
-5. **More in the Upstream review.** Not checked yet: the USB Wi-Fi driver (aic8800d80, both branches' commits,
-   `apps/wdriver/usb_wifidriver/builder.py:28,45-50`), Mesa (Mesh Shaders, ACE Queues), FFmpeg and libva (Console
-   Link, Remote Play), USB HD Cam's firmware sources, the speedtest CLI, and Vita3K and Xenia on both suites (owner,
-   04-11-2026: they come in; the Windows Portable check skips them now for their daily builds, `CADENCE = "daily"`,
-   and the BC250 check has neither).
-6. **Best settings for a game, found automatically.** Emulated and regular games. First an analysis: what can be
+4. **More in the Upstream review.** Not checked yet: Mesa (Mesh Shaders, ACE Queues), FFmpeg and libva (Console
+   Link, Remote Play), USB HD Cam's firmware sources, the speedtest CLI, and on the Windows Portable Suite Vita3K and
+   Xenia (its check skips them for their daily builds, `CADENCE = "daily"`; owner, 04-11-2026: they come in). The
+   BC250 check has Vita3K, Xenia and the USB Wi-Fi driver since 05-11-2026.
+5. **Best settings for a game, found automatically.** Emulated and regular games. First an analysis: what can be
    measured, per emulator and for a regular game, and whether WindowManager (`github.com/RobertoTorino/
    WindowManager`) can be used for it or join the gaming category.
 
@@ -2700,14 +2719,7 @@ installers, docs, native and shell jobs, both catalogs' --check, the wiki's stri
   package from shadPS4 itself): shadPS4 is GPL-2.0-or-later, the Manager GPL-3.0-or-later, so a build with both is
   GPL-3.0; to check before starting. The quit window itself opens from any controller and keyboard since
   22-10-2026 (the Manager's quit hotkeys in shadPS4's `input_config/global.ini`).
-- **Several packages at once in the BC250 suite's shadPS4 Manager (on the roadmap, owner 04-11-2026; owner 29-10-2026: "we will also
-  implement this on Bazzite").** The Windows Portable Suite's shadPS4 Manager unpacks several packages in one go
-  (`windows-portable/apps/shadps4`: `extract.read_all()` and `extract.plan()`, the marks in RB Packages, the page of
-  what each package does in the place chosen, the games first, then their updates and add-ons). The BC250 app's
-  Extract PKG window (`bc250-bazzite/apps/shadps4/shadps4_manager/extract_dialog.py`) takes one package at a time.
-  Port the planning there as a change of the BC250 suite of its own (the suites stand apart), shaped for its desktop
-  window (a list with tick boxes rather than the controller's marks), with its own tests, CHANGELOG entry and
-  release.
+- **Several packages at once in the BC250 suite's shadPS4 Manager.** Done 05-11-2026, see the roadmap (Bazzite 10).
 - **A PS4 Camera for USB HD Cam (dropped, owner 04-11-2026).** The app handles the
   PS4 Camera on Sony's PlayStation Camera Adapter (CFI-ZAA1), but nothing of it was tried: there is no PS4 Camera at
   the board. To try then: the adapter's hub (054c:0d0b) shows it as PS4 Camera; Download gets its firmware (PS4
@@ -3455,7 +3467,7 @@ Things already decided against were left out (the Bluetooth helper, the exploit 
   it has no data interface (no PMBus or USB), so nothing can be read from the adapter itself; to check against its
   datasheet. What the board reports (amdgpu's power and voltages, hwmon sensors) is readable: run `sensors` on the
   board to see what is there.
-- **SSD health check (on the roadmap, owner 04-11-2026).** Much simpler than CrystalDiskInfo: only the health percentage,
+- **SSD health check (owner 04-11-2026; now SSD Check, `apps/ssd`, roadmap item 11).** Much simpler than CrystalDiskInfo: only the health percentage,
   the power cycle count and the power-on hours. Through udisks2 over D-Bus, which reads SMART without root (the board
   has no passwordless sudo). NVMe gives all three (health = 100 - "percentage used"); a SATA SSD gives the hours and
   cycles, but its health attribute differs per vendor, so an unknown drive shows "health not reported". "Start/stop

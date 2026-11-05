@@ -103,9 +103,14 @@ about your system: read it before you post it. Security problems: see [SECURITY.
   you're in another window gives a desktop notification (*Settings → General*).
 * The app remembers its window size, the last page, the panel sizes and the stress settings.
 * **Show Logs** lists earlier runs, colored like the live output; **Settings** has privacy options, a
-  system overview, log cleanup, version information and **Print results**: it saves the Base and
-  Extended System scores and the other header boxes as a compact "BC-250 Bazzite Test Results" card
-  (results.png), easy to share and compare with other users.
+  system overview, log cleanup, version information and **Print results**: it shows the Base and
+  Extended System scores and the other header boxes as a compact "BC-250 Bazzite Test Results" card,
+  easy to compare with other users. Under the card: **Save…** saves it as a PNG where you choose (results.png
+  in Downloads at first) and opens it; **Copy** puts it on the clipboard, to paste in a chat or a forum post;
+  **Share** sends it to a phone paired with KDE Connect (one entry per phone in reach), opens your mail app with
+  it attached (**Email…**), or shows it in the file manager (**Show in file manager**), whose own right-click
+  **Share** has the rest of what KDE offers (Imgur, Telegram, Nextcloud, Bluetooth). Share writes the card to
+  `results-card.png` in `~/Desktop/bc250-bazzite-test/` first, overwritten each time.
 * **Game details** records a game while you play, like MangoHud's logging: copy its launch line into the
   game's *Properties → Launch options* in Steam (it works alongside `mangohud %command%`). Every session
   becomes a graph of FPS, the game's CPU/GPU share, total load, GPU and CPU clocks and temperatures,

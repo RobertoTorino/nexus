@@ -47,6 +47,10 @@ FW_FOLDER = "aic8800D80"
 STORAGE_PRODUCTS = ("5721", "5722", "5723", "5724", "572c")
 BRANCHES = ("main", "legacy-mcu1")
 BUILD_TIMEOUT_S = 1800
+# SELinux loads a kernel module only from a file of this type (Fedora's policy: can_load_kernmodule may module_load
+# modules_object_t, the label of /usr/lib/modules; seen with selinux-policy 44.11, Bazzite's image of 26-10-2026, which
+# refused the modules under /var/lib, labeled var_lib_t: "insmod: Permission denied", owner's board 04-11-2026).
+MODULE_TYPE = "modules_object_t"
 
 Runner = Callable[..., "Result"]
 
@@ -231,6 +235,17 @@ def write(path: Path, data: bytes) -> None:
     temp.replace(path)
 
 
+def label_modules(paths: Paths, folder: Path, run: Runner = run) -> None:
+    """The two modules of *folder* labeled MODULE_TYPE, so SELinux lets insmod load them; only the .ko files (the
+    firmware is read as before). Done at every load: install's restorecon and a relabel of the system set them back
+    to var_lib_t. Nothing to do without SELinux."""
+    if not (paths.sys / "fs/selinux/enforce").is_file() or shutil.which("chcon") is None:
+        return
+    result = run(["chcon", "-t", MODULE_TYPE, *(str(folder / f"{m}.ko") for m in MODULES)])
+    if not result.ok:
+        log(f"chcon {MODULE_TYPE} failed: {result.out.strip()}")
+
+
 def relabel(run: Runner, *paths: Path) -> None:
     """The SELinux labels of the files (Fedora, Bazzite)."""
     if shutil.which("restorecon"):
@@ -387,6 +402,8 @@ def load(paths: Paths, kernel: str, run: Runner = run, now: Callable[[], float] 
         state["built"] = True
         log(f"built the driver for kernel {kernel}")
     already = loaded(paths)
+    if any(module not in already for module in MODULES):
+        label_modules(paths, folder, run)
     run(["modprobe", "cfg80211"])
     for module in MODULES:
         if module in already:

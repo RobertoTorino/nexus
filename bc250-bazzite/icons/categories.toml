@@ -178,3 +178,8 @@ tile = "portal/images/apps/xenia.webp"
 category = "gaming"
 icons = ["apps/vita3k/images/bc250-vita3k-manager"]
 tile = "portal/images/apps/vita3k.webp"
+
+[ssd]
+category = "utilities"
+icons = ["apps/ssd/images/bc250-ssd"]
+tile = "portal/images/apps/ssd.webp"

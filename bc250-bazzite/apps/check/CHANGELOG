@@ -1,3 +1,11 @@
+Changelog: 05-11-2026 00:50:28
+
+Added. Print results shows the results card in a preview first (owner, 04-11-2026), with Save… (a PNG where you
+choose, opened afterwards, as Print results did until now), Copy (the card on the clipboard) and Share (owner,
+05-11-2026): send it to a phone paired with KDE Connect, email it with the mail app, or show it in the file manager,
+whose own Share menu has the rest of what KDE offers. Share writes the card to results-card.png in the results
+folder on the Desktop.
+
 Changelog: 04-11-2026 11:32:10
 
 Release 1.1.1.

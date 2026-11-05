@@ -144,6 +144,10 @@ launchers = ["~/.local/bin/bazzite-netcatgui"]
 name = "Bazzite DatStation"
 launchers = ["~/.local/bin/bazzite-datstation"]
 
+[app.ssd]
+name = "SSD Check"
+launchers = ["~/.local/bin/bc250-ssd"]
+
 [[tool]]
 name = "flashrom"
 description = "Reads and writes flash chips. BIOS Reader uses it only to read the BIOS chip on the board, through the chipset's internal programmer; a flashrom built without that programmer cannot read it."
@@ -752,6 +756,11 @@ owner = "fan"
 need = "optional"
 usage = "The thermal guard turns the governor's performance mode off at the cooling limit."
 
+[[tool.source]]
+owner = "ssd"
+need = "required"
+usage = "Reads the drives' SMART values from udisks, without root."
+
 [[tool]]
 name = "notify-send"
 description = "Shows a desktop notification (libnotify)."
@@ -1139,6 +1148,10 @@ specifier = ">=6.11,<7"
 
 [[dependency.source]]
 owner = "datstation"
+specifier = ">=6.11,<7"
+
+[[dependency.source]]
+owner = "ssd"
 specifier = ">=6.11,<7"
 
 [[dependency]]

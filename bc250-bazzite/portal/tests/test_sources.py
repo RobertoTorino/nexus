@@ -14,7 +14,7 @@ import pytest
 
 from bc250_portal.manifest import AppEntry
 from bc250_portal.sources import (
-    Records, SourceError, Sources, expected_sha256, is_installed, safe_extract,
+    Records, SourceError, Sources, expected_sha256, fetch_portal, is_installed, safe_extract,
 )
 from conftest import SUITE
 
@@ -83,6 +83,31 @@ def test_pinned_sha256_wins_and_mismatch_refuses(tmp_path):
     with pytest.raises(SourceError, match="does not match its checksum"):
         Sources(tmp_path / "w2", download=fake).prepare(wrong)
     assert not (tmp_path / "w2" / ENTRY.tag).exists()
+
+
+def test_the_portal_update_keeps_its_tarball_beside_the_folder(tmp_path):
+    """The portal's own update (owner, 04-11-2026): checked against SHA256SUMS (or the sha256 given), unpacked into
+    <work>/<tag> with <tag>.tar.gz beside it, so install.sh records the build; the folder is emptied first."""
+    tag = "portal-v9.0.0"
+    assets = tmp_path / "assets"
+    assets.mkdir()
+    digest = make_tarball(assets / f"{tag}.tar.gz", {"install.sh": b"echo hi\n"}, top=tag)
+    (assets / "SHA256SUMS").write_text(f"{digest}  {tag}.tar.gz\n")
+    work = tmp_path / "portal-update"
+    (work / "portal-v8.0.0").mkdir(parents=True)                      # an earlier attempt
+    fake = FakeRelease(assets)
+    folder = fetch_portal(fake, "https://github.com/o/r", tag, work)
+    assert folder == work / tag and (folder / "install.sh").read_bytes() == b"echo hi\n"
+    assert sorted(p.name for p in work.iterdir()) == ["SHA256SUMS", tag, f"{tag}.tar.gz"]
+    assert fake.urls[-1] == f"https://github.com/o/r/releases/download/{tag}/SHA256SUMS"
+    fake.urls.clear()
+    assert fetch_portal(fake, "https://github.com/o/r", tag, work, digest) == folder
+    assert len(fake.urls) == 1                                           # the sha256 was known
+    with pytest.raises(SourceError, match="does not match its checksum"):
+        fetch_portal(fake, "https://github.com/o/r", tag, work, "0" * 64)
+    assert not (work / tag).exists()
+    with pytest.raises(SourceError, match="could not download"):
+        fetch_portal(FakeRelease(tmp_path), "https://github.com/o/r", tag, work)
 
 
 def test_download_errors(tmp_path):

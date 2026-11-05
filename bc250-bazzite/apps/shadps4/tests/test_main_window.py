@@ -784,3 +784,51 @@ def test_remove_game_asks_what_to_keep(qapp, folders, monkeypatch, tmp_path):
     assert not target.exists() and window.running.text() == "One: deleted one (the game's folder)."
     assert "One" not in [window.table.item(r, 1).text() for r in range(window.table.rowCount())]
     window.close()
+
+
+def test_packages_in_a_game_folder_wait_as_rows_and_unpack_all_takes_the_game_first(qapp, folders, built_pkg,
+                                                                                    monkeypatch, tmp_path):
+    """A .pkg put in a game folder (owner, 05-11-2026, as the Windows Portable Suite's): a row of its own, PKG or PKG
+    update, after the games; an update whose game still waits says so; Unpack all unpacks the game first and its
+    update beside it, then the keep window offers the packages: kept ones are no longer rows, deleted ones are gone."""
+    import shutil
+    from PyQt6.QtWidgets import QDialog
+    from bc250_core.keep_dialog import KeepDialog
+    from pkg_builder import build_pkg, default_tree
+    games = tmp_path / "Games" / "PS4"
+    shutil.copy(built_pkg.path, games / "game.pkg")
+    build_pkg(games / "update.pkg", default_tree(), category="gp", app_ver="01.01")
+    window = _window(folders)
+    assert [p.path.name for p in window.waiting] == ["game.pkg", "update.pkg"]
+    rows = window.table.rowCount()
+    assert rows == len(window.games) + 2
+    assert [window.table.item(r, 0).text() for r in (rows - 2, rows - 1)] == ["PKG", "PKG"]   # its game waits too
+    assert not window.table.item(rows - 1, 0).flags() & Qt.ItemFlag.ItemIsUserCheckable        # not for Steam
+    assert window.unpack_all_button.isVisible() or not window.isVisible()
+    assert window.unpack_all_button.isEnabled() and not window.unpack_button.isEnabled()
+    window.table.selectRow(rows - 1)
+    assert window.chosen_package().path.name == "update.pkg" and window.chosen() is None
+    window.on_unpack()                                              # the update alone: its game first
+    assert "is an update: unpack its game first" in window.running.text() and not window.worker.running
+    offered = []
+    monkeypatch.setattr(KeepDialog, "exec", lambda self: (offered.append([i.label for i in self.items]),
+                                                          QDialog.DialogCode.Rejected)[1])
+    window.on_unpack_all()
+    _wait(window, qapp)
+    qapp.processEvents()
+    game_id = built_pkg.title_id
+    assert (games / game_id / "eboot.bin").is_file() and (games / f"{game_id}-UPDATE" / "eboot.bin").is_file()
+    assert offered and len(offered[0]) == 2 and "game.pkg" in offered[0][0]
+    assert window.waiting == [] and (games / "game.pkg").is_file()               # kept, and no longer waiting
+    assert window.unpacked_packages()
+    # Another one, deleted after: Delete marked.
+    build_pkg(games / "other.pkg", default_tree(), content_id="UP9000-CUSA77777_00-SYNTHETICPKG0002")
+    window.refresh()
+    assert [p.path.name for p in window.waiting] == ["other.pkg"]
+    monkeypatch.setattr(KeepDialog, "exec", lambda self: QDialog.DialogCode.Accepted)
+    window.unpack_packages(window.waiting)
+    _wait(window, qapp)
+    qapp.processEvents()
+    assert not (games / "other.pkg").exists() and (games / "CUSA77777" / "eboot.bin").is_file()
+    assert window.running.text() == "Packages deleted." and not window.unpack_all_button.isVisible()
+    window.close()

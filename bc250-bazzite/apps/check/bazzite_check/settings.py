@@ -217,9 +217,10 @@ class PrintResultsPage(QWidget):
         super().__init__(parent)
         layout = QVBoxLayout(self)
         layout.addWidget(_heading("Print results"))
-        layout.addWidget(_note("Saves a compact \"BC-250 Bazzite Test Results\" card as results.png — Base and "
-                               "Extended System scores on top and the other header boxes below, in a small image, "
-                               "easy to share and compare with other users."))
+        layout.addWidget(_note("Shows a compact \"BC-250 Bazzite Test Results\" card — Base and Extended System "
+                               "scores on top and the other header boxes below — then Save… (a PNG), Copy (to paste "
+                               "it in a chat or a forum post) or Share (to your phone, by email, or from the file "
+                               "manager), easy to compare with other users."))
         row = QHBoxLayout()
         print_btn = QPushButton("Print results")
         print_btn.clicked.connect(self.print_results_requested)

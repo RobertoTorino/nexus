@@ -20,7 +20,8 @@ DIRECTIONS = ("up", "down", "left", "right")
 
 BUTTONS = {                     # SDL's button names (pygame's CONTROLLER_BUTTON_*, in lower case) to actions
     "dpad_up": "up", "dpad_down": "down", "dpad_left": "left", "dpad_right": "right",
-    "a": "accept", "b": "back", "x": "menu",
+    "a": "accept", "b": "back", "x": "menu", "y": "update", "start": "settings",
+    "rightstick": "keyboard",   # R3: Bazzite's on-screen keyboard (keyboard.py, owner 05-11-2026)
     "leftshoulder": "previous", "rightshoulder": "next",
 }
 
@@ -53,7 +54,7 @@ class PygameSource:
         for index in range(controller.get_count()):
             self._open(index)
         self.buttons = {getattr(pygame, f"CONTROLLER_BUTTON_{name.upper()}"): name
-                        for name in ("a", "b", "x", "y", "start", "back", "leftshoulder", "rightshoulder",
+                        for name in ("a", "b", "x", "y", "start", "back", "leftshoulder", "rightshoulder", "rightstick",
                                      "dpad_up", "dpad_down", "dpad_left", "dpad_right")}
         self.axes = {pygame.CONTROLLER_AXIS_LEFTX: "leftx", pygame.CONTROLLER_AXIS_LEFTY: "lefty"}
 

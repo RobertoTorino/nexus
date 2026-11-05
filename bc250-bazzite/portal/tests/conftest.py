@@ -61,3 +61,14 @@ def desktop(tmp_path, monkeypatch):
     folder.mkdir()
     monkeypatch.setattr(desktop_icons, "desktop_dir", lambda: folder)
     return folder
+
+
+@pytest.fixture(autouse=True)
+def no_session_bus(monkeypatch):
+    """R3's keyboard never reaches the desktop's real KWin: it would change the keyboard mode of the machine the tests
+    run on. A test that wants KWin gives the keyboard a fake bus."""
+    from bc250_portal import keyboard
+
+    def refuse(*_args):
+        raise keyboard.KeyboardError("the tests have no session bus")
+    monkeypatch.setattr(keyboard, "dbus_call", refuse)

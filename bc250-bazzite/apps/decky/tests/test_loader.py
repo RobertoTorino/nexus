@@ -48,7 +48,7 @@ def setup(tmp_path, monkeypatch):
 
 
 def test_the_pin_points_at_the_release():
-    assert loader.URL == "https://github.com/SteamDeckHomebrew/decky-loader/releases/download/v3.3.0/PluginLoader"
+    assert loader.URL == "https://github.com/SteamDeckHomebrew/decky-loader/releases/download/" + loader.TAG + "/PluginLoader"
     assert len(loader.SHA256) == 64 and loader.TAG == f"v{loader.VERSION}"
 
 
@@ -69,9 +69,9 @@ def test_install(setup, monkeypatch):
     (paths.selinux).mkdir()
     (paths.selinux / "enforce").write_text("1")
     fake = Recorder()
-    assert loader.install(user, paths, source, fake.run, fake.chown) == "Decky Loader 3.3.0 is installed and running."
+    assert loader.install(user, paths, source, fake.run, fake.chown) == f"Decky Loader {loader.VERSION} is installed and running."
     assert paths.binary.read_bytes() == BINARY and paths.binary.stat().st_mode & 0o777 == 0o755
-    assert paths.version_file.read_text() == "v3.3.0\n"
+    assert paths.version_file.read_text() == f"{loader.TAG}\n"
     assert paths.unit.read_text() == loader.unit_text(paths.homebrew)
     assert paths.plugins.is_dir()
     assert fake.owners["homebrew"] == fake.owners["plugins"] == (1000, 1000)          # the user's, as Decky's

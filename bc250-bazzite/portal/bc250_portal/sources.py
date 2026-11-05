@@ -170,6 +170,45 @@ class Sources:
         shutil.rmtree(self.folder(entry), ignore_errors=True)
 
 
+def fetch_portal(download: Download, repo_url: str, tag: str, work: Path, want: str = "") -> Path:
+    """The portal's own update (owner, 04-11-2026, as the Windows Portable Suite's portal): <tag>.tar.gz downloaded
+    into *work* (emptied first), checked against *want* (its sha256) or the release's SHA256SUMS, and unpacked into
+    <work>/<tag>, with the tarball kept beside it as the install steps leave it, so install.sh records the build
+    (build.sha256). Returns the folder; raises SourceError."""
+    asset = f"{tag}.tar.gz"
+    base = f"{repo_url}/releases/download/{tag}"
+    if work.exists():
+        shutil.rmtree(work)
+    work.mkdir(parents=True)
+    part = work / f"{asset}.part"
+    try:
+        download(f"{base}/{asset}", part)
+    except OSError as exc:
+        raise SourceError(f"could not download {asset}: {exc}") from exc
+    if not want:
+        sums = work / "SHA256SUMS"
+        try:
+            download(f"{base}/SHA256SUMS", sums)
+        except OSError as exc:
+            raise SourceError(f"could not download SHA256SUMS of {tag}: {exc}") from exc
+        want = expected_sha256(sums.read_text(encoding="utf-8", errors="replace"), asset)
+        if not want:
+            raise SourceError(f"SHA256SUMS of {tag} does not list {asset}")
+    got = sha256_of(part)
+    if got != want:
+        raise SourceError(f"{asset} does not match its checksum (got {got[:16]}…, expected {want[:16]}…): "
+                          "not installed")
+    archive = part.rename(work / asset)
+    unpacked = work / ".x"
+    safe_extract(archive, unpacked)
+    inner = unpacked / tag
+    if not inner.is_dir():
+        raise SourceError(f"{asset} has no {tag}/ folder")
+    folder = inner.rename(work / tag)
+    shutil.rmtree(unpacked, ignore_errors=True)
+    return folder
+
+
 def _stage_module(checkout: Path):
     path = checkout / "tools" / "stage_app.py"
     spec = importlib.util.spec_from_file_location("bc250_stage_app", path)

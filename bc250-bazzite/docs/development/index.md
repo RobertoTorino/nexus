@@ -130,9 +130,10 @@ The PPSSPP, PCSX2 (its stable channel) and RPCS3 Managers and Mesh Shaders each 
 `LANDMARK` in the app's `emulator.py`, and `DIRECTMESH` in `bc250-bazzite/apps/mesh/bc250-mesh-shaders.sh`. RPCS3's `emulator.py`
 also holds the size of the pinned AppImage (`SIZE`), by which the app sees that RPCS3 replaced itself with another
 build, so a new pin moves it too.
-The same tool reports a newer stable release than the pin (for DirectMesh the newest `directmesh-v*` tag); the apps
-check the checksum of what they download themselves. The governor has no pin in the repository (its version is the
-one COPR built); the GPU Governor Manager compares the installed package with filippor's latest release.
+The same tool reports a newer stable release than the pin (for DirectMesh the newest `directmesh-v<version>` tag; a tag
+with more after the version is a development candidate and skipped); the apps check the checksum of what they download
+themselves. The governor has no pin in the repository (its version is the one COPR built); the GPU Governor Manager
+compares the installed package with filippor's latest release.
 
 The BC-250 Upscaler Manager pins no HelixSR release: it gets the latest of one major version (`SUPPORTED_MAJOR`), or the
 fallback HelixSR's developer names. Its `bc250-bazzite/apps/upscaler/upscaler/acquire.py` holds `SUPPORTED_MAJOR`,
@@ -144,8 +145,9 @@ named in the latest release's notes that is not `FALLBACK_VERSION`, and a fallba
 The Vita3K Manager installs one Vita3K build, pinned in `bc250-bazzite/apps/vita3k/vita3k_manager/emulator.py`
 (`BUILD`, `SEMVER`, `COMMIT`, `SHA256`, `SIZE`). Vita3K has no stable releases: every change is a build, kept as a
 release of `Vita3K/Vita3K-builds` tagged with its number, with `Vita3K-x86_64.AppImage` and the SHA-256 GitHub
-publishes for it. Builds come almost daily, so the tool does not check them; the app itself says when a newer build
-is out. A new pin takes the asset's digest and size from that release, and a look at what the app relies on in
+publishes for it. Builds come almost daily; the tool reports the newest build when it is past the pin (with how many
+builds later), and a pinned AppImage that is gone from GitHub or was replaced. The app itself already tells its users
+when a newer build is out, so a report is a reminder, not a fault: move the pin when a build is worth trying. A new pin takes the asset's digest and size from that release, and a look at what the app relies on in
 Vita3K's source at the new build:
 
 - the command line (`vita3k/config/src/config.cpp`): `-r <title ID>`, `--frontend sdl`, `--firmware`,
@@ -166,17 +168,24 @@ pin replaces it with the new build's, renamed for it.
 The Xenia Manager installs one Xenia Canary build, pinned in `bc250-bazzite/apps/xenia/xenia_manager/emulator.py` (`BUILD`,
 `COMMIT`, `PUBLISHED`, `SHA256`, `SIZE`). Xenia has no stable releases either: every change is a release of
 `xenia-canary/xenia-canary`, tagged with its commit, with `xenia_canary_linux.AppImage` and the SHA-256 GitHub
-publishes for it. A tag is no number, so the app takes a release published after `PUBLISHED` as a newer build; the
-tool does not check them. A new pin takes the asset's digest and size and the release's date, and a look at what the
+publishes for it. A tag is no number, so the app and the tool take a release published after `PUBLISHED` as a newer
+build; the tool also reports a pinned AppImage that is gone or replaced, as for Vita3K. A new pin takes the asset's digest and size and the release's date, and a look at what the
 app relies on in Xenia's source at the new commit: the `--fullscreen` option and the positional path
 (`src/xenia/app/xenia_main.cc`), the storage root in `$XDG_DATA_HOME/Xenia` (the same file, and `GetUserFolder` in
 `src/xenia/base/filesystem_posix.cc`), the places of the game partition in a disc image
 (`src/xenia/vfs/devices/disc_image_device.cc`, which `GAME_PARTITIONS` in the app's `games.py` copies), and GTK on
 X11 (`GDK_BACKEND` in `src/xenia/ui/windowed_app_main_posix.cc`).
 
+BC-250 USB Wi-Fi builds its driver from one pinned commit per branch of `shenmintao/aic8800d80` (`main` and
+`legacy-mcu1`), `PINS` in `bc250-bazzite/apps/wdriver/usb_wifidriver/builder.py`, fetched from the suite owner's
+mirror first and from the upstream when the mirror does not answer. The tool reports a branch with commits after its
+pin (how many, the newest and the compare page), and a mirror that is not on GitHub or lacks a pinned commit. A new
+pin is built on the board against the running kernel and tried with the stick, on the branch for its chip.
+
 ```bash
 python3 bc250-bazzite/tools/check_upstream.py            # all of them
-python3 bc250-bazzite/tools/check_upstream.py helixsr    # one: decky, shadps4, helixsr, ppsspp, pcsx2, rpcs3 or directmesh
+python3 bc250-bazzite/tools/check_upstream.py helixsr    # one: decky, shadps4, helixsr, ppsspp, pcsx2, rpcs3, directmesh,
+                                                          # vita3k, xenia or wdriver
 ```
 
 ## bc250_core

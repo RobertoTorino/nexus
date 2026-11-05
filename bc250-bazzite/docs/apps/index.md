@@ -56,6 +56,7 @@ other app is optional. They are listed by category, as the portal's tabs list th
 | ![](../assets/apps/sftp.webp){ .app-icon } [Bazzite SFTP Tools](sftp.md) | Move files between computers over SFTP, and manage the SSH server of a Bazzite host. |
 | ![](../assets/apps/package.webp){ .app-icon } [Dependency Checker](package.md) | The suite's Python packages and external tools, which apps use them, and whether newer ones exist; and whether a Bazzite update waits for a reboot. |
 | ![](../assets/apps/ncgui.webp){ .app-icon } [Bazzite NetcatGUI](ncgui.md) | A graphical netcat: connect to a host or listen on a port, TCP, UDP or TLS, one session per tab. |
+| ![](../assets/apps/ssd.webp){ .app-icon } [SSD Check](ssd.md) | The health, power cycles and power-on hours of the board's SSDs. |
 
 The tools for working on the suite are Nexus's, run from a checkout of the repository and are not in the portal:
 [Nexus Dashboard](https://robertotorino.github.io/nexus/dashboard/) opens them all (Nexus Release Tool, Nexus

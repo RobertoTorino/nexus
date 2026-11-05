@@ -1,3 +1,41 @@
+Changelog: 05-11-2026 03:20:52
+
+Fixed. BC250 Bazzite Suite: the weekly upstream check took DirectMesh's development candidate
+directmesh-v131-auto-rdna1-975ec91 (DirectMesh v1.3.1 plus work in progress) for a release 131 and reported Mesh
+Shaders as behind. It now counts only a tag with a version alone after directmesh-, as the app's own update notice
+does (owner, 05-11-2026: Mesh Shaders stays on v1.3.1).
+
+Changelog: 05-11-2026 03:13:57
+
+Added. BC250 Bazzite Suite: the weekly upstream check (bc250-bazzite/tools/check_upstream.py) follows Vita3K, Xenia
+and the USB Wi-Fi driver too (owner, 04-11-2026). For Vita3K and Xenia it reports a build newer than the one their
+managers bring (Vita3K by build number, Xenia by publish date) and a pinned AppImage gone from GitHub or published
+with another SHA-256; for BC-250 USB Wi-Fi each branch of aic8800d80 with commits after its pinned commit, and a
+mirror that is not on GitHub or lacks a pinned commit. The wiki's Development chapter and the workflow say so.
+
+Changelog: 05-11-2026 02:54:23
+
+Fixed. Windows Portable Suite: its README's Disclaimer no longer names Nintendo, as the shared text
+(tools/mkdocs/disclaimer.py); its wiki takes the text from the hook.
+
+Changelog: 05-11-2026 02:54:23
+
+Fixed. BC250 Bazzite Suite: the Disclaimer of its README, of eight apps' READMEs and of their wiki chapters (Console
+Link, Console LinkB, shadPS4, RPCS3, PPSSPP, PCSX2, Vita3K and Xenia Manager) no longer names Nintendo, as the shared
+text; the apps' own CHANGELOGs say so.
+
+Changelog: 05-11-2026 02:54:23
+
+Fixed. The disclaimer every wiki shares (tools/mkdocs/disclaimer.py) and the root README's no longer name Nintendo:
+no app of either suite works with a Nintendo console. tools/tests/test_disclaimer.py holds every copy to it.
+
+Changelog: 05-11-2026 00:23:26
+
+Added. The Nexus page's The development machine lists its tools in two tables, Prerequisites (what ./test.sh, the
+pre-push hook and tools/ci-local.sh need) and Optional, with actionlint and setools (sesearch and seinfo, in a
+distrobox) added and ffmpeg corrected as coming with Bazzite. CLAUDE.md's new rule: a tool the work needs more than
+once is installed for good and listed there.
+
 Changelog: 04-11-2026 22:27:59
 
 Release 1.45.0. Brings portal-v14.1.0, sftp-v1.2.0.

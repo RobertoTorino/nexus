@@ -116,7 +116,7 @@ def test_installed_and_running_with_plugins(qapp, setup):
     state.enable_cef(steam_dirs)
     make_plugin(paths.plugins, "SDH-CssLoader", "CSS Loader", "2.1.2", "DeckThemes")
     window = _window(setup)
-    assert window.pill.text() == "Ready" and window.decky_box.value.text() == "3.3.0"
+    assert window.pill.text() == "Ready" and window.decky_box.value.text() == loader.VERSION
     assert "Running as root; starts at boot." == window.service_state.text()
     assert not window.install_button.isEnabled() and window.remove_button.isEnabled()
     assert window.restart_button.isEnabled() and window.steam_box.value.text() == "On"
@@ -143,7 +143,7 @@ def test_older_newer_and_unknown_versions(qapp, setup):
     install(paths, "v3.2.8")
     window = _window(setup)
     assert window.install_button.text() == "Update" and window.install_button.isEnabled()
-    assert "brings 3.3.0" in window.decky_state.text()
+    assert f"brings {loader.VERSION}" in window.decky_state.text()
     install(paths, "v3.4.0")                                 # Decky updated itself
     window.refresh()
     assert "updated itself" in window.decky_state.text() and window.install_button.text() == "Install"
@@ -155,7 +155,7 @@ def test_older_newer_and_unknown_versions(qapp, setup):
 def test_a_newer_release_is_named(qapp, setup):
     window = _window(setup, latest=lambda: ReleaseInfo(version="3.4.0", tag="v3.4.0", published="2026-12-01"))
     assert "Decky Loader 3.4.0 is out (2026-12-01)" in window.decky_state.text()
-    window = _window(setup, latest=lambda: ReleaseInfo(version="3.3.0"))
+    window = _window(setup, latest=lambda: ReleaseInfo(version=loader.VERSION))
     assert "is out" not in window.decky_state.text()
     window = _window(setup, latest=lambda: ReleaseInfo(error="no connection"))
     assert "is out" not in window.decky_state.text()

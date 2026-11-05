@@ -78,6 +78,7 @@ By category, as the portal lists them.
 - <img src="portal/images/apps/sftp.webp" width="20" height="20" alt=""/> **[Bazzite SFTP Tools](apps/sftp)**: Move files between computers over SFTP, and manage the SSH server of a Bazzite host.
 - <img src="portal/images/apps/package.webp" width="20" height="20" alt=""/> **[Dependency Checker](apps/package)**: The suite's Python packages and external tools, which apps use them, and whether newer ones exist; and whether a Bazzite update waits for a reboot.
 - <img src="portal/images/apps/ncgui.webp" width="20" height="20" alt=""/> **[Bazzite NetcatGUI](apps/ncgui)**: A graphical netcat: connect to a host or listen on a port, TCP, UDP or TLS, one session per tab.
+- <img src="portal/images/apps/ssd.webp" width="20" height="20" alt=""/> **[SSD Check](apps/ssd)**: The health, power cycles and power-on hours of the board's SSDs.
 
 The tools for working on the suite are Nexus's, every suite's: they run from a checkout of the repository and are
 not in the portal. **[Nexus Dashboard](../dev/dash)** opens them all: Nexus Release Tool, Nexus Installer Tests,
@@ -95,10 +96,10 @@ like the code beside them.
 
 ## Disclaimer
 
-Nexus and its suites are independent community projects, not affiliated with or endorsed by AMD, ASRock, the Bazzite
-/ Universal Blue project, Sony, Microsoft, Nintendo, Valve, or the makers of the emulators and the other programs the
-apps work with. BC-250 is AMD's product name and Bazzite the Universal Blue project's. PlayStation, PS4, PS5, PS3,
-PS2, PSP, PS Vita, PSN, DualSense and Remote Play are Sony's; XBOX, XBOX 360, XBOX Cloud Gaming, Game Pass and
-Windows are Microsoft's; Steam, Steam Deck and Big Picture are Valve's; the names of Nintendo's consoles, of the
-emulators (shadPS4, RPCS3, PPSSPP, PCSX2, Vita3K, Xenia) and of Decky Loader, HelixSR and DirectMesh belong to their
-owners. The suites use them only to say what their apps work with.
+Nexus and its suites are independent community projects, not affiliated with or endorsed by AMD, ASRock, the Bazzite /
+Universal Blue project, Sony, Microsoft, Valve, or the makers of the emulators and the other programs the apps work
+with. BC-250 is AMD's product name and Bazzite the Universal Blue project's. PlayStation, PS4, PS5, PS3, PS2, PSP, PS
+Vita, PSN, DualSense and Remote Play are Sony's; XBOX, XBOX 360, XBOX Cloud Gaming, Game Pass and Windows are
+Microsoft's; Steam, Steam Deck and Big Picture are Valve's; the names of the emulators (shadPS4, RPCS3, PPSSPP, PCSX2,
+Vita3K, Xenia) and of Decky Loader, HelixSR and DirectMesh belong to their owners. The suites use them only to say what
+their apps work with.

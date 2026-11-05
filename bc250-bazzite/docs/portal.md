@@ -14,9 +14,9 @@ to skip it.
 
 **The header**: the suite's icon, as large as a tile's (click it to open this wiki), its name with the version and the **Beta** stage,
 a small **i** that says where the apps install from, and a line that says in a few words what the open category is
-for. Under them, in a row that ends level with the icon's bottom, nine pills with rounded corners: **Refresh**
+for. Under them, in a row that ends level with the icon's bottom, six pills with rounded corners: **Refresh**
 (look again at which apps are installed), **Installed apps**, **Install All updates**, **Install All apps**,
-**Icons on Desktop**, **Sound**, **Theme switcher**, **Wallpaper** and **Sys info**, each described below. A pill
+**Sys info** and **☰ Settings**, each described below. A pill
 that is not active is half transparent, so the wallpaper shows through it; the one with the focus or under the
 mouse is solid, framed in the theme's accent. The line at the bottom says what the keys and the controller's
 buttons do.
@@ -34,7 +34,10 @@ mouse:
 - **The name**, without the suite's "BC-250" prefix.
 - **Press the tile** (click it, Enter, or A on the controller) to open the app; an app with two windows (CU Bisect,
   Cores Bisect) asks which one. Pressing a tile that is not installed offers to install it.
-- **The tile's menu** (a right click, the Menu key, or X on the controller) holds every action: **Open** (or the
+- **Update** (a right click, or Y on the controller): installs the tile's update or reinstall at once; an app
+  that changes the board asks first. While a newer portal is out, they update the portal instead (see
+  **Updates** below). A right click on a tile with nothing to update opens its menu.
+- **The tile's menu** (the Menu key, or X on the controller) holds every action: **Open** (or the
   app's two windows), **Install** (an arrow into a tray; **Update**, in red, when an update is waiting;
   **Reinstall** for an installed app, in red with a circular arrow when its version is unknown) and
   **Uninstall** (a bin). What cannot be done now is grayed out. Bazzite Test has no Uninstall: it is removed
@@ -62,9 +65,18 @@ on the keyboard, to change the category. The portal always opens on the first on
 |---|---|---|---|
 | Arrow keys | D-pad or left stick | Point | Move the focus between the tiles, the pills and the notices |
 | Enter | A | Click | Open the app, press a pill, open a notice |
-| Menu key | X | Right click | The tile's menu: Open, Install, Update, Reinstall, Uninstall |
+| | Y | Right click | Update: the portal while a newer one is out, else the tile's app (update or reinstall) |
+| Menu key | X | | The tile's menu: Open, Install, Update, Reinstall, Uninstall |
 | Page Up, Page Down | LB, RB | Click a name | The category before and after |
-| Escape | B | | Close a menu or a question; with none open, close the portal (while a download or an install runs, it asks: press again within five seconds) |
+| | ☰ (Start) | Click ☰ | The Settings page, and back from it |
+| | R3 (the right stick pressed) | | Bazzite's on-screen keyboard (Plasma Keyboard), and away again; in a question or the file dialog too |
+| Escape | B | | Close a menu or a question; on the Settings page, go back to the apps; else close the portal (while a download or an install runs, it asks: press again within five seconds) |
+
+**The on-screen keyboard.** R3 shows Plasma Keyboard, the desktop's virtual keyboard, so you can type with the
+controller, for example a file name when you choose a wallpaper. Bazzite shows it only after touch or pen input,
+which a controller is not, so while it shows the portal sets it to show for any input, and R3 again (or closing the
+portal) hides it and sets your own choice back. When no virtual keyboard is chosen for the desktop, R3 says where to
+choose it: System Settings, Keyboard, Virtual Keyboard, Plasma Keyboard.
 
 The controller is read with [pygame-ce](https://pypi.org/project/pygame-ce/), which the portal's installer adds to
 the suite's venv; it takes any controller SDL knows (XBOX, PlayStation, Switch Pro and most others). The portal
@@ -103,15 +115,22 @@ Nexus Release Tool, Nexus Installer Tests (the installer tests one at a time), N
   checkout shows what it installed from there as installed, whatever it pins. The red notice beside the category
   strip counts them and the apps that need a reinstall, for example **● 2 updates, 1 reinstall**. Press it to list
   each one with its category and versions, and choose one to go to its tile. A category with such an app shows
-  their number in red after its name, so none goes unseen on a category that is not open. Newer app versions come
-  with a newer portal release: at start the portal looks for one on GitHub and, when there is one, shows a red
-  button beside the title that opens its release page. The button names what that release brings, for example
-  **Portal 0.9.1: updates ACE Queues and Memory Manager**, and its tooltip lists each app with its old and new
-  version. After the portal update, the installed apps among them show the red dot. When the new pins cannot be
-  read (offline, for example), the button says **Portal x.y.z available**. A release built again under the
-  portal's own version is offered too, as **Portal x.y.z: a new build of this version**: the installer keeps the
-  checksum of the tarball it installed from (`build.sha256` beside the program, when the tarball is next to the
-  unpacked folder, as the install steps leave it), and the portal compares it with the newest release's.
+  their number in red after its name, so none goes unseen on a category that is not open. Press Y or right-click
+  a tile with an update to install it.
+- **Portal updates:** newer app versions come with a newer portal release. At start the portal looks for one on
+  GitHub; when there is one, an orange **PORTAL UPDATE AVAILABLE** shows under the name on the intro, and an
+  orange **UPDATE AVAILABLE, PRESS Y TO UPDATE** beside the category strip. Its tooltip says what the release
+  brings, for example **Portal 0.9.1: updates ACE Queues and Memory Manager**, with each app's old and new
+  version. Press Y, right-click a tile, or click the banner (Enter or A with the focus on it) to update: the portal
+  downloads the release, checks it against the release's `SHA256SUMS`, and runs its `install.sh` in a terminal,
+  which asks for your sudo password for the copy to `/opt`. The banner says **DOWNLOADING THE UPDATE…** and then
+  **INSTALLING THE UPDATE…**. When the installer has ended well, the portal starts again as the new version, and
+  the installed apps it updates show the red dot. When it fails, the terminal stays open with what happened, and
+  Y tries again. While an app installs, the portal update waits for it. A release built again under the portal's
+  own version is offered too (the tooltip says **a new build of this version**): the installer keeps the checksum
+  of the tarball it installed from (`build.sha256` beside the program, when the tarball is next to the unpacked
+  folder, as the install steps and the portal's own update leave it), and the portal compares it with the newest
+  release's. The download is kept in `~/.local/share/bc250-bazzite-suite/portal/portal-update/` until the next one.
 - **Outside the suite**, in orange beside the red notice: a newer release of a program that an installed app
   installs in its newest version, so the app can install it now. Press it to list them, for example **Upscaler
   Manager (Graphics): HelixSR 1.9.3 is out**, with what to do in the app, and choose one to go to its tile; the
@@ -119,8 +138,8 @@ Nexus Release Tool, Nexus Installer Tests (the installer tests one at a time), N
   app found the last time it looked, so open the app now and then; when you come back to the portal, the notice
   follows. Programs an app pins (Decky Loader, shadPS4, PPSSPP, RPCS3, Vita3K, PCSX2's stable release, Xenia,
   DirectMesh) are not listed: a newer one comes with a new version of the app, as an update above.
-- **Restart: portal x.y.z is installed:** a portal window that is open while you install a newer portal keeps
-  running the old one, with its old app versions, and starting the portal again only brings that window to the
+- **Restart: portal x.y.z is installed:** a portal window that is open while you install a newer portal by hand
+  (its `install.sh` in a terminal) keeps running the old one, with its old app versions, and starting the portal again only brings that window to the
   front. When you come back to the window, it sees the newer portal and shows this red button: click it to restart
   into the new portal, which then shows the red dot on the apps it updates. While an app installs or uninstalls,
   the button waits for it to end.
@@ -138,20 +157,24 @@ Nexus Release Tool, Nexus Installer Tests (the installer tests one at a time), N
   list and the board warning, each installer in its own terminal, the pill showing which one of how many. It is
   disabled once every app of the category is installed. A portal installed for the first time fills a category with
   one click.
-- **Icons on Desktop**, a pill at the top (Yes or No; click it to switch): on, every installed app has an icon on the Desktop; off, only the
+- **☰ Settings**, the last pill at the top, or the ☰ button on the controller (Start, Options on a PlayStation
+  controller): the Settings page, in place of the category strip and the tiles, under the same header. It holds
+  the four settings below, each a pill with a short line beside it. Move between them with the arrow keys, the
+  d-pad or the stick, and press A or Enter to change one. B, Escape or ☰ again goes back to the apps.
+- **Icons on Desktop**, on the Settings page (Yes or No; click it to switch): on, every installed app has an icon on the Desktop; off, only the
   portal's icon is there and you start the apps from the portal. The apps stay in the app menu either way, so KDE's
   search and Steam's **Add a Non-Steam Game** still find them. The first time the portal starts with app icons on
   the Desktop, it asks whether to keep them. While the switch is off, the portal removes the icons the apps'
   installers put there, at start and after each install. It only touches the icons of the suite's apps, never its
   own or anything else on the Desktop.
-- **Sound**, a pill at the top (Yes or No; click it to switch): the intro plays its sound when the portal opens;
-  No switches it off. The portal remembers the choice. When the board has no audio output, the pill says No and is
+- **Sound**, on the Settings page (Yes or No; click it to switch): the intro plays its sound when the portal opens,
+  and each move and button on the controller gives a short sound; No switches both off. The portal remembers the choice. When the board has no audio output, the pill says No and is
   disabled, and the portal stays silent.
-- **Theme switcher**, a pill at the top showing the theme; click it for the next one: the look of every app in the
+- **Theme switcher**, on the Settings page, showing the theme; click it for the next one: the look of every app in the
   suite. **Gunmetal** (dark, cool blue-gray, the default), **Silver** (light) or **Warm** (dark warm gray with a
   bronze accent). It is one choice for all the apps, kept in `~/.config/bc250-bazzite-suite/theme`; each app takes
   it the next time it starts, the portal too.
-- **Wallpaper**, a pill at the top: a picture behind the portal, none until you choose one, and seen through the
+- **Wallpaper**, on the Settings page: a picture behind the portal, none until you choose one, and seen through the
   pills that are not active. Click the pill, then
   **Choose a picture…** for your own (**Custom**), **Example wallpaper** to see how one looks with the picture that
   comes with the portal (**Example**), or **No wallpaper** for none. Your picture must be a PNG, JPEG or WebP of at least 1920 x 1080 pixels, in 16:9 (1920 x
@@ -189,6 +212,9 @@ tar -xzf portal-v*.tar.gz
 cd portal-v*/
 ./install.sh                 # as your own user; asks for the sudo password only for the copies to /opt
 ```
+
+Later versions install from the portal itself: press Y when it says **UPDATE AVAILABLE** (see **Portal updates**
+above).
 
 What it installs:
 
@@ -241,12 +267,12 @@ release workflow stages them, so everything can be tried before anything is rele
 development venv from [Development](https://robertotorino.github.io/nexus/development/#set-up-and-test) on the Nexus page (Bazzite's own `python3` has no PyQt6):
 
 ```shell
-cd portal
-PYTHONPATH=../core ../.venv-linux/bin/python -m bc250_portal    # --source release: the pinned GitHub releases
+cd bc250-bazzite/portal                  # from the repository's root
+PYTHONPATH=../../core ../../.venv-linux/bin/python -m bc250_portal    # --source release: the pinned GitHub releases
 ```
 
-To install from the checkout, run `./install.sh` in the repository root (or here in `portal/`). It bundles
-`../core` and installs `../apps/check`. The installed portal then installs the other apps from the
+To install from the checkout, run `./install.sh` in the suite's folder, `bc250-bazzite/` (or here in `portal/`). It
+bundles the repository's `core/` and installs `../apps/check`. The installed portal then installs the other apps from the
 checkout too, so keep the checkout where it is.
 
 ## apps.toml and releases

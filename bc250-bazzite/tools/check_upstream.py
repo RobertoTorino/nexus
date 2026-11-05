@@ -3,7 +3,7 @@
 """Upstream check: are the apps that pin an upstream release still in step with it?
 
     python3 tools/check_upstream.py [--report FILE] [decky] [shadps4] [helixsr] [ppsspp] [pcsx2] [rpcs3]
-                                    [directmesh]                     # all when none is named
+                                    [directmesh] [vita3k] [xenia] [wdriver]     # all when none is named
 
 Decky Loader Manager pins one Decky release (apps/decky/decky_manager/loader.py: VERSION, TAG, SHA256)
 and writes Decky's release unit itself (loader.unit_text()). This compares them with Decky's GitHub repository:
@@ -30,11 +30,23 @@ importing the app:
 The PPSSPP, PCSX2 and RPCS3 Managers and Mesh Shaders pin one release each (VERSION in the emulator.py of
 PPSSPP and PCSX2's stable channel, RPCS3's LANDMARK, DIRECTMESH in bc250-mesh-shaders.sh), read here without
 importing the app:
- * the latest stable release (DirectMesh: the newest directmesh-v* tag): newer than the pin means a new version of the
-   app, tried on the board first. Their checksums are checked by the apps themselves when they download.
+ * the latest stable release (DirectMesh: the newest directmesh-v<version> tag; a tag with more after the version is a
+   development candidate and skipped): newer than the pin means a new version of the app, tried on the board first. Their checksums are checked by the apps themselves when they download.
 The governor's version is whatever COPR built, nothing in the repository pins it: the GPU Governor Manager says when
-filippor's release is newer than the installed package. Vita3K and Xenia are not checked: they publish a build almost
-daily, and the Vita3K and Xenia Managers say when a newer one is out.
+filippor's release is newer than the installed package.
+
+The Vita3K and Xenia Managers bring one build each (BUILD, SHA256 in their emulator.py; Xenia's PUBLISHED), read here
+without importing the app (owner, 04-11-2026: they come in, though both publish a build almost daily):
+ * the newest build: a later one (Vita3K: a higher build number; Xenia: published later) means a new version of the
+   app could bring it, after it is tried on the board; the app itself already tells its users that a newer one is out;
+ * the pinned build: its AppImage must still be on GitHub, published with the pinned SHA-256 (or without one, which
+   older uploads lack: the app checks the download itself).
+
+BC-250 USB Wi-Fi builds its driver from one pinned commit per branch of shenmintao/aic8800d80 (PINS in
+apps/wdriver/usb_wifidriver/builder.py, loaded on its own: it needs only the standard library):
+ * each branch's head: commits after the pin mean a new version of the app could move the pin, after it is built and
+   tried on the board with the stick;
+ * the suite owner's mirror, which the app fetches first, must be there and have each pinned commit.
 
 Exit code 0: all in step; 1: an upstream moved (the report says what); 2: one could not be checked (network, GitHub's
 rate limit).
@@ -65,8 +77,12 @@ PPSSPP = SUITE / "apps" / "ppsspp" / "ppsspp_manager" / "emulator.py"
 PCSX2 = SUITE / "apps" / "pcsx2" / "pcsx2_manager" / "emulator.py"
 RPCS3 = SUITE / "apps" / "rpcs3" / "rpcs3_manager" / "emulator.py"
 MESH = SUITE / "apps" / "mesh" / "bc250-mesh-shaders.sh"
+VITA3K = SUITE / "apps" / "vita3k" / "vita3k_manager" / "emulator.py"
+XENIA = SUITE / "apps" / "xenia" / "xenia_manager" / "emulator.py"
+BUILDER = SUITE / "apps" / "wdriver" / "usb_wifidriver" / "builder.py"
 DIRECTMESH_REPO = "lonewolf0622/bc250meshtaskwork"
 DIRECTMESH_PREFIX = "directmesh-"
+RELEASE_TAG = re.compile(r"v?\d+(\.\d+)+")      # after the prefix: a release's version, nothing more
 HELIXSR_REPO = "lonewolf0622/HelixSR"
 # How the release notes name the fallback: "use [HelixSR 1.8.1](...)", earlier "use HelixSR 1.4.3".
 FALLBACK_RE = re.compile(r"use \[?HelixSR v?(\d+\.\d+\.\d+)")
@@ -96,9 +112,9 @@ def fetch(url: str) -> bytes:
         raise CheckError(f"{url}: {getattr(error, 'reason', error)}") from error
 
 
-def load_loader(path: Path = LOADER) -> ModuleType:
-    """loader.py on its own: it needs only the standard library (it runs as root that way)."""
-    spec = importlib.util.spec_from_file_location("decky_loader_pin", path)
+def load_loader(path: Path = LOADER, name: str = "decky_loader_pin") -> ModuleType:
+    """loader.py on its own: it needs only the standard library (it runs as root that way). builder.py too."""
+    spec = importlib.util.spec_from_file_location(name, path)
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module             # its dataclasses look their module up there
     spec.loader.exec_module(module)
@@ -155,12 +171,13 @@ class Report:
     name: str = "Decky Loader"
     short: str = "Decky"
     held: str = "pinned"                        # HelixSR: "known", the newest release the app was checked against
+    newest: str = "latest stable"               # what *latest* is: the daily builds' "newest build", the branch heads
     latest: str = ""
     drift: list[str] = field(default_factory=list)
     fine: list[str] = field(default_factory=list)
 
     def text(self) -> str:
-        head = (f"{self.name}: {self.held} {self.pinned}, latest stable {self.latest or 'unknown'}. "
+        head = (f"{self.name}: {self.held} {self.pinned}, {self.newest} {self.latest or 'unknown'}. "
                 + ("In step." if not self.drift else f"{self.short} moved:"))
         return "\n".join([head] + [f"  - {line}" for line in self.drift] + [f"  ok {line}" for line in self.fine])
 
@@ -313,8 +330,12 @@ def check_release(pin: Release, get: Fetch = fetch) -> Report:
     api = API.format(repo=pin.repo)
     if pin.prefix:
         releases = json.loads(get(f"{api}/releases?per_page=100"))
+        # Only a version after the prefix ("directmesh-v1.3.1"), as the app's updates.py reads it: a tag with more
+        # after it is a development candidate ("directmesh-v131-auto-rdna1-975ec91", DirectMesh v1.3.1 plus work in
+        # progress, 24-10-2026; owner, 05-11-2026: the app stays on the release), never a newer release.
         candidates = [r for r in releases if not r.get("draft") and not r.get("prerelease")
-                      and str(r.get("tag_name", "")).startswith(pin.prefix)]
+                      and str(r.get("tag_name", "")).startswith(pin.prefix)
+                      and RELEASE_TAG.fullmatch(str(r["tag_name"])[len(pin.prefix):])]
         latest = max(candidates, key=lambda r: _version(str(r["tag_name"])[len(pin.prefix):]), default={})
         tag = str(latest.get("tag_name", ""))[len(pin.prefix):]
     else:
@@ -329,13 +350,130 @@ def check_release(pin: Release, get: Fetch = fetch) -> Report:
     return report
 
 
+@dataclass
+class Build:
+    """The build a daily-built emulator's manager brings (Vita3K, Xenia), read from its emulator.py."""
+    name: str                                   # "Vita3K"
+    app: str                                    # "the Vita3K Manager"
+    repo: str                                   # where its builds are released
+    build: str                                  # the tag: "4186", "e6cd2e4"
+    asset: str
+    sha256: str
+    published: str = ""                         # Xenia: tags are commits, so a later build is one published later
+    where: str = ""
+
+
+def load_build(name: str) -> Build:
+    path = {"vita3k": VITA3K, "xenia": XENIA}[name]
+    values = _string_constants(path, (str, int))
+    where = f"BUILD, SHA256 in {path.relative_to(SUITE)}"
+    if name == "vita3k":
+        return Build("Vita3K", "the Vita3K Manager", values["BUILDS"], str(values["BUILD"]), values["ASSET"],
+                     values["SHA256"], where=where)
+    return Build("Xenia", "the Xenia Manager", values["REPO"], values["BUILD"], values["ASSET"], values["SHA256"],
+                 values["PUBLISHED"], where + " (and PUBLISHED)")
+
+
+def _newer_build(pin: Build, tag: str, published: str) -> bool:
+    if pin.published:
+        return bool(tag) and tag != pin.build and published > pin.published     # ISO 8601 in UTC: compared as text
+    return tag.isdigit() and int(tag) > int(pin.build)
+
+
+def check_build(pin: Build, get: Fetch = fetch) -> Report:
+    report = Report(pin.build, name=pin.name, short=pin.name, held="brings build", newest="newest build")
+    api = API.format(repo=pin.repo)
+
+    latest = json.loads(get(f"{api}/releases/latest"))
+    tag, published = str(latest.get("tag_name", "")), str(latest.get("published_at", ""))
+    report.latest = tag
+    if _newer_build(pin, tag, published):
+        behind = f", {int(tag) - int(pin.build)} builds later" if not pin.published else ""
+        report.drift.append(f"build {tag} is out ({published[:10]}{behind}): a new version of {pin.app} could bring "
+                            f"it, after it is tried on the board ({pin.where}); the app already tells its users. "
+                            f"{latest.get('html_url', '')}")
+    else:
+        report.fine.append(f"no build newer than {pin.build}")
+
+    try:
+        pinned = json.loads(get(f"{api}/releases/tags/{pin.build}"))
+    except CheckError as error:
+        if ": GitHub answered 404" not in str(error):
+            raise
+        report.drift.append(f"build {pin.build} is gone from GitHub: {pin.app} cannot download it any more.")
+        return report
+    assets = {a.get("name"): a for a in pinned.get("assets", [])}
+    digest = str(assets.get(pin.asset, {}).get("digest") or "")
+    if pin.asset not in assets:
+        report.drift.append(f"build {pin.build} has no {pin.asset} any more: {pin.app} cannot download it.")
+    elif not digest:
+        report.fine.append(f"build {pin.build}'s {pin.asset} is there, published without a SHA-256 (the app checks "
+                           f"its own)")
+    elif digest != f"sha256:{pin.sha256}":
+        report.drift.append(f"build {pin.build}'s {pin.asset} is published with {digest}, not the pinned "
+                            f"sha256:{pin.sha256}: the asset was replaced.")
+    else:
+        report.fine.append(f"build {pin.build}'s {pin.asset} is still the pinned file")
+    return report
+
+
+def _repo(url: str) -> str:
+    """owner/name of a github.com URL."""
+    return url.rstrip("/").removeprefix("https://github.com/")
+
+
+def check_wdriver(builder: ModuleType, get: Fetch = fetch) -> Report:
+    pins = builder.PINS
+    report = Report(", ".join(f"{b} {p.commit[:7]}" for b, p in pins.items()), name="USB Wi-Fi driver (aic8800d80)",
+                    short="The driver", newest="branch heads")
+    upstream, mirror = API.format(repo=_repo(builder.UPSTREAM)), API.format(repo=_repo(builder.MIRROR))
+    heads = []
+    for branch, pin in pins.items():
+        compare = json.loads(get(f"{upstream}/compare/{pin.commit}...{branch}"))
+        ahead = int(compare.get("ahead_by") or 0)
+        commits = compare.get("commits") or [{}]
+        head = str(commits[-1].get("sha", pin.commit))[:7] if ahead else pin.commit[:7]
+        date = str(commits[-1].get("commit", {}).get("committer", {}).get("date", ""))[:10] if ahead else ""
+        heads.append(f"{branch} {head}")
+        if ahead:
+            report.drift.append(f"{branch} is {ahead} commit{'s' if ahead != 1 else ''} past the pin {pin.commit[:7]} "
+                                f"(newest {head}, {date}): a new version of BC-250 USB Wi-Fi could move PINS in "
+                                f"apps/wdriver/usb_wifidriver/builder.py, after the driver is built and tried on the "
+                                f"board with the stick. {compare.get('html_url', '')}")
+        else:
+            report.fine.append(f"{branch} has no commit after the pin {pin.commit[:7]}")
+    report.latest = ", ".join(heads)
+    try:
+        get(mirror)
+    except CheckError as error:
+        if ": GitHub answered 404" not in str(error):
+            raise
+        report.drift.append(f"the mirror {builder.MIRROR} is not on GitHub (missing, or private): the app fetches the "
+                            f"sources from the upstream alone, so a vanished upstream stops a fresh install.")
+        return report
+    for branch, pin in pins.items():
+        try:
+            get(f"{mirror}/commits/{pin.commit}")
+        except CheckError as error:
+            if not re.search(r": GitHub answered (404|422)", str(error)):
+                raise
+            report.drift.append(f"the mirror {builder.MIRROR} lacks {branch}'s pinned commit {pin.commit[:7]}: a fresh "
+                                f"install of it depends on the upstream alone. Push the branch to the mirror.")
+        else:
+            report.fine.append(f"the mirror has {branch}'s pinned commit")
+    return report
+
+
 CHECKS = {"decky": ("Decky Loader", lambda: check(load_loader())),
           "shadps4": ("shadPS4", lambda: check_shadps4(load_shadps4_pin())),
           "helixsr": ("HelixSR", lambda: check_helixsr(load_helixsr_pin())),
           "ppsspp": ("PPSSPP", lambda: check_release(load_release("ppsspp"))),
           "pcsx2": ("PCSX2", lambda: check_release(load_release("pcsx2"))),
           "rpcs3": ("RPCS3", lambda: check_release(load_release("rpcs3"))),
-          "directmesh": ("DirectMesh", lambda: check_release(load_release("directmesh")))}
+          "directmesh": ("DirectMesh", lambda: check_release(load_release("directmesh"))),
+          "vita3k": ("Vita3K", lambda: check_build(load_build("vita3k"))),
+          "xenia": ("Xenia", lambda: check_build(load_build("xenia"))),
+          "wdriver": ("USB Wi-Fi driver", lambda: check_wdriver(load_loader(BUILDER, "wdriver_builder_pin")))}
 
 
 def markdown(reports: list[Report], failed: list[str]) -> str:
@@ -343,7 +481,7 @@ def markdown(reports: list[Report], failed: list[str]) -> str:
     parts = []
     for report in reports:
         if report.drift:
-            parts.append(f"### {report.name}\n\n{report.held.capitalize()} {report.pinned}, latest stable "
+            parts.append(f"### {report.name}\n\n{report.held.capitalize()} {report.pinned}, {report.newest} "
                          f"{report.latest or 'unknown'}.\n\n" + "\n".join(f"- {line}" for line in report.drift))
     if parts and failed:
         parts.append("Not checked this week: " + "; ".join(failed))

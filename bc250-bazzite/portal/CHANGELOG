@@ -1,3 +1,53 @@
+Changelog: 05-11-2026 03:43:20
+
+Release 15.0.0. Pins ssd-v0.1.0.
+
+Changelog: 05-11-2026 00:47:43
+
+Added. A short sound on every controller action: each move of the d-pad or the stick and each button (owner,
+05-11-2026; the owner made the sound, sounds/blob.wav). The button that skips the intro stays silent, and the Sound
+setting switches it off with the intro's sound; the Settings page's line under Sound says so. The wiki's
+Development section had the command that runs the portal from the checkout with the paths from before the suite's
+move into bc250-bazzite/; it has the right ones now.
+
+Changelog: 05-11-2026 00:37:42
+
+Added. R3 shows Bazzite's on-screen keyboard, Plasma Keyboard, and hides it again (owner, 05-11-2026), also while a
+question or the file dialog is open. KWin shows it only after touch or pen input by default, so while it shows the
+portal sets it to any input and sets the user's choice back when R3 hides it or the portal closes. Without a virtual
+keyboard chosen for the desktop, R3 says where to choose one. The legend at the bottom names R3 Keyboard; to keep the
+line on a handheld's screen its entries sit closer and X reads Menu.
+
+Changelog: 04-11-2026 23:52:10
+
+Added. A Settings page behind ☰, as the Windows Portable Suite's portal has (owner, 04-11-2026). The ☰ pill at the
+end of the header, or the ☰ button on the controller (Start), shows it in place of the category strip and the
+tiles: Icons on Desktop, Sound, the theme switcher and the wallpaper, each a pill with a short line beside it, work
+as before. B, Escape or ☰ again go back to the apps. The header keeps Refresh, Installed apps, Install All updates,
+Install All apps and Sys info, and the legend at the bottom names ☰ Settings.
+
+Changelog: 04-11-2026 23:41:00
+
+Added. The portal updates itself, as the Windows Portable Suite's portal does (owner, 04-11-2026). When a newer
+portal release is out, an orange PORTAL UPDATE AVAILABLE shows under the name on the intro and an orange UPDATE
+AVAILABLE, PRESS Y TO UPDATE beside the category strip, its tooltip naming what the release brings. Y, a right click
+on a tile or a click on the banner downloads the release, checks it against its SHA256SUMS, runs its install.sh in a
+terminal and, when that ended well, starts the new portal; the banner says how far it is. Y and a right click on a
+tile also install the tile's update or reinstall (an app that changes the board asks first). The legend at the
+bottom says so: Y / Right click Update, X / Menu key App menu.
+
+Changelog: 04-11-2026 23:41:00
+
+Breaking. A right click on a tile with an update installs it instead of opening the tile's menu (X and the Menu key
+open it; a right click on a tile with nothing to update still does), and while a newer portal is out a right click
+updates the portal. The red Portal x.y.z button beside the title, which opened the release page, is gone: the orange
+banner takes its place and installs the update itself.
+
+Changelog: 04-11-2026 23:21:37
+
+Fixed. The line at the bottom that names the keys and the controller's buttons is bold now (weight 700, was
+600), so it reads better from a distance (owner, 04-11-2026).
+
 Changelog: 04-11-2026 22:27:58
 
 Release 14.1.0. Pins sftp-v1.2.0.

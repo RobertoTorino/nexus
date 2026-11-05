@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The portal's sound (sounds/, made by tools/make_portal_sounds.py): the intro's, when the portal opens. Without an
-audio output, or without Qt's multimedia, the portal stays silent and says nothing."""
+"""The portal's sounds (sounds/): the intro's when the portal opens (made by tools/make_portal_sounds.py), and a
+short one on every controller action (blob.wav, owner 05-11-2026: made by the owner in Audacity, the suite's own,
+GPL-3.0-or-later as the rest; replace it with any short WAV of the same name). Without an audio output, or without
+Qt's multimedia, the portal stays silent and says nothing."""
 
 from __future__ import annotations
 
@@ -10,6 +12,7 @@ from PyQt6.QtCore import QUrl
 
 SOUNDS = Path(__file__).resolve().parent / "sounds"
 INTRO = "bigpicture"
+ACTION = "blob"                 # a controller action: a move, a button
 VOLUME = 0.7
 NO_OUTPUT = "No audio output was found, so the portal stays silent."
 

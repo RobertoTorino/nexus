@@ -2,8 +2,9 @@
 """tools/check_upstream.py on a fake GitHub: in step, a newer Decky release, a replaced asset, a changed service unit
 (at the pinned tag or only on main), no network; the same for shadPS4's pin, read from emulator.py; and HelixSR
 against what acquire.py knows (a newer release, another fallback in the notes, a fallback without its zip); the pins
-of PPSSPP, PCSX2, RPCS3 and DirectMesh against a newer release; and the report for the Upstream review
-issue."""
+of PPSSPP, PCSX2, RPCS3 and DirectMesh against a newer release; the builds of Vita3K and Xenia (a later build, a
+replaced or vanished AppImage); the USB Wi-Fi driver's pinned commits (branches past them, the mirror); and the report
+for the Upstream review issue."""
 
 from __future__ import annotations
 
@@ -53,7 +54,7 @@ def test_in_step():
     assert report.text().startswith(f"Decky Loader: pinned {LOADER.TAG}, latest stable {LOADER.TAG}. In step.")
 
 
-@pytest.mark.parametrize("latest, moved", [("v3.3.1", True), ("v3.4.0", True), ("v4.0.0", True),
+@pytest.mark.parametrize("latest, moved", [("v3.3.2", True), ("v3.4.0", True), ("v4.0.0", True),
                                            ("v3.2.10", False), (LOADER.TAG, False)])
 def test_a_newer_release(latest, moved):
     report = check_upstream.check(LOADER, github(latest=latest))
@@ -242,7 +243,8 @@ def test_directmesh_takes_its_own_tags_only():
         return lambda asked: json.dumps({url: releases}[asked]).encode()
     same = {"tag_name": f"directmesh-{pin.pinned}", "published_at": "2026-10-01T00:00:00Z"}
     other = [{"tag_name": "v99.0", "published_at": ""},                                   # not DirectMesh's tag
-             {"tag_name": "directmesh-v9.0", "prerelease": True, "published_at": ""}]
+             {"tag_name": "directmesh-v9.0", "prerelease": True, "published_at": ""},
+             {"tag_name": "directmesh-v131-auto-rdna1-975ec91", "published_at": ""}]     # a candidate, not v131
     assert check_upstream.check_release(pin, get([same, *other])).drift == []
     newer = {"tag_name": "directmesh-v9.1", "published_at": "2026-11-01T00:00:00Z", "html_url": "u"}
     report = check_upstream.check_release(pin, get([same, newer, *other]))
@@ -267,3 +269,113 @@ def test_the_report_for_the_issue(monkeypatch, tmp_path):
     assert check_upstream.main(["--report", str(report), "ppsspp", "pcsx2"]) == 2
     assert "Not checked this week: PCSX2 (GitHub answered 403)" in report.read_text()
     assert check_upstream.main(["--report"]) == 2
+
+
+# --- Vita3K and Xenia: the build each manager brings --------------------------------------------------------------
+
+def build_github(pin, latest: str, published: str, digest: str | None = "pinned", gone: bool = False):
+    api = check_upstream.API.format(repo=pin.repo)
+    asset = {"name": pin.asset, "digest": f"sha256:{pin.sha256}" if digest == "pinned" else digest}
+    answers = {f"{api}/releases/latest": {"tag_name": latest, "published_at": published, "html_url": f"u/{latest}"},
+               f"{api}/releases/tags/{pin.build}": {"assets": [] if digest == "no asset" else [asset]}}
+
+    def get(url: str) -> bytes:
+        if gone and url.endswith(f"/tags/{pin.build}"):
+            raise check_upstream.CheckError(f"{url}: GitHub answered 404")
+        return json.dumps(answers[url]).encode()
+    return get
+
+
+@pytest.mark.parametrize("name", ["vita3k", "xenia"])
+def test_the_builds_are_read_from_the_apps(name):
+    pin = check_upstream.load_build(name)
+    assert pin.build and len(pin.sha256) == 64 and pin.asset.endswith(".AppImage") and pin.repo.count("/") == 1
+    assert bool(pin.published) == (name == "xenia") and pin.where.startswith("BUILD, SHA256 in apps/")
+
+
+def test_vita3k_a_higher_build_number_is_newer():
+    pin = check_upstream.load_build("vita3k")
+    report = check_upstream.check_build(pin, build_github(pin, pin.build, "2026-10-01T00:00:00Z"))
+    assert report.drift == [] and "newest build" in report.text() and "In step." in report.text()
+    later = str(int(pin.build) + 3)
+    report = check_upstream.check_build(pin, build_github(pin, later, "2026-11-04T12:00:00Z"))
+    assert report.drift[0].startswith(f"build {later} is out (2026-11-04, 3 builds later): a new version of the Vita3K")
+    assert check_upstream.check_build(pin, build_github(pin, "continuous", "2026-11-04T12:00:00Z")).drift == []
+
+
+def test_xenia_a_build_published_later_is_newer():
+    pin = check_upstream.load_build("xenia")
+    assert check_upstream.check_build(pin, build_github(pin, pin.build, pin.published)).drift == []
+    assert check_upstream.check_build(pin, build_github(pin, "0000001", "2020-01-01T00:00:00Z")).drift == []
+    report = check_upstream.check_build(pin, build_github(pin, "abc1234", "2099-01-01T00:00:00Z"))
+    assert report.drift[0].startswith("build abc1234 is out (2099-01-01): a new version of the Xenia Manager")
+
+
+@pytest.mark.parametrize("name", ["vita3k", "xenia"])
+def test_the_pinned_appimage(name):
+    pin = check_upstream.load_build(name)
+    same = (pin.build, pin.published or "2026-10-01T00:00:00Z")
+    assert "still the pinned file" in check_upstream.check_build(pin, build_github(pin, *same)).fine[-1]
+    assert "without a SHA-256" in check_upstream.check_build(pin, build_github(pin, *same, digest=None)).fine[-1]
+    replaced = check_upstream.check_build(pin, build_github(pin, *same, digest="sha256:" + "0" * 64))
+    assert "the asset was replaced" in replaced.drift[0]
+    assert "any more" in check_upstream.check_build(pin, build_github(pin, *same, digest="no asset")).drift[0]
+    assert "is gone from GitHub" in check_upstream.check_build(pin, build_github(pin, *same, gone=True)).drift[0]
+
+
+# --- BC-250 USB Wi-Fi: the driver's pinned commits ----------------------------------------------------------------
+
+BUILDER = check_upstream.load_loader(check_upstream.BUILDER, "wdriver_builder_pin")
+UPSTREAM_API = check_upstream.API.format(repo="shenmintao/aic8800d80")
+MIRROR_API = check_upstream.API.format(repo="RobertoTorino/aic8800d80")
+
+
+def driver_github(ahead: dict[str, int] | None = None, mirror: str = "all"):
+    """*ahead*: commits past the pin per branch; *mirror*: "all", "none" (the repository missing) or a branch it
+    lacks."""
+    ahead = ahead or {}
+
+    def get(url: str) -> bytes:
+        for branch, pin in BUILDER.PINS.items():
+            if url == f"{UPSTREAM_API}/compare/{pin.commit}...{branch}":
+                n = ahead.get(branch, 0)
+                commits = [{"sha": f"{i:07d}" + "f" * 33, "commit": {"committer": {"date": "2026-11-02T06:38:11Z"}}}
+                           for i in range(n)]
+                return json.dumps({"ahead_by": n, "commits": commits, "html_url": f"c/{branch}"}).encode()
+            if url == f"{MIRROR_API}/commits/{pin.commit}":
+                if mirror == branch:
+                    raise check_upstream.CheckError(f"{url}: GitHub answered 422")
+                return b"{}"
+        if url == MIRROR_API:
+            if mirror == "none":
+                raise check_upstream.CheckError(f"{url}: GitHub answered 404")
+            return b"{}"
+        raise AssertionError(url)
+    return get
+
+
+def test_the_driver_pins_are_read_from_builder_py():
+    assert set(BUILDER.PINS) == {"main", "legacy-mcu1"}
+    assert all(len(p.commit) == 40 for p in BUILDER.PINS.values())
+
+
+def test_the_driver_in_step():
+    report = check_upstream.check_wdriver(BUILDER, driver_github())
+    assert report.drift == [] and "branch heads main " in report.text()
+    assert "the mirror has legacy-mcu1's pinned commit" in report.fine
+
+
+def test_a_branch_past_its_pin():
+    report = check_upstream.check_wdriver(BUILDER, driver_github({"legacy-mcu1": 24}))
+    [line] = report.drift
+    pin = BUILDER.PINS["legacy-mcu1"].commit[:7]
+    assert line.startswith(f"legacy-mcu1 is 24 commits past the pin {pin} (newest 0000023, 2026-11-02): a new "
+                           "version of BC-250 USB Wi-Fi could move PINS")
+    assert "legacy-mcu1 0000023" in report.latest and f"main {BUILDER.PINS['main'].commit[:7]}" in report.latest
+
+
+def test_the_mirror():
+    [line] = check_upstream.check_wdriver(BUILDER, driver_github(mirror="none")).drift
+    assert "is not on GitHub (missing, or private)" in line
+    [line] = check_upstream.check_wdriver(BUILDER, driver_github(mirror="main")).drift
+    assert "lacks main's pinned commit" in line

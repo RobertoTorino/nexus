@@ -3,16 +3,19 @@
 tabs, is gone), opened by a short animated intro with its own sound. The header, as an app's header: the suite's
 icon (a click opens the wiki), spanning the name with the version and the stage, a line that says what the open
 category is for, and a row of square pills: Refresh, Installed apps (installed / listed), Install all updates,
-Install all apps (both read Install, the counts in their tooltips), the Desktop icons (Yes or No; a click switches),
-Sound, the theme (a click goes to the next one), the wallpaper and Sys info (a small window with what the system reports about the board, sysinfo.py). Then a
-category strip (the category of the apps' icons, apps.toml) with the notice of updates beside it, and the tiles of
+Install all apps (both read Install, the counts in their tooltips), Sys info (a small window with what the system
+reports about the board, sysinfo.py) and ☰, the Settings page (owner, 04-11-2026, as the Windows Portable Suite's
+portal; the ☰ button on the controller too, B back): the Desktop icons (Yes or No; a click switches), Sound, the
+theme (a click goes to the next one) and the wallpaper, each pill with a short line. Then a category strip (the category of the apps' icons, apps.toml) with the notice of updates beside it, and the tiles of
 the open category; check is the first tile on Sustainable (owner, 20-10-2026). The portal always opens on the
 first category (owner, 20-10-2026). Everything is reached with the keyboard, the mouse or a controller
 (gamepad.py).
 
 A tile: a click, Enter or A opens the app (an app with two windows asks which one), or offers to install one that
-is not installed. Its menu (a right click, the Menu key or X) holds every action: Open, Install (Update, Reinstall)
-and Uninstall. Install, update and uninstall run the app's own installer in a terminal window (they may ask for the
+is not installed. Its menu (the Menu key or X) holds every action: Open, Install (Update, Reinstall) and Uninstall.
+A right click or Y updates (owner, 04-11-2026, as the Windows Portable Suite's portal): the portal itself while a
+newer one is out, else the app's update or reinstall; a right click on a tile with nothing to update opens its
+menu. Install, update and uninstall run the app's own installer in a terminal window (they may ask for the
 sudo password and print what they do); the portal watches for the exit file the terminal writes and then refreshes.
 A terminal whose installer ended well closes by itself (owner, 26-10-2026); one that failed stays open with what
 happened until Enter is pressed. An app that changes the board (unlocks, governor, ACPI) gets a warning before it
@@ -25,7 +28,9 @@ version of it: a portal from a release compares that with the version it pins, a
 without the version needs a reinstall); a portal from a checkout shows it as installed, whatever the pin, since the
 checkout is what it installs. The red notice beside the category strip counts them; a click lists each one, and
 choosing one goes to its tile. A category's name counts those on it, so none goes unseen on a category that is not
-open. At start the portal looks for a newer portal release on GitHub (which is how newer app versions arrive).
+open. At start the portal looks for a newer portal release on GitHub (which is how newer app versions arrive): an
+orange banner on the intro and beside the category strip says so, and Y (or a click on the banner) downloads it,
+checks it, runs its install.sh in a terminal and starts the new portal.
 
 Install all updates: every app the notice names (an update or a reinstall), one after the other, each in its own
 terminal as a single install. An installer that asks for the sudo password waits for it in its terminal, and so
@@ -71,8 +76,8 @@ from bc250_core.theme import ORANGE, RED, THEMES, muted, save_theme_name, theme_
 from bc250_core.updates import ReleaseInfo, UpdateChecker, version_tuple
 from bc250_core.widgets import Pill
 
-from . import audio, desktop_icons, glyphs, sysinfo, wallpaper
-from .bigpicture import BigPicture, HeaderPill, Intro
+from . import audio, desktop_icons, glyphs, keyboard, sysinfo, wallpaper
+from .bigpicture import INTRO_BANNER, UPDATE_BANNER, BigPicture, HeaderPill, Intro, MenuPill
 from .gamepad import Gamepad
 from .looks import VEIL
 from . import APP_ICONS, APP_ID, APP_NAME, INFO, STAGE, STAGE_NOTE, __version__
@@ -81,14 +86,21 @@ from .portal_update import PortalUpdate
 
 PROGRESS_MS = 500                       # how often a download's size is shown (a 90 MB release looked like a hang)
 CONFIRM_MS = 5000                       # a second Escape (B) within this closes the portal while something runs
-from .sources import Records, SourceError, Sources, installed_from, is_installed, is_local, local_record, local_version
+from .sources import (Records, SourceError, Sources, fetch_portal, installed_from, is_installed, is_local, local_record,
+                      local_version)
 
 POLL_MS = 1000
+WAIT_UPDATE = "The portal's update starts once the download or install that runs now has finished."
 VEIL_MAX = 90                   # the slider's end: the picture still shows; "No wallpaper" takes it away
 VEIL_STEP = 5
 VEIL_KEY = "portal/wallpaper_transparency"
 DESKTOP_ICONS_KEY = "portal/desktop_icons"
 SOUND_KEY = "portal/sound"
+# The Settings page: a short line beside each pill (Icons on Desktop, Sound, the theme, the wallpaper)
+SETTING_LINES = ("An icon on the Desktop for every installed app, or only the portal's.",
+                 "The intro's sound, and a short one for each controller button.",
+                 "The look of every app in the suite, from its next start.",
+                 "A picture behind the portal, and how much of it shows through.")
 VALUE_PX = 300                  # a value in the Sys info window wraps beyond this width
 SYSINFO_OPACITY = 85            # % of the window color behind the Sys info text: what lies behind shows through
 LAUNCH_ICON_FILES = {("compute", "Unlock"): "cu-unlock", ("cores", "Unlock"): "cores-unlock"}  # else the app's
@@ -346,6 +358,11 @@ class MainWindow(QMainWindow):
         self.worker.finished.connect(self._prepared)
         self._job: tuple[AppEntry, str] | None = None
         self._withdrawal_tried: set[str] = set()        # withdrawn apps the portal tried to remove this time
+        self.portal_update: PortalUpdate | None = None  # a newer portal release, or a new build of this version
+        self.portal_stage = ""                          # its own update: "download", "install" or "" (none runs)
+        self.portal_exit: Path | None = None            # the exit file of its install.sh's terminal
+        self.portal_fetcher = UpdateChecker(self)       # downloads and checks it off the GUI thread
+        self.portal_fetcher.finished.connect(self._portal_fetched)
         self.batch: list[AppEntry] | None = None        # Install all updates: the apps still to go; None: no batch
         self.batch_what = "updates"                     # the batch's word: "updates" or "apps" (Install all apps)
         self.batch_pill: Pill | None = None             # the pill that shows the batch's progress
@@ -355,6 +372,7 @@ class MainWindow(QMainWindow):
         self.sounds = sounds or audio.Sounds()
         self.sounds.enabled = self.settings.value(SOUND_KEY, True, type=bool)
         self.gamepad = gamepad or Gamepad(self)
+        self.keyboard = keyboard.OnScreenKeyboard()                       # R3 (tests give it a fake bus)
         self.gamepad.action.connect(self._gamepad_action)
         self.intro: Intro | None = None
         self.installed = installed
@@ -367,6 +385,8 @@ class MainWindow(QMainWindow):
         self.big.set_veil(self.transparency())
         self.big.open_requested.connect(self._open_tile)
         self.big.menu_requested.connect(self._tile_menu)
+        self.big.update_requested.connect(self._tile_update)
+        self.big.update_banner.clicked.connect(self.portal_update_action)
         self.big.wiki_requested.connect(self.open_wiki)
         self.big.bar.currentChanged.connect(self._category_changed)
         self.big.notice.clicked.connect(self._notice_menu)
@@ -385,14 +405,8 @@ class MainWindow(QMainWindow):
         self.big.set_about(f"<p><b>{APP_NAME} {__version__}</b> · core {CORE_VERSION}"
                            + (f"<br>{escape(STAGE_NOTE)}" if STAGE else "") + f"</p><p>{escape(source)}</p>")
 
-        # The title row's red buttons: a newer portal release on GitHub, and a restart into a portal installed
-        # while this one runs.
-        self.portal_button = QPushButton()
-        self.portal_button.setStyleSheet(f"color:{RED}; font-weight:700; font-size:16px;")
-        self.portal_button.clicked.connect(self._open_portal_release)
-        self.portal_button.hide()
-        self.big.add_title_widget(self.portal_button)
-        self.portal_release: ReleaseInfo | None = None
+        # The title row's red button: a restart into a portal installed while this one runs (a newer portal release
+        # on GitHub is the orange banner beside the category strip).
         self.restart_button = QPushButton()
         self.restart_button.setStyleSheet(f"color:{RED}; font-weight:700; font-size:16px;")
         self.restart_button.clicked.connect(self.restart_portal)
@@ -426,15 +440,25 @@ class MainWindow(QMainWindow):
                                        "The board, BIOS, CPU, GPU, memory, drives and OS, as the system reports them.")
         self.sysinfo_pill.clicked.connect(self.show_sysinfo)
         self.sysinfo_window: SysInfoDialog | None = None
+        self.settings_pill = MenuPill("☰", "Settings", "Desktop icons, sound, theme and wallpaper. The ☰ button on "
+                                        "the controller opens them too.")
+        self.settings_pill.clicked.connect(self.toggle_settings)
+        # The settings have a page of their own behind ☰ (owner, 04-11-2026, as the Windows Portable Suite's portal);
+        # what acts on the apps stays in the header.
         self.header_pills = [self.refresh_pill, self.installed_pill, self.updates_pill, self.apps_pill,
-                             self.icons_box, self.sound_box, self.theme_pill, self.wallpaper_pill, self.sysinfo_pill]
+                             self.sysinfo_pill, self.settings_pill]
         self.big.place_pills(self.header_pills)
+        self.setting_pills = [self.icons_box, self.sound_box, self.theme_pill, self.wallpaper_pill]
+        self.big.place_settings(list(zip(self.setting_pills, SETTING_LINES)))
 
         self._show_sound()
         self._show_wallpaper()
         self.poll = QTimer(self)
         self.poll.setInterval(POLL_MS)
         self.poll.timeout.connect(self._check_pending)
+        self.portal_poll = QTimer(self)                 # the portal's own install.sh, in its terminal
+        self.portal_poll.setInterval(POLL_MS)
+        self.portal_poll.timeout.connect(self._check_portal_install)
         self.marked: list[tuple[AppEntry, str]] = []
         self.notice_lines: list[tuple[str, str]] = []       # the notice's menu: the app's key, its line
         self.outside_lines: list[tuple[str, str]] = []
@@ -458,7 +482,10 @@ class MainWindow(QMainWindow):
 
     # ------------------------------------------------------------------------------------------- state
     def busy(self) -> bool:
-        return self.pending is not None or self._job is not None
+        return self.pending is not None or self._job is not None or bool(self.portal_stage)
+
+    def downloading(self) -> bool:
+        return self._job is not None or self.portal_stage == "download"
 
     def refresh(self) -> None:
         marked: list[tuple[AppEntry, str]] = []
@@ -476,6 +503,7 @@ class MainWindow(QMainWindow):
         self.show_notice(marked)
         self.show_counts()
         self.check_installed()
+        self.show_update_banner()
 
     def downloaded_text(self, entry: AppEntry) -> str:
         """How much of the release has come in: " 40 MB", or "" before the first bytes (the part file the download
@@ -619,31 +647,144 @@ class MainWindow(QMainWindow):
         menu.deleteLater()
 
     def _portal_checked(self, result: object) -> None:
-        """A newer portal release brings newer pinned app versions; name them and offer its release page."""
+        """A newer portal release (newer pinned app versions come with it), or a new build of this version: the
+        orange banner, on the intro too while it plays."""
         update = result if isinstance(result, PortalUpdate) else PortalUpdate(result) \
             if isinstance(result, ReleaseInfo) else None
         release = update.release if update else None
-        if release is None or release.error or not release.version:
+        if release is None or release.error or not release.version or not release.tag:
             return                                      # offline or no release yet: nothing to announce
         if version_tuple(release.version) < version_tuple(__version__):
             return
         new_build = version_tuple(release.version) == version_tuple(__version__)
         if new_build and not (self.build is not None and update.sha256 and update.sha256 != self.build):
             return                                      # this version, and the build this portal came from
-        self.portal_release = release
-        summary = update.summary()
-        self.portal_button.setText(f"● Portal {release.version}" + (": a new build of this version" if new_build
-                                                                   else f": {summary}" if summary else " available"))
+        self.portal_update = update
+        if self.intro is not None:
+            self.intro.set_banner(INTRO_BANNER)
+        self.show_update_banner()
+
+    def update_available(self) -> bool:
+        """A newer portal is out, and was not installed by hand meanwhile (that one offers the restart)."""
+        return self.portal_update is not None and self.restart_button.isHidden()
+
+    def portal_tooltip(self) -> str:
+        update = self.portal_update
+        assert update is not None
+        release = update.release
+        new_build = version_tuple(release.version) == version_tuple(__version__)
+        what = (f"Portal {release.version}: a new build of this version" if new_build
+                else f"Portal {release.version}: {update.summary()}" if update.summary()
+                else f"Portal {release.version} is available")
+        released = f" Released {release.published}." if release.published else ""
         if update.changes:
-            tip = (f"Released {release.published}. App updates come with the portal: once it is updated, the "
-                   f"installed apps among these show Update.\n\n{update.details()}\n\nClick to open its release page.")
+            brings = ("App updates come with the portal: once it is updated, the installed apps among these show "
+                      f"Update.\n\n{update.details()}")
         elif update.changes == []:
-            tip = f"Released {release.published}. It pins the same app versions as this portal. Click to open its page."
+            brings = "It pins the same app versions as this portal."
         else:
-            tip = (f"Released {release.published}. A new portal version pins newer app versions; "
-                   "click to open its release page.")
-        self.portal_button.setToolTip(tip)
-        self.portal_button.setVisible(self.restart_button.isHidden())
+            brings = "A new portal version pins newer app versions."
+        return (f"{what}.{released} {brings}\n\nPress Y, or click here, to update: the portal downloads it, checks "
+                "it, runs its installer in a terminal (it asks for your password there) and starts again.")
+
+    def show_update_banner(self) -> None:
+        """The banner beside the category strip: while a newer portal is out, UPDATE_BANNER; while it downloads and
+        installs, how far it is; else none."""
+        if self.portal_stage == "download":
+            size = self.portal_downloaded()
+            self.big.update_banner.set_banner(f"DOWNLOADING THE UPDATE…{size}", "The portal's update downloads.")
+        elif self.portal_stage == "install":
+            self.big.update_banner.set_banner("INSTALLING THE UPDATE…", "The portal's installer runs in its terminal "
+                                              "window; when it asks for your password, type it there. The portal "
+                                              "starts again when it has ended.")
+        elif self.update_available():
+            self.big.update_banner.set_banner(UPDATE_BANNER, self.portal_tooltip())
+        else:
+            self.big.update_banner.set_banner("")
+
+    def portal_work(self) -> Path:
+        return self.sources.work.parent / "portal-update"
+
+    def portal_downloaded(self) -> str:
+        """How much of the portal's tarball has come in: " 40 MB", or "" before the first bytes."""
+        tag = self.portal_update.release.tag if self.portal_update else ""
+        try:
+            size = (self.portal_work() / f"{tag}.tar.gz.part").stat().st_size
+        except OSError:
+            return ""
+        return f" {size / 1_000_000:.0f} MB" if size else ""
+
+    def portal_update_action(self) -> None:
+        """Y, a right click or a click on the banner while a newer portal is out: its download and install. While an
+        app is downloaded or installed it waits, and says so."""
+        if not self.update_available() or self.portal_stage:
+            return
+        if self.busy():
+            QMessageBox.information(self, APP_NAME, WAIT_UPDATE)
+            return
+        self.install_portal_update()
+
+    def install_portal_update(self) -> None:
+        """Download the newer portal and check it as an app's release (its sha256 from the release's SHA256SUMS),
+        then run its install.sh in a terminal; when that ends well, the new portal starts (owner, 04-11-2026: as the
+        Windows Portable Suite's portal, no browser needed)."""
+        update, download = self.portal_update, self.sources.download
+        if update is None or download is None:
+            return
+        tag, want, work, repo = update.release.tag, update.sha256, self.portal_work(), self.sources.repo_url
+        self.portal_stage = "download"
+        self.progress_timer.start()
+        self.refresh()
+
+        def fetch() -> Path | Exception:
+            try:
+                return fetch_portal(download, repo, tag, work, want)
+            except (SourceError, OSError) as exc:
+                return exc
+        self.portal_fetcher.start(fetch)
+
+    def _portal_fetched(self, result: object) -> None:
+        if self.portal_stage != "download":
+            return
+        if self._job is None:                           # no app's download to count either
+            self.progress_timer.stop()
+        if isinstance(result, Exception) or result is None:
+            self.portal_stage = ""
+            QMessageBox.critical(self, APP_NAME, f"The portal's update could not be prepared:\n\n{result}")
+            self.refresh()
+            return
+        folder = Path(result)
+        exit_file = Path(tempfile.gettempdir()) / f"bc250-portal-update-{uuid.uuid4().hex}.exit"
+        try:
+            launch_in_terminal(shell_line(folder, ("./install.sh",)), exit_file=exit_file, keep_open="on_error")
+        except (RuntimeError, OSError) as exc:
+            self.portal_stage = ""
+            QMessageBox.critical(self, APP_NAME, f"Could not open a terminal for the portal's installer:\n\n{exc}"
+                                 f"\n\nRun it by hand instead:\n{shell_line(folder, ('./install.sh',))}")
+            self.refresh()
+            return
+        self.portal_stage, self.portal_exit = "install", exit_file
+        self.portal_poll.start()
+        self.refresh()
+
+    def _check_portal_install(self) -> None:
+        """The portal's install.sh ended: start the new portal; when it failed, its terminal shows why."""
+        if self.portal_exit is None:
+            self.portal_poll.stop()
+            return
+        try:
+            status = self.portal_exit.read_text(encoding="utf-8").strip()
+        except OSError:
+            return                                      # still running
+        self.portal_poll.stop()
+        self.portal_exit.unlink(missing_ok=True)
+        self.portal_exit, self.portal_stage = None, ""
+        if status == "0":
+            self.restart_portal()
+            return
+        self.refresh()
+        QMessageBox.warning(self, APP_NAME, f"The portal's update ended with exit status {status or '?'}. Its "
+                            "terminal window shows what happened; Y tries again.")
 
     def check_installed(self) -> None:
         """A newer portal installed while this one runs (its install.sh, in a terminal): this window still runs the
@@ -664,7 +805,6 @@ class MainWindow(QMainWindow):
             "app versions, and the red dot on the apps it updates."
             + ("\n\nAfter the install or uninstall that is running now." if busy else ""))
         self.restart_button.show()
-        self.portal_button.hide()                       # the newer portal is here already
 
     def restart_portal(self) -> None:
         """Start the portal again, after this one is gone (it allows one window), and close this one."""
@@ -683,10 +823,6 @@ class MainWindow(QMainWindow):
             self.check_installed()                      # back from the terminal that installed a new portal
             self.show_notice(self.marked)               # back from an app that checked its program's newest
         super().changeEvent(event)
-
-    def _open_portal_release(self) -> None:
-        if self.portal_release is not None:
-            QDesktopServices.openUrl(QUrl(self.portal_release.url))
 
     @staticmethod
     def open_wiki() -> None:
@@ -709,7 +845,7 @@ class MainWindow(QMainWindow):
             show = bool(desktop_icons.on_desktop(self.desktop, self.menu)) and QMessageBox.question(
                 self, APP_NAME, "Keep the app icons on the Desktop?\n\nThe portal starts every app, so its own icon "
                 "is enough. The apps stay in the app menu either way, and you can change this any time with the "
-                "\"Icons on Desktop\" pill at the top of the portal.",
+                "\"Icons on Desktop\" pill on the portal's Settings page (☰).",
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                 QMessageBox.StandardButton.Yes) == QMessageBox.StandardButton.Yes
             self.settings.setValue(DESKTOP_ICONS_KEY, show)
@@ -886,13 +1022,26 @@ class MainWindow(QMainWindow):
         self.intro = None
         self.big.focus_first()
 
+    def toggle_keyboard(self) -> None:
+        """R3: Bazzite's on-screen keyboard shown or hidden; when the desktop has none, the window says what to do."""
+        try:
+            self.keyboard.toggle()
+        except keyboard.KeyboardError as exc:
+            QMessageBox.information(self, APP_NAME, str(exc))
+
+    def toggle_settings(self) -> None:
+        """The ☰ pill or the controller's ☰ button: the Settings page, or back to the tiles."""
+        self.big.show_settings(not self.big.in_settings())
+
     def escape(self) -> None:
-        """Escape, or B with nothing open: skip the intro while it plays, else close the portal; while a download or
-        an install runs it asks first (owner, 03-11-2026, as the Windows Portable Suite's portal since 28-10-2026):
-        the download stops, or the installer finishes in its terminal, unrecorded. A second press within CONFIRM_MS
-        closes."""
+        """Escape, or B with nothing open: skip the intro while it plays, leave the Settings page, else close the
+        portal; while a download or an install runs it asks first (owner, 03-11-2026, as the Windows Portable Suite's
+        portal since 28-10-2026): the download stops, or the installer finishes in its terminal, unrecorded. A second
+        press within CONFIRM_MS closes."""
         if self.intro is not None:
             self.intro.skip()
+        elif self.big.in_settings():
+            self.big.show_settings(False)               # B on the Settings page goes back to the tiles
         elif self.busy() and not self.close_asked:
             self.ask_close()
         else:
@@ -901,7 +1050,7 @@ class MainWindow(QMainWindow):
     def ask_close(self) -> None:
         self.close_asked = True
         self.banner_before = self.big.banner.text() if not self.big.banner.isHidden() else ""
-        what = ("the download stops" if self._job is not None else
+        what = ("the download stops" if self.downloading() else
                 "the installer finishes in its terminal window, unrecorded")
         self.big.set_banner(f"Press Escape (or B) again to close the portal: {what}.")
         self.confirm_timer.start()
@@ -916,7 +1065,7 @@ class MainWindow(QMainWindow):
         """The window closed by the desktop (its close button, Alt+F4) while a download or an install runs asks
         first; Escape and B ask through escape()."""
         if event.spontaneous() and self.busy() and not self.close_asked:
-            what = ("the download stops" if self._job is not None else
+            what = ("the download stops" if self.downloading() else
                     "the installer finishes in its terminal window, but the portal does not record it")
             answer = QMessageBox.question(self, APP_NAME, f"Close the portal? {what[0].upper()}{what[1:]}.")
             if answer != QMessageBox.StandardButton.Yes:
@@ -1002,6 +1151,25 @@ class MainWindow(QMainWindow):
         elif kind == "show":
             self.show_app(key)
 
+    def update_action(self, entry: AppEntry | None) -> bool:
+        """Y, or a right click on a tile: the portal's own update while a newer portal is out, else the app's update
+        or reinstall (with the board warning for an app that changes the board). False when there is nothing to
+        update."""
+        if self.update_available():
+            self.portal_update_action()
+            return True
+        state = self.states[entry.key] if entry is not None else None
+        if state is None or not (state.update or state.reinstall) or entry.withdrawn:
+            return False
+        if not state.busy:
+            self.install(entry)
+        return True
+
+    def _tile_update(self, entry: AppEntry) -> None:
+        """A right click on a tile: its update; with nothing to update, its menu."""
+        if not self.update_action(entry):
+            self._tile_menu(entry)
+
     def _tile_menu(self, entry: AppEntry) -> None:
         tile = self.big.tiles[entry.key]
         menu = self.tile_menu(entry)
@@ -1015,6 +1183,10 @@ class MainWindow(QMainWindow):
             return
         if self.intro is not None:
             self.intro.skip()
+            return
+        self.sounds.play(audio.ACTION)                  # every controller action (owner, 05-11-2026)
+        if action == "keyboard":                        # R3, in a dialog too: where text is typed
+            self.toggle_keyboard()
             return
         popup, dialog = QApplication.activePopupWidget(), QApplication.activeModalWidget()
         if popup is not None or dialog is not None:
@@ -1042,6 +1214,11 @@ class MainWindow(QMainWindow):
             tile = self.big.focused_tile()
             if tile is not None:
                 self._tile_menu(self.states[tile.key].entry)
+        elif action == "settings":
+            self.toggle_settings()
+        elif action == "update":
+            tile = self.big.focused_tile()
+            self.update_action(self.states[tile.key].entry if tile is not None else None)
         elif action in ("previous", "next"):
             self.big.change_category(-1 if action == "previous" else 1)
         elif action == "back":
@@ -1243,8 +1420,13 @@ class MainWindow(QMainWindow):
     def _close_window(self, event) -> None:
         if self.intro is not None:
             self.intro.skip()
+        try:
+            self.keyboard.restore()                     # the user's keyboard mode back, when R3 changed it
+        except keyboard.KeyboardError:
+            pass
         self.gamepad.stop()
         self.sounds.stop()
         self.worker.stop(2000)
         self.portal_checker.stop(2000)
+        self.portal_fetcher.stop(2000)
         super().closeEvent(event)

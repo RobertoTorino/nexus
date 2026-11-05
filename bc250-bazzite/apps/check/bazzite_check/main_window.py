@@ -30,6 +30,7 @@ from .ingame import InGamePage
 from .privacy import Redactor
 from .settings import AppSettings, SettingsOverlay
 from .readme import ReadmeView
+from .results_dialog import ResultsCardDialog
 from .runhistory import HistoryPage
 from .livestatus import LiveStatus
 from .logstore import RunLog
@@ -322,8 +323,17 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage("sudo authentication forgotten: the next run asks for the password.", 8000)
 
     def _print_results(self) -> None:
-        """Settings > General > Print results: save the shareable results card as a PNG."""
-        pix = results_card(self.stats)
+        """Settings > Print results: the shareable results card in a preview, with Save…, Copy and Share (owner,
+        04-11-2026); Share writes it to the results folder on the Desktop."""
+        dialog = ResultsCardDialog(results_card(self.stats), self._save_results, DESKTOP_DIR, parent=self)
+        dialog.shared.connect(lambda text: self.statusBar().showMessage(text, 8000))
+        self.results_dialog = dialog                    # tests reach it; exec() blocks until it is closed
+        dialog.exec()
+        dialog.deleteLater()
+
+    def _save_results(self, pix) -> None:
+        """The preview's Save…: the card as a PNG where the user chooses, then its preview in the window and the
+        image opened (what Print results did before the preview)."""
         downloads = Path.home() / "Downloads"
         default = str((downloads if downloads.is_dir() else Path.home()) / "results.png")
         path, _ = QFileDialog.getSaveFileName(self, "Save results card", default, "PNG image (*.png)")

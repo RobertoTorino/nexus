@@ -95,6 +95,7 @@ nav:
       - Xenia Manager: apps/xenia.md
       - Decky Loader Manager: apps/decky.md
       - Bazzite DatStation: apps/datstation.md
+      - SSD Check: apps/ssd.md
   - Development:
       - development/index.md
       - Architecture and consistency: development/architecture.md

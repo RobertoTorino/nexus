@@ -51,7 +51,8 @@ stands, short, with more in their tooltips, and then come three tabs: **Your gam
 - **Game folders**: where the app looks for games, `~/Games/PS4` and a removable drive's `Games/PS4`, each game
   in a folder of its own (the paths and how many games were found are in the tooltip). The app makes them
   shadPS4's own game folders too, so shadPS4's window lists the games. A game may sit up to five folders deep.
-  **Install** unpacks a package file into one of them: see [Extract PKG](#extract-pkg).
+  A package file (`.pkg`) put in one of them waits under **Your games** to be unpacked: see
+  [Packages](#packages). **Install** opens [Extract PKG](#extract-pkg) for a package anywhere else.
 - **shadNet**: the name of the account shadPS4 signs in with, **Off** while none is set up, **—** while shadPS4 has
   not run yet (the server is in the tooltip). **Account** sets it up: see [shadNet](#shadnet).
 
@@ -151,6 +152,30 @@ Steam started the game.
 
 A game started from Steam reads your controllers itself, a DualShock 4 or DualSense with its touchpad and motion
 sensors. [How it works](#how-it-works) explains both.
+
+### Packages
+
+A package (`.pkg`) is how the PS4 gets a game bought digitally, or its update. Put it in one of the game folders
+(`~/Games/PS4`, or a drive's `Games/PS4`), anywhere up to five folders deep, and press **Refresh**: it is a row of its
+own under the games, **PKG** for a game to unpack before it plays, **PKG update** for an update of a game you have.
+Hover over the row to see where it goes.
+
+- **Unpack all** unpacks every package that waits, one after the other: the games first, then the updates. **Unpack**
+  unpacks only the chosen one. The line under the tabs says which one of how many and counts its files; a large game
+  takes minutes.
+- **A game** goes into a folder named by its ID, `CUSA00001`, beside its package.
+- **An update** goes beside its game, wherever that is, into a folder named like the game's with `-UPDATE`, which
+  shadPS4 lays over the game when it starts; the game's folder stays as it was. An update newer than the one there
+  replaces it: the new one is unpacked first, and the old one goes only when every file of the new one was written.
+  An update whose game is still a package waits for it: **Unpack** on it says so, and **Unpack all** unpacks both. An
+  update without its game is unpacked as a game of its own. Add-on content is not listed: use Extract PKG for it.
+- When the packages are unpacked, a window lists them, each with its size: a package takes as much room as its game
+  and is not needed to play. Untick what you want to keep, then **Delete marked**; **Cancel** keeps them all. A
+  package that was unpacked whole is no longer listed, kept or not; one with files that could not be written stays,
+  with `extraction_errors.txt` naming them in its folder.
+
+The same extractor works in the [Extract PKG](#extract-pkg) window, which also previews a package, salvages a damaged
+one, compares two extractions and renames a package to its content ID.
 
 ### Settings
 
@@ -431,13 +456,13 @@ Installing the app also removes the standalone Bazzite pkgxtractor, whose packag
 
 ## Disclaimer
 
-Nexus and its suites are independent community projects, not affiliated with or endorsed by AMD, ASRock, the Bazzite
-/ Universal Blue project, Sony, Microsoft, Nintendo, Valve, or the makers of the emulators and the other programs the
-apps work with. BC-250 is AMD's product name and Bazzite the Universal Blue project's. PlayStation, PS4, PS5, PS3,
-PS2, PSP, PS Vita, PSN, DualSense and Remote Play are Sony's; XBOX, XBOX 360, XBOX Cloud Gaming, Game Pass and
-Windows are Microsoft's; Steam, Steam Deck and Big Picture are Valve's; the names of Nintendo's consoles, of the
-emulators (shadPS4, RPCS3, PPSSPP, PCSX2, Vita3K, Xenia) and of Decky Loader, HelixSR and DirectMesh belong to their
-owners. The suites use them only to say what their apps work with.
+Nexus and its suites are independent community projects, not affiliated with or endorsed by AMD, ASRock, the Bazzite /
+Universal Blue project, Sony, Microsoft, Valve, or the makers of the emulators and the other programs the apps work
+with. BC-250 is AMD's product name and Bazzite the Universal Blue project's. PlayStation, PS4, PS5, PS3, PS2, PSP, PS
+Vita, PSN, DualSense and Remote Play are Sony's; XBOX, XBOX 360, XBOX Cloud Gaming, Game Pass and Windows are
+Microsoft's; Steam, Steam Deck and Big Picture are Valve's; the names of the emulators (shadPS4, RPCS3, PPSSPP, PCSX2,
+Vita3K, Xenia) and of Decky Loader, HelixSR and DirectMesh belong to their owners. The suites use them only to say what
+their apps work with.
 
 ## License
 

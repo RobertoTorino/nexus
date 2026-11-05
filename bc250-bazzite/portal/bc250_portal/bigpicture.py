@@ -2,7 +2,9 @@
 """The portal's view (owner, 01-11-2026: the one view; Suite Desktop Mode, the window of tabs, is gone), as Steam's
 Big Picture is for Steam: fullscreen, for a TV and a controller as much as for a desk. Large icons and type, the
 header with the suite's icon, its name and the square pills, a category strip, and a focus that moves with the
-arrow keys, a controller's d-pad or its stick (gamepad.py), with the mouse working as always.
+arrow keys, a controller's d-pad or its stick (gamepad.py), with the mouse working as always. The Settings page (the
+☰ pill or the controller's ☰ button, owner 04-11-2026, as the Windows Portable Suite's portal) takes the place of
+the category strip and the tiles: the pills of the settings, each with a short line, under the same header.
 
 A short animated intro (Intro) plays before the portal shows itself, with its sound; any key, click or button skips
 it."""
@@ -45,7 +47,16 @@ SHORT_HINTS = {
 KEYS = {Qt.Key.Key_Up: "up", Qt.Key.Key_Down: "down", Qt.Key.Key_Left: "left", Qt.Key.Key_Right: "right"}
 CATEGORY_KEYS = {Qt.Key.Key_PageUp: "previous", Qt.Key.Key_Q: "previous", Qt.Key.Key_PageDown: "next",
                  Qt.Key.Key_E: "next"}
-LEGEND = "A / Enter  Open      X / Right click  App menu      LB / RB  Category      B / Esc  Close the portal"
+# Y and a right click update (owner, 04-11-2026, as the Windows Portable Suite's portal): the portal while a newer
+# one is out, else the focused app; X and the Menu key hold the app's menu.
+LEGEND = ("A / Enter  Open    Y / Right click  Update    X / Menu key  Menu    LB / RB  Category"
+          "    ☰  Settings    R3  Keyboard    B / Esc  Close")
+SETTINGS_LEGEND = "A / Enter  Change    ☰ / B / Esc  Back"
+SETTINGS_HINT = "The portal's settings."         # the line under the title on the Settings page
+SETTING_H = 96                  # a pill on the Settings page: as wide as a header pill, this high
+UPDATE_BANNER = "UPDATE AVAILABLE, PRESS Y TO UPDATE"       # beside the category strip while a newer portal is out
+INTRO_BANNER = "PORTAL UPDATE AVAILABLE"                    # on the intro, when the update check answers in time
+BANNER_IN = 0.08                # the intro's banner fades in over this part of the intro
 
 
 def next_in_direction(current: QRect, others: list[QRect], direction: str) -> int | None:
@@ -158,10 +169,12 @@ class HeaderPill(Pill):
 
 class BigTile(QAbstractButton):
     """One app: a large icon, its name, and its state under it. The focus is a bright frame around the whole tile.
-    A click, Enter or A opens it (clicked); the Menu key, a right click or X asks for its menu (menu_requested)."""
+    A click, Enter or A opens it (clicked); the Menu key or X asks for its menu (menu_requested), a right click or Y
+    for an update (update_requested: the window's, owner 04-11-2026)."""
 
     navigate = pyqtSignal(str)
     menu_requested = pyqtSignal()
+    update_requested = pyqtSignal()
 
     def __init__(self, key: str, parent: QWidget | None = None):
         super().__init__(parent)
@@ -218,7 +231,7 @@ class BigTile(QAbstractButton):
 
     def contextMenuEvent(self, event) -> None:  # noqa: N802 (Qt override)
         self.setFocus()
-        self.menu_requested.emit()
+        self.update_requested.emit()
 
     def focusInEvent(self, event) -> None:  # noqa: N802 (Qt override)
         super().focusInEvent(event)
@@ -284,6 +297,14 @@ class BigTile(QAbstractButton):
         painter.end()
 
 
+class MenuPill(HeaderPill):
+    """The ☰ pill, its glyph larger than a pill's value: it opens the Settings page."""
+
+    def set_scale(self, scale: float) -> None:
+        super().set_scale(scale)
+        self.value.setStyleSheet(header_font() + f"font-size:{max(22, round(36 * scale))}px; font-weight:800;")
+
+
 class NoticeButton(QToolButton):
     """A short colored line beside the category strip (the updates the portal found, the ones outside the suite); a
     click, Enter or A opens the list of them as a menu. Hidden while there is nothing to say."""
@@ -310,6 +331,31 @@ class NoticeButton(QToolButton):
         self.setVisible(bool(text))
 
 
+class UpdateBanner(QToolButton):
+    """The orange banner beside the category strip while a newer portal is out (owner, 04-11-2026, as the Windows
+    Portable Suite's portal): white capitals on the suite's orange; a click, Enter or A does what Y does. While the
+    update downloads and installs it says how far it is. Hidden while there is nothing to say."""
+
+    def __init__(self):
+        super().__init__()
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.set_scale(1.0)
+        self.hide()
+
+    def set_scale(self, scale: float) -> None:
+        self.setStyleSheet(
+            f"QToolButton {{ color:white; background:{ORANGE}; font-weight:800; font-size:{max(13, round(18 * scale))}px;"
+            f" border:2px solid {ORANGE}; border-radius:{round(8 * scale)}px;"
+            f" padding:{round(4 * scale)}px {round(14 * scale)}px; }}"
+            "QToolButton:hover, QToolButton:focus { border-color:white; }")
+
+    def set_banner(self, text: str, tooltip: str = "") -> None:
+        self.setText(text)
+        self.setToolTip(tooltip)
+        self.setVisible(bool(text))
+
+
 class BigPicture(Backdrop):
     """The view: the header (the suite's icon, its name with the version and the stage, the line under it, the
     square pills), the category strip with the notices beside it, the tiles of the open category, and under them
@@ -318,6 +364,7 @@ class BigPicture(Backdrop):
 
     open_requested = pyqtSignal(object)         # an AppEntry
     menu_requested = pyqtSignal(object)         # an AppEntry
+    update_requested = pyqtSignal(object)       # an AppEntry: a right click on its tile
     wiki_requested = pyqtSignal()
 
     def __init__(self, entries, categories: dict[str, str], hints: dict[str, str], version: str = "",
@@ -375,14 +422,34 @@ class BigPicture(Backdrop):
         self.bar.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         strip.addWidget(self.bar)
         strip.addStretch(1)
+        self.update_banner = UpdateBanner()         # a newer portal: Y, a click or Enter installs it
         self.outside = NoticeButton(ORANGE)         # newer programs outside the suite an installed app can install
         self.notice = NoticeButton(RED)             # the updates and reinstalls the portal found
-        for button in (self.outside, self.notice):
+        for button in (self.update_banner, self.outside, self.notice):
             self.add_control(button)
             strip.addWidget(button, 0, Qt.AlignmentFlag.AlignVCenter)
-        outer.addLayout(strip)
+        self.strip = QWidget()                      # hidden with the tiles on the Settings page
+        self.strip.setLayout(strip)
+        strip.setContentsMargins(0, 0, 0, 0)
+        outer.addWidget(self.strip)
         self.stack = QStackedWidget()
         outer.addWidget(self.stack, 1)
+        self.settings_page = QWidget()              # the Settings page: a row per setting (place_settings)
+        page = QVBoxLayout(self.settings_page)
+        page.setContentsMargins(0, 0, 0, 0)
+        self.settings_heading = QTabBar()           # one tab, drawn as the open category's
+        self.settings_heading.setDrawBase(False)
+        self.settings_heading.setExpanding(False)
+        self.settings_heading.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.settings_heading.addTab("Settings")
+        page.addWidget(self.settings_heading, 0, Qt.AlignmentFlag.AlignLeft)
+        self.settings_grid = QGridLayout()
+        page.addLayout(self.settings_grid)
+        page.addStretch(1)
+        self.settings_page.hide()
+        outer.addWidget(self.settings_page, 1)
+        self.setting_pills: list[HeaderPill] = []
+        self.setting_lines: list[QLabel] = []
         self.categories: list[str] = []
         self.labels: dict[str, str] = {}
         self.pages: dict[str, QScrollArea] = {}
@@ -420,6 +487,7 @@ class BigPicture(Backdrop):
                 tile.navigate.connect(self.navigate)
                 tile.clicked.connect(lambda _=False, k=key: self.open_requested.emit(self.entries[k]))
                 tile.menu_requested.connect(lambda k=key: self.menu_requested.emit(self.entries[k]))
+                tile.update_requested.connect(lambda k=key: self.update_requested.emit(self.entries[k]))
                 self.tiles[key] = tile
         self.hints = {category: SHORT_HINTS.get(category, text) for category, text in hints.items()}
         self.full_hints = hints
@@ -457,6 +525,36 @@ class BigPicture(Backdrop):
         self.pills = pills
         self.set_scale(self.scale)
 
+    def place_settings(self, rows: list[tuple[HeaderPill, str]]) -> None:
+        """The Settings page's rows: a pill and its short line; the focus reaches the pills there."""
+        for row, (pill, line) in enumerate(rows, 1):
+            label = QLabel(line)
+            self.settings_grid.addWidget(pill, row, 0)
+            self.settings_grid.setColumnStretch(1, 1)
+            self.settings_grid.addWidget(label, row, 1, Qt.AlignmentFlag.AlignVCenter)
+            self.add_control(pill)
+            self.setting_pills.append(pill)
+            self.setting_lines.append(label)
+        self.set_scale(self.scale)
+
+    def in_settings(self) -> bool:
+        return not self.settings_page.isHidden()
+
+    def show_settings(self, on: bool) -> None:
+        """The Settings page in place of the category strip and the tiles, the focus on its first pill; off, back to
+        the tiles, the focus on the first."""
+        if on == self.in_settings():
+            return
+        self.strip.setVisible(not on)
+        self.stack.setVisible(not on)
+        self.settings_page.setVisible(on)
+        self.keys.setText(SETTINGS_LEGEND if on else LEGEND)
+        if on:
+            self.hint.setText(SETTINGS_HINT)
+        else:
+            self._category_changed(self.bar.currentIndex())
+        self.focus_first()
+
     def sync(self, states: dict) -> None:
         """Show each app as its tile in the window's state of it (AppState): icon, name, state."""
         for key, tile in self.tiles.items():
@@ -493,7 +591,7 @@ class BigPicture(Backdrop):
             self.bar.setTabTextColor(index, QColor(RED) if n else QColor())
 
     def _category_changed(self, index: int) -> None:
-        if 0 <= index < self.stack.count():
+        if 0 <= index < self.stack.count() and not self.in_settings():
             self.stack.setCurrentIndex(index)
             self.hint.setText(self.hints.get(self.categories[index], ""))
             self.reflow()
@@ -515,6 +613,7 @@ class BigPicture(Backdrop):
         entry = self.entries.get(key)
         if entry is None or entry.category not in self.categories:
             return
+        self.show_settings(False)
         self.bar.setCurrentIndex(self.categories.index(entry.category))
         tile = self.tiles[key]
         tile.setFocus()
@@ -542,17 +641,26 @@ class BigPicture(Backdrop):
                                  f" font-size:{max(11, round(14 * s))}px; border-radius:{round(6 * s)}px;"
                                  f" padding:{round(2 * s)}px {round(8 * s)}px;")
         self.hint.setStyleSheet(f"color:{muted()}; font-size:{max(13, round(18 * s))}px;")
-        self.keys.setStyleSheet(f"color:{muted()}; font-size:{max(16, round(24 * s))}px; font-weight:600;")
+        self.keys.setStyleSheet(f"color:{muted()}; font-size:{max(16, round(24 * s))}px; font-weight:700;")
         self.bar.setStyleSheet(
             f"QTabBar::tab {{ font-size:{max(15, round(24 * s))}px; font-weight:700;"
             f" padding:{round(10 * s)}px {round(26 * s)}px; margin-right:6px; background:transparent; border:none;"
             " border-bottom:4px solid transparent; }"
             f"QTabBar::tab:selected {{ border-bottom:4px solid {ACCENT}; }}"
             "QTabBar::tab:hover { background:rgba(128,128,128,40); }")
-        for button in (self.notice, self.outside):
+        self.settings_heading.setStyleSheet(self.bar.styleSheet())
+        for button in (self.update_banner, self.notice, self.outside):
             button.set_scale(s)
         for pill in self.pills:
             pill.set_scale(s)
+        for pill in self.setting_pills:
+            pill.set_scale(s)
+            pill.setFixedHeight(round(SETTING_H * s))
+        self.settings_grid.setHorizontalSpacing(round(24 * s))
+        self.settings_grid.setVerticalSpacing(round(14 * s))
+        self.settings_page.layout().setSpacing(round(16 * s))
+        for label in self.setting_lines:
+            label.setStyleSheet(f"font-size:{max(13, round(20 * s))}px; font-weight:600;")
         for grid in self.grids.values():
             grid.setSpacing(round(GAP * s))
         for tile in self.tiles.values():
@@ -620,6 +728,11 @@ class BigPicture(Backdrop):
         return focus if focus in self.focus_items() else None
 
     def focus_first(self) -> None:
+        """The first tile; on the Settings page, its first pill."""
+        if self.in_settings():
+            if self.setting_pills:
+                self.setting_pills[0].setFocus()
+            return
         tiles = self.current_tiles()
         if tiles:
             tiles[0].setFocus()
@@ -646,7 +759,7 @@ class BigPicture(Backdrop):
                 self.current_page().ensureWidgetVisible(others[found], 0, 24)
 
     def change_category(self, step: int) -> None:
-        if self.categories:
+        if self.categories and not self.in_settings():
             self.bar.setCurrentIndex((self.bar.currentIndex() + step) % len(self.categories))
             self.focus_first()
 
@@ -683,6 +796,14 @@ class Intro(QWidget):
         self.animation.valueChanged.connect(self._step)
         self.animation.finished.connect(self._done)
         self.done = False
+        self.banner = ""                        # INTRO_BANNER, from set_banner()
+        self.banner_at = 0.0                    # the progress when it came
+
+    def set_banner(self, text: str) -> None:
+        """A banner under the name for the rest of the intro: the portal's update check answered (owner, 04-11-2026,
+        as the Windows Portable Suite's portal)."""
+        self.banner, self.banner_at = text, self.progress
+        self.update()
 
     def begin(self) -> None:
         self.setGeometry(self.parentWidget().rect())
@@ -829,4 +950,24 @@ class Intro(QWidget):
             painter.setPen(colour)
             box = QRect(0, int(centre.y() + min(w, h) * 0.17), w, font.pixelSize() * 2)
             painter.drawText(box, int(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignVCenter), self.title)
+
+        # The banner under the name: white capitals on the suite's orange, fading in when the update check answers.
+        if self.banner:
+            font = QFont(self.font())
+            font.setPixelSize(max(14, int(h * 0.03)))
+            font.setWeight(QFont.Weight.ExtraBold)
+            font.setLetterSpacing(QFont.SpacingType.AbsoluteSpacing, font.pixelSize() * 0.12)
+            painter.setFont(font)
+            metrics = painter.fontMetrics()
+            pad = font.pixelSize()
+            width, height = metrics.horizontalAdvance(self.banner) + 2 * pad, metrics.height() + pad
+            top = centre.y() + min(w, h) * 0.17 + max(18, int(h * 0.055)) * 2 + h * 0.03
+            plate = QRectF((w - width) / 2, top, width, height)
+            painter.setOpacity(min(1.0, (p - self.banner_at) / BANNER_IN) * fade)
+            painter.setPen(Qt.PenStyle.NoPen)
+            painter.setBrush(QColor(ORANGE))
+            painter.drawRoundedRect(plate, height / 4, height / 4)
+            painter.setPen(QColor("#ffffff"))
+            painter.drawText(plate, int(Qt.AlignmentFlag.AlignCenter), self.banner)
+            painter.setOpacity(1.0)
         painter.end()

@@ -74,6 +74,11 @@ class Stick:
         return {"storage": "storage mode", "loader": "waiting for its firmware", "wifi": "Wi-Fi mode"}.get(
             self.mode, "unknown mode")
 
+    @property
+    def mode_short(self) -> str:
+        """The mode in a word, for the Stick box (mode_text goes in its tooltip)."""
+        return {"storage": "Storage", "loader": "Waiting", "wifi": "Wi-Fi"}.get(self.mode, "Unknown")
+
 
 def _read(path: Path) -> str:
     try:

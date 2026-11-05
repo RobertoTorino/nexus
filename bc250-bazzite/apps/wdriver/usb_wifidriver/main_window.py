@@ -24,7 +24,8 @@ from bc250_core import __version__ as CORE_VERSION
 from bc250_core.platform import data_home
 from bc250_core.settings import SettingsStore
 from bc250_core.theme import GREEN, GREY, ORANGE, RED
-from bc250_core.widgets import AppHeader, MetricBox, Pill, StatusText, Terminal, accent_button, hint_label
+from bc250_core.widgets import (AppHeader, InfoButton, MetricBox, Pill, StatusText, Terminal, accent_button,
+                                hint_label, same_width)
 
 from . import APP_ID, APP_NAME, INFO, LOGO_PATH, __version__
 from . import builder, driver, privileged, stick
@@ -33,6 +34,7 @@ MANUAL_URL = f"{SUITE_MANUAL_URL}apps/wdriver/"
 REFRESH_MS = 2000
 LOG_EVERY = 5                                   # refreshes between two reads of the kernel log and the adapters
 LEVEL_COLOURS = {"SUCCESS": GREEN, "WARNING": ORANGE}
+NOTE_PX = 360                                   # the driver notice's width, on the right of the controls
 
 
 class WifiSettings(SettingsStore):
@@ -129,6 +131,8 @@ class MainWindow(QMainWindow):
         self.refresh_pill.clicked.connect(lambda: self.refresh(read_log=True))
         for box in (self.stick_box, self.chip_box, self.driver_box, self.wifi_box, self.refresh_pill):
             header.add_second(box)
+        # The four boxes as wide as the widest value, so none cuts its text off (owner, 04-11-2026).
+        same_width([self.stick_box, self.chip_box, self.driver_box, self.wifi_box])
 
         group = QGroupBox("Driver")
         self.branch_combo = QComboBox()
@@ -141,10 +145,18 @@ class MainWindow(QMainWindow):
         self.newest_check.setToolTip("Fetch the branch's current head instead of the tested, pinned commit: a way "
                                      "out when a new kernel breaks the pinned build, until a release moves the pin")
         self.newest_check.toggled.connect(lambda _c: self.refresh_buttons())
+        # What the driver is and does, behind the info symbol (owner, 04-11-2026: no long lines in the window).
+        self.driver_info = InfoButton(
+            "The driver comes from pinned sources, built here against the running kernel. Installed, a system "
+            "service loads it at every boot, switches a stick out of its storage mode, and after a kernel update "
+            "builds it again at the next boot (no network needed). The stick's firmware does WPA2, not WPA3: set "
+            f"the Wi-Fi connection to WPA2 when the router offers both. <a href='{MANUAL_URL}'>Manual</a>",
+            "About the driver")
         row = QHBoxLayout()
         row.addWidget(QLabel("Driver branch"))
         row.addWidget(self.branch_combo, 1)
         row.addWidget(self.newest_check)
+        row.addWidget(self.driver_info)
         self.build_button = QPushButton("Build")
         self.build_button.setToolTip("Fetch the pinned sources and build the driver for the running kernel, as your "
                                      "own user (needs the network the first time)")
@@ -159,17 +171,17 @@ class MainWindow(QMainWindow):
         buttons.addStretch(1)
         for w in (self.build_button, self.remove_button, self.install_button):
             buttons.addWidget(w)
+        # The notice (what to do now) on the right of the controls (owner, 04-11-2026).
         self.driver_note = hint_label("")
         self.driver_note.setOpenExternalLinks(True)
-        lay = QVBoxLayout(group)
-        lay.addLayout(row)
-        lay.addLayout(buttons)
-        lay.addWidget(self.driver_note)
-        lay.addWidget(hint_label(
-            "The driver comes from pinned sources, built here against the running kernel. Installed, a system "
-            "service loads it at every boot, switches a stick out of its storage mode, and after a kernel update "
-            "builds it again at the next boot (no network needed). The stick's firmware does WPA2, not WPA3: set "
-            f"the Wi-Fi connection to WPA2 when the router offers both. <a href='{MANUAL_URL}'>Manual</a>"))
+        self.driver_note.setMaximumWidth(NOTE_PX)
+        controls = QVBoxLayout()
+        controls.addLayout(row)
+        controls.addLayout(buttons)
+        controls.addStretch(1)
+        lay = QHBoxLayout(group)
+        lay.addLayout(controls, 1)
+        lay.addWidget(self.driver_note, 0, Qt.AlignmentFlag.AlignTop)
 
         output = QGroupBox("Build output")
         self.terminal = Terminal()
@@ -181,11 +193,12 @@ class MainWindow(QMainWindow):
         self.adapters_label.setTextFormat(Qt.TextFormat.RichText)
         self.adapters_label.setWordWrap(True)
         self.adapters_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-        lay = QVBoxLayout(adapters)
-        lay.addWidget(self.adapters_label)
-        lay.addWidget(hint_label("Every Wi-Fi adapter on the board, of any chip, and whether the running kernel has "
+        lay = QHBoxLayout(adapters)
+        lay.addWidget(self.adapters_label, 1)
+        lay.addWidget(InfoButton("Every Wi-Fi adapter on the board, of any chip, and whether the running kernel has "
                                  "a driver and firmware for it: plug a stick in and press Refresh to see whether it "
-                                 "works on Bazzite. Only read: nothing is loaded or switched."))
+                                 "works on Bazzite. Only read: nothing is loaded or switched.", "About this list"),
+                      0, Qt.AlignmentFlag.AlignTop)
 
         events = QGroupBox("What the service did")
         self.events_label = QLabel()
@@ -269,7 +282,7 @@ class MainWindow(QMainWindow):
             set_box_colour(self.stick_box, GREY)
             return
         first = self.sticks[0]
-        self.stick_box.set_value(first.mode_text, f"{first.name} ({first.usb_id})"
+        self.stick_box.set_value(first.mode_short, f"In {first.mode_text}: {first.name} ({first.usb_id})"
                                  + (f", drivers: {', '.join(first.drivers)}" if first.drivers else ""))
         set_box_colour(self.stick_box, {"wifi": GREEN, "loader": ORANGE, "storage": ORANGE}.get(first.mode, GREY))
 
@@ -285,6 +298,7 @@ class MainWindow(QMainWindow):
 
     def show_driver(self) -> None:
         if self.installed is None:
+            self.driver_box.caption.setText("Driver")
             built = builder.complete(self.layout_for().output)
             self.driver_box.set_value("Built" if built else "Not installed",
                                       f"Built for {self.kernel}, not installed" if built else "")
@@ -293,7 +307,9 @@ class MainWindow(QMainWindow):
         kernels = driver.built_kernels(self.paths)
         for_kernel = self.kernel in kernels
         pinned = self.installed.commit == builder.PINS[self.installed.branch].commit
-        self.driver_box.set_value(self.installed.branch if pinned else f"{self.installed.branch} (newest)",
+        # The newest sources in the caption, not the value, so the value stays short (owner, 04-11-2026).
+        self.driver_box.caption.setText("Driver" if pinned else "Driver, newest")
+        self.driver_box.set_value(self.installed.branch,
                                   f"Installed from commit {self.installed.commit[:12] or '?'}"
                                   + ("" if pinned else ", the newest sources, not the tested pin")
                                   + f"; built for {', '.join(kernels) or 'no kernel'}")

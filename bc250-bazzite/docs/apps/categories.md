@@ -64,3 +64,4 @@ Every app with its icon and its category.
 | ![](../assets/apps/sftp.webp){ .app-icon } [Bazzite SFTP Tools](sftp.md) | Utilities |
 | ![](../assets/apps/package.webp){ .app-icon } [Dependency Checker](package.md) | Utilities |
 | ![](../assets/apps/ncgui.webp){ .app-icon } [Bazzite NetcatGUI](ncgui.md) | Utilities |
+| ![](../assets/apps/ssd.webp){ .app-icon } [SSD Check](ssd.md) | Utilities |

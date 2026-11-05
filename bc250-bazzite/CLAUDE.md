@@ -19,7 +19,7 @@ appearing in the portal.
 
 - `apps/<name>/`: check, gpu, upscaler, compute, cores, oc, acpi,
   overlay, ips35, hdcam, hdcontrol, bios, ace, mesh, vram, fan, wdriver, cec, sftp, consoles, clb, shadps4, rpcs3,
-  ppsspp, pcsx2, vita3k, xenia, decky, package, ncgui, datstation. Each has its
+  ppsspp, pcsx2, vita3k, xenia, decky, package, ncgui, datstation, ssd. Each has its
   own VERSION, CHANGELOG, LICENSE (acpi is MIT; consoles is AGPL-3.0, its protocol code ported from
   chiaki-ng: those files AGPL-3.0-only, its own AGPL-3.0-or-later; ncgui is GPL-2.0-only, a port of NetcatGUI; clb
   (Console LinkB, XBOX) is GPL-3.0-or-later with protocol code ported from Greenlight and xal-node, MIT, whose notice

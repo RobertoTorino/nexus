@@ -162,6 +162,36 @@ def test_load_with_the_modules_built(paths, user_build, tmp_path):
     assert notes == []
 
 
+def test_load_labels_the_modules_for_selinux(paths, user_build, tmp_path, monkeypatch):
+    """With SELinux, the two modules get modules_object_t before insmod: Fedora's policy loads a module from no other
+    type, and refused them as var_lib_t (selinux-policy 44.11, owner's board 04-11-2026: "insmod: Permission
+    denied"). At every load, a build for a new kernel included; not when both are loaded already."""
+    own = tmp_path / "driver.py"
+    own.write_text("# v\n")
+    installed(paths, Runner(), user_build, own)
+    write(paths.sys / "fs/selinux/enforce", "1")
+    monkeypatch.setattr(driver.shutil, "which", lambda tool: f"/usr/bin/{tool}")
+    write(paths.proc / "modules", "")
+    run = Runner()
+    assert driver.load(paths, KERNEL, run, now=lambda: 1.0, notify=notifications([])) == 0
+    modules = paths.modules(KERNEL)
+    label = ["chcon", "-t", "modules_object_t", str(modules / "aic_load_fw.ko"), str(modules / "aic8800_fdrv.ko")]
+    assert run.calls[0] == label and run.calls[2][0] == "insmod"
+    new = "7.3.1-ogc1.fc44.x86_64"
+    write(paths.build_tree(new) / ".config", "CONFIG_CFG80211=m")
+    run = Runner()
+    assert driver.load(paths, new, run, now=lambda: 2.0, notify=notifications([])) == 0
+    built = paths.modules(new)
+    assert ["chcon", "-t", "modules_object_t", str(built / "aic_load_fw.ko"), str(built / "aic8800_fdrv.ko")] in run.calls
+    assert run.calls.index(["modprobe", "cfg80211"]) > [c[0] for c in run.calls].index("chcon")
+    write(paths.proc / "modules", "aic_load_fw 1 0 - Live 0x0\naic8800_fdrv 1 0 - Live 0x0")
+    run = Runner(fail="chcon")
+    assert driver.load(paths, KERNEL, run, now=lambda: 3.0, notify=notifications([])) == 0
+    assert not any(c[0] == "chcon" for c in run.calls)              # both loaded: nothing to label
+    write(paths.proc / "modules", "")
+    assert driver.load(paths, KERNEL, run, now=lambda: 4.0, notify=notifications([])) == 0   # a failed chcon: insmod tries
+
+
 def test_load_skips_loaded_modules_and_ejects_a_stick_in_storage_mode(paths, user_build, tmp_path, sys_root):
     own = tmp_path / "driver.py"
     own.write_text("# v\n")

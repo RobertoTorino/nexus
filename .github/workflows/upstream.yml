@@ -5,7 +5,9 @@ name: Upstream
 # moved goes into the open "Upstream review" issue, so the owner sees it: for Decky Loader a newer release, a replaced
 # asset or a changed service unit, for shadPS4 a newer release (with its zip and SHA-256) or a replaced zip, for
 # HelixSR a release newer than the one the BC-250 Upscaler Manager was checked against or another fallback in its notes, for
-# PPSSPP, PCSX2, RPCS3 and DirectMesh a release newer than the pin. A new issue, or a comment on the open one,
+# PPSSPP, PCSX2, RPCS3 and DirectMesh a release newer than the pin, for Vita3K and Xenia a build newer than the one
+# their managers bring or a pinned AppImage gone or replaced, for the USB Wi-Fi driver a branch past its pinned commit
+# or a mirror without it. A new issue, or a comment on the open one,
 # notifies everyone who watches the repository; close it once handled. The job fails only when an upstream could not
 # be checked (network, GitHub's rate limit). It only reads from GitHub; only that issue changes.
 

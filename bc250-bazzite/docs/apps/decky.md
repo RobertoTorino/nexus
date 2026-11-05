@@ -22,13 +22,13 @@ choice in Decky, not this app's.
 - **Steam**, started at least once.
 - **Your password**, for installing, removing and restarting Decky: it runs as root from a system service, as on
   the Steam Deck.
-- About 33 MB for Decky itself, and room for the plugins you install.
+- About 34 MB for Decky itself, and room for the plugins you install.
 
 ## Using it
 
 The window has four rows, then the list of plugins.
 
-1. **Decky Loader**: **Install** downloads Decky from its GitHub release (about 33 MB), checks it against the
+1. **Decky Loader**: **Install** downloads Decky from its GitHub release (about 34 MB), checks it against the
    checksum this version of the app was tried with, installs it in `~/homebrew/services` and starts its service.
    It asks for your password for that. When an older Decky is there, the button says **Update**. **Remove** stops
    Decky and removes it; your plugins and their settings stay, unless you tick the box to remove them too.

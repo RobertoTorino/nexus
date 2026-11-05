@@ -492,15 +492,24 @@ def portal_window(tmp_path, release):
 
 
 def test_newer_portal_release_is_offered(qapp, home, settings_dir, tmp_path, launched, monkeypatch):
-    opened = []
-    monkeypatch.setattr(mw.QDesktopServices, "openUrl", lambda url: opened.append(url.toString()))
+    """The orange banner beside the category strip (owner, 04-11-2026, as the Windows Portable Suite's portal); a
+    click on it updates the portal, as Y does."""
     release = ReleaseInfo(version="99.0.0", tag="portal-v99.0.0", url="https://example.invalid/r", published="2030-01-01")
     w = portal_window(tmp_path, release)
-    assert wait_for(lambda: not w.portal_button.isHidden())
-    assert w.portal_button.text().endswith("Portal 99.0.0 available")
-    assert w.big.isAncestorOf(w.portal_button) and w.portal_button in w.big.controls    # in the title row
-    w.portal_button.click()
-    assert opened == ["https://example.invalid/r"]
+    banner = w.big.update_banner
+    assert wait_for(lambda: not banner.isHidden())
+    assert banner.text() == "UPDATE AVAILABLE, PRESS Y TO UPDATE"
+    assert "Portal 99.0.0 is available. Released 2030-01-01." in banner.toolTip() and "Press Y" in banner.toolTip()
+    assert banner in w.big.controls                                     # the focus reaches it, Enter presses it
+    started = []
+    monkeypatch.setattr(w, "install_portal_update", lambda: started.append(1))
+    banner.click()
+    assert started == [1]
+    w._gamepad_action("update")                                         # Y, on any tile or none
+    assert started == [1]                                               # not while the window is not active
+    monkeypatch.setattr(mw.QApplication, "activeWindow", staticmethod(lambda: w))
+    w._gamepad_action("update")
+    assert started == [1, 1]
     w.close()
 
 
@@ -515,13 +524,13 @@ def test_a_new_build_of_this_version_is_offered(qapp, home, settings_dir, tmp_pa
         w = mw.MainWindow(load(MANIFEST), FakeSources(tmp_path / "work"), Records(tmp_path / "installed.json"),
                           portal_check=lambda: update, build=build)
         assert wait_for(lambda: not w.portal_checker.running, 3000)
-        assert w.portal_button.isHidden() is not shown, build
+        assert w.big.update_banner.isHidden() is not shown, build
         if shown:
-            assert w.portal_button.text() == f"● Portal {__version__}: a new build of this version"
+            assert w.big.update_banner.toolTip().startswith(f"Portal {__version__}: a new build of this version.")
         w.close()
     w = mw.MainWindow(load(MANIFEST), FakeSources(tmp_path / "work"), Records(tmp_path / "installed.json"),
                       portal_check=lambda: PortalUpdate(same, [], ""), build="b" * 64)   # no SHA256SUMS: no offer
-    assert wait_for(lambda: not w.portal_checker.running, 3000) and w.portal_button.isHidden()
+    assert wait_for(lambda: not w.portal_checker.running, 3000) and w.big.update_banner.isHidden()
     w.close()
 
 
@@ -566,7 +575,7 @@ def test_escape_asks_while_something_runs(window):
 def test_no_portal_offer_when_not_newer_or_offline(qapp, home, settings_dir, tmp_path, launched, release):
     w = portal_window(tmp_path, release)
     assert wait_for(lambda: not w.portal_checker.running, 3000)
-    assert w.portal_button.isHidden()
+    assert w.big.update_banner.isHidden() and w.portal_update is None
     w.close()
 
 
@@ -646,15 +655,95 @@ def test_portal_offer_names_the_app_updates(qapp, home, settings_dir, tmp_path, 
     update = PortalUpdate(release, [AppChange("BC-250 ACE Queues", "0.1.0", "0.1.1"),
                                     AppChange("BC-250 Memory Manager", "0.1.0", "0.1.1")])
     w = portal_window(tmp_path, update)
-    assert wait_for(lambda: not w.portal_button.isHidden())
-    assert w.portal_button.text().endswith("Portal 99.0.0: updates ACE Queues and Memory Manager")
-    tip = w.portal_button.toolTip()
+    assert wait_for(lambda: not w.big.update_banner.isHidden())
+    tip = w.big.update_banner.toolTip()
+    assert tip.startswith("Portal 99.0.0: updates ACE Queues and Memory Manager.")
     assert "App updates come with the portal" in tip and "BC-250 Memory Manager: 0.1.0 → 0.1.1" in tip
     w.close()
     same = portal_window(tmp_path, PortalUpdate(release, []))
-    assert wait_for(lambda: not same.portal_button.isHidden())
-    assert same.portal_button.text().endswith("Portal 99.0.0 available") and "same app versions" in same.portal_button.toolTip()
+    assert wait_for(lambda: not same.big.update_banner.isHidden())
+    assert "same app versions" in same.big.update_banner.toolTip()
     same.close()
+
+
+def _portal_tarball(folder: Path, tag: str) -> Path:
+    import tarfile
+    source = folder / "src" / tag
+    source.mkdir(parents=True)
+    (source / "install.sh").write_text("#!/bin/sh\n")
+    archive = folder / f"{tag}.tar.gz"
+    with tarfile.open(archive, "w:gz") as tar:
+        tar.add(source, arcname=tag)
+    return archive
+
+
+def test_y_downloads_checks_and_installs_the_portal_then_restarts(qapp, home, settings_dir, tmp_path, launched,
+                                                                  monkeypatch):
+    """Y (or a right click, or the banner) while a newer portal is out (owner, 04-11-2026, as the Windows Portable
+    Suite's portal): its tarball downloaded and checked, unpacked with the tarball beside it (install.sh records the
+    build), its install.sh run in a terminal, and the new portal started when that ended well."""
+    import hashlib
+    import shutil
+    from bc250_portal.portal_update import PortalUpdate
+    tag = "portal-v99.0.0"
+    archive = _portal_tarball(tmp_path, tag)
+    sha = hashlib.sha256(archive.read_bytes()).hexdigest()
+    started = []
+    w = mw.MainWindow(load(MANIFEST), FakeSources(tmp_path / "work"), Records(tmp_path / "installed.json"),
+                      launch=lambda argv: (started.append(argv), True)[1])
+    asked = []
+    w.sources.download = lambda url, dest: (asked.append(url), shutil.copy(archive, dest))
+    w._portal_checked(PortalUpdate(ReleaseInfo("99.0.0", tag, "https://example.invalid/r"), [], sha))
+    monkeypatch.setattr(mw.QApplication, "activeWindow", staticmethod(lambda: w))
+    w.pending = object()                                     # an app installs: the portal waits for it
+    told = []
+    monkeypatch.setattr(mw.QMessageBox, "information", lambda *a, **k: told.append(a[2]))
+    w._gamepad_action("update")
+    assert told == [mw.WAIT_UPDATE] and asked == []
+    w.pending = None
+    w._gamepad_action("update")
+    assert w.portal_stage == "download" and w.busy()
+    assert wait_for(lambda: w.portal_stage == "install")
+    assert asked == [f"{w.sources.repo_url}/releases/download/{tag}/{tag}.tar.gz"]    # its sha256 was known
+    folder = w.portal_work() / tag
+    assert (folder / "install.sh").is_file() and (w.portal_work() / f"{tag}.tar.gz").is_file()
+    line, exit_file = launched[-1]
+    assert line == f"cd {folder} && ./install.sh"
+    assert w.big.update_banner.text() == "INSTALLING THE UPDATE…"
+    exit_file.write_text("0\n")
+    w._check_portal_install()
+    assert started == [["sh", "-c", 'sleep 1; exec "$0"', str(home / ".local" / "bin" / "bc250-bazzite-suite")]]
+    w.close()
+
+
+def test_a_portal_update_that_fails_says_so(qapp, home, settings_dir, tmp_path, launched, monkeypatch):
+    import shutil
+    from bc250_portal.portal_update import PortalUpdate
+    tag = "portal-v99.0.0"
+    archive = _portal_tarball(tmp_path, tag)
+    w = mw.MainWindow(load(MANIFEST), FakeSources(tmp_path / "work"), Records(tmp_path / "installed.json"),
+                      launch=lambda argv: True)
+    w.sources.download = lambda url, dest: shutil.copy(archive, dest)
+    w._portal_checked(PortalUpdate(ReleaseInfo("99.0.0", tag, "https://example.invalid/r"), [], "0" * 64))
+    errors = []
+    monkeypatch.setattr(mw.QMessageBox, "critical", lambda *a, **k: errors.append(a[2]))
+    w.portal_update_action()
+    assert wait_for(lambda: not w.portal_stage)
+    assert "does not match its checksum" in errors[0] and launched == []
+    assert w.big.update_banner.text() == "UPDATE AVAILABLE, PRESS Y TO UPDATE"   # Y tries again
+    w.portal_update = PortalUpdate(w.portal_update.release, [], "")         # the sha256 from SHA256SUMS then
+    sums = tmp_path / "SHA256SUMS"
+    import hashlib
+    sums.write_text(f"{hashlib.sha256(archive.read_bytes()).hexdigest()}  {tag}.tar.gz\n")
+    w.sources.download = lambda url, dest: shutil.copy(sums if url.endswith("SHA256SUMS") else archive, dest)
+    w.portal_update_action()
+    assert wait_for(lambda: w.portal_stage == "install")
+    warned = []
+    monkeypatch.setattr(mw.QMessageBox, "warning", lambda *a, **k: warned.append(a[2]))
+    launched[-1][1].write_text("1\n")
+    w._check_portal_install()
+    assert "exit status 1" in warned[0] and not w.portal_stage and not w.big.update_banner.isHidden()
+    w.close()
 
 
 def icons_window(tmp_path, desktop, names=("bc250-hdmi-cec.desktop", "bc250-governor-manager.desktop")):
@@ -795,11 +884,11 @@ def test_restart_into_a_portal_installed_meanwhile(qapp, home, settings_dir, tmp
                       installed=link, launch=lambda argv: (started.append(argv), True)[1])
     assert w.restart_button.isHidden()                                      # the one installed is this one
     w._portal_checked(ReleaseInfo("99.0.0", "portal-v99.0.0", "https://example.invalid", "2026-10-14"))
-    assert not w.portal_button.isHidden()
+    assert not w.big.update_banner.isHidden()
     _installed(tmp_path, "99.0.0")                                           # its install.sh ran in a terminal
-    w.check_installed()
+    w.refresh()
     assert w.restart_button.text() == "● Restart: portal 99.0.0 is installed"
-    assert w.restart_button.isEnabled() and w.portal_button.isHidden()
+    assert w.restart_button.isEnabled() and w.big.update_banner.isHidden()   # the newer portal is here already
     w.pending = object()                                                     # an install runs: wait for it
     w.check_installed()
     assert not w.restart_button.isEnabled() and "running now" in w.restart_button.toolTip()
@@ -844,15 +933,16 @@ def test_one_theme_for_every_app(window, home):
 
 def test_the_header_is_an_apps_header_with_pills(window):
     """The suite's icon, spanning the name and the pills: Refresh, Installed apps, Install all updates, Install all
-    apps, the Desktop icons, Sound, the theme, the wallpaper and Sys info (owner, 20-10-2026, 21-10-2026 and
-    01-11-2026)."""
+    apps, Sys info and ☰ (owner, 20-10-2026, 21-10-2026, 01-11-2026); the Desktop icons, Sound, the theme and the
+    wallpaper on the Settings page behind ☰ (owner, 04-11-2026)."""
     pills = window.header_pills
     listed = len(window.entries)
     sound = "Yes" if window.sounds.available() else "No"             # No on a machine without an audio output
     assert [(p.value.text(), p.caption.text()) for p in pills] == [
         ("Refresh", "Click to refresh"), (f"0/{listed}", "Installed apps"), ("Install", "All updates"),
-        ("Install", "All apps"), ("No", "Icons on Desktop"), (sound, "Sound"),
-        ("Gunmetal", "Theme switcher"), ("None", "Wallpaper"), ("Sys info", "Click to view")]
+        ("Install", "All apps"), ("Sys info", "Click to view"), ("☰", "Settings")]
+    assert [(p.value.text(), p.caption.text()) for p in window.setting_pills] == [
+        ("No", "Icons on Desktop"), (sound, "Sound"), ("Gunmetal", "Theme switcher"), ("None", "Wallpaper")]
     assert window.big.pill_row.indexOf(pills[0]) == 0 and window.big.pill_row.indexOf(pills[-1]) == len(pills) - 1
     assert "verified by checksum" in window.source_text
 

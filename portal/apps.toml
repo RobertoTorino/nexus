@@ -535,3 +535,16 @@ install = ["bash install.sh"]
 uninstall = ["bash install.sh --uninstall"]
 detect = ["~/.local/bin/bc250-xenia-manager"]
 launch = [["Open", "~/.local/bin/bc250-xenia-manager"]]
+
+[apps.ssd]
+name = "SSD Check"
+summary = "The health, power cycles and power-on hours of the board's SSDs."
+tag = "ssd-v0.1.0"
+sha256 = ""
+required = false
+changes_board = false
+category = "utilities"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/bc250-ssd"]
+launch = [["Open", "~/.local/bin/bc250-ssd"]]

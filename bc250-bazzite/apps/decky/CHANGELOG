@@ -1,3 +1,10 @@
+Changelog: 05-11-2026 03:17:53
+
+Added. The app installs Decky Loader 3.3.1 (was 3.3.0; the Upstream review): loader.py pins its release v3.3.1 and the
+SHA-256 of its PluginLoader (7bb73b05…c315), and the download is about 34 MB (was 33). Decky 3.3.1 handles a plugin
+store that fails to load and allows larger response headers when it downloads its own updates. Its service unit is
+the same at v3.3.1, so loader.unit_text() is unchanged. The tests follow the pin instead of naming the version.
+
 Changelog: 04-11-2026 11:32:10
 
 Release 1.1.1.

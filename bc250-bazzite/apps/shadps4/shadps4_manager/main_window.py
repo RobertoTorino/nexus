@@ -14,7 +14,13 @@ The app has no Play button: a game is started from Steam. The window keeps what 
 (userdata.py): the quit hotkeys. shadPS4's own window (Big Picture, shadPS4 settings under the games) stays for what
 the Settings tab does not set. The window also reads the volume Bazzite remembers for shadPS4 and says when it is
 muted (seen on the board). What the window says it also writes to the app's log (core's applog), shown in the Log
-tab."""
+tab.
+
+Packages (owner, 05-11-2026, as the Windows Portable Suite's shadPS4 Manager since 30-10-2026): a .pkg put in a game
+folder is a row of its own in Your games, "PKG" or "PKG update", until it is unpacked (extract.py). Unpack takes the
+chosen one, Unpack all every one, the games first; each update goes beside its game and replaces an older one there.
+The packages unpacked whole are remembered (path, size and time), so they are no longer rows, and offered for
+deletion in the keep window: a package takes as much room as its game."""
 
 from __future__ import annotations
 
@@ -41,8 +47,8 @@ from bc250_core.settings import SettingsStore
 from bc250_core.updates import ReleaseInfo, UpdateChecker
 from bc250_core.widgets import AppHeader, MetricBox, StatusText, Terminal, WrappedLabel, hint_label
 
-from . import (APP_ID, APP_NAME, INFO, LOGO_PATH, ROOT, __version__, controllers, emulator, library, settings_page, shadnet,
-               shortcuts, style, userdata)
+from . import (APP_ID, APP_NAME, INFO, LOGO_PATH, ROOT, __version__, controllers, emulator, extract, library,
+               settings_page, shadnet, shortcuts, style, userdata)
 from .games import MAX_DEPTH, Game, scan
 from .settings_page import SettingsPage
 from .shadnet_dialog import ShadNetDialog
@@ -59,6 +65,17 @@ _NUMBERED = re.compile(r"\d+(\.\d+)*")
 
 
 RUNNING_REMOVE = "shadPS4 is running: close it first, then remove the game."
+UNPACKED_KEY = "packages/unpacked"      # the packages unpacked whole (path|size|time): no longer waiting rows
+PROGRESS_MS = 500                       # how often the line under the tabs counts an unpacking package's files
+
+
+def _stamp(path: Path) -> str:
+    """A file as the app knows it again: path|size|time; "" for one that cannot be read."""
+    try:
+        info = path.stat()
+    except OSError:
+        return ""
+    return f"{path}|{info.st_size}|{info.st_mtime_ns}"
 
 
 class ShadSettings(SettingsStore):
@@ -136,6 +153,12 @@ class MainWindow(QMainWindow):
         self.config: dict = {}
         self.users: list[userdata.User] = []
         self.folders: list[Path] = []
+        self.waiting: list[extract.Package] = []        # the packages in the game folders still to unpack
+        self.unpacking = ("", (0, 0))                   # while packages unpack: which one, and its files done / all
+        self.unpacked_whole: list[extract.Package] = []  # the last Unpack's packages without a missing file
+        self.progress_timer = QTimer(self)
+        self.progress_timer.setInterval(PROGRESS_MS)
+        self.progress_timer.timeout.connect(self._show_unpacking)
 
         header = AppHeader(LOGO_PATH, APP_NAME, __version__)
         # The states on the right of the title row, ending at the middle of the last pill below them (owner,
@@ -250,7 +273,16 @@ class MainWindow(QMainWindow):
                                      f"{style.link(self, STEAM_URL, 'Steam')}.")
         self.steam_hint.setOpenExternalLinks(False)      # the app opens Steam itself (open_steam)
         self.steam_hint.linkActivated.connect(lambda _url: self.open_steam())
+        self.unpack_button = QPushButton("Unpack")
+        self.unpack_button.setToolTip("Unpack the chosen package (a PKG row) into its game folder")
+        self.unpack_button.clicked.connect(self.on_unpack)
+        self.unpack_all_button = QPushButton("Unpack all")
+        self.unpack_all_button.setToolTip("Unpack every package that waits, one after the other: the games first, "
+                                          "then their updates")
+        self.unpack_all_button.clicked.connect(self.on_unpack_all)
         buttons.addWidget(self.steam_hint, 1)
+        buttons.addWidget(self.unpack_button)
+        buttons.addWidget(self.unpack_all_button)
         buttons.addWidget(self.shad_button)
         buttons.addWidget(self.remove_game_button)
         buttons.addWidget(self.covers_button)
@@ -326,6 +358,8 @@ class MainWindow(QMainWindow):
         self.users = userdata.read_users(self.shad_home)
         self.prepare_shadps4()
         self.games = scan(self.folders)
+        done = self.unpacked_packages()
+        self.waiting = [p for p in extract.waiting(self.folders, self.unpacked()) if _stamp(p.path) not in done]
         try:
             self.in_steam = shortcuts.in_steam(self.steam_dir) if self.steam_dir else {}
             self.no_logo = {str(g.eboot) for g in self.games if str(g.eboot) in self.in_steam and
@@ -469,8 +503,8 @@ class MainWindow(QMainWindow):
         # The app's own folders (owner, 03-11-2026): the home folder's, and a removable drive's when it has one.
         where = ", ".join(f"<b>{escape(private(f))}</b>" for f in self.folders)
         self.folders_state.setText(f"{where}: put your games there, each in a folder of its own (with eboot.bin); "
-                                   "Games Install unpacks a package into one. A USB drive or an SD card with a "
-                                   "Games/PS4 folder on it is looked in too.")
+                                   "a package (.pkg) put there waits under Your games for Unpack. A USB drive or an "
+                                   "SD card with a Games/PS4 folder on it is looked in too.")
         self.folders_state.setToolTip("\n".join(private(f) for f in self.folders)
                                       + f"\n{len(self.games)} game(s) found, up to {MAX_DEPTH} folders deep.")
         self._show_shadnet()
@@ -585,9 +619,15 @@ class MainWindow(QMainWindow):
         rows = self.table.selectionModel().selectedRows()
         return self.games[rows[0].row()] if rows and rows[0].row() < len(self.games) else None
 
+    def chosen_package(self) -> extract.Package | None:
+        """The package whose row is selected (the rows after the games)."""
+        rows = self.table.selectionModel().selectedRows()
+        index = rows[0].row() - len(self.games) if rows else -1
+        return self.waiting[index] if 0 <= index < len(self.waiting) else None
+
     def _fill_table(self) -> None:
         self.table.blockSignals(True)
-        self.table.setRowCount(len(self.games))
+        self.table.setRowCount(len(self.games) + len(self.waiting))
         for row, game in enumerate(self.games):
             box = QTableWidgetItem()
             box.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
@@ -601,6 +641,21 @@ class MainWindow(QMainWindow):
                                  (FOLDER, game.folder.name or str(game.folder))):
                 self.table.setItem(row, column, QTableWidgetItem(text))
             self.table.item(row, FOLDER).setToolTip(str(game.folder))     # the folder's name; the path as the tip
+        unpacked = self.unpacked()
+        for row, package in enumerate(self.waiting, len(self.games)):
+            folder, game = extract.place(package, unpacked)
+            kind = "PKG update" if package.category == "gp" and game is not None else "PKG"
+            tip = (f"{package.path}\nWaits to be unpacked into {folder}"
+                   + (", beside its game, which shadPS4 lays it over" if game is not None else "")
+                   + ": Unpack or Unpack all.")
+            box = QTableWidgetItem(kind)                # no tick: a package is not in Steam
+            box.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
+            self.table.setItem(row, STEAM, box)
+            for column, text in ((GAME, package.title or package.path.stem), (SERIAL, package.title_id),
+                                 (VERSION, package.version), (FOLDER, package.path.name)):
+                self.table.setItem(row, column, QTableWidgetItem(text))
+            for column in range(self.table.columnCount()):
+                self.table.item(row, column).setToolTip(tip)
         self.table.blockSignals(False)
         self._update_buttons()
 
@@ -628,6 +683,10 @@ class MainWindow(QMainWindow):
         self.shad_button.setEnabled(idle and installed)
         self.covers_button.setEnabled(idle)
         self.remove_game_button.setEnabled(idle and self.chosen() is not None)
+        self.unpack_button.setVisible(bool(self.waiting))
+        self.unpack_all_button.setVisible(bool(self.waiting))
+        self.unpack_button.setEnabled(idle and self.chosen_package() is not None)
+        self.unpack_all_button.setEnabled(idle)
         add, remove = self.steam_plan()
         stale = self.no_logo | self.old_tags | self.no_cover
         named = shortcuts.names(add)        # a name in Steam that differs (one from before the prefix) is renamed
@@ -657,8 +716,11 @@ class MainWindow(QMainWindow):
 
     def _job_done(self, result: tuple[bool, str]) -> None:
         ok, message = result[0], private(result[1])     # a path in an error: the user's folders as ~
+        self.progress_timer.stop()
         self.refresh()
         self.say(message, ok)
+        if self.unpacked_whole:
+            QTimer.singleShot(0, self._packages_unpacked)       # after the line says what was done
 
     def on_install(self) -> None:
         if not self._ask("Install", f"Download shadPS4 {emulator.VERSION} from GitHub (about {emulator.SIZE_MB} MB)?"
@@ -788,6 +850,124 @@ class MainWindow(QMainWindow):
                 text += f" Not deleted: {', '.join(failed)}."
             return not failed, text
         self._start(f"Deleting {title}…", job)
+
+    # --- Packages ---------------------------------------------------------------------------------------------
+
+    def unpacked(self) -> dict[str, Path]:
+        """Each game's folder by its title ID, a game without its update before one with it in it."""
+        ordered = sorted((g for g in self.games if g.title_id), key=lambda g: not g.patched)
+        return {g.title_id: g.folder for g in ordered}
+
+    def unpacked_packages(self) -> set[str]:
+        """The packages unpacked whole (path|size|time): a kept one is no longer a waiting row while it is the same
+        file (an update unpacked as a game of its own would be offered again)."""
+        stored = self.settings.qsettings.value(UNPACKED_KEY, [])
+        stored = [stored] if isinstance(stored, str) else list(stored or [])
+        return {s for s in stored if s}
+
+    def remember_unpacked(self, paths: list[Path]) -> None:
+        """The packages just unpacked whole kept, and those deleted or changed since forgotten."""
+        if not paths and not self.settings.qsettings.contains(UNPACKED_KEY):
+            return
+        still = {s for s in self.unpacked_packages() if _stamp(Path(s.rsplit("|", 2)[0])) == s}
+        stamps = still | {stamp for stamp in map(_stamp, paths) if stamp}
+        self.settings.qsettings.setValue(UNPACKED_KEY, sorted(stamps))
+
+    def on_unpack(self) -> None:
+        package = self.chosen_package()
+        if package is not None:
+            self.unpack_packages([package])
+
+    def on_unpack_all(self) -> None:
+        self.unpack_packages(list(self.waiting))
+
+    def unpack_packages(self, packages: list[extract.Package]) -> None:
+        """Unpack or Unpack all: one after the other off the window's thread, the games first, each update beside
+        its game (an older one there replaced), the files counted on the line under the tabs. An update whose game
+        still waits as a package waits for it, unless that game is unpacked in the same go."""
+        if self.worker.running:
+            return
+        todo = sorted(packages, key=lambda p: extract.ORDER[p.category])
+        if not todo:
+            return
+        unpacked = self.unpacked()
+        games = {p.title_id for p in todo if p.category == "gd"}
+        waiting_games = {p.title_id for p in self.waiting if p.category == "gd"}
+        alone = next((p for p in todo if p.category == "gp" and p.title_id not in unpacked
+                      and p.title_id in waiting_games and p.title_id not in games), None)
+        if alone is not None:                           # its game first, or the update takes the game's folder
+            self.say(f"{alone.title or alone.title_id} is an update: unpack its game first, or Unpack all unpacks "
+                     "both.", ok=False)
+            return
+        log = self.log
+
+        def progress(done: int, total: int) -> None:
+            self.unpacking = (self.unpacking[0], (done, total))     # read by _show_unpacking on the window's thread
+
+        def job() -> tuple[bool, str]:
+            done: list[str] = []
+            whole: list[extract.Package] = []
+            failed: list[str] = []
+            for n, package in enumerate(todo, 1):
+                what = package.title or package.title_id or package.path.name
+                self.unpacking = (f"Unpacking {n} of {len(todo)}: {what}…" if len(todo) > 1 else
+                                  f"Unpacking {what}…", (0, 0))
+                folder, game = extract.place(package, unpacked)
+                log.info(f"Unpack: {package.path} ({package.title_id}, {package.kind}) into {folder}.")
+                try:
+                    final, written, missing = extract.unpack(package, folder.parent, game is not None and
+                                                             extract.has_entries(folder), progress, log.info,
+                                                             beside=game)
+                except extract.ExtractError as error:
+                    failed.append(f"{what} ({error})")
+                    continue
+                if missing:
+                    failed.append(f"{what} ({missing} of {written + missing} file(s) missing, {extract.ERRORS} in "
+                                  f"{final.name} names them; the package stays)")
+                    continue
+                if package.category == "gd":
+                    unpacked[package.title_id] = final
+                done.append(what)
+                whole.append(package)
+            self.unpacked_whole = whole
+            text = (f"{done[0]} is unpacked." if len(todo) == 1 and done else
+                    f"{len(done)} of {len(todo)} package(s) unpacked.")
+            if failed:
+                text += " Not done: " + "; ".join(failed) + "."
+            return not failed, text
+        self.unpacked_whole = []
+        self.unpacking = ("Unpacking…", (0, 0))
+        self._start(f"Unpacking {len(todo)} package(s)…" if len(todo) > 1 else
+                    f"Unpacking {todo[0].title or todo[0].path.name}…", job)
+        self.progress_timer.start()
+
+    def _show_unpacking(self) -> None:
+        """While packages unpack: which one, and its files done (a large game takes minutes)."""
+        if not self.worker.running:
+            self.progress_timer.stop()
+            return
+        stage, (done, total) = self.unpacking
+        self.running.setText(stage + (f" {done} of {total} files." if total else ""))
+
+    def _packages_unpacked(self) -> None:
+        """After Unpack: the packages unpacked whole remembered, and offered for deletion (a package takes as much
+        room as its game; the user decides what to keep, owner 01-11-2026)."""
+        whole, self.unpacked_whole = self.unpacked_whole, []
+        if not whole:
+            return
+        self.remember_unpacked([package.path for package in whole])
+        self.refresh()
+        items = [keep.Item(f"path:{package.path}", f"{package.path.name} ({package.title or package.title_id})",
+                           (package.path,)) for package in whole]
+        if KeepDialog("Delete the packages?", items, self,
+                      lead="The games are unpacked; their packages are not needed to play now. Untick what you "
+                           "want to keep. Nothing is deleted before you press Delete marked.").exec() \
+                != QDialog.DialogCode.Accepted:
+            self.note("The packages were kept.")
+            return
+        failed = keep.delete([path for item in keep.chosen(items) for path in item.paths])
+        self.refresh()
+        self.say(f"Packages deleted.{' Not deleted: ' + ', '.join(failed) + '.' if failed else ''}", not failed)
 
     def on_update_steam(self) -> None:
         if self.steam_dir is None:

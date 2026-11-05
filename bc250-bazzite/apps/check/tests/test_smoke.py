@@ -129,6 +129,8 @@ def test_print_results_opens_saved_png_and_shows_preview(sandbox, qapp, tmp_path
     monkeypatch.setattr(QFileDialog, "getSaveFileName", lambda *args: (str(image_path), "PNG image (*.png)"))
     opened_urls = []
     monkeypatch.setattr(QDesktopServices, "openUrl", lambda url: opened_urls.append(url) or True)
+    from bazzite_check.results_dialog import ResultsCardDialog
+    monkeypatch.setattr(ResultsCardDialog, "exec", lambda self: self.save_button.click())   # Save… in the preview
 
     window._print_results()
 
@@ -142,3 +144,52 @@ def test_print_results_opens_saved_png_and_shows_preview(sandbox, qapp, tmp_path
     window.close()
     window.deleteLater()
     qapp.processEvents()
+
+
+def test_the_results_card_preview_copies_and_shares(qapp, tmp_path, monkeypatch):
+    """Print results shows the card first (owner, 04-11-2026), with Save…, Copy and Share; Share is a menu (owner,
+    05-11-2026): each phone KDE Connect reaches, Email… and Show in file manager, the card written to the results
+    folder first."""
+    from PyQt6.QtGui import QPixmap
+    from PyQt6.QtWidgets import QApplication, QMessageBox
+
+    from bazzite_check import results_dialog as rd
+
+    card = QPixmap(1200, 900)
+    card.fill()
+    saved, calls = [], []
+
+    def fake_run(argv):
+        calls.append(argv)
+        if argv[:2] == ["kdeconnect-cli", "--list-available"]:
+            return 0, "a1b2c3 Pixel 9\n"
+        return 0, ""
+    monkeypatch.setattr(rd.shutil, "which", lambda tool: f"/usr/bin/{tool}")
+    folder = tmp_path / "Desktop" / "bc250-bazzite-test"
+    dialog = rd.ResultsCardDialog(card, saved.append, folder, run_=fake_run)
+    said = []
+    dialog.shared.connect(said.append)
+    shown = dialog.picture.pixmap()
+    assert shown.width() <= rd.PREVIEW.width() and shown.height() <= rd.PREVIEW.height()   # scaled to fit
+    dialog.save_button.click()
+    assert saved == [card]
+    dialog.copy_button.click()
+    assert QApplication.clipboard().pixmap().size() == card.size() and said[-1].startswith("Results card copied")
+    dialog.fill_share_menu()
+    entries = [(a.text(), a.isEnabled()) for a in dialog.share_menu.actions() if not a.isSeparator()]
+    assert entries == [("Send to Pixel 9 (KDE Connect)", True), ("Email…", True), ("Show in file manager", True)]
+    card_file = folder / rd.SHARE_NAME
+    assert dialog.share("phone", "a1b2c3", "Pixel 9") == "Results card sent to Pixel 9."
+    assert calls[-1] == ["kdeconnect-cli", "--share", str(card_file), "-d", "a1b2c3"] and card_file.is_file()
+    dialog.share("email")
+    assert calls[-1] == ["xdg-email", "--subject", rd.EMAIL_SUBJECT, "--attach", str(card_file)]
+    monkeypatch.setattr(dialog, "show_in_files", lambda path: path == card_file)
+    assert dialog.share("files").startswith("The file manager shows the card")
+    # No phone in reach, and a mail app that does not open: said, not silent.
+    dialog.run = lambda argv: (1, "") if argv[0] == "kdeconnect-cli" else (3, "no mail app")
+    dialog.fill_share_menu()
+    assert [a.isEnabled() for a in dialog.share_menu.actions() if not a.isSeparator()][0] is False
+    warned = []
+    monkeypatch.setattr(QMessageBox, "warning", lambda *a, **k: warned.append(a[2]))
+    dialog.share("email")
+    assert "No mail app opened: no mail app" in warned[0] and str(card_file) in warned[0]

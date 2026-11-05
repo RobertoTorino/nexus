@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import pytest
 from conftest import KERNEL, LOG_FAILED, LOG_WORKED, fake_build, fake_source, set_stick, usb_device, write  # noqa: F401
-from PyQt6.QtWidgets import QMessageBox
+from PyQt6.QtWidgets import QLabel, QMessageBox
 
 from usb_wifidriver import __version__, builder, driver
 from usb_wifidriver.main_window import MainWindow, StepRunner
@@ -58,7 +58,7 @@ def window(qapp, sys_root, proc_root, usr_root, paths, tmp_path, helper=None, lo
 
 def test_shows_the_owners_stick_without_the_driver_installed(qapp, sys_root, proc_root, usr_root, paths, tmp_path):
     w = window(qapp, sys_root, proc_root, usr_root, paths, tmp_path)
-    assert w.stick_box.value.text() == "Wi-Fi mode" and "AIC 8800D80 (a69c:8d81)" in w.stick_box.toolTip()
+    assert w.stick_box.value.text() == "Wi-Fi" and "AIC 8800D80 (a69c:8d81)" in w.stick_box.toolTip()
     assert w.chip_box.value.text() == "MCU 1" and "revision U03" in w.chip_box.toolTip()
     assert w.driver_box.value.text() == "Not installed" and w.wifi_box.value.text() == "wlan0"
     assert w.branch == "legacy-mcu1"
@@ -74,13 +74,14 @@ def test_stick_modes_and_no_stick(qapp, sys_root, proc_root, usr_root, paths, tm
     set_stick(sys_root, "storage")
     write(proc_root / "modules", "")
     w.refresh()
-    assert w.stick_box.value.text() == "storage mode" and w.wifi_box.value.text() == "—"
+    assert w.stick_box.value.text() == "Storage" and w.wifi_box.value.text() == "—"
+    assert w.stick_box.toolTip().startswith("In storage mode: ")
     assert "sits in storage mode" in w.driver_note.text() and "sudo eject /dev/sdX" in w.driver_note.text()
     assert w.chip_box.value.text() == "Unknown" and w.branch == "main"
     assert "has not answered yet" in w.driver_note.text()
     set_stick(sys_root, "loader")
     w.refresh()
-    assert w.stick_box.value.text() == "waiting for its firmware"
+    assert w.stick_box.value.text() == "Waiting"
     set_stick(sys_root, None)
     w.refresh()
     assert w.stick_box.value.text() == "None" and w.badge.text() == "Not installed"
@@ -174,10 +175,11 @@ def test_newest_sources_build_and_install(qapp, sys_root, proc_root, usr_root, p
     assert "untested" in w.terminal.toPlainText() and builder.output_commit(layout.output) == "b" * 40
     w.install()
     assert helper.calls[-1][helper.calls[-1].index("--commit") + 1] == "b" * 40
-    assert w.driver_box.value.text() == "legacy-mcu1 (newest)" and "not the tested pin" in w.driver_box.toolTip()
+    assert w.driver_box.value.text() == "legacy-mcu1" and "not the tested pin" in w.driver_box.toolTip()
+    assert w.driver_box.caption.text() == "Driver, newest"
     w.newest_check.setChecked(False)
     w.refresh()
-    assert w.driver_box.value.text() == "legacy-mcu1 (newest)" and not w.install_button.isEnabled()
+    assert w.driver_box.value.text() == "legacy-mcu1" and not w.install_button.isEnabled()
 
 
 def test_a_failed_build_leaves_install_off(qapp, sys_root, proc_root, usr_root, paths, tmp_path, monkeypatch):
@@ -286,3 +288,29 @@ def test_step_runner_takes_the_fallback(qapp):
     assert "The mirror did not answer." in text and "from upstream" in text and text.count("$ true") == 1
     text, done = run_steps(qapp, [builder.Step(["false"], fallback=["false"], note="again")])
     assert done == [False] and "again" in text and "Stopped: exit code 1." in text
+
+
+def test_the_boxes_keep_their_text_and_the_long_text_is_behind_the_info_symbols(qapp, sys_root, proc_root, usr_root,
+                                                                                 paths, tmp_path):
+    """The four header boxes as wide as the widest, so none cuts its text off, with short values; the driver's and
+    the adapters' explanations behind an info symbol; the notice on the right of the driver's controls (owner,
+    04-11-2026)."""
+    from bc250_core.widgets import InfoButton
+    w = window(qapp, sys_root, proc_root, usr_root, paths, tmp_path, log=LOG_FAILED)
+    set_stick(sys_root, "loader")
+    w.refresh(read_log=True)
+    w.resize(940, 800)
+    w.show()
+    qapp.processEvents()
+    assert w.stick_box.value.text() == "Waiting" and "waiting for its firmware" in w.stick_box.toolTip()
+    boxes = [w.stick_box, w.chip_box, w.driver_box, w.wifi_box]
+    assert len({box.width() for box in boxes}) == 1
+    assert all(box.value.sizeHint().width() <= box.value.width() for box in boxes)
+    infos = {b.toolTip(): b.text_ for b in w.findChildren(InfoButton)}
+    assert "pinned sources" in infos["About the driver"] and "Only read" in infos["About this list"]
+    labels = " ".join(label.text() for label in w.findChildren(QLabel) if not isinstance(label.parent(), InfoButton))
+    assert "pinned sources, built here" not in labels and "nothing is loaded or switched" not in labels
+    note = w.driver_note
+    assert note.isVisible() and "0x170400" in note.text()
+    assert note.mapTo(w, note.rect().topLeft()).x() > w.branch_combo.mapTo(w, w.branch_combo.rect().topRight()).x()
+    w.close()

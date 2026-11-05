@@ -130,13 +130,23 @@ class Tour(Recorder):
         self.fade(shown, wiki, 0.6)
         self.emit(wiki, round(2.8 * self.fps))
         self.fade(wiki, shown, 0.6)
-        for pill, text in ((w.refresh_pill, "The square pills: Refresh looks again at which apps are installed."),
-                           (w.icons_box, "Icons on Desktop: one icon per app on the Desktop, or only the portal's."),
+        self.say("The square pills: Refresh looks again at which apps are installed.")
+        self.move(self.at(w.refresh_pill), 0.6)
+        self.hold(2.6)
+        self.say("☰ opens the Settings page, as the ☰ button on a controller does.")
+        self.move(self.at(w.settings_pill), 0.6)
+        self.click(w.toggle_settings)
+        self.hold(1.4)
+        for pill, text in ((w.icons_box, "Icons on Desktop: one icon per app on the Desktop, or only the portal's."),
                            (w.theme_pill, "The theme switcher: one look for every app in the suite."),
                            (w.wallpaper_pill, "And a wallpaper of your own behind the portal, seen through the pills.")):
             self.say(text)
             self.move(self.at(pill), 0.6)
             self.hold(2.6)
+        self.say("B, Escape or ☰ again goes back to the apps.")
+        self.move(self.at(w.settings_pill), 0.6)
+        self.click(w.toggle_settings)
+        self.hold(1.4)
 
         self.say("An app with a newer release gets a red dot, and the notice beside the categories counts it.")
         self.move(self.at(w.big.notice))
@@ -170,6 +180,9 @@ class Tour(Recorder):
         self.click(lambda: w.big.bar.setCurrentIndex(0))
         self.hold(0.6)
 
+        self.move(self.at(w.settings_pill), 0.6)
+        self.click(w.toggle_settings)
+        self.hold(0.6)
         self.say("The Wallpaper pill: your own picture, the example, one used before, or none.")
         self.move(self.at(w.wallpaper_pill))
         self.click(lambda: self.open_menu())
@@ -195,9 +208,15 @@ class Tour(Recorder):
         self.popup.close()
         self.popup = None
         self.pump()
+        self.move(self.at(w.settings_pill), 0.6)
+        self.click(w.toggle_settings)
+        self.hold(0.6)
 
         self.controller()
 
+        self.move(self.at(w.settings_pill), 0.6)
+        self.click(w.toggle_settings)
+        self.hold(0.6)
         self.say("Gunmetal, Silver or Warm: each app takes the theme the next time it starts.")
         self.move(self.at(w.theme_pill))
         self.click(w._next_theme)
@@ -244,7 +263,7 @@ class Tour(Recorder):
         pointer, self.pointer = self.pointer, (-100, -100)
         w.big.focus_first()
         self.pump()
-        self.say("The d-pad, the stick or the arrow keys move the focus; A or Enter opens the app, X its menu.")
+        self.say("The d-pad, the stick or the arrow keys move the focus; A or Enter opens the app, X its menu, Y updates.")
         self.hold(1.2)
         for direction in ("right", "right", "right", "right", "left", "left"):     # the top row: above the captions
             w.big.move_focus(direction)
@@ -321,6 +340,7 @@ def render_still(theme: str, out: Path) -> None:
         tour = Tour(Path(os.devnull), 1, home)
         tour.ffmpeg.kill()
         tour.window.example_wallpaper()
+        tour.window.toggle_settings()                   # as the tour shows the theme: on the Settings page
         tour.say({"silver": "Silver", "warm": "Warm"}.get(theme, theme))
         tour.overlay = None
         tour.pointer = (-100, -100)

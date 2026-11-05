@@ -131,9 +131,10 @@ def test_buttons_become_actions_and_a_held_direction_repeats():
     assert gamepad.start()
     pad.queue = [("button", "a", True), ("button", "a", False), ("button", "b", True), ("button", "x", True),
                  ("button", "leftshoulder", True), ("button", "rightshoulder", True), ("button", "y", True),
-                 ("button", "start", True)]
+                 ("button", "start", True), ("button", "rightstick", True)]
     gamepad.poll()
-    assert got == ["accept", "back", "menu", "previous", "next"]          # Y and Start do nothing: no mode to switch
+    # Y updates and ☰ (Start) opens the Settings page (owner, 04-11-2026); R3 the on-screen keyboard (05-11-2026)
+    assert got == ["accept", "back", "menu", "previous", "next", "update", "settings", "keyboard"]
     got.clear()
     pad.queue = [("button", "dpad_down", True)]
     gamepad.poll()
@@ -298,7 +299,7 @@ def test_no_mode_is_kept_and_nothing_switches(made):
     assert not hasattr(window, "mode_pill") and not hasattr(window, "toggle_mode")
     assert not any(s.key().toString() == "F11" for s in window.findChildren(QShortcut))
     assert window.settings.value("portal/mode") is None
-    assert "Y" not in bigpicture.LEGEND and "F11" not in bigpicture.LEGEND
+    assert "F11" not in bigpicture.LEGEND and "mode" not in bigpicture.LEGEND.lower()
 
 
 def test_escape_and_b_close_the_portal_but_skip_the_intro_first(made, monkeypatch):
@@ -359,10 +360,9 @@ def test_the_pills_are_rounded_rectangles_that_show_the_wallpaper_through(made):
     mouse."""
     window, _ = made()
     pills = window.header_pills
-    assert len(pills) == 9 and all(isinstance(p, bigpicture.HeaderPill) for p in pills)
+    assert len(pills) == 6 and all(isinstance(p, bigpicture.HeaderPill) for p in pills)
     assert [p.caption.text() for p in pills] == [
-        "Click to refresh", "Installed apps", "All updates", "All apps", "Icons on Desktop",
-        "Sound", "Theme switcher", "Wallpaper", "Click to view"]
+        "Click to refresh", "Installed apps", "All updates", "All apps", "Click to view", "Settings"]
     assert all(window.big.isAncestorOf(p) for p in pills)
     window.show()
     window.resize(1920, 1080)
@@ -416,11 +416,60 @@ def test_the_focus_reaches_the_pills_and_back_with_the_controller(made, monkeypa
     pad.queue = [("button", "dpad_down", True), ("button", "dpad_down", False)]
     window.gamepad.poll()
     assert isinstance(window.focusWidget(), bigpicture.BigTile)
-    window.sound_box.setFocus()
-    before = window.sound_box.isChecked()
+    window.refresh_pill.setFocus()
+    pressed = []
+    window.refresh_pill.clicked.connect(lambda: pressed.append(1))
     pad.queue = [("button", "a", True)]
     window.gamepad.poll()
-    assert window.sound_box.isChecked() is (not before)        # A presses the focused pill
+    assert pressed == [1]                                      # A presses the focused pill
+
+
+def test_the_settings_page_holds_the_settings(made, monkeypatch):
+    """The Settings page behind ☰ (owner, 04-11-2026, as the Windows Portable Suite's portal): the ☰ pill or the
+    controller's ☰ button shows it in place of the category strip and the tiles, under the same header; its pills
+    (Desktop icons, Sound, the theme, the wallpaper), each with a short line, work as before; B, Escape or ☰ again
+    go back to the tiles."""
+    window, pad = made()
+    start(window)
+    window.resize(1500, 1000)
+    QApplication.processEvents()
+    big = window.big
+    assert window.setting_pills == [window.icons_box, window.sound_box, window.theme_pill, window.wallpaper_pill]
+    assert not any(p in window.header_pills for p in window.setting_pills)
+    assert all(big.settings_page.isAncestorOf(p) for p in window.setting_pills)
+    assert [label.text() for label in big.setting_lines] == list(mw.SETTING_LINES)
+    assert not big.in_settings() and big.keys.text() == bigpicture.LEGEND
+    window.settings_pill.click()
+    QApplication.processEvents()
+    assert big.in_settings() and big.strip.isHidden() and big.stack.isHidden()
+    assert big.keys.text() == bigpicture.SETTINGS_LEGEND and big.hint.full == bigpicture.SETTINGS_HINT
+    assert window.focusWidget() is window.icons_box             # the focus on its first pill
+    assert big.current_tiles() and not any(t in big.focus_items() for t in big.current_tiles())
+    monkeypatch.setattr(QApplication, "activeWindow", staticmethod(lambda: window))
+    pad.queue = [("button", "dpad_down", True), ("button", "dpad_down", False)]
+    window.gamepad.poll()
+    assert window.focusWidget() is window.sound_box
+    before = window.sound_box.isChecked()
+    pad.queue = [("button", "a", True), ("button", "a", False)]
+    window.gamepad.poll()
+    assert window.sound_box.isChecked() is (not before)        # A changes the focused setting
+    category = big.bar.currentIndex()
+    pad.queue = [("button", "rightshoulder", True), ("button", "rightshoulder", False)]
+    window.gamepad.poll()
+    assert big.bar.currentIndex() == category                  # no category on the Settings page
+    pad.queue = [("button", "b", True), ("button", "b", False)]
+    window.gamepad.poll()
+    assert not big.in_settings() and window.isVisible()         # B goes back, it does not close the portal
+    assert isinstance(window.focusWidget(), bigpicture.BigTile) and big.keys.text() == bigpicture.LEGEND
+    assert big.hint.full == big.hints[big.current_category()]
+    pad.queue = [("button", "start", True), ("button", "start", False)]
+    window.gamepad.poll()
+    assert big.in_settings()
+    key(window, Qt.Key.Key_Escape)
+    assert not big.in_settings() and window.isVisible()
+    window.toggle_settings()
+    window.show_app("ncgui")                                    # a notice's line: back to the tiles
+    assert not big.in_settings() and window.focusWidget() is big.tiles["ncgui"]
 
 
 def test_the_arrow_keys_move_from_a_pill_and_enter_presses_a_button(made):
@@ -435,15 +484,16 @@ def test_the_arrow_keys_move_from_a_pill_and_enter_presses_a_button(made):
     assert window.focusWidget() is window.apps_pill
     key(window, Qt.Key.Key_Down)
     assert isinstance(window.focusWidget(), bigpicture.BigTile)
-    window.portal_button.setText("● Portal 99.0.0 available")
-    window.portal_button.show()
+    window.restart_button.setText("● Restart: portal 99.0.0 is installed")
+    window.restart_button.show()
     pressed = []
-    window.portal_button.clicked.connect(lambda: pressed.append(1))
-    window.portal_button.setFocus()
+    window.restart_button.clicked.disconnect()
+    window.restart_button.clicked.connect(lambda: pressed.append(1))
+    window.restart_button.setFocus()
     key(window, Qt.Key.Key_Return)
     assert pressed == [1]                                      # Enter presses a title-row button
     key(window, Qt.Key.Key_Down)
-    assert window.focusWidget() is not window.portal_button
+    assert window.focusWidget() is not window.restart_button
 
 
 def test_the_local_build_banner_is_in_the_view(made, tmp_path):
@@ -539,8 +589,9 @@ def test_an_app_with_several_ways_to_open_offers_a_menu(made, monkeypatch):
 
 
 def test_the_tile_menu_holds_every_action(made, monkeypatch, home):
-    """X, the Menu key or a right click (owner, 01-11-2026: the desktop's buttons are gone): Open, Install (Update,
-    Reinstall) and Uninstall, grayed out where they cannot act now; check has no Uninstall."""
+    """X or the Menu key (owner, 01-11-2026: the desktop's buttons are gone): Open, Install (Update, Reinstall) and
+    Uninstall, grayed out where they cannot act now; check has no Uninstall. A right click opens it on a tile with
+    nothing to update (owner, 04-11-2026: a right click updates)."""
     window, pad = made()
     start(window)
     names = lambda menu: [(a.text(), a.isEnabled()) for a in menu.actions() if not a.isSeparator()]  # noqa: E731
@@ -567,13 +618,41 @@ def test_the_tile_menu_holds_every_action(made, monkeypatch, home):
     assert len(shown) == 2
     from PyQt6.QtGui import QContextMenuEvent
     from PyQt6.QtCore import QPoint
-    tile = window.big.tiles["gpu"]
+    tile = window.big.tiles["acpi"]                            # not installed: nothing to update
     QApplication.sendEvent(tile, QContextMenuEvent(QContextMenuEvent.Reason.Mouse, QPoint(5, 5)))
     assert len(shown) == 3
     installed = []
     monkeypatch.setattr(window, "install", lambda entry: installed.append(entry.key))
     window.tile_menu(gpu).actions()[2].trigger()
     assert installed == ["gpu"]
+
+
+def test_a_right_click_or_y_updates_the_app(made, monkeypatch, home):
+    """A right click on a tile, or Y on it (owner, 04-11-2026, as the Windows Portable Suite's portal): its update,
+    through install() and so with the board warning for an app that changes the board; no menu."""
+    window, pad = made()
+    start(window)
+    shown, installed = [], []
+    monkeypatch.setattr(mw.QMenu, "exec", lambda self, *a: shown.append(1))
+    monkeypatch.setattr(window, "install", lambda entry: installed.append(entry.key))
+    (home / ".local" / "bin" / "bc250-governor-manager").write_text("#!/bin/sh\n")
+    window.records.set("gpu", "gpu-v0.0.9")
+    window.refresh()
+    assert window.states["gpu"].update
+    from PyQt6.QtGui import QContextMenuEvent
+    from PyQt6.QtCore import QPoint
+    tile = window.big.tiles["gpu"]
+    QApplication.sendEvent(tile, QContextMenuEvent(QContextMenuEvent.Reason.Mouse, QPoint(5, 5)))
+    assert installed == ["gpu"] and shown == []
+    monkeypatch.setattr(QApplication, "activeWindow", staticmethod(lambda: window))
+    tile.setFocus()
+    pad.queue = [("button", "y", True)]
+    window.gamepad.poll()
+    assert installed == ["gpu", "gpu"] and shown == []
+    window.big.tiles["acpi"].setFocus()                        # nothing to update: Y does nothing
+    pad.queue = [("button", "y", False), ("button", "y", True)]
+    window.gamepad.poll()
+    assert installed == ["gpu", "gpu"] and shown == []
 
 
 def test_the_controller_drives_a_menu_with_keys(made, monkeypatch):
@@ -608,7 +687,8 @@ def test_an_install_stays_in_the_view(made, monkeypatch):
 def test_the_legend_names_the_keys(made):
     window, _ = made()
     text = window.big.keys.text()
-    assert "A / Enter" in text and "X / Right click" in text and "LB / RB" in text and "B / Esc" in text
+    assert "A / Enter" in text and "Y / Right click  Update" in text and "X / Menu key" in text and "LB / RB" in text \
+        and "B / Esc" in text
     assert "font-size:24px" in window.big.keys.styleSheet()                   # readable from the couch
 
 
@@ -652,3 +732,51 @@ def test_each_category_keeps_its_own_columns(made):
     QApplication.processEvents()
     big.bar.setCurrentIndex(0)                          # it was laid out for 1900 px; now the window is narrower
     assert big.columns["sustainable"] < wide
+
+
+def test_r3_toggles_the_on_screen_keyboard_in_a_dialog_too(made, monkeypatch):
+    """R3 (owner, 05-11-2026): Bazzite's on-screen keyboard, also while a question or the file dialog is open, where
+    text is typed; when the desktop has none, the window says what to do. The legend names it."""
+    window, pad = made()
+    start(window)
+    monkeypatch.setattr(QApplication, "activeWindow", staticmethod(lambda: window))
+    toggled = []
+    monkeypatch.setattr(window.keyboard, "toggle", lambda: toggled.append(1) or True)
+    pad.queue = [("button", "rightstick", True), ("button", "rightstick", False)]
+    window.gamepad.poll()
+    assert toggled == [1]
+    monkeypatch.setattr(QApplication, "activeModalWidget", staticmethod(lambda: window))   # a dialog is open
+    window._gamepad_action("keyboard")
+    assert toggled == [1, 1]
+    from bc250_portal import keyboard
+    told = []
+    monkeypatch.setattr(QMessageBox, "information", lambda *a, **k: told.append(a[2]))
+
+    def none():
+        raise keyboard.KeyboardError(keyboard.NOT_CHOSEN)
+    monkeypatch.setattr(window.keyboard, "toggle", none)
+    window._gamepad_action("keyboard")
+    assert told == [keyboard.NOT_CHOSEN]
+    assert "R3  Keyboard" in bigpicture.LEGEND
+
+
+def test_every_controller_action_plays_the_short_sound(made, monkeypatch):
+    """blob.wav on every controller action (owner, 05-11-2026), not on the button that skips the intro, and not with
+    the Sound setting off."""
+    import wave
+    with wave.open(str(audio.SOUNDS / f"{audio.ACTION}.wav"), "rb") as sound:
+        assert sound.getnframes() / sound.getframerate() < 0.5            # short: a held direction repeats
+    window, pad = made()
+    window.start_up()
+    monkeypatch.setattr(QApplication, "activeWindow", staticmethod(lambda: window))
+    pad.queue = [("button", "a", True)]
+    window.gamepad.poll()                                                  # skips the intro: silent
+    assert window.sounds.played == [audio.INTRO]
+    pad.queue = [("button", "a", False), ("button", "dpad_right", True), ("button", "dpad_right", False),
+                 ("button", "rightshoulder", True), ("button", "rightshoulder", False)]
+    window.gamepad.poll()
+    assert window.sounds.played == [audio.INTRO, audio.ACTION, audio.ACTION]
+    window.sound_box.setChecked(False)
+    pad.queue = [("button", "leftshoulder", True)]
+    window.gamepad.poll()
+    assert window.sounds.played.count(audio.ACTION) == 2

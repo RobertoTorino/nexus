@@ -1,3 +1,18 @@
+Changelog: 05-11-2026 02:54:23
+
+Fixed. The Disclaimer of the README and of the manual chapter (MANUAL.md) no longer names Nintendo, as the text every
+part of Nexus shares (tools/mkdocs/disclaimer.py).
+
+Changelog: 05-11-2026 01:06:31
+
+Added. A package put in a game folder waits under Your games (owner, 05-11-2026, as the Windows Portable Suite's
+shadPS4 Manager since 30-10-2026): a row of its own, PKG or PKG update, with where it goes in its tooltip. Unpack
+takes the chosen one, Unpack all every one, the games first; a game goes into its ID's folder beside its package, an
+update beside its game wherever that is and replaces an older one there only when every file was written, and an
+update whose game still waits waits for it. Afterwards a window offers the packages for deletion, each ticked;
+Cancel keeps them, and a package unpacked whole is no longer listed. extract.py is the Windows app's, so both suites
+place a package the same way; the Extract PKG window stays for its own tools. The Game folders line says so.
+
 Changelog: 04-11-2026 11:32:10
 
 Release 4.0.1.

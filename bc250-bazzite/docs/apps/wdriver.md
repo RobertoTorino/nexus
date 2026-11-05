@@ -29,9 +29,11 @@ that loads it at every boot, and builds it again after a kernel update.
 
 ## Using it
 
-The top row shows the **stick** (storage mode, waiting for its firmware, or Wi-Fi mode), the **chip** (its
-revision and MCU as the loader reported it in the kernel log), the **driver** (built, or the installed branch) and
-the **Wi-Fi** interface the driver created.
+The top row shows the **stick** (**Storage**, **Waiting** for its firmware, or **Wi-Fi**), the **chip** (its MCU;
+hover over it for the revision as the loader reported it in the kernel log), the **driver** (built, or the installed
+branch) and the **Wi-Fi** interface the driver created. Hover over a box for the details. What to do next, when
+there is something, shows on the right of the driver's controls. The small **i** at the end of the branch row says
+what the driver is and does, the one beside **Wi-Fi adapters** what that list shows.
 
 1. **Driver branch:** chosen from the chip's answer. A chip that reports MCU 1 takes `legacy-mcu1`; MCU 0 takes
    `main`. When the chip has not answered yet, the app proposes `main`, and says what to do when the firmware
@@ -42,7 +44,8 @@ the **Wi-Fi** interface the driver created.
    mirror does not answer.
    **Newest sources (untested)** fetches the branch's current head instead of the tested commit: for the day a
    new kernel breaks the pinned build and the fix is already upstream but not yet in a release of this app. The
-   window marks such a driver as newest; the next release brings a tested pin again.
+   window marks such a driver as newest (the Driver box reads **Driver, newest**); the next release brings a
+   tested pin again.
 3. **Install…:** copies the build and the sources to `/var/lib/bc250-usb-wifi`, writes the stick's udev rule and
    the service, and starts the service, which loads the driver now. The app asks first, then asks for your
    password. A stick in storage mode is switched at the same time.
@@ -102,7 +105,9 @@ The driver's own tests, upstream, were on 6.1 and 6.16. Tested in the suite: the
 
 - when there are no modules for the running kernel, it builds them from the kept sources with the kernel's build
   tree (no network; a minute or two, in the background, with a desktop notification when done or when it failed);
-- loads `cfg80211`, then the loader `aic_load_fw` with the firmware folder as its parameter, then `aic8800_fdrv`;
+- labels the two modules `modules_object_t` for SELinux (the only type Fedora's policy loads a module from; the
+  files under `/var/lib` are `var_lib_t` otherwise), then loads `cfg80211`, the loader `aic_load_fw` with the
+  firmware folder as its parameter, and `aic8800_fdrv`;
 - ejects the virtual disk of a stick that sits in storage mode, which switches it to loader mode; the udev rule
   does the same for a stick plugged in later.
 
@@ -133,6 +138,10 @@ parameter points at the folder there.
   notification. When the build failed, the window shows the error and `journalctl -u bc250-usb-wifi` the log. A
   kernel the pinned driver does not build on yet needs a newer pin (a new release of this app); until then, tick
   **Newest sources**, Build and Update: when the fix is upstream already, that build works.
+- **No wlan0, and the service's log says `insmod: ERROR: could not insert module … Permission denied`:** SELinux
+  refused the module (`journalctl -b | grep module_load` shows the denial). A service installed by an older version
+  of the app did not label the modules for it; the window then says the service is outdated: press **Update…** and
+  the service labels and loads them.
 - **The desktop keeps asking for the Wi-Fi password:** the connection uses WPA3; set it to WPA2, see Using it.
 - **Bluetooth:** the stick's Bluetooth comes up on the kernel's own `btusb` driver once the firmware runs; the app
   does nothing for it.

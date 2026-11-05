@@ -8,22 +8,53 @@ checks before a push are in [Development](development.md#ci-on-your-own-machine)
 
 ## Tools
 
+The tools the work on the repository needs often are installed for good, not run once in a container: the
+prerequisites on every development machine, the optional ones on the machine that does that work.
+
+### Prerequisites
+
+What `./test.sh`, `tools/pre-push.sh` (the pre-push hook) and `tools/ci-local.sh` need.
+
 | Tool | What uses it | Bazzite | Windows |
 |---|---|---|---|
 | Git | everything; `tools/hooks/pre-push` as the pre-push hook | comes with Bazzite | Git for Windows (`winget install Git.Git`); Git Bash runs the `.sh` scripts |
 | Python 3.11 or newer (CI runs 3.12) | the venvs, every tool in `tools/` | comes with Bazzite (`python3`, without PyQt6) | python.org or `winget install Python.Python.3.12`, with the `py` launcher |
 | The development venv (`requirements-dev.txt`) | `./test.sh`, `mkdocs`, the tools; it brings pytest, PyQt6, MkDocs Material and Pillow | `.venv-linux/`, see [Development](development.md#set-up-and-test) | `.venv-windows/` |
+| Homebrew | installs the tools below on Bazzite | comes with Bazzite | not used |
 | podman (or docker) | `tools/ci-local.sh`: CI's jobs in a container, with Python 3.12, shellcheck, fakeroot, Rust and Console Link's build tools inside | comes with Bazzite | `winget install RedHat.Podman`; it runs in podman's machine, see [Development](development.md) |
 | shellcheck | the shell checks of CI | `brew install shellcheck` | `winget install koalaman.shellcheck` |
 | fakeroot | the installer tests (`bc250-bazzite/tools/installer-tests/`) | `brew install fakeroot` | Linux only |
+| zip, tar, sha256sum | `tools/build_release.py` | come with Bazzite | come with Git Bash |
+
+### Optional
+
+Each for one tool or one kind of work; without it that tool does not run, or its test skips.
+
+| Tool | What uses it | Bazzite | Windows |
+|---|---|---|---|
 | Node.js | the design panel's test (`tools/tests/test_design_panel.py`, skipped without it) | `brew install node` | `winget install OpenJS.NodeJS.LTS` |
 | GitHub CLI (`gh`) | the runs and releases from a terminal, the Nexus Release Tool's sign-in | `brew install gh` | `winget install GitHub.cli` |
-| ffmpeg | the video tours (each suite's `tools/record-tour.sh` and `tools/record-app-tour.sh`, on its own system) | `brew install ffmpeg` | `winget install Gyan.FFmpeg` |
+| actionlint | a changed workflow in `.github/workflows/` checked before the push, with shellcheck on its `run:` steps: `actionlint` at the repository root | `brew install actionlint` | `winget install rhysd.actionlint` |
+| ffmpeg | the video tours (each suite's `tools/record-tour.sh` and `tools/record-app-tour.sh`, on its own system) | comes with Bazzite | `winget install Gyan.FFmpeg` |
 | Rust (rustup with cargo and clippy), maturin, nasm, the libva headers | Console Link's native core, only to run `cargo test` or `maturin build` on the machine itself; the container of `tools/ci-local.sh` has them all | rustup from rustup.rs, `brew install nasm`, maturin with pip in the venv | `winget install Rustlang.Rustup`; the decoder builds on Linux only |
 | PyInstaller and Pillow | `tools/build_windows_exe.py`, the Windows executable of Bazzite SFTP | not used | in `.venv-windows/`, `pip install pyinstaller pillow` |
 | OBS Studio, with its WebSocket server on | Nexus Demo Recorder (`dev/demo/`) | flatpak `com.obsproject.Studio`, or `obs` | `winget install OBSProject.OBSStudio` |
 | notify-send | `tools/dev-updates.sh --notify` (below) | comes with Bazzite | not used |
-| zip, tar, sha256sum | `tools/build_release.py` | come with Bazzite | come with Git Bash |
+| setools (`sesearch`, `seinfo`) | reading the SELinux policy on the board: which label a file needs (BC-250 USB Wi-Fi's modules, for example) | in a distrobox, see below | not used |
+
+`setools-console` is a Fedora package that Homebrew does not have; a distrobox keeps it off the image (no
+`rpm-ostree install`, no reboot) and puts the two commands in `~/.local/bin`:
+
+```bash
+distrobox create --name nexus-tools --image registry.fedoraproject.org/fedora-toolbox:44 --yes
+distrobox enter nexus-tools -- sudo dnf -y install setools-console
+distrobox enter nexus-tools -- distrobox-export --bin /usr/bin/sesearch --export-path ~/.local/bin
+distrobox enter nexus-tools -- distrobox-export --bin /usr/bin/seinfo --export-path ~/.local/bin
+```
+
+Inside the distrobox the board's own files are under `/run/host`, so give the policy by that path:
+`sesearch -A -s unconfined_service_t -c system -p module_load /run/host/etc/selinux/targeted/policy/policy.35`.
+`distrobox rm nexus-tools` removes it again.
 
 Homebrew on Bazzite installs to `/home/linuxbrew/.linuxbrew/bin`; a shell that is not interactive (a timer, an IDE's
 terminal) may need it on `PATH`.
@@ -53,7 +84,7 @@ machine was off, and updates the image, the Flatpaks and Homebrew's packages. `u
 new image is used after a reboot. The venv is pip's and the Rust toolchain rustup's; nothing updates them for you.
 
 `tools/dev-updates.sh` looks at every source at once and says what has a newer version: Bazzite's image, the
-Flatpaks, Homebrew's packages (`gh`, shellcheck, fakeroot, node, ffmpeg, ...), the Rust toolchain and the packages
+Flatpaks, Homebrew's packages (`gh`, shellcheck, fakeroot, node, nasm, ...), the Rust toolchain and the packages
 of `.venv-linux`. It only looks; with each source it says how it gets installed. `--install` makes a user timer
 of it that runs every hour and shows a desktop notification when something is new, so an update never comes as a
 surprise:

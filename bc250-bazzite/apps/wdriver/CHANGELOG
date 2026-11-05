@@ -1,3 +1,19 @@
+Changelog: 05-11-2026 00:15:44
+
+Fixed. The driver did not load any more: SELinux refused the modules (insmod: Permission denied; owner's board,
+04-11-2026, Bazzite's image of 26-10-2026 with selinux-policy 44.11 and kernel 7.2.11). Fedora's policy loads a
+module only from a file labeled modules_object_t, and the modules under /var/lib/bc250-usb-wifi are var_lib_t. The
+service now labels the two modules modules_object_t before it loads them, at every boot, after a rebuild for a new
+kernel too. The stick itself was recognized: it waited for the firmware the loader never sent. A service installed
+by an earlier version needs Update in the window.
+
+Changelog: 05-11-2026 00:07:05
+
+Fixed. The header's boxes no longer cut their text off (owner, 04-11-2026): Stick, Chip, Driver and Wi-Fi are as
+wide as the widest of them, with shorter values (Storage, Waiting, Wi-Fi; the installed branch, with Driver, newest
+as the caption for the newest sources), the full text in each box's tooltip. What to do next shows on the right of
+the driver's controls, and the explanations of the driver and of the Wi-Fi adapters list are behind a small i.
+
 Changelog: 04-11-2026 11:32:10
 
 Release 1.1.1.

@@ -121,6 +121,11 @@ tooling, is [.claude/checks.md](.claude/checks.md).
 lacks (Node.js for the design panel's script, shellcheck, fakeroot, podman), get it (`brew install` on Bazzite)
 and run the check, rather than reviewing by eye.
 
+**Frequently needed tools are installed for good** (owner, 05-11-2026): a tool the work needs more than once is
+installed permanently on the development machine (Homebrew, or a distrobox for a Fedora package Homebrew lacks), not
+run once in a throwaway container, and listed in the Nexus page's [The development machine](nexus/docs/machine.md)
+chapter, under Prerequisites or Optional, in the same change.
+
 ## Style
 
 Code reads like the code around it: the same comment density, naming and idiom. Docs are plain, short sentences,

@@ -1,0 +1,7 @@
+Changelog: 05-11-2026 02:36:25
+
+Added. SSD Check: the health, power cycles and power-on hours of each drive that reports SMART, read from udisks
+over D-Bus without root (busctl). An NVMe drive gives all three (health is 100 minus its percentage used); a SATA SSD
+gives its hours and cycles and its health from the first known maker's attribute (231, 169, 202, 233, 177), else
+"Not reported". The state beside the name shows a problem the drive itself flags; with more drives a list chooses
+one. The drive's serial number stays out of the window. Written by tools/new_app.py from the architecture chapter.
