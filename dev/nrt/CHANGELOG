@@ -1,3 +1,17 @@
+Changelog: 05-11-2026 20:41:56
+
+Breaking. A Nexus release is of the suite ticked in the Portals column, and only it (owner, 05-11-2026: the Windows
+draft, waiting for its device test on the handheld, held up the board's next release). The Contents tab and Start
+take that suite's apps and portal (core and Nexus when they changed); Start passes it to release-nexus.yml as the
+suites input (-f suites=bc250-bazzite), so the run carries only that suite and its title says so ("Release Nexus:
+bc250-bazzite"); Start again on this commit passes the run's suites again. The steps follow the ticked suite's
+release: its newest run, and only its own draft keeps it open, so the other suite's draft no longer holds Start
+new release back. A run started before (titled "Release Nexus") counts for every suite.
+
+Fixed. The Device test step says where the draft is tested when that is another system: "wp-portal-v8.2.0 is a
+draft: Device test on the handheld (Windows), then Publish when it works or Not OK." (owner, 05-11-2026: on the
+board Device test was gray, with no word why).
+
 Changelog: 05-11-2026 19:21:28
 
 Fixed. The portal choice of Device test and Publish holds only the portals that are still drafts: after one suite's

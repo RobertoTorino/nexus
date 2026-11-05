@@ -173,7 +173,8 @@ class ReleasePage(QWidget):
         typed = {pick.label: (combo.currentText() if combo.currentText() != pick.choices[0] else "", notes.text())
                  for pick, combo, notes in self.rows}
         root = self.release_window.root
-        self.picks = flow.picks(root) if flow.release_suites(root) else []
+        suite = self.release_window.suite
+        self.picks = flow.picks(root, suite) if flow.chosen_suites(root, suite) else []
         self.table.setRowCount(len(self.picks))
         self.rows = []
         for i, pick in enumerate(self.picks):
@@ -198,7 +199,7 @@ class ReleasePage(QWidget):
             self.table.setCellWidget(i, 4, notes)
             self.rows.append((pick, combo, notes))
         self.portal_choice.clear()
-        self.portal_choice.addItems(flow.waiting_portals(root))
+        self.portal_choice.addItems(flow.waiting_portals(root, suite))
         self.show_state()
 
     def chosen(self) -> list[flow.Pick]:
@@ -214,13 +215,14 @@ class ReleasePage(QWidget):
         root, base = window.root, window.base()
         runs = window.build.runs
         head = (rp.git(root, "rev-parse", "HEAD") or "").strip()
-        run = flow.cycle_run(root, runs, self.rejected(flow.release_run(runs)))
+        suite = window.suite                   # the release of the suite ticked in the Portals column, and only it
+        run = flow.cycle_run(root, runs, self.rejected(flow.release_run(runs, suite=suite)), suite)
         unstaged, staged, ahead = rp.git_state(root, base)
         return flow.Facts(
             behind=rp.behind(root, base) or int(flow.pushed_elsewhere(root, runs) is not None), dirty=unstaged or staged, ahead=ahead,
             ci=flow.ci_state(runs, head, window.ticker.hidden) if window.build.source is not None else "unknown",
             unpushed=flow.unpushed_release(root, base), something=bool(self.picks), run=run,
-            drafts=[t for t in flow.waiting_portals(root) if not flow.published(root, runs, t)] if run else [],
+            drafts=[t for t in flow.waiting_portals(root, suite) if not flow.published(root, runs, t)] if run else [],
             restart=run is not None and run.sha != head, rejected=self.rejected(run))
 
     def rejected(self, run: rp.BuildRun | None) -> list[str]:
@@ -239,6 +241,7 @@ class ReleasePage(QWidget):
         window = self.release_window
         idle = not window.commands.is_running() and bool(window.commands.bash)
         facts = self.facts = self.read_facts()
+        self.choose_drafts(facts.drafts)              # before the lines, which name where the chosen one is tested
         states = flow.step_states(facts)
         now = flow.current_step(facts)
         for key, _title, what in flow.STEPS:
@@ -264,7 +267,6 @@ class ReleasePage(QWidget):
         self.stop_button.setEnabled(idle and now == "run" and run is not None and not run.done)
         self.resume_button.setEnabled(idle and now == "run" and run is not None and run.done and not run.passed)
         self.resume_button.setText("Start again on this commit" if facts.restart else "Resume run")
-        self.choose_drafts(facts.drafts)
         here = bool(facts.drafts) and rp.tests_here(window.root, self.waiting_suite())
         self.portal_choice.setVisible(self.portal_choice.count() > 1)
         self.test_button.setEnabled(idle and now == "test" and here)
@@ -274,7 +276,7 @@ class ReleasePage(QWidget):
         self.publish_button.setEnabled(idle and now == "test")
         self.reject_button.setEnabled(now == "test")
         self.finish_button.setEnabled(idle and now == "finish")
-        last = flow.release_run(window.build.runs)
+        last = flow.release_run(window.build.runs, suite=window.suite)
         self.state.setText(f'Last {flow.WORKFLOW_NAME}: {last.outcome} on {last.sha[:7]}. <a href="{last.url}">Open '
                            "the run</a>" if last is not None else "")
         self.state.setStyleSheet(f"color:{GREY};")
@@ -320,9 +322,15 @@ class ReleasePage(QWidget):
                     "then Commit your changes, Push them and, once CI passes, Start new release: the portal is built "
                     "anew, the apps already out are skipped. Device test tests this draft again; Publish still "
                     "publishes it.")
-        if key in ("test", "publish") and facts.drafts:
-            return (f"{', '.join(facts.drafts)} is a draft: Device test, then Publish when it works or Not OK."
-                    if key == "test" else "After the device test: Publish, or Not OK.")
+        if key == "test" and facts.drafts:
+            # Where the draft is tested when not here (owner, 05-11-2026: the Windows draft showed on the board with
+            # Device test gray and no word why)
+            here = rp.tests_here(window.root, self.waiting_suite())
+            where = "" if here else " on " + ("the board (Linux)" if sys.platform == "win32" else
+                                              "the handheld (Windows)")
+            return f"{', '.join(facts.drafts)} is a draft: Device test{where}, then Publish when it works or Not OK."
+        if key == "publish" and facts.drafts:
+            return "After the device test: Publish, or Not OK."
         if key == "finish":
             return "The release is out: git pull brings in its Pin ... commit."
         return ""
@@ -402,9 +410,10 @@ class ReleasePage(QWidget):
         window = self.release_window
         pending = flow.unpushed_release(window.root, window.base())
         if pending:                             # the release commit is made; its push stopped: push and start
+            command = flow.push_and_start_command(self.release_of(pending.removeprefix("Release ").split(", ")))
             if window.confirm_git("Push and start", f"Push the release commit and start it on GitHub:\n\n{pending}",
-                                  flow.push_and_start_command()):
-                window.run_git(flow.push_and_start_command())
+                                  command):
+                window.run_git(command)
             return
         # The last releases are read from the tags here: GitHub's first, so a portal published since counts; what
         # main has that this checkout lacks (the last release's Pin ... commit) comes in first, then the versions
@@ -428,16 +437,22 @@ class ReleasePage(QWidget):
             return
         rows = "\n".join(f"{p.label}: {p.unit.version} -> {p.version or p.choices[0]}" for p in chosen)
         if not window.confirm_git("Start new release", "Write this release, commit it, push it to main and start "
-                                  f"it on GitHub:\n\n{rows}", flow.start_command("Release ...")):
+                                  f"it on GitHub:\n\n{rows}", flow.start_command("Release ...", self.release_of([]))):
             return
         log, tags = flow.write(window.root, chosen, window.base())
         message = flow.commit_message(tags)
         log += ["", f"Commit \"{message}\", push, and {flow.NEXUS_WORKFLOW} on GitHub: see Commands."]
         self.output.set_text("\n".join(log))
-        window.run_git(flow.start_command(message))
+        window.run_git(flow.start_command(message, self.release_of(tags)))
+
+    def release_of(self, tags: list[str]) -> list[str]:
+        """The suites release-nexus.yml carries for a release of *tags*: those whose portal is among them, else the
+        suite ticked (a release of Nexus's own, whose run makes the index), never every suite (owner, 05-11-2026)."""
+        window = self.release_window
+        return flow.tag_suites(window.root, tags) or flow.chosen_suites(window.root, window.suite)[:1]
 
     def run(self) -> rp.BuildRun | None:
-        return flow.release_run(self.release_window.build.runs)
+        return flow.release_run(self.release_window.build.runs, suite=self.release_window.suite)
 
     def stop_run(self) -> None:
         run = self.run()
@@ -456,8 +471,8 @@ class ReleasePage(QWidget):
             window = self.release_window
             if window.confirm_git("Start again on this commit", f"Start {flow.WORKFLOW_NAME} again on HEAD, the fix on "
                                   f"top of {run.sha[:7]}: the release as it is written, nothing new is written.",
-                                  flow.restart_command()):
-                window.run_git(flow.restart_command())
+                                  flow.restart_command(flow.run_suites(run) or ())):
+                window.run_git(flow.restart_command(flow.run_suites(run) or ()))
             return
         self.release_window.run_git(flow.resume_command(run))
 

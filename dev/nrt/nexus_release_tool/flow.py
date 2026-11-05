@@ -2,8 +2,11 @@
 """A Nexus release (owner, 30-10-2026): the one action of the Nexus Release Tool, Start new release, and what follows
 it. No Qt here; the page is release_page.py.
 
-The release holds every suite on the Nexus release (its release workflow can be called by release-nexus.yml) with
-an app that needs a release, and core and Nexus's own version. The owner sees each version first and may type
+The release holds the suite ticked in the Portals column, when it is on the Nexus release (its release workflow can
+be called by release-nexus.yml), with its apps that need a release, and core and Nexus's own version. Each suite
+stands apart (owner, 05-11-2026: a Windows draft waiting for the handheld held up the board's next release): Start
+names the suite to release-nexus.yml, which carries only it and says so in the run's title, and a draft waits for
+its own suite's device test only. The owner sees each version first and may type
 another (owner: "keep the override"); a portal's and Nexus's version are worked out when Start writes them (at least
 what the app releases need, check_manifest.py's rule), unless one is typed. Start writes the release, as steps 1
 and 2 would (the versions and their copies, the "Release x.y.z." entries, the new tags in apps.toml with their
@@ -58,12 +61,18 @@ class Pick:
         return self.unit.key if not self.suite else f"{self.suite} · {self.unit.key}"
 
 
-def picks(root: Path) -> list[Pick]:
-    """What a Nexus release would hold now: per suite on the release, each portal app that needs a release and the
-    portal; core when it changed since its last version; Nexus whenever anything is released."""
+def chosen_suites(root: Path, suite: str | None) -> list[str]:
+    """The suites on the Nexus release that *suite* names: that one when it is on it; every one for None."""
+    return [s for s in release_suites(root) if suite is None or s == suite]
+
+
+def picks(root: Path, only: str | None = None) -> list[Pick]:
+    """What a Nexus release of the suite *only* (every suite on the release for None) would hold now: each portal app
+    that needs a release and the portal; core when it changed since its last version; Nexus whenever anything is
+    released."""
     found: list[Pick] = []
     loaded: list[list[rp.Unit]] = []        # each suite's units: core and Nexus are read per suite
-    for suite in release_suites(root):
+    for suite in chosen_suites(root, only):
         units = rp.load_units(root, suite)
         loaded.append(units)
         blobs = rp.read_blobs(root, rp.changelog_specs(units))
@@ -251,22 +260,44 @@ def commit_message(tags: list[str]) -> str:
     return f"Release {', '.join(tags)}"
 
 
-def push_and_start_command() -> str:
-    """The release commit pushed (the pre-push hook checks it) and release-nexus.yml started on it."""
+def tag_suites(root: Path, tags: Iterable[str]) -> list[str]:
+    """The suites whose portal is among *tags* (a release's, as its commit's subject lists them)."""
+    tags = list(tags)
+    return [s for s in release_suites(root) if any(t.startswith(f"{rp.tag_prefix(root, s)}portal-v") for t in tags)]
+
+
+def suites_input(suites: Iterable[str]) -> str:
+    """release-nexus.yml's suites input: the suites it carries, and only those; none given, every suite whose portal
+    is not out (a run started by hand, as before 05-11-2026)."""
+    names = " ".join(suites)
+    return f" -f suites={shlex.quote(names)}" if names else ""
+
+
+def run_suites(run: rp.BuildRun) -> list[str] | None:
+    """The suites a release-nexus.yml run carries, from its title ("Release Nexus: bc250-bazzite"); None for one
+    started without them, which carried every suite whose portal was not out."""
+    head, sep, names = run.title.partition(": ")
+    return names.split() if sep and head == WORKFLOW_NAME else None
+
+
+def push_and_start_command(suites: Iterable[str] = ()) -> str:
+    """The release commit pushed (the pre-push hook checks it) and release-nexus.yml started on it for *suites*."""
     return (f'git push origin HEAD:main && gh workflow run {NEXUS_WORKFLOW} --ref main -f commit="$(git rev-parse '
-            f"HEAD)\" && echo 'Started {NEXUS_WORKFLOW} on '\"$(git rev-parse --short HEAD)\"")
+            f'HEAD)"{suites_input(suites)} && echo \'Started {NEXUS_WORKFLOW} on \'"$(git rev-parse --short HEAD)"')
 
 
-def start_command(message: str) -> str:
+def start_command(message: str, suites: Iterable[str] = ()) -> str:
     """The one command Start runs in the command line (bash, on Windows too): the release commit, its push, and
-    release-nexus.yml started on it."""
-    return f"git commit -a -q -m {shlex.quote(message)} && {push_and_start_command()}"
+    release-nexus.yml started on it for *suites*."""
+    return f"git commit -a -q -m {shlex.quote(message)} && {push_and_start_command(suites)}"
 
 
-def release_run(runs: list[rp.BuildRun], sha: str = "") -> rp.BuildRun | None:
-    """The newest run of release-nexus.yml (on *sha* when given): GitHub lists the newest first."""
+def release_run(runs: list[rp.BuildRun], sha: str = "", suite: str | None = None) -> rp.BuildRun | None:
+    """The newest run of release-nexus.yml (on *sha* when given; carrying *suite* when given, which a run without
+    suites in its title may): GitHub lists the newest first."""
     return next((r for r in runs if (r.file == NEXUS_WORKFLOW or r.workflow == WORKFLOW_NAME)
-                 and (not sha or r.sha == sha)), None)
+                 and (not sha or r.sha == sha)
+                 and (suite is None or (names := run_suites(r)) is None or suite in names)), None)
 
 
 def run_id(run: rp.BuildRun) -> str:
@@ -274,11 +305,11 @@ def run_id(run: rp.BuildRun) -> str:
     return found[1] if found else ""
 
 
-def restart_command() -> str:
+def restart_command(suites: Iterable[str] = ()) -> str:
     """A release whose run failed, started again on HEAD (its fix, pushed and passed CI): release-nexus.yml on that
-    commit, nothing written anew; what is out already is skipped."""
-    return (f'gh workflow run {NEXUS_WORKFLOW} --ref main -f commit="$(git rev-parse HEAD)" && echo \'Started '
-            f'{NEXUS_WORKFLOW} on \'"$(git rev-parse --short HEAD)"')
+    commit for the run's *suites*, nothing written anew; what is out already is skipped."""
+    return (f'gh workflow run {NEXUS_WORKFLOW} --ref main -f commit="$(git rev-parse HEAD)"{suites_input(suites)} && '
+            f'echo \'Started {NEXUS_WORKFLOW} on \'"$(git rev-parse --short HEAD)"')
 
 
 def stop_command(run: rp.BuildRun) -> str:
@@ -356,12 +387,14 @@ def rerun_ci_command(runs: list[rp.BuildRun]) -> str:
     return " && ".join(f"gh run rerun {run_id(r)} --failed" for r in runs)
 
 
-def cycle_run(root: Path, runs: list[rp.BuildRun], rejected: Iterable[str] = ()) -> rp.BuildRun | None:
+def cycle_run(root: Path, runs: list[rp.BuildRun], rejected: Iterable[str] = (),
+              suite: str | None = None) -> rp.BuildRun | None:
     """The newest release run, while its release lasts: HEAD is its commit, or that commit with only the release's
     Pin ... commits on top (after git pull). Once other work is committed on top, it lasts while a portal draft of
     it is neither published nor *rejected* (Not OK): the device test and Publish stay to do (owner, 04-11-2026: a fix
-    pushed before the Windows portal's device test, and NRT offered a new release instead). None after that."""
-    run = release_run(runs)
+    pushed before the Windows portal's device test, and NRT offered a new release instead). None after that. With
+    *suite*, the release of that suite: its newest run, and only its draft keeps it (owner, 05-11-2026)."""
+    run = release_run(runs, suite=suite)
     if run is None or not run.sha:
         return None
     if rp.git(root, "merge-base", "--is-ancestor", run.sha, "HEAD") is None:
@@ -371,7 +404,7 @@ def cycle_run(root: Path, runs: list[rp.BuildRun], rejected: Iterable[str] = ())
     subjects = (rp.git(root, "log", "--format=%s", f"{run.sha}..HEAD") or "").splitlines()
     if all(s.startswith("Pin ") for s in subjects if s.strip()):
         return run
-    waiting = [t for t in waiting_portals(root) if not published(root, runs, t) and t not in set(rejected)]
+    waiting = [t for t in waiting_portals(root, suite) if not published(root, runs, t) and t not in set(rejected)]
     return run if run.passed and waiting else None
 
 
@@ -459,12 +492,12 @@ def commit_work_command(root: Path, message: str, base: str, python: str) -> str
                                                         rp.manifest_checks(root, touched), rp.version_checks(touched))
 
 
-def waiting_portals(root: Path) -> list[str]:
-    """The portal tag of each suite on the Nexus release, as portal/VERSION says: what a device test and Publish
-    work on after a release ran (a draft until published)."""
+def waiting_portals(root: Path, only: str | None = None) -> list[str]:
+    """The portal tag of the suite *only* (each suite on the Nexus release for None), as portal/VERSION says: what a device
+    test and Publish work on after a release ran (a draft until published)."""
     return [f"{rp.tag_prefix(root, suite)}portal-v"
             f"{(rp.suite_dir(root, suite) / 'portal' / 'VERSION').read_text(encoding='utf-8').strip()}"
-            for suite in release_suites(root)]
+            for suite in chosen_suites(root, only)]
 
 
 def publish_command(tag: str) -> str:

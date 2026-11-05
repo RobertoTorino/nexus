@@ -72,3 +72,26 @@ def test_the_release_starts_only_on_mains_newest_commit_after_nexus_ci():
     nexus = (WORKFLOWS / "release-nexus.yml").read_text(encoding="utf-8")
     assert "git rev-parse origin/main" in nexus and "ci_state.py --workflow ci-nexus.yml" in nexus
     assert "cancel-in-progress: false" in nexus
+
+
+def test_the_suites_named_carry_only_those(tmp_path):
+    """The Nexus Release Tool names the suite it releases (owner, 05-11-2026: each suite stands apart): a draft of
+    another suite, waiting for its device test, is not built again with it."""
+    suite(tmp_path, "aa-suite", "aa-", "2.0.0", called=True)        # the suite released
+    suite(tmp_path, "bb-suite", "bb-", "1.1.0", called=True)        # a draft waiting for its device test
+    assert nr.carried(tmp_path, released=lambda tag: False) == ["aa-suite", "bb-suite"]
+    assert nr.carried(tmp_path, released=lambda tag: False, only=["aa-suite"]) == ["aa-suite"]
+    assert nr.carried(tmp_path, released=lambda tag: True, only=["aa-suite"]) == []     # out: the index alone
+
+
+def test_the_workflow_passes_the_suites_and_names_them_in_the_runs_title():
+    nexus = (WORKFLOWS / "release-nexus.yml").read_text(encoding="utf-8")
+    assert "      suites:\n" in nexus and "SUITES: ${{ inputs.suites }}" in nexus
+    assert 'tools/nexus_release.py suites "${names[@]}"' in nexus
+    assert ("run-name: \"${{ inputs.suites && format('Release Nexus: {0}', inputs.suites) || 'Release Nexus' }}\""
+            in nexus)
+
+
+def test_an_unknown_suite_is_refused(capsys):
+    assert nr.main(["suites", "no-such-suite"]) == 2
+    assert "No such suite: no-such-suite" in capsys.readouterr().err

@@ -8,10 +8,12 @@ workflows, a VERSION or a CHANGELOG's release entries.
 
 ## A Nexus release
 
-A **Nexus release** (owner, 30-10-2026) is the one release of the repository: Nexus's version with every suite that
-changed, started by the owner with the Nexus Release Tool's one action, Start new release
-(`.github/workflows/release-nexus.yml` calls each changed suite's own release workflow, which builds, publishes and
-pins; each portal ends as a draft the owner device-tests and publishes from the tool). A suite takes part once its
+A **Nexus release** (owner, 30-10-2026) is the one release of the repository: Nexus's version with the suite ticked
+in the tool, when it changed, started by the owner with the Nexus Release Tool's one action, Start new release
+(`.github/workflows/release-nexus.yml` calls that suite's own release workflow, which builds, publishes and pins; its
+portal ends as a draft the owner device-tests and publishes from the tool). Each suite is released on its own (owner,
+05-11-2026): Start passes the suite as the workflow's `suites` input, the run carries only that one, and a draft of one
+suite never holds up the other's release. A suite takes part once its
 release workflow has `workflow_call`: both suites do (the Windows Portable Suite's `release-windows-portable.yml`
 since 30-10-2026, the BC250 Bazzite Suite's `release.yml` since 04-11-2026, stage 3), so every suite releases with
 the same steps (owner, 04-11-2026). A tag pushed by hand still releases that one app or portal. The plan and its

@@ -44,10 +44,15 @@ the settings.
 
 ## The Nexus release
 
-A Nexus release is the one release of the repository: Nexus's version with every suite that changed since its last
-release, and only those. A suite takes part once its release workflow can be called by **Release Nexus**
-(`release-nexus.yml`): the Windows Portable Suite (`release-windows-portable.yml`) and the BC250 Bazzite Suite
-(`release.yml`) both are, so every suite is released with the same steps, those of the Nexus release tab. The
+A Nexus release is the one release of the repository: Nexus's version with the suite ticked in the first column,
+when it changed since its last release. A suite takes part once its release workflow can be called by **Release
+Nexus** (`release-nexus.yml`): the Windows Portable Suite (`release-windows-portable.yml`) and the BC250 Bazzite
+Suite (`release.yml`) both are, so every suite is released with the same steps, those of the Nexus release tab.
+Each suite is released on its own: a release of the BC250 Bazzite Suite never builds the Windows Portable Suite's
+portal, and a Windows draft waiting for its device test on the handheld never holds up the board's next release.
+Start names the suite to Release Nexus, which carries only that one; its run's title says which ("Release Nexus:
+bc250-bazzite"). When core changed, it is released with the suite ticked; the other suite's apps that bundle it
+wait for that suite's own release. The
 numbered tabs after it are the release by hand, one tag at a time, for the odd single release outside a Nexus
 release.
 
@@ -90,7 +95,7 @@ tab explains itself behind the round **i** in its first row: click it to read th
    it writes shows each part's version as it will be. Each version comes from the part's CHANGELOG entries since its
    last tag (`Breaking.` major, `Added.` minor, `Fixed.` patch), so nothing is bumped by hand; type another one in
    the list only to override it.
-6. **The release on GitHub:** Release Nexus calls each changed suite's release workflow. It starts at once: your
+6. **The release on GitHub:** Release Nexus calls the ticked suite's release workflow. It starts at once: your
    release commit only writes the release, so the CI that passed on your commit in step 4 counts for it, and CI
    does not have to run again first. A suite's run builds its
    new app releases side by side and publishes them, writes their checksums into `apps.toml` in a commit *Pin ...*
@@ -105,11 +110,11 @@ tab explains itself behind the round **i** in its first row: click it to read th
    Portable Suite: it downloads the draft portal with `gh` (a draft needs the sign-in), checks it against its
    `SHA256SUMS`, installs it and starts it (`check-release.sh draft` on the board, `check-release.ps1 draft` on the
    handheld). On Windows an installed portal that is open is closed first, as its window would close (ended when it
-   has not closed within 10 seconds): a program that runs cannot be replaced. Test it as a user would. When a release
-   holds both suites, each has its device test on its own device, and each portal is published on its own yes:
-   the portal choice next to Device test lists only the portals still drafts, so after one Publish it is on the next.
-   Work pushed in the meantime (a fix found during the first device test) does not end the release: while a draft
-   waits, Device test and Publish stay at hand for it, on the device of its suite.
+   has not closed within 10 seconds): a program that runs cannot be replaced. Test it as a user would. On another
+   system the button stays gray and the step's line names the device the draft is tested on. Work pushed in the
+   meantime (a fix found during the device test) does not end the release: while its draft waits, Device test and
+   Publish stay at hand for it. The draft belongs to its own suite: tick the other suite and its steps go on with its
+   own release; tick this one again and the draft is still there.
 8. **Publish** when it works: the draft becomes a release, which makes its portal tag, and the portals offer it from
    then on; the Nexus index follows. **Not OK** leaves the draft unpublished: the Device test step turns red and
    says what comes next. Fix what the test showed; the steps start again from **Commit your changes**, then **Push

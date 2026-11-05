@@ -5,6 +5,7 @@ Nexus's versions worked out), when Start can go, its one command, and the comman
 from __future__ import annotations
 
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -200,7 +201,8 @@ def test_start_writes_the_release_and_runs_the_one_command(release_window, monke
     monkeypatch.setattr(w, "run_git", ran.append)
     page.rows[0][2].setText("A greeting")
     page.start()
-    assert ran == [flow.start_command("Release wp-test-v0.2.0, wp-portal-v1.1.0, nexus-v0.6.0")]
+    assert ran == [flow.start_command("Release wp-test-v0.2.0, wp-portal-v1.1.0, nexus-v0.6.0", ["wp"])]
+    assert " -f suites=wp && " in ran[0]         # only the suite released (owner, 05-11-2026)
     assert "Release 0.2.0. A greeting" in (w.root / "wp/apps/test/CHANGELOG").read_text()
     assert "wp · test: 0.2.0" in page.output.toPlainText()
 
@@ -351,9 +353,9 @@ def test_changes_not_committed_make_commit_the_step_to_do(release_window, monkey
 
 
 def _run(sha="abc1234", file="release-nexus.yml", workflow="Release Nexus", status="completed",
-         conclusion="success", ref="main"):
+         conclusion="success", ref="main", title="title"):
     return rp.BuildRun(workflow, ref, status, conclusion, f"https://github.com/o/r/actions/runs/{abs(hash(sha+file))}",
-                       sha, "title", file=file)
+                       sha, title, file=file)
 
 
 def test_the_step_to_do_follows_the_release():
@@ -494,7 +496,7 @@ def test_a_push_git_has_not_fetched_lights_the_pull(release_window, monkeypatch)
     pin = _run("f" * 40, "ci.yml", "CI")
     assert flow.pushed_elsewhere(w.root, [pin, release]) is pin
     monkeypatch.setattr(w.build, "runs", [pin, release])
-    monkeypatch.setattr(flow, "waiting_portals", lambda root: [])
+    monkeypatch.setattr(flow, "waiting_portals", lambda root, only=None: [])
     page.show_state()
     assert page.facts.behind == 1 and flow.current_step(page.facts) == "finish"
     assert page.finish_button.isEnabled()
@@ -525,22 +527,61 @@ def test_the_device_test_and_publish(release_window, monkeypatch):
 
 
 def test_the_portal_choice_holds_only_the_drafts(release_window, monkeypatch):
-    """Two suites on the release, the board's published (owner, 05-11-2026: the choice stayed on portal-v15.2.0, so
-    Publish published it again and the Windows draft stayed a draft): only the Windows draft is left to choose."""
+    """A tag published since the choice was filled leaves it (owner, 05-11-2026: the choice stayed on
+    portal-v15.2.0, so Publish published it again): only the draft is left, and the line says where it is tested."""
     w = release_window
     page = w.release_page
-    monkeypatch.setattr(flow, "waiting_portals", lambda root: ["portal-v2.0.0", "wp-portal-v1.0.0"])
-    monkeypatch.setattr(flow, "published", lambda root, runs, tag: tag == "portal-v2.0.0")
+    monkeypatch.setattr(flow, "waiting_portals", lambda root, only=None: ["wp-portal-v1.0.0"])
+    monkeypatch.setattr(flow, "published", lambda root, runs, tag: False)
+    monkeypatch.setattr("nexus_release_tool.release_page.rp.tests_here", lambda *a: False)    # not its device
     w.build.runs = [_run(sh(w.root, "rev-parse", "HEAD").strip())]
     page.portal_choice.clear()
     page.portal_choice.addItems(["portal-v2.0.0", "wp-portal-v1.0.0"])
     page.show_state()
-    assert page.facts.drafts == ["wp-portal-v1.0.0"] and page.portal_choice.currentText() == "wp-portal-v1.0.0"
+    assert page.facts.drafts == ["wp-portal-v1.0.0"]
+    assert [page.portal_choice.itemText(i) for i in range(page.portal_choice.count())] == ["wp-portal-v1.0.0"]
+    where = "the board (Linux)" if sys.platform == "win32" else "the handheld (Windows)"
+    assert page.details["test"].text() == (f"wp-portal-v1.0.0 is a draft: Device test on {where}, then Publish when "
+                                           "it works or Not OK.")
     ran = []
     monkeypatch.setattr(w, "confirm_git", lambda *a: True)
     monkeypatch.setattr(w, "run_git", ran.append)
     page.publish()
     assert ran == ["gh release edit wp-portal-v1.0.0 --draft=false --latest=false"]
+
+
+def test_each_suite_stands_apart(nexus):
+    """Two suites on the Nexus release (owner, 05-11-2026: the Windows draft, waiting for the handheld, held up the
+    board's next release): each release is of one suite, its run says which, and only its own draft keeps it."""
+    bc = nexus / "bc"
+    write(bc / "SYSTEM", "bazzite\n")
+    write(bc / "portal/VERSION", "2.0.0\n")
+    write(bc / "portal/apps.toml", "")
+    write(nexus / ".github/workflows/release.yml", "on:\n  workflow_call:\n")
+    write(nexus / "wp/portal/VERSION", "1.1.0\n")                 # the wp release wrote wp-portal-v1.1.0: a draft
+    sh(nexus, "-c", "user.name=t", "-c", "user.email=t@t", "add", "-A")
+    sh(nexus, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "-m", "Release wp-portal-v1.1.0")
+    head = sh(nexus, "rev-parse", "HEAD").strip()
+    sh(nexus, "tag", "portal-v2.0.0")                                # the board's portal is out
+    sh(nexus, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "--allow-empty", "-m", "Other work")
+    assert flow.release_suites(nexus) == ["bc", "wp"]
+    assert flow.waiting_portals(nexus) == ["portal-v2.0.0", "wp-portal-v1.1.0"]
+    assert flow.waiting_portals(nexus, "bc") == ["portal-v2.0.0"]
+    assert {p.suite for p in flow.picks(nexus, "wp")} == {"wp", ""}           # its apps and portal, core and Nexus
+    # A run of before 05-11-2026 carried every suite: the wp draft keeps the wp release, not the board's
+    old = _run(head)
+    assert flow.run_suites(old) is None
+    assert flow.cycle_run(nexus, [old], suite="wp") is old
+    assert flow.cycle_run(nexus, [old], suite="bc") is None          # Start new release for the board
+    # A run started for the board says so in its title, and is not the wp release's
+    board = _run("f" * 40, title="Release Nexus: bc")
+    assert flow.run_suites(board) == ["bc"]
+    assert flow.release_run([board, old], suite="bc") is board
+    assert flow.release_run([board, old], suite="wp") is old
+    assert flow.tag_suites(nexus, ["test-v1.0.0", "portal-v2.1.0", "nexus-v0.6.0"]) == ["bc"]
+    assert flow.tag_suites(nexus, ["wp-portal-v1.1.0"]) == ["wp"] and flow.tag_suites(nexus, ["nexus-v0.6.0"]) == []
+    assert ' -f suites=bc && ' in flow.start_command("Release portal-v2.1.0", ["bc"])
+    assert ' -f suites=bc && ' in flow.restart_command(["bc"]) and "suites" not in flow.restart_command()
 
 
 def test_not_ok_is_the_runs_and_a_fix_goes_on_from_commit():
