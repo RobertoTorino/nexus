@@ -32,10 +32,10 @@ def pinned(monkeypatch):
 
 
 def test_the_pin_points_at_the_release():
-    assert emulator.URL == ("https://github.com/xenia-canary/xenia-canary/releases/download/e6cd2e4/"
+    assert emulator.URL == ("https://github.com/xenia-canary/xenia-canary/releases/download/838850f/"
                             "xenia_canary_linux.AppImage")
-    assert emulator.VERSION == "e6cd2e4" and emulator.COMMIT.startswith("e6cd2e4") and len(emulator.SHA256) == 64
-    assert emulator.RELEASE_PAGE == "https://github.com/xenia-canary/xenia-canary/releases/tag/e6cd2e4"
+    assert emulator.VERSION == "838850f" and emulator.COMMIT.startswith("838850f") and len(emulator.SHA256) == 64
+    assert emulator.RELEASE_PAGE == "https://github.com/xenia-canary/xenia-canary/releases/tag/838850f"
     assert emulator.SIZE_MB == 18
 
 
@@ -49,7 +49,7 @@ def test_install_and_remove(tmp_path, pinned):
     assert image.read_bytes() == APPIMAGE and image.stat().st_mode & 0o777 == 0o755
     assert image.name == "xenia.AppImage"                                        # the same name for every build
     assert (home / "current").is_symlink() and emulator.installed_version(home) == emulator.VERSION
-    assert sorted(p.name for p in home.iterdir()) == ["current", "e6cd2e4"]       # no download left behind
+    assert sorted(p.name for p in home.iterdir()) == ["838850f", "current"]       # no download left behind
     emulator.remove(home)
     assert not home.exists() and emulator.installed_version(home) == ""
 
@@ -103,7 +103,7 @@ def _releases(tag: str, published: str = "2026-11-30T22:00:00Z"):
 def test_a_newer_xenia():
     newer = emulator.newer_release(_releases("0a1b2c3"))
     assert (newer.version, newer.published) == ("0a1b2c3", "2026-11-30") and newer.url.endswith("/0a1b2c3")
-    assert emulator.newer_release(_releases("e6cd2e4", emulator.PUBLISHED)) is None  # the one the app brings
+    assert emulator.newer_release(_releases("838850f", emulator.PUBLISHED)) is None  # the one the app brings
     assert emulator.newer_release(_releases("f42147a", "2026-10-20T09:40:37Z")) is None   # an older build
     assert emulator.newer_release(lambda url: ["not a release"]) is None
 

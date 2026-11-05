@@ -2,7 +2,7 @@
 """The Vita3K build this version of the app installs, pinned: the Linux AppImage of one build on GitHub, checked
 against its SHA-256 before it is installed. Vita3K has no stable releases: it publishes a build for every change,
 the newest under the rolling "continuous" tag of Vita3K/Vita3K and each one kept in Vita3K/Vita3K-builds (a release
-per build, tagged with its number, 4186). The app pins one build there, so the launch line and the advice in the
+per build, tagged with its number, 4269). The app pins one build there, so the launch line and the advice in the
 app are tried with the build they are for. It looks up the newest build and says when there is a newer one than it
 brings; it never installs one it was not tried with.
 
@@ -28,13 +28,13 @@ from bc250_core.updates import Fetch, ReleaseInfo, github_fetch
 
 from . import APP_ID, __version__
 
-BUILD = 4186                            # Vita3K's build number, counted over its whole history
+BUILD = 4269                            # Vita3K's build number, counted over its whole history
 VERSION = str(BUILD)                    # how the app names it; also the folder it is installed in
-SEMVER = "0.2.1"                        # what it calls itself (Vita3K --version: v0.2.1 4186-f0273e4c)
-COMMIT = "f0273e4cd9b860ea77c44c73d9f5c5b1ed5fa8ab"
+SEMVER = "0.2.1"                        # what it calls itself (Vita3K --version: v0.2.1 4269-9409e2ec)
+COMMIT = "9409e2ecad1bdae275db2f85b83a97aa084c79bc"
 ASSET = "Vita3K-x86_64.AppImage"        # the same name in every build's release
-SHA256 = "1be29192ba81ef5ef40d30e65168da18786205d5bedd7bf4112940a5eb15a06a"
-SIZE = 78489697                         # bytes: how the app tells that the AppImage was replaced by another build
+SHA256 = "a0387e6e689bae297b8b0143b2b0836f68a31cc1e93e005d4b5ee59abe6e4573"
+SIZE = 89907735                         # bytes: how the app tells that the AppImage was replaced by another build
 SIZE_MB = round(SIZE / (1 << 20))       # for the question before downloading
 MEMBER = "vita3k.AppImage"              # the name it is installed under, the same for every build
 REPO = "Vita3K/Vita3K"
@@ -62,7 +62,7 @@ def appimage(home: Path) -> Path:
 
 
 def installed_version(home: Path) -> str:
-    """The installed Vita3K build ("4186"), "" when none is."""
+    """The installed Vita3K build ("4269"), "" when none is."""
     current = home / "current"
     if not (current / MEMBER).is_file():
         return ""

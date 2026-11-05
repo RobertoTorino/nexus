@@ -61,6 +61,9 @@ class PygameSource:
         os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
         os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
         os.environ.setdefault("SDL_JOYSTICK_ALLOW_BACKGROUND_EVENTS", "1")
+        # The pad over XInput, not Windows' raw input: over raw input the Ally's pad gave SDL its triggers alone, not
+        # one button, while XInput had them all (the owner's Ally, 05-11-2026). Windows only; SDL elsewhere ignores it.
+        os.environ.setdefault("SDL_JOYSTICK_RAWINPUT", "0")
         os.environ.setdefault("PYGAME_HIDE_SUPPORT_PROMPT", "1")
         import pygame
         from pygame._sdl2 import controller

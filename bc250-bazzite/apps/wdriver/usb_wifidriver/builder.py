@@ -43,9 +43,9 @@ class Pin:
 # shenmintao/aic8800d80 (GPL-2.0-only), the fork with the AIC8800D80 USB IDs, both firmware sets and fixes for
 # kernels up to 7.3 (checked 17-10-2026). The owner's UGREEN AX900 reports chip_mcu_id 1 and runs on legacy-mcu1.
 PINS = {
-    "main": Pin("main", "43db8006cb9b5fcd2b3191ecb7e3ea5962d39aaa", "08-10-2026",
+    "main": Pin("main", "2e75f8885a053914c1b0328fdf4950f52691495d", "02-11-2026",
                 "chips that report chip_mcu_id 0, or an unknown MCU"),
-    "legacy-mcu1": Pin("legacy-mcu1", "1d1b8fff4627857484758d7b8a5f24ac929b933e", "08-10-2026",
+    "legacy-mcu1": Pin("legacy-mcu1", "bbf6cb4015c8da4e7e113a6a6282f191213e0854", "02-11-2026",
                        "chips that report chip_mcu_id 1 (the UGREEN AX900)"),
 }
 BRANCHES = tuple(PINS)

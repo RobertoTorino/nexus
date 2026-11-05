@@ -193,6 +193,12 @@ def test_the_window_opens_on_the_nexus_release(release_window):
     assert not page.stop_button.isEnabled() and not page.resume_button.isEnabled()
 
 
+def test_the_suite_field_has_room_before_its_text_and_only_it(release_window):
+    page = release_window.release_page
+    assert "padding-left: 8px" in page.portal_choice.styleSheet()
+    assert all(not combo.styleSheet() for _pick, combo, _notes in page.rows)
+
+
 def test_start_writes_the_release_and_runs_the_one_command(release_window, monkeypatch):
     w = release_window
     page = w.release_page
@@ -506,6 +512,8 @@ def test_the_device_test_and_publish(release_window, monkeypatch):
     w = release_window
     page = w.release_page
     monkeypatch.setattr("nexus_release_tool.release_page.rp.tests_here", lambda *a: True)
+    w.build.runs = [_run(sh(w.root, "rev-parse", "HEAD").strip())]   # the release run passed on HEAD: its draft
+    monkeypatch.setattr(flow, "published", lambda *a: False)          # wp-portal-v1.0.0 a draft still
     page.show_state()
     page.device_test()
     assert w.launched and w.launched[-1].endswith("draft wp-portal-v1.0.0")
@@ -514,8 +522,6 @@ def test_the_device_test_and_publish(release_window, monkeypatch):
     monkeypatch.setattr(w, "run_git", ran.append)
     page.publish()
     assert ran == ["gh release edit wp-portal-v1.0.0 --draft=false --latest=false"]
-    w.build.runs = [_run(sh(w.root, "rev-parse", "HEAD").strip())]   # the release run passed on HEAD: its draft
-    monkeypatch.setattr(flow, "published", lambda *a: False)          # wp-portal-v1.0.0 a draft still
     page.show_state()
     assert flow.step_states(page.facts)["test"] == "now"
     page.reject()

@@ -9,6 +9,7 @@ status. Direction D's portal screen (the owner's, 26-10-2026)."""
 
 from __future__ import annotations
 
+import os
 import shlex
 import subprocess
 import sys
@@ -20,7 +21,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from pathlib import Path, PurePath
 
-from PyQt6.QtCore import QObject, QSettings, Qt, QTimer, pyqtSignal
+from PyQt6.QtCore import QEvent, QObject, QSettings, Qt, QTimer, pyqtSignal
 from PyQt6.QtGui import QGuiApplication, QPixmap
 from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QStackedWidget, QVBoxLayout, QWidget
 
@@ -30,26 +31,58 @@ from bc250_core.platform import expand, launch_in_terminal, private
 from bc250_core.portable import (AMBER, DIM, KEYBOARD, MENU, VIEW, Card, Legend, PortableHeader, PortableWindow, px,
                                  status_clock)
 
-from . import APP_ICONS, APP_ID, APP_NAME, EXE_NAME, INTRO_SOUND, ROOT, SUITE, __version__, operating_mode, state_dir
-from .intro import INTRO_MS, Intro
+from . import ACTION_SOUND, APP_ICONS, APP_ID, APP_NAME, EXE_NAME, INTRO_SOUND, ROOT, SUITE, __version__, operating_mode, state_dir
+from .intro import INTRO_MS, Intro, play
 from .manifest import CATEGORIES, AppEntry
 from .portal_update import PortalUpdate, short
 from .sources import Records, SourceError, Sources, downloaded, fetch_release, is_installed
-from .widgets import AppPane, DetailsPane, ModePane, SuitePane, Tabs, UpdateBanner
+from .widgets import AppPane, DetailsPane, ModePane, PageMarker, SuitePane, Tabs, UpdateBanner
 
 STATUS_MS = 2_000               # the header: the CPU and GPU live (owner, 30-10-2026), the battery and the time
+EXIT_QUESTION = "Do you really want to exit the portal?"
+EXIT_ANSWERS = [(VIEW, "Yes, exit the portal"), ("B", "No, stay")]   # the legend while it is asked
 POLL_MS = 1000                  # how often the portal looks for the installer window's exit status
-CONFIRM_MS = 5000               # Remove, and B while the portal is busy, ask for a second press within this
+CONFIRM_MS = 5000               # Remove, and View's exit question, wait this long for the answer
 PROGRESS_MS = 500               # how often a download's size is shown (owner, 28-10-2026: 94 MB looked like a hang)
+RECHECK_MS = 60 * 60 * 1000     # the portal's own update looked for again this often while it runs (owner's roadmap,
+RECHECK_AFTER_S = 15 * 60       # 04-11-2026), and when it becomes active again with the last check this old
 HELPER_POLL_MS = 500            # how often the Operating Mode page looks for the helper's answer
 HELPER_ANSWER_S = 15            # the helper's answer to a mode, at most (PowerShell starts as SYSTEM, ASUS WMI)
 HELPER_INSTALL_S = 180          # its install or removal, with Windows' prompt answered first
 TILE_W, TILE_H, GAP = 293, 176, 14      # the mock-up's tiles: two rows of four
-COLUMNS, PER_PAGE = 4, 8
+COLUMNS, PER_PAGE = 4, 8          # a tab's page of tiles; a tab with more apps has more pages
 TAB_KEY = "window/tab"          # the settings: the tab shown last
 LOGO_PNG = ROOT / "images" / f"{APP_ID}-128.png"   # the suite's icon, its picture in the XBOX menu
 STEAM_MISSING = "Steam is not installed on this device: install it from store.steampowered.com, then RT opens it."
 ONE_SCREEN = "There is one screen: attach a TV or a monitor, then LT moves the portal to it."
+DISPLAY_SWITCH = Path(os.environ.get("SystemRoot") or r"C:\Windows") / "System32" / "DisplaySwitch.exe"   # Win + P
+NO_WINDOW = 0x08000000          # CREATE_NO_WINDOW
+ON_TV = ("Windows shows its picture on the TV only now: XBOX mode, the games and the sound are there. Play on the "
+         "handheld switches back.")
+ON_HANDHELD = "Windows shows its picture on the handheld's screen only now, and plays the sound on its speakers."
+ON_BOTH = ("Windows shows the same picture on both screens now, XBOX mode too; the sound goes to the TV. Play on the "
+           "handheld switches back.")
+SETTLE_MS = 4000                # Windows' display switch settles in this time: then the portal starts again, sized
+SWITCHED_MODE = ("XBOX mode or the desktop, as Win + F11 switches: the same row switches back. Coming back to XBOX "
+                 "mode, Windows may ask to restart for better performance.")
+
+
+def press_win_f11() -> None:
+    """Win + F11, Windows' own switch between XBOX mode and the desktop (no command does it: Microsoft documents the
+    keys, Game Bar and Task View), pressed as the keyboard would. OSError off Windows."""
+    if sys.platform != "win32":
+        raise OSError("Win + F11 is Windows'")
+    import ctypes
+    user32 = ctypes.windll.user32
+    win, f11, up = 0x5B, 0x7A, 0x0002               # VK_LWIN, VK_F11, KEYEVENTF_KEYUP
+    for key, flags in ((win, 0), (f11, 0), (f11, up), (win, up)):
+        user32.keybd_event(key, 0, flags, 0)
+
+
+def switch_display(mode: str) -> None:
+    """Windows' display setup as Win + P sets it, with DisplaySwitch.exe: /external (the second screen only),
+    /internal (the handheld's only), /clone, /extend. OSError when it does not start."""
+    subprocess.Popen([str(DISPLAY_SWITCH), mode], creationflags=NO_WINDOW if sys.platform == "win32" else 0)
 # With a second screen, the legend's left end (owner, 31-10-2026: "Switch monitor: [] + Shift + < or >", with icons)
 SCREEN_KEYS = (portable.SCREEN_ICON, (portable.WINDOWS_KEY, "+", "Shift", "+", "←", "→"))   # two screens drawn
 TURBO_COLOR = "#ff1f1f"         # the Turbo letter in the header: a hard red, extra bold (owner, 31-10-2026)
@@ -147,7 +180,10 @@ class MainWindow(PortableWindow):
                  xbox_local: Path | None = None, xbox_closed: Callable[[Callable[[], None]], None] | None = None,
                  chip_parts: Callable[[], list[str]] | None = None,
                  modes: Callable[[], operating_mode.PowerApi | None] = operating_mode.power_api,
-                 helper: Callable[[], operating_mode.Helper] = operating_mode.Helper):
+                 helper: Callable[[], operating_mode.Helper] = operating_mode.Helper,
+                 player: Callable[[Path | None], None] = play,
+                 display: Callable[[str], None] = switch_display,
+                 xbox_mode: Callable[[], None] = press_win_f11):
         """*build*: the sha256 of the zip this portal was installed from (build.sha256), "" when not known, None
         from a checkout: a new build of the same version is offered when its sha256 differs. *intro_ms*: how long
         the intro plays when the window starts (0: none). *wallpaper*: the picture behind the page, darkened (None:
@@ -156,8 +192,10 @@ class MainWindow(PortableWindow):
         app closed (core's xbox.with_xbox_closed). *chip_parts*: the CPU's and the GPU's load and temperature for the
         status line (default core's chip.py, AMD's driver opened once). *modes*: Windows' power API on the ROG XBOX
         Ally X, None elsewhere: the operating mode's letter before the battery and its page; *helper*: the Operating
-        Mode helper that writes its watts (the Ally X only)."""
-        old = QSettings()                               # portal 1.6.0 kept the switch in portal.ini: the suite's now
+        Mode helper that writes its watts (the Ally X only). *player*: plays a .wav, the intro's and each controller
+        action's (default winsound; tests pass a fake). *display*: sets Windows' display setup (switch_display). *xbox_mode*: switches between XBOX mode and the desktop
+        (press_win_f11)."""
+        old = QSettings()                              # portal 1.6.0 kept the switch in portal.ini: the suite's now
         if old.contains(WALLPAPER_KEY) and portable.look_settings(SUITE).value(portable.LOOK_KEY) is None:
             portable.set_wallpaper_on(SUITE, str(old.value(WALLPAPER_KEY)).lower() != "false")
         old.remove(WALLPAPER_KEY)
@@ -168,6 +206,9 @@ class MainWindow(PortableWindow):
         self.steam_here, self.open_steam = steam_here, open_steam
         self.xbox_local, self.xbox_closed = xbox_local, xbox_closed
         self.portal_check, self.battery, self.launch, self.terminal = portal_check, battery, launch, terminal
+        self.player = player                            # plays a .wav (the intro's player, winsound)
+        self.display = display                          # Windows' display setup (DisplaySwitch.exe)
+        self.xbox_mode = xbox_mode                      # Win + F11
         self.sensors: chip.Temperatures | None = None
         if chip_parts is None:                          # ADL opened once, read every STATUS_MS
             self.sensors, cpu_load = chip.Temperatures(), chip.CpuLoad()
@@ -192,8 +233,10 @@ class MainWindow(PortableWindow):
         self.pending: Pending | None = None             # installing in its PowerShell window
         self.update: PortalUpdate | None = None
         self.checking = False
+        self.checked_at: float | None = None            # time.monotonic() of the last check of the portal's update
+        self.quiet_check = False                        # a check again of its own: an error keeps what was known
         self.confirm_key = ""                           # Remove pressed once on this app
-        self.close_asked = False                        # View pressed once while a download or an install runs
+        self.close_asked = False                        # View pressed once: the exit question asked
         self.message = ""                               # the last outcome, under the focused app
         self.message_key = ""
 
@@ -224,6 +267,10 @@ class MainWindow(PortableWindow):
         for row in range(PER_PAGE // COLUMNS):          # two rows of tiles, also when a tab fills one
             self.grid.setRowMinimumHeight(row, px(TILE_H))
         apps.addLayout(self.grid)
+        self.page = 0                                   # the tab's page that shows
+        self.page_marker = PageMarker()
+        self.page_marker.pressed.connect(lambda: self.turn_page(1, wrap=True))
+        apps.addWidget(self.page_marker, 0, Qt.AlignmentFlag.AlignRight)
         apps.addStretch()
         self.app_pane = AppPane()
         apps.addWidget(self.app_pane)
@@ -251,6 +298,10 @@ class MainWindow(PortableWindow):
         self.suite_pane.xbox.activated.connect(self.xbox_menu)
         self.suite_pane.mode.activated.connect(self.show_modes)
         self.suite_pane.screen_row.activated.connect(self.next_screen)
+        self.suite_pane.tv.activated.connect(lambda: self.play_on("/external", ON_TV, "the TV"))
+        self.suite_pane.handheld.activated.connect(lambda: self.play_on("/internal", ON_HANDHELD, "the handheld"))
+        self.suite_pane.both.activated.connect(lambda: self.play_on("/clone", ON_BOTH, "both screens"))
+        self.suite_pane.xbox_mode.activated.connect(self.switch_xbox_mode)
         for letter, row in self.mode_pane.rows.items():
             row.activated.connect(lambda letter=letter: self.set_mode(letter))
         self.mode_pane.helper.activated.connect(self.helper_action)
@@ -286,8 +337,12 @@ class MainWindow(PortableWindow):
         self.confirm_timer.setSingleShot(True)
         self.confirm_timer.setInterval(CONFIRM_MS)
         self.confirm_timer.timeout.connect(self._confirm_over)
+        self.recheck_timer = QTimer(self)
+        self.recheck_timer.setInterval(RECHECK_MS)
+        self.recheck_timer.timeout.connect(lambda: self.check_portal(quiet=True))
         if intro_ms > 0:                                # over the window before it shows: its first frame is dark
-            self.intro = Intro(self, intro_ms, sound=INTRO_SOUND if portable.sound_on(SUITE) else None)
+            self.intro = Intro(self, intro_ms, sound=INTRO_SOUND if portable.sound_on(SUITE) else None,
+                               player=player)
             self.intro.finished.connect(self._intro_done)
             self.intro.cover()
 
@@ -303,6 +358,7 @@ class MainWindow(PortableWindow):
         else:
             self.show_tab(self.tabs.current)
         self.check_portal()
+        self.recheck_timer.start()
         if self.intro is not None:
             self.intro.begin()
 
@@ -315,7 +371,9 @@ class MainWindow(PortableWindow):
             if self.isActiveWindow():
                 self.intro.skip()
             return
-        super().on_action(action)
+        if self.isActiveWindow() and portable.sound_on(SUITE):
+            self.player(ACTION_SOUND)                   # every controller action (owner, 05-11-2026), as the BC250
+        super().on_action(action)                       # portal: the portal only, never during the intro
 
     def wallpaper_choices(self) -> tuple[list[tuple[str, Path | None]], dict[str, str]]:
         """The Wallpaper row's choices in order, (name, picture): Off, Built-in (the suite's own), then each picture in
@@ -544,24 +602,59 @@ class MainWindow(PortableWindow):
             self.fill_modes()
 
     def tab_entries(self, category: str) -> list[AppEntry]:
-        return [entry for entry in self.entries if entry.category == category][:PER_PAGE]
+        return [entry for entry in self.entries if entry.category == category]
 
-    def show_tab(self, category: str) -> None:
+    def pages(self) -> int:
+        return max(1, -(-len(self.tab_entries(self.tabs.current)) // PER_PAGE))
+
+    def show_tab(self, category: str, page: int = 0, focus: int = 0) -> None:
+        """The tab's *page* of tiles (the first when a tab is picked), the focus on its tile at *focus* (the last
+        one when there are fewer)."""
         for tile in self.tiles.values():
             self.grid.removeWidget(tile)
             tile.hide()
-        shown = self.tab_entries(category)
+        entries = self.tab_entries(category)
+        self.page = min(page, max(0, (len(entries) - 1) // PER_PAGE))
+        shown = entries[self.page * PER_PAGE:(self.page + 1) * PER_PAGE]
         for i, entry in enumerate(shown):
             tile = self.tiles[entry.key]
             self.grid.addWidget(tile, i // COLUMNS, i % COLUMNS, Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
             tile.show()
+        self.page_marker.set_page(self.page, self.pages())
         self.settings.setValue(TAB_KEY, category)
         self.stack.setCurrentWidget(self.apps_page)
         self.refresh()
         if shown:
-            self.tiles[shown[0].key].setFocus()
-            self.show_app(shown[0].key)
+            key = shown[min(focus, len(shown) - 1)].key
+            self.tiles[key].setFocus()
+            self.show_app(key)
         self.update_legend()
+
+    def turn_page(self, step: int, row: int = 0, wrap: bool = False) -> bool:
+        """The tab's next (*step* 1) or previous (-1) page, the focus on *row*'s first tile going forward and its
+        last going back (the d-pad past the tiles' edge); with *wrap*, from the last page to the first (a tap on the
+        page marker). Whether the page turned."""
+        pages = self.pages()
+        page = (self.page + step) % pages if wrap else self.page + step
+        if pages < 2 or not 0 <= page < pages:
+            return False
+        self.show_tab(self.tabs.current, page, row * COLUMNS + (COLUMNS - 1 if step < 0 else 0))
+        return True
+
+    def move_focus(self, direction: str) -> QWidget | None:
+        """The d-pad as everywhere, and past the tiles' left or right edge to the tab's previous or next page."""
+        before = QGuiApplication.focusObject()
+        moved = super().move_focus(direction)
+        if moved is before and direction in ("left", "right") and self.stack.currentWidget() is self.apps_page:
+            tile = next((i for i, (key, card) in enumerate(self.page_tiles()) if card is before), None)
+            if tile is not None and self.turn_page(1 if direction == "right" else -1, tile // COLUMNS):
+                return QGuiApplication.focusObject()
+        return moved
+
+    def page_tiles(self) -> list[tuple[str, Card]]:
+        """The tiles of the page that shows, in order."""
+        entries = self.tab_entries(self.tabs.current)[self.page * PER_PAGE:(self.page + 1) * PER_PAGE]
+        return [(entry.key, self.tiles[entry.key]) for entry in entries]
 
     def show_app(self, key: str) -> None:
         if key not in self.by_key:
@@ -595,7 +688,7 @@ class MainWindow(PortableWindow):
     def update_legend(self) -> None:
         """The page's buttons, LT Screen with a second screen (and the keyboard's Win + Shift + an arrow at the
         left), RT Steam where Steam is installed, R3 the touch keyboard, then core's B Back (on Details and Suite, and from the strip to its
-        tile) and View Exit; while an exit is asked, only that."""
+        tile) and View Exit; while the exit question is asked, its answers."""
         if not hasattr(self, "legend") or not hasattr(self, "stack"):
             return
         self.show_banner()
@@ -604,7 +697,7 @@ class MainWindow(PortableWindow):
                     KEYBOARD]                       # R3 and a keyboard drawn: Windows' touch keyboard (owner)
         keys = SCREEN_KEYS if screens and not self.close_asked else None
         if self.close_asked:
-            self.legend.set_items([(VIEW, "Press again to exit")])
+            self.legend.set_items(EXIT_ANSWERS)
         elif self.stack.currentWidget() is self.apps_page:
             pane = self.app_pane
             other = "Update suite" if self.update_available() else pane.other      # the portal first
@@ -640,15 +733,19 @@ class MainWindow(PortableWindow):
         self.refresh()
 
     def exit_app(self) -> None:
-        """View: the portal closes; while a download or an install runs it asks first."""
-        if (self.job is not None or self.pending is not None) and not self.close_asked:
+        """View: the portal asks first, then closes on a second View (owner, 05-11-2026: every time, not only while
+        a download or an install runs)."""
+        if not self.close_asked:
             self.ask_close()
             return
         self.close()
 
     def on_back(self) -> None:
         """B goes back (owner, 29-10-2026): Details and Suite to the tiles, Operating Mode to Settings, the strip's pills
-        to their tile; on a tile it does nothing (View exits)."""
+        to their tile; on a tile it does nothing (View exits). While the exit question is asked, B is its No."""
+        if self.close_asked:
+            self._confirm_over()
+            return
         if self.stack.currentWidget() is self.apps_page:
             self.go_back()
             return
@@ -782,14 +879,17 @@ class MainWindow(PortableWindow):
         self._start(entry, "uninstall")
 
     def ask_close(self) -> None:
-        """View while a download or an install runs asks first (owner, 28-10-2026): exiting drops the download, and
-        an installer that ends after the portal is not recorded. A second View within CONFIRM_MS exits."""
+        """View asks first (owner, 05-11-2026: "Do you really want to exit the Portal?"): a second View within
+        CONFIRM_MS exits, B or the time running out stays. While a download or an install runs the question says what
+        exiting does to it (owner, 28-10-2026): the download is dropped, and an installer that ends after the portal
+        is not recorded."""
         self.close_asked = True
         self.confirm_timer.start()
+        text = EXIT_QUESTION
         if self.job is not None:
-            text = "Press View again to exit the portal: the download stops."
-        else:
-            text = "Press View again to exit the portal: the installer finishes in its window, unrecorded."
+            text += " The download stops."
+        elif self.pending is not None:
+            text += " The installer finishes in its window, unrecorded."
         self.say(self.current_key, text)
         self.update_legend()
 
@@ -797,7 +897,7 @@ class MainWindow(PortableWindow):
         self.confirm_timer.stop()
         if self.close_asked:
             self.close_asked = False
-            if self.message.startswith("Press View again"):
+            if self.message.startswith(EXIT_QUESTION):
                 self.message = ""
             self.update_legend()
             self.refresh()
@@ -912,16 +1012,34 @@ class MainWindow(PortableWindow):
                     and power_version(update.release.version) == power_version(__version__)
                     and update.sha256 != self.build)
 
-    def check_portal(self) -> None:
+    def check_portal(self, quiet: bool = False) -> None:
+        """The portal's own update looked for in the background: at the start, on Check again, and *quiet* again of
+        its own (recheck_portal)."""
         if self.portal_check is None or self.checking or self.worker.busy:
             return
-        self.checking = True
+        self.checking, self.quiet_check = True, quiet
         self.fill_suite()
         self._run(self.portal_check, self._portal_checked)
 
+    def recheck_portal(self) -> None:
+        """Not only at the start (owner's roadmap, 04-11-2026): when the portal becomes active again (back from a
+        game or an app) once the last check is RECHECK_AFTER_S old, which keeps it well within GitHub's limit for a
+        device that is not signed in; and every RECHECK_MS (recheck_timer)."""
+        if self.checked_at is None or time.monotonic() - self.checked_at >= RECHECK_AFTER_S:
+            self.check_portal(quiet=True)
+
+    def changeEvent(self, event) -> None:  # noqa: N802 (Qt override)
+        if event.type() == QEvent.Type.ActivationChange and self.isActiveWindow() and self.intro is None:
+            self.recheck_portal()
+        super().changeEvent(event)
+
     def _portal_checked(self, result: object) -> None:
         self.checking = False
-        if isinstance(result, PortalUpdate):
+        self.checked_at = time.monotonic()
+        if isinstance(result, PortalUpdate) and result.release.error and self.quiet_check and self.update_available():
+            # Offline for a moment: the update found before stays offered
+            self.log.info(f"Portal update check again: {result.release.error}; the update found before stays.")
+        elif isinstance(result, PortalUpdate):
             self.update = result
             if result.release.error:
                 self.log.info(f"Portal update check: {result.release.error}")
@@ -1048,6 +1166,36 @@ class MainWindow(PortableWindow):
             return
         self.next_screen()
 
+    def switch_xbox_mode(self) -> None:
+        """The Settings page's XBOX mode ↔ Desktop row (owner, 05-11-2026: "a button to start XBOX mode and to quit
+        it"): Win + F11, which switches either way; Windows asks its own question about a restart for performance."""
+        try:
+            self.xbox_mode()
+        except OSError as exc:
+            self.say("", f"XBOX mode was not switched: {exc.strerror or exc}")
+            self.log.error(f"Win + F11 not pressed: {exc}")
+        else:
+            self.say("", SWITCHED_MODE)
+            self.log.info("XBOX mode or the desktop: Win + F11 pressed.")
+        self.refresh()
+
+    def play_on(self, mode: str, said: str, where: str) -> None:
+        """The Settings page's Play on the TV (/external) and Play on the handheld (/internal), owner 05-11-2026: XBOX
+        mode runs on Windows' main screen only and leaves the other one empty, so Windows' display setup is switched
+        as Win + P does, for everything on the handheld; said on the page and in the log."""
+        try:
+            self.display(mode)
+        except OSError as exc:
+            self.say("", f"Windows' display setting did not change: {exc.strerror or exc}")
+            self.log.error(f"DisplaySwitch {mode} failed: {exc}")
+        else:
+            self.say("", said)
+            self.log.info(f"Play on {where}: DisplaySwitch {mode}.")
+            # Windows moves the window to its new main screen but the portal keeps the sizes of the one before (owner,
+            # 05-11-2026: the TV cut the legend off): once the switch has settled it starts again there, as LT does
+            QTimer.singleShot(SETTLE_MS, lambda: self.move_to(QGuiApplication.primaryScreen()))
+        self.refresh()
+
     def screens_changed(self, _screen=None) -> None:
         self.update_legend()
         if self.stack.currentWidget() is self.suite_pane:
@@ -1068,6 +1216,7 @@ class MainWindow(PortableWindow):
 
     def closeEvent(self, event) -> None:
         self.poll.stop()
+        self.recheck_timer.stop()
         self.progress_timer.stop()
         self.status_timer.stop()
         if self.sensors is not None:

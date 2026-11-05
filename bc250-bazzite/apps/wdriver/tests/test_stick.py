@@ -61,6 +61,18 @@ def test_chip_from_the_log():
     assert stick.chip_from_log("chip_id=5, chip_mcu_id = 0\n").revision == "0x5"
 
 
+def test_the_chips_product_from_legacy_mcu1s_loader():
+    """legacy-mcu1's loader adds the chip's product (from 02-11-2026); product 0x8820, a UGREEN stick, needs that branch
+    (owner, 05-11-2026: add it), whatever its MCU; another product changes nothing."""
+    chip = stick.chip_from_log("chip_id=7, chip_mcu_id = 1, product_id=0x8820\n")
+    assert chip == stick.Chip(7, 1, False, 0x8820) and chip.branch == "legacy-mcu1"
+    assert chip.text == "revision U03, MCU 1, product 0x8820"
+    assert stick.chip_from_log("chip_id=7, chip_mcu_id = 0, product_id=0x8820\n").branch == "legacy-mcu1"
+    other = stick.chip_from_log("chip_id=7, chip_mcu_id = 0, product_id=0x8800\n")
+    assert other.branch == "main" and other.text == "revision U03, MCU 0, product 0x8800"
+    assert stick.chip_from_log("chip_id=7, chip_mcu_id = 1\n").product is None      # main's loader: no product
+
+
 def test_a_wedged_stick_is_no_answer():
     assert stick.chip_from_log(LOG_WEDGED) is None
     assert stick.chip_from_log(LOG_WORKED + LOG_WEDGED) == stick.Chip(7, 1, False)

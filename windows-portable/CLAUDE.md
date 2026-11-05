@@ -33,7 +33,9 @@ app is an optional tile. The wiki is at robertotorino.github.io/nexus/windows-po
   per app and per manifest entry, and the Nexus apps' `nrt.ps1` and `dash.ps1`).
 - `docs/` and `mkdocs.yml`: the wiki; `icons/`: the suite's pictures and the category icons
   (`icons/<category>/<category>-<size>.png`), the PNG sources of their copies: every optional app takes its
-  category's icon (`../tools/make_icons.py` writes the copies, `../ICONS.md` lists them).
+  category's icon (`../tools/make_icons.py` writes the copies, `../ICONS.md` lists them). `icons/categories.toml`
+  says so for `../tools/sync_icons.py` (the dashboard's Convert icons): PNG at every size, Gaming 2:1, the apps
+  from the portal's `apps.toml`.
 - `../core/bc250_core/`: shared Python code, every suite's, **bundled per app** in its release. The portable window
   (`portable.py`: `PortableWindow`, `Card`, `Pane`, `Pill`, `InfoPill`, `Legend`, `PortableHeader`), the
   controller (`gamepad.py`), the battery (`power.py`) and the Windows folders and shortcuts (`platform.py`) are

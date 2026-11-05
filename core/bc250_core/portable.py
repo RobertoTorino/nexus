@@ -190,6 +190,16 @@ def restart_command(pid: int, argv: Sequence[str], cwd: str) -> list[str]:
     return ["powershell.exe", "-NoProfile", "-NonInteractive", "-WindowStyle", "Hidden", "-Command", line]
 
 
+def allow_foreground() -> bool:
+    """Windows' AllowSetForegroundWindow(ASFW_ANY), from the app in front: the next app may take the front, as the one
+    started again does (a process started from the background is otherwise left behind). False elsewhere, or when
+    Windows refuses (this app is not in front)."""
+    if sys.platform != "win32":
+        return False
+    import ctypes
+    return bool(ctypes.windll.user32.AllowSetForegroundWindow(-1))
+
+
 def own_command() -> list[str]:
     """This app's command line, to start it again: the installed program with its arguments, or from a checkout
     Python's windowless pythonw.exe with the module (no console window)."""
@@ -1427,6 +1437,7 @@ class PortableWindow(QWidget):
     def restart(self) -> None:
         """End and start again (Windows: PowerShell waits for this process, then starts the same command line)."""
         if sys.platform == "win32":
+            allow_foreground()
             subprocess.Popen(restart_command(os.getpid(), own_command(), os.getcwd()),
                              creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000))
         self.close()
@@ -1477,6 +1488,13 @@ class PortableWindow(QWidget):
         self.handlers[action] = handler
 
     def start_gamepad(self) -> bool:
+        """The controller read from now on; an app started again on another screen (RESTARTED) first takes the front,
+        which the one before allowed it (restart): the controller counts in the active window only, and Windows
+        leaves a window started from the background behind (owner, 05-11-2026: the portal did not answer the
+        controller after Play on the TV)."""
+        if os.environ.get(RESTARTED):
+            self.raise_()
+            self.activateWindow()
         return self.gamepad.start()
 
     def focusables(self) -> list[QWidget]:

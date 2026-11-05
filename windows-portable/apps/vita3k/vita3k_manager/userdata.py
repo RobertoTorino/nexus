@@ -48,6 +48,12 @@ PACKAGE_SUFFIXES = (".pkg",)
 OWNED = (("boot-apps-full-screen", "true", "games full screen"),
          ("show-welcome", "false", "its welcome window off"),
          ("check-for-updates-mode", "0", "its update check off"))
+# Vita3K's window settings (its Qt frontend's QSettings, an .ini in portable\gui-configs) the app owns: (section, key,
+# value, what it is, for the log). confirmExitApp off (owner, 05-11-2026): a close of its game or main window asked
+# "Do you really want to exit?" with No as its default, so View, LB and RB held (core's play) waited out the grace
+# and ended Vita3K by force (the owner's Ally, Lumines, build 4186; the same in 4269's game_window.cpp, main_window.cpp)
+GUI_SETTINGS = Path("gui-configs") / "CurrentSettings.ini"
+GUI_OWNED = (("MainWindow", "confirmExitApp", "false", "its exit question off"),)
 CONTENT = (("app", "game"), ("patch", "update"), ("addcont", "extra content"))   # ux0's folders, what each holds
 ZRIF = re.compile(r"[A-Za-z0-9+/=_-]+")
 
@@ -123,11 +129,48 @@ def set_values(path: Path, values: dict[str, str]) -> list[str]:
     return changed
 
 
+def gui_settings_path(home: Path) -> Path:
+    return folder(home) / GUI_SETTINGS
+
+
+def set_ini_value(path: Path, section: str, key: str, value: str) -> bool:
+    """*key* in [*section*] of an .ini as Qt writes it set to *value*, every other line kept as it is (Qt's
+    @ByteArray(...) values, its CRLF line ends); a section or a file that is not there is made. Whether it changed;
+    the file is written only then. OSError is the caller's; the caller makes sure Vita3K does not run."""
+    try:
+        text = path.read_bytes().decode("utf-8")
+    except FileNotFoundError:
+        text = ""
+    newline = "\r\n" if "\r\n" in text or not text else "\n"
+    lines = text.splitlines()
+    head = f"[{section}]"
+    start = next((n for n, line in enumerate(lines) if line.strip() == head), None)
+    if start is None:
+        while lines and not lines[-1].strip():
+            lines.pop()
+        lines += ([""] if lines else []) + [head, f"{key}={value}"]
+    else:
+        end = next((n for n in range(start + 1, len(lines)) if lines[n].startswith("[")), len(lines))
+        at = next((n for n in range(start + 1, end) if lines[n].partition("=")[0].strip() == key), None)
+        if at is not None:
+            if lines[at].partition("=")[2].strip() == value:
+                return False
+            lines[at] = f"{key}={value}"
+        else:
+            last = max((n for n in range(start, end) if lines[n].strip()), default=start)
+            lines.insert(last + 1, f"{key}={value}")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes((newline.join(lines) + newline).encode("utf-8"))
+    return True
+
+
 def prepare(home: Path) -> list[str]:
-    """config.yml's lines the app owns (OWNED) set; what was changed, for the log. The caller makes sure Vita3K does
-    not run."""
+    """config.yml's lines the app owns (OWNED) and the window settings it owns (GUI_OWNED) set; what was changed, for
+    the log. The caller makes sure Vita3K does not run."""
     changed = set(set_values(config_path(home), {key: value for key, value, _what in OWNED}))
-    return [what for key, _value, what in OWNED if key in changed]
+    done = [what for key, _value, what in OWNED if key in changed]
+    return done + [what for section, key, value, what in GUI_OWNED
+                   if set_ini_value(gui_settings_path(home), section, key, value)]
 
 
 # --- The firmware ------------------------------------------------------------------------------------------------

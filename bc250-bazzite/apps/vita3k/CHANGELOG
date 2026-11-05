@@ -7,6 +7,14 @@ Changelog: 05-11-2026 18:18:09
 Fixed. Every border that shows under the mouse, with the focus or on what is chosen is silver now (owner,
 05-11-2026), the theme's outline from core, not the app's blue.
 
+Changelog: 05-11-2026 12:08:01
+
+Added. The app installs Vita3K build 4269 (was 4186; the Upstream review): emulator.py pins build 4269 (0.2.1,
+commit 9409e2ec), the SHA-256 GitHub publishes for its AppImage (a0387e6e…4573) and its size, and the download is
+about 86 MB (was 75). Checked in Vita3K's source between the two builds: the command line, the folders (init_paths)
+and the firmware check are unchanged; config.yml gains disable-mask-bit, enable-cheats and keyboard-gui-exit, which
+the app does not set.
+
 Changelog: 05-11-2026 03:50:19
 
 Release 2.0.2.

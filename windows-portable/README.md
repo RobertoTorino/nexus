@@ -49,6 +49,8 @@ By category, as the portal's tabs list them.
 - <img src="portal/images/apps/vita3k.webp" width="20" height="20" alt=""/> **[Vita3K Manager](apps/vita3k)**: Installs Vita3K, the PS Vita emulator, has it install the firmware and your games, and plays your PS Vita games.
 - <img src="portal/images/apps/xenia.webp" width="20" height="20" alt=""/> **[Xenia Manager](apps/xenia)**: Installs Xenia, the XBOX 360 emulator, and plays your XBOX 360 games.
 - <img src="portal/images/apps/rplay.webp" width="20" height="20" alt=""/> **[Remote Play](apps/rplay)**: Plays your PS4 and PS5 on the handheld: finds them on the network, registers, wakes and streams them.
+- <img src="portal/images/apps/datstat.webp" width="20" height="20" alt=""/> **[DatStation](apps/datstat)**: PlayStation knowledge on your handheld: a quiz against the clock, the consoles' history, system software versions, region codes, user guides and PS news.
+- <img src="portal/images/apps/upscale.webp" width="20" height="20" alt=""/> **[Upscale Boost](apps/upscale)**: HelixSR, the DLSS-like upscaler for AMD graphics, in your games: its build, deployed per game and set.
 
 How to install and use them: **[the wiki](https://robertotorino.github.io/nexus/windows-portable-suite/)**.
 

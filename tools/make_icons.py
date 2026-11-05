@@ -367,7 +367,9 @@ def build(root: Path = ROOT) -> str:
             "Every app but Windows Portable Test has the icon of its category: `windows-portable/icons/<category>/` "
             "at 1024, 512,\n256 and 128 px (PNG), copied by this tool from the portal's `apps.toml` to the app's "
             "`images/<app id>.webp` (512 px)\nand `-128.png`, its tile `portal/images/apps/<key>.webp` (256 px) and its "
-            "chapter's icon `docs/images/apps/<key>.webp`\n(256 px).", ""]
+            "chapter's icon `docs/images/apps/<key>.webp`\n(256 px). A new picture for a category is converted by "
+            "`tools/sync_icons.py --suite windows-portable` (the\ndashboard's Convert icons), as "
+            "`windows-portable/icons/categories.toml` says: PNG, the Gaming pictures 2:1.", ""]
     out += table("Icon,Category,Apps", (
         (img(f"{WINDOWS_PORTABLE}/icons/{category}/{category}-128.png", 64),
          f"{category.title()}: {source}", "<br>".join(by_category.get(category, [])))

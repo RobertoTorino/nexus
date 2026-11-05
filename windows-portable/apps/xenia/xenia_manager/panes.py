@@ -118,7 +118,15 @@ XENIA_INFO = (
     "Xenia needs no firmware: your games are all it needs (see Your games). Xenia for Windows needs Microsoft's "
     "Visual C++ runtime, which Steam and most games bring; the pane says when it is missing (vc_redist.x64.exe from "
     "Microsoft installs it). The X button removes Xenia's program; its folder, with your saves and its settings, "
-    "stays.")
+    "stays.\n\n"
+    "A game saves only to a profile, the console's user. Xenia makes one only in its own window, so the LB button "
+    "(Create profile) makes it here: type a gamertag and the A button creates the profile, which Xenia signs in "
+    "whenever it starts a game. Profile in the list above says which one that is.")
+PROFILE_TEXT = (
+    "A profile is the console's user: a game saves to it, and Xenia signs it in whenever it starts a game, so no game "
+    "asks for one. It stays on this device, in Xenia's folder; it is never online.\n\n"
+    "The gamertag is its name: up to 15 letters and digits, starting with a letter, with single spaces between "
+    "words. R3 opens the touch keyboard; the A button creates the profile and signs it in at start.")
 GAMES_INFO = (
     "Your XBOX 360 games, to play from Steam. Press the A button on a game to mark it for Steam, or to take the mark "
     "away; then the Y button (Update Steam) makes Steam match the marks: each marked game becomes a non-Steam game, "
@@ -230,6 +238,28 @@ KEY_TEXT = (
     "second press. R3 (the right stick pressed) opens Windows' touch keyboard to type it, or closes it. The B button "
     "goes back without saving.\n"
     "It is one key for every app of the suite. Leave it empty to look nothing up.")
+
+
+class ProfilePane(Pane):
+    """A new profile: the text and the gamertag field; A Create and R3 the keyboard are in the legend."""
+
+    def __init__(self, parent: QWidget | None = None):
+        super().__init__(parent)
+        self.column.addWidget(text_label("Create profile", 24, QFont.Weight.ExtraBold))
+        self.column.addSpacing(px(6))
+        self.column.addWidget(text_label(PROFILE_TEXT, BODY + 1, color=DIM, wrap=True))
+        self.column.addSpacing(px(12))
+        self.field = QLineEdit()
+        self.field.setMaxLength(15)
+        self.field.setPlaceholderText("Gamertag")
+        self.field.setFont(font(BODY + 2))
+        self.field.setMinimumHeight(px(44))
+        self.field.setStyleSheet(f"QLineEdit {{ color: {TEXT}; background: {RAISED}; border: none; "
+                                 f"border-radius: {px(10)}px; padding: 0 {px(12)}px; }}")
+        self.column.addWidget(self.field)
+        self.column.addStretch()
+        self.status = text_label("", BODY + 1, QFont.Weight.DemiBold, AMBER, wrap=True)
+        self.column.addWidget(self.status)
 
 
 class KeyPane(Pane):

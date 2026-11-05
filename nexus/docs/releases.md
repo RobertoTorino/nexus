@@ -113,7 +113,9 @@ tab explains itself behind the round **i** in its first row: click it to read th
    Portable Suite: it downloads the draft portal with `gh` (a draft needs the sign-in), checks it against its
    `SHA256SUMS`, installs it and starts it (`check-release.sh draft` on the board, `check-release.ps1 draft` on the
    handheld). On Windows an installed portal that is open is closed first, as its window would close (ended when it
-   has not closed within 10 seconds): a program that runs cannot be replaced. Test it as a user would. On another
+   has not closed within 10 seconds): a program that runs cannot be replaced. Test it as a user would. When more
+   than one portal of the run is still a draft, a choice beside Device test lists them; Device test, Publish, Not
+   OK and the step's line follow the one picked there. On another
    system the button stays gray and the step's line names the device the draft is tested on. Work pushed in the
    meantime (a fix found during the device test) does not end the release: while its draft waits, Device test and
    Publish stay at hand for it. The draft belongs to its own suite: tick the other suite and its steps go on with its

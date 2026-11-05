@@ -8,7 +8,10 @@ The same checks as CI (`.github/workflows/ci-nexus.yml` and `ci.yml`). `tools/ci
 newer Python cannot show; run it before saying work is ready. The BC250 suite's checks (its tests, installer tests,
 `tools/ci-local.sh`) run on Bazzite and in CI. On Windows, `tools/ci-local.sh` runs in podman's machine (Fedora in
 WSL) as its user, not root (the installers refuse root):
-`podman machine ssh "su - user -c 'cd /mnt/c/Projects/nexus && bash tools/ci-local.sh'"`.
+`podman machine ssh "su - user -c 'cd /mnt/c/Projects/nexus && bash tools/ci-local.sh'"`. Run it from PowerShell, not
+Git Bash: podman points ssh's known-hosts file at `NUL`, which Git Bash writes as a real file named NUL in the current
+folder (the root .gitignore leaves it out of `git add`); remove one with `Remove-Item -LiteralPath
+'\\?\C:\Projects\nexus\NUL'`.
 
 ```bash
 tools/ci-local.sh                                   # every job of both workflows as GitHub runs it (podman); --list shows them

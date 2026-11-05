@@ -2,6 +2,18 @@ Changelog: 05-11-2026 18:44:37
 
 Release 1.2.0.
 
+Changelog: 05-11-2026 12:08:01
+
+Added. The AIC8800D80 of product 0x8820, a UGREEN stick (a69c:5723), takes the legacy-mcu1 branch whatever MCU
+it reports, as only that branch supports it (owner, 05-11-2026). legacy-mcu1's loader now prints the chip's
+product after its revision; the app reads it and the chip's box shows it ("revision U03, MCU 1, product
+0x8820"). The wiki's driver branch says so.
+
+Added. The driver is built from newer commits of shenmintao/aic8800d80 (the Upstream review): main 2e75f88 (was
+43db800, 26 commits) and legacy-mcu1 bbf6cb4 (was 1d1b8ff, 24 commits), both of 02-11-2026: fixes for teardown, scans
+and network namespaces, Linux 7.3's cfg80211 on legacy-mcu1, and the AIC8800D80 product 0x8820 there. Both still build
+with CONFIG_USE_FW_REQUEST off, so the firmware is still read from the folder the app gives as aic_fw_path.
+
 Changelog: 05-11-2026 03:50:19
 
 Release 1.1.2.

@@ -14,7 +14,10 @@ intro; any button, key or tap skips it.
 ## The apps page
 
 The apps are tiles under tabs: one tab per category that has apps (Sustainable, Graphics, Gaming, Utilities), two
-rows of four tiles each. A tile shows the app's icon, its name and its state:
+rows of four tiles each. A tab with more than eight apps has more pages: **Page 1 of 2** under the tiles says which
+one shows. Move past the last tile on the right to the next page, or past the first on the left back; a tap on
+**Page 1 of 2** turns to the next page, and from the last back to the first. A tile shows the app's icon, its name
+and its state:
 
 | State | Meaning |
 |---|---|
@@ -39,7 +42,7 @@ The strip under the tiles shows the focused app: its name, its versions and what
 | RT | Steam's library, in Big Picture mode, when Steam is installed |
 | R3 (the right stick pressed) | Windows' touch keyboard, shown or hidden; the row at the bottom shows **R3** with a keyboard symbol (⌨) |
 | B | Back: from a page to the tiles; on a tile nothing |
-| ⧉ (View) | Exit the portal |
+| ⧉ (View) | Exit the portal, after its question |
 
 Every action is a button, in the row at the bottom with what it does for the focused app (**A Install** or **A
 Open**, **X Details**, **Y Update**, **☰ Settings**, **RT Steam**, **⧉ Exit**). Every tile works by touch, and so does the row: a
@@ -62,20 +65,27 @@ managers then start a game in its emulator themselves.
 window. The tile counts the megabytes while it downloads. When the installer is done, the window closes by itself;
 when it fails, the window stays open so you can read why, and the strip says so too.
 
-**B** while a download or an installer runs asks first: the strip says what closing does (the download stops; an
-installer finishes in its window, but the portal does not record it), and a second **B** within five seconds closes
-the portal.
-
 An app the portal installs gets a Start-menu entry in the **Windows Portable Suite** folder and no Desktop shortcut:
 you start it from the portal.
 
 **Y** updates an app whose tile says **Update x.y.z**: the portal installs the release it pins over the older one.
+
+The portal looks for a newer portal when it starts, every hour while it runs, and when you come back to it from a
+game or an app once its last look is a quarter of an hour old. A look that fails (offline for a moment) keeps the
+update it found before.
 
 While a newer portal is out, an amber banner on the line of the tabs says **UPDATE AVAILABLE, PRESS Y TO UPDATE**, on
 the tiles and on the Settings page. **Y**, or a tap on the banner, updates the portal first, since the new portal brings
 the apps' new releases; the row at the bottom says **Y Update suite**. While the portal downloads, the banner counts the
 megabytes. Once the portal is up to date the banner is gone, and **Y** updates an app again. When the portal finds the
 update while its intro plays, the intro shows **PORTAL UPDATE AVAILABLE** under the suite's name.
+
+## Exiting the portal
+
+**⧉** (View) asks first: "Do you really want to exit the portal?" The row at the bottom then shows the answers,
+**⧉ Yes, exit the portal** and **B No, stay**; a second **⧉** closes the portal, and **B**, or five seconds without an
+answer, keeps it open. While a download or an installer runs, the question says what exiting does to it: the
+download stops, or the installer finishes in its window but the portal does not record it.
 
 ## The details page
 
@@ -98,7 +108,7 @@ The status line at the top right shows the date and the time, and **Suite x.y.z 
 The line under it shows the CPU and the GPU live, each with its load and its temperature (**CPU 12% 48°**, **GPU 7%
 47°**, read every two seconds from AMD's driver and Windows; on a device without AMD's driver the GPU shows only its
 temperature), and the battery last, at the right: its percentage, or **Plugged in** while the device is on its
-charger. The apps' status lines show the battery the same way. On the ROG XBOX Ally X, the operating mode's letter
+charger. The apps' status lines show the battery the same way. On the ROG XBOX Ally X, the performance mode's letter
 stands just before the battery: **S** Silent, **P** Performance, **T** Turbo or **W** Windows, read from Windows'
 power plan and power mode, which Armoury Crate's modes set (`CPU 12% 48°  |  GPU 7% 47°  |  T  |  82%`); the **T**
 of Turbo is a bright red, in heavier letters. No letter
@@ -119,10 +129,14 @@ bottom does.
 |---|---|
 | Wallpaper | A picture behind the tiles, which show it through them, in every app of the suite, each from its next start. **A** picks the next: **Off** (the plain dark background), **Built-in** (the suite's own picture), then each of your own pictures, by file name (see below). |
 | Transparency | How much of the dark background lies over the picture, so the text stays easy to read. **A** adds 10 %, up to 90 %, then starts at 0 %. It starts at 59 %. |
-| Sound | The intro's sound when the portal starts. Off: the intro plays without it. |
+| Sound | The intro's sound when the portal starts, and a short sound on each controller button. Off: both are silent. |
 | XBOX menu | Only with the XBOX app on the device. **Add** puts the suite in the XBOX app's library, so XBOX mode starts the portal from its home; the XBOX app closes for a moment while its library changes. **In the menu** once it is there; **A** on it takes the suite out of the XBOX app's library again, the XBOX app closed for a moment as well. The XBOX app keeps its library in a file of its own that Microsoft does not document: when a newer XBOX app keeps it otherwise, the row says so and nothing is changed; add the suite in the XBOX app then (**My Library**, **+**). |
-| Operating mode | Only on the ROG XBOX Ally X: the active mode (**Other** when the power plan and the power mode match none of them). **A** opens the Operating Mode page, below. |
+| Performance mode | Only on the ROG XBOX Ally X: the active mode (**Other** when the power plan and the power mode match none of them). **A** opens the Performance Mode page, below. |
 | Screen | Only with a second screen attached, such as a TV or a monitor: the screen the portal is on. **A**, or **LT** on any page, moves it to the next screen (see below). |
+| Play on the TV | **A** has Windows show its picture on the second screen only, so XBOX mode, the portal, the games and the sound are all on the TV; the handheld's screen goes dark (see below). |
+| Play on the handheld | **A** has Windows show its picture on the handheld's screen only again, with the sound on its speakers. |
+| Play on both screens | **A** has Windows show the same picture on both screens (Duplicate), XBOX mode too; the sound goes to the TV. |
+| XBOX mode ↔ Desktop | **A** switches between XBOX mode and the desktop, either way, as **Win + F11** does. |
 
 **Your own wallpapers** go in the folder `%LOCALAPPDATA%\windows-portable-suite\wallpapers`, which the installer
 makes: paste that address in File Explorer's address bar and drop the pictures there. Only pictures in that folder
@@ -132,9 +146,27 @@ stretched. A picture that does not follow these rules is named in the page's inf
 used: small.png (800 x 450, smaller than 1280 x 720)**). Take a picture out of the folder and the apps show the built-in
 one again. Your pictures stay when the suite is uninstalled.
 
-## The Operating Mode page
+### XBOX mode on a TV
 
-On the ROG XBOX Ally X, the Settings page's **Operating mode** row opens a page with the operating modes Armoury
+XBOX mode runs on Windows' main screen only, the handheld's. With a TV attached and both screens on, the TV stays
+empty (white) in XBOX mode while the sound goes to it. Before you switch to XBOX mode, choose where to play:
+
+- **Play on the TV** on the Settings page: Windows shows its picture on the TV only, and XBOX mode, the games and
+  the sound are there. **Play on both screens** shows the same picture on the handheld too. **Play on the
+  handheld** switches back. After each, the portal starts again by itself, sized for the screen.
+- Or Windows' own way: press **Win + P** and choose **Second screen only** (the same as Play on the TV), **PC screen
+  only** (the same as Play on the handheld), or **Duplicate**, the same picture on both screens.
+
+Either changes Windows' display setting for everything on the handheld, until you change it again.
+
+**XBOX mode ↔ Desktop** on the Settings page switches to XBOX mode, and from XBOX mode back to the desktop: it presses
+**Win + F11** for you, Windows' own switch. Coming back to XBOX mode after the desktop, Windows may ask whether to
+restart the handheld for better performance; that question is Windows', answered with the controller. Windows' own
+way out stays too: the Windows key, **Exit XBOX mode**.
+
+## The Performance Mode page
+
+On the ROG XBOX Ally X, the Settings page's **Performance mode** row opens a page with the performance modes Armoury
 Crate's Command Center offers: **Silent**, **Performance**, **Turbo** and **Windows**. Each row shows the mode's
 watt limits on the power source the device is on now (the line under the title: **On the charger** or **On
 battery**): sustained, slow and fast, as measured on the Ally X. Armoury Crate keeps one set for the charger and one
@@ -196,5 +228,5 @@ finishes first, and the portal says it will move once that is done.
 | `%LOCALAPPDATA%\windows-portable-suite\portal\installed.json` | Which release of each app the portal installed |
 | `%LOCALAPPDATA%\windows-portable-suite\portal\portal.log` | The portal's log |
 | `%APPDATA%\windows-portable-suite\portal.ini` | Its settings: the last tab |
-| `C:\Program Files\windows-portable-suite\` | The Operating Mode helper, on the ROG XBOX Ally X once installed from its page |
+| `C:\Program Files\windows-portable-suite\` | The Performance Mode helper, on the ROG XBOX Ally X once installed from its page |
 | `C:\ProgramData\windows-portable-suite\` | The mode the helper applies, its last result and its log |

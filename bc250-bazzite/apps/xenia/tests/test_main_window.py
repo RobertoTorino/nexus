@@ -62,7 +62,7 @@ def _titles(window) -> list[str]:
 def test_before_installing(qapp, folders):
     window = _window(folders)
     assert window.pill.text() == "Not installed"
-    assert "Not installed. Install downloads Xenia e6cd2e4" in window.emulator_state.text()
+    assert "Not installed. Install downloads Xenia 838850f" in window.emulator_state.text()
     assert window.install_button.isEnabled() and not window.remove_button.isEnabled()
     assert not window.xenia_button.isEnabled() and not window.play_button.isEnabled()
     for name in ("folder_button", "forget_button"):
@@ -93,7 +93,7 @@ def test_an_older_build_is_offered_the_pinned_one(qapp, folders):
     (folders["home"] / "f42147a" / emulator.MEMBER).write_text("")
     (folders["home"] / "current").symlink_to("f42147a")
     window = _window(folders)
-    assert "Xenia f42147a is installed; this version of the app brings e6cd2e4" in window.emulator_state.text()
+    assert "Xenia f42147a is installed; this version of the app brings 838850f" in window.emulator_state.text()
     assert window.install_button.isEnabled()
     window.close()
 

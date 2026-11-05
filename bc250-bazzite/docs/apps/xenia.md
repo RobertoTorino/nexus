@@ -120,7 +120,7 @@ bc250-xenia-run                                         # Xenia's own window
 ## New Xenia builds
 
 Xenia has no stable releases: Xenia Canary publishes a build for almost every change, named after the change
-(`e6cd2e4`). Each version of the app installs one build, the one it was tried with. When the window opens, the app
+(`838850f`). Each version of the app installs one build, the one it was tried with. When the window opens, the app
 asks GitHub for the newest build; when one was published after the app's, the first step says so, with a link to
 what changed. The app does not install it. A newer build comes with a newer version of the app, once it has been
 tried, from the [portal](../portal.md): after updating the app, the first step says so, and **Install** brings it.

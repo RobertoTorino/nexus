@@ -55,6 +55,12 @@ screen and puts them in Steam.
 
 [Remote Play](apps/rplay.md) plays your PS4 and PS5 on the handheld: it finds them on the network, registers the
 handheld with them, wakes them from rest mode and streams them full screen, and puts them in Steam.
+
+[DatStation](apps/datstat.md): PlayStation knowledge on your handheld: a quiz against the clock, the consoles'
+history, system software versions, region codes, user guides and PS news.
+
+[Upscale Boost](apps/upscale.md): HelixSR, the DLSS-like upscaler for AMD graphics, in your games: its build,
+deployed per game and set.
 </div>
 <div class="home-card" markdown>
 #### :material-toolbox: Utilities
@@ -68,6 +74,12 @@ reads.
 
 [Smart Screen](apps/smart.md): Your handheld's live values on a Turzx USB screen, such as the Turing Smart Screen
 3.5 inch, in your look.
+
+[Support Checker](apps/support.md): What the suite's apps need on this handheld: Windows' updates, the tools and
+runtimes, the apps' versions.
+
+[HD Controller](apps/hdcontrol.md): Your USB HD controllers: what each one is, its firmware, its buttons tested, its
+settings.
 </div>
 </div>
 

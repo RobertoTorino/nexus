@@ -53,7 +53,7 @@ def test_the_window_lists_the_apps_then_the_suites_tools(qapp):
     window.close()
 
 
-def test_a_windows_suite_greys_out_the_tours_and_the_icons_and_the_choice_is_remembered(qapp):
+def test_a_windows_suite_greys_out_the_tours_and_the_choice_is_remembered(qapp):
     settings = QSettings(QSettings.Format.IniFormat, QSettings.Scope.UserScope, "test", "test")
     window = MainWindow(settings=settings, suite="bc250-bazzite")
 
@@ -61,8 +61,7 @@ def test_a_windows_suite_greys_out_the_tours_and_the_icons_and_the_choice_is_rem
 
     assert window.suite == "windows-portable" and settings.value(SUITE_KEY) == "windows-portable"
     tiles = {window.tiles.item(i).text(): window.tiles.item(i) for i in range(window.tiles.count())}
-    assert not tiles["Convert icons"].flags() & Qt.ItemFlag.ItemIsEnabled
-    assert "no category icons" in tiles["Convert icons"].toolTip()
+    assert tiles["Convert icons"].flags() & Qt.ItemFlag.ItemIsEnabled         # its PNG icons, since 05-11-2026
     if sys.platform != "win32":
         assert not tiles["Portal video tour"].flags() & Qt.ItemFlag.ItemIsEnabled
         assert "not recorded on Linux" in tiles["Portal video tour"].toolTip()

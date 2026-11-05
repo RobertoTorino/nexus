@@ -95,7 +95,10 @@ class ReleasePage(QWidget):
         self.resume_button = accent_button("Resume run", "Start the jobs that failed or were stopped again (gh run "
                                            "rerun --failed): what is out already is skipped, the draft made anew")
         self.resume_button.clicked.connect(self.resume_run)
-        self.portal_choice = QComboBox()        # the suites' portal tags waiting for their device test
+        self.portal_choice = QComboBox()        # the run's portal drafts waiting for their device test
+        # Room before the tag (owner, 04-11-2026: this field only, not the theme every app shares)
+        self.portal_choice.setStyleSheet("QComboBox { padding-left: 8px; }")
+        self.portal_choice.currentIndexChanged.connect(self.show_state)     # Device test follows the suite picked
         self.test_button = accent_button("Device test", "Install the draft portal on this device from GitHub and "
                                          "start it (check-release draft): test it as a user would")
         self.test_button.clicked.connect(self.device_test)
@@ -362,16 +365,15 @@ class ReleasePage(QWidget):
         if items == drafts:
             return
         chosen = self.portal_choice.currentText()
+        self.portal_choice.blockSignals(True)          # its change re-reads the steps: not while it is filled here
         self.portal_choice.clear()
         self.portal_choice.addItems(drafts)
         if chosen in drafts:
             self.portal_choice.setCurrentText(chosen)
+        self.portal_choice.blockSignals(False)
 
     def waiting_suite(self) -> str | None:
-        tag = self.portal_choice.currentText()
-        root = self.release_window.root
-        return next((s for s in flow.release_suites(root) if tag.startswith(f"{rp.tag_prefix(root, s)}portal-v")),
-                    None)
+        return flow.portal_suite(self.release_window.root, self.portal_choice.currentText())
 
     # --- the pills ------------------------------------------------------------------------------------------------
 

@@ -7,6 +7,13 @@ Changelog: 05-11-2026 18:18:09
 Fixed. Every border that shows under the mouse, with the focus or on what is chosen is silver now (owner,
 05-11-2026), the theme's outline from core, not the app's blue.
 
+Changelog: 05-11-2026 12:08:01
+
+Added. The app installs Xenia Canary build 838850f (04-11-2026; was e6cd2e4; the Upstream review): emulator.py pins
+its commit, release date, the SHA-256 GitHub publishes for its AppImage (e1e1029f…a3bf) and its size. Checked in
+Xenia's source between the two builds: the launch options, the storage root, the disc image's partitions and GTK on
+X11 are unchanged, and no setting the app writes changed (one new one, edram_tile_count).
+
 Changelog: 05-11-2026 03:50:19
 
 Release 2.0.2.

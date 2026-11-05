@@ -23,7 +23,10 @@ def test_a_suite_with_category_icons_is_told_apart(tmp_path):
     suite = _checkout(tmp_path)
     assert icons.has_category_icons(suite) and not icons.has_category_icons(tmp_path)
     assert icons.categories(suite) == ["gear", "leaf"]
-    assert icons.has_category_icons(SUITE) and not icons.has_category_icons(CHECKOUT / "windows-portable")
+    assert icons.has_category_icons(SUITE) and icons.has_category_icons(CHECKOUT / "windows-portable")
+    assert not icons.png_icons(SUITE) and icons.png_icons(CHECKOUT / "windows-portable")      # its PNG icons
+    assert icons.icon_path(CHECKOUT / "windows-portable", "gaming", 512).name == "gaming-512.png"
+    assert icons.icon_path(SUITE, "gaming", 512).name == "gaming-512.webp"
 
 
 def test_whole_set_runs_first_then_each_size_in_order(tmp_path):
@@ -97,11 +100,22 @@ def test_dialog_stops_at_the_first_failure(qapp, tmp_path, monkeypatch):
     dialog.close()
 
 
-def test_dialog_on_a_suite_without_category_icons_is_greyed_out(qapp):
-    dialog = icons.IconsDialog(CHECKOUT, "windows-portable")
+def test_dialog_on_a_suite_without_category_icons_is_greyed_out(qapp, tmp_path):
+    (tmp_path / "plain" / "icons").mkdir(parents=True)
+    dialog = icons.IconsDialog(tmp_path, "plain")
     assert dialog.category.count() == 0 and dialog.checkout is None
     assert not dialog.convert_button.isEnabled()
     assert "no category icons" in dialog.output.toPlainText()
+    dialog.close()
+
+
+def test_dialog_on_the_windows_portable_suite_shows_its_png_icons(qapp):
+    """Its icons are PNG at every size, the gaming ones wide (05-11-2026: Convert icons for that suite too)."""
+    dialog = icons.IconsDialog(CHECKOUT, "windows-portable")
+    assert dialog.checkout == CHECKOUT / "windows-portable"
+    assert [dialog.category.itemText(i) for i in range(dialog.category.count())] == ["gaming", "utilities"]
+    dialog.category.setCurrentText("gaming")
+    assert dialog.previews[1024].toolTip().endswith("gaming-1024.png") and not dialog.previews[1024].pixmap().isNull()
     dialog.close()
 
 

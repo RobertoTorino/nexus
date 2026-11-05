@@ -61,7 +61,7 @@ firmware Vita3K has, how many games are installed in it and the folder. When Vit
 the one this app brings, a row says so. Vita3K's own window is never opened: the firmware and your games are given to
 Vita3K from here.
 
-- **A Install** (also **A** on the Vita3K card) downloads Vita3K build 4186 for Windows from Vita3K's builds on GitHub
+- **A Install** (also **A** on the Vita3K card) downloads Vita3K build 4269 for Windows from Vita3K's builds on GitHub
   (25 MB), checks it against the checksum this version of the app was tested with, and unpacks it. The page counts the
   megabytes while it downloads. Nothing is downloaded before you press A.
 - **X Remove Vita3K** removes Vita3K's program. Press it twice: the first press only changes the entry to **Press
@@ -85,8 +85,10 @@ status line names the folder.
 Vita3K keeps its files in a folder named `portable` beside its program (its portable mode), in the app's `emulator`
 folder: its settings (`config.yml`), its own log (`vita3k.log`, written anew each time it starts) and the PS Vita's
 storage in `fs`: the firmware, the installed games (`ux0\app`), their updates and extra content, and the saves. After
-the install, each time the app opens and before each install, the app sets three of Vita3K's settings: games start
-full screen, its welcome window and its own update check are off. What it changed goes to the log.
+the install, each time the app opens, before each install and before a game starts, the app sets four of Vita3K's
+settings: games start full screen, its welcome window and its own update check are off, and so is its question
+"Do you really want to exit?" (`confirmExitApp` in `portable\gui-configs\CurrentSettings.ini`), so View, LB and RB
+held close the game at once. What it changed goes to the log.
 
 A newer Vita3K never reaches the device by itself: Vita3K publishes a new build almost every day, which may change how
 games run, so it comes only with a new version of Vita3K Manager, tried first, which the portal offers as an update.
@@ -154,11 +156,14 @@ saving). See [Steam artwork from SteamGridDB](covers.md).
 
 ### In a game
 
-A game from Steam starts full screen, with the device's controller as the PS Vita's: A is Cross, B Circle, X Square, Y
-Triangle, Menu Start, View Select, LB and RB are L and R.
+A game from Steam starts full screen, with only the game in sight: Vita3K always opens its library window beside the
+game (with a second screen attached, on the device's own screen), and the app minimizes it as soon as the game's window
+is up. The device's controller is the PS Vita's: A is Cross, B Circle, X Square, Y Triangle, Menu Start, View Select,
+LB and RB are L and R.
 
 To quit a game, **hold View, LB and RB together for two seconds**: Vita3K closes as its window would close, and you are
-back in Steam, or in the app when it started the game. It works the same in every game manager of the suite, started
+back in Steam, or in the app when it started the game. *Closing the game* at the top of the screen says the hold
+was seen. It works the same in every game manager of the suite, started
 from Steam's library or from the app. The line at the bottom of Your games says so when a game starts. **Steam's own
 menu** (the Steam button, or the guide button where Windows does not take it) and its **Exit game** still end the game
 too. Vita3K's own pause menu, on its PS button, has **Exit**, which ends the game but leaves Vita3K's window; holding
@@ -168,7 +173,7 @@ View, LB and RB closes that too.
 temperature every two seconds. When the CPU or the GPU stays above 90 °C for half a minute, a banner shows at the top of
 the screen for a few seconds (on every screen, with a second one attached), and the controller rumbles three times; it
 warns again at most every five minutes while the chip stays that hot. The banner takes no press and does not take the
-focus from the game. A pause, or a lower operating mode (the portal's Operating Mode page), lets the device cool down.
+focus from the game. A pause, or a lower performance mode (the portal's Performance Mode page), lets the device cool down.
 When the game ends, the log (**A View log** on the Log pane) says how hot the chip got and for how long. Windows cannot
 read how hot the outside of the device is: the chip's temperature is the closest reading, and the chip slows itself down
 at its own limit.
@@ -242,7 +247,8 @@ The newest lines show at the bottom of a box of their own, which a finger can sc
 
 A game's shortcut in Steam starts the app itself in its play mode, `Vita3K-Manager.exe --play -r <ID>`, which shows
 no window: it starts `Vita3K.exe -r <ID>` in Vita3K's folder, the game's ID as Vita3K installed it, so Vita3K starts
-that game at once, full screen; it watches the controller for View, LB and RB held, and ends when Vita3K ends, so Steam
+that game at once, full screen; it minimizes Vita3K's library window once the game's window is up (again if Vita3K
+shows it again), watches the controller for View, LB and RB held, and ends when Vita3K ends, so Steam
 sees the game end. Asked to close, Vita3K gets ten seconds before it is ended. On a device without Steam the app starts
 a game the same way. A shortcut made by an earlier version, which starts `Vita3K.exe` itself, shows **(Update Steam)**
 on its game: **Y Update Steam** writes it again.

@@ -38,10 +38,10 @@ check "core imports from the app copy" "(cd $A && /usr/bin/python3 -c 'import im
 echo "== 2. the run wrapper"
 bash "$RUN" --fullscreen=true /games/x.iso > "$T/run.log" 2>&1; rc=$?
 check "without Xenia it says so" "[ $rc -eq 1 ] && grep -q 'Xenia is not installed' $T/run.log"
-mkdir -p "$D/$APP/emulator/e6cd2e4"
-printf '#!/bin/sh\necho "args: $*"\n' > "$D/$APP/emulator/e6cd2e4/xenia.AppImage"
-chmod +x "$D/$APP/emulator/e6cd2e4/xenia.AppImage"
-ln -sfn e6cd2e4 "$D/$APP/emulator/current"
+mkdir -p "$D/$APP/emulator/838850f"
+printf '#!/bin/sh\necho "args: $*"\n' > "$D/$APP/emulator/838850f/xenia.AppImage"
+chmod +x "$D/$APP/emulator/838850f/xenia.AppImage"
+ln -sfn 838850f "$D/$APP/emulator/current"
 mkdir -p "$T/games" && touch "$T/games/My Game.iso"                           # a game that is there (the wrapper's gone check)
 bash "$RUN" --fullscreen=true "$T/games/My Game.iso" > "$T/run.log" 2>&1; rc=$?
 check "starts the current Xenia with the arguments as given" "[ $rc -eq 0 ] && grep -qxF 'args: --fullscreen=true $T/games/My Game.iso' $T/run.log"

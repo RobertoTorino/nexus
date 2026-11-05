@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The portal's own widgets on the portable window: the strip under the tiles (what the focused app is and does,
 with its pills), the details page of an app, the Settings page (the portal's own version and update) and the ROG
-XBOX Ally X's Operating Mode page. The tabs
+XBOX Ally X's Performance Mode page (the Operating Mode page until 05-11-2026). The tabs
 (LB and RB step through the categories) are core's Tabs. Direction D's portal screen (the owner's, 26-10-2026)."""
 
 from __future__ import annotations
@@ -12,8 +12,8 @@ from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QVBoxLayout, QWidget
 
-from bc250_core.portable import (AMBER, BODY, DIM, ON_AMBER, PICTURE_RULES, RADIUS, TEXT, VEIL_MAX, VEIL_STEP,
-                                 InfoPill, Pane, Row, Tabs, font, px, text_label)
+from bc250_core.portable import (AMBER, BODY, DIM, LEGEND, ON_AMBER, PICTURE_RULES, RADIUS, TEXT, VEIL_MAX,
+                                 VEIL_STEP, InfoPill, Pane, Row, Tabs, font, px, text_label)
 
 from .operating_mode import BY_LETTER, MODES
 
@@ -66,6 +66,28 @@ class UpdateBanner(QLabel):
                            f" padding: {px(6)}px {px(16)}px;")
         self.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.hide()
+
+    def mousePressEvent(self, event) -> None:  # noqa: N802 (Qt override)
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.pressed.emit()
+        super().mousePressEvent(event)
+
+
+class PageMarker(QLabel):
+    """Under the tiles while a tab has more apps than one page holds: which page shows, "Page 1 of 2". The d-pad
+    turns the page past the tiles' left or right edge; a tap turns to the next page, from the last to the first."""
+
+    pressed = pyqtSignal()
+
+    def __init__(self, parent: QWidget | None = None):
+        super().__init__(parent)
+        self.setFont(font(LEGEND, QFont.Weight.DemiBold))
+        self.setStyleSheet(f"color: {DIM}; background: transparent;")
+        self.hide()
+
+    def set_page(self, page: int, pages: int) -> None:
+        self.setText(f"Page {page + 1} of {pages}")
+        self.setVisible(pages > 1)
 
     def mousePressEvent(self, event) -> None:  # noqa: N802 (Qt override)
         if event.button() == Qt.MouseButton.LeftButton:
@@ -148,11 +170,18 @@ class SuitePane(Pane):
         self.transparency = Row("Transparency: 59 %")
         self.sound = Row("Sound: On")
         self.xbox = Row("XBOX menu: Add")
-        self.mode = Row("Operating mode: Turbo")
+        self.mode = Row("Performance mode: Turbo")
         self.mode.hide()                                # on the ROG XBOX Ally X only
         self.screen_row = Row("Screen: Display 1")
         self.screen_row.hide()                          # with a second screen attached
-        for row in (self.wallpaper, self.transparency, self.sound, self.xbox, self.mode, self.screen_row):
+        # Windows' display setup for XBOX mode, which runs on the main screen only (owner, 05-11-2026): always shown,
+        # as with the TV alone Windows sees one screen, and the way back has to stay at hand
+        self.tv = Row("Play on the TV")
+        self.handheld = Row("Play on the handheld")
+        self.both = Row("Play on both screens")
+        self.xbox_mode = Row("XBOX mode ↔ Desktop")       # Win + F11 (owner, 05-11-2026)
+        for row in (self.wallpaper, self.transparency, self.sound, self.xbox, self.mode, self.screen_row, self.tv,
+                    self.handheld, self.both, self.xbox_mode):
             self.column.addWidget(row)
             self.column.addSpacing(px(6))
         self.column.addStretch()
@@ -192,12 +221,12 @@ class SuitePane(Pane):
             parts.append("Not used: " + "; ".join(f"{name} ({why})" for name, why in self.refused.items()) + ".")
         parts += [f"Transparency: how much of the dark background lies over the wallpaper, so the text stays easy to "
                   f"read. The A button adds {VEIL_STEP} %, up to {VEIL_MAX} %, then starts at 0 %.",
-                  "Sound: the portal's intro sound, for the suite."]
+                  "Sound: the portal's intro sound and a short one on each controller button, for the suite."]
         if self.xbox.isVisibleTo(self):
             parts.append("XBOX menu: the suite in the XBOX app's library, so XBOX mode starts it from its home. The A "
                          "button adds it, and on In the menu takes it out again; the XBOX app closes for a moment.")
         if self.mode.isVisibleTo(self):
-            parts.append("Operating mode: the ROG XBOX Ally X's mode, as Armoury Crate's Command Center offers them. "
+            parts.append("Performance mode: the ROG XBOX Ally X's mode, as Armoury Crate's Command Center offers them. "
                          "The A button opens its page.")
         if self.screen_row.isVisibleTo(self):
             parts.append("Screen: the screen the portal is on, with a second screen attached (a TV or a monitor). The A "
@@ -205,6 +234,15 @@ class SuitePane(Pane):
                          "for it, after a download or an install has finished. The suite's apps open on that screen "
                          "from then on, while it is attached. Win + Shift + the left or right arrow key, shown at the "
                          "bottom left, moves a window of the suite as well.")
+        parts.append("Play on the TV: Windows shows its picture on the second screen only (a TV or a monitor), so XBOX "
+                     "mode, the portal, the games and the sound are all there; the handheld's screen goes dark. XBOX "
+                     "mode runs on the main screen only, and with both screens on, the TV stays empty. Play on the "
+                     "handheld: the handheld's screen only again, and its speakers. Play on both screens: the same "
+                     "picture on both, XBOX mode too. Each changes Windows' display setting for everything on the "
+                     "handheld, as Win + P does, and the portal then starts again, sized for the screen.")
+        parts.append("XBOX mode ↔ Desktop: Windows' switch between XBOX mode and the desktop (Win + F11), either way. "
+                     "Coming back to XBOX mode after the desktop, Windows may ask whether to restart for better "
+                     "performance: its own question, answered with the controller.")
         parts += ["Every setting is kept for the next start.",
                   "The buttons at the bottom: A changes the setting with the focus. Y looks for a newer portal on "
                   "GitHub (Check again), or downloads and installs it (Update to x.y.z). RT starts Steam's library in "
@@ -244,7 +282,7 @@ class SuitePane(Pane):
         """The Operating mode row: "" off the ROG XBOX Ally X (hidden), else the active mode's name."""
         self.mode.setVisible(bool(name))
         if name:
-            self.mode.set_text(f"Operating mode: {name}")
+            self.mode.set_text(f"Performance mode: {name}")
         self._explain()
 
 
@@ -257,9 +295,9 @@ class ModePane(Pane):
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
         heading = QHBoxLayout()
-        heading.addWidget(text_label("Operating Mode", NAME, QFont.Weight.ExtraBold))
+        heading.addWidget(text_label("Performance Mode", NAME, QFont.Weight.ExtraBold))
         heading.addStretch()
-        self.info = InfoPill("Operating Mode", "")
+        self.info = InfoPill("Performance Mode", "")
         heading.addWidget(self.info, 0, Qt.AlignmentFlag.AlignTop)
         self.column.addLayout(heading)
         self.source = text_label("", BODY + 1, color=DIM)
@@ -278,7 +316,7 @@ class ModePane(Pane):
         self.status = text_label("", BODY + 1, QFont.Weight.DemiBold, AMBER, wrap=True)
         self.column.addWidget(self.status)
         self.info.info = "\n\n".join([
-            "The ROG XBOX Ally X's operating modes, as Armoury Crate's Command Center offers them. Each row shows the "
+            "The ROG XBOX Ally X's performance modes, as Armoury Crate's Command Center offers them. Each row shows the "
             "mode's watt limits on the power source the device is on now: sustained, slow and fast. Armoury Crate "
             "keeps one set for the charger and one for the battery.",
             "Silent: the least power, the coolest and the quietest. Performance: the middle. Turbo: the most power; on "

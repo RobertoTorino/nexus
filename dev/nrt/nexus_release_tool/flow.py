@@ -500,6 +500,11 @@ def waiting_portals(root: Path, only: str | None = None) -> list[str]:
             for suite in chosen_suites(root, only)]
 
 
+def portal_suite(root: Path, tag: str) -> str | None:
+    """The suite on the Nexus release whose portal *tag* is; None when no suite's is."""
+    return next((s for s in release_suites(root) if tag.startswith(f"{rp.tag_prefix(root, s)}portal-v")), None)
+
+
 def publish_command(tag: str) -> str:
     """The owner's yes after the device test: the draft becomes a release, which makes its tag (on the pin commit)
     and starts the Nexus index. Never GitHub's Latest: that is the index."""

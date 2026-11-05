@@ -47,16 +47,22 @@ list scrolls with the d-pad or a finger.
 
 ## Xenia
 
-The pane shows the Xenia build that is installed, the one this version of the app installs, how many games were found
-and the folder. When Xenia Canary has published a newer build than the one this app brings, a row says so.
+The pane shows the Xenia build that is installed, the one this version of the app installs, the profile Xenia signs
+in, how many games were found and the folder. When Xenia Canary has published a newer build than the one this app brings, a row says so.
 
-- **A Install** (also **A** on the Xenia card) downloads Xenia Canary build e6cd2e4 for Windows from Xenia Canary's
+- **A Install** (also **A** on the Xenia card) downloads Xenia Canary build 838850f for Windows from Xenia Canary's
   release on GitHub (4 MB), checks it against the checksum this version of the app was tested with, and unpacks it.
   The page counts the megabytes while it downloads. Nothing is downloaded before you press A.
 - **X Remove Xenia** removes Xenia's program. Press it twice: the first press only changes the entry to **Press
   again** for five seconds. Xenia's own files, your saves and its settings, stay, so a new install finds them again.
   It does not work while Xenia runs.
 - **Y Update** shows when another Xenia build is installed, and puts in the one this version of the app brings.
+- **LB Create profile** makes a profile, the console's user: a game saves only to one, and Xenia itself makes one
+  only in its own window. Type a gamertag (**R3** opens the touch keyboard; up to 15 letters and digits, starting
+  with a letter, with single spaces between words) and press **A Create**; **B** goes back without one. Xenia
+  signs the new profile in whenever it starts a game, so no game asks for one. The pane's **Profile** row says which
+  profile that is. The profile stays on the device, in Xenia's `content` folder, and is never online. It does not
+  work while Xenia runs.
 
 **⧉** during a download asks first: a second **⧉** within five seconds exits the app, and the download stops.
 
@@ -139,7 +145,8 @@ saving). See [Steam artwork from SteamGridDB](covers.md).
 A game starts full screen, with the device's controller as the XBOX 360's.
 
 To quit a game, **hold View, LB and RB together for two seconds**: Xenia closes as its window would close, and you are
-back in Steam, or in the app when it started the game. It works the same in every game manager of the suite, started
+back in Steam, or in the app when it started the game. *Closing the game* at the top of the screen says the hold
+was seen. It works the same in every game manager of the suite, started
 from Steam's library or from the app. The line at the bottom of Your games says so when a game starts. **Steam's own
 menu** (the Steam button, or the guide button) and its **Exit game** end the game too.
 
@@ -147,7 +154,7 @@ menu** (the Steam button, or the guide button) and its **Exit game** end the gam
 temperature every two seconds. When the CPU or the GPU stays above 90 °C for half a minute, a banner shows at the top of
 the screen for a few seconds (on every screen, with a second one attached), and the controller rumbles three times; it
 warns again at most every five minutes while the chip stays that hot. The banner takes no press and does not take the
-focus from the game. A pause, or a lower operating mode (the portal's Operating Mode page), lets the device cool down.
+focus from the game. A pause, or a lower performance mode (the portal's Performance Mode page), lets the device cool down.
 When the game ends, the log (**A View log** on the Log pane) says how hot the chip got and for how long. Windows cannot
 read how hot the outside of the device is: the chip's temperature is the closest reading, and the chip slows itself down
 at its own limit.

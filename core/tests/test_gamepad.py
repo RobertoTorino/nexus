@@ -4,7 +4,11 @@ dead zone, every control as it is for a controller test, and no controller at al
 
 from __future__ import annotations
 
-from bc250_core.gamepad import DEADZONE, FIRST_REPEAT, REPEAT, Gamepad, stick_direction
+import os
+import sys
+import types
+
+from bc250_core.gamepad import DEADZONE, FIRST_REPEAT, REPEAT, Gamepad, PygameSource, stick_direction
 
 
 class Clock:
@@ -149,3 +153,25 @@ def test_without_pygame_or_a_controller(qapp):
     assert not gamepad.start() and gamepad.names() == []
     gamepad.poll()                                              # nothing happens
     gamepad.stop()
+
+
+def test_sdl_reads_the_pad_over_xinput_not_raw_input(monkeypatch):
+    """Over Windows' raw input the Ally's pad gave SDL its triggers alone, not one button (05-11-2026): the reader
+    sets SDL_JOYSTICK_RAWINPUT=0 before SDL starts, and a value set by hand stays."""
+    seen = []
+
+    class Pygame(types.ModuleType):
+        def __getattr__(self, name):
+            return name                                     # CONTROLLER_BUTTON_* and CONTROLLER_AXIS_*
+
+    pygame, sdl2, controller = Pygame("pygame"), types.ModuleType("pygame._sdl2"), types.ModuleType("controller")
+    pygame.display = types.SimpleNamespace(init=lambda: seen.append(os.environ.get("SDL_JOYSTICK_RAWINPUT")))
+    controller.init, controller.get_count = (lambda: None), (lambda: 0)
+    pygame._sdl2, sdl2.controller = sdl2, controller
+    monkeypatch.setitem(sys.modules, "pygame", pygame)
+    monkeypatch.setitem(sys.modules, "pygame._sdl2", sdl2)
+    monkeypatch.delenv("SDL_JOYSTICK_RAWINPUT", raising=False)
+    PygameSource()
+    monkeypatch.setenv("SDL_JOYSTICK_RAWINPUT", "1")
+    PygameSource()
+    assert seen == ["0", "1"]

@@ -196,7 +196,7 @@ _OUTSIDE = threading.Lock()
 BUNDLE_VARIABLES = ("QT_PLUGIN_PATH", "QML2_IMPORT_PATH")     # what PyInstaller's PyQt6 hook sets for the app itself
 # What the app's own controller reader sets for SDL (gamepad.PygameSource), for itself only
 APP_VARIABLES = ("SDL_VIDEODRIVER", "SDL_AUDIODRIVER", "SDL_JOYSTICK_ALLOW_BACKGROUND_EVENTS",
-                 "PYGAME_HIDE_SUPPORT_PROMPT")
+                 "SDL_JOYSTICK_RAWINPUT", "PYGAME_HIDE_SUPPORT_PROMPT")
 
 
 def _get_dll_directory() -> str:

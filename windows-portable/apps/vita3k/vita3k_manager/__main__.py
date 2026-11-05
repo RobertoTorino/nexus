@@ -26,8 +26,16 @@ def play_game(args: list[str]) -> int:
         log.error(f"Play: {private(game)} is no longer there; Vita3K was not started.")
         from bc250_core import gone
         return gone.show(INFO, APP_NAME, __version__, game)
+    home = emulator.emulator_home()
+    if not emulator.running(home):                  # its settings as the window sets them (its exit question off)
+        try:
+            if done := userdata.prepare(home):
+                log.info(f"Vita3K set up: {', '.join(done)}.")
+        except OSError as error:
+            log.error(f"Vita3K's settings could not be written: {error}")
     try:
-        return play.run([str(program), *args], program.parent, log=log.info)
+        # Its library window minimized beside the game (owner, 05-11-2026: with a TV it stayed on the Ally's screen)
+        return play.run([str(program), *args], program.parent, log=log.info, windows=emulator.minimize_library)
     except OSError as error:
         log.error(f"Play: Vita3K could not start: {error}")
         return 1

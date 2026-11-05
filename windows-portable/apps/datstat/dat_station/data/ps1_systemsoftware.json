@@ -1,0 +1,882 @@
+[
+  {
+    "id": "DTL1000",
+    "name": "DTLH1_Series",
+    "entries": [
+      {
+        "version": "System Software Version v?",
+        "release_date": "1994-09-22",
+        "region": "Japan",
+        "region_code": "NTSC-J",
+        "region_free": "Yes",
+        "model": "DTL-H1000",
+        "color": "Blue",
+        "cdr_copies": "Yes",
+        "av_direct_out": "Yes",
+        "parallel_port": "Yes",
+        "serial_port": "Yes",
+        "notes": [
+          "Debugger.",
+          "Contains printf bugs.",
+          "S-Video direct out."
+        ]
+      },
+      {
+        "version": "System Software Version v1.1",
+        "release_date": "1995-01-22",
+        "region": "Japan",
+        "region_code": "NTSC-J",
+        "region_free": "Yes",
+        "model": "DTL-H1000H",
+        "color": "Grey",
+        "cdr_copies": "Yes",
+        "av_direct_out": "Yes",
+        "parallel_port": "Yes",
+        "serial_port": "Yes",
+        "notes": [
+          "Debugger.",
+          "Contains printf bugs.",
+          "S-Video direct out."
+        ]
+      },
+      {
+        "version": "System Software Version v2.1",
+        "release_date": "1995-07-17",
+        "region": "USA",
+        "region_code": "NTSC-U/C",
+        "region_free": "Yes",
+        "model": "DTL-H1101",
+        "color": "Blue",
+        "cdr_copies": "Yes",
+        "av_direct_out": "Yes",
+        "parallel_port": "Yes",
+        "serial_port": "Yes",
+        "notes": [
+          "Has external power supply."
+        ]
+      },
+      {
+        "version": "System Software Version v2.1",
+        "release_date": "1995-07-17",
+        "region": "Europe",
+        "region_code": "PAL",
+        "region_free": "Yes",
+        "model": "DTL-H1102",
+        "color": "Blue",
+        "cdr_copies": "Yes",
+        "av_direct_out": "Yes",
+        "parallel_port": "Yes",
+        "serial_port": "Yes",
+        "notes": [
+          "Has external power supply."
+        ]
+      },
+      {
+        "version": "System Software Version v?",
+        "release_date": "?",
+        "region": "USA",
+        "region_code": "NTSC-U/C",
+        "region_free": "Yes",
+        "model": "DTL-H1001H",
+        "color": "Grey",
+        "cdr_copies": "Yes",
+        "av_direct_out": "Yes",
+        "parallel_port": "Yes",
+        "serial_port": "Yes",
+        "notes": [
+          "Debugger.",
+          "Contains printf bugs.",
+          "S-Video direct out."
+        ]
+      },
+      {
+        "version": "System Software Version v2.2",
+        "release_date": "1995-04-12",
+        "region": "Japan",
+        "region_code": "NTSC-J",
+        "region_free": "Yes",
+        "model": "DTL-H1200",
+        "color": "Green",
+        "cdr_copies": "Yes",
+        "av_direct_out": "Yes",
+        "parallel_port": "Yes",
+        "serial_port": "Yes",
+        "notes": [
+          "Has external power supply."
+        ]
+      },
+      {
+        "version": "System Software Version v2.2",
+        "release_date": "1995-04-12",
+        "region": "USA",
+        "region_code": "NTSC-U/C",
+        "region_free": "Yes",
+        "model": "DTL-H1201",
+        "color": "Green",
+        "cdr_copies": "Yes",
+        "av_direct_out": "Yes",
+        "parallel_port": "Yes",
+        "serial_port": "Yes",
+        "notes": [
+          "Has external power supply."
+        ]
+      },
+      {
+        "version": "System Software Version v2.2",
+        "release_date": "1995-04-12",
+        "region": "Europe",
+        "region_code": "PAL",
+        "region_free": "Yes",
+        "model": "DTL-H1202",
+        "color": "Green",
+        "cdr_copies": "Yes",
+        "av_direct_out": "Yes",
+        "parallel_port": "Yes",
+        "serial_port": "Yes",
+        "notes": [
+          "Has external power supply."
+        ]
+      },
+      {
+        "version": "System Software Version v2.0",
+        "release_date": "1995-07-05",
+        "region": "USA",
+        "region_code": "NTSC-U/C",
+        "region_free": "Yes",
+        "model": "DTL-H1001",
+        "color": "Blue",
+        "cdr_copies": "Yes",
+        "av_direct_out": "Yes",
+        "parallel_port": "Yes",
+        "serial_port": "Yes",
+        "notes": [
+          "Debugger.",
+          "Contains printf bugs.",
+          "S-Video direct out."
+        ]
+      },
+      {
+        "version": "System Software Version v2.0",
+        "release_date": "1995-10-05",
+        "region": "Europe",
+        "region_code": "PAL",
+        "region_free": "Yes",
+        "model": "DTL-H1002",
+        "color": "Blue",
+        "cdr_copies": "Yes",
+        "av_direct_out": "Yes",
+        "parallel_port": "Yes",
+        "serial_port": "Yes",
+        "notes": [
+          "Debugger.",
+          "Contains printf bugs.",
+          "S-Video direct out."
+        ]
+      },
+      {
+        "version": "System Software Version v2.2",
+        "release_date": "1996-06-03",
+        "region": "Japan",
+        "region_code": "NTSC-J",
+        "region_free": "Yes",
+        "model": "DTL-H1100",
+        "color": "Blue",
+        "cdr_copies": "Yes",
+        "av_direct_out": "Yes",
+        "parallel_port": "Yes",
+        "serial_port": "Yes",
+        "notes": [
+          "Has external power supply."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "DTL1000",
+    "name": "DTLH3_Series",
+    "entries": [
+      {
+        "version": "System Software Version v2.2",
+        "release_date": "1995-04-12",
+        "region": "Japan",
+        "region_code": "NTSC-J",
+        "region_free": "Yes",
+        "model": "DTL-H3000",
+        "color": "Black",
+        "cdr_copies": "No",
+        "av_direct_out": "Yes",
+        "parallel_port": "Yes",
+        "serial_port": "Yes",
+        "notes": [
+          "Yaroze development system."
+        ]
+      },
+      {
+        "version": "System Software Version v2.2",
+        "release_date": "1995-04-12",
+        "region": "USA",
+        "region_code": "NTSC-U/C",
+        "region_free": "Yes",
+        "model": "DTL-H3001",
+        "color": "Black",
+        "cdr_copies": "No",
+        "av_direct_out": "Yes",
+        "parallel_port": "Yes",
+        "serial_port": "Yes",
+        "notes": [
+          "Yaroze development system."
+        ]
+      },
+      {
+        "version": "System Software Version v2.2",
+        "release_date": "1995-04-12",
+        "region": "Europe",
+        "region_code": "PAL",
+        "region_free": "Yes",
+        "model": "DTL-H3002",
+        "color": "Black",
+        "cdr_copies": "No",
+        "av_direct_out": "Yes",
+        "parallel_port": "Yes",
+        "serial_port": "Yes",
+        "notes": [
+          "Yaroze development system."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "SCPH100",
+    "name": "SCPH10_Series",
+    "entries": [
+      {
+        "version": "System Software Version v4.6",
+        "release_date": "?",
+        "region": "Japan",
+        "region_code": "NTSC-J",
+        "region_free": "No",
+        "model": "SCPH-103",
+        "color": "White",
+        "cdr_copies": "No",
+        "av_direct_out": "No",
+        "parallel_port": "No",
+        "serial_port": "No",
+        "notes": [
+          "Redesigned smaller case.",
+          "Controller and memory card ports integrated onto motherboard.",
+          "Serial port removed.",
+          "Has external power supply."
+        ]
+      },
+      {
+        "version": "System Software Version v4.3",
+        "release_date": "2000-03-11",
+        "region": "Japan",
+        "region_code": "NTSC-J",
+        "region_free": "No",
+        "model": "SCPH-100",
+        "color": "White",
+        "cdr_copies": "No",
+        "av_direct_out": "No",
+        "parallel_port": "No",
+        "serial_port": "No",
+        "notes": [
+          "Redesigned smaller case.",
+          "Controller and memory card ports integrated onto motherboard.",
+          "Serial port removed.",
+          "Has external power supply."
+        ]
+      },
+      {
+        "version": "System Software Version v4.4",
+        "release_date": "2000-03-24",
+        "region": "Europe",
+        "region_code": "PAL",
+        "region_free": "No",
+        "model": "SCPH-102",
+        "color": "White",
+        "cdr_copies": "No",
+        "av_direct_out": "No",
+        "parallel_port": "No",
+        "serial_port": "No",
+        "notes": [
+          "Redesigned smaller case.",
+          "Controller and memory card ports integrated onto motherboard.",
+          "Serial port removed.",
+          "Has external power supply."
+        ]
+      },
+      {
+        "version": "System Software Version v4.5",
+        "release_date": "2000-05-25",
+        "region": "USA",
+        "region_code": "NTSC-U/C",
+        "region_free": "No",
+        "model": "SCPH-101",
+        "color": "White",
+        "cdr_copies": "No",
+        "av_direct_out": "No",
+        "parallel_port": "No",
+        "serial_port": "No",
+        "notes": [
+          "Redesigned smaller case.",
+          "Controller and memory card ports integrated onto motherboard.",
+          "Serial port removed.",
+          "Has external power supply."
+        ]
+      },
+      {
+        "version": "System Software Version v4.5",
+        "release_date": "2000-05-25",
+        "region": "Europe",
+        "region_code": "PAL",
+        "region_free": "No",
+        "model": "SCPH-102",
+        "color": "White",
+        "cdr_copies": "No",
+        "av_direct_out": "No",
+        "parallel_port": "No",
+        "serial_port": "No",
+        "notes": [
+          "Redesigned smaller case.",
+          "Controller and memory card ports integrated onto motherboard.",
+          "Serial port removed.",
+          "Has external power supply."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "SCPH1000",
+    "name": "SCPH1000_Series",
+    "entries": [
+      {
+        "version": "System Software Version v?",
+        "release_date": "1994-09-22",
+        "region": "Japan",
+        "region_code": "NTSC-J",
+        "region_free": "No",
+        "model": "SCPH-1000",
+        "color": "Grey",
+        "cdr_copies": "No",
+        "av_direct_out": "Yes",
+        "parallel_port": "Yes",
+        "serial_port": "No",
+        "notes": [
+          "FMV skipping issues.",
+          "S-Video direct out."
+        ]
+      },
+      {
+        "version": "System Software Version v2.0",
+        "release_date": "1995-05-10",
+        "region": "Europe",
+        "region_code": "PAL",
+        "region_free": "No",
+        "model": "SCPH-1002",
+        "color": "Grey",
+        "cdr_copies": "No",
+        "av_direct_out": "Yes",
+        "parallel_port": "Yes",
+        "serial_port": "No",
+        "notes": [
+          "FMV skipping issues.",
+          "Based on the SCPH-3000 series."
+        ]
+      },
+      {
+        "version": "System Software Version v2.1",
+        "release_date": "1995-07-17",
+        "region": "Europe",
+        "region_code": "PAL",
+        "region_free": "No",
+        "model": "SCPH-1002",
+        "color": "Grey",
+        "cdr_copies": "No",
+        "av_direct_out": "Yes",
+        "parallel_port": "Yes",
+        "serial_port": "No",
+        "notes": [
+          "FMV skipping issues.",
+          "Based on the SCPH-3000 series."
+        ]
+      },
+      {
+        "version": "System Software Version v2.2",
+        "release_date": "1995-12-04",
+        "region": "USA",
+        "region_code": "NTSC-U/C",
+        "region_free": "No",
+        "model": "SCPH-1001",
+        "color": "Grey",
+        "cdr_copies": "No",
+        "av_direct_out": "Yes",
+        "parallel_port": "Yes",
+        "serial_port": "No",
+        "notes": [
+          "FMV skipping issues.",
+          "Based on the SCPH-3000 series."
+        ]
+      },
+      {
+        "version": "System Software Version v2.2",
+        "release_date": "1995-12-04",
+        "region": "Europe",
+        "region_code": "PAL",
+        "region_free": "No",
+        "model": "SCPH-1002",
+        "color": "Grey",
+        "cdr_copies": "No",
+        "av_direct_out": "Yes",
+        "parallel_port": "Yes",
+        "serial_port": "No",
+        "notes": [
+          "FMV skipping issues.",
+          "Based on the SCPH-3000 series."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "SCPH3000",
+    "name": "SCPH3_Series",
+    "entries": [
+      {
+        "version": "System Software Version v1.1",
+        "release_date": "1995-01-22",
+        "region": "Japan",
+        "region_code": "NTSC-J",
+        "region_free": "No",
+        "model": "SCPH-3000",
+        "color": "Grey",
+        "cdr_copies": "No",
+        "av_direct_out": "Yes",
+        "parallel_port": "Yes",
+        "serial_port": "No",
+        "notes": [
+          "FMV skipping issues."
+        ]
+      },
+      {
+        "version": "System Software Version v2.1",
+        "release_date": "1995-07-17",
+        "region": "Japan",
+        "region_code": "NTSC-J",
+        "region_free": "No",
+        "model": "SCPH-3500",
+        "color": "Grey",
+        "cdr_copies": "No",
+        "av_direct_out": "Yes",
+        "parallel_port": "Yes",
+        "serial_port": "No",
+        "notes": [
+          "FMV skipping issues.",
+          "2 controllers included for this model."
+        ]
+      },
+      {
+        "version": "System Software Version v2.2",
+        "release_date": "1995-12-04",
+        "region": "Japan",
+        "region_code": "NTSC-J",
+        "region_free": "No",
+        "model": "SCPH-5000",
+        "color": "Grey",
+        "cdr_copies": "No",
+        "av_direct_out": "Yes",
+        "parallel_port": "Yes",
+        "serial_port": "No",
+        "notes": [
+          "FMV skipping issues."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "SCPH5000",
+    "name": "SCPH5_Series",
+    "entries": [
+      {
+        "version": "System Software Version v2.2",
+        "release_date": "1995-12-04",
+        "region": "Japan",
+        "region_code": "NTSC-J",
+        "region_free": "No",
+        "model": "SCPH-5903",
+        "color": "White",
+        "cdr_copies": "No",
+        "av_direct_out": "Yes",
+        "parallel_port": "Yes",
+        "serial_port": "No",
+        "notes": [
+          "Only model capable of playing Video CD movies.",
+          "This model also has RCA plugs, like earlier PlayStation models."
+        ]
+      },
+      {
+        "version": "System Software Version v3.0",
+        "release_date": "1996-09-09",
+        "region": "Japan",
+        "region_code": "NTSC-J",
+        "region_free": "No",
+        "model": "SCPH-5500",
+        "color": "Grey",
+        "cdr_copies": "No",
+        "av_direct_out": "No",
+        "parallel_port": "Yes",
+        "serial_port": "No",
+        "notes": [
+          "CD-ROM drive re-located on right side of CD bay.",
+          "Digital servo for focus/tracking introduced, manual gain/bias calibration removed.",
+          "Lens carriage reinforced and power simplified, fixing FMV skipping issues.",
+          "Only revision with vibration damper under the drive.",
+          "A/V direct out and RFU power connector removed.",
+          "Motherboard PCB reduced in size.",
+          "Model numbers synchronized worldwide."
+        ]
+      },
+      {
+        "version": "System Software Version v3.0",
+        "release_date": "1996-11-18",
+        "region": "Japan",
+        "region_code": "NTSC-J",
+        "region_free": "No",
+        "model": "SCPH-5503",
+        "color": "Grey",
+        "cdr_copies": "No",
+        "av_direct_out": "No",
+        "parallel_port": "Yes",
+        "serial_port": "No",
+        "notes": [
+          "CD-ROM drive re-located on right side of CD bay.",
+          "Digital servo for focus/tracking introduced, manual gain/bias calibration removed.",
+          "Lens carriage reinforced and power simplified, fixing FMV skipping issues.",
+          "Only revision with vibration damper under the drive.",
+          "A/V direct out and RFU power connector removed.",
+          "Motherboard PCB reduced in size.",
+          "Model numbers synchronized worldwide."
+        ]
+      },
+      {
+        "version": "System Software Version v3.0",
+        "release_date": "1996-11-18",
+        "region": "USA",
+        "region_code": "NTSC-U/C",
+        "region_free": "No",
+        "model": "SCPH-5001",
+        "color": "Grey",
+        "cdr_copies": "No",
+        "av_direct_out": "No",
+        "parallel_port": "Yes",
+        "serial_port": "No",
+        "notes": [
+          "CD-ROM drive re-located on right side of CD bay.",
+          "Digital servo for focus/tracking introduced, manual gain/bias calibration removed.",
+          "Lens carriage reinforced and power simplified, fixing FMV skipping issues.",
+          "Only revision with vibration damper under the drive.",
+          "A/V direct out and RFU power connector removed.",
+          "Motherboard PCB reduced in size.",
+          "Model numbers synchronized worldwide."
+        ]
+      },
+      {
+        "version": "System Software Version v3.0",
+        "release_date": "1996-11-18",
+        "region": "USA",
+        "region_code": "NTSC-U/C",
+        "region_free": "No",
+        "model": "SCPH-5501",
+        "color": "Grey",
+        "cdr_copies": "No",
+        "av_direct_out": "No",
+        "parallel_port": "Yes",
+        "serial_port": "No",
+        "notes": [
+          "CD-ROM drive re-located on right side of CD bay.",
+          "Digital servo for focus/tracking introduced, manual gain/bias calibration removed.",
+          "Lens carriage reinforced and power simplified, fixing FMV skipping issues.",
+          "Only revision with vibration damper under the drive.",
+          "A/V direct out and RFU power connector removed.",
+          "Motherboard PCB reduced in size.",
+          "Model numbers synchronized worldwide."
+        ]
+      },
+      {
+        "version": "System Software Version v3.0",
+        "release_date": "1997-01-06",
+        "region": "Europe",
+        "region_code": "PAL",
+        "region_free": "No",
+        "model": "SCPH-5502",
+        "color": "Grey",
+        "cdr_copies": "No",
+        "av_direct_out": "No",
+        "parallel_port": "Yes",
+        "serial_port": "No",
+        "notes": [
+          "CD-ROM drive re-located on right side of CD bay.",
+          "Digital servo for focus/tracking introduced, manual gain/bias calibration removed.",
+          "Lens carriage reinforced and power simplified, fixing FMV skipping issues.",
+          "Only revision with vibration damper under the drive.",
+          "A/V direct out and RFU power connector removed.",
+          "Motherboard PCB reduced in size.",
+          "Model numbers synchronized worldwide."
+        ]
+      },
+      {
+        "version": "System Software Version v3.0",
+        "release_date": "1997-01-06",
+        "region": "Europe",
+        "region_code": "PAL",
+        "region_free": "No",
+        "model": "SCPH-5552",
+        "color": "Grey",
+        "cdr_copies": "No",
+        "av_direct_out": "No",
+        "parallel_port": "Yes",
+        "serial_port": "No",
+        "notes": [
+          "CD-ROM drive re-located on right side of CD bay.",
+          "Digital servo for focus/tracking introduced, manual gain/bias calibration removed.",
+          "Lens carriage reinforced and power simplified, fixing FMV skipping issues.",
+          "Only revision with vibration damper under the drive.",
+          "A/V direct out and RFU power connector removed.",
+          "Motherboard PCB reduced in size.",
+          "Model numbers synchronized worldwide."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "SCPH7000",
+    "name": "SCPH7_Series",
+    "entries": [
+      {
+        "version": "System Software Version v3.0",
+        "release_date": "1996-11-18",
+        "region": "Japan",
+        "region_code": "NTSC-J",
+        "region_free": "No",
+        "model": "SCPH-7003",
+        "color": "Grey",
+        "cdr_copies": "No",
+        "av_direct_out": "No",
+        "parallel_port": "Yes",
+        "serial_port": "No",
+        "notes": [
+          "DualShock now standard.",
+          "Introduction of Sound Scope.",
+          "Major manufacturing cost reductions took place from this model onwards.",
+          "The number of memory chips and CD-ROM controllers were reduced (e.g. system RAM went from 4 separate chips down to 1 single consolidated chip), and other components were simplified, especially on SCPH-750x."
+        ]
+      },
+      {
+        "version": "System Software Version v4.0",
+        "release_date": "1997-08-18",
+        "region": "Japan",
+        "region_code": "NTSC-J",
+        "region_free": "No",
+        "model": "SCPH-7000",
+        "color": "Grey",
+        "cdr_copies": "No",
+        "av_direct_out": "No",
+        "parallel_port": "Yes",
+        "serial_port": "No",
+        "notes": [
+          "DualShock now standard.",
+          "Introduction of Sound Scope.",
+          "Major manufacturing cost reductions took place from this model onwards.",
+          "The number of memory chips and CD-ROM controllers were reduced (e.g. system RAM went from 4 separate chips down to 1 single consolidated chip), and other components were simplified, especially on SCPH-750x."
+        ]
+      },
+      {
+        "version": "System Software Version v4.1",
+        "release_date": "1997-12-16",
+        "region": "Japan",
+        "region_code": "NTSC-J",
+        "region_free": "No",
+        "model": "SCPH-7500",
+        "color": "Grey",
+        "cdr_copies": "No",
+        "av_direct_out": "No",
+        "parallel_port": "Yes",
+        "serial_port": "No",
+        "notes": [
+          "DualShock now standard.",
+          "Introduction of Sound Scope.",
+          "Major manufacturing cost reductions took place from this model onwards.",
+          "The number of memory chips and CD-ROM controllers were reduced (e.g. system RAM went from 4 separate chips down to 1 single consolidated chip), and other components were simplified, especially on SCPH-750x."
+        ]
+      },
+      {
+        "version": "System Software Version v4.1",
+        "release_date": "1997-12-16",
+        "region": "Japan",
+        "region_code": "NTSC-J",
+        "region_free": "No",
+        "model": "SCPH-7503",
+        "color": "Grey",
+        "cdr_copies": "No",
+        "av_direct_out": "No",
+        "parallel_port": "Yes",
+        "serial_port": "No",
+        "notes": [
+          "DualShock now standard.",
+          "Introduction of Sound Scope.",
+          "Major manufacturing cost reductions took place from this model onwards.",
+          "The number of memory chips and CD-ROM controllers were reduced (e.g. system RAM went from 4 separate chips down to 1 single consolidated chip), and other components were simplified, especially on SCPH-750x."
+        ]
+      },
+      {
+        "version": "System Software Version v4.1",
+        "release_date": "1997-12-16",
+        "region": "USA",
+        "region_code": "NTSC-U/C",
+        "region_free": "No",
+        "model": "SCPH-7001",
+        "color": "Grey",
+        "cdr_copies": "No",
+        "av_direct_out": "No",
+        "parallel_port": "Yes",
+        "serial_port": "No",
+        "notes": [
+          "DualShock now standard.",
+          "Introduction of Sound Scope.",
+          "Major manufacturing cost reductions took place from this model onwards.",
+          "The number of memory chips and CD-ROM controllers were reduced (e.g. system RAM went from 4 separate chips down to 1 single consolidated chip), and other components were simplified, especially on SCPH-750x."
+        ]
+      },
+      {
+        "version": "System Software Version v4.1",
+        "release_date": "1997-12-16",
+        "region": "USA",
+        "region_code": "NTSC-U/C",
+        "region_free": "No",
+        "model": "SCPH-7501",
+        "color": "Grey",
+        "cdr_copies": "No",
+        "av_direct_out": "No",
+        "parallel_port": "Yes",
+        "serial_port": "No",
+        "notes": [
+          "DualShock now standard.",
+          "Introduction of Sound Scope.",
+          "Major manufacturing cost reductions took place from this model onwards.",
+          "The number of memory chips and CD-ROM controllers were reduced (e.g. system RAM went from 4 separate chips down to 1 single consolidated chip), and other components were simplified, especially on SCPH-750x."
+        ]
+      },
+      {
+        "version": "System Software Version v4.1",
+        "release_date": "1997-12-16",
+        "region": "Europe",
+        "region_code": "PAL",
+        "region_free": "No",
+        "model": "SCPH-7002",
+        "color": "Grey",
+        "cdr_copies": "No",
+        "av_direct_out": "No",
+        "parallel_port": "Yes",
+        "serial_port": "No",
+        "notes": [
+          "DualShock now standard.",
+          "Introduction of Sound Scope.",
+          "Major manufacturing cost reductions took place from this model onwards.",
+          "The number of memory chips and CD-ROM controllers were reduced (e.g. system RAM went from 4 separate chips down to 1 single consolidated chip), and other components were simplified, especially on SCPH-750x."
+        ]
+      },
+      {
+        "version": "System Software Version v4.1",
+        "release_date": "1997-12-16",
+        "region": "Europe",
+        "region_code": "PAL",
+        "region_free": "No",
+        "model": "SCPH-7502",
+        "color": "Grey",
+        "cdr_copies": "No",
+        "av_direct_out": "No",
+        "parallel_port": "Yes",
+        "serial_port": "No",
+        "notes": [
+          "DualShock now standard.",
+          "Introduction of Sound Scope.",
+          "Major manufacturing cost reductions took place from this model onwards.",
+          "The number of memory chips and CD-ROM controllers were reduced (e.g. system RAM went from 4 separate chips down to 1 single consolidated chip), and other components were simplified, especially on SCPH-750x."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "SCPH900",
+    "name": "SCPH9_Series",
+    "entries": [
+      {
+        "version": "System Software Version v4.0",
+        "release_date": "1997-08-18",
+        "region": "Japan",
+        "region_code": "NTSC-J",
+        "region_free": "No",
+        "model": "SCPH-9000",
+        "color": "Grey",
+        "cdr_copies": "No",
+        "av_direct_out": "No",
+        "parallel_port": "No",
+        "serial_port": "No",
+        "notes": [
+          "Parallel port removed (hidden under case on earlier 9000 units, completely removed on later 9000 models).",
+          "Motherboard PCB reduced in size."
+        ]
+      },
+      {
+        "version": "System Software Version v4.1",
+        "release_date": "1997-12-16",
+        "region": "Japan",
+        "region_code": "NTSC-J",
+        "region_free": "No",
+        "model": "SCPH-9003",
+        "color": "Grey",
+        "cdr_copies": "No",
+        "av_direct_out": "No",
+        "parallel_port": "No",
+        "serial_port": "No",
+        "notes": [
+          "Parallel port removed (hidden under case on earlier 9000 units, completely removed on later 9000 models).",
+          "Motherboard PCB reduced in size."
+        ]
+      },
+      {
+        "version": "System Software Version v4.1",
+        "release_date": "1997-12-16",
+        "region": "USA",
+        "region_code": "NTSC-U/C",
+        "region_free": "No",
+        "model": "SCPH-9001",
+        "color": "Grey",
+        "cdr_copies": "No",
+        "av_direct_out": "No",
+        "parallel_port": "No",
+        "serial_port": "No",
+        "notes": [
+          "Parallel port removed (hidden under case on earlier 9000 units, completely removed on later 9000 models).",
+          "Motherboard PCB reduced in size."
+        ]
+      },
+      {
+        "version": "System Software Version v4.1",
+        "release_date": "1997-12-16",
+        "region": "Europe",
+        "region_code": "PAL",
+        "region_free": "No",
+        "model": "SCPH-9002",
+        "color": "Grey",
+        "cdr_copies": "No",
+        "av_direct_out": "No",
+        "parallel_port": "No",
+        "serial_port": "No",
+        "notes": [
+          "Parallel port removed (hidden under case on earlier 9000 units, completely removed on later 9000 models).",
+          "Motherboard PCB reduced in size."
+        ]
+      }
+    ]
+  }
+]

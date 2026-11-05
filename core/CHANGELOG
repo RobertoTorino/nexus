@@ -1,3 +1,27 @@
+Changelog: 06-11-2026 00:27:29
+
+Added. The play mode can see to an emulator's windows while the game runs (owner, 06-11-2026, for Vita3K's library
+window): run(windows=) calls what it is given every half second with the emulator's process until the quit; each line
+it returns is logged once, and one that fails is logged and not called again, the game running on. The Nexus page's
+development chapter says so.
+
+Changelog: 05-11-2026 23:17:00
+
+Added. The play mode shows a notice when View, LB and RB are held (owner, 05-11-2026: show that the game is being
+quit): "Closing the game" at the top of every screen, in the suite's design and over the game, as the heat warning
+shows (heat.Banner: it takes neither the focus nor a press). It goes up when the two seconds are reached, before the
+emulator is asked to close, and stays at least a second (play.SHOWN), so an emulator that closes at once does not
+take it away before it can be read; it comes down when the play mode ends. A notice that cannot show is logged and
+the game closes all the same. Every game manager has it with the new core; their wiki chapters say so.
+
+Changelog: 05-11-2026 22:54:10
+
+Fixed. The controller reader (gamepad.py) reads the pad over XInput on Windows, not over Windows' raw input
+(SDL_JOYSTICK_RAWINPUT=0): on the owner's Ally (05-11-2026, after a restart), read as the play mode reads it while a
+game is in front, SDL got the pad's triggers over raw input but not one button, so View + LB + RB never quit the game,
+while XInput had every one; over XInput every button arrives. A program the app starts does not inherit the setting
+(platform.APP_VARIABLES), so Steam and the emulators keep SDL's own choice.
+
 Changelog: 05-11-2026 18:44:37
 
 Version 2.9.0.
@@ -8,6 +32,13 @@ Added. A silver outline per theme (owner, 05-11-2026): Theme.outline, outline() 
 Gunmetal and Warm, a darker #7d8389 on Silver, where the light silver would vanish. The pills' hover and focus
 border and an active red button's hover border take it too. A theme without an outline of its own (Nexus's, the
 Windows Portable Suite's) keeps its accent there, so nothing changes outside the BC250 Bazzite Suite.
+
+Changelog: 05-11-2026 15:00:29
+
+Fixed. A portable app started again on another screen takes the front (owner, 05-11-2026, on the Ally: the portal
+did not answer the controller after Play on the TV): before it ends, the app allows the next one to take the front
+(AllowSetForegroundWindow), and the one started again raises and activates its window as its controller starts.
+Windows leaves a window started from the background behind, and the controller counts in the active window only.
 
 Changelog: 04-11-2026 02:22:10
 

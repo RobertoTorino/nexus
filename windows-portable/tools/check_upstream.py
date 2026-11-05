@@ -13,8 +13,10 @@ apps/<name>/<package>/emulator.py of the suite. For each:
  * the latest stable release: newer than the pin means a new version of the app, which brings it once tried on the
    device (owner, 29-10-2026: a new emulator can break things, so it never reaches the device without a release of
    the app); the report names the release and the constant to move. An emulator that publishes a build for every
-   change (Vita3K Manager's: CADENCE = "daily" in its emulator.py, as the BC250 suite's check leaves Vita3K out) is
-   not compared: it would be reported every week, and the app's own pane shows its newest build;
+   change (CADENCE = "daily" in its emulator.py: Vita3K Manager's, Xenia Manager's) is compared as a build (owner,
+   04-11-2026: they come in): a higher build number (Vita3K), or a release published after PUBLISHED (Xenia, whose
+   tags are commits) is a newer build, which a new version of the app could bring once tried on the device; the
+   app's own pane already shows its users the newest build;
  * the pinned release's asset: GitHub's published SHA-256 for it must still be the pinned one (a replaced file would
    fail every install).
 
@@ -75,7 +77,8 @@ class Pin:
     where: str                                  # "VERSION in windows-portable/apps/ppsspp/ppsspp_manager/emulator.py"
     asset_repo: str = ""                        # where the file is, when not *repo*: "RPCS3/rpcs3-binaries-win"
     asset_tag: str = ""                         # its release there: "build-<commit>"
-    daily: bool = False                         # a build for every change (CADENCE = "daily"): the file checked only
+    daily: bool = False                         # a build for every change (CADENCE = "daily"): compared as a build
+    published: str = ""                         # PUBLISHED: a daily build tagged with its commit (Xenia), its date
 
     @property
     def file_repo(self) -> str:
@@ -126,7 +129,8 @@ def pins(suite: Path = SUITE) -> list[Pin]:
         found.append(Pin(path.parent.parent.name, init.get("APP_NAME", path.parent.parent.name), values["REPO"],
                          version, values.get("TAG", f"v{version}"), values["ASSET"], values["SHA256"].lower(),
                          f"{constant} in {path.relative_to(suite.parent).as_posix()}",
-                         values.get("BUILDS", ""), values.get("BUILD_TAG", ""), values.get("CADENCE") == "daily"))
+                         values.get("BUILDS", ""), values.get("BUILD_TAG", ""), values.get("CADENCE") == "daily",
+                         values.get("PUBLISHED", "")))
     return found
 
 
@@ -143,15 +147,32 @@ class Report:
     fine: list[str] = field(default_factory=list)
 
     def text(self) -> str:
-        latest = "a build daily, not compared" if self.pin.daily else f"latest stable {self.latest or 'unknown'}"
+        latest = f"{'newest build' if self.pin.daily else 'latest stable'} {self.latest or 'unknown'}"
         head = f"{self.pin.name}: pinned {self.pin.version}, {latest}. " + ("In step." if not self.drift else "Moved:")
         return "\n".join([head] + [f"  - {line}" for line in self.drift] + [f"  ok {line}" for line in self.fine])
+
+
+def _newer_build(pin: Pin, tag: str, published: str) -> bool:
+    """Whether the newest daily build *tag* (published at *published*) is newer than the pin: published later for a
+    build tagged with its commit (PUBLISHED, ISO 8601 in UTC, compared as text), else a higher build number."""
+    if pin.published:
+        return bool(tag) and tag != pin.tag and published > pin.published
+    return tag.isdigit() and pin.version.isdigit() and int(tag) > int(pin.version)
 
 
 def check(pin: Pin, get: Fetch = fetch) -> Report:
     report = Report(pin)
     if pin.daily:
-        report.fine.append("newer builds are not compared: the app's pane shows the newest")
+        latest = json.loads(get(f"{API.format(repo=pin.repo)}/releases/latest"))
+        tag, published = str(latest.get("tag_name", "")), str(latest.get("published_at", ""))
+        report.latest = tag
+        if _newer_build(pin, tag, published):
+            later = f", {int(tag) - int(pin.version)} builds later" if not pin.published else ""
+            report.drift.append(f"build {tag} is out ({published[:10]}{later}): a new version of {pin.name} could "
+                                f"bring it, once tried on the device ({pin.where}); the app's pane already shows it. "
+                                f"{latest.get('html_url', '')}")
+        else:
+            report.fine.append(f"no build newer than {pin.version}")
     else:
         latest = json.loads(get(f"{API.format(repo=pin.repo)}/releases/latest"))
         tag = str(latest.get("tag_name", ""))
@@ -179,7 +200,7 @@ def check(pin: Pin, get: Fetch = fetch) -> Report:
 def markdown(reports: list[Report], failed: list[str]) -> str:
     """The issue's body: each emulator that moved with what to do, and those that could not be checked."""
     parts = [f"### {report.pin.name}\n\nPinned {report.pin.version}, "
-             + ("a build daily, not compared" if report.pin.daily else f"latest stable {report.latest or 'unknown'}")
+             + f"{'newest build' if report.pin.daily else 'latest stable'} {report.latest or 'unknown'}"
              + ".\n\n" + "\n".join(f"- {line}" for line in report.drift) for report in reports if report.drift]
     if parts and failed:
         parts.append("Not checked this week: " + "; ".join(failed))

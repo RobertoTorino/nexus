@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The Xenia build this version of the app installs, pinned: the Linux AppImage of one Xenia Canary build on GitHub,
 checked against its SHA-256 before it is installed. Xenia has no stable releases: Xenia Canary publishes a build for
-almost every change, a release of xenia-canary/xenia-canary tagged with the commit it was built from (e6cd2e4), all
+almost every change, a release of xenia-canary/xenia-canary tagged with the commit it was built from (838850f), all
 of them marked experimental, the Linux build more so than the Windows one. The app pins one build there, so the
 launch line and the advice in the app are tried with the build they are for. It looks up the newest build and says
 when there is a newer one than it brings; it never installs one it was not tried with. A tag is a commit, not a
@@ -30,13 +30,13 @@ from bc250_core.updates import Fetch, ReleaseInfo, github_fetch
 
 from . import APP_ID, __version__
 
-BUILD = "e6cd2e4"                       # the build's tag: the commit it was built from
-COMMIT = "e6cd2e4bc998609ca25e24a24c8e32b66c5908ad"
-PUBLISHED = "2026-10-20T19:30:12Z"      # when GitHub published it: a later release is a newer build
+BUILD = "838850f"                       # the build's tag: the commit it was built from
+COMMIT = "838850fed8389bdb28dc38f89bcb73bb43db1494"
+PUBLISHED = "2026-11-04T16:38:00Z"      # when GitHub published it: a later release is a newer build
 VERSION = BUILD                         # how the app names it; also the folder it is installed in
 ASSET = "xenia_canary_linux.AppImage"   # the same name in every build's release
-SHA256 = "bdb83b3b30b9c0a84db4a36aa9c4b08bfaa0968ccb0e8e95bc52da88b1406b63"
-SIZE = 18790904                         # bytes of the AppImage
+SHA256 = "e1e1029f6a642161b8d99664bd3cc0e1bf531de15277613a27f1242b675ca3bf"
+SIZE = 18901496                         # bytes of the AppImage
 SIZE_MB = round(SIZE / (1 << 20))       # for the question before downloading
 MEMBER = "xenia.AppImage"               # the name it is installed under, the same for every build
 CONFIG = "xenia-canary.config.toml"     # Xenia's settings file, in xenia_home()
@@ -85,7 +85,7 @@ def appimage(home: Path) -> Path:
 
 
 def installed_version(home: Path) -> str:
-    """The installed Xenia build ("e6cd2e4"), "" when none is."""
+    """The installed Xenia build ("838850f"), "" when none is."""
     current = home / "current"
     if not (current / MEMBER).is_file():
         return ""

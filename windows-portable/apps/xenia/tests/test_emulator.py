@@ -51,10 +51,10 @@ def install(home: Path, data: bytes, **kwargs) -> str:
 
 def test_the_pin():
     """The same build as the BC250 suite's Xenia Manager pins, its Windows archive in the same release."""
-    assert emulator.VERSION == emulator.TAG == "e6cd2e4" and emulator.COMMIT.startswith(emulator.VERSION)
+    assert emulator.VERSION == emulator.TAG == "838850f" and emulator.COMMIT.startswith(emulator.VERSION)
     assert emulator.ASSET == "xenia_canary_windows.7z" and emulator.REPO == "xenia-canary/xenia-canary"
-    assert emulator.URL == f"https://github.com/xenia-canary/xenia-canary/releases/download/e6cd2e4/{emulator.ASSET}"
-    assert emulator.CADENCE == "daily" and len(emulator.SHA256) == 64 and emulator.SIZE == 3_677_214
+    assert emulator.URL == f"https://github.com/xenia-canary/xenia-canary/releases/download/838850f/{emulator.ASSET}"
+    assert emulator.CADENCE == "daily" and len(emulator.SHA256) == 64 and emulator.SIZE == 3_703_554
     assert emulator.EXE == "xenia_canary.exe" and emulator.GAME_ARGS == ("--fullscreen=true",)
     bc250 = Path(__file__).resolve().parents[4] / "bc250-bazzite" / "apps" / "xenia" / "xenia_manager" / "emulator.py"
     if bc250.is_file():                                             # the same build as the BC250 suite's pin
@@ -152,9 +152,9 @@ def test_a_newer_build_on_github():
     not answering is nothing to say."""
     def answer(tag, published):
         return lambda url: {"tag_name": tag, "html_url": f"https://github.com/x/{tag}", "published_at": published}
-    newer = emulator.newer_release(answer("48b318a", "2026-10-27T18:08:48Z"))
-    assert (newer.version, newer.url, newer.published) == ("48b318a", "https://github.com/x/48b318a", "2026-10-27")
-    assert emulator.newer_release(answer("e6cd2e4", "2026-10-30T00:00:00Z")) is None
+    newer = emulator.newer_release(answer("9a1b2c3", "2026-11-20T18:08:48Z"))
+    assert (newer.version, newer.url, newer.published) == ("9a1b2c3", "https://github.com/x/9a1b2c3", "2026-11-20")
+    assert emulator.newer_release(answer("838850f", "2026-11-04T16:38:00Z")) is None
     assert emulator.newer_release(answer("f42147a", "2026-10-19T00:00:00Z")) is None
 
     def offline(url):

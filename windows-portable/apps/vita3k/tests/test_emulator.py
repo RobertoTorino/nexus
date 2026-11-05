@@ -52,11 +52,11 @@ def install(home: Path, data: bytes, **kwargs) -> str:
 
 def test_the_pin():
     """The same build as the BC250 suite's Vita3K Manager pins, its Windows archive on Vita3K's builds repository."""
-    assert emulator.VERSION == emulator.TAG == "4186" and emulator.SEMVER == "0.2.1"
+    assert emulator.VERSION == emulator.TAG == "4269" and emulator.SEMVER == "0.2.1"
     assert emulator.ASSET == f"vita3k-{emulator.VERSION}-{emulator.COMMIT[:8]}-windows-x86_64.7z"
-    assert emulator.URL == f"https://github.com/Vita3K/Vita3K-builds/releases/download/4186/{emulator.ASSET}"
+    assert emulator.URL == f"https://github.com/Vita3K/Vita3K-builds/releases/download/4269/{emulator.ASSET}"
     assert emulator.REPO == "Vita3K/Vita3K-builds" and emulator.CADENCE == "daily" and len(emulator.SHA256) == 64
-    assert emulator.SIZE == 24_522_324 and emulator.EXE == "Vita3K.exe" and emulator.PORTABLE == "portable"
+    assert emulator.SIZE == 24_561_566 and emulator.EXE == "Vita3K.exe" and emulator.PORTABLE == "portable"
     assert emulator.GAME_ARGS == ("-r",)
     bc250 = Path(__file__).resolve().parents[4] / "bc250-bazzite" / "apps" / "vita3k" / "vita3k_manager" / "emulator.py"
     if bc250.is_file():                                             # the same build as the BC250 suite's pin
@@ -159,9 +159,9 @@ def test_a_newer_build_on_github():
     def answer(tag):
         return lambda url: {"tag_name": tag, "html_url": f"https://github.com/x/{tag}",
                             "published_at": "2026-10-29T15:15:42Z"}
-    newer = emulator.newer_release(answer("4242"))
-    assert (newer.version, newer.url, newer.published) == ("4242", "https://github.com/x/4242", "2026-10-29")
-    assert emulator.newer_release(answer("4186")) is None and emulator.newer_release(answer("4100")) is None
+    newer = emulator.newer_release(answer("4300"))
+    assert (newer.version, newer.url, newer.published) == ("4300", "https://github.com/x/4300", "2026-10-29")
+    assert emulator.newer_release(answer("4269")) is None and emulator.newer_release(answer("4268")) is None
     assert emulator.newer_release(answer("continuous")) is None
 
     def offline(url):

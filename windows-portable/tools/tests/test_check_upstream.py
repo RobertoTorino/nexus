@@ -143,23 +143,51 @@ def test_a_tag_with_a_dot_after_the_v(tmp_path):
         "Emu Manager: pinned 1.2.0, latest stable 1.2.0. In step.")
 
 
-def test_a_build_for_every_change_is_checked_for_its_file_only(tmp_path, capsys):
-    """CADENCE = "daily" (Vita3K's builds, one a day): newer builds are not reported, a replaced file is."""
+def test_a_build_for_every_change_is_compared_as_a_build(tmp_path, capsys):
+    """CADENCE = "daily" (Vita3K's builds, one a day; owner, 04-11-2026: they come in): a higher build number is a
+    newer build, the pinned build's file is checked as any pin's."""
     package = tmp_path / "windows-portable" / "apps" / "emu" / "emu_manager"
     package.mkdir(parents=True)
     (package / "emulator.py").write_text(
         'VERSION = "4186"\nTAG = VERSION\nREPO = "someone/emu-builds"\nCADENCE = "daily"\n'
         f'ASSET = "emu-4186-windows-x86_64.7z"\nSHA256 = "{SHA}"\n', encoding="utf-8")
-    asked = []
 
-    def get(url: str, digest: str = SHA) -> bytes:
-        asked.append(url)
+    def get(url: str, newest: str = "4186", digest: str = SHA) -> bytes:
+        if url.endswith("someone/emu-builds/releases/latest"):
+            return json.dumps({"tag_name": newest, "published_at": "2026-11-05T03:00:00Z",
+                               "html_url": f"https://github.com/someone/emu-builds/releases/tag/{newest}"}).encode()
         if url.endswith("someone/emu-builds/releases/tags/4186"):
             return json.dumps({"assets": [{"name": "emu-4186-windows-x86_64.7z", "digest": f"sha256:{digest}"}]}).encode()
-        raise AssertionError(url)                   # never the latest release
+        raise AssertionError(url)
     report = tmp_path / "upstream.md"
     assert cu.main(["--report", str(report)], get, tmp_path / "windows-portable") == 0
-    assert report.read_text() == "" and len(asked) == 1
-    assert "emu: pinned 4186, a build daily, not compared. In step." in capsys.readouterr().out
-    assert cu.main(["--report", str(report)], lambda url: get(url, "cd" * 32), tmp_path / "windows-portable") == 1
-    assert "Pinned 4186, a build daily, not compared." in report.read_text() and "was replaced" in report.read_text()
+    assert report.read_text() == ""
+    assert "emu: pinned 4186, newest build 4186. In step." in capsys.readouterr().out
+    assert cu.main(["--report", str(report)], lambda url: get(url, "4269"), tmp_path / "windows-portable") == 1
+    assert "Pinned 4186, newest build 4269." in report.read_text()
+    assert "build 4269 is out (2026-11-05, 83 builds later): a new version of emu could bring it" in report.read_text()
+    assert cu.main(["--report", str(report)], lambda url: get(url, "4100"), tmp_path / "windows-portable") == 0
+    assert cu.main(["--report", str(report)], lambda url: get(url, digest="cd" * 32), tmp_path / "windows-portable") == 1
+    assert "was replaced" in report.read_text()
+
+
+def test_a_daily_build_tagged_with_its_commit_is_newer_when_published_later(tmp_path):
+    """Xenia's builds are tagged with their commit: a release published after PUBLISHED is a newer build."""
+    package = tmp_path / "windows-portable" / "apps" / "emu" / "emu_manager"
+    package.mkdir(parents=True)
+    (package / "emulator.py").write_text(
+        'VERSION = "e6cd2e4"\nTAG = VERSION\nPUBLISHED = "2026-10-20T19:30:12Z"\nREPO = "someone/emu"\n'
+        f'CADENCE = "daily"\nASSET = "emu_windows.7z"\nSHA256 = "{SHA}"\n', encoding="utf-8")
+    pin = cu.pins(tmp_path / "windows-portable")[0]
+    assert pin.published == "2026-10-20T19:30:12Z"
+
+    def get(tag: str, published: str):
+        def answer(url: str) -> bytes:
+            if url.endswith("/releases/latest"):
+                return json.dumps({"tag_name": tag, "published_at": published, "html_url": "u"}).encode()
+            return json.dumps({"assets": [{"name": "emu_windows.7z", "digest": f"sha256:{SHA}"}]}).encode()
+        return answer
+    newer = cu.check(pin, get("838850f", "2026-11-04T16:38:00Z"))
+    assert newer.drift and newer.drift[0].startswith("build 838850f is out (2026-11-04): a new version of emu")
+    assert not cu.check(pin, get("e6cd2e4", "2026-10-20T19:30:12Z")).drift                # the pinned one
+    assert not cu.check(pin, get("0000000", "2026-10-01T00:00:00Z")).drift                # published before it

@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"
+	xmlns:content="http://purl.org/rss/1.0/modules/content/"
+	xmlns:dc="http://purl.org/dc/elements/1.1/"
+	xmlns:atom="http://www.w3.org/2005/Atom"
+	>
+
+<!-- A made-up feed in the shape of blog.playstation.com/feed/ (RSS 2.0, WordPress): the titles, texts and links are invented for the tests. -->
+<channel>
+	<title>PlayStation.Blog</title>
+	<atom:link href="https://blog.playstation.com/feed/" rel="self" type="application/rss+xml" />
+	<link>https://blog.playstation.com</link>
+	<description>A test feed.</description>
+	<lastBuildDate>Thu, 15 Oct 2026 02:07:00 +0000</lastBuildDate>
+	<language>en-US</language>
+	<item>
+		<title>(For Southeast Asia) Example Racing’s autumn update launches today &amp; a first look at a new controller</title>
+		<link>https://blog.playstation.com/2026/10/14/example-racing-autumn-update/</link>
+		<comments>https://blog.playstation.com/2026/10/14/example-racing-autumn-update/#respond</comments>
+		<dc:creator><![CDATA[Test Writer]]></dc:creator>
+		<pubDate>Thu, 15 Oct 2026 02:06:55 +0000</pubDate>
+		<category><![CDATA[PS5]]></category>
+		<guid isPermaLink="false">urn:uuid:00000000-0000-4000-8000-000000000000</guid>
+		<description><![CDATA[A short summary with an entity: we&#8217;re testing &#8211; nothing more.]]></description>
+		<content:encoded><![CDATA[<p class="wp-block-paragraph">The article text, with a <a href="https://blog.playstation.com/2026/10/14/example-racing-autumn-update/">link</a> and &nbsp;entities.</p>]]></content:encoded>
+	</item>
+	<item>
+		<title>Example Quest: five tips for the first hour</title>
+		<link>https://blog.playstation.com/2026/10/14/example-quest-tips/</link>
+		<comments>https://blog.playstation.com/2026/10/14/example-quest-tips/#respond</comments>
+		<dc:creator><![CDATA[Test Writer]]></dc:creator>
+		<pubDate>Wed, 14 Oct 2026 16:00:00 +0000</pubDate>
+		<category><![CDATA[PS5]]></category>
+		<guid isPermaLink="false">urn:uuid:00000000-0000-4000-8000-000000000001</guid>
+		<description><![CDATA[A short summary with an entity: we&#8217;re testing &#8211; nothing more.]]></description>
+		<content:encoded><![CDATA[<p class="wp-block-paragraph">The article text, with a <a href="https://blog.playstation.com/2026/10/14/example-quest-tips/">link</a> and &nbsp;entities.</p>]]></content:encoded>
+	</item>
+	<item>
+		<title>Game Library additions for October</title>
+		<link>https://blog.playstation.com/2026/10/14/game-library-october/</link>
+		<comments>https://blog.playstation.com/2026/10/14/game-library-october/#respond</comments>
+		<dc:creator><![CDATA[Test Writer]]></dc:creator>
+		<pubDate>Wed, 14 Oct 2026 13:00:00 +0000</pubDate>
+		<category><![CDATA[PS5]]></category>
+		<guid isPermaLink="false">urn:uuid:00000000-0000-4000-8000-000000000002</guid>
+		<description><![CDATA[A short summary with an entity: we&#8217;re testing &#8211; nothing more.]]></description>
+		<content:encoded><![CDATA[<p class="wp-block-paragraph">The article text, with a <a href="https://blog.playstation.com/2026/10/14/game-library-october/">link</a> and &nbsp;entities.</p>]]></content:encoded>
+	</item>
+	<item>
+		<title>Behind the music of Example Skies</title>
+		<link>https://blog.playstation.com/2026/10/13/example-skies-music/</link>
+		<comments>https://blog.playstation.com/2026/10/13/example-skies-music/#respond</comments>
+		<dc:creator><![CDATA[Test Writer]]></dc:creator>
+		<pubDate>Tue, 13 Oct 2026 18:30:00 +0000</pubDate>
+		<category><![CDATA[PS5]]></category>
+		<guid isPermaLink="false">urn:uuid:00000000-0000-4000-8000-000000000003</guid>
+		<description><![CDATA[A short summary with an entity: we&#8217;re testing &#8211; nothing more.]]></description>
+		<content:encoded><![CDATA[<p class="wp-block-paragraph">The article text, with a <a href="https://blog.playstation.com/2026/10/13/example-skies-music/">link</a> and &nbsp;entities.</p>]]></content:encoded>
+	</item>
+	<item>
+		<title>System update notes: smaller downloads, faster resume</title>
+		<link>https://blog.playstation.com/2026/10/13/system-update-notes/</link>
+		<comments>https://blog.playstation.com/2026/10/13/system-update-notes/#respond</comments>
+		<dc:creator><![CDATA[Test Writer]]></dc:creator>
+		<pubDate>Tue, 13 Oct 2026 09:15:00 +0000</pubDate>
+		<category><![CDATA[PS5]]></category>
+		<guid isPermaLink="false">urn:uuid:00000000-0000-4000-8000-000000000004</guid>
+		<description><![CDATA[A short summary with an entity: we&#8217;re testing &#8211; nothing more.]]></description>
+		<content:encoded><![CDATA[<p class="wp-block-paragraph">The article text, with a <a href="https://blog.playstation.com/2026/10/13/system-update-notes/">link</a> and &nbsp;entities.</p>]]></content:encoded>
+	</item>
+	<item>
+		<title>Example Arena season 4 starts next week</title>
+		<link>https://blog.playstation.com/2026/10/12/example-arena-season-4/</link>
+		<comments>https://blog.playstation.com/2026/10/12/example-arena-season-4/#respond</comments>
+		<dc:creator><![CDATA[Test Writer]]></dc:creator>
+		<pubDate>Mon, 12 Oct 2026 20:00:00 +0000</pubDate>
+		<category><![CDATA[PS5]]></category>
+		<guid isPermaLink="false">urn:uuid:00000000-0000-4000-8000-000000000005</guid>
+		<description><![CDATA[A short summary with an entity: we&#8217;re testing &#8211; nothing more.]]></description>
+		<content:encoded><![CDATA[<p class="wp-block-paragraph">The article text, with a <a href="https://blog.playstation.com/2026/10/12/example-arena-season-4/">link</a> and &nbsp;entities.</p>]]></content:encoded>
+	</item>
+	<item>
+		<title>Accessibility options in Example Garden</title>
+		<link>https://blog.playstation.com/2026/10/12/example-garden-accessibility/</link>
+		<comments>https://blog.playstation.com/2026/10/12/example-garden-accessibility/#respond</comments>
+		<dc:creator><![CDATA[Test Writer]]></dc:creator>
+		<pubDate>Mon, 12 Oct 2026 15:45:00 +0000</pubDate>
+		<category><![CDATA[PS5]]></category>
+		<guid isPermaLink="false">urn:uuid:00000000-0000-4000-8000-000000000006</guid>
+		<description><![CDATA[A short summary with an entity: we&#8217;re testing &#8211; nothing more.]]></description>
+		<content:encoded><![CDATA[<p class="wp-block-paragraph">The article text, with a <a href="https://blog.playstation.com/2026/10/12/example-garden-accessibility/">link</a> and &nbsp;entities.</p>]]></content:encoded>
+	</item>
+	<item>
+		<title>This week’s new releases</title>
+		<link>https://blog.playstation.com/2026/10/11/new-releases/</link>
+		<comments>https://blog.playstation.com/2026/10/11/new-releases/#respond</comments>
+		<dc:creator><![CDATA[Test Writer]]></dc:creator>
+		<pubDate>Sun, 11 Oct 2026 12:00:00 +0000</pubDate>
+		<category><![CDATA[PS5]]></category>
+		<guid isPermaLink="false">urn:uuid:00000000-0000-4000-8000-000000000007</guid>
+		<description><![CDATA[A short summary with an entity: we&#8217;re testing &#8211; nothing more.]]></description>
+		<content:encoded><![CDATA[<p class="wp-block-paragraph">The article text, with a <a href="https://blog.playstation.com/2026/10/11/new-releases/">link</a> and &nbsp;entities.</p>]]></content:encoded>
+	</item>
+	<item>
+		<title>Developer diary: building the city of Example Harbour</title>
+		<link>https://blog.playstation.com/2026/10/10/example-harbour-diary/</link>
+		<comments>https://blog.playstation.com/2026/10/10/example-harbour-diary/#respond</comments>
+		<dc:creator><![CDATA[Test Writer]]></dc:creator>
+		<pubDate>Sat, 10 Oct 2026 17:20:00 +0000</pubDate>
+		<category><![CDATA[PS5]]></category>
+		<guid isPermaLink="false">urn:uuid:00000000-0000-4000-8000-000000000008</guid>
+		<description><![CDATA[A short summary with an entity: we&#8217;re testing &#8211; nothing more.]]></description>
+		<content:encoded><![CDATA[<p class="wp-block-paragraph">The article text, with a <a href="https://blog.playstation.com/2026/10/10/example-harbour-diary/">link</a> and &nbsp;entities.</p>]]></content:encoded>
+	</item>
+	<item>
+		<title>Share your best photo mode shots</title>
+		<link>https://blog.playstation.com/2026/10/09/photo-mode-shots/</link>
+		<comments>https://blog.playstation.com/2026/10/09/photo-mode-shots/#respond</comments>
+		<dc:creator><![CDATA[Test Writer]]></dc:creator>
+		<pubDate>Fri, 09 Oct 2026 10:00:00 +0000</pubDate>
+		<category><![CDATA[PS5]]></category>
+		<guid isPermaLink="false">urn:uuid:00000000-0000-4000-8000-000000000009</guid>
+		<description><![CDATA[A short summary with an entity: we&#8217;re testing &#8211; nothing more.]]></description>
+		<content:encoded><![CDATA[<p class="wp-block-paragraph">The article text, with a <a href="https://blog.playstation.com/2026/10/09/photo-mode-shots/">link</a> and &nbsp;entities.</p>]]></content:encoded>
+	</item>
+</channel>
+</rss>

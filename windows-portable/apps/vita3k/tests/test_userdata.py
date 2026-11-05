@@ -29,7 +29,8 @@ def test_the_config_yml_of_build_4186():
 def test_prepare_sets_the_apps_lines_and_keeps_the_rest(tmp_path):
     path = write_config(tmp_path)
     before = path.read_text(encoding="utf-8").splitlines()
-    assert userdata.prepare(tmp_path) == ["games full screen", "its welcome window off", "its update check off"]
+    assert userdata.prepare(tmp_path) == ["games full screen", "its welcome window off", "its update check off",
+                                         "its exit question off"]
     after = path.read_text(encoding="utf-8").splitlines()
     assert len(after) == len(before) and after[0] == "---" and after[-1] == "..."
     changed = [(old, new) for old, new in zip(before, after) if old != new]
@@ -43,7 +44,8 @@ def test_prepare_sets_the_apps_lines_and_keeps_the_rest(tmp_path):
 
 def test_prepare_before_vita3k_ever_started(tmp_path):
     """No config.yml yet: the app's lines in a file Vita3K reads, its defaults for the rest (config::update_members)."""
-    assert userdata.prepare(tmp_path) == ["games full screen", "its welcome window off", "its update check off"]
+    assert userdata.prepare(tmp_path) == ["games full screen", "its welcome window off", "its update check off",
+                                         "its exit question off"]
     assert userdata.config_path(tmp_path).read_text(encoding="utf-8") == (
         "---\nboot-apps-full-screen: true\nshow-welcome: false\ncheck-for-updates-mode: 0\n...\n")
 

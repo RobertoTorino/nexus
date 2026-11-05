@@ -6,7 +6,7 @@
 
 # Vita3K Manager
 
-Plays your PS Vita games on a Windows handheld with Vita3K, the PS Vita emulator: Vita3K build 4186 for Windows from
+Plays your PS Vita games on a Windows handheld with Vita3K, the PS Vita emulator: Vita3K build 4269 for Windows from
 Vita3K's own builds, checked against the checksum this version of the app was tested with, for your own user; Vita3K
 keeps its settings, the firmware, your games and your saves in its portable folder beside its program, in the app's
 folder. You put the PS Vita's firmware in Games\Vita\Firmware and your own games (a .vpk, a .zip, a dumped game

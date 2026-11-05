@@ -1,0 +1,495 @@
+[
+  {
+    "version": "System Software Version 3.74",
+    "releaseDate": "May 10, 2022",
+    "size": "127MB",
+    "notes": [
+      "Latest Vita/PS TV update",
+      "device password now required for PSN sign-in",
+      "account creation and some account-management features removed from the console. Sony’s support page also lists 3.74 as the current update."
+    ]
+  },
+  {
+    "version": "System Software Version 3.73",
+    "releaseDate": "October 16, 2019",
+    "size": "127MB",
+    "notes": [
+      "System performance update."
+    ]
+  },
+  {
+    "version": "System Software Version 3.72",
+    "releaseDate": "August 27, 2019",
+    "size": "127MB",
+    "notes": [
+      "System performance update."
+    ]
+  },
+  {
+    "version": "System Software Version 3.71",
+    "releaseDate": "July 24, 2019",
+    "size": "127MB",
+    "notes": [
+      "System performance update."
+    ]
+  },
+  {
+    "version": "System Software Version 3.70",
+    "releaseDate": "January 16, 2019",
+    "size": "127MB",
+    "notes": [
+      "System performance update."
+    ]
+  },
+  {
+    "version": "System Software Version 3.69",
+    "releaseDate": "September 11, 2018",
+    "size": "127MB",
+    "notes": [
+      "Mandatory update for PSN access",
+      "system performance update."
+    ]
+  },
+  {
+    "version": "System Software Version 3.68",
+    "releaseDate": "April 10, 2018",
+    "size": "127MB",
+    "notes": [
+      "Mandatory update for PSN access",
+      "system performance/quality update."
+    ]
+  },
+  {
+    "version": "System Software Version 3.67",
+    "releaseDate": "November 28, 2017",
+    "size": "127MB",
+    "notes": [
+      "Mandatory update for PSN access",
+      "system stability update."
+    ]
+  },
+  {
+    "version": "System Software Version 3.65",
+    "releaseDate": "April 17, 2017",
+    "size": "127MB",
+    "notes": [
+      "Stability update",
+      "required for PSN access at release."
+    ]
+  },
+  {
+    "version": "System Software Version 3.63",
+    "releaseDate": "November 2, 2016",
+    "size": "127MB",
+    "notes": [
+      "Security/performance quality update."
+    ]
+  },
+  {
+    "version": "System Software Version 3.61",
+    "releaseDate": "August 8, 2016",
+    "size": "127MB",
+    "notes": [
+      "System performance update."
+    ]
+  },
+  {
+    "version": "System Software Version 3.60",
+    "releaseDate": "April 6, 2016",
+    "size": "127MB",
+    "notes": [
+      "System performance/quality update",
+      "historically important because HENkaku targeted 3.60."
+    ]
+  },
+  {
+    "version": "System Software Version 3.57",
+    "releaseDate": "January 20, 2016",
+    "size": "126MB",
+    "notes": [
+      "Removed system-wide Facebook integration",
+      "patched PSP-emulator/custom-bubble related exploits."
+    ]
+  },
+  {
+    "version": "System Software Version 3.55",
+    "releaseDate": "September 30, 2015",
+    "size": "126MB",
+    "notes": [
+      "PS4 Link video-resolution setting added",
+      "Email can be restricted in Parental Controls",
+      "exploit fixes."
+    ]
+  },
+  {
+    "version": "System Software Version 3.52",
+    "releaseDate": "June 23, 2015",
+    "size": "126MB",
+    "notes": [
+      "Stability update",
+      "revoked PlayStation Mobile",
+      "fixed Rejuvenate exploit."
+    ]
+  },
+  {
+    "version": "System Software Version 3.51",
+    "releaseDate": "May 13, 2015",
+    "size": "126MB",
+    "notes": [
+      "Stability update",
+      "additional custom-bubble fixes",
+      "fixed reported home-screen lag."
+    ]
+  },
+  {
+    "version": "System Software Version 3.50",
+    "releaseDate": "March 26, 2015",
+    "size": "126MB",
+    "notes": [
+      "Added 60fps PS4 Remote Play option",
+      "added Accessibility settings",
+      "removed Maps app",
+      "near no longer shows Maps-related content."
+    ]
+  },
+  {
+    "version": "System Software Version 3.36",
+    "releaseDate": "January 14, 2015",
+    "size": "123MB",
+    "notes": [
+      "PSP emulator updated to PSP firmware 6.61",
+      "exploit/internal PSP emulator fixes."
+    ]
+  },
+  {
+    "version": "System Software Version 3.35",
+    "releaseDate": "October 28, 2014",
+    "size": "123MB",
+    "notes": [
+      "Four-player Remote Play support on PlayStation TV",
+      "Remote Play video-quality setting for PS TV."
+    ]
+  },
+  {
+    "version": "System Software Version 3.30",
+    "releaseDate": "October 2, 2014",
+    "size": "123MB",
+    "notes": [
+      "Themes/backgrounds added",
+      "trophy rarity",
+      "Calendar improvements",
+      "PS TV naming/account support changes",
+      "browser and Content Manager updates."
+    ]
+  },
+  {
+    "version": "System Software Version 3.20",
+    "releaseDate": "October 14, 2014",
+    "size": "123MB",
+    "notes": [
+      "Initial North American/European PlayStation TV firmware",
+      "otherwise largely identical to 3.18."
+    ]
+  },
+  {
+    "version": "System Software Version 3.18",
+    "releaseDate": "August 7, 2014",
+    "size": "115MB",
+    "notes": [
+      "Stability update",
+      "“no entry” sign changed."
+    ]
+  },
+  {
+    "version": "System Software Version 3.15",
+    "releaseDate": "April 30, 2014",
+    "size": "115MB",
+    "notes": [
+      "PS Vita TV gained full PS4 Remote Play functionality",
+      "PS4 Link became easier to use."
+    ]
+  },
+  {
+    "version": "System Software Version 3.12",
+    "releaseDate": "March 28, 2014",
+    "size": "114MB",
+    "notes": [
+      "Stability update",
+      "fixed problems with larger memory cards introduced in 3.10."
+    ]
+  },
+  {
+    "version": "System Software Version 3.10",
+    "releaseDate": "March 25, 2014",
+    "size": "114MB",
+    "notes": [
+      "Home-screen app limit increased to 500",
+      "Calendar app added",
+      "DualShock 4 and PlayStation Mobile compatibility added for Vita TV",
+      "voice messages and parental-control improvements."
+    ]
+  },
+  {
+    "version": "System Software Version 3.01",
+    "releaseDate": "December 5, 2013",
+    "size": "125MB",
+    "notes": [
+      "Stability update",
+      "exploit fixes."
+    ]
+  },
+  {
+    "version": "System Software Version 3.00",
+    "releaseDate": "November 5, 2013",
+    "size": "122MB",
+    "notes": [
+      "Parental Controls app",
+      "automatic update downloads",
+      "PS4 trophy display",
+      "PS4 Link added",
+      "Messages/Party/Photos/Friends updates."
+    ]
+  },
+  {
+    "version": "System Software Version 2.61",
+    "releaseDate": "August 28, 2013",
+    "size": "117MB",
+    "notes": [
+      "Stability update",
+      "patched Arcade Darts and other VHBL-related exploits."
+    ]
+  },
+  {
+    "version": "System Software Version 2.60",
+    "releaseDate": "August 5, 2013",
+    "size": "117MB",
+    "notes": [
+      "Default Japanese PlayStation Vita TV release firmware",
+      "Devices setting added",
+      "Quick Access Menu improved",
+      "trophies can be hidden",
+      "browser/content updates."
+    ]
+  },
+  {
+    "version": "System Software Version 2.50",
+    "releaseDate": "October 10, 2013",
+    "size": "117MB",
+    "notes": [
+      "Initial PCH-2000 / PS Vita Slim firmware",
+      "otherwise largely identical to 2.12."
+    ]
+  },
+  {
+    "version": "System Software Version 2.12",
+    "releaseDate": "May 8, 2013",
+    "size": "113MB",
+    "notes": [
+      "Stability update."
+    ]
+  },
+  {
+    "version": "System Software Version 2.11",
+    "releaseDate": "April 16, 2013",
+    "size": "113MB",
+    "notes": [
+      "Stability update",
+      "playback stabilization for certain titles."
+    ]
+  },
+  {
+    "version": "System Software Version 2.10",
+    "releaseDate": "April 9, 2013",
+    "size": "113MB",
+    "notes": [
+      "Folders added",
+      "up to 100 home-screen icons including folders",
+      "browser video support",
+      "Email enhancements",
+      "3G PlayStation Plus save upload/download",
+      "Content Manager update checks."
+    ]
+  },
+  {
+    "version": "System Software Version 2.06",
+    "releaseDate": "March 12, 2013",
+    "size": "109MB",
+    "notes": [
+      "Stability update",
+      "patched Dissidia Duodecim PSP exploit and browser URL-spoofing issue."
+    ]
+  },
+  {
+    "version": "System Software Version 2.05",
+    "releaseDate": "January 24, 2013",
+    "size": "109MB",
+    "notes": [
+      "Stability update",
+      "closed UNO exploit."
+    ]
+  },
+  {
+    "version": "System Software Version 2.02",
+    "releaseDate": "December 19, 2012",
+    "size": "109MB",
+    "notes": [
+      "Stability update."
+    ]
+  },
+  {
+    "version": "System Software Version 2.01",
+    "releaseDate": "December 3, 2012",
+    "size": "109MB",
+    "notes": [
+      "Fixed PlayStation Plus automatic saved-data upload issue",
+      "stability update."
+    ]
+  },
+  {
+    "version": "System Software Version 2.00",
+    "releaseDate": "November 19, 2012",
+    "size": "109MB",
+    "notes": [
+      "Major update: PlayStation Plus support, Email app, Wi-Fi Content Manager, browser upgrades, 1080p video display, background screenshots/trophy sync, Turkish system language."
+    ]
+  },
+  {
+    "version": "System Software Version 1.81",
+    "releaseDate": "September 17, 2012",
+    "size": "102MB",
+    "notes": [
+      "Stability update",
+      "fixed Treasure Park loading issue",
+      "patched Monster Hunter Freedom Unite VHBL exploit."
+    ]
+  },
+  {
+    "version": "System Software Version 1.80",
+    "releaseDate": "August 28, 2012",
+    "size": "102MB",
+    "notes": [
+      "Major update: PSone Classics support, button control for home screen/apps, Cross-Controller for PS3, improved Content Manager/imports, browser controls, playlists, video playback controls."
+    ]
+  },
+  {
+    "version": "System Software Version 1.69.1",
+    "releaseDate": "July 4, 2012",
+    "size": "96MB",
+    "notes": [
+      "Optional update",
+      "resolves compatibility issue with the Escape Plan demo."
+    ]
+  },
+  {
+    "version": "System Software Version 1.69.0",
+    "releaseDate": "June 11, 2012",
+    "size": "96MB",
+    "notes": [
+      "Optional update",
+      "stability update",
+      "patched Super Collapse 3 VHBL exploit",
+      "PSP game compatibility fix."
+    ]
+  },
+  {
+    "version": "System Software Version 1.67",
+    "releaseDate": "April 11, 2012",
+    "size": "96MB",
+    "notes": [
+      "Fixed camera functionality issue with Dream Club Zero Portable."
+    ]
+  },
+  {
+    "version": "System Software Version 1.66",
+    "releaseDate": "April 4, 2012",
+    "size": "96MB",
+    "notes": [
+      "Replaced 1.65",
+      "fixed issues introduced in 1.65",
+      "adjusted System Music, notification duration, near and game/app functionality."
+    ]
+  },
+  {
+    "version": "System Software Version 1.65",
+    "releaseDate": "April 3, 2012",
+    "size": "96MB",
+    "notes": [
+      "Replaced by 1.66",
+      "added notification alert setting, 10-minute power-save option, Caps Lock support, download/DLC progress bar",
+      "exploit/security fixes."
+    ]
+  },
+  {
+    "version": "System Software Version 1.61",
+    "releaseDate": "February 21, 2012",
+    "size": "94MB",
+    "notes": [
+      "Improved certain aspects of system software."
+    ]
+  },
+  {
+    "version": "System Software Version 1.60",
+    "releaseDate": "February 8, 2012",
+    "size": "94MB",
+    "notes": [
+      "Added Maps app, video recording in Photos, Content Manager backup deletion, near improvements, charging PS-button behavior, SEN account renaming."
+    ]
+  },
+  {
+    "version": "System Software Version 1.52",
+    "releaseDate": "January 16, 2012",
+    "size": "90MB",
+    "notes": [
+      "Stability update",
+      "fixed 1.51 issue where 3G/Wi-Fi SKU did not recognize a SIM card."
+    ]
+  },
+  {
+    "version": "System Software Version 1.51",
+    "releaseDate": "December 27, 2011",
+    "size": "90MB",
+    "notes": [
+      "Addressed freezing issues with certain games."
+    ]
+  },
+  {
+    "version": "System Software Version 1.50",
+    "releaseDate": "December 17, 2011",
+    "size": "90MB",
+    "notes": [
+      "Added support for the PlayStation Vita cradle."
+    ]
+  },
+  {
+    "version": "System Software Version 1.06",
+    "releaseDate": "February 15, 2012",
+    "size": "94MB",
+    "notes": [
+      "EU release firmware and US First Edition Bundle release firmware."
+    ]
+  },
+  {
+    "version": "System Software Version 1.05",
+    "releaseDate": "December 17, 2011",
+    "size": "94MB",
+    "notes": [
+      "Japanese release firmware."
+    ]
+  },
+  {
+    "version": "System Software Version 1.04",
+    "releaseDate": "December 17, 2011",
+    "size": "94MB",
+    "notes": [
+      "Provided only with Shin Kamaitachi no Yoru: 11 Hitome no Suspect."
+    ]
+  },
+  {
+    "version": "System Software Version 1.03",
+    "releaseDate": "December 17, 2011",
+    "size": "94MB",
+    "notes": [
+      "Japanese release firmware."
+    ]
+  }
+]

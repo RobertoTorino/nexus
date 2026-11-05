@@ -1,0 +1,8 @@
+Changelog: 05-11-2026 13:14:42
+
+Added. Support Checker: the first version, written by tools/new_app.py from the architecture chapter. The BC250
+suite's Dependency Checker for this suite (owner, 05-11-2026): three cards, Windows (its version, an update
+waiting for a restart, the newest update installed), Tools (Windows PowerShell, the Visual C++ runtime, Windows'
+tar with 7z, Steam and the XBOX app, each with the installed apps that use it and how to get it) and Apps (each
+app's installed version against the portal's). Y checks again. It only reads; its Python packages are left out,
+as every app of this suite carries its own.

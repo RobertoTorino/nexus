@@ -126,6 +126,8 @@ def world(qapp, tmp_path, monkeypatch):
     w.update = PortalUpdate(ReleaseInfo(version="9.9.9", tag="wp-portal-v9.9.9", published="2030-01-01"),
                             [AppChange("Windows Portable Test", "0.1.0", "0.2.0")])
     w.windows = []
+    w.played = []                                       # what the window's player was given: never a real sound
+    w.displays = []                                     # what Windows' display setup was set to
 
     def make(portal_check=None, **kwargs):
         pad = FakePad()
@@ -135,6 +137,9 @@ def world(qapp, tmp_path, monkeypatch):
         kwargs.setdefault("chip_parts", lambda: ["CPU 12% 48°", "GPU 7% 47°"])   # never this machine's own chip
         kwargs.setdefault("modes", lambda: None)        # never this machine's own operating mode
         kwargs.setdefault("helper", lambda: FakeHelper(installed=False))   # nor its helper
+        kwargs.setdefault("player", w.played.append)
+        kwargs.setdefault("display", w.displays.append)     # never this machine's own display setup
+        kwargs.setdefault("xbox_mode", lambda: w.displays.append("Win + F11"))   # nor its XBOX mode
         window = mw.MainWindow(w.entries, w.sources, w.records, portal_check=portal_check,
                                gamepad=Gamepad(source_factory=lambda: pad), battery=lambda: (82, False),
                                launch=w.launched.append, terminal=w.terminal, exit_dir=tmp_path / "exit", **kwargs)
@@ -327,8 +332,8 @@ def test_the_operating_mode_page_on_the_ally_x(world, qapp, monkeypatch):
     assert plain(window.header.second) == "CPU 12% 48°  |  GPU 7% 47°  |  T  |  82%"
     window.on_action("menu")
     row = window.suite_pane.mode
-    assert row.isVisible() and row.label.text() == "Operating mode: Turbo"
-    assert "Operating mode: the ROG XBOX Ally X's mode" in window.suite_pane.info.info
+    assert row.isVisible() and row.label.text() == "Performance mode: Turbo"
+    assert "Performance mode: the ROG XBOX Ally X's mode" in window.suite_pane.info.info
     row.activated.emit()
     pane = window.mode_pane
     assert window.stack.currentWidget() is pane and pane.rows["T"].hasFocus()
@@ -358,10 +363,10 @@ def test_the_operating_mode_page_on_the_ally_x(world, qapp, monkeypatch):
     assert window.popup is None
     window.on_action("back")
     assert window.stack.currentWidget() is window.suite_pane and row.hasFocus()
-    assert row.label.text() == "Operating mode: Silent"
+    assert row.label.text() == "Performance mode: Silent"
     api._plan = "11111111-1111-1111-1111-111111111111"              # another plan
     window.show_suite(row)
-    assert row.label.text() == "Operating mode: Other"
+    assert row.label.text() == "Performance mode: Other"
     window.on_action("back")
     assert window.stack.currentWidget() is window.apps_page
 
@@ -377,7 +382,7 @@ def test_the_operating_mode_helper_writes_the_watts(world, qapp, monkeypatch):
     window.on_action("menu")
     window.suite_pane.mode.activated.emit()
     pane = window.mode_pane
-    assert window.suite_pane.mode.label.text() == "Operating mode: Other" and pane.rows["S"].hasFocus()
+    assert window.suite_pane.mode.label.text() == "Performance mode: Other" and pane.rows["S"].hasFocus()
     pane.helper.activated.emit()
     assert helper.installs == [False] and pane.status.text() == "Installing the helper: answer Windows' prompt…"
     helper._installed = True
@@ -433,7 +438,8 @@ def test_x_shows_the_details_and_remove_takes_a_second_press(world, qapp):
 
 def test_b_goes_back_and_view_exits(world, qapp, monkeypatch):
     """The suite's buttons (owner, 29-10-2026: "Close" on B was not clear): B goes back from a page to the tiles, and
-    on a tile does nothing; View (Exit) closes the portal, a tap on its entry too."""
+    on a tile does nothing; View (Exit) closes the portal after its question (owner, 05-11-2026), a tap on its
+    entry too, and B is the question's No."""
     window = world.make()
     closed = []
     monkeypatch.setattr(window, "close", lambda: closed.append(True))
@@ -443,8 +449,46 @@ def test_b_goes_back_and_view_exits(world, qapp, monkeypatch):
     assert window.stack.currentWidget() is window.apps_page and window.tiles["test"].hasFocus() and closed == []
     window.on_action("back")                            # on a tile: nothing
     assert closed == [] and window.tiles["test"].hasFocus()
+    window.on_action("menu")
+    window.legend.entries[VIEW].pressed.emit()          # asked on the Settings page too
+    assert closed == [] and window.legend.items == mw.EXIT_ANSWERS
+    assert window.message == "Do you really want to exit the portal?"
+    window.on_action("back")                            # No: the question gone, still on the Settings page
+    assert closed == [] and not window.close_asked and window.stack.currentWidget() is window.suite_pane
+    assert ("B", "Back") in window.legend.items and window.message == ""
     window.legend.entries[VIEW].pressed.emit()
+    window.legend.entries[VIEW].pressed.emit()          # Yes
     assert closed == [True]
+
+
+def test_the_portal_looks_for_its_update_again(world, qapp, monkeypatch):
+    """Not only at the start (owner's roadmap, 04-11-2026): every hour, and when the portal is active again once the
+    last check is a quarter of an hour old; a check again that fails keeps the update found before."""
+    from PyQt6.QtCore import QEvent
+    answers = [world.update]
+    calls = []
+
+    def check():
+        calls.append(True)
+        return answers[-1]
+    window = world.make(portal_check=check)
+    assert wait_for(qapp, lambda: window.update is not None and not window.checking)
+    assert len(calls) == 1 and window.update_available()
+    assert window.recheck_timer.isActive() and window.recheck_timer.interval() == mw.RECHECK_MS
+    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
+    window.changeEvent(QEvent(QEvent.Type.ActivationChange))    # active again at once: not looked for again
+    assert len(calls) == 1 and not window.checking
+    window.checked_at -= mw.RECHECK_AFTER_S                     # a quarter of an hour later
+    answers.append(PortalUpdate(ReleaseInfo(error="offline"), []))
+    window.changeEvent(QEvent(QEvent.Type.ActivationChange))
+    assert wait_for(qapp, lambda: len(calls) == 2 and not window.checking)
+    assert window.update_available() and window.update is answers[0]            # offline for a moment: it stays
+    window.check_portal()                                       # Check again on the Settings page shows the error
+    assert wait_for(qapp, lambda: len(calls) == 3 and not window.checking)
+    assert window.update is answers[1] and not window.update_available()
+    answers.append(world.update)
+    window.recheck_timer.timeout.emit()                         # an hour later
+    assert wait_for(qapp, lambda: len(calls) == 4 and not window.checking) and window.update_available()
 
 
 def test_a_portal_newer_than_the_newest_release_says_so(world, qapp):
@@ -512,6 +556,65 @@ def test_the_banner_offers_the_portals_update_on_the_tiles(world, qapp, monkeypa
     window.update = PortalUpdate(ReleaseInfo(version=mw.__version__, tag=f"wp-portal-v{mw.__version__}"))
     window.refresh()
     assert not window.banner.isVisible() and ("Y", "Update") in window.legend.items      # the app's own again
+
+
+def test_play_on_the_tv_or_the_handheld(world, qapp, monkeypatch):
+    """XBOX mode runs on Windows' main screen only and leaves the TV empty (found on the Ally, 05-11-2026): the
+    Settings page's two rows switch Windows' display setup as Win + P does, always shown (with the TV alone Windows
+    sees one screen); a switch that does not start says so."""
+    window = world.make()
+    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
+    moved = []
+    monkeypatch.setattr(window, "move_to", moved.append)
+    monkeypatch.setattr(mw, "SETTLE_MS", 0)
+    window.on_action("menu")
+    pane = window.suite_pane
+    assert pane.tv.isVisible() and pane.handheld.isVisible() and pane.both.isVisible()
+    assert "Play on the TV: Windows shows its picture on the second screen only" in pane.info.info
+    pane.tv.setFocus()
+    window.on_action("accept")
+    assert world.displays == ["/external"] and pane.status.text() == mw.ON_TV
+    # then the portal starts again on Windows' main screen, sized for it (owner, 05-11-2026: the TV cut it off)
+    assert wait_for(qapp, lambda: moved == [mw.QGuiApplication.primaryScreen()])
+    pane.handheld.activated.emit()                      # a tap
+    assert world.displays == ["/external", "/internal"] and pane.status.text() == mw.ON_HANDHELD
+    pane.both.activated.emit()                          # Windows' Duplicate
+    assert world.displays[-1] == "/clone" and pane.status.text() == mw.ON_BOTH
+    assert wait_for(qapp, lambda: len(moved) == 3)
+    pane.xbox_mode.activated.emit()                     # XBOX mode or the desktop: Win + F11, either way
+    assert world.displays[-1] == "Win + F11" and pane.status.text() == mw.SWITCHED_MODE
+    assert "XBOX mode ↔ Desktop: Windows' switch" in pane.info.info
+
+    def broken(mode):
+        raise OSError("not found")
+    window.display = broken
+    pane.tv.activated.emit()
+    assert pane.status.text() == "Windows' display setting did not change: not found"
+
+
+def test_every_controller_action_has_its_sound(world, qapp, monkeypatch):
+    """A short sound on every controller action (owner, 05-11-2026), as the BC250 portal: the owner's blob.wav, off
+    with the suite's Sound setting, none while the intro plays (its button only skips it) or the portal is not
+    the active window."""
+    from portable_portal import ACTION_SOUND
+    assert ACTION_SOUND.name == "blob.wav" and ACTION_SOUND.is_file()
+    window = world.make(intro_ms=60_000)
+    active = [True]
+    monkeypatch.setattr(window, "isActiveWindow", lambda: active[0])
+    window.on_action("right")                           # skips the intro: no sound of its own
+    assert window.intro is None and world.played == [mw.INTRO_SOUND, None]     # the intro's, then cut short
+    world.played.clear()
+    window.on_action("right")
+    window.on_action("x")
+    assert world.played == [ACTION_SOUND, ACTION_SOUND]
+    window.on_action("back")
+    active[0] = False                                   # a game has the controller
+    window.on_action("right")
+    assert world.played == [ACTION_SOUND] * 3
+    active[0] = True
+    portable.set_sound_on(mw.SUITE, False)              # Sound: Off
+    window.on_action("right")
+    assert world.played == [ACTION_SOUND] * 3
 
 
 def test_the_intro_says_a_portal_update_is_out(world, qapp):
@@ -602,8 +705,7 @@ def test_the_update_window_leaves_the_program_folder_before_the_installer_runs()
 
 
 def test_the_intro_plays_at_the_start_and_any_button_skips_it(world, qapp, monkeypatch):
-    played = []
-    monkeypatch.setattr("portable_portal.intro.play", played.append)
+    played = world.played                               # the window's player, the intro's too
     window = world.make(intro_ms=60_000)
     assert len(played) == 1 and played[0].name == "intro.wav"
     intro = window.intro
@@ -695,6 +797,40 @@ def test_the_intro_covers_the_window_before_it_shows(world, qapp):
     assert frame.pixelColor(640, 600).name() == portable.BACKGROUND        # dark where the tiles are, before start()
 
 
+def test_a_tab_with_more_apps_than_a_page_has_pages(world, qapp, monkeypatch):
+    """A ninth app in a tab (owner's roadmap, 04-11-2026: it was cut off): a second page, the marker under the tiles,
+    the d-pad past the tiles' right or left edge turns the page, a tap on the marker turns it too."""
+    gaming = world.entries[1]
+    world.entries = [replace(gaming, key=f"g{i}", name=f"Game {i}", short=f"G{i}") for i in range(9)]
+    window = world.make()
+    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
+    shown = lambda: [key for key, tile in window.page_tiles() if tile.isVisible()]     # noqa: E731
+    assert shown() == [f"g{i}" for i in range(8)] and not window.tiles["g8"].isVisible()
+    assert window.page_marker.isVisible() and window.page_marker.text() == "Page 1 of 2"
+    window.tiles["g3"].setFocus()                       # the first row's last tile
+    window.on_action("right")                           # past the edge: the next page, its only tile
+    assert shown() == ["g8"] and window.tiles["g8"].hasFocus() and window.current_key == "g8"
+    assert window.page_marker.text() == "Page 2 of 2"
+    window.on_action("right")                           # the last page: nothing further
+    assert window.page == 1 and window.tiles["g8"].hasFocus()
+    window.on_action("left")                            # back: the first row's last tile
+    assert window.page == 0 and window.tiles["g3"].hasFocus()
+    window.tiles["g4"].setFocus()
+    window.on_action("left")                            # the first page: nothing before it
+    assert window.page == 0 and window.tiles["g4"].hasFocus()
+    window.on_action("right")                           # inside the page the d-pad moves as before
+    assert window.page == 0 and window.tiles["g5"].hasFocus()
+    window.page_marker.pressed.emit()                   # a tap: the next page
+    window.page_marker.pressed.emit()                   # and from the last back to the first
+    assert window.page == 0 and window.tiles["g0"].hasFocus()
+
+
+def test_a_tab_that_fits_one_page_has_no_marker(world, qapp):
+    window = world.make()
+    assert not window.page_marker.isVisible() and window.pages() == 1
+    assert not window.turn_page(1) and window.page == 0
+
+
 def test_exit_during_a_download_asks_first(world, qapp, monkeypatch):
     # B closed the portal and dropped the download at once (owner, 28-10-2026: ask first); View exits now (29-10-2026).
     import threading
@@ -713,8 +849,8 @@ def test_exit_during_a_download_asks_first(world, qapp, monkeypatch):
     window.on_action("accept")
     assert wait_for(qapp, lambda: window.job is not None)
     window.on_action("view")
-    assert closed == [] and window.legend.items == [(VIEW, "Press again to exit")]
-    assert window.app_pane.status.text() == "Press View again to exit the portal: the download stops."
+    assert closed == [] and window.legend.items == mw.EXIT_ANSWERS
+    assert window.app_pane.status.text() == "Do you really want to exit the portal? The download stops."
     window._confirm_over()                              # five seconds without a second press
     assert ("X", "Details") in window.legend.items and not window.close_asked
     window.on_action("view")
@@ -722,7 +858,11 @@ def test_exit_during_a_download_asks_first(world, qapp, monkeypatch):
     assert closed == [True]
     release.set()
     assert wait_for(qapp, lambda: window.job is None)
-    window.on_action("view")                            # nothing runs: View exits at once
+    window._confirm_over()                              # the window stays (close is a stand-in): a new question
+    window.on_action("view")                            # the installer runs in its window: the question says so
+    assert closed == [True] and window.app_pane.status.text() == ("Do you really want to exit the portal? The "
+                                                                  "installer finishes in its window, unrecorded.")
+    window.on_action("view")
     assert closed == [True, True]
 
 
@@ -827,8 +967,6 @@ def test_a_tile_has_a_red_dot_only_while_an_update_is_out(world, qapp):
 def test_the_suite_page_switches_the_sound(world, qapp, monkeypatch):
     """Suite settings: sound off (owner, 29-10-2026): the intro plays no sound at the next start."""
     from bc250_core import portable
-    played = []
-    monkeypatch.setattr("portable_portal.intro.play", played.append)
     window = world.make()
     monkeypatch.setattr(window, "isActiveWindow", lambda: True)
     window.on_action("menu")
@@ -840,12 +978,13 @@ def test_the_suite_page_switches_the_sound(world, qapp, monkeypatch):
     window.on_action("accept")
     assert window.suite_pane.sound.label.text() == "Sound: Off" and not portable.sound_on(mw.SUITE)
     assert window.wallpaper_on                                        # the other row unchanged
+    intro = lambda: [wav for wav in world.played if wav == mw.INTRO_SOUND]   # noqa: E731 (not the buttons' sound)
     silent = world.make(intro_ms=60_000)
-    assert played == [] and silent.intro is not None                  # the intro plays, silent
+    assert intro() == [] and silent.intro is not None                 # the intro plays, silent
     silent.toggle_sound()
     assert portable.sound_on(mw.SUITE)
     world.make(intro_ms=60_000)
-    assert len(played) == 1 and played[0].name == "intro.wav"
+    assert len(intro()) == 1
 
 
 def test_the_chip_is_read_through_cores_chip_and_closed_with_the_window(world, qapp, monkeypatch):

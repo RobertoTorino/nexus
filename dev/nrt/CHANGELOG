@@ -1,3 +1,10 @@
+Changelog: 05-11-2026 22:24:55
+
+Fixed. Device test and its step's line follow the portal picked in the choice beside it, at once.
+
+Fixed. The portal choice of Device test has room before its text, which stood against the left border; the
+field only, the theme every app shares stays as it is.
+
 Changelog: 05-11-2026 21:14:15
 
 Fixed. A step whose command runs says so (owner, 05-11-2026: Push stayed lit during the push, which read as "push

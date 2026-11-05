@@ -1,3 +1,9 @@
+Changelog: 06-11-2026 00:46:02
+
+Fixed. git add -A no longer stops at a file named NUL (unable to index file 'NUL'): a Git Bash command meant for cmd,
+such as podman machine ssh for tools/ci-local.sh on Windows, writes Windows' NUL device as a real file. The root
+.gitignore leaves it out, and .claude/checks.md says to run that podman command from PowerShell.
+
 Changelog: 05-11-2026 21:41:34
 
 Release 1.49.0. Brings portal-v15.3.0.
@@ -23,6 +29,27 @@ writes it with its color samples.
 Changelog: 05-11-2026 17:31:19
 
 Release 1.47.0. Brings portal-v15.1.0, ssd-v0.2.0.
+
+Changelog: 05-11-2026 13:08:28
+
+Added. Convert icons for the Windows Portable Suite (Bazzite/Windows 1 of the roadmap): tools/sync_icons.py reads an
+[icons] table of a suite's icons/categories.toml (format = "png", wide = {category = 2}, apps = "portal"), and the
+Windows Portable Suite has one: its icons are PNG at every size, its Gaming pictures 2:1, and its apps take their
+category's icon from the portal's apps.toml, the copies written as tools/make_icons.py writes them and checked by
+their pixels. The Nexus Dashboard's Convert icons works on that suite (it was greyed out). The BC250 suite's file
+has no such table and works as before. The Nexus page's Dashboard chapter says so.
+
+Changelog: 05-11-2026 12:36:30
+
+Added. BC250 Bazzite Suite: the weekly upstream check also follows Mesa (BC-250 Mesh Shaders' MESA_VER against
+Mesa's newest release, and BC-250 ACE Queues' patch tried on it with patch --dry-run), FFmpeg and libva (Console
+Link's FFMPEG_VERSION and LIBVA_VERSION: a newer release on the pinned FFmpeg branch, a newer branch, a newer libva),
+USB HD Cam's firmware (each file at its pinned commit and on the repository's default branch) and Ookla's speedtest
+CLI (Bazzite Test's development tool). The development chapter of the wiki says so.
+
+Added. Windows Portable Suite: the weekly upstream check compares the daily builds of Vita3K and Xenia too (CADENCE
+= "daily"; owner, 04-11-2026: they come in): a higher build number, or for Xenia a build published after PUBLISHED,
+is a newer build. Before, only their pinned file was checked.
 
 Changelog: 05-11-2026 10:30:12
 

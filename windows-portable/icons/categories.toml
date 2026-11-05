@@ -1,0 +1,18 @@
+# The category icons of the Windows Portable Suite's apps. Every app but Windows Portable Test (the suite's own
+# drawing) has its category's icon, kept once in icons/<category>/: <category>-1024.png, -512.png, -256.png and
+# -128.png, each made from a picture of the owner's. Which app is in which category is the portal's apps.toml, so
+# this file has no app tables: tools/make_icons.py copies each category's icon to the app's images/<app id>.webp
+# (512 px) and -128.png (a wide picture centered on a transparent square there), its tile
+# portal/images/apps/<key>.webp (256 px) and its chapter's icon docs/images/apps/<key>.webp (256 px).
+#
+# To replace a category's icons, drop the new picture in icons/<category>/ and run
+#   python3 tools/sync_icons.py --suite windows-portable
+# (or the Nexus Dashboard's Convert icons): one named <category>-<size>.<any extension> becomes that size, one by
+# another name all four. It converts them (scaled, PNG), removes the dropped files and writes the copies.
+
+[icons]
+format = "png"          # every size a PNG
+apps = "portal"         # the apps and their categories: portal/apps.toml; the copies: tools/make_icons.py
+
+[icons.wide]
+gaming = 2              # the owner's pictures of the handheld (29-10-2026): 2:1, 1024 x 512 down to 128 x 64

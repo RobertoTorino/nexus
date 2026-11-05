@@ -379,3 +379,106 @@ def test_the_mirror():
     assert "is not on GitHub (missing, or private)" in line
     [line] = check_upstream.check_wdriver(BUILDER, driver_github(mirror="main")).drift
     assert "lacks main's pinned commit" in line
+
+
+# --- Mesa, FFmpeg and libva, USB HD Cam's firmware, the speedtest CLI (Bazzite/Windows 2, 05-11-2026) ---------------
+
+def test_the_new_pins_are_read_from_the_apps():
+    assert check_upstream.shell_value(check_upstream.MESH, "MESA_VER").count(".") == 2
+    assert check_upstream.shell_value(check_upstream.FFMPEG_BUILD, "FFMPEG_VERSION").startswith("7.1.")
+    assert check_upstream.shell_value(check_upstream.FFMPEG_BUILD, "LIBVA_VERSION").count(".") == 2
+    assert check_upstream.shell_value(check_upstream.SPEEDTEST_TOOL, "SPEEDTEST_VERSION") == "1.2.0"   # ${..:-1.2.0}
+    firmware = check_upstream.load_firmware()
+    assert {f.model for f in firmware} == {"cfi-zey1", "ps4-camera"}
+    assert all(len(f.commit) == 40 and len(f.sha256) == 64 and f.path.endswith(".bin") for f in firmware)
+    assert "+++ b/src/amd/common/ac_gpu_info.c" in check_upstream.ACE_PATCH.read_text(encoding="utf-8")
+
+
+def mesa(tags: list[str]):
+    def get(url: str) -> bytes:
+        if url == check_upstream.MESA_TAGS:
+            return json.dumps([{"name": t} for t in tags]).encode()
+        if url.startswith("https://gitlab.freedesktop.org/mesa/mesa/-/raw/"):
+            return b"the file\n"
+        raise AssertionError(url)
+    return get
+
+
+def test_mesa_a_newer_release_and_the_ace_patch():
+    """A release candidate is no release; the ACE patch is tried on the files it touches at the newest release."""
+    tried = []
+    patch = "--- a/src/x.c\n+++ b/src/x.c\n@@ -1 +1 @@\n-the file\n+a file\n"
+
+    def applies(text: str, files: dict[str, bytes]) -> bool:
+        tried.append(sorted(files))
+        return True
+    report = check_upstream.check_mesa("26.2.1", patch, mesa(["mesa-26.3.0-rc3", "mesa-26.2.6", "mesa-26.2.1"]), applies)
+    [line] = report.drift
+    assert line.startswith("Mesa 26.2.6 is out: a new version of BC-250 Mesh Shaders could build it")
+    assert report.latest == "26.2.6" and tried == [["src/x.c"]]
+    assert "BC-250 ACE Queues' patch applies to Mesa 26.2.6" in report.fine
+    stale = check_upstream.check_mesa("26.2.6", patch, mesa(["mesa-26.2.6"]), lambda text, files: False)
+    [line] = stale.drift
+    assert "does not apply to Mesa 26.2.6: once Bazzite ships it, the app cannot build for it" in line
+
+
+@pytest.mark.skipif(not __import__("shutil").which("patch"), reason="needs patch")
+def test_patch_applies_tries_it_for_real():
+    patch = "--- a/src/x.c\n+++ b/src/x.c\n@@ -1 +1 @@\n-the file\n+a file\n"
+    assert check_upstream.patch_applies(patch, {"src/x.c": b"the file\n"})
+    assert not check_upstream.patch_applies(patch, {"src/x.c": b"another file\n"})
+
+
+def ffmpeg(tags: list[str], libva: str):
+    def get(url: str) -> bytes:
+        if url.endswith("FFmpeg/FFmpeg/git/matching-refs/tags/n"):
+            return json.dumps([{"ref": f"refs/tags/{t}"} for t in tags]).encode()
+        if url.endswith("intel/libva/releases/latest"):
+            return json.dumps({"tag_name": libva}).encode()
+        raise AssertionError(url)
+    return get
+
+
+def test_ffmpeg_and_libva():
+    """A point release on the pinned branch, a newer branch and a newer libva are each a line; a development tag
+    (n8.1-dev) is no release."""
+    report = check_upstream.check_ffmpeg("7.1.2", "2.22.0", ffmpeg(["n7.1.2", "n7.1.5", "n8.1-dev", "n9.0.2"], "2.24.1"))
+    assert report.latest == "FFmpeg 9.0.2 (7.1.x: 7.1.5), libva 2.24.1"
+    assert [line.split(":")[0] for line in report.drift] == [
+        "FFmpeg 7.1.5 is out, on the pinned 7.1 branch", "FFmpeg 9.0.2 is a newer branch than 7.1",
+        "libva 2.24.1 is out"]
+    still = check_upstream.check_ffmpeg("7.1.2", "2.22.0", ffmpeg(["n7.0.3", "n7.1.2"], "2.22.0"))
+    assert still.drift == [] and still.fine == ["no FFmpeg release newer than 7.1.2", "no libva release newer than 2.22.0"]
+
+
+def test_hdcam_firmware():
+    """The file at the pinned commit, and the same file on the default branch: changed or gone there is a line."""
+    import hashlib
+    firmware = [check_upstream.Firmware("cam", "someone/fw", "a" * 40, "fw/cam.bin", hashlib.sha256(b"fw").hexdigest())]
+
+    def raw(head: bytes | None, pinned: bytes = b"fw"):
+        def get(url: str) -> bytes:
+            if url == f"https://raw.githubusercontent.com/someone/fw/{'a' * 40}/fw/cam.bin":
+                return pinned
+            if url == "https://raw.githubusercontent.com/someone/fw/HEAD/fw/cam.bin":
+                if head is None:
+                    raise check_upstream.CheckError(f"{url}: GitHub answered 404")
+                return head
+            raise AssertionError(url)
+        return get
+    same = check_upstream.check_hdcam(firmware, raw(b"fw"))
+    assert same.drift == [] and same.latest == "the same files"
+    [line] = check_upstream.check_hdcam(firmware, raw(b"new")).drift
+    assert line.startswith("cam's fw/cam.bin changed on someone/fw's default branch: a new version of USB HD Cam")
+    [line] = check_upstream.check_hdcam(firmware, raw(None)).drift
+    assert "is gone from someone/fw's default branch" in line
+    replaced = check_upstream.check_hdcam(firmware, raw(b"fw", pinned=b"other")).drift
+    assert "is not the pinned file" in replaced[0]
+
+
+def test_speedtest():
+    def formula(version: str):
+        return lambda url: f'class Speedtest < Formula\n  version "{version}"\nend\n'.encode()
+    assert check_upstream.check_speedtest("1.2.0", formula("1.2.0")).drift == []
+    [line] = check_upstream.check_speedtest("1.2.0", formula("1.3.0")).drift
+    assert line.startswith("speedtest 1.3.0 is out: the development tool could install it")

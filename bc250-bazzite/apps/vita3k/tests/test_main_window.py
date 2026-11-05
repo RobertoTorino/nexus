@@ -133,7 +133,7 @@ def test_installed_with_firmware_and_games(qapp, folders, tmp_path):
     assert window.pill.text() == "Ready" and window.firmware_box.value.text() == "Ready"
     assert "System software: installed<br>Font package: installed" in window.firmware_state.text()
     assert "Preinstalled apps (optional): not installed" in window.firmware_state.text()
-    assert window.emulator_box.value.text() == "4186"
+    assert window.emulator_box.value.text() == "4269"
     assert window.games_box.value.text() == "1" and window.steam_box.value.text() == "0"
     assert not window.install_button.isEnabled() and window.remove_button.isEnabled()
     assert not window.play_button.isEnabled()                                   # nothing chosen yet
@@ -173,8 +173,8 @@ def test_install_runs_off_the_window(qapp, folders, monkeypatch):
     window.on_install()
     assert not window.install_button.isEnabled()                                # busy
     _wait(window, qapp)
-    assert window.running.text() == "Vita3K build 4186 is installed."
-    assert window.version == "4186" and window.pill.text() == "No firmware"
+    assert window.running.text() == "Vita3K build 4269 is installed."
+    assert window.version == "4269" and window.pill.text() == "No firmware"
     window.close()
 
 

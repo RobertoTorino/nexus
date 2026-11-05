@@ -2,6 +2,19 @@ Changelog: 05-11-2026 18:44:37
 
 Release 5.2.0.
 
+Changelog: 05-11-2026 12:43:11
+
+Added. Create profile (LB on the Xenia pane; owner's roadmap, 04-11-2026: a game saves only to a profile, and Xenia
+makes one only in its own window): type a gamertag and A creates the profile as Xenia does (its encrypted Account
+file and its header, in Xenia's content folder) and signs it in at start ([Profiles] logged_profile_slot_0_xuid), so
+no game asks for one. Refused while Xenia runs, and for a gamertag Xenia would refuse. The pane's Profile row says
+which profile Xenia signs in. The wiki says so.
+
+Added. The app installs Xenia Canary build 838850f (04-11-2026; was e6cd2e4), the BC250 suite's new pin: emulator.py
+pins its commit, release date, the SHA-256 GitHub publishes for xenia_canary_windows.7z (555159b5…0438) and its size.
+The archive holds the same files (xenia_canary.exe, LICENSE); what the app relies on in Xenia's source (the portable
+storage root, the launch options, the settings it writes, the profiles) is unchanged.
+
 Changelog: 04-11-2026 02:22:10
 
 Release 5.1.0.

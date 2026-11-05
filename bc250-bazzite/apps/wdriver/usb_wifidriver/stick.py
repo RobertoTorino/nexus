@@ -7,8 +7,9 @@ An AIC8800D80 stick goes through three USB identities (seen on the owner's UGREE
  * loader mode, a69c:8d80 "AIC Wlan": the chip waits for its firmware, which aic_load_fw uploads;
  * Wi-Fi mode, a69c:8d81 "AIC 8800D80": the firmware runs, aic8800_fdrv binds and creates wlan0; the stick's
    Bluetooth comes up beside it on the kernel's own btusb.
-The loader prints the chip's revision before it uploads anything ("chip_id=7, chip_mcu_id = 1"); which firmware the
-chip takes follows from it (see builder.PINS)."""
+The loader prints the chip's revision before it uploads anything ("chip_id=7, chip_mcu_id = 1"; legacy-mcu1's
+loader adds the chip's product, ", product_id=0x8820"); which firmware the chip takes follows from it (see
+builder.PINS)."""
 
 from __future__ import annotations
 
@@ -29,7 +30,10 @@ DRIVER = "aic8800_fdrv"
 LOADER = "aic_load_fw"
 MODULES = (LOADER, DRIVER)
 TOOLS = ("gcc", "make", "git")                               # for building the driver as the user
-CHIP_LINE = re.compile(r"chip_id=([0-9a-fA-F]+), chip_mcu_id = (\d+)")
+CHIP_LINE = re.compile(r"chip_id=([0-9a-fA-F]+), chip_mcu_id = (\d+)(?:, product_id=0x([0-9a-fA-F]+))?")
+# The chip's products only legacy-mcu1 supports: 0x8820, a UGREEN stick (a69c:5723) with its own system configuration
+# writes (shenmintao/aic8800d80 issues 118 and 119, legacy-mcu1 from 02-11-2026; owner, 05-11-2026: add it)
+LEGACY_PRODUCTS = {0x8820}
 UPLOAD_FAILED = re.compile(r"bin upload fail: 170400")
 REVISIONS = {0x1: "U01", 0x3: "U02", 0x7: "U03", 0xF: "U04", 0x1F: "U05"}
 
@@ -154,6 +158,7 @@ class Chip:
     chip_id: int
     mcu_id: int
     upload_failed: bool = False                 # the firmware of the other branch broke off at 0x170400
+    product: int | None = None                  # the chip's product, when the loader printed it (legacy-mcu1's)
 
     @property
     def revision(self) -> str:
@@ -162,12 +167,14 @@ class Chip:
     @property
     def branch(self) -> str:
         """The driver branch the chip takes: the older MCU (chip_mcu_id 1) needs the SDK 3 firmware of legacy-mcu1,
-        the SDK 5 firmware of main is larger than its upload boundary (shenmintao/aic8800d80 issue 58, 24-07-2026)."""
-        return "legacy-mcu1" if self.mcu_id == 1 else "main"
+        the SDK 5 firmware of main is larger than its upload boundary (shenmintao/aic8800d80 issue 58, 24-07-2026);
+        a product only legacy-mcu1 supports (LEGACY_PRODUCTS) takes it too."""
+        return "legacy-mcu1" if self.mcu_id == 1 or self.product in LEGACY_PRODUCTS else "main"
 
     @property
     def text(self) -> str:
-        return f"revision {self.revision}, MCU {self.mcu_id}"
+        return f"revision {self.revision}, MCU {self.mcu_id}" + (f", product 0x{self.product:04x}"
+                                                                if self.product is not None else "")
 
 
 def chip_from_log(text: str) -> Chip | None:
@@ -178,7 +185,8 @@ def chip_from_log(text: str) -> Chip | None:
         return None
     last = answers[-1]
     failed = bool(UPLOAD_FAILED.search(text, last.end()))
-    return Chip(int(last.group(1), 16), int(last.group(2)), failed)
+    return Chip(int(last.group(1), 16), int(last.group(2)), failed,
+                int(last.group(3), 16) if last.group(3) else None)
 
 
 def read_kernel_log(runner: Runner = run_text) -> str:

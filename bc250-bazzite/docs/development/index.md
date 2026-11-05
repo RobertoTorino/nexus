@@ -182,10 +182,32 @@ mirror first and from the upstream when the mirror does not answer. The tool rep
 pin (how many, the newest and the compare page), and a mirror that is not on GitHub or lacks a pinned commit. A new
 pin is built on the board against the running kernel and tried with the stick, on the branch for its chip.
 
+BC-250 Mesh Shaders builds RADV from one Mesa release (`MESA_VER` in `bc250-bazzite/apps/mesh/bc250-mesh-shaders.sh`,
+with DirectMesh's patch and the suite's patch for that release in `apps/mesh/mesa/`); BC-250 ACE Queues builds it from
+the system's Mesa with one patch (`apps/ace/mesa/gfx1013-ace-queue.patch`). The tool takes Mesa's newest release from
+its tags on GitLab (a release candidate is none), reports it when it is newer than `MESA_VER`, and tries the ACE patch
+on it (`patch -p1 --dry-run` on the files the patch touches, fetched at that release): a patch that no longer applies
+stops ACE Queues building once Bazzite ships that Mesa. A new Mesh Shaders pin needs DirectMesh's patch for the new
+release and the suite's patch moved to it.
+
+Console Link builds FFmpeg from one release (`FFMPEG_VERSION`, `FFMPEG_SHA256` in
+`bc250-bazzite/apps/consoles/native/ffmpeg/build.sh`) and takes libva's headers from one release where the system has
+none (`LIBVA_VERSION`, `LIBVA_SHA256`). The tool reads FFmpeg's release tags (`n<version>` on its GitHub mirror) and
+libva's latest release, and reports a newer FFmpeg on the pinned branch (its fixes), a newer FFmpeg branch (a bigger
+move: the decoder calls of the native core) and a newer libva (its headers only; the libraries stay the system's).
+
+USB HD Cam downloads each camera's firmware from one commit of a GitHub repository (`PINNED` in
+`bc250-bazzite/apps/hdcam/usb_hdcam/firmware.py`). The tool downloads the file at that commit, which must still have
+the pinned SHA-256, and the same file on the repository's default branch: changed or gone there is reported.
+
+BC-250 Bazzite Test runs whichever speedtest CLI is installed; its development tool installs one release of Ookla's
+(`SPEEDTEST_VERSION` in `bc250-bazzite/apps/check/development/tools/install-requirements.sh`). Ookla publishes no API;
+the tool reads the version from Ookla's Homebrew formula.
+
 ```bash
 python3 bc250-bazzite/tools/check_upstream.py            # all of them
 python3 bc250-bazzite/tools/check_upstream.py helixsr    # one: decky, shadps4, helixsr, ppsspp, pcsx2, rpcs3, directmesh,
-                                                          # vita3k, xenia or wdriver
+                                                          # vita3k, xenia, wdriver, mesa, ffmpeg, hdcam or speedtest
 ```
 
 ## bc250_core

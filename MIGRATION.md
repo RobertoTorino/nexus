@@ -5,33 +5,159 @@
 Working notes for moving the seven BC-250 tools into this suite. Not part of the manual or the READMEs, which
 describe only what exists.
 
-## Resume here (05-11-2026 03:41, for a new chat): the roadmap after the Bazzite items
+## Resume here (05-11-2026 11:16, for a new chat): the roadmap, Windows and Bazzite/Windows
 
-The Bazzite items of the roadmap are done. Each app's CHANGELOG says what its release carries:
+The Bazzite items of the roadmap are done and released (portal-v15.0.0 and the apps of 05-11-2026).
 
-- **portal**: the self-update (Y or a right click, the orange banners; Breaking: the red release-page button is gone),
-  the Settings page behind ☰, R3's on-screen keyboard (Plasma Keyboard over KWin's D-Bus, mode 2 while shown),
-  the controller sound (the owner's `blob.wav`), the bolder legend; a minor bump at least, for SSD Check's entry.
-- **wdriver**: the modules labeled `modules_object_t` for SELinux before insmod (the UGREEN stick did not load), the
-  header boxes, the info symbols. Update in the window installs the new service on the board.
-- **check**: the results card's preview with Save…, Copy and Share.
-- **shadps4**: packages in a game folder as rows, Unpack and Unpack all, the keep window; a Fixed disclaimer entry.
-- **ssd**: SSD Check, new (0.1.0), in the portal's Utilities.
-- **package**: the catalog lists SSD Check.
-- **decky**: Decky Loader 3.3.1.
-- **clb, consoles, rpcs3, ppsspp, pcsx2, vita3k, xenia**: the disclaimer without Nintendo (with shadps4), nothing
-  urgent: whenever each is next released.
+Done in the working tree, not committed (the owner commits, releases and tries them on the Ally); every check passes
+(`./test.sh`, `tools/ci-local.sh`, the Windows Portable Suite's version check and wiki):
 
-The disclaimer hook and READMEs, the upstream check (vita3k, xenia, wdriver; DirectMesh candidates skipped), 
-the machine chapter's tool tables and CLAUDE.md's rule that frequently needed tools are installed for good.
+- **Windows Portable Suite portal** (a release, minor at least: four Added entries): a short sound on every controller
+  action (the owner's blob.wav, the portal only, never during the intro, off with Sound); View asks "Do you really
+  want to exit the portal?" every time (View Yes, B No in the legend; five seconds is No); a tab with more than eight
+  apps has pages (Page 1 of 2 under the tiles, the d-pad past the edge, a tap on the marker); the portal looks for its
+  own update again every hour and when it is active again after a quarter of an hour. The wiki's portal chapter has
+  all four (and its stale "B while a download runs" became View). The suite's other apps keep "Press again to exit" on
+  their busy View (owner, 05-11-2026: leave that as is).
+- **BC250 Bazzite Suite: the pins moved** (the Upstream review; each app a release after the owner's board test,
+  minor: an Added entry each): Vita3K build 4269 (was 4186), Xenia Canary 838850f (was e6cd2e4), and BC-250 USB
+  Wi-Fi's aic8800d80 main 2e75f88 and legacy-mcu1 bbf6cb4 (were 43db800 and 1d1b8ff). What each app relies on was read
+  in the upstream source between the two pins (the development chapter's list): unchanged; the driver still builds
+  with CONFIG_USE_FW_REQUEST off, so aic_fw_path still gives the firmware. BC-250 USB Wi-Fi also knows the chip's
+  product 0x8820 (owner, 05-11-2026: add it), a UGREEN stick only legacy-mcu1 supports: it takes that branch whatever
+  its MCU, and the chip's box shows the product. The board test, on Bazzite (owner, 05-11-2026: the driver only
+  there): each emulator installed and a game started from Steam; the driver built and loaded on both branches with the
+  stick. With BC-250 USB Wi-Fi's release (owner, 05-11-2026: part of the Bazzite release, the driver is used on
+  Bazzite only): the owner creates the driver's mirror `RobertoTorino/aic8800d80` on Bazzite, with the new pins'
+  commits; until then (404) the app fetches the driver from the upstream alone. Vita3K's first start of build 4269
+  writes the config.yml the tests hold: copy it from the board as `apps/vita3k/tests/fixtures/config-4269.yml` (in place of config-4186.yml, the development chapter says so) and the
+  tests' references follow. A code path to check: `tools/ci-local.sh` with a few jobs named (installers among them)
+  twice failed ace.sh's first install without a message; the installers job alone and the full run pass. Another
+  (05-11-2026): Remote Play's `tests/test_senkusha.py::test_full_run` failed once in a full `./test.sh` on Windows
+  (the console got the MTU request twice, [1454, 1454]), and passed three times on its own: timing under load. And
+  (06-11-2026): core's `tests/test_instance.py::test_nobody_running` failed once in a full `./test.sh` on Windows
+  (already_running() true for its own unique name, bc250-test-nobody-<pid>, while the checkout's portal and the window
+  logger ran) and passed on its own.
+- **Windows Portable Suite: Xenia Manager's Create profile** (Windows 3 of the roadmap; a release, minor): LB on the
+  Xenia pane, a gamertag, A Create. `profiles.py` writes the profile as Xenia does (the encrypted Account file, the
+  0xA000-byte header, in the content folder; read from Xenia's source at e6cd2e4 and checked at 838850f, where the
+  crypto moved into xboxkrnl_crypt.cc unchanged) and signs it in at start ([Profiles] logged_profile_slot_0_xuid). To
+  try on the Ally: create a profile, start a game from Steam (no "No Profiles Found" window, the game signed in),
+  save, and find the save under content\<XUID>\<title ID>.
+- **Windows Portable Suite: Vita3K 4269 and Xenia 838850f** (the BC250 suite's new pins, which the Windows apps' tests
+  require; each app a release after the Ally, minor): the Windows archives hold the same files as before (listed with
+  Windows' tar). Vita3K's tests keep config-4186.yml until the new build's first config.yml is taken from the Ally
+  (`windows-portable/apps/vita3k/tests/fixtures/`).
+- **The Upstream review follows more** (Bazzite/Windows 2 of the roadmap; no release, the tools): the BC250 check has
+  Mesa (Mesh Shaders' MESA_VER, ACE Queues' patch tried with patch --dry-run), FFmpeg and libva (Console Link), USB HD
+  Cam's firmware and Ookla's speedtest CLI; the Windows check compares Vita3K's and Xenia's daily builds. The first
+  run reports Mesa 26.2.6 (Mesh Shaders pins 26.2.1), FFmpeg 7.1.5 and the 9.0 branch and libva 2.24.1 (Console Link
+  pins 7.1.2 and 2.22.0): the owner says which to take up.
+- **Convert icons for the Windows Portable Suite** (Bazzite/Windows 1 of the roadmap; no release: the Nexus tools and
+  the dashboard, which is never released): `windows-portable/icons/categories.toml` has an [icons] table (PNG, Gaming
+  2:1, the apps from the portal), which `tools/sync_icons.py` reads; the dashboard's Convert icons works on that
+  suite. To try on the Ally: the dashboard there, Convert icons on a copy of a picture (the roadmap's "with the
+  dashboard's other tools that do not start there").
+- **Windows Portable Suite: Support Checker** (`apps/support`, 0.1.0, new; from the roadmap's ports, the owner's scope
+  of 05-11-2026): the BC250 Dependency Checker for Windows. Cards Windows (version, a restart waiting, the newest
+  update), Tools (PowerShell, the Visual C++ runtime, tar with 7z, Steam, the XBOX app) and Apps (installed against
+  the portal's); no Python packages. Its entry in the portal's apps.toml is written (tag wp-support-v0.1.0, no
+  sha256): its first release and the portal's bump are the owner's. To try on the Ally.
+- **Windows Portable Suite: DatStation, Upscale Boost and HD Controller** (`apps/datstat`, `apps/upscale`,
+  `apps/hdcontrol`, 0.1.0 each, new; the roadmap's ports, each the BC250 app feature for feature on the handheld
+  window, written 05-11-2026 by three agents in parallel on new_app.py's skeletons). Their entries are in the portal's
+  apps.toml (no sha256): the first releases and the portal's bump are the owner's. Upscale Boost is in Gaming until
+  the suite has a Graphics picture. To try on the Ally: DatStation's quiz music; Upscale Boost's real HelixSR build
+  (time, memory), Run with HelixSR on a Steam game and Go back; HD Controller on a real DualSense (firmware update
+  over hidapi, profiles, vibration, battery, a controller on USB and Bluetooth at once) before any release. Owner's
+  choices open: Upscale Boost's tools in its own folder or HelixSR's %LOCALAPPDATA%\HelixSR; HelixSR in the Windows
+  suite's Upstream review; HD Controller's idle switch-off and Turn Bluetooth off, left out (they need a program that
+  runs at sign-in).
+- **Windows Portable Suite portal, on the Ally 05-11-2026** (with the four Added entries above, one release): the
+  Settings rows Play on the TV, Play on the handheld, Play on both screens (DisplaySwitch /external, /internal,
+  /clone; the portal then starts again sized for the new main screen: on the TV the legend was cut off) and XBOX mode
+  ↔ Desktop (Win + F11, Windows' own switch; no command exists; Windows asks its own restart-for-performance
+  question); Operating mode is called Performance mode (owner, 05-11-2026; the helper's task keeps its name). The
+  Ally's control mode (Desktop for Windows' dialogs and web pages): the HID feature report Handheld Companion knows
+  (5A D1 01 01 03 on interface 2, usage page 0xFF31, product 0x1B4C) works for a moment, then Armoury Crate's control
+  service writes the controller back; per-app control profiles for File Explorer were not found in Armoury Crate SE on
+  the XBOX Ally X. Left as Command Center's Control mode by hand; nothing in the suite.
+- **Nexus Release Tool** (never released): the device test's field lists the run's unpublished drafts on every
+  state, this device's suite first, and has room before its text; Device test and its step's line follow the portal
+  picked there at once (22:24). The Nexus page's Releases chapter says so.
 
-Waiting on the owner: the driver's mirror `RobertoTorino/aic8800d80` is not on GitHub (404, missing or private), so
-BC-250 USB Wi-Fi fetches the driver from the upstream alone; create it or make it public. Both aic8800d80 branches,
-Vita3K and Xenia are past their pins.
+### Tested on the Ally, 05-11-2026 evening to 06-11-2026 (the checkout, with the window logger)
 
-Next: the Windows chapter of the roadmap, or Bazzite/Windows (ready to start without the owner: Windows 2, 5, 7 and 8
-and Bazzite/Windows 1 to 4; Windows 1, 3, 4 and 6 need the Ally; Windows 9, 10 and 11 and Bazzite/Windows 5 need the
-owner's choices or an analysis first, which each entry names). The owner says which first.
+Testing core on the Ally: a game started from an app's window, even the checkout's, goes through its Steam shortcut
+and so runs the **installed** app's play mode. Start it directly with the shortcut's arguments instead
+(`windows-portable\apps\<app>\run.ps1 --play <the shortcut's arguments>`), with no other copy of the emulator running
+(Xenia closes a second copy by itself). The window logger (`log-windows.ps1`) was in the session's scratchpad.
+
+**The controller in the play mode** (core's gamepad.py). The afternoon's controller test (the HID mode report alone,
+14:30) left the Ally's buttons answering XInput but not SDL; the owner restarted the Ally.
+
+| Tested | Result |
+|---|---|
+| SDL's default (raw input), pygame-ce 2.5.8 / SDL 2.32.10, no window of its own (22:50) | Did not work: SDL opens the pad as "ASUSTeK Computer Inc." (guid 03001101050b00004c1b...), only the triggers arrive, not one button; XInput gets them all |
+| SDL_JOYSTICK_RAWINPUT=0 (22:52) | Worked: SDL opens "XInput Controller #1", every button with XInput's, View + LB + RB too |
+| Installed Xenia Manager (old core), Need for Speed Undercover, View + LB + RB (23:10) | Did not work: nothing happened |
+| Checkout's play mode with the fix, the same game (23:14) | Worked: Xenia closed 2.6 s after the game came to the front, no Xenia UI or profile question |
+
+Fixed in core (gamepad.py sets SDL_JOYSTICK_RAWINPUT=0; platform.APP_VARIABLES keeps it from programs the app
+starts). Likely raw input gives buttons only to the window in front; the portal, in front, always had its buttons.
+The owner then asked for a notice on the quit (a notice, not a question or a countdown): core's play mode shows
+"Closing the game" (heat.Banner, at least a second). Seen on both screens at 23:28.
+
+**Vita3K's quit** (Lumines, the installed build 4186).
+
+| Tested | Result |
+|---|---|
+| View + LB + RB with Vita3K's defaults (23:22) | Did not work: Vita3K asked "Exit App?" (default No; game_window.cpp, main_window.cpp, the same in 4269); ended by force after 10 s, exit code 1 |
+| confirmExitApp=false in portable\gui-configs\CurrentSettings.ini, written by Vita3K Manager (23:28) | Worked: Vita3K ended by itself 1 s after the close, exit code 0 |
+
+**Vita3K's library window beside the game.** With a TV in extended mode, Vita3K's main window (its app library) stayed
+on the Ally's screen while the game ran on the TV. Vita3K cannot start without it (main.cpp always shows it, 4186 and
+4269; no setting or option).
+
+| Tested | Result |
+|---|---|
+| A double click to make the SDL window full screen | Not possible: the SDL frontend has no handler; its left mouse button is the touch screen |
+| SDL frontend (`--frontend sdl -r <ID>`), made borderless and screen-sized by the play mode (ScreenFill, after WindowManager's applyFit: stable 2 s, restore, strip the frame, the whole monitor, measure again), on the Ally's screen (23:39, 00:17) | Worked: filled exactly, the game's buttons work, the quit clean |
+| The same, moved to the TV by the suite's Screen setting (23:48, 23:51) | Did not work: filled the TV, but the game's buttons did nothing (the quit worked: our reader) |
+| The same, with SDL_JOYSTICK_ALLOW_BACKGROUND_EVENTS=1 for Vita3K (23:56) | Did not work: no buttons |
+| The same, with SDL_JOYSTICK_RAWINPUT=0 for Vita3K (00:00) | Did not work: no buttons |
+| The same, moved the moment the window shows (stable 0) (00:03) | Did not work: no buttons |
+| The TV as the only screen (Win + P), the window not moved at all (00:05) | Did not work: no buttons |
+| Without the Qt application in the play mode (00:08) | Did not work: no buttons |
+| Moved to the TV by hand (Win + Shift + arrow) (00:14) | Did not work: it jumped back to the Ally's screen |
+| The mouse as the touch screen in the SDL window | Did not work |
+| Qt frontend (as before), the play mode minimizing the library window (emulator.minimize_library through core's run(windows=)) (00:22) | Worked: minimized within a second, the game full screen on the TV with its buttons, the quit clean (2 windows, code 0) |
+
+So Vita3K's SDL frontend gets no button whenever its game is on the TV, whatever we set, and its mouse is no touch
+screen; Vita3K's log names the pad "XInput Controller #1" every time and its ctrl.cpp polls SDL with no focus check of
+its own. Kept (the owner, 00:20): the Qt frontend with the library minimized. ScreenFill and
+portable.start_screen_point were taken out (the owner: not kept unused); this table and WindowManager's applyFit say
+how they worked. One quit on the TV (23:48) hung while the game read its data (Vita3K's log stops at stat_file) and
+was ended after the 10 s grace; it did not come back (a code path to check if it does).
+
+Left over on the Ally: the suite's Screen setting is cleared (it was "Mi TV"; a copy of suite.ini is in the session's
+scratchpad), so the owner sets it again in the portal if wanted. A "USB HD Cam 0.7.0" window was in front at 23:51
+without the owner starting it: to find out what opened it.
+
+**A restarted portal taking the front** (core's AllowSetForegroundWindow, core CHANGELOG 15:00:29; the checkout's
+portal, 06-11-2026 00:32-00:34).
+
+| Tested | Result |
+|---|---|
+| Play on the TV (DisplaySwitch /external) | Worked: the portal started again on the TV in 2 s, in front, the controller at once |
+| Play on both screens (/clone) | Worked: started again in 5 s, in front within half a second, the controller at once |
+| Play on the handheld (/internal) | Worked: the controller at once (the owner) |
+
+What opened USB HD Cam at 23:51:22 (and 14:31:20) is not known: not Steam (its gameprocess_log has no launch after
+23:11), no autostart (scheduled tasks, Run, Startup). The Nexus Dashboard (it starts the checkout's apps, keeps no log
+of it) was on the Ally's screen while the owner tried touch for the game on the TV: a tap may have started it.
+
+Ready to start without the owner: Bazzite/Windows 1 (best settings) needs an analysis first.
 
 ## Roadmap (owner, 04-11-2026)
 
@@ -79,56 +205,26 @@ noted where each item stood). Each entry says where it is in the code and what t
      against 2.0, HelixSR Scaler offering DLSS in FSR-only games, a game's FSR frame generation with HLX in place.
 ### Windows
 
-1. **Quitting a game in an app closes the portal too.** The likely path: the portal reads the controller in the
-   background (`core/bc250_core/gamepad.py:60-63`) and View closes it whenever Windows still counts it as the
-   active window (`core/bc250_core/portable.py:1544-1569`). Reproduce on the Ally with the log, then ignore View
-   while a game runs and just after the portal is active again.
-2. **A Yes/No question before the portal exits.** "Do you really want to exit the Portal?" every time, not only
-   during a download (`portal/portable_portal/main_window.py:639-644`, `784-794`).
-3. **The second screen is gray in XBOX mode** (sound still goes there). Not known yet; find out on the Ally whether
-   it is Windows' own behavior and whether the portal can do anything about it (`start_screen`, LT Screen).
-4. **Xenia: quitting a game shows Xenia's UI and the profile question.** The quit sends a close to Xenia's windows
+1. **The second screen is gray in XBOX mode**: Windows' own behavior (found on the Ally, 05-11-2026: XBOX mode runs
+   on the main screen only). Done in the working tree (owner, 05-11-2026): the portal's Settings rows Play on the TV
+   (DisplaySwitch /external) and Play on the handheld (/internal), and Win + P (Duplicate too) in the wiki's portal
+   chapter. To try on the Ally: Play on the TV, then XBOX mode on the TV with its sound; Play on the handheld back.
+2. **Xenia: quitting a game shows Xenia's UI and the profile question.** The quit sends a close to Xenia's windows
    (`apps/xenia/xenia_manager/__main__.py:18-35`); find out on the Ally which window takes it, then end Xenia the
    way it needs.
-5. **Xenia: create a profile.** Saves need a profile; the settings have none (`xenia_settings.py:87-131`). Look up
-   Xenia Canary's profiles at the pinned commit, then a Create profile action.
-6. **Vita3K: quitting a game shows Vita3K's UI.** The close reaches the game window only, Vita3K's main window
+3. **Vita3K: quitting a game shows Vita3K's UI.** The close reaches the game window only, Vita3K's main window
    stays (`apps/vita3k/vita3k_manager/__main__.py:17-31`); close it too.
-7. **Paging in a portal tab from a ninth app.** A ninth app is cut off now (`COLUMNS, PER_PAGE = 4, 8`,
-   `main_window.py:48`, `546-547`); pages, a page marker, turning pages past the edge, a test. No tab has nine yet
-   (Gaming has seven).
-8. **The portal checks for its own update again**, not only at start (`main_window.py:295-305`): when it becomes
-   active again or on a timer.
-9. **The ports:** Bazzite DatStation, BC-250 Upscaler Manager, USB HD Control (hidapi instead of hidraw),
-   Dependency Checker (a Windows tool list). Each with the owner's Windows name.
-10. **The handheld's own tuning apps** (TDP, fans and the like). First: which apps (the owner).
-11. **A short sound on every controller action** (owner, 05-11-2026: "it has to be done there also"), as the BC250
-    portal has since 05-11-2026: the owner's own `blob.wav` (made in Audacity, the suite's own; the BC250 copy is
-    `bc250-bazzite/portal/bc250_portal/sounds/blob.wav`, 0.25 s), a copy in `windows-portable/portal/sounds/`, off
-    with the suite's Sound setting, silent on the button that skips the intro. Two things to settle in the change:
-    the Windows portal plays with `winsound` (`portal/portable_portal/intro.py:30`), one sound at a time, so a
-    controller sound during the intro would cut the intro's off (skip it while the intro plays, or another player);
-    and the controller reaches every Windows app through core's `PortableWindow.on_action`
-    (`core/bc250_core/portable.py:1237`), so the portal alone or every app is the owner's to say.
+4. **The ports**, with the owner's names and packages (owner, 05-11-2026): **DatStation** (`datstat`,
+   `dat_station`), from Bazzite DatStation; **Upscale Boost** (`upscale`, `upscale_boost`), from BC-250 Upscaler
+   Manager; **HD Controller** (`hdcontrol`, `hd_controller`), from USB HD Control (hidapi instead of hidraw);
+   **Support Checker** (`support`, `support_checker`): done 05-11-2026, see the resume note.
+
+Dropped (owner, 05-11-2026): quitting a game in an app closes the portal too (not reproduced), and the handheld's
+own tuning apps.
 
 ### Bazzite/Windows
 
-1. **Nexus Release Tool: the device test's selection follows the release.** The list comes from the working
-   tree's portal VERSIONs (`flow.waiting_portals`, `dev/nrt/nexus_release_tool/release_page.py:199-200`) and is
-   filled once; fill it from the run's unpublished drafts on every state, this device's suite first.
-2. **Nexus Release Tool: room before the text in the device test's suite field.** The field where the suite is
-   picked (`portal_choice`, `dev/nrt/nexus_release_tool/release_page.py:84`) shows its text against the left border;
-   padding on that field only (owner, 04-11-2026: not the theme, which every app shares).
-3. **Convert icons on Windows, and a gaming icon per suite.** The dashboard's Convert icons (`dev/dash/
-   nexus_dashboard/icons.py`, `tools/sync_icons.py`) needs a suite's `icons/categories.toml`, which the Windows
-   Portable Suite lacks; its gaming icon is wide and PNG (`tools/make_icons.py:163-180`). Make the tool take that
-   suite, and any suite's own gaming icon; try it on the Ally with the dashboard's other tools that do not start
-   there (above).
-4. **More in the Upstream review.** Not checked yet: Mesa (Mesh Shaders, ACE Queues), FFmpeg and libva (Console
-   Link, Remote Play), USB HD Cam's firmware sources, the speedtest CLI, and on the Windows Portable Suite Vita3K and
-   Xenia (its check skips them for their daily builds, `CADENCE = "daily"`; owner, 04-11-2026: they come in). The
-   BC250 check has Vita3K, Xenia and the USB Wi-Fi driver since 05-11-2026.
-5. **Best settings for a game, found automatically.** Emulated and regular games. First an analysis: what can be
+1. **Best settings for a game, found automatically.** Emulated and regular games. First an analysis: what can be
    measured, per emulator and for a regular game, and whether WindowManager (`github.com/RobertoTorino/
    WindowManager`) can be used for it or join the gaming category.
 

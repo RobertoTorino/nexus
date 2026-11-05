@@ -38,10 +38,10 @@ check "core imports from the app copy" "(cd $A && /usr/bin/python3 -c 'import im
 echo "== 2. the run wrapper"
 bash "$RUN" --frontend sdl -r PCSB00245 > "$T/run.log" 2>&1; rc=$?
 check "without Vita3K it says so" "[ $rc -eq 1 ] && grep -q 'Vita3K is not installed' $T/run.log"
-mkdir -p "$D/$APP/emulator/4186"
-printf '#!/bin/sh\necho "args: $*"\n' > "$D/$APP/emulator/4186/vita3k.AppImage"
-chmod +x "$D/$APP/emulator/4186/vita3k.AppImage"
-ln -sfn 4186 "$D/$APP/emulator/current"
+mkdir -p "$D/$APP/emulator/4269"
+printf '#!/bin/sh\necho "args: $*"\n' > "$D/$APP/emulator/4269/vita3k.AppImage"
+chmod +x "$D/$APP/emulator/4269/vita3k.AppImage"
+ln -sfn 4269 "$D/$APP/emulator/current"
 bash "$RUN" --pkg "/games/My Game.pkg" --zrif KO5i > "$T/run.log" 2>&1; rc=$?
 check "starts the current Vita3K with the arguments as given" "[ $rc -eq 0 ] && grep -qxF 'args: --pkg /games/My Game.pkg --zrif KO5i' $T/run.log"
 

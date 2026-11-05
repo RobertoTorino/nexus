@@ -154,12 +154,18 @@ under every tour is the Nexus tools' `tools/sounds/`, every suite's.
 
 Every app in a category of a suite shares the category's icon, kept in the suite's `icons/<category>/` at 1024,
 512, 256 and 128 px. **Convert icons** makes a category's icons from your images: one image for every size, or an
-image for a single size. They are scaled, saved as WebP (the 128 px icon as PNG) under the category's names, and
-copied to every app of the category, the portal's tiles and the wiki. Images must be square. The dialog shows the
-current icons of the chosen category; **Convert and copy to the apps** runs `tools/sync_icons.py` on the suite,
-whose output shows in the dialog; the icons and their copies are changed in the checkout, for you to review and
-commit. A suite whose apps take no category icons (the Windows Portable Suite: its apps' icons are written by
-`tools/make_icons.py`) has the tile off.
+image for a single size. They are scaled, saved under the category's names in the suite's format, and copied to
+every app of the category, the portal's tiles and the wiki. The suite's `icons/categories.toml` says how:
+
+- The BC250 Bazzite Suite: WebP, the 128 px icon PNG; images must be square.
+- The Windows Portable Suite: PNG at every size. Its Gaming pictures are twice as wide as high (1024 x 512 down to
+  128 x 64), so an image for them must be 2:1; Utilities' are square. Which app is in which category is the
+  portal's `apps.toml`, and the copies are written as `tools/make_icons.py` writes them: a wide picture centered on
+  a transparent square for an app's window and Start-menu icon.
+
+The dialog shows the current icons of the chosen category; **Convert and copy to the apps** runs
+`tools/sync_icons.py` on the suite, whose output shows in the dialog; the icons and their copies are changed in the
+checkout, for you to review and commit. A suite without `icons/categories.toml` has the tile off.
 
 ## Demo Recorder
 

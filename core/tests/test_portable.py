@@ -5,6 +5,8 @@ the controller only while the window is active."""
 
 from __future__ import annotations
 
+import sys
+
 import pytest
 from PyQt6.QtCore import QEvent, QPoint, QPointF, QSize, Qt
 from PyQt6.QtGui import QEnterEvent, QKeyEvent, QPixmap
@@ -873,6 +875,27 @@ def test_the_restart_waits_for_this_app_then_starts_its_command_again():
     assert argv[6] == ("Wait-Process -Id 4242 -ErrorAction SilentlyContinue; $env:PORTABLE_RESTARTED = '1'; "
                        "Start-Process -FilePath 'C:\\Apps\\Portal.exe' -WorkingDirectory 'C:\\Apps' "
                        "-ArgumentList '--x', 'it''s'")
+
+
+def test_an_app_started_again_takes_the_front(qapp, monkeypatch):
+    """Started again on another screen (RESTARTED), the window takes the front as the controller starts: the one before
+    allowed it (allow_foreground before the restart), and the controller counts in the active window only (owner,
+    05-11-2026: the portal did not answer it after Play on the TV)."""
+    window = PortableWindow(gamepad=portable.Gamepad(source_factory=NoPad))
+    asked = []
+    monkeypatch.setattr(window, "activateWindow", lambda: asked.append("activate"))
+    monkeypatch.setattr(window, "raise_", lambda: asked.append("raise"))
+    monkeypatch.delenv(portable.RESTARTED, raising=False)
+    window.start_gamepad()
+    assert asked == []                                  # a first start: Windows puts it in front itself
+    monkeypatch.setenv(portable.RESTARTED, "1")
+    window.start_gamepad()
+    assert asked == ["raise", "activate"]
+    window.close()
+    if sys.platform == "win32":
+        assert isinstance(portable.allow_foreground(), bool)
+    else:
+        assert portable.allow_foreground() is False
 
 
 def test_the_legend_shows_a_keyboard_shortcut_as_key_caps(qapp):

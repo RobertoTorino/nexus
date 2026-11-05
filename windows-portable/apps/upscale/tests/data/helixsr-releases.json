@@ -1,0 +1,395 @@
+[
+ {
+  "assets": [
+   {
+    "browser_download_url": "https://github.com/lonewolf0622/HelixSR/releases/download/v3.2.0/HelixSR-3.2.0.zip",
+    "digest": "sha256:a4e83da8b4335a886197aef10e8f8a8947a2e32e5e1eebfdf060ff00724c17c7",
+    "name": "HelixSR-3.2.0.zip",
+    "size": 217396302
+   },
+   {
+    "browser_download_url": "https://github.com/lonewolf0622/HelixSR/releases/download/v3.2.0/SHA256SUMS.txt",
+    "digest": "sha256:a1e20d6fd451f19aeb5428d9c753b41b533b80f92877d89a8353a6add70569ce",
+    "name": "SHA256SUMS.txt",
+    "size": 1544
+   }
+  ],
+  "draft": false,
+  "html_url": "https://github.com/lonewolf0622/HelixSR/releases/tag/v3.2.0",
+  "prerelease": true,
+  "published_at": "2026-10-29T04:58:31Z",
+  "tag_name": "v3.2.0"
+ },
+ {
+  "assets": [
+   {
+    "browser_download_url": "https://github.com/lonewolf0622/HelixSR/releases/download/v3.1.0/HelixSR-3.1.0.zip",
+    "digest": "sha256:3a1b1ec8b26178cbec3a7bf56b78abf78e236b2062b4cff9cad21993d023bf75",
+    "name": "HelixSR-3.1.0.zip",
+    "size": 140587738
+   },
+   {
+    "browser_download_url": "https://github.com/lonewolf0622/HelixSR/releases/download/v3.1.0/HelixSR.Desktop_1.3.0_amd64.AppImage",
+    "digest": "sha256:e9c9650bf1f01f9826d083caf84e61b674aabb11bd1857bc1580d1de1f438d0e",
+    "name": "HelixSR.Desktop_1.3.0_amd64.AppImage",
+    "size": 82799096
+   },
+   {
+    "browser_download_url": "https://github.com/lonewolf0622/HelixSR/releases/download/v3.1.0/HelixSR.Desktop_1.3.0_amd64.deb",
+    "digest": "sha256:9bd5be81f3b8ac5990588180553d1abf4251ebaf218b56018904fdca4a03bee2",
+    "name": "HelixSR.Desktop_1.3.0_amd64.deb",
+    "size": 4451986
+   },
+   {
+    "browser_download_url": "https://github.com/lonewolf0622/HelixSR/releases/download/v3.1.0/HelixSR.Desktop_1.3.0_x64-setup.exe",
+    "digest": "sha256:894f6afb7abacd0c1993d8edb3bbef41e3208b20f162a5031f7da97704a30f25",
+    "name": "HelixSR.Desktop_1.3.0_x64-setup.exe",
+    "size": 4837304
+   },
+   {
+    "browser_download_url": "https://github.com/lonewolf0622/HelixSR/releases/download/v3.1.0/SHA256SUMS.txt",
+    "digest": "sha256:d4d26aae28a2a954608e0756df46731f5e6ba97fc34e80e9dee43b259c98e811",
+    "name": "SHA256SUMS.txt",
+    "size": 1544
+   }
+  ],
+  "draft": false,
+  "html_url": "https://github.com/lonewolf0622/HelixSR/releases/tag/v3.1.0",
+  "prerelease": false,
+  "published_at": "2026-10-28T04:12:31Z",
+  "tag_name": "v3.1.0"
+ },
+ {
+  "assets": [
+   {
+    "browser_download_url": "https://github.com/lonewolf0622/HelixSR/releases/download/v3.0.0/HelixSR-3.0.0.zip",
+    "digest": "sha256:1d8591fa7e79c89b57c4e260726b7b1c9f6fd165c9acc1346929daf00517af37",
+    "name": "HelixSR-3.0.0.zip",
+    "size": 139914969
+   },
+   {
+    "browser_download_url": "https://github.com/lonewolf0622/HelixSR/releases/download/v3.0.0/HelixSR.Desktop_1.2.0_amd64.AppImage",
+    "digest": "sha256:5e1e674ef3b7154a38985199e27f9484bcd6f247c4a592da2a5b71d5fc01ab59",
+    "name": "HelixSR.Desktop_1.2.0_amd64.AppImage",
+    "size": 82405880
+   },
+   {
+    "browser_download_url": "https://github.com/lonewolf0622/HelixSR/releases/download/v3.0.0/HelixSR.Desktop_1.2.0_amd64.deb",
+    "digest": "sha256:0bacc4d8eb66b936d66c09ab77968a18e35b7ea7ff4c307e4c006c9ab07475a9",
+    "name": "HelixSR.Desktop_1.2.0_amd64.deb",
+    "size": 4014168
+   },
+   {
+    "browser_download_url": "https://github.com/lonewolf0622/HelixSR/releases/download/v3.0.0/HelixSR.Desktop_1.2.0_x64-setup.exe",
+    "digest": "sha256:57a04cd05969c6f88bea33c05fbf77593d83b07af2e6f00fc7e0933e52b401d2",
+    "name": "HelixSR.Desktop_1.2.0_x64-setup.exe",
+    "size": 4639003
+   },
+   {
+    "browser_download_url": "https://github.com/lonewolf0622/HelixSR/releases/download/v3.0.0/SHA256SUMS.txt",
+    "digest": "sha256:86e43925ca8c6be7131bf1fcf35645d019edd45c00d7b0b62bccf877586c3fa4",
+    "name": "SHA256SUMS.txt",
+    "size": 387
+   }
+  ],
+  "draft": false,
+  "html_url": "https://github.com/lonewolf0622/HelixSR/releases/tag/v3.0.0",
+  "prerelease": true,
+  "published_at": "2026-10-27T11:19:45Z",
+  "tag_name": "v3.0.0"
+ },
+ {
+  "assets": [
+   {
+    "browser_download_url": "https://github.com/lonewolf0622/HelixSR/releases/download/v2.0.0/HelixSR-2.0.0.zip",
+    "digest": "sha256:0d60686eddbb0abd680b27d12a088344b212464ebf0a2dc18d10387e1c817f52",
+    "name": "HelixSR-2.0.0.zip",
+    "size": 136997025
+   },
+   {
+    "browser_download_url": "https://github.com/lonewolf0622/HelixSR/releases/download/v2.0.0/HelixSR-Scaler-1.1.0-linux.tar.gz",
+    "digest": "sha256:7a238417b6ee6b075190adb320d0dd8b4a0d5c47bff420fa4cd7df5060169bbd",
+    "name": "HelixSR-Scaler-1.1.0-linux.tar.gz",
+    "size": 130807439
+   },
+   {
+    "browser_download_url": "https://github.com/lonewolf0622/HelixSR/releases/download/v2.0.0/HelixSR-Scaler-1.1.0.zip",
+    "digest": "sha256:827547c368a8468f9d888419f8f11cda687d3df7959725234a4dce4d8b3fc5fd",
+    "name": "HelixSR-Scaler-1.1.0.zip",
+    "size": 130590483
+   },
+   {
+    "browser_download_url": "https://github.com/lonewolf0622/HelixSR/releases/download/v2.0.0/HelixSR.Desktop_1.1.0_amd64.AppImage",
+    "digest": "sha256:11bb1d204f5650952edfcde7a0851797b1297f5e0f75d21b2cf3729e62fd1678",
+    "name": "HelixSR.Desktop_1.1.0_amd64.AppImage",
+    "size": 82401784
+   },
+   {
+    "browser_download_url": "https://github.com/lonewolf0622/HelixSR/releases/download/v2.0.0/HelixSR.Desktop_1.1.0_amd64.deb",
+    "digest": "sha256:4201652f65ee930f7d55fd1fa60acb98e9696fbc11d97cd1cb74521e39dac462",
+    "name": "HelixSR.Desktop_1.1.0_amd64.deb",
+    "size": 4007668
+   },
+   {
+    "browser_download_url": "https://github.com/lonewolf0622/HelixSR/releases/download/v2.0.0/HelixSR.Desktop_1.1.0_x64-setup.exe",
+    "digest": "sha256:c2433b3e03770faeb89d6f51ccc3217e4175f6e65f68adaf4d96d381a3489539",
+    "name": "HelixSR.Desktop_1.1.0_x64-setup.exe",
+    "size": 4618674
+   },
+   {
+    "browser_download_url": "https://github.com/lonewolf0622/HelixSR/releases/download/v2.0.0/SHA256SUMS.txt",
+    "digest": "sha256:135d5916dc66a6e025961a755954ea484f6bd7b0eec72b9f73e5189294a3bd27",
+    "name": "SHA256SUMS.txt",
+    "size": 578
+   }
+  ],
+  "draft": false,
+  "html_url": "https://github.com/lonewolf0622/HelixSR/releases/tag/v2.0.0",
+  "prerelease": false,
+  "published_at": "2026-10-19T03:15:38Z",
+  "tag_name": "v2.0.0"
+ },
+ {
+  "assets": [
+   {
+    "browser_download_url": "https://github.com/lonewolf0622/HelixSR/releases/download/v1.9.3/HelixSR-1.9.3.zip",
+    "digest": "sha256:7094b7afd006ab56231c880fcd358f115b114ee0734baa19d497a3e42da0a1d1",
+    "name": "HelixSR-1.9.3.zip",
+    "size": 136076974
+   },
+   {
+    "browser_download_url": "https://github.com/lonewolf0622/HelixSR/releases/download/v1.9.3/HelixSR-Scaler-1.0.6-linux.tar.gz",
+    "digest": "sha256:ddd28a2b6f2bb125ba361a000bea21b0fb3b9a74a47e7f649f8857cea03ea667",
+    "name": "HelixSR-Scaler-1.0.6-linux.tar.gz",
+    "size": 132259214
+   },
+   {
+    "browser_download_url": "https://github.com/lonewolf0622/HelixSR/releases/download/v1.9.3/HelixSR-Scaler-1.0.6.zip",
+    "digest": "sha256:1256a5c51ba0db804d60c5ad896a06a17134f8b130a68fabda41621e8dc650af",
+    "name": "HelixSR-Scaler-1.0.6.zip",
+    "size": 133228253
+   },
+   {
+    "browser_download_url": "https://github.com/lonewolf0622/HelixSR/releases/download/v1.9.3/HelixSR.Desktop_1.0.6_amd64.AppImage",
+    "digest": "sha256:f6185404c04720eda27ece3074630b0cb1a6973c4fdf911dc519cf70b69e1540",
+    "name": "HelixSR.Desktop_1.0.6_amd64.AppImage",
+    "size": 82348536
+   },
+   {
+    "browser_download_url": "https://github.com/lonewolf0622/HelixSR/releases/download/v1.9.3/HelixSR.Desktop_1.0.6_amd64.deb",
+    "digest": "sha256:f8a911d113e4444722dcb17614284cdd92f9d12df81f0a202ddafd611a8fc55c",
+    "name": "HelixSR.Desktop_1.0.6_amd64.deb",
+    "size": 3950962
+   },
+   {
+    "browser_download_url": "https://github.com/lonewolf0622/HelixSR/releases/download/v1.9.3/HelixSR.Desktop_1.0.6_x64-setup.exe",
+    "digest": "sha256:7ea2a1dc8eea1d42f75046c3f3bc6b9fbf7047d889693d564266a309c739491f",
+    "name": "HelixSR.Desktop_1.0.6_x64-setup.exe",
+    "size": 4572303
+   },
+   {
+    "browser_download_url": "https://github.com/lonewolf0622/HelixSR/releases/download/v1.9.3/SHA256SUMS.txt",
+    "digest": "sha256:ab345a94ff4219aaf32bb9eba54c798c6fb488a6c19cf44dafa54c737ad6b85f",
+    "name": "SHA256SUMS.txt",
+    "size": 578
+   }
+  ],
+  "draft": false,
+  "html_url": "https://github.com/lonewolf0622/HelixSR/releases/tag/v1.9.3",
+  "prerelease": false,
+  "published_at": "2026-10-16T14:22:56Z",
+  "tag_name": "v1.9.3"
+ },
+ {
+  "assets": [
+   {
+    "browser_download_url": "https://github.com/lonewolf0622/HelixSR/releases/download/v1.9.2/HelixSR-1.9.2.zip",
+    "digest": "sha256:87f4922b37bf73a6f37c186143cc9751db132288960ec5067aa22b01ebf3fc1a",
+    "name": "HelixSR-1.9.2.zip",
+    "size": 136991927
+   },
+   {
+    "browser_download_url": "https://github.com/lonewolf0622/HelixSR/releases/download/v1.9.2/HelixSR-Scaler-1.0.5-linux.tar.gz",
+    "digest": "sha256:6404ec0cf20389a5f80764267d74054089ad2033e6d466243b011c0513abce22",
+    "name": "HelixSR-Scaler-1.0.5-linux.tar.gz",
+    "size": 132258679
+   },
+   {
+    "browser_download_url": "https://github.com/lonewolf0622/HelixSR/releases/download/v1.9.2/HelixSR-Scaler-1.0.5.zip",
+    "digest": "sha256:6c0a0bfce06669df7f92eb37373118519cb90b3bcbda33234cc09e5efd70c00c",
+    "name": "HelixSR-Scaler-1.0.5.zip",
+    "size": 133228303
+   },
+   {
+    "browser_download_url": "https://github.com/lonewolf0622/HelixSR/releases/download/v1.9.2/HelixSR.Desktop_1.0.3_amd64.AppImage",
+    "digest": "sha256:d2cbd1aecaef085b7c5c2e6690e7de94a41c23e7e68fea4713804372252d791a",
+    "name": "HelixSR.Desktop_1.0.3_amd64.AppImage",
+    "size": 82323960
+   },
+   {
+    "browser_download_url": "https://github.com/lonewolf0622/HelixSR/releases/download/v1.9.2/HelixSR.Desktop_1.0.3_amd64.deb",
+    "digest": "sha256:bbe8c2c8d45f06d7a7849d2b705f75125dac4e66c9912798a3b4ad6f80394db0",
+    "name": "HelixSR.Desktop_1.0.3_amd64.deb",
+    "size": 3929792
+   },
+   {
+    "browser_download_url": "https://github.com/lonewolf0622/HelixSR/releases/download/v1.9.2/HelixSR.Desktop_1.0.3_x64-setup.exe",
+    "digest": "sha256:c32e50329b6a8cd6a6d19015cab8bc2f78accc2cb1a0fb32b08ccd9dfb444284",
+    "name": "HelixSR.Desktop_1.0.3_x64-setup.exe",
+    "size": 4548257
+   },
+   {
+    "browser_download_url": "https://github.com/lonewolf0622/HelixSR/releases/download/v1.9.2/SHA256SUMS.txt",
+    "digest": "sha256:b1bba070bdc74760bcc25e26a5ae4d9e683a5c61675592679cdbe8b71aef1631",
+    "name": "SHA256SUMS.txt",
+    "size": 578
+   }
+  ],
+  "draft": false,
+  "html_url": "https://github.com/lonewolf0622/HelixSR/releases/tag/v1.9.2",
+  "prerelease": true,
+  "published_at": "2026-10-16T13:59:27Z",
+  "tag_name": "v1.9.2"
+ },
+ {
+  "assets": [
+   {
+    "browser_download_url": "https://github.com/lonewolf0622/HelixSR/releases/download/v1.9.0/HelixSR-1.9.0.zip",
+    "digest": "sha256:795268f60a1262cd7c8cb01a38f553751cc380fa0cbec63c8f466b6807468be4",
+    "name": "HelixSR-1.9.0.zip",
+    "size": 3803249
+   },
+   {
+    "browser_download_url": "https://github.com/lonewolf0622/HelixSR/releases/download/v1.9.0/HelixSR-Scaler-1.0.3-linux.tar.gz",
+    "digest": "sha256:e43985f50847a6d2ad2b1a1087a87abc7bd001532cf6b205a9e98d578e665382",
+    "name": "HelixSR-Scaler-1.0.3-linux.tar.gz",
+    "size": 132489118
+   },
+   {
+    "browser_download_url": "https://github.com/lonewolf0622/HelixSR/releases/download/v1.9.0/HelixSR-Scaler-1.0.3.zip",
+    "digest": "sha256:974c9d62ea0e088a1e11fe8e7e3196b2d9939d39fb5d709b684c5e7c2c74c351",
+    "name": "HelixSR-Scaler-1.0.3.zip",
+    "size": 132504212
+   },
+   {
+    "browser_download_url": "https://github.com/lonewolf0622/HelixSR/releases/download/v1.9.0/HelixSR.Desktop_1.0.2_amd64.AppImage",
+    "digest": "sha256:cd54cc4c3873dd6cd85c9e84f01577c2ca1c78f4ed691d7d9614809112a3bb96",
+    "name": "HelixSR.Desktop_1.0.2_amd64.AppImage",
+    "size": 82299384
+   },
+   {
+    "browser_download_url": "https://github.com/lonewolf0622/HelixSR/releases/download/v1.9.0/HelixSR.Desktop_1.0.2_amd64.deb",
+    "digest": "sha256:bfe6a51475b48e59648b16a27f717cf2b81d63b424bed3731399147116b2569a",
+    "name": "HelixSR.Desktop_1.0.2_amd64.deb",
+    "size": 3900662
+   },
+   {
+    "browser_download_url": "https://github.com/lonewolf0622/HelixSR/releases/download/v1.9.0/HelixSR.Desktop_1.0.2_x64-setup.exe",
+    "digest": "sha256:050b44e8ee3d4718c46145fdb74dd6f1e1455f0252b289a5622f969f2329bae4",
+    "name": "HelixSR.Desktop_1.0.2_x64-setup.exe",
+    "size": 2778415
+   },
+   {
+    "browser_download_url": "https://github.com/lonewolf0622/HelixSR/releases/download/v1.9.0/SHA256SUMS.txt",
+    "digest": "sha256:b8e87232157e5ece4101703468307cd9aea7206e6cb8bf44e95c9213b6af6c7b",
+    "name": "SHA256SUMS.txt",
+    "size": 578
+   }
+  ],
+  "draft": false,
+  "html_url": "https://github.com/lonewolf0622/HelixSR/releases/tag/v1.9.0",
+  "prerelease": false,
+  "published_at": "2026-10-15T10:06:18Z",
+  "tag_name": "v1.9.0"
+ },
+ {
+  "assets": [
+   {
+    "browser_download_url": "https://github.com/lonewolf0622/HelixSR/releases/download/v1.8.1/HelixSR-1.8.1.zip",
+    "digest": "sha256:abab32b16acf2536b39663763c355f3cfd35c4876c90297d6b5481bd9ad03a19",
+    "name": "HelixSR-1.8.1.zip",
+    "size": 55766339
+   }
+  ],
+  "draft": false,
+  "html_url": "https://github.com/lonewolf0622/HelixSR/releases/tag/v1.8.1",
+  "prerelease": false,
+  "published_at": "2026-10-11T11:20:18Z",
+  "tag_name": "v1.8.1"
+ },
+ {
+  "assets": [
+   {
+    "browser_download_url": "https://github.com/lonewolf0622/HelixSR/releases/download/v1.8.0/HelixSR-1.8.0.zip",
+    "digest": "sha256:7041d4bee121cc33c24660902c9f09481ed15644fe2ff5a458071337e0cda848",
+    "name": "HelixSR-1.8.0.zip",
+    "size": 56617399
+   }
+  ],
+  "draft": false,
+  "html_url": "https://github.com/lonewolf0622/HelixSR/releases/tag/v1.8.0",
+  "prerelease": false,
+  "published_at": "2026-10-11T04:44:41Z",
+  "tag_name": "v1.8.0"
+ },
+ {
+  "assets": [
+   {
+    "browser_download_url": "https://github.com/lonewolf0622/HelixSR/releases/download/v1.7.0/HelixSR-1.7.0.zip",
+    "digest": "sha256:5254b507d4915293389c66de8f243749d84d7a764b4983671f78b243eb372785",
+    "name": "HelixSR-1.7.0.zip",
+    "size": 56601341
+   }
+  ],
+  "draft": false,
+  "html_url": "https://github.com/lonewolf0622/HelixSR/releases/tag/v1.7.0",
+  "prerelease": false,
+  "published_at": "2026-10-10T13:41:37Z",
+  "tag_name": "v1.7.0"
+ },
+ {
+  "assets": [
+   {
+    "browser_download_url": "https://github.com/lonewolf0622/HelixSR/releases/download/v1.4.3/HelixSR-1.4.3.zip",
+    "digest": "sha256:d79e849444e0ea8928c0b8df22ec21368ac08ec038417c087a3d2df7a6722119",
+    "name": "HelixSR-1.4.3.zip",
+    "size": 2342525
+   }
+  ],
+  "draft": false,
+  "html_url": "https://github.com/lonewolf0622/HelixSR/releases/tag/v1.4.3",
+  "prerelease": false,
+  "published_at": "2026-10-09T13:15:36Z",
+  "tag_name": "v1.4.3"
+ },
+ {
+  "assets": [
+   {
+    "browser_download_url": "https://github.com/lonewolf0622/HelixSR/releases/download/v1.3.0/HelixSR-1.3.0.zip",
+    "digest": "sha256:fb2b570abf2f35b336f83127720ee6640bbbdd8173809f975cfe1aab0e5181eb",
+    "name": "HelixSR-1.3.0.zip",
+    "size": 2337353
+   }
+  ],
+  "draft": false,
+  "html_url": "https://github.com/lonewolf0622/HelixSR/releases/tag/v1.3.0",
+  "prerelease": false,
+  "published_at": "2026-10-08T09:44:58Z",
+  "tag_name": "v1.3.0"
+ },
+ {
+  "assets": [
+   {
+    "browser_download_url": "https://github.com/lonewolf0622/HelixSR/releases/download/v1.2.0/HelixSR-1.2.0.zip",
+    "digest": "sha256:7c9aeac2e3dcd73f6e9b2dd8b04c41a828fd8e1a8fe30a2ac77787097ddbeb0e",
+    "name": "HelixSR-1.2.0.zip",
+    "size": 2315352
+   }
+  ],
+  "draft": false,
+  "html_url": "https://github.com/lonewolf0622/HelixSR/releases/tag/v1.2.0",
+  "prerelease": false,
+  "published_at": "2026-10-06T23:04:52Z",
+  "tag_name": "v1.2.0"
+ }
+]

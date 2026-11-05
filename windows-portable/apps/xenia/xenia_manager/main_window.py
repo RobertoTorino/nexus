@@ -48,9 +48,9 @@ from bc250_core.portable import (AMBER, BODY, DIM, EXIT, KEYBOARD, VIEW, Card, I
                                  PortableWindow, Row, Tabs, px, status_clock, text_label)
 from bc250_core.updates import ReleaseInfo
 
-from . import APP_ID, APP_NAME, LOGO_PATH, __version__, emulator, library, shortcuts, xenia_settings
+from . import APP_ID, APP_NAME, LOGO_PATH, __version__, emulator, library, profiles, shortcuts, xenia_settings
 from .games import Game, scan
-from .panes import GAMES_INFO, KEEP_INFO, XENIA_INFO, KeyPane, ListPane, LogPane
+from .panes import GAMES_INFO, KEEP_INFO, XENIA_INFO, KeyPane, ListPane, LogPane, ProfilePane
 from .xenia_settings import TABS, Setting
 
 STATUS_MS = 30_000              # the header's battery and time
@@ -256,13 +256,16 @@ class MainWindow(PortableWindow):
         self.settings_pane = SettingsPane()
         self.games_pane = ListPane("Your games", "Your games", GAMES_INFO)
         self.key_pane = KeyPane()
+        self.profile_pane = ProfilePane()
         self.log_pane = LogPane()
         self.keep_pane = ListPane("Remove", "Keep or delete", KEEP_INFO)
-        for pane in (self.pane, self.games_pane, self.settings_pane, self.log_pane, self.key_pane, self.keep_pane):
+        for pane in (self.pane, self.games_pane, self.settings_pane, self.log_pane, self.key_pane, self.keep_pane,
+                     self.profile_pane):
             self.panes.addWidget(pane)
         self.cards = {self.pane: self.xenia_card, self.games_pane: self.games_card,
                       self.settings_pane: self.settings_card, self.log_pane: self.log_card,
-                      self.key_pane: self.games_card, self.keep_pane: self.games_card}
+                      self.key_pane: self.games_card, self.keep_pane: self.games_card,
+                      self.profile_pane: self.xenia_card}
         body.addWidget(self.panes, 1)
         page.addLayout(body, 1)
         page.addSpacing(px(8))
@@ -358,6 +361,8 @@ class MainWindow(PortableWindow):
         if self.newer is not None:
             rows.append(("Newest build", f"{self.newer.version} ({self.newer.published}): a later version of this "
                                          "app brings it, once tried on the handheld"))
+        if version:
+            rows.append(("Profile", self.profile_text()))
         rows.append(("Games", str(len(self.games))))
         return [*rows, ("Folder", wrappable(self.home))]
 
@@ -413,7 +418,7 @@ class MainWindow(PortableWindow):
             installed = not self.busy and bool(emulator.installed(self.home))
             items = [*([("A", main)] if main else []),
                      *([("X", "Press again" if self.confirm_remove else "Remove Xenia")] if installed else []),
-                     *([("Y", other)] if other else [])]
+                     *([("Y", other)] if other else []), *([("LB", "Create profile")] if installed else [])]
         elif pane is self.games_pane:
             game = self.focused_game()
             items = [("A", "Steam mark"), *([("X", "Play")] if game else []), ("Y", "Update Steam"),
@@ -428,7 +433,9 @@ class MainWindow(PortableWindow):
         elif pane is self.key_pane:
             items = [("A", "Save"), ("X", "Paste"), ("Y", "Press again" if self.confirm_key else "Remove key"),
                      KEYBOARD]
-        on_a_page = pane in (self.key_pane, self.keep_pane) or self.log_pane.viewing
+        elif pane is self.profile_pane:
+            items = [("A", "Create"), KEYBOARD]
+        on_a_page = pane in (self.key_pane, self.keep_pane, self.profile_pane) or self.log_pane.viewing
         return [*items, *self.common_items(True if on_a_page else None)]
 
     def update_legend(self) -> None:
@@ -775,6 +782,58 @@ class MainWindow(PortableWindow):
             self.games_pane.status.setText(said)
         self.focus_list(self.games_pane)
 
+    # Xenia's profiles (profiles.py): a game saves only to one, and Xenia makes one only in its own window
+
+    def profile_text(self) -> str:
+        found = profiles.find(self.home)
+        if not found:
+            return "none: a game cannot save; the LB button creates one"
+        xuid = profiles.signed_in(self.home)
+        signed = next((p for p in found if p.xuid == xuid), None)
+        others = [p.gamertag for p in found if p is not signed]
+        if signed is None:
+            return f"{', '.join(others)}: none signed in at start (Xenia asks)"
+        return f"{signed.gamertag}, signed in at start" + (f" (also {', '.join(others)})" if others else "")
+
+    def show_profile(self) -> None:
+        if self.busy:
+            self.message = BUSY
+            self.refresh()
+            return
+        if not emulator.installed(self.home):
+            self.message = "Install Xenia first: its profiles are in its folder."
+            self.refresh()
+            return
+        self.profile_pane.field.clear()
+        self.profile_pane.status.setText("")
+        self.show_pane(self.profile_pane)
+        self.profile_pane.field.setFocus()
+
+    def create_profile(self) -> None:
+        gamertag = self.profile_pane.field.text().strip()
+        if self.running(self.home):
+            self.profile_pane.status.setText(RUNNING)
+            return
+        try:
+            made = profiles.create(self.home, gamertag)
+        except profiles.ProfileError as error:
+            self.profile_pane.status.setText(str(error))
+            return
+        except OSError as error:
+            self.profile_pane.status.setText(f"The profile was not created: {error.strerror or error}")
+            self.log.error(f"Creating a profile failed: {error.strerror or error}")
+            return
+        self.log.info(f"Profile {made.gamertag} ({made.folder_name}) created, signed in at start.")
+        self.back_to_xenia(f"Profile {made.gamertag} is created: Xenia signs it in whenever it starts a game, and "
+                           "the games save to it.")
+
+    def back_to_xenia(self, said: str = "") -> None:
+        self.profile_pane.field.clear()
+        self.message = said
+        self.show_pane(self.pane)
+        self.refresh()
+        self.xenia_card.setFocus()
+
     # The legend's buttons: what A (beside a card or a row), X, Y, LB and RB do on the pane that shows (a tap on the
     # legend's entry does the same)
 
@@ -782,6 +841,8 @@ class MainWindow(PortableWindow):
         pane = self.panes.currentWidget()
         if pane is self.key_pane:
             self.save_key()
+        elif pane is self.profile_pane:
+            self.create_profile()
         elif pane is self.pane:
             self.main_action()
         elif pane is self.log_pane:
@@ -811,6 +872,8 @@ class MainWindow(PortableWindow):
         pane = self.panes.currentWidget()
         if pane is self.games_pane:
             self.show_key()
+        elif pane is self.pane:
+            self.show_profile()
         elif pane is self.settings_pane:
             self.settings_pane.tabs.step(-1)
 
@@ -1003,7 +1066,8 @@ class MainWindow(PortableWindow):
 
     def on_back(self) -> None:
         """B goes back (the suite's rule, owner 29-10-2026): the whole log to its summary, the key page to Your games
-        (nothing saved), a pane to its card; on a card it does nothing (View exits)."""
+        (nothing saved), the profile page to the Xenia pane (nothing created), a pane to its card; on a card it does
+        nothing (View exits)."""
         pane = self.panes.currentWidget()
         if pane is self.log_pane and self.log_pane.viewing:
             self.log_pane.show_summary()
@@ -1011,6 +1075,8 @@ class MainWindow(PortableWindow):
             self.update_legend()
         elif pane is self.key_pane:
             self.back_to_games()
+        elif pane is self.profile_pane:
+            self.back_to_xenia()
         elif pane is self.keep_pane:
             self.leave_keep("Nothing was deleted.")
         else:

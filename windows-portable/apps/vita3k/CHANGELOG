@@ -1,6 +1,30 @@
+Changelog: 06-11-2026 00:27:29
+
+Fixed. Vita3K's library window no longer stays in sight beside a game (owner, 05-11-2026: with a TV attached it
+stayed on the Ally's screen while the game ran on the TV): Vita3K always opens it, and the play mode minimizes it as
+soon as the game's window is up, without taking the focus from the game, and again if Vita3K shows it again. It stays
+open, so View, LB and RB close it with the game. The wiki's Vita3K chapter says so.
+
+Changelog: 05-11-2026 23:26:51
+
+Fixed. View, LB and RB held now close Vita3K at once (owner, 05-11-2026): Vita3K asked "Do you really want to exit?"
+on the close, with No as its default, so the play mode waited out its ten seconds and ended Vita3K by force (the
+owner's Ally, Lumines, build 4186; build 4269 asks the same). The app turns that question off in Vita3K's window
+settings (confirmExitApp=false in portable\gui-configs\CurrentSettings.ini, every other line kept as Vita3K wrote
+it), with the settings it sets already: when it opens, before an install, and now also in the play mode before a
+game starts, never while Vita3K runs. The wiki says so.
+
 Changelog: 05-11-2026 18:44:37
 
 Release 5.2.0.
+
+Changelog: 05-11-2026 12:43:11
+
+Added. The app installs Vita3K build 4269 (was 4186), the BC250 suite's new pin: emulator.py pins build 4269 (0.2.1,
+commit 9409e2ec), the SHA-256 GitHub publishes for vita3k-4269-9409e2ec-windows-x86_64.7z (43d6a1fc…0ea9) and its
+size. The archive holds the same 136 files by name; what the app relies on in Vita3K's source (the command line, the
+portable folder, the firmware check) is unchanged; config.yml gains disable-mask-bit, enable-cheats and
+keyboard-gui-exit, which the app does not set.
 
 Changelog: 04-11-2026 02:22:10
 

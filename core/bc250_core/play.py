@@ -35,10 +35,15 @@ HOLD = 2.0                      # s View, LB and RB are held together before the
 GRACE = 10.0                    # s an emulator asked to close has before it is ended
 ASK = 1.0                       # s after the close before an emulator's own quit question is answered
 POLL = 0.05                     # s between two looks at the controller and the emulator
+WINDOWS_EVERY = 0.5             # s between two looks at the emulator's windows, for run(windows=)
 CHORD = ("back", "leftshoulder", "rightshoulder")    # SDL's names of View, LB and RB
 FLAG = "--play"                 # the app's argument for its play mode
 POWERSHELL = r"C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
 QUIT_HINT = "In the game, hold View, LB and RB together to quit."
+# The notice over the game once the chord is held (owner, 05-11-2026: show that the game is being quit), and the
+# least time it shows: an emulator that closes at once would take it away before it could be read
+CLOSING = ("Closing the game", "View, LB and RB were held.")
+SHOWN = 1.0
 
 
 def launcher(app_root: Path, frozen: bool | None = None, program: str | None = None) -> tuple[str, list[str]]:
@@ -173,17 +178,51 @@ def _guard(log: Callable[[str], None]):
     return Guard(log)
 
 
+def _notice():
+    from .heat import Banner
+    return Banner(seconds=GRACE + SHOWN)                # up until the play mode ends, which takes it down
+
+
+def _show_notice(make: Callable[[], object], now: float, log: Callable[[str], None]):
+    """The CLOSING notice put up, or None when it cannot show (logged; the game closes all the same)."""
+    try:
+        banner = make()
+        if banner is not None:
+            banner.show(now, *CLOSING)
+        return banner
+    except Exception as error:  # noqa: BLE001
+        log(f"Play: the closing notice cannot show ({error}); the game closes all the same.")
+        return None
+
+
+def _tick_notice(banner, now: float, log: Callable[[str], None]):
+    """Lets Qt draw the notice; None from then on when it fails."""
+    if banner is None:
+        return None
+    try:
+        banner.tick(now)
+        return banner
+    except Exception as error:  # noqa: BLE001
+        log(f"Play: the closing notice cannot show ({error}); the game closes all the same.")
+        return None
+
+
 def run(command: Sequence[str], cwd: Path, log: Callable[[str], None] = lambda line: None,
         start: Callable[[Sequence[str], Path], subprocess.Popen] = _start, pad: Callable[[], object] = _pad,
         close: Callable[[int], int] = close_windows, clock: Callable[[], float] = time.monotonic,
         sleep: Callable[[float], None] = time.sleep, hold: float = HOLD, grace: float = GRACE,
-        confirm: Callable[[int], int] | None = None, heat: Callable[[Callable[[str], None]], object] | None = None
-        ) -> int:
+        confirm: Callable[[int], int] | None = None, heat: Callable[[Callable[[str], None]], object] | None = None,
+        notice: Callable[[], object] | None = None, windows: Callable[[int], str] | None = None) -> int:
     """The emulator *command* run in *cwd* to its end, closed on View, LB and RB held for *hold* seconds; its exit
     code. *confirm*: for an emulator that asks before it quits (shadPS4), what answers yes (press_enter), ASK seconds
     after the close while it still runs. *heat*: makes what watches the chip's temperatures from *log* (core's
-    heat.Guard; a test passes lambda log: None for none). Without a controller reader (no pygame-ce, no SDL) the
-    game still runs, only without the chord and the rumble. OSError when the emulator cannot start."""
+    heat.Guard; a test passes lambda log: None for none). *notice*: makes the banner that says CLOSING over the game
+    once the chord is held (core's heat.Banner), up for at least SHOWN seconds; one that cannot show is logged and
+    the game closes all the same. *windows*: what an emulator's windows need while the game runs (owner, 05-11-2026:
+    Vita3K's library window minimized beside its game), called every WINDOWS_EVERY seconds with its process until the
+    quit; what it says it did is logged, each line once, and one that fails is logged and not called again. Without a
+    controller reader (no pygame-ce, no SDL) the game still runs, only without the chord and the rumble. OSError when
+    the emulator cannot start."""
     process = start(command, cwd)
     log(f"Play: {Path(command[0]).name} started; View, LB and RB held for {hold:g} s close it.")
     try:
@@ -193,7 +232,8 @@ def run(command: Sequence[str], cwd: Path, log: Callable[[str], None] = lambda l
         log(f"Play: no controller reader ({error}); the game runs without the quit chord.")
     guard = (heat or _guard)(log)
     pressed: set[str] = set()
-    since = asked = None
+    since = asked = banner = looked = None
+    told: set[str] = set()
     try:
         while process.poll() is None:
             for kind, name, value in (source.events() if source is not None else []):
@@ -205,6 +245,7 @@ def run(command: Sequence[str], cwd: Path, log: Callable[[str], None] = lambda l
             since = (since if since is not None else now) if all(b in pressed for b in CHORD) else None
             if asked is None and since is not None and now - since >= hold:
                 asked = now
+                banner = _show_notice(notice or _notice, now, log)     # first, so it is drawn before the close
                 log(f"Play: View, LB and RB held; {close(process.pid)} window(s) of the emulator asked to close.")
             elif asked is not None and confirm is not None and now - asked >= ASK:
                 log(f"Play: the emulator asks before it quits; answered in {confirm(process.pid)} window(s).")
@@ -214,14 +255,29 @@ def run(command: Sequence[str], cwd: Path, log: Callable[[str], None] = lambda l
                 process.terminate()
                 process.wait()
                 break
+            if windows is not None and asked is None and (looked is None or now - looked >= WINDOWS_EVERY):
+                looked = now
+                try:
+                    if (said := windows(process.pid)) and said not in told:
+                        told.add(said)
+                        log(f"Play: {said}")
+                except Exception as error:  # noqa: BLE001  (the game runs on, its windows as they are)
+                    log(f"Play: the emulator's windows cannot be seen to ({error}).")
+                    windows = None
             if guard is not None:
                 guard.tick(now, source)
+            banner = _tick_notice(banner, now, log)
+            sleep(POLL)
+        while banner is not None and clock() - asked < SHOWN:      # the emulator went at once: the notice stays
+            banner = _tick_notice(banner, clock(), log)
             sleep(POLL)
     finally:
-        if guard is not None:
-            guard.close()
-        if source is not None:
-            source.close()
+        for done in (guard and guard.close, banner and banner.hide, source and source.close):
+            try:
+                if done:
+                    done()
+            except Exception:  # noqa: BLE001  (closing never fails the play mode)
+                pass
     log(f"Play: the emulator ended (exit code {process.returncode}).")
     if guard is not None and (note := guard.note()):
         log(note)

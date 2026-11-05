@@ -1,0 +1,19 @@
+Changelog: 05-11-2026 13:49:03
+
+Added. HD Controller: the first version, the BC250 suite's USB HD Control for this suite (owner, 05-11-2026), on the
+portable window. Five cards: Controller (each DualSense and DualSense Edge Windows has, on USB or Bluetooth, read on
+A: its firmware, its battery from its input reports, the report rate, and the spec sheet in the information; LB and
+RB choose between two or more), Test (the drawing follows the controller live; A starts a test in which every button
+only lights the drawing, until B is held for two seconds; X runs the left motor, then the right one; Y gives the
+light bar its next color), Firmware (Y asks the official update server for the latest version, also when the app
+opens, at most once a day; A downloads, checks and sends it over the USB cable, after a second press, with the Edge's
+profiles backed up first; X sends a file of your own, picked in the suite's browser; the app does not close while it
+runs), Profiles (the Edge's four, the active one marked; A creates or edits one on a page of rows, X clears one on a
+second press, Y backs them up, LT reads them again; the default profile is never changed) and Settings (the check
+when the app opens, and the introduction of three pages shown after the first controller is read). The protocol is
+the BC250 app's (the firmware update, the profiles, the firmware report, the light bar); the app talks to the
+controller through hidapi in place of Linux's hidraw, so Windows needs no rule, no driver and no administrator for it.
+The motors get the output report hid-playstation sends, as Windows has no force feedback for the controller; over
+Bluetooth the app reads the controller's calibration once, as Linux's driver does, so it sends its full reports. The
+update refuses to start while Steam, DS4Windows or DSX runs. --info prints each controller's battery, firmware and
+profiles without a window.

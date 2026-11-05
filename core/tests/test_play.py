@@ -14,10 +14,28 @@ import pytest
 from bc250_core import play
 
 
+class Notice:
+    """The closing notice, as heat.Banner is used: show(), tick() while it is up, hide() at the end."""
+
+    def __init__(self, order: list | None = None):
+        self.shown, self.ticks, self.hidden, self.order = [], 0, None, order if order is not None else []
+
+    def show(self, now, title, line):
+        self.shown.append((now, title, line))
+        self.order.append("notice")
+
+    def tick(self, now):
+        self.ticks += 1
+
+    def hide(self):
+        self.hidden = True
+
+
 @pytest.fixture(autouse=True)
 def no_heat_guard(monkeypatch):
-    """The chip is not read here (test_heat.py has the play mode's heat warning)."""
+    """The chip is not read here (test_heat.py has the play mode's heat warning), and no notice opens a window."""
     monkeypatch.setattr(play, "_guard", lambda log: None)
+    monkeypatch.setattr(play, "_notice", Notice)
 
 
 class Clock:
@@ -89,7 +107,8 @@ def test_view_lb_and_rb_held_close_the_emulator():
     process = Process()
     code, closed, lines, pad, clock = played(script, process)
     assert closed == [4242] and code == 0 and not process.terminated and pad.closed
-    assert 5.0 <= clock.now < 5.5                                  # both down from 3.0 (View since 0.5): two seconds
+    # both down from 3.0 (View since 0.5): two seconds, then the notice's least time
+    assert 5.0 + play.SHOWN <= clock.now < 5.5 + play.SHOWN
     assert lines[0] == "Play: emu.exe started; View, LB and RB held for 2 s close it."
     assert lines[-1] == "Play: the emulator ended (exit code 0)."
 
@@ -238,3 +257,79 @@ def test_a_game_no_longer_there_is_missing(tmp_path):
     game.write_bytes(b"game")
     assert not play.missing(game) and not play.missing(str(tmp_path))
     assert play.missing(tmp_path / "Renamed.iso") and play.missing(str(tmp_path / "Gone" / "eboot.bin"))
+
+
+def test_a_notice_says_the_game_closes_before_it_is_closed():
+    """Owner, 05-11-2026: show that the game is being quit. The notice goes up when the hold is reached, before the
+    close, stays at least SHOWN seconds when the emulator goes at once, and comes down when the play mode ends."""
+    order, clock, lines = [], Clock(), []
+    notice = Notice(order)
+    process = Process(closes_after=0)
+    pad = Pad({0.0: [("button", "back", True), ("button", "leftshoulder", True), ("button", "rightshoulder", True)]})
+    pad.clock = clock
+
+    def close(pid):
+        order.append("close")
+        process.asked = True
+        return 1
+    assert play.run(["emu.exe"], Path("."), log=lines.append, start=lambda c, d: process, pad=lambda: pad,
+                    close=close, clock=clock, sleep=clock.sleep, notice=lambda: notice) == 0
+    assert order == ["notice", "close"] and notice.shown == [(pytest.approx(2.0), *play.CLOSING)]
+    assert notice.hidden and notice.ticks and clock.now >= 2.0 + play.SHOWN
+    assert play.CLOSING == ("Closing the game", "View, LB and RB were held.")
+
+
+def test_a_notice_that_cannot_show_never_stops_the_close():
+    def broken():
+        raise RuntimeError("no screen")
+    clock, lines, closed = Clock(), [], []
+    process = Process()
+    pad = Pad({0.0: [("button", "back", True), ("button", "leftshoulder", True), ("button", "rightshoulder", True)]})
+    pad.clock = clock
+
+    def close(pid):
+        closed.append(pid)
+        process.asked = True
+        return 1
+    assert play.run(["emu.exe"], Path("."), log=lines.append, start=lambda c, d: process, pad=lambda: pad,
+                    close=close, clock=clock, sleep=clock.sleep, notice=broken) == 0
+    assert closed == [4242] and "the closing notice cannot show (no screen); the game closes all the same" in lines[1]
+
+
+def test_the_emulators_windows_are_seen_to_every_half_second_until_the_quit():
+    """What an emulator's windows need while the game runs (owner, 05-11-2026: Vita3K's library window minimized):
+    windows() every WINDOWS_EVERY seconds with its process, what it says it did logged once, never after the quit."""
+    asked, clock = [], Clock()
+    process = Process()
+    pad = Pad({3.0: [("button", "back", True), ("button", "leftshoulder", True), ("button", "rightshoulder", True)]})
+    pad.clock = clock
+    lines = []
+
+    def close(pid):
+        process.asked = True
+        return 1
+
+    def windows(pid):
+        asked.append(round(clock.now, 2))
+        return "Its library window minimized." if len(asked) in (2, 4) else ""   # up at the second look, and again
+    play.run(["emu.exe"], Path("."), log=lines.append, start=lambda c, d: process, pad=lambda: pad, close=close,
+             clock=clock, sleep=clock.sleep, windows=windows)
+    gaps = [b - a for a, b in zip(asked, asked[1:])]
+    assert asked[0] == 0.0
+    assert all(play.WINDOWS_EVERY - 1e-9 <= gap <= play.WINDOWS_EVERY + play.POLL + 1e-9 for gap in gaps)
+    assert len(asked) >= 9 and all(t < 5.0 for t in asked)                    # the quit at 5 s: no more
+    assert lines.count("Play: Its library window minimized.") == 1
+
+
+def test_windows_that_fail_let_the_game_run():
+    clock, lines = Clock(), []
+    process = Process()
+    process.poll = lambda: 0 if clock.now >= 2 else None
+    called = []
+
+    def broken(pid):
+        called.append(pid)
+        raise OSError("access denied")
+    assert play.run(["emu.exe"], Path("."), log=lines.append, start=lambda c, d: process, pad=lambda: Pad({}),
+                    clock=clock, sleep=clock.sleep, windows=broken) == 0
+    assert lines.count("Play: the emulator's windows cannot be seen to (access denied).") == 1 and len(called) == 1

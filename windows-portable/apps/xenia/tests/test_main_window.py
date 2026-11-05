@@ -127,7 +127,7 @@ def test_nothing_is_installed_before_a(qapp, tmp_path):
     calls = []
     window = make(qapp, tmp_path / "emulator", install=lambda *a, **k: calls.append(True))
     assert calls == [] and window.xenia_card.hasFocus()
-    assert dict(window.rows())["Installed"] == "not installed" and dict(window.rows())["This app installs"] == "e6cd2e4"
+    assert dict(window.rows())["Installed"] == "not installed" and dict(window.rows())["This app installs"] == "838850f"
     window.on_action("x")                                       # X Remove: says why, nothing happens
     assert "nothing to remove" in window.status.text() and calls == []
     window.close()
@@ -150,7 +150,7 @@ def test_a_installs_off_the_windows_thread_and_counts_the_megabytes(qapp, tmp_pa
     gate.set()
     assert wait_for(qapp, lambda: not window.busy)
     assert window.status.text() == f"Xenia {emulator.VERSION} is installed."
-    assert window.legend.items == [("X", "Remove Xenia"), MENU_INFO, EXIT]
+    assert window.legend.items == [("X", "Remove Xenia"), ("LB", "Create profile"), MENU_INFO, EXIT]
     window.on_action("view")
     assert closed == [True]                                     # nothing runs: View exits at once
 
@@ -173,7 +173,7 @@ def test_update_and_remove_with_x_pressed_twice(qapp, tmp_path):
     save.parent.mkdir(parents=True)
     save.write_bytes(b"x")
     window = make(qapp, home)
-    assert window.legend.items == [("X", "Remove Xenia"), ("Y", "Update"), MENU_INFO, EXIT]
+    assert window.legend.items == [("X", "Remove Xenia"), ("Y", "Update"), ("LB", "Create profile"), MENU_INFO, EXIT]
     assert window.status.text() == f"This app installs Xenia {emulator.VERSION}: the Y button updates it."
     window.act("y")
     assert wait_for(qapp, lambda: not window.busy) and emulator.installed(home) == emulator.VERSION
@@ -610,6 +610,57 @@ def test_the_steamgriddb_key_is_pasted_saved_and_removed(qapp, tmp_path, monkeyp
     assert window.legend.items[2] == ("Y", "Press again") and key_file.exists()
     window.legend.entries["Y"].pressed.emit()                   # the second press, as a tap
     assert not key_file.exists()
+    window.close()
+
+
+def test_a_profile_is_created_and_signed_in_at_start(qapp, tmp_path, monkeypatch):
+    """Saves need a profile, and Xenia makes one only in its own window (owner's roadmap, 04-11-2026): LB Create
+    profile on the Xenia pane, a page with the gamertag field, A Create (refused while Xenia runs, and a gamertag
+    Xenia would refuse), B back without creating; the Profile row says which one Xenia signs in."""
+    from xenia_manager import profiles
+    home = tmp_path / "emulator"
+    fake_install(home)
+    is_running = [False]
+    window = make(qapp, home, running=lambda h: is_running[0])
+    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
+    window.xenia_card.setFocus()
+    qapp.processEvents()
+    assert dict(window.rows())["Profile"] == "none: a game cannot save; the LB button creates one"
+    assert ("LB", "Create profile") in window.legend.items
+    window.on_action("previous")                                # LB Create profile
+    pane = window.profile_pane
+    assert window.panes.currentWidget() is pane and pane.field.hasFocus()
+    assert window.legend.items == [("A", "Create"), KEYBOARD, BACK, EXIT]
+    pane.field.setText("1up")
+    window.on_action("accept")
+    assert pane.status.text().startswith("A gamertag starts with a letter") and profiles.find(home) == []
+    window.on_action("back")                                    # B: back, nothing created
+    assert window.panes.currentWidget() is window.pane and profiles.find(home) == []
+    window.legend.entries["LB"].pressed.emit()                  # a tap on LB Create profile
+    pane.field.setText("Player One")
+    is_running[0] = True
+    window.on_action("accept")
+    assert pane.status.text().startswith("Xenia is open") and profiles.find(home) == []
+    is_running[0] = False
+    window.on_action("accept")                                  # A Create
+    [made] = profiles.find(home)
+    assert made.gamertag == "Player One" and profiles.signed_in(home) == made.xuid
+    assert window.panes.currentWidget() is window.pane and pane.field.text() == ""
+    assert window.status.text().startswith("Profile Player One is created: Xenia signs it in")
+    assert dict(window.rows())["Profile"] == "Player One, signed in at start"
+    window.on_action("previous")
+    pane.field.setText("Second")
+    window.on_action("accept")
+    assert dict(window.rows())["Profile"] == "Second, signed in at start (also Player One)"
+    window.close()
+
+
+def test_create_profile_needs_xenia(qapp, tmp_path, monkeypatch):
+    window = make(qapp, tmp_path / "emulator")
+    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
+    assert ("LB", "Create profile") not in window.legend.items and "Profile" not in dict(window.rows())
+    window.show_profile()
+    assert window.panes.currentWidget() is window.pane and window.status.text().startswith("Install Xenia first")
     window.close()
 
 

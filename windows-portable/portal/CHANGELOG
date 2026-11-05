@@ -2,6 +2,44 @@ Changelog: 05-11-2026 18:44:37
 
 Release 8.2.0. Pins wp-test-v4.12.0, wp-pcsx2-v6.2.0, wp-ppsspp-v5.2.0, wp-rpcs3-v4.2.0, wp-shadps4-v5.2.0, wp-vita3k-v5.2.0, wp-xenia-v5.2.0, wp-rplay-v0.9.0, wp-hdcam-v0.8.0, wp-bios-v0.9.0, wp-sftp-v0.8.0, wp-smart-v0.4.0.
 
+Changelog: 05-11-2026 14:21:24
+
+Added. XBOX mode ↔ Desktop on the Settings page (owner, 05-11-2026): A switches between XBOX mode and the desktop,
+either way, pressing Win + F11, Windows' own switch (no command does it); Windows asks its own question about a
+restart for performance. The Operating mode row and page are called Performance mode now (owner, 05-11-2026); the
+helper's scheduled task keeps its name. The wiki says so.
+
+Changelog: 05-11-2026 13:55:03
+
+Added. Play on the TV, Play on the handheld and Play on both screens on the Settings page (owner, 05-11-2026): XBOX
+mode runs on Windows' main screen only and left a second screen empty while the sound went there (found on the
+Ally), so A switches Windows' display setup as Win + P does (DisplaySwitch.exe: the second screen only, the
+handheld's only, or the same picture on both). The portal then starts again by itself, sized for its new screen
+(on the TV it kept the handheld's sizes and the legend was cut off). The wiki's portal chapter says so, with Win + P.
+
+Changelog: 05-11-2026 12:02:16
+
+Added. A short sound on every controller action (owner, 05-11-2026), as the BC250 portal has: the owner's own
+blob.wav, in the portal only, never while the intro plays (its button only skips it), off with the Sound setting.
+
+Changelog: 05-11-2026 11:16:08
+
+Added. The portal looks for its own update again while it runs, not only at the start: every hour, and when it
+becomes active again (back from a game or an app) once the last look is a quarter of an hour old. A look again
+that fails keeps the update found before; Check again on the Settings page shows the error as before.
+
+Changelog: 05-11-2026 11:14:02
+
+Added. A tab with more than eight apps has pages: a ninth app was cut off. "Page 1 of 2" under the tiles
+says which page shows; the d-pad past the tiles' right or left edge turns the page, and a tap on the marker
+turns to the next page.
+
+Changelog: 05-11-2026 11:11:50
+
+Added. View asks before the portal exits, every time (owner, 05-11-2026): "Do you really want to exit the
+portal?", with View Yes and B No in the row at the bottom; five seconds without an answer is No. While a download
+or an installer runs, the question says what exiting does to it, as before.
+
 Changelog: 04-11-2026 21:40:37
 
 Release 8.1.1. Pins wp-rplay-v0.8.1.

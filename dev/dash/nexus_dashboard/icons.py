@@ -1,12 +1,14 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Convert a suite's category icons: a front end for tools/sync_icons.py (the Nexus tool, every suite's since
-02-11-2026) on the suite chosen in the dashboard. A suite whose apps take no category icons (no
-icons/categories.toml: the Windows Portable Suite) gets the dialog greyed out."""
+02-11-2026) on the suite chosen in the dashboard, the Windows Portable Suite's too since 05-11-2026 (its PNG icons,
+the wide gaming one). A suite whose apps take no category icons (no icons/categories.toml) gets the dialog greyed
+out."""
 
 from __future__ import annotations
 
 import subprocess
 import sys
+import tomllib
 from pathlib import Path
 
 from PyQt6.QtCore import Qt
@@ -39,9 +41,19 @@ def categories(suite: Path) -> list[str]:
     return sorted(p.name for p in (suite / "icons").iterdir() if p.is_dir())
 
 
+def png_icons(suite: Path) -> bool:
+    """Whether the suite's icons are PNG at every size ([icons] format = "png" in its categories.toml)."""
+    try:
+        table = tomllib.loads((suite / "icons" / "categories.toml").read_text(encoding="utf-8"))
+    except (OSError, tomllib.TOMLDecodeError):
+        return False
+    return table.get("icons", {}).get("format") == "png"
+
+
 def icon_path(suite: Path, category: str, size: int) -> Path:
     """A category's icon at one size, as tools/sync_icons.py names it."""
-    return suite / "icons" / category / f"{category}-{size}.{'png' if size == 128 else 'webp'}"
+    png = size == 128 or png_icons(suite)
+    return suite / "icons" / category / f"{category}-{size}.{'png' if png else 'webp'}"
 
 
 def convert_commands(root: Path, suite: str, category: str, whole: Path | None,

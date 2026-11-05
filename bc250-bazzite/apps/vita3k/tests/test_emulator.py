@@ -33,23 +33,23 @@ def pinned(monkeypatch):
 
 
 def test_the_pin_points_at_the_build():
-    assert emulator.URL == "https://github.com/Vita3K/Vita3K-builds/releases/download/4186/Vita3K-x86_64.AppImage"
-    assert emulator.VERSION == "4186" and len(emulator.SHA256) == 64 and emulator.COMMIT.startswith("f0273e4c")
-    assert emulator.RELEASE_PAGE == "https://github.com/Vita3K/Vita3K-builds/releases/tag/4186"
-    assert emulator.SIZE_MB == 75
+    assert emulator.URL == "https://github.com/Vita3K/Vita3K-builds/releases/download/4269/Vita3K-x86_64.AppImage"
+    assert emulator.VERSION == "4269" and len(emulator.SHA256) == 64 and emulator.COMMIT.startswith("9409e2ec")
+    assert emulator.RELEASE_PAGE == "https://github.com/Vita3K/Vita3K-builds/releases/tag/4269"
+    assert emulator.SIZE_MB == 86
 
 
 def test_install_and_remove(tmp_path, pinned):
     home = tmp_path / "emulator"
     assert emulator.installed_version(home) == ""
     calls = []
-    assert emulator.install(home, _fetch(pinned, calls)) == "Vita3K build 4186 is installed."
+    assert emulator.install(home, _fetch(pinned, calls)) == "Vita3K build 4269 is installed."
     assert calls == [emulator.URL]
     image = emulator.appimage(home)
     assert image.read_bytes() == APPIMAGE and image.stat().st_mode & 0o777 == 0o755
     assert image.name == "vita3k.AppImage"                                       # the same name for every build
-    assert (home / "current").is_symlink() and emulator.installed_version(home) == "4186"
-    assert sorted(p.name for p in home.iterdir()) == ["4186", "current"]          # no download left behind
+    assert (home / "current").is_symlink() and emulator.installed_version(home) == "4269"
+    assert sorted(p.name for p in home.iterdir()) == ["4269", "current"]          # no download left behind
     emulator.remove(home)
     assert not home.exists() and emulator.installed_version(home) == ""
 
@@ -61,7 +61,7 @@ def test_an_older_build_is_replaced(tmp_path, pinned):
     (home / "current").symlink_to("4100")
     assert emulator.installed_version(home) == "4100"
     emulator.install(home, _fetch(pinned))
-    assert emulator.installed_version(home) == "4186" and not (home / "4100").exists()
+    assert emulator.installed_version(home) == "4269" and not (home / "4100").exists()
 
 
 def test_the_appimage_updated_itself(tmp_path, pinned):
@@ -71,7 +71,7 @@ def test_the_appimage_updated_itself(tmp_path, pinned):
     emulator.install(home, _fetch(pinned))
     assert not emulator.replaced(home)
     emulator.appimage(home).write_bytes(APPIMAGE + b"a newer build")
-    assert emulator.replaced(home) and emulator.installed_version(home) == "4186"
+    assert emulator.replaced(home) and emulator.installed_version(home) == "4269"
     emulator.install(home, _fetch(pinned))
     assert not emulator.replaced(home)
 
@@ -88,7 +88,7 @@ def test_a_failed_install_keeps_the_installed_one(tmp_path, pinned):
     emulator.install(home, _fetch(pinned))
     with pytest.raises(emulator.EmulatorError):
         emulator.install(home, _fetch(b"broken"))
-    assert emulator.installed_version(home) == "4186" and emulator.appimage(home).read_bytes() == APPIMAGE
+    assert emulator.installed_version(home) == "4269" and emulator.appimage(home).read_bytes() == APPIMAGE
 
 
 def test_download_errors_say_what_happened(tmp_path):
@@ -113,10 +113,10 @@ def _builds(tag: str):
 
 
 def test_a_newer_vita3k_build():
-    newer = emulator.newer_release(_builds("4200"))
-    assert (newer.version, newer.published) == ("4200", "2026-11-30") and newer.url.endswith("/tag/4200")
-    assert emulator.newer_release(_builds("4186")) is None                         # the one the app brings
-    assert emulator.newer_release(_builds("4185")) is None
+    newer = emulator.newer_release(_builds("4300"))
+    assert (newer.version, newer.published) == ("4300", "2026-11-30") and newer.url.endswith("/tag/4300")
+    assert emulator.newer_release(_builds("4269")) is None                         # the one the app brings
+    assert emulator.newer_release(_builds("4268")) is None
     assert emulator.newer_release(_builds("continuous")) is None                   # not a build number
 
     def offline(url: str):

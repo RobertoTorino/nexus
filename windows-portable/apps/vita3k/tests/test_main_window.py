@@ -152,7 +152,7 @@ def test_nothing_is_installed_before_a(qapp, tmp_path):
     window = make(qapp, tmp_path / "emulator", install=lambda *a, **k: calls.append(True))
     assert calls == [] and window.vita3k_card.hasFocus()
     rows = dict(window.rows())
-    assert rows["Installed"] == "not installed" and rows["This app installs"] == "build 4186 (0.2.1)"
+    assert rows["Installed"] == "not installed" and rows["This app installs"] == "build 4269 (0.2.1)"
     assert rows["Firmware"] == "no system software and no font package" and rows["Games"] == "0"
     window.on_action("x")                                       # X Remove: says why, nothing happens
     assert "nothing to remove" in window.status.text() and calls == []
@@ -965,20 +965,21 @@ def test_a_shortcut_made_before_the_play_mode_asks_for_update_steam(qapp, tmp_pa
 
 def test_play_runs_the_game_without_a_window(monkeypatch, tmp_path):
     """--play, as a shortcut starts the app: Vita3K with the shortcut's arguments from its folder, through core's
-    play mode, before any window or the one-window check (the app's window may be open beside it)."""
+    play mode, which minimizes its library window beside the game (owner, 05-11-2026), before any window or the
+    one-window check (the app's window may be open beside it)."""
     from vita3k_manager import __main__ as entry
     ran = []
     monkeypatch.setattr(emulator, "emulator_home", lambda: tmp_path / "emulator")
     monkeypatch.setattr(entry.applog, "setup", lambda *a, **k: tmp_path / "log")
-    monkeypatch.setattr(entry.play, "run", lambda command, cwd, log: ran.append((command, cwd)) or 3)
+    monkeypatch.setattr(entry.play, "run", lambda command, cwd, log, windows: ran.append((command, cwd, windows)) or 3)
     monkeypatch.setattr(entry, "create_app", lambda *a, **k: pytest.fail("no window in the play mode"))
     monkeypatch.setattr(entry.play, "missing", lambda game: False)    # the game is there (test_play_mode.py: not)
     monkeypatch.setattr(sys, "argv", ["Vita3K-Manager.exe", "--play", "-r", "PCSB00245"])
     assert entry.main() == 3
     program = emulator.program(tmp_path / "emulator")
-    assert ran == [([str(program), "-r", "PCSB00245"], program.parent)]
+    assert ran == [([str(program), "-r", "PCSB00245"], program.parent, emulator.minimize_library)]
 
-    def fails(command, cwd, log):
+    def fails(command, cwd, log, windows):
         raise FileNotFoundError(2, "The system cannot find the file specified")
     monkeypatch.setattr(entry.play, "run", fails)
     assert entry.main() == 1

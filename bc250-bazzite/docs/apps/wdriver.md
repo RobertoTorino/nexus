@@ -36,7 +36,8 @@ there is something, shows on the right of the driver's controls. The small **i**
 what the driver is and does, the one beside **Wi-Fi adapters** what that list shows.
 
 1. **Driver branch:** chosen from the chip's answer. A chip that reports MCU 1 takes `legacy-mcu1`; MCU 0 takes
-   `main`. When the chip has not answered yet, the app proposes `main`, and says what to do when the firmware
+   `main`. A chip of product 0x8820 (a UGREEN stick, `a69c:5723`) takes `legacy-mcu1` too: only that branch
+   supports it. When the chip has not answered yet, the app proposes `main`, and says what to do when the firmware
    upload then breaks off (see below).
 2. **Build:** fetches the pinned sources into your home folder and builds the two modules against the running
    kernel, as your own user. The output shows in the window; it takes a minute or two. The sources come from a

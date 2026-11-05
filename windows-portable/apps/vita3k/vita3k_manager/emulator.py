@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The Vita3K this version of the app installs: the Windows build of one of Vita3K's builds on GitHub, pinned and
 checked against the SHA-256 this version of the app was tried with, the same build as the BC250 suite's Vita3K Manager
-pins (4186). Vita3K has no stable releases: it publishes a build for every change, almost daily, each one kept in
+pins (4269). Vita3K has no stable releases: it publishes a build for every change, almost daily, each one kept in
 Vita3K/Vita3K-builds (a release per build, tagged with its number). A newer Vita3K comes with a new version of the app;
-the Vita3K pane says when a newer build is out (newer_release), and the suite's weekly upstream check
-(windows-portable/tools/check_upstream.py) checks only that the pinned file is still there (CADENCE: it would report
-a new build every week).
+the Vita3K pane says when a newer build is out (newer_release), and so does the suite's weekly upstream check
+(windows-portable/tools/check_upstream.py, CADENCE: a build for every change, compared by its number), with the
+pinned file.
 
 It goes to %LOCALAPPDATA%\\windows-portable-suite\\windows-portable-vita3k\\emulator\\, one folder, in Vita3K's
 portable mode: Vita3K keeps everything in a folder named portable beside Vita3K.exe when there is one
@@ -46,15 +46,15 @@ from bc250_core.updates import Fetch, ReleaseInfo, github_fetch
 
 from . import APP_ID, SUITE, __version__
 
-VERSION = "4186"                        # Vita3K's build number, counted over its whole history: the BC250 suite's pin
+VERSION = "4269"                        # Vita3K's build number, counted over its whole history: the BC250 suite's pin
 TAG = VERSION                           # each build's release is tagged with its number alone
-SEMVER = "0.2.1"                        # what the build calls itself (v0.2.1 4186-f0273e4c)
-COMMIT = "f0273e4cd9b860ea77c44c73d9f5c5b1ed5fa8ab"
+SEMVER = "0.2.1"                        # what the build calls itself (v0.2.1 4269-9409e2ec)
+COMMIT = "9409e2ecad1bdae275db2f85b83a97aa084c79bc"
 REPO = "Vita3K/Vita3K-builds"           # a release per build; Vita3K/Vita3K has only the rolling "continuous"
 CADENCE = "daily"                       # for the weekly upstream check: a build for every change
-ASSET = "vita3k-4186-f0273e4c-windows-x86_64.7z"
-SHA256 = "a26120e62aaad28df8502b8de0fd143564a0e1bc10582dc215746229b980adc4"
-SIZE = 24_522_324                       # bytes
+ASSET = "vita3k-4269-9409e2ec-windows-x86_64.7z"
+SHA256 = "43d6a1fc3f5955a015f057ee7621a2999ff3b2e27e23be6541f6d170f89e0ea9"
+SIZE = 24_561_566                       # bytes
 URL = f"https://github.com/{REPO}/releases/download/{TAG}/{ASSET}"
 RELEASE_PAGE = f"https://github.com/{REPO}/releases/tag/{TAG}"
 EXE = "Vita3K.exe"
@@ -102,7 +102,7 @@ def program(home: Path) -> Path:
 
 
 def installed(home: Path) -> str:
-    """The installed build ("4186"), "" when Vita3K is not installed (or its program is gone)."""
+    """The installed build ("4269"), "" when Vita3K is not installed (or its program is gone)."""
     version = str(record(home).get("version") or "")
     return version if version and program(home).is_file() else ""
 
@@ -361,5 +361,33 @@ def processes(name: str) -> list[str]:
 # title ID, and Vita3K's own frontend (owner, 29-10-2026: not the SDL frontend, whose window never goes full screen on
 # Windows) boots it at once, full screen as config.yml's boot-apps-full-screen says (userdata.prepare). View, LB and
 # RB held close Vita3K (core's play), as Steam's Exit game ends it; Vita3K's own pause menu (its PS button) has Exit, which
-# ends the game and leaves Vita3K's window.
+# ends the game and leaves Vita3K's window. Vita3K always shows its library window beside the game (main.cpp, 4186 and
+# 4269), with a second screen on the handheld's screen: the play mode minimizes it (minimize_library). Owner,
+# 05-11-2026: the SDL frontend, which has none, was tried on the Ally and left: on the TV its game got no button
+# (whether moved there or the only screen), and its mouse is no touch screen.
 GAME_ARGS = ("-r",)
+LIBRARY_TITLE = "Vita3K v"              # Vita3K's library window: "Vita3K v0.2.1 4186-f0273e4c"
+
+
+def minimize_library(pid: int) -> str:
+    """Vita3K's library window minimized, without taking the focus from the game, once its game window is up beside
+    it (owner, 05-11-2026); again when Vita3K shows it again. For core's play.run(windows=): what it did, for the log
+    ("" when nothing). It stays open, so View, LB and RB still close it with the game. Windows only."""
+    import ctypes
+    from bc250_core import play
+    user32 = ctypes.windll.user32  # type: ignore[attr-defined]
+    windows = play.main_windows(pid)
+    library = [hwnd for hwnd in windows if _title(hwnd).startswith(LIBRARY_TITLE)]
+    if not library or len(windows) == len(library):                # the game's window is not up yet
+        return ""
+    shown = [hwnd for hwnd in library if not user32.IsIconic(hwnd)]
+    for hwnd in shown:
+        user32.ShowWindow(hwnd, 7)                                  # SW_SHOWMINNOACTIVE
+    return "Vita3K's library window minimized." if shown else ""
+
+
+def _title(hwnd: int) -> str:
+    import ctypes
+    buffer = ctypes.create_unicode_buffer(256)
+    ctypes.windll.user32.GetWindowTextW(hwnd, buffer, len(buffer))  # type: ignore[attr-defined]
+    return buffer.value

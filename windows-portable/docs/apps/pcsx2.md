@@ -131,7 +131,8 @@ You play the games from Steam; the app puts them there, and starts them there wi
   the memory cards. While PCSX2 runs, **RB** says to quit the game first.
 
 To quit a game, **hold View, LB and RB together for two seconds**: PCSX2 closes as its window would close, and you
-are back in Steam, or in the app when it started the game. It works the same in every game manager of the suite,
+are back in Steam, or in the app when it started the game. *Closing the game* at the top of the screen says the hold
+was seen. It works the same in every game manager of the suite,
 started from Steam's library or from the app, and the line at the bottom of Your games says so when a game starts.
 With **Quit with View + Menu** on (see Settings), PCSX2's own quit chord, a short press of View and Menu already ends
 the game; the two-second hold works either way.
@@ -140,7 +141,7 @@ the game; the two-second hold works either way.
 temperature every two seconds. When the CPU or the GPU stays above 90 °C for half a minute, a banner shows at the top of
 the screen for a few seconds (on every screen, with a second one attached), and the controller rumbles three times; it
 warns again at most every five minutes while the chip stays that hot. The banner takes no press and does not take the
-focus from the game. A pause, or a lower operating mode (the portal's Operating Mode page), lets the device cool down.
+focus from the game. A pause, or a lower performance mode (the portal's Performance Mode page), lets the device cool down.
 When the game ends, the log (**A View log** on the Log pane) says how hot the chip got and for how long. Windows cannot
 read how hot the outside of the device is: the chip's temperature is the closest reading, and the chip slows itself down
 at its own limit.

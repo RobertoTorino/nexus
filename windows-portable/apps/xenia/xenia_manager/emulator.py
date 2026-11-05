@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The Xenia this version of the app installs: the Windows build of one Xenia Canary build on GitHub, pinned and
 checked against the SHA-256 this version of the app was tried with, the same build as the BC250 suite's Xenia Manager
-pins (e6cd2e4). Xenia has no stable releases: Xenia Canary publishes a build for almost every change, a release of
+pins (838850f). Xenia has no stable releases: Xenia Canary publishes a build for almost every change, a release of
 xenia-canary/xenia-canary tagged with the commit it was built from. A newer Xenia comes with a new version of the app;
 the Xenia pane says when a newer build is out (newer_release: a tag is a commit, not a number, so "newer" is a release
-published after the pinned one), and the suite's weekly upstream check (windows-portable/tools/check_upstream.py)
-checks only that the pinned file is still there (CADENCE: it would report a new build every week).
+published after the pinned one), and so does the suite's weekly upstream check (windows-portable/tools/
+check_upstream.py, CADENCE: a build for almost every change, compared by PUBLISHED), with the pinned file.
 
 It goes to %LOCALAPPDATA%\\windows-portable-suite\\windows-portable-xenia\\emulator\\, one folder: Xenia on Windows is
 portable by itself (app/xenia_main.cc in e6cd2e4: the portable cvar is true on Windows, so its storage root is the
@@ -38,15 +38,15 @@ from bc250_core.updates import Fetch, ReleaseInfo, github_fetch
 
 from . import APP_ID, SUITE, __version__
 
-VERSION = "e6cd2e4"                     # the build's tag: the commit it was built from, the BC250 suite's pin
+VERSION = "838850f"                     # the build's tag: the commit it was built from, the BC250 suite's pin
 TAG = VERSION
-COMMIT = "e6cd2e4bc998609ca25e24a24c8e32b66c5908ad"
-PUBLISHED = "2026-10-20T19:30:12Z"      # when GitHub published it: a later release is a newer build
+COMMIT = "838850fed8389bdb28dc38f89bcb73bb43db1494"
+PUBLISHED = "2026-11-04T16:38:00Z"      # when GitHub published it: a later release is a newer build
 REPO = "xenia-canary/xenia-canary"
 CADENCE = "daily"                       # for the weekly upstream check: a build for almost every change
 ASSET = "xenia_canary_windows.7z"       # the same name in every build's release
-SHA256 = "f60b6242c1a3b4ad787acc0a1bc85d44e45079150ac5c9ec0a30c5eff6ef0511"
-SIZE = 3_677_214                        # bytes
+SHA256 = "555159b5058e250da639af6a70ec43c87c7b1fb68fc00193c4b91f4b52a60438"
+SIZE = 3_703_554                        # bytes
 URL = f"https://github.com/{REPO}/releases/download/{TAG}/{ASSET}"
 RELEASE_PAGE = f"https://github.com/{REPO}/releases/tag/{TAG}"
 EXE = "xenia_canary.exe"
@@ -88,7 +88,7 @@ def program(home: Path) -> Path:
 
 
 def installed(home: Path) -> str:
-    """The installed build ("e6cd2e4"), "" when Xenia is not installed (or its program is gone)."""
+    """The installed build ("838850f"), "" when Xenia is not installed (or its program is gone)."""
     version = str(record(home).get("version") or "")
     return version if version and program(home).is_file() else ""
 

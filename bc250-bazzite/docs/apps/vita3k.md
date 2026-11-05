@@ -28,7 +28,7 @@ shows what others found.
 
     Then press **Install firmware** in the app, once for each file.
 - **Steam**, started at least once, for Game Mode.
-- About 75 MB for Vita3K itself. Its settings go in `~/.config/Vita3K`, the PS Vita's storage (firmware, installed
+- About 86 MB for Vita3K itself. Its settings go in `~/.config/Vita3K`, the PS Vita's storage (firmware, installed
   games, saves) in `~/.local/share/Vita3K/Vita3K`.
 - **fusermount** (FUSE), which Bazzite has. Vita3K comes as an AppImage, which mounts itself with it. Without it, it
   unpacks itself to a temporary folder on every start, which takes longer.
@@ -37,7 +37,7 @@ shows what others found.
 
 The window has three steps, then the list of games.
 
-1. **Vita3K**: **Install** downloads Vita3K from GitHub (about 75 MB) and checks it against the checksum this version
+1. **Vita3K**: **Install** downloads Vita3K from GitHub (about 86 MB) and checks it against the checksum this version
    of the app was tried with before installing it. **Remove** takes it out again; Vita3K's own folders, with the
    firmware, your games, saves and settings, stay.
 2. **Firmware**: which parts of the PS Vita's firmware Vita3K has: the system software, the font package and the
@@ -139,7 +139,7 @@ bc250-vita3k-run                                               # Vita3K's own wi
 ## New Vita3K builds
 
 Vita3K has no stable releases: it publishes a new build for almost every change, numbered over its whole history
-(4186). Each version of the app installs one build, the one it was tried with. When the window opens, the app asks
+(4269). Each version of the app installs one build, the one it was tried with. When the window opens, the app asks
 GitHub for Vita3K's newest build. When that one is newer, the first step says so, with a link to what is new; the app
 does not install it. A newer Vita3K comes with a newer version of the app, once it has been tried, from the
 [portal](../portal.md): after updating the app, the first step says so, and **Install** brings it.

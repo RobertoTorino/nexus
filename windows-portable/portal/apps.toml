@@ -157,3 +157,47 @@ install = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --no
 uninstall = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --uninstall"]
 detect = ["%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-smart\\app\\Smart-Screen.exe"]
 launch = [["Open", "%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-smart\\app\\Smart-Screen.exe"]]
+
+[apps.support]
+name = "Support Checker"
+summary = "What the suite's apps need on this handheld: Windows' updates, the tools and runtimes, the apps' versions."
+tag = "wp-support-v0.1.0"
+sha256 = ""
+category = "utilities"
+install = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --no-desktop-shortcut"]
+uninstall = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --uninstall"]
+detect = ["%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-support\\app\\Support-Checker.exe"]
+launch = [["Open", "%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-support\\app\\Support-Checker.exe"]]
+
+[apps.datstat]
+name = "DatStation"
+summary = "PlayStation knowledge: a quiz against the clock, the consoles' history, system versions, region codes and PS news."
+tag = "wp-datstat-v0.1.0"
+sha256 = ""
+category = "gaming"
+install = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --no-desktop-shortcut"]
+uninstall = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --uninstall"]
+detect = ["%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-datstat\\app\\DatStation.exe"]
+launch = [["Open", "%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-datstat\\app\\DatStation.exe"]]
+
+[apps.upscale]
+name = "Upscale Boost"
+summary = "HelixSR, the DLSS-like upscaler for AMD graphics, in your games: its build, deployed per game and set."
+tag = "wp-upscale-v0.1.0"
+sha256 = ""
+category = "gaming"
+install = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --no-desktop-shortcut"]
+uninstall = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --uninstall"]
+detect = ["%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-upscale\\app\\Upscale-Boost.exe"]
+launch = [["Open", "%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-upscale\\app\\Upscale-Boost.exe"]]
+
+[apps.hdcontrol]
+name = "HD Controller"
+summary = "Your DualSense: its battery, a firmware update, the button test and the Edge's profiles."
+tag = "wp-hdcontrol-v0.1.0"
+sha256 = ""
+category = "utilities"
+install = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --no-desktop-shortcut"]
+uninstall = ["powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 --uninstall"]
+detect = ["%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-hdcontrol\\app\\HD-Controller.exe"]
+launch = [["Open", "%LOCALAPPDATA%\\windows-portable-suite\\windows-portable-hdcontrol\\app\\HD-Controller.exe"]]

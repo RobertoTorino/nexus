@@ -3,7 +3,8 @@
 """Upstream check: are the apps that pin an upstream release still in step with it?
 
     python3 tools/check_upstream.py [--report FILE] [decky] [shadps4] [helixsr] [ppsspp] [pcsx2] [rpcs3]
-                                    [directmesh] [vita3k] [xenia] [wdriver]     # all when none is named
+                                    [directmesh] [vita3k] [xenia] [wdriver] [mesa] [ffmpeg] [hdcam] [speedtest]
+                                    # all when none is named
 
 Decky Loader Manager pins one Decky release (apps/decky/decky_manager/loader.py: VERSION, TAG, SHA256)
 and writes Decky's release unit itself (loader.unit_text()). This compares them with Decky's GitHub repository:
@@ -48,6 +49,25 @@ apps/wdriver/usb_wifidriver/builder.py, loaded on its own: it needs only the sta
    tried on the board with the stick;
  * the suite owner's mirror, which the app fetches first, must be there and have each pinned commit.
 
+Mesa (Bazzite/Windows 2, 05-11-2026): BC-250 Mesh Shaders builds RADV from one Mesa release (MESA_VER in
+apps/mesh/bc250-mesh-shaders.sh, with DirectMesh's patch and the suite's for it), BC-250 ACE Queues from the system's
+Mesa with one patch (apps/ace/mesa/gfx1013-ace-queue.patch). Against Mesa's newest release (its tags on GitLab; a
+release candidate is none):
+ * newer than MESA_VER means a new version of Mesh Shaders, with the patches moved to it, tried on the board;
+ * the ACE patch must apply to it (patch -p1 --dry-run on the files it touches, fetched at that release), as Bazzite
+   moves to it and the app then builds for it.
+
+Console Link builds FFmpeg from one release and takes libva's headers from one (FFMPEG_VERSION, LIBVA_VERSION in
+apps/consoles/native/ffmpeg/build.sh). Against FFmpeg's release tags (n<version> on its GitHub mirror) and libva's
+latest release: a newer FFmpeg on the pinned branch (its fixes), a newer branch (a bigger move), a newer libva.
+
+USB HD Cam downloads each camera's firmware from one commit of a GitHub repository (PINNED in
+apps/hdcam/usb_hdcam/firmware.py): the file there must still be the pinned one (SHA-256), and the file on the
+repository's default branch the same; changed or gone there means a new version of the app could follow it.
+
+BC-250 Bazzite Test's development tool installs one release of Ookla's speedtest CLI (SPEEDTEST_VERSION in
+apps/check/development/tools/install-requirements.sh); Ookla's Homebrew formula names the current one.
+
 Exit code 0: all in step; 1: an upstream moved (the report says what); 2: one could not be checked (network, GitHub's
 rate limit).
 --report FILE writes what moved as Markdown, for the "Upstream review" issue (empty when all are in step).
@@ -57,11 +77,14 @@ Nothing is changed or published."""
 from __future__ import annotations
 
 import ast
+import hashlib
 import importlib.util
 import json
 import os
 import re
+import subprocess
 import sys
+import tempfile
 import urllib.error
 import urllib.request
 from collections.abc import Callable
@@ -80,6 +103,19 @@ MESH = SUITE / "apps" / "mesh" / "bc250-mesh-shaders.sh"
 VITA3K = SUITE / "apps" / "vita3k" / "vita3k_manager" / "emulator.py"
 XENIA = SUITE / "apps" / "xenia" / "xenia_manager" / "emulator.py"
 BUILDER = SUITE / "apps" / "wdriver" / "usb_wifidriver" / "builder.py"
+ACE_PATCH = SUITE / "apps" / "ace" / "mesa" / "gfx1013-ace-queue.patch"
+FFMPEG_BUILD = SUITE / "apps" / "consoles" / "native" / "ffmpeg" / "build.sh"
+HDCAM_FIRMWARE = SUITE / "apps" / "hdcam" / "usb_hdcam" / "firmware.py"
+SPEEDTEST_TOOL = SUITE / "apps" / "check" / "development" / "tools" / "install-requirements.sh"
+MESA_TAGS = ("https://gitlab.freedesktop.org/api/v4/projects/mesa%2Fmesa/repository/tags"
+             "?search=%5Emesa-&order_by=version&per_page=100")
+MESA_RAW = "https://gitlab.freedesktop.org/mesa/mesa/-/raw/{tag}/{path}"
+MESA_RELEASE = re.compile(r"mesa-(\d+\.\d+\.\d+)")         # a release; "mesa-26.3.0-rc3" is a candidate
+FFMPEG_REPO = "FFmpeg/FFmpeg"                 # its GitHub mirror: a release is tagged n<version> there too
+FFMPEG_TAG = re.compile(r"refs/tags/n(\d+(?:\.\d+)+)")
+LIBVA_REPO = "intel/libva"
+FIRMWARE_RAW = re.compile(r"https://raw\.githubusercontent\.com/([^/]+/[^/]+)/([0-9a-f]{40})/(.+)")
+SPEEDTEST_FORMULA = "https://raw.githubusercontent.com/teamookla/homebrew-speedtest/master/speedtest.rb"
 DIRECTMESH_REPO = "lonewolf0622/bc250meshtaskwork"
 DIRECTMESH_PREFIX = "directmesh-"
 RELEASE_TAG = re.compile(r"v?\d+(\.\d+)+")      # after the prefix: a release's version, nothing more
@@ -99,7 +135,10 @@ class CheckError(Exception):
 
 
 def fetch(url: str) -> bytes:
-    headers = {"User-Agent": "bc250-check-upstream", "Accept": "application/vnd.github+json"}
+    headers = {"User-Agent": "bc250-check-upstream"}
+    github = "github" in url.split("/")[2]      # GitHub's API and raw files; Mesa's GitLab and FFmpeg's site as they are
+    if github:
+        headers["Accept"] = "application/vnd.github+json"
     token = os.environ.get("GITHUB_TOKEN")
     if token and url.startswith("https://api.github.com/"):
         headers["Authorization"] = f"Bearer {token}"
@@ -107,7 +146,7 @@ def fetch(url: str) -> bytes:
         with urllib.request.urlopen(urllib.request.Request(url, headers=headers), timeout=TIMEOUT) as response:
             return response.read()
     except urllib.error.HTTPError as error:
-        raise CheckError(f"{url}: GitHub answered {error.code}") from error
+        raise CheckError(f"{url}: {'GitHub' if github else 'the server'} answered {error.code}") from error
     except (urllib.error.URLError, OSError) as error:
         raise CheckError(f"{url}: {getattr(error, 'reason', error)}") from error
 
@@ -464,6 +503,185 @@ def check_wdriver(builder: ModuleType, get: Fetch = fetch) -> Report:
     return report
 
 
+def shell_value(path: Path, name: str) -> str:
+    """A shell script's NAME=value, or the default of NAME="${NAME:-value}"."""
+    text = path.read_text(encoding="utf-8")
+    found = re.search(rf'^{name}="?(?:\$\{{{name}:-)?([^"\s}}]+)', text, re.MULTILINE)
+    if not found:
+        raise ValueError(f"{path.relative_to(SUITE)} sets no {name}")
+    return found.group(1)
+
+
+Applies = Callable[[str, dict[str, bytes]], bool]
+
+
+def patch_applies(patch: str, files: dict[str, bytes]) -> bool:
+    """Whether *patch* applies with patch -p1 to *files* (path in the tree: its content), as the app's build checks it
+    first; only the files the patch touches are needed."""
+    with tempfile.TemporaryDirectory(prefix="bc250-check-upstream-") as tree:
+        for path, content in files.items():
+            target = Path(tree, path)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(content)
+        try:
+            result = subprocess.run(["patch", "-p1", "--dry-run", "--batch"], input=patch, text=True, cwd=tree,
+                                    capture_output=True)
+        except OSError as error:
+            raise CheckError(f"patch could not run: {error}") from error
+    return result.returncode == 0
+
+
+def check_mesa(mesh: str, ace_patch: str, get: Fetch = fetch, applies: Applies = patch_applies) -> Report:
+    """BC-250 Mesh Shaders builds RADV from one Mesa release (MESA_VER), with DirectMesh's patch and the suite's for
+    it; BC-250 ACE Queues builds it from the system's Mesa with one patch. The newest Mesa release: newer than
+    Mesh Shaders' means a new version of it; ACE Queues' patch must apply to it, as the system moves to it."""
+    report = Report(mesh, name="Mesa (BC-250 Mesh Shaders, BC-250 ACE Queues)", short="Mesa",
+                    held="Mesh Shaders builds", newest="newest release")
+    tags = json.loads(get(MESA_TAGS))
+    releases = [m.group(1) for m in (MESA_RELEASE.fullmatch(str(t.get("name", ""))) for t in tags) if m]
+    latest = max(releases, key=_version, default="")
+    report.latest = latest
+    if not latest:
+        raise CheckError("Mesa's tags name no release")
+    if _version(latest) > _version(mesh):
+        report.drift.append(f"Mesa {latest} is out: a new version of BC-250 Mesh Shaders could build it, with "
+                            f"DirectMesh's patch for {latest} and the suite's patch moved to it (MESA_VER in "
+                            f"apps/mesh/bc250-mesh-shaders.sh, the patches in apps/mesh/mesa/), after it is tried on "
+                            f"the board. https://docs.mesa3d.org/relnotes/{latest}.html")
+    else:
+        report.fine.append(f"no Mesa release newer than {mesh}")
+    paths = re.findall(r"^\+\+\+ b/(\S+)", ace_patch, re.MULTILINE)
+    files = {path: get(MESA_RAW.format(tag=f"mesa-{latest}", path=path)) for path in paths}
+    if applies(ace_patch, files):
+        report.fine.append(f"BC-250 ACE Queues' patch applies to Mesa {latest}")
+    else:
+        report.drift.append(f"BC-250 ACE Queues' patch (apps/ace/mesa/gfx1013-ace-queue.patch) does not apply to Mesa "
+                            f"{latest}: once Bazzite ships it, the app cannot build for it. A new version of the app "
+                            f"moves the patch to it.")
+    return report
+
+
+def check_ffmpeg(ffmpeg: str, libva: str, get: Fetch = fetch) -> Report:
+    """Console Link builds FFmpeg from one release (FFMPEG_VERSION, its tarball's SHA-256 and signature checked) and
+    takes libva's headers from one release where the system has none (LIBVA_VERSION). A newer FFmpeg on the pinned
+    branch (7.1.x) is its fixes, a newer branch a bigger move; a newer libva only its headers."""
+    report = Report(f"FFmpeg {ffmpeg}, libva {libva}", name="FFmpeg and libva (Console Link)", short="FFmpeg or libva",
+                    held="builds", newest="newest")
+    refs = json.loads(get(f"{API.format(repo=FFMPEG_REPO)}/git/matching-refs/tags/n"))
+    versions = {m.group(1) for m in (FFMPEG_TAG.fullmatch(str(r.get("ref", ""))) for r in refs) if m}
+    if not versions:
+        raise CheckError(f"{FFMPEG_REPO} has no release tag")
+    branch = ffmpeg.split(".")[:2]
+    newest = max(versions, key=_version)
+    on_branch = max((v for v in versions if v.split(".")[:2] == branch), key=_version, default=ffmpeg)
+    latest_libva = str(json.loads(get(f"{API.format(repo=LIBVA_REPO)}/releases/latest")).get("tag_name", ""))
+    report.latest = f"FFmpeg {newest} ({'.'.join(branch)}.x: {on_branch}), libva {latest_libva or 'unknown'}"
+    where = "apps/consoles/native/ffmpeg/build.sh"
+    if _version(on_branch) > _version(ffmpeg):
+        report.drift.append(f"FFmpeg {on_branch} is out, on the pinned {'.'.join(branch)} branch: a new version of "
+                            f"Console Link could build it (FFMPEG_VERSION, FFMPEG_SHA256 in {where}), after the "
+                            f"stream is tried on the board. https://ffmpeg.org/download.html")
+    if _version(newest)[:2] > _version(ffmpeg)[:2]:
+        report.drift.append(f"FFmpeg {newest} is a newer branch than {'.'.join(branch)}: moving Console Link to it "
+                            f"needs a look at the decoder calls its native core makes, and a try on the board.")
+    if not report.drift:
+        report.fine.append(f"no FFmpeg release newer than {ffmpeg}")
+    if latest_libva and _version(latest_libva) > _version(libva):
+        report.drift.append(f"libva {latest_libva} is out: Console Link takes its headers from libva's sources where "
+                            f"the system has none (LIBVA_VERSION, LIBVA_SHA256 in {where}); the libraries stay the "
+                            f"system's. https://github.com/{LIBVA_REPO}/releases/tag/{latest_libva}")
+    else:
+        report.fine.append(f"no libva release newer than {libva}")
+    return report
+
+
+@dataclass
+class Firmware:
+    """One firmware file USB HD Cam downloads, pinned at a commit of a GitHub repository (firmware.PINNED)."""
+    model: str
+    repo: str
+    commit: str
+    path: str
+    sha256: str
+
+
+def load_firmware(path: Path = HDCAM_FIRMWARE) -> list[Firmware]:
+    """firmware.py's PINNED, read without importing the app: each Pinned(url=..., sha256=...)."""
+    found = []
+    for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
+        if not (isinstance(node, ast.Dict) and all(isinstance(v, ast.Call) for v in node.values)):
+            continue
+        for key, call in zip(node.keys, node.values):
+            values = {k.arg: k.value.value for k in call.keywords if isinstance(k.value, ast.Constant)}
+            where = FIRMWARE_RAW.fullmatch(str(values.get("url", "")))
+            if isinstance(key, ast.Constant) and where and "sha256" in values:
+                found.append(Firmware(str(key.value), where.group(1), where.group(2), where.group(3),
+                                      str(values["sha256"])))
+    if not found:
+        raise ValueError(f"{path.relative_to(SUITE)} pins no firmware")
+    return found
+
+
+def check_hdcam(pins: list[Firmware], get: Fetch = fetch) -> Report:
+    """Each pinned firmware file: still there at the pinned commit with its SHA-256, and the same on the repository's
+    default branch (a changed or removed file there means a new version of the app could follow it)."""
+    report = Report(", ".join(f"{p.model} {p.commit[:7]}" for p in pins), name="USB HD Cam's firmware",
+                    short="The firmware", newest="default branch")
+    moved = []
+    for pin in pins:
+        raw = f"https://raw.githubusercontent.com/{pin.repo}/{{ref}}/{pin.path}"
+        try:
+            pinned = hashlib.sha256(get(raw.format(ref=pin.commit))).hexdigest()
+        except CheckError as error:
+            if ": GitHub answered 404" not in str(error):
+                raise
+            report.drift.append(f"{pin.model}'s {pin.path} is gone from {pin.repo} at {pin.commit[:7]}: USB HD Cam "
+                                f"cannot download it any more.")
+            continue
+        if pinned != pin.sha256:
+            report.drift.append(f"{pin.model}'s {pin.path} at {pin.commit[:7]} is not the pinned file (SHA-256 "
+                                f"{pinned[:12]}…): every download of it fails the check.")
+        else:
+            report.fine.append(f"{pin.model}'s file at {pin.commit[:7]} is the pinned one")
+        try:
+            head = hashlib.sha256(get(raw.format(ref="HEAD"))).hexdigest()
+        except CheckError as error:
+            if ": GitHub answered 404" not in str(error):
+                raise
+            moved.append(pin.model)
+            report.drift.append(f"{pin.model}'s {pin.path} is gone from {pin.repo}'s default branch (the app still "
+                                f"downloads it at {pin.commit[:7]}): see what replaced it. https://github.com/{pin.repo}")
+            continue
+        if head != pin.sha256:
+            moved.append(pin.model)
+            report.drift.append(f"{pin.model}'s {pin.path} changed on {pin.repo}'s default branch: a new version of USB "
+                                f"HD Cam could pin it (PINNED in apps/hdcam/usb_hdcam/firmware.py), after it is tried "
+                                f"with the camera. https://github.com/{pin.repo}/commits/HEAD/{pin.path}")
+        else:
+            report.fine.append(f"{pin.model}'s file is the same on the default branch")
+    report.latest = f"changed for {', '.join(moved)}" if moved else "the same files"
+    return report
+
+
+def check_speedtest(version: str, get: Fetch = fetch) -> Report:
+    """BC-250 Bazzite Test's development tool installs one release of Ookla's speedtest CLI (SPEEDTEST_VERSION); the
+    test itself runs whichever is installed. Ookla publishes no API: its Homebrew formula names the current one."""
+    report = Report(version, name="Ookla's speedtest CLI (BC-250 Bazzite Test)", short="speedtest", held="installs",
+                    newest="current")
+    formula = get(SPEEDTEST_FORMULA).decode("utf-8", "replace")
+    found = re.search(r'^\s*version "([^"]+)"', formula, re.MULTILINE)
+    if not found:
+        raise CheckError(f"{SPEEDTEST_FORMULA} names no version")
+    report.latest = found.group(1)
+    if _version(report.latest) > _version(version):
+        report.drift.append(f"speedtest {report.latest} is out: the development tool could install it "
+                            f"(SPEEDTEST_VERSION in apps/check/development/tools/install-requirements.sh), after test "
+                            f"44 is run with it on the board. https://www.speedtest.net/apps/cli")
+    else:
+        report.fine.append(f"no release newer than {version}")
+    return report
+
+
 CHECKS = {"decky": ("Decky Loader", lambda: check(load_loader())),
           "shadps4": ("shadPS4", lambda: check_shadps4(load_shadps4_pin())),
           "helixsr": ("HelixSR", lambda: check_helixsr(load_helixsr_pin())),
@@ -473,7 +691,13 @@ CHECKS = {"decky": ("Decky Loader", lambda: check(load_loader())),
           "directmesh": ("DirectMesh", lambda: check_release(load_release("directmesh"))),
           "vita3k": ("Vita3K", lambda: check_build(load_build("vita3k"))),
           "xenia": ("Xenia", lambda: check_build(load_build("xenia"))),
-          "wdriver": ("USB Wi-Fi driver", lambda: check_wdriver(load_loader(BUILDER, "wdriver_builder_pin")))}
+          "wdriver": ("USB Wi-Fi driver", lambda: check_wdriver(load_loader(BUILDER, "wdriver_builder_pin"))),
+          "mesa": ("Mesa", lambda: check_mesa(shell_value(MESH, "MESA_VER"),
+                                              ACE_PATCH.read_text(encoding="utf-8"))),
+          "ffmpeg": ("FFmpeg and libva", lambda: check_ffmpeg(shell_value(FFMPEG_BUILD, "FFMPEG_VERSION"),
+                                                             shell_value(FFMPEG_BUILD, "LIBVA_VERSION"))),
+          "hdcam": ("USB HD Cam's firmware", lambda: check_hdcam(load_firmware())),
+          "speedtest": ("speedtest CLI", lambda: check_speedtest(shell_value(SPEEDTEST_TOOL, "SPEEDTEST_VERSION")))}
 
 
 def markdown(reports: list[Report], failed: list[str]) -> str:
