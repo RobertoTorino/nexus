@@ -539,8 +539,8 @@ launch = [["Open", "~/.local/bin/bc250-xenia-manager"]]
 [apps.ssd]
 name = "SSD Check"
 summary = "The health, power cycles and power-on hours of the board's SSDs."
-tag = "ssd-v0.1.0"
-sha256 = "ec9a8ca6bc2ebad5c3aae11c1ed0247340ccd943319eff9b68457669d93bcce4"
+tag = "ssd-v0.2.0"
+sha256 = ""
 required = false
 changes_board = false
 category = "utilities"

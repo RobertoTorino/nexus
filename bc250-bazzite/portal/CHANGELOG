@@ -1,3 +1,7 @@
+Changelog: 05-11-2026 17:31:18
+
+Release 15.1.0. Pins ssd-v0.2.0.
+
 Changelog: 05-11-2026 13:56:06
 
 Added. Every exit asks "Do you really want to exit the Portal?" first, with Yes and No and No the default: Escape,

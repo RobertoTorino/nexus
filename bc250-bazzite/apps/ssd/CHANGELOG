@@ -1,3 +1,7 @@
+Changelog: 05-11-2026 17:31:18
+
+Release 0.2.0.
+
 Changelog: 05-11-2026 16:20:03
 
 Fixed. The tests of the drive list no longer read the machine's /sys: with a USB drive plugged into the board as
