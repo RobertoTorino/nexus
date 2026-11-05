@@ -1,3 +1,7 @@
+Changelog: 05-11-2026 18:44:38
+
+Release 1.48.0. Brings ace-v1.2.0, acpi-v0.4.3, bios-v1.2.0, cec-v1.2.0, check-v1.3.0, clb-v1.2.0, compute-v0.4.3, consoles-v2.2.0, cores-v0.4.3, datstation-v3.2.0, decky-v1.3.0, fan-v1.2.0, gpu-v0.4.3, hdcam-v1.2.0, hdcontrol-v1.2.0, ips35-v1.2.0, mesh-v1.2.0, ncgui-v1.2.0, oc-v0.3.3, overlay-v1.2.0, package-v3.3.0, pcsx2-v4.1.0, portal-v15.2.0, ppsspp-v2.1.0, rpcs3-v4.1.0, sftp-v1.3.0, shadps4-v4.2.0, ssd-v0.3.0, upscaler-v2.2.0, vita3k-v2.1.0, vram-v1.2.0, wdriver-v1.2.0, wp-bios-v0.9.0, wp-hdcam-v0.8.0, wp-pcsx2-v6.2.0, wp-portal-v8.2.0, wp-ppsspp-v5.2.0, wp-rpcs3-v4.2.0, wp-rplay-v0.9.0, wp-sftp-v0.8.0, wp-shadps4-v5.2.0, wp-smart-v0.4.0, wp-test-v4.12.0, wp-vita3k-v5.2.0, wp-xenia-v5.2.0, xenia-v2.1.0.
+
 Changelog: 05-11-2026 18:18:09
 
 Added. DESIGN.md lists the silver outline of each BC250 theme (the border under the mouse, with the focus and of

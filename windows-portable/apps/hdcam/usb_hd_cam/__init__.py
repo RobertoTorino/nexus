@@ -5,7 +5,7 @@ APP_NAME = "USB HD Cam"
 APP_ID = "windows-portable-hdcam"
 EXE_NAME = "USB-HD-Cam"   # the program's file name in a release
 SUITE = "windows-portable-suite"
-__version__ = "0.7.0"
+__version__ = "0.8.0"
 
 from pathlib import Path
 

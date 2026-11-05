@@ -4,7 +4,7 @@ on PPSSPP's memory stick and adds them to Steam for Game Mode."""
 
 APP_NAME = "PPSSPP Manager"
 APP_ID = "bc250-ppsspp-manager"
-__version__ = "2.0.2"
+__version__ = "2.1.0"
 
 from pathlib import Path
 

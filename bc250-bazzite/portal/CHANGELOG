@@ -1,3 +1,7 @@
+Changelog: 05-11-2026 18:44:37
+
+Release 15.2.0. Pins check-v1.3.0, gpu-v0.4.3, upscaler-v2.2.0, compute-v0.4.3, cores-v0.4.3, oc-v0.3.3, acpi-v0.4.3, overlay-v1.2.0, bios-v1.2.0, ace-v1.2.0, mesh-v1.2.0, vram-v1.2.0, fan-v1.2.0, wdriver-v1.2.0, cec-v1.2.0, sftp-v1.3.0, ips35-v1.2.0, hdcam-v1.2.0, hdcontrol-v1.2.0, package-v3.3.0, ncgui-v1.2.0, rpcs3-v4.1.0, consoles-v2.2.0, clb-v1.2.0, shadps4-v4.2.0, decky-v1.3.0, datstation-v3.2.0, ppsspp-v2.1.0, pcsx2-v4.1.0, vita3k-v2.1.0, xenia-v2.1.0, ssd-v0.3.0.
+
 Changelog: 05-11-2026 18:18:09
 
 Fixed. The pills, the tiles, the notices, the update banner and the chosen category are framed in silver under
