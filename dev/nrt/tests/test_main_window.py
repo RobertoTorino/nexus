@@ -77,6 +77,11 @@ def test_the_header_is_a_row_of_pills(window):
     w.reload = lambda: refreshed.append(1)
     w.refresh_pill.click()
     assert refreshed == [1]
+    # It says it is at it until GitHub's runs are in (owner, 05-11-2026: it seemed to do nothing)
+    caption = w.refresh_pill.caption.text()
+    assert caption == "Refreshing…" or caption.startswith("Refreshed ")
+    w.refreshed()
+    assert w.refresh_pill.caption.text().startswith("Refreshed ")
     w.build.rate.set_value("A much longer value")                   # every pill grows with the widest
     assert len({p.minimumWidth() for p in pills}) == 1
     assert w.refresh_pill.minimumWidth() >= w.build.rate.sizeHint().width()

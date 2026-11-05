@@ -1365,6 +1365,7 @@ class ReleaseWindow(QMainWindow):
                                  "made in a terminal; what you entered stays")
         self.refresh_pill.clicked.connect(self.refresh)
         self.build = BuildIndicator(self, runs_source, notify)
+        self.build.checker.finished.connect(self.refreshed)     # after the build's own slot: the steps are drawn
         self.ticker = WorkflowTicker(jobs_source)       # between the pills and the tabs, fed by the build's looks
         self.ticker.hidden = rp.other_suites_workflows(root, self.suite)
         self.github_status = GitHubStatusIndicator(status_source)
@@ -1538,19 +1539,33 @@ class ReleaseWindow(QMainWindow):
 
     def refresh(self) -> None:
         """reload(), keeping what was entered: step 1's ticks, versions and notes, step 2's portal version (if it
-        is not the one offered) and notes."""
-        typed = self.apps_page.typed()
-        combo = self.portal_page.portal_version
-        version = None if combo.currentText() == combo.itemText(0) else combo.currentText()
-        notes = self.portal_page.portal_notes.text()
-        self.reload()
-        self.apps_page.restore(typed)
-        if version is not None:
-            combo.setEditText(version)
-        self.portal_page.portal_notes.setText(notes)
-        self.build.check()                      # a push from a terminal: its build
+        is not the one offered) and notes. The pill says it is at it until GitHub's runs are in (owner, 05-11-2026:
+        it seemed to do nothing, or to be very slow): the checkout is read here, GitHub's runs in a thread."""
+        self.refresh_pill.caption.setText("Refreshing…")
+        self.refresh_pill.caption.repaint()             # drawn before the checkout is read, which holds the window
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
+        try:
+            typed = self.apps_page.typed()
+            combo = self.portal_page.portal_version
+            version = None if combo.currentText() == combo.itemText(0) else combo.currentText()
+            notes = self.portal_page.portal_notes.text()
+            self.reload()
+            self.apps_page.restore(typed)
+            if version is not None:
+                combo.setEditText(version)
+            self.portal_page.portal_notes.setText(notes)
+        finally:
+            QApplication.restoreOverrideCursor()
+        if self.build.source is None:
+            self.refreshed()
+        self.build.check()                      # a push from a terminal: its build; refreshed() when it is in
         self.github_status.check()
         self.claude.check()
+
+    def refreshed(self, _result: object = None) -> None:
+        """GitHub's runs are in (or could not be had: the build pill says so): the time of this refresh."""
+        if self.refresh_pill.caption.text() == "Refreshing…":
+            self.refresh_pill.caption.setText(f"Refreshed {time.strftime('%H:%M')}")
 
     def reload(self) -> None:
         units = self.units = rp.load_units(self.root, self.suite)

@@ -1,3 +1,9 @@
+Changelog: 05-11-2026 20:58:16
+
+Fixed. Refresh says it is at it (owner, 05-11-2026: it seemed to do nothing, or to be very slow): its pill reads
+"Refreshing…", with the busy cursor while the checkout is read, until GitHub's runs are in, then "Refreshed" with
+the time. A refresh takes a second or two: about 0.6 s for the checkout, 1.3 s for GitHub's runs.
+
 Changelog: 05-11-2026 20:41:56
 
 Breaking. A Nexus release is of the suite ticked in the Portals column, and only it (owner, 05-11-2026: the Windows
