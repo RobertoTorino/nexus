@@ -106,7 +106,8 @@ tab explains itself behind the round **i** in its first row: click it to read th
    `SHA256SUMS`, installs it and starts it (`check-release.sh draft` on the board, `check-release.ps1 draft` on the
    handheld). On Windows an installed portal that is open is closed first, as its window would close (ended when it
    has not closed within 10 seconds): a program that runs cannot be replaced. Test it as a user would. When a release
-   holds both suites, each has its device test on its own device, and each portal is published on its own yes.
+   holds both suites, each has its device test on its own device, and each portal is published on its own yes:
+   the portal choice next to Device test lists only the portals still drafts, so after one Publish it is on the next.
    Work pushed in the meantime (a fix found during the first device test) does not end the release: while a draft
    waits, Device test and Publish stay at hand for it, on the device of its suite.
 8. **Publish** when it works: the draft becomes a release, which makes its portal tag, and the portals offer it from

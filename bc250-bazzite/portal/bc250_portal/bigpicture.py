@@ -1,10 +1,12 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The portal's view (owner, 01-11-2026: the one view; Suite Desktop Mode, the window of tabs, is gone), as Steam's
 Big Picture is for Steam: fullscreen, for a TV and a controller as much as for a desk. Large icons and type, the
-header with the suite's icon, its name and the square pills, a category strip, and a focus that moves with the
-arrow keys, a controller's d-pad or its stick (gamepad.py), with the mouse working as always. The Settings page (the
-☰ pill or the controller's ☰ button, owner 04-11-2026, as the Windows Portable Suite's portal) takes the place of
-the category strip and the tiles: the pills of the settings, each with a short line, under the same header.
+header with the suite's icon, its name, ☰ at the top right and a row of big symbols (owner, 05-11-2026: in place of
+the pills) with the board's load, temperatures, date and time on its right, a category strip, and a focus that moves
+with the arrow keys, a controller's d-pad or its stick (gamepad.py), with the mouse working as always. The Settings
+page (the ☰ symbol or the controller's ☰ button, owner 04-11-2026, as the Windows Portable Suite's portal) takes the
+place of the category strip and the tiles: the pills of the settings, each with a short line, under the same
+header.
 
 A short animated intro (Intro) plays before the portal shows itself, with its sound; any key, click or button skips
 it."""
@@ -27,10 +29,12 @@ from .looks import Backdrop, greyed
 TILE_W, TILE_H = 244, 316
 ICON_PX = 184
 LOGO_PX = ICON_PX               # the suite's icon in the header: as large as a tile's icon (owner, 01-11-2026)
-PILL_W = 128                    # a header pill: a rounded rectangle (owner, 01-11-2026) as wide as this, and as high as
-PILL_MIN_H = 64                 # the room under the title down to the icon's bottom, at least this
+PILL_W = 128                    # a pill on the Settings page: a rounded rectangle (owner, 01-11-2026) this wide
+PILL_MIN_H = 64
 PILL_RADIUS = 16
 PILL_ALPHA = 150                # a pill that is not active (no focus, no mouse) shows the wallpaper through it
+SYMBOL_PX = 84                  # a header symbol (owner, 05-11-2026): a square this large, its glyph GLYPH_PX
+GLYPH_PX = 56
 GAP = 20
 MARGIN = 48
 FULL_HEIGHT = 1000             # a window this high or higher is drawn at full size, a lower one smaller
@@ -124,11 +128,10 @@ class Logo(QLabel):
 
 
 class HeaderPill(Pill):
-    """A header pill as a rounded rectangle (owner, 01-11-2026): the value in large type over its caption, both
-    centered; the row of them ends at the bottom of the suite's icon, so a pill is as high as the room under the
-    title leaves. Not active (no focus, no mouse) it is half transparent, so the wallpaper shows through it; with
-    the focus or under the mouse it is solid, framed in silver (the theme's outline, owner 05-11-2026), as a tile
-    with the focus is. The same clicked, set_value and setEnabled as every pill."""
+    """A pill of the Settings page as a rounded rectangle (owner, 01-11-2026): the value in large type over its
+    caption, both centered. Not active (no focus, no mouse) it is half transparent, so the wallpaper shows through
+    it; with the focus or under the mouse it is solid, framed in silver (the theme's outline, owner 05-11-2026), as a
+    tile with the focus is. The same clicked, set_value and setEnabled as every pill."""
 
     scale = 1.0
 
@@ -297,12 +300,89 @@ class BigTile(QAbstractButton):
         painter.end()
 
 
-class MenuPill(HeaderPill):
-    """The ☰ pill, its glyph larger than a pill's value: it opens the Settings page."""
+class SymbolButton(QAbstractButton):
+    """A big symbol in the header (owner, 05-11-2026: in place of the pills): the glyph alone on the wallpaper, what it
+    does in its tooltip. With the focus or under the mouse it is framed as a tile with the focus is; disabled, the
+    glyph is muted. A badge on its corner holds a short figure: the updates waiting, or a batch's progress (3/7)."""
+
+    def __init__(self, glyph, tooltip: str = ""):
+        super().__init__()
+        self.glyph = glyph                      # glyphs.<name>: a color in, a QIcon out
+        self.badge = ""
+        self.badge_colour = RED
+        self._icons: dict[str, object] = {}
+        self.scale = 1.0
+        self.setToolTip(tooltip)
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.set_scale(1.0)
+
+    def set_badge(self, text: str, colour: str = RED) -> None:
+        self.badge, self.badge_colour = text, colour
+        self.update()
 
     def set_scale(self, scale: float) -> None:
-        super().set_scale(scale)
-        self.value.setStyleSheet(header_font() + f"font-size:{max(22, round(36 * scale))}px; font-weight:800;")
+        self.scale = scale
+        self.setFixedSize(self.sizeHint())
+        self.update()
+
+    def sizeHint(self) -> QSize:  # noqa: N802 (Qt override)
+        return QSize(round(SYMBOL_PX * self.scale), round(SYMBOL_PX * self.scale))
+
+    def _icon(self, colour: str):
+        """The glyph in *colour*, drawn once per color (the theme's text, or muted when disabled)."""
+        if colour not in self._icons:
+            self._icons[colour] = self.glyph(colour)
+        return self._icons[colour]
+
+    def focusInEvent(self, event) -> None:  # noqa: N802 (Qt override)
+        super().focusInEvent(event)
+        self.update()
+
+    def focusOutEvent(self, event) -> None:  # noqa: N802 (Qt override)
+        super().focusOutEvent(event)
+        self.update()
+
+    def enterEvent(self, event) -> None:  # noqa: N802 (Qt override)
+        super().enterEvent(event)
+        self.update()
+
+    def leaveEvent(self, event) -> None:  # noqa: N802 (Qt override)
+        super().leaveEvent(event)
+        self.update()
+
+    def paintEvent(self, event) -> None:  # noqa: N802 (Qt override)
+        s = self.scale
+        painter = QPainter(self)
+        painter.setRenderHints(QPainter.RenderHint.Antialiasing | QPainter.RenderHint.SmoothPixmapTransform
+                               | QPainter.RenderHint.TextAntialiasing)
+        frame = QRectF(self.rect()).adjusted(2, 2, -2, -2)
+        focused = self.hasFocus()
+        if (focused or self.underMouse()) and self.isEnabled():
+            fill = QColor(ACCENT)
+            fill.setAlpha(60 if focused else 28)
+            painter.setBrush(fill)
+            painter.setPen(QPen(QColor(OUTLINE), 3) if focused else Qt.PenStyle.NoPen)
+            painter.drawRoundedRect(frame, 16 * s, 16 * s)
+        theme = current_theme()
+        side = round(GLYPH_PX * s)
+        glyph = QRect((self.width() - side) // 2, (self.height() - side) // 2, side, side)
+        self._icon(theme.text if self.isEnabled() else muted(theme)).paint(painter, glyph)
+        if self.badge:
+            font = QFont(self.font())
+            font.setPixelSize(max(11, round(15 * s)))
+            font.setBold(True)
+            painter.setFont(font)
+            metrics = QFontMetrics(font)
+            height = metrics.height() + round(2 * s)
+            width = max(height, metrics.horizontalAdvance(self.badge) + round(10 * s))
+            plate = QRectF(self.width() - width - 1, self.height() - height - 1, width, height)
+            painter.setPen(QPen(QColor("#1b1b1b"), 2))
+            painter.setBrush(QColor(self.badge_colour))
+            painter.drawRoundedRect(plate, height / 2, height / 2)
+            painter.setPen(QColor("white"))
+            painter.drawText(plate, int(Qt.AlignmentFlag.AlignCenter), self.badge)
+        painter.end()
 
 
 class NoticeButton(QToolButton):
@@ -357,8 +437,8 @@ class UpdateBanner(QToolButton):
 
 
 class BigPicture(Backdrop):
-    """The view: the header (the suite's icon, its name with the version and the stage, the line under it, the
-    square pills), the category strip with the notices beside it, the tiles of the open category, and under them
+    """The view: the header (the suite's icon, its name with the version and the stage, the line under it, ☰ at the
+    top right, the row of symbols with the installed count and the status line on its right), the category strip with the notices beside it, the tiles of the open category, and under them
     what the buttons do. It shows what the window knows of each app (sync); a tile opens its app by
     open_requested(entry) and asks for its menu by menu_requested(entry)."""
 
@@ -388,8 +468,11 @@ class BigPicture(Backdrop):
         self.logo.setToolTip("Open the wiki in the browser")
         self.logo.clicked.connect(self.wiki_requested)
         top.addWidget(self.logo, 0, Qt.AlignmentFlag.AlignTop)
-        words = self.words = QVBoxLayout()           # as high as the icon: the pills take what the title leaves
+        words = self.words = QVBoxLayout()           # as high as the icon: the symbols' row ends at its bottom
         words.setSpacing(2)
+        upper = self.upper = QHBoxLayout()           # the title and the line under it, ☰ on their right
+        heading = QVBoxLayout()
+        heading.setSpacing(2)
         title_row = self.title_row = QHBoxLayout()
         self.title = QLabel(APP_NAME)
         title_row.addWidget(self.title)
@@ -403,16 +486,31 @@ class BigPicture(Backdrop):
         self.info = InfoButton("", "About this portal")
         title_row.addWidget(self.info, 0, Qt.AlignmentFlag.AlignVCenter)
         title_row.addStretch(1)
-        words.addLayout(title_row)
+        heading.addLayout(title_row)
         self.hint = ElidedLabel()
-        words.addWidget(self.hint)
-        self.pill_row = QHBoxLayout()
-        self.pill_row.addStretch(1)
-        words.addLayout(self.pill_row, 1)
+        heading.addWidget(self.hint)
+        heading.addStretch(1)
+        upper.addLayout(heading, 1)
+        words.addLayout(upper)
+        words.addStretch(1)
+        self.symbol_row = QHBoxLayout()              # the symbols, then on the right the installed count over the
+        self.symbol_row.addStretch(1)                # status line (owner, 05-11-2026)
+        readout = QVBoxLayout()
+        readout.setSpacing(0)
+        readout.addStretch(1)
+        self.installed = QLabel()
+        self.installed.setAlignment(Qt.AlignmentFlag.AlignRight)
+        readout.addWidget(self.installed)
+        self.status = QLabel()
+        self.status.setAlignment(Qt.AlignmentFlag.AlignRight)
+        readout.addWidget(self.status)
+        self.symbol_row.addLayout(readout)
+        words.addLayout(self.symbol_row)
         top.addLayout(words, 1)
-        self.controls: list[QWidget] = [self.info]   # the header's widgets the focus can reach, the pills among them
+        self.controls: list[QWidget] = [self.info]   # the header's widgets the focus can reach, the symbols among them
         self.info.installEventFilter(self)
-        self.pills: list[HeaderPill] = []
+        self.symbols: list[SymbolButton] = []
+        self.corner: SymbolButton | None = None
         outer.addLayout(top)
 
         strip = QHBoxLayout()
@@ -517,13 +615,25 @@ class BigPicture(Backdrop):
         self.title_row.insertWidget(self.title_row.count() - 1, widget, 0, Qt.AlignmentFlag.AlignVCenter)
         self.add_control(widget)
 
-    def place_pills(self, pills: list[HeaderPill]) -> None:
-        """The window's pills, in a row under the title; the focus can reach them."""
-        for pill in pills:
-            self.pill_row.insertWidget(self.pill_row.count() - 1, pill)
-            self.add_control(pill)
-        self.pills = pills
+    def place_symbols(self, symbols: list[SymbolButton], corner: SymbolButton) -> None:
+        """The window's symbols, in a row under the title, and *corner* (☰) at the top right; the focus reaches
+        them."""
+        for symbol in symbols:
+            self.symbol_row.insertWidget(self.symbol_row.count() - 2, symbol)
+            self.add_control(symbol)
+        self.upper.addWidget(corner, 0, Qt.AlignmentFlag.AlignTop)
+        self.add_control(corner)
+        self.symbols, self.corner = symbols, corner
         self.set_scale(self.scale)
+
+    def set_installed(self, text: str, tooltip: str = "") -> None:
+        """The small line over the status line: how many apps are installed."""
+        self.installed.setText(text)
+        self.installed.setToolTip(tooltip)
+
+    def set_status(self, text: str) -> None:
+        """The line on the right of the symbols: the CPU's and the GPU's load and temperature, the date and time."""
+        self.status.setText(text)
 
     def place_settings(self, rows: list[tuple[HeaderPill, str]]) -> None:
         """The Settings page's rows: a pill and its short line; the focus reaches the pills there."""
@@ -630,7 +740,8 @@ class BigPicture(Backdrop):
         self.top.setSpacing(round(24 * s))
         self.words.setSpacing(round(6 * s))
         self.title_row.setSpacing(round(12 * s))
-        self.pill_row.setSpacing(round(12 * s))
+        self.upper.setSpacing(round(12 * s))
+        self.symbol_row.setSpacing(round(14 * s))
         self.logo.set_side(round(LOGO_PX * s))
         self.banner.setStyleSheet(f"background:{ORANGE}; color:white; font-weight:700; padding:6px 10px;"
                                   f" font-size:{max(12, round(16 * s))}px;")
@@ -641,6 +752,8 @@ class BigPicture(Backdrop):
                                  f" font-size:{max(11, round(14 * s))}px; border-radius:{round(6 * s)}px;"
                                  f" padding:{round(2 * s)}px {round(8 * s)}px;")
         self.hint.setStyleSheet(f"color:{muted()}; font-size:{max(13, round(18 * s))}px;")
+        self.installed.setStyleSheet(f"color:{muted()}; font-size:{max(12, round(16 * s))}px; font-weight:600;")
+        self.status.setStyleSheet(f"font-size:{max(14, round(22 * s))}px; font-weight:700;")
         self.keys.setStyleSheet(f"color:{muted()}; font-size:{max(16, round(24 * s))}px; font-weight:700;")
         self.bar.setStyleSheet(
             f"QTabBar::tab {{ font-size:{max(15, round(24 * s))}px; font-weight:700;"
@@ -651,8 +764,8 @@ class BigPicture(Backdrop):
         self.settings_heading.setStyleSheet(self.bar.styleSheet())
         for button in (self.update_banner, self.notice, self.outside):
             button.set_scale(s)
-        for pill in self.pills:
-            pill.set_scale(s)
+        for symbol in self.symbols + ([self.corner] if self.corner else []):
+            symbol.set_scale(s)
         for pill in self.setting_pills:
             pill.set_scale(s)
             pill.setFixedHeight(round(SETTING_H * s))
@@ -692,7 +805,7 @@ class BigPicture(Backdrop):
             self.reflow()
         elif event.type() == QEvent.Type.KeyPress and watched in self.controls:
             # The arrow keys move the focus from a header control as from a tile, Page Up and Page Down change the
-            # category; Enter presses a button (a pill presses itself).
+            # category; Enter presses a button (a pill of the Settings page presses itself).
             key = event.key()
             if key in KEYS or key in CATEGORY_KEYS:
                 self.navigate(KEYS.get(key) or CATEGORY_KEYS[key])
@@ -717,7 +830,7 @@ class BigPicture(Backdrop):
         return focus if isinstance(focus, BigTile) and focus in self.current_tiles() else None
 
     def focus_items(self) -> list[QWidget]:
-        """What the focus can be on: the tiles of the open category and the header's controls (the pills, the
+        """What the focus can be on: the tiles of the open category and the header's controls (the symbols, the
         notices, the buttons of the title row)."""
         controls = [c for c in self.controls if c.isVisibleTo(self) and c.isEnabled()
                     and c.focusPolicy() != Qt.FocusPolicy.NoFocus]

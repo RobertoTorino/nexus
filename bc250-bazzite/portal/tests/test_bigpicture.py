@@ -370,44 +370,54 @@ def test_without_an_audio_output_the_pill_is_disabled_with_a_reason(made):
 
 
 # ------------------------------------------------------------------------------------------------ the header
-def test_the_pills_are_rounded_rectangles_that_show_the_wallpaper_through(made):
-    """The pills (owner, 01-11-2026): rounded rectangles, all the same size, their row ending at the bottom of the
-    suite's icon, half transparent when not active, solid and framed in the accent with the focus or under the
-    mouse."""
+def test_the_header_has_big_symbols_with_the_status_on_their_right(made):
+    """Big symbols in place of the pills (owner, 05-11-2026): all the same square size, their row ending at the bottom
+    of the suite's icon; ☰ at the top right, level with the title; on the right of the symbols the installed count
+    over the status line. Scaled with the view on a handheld's screen."""
     window, _ = made()
-    pills = window.header_pills
-    assert len(pills) == 6 and all(isinstance(p, bigpicture.HeaderPill) for p in pills)
-    assert [p.caption.text() for p in pills] == [
-        "Click to refresh", "Installed apps", "All updates", "All apps", "Click to view", "Settings"]
-    assert all(window.big.isAncestorOf(p) for p in pills)
+    symbols = window.header_buttons
+    assert len(symbols) == 4 and all(isinstance(s, bigpicture.SymbolButton) for s in symbols)
     window.show()
     window.resize(1920, 1080)
     QApplication.processEvents()
     QApplication.processEvents()
     big = window.big
-    sizes = {(p.width(), p.height()) for p in pills}
-    assert len(sizes) == 1
-    width, height = sizes.pop()
-    assert width == bigpicture.PILL_W and bigpicture.PILL_MIN_H <= height < width
+    corner = window.settings_button
+    assert {(s.width(), s.height()) for s in [*symbols, corner]} == {(bigpicture.SYMBOL_PX, bigpicture.SYMBOL_PX)}
+    at = lambda w: w.mapTo(big, w.rect().topLeft())  # noqa: E731
     bottom = lambda w: w.mapTo(big, w.rect().bottomLeft()).y()  # noqa: E731
-    assert abs(bottom(pills[0]) - bottom(big.logo)) <= 1                  # the row ends at the icon's bottom
-    assert big.logo.mapTo(big, big.logo.rect().topLeft()).y() <= big.title.mapTo(big, big.title.rect().topLeft()).y()
-    sheet = pills[0].styleSheet()
-    assert f"rgba(" in sheet and f",{bigpicture.PILL_ALPHA});" in sheet and f"border-radius:{bigpicture.PILL_RADIUS}px" in sheet
-    assert "#pill:hover, #pill:focus" in sheet and "border-left" not in sheet
-    assert window.refresh_pill.caption.wordWrap()
+    assert abs(bottom(symbols[0]) - bottom(big.logo)) <= 2                # the row ends at the icon's bottom
+    assert at(corner).y() <= at(big.title).y() + big.title.height()       # ☰ at the top ...
+    assert at(corner).x() + corner.width() >= at(big.status).x() + big.status.width() - 2   # ... right
+    assert at(big.status).x() > at(symbols[-1]).x() + symbols[-1].width()  # the status on the symbols' right
+    assert at(big.installed).y() < at(big.status).y()
     window.resize(1280, 720)
     QApplication.processEvents()
     QApplication.processEvents()
-    assert window.big.scale < 1 and {p.width() for p in pills} == {round(bigpicture.PILL_W * window.big.scale)}
-    assert abs(bottom(pills[0]) - bottom(big.logo)) <= 1                  # scaled with the view, still aligned
+    assert big.scale < 1 and {s.width() for s in symbols} == {round(bigpicture.SYMBOL_PX * big.scale)}
+    assert abs(bottom(symbols[0]) - bottom(big.logo)) <= 2                # scaled with the view, still aligned
 
 
-def test_the_pills_work_as_before(made):
+def test_a_symbols_badge_and_its_disabled_look(made):
+    """The badge holds a short figure; a disabled symbol draws its glyph muted, an enabled one in the theme's text."""
+    window, _ = made()
+    symbol = window.updates_button
+    symbol.set_badge("3/7", bigpicture.BLUE)
+    assert symbol.badge == "3/7" and symbol.badge_colour == bigpicture.BLUE
+    symbol.setEnabled(False)
+    symbol.grab()
+    symbol.setEnabled(True)
+    symbol.grab()
+    theme = bigpicture.current_theme()
+    assert set(symbol._icons) == {bigpicture.muted(theme), theme.text}
+
+
+def test_the_symbols_and_the_pills_work_as_before(made):
     window, _ = made()
     refreshed = []
-    window.refresh_pill.clicked.connect(lambda: refreshed.append(1))
-    window.refresh_pill.keyPressEvent(QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_Space, Qt.KeyboardModifier.NoModifier))
+    window.refresh_button.clicked.connect(lambda: refreshed.append(1))
+    from PyQt6.QtTest import QTest
+    QTest.keyClick(window.refresh_button, Qt.Key.Key_Space)
     assert refreshed == [1]
     toggled = []
     window.icons_box.toggled.connect(toggled.append)
@@ -417,7 +427,7 @@ def test_the_pills_work_as_before(made):
     assert toggled == [True]
 
 
-def test_the_focus_reaches_the_pills_and_back_with_the_controller(made, monkeypatch):
+def test_the_focus_reaches_the_symbols_and_back_with_the_controller(made, monkeypatch):
     window, pad = made()
     start(window)
     window.resize(1500, 1000)
@@ -428,16 +438,16 @@ def test_the_focus_reaches_the_pills_and_back_with_the_controller(made, monkeypa
     assert window.focusWidget() is first
     pad.queue = [("button", "dpad_up", True), ("button", "dpad_up", False)]
     window.gamepad.poll()
-    assert window.focusWidget() in window.header_pills          # up from the top row: the pills
+    assert window.focusWidget() in window.header_buttons          # up from the top row: the symbols
     pad.queue = [("button", "dpad_down", True), ("button", "dpad_down", False)]
     window.gamepad.poll()
     assert isinstance(window.focusWidget(), bigpicture.BigTile)
-    window.refresh_pill.setFocus()
+    window.refresh_button.setFocus()
     pressed = []
-    window.refresh_pill.clicked.connect(lambda: pressed.append(1))
+    window.refresh_button.clicked.connect(lambda: pressed.append(1))
     pad.queue = [("button", "a", True)]
     window.gamepad.poll()
-    assert pressed == [1]                                      # A presses the focused pill
+    assert pressed == [1]                                      # A presses the focused symbol
 
 
 def test_the_settings_page_holds_the_settings(made, monkeypatch):
@@ -451,11 +461,11 @@ def test_the_settings_page_holds_the_settings(made, monkeypatch):
     QApplication.processEvents()
     big = window.big
     assert window.setting_pills == [window.icons_box, window.sound_box, window.theme_pill, window.wallpaper_pill]
-    assert not any(p in window.header_pills for p in window.setting_pills)
+    assert not any(p in window.header_buttons for p in window.setting_pills)
     assert all(big.settings_page.isAncestorOf(p) for p in window.setting_pills)
     assert [label.text() for label in big.setting_lines] == list(mw.SETTING_LINES)
     assert not big.in_settings() and big.keys.text() == bigpicture.LEGEND
-    window.settings_pill.click()
+    window.settings_button.click()
     QApplication.processEvents()
     assert big.in_settings() and big.strip.isHidden() and big.stack.isHidden()
     assert big.keys.text() == bigpicture.SETTINGS_LEGEND and big.hint.full == bigpicture.SETTINGS_HINT
@@ -488,16 +498,19 @@ def test_the_settings_page_holds_the_settings(made, monkeypatch):
     assert not big.in_settings() and window.focusWidget() is big.tiles["ncgui"]
 
 
-def test_the_arrow_keys_move_from_a_pill_and_enter_presses_a_button(made):
+def test_the_arrow_keys_move_from_a_symbol_and_enter_presses_a_button(made):
     window, _ = made()
     start(window)
     window.resize(1500, 1000)
     QApplication.processEvents()
     QApplication.processEvents()
-    window.refresh_pill.setFocus()
+    window.refresh_button.setFocus()
     key(window, Qt.Key.Key_Right)
-    # Installed apps only shows and Install all updates is disabled without updates: both are skipped.
-    assert window.focusWidget() is window.apps_pill
+    assert window.focusWidget() is window.sysinfo_button
+    key(window, Qt.Key.Key_Right)
+    assert window.focusWidget() is window.apps_button
+    key(window, Qt.Key.Key_Right)                              # Install all updates is disabled without updates
+    assert window.focusWidget() is not window.updates_button
     key(window, Qt.Key.Key_Down)
     assert isinstance(window.focusWidget(), bigpicture.BigTile)
     window.restart_button.setText("● Restart: portal 99.0.0 is installed")
@@ -558,8 +571,8 @@ def test_the_controller_moves_opens_and_switches_category(made, monkeypatch):
     assert window.big.bar.currentIndex() == 0
     key(window, Qt.Key.Key_PageDown)                         # on a tile: the category, not the page's scroll
     assert window.big.bar.currentIndex() == 1
-    window.refresh_pill.setFocus()
-    key(window, Qt.Key.Key_PageUp)                           # on a pill too
+    window.refresh_button.setFocus()
+    key(window, Qt.Key.Key_PageUp)                           # on a symbol too
     assert window.big.bar.currentIndex() == 0
 
 
@@ -729,9 +742,11 @@ def test_the_view_scales_down_for_a_handheld_screen(made, height, small):
     assert window.big.columns["sustainable"] * tile.width() <= window.big.width()
     assert window.big.minimumSizeHint().width() <= 640 or window.big.minimumWidth() <= 640
     assert (window.big.logo.width() < bigpicture.LOGO_PX) is small
-    pills = window.header_pills
-    row = sum(p.width() for p in pills) + (len(pills) - 1) * window.big.pill_row.spacing()
-    assert row <= window.big.width() - 2 * window.big.outer.contentsMargins().left()   # one row of pills fits
+    symbols = window.header_buttons
+    row = (sum(s.width() for s in symbols) + len(symbols) * window.big.symbol_row.spacing()
+           + window.big.status.sizeHint().width())
+    room = window.big.width() - 2 * window.big.outer.contentsMargins().left() - window.big.logo.width()
+    assert row <= room                                      # the symbols and the status line fit in one row
 
 
 def test_each_category_keeps_its_own_columns(made):
@@ -800,8 +815,8 @@ def test_every_controller_action_plays_the_short_sound(made, monkeypatch):
 
 def test_keys_and_clicks_play_the_short_sound_too(made, monkeypatch):
     """The short sound on every action whatever it comes from (owner, 05-11-2026): a key that acts, a click on a
-    tile or a pill, the shortcuts, and a controller Steam turns into keys; not on a key that does nothing, a held key's
-    repeats, a click on the room around the tiles or a pill that only shows, and once for a click."""
+    tile or a symbol, the shortcuts, and a controller Steam turns into keys; not on a key that does nothing, a held
+    key's repeats, a click on the room around the tiles or on text that only shows, and once for a click."""
     from PyQt6.QtTest import QTest
     window, _ = made()
     start(window)
@@ -813,9 +828,10 @@ def test_keys_and_clicks_play_the_short_sound_too(made, monkeypatch):
     QApplication.sendEvent(window.focusWidget(), QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_Left,
                                                            Qt.KeyboardModifier.NoModifier, "", True))
     assert actions() == 1                                                    # nor a repeat (not spontaneous either)
-    QTest.mouseClick(window.refresh_pill.caption, Qt.MouseButton.LeftButton)   # the label in the pill: once
+    QTest.mouseClick(window.refresh_button, Qt.MouseButton.LeftButton)       # a symbol: once
     assert actions() == 2
-    QTest.mouseClick(window.installed_pill, Qt.MouseButton.LeftButton)        # only shows
+    QTest.mouseClick(window.big.installed, Qt.MouseButton.LeftButton)        # only shows
+    QTest.mouseClick(window.big.status, Qt.MouseButton.LeftButton)
     QTest.mouseClick(window.big, Qt.MouseButton.LeftButton, pos=window.big.rect().bottomRight())
     assert actions() == 2
     monkeypatch.setattr(window, "confirm_exit", lambda: False)

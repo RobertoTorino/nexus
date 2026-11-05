@@ -264,6 +264,7 @@ class ReleasePage(QWidget):
         self.stop_button.setEnabled(idle and now == "run" and run is not None and not run.done)
         self.resume_button.setEnabled(idle and now == "run" and run is not None and run.done and not run.passed)
         self.resume_button.setText("Start again on this commit" if facts.restart else "Resume run")
+        self.choose_drafts(facts.drafts)
         here = bool(facts.drafts) and rp.tests_here(window.root, self.waiting_suite())
         self.portal_choice.setVisible(self.portal_choice.count() > 1)
         self.test_button.setEnabled(idle and now == "test" and here)
@@ -325,6 +326,20 @@ class ReleasePage(QWidget):
         if key == "finish":
             return "The release is out: git pull brings in its Pin ... commit."
         return ""
+
+    def choose_drafts(self, drafts: list[str]) -> None:
+        """Only the portals still drafts in the choice, the chosen one kept while it is one (owner, 05-11-2026: after
+        the board's Publish it stayed on portal-v15.2.0, so Publish published it again and the Windows draft stayed)."""
+        if not drafts:
+            return
+        items = [self.portal_choice.itemText(i) for i in range(self.portal_choice.count())]
+        if items == drafts:
+            return
+        chosen = self.portal_choice.currentText()
+        self.portal_choice.clear()
+        self.portal_choice.addItems(drafts)
+        if chosen in drafts:
+            self.portal_choice.setCurrentText(chosen)
 
     def waiting_suite(self) -> str | None:
         tag = self.portal_choice.currentText()

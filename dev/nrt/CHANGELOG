@@ -1,3 +1,9 @@
+Changelog: 05-11-2026 19:21:28
+
+Fixed. The portal choice of Device test and Publish holds only the portals that are still drafts: after one suite's
+Publish it moves to the next draft (owner, 05-11-2026: it stayed on portal-v15.2.0, so Publish published that one
+again and wp-portal-v8.2.0 stayed a draft).
+
 Changelog: 05-11-2026 13:42:23
 
 Added. The commit message field of Commit your changes starts with "see changelog", and holds it again after each

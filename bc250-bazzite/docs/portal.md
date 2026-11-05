@@ -14,12 +14,14 @@ to skip it.
 
 **The header**: the suite's icon, as large as a tile's (click it to open this wiki), its name with the version and the **Beta** stage,
 a small **i** that says where the apps install from, and a line that says in a few words what the open category is
-for. Under them, in a row that ends level with the icon's bottom, six pills with rounded corners: **Refresh**
-(look again at which apps are installed), **Installed apps**, **Install All updates**, **Install All apps**,
-**Sys info** and **☰ Settings**, each described below. A pill
-that is not active is half transparent, so the wallpaper shows through it; the one with the focus or under the
-mouse is solid, framed in silver. The line at the bottom says what the keys and the controller's
-buttons do.
+for, with **☰ Settings** at the top right. Under them, in a row that ends level with the icon's bottom, four big
+symbols: **Refresh** (two circling arrows: look again at which apps are installed), **Sys info** (a chip),
+**Install All apps** (a grid of apps with an arrow down) and **Install All updates** (a circular arrow around an
+arrow down), each described below. Hover a symbol to see what it does. The one with the focus is framed in silver,
+as a tile is; a symbol that has nothing to do is grayed out. On the right of the symbols, how many apps are
+installed, and under it the status line: the CPU's and the GPU's load and temperature, then the date and the time,
+for example **CPU 12% 54°C | GPU 3% 61°C | Thursday 11/5/26 | 07:44 PM CEST**. The line at the bottom says what the
+keys and the controller's buttons do.
 
 **Bazzite Test** is always installed with the portal; every other app is optional. Below the header is a strip
 with a name for each [category](apps/categories.md): Sustainable, Graphics, Gaming and Utilities, and beside it
@@ -63,8 +65,8 @@ on the keyboard, to change the category. The portal always opens on the first on
 
 | Keyboard | Controller | Mouse | Does |
 |---|---|---|---|
-| Arrow keys | D-pad or left stick | Point | Move the focus between the tiles, the pills and the notices |
-| Enter | A | Click | Open the app, press a pill, open a notice |
+| Arrow keys | D-pad or left stick | Point | Move the focus between the tiles, the symbols and the notices |
+| Enter | A | Click | Open the app, press a symbol, open a notice |
 | U | Y | Right click | Update: the portal while a newer one is out, else the tile's app (update or reinstall) |
 | Menu key, M | X | | The tile's menu: Open, Install, Update, Reinstall, Uninstall |
 | Page Up, Page Down (or Q, E) | LB, RB | Click a name | The category before and after |
@@ -94,7 +96,7 @@ controller, the keyboard and the mouse work as always.
 
 **Handhelds.** The view is made for a TV at 1080 p or 4K as much as for the Steam Deck (1280 x 800) and the ROG
 XBOX Ally X (1920 x 1080, shown at 1280 x 720 with the desktop's scaling): below 1000 px of height the icons, the
-type, the header and the pills are drawn smaller, down to about two thirds, so a row of pills, two rows of icons
+type, the header and its symbols are drawn smaller, down to about two thirds, so the header, two rows of icons
 and the line of keys fit on the screen. You can also swipe a page with a finger on the touch screen. The built-in
 controls are controllers like any other. Where Steam Input already turns them into keys (the Deck's desktop
 layout does: d-pad to the arrow keys, A to Enter, B to Escape), the keyboard column above applies and works as it
@@ -167,21 +169,28 @@ Nexus Release Tool, Nexus Installer Tests (the installer tests one at a time), N
   front. When you come back to the window, it sees the newer portal and shows this red button: click it to restart
   into the new portal, which then shows the red dot on the apps it updates. While an app installs or uninstalls,
   the button waits for it to end.
-- **Installed apps**, a pill at the top: how many of the portal's apps are installed, for example **12/27**. An app
-  that is not available any more is not counted.
-- **Install All updates**, a pill at the top, enabled when the notice names any app (its tooltip says how many).
+- **Installed apps**, on the right of the symbols: how many of the portal's apps are installed, for example
+  **12/27 installed**. An app that is not available any more is not counted.
+- **The status line**, under it: the CPU's load and temperature, the GPU's load and temperature, the day, the date
+  (month/day/year) and the time with its time zone, read every two seconds (not while the portal is minimized). The
+  load is the share of the last two seconds. The GPU's load comes from the kernel's load sensor where there is
+  one; the BC-250's stock kernel has none, so the portal adds up the GPU time of your own programs (the games and
+  the desktop among them), or reads GPU Governor's corrected metrics when it has set them up. What the system does
+  not report is left out of the line.
+- **Install All updates**, a symbol at the top, enabled when the notice names any app; a red badge on it says how
+  many, and its tooltip what it does.
   Click it to install them all, updates and reinstalls, one after the other. The portal asks once, with the list, and warns when one of them changes
   the board. Each app's installer runs in its own terminal, as a single install does. When one asks for your
-  password, type it in that terminal: the next one waits until it has ended. While it runs, the pill shows which one
-  of how many it is at, for example **2/5**. An install that fails does not stop the others; at the end the portal
+  password, type it in that terminal: the next one waits until it has ended. While it runs, its badge shows which
+  one of how many it is at, for example **2/5**. An install that fails does not stop the others; at the end the portal
   names those that failed, and Install in their tiles' menus tries again. **Refresh**, while it waits for a
   terminal that was closed, can stop waiting, and then stops the rest too.
-- **Install All apps**, a pill at the top, enabled when the open category has apps that are not installed yet
+- **Install All apps**, a symbol at the top, enabled when the open category has apps that are not installed yet
   (its tooltip says how many). Click it to install them, one after the other, the same way as **Install all updates**: one question with the
-  list and the board warning, each installer in its own terminal, the pill showing which one of how many. It is
+  list and the board warning, each installer in its own terminal, its badge showing which one of how many. It is
   disabled once every app of the category is installed. A portal installed for the first time fills a category with
   one click.
-- **☰ Settings**, the last pill at the top, or the ☰ button on the controller (Start, Options on a PlayStation
+- **☰ Settings**, the symbol at the top right, or the ☰ button on the controller (Start, Options on a PlayStation
   controller): the Settings page, in place of the category strip and the tiles, under the same header. It holds
   the four settings below, each a pill with a short line beside it. Move between them with the arrow keys, the
   d-pad or the stick, and press A or Enter to change one. B, Escape or ☰ again goes back to the apps.
@@ -194,7 +203,7 @@ Nexus Release Tool, Nexus Installer Tests (the installer tests one at a time), N
 - **Sound**, on the Settings page (Yes or No; click it to switch): the intro plays its sound when the portal opens,
   and every action gives a short sound: each move and button on a controller, each key that acts (the arrow keys,
   Enter, Space, Escape, Tab, Page Up and Page Down, Q, E, U, S, K, M and the Menu key) and each click on a tile, a
-  pill, a button, a category or a menu entry. Any controller works, also one Steam turns into keys. A key held down
+  symbol, a pill, a button, a category or a menu entry. Any controller works, also one Steam turns into keys. A key held down
   sounds once, and typing in a text field stays silent. No switches both off. The portal remembers the choice.
   When the board has no audio output, the pill says No and is disabled, and the portal stays silent.
 - **Theme switcher**, on the Settings page, showing the theme; click it for the next one: the look of every app in the
@@ -213,7 +222,7 @@ Nexus Release Tool, Nexus Installer Tests (the installer tests one at a time), N
   removes it. The menu also lists the last 10 wallpapers you chose, newest first, under **Used before**: click one to
   use it again. The portal remembers only where each picture was (in `wallpapers.json` in the same folder), so one
   moved or deleted since shows as not found until it is back.
-- **Sys info**, a pill at the top: a small window with what the system reports about the board: the board, the BIOS
+- **Sys info**, a symbol at the top: a small window with what the system reports about the board: the board, the BIOS
   (with UEFI and Secure Boot), the CPU (model, cores and threads online, top clock, microcode), each GPU (name,
   driver, VRAM, shared memory, clock levels, VBIOS, PCIe link), the memory, the drives with the free space in your
   home folder, the displays (each output, the monitor's name and its preferred mode), the sound cards, the network

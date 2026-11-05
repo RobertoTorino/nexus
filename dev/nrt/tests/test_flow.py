@@ -524,6 +524,25 @@ def test_the_device_test_and_publish(release_window, monkeypatch):
     assert page.marks["test"].text() == "!" and page.test_button.isEnabled() and page.publish_button.isEnabled()
 
 
+def test_the_portal_choice_holds_only_the_drafts(release_window, monkeypatch):
+    """Two suites on the release, the board's published (owner, 05-11-2026: the choice stayed on portal-v15.2.0, so
+    Publish published it again and the Windows draft stayed a draft): only the Windows draft is left to choose."""
+    w = release_window
+    page = w.release_page
+    monkeypatch.setattr(flow, "waiting_portals", lambda root: ["portal-v2.0.0", "wp-portal-v1.0.0"])
+    monkeypatch.setattr(flow, "published", lambda root, runs, tag: tag == "portal-v2.0.0")
+    w.build.runs = [_run(sh(w.root, "rev-parse", "HEAD").strip())]
+    page.portal_choice.clear()
+    page.portal_choice.addItems(["portal-v2.0.0", "wp-portal-v1.0.0"])
+    page.show_state()
+    assert page.facts.drafts == ["wp-portal-v1.0.0"] and page.portal_choice.currentText() == "wp-portal-v1.0.0"
+    ran = []
+    monkeypatch.setattr(w, "confirm_git", lambda *a: True)
+    monkeypatch.setattr(w, "run_git", ran.append)
+    page.publish()
+    assert ran == ["gh release edit wp-portal-v1.0.0 --draft=false --latest=false"]
+
+
 def test_not_ok_is_the_runs_and_a_fix_goes_on_from_commit():
     run = _run()
     facts = flow.Facts(run=run, drafts=["wp-portal-v6.0.0"], rejected=["wp-portal-v6.0.0"])

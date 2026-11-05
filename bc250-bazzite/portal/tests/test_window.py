@@ -287,19 +287,19 @@ def test_red_dot_and_count_for_updates(window, home):
     window.refresh()
     assert not window.states["gpu"].update and window.big.notice.isHidden() and window.notice_lines == []
     assert tab_text(window, "sustainable") == "Sustainable"
-    assert "No updates" in window.updates_pill.toolTip()
+    assert "No updates" in window.updates_button.toolTip()
 
 
-def test_installed_apps_pill_counts_installed_of_listed(qapp, home, settings_dir, tmp_path, launched):
+def test_the_installed_line_counts_installed_of_listed(qapp, home, settings_dir, tmp_path, launched):
     """Installed apps: installed / listed, a withdrawn app not counted (owner, 21-10-2026)."""
     entries = [replace(e, withdrawn="test") if e.key == "sftp" else e for e in load(MANIFEST)]
     w = mw.MainWindow(entries, FakeSources(tmp_path / "work"), Records(tmp_path / "installed.json"))
     listed = len(entries) - 1
-    assert w.installed_pill.value.text() == f"0/{listed}"
+    assert w.big.installed.text() == f"0/{listed} installed"
     for name in ("bc250-governor-manager", "bc250-upscaler"):
         (home / ".local" / "bin" / name).write_text("#!/bin/sh\n")
     w.refresh()
-    assert w.installed_pill.value.text() == f"2/{listed}" and f"2 of the {listed} apps" in w.installed_pill.toolTip()
+    assert w.big.installed.text() == f"2/{listed} installed" and f"2 of the {listed} apps" in w.big.installed.toolTip()
     w.close()
 
 
@@ -315,8 +315,8 @@ def test_install_all_updates_one_after_the_other(window, launched, monkeypatch, 
     keys = [entry.key for entry, _ in window.marked]
     assert set(keys) == {"gpu", "upscaler", "acpi"}
     assert window.big.notice.text() == "● 2 updates, 1 reinstall"
-    pill = window.updates_pill
-    assert pill.value.text() == "Install" and pill.isEnabled() and "all 3" in pill.toolTip()
+    pill = window.updates_button
+    assert pill.badge == "3" and pill.isEnabled() and "all 3" in pill.toolTip()
     asked = []
     monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: (asked.append(a[2]), CANCEL)[1])
     pill.click()
@@ -326,7 +326,7 @@ def test_install_all_updates_one_after_the_other(window, launched, monkeypatch, 
     monkeypatch.setattr(QMessageBox, "warning", lambda *a, **k: pytest.fail("one question only"))
     pill.click()
     assert wait_for(lambda: len(launched) == 1)
-    assert window.sources.prepared == [keys[0]] and pill.value.text() == "1/3" and not pill.isEnabled()
+    assert window.sources.prepared == [keys[0]] and pill.badge == "1/3" and not pill.isEnabled()
     # Its installer waits for the password: no exit file yet, so the batch waits too.
     window._check_pending()
     assert window.pending is not None and len(launched) == 1
@@ -335,7 +335,7 @@ def test_install_all_updates_one_after_the_other(window, launched, monkeypatch, 
     assert wait_for(lambda: len(launched) == 2) and window.records.get(keys[0]) != ""
     launched[1][1].write_text("1\n")                          # a failure: the batch goes on
     window._check_pending()
-    assert wait_for(lambda: len(launched) == 3) and pill.value.text() == "3/3"
+    assert wait_for(lambda: len(launched) == 3) and pill.badge == "3/3"
     shown = []
     monkeypatch.setattr(QMessageBox, "warning", lambda *a, **k: shown.append(a[2]))
     launched[2][1].write_text("0\n")
@@ -344,7 +344,7 @@ def test_install_all_updates_one_after_the_other(window, launched, monkeypatch, 
     assert len(shown) == 1 and "1 of the 3 updates did not install" in shown[0] and "exit status 1" in shown[0]
     failed = entry_of(window, keys[1])
     assert failed.name in shown[0] and [e.key for e, _ in window.marked] == [keys[1]]
-    assert pill.value.text() == "Install" and pill.isEnabled() and "1 the notice names" in pill.toolTip()
+    assert pill.badge == "1" and pill.isEnabled() and "1 the notice names" in pill.toolTip()
 
 
 def test_stop_waiting_ends_the_batch(window, launched, monkeypatch, home):
@@ -361,18 +361,18 @@ def test_stop_waiting_ends_the_batch(window, launched, monkeypatch, home):
     window._on_refresh()                                     # its terminal was closed
     assert "The rest of the batch (1) is not installed then." in asked[-1]
     assert window.batch is None and window.pending is None and len(launched) == 1
-    assert window.updates_pill.value.text() == "Install" and window.updates_pill.isEnabled()
+    assert window.updates_button.badge == "2" and window.updates_button.isEnabled()
 
 
-def test_install_all_apps_is_a_pill_that_fills_the_open_category(window, launched, monkeypatch, qapp):
-    """Install all apps (owner, 26-10-2026; a pill since the tabs went, 01-11-2026, reading Install over All apps,
-    the number of apps of the open category not installed yet in its tooltip). A click installs them as one batch
-    with one question; the pill shows the batch's progress; it is disabled once every app of the category is
-    installed."""
-    pill = window.apps_pill
+def test_install_all_apps_is_a_symbol_that_fills_the_open_category(window, launched, monkeypatch, qapp):
+    """Install all apps (owner, 26-10-2026; in the header since the tabs went, 01-11-2026, a big symbol since
+    05-11-2026, the number of apps of the open category not installed yet in its tooltip). A click installs them as
+    one batch with one question; its badge shows the batch's progress; it is disabled once every app of the category
+    is installed."""
+    pill = window.apps_button
     expected = [e for e in window.entries if e.category == "sustainable"]
     assert window.shown_category() == "sustainable" and window.missing("sustainable") == expected
-    assert pill.value.text() == "Install" and pill.caption.text() == "All apps" and pill.isEnabled()
+    assert pill.badge == "" and pill.toolTip().startswith("Install all apps.") and pill.isEnabled()
     assert f"all {len(expected)} apps on Sustainable" in pill.toolTip()
     asked = []
     monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: (asked.append(a[2]), CANCEL)[1])
@@ -384,8 +384,8 @@ def test_install_all_apps_is_a_pill_that_fills_the_open_category(window, launche
     pill.click()
     assert wait_for(lambda: len(launched) == 1)
     assert window.sources.prepared == [expected[0].key]
-    assert pill.value.text() == f"1/{len(expected)}" and not pill.isEnabled()
-    assert window.updates_pill.value.text() == "Install" and not window.updates_pill.isEnabled()
+    assert pill.badge == f"1/{len(expected)}" and not pill.isEnabled()
+    assert window.updates_button.badge == "" and not window.updates_button.isEnabled()
     done: set[str] = set()                                   # some detect paths are under /opt: not writable here
     monkeypatch.setattr(mw, "is_installed", lambda entry: entry.key in done)
     for i, entry in enumerate(expected):
@@ -396,8 +396,8 @@ def test_install_all_apps_is_a_pill_that_fills_the_open_category(window, launche
             assert wait_for(lambda: len(launched) == i + 2)
     assert window.batch is None and not window.busy()
     assert window.sources.prepared == [e.key for e in expected]
-    assert pill.value.text() == "Install" and not pill.isEnabled()
-    assert pill.toolTip() == "Every app on Sustainable is installed."
+    assert pill.badge == "" and not pill.isEnabled()
+    assert pill.toolTip() == "Install all apps. Every app on Sustainable is installed."
     window.big.bar.setCurrentIndex(window.big.categories.index("graphics"))
     assert pill.isEnabled() and "on Graphics" in pill.toolTip()
     window.big.bar.setCurrentIndex(0)
@@ -406,8 +406,8 @@ def test_install_all_apps_is_a_pill_that_fills_the_open_category(window, launche
 
 
 def test_no_updates_no_batch(window, launched):
-    assert window.updates_pill.value.text() == "Install" and not window.updates_pill.isEnabled()
-    assert "No updates" in window.updates_pill.toolTip()
+    assert window.updates_button.badge == "" and not window.updates_button.isEnabled()
+    assert "No updates" in window.updates_button.toolTip()
     window.install_all()
     assert window.batch is None and launched == []
 
@@ -988,36 +988,41 @@ def test_one_theme_for_every_app(window, home):
     assert theme.theme_file().is_relative_to(home)
 
 
-def test_the_header_is_an_apps_header_with_pills(window):
-    """The suite's icon, spanning the name and the pills: Refresh, Installed apps, Install all updates, Install all
-    apps, Sys info and ☰ (owner, 20-10-2026, 21-10-2026, 01-11-2026); the Desktop icons, Sound, the theme and the
-    wallpaper on the Settings page behind ☰ (owner, 04-11-2026)."""
-    pills = window.header_pills
+def test_the_header_is_an_apps_header_with_symbols(window):
+    """The suite's icon, spanning the name, ☰ at the top right and the row of big symbols (owner, 05-11-2026, in
+    place of the pills): Refresh, Sys info, Install all apps and Install all updates, what each does in its tooltip;
+    on their right the installed count over the status line. The Desktop icons, Sound, the theme and the wallpaper
+    on the Settings page behind ☰ (owner, 04-11-2026)."""
+    symbols = window.header_buttons
     listed = len(window.entries)
     sound = "Yes" if window.sounds.available() else "No"             # No on a machine without an audio output
-    assert [(p.value.text(), p.caption.text()) for p in pills] == [
-        ("Refresh", "Click to refresh"), (f"0/{listed}", "Installed apps"), ("Install", "All updates"),
-        ("Install", "All apps"), ("Sys info", "Click to view"), ("☰", "Settings")]
+    assert symbols == [window.refresh_button, window.sysinfo_button, window.apps_button, window.updates_button]
+    assert all(isinstance(s, mw.SymbolButton) for s in [*symbols, window.settings_button])
+    assert [s.toolTip().split(":")[0].split(".")[0] for s in [*symbols, window.settings_button]] == [
+        "Refresh", "Sys info", "Install all apps", "Install all updates", "Settings"]
+    assert [window.big.symbol_row.indexOf(s) for s in symbols] == [0, 1, 2, 3]
+    assert window.big.upper.indexOf(window.settings_button) == window.big.upper.count() - 1     # the top right
+    assert window.big.installed.text() == f"0/{listed} installed"
+    assert " | " in window.big.status.text()
     assert [(p.value.text(), p.caption.text()) for p in window.setting_pills] == [
         ("No", "Icons on Desktop"), (sound, "Sound"), ("Gunmetal", "Theme switcher"), ("None", "Wallpaper")]
-    assert window.big.pill_row.indexOf(pills[0]) == 0 and window.big.pill_row.indexOf(pills[-1]) == len(pills) - 1
     assert "verified by checksum" in window.source_text
 
 
-def test_the_sys_info_pill_opens_one_window_read_each_time(window, qapp, monkeypatch):
+def test_the_sys_info_symbol_opens_one_window_read_each_time(window, qapp, monkeypatch):
     """Sys info (owner, 20-10-2026): a small window with what the system reports, read again each time it opens;
     Copy puts it on the clipboard as text."""
     reads = iter([[("Board", [("Board", "ASRock AMD BC-250")])],
                   [("Board", [("Board", "ASRock AMD BC-250")]), ("BIOS", [("Version", "P5.00")])]])
     monkeypatch.setattr(mw.sysinfo, "collect", lambda: next(reads))
-    window.sysinfo_pill.click()
+    window.sysinfo_button.click()
     first = window.sysinfo_window
     assert first.isVisible() and [h for h, _ in first.sections] == ["Board"]
     from PyQt6.QtCore import Qt
     assert first.testAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)    # semi-transparent (owner, 20-10-2026)
     picture = first.grab().toImage()
     assert picture.pixelColor(2, 2).alphaF() == pytest.approx(mw.SYSINFO_OPACITY / 100, abs=0.01)
-    window.sysinfo_pill.click()
+    window.sysinfo_button.click()
     assert window.sysinfo_window is first and [h for h, _ in first.sections] == ["Board", "BIOS"]
     first.copy()
     assert qapp.clipboard().text() == "Board\n  Board: ASRock AMD BC-250\nBIOS\n  Version: P5.00"

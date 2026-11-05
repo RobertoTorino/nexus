@@ -130,11 +130,11 @@ class Tour(Recorder):
         self.fade(shown, wiki, 0.6)
         self.emit(wiki, round(2.8 * self.fps))
         self.fade(wiki, shown, 0.6)
-        self.say("The square pills: Refresh looks again at which apps are installed.")
-        self.move(self.at(w.refresh_pill), 0.6)
+        self.say("The symbols: Refresh looks again at which apps are installed.")
+        self.move(self.at(w.refresh_button), 0.6)
         self.hold(2.6)
         self.say("☰ opens the Settings page, as the ☰ button on a controller does.")
-        self.move(self.at(w.settings_pill), 0.6)
+        self.move(self.at(w.settings_button), 0.6)
         self.click(w.toggle_settings)
         self.hold(1.4)
         for pill, text in ((w.icons_box, "Icons on Desktop: one icon per app on the Desktop, or only the portal's."),
@@ -144,7 +144,7 @@ class Tour(Recorder):
             self.move(self.at(pill), 0.6)
             self.hold(2.6)
         self.say("B, Escape or ☰ again goes back to the apps.")
-        self.move(self.at(w.settings_pill), 0.6)
+        self.move(self.at(w.settings_button), 0.6)
         self.click(w.toggle_settings)
         self.hold(1.4)
 
@@ -180,7 +180,7 @@ class Tour(Recorder):
         self.click(lambda: w.big.bar.setCurrentIndex(0))
         self.hold(0.6)
 
-        self.move(self.at(w.settings_pill), 0.6)
+        self.move(self.at(w.settings_button), 0.6)
         self.click(w.toggle_settings)
         self.hold(0.6)
         self.say("The Wallpaper pill: your own picture, the example, one used before, or none.")
@@ -208,13 +208,13 @@ class Tour(Recorder):
         self.popup.close()
         self.popup = None
         self.pump()
-        self.move(self.at(w.settings_pill), 0.6)
+        self.move(self.at(w.settings_button), 0.6)
         self.click(w.toggle_settings)
         self.hold(0.6)
 
         self.controller()
 
-        self.move(self.at(w.settings_pill), 0.6)
+        self.move(self.at(w.settings_button), 0.6)
         self.click(w.toggle_settings)
         self.hold(0.6)
         self.say("Gunmetal, Silver or Warm: each app takes the theme the next time it starts.")
@@ -275,7 +275,7 @@ class Tour(Recorder):
             self.hold(1.8)
         w.big.change_category(-2)
         self.hold(0.6)
-        self.say("Up from the top row reaches the pills and the notices; everything works the same with a mouse.")
+        self.say("Up from the top row reaches the symbols and the notices; everything works the same with a mouse.")
         w.big.move_focus("up")
         self.hold(2.5)
         w.big.focus_first()

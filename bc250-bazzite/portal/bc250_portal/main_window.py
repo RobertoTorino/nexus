@@ -2,9 +2,11 @@
 """The portal window: one fullscreen view (bigpicture.py; owner, 01-11-2026: Suite Desktop Mode, the window of
 tabs, is gone), opened by a short animated intro with its own sound. The header, as an app's header: the suite's
 icon (a click opens the wiki), spanning the name with the version and the stage, a line that says what the open
-category is for, and a row of square pills: Refresh, Installed apps (installed / listed), Install all updates,
-Install all apps (both read Install, the counts in their tooltips), Sys info (a small window with what the system
-reports about the board, sysinfo.py) and ☰, the Settings page (owner, 04-11-2026, as the Windows Portable Suite's
+category is for, ☰ at the top right, and under them a row of big symbols (owner, 05-11-2026: in place of the pills):
+Refresh, Sys info (a small window with what the system reports about the board, sysinfo.py), Install all apps and
+Install all updates (the counts in their tooltips, the updates waiting on a red badge). On the right of the symbols
+how many apps are installed (installed / listed), and under it the CPU's and the GPU's load and temperature with the
+date and time (status.py, every 2 s). ☰ opens the Settings page (owner, 04-11-2026, as the Windows Portable Suite's
 portal; the ☰ button on the controller too, B back): the Desktop icons (Yes or No; a click switches), Sound, the
 theme (a click goes to the next one) and the wallpaper, each pill with a short line. Then a category strip (the category of the apps' icons, apps.toml) with the notice of updates beside it, and the tiles of
 the open category; check is the first tile on Sustainable (owner, 20-10-2026). The portal always opens on the
@@ -75,12 +77,12 @@ from PyQt6.QtWidgets import (
 from bc250_core import SUITE_MANUAL_URL, __version__ as CORE_VERSION, upstream
 from bc250_core.platform import bin_home, expand, launch_in_terminal
 from bc250_core.settings import open_settings
-from bc250_core.theme import ORANGE, RED, THEMES, muted, save_theme_name, theme_name
+from bc250_core.theme import BLUE, ORANGE, RED, THEMES, muted, save_theme_name, theme_name
 from bc250_core.updates import ReleaseInfo, UpdateChecker, version_tuple
 from bc250_core.widgets import Pill
 
-from . import audio, desktop_icons, glyphs, keyboard, sysinfo, wallpaper
-from .bigpicture import INTRO_BANNER, UPDATE_BANNER, BigPicture, HeaderPill, Intro, MenuPill
+from . import audio, desktop_icons, glyphs, keyboard, status, sysinfo, wallpaper
+from .bigpicture import INTRO_BANNER, UPDATE_BANNER, BigPicture, HeaderPill, Intro, SymbolButton
 from .gamepad import Gamepad
 from .looks import VEIL
 from . import APP_ICONS, APP_ID, APP_NAME, INFO, STAGE, STAGE_NOTE, __version__
@@ -104,6 +106,7 @@ from .sources import (Records, SourceError, Sources, fetch_portal, installed_fro
                       local_version)
 
 POLL_MS = 1000
+STATUS_MS = 2000                # the status line on the right of the symbols: load, temperatures, date and time
 WAIT_UPDATE = "The portal's update starts once the download or install that runs now has finished."
 VEIL_MAX = 90                   # the slider's end: the picture still shows; "No wallpaper" takes it away
 VEIL_STEP = 5
@@ -375,7 +378,7 @@ class MainWindow(QMainWindow):
         self.portal_fetcher.finished.connect(self._portal_fetched)
         self.batch: list[AppEntry] | None = None        # Install all updates: the apps still to go; None: no batch
         self.batch_what = "updates"                     # the batch's word: "updates" or "apps" (Install all apps)
-        self.batch_pill: Pill | None = None             # the pill that shows the batch's progress
+        self.batch_button: SymbolButton | None = None   # the symbol that shows the batch's progress
         self.batch_size = 0
         self.batch_failed: list[str] = []
         self.settings = open_settings(INFO, self)
@@ -425,15 +428,19 @@ class MainWindow(QMainWindow):
         self.restart_button.hide()
         self.big.add_title_widget(self.restart_button)
 
-        self.refresh_pill = HeaderPill("Refresh", "Click to refresh", "Look again at which apps are installed.")
-        self.refresh_pill.clicked.connect(self._on_refresh)
-        self.installed_pill = HeaderPill("0/0", "Installed apps")
-        self.installed_pill.setCursor(Qt.CursorShape.ArrowCursor)      # it only shows
-        self.installed_pill.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.updates_pill = HeaderPill("Install", "All updates")    # the count in its tooltip (owner, 01-11-2026)
-        self.updates_pill.clicked.connect(self.install_all)
-        self.apps_pill = HeaderPill("Install", "All apps")
-        self.apps_pill.clicked.connect(self.install_missing)
+        self.refresh_button = SymbolButton(glyphs.refresh, "Refresh: look again at which apps are installed.")
+        self.refresh_button.clicked.connect(self._on_refresh)
+        self.sysinfo_button = SymbolButton(glyphs.chip, "Sys info: the board, BIOS, CPU, GPU, memory, drives and OS, "
+                                           "as the system reports them.")
+        self.sysinfo_button.clicked.connect(self.show_sysinfo)
+        self.sysinfo_window: SysInfoDialog | None = None
+        self.apps_button = SymbolButton(glyphs.install_apps)                 # the counts in the tooltips (owner,
+        self.apps_button.clicked.connect(self.install_missing)               # 01-11-2026)
+        self.updates_button = SymbolButton(glyphs.install_updates)
+        self.updates_button.clicked.connect(self.install_all)
+        self.settings_button = SymbolButton(glyphs.menu, "Settings: Desktop icons, sound, theme and wallpaper. The ☰ "
+                                            "button on the controller opens them too.")
+        self.settings_button.clicked.connect(self.toggle_settings)
         self.icons_box = TogglePill(
             "Icons on Desktop", "On: every installed app gets an icon on the Desktop. Off: only the portal's icon is "
             "there, and you start the apps from here. The apps stay in the app menu either way. Click to switch.",
@@ -449,18 +456,16 @@ class MainWindow(QMainWindow):
         self.theme_pill.clicked.connect(self._next_theme)
         self.wallpaper_pill = HeaderPill("None", "Wallpaper")
         self.wallpaper_pill.clicked.connect(self._wallpaper_menu)
-        self.sysinfo_pill = HeaderPill("Sys info", "Click to view",
-                                       "The board, BIOS, CPU, GPU, memory, drives and OS, as the system reports them.")
-        self.sysinfo_pill.clicked.connect(self.show_sysinfo)
-        self.sysinfo_window: SysInfoDialog | None = None
-        self.settings_pill = MenuPill("☰", "Settings", "Desktop icons, sound, theme and wallpaper. The ☰ button on "
-                                        "the controller opens them too.")
-        self.settings_pill.clicked.connect(self.toggle_settings)
         # The settings have a page of their own behind ☰ (owner, 04-11-2026, as the Windows Portable Suite's portal);
-        # what acts on the apps stays in the header.
-        self.header_pills = [self.refresh_pill, self.installed_pill, self.updates_pill, self.apps_pill,
-                             self.sysinfo_pill, self.settings_pill]
-        self.big.place_pills(self.header_pills)
+        # what acts on the apps stays in the header, as big symbols (owner, 05-11-2026), ☰ at the top right.
+        self.header_buttons = [self.refresh_button, self.sysinfo_button, self.apps_button, self.updates_button]
+        self.big.place_symbols(self.header_buttons, self.settings_button)
+        self.status = status.Status()
+        self.status_timer = QTimer(self)
+        self.status_timer.setInterval(STATUS_MS)
+        self.status_timer.timeout.connect(self.show_status)
+        self.status_timer.start()
+        self.big.set_status(self.status.line())         # the first line at once, the load from the next one
         self.setting_pills = [self.icons_box, self.sound_box, self.theme_pill, self.wallpaper_pill]
         self.big.place_settings(list(zip(self.setting_pills, SETTING_LINES)))
 
@@ -589,32 +594,35 @@ class MainWindow(QMainWindow):
         return f" {size / 1_000_000:.0f} MB" if size else ""
 
     def show_counts(self) -> None:
-        """The Installed apps pill (installed / listed, a withdrawn app not counted), the Install all updates pill
-        (enabled when the notice names any; during its batch, which one of how many) and the Install all apps pill."""
+        """The installed apps (installed / listed, a withdrawn app not counted), the Install all updates symbol
+        (enabled when the notice names any, how many on its badge; during its batch, which one of how many) and the
+        Install all apps symbol."""
         listed = [entry for entry in self.entries if not entry.withdrawn]
         installed = sum(is_installed(entry) for entry in listed)
-        self.installed_pill.set_value(f"{installed}/{len(listed)}", f"{installed} of the {len(listed)} apps in this "
-                                      "portal are installed.")
-        if self.batch is not None and self.batch_pill is self.updates_pill:
+        self.big.set_installed(f"{installed}/{len(listed)} installed", f"{installed} of the {len(listed)} apps in "
+                               "this portal are installed.")
+        if self.batch is not None and self.batch_button is self.updates_button:
             self._show_batch()
         else:
             count = len(self.marked)
-            self.updates_pill.set_value("Install", (
+            self.updates_button.set_badge(str(count) if count else "")
+            self.updates_button.setToolTip("Install all updates. " + ((
                 f"Click to install {'all ' * (count > 1)}{count} the notice names (updates and reinstalls), one after "
                 "the other. When an installer asks for your password, the next one waits "
                 "until you typed it in its terminal and it has ended.") if count else
-                "No updates: every installed app is the version this portal pins.")
-            self.updates_pill.setEnabled(bool(count) and not self.busy())
-        self._show_apps_pill()
+                "No updates: every installed app is the version this portal pins."))
+            self.updates_button.setEnabled(bool(count) and not self.busy())
+        self._show_apps_button()
 
     def _show_batch(self) -> None:
-        """The batch's progress, on its pill: Install all updates or Install all apps."""
-        assert self.batch is not None and self.batch_pill is not None
+        """The batch's progress, on its symbol's badge: Install all updates or Install all apps."""
+        assert self.batch is not None and self.batch_button is not None
         done = self.batch_size - len(self.batch)
-        self.batch_pill.set_value(f"{done}/{self.batch_size}", (
+        self.batch_button.set_badge(f"{done}/{self.batch_size}", BLUE)
+        self.batch_button.setToolTip(
             f"Installing {self.batch_what[:-1]} {done} of {self.batch_size}, each in its own terminal. When one asks "
-            "for your password, type it there: the next one starts when it has ended."))
-        self.batch_pill.setEnabled(False)
+            "for your password, type it there: the next one starts when it has ended.")
+        self.batch_button.setEnabled(False)
 
     def shown_category(self) -> str:
         """The category that is open."""
@@ -623,25 +631,26 @@ class MainWindow(QMainWindow):
     def _category_changed(self, _index: int) -> None:
         # A bound method, not a lambda over self: a lambda would keep the window in a reference cycle, alive until
         # the interpreter's shutdown, where Qt is gone already (tools/portal_screenshot.py crashed at exit).
-        self._show_apps_pill()
+        self._show_apps_button()
 
-    def _show_apps_pill(self) -> None:
-        """The Install all apps pill: enabled when the open category has apps not installed yet (how many, in its
+    def _show_apps_button(self) -> None:
+        """The Install all apps symbol: enabled when the open category has apps not installed yet (how many, in its
         tooltip), disabled when every app of the category is installed; during its batch, which one of how many."""
-        if self.batch is not None and self.batch_pill is self.apps_pill:
+        if self.batch is not None and self.batch_button is self.apps_button:
             self._show_batch()
             return
         category = self.shown_category()
         label = CATEGORIES.get(category, category)
         count = len(self.missing(category))
         if count:
-            tip = (f"Click to install {'all ' * (count > 1)}{count} app{'s' * (count != 1)} on {label} not installed "
+            tip = (f"Install all apps. Click to install {'all ' * (count > 1)}{count} app{'s' * (count != 1)} on {label} not installed "
                    "yet, one after the other, each in its own terminal. When an installer asks for your password, the "
                    "next one waits until you typed it there and it has ended.")
         else:
-            tip = f"Every app on {label} is installed."
-        self.apps_pill.set_value("Install", tip)
-        self.apps_pill.setEnabled(bool(count) and not self.busy())
+            tip = f"Install all apps. Every app on {label} is installed."
+        self.apps_button.set_badge("")
+        self.apps_button.setToolTip(tip)
+        self.apps_button.setEnabled(bool(count) and not self.busy())
 
     def missing(self, category: str) -> list[AppEntry]:
         """Install all apps: the listed apps of *category* that are not installed."""
@@ -892,6 +901,13 @@ class MainWindow(QMainWindow):
         self.close()
         QCoreApplication.quit()
 
+    def show_status(self) -> None:
+        """The status line on the right of the symbols, every STATUS_MS; none while the portal is minimized or hidden,
+        so it costs nothing behind a game."""
+        if self.isMinimized() or not self.isVisible():
+            return
+        self.big.set_status(self.status.line())
+
     def changeEvent(self, event) -> None:  # noqa: N802 (Qt override)
         if event.type() == QEvent.Type.ActivationChange and self.isActiveWindow():
             self.check_installed()                      # back from the terminal that installed a new portal
@@ -1104,7 +1120,7 @@ class MainWindow(QMainWindow):
             QMessageBox.information(self, APP_NAME, str(exc))
 
     def toggle_settings(self) -> None:
-        """The ☰ pill or the controller's ☰ button: the Settings page, or back to the tiles."""
+        """The ☰ symbol or the controller's ☰ button: the Settings page, or back to the tiles."""
         self.big.show_settings(not self.big.in_settings())
 
     def escape(self) -> None:
@@ -1335,15 +1351,15 @@ class MainWindow(QMainWindow):
     def install_all(self) -> None:
         """Install all updates: every app the notice names, after one question (with the board warning when one of
         them changes the board), one after the other."""
-        self._start_batch([entry for entry, _ in self.marked], "updates", self.updates_pill)
+        self._start_batch([entry for entry, _ in self.marked], "updates", self.updates_button)
 
     def install_missing(self) -> None:
         """Install all apps: every app of the open category that is not installed yet, the same way (owner,
-        26-10-2026); its pill shows the batch's progress."""
+        26-10-2026); its symbol shows the batch's progress."""
         category = self.shown_category()
-        self._start_batch(self.missing(category), "apps", self.apps_pill, CATEGORIES.get(category, ""))
+        self._start_batch(self.missing(category), "apps", self.apps_button, CATEGORIES.get(category, ""))
 
-    def _start_batch(self, entries: list[AppEntry], what: str, pill: Pill, where: str = "") -> None:
+    def _start_batch(self, entries: list[AppEntry], what: str, button: SymbolButton, where: str = "") -> None:
         if self.busy() or not entries:
             return
         names = "".join(f"<li>{escape(entry.name)}"
@@ -1361,7 +1377,7 @@ class MainWindow(QMainWindow):
         if answer != QMessageBox.StandardButton.Yes:
             return
         self.batch, self.batch_size, self.batch_failed = entries, len(entries), []
-        self.batch_what, self.batch_pill = what, pill
+        self.batch_what, self.batch_button = what, button
         self._next_in_batch()
 
     def _next_in_batch(self) -> None:
