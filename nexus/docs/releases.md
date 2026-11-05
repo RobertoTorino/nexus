@@ -227,8 +227,8 @@ so the CI runs under them count; a release step 2 waits for whose run is older t
 Pin never waits for a release that is out already. It reads **building** while one runs, then **passed** or **failed**; hover for each
 run, click to open the run that failed (or still runs) on GitHub. A run GitHub canceled because a later run of the
 same workflow on the same commit took its place (the Nexus index, which each release run of a push starts) is no
-failure: hover says **replaced by a later run**. It looks every 30 seconds while a build runs and
-every 5 minutes otherwise, and **Refresh** looks at once: its pill reads *Refreshing…* while it reads the checkout
+failure: hover says **replaced by a later run**. It looks every 30 seconds while a build runs, every 10 seconds
+after a push until GitHub has started its runs (a few seconds after the push), and every 5 minutes otherwise, and **Refresh** looks at once: its pill reads *Refreshing…* while it reads the checkout
 and GitHub's runs (a second or two), then *Refreshed* with the time. When a run it saw running finishes, a desktop
 notification says whether it passed. It needs no GitHub token: answers that did not change do not count against
 GitHub's limit of 60 requests an hour.

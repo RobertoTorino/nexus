@@ -1,3 +1,9 @@
+Changelog: 05-11-2026 21:05:30
+
+Fixed. After a push the CI passes step sees GitHub's CI within seconds (owner, 05-11-2026: CI ran on GitHub while
+the step said it had no CI run yet): the look right after the push comes before GitHub has started the runs, and
+the next one came 5 minutes later. While the pushed HEAD has no run on GitHub, the build pill looks every 10 s.
+
 Changelog: 05-11-2026 20:58:16
 
 Fixed. Refresh says it is at it (owner, 05-11-2026: it seemed to do nothing, or to be very slow): its pill reads

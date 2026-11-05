@@ -312,6 +312,32 @@ def test_ticker_follows_the_suite_ticked(two_suites, tmp_path):
     w.close()
 
 
+def test_a_pushed_head_without_a_run_is_looked_at_again_soon(two_suites, tmp_path):
+    """GitHub starts the CI of a push seconds after it (owner, 05-11-2026: CI ran on GitHub while the CI passes step
+    said it had none, for 5 minutes): while the pushed HEAD has no run, the next look is in 10 s, not 5 minutes."""
+    pytest.importorskip("PyQt6.QtWidgets")
+    from PyQt6.QtCore import QSettings
+    from PyQt6.QtWidgets import QApplication
+    QSettings.setPath(QSettings.Format.IniFormat, QSettings.Scope.UserScope, str(tmp_path / "settings"))
+    app = QApplication.instance() or QApplication([])          # noqa: F841 (kept alive for the window)
+    from nexus_release_tool import main_window
+    w = main_window.ReleaseWindow(two_suites, status_source=None, runs_source=lambda etag, head="", tags=(): (None, etag),
+                                  notify=lambda *a: None, claude_source=None, jobs_source=None, suite="bc")
+    head = (rp.git(two_suites, "rev-parse", "HEAD") or "").strip()
+    w.build.head = head
+    w.base = lambda: "HEAD"                                         # HEAD is pushed: on the base
+    older = rp.parse_runs({"workflow_runs": [run(n=1, sha="older")]})
+    w.build.checked((older, "e1"))
+    assert w.build.awaiting_head() and w.build.timer.interval() == main_window.BUILD_SOON_MS
+    w.build.checked((rp.parse_runs({"workflow_runs": [run(n=2, sha=head, status="in_progress"), run(n=1, sha="older")]}),
+                     "e2"))
+    assert not w.build.awaiting_head() and w.build.timer.interval() == main_window.BUILD_BUSY_MS
+    w.base = lambda: "HEAD~0^{tree}"                                # not pushed: no reason to hurry
+    w.build.runs = older
+    assert not w.build.awaiting_head()
+    w.close()
+
+
 def test_notifications_follow_the_suite_ticked(two_suites, tmp_path):
     """A run that finishes is told about only when it is the ticked suite's or Nexus's (owner, 28-10-2026: CI Windows
     Portable notified while BC250 was released)."""

@@ -873,6 +873,7 @@ def desktop_notify(summary: str, body: str) -> bool:
 
 BUILD_BUSY_MS = 30_000                  # how often to look while a build runs
 BUILD_IDLE_MS = 300_000                 # and otherwise (unchanged answers do not count against GitHub's limit)
+BUILD_SOON_MS = 10_000                  # while a pushed HEAD has no run yet: GitHub starts its CI seconds after a push
 BUILD_LOOK = {"running": (BLUE, "Building"), "passed": (GREEN, "Passed"), "failed": (RED, "Failed"),
               "": (GREY, "No builds")}
 RELEASE_TEXT = {"": "no run seen", "running": "building\u2026", "passed": "ready", "failed": "failed"}
@@ -885,7 +886,7 @@ RELEASE_TIP = {"": "GitHub shows no release run on {tag} among its newest runs: 
 
 class BuildIndicator(Pill):
     """Whether GitHub built the newest push: CI, Release and Manual on its commit. Looks every 30 s while a build
-    runs and every 5 minutes otherwise; a run seen running that finishes gives a desktop notification, and so does
+    runs, every 10 s while the pushed HEAD has no run yet, and every 5 minutes otherwise; a run seen running that finishes gives a desktop notification, and so does
     the release of an app waiting to be pinned, seen running or not (each once), and the portal's release. A
     click opens the run that failed (or still runs), else the Actions page. When GitHub's hourly limit is used up
     it says until when and waits till then. Requests carry the token of a gh login when there is one
@@ -897,6 +898,7 @@ class BuildIndicator(Pill):
         self.source = source            # rp.fetch_runs(etag, head, tags): (runs | None when unchanged, etag)
         self.notify = notify
         self.etag = ""
+        self.head = ""                          # the checkout's HEAD at the last look
         self.runs: list[rp.BuildRun] = []
         self.seen: dict[str, rp.BuildRun] = {}
         self.announced: set[str] = set()        # the Release runs told about, by url
@@ -916,6 +918,7 @@ class BuildIndicator(Pill):
         if self.source is None:
             return
         etag, head = self.etag, (rp.git(self.release_window.root, "rev-parse", "HEAD") or "").strip()
+        self.head = head
         page = getattr(self.release_window, "portal_page", None)       # not built yet at the first look
         waiting = tuple(page.waiting_tags()) if page is not None else ()
         self.checker.start(lambda: self._fetch(etag, head, waiting))
@@ -971,7 +974,16 @@ class BuildIndicator(Pill):
         self.show_state(state, self.details(latest))
         self.release_window.ticker.show_runs(latest, self.signed_in)
         running = any(not r.done for r in self.runs)
-        self.timer.start(BUILD_BUSY_MS if running else BUILD_IDLE_MS)
+        self.timer.start(BUILD_SOON_MS if self.awaiting_head() else BUILD_BUSY_MS if running else BUILD_IDLE_MS)
+
+    def awaiting_head(self) -> bool:
+        """HEAD is pushed and GitHub has no run of it yet (owner, 05-11-2026: CI ran on GitHub while the CI passes
+        step said it had none, as the look right after the push came before GitHub started it, and the next one
+        came 5 minutes later)."""
+        if not self.head or any(r.sha == self.head for r in self.runs):
+            return False
+        window = self.release_window
+        return rp.git(window.root, "merge-base", "--is-ancestor", self.head, window.base()) is not None
 
     def details(self, latest: list[rp.BuildRun]) -> str:
         if not latest:
