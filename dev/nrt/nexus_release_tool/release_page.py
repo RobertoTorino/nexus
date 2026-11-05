@@ -33,6 +33,7 @@ SEMVER_TIP = ("Breaking. (an entry that starts with it) -> major, Added. -> mino
               "when Start writes the release.")
 MARKS = {"done": ("✓", GREEN), "now": ("▶", ORANGE), "failed": ("!", RED), "later": ("", GREY)}
 REJECTED_KEY = "release/rejected"     # "<run url>|<portal tag>" of each Not OK, the newest 20
+DEFAULT_MESSAGE = "see changelog"      # the commit message the field starts with (owner, 05-11-2026)
 PILLS_PX = 360                        # the pills column of the steps: two pills side by side, or the message field
 
 
@@ -51,7 +52,7 @@ class ReleasePage(QWidget):
         header.setSectionResizeMode(len(COLUMNS) - 1, QHeaderView.ResizeMode.Stretch)
         self.pull_button = QPushButton("git pull")
         self.pull_button.clicked.connect(self.pull)
-        self.commit_message = QLineEdit()
+        self.commit_message = QLineEdit(DEFAULT_MESSAGE)
         self.commit_message.setPlaceholderText("What these changes do (the commit message)")
         self.commit_message.setMinimumWidth(200)
         self.commit_message.textChanged.connect(self.show_state)
@@ -292,7 +293,7 @@ class ReleasePage(QWidget):
             return f"{facts.behind} commit{'s' if facts.behind != 1 else ''} on GitHub that this checkout lacks."
         if key == "commit":
             files = len(flow.dirty_paths(window.root))
-            return f"{files} file{'s' if files != 1 else ''} changed. Type what they do, then Commit."
+            return f"{files} file{'s' if files != 1 else ''} changed. Keep the message or type your own, then Commit."
         if key == "push":
             return f"{facts.ahead} commit{'s' if facts.ahead != 1 else ''} to push."
         if key == "ci":
@@ -351,7 +352,7 @@ class ReleasePage(QWidget):
         if not self.offer_portal_bumps():
             return
         window.run_git(flow.commit_work_command(window.root, message, window.base(), shlex.quote(sys.executable)))
-        self.commit_message.clear()
+        self.commit_message.setText(DEFAULT_MESSAGE)
 
     def offer_portal_bumps(self) -> bool:
         """A suite whose apps.toml changed since its last portal release needs a portal bump, or the commit's

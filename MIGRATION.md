@@ -3469,6 +3469,14 @@ Things already decided against were left out (the Bluetooth helper, the exploit 
   has no passwordless sudo). NVMe gives all three (health = 100 - "percentage used"); a SATA SSD gives the hours and
   cycles, but its health attribute differs per vendor, so an unknown drive shows "health not reported". "Start/stop
   cycles" is a hard-disk attribute; for an SSD it is the power cycle count. Utilities category.
+- **New SSD models for SSD Check's rated speeds (on hold, owner 05-11-2026: every week, it does not end).** Look for
+  NVMe drives (PCIe 3.0 and later) that came out since the last review, of Samsung, Crucial, WD_BLACK, SK hynix,
+  Netac and CUSU, and add those whose rated read and write the maker publishes to
+  `bc250-bazzite/apps/ssd/ssd_check/rated.py`, each with the model string the drive reports (from a real
+  `smartctl -i` or a linux-hardware.org probe), with its tests and a CHANGELOG entry; the SSD Check chapter of the
+  wiki names the makers. Leave out what cannot be pinned down: Netac's drives report only "Netac NVMe SSD <size>",
+  never the model, and CUSU publishes no specifications; look again whether either changed. A release of SSD Check
+  follows.
 
 ## Details for later steps
 

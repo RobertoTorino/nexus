@@ -65,12 +65,21 @@ on the keyboard, to change the category. The portal always opens on the first on
 |---|---|---|---|
 | Arrow keys | D-pad or left stick | Point | Move the focus between the tiles, the pills and the notices |
 | Enter | A | Click | Open the app, press a pill, open a notice |
-| | Y | Right click | Update: the portal while a newer one is out, else the tile's app (update or reinstall) |
-| Menu key | X | | The tile's menu: Open, Install, Update, Reinstall, Uninstall |
-| Page Up, Page Down | LB, RB | Click a name | The category before and after |
-| | ☰ (Start) | Click ☰ | The Settings page, and back from it |
-| | R3 (the right stick pressed) | | Bazzite's on-screen keyboard (Plasma Keyboard), and away again; in a question or the file dialog too |
-| Escape | B | | Close a menu or a question; on the Settings page, go back to the apps; else close the portal (while a download or an install runs, it asks: press again within five seconds) |
+| U | Y | Right click | Update: the portal while a newer one is out, else the tile's app (update or reinstall) |
+| Menu key, M | X | | The tile's menu: Open, Install, Update, Reinstall, Uninstall |
+| Page Up, Page Down (or Q, E) | LB, RB | Click a name | The category before and after |
+| S | ☰ (Start) | Click ☰ | The Settings page, and back from it |
+| K | R3 (the right stick pressed) | | Bazzite's on-screen keyboard (Plasma Keyboard), and away again; R3 works in a question or the file dialog too |
+| Escape | B | | Close a menu or a question; on the Settings page, go back to the apps; else exit the portal, after a question |
+
+**Exiting.** Escape, B, the window's close button and Alt+F4 all ask *Do you really want to exit the Portal?* first.
+**No** has the focus, so a stray press does not close the portal: move to **Yes** with the arrow keys, the d-pad or
+the stick, and press Enter or A. B or Escape answers No. While a download or an install runs, the question also says
+what exiting does to it: the download stops, or the installer finishes in its terminal window without the portal
+recording it.
+
+**Questions.** In a question (Yes and No, Install and Cancel) the arrow keys, the d-pad and the stick move between
+the buttons, and Enter or A presses the one with the focus.
 
 **The on-screen keyboard.** R3 shows Plasma Keyboard, the desktop's virtual keyboard, so you can type with the
 controller, for example a file name when you choose a wallpaper. Bazzite shows it only after touch or pen input,
@@ -90,6 +99,21 @@ and the line of keys fit on the screen. You can also swipe a page with a finger 
 controls are controllers like any other. Where Steam Input already turns them into keys (the Deck's desktop
 layout does: d-pad to the arrow keys, A to Enter, B to Escape), the keyboard column above applies and works as it
 is.
+
+**The Steam Controller, and any controller Steam Input owns.** While Steam runs, it takes the controllers it has
+Steam Input on for (always the Steam Controller and a Steam Deck's own controls): outside a game, its desktop layout
+turns their buttons into keys and the mouse, and the portal sees only those keys. By default that layout gives the
+d-pad the arrow keys, A Enter and B Escape, but LB, RB, R3, the back buttons and others have no key, so they do
+nothing in the portal. There are two ways to get every button:
+
+- **Start the portal from Steam.** In Steam, choose **Games**, **Add a Non-Steam Game to My Library**, and pick
+  **BC250 Bazzite Suite** (or browse to `~/.local/bin/bc250-bazzite-suite`). Started from Steam, the portal reads
+  the controller as an XBOX controller, with the buttons in the table above. Steam's controller settings for that
+  entry can give the back buttons, the touchpads and the other extras any button or key you like.
+- **Give the buttons keys in the desktop layout.** In Steam, open **Settings**, **Controller**, **Desktop Layout**
+  (Edit), and set LB to Page Up, RB to Page Down, Y to U, X to M, ☰ to S and R3 to K (the keyboard column of the
+  table). The back buttons can take any of these keys too. The layout is Steam's and applies to every program
+  outside a game.
 
 The tools for working on the suite are not in the portal: they are Nexus's, in `dev/` of the repository, run from a
 checkout and have no release. [Nexus Dashboard](https://robertotorino.github.io/nexus/dashboard/) opens them all:

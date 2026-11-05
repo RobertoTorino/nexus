@@ -122,6 +122,19 @@ def test_stick_needs_a_real_push_and_goes_along_its_stronger_axis():
     assert stick_direction(0.2, 0.9) == "down" and stick_direction(0.2, -0.9) == "up"
 
 
+def test_steams_virtual_pad_only_when_steam_started_the_portal():
+    from bc250_portal.gamepad import launched_by_steam, steam_virtual_pad
+    outside = {"HOME": "/home/x"}
+    steam_virtual_pad(outside)
+    assert not launched_by_steam(outside) and "SDL_GAMECONTROLLER_ALLOW_STEAM_VIRTUAL_GAMEPAD" not in outside
+    for env in ({"SteamGameId": "12345"}, {"SDL_GAMECONTROLLER_IGNORE_DEVICES": "0x28de/0x1302"}):
+        steam_virtual_pad(env)
+        assert launched_by_steam(env) and env["SDL_GAMECONTROLLER_ALLOW_STEAM_VIRTUAL_GAMEPAD"] == "1"
+    chosen = {"SteamGameId": "1", "SDL_GAMECONTROLLER_ALLOW_STEAM_VIRTUAL_GAMEPAD": "0"}
+    steam_virtual_pad(chosen)
+    assert chosen["SDL_GAMECONTROLLER_ALLOW_STEAM_VIRTUAL_GAMEPAD"] == "0"         # a choice of the user's stays
+
+
 def test_buttons_become_actions_and_a_held_direction_repeats():
     clock = Clock()
     pad = FakePad()
@@ -303,9 +316,12 @@ def test_no_mode_is_kept_and_nothing_switches(made):
 
 
 def test_escape_and_b_close_the_portal_but_skip_the_intro_first(made, monkeypatch):
-    """Escape closes the portal (owner, 01-11-2026: "ESC does not close the board"), B too with nothing open; while
-    the intro plays, either skips it instead."""
+    """Escape closes the portal (owner, 01-11-2026: "ESC does not close the board"), B too with nothing open, after a
+    Yes to the exit question (owner, 05-11-2026); while the intro plays, either skips it instead."""
     from PyQt6.QtGui import QShortcut
+    asked = []
+    monkeypatch.setattr(mw.QMessageBox, "question", lambda *a, **k: (asked.append(a[2]),
+                                                                      mw.QMessageBox.StandardButton.Yes)[1])
     window, pad = made()
     window.show()
     window.start_up()
@@ -321,7 +337,7 @@ def test_escape_and_b_close_the_portal_but_skip_the_intro_first(made, monkeypatc
     monkeypatch.setattr(QApplication, "activeWindow", staticmethod(lambda: again))
     pad.queue = [("button", "b", True)]
     again.gamepad.poll()
-    assert not again.isVisible()
+    assert not again.isVisible() and asked == [mw.EXIT_QUESTION, mw.EXIT_QUESTION]
 
 
 def test_sound_off_is_kept_and_silences_the_intro(made):

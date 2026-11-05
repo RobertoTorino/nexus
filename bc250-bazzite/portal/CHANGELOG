@@ -1,3 +1,13 @@
+Changelog: 05-11-2026 13:56:06
+
+Added. Every exit asks "Do you really want to exit the Portal?" first, with Yes and No and No the default: Escape,
+B, the window's close button and Alt+F4. While a download or an install runs, the question says what exiting does
+to it; it replaces the banner that asked for a second press of Escape or B within five seconds. Every controller
+action has a key too, for a controller Steam turns into keys (its desktop layout): U updates as Y does, S opens the
+Settings as the ☰ button does, K the on-screen keyboard as R3 does and M the tile's menu as X does. Started from
+Steam (as a non-Steam game), the portal reads Steam's virtual controller, so the Steam Controller and any controller
+Steam Input owns work with every button; outside Steam nothing changes, so no press arrives twice.
+
 Changelog: 05-11-2026 10:30:12
 
 Release 15.0.0.

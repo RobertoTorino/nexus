@@ -62,8 +62,9 @@ each says what there is to do. Only the lit pill does anything, so you never nee
 tab explains itself behind the round **i** in its first row: click it to read the whole explanation.
 
 1. **Get up to date** (**git pull**): only when GitHub has commits this checkout lacks, pushed from the other machine.
-2. **Commit your changes:** type what they do, then **Commit**. It stages every change and new file and commits
-   them after the version and manifest checks of the suites they touch. When a suite's `apps.toml` changed since
+2. **Commit your changes:** the message field holds *see changelog*; keep it or type what the changes do, then
+   **Commit**. It stages every change and new file and commits them after the version and manifest checks of the
+   suites they touch. When a suite's `apps.toml` changed since
    its last portal release (an app added, removed or withdrawn, a pin moved), that check needs a portal bump: the
    step asks first, with the version step 2 would suggest (the portal's CHANGELOG entries count: a Breaking entry
    makes it major), or the least the check accepts, whichever is higher, and writes it with its CHANGELOG entry

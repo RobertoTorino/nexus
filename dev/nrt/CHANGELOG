@@ -1,3 +1,8 @@
+Changelog: 05-11-2026 13:42:23
+
+Added. The commit message field of Commit your changes starts with "see changelog", and holds it again after each
+commit; type over it for another message.
+
 Changelog: 04-11-2026 21:04:31
 
 Version 1.0.0.

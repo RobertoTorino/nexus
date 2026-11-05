@@ -1,3 +1,19 @@
+Changelog: 05-11-2026 15:44:27
+
+Added. The top row holds the health, the serial (hidden; a click shows it in a popup below its pill, so the pill
+keeps its width, and it goes with another drive or Refresh), a speed test and Refresh. The list names the drives by
+number (Drive 1, Drive 2), with the drive's model and size under it. Below, the drive's specs, a pill each: the power
+cycles, the power-on hours and the power-on days (full days), the device, the data the host read and wrote, the
+firmware, a firmware update from fwupd (Available, Up to date, Unknown or Not supported), the interface and the
+link's speed (PCIe, SATA or USB, from sysfs). Two more pills say whether the board holds the drive back: the most
+the board's port carries (orange when it is less than the drive can do) and the maker's rated read and write, from
+a list of the NVMe drives of PCIe 3.0 and later of Samsung, WD_BLACK, Crucial and SK hynix (from the makers' data
+sheets) and a few SATA SSDs. The speed test measures the read and write speed in this board with a test file of
+1 GB, written, read back past the cache and deleted. Drives on USB are listed too, with their specs; without SMART
+behind their adapter the state says No SMART over USB. An M.2 enclosure with a known NVMe bridge (Realtek RTL9210,
+ASMedia ASM2362, JMicron JMS583) shows NVMe over USB; a USB drive stuck at USB 2.0 in a USB 3 port (its port's peer
+on the USB 3 bus) turns the Speed pill orange with what to try, and Board link shows what the port can do.
+
 Changelog: 05-11-2026 03:50:19
 
 Release 0.1.0.

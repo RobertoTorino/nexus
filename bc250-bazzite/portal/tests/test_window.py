@@ -552,22 +552,79 @@ def test_a_download_counts_its_megabytes(window, tmp_path):
     assert window.states["gpu"].busy == ""
 
 
-def test_escape_asks_while_something_runs(window):
-    """Escape (B) while a download or an install runs asks first (owner, 03-11-2026): the banner says what closing
-    does, a second press within CONFIRM_MS closes, and after that time the question is withdrawn."""
-    closed = []
+def test_every_exit_asks_first(window, monkeypatch):
+    """Escape (B) asks "Do you really want to exit the Portal?" (owner, 05-11-2026), No the default; a Yes closes.
+    While a download or an install runs, the question says what exiting does to it."""
+    closed, asked = [], []
     window.close = lambda: closed.append(1)
+    answer = [QMessageBox.StandardButton.No]
+    monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: (asked.append(a), answer[0])[1])
+    window.escape()
+    assert closed == [] and asked[-1][2] == mw.EXIT_QUESTION
+    assert asked[-1][3] == QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+    assert asked[-1][4] == QMessageBox.StandardButton.No
+    answer[0] = YES
+    window.escape()
+    assert closed == [1] and window.exit_confirmed
     window._job = (entry_of(window, "gpu"), "install")
     window.escape()
-    assert closed == [] and window.close_asked
-    assert window.big.banner.text() == "Press Escape (or B) again to close the portal: the download stops."
-    window.escape()
-    assert closed == [1]
-    window._confirm_over()
-    assert not window.close_asked and window.big.banner.isHidden()
+    assert asked[-1][2] == mw.EXIT_QUESTION + "\n\nThe download stops."
     window._job = None
-    window.escape()
-    assert closed == [1, 1]                                     # nothing runs: closes at once
+
+
+def test_the_desktops_close_asks_and_the_portals_own_does_not(window, monkeypatch):
+    from PyQt6.QtGui import QCloseEvent
+    asked = []
+    monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: (asked.append(a), QMessageBox.StandardButton.No)[1])
+    event = QCloseEvent()
+    monkeypatch.setattr(event, "spontaneous", lambda: True)
+    window.closeEvent(event)
+    assert asked and not event.isAccepted()
+    asked.clear()
+    window.close()                                              # a restart, or the test's own: no question
+    assert asked == []
+
+
+def test_a_key_for_each_controller_action(window, monkeypatch):
+    """Steam's desktop layout turns a pad's buttons into keys (owner, 05-11-2026): U, S, K and M do what Y, ☰, R3 and
+    X do, for the buttons it gives no key of their own."""
+    done = []
+    monkeypatch.setattr(window, "act", done.append)
+    for shortcut in window.action_shortcuts:
+        shortcut.activated.emit()
+    assert [s.key().toString() for s in window.action_shortcuts] == ["U", "S", "K", "M"]
+    assert done == ["update", "settings", "keyboard", "menu"]
+    assert sorted(mw.ACTION_KEYS.values()) == ["keyboard", "menu", "settings", "update"]
+
+
+def test_the_s_key_opens_the_settings(window):
+    window.act("settings")
+    assert window.big.in_settings()
+    window.act("settings")
+    assert not window.big.in_settings()
+
+
+def test_the_arrow_keys_move_between_a_questions_buttons(window, qapp):
+    """With Steam's desktop layout a controller is the arrow keys and Enter: Qt's questions take them as they are."""
+    from PyQt6.QtCore import Qt
+    from PyQt6.QtTest import QTest
+    box = QMessageBox(QMessageBox.Icon.Question, "Portal", mw.EXIT_QUESTION,
+                      QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, window)
+    box.setDefaultButton(QMessageBox.StandardButton.No)
+    box.show()
+    qapp.processEvents()
+    no, yes = box.button(QMessageBox.StandardButton.No), box.button(QMessageBox.StandardButton.Yes)
+    no.setFocus()
+    qapp.processEvents()
+    for key, now in ((Qt.Key.Key_Left, yes), (Qt.Key.Key_Right, no), (Qt.Key.Key_Up, yes)):
+        QTest.keyClick(qapp.focusWidget(), key)
+        qapp.processEvents()
+        assert qapp.focusWidget() is now
+    clicked = []
+    box.buttonClicked.connect(clicked.append)
+    QTest.keyClick(yes, Qt.Key.Key_Return)                              # Enter (A) presses the focused button
+    assert clicked == [yes]
+    box.close()
 
 
 @pytest.mark.parametrize("release", [ReleaseInfo(version="0.0.1", tag="portal-v0.0.1"),

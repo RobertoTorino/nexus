@@ -2,7 +2,13 @@
 """A game controller for the portal, read with pygame-ce (SDL's game controller layer, which gives every pad the
 same button names): d-pad and left stick move, A accepts, B goes back, X opens the focused tile's menu, the shoulder
 buttons change the category. The portal only listens while its own window has the focus, so a game's input never
-moves it. Without pygame-ce, or without a controller, nothing happens."""
+moves it. Without pygame-ce, or without a controller, nothing happens.
+
+A pad that Steam Input owns (the Steam Controller, a Steam Deck's, any pad with Steam Input on) reaches SDL only as
+Steam's virtual pad, and only for a program Steam started: the desktop layout turns its buttons into keys
+(owner, 05-11-2026: the portal does all of its actions by keys too). Started from Steam, as a non-Steam game, the
+portal reads the virtual pad (steam_virtual_pad()); Steam then names the real pads behind it for SDL to skip, so no
+press arrives twice."""
 
 from __future__ import annotations
 
@@ -26,6 +32,20 @@ BUTTONS = {                     # SDL's button names (pygame's CONTROLLER_BUTTON
 }
 
 
+def launched_by_steam(env: dict | None = None) -> bool:
+    """Whether Steam started the portal: it sets SteamGameId (a non-Steam game has one too) and the pads SDL skips."""
+    env = os.environ if env is None else env
+    return bool(env.get("SteamGameId") or env.get("SDL_GAMECONTROLLER_IGNORE_DEVICES"))
+
+
+def steam_virtual_pad(env: dict | None = None) -> None:
+    """Started by Steam: SDL reads Steam's virtual pad, which it skips by default (a program outside Steam would see
+    each press twice, from the pad and from the virtual pad)."""
+    env = os.environ if env is None else env
+    if launched_by_steam(env):
+        env.setdefault("SDL_GAMECONTROLLER_ALLOW_STEAM_VIRTUAL_GAMEPAD", "1")
+
+
 def stick_direction(x: float, y: float) -> str | None:
     """The direction a stick (each axis -1 to 1, y down) is pushed, along its stronger axis; None in the dead zone."""
     if max(abs(x), abs(y)) < DEADZONE:
@@ -45,6 +65,7 @@ class PygameSource:
         os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
         os.environ.setdefault("SDL_JOYSTICK_ALLOW_BACKGROUND_EVENTS", "1")
         os.environ.setdefault("PYGAME_HIDE_SUPPORT_PROMPT", "1")
+        steam_virtual_pad()
         import pygame
         from pygame._sdl2 import controller
         self.pygame, self.controller = pygame, controller

@@ -334,6 +334,8 @@ def test_changes_not_committed_make_commit_the_step_to_do(release_window, monkey
     assert states["pull"] == "done" and states["commit"] == "now" and states["start"] == "later"
     assert page.marks["commit"].text() == "▶" and "1 file changed" in page.details["commit"].text()
     assert not page.start_button.isEnabled() and not page.push_button.isEnabled()
+    assert page.commit_message.text() == "see changelog" and page.commit_button.isEnabled()
+    page.commit_message.clear()
     assert not page.commit_button.isEnabled()                   # a message first
     page.commit_message.setText("A greeting")
     assert page.commit_button.isEnabled()

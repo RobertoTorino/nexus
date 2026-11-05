@@ -85,7 +85,10 @@ from .manifest import CATEGORIES, AppEntry
 from .portal_update import PortalUpdate
 
 PROGRESS_MS = 500                       # how often a download's size is shown (a 90 MB release looked like a hang)
-CONFIRM_MS = 5000                       # a second Escape (B) within this closes the portal while something runs
+EXIT_QUESTION = "Do you really want to exit the Portal?"     # every exit asks (owner, 05-11-2026)
+# A key for each controller action that has none of its own, so a pad Steam turns into keys (its desktop layout) can
+# do all of them: map the buttons to these keys in Steam (owner, 05-11-2026).
+ACTION_KEYS = {Qt.Key.Key_U: "update", Qt.Key.Key_S: "settings", Qt.Key.Key_K: "keyboard", Qt.Key.Key_M: "menu"}
 from .sources import (Records, SourceError, Sources, fetch_portal, installed_from, is_installed, is_local, local_record,
                       local_version)
 
@@ -322,6 +325,7 @@ class SysInfoDialog(QDialog):
         painter.end()
 
 
+
 class MainWindow(QMainWindow):
     def __init__(self, entries: list[AppEntry], sources: Sources, records: Records,
                  portal_check: Callable[[], ReleaseInfo] | None = None, local_build: Path | None = None,
@@ -345,12 +349,7 @@ class MainWindow(QMainWindow):
         self.records = records
         self.build = build
         self.pending: Pending | None = None
-        self.close_asked = False                        # Escape (B) pressed once while a download or an install runs
-        self.confirm_timer = QTimer(self)               # a second press within CONFIRM_MS closes the portal
-        self.confirm_timer.setSingleShot(True)
-        self.confirm_timer.setInterval(CONFIRM_MS)
-        self.confirm_timer.timeout.connect(self._confirm_over)
-        self.banner_before = ""                         # the banner the question replaced
+        self.exit_confirmed = False                     # the exit question was answered Yes: close without asking
         self.progress_timer = QTimer(self)              # while a release downloads: its size on the tile
         self.progress_timer.setInterval(PROGRESS_MS)
         self.progress_timer.timeout.connect(self.refresh)
@@ -396,6 +395,8 @@ class MainWindow(QMainWindow):
         # Escape closes the portal (owner, 01-11-2026), as B does; a menu or a question takes it first, and during
         # the intro it skips the intro.
         self.escape_shortcut = QShortcut(QKeySequence(Qt.Key.Key_Escape), self, self.escape)
+        self.action_shortcuts = {QShortcut(QKeySequence(key), self, self._action_key): action
+                                 for key, action in ACTION_KEYS.items()}      # a bound method: no lambda keeps self
         if local_build is not None:
             self.big.set_banner(f"Local build: this portal comes from the checkout {local_build}, "
                                 "not from a published release.")
@@ -1034,43 +1035,35 @@ class MainWindow(QMainWindow):
         self.big.show_settings(not self.big.in_settings())
 
     def escape(self) -> None:
-        """Escape, or B with nothing open: skip the intro while it plays, leave the Settings page, else close the
-        portal; while a download or an install runs it asks first (owner, 03-11-2026, as the Windows Portable Suite's
-        portal since 28-10-2026): the download stops, or the installer finishes in its terminal, unrecorded. A second
-        press within CONFIRM_MS closes."""
+        """Escape, or B with nothing open: skip the intro while it plays, leave the Settings page, else ask whether
+        to exit and close the portal on a Yes."""
         if self.intro is not None:
             self.intro.skip()
         elif self.big.in_settings():
             self.big.show_settings(False)               # B on the Settings page goes back to the tiles
-        elif self.busy() and not self.close_asked:
-            self.ask_close()
-        else:
+        elif self.confirm_exit():
+            self.exit_confirmed = True
             self.close()
 
-    def ask_close(self) -> None:
-        self.close_asked = True
-        self.banner_before = self.big.banner.text() if not self.big.banner.isHidden() else ""
-        what = ("the download stops" if self.downloading() else
-                "the installer finishes in its terminal window, unrecorded")
-        self.big.set_banner(f"Press Escape (or B) again to close the portal: {what}.")
-        self.confirm_timer.start()
-
-    def _confirm_over(self) -> None:
-        self.confirm_timer.stop()
-        if self.close_asked:
-            self.close_asked = False
-            self.big.set_banner(self.banner_before)
+    def confirm_exit(self) -> bool:
+        """Every exit asks first (owner, 05-11-2026), No the default, so a stray B and A keep the portal open. While a
+        download or an install runs, the question says what exiting does to it: the download stops, or the installer
+        finishes in its terminal, unrecorded."""
+        text = EXIT_QUESTION
+        if self.busy():
+            text += ("\n\nThe download stops." if self.downloading() else
+                     "\n\nThe installer finishes in its terminal window, but the portal does not record it.")
+        answer = QMessageBox.question(self, APP_NAME, text,
+                                      QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                                      QMessageBox.StandardButton.No)
+        return answer == QMessageBox.StandardButton.Yes
 
     def closeEvent(self, event) -> None:  # noqa: N802 (Qt override)
-        """The window closed by the desktop (its close button, Alt+F4) while a download or an install runs asks
-        first; Escape and B ask through escape()."""
-        if event.spontaneous() and self.busy() and not self.close_asked:
-            what = ("the download stops" if self.downloading() else
-                    "the installer finishes in its terminal window, but the portal does not record it")
-            answer = QMessageBox.question(self, APP_NAME, f"Close the portal? {what[0].upper()}{what[1:]}.")
-            if answer != QMessageBox.StandardButton.Yes:
-                event.ignore()
-                return
+        """The window closed by the desktop (its close button, Alt+F4) asks first, as Escape and B do through
+        escape(); a close of the portal's own (a restart) does not."""
+        if event.spontaneous() and not self.exit_confirmed and not self.confirm_exit():
+            event.ignore()
+            return
         self._close_window(event)
 
     # ---------------------------------------------------------------------------------------- the tiles
@@ -1202,7 +1195,16 @@ class MainWindow(QMainWindow):
                 for kind in (QEvent.Type.KeyPress, QEvent.Type.KeyRelease):
                     QApplication.sendEvent(target, QKeyEvent(kind, key, Qt.KeyboardModifier.NoModifier))
             return
-        if action in ("up", "down", "left", "right"):
+        self.act(action)
+
+    def _action_key(self) -> None:
+        self.act(self.action_shortcuts[self.sender()])
+
+    def act(self, action: str) -> None:
+        """An action in the view, from the controller or from its key (ACTION_KEYS)."""
+        if action == "keyboard":
+            self.toggle_keyboard()
+        elif action in ("up", "down", "left", "right"):
             self.big.move_focus(action)
         elif action == "accept":
             item = self.big.focused_item()
