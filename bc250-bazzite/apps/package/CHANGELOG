@@ -1,3 +1,7 @@
+Changelog: 05-11-2026 03:50:19
+
+Release 3.2.0.
+
 Changelog: 05-11-2026 02:36:25
 
 Added. The catalog lists SSD Check (apps/ssd): its launcher, PyQt6 and busctl (required, to read the drives'

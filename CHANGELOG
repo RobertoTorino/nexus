@@ -1,3 +1,7 @@
+Changelog: 05-11-2026 03:50:19
+
+Release 1.46.0. Brings check-v1.2.0, clb-v1.1.2, consoles-v2.1.2, decky-v1.2.0, package-v3.2.0, pcsx2-v4.0.2, portal-v15.0.0, ppsspp-v2.0.2, rpcs3-v4.0.2, shadps4-v4.1.0, ssd-v0.1.0, vita3k-v2.0.2, wdriver-v1.1.2, xenia-v2.0.2.
+
 Changelog: 05-11-2026 03:20:52
 
 Fixed. BC250 Bazzite Suite: the weekly upstream check took DirectMesh's development candidate
