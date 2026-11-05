@@ -632,3 +632,23 @@ def test_commit_offers_the_portal_bump_when_apps_toml_changed(release_window, mo
                                                 "Changelog: 01-01-2026 00:00:00\n\nRelease 1.0.0.\n")
     w.reload()
     assert rp.portal_offer(w.root, "HEAD", "wp")[0] == "2.0.0"
+
+
+def test_the_step_being_done_says_a_command_runs(release_window, monkeypatch):
+    """While its command runs (owner, 05-11-2026: Push stayed lit for its two minutes of CI's jobs, which read as
+    "push again"), the step to do has a teal ⋯ and says what runs, and its pill rests."""
+    from nexus_release_tool import release_page
+    w = release_window
+    page = w.release_page
+    page.show_state()
+    now = flow.current_step(page.facts)
+    assert now and page.marks[now].text() == "▶"
+    monkeypatch.setattr(w.commands, "is_running", lambda: True)
+    page.show_state()
+    assert page.marks[now].text() == "⋯"
+    assert page.details[now].text() == release_page.RUNNING.get(now, release_page.RUNNING_ELSE)
+    assert not any(b.isEnabled() for b in (page.pull_button, page.commit_button, page.push_button, page.start_button))
+    monkeypatch.setattr(w.commands, "is_running", lambda: False)
+    page.show_state()
+    assert page.marks[now].text() == "▶"
+    assert "Pushing: CI's jobs run here first" in release_page.RUNNING["push"]

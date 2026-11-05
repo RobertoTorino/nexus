@@ -1,3 +1,10 @@
+Changelog: 05-11-2026 21:14:15
+
+Fixed. A step whose command runs says so (owner, 05-11-2026: Push stayed lit during the push, which read as "push
+again"): a teal ⋯ in place of the orange ▶, and its line says what runs and that the output is on the Commands
+tab; for Push them, that CI's jobs run here first (a couple of minutes on Linux), then git push. Its pill stays
+gray until the command ends, then the next step lights.
+
 Changelog: 05-11-2026 21:05:30
 
 Fixed. After a push the CI passes step sees GitHub's CI within seconds (owner, 05-11-2026: CI ran on GitHub while

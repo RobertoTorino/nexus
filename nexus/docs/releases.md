@@ -63,7 +63,10 @@ are worked out when the release is written, at least what the app releases need,
 
 The tab **Nexus release** holds the release's steps, numbered, in the order you do them, each with its pill. The step
 to do now has an orange ▶ and its pill lit; a step done has a green ✓, one that failed a red !, and the line beside
-each says what there is to do. Only the lit pill does anything, so you never need a command or another tab. Every
+each says what there is to do. While a pill's command runs, its step has a teal ⋯ and its line says what runs
+(**Push them** runs CI's jobs here first, a couple of minutes on Linux, then pushes); the step is done when it
+ends, and its output is on the Commands tab. Only the lit pill does anything, so you never need a command or
+another tab. Every
 tab explains itself behind the round **i** in its first row: click it to read the whole explanation.
 
 1. **Get up to date** (**git pull**): only when GitHub has commits this checkout lacks, pushed from the other machine.

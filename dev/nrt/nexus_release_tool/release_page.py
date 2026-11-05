@@ -24,6 +24,7 @@ from bc250_core.widgets import accent_button
 from . import flow
 from . import plan as rp
 from .parts import StepLog, info_row
+from .style import TEAL
 
 if TYPE_CHECKING:
     from .main_window import ReleaseWindow
@@ -31,7 +32,19 @@ if TYPE_CHECKING:
 COLUMNS = ("Release", "Now", "New version", "Why", "Notes")
 SEMVER_TIP = ("Breaking. (an entry that starts with it) -> major, Added. -> minor, Fixed. -> patch. auto: worked out "
               "when Start writes the release.")
-MARKS = {"done": ("✓", GREEN), "now": ("▶", ORANGE), "failed": ("!", RED), "later": ("", GREY)}
+MARKS = {"done": ("✓", GREEN), "now": ("▶", ORANGE), "failed": ("!", RED), "later": ("", GREY),
+         "running": ("⋯", TEAL)}
+# The line of the step to do while a command runs (owner, 05-11-2026: Push stayed lit during its two minutes, which
+# read as "push again"): what runs, and that its output is on the Commands tab.
+RUNNING = {
+    "pull": "git pull runs. Its output is on the Commands tab.",
+    "commit": "Committing: the version and manifest checks run first. Their output is on the Commands tab.",
+    "push": ("Pushing: CI's jobs run here first (on Linux, a couple of minutes), then git push. The output is on the "
+             "Commands tab; the step is done when it ends."),
+    "start": "The release is committed, pushed and started on GitHub. The output is on the Commands tab.",
+    "finish": "git pull runs. Its output is on the Commands tab.",
+}
+RUNNING_ELSE = "A command runs. Its output is on the Commands tab; the steps go on when it ends."
 REJECTED_KEY = "release/rejected"     # "<run url>|<portal tag>" of each Not OK, the newest 20
 DEFAULT_MESSAGE = "see changelog"      # the commit message the field starts with (owner, 05-11-2026)
 PILLS_PX = 360                        # the pills column of the steps: two pills side by side, or the message field
@@ -244,11 +257,14 @@ class ReleasePage(QWidget):
         self.choose_drafts(facts.drafts)              # before the lines, which name where the chosen one is tested
         states = flow.step_states(facts)
         now = flow.current_step(facts)
+        running = window.commands.is_running()
+        if running and now:
+            states[now] = "running"
         for key, _title, what in flow.STEPS:
             sign, color = MARKS[states[key]]
             self.marks[key].setText(sign)
             self.marks[key].setStyleSheet(f"color:{color}; font-weight:800;")
-            lit = states[key] in ("now", "failed")
+            lit = states[key] in ("now", "failed", "running")
             self.titles[key].setStyleSheet(f"font-weight:800; color:{color};" if lit else
                                            "font-weight:600;" if states[key] == "done" else f"color:{GREY};")
             self.details[key].setText(self.detail(key, states[key], facts) or what)
@@ -284,6 +300,8 @@ class ReleasePage(QWidget):
     def detail(self, key: str, state: str, facts: flow.Facts) -> str:
         """The step's line while it is the one to do or failed: what is there to do, in words; "" for its usual
         line."""
+        if state == "running":
+            return RUNNING.get(key, RUNNING_ELSE)
         if key == "test" and state == "later" and facts.drafts and flow.current_step(facts) in (
                 "pull", "commit", "push", "ci", "start"):
             # After Not OK, or after a restart of NRT, which keeps nothing of its own: the draft says it is still there
