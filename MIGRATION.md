@@ -7,9 +7,7 @@ describe only what exists.
 
 ## Resume here (05-11-2026 03:41, for a new chat): the roadmap after the Bazzite items
 
-The Bazzite items of the roadmap are done in the working tree, not committed: the owner commits, releases and tries
-them on the board. `tools/ci-local.sh` passes every job but one: check_manifest wants the portal's minor bump for
-SSD Check's new entry in `apps.toml` (the owner's). Each app's CHANGELOG says what its release carries:
+The Bazzite items of the roadmap are done. Each app's CHANGELOG says what its release carries:
 
 - **portal**: the self-update (Y or a right click, the orange banners; Breaking: the red release-page button is gone),
   the Settings page behind ☰, R3's on-screen keyboard (Plasma Keyboard over KWin's D-Bus, mode 2 while shown),
@@ -24,13 +22,12 @@ SSD Check's new entry in `apps.toml` (the owner's). Each app's CHANGELOG says wh
 - **clb, consoles, rpcs3, ppsspp, pcsx2, vita3k, xenia**: the disclaimer without Nintendo (with shadps4), nothing
   urgent: whenever each is next released.
 
-Without a release (in the repository only): the disclaimer hook and READMEs, the upstream check (vita3k, xenia,
-wdriver; DirectMesh candidates skipped), the machine chapter's tool tables and CLAUDE.md's rule that frequently
-needed tools are installed for good.
+The disclaimer hook and READMEs, the upstream check (vita3k, xenia, wdriver; DirectMesh candidates skipped), 
+the machine chapter's tool tables and CLAUDE.md's rule that frequently needed tools are installed for good.
 
 Waiting on the owner: the driver's mirror `RobertoTorino/aic8800d80` is not on GitHub (404, missing or private), so
 BC-250 USB Wi-Fi fetches the driver from the upstream alone; create it or make it public. Both aic8800d80 branches,
-Vita3K and Xenia are past their pins (the weekly Upstream review lists them); moving a pin is a board test.
+Vita3K and Xenia are past their pins.
 
 Next: the Windows chapter of the roadmap, or Bazzite/Windows (ready to start without the owner: Windows 2, 5, 7 and 8
 and Bazzite/Windows 1 to 4; Windows 1, 3, 4 and 6 need the Ally; Windows 9, 10 and 11 and Bazzite/Windows 5 need the
