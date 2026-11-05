@@ -796,3 +796,40 @@ def test_every_controller_action_plays_the_short_sound(made, monkeypatch):
     pad.queue = [("button", "leftshoulder", True)]
     window.gamepad.poll()
     assert window.sounds.played.count(audio.ACTION) == 2
+
+
+def test_keys_and_clicks_play_the_short_sound_too(made, monkeypatch):
+    """The short sound on every action whatever it comes from (owner, 05-11-2026): a key that acts, a click on a
+    tile or a pill, the shortcuts, and a controller Steam turns into keys; not on a key that does nothing, a held key's
+    repeats, a click on the room around the tiles or a pill that only shows, and once for a click."""
+    from PyQt6.QtTest import QTest
+    window, _ = made()
+    start(window)
+    actions = lambda: window.sounds.played.count(audio.ACTION)               # noqa: E731
+    tile = window.focusWidget()
+    QTest.keyClick(tile, Qt.Key.Key_Right)
+    assert actions() == 1
+    QTest.keyClick(window.focusWidget(), Qt.Key.Key_X)                       # no action of the portal's
+    QApplication.sendEvent(window.focusWidget(), QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_Left,
+                                                           Qt.KeyboardModifier.NoModifier, "", True))
+    assert actions() == 1                                                    # nor a repeat (not spontaneous either)
+    QTest.mouseClick(window.refresh_pill.caption, Qt.MouseButton.LeftButton)   # the label in the pill: once
+    assert actions() == 2
+    QTest.mouseClick(window.installed_pill, Qt.MouseButton.LeftButton)        # only shows
+    QTest.mouseClick(window.big, Qt.MouseButton.LeftButton, pos=window.big.rect().bottomRight())
+    assert actions() == 2
+    monkeypatch.setattr(window, "confirm_exit", lambda: False)
+    window._escape_key()                                                     # Escape's shortcut
+    assert actions() == 3
+    window.sound_box.setChecked(False)
+    QTest.keyClick(window.focusWidget(), Qt.Key.Key_Right)
+    assert actions() == 3
+
+
+def test_the_key_that_skips_the_intro_is_silent(made):
+    from PyQt6.QtTest import QTest
+    window, _ = made()
+    window.show()
+    window.start_up()
+    QTest.keyClick(window.intro, Qt.Key.Key_Return)
+    assert window.sounds.played == [audio.INTRO]

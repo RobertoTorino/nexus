@@ -1,3 +1,9 @@
+Changelog: 05-11-2026 18:02:07
+
+Added. Screenshot, on the line of the drive's list, saves the window with the values it shows as a PNG in the
+Pictures folder, in a folder named SSD Check, with the date and the time in the file's name; the line beside it
+names the file. The serial stays hidden in the picture.
+
 Changelog: 05-11-2026 17:31:18
 
 Release 0.2.0.

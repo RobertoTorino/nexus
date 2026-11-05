@@ -17,7 +17,7 @@ from PyQt6.QtWidgets import (
 from . import FONT_DIR, plain_tooltip, window_title
 
 # The suite's theme and colors (a copy of core's theme.py): result colors, the logo's purple, the theme's accent.
-from .theme import ACCENT, BLUE, GREEN, GREY, ORANGE, PURPLE, RED, STATE_COLORS, surface_style
+from .theme import ACCENT, BLUE, GREEN, GREY, ORANGE, OUTLINE, PURPLE, RED, STATE_COLORS, surface_style
 
 
 @lru_cache(maxsize=1)
@@ -166,7 +166,7 @@ def set_button_active(button: QPushButton, active: bool) -> None:
         # blended over the native gradient. No font change, so the text weight matches the neighbors.
         button.setStyleSheet("QPushButton { background:#8b0000; color:white; border:1px solid #8b0000; "
                              "border-radius:3px; }"
-                             "QPushButton:hover { background:#a00000; border-color:#a00000; }")
+                             f"QPushButton:hover {{ background:#a00000; border-color:{OUTLINE}; }}")
     else:
         button.setStyleSheet("")
 

@@ -17,6 +17,7 @@ from PyQt6.QtWidgets import (
 )
 
 from .text import plain_tooltip, window_title
+from .theme import outline as theme_outline
 from .theme import (ACTIVE_RED, ACTIVE_RED_HOVER, BLUE, GREY, STATE_COLORS, THEME, Theme, header_font, muted,
                     surface_style)
 
@@ -35,8 +36,13 @@ def set_theme(theme: Theme) -> None:
 
 
 def accent() -> str:
-    """The accent of the theme the widgets draw with: hover and focus outlines, the main action."""
+    """The accent of the theme the widgets draw with: the main action."""
     return _theme.accent
+
+
+def outline() -> str:
+    """The border under the mouse and with the focus, in the theme the widgets draw with (theme.outline)."""
+    return theme_outline(_theme)
 
 
 class StatusPill(QLabel):
@@ -142,7 +148,7 @@ class Pill(MetricBox):
         # A pill that cannot be clicked (setEnabled(False)) shows its text muted, as a disabled button does.
         # The rule is on the labels' own state: Qt ignores an ancestor's pseudo-state in a selector, so
         # "#pill:disabled QLabel" would mute every pill.
-        self.setStyleSheet(self.styleSheet() + f"#pill:hover, #pill:focus {{ border-color:{accent()}; }}"
+        self.setStyleSheet(self.styleSheet() + f"#pill:hover, #pill:focus {{ border-color:{outline()}; }}"
                            f"#pill QLabel:disabled {{ color:{muted(_theme)}; }}")
 
     def mouseReleaseEvent(self, event) -> None:  # noqa: N802 (Qt override)
@@ -379,7 +385,8 @@ def set_button_active(button: QPushButton, active: bool) -> None:
         # blended over the native gradient. No font change, so the text weight matches the neighbors.
         button.setStyleSheet(f"QPushButton {{ background:{ACTIVE_RED}; color:white; border:1px solid {ACTIVE_RED}; "
                              "border-radius:3px; }"
-                             f"QPushButton:hover {{ background:{ACTIVE_RED_HOVER}; border-color:{ACTIVE_RED_HOVER}; }}")
+                             f"QPushButton:hover {{ background:{ACTIVE_RED_HOVER};"
+                             f" border-color:{_theme.outline or ACTIVE_RED_HOVER}; }}")
     else:
         button.setStyleSheet("")
 

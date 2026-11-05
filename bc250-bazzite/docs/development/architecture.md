@@ -157,6 +157,11 @@ their colors. A status box, pill or banner is the theme's surface with its state
 (`MetricBox.set_colour()`, `surface_style()`), never a filled box with white text, so it reads in a light and a
 dark theme alike. Text takes the theme's colors (`THEME.text`, `muted()`), not white or a fixed gray.
 
+Every border that shows under the mouse, with the keyboard or controller focus, or on what is chosen (a tab, a
+page in a list) is silver: the theme's outline, `OUTLINE` in `theme.py` (`outline()` in the widgets), light
+silver on gunmetal and warm, a darker silver on the light silver theme. A `style.py` keeps its own color for
+fills and edges that are always there, and uses `OUTLINE` for those borders too.
+
 An app may have its own color, taken from its icon, in a `style.py` beside its window (the shadPS4 Manager's is
 the pattern): the main buttons, the table headers, the selection and the links take it, over the theme. White text
 on the color reads at 4.5:1 or more, links on a dark window use a lighter shade of it, and the color stays easy on

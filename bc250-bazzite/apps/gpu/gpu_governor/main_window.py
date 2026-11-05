@@ -37,7 +37,8 @@ from .settings_page import SettingsPage
 from .stress import NO_TOOL, StressRunner
 from .tray import Tray, profile_command
 from .update_check import UpdateChecker, UpdateResult
-from .widgets import ACCENT, BLUE, GREEN, GREY, ORANGE, PURPLE, RED, ClickableLogo, MetricBox, header_font
+from .theme import OUTLINE
+from .widgets import BLUE, GREEN, GREY, ORANGE, PURPLE, RED, ClickableLogo, MetricBox, header_font
 
 SOURCE_NAMES = {"hwmon": "amdgpu hwmon sensor",
                 "gpu_metrics": "gpu_metrics table"}
@@ -99,9 +100,9 @@ class MainWindow(QMainWindow):
         self.nav.setStyleSheet(
             "QListWidget { outline:0; }"
             "QListWidget::item { padding:6px; margin:2px 4px; border:2px solid transparent; border-radius:6px; }"
-            "QListWidget::item:hover { border-color:palette(mid); }"
+            f"QListWidget::item:hover {{ border-color:{OUTLINE}; }}"
             "QListWidget::item:selected { background:transparent; color:palette(text);"
-            f" border-color:{ACCENT}; }}")
+            f" border-color:{OUTLINE}; }}")
         self.stack = QStackedWidget()
         main.addWidget(self.nav)
         main.addWidget(self.stack, 1)

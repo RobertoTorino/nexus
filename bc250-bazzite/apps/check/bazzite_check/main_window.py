@@ -21,7 +21,7 @@ from .bench import BASELINE_NAME, BASELINE_PATH, BenchSettings, load_history, sc
 from .disk import DiskSettings
 from .catalog import (BENCH_TEST_ID, CATEGORIES, CATEGORY_OF, DISK_TEST_ID, SPEEDTEST_TEST_ID, STRESS_TEST_ID,
                       TESTS)
-from .dashboard import ACCENT, ORANGE, RED, ResultsPreview, Stats, StatsBar, header_font, results_card
+from .dashboard import OUTLINE, ORANGE, RED, ResultsPreview, Stats, StatsBar, header_font, results_card
 from .cleanup import CleanupDialog, execute as execute_cleanup
 from .findings import Entry, FindingsDialog
 from .integrity import check_engine
@@ -122,9 +122,9 @@ class MainWindow(QMainWindow):
         self.nav.setStyleSheet(
             "QListWidget { outline:0; }"
             "QListWidget::item { padding:6px; margin:2px 4px; border:2px solid transparent; border-radius:6px; }"
-            "QListWidget::item:hover { border-color:palette(mid); }"
+            f"QListWidget::item:hover {{ border-color:{OUTLINE}; }}"
             "QListWidget::item:selected { background:transparent; color:palette(text);"
-            f" border-color:{ACCENT}; }}")
+            f" border-color:{OUTLINE}; }}")
         self.stack = QStackedWidget()
         main.addWidget(self.nav)
         main.addWidget(self.stack, 1)

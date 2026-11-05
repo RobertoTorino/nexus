@@ -1,3 +1,8 @@
+Changelog: 05-11-2026 18:18:09
+
+Fixed. Every border that shows under the mouse, with the focus or on what is chosen is silver now (owner,
+05-11-2026), the theme's outline from core, not the app's blue; the chosen tab and the choice boxes too.
+
 Changelog: 05-11-2026 03:50:19
 
 Release 4.1.0.

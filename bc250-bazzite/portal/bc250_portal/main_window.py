@@ -49,7 +49,9 @@ pill's menu sets the veil, the picture's transparency (owner, 20-10-2026): a dar
 so the icons on it stand out. A pill that is not active is half transparent, so the picture shows through it.
 
 Sound (owner, 21-10-2026): the intro plays with its sound, and the Sound pill turns it off (the choice is kept;
-without an audio output the pill is disabled and the portal silent)."""
+without an audio output the pill is disabled and the portal silent). Every action plays a short sound (owner,
+05-11-2026), whatever it comes from: a controller SDL reads, a key (a controller Steam turns into keys too) or a
+click on something that acts (_input_sound, the window's filter over the whole application)."""
 
 from __future__ import annotations
 
@@ -65,8 +67,9 @@ from pathlib import Path, PurePath
 from PyQt6.QtCore import QCoreApplication, QEvent, QProcess, QTimer, Qt, QUrl, pyqtSignal
 from PyQt6.QtGui import QColor, QDesktopServices, QIcon, QKeyEvent, QKeySequence, QPainter, QPalette, QShortcut
 from PyQt6.QtWidgets import (
-    QApplication, QDialog, QDialogButtonBox, QFileDialog, QGridLayout, QHBoxLayout, QLabel, QMainWindow, QMenu,
-    QMessageBox, QPushButton, QSlider, QVBoxLayout, QWidget, QWidgetAction,
+    QAbstractButton, QAbstractSpinBox, QApplication, QComboBox, QDialog, QDialogButtonBox, QFileDialog, QGridLayout,
+    QHBoxLayout, QLabel, QLineEdit, QMainWindow, QMenu, QMessageBox, QPlainTextEdit, QPushButton, QSlider, QTabBar,
+    QTextEdit, QVBoxLayout, QWidget, QWidgetAction,
 )
 
 from bc250_core import SUITE_MANUAL_URL, __version__ as CORE_VERSION, upstream
@@ -89,6 +92,14 @@ EXIT_QUESTION = "Do you really want to exit the Portal?"     # every exit asks (
 # A key for each controller action that has none of its own, so a pad Steam turns into keys (its desktop layout) can
 # do all of them: map the buttons to these keys in Steam (owner, 05-11-2026).
 ACTION_KEYS = {Qt.Key.Key_U: "update", Qt.Key.Key_S: "settings", Qt.Key.Key_K: "keyboard", Qt.Key.Key_M: "menu"}
+# The keys that act, with the short sound as the controller's buttons (owner, 05-11-2026: every input, not only a
+# controller SDL reads): the moves, Enter and Space, Escape, Tab, the category keys and the Menu key. ACTION_KEYS
+# and Escape are shortcuts, which sound in their own slot (a shortcut's key press never reaches a widget).
+SOUND_KEYS = {Qt.Key.Key_Up, Qt.Key.Key_Down, Qt.Key.Key_Left, Qt.Key.Key_Right, Qt.Key.Key_Return,
+              Qt.Key.Key_Enter, Qt.Key.Key_Space, Qt.Key.Key_Escape, Qt.Key.Key_Tab, Qt.Key.Key_Backtab,
+              Qt.Key.Key_PageUp, Qt.Key.Key_PageDown, Qt.Key.Key_Q, Qt.Key.Key_E, Qt.Key.Key_Menu}
+TYPING_KEYS = {Qt.Key.Key_Return, Qt.Key.Key_Enter, Qt.Key.Key_Escape, Qt.Key.Key_Tab, Qt.Key.Key_Backtab}
+TEXT_INPUTS = (QLineEdit, QTextEdit, QPlainTextEdit, QAbstractSpinBox)     # where only TYPING_KEYS sound
 from .sources import (Records, SourceError, Sources, fetch_portal, installed_from, is_installed, is_local, local_record,
                       local_version)
 
@@ -101,7 +112,7 @@ DESKTOP_ICONS_KEY = "portal/desktop_icons"
 SOUND_KEY = "portal/sound"
 # The Settings page: a short line beside each pill (Icons on Desktop, Sound, the theme, the wallpaper)
 SETTING_LINES = ("An icon on the Desktop for every installed app, or only the portal's.",
-                 "The intro's sound, and a short one for each controller button.",
+                 "The intro's sound, and a short one for each action.",
                  "The look of every app in the suite, from its next start.",
                  "A picture behind the portal, and how much of it shows through.")
 VALUE_PX = 300                  # a value in the Sys info window wraps beyond this width
@@ -394,7 +405,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.big)
         # Escape closes the portal (owner, 01-11-2026), as B does; a menu or a question takes it first, and during
         # the intro it skips the intro.
-        self.escape_shortcut = QShortcut(QKeySequence(Qt.Key.Key_Escape), self, self.escape)
+        self.escape_shortcut = QShortcut(QKeySequence(Qt.Key.Key_Escape), self, self._escape_key)
         self.action_shortcuts = {QShortcut(QKeySequence(key), self, self._action_key): action
                                  for key, action in ACTION_KEYS.items()}      # a bound method: no lambda keeps self
         if local_build is not None:
@@ -428,7 +439,8 @@ class MainWindow(QMainWindow):
             "there, and you start the apps from here. The apps stay in the app menu either way. Click to switch.",
             self.settings.value(DESKTOP_ICONS_KEY, False, type=bool))
         self.icons_box.toggled.connect(self._show_icons)
-        self.sound_tip = "The sound of the intro when the portal opens. Click to switch."
+        self.sound_tip = ("The sound of the intro when the portal opens, and a short one for each action. Click to "
+                          "switch.")
         self.sound_box = TogglePill("Sound", self.sound_tip, self.sounds.enabled)
         self.sound_box.toggled.connect(self._set_sound)
         self.theme_pill = HeaderPill(THEMES[theme_name()].label, "Theme switcher",
@@ -470,6 +482,8 @@ class MainWindow(QMainWindow):
             self.portal_checker.start(portal_check)
         QTimer.singleShot(0, self.settle_icons)          # once the window shows: it may ask
         QTimer.singleShot(0, self.remove_withdrawn)
+        self._last_press = -1                           # the mouse press that sounded: once as it goes up the parents
+        QApplication.instance().installEventFilter(self)    # the short sound on a key or a click (_input_sound)
 
     # ------------------------------------------------------------------------------------------- layout
     def show_app(self, key: str) -> None:
@@ -477,9 +491,68 @@ class MainWindow(QMainWindow):
         self.big.show_app(key)
 
     def eventFilter(self, watched, event) -> bool:
-        if self.intro is not None and watched is self.big and event.type() == QEvent.Type.Resize:
+        kind = event.type()
+        if kind in (QEvent.Type.KeyPress, QEvent.Type.MouseButtonPress) and event.spontaneous():
+            self._input_sound(watched, event)
+        elif self.intro is not None and watched is self.big and kind == QEvent.Type.Resize:
             self.intro.setGeometry(self.big.rect())
         return super().eventFilter(watched, event)
+
+    # ------------------------------------------------------------------------------------------- sound
+    def _input_sound(self, watched, event) -> None:
+        """The short sound on a key that acts or a click on something that acts, in the portal or one of its menus
+        and questions: the same as a controller's button, for a mouse, a keyboard and a controller Steam turns into
+        keys. Only what the user did (spontaneous): the keys _gamepad_action sends to a menu have sounded already.
+        Silent while the intro plays: the press that skips it stays silent, as the controller's button does."""
+        if self.intro is not None or not isinstance(watched, QWidget) or not self._mine(watched):
+            return
+        if event.type() == QEvent.Type.KeyPress:
+            key = event.key()
+            if event.isAutoRepeat() or key not in SOUND_KEYS:
+                return
+            if isinstance(QApplication.focusWidget(), TEXT_INPUTS) and key not in TYPING_KEYS:
+                return                                  # typing in a text field
+            self.sounds.play(audio.ACTION)
+            return
+        if event.button() not in (Qt.MouseButton.LeftButton, Qt.MouseButton.RightButton):
+            return
+        if event.timestamp() == self._last_press:      # the same press, handed on to a parent
+            return
+        if self._clickable(watched, event.globalPosition().toPoint()):
+            self._last_press = event.timestamp()
+            self.sounds.play(audio.ACTION)
+
+    def _mine(self, widget: QWidget) -> bool:
+        """Whether *widget* is the portal's: in its window, or in a menu or a question it opened."""
+        while widget is not None:
+            if widget is self:
+                return True
+            widget = widget.parentWidget()
+        return False
+
+    @staticmethod
+    def _clickable(widget: QWidget, where) -> bool:
+        """Whether a press at *where* (global) on *widget* acts: a tile, a pill, a button, a category or an entry of a
+        menu, not the empty room around them or a pill that only shows."""
+        while widget is not None:
+            if isinstance(widget, QMenu):
+                action = widget.actionAt(widget.mapFromGlobal(where))
+                return action is not None and action.isEnabled() and not action.isSeparator()
+            if isinstance(widget, QTabBar):
+                return widget.tabAt(widget.mapFromGlobal(where)) >= 0
+            if isinstance(widget, (QAbstractButton, QComboBox)):
+                return widget.isEnabled()
+            if isinstance(widget, Pill):
+                return widget.isEnabled() and widget.focusPolicy() != Qt.FocusPolicy.NoFocus
+            if widget.isWindow():
+                return False
+            widget = widget.parentWidget()
+        return False
+
+    def _key_sound(self) -> None:
+        """A shortcut's key (Escape, U, S, K, M): the short sound, but not when it skips the intro."""
+        if self.intro is None:
+            self.sounds.play(audio.ACTION)
 
     # ------------------------------------------------------------------------------------------- state
     def busy(self) -> bool:
@@ -1198,7 +1271,12 @@ class MainWindow(QMainWindow):
         self.act(action)
 
     def _action_key(self) -> None:
+        self._key_sound()
         self.act(self.action_shortcuts[self.sender()])
+
+    def _escape_key(self) -> None:
+        self._key_sound()
+        self.escape()
 
     def act(self, action: str) -> None:
         """An action in the view, from the controller or from its key (ACTION_KEYS)."""
@@ -1426,6 +1504,7 @@ class MainWindow(QMainWindow):
             self.keyboard.restore()                     # the user's keyboard mode back, when R3 changed it
         except keyboard.KeyboardError:
             pass
+        QApplication.instance().removeEventFilter(self)
         self.gamepad.stop()
         self.sounds.stop()
         self.worker.stop(2000)

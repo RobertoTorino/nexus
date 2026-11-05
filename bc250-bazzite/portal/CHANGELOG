@@ -1,3 +1,17 @@
+Changelog: 05-11-2026 18:18:09
+
+Fixed. The pills, the tiles, the notices, the update banner and the chosen category are framed in silver under
+the mouse and with the focus (owner, 05-11-2026), not in the theme's steel-blue accent; the update banner's frame
+was white. The wiki's portal chapter says so.
+
+Changelog: 05-11-2026 18:02:07
+
+Fixed. The short sound of an action plays for every input, not only for a controller SDL reads (a DualShock 4,
+for example): each key that acts (the arrow keys, Enter, Space, Escape, Tab, Page Up and Page Down, Q, E, U, S, K,
+M and the Menu key), so also a controller Steam turns into keys, and each click on a tile, a pill, a button, a
+category or a menu entry. A key held down sounds once, typing in a text field and a click beside the tiles stay
+silent, and the press that skips the intro stays silent as before. The Sound setting's line and tooltip say so.
+
 Changelog: 05-11-2026 17:31:18
 
 Release 15.1.0. Pins ssd-v0.2.0.

@@ -66,3 +66,17 @@ def test_muted_lies_between_text_and_window(name):
     t = theme.THEMES[name]
     lightness = sorted(QColor(c).lightness() for c in (t.text, t.window))
     assert lightness[0] < QColor(theme.muted(t)).lightness() < lightness[1]
+
+
+def test_hover_focus_and_chosen_borders_are_silver():
+    """Every border under the mouse, with the focus or on the chosen tab is silver (owner, 05-11-2026), a darker
+    silver on the light theme, never the accent; a theme without an outline of its own (Nexus's) keeps its accent."""
+    from bc250_core.nexus import NEXUS
+    assert {name: t.outline for name, t in theme.THEMES.items()} == {
+        "gunmetal": "#c0c4c9", "silver": "#7d8389", "warm": "#c0c4c9"}
+    for t in theme.THEMES.values():
+        sheet = theme.stylesheet(t)
+        assert f"QPushButton:hover, QToolButton:hover {{ border-color:{t.outline}; }}" in sheet
+        assert f"border-top:2px solid {t.outline}" in sheet and f"border-color:{t.accent}" not in sheet
+    assert theme.outline(NEXUS) == NEXUS.accent
+    assert theme.OUTLINE in theme.HOVER_STYLESHEET

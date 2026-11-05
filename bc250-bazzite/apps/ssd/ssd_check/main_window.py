@@ -5,7 +5,9 @@ it the drive chosen by its number, its model and where its values come from, and
 cycles, the power-on hours and days, the device, the data the host read and wrote, the firmware and whether a newer
 one exists, then a row on speed: the interface, the link now, the most the board's port carries and the maker's
 rated read and write (rated.py), beside the speeds measured in this board at the top (speedtest.py), so it shows
-whether the board holds the drive back. The reading and the measuring run off the GUI thread: udisks may wake a sleeping drive first."""
+whether the board holds the drive back. The reading and the measuring run off the GUI thread: udisks may wake a sleeping drive first.
+Screenshot, beside the drive's list (owner, 05-11-2026), saves the window with the values it shows as a PNG in the
+Pictures folder; the serial stays hidden in it, as on the screen."""
 
 from __future__ import annotations
 
@@ -14,9 +16,11 @@ import threading
 from pathlib import Path
 
 from PyQt6 import sip
-from PyQt6.QtCore import QObject, QPoint, Qt, pyqtSignal
-from PyQt6.QtWidgets import QComboBox, QGridLayout, QHBoxLayout, QLabel, QMainWindow, QVBoxLayout, QWidget
+from PyQt6.QtCore import QObject, QPoint, QStandardPaths, Qt, pyqtSignal
+from PyQt6.QtWidgets import (QComboBox, QGridLayout, QHBoxLayout, QLabel, QMainWindow, QPushButton, QVBoxLayout,
+                             QWidget)
 
+from bc250_core.platform import private
 from bc250_core.theme import GREEN, GREY, ORANGE, RED
 from bc250_core.widgets import (AppHeader, InfoButton, MetricBox, Pill, RoundedToolTip, StatusText, accent,
                                 hint_label, same_width)
@@ -87,14 +91,31 @@ def thousands(number: int) -> str:
     return f"{number:,}"
 
 
+def pictures() -> Path:
+    """The user's Pictures folder (xdg-user-dirs, ~/Pictures by default), the app's folder in it."""
+    return Path(QStandardPaths.writableLocation(QStandardPaths.StandardLocation.PicturesLocation)) / APP_NAME
+
+
+def screenshot_path(folder: Path, now: datetime.datetime | None = None) -> Path:
+    """A PNG in *folder* named after the app and the time ("SSD Check 2026-11-05 18-04-09.png"), not one there
+    already: two in one second get (2), (3) and so on."""
+    stem = f"{APP_NAME} {(now or datetime.datetime.now()):%Y-%m-%d %H-%M-%S}"
+    path, n = folder / f"{stem}.png", 1
+    while path.exists():
+        n += 1
+        path = folder / f"{stem} ({n}).png"
+    return path
+
+
 class MainWindow(QMainWindow):
     def __init__(self, run_: smart.Run = smart.run, threaded: bool = True, sysfs: Path = smart.SYSFS,
-                 home: Path | None = None) -> None:
+                 home: Path | None = None, pictures_: Path | None = None) -> None:
         super().__init__()
         self.setWindowTitle(APP_NAME)
         self.resize(820, 420)
         self.run, self.threaded, self.sysfs = run_, threaded, sysfs
         self.home = home                                        # where the speed test prefers to write; tests set it
+        self.pictures = pictures_                               # where Screenshot saves (default pictures()); tests set it
         self.measured: dict[str, tuple[float, float]] = {}     # drive path: its measured (read, write)
         self.speed_test: _Speed | None = None                   # kept alive until its thread reports
         self.drives: list[smart.Drive] = []
@@ -127,9 +148,17 @@ class MainWindow(QMainWindow):
         self.drive_box.setToolTip("The drive to show")
         self.drive_box.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToContents)
         self.drive_box.currentIndexChanged.connect(self.drive_chosen)
+        # Screenshot on the same line (owner, 05-11-2026): the window with its values, as a PNG.
+        self.shot_button = QPushButton("Screenshot")
+        self.shot_button.setToolTip("Save the window with the values it shows as a PNG in your Pictures folder "
+                                    "(the serial stays hidden)")
+        self.shot_button.clicked.connect(self.screenshot)
+        self.shot_note = hint_label("")
         drive_row = QHBoxLayout()
         drive_row.addWidget(QLabel("Drive"))
         drive_row.addWidget(self.drive_box)
+        drive_row.addWidget(self.shot_button)
+        drive_row.addWidget(self.shot_note)
         drive_row.addStretch(1)
         self.model = QLabel("")
         self.model.setStyleSheet("font-size:16px; font-weight:700;")
@@ -355,6 +384,24 @@ class MainWindow(QMainWindow):
             self.show_measured(drive)
         if isinstance(result, str) and drive is not None and drive.path == path:
             self.measure_pill.set_value("Failed", result)
+
+    def screenshot(self) -> None:
+        """The window as it shows now, saved as a PNG in the Pictures folder. The serial's popup is a window of its
+        own, so the picture has the hidden pill only; the line beside the button says where the file went."""
+        self.shot_note.setText("")                      # the last one's line stays out of the picture
+        self.shot_note.setToolTip("")
+        path = screenshot_path(self.pictures or pictures())
+        try:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            saved = self.grab().save(str(path), "PNG")
+        except OSError:
+            saved = False
+        if saved:
+            self.shot_note.setText(f"Saved: {path.name}")
+            self.shot_note.setToolTip(private(path))
+        else:
+            self.shot_note.setText("The screenshot could not be saved")
+            self.shot_note.setToolTip(f"Could not write to {private(path.parent)}")
 
     def show_serial(self, drive: smart.Drive) -> None:
         """The pill only says there is a serial; the popup shows it (show_serial_popup)."""

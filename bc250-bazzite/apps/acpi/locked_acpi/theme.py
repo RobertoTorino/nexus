@@ -36,17 +36,18 @@ class Theme:
     button: str         # button face, the top of its sheen
     button_low: str     # the bottom of the sheen
     edge: str           # borders
-    accent: str         # selection, focus, hover outline, the page's main action
+    accent: str         # selection, the page's main action
     accent_text: str    # text on the accent
+    outline: str = ""   # the border on hover, focus and selection (owner, 05-11-2026: silver); "" takes the accent
 
 
 THEMES: dict[str, Theme] = {
     "gunmetal": Theme("Gunmetal", True, "#2b2f34", "#22262a", "#292d32", "#d9dde2", "#4a5058", "#3b4048",
-                      "#14171a", "#7e97ad", "#ffffff"),
+                      "#14171a", "#7e97ad", "#ffffff", "#c0c4c9"),
     "silver": Theme("Silver", False, "#d5d8dc", "#eceef0", "#e2e5e8", "#1e2226", "#eef0f2", "#c4c8cd",
-                    "#8d9298", "#5f7f9c", "#ffffff"),
+                    "#8d9298", "#5f7f9c", "#ffffff", "#7d8389"),    # a darker silver: light silver vanishes here
     "warm": Theme("Warm", True, "#35332f", "#292826", "#302e2b", "#e3dfd8", "#57534d", "#45423d",
-                  "#181716", "#b59a6e", "#1b1a18"),
+                  "#181716", "#b59a6e", "#1b1a18", "#c0c4c9"),
 }
 DEFAULT_THEME = "gunmetal"
 
@@ -80,14 +81,23 @@ THEME = THEMES[theme_name()]
 GREEN, ORANGE, RED, BLUE, GREY = "#2e7d32", "#ef6c00", "#c62828", "#1565c0", "#3a3f4b"
 PURPLE = "#6a1b9a"
 ACCENT = THEME.accent
+
+
+def outline(theme: Theme = THEME) -> str:
+    """The border a control shows under the mouse, with the focus or chosen: silver in the suite's themes (owner,
+    05-11-2026), the accent in a theme without its own."""
+    return theme.outline or theme.accent
+
+
+OUTLINE = outline()
 YELLOW = "#fdd835"                      # "running": never confused with a failed (red) state
 ACTIVE_RED, ACTIVE_RED_HOVER = "#8b0000", "#a00000"
 STATE_COLORS = {"ok": GREEN, "warn": ORANGE, "bad": RED, "info": BLUE, "neutral": GREY}
 
-# Accent outline on hover for every input control (the bisect and unlock GUIs apply it app-wide).
+# The outline on hover for every input control (the bisect and unlock GUIs apply it app-wide).
 HOVER_STYLESHEET = (
     "QPushButton:hover, QCheckBox:hover, QComboBox:hover, QSpinBox:hover, QLineEdit:hover {"
-    f"  border: 1px solid {ACCENT};"
+    f"  border: 1px solid {OUTLINE};"
     "   border-radius: 6px;"
     "}"
 )
@@ -138,26 +148,27 @@ def palette(theme: Theme = THEME) -> QPalette:
 
 
 def stylesheet(theme: Theme = THEME) -> str:
-    """The theme's controls: buttons and tabs with a sheen, thin borders, the accent on focus and selection."""
+    """The theme's controls: buttons and tabs with a sheen, thin borders, the outline on hover, focus and the chosen
+    tab, the accent on selection."""
     return f"""
 QPushButton, QToolButton {{
     background:{_sheen(theme)}; border:1px solid {theme.edge}; border-radius:5px; padding:4px 14px;
     color:{theme.text};
 }}
-QPushButton:hover, QToolButton:hover {{ border-color:{theme.accent}; }}
+QPushButton:hover, QToolButton:hover {{ border-color:{outline(theme)}; }}
 QPushButton:pressed, QToolButton:pressed, QToolButton:checked {{ background:{_sheen(theme, reverse=True)}; }}
 QPushButton:disabled, QToolButton:disabled {{ color:{muted(theme)}; }}
 QLineEdit, QPlainTextEdit, QTextEdit, QTextBrowser, QSpinBox, QDoubleSpinBox, QComboBox, QListView, QTreeView,
 QTableView {{ border:1px solid {theme.edge}; border-radius:4px; }}
 QLineEdit:focus, QPlainTextEdit:focus, QTextEdit:focus, QSpinBox:focus, QDoubleSpinBox:focus, QComboBox:focus {{
-    border-color:{theme.accent};
+    border-color:{outline(theme)};
 }}
 QTabWidget::pane {{ border:1px solid {theme.edge}; border-radius:4px; top:-1px; }}
 QTabBar::tab {{
     background:{_sheen(theme)}; border:1px solid {theme.edge}; border-bottom:none; padding:6px 16px;
     border-top-left-radius:5px; border-top-right-radius:5px; margin-right:2px; color:{theme.text};
 }}
-QTabBar::tab:selected {{ background:{theme.window}; border-top:2px solid {theme.accent}; }}
+QTabBar::tab:selected {{ background:{theme.window}; border-top:2px solid {outline(theme)}; }}
 QHeaderView::section {{
     background:{_sheen(theme)}; border:none; border-right:1px solid {theme.edge}; padding:4px 8px;
     color:{theme.text};

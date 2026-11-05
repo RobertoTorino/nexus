@@ -15,6 +15,7 @@ from PyQt6.QtWidgets import (
 )
 
 # The logo and the rounded tooltip (Wayland-safe) are shared with the other suite apps.
+from bc250_core.theme import OUTLINE
 from bc250_core.widgets import ClickableLogo, RoundedToolTip, hide_tooltip, show_tooltip  # noqa: F401
 
 from . import plain_tooltip, window_title
@@ -67,7 +68,7 @@ class TestButton(QPushButton):
         self.setStyleSheet(
             f"QPushButton {{ background:{bg}; color:{fg}; border-radius:6px; padding:6px 12px;"
             f" text-align:left; font-weight:600; }}"
-            f"QPushButton:hover {{ border:2px solid #9aa0a6; }}"
+            f"QPushButton:hover {{ border:2px solid {OUTLINE}; }}"
             f"QPushButton:disabled {{ color:{fg}; }}"
         )
 

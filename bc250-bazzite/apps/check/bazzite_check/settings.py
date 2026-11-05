@@ -23,7 +23,7 @@ from bc250_core.platform import private
 from bc250_core.settings import SettingsStore
 
 from . import APP_NAME, INFO, LOGO_PATH, REPO_URL, ROOT, __version__
-from .dashboard import ACCENT, RED, header_font
+from .dashboard import ACCENT, OUTLINE, RED, header_font
 from .history import db_path
 from .logstore import log_dir
 from .sysoverview import SystemOverviewPage
@@ -379,9 +379,9 @@ class SettingsOverlay(QWidget):
         self.sections.setStyleSheet(
             "QListWidget { outline:0; border:none; background:transparent; }"
             "QListWidget::item { padding:6px; margin:2px 0; border:2px solid transparent; border-radius:6px; }"
-            "QListWidget::item:hover { border-color:palette(mid); }"
+            f"QListWidget::item:hover {{ border-color:{OUTLINE}; }}"
             "QListWidget::item:selected { background:transparent; color:palette(text);"
-            f" border-color:{ACCENT}; }}")
+            f" border-color:{OUTLINE}; }}")
         self.sections.addItems(self.SECTIONS)
         self.pages = QStackedWidget()
         self.privacy = PrivacyPage(settings, sudo_locked)

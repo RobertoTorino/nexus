@@ -17,7 +17,7 @@ from PyQt6.QtWidgets import (
 )
 
 from bc250_core.text import window_title
-from bc250_core.theme import BLUE, GREEN, GREY, ORANGE, PURPLE, RED, THEME, header_font, surface_style
+from bc250_core.theme import BLUE, GREEN, GREY, ORANGE, OUTLINE, PURPLE, RED, THEME, header_font, surface_style
 from bc250_core.updates import UpdateChecker
 from bc250_core.widgets import AppHeader, MetricBox, StatusPill, hint_label
 
@@ -437,7 +437,7 @@ class DependencyWindow(QMainWindow):
         self.check_button.setMinimumWidth(120)
         self.check_button.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
         self.check_button.setStyleSheet(surface_style(selector="QPushButton")      # a box like those beside it
-                                        + f"QPushButton:hover {{ border-color:{THEME.accent}; }}")
+                                        + f"QPushButton:hover {{ border-color:{OUTLINE}; }}")
         self.check_button.clicked.connect(self.check_updates)
         header.add_second(self.check_button, 1)
         root.addLayout(header)

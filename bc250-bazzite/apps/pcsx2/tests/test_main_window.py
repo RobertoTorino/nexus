@@ -463,14 +463,14 @@ def test_no_steam_game_mode_or_no_wrapper(qapp, folders, monkeypatch, tmp_path):
 def test_the_blue_look(qapp, folders):
     _install(folders["home"])
     window = _window(folders)
-    from bc250_core.theme import ACCENT
+    from bc250_core.theme import OUTLINE
     assert style.BLUE in window.styleSheet()
     assert window.covers_button.property("primary") is None and window.steam_button.property("primary")
     assert style.BLUE in window.emulator_box.styleSheet() and style.BLUE in window.refresh_pill.styleSheet()
     assert f"color:{style.BLUE}" in window.intro.text()                             # the release link
     for pill in (window.refresh_pill, *window.actions):
         sheet = pill.styleSheet()                       # the blue left edge only, also under the mouse (owner)
-        assert sheet.rfind(f"border-left-color:{style.BLUE}") > sheet.rfind(ACCENT), pill.caption.text()
+        assert sheet.rfind(f"border-left-color:{style.BLUE}") > sheet.rfind(OUTLINE) >= 0, pill.caption.text()
         assert style.HOVER_SHEEN in sheet and style.BLUE_TINT not in sheet
     assert all(p.value.styleSheet() == window.refresh_pill.value.styleSheet() for p in window.actions)  # same type
     # The Refresh pill has the keyboard focus when the window opens; it looks as the boxes beside it all the same

@@ -4,6 +4,7 @@ sheet goes on the main window, so everything in it takes the blue and the rest o
 
 from __future__ import annotations
 
+from bc250_core.theme import OUTLINE
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor, QPalette
 from PyQt6.QtWidgets import QLabel, QPushButton, QWidget
@@ -18,12 +19,12 @@ DISABLED = "#80808080"                  # 50 % gray: a disabled button, readable
 
 STYLESHEET = f"""
 QPushButton {{ border:1px solid {BLUE_LINE}; border-radius:6px; padding:5px 14px; background:palette(button); }}
-QPushButton:hover {{ border-color:{BLUE}; background:{BLUE_TINT}; }}
+QPushButton:hover {{ border-color:{OUTLINE}; background:{BLUE_TINT}; }}
 QPushButton:pressed {{ background:{BLUE_LINE}; }}
 QPushButton:disabled {{ color:{DISABLED}; border-color:{DISABLED}; background:palette(window); }}
 QPushButton[primary="true"] {{ background:{BLUE}; border-color:{BLUE}; color:white; font-weight:700;
                                padding:5px 18px; }}
-QPushButton[primary="true"]:hover {{ background:{BLUE_HOVER}; border-color:{BLUE_HOVER}; }}
+QPushButton[primary="true"]:hover {{ background:{BLUE_HOVER}; border-color:{OUTLINE}; }}
 QPushButton[primary="true"]:pressed {{ background:{BLUE_PRESSED}; border-color:{BLUE_PRESSED}; }}
 QPushButton[primary="true"]:disabled {{ background:palette(window); border-color:{DISABLED};
                                         color:{DISABLED}; }}

@@ -13,6 +13,7 @@ import pytest
 
 from conftest import make_plugin
 
+from bc250_core.theme import OUTLINE
 from bc250_core.updates import ReleaseInfo
 from decky_manager import loader, privileged, state, style
 from decky_manager.main_window import MainWindow
@@ -248,8 +249,8 @@ def test_the_blue_look(qapp, setup):
     """The gaming apps' look (owner, 20-10-2026): the shadPS4 Manager's blue on the buttons, the header's boxes all
     with a blue left edge, the main action filled blue."""
     window = _window(setup)
-    assert style.BLUE in window.styleSheet() and f"border-color:{style.BLUE}; background:{style.BLUE_TINT}" \
-        in window.styleSheet()                                                      # the hover
+    assert style.BLUE in window.styleSheet() and f"border-color:{OUTLINE}; background:{style.BLUE_TINT}" \
+        in window.styleSheet()                                                      # the hover: silver
     for box in (window.decky_box, window.service_box, window.steam_box, window.plugins_box):
         assert f"border-left:4px solid {style.BLUE}" in box.styleSheet()
     assert window.install_button.property("primary")

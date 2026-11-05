@@ -199,3 +199,40 @@ def test_the_enclosure_on_a_slow_link_and_a_folder_of_roots(qapp, fake_sys):
     assert w.board_box.value.text() == "5 Gb/s"
     assert w.measure_pill.value.text() == "—" and "belong to root" in w.measure_pill.toolTip()
     w.close()
+
+
+def test_screenshot_saves_the_window_as_a_png_beside_the_drive_list(qapp, tmp_path):
+    from PyQt6.QtGui import QImage
+    w = MainWindow(run_=FakeBus(SETUPS), threaded=False, sysfs=Path("/nonexistent"), home=Path("/var/home/user"),
+                   pictures_=tmp_path / "shots")
+    w.show()
+    assert w.shot_button.text() == "Screenshot"
+    button, chooser = w.shot_button.geometry(), w.drive_box.geometry()
+    assert abs(button.center().y() - chooser.center().y()) <= 2 and button.left() > chooser.right()   # its line
+    w.shot_button.click()
+    w.shot_button.click()                                                   # a second in the same second: (2)
+    files = sorted((tmp_path / "shots").iterdir())
+    assert len(files) == 2 and all(f.suffix == ".png" and f.name.startswith("SSD Check ") for f in files)
+    image = QImage(str(files[0]))
+    assert not image.isNull() and image.width() == w.width()
+    assert w.shot_note.text().startswith("Saved: SSD Check ") and w.serial_pill.value.text() == HIDDEN
+    w.close()
+
+
+def test_a_screenshot_that_cannot_be_written_says_so(qapp, tmp_path):
+    blocker = tmp_path / "file"
+    blocker.write_text("")                                                  # a file where the folder should be
+    w = MainWindow(run_=FakeBus(), threaded=False, sysfs=Path("/nonexistent"), pictures_=blocker / "shots")
+    w.shot_button.click()
+    assert w.shot_note.text() == "The screenshot could not be saved"
+    w.close()
+
+
+def test_screenshot_names_never_overwrite(tmp_path):
+    import datetime
+    from ssd_check.main_window import screenshot_path
+    now = datetime.datetime(2026, 11, 5, 18, 4, 9)
+    first = screenshot_path(tmp_path, now)
+    assert first.name == "SSD Check 2026-11-05 18-04-09.png"
+    first.write_bytes(b"")
+    assert screenshot_path(tmp_path, now).name == "SSD Check 2026-11-05 18-04-09 (2).png"

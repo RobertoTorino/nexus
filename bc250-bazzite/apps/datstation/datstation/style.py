@@ -10,6 +10,7 @@ from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QApplication, QFrame, QLabel, QPushButton, QWidget
 
 from bc250_core import theme
+from bc250_core.theme import OUTLINE
 
 PS_BLUE = "#003791"
 PS_LIGHT_BLUE = "#0072CE"
@@ -44,15 +45,15 @@ QPushButton, QToolButton {{
     background: {SHEEN}; color: {TEXT}; font-weight: 700;
     border: 1px solid {CARD_LINE}; border-radius: 10px; padding: 8px 16px;
 }}
-QPushButton:hover, QToolButton:hover {{ border-color: {PS_LIGHT_BLUE}; }}
+QPushButton:hover, QToolButton:hover {{ border-color: {OUTLINE}; }}
 QPushButton:pressed, QToolButton:pressed {{ background: {CONTROL}; }}
-QPushButton:focus, QToolButton:focus {{ border: 2px solid {PS_LIGHT_BLUE}; }}
+QPushButton:focus, QToolButton:focus {{ border: 2px solid {OUTLINE}; }}
 QPushButton:disabled, QToolButton:disabled {{ background: {CONTROL}; color: {DISABLED}; border-color: {CARD_LINE}; }}
 QPushButton[primary="true"] {{ background: {PS_LIGHT_BLUE}; color: white; border-color: {PS_LIGHT_BLUE}; }}
-QPushButton[primary="true"]:hover {{ background: {BLUE_HOVER}; border-color: {BLUE_HOVER}; }}
+QPushButton[primary="true"]:hover {{ background: {BLUE_HOVER}; border-color: {OUTLINE}; }}
 QPushButton[primary="true"]:pressed {{ background: {BLUE_PRESSED}; }}
 QPushButton[quiet="true"], QToolButton[quiet="true"] {{ background: transparent; border: 1px solid {CARD_LINE}; }}
-QPushButton[quiet="true"]:hover, QToolButton[quiet="true"]:hover {{ border-color: {PS_LIGHT_BLUE}; }}
+QPushButton[quiet="true"]:hover, QToolButton[quiet="true"]:hover {{ border-color: {OUTLINE}; }}
 QPushButton[link="true"] {{
     background: transparent; border: none; color: {LINK}; text-align: left; padding: 2px 0; font-weight: 700;
 }}
@@ -60,8 +61,8 @@ QPushButton[link="true"]:hover {{ text-decoration: underline; }}
 QPushButton[tile="true"] {{
     background: {CARD}; border: 1px solid {CARD_LINE}; border-radius: 14px; padding: 0; text-align: left;
 }}
-QPushButton[tile="true"]:hover {{ background: {SHEEN}; border-color: {PS_LIGHT_BLUE}; }}
-QPushButton[tile="true"]:focus {{ border: 2px solid {PS_LIGHT_BLUE}; }}
+QPushButton[tile="true"]:hover {{ background: {SHEEN}; border-color: {OUTLINE}; }}
+QPushButton[tile="true"]:focus {{ border: 2px solid {OUTLINE}; }}
 QPushButton[tile="true"]:pressed {{ background: {CONTROL}; border-color: {PS_LIGHT_BLUE}; }}
 QPushButton[soon="true"]:disabled {{
     background: transparent; border: 1px dashed {CARD_LINE}; color: {DISABLED};

@@ -12,7 +12,7 @@ from PyQt6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton, QVBoxLayou
 
 # The suite palette and the bundled Inter font (header_font) come from bc250_core; ACCENT is the brighter purple
 # of the logo's circuit lines, PURPLE the logo's own.
-from bc250_core.theme import ACCENT, BLUE, GREEN, GREY, ORANGE, PURPLE, RED, THEME, header_font, surface_style
+from bc250_core.theme import ACCENT, BLUE, GREEN, GREY, ORANGE, OUTLINE, PURPLE, RED, THEME, header_font, surface_style
 
 from . import plain_tooltip
 from .runner import ERROR, INFO, SUCCESS, WARNING
@@ -95,9 +95,9 @@ class StatBox(QFrame):
 
     def set_color(self, color: str) -> None:
         """The theme's surface, *color* its left edge (GRAY: the suite's blue, as every neutral header box; owner,
-        26-10-2026); outlined in the accent on hover."""
+        26-10-2026); outlined in silver on hover."""
         self.color = color
-        hover = f"StatBox:hover {{ border-color:{ACCENT}; }}" if self.clickable else ""
+        hover = f"StatBox:hover {{ border-color:{OUTLINE}; }}" if self.clickable else ""
         self.setStyleSheet(surface_style(BLUE if color == GREY else color, "StatBox") + hover)
 
     def mouseReleaseEvent(self, event) -> None:

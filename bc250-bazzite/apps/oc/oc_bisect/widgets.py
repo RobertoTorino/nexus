@@ -14,7 +14,7 @@ from PyQt6.QtWidgets import (
 )
 
 from . import APP_NAME, LOGO_PATH, REPO_URL, __version__, window_title
-from .theme import ACCENT, BLUE, header_font, muted, surface_style
+from .theme import ACCENT, BLUE, OUTLINE, header_font, muted, surface_style
 
 
 class AboutDialog(QDialog):
@@ -146,7 +146,7 @@ class Pill(MetricBox):
         # A pill that cannot be clicked (setEnabled(False)) shows its text muted, as a disabled button does.
         # The rule is on the labels' own state: Qt ignores an ancestor's pseudo-state in a selector, so
         # "#pill:disabled QLabel" would mute every pill.
-        self.setStyleSheet(self.styleSheet() + f"#pill:hover, #pill:focus {{ border-color:{ACCENT}; }}"
+        self.setStyleSheet(self.styleSheet() + f"#pill:hover, #pill:focus {{ border-color:{OUTLINE}; }}"
                            f"#pill QLabel:disabled {{ color:{muted()}; }}")
 
     def mouseReleaseEvent(self, event) -> None:  # noqa: N802 (Qt override)

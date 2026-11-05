@@ -15,6 +15,7 @@ from PyQt6.QtWidgets import QLabel, QPushButton, QWidget
 
 from bc250_core.theme import THEME
 from bc250_core.widgets import Pill
+from bc250_core.theme import OUTLINE
 
 BLUE = "#0A55B0"
 ARROW = (Path(__file__).resolve().parent / "arrow-down.svg").as_posix()     # a choice box's arrow, a thin chevron
@@ -27,12 +28,12 @@ DISABLED = "#80808080"                  # 50 % gray: a disabled button, readable
 
 STYLESHEET = f"""
 QPushButton {{ border:1px solid {BLUE_LINE}; border-radius:6px; padding:5px 14px; background:palette(button); }}
-QPushButton:hover {{ border-color:{BLUE}; background:{BLUE_TINT}; }}
+QPushButton:hover {{ border-color:{OUTLINE}; background:{BLUE_TINT}; }}
 QPushButton:pressed {{ background:{BLUE_LINE}; }}
 QPushButton:disabled {{ color:{DISABLED}; border-color:{DISABLED}; background:palette(window); }}
 QPushButton[primary="true"] {{ background:{BLUE}; border-color:{BLUE}; color:white; font-weight:700;
                                padding:5px 18px; }}
-QPushButton[primary="true"]:hover {{ background:{BLUE_HOVER}; border-color:{BLUE_HOVER}; }}
+QPushButton[primary="true"]:hover {{ background:{BLUE_HOVER}; border-color:{OUTLINE}; }}
 QPushButton[primary="true"]:pressed {{ background:{BLUE_PRESSED}; border-color:{BLUE_PRESSED}; }}
 QPushButton[primary="true"]:disabled {{ background:palette(window); border-color:{DISABLED};
                                         color:{DISABLED}; }}
@@ -43,7 +44,7 @@ QHeaderView::section {{ background:{BLUE}; color:white; font-weight:700; border:
                         border-right:1px solid {BLUE_HOVER}; padding:5px 8px; }}
 QPlainTextEdit {{ border:1px solid {BLUE_LINE}; border-radius:6px; }}
 QComboBox {{ border:1px solid {BLUE_LINE}; border-radius:6px; padding:3px 8px; background:transparent; }}
-QComboBox:hover {{ border-color:{BLUE}; background:{BLUE_TINT}; }}
+QComboBox:hover {{ border-color:{OUTLINE}; background:{BLUE_TINT}; }}
 QComboBox:disabled {{ color:{DISABLED}; border-color:{DISABLED}; background:palette(window); }}
 QComboBox::drop-down {{ border:none; width:24px; subcontrol-origin:padding; subcontrol-position:center right; }}
 QComboBox::down-arrow {{ image:url({ARROW}); width:10px; height:10px; }}
@@ -53,8 +54,8 @@ QTabWidget::pane {{ border:none; }}
 QTabBar::tab {{ padding:17px 26px; min-width:120px; font-size:17px; font-weight:700; border:1px solid {BLUE_LINE};
                 border-bottom:none; border-top-left-radius:8px; border-top-right-radius:8px; margin-right:6px;
                 background:palette(button); }}
-QTabBar::tab:selected {{ background:{BLUE}; color:white; border-color:{BLUE}; }}
-QTabBar::tab:hover:!selected {{ background:{BLUE_TINT}; border-color:{BLUE}; }}
+QTabBar::tab:selected {{ background:{BLUE}; color:white; border-color:{OUTLINE}; }}
+QTabBar::tab:hover:!selected {{ background:{BLUE_TINT}; border-color:{OUTLINE}; }}
 """
 
 

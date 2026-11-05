@@ -28,7 +28,8 @@ from .games_page import GamesPage, GameScanner
 from .help import HelpView
 from .pages import POLL_MS, DeployPage, IniPage, OverviewPage
 from .setup_page import SetupPage
-from .style import COPPER, CYAN, TEAL
+from .style import COPPER, TEAL
+from .theme import OUTLINE
 from .widgets import ORANGE, RED, ClickableLogo, MetricBox, header_font
 
 
@@ -83,9 +84,9 @@ class MainWindow(QMainWindow):
         self.nav.setStyleSheet(
             "QListWidget { outline:0; }"
             "QListWidget::item { padding:6px; margin:2px 4px; border:2px solid transparent; border-radius:6px; }"
-            "QListWidget::item:hover { border-color:palette(mid); }"
+            f"QListWidget::item:hover {{ border-color:{OUTLINE}; }}"
             "QListWidget::item:selected { background:transparent; color:palette(text);"
-            f" border-color:{CYAN}; }}")
+            f" border-color:{OUTLINE}; }}")
         self.stack = QStackedWidget()
         main.addWidget(self.nav)
         main.addWidget(self.stack, 1)

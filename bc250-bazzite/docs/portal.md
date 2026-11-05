@@ -18,14 +18,14 @@ for. Under them, in a row that ends level with the icon's bottom, six pills with
 (look again at which apps are installed), **Installed apps**, **Install All updates**, **Install All apps**,
 **Sys info** and **☰ Settings**, each described below. A pill
 that is not active is half transparent, so the wallpaper shows through it; the one with the focus or under the
-mouse is solid, framed in the theme's accent. The line at the bottom says what the keys and the controller's
+mouse is solid, framed in silver. The line at the bottom says what the keys and the controller's
 buttons do.
 
 **Bazzite Test** is always installed with the portal; every other app is optional. Below the header is a strip
 with a name for each [category](apps/categories.md): Sustainable, Graphics, Gaming and Utilities, and beside it
 the notice of updates. Each app is a large tile under its category, left to right in the order of `apps.toml`
 and as many to a row as the screen fits; Bazzite Test is always the first tile on Sustainable. The tile with the
-focus is framed in the accent; move it with the arrow keys, the d-pad or the stick, or point at a tile with the
+focus is framed in silver; move it with the arrow keys, the d-pad or the stick, or point at a tile with the
 mouse:
 
 - **The icon**, its category's, drawn from a 512 px picture so it stays sharp on a 4K screen. It is gray while
@@ -192,8 +192,11 @@ Nexus Release Tool, Nexus Installer Tests (the installer tests one at a time), N
   installers put there, at start and after each install. It only touches the icons of the suite's apps, never its
   own or anything else on the Desktop.
 - **Sound**, on the Settings page (Yes or No; click it to switch): the intro plays its sound when the portal opens,
-  and each move and button on the controller gives a short sound; No switches both off. The portal remembers the choice. When the board has no audio output, the pill says No and is
-  disabled, and the portal stays silent.
+  and every action gives a short sound: each move and button on a controller, each key that acts (the arrow keys,
+  Enter, Space, Escape, Tab, Page Up and Page Down, Q, E, U, S, K, M and the Menu key) and each click on a tile, a
+  pill, a button, a category or a menu entry. Any controller works, also one Steam turns into keys. A key held down
+  sounds once, and typing in a text field stays silent. No switches both off. The portal remembers the choice.
+  When the board has no audio output, the pill says No and is disabled, and the portal stays silent.
 - **Theme switcher**, on the Settings page, showing the theme; click it for the next one: the look of every app in the
   suite. **Gunmetal** (dark, cool blue-gray, the default), **Silver** (light) or **Warm** (dark warm gray with a
   bronze accent). It is one choice for all the apps, kept in `~/.config/bc250-bazzite-suite/theme`; each app takes

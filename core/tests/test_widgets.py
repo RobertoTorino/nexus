@@ -55,12 +55,12 @@ def test_metric_box(qapp):
 
 
 def test_pill_is_a_metric_box_that_clicks(qapp):
-    """A click, Enter or Space emits clicked; the accent edge under the mouse or the keyboard focus."""
+    """A click, Enter or Space emits clicked; the silver outline under the mouse or the keyboard focus."""
     from PyQt6.QtCore import QEvent
     from PyQt6.QtGui import QKeyEvent
     pill = Pill("Refresh", "Click to refresh", "tip")
     assert (pill.value.text(), pill.caption.text(), pill.toolTip()) == ("Refresh", "Click to refresh", "tip")
-    assert f"#pill:hover, #pill:focus {{ border-color:{theme.ACCENT}; }}" in pill.styleSheet()
+    assert f"#pill:hover, #pill:focus {{ border-color:{theme.OUTLINE}; }}" in pill.styleSheet()
     clicks = []
     pill.clicked.connect(lambda: clicks.append(1))
     pill.click()

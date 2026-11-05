@@ -18,7 +18,7 @@ from PyQt6.QtWidgets import (
     QSizePolicy, QToolButton, QVBoxLayout, QWidget,
 )
 
-from bc250_core.theme import ACCENT, BLUE, ORANGE, RED, header_font, muted
+from bc250_core.theme import ACCENT, BLUE, ORANGE, OUTLINE, RED, header_font, muted, outline
 from bc250_core.widgets import InfoButton, Pill, current_theme
 
 from . import APP_ICONS, APP_NAME, CATEGORY_ICONS, INTRO_LOGO, LOGO_PATH, glyphs
@@ -127,8 +127,8 @@ class HeaderPill(Pill):
     """A header pill as a rounded rectangle (owner, 01-11-2026): the value in large type over its caption, both
     centered; the row of them ends at the bottom of the suite's icon, so a pill is as high as the room under the
     title leaves. Not active (no focus, no mouse) it is half transparent, so the wallpaper shows through it; with
-    the focus or under the mouse it is solid, framed in the accent, as a tile with the focus is. The same clicked,
-    set_value and setEnabled as every pill."""
+    the focus or under the mouse it is solid, framed in silver (the theme's outline, owner 05-11-2026), as a tile
+    with the focus is. The same clicked, set_value and setEnabled as every pill."""
 
     scale = 1.0
 
@@ -141,7 +141,7 @@ class HeaderPill(Pill):
         self.set_scale(1.0)
 
     def set_colour(self, colour: str) -> None:
-        """The accent frames the active pill, whatever the color given: these pills have no colored edge."""
+        """The outline frames the active pill, whatever the color given: these pills have no colored edge."""
         theme = current_theme()
         window, edge = QColor(theme.window), QColor(theme.edge)
         radius = round(PILL_RADIUS * self.scale)
@@ -149,7 +149,7 @@ class HeaderPill(Pill):
             f"#pill {{ background:rgba({window.red()},{window.green()},{window.blue()},{PILL_ALPHA});"
             f" border:2px solid rgba({edge.red()},{edge.green()},{edge.blue()},{PILL_ALPHA});"
             f" border-radius:{radius}px; }}"
-            f"#pill:hover, #pill:focus {{ background:{theme.window}; border-color:{theme.accent}; }}"
+            f"#pill:hover, #pill:focus {{ background:{theme.window}; border-color:{outline(theme)}; }}"
             f"#pill QLabel {{ background:transparent; border:none; color:{theme.text}; }}"
             f"#pill QLabel:disabled {{ color:{muted(theme)}; }}")
 
@@ -261,7 +261,7 @@ class BigTile(QAbstractButton):
             fill = QColor(ACCENT)
             fill.setAlpha(60 if focused else 28)
             painter.setBrush(fill)
-            painter.setPen(QPen(QColor(ACCENT), 4) if focused else Qt.PenStyle.NoPen)
+            painter.setPen(QPen(QColor(OUTLINE), 4) if focused else Qt.PenStyle.NoPen)
             painter.drawRoundedRect(frame, 22 * s, 22 * s)
         side = round(ICON_PX * s)
         icon = QRect((width - side) // 2, round(18 * s), side, side)
@@ -323,7 +323,7 @@ class NoticeButton(QToolButton):
             f"QToolButton {{ color:{self.colour}; font-weight:700; font-size:{max(13, round(18 * scale))}px;"
             f" background:transparent; border:2px solid transparent; border-radius:{round(8 * scale)}px;"
             f" padding:{round(4 * scale)}px {round(10 * scale)}px; }}"
-            f"QToolButton:hover, QToolButton:focus {{ border-color:{ACCENT}; }}")
+            f"QToolButton:hover, QToolButton:focus {{ border-color:{OUTLINE}; }}")
 
     def set_notice(self, text: str, tooltip: str = "") -> None:
         self.setText(text)
@@ -348,7 +348,7 @@ class UpdateBanner(QToolButton):
             f"QToolButton {{ color:white; background:{ORANGE}; font-weight:800; font-size:{max(13, round(18 * scale))}px;"
             f" border:2px solid {ORANGE}; border-radius:{round(8 * scale)}px;"
             f" padding:{round(4 * scale)}px {round(14 * scale)}px; }}"
-            "QToolButton:hover, QToolButton:focus { border-color:white; }")
+            f"QToolButton:hover, QToolButton:focus {{ border-color:{OUTLINE}; }}")
 
     def set_banner(self, text: str, tooltip: str = "") -> None:
         self.setText(text)
@@ -646,7 +646,7 @@ class BigPicture(Backdrop):
             f"QTabBar::tab {{ font-size:{max(15, round(24 * s))}px; font-weight:700;"
             f" padding:{round(10 * s)}px {round(26 * s)}px; margin-right:6px; background:transparent; border:none;"
             " border-bottom:4px solid transparent; }"
-            f"QTabBar::tab:selected {{ border-bottom:4px solid {ACCENT}; }}"
+            f"QTabBar::tab:selected {{ border-bottom:4px solid {OUTLINE}; }}"
             "QTabBar::tab:hover { background:rgba(128,128,128,40); }")
         self.settings_heading.setStyleSheet(self.bar.styleSheet())
         for button in (self.update_banner, self.notice, self.outside):

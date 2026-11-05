@@ -103,7 +103,9 @@ THEMES = [
       ("#3b4048", "Button face, bottom of its sheen."),
       ("#606872", "Palette light (the button face 30 % lighter)."),
       ("#14171a", "Borders and shadows."),
-      ("#7e97ad", "Accent: selection, focus, hover outline, progress, the selected tab's top edge.")]),
+      ("#7e97ad", "Accent: selection, progress."),
+      ("#c0c4c9", "Silver outline: the border under the mouse, with the focus and of the chosen tab or item "
+                  "(owner, 05-11-2026).")]),
     ("Silver (light)",
      [("#1e2226", "Text on every surface."),
       ("#7a7d81", "Muted text: versions, hints, placeholders, disabled buttons."),
@@ -116,7 +118,9 @@ THEMES = [
       ("#c4c8cd", "Button face, bottom of its sheen."),
       ("#ffffff", "Palette light (the button face 30 % lighter)."),
       ("#8d9298", "Borders and shadows."),
-      ("#5f7f9c", "Accent: selection, focus, hover outline, progress, the selected tab's top edge.")]),
+      ("#5f7f9c", "Accent: selection, progress."),
+      ("#7d8389", "Silver outline, darker on the light theme: the border under the mouse, with the focus and of "
+                  "the chosen tab or item.")]),
     ("Warm (dark)",
      [("#e3dfd8", "Text on every surface."),
       ("#8c8984", "Muted text: versions, hints, placeholders, disabled buttons."),
@@ -129,7 +133,9 @@ THEMES = [
       ("#45423d", "Button face, bottom of its sheen."),
       ("#716c64", "Palette light (the button face 30 % lighter)."),
       ("#181716", "Borders and shadows."),
-      ("#b59a6e", "Accent: selection, focus, hover outline, progress, the selected tab's top edge.")]),
+      ("#b59a6e", "Accent: selection, progress."),
+      ("#c0c4c9", "Silver outline: the border under the mouse, with the focus and of the chosen tab or item "
+                  "(owner, 05-11-2026).")]),
 ]
 
 STATE_TEXT = [
@@ -268,13 +274,14 @@ Each design (a suite's, the Nexus page's) has its own; none is carried over to a
   and the apps' Gunmetal theme, steel gray with the steel-blue accent `#7e97ad`. Inter, with heavy titles. Every
   app has the icon of its category.
 - **One theme for every app** (Gunmetal, Silver or Warm, the user's choice), from `core/bc250_core/theme.py`: the
-  surfaces, text and accent below. An app adds no surface or text color of its own.
+  surfaces, text and accent below. Every border that shows under the mouse, with the focus or on what is chosen
+  is silver (owner, 05-11-2026), never the accent. An app adds no surface or text color of its own.
 - **One state family,** the same in every theme: green `#2e7d32` ok, orange `#ef6c00` warn, red `#c62828` bad,
   blue `#1565c0` info, yellow `#fdd835` running, gray `#3a3f4b` neutral. A state is an edge or a dot on the theme's
   surface; a header box or pill in the neutral state shows the blue as its edge (owner, 26-10-2026), never the
   theme's dark edge color. The portal's pills are the exception (owner, 01-11-2026): rounded rectangles in a row
   that ends level with the suite's icon, the theme's window color at 59 % so the wallpaper shows through, solid
-  and framed in the accent when active. A
+  and framed in the silver outline when active. A
   red button is the red with `#b71c1c` pressed. Active red `#8b0000` (`#a00000` under the pointer) is a toggled-on
   state, never an error.
 - **Text in a state color sits on a dark surface** in the next lighter tint of the same hue (Material's 300:

@@ -1,3 +1,10 @@
+Changelog: 05-11-2026 18:18:09
+
+Added. A silver outline per theme (owner, 05-11-2026): Theme.outline, outline() and OUTLINE in theme.py and outline() in widgets.py. The borders under the mouse, with the focus and of the chosen tab take it: #c0c4c9 on
+Gunmetal and Warm, a darker #7d8389 on Silver, where the light silver would vanish. The pills' hover and focus
+border and an active red button's hover border take it too. A theme without an outline of its own (Nexus's, the
+Windows Portable Suite's) keeps its accent there, so nothing changes outside the BC250 Bazzite Suite.
+
 Changelog: 04-11-2026 02:22:10
 
 Version 2.8.0.
