@@ -1,3 +1,7 @@
+Changelog: 06-11-2026 22:16:41
+
+Release 5.5.0.
+
 Changelog: 06-11-2026 10:55:45
 
 Fixed. The tests' session teardown takes the tooltip filter off the app and collects the leftover widgets while the
