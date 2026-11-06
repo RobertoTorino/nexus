@@ -5,7 +5,7 @@ APP_NAME = "BIOS Reader"
 APP_ID = "windows-portable-bios"
 EXE_NAME = "BIOS-Reader"   # the program's file name in a release
 SUITE = "windows-portable-suite"
-__version__ = "0.10.0"
+__version__ = "0.11.0"
 
 from pathlib import Path
 

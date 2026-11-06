@@ -5,7 +5,7 @@ APP_NAME = "Upscale Boost"
 APP_ID = "windows-portable-upscale"
 EXE_NAME = "Upscale-Boost"   # the program's file name in a release
 SUITE = "windows-portable-suite"
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 from pathlib import Path
 
