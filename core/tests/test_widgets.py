@@ -249,6 +249,26 @@ def test_tooltip_filter_is_removed_when_the_app_quits(qapp, monkeypatch):
     assert app.filters == []
 
 
+def test_tooltip_filter_is_removed_by_uninstall(qapp, monkeypatch):
+    """The test sessions' teardown (conftest.py): the app's filter off, so it sees no more events."""
+    seen: list[QEvent.Type] = []
+
+    class Tip(RoundedToolTip):
+        def eventFilter(self, obj, event):  # noqa: N802
+            seen.append(event.type())
+            return False
+
+    tip = Tip.install(qapp)
+    monkeypatch.setattr(RoundedToolTip, "_instance", tip)  # install() set it on the subclass
+    widget = QWidget()
+    QApplication.sendEvent(widget, QEvent(QEvent.Type.User))
+    assert QEvent.Type.User in seen
+    RoundedToolTip.uninstall()
+    seen.clear()
+    QApplication.sendEvent(widget, QEvent(QEvent.Type.User))
+    assert seen == [] and RoundedToolTip._instance is None
+
+
 def test_manual_tooltip_uses_installed_instance(qapp, monkeypatch):
     tip = RoundedToolTip(qapp)
     monkeypatch.setattr(RoundedToolTip, "_instance", tip)

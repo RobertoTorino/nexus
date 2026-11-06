@@ -218,6 +218,13 @@ noted where each item stood). Each entry says where it is in the code and what t
    `dat_station`), from Bazzite DatStation; **Upscale Boost** (`upscale`, `upscale_boost`), from BC-250 Upscaler
    Manager; **HD Controller** (`hdcontrol`, `hd_controller`), from USB HD Control (hidapi instead of hidraw);
    **Support Checker** (`support`, `support_checker`): done 05-11-2026, see the resume note.
+5. **The tests' exit crash, the owner fixes it on Windows** (owner, 06-11-2026). Core's tests segfaulted now and
+   then in pytest's final garbage collection (CI Nexus, 06-11-2026): `create_app()` in a test leaves the tooltip
+   filter on the session's QApplication. Fixed in core's `tests/conftest.py` (the `qapp` teardown calls
+   `RoundedToolTip.uninstall()`, then `gc.collect()`: 17 crashes in 120 runs before, none after). The game
+   managers' tests call `create_app()` too (`apps/{pcsx2,ppsspp,rpcs3,shadps4,vita3k,xenia}/tests/test_main_window.py`),
+   so their conftests' `qapp` wants the same teardown; the BC250 suite's apps are to check as well, a change of
+   their own.
 
 Dropped (owner, 05-11-2026): quitting a game in an app closes the portal too (not reproduced), and the handheld's
 own tuning apps.

@@ -1,3 +1,11 @@
+Changelog: 06-11-2026 09:57:11
+
+Fixed. The core tests' session teardown takes the tooltip filter off the app (RoundedToolTip.uninstall(), which
+nothing called) and collects the leftover widgets while the app is whole. create_app() in a test left the filter on
+the session's QApplication, and pytest's final garbage collection crashed on it now and then after every test had
+passed (CI, 06-11-2026: a segmentation fault in about one run in seven, none in 120 runs with the fix). A test checks
+that uninstall() really stops the filter seeing events. The apps' code is unchanged.
+
 Changelog: 06-11-2026 02:33:59
 
 Version 2.11.0.

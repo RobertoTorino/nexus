@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import gc
 import os
 import sys
 import uuid
@@ -20,6 +21,12 @@ def qapp():
     from PyQt6.QtWidgets import QApplication
     app = QApplication.instance() or QApplication([])
     yield app
+    # create_app() installs the tooltip filter on this app, and no aboutToQuit takes it off without an event loop:
+    # left on, it saw the events of the widgets pytest's final garbage collection destroyed, and crashed it now and
+    # then (CI, 06-11-2026). Off before that collection, and the leftover widgets collected while the app is whole.
+    from bc250_core.widgets import RoundedToolTip
+    RoundedToolTip.uninstall()
+    gc.collect()
 
 
 @pytest.fixture
