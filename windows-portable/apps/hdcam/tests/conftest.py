@@ -33,3 +33,13 @@ def settings_in_tmp(tmp_path, monkeypatch):
     monkeypatch.setenv("LOCALAPPDATA", str(tmp_path / "Local"))
     monkeypatch.setenv("APPDATA", str(tmp_path / "Roaming"))
     monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "data"))
+
+
+@pytest.fixture(autouse=True)
+def shown(monkeypatch):
+    """A saved screenshot opens the file manager on it (owner, 06-11-2026): never from a test. The files it would
+    show."""
+    from usb_hd_cam import main_window
+    files = []
+    monkeypatch.setattr(main_window, "show_in_folder", files.append)
+    return files

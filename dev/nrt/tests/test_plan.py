@@ -1040,6 +1040,32 @@ def test_window_ticker_shows_the_jobs_of_the_runs(repo, tmp_path):
     assert not ticker.timer.isActive()
 
 
+def test_window_ticker_runs_a_failed_run_again(repo, tmp_path):
+    """Run again in the ticker (owner, 06-11-2026): shown while a run of the newest push failed, it starts that run's
+    failed jobs again; a run canceled for a later one of its workflow does not count."""
+    pytest.importorskip("PyQt6.QtWidgets")
+    os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+    from PyQt6.QtCore import QSettings
+    from PyQt6.QtWidgets import QApplication
+    QSettings.setPath(QSettings.Format.IniFormat, QSettings.Scope.UserScope, str(tmp_path / "settings"))
+    app = QApplication.instance() or QApplication([])          # noqa: F841 (kept alive for the window)
+    from nexus_release_tool import flow, main_window
+    w = main_window.ReleaseWindow(repo, status_source=None, sha256_source=lambda tag: SHA, launch=launched.append,
+                                  runs_source=lambda etag, head="", tags=(): (None, etag), notify=lambda *a: None,
+                                  claude_source=None, jobs_source=None)
+    ticker, ran = w.ticker, []
+    ticker.on_rerun = ran.append
+    w.build.checked((rp.parse_runs({"workflow_runs": [run(n=12), run("CI Nexus", n=11)]}), "e1"))
+    assert ticker.rerun_button.isHidden()                                      # all passed
+    index = [run("Nexus index", n=14), run("Nexus index", conclusion="cancelled", n=13)]
+    failed = dict(run(conclusion="failure", n=12), html_url="https://github.com/o/r/actions/runs/12")
+    w.build.checked((rp.parse_runs({"workflow_runs": [*index, failed, run("CI Nexus", n=11)]}), "e2"))
+    assert not ticker.rerun_button.isHidden() and "CI on main" in ticker.rerun_button.toolTip()
+    assert [r.url for r in flow.failed_runs(ticker.runs)] == [failed["html_url"]]
+    ticker.rerun_button.click()
+    assert ran == ["gh run rerun 12 --failed"]
+    w.close()
+
 def test_release_runs_of_the_tags_waited_for():
     runs = rp.parse_runs({"workflow_runs": [run("Release", "alpha-v0.1.1", "in_progress", n=4),
                                             run("Release", "alpha-v0.1.1", conclusion="failure", n=3),

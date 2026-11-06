@@ -26,7 +26,7 @@ from PyQt6.QtWidgets import QHBoxLayout, QStackedWidget, QVBoxLayout, QWidget
 
 from bc250_core import applog, browse, power
 from bc250_core.gamepad import Gamepad
-from bc250_core.platform import private
+from bc250_core.platform import private, show_in_folder
 from bc250_core.portable import (AMBER, DIM, KEYBOARD, VIEW, Card, Legend, PortableHeader, PortableWindow, px,
                                  status_clock)
 from bc250_core.settings import SettingsStore
@@ -553,7 +553,8 @@ class MainWindow(PortableWindow):
         self.show_screen()
 
     def save_picture(self) -> None:
-        """What the screen shows, at its own size, as a PNG in Pictures\\Smart Screen."""
+        """What the screen shows, at its own size, as a PNG in Pictures\\Smart Screen; Explorer then shows it (owner,
+        06-11-2026)."""
         if self.image is None:
             return
         try:
@@ -567,6 +568,7 @@ class MainWindow(PortableWindow):
             return
         self.screen_pane.status.setText(f"Saved: {private(path)}")
         self.log.info(f"Picture saved: {private(path)}.")
+        show_in_folder(path)
 
     def report_text(self, when: float | None = None) -> str:
         name = self.settings.get("interface")

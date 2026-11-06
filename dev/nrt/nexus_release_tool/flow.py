@@ -381,6 +381,12 @@ def failed_ci(runs: list[rp.BuildRun], sha: str, hidden: set[str] = frozenset())
     return [r for r in ci_runs(runs, sha, hidden) if r.done and not r.passed]
 
 
+def failed_runs(runs: list[rp.BuildRun]) -> list[rp.BuildRun]:
+    """The runs of *runs* that ended badly, not counting one canceled for a later run of its workflow: what the
+    ticker's Run again starts again (owner, 06-11-2026)."""
+    return [r for r in runs if r.done and not r.passed and not rp.superseded(r, runs)]
+
+
 def rerun_ci_command(runs: list[rp.BuildRun]) -> str:
     """Run CI again (owner, 30-10-2026: CI failed while GitHub's Actions were degraded): each failed CI run's failed
     jobs started again (gh run rerun --failed), on the same commit."""

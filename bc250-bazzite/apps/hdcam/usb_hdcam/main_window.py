@@ -20,7 +20,7 @@ from PyQt6.QtWidgets import (QCheckBox, QComboBox, QFileDialog, QGridLayout, QGr
                              QMessageBox, QPushButton, QSizePolicy, QVBoxLayout, QWidget)
 
 from bc250_core import window_title
-from bc250_core.platform import private
+from bc250_core.platform import private, show_in_folder
 from bc250_core.settings import restore_geometry, save_geometry
 from bc250_core.theme import GREY, STATE_COLORS
 from bc250_core.updates import UpdateChecker
@@ -728,7 +728,8 @@ class MainWindow(QWidget):
         self._show_look()
 
     def screenshot(self) -> None:
-        """What the full screen shows now, saved as a PNG in the Pictures folder."""
+        """What the full screen shows now, saved as a PNG in the Pictures folder, which the file manager then shows
+        with the file selected (owner, 06-11-2026)."""
         if self.full is None:
             return
         if self.last is None:
@@ -741,6 +742,7 @@ class MainWindow(QWidget):
             self.full.say(str(error), ok=False)
             return
         self.full.say(f"Screenshot saved: {private(path)}")
+        show_in_folder(path)
 
     def toggle_recording(self) -> None:
         """A recording of what the full screen shows starts, at the mode's size, or it stops and is written to the

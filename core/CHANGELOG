@@ -1,3 +1,9 @@
+Changelog: 06-11-2026 10:55:45
+
+Added. show_in_folder(path) in platform: the file's folder in the file manager with the file selected (Explorer's
+/select on Windows, org.freedesktop.FileManager1 over D-Bus on Linux, else the folder opened with xdg-open). The apps
+call it when a screenshot is saved (owner, 06-11-2026).
+
 Changelog: 06-11-2026 09:57:11
 
 Fixed. The core tests' session teardown takes the tooltip filter off the app (RoundedToolTip.uninstall(), which

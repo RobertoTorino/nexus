@@ -28,7 +28,7 @@ from bc250_core.widgets import AppHeader, InfoButton, Terminal, hint_label
 
 from . import APP_ID, APP_NAME, CHECKOUT, LOGO_PATH, __version__
 from . import local
-from .checkout import DevApp, dev_apps, here, start, suite_name, suites
+from .checkout import WINDOWS, DevApp, dev_apps, here, start, suite_name, suites
 from .icons import IconsDialog, has_category_icons
 from .issues import IssuesDialog, close_commands, fetch_open_issues, gh_program
 from .tours import RECORD_APP_TOUR, RECORD_TOUR, AppsTourDialog, PortalTourDialog
@@ -54,8 +54,9 @@ ABOUT = ("One door to the tools for working on the suites. The first tiles are t
          "Test local apps, below the tiles: the suite's portal and apps as they are in this checkout, to try them "
          "before their release, then the suite's wiki and the Nexus page served from the checkout.")
 LOCAL_ABOUT = (
-    "Click an app to start it from this checkout, to try it before its release: <code>python -m</code> with this "
-    "venv and the checkout's core, as <code>run.sh</code> starts an app. An app that changes how the board runs "
+    "Click an app to start it from this checkout, to try it before its release. On Windows an app with a "
+    "<code>run.ps1</code> starts with it, as by hand; otherwise <code>python -m</code> with this venv and the "
+    "checkout's core, as <code>run.sh</code> starts a Nexus app. An app that changes how the board runs "
     "(an orange <b>!</b> on its icon) asks first; it uses the scripts in the checkout. Each app writes its output "
     f"to <code>{LOCAL_LOG_DIR}</code>; when it stops with an error, the end of that log shows below. The suite's "
     "portal is the first icon; when a portal is already open it warns instead, as a second one would only show the "
@@ -121,6 +122,11 @@ def start_local(command: list[str], env: dict[str, str], cwd: Path, log: Path) -
     """Starts a local app in its own session, so it keeps running when this window closes; its output goes to *log*."""
     log.parent.mkdir(parents=True, exist_ok=True)
     with open(log, "wb") as out:
+        if WINDOWS:
+            # No console window, in a group of its own, as checkout.start() starts a Nexus app's run.ps1.
+            return subprocess.Popen(command, cwd=cwd, env=env, stdin=subprocess.DEVNULL, stdout=out,
+                                    stderr=subprocess.STDOUT,
+                                    creationflags=subprocess.CREATE_NO_WINDOW | subprocess.CREATE_NEW_PROCESS_GROUP)
         return subprocess.Popen(command, cwd=cwd, env=env, stdin=subprocess.DEVNULL, stdout=out,
                                 stderr=subprocess.STDOUT, start_new_session=True)
 LOGO_ICON = LOGO_PATH

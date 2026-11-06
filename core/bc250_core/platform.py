@@ -138,6 +138,34 @@ def open_path(target: str | Path) -> bool:
     return True
 
 
+def show_in_folder(path: str | Path) -> bool:
+    """The folder of the file at *path* in the file manager, with the file selected: Explorer on Windows, else the
+    desktop's file manager over D-Bus (org.freedesktop.FileManager1, Dolphin on Bazzite), else the folder opened with
+    xdg-open. False when nothing opened it. A saved screenshot shows itself so (owner, 06-11-2026)."""
+    path = Path(path)
+    if WINDOWS:
+        try:
+            # Explorer's own syntax: one argument, "/select," and the path; it exits with 1 even when it worked.
+            subprocess.Popen(f'explorer /select,"{path}"', stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                             stderr=subprocess.DEVNULL)
+        except OSError:
+            return open_path(path.parent)
+        return True
+    gdbus = shutil.which("gdbus")
+    if gdbus is not None:
+        try:
+            done = subprocess.run([gdbus, "call", "--session", "--dest", "org.freedesktop.FileManager1",
+                                   "--object-path", "/org/freedesktop/FileManager1",
+                                   "--method", "org.freedesktop.FileManager1.ShowItems",
+                                   f"['{path.resolve().as_uri()}']", ""],
+                                  stdin=subprocess.DEVNULL, capture_output=True, timeout=5)
+            if done.returncode == 0:
+                return True
+        except (OSError, subprocess.TimeoutExpired):
+            pass
+    return xdg_open(path.parent)
+
+
 # Windows' touch keyboard (owner, 31-10-2026: R3 in the portable window): its host's own interface, ITipInvocation,
 # shows or hides it; the host, TabTip.exe, is started first when it does not run. No administrator, no registry.
 TABTIP = r"%CommonProgramFiles%\microsoft shared\ink\TabTip.exe"

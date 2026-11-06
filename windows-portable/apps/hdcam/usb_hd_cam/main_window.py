@@ -24,7 +24,7 @@ from PyQt6.QtWidgets import QHBoxLayout, QStackedWidget, QVBoxLayout, QWidget
 
 from bc250_core import applog, browse, power
 from bc250_core.gamepad import Gamepad
-from bc250_core.platform import private
+from bc250_core.platform import private, show_in_folder
 from bc250_core.portable import VIEW, Card, Legend, PortableHeader, PortableWindow, px, status_clock
 
 from . import APP_ID, APP_NAME, __version__, camera, driver, firmware, loader, modes, picture, preview, record, winusb
@@ -670,7 +670,8 @@ class MainWindow(PortableWindow):
         self.update_legend()
 
     def screenshot(self) -> None:
-        """A: what shows now, saved as a PNG in the Pictures folder (off the window's thread)."""
+        """A: what shows now, saved as a PNG in the Pictures folder (off the window's thread); Explorer then shows it
+        (owner, 06-11-2026)."""
         if self.last is None:
             self.say("There is no picture to save yet.")
             return
@@ -683,6 +684,7 @@ class MainWindow(PortableWindow):
     def shot_done(self, path) -> None:
         self.say(f"Screenshot saved: {private(path)}")
         self.log.info(f"Screenshot saved: {private(path)}.")
+        show_in_folder(path)
 
     def toggle_recording(self) -> None:
         """X: a recording of what shows starts, at the mode's size, or it stops and is written to the Videos

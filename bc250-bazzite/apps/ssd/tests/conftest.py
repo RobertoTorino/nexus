@@ -28,3 +28,13 @@ def settings_dir(tmp_path):
     from PyQt6.QtCore import QSettings
     QSettings.setPath(QSettings.Format.IniFormat, QSettings.Scope.UserScope, str(tmp_path / "settings"))
     return tmp_path / "settings"
+
+
+@pytest.fixture(autouse=True)
+def shown(monkeypatch):
+    """A saved screenshot opens the file manager on it (owner, 06-11-2026): never from a test. The files it would
+    show."""
+    from ssd_check import main_window
+    files = []
+    monkeypatch.setattr(main_window, "show_in_folder", files.append)
+    return files

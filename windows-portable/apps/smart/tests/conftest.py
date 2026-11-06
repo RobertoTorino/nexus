@@ -71,3 +71,13 @@ def wait_until(qapp, condition, timeout: float = 5.0) -> bool:
             return True
         time.sleep(0.01)
     return False
+
+
+@pytest.fixture(autouse=True)
+def shown(monkeypatch):
+    """A saved screenshot opens the file manager on it (owner, 06-11-2026): never from a test. The files it would
+    show."""
+    from smart_screen import main_window
+    files = []
+    monkeypatch.setattr(main_window, "show_in_folder", files.append)
+    return files

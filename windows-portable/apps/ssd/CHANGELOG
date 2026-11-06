@@ -1,0 +1,10 @@
+Changelog: 06-11-2026 11:15:38
+
+Added. SSD Check: the first version, the BC250 Bazzite Suite's SSD Check on the handheld's window (owner, 06-11-2026),
+written on tools/new_app.py's skeleton. A card for each drive Windows lists, with its pane: an NVMe drive's health,
+power cycles, power-on hours and days, data read and written (its health log, read through Windows' storage driver
+without an administrator), its firmware, NVMe version and PCIe link, the port's link when Windows reports it, the
+maker's rated speeds (the BC250 app's list) and the speed measured in the handheld (X: a 1 GB test file past Windows'
+cache, deleted after). A SATA drive (its SMART values need an administrator on Windows), a drive on USB and a memory
+card show their specs. Y reads the drives again; RB saves a screenshot in Pictures\SSD Check and Explorer shows it. No
+serial number and no firmware update check (owner, 06-11-2026).

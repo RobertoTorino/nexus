@@ -71,8 +71,9 @@ The other tiles work on the chosen suite:
 
 Under **Test local apps** are the chosen suite's portal and every app window of it in the checkout, as an icon
 (the portal first; the Windows Portable Suite's portal too, which starts full screen as on the handheld: View
-exits it). A click starts that app from the checkout, to try a change before its release: `python -m <package>`
-with the checkout's venv and its `core`, as `run.sh` starts a Nexus app. When the portal is already open, its icon
+exits it). A click starts that app from the checkout, to try a change before its release. On Windows the
+Windows Portable Suite's portal and apps start with their own `run.ps1`, as when you run it by hand; the others
+start as `python -m <package>` with the checkout's venv and its `core`, as `run.sh` starts a Nexus app. When the portal is already open, its icon
 warns instead of starting: a second portal never opens (starting it only brings the open window to the front), so
 close it first. An app that changes how the board runs (an orange **!** on its icon) asks first, as in the portal;
 started from the checkout it uses the scripts in the checkout. Each app writes its output to

@@ -180,7 +180,8 @@ recording's time:
 | **Close** (Esc) | Back to the window; a recording stops and is kept |
 
 Screenshots and recordings show what you see: zoomed in and black and white too. Each goes in a **USB HD Cam**
-folder, named with the date and the time (`USB HD Cam 2026-11-01 21-04-09.png`). A recording is an MP4 at the
+folder, named with the date and the time (`USB HD Cam 2026-11-01 21-04-09.png`); after a screenshot the file manager
+opens on that folder with the new file selected. A recording is an MP4 at the
 mode's size (or the half **Show** picks), with at most 30 frames a second, written with the video encoder Qt
 brings (MPEG-4; H.264 where the system has one). The mode does not change while it records: stop it first. If the
 camera stops sending, the screen says so and stays: choose another mode with **Mode −** or **Mode +**. Closing the

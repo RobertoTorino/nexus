@@ -246,7 +246,8 @@ releases. For each run that is still going it shows how many of its jobs are don
 is at (*pytest (core): Run tests (4/7)*) and the time since the run started; a run that failed names its job and
 step; a run that passed says so. The dot is blue while something runs, red when a run failed and green when all
 passed. The line wraps when it is longer than the window is wide, so its end is always visible. Hover for every
-job of every run; click to open the job that runs (or failed) on GitHub. The jobs need a gh
+job of every run; click to open the job that runs (or failed) on GitHub. While a run has failed, **Run again** at
+its right starts that run's failed jobs again on the same commit (`gh run rerun <id> --failed`, in the Commands tab). The jobs need a gh
 login (`gh auth login`): it then reads them every 10 seconds while a run goes. Without one it shows the runs only,
 so the 60 requests an hour stay for the **GitHub** pill.
 

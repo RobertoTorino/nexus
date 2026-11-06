@@ -163,6 +163,27 @@ def test_open_path_elsewhere_is_xdg_open(monkeypatch):
     assert platform.open_path("https://example.org")
 
 
+def test_show_in_folder(monkeypatch, tmp_path):
+    """A saved screenshot shows itself (owner, 06-11-2026): Explorer with the file selected on Windows; elsewhere the
+    file manager over D-Bus, else the folder with xdg-open."""
+    shot = tmp_path / "it's a shot.png"
+    started, ran, opened = [], [], []
+    monkeypatch.setattr(platform.subprocess, "Popen", lambda command, **kw: started.append(command))
+    monkeypatch.setattr(platform, "WINDOWS", True)
+    assert platform.show_in_folder(shot) and started == [f'explorer /select,"{shot}"']
+
+    class Done:
+        returncode = 0
+    monkeypatch.setattr(platform, "WINDOWS", False)
+    monkeypatch.setattr(platform.shutil, "which", lambda name: "/usr/bin/gdbus" if name == "gdbus" else None)
+    monkeypatch.setattr(platform.subprocess, "run", lambda command, **kw: ran.append(command) or Done())
+    monkeypatch.setattr(platform, "xdg_open", lambda target: opened.append(target) or True)
+    assert platform.show_in_folder(shot) and opened == []
+    assert ran[0][-2] == f"['{shot.resolve().as_uri()}']" and "%27" in ran[0][-2]   # the quote cannot end the list
+    Done.returncode = 1                                                         # no FileManager1 on the bus
+    assert platform.show_in_folder(shot) and opened == [shot.parent]
+
+
 def test_powershell_command():
     exit_file = PureWindowsPath("C:/Users/it's me/status")
     script = platform.powershell_command("cmd.exe /c exit 3", keep_open="on_error", exit_file=exit_file)

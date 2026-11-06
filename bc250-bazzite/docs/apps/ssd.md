@@ -29,7 +29,8 @@ nothing on the drive changes, and it needs no root.
   Under the list are the drive's model and size, and a line with its bus and when udisks last read it.
 - **Screenshot**, beside the list: saves the window with the values it shows now as a PNG in your Pictures folder,
   in a folder named SSD Check (`~/Pictures/SSD Check/SSD Check 2026-11-05 18-04-09.png`, the date and time in its
-  name). The line beside the button names the file; hover it for the folder. The serial stays hidden in the picture,
+  name). The file manager opens on the folder with the new file selected. The line beside the button names the
+  file; hover it for the folder. The serial stays hidden in the picture,
   even while its small window is open.
 - The specs, a pill each:
 

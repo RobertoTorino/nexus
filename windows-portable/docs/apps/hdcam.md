@@ -80,7 +80,8 @@ By touch, tap an entry in the row, drag the picture with a finger to move it, or
 **☰** (Menu) or the information icon shows these buttons.
 
 Screenshots and recordings show what you see: zoomed in and black and white too. Each goes in a **USB HD Cam**
-folder, named with the date and the time (`USB HD Cam 2026-11-01 21-04-09.png`). A recording is an MP4 (H.264,
+folder, named with the date and the time (`USB HD Cam 2026-11-01 21-04-09.png`); after a screenshot Explorer opens on
+that folder with the new file selected. A recording is an MP4 (H.264,
 written by Windows' own video encoder) at the mode's size, with at most 30 frames a second. The mode does not change
 while it records: stop it first. If the camera stops sending, the screen says so and stays: choose another mode with
 **LB** or **RB**. **⧉** (View) asks for a second press while a recording runs, then stops it and keeps the file.

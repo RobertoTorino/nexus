@@ -484,7 +484,7 @@ def test_a_failed_picture_stays_full_screen_so_another_mode_can_be_tried(qapp, t
     window.close()
 
 
-def test_a_screenshot_is_what_shows(qapp, tmp_path):
+def test_a_screenshot_is_what_shows(qapp, tmp_path, shown):
     window, live = picture_window(qapp, tmp_path)
     full_screen(qapp, window)
     window.a_action()
@@ -498,6 +498,7 @@ def test_a_screenshot_is_what_shows(qapp, tmp_path):
     shot = QImage(str(saved[0]))
     assert (shot.width(), shot.height()) == (43, 24) and shot.isGrayscale()
     assert window.full.status.text().startswith("Screenshot saved: ") and saved[0].name in window.full.status.text()
+    assert shown == saved                                   # Explorer shows it
     press_a(qapp, window)                                   # a second one in the same second: its own file
     assert len(list((tmp_path / "Pictures").glob("*.png"))) == 2
     window.close()

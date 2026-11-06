@@ -1,3 +1,9 @@
+Changelog: 06-11-2026 10:55:45
+
+Added. Run again in the workflow ticker (owner, 06-11-2026): while a run of the newest push has failed, it starts that
+run's failed jobs again on the same commit (gh run rerun --failed) in the Commands tab. A run canceled for a later run
+of its workflow does not count.
+
 Changelog: 06-11-2026 01:49:21
 
 Fixed. Publish is pressed once (owner, 06-11-2026: it stayed lit after the release was published, so it was pressed

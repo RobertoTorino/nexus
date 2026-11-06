@@ -496,12 +496,12 @@ def test_full_screen_zoom_pan_and_gray(make, tmp_path):
     assert not window.look.gray and full.gray_button.text() == "Gray"
 
 
-def test_full_screen_screenshot_and_recording(make, tmp_path):
+def test_full_screen_screenshot_and_recording(make, tmp_path, shown):
     recording = FakeRecording()
     window = _full_window(make, tmp_path, recording)
     full = window.full
     full.screenshot_button.click()
-    assert full.status.text() == "There is no picture to save yet."
+    assert full.status.text() == "There is no picture to save yet." and shown == []
     frame = QImage(1920, 1080, QImage.Format.Format_RGB32)
     frame.fill(QColor("green"))
     window.preview.frame.emit(frame)
@@ -509,6 +509,7 @@ def test_full_screen_screenshot_and_recording(make, tmp_path):
     shots = list((tmp_path / "Pictures" / "USB HD Cam").glob("USB HD Cam *.png"))
     assert len(shots) == 1 and QImage(str(shots[0])).width() == 1920
     assert full.status.text() == f"Screenshot saved: {shots[0]}"            # ~ for a path in the home folder
+    assert shown == shots                                                 # the file manager shows it
     full.record_button.click()
     assert recording.started[-1][1:] == (1920, 1080) and recording.started[-1][0].suffix == ".mp4"
     assert full.record_button.text() == "Stop"

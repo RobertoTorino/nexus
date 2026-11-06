@@ -1,3 +1,9 @@
+Changelog: 06-11-2026 10:55:45
+
+Fixed. The License paragraphs of both suites' READMEs and wiki Home pages: the portal's sound on a controller action
+was made by the owner in Audacity, without AI; the other sounds (and the music of the video tours) were made with
+generative AI tools.
+
 Changelog: 06-11-2026 10:25:37
 
 Release 1.52.0. Brings portal-v15.4.0.

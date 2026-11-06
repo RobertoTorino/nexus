@@ -174,13 +174,13 @@ def test_the_backlight_switches_off_and_on(qapp, tmp_path, monkeypatch):
     window.close()
 
 
-def test_the_picture_and_the_report_are_saved_without_a_dialog(qapp, tmp_path, monkeypatch):
+def test_the_picture_and_the_report_are_saved_without_a_dialog(qapp, tmp_path, monkeypatch, shown):
     window = make(qapp, tmp_path)
     into(window, window.screen_card, "picture")
     act(window, monkeypatch, "accept")
     saved = list((tmp_path / "Pictures").glob(f"{APP_NAME} *.png"))
     assert len(saved) == 1 and QImage(str(saved[0])).size() == window.image.size()
-    assert window.screen_pane.status.text().startswith("Saved: ")
+    assert window.screen_pane.status.text().startswith("Saved: ") and shown == saved      # Explorer shows it
     into(window, window.screen_card, "report")
     act(window, monkeypatch, "accept")
     report = next((tmp_path / "Documents").glob(f"{APP_NAME} *.txt")).read_text(encoding="utf-8")

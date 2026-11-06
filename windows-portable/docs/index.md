@@ -80,6 +80,8 @@ runtimes, the apps' versions.
 
 [HD Controller](apps/hdcontrol.md): Your USB HD controllers: what each one is, its firmware, its buttons tested, its
 settings.
+
+[SSD Check](apps/ssd.md): The health, power cycles and power-on hours of the handheld's SSD and the drives on it.
 </div>
 </div>
 
@@ -174,8 +176,8 @@ Open an issue on [GitHub](https://github.com/RobertoTorino/nexus/issues).
 ## License
 
 GPL-3.0-or-later. Each app has its own `LICENSE`. The icons and pictures were made with generative AI tools and
-edited by hand, the sounds with generative AI tools; all are under the license of the app or tool they come with,
-like its code.
+edited by hand. The portal's sound on a controller action was made by hand in Audacity, without AI; the other sounds
+were made with generative AI tools. All are under the license of the app or tool they come with, like its code.
 
 Each release also carries `THIRD-PARTY-NOTICES.txt`: the licenses of what its program bundles, such as Python, Qt
 and the fonts, and FFmpeg in USB HD Cam, whose picture Qt shows and records with FFmpeg's libraries.

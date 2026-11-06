@@ -104,6 +104,28 @@ def test_portal_target(nexus):
     assert local.portal_target(nexus, "wp") is None
 
 
+def test_an_app_with_run_ps1_starts_with_it_on_windows(nexus):
+    """A real run from the checkout (owner, 06-11-2026): on Windows the Windows Portable Suite's portal and apps start
+    with their own run.ps1, as by hand; elsewhere, and without the script, python -m as before."""
+    write(nexus / "wp/portal/portable_portal/__main__.py", "print('portal')\n")
+    write(nexus / "wp/portal/portable_portal/__init__.py", 'APP_NAME = "Portable Portal"\n')
+    portal = local.portal_target(nexus, "wp")
+    assert local.run_script(portal, windows=True) is None                     # no run.ps1 yet
+    write(nexus / "wp/portal/run.ps1", "exit 0\n")
+    script = nexus / "wp/portal/run.ps1"
+    assert local.run_script(portal, windows=True) == script and local.run_script(portal, windows=False) is None
+    command, _env = local.launch_command(nexus, portal, python="/venv/python", windows=True)
+    assert command == ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(script)]
+    command, env = local.launch_command(nexus, portal, python="/venv/python", windows=False)
+    assert command == ["/venv/python", "-m", "portable_portal"] and str(nexus / "core") in env["PYTHONPATH"]
+    wiki = local.docs_targets(nexus, suite="wp")[0]
+    assert local.run_script(wiki, windows=True) is None                       # a wiki is mkdocs serve
+
+
+def test_this_checkouts_windows_apps_have_run_ps1():
+    assert local.run_script(local.portal_target(CHECKOUT, "windows-portable"), windows=True) is not None
+    assert all(local.run_script(t, windows=True) for t in local.launch_targets(CHECKOUT, "windows-portable"))
+
 def test_this_checkouts_portals():
     assert local.portal_target(CHECKOUT, "bc250-bazzite").module == "bc250_portal"
     assert local.portal_target(CHECKOUT, "windows-portable").module == "portable_portal"

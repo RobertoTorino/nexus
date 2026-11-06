@@ -6,6 +6,7 @@ here (small ISO 9660 images with a SYSTEM.CNF) and mymc++'s own test data for th
 
 from __future__ import annotations
 
+import gc
 import hashlib
 import os
 import shutil
@@ -100,6 +101,11 @@ def qapp():
     portable.pin_scale((1280, 720))     # the Ally's screen, not the offscreen one (800 x 800): the windows fit-tested
     yield app
     QSettings.setDefaultFormat(QSettings.Format.IniFormat)
+    # create_app() (test_main_window.py) installs the tooltip filter on this app, and no aboutToQuit takes it off
+    # without an event loop: left on, it can crash pytest's final garbage collection (core's conftest, 06-11-2026).
+    from bc250_core.widgets import RoundedToolTip
+    RoundedToolTip.uninstall()
+    gc.collect()
 
 
 @pytest.fixture(autouse=True)

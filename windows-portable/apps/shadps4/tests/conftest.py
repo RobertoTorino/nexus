@@ -7,6 +7,7 @@ shadNet server, and shadPS4's own files as 0.20.0 leaves them in its user folder
 
 from __future__ import annotations
 
+import gc
 import json
 import os
 import struct
@@ -149,6 +150,11 @@ def qapp():
     portable.pin_scale((1280, 720))     # the Ally's screen, not the offscreen one (800 x 800): the windows fit-tested
     yield app
     QSettings.setDefaultFormat(QSettings.Format.IniFormat)
+    # create_app() (test_main_window.py) installs the tooltip filter on this app, and no aboutToQuit takes it off
+    # without an event loop: left on, it can crash pytest's final garbage collection (core's conftest, 06-11-2026).
+    from bc250_core.widgets import RoundedToolTip
+    RoundedToolTip.uninstall()
+    gc.collect()
 
 
 @pytest.fixture(scope="session")

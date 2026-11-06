@@ -201,7 +201,7 @@ def test_the_enclosure_on_a_slow_link_and_a_folder_of_roots(qapp, fake_sys):
     w.close()
 
 
-def test_screenshot_saves_the_window_as_a_png_beside_the_drive_list(qapp, tmp_path):
+def test_screenshot_saves_the_window_as_a_png_beside_the_drive_list(qapp, tmp_path, shown):
     from PyQt6.QtGui import QImage
     w = MainWindow(run_=FakeBus(SETUPS), threaded=False, sysfs=Path("/nonexistent"), home=Path("/var/home/user"),
                    pictures_=tmp_path / "shots")
@@ -216,15 +216,16 @@ def test_screenshot_saves_the_window_as_a_png_beside_the_drive_list(qapp, tmp_pa
     image = QImage(str(files[0]))
     assert not image.isNull() and image.width() == w.width()
     assert w.shot_note.text().startswith("Saved: SSD Check ") and w.serial_pill.value.text() == HIDDEN
+    assert sorted(shown) == files                                           # the file manager shows each
     w.close()
 
 
-def test_a_screenshot_that_cannot_be_written_says_so(qapp, tmp_path):
+def test_a_screenshot_that_cannot_be_written_says_so(qapp, tmp_path, shown):
     blocker = tmp_path / "file"
     blocker.write_text("")                                                  # a file where the folder should be
     w = MainWindow(run_=FakeBus(), threaded=False, sysfs=Path("/nonexistent"), pictures_=blocker / "shots")
     w.shot_button.click()
-    assert w.shot_note.text() == "The screenshot could not be saved"
+    assert w.shot_note.text() == "The screenshot could not be saved" and shown == []
     w.close()
 
 

@@ -85,6 +85,20 @@ Done in the working tree, not committed (the owner commits, releases and tries t
 - **Nexus Release Tool** (never released): the device test's field lists the run's unpublished drafts on every
   state, this device's suite first, and has room before its text; Device test and its step's line follow the portal
   picked there at once (22:24). The Nexus page's Releases chapter says so.
+- **Windows Portable Suite: SSD Check** (`apps/ssd`, `ssd_check`, 0.1.0, new; owner, 06-11-2026: the BC250 suite's
+  new app on the handheld). The owner's choices: no serial number, no Update pill (Windows has no fwupd), a SATA
+  drive's specs only (its SMART values need an administrator; no administrator prompt). An NVMe drive's health log
+  comes through IOCTL_STORAGE_QUERY_PROPERTY on the drive opened with no access right: no administrator, tried on
+  this Ally X (Samsung MZVMA1T0HCLD, NVMe 1.4, PCIe 4.0 x4; the port above it reports no link, so Board link says
+  Not reported). The drives' links through cfgmgr32 (Get-PnpDeviceProperty took 11 s for two drives). Measured on the
+  Ally X: 4,295 MB/s read, 2,022 write. Its entry is in the portal's apps.toml (no sha256): the first release and the
+  portal's bump are the owner's. To try on the Ally: a drive on USB (no USB link speed on Windows yet: the BC250
+  app's USB 2.0 warning has no Windows counterpart), an SD card's speed test (it writes 1 GB at the card's root).
+- **Today's other work (06-11-2026)**, every check passing: the six Windows game managers' test teardown (item 5 of
+  the roadmap), the License paragraphs on the owner's blob.wav (both suites' READMEs and wiki Home pages), Run again
+  in Nexus Release Tool's ticker, the dashboard's Test local apps starting a Windows app with its run.ps1, and a
+  saved screenshot opening its folder (core's show_in_folder; SSD Check and USB HD Cam on Bazzite, USB HD Cam and
+  Smart Screen on Windows: a minor release each, Added).
 
 ### Tested on the Ally, 05-11-2026 evening to 06-11-2026 (the checkout, with the window logger)
 
@@ -223,8 +237,8 @@ noted where each item stood). Each entry says where it is in the code and what t
    filter on the session's QApplication. Fixed in core's `tests/conftest.py` (the `qapp` teardown calls
    `RoundedToolTip.uninstall()`, then `gc.collect()`: 17 crashes in 120 runs before, none after). The game
    managers' tests call `create_app()` too (`apps/{pcsx2,ppsspp,rpcs3,shadps4,vita3k,xenia}/tests/test_main_window.py`),
-   so their conftests' `qapp` wants the same teardown; the BC250 suite's apps are to check as well, a change of
-   their own.
+   so their conftests' `qapp` wants the same teardown: done in the working tree for the six Windows game managers
+   (06-11-2026, a Fixed entry each, tests only). The BC250 suite's apps are to check as well, a change of their own.
 
 Dropped (owner, 05-11-2026): quitting a game in an app closes the portal too (not reproduced), and the handheld's
 own tuning apps.
@@ -3669,7 +3683,7 @@ moves. The Steam shortcut tags take the new names (owner, 14-10-2026): shadps4-m
 date with Update Game Mode, console-link with Update in Game Mode. An app's identifiers move (with an old-ID
 fallback, as console-link's `OLD_APP_ID`) only when it is ported, together with its hardware code paths.
 
-Media licenses (owner's decision, 22-10-2026): the icons (a generative AI base, edited by hand in Photoshop) and the sounds (generative AI) stay under the
+Media licenses (owner's decision, 22-10-2026): the icons (a generative AI base, edited by hand in Photoshop) and the sounds (generative AI, but the portals' blob.wav, which the owner made by hand in Audacity: owner, 06-11-2026) stay under the
 license of the folder they are in, like the code: no separate or proprietary license for media, consistent with
 "open by default". The README, the wiki's Home page and CONTRIBUTING.md say so.
 

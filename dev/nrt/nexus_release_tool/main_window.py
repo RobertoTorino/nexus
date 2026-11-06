@@ -1063,6 +1063,7 @@ class WorkflowTicker(QFrame):
     that passed says so. Signed in with gh it reads the jobs of every run that runs every 10 seconds, and of a run
     that failed once (unchanged answers do not count against GitHub's limit); without a token, the 60 requests an
     hour are the build pill's, so it shows the runs only. A click opens the job that runs (or failed), else the run.
+    While a run shown has failed, Run again starts its failed jobs again (gh run rerun --failed; owner, 06-11-2026).
     Hidden until GitHub shows a run. The line wraps to as many lines as it needs, never wider than the window
     (owner, 01-11-2026: cut off at one line, the end was not visible)."""
 
@@ -1077,6 +1078,7 @@ class WorkflowTicker(QFrame):
         self.final: set[str] = set()            # the runs whose jobs were read after they finished
         self.signed_in = False
         self.line = ""
+        self.on_rerun = None                    # the window's: runs a command in the Commands tab
         self.setObjectName("ticker")
         self.setStyleSheet(f"#ticker {{ border:1px solid {NEXUS.edge}; border-radius:6px; }}")
         self.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -1088,6 +1090,11 @@ class WorkflowTicker(QFrame):
         lay.setContentsMargins(10, 4, 10, 4)
         lay.addWidget(self.dot, 0, Qt.AlignmentFlag.AlignTop)
         lay.addWidget(self.text, 1)
+        self.rerun_button = accent_button("Run again")
+        self.rerun_button.setCursor(Qt.CursorShape.ArrowCursor)
+        self.rerun_button.clicked.connect(self.rerun)
+        self.rerun_button.setVisible(False)
+        lay.addWidget(self.rerun_button, 0, Qt.AlignmentFlag.AlignTop)
         self.checker = UpdateChecker(self)
         self.checker.finished.connect(self.fetched)
         self.timer = QTimer(self, singleShot=True)
@@ -1158,6 +1165,11 @@ class WorkflowTicker(QFrame):
             self.clock.stop()
         if running and self.wanted() and not self.timer.isActive():
             self.timer.start(JOBS_BUSY_MS)
+        failed = flow.failed_runs(self.runs)
+        self.rerun_button.setVisible(bool(failed))
+        if failed:
+            self.rerun_button.setToolTip("Start the failed jobs of " + ", ".join(r.label for r in failed) + " again, on "
+                                         "the same commit: " + flow.rerun_ci_command(failed))
         if not self.runs:
             return
         self.dot.setStyleSheet(f"color:{BUILD_LOOK[state][0]};")
@@ -1169,6 +1181,11 @@ class WorkflowTicker(QFrame):
 
     def target(self) -> str:
         return rp.ticker_target(self.runs, self.jobs)
+
+    def rerun(self) -> None:
+        failed = flow.failed_runs(self.runs)
+        if failed and self.on_rerun is not None:
+            self.on_rerun(flow.rerun_ci_command(failed))
 
     def mouseReleaseEvent(self, event) -> None:  # noqa: N802 (Qt override)
         if event.button() == Qt.MouseButton.LeftButton and self.target():
@@ -1380,6 +1397,7 @@ class ReleaseWindow(QMainWindow):
         self.build.checker.finished.connect(self.refreshed)     # after the build's own slot: the steps are drawn
         self.ticker = WorkflowTicker(jobs_source)       # between the pills and the tabs, fed by the build's looks
         self.ticker.hidden = rp.other_suites_workflows(root, self.suite)
+        self.ticker.on_rerun = self.run_git
         self.github_status = GitHubStatusIndicator(status_source)
         self.claude = ClaudeUsageIndicator(claude_source)
         self.tabs = QTabWidget()

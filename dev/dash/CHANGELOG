@@ -1,3 +1,10 @@
+Changelog: 06-11-2026 10:55:45
+
+Fixed. Test local apps on Windows starts the Windows Portable Suite's portal and apps with their own run.ps1, as when
+they are run by hand from the checkout (owner, 06-11-2026: it was python -m with the dashboard's environment, not a
+real run from the checkout). The other apps and the wikis start as before. A local app on Windows starts without a
+console window, as the Nexus apps do.
+
 Changelog: 05-11-2026 13:08:36
 
 Added. Convert icons works on the Windows Portable Suite (it was greyed out): the dialog shows its PNG icons, and

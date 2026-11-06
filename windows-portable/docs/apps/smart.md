@@ -47,7 +47,7 @@ The screen's state: which screen it is, its COM port, its size and how much the 
 | Brightness | **A** and **RB** brighter, **LB** darker, in steps of 10 %. |
 | Orientation | Portrait, Landscape, and each upside down: how the screen stands. Turn it upside down when its USB cable is at the bottom or on the other side. Lying down, the tiles go in two columns. |
 | Backlight | **A** switches the screen dark and back on; the app keeps running. It is on at every start. |
-| Save the picture | What the screen shows, at its own size, as a PNG in your Pictures folder, in a Smart Screen folder. |
+| Save the picture | What the screen shows, at its own size, as a PNG in your Pictures folder, in a Smart Screen folder; Explorer then opens on it with the new file selected. |
 | Save a report | Every value at this moment, with the date, the time and its offset from UTC, as a text file in your Documents folder, in a Smart Screen folder. |
 
 ## Values

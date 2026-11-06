@@ -1,3 +1,9 @@
+Changelog: 06-11-2026 10:55:45
+
+Fixed. The tests' session teardown takes the tooltip filter off the app and collects the leftover widgets while the
+app is whole, as core's tests do since 06-11-2026: create_app() in test_main_window.py left the filter on, which can
+crash pytest's final garbage collection after every test passed. The app's code is unchanged.
+
 Changelog: 06-11-2026 02:33:57
 
 Release 4.4.0.

@@ -1,8 +1,9 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Test local apps: the suite's windows as they are in the checkout, to try them before their release (the suite's
-portal, then every app with a __main__.py), and the wikis served from the checkout with mkdocs serve. Each is
-`python -m <module>` with the dev venv's python and the checkout's core on the path, as run.sh starts an app. It
-moved here from Nexus Release Tool's Test on this board (owner, 04-11-2026: the release tool is the release)."""
+portal, then every app with a __main__.py), and the wikis served from the checkout with mkdocs serve. On Windows a
+window whose folder has run.ps1 (the Windows Portable Suite's portal and apps) starts with that script, as it is run
+by hand (owner, 06-11-2026: a real run from the checkout); otherwise it is `python -m <module>` with the dev venv's
+python and the checkout's core on the path, as a Nexus app's run.sh starts it. It moved here from Nexus Release Tool's Test on this board (owner, 04-11-2026: the release tool is the release)."""
 
 from __future__ import annotations
 
@@ -15,7 +16,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import urlparse
 
-from .checkout import suites
+from .checkout import WINDOWS, suites
 
 CHECKOUT_ONLY = ".checkout-only"        # an app folder with this marker runs from the checkout and is never released
 DOCS_HOST = "127.0.0.1"
@@ -190,9 +191,21 @@ def targets(root: Path, suite: str | None, network: bool = False) -> list[Launch
     return ([portal] if portal else []) + launch_targets(root, suite) + docs_targets(root, network, suite=suite)
 
 
-def launch_command(root: Path, target: Launch, python: str = sys.executable) -> tuple[list[str], dict[str, str]]:
-    """The command and environment that start *target* from the checkout: the dev venv's python, with the
-    checkout's core on the path as run.sh does it (a release bundles core instead)."""
+def run_script(target: Launch, windows: bool = WINDOWS) -> Path | None:
+    """The script that starts *target* from the checkout by hand: run.ps1 in its folder, on Windows (the Windows
+    Portable Suite's portal and apps have one); None elsewhere and for a wiki."""
+    script = target.folder / "run.ps1"
+    return script if windows and target.module != "mkdocs" and script.is_file() else None
+
+
+def launch_command(root: Path, target: Launch, python: str = sys.executable,
+                   windows: bool = WINDOWS) -> tuple[list[str], dict[str, str]]:
+    """The command and environment that start *target* from the checkout: its run.ps1 when it has one on Windows,
+    with Windows PowerShell as by hand (the script picks the venv and puts core on the path), else the dev venv's
+    python with the checkout's core on the path as run.sh does it (a release bundles core instead)."""
     env = dict(os.environ)
+    script = run_script(target, windows)
+    if script is not None:
+        return ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(script), *target.args], env
     env["PYTHONPATH"] = os.pathsep.join(filter(None, (str(root / "core"), env.get("PYTHONPATH"))))
     return [python, "-m", target.module, *target.args], env

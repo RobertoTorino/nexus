@@ -20,7 +20,7 @@ from PyQt6.QtCore import QObject, QPoint, QStandardPaths, Qt, pyqtSignal
 from PyQt6.QtWidgets import (QComboBox, QGridLayout, QHBoxLayout, QLabel, QMainWindow, QPushButton, QVBoxLayout,
                              QWidget)
 
-from bc250_core.platform import private
+from bc250_core.platform import private, show_in_folder
 from bc250_core.theme import GREEN, GREY, ORANGE, RED
 from bc250_core.widgets import (AppHeader, InfoButton, MetricBox, Pill, RoundedToolTip, StatusText, accent,
                                 hint_label, same_width)
@@ -387,7 +387,8 @@ class MainWindow(QMainWindow):
 
     def screenshot(self) -> None:
         """The window as it shows now, saved as a PNG in the Pictures folder. The serial's popup is a window of its
-        own, so the picture has the hidden pill only; the line beside the button says where the file went."""
+        own, so the picture has the hidden pill only; the line beside the button says where the file went, and the
+        file manager shows it (owner, 06-11-2026)."""
         self.shot_note.setText("")                      # the last one's line stays out of the picture
         self.shot_note.setToolTip("")
         path = screenshot_path(self.pictures or pictures())
@@ -399,6 +400,7 @@ class MainWindow(QMainWindow):
         if saved:
             self.shot_note.setText(f"Saved: {path.name}")
             self.shot_note.setToolTip(private(path))
+            show_in_folder(path)
         else:
             self.shot_note.setText("The screenshot could not be saved")
             self.shot_note.setToolTip(f"Could not write to {private(path.parent)}")

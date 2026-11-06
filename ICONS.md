@@ -147,7 +147,7 @@ dashboard's Convert icons), as `windows-portable/icons/categories.toml` says: PN
 | Icon | Category | Apps |
 | --- | --- | --- |
 | <img src="windows-portable/icons/gaming/gaming-128.png" width="64" alt=""> | Gaming: the owner's pictures of the handheld (29-10-2026), wide (2:1: 1024 x 512 down to 128 x 64): the tile and the wiki show them as they are, the window, program and Start-menu icons centered on a transparent square | PCSX2 Manager (`pcsx2`)<br>PPSSPP Manager (`ppsspp`)<br>RPCS3 Manager (`rpcs3`)<br>shadPS4 Manager (`shadps4`)<br>Vita3K Manager (`vita3k`)<br>Xenia Manager (`xenia`)<br>Remote Play (`rplay`)<br>DatStation (`datstat`)<br>Upscale Boost (`upscale`) |
-| <img src="windows-portable/icons/utilities/utilities-128.png" width="64" alt=""> | Utilities: the owner's picture of a circuit board (01-11-2026), square (1024 x 1024 down to 128 x 128) | USB HD Cam (`hdcam`)<br>BIOS Reader (`bios`)<br>sFTP Tools (`sftp`)<br>Smart Screen (`smart`)<br>Support Checker (`support`)<br>HD Controller (`hdcontrol`) |
+| <img src="windows-portable/icons/utilities/utilities-128.png" width="64" alt=""> | Utilities: the owner's picture of a circuit board (01-11-2026), square (1024 x 1024 down to 128 x 128) | USB HD Cam (`hdcam`)<br>BIOS Reader (`bios`)<br>sFTP Tools (`sftp`)<br>Smart Screen (`smart`)<br>Support Checker (`support`)<br>HD Controller (`hdcontrol`)<br>SSD Check (`ssd`) |
 
 ### Material Design icons in the wiki
 
