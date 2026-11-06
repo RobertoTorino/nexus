@@ -1,3 +1,19 @@
+Changelog: 06-11-2026 01:49:21
+
+Added. The clock at the top as the Settings page sets it (owner, 06-11-2026): Clock, 24 hours or 12 hours with AM
+and PM; Seconds, on or off (the time then moves on each second); Time zone, CET (Amsterdam time, CEST in summer) or
+UTC, its name after the time. 24 hours, no seconds and CET until changed; kept in the suite's settings.
+
+Added. The weather at the top, before the date (owner, 06-11-2026): the Settings page's Location row opens a page
+where part of a place's name is typed (R3: Windows' touch keyboard) and A searches Open-Meteo's places (up to five,
+each name and area once: Open-Meteo lists villages that share them); the d-pad picks one, A takes it, and its weather symbol and temperature show at the top ("Amsterdam ☁ 9°"), looked up again
+every 15 minutes, off the window's thread. Y goes from the name to the list, where Off takes the place away. Open-Meteo
+needs no key. The wiki's portal chapter says so.
+
+Fixed. The Settings page's rows lay too close, so the focused row's edge was cut off (owner, 06-11-2026): the
+settings are in two columns now, Look and clock and Screens and device, each under its heading; the d-pad moves up
+and down a column and left and right between them.
+
 Changelog: 06-11-2026 00:58:47
 
 Release 8.2.0. Pins wp-test-v4.13.0, wp-pcsx2-v6.3.0, wp-ppsspp-v5.3.0, wp-rpcs3-v4.3.0, wp-shadps4-v5.3.0, wp-vita3k-v5.3.0, wp-xenia-v5.3.0, wp-rplay-v0.10.0, wp-hdcam-v0.9.0, wp-bios-v0.10.0, wp-sftp-v0.9.0, wp-smart-v0.5.0.

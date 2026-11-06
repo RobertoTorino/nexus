@@ -695,11 +695,40 @@ def _set_line(label: QLabel, parts: Sequence[str | tuple[str, str]]) -> bool:
 DAYS = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
 
 
-def status_clock(now: datetime.datetime | None = None) -> list[str]:
+CLOCK_ZONES = ("cet", "utc")    # the clock's time zones (owner, 06-11-2026): Amsterdam time (CET, CEST in summer), UTC
+
+
+def summer_time(utc: datetime.datetime) -> bool:
+    """Whether Central European Summer Time is in force at *utc* (naive, in UTC): the EU's rule, from 01:00 UTC on the
+    last Sunday of March to 01:00 UTC on the last Sunday of October; no time zone data needed."""
+    def last_sunday(month: int) -> datetime.datetime:
+        last = datetime.datetime(utc.year, month, 31, 1)
+        return last - datetime.timedelta(days=(last.weekday() + 1) % 7)
+    return last_sunday(3) <= utc < last_sunday(10)
+
+
+def status_clock(now: datetime.datetime | None = None, *, seconds: bool = False, twelve_hour: bool = False,
+                 zone: str = "") -> list[str]:
     """The date and the time for the header's status line, before the battery (owner, 30-10-2026: the battery last):
-    "Monday 27/10/2026", "17:04" (owner, 28-10-2026). The day's name is English whatever Windows' language, as the apps' text is."""
-    now = now or datetime.datetime.now()
-    return [f"{DAYS[now.weekday()]} {now:%d/%m/%Y}", f"{now:%H:%M}"]
+    "Monday 27/10/2026", "17:04" (owner, 28-10-2026). The day's name is English whatever Windows' language, as the apps' text is.
+    The portal's clock settings (owner, 06-11-2026): *seconds* ("17:04:09"), *twelve_hour* ("5:04 PM"), and *zone*
+    "cet" (Amsterdam time: CET, CEST in summer) or "utc", its name after the time; "" is the device's own time, without
+    a name. With a *zone*, *now* is the time in UTC."""
+    if zone in CLOCK_ZONES:
+        utc = now or datetime.datetime.now(datetime.timezone.utc)
+        if utc.tzinfo is not None:
+            utc = utc.astimezone(datetime.timezone.utc).replace(tzinfo=None)
+        summer = zone == "cet" and summer_time(utc)
+        now = utc + datetime.timedelta(hours=(2 if summer else 1) if zone == "cet" else 0)
+        label = " " + ("CEST" if summer else "CET" if zone == "cet" else "UTC")
+    else:
+        now, label = now or datetime.datetime.now(), ""
+    tail = f":{now:%S}" if seconds else ""
+    if twelve_hour:
+        time = f"{now.hour % 12 or 12}:{now:%M}{tail} {'AM' if now.hour < 12 else 'PM'}"
+    else:
+        time = f"{now:%H:%M}{tail}"
+    return [f"{DAYS[now.weekday()]} {now:%d/%m/%Y}", time + label]
 
 
 def trimmed(pixmap: QPixmap) -> QPixmap:

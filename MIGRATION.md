@@ -224,9 +224,31 @@ own tuning apps.
 
 ### Bazzite/Windows
 
-1. **Best settings for a game, found automatically.** Emulated and regular games. First an analysis: what can be
-   measured, per emulator and for a regular game, and whether WindowManager (`github.com/RobertoTorino/
-   WindowManager`) can be used for it or join the gaming category.
+1. **Best settings for a game, found automatically.** Emulated and regular games. On hold (owner, 06-11-2026: first
+   look into other upscaling options, OptiScaler among them). The analysis (06-11-2026, on the Ally and in the code):
+   - *Measurable without admin rights.* Bazzite: frame rate and frame times from MangoHud's CSV log (Bazzite Test's
+     `gamemon.py`, `gamecheck.py` already work out 1% and 0.1% lows), load, power and temperatures from sysfs and
+     `/proc/<pid>/fdinfo` (core's `sensors.py`); no Python runs during play there (Steam, the run wrapper, the
+     AppImage), so a measurement goes in the launch line as `gamemon.py` does. Windows (the Ally X, Z2 Extreme,
+     "Radeon 890M"): power per part from the `\Energy Meter(*)\Power` counters (tested: apu, cpu, gpu power) and
+     GPU load per process from PDH, temperatures from core's `chip.py`; the frame rate is the gap: only what an
+     emulator shows itself (Vita3K's game window title, "30 FPS (34 ms)"), PresentMon (MIT, every API) once the user
+     is in *Performance Log Users* (a one-time admin step), or AMD's ADLX (proprietary). Core's play mode runs during
+     every game and is the place to sample.
+   - *Settable per game:* PCSX2 `gamesettings/<serial>_<CRC>.ini` (`-gamecfg` for one run), RPCS3
+     `custom_configs/config_<serial>.yml` (`--config`), Xenia `config/<TITLEID>.config.toml` (any `--name=value`),
+     Vita3K `-c <yml>` with `-w`, PPSSPP `--config`/`--appendconfig`, shadPS4 `custom_configs/<Id>.json` (no option:
+     written before the run). The managers write global settings only (per game only the screen choice, Bazzite's
+     PCSX2 and RPCS3); none reads a frame rate; no presets or compatibility data in either suite. Regular games keep
+     their settings in their own formats: measure and advise only (frame limit, upscaler, power mode).
+   - *WindowManager* (C++/Qt, GPL-3.0, beta): FPS and 1% lows from ETW (admin), GPU/VRAM per process, power state,
+     a CSV per session and setups compared; no search for settings; no controller support; stats on Windows only.
+     Advice: keep it separate, take its method (sessions compared by average FPS and 1% low).
+   - *Steps, if taken up:* 1. the play mode records each session (frame rate where reported, load, power,
+     temperatures, the settings used) and the manager shows it on the game; 2. it suggests one step (the internal
+     resolution up or down) and A writes it to the game's own config; 3. fully automatic with a save state of a
+     demanding moment, about 60 s at each step of the resolution ladder. Open choices: which suite first, the frame
+     rate source on Windows, how far, the target (60 or 30 fps, temperature and power limits), WindowManager.
 
 ## The tools centralized in Nexus (02-11-2026, in the working tree for the owner to commit)
 

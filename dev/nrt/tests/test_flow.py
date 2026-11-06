@@ -152,7 +152,8 @@ def test_the_run_is_followed_stopped_and_resumed():
 
 def test_the_device_test_and_publish_work_on_the_portals_draft(nexus):
     assert flow.waiting_portals(nexus) == ["wp-portal-v1.0.0"]
-    assert flow.publish_command("wp-portal-v1.1.0") == "gh release edit wp-portal-v1.1.0 --draft=false --latest=false"
+    assert flow.publish_command("wp-portal-v1.1.0") == ("gh release edit wp-portal-v1.1.0 --draft=false --latest=false"
+                                                        " && git fetch origin tag wp-portal-v1.1.0")   # seen at once
     line = flow.device_test_line(nexus, "wp", "wp-portal-v1.1.0", windows=True)
     assert line.startswith("& '") and line.endswith("check-release.ps1' draft wp-portal-v1.1.0")
 
@@ -521,7 +522,7 @@ def test_the_device_test_and_publish(release_window, monkeypatch):
     monkeypatch.setattr(w, "confirm_git", lambda *a: True)
     monkeypatch.setattr(w, "run_git", ran.append)
     page.publish()
-    assert ran == ["gh release edit wp-portal-v1.0.0 --draft=false --latest=false"]
+    assert ran == [flow.publish_command("wp-portal-v1.0.0")]
     page.show_state()
     assert flow.step_states(page.facts)["test"] == "now"
     page.reject()
@@ -553,7 +554,7 @@ def test_the_portal_choice_holds_only_the_drafts(release_window, monkeypatch):
     monkeypatch.setattr(w, "confirm_git", lambda *a: True)
     monkeypatch.setattr(w, "run_git", ran.append)
     page.publish()
-    assert ran == ["gh release edit wp-portal-v1.0.0 --draft=false --latest=false"]
+    assert ran == [flow.publish_command("wp-portal-v1.0.0")]
 
 
 def test_each_suite_stands_apart(nexus):

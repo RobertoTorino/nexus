@@ -1112,3 +1112,104 @@ def test_lt_moves_the_portal_with_a_second_screen(world, qapp, monkeypatch):
     qapp.processEvents()
     assert 1000 < window.legend.sizeHint().width() <= 1280 - left - right
     window.close()
+
+
+def test_the_settings_lie_in_two_columns(world, qapp, monkeypatch):
+    """Owner, 06-11-2026: the rows lay too close, the focused one's edge was cut off. Two columns, Look and clock on the
+    left, Screens and device on the right; the d-pad goes down a column and across between them."""
+    window = world.make()
+    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
+    window.resize(1280, 720)
+    window.show()
+    qapp.processEvents()
+    window.on_action("menu")
+    pane = window.suite_pane
+    left = [pane.wallpaper, pane.transparency, pane.sound, pane.hours, pane.seconds, pane.zone, pane.place]
+    right = [pane.tv, pane.handheld, pane.both, pane.xbox_mode]
+    assert len({row.mapTo(window, row.rect().topLeft()).x() for row in left}) == 1
+    assert all(r.mapTo(window, r.rect().topLeft()).x() > pane.wallpaper.mapTo(window, pane.wallpaper.rect().topRight()).x()
+               for r in right)
+    tops = [row.mapTo(window, row.rect().topLeft()).y() for row in left]
+    assert all(b - a > row.height() for a, b, row in zip(tops, tops[1:], left))   # apart: no edge cut off
+    for _ in range(6):
+        window.on_action("down")
+    assert pane.place.hasFocus()
+    window.on_action("right")
+    assert window.focusWidget() in right                             # across to the other column
+    window.close()
+
+
+def test_the_clock_rows_change_the_clock_at_the_top(world, qapp, monkeypatch):
+    """Clock 24 or 12 hours, Seconds, Time zone CET (Amsterdam time) or UTC (owner, 06-11-2026): the time at the top
+    follows at once, and the choice is kept for the next start."""
+    window = world.make()
+    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
+    window.on_action("menu")
+    pane = window.suite_pane
+    assert pane.hours.label.text() == "Clock: 24 hours" and pane.zone.label.text() == "Time zone: CET"
+    window.update_status()
+    assert window.header.status.text().split("  |  ")[1].endswith((" CET", " CEST"))
+    pane.hours.activated.emit()
+    pane.seconds.activated.emit()
+    pane.zone.activated.emit()
+    assert (pane.hours.label.text(), pane.seconds.label.text(), pane.zone.label.text()) == \
+        ("Clock: 12 hours", "Seconds: On", "Time zone: UTC")
+    time_part = window.header.status.text().split("  |  ")[1]
+    assert time_part.endswith((" AM UTC", " PM UTC")) and time_part.count(":") == 2
+    again = world.make()
+    assert again.clock == window.clock and 0 < again.status_ms() <= 1020   # kept; with seconds, on each second
+
+
+def test_the_location_page_finds_a_place_and_its_weather_shows_at_the_top(world, qapp, monkeypatch):
+    """Location (owner, 06-11-2026): part of the name, A searches Open-Meteo's places, A takes one; its weather symbol
+    and temperature show before the date. Y goes to the list, where Off takes the place away again."""
+    asked = []
+
+    def fetch(url):
+        asked.append(url)
+        if "geocoding" in url:
+            return {"results": [{"name": "Amsterdam", "latitude": 52.37, "longitude": 4.89, "country": "Netherlands",
+                                 "admin1": "North Holland"},
+                                {"name": "Amstelveen", "latitude": 52.30, "longitude": 4.86,
+                                 "country": "Netherlands", "admin1": "North Holland"}]}
+        return {"current": {"temperature_2m": 8.6, "weather_code": 3, "is_day": 1}}
+    window = world.make(weather_fetch=fetch)
+    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
+    window.on_action("menu")
+    window.suite_pane.place.activated.emit()
+    pane = window.place_pane
+    assert window.stack.currentWidget() is pane and pane.field.hasFocus() and ("A", "Search") in window.legend.items
+    pane.field.setText("Amst")
+    window.on_action("accept")
+    assert wait_for(qapp, lambda: pane.rows[0].isVisible())
+    assert pane.rows[0].label.text() == "Amsterdam, North Holland, Netherlands" and pane.rows[0].hasFocus()
+    assert pane.rows[1].isVisible() and not pane.rows[2].isVisible() and ("A", "Take") in window.legend.items
+    window.on_action("accept")
+    assert window.stack.currentWidget() is window.suite_pane and window.suite_pane.place.hasFocus()
+    assert window.suite_pane.place.label.text() == "Location: Amsterdam"
+    assert wait_for(qapp, lambda: window.header.status.text().startswith("Amsterdam ☁ 9°  |  "))
+    from portable_portal import weather
+    assert weather.place(mw.SUITE) == window.place                   # kept for the next start
+    window.suite_pane.place.activated.emit()
+    window.on_action("y")                                            # from the field to the list: Off
+    assert pane.off.hasFocus() and ("Y", "Search") in window.legend.items
+    window.on_action("accept")
+    assert window.place is None and window.suite_pane.place.label.text() == "Location: Off"
+    assert not window.header.status.text().startswith("Amsterdam")
+    window.on_action("b")
+    assert len([url for url in asked if "geocoding" in url]) == 1
+
+
+def test_a_search_without_a_connection_says_so(world, qapp, monkeypatch):
+    def fetch(url):
+        raise OSError("no route to host")
+    window = world.make(weather_fetch=fetch)
+    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
+    window.show_place()
+    window.place_pane.field.setText("A")
+    window.on_action("accept")
+    assert window.place_pane.status.text().startswith("Type at least two letters")
+    window.place_pane.field.setText("Amsterdam")
+    window.on_action("accept")
+    assert wait_for(qapp, lambda: "could not be reached" in window.place_pane.status.text())
+    assert window.place_pane.field.text() == "Amsterdam" and window.place is None

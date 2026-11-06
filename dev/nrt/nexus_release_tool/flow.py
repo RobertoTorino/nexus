@@ -507,8 +507,10 @@ def portal_suite(root: Path, tag: str) -> str | None:
 
 def publish_command(tag: str) -> str:
     """The owner's yes after the device test: the draft becomes a release, which makes its tag (on the pin commit)
-    and starts the Nexus index. Never GitHub's Latest: that is the index."""
-    return f"gh release edit {tag} --draft=false --latest=false"
+    and starts the Nexus index. Never GitHub's Latest: that is the index. The new tag is fetched at once, so the step
+    sees the release published when the command ends (owner, 06-11-2026: Publish stayed lit until GitHub's runs were
+    read again, and was pressed twice)."""
+    return f"gh release edit {tag} --draft=false --latest=false && git fetch origin tag {tag}"
 
 
 def device_test_line(root: Path, suite: str, tag: str, windows: bool) -> str:

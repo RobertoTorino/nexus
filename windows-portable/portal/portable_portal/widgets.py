@@ -10,12 +10,13 @@ from collections.abc import Sequence
 
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QFont
-from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QLineEdit, QVBoxLayout, QWidget
 
-from bc250_core.portable import (AMBER, BODY, DIM, LEGEND, ON_AMBER, PICTURE_RULES, RADIUS, TEXT, VEIL_MAX,
+from bc250_core.portable import (AMBER, BODY, DIM, LEGEND, ON_AMBER, PICTURE_RULES, RADIUS, RAISED, TEXT, VEIL_MAX,
                                  VEIL_STEP, InfoPill, Pane, Row, Tabs, font, px, text_label)
 
 from .operating_mode import BY_LETTER, MODES
+from .weather import MATCHES, Place
 
 WALLPAPER_FOLDER = r"%LOCALAPPDATA%\windows-portable-suite\wallpapers"   # as the user finds it
 NAME = 24                               # pt: the name at the top of a pane
@@ -147,7 +148,8 @@ class SuitePane(Pane):
     wallpaper on or off; 29-10-2026: the sound on or off; 30-10-2026: which wallpaper, and its transparency). What
     each does is behind the information icon (Menu), not in lines under the rows (owner, 30-10-2026: no long lines
     of text where the space is not there). They had a page of their own on View until View became the suite's Exit
-    app (owner, 29-10-2026)."""
+    app (owner, 29-10-2026). Two columns under a heading each (owner, 06-11-2026: ten rows lay too close, the focused
+    one's edge was cut off): the d-pad moves up and down a column, left and right between them."""
 
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
@@ -180,11 +182,25 @@ class SuitePane(Pane):
         self.handheld = Row("Play on the handheld")
         self.both = Row("Play on both screens")
         self.xbox_mode = Row("XBOX mode ↔ Desktop")       # Win + F11 (owner, 05-11-2026)
-        for row in (self.wallpaper, self.transparency, self.sound, self.xbox, self.mode, self.screen_row, self.tv,
-                    self.handheld, self.both, self.xbox_mode):
-            self.column.addWidget(row)
-            self.column.addSpacing(px(6))
-        self.column.addStretch()
+        # The clock and the weather at the top (owner, 06-11-2026)
+        self.hours = Row("Clock: 24 hours")
+        self.seconds = Row("Seconds: Off")
+        self.zone = Row("Time zone: CET")
+        self.place = Row("Location: Off")
+        columns = QHBoxLayout()
+        columns.setSpacing(px(20))
+        for heading, rows in (("Look and clock", (self.wallpaper, self.transparency, self.sound, self.hours,
+                                                  self.seconds, self.zone, self.place)),
+                              ("Screens and device", (self.xbox, self.mode, self.screen_row, self.tv, self.handheld,
+                                                      self.both, self.xbox_mode))):
+            column = QVBoxLayout()
+            column.setSpacing(px(8))
+            column.addWidget(text_label(heading, BODY + 1, QFont.Weight.Bold, DIM))
+            for row in rows:
+                column.addWidget(row)
+            column.addStretch()
+            columns.addLayout(column, 1)
+        self.column.addLayout(columns, 1)
         self.status = text_label("", BODY + 1, QFont.Weight.DemiBold, AMBER, wrap=True)
         self.column.addWidget(self.status)
         self.action = ""                                # Y's text in the legend: Check again, Update to x.y.z
@@ -221,7 +237,14 @@ class SuitePane(Pane):
             parts.append("Not used: " + "; ".join(f"{name} ({why})" for name, why in self.refused.items()) + ".")
         parts += [f"Transparency: how much of the dark background lies over the wallpaper, so the text stays easy to "
                   f"read. The A button adds {VEIL_STEP} %, up to {VEIL_MAX} %, then starts at 0 %.",
-                  "Sound: the portal's intro sound and a short one on each controller button, for the suite."]
+                  "Sound: the portal's intro sound and a short one on each controller button, for the suite.",
+                  "Clock: the time at the top in 24 hours (17:04) or 12 hours (5:04 PM). Seconds: with or without them. "
+                  "Time zone: CET is Amsterdam time (CEST in summer), or UTC; its name follows the time. The A button "
+                  "switches each.",
+                  "Location: a place, whose weather shows at the top before the date: its symbol and the temperature, "
+                  "looked up again every 15 minutes. The A button opens its page: type part of the name (R3 opens "
+                  "Windows' touch keyboard) and A searches; the d-pad picks a place and A takes it, or Off for none. "
+                  "Weather data by Open-Meteo.com."]
         if self.xbox.isVisibleTo(self):
             parts.append("XBOX menu: the suite in the XBOX app's library, so XBOX mode starts it from its home. The A "
                          "button adds it, and on In the menu takes it out again; the XBOX app closes for a moment.")
@@ -278,12 +301,67 @@ class SuitePane(Pane):
             self.screen_row.set_text(f"Screen: {name}")
         self._explain()
 
+    def set_clock(self, twelve_hour: bool, seconds: bool, zone: str) -> None:
+        self.hours.set_text(f"Clock: {'12 hours' if twelve_hour else '24 hours'}")
+        self.seconds.set_text(f"Seconds: {'On' if seconds else 'Off'}")
+        self.zone.set_text(f"Time zone: {zone}")
+
+    def set_place(self, name: str) -> None:
+        """The Location row: the place's name, "" for Off."""
+        self.place.set_text(f"Location: {name or 'Off'}")
+
     def set_mode(self, name: str) -> None:
         """The Operating mode row: "" off the ROG XBOX Ally X (hidden), else the active mode's name."""
         self.mode.setVisible(bool(name))
         if name:
             self.mode.set_text(f"Performance mode: {name}")
         self._explain()
+
+
+class PlacePane(Pane):
+    """The Location page (owner, 06-11-2026): a field for part of a place's name, A searches Open-Meteo's places, and
+    the matches as rows under it, A takes the one with the focus; Off takes none (no weather). R3 opens Windows'
+    touch keyboard for the field, Y goes back to it from the rows, B back to Settings."""
+
+    def __init__(self, parent: QWidget | None = None):
+        super().__init__(parent)
+        self.column.addWidget(text_label("Location", NAME, QFont.Weight.ExtraBold))
+        self.column.addSpacing(px(6))
+        self.column.addWidget(text_label("Part of the place's name, then A to search; Y goes to the list, with Off "
+                                         "for no weather. Weather data by Open-Meteo.com.", BODY + 1, color=DIM,
+                                         wrap=True))
+        self.column.addSpacing(px(12))
+        self.field = QLineEdit()
+        self.field.setFont(font(BODY + 2))
+        self.field.setMinimumHeight(px(44))
+        self.field.setPlaceholderText("Amsterdam")
+        self.field.setStyleSheet(f"QLineEdit {{ color: {TEXT}; background: {RAISED}; border: none; "
+                                 f"border-radius: {px(10)}px; padding: 0 {px(12)}px; }}")
+        self.column.addWidget(self.field)
+        self.column.addSpacing(px(10))
+        self.rows: list[Row] = []
+        listed = QVBoxLayout()
+        listed.setSpacing(px(8))                        # apart, so the focused row's edge shows whole
+        for _ in range(MATCHES):
+            row = Row("")
+            row.hide()
+            self.rows.append(row)
+            listed.addWidget(row)
+        self.off = Row("Off: no weather")
+        listed.addWidget(self.off)
+        self.column.addLayout(listed)
+        self.column.addStretch()
+        self.status = text_label("", BODY + 1, QFont.Weight.DemiBold, AMBER, wrap=True)
+        self.column.addWidget(self.status)
+        self.places: list[Place] = []
+
+    def show_places(self, places: Sequence[Place]) -> None:
+        """The matches as rows, the first *MATCHES*; none: the rows hidden."""
+        self.places = list(places)[:len(self.rows)]
+        for row, found in zip(self.rows, [*self.places, *[None] * len(self.rows)]):
+            row.setVisible(found is not None)
+            if found is not None:
+                row.set_text(found.label)
 
 
 class ModePane(Pane):

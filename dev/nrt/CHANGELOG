@@ -1,3 +1,10 @@
+Changelog: 06-11-2026 01:49:21
+
+Fixed. Publish is pressed once (owner, 06-11-2026: it stayed lit after the release was published, so it was pressed
+twice): the command fetches the new portal tag right after gh release edit, so the step sees the release published
+as soon as the command ends, instead of after GitHub's runs were read again. The Nexus page's Releases chapter says
+so.
+
 Changelog: 05-11-2026 22:24:55
 
 Fixed. Device test and its step's line follow the portal picked in the choice beside it, at once.

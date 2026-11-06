@@ -18,7 +18,7 @@ import threading
 import time
 import uuid
 from collections.abc import Callable, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path, PurePath
 
 from PyQt6.QtCore import QEvent, QObject, QSettings, Qt, QTimer, pyqtSignal
@@ -28,15 +28,17 @@ from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QStackedWidget, QVBoxLayou
 from bc250_core import applog, chip, portable, power, steam, xbox
 from bc250_core.gamepad import Gamepad
 from bc250_core.platform import expand, launch_in_terminal, private
-from bc250_core.portable import (AMBER, DIM, KEYBOARD, MENU, VIEW, Card, Legend, PortableHeader, PortableWindow, px,
-                                 status_clock)
+from bc250_core.portable import AMBER, DIM, KEYBOARD, MENU, VIEW, Card, Legend, PortableHeader, PortableWindow, px
+from bc250_core.updates import UpdateChecker
 
 from . import ACTION_SOUND, APP_ICONS, APP_ID, APP_NAME, EXE_NAME, INTRO_SOUND, ROOT, SUITE, __version__, operating_mode, state_dir
+from . import weather
+from .clock import ZONE_NAMES, read as read_clock, save as save_clock
 from .intro import INTRO_MS, Intro, play
 from .manifest import CATEGORIES, AppEntry
 from .portal_update import PortalUpdate, short
 from .sources import Records, SourceError, Sources, downloaded, fetch_release, is_installed
-from .widgets import AppPane, DetailsPane, ModePane, PageMarker, SuitePane, Tabs, UpdateBanner
+from .widgets import AppPane, DetailsPane, ModePane, PageMarker, PlacePane, SuitePane, Tabs, UpdateBanner
 
 STATUS_MS = 2_000               # the header: the CPU and GPU live (owner, 30-10-2026), the battery and the time
 EXIT_QUESTION = "Do you really want to exit the portal?"
@@ -183,7 +185,8 @@ class MainWindow(PortableWindow):
                  helper: Callable[[], operating_mode.Helper] = operating_mode.Helper,
                  player: Callable[[Path | None], None] = play,
                  display: Callable[[str], None] = switch_display,
-                 xbox_mode: Callable[[], None] = press_win_f11):
+                 xbox_mode: Callable[[], None] = press_win_f11,
+                 weather_fetch: weather.Fetch | None = None):
         """*build*: the sha256 of the zip this portal was installed from (build.sha256), "" when not known, None
         from a checkout: a new build of the same version is offered when its sha256 differs. *intro_ms*: how long
         the intro plays when the window starts (0: none). *wallpaper*: the picture behind the page, darkened (None:
@@ -194,7 +197,8 @@ class MainWindow(PortableWindow):
         Ally X, None elsewhere: the operating mode's letter before the battery and its page; *helper*: the Operating
         Mode helper that writes its watts (the Ally X only). *player*: plays a .wav, the intro's and each controller
         action's (default winsound; tests pass a fake). *display*: sets Windows' display setup (switch_display). *xbox_mode*: switches between XBOX mode and the desktop
-        (press_win_f11)."""
+        (press_win_f11). *weather_fetch*: reads Open-Meteo (url -> decoded JSON) for the Location page and the weather
+        at the top (weather.fetch_json); None: no lookups (the tests)."""
         old = QSettings()                              # portal 1.6.0 kept the switch in portal.ini: the suite's now
         if old.contains(WALLPAPER_KEY) and portable.look_settings(SUITE).value(portable.LOOK_KEY) is None:
             portable.set_wallpaper_on(SUITE, str(old.value(WALLPAPER_KEY)).lower() != "false")
@@ -277,7 +281,8 @@ class MainWindow(PortableWindow):
         self.details_pane = DetailsPane()
         self.suite_pane = SuitePane()
         self.mode_pane = ModePane()
-        for widget in (self.apps_page, self.details_pane, self.suite_pane, self.mode_pane):
+        self.place_pane = PlacePane()
+        for widget in (self.apps_page, self.details_pane, self.suite_pane, self.mode_pane, self.place_pane):
             self.stack.addWidget(widget)
         page.addWidget(self.stack, 1)
         page.addSpacing(px(8))
@@ -302,6 +307,15 @@ class MainWindow(PortableWindow):
         self.suite_pane.handheld.activated.connect(lambda: self.play_on("/internal", ON_HANDHELD, "the handheld"))
         self.suite_pane.both.activated.connect(lambda: self.play_on("/clone", ON_BOTH, "both screens"))
         self.suite_pane.xbox_mode.activated.connect(self.switch_xbox_mode)
+        self.suite_pane.hours.activated.connect(lambda: self.change_clock(twelve_hour=not self.clock.twelve_hour))
+        self.suite_pane.seconds.activated.connect(lambda: self.change_clock(seconds=not self.clock.seconds))
+        self.suite_pane.zone.activated.connect(
+            lambda: self.change_clock(zone="utc" if self.clock.zone == "cet" else "cet"))
+        self.suite_pane.place.activated.connect(self.show_place)
+        for index, row in enumerate(self.place_pane.rows):
+            row.activated.connect(lambda index=index: self.pick_place(index))
+        self.place_pane.off.activated.connect(lambda: self.pick_place(None))
+        self.place_pane.field.returnPressed.connect(self.search_place)
         for letter, row in self.mode_pane.rows.items():
             row.activated.connect(lambda letter=letter: self.set_mode(letter))
         self.mode_pane.helper.activated.connect(self.helper_action)
@@ -333,6 +347,18 @@ class MainWindow(PortableWindow):
         self.status_timer = QTimer(self)
         self.status_timer.setInterval(STATUS_MS)
         self.status_timer.timeout.connect(self.update_status)
+        # The clock and the weather at the top, as the Settings page sets them (owner, 06-11-2026)
+        self.clock = read_clock(SUITE)
+        self.place = weather.place(SUITE)
+        self.weather_now: weather.Weather | None = None
+        self.weather_fetch = weather_fetch
+        self.weather_checker = UpdateChecker(self)      # the weather off the window's thread
+        self.weather_checker.finished.connect(self._weather_in)
+        self.search_checker = UpdateChecker(self)       # a place search
+        self.search_checker.finished.connect(self._places_found)
+        self.weather_timer = QTimer(self)
+        self.weather_timer.setInterval(weather.EVERY_MS)
+        self.weather_timer.timeout.connect(self.look_weather)
         self.confirm_timer = QTimer(self)
         self.confirm_timer.setSingleShot(True)
         self.confirm_timer.setInterval(CONFIRM_MS)
@@ -351,7 +377,9 @@ class MainWindow(PortableWindow):
         update checked once in the background."""
         self.start_gamepad()
         self.update_status()
-        self.status_timer.start()
+        self.status_timer.start(self.status_ms())
+        self.look_weather()
+        self.weather_timer.start()
         last = str(self.settings.value(TAB_KEY, ""))
         if last in self.tabs.keys and last != self.tabs.current:
             self.tabs.select(last)
@@ -592,7 +620,12 @@ class MainWindow(PortableWindow):
         # The date and the time, and a portal update when there is one; under them the CPU's and the GPU's load and
         # temperature (owner, 30-10-2026: two lines, one was wider than the screen), the Ally X's operating mode
         # (S, P, T or W, owner 31-10-2026) and the battery, last
-        parts = status_clock()
+        parts = self.clock.parts()
+        place = weather.text(self.place, self.weather_now)
+        if place:
+            parts.insert(0, place)                      # the place and its weather before the date
+        if self.status_timer.isActive():
+            self.status_timer.start(self.status_ms())   # with seconds, on each second
         if self.update_available():
             parts.append(f"Suite {self.update.release.version} available")
         marker = self.mode_marker()
@@ -600,6 +633,112 @@ class MainWindow(PortableWindow):
                                        power.text(self.battery())])
         if self.stack.currentWidget() is self.mode_pane:  # the watts follow the charger
             self.fill_modes()
+
+    def status_ms(self) -> int:
+        """The time to the header's next look: just past the next second when the clock shows seconds (a timer of a
+        second drifts, and a second would be skipped), else STATUS_MS."""
+        if not self.clock.seconds:
+            return STATUS_MS
+        return 1000 - int(time.time() * 1000) % 1000 + 20
+
+    def change_clock(self, **changes: object) -> None:
+        """A Clock, Seconds or Time zone row: the clock at the top changes at once, and the choice is kept."""
+        self.clock = replace(self.clock, **changes)
+        save_clock(SUITE, self.clock)
+        self.show_clock_rows()
+        self.update_status()
+        self.log.info(f"Clock: {'12' if self.clock.twelve_hour else '24'} hours, seconds "
+                      f"{'on' if self.clock.seconds else 'off'}, {ZONE_NAMES[self.clock.zone]}.")
+
+    def show_clock_rows(self) -> None:
+        self.suite_pane.set_clock(self.clock.twelve_hour, self.clock.seconds, ZONE_NAMES[self.clock.zone])
+        self.suite_pane.set_place(self.place.name if self.place else "")
+
+    def look_weather(self) -> None:
+        """The place's weather from Open-Meteo, off the window's thread; the last one stays while it is looked up."""
+        if self.place is None or self.weather_fetch is None or self.weather_checker.running:
+            return
+        place, fetch = self.place, self.weather_fetch
+
+        def job() -> tuple[weather.Place, object]:
+            try:
+                return place, weather.current(place, fetch)
+            except (OSError, ValueError) as error:
+                return place, error
+        self.weather_checker.start(job)
+
+    def _weather_in(self, result: object) -> None:
+        place, outcome = result                         # type: ignore[misc]
+        if place != self.place:                         # the place changed meanwhile
+            return
+        if isinstance(outcome, weather.Weather):
+            self.weather_now = outcome
+            self.update_status()
+        else:
+            self.log.warning(f"The weather at {place.name} could not be read: {outcome}")
+
+    def show_place(self) -> None:
+        """The Location page: the field with the place's name, A searches."""
+        pane = self.place_pane
+        self.stack.setCurrentWidget(pane)
+        pane.field.setText(self.place.name if self.place else "")
+        pane.show_places([])
+        pane.status.setText(f"Now: {self.place.label}." if self.place else "Now: Off, no weather.")
+        pane.field.setFocus()
+        pane.field.selectAll()
+        self.update_legend()
+
+    def search_place(self) -> None:
+        pane = self.place_pane
+        name = pane.field.text().strip()
+        if len(name) < 2:
+            pane.status.setText("Type at least two letters of the place's name, then A.")
+            return
+        if self.weather_fetch is None or self.search_checker.running:
+            return
+        fetch = self.weather_fetch
+
+        def job() -> object:
+            try:
+                return weather.search(name, fetch)
+            except (OSError, ValueError) as error:
+                return error
+        pane.status.setText(f"Searching for {name}…")
+        self.search_checker.start(job)
+
+    def _places_found(self, result: object) -> None:
+        pane = self.place_pane
+        if not isinstance(result, list):
+            pane.status.setText(f"Open-Meteo could not be reached: {result}. Try again with A.")
+            return
+        pane.show_places(result)
+        if result:
+            pane.rows[0].setFocus()
+            pane.status.setText("The d-pad picks a place, A takes it; Y goes back to the name.")
+        else:
+            pane.status.setText("No place by that name: try another spelling, then A.")
+        self.update_legend()
+
+    def place_toggle(self) -> None:
+        """Y on the Location page: from the field to the list (the matches, then Off), and back to the field for
+        another name; the d-pad stays in a text field (core's move_focus)."""
+        pane = self.place_pane
+        if pane.field.hasFocus():
+            next(row for row in [*pane.rows, pane.off] if row.isVisible()).setFocus()
+        else:
+            pane.field.setFocus()
+            pane.field.selectAll()
+        self.update_legend()
+
+    def pick_place(self, index: int | None) -> None:
+        """A on a match (or on Off): the suite's place, its weather looked up at once; back to Settings."""
+        chosen = self.place_pane.places[index] if index is not None and index < len(self.place_pane.places) else None
+        weather.set_place(SUITE, chosen)
+        self.place, self.weather_now = chosen, None
+        self.log.info(f"Location: {chosen.label if chosen else 'Off'}.")
+        self.look_weather()
+        self.update_status()
+        self.show_suite(self.suite_pane.place)
 
     def tab_entries(self, category: str) -> list[AppEntry]:
         return [entry for entry in self.entries if entry.category == category]
@@ -681,6 +820,7 @@ class MainWindow(PortableWindow):
         self.suite_pane.set_xbox(self.xbox_state())
         self.suite_pane.set_mode(self.mode_name())
         self.suite_pane.set_screen(self.screen_name())
+        self.show_clock_rows()
         self.update_legend()
         self.refresh()
         (focus or self.suite_pane.wallpaper).setFocus()
@@ -711,6 +851,10 @@ class MainWindow(PortableWindow):
                                    *self.common_items(True)], keys)
         elif self.stack.currentWidget() is self.mode_pane:
             self.legend.set_items([("A", "Set"), *triggers, *self.common_items(True)], keys)
+        elif self.stack.currentWidget() is self.place_pane:
+            typing = self.place_pane.field.hasFocus()
+            self.legend.set_items([("A", "Search" if typing else "Take"), ("Y", "To the list" if typing else "Search"),
+                                   *triggers, *self.common_items(True)], keys)
         else:
             self.legend.set_items([("A", "Change"), *([("Y", self.suite_pane.action)] if self.suite_pane.action
                                                       else []), *triggers, *self.common_items(True)], keys)
@@ -751,6 +895,9 @@ class MainWindow(PortableWindow):
             return
         if self.stack.currentWidget() is self.mode_pane:
             self.show_suite(self.suite_pane.mode)
+            return
+        if self.stack.currentWidget() is self.place_pane:
+            self.show_suite(self.suite_pane.place)
             return
         self.stack.setCurrentWidget(self.apps_page)
         self.update_legend()
@@ -854,6 +1001,8 @@ class MainWindow(PortableWindow):
                 self.open_app(self.current_key)
         elif self.stack.currentWidget() is self.apps_page:
             self.main_action(self.current_key)
+        elif self.stack.currentWidget() is self.place_pane:
+            self.search_place()                         # A in the field
 
     def y_action(self) -> None:
         if self.stack.currentWidget() is self.details_pane:
@@ -864,6 +1013,8 @@ class MainWindow(PortableWindow):
             self.update_action(self.current_key)
         elif self.stack.currentWidget() is self.suite_pane:
             self.suite_action()
+        elif self.stack.currentWidget() is self.place_pane:
+            self.place_toggle()
 
     def remove_action(self, key: str) -> None:
         """Remove asks for a second press (no dialog on a handheld): the pill says so for a few seconds."""

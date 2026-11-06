@@ -121,7 +121,9 @@ tab explains itself behind the round **i** in its first row: click it to read th
    Publish stay at hand for it. The draft belongs to its own suite: tick the other suite and its steps go on with its
    own release; tick this one again and the draft is still there.
 8. **Publish** when it works: the draft becomes a release, which makes its portal tag, and the portals offer it from
-   then on; the Nexus index follows. **Not OK** leaves the draft unpublished: the Device test step turns red and
+   then on; the Nexus index follows. The new tag is fetched in the same command, so the step shows ✓ as soon as it
+   ends: press Publish once. A portal that was open during the device test says its newest release as it was when it
+   looked; **Y Check again** on its Settings page (or its hourly look) shows the release just published. **Not OK** leaves the draft unpublished: the Device test step turns red and
    says what comes next. Fix what the test showed; the steps start again from **Commit your changes**, then **Push
    them**, **CI passes** and **Start new release**, which builds the portal anew (a portal that was never published
    keeps its version; the apps already out are skipped). Until the fix is committed, **Device test** and **Publish**

@@ -1,3 +1,10 @@
+Changelog: 06-11-2026 01:49:21
+
+Added. status_clock() takes the portal's clock settings (owner, 06-11-2026): seconds, 12 hours with AM and PM, and
+a zone, "cet" (Amsterdam time: CET, CEST from 01:00 UTC on the last Sunday of March to 01:00 UTC on the last Sunday
+of October, the EU's rule, without time zone data) or "utc", its name after the time. Without them it is as before,
+the device's own time.
+
 Changelog: 06-11-2026 00:58:47
 
 Version 2.10.0.

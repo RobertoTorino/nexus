@@ -104,7 +104,9 @@ A release of this portal's own version that was built again shows as **a new bui
 the same way: the portal compares the checksum (sha256) of the release's zip with the one it was installed from.
 A portal installed without that checksum (from before it was kept, or unpacked without its zip beside it) is offered
 the newest build once.
-The status line at the top right shows the date and the time, and **Suite x.y.z available** while there is one.
+The status line at the top right shows the place's weather when a location is set (**Amsterdam ☁ 9°**: its
+symbol and the temperature, looked up again every 15 minutes), the date and the time as the Clock settings say
+(**01:14 CET**, **1:14:32 AM UTC**), and **Suite x.y.z available** while there is one.
 The line under it shows the CPU and the GPU live, each with its load and its temperature (**CPU 12% 48°**, **GPU 7%
 47°**, read every two seconds from AMD's driver and Windows; on a device without AMD's driver the GPU shows only its
 temperature), and the battery last, at the right: its percentage, or **Plugged in** while the device is on its
@@ -119,8 +121,10 @@ the mode, so it can show another one.
 installs the new release in a PowerShell window and starts again. The new release brings the apps it pins: their
 tiles then say **Update** where a newer release is pinned.
 
-The settings are on the Settings page too, under the release: how the portal looks and sounds, kept for the next start.
-The d-pad moves between them, **A** on a setting changes it; **B** goes back to the tiles. What each setting does
+The settings are on the Settings page too, under the release, in two columns: **Look and clock** (how the portal
+looks and sounds, the clock and the weather at the top) and **Screens and device**. They are kept for the next start.
+The d-pad moves up and down a column and left and right between them, **A** on a setting changes it; **B** goes back
+to the tiles. What each setting does
 is behind the information icon at the top right of the page: **☰** on the Settings page, or a tap on the icon,
 shows it, with the pictures in your wallpaper folder that cannot be used and why, and what each button at the
 bottom does.
@@ -130,6 +134,10 @@ bottom does.
 | Wallpaper | A picture behind the tiles, which show it through them, in every app of the suite, each from its next start. **A** picks the next: **Off** (the plain dark background), **Built-in** (the suite's own picture), then each of your own pictures, by file name (see below). |
 | Transparency | How much of the dark background lies over the picture, so the text stays easy to read. **A** adds 10 %, up to 90 %, then starts at 0 %. It starts at 59 %. |
 | Sound | The intro's sound when the portal starts, and a short sound on each controller button. Off: both are silent. |
+| Clock | The time at the top in **24 hours** (17:04) or **12 hours** (5:04 PM). **A** switches. |
+| Seconds | **On** shows the seconds too (17:04:09). **A** switches. |
+| Time zone | **CET**, Amsterdam time (CEST in summer, as Europe switches on the last Sundays of March and October), or **UTC**; its name follows the time. **A** switches. |
+| Location | The place whose weather shows at the top, or **Off**. **A** opens its page: type part of the name (**R3** opens Windows' touch keyboard), **A** searches, and up to five places found are listed with where they are (**Amsterdam, North Holland, Netherlands**), each once; the d-pad picks one and **A** takes it. **Y** goes from the name to the list and back, where **Off** takes the place away. Weather data by [Open-Meteo.com](https://open-meteo.com/). |
 | XBOX menu | Only with the XBOX app on the device. **Add** puts the suite in the XBOX app's library, so XBOX mode starts the portal from its home; the XBOX app closes for a moment while its library changes. **In the menu** once it is there; **A** on it takes the suite out of the XBOX app's library again, the XBOX app closed for a moment as well. The XBOX app keeps its library in a file of its own that Microsoft does not document: when a newer XBOX app keeps it otherwise, the row says so and nothing is changed; add the suite in the XBOX app then (**My Library**, **+**). |
 | Performance mode | Only on the ROG XBOX Ally X: the active mode (**Other** when the power plan and the power mode match none of them). **A** opens the Performance Mode page, below. |
 | Screen | Only with a second screen attached, such as a TV or a monitor: the screen the portal is on. **A**, or **LT** on any page, moves it to the next screen (see below). |
