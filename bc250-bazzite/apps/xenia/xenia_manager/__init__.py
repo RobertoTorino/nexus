@@ -4,7 +4,7 @@ folders and adds them to Steam for Game Mode."""
 
 APP_NAME = "Xenia Manager"
 APP_ID = "bc250-xenia-manager"
-__version__ = "2.1.0"
+__version__ = "2.2.0"
 
 from pathlib import Path
 
