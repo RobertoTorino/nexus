@@ -20,6 +20,8 @@ def qapp():
     from PyQt6.QtWidgets import QApplication
     app = QApplication.instance() or QApplication([])
     yield app
+    from bc250_core.widgets import RoundedToolTip
+    RoundedToolTip.uninstall()
 
 
 @pytest.fixture

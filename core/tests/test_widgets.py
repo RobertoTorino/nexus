@@ -249,6 +249,13 @@ def test_tooltip_filter_is_removed_when_the_app_quits(qapp, monkeypatch):
     assert app.filters == []
 
 
+def test_tooltip_filter_can_be_uninstalled(qapp):
+    tip = RoundedToolTip.install(qapp)
+    assert RoundedToolTip._instance is tip
+    RoundedToolTip.uninstall()
+    assert RoundedToolTip._instance is None
+
+
 def test_manual_tooltip_uses_installed_instance(qapp, monkeypatch):
     tip = RoundedToolTip(qapp)
     monkeypatch.setattr(RoundedToolTip, "_instance", tip)
