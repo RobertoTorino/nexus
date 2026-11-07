@@ -48,6 +48,8 @@ $Settings = Join-Path $env:APPDATA "$Suite\portal.ini"
 $Wallpapers = Join-Path $SuiteHome 'wallpapers'
 $MenuDir = Join-Path $env:APPDATA "Microsoft\Windows\Start Menu\Programs\$SuiteName"
 $MenuEntry = Join-Path $MenuDir "$AppName.lnk"
+# The portal's own, while it set another screen than PC screen only (owner, 07-11-2026): PC screen only at the next sign-in
+$StartupLink = Join-Path $env:APPDATA "Microsoft\Windows\Start Menu\Programs\Startup\$SuiteName - PC screen only.lnk"
 if ($env:WPS_DESKTOP_DIR) { $DesktopDir = $env:WPS_DESKTOP_DIR } else { $DesktopDir = [Environment]::GetFolderPath('Desktop') }
 $DesktopIcon = Join-Path $DesktopDir "$AppName.lnk"
 $Src = $PSScriptRoot
@@ -58,7 +60,7 @@ function Usage { Get-Content -LiteralPath $PSCommandPath | Select-Object -Skip 1
 
 function Add-ToXBOXMenu($program) {
     # The suite in the XBOX app's library, so XBOX mode starts it from its home (owner, 30-10-2026): asked on a
-    # first install (an update keeps what was chosen; the Settings page adds it any time), --xbox-menu and
+    # first install (an update keeps what was chosen; install.ps1 --xbox-menu adds it later), --xbox-menu and
     # --no-xbox-menu answer without the question, WPS_XBOX_MENU (y or n) in the installer tests. The portal itself
     # writes it (--xbox-menu, core's xbox.py): the XBOX app closes for a moment.
     if ($XBOXMenu -eq $false) { return }
@@ -70,13 +72,13 @@ function Add-ToXBOXMenu($program) {
             if (-not [Environment]::UserInteractive -or [Console]::IsInputRedirected) { return }
             $answer = Read-Host "Add $AppName to the XBOX menu, so XBOX mode starts it from its home? The XBOX app closes for a moment. [Y/n]"
         }
-        if ($answer -and $answer -notmatch '^\s*y') { Info 'Not added to the XBOX menu (the Settings page adds it any time)'; return }
+        if ($answer -and $answer -notmatch '^\s*y') { Info 'Not added to the XBOX menu (install.ps1 --xbox-menu adds it later)'; return }
     }
     Info "Adding $AppName to the XBOX menu"
     try { $run = Start-Process -FilePath $program -ArgumentList '--xbox-menu' -Wait -PassThru -WindowStyle Hidden }
-    catch { Info "Not added to the XBOX menu: $_ (the Settings page tries again)"; return }
+    catch { Info "Not added to the XBOX menu: $_ (install.ps1 --xbox-menu tries again)"; return }
     if ($run.ExitCode -eq 0) { Info "$AppName is in the XBOX menu" }
-    else { Info "Not added to the XBOX menu: $PortalHome\portal.log says why (the Settings page tries again)" }
+    else { Info "Not added to the XBOX menu: $PortalHome\portal.log says why (install.ps1 --xbox-menu tries again)" }
 }
 
 function Elevated {
@@ -258,6 +260,7 @@ if ($Uninstall) {
     Info 'Removing the Start-menu entry, the Desktop shortcut and the portal'
     Remove-IfThere $MenuEntry
     Remove-IfThere $DesktopIcon
+    Remove-IfThere $StartupLink
     try { Remove-IfThere $AppDir } catch { Die "$AppDir could not be removed: close $AppName first. ($_)" }
     $records = Read-Records
     $appOptions = @('--uninstall')

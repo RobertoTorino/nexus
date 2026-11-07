@@ -1,3 +1,8 @@
+Changelog: 07-11-2026 01:03:47
+
+Fixed. show_in_folder() lets Explorer take the front on Windows (AllowSetForegroundWindow): a saved screenshot's folder
+opened behind the full-screen app (owner, 07-11-2026).
+
 Changelog: 06-11-2026 22:16:42
 
 Version 2.12.0.

@@ -1,3 +1,30 @@
+Changelog: 07-11-2026 01:03:47
+
+Breaking. The Settings page's XBOX menu row is gone (owner, 07-11-2026: it was very slow): the XBOX app keeps its
+library in memory, so every change had to end the XBOX app and start it again, in XBOX mode the whole home screen.
+The installer still offers it on a first install, and install.ps1 --xbox-menu adds it later; the suite is taken out
+in the XBOX app's own library.
+
+Breaking. The screen rows are named as Win + P names them (owner, 07-11-2026: not every user plays on a TV): PC
+screen only (was Play on the handheld), Duplicate (was Play on both screens) and Second screen only (was Play on the
+TV), and Extend is new: both screens, the second one beside the handheld's.
+
+Added. Back on the handheld's screen after the portal (owner, 07-11-2026: it kept the last screen set): exiting with
+View sets PC screen only again when another one was set on the Settings page, and a restart does too, through a
+shortcut in the user's Startup folder (Windows Portable Suite - PC screen only.lnk, DisplaySwitch.exe /internal at the
+sign-in) that is in place only while another screen is set here. PC screen only, the exit and the uninstaller take it
+away; the portal takes it away once it has done its work at a sign-in.
+
+Added. Installed 12/20 at the right of the tabs (owner, 07-11-2026): how many of the suite's apps are on the device, of
+all the portal lists.
+
+Fixed. An app opened again from the portal while it was open behind it stayed behind (owner, 07-11-2026): the portal
+lets it take the front (AllowSetForegroundWindow) before it starts it.
+
+Fixed. The Settings page's rows were cut off at the bottom, the focused one's edge too, and the line under them covered
+the last one (owner, 07-11-2026): seven rows in a column did not fit at 1280 x 720. The settings are in three columns
+of at most five rows now: Look and device, Clock and weather, and Screens.
+
 Changelog: 06-11-2026 22:16:42
 
 Release 8.4.0. Pins wp-test-v4.15.0, wp-pcsx2-v6.5.0, wp-ppsspp-v5.5.0, wp-rpcs3-v4.5.0, wp-shadps4-v5.5.0, wp-vita3k-v5.5.0, wp-xenia-v5.5.0, wp-rplay-v0.12.0, wp-hdcam-v0.11.0, wp-bios-v0.12.0, wp-sftp-v0.11.0, wp-smart-v0.7.0, wp-support-v0.3.0, wp-datstat-v0.3.0, wp-upscale-v0.3.0, wp-hdcontrol-v0.3.0.

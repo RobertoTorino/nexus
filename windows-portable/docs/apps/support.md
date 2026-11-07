@@ -43,7 +43,7 @@ What the installed apps need besides themselves, and which of them uses each:
 | **Microsoft Visual C++ runtime** | RPCS3, shadPS4, Vita3K and Xenia: the emulators do not start without it. |
 | **Windows' tar (with 7z)** | The managers of PCSX2, RPCS3, Vita3K and Xenia: it unpacks the emulator's archive; a `.7z` needs Windows 11's. |
 | **Steam** | The game managers, Remote Play and the portal's RT; without it a game manager starts a game itself. |
-| **XBOX app** | The portal's XBOX menu setting. |
+| **XBOX app** | The XBOX menu, which the portal's installer adds the suite to. |
 
 | Status | Meaning |
 |---|---|

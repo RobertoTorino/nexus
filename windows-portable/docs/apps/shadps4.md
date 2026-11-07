@@ -50,6 +50,9 @@ list scrolls with the d-pad or a finger.
 
 ## shadPS4
 
+The shadPS4 card on the left says only whether shadPS4 is installed and which button acts: **Not installed.** and
+**Install with the A button.** until it is installed, then **Installed.** and **Remove with the X button.**
+
 The pane shows the shadPS4 that is installed, the one this version of the app installs, how many of the system modules
 shadPS4 cannot do without are there, the time spent in your games (as shadPS4 counts it) and the folder. shadPS4's own
 window is never opened: your games and their packages are on the **Your games** card, the modules are taken from
@@ -199,7 +202,7 @@ at its own limit.
 
 ## Settings
 
-The Settings card's pane has four tabs, **Picture**, **Sound**, **Controller** and **In a game**: **LB** and **RB**
+The Settings card's pane has four tabs, **Screen**, **Sound**, **Controller** and **In a game**: **LB** and **RB**
 step through them, or tap one. A tab is a row per setting with its value; **A** on one steps to the next value and
 saves it at once into shadPS4's settings (`user\config.json` in its folder; the row at the bottom says **A Change**,
 **LB Previous tab**, **RB Next tab**). They are the settings shadPS4's own settings window offers for every game.
@@ -207,7 +210,7 @@ shadPS4 reads them when a game starts; while shadPS4 is open, the pane asks you 
 its own settings back when it ends. A game's own settings in shadPS4 come before these. The **information icon** at
 the pane's top right says what each setting of the tab does.
 
-**Picture**
+**Screen**
 
 | Setting | Values |
 |---|---|

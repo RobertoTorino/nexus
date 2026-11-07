@@ -9,7 +9,7 @@ A setting is read from the file (Vita3K's default while the file, or the line, i
 a time, every other line kept (userdata.set_values); Vita3K writes the whole file itself when it starts. Never while
 Vita3K runs. A game's own settings in Vita3K come before these.
 
-The pane shows them in tabs (TABS below: Picture, Speed, Sound, System), a row each with its value; A steps to the
+The pane shows them in tabs (TABS below: Screen, Speed, Sound, System), a row each with its value; A steps to the
 next value (Setting.next_value), as RPCS3 Manager's pane does."""
 
 from __future__ import annotations
@@ -82,7 +82,7 @@ LANGUAGES = (("1", "English (United States)"), ("18", "English (United Kingdom)"
 # The Settings pane's tabs, as RPCS3 Manager's: the key, the tab's name and its settings, in the order the rows show
 # them (six rows at most: they fit a page at 720 px high)
 TABS: tuple[tuple[str, str, tuple[Setting, ...]], ...] = (
-    ("picture", "Picture", (
+    ("picture", "Screen", (
         Setting("renderer", "Renderer", "backend-renderer", "Vulkan", CHOICE, RENDERERS,
                 "how Vita3K draws: Vulkan on the handheld's graphics; OpenGL helps only a game that fails with "
                 "Vulkan."),

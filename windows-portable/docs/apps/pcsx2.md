@@ -45,13 +45,16 @@ finger.
 
 ## PCSX2
 
+The PCSX2 card on the left says only whether PCSX2 is installed and which button acts: **Not installed.** and **Install
+with the A button.** until it is installed, then **Installed.** and **Remove with the X button.**
+
 The pane shows the PCSX2 that is installed, the one this version of the app installs, the BIOS and the folder.
 PCSX2's own window is never opened: your games are on the **Your games** card.
 
 - **A Install** (also **A** on the PCSX2 card) downloads PCSX2 2.8.2 for Windows from PCSX2's own release on GitHub
   (26 MB), checks it against the checksum this version of the app was tested with, and unpacks it. The page counts
   the megabytes while it downloads. Nothing is downloaded before you press A.
-- **RB Remove PCSX2** removes PCSX2's program. Press it twice: the first press only changes the entry to **Press
+- **X Remove PCSX2** removes PCSX2's program. Press it twice: the first press only changes the entry to **Press
   again** for five seconds. Your BIOS, memory cards, save states and settings stay in the folder, so a new install
   finds them again.
 - **Y Reinstall** or **Y Update** shows when PCSX2 replaced its program with another build, or an older PCSX2 is
@@ -62,8 +65,8 @@ PCSX2's own window is never opened: your games are on the **Your games** card.
 PCSX2 runs in **portable mode** (an empty `portable.txt` beside `pcsx2-qt.exe`): it keeps its settings, the BIOS, the
 memory cards and the save states in its own folder, not in Documents.
 
-The **BIOS** row says which dump PCSX2 uses, or **No BIOS yet** with the folder to put it in (the PCSX2 card and the
-status line say so too):
+The **BIOS** row says which dump PCSX2 uses, or **No BIOS yet** with the folder to put it in (the status line says so
+too):
 
 - **The BIOS dump** (`.bin` or `.rom`) you put in `Games\PS2\BIOS` is copied by the app itself, with the files beside
   it under the same name (`.nvm`, `.mec`, `.erom`), into PCSX2's `bios` folder, when the app opens and each time the
@@ -185,13 +188,13 @@ The quit chord stays as you set it below: turned off, the app does not turn it o
 stays as PCSX2 wrote it. Without a settings file the app starts from PCSX2's own defaults, as PCSX2 2.8.2 writes them
 at its first start.
 
-The Settings card's pane has four tabs, **Picture**, **Game**, **Controller** and **On screen**: **LB** and **RB**
+The Settings card's pane has four tabs, **Screen**, **Game**, **Controller** and **On screen**: **LB** and **RB**
 step through them, or tap one. A tab is a row per setting with its value; **A** on one steps to the next value and
 saves it at once (the row at the bottom says **A Change**, **LB Previous tab**, **RB Next tab**). PCSX2 reads it the
 next time it opens; while PCSX2 is open, the pane asks you to close it first, since PCSX2 writes its own settings back
 when it closes. The **information icon** at the pane's top right says what each setting of the tab does.
 
-**Picture**
+**Screen**
 
 | Setting | Values |
 |---|---|

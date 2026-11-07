@@ -49,6 +49,9 @@ list scrolls with the d-pad or a finger.
 
 ## RPCS3
 
+The RPCS3 card on the left says only whether RPCS3 is installed and which button acts: **Not installed.** and **Install
+with the A button.** until it is installed, then **Installed.** and **Remove with the X button.**
+
 The pane shows the RPCS3 that is installed, the one this version of the app installs, the firmware, the time spent in
 your games (as RPCS3 counts it) and the folder. RPCS3's own window is never opened: your games and packages are on
 the **Your games** card, and the firmware is installed by itself.
@@ -201,7 +204,7 @@ page of what would go, a row each with its size, every row marked **Delete** at 
 
 ## Settings
 
-The Settings card's pane has four tabs, **Picture**, **Speed**, **Sound** and **Messages**: **LB** and **RB** step
+The Settings card's pane has four tabs, **Screen**, **Speed**, **Sound** and **Messages**: **LB** and **RB** step
 through them, or tap one. A tab is a row per setting with its value; **A** on one steps to the next value and saves it
 at once into RPCS3's settings (`config\config.yml` in its folder; the row at the bottom says **A Change**, **LB
 Previous tab**, **RB Next tab**). RPCS3 reads them when a game starts; while RPCS3 is open, the pane asks you to close
@@ -209,7 +212,7 @@ it first, since RPCS3 writes its own settings back when it closes. A game's own 
 them, come before these. The **information icon** at the pane's top right says what each setting of the tab
 does.
 
-**Picture**
+**Screen**
 
 | Setting | Values |
 |---|---|

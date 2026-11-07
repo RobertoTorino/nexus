@@ -2,11 +2,11 @@
 r"""The window (main_window.py): it opens on the portable window with the header's battery, date and time, fits the
 handheld's screen; every action is a button in the row at the bottom, A too, and no pill is left (owner,
 29-10-2026); B goes back and View exits; PCSX2 installed on A (off the window's thread, the megabytes counted, View
-asking first meanwhile, its settings prepared after), reinstalled after PCSX2 replaced itself, removed with RB
-pressed twice; the BIOS put in Games\PS2\BIOS taken in by itself and removed (LB); the Settings pane's rows, in tabs,
-step through their values, never while PCSX2 runs; Your games in the app's own Games\PS2 folders, marked for Steam
-with A and removed with RB pressed twice, the memory cards, the log read in the app, the SteamGridDB key; the version
-and the icons are where the checks expect them."""
+asking first meanwhile, its settings prepared after), reinstalled after PCSX2 replaced itself, removed with X
+pressed twice, the PCSX2 card saying whether it is installed; the BIOS put in Games\PS2\BIOS taken in by itself
+and removed (LB); the Settings pane's rows, in tabs, step through their values, never while PCSX2 runs; Your games
+in the app's own Games\PS2 folders, marked for Steam with A and removed with RB pressed twice, the memory cards, the
+log read in the app, the SteamGridDB key; the version and the icons are where the checks expect them."""
 
 from __future__ import annotations
 
@@ -26,8 +26,9 @@ from bc250_core.portable import BACK, EXIT, KEYBOARD, VIEW
 from bc250_core.portable import INFO as MENU_INFO
 from conftest import make_disc
 from pcsx2_manager import APP_ID, APP_NAME, EXE_NAME, INFO, LOGO_PATH, ROOT, __version__, emulator, shortcuts
-from pcsx2_manager.main_window import (BIOS_NEEDS_PCSX2, NO_BIOS, NO_BIOS_TO_REMOVE, NO_CARD_TO_COPY, NO_STEAM,
-                                      NOTHING_TO_CHANGE, PICK_A_GAME, MainWindow)
+from pcsx2_manager.main_window import (BIOS_NEEDS_PCSX2, CARD_INSTALLED, CARD_NOT_INSTALLED, NO_BIOS,
+                                      NO_BIOS_TO_REMOVE, NO_CARD_TO_COPY, NO_STEAM, NOTHING_TO_CHANGE,
+                                      PICK_A_GAME, MainWindow)
 
 
 class FakePad:
@@ -146,7 +147,7 @@ def test_nothing_is_installed_before_a(qapp, tmp_path):
     window = make(qapp, tmp_path / "emulator", install=lambda *a, **k: calls.append(True))
     assert calls == [] and window.pcsx2_card.hasFocus()
     assert dict(window.rows())["Installed"] == "not installed"
-    window.act("next")                                          # RB Remove PCSX2: says why
+    window.act("x")                                             # X Remove PCSX2: says why
     assert "nothing to remove" in window.status.text() and calls == []
     window.close()
 
@@ -167,7 +168,7 @@ def test_a_installs_off_the_windows_thread_and_counts_the_megabytes(qapp, tmp_pa
     gate.set()
     assert wait_for(qapp, lambda: not window.busy)
     assert window.status.text() == f"PCSX2 {emulator.VERSION} is installed."
-    assert window.legend.items == [("LB", "Remove BIOS"), ("RB", "Remove PCSX2"), MENU_INFO, EXIT]
+    assert window.legend.items == [("LB", "Remove BIOS"), ("X", "Remove PCSX2"), MENU_INFO, EXIT]
     window.on_action("view")
     assert closed == [True]                                     # nothing runs: View exits at once
 
@@ -183,7 +184,7 @@ def test_a_failed_install_says_why(qapp, tmp_path):
     window.close()
 
 
-def test_reinstall_and_remove_with_rb_pressed_twice(qapp, tmp_path):
+def test_reinstall_and_remove_with_x_pressed_twice(qapp, tmp_path):
     home = tmp_path / "emulator"
     fake_install(home)
     (home / "memcards").mkdir()
@@ -196,15 +197,38 @@ def test_reinstall_and_remove_with_rb_pressed_twice(qapp, tmp_path):
     assert "replaced itself" in window.status.text()
     window.act("y")
     assert wait_for(qapp, lambda: not window.busy) and not emulator.replaced(home)
-    window.legend.entries["RB"].pressed.emit()                  # a tap on RB Remove PCSX2
-    assert ("RB", "Press again") in window.legend.items and emulator.installed(home)
-    assert window.status.text().startswith("Press the RB button again")
+    window.legend.entries["X"].pressed.emit()                   # a tap on X Remove PCSX2
+    assert ("X", "Press again") in window.legend.items and emulator.installed(home)
+    assert window.status.text().startswith("Press the X button again")
     window._confirm_over()                                      # five seconds without a second press
-    assert ("RB", "Remove PCSX2") in window.legend.items
-    window.act("next")
-    window.act("next")
+    assert ("X", "Remove PCSX2") in window.legend.items
+    window.act("next")                                          # RB does nothing on the PCSX2 pane
+    assert emulator.installed(home) and not window.confirm_remove
+    window.act("x")
+    window.act("x")
     assert emulator.installed(home) == "" and (home / "memcards" / "Mcd001.ps2").is_file()
     assert "stay" in window.status.text() and window.legend.items[0] == ("A", "Install")
+    window.close()
+
+
+def test_the_cards_say_what_they_are_for(qapp, tmp_path):
+    """The cards' texts, the same in every emulator manager (owner, 07-11-2026): the PCSX2 card says only whether
+    PCSX2 is installed and which button acts, Not installed. and Install with the A button., then Installed. and
+    Remove with the X button.; the Settings pane's first tab is Screen."""
+    from pcsx2_manager.pcsx2_settings import TABS
+    window = make(qapp, tmp_path / "emulator")
+    assert window.pcsx2_card.text.text() == CARD_NOT_INSTALLED == "Not installed.\nInstall with the A button."
+    assert window.games_card.text.text() == "Mark them for Steam and press X to play."
+    assert window.settings_card.text.text() == "Screen, game and controller settings"
+    assert window.log_card.text.text() == "This app's log file."
+    assert TABS[0][:2] == ("picture", "Screen") and "Picture" not in [name for _key, name, _group in TABS]
+    window.act("accept")                                        # A Install
+    assert wait_for(qapp, lambda: not window.busy) and emulator.installed(window.home)
+    assert window.pcsx2_card.text.text() == CARD_INSTALLED == "Installed.\nRemove with the X button."
+    window.act("x")
+    window.act("x")                                             # X Remove PCSX2, pressed twice
+    assert not emulator.installed(window.home)
+    assert window.pcsx2_card.text.text() == CARD_NOT_INSTALLED
     window.close()
 
 
@@ -264,7 +288,7 @@ def test_the_settings_step_and_are_written_at_once(qapp, tmp_path, monkeypatch):
 
 def test_the_settings_are_in_tabs(qapp, tmp_path, monkeypatch):
     """More settings than one page holds (owner, 29-10-2026: "we can use tabs in the settings page to add more"):
-    LB and RB step through Picture, Game, Controller and On screen; the focus follows to the tab's first row; the
+    LB and RB step through Screen, Game, Controller and On screen; the focus follows to the tab's first row; the
     information tells the tab's settings; every tab's rows fit the pane."""
     from pcsx2_manager.pcsx2_settings import TABS
     window = make(qapp, tmp_path / "emulator")
@@ -586,7 +610,8 @@ def test_the_bios_is_taken_from_its_folder_and_removed(qapp, tmp_path, monkeypat
     window.refresh()
     window.act("previous")                                                       # LB, no BIOS yet
     assert window.status.text() == NO_BIOS_TO_REMOVE
-    assert dict(window.rows())["BIOS"].startswith("No BIOS yet") and "No BIOS yet" in window.pcsx2_card.text.text()
+    assert dict(window.rows())["BIOS"].startswith("No BIOS yet") and window.pcsx2_card.text.text() == CARD_INSTALLED
+    assert window.state()[0].startswith("PCSX2 needs your own console's BIOS")         # the pane's status line says so
     is_running[0] = True                                         # PCSX2 writes its settings when it closes
     window.games_card.setFocus()
     window.pcsx2_card.setFocus()
@@ -597,7 +622,7 @@ def test_the_bios_is_taken_from_its_folder_and_removed(qapp, tmp_path, monkeypat
     assert sorted(p.name for p in (home / "bios").iterdir()) == ["SCPH-70012.bin", "SCPH-70012.nvm"]
     assert "BIOS = SCPH-70012.bin" in (home / "inis" / "PCSX2.ini").read_text(encoding="utf-8")
     assert window.status.text() == "2 BIOS file(s) taken from the BIOS folder: PCSX2 uses SCPH-70012.bin."
-    assert "No BIOS" not in window.pcsx2_card.text.text()
+    assert window.pcsx2_card.text.text() == CARD_INSTALLED
     window.message = ""
     window.games_card.setFocus()
     window.pcsx2_card.setFocus()                                                 # unchanged: nothing copied

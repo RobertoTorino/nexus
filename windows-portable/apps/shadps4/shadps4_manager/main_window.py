@@ -33,7 +33,7 @@ portal's RT Steam (owner, 30-10-2026: Open Steam moved there).
 The Log pane: shadPS4's folder, the app's folders and the newest lines of the app's log; A (or a tap on the pane)
 shows the whole log in the pane.
 
-The Settings pane: the BC250 app's settings of shadPS4, in tabs (LB and RB: Picture, Sound, Controller, In a game), a
+The Settings pane: the BC250 app's settings of shadPS4, in tabs (LB and RB: Screen, Sound, Controller, In a game), a
 row each with its value; A steps to the next value and writes it into config.json at once (shadps4_settings). The
 shadNet pane: the account shadPS4 signs in with when a game starts (the BC250 app's shadNet window), a row each; A on
 a text row opens its page (FieldPane), with the touch keyboard; X creates the account on the server, Y tries the
@@ -72,6 +72,9 @@ LOG_LINES = 12                  # the newest lines of the app's log in the Log p
 LOG_MAX = 2000                  # the lines of the log the whole view shows, the newest
 RUNNING = "shadPS4 is open: close it first, it would write its own settings over the change."
 NOT_INSTALLED = "Install shadPS4 first: the settings are in its folder."
+# The shadPS4 card's two lines, the same in every emulator manager (owner, 07-11-2026)
+CARD_NOT_INSTALLED = "Not installed.\nInstall with the A button."
+CARD_INSTALLED = "Installed.\nRemove with the X button."
 BUSY = "Wait a moment: the app is still busy with the step before."
 NO_GAME = "Put the focus on a game first: the X button starts it."
 NOTHING_TO_UNPACK = "Nothing to unpack: put .pkg files in your Games\\PS4 folder, then the X button unpacks them."
@@ -145,7 +148,7 @@ class _Worker(QObject):
 
 
 class SettingsPane(Pane):
-    """The settings in tabs, as RPCS3 Manager's: LB and RB step through Picture, Sound, Controller and In a game, a
+    """The settings in tabs, as RPCS3 Manager's: LB and RB step through Screen, Sound, Controller and In a game, a
     tap picks one; a tab is a page of rows, "VSync: Mailbox (no tearing)", and A on one steps to the next value (the
     window writes it). The information icon tells what the tab's settings do."""
 
@@ -264,11 +267,11 @@ class MainWindow(PortableWindow):
         cards = QVBoxLayout(column)
         cards.setContentsMargins(0, 0, 0, 0)
         cards.setSpacing(px(12))
-        self.shadps4_card = Card("shadPS4", "Install it, the system modules and your packages.")
-        self.games_card = Card("Your games", "Mark them for Steam, play them, their folders.")
-        self.settings_card = Card("Settings", "The picture, the sound and the controller.")
+        self.shadps4_card = Card("shadPS4", CARD_NOT_INSTALLED)
+        self.games_card = Card("Your games", "Mark them for Steam and press X to play.")
+        self.settings_card = Card("Settings", "Screen, game and controller settings")
         self.shadnet_card = Card("shadNet", "The online account shadPS4 signs in with.")
-        self.log_card = Card("Log", "shadPS4's folder, and this app's log.")
+        self.log_card = Card("Log", "This app's log file.")
         for card in (self.shadps4_card, self.games_card, self.settings_card, self.shadnet_card, self.log_card):
             card.setFixedHeight(px(CARD_HEIGHT))
             cards.addWidget(card)
@@ -484,6 +487,7 @@ class MainWindow(PortableWindow):
             status = ("Press the X button again to remove shadPS4: its folder, with your saves and the system modules, "
                       "stays.")
         self.status.setText(self.message or status)
+        self.shadps4_card.set_text(CARD_INSTALLED if emulator.installed(self.home) else CARD_NOT_INSTALLED)
         if self.busy and self._job == "extract":
             self.games_pane.status.setText(status)      # the packages are unpacked from Your games: their files there
         self.refresh_settings()

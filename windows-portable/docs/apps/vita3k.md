@@ -56,6 +56,9 @@ list scrolls with the d-pad or a finger.
 
 ## Vita3K
 
+The Vita3K card on the left says only whether Vita3K is installed and which button acts: **Not installed.** and
+**Install with the A button.** until it is installed, then **Installed.** and **Remove with the X button.**
+
 The pane shows the Vita3K build that is installed, the one this version of the app installs, which parts of the
 firmware Vita3K has, how many games are installed in it and the folder. When Vita3K has published a newer build than
 the one this app brings, a row says so. Vita3K's own window is never opened: the firmware and your games are given to
@@ -190,14 +193,14 @@ what would be deleted, one row each with its size, and every row starts as **Del
 
 ## Settings
 
-The Settings card's pane has four tabs, **Picture**, **Speed**, **Sound** and **System**: **LB** and **RB** step
+The Settings card's pane has four tabs, **Screen**, **Speed**, **Sound** and **System**: **LB** and **RB** step
 through them, or tap one. A tab is a row per setting with its value; **A** on one steps to the next value and saves it
 at once into Vita3K's settings (`portable\config.yml` in its folder; the row at the bottom says **A Change**, **LB
 Previous tab**, **RB Next tab**). They are settings of Vita3K's own settings window. Vita3K reads them when a game
 starts; while Vita3K is open, the pane asks you to close it first. A game's own settings in Vita3K come before these.
 The **information icon** at the pane's top right says what each setting of the tab does.
 
-**Picture**
+**Screen**
 
 | Setting | Values |
 |---|---|

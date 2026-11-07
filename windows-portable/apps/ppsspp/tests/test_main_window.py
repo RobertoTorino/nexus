@@ -28,7 +28,8 @@ from bc250_core.portable import BACK, EXIT, KEYBOARD, VIEW
 from bc250_core.portable import INFO as MENU_INFO
 from conftest import make_disc, make_pbp
 from ppsspp_manager import APP_ID, APP_NAME, EXE_NAME, INFO, LOGO_PATH, ROOT, __version__, emulator, shortcuts
-from ppsspp_manager.main_window import NO_STEAM, NOTHING_TO_CHANGE, PICK_A_GAME, MainWindow
+from ppsspp_manager.main_window import (CARD_INSTALLED, CARD_NOT_INSTALLED, NO_STEAM, NOTHING_TO_CHANGE,
+                                       PICK_A_GAME, MainWindow)
 
 
 class FakePad:
@@ -197,6 +198,27 @@ def test_update_and_remove_with_x_pressed_twice(qapp, tmp_path):
     window.act("x")
     assert emulator.installed(home) == "" and save.is_file()
     assert "stays" in window.status.text() and window.legend.items[0] == ("A", "Install")
+    window.close()
+
+
+def test_the_cards_say_what_they_are_for(qapp, tmp_path):
+    """The cards' texts, the same in every emulator manager (owner, 07-11-2026): the PPSSPP card says only whether
+    PPSSPP is installed and which button acts, Not installed. and Install with the A button., then Installed. and
+    Remove with the X button.; the Settings pane's first tab is Screen."""
+    from ppsspp_manager.ppsspp_settings import TABS
+    window = make(qapp, tmp_path / "emulator")
+    assert window.ppsspp_card.text.text() == CARD_NOT_INSTALLED == "Not installed.\nInstall with the A button."
+    assert window.games_card.text.text() == "Mark them for Steam and press X to play."
+    assert window.settings_card.text.text() == "Screen, game and controller settings"
+    assert window.log_card.text.text() == "This app's log file."
+    assert TABS[0][:2] == ("picture", "Screen") and "Picture" not in [name for _key, name, _group in TABS]
+    window.act("accept")                                        # A Install
+    assert wait_for(qapp, lambda: not window.busy) and emulator.installed(window.home)
+    assert window.ppsspp_card.text.text() == CARD_INSTALLED == "Installed.\nRemove with the X button."
+    window.act("x")
+    window.act("x")                                             # X Remove PPSSPP, pressed twice
+    assert not emulator.installed(window.home)
+    assert window.ppsspp_card.text.text() == CARD_NOT_INSTALLED
     window.close()
 
 

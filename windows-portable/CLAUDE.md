@@ -71,7 +71,7 @@ app is an optional tile. The wiki is at robertotorino.github.io/nexus/windows-po
     A too (A Install, A Read, A Steam mark, A View log), and a pane holds no pill** (no Install, Remove, Save or
     Open the log pill); a tap on the entry does the same (core's `Legend`, through `PortableWindow.act()`, A
     beside a card or row through `bind("accept")`). An action without a button of its own takes a free one on its
-    pane (Remove PCSX2 on RB, Remove BIOS on LB, Remove PPSSPP on X). A tap on a pane may do its A where that is
+    pane (Remove BIOS on LB, Remove game on RB). A tap on a pane may do its A where that is
     safe (the Log pane shows the log). Pills stay only inside a popup, as its choices (the stick lights). The
     information icon is touch only: the d-pad never lands on it, Menu (☰) opens it.
   - No dialogs: an action that needs care asks for a second press within five seconds (Remove; View while a

@@ -144,6 +144,11 @@ def show_in_folder(path: str | Path) -> bool:
     xdg-open. False when nothing opened it. A saved screenshot shows itself so (owner, 06-11-2026)."""
     path = Path(path)
     if WINDOWS:
+        # Explorer may take the front: without it, its window opened behind the full-screen app (owner, 07-11-2026)
+        import ctypes
+        windll = getattr(ctypes, "windll", None)        # None where Windows is only played (the tests on Linux)
+        if windll is not None:
+            windll.user32.AllowSetForegroundWindow(-1)
         try:
             # Explorer's own syntax: one argument, "/select," and the path; it exits with 1 even when it worked.
             subprocess.Popen(f'explorer /select,"{path}"', stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,

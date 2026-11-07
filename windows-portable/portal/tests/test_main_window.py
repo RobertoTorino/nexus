@@ -133,7 +133,9 @@ def world(qapp, tmp_path, monkeypatch):
         pad = FakePad()
         kwargs.setdefault("intro_ms", 0)                # the intro has its own tests
         kwargs.setdefault("steam_here", lambda: False)  # never this machine's own Steam
-        kwargs.setdefault("xbox_local", tmp_path / "no-xbox")  # never this machine's own XBOX app
+        kwargs.setdefault("startup", tmp_path / "Startup")   # never this user's own Startup folder
+        kwargs.setdefault("shortcut", lambda link, target, arguments="", **_: (
+            link.parent.mkdir(parents=True, exist_ok=True), link.write_text(f"{target} {arguments}")))
         kwargs.setdefault("chip_parts", lambda: ["CPU 12% 48°", "GPU 7% 47°"])   # never this machine's own chip
         kwargs.setdefault("modes", lambda: None)        # never this machine's own operating mode
         kwargs.setdefault("helper", lambda: FakeHelper(installed=False))   # nor its helper
@@ -284,36 +286,12 @@ def test_rt_opens_steam_where_it_is_installed(world, qapp):
     assert window.app_pane.status.text() == "Steam could not be opened: The system cannot find the file specified"
 
 
-def test_the_suite_page_adds_the_suite_to_the_xbox_menu(world, qapp, tmp_path, monkeypatch):
-    """The XBOX menu row (owner, 30-10-2026): only with the XBOX app; A adds the installed portal to its library,
-    and A again takes it out, with the XBOX app closed for each change; a library kept otherwise is left alone and
-    said."""
-    from bc250_core import xbox
+def test_the_settings_page_has_no_xbox_menu_row(world, qapp):
+    """The XBOX menu row is gone (owner, 07-11-2026: it was very slow, the XBOX app has to be ended and started again
+    for each change); install.ps1 still offers it on a first install."""
     window = world.make()
     window.on_action("menu")
-    assert not window.suite_pane.xbox.isVisible()                  # no XBOX app here
-    window.close()
-    local = tmp_path / "local"
-    (local / "Packages" / xbox.PACKAGE).mkdir(parents=True)
-    monkeypatch.setattr(mw, "state_dir", lambda: tmp_path / "portal")
-    closed = []
-    window = world.make(xbox_local=local, xbox_closed=lambda change: closed.append(True) or change())
-    window.on_action("menu")
-    row = window.suite_pane.xbox
-    assert row.isVisible() and row.label.text() == "XBOX menu: Add"
-    row.activated.emit()
-    program = tmp_path / "portal" / "app" / "Windows-Portable-Suite.exe"
-    assert closed == [True] and xbox.listed(program, local) and row.label.text() == "XBOX menu: In the menu"
-    row.activated.emit()                                            # A on In the menu takes it out (30-10-2026)
-    assert closed == [True, True] and not xbox.listed(program, local) and row.label.text() == "XBOX menu: Add"
-    row.activated.emit()
-    assert closed == [True, True, True] and xbox.listed(program, local)
-    assert xbox.remove(program, local=local, closed=lambda change: change())
-    xbox.manifest_path(local).write_text('{"customApps": []}', encoding="utf-8")
-    window.suite_pane.set_xbox("Add")
-    row.activated.emit()
-    assert row.label.text() == "XBOX menu: not added, the XBOX app keeps its library otherwise"
-    assert xbox.manifest_path(local).read_text(encoding="utf-8") == '{"customApps": []}'
+    assert not hasattr(window.suite_pane, "xbox") and "XBOX menu" not in window.suite_pane.info.info
 
 
 def test_the_operating_mode_page_on_the_ally_x(world, qapp, monkeypatch):
@@ -558,10 +536,11 @@ def test_the_banner_offers_the_portals_update_on_the_tiles(world, qapp, monkeypa
     assert not window.banner.isVisible() and ("Y", "Update") in window.legend.items      # the app's own again
 
 
-def test_play_on_the_tv_or_the_handheld(world, qapp, monkeypatch):
+def test_the_screens_as_windows_names_them(world, qapp, monkeypatch, tmp_path):
     """XBOX mode runs on Windows' main screen only and leaves the TV empty (found on the Ally, 05-11-2026): the
-    Settings page's two rows switch Windows' display setup as Win + P does, always shown (with the TV alone Windows
-    sees one screen); a switch that does not start says so."""
+    Settings page's rows switch Windows' display setup as Win + P does and names them (owner, 07-11-2026: PC screen
+    only, Duplicate, Extend, Second screen only), always shown (with the TV alone Windows sees one screen); a switch
+    that does not start says so."""
     window = world.make()
     monkeypatch.setattr(window, "isActiveWindow", lambda: True)
     moved = []
@@ -569,18 +548,22 @@ def test_play_on_the_tv_or_the_handheld(world, qapp, monkeypatch):
     monkeypatch.setattr(mw, "SETTLE_MS", 0)
     window.on_action("menu")
     pane = window.suite_pane
-    assert pane.tv.isVisible() and pane.handheld.isVisible() and pane.both.isVisible()
-    assert "Play on the TV: Windows shows its picture on the second screen only" in pane.info.info
+    rows = [pane.handheld, pane.both, pane.extend, pane.tv]
+    assert [row.label.text() for row in rows] == ["PC screen only", "Duplicate", "Extend", "Second screen only"]
+    assert all(row.isVisible() for row in rows)
+    assert "Second screen only: the second screen only (a TV or a monitor)" in pane.info.info
     pane.tv.setFocus()
     window.on_action("accept")
-    assert world.displays == ["/external"] and pane.status.text() == mw.ON_TV
+    assert world.displays == ["/external"] and pane.status.text() == mw.ON_SECOND
     # then the portal starts again on Windows' main screen, sized for it (owner, 05-11-2026: the TV cut it off)
     assert wait_for(qapp, lambda: moved == [mw.QGuiApplication.primaryScreen()])
     pane.handheld.activated.emit()                      # a tap
     assert world.displays == ["/external", "/internal"] and pane.status.text() == mw.ON_HANDHELD
-    pane.both.activated.emit()                          # Windows' Duplicate
+    pane.both.activated.emit()
     assert world.displays[-1] == "/clone" and pane.status.text() == mw.ON_BOTH
-    assert wait_for(qapp, lambda: len(moved) == 3)
+    pane.extend.activated.emit()                        # Extend, missing before (owner, 07-11-2026)
+    assert world.displays[-1] == "/extend" and pane.status.text() == mw.ON_EXTEND
+    assert wait_for(qapp, lambda: len(moved) == 4)
     pane.xbox_mode.activated.emit()                     # XBOX mode or the desktop: Win + F11, either way
     assert world.displays[-1] == "Win + F11" and pane.status.text() == mw.SWITCHED_MODE
     assert "XBOX mode ↔ Desktop: Windows' switch" in pane.info.info
@@ -590,6 +573,39 @@ def test_play_on_the_tv_or_the_handheld(world, qapp, monkeypatch):
     window.display = broken
     pane.tv.activated.emit()
     assert pane.status.text() == "Windows' display setting did not change: not found"
+
+
+def test_the_screen_goes_back_to_the_handheld_after_the_portal(world, qapp, monkeypatch, tmp_path):
+    """Owner, 07-11-2026: after exiting the portal or a restart the screen should be the handheld's again, it kept the
+    last one set. Any screen but PC screen only puts a shortcut in the Startup folder that sets PC screen only at the
+    next sign-in; PC screen only takes it away, and so does exiting with View, which sets PC screen only first. A
+    restart of the portal by itself (after a switch) leaves both alone."""
+    link = tmp_path / "Startup" / mw.STARTUP_LINK
+    window = world.make()
+    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
+    monkeypatch.setattr(window, "move_to", lambda screen: None)
+    window.suite_pane.extend.activated.emit()
+    assert link.read_text() == f"{mw.DISPLAY_SWITCH} /internal"
+    window.suite_pane.handheld.activated.emit()
+    assert not link.exists() and world.displays == ["/extend", "/internal"]
+    window.suite_pane.tv.activated.emit()
+    assert link.exists()
+    window.close()                                      # the portal starting again: nothing changes
+    assert link.exists() and world.displays[-1] == "/external"
+    window = world.make(booted=lambda: 0.0)             # a start after it, Windows not restarted: it stays
+    assert link.exists()
+    window.on_action("view")
+    window.on_action("view")                            # exit: PC screen only, the shortcut gone
+    assert world.displays[-1] == "/internal" and not link.exists()
+    window.close()
+    window = world.make()
+    window.on_action("view")
+    window.on_action("view")                            # nothing set here: the screen is left as it is
+    assert world.displays[-1] == "/internal" and len([d for d in world.displays if d == "/internal"]) == 2
+    link.write_text("x")                                # from before Windows' last start: done at the sign-in
+    os.utime(link, (1000, 1000))
+    world.make(booted=lambda: 2000.0)
+    assert not link.exists()
 
 
 def test_every_controller_action_has_its_sound(world, qapp, monkeypatch):
@@ -1114,28 +1130,48 @@ def test_lt_moves_the_portal_with_a_second_screen(world, qapp, monkeypatch):
     window.close()
 
 
-def test_the_settings_lie_in_two_columns(world, qapp, monkeypatch):
-    """Owner, 06-11-2026: the rows lay too close, the focused one's edge was cut off. Two columns, Look and clock on the
-    left, Screens and device on the right; the d-pad goes down a column and across between them."""
-    window = world.make()
+def test_the_settings_lie_in_three_columns(world, qapp, monkeypatch):
+    """Owner, 06-11-2026 and 07-11-2026: the rows lay too close, the focused one's edge was cut off (also by the line
+    under them). Three columns of at most five rows, Look and device, Clock and weather, Screens, with the Ally X's
+    Performance mode, a second screen and a two-line message all shown: every row whole, apart, above the message;
+    the d-pad goes down a column and across between them."""
+    from portable_portal import operating_mode as om
+    from test_operating_mode import FakeApi
+    turbo = om.BY_LETTER["T"]
+    window = world.make(modes=lambda: FakeApi(turbo.plan, turbo.overlay))
     monkeypatch.setattr(window, "isActiveWindow", lambda: True)
     window.resize(1280, 720)
     window.show()
     qapp.processEvents()
     window.on_action("menu")
     pane = window.suite_pane
-    left = [pane.wallpaper, pane.transparency, pane.sound, pane.hours, pane.seconds, pane.zone, pane.place]
-    right = [pane.tv, pane.handheld, pane.both, pane.xbox_mode]
-    assert len({row.mapTo(window, row.rect().topLeft()).x() for row in left}) == 1
-    assert all(r.mapTo(window, r.rect().topLeft()).x() > pane.wallpaper.mapTo(window, pane.wallpaper.rect().topRight()).x()
-               for r in right)
-    tops = [row.mapTo(window, row.rect().topLeft()).y() for row in left]
-    assert all(b - a > row.height() for a, b, row in zip(tops, tops[1:], left))   # apart: no edge cut off
-    for _ in range(6):
+    pane.set_screen("Display 2")
+    window.say("", mw.SWITCHED_MODE)                    # two lines under the rows
+    qapp.processEvents()
+    columns = [[pane.wallpaper, pane.transparency, pane.sound, pane.mode, pane.xbox_mode],
+               [pane.hours, pane.seconds, pane.zone, pane.place],
+               [pane.handheld, pane.both, pane.extend, pane.tv, pane.screen_row]]
+    lefts = []
+    for rows in columns:
+        assert all(row.isVisible() for row in rows)
+        assert len({row.mapTo(window, row.rect().topLeft()).x() for row in rows}) == 1
+        lefts.append(rows[0].mapTo(window, rows[0].rect().topLeft()).x())
+        tops = [row.mapTo(window, row.rect().topLeft()).y() for row in rows]
+        assert all(b - a > row.height() for a, b, row in zip(tops, tops[1:], rows))   # apart: no edge cut off
+        assert all(row.height() == portable.px(portable.ROW_HEIGHT) for row in rows)
+        last = rows[-1]
+        assert last.mapTo(window, last.rect().bottomLeft()).y() < pane.status.mapTo(window, pane.status.rect().topLeft()).y()
+    assert lefts == sorted(lefts) and len(set(lefts)) == 3
+    status = pane.status.mapTo(window, pane.status.rect().bottomLeft()).y()
+    assert status <= pane.mapTo(window, pane.rect().bottomLeft()).y()
+    pane.wallpaper.setFocus()
+    for _ in range(4):
         window.on_action("down")
-    assert pane.place.hasFocus()
+    assert pane.xbox_mode.hasFocus()
     window.on_action("right")
-    assert window.focusWidget() in right                             # across to the other column
+    assert window.focusWidget() in columns[1]                        # across to the next column
+    window.on_action("right")
+    assert window.focusWidget() in columns[2]
     window.close()
 
 

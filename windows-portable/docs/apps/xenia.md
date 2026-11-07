@@ -47,6 +47,9 @@ list scrolls with the d-pad or a finger.
 
 ## Xenia
 
+The Xenia card on the left says only whether Xenia is installed and which button acts: **Not installed.** and **Install
+with the A button.** until it is installed, then **Installed.** and **Remove with the X button.**
+
 The pane shows the Xenia build that is installed, the one this version of the app installs, the profile Xenia signs
 in, how many games were found and the folder. When Xenia Canary has published a newer build than the one this app brings, a row says so.
 
@@ -161,14 +164,14 @@ at its own limit.
 
 ## Settings
 
-The Settings card's pane has four tabs, **Picture**, **Speed**, **Sound** and **Console**: **LB** and **RB** step
+The Settings card's pane has four tabs, **Screen**, **Speed**, **Sound** and **Console**: **LB** and **RB** step
 through them, or tap one. A tab is a row per setting with its value; **A** on one steps to the next value and saves it
 at once into Xenia's settings (`xenia-canary.config.toml` in its folder; the row at the bottom says **A Change**, **LB
 Previous tab**, **RB Next tab**). Xenia reads them when a game starts; while Xenia is open, the pane asks you to close
 it first, since Xenia writes its settings when it starts. A game's own settings in Xenia come before these. The
 **information icon** at the pane's top right says what each setting of the tab does.
 
-**Picture**
+**Screen**
 
 | Setting | Values |
 |---|---|

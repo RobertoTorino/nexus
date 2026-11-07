@@ -34,8 +34,8 @@ The installer puts:
 
 On a first install, with the XBOX app on the device, the installer asks whether to add the suite to the XBOX menu:
 the XBOX app's library, so XBOX mode starts the portal from its home. Answer **Y** (or press Enter) to add it; the XBOX
-app closes for a moment while its library changes and starts again. An update does not ask again, and the portal's
-Settings page adds it any time (**XBOX menu: Add**) and takes it out again (**A** on **XBOX menu: In the menu**).
+app closes for a moment while its library changes and starts again. An update does not ask again; to add it later,
+run the installer again with `--xbox-menu`. To take the suite out, remove it in the XBOX app's library.
 
 ## Remove the download
 

@@ -16,7 +16,8 @@ intro; any button, key or tap skips it.
 The apps are tiles under tabs: one tab per category that has apps (Sustainable, Graphics, Gaming, Utilities), two
 rows of four tiles each. A tab with more than eight apps has more pages: **Page 1 of 2** under the tiles says which
 one shows. Move past the last tile on the right to the next page, or past the first on the left back; a tap on
-**Page 1 of 2** turns to the next page, and from the last back to the first. A tile shows the app's icon, its name
+**Page 1 of 2** turns to the next page, and from the last back to the first. At the right of the tabs, **Installed
+12/20** says how many of the suite's apps are on this device, of all the portal lists. A tile shows the app's icon, its name
 and its state:
 
 | State | Meaning |
@@ -121,8 +122,9 @@ the mode, so it can show another one.
 installs the new release in a PowerShell window and starts again. The new release brings the apps it pins: their
 tiles then say **Update** where a newer release is pinned.
 
-The settings are on the Settings page too, under the release, in two columns: **Look and clock** (how the portal
-looks and sounds, the clock and the weather at the top) and **Screens and device**. They are kept for the next start.
+The settings are on the Settings page too, under the release, in three columns: **Look and device** (how the portal
+looks and sounds, the performance mode and XBOX mode), **Clock and weather** (at the top) and **Screens**. They are
+kept for the next start.
 The d-pad moves up and down a column and left and right between them, **A** on a setting changes it; **B** goes back
 to the tiles. What each setting does
 is behind the information icon at the top right of the page: **☰** on the Settings page, or a tap on the icon,
@@ -138,13 +140,13 @@ bottom does.
 | Seconds | **On** shows the seconds too (17:04:09). **A** switches. |
 | Time zone | **CET**, Amsterdam time (CEST in summer, as Europe switches on the last Sundays of March and October), or **UTC**; its name follows the time. **A** switches. |
 | Location | The place whose weather shows at the top, or **Off**. **A** opens its page: type part of the name (**R3** opens Windows' touch keyboard), **A** searches, and up to five places found are listed with where they are (**Amsterdam, North Holland, Netherlands**), each once; the d-pad picks one and **A** takes it. **Y** goes from the name to the list and back, where **Off** takes the place away. Weather data by [Open-Meteo.com](https://open-meteo.com/). |
-| XBOX menu | Only with the XBOX app on the device. **Add** puts the suite in the XBOX app's library, so XBOX mode starts the portal from its home; the XBOX app closes for a moment while its library changes. **In the menu** once it is there; **A** on it takes the suite out of the XBOX app's library again, the XBOX app closed for a moment as well. The XBOX app keeps its library in a file of its own that Microsoft does not document: when a newer XBOX app keeps it otherwise, the row says so and nothing is changed; add the suite in the XBOX app then (**My Library**, **+**). |
 | Performance mode | Only on the ROG XBOX Ally X: the active mode (**Other** when the power plan and the power mode match none of them). **A** opens the Performance Mode page, below. |
-| Screen | Only with a second screen attached, such as a TV or a monitor: the screen the portal is on. **A**, or **LT** on any page, moves it to the next screen (see below). |
-| Play on the TV | **A** has Windows show its picture on the second screen only, so XBOX mode, the portal, the games and the sound are all on the TV; the handheld's screen goes dark (see below). |
-| Play on the handheld | **A** has Windows show its picture on the handheld's screen only again, with the sound on its speakers. |
-| Play on both screens | **A** has Windows show the same picture on both screens (Duplicate), XBOX mode too; the sound goes to the TV. |
 | XBOX mode ↔ Desktop | **A** switches between XBOX mode and the desktop, either way, as **Win + F11** does. |
+| PC screen only | **A** has Windows show its picture on the handheld's screen only, with the sound on its speakers, as **Win + P** names it (see below). |
+| Duplicate | **A** has Windows show the same picture on both screens, XBOX mode too; the sound goes to the second screen. |
+| Extend | **A** has Windows use both screens, the second one beside the handheld's. XBOX mode stays on the main screen, the handheld's. |
+| Second screen only | **A** has Windows show its picture on the second screen only (a TV or a monitor), so XBOX mode, the portal, the games and the sound are all there; the handheld's screen goes dark. |
+| Screen | Only with a second screen attached, such as a TV or a monitor: the screen the portal is on. **A**, or **LT** on any page, moves it to the next screen (see below). |
 
 **Your own wallpapers** go in the folder `%LOCALAPPDATA%\windows-portable-suite\wallpapers`, which the installer
 makes: paste that address in File Explorer's address bar and drop the pictures there. Only pictures in that folder
@@ -156,16 +158,22 @@ one again. Your pictures stay when the suite is uninstalled.
 
 ### XBOX mode on a TV
 
-XBOX mode runs on Windows' main screen only, the handheld's. With a TV attached and both screens on, the TV stays
-empty (white) in XBOX mode while the sound goes to it. Before you switch to XBOX mode, choose where to play:
+XBOX mode runs on Windows' main screen only, the handheld's. With a TV attached and both screens on (**Extend**), the
+TV stays empty (white) in XBOX mode while the sound goes to it. Before you switch to XBOX mode, choose where to play
+on the Settings page, under **Screens**, with the names **Win + P** gives them:
 
-- **Play on the TV** on the Settings page: Windows shows its picture on the TV only, and XBOX mode, the games and
-  the sound are there. **Play on both screens** shows the same picture on the handheld too. **Play on the
-  handheld** switches back. After each, the portal starts again by itself, sized for the screen.
-- Or Windows' own way: press **Win + P** and choose **Second screen only** (the same as Play on the TV), **PC screen
-  only** (the same as Play on the handheld), or **Duplicate**, the same picture on both screens.
+- **Second screen only**: Windows shows its picture on the TV only, and XBOX mode, the games and the sound are there.
+- **Duplicate**: the same picture on the handheld and the TV.
+- **Extend**: both screens, the TV beside the handheld's; XBOX mode stays on the handheld.
+- **PC screen only**: the handheld's screen only again.
 
-Either changes Windows' display setting for everything on the handheld, until you change it again.
+After each, the portal starts again by itself, sized for the screen. Each changes Windows' display setting for
+everything on the handheld; Windows' own way, **Win + P**, offers the same four. When you exit the portal (**⧉**), it
+sets **PC screen only** again if another one was set on its Settings page; and a restart of the handheld comes back
+on its own screen as well: until then a shortcut in your Startup folder,
+`%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\Windows Portable Suite - PC screen only.lnk`, sets **PC
+screen only** when you sign in. **PC screen only** on the Settings page, or exiting the portal, takes it away, and so
+does the portal's uninstaller.
 
 **XBOX mode ↔ Desktop** on the Settings page switches to XBOX mode, and from XBOX mode back to the desktop: it presses
 **Win + F11** for you, Windows' own switch. Coming back to XBOX mode after the desktop, Windows may ask whether to

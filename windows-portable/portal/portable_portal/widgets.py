@@ -74,6 +74,18 @@ class UpdateBanner(QLabel):
         super().mousePressEvent(event)
 
 
+class Count(QLabel):
+    """On the tabs' line: how many of the suite's apps are installed, of all it lists, "12/20" (owner, 07-11-2026)."""
+
+    def __init__(self, parent: QWidget | None = None):
+        super().__init__(parent)
+        self.setFont(font(LEGEND, QFont.Weight.DemiBold))
+        self.setStyleSheet(f"color: {DIM}; background: transparent;")
+
+    def set_count(self, installed: int, listed: int) -> None:
+        self.setText(f"Installed {installed}/{listed}")
+
+
 class PageMarker(QLabel):
     """Under the tiles while a tab has more apps than one page holds: which page shows, "Page 1 of 2". The d-pad
     turns the page past the tiles' left or right edge; a tap turns to the next page, from the last to the first."""
@@ -145,11 +157,13 @@ class SuitePane(Pane):
     """The Settings page (Menu): the portal's own version, the newest release on GitHub and what it changes, with Update
     (Y) when there is a newer one (the app by app list behind the information icon: owner, 01-11-2026, eight apps'
     lines ran over each other); and the suite's settings, a row each that A changes (owner, 28-10-2026: the
-    wallpaper on or off; 29-10-2026: the sound on or off; 30-10-2026: which wallpaper, and its transparency). What
+    wallpaper on or off; 29-10-2026: the sound on or off; 30-10-2026: which wallpaper, and its transparency; the XBOX
+    menu row went on 07-11-2026: the XBOX app had to be ended and started again for it, which took long). What
     each does is behind the information icon (Menu), not in lines under the rows (owner, 30-10-2026: no long lines
     of text where the space is not there). They had a page of their own on View until View became the suite's Exit
-    app (owner, 29-10-2026). Two columns under a heading each (owner, 06-11-2026: ten rows lay too close, the focused
-    one's edge was cut off): the d-pad moves up and down a column, left and right between them."""
+    app (owner, 29-10-2026). Three columns under a heading each, at most five rows in one (owner, 06-11-2026 and
+    07-11-2026: seven rows in a column lay too close, the focused one's edge was cut off): the d-pad moves up and
+    down a column, left and right between them."""
 
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
@@ -171,17 +185,18 @@ class SuitePane(Pane):
         self.wallpaper = Row("Wallpaper: Built-in")
         self.transparency = Row("Transparency: 59 %")
         self.sound = Row("Sound: On")
-        self.xbox = Row("XBOX menu: Add")
         self.mode = Row("Performance mode: Turbo")
         self.mode.hide()                                # on the ROG XBOX Ally X only
+        self.xbox_mode = Row("XBOX mode ↔ Desktop")       # Win + F11 (owner, 05-11-2026)
+        # Windows' display setup, as Win + P names it (owner, 07-11-2026): XBOX mode runs on the main screen only
+        # (owner, 05-11-2026), so the four are always shown, as with the TV alone Windows sees one screen, and the way
+        # back has to stay at hand
+        self.handheld = Row("PC screen only")
+        self.both = Row("Duplicate")
+        self.extend = Row("Extend")
+        self.tv = Row("Second screen only")
         self.screen_row = Row("Screen: Display 1")
         self.screen_row.hide()                          # with a second screen attached
-        # Windows' display setup for XBOX mode, which runs on the main screen only (owner, 05-11-2026): always shown,
-        # as with the TV alone Windows sees one screen, and the way back has to stay at hand
-        self.tv = Row("Play on the TV")
-        self.handheld = Row("Play on the handheld")
-        self.both = Row("Play on both screens")
-        self.xbox_mode = Row("XBOX mode ↔ Desktop")       # Win + F11 (owner, 05-11-2026)
         # The clock and the weather at the top (owner, 06-11-2026)
         self.hours = Row("Clock: 24 hours")
         self.seconds = Row("Seconds: Off")
@@ -189,10 +204,10 @@ class SuitePane(Pane):
         self.place = Row("Location: Off")
         columns = QHBoxLayout()
         columns.setSpacing(px(20))
-        for heading, rows in (("Look and clock", (self.wallpaper, self.transparency, self.sound, self.hours,
-                                                  self.seconds, self.zone, self.place)),
-                              ("Screens and device", (self.xbox, self.mode, self.screen_row, self.tv, self.handheld,
-                                                      self.both, self.xbox_mode))):
+        for heading, rows in (("Look and device", (self.wallpaper, self.transparency, self.sound, self.mode,
+                                                   self.xbox_mode)),
+                              ("Clock and weather", (self.hours, self.seconds, self.zone, self.place)),
+                              ("Screens", (self.handheld, self.both, self.extend, self.tv, self.screen_row))):
             column = QVBoxLayout()
             column.setSpacing(px(8))
             column.addWidget(text_label(heading, BODY + 1, QFont.Weight.Bold, DIM))
@@ -223,7 +238,7 @@ class SuitePane(Pane):
 
     def _explain(self) -> None:
         """The information icon's text: each setting, where your own wallpapers go and by which rules, the pictures in
-        that folder that cannot be one with why, the XBOX menu only where the XBOX app is, and the buttons at the
+        that folder that cannot be one with why, and the buttons at the
         bottom (owner, 30-10-2026)."""
         parts = [f"The update brings:\n{self.brings}"] if self.brings else []
         parts += [
@@ -245,9 +260,6 @@ class SuitePane(Pane):
                   "looked up again every 15 minutes. The A button opens its page: type part of the name (R3 opens "
                   "Windows' touch keyboard) and A searches; the d-pad picks a place and A takes it, or Off for none. "
                   "Weather data by Open-Meteo.com."]
-        if self.xbox.isVisibleTo(self):
-            parts.append("XBOX menu: the suite in the XBOX app's library, so XBOX mode starts it from its home. The A "
-                         "button adds it, and on In the menu takes it out again; the XBOX app closes for a moment.")
         if self.mode.isVisibleTo(self):
             parts.append("Performance mode: the ROG XBOX Ally X's mode, as Armoury Crate's Command Center offers them. "
                          "The A button opens its page.")
@@ -257,12 +269,15 @@ class SuitePane(Pane):
                          "for it, after a download or an install has finished. The suite's apps open on that screen "
                          "from then on, while it is attached. Win + Shift + the left or right arrow key, shown at the "
                          "bottom left, moves a window of the suite as well.")
-        parts.append("Play on the TV: Windows shows its picture on the second screen only (a TV or a monitor), so XBOX "
-                     "mode, the portal, the games and the sound are all there; the handheld's screen goes dark. XBOX "
-                     "mode runs on the main screen only, and with both screens on, the TV stays empty. Play on the "
-                     "handheld: the handheld's screen only again, and its speakers. Play on both screens: the same "
-                     "picture on both, XBOX mode too. Each changes Windows' display setting for everything on the "
-                     "handheld, as Win + P does, and the portal then starts again, sized for the screen.")
+        parts.append("PC screen only, Duplicate, Extend and Second screen only: Windows' display setting, as Win + P "
+                     "names and sets it, for everything on the handheld; the portal then starts again, sized for its "
+                     "screen. PC screen only: the handheld's screen only, and its speakers. Duplicate: the same "
+                     "picture on both screens, XBOX mode too. Extend: both screens, the second one beside the "
+                     "handheld's; XBOX mode stays on the main screen. Second screen only: the second screen only (a TV "
+                     "or a monitor), so XBOX mode, the portal, the games and the sound are all there, and the "
+                     "handheld's screen goes dark. XBOX mode runs on the main screen only: with Extend the second "
+                     "screen stays empty in XBOX mode. Exiting the portal sets PC screen only again, and so does the "
+                     "next sign-in after a restart, when one of the others was set here.")
         parts.append("XBOX mode ↔ Desktop: Windows' switch between XBOX mode and the desktop (Win + F11), either way. "
                      "Coming back to XBOX mode after the desktop, Windows may ask whether to restart for better "
                      "performance: its own question, answered with the controller.")
@@ -286,13 +301,6 @@ class SuitePane(Pane):
 
     def set_sound(self, on: bool) -> None:
         self.sound.set_text(f"Sound: {'On' if on else 'Off'}")
-
-    def set_xbox(self, state: str) -> None:
-        """The XBOX menu row: "" without the XBOX app (hidden), else what it says after "XBOX menu: "."""
-        self.xbox.setVisible(bool(state))
-        if state:
-            self.xbox.set_text(f"XBOX menu: {state}")
-        self._explain()
 
     def set_screen(self, name: str) -> None:
         """The Screen row: "" with one screen (hidden), else the name of the screen the portal is on."""

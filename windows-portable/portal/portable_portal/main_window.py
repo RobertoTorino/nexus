@@ -25,20 +25,20 @@ from PyQt6.QtCore import QEvent, QObject, QSettings, Qt, QTimer, pyqtSignal
 from PyQt6.QtGui import QGuiApplication, QPixmap
 from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QStackedWidget, QVBoxLayout, QWidget
 
-from bc250_core import applog, chip, portable, power, steam, xbox
+from bc250_core import applog, chip, portable, power, steam
 from bc250_core.gamepad import Gamepad
-from bc250_core.platform import expand, launch_in_terminal, private
+from bc250_core.platform import expand, launch_in_terminal, make_shortcut, private, start_menu
 from bc250_core.portable import AMBER, DIM, KEYBOARD, MENU, VIEW, Card, Legend, PortableHeader, PortableWindow, px
 from bc250_core.updates import UpdateChecker
 
-from . import ACTION_SOUND, APP_ICONS, APP_ID, APP_NAME, EXE_NAME, INTRO_SOUND, ROOT, SUITE, __version__, operating_mode, state_dir
+from . import ACTION_SOUND, APP_ICONS, APP_ID, APP_NAME, INTRO_SOUND, SUITE, __version__, operating_mode
 from . import weather
 from .clock import ZONE_NAMES, read as read_clock, save as save_clock
 from .intro import INTRO_MS, Intro, play
 from .manifest import CATEGORIES, AppEntry
 from .portal_update import PortalUpdate, short
 from .sources import Records, SourceError, Sources, downloaded, fetch_release, is_installed
-from .widgets import AppPane, DetailsPane, ModePane, PageMarker, PlacePane, SuitePane, Tabs, UpdateBanner
+from .widgets import AppPane, Count, DetailsPane, ModePane, PageMarker, PlacePane, SuitePane, Tabs, UpdateBanner
 
 STATUS_MS = 2_000               # the header: the CPU and GPU live (owner, 30-10-2026), the battery and the time
 EXIT_QUESTION = "Do you really want to exit the portal?"
@@ -54,16 +54,23 @@ HELPER_INSTALL_S = 180          # its install or removal, with Windows' prompt a
 TILE_W, TILE_H, GAP = 293, 176, 14      # the mock-up's tiles: two rows of four
 COLUMNS, PER_PAGE = 4, 8          # a tab's page of tiles; a tab with more apps has more pages
 TAB_KEY = "window/tab"          # the settings: the tab shown last
-LOGO_PNG = ROOT / "images" / f"{APP_ID}-128.png"   # the suite's icon, its picture in the XBOX menu
 STEAM_MISSING = "Steam is not installed on this device: install it from store.steampowered.com, then RT opens it."
 ONE_SCREEN = "There is one screen: attach a TV or a monitor, then LT moves the portal to it."
 DISPLAY_SWITCH = Path(os.environ.get("SystemRoot") or r"C:\Windows") / "System32" / "DisplaySwitch.exe"   # Win + P
 NO_WINDOW = 0x08000000          # CREATE_NO_WINDOW
-ON_TV = ("Windows shows its picture on the TV only now: XBOX mode, the games and the sound are there. Play on the "
-         "handheld switches back.")
-ON_HANDHELD = "Windows shows its picture on the handheld's screen only now, and plays the sound on its speakers."
-ON_BOTH = ("Windows shows the same picture on both screens now, XBOX mode too; the sound goes to the TV. Play on the "
-           "handheld switches back.")
+# Windows' display setup as Win + P names it (owner, 07-11-2026): what each row says once it is set
+PC_SCREEN = "/internal"
+ON_HANDHELD = ("PC screen only: Windows shows its picture on the handheld's screen only, and plays the sound on its "
+               "speakers.")
+ON_BOTH = ("Duplicate: Windows shows the same picture on both screens, XBOX mode too; the sound goes to the second "
+           "screen. PC screen only switches back.")
+ON_EXTEND = ("Extend: Windows uses both screens, the second one beside the handheld's; XBOX mode stays on the main "
+             "screen. PC screen only switches back.")
+ON_SECOND = ("Second screen only: Windows shows its picture on the second screen only, XBOX mode, the games and the "
+             "sound too. PC screen only switches back.")
+# Back on the handheld's screen after the portal and after a restart (owner, 07-11-2026: it kept the last one set): a
+# shortcut in the user's Startup folder sets PC screen only at the next sign-in, while another one is set here
+STARTUP_LINK = "Windows Portable Suite - PC screen only.lnk"
 SETTLE_MS = 4000                # Windows' display switch settles in this time: then the portal starts again, sized
 SWITCHED_MODE = ("XBOX mode or the desktop, as Win + F11 switches: the same row switches back. Coming back to XBOX "
                  "mode, Windows may ask to restart for better performance.")
@@ -179,26 +186,26 @@ class MainWindow(PortableWindow):
                  exe: str = "", build: str | None = None, exit_dir: Path | None = None, intro_ms: int = INTRO_MS,
                  wallpaper: Path | None = portable.WALLPAPER,
                  steam_here: Callable[[], bool] = steam.installed, open_steam: Callable[[str], None] = steam.open_url,
-                 xbox_local: Path | None = None, xbox_closed: Callable[[Callable[[], None]], None] | None = None,
                  chip_parts: Callable[[], list[str]] | None = None,
                  modes: Callable[[], operating_mode.PowerApi | None] = operating_mode.power_api,
                  helper: Callable[[], operating_mode.Helper] = operating_mode.Helper,
                  player: Callable[[Path | None], None] = play,
                  display: Callable[[str], None] = switch_display,
                  xbox_mode: Callable[[], None] = press_win_f11,
-                 weather_fetch: weather.Fetch | None = None):
+                 weather_fetch: weather.Fetch | None = None, startup: Path | None = None,
+                 shortcut: Callable[..., None] = make_shortcut, booted: Callable[[], float] | None = None):
         """*build*: the sha256 of the zip this portal was installed from (build.sha256), "" when not known, None
         from a checkout: a new build of the same version is offered when its sha256 differs. *intro_ms*: how long
         the intro plays when the window starts (0: none). *wallpaper*: the picture behind the page, darkened (None:
-        the plain background); on or off for the whole suite (Settings). *steam_here*: whether Steam is installed; *open_steam*: hands a steam:// address to Steam (its library). *xbox_local*:
-        where the XBOX app's package folder is (default %LOCALAPPDATA%); *xbox_closed*: runs a change with the XBOX
-        app closed (core's xbox.with_xbox_closed). *chip_parts*: the CPU's and the GPU's load and temperature for the
+        the plain background); on or off for the whole suite (Settings). *steam_here*: whether Steam is installed; *open_steam*: hands a steam:// address to Steam (its library). *chip_parts*: the CPU's and the GPU's load and temperature for the
         status line (default core's chip.py, AMD's driver opened once). *modes*: Windows' power API on the ROG XBOX
         Ally X, None elsewhere: the operating mode's letter before the battery and its page; *helper*: the Operating
         Mode helper that writes its watts (the Ally X only). *player*: plays a .wav, the intro's and each controller
         action's (default winsound; tests pass a fake). *display*: sets Windows' display setup (switch_display). *xbox_mode*: switches between XBOX mode and the desktop
         (press_win_f11). *weather_fetch*: reads Open-Meteo (url -> decoded JSON) for the Location page and the weather
-        at the top (weather.fetch_json); None: no lookups (the tests)."""
+        at the top (weather.fetch_json); None: no lookups (the tests). *startup*: the user's Startup folder, where
+        STARTUP_LINK goes (default the Start menu's); *shortcut*: writes a .lnk (core's make_shortcut); *booted*: when
+        Windows started, as time.time() counts (default boot_time)."""
         old = QSettings()                              # portal 1.6.0 kept the switch in portal.ini: the suite's now
         if old.contains(WALLPAPER_KEY) and portable.look_settings(SUITE).value(portable.LOOK_KEY) is None:
             portable.set_wallpaper_on(SUITE, str(old.value(WALLPAPER_KEY)).lower() != "false")
@@ -208,7 +215,8 @@ class MainWindow(PortableWindow):
         self.log = applog.logger(APP_ID)
         self.entries, self.sources, self.records = entries, sources, records
         self.steam_here, self.open_steam = steam_here, open_steam
-        self.xbox_local, self.xbox_closed = xbox_local, xbox_closed
+        self.startup = startup if startup is not None else start_menu() / "Startup"
+        self.shortcut, self.booted = shortcut, booted or boot_time
         self.portal_check, self.battery, self.launch, self.terminal = portal_check, battery, launch, terminal
         self.player = player                            # plays a .wav (the intro's player, winsound)
         self.display = display                          # Windows' display setup (DisplaySwitch.exe)
@@ -254,6 +262,9 @@ class MainWindow(PortableWindow):
         tabs_line = QHBoxLayout()
         tabs_line.setContentsMargins(0, 0, 0, 0)
         tabs_line.addWidget(self.tabs, 1)
+        self.count = Count()                            # how many apps are installed, of all (owner, 07-11-2026)
+        tabs_line.addWidget(self.count, 0, Qt.AlignmentFlag.AlignVCenter)
+        tabs_line.addSpacing(px(16))
         self.banner = UpdateBanner()                    # while a newer portal is out
         self.banner.pressed.connect(self.portal_update_action)
         tabs_line.addWidget(self.banner, 0, Qt.AlignmentFlag.AlignVCenter)
@@ -300,12 +311,12 @@ class MainWindow(PortableWindow):
         self.suite_pane.wallpaper.activated.connect(self.next_wallpaper)
         self.suite_pane.transparency.activated.connect(self.next_transparency)
         self.suite_pane.sound.activated.connect(self.toggle_sound)
-        self.suite_pane.xbox.activated.connect(self.xbox_menu)
         self.suite_pane.mode.activated.connect(self.show_modes)
         self.suite_pane.screen_row.activated.connect(self.next_screen)
-        self.suite_pane.tv.activated.connect(lambda: self.play_on("/external", ON_TV, "the TV"))
-        self.suite_pane.handheld.activated.connect(lambda: self.play_on("/internal", ON_HANDHELD, "the handheld"))
-        self.suite_pane.both.activated.connect(lambda: self.play_on("/clone", ON_BOTH, "both screens"))
+        self.suite_pane.handheld.activated.connect(lambda: self.play_on(PC_SCREEN, ON_HANDHELD, "PC screen only"))
+        self.suite_pane.both.activated.connect(lambda: self.play_on("/clone", ON_BOTH, "Duplicate"))
+        self.suite_pane.extend.activated.connect(lambda: self.play_on("/extend", ON_EXTEND, "Extend"))
+        self.suite_pane.tv.activated.connect(lambda: self.play_on("/external", ON_SECOND, "Second screen only"))
         self.suite_pane.xbox_mode.activated.connect(self.switch_xbox_mode)
         self.suite_pane.hours.activated.connect(lambda: self.change_clock(twelve_hour=not self.clock.twelve_hour))
         self.suite_pane.seconds.activated.connect(lambda: self.change_clock(seconds=not self.clock.seconds))
@@ -387,6 +398,7 @@ class MainWindow(PortableWindow):
             self.show_tab(self.tabs.current)
         self.check_portal()
         self.recheck_timer.start()
+        self.startup_done()
         if self.intro is not None:
             self.intro.begin()
 
@@ -445,40 +457,6 @@ class MainWindow(PortableWindow):
         self.set_wallpaper_veil(percent)
         self.show_wallpaper_rows()
         self.log.info(f"Wallpaper transparency {percent} %, for the suite.")
-
-    def xbox_state(self) -> str:
-        """The XBOX menu row's state: "" without the XBOX app, In the menu, or Add."""
-        if not xbox.installed(self.xbox_local):
-            return ""
-        return "In the menu" if xbox.listed(self.program(), self.xbox_local) else "Add"
-
-    def program(self) -> Path:
-        """The installed portal, what the XBOX menu starts (never a checkout's Python)."""
-        return state_dir() / "app" / f"{EXE_NAME}.exe"
-
-    def xbox_menu(self) -> None:
-        """The Settings page's XBOX menu row (owner, 30-10-2026): A puts the suite in the XBOX app's library, and A on
-        In the menu takes it out again, the XBOX app closed for a moment either way (core's xbox.py); said on the row
-        and in the log."""
-        state = self.xbox_state()
-        if not state:
-            return
-        adding = state == "Add"
-        try:
-            if adding:
-                xbox.add(self.program(), APP_NAME, LOGO_PNG, local=self.xbox_local, closed=self.xbox_closed)
-            else:
-                xbox.remove(self.program(), local=self.xbox_local, closed=self.xbox_closed)
-        except xbox.FormatError as exc:
-            self.suite_pane.set_xbox(f"not {'added' if adding else 'removed'}, the XBOX app keeps its library otherwise")
-            self.log.error(f"Not {'added to' if adding else 'removed from'} the XBOX menu: {exc}")
-            return
-        except OSError as exc:
-            self.suite_pane.set_xbox(f"not {'added' if adding else 'removed'} ({exc.strerror or exc})")
-            self.log.error(f"Not {'added to' if adding else 'removed from'} the XBOX menu: {exc}")
-            return
-        self.suite_pane.set_xbox(self.xbox_state())
-        self.log.info(f"{'Added to' if adding else 'Removed from'} the XBOX menu (the XBOX app's library).")
 
     def mode_name(self) -> str:
         """The Operating mode row's state: "" off the Ally X, the active mode's name, or Other (a plan or a power mode
@@ -817,7 +795,6 @@ class MainWindow(PortableWindow):
         self.stack.setCurrentWidget(self.suite_pane)
         self.show_wallpaper_rows()
         self.suite_pane.set_sound(portable.sound_on(SUITE))
-        self.suite_pane.set_xbox(self.xbox_state())
         self.suite_pane.set_mode(self.mode_name())
         self.suite_pane.set_screen(self.screen_name())
         self.show_clock_rows()
@@ -878,10 +855,12 @@ class MainWindow(PortableWindow):
 
     def exit_app(self) -> None:
         """View: the portal asks first, then closes on a second View (owner, 05-11-2026: every time, not only while
-        a download or an install runs)."""
+        a download or an install runs), Windows' display setup back to PC screen only when another one was set here
+        (owner, 07-11-2026)."""
         if not self.close_asked:
             self.ask_close()
             return
+        self.screen_back()
         self.close()
 
     def on_back(self) -> None:
@@ -943,6 +922,7 @@ class MainWindow(PortableWindow):
 
     def refresh(self) -> None:
         busy = self.job is not None or self.pending is not None
+        self.count.set_count(sum(is_installed(entry) for entry in self.entries), len(self.entries))
         for entry in self.entries:
             status, color, _, other = self.state(entry)
             self.tiles[entry.key].set_text(status, color)
@@ -1061,6 +1041,9 @@ class MainWindow(PortableWindow):
         if entry is None or not entry.launch or not is_installed(entry):
             return
         label, command = entry.launch[0]
+        # The app may take the front, also the one already open that this start only asks to show itself (owner,
+        # 07-11-2026: an open app stayed behind the portal)
+        portable.allow_foreground()
         try:
             self.launch(launch_argv(command))
         except OSError as exc:
@@ -1331,9 +1314,11 @@ class MainWindow(PortableWindow):
         self.refresh()
 
     def play_on(self, mode: str, said: str, where: str) -> None:
-        """The Settings page's Play on the TV (/external) and Play on the handheld (/internal), owner 05-11-2026: XBOX
-        mode runs on Windows' main screen only and leaves the other one empty, so Windows' display setup is switched
-        as Win + P does, for everything on the handheld; said on the page and in the log."""
+        """The Settings page's PC screen only (/internal), Duplicate (/clone), Extend (/extend) and Second screen only
+        (/external), as Win + P names them (owner, 05-11-2026 and 07-11-2026): XBOX mode runs on Windows' main screen
+        only and leaves the other one empty, so Windows' display setup is switched as Win + P does, for everything on
+        the handheld; said on the page and in the log. Any but PC screen only puts STARTUP_LINK in place, which sets
+        PC screen only at the next sign-in; PC screen only takes it away."""
         try:
             self.display(mode)
         except OSError as exc:
@@ -1341,11 +1326,53 @@ class MainWindow(PortableWindow):
             self.log.error(f"DisplaySwitch {mode} failed: {exc}")
         else:
             self.say("", said)
-            self.log.info(f"Play on {where}: DisplaySwitch {mode}.")
+            self.log.info(f"{where}: DisplaySwitch {mode}.")
+            self.reset_at_sign_in(mode != PC_SCREEN)
             # Windows moves the window to its new main screen but the portal keeps the sizes of the one before (owner,
             # 05-11-2026: the TV cut the legend off): once the switch has settled it starts again there, as LT does
             QTimer.singleShot(SETTLE_MS, lambda: self.move_to(QGuiApplication.primaryScreen()))
         self.refresh()
+
+    def startup_link(self) -> Path:
+        return self.startup / STARTUP_LINK
+
+    def reset_at_sign_in(self, on: bool) -> None:
+        """STARTUP_LINK in the user's Startup folder (*on*), or taken away: DisplaySwitch.exe /internal at the next
+        sign-in, so a restart comes back on the handheld's screen."""
+        link = self.startup_link()
+        try:
+            if on and not link.is_file():
+                self.shortcut(link, DISPLAY_SWITCH, PC_SCREEN, description="PC screen only at the next sign-in: the "
+                              "Windows Portable Suite's portal set another screen")
+                self.log.info("PC screen only at the next sign-in: the Startup folder's shortcut is in place.")
+            elif not on and link.is_file():
+                link.unlink()
+                self.log.info("The Startup folder's PC screen only shortcut is taken away.")
+        except (OSError, RuntimeError) as exc:
+            self.log.error(f"The Startup folder's PC screen only shortcut: {exc}")
+
+    def startup_done(self) -> None:
+        """At the start: STARTUP_LINK from before Windows' last start has done its work at the sign-in (the screen is
+        the handheld's again), so it goes; one put in place since stays, for the next restart."""
+        link = self.startup_link()
+        try:
+            if link.is_file() and link.stat().st_mtime < self.booted():
+                link.unlink()
+                self.log.info("PC screen only was set at the sign-in; the Startup folder's shortcut is taken away.")
+        except OSError as exc:
+            self.log.error(f"The Startup folder's PC screen only shortcut: {exc}")
+
+    def screen_back(self) -> None:
+        """Exiting the portal: PC screen only again when another one was set here (STARTUP_LINK is in place)."""
+        if not self.startup_link().is_file():
+            return
+        try:
+            self.display(PC_SCREEN)
+        except OSError as exc:
+            self.log.error(f"DisplaySwitch {PC_SCREEN} on exit failed: {exc}")
+            return
+        self.log.info(f"Exit: PC screen only again (DisplaySwitch {PC_SCREEN}).")
+        self.reset_at_sign_in(False)
 
     def screens_changed(self, _screen=None) -> None:
         self.update_legend()
@@ -1374,6 +1401,16 @@ class MainWindow(PortableWindow):
             self.sensors.close()
             self.sensors = None
         super().closeEvent(event)
+
+
+def boot_time() -> float:
+    """When Windows started, as time.time() counts: now less GetTickCount64's milliseconds; 0 off Windows."""
+    if sys.platform != "win32":
+        return 0.0
+    import ctypes
+    ticks = ctypes.windll.kernel32.GetTickCount64
+    ticks.restype = ctypes.c_ulonglong
+    return time.time() - ticks() / 1000
 
 
 def power_version(version: str) -> tuple[int, ...]:

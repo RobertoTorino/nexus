@@ -14,7 +14,7 @@ of a newer release off ([General] CheckForNewVersion; a newer PPSSPP comes with 
 main screen, which the app never shows). The controller needs nothing: PPSSPP maps an XBOX controller (XInput), the
 handheld's own, at its first start, with LT and the guide button for its pause menu (Core\\KeyMapDefaults.cpp).
 
-The settings the Settings pane offers, in tabs (TABS below: Picture, Game, Controller, On screen): each one key of
+The settings the Settings pane offers, in tabs (TABS below: Screen, Game, Controller, On screen): each one key of
 ppsspp.ini, read from the file (or PPSSPP's default while it names none) and written one at a time. The On screen
 switches are bits of one key ([Graphics] iShowStatusFlags: 2 the FPS, 4 the speed, 8 the battery). The file is
 changed line by line: every other line and its order stay as PPSSPP wrote it."""
@@ -103,7 +103,7 @@ SENSITIVITIES = (("1.100000", "PPSSPP's (1.10)"), ("1.000000", "As the stick (1.
 # The Settings pane's tabs, as PCSX2 Manager's: the key, the tab's name and its settings, in the order the rows show
 # them
 TABS: tuple[tuple[str, str, tuple[Setting, ...]], ...] = (
-    ("picture", "Picture", (
+    ("picture", "Screen", (
         Setting("renderer", "Renderer", "Graphics", "GraphicsBackend", CHOICE, RENDERERS,
                 "how PPSSPP draws: Vulkan is its choice on Windows; Direct3D 11 or OpenGL when a game shows faults.",
                 RENDERERS[0][0]),

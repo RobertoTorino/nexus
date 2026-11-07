@@ -19,7 +19,7 @@ PCSX2.ini (inis\\ in PCSX2's portable folder):
   first controller is SDL-0, whatever its kind: its buttons by position as PCSX2's Automatic Mapping binds them, so
   Cross is the bottom face button. The chord is set only while its line is missing: its switch in the Settings
   pane turns it off by leaving the line empty (which PCSX2 reads as no binding), so off stays off.
-* The settings the Settings pane offers, in tabs (TABS below: Picture, Game, Controller, On screen): each one or
+* The settings the Settings pane offers, in tabs (TABS below: Screen, Game, Controller, On screen): each one or
   more keys of PCSX2.ini, read from the file (or from the defaults while there is none) and written one at a time,
   as are player 2 on the second controller ([Pad2]) and the quit chord (OWN).
 
@@ -108,7 +108,7 @@ QUIT = Setting("quit", "Quit with View + Menu", "Hotkeys", ("ShutdownVM",), SWIT
 # The Settings pane's tabs (owner, 29-10-2026: "we have way too less settings, we can use tabs"): the key, the tab's
 # name and its settings, each one or more keys of PCSX2.ini, in the order the rows show them
 TABS: tuple[tuple[str, str, tuple[Setting, ...]], ...] = (
-    ("picture", "Picture", (
+    ("picture", "Screen", (
         Setting("renderer", "Renderer", "EmuCore/GS", ("Renderer",), CHOICE, RENDERERS,
                 "Automatic lets PCSX2 choose for the graphics chip; Software draws on the CPU, exact but slow."),
         Setting("resolution", "Resolution", "EmuCore/GS", ("upscale_multiplier",), CHOICE, RESOLUTIONS,

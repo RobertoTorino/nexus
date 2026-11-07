@@ -12,7 +12,7 @@ file, or the line, is not there) and written one value at a time, its descriptio
 it) and every other line too; a key the file does not name goes at the end of its [Category], or in a new one. Xenia
 writes the whole file again when it starts, its values kept. Never while Xenia runs. A game's own config file comes before these.
 
-The pane shows them in tabs (TABS below: Picture, Speed, Sound, Console), a row each with its value; A steps to the
+The pane shows them in tabs (TABS below: Screen, Speed, Sound, Console), a row each with its value; A steps to the
 next value (Setting.next_value), as RPCS3 Manager's pane does."""
 
 from __future__ import annotations
@@ -86,7 +86,7 @@ LICENSES = (("0", "None"), ("1", "Full version"), ("-1", "All licenses"))
 # The Settings pane's tabs, as RPCS3 Manager's: the key, the tab's name and its settings, in the order the rows show
 # them (six rows at most: they fit a page at 720 px high)
 TABS: tuple[tuple[str, str, tuple[Setting, ...]], ...] = (
-    ("picture", "Picture", (
+    ("picture", "Screen", (
         Setting("gpu", "Graphics", "GPU", ("gpu",), "any", CHOICE, GRAPHICS,
                 "how Xenia draws: Direct3D 12 is its choice on Windows, Vulkan an alternative for a game that shows "
                 "errors."),

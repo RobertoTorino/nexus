@@ -15,9 +15,11 @@ from bc250_core.app import create_app, exec_app
 from bc250_core.portable import PORTABLE, RESTARTED
 from bc250_core.updates import repo_slug
 
-from . import APP_ID, APP_NAME, EXE_NAME, INFO, MANIFEST, __version__, portal_update, state_dir
+from . import APP_ID, APP_NAME, EXE_NAME, INFO, MANIFEST, ROOT, __version__, portal_update, state_dir
 from .manifest import ManifestError, load
 from .sources import Records, Sources, http_download
+
+LOGO_PNG = ROOT / "images" / f"{APP_ID}-128.png"   # the suite's icon, its picture in the XBOX menu
 
 
 def xbox_menu() -> int:
@@ -25,7 +27,6 @@ def xbox_menu() -> int:
     the XBOX app's library, without a window; 0 when it is there now, 1 when it could not be added (said why)."""
     from bc250_core import xbox
 
-    from .main_window import LOGO_PNG
     applog.setup(APP_ID, path=state_dir() / "portal.log", private=True)
     log = applog.logger(APP_ID)
     program = state_dir() / "app" / f"{EXE_NAME}.exe"

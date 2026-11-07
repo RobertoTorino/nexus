@@ -11,7 +11,7 @@ Never while RPCS3 runs. Screen sets two lines, Aspect ratio and Stretch To Displ
 write_screen, the values a game's own settings took when X on a game set them: owner, 29-10-2026, X plays a game
 now). A game's own settings in RPCS3 (a config_<ID>.yml made before) come before these.
 
-The pane shows them in tabs (TABS below: Picture, Speed, Sound, Messages), a row each with its value; A steps to the
+The pane shows them in tabs (TABS below: Screen, Speed, Sound, Messages), a row each with its value; A steps to the
 next value (Setting.next_value), as PPSSPP Manager's pane does."""
 
 from __future__ import annotations
@@ -83,7 +83,7 @@ VOLUMES = (("100", "100%"), ("75", "75%"), ("50", "50%"), ("25", "25%"), ("0", "
 # The Settings pane's tabs, as PPSSPP Manager's: the key, the tab's name and its settings, in the order the rows show
 # them (six rows at most: they fit a page at 720 px high)
 TABS: tuple[tuple[str, str, tuple[Setting, ...]], ...] = (
-    ("picture", "Picture", (
+    ("picture", "Screen", (
         Setting("renderer", "Renderer", "Video", "Renderer", "Vulkan", CHOICE, RENDERERS,
                 "how RPCS3 draws: Vulkan on the handheld's graphics; OpenGL is slower and helps only when Vulkan "
                 "fails."),

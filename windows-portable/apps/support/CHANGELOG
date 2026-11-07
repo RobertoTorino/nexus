@@ -1,3 +1,8 @@
+Changelog: 07-11-2026 01:03:47
+
+Fixed. The XBOX app's line names the portal's installer, which adds the suite to the XBOX menu: the portal's XBOX menu
+setting is gone (owner, 07-11-2026).
+
 Changelog: 06-11-2026 22:16:41
 
 Release 0.3.0.

@@ -22,13 +22,15 @@ on each, X New card and Y Copy card. The Log pane: PCSX2's last run, where Games
 app's log; A (or a tap on the pane) shows the whole log in the pane, B goes back.
 
 The PCSX2 pane: what is installed, where, the BIOS; A Install until PCSX2 is installed, Y Reinstall or Update, LB
-Remove BIOS (the keep page: PCSX2's copy and the one in Games\\PS2\\BIOS) and RB Remove PCSX2 (a second press).
+Remove BIOS (the keep page: PCSX2's copy and the one in Games\\PS2\\BIOS) and X Remove PCSX2 (a second press;
+owner, 07-11-2026: X removes the emulator in every emulator manager). The PCSX2 card says only whether PCSX2 is
+installed and which button acts (CARD_INSTALLED, CARD_NOT_INSTALLED: the same in every emulator manager).
 The BIOS dump put in Games\\PS2\\BIOS is copied into PCSX2's bios folder when the app opens and when the PCSX2 card
 gets the focus (userdata.sync_bios, only what is new or changed). A press that cannot act now says why on the status
 line. Nothing downloads before A. The download, the unpacking and the keep page's deleting run off the window's
 thread; the pane counts the megabytes. View (exit) while they run asks first, as the portal does.
 
-The Settings pane: PCSX2's settings that matter on the handheld, in tabs (LB and RB: Picture, Game, Controller, On
+The Settings pane: PCSX2's settings that matter on the handheld, in tabs (LB and RB: Screen, Game, Controller, On
 screen), a row each with its value; A steps to the next value and writes it into PCSX2.ini at once (pcsx2_settings),
 never while PCSX2 runs (it writes its own settings back when it closes). What the app owns in PCSX2.ini is set after
 an install and when the window opens (pcsx2_settings.prepare), so PCSX2 opens ready to play: the BC250 suite's PCSX2
@@ -70,6 +72,9 @@ LOG_MAX = 2000                  # the lines of the log the whole view shows, the
 BACK_KEY = "‹"            # the first row of a card's saves: back to the cards
 RUNNING = "PCSX2 is open: close it first, it would write its own settings over the change."
 NOT_INSTALLED = "Install PCSX2 first: the settings are in its folder."
+# The PCSX2 card's two lines, the same in every emulator manager (owner, 07-11-2026)
+CARD_NOT_INSTALLED = "Not installed.\nInstall with the A button."
+CARD_INSTALLED = "Installed.\nRemove with the X button."
 BUSY = "Wait a moment: the app is still busy with the step before."
 BIOS_NEEDS_PCSX2 = "Install PCSX2 first: the BIOS goes in its folder."
 NO_BIOS_TO_REMOVE = ("There is no BIOS to remove: put your own console's dump in the BIOS folder of Games\\PS2, and "
@@ -140,7 +145,7 @@ NO_BIOS = ("Put your console's BIOS in the BIOS folder of Games\\PS2 first (the 
 
 class SettingsPane(Pane):
     """The settings in tabs (owner, 29-10-2026: "we can use tabs in the settings page to add more"): LB and RB step
-    through Picture, Game, Controller and On screen, a tap picks one; a tab is a page of rows, "Renderer: Automatic",
+    through Screen, Game, Controller and On screen, a tap picks one; a tab is a page of rows, "Renderer: Automatic",
     and A on one steps to the next value (the window writes it). Seven rows fit a page at 720 px high. The
     information icon tells what the tab's settings do."""
 
@@ -245,11 +250,11 @@ class MainWindow(PortableWindow):
         cards = QVBoxLayout(column)
         cards.setContentsMargins(0, 0, 0, 0)
         cards.setSpacing(px(12))
-        self.pcsx2_card = Card("PCSX2", "Install, update or remove it, and its BIOS.")
-        self.games_card = Card("Your games", "Mark them for Steam, or remove them.")
-        self.settings_card = Card("Settings", "The picture, the controllers and how PCSX2 opens.")
+        self.pcsx2_card = Card("PCSX2", CARD_NOT_INSTALLED)
+        self.games_card = Card("Your games", "Mark them for Steam and press X to play.")
+        self.settings_card = Card("Settings", "Screen, game and controller settings")
         self.cards_card = Card("Memory cards", "The cards and the saves on them.")
-        self.log_card = Card("Log", "PCSX2's last run, and this app's log.")
+        self.log_card = Card("Log", "This app's log file.")
         for card in (self.pcsx2_card, self.games_card, self.settings_card, self.cards_card, self.log_card):
             card.setFixedHeight(px(CARD_HEIGHT))
             cards.addWidget(card)
@@ -468,12 +473,9 @@ class MainWindow(PortableWindow):
         self.grid.setColumnStretch(1, 1)
         status = self.state()[0]
         if self.confirm_remove:
-            status = "Press the RB button again to remove PCSX2: its BIOS, memory cards and settings stay."
+            status = "Press the X button again to remove PCSX2: its BIOS, memory cards and settings stay."
         self.status.setText(self.message or status)
-        installed = bool(emulator.installed(self.home))
-        self.pcsx2_card.set_text("No BIOS yet: put it in the BIOS folder of Games\\PS2."
-                                 if installed and self.bios_used() is None
-                                 else "Install, update or remove it, and its BIOS.")
+        self.pcsx2_card.set_text(CARD_INSTALLED if emulator.installed(self.home) else CARD_NOT_INSTALLED)
         self.refresh_settings()
         self.update_legend()
 
@@ -509,7 +511,7 @@ class MainWindow(PortableWindow):
             installed = not self.busy and bool(emulator.installed(self.home))
             items = [*([("A", main)] if main else []), *([("Y", other)] if other else []),
                      *([("LB", "Remove BIOS"),
-                        ("RB", "Press again" if self.confirm_remove else "Remove PCSX2")] if installed else [])]
+                        ("X", "Press again" if self.confirm_remove else "Remove PCSX2")] if installed else [])]
         elif pane is self.games_pane:
             focused = self.focused_game()
             items = [("A", "Steam mark"), *([("X", "Play")] if focused else []), ("Y", "Update Steam"),
@@ -845,7 +847,9 @@ class MainWindow(PortableWindow):
 
     def x_action(self) -> None:
         pane = self.panes.currentWidget()
-        if pane is self.games_pane:
+        if pane is self.pane:
+            self.remove_action()
+        elif pane is self.games_pane:
             self.play()
         elif pane is self.cards_pane:
             self.new_card()
@@ -876,9 +880,7 @@ class MainWindow(PortableWindow):
 
     def rb_action(self) -> None:
         pane = self.panes.currentWidget()
-        if pane is self.pane:
-            self.remove_action()
-        elif pane is self.games_pane:
+        if pane is self.games_pane:
             self.remove_game()
         elif pane is self.settings_pane:
             self.settings_pane.tabs.step(1)
@@ -1252,7 +1254,7 @@ class MainWindow(PortableWindow):
         self.refresh()
 
     def remove_action(self) -> None:
-        """RB Remove PCSX2 asks for a second press (no dialog on a handheld): the legend and the status line say so
+        """X Remove PCSX2 asks for a second press (no dialog on a handheld): the legend and the status line say so
         for a few seconds."""
         if self.busy:
             self.message = BUSY

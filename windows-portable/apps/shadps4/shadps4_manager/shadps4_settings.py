@@ -8,7 +8,7 @@ is not there) and written one key at a time, every other key kept (userdata.writ
 with its defaults when it starts and writes the whole file back, also when it ends. Never while shadPS4 runs. A
 game's own settings in shadPS4 (custom_configs\\<Id>.json) come before these.
 
-The pane shows them in tabs (TABS below: Picture, Sound, Controller, In a game), a row each with its value; A steps to
+The pane shows them in tabs (TABS below: Screen, Sound, Controller, In a game), a row each with its value; A steps to
 the next value (Setting.next_value), as the suite's other managers do. The volume, which the BC250 app sets with a
 slider, steps through a few values instead."""
 
@@ -70,7 +70,7 @@ LANGUAGES = ((21, "Arabic"), (23, "Czech"), (14, "Danish"), (6, "Dutch"), (18, "
 # The Settings pane's tabs: the key, the tab's name and its settings, in the order the rows show them (six rows at
 # most: they fit a page at 720 px high)
 TABS: tuple[tuple[str, str, tuple[Setting, ...]], ...] = (
-    ("picture", "Picture", (
+    ("picture", "Screen", (
         Setting("present", "VSync", "GPU", "present_mode", "Mailbox", CHOICE, PRESENT,
                 "how a frame goes to the screen. Mailbox, shadPS4's default: no tearing and little delay, the "
                 "newest frame shown at each refresh. On: each frame waits for the refresh, a little more delay. "

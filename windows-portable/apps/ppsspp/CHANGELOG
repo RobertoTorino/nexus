@@ -1,3 +1,11 @@
+Changelog: 07-11-2026 00:56:48
+
+Fixed. The cards' texts, the same in every emulator manager (owner, 07-11-2026): the PPSSPP card says only "Not
+installed." and "Install with the A button." until PPSSPP is installed, then "Installed." and "Remove with the X
+button.", set again at start, after an install and after a remove. Your games says "Mark them for Steam and press X to
+play.", Settings "Screen, game and controller settings" and Log "This app's log file.". The Settings pane's Picture tab
+is called Screen (its settings are unchanged). The wiki's chapter says so.
+
 Changelog: 06-11-2026 22:16:40
 
 Release 5.5.0.

@@ -36,9 +36,10 @@ page marks each row Delete, A keeps one, X deletes the marked, B deletes nothing
 pane: RPCS3's folder, the app's Games\\PS3 folder and the newest lines of the app's log; A (or a tap on the pane) shows
 the whole log in the pane.
 
-The Settings pane: RPCS3's settings that matter on the handheld, in tabs (LB and RB: Picture, Speed, Sound,
-Messages; Screen, how the games fill it, among the Picture's), a row each with its value; A steps to the next value and writes it into config.yml at once
-(rpcs3_settings), never while RPCS3 runs (it writes its own settings back when it closes)."""
+The Settings pane: RPCS3's settings that matter on the handheld, in tabs (LB and RB: Screen, Speed, Sound,
+Messages; the Screen setting, how the games fill it, among the Screen tab's), a row each with its value; A steps to
+the next value and writes it into config.yml at once (rpcs3_settings), never while RPCS3 runs (it writes its own
+settings back when it closes)."""
 
 from __future__ import annotations
 
@@ -72,6 +73,9 @@ LOG_LINES = 12                  # the newest lines of the app's log in the Log p
 LOG_MAX = 2000                  # the lines of the log the whole view shows, the newest
 RUNNING = "RPCS3 is open: close it first, it would write its own settings over the change."
 NOT_INSTALLED = "Install RPCS3 first: the settings are in its folder."
+# The RPCS3 card's two lines, the same in every emulator manager (owner, 07-11-2026)
+CARD_NOT_INSTALLED = "Not installed.\nInstall with the A button."
+CARD_INSTALLED = "Installed.\nRemove with the X button."
 NEEDS_RPCS3 = "Install RPCS3 first (the RPCS3 card): it is RPCS3 that installs the firmware and the packages."
 NO_FIRMWARE = ("The PS3's firmware is not installed yet: put PS3UPDAT.PUP in your Games\\PS3\\Firmware folder, and "
                "RPCS3 installs it when the RPCS3 card gets the focus. Without it no game starts from Steam.")
@@ -162,7 +166,7 @@ class _Worker(QObject):
 
 
 class SettingsPane(Pane):
-    """The settings in tabs, as PPSSPP Manager's: LB and RB step through Picture, Speed, Sound and Messages, a tap
+    """The settings in tabs, as PPSSPP Manager's: LB and RB step through Screen, Speed, Sound and Messages, a tap
     picks one; a tab is a page of rows, "Renderer: Vulkan", and A on one steps to the next value (the window writes
     it). The information icon tells what the tab's settings do."""
 
@@ -275,10 +279,10 @@ class MainWindow(PortableWindow):
         cards = QVBoxLayout(column)
         cards.setContentsMargins(0, 0, 0, 0)
         cards.setSpacing(px(12))
-        self.rpcs3_card = Card("RPCS3", "Install it; it takes the PS3's firmware.")
-        self.games_card = Card("Your games", "Mark them for Steam, play them, install packages.")
-        self.settings_card = Card("Settings", "The picture, the speed and the sound.")
-        self.log_card = Card("Log", "RPCS3's folder, and this app's log.")
+        self.rpcs3_card = Card("RPCS3", CARD_NOT_INSTALLED)
+        self.games_card = Card("Your games", "Mark them for Steam and press X to play.")
+        self.settings_card = Card("Settings", "Screen, game and controller settings")
+        self.log_card = Card("Log", "This app's log file.")
         for card in (self.rpcs3_card, self.games_card, self.settings_card, self.log_card):
             card.setFixedHeight(px(CARD_HEIGHT))
             cards.addWidget(card)
@@ -473,6 +477,7 @@ class MainWindow(PortableWindow):
         if self.confirm_remove:
             status = "Press the X button again to remove RPCS3: its folder, with the firmware and your saves, stays."
         self.status.setText(self.message or status)
+        self.rpcs3_card.set_text(CARD_INSTALLED if emulator.installed(self.home) else CARD_NOT_INSTALLED)
         if self.busy and self._job == "packages":
             self.games_pane.status.setText(status)      # the packages are installed from Your games: the run there
         self.refresh_settings()

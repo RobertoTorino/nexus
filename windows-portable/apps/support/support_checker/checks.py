@@ -160,8 +160,8 @@ TOOLS = (
           "shadps4": "optional", "vita3k": "optional", "xenia": "optional", PORTAL: "optional"},
          "Install it from https://store.steampowered.com/about/, and start it once."),
     Tool("xbox", "XBOX app",
-         "Microsoft's XBOX app, the home of the handheld's XBOX mode. The portal's XBOX menu setting puts the suite "
-         "in its library, so XBOX mode starts it.",
+         "Microsoft's XBOX app, the home of the handheld's XBOX mode. The portal's installer puts the suite in its "
+         "library on a first install, so XBOX mode starts it.",
          {PORTAL: "optional"}, "It comes with the handheld; else from the Microsoft Store."),
 )
 

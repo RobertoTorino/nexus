@@ -37,7 +37,7 @@ in Vita3K's storage and its Steam shortcut (library.removal_items; never its sav
 lists the .vpk, .zip and .pkg files it installed, and a file kept there is not listed to install again until it
 changes (KEPT_KEY).
 
-The Settings pane: Vita3K's settings that matter on the handheld, in tabs (LB and RB: Picture, Speed, Sound,
+The Settings pane: Vita3K's settings that matter on the handheld, in tabs (LB and RB: Screen, Speed, Sound,
 System), a row each with its value; A steps to the next value and writes it into config.yml at once
 (vita3k_settings), never while Vita3K runs."""
 
@@ -81,6 +81,9 @@ REMOVE, INSTALLED = "remove", "installed"      # what the keep page is for
 NOTHING_MARKED = "Nothing is marked Delete: B goes back, and nothing is deleted."
 RUNNING = "Vita3K is open: close it first, it would write its own settings over the change."
 NOT_INSTALLED = "Install Vita3K first: the settings are in its folder."
+# The Vita3K card's two lines, the same in every emulator manager (owner, 07-11-2026)
+CARD_NOT_INSTALLED = "Not installed.\nInstall with the A button."
+CARD_INSTALLED = "Installed.\nRemove with the X button."
 NEEDS_VITA3K = "Install Vita3K first (the A button): it is Vita3K that installs the firmware and your games."
 NO_FIRMWARE = ("Install the PS Vita's firmware and its font package first (put them in the Firmware folder of "
                "Games\\Vita): without them most games do not start.")
@@ -150,7 +153,7 @@ class _Worker(QObject):
 
 
 class SettingsPane(Pane):
-    """The settings in tabs, as RPCS3 Manager's: LB and RB step through Picture, Speed, Sound and System, a tap picks
+    """The settings in tabs, as RPCS3 Manager's: LB and RB step through Screen, Speed, Sound and System, a tap picks
     one; a tab is a page of rows, "Renderer: Vulkan", and A on one steps to the next value (the window writes it). The
     information icon tells what the tab's settings do."""
 
@@ -271,10 +274,10 @@ class MainWindow(PortableWindow):
         cards = QVBoxLayout(column)
         cards.setContentsMargins(0, 0, 0, 0)
         cards.setSpacing(px(12))
-        self.vita3k_card = Card("Vita3K", "Install it, the PS Vita's firmware and your games.")
-        self.games_card = Card("Your games", "Mark them for Steam, and play them.")
-        self.settings_card = Card("Settings", "The picture, the speed, the sound and the system.")
-        self.log_card = Card("Log", "Vita3K's folder, and this app's log.")
+        self.vita3k_card = Card("Vita3K", CARD_NOT_INSTALLED)
+        self.games_card = Card("Your games", "Mark them for Steam and press X to play.")
+        self.settings_card = Card("Settings", "Screen, game and controller settings")
+        self.log_card = Card("Log", "This app's log file.")
         for card in (self.vita3k_card, self.games_card, self.settings_card, self.log_card):
             card.setFixedHeight(px(CARD_HEIGHT))
             cards.addWidget(card)
@@ -493,6 +496,7 @@ class MainWindow(PortableWindow):
             status = ("Press the X button again to remove Vita3K: its folder, with the firmware, your games and your "
                       "saves, stays.")
         self.status.setText(self.message or status)
+        self.vita3k_card.set_text(CARD_INSTALLED if emulator.installed(self.home) else CARD_NOT_INSTALLED)
         if self.busy and self._job in ("content", "package") and self.stage:
             self.games_pane.status.setText(self.stage)  # the games are installed from Your games: their line there
         self.refresh_settings()

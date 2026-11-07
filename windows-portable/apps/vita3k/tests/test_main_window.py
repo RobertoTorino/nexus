@@ -32,8 +32,8 @@ from bc250_core.updates import ReleaseInfo
 from conftest import fake_install, install_firmware, make_dump, make_game, make_pkg, make_vpk
 from vita3k_manager import APP_ID, APP_NAME, EXE_NAME, INFO, LOGO_PATH, ROOT, __version__, emulator, shortcuts, userdata
 from vita3k_manager.library import Waiting
-from vita3k_manager.main_window import (NEEDS_VITA3K, NO_FIRMWARE, NO_STEAM, NOTHING_TO_CHANGE, NOTHING_TO_INSTALL,
-                                        MainWindow)
+from vita3k_manager.main_window import (CARD_INSTALLED, CARD_NOT_INSTALLED, NEEDS_VITA3K, NO_FIRMWARE, NO_STEAM,
+                                        NOTHING_TO_CHANGE, NOTHING_TO_INSTALL, MainWindow)
 
 
 class FakePad:
@@ -218,6 +218,27 @@ def test_update_and_remove_with_x_pressed_twice(qapp, tmp_path):
     window.act("x")
     assert emulator.installed(home) == "" and save.is_file() and userdata.firmware(fs(home)).ready
     assert "stays" in window.status.text() and window.legend.items[0] == ("A", "Install")
+    window.close()
+
+
+def test_the_cards_say_what_they_are_for(qapp, tmp_path):
+    """The cards' texts, the same in every emulator manager (owner, 07-11-2026): the Vita3K card says only whether
+    Vita3K is installed and which button acts, Not installed. and Install with the A button., then Installed. and
+    Remove with the X button.; the Settings pane's first tab is Screen."""
+    from vita3k_manager.vita3k_settings import TABS
+    window = make(qapp, tmp_path / "emulator")
+    assert window.vita3k_card.text.text() == CARD_NOT_INSTALLED == "Not installed.\nInstall with the A button."
+    assert window.games_card.text.text() == "Mark them for Steam and press X to play."
+    assert window.settings_card.text.text() == "Screen, game and controller settings"
+    assert window.log_card.text.text() == "This app's log file."
+    assert TABS[0][:2] == ("picture", "Screen") and "Picture" not in [name for _key, name, _group in TABS]
+    window.act("accept")                                        # A Install
+    assert wait_for(qapp, lambda: not window.busy) and emulator.installed(window.home)
+    assert window.vita3k_card.text.text() == CARD_INSTALLED == "Installed.\nRemove with the X button."
+    window.act("x")
+    window.act("x")                                             # X Remove Vita3K, pressed twice
+    assert not emulator.installed(window.home)
+    assert window.vita3k_card.text.text() == CARD_NOT_INSTALLED
     window.close()
 
 

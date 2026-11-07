@@ -27,7 +27,7 @@ the SteamGridDB key; Steam's library is the portal's RT Steam (owner, 30-10-2026
 pane: Xenia's folder, where Games\\XBOX360 is and the newest lines of the app's log; A (or a tap on the pane) shows the
 whole log in the pane.
 
-The Settings pane: Xenia's settings that matter on the handheld, in tabs (LB and RB: Picture, Speed, Sound, Console), a
+The Settings pane: Xenia's settings that matter on the handheld, in tabs (LB and RB: Screen, Speed, Sound, Console), a
 row each with its value; A steps to the next value and writes it into xenia-canary.config.toml at once
 (xenia_settings), never while Xenia runs."""
 
@@ -65,6 +65,9 @@ LOG_MAX = 2000                  # the lines of the log the whole view shows, the
 KINDS = {"iso": "ISO", "xex": "XEX", "zar": "ZAR", "god": "Games on Demand", "xbla": "Arcade"}
 RUNNING = "Xenia is open: close it first, it would write its own settings over the change."
 NOT_INSTALLED = "Install Xenia first: the settings are in its folder."
+# The Xenia card's two lines, the same in every emulator manager (owner, 07-11-2026)
+CARD_NOT_INSTALLED = "Not installed.\nInstall with the A button."
+CARD_INSTALLED = "Installed.\nRemove with the X button."
 BUSY = "Wait a moment: the app is still busy with the step before."
 ALL_SETTINGS = xenia_settings.SETTINGS
 # The Settings pane's information, per tab: what each setting of the tab does
@@ -114,7 +117,7 @@ class _Worker(QObject):
 
 
 class SettingsPane(Pane):
-    """The settings in tabs, as RPCS3 Manager's: LB and RB step through Picture, Speed, Sound and Console, a tap picks
+    """The settings in tabs, as RPCS3 Manager's: LB and RB step through Screen, Speed, Sound and Console, a tap picks
     one; a tab is a page of rows, "Graphics: Direct3D 12", and A on one steps to the next value (the window writes
     it). The information icon tells what the tab's settings do."""
 
@@ -225,10 +228,10 @@ class MainWindow(PortableWindow):
         cards = QVBoxLayout(column)
         cards.setContentsMargins(0, 0, 0, 0)
         cards.setSpacing(px(12))
-        self.xenia_card = Card("Xenia", "Install it.")
-        self.games_card = Card("Your games", "Mark them for Steam, play them, remove them.")
-        self.settings_card = Card("Settings", "The picture, the speed, the sound and the console.")
-        self.log_card = Card("Log", "Xenia's folder, and this app's log.")
+        self.xenia_card = Card("Xenia", CARD_NOT_INSTALLED)
+        self.games_card = Card("Your games", "Mark them for Steam and press X to play.")
+        self.settings_card = Card("Settings", "Screen, game and controller settings")
+        self.log_card = Card("Log", "This app's log file.")
         for card in (self.xenia_card, self.games_card, self.settings_card, self.log_card):
             card.setFixedHeight(px(CARD_HEIGHT))
             cards.addWidget(card)
@@ -383,6 +386,7 @@ class MainWindow(PortableWindow):
         if self.confirm_remove:
             status = "Press the X button again to remove Xenia: its folder, with your saves and its settings, stays."
         self.status.setText(self.message or status)
+        self.xenia_card.set_text(CARD_INSTALLED if emulator.installed(self.home) else CARD_NOT_INSTALLED)
         self.refresh_settings()
         self.update_legend()
 

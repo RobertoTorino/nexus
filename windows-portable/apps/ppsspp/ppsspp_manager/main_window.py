@@ -26,7 +26,7 @@ there, X Remove PPSSPP (a second press). A press that cannot act now says why on
 before A. The download and the unpacking run off the window's thread; the pane counts the megabytes. View (exit)
 while they run asks first, as the portal does.
 
-The Settings pane: PPSSPP's settings that matter on the handheld, in tabs (LB and RB: Picture, Game, Controller, On
+The Settings pane: PPSSPP's settings that matter on the handheld, in tabs (LB and RB: Screen, Game, Controller, On
 screen), a row each with its value; A steps to the next value and writes it into ppsspp.ini at once
 (ppsspp_settings), never while PPSSPP runs (it writes its own settings back when it closes). What the app owns in
 ppsspp.ini is set after an install, when the window opens (ppsspp_settings.prepare)."""
@@ -63,6 +63,9 @@ LOG_LINES = 12                  # the newest lines of the app's log in the Log p
 LOG_MAX = 2000                  # the lines of the log the whole view shows, the newest
 RUNNING = "PPSSPP is open: close it first, it would write its own settings over the change."
 NOT_INSTALLED = "Install PPSSPP first: the settings are in its folder."
+# The PPSSPP card's two lines, the same in every emulator manager (owner, 07-11-2026)
+CARD_NOT_INSTALLED = "Not installed.\nInstall with the A button."
+CARD_INSTALLED = "Installed.\nRemove with the X button."
 BUSY = "Wait a moment: the app is still busy with the step before."
 ALL_SETTINGS = ppsspp_settings.SETTINGS
 # The Settings pane's information, per tab: what each setting of the tab does
@@ -121,7 +124,7 @@ NOTHING_TO_CHANGE = ("Nothing to change in Steam: the A button on a game marks i
 
 
 class SettingsPane(Pane):
-    """The settings in tabs, as PCSX2 Manager's: LB and RB step through Picture, Game, Controller and On screen, a
+    """The settings in tabs, as PCSX2 Manager's: LB and RB step through Screen, Game, Controller and On screen, a
     tap picks one; a tab is a page of rows, "Renderer: Vulkan", and A on one steps to the next value (the window
     writes it). Seven rows fit a page at 720 px high. The information icon tells what the tab's settings do."""
 
@@ -224,10 +227,10 @@ class MainWindow(PortableWindow):
         cards = QVBoxLayout(column)
         cards.setContentsMargins(0, 0, 0, 0)
         cards.setSpacing(px(12))
-        self.ppsspp_card = Card("PPSSPP", "Install, update or remove it.")
-        self.games_card = Card("Your games", "Mark them for Steam, or remove them.")
-        self.settings_card = Card("Settings", "The picture, the game and the controller.")
-        self.log_card = Card("Log", "PPSSPP's memory stick, and this app's log.")
+        self.ppsspp_card = Card("PPSSPP", CARD_NOT_INSTALLED)
+        self.games_card = Card("Your games", "Mark them for Steam and press X to play.")
+        self.settings_card = Card("Settings", "Screen, game and controller settings")
+        self.log_card = Card("Log", "This app's log file.")
         for card in (self.ppsspp_card, self.games_card, self.settings_card, self.log_card):
             card.setFixedHeight(px(CARD_HEIGHT))
             cards.addWidget(card)
@@ -372,6 +375,7 @@ class MainWindow(PortableWindow):
         if self.confirm_remove:
             status = "Press the X button again to remove PPSSPP: its memory stick stays."
         self.status.setText(self.message or status)
+        self.ppsspp_card.set_text(CARD_INSTALLED if emulator.installed(self.home) else CARD_NOT_INSTALLED)
         self.refresh_settings()
         self.update_legend()
 

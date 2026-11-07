@@ -37,6 +37,9 @@ list scrolls with the d-pad or a finger.
 
 ## PPSSPP
 
+The PPSSPP card on the left says only whether PPSSPP is installed and which button acts: **Not installed.** and
+**Install with the A button.** until it is installed, then **Installed.** and **Remove with the X button.**
+
 The pane shows the PPSSPP that is installed, the one this version of the app installs, and the folder. PPSSPP's own
 window is never opened: your games are on the **Your games** card.
 
@@ -141,13 +144,13 @@ Right after the install, and each time before PPSSPP opens, the app turns off PP
 its settings (`memstick\PSP\SYSTEM\ppsspp.ini` in its folder): a newer PPSSPP comes with the app. Everything else in
 the file stays as PPSSPP wrote it.
 
-The Settings card's pane has four tabs, **Picture**, **Game**, **Controller** and **On screen**: **LB** and **RB**
+The Settings card's pane has four tabs, **Screen**, **Game**, **Controller** and **On screen**: **LB** and **RB**
 step through them, or tap one. A tab is a row per setting with its value; **A** on one steps to the next value and
 saves it at once (the row at the bottom says **A Change**, **LB Previous tab**, **RB Next tab**). PPSSPP reads it the
 next time it opens; while PPSSPP is open, the pane asks you to close it first, since PPSSPP writes its own settings
 back when it closes. The **information icon** at the pane's top right says what each setting of the tab does.
 
-**Picture**
+**Screen**
 
 | Setting | Values |
 |---|---|
