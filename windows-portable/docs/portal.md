@@ -17,8 +17,7 @@ The apps are tiles under tabs: one tab per category that has apps (Sustainable, 
 rows of four tiles each. A tab with more than eight apps has more pages: **Page 1 of 2** under the tiles says which
 one shows. Move past the last tile on the right to the next page, or past the first on the left back; a tap on
 **Page 1 of 2** turns to the next page, and from the last back to the first. At the right of the tabs, **Installed
-12/20** says how many of the suite's apps are on this device, of all the portal lists (while a newer portal is out, the
-update banner takes its place). A tile shows the app's icon, its name
+12/20** says how many of the suite's apps are on this device, of all the portal lists. A tile shows the app's icon, its name
 and its state:
 
 | State | Meaning |
@@ -55,13 +54,30 @@ Escape goes back.
 On the Settings page the setting with the focus has the amber edge; the d-pad stays on the page, and **B** goes back to
 the tiles.
 
-## Steam, XBOX, Armoury Crate and Command Center
+## Steam, XBOX, XBOX mode, Armoury Crate and Command Center
 
-Beside the tabs are four buttons that start the device's own programs: **Steam** (its library in Big Picture mode, as
-**RT** opens it, below), **XBOX** (the XBOX app), **Armoury Crate** and **Command Center** (ASUS's, on the ROG Ally and
-the ROG XBOX Ally; Armoury Crate on an ASUS laptop too). Tap one, or press up on the top row of tiles and then **A**;
-the row at the bottom says **A Start** while one has the focus, and down goes back to the tiles. A program that is not
-on the device says so on the line under the app.
+Beside the tabs are five icons:
+
+| Icon | What it does |
+|---|---|
+| Steam | Steam's library in Big Picture mode, as **RT** opens it (below) |
+| XBOX | Starts the XBOX app |
+| XBOX mode ↔ Desktop (a screen with two arrows) | Switches between XBOX mode and the desktop, either way, as **Win + F11** and the Settings page's row do |
+| Armoury Crate | Starts Armoury Crate (Armoury Crate SE on the ROG Ally and the ROG XBOX Ally; Armoury Crate on an ASUS laptop) |
+| Command Center (three sliders) | Opens Armoury Crate SE's Command Center by pressing **Ctrl + Alt + C** (set it once, below) |
+
+Steam, XBOX and Armoury Crate show their programs' own icons, read from the device when the portal starts; Command
+Center has three sliders instead, as ASUS gives it Armoury Crate's icon. The mouse over an icon shows its name. Tap
+one, or press up on the top row of tiles and then **A**; the row at the bottom says what it does while it has the focus
+(**A Start XBOX**, **A Open Command Center**), and down goes back to the tiles. A program that is not on the device
+shows its initials, and says so on the line under the app when pressed.
+
+### Command Center's shortcut
+
+Windows has no way to open Command Center from another program: Armoury Crate SE opens it from the handheld's own
+Command Center button, or from a keyboard shortcut you choose. The portal presses **Ctrl + Alt + C**, so set that once:
+in Armoury Crate SE's settings, find the keyboard shortcut for Command Center and press **Ctrl + Alt + C**. Until then
+the icon presses the keys and nothing opens; the line under the app reminds you.
 
 ### RT Steam
 
@@ -133,7 +149,8 @@ installs the new release in a PowerShell window and starts again. The new releas
 tiles then say **Update** where a newer release is pinned.
 
 The settings are on the Settings page too, under the release, in three columns: **Look and device** (how the portal
-looks and sounds, the performance mode and XBOX mode), **Clock and weather** (at the top) and **Screens**. They are
+looks and sounds, the performance mode and XBOX mode), **Start, clock and weather** (starting at sign-in, and the top
+of the page) and **Screens**. They are
 kept for the next start.
 The d-pad moves up and down a column and left and right between them, **A** on a setting changes it; **B** goes back
 to the tiles. What each setting does
@@ -146,6 +163,7 @@ bottom does.
 | Wallpaper | A picture behind the tiles, which show it through them, in every app of the suite, each from its next start. **A** picks the next: **Off** (the plain dark background), **Built-in** (the suite's own picture), then each of your own pictures, by file name (see below). |
 | Transparency | How much of the dark background lies over the picture, so the text stays easy to read. **A** adds 10 %, up to 90 %, then starts at 0 %. It starts at 59 %. |
 | Sound | The intro's sound when the portal starts, and a short sound on each controller button. Off: both are silent until Windows starts again; after a restart the sound is on. |
+| Start at sign-in | **On**: the portal starts by itself, full screen, each time you sign in to Windows. **A** first says what it does and asks for **A** again within five seconds; only that second press turns it on (the row says **press A again** meanwhile). **A** turns it off at once. It is a shortcut to the installed portal in your Startup folder (`%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\Windows Portable Suite.lnk`), in your own account; Windows' Settings > Apps > Startup lists it too, and uninstalling the suite takes it away. The portal run from a checkout cannot start at sign-in. |
 | Clock | The time at the top in **24 hours** (17:04) or **12 hours** (5:04 PM). **A** switches. |
 | Seconds | **On** shows the seconds too (17:04:09). **A** switches. |
 | Time zone | **CET**, Amsterdam time (CEST in summer, as Europe switches on the last Sundays of March and October), or **UTC**; its name follows the time. **A** switches. |

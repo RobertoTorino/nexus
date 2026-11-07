@@ -43,6 +43,7 @@ $TestMenu = Join-Path $MenuDir 'Windows Portable Test.lnk'
 $Desk = Join-Path $env:WPS_DESKTOP_DIR 'Windows Portable Suite.lnk'
 $TestDesk = Join-Path $env:WPS_DESKTOP_DIR 'Windows Portable Test.lnk'
 $Startup = Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs\Startup\Windows Portable Suite - PC screen only.lnk'
+$Autostart = Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs\Startup\Windows Portable Suite.lnk'
 
 # The release folder: the built one, or a stand-in with the same layout: program\ with the exe and _internal\, and
 # bundle\ with a stand-in Windows Portable Test release (its real install.ps1) and SHA256SUMS.
@@ -162,11 +163,12 @@ Set-Content -LiteralPath $Ini, (Join-Path $PortalHome 'portal.log') -Value 'x' -
 Set-Content -LiteralPath (Join-Path $SuiteHome 'wallpapers\mine.png') -Value 'x'      # a picture of the user's
 New-Item -ItemType Directory -Force -Path (Split-Path -Parent $Startup) | Out-Null
 Set-Content -LiteralPath $Startup -Value 'x'                                         # the portal's PC screen only shortcut
+Set-Content -LiteralPath $Autostart -Value 'x'                                       # and its Start at sign-in
 $rc = Run 'log4' @('--uninstall')
 Check 'a picture in the wallpapers folder kept' { Test-Path (Join-Path $SuiteHome 'wallpapers\mine.png') }
 Remove-Item -LiteralPath (Join-Path $SuiteHome 'wallpapers\mine.png')
 Check 'exit 0' { $rc -eq 0 }
-Check 'portal gone, its Startup shortcut too' { -not (Test-Path $A) -and -not (Test-Path $Menu) -and -not (Test-Path $Startup) }
+Check 'portal gone, its Startup shortcuts too' { -not (Test-Path $A) -and -not (Test-Path $Menu) -and -not (Test-Path $Startup) -and -not (Test-Path $Autostart) }
 Check 'the test app gone with it, its release folder too' { -not (Test-Path $TestApp) -and -not (Test-Path $TestMenu) -and -not (Test-Path (Join-Path $Releases $TestTag)) }
 Check 'the other app kept and named' { (Test-Path (Join-Path $SuiteHome 'windows-portable-other')) -and (Log 'log4') -match 'Still installed.*other \(wp-other-v0.1.0\)' }
 Check 'settings, log and the records kept, the test app no longer recorded' { (Test-Path $Ini) -and (Test-Path (Join-Path $PortalHome 'portal.log')) -and ((RecordOf 'other') -eq 'wp-other-v0.1.0') -and ($null -eq (RecordOf 'test')) }

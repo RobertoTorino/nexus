@@ -8,8 +8,8 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QFont
+from PyQt6.QtCore import QPointF, QRectF, Qt, pyqtSignal
+from PyQt6.QtGui import QColor, QFont, QPainter, QPen, QPixmap
 from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QLineEdit, QSizePolicy, QVBoxLayout, QWidget
 
 from bc250_core.portable import (AMBER, BODY, DIM, LEGEND, ON_AMBER, PICTURE_RULES, RADIUS, RAISED, TEXT, VEIL_MAX,
@@ -20,6 +20,7 @@ from .weather import MATCHES, Place
 
 WALLPAPER_FOLDER = r"%LOCALAPPDATA%\windows-portable-suite\wallpapers"   # as the user finds it
 NAME = 24                               # pt: the name at the top of a pane
+LAUNCH, ICON = 36, 26                   # a launch button's square, as high as a tab's name, and its icon
 
 
 class AppPane(Pane):
@@ -75,11 +76,11 @@ class UpdateBanner(QLabel):
 
 
 class Count(QLabel):
-    """On the tabs' line: how many of the suite's apps are installed, of all it lists, "12/20" (owner, 07-11-2026);
-    hidden while the update banner takes its room."""
+    """On the tabs' line: how many of the suite's apps are installed, of all it lists, "12/20" (owner, 07-11-2026)."""
 
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
+        self.setContentsMargins(px(12), 0, px(4), 0)   # apart from the buttons and the banner
         self.setFont(font(LEGEND, QFont.Weight.DemiBold))
         self.setStyleSheet(f"color: {DIM}; background: transparent;")
 
@@ -87,16 +88,91 @@ class Count(QLabel):
         self.setText(f"Installed {installed}/{listed}")
 
 
+def sliders_symbol(size: int = 96) -> QPixmap:
+    """The suite's own symbol for Command Center (owner, 07-11-2026: our own icon where an app's does not serve; ASUS
+    gives it Armoury Crate's): three sliders, each a line with its knob at another place, in the text's color."""
+    picture = QPixmap(size, size)
+    picture.fill(Qt.GlobalColor.transparent)
+    painter = QPainter(picture)
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+    line = max(2, size // 14)
+    knob = size // 6
+    for row, at in ((0.25, 0.68), (0.5, 0.32), (0.75, 0.56)):
+        y = round(size * row)
+        painter.setPen(QPen(QColor(TEXT), line, cap=Qt.PenCapStyle.RoundCap))
+        painter.drawLine(round(size * 0.12), y, round(size * 0.88), y)
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(QColor(AMBER))
+        painter.drawEllipse(QPointF(size * at, y), knob, knob)
+    painter.end()
+    return picture
+
+
+def switch_symbol(size: int = 96) -> QPixmap:
+    """The suite's own symbol for XBOX mode ↔ Desktop (owner, 07-11-2026): a screen with two arrows, one each way, in
+    amber, as Win + F11 switches either way."""
+    picture = QPixmap(size, size)
+    picture.fill(Qt.GlobalColor.transparent)
+    painter = QPainter(picture)
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+    line = max(2, size // 16)
+    painter.setPen(QPen(QColor(TEXT), line))
+    painter.setBrush(Qt.BrushStyle.NoBrush)
+    painter.drawRoundedRect(QRectF(size * 0.08, size * 0.14, size * 0.84, size * 0.62), size * 0.08, size * 0.08)
+    painter.drawLine(round(size * 0.34), round(size * 0.88), round(size * 0.66), round(size * 0.88))   # the stand
+    painter.setPen(QPen(QColor(AMBER), line, cap=Qt.PenCapStyle.RoundCap, join=Qt.PenJoinStyle.RoundJoin))
+    head = size * 0.09
+    for y, start, end in ((0.36, 0.26, 0.74), (0.56, 0.74, 0.26)):      # right, then back left
+        y, start, end = size * y, size * start, size * end
+        way = 1 if end > start else -1
+        painter.drawLine(QPointF(start, y), QPointF(end, y))
+        painter.drawLine(QPointF(end, y), QPointF(end - way * head, y - head))
+        painter.drawLine(QPointF(end, y), QPointF(end - way * head, y + head))
+    painter.end()
+    return picture
+
+
+OWN_SYMBOLS = {"command": sliders_symbol, "xboxmode": switch_symbol}
+
+
+def own_symbol(key: str) -> QPixmap | None:
+    """The suite's own symbol of a tabs' line button, None for one that shows its program's icon."""
+    draw = OWN_SYMBOLS.get(key)
+    return draw() if draw is not None else None
+
+
 class LaunchButton(Row):
     """A button on the tabs' line that starts a program of the device's (owner, 07-11-2026: Steam, XBOX, Armoury
-    Crate and Command Center beside the categories): drawn as a row, the focus with the amber edge; the d-pad reaches
-    it up from the tiles, A or a tap starts it (activated)."""
+    Crate and Command Center beside the categories): a square with the program's own icon (owner, 07-11-2026: symbols,
+    not text, the line had no room), its name on hover, drawn as a row, the focus with the amber edge; the d-pad
+    reaches it up from the tiles, A or a tap starts it (activated). Without an icon (the program is not here) the
+    suite's own symbol: the name's initials."""
 
-    def __init__(self, key: str, name: str, parent: QWidget | None = None):
-        super().__init__(name, parent)
-        self.key = key
+    def __init__(self, key: str, name: str, icon: QPixmap | None = None, verb: str = "Start",
+                 parent: QWidget | None = None):
+        super().__init__("", parent)
+        self.key, self.name = key, name
+        self.action = f"{verb} {name}".strip()          # A's text in the row at the bottom
+        self.setToolTip(name)
+        self.setStyleSheet(f"QToolTip {{ color: {TEXT}; background: {RAISED}; border: none; padding: {px(4)}px; }}")
+        self.layout().setContentsMargins(0, 0, 0, 0)
+        self.label.setFont(font(BODY, QFont.Weight.ExtraBold))
         self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+        side = px(LAUNCH)
+        self.setFixedSize(side, side)
+        self.set_icon(icon)
+
+    def set_icon(self, icon: QPixmap | None) -> None:
+        if icon is not None and not icon.isNull():
+            size = px(ICON)
+            self.label.setPixmap(icon.scaled(size, size, Qt.AspectRatioMode.KeepAspectRatio,
+                                             Qt.TransformationMode.SmoothTransformation))
+        else:
+            self.label.setPixmap(QPixmap())
+            self.label.setText("".join(word[0] for word in self.name.split())[:2])
+
+    def has_icon(self) -> bool:
+        return not self.label.pixmap().isNull()
 
 
 class PageMarker(QLabel):
@@ -215,11 +291,13 @@ class SuitePane(Pane):
         self.seconds = Row("Seconds: Off")
         self.zone = Row("Time zone: CET")
         self.place = Row("Location: Off")
+        self.autostart = Row("Start at sign-in: Off")   # owner, 07-11-2026: turned on with a second press
         columns = QHBoxLayout()
         columns.setSpacing(px(20))
         for heading, rows in (("Look and device", (self.wallpaper, self.transparency, self.sound, self.mode,
                                                    self.xbox_mode)),
-                              ("Clock and weather", (self.hours, self.seconds, self.zone, self.place)),
+                              ("Start, clock and weather", (self.autostart, self.hours, self.seconds, self.zone,
+                                                            self.place)),
                               ("Screens", (self.handheld, self.both, self.extend, self.tv, self.screen_row))):
             column = QVBoxLayout()
             column.setSpacing(px(8))
@@ -291,12 +369,18 @@ class SuitePane(Pane):
                      "handheld's screen goes dark. XBOX mode runs on the main screen only: with Extend the second "
                      "screen stays empty in XBOX mode. Exiting the portal sets PC screen only again, and so does the "
                      "next sign-in after a restart, when one of the others was set here.")
+        parts.append("Start at sign-in: the portal starts by itself, full screen, each time you sign in to Windows (a "
+                     "shortcut in your Startup folder, in your own account). The A button asks first: press A again "
+                     "within five seconds to turn it on. A turns it off again. Only the installed portal can start at "
+                     "sign-in; uninstalling the suite takes the shortcut away.")
         parts.append("XBOX mode ↔ Desktop: Windows' switch between XBOX mode and the desktop (Win + F11), either way. "
                      "Coming back to XBOX mode after the desktop, Windows may ask whether to restart for better "
                      "performance: its own question, answered with the controller.")
-        parts.append("The buttons beside the categories start Steam (its library in Big Picture), the XBOX app, "
-                     "Armoury Crate and its Command Center: a tap, or the d-pad up from the tiles and A. One that is "
-                     "not on this device says so.")
+        parts.append("The icons beside the categories start Steam (its library in Big Picture), the XBOX app, "
+                     "XBOX mode or the desktop (Win + F11), Armoury Crate and its Command Center (the mouse over one "
+                     "shows its name): a tap, or the d-pad up from the tiles and A. Command Center opens with Ctrl + "
+                     "Alt + C, a shortcut you set once in Armoury Crate SE's settings. A program that is not on this "
+                     "device shows its initials, and says so when pressed.")
         parts.append("With a second screen in Extend, drag the portal by its top (the name or the clock) toward the "
                      "other screen, with a finger or the mouse, and it moves there, as LT does.")
         parts += ["Every setting is kept for the next start.",
@@ -331,6 +415,10 @@ class SuitePane(Pane):
         self.hours.set_text(f"Clock: {'12 hours' if twelve_hour else '24 hours'}")
         self.seconds.set_text(f"Seconds: {'On' if seconds else 'Off'}")
         self.zone.set_text(f"Time zone: {zone}")
+
+    def set_autostart(self, on: bool, asked: bool = False) -> None:
+        """The Start at sign-in row: On or Off, or the second press it waits for."""
+        self.autostart.set_text("Start at sign-in: " + ("press A again" if asked else "On" if on else "Off"))
 
     def set_place(self, name: str) -> None:
         """The Location row: the place's name, "" for Off."""

@@ -50,6 +50,8 @@ $MenuDir = Join-Path $env:APPDATA "Microsoft\Windows\Start Menu\Programs\$SuiteN
 $MenuEntry = Join-Path $MenuDir "$AppName.lnk"
 # The portal's own, while it set another screen than PC screen only (owner, 07-11-2026): PC screen only at the next sign-in
 $StartupLink = Join-Path $env:APPDATA "Microsoft\Windows\Start Menu\Programs\Startup\$SuiteName - PC screen only.lnk"
+# The portal at every sign-in, while its Settings page's Start at sign-in is on (owner, 07-11-2026)
+$AutostartLink = Join-Path $env:APPDATA "Microsoft\Windows\Start Menu\Programs\Startup\$AppName.lnk"
 if ($env:WPS_DESKTOP_DIR) { $DesktopDir = $env:WPS_DESKTOP_DIR } else { $DesktopDir = [Environment]::GetFolderPath('Desktop') }
 $DesktopIcon = Join-Path $DesktopDir "$AppName.lnk"
 $Src = $PSScriptRoot
@@ -261,6 +263,7 @@ if ($Uninstall) {
     Remove-IfThere $MenuEntry
     Remove-IfThere $DesktopIcon
     Remove-IfThere $StartupLink
+    Remove-IfThere $AutostartLink
     try { Remove-IfThere $AppDir } catch { Die "$AppDir could not be removed: close $AppName first. ($_)" }
     $records = Read-Records
     $appOptions = @('--uninstall')

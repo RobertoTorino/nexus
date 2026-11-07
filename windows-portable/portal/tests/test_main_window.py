@@ -22,7 +22,7 @@ from bc250_core.portable import MENU, VIEW
 from bc250_core.gamepad import Gamepad
 from bc250_core.updates import ReleaseInfo
 
-from portable_portal import MANIFEST
+from portable_portal import MANIFEST, launchers
 from portable_portal import main_window as mw
 from portable_portal.manifest import AppEntry, load
 from portable_portal.portal_update import AppChange, PortalUpdate
@@ -133,6 +133,7 @@ def world(qapp, tmp_path, monkeypatch):
     w.sound = "speakers"                                # where Windows plays the sound, as the window reads it
     w.notices = []                                      # the Windows notifications shown
     w.started = []                                      # the programs the tabs' line started, by application ID
+    w.pressed = []                                      # the keys it pressed together
 
     def make(portal_check=None, **kwargs):
         pad = FakePad()
@@ -151,6 +152,8 @@ def world(qapp, tmp_path, monkeypatch):
         kwargs.setdefault("notify", w.notices.append)       # nor its notifications
         kwargs.setdefault("find_app", lambda launcher: launcher.app_ids()[0])   # every program here, none started
         kwargs.setdefault("start_app_id", w.started.append)
+        kwargs.setdefault("app_icon", lambda launcher: None)    # nor this machine's own icons
+        kwargs.setdefault("press", w.pressed.append)        # nor its keyboard
         window = mw.MainWindow(w.entries, w.sources, w.records, portal_check=portal_check,
                                gamepad=Gamepad(source_factory=lambda: pad), battery=lambda: (82, False),
                                launch=w.launched.append, terminal=w.terminal, exit_dir=tmp_path / "exit", **kwargs)
@@ -525,7 +528,7 @@ def test_the_banner_offers_the_portals_update_on_the_tiles(world, qapp, monkeypa
     world.records.set("test", "wp-test-v0.0.9")         # an app update waits too: the portal goes first
     window = world.make(portal_check=lambda: world.update, exe=r"C:\portal\Windows-Portable-Suite.exe")
     assert wait_for(qapp, lambda: window.update is not None)
-    assert window.banner.isVisible() and window.banner.text() == "UPDATE: PRESS Y" and not window.count.isVisible()
+    assert window.banner.isVisible() and window.banner.text() == "UPDATE: PRESS Y" and window.count.isVisible()
     assert ("Y", "Update suite") in window.legend.items
     window.on_action("x")
     assert window.stack.currentWidget() is window.details_pane and not window.banner.isVisible()
@@ -543,7 +546,6 @@ def test_the_banner_offers_the_portals_update_on_the_tiles(world, qapp, monkeypa
     window.update = PortalUpdate(ReleaseInfo(version=mw.__version__, tag=f"wp-portal-v{mw.__version__}"))
     window.refresh()
     assert not window.banner.isVisible() and ("Y", "Update") in window.legend.items      # the app's own again
-    assert window.count.isVisible()
 
 
 def test_the_screens_as_windows_names_them(world, qapp, monkeypatch, tmp_path):
@@ -1210,7 +1212,7 @@ def test_the_settings_lie_in_three_columns(world, qapp, monkeypatch):
     window.say("", mw.SWITCHED_MODE)                    # two lines under the rows
     qapp.processEvents()
     columns = [[pane.wallpaper, pane.transparency, pane.sound, pane.mode, pane.xbox_mode],
-               [pane.hours, pane.seconds, pane.zone, pane.place],
+               [pane.autostart, pane.hours, pane.seconds, pane.zone, pane.place],
                [pane.handheld, pane.both, pane.extend, pane.tv, pane.screen_row]]
     lefts = []
     for rows in columns:
@@ -1313,13 +1315,28 @@ def test_a_search_without_a_connection_says_so(world, qapp, monkeypatch):
 
 
 def test_the_tabs_line_starts_steam_xbox_armoury_crate_and_command_center(world, qapp, monkeypatch):
-    """Owner, 07-11-2026: buttons on the categories' line start Steam, XBOX, Armoury Crate and Command Center, by a tap
-    or the d-pad up from the tiles and A (A Start in the legend); one that is not on the device says so."""
+    """Owner, 07-11-2026: buttons on the categories' line start Steam, XBOX, XBOX mode or the desktop, Armoury Crate
+    and Command Center, by a tap or the d-pad up from the tiles and A (what A does, with the name, in the legend); one
+    that is not on the device says so. Each shows its program's icon (owner, 07-11-2026: symbols, not text), its name
+    on hover; without one, initials. Command Center opens with its keyboard shortcut (its own app opened Armoury
+    Crate)."""
+    from PyQt6.QtGui import QColor, QPixmap
     opened = []
-    window = world.make(steam_here=lambda: True, open_steam=opened.append)
+    red = QPixmap(64, 64)
+    red.fill(QColor("red"))
+    window = world.make(steam_here=lambda: True, open_steam=opened.append,
+                        app_icon=lambda launcher: red if launcher.key != "armoury" else None)
     monkeypatch.setattr(window, "isActiveWindow", lambda: True)
     buttons = window.launch_buttons
-    assert [b.label.text() for b in buttons.values()] == ["Steam", "XBOX", "Armoury Crate", "Command Center"]
+    assert [b.toolTip() for b in buttons.values()] == ["Steam", "XBOX", "XBOX mode ↔ Desktop", "Armoury Crate",
+                                                       "Command Center"]
+    assert [b.has_icon() for b in buttons.values()] == [True, True, True, False, True]
+    assert buttons["armoury"].label.text() == "AC" and buttons["xbox"].label.text() == ""
+    for key in ("command", "xboxmode"):                             # the suite's own symbols
+        assert not mw.launcher_icon(launchers.BY_KEY[key]).isNull()
+    buttons["xboxmode"].activated.emit()                            # Win + F11, as the Settings page's row
+    assert world.displays == ["Win + F11"] and window.message == mw.SWITCHED_MODE
+    assert all(b.width() == b.height() for b in buttons.values())
     tabs_line = window.tabs.geometry()
     for button in buttons.values():
         assert button.isVisible() and abs(button.geometry().center().y() - tabs_line.center().y()) <= 2
@@ -1329,11 +1346,17 @@ def test_the_tabs_line_starts_steam_xbox_armoury_crate_and_command_center(world,
     buttons["steam"].activated.emit()                               # as RT
     assert opened == [steam.OPEN_URL]
     window.on_action("up")                                          # from the first tile up to the line
-    assert isinstance(window.focusWidget(), mw.LaunchButton) and ("A", "Start") in window.legend.items
+    assert isinstance(window.focusWidget(), mw.LaunchButton)
+    assert ("A", f"Start {window.focusWidget().name}") in window.legend.items
+    buttons["xboxmode"].setFocus()
+    assert ("A", "XBOX mode ↔ Desktop") in window.legend.items
     buttons["command"].setFocus()
+    assert ("A", "Open Command Center") in window.legend.items
     window.on_action("accept")
-    assert world.started[-1] == "B9ECED6F.ASUSCommandCenter_qmba6cd70vzyy!App"
-    window.on_action("down")                                        # back down to the tiles
+    assert world.pressed == [("Ctrl", "Alt", "C")] and len(world.started) == 1     # its shortcut, not its app
+    assert window.app_pane.status.text() == mw.COMMAND_CENTER
+    assert launchers.virtual_keys(("Ctrl", "Alt", "C")) == [0x11, 0x12, ord("C")]
+    window.on_action("down")                                      # back down to the tiles
     assert isinstance(window.focusWidget(), portable.Card)
 
     def fails(app_id):
@@ -1344,6 +1367,29 @@ def test_the_tabs_line_starts_steam_xbox_armoury_crate_and_command_center(world,
     window = world.make(start_app_id=fails)
     window.launch_buttons["armoury"].activated.emit()
     assert window.app_pane.status.text() == "Armoury Crate could not be started: Explorer did not start"
+
+
+def test_a_launchers_icon_is_its_apps_largest_plain_logo(tmp_path):
+    """The Start menu's logo of the app, from its package's manifest: the largest size, on no plate where there is
+    one; never the high-contrast or light-background ones."""
+    from portable_portal import launchers
+    (tmp_path / "Assets").mkdir()
+    (tmp_path / "AppxManifest.xml").write_text(
+        '<Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10" '
+        'xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"><Applications>'
+        r'<Application Id="Other"><uap:VisualElements Square44x44Logo="Other\Logo.png"/></Application>'
+        r'<Application Id="App"><uap:VisualElements Square44x44Logo="Assets\Logo.png"/></Application>'
+        '</Applications></Package>', encoding="utf-8")
+    assert launchers.logo(tmp_path, "App") is None                  # no picture yet
+    for name in ("scale-200", "targetsize-48", "targetsize-256", "targetsize-48_altform-unplated",
+                 "targetsize-256_contrast-black", "targetsize-256_altform-lightunplated"):
+        (tmp_path / "Assets" / f"Logo.{name}.png").write_bytes(b"png")
+    assert launchers.logo(tmp_path, "App").name == "Logo.targetsize-256.png"
+    (tmp_path / "Assets" / "Logo.targetsize-256_altform-unplated.png").write_bytes(b"png")
+    assert launchers.logo(tmp_path, "App").name == "Logo.targetsize-256_altform-unplated.png"
+    (tmp_path / "Assets" / "Logo.png").write_bytes(b"png")           # the plain name, when the package has it
+    assert launchers.logo(tmp_path, "App").name == "Logo.png"
+    assert launchers.logo(tmp_path, "Missing") is None and launchers.logo(tmp_path / "none", "App") is None
 
 
 def test_the_launchers_find_the_first_package_there(tmp_path):
@@ -1357,16 +1403,22 @@ def test_the_launchers_find_the_first_package_there(tmp_path):
 
 
 def test_the_tabs_line_fits_with_the_update_banner(world, qapp):
-    """The categories, the four buttons, the count and the update banner on one line at 1280 x 720."""
+    """Every category, the five icons, the count and the update banner on one line at 1280 x 720 (owner, 07-11-2026:
+    the buttons as icons; the banner short again with the fifth, XBOX mode), none of them squeezed."""
+    gaming = world.entries[1]
+    world.entries = [*world.entries, *(replace(gaming, key=key, category=key) for key in mw.CATEGORIES)]
     window = world.make(portal_check=lambda: world.update)
+    assert len(window.tabs.labels) == len(mw.CATEGORIES) == 4
     assert wait_for(qapp, lambda: window.banner.isVisible())
     qapp.processEvents()
     right = window.width() - window.margins()[2]
     assert window.banner.geometry().right() <= right
     labels = list(window.tabs.labels.values())
     assert labels[-1].mapTo(window, labels[-1].rect().topRight()).x() < window.launch_buttons["steam"].x()
-    for button in window.launch_buttons.values():
-        assert button.width() >= button.sizeHint().width()
+    assert window.launch_buttons["command"].geometry().right() < window.count.x()
+    assert window.count.isVisible() and window.count.geometry().right() < window.banner.x()
+    assert all(label.width() >= label.sizeHint().width() for label in labels)   # nothing squeezed
+    assert window.count.width() >= window.count.sizeHint().width()
 
 
 def test_dragging_the_top_moves_the_portal_to_the_other_screen(world, qapp, monkeypatch):
@@ -1412,3 +1464,34 @@ class LeftScreen(OtherScreen):
     def geometry(self):
         from PyQt6.QtCore import QRect
         return QRect(-3000, 0, 1920, 1080)
+
+
+def test_start_at_sign_in_is_turned_on_with_a_second_press(world, qapp, tmp_path):
+    """Owner, 07-11-2026: the portal can start at every sign-in, and the user acknowledges it: the Settings page's row
+    says what it does on the first A and turns it on only with a second A within five seconds (a shortcut to the
+    installed portal in the Startup folder); A turns it off; from the checkout it cannot."""
+    exe = r"C:\portal\Windows-Portable-Suite.exe"
+    window = world.make(exe=exe)
+    link = tmp_path / "Startup" / "Windows Portable Suite.lnk"
+    window.on_action("menu")
+    row = window.suite_pane.autostart
+    assert row.label.text() == "Start at sign-in: Off" and "Start at sign-in:" in window.suite_pane.info.info
+    row.activated.emit()                                            # the first press only asks
+    assert not link.exists() and window.message == mw.AUTOSTART_ASK
+    assert row.label.text() == "Start at sign-in: press A again"
+    window._confirm_over()                                          # five seconds without an answer
+    assert not link.exists() and row.label.text() == "Start at sign-in: Off" and window.message == ""
+    row.activated.emit()
+    row.activated.emit()                                            # acknowledged
+    assert link.read_text() == f"{exe} " and window.message == mw.AUTOSTART_ON
+    assert row.label.text() == "Start at sign-in: On"
+    window.on_action("back")
+    window.on_action("menu")
+    assert window.suite_pane.autostart.label.text() == "Start at sign-in: On"     # read from the Startup folder
+    row.activated.emit()                                            # off at once
+    assert not link.exists() and window.message == mw.AUTOSTART_OFF and row.label.text() == "Start at sign-in: Off"
+    window = world.make()                                           # from the checkout
+    window.on_action("menu")
+    window.suite_pane.autostart.activated.emit()
+    window.suite_pane.autostart.activated.emit()
+    assert not link.exists() and window.message == mw.AUTOSTART_CHECKOUT

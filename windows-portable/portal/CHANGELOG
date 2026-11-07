@@ -1,3 +1,13 @@
+Changelog: 07-11-2026 20:16:19
+
+Added. The buttons on the line of the tabs are icons now, the line had no room for their names: Steam, XBOX and Armoury Crate show their programs' own icons, read from the device at the start (an app's Start-menu logo from its package, Steam's from steam.exe), and Command Center the suite's own sliders, as ASUS gives it Armoury Crate's icon. The mouse over one shows its name; the row at the bottom says what A does with it (A Start XBOX). A program that is not on the device shows its initials. Installed x/y stays beside the update banner.
+
+Added. A fifth icon, XBOX mode ↔ Desktop: Win + F11, as the Settings page's row, either way.
+
+Added. Start at sign-in on the Settings page (in the column now called Start, clock and weather): the portal starts by itself each time you sign in to Windows, from a shortcut in the Startup folder. The first A says what it does; only a second A within five seconds turns it on. A turns it off; uninstalling the portal takes the shortcut away.
+
+Fixed. Command Center opened Armoury Crate (its own app ID does): it opens with Ctrl + Alt + C now, a shortcut set once in Armoury Crate SE's settings, which the portal presses.
+
 Changelog: 07-11-2026 19:27:35
 
 Release 10.2.0.

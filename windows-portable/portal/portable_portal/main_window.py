@@ -41,7 +41,7 @@ from .manifest import CATEGORIES, AppEntry
 from .portal_update import PortalUpdate, short
 from .sources import Records, SourceError, Sources, downloaded, fetch_release, is_installed
 from .widgets import (AppPane, Count, DetailsPane, LaunchButton, ModePane, PageMarker, PlacePane, SuitePane, Tabs,
-                      UpdateBanner)
+                      UpdateBanner, own_symbol)
 
 STATUS_MS = 2_000               # the header: the CPU and GPU live (owner, 30-10-2026), the battery and the time
 EXIT_QUESTION = "Do you really want to exit the portal?"
@@ -64,6 +64,16 @@ STEAM_MISSING = "Steam is not installed on this device: install it from store.st
 ONE_SCREEN = "There is one screen: attach a TV or a monitor, then LT moves the portal to it."
 DRAG_PX = 120                   # a drag of the portal's top this far (or let go on another screen) moves it
 NOT_HERE = "{name} is not on this device."
+COMMAND_CENTER = ("Ctrl + Alt + C pressed for Command Center: if it does not open, set that shortcut once in Armoury "
+                  "Crate SE's settings.")
+# The portal at every sign-in (owner, 07-11-2026: "the user should acknowledge"): a shortcut in the Startup folder,
+# turned on with a second press
+AUTOSTART_LINK = f"{APP_NAME}.lnk"
+AUTOSTART_ASK = ("Start at sign-in: the portal will start by itself, full screen, each time you sign in to Windows. "
+                 "Press A again within five seconds to turn it on.")
+AUTOSTART_ON = "Start at sign-in is on: the portal starts each time you sign in to Windows."
+AUTOSTART_OFF = "Start at sign-in is off."
+AUTOSTART_CHECKOUT = "Only the installed portal can start at sign-in: this one runs from the checkout."
 DISPLAY_SWITCH = Path(os.environ.get("SystemRoot") or r"C:\Windows") / "System32" / "DisplaySwitch.exe"   # Win + P
 NO_WINDOW = 0x08000000          # CREATE_NO_WINDOW
 # Windows' display setup as Win + P names it (owner, 07-11-2026): what each row says once it is set
@@ -102,6 +112,20 @@ def switch_display(mode: str) -> None:
     subprocess.Popen([str(DISPLAY_SWITCH), mode], creationflags=NO_WINDOW if sys.platform == "win32" else 0)
 
 
+def launcher_icon(launcher: launchers.Launcher) -> QPixmap | None:
+    """A tabs' line button's icon, its program's own as the device has it: Steam's from its steam.exe, an app's
+    Start-menu logo from its package (launchers.icon_file); the suite's own symbol where the launcher has one; None
+    when it is not here."""
+    if launcher.own_symbol:
+        return own_symbol(launcher.key)
+    if launcher.key == launchers.STEAM:
+        folder = steam.windows_steam()
+        image = launchers.exe_icon(folder / "steam.exe") if folder is not None else None
+        return QPixmap.fromImage(image) if image is not None else None
+    found = launchers.icon_file(launcher)
+    return QPixmap(str(found)) if found is not None else None
+
+
 def drag_target(here, screens: Sequence, end: QPoint, delta: QPoint):
     """The screen a drag of the portal's top moves it to (owner, 07-11-2026): the one it was let go on (the mouse),
     else the one farthest ahead in the drag's direction (a finger stays on the handheld's screen); None without
@@ -121,7 +145,7 @@ def drag_target(here, screens: Sequence, end: QPoint, delta: QPoint):
 # With a second screen, the legend's left end (owner, 31-10-2026: "Switch monitor: [] + Shift + < or >", with icons)
 SCREEN_KEYS = (portable.SCREEN_ICON, (portable.WINDOWS_KEY, "+", "Shift", "+", "←", "→"))   # two screens drawn
 TURBO_COLOR = "#ff1f1f"         # the Turbo letter in the header: a hard red, extra bold (owner, 31-10-2026)
-BANNER = "UPDATE: PRESS Y"      # on the tabs' line (owner, 01-11-2026; shorter beside the buttons, 07-11-2026)
+BANNER = "UPDATE: PRESS Y"      # on the tabs' line (owner, 01-11-2026; short beside the five icons, 07-11-2026)
 INTRO_BANNER = "PORTAL UPDATE AVAILABLE"            # on the intro, when the check answers in time
 WAIT_UPDATE = "The portal's update starts once the download or install has finished."
 WALLPAPER_KEY = "look/wallpaper"  # where portal 1.6.0 kept the wallpaper switch: now the suite's (core, suite.ini)
@@ -223,7 +247,9 @@ class MainWindow(PortableWindow):
                  sound_kind: Callable[[], str | None] = sound_output.default_kind,
                  notify: Callable[[str], None] | None = None,
                  find_app: Callable[[launchers.Launcher], str | None] = launchers.find,
-                 start_app_id: Callable[[str], None] = launchers.start):
+                 start_app_id: Callable[[str], None] = launchers.start,
+                 app_icon: Callable[[launchers.Launcher], QPixmap | None] = launcher_icon,
+                 press: Callable[[tuple[str, ...]], None] = launchers.press_keys):
         """*build*: the sha256 of the zip this portal was installed from (build.sha256), "" when not known, None
         from a checkout: a new build of the same version is offered when its sha256 differs. *intro_ms*: how long
         the intro plays when the window starts (0: none). *wallpaper*: the picture behind the page, darkened (None:
@@ -238,7 +264,9 @@ class MainWindow(PortableWindow):
         Windows started, as time.time() counts (default boot_time). *sound_kind*: the kind of Windows' default sound
         output (core's sound_output.default_kind); *notify*: shows a line as a Windows notification (default
         windows_notice; tests pass a fake). *find_app*: the application ID a button on the tabs' line starts, None when
-        its program is not here (launchers.find); *start_app_id*: starts it (launchers.start)."""
+        its program is not here (launchers.find); *start_app_id*: starts it (launchers.start); *app_icon*: its icon
+        (launcher_icon), None for the initials; *press*: presses keys together (launchers.press_keys), Command
+        Center's shortcut."""
         old = QSettings()                              # portal 1.6.0 kept the switch in portal.ini: the suite's now
         if old.contains(WALLPAPER_KEY) and portable.look_settings(SUITE).value(portable.LOOK_KEY) is None:
             portable.set_wallpaper_on(SUITE, str(old.value(WALLPAPER_KEY)).lower() != "false")
@@ -248,7 +276,8 @@ class MainWindow(PortableWindow):
         self.log = applog.logger(APP_ID)
         self.entries, self.sources, self.records = entries, sources, records
         self.steam_here, self.open_steam = steam_here, open_steam
-        self.find_app, self.start_app_id = find_app, start_app_id
+        self.find_app, self.start_app_id, self.press = find_app, start_app_id, press
+        self.autostart_asked = False                    # Start at sign-in pressed once: the second press turns it on
         self.drag_from: QPoint | None = None            # where a drag of the portal's top began (global)
         self.startup = startup if startup is not None else start_menu() / "Startup"
         self.shortcut, self.booted = shortcut, booted or boot_time
@@ -298,18 +327,16 @@ class MainWindow(PortableWindow):
                           if any(entry.category == key for entry in entries)])
         tabs_line = QHBoxLayout()
         tabs_line.setContentsMargins(0, 0, 0, 0)
+        tabs_line.setSpacing(px(8))                     # one gap between all: the line is full with the banner
         tabs_line.addWidget(self.tabs, 1)
         self.launch_buttons: dict[str, LaunchButton] = {}   # beside the categories (owner, 07-11-2026)
         for launcher in launchers.LAUNCHERS:
-            button = LaunchButton(launcher.key, launcher.name)
+            button = LaunchButton(launcher.key, launcher.name, app_icon(launcher), launcher.verb)
             button.activated.connect(lambda key=launcher.key: self.launch_action(key))
             self.launch_buttons[launcher.key] = button
             tabs_line.addWidget(button, 0, Qt.AlignmentFlag.AlignVCenter)
-            tabs_line.addSpacing(px(8))
-        tabs_line.addSpacing(px(8))
         self.count = Count()                           # how many apps are installed, of all (owner, 07-11-2026)
         tabs_line.addWidget(self.count, 0, Qt.AlignmentFlag.AlignVCenter)
-        tabs_line.addSpacing(px(16))
         self.banner = UpdateBanner()                    # while a newer portal is out
         self.banner.pressed.connect(self.portal_update_action)
         tabs_line.addWidget(self.banner, 0, Qt.AlignmentFlag.AlignVCenter)
@@ -368,6 +395,7 @@ class MainWindow(PortableWindow):
         self.suite_pane.zone.activated.connect(
             lambda: self.change_clock(zone="utc" if self.clock.zone == "cet" else "cet"))
         self.suite_pane.place.activated.connect(self.show_place)
+        self.suite_pane.autostart.activated.connect(self.autostart_action)
         for index, row in enumerate(self.place_pane.rows):
             row.activated.connect(lambda index=index: self.pick_place(index))
         self.place_pane.off.activated.connect(lambda: self.pick_place(None))
@@ -931,6 +959,7 @@ class MainWindow(PortableWindow):
         self.suite_pane.set_sound(portable.sound_on(SUITE))
         self.suite_pane.set_mode(self.mode_name())
         self.suite_pane.set_screen(self.screen_name())
+        self.suite_pane.set_autostart(self.autostart_link().is_file(), self.autostart_asked)
         self.show_clock_rows()
         self.update_legend()
         self.refresh()
@@ -950,7 +979,8 @@ class MainWindow(PortableWindow):
         if self.close_asked:
             self.legend.set_items(EXIT_ANSWERS)
         elif isinstance(self.focusWidget(), LaunchButton):   # a button on the tabs' line: A starts its program
-            self.legend.set_items([("A", "Start"), (MENU, "Settings"), *triggers, *self.common_items()], keys)
+            self.legend.set_items([("A", self.focusWidget().action), (MENU, "Settings"), *triggers,
+                                   *self.common_items()], keys)
         elif self.stack.currentWidget() is self.apps_page:
             pane = self.app_pane
             other = "Update suite" if self.update_available() else pane.other      # the portal first
@@ -990,15 +1020,30 @@ class MainWindow(PortableWindow):
         self.refresh()
 
     def launch_action(self, key: str) -> None:
-        """A button on the tabs' line (owner, 07-11-2026): Steam as RT opens it, the XBOX app, Armoury Crate or Command
-        Center as the Start menu starts them; one that is not on this device says so on the line under the app."""
+        """A button on the tabs' line (owner, 07-11-2026): Steam as RT opens it, XBOX mode ↔ Desktop as the Settings
+        page's row, the XBOX app and Armoury Crate as the Start menu starts them, Command Center by its keyboard
+        shortcut; one that is not on this device says so on the line under the app."""
         if key == launchers.STEAM:
             self.steam_action()
+            return
+        if key == launchers.XBOX_MODE:
+            self.switch_xbox_mode()
             return
         launcher = launchers.BY_KEY[key]
         app_id = self.find_app(launcher)
         if app_id is None:
             self.say(self.current_key, NOT_HERE.format(name=launcher.name))
+            self.refresh()
+            return
+        if launcher.keys:
+            try:
+                self.press(launcher.keys)
+            except OSError as exc:
+                self.say(self.current_key, f"{launcher.name} could not be opened: {exc.strerror or exc}")
+                self.log.error(f"Pressing {' + '.join(launcher.keys)} for {launcher.name} failed: {exc}")
+            else:
+                self.say(self.current_key, COMMAND_CENTER)
+                self.log.info(f"{launcher.name}: {' + '.join(launcher.keys)} pressed.")
             self.refresh()
             return
         try:
@@ -1231,6 +1276,12 @@ class MainWindow(PortableWindow):
         if self.confirm_key:
             self.confirm_key = ""
             self.refresh()
+        if self.autostart_asked:
+            self.autostart_asked = False
+            if self.message == AUTOSTART_ASK:
+                self.message = ""
+            self.suite_pane.set_autostart(self.autostart_link().is_file())
+            self.refresh()
 
     def open_app(self, key: str) -> None:
         entry = self.by_key.get(key)
@@ -1382,13 +1433,12 @@ class MainWindow(PortableWindow):
     def show_banner(self) -> None:
         """The banner on the tabs' line: while a newer portal is out, on the tiles and the Settings page, where Y
         updates it (Y removes an app on Details); while it downloads, how far it is; else none (owner, 01-11-2026).
-        The installed count gives it its room meanwhile, beside the buttons (owner, 07-11-2026)."""
+        Short, so the line holds the categories, the icons and the installed count with it (owner, 07-11-2026)."""
         portal_job = self.job is not None and self.job[0].key == ""
         text = (f"DOWNLOADING…{self.downloaded_text()}" if portal_job
                 else BANNER if self.update_available() else "")
         self.banner.setText(text)
         self.banner.setVisible(bool(text) and self.stack.currentWidget() in (self.apps_page, self.suite_pane))
-        self.count.setVisible(not self.banner.isVisibleTo(self))   # its room is the banner's (owner, 07-11-2026)
 
     def portal_update_action(self) -> None:
         """Y on the tiles, or a tap on the banner, while a newer portal is out: its download and install; while an
@@ -1529,6 +1579,44 @@ class MainWindow(PortableWindow):
             # Windows moves the window to its new main screen but the portal keeps the sizes of the one before (owner,
             # 05-11-2026: the TV cut the legend off): once the switch has settled it starts again there, as LT does
             QTimer.singleShot(SETTLE_MS, lambda: self.move_to(QGuiApplication.primaryScreen()))
+        self.refresh()
+
+    def autostart_link(self) -> Path:
+        return self.startup / AUTOSTART_LINK
+
+    def autostart_action(self) -> None:
+        """The Settings page's Start at sign-in row (owner, 07-11-2026: "the user should acknowledge"): off, A says what
+        it does and waits CONFIRM_MS for a second A, which puts AUTOSTART_LINK in the user's Startup folder (the
+        installed portal's program; uninstalling takes it away); on, A takes it away."""
+        link = self.autostart_link()
+        if link.is_file():
+            try:
+                link.unlink()
+            except OSError as exc:
+                self.say("", f"Start at sign-in could not be turned off: {exc.strerror or exc}")
+                self.log.error(f"Start at sign-in: {link.name} not taken away: {exc}")
+            else:
+                self.say("", AUTOSTART_OFF)
+                self.log.info("Start at sign-in: off, the Startup folder's shortcut taken away.")
+        elif not self.exe:
+            self.say("", AUTOSTART_CHECKOUT)
+        elif not self.autostart_asked:
+            self.autostart_asked = True
+            self.confirm_timer.start()
+            self.say("", AUTOSTART_ASK)
+        else:
+            self.autostart_asked = False
+            self.confirm_timer.stop()
+            try:
+                self.shortcut(link, Path(self.exe), description="The Windows Portable Suite's portal, at every "
+                              "sign-in: its Settings page turns it off")
+            except (OSError, RuntimeError) as exc:
+                self.say("", f"Start at sign-in could not be turned on: {exc}")
+                self.log.error(f"Start at sign-in: {link.name} not written: {exc}")
+            else:
+                self.say("", AUTOSTART_ON)
+                self.log.info("Start at sign-in: on, the Startup folder's shortcut is in place.")
+        self.suite_pane.set_autostart(link.is_file(), self.autostart_asked)
         self.refresh()
 
     def startup_link(self) -> Path:
