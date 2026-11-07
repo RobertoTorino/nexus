@@ -1,3 +1,7 @@
+Changelog: 07-11-2026 14:30:37
+
+Release 10.0.0. Pins wp-test-v5.0.0, wp-pcsx2-v8.0.0, wp-ppsspp-v6.0.0, wp-rpcs3-v5.0.0, wp-shadps4-v6.0.0, wp-vita3k-v6.0.0, wp-xenia-v6.0.0, wp-rplay-v1.0.0, wp-hdcam-v1.0.0, wp-bios-v1.0.0, wp-sftp-v1.0.0, wp-smart-v1.0.0, wp-support-v1.0.0, wp-datstat-v1.0.0, wp-upscale-v1.0.0, wp-hdcontrol-v1.0.0, wp-ssd-v1.0.0.
+
 Changelog: 07-11-2026 13:40:16
 
 Fixed. The test of the Screen row's move to a second screen passed only on a device with a built-in screen: its
