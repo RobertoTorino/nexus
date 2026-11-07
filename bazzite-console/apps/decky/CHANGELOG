@@ -1,3 +1,7 @@
+Changelog: 07-11-2026 21:19:23
+
+Release 0.1.0.
+
 Changelog: 06-11-2026 22:49:44
 
 Fixed. The warning explains that the Decky service is system-wide, and release messages describe the pinned loader
