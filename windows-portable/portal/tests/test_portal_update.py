@@ -16,6 +16,12 @@ PCSX2 = AppEntry(key="pcsx2-next", name="Windows Portable PCSX2 Manager", summar
                  category="gaming", install=("i",), uninstall=("u",), detect=("d",))
 
 
+def newer(entry: AppEntry) -> AppEntry:
+    """*entry* pinned one major release on, whatever its version now."""
+    version = f"{int(entry.version.split('.')[0]) + 1}.0.0"
+    return replace(entry, tag=entry.tag.replace(f"-v{entry.version}", f"-v{version}"))
+
+
 def text_of(entries) -> str:
     """apps.toml text for *entries*: the shipped file with the test app's tag swapped in."""
     text = MANIFEST.read_text(encoding="utf-8")
@@ -24,9 +30,9 @@ def text_of(entries) -> str:
 
 def test_compare_names_the_changed_added_and_withdrawn_apps():
     current = load(MANIFEST)
-    new = [replace(current[0], tag="wp-test-v9.0.0"), PCSX2]
+    new = [newer(current[0]), PCSX2]
     changes = pu.compare(current, new)
-    assert [(c.name, c.old, c.new) for c in changes] == [("Windows Portable Test", current[0].version, "9.0.0"),
+    assert [(c.name, c.old, c.new) for c in changes] == [("Windows Portable Test", current[0].version, new[0].version),
                                                          ("Windows Portable PCSX2 Manager", "", "0.2.0")]
     assert pu.compare(current, current) == []
     gone = pu.compare(current + [PCSX2], current + [replace(PCSX2, withdrawn="broken")])
@@ -57,7 +63,7 @@ def test_check_reads_the_pins_at_the_release_tag():
         urls.append(url)
         if url.endswith("/SHA256SUMS"):
             return f"{'a' * 64}  wp-portal-v99.0.0.zip\n{'b' * 64}  wp-test-v1.0.0.zip\n"
-        return text_of([replace(current[0], tag="wp-test-v9.0.0")])
+        return text_of([newer(current[0])])
 
     update = pu.check("owner/repo", "wp-portal-v", current, "ua", release_of=lambda *a, **k: RELEASE, read=read)
     assert urls == ["https://raw.githubusercontent.com/owner/repo/wp-portal-v99.0.0/windows-portable/portal/apps.toml",

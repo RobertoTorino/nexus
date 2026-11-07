@@ -1,3 +1,13 @@
+Changelog: 07-11-2026 15:01:28
+
+Fixed. The tests of the portal's own update offered release 9.9.9 as the newer portal, which it no longer was from
+10.0.0 on, and the test of what an update brings took Windows Portable Test 9.0.0 as its newer pin. Both are now
+one major release on from the running portal and the shipped pin, whatever their versions.
+
+Added. The wiki's Portal chapter has a section Sound on a TV: why the sound stays on a TV switched to another input
+and moves to the handheld's speakers only when its screen turns off, with what Windows did at each step, measured on
+the ROG XBOX Ally X with a TV (owner, 07-11-2026), and how to hear the sound on the handheld.
+
 Changelog: 07-11-2026 14:30:37
 
 Release 10.0.0. Pins wp-test-v5.0.0, wp-pcsx2-v8.0.0, wp-ppsspp-v6.0.0, wp-rpcs3-v5.0.0, wp-shadps4-v6.0.0, wp-vita3k-v6.0.0, wp-xenia-v6.0.0, wp-rplay-v1.0.0, wp-hdcam-v1.0.0, wp-bios-v1.0.0, wp-sftp-v1.0.0, wp-smart-v1.0.0, wp-support-v1.0.0, wp-datstat-v1.0.0, wp-upscale-v1.0.0, wp-hdcontrol-v1.0.0, wp-ssd-v1.0.0.

@@ -180,6 +180,31 @@ does the portal's uninstaller.
 restart the handheld for better performance; that question is Windows', answered with the controller. Windows' own
 way out stays too: the Windows key, **Exit XBOX mode**.
 
+### Sound on a TV
+
+With a TV attached over HDMI, Windows plays the sound on the TV, and it decides whether the TV is there by the HDMI
+connection, not by what the TV shows. Most TVs keep a port connected when you switch them to another input: Windows
+still sees the TV and keeps playing the sound to it, which the TV no longer plays. The sound moves to the handheld's
+speakers only when the HDMI connection goes down, and that happens when the handheld's screen turns off; when you wake
+the screen, the connection comes back and the sound goes to the TV again.
+
+This is how it went on a ROG XBOX Ally X with a TV, YouTube playing, Windows' sound outputs read every two seconds:
+
+| What you do | What Windows does | What you hear |
+|---|---|---|
+| YouTube plays on the TV | The TV's HDMI output is on and is the default output. | The sound on the TV. |
+| Switch the TV to another input | Nothing changes: the TV's output stays the default, and Windows still counts two screens. | Nothing. |
+| Leave the handheld until its screen turns off | The TV's output goes (unplugged), and the handheld's speakers become the default. | The sound on the handheld. |
+| Wake the handheld's screen | The TV's output is back and is the default again. | Nothing again. |
+
+The same happens after a restart: with the TV on and the cable in, even on another input, Windows starts with the
+TV as its sound output. The suite does not choose where the sound plays; to hear it on the handheld:
+
+- Choose the handheld's speakers in Windows' **Settings > System > Sound**, and the TV there when you watch on it.
+- Look in the TV's settings for an option that turns an HDMI port off when it is not selected (often under energy
+  saving or HDMI-CEC). Windows then sees the TV go when you switch inputs and plays the sound on the handheld.
+- Take the cable out when the TV is in use for something else.
+
 ## The Performance Mode page
 
 On the ROG XBOX Ally X, the Settings page's **Performance mode** row opens a page with the performance modes Armoury

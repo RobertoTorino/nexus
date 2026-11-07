@@ -29,6 +29,8 @@ from portable_portal.portal_update import AppChange, PortalUpdate
 from portable_portal.sources import Records, Sources
 from test_operating_mode import FakeHelper
 
+NEWER = f"{int(mw.__version__.split('.')[0]) + 1}.0.0"    # a portal release newer than this one, whatever its version
+
 
 class FakePad:
     def __init__(self):
@@ -104,7 +106,7 @@ def world(qapp, tmp_path, monkeypatch):
     assets = tmp_path / "assets"
     assets.mkdir()
     sums = ""
-    for tag in ("wp-test-v0.1.0", "wp-pcsx2-v0.2.0", "wp-portal-v9.9.9"):
+    for tag in ("wp-test-v0.1.0", "wp-pcsx2-v0.2.0", f"wp-portal-v{NEWER}"):
         sums += f"{make_zip(assets / f'{tag}.zip', tag)}  {tag}.zip\n"
     (assets / "SHA256SUMS").write_text(sums)
 
@@ -123,7 +125,7 @@ def world(qapp, tmp_path, monkeypatch):
     w.terminal = FakeTerminal(app_dir)
     w.launched = []
     w.checks = []
-    w.update = PortalUpdate(ReleaseInfo(version="9.9.9", tag="wp-portal-v9.9.9", published="2030-01-01"),
+    w.update = PortalUpdate(ReleaseInfo(version=NEWER, tag=f"wp-portal-v{NEWER}", published="2030-01-01"),
                             [AppChange("Windows Portable Test", "0.1.0", "0.2.0")])
     w.windows = []
     w.played = []                                       # what the window's player was given: never a real sound
@@ -485,22 +487,22 @@ def test_a_portal_newer_than_the_newest_release_says_so(world, qapp):
 def test_the_suite_page_offers_the_portals_own_update_and_installs_it(world, qapp, monkeypatch):
     window = world.make(portal_check=lambda: world.update, exe=r"C:\portal\Windows-Portable-Suite.exe")
     assert wait_for(qapp, lambda: window.update is not None)
-    assert "Suite 9.9.9 available" in window.header.status.text()
+    assert f"Suite {NEWER} available" in window.header.status.text()
     window.show_suite()
     rows = {window.suite_pane.grid.itemAt(i).widget().text(): window.suite_pane.grid.itemAt(i + 1).widget().text()
             for i in range(0, window.suite_pane.grid.count(), 2)}
-    assert rows == {"Newest release": "9.9.9, 2030-01-01", "It brings": "updates Test"}    # this portal: the line
+    assert rows == {"Newest release": f"{NEWER}, 2030-01-01", "It brings": "updates Test"}    # this portal: the line
     assert window.suite_pane.version.text() == f"{mw.__version__}, the portal of the suite"   # under the title
     # App by app in the information (owner, 01-11-2026: eight apps' lines ran over each other)
     assert window.suite_pane.info.info.startswith("The update brings:\nWindows Portable Test: 0.1.0 → 0.2.0\n\n")
-    assert ("Y", "Update to 9.9.9") in window.legend.items           # A switches the setting, Y updates
+    assert ("Y", f"Update to {NEWER}") in window.legend.items           # A switches the setting, Y updates
     assert window.banner.isVisible() and window.banner.text() == mw.BANNER
     closed = []
     monkeypatch.setattr(window, "close", lambda: closed.append(True))
     window.on_action("y")
     assert wait_for(qapp, lambda: closed == [True])
     line = world.terminal.lines[0]
-    folder = world.sources.work.parent / "portal-update" / "wp-portal-v9.9.9"
+    folder = world.sources.work.parent / "portal-update" / f"wp-portal-v{NEWER}"
     assert (folder / "install.ps1").is_file()
     assert line.startswith("Wait-Process -Id ") and f"Set-Location -LiteralPath '{folder}'" in line
     assert "-File install.ps1" in line and line.endswith("Start-Process -FilePath 'C:\\portal\\Windows-Portable-Suite.exe'")
