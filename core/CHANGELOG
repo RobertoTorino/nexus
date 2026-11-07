@@ -1,3 +1,7 @@
+Changelog: 07-11-2026 17:15:29
+
+Version 3.1.0.
+
 Changelog: 07-11-2026 15:57:37
 
 Added. sound_output.py: where Windows plays the sound, the kind of its default sound output (PC speakers, Other

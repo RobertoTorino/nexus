@@ -7,7 +7,7 @@ APP_NAME = "DatStation"
 APP_ID = "windows-portable-datstat"
 EXE_NAME = "DatStation"   # the program's file name in a release
 SUITE = "windows-portable-suite"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
 from pathlib import Path
 
