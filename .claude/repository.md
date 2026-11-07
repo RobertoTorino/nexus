@@ -72,7 +72,10 @@ The root keeps what is Nexus's:
   the BC250 suite's on Linux and the Windows Portable Suite's on Windows, with `run.ps1`; the OBS part of the BC250 suite's Media Tool, which is gone from the suite); `dev/itests/` is **Nexus
   Installer Tests** (a suite's installer tests one at a time; BC-250 Installer Tests, made every suite's);
   `dev/sounds/` is **Nexus Sound Lab** (short sound effects for the suites' windows, such as the tick when the
-  controller moves the focus, made from sliders and saved as WAV; owner, 03-11-2026). A
+  controller moves the focus, made from sliders and saved as WAV; owner, 03-11-2026); `dev/deps/` is **Nexus Deps**
+  (a suite's Python packages and tools on this machine, Fix for what is missing or outdated with pip, Homebrew or
+  rpm-ostree, Bazzite's update state and a weekly reminder; its catalog per suite in
+  `nexus_deps/catalogs/<suite>.toml`; the BC250 suite's Dependency Checker, `apps/package`, until 07-11-2026). A
   suite's own scripts (its manifest, pins, board checks, tours, installer tests) stay in its `tools/`: the
   dashboard runs them there.
 - `DESIGN.md` and `ICONS.md`: every color and every icon, per suite and the Nexus page; `test.sh` runs every test

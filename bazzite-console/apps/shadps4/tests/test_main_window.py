@@ -83,7 +83,9 @@ def _window(folders, **kwargs) -> MainWindow:
 def test_before_installing(qapp, folders):
     window = _window(folders)
     assert window.pill.text() == "Not installed"
-    assert "Not installed" in window.emulator_state.text()
+    # The state alone, in the words every manager uses (owner, 07-11-2026); what Install does in the tip.
+    assert window.emulator_state.text() == "Not installed.<br>Install it with the Install button."
+    assert f"Install downloads shadPS4 {emulator.VERSION}" in window.emulator_state.toolTip()
     assert window.install_pill.isEnabled() and not window.remove_pill.isEnabled()
     assert not window.shad_button.isEnabled()
     assert window.refresh_pill.isEnabled() and window.package_pill.isEnabled()
@@ -123,7 +125,7 @@ def test_installed_with_games(qapp, folders):
     window = _window(folders)
     assert window.pill.text() == "Modules missing"
     assert window.emulator_box.value.text() == emulator.VERSION
-    assert window.emulator_state.text() == f"<b>{emulator.VERSION}</b>"           # the version alone (owner)
+    assert window.emulator_state.text() == "Installed.<br>Uninstall with the Uninstall button."           # the state alone (owner)
     assert window.emulator_state.toolTip() == f"shadPS4 {emulator.VERSION}, pinned for this version of the app"
     # Ok in green or Missing sys modules in red (owner, 24-10-2026), the count and the folder in the tooltip.
     assert window.modules_state.text() == f"<b style='color:{RED};'>Missing sys modules</b>"
@@ -196,13 +198,13 @@ def test_install_runs_off_the_window(qapp, folders, monkeypatch):
 
 
 def test_another_version_installed_than_the_app_brings(qapp, folders):
-    """The line and box show the version alone, the advice in the tooltip and the log once (as RPCS3 Manager's); a
-    nightly build from before the channel went is too long for the box."""
+    """The line shows the state alone (owner, 07-11-2026), the box the version, the advice in the tooltip and the
+    log once (as RPCS3 Manager's); a nightly build from before the channel went is too long for the box."""
     (folders["home"] / "2026-10-15-b2d7ec7").mkdir(parents=True)
     (folders["home"] / "2026-10-15-b2d7ec7" / emulator.MEMBER).write_text("")
     (folders["home"] / "current").symlink_to("2026-10-15-b2d7ec7")
     window = _window(folders)
-    assert window.emulator_state.text() == "<b>2026-10-15-b2d7ec7</b>" and window.emulator_box.value.text() == "other"
+    assert window.emulator_state.text() == "Installed.<br>Uninstall with the Uninstall button." and window.emulator_box.value.text() == "other"
     assert window.emulator_state.toolTip() == (f"shadPS4 2026-10-15-b2d7ec7 is installed; this version of the app "
                                                f"brings {emulator.VERSION}: Install puts it in.")
     assert window.install_pill.isEnabled()
@@ -545,8 +547,8 @@ def test_a_newer_shadps4_is_mentioned(qapp, folders):
     while window.newer is None and time.monotonic() < deadline:
         qapp.processEvents()
         time.sleep(0.01)
-    tip = window.emulator_state.toolTip()                   # the line stays the version; the tip and the log say
-    assert window.emulator_state.text() == f"<b>{emulator.VERSION}</b>"
+    tip = window.emulator_state.toolTip()                   # the line stays the state; the tip and the log say
+    assert window.emulator_state.text() == "Installed.<br>Uninstall with the Uninstall button."
     assert "shadPS4 0.21.0 is out (2026-11-20)" in tip and "releases/tag/v.0.21.0" in tip
     assert "shadPS4 0.21.0 is out (2026-11-20)" in window.output.toPlainText()
     assert window.install_pill.isEnabled() is False                                # it never installs that one

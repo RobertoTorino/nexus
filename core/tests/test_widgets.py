@@ -175,6 +175,23 @@ def test_long_tooltip_wraps(qapp):
     assert tip.label.wordWrap() and tip.label.width() == RoundedToolTip.MAX_WIDTH
 
 
+def test_tooltip_border_is_the_outline(qapp):
+    """Framed in the theme's outline, silver in the suite's themes, not the accent (owner, 07-11-2026); a theme
+    without an outline of its own (Nexus's) keeps its accent."""
+    from bc250_core.nexus import NEXUS
+    from bc250_core.widgets import current_theme, set_theme
+    before = current_theme()
+    try:
+        for name, look in theme.THEMES.items():
+            set_theme(look)
+            sheet = RoundedToolTip(qapp).label.styleSheet()
+            assert f"border:1px solid {look.outline};" in sheet and look.accent not in sheet, name
+        set_theme(NEXUS)
+        assert f"border:1px solid {NEXUS.accent};" in RoundedToolTip(qapp).label.styleSheet()
+    finally:
+        set_theme(before)
+
+
 def test_tooltip_never_covers_the_cursor(qapp):
     geo = QApplication.primaryScreen().availableGeometry()
     size = QSize(300, 200)

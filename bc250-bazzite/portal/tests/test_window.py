@@ -694,7 +694,8 @@ def test_a_line_of_the_notice_goes_to_the_tile_of_its_app(window, home, qapp):
 def test_the_tools_of_the_development_tab_are_utilities(window):
     """No Development tab (owner, 27-10-2026): its released apps are on Utilities, and its hint names them."""
     assert "development" not in window.big.categories
-    assert {"package", "ncgui"} <= {k for k, s in window.states.items() if s.entry.category == "utilities"}
+    assert "ncgui" in {k for k, s in window.states.items() if s.entry.category == "utilities"}
+    assert "package" not in window.states                         # Nexus Deps, a Nexus app since 07-11-2026
     assert "a graphical netcat" in window.big.full_hints["utilities"]
     assert window.big.bar.tabToolTip(window.big.categories.index("utilities")) == mw.CATEGORY_HINTS["utilities"]
 

@@ -50,6 +50,10 @@ KINDS = {"iso": "ISO", "chd": "CHD", "cso": "CSO", "zso": "ZSO", "gz": "GZ"}
 RUNNING = "PCSX2 is running: close it first, it would write its own settings over the change."
 STEAM, GAME, SERIAL, KIND, FILE, SCREEN = range(6)          # the table's columns (the screen last; owner)
 GAMES, SETTINGS, MEMCARDS, LOG = range(4)                   # the tabs
+# The emulator's line: the state alone, the same words in every manager (owner, 07-11-2026); the version and the
+# advice are in its tip.
+NOT_INSTALLED = "Not installed.<br>Install it with the Install button."
+INSTALLED = "Installed.<br>Uninstall with the Uninstall button."
 
 
 RUNNING_REMOVE = "PCSX2 is running: close it first, then remove the game."
@@ -116,6 +120,7 @@ class MainWindow(QMainWindow):
         self.no_cover: set[str] = set()               # games in Steam not yet looked up on SteamGridDB, with a key
         self.version = ""
         self.replaced = False                       # PCSX2 updated itself beyond the build pinned by this app
+        self._pin_noted = False                     # another release installed than the app brings: logged once
         self.bios: list[Path] = []
         self.folders: list[Path] = []
         self.catalogue_dir = emulator.appimage(self.home).parent    # PCSX2's titles and patches, beside its AppImage
@@ -412,28 +417,29 @@ class MainWindow(QMainWindow):
 
     def _show_state(self) -> None:
         pinned = emulator.VERSION
+        # The state alone in the line (owner, 07-11-2026), the version and the advice in the tip and the log once.
+        self.emulator_state.setText(INSTALLED if self.version else NOT_INSTALLED)
         if not self.version:
-            self.emulator_state.setText(f"Not installed. Install downloads PCSX2 {pinned}, the stable release pinned "
-                                        "for this version of the app, checks it and sets it up. The app says "
-                                        "when a newer stable release is out.")
             self.emulator_box.set_value("—")
+            tip = (f"Install downloads PCSX2 {pinned}, the stable release pinned for this version of the app, "
+                   "checks it and sets it up. The app says when a newer stable release is out.")
         elif self.version != pinned:
-            self.emulator_state.setText(f"PCSX2 {escape(self.version)} is installed; this version of the app "
-                                        f"brings {pinned}: <b>install it</b> to use it.")
             self.emulator_box.set_value(self.version)
+            tip = f"PCSX2 {self.version} is installed; this version of the app brings {pinned}: Install puts it in."
+            if not self._pin_noted:
+                self.note(tip)
+                self._pin_noted = True
         elif self.replaced:
-            self.emulator_state.setText("PCSX2 updated itself in its own window beyond this app's pinned build. "
-                                        f"<b>Install</b> puts back {pinned}.")
             self.emulator_box.set_value("other")
+            tip = ("PCSX2 updated itself in its own window beyond this app's pinned build. "
+                   f"Install puts back {pinned}.")
         else:
-            self.emulator_state.setText(f"PCSX2 {pinned} is installed.")
             self.emulator_box.set_value(pinned)
-        if self.newer is not None:
-            self.emulator_state.setText(
-                self.emulator_state.text() + f"<br>PCSX2 {escape(self.newer.version)} is out "
-                f"({escape(self.newer.published)}). A later version of this app brings it, once it has been tried "
-                "on the board. " + style.link(self, self.newer.url, "What is new"))
-        self.emulator_state.setOpenExternalLinks(True)
+            tip = f"PCSX2 {pinned}, pinned for this version of the app"
+        if self.newer is not None:              # in the tip and the log, so the line stays the state (owner)
+            tip += (f"\nPCSX2 {self.newer.version} is out ({self.newer.published}). A later version of this app "
+                    f"may pin it: {self.newer.url}")
+        self.emulator_state.setToolTip(tip)
 
         page = style.link(self, userdata.BIOS_HELP_URL, "PCSX2's BIOS page")
         chosen = pcsx2_settings.chosen_bios(self.pcsx2_home)
@@ -492,6 +498,8 @@ class MainWindow(QMainWindow):
         if result is not None:
             self._show_state()
             self._update_buttons()
+            self.note(f"PCSX2 {result.version} is out ({result.published}); a later version of this app may pin it: "
+                      f"{result.url}")
 
     def chosen(self) -> Game | None:
         """The game whose row is selected."""

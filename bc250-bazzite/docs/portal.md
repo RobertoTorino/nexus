@@ -262,10 +262,6 @@ Nexus Release Tool, Nexus Installer Tests (the installer tests one at a time), N
   window opens; what a system does not report is left out. **Copy** puts it all on the clipboard as text, for an
   issue or a forum post. It holds nothing personal: no host or user name, no serial numbers, no MAC or IP
   addresses.
-- The **Dependency Checker** is a separate app in `apps/`. It lists declared runtime Python packages and
-  app-specific external tools, plus the apps and features that use them. It compares Python package versions with
-  PyPI and checks whether external tools are available; tool links open the relevant app guide. Some apps use
-  separate virtual environments. The checker does not install or update anything.
 
 ## Install
 

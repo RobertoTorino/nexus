@@ -119,11 +119,6 @@ category = "utilities"
 icons = ["apps/hdcontrol/images/bc250-usb-hdcontrol"]
 tile = "portal/images/apps/hdcontrol.webp"
 
-[package]
-category = "utilities"
-icons = ["apps/package/images/bc250-dependency-checker"]
-tile = "portal/images/apps/package.webp"
-
 [ncgui]
 category = "utilities"
 icons = ["apps/ncgui/images/bazzite-netcatgui"]

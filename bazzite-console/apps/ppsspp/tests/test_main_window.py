@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The window on folders made in a temp folder: the states before and after installing, the games in the table, the
-game folders, the plan for Game Mode, installing through the worker, Steam's shortcuts changed with a fake "close
-Steam", and the blue look."""
+game folders, the plan for Steam, installing through the worker, Steam's shortcuts changed with a fake "close
+Steam", the Settings and Log tabs, and the blue look of RPCS3 Manager's design."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QMessageBox
+from PyQt6.QtWidgets import QLabel, QMessageBox
 
 from conftest import make_disc, make_memstick, make_pbp
 
@@ -32,8 +32,10 @@ def folders(tmp_path):
     run = tmp_path / "bin" / "ps5-ppsspp-run"
     run.parent.mkdir()
     run.write_text("#!/bin/sh\n")
+    log = tmp_path / "data" / "ps5-ppsspp-manager" / "ps5-ppsspp-manager.log"
+    log.parent.mkdir(parents=True)
     return {"home": tmp_path / "emulator", "memstick": memstick, "steam_dir": tmp_path / "Steam", "run": run,
-            "user_home": tmp_path, "drives": lambda: []}
+            "log_path": log, "user_home": tmp_path, "drives": lambda: []}
 
 
 def _install(home: Path) -> None:
@@ -59,7 +61,7 @@ def _window(folders, **kwargs) -> MainWindow:
 
 def test_ppsspp_is_set_up_once_installed(qapp, folders):
     """Once PPSSPP is installed, and while it does not run, the app turns its notice of a newer release off in
-    ppsspp.ini (owner, 03-11-2026); the output says so once, and nothing is written while PPSSPP runs."""
+    ppsspp.ini (owner, 03-11-2026); the Log tab says so once, and nothing is written while PPSSPP runs."""
     ini = folders["memstick"] / "PSP" / "SYSTEM" / "ppsspp.ini"
     window = _window(folders)
     assert ini.read_text() == "[General]\n"                                           # not installed: left alone
@@ -71,7 +73,7 @@ def test_ppsspp_is_set_up_once_installed(qapp, folders):
     running[0] = False
     window.refresh()
     assert ini.read_text() == "[General]\nCheckForNewVersion = False\n"
-    assert window.output.toPlainText().splitlines()[-1] == "PPSSPP set up: its notice of a newer release off."
+    assert window.output.toPlainText().splitlines()[-1].endswith(" INFO PPSSPP set up: its notice of a newer release off.")
     lines = len(window.output.toPlainText().splitlines())
     window.refresh()
     assert len(window.output.toPlainText().splitlines()) == lines                      # said once
@@ -83,7 +85,7 @@ def test_no_user_name_on_the_screen(qapp, folders, tmp_path, monkeypatch):
     the first step, and a message with a path in it."""
     monkeypatch.setenv("HOME", str(tmp_path))
     window = _window(folders)
-    assert "<code>~/ppsspp/PSP/GAME</code>" in window.folders_state.text()
+    assert "<b>~/ppsspp/PSP/GAME</b>" in window.folders_state.text()
     assert str(tmp_path) not in window.folders_state.text()
     window._job_done((False, f"PPSSPP could not be installed: {tmp_path}/emulator is read-only"))
     assert window.running.text() == "PPSSPP could not be installed: ~/emulator is read-only"
@@ -93,8 +95,10 @@ def test_no_user_name_on_the_screen(qapp, folders, tmp_path, monkeypatch):
 def test_before_installing(qapp, folders):
     window = _window(folders)
     assert window.pill.text() == "Not installed"
-    assert "Not installed" in window.emulator_state.text()
-    assert window.install_button.isEnabled() and not window.remove_button.isEnabled()
+    # The state alone, in the words every manager uses (owner, 07-11-2026); what Install does in the tip.
+    assert window.emulator_state.text() == "Not installed.<br>Install it with the Install button."
+    assert f"Install downloads PPSSPP {emulator.VERSION}" in window.emulator_state.toolTip()
+    assert window.install_pill.isEnabled() and not window.remove_pill.isEnabled()
     assert not window.ppsspp_button.isEnabled()
     for name in ("folder_button", "forget_button"):
         assert not hasattr(window, name), name                               # gone (owner, 03-11-2026): fixed folders
@@ -107,10 +111,13 @@ def test_installed_with_games(qapp, folders):
     window = _window(folders)
     assert window.pill.text() == "Ready" and window.emulator_box.value.text() == emulator.VERSION
     assert window.games_box.value.text() == "2" and window.steam_box.value.text() == "0"
-    assert not window.install_button.isEnabled() and window.remove_button.isEnabled()
-    assert not window.play_button.isEnabled()                                   # nothing chosen yet
+    assert window.emulator_state.text() == "Installed.<br>Uninstall with the Uninstall button."
+    assert window.emulator_state.toolTip() == f"PPSSPP {emulator.VERSION}, pinned for this version of the app"
+    assert not window.install_pill.isEnabled() and window.remove_pill.isEnabled()
+    assert not hasattr(window, "play_button")                   # a game is started from Steam (owner, 07-11-2026)
+    assert not window.remove_game_button.isEnabled()                            # nothing chosen yet
     window.table.selectRow(0)
-    assert window.play_button.isEnabled() and window.chosen().title == "One"
+    assert window.remove_game_button.isEnabled() and window.chosen().title == "One"
     assert not window.steam_button.isEnabled()                                  # nothing to change
     assert window.table.item(0, 3).text() == "ISO" and window.table.item(1, 3).text() == "Memory Stick"
     window.close()
@@ -127,7 +134,7 @@ def test_the_apps_own_game_folders(qapp, folders, tmp_path, monkeypatch):
     window = _window({**folders, "drives": lambda: [tmp_path / "sd", tmp_path / "stick", tmp_path / "gone"]})
     assert window.folders == [tmp_path / "Games" / "PSP", tmp_path / "sd" / "Games" / "PSP"]
     text = window.folders_state.text()
-    assert "<code>~/Games/PSP</code>" in text and "<code>~/sd/Games/PSP</code>" in text
+    assert "<b>~/Games/PSP</b>" in text and "<b>~/sd/Games/PSP</b>" in text
     assert str(tmp_path) not in text and "folders" not in window.settings.DEFAULTS
     window.close()
 
@@ -136,10 +143,10 @@ def test_rename_files_needs_a_disc_image(qapp, folders, tmp_path):
     _install(folders["home"])
     (tmp_path / "Games" / "PSP" / "one.iso").unlink()
     window = _window(folders)
-    assert not window.rename_button.isEnabled()                                 # only the memory stick game (a PBP)
+    assert not window.rename_pill.isEnabled()                                   # only the memory stick game (a PBP)
     make_disc(tmp_path / "Games" / "PSP" / "one.iso", "One", "ULUS00001")
     window.refresh()
-    assert window.rename_button.isEnabled()
+    assert window.rename_pill.isEnabled()
     window.close()
 
 
@@ -158,32 +165,38 @@ def test_install_runs_off_the_window(qapp, folders, monkeypatch):
     monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: QMessageBox.StandardButton.Yes)
     window = _window(folders, fetch=lambda url, dest, progress=None: dest.write_bytes(payload))
     window.on_install()
-    assert not window.install_button.isEnabled()                                # busy
+    assert not window.install_pill.isEnabled()                                  # busy
     _wait(window, qapp)
     assert window.running.text() == f"PPSSPP {emulator.VERSION} is installed."
     assert window.version == emulator.VERSION and window.pill.text() == "Ready"
     window.close()
 
 
-def test_play_and_ppsspps_window(qapp, folders, tmp_path):
+def test_ppsspps_window(qapp, folders, tmp_path):
+    """PPSSPP settings opens PPSSPP's own window, through the run wrapper and without a game."""
     _install(folders["home"])
     log = tmp_path / "args"
     folders["run"].write_text(f'#!/bin/sh\necho "$@" >> "{log}"\n')
     folders["run"].chmod(0o755)
     window = _window(folders)
-    window.table.selectRow(0)
-    window.on_play()
-    window.on_open_ppsspp()
+    window.ppsspp_button.click()
     deadline = time.monotonic() + 10
-    while (not log.exists() or len(log.read_text().splitlines()) < 2) and time.monotonic() < deadline:
+    while not log.exists() and time.monotonic() < deadline:
         time.sleep(0.01)
-    iso = tmp_path / "Games" / "PSP" / "one.iso"                                # the first row: the disc image
-    assert sorted(log.read_text().splitlines()) == sorted([f"{iso}", ""])
-    assert window.running.text() == "Started One."
+    assert log.read_text().splitlines() == [""]
+    assert window.output.toPlainText().splitlines()[-1].endswith(" INFO PPSSPP's own window was opened.")
     window.close()
 
 
-def test_game_mode_added_and_taken_out(qapp, folders, monkeypatch):
+def test_the_steam_link(qapp, folders):
+    opened = []
+    window = _window(folders, open_url=lambda url: opened.append(url) or True)
+    window.steam_hint.linkActivated.emit("steam://open/games")
+    assert opened == ["steam://open/games"]
+    window.close()
+
+
+def test_steam_added_and_taken_out(qapp, folders, monkeypatch):
     _install(folders["home"])
     monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: QMessageBox.StandardButton.Yes)
     closed = []
@@ -207,7 +220,7 @@ def test_game_mode_added_and_taken_out(qapp, folders, monkeypatch):
 
 
 def test_a_shortcut_named_before_the_system_prefix_is_renamed(qapp, folders, monkeypatch):
-    """A shortcut named by the title alone, as before "[PSP] ": Update Game Mode is on for it and renames it, with
+    """A shortcut named by the title alone, as before "[PSP] ": Update Steam is on for it and renames it, with
     its play time; the artwork under its old number goes."""
     _install(folders["home"])
     monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: QMessageBox.StandardButton.Yes)
@@ -265,14 +278,24 @@ def test_no_steam_game_mode_or_no_wrapper(qapp, folders, monkeypatch):
 
 
 def test_the_blue_look(qapp, folders):
+    """RPCS3 Manager's design (owner, 07-11-2026): the Refresh pill and the boxes in the header, the action pills
+    under the introduction, the tabs."""
     _install(folders["home"])
     window = _window(folders)
+    from bc250_core.theme import OUTLINE
     assert style.BLUE in window.styleSheet()
-    assert window.install_button.property("primary") and window.steam_button.property("primary")
-    assert style.BLUE in window.emulator_box.styleSheet()
-    assert f"color:{style.BLUE}" in window.emulator_state.text()                   # the release link
-    steps = (window.install_button, window.remove_button)
-    assert len({(b.width(), b.height()) for b in steps}) == 1                       # one size, padding included
+    assert window.covers_button.property("primary") is None and window.steam_button.property("primary")
+    assert window.ppsspp_button.property("primary") is None
+    assert style.BLUE in window.emulator_box.styleSheet() and style.BLUE in window.refresh_pill.styleSheet()
+    assert f"color:{style.BLUE}" in window.intro.text()                             # the release link
+    assert [(p.value.text(), p.caption.text()) for p in window.actions] == [
+        ("PPSSPP", "Install"), ("PPSSPP", "Uninstall"), ("Games", "Rename")]
+    for pill in (window.refresh_pill, *window.actions):
+        sheet = pill.styleSheet()                       # the blue left edge only, also under the mouse (owner)
+        assert sheet.rfind(f"border-left-color:{style.BLUE}") > sheet.rfind(OUTLINE) >= 0, pill.caption.text()
+        assert style.HOVER_SHEEN in sheet and style.BLUE_TINT not in sheet
+    assert "QTabBar::tab" in window.styleSheet() and "QComboBox" in window.styleSheet()
+    assert [window.tabs.tabText(i) for i in range(window.tabs.count())] == ["Your games", "Settings", "Log"]
     window.close()
 
 
@@ -285,14 +308,48 @@ def test_a_newer_ppsspp_is_mentioned(qapp, folders):
     while window.newer is None and time.monotonic() < deadline:
         qapp.processEvents()
         time.sleep(0.01)
-    text = window.emulator_state.text()
-    assert "PPSSPP 1.21.0 is out (2026-11-30)" in text and "releases/tag/v1.21" in text
-    assert window.install_button.isEnabled() is False                              # it never installs that one
+    tip = window.emulator_state.toolTip()                   # the line stays the state; the tip and the log say
+    assert window.emulator_state.text() == "Installed.<br>Uninstall with the Uninstall button."
+    assert "PPSSPP 1.21.0 is out (2026-11-30)" in tip and "releases/tag/v1.21" in tip
+    assert "PPSSPP 1.21.0 is out (2026-11-30)" in window.output.toPlainText()
+    assert window.install_pill.isEnabled() is False                                # it never installs that one
+    window.close()
+
+
+def test_another_ppsspp_is_installed(qapp, folders):
+    """Another release than the app brings: the line stays the state, the tip says Install puts the app's in, and
+    the log says it once."""
+    home = folders["home"]
+    (home / "1.19.3").mkdir(parents=True)
+    (home / "1.19.3" / emulator.MEMBER).write_text("")
+    (home / "current").symlink_to("1.19.3")
+    window = _window(folders)
+    assert window.version == "1.19.3" and window.emulator_box.value.text() == "1.19.3"
+    assert window.emulator_state.text() == "Installed.<br>Uninstall with the Uninstall button."
+    assert window.emulator_state.toolTip() == (f"PPSSPP 1.19.3 is installed; this version of the app brings "
+                                               f"{emulator.VERSION}: Install puts it in.")
+    assert window.install_pill.isEnabled()
+    window.refresh()
+    assert window.output.toPlainText().count("PPSSPP 1.19.3 is installed") == 1
+    window.close()
+
+
+def test_the_log_tab(qapp, folders):
+    """What the window says goes to the Log tab with the time, after what the log file held already."""
+    folders["log_path"].write_text("07-11-2026 22:14:00 INFO PPSSPP Manager 2.2.0 started\n")
+    window = _window(folders)
+    lines = window.output.toPlainText().splitlines()
+    assert lines == ["07-11-2026 22:14:00 INFO PPSSPP Manager 2.2.0 started"]
+    window.say("Steam was not changed: no Steam", ok=False)
+    lines = window.output.toPlainText().splitlines()
+    assert lines[-1][:19].count("-") == 2 and lines[-1][10] == " "               # DD-MM-YYYY HH:MM:SS
+    assert lines[-1].endswith(" ERROR Steam was not changed: no Steam") and "c62828" in window.running.styleSheet()
+    assert str(folders["log_path"]) in window.tabs.widget(2).findChildren(QLabel)[0].text()
     window.close()
 
 
 def test_covers_with_the_suites_key(qapp, folders, monkeypatch, tmp_path):
-    """Covers… keeps the suite's key; Update Game Mode then looks up the games and puts the cover on the portrait, and a
+    """Steam artwork… keeps the suite's key; Update Steam then looks up the games and puts the cover on the portrait, and a
     game in Steam not looked up yet makes the button do something again."""
     from PyQt6.QtGui import QColor, QImage
     from PyQt6.QtWidgets import QInputDialog
@@ -370,19 +427,15 @@ def test_remove_game_asks_what_to_keep(qapp, folders, monkeypatch, tmp_path):
     window.close()
 
 
-def test_the_settings_window(qapp, folders, monkeypatch):
-    """Settings… opens PPSSPP's settings in the app (core's settings_page): the values as ppsspp.ini holds them, a
-    change written into it at once, and nothing while PPSSPP runs."""
-    from bc250_core.settings_page import SettingsDialog
+def test_the_settings_tab(qapp, folders):
+    """The Settings tab holds PPSSPP's settings in the app (core's settings_page): the values as ppsspp.ini holds
+    them, a change written into it at once, and nothing while PPSSPP runs."""
     ini = folders["memstick"] / "PSP" / "SYSTEM" / "ppsspp.ini"
     ini.write_text("[General]\n[Graphics]\nInternalResolution = 3\n")
     running = [False]
     window = _window(folders, ppsspp_running=lambda: running[0])
-    opened = []
-    monkeypatch.setattr(SettingsDialog, "exec", lambda dialog: opened.append(dialog))
-    window.settings_button.click()
-    page = opened[0].page
-    assert opened[0].windowTitle() == "PPSSPP settings" and page.widgets["resolution"].currentData() == "3"
+    page = window.settings_page
+    assert window.tabs.widget(1) is page and page.widgets["resolution"].currentData() == "3"
     assert page.widgets["renderer"].currentText() == "Vulkan" and page.widgets["volume"].value() == 100
     page.widgets["vsync"].setChecked(False)
     assert "VerticalSync = False" in ini.read_text() and page.status.text() == "VSync: off."

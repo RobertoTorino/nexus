@@ -36,6 +36,7 @@ from .versions import VersionsDialog
 
 SUITE_KEY = "suite"                     # the chosen suite, in the settings
 ICON_PX = 64
+DEPS_CATALOGS = Path("nexus_deps") / "catalogs"   # Nexus Deps checks a suite with a catalog here (<suite>.toml)
 BADGE_PX = 26                           # the warning in the corner of an app's icon that changes the board
 NEXUS_PAGE = "https://robertotorino.github.io/nexus/"     # the Nexus page, opened by a click on the header's icon
 # Each local app's output, a log per app (the Nexus apps' logs are in checkout.LOG_DIR)
@@ -247,6 +248,9 @@ class MainWindow(QMainWindow):
         found = []
         for app in self.apps:
             off = "" if app.runs_here else f"{app.name} has no {app.script.name} for this system."
+            catalog = app.folder / DEPS_CATALOGS / f"{self.suite}.toml"
+            if not off and app.key == "deps" and self.suite and not catalog.is_file():
+                off = f"{app.name} has no catalog for {self.suite} yet."
             found.append(Tile(app.key, app.name, app.icon, f"{app.name} {app.version}: {app.script.name} in "
                               f"{app.folder}", app, off))
         suite = self.suite_dir
@@ -325,7 +329,7 @@ class MainWindow(QMainWindow):
 
     def run(self, app: DevApp) -> None:
         """Starts *app* in a window of its own; the suite goes along where the app takes one."""
-        args = ("--suite", self.suite) if app.key in ("nrt", "itests") and self.suite else ()
+        args = ("--suite", self.suite) if app.key in ("nrt", "itests", "deps") and self.suite else ()
         try:
             self.starter(app, args)
         except OSError as exc:

@@ -43,12 +43,12 @@ games go](#where-your-games-go)); nothing is chosen or browsed to for them. Four
 each stands, short, with more in their tooltips, and then come three tabs: **Your games**, **Settings** and
 **Log**.
 
-- **RPCS3**: the version installed (the build is in the tooltip; when this version of the app brings another
-  build, the tooltip and the log say so, and **Install** puts it in). **Install** downloads RPCS3 from GitHub
-  (about 80 MB): the build this version of the app was tried with, checked against its checksum before it is
-  installed.
-  **Uninstall** takes it out again; RPCS3's own folder, with the firmware, your saves, settings and installed
-  games, stays.
+- **RPCS3**: **Not installed.** or **Installed.**, with the button to use under it; the version box in the header
+  shows the version installed. The tooltip says which build is installed, or what Install takes; when this version of
+  the app brings another build, the tooltip and the log say so, and **Install** puts it in. **Install** downloads
+  RPCS3 from GitHub (about 80 MB): the build this version of the app was tried with, checked against its checksum
+  before it is installed. **Uninstall** takes it out again; RPCS3's own folder, with the firmware, your saves,
+  settings and installed games, stays.
 - **Firmware**: which version of the PS3's firmware RPCS3 has (the folder's path is in the tooltip). Put the
   `PS3UPDAT.PUP` you downloaded in `~/Games/PS3/Firmware`: once RPCS3 is installed, the app gives it to RPCS3 by
   itself, when the window opens and on **Refresh**, and RPCS3 installs it in its own window. Close that window
@@ -214,14 +214,14 @@ bc250-rpcs3-run                                                              # R
 
 RPCS3 has no stable releases: it publishes a new build for almost every change, and now and then marks one with a
 version number (0.0.43). Each version of the app installs one build, the one it was tried with. When the window
-opens, the app asks GitHub for RPCS3's newest version number. When that one is newer, the RPCS3 line says so, with
-a link to what is new; the app does not install it. A newer RPCS3 comes with a newer version of the app, once it has
-been tried, from the [portal](../portal.md): after updating the app, the RPCS3 line says so, and **Install** brings
+opens, the app asks GitHub for RPCS3's newest version number. When that one is newer, the RPCS3 line's tooltip and the
+log say so, with a link to what is new; the app does not install it. A newer RPCS3 comes with a newer version of the app, once it has
+been tried, from the [portal](../portal.md): after updating the app, the RPCS3 line's tooltip says so, and **Install** brings
 it.
 
 RPCS3's own window looks for a newer build when it opens and offers to update itself; the app turns that check
 off, so the build stays the one the app was tried with (RPCS3's **Help** menu can still update it by hand). If
-you update it there, the RPCS3 line says that RPCS3 updated itself, and **Install** puts the tried build back;
+you update it there, the RPCS3 line's tooltip says that RPCS3 updated itself, and **Install** puts the tried build back;
 RPCS3's Settings then ask once to remove the settings the other build left (see
 [RPCS3's settings](#rpcs3s-settings)). A game started from Steam never asks.
 

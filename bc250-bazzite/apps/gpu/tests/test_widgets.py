@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from PyQt6.QtCore import QObject, pyqtSignal
 
+from gpu_governor.theme import ACCENT, OUTLINE
 from gpu_governor.widgets import RoundedToolTip
 
 
@@ -29,3 +30,9 @@ def test_tooltip_filter_is_removed_when_the_app_quits(qapp, monkeypatch):
     assert app.filters == [tip] and RoundedToolTip._instance is tip
     app.aboutToQuit.emit()
     assert app.filters == []
+
+
+def test_tooltip_border_is_the_outline(qapp):
+    """Framed in the theme's outline, silver, not the accent (owner, 07-11-2026)."""
+    sheet = RoundedToolTip(qapp).label.styleSheet()
+    assert f"border:1px solid {OUTLINE};" in sheet and (ACCENT == OUTLINE or ACCENT not in sheet)

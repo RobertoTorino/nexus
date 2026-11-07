@@ -24,7 +24,8 @@ The app also checks its own test files before every run and refuses to run tests
 The suite answers for its own code and for the Python packages its apps install. Bazzite's own packages, including
 the system tools some apps run (such as `systemctl`, `sudo` or `cec-ctl`), are updated and patched by Bazzite.
 
-The [Dependency Checker](apps/package.md) shows where the suite's dependencies stand:
+[Nexus Deps](https://robertotorino.github.io/nexus/dashboard/#deps), a Nexus app run from a checkout of the repository, shows where the suite's dependencies stand
+on a board:
 
 - **Python packages** are read from the environment each installed app runs in: the suite's shared one, or the
   app's own. A card shows the version in each environment, whether it meets the app's requirement, and the latest
@@ -38,8 +39,9 @@ The [Dependency Checker](apps/package.md) shows where the suite's dependencies s
   whether it needs root. Their versions are not looked up, because they come with Bazzite or from their makers,
   and OSV.dev has no reliable record of those builds.
 
-The checker changes nothing. It sends the names and versions of the Python packages to PyPI and OSV.dev, and
-nothing else.
+Its check changes nothing. It sends the names and versions of the Python packages to PyPI and OSV.dev, and
+nothing else. Its **Fix** changes only what it lists and you confirm: the Python packages in an app's environment,
+and a missing tool an installed app needs (with Homebrew, or layered into the Bazzite image with rpm-ostree).
 
 When a package of an app has a known vulnerability, the card names the version with the fix. The fix reaches the
 app through an app release that requires that version. If no release does yet, report it as described above.
@@ -50,6 +52,6 @@ app through an app release that requires that version. If no release does yet, r
   steps that need root ask for your password, through sudo in a terminal or pkexec in a desktop dialog.
 - Apps whose scripts run as root are installed root-owned under `/opt`, so a normal user cannot change code that
   sudo runs. Bazzite Test never runs a tool as root from a folder you can write to, such as `~/.local/bin`.
-- The tools that only work as root are marked **Needs root.** in the Dependency Checker.
+- The tools that only work as root are marked **Needs root.** in [Nexus Deps](https://robertotorino.github.io/nexus/dashboard/#deps).
 - The portal asks before it installs or opens an app that changes how the board runs (unlocks, clocks, voltages,
   firmware tables, the VRAM split, the patched driver). All of them are software-only and can be undone.

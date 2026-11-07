@@ -39,10 +39,11 @@ for on top and what it does under it: **shadPS4 Install** and **shadPS4 Uninstal
 go](#where-your-games-go)); nothing is chosen or browsed to for them. Four lines below the pills say where each
 stands, short, with more in their tooltips, and then come three tabs: **Your games**, **Settings** and **Log**.
 
-- **shadPS4**: the version installed (when this version of the app brings another one, the tooltip and the log say
-  so, and **Install** puts it in). **Install** downloads shadPS4 from its GitHub release (about 31 MB) and checks it
-  against the checksum this version of the app was tried with before unpacking it. **Uninstall** takes it out
-  again; shadPS4's own folder, with your saves, settings and system modules, stays.
+- **shadPS4**: **Not installed.** or **Installed.**, with the button to use under it; the version box in the header
+  shows the version installed. When this version of the app brings another one, the tooltip and the log say so, and
+  **Install** puts it in. **Install** downloads shadPS4 from its GitHub release (about 31 MB) and checks it against
+  the checksum this version of the app was tried with before unpacking it. **Uninstall** takes it out again; shadPS4's
+  own folder, with your saves, settings and system modules, stays.
 - **Sys modules**: **Ok** in green when every module that shadPS4 cannot do without is in its module folder,
   **Missing sys modules** in red when one is not (how many there are, which are missing and the folder's path are in
   the tooltip). Many games run without them. Put the modules (`.sprx` files) you copied from your own PS4's

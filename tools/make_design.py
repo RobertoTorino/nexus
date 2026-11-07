@@ -275,7 +275,8 @@ Each design (a suite's, the Nexus page's) has its own; none is carried over to a
   app has the icon of its category.
 - **One theme for every app** (Gunmetal, Silver or Warm, the user's choice), from `core/bc250_core/theme.py`: the
   surfaces, text and accent below. Every border that shows under the mouse, with the focus or on what is chosen
-  is silver (owner, 05-11-2026), never the accent. An app adds no surface or text color of its own.
+  is silver (owner, 05-11-2026), never the accent, and so is the thin border of every tooltip (owner, 07-11-2026). An
+  app adds no surface or text color of its own.
 - **One state family,** the same in every theme: green `#2e7d32` ok, orange `#ef6c00` warn, red `#c62828` bad,
   blue `#1565c0` info, yellow `#fdd835` running, gray `#3a3f4b` neutral. A state is an edge or a dot on the theme's
   surface; a header box or pill in the neutral state shows the blue as its edge (owner, 26-10-2026), never the

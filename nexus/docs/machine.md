@@ -104,8 +104,9 @@ below 13 on purpose): `.venv-linux/bin/python -m pip install -U <package>`, or t
 On Windows, `winget upgrade` lists every program with a newer version and `winget upgrade --all` installs them;
 the venv is `.venv-windows\Scripts\python.exe -m pip list --outdated`.
 
-The board has its own reminder: the Dependency Checker's weekly look at Bazzite's update state, for the people who
-run the suite. The timer above is for the machine the suite is developed on.
+[Nexus Deps](dashboard.md#deps) has a weekly reminder of its own: Bazzite's update state and the suite's
+dependencies on the machine it is installed on, with a button to fix what is missing. The timer above is for the
+development tools.
 
 ## Git identity and signing
 

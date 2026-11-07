@@ -54,7 +54,6 @@ other app is optional. They are listed by category, as the portal's tabs list th
 | ![](../assets/apps/wdriver.webp){ .app-icon } [BC-250 USB Wi-Fi](wdriver.md) | The driver for AIC8800D80 USB Wi-Fi sticks: built for the running kernel, loaded at boot, rebuilt after a kernel update. **Changes the board.** |
 | ![](../assets/apps/cec.webp){ .app-icon } [HDMI CEC Manager](cec.md) | Turn the TV on and off with the board, switch its input and use its remote, over HDMI-CEC. |
 | ![](../assets/apps/sftp.webp){ .app-icon } [Bazzite SFTP Tools](sftp.md) | Move files between computers over SFTP, and manage the SSH server of a Bazzite host. |
-| ![](../assets/apps/package.webp){ .app-icon } [Dependency Checker](package.md) | The suite's Python packages and external tools, which apps use them, and whether newer ones exist; and whether a Bazzite update waits for a reboot. |
 | ![](../assets/apps/ncgui.webp){ .app-icon } [Bazzite NetcatGUI](ncgui.md) | A graphical netcat: connect to a host or listen on a port, TCP, UDP or TLS, one session per tab. |
 | ![](../assets/apps/ssd.webp){ .app-icon } [SSD Check](ssd.md) | The health, power cycles and power-on hours of the board's SSDs. |
 

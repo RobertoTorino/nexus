@@ -376,19 +376,6 @@ uninstall = ["bash install.sh --uninstall"]
 detect = ["~/.local/bin/bc250-usb-hdcontrol"]
 launch = [["Open", "~/.local/bin/bc250-usb-hdcontrol"]]
 
-[apps.package]
-name = "Dependency Checker"
-summary = "The suite's Python packages and external tools, which apps use them, and whether newer ones exist; and whether a Bazzite update waits for a reboot."
-tag = "package-v3.4.0"
-sha256 = "3a06ae30128d66de8dbc36e4e736cfe77b2cc1fe8f743cfb15f6b8cba1f44ca5"
-required = false
-changes_board = false
-category = "utilities"
-install = ["bash install.sh"]
-uninstall = ["bash install.sh --uninstall"]
-detect = ["~/.local/bin/bc250-portal-dependency-checker"]
-launch = [["Open", "~/.local/bin/bc250-portal-dependency-checker"]]
-
 [apps.ncgui]
 name = "Bazzite NetcatGUI"
 short = "NetcatGUI"

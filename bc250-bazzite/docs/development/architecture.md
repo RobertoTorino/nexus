@@ -54,7 +54,7 @@ bc250-bazzite/apps/<name>/
   for BC-250 Bazzite Test (a short name chosen apart from the app's, so that no folder is called test). Apps
   from before this convention still have a `bc250_<something>` or `bazzite_<something>` package;
   they move to it one at a time.
-- **Data** the package reads ships inside the package (the Dependency Checker's `dependencies.toml`) or next to it
+- **Data** the package reads ships inside the package (DatStation's `data/questions.json`) or next to it
   in the app folder (acpi's `tables/`). Never one folder up from where the installer copies the app.
 - An app with a shell script as its engine keeps that script in the app folder too
   (`bc250-bazzite/apps/cores-bisect/bc250-cores-bisect.sh`).
@@ -298,7 +298,7 @@ It installs:
   shadPS4 Manager) stays in the folder it is started from, so a relative path means what it
   says: `exec "<venv>/bin/python" -c '$RUN_MODULE' "<app folder>" <package> "$@"`, which puts the app folder first
   on `sys.path` instead (see its `install.sh`), and its `__main__.py` makes the path absolute before it uses or
-  hands it on. Keep the `exec "<venv>/bin/python"` start of that line: the Dependency Checker reads it to find the
+  hands it on. Keep the `exec "<venv>/bin/python"` start of that line: Nexus Deps reads it to find the
   app's Python environment.
 - **A menu entry and a Desktop icon,** both pointing at the launcher by its full path.
 
@@ -359,7 +359,7 @@ It writes `bc250-bazzite/apps/<name>/` (the package with `__main__.py` and a win
 `tests/`, `install.sh`, the requirements, `VERSION` 0.1.0, `CHANGELOG`, `LICENSE`, `.gitignore`, `README.md`),
 the installer test `bc250-bazzite/tools/installer-tests/<name>.sh` and the chapter `bc250-bazzite/docs/apps/<name>.md`,
 and adds the app to `portal/apps.toml`, `icons/categories.toml` (with the icon copies), `mkdocs.yml`, the apps
-overview and categories tables, the suite README and the Dependency Checker's catalog; CI needs no edit, as its
+overview and categories tables, the suite README and Nexus Deps' catalog of the suite; CI needs no edit, as its
 pytest matrix, its installer tests and its shellcheck come from the folders. What it does by hand, step by step,
 for an app that does not fit the template (the owner's decision):
 
@@ -375,8 +375,9 @@ for an app that does not fit the template (the owner's decision):
    it), install, uninstall, detect, launch). An app that changes the board also gets a `board_change`: what it
    touches, what stays after a reboot or a power off, what it never touches and how it is undone, in a few plain
    sentences; the tile's popup shows it.
-7. Add the app to the Dependency Checker's catalog (`[app.<name>]` with its launchers), its Python packages and
-   the external tools it runs (`bc250-bazzite/apps/package/package_checker/dependencies.toml`).
+7. Add the app to Nexus Deps' catalog of the suite (`[app.<name>]` with its launchers), its Python packages and
+   the external tools it runs, with the Homebrew formula (`brew`) or Fedora package (`rpm`) that installs a tool
+   (`dev/deps/nexus_deps/catalogs/bc250-bazzite.toml`).
 8. Write its manual chapter, `bc250-bazzite/docs/apps/<name>.md`, add it to `mkdocs.yml`, and give it a row in the apps overview,
    `bc250-bazzite/docs/apps/index.md`. An app that changes the board opens its chapter, right after the title, with
    a `!!! warning "Changes the board"` box holding its `board_change` text word for word
@@ -399,7 +400,7 @@ for a package or tool beyond PyQt6, and the portal bump the new entry asks for.
 | Version copies equal `VERSION` | `tools/check_versions.py` |
 | Every app and portal entry has an installer test, and CI runs it | `bc250-bazzite/tools/tests/test_installer_tests.py` |
 | Copies of `instance.py` equal core's | `tools/tests/test_instance_copies.py` |
-| The Dependency Checker's catalog matches the requirements files, the portal's apps, and the tools the apps use | `bc250-bazzite/apps/package/tests/test_dependencies.py` |
+| Nexus Deps' catalog matches the requirements files, the portal's apps, and the tools the apps use | `dev/deps/tests/test_dependencies.py` |
 | `bc250-bazzite/portal/apps.toml` rules and version bumps | `bc250-bazzite/tools/check_manifest.py` |
 | A CHANGELOG keeps every entry it had at the last push | `tools/check_changelogs.py` |
 | The manual builds with no broken link | `mkdocs build --strict` |

@@ -1,3 +1,14 @@
+Changelog: 07-11-2026 20:31:02
+
+Fixed. bc250_core.egg-info is out of the repository: pip writes it when it installs core from the checkout, and the
+copy in git still named version 0.1.2. .gitignore leaves it out from now on.
+
+Changelog: 07-11-2026 18:41:30
+
+Fixed. RoundedToolTip frames every tooltip in the theme's outline, silver in the suite's themes, as the borders
+under the mouse already were (owner, 07-11-2026); it was the accent, a blueish gray on Gunmetal. A theme without an
+outline of its own (Nexus's, the Windows Portable Suite's) keeps its accent, as before.
+
 Changelog: 07-11-2026 17:15:29
 
 Version 3.1.0.

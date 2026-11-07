@@ -1,3 +1,10 @@
+Changelog: 07-11-2026 20:18:45
+
+Added. The shadPS4 line under the pills says only the state, in the words every manager uses (owner, 07-11-2026): "Not
+installed." with "Install it with the Install button." under it, or "Installed." with "Uninstall with the Uninstall
+button." under it. The version installed, what Install takes, another version than the app brings, and a newer shadPS4
+are in the line's tooltip; another version and a newer shadPS4 also go to the log, once.
+
 Changelog: 06-11-2026 10:25:36
 
 Release 4.3.0.

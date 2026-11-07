@@ -18,7 +18,7 @@ from PyQt6.QtWidgets import (
 from . import FONT_DIR, plain_tooltip, window_title
 
 # The suite's theme and colors (a copy of core's theme.py): result colors, the logo's purple, the theme's accent.
-from .theme import ACCENT, BLUE, GREEN, GREY, ORANGE, PURPLE, RED, STATE_COLORS, surface_style
+from .theme import ACCENT, BLUE, GREEN, GREY, ORANGE, OUTLINE, PURPLE, RED, STATE_COLORS, surface_style
 
 
 @lru_cache(maxsize=1)
@@ -166,7 +166,7 @@ def accent_button(text: str, tooltip: str = "") -> QPushButton:
 
 
 class RoundedToolTip(QObject):
-    """Every tooltip of the app with rounded corners and a thin border in the accent.
+    """Every tooltip of the app with rounded corners and a thin border in the outline (silver).
 
     Qt's own tooltip window cannot have transparent corners, so this shows a translucent frameless label
     instead. RoundedToolTip.install(app) filters the tooltip events of all widgets and item views."""
@@ -195,7 +195,7 @@ class RoundedToolTip(QObject):
         self.label = QLabel()
         self.label.setTextFormat(Qt.TextFormat.AutoText)
         self.label.setStyleSheet(
-            f"QLabel {{ background:palette(window); color:palette(window-text); border:1px solid {ACCENT}; "
+            f"QLabel {{ background:palette(window); color:palette(window-text); border:1px solid {OUTLINE}; "
             "border-radius:6px; padding:6px 8px; }")
         box.addWidget(self.label)
         self.destroyed.connect(self.popup.deleteLater)

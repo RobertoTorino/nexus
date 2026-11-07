@@ -271,6 +271,28 @@ own tuning apps.
      demanding moment, about 60 s at each step of the resolution ladder. Open choices: which suite first, the frame
      rate source on Windows, how far, the target (60 or 30 fps, temperature and power limits), WindowManager.
 
+## Nexus Deps: the Dependency Checker moved to Nexus, with Fix (07-11-2026, in the working tree for the owner to commit)
+
+The owner: the Dependency Checker out of the suite's Utilities and into Nexus Dashboard, renamed Nexus Deps, with a
+button that fixes missing dependencies and notifications that ask (07-11-2026). Decided with the owner: the name
+Nexus Deps (`dev/deps`); Fix installs with pip, Homebrew and rpm-ostree (advice to restart, never a restart); the
+weekly notification covers Bazzite and the dependencies, with Fix… and Open buttons; the BC250 suite only, for now.
+
+- **`dev/deps/` Nexus Deps** (VERSION stays 3.4.0, the checker's; the number is the owner's): `apps/package` moved
+  with its CHANGELOG, on Nexus's theme and icon (`make_icons.py`), its catalog per suite in
+  `nexus_deps/catalogs/bc250-bazzite.toml` with `brew` and `rpm` per tool, `fixes.py` (the plan and the
+  notification), Fix in the window, `--fix`, `--remind` (the timer `nexus-deps-reminder`). Its `install.sh` removes
+  an installed Dependency Checker and its timer `bc250-bazzite-update-reminder`. Installer test
+  `bc250-bazzite/tools/installer-tests/deps.sh`; CI: `ci-nexus.yml`'s matrix. The dashboard passes `--suite` and
+  turns the tile off for a suite without a catalog. Linux only (no `run.ps1`).
+- **Gone from the BC250 suite:** `apps/package` (Breaking in the portal's CHANGELOG, the manifest entry in both
+  apps.toml, its wiki chapter, now the Dashboard chapter's Deps section on the Nexus page, its installer test, its
+  icon in `icons/categories.toml` and the portal's tile picture). The GitHub releases `package-v*` stay.
+- **Not tried on a board yet:** the Fix run (pip into an app's venv, `brew install`, `rpm-ostree install`) and the
+  notification's buttons (notify-send's `--action`, KDE). The `brew`/`rpm` names in the catalog are from Fedora's
+  and Homebrew's package names, not each checked on Bazzite. **Open (owner):** the portal's major bump (an app
+  removed: Breaking), Nexus Deps' version, WiFi Driver's (its hint no longer names the checker).
+
 ## The tools centralized in Nexus (02-11-2026, in the working tree for the owner to commit)
 
 The owner: the Media Tool out of the suite (it was dev work released as an app), all the tools for working on the
@@ -3683,7 +3705,9 @@ moves. The Steam shortcut tags take the new names (owner, 14-10-2026): shadps4-m
 date with Update Game Mode, console-link with Update in Game Mode. An app's identifiers move (with an old-ID
 fallback, as console-link's `OLD_APP_ID`) only when it is ported, together with its hardware code paths.
 
-Media licenses (owner's decision, 22-10-2026): the icons (a generative AI base, edited by hand in Photoshop) and the sounds (generative AI, but the portals' blob.wav, which the owner made by hand in Audacity: owner, 06-11-2026) stay under the
+Media licenses (owner's decision, 22-10-2026): the icons (a generative AI base, edited by hand in Photoshop) and the sounds (none with AI: the portals' intro sound is made by code, the portals' blob.wav and DatStation's
+sea_breeze.ogg the owner made by hand in Audacity, owner 06-11-2026 and 07-11-2026; the video tours' music is generative
+AI) stay under the
 license of the folder they are in, like the code: no separate or proprietary license for media, consistent with
 "open by default". The README, the wiki's Home page and CONTRIBUTING.md say so.
 

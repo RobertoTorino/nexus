@@ -35,24 +35,33 @@ shows what others found.
 
 ## Using it
 
-The window has three steps, then the list of games.
+The header shows the **Vita3K version** (its build number), the **Firmware** (Ready, Partly or —), **Your games**
+(the games installed) and those **Available in Steam**. **Refresh** reads everything again. Beside the title stands
+the app's state. Under the introduction, which links to **Vita3K's release notes** and to this wiki, a row of three
+pills does the setting up, each with what it is for on top and what it does under it: **Vita3K Install**,
+**Vita3K Uninstall** and **Games Install**. Three lines below the pills say where each stands, and then come three
+tabs: **Your games**, **Settings** and **Log**.
 
-1. **Vita3K**: **Install** downloads Vita3K from GitHub (about 86 MB) and checks it against the checksum this version
-   of the app was tried with before installing it. **Remove** takes it out again; Vita3K's own folders, with the
-   firmware, your games, saves and settings, stay.
-2. **Firmware**: which parts of the PS Vita's firmware Vita3K has: the system software, the font package and the
-   preinstalled apps. Put the `PSP2UPDAT.PUP` files you downloaded in `~/Games/Vita/Firmware` (each in a folder of
-   its own there if you like, since Sony names all three the same): once Vita3K is installed, the app gives them to
-   Vita3K by itself, the largest first, one after the other, when the window opens and on **Refresh**; the step
-   then says which part each was. A file is given once as it is, also one Vita3K could not use; a file you replace
-   is given again. The files stay in the folder.
-3. **Games**: how many games Vita3K has installed. **Install game…** installs one of yours; its window opens in
-   `~/Games/Vita`, the app's own folder (also on a USB drive or an SD card with a `Games/Vita` folder on it):
+- **Vita3K**: **Not installed.** or **Installed.**, with the button to use under it. The tooltip says which build
+  is installed, or what Install takes, and when a newer build is out. **Install** downloads Vita3K from GitHub
+  (about 86 MB) and checks it against the checksum this version of the app was tried with before installing it;
+  when another build is installed, the tooltip and the log say so, and **Install** puts the app's in.
+  **Uninstall** takes it out again; Vita3K's own folders, with the firmware, your games, saves and settings, stay.
+- **Firmware**: which parts of the PS Vita's firmware Vita3K has: the system software, the font package and the
+  preinstalled apps. Put the `PSP2UPDAT.PUP` files you downloaded in `~/Games/Vita/Firmware` (each in a folder of
+  its own there if you like, since Sony names all three the same): once Vita3K is installed, the app gives them to
+  Vita3K by itself, the largest first, one after the other, when the window opens and on **Refresh**; the line
+  under the tabs then says which part each was. A file is given once as it is, also one Vita3K could not use; a
+  file you replace is given again. The files stay in the folder.
+- **Games**: how many games Vita3K has installed. **Games Install** installs one of yours; its window opens in
+  `~/Games/Vita`, the app's own folder (also on a USB drive or an SD card with a `Games/Vita` folder on it):
     - **From a file**: a `.vpk` or `.zip` is handed to Vita3K, which installs it and then starts it in its own
       window; a `.pkg` asks for the game's zRIF license key, and Vita3K installs it without a window.
     - **From a dumped folder**: Vita3K installs the folder's game and starts it in its own window.
 
     The list shows the game once it is installed.
+
+### Your games
 
 The table lists every game Vita3K has installed: its title and ID (PCSB…, PCSE…) from the game's own files, its
 version and its folder in Vita3K's storage (`ux0/app`).
@@ -62,15 +71,50 @@ size: the game in Vita3K's storage, and its update and extra content when they a
 **Delete marked**; **Cancel** deletes nothing. The saves stay. A game the app will not delete (one at the top of a
 drive, or in a folder that holds another game) is said so under the tabs: delete it by hand.
 
-- **Play** (or a double-click) starts the chosen game on the desktop, alone in a window. Closing the window ends it.
-- **Vita3K settings** opens Vita3K's own window, with its settings, its controls and its game list.
-- **Settings…** opens the settings that matter for playing, in the app: see [Settings](#settings).
+**Vita3K settings** opens Vita3K's own window, with its other settings, its controls and its game list. The app
+has no Play button: a game is started from Steam.
+
+#### Game updates and extra content
+
+Install an update or extra content (DLC) as a game: **Games Install** with its `.pkg` and zRIF key. Vita3K puts an
+update in `ux0/patch` and extra content in `ux0/addcont`, and uses them when it starts the game. The table lists the
+game once.
+
+#### Steam
+
+Tick the games you want in Steam and press **Update Steam**. The app adds them to Steam as non-Steam games, with
+the game's own icon and LiveArea picture as their pictures and its icon (`icon0.png`) as the logo on the banner,
+and takes out the games you unticked and games no longer installed. Steam keeps these files in memory, so it closes
+for the change and starts again in the background.
+
+In Steam each game's name starts with its system, for example **[PS Vita] Gravity Rush**, so it stands apart from the
+same title on Steam or on another system in Steam's menus.
+
+The games are in the library under **Non-Steam**, on the desktop, in Big Picture Mode and in Game Mode alike. They
+start the game alone in Vita3K, full screen, and Vita3K quits when the game ends. Steam's menu and **Exit game** work
+as for any game.
+
+Steam's overlay works over a game started from Steam, in Game Mode and on the desktop: press **Shift+Tab** or the
+**PS button** for the game's page, its controller layout and its settings, without leaving the game.
+
+A game started from Steam reads your controllers itself. [How it works](#how-it-works) explains both.
+
+Change Steam from Desktop Mode: in Game Mode Steam is the session itself and cannot close for the change.
+
+##### Covers
+
+A PS Vita game has no cover in the shape Steam's library uses, so the app draws one: the game's icon with its title on
+a dark background. With a SteamGridDB API key, entered under **Steam artwork…**, the app takes a cover from
+SteamGridDB for each game instead; the background and the logo on the game's page stay the game's own. See
+[Covers from SteamGridDB](covers.md) for the key, how a game is looked up and how to use a cover of your own.
+
+**Steam** in the line under the table is a link: it opens Steam's library (Steam starts when it does not run).
 
 ### Settings
 
-**Settings…** opens a window with Vita3K's settings that matter for playing, written into Vita3K's own settings
-file (`config.yml`) the moment you change one. A game's own settings in Vita3K come before these; everything else
-is in Vita3K's own window (**Vita3K settings**).
+Vita3K's settings that matter for playing, each written into Vita3K's own settings file (`config.yml`) the moment
+you change it. A game's own settings in Vita3K come before these; everything else is in Vita3K's own window
+(**Vita3K settings**, under the games).
 
 - **Picture**: the **Renderer** (Vulkan; OpenGL helps only a game that fails with Vulkan), the **Resolution** (a
   multiple of the PS Vita's 960 × 544: 2x fills a 1080p screen sharply; a higher one asks more of the GPU), the
@@ -90,43 +134,17 @@ Each setting shows what Vita3K's settings file holds, or Vita3K's own default wh
 value set in Vita3K that the app does not offer is shown as it is. Nothing is written while Vita3K runs: Vita3K
 writes its settings back when it closes, over any change.
 
-### Game updates and extra content
+### Log
 
-Install an update or extra content (DLC) as a game: **Install game…** with its `.pkg` and zRIF key. Vita3K puts an
-update in `ux0/patch` and extra content in `ux0/addcont`, and uses them when it starts the game. The table lists the
-game once.
-
-### Game Mode
-
-Tick the games you want in Game Mode and press **Update Game Mode**. The app adds them to Steam as non-Steam games,
-with the game's own icon and LiveArea picture as their pictures and its icon (`icon0.png`) as the logo on the
-banner, and takes out the games you unticked and games no longer installed. Steam keeps these files in memory, so it
-closes for the change and starts again in the background.
-
-In Steam each game's name starts with its system, for example **[PS Vita] Gravity Rush**, so it stands apart from the
-same title on Steam or on another system in Steam's menus.
-
-In Game Mode the games are in the library under **Non-Steam**. They start the game alone in Vita3K, full screen, and
-Vita3K quits when the game ends. Steam's menu and **Exit game** work as for any game.
-
-Steam's overlay works over a game started from Steam, in Game Mode and on the desktop: press **Shift+Tab** or the
-**PS button** for the game's page, its controller layout and its settings, without leaving the game.
-
-A game started from Steam reads your controllers itself. [How it works](#how-it-works) explains both.
-
-Change Game Mode from Desktop Mode: in Game Mode Steam is the session itself and cannot close for the change.
-
-#### Covers
-
-A PS Vita game has no cover in the shape Steam's library uses, so the app draws one: the game's icon with its title on
-a dark background. With a SteamGridDB API key, the app takes a cover from SteamGridDB for each game instead; the
-background and the logo on the game's page stay the game's own. See [Covers from SteamGridDB](covers.md) for the
-key, how a game is looked up and how to use a cover of your own.
+Everything the app said and did, with the time: Vita3K installed or removed, what the app set up in Vita3K, the
+firmware files given to Vita3K, the games installed or deleted, every change to Steam, and every error. The same
+lines are in `~/.local/share/bc250-vita3k-manager/bc250-vita3k-manager.log`, which turns over at 1 MB (the three
+older files are kept). The log holds what the app did, not your SteamGridDB key or anything personal.
 
 ## From a terminal
 
-`bc250-vita3k-run` starts the installed Vita3K with the options you give it. The Game Mode shortcuts use it, so they
-keep working when a newer version of the app brings a newer Vita3K.
+`bc250-vita3k-run` starts the installed Vita3K with the options you give it. The Steam shortcuts use it, so they keep
+working when a newer version of the app brings a newer Vita3K.
 
 ```bash
 bc250-vita3k-run --frontend sdl -r PCSB00245                   # a game alone, by its ID; Vita3K quits with it
@@ -140,25 +158,26 @@ bc250-vita3k-run                                               # Vita3K's own wi
 
 Vita3K has no stable releases: it publishes a new build for almost every change, numbered over its whole history
 (4269). Each version of the app installs one build, the one it was tried with. When the window opens, the app asks
-GitHub for Vita3K's newest build. When that one is newer, the first step says so, with a link to what is new; the app
-does not install it. A newer Vita3K comes with a newer version of the app, once it has been tried, from the
-[portal](../portal.md): after updating the app, the first step says so, and **Install** brings it.
+GitHub for Vita3K's newest build. When that one is newer, the Vita3K line's tooltip and the log say so, with a link
+to what is new; the app does not install it. A newer Vita3K comes with a newer version of the app, once it has been
+tried, from the [portal](../portal.md): after updating the app, the tooltip and the log say so, and **Install**
+brings it.
 
 Vita3K's own window (**Vita3K settings**) would look for a newer build when it opens; the app turns that check off
 in Vita3K's settings, with Vita3K's welcome window (see below). The AppImage Vita3K comes in can update itself, but
-the app starts Vita3K with that turned off. Should Vita3K have been updated all the same, the first step says so, and
-**Install** puts the tried build back.
+the app starts Vita3K with that turned off. Should Vita3K have been updated all the same, the Vita3K line's tooltip
+says so, and **Install** puts the tried build back.
 
 ## How it works
 
-The Game Mode shortcuts start `bc250-vita3k-run`, which starts Vita3K with its plain game window: the game alone, and
+The Steam shortcuts start `bc250-vita3k-run`, which starts Vita3K with its plain game window: the game alone, and
 Vita3K quits with it, so Steam sees the game end. Two things change when Steam is the one that starts it. Started
-with **Play**, from outside Steam, Vita3K runs as it is.
+from outside Steam (**Vita3K settings**, or `bc250-vita3k-run` in a terminal), Vita3K runs as it is.
 
 Once Vita3K is installed, each time the window opens and while Vita3K does not run, the app sets two lines of
 Vita3K's settings (`config.yml` in its settings folder): its welcome window off, which would wait for a click
 before a game, and its own update check off, which would offer a build the app was not tried with. Everything else
-in the file stays as Vita3K wrote it, and what changed shows in the window's output.
+in the file stays as Vita3K wrote it, and what changed goes to the log.
 
 ### Controllers
 
@@ -193,7 +212,8 @@ game. Game Mode runs every game through X11 already.
 | The PS Vita's storage: firmware, installed games, saves | `~/.local/share/Vita3K/Vita3K` (Vita3K's own folder) |
 | Vita3K's shader cache and log | `~/.cache/AppImage-Cache/Vita3K` |
 | The app's settings | `~/.config/bc250-vita3k-manager` |
-| The Game Mode shortcuts | Steam's `shortcuts.vdf` and `grid` folder, per Steam user |
+| The app's log | `~/.local/share/bc250-vita3k-manager/bc250-vita3k-manager.log` |
+| The Steam shortcuts | Steam's `shortcuts.vdf` and `grid` folder, per Steam user |
 | The covers found on SteamGridDB | `~/.local/share/bc250-vita3k-manager/covers` |
 | Launchers | `~/.local/bin/bc250-vita3k-manager`, `~/.local/bin/bc250-vita3k-run` |
 
@@ -202,14 +222,14 @@ Vita3K can keep its storage elsewhere (its **Settings**, the storage folder); th
 ## Install and remove
 
 Install the app from the [portal](../portal.md), where it is under Gaming. Removing it takes out the app
-and the Vita3K it installed; Vita3K's own folders (the firmware, your games, your saves) stay. The games in Game
-Mode then no longer start: take them out first by unticking them and pressing **Update Game Mode**.
+and the Vita3K it installed; Vita3K's own folders (the firmware, your games, your saves) stay. The games in Steam
+then no longer start: take them out first by unticking them and pressing **Update Steam**.
 
 ```bash
 ./install.sh                         # install or update
 ./install.sh --no-desktop-shortcut   # app menu entry only, no icon on the Desktop
-./install.sh --uninstall             # remove the app and the Vita3K it installed; keeps its settings
-./install.sh --uninstall --purge     # also remove its settings and covers
+./install.sh --uninstall             # remove the app and the Vita3K it installed; keeps its settings and log
+./install.sh --uninstall --purge     # also remove its settings, covers and log
 ```
 
 ## Disclaimer

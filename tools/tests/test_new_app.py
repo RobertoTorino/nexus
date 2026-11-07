@@ -172,7 +172,7 @@ def checkout(tmp_path) -> Path:
     for size, kind in ((1024, "webp"), (512, "webp"), (256, "webp"), (128, "png")):   # real pictures: sync_icons reads them
         shutil.copy(ICONS / f"utilities-{size}.{kind}", suite / "icons" / "utilities" / f"utilities-{size}.{kind}")
     (suite / "tools" / "installer-tests").mkdir(parents=True)
-    write(suite / "apps" / "package" / "package_checker" / "dependencies.toml", CATALOG)
+    write(root / "dev" / "deps" / "nexus_deps" / "catalogs" / f"{suite.name}.toml", CATALOG)
     write(root / ".github" / "workflows" / "ci.yml", CI)
     return root
 
@@ -252,8 +252,8 @@ def test_writes_the_app_and_lists_it_everywhere(checkout, capsys):
     readme = (suite / "README.md").read_text()
     assert ("**[Beta](apps/beta)**: t\n- <img src=\"portal/images/apps/fan2.webp\" width=\"20\" height=\"20\" alt=\"\"/> "
             "**[BC-250 Fan Two](apps/fan2)**: A second fan.\n\nHow to install") in readme
-    # The Dependency Checker's catalog: the app before the tools, PyQt6 with the app as a source.
-    catalog = (suite / "apps" / "package" / "package_checker" / "dependencies.toml").read_text()
+    # Nexus Deps' catalog of the suite: the app before the tools, PyQt6 with the app as a source.
+    catalog = (suite.parent / "dev" / "deps" / "nexus_deps" / "catalogs" / f"{suite.name}.toml").read_text()
     assert ('launchers = ["~/.local/bin/bc250-alpha"]\n\n[app.fan2]\nname = "BC-250 Fan Two"\n'
             'launchers = ["~/.local/bin/bc250-fan2"]\n\n[[tool]]') in catalog
     assert ('owner = "alpha"\nspecifier = ">=6.11,<7"\n\n[[dependency.source]]\nowner = "fan2"\n'

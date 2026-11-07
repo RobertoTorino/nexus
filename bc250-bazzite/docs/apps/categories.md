@@ -25,7 +25,7 @@ The categories are also the [portal's](../portal.md) categories: an app's tile i
 | ![](../assets/categories/sustainable.webp){ .app-icon } | **Sustainable** | The board itself: test it, tune it, unlock it, cool it, and keep it running well for a long time. Most of these apps change how the board runs. |
 | ![](../assets/categories/graphics.webp){ .app-icon } | **Graphics** | Graphics features for games: upscaling, async compute and mesh shaders on the board's GPU. |
 | ![](../assets/categories/gaming.webp){ .app-icon } | **Gaming** | Playing: emulators, Remote Play with your console, plugins in Game Mode, and PlayStation trivia. |
-| ![](../assets/categories/utilities.webp){ .app-icon } | **Utilities** | Handy tools around the board: an overlay, a USB stats screen, the PS5 HD Camera as a webcam, the DualSense's firmware, the BIOS settings, Wi-Fi, the TV over HDMI-CEC, file transfer, a graphical netcat, demo recordings, and the suite's dependencies. |
+| ![](../assets/categories/utilities.webp){ .app-icon } | **Utilities** | Handy tools around the board: an overlay, a USB stats screen, the PS5 HD Camera as a webcam, the DualSense's firmware, the BIOS settings, Wi-Fi, the TV over HDMI-CEC, file transfer and a graphical netcat. |
 
 ## Apps by category
 
@@ -62,6 +62,5 @@ Every app with its icon and its category.
 | ![](../assets/apps/wdriver.webp){ .app-icon } [BC-250 USB Wi-Fi](wdriver.md) | Utilities |
 | ![](../assets/apps/cec.webp){ .app-icon } [HDMI CEC Manager](cec.md) | Utilities |
 | ![](../assets/apps/sftp.webp){ .app-icon } [Bazzite SFTP Tools](sftp.md) | Utilities |
-| ![](../assets/apps/package.webp){ .app-icon } [Dependency Checker](package.md) | Utilities |
 | ![](../assets/apps/ncgui.webp){ .app-icon } [Bazzite NetcatGUI](ncgui.md) | Utilities |
 | ![](../assets/apps/ssd.webp){ .app-icon } [SSD Check](ssd.md) | Utilities |

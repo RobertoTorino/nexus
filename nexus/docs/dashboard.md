@@ -54,6 +54,7 @@ own that keeps running when the dashboard closes; the suite goes along where the
 |---|---|
 | **Nexus Release Tool** | The release front end: a release's versions, CHANGELOG entries, pins and portal bump, and the board checks ([Releases](releases.md)). |
 | **Nexus Demo Recorder** | A portal installation recorded with OBS ([below](#demo-recorder)): the BC250 Bazzite Suite's on Linux, the Windows Portable Suite's on Windows. |
+| **Nexus Deps** | A suite's Python packages and tools on this machine, what is missing or outdated, and Fix for it ([below](#deps)). Off for a suite without a catalog. |
 | **Nexus Installer Tests** | A suite's installer tests, one at a time ([below](#installer-tests)). |
 | **Nexus Sound Lab** | Short sound effects for the suites' windows, made from sliders ([below](#sound-lab)). |
 
@@ -253,3 +254,96 @@ preset Tick after silence shows the same from the other side: with the link asle
 window that plays such sounds needs the same loop while it is open. `dev/sounds/run.sh` and
 `dev/sounds/install.sh` start and install it on their own; on Windows (PowerShell) `dev\sounds\run.ps1` starts it,
 and the dashboard's tile does the same.
+
+## Deps
+
+**Nexus Deps** (`dev/deps/`) lists the Python packages and external tools of a suite's apps installed on this
+machine, which apps and features use them, and what is missing or must be updated; **Fix** installs that. On top,
+it shows whether a Bazzite update waits for you. It was the BC250 Bazzite Suite's Dependency Checker until
+07-11-2026; it now runs from the checkout, like every Nexus app, and checks the BC250 Bazzite Suite (its catalog
+is `dev/deps/nexus_deps/catalogs/bc250-bazzite.toml`; `--suite` picks another suite once it has one). The
+dashboard's tile opens it on the suite chosen in the header.
+
+```bash
+dev/deps/run.sh                             # open it
+dev/deps/run.sh --fix                       # open it and offer Fix as soon as the check is done
+dev/deps/run.sh --remind                    # no window: the weekly check once, from a terminal
+dev/deps/install.sh                         # app menu entry, Desktop icon and the weekly reminder
+dev/deps/install.sh --no-desktop-shortcut   # the same without the Desktop icon
+dev/deps/install.sh --uninstall             # remove them and the reminder; --purge also the settings
+```
+
+Installing it removes an installed Dependency Checker of the suite (its copy, launcher, menu entry, Desktop icon
+and its weekly timer, `bc250-bazzite-update-reminder.timer`): Nexus Deps takes its place.
+
+**Bazzite**, the first card, shows the Bazzite image the machine runs (its version and build date), whether a newer
+one is installed and waits for a reboot, and when Bazzite's updater last ran. That updater, `uupd`, runs every
+night by itself and updates the image, Flatpaks, Homebrew and distroboxes; a new image takes effect at the next
+boot, so an update can wait unnoticed for days. The card turns to **Reboot to update** then. It also warns when
+the updater failed on its last run or has not run for over a week. This card only reads (from `rpm-ostree status`
+and `systemctl`, without root or the network); installing Bazzite's updates stays Bazzite's.
+
+**Python packages** are checked where each app runs: Nexus Deps finds every installed app by its launcher and
+reads the package versions in that app's Python environment (the suite's shared one, or the app's own). A card
+shows the version in each environment, whether it meets the app's requirement, and the latest version on PyPI.
+A package that no installed app uses is shown as **Not needed**. Each installed version is also looked up in
+[OSV.dev](https://osv.dev), which collects the GitHub, PyPA and NVD advisories: a green **✓ CVE** means no known
+vulnerability, a red **✗ CVE** lists each one by its CVE ID, linked to
+[Snyk's vulnerability database](https://security.snyk.io/), with the release that fixes it, and **CVE ?** means the
+check could not run (no network) or no installed app has the package.
+
+**External tools** are checked for availability, on your PATH and in `~/.local/bin` and Homebrew, where the apps
+also look. Each app says whether it needs the tool (required) or uses it when it is there (optional); the links
+open the app's chapter in the suite's wiki. Tools that do their work only as root are marked **Needs root.**; the
+apps run them through sudo or pkexec. Where a tool has two forms, one is enough (Ookla's `speedtest` or
+`speedtest-cli`). Console Link's FFmpeg, inside its native core, is asked for its version through the app's own
+Python.
+
+### Fix
+
+**Fix**, beside the check button, is on when something can be fixed; its tooltip says what. A click lists every
+command it will run and asks first; **No** changes nothing. **Yes** runs them one after the other in a window that
+shows their output and stops at the first that fails, then the check runs again.
+
+- A Python package that is **Missing**, at a **Wrong version** or that **Needs update** is installed with pip into
+  the environment of the app that needs it, at the version the apps in that environment allow (and at least the
+  release that fixes a known vulnerability). One command per environment.
+- A missing tool an installed app **needs** is installed with Homebrew when Homebrew has it (no restart), else
+  layered into the Bazzite image with `rpm-ostree install`, which may ask for your password. A layered package is
+  there after a restart: the window says so and gives the command (`systemctl reboot`); Nexus Deps never restarts
+  by itself.
+- Optional tools are left out: the apps work without them. A tool neither Homebrew nor Fedora has (`ujust`, Steam,
+  a tool an app brings itself) is left to the app's chapter, which says how to get it.
+
+The catalog says how each tool is installed: `brew` (the Homebrew formula) and `rpm` (the Fedora package).
+
+### The weekly reminder
+
+Every Monday at about 10:00 (or at the next login, when the machine was off then) Nexus Deps runs its check
+without a window and, when something needs you, says so in a desktop notification: a Bazzite update waiting for a
+reboot, Bazzite's updater failing or not running, Python packages missing or to update, tools an installed app
+needs. **Fix…** opens the window and asks to fix it, the same question as the button; **Open Nexus Deps** opens the
+window. When all is well it says nothing. It is a systemd user timer, `nexus-deps-reminder.timer`, that
+`install.sh` adds and `--uninstall` removes; `systemctl --user disable --now nexus-deps-reminder.timer` switches it
+off.
+
+### What the statuses mean
+
+Each card has one status, the most urgent that applies. The boxes at the top count them.
+
+| Status | For | Meaning |
+|---|---|---|
+| **Up to date** | package | Installed where the apps need it, at PyPI's latest version, no known vulnerability. |
+| **Update available** | package | PyPI has a newer version. Nothing is wrong: newer versions come with an app release, after they are tested; Fix leaves it. |
+| **Needs update** | package | An installed app needs a newer version, or a newer release fixes a known vulnerability. Fix updates it. |
+| **Vulnerable** | package | An installed version has a known vulnerability that no release fixes yet. |
+| **Wrong version** | package | An installed version does not meet an app's requirement. Fix installs one that does. |
+| **Missing** | package | Not in the Python environment of an installed app that uses it. Fix installs it. |
+| **Missing** | tool | Not found, and an installed app needs it. Fix installs it when the catalog says how. |
+| **Not installed** | tool | Not found, but the installed apps only use it when it is there. |
+| **Available** | tool | Found; the card shows where (and the version, where the check can read one). |
+| **Unsupported build** | tool | Found, but in a form the app cannot use, for example a flashrom without the internal programmer. |
+| **Not needed** | both | No installed app uses it. |
+| **Check failed** | package | PyPI could not be reached (no network). |
+
+The check sends the names and versions of the Python packages to PyPI and OSV.dev, nothing else.

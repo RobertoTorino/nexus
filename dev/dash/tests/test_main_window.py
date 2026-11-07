@@ -30,11 +30,12 @@ def test_the_checkout_has_the_suites_and_the_nexus_apps():
     assert checkout.here(CHECKOUT, "bc250-bazzite", "linux") and not checkout.here(CHECKOUT, "bc250-bazzite", "win32")
     assert checkout.here(CHECKOUT, "windows-portable", "win32")
     apps = checkout.dev_apps(CHECKOUT)
-    assert [app.key for app in apps] == ["nrt", "demo", "itests", "sounds"]   # the release tool first, then by name
-    assert [app.name for app in apps] == ["Nexus Release Tool", "Nexus Demo Recorder", "Nexus Installer Tests",
-                                          "Nexus Sound Lab"]
+    assert [app.key for app in apps] == ["nrt", "demo", "deps", "itests", "sounds"]   # the release tool, then by name
+    assert [app.name for app in apps] == ["Nexus Release Tool", "Nexus Demo Recorder", "Nexus Deps",
+                                          "Nexus Installer Tests", "Nexus Sound Lab"]
     assert all(app.icon is not None and app.icon.is_file() for app in apps)
-    assert all(app.script.is_file() for app in apps)
+    # Nexus Deps checks a Bazzite machine: it has run.sh alone
+    assert all(app.script.is_file() for app in apps if not (checkout.WINDOWS and app.key == "deps"))
     assert apps[1].log.name == "demo.log"
 
 
@@ -44,14 +45,14 @@ def test_the_window_lists_the_apps_then_the_suites_tools(qapp):
 
     assert window.windowTitle() == APP_NAME
     names = [window.tiles.item(i).text() for i in range(window.tiles.count())]
-    assert names == ["Nexus Release Tool", "Nexus Demo Recorder", "Nexus Installer Tests", "Nexus Sound Lab",
-                     "Portal video tour", "Apps video tour", "Convert icons", "Close issues", "Dev app versions"]
+    assert names == ["Nexus Release Tool", "Nexus Demo Recorder", "Nexus Deps", "Nexus Installer Tests",
+                     "Nexus Sound Lab", "Portal video tour", "Apps video tour", "Convert icons", "Close issues", "Dev app versions"]
     assert window.suite_box.currentText() == "BC250 Bazzite Suite" and settings.value(SUITE_KEY) is None
     enabled = [bool(window.tiles.item(i).flags() & Qt.ItemFlag.ItemIsEnabled) for i in range(window.tiles.count())]
     if sys.platform == "win32":
-        assert enabled == [True, True, True, True, False, False, True, True, True]
+        assert enabled == [True, True, False, True, True, False, False, True, True, True]   # Nexus Deps: no run.ps1
     else:
-        assert enabled == [True] * 9
+        assert enabled == [True] * 10
     window.close()
 
 
@@ -74,6 +75,21 @@ def test_a_windows_suite_greys_out_the_tours_and_the_choice_is_remembered(qapp):
     window.close()
 
 
+def test_nexus_deps_is_off_for_a_suite_without_a_catalog(qapp):
+    """Nexus Deps checks a suite with a catalog of its own: the BC250 Bazzite Suite's so far (owner, 07-11-2026)."""
+    settings = QSettings(QSettings.Format.IniFormat, QSettings.Scope.UserScope, "test", "test")
+    window = MainWindow(settings=settings, suite="bc250-bazzite")
+    tiles = {window.tiles.item(i).text(): window.tiles.item(i) for i in range(window.tiles.count())}
+    if sys.platform != "win32":
+        assert tiles["Nexus Deps"].flags() & Qt.ItemFlag.ItemIsEnabled
+    window.suite_box.setCurrentIndex(window.suite_box.findText("Bazzite Console Suite"))
+    tiles = {window.tiles.item(i).text(): window.tiles.item(i) for i in range(window.tiles.count())}
+    assert not tiles["Nexus Deps"].flags() & Qt.ItemFlag.ItemIsEnabled
+    if sys.platform != "win32":
+        assert "no catalog for bazzite-console" in tiles["Nexus Deps"].toolTip()
+    window.close()
+
+
 def test_a_click_on_an_app_starts_it_with_the_suite_and_says_so(qapp, tmp_path):
     started = []
     window = MainWindow(settings=None, suite="bc250-bazzite", starter=lambda app, args: started.append((app.key, args)))
@@ -82,8 +98,10 @@ def test_a_click_on_an_app_starts_it_with_the_suite_and_says_so(qapp, tmp_path):
     window.click(tiles["Nexus Release Tool"].data(Qt.ItemDataRole.UserRole))
     window.click(tiles["Nexus Installer Tests"].data(Qt.ItemDataRole.UserRole))
     window.click(tiles["Nexus Demo Recorder"].data(Qt.ItemDataRole.UserRole))
+    window.click(tiles["Nexus Deps"].data(Qt.ItemDataRole.UserRole))
 
-    assert started == [("nrt", ("--suite", "bc250-bazzite")), ("itests", ("--suite", "bc250-bazzite")), ("demo", ())]
+    assert started == [("nrt", ("--suite", "bc250-bazzite")), ("itests", ("--suite", "bc250-bazzite")), ("demo", ()),
+                       ("deps", ("--suite", "bc250-bazzite"))]
     assert "Nexus Release Tool" in window.output.toPlainText() and "started from" in window.output.toPlainText()
 
     def refuse(app, args):

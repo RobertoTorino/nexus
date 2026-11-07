@@ -364,7 +364,7 @@ class MainWindow(QMainWindow):
         missing = stick.missing_tools(self.which) if self.which else stick.missing_tools()
         if tree is None:
             notes.append(f"No kernel build tree for {self.kernel} (kernel-devel): the driver cannot be built. "
-                         "Bazzite ships it with its kernel; check the Dependency Checker.")
+                         "Bazzite ships it with its kernel.")
         if missing:
             notes.append(f"Not installed: {', '.join(missing)}. The build needs them.")
         if self.chip is None:

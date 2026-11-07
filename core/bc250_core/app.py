@@ -50,7 +50,7 @@ def create_app(info: AppInfo, qt_args: Sequence[str] = (), stylesheet: str = "",
     app.setDesktopFileName(info.app_id)
     app.setStyle("Fusion")
     apply_theme(app, stylesheet, current_theme())
-    RoundedToolTip.install(app)     # every tooltip: rounded corners, a thin border in the accent
+    RoundedToolTip.install(app)     # every tooltip: rounded corners, a thin border in the outline
     if info.logo is not None and info.logo.is_file():
         app.setWindowIcon(QIcon(str(info.logo)))
     return app

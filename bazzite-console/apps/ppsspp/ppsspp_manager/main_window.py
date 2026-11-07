@@ -1,31 +1,38 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The main window: PPSSPP itself and the game folders as two steps with their state and buttons, then the games
-found, each with a box for Game Mode. Downloading PPSSPP, asking GitHub for a newer one and changing Steam's files
-run off the GUI thread; nothing here needs root. The look is the app's own blue (style.py). Covers… takes the
-suite's SteamGridDB API key, with which Update Game Mode looks up a cover for each game's portrait first (core's
-covers)."""
+"""The main window, built as RPCS3 Manager's (owner, 07-11-2026: RPCS3 Manager's design is every manager's): the header
+with the Refresh pill and the state boxes, a row of action pills (Install and Uninstall for PPSSPP, Rename for the
+games), the state of each (PPSSPP, the game folder) in a line, then three tabs: the games found, each with a box for
+Steam; PPSSPP's settings (core's settings_page over ppsspp_settings); and the app's log. Downloading PPSSPP, asking
+GitHub for a newer one and changing Steam's files run off the GUI thread; nothing here needs root. The look is the
+app's own blue (style.py). Steam artwork… takes the suite's SteamGridDB API key, with which Update Steam looks up a
+cover for each game's portrait first (core's covers).
+
+The app has no Play button: a game is started from Steam. PPSSPP's own window (PPSSPP settings, under the games)
+stays for what the Settings tab does not set. What the window says it also writes to the app's log (core's applog),
+shown in the Log tab."""
 
 from __future__ import annotations
 
+import time
 from html import escape
 from collections.abc import Callable
 from pathlib import Path
 
-from PyQt6.QtCore import QProcess, Qt
-from PyQt6.QtGui import QCloseEvent
-from PyQt6.QtWidgets import (QAbstractItemView, QDialog, QGridLayout, QHBoxLayout, QHeaderView,
-                             QLabel, QMainWindow, QMessageBox, QPushButton, QTableWidget, QTableWidgetItem,
+from PyQt6.QtCore import QProcess, Qt, QTimer
+from PyQt6.QtGui import QCloseEvent, QResizeEvent
+from PyQt6.QtWidgets import (QAbstractItemView, QDialog, QGridLayout, QHBoxLayout, QHeaderView, QLabel, QMainWindow,
+                             QMessageBox, QPushButton, QSizePolicy, QTableWidget, QTableWidgetItem, QTabWidget,
                              QVBoxLayout, QWidget)
 
-from bc250_core import SUITE_MANUAL_URL, covers, steam, window_title
+from bc250_core import SUITE_MANUAL_URL, applog, covers, steam, window_title
 from bc250_core import __version__ as CORE_VERSION
 from bc250_core import keep, renamed
 from bc250_core.keep_dialog import KeepDialog
-from bc250_core.platform import bin_home, private
+from bc250_core.platform import bin_home, private, xdg_open
 from bc250_core.settings import SettingsStore
-from bc250_core.settings_page import SettingsDialog
+from bc250_core.settings_page import SettingsPage
 from bc250_core.updates import ReleaseInfo, UpdateChecker
-from bc250_core.widgets import AppHeader, MetricBox, StatusText, Terminal, hint_label
+from bc250_core.widgets import AppHeader, MetricBox, StatusText, Terminal, WrappedLabel, hint_label
 
 from . import (APP_ID, APP_NAME, INFO, LOGO_PATH, ROOT, __version__, emulator, library, ppsspp_settings, renamer,
                shortcuts, style, userdata)
@@ -33,7 +40,17 @@ from .games import Game, installed, memstick_game, ppsspp_home, scan
 
 MANUAL_URL = f"{SUITE_MANUAL_URL}apps/ppsspp/"
 STEAM_TIP = "Add the ticked games to Steam and take out the others; Steam closes for it and starts again"
+STEAM_URL = "steam://open/games"        # Steam's library; Steam starts when it does not run
 KINDS = {"iso": "ISO", "cso": "CSO", "chd": "CHD", "pbp": "Memory Stick"}
+STEAM, GAME, SERIAL, KIND, FILE = range(5)                  # the table's columns
+GAMES, SETTINGS, LOG = range(3)                             # the tabs
+# The emulator's line: the state alone, the same words in every manager (owner, 07-11-2026); the version and the
+# advice are in its tip.
+NOT_INSTALLED = "Not installed.<br>Install it with the Install button."
+INSTALLED = "Installed.<br>Uninstall with the Uninstall button."
+SETTINGS_LEAD = ("PPSSPP's settings that matter for playing, written into PPSSPP's own settings file the moment you "
+                 "change one, while PPSSPP does not run. Everything else is in PPSSPP's own window (PPSSPP settings, "
+                 "under Your games).")
 
 
 RUNNING_REMOVE = "PPSSPP is running: close it first, then remove the game."
@@ -50,15 +67,19 @@ class MainWindow(QMainWindow):
                  newer_release=emulator.newer_release,
                  covers_home: Path | None = None, covers_get: covers.Get = covers._get,
                  covers_key: Path | None = None, ppsspp_running=emulator.running,
-                 user_home: Path | None = None, drives: Callable[[], list[Path]] = library.removable_drives):
+                 user_home: Path | None = None, drives: Callable[[], list[Path]] = library.removable_drives,
+                 log_path: Path | None = None, open_url=xdg_open):
         """*home*: where the app installs PPSSPP; *memstick*: PPSSPP's own folder (its memory stick); *steam_dir*:
         Steam's folder (None: looked up); *run*: the run wrapper the shortcuts start; *fetch*: the download;
         *steam_closed* and *steam_running*: closing Steam for a change and asking whether it runs; *newer_release*:
         asks GitHub for a newer PPSSPP; *covers_home*, *covers_get* and *covers_key*: where the SteamGridDB
         pictures are kept, how SteamGridDB is asked and the suite's key file (tests never touch the real ones);
-        *ppsspp_running*: whether PPSSPP runs (its settings are left alone then)."""
+        *ppsspp_running*: whether PPSSPP runs (its settings are left alone then); *user_home*: the home folder with
+        the app's own game folder (library.fixed); *drives*: the removable drives looked at for one; *log_path*: the
+        app's log file, as the Log tab shows it (__main__ set it up); *open_url*: opens a URL on the desktop (the
+        Steam link)."""
         super().__init__()
-        self.resize(980, 720)
+        self.resize(980, 800)
         self.home = home or emulator.emulator_home()
         self.memstick = memstick or ppsspp_home()
         self.steam_dir = steam_dir if steam_dir is not None else steam.find_steam()
@@ -72,6 +93,10 @@ class MainWindow(QMainWindow):
         self.covers_home = covers_home or covers.covers_home(APP_ID)
         self.covers_get = covers_get
         self.covers_key = covers_key
+        self.log_path = log_path or applog.log_file(APP_ID)
+        self.open_url = open_url
+        self.log = applog.logger(APP_ID)
+        self._pin_noted = False                         # another release installed than the app brings: logged once
         self.newer: ReleaseInfo | None = None           # PPSSPP's newest release, when newer than the pinned one
         self.release_check = UpdateChecker(self)        # apart from the worker: it runs while the window opens
         self.release_check.finished.connect(self._release_found)
@@ -87,49 +112,63 @@ class MainWindow(QMainWindow):
         self.folders: list[Path] = []
 
         header = AppHeader(LOGO_PATH, APP_NAME, __version__)
+        # The state on the right of the title row, ending at the middle of the last pill below it, as in RPCS3
+        # Manager: a spacer of half that pill's width after it, set whenever the window's size changes.
         self.pill = StatusText()
-        header.add_state(self.pill)
-        self.refresh_button = QPushButton("Refresh")
-        self.refresh_button.setToolTip("Read the state again and look for games")
-        self.refresh_button.clicked.connect(self.refresh)
-        header.add_action(self.refresh_button)
-        self.emulator_box = MetricBox("PPSSPP", style.BLUE)
-        self.games_box = MetricBox("Games", style.BLUE)
-        self.steam_box = MetricBox("In Game Mode", style.BLUE)
-        for box in (self.emulator_box, self.games_box, self.steam_box):
-            header.add_second(box)
-        intro = hint_label(
-            "PSP games on the system with the PPSSPP emulator. The app installs the release pinned for this version "
-            "with, finds your games and puts them in Steam, so they start from Game Mode. The games come from your "
-            "own discs; the app never downloads them. " + style.link(self, MANUAL_URL, "Manual"))
+        header.add_action(self.pill)
+        self.states_spacer = QWidget()
+        self.states_spacer.setFixedSize(0, 1)
+        header.add_action(self.states_spacer)
+        self.refresh_pill = style.action_pill("Refresh", "Click to refresh", "Read the state again and look for games")
+        self.refresh_pill.clicked.connect(self.refresh)
+        self.emulator_box = MetricBox("PPSSPP version", style.BLUE)
+        self.games_box = MetricBox("Your games", style.BLUE)
+        self.steam_box = MetricBox("Available in Steam", style.BLUE)
+        # The header's pills spread over the window's width in equal parts, as the action pills below.
+        self.header_pills = [self.refresh_pill, self.emulator_box, self.games_box, self.steam_box]
+        for box in self.header_pills:
+            box.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+            header.add_second(box, 1)
+        self.intro = hint_label(
+            "PSP games on the system with the PPSSPP emulator. The app installs the PPSSPP release pinned for this "
+            "version of the app, finds your games and puts them in Steam, so a game starts straight away, also from "
+            "Steam's Big Picture Mode. The games come from your own discs; the app never downloads them. "
+            + style.link(self, emulator.RELEASE_PAGE, "PPSSPP's release notes") + " · "
+            + style.link(self, MANUAL_URL, "Wiki"), follow_height=True)       # its lines count in the minimum
 
-        grid = QGridLayout()
-        grid.setColumnStretch(2, 1)
+        # What there is to do, as pills the size of the header's, spread over the window's width: what it is for in
+        # large type (PPSSPP, Games), what the pill does under it (Install, Uninstall, Rename).
+        self.install_pill = style.action_pill("PPSSPP", "Install", f"Download PPSSPP {emulator.VERSION} from GitHub "
+                                                                   f"(about {emulator.SIZE_MB} MB) and check it")
+        self.install_pill.clicked.connect(self.on_install)
+        self.remove_pill = style.action_pill("PPSSPP", "Uninstall", "Remove the installed PPSSPP; its own folder "
+                                                                    "(saves, settings) stays")
+        self.remove_pill.clicked.connect(self.on_remove)
+        self.rename_pill = style.action_pill("Games", "Rename", "Rename the ISO and CSO images after their "
+                                                                "PARAM.SFO: disc ID, title and version, with a "
+                                                                "choice of naming templates")
+        self.rename_pill.clicked.connect(self.on_rename)
+        self.actions = [self.install_pill, self.remove_pill, self.rename_pill]
+        actions = QHBoxLayout()
+        actions.setSpacing(8)
+        for pill in self.actions:                       # each a third of the width, whatever the window's
+            pill.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+            actions.addWidget(pill, 1)
+
+        grid = QGridLayout()        # the state of each: PPSSPP, the game folder
+        grid.setColumnStretch(1, 1)
         grid.setHorizontalSpacing(14)
-        grid.setVerticalSpacing(10)
+        grid.setVerticalSpacing(6)
         self.emulator_state, self.folders_state = (self._state_label() for _ in range(2))
-        self.install_button = style.primary_button("Install", f"Download PPSSPP {emulator.VERSION} from GitHub "
-                                                              f"(about {emulator.SIZE_MB} MB) and check it")
-        self.install_button.clicked.connect(self.on_install)
-        self.remove_button = QPushButton("Remove")
-        self.remove_button.setToolTip("Remove the installed PPSSPP; its own folder (saves, settings) stays")
-        self.remove_button.clicked.connect(self.on_remove)
-        rows = [("PPSSPP", self.emulator_state, [self.install_button, self.remove_button]),
-                ("Game folder", self.folders_state, [])]
-        centre = Qt.AlignmentFlag.AlignVCenter
-        for row, (name, state, buttons) in enumerate(rows):
+        for row, (name, state) in enumerate((("PPSSPP", self.emulator_state), ("Game folder", self.folders_state))):
             label = QLabel(name)
             label.setStyleSheet("font-weight:700;")
-            for text in (label, state):
-                text.setAlignment(Qt.AlignmentFlag.AlignLeft | centre)
-            grid.addWidget(style.step_badge(row + 1), row, 0, centre)
-            grid.addWidget(label, row, 1)
-            grid.addWidget(state, row, 2)
-            for column, button in zip((4, 3), reversed(buttons)):
-                grid.addWidget(button, row, column, centre)
+            label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+            grid.addWidget(label, row, 0)
+            grid.addWidget(state, row, 1)
 
         self.table = QTableWidget(0, 5)
-        self.table.setHorizontalHeaderLabels(["Game Mode", "Game", "ID", "Kind", "File"])
+        self.table.setHorizontalHeaderLabels(["In Steam", "Game title", "Id", "Kind", "File"])
         self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
@@ -143,76 +182,76 @@ class MainWindow(QMainWindow):
             head.setSectionResizeMode(column, mode)
         self.table.itemChanged.connect(lambda _item: self._update_buttons())
         self.table.itemSelectionChanged.connect(self._update_buttons)
-        self.table.doubleClicked.connect(lambda _index: self.on_play())
 
-        self.play_button = QPushButton("Play")
-        self.play_button.setToolTip("Start the chosen game in PPSSPP, here on the desktop")
-        self.play_button.clicked.connect(self.on_play)
         self.ppsspp_button = QPushButton("PPSSPP settings")
-        self.ppsspp_button.setToolTip("Open PPSSPP's own window: its settings, controllers and game list")
+        self.ppsspp_button.setToolTip("Open PPSSPP's own window for what the Settings tab does not set: its other "
+                                      "settings, the controllers and its game list")
         self.ppsspp_button.clicked.connect(self.on_open_ppsspp)
-        self.settings_button = QPushButton("Settings…")
-        self.settings_button.setToolTip("PPSSPP's settings that matter for playing, written into PPSSPP's own "
-                                        "settings file the moment you change one, while PPSSPP does not run")
-        self.settings_button.clicked.connect(self.on_settings)
-        self.rename_button = QPushButton("Rename files…")
-        self.rename_button.setToolTip("Rename the ISO and CSO images after their PARAM.SFO: disc ID, title and "
-                                      "version, with a choice of naming templates")
-        self.rename_button.clicked.connect(self.on_rename)
         self.remove_game_button = QPushButton("Remove game…")
         self.remove_game_button.setToolTip("Delete the chosen game from the disk: a window lists what would go, and "
                                            "you untick what to keep; nothing is deleted before you confirm")
         self.remove_game_button.clicked.connect(self.on_remove_game)
-        self.covers_button = QPushButton("Covers…")
-        self.covers_button.setToolTip("The SteamGridDB API key, one for the whole suite: with it, Update Game Mode "
+        self.covers_button = QPushButton("Steam artwork…")
+        self.covers_button.setToolTip("The SteamGridDB API key, one for the whole suite: with it, Update Steam "
                                       "gives each game a cover from SteamGridDB in Steam's library")
         self.covers_button.clicked.connect(self.on_covers)
-        self.steam_button = style.primary_button("Update Game Mode", STEAM_TIP)
+        self.steam_button = style.primary_button("Update Steam", STEAM_TIP)
         self.steam_button.clicked.connect(self.on_update_steam)
         buttons = QHBoxLayout()
-        buttons.addWidget(self.play_button)
+        self.steam_hint = hint_label(f"Tick a game to put it in Steam. A game is started from "
+                                     f"{style.link(self, STEAM_URL, 'Steam')}.")
+        self.steam_hint.setOpenExternalLinks(False)      # the app opens Steam itself (open_steam)
+        self.steam_hint.linkActivated.connect(lambda _url: self.open_steam())
+        buttons.addWidget(self.steam_hint, 1)
         buttons.addWidget(self.ppsspp_button)
-        buttons.addWidget(self.settings_button)
-        buttons.addWidget(self.rename_button)
-        buttons.addStretch(1)
         buttons.addWidget(self.remove_game_button)
         buttons.addWidget(self.covers_button)
         buttons.addWidget(self.steam_button)
+        games_page = QWidget()
+        games = QVBoxLayout(games_page)
+        games.setContentsMargins(0, 8, 0, 0)
+        games.addWidget(self.table, 1)
+        games.addLayout(buttons)
 
-        self.running = QLabel()
+        self.settings_page = SettingsPage("PPSSPP", ppsspp_settings.SETTINGS,
+                                          lambda: ppsspp_settings.read_settings(self.memstick),
+                                          lambda setting, value: ppsspp_settings.write_setting(self.memstick, setting,
+                                                                                               value),
+                                          self.ppsspp_running, SETTINGS_LEAD, self.log)
+        self.output = Terminal()
+        self.output.setPlaceholderText("What the app did, with the time, appears here.")
+        self.output.set_text(applog.tail(self.log_path))
+        log_page = QWidget()
+        log = QVBoxLayout(log_page)
+        log.setContentsMargins(0, 8, 0, 0)
+        log.addWidget(hint_label(f"Everything the app said and did, newest last; the same lines are in "
+                                 f"{escape(private(self.log_path))}, which turns over at 1 MB."))
+        log.addWidget(self.output, 1)
+        self.tabs = QTabWidget()
+        self.tabs.addTab(games_page, "Your games")
+        self.tabs.addTab(self.settings_page, "Settings")
+        self.tabs.addTab(log_page, "Log")
+
+        self.running = WrappedLabel()
         self.running.setStyleSheet("font-weight:600;")
         self.running.setWordWrap(True)
-        self.output = Terminal()
-        self.output.setPlaceholderText("Messages appear here.")
-        self.output.setMaximumHeight(120)
 
         central = QWidget()
         lay = QVBoxLayout(central)
         lay.addLayout(header)
-        lay.addWidget(intro)
-        lay.addSpacing(6)
+        lay.addWidget(self.intro)
+        lay.addSpacing(4)
+        lay.addLayout(actions)
+        lay.addSpacing(4)
         lay.addLayout(grid)
         lay.addSpacing(6)
-        lay.addWidget(self.table, 1)
-        lay.addLayout(buttons)
+        lay.addWidget(self.tabs, 1)
         lay.addWidget(self.running)
-        lay.addWidget(self.output)
         version = QLabel(f"{APP_NAME} {__version__} · core {CORE_VERSION} · PPSSPP {emulator.VERSION}")
         version.setStyleSheet("color:palette(placeholder-text);")
         lay.addWidget(version, 0, Qt.AlignmentFlag.AlignRight)
         self.setCentralWidget(central)
         style.apply(self)
-        # As in shadPS4 Manager: the buttons of the steps the size of the widest, in two columns on the
-        # right. Sized here, in the window, so their size includes the style sheet's padding.
-        steps = [b for _, _, buttons in rows for b in buttons]
-        for button in steps:
-            button.ensurePolished()
-        width = max(b.sizeHint().width() for b in steps)
-        height = max(b.sizeHint().height() for b in steps)
-        for row in range(len(rows)):
-            grid.setRowMinimumHeight(row, height)
-        for button in steps:
-            button.setFixedSize(width, height)
 
         geometry = self.settings.window_state("geometry")
         if geometry is not None:
@@ -222,9 +261,9 @@ class MainWindow(QMainWindow):
 
     @staticmethod
     def _state_label() -> QLabel:
-        label = QLabel()
-        label.setWordWrap(True)
-        label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        label = WrappedLabel()                  # its lines count in the window's minimum height
+        label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse
+                                      | Qt.TextInteractionFlag.LinksAccessibleByMouse)
         return label
 
     # --- State ------------------------------------------------------------------------------------------------
@@ -253,59 +292,65 @@ class MainWindow(QMainWindow):
         if self.moved and set(self.moved) != self._moved_said:
             self._moved_said = set(self.moved)
             titles = [g.title for g in self.games if str(g.file) in self.moved]
-            self.tell(f"Found again under a new name or in another folder, with its Steam mark: {', '.join(titles)}. "
+            self.say(f"Found again under a new name or in another folder, with its Steam mark: {', '.join(titles)}. "
                      "Update Steam brings the shortcut in Steam up to date.")
-
-    def on_settings(self) -> None:
-        """The Settings window (core's settings_page over ppsspp_settings): PPSSPP's settings in the app."""
-        dialog = SettingsDialog(window_title("PPSSPP settings"), "PPSSPP", ppsspp_settings.SETTINGS,
-                                lambda: ppsspp_settings.read_settings(self.memstick),
-                                lambda setting, value: ppsspp_settings.write_setting(self.memstick, setting, value),
-                                self.ppsspp_running, "PPSSPP's settings that matter for playing, written into "
-                                "PPSSPP's own settings file the moment you change one, while PPSSPP does not run. "
-                                "Everything else is in PPSSPP's own window (PPSSPP settings).", parent=self)
-        dialog.exec()
+        self.settings_page.load()
 
     def prepare_ppsspp(self) -> None:
         """What the app owns in PPSSPP's settings (userdata.prepare), once PPSSPP is installed and while it does not
-        run; what changed goes to the output."""
+        run; what changed goes to the log."""
         if not self.version or self.ppsspp_running():
             return
         try:
             done = userdata.prepare(self.memstick)
         except OSError as exc:
-            self.output.appendPlainText(f"PPSSPP's settings could not be written: {exc}")
+            self.note(f"PPSSPP's settings could not be written: {exc}", ok=False)
             return
         if done:
-            self.output.appendPlainText("PPSSPP set up: " + ", ".join(done) + ".")
+            self.note("PPSSPP set up: " + ", ".join(done) + ".")
+
+    def say(self, text: str, ok: bool = True) -> None:
+        """What the window has to say: the line under the tabs, the Log tab and the log file."""
+        self.running.setStyleSheet("font-weight:600;" + ("" if ok else "color:#c62828;"))
+        self.running.setText(text)
+        self.note(text, ok)
+
+    def note(self, text: str, ok: bool = True) -> None:
+        """Into the Log tab and the log file only: something that happened, not what the window is doing now."""
+        (self.log.info if ok else self.log.error)(text)
+        stamp = time.strftime(applog.DATE)
+        self.output.appendPlainText(f"{stamp} {'INFO' if ok else 'ERROR'} {text}")
 
     def _show_state(self) -> None:
         pinned = emulator.VERSION
         if not self.version:
-            self.emulator_state.setText(f"Not installed. Install downloads PPSSPP {pinned}, the release pinned for "
-                                        "this version of the app, and checks it before installing it.")
+            self.emulator_state.setText(NOT_INSTALLED)
             self.emulator_box.set_value("—")
-        elif self.version != pinned:
-            self.emulator_state.setText(f"PPSSPP {escape(self.version)} is installed; this version of the app "
-                                        f"brings {pinned}: <b>install it</b> to use it.")
-            self.emulator_box.set_value(self.version)
+            tip = (f"Install downloads PPSSPP {pinned}, the release pinned for this version of the app, and "
+                   "checks it before installing it.")
         else:
-            self.emulator_state.setText(f"PPSSPP {pinned} is installed. "
-                                        + style.link(self, emulator.RELEASE_PAGE, "What is in it"))
-            self.emulator_box.set_value(pinned)
+            self.emulator_state.setText(INSTALLED)
+            self.emulator_box.set_value(self.version)
+            if self.version != pinned:
+                tip = (f"PPSSPP {self.version} is installed; this version of the app brings {pinned}: Install puts "
+                       "it in.")
+                if not self._pin_noted:
+                    self.note(tip)
+                    self._pin_noted = True
+            else:
+                tip = f"PPSSPP {pinned}, pinned for this version of the app"
         if self.newer is not None:
-            self.emulator_state.setText(
-                self.emulator_state.text() + f"<br>PPSSPP {escape(self.newer.version)} is out "
-                f"({escape(self.newer.published)}). A later version of this app brings it, once it has been tried "
-                "on the board. " + style.link(self, self.newer.url, "What is new"))
-        self.emulator_state.setOpenExternalLinks(True)
+            tip += (f"\nPPSSPP {self.newer.version} is out ({self.newer.published}). A later version of this app "
+                    f"may pin it: {self.newer.url}")
+        self.emulator_state.setToolTip(tip)
 
-        own = f"{len(installed(self.game_dir))} on PPSSPP's memory stick (<code>{escape(private(self.game_dir))}</code>)."
+        own = f"{len(installed(self.game_dir))} on PPSSPP's memory stick (<b>{escape(private(self.game_dir))}</b>)."
         # The app's own folders (owner, 03-11-2026): the home folder's, and a removable drive's when it has one.
-        where = ", ".join(f"<code>{escape(private(f))}</code>" for f in self.folders)
+        where = ", ".join(f"<b>{escape(private(f))}</b>" for f in self.folders)
         self.folders_state.setText(f"{where}: put your games there (ISO, CSO or CHD images, or folders with an "
                                    f"EBOOT.PBP; in folders too). A USB drive or an SD card with a Games/PSP folder on "
-                                   f"it is looked in too.<br>And {own}")
+                                   f"it is looked in too. And {own}")
+        self.folders_state.setToolTip("\n".join(private(f) for f in self.folders))
         self.games_box.set_value(str(len(self.games)))
         found = {str(g.file) for g in self.games}
         self.steam_box.set_value(str(len(found & set(self.in_steam))))
@@ -313,7 +358,7 @@ class MainWindow(QMainWindow):
         if not self.version:
             self.pill.set_status("Not installed", "warn", "Install PPSSPP first.")
         elif not self.games:
-            self.pill.set_status("No games", "neutral", "Add the folder with your games.")
+            self.pill.set_status("No games", "neutral", "Put your games in the game folder.")
         else:
             self.pill.set_status("Ready", "ok", "PPSSPP is installed and games were found.")
 
@@ -321,6 +366,8 @@ class MainWindow(QMainWindow):
         self.newer = release
         if release is not None:
             self._show_state()
+            self.note(f"PPSSPP {release.version} is out ({release.published}); a later version of this app may pin "
+                      f"it: {release.url}")
 
     def _fill_table(self) -> None:
         self.table.blockSignals(True)
@@ -330,24 +377,24 @@ class MainWindow(QMainWindow):
             box.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
             box.setCheckState(Qt.CheckState.Checked if str(game.file) in self.in_steam or str(game.file) in self.moved
                               else Qt.CheckState.Unchecked)
-            box.setToolTip("In Steam for Game Mode" if str(game.file) in self.in_steam else "Not in Steam")
-            self.table.setItem(row, 0, box)
+            box.setToolTip("In Steam" if str(game.file) in self.in_steam else "Not in Steam")
+            self.table.setItem(row, STEAM, box)
             kind = KINDS.get(game.kind, game.kind)
-            for column, text in enumerate((game.title, game.disc_id, kind, str(game.file)), start=1):
+            for column, text in ((GAME, game.title), (SERIAL, game.disc_id), (KIND, kind), (FILE, str(game.file))):
                 self.table.setItem(row, column, QTableWidgetItem(text))
             if game.kind == "chd":
-                self.table.item(row, 3).setToolTip("A CHD is not looked into: the name is the file's, and Steam "
-                                                   "gets no pictures from the game.")
+                self.table.item(row, KIND).setToolTip("A CHD is not looked into: the name is the file's, and Steam "
+                                                      "gets no pictures from the game.")
         self.table.blockSignals(False)
         self._update_buttons()
 
     def ticked(self) -> list[Game]:
         return [g for row, g in enumerate(self.games)
-                if self.table.item(row, 0).checkState() == Qt.CheckState.Checked]
+                if self.table.item(row, STEAM).checkState() == Qt.CheckState.Checked]
 
     def chosen(self) -> Game | None:
         rows = self.table.selectionModel().selectedRows()
-        return self.games[rows[0].row()] if rows else None
+        return self.games[rows[0].row()] if rows and rows[0].row() < len(self.games) else None
 
     def steam_plan(self) -> tuple[list[Game], list[Game]]:
         """(games to add or bring up to date, games to take out): the ticked ones in, the others out, and the
@@ -361,14 +408,13 @@ class MainWindow(QMainWindow):
     def _update_buttons(self) -> None:
         idle = not self.worker.running
         installed_ = bool(self.version)
-        self.refresh_button.setEnabled(idle)
-        self.install_button.setEnabled(idle and self.version != emulator.VERSION)
-        self.remove_button.setEnabled(idle and installed_)
-        self.play_button.setEnabled(idle and installed_ and self.chosen() is not None)
+        self.refresh_pill.setEnabled(idle)
+        self.install_pill.setEnabled(idle and self.version != emulator.VERSION)
+        self.remove_pill.setEnabled(idle and installed_)
+        self.rename_pill.setEnabled(idle and bool(renamer.renamable(self.games)))
         self.covers_button.setEnabled(idle)
         self.remove_game_button.setEnabled(idle and self.chosen() is not None)
         self.ppsspp_button.setEnabled(idle and installed_)
-        self.rename_button.setEnabled(idle and bool(renamer.renamable(self.games)))
         add, remove = self.steam_plan()
         named = shortcuts.names(add)        # a name in Steam that differs (one from before the prefix) is renamed
         changed = bool(remove) or any(self.in_steam.get(str(g.file)) != named[g.file] or str(g.file) in self.no_cover
@@ -389,18 +435,15 @@ class MainWindow(QMainWindow):
 
     def _start(self, text: str, job) -> None:
         if self.worker.start(job):
+            self.running.setStyleSheet("font-weight:600;")
             self.running.setText(text)
+            self.log.info(text)
             self._update_buttons()
 
     def _job_done(self, result: tuple[bool, str]) -> None:
         ok, message = result[0], private(result[1])     # a path in an error: the user's folders as ~
-        self.running.setText(message)
-        self.output.appendPlainText(message)
         self.refresh()
-        if not ok:
-            self.running.setStyleSheet("font-weight:600;color:#c62828;")
-        else:
-            self.running.setStyleSheet("font-weight:600;")
+        self.say(message, ok)
 
     def on_install(self) -> None:
         if not self._ask("Install", f"Download PPSSPP {emulator.VERSION} from GitHub (about {emulator.SIZE_MB} MB)?"
@@ -420,49 +463,41 @@ class MainWindow(QMainWindow):
         text = ("Remove the installed PPSSPP?\n\nIts own folder, with your saves, settings and memory stick games, "
                 "stays.")
         if self.in_steam:
-            text += "\nThe games in Game Mode no longer start until it is installed again."
+            text += "\nThe games in Steam no longer start until it is installed again."
         if self._ask("Remove", text):
             emulator.remove(self.home)
-            self.output.appendPlainText("PPSSPP was removed.")
             self.refresh()
+            self.say("PPSSPP was removed.")
 
     def ppsspp_command(self, *args: str) -> list[str]:
         """The installed PPSSPP through the run wrapper (from the app folder when it is not installed yet)."""
         run = self.run_path if self.run_path.is_file() else ROOT / shortcuts.RUN_NAME
         return [str(run), *args]
 
-    def on_play(self) -> None:
-        game = self.chosen()
-        if game is None or not self.version:
-            return
-        command = self.ppsspp_command(str(game.file))
-        if QProcess.startDetached(command[0], command[1:], str(game.folder))[0]:
-            self.running.setText(f"Started {game.title}.")
-        else:
-            self.running.setText(f"{game.title} could not be started: {command[0]} did not run.")
-
     def on_open_ppsspp(self) -> None:
         command = self.ppsspp_command()
-        if not QProcess.startDetached(command[0], command[1:])[0]:
-            self.running.setText(f"PPSSPP could not be started: {command[0]} did not run.")
+        if QProcess.startDetached(command[0], command[1:])[0]:
+            self.note("PPSSPP's own window was opened.")
+        else:
+            self.say(f"PPSSPP could not be started: {command[0]} did not run.", ok=False)
+
+    def open_steam(self) -> None:
+        """The Steam link: Steam's library on the desktop (Steam starts when it does not run)."""
+        if self.open_url(STEAM_URL):
+            self.note("Steam was opened.")
+        else:
+            self.say("Steam could not be opened: xdg-open is missing.", ok=False)
 
     def on_rename(self) -> None:
         """The Rename files window, on the disc images found. The list here follows after it closes: a renamed game
-        that is in Game Mode shows up as a change for Update Game Mode (its shortcut names the file)."""
+        that is in Steam shows up as a change for Update Steam (its shortcut names the file)."""
         from .rename_dialog import RenameDialog
         dialog = RenameDialog(renamer.renamable(self.games), self.settings, self)
         dialog.exec()
         if dialog.renamed:
             self.refresh()
-            self.running.setStyleSheet("font-weight:600;")
-            self.running.setText("Files were renamed. A renamed game that is in Game Mode needs Update Game Mode: "
+            self.say("Files were renamed. A renamed game that is in Steam needs Update Steam: "
                                  "its shortcut names the file.")
-
-    def tell(self, text: str, ok: bool = True) -> None:
-        """What the window has to say: the line under the tabs and the output."""
-        self.running.setStyleSheet("font-weight:600;" + ("" if ok else "color:#c62828;"))
-        self.running.setText(text)
-        self.output.appendPlainText(text)
 
     def on_remove_game(self) -> None:
         """Remove game… (owner, 03-11-2026, from the Windows Portable Suite's managers: before deleting anything, let
@@ -474,14 +509,14 @@ class MainWindow(QMainWindow):
         if game is None:
             return
         if self.ppsspp_running():
-            self.tell(RUNNING_REMOVE, ok=False)
+            self.say(RUNNING_REMOVE, ok=False)
             return
         items, why = library.removal_items(game, [*self.folders, self.game_dir], self.games, str(game.file) in self.in_steam)
         if not items:
-            self.tell(why, ok=False)
+            self.say(why, ok=False)
             return
         if KeepDialog(f"Remove {game.title}", items, self).exec() != QDialog.DialogCode.Accepted:
-            self.tell("Nothing was deleted.")
+            self.say("Nothing was deleted.")
             return
         chosen = keep.chosen(items)
         kept = [item.label for item in items if not item.delete]
@@ -512,17 +547,17 @@ class MainWindow(QMainWindow):
         if self.steam_dir is None:
             return
         if not self.run_path.is_file():
-            self.running.setText(f"The shortcuts run {self.run_path}, which is not there: install "
-                                 f"{APP_NAME} through the portal first.")
+            self.say(f"The shortcuts run {self.run_path}, which is not there: install {APP_NAME} through the "
+                     "portal first.", ok=False)
             return
         add, remove = self.steam_plan()
         if add and not self.version:
-            self.running.setText("Install PPSSPP first: the games in Game Mode start it.")
+            self.say("Install PPSSPP first: the games in Steam start it.", ok=False)
             return
-        text = f"{len(add)} game(s) in Game Mode" + (f", {len(remove)} taken out." if remove else ".")
+        text = f"{len(add)} game(s) in Steam" + (f", {len(remove)} taken out." if remove else ".")
         if self.steam_running():
             text += "\n\nSteam closes for it and starts again in the background."
-        if not self._ask("Game Mode", text):
+        if not self._ask("Steam", text):
             return
         folder, closed, run, existing = self.steam_dir, self.steam_closed, self.run_path, self.in_steam
         key, home, get = covers.read_key(self.covers_key), self.covers_home, self.covers_get
@@ -565,8 +600,18 @@ class MainWindow(QMainWindow):
 
     def on_covers(self) -> None:
         """Asks for the suite's SteamGridDB API key; empty turns the lookup off (the pictures kept stay in use)."""
-        if covers.edit_key(self, self.covers_key):
+        if covers.edit_key(self, self.covers_key, "Update Steam"):
             self.refresh()
+            self.say("The SteamGridDB key was changed." if covers.read_key(self.covers_key) else
+                     "The SteamGridDB key was taken out; the pictures kept stay in use.")
+
+    def resizeEvent(self, event: QResizeEvent) -> None:  # noqa: N802 (Qt override)
+        super().resizeEvent(event)
+        QTimer.singleShot(0, self.place_states)         # once the pills below have their new width
+
+    def place_states(self) -> None:
+        """The state ends at the middle of the last header pill: the spacer after it is half its width."""
+        self.states_spacer.setFixedWidth(max(0, self.steam_box.width() // 2))
 
     def closeEvent(self, event: QCloseEvent) -> None:  # noqa: N802 (Qt override)
         if self.worker.running and not self._ask("Close", "A download or a change to Steam is still running. "

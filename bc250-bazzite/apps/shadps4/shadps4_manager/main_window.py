@@ -61,6 +61,10 @@ RUNNING = "shadPS4 is running: close it first, it writes its own settings over t
 STEAM_URL = "steam://open/games"        # Steam's library; Steam starts when it does not run
 STEAM, GAME, SERIAL, VERSION, FOLDER = range(5)             # the table's columns
 GAMES, SETTINGS, LOG = range(3)                             # the tabs
+# The emulator's line: the state alone, the same words in every manager (owner, 07-11-2026); the version and the
+# advice are in its tip.
+NOT_INSTALLED = "Not installed.<br>Install it with the Install button."
+INSTALLED = "Installed.<br>Uninstall with the Uninstall button."
 _NUMBERED = re.compile(r"\d+(\.\d+)*")
 
 
@@ -465,13 +469,11 @@ class MainWindow(QMainWindow):
 
     def _show_state(self) -> None:
         pinned = emulator.VERSION
+        # The state alone in the line (owner, 07-11-2026), the version and the advice in the tip and the log once.
+        self.emulator_state.setText(INSTALLED if self.version else NOT_INSTALLED)
         if not self.version:
-            self.emulator_state.setText(f"Not installed. Install downloads shadPS4 {pinned}, the release this "
-                                        "version of the app was tried with, and checks it before unpacking. The "
-                                        "app says when a newer shadPS4 is out.")
             self.emulator_box.set_value("—")
-        else:                                   # the version alone (owner, 24-10-2026), the advice in the tip
-            self.emulator_state.setText(f"<b>{escape(self.version)}</b>")
+        else:
             # The box is not wide enough for a nightly build's name (date and commit) from before the channel went.
             self.emulator_box.set_value(self.version if _NUMBERED.fullmatch(self.version) else "other")
             if self.version != pinned and not self._pin_noted:
@@ -479,9 +481,12 @@ class MainWindow(QMainWindow):
                           "puts it in.")
                 self._pin_noted = True
         tip = f"shadPS4 {pinned}, the release this version of the app was tried with"
-        if self.version and self.version != pinned:
+        if not self.version:
+            tip = (f"Install downloads shadPS4 {pinned}, the release this version of the app was tried with, and "
+                   "checks it before unpacking. The app says when a newer shadPS4 is out.")
+        elif self.version != pinned:
             tip = f"shadPS4 {self.version} is installed; this version of the app brings {pinned}: Install puts it in."
-        if self.newer is not None:              # in the tip and the log, so the line stays the version (owner)
+        if self.newer is not None:              # in the tip and the log, so the line stays the state (owner)
             tip += (f"\nshadPS4 {self.newer.version} is out ({self.newer.published}). A later version of this app "
                     f"brings it, once it has been tried on the board: {self.newer.url}")
         self.emulator_state.setToolTip(tip)

@@ -176,8 +176,9 @@ Open an issue on [GitHub](https://github.com/RobertoTorino/nexus/issues).
 ## License
 
 GPL-3.0-or-later. Each app has its own `LICENSE`. The icons and pictures were made with generative AI tools and
-edited by hand. The portal's sound on a controller action was made by hand in Audacity, without AI; the other sounds
-were made with generative AI tools. All are under the license of the app or tool they come with, like its code.
+edited by hand, and the music of the video tours with generative AI tools. The sounds were made without AI: the portal's
+intro sound by code, from arithmetic alone, and the portal's sound on a controller action and DatStation's quiz music by
+hand in Audacity. All are under the license of the app or tool they come with, like its code.
 
 Each release also carries `THIRD-PARTY-NOTICES.txt`: the licenses of what its program bundles, such as Python, Qt
 and the fonts, and FFmpeg in USB HD Cam, whose picture Qt shows and records with FFmpeg's libraries.

@@ -32,9 +32,9 @@ The servers see your IP address, as any website you open does.
 update server for the controllers' latest firmware when its window opens (at most once a day; it can be told not
 to), and downloads the firmware when you update a controller.
 
-**PyPI and OSV.dev**: the [Dependency Checker](apps/package.md) sends the names and versions of the
-Python packages in the apps' environments, to learn whether newer ones or known vulnerabilities exist. Its
-Bazzite card and weekly reminder read Bazzite's update state on the board itself and send nothing. Installing an
+**PyPI and OSV.dev**: [Nexus Deps](https://robertotorino.github.io/nexus/dashboard/#deps), a Nexus app run from a checkout of the repository, sends the names
+and versions of the Python packages in the apps' environments, to learn whether newer ones or known vulnerabilities
+exist. Its Bazzite card and weekly reminder read Bazzite's update state on the board itself and send nothing. Installing an
 app downloads its Python packages from PyPI.
 
 **Only when you ask for it:**

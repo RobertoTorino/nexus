@@ -94,7 +94,9 @@ def _window(folders, **kwargs) -> MainWindow:
 def test_before_installing(qapp, folders):
     window = _window(folders)
     assert window.pill.text() == "Not installed"
-    assert "Not installed" in window.emulator_state.text() and "No firmware" in window.firmware_state.text()
+    # The state alone, in the words every manager uses (owner, 07-11-2026); what Install does in the tip.
+    assert window.emulator_state.text() == "Not installed.<br>Install it with the Install button." and "No firmware" in window.firmware_state.text()
+    assert f"Install downloads RPCS3 {emulator.VERSION}" in window.emulator_state.toolTip()
     assert window.install_pill.isEnabled() and not window.remove_pill.isEnabled()
     assert not window.rpcs3_button.isEnabled()
     assert window.refresh_pill.isEnabled()
@@ -146,7 +148,7 @@ def test_installed_with_firmware_and_games(qapp, folders):
     assert window.firmware_state.toolTip().startswith("PS3 firmware 4.92 in RPCS3's firmware folder: ")
     assert str(folders["rpcs3_home"] / "dev_flash") in window.firmware_state.toolTip()     # the path as the tip
     assert window.emulator_box.value.text() == emulator.LANDMARK
-    assert window.emulator_state.text() == f"<b>{emulator.LANDMARK}</b>"
+    assert window.emulator_state.text() == "Installed.<br>Uninstall with the Uninstall button."
     assert window.emulator_state.toolTip() == f"RPCS3 {emulator.VERSION}, the build this version of the app was tried with"
     # PKG games: RPCS3's games folder within its own folder, the count in the tip (owner, 24-10-2026).
     assert window.pkg_state.text() == "<b>dev_hdd0/game/</b>"
@@ -422,7 +424,8 @@ def test_rpcs3_updated_itself(qapp, folders):
     _install(folders["home"])
     emulator.appimage(folders["home"]).write_bytes(b"another build")
     window = _window(folders)
-    assert "updated itself" in window.emulator_state.text() and window.emulator_box.value.text() == "other"
+    assert window.emulator_state.text() == "Installed.<br>Uninstall with the Uninstall button."
+    assert "updated itself" in window.emulator_state.toolTip() and window.emulator_box.value.text() == "other"
     assert window.install_pill.isEnabled()                                    # puts the pinned build back
     window.close()
 
@@ -667,8 +670,8 @@ def test_a_newer_rpcs3_is_mentioned(qapp, folders):
     while window.newer is None and time.monotonic() < deadline:
         qapp.processEvents()
         time.sleep(0.01)
-    tip = window.emulator_state.toolTip()                   # the line stays the version; the tip and the log say
-    assert window.emulator_state.text() == f"<b>{emulator.LANDMARK}</b>"
+    tip = window.emulator_state.toolTip()                   # the line stays the state; the tip and the log say
+    assert window.emulator_state.text() == "Installed.<br>Uninstall with the Uninstall button."
     assert "RPCS3 0.0.44 is out (2026-11-30)" in tip and "releases/tag/v0.0.44" in tip
     assert "RPCS3 0.0.44 is out (2026-11-30)" in window.output.toPlainText()
     assert window.install_pill.isEnabled() is False                                # it never installs that one
@@ -737,13 +740,13 @@ def test_covers_with_the_suites_key(qapp, folders, monkeypatch, tmp_path):
 
 
 def test_another_build_installed_than_the_app_brings(qapp, folders):
-    """The RPCS3 line and box show the version alone (owner, 24-10-2026: the box is not wide enough for the
-    build): the installed version in the line, its landmark in the box, the advice in the tooltip and the log."""
+    """The RPCS3 line shows the state alone (owner, 07-11-2026), the box the installed version's landmark (owner,
+    24-10-2026: the box is not wide enough for the build), the advice in the tooltip and the log."""
     (folders["home"] / "0.0.43-20133").mkdir(parents=True)
     (folders["home"] / "0.0.43-20133" / emulator.MEMBER).write_text("")
     (folders["home"] / "current").symlink_to("0.0.43-20133")
     window = _window(folders)
-    assert window.emulator_state.text() == "<b>0.0.43-20133</b>" and window.emulator_box.value.text() == "0.0.43"
+    assert window.emulator_state.text() == "Installed.<br>Uninstall with the Uninstall button." and window.emulator_box.value.text() == "0.0.43"
     assert window.emulator_state.toolTip() == (f"RPCS3 0.0.43-20133 is installed; this version of the app brings "
                                                f"{emulator.VERSION}: Install puts it in.")
     assert window.install_pill.isEnabled()

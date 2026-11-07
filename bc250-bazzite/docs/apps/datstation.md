@@ -179,7 +179,7 @@ True/false questions whose answer carried its explanation after a colon were spl
   Nothing runs as root, nothing is layered, no service is installed.
 - The only dependency is PyQt6, pinned to a major version (`PyQt6>=6.11,<7`) and installed from PyPI into the
   app's own venv; the installer upgrades it within that range on every install, so a security fix in PyQt6
-  reaches the app with the next `./install.sh`. The [Dependency Checker](package.md) lists the version
+  reaches the app with the next `./install.sh`. [Nexus Deps](https://robertotorino.github.io/nexus/dashboard/#deps), run from a checkout, lists the version
   and its known vulnerabilities.
 - `bc250_core` ships with the app, so it runs on the core it was tested with; the launcher puts the app folder
   first on Python's path, so a module in the folder you start it from cannot shadow the app's own.

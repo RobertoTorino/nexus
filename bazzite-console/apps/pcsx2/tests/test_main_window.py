@@ -74,7 +74,9 @@ def _window(folders, **kwargs) -> MainWindow:
 def test_before_installing(qapp, folders):
     window = _window(folders)
     assert window.pill.text() == "Not installed"
-    assert "Not installed" in window.emulator_state.text() and "No BIOS" in window.bios_state.text()
+    # The state alone, in the words every manager uses (owner, 07-11-2026); what Install does in the tip.
+    assert window.emulator_state.text() == "Not installed.<br>Install it with the Install button." and "No BIOS" in window.bios_state.text()
+    assert f"Install downloads PCSX2 {emulator.VERSION}" in window.emulator_state.toolTip()
     assert window.install_pill.isEnabled() and not window.remove_pill.isEnabled()
     assert not window.bios_remove_pill.isEnabled()                               # no dump to remove
     assert window.refresh_pill.isEnabled()
@@ -123,7 +125,8 @@ def test_installed_with_bios_and_games(qapp, folders, tmp_path):
     assert str(bios_dir(folders["pcsx2_home"])) not in window.bios_state.text()    # the name, not the path
     assert str(bios_dir(folders["pcsx2_home"])) in window.bios_state.toolTip()
     assert window.emulator_box.value.text() == emulator.VERSION
-    assert window.emulator_state.text() == f"PCSX2 {emulator.VERSION} is installed."
+    assert window.emulator_state.text() == "Installed.<br>Uninstall with the Uninstall button."
+    assert window.emulator_state.toolTip() == f"PCSX2 {emulator.VERSION}, pinned for this version of the app"
     assert window.games_box.value.text() == "1" and window.steam_box.value.text() == "0"
     assert not window.install_pill.isEnabled() and window.remove_pill.isEnabled()
     assert window.bios_remove_pill.isEnabled()
@@ -180,7 +183,8 @@ def test_pcsx2_updated_itself(qapp, folders):
     _install(folders["home"])
     emulator.appimage(folders["home"]).write_bytes(b"another build")
     window = _window(folders)
-    assert "updated itself" in window.emulator_state.text() and window.emulator_box.value.text() == "other"
+    assert window.emulator_state.text() == "Installed.<br>Uninstall with the Uninstall button."
+    assert "updated itself" in window.emulator_state.toolTip() and window.emulator_box.value.text() == "other"
     assert window.install_pill.isEnabled()                                      # puts the pinned release back
     window.close()
 
@@ -499,8 +503,10 @@ def test_a_newer_pcsx2_is_mentioned(qapp, folders):
     while window.newer is None and time.monotonic() < deadline:
         qapp.processEvents()
         time.sleep(0.01)
-    text = window.emulator_state.text()
-    assert "PCSX2 2.9.0 is out (2026-11-30)" in text and "releases/tag/v2.9.0" in text
+    tip = window.emulator_state.toolTip()                   # the line stays the state; the tip and the log say
+    assert window.emulator_state.text() == "Installed.<br>Uninstall with the Uninstall button."
+    assert "PCSX2 2.9.0 is out (2026-11-30)" in tip and "releases/tag/v2.9.0" in tip
+    assert "PCSX2 2.9.0 is out (2026-11-30)" in window.output.toPlainText()
     assert window.install_pill.isEnabled() is False                                # it never installs that one
     from bc250_core import upstream
     assert upstream.read_all() == {}                    # the release is pinned: the portal has nothing to announce

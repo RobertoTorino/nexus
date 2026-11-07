@@ -145,8 +145,8 @@ CATEGORY_HINTS = {
     "graphics": "Graphics features for games: upscaling, async compute and mesh shaders on the board's GPU.",
     "gaming": "Playing: emulators, Remote Play with your console, plugins in Game Mode, and PlayStation trivia.",
     "utilities": "Handy tools around the board: an overlay, a USB stats screen, the PS5 HD Camera as a webcam, the "
-                 "DualSense's firmware, the BIOS settings, Wi-Fi, the TV over HDMI-CEC, file transfer, a graphical "
-                 "netcat, demo recordings, and the suite's dependencies.",
+                 "DualSense's firmware, the BIOS settings, Wi-Fi, the TV over HDMI-CEC, file transfer and a graphical "
+                 "netcat.",
 }
 
 BOARD_WARNING = (

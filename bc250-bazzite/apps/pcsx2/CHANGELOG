@@ -1,3 +1,10 @@
+Changelog: 07-11-2026 20:18:45
+
+Added. The PCSX2 line under the pills says only the state, in the words every manager uses (owner, 07-11-2026): "Not
+installed." with "Install it with the Install button." under it, or "Installed." with "Uninstall with the Uninstall
+button." under it. The version installed, what Install takes, another version than the app brings, PCSX2 updated itself,
+and a newer PCSX2 are in the line's tooltip; another version and a newer PCSX2 also go to the log, once.
+
 Changelog: 06-11-2026 10:25:36
 
 Release 4.2.0.

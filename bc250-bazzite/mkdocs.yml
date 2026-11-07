@@ -83,7 +83,6 @@ nav:
       - BC-250 Mesh Shaders: apps/mesh.md
       - HDMI CEC Manager: apps/cec.md
       - Bazzite SFTP Tools: apps/sftp.md
-      - Dependency Checker: apps/package.md
       - Bazzite NetcatGUI: apps/ncgui.md
       - Console Link: apps/consoles.md
       - Console LinkB: apps/clb.md

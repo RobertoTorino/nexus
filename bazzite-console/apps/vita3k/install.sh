@@ -4,8 +4,8 @@
 #
 #   ./install.sh                         # install or update
 #   ./install.sh --no-desktop-shortcut   # app menu entry only, no icon on the Desktop
-#   ./install.sh --uninstall             # remove the app and the Vita3K it installed; keeps its settings
-#   ./install.sh --uninstall --purge     # also remove its settings and covers
+#   ./install.sh --uninstall             # remove the app and the Vita3K it installed; keeps its settings and log
+#   ./install.sh --uninstall --purge     # also remove its settings, covers and log
 #
 # Run it as your own user; installing needs no root. Vita3K itself is downloaded by the app (Install), not here.
 #  * ~/.local/share/ps5-vita3k-manager/app: the app, with bc250_core (bundled in the
@@ -14,9 +14,10 @@
 #  * ~/.local/share/bazzite-console-suite/venv, the Bazzite Console Suite's shared venv with PyQt6 (the wheels bundle
 #    Qt; nothing is layered). It is removed with the last suite app that uses it.
 #  * ~/.local/bin/ps5-vita3k-manager to start it from a terminal, plus an app menu entry and a Desktop icon.
-#  * ~/.local/bin/ps5-vita3k-run, which starts Vita3K: the Game Mode shortcuts run it.
+#  * ~/.local/bin/ps5-vita3k-run, which starts Vita3K: the Steam shortcuts run it.
+#  * ~/.local/share/ps5-vita3k-manager/ps5-vita3k-manager.log: the app's log.
 # Vita3K's own folders, ~/.config/Vita3K (settings) and ~/.local/share/Vita3K (firmware, installed games, saves), are
-# never removed; the Game Mode shortcuts stay in Steam (take them out in the app first).
+# never removed; the Steam shortcuts stay in Steam (take them out in the app first).
 set -euo pipefail
 
 APP_ID="ps5-vita3k-manager"
@@ -74,8 +75,8 @@ if $UNINSTALL; then
         rm -rf "$VENV"
     fi
     if $PURGE; then
-        info "Removing the settings and the covers found on SteamGridDB"
-        rm -rf "${CONFIG_DIR:?}/$APP_ID" "${DATA_DIR:?}/$APP_ID/covers"
+        info "Removing the settings, the covers found on SteamGridDB and the log"
+        rm -rf "${CONFIG_DIR:?}/$APP_ID" "${DATA_DIR:?}/$APP_ID"
     fi
     rmdir "${DATA_DIR:?}/$APP_ID" 2>/dev/null || true
     info "$APP_NAME is uninstalled. Vita3K's own folders ($CONFIG_DIR/Vita3K, $DATA_DIR/Vita3K) and your games were left as they are."

@@ -76,7 +76,6 @@ By category, as the portal lists them.
 - <img src="portal/images/apps/wdriver.webp" width="20" height="20" alt=""/> **[BC-250 USB Wi-Fi](apps/wdriver)**: The driver for AIC8800D80 USB Wi-Fi sticks: built for the running kernel, loaded at boot, rebuilt after a kernel update.
 - <img src="portal/images/apps/cec.webp" width="20" height="20" alt=""/> **[HDMI CEC Manager](apps/cec)**: Turn the TV on and off with the board, switch its input and use its remote, over HDMI-CEC.
 - <img src="portal/images/apps/sftp.webp" width="20" height="20" alt=""/> **[Bazzite SFTP Tools](apps/sftp)**: Move files between computers over SFTP, and manage the SSH server of a Bazzite host.
-- <img src="portal/images/apps/package.webp" width="20" height="20" alt=""/> **[Dependency Checker](apps/package)**: The suite's Python packages and external tools, which apps use them, and whether newer ones exist; and whether a Bazzite update waits for a reboot.
 - <img src="portal/images/apps/ncgui.webp" width="20" height="20" alt=""/> **[Bazzite NetcatGUI](apps/ncgui)**: A graphical netcat: connect to a host or listen on a port, TCP, UDP or TLS, one session per tab.
 - <img src="portal/images/apps/ssd.webp" width="20" height="20" alt=""/> **[SSD Check](apps/ssd)**: The health, power cycles and power-on hours of the board's SSDs.
 
@@ -90,10 +89,11 @@ How to install and use them: **[the manual](https://robertotorino.github.io/nexu
 
 GPL-3.0-or-later ([LICENSE](../LICENSE)), except BC-250 Persistent ACPI, which is MIT, Console Link, which is
 AGPL-3.0 (its protocol code comes from chiaki-ng), and Bazzite NetcatGUI, which is GPL-2.0 (a port of NetcatGUI).
-Each app keeps its own `LICENSE`. The icons were made with generative AI tools and edited by hand in Photoshop. The
-portal's sound on a controller action was made by hand in Audacity, without AI; the other sounds and the music of the
-video tours were made with generative AI tools. All are under the license of the folder they are in, like the code
-beside them.
+Each app keeps its own `LICENSE`. The icons were made with generative AI tools and edited by hand in Photoshop, and the
+music of the video tours with generative AI tools. The sounds were made without AI: the portal's intro sound by its own
+code, from arithmetic alone (`tools/make_portal_sounds.py`), and the portal's sound on a controller action and
+DatStation's quiz music by hand in Audacity. All are under the license of the folder they are in, like the code beside
+them.
 
 ## Disclaimer
 

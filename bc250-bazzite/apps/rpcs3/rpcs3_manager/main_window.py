@@ -55,6 +55,10 @@ RUNNING_INSTALL = "RPCS3 is running: close it first; packages are installed whil
 STEAM_URL = "steam://open/games"        # Steam's library; Steam starts when it does not run
 STEAM, GAME, SERIAL, VERSION, FOLDER, SCREEN = range(6)     # the table's columns (the screen last; owner)
 GAMES, SETTINGS, LOG = range(3)                             # the tabs
+# The emulator's line: the state alone, the same words in every manager (owner, 07-11-2026); the version and the
+# advice are in its tip.
+NOT_INSTALLED = "Not installed.<br>Install it with the Install button."
+INSTALLED = "Installed.<br>Uninstall with the Uninstall button."
 
 
 def _packages_in(hdd0_game: Path) -> tuple[set[str], set[str]]:
@@ -472,29 +476,26 @@ class MainWindow(QMainWindow):
 
     def _show_state(self) -> None:
         pinned = emulator.VERSION
+        # The state alone in the line (owner, 07-11-2026), the version and the advice in the tip and the log once.
+        self.emulator_state.setText(INSTALLED if self.version else NOT_INSTALLED)
         if not self.version:
-            self.emulator_state.setText(f"Not installed. Install downloads RPCS3 {pinned}, the build this version "
-                                        "of the app was tried with, and checks it before installing it. The app "
-                                        "says when a newer RPCS3 is out.")
             self.emulator_box.set_value("—")
-        elif self.version != pinned:        # the version alone here too (owner, 24-10-2026), the advice in the
-            self.emulator_state.setText(f"<b>{escape(self.version)}</b>")    # tip and the log once
-            self.emulator_box.set_value(self.version.split("-")[0])         # the landmark: the box is not wide
-            if not self._pin_noted:                                          # enough for the build
-                self.note(f"RPCS3 {self.version} is installed; this version of the app brings {pinned}: Install "
-                          "puts it in.")
+            tip = (f"Install downloads RPCS3 {pinned}, the build this version of the app was tried with, and checks "
+                   "it before installing it. The app says when a newer RPCS3 is out.")
+        elif self.version != pinned:
+            self.emulator_box.set_value(self.version.split("-")[0])     # the landmark: the box is not wide enough
+            tip = f"RPCS3 {self.version} is installed; this version of the app brings {pinned}: Install puts it in."
+            if not self._pin_noted:
+                self.note(tip)
                 self._pin_noted = True
         elif self.replaced:
-            self.emulator_state.setText("RPCS3 updated itself in its own window to a build this version of the app "
-                                        f"was not tried with. <b>Install</b> puts back {pinned}.")
             self.emulator_box.set_value("other")
-        else:                                   # the version alone (owner, 24-10-2026), the build in the tip
-            self.emulator_state.setText(f"<b>{emulator.LANDMARK}</b>")
+            tip = ("RPCS3 updated itself in its own window to a build this version of the app was not tried with. "
+                   f"Install puts back {pinned}.")
+        else:
             self.emulator_box.set_value(emulator.LANDMARK)
-        tip = f"RPCS3 {pinned}, the build this version of the app was tried with"
-        if self.version and self.version != pinned and not self.replaced:
-            tip = f"RPCS3 {self.version} is installed; this version of the app brings {pinned}: Install puts it in."
-        if self.newer is not None:              # in the tip and the log, so the line stays the version (owner)
+            tip = f"RPCS3 {pinned}, the build this version of the app was tried with"
+        if self.newer is not None:              # in the tip and the log, so the line stays the state (owner)
             tip += (f"\nRPCS3 {self.newer.version} is out ({self.newer.published}). A later version of this app "
                     f"brings it, once it has been tried on the board: {self.newer.url}")
         self.emulator_state.setToolTip(tip)

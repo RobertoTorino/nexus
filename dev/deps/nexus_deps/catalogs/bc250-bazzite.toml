@@ -1,0 +1,1331 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# The BC250 Bazzite Suite's catalog for Nexus Deps (dev/deps): runtime dependencies only. Keep it in sync with the
+# suite's apps', core's and portal's requirements.
+# Only what the portal and its apps use: a Bazzite system package is listed when one of our apps runs it, never
+# for Bazzite's own sake (tests/test_dependencies.py checks every tool against the apps that name it).
+#
+# [app.<owner>]  name, and the launchers the app's installer writes (portal/apps.toml: detect). The python on a
+#                launcher's exec line is the app's Python environment; no launcher means the app is not installed.
+#                core has none: it is bundled with each app and runs in that app's environment.
+# [[tool]]       name, description (shown when the name is clicked), executables (any one of them will do) and/or
+#                locations, probe ("path": a library file; "flashrom-internal"; "console-link-ffmpeg": the FFmpeg
+#                in Console Link's native core, asked through the app's python), root (true: it does its work only as root, through sudo or pkexec), and per app
+#                a [[tool.source]] with need ("required" or "optional"), usage and an optional manual anchor.
+#                How Fix installs it, when it can: brew (a Homebrew formula, used first: no reboot) and rpm (the
+#                Fedora package, layered with rpm-ostree: active after a restart). Neither: the app's manual says how.
+# [[dependency]] a Python package: name, description, and per app a [[dependency.source]] with its specifier.
+
+[app.portal]
+name = "Portal"
+launchers = ["~/.local/bin/bc250-bazzite-suite"]
+
+[app.core]
+name = "Shared core"
+launchers = []
+
+[app.check]
+name = "BC-250 Bazzite Test"
+launchers = ["~/.local/bin/bc250-bazzite-test"]
+
+[app.gpu]
+name = "BC-250 GPU Manager"
+launchers = ["~/.local/bin/bc250-governor-manager"]
+
+[app.upscaler]
+name = "BC-250 Upscaler Manager"
+launchers = ["~/.local/bin/bc250-upscaler"]
+
+[app.compute]
+name = "BC-250 CU Bisect"
+launchers = ["~/.local/bin/bc250-bisect-gui", "~/.local/bin/bc250-unlock-cu-gui"]
+
+[app.cores]
+name = "BC-250 Cores Bisect"
+launchers = ["~/.local/bin/bc250-cores-bisect-gui", "~/.local/bin/bc250-cores-unlock-gui"]
+
+[app.oc]
+name = "BC-250 GPU OC Bisect"
+launchers = ["~/.local/bin/bc250-gpu-oc-bisect-gui"]
+
+[app.acpi]
+name = "BC-250 Persistent ACPI"
+launchers = ["~/.local/bin/bc250-persistent-acpi-gui"]
+
+[app.overlay]
+name = "System Overlay"
+launchers = ["~/.local/bin/bc250-system-overlay"]
+
+[app.ips35]
+name = "USB IPS3.5"
+launchers = ["~/.local/bin/bc250-usb-ips35"]
+
+[app.hdcam]
+name = "USB HD Cam"
+launchers = ["~/.local/bin/bc250-usb-hdcam"]
+
+[app.hdcontrol]
+name = "USB HD Control"
+launchers = ["~/.local/bin/bc250-usb-hdcontrol"]
+
+[app.bios]
+name = "BC-250 BIOS Reader"
+launchers = ["~/.local/bin/bc250-bios-reader"]
+
+[app.ace]
+name = "BC-250 ACE Queues"
+launchers = ["~/.local/bin/bc250-ace-queues"]
+
+[app.mesh]
+name = "BC-250 Mesh Shaders"
+launchers = ["~/.local/bin/bc250-mesh-shaders"]
+
+[app.vram]
+name = "BC-250 Memory Manager"
+launchers = ["~/.local/bin/bc250-memory-manager"]
+
+[app.fan]
+name = "BC-250 Fan Control"
+launchers = ["~/.local/bin/bc250-fan-control"]
+
+[app.wdriver]
+name = "BC-250 USB Wi-Fi"
+launchers = ["~/.local/bin/bc250-usb-wifi"]
+
+[app.cec]
+name = "HDMI CEC Manager"
+launchers = ["~/.local/bin/bc250-hdmi-cec"]
+
+[app.sftp]
+name = "Bazzite SFTP Tools"
+launchers = ["~/.local/bin/bc250-bazzite-sftp-tools"]
+
+[app.consoles]
+name = "Console Link"
+launchers = ["~/.local/bin/bc250-console-link"]
+
+[app.clb]
+name = "Console LinkB"
+launchers = ["~/.local/bin/bc250-console-linkb"]
+
+[app.shadps4]
+name = "shadPS4 Manager"
+launchers = ["~/.local/bin/bc250-shadps4-manager"]
+
+[app.rpcs3]
+name = "RPCS3 Manager"
+launchers = ["~/.local/bin/bc250-rpcs3-manager"]
+
+[app.ppsspp]
+name = "PPSSPP Manager"
+launchers = ["~/.local/bin/bc250-ppsspp-manager"]
+
+[app.pcsx2]
+name = "PCSX2 Manager"
+launchers = ["~/.local/bin/bc250-pcsx2-manager"]
+
+[app.vita3k]
+name = "Vita3K Manager"
+launchers = ["~/.local/bin/bc250-vita3k-manager"]
+
+[app.xenia]
+name = "Xenia Manager"
+launchers = ["~/.local/bin/bc250-xenia-manager"]
+
+[app.decky]
+name = "Decky Loader Manager"
+launchers = ["~/.local/bin/bc250-decky-manager"]
+
+[app.ncgui]
+name = "Bazzite NetcatGUI"
+launchers = ["~/.local/bin/bazzite-netcatgui"]
+
+[app.datstation]
+name = "Bazzite DatStation"
+launchers = ["~/.local/bin/bazzite-datstation"]
+
+[app.ssd]
+name = "SSD Check"
+launchers = ["~/.local/bin/bc250-ssd"]
+
+[[tool]]
+name = "flashrom"
+rpm = "flashrom"
+description = "Reads and writes flash chips. BIOS Reader uses it only to read the BIOS chip on the board, through the chipset's internal programmer; a flashrom built without that programmer cannot read it."
+executables = ["flashrom"]
+locations = ["~/flashrom/usr/bin/flashrom", "/usr/sbin/flashrom", "/usr/bin/flashrom"]
+probe = "flashrom-internal"
+root = true
+
+[[tool.source]]
+owner = "bios"
+need = "optional"
+usage = "Read the BIOS flash chip; needs the internal programmer."
+anchor = "reading-the-bios-flash-chip-optional"
+
+[[tool]]
+name = "bluetoothctl"
+rpm = "bluez"
+description = "BlueZ's command line for Bluetooth. USB HD Control uses it only to end a controller's Bluetooth connection: so that Linux takes its USB cable instead, or to switch it off."
+executables = ["bluetoothctl"]
+
+[[tool.source]]
+owner = "hdcontrol"
+need = "optional"
+usage = "Use the cable disconnects a controller that stayed on Bluetooth while plugged in; Turn Bluetooth off and the idle service switch a controller off."
+anchor = "on-the-cable-and-over-bluetooth"
+
+[[tool]]
+name = "pkexec"
+rpm = "polkit"
+description = "Runs one command as root after asking for your password in a desktop dialog (polkit). The apps use it for the few steps that need root, so the apps themselves run as your own user."
+executables = ["pkexec"]
+
+[[tool.source]]
+owner = "bios"
+need = "optional"
+usage = "Runs the flashrom read with a password prompt."
+anchor = "reading-the-bios-flash-chip-optional"
+
+[[tool.source]]
+owner = "vram"
+need = "required"
+usage = "Password prompt for reading and writing CMOS."
+
+[[tool.source]]
+owner = "fan"
+need = "required"
+usage = "Password prompt for turning the thermal guard on, changing it and turning it off."
+
+[[tool.source]]
+owner = "wdriver"
+need = "required"
+usage = "Password prompt for installing, updating and removing the Wi-Fi driver and its service."
+
+[[tool.source]]
+owner = "gpu"
+need = "required"
+usage = "Password prompt for privileged configuration, service actions and safe-point tests."
+
+[[tool.source]]
+owner = "ace"
+need = "required"
+usage = "Password prompt for installing and removing the patched driver."
+
+[[tool.source]]
+owner = "mesh"
+need = "required"
+usage = "Password prompt for installing and removing the DirectMesh driver."
+
+[[tool.source]]
+owner = "decky"
+need = "required"
+usage = "Password prompt for installing, removing and restarting Decky Loader's system service, and for the /home/deck link."
+anchor = "using-it"
+
+[[tool.source]]
+owner = "ips35"
+need = "required"
+usage = "Password prompt for adding the udev rule that gives your user the screen's port (Allow access)."
+anchor = "access-to-the-screen"
+
+[[tool.source]]
+owner = "hdcam"
+need = "required"
+usage = "Password prompt for adding the udev rule that gives your user the camera's boot loader (Allow access)."
+anchor = "access-to-the-camera"
+
+[[tool]]
+name = "umr"
+rpm = "umr"
+description = "AMD's user-mode register debugger: reads and writes the GPU's registers directly. The suite uses it to see which compute units are switched on and, in CU Bisect, to switch them."
+executables = ["umr"]
+root = true
+
+[[tool.source]]
+owner = "check"
+need = "optional"
+usage = "Read live GPU registers for the active compute-unit count."
+
+[[tool.source]]
+owner = "compute"
+need = "required"
+usage = "Read and change the GPU compute-unit registers."
+anchor = "requirements"
+
+[[tool]]
+name = "memtest_vulkan"
+description = "A GPU memory tester that runs through Vulkan. Besides finding memory errors it puts a steady, verifiable load on the GPU, which the stress and bisect tests use."
+executables = ["memtest_vulkan"]
+
+[[tool.source]]
+owner = "check"
+need = "optional"
+usage = "Verified GPU load for stress tests."
+
+[[tool.source]]
+owner = "compute"
+need = "optional"
+usage = "Recommended: verify GPU load results during CU testing."
+anchor = "requirements"
+
+[[tool.source]]
+owner = "oc"
+need = "optional"
+usage = "Recommended: verify GPU load results during overclock testing."
+anchor = "requirements"
+
+[[tool]]
+name = "stress-ng"
+brew = "stress-ng"
+rpm = "stress-ng"
+description = "A CPU, memory and system stress tool with many load types. It checks its own results, so a core that computes wrong answers is caught, not only one that crashes."
+executables = ["stress-ng"]
+
+[[tool.source]]
+owner = "check"
+need = "optional"
+usage = "CPU stress/load tests and CPU benchmark."
+
+[[tool.source]]
+owner = "cores"
+need = "required"
+usage = "Verified CPU load during core testing."
+anchor = "requirements"
+
+[[tool]]
+name = "stress"
+brew = "stress"
+rpm = "stress"
+description = "A simple CPU and memory load generator, older than stress-ng. Bazzite Test uses it only when stress-ng is missing."
+executables = ["stress"]
+
+[[tool.source]]
+owner = "check"
+need = "optional"
+usage = "Fallback for CPU load during stress tests, when stress-ng is missing."
+
+[[tool]]
+name = "vkpeak"
+description = "A Vulkan benchmark that measures the GPU's peak compute throughput (FLOPS and IOPS). Used as a GPU benchmark and as a GPU load."
+executables = ["vkpeak"]
+
+[[tool.source]]
+owner = "check"
+need = "optional"
+usage = "GPU benchmark and fallback GPU load."
+
+[[tool.source]]
+owner = "compute"
+need = "optional"
+usage = "Fallback GPU load during CU testing."
+
+[[tool.source]]
+owner = "oc"
+need = "optional"
+usage = "Fallback GPU load during overclock testing."
+
+[[tool]]
+name = "vkmark"
+rpm = "vkmark"
+description = "A Vulkan graphics benchmark with several scenes. Used as a GPU load when memtest_vulkan and vkpeak are missing."
+executables = ["vkmark"]
+
+[[tool.source]]
+owner = "check"
+need = "optional"
+usage = "Fallback GPU load during stress tests."
+
+[[tool.source]]
+owner = "compute"
+need = "optional"
+usage = "Fallback GPU load during CU testing."
+
+[[tool.source]]
+owner = "oc"
+need = "optional"
+usage = "Fallback GPU load during overclock testing."
+
+[[tool.source]]
+owner = "gpu"
+need = "optional"
+usage = "GPU load generator for safe-point tests."
+
+[[tool]]
+name = "glmark2"
+rpm = "glmark2"
+description = "An OpenGL graphics benchmark (X11). Used as a GPU load when the Vulkan tools are missing."
+executables = ["glmark2"]
+
+[[tool.source]]
+owner = "check"
+need = "optional"
+usage = "Fallback GPU load during stress tests."
+
+[[tool.source]]
+owner = "compute"
+need = "optional"
+usage = "Fallback GPU load during CU testing."
+
+[[tool.source]]
+owner = "oc"
+need = "optional"
+usage = "Fallback GPU load during overclock testing."
+
+[[tool.source]]
+owner = "gpu"
+need = "optional"
+usage = "GPU load generator for safe-point tests."
+
+[[tool]]
+name = "glmark2-wayland"
+rpm = "glmark2"
+description = "The Wayland build of the glmark2 OpenGL benchmark, for a desktop session without X11."
+executables = ["glmark2-wayland"]
+
+[[tool.source]]
+owner = "gpu"
+need = "optional"
+usage = "Wayland GPU load generator for safe-point tests."
+
+[[tool]]
+name = "vkcube"
+rpm = "vulkan-tools"
+description = "The Vulkan spinning-cube demo from the Vulkan tools. A light GPU load and a quick check that Vulkan works."
+executables = ["vkcube"]
+
+[[tool.source]]
+owner = "check"
+need = "optional"
+usage = "Fallback GPU load during stress tests."
+
+[[tool.source]]
+owner = "gpu"
+need = "optional"
+usage = "GPU load generator for safe-point tests."
+
+[[tool]]
+name = "glxgears"
+rpm = "glx-utils"
+description = "The OpenGL gears demo from the Mesa demos. A light GPU load."
+executables = ["glxgears"]
+
+[[tool.source]]
+owner = "gpu"
+need = "optional"
+usage = "GPU load generator for safe-point tests."
+
+[[tool]]
+name = "sensors"
+rpm = "lm_sensors"
+description = "Shows the hardware monitoring chips' readings: temperatures, fan speeds and voltages (lm_sensors)."
+executables = ["sensors"]
+
+[[tool.source]]
+owner = "check"
+need = "optional"
+usage = "Temperature sensor data; falls back to sysfs."
+
+[[tool]]
+name = "vulkaninfo"
+rpm = "vulkan-tools"
+description = "Prints the Vulkan drivers and the GPU's Vulkan features and limits (Vulkan tools)."
+executables = ["vulkaninfo"]
+
+[[tool.source]]
+owner = "check"
+need = "optional"
+usage = "Vulkan information used by graphics diagnostics."
+
+[[tool]]
+name = "glxinfo"
+rpm = "glx-utils"
+description = "Prints the OpenGL driver and its version and extensions (Mesa demos)."
+executables = ["glxinfo"]
+
+[[tool.source]]
+owner = "check"
+need = "optional"
+usage = "OpenGL information used by graphics diagnostics."
+
+[[tool]]
+name = "vainfo"
+rpm = "libva-utils"
+description = "Lists the video formats the GPU can decode and encode through VA-API (libva-utils): what video playback, streaming and recording can hand to the GPU."
+executables = ["vainfo"]
+
+[[tool.source]]
+owner = "check"
+need = "optional"
+usage = "Video decode and encode check (H.264, HEVC, VP9, AV1)."
+
+[[tool]]
+name = "clinfo"
+rpm = "clinfo"
+description = "Lists the OpenCL platforms and devices, including the GPU's compute-unit count."
+executables = ["clinfo"]
+
+[[tool.source]]
+owner = "check"
+need = "optional"
+usage = "Compute-unit count when umr and rocminfo give none."
+
+[[tool]]
+name = "rocminfo"
+rpm = "rocminfo"
+description = "Lists the GPUs AMD's ROCm compute stack sees, with their compute-unit counts."
+executables = ["rocminfo"]
+
+[[tool.source]]
+owner = "check"
+need = "optional"
+usage = "Compute-unit count when umr gives none."
+
+[[tool]]
+name = "mangohud"
+rpm = "mangohud"
+description = "An in-game overlay for frame rate, frame times, temperatures and loads, which can also log them to a file."
+executables = ["mangohud"]
+
+[[tool.source]]
+owner = "check"
+need = "optional"
+usage = "Frame rate in the in-game monitor and the game logs it reads."
+
+[[tool]]
+name = "nvme"
+rpm = "nvme-cli"
+description = "NVMe management tool (nvme-cli): the drive's health log, temperatures, wear and error counts."
+executables = ["nvme"]
+
+[[tool.source]]
+owner = "check"
+need = "optional"
+usage = "NVMe health and device information."
+
+[[tool]]
+name = "smartctl"
+brew = "smartmontools"
+rpm = "smartmontools"
+description = "Reads the SMART health data of disks and NVMe drives (smartmontools)."
+executables = ["smartctl"]
+root = true
+
+[[tool.source]]
+owner = "check"
+need = "optional"
+usage = "SMART information for NVMe diagnostics."
+
+[[tool]]
+name = "fio"
+brew = "fio"
+rpm = "fio"
+description = "A flexible disk benchmark. Bazzite Test uses it read-only, for the random 4K read speed of the system disk. It reads the raw partition, so it runs as root, and only a system-wide fio is used (rpm-ostree install fio)."
+executables = ["fio"]
+root = true
+
+[[tool.source]]
+owner = "check"
+need = "optional"
+usage = "Random 4K disk read test."
+
+[[tool]]
+name = "speedtest"
+brew = "speedtest-cli"
+rpm = "speedtest-cli"
+description = "An internet speed test: download, upload and latency. Bazzite Test runs Ookla's speedtest CLI (command speedtest) when it is there, else speedtest-cli; one of the two is enough."
+executables = ["speedtest", "speedtest-cli"]
+
+[[tool.source]]
+owner = "check"
+need = "optional"
+usage = "Internet speed test: Ookla's speedtest, or speedtest-cli."
+
+[[tool]]
+name = "setpci"
+rpm = "pciutils"
+description = "Reads and writes PCI configuration registers (pciutils). Cores Bisect reaches the BC-250's SMU through them to switch CPU cores."
+executables = ["setpci"]
+root = true
+
+[[tool.source]]
+owner = "cores"
+need = "required"
+usage = "Access BC-250 SMN/SMU through PCI configuration space."
+anchor = "requirements"
+
+[[tool]]
+name = "lspci"
+rpm = "pciutils"
+description = "Lists the PCI devices (pciutils). Cores Bisect uses it to make sure the board is a BC-250 before it touches the SMU."
+executables = ["lspci"]
+
+[[tool.source]]
+owner = "cores"
+need = "required"
+usage = "Used with setpci to access BC-250 PCI configuration space."
+anchor = "requirements"
+
+[[tool]]
+name = "taskset"
+rpm = "util-linux"
+description = "Runs a command on chosen CPU threads only (util-linux), so a load tests one core at a time."
+executables = ["taskset"]
+
+[[tool.source]]
+owner = "cores"
+need = "required"
+usage = "Pin test loads to specific CPU threads."
+anchor = "requirements"
+
+[[tool]]
+name = "mprime"
+description = "Prime95 for Linux. Its torture test is a long, heavy CPU and memory load that finds marginal cores other tests miss."
+executables = ["mprime"]
+
+[[tool.source]]
+owner = "cores"
+need = "optional"
+usage = "Prime95 torture test for a longer burn-in."
+anchor = "longer-burn-in-mprime-rasdaemon"
+
+[[tool]]
+name = "ras-mc-ctl"
+rpm = "rasdaemon"
+description = "Shows the hardware error counters that rasdaemon records (machine checks and memory errors), including corrected errors that never crash anything."
+executables = ["ras-mc-ctl"]
+root = true
+
+[[tool.source]]
+owner = "cores"
+need = "optional"
+usage = "Hardware error counters through rasdaemon."
+anchor = "longer-burn-in-mprime-rasdaemon"
+
+[[tool]]
+name = "sudo"
+rpm = "sudo"
+description = "Runs a command as root after asking for your password in the terminal. The scripts use it only for the steps that need root."
+executables = ["sudo"]
+
+[[tool.source]]
+owner = "compute"
+need = "required"
+usage = "Privilege for GPU register access and kernel log checks."
+
+[[tool.source]]
+owner = "cores"
+need = "required"
+usage = "Privilege for PCI access and kernel log checks."
+
+[[tool.source]]
+owner = "check"
+need = "required"
+usage = "Privilege for system checks and tests that need administrator access."
+
+[[tool.source]]
+owner = "oc"
+need = "required"
+usage = "Privilege for governor configuration and kernel log checks."
+anchor = "requirements"
+
+[[tool.source]]
+owner = "acpi"
+need = "required"
+usage = "Privilege for installing or removing the ACPI override."
+
+[[tool]]
+name = "ujust"
+description = "Bazzite's command for its ready-made maintenance tasks (ujust --choose lists them)."
+executables = ["ujust"]
+
+[[tool.source]]
+owner = "acpi"
+need = "optional"
+usage = "Regenerate the GRUB configuration (ujust regenerate-grub); else grub2-mkconfig."
+
+[[tool.source]]
+owner = "cec"
+need = "optional"
+usage = "Switch Bazzite's CEC mode to native (ujust cec-mode native)."
+
+[[tool]]
+name = "grub2-mkconfig"
+rpm = "grub2-tools"
+description = "Writes the GRUB boot menu configuration from its settings and the installed kernels."
+executables = ["grub2-mkconfig"]
+root = true
+
+[[tool.source]]
+owner = "acpi"
+need = "optional"
+usage = "Regenerate the GRUB configuration when ujust is missing."
+
+[[tool]]
+name = "systemctl"
+rpm = "systemd"
+description = "Controls systemd: starts, stops, enables and inspects system and user services."
+executables = ["systemctl"]
+
+[[tool.source]]
+owner = "gpu"
+need = "required"
+usage = "Manage and inspect the GPU governor system service."
+
+[[tool.source]]
+owner = "cores"
+need = "required"
+usage = "Install, remove and inspect the persistent core-unlock service."
+
+[[tool.source]]
+owner = "decky"
+need = "required"
+usage = "Install, start, restart and inspect Decky Loader's service, plugin_loader."
+anchor = "using-it"
+
+[[tool.source]]
+owner = "ace"
+need = "required"
+usage = "Manage the driver guard service."
+
+[[tool.source]]
+owner = "cec"
+need = "required"
+usage = "Read Bazzite's CEC mode and tell Valve's CEC daemon to reload its settings."
+
+[[tool.source]]
+owner = "fan"
+need = "required"
+usage = "Install, start and remove the thermal guard's service; the guard powers the board off with it at the shutdown limit."
+
+[[tool.source]]
+owner = "wdriver"
+need = "required"
+usage = "Install, start and remove the Wi-Fi driver's service, which loads the driver at boot."
+
+[[tool.source]]
+owner = "hdcam"
+need = "required"
+usage = "Tell your user's systemd about the load service, which sends the camera's firmware when it is plugged in."
+anchor = "loading-by-itself"
+
+[[tool.source]]
+owner = "hdcontrol"
+need = "required"
+usage = "Enable your user's service that switches an unused controller on Bluetooth off."
+anchor = "the-controller-box"
+
+[[tool]]
+name = "journalctl"
+rpm = "systemd"
+description = "Reads the systemd journal: the system, service and kernel logs."
+executables = ["journalctl"]
+
+[[tool.source]]
+owner = "wdriver"
+need = "required"
+usage = "Read the chip's answer and the loader's messages from the kernel log."
+
+[[tool.source]]
+owner = "gpu"
+need = "required"
+usage = "Read and follow system and service logs."
+
+[[tool.source]]
+owner = "cores"
+need = "required"
+usage = "Check machine-check and kernel errors during testing."
+
+[[tool.source]]
+owner = "decky"
+need = "optional"
+usage = "Log shows Decky Loader's lines from the system journal."
+anchor = "using-it"
+
+[[tool.source]]
+owner = "compute"
+need = "required"
+usage = "Check GPU kernel errors during testing."
+
+[[tool.source]]
+owner = "check"
+need = "optional"
+usage = "Read system and kernel logs for diagnostics."
+
+[[tool.source]]
+owner = "oc"
+need = "required"
+usage = "Check GPU kernel errors during testing."
+anchor = "requirements"
+
+[[tool]]
+name = "cyan-skillfish-governor-smu"
+description = "The GPU governor service for the BC-250's GPU (Cyan Skillfish): it sets the GPU clock and voltage from the load, through the SMU. Checked by its configuration and service files."
+executables = []
+locations = ["/etc/cyan-skillfish-governor-smu/config.toml", "/usr/lib/systemd/system/cyan-skillfish-governor-smu.service", "/etc/systemd/system/cyan-skillfish-governor-smu.service"]
+probe = "path"
+
+[[tool.source]]
+owner = "gpu"
+need = "required"
+usage = "System service and configuration managed by the GPU Manager."
+
+[[tool.source]]
+owner = "oc"
+need = "required"
+usage = "Service and configuration for overclock/undervolt testing."
+anchor = "requirements"
+
+[[tool]]
+name = "busctl"
+rpm = "systemd"
+description = "Talks to services over D-Bus from the command line (systemd)."
+executables = ["busctl"]
+
+[[tool.source]]
+owner = "gpu"
+need = "required"
+usage = "Communicate with the governor service over D-Bus."
+
+[[tool.source]]
+owner = "fan"
+need = "optional"
+usage = "The thermal guard turns the governor's performance mode off at the cooling limit."
+
+[[tool.source]]
+owner = "ssd"
+need = "required"
+usage = "Reads the drives' SMART values from udisks, without root."
+
+[[tool]]
+name = "notify-send"
+rpm = "libnotify"
+description = "Shows a desktop notification (libnotify)."
+executables = ["notify-send"]
+
+[[tool.source]]
+owner = "fan"
+need = "optional"
+usage = "The thermal guard's warnings on the desktop; without it they go only to the journal and the app."
+
+[[tool.source]]
+owner = "wdriver"
+need = "optional"
+usage = "The driver service's word on the desktop when it rebuilt the driver after a kernel update, or could not."
+
+[[tool.source]]
+owner = "hdcontrol"
+need = "optional"
+usage = "The idle service's word on the desktop when it switched an unused controller off, or could not; without it only the journal has it."
+anchor = "the-controller-box"
+
+[[tool]]
+name = "radeontop"
+rpm = "radeontop"
+description = "Shows the load of the parts of an AMD GPU (shaders, memory, video). The GPU Manager reads the GPU load from it when the kernel's own reading is missing."
+executables = ["radeontop"]
+
+[[tool.source]]
+owner = "gpu"
+need = "optional"
+usage = "Fallback GPU load sensor."
+
+[[tool]]
+name = "curl"
+rpm = "curl"
+description = "Downloads files over HTTP and HTTPS."
+executables = ["curl"]
+
+[[tool.source]]
+owner = "ace"
+need = "required"
+usage = "Download Mesa source and signatures for the driver build."
+anchor = "before-you-start"
+
+[[tool.source]]
+owner = "mesh"
+need = "required"
+usage = "Download Mesa source and signatures for the driver build."
+anchor = "before-you-start"
+
+[[tool]]
+name = "podman"
+rpm = "podman"
+description = "Runs containers without a daemon. ACE Queues and Mesh Shaders build their patched Mesa driver in a Fedora container, so nothing is layered onto the system for the build."
+executables = ["podman"]
+
+[[tool.source]]
+owner = "ace"
+need = "required"
+usage = "Build the patched driver in a Fedora container."
+anchor = "before-you-start"
+
+[[tool.source]]
+owner = "mesh"
+need = "required"
+usage = "Build the DirectMesh driver in a Fedora container."
+anchor = "before-you-start"
+
+[[tool]]
+name = "cec-ctl"
+rpm = "v4l-utils"
+description = "Controls HDMI-CEC adapters (v4l-utils): it sends the TV CEC messages such as power on, standby and switch input, and reads what the TV answers."
+executables = ["cec-ctl"]
+
+[[tool.source]]
+owner = "cec"
+need = "required"
+usage = "Read the CEC adapter and send the TV its messages (package v4l-utils)."
+
+[[tool.source]]
+owner = "check"
+need = "optional"
+usage = "Read the CEC adapter for the HDMI-CEC check (test 51)."
+
+[[tool]]
+name = "cecd"
+description = "Valve's CEC daemon, Bazzite's native CEC mode: it turns the TV on and off with the board's sleep and passes the TV remote's buttons on as key presses."
+executables = ["cecd"]
+
+[[tool.source]]
+owner = "cec"
+need = "optional"
+usage = "Valve's CEC daemon (Bazzite's native CEC mode), for the TV with the board's sleep and the remote."
+
+[[tool]]
+name = "paplay"
+rpm = "pulseaudio-utils"
+description = "Plays a sound file through PulseAudio or PipeWire. SFTP Tools plays the desktop's \"complete\" sound with it when a transfer is done."
+executables = ["paplay"]
+
+[[tool.source]]
+owner = "sftp"
+need = "optional"
+usage = "The sound when a transfer completes; without it the app uses Qt's beep."
+anchor = "what-it-needs"
+
+[[tool]]
+name = "SDL3"
+rpm = "SDL3"
+description = "The Simple DirectMedia Layer library (libSDL3): reads game controllers, with one button layout for every kind. Checked by its library file."
+executables = []
+locations = ["/usr/lib64/libSDL3.so.0", "/usr/lib/x86_64-linux-gnu/libSDL3.so.0", "/usr/lib/libSDL3.so.0"]
+probe = "path"
+
+[[tool.source]]
+owner = "consoles"
+need = "optional"
+usage = "Reads the controllers on the board for the stream; without it the console sees a controller lying still."
+anchor = "what-you-need"
+
+[[tool]]
+name = "FFmpeg"
+description = "The audio and video codec library. Console Link carries its own inside the app's native core (decoders only, LGPL, built from pinned sources), so nothing is installed on the system for it; checked by asking the installed core which version it holds."
+executables = []
+locations = ["~/.local/share/bc250-console-link/venv/bin/python"]
+probe = "console-link-ffmpeg"
+
+[[tool.source]]
+owner = "consoles"
+need = "required"
+usage = "Decodes the stream's picture (H.264) and sound (Opus); without it there is no stream. It comes with the app: install the app again through the portal when it is missing."
+anchor = "install-and-remove"
+
+[[tool]]
+name = "libva"
+rpm = "libva"
+description = "The VA-API library, the way to a GPU's video decoder. Part of Bazzite. Checked by its library files."
+executables = []
+locations = ["/usr/lib64/libva.so.2", "/usr/lib/x86_64-linux-gnu/libva.so.2", "/usr/lib/libva.so.2"]
+probe = "path"
+
+[[tool.source]]
+owner = "consoles"
+need = "required"
+usage = "The native core links it (with libva-drm) to use a GPU's video decoder where there is one; the BC-250 has none and decodes in software, but the core does not load without the library."
+anchor = "install-and-remove"
+
+[[tool]]
+name = "Steam"
+description = "Valve's game client. Bazzite starts it with bazzite-steam."
+executables = ["steam", "bazzite-steam"]
+
+[[tool.source]]
+owner = "consoles"
+need = "optional"
+usage = "Add to Game Mode (a Steam shortcut per console) and the PS button setting close Steam with steam -shutdown and start it again with bazzite-steam."
+anchor = "using-it"
+
+[[tool.source]]
+owner = "shadps4"
+need = "optional"
+usage = "Update Game Mode (a Steam shortcut per game) closes Steam with steam -shutdown and starts it again with bazzite-steam."
+anchor = "game-mode"
+
+[[tool.source]]
+owner = "rpcs3"
+need = "optional"
+usage = "Update Game Mode (a Steam shortcut per game) closes Steam with steam -shutdown and starts it again with bazzite-steam."
+anchor = "game-mode"
+
+[[tool.source]]
+owner = "ppsspp"
+need = "optional"
+usage = "Update Game Mode (a Steam shortcut per game) closes Steam with steam -shutdown and starts it again with bazzite-steam."
+anchor = "game-mode"
+
+[[tool.source]]
+owner = "pcsx2"
+need = "optional"
+usage = "Update Game Mode (a Steam shortcut per game) closes Steam with steam -shutdown and starts it again with bazzite-steam."
+anchor = "game-mode"
+
+[[tool.source]]
+owner = "vita3k"
+need = "optional"
+usage = "Update Game Mode (a Steam shortcut per game) closes Steam with steam -shutdown and starts it again with bazzite-steam."
+anchor = "game-mode"
+
+[[tool.source]]
+owner = "xenia"
+need = "optional"
+usage = "Update Game Mode (a Steam shortcut per game) closes Steam with steam -shutdown and starts it again with bazzite-steam."
+anchor = "game-mode"
+
+[[tool.source]]
+owner = "datstation"
+need = "optional"
+usage = "Add to Steam and Remove from Steam (the app's own shortcut) close Steam with steam -shutdown and start it again with bazzite-steam."
+anchor = "install"
+
+[[tool]]
+name = "FUSE 2"
+rpm = "fuse-libs"
+description = "The FUSE 2 library (libfuse.so.2), with which an AppImage mounts itself. Checked by its library file."
+executables = []
+locations = ["/usr/lib64/libfuse.so.2", "/usr/lib/x86_64-linux-gnu/libfuse.so.2", "/usr/lib/libfuse.so.2"]
+probe = "path"
+
+[[tool.source]]
+owner = "shadps4"
+need = "optional"
+usage = "shadPS4 is an AppImage; without the library it unpacks itself to a temporary folder on every start, which is slower."
+anchor = "what-you-need"
+
+[[tool]]
+name = "fusermount"
+rpm = "fuse3"
+description = "FUSE's mount helper (fusermount3, or fusermount for FUSE 2), with which an AppImage that brings its own FUSE library mounts itself."
+executables = ["fusermount3", "fusermount"]
+
+[[tool.source]]
+owner = "rpcs3"
+need = "optional"
+usage = "RPCS3 is an AppImage with its own FUSE library; without fusermount it unpacks itself to a temporary folder on every start, which is slower."
+anchor = "what-you-need"
+
+[[tool.source]]
+owner = "ppsspp"
+need = "optional"
+usage = "PPSSPP is an AppImage with its own FUSE library; without fusermount it unpacks itself to a temporary folder on every start, which is slower."
+anchor = "what-you-need"
+
+[[tool.source]]
+owner = "pcsx2"
+need = "optional"
+usage = "PCSX2 is an AppImage with its own FUSE library; without fusermount it unpacks itself to a temporary folder on every start, which is slower."
+anchor = "what-you-need"
+
+[[tool.source]]
+owner = "vita3k"
+need = "optional"
+usage = "Vita3K is an AppImage with its own FUSE library; without fusermount it unpacks itself to a temporary folder on every start, which is slower."
+anchor = "what-you-need"
+
+[[tool.source]]
+owner = "xenia"
+need = "optional"
+usage = "Xenia is an AppImage with its own FUSE library; without fusermount it unpacks itself to a temporary folder on every start, which is slower."
+anchor = "what-you-need"
+
+[[tool]]
+name = "Rust"
+brew = "rust"
+rpm = "cargo"
+description = "The Rust compiler and its build tool cargo (rustup puts them in ~/.cargo/bin). Checked by cargo."
+executables = ["cargo"]
+locations = ["~/.cargo/bin/cargo"]
+
+[[tool.source]]
+owner = "consoles"
+need = "optional"
+usage = "Only to build the native core when the app is installed from a checkout of the repository; a release brings it built."
+anchor = "install-and-remove"
+
+[[dependency]]
+name = "PyQt6"
+description = "The Python bindings of the Qt 6 toolkit. Every suite app draws its windows with it; the wheels include Qt itself, so nothing is layered onto the system."
+
+[[dependency.source]]
+owner = "portal"
+specifier = ">=6.11,<7"
+
+[[dependency.source]]
+owner = "core"
+specifier = ">=6.11,<7"
+
+[[dependency.source]]
+owner = "check"
+specifier = ">=6.11,<7"
+
+[[dependency.source]]
+owner = "gpu"
+specifier = ">=6.11,<7"
+
+[[dependency.source]]
+owner = "upscaler"
+specifier = ">=6.11,<7"
+
+[[dependency.source]]
+owner = "compute"
+specifier = ">=6.11,<7"
+
+[[dependency.source]]
+owner = "cores"
+specifier = ">=6.5,<7"
+
+[[dependency.source]]
+owner = "oc"
+specifier = ">=6.11,<7"
+
+[[dependency.source]]
+owner = "acpi"
+specifier = ">=6.5,<7"
+
+[[dependency.source]]
+owner = "overlay"
+specifier = ">=6.11,<7"
+
+[[dependency.source]]
+owner = "ips35"
+specifier = ">=6.11,<7"
+
+[[dependency.source]]
+owner = "hdcam"
+specifier = ">=6.11,<7"
+
+[[dependency.source]]
+owner = "hdcontrol"
+specifier = ">=6.11,<7"
+
+[[dependency.source]]
+owner = "bios"
+specifier = ">=6.11,<7"
+
+[[dependency.source]]
+owner = "ace"
+specifier = ">=6.11,<7"
+
+[[dependency.source]]
+owner = "mesh"
+specifier = ">=6.11,<7"
+
+[[dependency.source]]
+owner = "shadps4"
+specifier = ">=6.11,<7"
+
+[[dependency.source]]
+owner = "rpcs3"
+specifier = ">=6.11,<7"
+
+[[dependency.source]]
+owner = "ppsspp"
+specifier = ">=6.11,<7"
+
+[[dependency.source]]
+owner = "pcsx2"
+specifier = ">=6.11,<7"
+
+[[dependency.source]]
+owner = "vita3k"
+specifier = ">=6.11,<7"
+
+[[dependency.source]]
+owner = "xenia"
+specifier = ">=6.11,<7"
+
+[[dependency.source]]
+owner = "decky"
+specifier = ">=6.11,<7"
+
+[[dependency.source]]
+owner = "vram"
+specifier = ">=6.11,<7"
+
+[[dependency.source]]
+owner = "fan"
+specifier = ">=6.11,<7"
+
+[[dependency.source]]
+owner = "wdriver"
+specifier = ">=6.11,<7"
+
+[[dependency.source]]
+owner = "cec"
+specifier = ">=6.11,<7"
+
+[[dependency.source]]
+owner = "sftp"
+specifier = ">=6.11,<7"
+
+[[dependency.source]]
+owner = "consoles"
+specifier = ">=6.11,<7"
+
+[[dependency.source]]
+owner = "clb"
+specifier = ">=6.11,<7"
+
+[[dependency.source]]
+owner = "ncgui"
+specifier = ">=6.11,<7"
+
+[[dependency.source]]
+owner = "datstation"
+specifier = ">=6.11,<7"
+
+[[dependency.source]]
+owner = "ssd"
+specifier = ">=6.11,<7"
+
+[[dependency]]
+name = "pygame-ce"
+description = "A community-maintained game library for Python, built on SDL. The portal reads a game controller with it (the pad's buttons under SDL's common names), to move around Suite Big Picture Mode, and Console LinkB reads the controller of a stream with it and sends it the stream's rumble; neither opens a window or plays sound with it."
+
+[[dependency.source]]
+owner = "portal"
+specifier = ">=2.5,<3"
+
+[[dependency.source]]
+owner = "clb"
+specifier = ">=2.5,<3"
+
+[[dependency]]
+name = "PyQt6-Charts"
+description = "Qt's chart module for PyQt6. Bazzite Test draws its benchmark and history graphs with it, the GPU Manager its clock, load and temperature graphs."
+
+[[dependency.source]]
+owner = "check"
+specifier = ">=6.11,<7"
+
+[[dependency.source]]
+owner = "gpu"
+specifier = ">=6.11,<7"
+
+[[tool]]
+name = "gcc"
+brew = "gcc"
+rpm = "gcc"
+description = "The C compiler. BC-250 USB Wi-Fi builds the Wi-Fi driver with it against the running kernel; Bazzite's image ships it with the kernel's build tree (kernel-devel)."
+executables = ["gcc"]
+
+[[tool.source]]
+owner = "wdriver"
+need = "required"
+usage = "Build the Wi-Fi driver for the running kernel, in the app and in its service after a kernel update."
+
+[[tool]]
+name = "make"
+brew = "make"
+rpm = "make"
+description = "Runs the kernel's build system for an out-of-tree module."
+executables = ["make"]
+
+[[tool.source]]
+owner = "wdriver"
+need = "required"
+usage = "Build the Wi-Fi driver with the kernel's build tree."
+
+[[tool]]
+name = "git"
+brew = "git"
+rpm = "git"
+description = "Fetches the driver's sources at the pinned commit."
+executables = ["git"]
+
+[[tool.source]]
+owner = "wdriver"
+need = "required"
+usage = "Fetch the Wi-Fi driver's sources, one commit, the first time a branch is built."
+
+[[tool]]
+name = "kmod"
+rpm = "kmod"
+description = "Loads and unloads kernel modules (insmod, modprobe, rmmod)."
+executables = ["insmod", "modprobe", "rmmod"]
+
+[[tool.source]]
+owner = "wdriver"
+need = "required"
+usage = "The driver's service loads the Wi-Fi driver's two modules at boot and unloads them when stopped."
+
+[[tool]]
+name = "eject"
+rpm = "util-linux"
+description = "Ejects a removable disk. An AIC8800 stick leaves its storage mode when its virtual disk is ejected."
+executables = ["eject"]
+
+[[tool.source]]
+owner = "wdriver"
+need = "required"
+usage = "Switch the stick out of storage mode, from the udev rule and from the driver's service."
+
+[[tool]]
+name = "udevadm"
+rpm = "systemd-udev"
+description = "Controls udev: reloads its rules after a change."
+executables = ["udevadm"]
+
+[[tool.source]]
+owner = "wdriver"
+need = "required"
+usage = "Reload udev's rules after installing or removing the stick's rule."
+
+[[tool.source]]
+owner = "ips35"
+need = "required"
+usage = "Applies the rule that gives your user the screen's port, at once, without unplugging it."
+anchor = "access-to-the-screen"
+
+[[tool.source]]
+owner = "hdcam"
+need = "required"
+usage = "Applies the rule that gives your user the camera's boot loader, at once, without unplugging it."
+anchor = "access-to-the-camera"
+
+[[dependency]]
+name = "paramiko"
+description = "An SSH and SFTP library for Python. Bazzite SFTP Tools connects to the host, transfers files and runs the sshd commands of the Server Manager with it."
+
+[[dependency.source]]
+owner = "sftp"
+specifier = ">=5.0,<6"
+
+[[dependency]]
+name = "cryptography"
+description = "Cryptographic recipes and primitives for Python, on OpenSSL. Console Link encrypts registration and the control connection of a Remote Play session with its AES and HMAC; the shadPS4 Manager's Extract PKG decrypts packages with its AES-CBC and AES-XTS."
+
+[[dependency.source]]
+owner = "consoles"
+specifier = ">=42,<51"
+
+[[dependency.source]]
+owner = "shadps4"
+specifier = ">=42,<51"
+
+[[dependency]]
+name = "aiortc"
+description = "WebRTC for Python, on asyncio. Console LinkB's streams from an XBOX or XBOX Cloud Gaming run on it: the connection, the H.264 video and Opus sound (decoded with PyAV, whose wheels include FFmpeg, which aiortc installs with it) and the data channels for the controller."
+
+[[dependency.source]]
+owner = "clb"
+specifier = ">=1.14,<2"

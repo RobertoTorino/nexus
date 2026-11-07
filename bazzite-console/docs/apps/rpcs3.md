@@ -25,3 +25,9 @@ The launcher is `~/.local/bin/ps5-rpcs3-manager`; the app runs on the suite's sh
 Install RPCS3, then use its firmware setup before adding games. Add folders that contain your PS3 games and refresh
 the library; select a game to manage its Steam entry. RPCS3 is a desktop emulator, so game compatibility and
 performance vary by title and are not guaranteed on PlayStation 5 hardware running Bazzite.
+
+Under the **RPCS3 Install** and **RPCS3 Uninstall** pills, the RPCS3 line says **Not installed.** or **Installed.**,
+with the button to use. Its tooltip says which build is installed, or what Install takes, and when a newer RPCS3 is
+out. When another build than the one pinned for this version of the app is installed, or RPCS3 updated itself in its
+own window, the tooltip says so, and **Install** puts the pinned build back. Another build and a newer RPCS3 also go
+to the log, once.

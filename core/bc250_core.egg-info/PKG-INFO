@@ -1,9 +1,0 @@
-Metadata-Version: 2.4
-Name: bc250-core
-Version: 0.1.2
-Summary: Shared code of the BC250 Bazzite Suite apps
-License-Expression: GPL-3.0-or-later
-Requires-Python: >=3.11
-License-File: LICENSE
-Requires-Dist: PyQt6<7,>=6.11
-Dynamic: license-file

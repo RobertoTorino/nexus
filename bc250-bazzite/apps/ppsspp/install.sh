@@ -4,8 +4,8 @@
 #
 #   ./install.sh                         # install or update
 #   ./install.sh --no-desktop-shortcut   # app menu entry only, no icon on the Desktop
-#   ./install.sh --uninstall             # remove the app and the PPSSPP it installed; keeps its settings
-#   ./install.sh --uninstall --purge     # also remove its settings and covers
+#   ./install.sh --uninstall             # remove the app and the PPSSPP it installed; keeps its settings and log
+#   ./install.sh --uninstall --purge     # also remove its settings, covers and log
 #
 # Run it as your own user; installing needs no root. PPSSPP itself is downloaded by the app (Install), not here.
 #  * ~/.local/share/bc250-ppsspp-manager/app: the app, with the bc250_core it was tested with (bundled in the
@@ -14,10 +14,11 @@
 #  * ~/.local/share/bc250-bazzite-suite/venv, the BC250 Bazzite Suite's shared venv with PyQt6 (the wheels bundle
 #    Qt; nothing is layered). It is removed with the last suite app that uses it.
 #  * ~/.local/bin/bc250-ppsspp-manager to start it from a terminal, plus an app menu entry and a Desktop icon.
-#  * ~/.local/bin/bc250-ppsspp-run, which starts PPSSPP: the Game Mode shortcuts run it.
+#  * ~/.local/bin/bc250-ppsspp-run, which starts PPSSPP: the Steam shortcuts run it.
+#  * ~/.local/share/bc250-ppsspp-manager/bc250-ppsspp-manager.log: the app's log.
 # PPSSPP's own folder, ~/.config/ppsspp (saves, settings, memory stick games), is never removed, nor are the
-# games; the Game Mode shortcuts stay in Steam (take them out in the app first).
-# Installing also removes the standalone Bazzite UMD File Renamer, absorbed into this app (Rename files…); its
+# games; the Steam shortcuts stay in Steam (take them out in the app first).
+# Installing also removes the standalone Bazzite UMD File Renamer, absorbed into this app (Games, Rename); its
 # settings folder stays, and the app adopts the saved naming template from it.
 set -euo pipefail
 
@@ -76,8 +77,8 @@ if $UNINSTALL; then
         rm -rf "$VENV"
     fi
     if $PURGE; then
-        info "Removing the settings and the covers found on SteamGridDB"
-        rm -rf "${CONFIG_DIR:?}/$APP_ID" "${DATA_DIR:?}/$APP_ID/covers"
+        info "Removing the settings, the covers found on SteamGridDB and the log"
+        rm -rf "${CONFIG_DIR:?}/$APP_ID" "${DATA_DIR:?}/$APP_ID"
     fi
     rmdir "${DATA_DIR:?}/$APP_ID" 2>/dev/null || true
     info "$APP_NAME is uninstalled. PPSSPP's own folder ($CONFIG_DIR/ppsspp) and your games were left as they are."
@@ -99,11 +100,11 @@ python3 -c 'import venv, ensurepip' 2>/dev/null || die "python3 has no venv/ensu
 
 info "Installing $APP_NAME $VERSION"
 
-# --- 0. The standalone Bazzite UMD File Renamer, absorbed into this app (Rename files…) ---------
+# --- 0. The standalone Bazzite UMD File Renamer, absorbed into this app (Games, Rename) ---------
 # Its settings folder stays: the app adopts the saved naming template from it.
 OLD_APP="bazzite-umd-file-renamer"
 if [ -e "$DATA_DIR/$OLD_APP" ] || [ -e "$HOME/.local/bin/$OLD_APP" ]; then
-    info "Removing the standalone Bazzite UMD File Renamer: renaming lives in this app now (Rename files…)"
+    info "Removing the standalone Bazzite UMD File Renamer: renaming lives in this app now (Games, Rename)"
     rm -f "$HOME/.local/bin/$OLD_APP" "$DATA_DIR/applications/$OLD_APP.desktop" "$DESKTOP_DIR/$OLD_APP.desktop"
     rm -rf "${DATA_DIR:?}/$OLD_APP"
     rm -f "$VENV_USERS/$OLD_APP"

@@ -1482,8 +1482,8 @@ def write_app(root: Path, suite: Suite, app: NewApp) -> list[Path]:
     readme = suite.folder / "README.md"
     change(readme, insert_after_list(readme.read_text(encoding="utf-8"), f"**{app.category_title}**",
                                      fill(README_ROW, app, suite), "README.md"))
-    # The Dependency Checker's catalog: the app with its launcher, and PyQt6 as one of its packages.
-    catalog = suite.folder / "apps" / "package" / "package_checker" / "dependencies.toml"
+    # Nexus Deps' catalog of the suite (dev/deps): the app with its launcher, and PyQt6 as one of its packages.
+    catalog = root / "dev" / "deps" / "nexus_deps" / "catalogs" / f"{suite.folder.name}.toml"
     if catalog.is_file():
         text = insert_before(catalog.read_text(encoding="utf-8"), "\n[[tool]]\n", "\n" + fill(CATALOG_APP, app, suite).rstrip("\n") + "\n",
                              "dependencies.toml")
@@ -1583,8 +1583,8 @@ def checks(root: Path, suite: Suite, app: NewApp) -> list[tuple[str, bool, str]]
         ("the suite's installer, icon and manifest tests",
          [*pytest, "tests/test_installer_tests.py", "tests/test_icons.py", "tests/test_check_manifest.py"],
          suite.folder / "tools"),
-        ("the Dependency Checker's catalog tests", [*pytest, "tests/test_dependencies.py", "-k", "catalog"],
-         suite.folder / "apps" / "package"),
+        ("Nexus Deps' catalog tests", [*pytest, "tests/test_dependencies.py", "-k", "catalog"],
+         root / "dev" / "deps"),
         ("the manifest check", [python, str(suite.folder / "tools" / "check_manifest.py")], root),
         ("bash -n", ["bash", "-n", *scripts], root),
     ]
@@ -1663,7 +1663,7 @@ def main(argv: list[str] | None = None) -> int:
         if not passed:
             failed = True
             print("       " + output.replace("\n", "\n       "))
-    print("Next: the window and its tests, the chapter, the app's CHANGELOG entries, the Dependency Checker's catalog "
+    print("Next: the window and its tests, the chapter, the app's CHANGELOG entries, Nexus Deps' catalog "
           "for a package or tool beyond PyQt6, and the portal bump the new entry asks for (check_manifest.py --base; "
           "the release stays the owner's).")
     return 1 if failed else 0

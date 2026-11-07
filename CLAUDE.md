@@ -31,7 +31,7 @@ the BC250 suite has none and is the tools' default suite, `tools/suites.py`), an
 its `tools/`. The root keeps what is Nexus's: `core/bc250_core/` (shared Python code, bundled per app at release
 time), `tools/` (the Nexus tools: release and CI, design and icons, tours; a tool that works on a suite takes
 `--suite`), `dev/<name>/` (the Nexus apps, run from the checkout and never released: Nexus Dashboard, Nexus Release
-Tool, Nexus Demo Recorder, Nexus Installer Tests, Nexus Sound Lab), `nexus/` (the Nexus page,
+Tool, Nexus Demo Recorder, Nexus Installer Tests, Nexus Sound Lab, Nexus Deps), `nexus/` (the Nexus page,
 robertotorino.github.io/nexus/), `DESIGN.md`, `ICONS.md` and `test.sh`.
 
 **Each suite stands apart** (owner, 27-10-2026): a change to one suite never edits another suite's folder, its CI

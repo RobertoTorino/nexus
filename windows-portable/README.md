@@ -57,9 +57,10 @@ How to install and use them: **[the wiki](https://robertotorino.github.io/nexus/
 ## License
 
 GPL-3.0-or-later ([LICENSE](../LICENSE)). Each app keeps its own `LICENSE`. The icons and pictures were made with
-generative AI tools and edited by hand. The portal's sound on a controller action was made by hand in Audacity, without
-AI; the other sounds were made with generative AI tools. All are under the license of the folder they are in, like the
-code beside them.
+generative AI tools and edited by hand, and the music of the video tours with generative AI tools. The sounds were made
+without AI: the portal's intro sound by code, from arithmetic alone, and the portal's sound on a controller action and
+DatStation's quiz music by hand in Audacity. All are under the license of the folder they are in, like the code beside
+them.
 
 ## Disclaimer
 

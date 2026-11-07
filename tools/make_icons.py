@@ -67,9 +67,9 @@ STANDARD = [
     ("qt-warning", "SP_MessageBoxWarning", "", "`SP_MessageBoxWarning`",
      "BC-250 Bazzite Test: a warning in the results; the warning before a run."),
     ("qt-information", "SP_MessageBoxInformation", "", "`SP_MessageBoxInformation`",
-     "BC-250 Bazzite Test: an info result. Dependency Checker: the About button."),
+     "BC-250 Bazzite Test: an info result. Nexus Deps: the About button."),
     ("qt-reload", "SP_BrowserReload", "view-refresh", "`view-refresh`, else `SP_BrowserReload`",
-     "Dependency Checker: the Check button."),
+     "Nexus Deps: the Check button."),
 ]
 
 MATERIAL = [
@@ -176,13 +176,13 @@ NEXUS_ICON = [
     ("dev/nrt/images/nexus-release-tool.webp", "`dev/<name>/images/<app id>.webp` (512 px), `-128.png`",
      "The Nexus apps (owner, 26-10-2026: a Nexus app takes Nexus's icon, not a category's): Nexus Dashboard "
      "(`dev/dash`), Nexus Release Tool (`dev/nrt`), Nexus Demo Recorder (`dev/demo`), Nexus Installer Tests "
-     "(`dev/itests`) and Nexus Sound Lab (`dev/sounds`), each its window header and window icon, its menu entry and Desktop icon. Lossless copies of "
+     "(`dev/itests`), Nexus Sound Lab (`dev/sounds`) and Nexus Deps (`dev/deps`), each its window header and window icon, its menu entry and Desktop icon. Lossless copies of "
      "the drawing, written by this tool."),
 ]
 # the Nexus apps' icons (dev/<name>/images/<app id>): the drawing at each size, lossless (the pixels stay the
 # drawing's), by this tool.
 NEXUS_APPS = {"dash": "nexus-dashboard", "nrt": "nexus-release-tool", "demo": "nexus-demo-recorder",
-              "itests": "nexus-installer-tests", "sounds": "nexus-sound-lab"}
+              "itests": "nexus-installer-tests", "sounds": "nexus-sound-lab", "deps": "nexus-deps"}
 NEXUS_COPIES = [
     *((f"nexus/images/nexus-{size}.png", f"dev/{folder}/images/{app_id}{'-128' if size == 128 else ''}.{kind}")
       for folder, app_id in NEXUS_APPS.items() for size, kind in ((512, "webp"), (128, "png"))),
@@ -333,7 +333,7 @@ SYMBOLS = [
     ("△ □ ✕ ○", "USB HD Control", "The face buttons."),
     ("↓ ↑", "USB IPS3.5", "The network tile: download and upload."),
     ("↓ ↑", "System Overlay", "Network: download and upload."),
-    ("✓ ✗", "Dependency Checker", "CVE: none found, found."),
+    ("✓ ✗", "Nexus Deps", "CVE: none found, found."),
     ("⚠ ✓ ✗", "Bazzite SFTP Tools", "Password: a warning, requirements met, not met."),
     ("← ↑ ↓", "Bazzite SFTP Tools", "Download; uploads and downloads in the transfer queue."),
     ("↑ ↓", "Nexus Release Tool", "Earlier commands, in the command line's placeholder."),

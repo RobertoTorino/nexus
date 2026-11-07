@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The window on folders made in a temp folder: the states before and after installing, the games in the table, the
-game folders, the plan for Game Mode, installing through the worker, Steam's shortcuts changed with a fake "close
-Steam", a newer Xenia build, and the blue look."""
+game folders, the plan for Steam, installing through the worker, Steam's shortcuts changed with a fake "close
+Steam", a newer Xenia build, the Settings and Log tabs, and the blue look of RPCS3 Manager's design."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QMessageBox
+from PyQt6.QtWidgets import QLabel, QMessageBox
 
 from conftest import make_iso, make_package
 
@@ -30,8 +30,10 @@ def folders(tmp_path):
     run = tmp_path / "bin" / "bc250-xenia-run"
     run.parent.mkdir()
     run.write_text("#!/bin/sh\n")
+    log = tmp_path / "data" / "bc250-xenia-manager" / "bc250-xenia-manager.log"
+    log.parent.mkdir(parents=True)
     return {"home": tmp_path / "emulator", "steam_dir": tmp_path / "Steam", "run": run, "user_home": tmp_path,
-            "drives": lambda: []}
+            "drives": lambda: [], "log_path": log}
 
 
 def _install(home: Path) -> None:
@@ -62,9 +64,11 @@ def _titles(window) -> list[str]:
 def test_before_installing(qapp, folders):
     window = _window(folders)
     assert window.pill.text() == "Not installed"
-    assert "Not installed. Install downloads Xenia 838850f" in window.emulator_state.text()
-    assert window.install_button.isEnabled() and not window.remove_button.isEnabled()
-    assert not window.xenia_button.isEnabled() and not window.play_button.isEnabled()
+    # The state alone, in the words every manager uses (owner, 07-11-2026); what Install does in the tip.
+    assert window.emulator_state.text() == "Not installed.<br>Install it with the Install button."
+    assert "Install downloads Xenia 838850f" in window.emulator_state.toolTip()
+    assert window.install_pill.isEnabled() and not window.remove_pill.isEnabled()
+    assert not window.xenia_button.isEnabled() and not hasattr(window, "play_button")
     for name in ("folder_button", "forget_button"):
         assert not hasattr(window, name), name                               # gone (owner, 03-11-2026): fixed folders
     assert window.table.rowCount() == 2                                          # the games in Games/XBOX360
@@ -76,12 +80,13 @@ def test_installed_with_games(qapp, folders, tmp_path):
     window = _window(folders)
     assert window.pill.text() == "Ready"                                       # the games in Games/XBOX360
     assert window.pill.text() == "Ready" and window.emulator_box.value.text() == emulator.VERSION
-    assert "experimental on Linux" in window.emulator_state.text()
+    assert window.emulator_state.text() == "Installed.<br>Uninstall with the Uninstall button."
+    assert "experimental on Linux" in window.emulator_state.toolTip()
     assert window.games_box.value.text() == "2" and window.steam_box.value.text() == "0"
-    assert not window.install_button.isEnabled() and window.remove_button.isEnabled()
-    assert not window.play_button.isEnabled()                                     # nothing chosen yet
+    assert not window.install_pill.isEnabled() and window.remove_pill.isEnabled()
+    assert not window.remove_game_button.isEnabled()                              # nothing chosen yet
     window.table.selectRow(0)
-    assert window.play_button.isEnabled() and window.chosen().title == "One"
+    assert window.remove_game_button.isEnabled() and window.chosen().title == "One"
     assert not window.steam_button.isEnabled()                                    # nothing to change
     assert [window.table.item(r, 2).text() for r in range(2)] == ["", "4D5307E6"]
     assert [window.table.item(r, 3).text() for r in range(2)] == ["ISO", "Games on Demand"]
@@ -93,8 +98,11 @@ def test_an_older_build_is_offered_the_pinned_one(qapp, folders):
     (folders["home"] / "f42147a" / emulator.MEMBER).write_text("")
     (folders["home"] / "current").symlink_to("f42147a")
     window = _window(folders)
-    assert "Xenia f42147a is installed; this version of the app brings 838850f" in window.emulator_state.text()
-    assert window.install_button.isEnabled()
+    assert window.emulator_state.text() == "Installed.<br>Uninstall with the Uninstall button."
+    assert "Xenia f42147a is installed; this version of the app brings 838850f" in window.emulator_state.toolTip()
+    assert window.install_pill.isEnabled()
+    window.refresh()
+    assert window.output.toPlainText().count("Xenia f42147a is installed") == 1           # logged once
     window.close()
 
 
@@ -109,7 +117,7 @@ def test_the_apps_own_game_folders(qapp, folders, tmp_path, monkeypatch):
     window = _window({**folders, "drives": lambda: [tmp_path / "sd", tmp_path / "stick", tmp_path / "gone"]})
     assert window.folders == [tmp_path / "Games" / "XBOX360", tmp_path / "sd" / "Games" / "XBOX360"]
     text = window.folders_state.text()
-    assert "<code>~/Games/XBOX360</code>" in text and "<code>~/sd/Games/XBOX360</code>" in text
+    assert "<b>~/Games/XBOX360</b>" in text and "<b>~/sd/Games/XBOX360</b>" in text
     assert str(tmp_path) not in text and "folders" not in window.settings.DEFAULTS
     window.close()
 
@@ -120,7 +128,7 @@ def test_install_runs_off_the_window(qapp, folders, monkeypatch):
     monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: QMessageBox.StandardButton.Yes)
     window = _window(folders, fetch=lambda url, dest, progress=None: dest.write_bytes(payload))
     window.on_install()
-    assert not window.install_button.isEnabled()                                  # busy
+    assert not window.install_pill.isEnabled()                                    # busy
     _wait(window, qapp)
     assert window.running.text() == f"Xenia {emulator.VERSION} is installed."
     assert window.version == emulator.VERSION and window.pill.text() == "Ready"
@@ -146,24 +154,31 @@ def test_remove(qapp, folders, monkeypatch):
     window.close()
 
 
-def test_play_and_xenias_window(qapp, folders, tmp_path):
+def test_xenias_window(qapp, folders, tmp_path):
+    """Xenia settings opens Xenia's own window, through the run wrapper and without a game."""
     _install(folders["home"])
     log = tmp_path / "args"
     folders["run"].write_text(f'#!/bin/sh\necho "$@" >> "{log}"\n')
     folders["run"].chmod(0o755)
     window = _window(folders)
-    window.table.selectRow(0)
-    window.on_play()
-    window.on_open_xenia()
+    window.xenia_button.click()
     deadline = time.monotonic() + 10
-    while (not log.exists() or len(log.read_text().splitlines()) < 2) and time.monotonic() < deadline:
+    while not log.exists() and time.monotonic() < deadline:
         time.sleep(0.01)
-    assert sorted(log.read_text().splitlines()) == sorted([str(tmp_path / "Games" / "XBOX360" / "One.iso"), ""])
-    assert window.running.text() == "Started One."
+    assert log.read_text().splitlines() == [""]
+    assert window.output.toPlainText().splitlines()[-1].endswith(" INFO Xenia's own window was opened.")
     window.close()
 
 
-def test_game_mode_added_and_taken_out(qapp, folders, tmp_path, monkeypatch):
+def test_the_steam_link(qapp, folders):
+    opened = []
+    window = _window(folders, open_url=lambda url: opened.append(url) or True)
+    window.steam_hint.linkActivated.emit("steam://open/games")
+    assert opened == ["steam://open/games"]
+    window.close()
+
+
+def test_steam_added_and_taken_out(qapp, folders, tmp_path, monkeypatch):
     _install(folders["home"])
     monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: QMessageBox.StandardButton.Yes)
     closed = []
@@ -229,14 +244,28 @@ def test_no_steam_game_mode_or_no_wrapper(qapp, folders, tmp_path, monkeypatch):
 
 
 def test_the_blue_look(qapp, folders):
+    """RPCS3 Manager's design (owner, 07-11-2026): the Refresh pill and the boxes in the header, the action pills
+    under the introduction, a third of the width each, the tabs."""
     _install(folders["home"])
     window = _window(folders)
+    from bc250_core.theme import OUTLINE
     assert style.BLUE in window.styleSheet()
-    assert window.install_button.property("primary") and window.steam_button.property("primary")
-    assert style.BLUE in window.emulator_box.styleSheet()
-    assert f"color:{style.BLUE}" in window.emulator_state.text()                   # the release link
-    steps = (window.install_button, window.remove_button)
-    assert len({(b.width(), b.height()) for b in steps}) == 1                       # one size, padding included
+    assert window.covers_button.property("primary") is None and window.steam_button.property("primary")
+    assert window.xenia_button.property("primary") is None
+    assert style.BLUE in window.emulator_box.styleSheet() and style.BLUE in window.refresh_pill.styleSheet()
+    assert f"color:{style.BLUE}" in window.intro.text()                             # the release link
+    assert [(p.value.text(), p.caption.text()) for p in window.actions] == [("Xenia", "Install"),
+                                                                           ("Xenia", "Uninstall")]
+    for pill in (window.refresh_pill, *window.actions):
+        sheet = pill.styleSheet()                       # the blue left edge only, also under the mouse (owner)
+        assert sheet.rfind(f"border-left-color:{style.BLUE}") > sheet.rfind(OUTLINE) >= 0, pill.caption.text()
+        assert style.HOVER_SHEEN in sheet and style.BLUE_TINT not in sheet
+    assert "QTabBar::tab" in window.styleSheet() and "QComboBox" in window.styleSheet()
+    assert [window.tabs.tabText(i) for i in range(window.tabs.count())] == ["Your games", "Settings", "Log"]
+    window.show()
+    qapp.processEvents()
+    third = window.centralWidget().width() // 3
+    assert all(abs(p.width() - third) < 12 for p in window.actions)               # the last third empty
     window.close()
 
 
@@ -250,14 +279,29 @@ def test_a_newer_build_is_mentioned(qapp, folders):
     while window.newer is None and time.monotonic() < deadline:
         qapp.processEvents()
         time.sleep(0.01)
-    text = window.emulator_state.text()
-    assert "Xenia 0a1b2c3 is out (2026-11-30)" in text and "releases/tag/0a1b2c3" in text
-    assert window.install_button.isEnabled() is False                              # it never installs that one
+    tip = window.emulator_state.toolTip()                   # the line stays the state; the tip and the log say
+    assert window.emulator_state.text() == "Installed.<br>Uninstall with the Uninstall button."
+    assert "Xenia 0a1b2c3 is out (2026-11-30)" in tip and "releases/tag/0a1b2c3" in tip
+    assert "Xenia 0a1b2c3 is out (2026-11-30)" in window.output.toPlainText()
+    assert window.install_pill.isEnabled() is False                                # it never installs that one
+    window.close()
+
+
+def test_the_log_tab(qapp, folders):
+    """What the window says goes to the Log tab with the time, after what the log file held already."""
+    folders["log_path"].write_text("07-11-2026 22:14:00 INFO Xenia Manager 2.2.0 started\n")
+    window = _window(folders)
+    assert window.output.toPlainText().splitlines() == ["07-11-2026 22:14:00 INFO Xenia Manager 2.2.0 started"]
+    window.say("Steam was not changed: no Steam", ok=False)
+    lines = window.output.toPlainText().splitlines()
+    assert lines[-1][:19].count("-") == 2 and lines[-1][10] == " "               # DD-MM-YYYY HH:MM:SS
+    assert lines[-1].endswith(" ERROR Steam was not changed: no Steam") and "c62828" in window.running.styleSheet()
+    assert str(folders["log_path"]) in window.tabs.widget(2).findChildren(QLabel)[0].text()
     window.close()
 
 
 def test_covers_with_the_suites_key(qapp, folders, monkeypatch, tmp_path):
-    """Covers… keeps the suite's key; Update Game Mode then looks up the game by its title and puts
+    """Steam artwork… keeps the suite's key; Update Steam then looks up the game by its title and puts
     SteamGridDB's pictures in place of all four drawn ones, and a game in Steam not looked up yet makes the button do
     something again."""
     import json
@@ -346,18 +390,14 @@ def test_remove_game_asks_what_to_keep(qapp, folders, monkeypatch, tmp_path):
     window.close()
 
 
-def test_the_settings_window(qapp, folders, monkeypatch, tmp_path):
-    """Settings… opens Xenia's settings in the app (core's settings_page): Xenia's defaults while there is no file,
-    a change written into Xenia's own folder at once, and nothing while Xenia runs."""
-    from bc250_core.settings_page import SettingsDialog
+def test_the_settings_tab(qapp, folders, tmp_path):
+    """The Settings tab holds Xenia's settings in the app (core's settings_page): Xenia's defaults while there is no
+    file, a change written into Xenia's own folder at once, and nothing while Xenia runs."""
     xenia_home = tmp_path / "Xenia"
     running = [False]
     window = _window(folders, xenia_home=xenia_home, xenia_running=lambda: running[0])
-    opened = []
-    monkeypatch.setattr(SettingsDialog, "exec", lambda dialog: opened.append(dialog))
-    window.settings_button.click()
-    page = opened[0].page
-    assert opened[0].windowTitle() == "Xenia settings" and page.widgets["gpu"].currentText() == "Automatic (Vulkan)"
+    page = window.settings_page
+    assert window.tabs.widget(1) is page and page.widgets["gpu"].currentText() == "Automatic (Vulkan)"
     assert page.widgets["letterbox"].isChecked() and page.widgets["license"].currentData() == "0"
     page.widgets["scale"].setCurrentIndex(page.widgets["scale"].findData("2"))
     text = (xenia_home / emulator.CONFIG).read_text()

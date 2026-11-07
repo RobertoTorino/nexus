@@ -19,7 +19,7 @@ appearing in the portal.
 
 - `apps/<name>/`: check, gpu, upscaler, compute, cores, oc, acpi,
   overlay, ips35, hdcam, hdcontrol, bios, ace, mesh, vram, fan, wdriver, cec, sftp, consoles, clb, shadps4, rpcs3,
-  ppsspp, pcsx2, vita3k, xenia, decky, package, ncgui, datstation, ssd. Each has its
+  ppsspp, pcsx2, vita3k, xenia, decky, ncgui, datstation, ssd. Each has its
   own VERSION, CHANGELOG, LICENSE (acpi is MIT; consoles is AGPL-3.0, its protocol code ported from
   chiaki-ng: those files AGPL-3.0-only, its own AGPL-3.0-or-later; ncgui is GPL-2.0-only, a port of NetcatGUI; clb
   (Console LinkB, XBOX) is GPL-3.0-or-later with protocol code ported from Greenlight and xal-node, MIT, whose notice
@@ -28,14 +28,15 @@ appearing in the portal.
   gaming, utilities): the portal, one fullscreen view for the keyboard, the mouse and a controller (owner,
   01-11-2026: Suite Desktop Mode is gone), shows a category strip with the notice of updates beside it and check
   as the first tile on Sustainable (owner, 20-10-2026). There is no Development category
-  (owner, 27-10-2026): the portal lists only released apps, and the Dependency Checker and Bazzite NetcatGUI are
-  on Utilities. The tools for working on the suite are Nexus's (owner, 02-11-2026), in `../dev/`, each with
-  `.checkout-only`: they run from the checkout, are never released and are in no portal. Nexus Dashboard
+  (owner, 27-10-2026): the portal lists only released apps, and Bazzite NetcatGUI is on Utilities. The tools for
+  working on the suite are Nexus's (owner, 02-11-2026), in `../dev/`, each with `.checkout-only`: they run from the checkout, are never released and are in no portal. Nexus Dashboard
   (`../dev/dash/`) opens them all: Nexus Release Tool (the release front end), Nexus Installer Tests (this suite's
   `tools/installer-tests/*.sh` one at a time; it was BC-250 Installer Tests in `tools/installer-tests/gui`), Nexus
   Demo Recorder (a portal installation recorded with OBS; it was the OBS part of Media Tool, `apps/mtool`, which is
   gone from the suite: Breaking in the portal's CHANGELOG), Nexus Sound Lab (short sound effects for the windows,
-  from sliders), the video tours and the icons. Their manuals are on
+  from sliders), Nexus Deps (this suite's packages and tools on the machine, with Fix; it was the suite's
+  Dependency Checker, `apps/package`, until 07-11-2026, and its catalog of this suite is
+  `../dev/deps/nexus_deps/catalogs/bc250-bazzite.toml`), the video tours and the icons. Their manuals are on
   the Nexus page. A portal that runs from the checkout, or was
   installed from one, installs the released apps from that checkout's source (the checkout it records is the
   repository, the suite's folder in it `bc250-bazzite/`, `SUITE_DIR`): that is how a release is tried on a board
@@ -102,11 +103,13 @@ appearing in the portal.
 - **The Bazzite design** (owner, 25-10-2026: a design per system): this suite keeps the Bazzite design (purple, the
   apps' theme and the wiki's). Never carry another system's design over to it, nor its design to another system.
 - **Scope is the suite, not Bazzite.** We answer for the portal and its apps, not for Bazzite itself. A system-wide
-  Bazzite package is in scope only where one of our apps uses it (the Dependency Checker lists it then); its
-  updates and security fixes are Bazzite's. Our own code, and the Python packages in our apps' environments, are
-  ours. One exception (owner, 15-10-2026): the Dependency Checker shows Bazzite's update state (the running image,
-  an update waiting for a reboot, uupd's last run) and reminds weekly when one waits; it only reads it, and
-  updating stays Bazzite's.
+  Bazzite package is in scope only where one of our apps uses it (Nexus Deps lists it then); its updates and
+  security fixes are Bazzite's. Our own code, and the Python packages in our apps' environments, are ours. One
+  exception (owner, 15-10-2026): Nexus Deps shows Bazzite's update state (the running image, an update waiting for
+  a reboot, uupd's last run) and reminds weekly when one waits; it only reads it, and updating stays Bazzite's.
+  Its Fix (owner, 07-11-2026) installs what an installed app needs and lacks, after it lists the commands and asks:
+  Python packages with pip, a missing tool with Homebrew, else layered with rpm-ostree (active after a restart,
+  which it advises and never does).
 - **chiaki-ng is named only where licensing needs it:** Console Link's LICENSE, the License sections of its README
   and manual chapter, the suite's license overview (README, docs/index.md) and this file. Everywhere else (code,
   comments, tests, vectors, log messages, the manual, CHANGELOGs, MIGRATION.md) it is "the reference" (the reference

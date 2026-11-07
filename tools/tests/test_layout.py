@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Every app of every suite has the same layout: its Python package(s) and images/ directly in <suite>/apps/<name>/, no
 wrapper folder; the Nexus apps in dev/<name>/ (Nexus Dashboard, Nexus Release Tool, Nexus Demo Recorder, Nexus
-Installer Tests) the same."""
+Installer Tests, Nexus Sound Lab, Nexus Deps) the same."""
 
 from __future__ import annotations
 

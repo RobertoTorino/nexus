@@ -2,9 +2,48 @@ Changelog: 07-11-2026 20:38:19
 
 Release 1.58.0. Brings wp-portal-v10.3.0.
 
+Changelog: 07-11-2026 20:28:10
+
+Fixed. Five files at the root of the repository are gone, all copied in for reference with commit 15961eab: s.cpp,
+r.cpp, rpcs3_main.cpp and ppsspp_native.cpp, the start-up code of shadPS4, RPCS3 and PPSSPP, and tree.json, a
+listing of PPSSPP's files from GitHub. Nothing in Nexus builds or reads them.
+
 Changelog: 07-11-2026 19:27:38
 
 Release 1.57.0. Brings wp-portal-v10.2.0.
+
+Changelog: 07-11-2026 19:13:44
+
+Added. Nexus Deps (dev/deps), the BC250 Bazzite Suite's Dependency Checker made a Nexus app with Fix and a weekly
+notification that asks (owner, 07-11-2026): ci-nexus.yml tests it, tools/make_icons.py writes its icons,
+tools/new_app.py adds a new app to its catalog of the suite (dev/deps/nexus_deps/catalogs/<suite>.toml),
+bc250-bazzite/tools/installer-tests/deps.sh tests its installer. The Nexus page's Dashboard chapter has its manual
+(Deps), and The development machine says what its reminder is. CLAUDE.md and the suite's CLAUDE.md name it.
+
+Changelog: 07-11-2026 19:13:44
+
+Breaking. The BC250 Bazzite Suite: the Dependency Checker (apps/package) is gone from the suite, its wiki chapter,
+its installer test, its icon in icons/categories.toml and its tile picture with it. The wiki's Security, Privacy,
+DatStation and Architecture pages name Nexus Deps on the Nexus page instead, and the portal chapter's paragraph on
+the checker is gone. The categories table's Utilities row names only the suite's apps.
+
+Changelog: 07-11-2026 18:41:30
+
+Fixed. DESIGN.md: the thin border of every tooltip is the silver outline, never the accent (owner, 07-11-2026).
+
+Changelog: 07-11-2026 18:40:02
+
+Fixed. The License paragraphs of the Windows Portable Suite's README and wiki Home page: none of the suite's sounds were
+made with generative AI tools. The portal's intro sound (intro.wav, the BC250 portal's) is made by code; the portal's
+sound on a controller action and DatStation's quiz music (sea_breeze.ogg) were made by the owner in Audacity. Only the
+icons and pictures and the music of the video tours were made with generative AI tools.
+
+Changelog: 07-11-2026 18:33:41
+
+Fixed. The License paragraphs of the BC250 Bazzite Suite's README and wiki Home page: none of the suite's sounds were
+made with generative AI tools. The portal's intro sound is made by its own code (tools/make_portal_sounds.py); the
+portal's sound on a controller action and DatStation's quiz music (sea_breeze.ogg) were made by the owner in Audacity.
+Only the icons and the music of the video tours were made with generative AI tools.
 
 Changelog: 07-11-2026 17:15:31
 

@@ -34,7 +34,7 @@ category's icon (`icons/<category>/`, at 1024, 512, 256 and 128 px) to these pla
 | <img src="bc250-bazzite/icons/gaming/gaming-128.png" width="64" alt=""> | Gaming | RPCS3 Manager (`rpcs3`)<br>Console Link (`consoles`)<br>Console LinkB (`clb`)<br>shadPS4 Manager (`shadps4`)<br>Decky Loader Manager (`decky`)<br>Bazzite DatStation (`datstation`)<br>PPSSPP Manager (`ppsspp`)<br>PCSX2 Manager (`pcsx2`)<br>Xenia Manager (`xenia`)<br>Vita3K Manager (`vita3k`) |
 | <img src="bc250-bazzite/icons/graphics/graphics-128.png" width="64" alt=""> | Graphics | BC-250 Upscaler Manager (`upscaler`)<br>BC-250 ACE Queues (`ace`)<br>BC-250 Mesh Shaders (`mesh`) |
 | <img src="bc250-bazzite/icons/sustainable/sustainable-128.png" width="64" alt=""> | Sustainable | BC-250 Bazzite Test (`check`)<br>BC-250 GPU Manager (`gpu`)<br>BC-250 CU Bisect (`compute`)<br>CU Unlock (the CU Bisect app's Unlock) (`cu-unlock`)<br>BC-250 Cores Bisect (`cores`)<br>Cores Unlock (the Cores Bisect app's Unlock) (`cores-unlock`)<br>BC-250 GPU OC Bisect (`oc`)<br>BC-250 Persistent ACPI (`acpi`)<br>BC-250 Memory Manager (`vram`)<br>BC-250 Fan Control (`fan`) |
-| <img src="bc250-bazzite/icons/utilities/utilities-128.png" width="64" alt=""> | Utilities | System Overlay (`overlay`)<br>BC-250 BIOS Reader (`bios`)<br>BC-250 USB Wi-Fi (`wdriver`)<br>HDMI CEC Manager (`cec`)<br>Bazzite SFTP Tools (`sftp`)<br>USB IPS3.5 (`ips35`)<br>USB HD Cam (`hdcam`)<br>USB HD Control (`hdcontrol`)<br>Dependency Checker (`package`)<br>Bazzite NetcatGUI (`ncgui`)<br>SSD Check (`ssd`) |
+| <img src="bc250-bazzite/icons/utilities/utilities-128.png" width="64" alt=""> | Utilities | System Overlay (`overlay`)<br>BC-250 BIOS Reader (`bios`)<br>BC-250 USB Wi-Fi (`wdriver`)<br>HDMI CEC Manager (`cec`)<br>Bazzite SFTP Tools (`sftp`)<br>USB IPS3.5 (`ips35`)<br>USB HD Cam (`hdcam`)<br>USB HD Control (`hdcontrol`)<br>Bazzite NetcatGUI (`ncgui`)<br>SSD Check (`ssd`) |
 
 ### The portal's symbols
 
@@ -65,8 +65,8 @@ Qt's Fusion style draws them.
 | Icon | Name | Used for |
 | --- | --- | --- |
 | <img src="bc250-bazzite/docs/design/icons/qt-warning.png" width="48" alt=""> | `SP_MessageBoxWarning` | BC-250 Bazzite Test: a warning in the results; the warning before a run. |
-| <img src="bc250-bazzite/docs/design/icons/qt-information.png" width="48" alt=""> | `SP_MessageBoxInformation` | BC-250 Bazzite Test: an info result. Dependency Checker: the About button. |
-| <img src="bc250-bazzite/docs/design/icons/qt-reload.png" width="48" alt=""> | `view-refresh`, else `SP_BrowserReload` | Dependency Checker: the Check button. |
+| <img src="bc250-bazzite/docs/design/icons/qt-information.png" width="48" alt=""> | `SP_MessageBoxInformation` | BC-250 Bazzite Test: an info result. Nexus Deps: the About button. |
+| <img src="bc250-bazzite/docs/design/icons/qt-reload.png" width="48" alt=""> | `view-refresh`, else `SP_BrowserReload` | Nexus Deps: the Check button. |
 
 ### Material Design icons in the wiki
 
@@ -112,7 +112,7 @@ Characters of the font, used as icons in labels and buttons.
 | △ □ ✕ ○ | USB HD Control | The face buttons. |
 | ↓ ↑ | USB IPS3.5 | The network tile: download and upload. |
 | ↓ ↑ | System Overlay | Network: download and upload. |
-| ✓ ✗ | Dependency Checker | CVE: none found, found. |
+| ✓ ✗ | Nexus Deps | CVE: none found, found. |
 | ⚠ ✓ ✗ | Bazzite SFTP Tools | Password: a warning, requirements met, not met. |
 | ← ↑ ↓ | Bazzite SFTP Tools | Download; uploads and downloads in the transfer queue. |
 | ↑ ↓ | Nexus Release Tool | Earlier commands, in the command line's placeholder. |
@@ -212,7 +212,7 @@ Drawn by MkDocs Material in the wiki's colors.
 | <img src="nexus/images/nexus-256.png" width="48" alt=""> | `nexus/images/nexus-<size>.png` (1024, 512, 256 and 128 px) | The icon of Nexus, the owner's drawing (25-10-2026): the set the copies are made from. |
 | <img src="nexus/docs/images/nexus.webp" width="48" alt=""> | `nexus/docs/images/nexus.webp`, `.png` (256 px) | The Nexus page's header logo and its home page's footer (`.webp`), and its favicon (`.png`): the 256 px drawing, transparent (owner, 27-10-2026: no more dark tile), both written by this tool. |
 | <img src="nexus/docs/images/nexus-hero.webp" width="48" alt=""> | `nexus/docs/images/nexus-hero.webp` (1024 px) | The Nexus page's home: the icon under the headline, a WebP copy of the 1024 px drawing. |
-| <img src="dev/nrt/images/nexus-release-tool.webp" width="48" alt=""> | `dev/<name>/images/<app id>.webp` (512 px), `-128.png` | The Nexus apps (owner, 26-10-2026: a Nexus app takes Nexus's icon, not a category's): Nexus Dashboard (`dev/dash`), Nexus Release Tool (`dev/nrt`), Nexus Demo Recorder (`dev/demo`), Nexus Installer Tests (`dev/itests`) and Nexus Sound Lab (`dev/sounds`), each its window header and window icon, its menu entry and Desktop icon. Lossless copies of the drawing, written by this tool. |
+| <img src="dev/nrt/images/nexus-release-tool.webp" width="48" alt=""> | `dev/<name>/images/<app id>.webp` (512 px), `-128.png` | The Nexus apps (owner, 26-10-2026: a Nexus app takes Nexus's icon, not a category's): Nexus Dashboard (`dev/dash`), Nexus Release Tool (`dev/nrt`), Nexus Demo Recorder (`dev/demo`), Nexus Installer Tests (`dev/itests`), Nexus Sound Lab (`dev/sounds`) and Nexus Deps (`dev/deps`), each its window header and window icon, its menu entry and Desktop icon. Lossless copies of the drawing, written by this tool. |
 
 ### Material Design icons on the Nexus page
 

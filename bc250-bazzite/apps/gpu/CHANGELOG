@@ -1,3 +1,8 @@
+Changelog: 07-11-2026 18:41:30
+
+Fixed. The tooltips are framed in the silver outline, as the borders under the mouse are, not in the accent (owner,
+07-11-2026).
+
 Changelog: 06-11-2026 10:25:36
 
 Release 0.5.0.
