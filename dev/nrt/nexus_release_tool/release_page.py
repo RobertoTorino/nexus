@@ -238,7 +238,8 @@ class ReleasePage(QWidget):
             behind=rp.behind(root, base) or int(flow.pushed_elsewhere(root, runs) is not None), dirty=unstaged or staged, ahead=ahead,
             ci=flow.ci_state(runs, head, window.ticker.hidden) if window.build.source is not None else "unknown",
             unpushed=flow.unpushed_release(root, base), something=bool(self.picks), run=run,
-            drafts=[t for t in flow.waiting_portals(root, suite) if not flow.published(root, runs, t)] if run else [],
+            drafts=[t for t in flow.waiting_portals(root, suite, run.sha) if not flow.published(root, runs, t)]
+            if run else [],
             restart=run is not None and run.sha != head, rejected=self.rejected(run))
 
     def rejected(self, run: rp.BuildRun | None) -> list[str]:

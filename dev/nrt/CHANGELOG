@@ -1,3 +1,11 @@
+Changelog: 07-11-2026 17:08:25
+
+Fixed. With the portal's version raised in a commit after its release was published, the steps showed the release
+on GitHub done and lit Device test for a draft no run had built (owner, 07-11-2026: wp-portal-v10.1.0 after the
+10.0.0 release; the device test downloaded nothing and the portal never showed). The draft a release run leaves is
+now read from portal/VERSION at the run's own commit, not the checkout's, so that release counts as over and Start
+new release is the step to do.
+
 Changelog: 06-11-2026 10:55:45
 
 Added. Run again in the workflow ticker (owner, 06-11-2026): while a run of the newest push has failed, it starts that

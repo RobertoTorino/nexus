@@ -410,7 +410,8 @@ def cycle_run(root: Path, runs: list[rp.BuildRun], rejected: Iterable[str] = (),
     subjects = (rp.git(root, "log", "--format=%s", f"{run.sha}..HEAD") or "").splitlines()
     if all(s.startswith("Pin ") for s in subjects if s.strip()):
         return run
-    waiting = [t for t in waiting_portals(root, suite) if not published(root, runs, t) and t not in set(rejected)]
+    waiting = [t for t in waiting_portals(root, suite, run.sha) if not published(root, runs, t)
+               and t not in set(rejected)]
     return run if run.passed and waiting else None
 
 
@@ -498,12 +499,23 @@ def commit_work_command(root: Path, message: str, base: str, python: str) -> str
                                                         rp.manifest_checks(root, touched), rp.version_checks(touched))
 
 
-def waiting_portals(root: Path, only: str | None = None) -> list[str]:
+def waiting_portals(root: Path, only: str | None = None, at: str = "") -> list[str]:
     """The portal tag of the suite *only* (each suite on the Nexus release for None), as portal/VERSION says: what a device
-    test and Publish work on after a release ran (a draft until published)."""
-    return [f"{rp.tag_prefix(root, suite)}portal-v"
-            f"{(rp.suite_dir(root, suite) / 'portal' / 'VERSION').read_text(encoding='utf-8').strip()}"
-            for suite in chosen_suites(root, only)]
+    test and Publish work on after a release ran (a draft until published). *at*: as the release run's own commit has
+    it, not the checkout (owner, 07-11-2026: the portal's version raised in a commit after a published release made
+    NRT offer the device test of a draft no run had built, instead of Start new release)."""
+    return [f"{rp.tag_prefix(root, suite)}portal-v{portal_version(root, suite, at)}" for suite in chosen_suites(root, only)]
+
+
+def portal_version(root: Path, suite: str, at: str = "") -> str:
+    """The suite's portal/VERSION in the checkout, or at commit *at* when given (the checkout's when that commit has
+    none)."""
+    path = rp.suite_dir(root, suite) / "portal" / "VERSION"
+    if at:
+        kept = rp.git(root, "show", f"{at}:{path.relative_to(root).as_posix()}")
+        if kept is not None:
+            return kept.strip()
+    return path.read_text(encoding="utf-8").strip()
 
 
 def portal_suite(root: Path, tag: str) -> str | None:

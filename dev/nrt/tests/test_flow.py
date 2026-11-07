@@ -481,15 +481,30 @@ def test_the_release_run_lasts_until_other_work_is_committed(nexus):
 def test_a_release_with_a_draft_to_test_lasts_with_other_work_on_top(nexus):
     """Other work pushed before a portal draft's device test (owner, 04-11-2026: the Windows portal's, after a fix
     to the board's): the release lasts until the draft is published or Not OK, so Start never replaces it."""
+    write(nexus / "wp/portal/VERSION", "1.1.0\n")                  # what the release wrote: wp-portal-v1.1.0, a draft
+    sh(nexus, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "-am", "Release wp-portal-v1.1.0")
     head = sh(nexus, "rev-parse", "HEAD").strip()
     run = _run(head)
-    write(nexus / "wp/portal/VERSION", "1.1.0\n")                  # what the release wrote: wp-portal-v1.1.0, a draft
-    sh(nexus, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "-am", "Other work")
+    sh(nexus, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "--allow-empty", "-m", "Other work")
     assert flow.cycle_run(nexus, [run]) is run
     assert flow.cycle_run(nexus, [run], ["wp-portal-v1.1.0"]) is None      # Not OK: a new release may replace it
     assert flow.cycle_run(nexus, [_run(head, conclusion="failure")]) is not None   # a failed run lasted already
     sh(nexus, "tag", "wp-portal-v1.1.0")                             # published: its tag fetched
     assert flow.cycle_run(nexus, [run]) is None
+
+
+def test_a_portal_version_raised_after_a_published_release_is_the_next_release(nexus):
+    """The portal's version raised in a commit after its release was published (owner, 07-11-2026: NRT showed the
+    release on GitHub done and offered the device test of wp-portal-v10.1.0, a draft no run had built): the run's
+    own portal is out, so that release is over and Start new release is next; the draft is read at the run's commit."""
+    head = sh(nexus, "rev-parse", "HEAD").strip()
+    run = _run(head)
+    assert flow.published(nexus, [], "wp-portal-v1.0.0")              # the run's portal, published (the fixture's tag)
+    write(nexus / "wp/portal/VERSION", "1.1.0\n")
+    sh(nexus, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "-am", "Other work")
+    assert flow.waiting_portals(nexus, "wp") == ["wp-portal-v1.1.0"]          # the checkout's: the next release
+    assert flow.waiting_portals(nexus, "wp", head) == ["wp-portal-v1.0.0"]    # the run's own
+    assert flow.cycle_run(nexus, [run], suite="wp") is None
 
 
 def test_a_push_git_has_not_fetched_lights_the_pull(release_window, monkeypatch):
@@ -503,7 +518,7 @@ def test_a_push_git_has_not_fetched_lights_the_pull(release_window, monkeypatch)
     pin = _run("f" * 40, "ci.yml", "CI")
     assert flow.pushed_elsewhere(w.root, [pin, release]) is pin
     monkeypatch.setattr(w.build, "runs", [pin, release])
-    monkeypatch.setattr(flow, "waiting_portals", lambda root, only=None: [])
+    monkeypatch.setattr(flow, "waiting_portals", lambda root, only=None, at="": [])
     page.show_state()
     assert page.facts.behind == 1 and flow.current_step(page.facts) == "finish"
     assert page.finish_button.isEnabled()
@@ -538,7 +553,7 @@ def test_the_portal_choice_holds_only_the_drafts(release_window, monkeypatch):
     portal-v15.2.0, so Publish published it again): only the draft is left, and the line says where it is tested."""
     w = release_window
     page = w.release_page
-    monkeypatch.setattr(flow, "waiting_portals", lambda root, only=None: ["wp-portal-v1.0.0"])
+    monkeypatch.setattr(flow, "waiting_portals", lambda root, only=None, at="": ["wp-portal-v1.0.0"])
     monkeypatch.setattr(flow, "published", lambda root, runs, tag: False)
     monkeypatch.setattr("nexus_release_tool.release_page.rp.tests_here", lambda *a: False)    # not its device
     w.build.runs = [_run(sh(w.root, "rev-parse", "HEAD").strip())]
