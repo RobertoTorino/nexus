@@ -40,3 +40,4 @@ $RECYCLE.BIN/
 # Windows' NUL device written as a real file by a Git Bash command meant for cmd (podman machine ssh's known-hosts
 # file): git cannot add it, "unable to index file 'NUL'" (06-11-2026)
 NUL
+*.dmp
