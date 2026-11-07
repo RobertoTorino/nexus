@@ -1,3 +1,7 @@
+Changelog: 07-11-2026 20:38:16
+
+Release 10.3.0.
+
 Changelog: 07-11-2026 20:16:19
 
 Added. The buttons on the line of the tabs are icons now, the line had no room for their names: Steam, XBOX and Armoury Crate show their programs' own icons, read from the device at the start (an app's Start-menu logo from its package, Steam's from steam.exe), and Command Center the suite's own sliders, as ASUS gives it Armoury Crate's icon. The mouse over one shows its name; the row at the bottom says what A does with it (A Start XBOX). A program that is not on the device shows its initials. Installed x/y stays beside the update banner.
