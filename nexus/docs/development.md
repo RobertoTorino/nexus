@@ -18,8 +18,8 @@ core/bc250_core/              shared Python package, every suite's; bundled into
 tools/                        the Nexus tools: release and CI (build_release, stage_app, check_versions,
                               check_changelogs, tag-release.sh, release.sh, ci-local.sh, pre-push.sh, git-setup.sh,
                               merge_changelog, nexus_index), dev_versions (the dev/ apps' versions),
-                              new_app, the design and icon catalogs, sync_icons (a suite's category icons), the
-                              tours, the design panel
+                              new_app, features (the Apps and features chapter), the design and icon catalogs,
+                              sync_icons (a suite's category icons), the tours, the design panel
 dev/<name>/                   the Nexus development apps, run from the checkout: dev/dash/ is Nexus Dashboard (the
                               door to the others), dev/nrt/ Nexus Release Tool, dev/demo/ Nexus Demo Recorder,
                               dev/itests/ Nexus Installer Tests, dev/sounds/ Nexus Sound Lab
@@ -60,6 +60,23 @@ over with what the app does:
 ```powershell
 .venv-windows\Scripts\python.exe tools\new_app.py windows-portable pcsx2 "PCSX2 Manager" --category gaming --summary "What it does."
 ```
+
+### Apps and features
+
+The [Apps and features](features.md) chapter is written by `tools/features.py` from `nexus/features.toml`: every
+suite as a column, every app as a family that names its folder in each suite that has it (DatStation is
+`datstation` in the Bazzite suites and `datstat` in the Windows Portable Suite), and its features in a few words,
+each marked with the suites that have it. The apps' names and categories come from each suite's `portal/apps.toml`.
+A change to what an app does changes its features in the same change; then write the chapter again:
+
+```bash
+python3 tools/features.py            # writes nexus/docs/features.md
+python3 tools/features.py --check    # what CI runs: every app in a family, the chapter current
+```
+
+A feature is `<Area>: <what it does>`, at most a short line, for the person using the app. Write a feature the suites
+share in the same words, so it is one row with a mark for each. `tools/new_app.py` adds a new app as a family of its
+own, its summary its first feature; when it is another suite's app made for this one, move it into that family.
 
 ## bc250_core
 

@@ -1,3 +1,13 @@
+Changelog: 07-11-2026 20:44:09
+
+Added. The Nexus page has an Apps and features chapter (owner, 07-11-2026: one short matrix to cross-reference the
+suites): every app of the three suites side by side, each linked to its wiki chapter, and per app its features in a
+few words with a mark for each suite that has it, the portals included. tools/features.py writes it from
+nexus/features.toml, where every app is a family that names its folder in each suite; --check fails while an app of a
+suite's portal/apps.toml is in no family, a family names an app that is not there, or the chapter is not current
+(tools/tests/test_features.py, in CI). tools/new_app.py adds a new app as a family of its own. The Development
+chapter says how to keep it up to date.
+
 Changelog: 07-11-2026 20:38:19
 
 Release 1.58.0. Brings wp-portal-v10.3.0.

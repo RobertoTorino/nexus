@@ -106,6 +106,8 @@ Control your PlayStation 5 running Bazzite. [Its wiki](bazzite-console-suite/).
 </div>
 </div>
 
+Every app of the suites side by side, with what each one does in which suite: [Apps and features](features.md).
+
 </div>
 </section>
 

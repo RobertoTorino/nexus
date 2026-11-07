@@ -8,6 +8,7 @@ import importlib.util
 import shutil
 import subprocess
 import sys
+import tomllib
 from pathlib import Path
 
 import pytest
@@ -187,6 +188,27 @@ def test_defaults():
                                                                    "bc250", "bc250_core")
     assert suite.wiki == "https://robertotorino.github.io/nexus/bc250-bazzite-suite/"
     assert suite.categories == ("sustainable", "graphics", "gaming", "utilities")      # no Development tab
+
+
+def test_lists_the_app_in_the_nexus_features(checkout):
+    """With nexus/features.toml in the checkout, the app is a family of its own there, its summary its feature, and
+    the Nexus page's Apps and features chapter is written again (tools/features.py --check passes)."""
+    apps = tomllib.loads(MANIFEST)["apps"]
+    families = "".join(f'\n[[family]]\nname = "{key}"\napps = {{ {SUITE} = "{key}" }}\nfeatures = [{{ text = "x" }}]\n'
+                       for key in apps)
+    write(checkout / "nexus" / "features.toml",
+          f'[suites.{SUITE}]\nname = "BC250 Bazzite Suite"\nshort = "BC250"\nwiki = "https://example.org/"\n'
+          f'\n[[family]]\nname = "Portal"\napps = {{ {SUITE} = "portal" }}\nfeatures = [{{ text = "x" }}]\n'
+          + families)
+    assert na.main([SUITE, "fan2", "BC-250 Fan Two", "--summary", "A second fan.", "--no-check", "--root",
+                    str(checkout)]) == 0
+    data = (checkout / "nexus" / "features.toml").read_text()
+    assert data.endswith('[[family]]\nname = "Fan Two"\napps = { bc250-bazzite = "fan2" }\n'
+                         'features = [\n  { text = "A second fan." },\n]\n')
+    page = (checkout / "nexus" / "docs" / "features.md").read_text()
+    assert "| [Fan Two](#fan-two) | [BC-250 Fan Two](https://example.org/apps/fan2/) |" in page
+    features = na._load("test_new_app_features", ROOT / "tools" / "features.py")     # a dataclass: in sys.modules
+    assert features.main(["--check", "--root", str(checkout)]) == 0
 
 
 def test_writes_the_app_and_lists_it_everywhere(checkout, capsys):

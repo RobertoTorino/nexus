@@ -64,6 +64,7 @@ validation:
     anchors: warn
 nav:
   - Home: index.md
+  - Apps and features: features.md
   - Releases: releases.md
   - Dashboard: dashboard.md
   - Development: development.md

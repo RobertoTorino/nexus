@@ -52,7 +52,9 @@ The root keeps what is Nexus's:
   checkout: the pre-push hook and `merge_changelog.py`, git's merge driver for the CHANGELOGs, which merges two
   machines' new entries by entry; owner, 01-11-2026), `fix-modes.sh`, `dev_versions.py` (the dev/ apps' versions),
   `backlog.py`, `nexus_index.py` (GitHub's Latest release: the Nexus index, every suite's newest portal),
-  `dev-updates.sh`, `dev-backup.sh`), `new_app.py` (a new app of a suite from the architecture chapter, listed
+  `dev-updates.sh`, `dev-backup.sh`), `features.py` (the Nexus page's Apps and features chapter from
+  `nexus/features.toml`: every app of every suite and its features, a mark per suite; its test fails while an app
+  is in no family or the chapter is stale), `new_app.py` (a new app of a suite from the architecture chapter, listed
   everywhere the suite lists its apps, with the checks run on it), the design and icon catalogs (`make_design.py`, `make_icons.py`, `apply_design.py`),
   `sync_icons.py` (a suite's category icons and their copies in its apps; owner, 02-11-2026: a Nexus tool, the
   BC250 suite's before), the tours

@@ -1,0 +1,572 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# The apps and their features across the suites: the source of the Nexus page's Apps and features chapter
+# (nexus/docs/features.md), which tools/features.py writes from it. Run that tool after every change here;
+# tools/tests/test_features.py fails while the chapter is not current, an app of a suite's portal/apps.toml is in no
+# family, or a family names an app that is not there.
+#
+# [suites.<folder>]   a column: the suite's name, the short name over its column, its wiki's address
+# [[family]]          one app across the suites, in the portals' category order (the portal first)
+#   name              the row's name
+#   apps              suite folder -> the app's folder in it ("portal" for the suite's portal)
+#   features          a few words each, "<Area>: <what it does>", for the person using the app; no status or plans.
+#                     `in` lists the suites that have it; without `in`, every suite of the family has it.
+#                     Write a feature the suites share in the same words, so it is one row.
+
+[suites.bc250-bazzite]
+name = "BC250 Bazzite Suite"
+short = "BC250"
+wiki = "https://robertotorino.github.io/nexus/bc250-bazzite-suite/"
+
+[suites.bazzite-console]
+name = "Bazzite Console Suite"
+short = "Console"
+wiki = "https://robertotorino.github.io/nexus/bazzite-console-suite/"
+
+[suites.windows-portable]
+name = "Windows Portable Suite"
+short = "Portable"
+wiki = "https://robertotorino.github.io/nexus/windows-portable-suite/"
+
+[[family]]
+name = "Portal"
+apps = { bc250-bazzite = "portal", bazzite-console = "portal", windows-portable = "portal" }
+features = [
+  { text = "Apps: tiles by category; install, open, update, remove" },
+  { text = "Apps: checksum-checked installs from GitHub releases" },
+  { text = "Apps: install all missing apps or updates at once", in = ["bc250-bazzite", "bazzite-console"] },
+  { text = "Updates: flag apps needing an update or reinstall" },
+  { text = "Updates: update the portal itself from a banner" },
+  { text = "Updates: flag newer programs outside the suite", in = ["bc250-bazzite", "bazzite-console"] },
+  { text = "Media: open streaming sites and apps full screen", in = ["bazzite-console"] },
+  { text = "Sys info: show and copy the system's details", in = ["bc250-bazzite", "bazzite-console"] },
+  { text = "Header: live CPU and GPU, date and time" },
+  { text = "Settings: wallpaper, transparency and sound" },
+  { text = "Settings: clock format, time zone and weather place" },
+  { text = "Settings: theme, Desktop icons and touchpad speed", in = ["bc250-bazzite", "bazzite-console"] },
+  { text = "Settings: performance mode, screens and XBOX mode", in = ["windows-portable"] },
+  { text = "Steam: open its Big Picture library with RT", in = ["windows-portable"] },
+]
+
+[[family]]
+name = "Test"
+apps = { bc250-bazzite = "check", bazzite-console = "bazzite", windows-portable = "test" }
+features = [
+  { text = "System: show the OS version, read again on demand" },
+  { text = "Hardware: list CPU, GPU, memory, storage, screen", in = ["bc250-bazzite", "windows-portable"] },
+  { text = "Hardware: list problem devices and USB devices", in = ["windows-portable"] },
+  { text = "Network: test the Wi-Fi link and internet speed", in = ["bc250-bazzite", "windows-portable"] },
+  { text = "Controller: test buttons, sticks, triggers, lights", in = ["windows-portable"] },
+  { text = "Status line: live CPU, GPU and refresh rate", in = ["bc250-bazzite", "windows-portable"] },
+  { text = "Reports: save a text report of the results", in = ["bc250-bazzite", "windows-portable"] },
+  { text = "Tests: run 50+ board diagnostics with fix hints", in = ["bc250-bazzite"] },
+  { text = "Stress test and benchmark: load and score CPU/GPU", in = ["bc250-bazzite"] },
+  { text = "Disk: measure read, write and SLC cache speed", in = ["bc250-bazzite"] },
+  { text = "History: compare two runs side by side", in = ["bc250-bazzite"] },
+  { text = "Logs: view runs, graph CSVs, clean up", in = ["bc250-bazzite"] },
+  { text = "Game details: record FPS and load while playing", in = ["bc250-bazzite"] },
+  { text = "Results: share a score card as a picture", in = ["bc250-bazzite"] },
+]
+
+[[family]]
+name = "PCSX2 Manager"
+apps = { bc250-bazzite = "pcsx2", bazzite-console = "pcsx2", windows-portable = "pcsx2" }
+features = [
+  { text = "Install: a tested emulator release, checksum checked" },
+  { text = "Install: says when a newer emulator is out", in = ["bc250-bazzite", "bazzite-console"] },
+  { text = "Setup: emulator ready to play, its own updates off" },
+  { text = "BIOS: copied in from the app's folder, removable" },
+  { text = "Games: found in the Games folder and on SD cards and USB drives" },
+  { text = "Games: remove a game, choosing what to keep" },
+  { text = "Steam: add games, with SteamGridDB artwork" },
+  { text = "Steam: follows a game renamed or moved" },
+  { text = "Play: quit a game by holding View, LB and RB", in = ["windows-portable"] },
+  { text = "Play: warns while the device runs hot", in = ["windows-portable"] },
+  { text = "Controller: player 1 and 2, quit with Select + Start" },
+  { text = "Header: controller connected or not", in = ["bc250-bazzite", "bazzite-console"] },
+  { text = "Screen: per game original, widescreen or fill", in = ["bc250-bazzite", "bazzite-console"] },
+  { text = "Settings: picture, game, sound, controller, on screen" },
+  { text = "Sound: shows and unmutes Bazzite's volume for it", in = ["bc250-bazzite", "bazzite-console"] },
+  { text = "Memory cards: list cards and saves, make a new card" },
+  { text = "Memory cards: copy a whole card", in = ["windows-portable"] },
+  { text = "Memory cards: import, export, copy, delete saves", in = ["bc250-bazzite", "bazzite-console"] },
+  { text = "Memory cards: slots, format, check, backups", in = ["bc250-bazzite", "bazzite-console"] },
+  { text = "Play time: the time spent in your games" },
+  { text = "Log: what the app did, and the emulator's last run" },
+]
+
+[[family]]
+name = "PPSSPP Manager"
+apps = { bc250-bazzite = "ppsspp", bazzite-console = "ppsspp", windows-portable = "ppsspp" }
+features = [
+  { text = "Install: a tested emulator release, checksum checked" },
+  { text = "Install: says when a newer emulator is out", in = ["bc250-bazzite", "bazzite-console"] },
+  { text = "Setup: emulator ready to play, its own updates off" },
+  { text = "Games: found in the Games folder and on SD cards and USB drives" },
+  { text = "Games: disc images and memory stick games" },
+  { text = "Games: remove a game, choosing what to keep" },
+  { text = "Games: rename ISO and CSO files after the game", in = ["bc250-bazzite", "bazzite-console"] },
+  { text = "Steam: add games, with SteamGridDB artwork" },
+  { text = "Steam: follows a game renamed or moved" },
+  { text = "Play: quit a game by holding View, LB and RB", in = ["windows-portable"] },
+  { text = "Play: warns while the device runs hot", in = ["windows-portable"] },
+  { text = "Settings: picture, game, sound, controller, on screen" },
+  { text = "Settings: show the battery on screen", in = ["windows-portable"] },
+  { text = "Settings: open the emulator's own window", in = ["bc250-bazzite", "bazzite-console"] },
+  { text = "Log: what the app did" },
+]
+
+[[family]]
+name = "RPCS3 Manager"
+apps = { bc250-bazzite = "rpcs3", bazzite-console = "rpcs3", windows-portable = "rpcs3" }
+features = [
+  { text = "Install: a tested emulator release, checksum checked" },
+  { text = "Install: says when a newer emulator is out", in = ["bc250-bazzite", "bazzite-console"] },
+  { text = "Setup: emulator ready to play, its own updates off" },
+  { text = "Firmware: installed from the app's folder by itself" },
+  { text = "Packages: install games, updates and licenses" },
+  { text = "Packages: delete after install, choosing what to keep", in = ["windows-portable"] },
+  { text = "Games: found in the Games folder and on SD cards and USB drives" },
+  { text = "Games: remove a game, choosing what to keep" },
+  { text = "Steam: add games, with SteamGridDB artwork" },
+  { text = "Steam: follows a game renamed or moved" },
+  { text = "Play: quit a game by holding View, LB and RB", in = ["windows-portable"] },
+  { text = "Play: warns while the device runs hot", in = ["windows-portable"] },
+  { text = "Controller: player 1 set up on your controller" },
+  { text = "Header: controller connected or not", in = ["bc250-bazzite", "bazzite-console"] },
+  { text = "Screen: per game 16:9, 4:3 or fill", in = ["bc250-bazzite", "bazzite-console"] },
+  { text = "Settings: picture, speed, sound, messages" },
+  { text = "Sound: shows and unmutes Bazzite's volume for it", in = ["bc250-bazzite", "bazzite-console"] },
+  { text = "Settings: open the emulator's own window", in = ["bc250-bazzite", "bazzite-console"] },
+  { text = "Play time: the time spent in your games" },
+  { text = "Log: what the app did, firmware and package results" },
+]
+
+[[family]]
+name = "shadPS4 Manager"
+apps = { bc250-bazzite = "shadps4", bazzite-console = "shadps4", windows-portable = "shadps4" }
+features = [
+  { text = "Install: a tested emulator release, checksum checked" },
+  { text = "Install: says when a newer emulator is out", in = ["bc250-bazzite", "bazzite-console"] },
+  { text = "System modules: copied into shadPS4 by themselves" },
+  { text = "Games: found in the Games folder and on SD cards and USB drives" },
+  { text = "Packages: unpack .pkg games and updates, keep or delete" },
+  { text = "Packages: preview, salvage, compare and rename", in = ["bc250-bazzite", "bazzite-console"] },
+  { text = "Games: remove a game with its update and mods" },
+  { text = "Steam: add games, with SteamGridDB artwork" },
+  { text = "Play: quit a game by holding View, LB and RB", in = ["windows-portable"] },
+  { text = "Play: warns while the device runs hot", in = ["windows-portable"] },
+  { text = "Settings: picture, sound, controller and language" },
+  { text = "shadNet: create, test and save an online account" },
+  { text = "Play time: the time spent in your games" },
+  { text = "Log: what the app did" },
+]
+
+[[family]]
+name = "Vita3K Manager"
+apps = { bc250-bazzite = "vita3k", bazzite-console = "vita3k", windows-portable = "vita3k" }
+features = [
+  { text = "Install: a tested emulator release, checksum checked" },
+  { text = "Install: says when a newer emulator is out" },
+  { text = "Firmware: installed from the Firmware folder by itself" },
+  { text = "Games: install .vpk, .zip, a dumped folder or .pkg with zRIF" },
+  { text = "Games: found in the Games folder and on SD cards and USB drives", in = ["windows-portable"] },
+  { text = "Games: updates and DLC installed as a game" },
+  { text = "Games: remove a game with its update and DLC" },
+  { text = "Steam: add games, with SteamGridDB artwork" },
+  { text = "Play: quit a game by holding View, LB and RB", in = ["windows-portable"] },
+  { text = "Play: warns while the device runs hot", in = ["windows-portable"] },
+  { text = "Settings: picture, speed, sound and system" },
+  { text = "Settings: open the emulator's own window", in = ["bc250-bazzite", "bazzite-console"] },
+  { text = "Log: what the app did" },
+]
+
+[[family]]
+name = "Xenia Manager"
+apps = { bc250-bazzite = "xenia", bazzite-console = "xenia", windows-portable = "xenia" }
+features = [
+  { text = "Install: a tested emulator release, checksum checked" },
+  { text = "Install: says when a newer emulator is out" },
+  { text = "Games: found in the Games folder and on SD cards and USB drives" },
+  { text = "Games: ISO, unpacked disc, ZAR, Games on Demand, Arcade" },
+  { text = "Games: remove a game, keeping its add-ons if you like" },
+  { text = "Steam: add games, with SteamGridDB artwork" },
+  { text = "Steam: follows a game renamed or moved" },
+  { text = "Play: quit a game by holding View, LB and RB", in = ["windows-portable"] },
+  { text = "Play: warns while the device runs hot", in = ["windows-portable"] },
+  { text = "Profile: create one, signed in for every game", in = ["windows-portable"] },
+  { text = "Settings: picture, speed, sound and console" },
+  { text = "Settings: open the emulator's own window", in = ["bc250-bazzite", "bazzite-console"] },
+  { text = "Log: what the app did" },
+]
+
+[[family]]
+name = "Decky Loader Manager"
+apps = { bc250-bazzite = "decky", bazzite-console = "decky" }
+features = [
+  { text = "Install: a tested Decky release, checksum checked" },
+  { text = "Install: update, or remove with or without plugins" },
+  { text = "Install: says when a newer Decky release is out" },
+  { text = "Install: finds a Decky installed by ujust or Decky's installer" },
+  { text = "Service: shows whether Decky runs, restart it" },
+  { text = "Service: Decky's log from the system journal" },
+  { text = "Steam: switch Decky's remote debugging on or off" },
+  { text = "Steam Deck plugins: link /home/deck for them" },
+  { text = "Plugins: list with version, author and state" },
+  { text = "Plugins: open the plugins folder" },
+]
+
+[[family]]
+name = "PS Remote Play"
+apps = { bc250-bazzite = "consoles", bazzite-console = "consoles", windows-portable = "rplay" }
+features = [
+  { text = "Find: search the network or one address" },
+  { text = "Register: PIN pairing, account ID via PSN sign-in" },
+  { text = "Console: wake from rest mode, or put it in rest mode" },
+  { text = "Tests: test session and test stream" },
+  { text = "Stream: full-screen picture and sound, controllers play" },
+  { text = "Stream: DualShock 4 and DualSense touchpad, motion, rumble, light bar" },
+  { text = "Stream settings: resolution, fps, bitrate, picture, delay" },
+  { text = "Login passcode: saved per console" },
+  { text = "History: games played and time, per console" },
+  { text = "Steam: add a console as a game, streams on start" },
+  { text = "Controller test: live buttons, drift, genuine or fake", in = ["bc250-bazzite", "bazzite-console"] },
+  { text = "Privacy: personal details masked, shown on request" },
+]
+
+[[family]]
+name = "Console LinkB"
+apps = { bc250-bazzite = "clb", bazzite-console = "clb" }
+features = [
+  { text = "Account: Microsoft sign-in with a code, stays signed in" },
+  { text = "Consoles: list with power state and remote play" },
+  { text = "Consoles: wake an XBOX from sleep" },
+  { text = "Stream: your own XBOX (Remote Play)" },
+  { text = "Cloud games: Game Pass or free-to-play, with search" },
+  { text = "Stream: full screen, sound, controller with rumble" },
+  { text = "Stream: keyboard as a controller" },
+  { text = "Stream: answers a game's dialogs, shows the cloud queue" },
+  { text = "Privacy: log masks tokens, gamertag and IDs" },
+]
+
+[[family]]
+name = "DatStation"
+apps = { bc250-bazzite = "datstation", bazzite-console = "datstation", windows-portable = "datstat" }
+features = [
+  { text = "Quiz: PlayStation quiz against the clock, 12 categories" },
+  { text = "Quiz: quick quiz, pause, skip, music on or off" },
+  { text = "Scores and trophies: top ten rounds and trophies" },
+  { text = "History: every PlayStation console since 1994" },
+  { text = "System versions: every system software release" },
+  { text = "Region codes: title ID prefixes and model regions" },
+  { text = "User guides: Sony's online manuals" },
+  { text = "PS News: PlayStation.Blog feed and store links" },
+  { text = "Steam: add the app to Steam, or take it out" },
+]
+
+[[family]]
+name = "SFTP Tools"
+apps = { bc250-bazzite = "sftp", bazzite-console = "sftp", windows-portable = "sftp" }
+features = [
+  { text = "Connection: password or key, host key check" },
+  { text = "Connection: remembered servers, never a password" },
+  { text = "Files: browse both sides, upload and download folders" },
+  { text = "Files: delete on either side" },
+  { text = "Files: drag and drop to upload", in = ["bc250-bazzite", "bazzite-console"] },
+  { text = "Transfers: queue with progress and speed" },
+  { text = "Settings: speed limit, existing files, compression" },
+  { text = "SSH server: start or stop sshd on the remote host" },
+  { text = "SSH server: view sshd_config", in = ["windows-portable"] },
+  { text = "SSH server: edit and check sshd_config", in = ["bc250-bazzite", "bazzite-console"] },
+  { text = "SSH server: start or stop sshd on this computer", in = ["bc250-bazzite", "bazzite-console"] },
+  { text = "Windows: a build for Windows PCs", in = ["bc250-bazzite"] },
+]
+
+[[family]]
+name = "USB HD Cam"
+apps = { bc250-bazzite = "hdcam", bazzite-console = "hdcam", windows-portable = "hdcam" }
+features = [
+  { text = "Firmware: pinned, checked download or your own file" },
+  { text = "Camera: loads the firmware, a webcam for other apps" },
+  { text = "Access: one-time permission for the boot loader" },
+  { text = "Firmware: loads by itself on plug-in and login", in = ["bc250-bazzite", "bazzite-console"] },
+  { text = "Bandwidth: full or reduced USB bandwidth" },
+  { text = "Picture: preview in every mode, side by side too" },
+  { text = "Picture: keeps auto exposure for a bright picture" },
+  { text = "Picture settings: brightness, white balance, exposure", in = ["bc250-bazzite", "bazzite-console"] },
+  { text = "Full screen: screenshot, record, zoom, black and white" },
+  { text = "PS4 Camera: firmware on Sony's adapter", in = ["bc250-bazzite", "bazzite-console"] },
+]
+
+[[family]]
+name = "USB HD Control"
+apps = { bc250-bazzite = "hdcontrol", bazzite-console = "hdcontrol", windows-portable = "hdcontrol" }
+features = [
+  { text = "Controller: model, connection, battery, report rate" },
+  { text = "Controller: several controllers, one at a time" },
+  { text = "Controller: spec sheet with official sources" },
+  { text = "Test: live drawing of buttons, sticks and triggers" },
+  { text = "Test: vibration and light bar color" },
+  { text = "Firmware: check Sony's server, update over USB" },
+  { text = "Firmware: send a firmware file of your own" },
+  { text = "Profiles: show, back up, create, edit, clear (Edge)" },
+  { text = "Bluetooth: turn a controller off", in = ["bc250-bazzite", "bazzite-console"] },
+  { text = "Bluetooth: switch off when unused", in = ["bc250-bazzite", "bazzite-console"] },
+]
+
+[[family]]
+name = "SSD Check"
+apps = { bc250-bazzite = "ssd", bazzite-console = "ssd", windows-portable = "ssd" }
+features = [
+  { text = "Health: wear, power cycles, power-on hours" },
+  { text = "Health: problems the drive reports" },
+  { text = "Specs: firmware, interface, host reads and writes" },
+  { text = "Speed: link, board link and rated read and write" },
+  { text = "Speed: a 1 GB read and write test" },
+  { text = "Drives: NVMe, SATA and USB, one at a time" },
+  { text = "Drives: memory cards", in = ["windows-portable"] },
+  { text = "Firmware: fwupd says whether an update exists", in = ["bc250-bazzite", "bazzite-console"] },
+  { text = "Serial: hidden, shown on a click", in = ["bc250-bazzite", "bazzite-console"] },
+  { text = "Screenshot: save the window as a PNG" },
+]
+
+[[family]]
+name = "BIOS Reader"
+apps = { bc250-bazzite = "bios", windows-portable = "bios" }
+features = [
+  { text = "Setup screens: every page and menu, read only" },
+  { text = "Setup screens: hidden settings and menus, with reasons" },
+  { text = "Settings: help, default, options and storage place" },
+  { text = "Settings: this device's own values" },
+  { text = "Open: a BIOS dump or the maker's BIOS file" },
+  { text = "BIOS chip: read and verify a flash dump", in = ["bc250-bazzite"] },
+  { text = "Status: stock or modded BIOS", in = ["bc250-bazzite"] },
+  { text = "This device: BIOS version, and the newest from ASUS", in = ["windows-portable"] },
+  { text = "BIOS file: this device's from Windows Update", in = ["windows-portable"] },
+]
+
+[[family]]
+name = "USB screen"
+apps = { bc250-bazzite = "ips35", windows-portable = "smart" }
+features = [
+  { text = "Screens: Turzx 3.5\", 5\" and 7\", found by themselves" },
+  { text = "Values: CPU, GPU, temperatures, RAM, network, disk" },
+  { text = "Values: fan, VRAM, VRM and NVMe temperatures", in = ["bc250-bazzite"] },
+  { text = "Values: power and battery", in = ["windows-portable"] },
+  { text = "Screen: brightness, orientation, screen off" },
+  { text = "Look: six themes, own colors, header text, background" },
+  { text = "Clock: 12 or 24 hours, time zone, date" },
+  { text = "Weather: a place's weather from Open-Meteo" },
+  { text = "Save: the picture as a PNG, the values as a report" },
+  { text = "Start: with the desktop, minimized" },
+]
+
+[[family]]
+name = "HelixSR upscaler"
+apps = { bc250-bazzite = "upscaler", windows-portable = "upscale" }
+features = [
+  { text = "Setup: download and build HelixSR, checked" },
+  { text = "Setup: latest release or HelixSR 1.8.1" },
+  { text = "Setup: NVIDIA's DLL downloaded, from Steam or a file" },
+  { text = "Setup: import a release you built" },
+  { text = "Updates: check for a newer HelixSR" },
+  { text = "Games: Steam games with FSR 3.1, run with HelixSR" },
+  { text = "Deploy: replace a game's DLL, reversibly" },
+  { text = "Deploy: any game folder, added by hand" },
+  { text = "OptiScaler: for games without FSR 3.1" },
+  { text = "Deployments: status, update older games, remove" },
+  { text = "helixsr.ini: edit settings, apply to a game" },
+]
+
+[[family]]
+name = "Support Checker"
+apps = { windows-portable = "support" }
+features = [
+  { text = "Windows: show version, build and newest update" },
+  { text = "Windows: flag a pending restart or late update" },
+  { text = "Tools: check the runtimes and programs apps need" },
+  { text = "Tools: show which app uses each, how to get it" },
+  { text = "Tools: flag missing or unsupported builds" },
+  { text = "Apps: compare installed versions with the portal's" },
+  { text = "Check again: run every check once more" },
+  { text = "Info: explain each pane with the ☰ button" },
+  { text = "Read-only: installs and changes nothing" },
+]
+
+[[family]]
+name = "GPU Manager"
+apps = { bc250-bazzite = "gpu" }
+features = [
+  { text = "Overview: live load, clock, temperature, power chart" },
+  { text = "Overview: export history to CSV, compare with an earlier run" },
+  { text = "GPU Usage: fix the load readout, choose sampling method" },
+  { text = "Tuning: clock range, load target, temperature, timing" },
+  { text = "Profiles: save, apply, bind to a hotkey" },
+  { text = "Safe points: edit the clock/voltage curve" },
+  { text = "Safe points: test a point under load, abort on GPU errors" },
+  { text = "Performance: runtime clocks, per-game launch options" },
+  { text = "Backups: a dated copy before every write, diff, restore" },
+  { text = "Service: start, stop, enable at boot, live journal" },
+  { text = "Settings: tray icon, autostart, temperature alerts" },
+]
+
+[[family]]
+name = "CU Bisect"
+apps = { bc250-bazzite = "compute" }
+features = [
+  { text = "Bisect: test each locked WGP under verified GPU load" },
+  { text = "Bisect: control round, rounds per WGP, crash-safe resume" },
+  { text = "Bisect: unattended mode with auto-reboot and resume" },
+  { text = "Results: good, fails every time or random per WGP" },
+  { text = "Results: suggest an even 24, 32 or 40 CU mask" },
+  { text = "Unlock: apply the mask at every boot as a service" },
+  { text = "Unlock: install only when results justify the mask" },
+  { text = "Status: read the live masks from the GPU, uninstall" },
+]
+
+[[family]]
+name = "Cores Bisect"
+apps = { bc250-bazzite = "cores" }
+features = [
+  { text = "Bisect: unlock the 2 extra CPU cores through the SMU" },
+  { text = "Bisect: test each new core pinned under verified load" },
+  { text = "Bisect: stress-ng, mprime or both; rasdaemon errors" },
+  { text = "Bisect: unattended mode, crash-safe resume across boots" },
+  { text = "Results: verdict per core, report on the Desktop" },
+  { text = "Setup: pick load, rounds and mode, runtime estimate" },
+  { text = "Unlock: keep 8 cores after a cold boot, as a service" },
+  { text = "Unlock: install only after a clean verdict, uninstall" },
+]
+
+[[family]]
+name = "GPU OC Bisect"
+apps = { bc250-bazzite = "oc" }
+features = [
+  { text = "Sweep: raise the GPU clock step by step (overclock)" },
+  { text = "Sweep: lower the GPU voltage step by step (undervolt)" },
+  { text = "Test: verified GPU load, 97 °C abort, fixed hard limits" },
+  { text = "Test: crash-safe, restores your governor config" },
+  { text = "Results: verdict per step, best and margin pick" },
+  { text = "Install: make the safe point permanent, uninstall" },
+  { text = "Launcher: pick time, rounds, ladder limits and steps" },
+]
+
+[[family]]
+name = "Persistent ACPI"
+apps = { bc250-bazzite = "acpi" }
+features = [
+  { text = "Install: CPU idle states and 8 clock steps, no BIOS flash" },
+  { text = "Install: stays across kernel and Bazzite updates" },
+  { text = "Install: warns on modded BIOS and missing kernel support" },
+  { text = "Status: installed, clock steps, idle states" },
+  { text = "Status with sudo: whether the kernel loaded the tables" },
+  { text = "Uninstall: back to the BIOS tables after a reboot" },
+]
+
+[[family]]
+name = "System Overlay"
+apps = { bc250-bazzite = "overlay" }
+features = [
+  { text = "Overlay: CPU and GPU load, clocks, power, voltage" },
+  { text = "Overlay: VRAM, RAM, refresh rate, network and disk" },
+  { text = "Overlay: fan speed, CPU, GPU, VRM and NVMe temps" },
+  { text = "Overlay: governor clock range, colors when hot" },
+  { text = "Options: choose rows, background see-through, on top" },
+  { text = "Window: drag to move, opens where you left it" },
+]
+
+[[family]]
+name = "ACE Queues"
+apps = { bc250-bazzite = "ace" }
+features = [
+  { text = "Build: patched RADV for async compute, in a container" },
+  { text = "Install: driver beside the system Mesa, never replaced" },
+  { text = "Test: compute queues checked on the running kernel" },
+  { text = "Use: copy launch options per game" },
+  { text = "Use: switch on for all apps, off again after a kernel update" },
+  { text = "Status: not built, test needed, ready, test failed" },
+  { text = "Remove: take the driver and all-apps files away" },
+]
+
+[[family]]
+name = "Mesh Shaders"
+apps = { bc250-bazzite = "mesh" }
+features = [
+  { text = "Build: RADV with DirectMesh mesh shaders, in a container" },
+  { text = "Install: driver beside the system Mesa, never replaced" },
+  { text = "Test: mesh draws and compute queues on the running kernel" },
+  { text = "Use: copy launch options per game" },
+  { text = "Switches: driver options per game, for comparisons" },
+  { text = "Updates: says when a newer DirectMesh release is out" },
+  { text = "Remove: take the driver and wrapper away" },
+]
+
+[[family]]
+name = "Memory Manager"
+apps = { bc250-bazzite = "vram" }
+features = [
+  { text = "Overview: VRAM split, GTT, TTM limit, RAM and swap" },
+  { text = "Memory map: live bar of the 16 GB, preview next boot" },
+  { text = "Split: set the VRAM split in CMOS, undo" },
+  { text = "GTT limit: set ttm.pages_limit on the kernel line" },
+  { text = "Profiles: Default or Games split and limit at once" },
+  { text = "Read CMOS: show and save the memory block, read-only" },
+  { text = "Safety: refuses on bad checksum, lockdown, other boards" },
+  { text = "Backups: CMOS block before and after every change" },
+]
+
+[[family]]
+name = "Fan Control"
+apps = { bc250-bazzite = "fan" }
+features = [
+  { text = "Overview: GPU and CPU temperature, fans, guard state" },
+  { text = "Fans: every fan, its header, firmware curve or manual" },
+  { text = "Guard: warn, full fans, clean shutdown at set limits" },
+  { text = "Guard: runs as a service, also with no app open" },
+  { text = "Guard: reports a stopped fan, ignores broken sensors" },
+  { text = "Limits: set, apply, back to defaults" },
+  { text = "History: what the guard did, newest first" },
+]
+
+[[family]]
+name = "USB Wi-Fi"
+apps = { bc250-bazzite = "wdriver" }
+features = [
+  { text = "Status: stick mode, chip, driver and Wi-Fi interface" },
+  { text = "Driver: branch chosen from the chip's revision" },
+  { text = "Build: AIC8800D80 driver for the running kernel" },
+  { text = "Build: newest sources when a kernel breaks the pin" },
+  { text = "Install: service loads it at every boot, rebuilds" },
+  { text = "Install: switches a stick out of storage mode" },
+  { text = "Driver: update and remove" },
+  { text = "Wi-Fi adapters: check any stick's kernel support" },
+]
+
+[[family]]
+name = "HDMI CEC Manager"
+apps = { bc250-bazzite = "cec" }
+features = [
+  { text = "TV: turn on, standby, switch to the board's input" },
+  { text = "TV: volume and mute, to the TV or an AV receiver" },
+  { text = "TV: check, list devices on the bus, TV info" },
+  { text = "Name: set the name the TV shows for the board" },
+  { text = "Picture: fix a black TV after standby" },
+  { text = "Media: pause players while the TV is off" },
+  { text = "Boot: name the board, turn the TV on before login" },
+  { text = "Daemon: wake and sleep with the TV, remote as keys" },
+  { text = "Remote: map buttons to keys, show received keys" },
+]
+
+[[family]]
+name = "NetcatGUI"
+apps = { bc250-bazzite = "ncgui" }
+features = [
+  { text = "Tabs: connect or listen, TCP, UDP or TLS per tab" },
+  { text = "Connect: certificate check, reconnect automatically" },
+  { text = "Messages: history, newline, line ending, encoding" },
+  { text = "Templates: HTTP, SMTP, IMAP, Redis and more" },
+  { text = "Log: protocol highlighting, hex view, save, clear" },
+  { text = "Hex input: send raw bytes as hex digits" },
+  { text = "Pipes: save to file, send a file, pipe to another tab" },
+  { text = "Recording: save sent messages, replay with pauses" },
+  { text = "Terminal: nc-style arguments open a tab" },
+]

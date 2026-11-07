@@ -10,8 +10,9 @@ the requirements, VERSION 0.1.0, CHANGELOG, LICENSE, .gitignore and README.md), 
 <suite>/tools/installer-tests/<name>.sh and the wiki chapter <suite>/docs/apps/<name>.md, and lists the app wherever
 the suite lists its apps: portal/apps.toml (and the root's copy while there is one), icons/categories.toml (with the
 icon copies, tools/sync_icons.py), mkdocs.yml, docs/apps/index.md and categories.md, the suite README, the Dependency
-Checker's catalog. The suite's CI needs no edit: its matrices come from the folders (tools/ci_matrix.py), its
-installer tests from tools/installer-tests/ and its shellcheck from the installers' and wrappers' names.
+Checker's catalog, and nexus/features.toml with the Nexus page's Apps and features chapter (tools/features.py).
+The suite's CI needs no edit: its matrices come from the folders (tools/ci_matrix.py), its installer tests from
+tools/installer-tests/ and its shellcheck from the installers' and wrappers' names.
 Then it runs the checks on it (the layout test, the app's tests, the suite's installer, icon and manifest tests, the
 catalog tests) unless --no-check. The portal bump the new entry asks for, the app's CHANGELOG and its release stay
 the owner's.
@@ -1409,6 +1410,25 @@ def insert_after_rows(text: str, ending: str, row: str, where: str) -> str:
     return "".join(lines)
 
 
+def list_features(root: Path, suite: Suite, app: NewApp) -> list[Path]:
+    """The app as a family of its own in nexus/features.toml, its summary its first feature, and the Nexus page's
+    Apps and features chapter written again (tools/features.py); nothing in a checkout without the file. When the
+    app is another suite's app made for this one, move it into that family by hand."""
+    data = root / "nexus" / "features.toml"
+    if not data.is_file():
+        return []
+    name = app.app_name
+    for prefix in _PREFIXES + ("Windows Portable ",):
+        name = name.removeprefix(prefix)
+    family = (f'[[family]]\nname = "{name}"\napps = {{ {suite.folder.name} = "{app.name}" }}\n'
+              f'features = [\n  {{ text = "{app.summary.replace(chr(34), chr(39))}" }},\n]\n')
+    data.write_bytes((data.read_text(encoding="utf-8").rstrip("\n") + "\n\n" + family).encode("utf-8"))
+    features = _load("new_app_features", Path(__file__).resolve().parent / "features.py")
+    if features.main(["--root", str(root)]) != 0:
+        raise SystemExit("nexus/features.toml: tools/features.py could not write the chapter (see above)")
+    return [data, root / features.PAGE]
+
+
 def write_app(root: Path, suite: Suite, app: NewApp) -> list[Path]:
     """Writes the app and lists it, from the suite's template; returns the files written or changed, relative to
     *root*."""
@@ -1494,6 +1514,7 @@ def write_app(root: Path, suite: Suite, app: NewApp) -> list[Path]:
         end = len(text) if end < 0 else end + 1
         text = text[:end].rstrip("\n") + "\n\n" + fill(CATALOG_SOURCE, app, suite) + "\n" + text[end:]
         change(catalog, text)
+    written += list_features(root, suite, app)      # the Nexus page's Apps and features
     # CI (ci.yml) needs no edit: the pytest matrix comes from the folders with tests/ (tools/ci_matrix.py), the
     # installers step runs every tools/installer-tests/*.sh, and shellcheck takes every apps/*/install.sh.
     return [p.relative_to(root) for p in written]
@@ -1562,6 +1583,7 @@ def write_windows_app(root: Path, suite: Suite, app: NewApp) -> list[Path]:
     if readme.is_file() and f"**{app.category_title}**" in readme.read_text(encoding="utf-8"):
         put(readme, insert_after_list(readme.read_text(encoding="utf-8"), f"**{app.category_title}**",
                                       fill(README_ROW, app, suite), "README.md"))
+    written += list_features(root, suite, app)      # the Nexus page's Apps and features
     # The suite's CI (ci-<suite>.yml) needs no edit: its pytest and installers matrices come from the folders
     # (tools/ci_matrix.py), so the new app's tests, installer test and release build run at once.
     return [p.relative_to(root) for p in dict.fromkeys(written)]

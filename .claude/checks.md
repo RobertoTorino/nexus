@@ -21,6 +21,7 @@ python3 tools/check_versions.py                     # versions = VERSION, every 
 python3 bc250-bazzite/tools/check_manifest.py --base origin/main  # the suite's apps.toml rules, the bump since the last portal release
 python3 bazzite-console/tools/check_manifest.py --base origin/main  # the suite's apps.toml rules and portal bump
 python3 tools/check_changelogs.py --base origin/main  # no CHANGELOG lost an entry since the last push
+python3 tools/features.py --check                   # every app in nexus/features.toml, the Nexus page's Apps and features current
 find bc250-bazzite bazzite-console tools test.sh -name '*.sh' -print0 | xargs -0 -n1 bash -n
 find bc250-bazzite bazzite-console tools test.sh -name '*.sh' -print0 | xargs -0 shellcheck -x -S error
 shellcheck -x -S warning bc250-bazzite/portal/install.sh bc250-bazzite/apps/check/install.sh \
