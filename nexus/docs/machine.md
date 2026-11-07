@@ -40,6 +40,7 @@ Each for one tool or one kind of work; without it that tool does not run, or its
 | PyInstaller and Pillow | `tools/build_windows_exe.py`, the Windows executable of Bazzite SFTP | not used | in `.venv-windows/`, `pip install pyinstaller pillow` |
 | OBS Studio, with its WebSocket server on | Nexus Demo Recorder (`dev/demo/`) | flatpak `com.obsproject.Studio`, or `obs` | `winget install OBSProject.OBSStudio` |
 | notify-send | `tools/dev-updates.sh --notify` (below) | comes with Bazzite | not used |
+| WinDbg (with `cdb.exe`) | a native crash of a Windows app (exception 0xc0000409 and the like, nothing in the app's log): `cdb` attached to the program writes a dump and every thread's stack when it crashes | not used | `winget install Microsoft.WinDbg`; `cdb.exe` is in its package's `amd64` folder |
 | setools (`sesearch`, `seinfo`) | reading the SELinux policy on the board: which label a file needs (BC-250 USB Wi-Fi's modules, for example) | in a distrobox, see below | not used |
 
 `setools-console` is a Fedora package that Homebrew does not have; a distrobox keeps it off the image (no
