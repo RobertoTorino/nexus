@@ -1,3 +1,7 @@
+Changelog: 07-11-2026 19:27:35
+
+Release 10.2.0.
+
 Changelog: 07-11-2026 19:12:18
 
 Added. Four buttons on the line of the tabs start Steam (its library in Big Picture, as RT), the XBOX app, Armoury Crate and Command Center: a tap, or the d-pad up from the top row of tiles and A (A Start in the row at the bottom). Windows starts them by their application ID, as the Start menu does; one that is not on the device says so. The portal can be dragged by its top (the name or the clock) to the other screen, with a finger or the mouse: let go, it moves to the screen it was let go on or dragged toward, as LT moves it. While a newer portal is out, the banner reads UPDATE: PRESS Y (DOWNLOADING… while it downloads) and takes the place of Installed x/y, so the line fits at 1280 x 720.
