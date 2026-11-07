@@ -14,7 +14,7 @@ folder (the root .gitignore leaves it out of `git add`); remove one with `Remove
 '\\?\C:\Projects\nexus\NUL'`.
 
 ```bash
-tools/ci-local.sh                                   # every job of the Linux suites and Nexus workflows (podman)
+tools/ci-local.sh                                   # the Linux workflows this push starts on GitHub (podman); --all: every one
 tools/pre-push.sh                                   # CI's quick checks against origin/main (git's pre-push hook, tools/git-setup.sh once per checkout)
 ./test.sh                                           # every test suite of this system, offscreen
 python3 tools/check_versions.py                     # versions = VERSION, every suite

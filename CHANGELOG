@@ -1,3 +1,10 @@
+Changelog: 07-11-2026 21:42:29
+
+Fixed. tools/ci-local.sh runs only the workflows the push starts on GitHub: those whose push paths match a file that
+differs from origin/main, what is not committed yet included. A push of one suite no longer runs, and fails on,
+another suite's CI (owner, 07-11-2026); a change to core/, tools/ or dev/ still runs every suite's, as on GitHub.
+--all runs every workflow. The Nexus page's Development chapter says so.
+
 Changelog: 07-11-2026 21:19:23
 
 Release 2.0.0. Brings the new suite bazzite-console, ps5-bazzite-v0.1.0, ps5-clb-v0.1.0, ps5-consoles-v0.1.0, ps5-datstation-v0.1.0, ps5-decky-v0.1.0, ps5-hdcam-v0.1.0, ps5-hdcontrol-v0.1.0, ps5-pcsx2-v0.1.0, ps5-portal-v0.1.0, ps5-ppsspp-v0.1.0, ps5-rpcs3-v0.1.0, ps5-sftp-v0.1.0, ps5-shadps4-v0.1.0, ps5-ssd-v0.1.0, ps5-vita3k-v0.1.0, ps5-xenia-v0.1.0.

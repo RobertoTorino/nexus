@@ -5,8 +5,13 @@ rules) as GitHub runs them, inside the container tools/ci-local.sh starts: Pytho
 3.12, each job (and each entry of a matrix) in its own environment with only what that job installs. Tests that
 pass in the suite's full venv on a newer Python can still fail in CI; this shows it before the push.
 
-    tools/ci-local.sh [--list] [--workers N] [job[/matrix value] ...]
+    tools/ci-local.sh [--list] [--all] [--workers N] [job[/matrix value] ...]
     e.g.  tools/ci-local.sh pytest/bc250-bazzite/apps/gpu console-pytest/bazzite-console/apps/bazzite
+
+Without job names it runs the workflows the push would start on GitHub: those whose push paths match a file that
+differs from origin/main (the commits not pushed yet and the changes not committed), so one suite's jobs never hold
+another suite's push (owner, 07-11-2026). --all runs every workflow; so does a checkout without origin/main. Job
+names run those jobs, whatever changed.
 
 The jobs come from the workflows themselves, so a new app in the matrix or a new installer step is run without
 changing this; a matrix a plan job reads from the suite's folders (tools/ci_matrix.py, fromJSON(needs.plan.outputs.x))
@@ -114,9 +119,43 @@ def load_jobs(workflow: Path, prefix: str = "") -> list[Job]:
     return jobs
 
 
-def all_jobs(src: Path = SRC) -> list[Job]:
-    """The jobs of every workflow run here (WORKFLOWS), in that order."""
-    return [job for name, prefix in WORKFLOWS for job in load_jobs(src / ".github" / "workflows" / name, prefix)]
+def all_jobs(src: Path = SRC, changed: list[str] | None = None) -> list[Job]:
+    """The jobs of every workflow run here (WORKFLOWS), in that order; with *changed* (the files a push changes) only
+    those of the workflows that push starts (runs_for)."""
+    return [job for name, prefix in workflows(src, changed)
+            for job in load_jobs(src / ".github" / "workflows" / name, prefix)]
+
+
+def workflows(src: Path = SRC, changed: list[str] | None = None) -> list[tuple[str, str]]:
+    """The workflows of WORKFLOWS a push changing *changed* starts on GitHub; every one when *changed* is None."""
+    return [(name, prefix) for name, prefix in WORKFLOWS
+            if changed is None or runs_for(src / ".github" / "workflows" / name, changed)]
+
+
+def runs_for(workflow: Path, changed: list[str]) -> bool:
+    """Whether a push changing the files *changed* starts *workflow*: it has no push paths filter, or one of its
+    patterns matches one of the files (GitHub's globs: * within a folder, ** across folders)."""
+    spec = yaml.safe_load(workflow.read_text(encoding="utf-8"))
+    push = (spec.get("on", spec.get(True)) or {}).get("push") or {}     # PyYAML reads the key on as True
+    patterns = push.get("paths") if isinstance(push, dict) else None
+    if not patterns:
+        return True
+    return any(glob_match(pattern, path) for pattern in patterns for path in changed)
+
+
+def glob_match(pattern: str, path: str) -> bool:
+    regex = "".join(".*" if part == "**" else "[^/]*" if part == "*" else re.escape(part)
+                    for part in re.split(r"(\*\*|\*)", pattern))
+    return re.fullmatch(regex, path) is not None
+
+
+def changed_files(base: str) -> list[str] | None:
+    """The files the copy (every change staged) differs in from *base*, origin/main: what the push changes, with
+    what is not committed yet. None without a base: every workflow runs."""
+    if not base:
+        return None
+    diff = subprocess.run(["git", "diff", "--name-only", "--cached", base], cwd=WORK, capture_output=True, text=True)
+    return diff.stdout.split() if diff.returncode == 0 else None
 
 
 def expand(text: str, job: Job, base: str) -> str:
@@ -245,17 +284,24 @@ def main(argv: list[str]) -> int:
     if "--workers" in argv:
         i = argv.index("--workers")
         workers, argv = int(argv[i + 1]), argv[:i] + argv[i + 2:]
-    jobs = all_jobs()
+    every = "--all" in argv
+    argv = [a for a in argv if a != "--all"]
     if "--list" in argv:
+        jobs = all_jobs()
         print("\n".join(j.name + ("" if j.runs_here else f"   (not here: {j.spec.get('runs-on')})") for j in jobs))
         return 0
-    jobs = selected(jobs, argv)
-    if not jobs:
-        print(f"no job matches {' '.join(argv)}; tools/ci-local.sh --list shows them", file=sys.stderr)
-        return 2
     base = prepare_copy()
-    print(f"{len(jobs)} jobs from {' and '.join(name for name, _ in WORKFLOWS)}, {workers} at a time, "
-          f"on Python {sys.version.split()[0]}", flush=True)
+    changed = None if every or argv else changed_files(base)
+    names = [name for name, _ in workflows(SRC, changed)]
+    jobs = selected(all_jobs(SRC, changed), argv)
+    if not jobs:
+        print(f"no job matches {' '.join(argv)}; tools/ci-local.sh --list shows them" if argv else
+              "nothing to run: this push changes no file a CI workflow runs for", file=sys.stderr)
+        return 2 if argv else 0
+    print(f"{len(jobs)} jobs from {' and '.join(names)}, {workers} at a time, on Python {sys.version.split()[0]}",
+          flush=True)
+    if left := [name for name, _ in WORKFLOWS if name not in names]:
+        print(f"not run: {', '.join(left)}, which this push does not start on GitHub (--all runs them)", flush=True)
     results: list[Result] = []
     with concurrent.futures.ThreadPoolExecutor(workers) as pool:
         for result in pool.map(lambda j: run_job(j, base), jobs):

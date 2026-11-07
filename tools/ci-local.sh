@@ -4,7 +4,7 @@
 # each job with only its own requirements), in a container: tools/ci_local.py inside
 # tools/ci-local/Containerfile. Before a push or a release, so "passes here, fails in CI" shows up here first.
 #
-#   tools/ci-local.sh                                      # every job of all three workflows
+#   tools/ci-local.sh                                      # the workflows this push starts on GitHub (--all: every one)
 #   tools/ci-local.sh shell console-pytest/bazzite-console/apps/bazzite
 #                                                         # jobs by workflow-prefixed name
 #   tools/ci-local.sh --list                    # the jobs

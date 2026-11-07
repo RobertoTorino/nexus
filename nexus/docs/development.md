@@ -153,11 +153,13 @@ and its `install.sh` are in CI at once.
 
 `./test.sh` runs every suite in one venv that holds everything, on whatever Python your system has. GitHub's CI runs
 each job on Python 3.12 with only that job's own requirements, so a test can pass here and still fail there: a
-Python 3.13 function, or a package only the full venv has. `tools/ci-local.sh` runs the jobs of `ci.yml` and
-`ci-nexus.yml` the way GitHub does, in a container (podman, which Bazzite has, or docker):
+Python 3.13 function, or a package only the full venv has. `tools/ci-local.sh` runs the jobs of `ci.yml`,
+`ci-bazzite-console.yml` and `ci-nexus.yml` the way GitHub does, in a container (podman, which Bazzite has, or
+docker):
 
 ```bash
-tools/ci-local.sh                            # every job of both workflows, about a minute and a half once the image is built
+tools/ci-local.sh                            # the workflows this push starts on GitHub, a minute or two once the image is built
+tools/ci-local.sh --all                      # every workflow, whatever changed
 tools/ci-local.sh shell nexus-pytest/tools   # some jobs; a matrix job by its value, pytest for all of the suite's
 tools/ci-local.sh --list                     # the jobs; ci-nexus.yml's have nexus- before the name (nexus-shell)
 ```
@@ -166,6 +168,10 @@ It reads the jobs from the workflows themselves, a matrix from the folders as th
 first run builds the image from `tools/ci-local/Containerfile` (Python 3.12 and the packages GitHub's runner has)
 and Console Link's FFmpeg; both are kept, with the venvs and the logs, in `~/.cache/bc250-ci-local`. It works on a
 copy of the checkout with every change staged, as the commit will have it. Only the Windows job does not run here.
+Without job names it runs only the workflows GitHub starts for the push: those whose `paths` match a file that differs
+from `origin/main`, counting what is not committed yet. A push that changes only the Bazzite Console Suite runs
+`ci-bazzite-console.yml` and `ci-nexus.yml`, not the BC250 suite's `ci.yml`, so one suite's checks never hold another
+suite's push. A change to `core/`, `tools/` or `dev/` starts every suite's CI, there as here.
 The push commands Nexus Release Tool shows run it first (`tools/ci-local.sh && git push`): no push when a job fails.
 
 On Windows it runs in podman's machine, a small Fedora in WSL that reaches the checkout under `/mnt/c`. Install

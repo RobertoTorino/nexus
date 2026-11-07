@@ -111,3 +111,19 @@ def test_ci_runs_for_every_branch_push_and_no_tag():
         push = spec.get("on", spec.get(True))["push"]                     # PyYAML reads the key on as True
         assert push.get("branches") == ["**"] and not {"branches-ignore", "tags", "tags-ignore"} & set(push)
         assert all("timeout-minutes" in job for job in spec["jobs"].values()), workflow.name
+
+
+def test_only_the_workflows_a_push_starts():
+    """Without job names, the workflows GitHub starts for the push: a change to one suite runs that suite's CI and
+    Nexus's, never the other suite's (owner, 07-11-2026: a Console push was held by the BC250 suite's check)."""
+    names = lambda changed: [name for name, _ in ci_local.workflows(SUITE, changed)]   # noqa: E731
+    assert names(None) == [name for name, _ in ci_local.WORKFLOWS]
+    assert names(["bazzite-console/apps/xenia/VERSION"]) == ["ci-bazzite-console.yml", "ci-nexus.yml"]
+    assert names(["bc250-bazzite/portal/apps.toml"]) == ["ci.yml", "ci-nexus.yml"]
+    assert names(["portal/apps.toml"]) == ["ci.yml", "ci-nexus.yml"]          # the root's copy is the BC250 suite's
+    assert names(["windows-portable/apps/bios/VERSION"]) == ["ci-nexus.yml"]
+    assert names(["core/bc250_core/app.py"]) == [name for name, _ in ci_local.WORKFLOWS]   # every suite bundles core
+    assert names([]) == ["ci-nexus.yml"]                                        # no paths filter: every push
+    assert ci_local.glob_match("bazzite-console/**", "bazzite-console/a/b.py")
+    assert not ci_local.glob_match("bazzite-console/**", "bazzite-console-x/a.py")
+    assert ci_local.glob_match("test.sh", "test.sh") and not ci_local.glob_match("test.sh", "tools/test.sh")
