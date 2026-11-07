@@ -1,3 +1,20 @@
+Changelog: 07-11-2026 11:35:01
+
+Breaking. The Settings page's Screen row says PC screen (the handheld's own) or Other screen (a TV or a monitor,
+whatever its make), not the name Windows gives the screen (owner, 07-11-2026: "just call it Other screen"), through
+core's screen_label(). The screen the portal opens on is kept the same way, so another TV or monitor counts as the
+same Other screen.
+
+Changelog: 07-11-2026 11:01:22
+
+Fixed. Sound: Off holds until Windows starts again (owner, 07-11-2026: "on reboot it should return to default"):
+the portal keeps when it was switched off, and its first start after a restart of Windows switches it on again,
+also when it was switched off by an earlier portal. Within one Windows session it stays off.
+
+Fixed. The portal's window fills its screen again after Windows moves or resizes it (owner, 07-11-2026: the row at
+the bottom cut off on the TV after an update), through core's PortableWindow, which puts it back on its monitor and
+no longer lets its content set its height.
+
 Changelog: 07-11-2026 01:32:26
 
 Release 9.0.0. Pins wp-test-v4.15.1, wp-pcsx2-v7.0.0, wp-ppsspp-v5.5.1, wp-rpcs3-v4.5.1, wp-shadps4-v5.5.1, wp-vita3k-v5.5.1, wp-xenia-v5.5.1, wp-rplay-v0.12.1, wp-hdcam-v0.11.1, wp-bios-v0.12.1, wp-sftp-v0.11.1, wp-smart-v0.7.1, wp-support-v0.3.1, wp-datstat-v0.3.1, wp-upscale-v0.3.1, wp-hdcontrol-v0.3.1, wp-ssd-v0.1.1.

@@ -825,28 +825,48 @@ def test_a_full_screen_window_is_never_taller_than_its_screen(qapp):
 
 
 class FakeScreen:
-    def __init__(self, name, width, height):
-        self._name, self._size = name, QSize(width, height)
+    def __init__(self, name, width, height, x=0, y=0):
+        self._name, self._size, self._corner = name, QSize(width, height), QPoint(x, y)
 
     def name(self):
         return self._name
 
     def geometry(self):
         from PyQt6.QtCore import QRect
-        return QRect(QPoint(0, 0), self._size)
+        return QRect(self._corner, self._size)
 
 
 def test_the_screen_an_app_was_moved_to_is_kept_for_the_suite(qapp, monkeypatch):
-    """Moved to another screen, the suite's apps open there from then on, while it is attached (owner, 31-10-2026)."""
-    tv, ally = FakeScreen("Mi TV", 1920, 1080), FakeScreen("\\\\.\\DISPLAY1", 1280, 720)
-    monkeypatch.setattr(portable.QGuiApplication, "screens", staticmethod(lambda: [tv, ally]))
-    monkeypatch.setattr(portable.QGuiApplication, "primaryScreen", staticmethod(lambda: tv))
+    """Moved to another screen, the suite's apps open there from then on, while there is one (owner, 31-10-2026),
+    kept as the device's own screen or another one and named so, never by a screen's name (owner, 07-11-2026:
+    hardware changes): the device's own is the one Windows reports built in, else the main display."""
+    tv, own = FakeScreen("any name", 1920, 1080, 0, -1080), FakeScreen("another name", 1280, 720)
+    screens, built_in = [tv, own], [(0, 0)]
+    monkeypatch.setattr(portable.QGuiApplication, "screens", staticmethod(lambda: screens))
+    monkeypatch.setattr(portable.QGuiApplication, "primaryScreen", staticmethod(lambda: screens[0]))
+    monkeypatch.setattr(portable.platform, "built_in_screens", lambda: built_in)
+    assert portable.own_screen() is own
     assert portable.start_screen("suite-test") is tv                      # nothing kept yet: the main display
-    portable.set_start_screen("suite-test", ally)
-    assert portable.start_screen("suite-test") is ally
-    monkeypatch.setattr(portable.QGuiApplication, "screens", staticmethod(lambda: [tv]))
-    assert portable.start_screen("suite-test") is tv                      # not attached now
-    assert portable.screen_label(ally) == "Display 1" and portable.screen_label(tv) == "Mi TV"
+    portable.set_start_screen("suite-test", own)
+    assert portable.look_settings("suite-test").value(portable.SCREEN_KEY) == portable.OWN_SCREEN
+    assert portable.start_screen("suite-test") is own
+    portable.set_start_screen("suite-test", tv)
+    assert portable.look_settings("suite-test").value(portable.SCREEN_KEY) == portable.OTHER_SCREEN
+    assert portable.start_screen("suite-test") is tv
+    other = FakeScreen("a monitor now", 2560, 1440, 1280, 0)              # another TV or monitor: the same row
+    screens[:] = [own, other]
+    assert portable.start_screen("suite-test") is other
+    assert portable.screen_label(own) == "PC screen" and portable.screen_label(other) == "Other screen"
+    screens[:] = [own]
+    assert portable.start_screen("suite-test") is own                     # no other one now: the main display
+    portable.look_settings("suite-test").setValue(portable.SCREEN_KEY, "Mi TV")   # a name kept before: the main one
+    assert portable.start_screen("suite-test") is own
+
+    def no_answer():
+        raise OSError("Windows' only")
+    monkeypatch.setattr(portable.platform, "built_in_screens", no_answer)
+    screens[:] = [tv, own]
+    assert portable.own_screen() is tv and portable.screen_label(own) == "Other screen"   # the main display, then
 
 
 def test_on_a_screen_of_another_size_the_app_starts_again_once_free(qapp, monkeypatch):
@@ -857,7 +877,7 @@ def test_on_a_screen_of_another_size_the_app_starts_again_once_free(qapp, monkey
     monkeypatch.setattr(portable, "_pinned", False)
     window.screen_size = QSize(1920, 1080)
     window.screen_moved(FakeScreen("Same size", 1920, 1080))
-    assert restarts == [] and portable.look_settings("suite-test").value(portable.SCREEN_KEY) == "Same size"
+    assert restarts == [] and portable.look_settings("suite-test").value(portable.SCREEN_KEY) == portable.OTHER_SCREEN
     said = []
     monkeypatch.setattr(window, "waiting_to_move", lambda: said.append(True))
     window.busy = True                                                    # a manager's download
@@ -866,6 +886,77 @@ def test_on_a_screen_of_another_size_the_app_starts_again_once_free(qapp, monkey
     window.busy = False
     window._move_when_free()
     assert restarts == [True] and not window.move_timer.isActive() and not window.move_pending
+    window.close()
+
+
+def test_a_full_screen_window_is_put_back_on_its_monitor(qapp, monkeypatch):
+    """Moved or resized from outside (a display switch, a title bar), the window goes back on Windows' rectangle of
+    its monitor, as WindowManager does, and full screen to Qt again; at most FIT_TRIES times in a row, afresh once
+    the screens change (owner, 07-11-2026: the portal's bottom row cut off on the TV)."""
+    window = PortableWindow(gamepad=portable.Gamepad(source_factory=NoPad), suite="suite-test")
+    monkeypatch.setattr(portable, "_pinned", False)
+    window.show()
+    qapp.processEvents()
+    window.full_screen_wanted = True                    # as showFullScreen() sets it
+    window.screen_size = window.screen().geometry().size()
+    monitor, rect, placed = (0, -1080, 1920, 1080), [(7, -1071, 1920, 1120)], []
+    window.monitor_rect = lambda hwnd: monitor
+    window.window_rect = lambda hwnd: rect[0]
+    window.fill_monitor = lambda hwnd, to: placed.append(to)
+    try:
+        window.fit_screen()
+        assert placed == [monitor] and window.isFullScreen()
+        for _ in range(portable.FIT_TRIES + 2):         # Windows keeps moving it: left after FIT_TRIES
+            window.fit_screen()
+        assert len(placed) == portable.FIT_TRIES
+        window.refit()                                  # the screens changed: tried again, once settled
+        assert window.fit_timer.isActive() and window.fit_tries == 0
+        window.fit_screen()
+        assert len(placed) == portable.FIT_TRIES + 1
+        rect[0] = monitor                               # on its monitor: nothing to do
+        window.fit_screen()
+        assert len(placed) == portable.FIT_TRIES + 1 and window.fit_tries == 0
+        window.full_screen_wanted = False               # a window (--windowed): left where it is
+        monkeypatch.setattr(window, "isFullScreen", lambda: False)
+        rect[0] = (10, 10, 800, 600)
+        window.fit_screen()
+        assert len(placed) == portable.FIT_TRIES + 1
+    finally:
+        window.close()
+
+
+def test_a_full_screen_window_takes_its_height_from_the_screen_not_its_content(qapp):
+    """Qt holds a window that is not full screen to its layout's height for its width: after a move from outside the
+    portal was 1536 x 888 on a 1536 x 864 TV (owner, 07-11-2026). Filling a screen, it has none."""
+    window = PortableWindow(gamepad=portable.Gamepad(source_factory=NoPad))
+    column = QVBoxLayout(window)
+    summary = QLabel("A summary long enough to wrap onto more lines when the window is narrow. " * 4)
+    summary.setWordWrap(True)
+    column.addWidget(summary)
+    assert window.hasHeightForWidth()                   # a plain window: Qt's own answer
+    window.full_screen_wanted = True
+    assert not window.hasHeightForWidth()
+    window.close()
+
+
+def test_a_screen_that_changes_size_under_the_window_starts_the_app_again(qapp, monkeypatch):
+    """Its own screen made another size (a display switch, another resolution or scaling): Qt's screenChanged says
+    nothing, so the window follows its screen's size and starts again sized for it."""
+    window = PortableWindow(gamepad=portable.Gamepad(source_factory=NoPad), suite="suite-test")
+    monkeypatch.setattr(portable, "_pinned", False)
+    moved = []
+    monkeypatch.setattr(window, "move_to", moved.append)
+    window.show()
+    qapp.processEvents()
+    window.full_screen_wanted = True
+    window.watch(window.screen())
+    assert window.watched is window.screen()
+    window.screen_size = QSize(1280, 720)               # sized for the Ally; its screen is another size now
+    window.monitor_rect = window.window_rect = lambda hwnd: (0, 0, 1, 1)
+    window.fit_screen()
+    assert moved == [window.screen()]
+    window.watch(None)                                  # the screen gone: nothing followed
+    assert window.watched is None
     window.close()
 
 

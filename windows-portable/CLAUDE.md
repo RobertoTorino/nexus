@@ -105,7 +105,9 @@ app is an optional tile. The wiki is at robertotorino.github.io/nexus/windows-po
     test app's header (the screen is too small for it).
 - **Not limited to the owner's handheld.** The Ally X is one case, not the target: an app reads what Windows
   reports, works on another Windows handheld, and says so where something does not apply (no AMD driver, no Wi-Fi,
-  no back buttons).
+  no back buttons). **No hardcoded names of hardware** (owner, 07-11-2026: hardware can change): no screen, audio
+  device or other device is found by a name written in the code; an app asks Windows what is there (the monitor a
+  window is on, its size and scaling) and works with whatever it finds.
 - **For your own user; administrator per use case.** The installers refuse an administrator's window; everything goes
   in `%LOCALAPPDATA%\windows-portable-suite\` (programs, logs, reports, the portal's state) and
   `%APPDATA%\windows-portable-suite\` (one `.ini` per app); nothing in the registry (tests must not write to it

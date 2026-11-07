@@ -21,6 +21,8 @@ screen; **B** goes back and **⧉** (View) exits it.
   suite's wiki has the [whole setup](https://robertotorino.github.io/nexus/bc250-bazzite-suite/apps/sftp/#set-up-the-host),
   password logins included.
 - **Your account on it**: its user name, and its password or a key.
+- **An SSH server that signs with SHA-2**: OpenSSH 7.2 (2016) or newer, as every current system has. An older one
+  that only offers SHA-1 (`ssh-rsa`) is refused, and so is an RSA key that can only sign with SHA-1.
 - Both on a network you trust. Do not forward port 22 from your router to the internet.
 
 The app is the client; nothing is installed on the other computer.

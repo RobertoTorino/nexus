@@ -45,8 +45,8 @@ def test_window_displays_package_and_tool_results(qapp):
     result = CheckResult(
         [DependencyStatus(dependencies["PyQt6"], (EnvironmentVersion(SHARED, ("portal", "check"), "6.11.0"),
                                                   EnvironmentVersion(SFTP, ("sftp",), "6.11.0")), "6.12.0"),
-         DependencyStatus(dependencies["paramiko"], (EnvironmentVersion(SFTP, ("sftp",), "4.0.0"),),
-                          "4.0.0"),
+         DependencyStatus(dependencies["paramiko"], (EnvironmentVersion(SFTP, ("sftp",), "5.1.0"),),
+                          "5.1.0"),
          DependencyStatus(dependencies["pygame-ce"], (), "2.5.8")],
         [ToolStatus(tools["flashrom"], "/home/test/flashrom/usr/bin/flashrom"),
          ToolStatus(tools["speedtest"], "/home/test/.local/bin/speedtest"),
@@ -127,7 +127,7 @@ def test_cve_marks(qapp):
     result = CheckResult(
         [DependencyStatus(dependencies["PyQt6"], (EnvironmentVersion(SHARED, ("portal",), "6.11.0", (), (cve,)),),
                           "6.12.1"),
-         DependencyStatus(dependencies["paramiko"], (EnvironmentVersion(SFTP, ("sftp",), "4.0.0"),), "4.0.0"),
+         DependencyStatus(dependencies["paramiko"], (EnvironmentVersion(SFTP, ("sftp",), "5.1.0"),), "5.1.0"),
          DependencyStatus(dependencies["pygame-ce"], (EnvironmentVersion(SFTP, ("sftp",), "2.5.8"),), "2.5.8",
                           cve_error="offline")],
         [], frozenset({"portal", "sftp"}))

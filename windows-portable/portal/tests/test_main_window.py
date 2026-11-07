@@ -980,6 +980,26 @@ def test_a_tile_has_a_red_dot_only_while_an_update_is_out(world, qapp):
     assert not window.tiles["test"].dot
 
 
+def test_the_sound_is_on_again_after_windows_restarts(world, qapp):
+    """Sound: Off holds until Windows starts again (owner, 07-11-2026: "on reboot it should return to default"): kept
+    for every start of the portal till then, On at the first start after it, also one switched off by a portal that
+    did not keep the time."""
+    window = world.make(booted=lambda: 1000.0)
+    window.toggle_sound()                                             # Off, now
+    assert not portable.sound_on(mw.SUITE)
+    world.make(booted=lambda: 1000.0)                                 # started again, Windows not restarted
+    assert not portable.sound_on(mw.SUITE)
+    again = world.make(booted=lambda: time.time() + 60)               # Windows started after it
+    assert portable.sound_on(mw.SUITE) and again.suite_pane.sound.label.text() == "Sound: On"
+    assert portable.look_settings(mw.SUITE).value(mw.SOUND_OFF_KEY) is None
+    portable.set_sound_on(mw.SUITE, False)                            # Off from portal 9.0.0: no time kept
+    world.make(booted=lambda: 1000.0)
+    assert portable.sound_on(mw.SUITE)
+    window.toggle_sound()
+    window.toggle_sound()                                             # Off and On again: no time left behind
+    assert portable.look_settings(mw.SUITE).value(mw.SOUND_OFF_KEY) is None
+
+
 def test_the_suite_page_switches_the_sound(world, qapp, monkeypatch):
     """Suite settings: sound off (owner, 29-10-2026): the intro plays no sound at the next start."""
     from bc250_core import portable
@@ -1060,25 +1080,33 @@ def test_the_screen_row_moves_the_portal_to_the_next_screen(world, qapp, monkeyp
     window.job = None
 
 
+class OtherScreen:
+    """A second screen, a TV or a monitor, beside the device's own."""
+    def name(self):
+        return "any name"
+
+    def geometry(self):
+        from PyQt6.QtCore import QRect
+        return QRect(5000, 0, 1920, 1080)
+
+
 def test_the_screen_row_follows_a_move_by_the_keyboard(world, qapp, monkeypatch):
     """Moved by Win + Shift + an arrow to a screen of the same size, the portal does not start again: the Screen row
-    names the screen it is on now (owner, 01-11-2026: moved back to Display 1, it still said Display 2)."""
+    says the screen it is on now (owner, 01-11-2026: moved back, it still named the other one), PC screen or Other
+    screen, never a screen's name (owner, 07-11-2026)."""
     window = world.make()
     here = window.screen()
-
-    class Other:
-        def name(self):
-            return "\\\\.\\DISPLAY2"
-    other = Other()
+    other = OtherScreen()
+    monkeypatch.setattr(portable.platform, "built_in_screens", lambda: [(here.geometry().x(), here.geometry().y())])
     monkeypatch.setattr(mw.QGuiApplication, "screens", staticmethod(lambda: [here, other]))
     monkeypatch.setattr(window, "move_to", lambda screen: None)
     monkeypatch.setattr(window, "screen", lambda: other)
     window.show_suite(window.suite_pane.wallpaper)
     row = window.suite_pane.screen_row
-    assert row.label.text() == "Screen: Display 2"
+    assert row.label.text() == "Screen: Other screen"
     monkeypatch.setattr(window, "screen", lambda: here)            # Win + Shift + an arrow
     window.screen_moved(here)
-    assert row.label.text() == f"Screen: {portable.screen_label(here)}"
+    assert row.label.text() == "Screen: PC screen"
     window.close()
 
 
@@ -1093,11 +1121,8 @@ def test_lt_moves_the_portal_with_a_second_screen(world, qapp, monkeypatch):
     window.on_action("lt")                                          # one screen: nothing moves, the line says why
     assert moves == [] and window.message == mw.ONE_SCREEN
     here = window.screen()
-
-    class Other:
-        def name(self):
-            return "Mi TV"
-    other = Other()
+    other = OtherScreen()
+    monkeypatch.setattr(portable.platform, "built_in_screens", lambda: [(here.geometry().x(), here.geometry().y())])
     monkeypatch.setattr(mw.QGuiApplication, "screens", staticmethod(lambda: [here, other]))
     window.screens_changed()                                        # a TV attached
     items = window.legend.items
@@ -1145,7 +1170,7 @@ def test_the_settings_lie_in_three_columns(world, qapp, monkeypatch):
     qapp.processEvents()
     window.on_action("menu")
     pane = window.suite_pane
-    pane.set_screen("Display 2")
+    pane.set_screen("Other screen")
     window.say("", mw.SWITCHED_MODE)                    # two lines under the rows
     qapp.processEvents()
     columns = [[pane.wallpaper, pane.transparency, pane.sound, pane.mode, pane.xbox_mode],

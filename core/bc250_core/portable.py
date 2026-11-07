@@ -88,7 +88,10 @@ PICTURE_MIN = (1280, 720)               # the Ally's screen: a smaller picture b
 PICTURE_RULES = "PNG, JPEG or WebP, wider than high, at least 1280 x 720 pixels"
 SOUND_KEY = "look/sound"                # the suite's sounds (the portal's intro) on or off: sound_on()
 SCREEN_KEY = "look/screen"              # the screen the suite's apps start on: start_screen() (owner, 31-10-2026)
+OWN_SCREEN, OTHER_SCREEN = "own", "other"   # SCREEN_KEY's values: the device's own screen, or another
 RESTARTED = "PORTABLE_RESTARTED"        # set for an app started again on another screen: no intro the second time
+FIT_MS = 1500                           # a full-screen window's place checked once its screen is still this long
+FIT_TRIES = 3                           # Windows moving it off its monitor again: put back this often, then left
 _fonts_loaded = False
 
 
@@ -150,31 +153,43 @@ def set_sound_on(suite: str, on: bool) -> None:
     settings.sync()
 
 
-def start_screen(suite: str) -> QScreen | None:
-    """The screen the suite's apps open on: the one an app was last moved to (by name), while it is attached, else
-    Windows' main display (owner, 31-10-2026: moved to the Ally's own screen, it stays there)."""
-    name = str(look_settings(suite).value(SCREEN_KEY, "")) if suite else ""
-    return next((screen for screen in QGuiApplication.screens() if name and screen.name() == name),
+def own_screen() -> QScreen | None:
+    """The device's own screen (a handheld's panel), as Windows reports its connection (platform.built_in_screens),
+    never by its name (owner, 07-11-2026: hardware changes); without one found, Windows' main display."""
+    screens = QGuiApplication.screens()
+    try:
+        corners = platform.built_in_screens()
+    except OSError:                                     # not Windows, or no answer: the main display
+        corners = []
+    return next((screen for screen in screens if (screen.geometry().x(), screen.geometry().y()) in corners),
                 QGuiApplication.primaryScreen())
+
+
+def start_screen(suite: str) -> QScreen | None:
+    """The screen the suite's apps open on: the device's own (PC screen) or another one (Other screen), as an app was
+    last moved, while there is one, else Windows' main display (owner, 31-10-2026: moved to the Ally's own screen,
+    it stays there; 07-11-2026: kept as PC screen or Other screen, never a screen's name)."""
+    kept = str(look_settings(suite).value(SCREEN_KEY, "")) if suite else ""
+    own = own_screen()
+    if kept == OWN_SCREEN and own is not None:
+        return own
+    if kept == OTHER_SCREEN:
+        return next((screen for screen in QGuiApplication.screens() if screen is not own),
+                    QGuiApplication.primaryScreen())
+    return QGuiApplication.primaryScreen()
 
 
 def set_start_screen(suite: str, screen: QScreen) -> None:
     if suite:
         settings = look_settings(suite)
-        settings.setValue(SCREEN_KEY, screen.name())
+        settings.setValue(SCREEN_KEY, OWN_SCREEN if screen is own_screen() else OTHER_SCREEN)
         settings.sync()
 
 
 def screen_label(screen: QScreen) -> str:
-    """A screen's name for a person: its model as Windows names it (Mi TV), or Display 1 for one without a name (the
-    device's own screen, DISPLAY1 in Windows)."""
-    name = screen.name()
-    if name.startswith("\\\\.\\"):
-        return name[4:].replace("DISPLAY", "Display ")
-    if not name:                                        # no name at all: its place among the screens
-        screens = QGuiApplication.screens()
-        return f"Display {screens.index(screen) + 1}" if screen in screens else "Display"
-    return name
+    """A screen for a person, as Win + P names them (owner, 07-11-2026: "just call it Other screen"): PC screen for the
+    device's own, Other screen for any other."""
+    return "PC screen" if screen is own_screen() else "Other screen"
 
 
 def restart_command(pid: int, argv: Sequence[str], cwd: str) -> list[str]:
@@ -1263,6 +1278,15 @@ class PortableWindow(QWidget):
         self.move_timer = QTimer(self)                  # once done
         self.move_timer.setInterval(1000)
         self.move_timer.timeout.connect(self._move_when_free)
+        self.fit_timer = QTimer(self)                   # fit_screen() once the screens have settled
+        self.fit_timer.setSingleShot(True)
+        self.fit_timer.setInterval(FIT_MS)
+        self.fit_timer.timeout.connect(self.fit_screen)
+        self.fit_tries = 0
+        self.full_screen_wanted = False                 # showFullScreen(): meant to fill its screen, whatever Qt says
+        self.watched: QScreen | None = None             # the screen whose size and scaling are followed
+        self.window_rect, self.monitor_rect = platform.window_rect, platform.monitor_rect
+        self.fill_monitor = platform.fill_monitor
         self.setObjectName("portable")
         self.setStyleSheet(f"QWidget#portable {{ background: {BACKGROUND}; }}")
         self.setAutoFillBackground(True)
@@ -1407,6 +1431,7 @@ class PortableWindow(QWidget):
         more width than the screen came out a title bar taller than its screen (owner, 01-11-2026: shadPS4 Manager
         1280 x 755 on the Ally, 1920 x 1110 on a 1080p TV, its row at the bottom cut off)."""
         self.setWindowFlag(Qt.WindowType.FramelessWindowHint)
+        self.full_screen_wanted = True
         super().showFullScreen()
 
     def showEvent(self, event) -> None:  # noqa: N802 (Qt override)
@@ -1416,6 +1441,13 @@ class PortableWindow(QWidget):
         if handle is not None and not self.property("follows_screen"):
             self.setProperty("follows_screen", True)
             handle.screenChanged.connect(self.screen_moved)
+            app = QGuiApplication.instance()
+            if isinstance(app, QGuiApplication):        # a screen attached, taken away or made the main one
+                app.screenAdded.connect(self.refit)
+                app.screenRemoved.connect(self.refit)
+                app.primaryScreenChanged.connect(self.refit)
+            self.watch(self.screen())
+            self.refit()
         for stack in self.findChildren(QStackedWidget):
             if not stack.property("one_page"):
                 stack.setProperty("one_page", True)
@@ -1432,9 +1464,80 @@ class PortableWindow(QWidget):
     def screen_moved(self, screen: QScreen | None) -> None:
         if screen is None or _pinned:
             return
+        self.watch(screen)
         set_start_screen(self.suite, screen)
-        if screen.geometry().size() != self.screen_size and self.isFullScreen():
+        if screen.geometry().size() != self.screen_size and self.fills_screen():
             self.move_to(screen)
+        else:
+            self.refit()
+
+    # Its place on the screen, kept (owner, 07-11-2026: "screen sizes can change, and switching between monitors with
+    # different sizes"; the portal's bottom row cut off on the TV again), as WindowManager keeps a game's: Windows'
+    # own rectangle of the monitor, compared with the window's and set exactly when they differ. Checked once things
+    # settle after the window shows, moves or changes size, and after its screen changes size or scaling (a display
+    # switch, another resolution) or a screen is attached or taken away; a screen of another size than the one the
+    # window was sized for starts the app again there (move_to).
+
+    def watch(self, screen: QScreen | None) -> None:
+        """Follow *screen*'s size and scaling (Qt says nothing through screenChanged when its own screen changes)."""
+        if screen is self.watched:
+            return
+        if self.watched is not None:
+            for signal in (self.watched.geometryChanged, self.watched.logicalDotsPerInchChanged):
+                try:
+                    signal.disconnect(self.refit)
+                except (TypeError, RuntimeError):       # not connected, or the screen is gone
+                    pass
+        self.watched = screen if isinstance(screen, QScreen) else None
+        if self.watched is not None:
+            screen.geometryChanged.connect(self.refit)
+            screen.logicalDotsPerInchChanged.connect(self.refit)
+
+    def refit(self, *_args) -> None:
+        """The screens changed: the place checked again once they have settled, with its tries afresh."""
+        self.fit_tries = 0
+        self.fit_soon()
+
+    def fills_screen(self) -> bool:
+        """Full screen, or meant to be: a window Windows moved or resized from outside is no longer full screen to Qt
+        (checked on the Ally, 07-11-2026: a title bar added, WindowNoState)."""
+        return self.full_screen_wanted or self.isFullScreen()
+
+    def hasHeightForWidth(self) -> bool:  # noqa: N802 (Qt's name)
+        """None while it fills its screen: Qt holds a window that is not full screen to its layout's height for its
+        width, and on its first move or resize from outside (a display switch, another monitor) the portal was
+        1536 x 888 on a 1536 x 864 TV, its bottom row cut off (owner, 07-11-2026). The screen sizes it, never its
+        content (setVisible)."""
+        return False if self.fills_screen() else super().hasHeightForWidth()
+
+    def fit_soon(self, *_args) -> None:
+        if self.isVisible() and self.fills_screen() and not _pinned:
+            self.fit_timer.start()                   # again from the start: once nothing has changed for FIT_MS
+
+    def fit_screen(self) -> None:
+        """A full-screen window on its monitor exactly, full screen to Qt again: started again when its screen is not
+        the size it was laid out for, else put on the monitor's rectangle when Windows has it elsewhere or larger (a
+        title bar), at most FIT_TRIES times in a row. Nothing in a window, or while a move waits (move_to)."""
+        screen = self.screen()
+        if _pinned or not self.isVisible() or not self.fills_screen() or self.move_pending or screen is None:
+            return
+        if not self.screen_size.isEmpty() and screen.geometry().size() != self.screen_size:
+            self.move_to(screen)
+            return
+        if not self.isFullScreen():                     # Qt's full screen again, then Windows' rectangle checked
+            self.setWindowState(self.windowState() | Qt.WindowState.WindowFullScreen)
+        try:
+            hwnd = int(self.winId())
+            monitor = self.monitor_rect(hwnd)
+            if self.window_rect(hwnd) == monitor:
+                self.fit_tries = 0
+                return
+            if self.fit_tries >= FIT_TRIES:
+                return
+            self.fit_tries += 1
+            self.fill_monitor(hwnd, monitor)
+        except OSError:                                 # not Windows, or Windows had no answer: left as it is
+            return
 
     def move_to(self, screen: QScreen) -> None:
         """Start again on *screen*, remembered for the suite: at once, or once the app is no longer busy (a download
@@ -1635,6 +1738,11 @@ class PortableWindow(QWidget):
         super().resizeEvent(event)
         if self.popup is not None:
             self.popup.setGeometry(self.rect())
+        self.fit_soon()
+
+    def moveEvent(self, event) -> None:  # noqa: N802 (Qt override)
+        super().moveEvent(event)
+        self.fit_soon()
 
     def event(self, event) -> bool:
         # The arrow keys move between the cards rather than through Qt's tab order.
@@ -1645,6 +1753,7 @@ class PortableWindow(QWidget):
 
     def closeEvent(self, event) -> None:
         self.gamepad.stop()
+        self.fit_timer.stop()
         super().closeEvent(event)
 
 

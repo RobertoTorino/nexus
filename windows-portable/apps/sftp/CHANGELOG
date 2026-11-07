@@ -1,3 +1,10 @@
+Changelog: 07-11-2026 12:29:55
+
+Fixed. paramiko 5 (>=5.0,<6, was >=3.4,<5): GHSA-r374-rxx8-8654 (low), paramiko before 5.0.0 still signed and
+verified RSA with SHA-1; Dependabot's security update could not raise the range itself. paramiko 5 drops SHA-1:
+a server that only offers ssh-rsa signatures or SHA-1 key exchange (OpenSSH before 7.2, 2016), and an RSA key that
+can only sign with SHA-1, no longer connect. Nothing the app calls changed; its tests pass with paramiko 5.1.0.
+
 Changelog: 07-11-2026 01:32:26
 
 Release 0.11.1.

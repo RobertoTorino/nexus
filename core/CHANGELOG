@@ -1,3 +1,26 @@
+Changelog: 07-11-2026 11:35:01
+
+Breaking. The suite's screens are PC screen and Other screen, never a screen's name (owner, 07-11-2026: "just call
+it Other screen"; hardware changes and an app must not fail on a name). own_screen() is the device's own screen,
+the one Windows reports built in (platform.built_in_screens(): QueryDisplayConfig's connection of each screen),
+else Windows' main display; screen_label() says PC screen for it and Other screen for any other;
+set_start_screen() keeps own or other in look/screen, and start_screen() opens on the device's own screen or on
+the first other one there is. A screen's name kept before is forgotten once: the apps open on the main display
+until one is moved again.
+
+Changelog: 07-11-2026 11:01:22
+
+Fixed. A full-screen PortableWindow keeps to its screen, as WindowManager keeps a game's window (owner, 07-11-2026:
+the portal's bottom row was cut off on the TV again). Moved or resized from outside (a display switch, a title bar
+added), Qt no longer counted the window as full screen and held it to its layout's height for its width: 1536 x 888
+on a 1536 x 864 TV. Filling a screen, the window now has no height for its width (the screen sizes it), and 1.5
+seconds after it or its screens change (it moves or changes size, its screen's size or scaling changes, a screen is
+attached, taken away or made the main one) it checks Windows' own rectangle of its monitor against its own and puts
+itself back on it exactly when they differ (at most three times in a row), full screen to Qt again; on a screen of
+another size than the one it was sized for it starts again there. platform has window_rect(), monitor_rect() and
+fill_monitor() for it (GetWindowRect, MonitorFromWindow with GetMonitorInfo, SetWindowPos). Checked on the Ally with
+the TV attached: the window pushed 40 pixels taller and off its corner went back on the TV's 1920 x 1080.
+
 Changelog: 07-11-2026 01:32:26
 
 Version 2.12.1.

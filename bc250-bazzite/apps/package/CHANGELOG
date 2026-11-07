@@ -1,3 +1,8 @@
+Changelog: 07-11-2026 12:29:55
+
+Fixed. The catalog's paramiko for SFTP Tools is >=5.0,<6, as its requirements now are (GHSA-r374-rxx8-8654:
+paramiko before 5.0.0 still used SHA-1 for RSA).
+
 Changelog: 06-11-2026 10:25:36
 
 Release 3.4.0.

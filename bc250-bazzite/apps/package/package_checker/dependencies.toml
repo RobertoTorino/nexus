@@ -1256,7 +1256,7 @@ description = "An SSH and SFTP library for Python. Bazzite SFTP Tools connects t
 
 [[dependency.source]]
 owner = "sftp"
-specifier = ">=3.4,<5"
+specifier = ">=5.0,<6"
 
 [[dependency]]
 name = "cryptography"

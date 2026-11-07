@@ -54,6 +54,7 @@ HELPER_INSTALL_S = 180          # its install or removal, with Windows' prompt a
 TILE_W, TILE_H, GAP = 293, 176, 14      # the mock-up's tiles: two rows of four
 COLUMNS, PER_PAGE = 4, 8          # a tab's page of tiles; a tab with more apps has more pages
 TAB_KEY = "window/tab"          # the settings: the tab shown last
+SOUND_OFF_KEY = "look/sound_off"   # the suite's: when Sound was switched off (time.time()), on again after a restart
 STEAM_MISSING = "Steam is not installed on this device: install it from store.steampowered.com, then RT opens it."
 ONE_SCREEN = "There is one screen: attach a TV or a monitor, then LT moves the portal to it."
 DISPLAY_SWITCH = Path(os.environ.get("SystemRoot") or r"C:\Windows") / "System32" / "DisplaySwitch.exe"   # Win + P
@@ -217,6 +218,7 @@ class MainWindow(PortableWindow):
         self.steam_here, self.open_steam = steam_here, open_steam
         self.startup = startup if startup is not None else start_menu() / "Startup"
         self.shortcut, self.booted = shortcut, booted or boot_time
+        self.sound_back()                               # before the intro, which plays it
         self.portal_check, self.battery, self.launch, self.terminal = portal_check, battery, launch, terminal
         self.player = player                            # plays a .wav (the intro's player, winsound)
         self.display = display                          # Windows' display setup (DisplaySwitch.exe)
@@ -574,11 +576,35 @@ class MainWindow(PortableWindow):
 
     def toggle_sound(self) -> None:
         """The Settings page's Sound row: the portal's intro sound on or off for the suite (owner, 29-10-2026), kept for
-        the next start."""
+        the next start until Windows restarts (sound_back)."""
         on = not portable.sound_on(SUITE)
         portable.set_sound_on(SUITE, on)
+        settings = portable.look_settings(SUITE)
+        if on:
+            settings.remove(SOUND_OFF_KEY)
+        else:
+            settings.setValue(SOUND_OFF_KEY, time.time())
+        settings.sync()
         self.suite_pane.set_sound(on)
         self.log.info(f"Sound {'on' if on else 'off'}, for the suite.")
+
+    def sound_back(self) -> None:
+        """Sound on again after Windows restarted (owner, 07-11-2026: "on reboot it should return to default"): Off
+        holds from its switch until the next start of Windows; one switched off before that time, or by a portal that
+        did not keep the time, is on again."""
+        settings = portable.look_settings(SUITE)
+        if portable.sound_on(SUITE):
+            return
+        try:
+            off = float(settings.value(SOUND_OFF_KEY, 0))
+        except (TypeError, ValueError):
+            off = 0.0
+        if off >= self.booted():
+            return
+        portable.set_sound_on(SUITE, True)
+        settings.remove(SOUND_OFF_KEY)
+        settings.sync()
+        self.log.info("Sound on again: it was switched off before Windows started.")
 
     def resizeEvent(self, event) -> None:  # noqa: N802 (Qt override)
         super().resizeEvent(event)
@@ -1381,7 +1407,7 @@ class MainWindow(PortableWindow):
 
     def screen_moved(self, screen) -> None:
         """Moved to another screen by the keyboard (Win + Shift + an arrow) without starting again (a screen of the
-        same size): the Screen row names the screen it is on now (owner, 01-11-2026: it still said Display 2)."""
+        same size): the Screen row says the screen it is on now, PC screen or Other screen (owner, 01-11-2026)."""
         super().screen_moved(screen)
         self.screens_changed()
 

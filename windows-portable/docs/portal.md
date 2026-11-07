@@ -135,7 +135,7 @@ bottom does.
 |---|---|
 | Wallpaper | A picture behind the tiles, which show it through them, in every app of the suite, each from its next start. **A** picks the next: **Off** (the plain dark background), **Built-in** (the suite's own picture), then each of your own pictures, by file name (see below). |
 | Transparency | How much of the dark background lies over the picture, so the text stays easy to read. **A** adds 10 %, up to 90 %, then starts at 0 %. It starts at 59 %. |
-| Sound | The intro's sound when the portal starts, and a short sound on each controller button. Off: both are silent. |
+| Sound | The intro's sound when the portal starts, and a short sound on each controller button. Off: both are silent until Windows starts again; after a restart the sound is on. |
 | Clock | The time at the top in **24 hours** (17:04) or **12 hours** (5:04 PM). **A** switches. |
 | Seconds | **On** shows the seconds too (17:04:09). **A** switches. |
 | Time zone | **CET**, Amsterdam time (CEST in summer, as Europe switches on the last Sundays of March and October), or **UTC**; its name follows the time. **A** switches. |
@@ -146,7 +146,7 @@ bottom does.
 | Duplicate | **A** has Windows show the same picture on both screens, XBOX mode too; the sound goes to the second screen. |
 | Extend | **A** has Windows use both screens, the second one beside the handheld's. XBOX mode stays on the main screen, the handheld's. |
 | Second screen only | **A** has Windows show its picture on the second screen only (a TV or a monitor), so XBOX mode, the portal, the games and the sound are all there; the handheld's screen goes dark. |
-| Screen | Only with a second screen attached, such as a TV or a monitor: the screen the portal is on. **A**, or **LT** on any page, moves it to the next screen (see below). |
+| Screen | Only with a second screen attached, such as a TV or a monitor: the screen the portal is on, **PC screen** (the handheld's own) or **Other screen**. **A**, or **LT** on any page, moves it to the next screen (see below). |
 
 **Your own wallpapers** go in the folder `%LOCALAPPDATA%\windows-portable-suite\wallpapers`, which the installer
 makes: paste that address in File Explorer's address bar and drop the pictures there. Only pictures in that folder
@@ -228,12 +228,18 @@ The window fits the screen it is on: it is laid out for the Ally's 1280 x 720 (a
 larger on a larger screen, such as a TV, and smaller on a smaller one.
 
 **With a second screen** attached, such as a TV or a monitor, the portal and the suite's apps open on the screen they
-were last moved to, while it is attached, otherwise on Windows' main display. To move one to the other screen, use
+were last moved to, **PC screen** (the handheld's own, as Windows reports it built in) or **Other screen** (any
+other one, whatever its make), while there is one, otherwise on Windows' main display. To move one to the other screen, use
 the Settings page's **Screen** row or **LT** (the row at the bottom shows **LT Screen** then), or press **Win +
 Shift + Left** (or **Right**) with its window in front, which works for every app of the suite; the row at the bottom
 shows those keys at its left, after a symbol of two screens with an arrow between them. The window cannot be dragged: it is full screen, without a title bar. On a screen
 of another size the app starts again there, sized for that screen, in a second or two; a download or an install
 finishes first, and the portal says it will move once that is done.
+
+The window always fills the screen it is on, exactly. When Windows moves it or changes its size (switching the
+display setup, changing a screen's resolution or scaling, attaching or removing a screen), the app puts itself back
+on that screen's full area a second or two later; when the screen is now another size, it starts again there, sized
+for it.
 
 ## Files
 

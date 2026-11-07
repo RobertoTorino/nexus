@@ -195,7 +195,7 @@ class SuitePane(Pane):
         self.both = Row("Duplicate")
         self.extend = Row("Extend")
         self.tv = Row("Second screen only")
-        self.screen_row = Row("Screen: Display 1")
+        self.screen_row = Row("Screen: PC screen")
         self.screen_row.hide()                          # with a second screen attached
         # The clock and the weather at the top (owner, 06-11-2026)
         self.hours = Row("Clock: 24 hours")

@@ -225,6 +225,123 @@ def start_touch_keyboard() -> None:
     os.startfile(str(program))  # type: ignore[attr-defined]  # Windows only
 
 
+# A window and its monitor as Windows has them, in the screen's own pixels (Qt's apps are per-monitor DPI aware): a
+# full-screen window is placed on its monitor's rectangle exactly, as WindowManager does (owner, 07-11-2026: the
+# portal's bottom row was cut off again on the TV). Rectangles are (left, top, width, height).
+WS_CAPTION, WS_THICKFRAME = 0x00C00000, 0x00040000
+SWP_NOACTIVATE, SWP_NOOWNERZORDER, SWP_FRAMECHANGED = 0x0010, 0x0200, 0x0020
+
+
+def _user32():
+    import ctypes
+    windll = getattr(ctypes, "windll", None)            # None where Windows is only played (the tests on Linux)
+    if not WINDOWS or windll is None:
+        raise OSError("A window's place on its monitor is Windows'.")
+    return windll.user32
+
+
+def window_rect(hwnd: int) -> tuple[int, int, int, int]:
+    """The window's rectangle on the desktop (GetWindowRect); OSError off Windows or when Windows has no answer."""
+    import ctypes
+    from ctypes import wintypes
+    rect = wintypes.RECT()
+    if not _user32().GetWindowRect(wintypes.HWND(hwnd), ctypes.byref(rect)):
+        raise OSError("Windows did not give the window's rectangle.")
+    return rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top
+
+
+def monitor_rect(hwnd: int) -> tuple[int, int, int, int]:
+    """The whole rectangle of the monitor the window is on (most of it, else the nearest): MonitorFromWindow and
+    GetMonitorInfo's rcMonitor, the taskbar included."""
+    import ctypes
+    from ctypes import wintypes
+
+    class MonitorInfo(ctypes.Structure):
+        _fields_ = [("cbSize", wintypes.DWORD), ("rcMonitor", wintypes.RECT), ("rcWork", wintypes.RECT),
+                    ("dwFlags", wintypes.DWORD)]
+
+    user32 = _user32()
+    user32.MonitorFromWindow.restype = wintypes.HMONITOR
+    monitor = user32.MonitorFromWindow(wintypes.HWND(hwnd), 2)     # MONITOR_DEFAULTTONEAREST
+    info = MonitorInfo()
+    info.cbSize = ctypes.sizeof(MonitorInfo)
+    if not monitor or not user32.GetMonitorInfoW(wintypes.HMONITOR(monitor), ctypes.byref(info)):
+        raise OSError("Windows did not give the window's monitor.")
+    rect = info.rcMonitor
+    return rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top
+
+
+def fill_monitor(hwnd: int, rect: tuple[int, int, int, int]) -> None:
+    """The window on *rect* exactly (its monitor's), without a title bar or a sizing frame: they are taken away
+    when Windows gave it one, as a full-screen window has none."""
+    from ctypes import wintypes
+    user32 = _user32()
+    style = user32.GetWindowLongW(wintypes.HWND(hwnd), -16)        # GWL_STYLE
+    if style & (WS_CAPTION | WS_THICKFRAME):
+        user32.SetWindowLongW(wintypes.HWND(hwnd), -16, style & ~(WS_CAPTION | WS_THICKFRAME))
+    left, top, width, height = rect
+    if not user32.SetWindowPos(wintypes.HWND(hwnd), None, left, top, width, height,
+                               SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_FRAMECHANGED):
+        raise OSError("Windows did not move the window onto its monitor.")
+
+
+# The device's own screen, as Windows reports its connection (owner, 07-11-2026: no screen found by its name, hardware
+# changes): QueryDisplayConfig's output technology of each active screen, the built-in ones' top-left corners.
+BUILT_IN = (0x80000000, 6, 11, 13)      # DISPLAYCONFIG_OUTPUT_TECHNOLOGY_ INTERNAL, LVDS, DISPLAYPORT_ and UDI_EMBEDDED
+
+
+def built_in_screens() -> list[tuple[int, int]]:
+    """The top-left corners, on the desktop, of the screens built into the device (a handheld's own panel): Windows'
+    QueryDisplayConfig for each active screen's connection, its source's monitor from EnumDisplayMonitors. Empty
+    without one (a desktop PC, only a TV); OSError off Windows or when Windows has no answer."""
+    import ctypes
+    from ctypes import wintypes
+    user32 = _user32()
+
+    class Luid(ctypes.Structure):                       # two DWORDs, aligned as one
+        _fields_ = [("low", ctypes.c_uint32), ("high", ctypes.c_int32)]
+
+    class Path(ctypes.Structure):                       # DISPLAYCONFIG_PATH_INFO, 72 bytes
+        _fields_ = [("source_adapter", Luid), ("source_id", ctypes.c_uint32), ("source_rest", ctypes.c_uint32 * 2),
+                    ("target_adapter", Luid), ("target_id", ctypes.c_uint32), ("target_mode", ctypes.c_uint32),
+                    ("output", ctypes.c_uint32), ("target_rest", ctypes.c_uint32 * 7), ("flags", ctypes.c_uint32)]
+
+    class SourceName(ctypes.Structure):                 # DISPLAYCONFIG_SOURCE_DEVICE_NAME
+        _fields_ = [("type", ctypes.c_uint32), ("size", ctypes.c_uint32), ("adapter", Luid),
+                    ("id", ctypes.c_uint32), ("gdi", ctypes.c_wchar * 32)]
+
+    class MonitorInfo(ctypes.Structure):                # MONITORINFOEXW
+        _fields_ = [("cbSize", wintypes.DWORD), ("rcMonitor", wintypes.RECT), ("rcWork", wintypes.RECT),
+                    ("dwFlags", wintypes.DWORD), ("device", ctypes.c_wchar * 32)]
+
+    paths, modes = ctypes.c_uint32(), ctypes.c_uint32()
+    if user32.GetDisplayConfigBufferSizes(2, ctypes.byref(paths), ctypes.byref(modes)):     # QDC_ONLY_ACTIVE_PATHS
+        raise OSError("Windows did not give its screens.")
+    path_info, mode_info = (Path * paths.value)(), (ctypes.c_byte * (64 * max(modes.value, 1)))()
+    if user32.QueryDisplayConfig(2, ctypes.byref(paths), path_info, ctypes.byref(modes), mode_info, None):
+        raise OSError("Windows did not give its screens.")
+    built_in = set()
+    for path in path_info[:paths.value]:
+        if path.output not in BUILT_IN:
+            continue
+        name = SourceName(type=1, size=ctypes.sizeof(SourceName), adapter=path.source_adapter, id=path.source_id)
+        if not user32.DisplayConfigGetDeviceInfo(ctypes.byref(name)):    # DISPLAYCONFIG_DEVICE_INFO_GET_SOURCE_NAME
+            built_in.add(name.gdi)
+    corners: list[tuple[int, int]] = []
+    callback = ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HMONITOR, wintypes.HDC, ctypes.POINTER(wintypes.RECT),
+                                  wintypes.LPARAM)
+
+    def each(monitor, _hdc, _rect, _data):
+        info = MonitorInfo()
+        info.cbSize = ctypes.sizeof(MonitorInfo)
+        if user32.GetMonitorInfoW(monitor, ctypes.byref(info)) and info.device in built_in:
+            corners.append((info.rcMonitor.left, info.rcMonitor.top))
+        return True
+
+    user32.EnumDisplayMonitors(None, None, callback(each), 0)
+    return corners
+
+
 _OUTSIDE = threading.Lock()
 BUNDLE_VARIABLES = ("QT_PLUGIN_PATH", "QML2_IMPORT_PATH")     # what PyInstaller's PyQt6 hook sets for the app itself
 # What the app's own controller reader sets for SDL (gamepad.PygameSource), for itself only

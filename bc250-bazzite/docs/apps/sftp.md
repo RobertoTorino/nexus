@@ -23,7 +23,9 @@ and asks before it saves, and starts or stops the SSH server of this computer wh
 - Python 3.10 or newer. The installer makes the app's own virtual environment with PyQt6 and
   [paramiko](https://www.paramiko.org/) in it, so the suite's shared environment is not touched.
 - On the host you connect to: `sshd` running, and the firewall open for it. [Set up the host](#set-up-the-host)
-  has the commands.
+  has the commands. Its SSH server must sign with SHA-2 (OpenSSH 7.2 from 2016 or newer, as every current system
+  has); an older server that only offers SHA-1 (`ssh-rsa`) is refused, and so is an RSA key that can only sign
+  with SHA-1.
 - Optional: `paplay` (the sound of the beep when a transfer completes). Without it the app uses Qt's beep.
 
 ## Using it

@@ -354,3 +354,21 @@ def test_the_touch_keyboard_is_windows_only_and_needs_its_host(monkeypatch, tmp_
     monkeypatch.setattr(platform.os, "startfile", started.append, raising=False)
     platform.start_touch_keyboard()
     assert started == [str(tmp_path / "TabTip.exe")]
+
+
+def test_a_window_and_its_monitor_as_windows_has_them(monkeypatch):
+    """window_rect, monitor_rect and fill_monitor, as WindowManager places a window, and built_in_screens, the
+    device's own screen by its connection (owner, 07-11-2026): Windows' own answers; elsewhere an OSError that says
+    why."""
+    if sys.platform == "win32":
+        import ctypes
+        desktop = ctypes.windll.user32.GetDesktopWindow()
+        left, top, width, height = platform.monitor_rect(desktop)
+        assert width > 0 and height > 0
+        assert platform.window_rect(desktop)[2] > 0
+        assert all(isinstance(x, int) and isinstance(y, int) for x, y in platform.built_in_screens())
+    monkeypatch.setattr(platform, "WINDOWS", False)
+    for call in (lambda: platform.window_rect(1), lambda: platform.monitor_rect(1),
+                 lambda: platform.fill_monitor(1, (0, 0, 1280, 720)), platform.built_in_screens):
+        with pytest.raises(OSError, match="Windows'"):
+            call()

@@ -206,8 +206,8 @@ def test_installed_environments_follow_each_launcher(tmp_path):
 
 
 def test_environment_versions_read_site_packages(tmp_path):
-    venv = _venv(tmp_path / "venv", {"PyQt6": "6.11.0", "paramiko": "4.0.0"})
-    assert environment_versions(venv) == {"pyqt6": "6.11.0", "paramiko": "4.0.0"}
+    venv = _venv(tmp_path / "venv", {"PyQt6": "6.11.0", "paramiko": "5.1.0"})
+    assert environment_versions(venv) == {"pyqt6": "6.11.0", "paramiko": "5.1.0"}
     assert environment_versions(tmp_path / "nothing") == {}
 
 
@@ -215,13 +215,13 @@ def test_packages_are_checked_in_each_app_environment(tmp_path):
     """A package of an app with its own venv is found there, not reported missing from the shared one."""
     dependencies = {dependency.name: dependency for dependency in load_catalog(CATALOG)}
     shared = _venv(tmp_path / "shared", {"PyQt6": "6.11.0", "PyQt6-Charts": "6.11.0"})
-    demo = _venv(tmp_path / "demo", {"PyQt6": "6.11.0", "paramiko": "4.0.0"})
+    demo = _venv(tmp_path / "demo", {"PyQt6": "6.11.0", "paramiko": "5.1.0"})
     environments = {"portal": (shared,), "check": (shared,), "sftp": (demo,)}
 
     results = {result.dependency.name: result for result in check_dependencies(
         list(dependencies.values()), "test-agent", environments, get_latest=lambda name, _agent: {
-            "PyQt6": "6.12.0", "PyQt6-Charts": "6.11.0", "pygame-ce": "2.5.8", "paramiko": "4.0.0", "pygame-ce": "2.5.8",
-            "pillow": "12.3.0", "paramiko": "4.0.0", "cryptography": "46.0.0", "aiortc": "1.15.0"}[name],
+            "PyQt6": "6.12.0", "PyQt6-Charts": "6.11.0", "pygame-ce": "2.5.8", "paramiko": "5.1.0", "pygame-ce": "2.5.8",
+            "pillow": "12.3.0", "paramiko": "5.1.0", "cryptography": "46.0.0", "aiortc": "1.15.0"}[name],
         get_vulnerabilities=NO_CVES)}
 
     pyqt = results["PyQt6"]
@@ -229,14 +229,14 @@ def test_packages_are_checked_in_each_app_environment(tmp_path):
         (shared, ("portal", "check"), "6.11.0"), (demo, ("sftp",), "6.11.0")]
     assert pyqt.update_available and not pyqt.missing
     assert results["PyQt6-Charts"].needed and not results["PyQt6-Charts"].update_available
-    assert results["paramiko"].environments[0].version == "4.0.0" and not results["paramiko"].missing
+    assert results["paramiko"].environments[0].version == "5.1.0" and not results["paramiko"].missing
     assert [env.owners for env in results["pygame-ce"].missing] == [("portal",)]
 
 
 def test_packages_of_apps_that_are_not_installed_are_not_needed():
     dependency = next(dependency for dependency in load_catalog(CATALOG) if dependency.name == "paramiko")
     result = check_dependencies([dependency], "agent", {"check": (Path("/x"),)},
-                                get_versions=lambda _venv: {}, get_latest=lambda *_args: "4.0.0",
+                                get_versions=lambda _venv: {}, get_latest=lambda *_args: "5.1.0",
                                 get_vulnerabilities=NO_CVES)[0]
     assert not result.needed and not result.missing and not result.update_available
 
