@@ -1,0 +1,3 @@
+Changelog: 07-11-2026 00:03:37
+
+Added. Added USB HD Cam as an optional utility for the Sony camera models recognized by its USB identifiers. Camera firmware remains separate from the app, and system-wide USB access is granted only after explicit approval.

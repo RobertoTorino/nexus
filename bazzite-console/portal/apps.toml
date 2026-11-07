@@ -1,0 +1,200 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Each [apps.<name>] table pins one release of a suite app. The required app is always installed and listed first.
+
+[apps.bazzite]
+name = "Bazzite Test"
+summary = "Read-only system details for PlayStation 5 hardware running Bazzite."
+tag = "ps5-bazzite-v0.1.0"
+sha256 = ""
+required = true
+changes_board = false
+category = "sustainable"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/bazzite-test"]
+launch = [["Open", "~/.local/bin/bazzite-test"]]
+
+[apps.rpcs3]
+name = "RPCS3 Manager"
+summary = "Install RPCS3 for PS3 games, manage game libraries, and add games to Game Mode."
+tag = "ps5-rpcs3-v0.1.0"
+sha256 = ""
+required = false
+changes_board = false
+category = "gaming"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/ps5-rpcs3-manager"]
+launch = [["Open", "~/.local/bin/ps5-rpcs3-manager"]]
+
+[apps.consoles]
+name = "Console Link"
+summary = "Find, wake, and register PS4 and PS5 consoles on the network, and start Remote Play."
+tag = "ps5-consoles-v0.1.0"
+sha256 = ""
+required = false
+changes_board = false
+category = "gaming"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/ps5-console-link"]
+launch = [["Open", "~/.local/bin/ps5-console-link"]]
+
+[apps.clb]
+name = "Console LinkB"
+summary = "Stream Xbox consoles and Xbox Cloud Gaming to the system."
+tag = "ps5-clb-v0.1.0"
+sha256 = ""
+required = false
+changes_board = false
+category = "gaming"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/ps5-console-linkb"]
+launch = [["Open", "~/.local/bin/ps5-console-linkb"]]
+
+[apps.shadps4]
+name = "shadPS4 Manager"
+summary = "Install shadPS4 for PS4 games, manage game libraries, and add games to Game Mode."
+tag = "ps5-shadps4-v0.1.0"
+sha256 = ""
+required = false
+changes_board = false
+category = "gaming"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/ps5-shadps4-manager"]
+launch = [["Open", "~/.local/bin/ps5-shadps4-manager"]]
+
+[apps.decky]
+name = "Decky Loader Manager"
+summary = "Manage Decky Loader and Steam Game Mode plugins; installation adds a system service."
+tag = "ps5-decky-v0.1.0"
+sha256 = ""
+required = false
+changes_board = true
+board_change = "Installs Decky Loader under the user's homebrew folder, adds and enables a root systemd service, and labels the loader binary for SELinux. The Decky install and service are system-wide, not isolated to this manager. It does not change firmware or boot settings. Uninstalling Decky Loader Manager leaves Decky Loader and its service in place; remove Decky with `ujust setup-decky uninstall`. Use only on a Bazzite image with Steam/Game Mode and systemd support."
+category = "gaming"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/ps5-decky-manager"]
+launch = [["Open", "~/.local/bin/ps5-decky-manager"]]
+
+[apps.datstation]
+name = "Bazzite DatStation"
+summary = "Play a PlayStation quiz and explore console history, system versions, region codes, manuals, and news."
+tag = "ps5-datstation-v0.1.0"
+sha256 = ""
+required = false
+changes_board = false
+category = "gaming"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/ps5-datstation"]
+launch = [["Open", "~/.local/bin/ps5-datstation"]]
+
+[apps.ppsspp]
+name = "PPSSPP Manager"
+summary = "Install PPSSPP for PSP games, manage game libraries, and add games to Game Mode."
+tag = "ps5-ppsspp-v0.1.0"
+sha256 = ""
+required = false
+changes_board = false
+category = "gaming"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/ps5-ppsspp-manager"]
+launch = [["Open", "~/.local/bin/ps5-ppsspp-manager"]]
+
+[apps.pcsx2]
+name = "PCSX2 Manager"
+summary = "Install PCSX2 for PS2 games, manage BIOS and game libraries, and add games to Game Mode."
+tag = "ps5-pcsx2-v0.1.0"
+sha256 = ""
+required = false
+changes_board = false
+category = "gaming"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/ps5-pcsx2-manager"]
+launch = [["Open", "~/.local/bin/ps5-pcsx2-manager"]]
+
+[apps.vita3k]
+name = "Vita3K Manager"
+summary = "Install Vita3K for PS Vita games and add installed titles to Game Mode."
+tag = "ps5-vita3k-v0.1.0"
+sha256 = ""
+required = false
+changes_board = false
+category = "gaming"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/ps5-vita3k-manager"]
+launch = [["Open", "~/.local/bin/ps5-vita3k-manager"]]
+
+[apps.xenia]
+name = "Xenia Manager"
+summary = "Install Xenia Canary for Xbox 360 games and add games to Game Mode."
+tag = "ps5-xenia-v0.1.0"
+sha256 = ""
+required = false
+changes_board = false
+category = "gaming"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/ps5-xenia-manager"]
+launch = [["Open", "~/.local/bin/ps5-xenia-manager"]]
+
+[apps.sftp]
+name = "SFTP Tools"
+summary = "Transfer files over SFTP and manage SSH servers on Bazzite hosts."
+tag = "ps5-sftp-v0.1.0"
+sha256 = ""
+required = false
+changes_board = true
+board_change = "Starting or configuring an SSH server changes the local or remote Bazzite host. Starting the local server enables it at boot and may open the firewall for SSH. Review access and firewall rules before enabling it."
+category = "utilities"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/ps5-sftp-tools"]
+launch = [["Open", "~/.local/bin/ps5-sftp-tools"]]
+
+[apps.hdcam]
+name = "USB HD Cam"
+summary = "Use supported Sony PlayStation cameras as webcams on Bazzite."
+tag = "ps5-hdcam-v0.1.0"
+sha256 = ""
+required = false
+changes_board = true
+board_change = "Allow access installs a system-wide udev rule for supported camera identifiers. A per-user service loads camera firmware when the camera connects. The udev rule is removed when the app is uninstalled."
+category = "utilities"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/ps5-usb-hdcam"]
+launch = [["Open", "~/.local/bin/ps5-usb-hdcam"]]
+
+[apps.hdcontrol]
+name = "USB HD Control"
+summary = "Manage DualSense and DualSense Edge controllers on Bazzite."
+tag = "ps5-hdcontrol-v0.1.0"
+sha256 = ""
+required = false
+changes_board = false
+category = "utilities"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/ps5-usb-hdcontrol"]
+launch = [["Open", "~/.local/bin/ps5-usb-hdcontrol"]]
+
+[apps.ssd]
+name = "SSD Check"
+summary = "Inspect drive health and information exposed by Bazzite; run an optional filesystem speed test."
+tag = "ps5-ssd-v0.1.0"
+sha256 = ""
+required = false
+changes_board = false
+category = "utilities"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/ps5-ssd-check"]
+launch = [["Open", "~/.local/bin/ps5-ssd-check"]]

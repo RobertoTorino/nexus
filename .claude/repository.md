@@ -12,7 +12,8 @@ The repository is **Nexus**, `github.com/RobertoTorino/nexus` (branch `main`; un
 `bc250-bazzite-suite`, which GitHub redirects: never make a repository of that name again, it would end the
 redirect that installed portals update through). It is the umbrella over the suites: every suite in a folder of its
 own (owner, 26-10-2026), with what they share at the root. The **BC250 Bazzite Suite** (tools for the AMD BC-250 on
-Bazzite) is `bc250-bazzite/`; its tag names (`<app>-v<x.y.z>`, `portal-v<x.y.z>`), app ids and wiki address did not
+Bazzite) is `bc250-bazzite/`; the **Bazzite Console Suite** (PlayStation 5 hardware running Bazzite) is
+`bazzite-console/` with `ps5-` tags; the BC250 suite's tag names (`<app>-v<x.y.z>`, `portal-v<x.y.z>`), app ids and wiki address did not
 change with the move. The **Windows Portable Suite** (Windows handhelds) is `windows-portable/`: its apps are
 released as one zip per tag with a PyInstaller build and an `install.ps1` (`windows-portable/tools/build_release.py`,
 on Windows). **Each suite stands apart** (owner, 27-10-2026): a change to one suite never edits another suite's

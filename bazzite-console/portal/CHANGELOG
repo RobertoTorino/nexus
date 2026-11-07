@@ -1,0 +1,22 @@
+Changelog: 07-11-2026 12:11:39
+
+Added. X (formerly Twitter), Instagram, Discord, TikTok, WhatsApp, Netflix and Spotify launcher cards to the Media
+category.
+
+Changelog: 07-11-2026 01:42:48
+
+Added. The Media category has Twitch and Stremio launcher cards.
+
+Changelog: 07-11-2026 01:21:03
+
+Added. The Media category has YouTube and Twitch launcher cards that open fullscreen in Brave Browser; Brave
+Browser's Flatpak must be installed.
+
+Changelog: 06-11-2026 21:34:05
+
+Added. A fullscreen app library with category browsing, install and update flows, controller navigation, a Settings
+page, and a live date and time header.
+
+Changelog: 06-11-2026 11:25:07
+
+Added. The first Bazzite Console Suite portal, with Bazzite Test as its required app.

@@ -13,7 +13,8 @@ tasks need; the rest is in files it points to, read when the task calls for them
   tooling they need.
 - [.claude/releases.md](.claude/releases.md): what a release is, Nexus's version, the CHANGELOG kinds, and which
   steps are the owner's.
-- [bc250-bazzite/CLAUDE.md](bc250-bazzite/CLAUDE.md) and [windows-portable/CLAUDE.md](windows-portable/CLAUDE.md):
+- [bc250-bazzite/CLAUDE.md](bc250-bazzite/CLAUDE.md), [bazzite-console/CLAUDE.md](bazzite-console/CLAUDE.md)
+  and [windows-portable/CLAUDE.md](windows-portable/CLAUDE.md):
   each suite's own rules (the layout of its apps, the board, the scope, the names not to use). Status and plans:
   [MIGRATION.md](MIGRATION.md).
 
@@ -21,8 +22,10 @@ tasks need; the rest is in files it points to, read when the task calls for them
 
 The repository is **Nexus**, `github.com/RobertoTorino/nexus` (branch `main`): the umbrella over the suites, every
 suite in a folder of its own, with what they share at the root. The **BC250 Bazzite Suite** (the AMD BC-250 on
-Bazzite) is `bc250-bazzite/`; the **Windows Portable Suite** (Windows handhelds) is `windows-portable/`. A suite's
-`SYSTEM` file names the system it is made for and tested on, its release tags start with its `TAG_PREFIX` (`wp-`;
+Bazzite) is `bc250-bazzite/`; the **Bazzite Console Suite** (PlayStation 5 hardware running Bazzite) is
+`bazzite-console/`; the **Windows Portable Suite** (Windows handhelds) is `windows-portable/`. A suite's
+`SYSTEM` file names the system it is made for and tested on, its release tags start with its `TAG_PREFIX` (`ps5-`
+and `wp-`;
 the BC250 suite has none and is the tools' default suite, `tools/suites.py`), and its folder holds its
 `apps/<name>/`, its `portal/` with `apps.toml` (one pinned release per app), its wiki in `docs/`, its `icons/` and
 its `tools/`. The root keeps what is Nexus's: `core/bc250_core/` (shared Python code, bundled per app at release

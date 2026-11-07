@@ -1,0 +1,7 @@
+Changelog: 06-11-2026 22:49:44
+
+Fixed. Emulator release messages now identify the pinned build without implying PS5 hardware validation.
+
+Changelog: 06-11-2026 22:39:30
+
+Added. Ported Vita3K Manager for PS Vita games with console-suite launchers and Game Mode shortcuts.

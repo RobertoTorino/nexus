@@ -1,0 +1,570 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+/* The Bazzite Console Suite's wiki: Bazzite purple and Inter with heavy titles like the apps' header_font(). Only this
+   wiki loads this file; every other wiki has a stylesheet of its own. The design panel (mkdocs serve) shows the
+   variables below: the comment before a rule names its group, the comment after a variable says what it colors. */
+
+/* The suite's colors: the rest of the design is made from these. */
+:root {
+  --suite-primary: #5835CE;     /* Main color: table headings, page icons, the home page's gradient */
+  --suite-secondary: #8A2BE2;   /* Second color: hover on links and buttons, the home page's gradients */
+  --suite-ink: #120c22;         /* Darkest: the home page's dark sections and its footer */
+  --suite-deep: #1e1340;        /* Deep: the header, the top of the home page, the Download button */
+  --suite-soft: #a98bff;        /* Light: links, the icons on the home page's cards, footer headings */
+  --suite-mist: #c9bfee;        /* Pale: text on the home page's cards, footer links */
+}
+
+/* Corners. */
+:root {
+  --suite-radius-small: 6px;    /* Tooltips, as the apps' */
+  --suite-radius-medium: 8px;   /* Notes, code blocks, tables, pictures, search results */
+  --suite-radius-large: 12px;   /* An app's icon at the top of its chapter */
+}
+
+/* Header: the bar at the top of every page. */
+:root {
+  --suite-header-bg: var(--suite-deep);   /* Header background */
+  --suite-header-fg: #ffffff;             /* Header text: the suite's name and the links */
+  --suite-header-hover-bg: #ffffff1f;         /* Behind a link in the header under the pointer */
+}
+
+/* Material's main color. */
+[data-md-color-primary="custom"] {
+  --md-primary-fg-color: var(--suite-primary);   /* Buttons and Material's highlights */
+  --md-primary-fg-color--light: #7a5ce0;         /* Lighter main color */
+  --md-primary-fg-color--dark: #4426a8;          /* Darker main color */
+  --md-primary-bg-color: #ffffff;                /* Text on the main color */
+  --md-primary-bg-color--light: #ffffffb3;       /* Dimmed text on the main color: the search field's hint */
+}
+
+/* Material's hover color. */
+[data-md-color-accent="custom"] {
+  --md-accent-fg-color: var(--suite-secondary);  /* Links and buttons under the pointer, the outline on pictures */
+  --md-accent-fg-color--transparent: #8a2be21a;  /* A faint fill behind what is under the pointer */
+  --md-accent-bg-color: #ffffff;                 /* Text on the hover color */
+  --md-accent-bg-color--light: #ffffffb3;        /* Dimmed text on the hover color */
+}
+
+/* The page. */
+[data-md-color-scheme="slate"] {
+  --md-typeset-a-color: var(--suite-soft);       /* Links in the text */
+  --md-default-bg-color: #17141f;                /* Page background */
+}
+
+/* Buttons. */
+:root {
+  --suite-button-shadow: #00000040;           /* The shadow under a button under the pointer */
+}
+
+/* Tables. */
+:root {
+  --suite-table-head-bg: var(--suite-primary);    /* Background of a table's headings */
+  --suite-table-head-fg: #ffffff;             /* Text of a table's headings */
+}
+
+/* The home page. */
+:root {
+  --suite-hero-fg: #ffffff;                   /* The words under the pictures at the top: the name and the claim */
+  --suite-hero-shadow: #120c2273;             /* The shadow under the board and the controller at the top */
+  --suite-stage-bg: #8b4fd8;                  /* The stage pill under the claim */
+  --suite-stage-fg: #ffffff;                  /* Text in the stage pill */
+  --suite-section-bg: var(--suite-ink);           /* Background of the dark sections */
+  --suite-section-fg: #ffffff;                /* Text, card titles and links in the dark and the colored sections */
+  --suite-section-button: #ffffff;            /* Buttons there: outline and text, the fill under the pointer */
+}
+
+/* The home page's footer. */
+:root {
+  --suite-footer-bg: var(--suite-ink);            /* Footer background */
+  --suite-footer-fg: #ffffff;                 /* The name, and a link under the pointer */
+  --suite-footer-notice-bg: #00000059;        /* The strip with the notice at the bottom, over the footer */
+}
+
+
+.md-header, .md-tabs {
+  background: var(--suite-header-bg);
+  color: var(--suite-header-fg);
+}
+
+/* Buttons as pills. */
+.md-typeset .md-button {
+  border-radius: 2em;
+  padding: 0.55em 1.5em;
+  font-weight: 700;
+  transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.md-typeset .md-button:hover,
+.md-typeset .md-button:focus {
+  box-shadow: 0 0.5em 1em var(--suite-button-shadow);
+}
+
+.md-search__form {
+  border-radius: 2em;
+}
+
+.md-typeset h1, .md-typeset h2 {
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.md-typeset h1 {
+  color: var(--md-default-fg-color);
+}
+
+.md-typeset h3, .md-typeset h4 {
+  font-weight: 700;
+}
+
+.md-nav--primary > .md-nav__list > .md-nav__item > .md-nav__link[href$="SECURITY/"],
+.md-nav--primary > .md-nav__list > .md-nav__item--section > label.md-nav__link {
+  font-weight: 700;
+}
+
+.md-typeset .admonition,
+.md-typeset details,
+.md-typeset .highlight,
+.md-typeset pre,
+.md-search__output {
+  border-radius: var(--suite-radius-medium);
+}
+
+.md-typeset .admonition,
+.md-typeset details {
+  overflow: hidden;
+}
+
+.md-typeset .highlight,
+.md-typeset pre {
+  overflow: auto;
+}
+
+.md-typeset table:not([class]) {
+  border-radius: var(--suite-radius-medium);
+}
+
+.md-typeset img:not(.app-icon):not(.app-logo) {
+  border-radius: var(--suite-radius-medium);
+}
+
+.md-typeset a > img {
+  transition: box-shadow 120ms ease, transform 120ms ease;
+}
+
+.md-typeset a:hover > img {
+  box-shadow: 0 0 0 2px var(--md-accent-fg-color);
+  transform: translateY(-1px);
+}
+
+/* The app icon in front of a name, as on the portal's cards; on a wide screen the name stays on one line. */
+.md-typeset img.app-icon {
+  width: 2.6em;
+  height: 2.6em;
+  vertical-align: middle;
+  margin-right: 0.6em;
+  border-radius: 0.3em;
+}
+
+@media screen and (min-width: 45em) {
+  .md-typeset td:has(> img.app-icon) {
+    white-space: nowrap;
+  }
+}
+
+.md-typeset tr:has(img.app-icon) > td {
+  vertical-align: middle;
+}
+
+/* An app's own icon at the top of its chapter: it comes before the heading in the page, floats right of it and
+   adds no height of its own, so the app's name and its icon share the first line. */
+.md-typeset img.app-logo {
+  width: 128px;
+  float: right;
+  margin: 0 0 1em 1em;
+  border-radius: var(--suite-radius-large);
+}
+
+.md-typeset p:has(> img.app-logo) {
+  margin: 0;
+}
+
+/* A page's own icon where an app chapter has the app's logo: a symbol in the suite's color, as large. */
+.md-typeset .page-icon {
+  float: right;
+  margin: 0 0 1em 1em;
+}
+
+.md-typeset .page-icon .twemoji,
+.md-typeset .page-icon svg {
+  width: 128px;
+  height: 128px;
+  max-height: none;
+  fill: var(--suite-primary);
+}
+
+.md-typeset p:has(> .page-icon) {
+  margin: 0;
+}
+
+.md-typeset p:has(> .page-icon) + h1,
+.md-typeset p:has(> img.app-logo) + h1,
+.md-typeset p:has(> img.app-logo) + h2,
+.md-typeset p:has(> img.app-logo) + h3 {
+  margin-top: 0;
+}
+
+.md-typeset table:not([class]) th {
+  background-color: var(--suite-table-head-bg);
+  color: var(--suite-table-head-fg);
+}
+
+/* The suite icon in the header, large like the logo in the apps' own headers. */
+.md-header__button.md-logo img,
+.md-header__button.md-logo svg {
+  height: 3.4rem;
+  width: auto;
+}
+
+.md-header__button.md-logo {
+  margin: 0.1rem 0.2rem;
+  padding: 0.1rem;
+}
+
+/* The suite's name beside the icon; on a narrow screen smaller, and cut off before it pushes the links away. */
+.md-header__name {
+  margin-left: 0.4rem;
+  overflow: hidden;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--suite-header-fg);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.md-header__name:hover,
+.md-header__name:focus {
+  color: var(--suite-header-fg);
+}
+
+@media screen and (max-width: 44.9375em) {
+  .md-header__name {
+    font-size: 0.8rem;
+  }
+}
+
+/* GitHub and Wiki on the right of the header, as plain words; the search field before them. */
+.md-header__spacer {
+  flex-grow: 1;
+}
+
+.md-header__links {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  margin: 0 0.4rem;
+}
+
+.md-header__link {
+  padding: 0.4rem 0.8rem;
+  border-radius: 2em;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--suite-header-fg);
+  transition: background-color 150ms ease;
+}
+
+.md-header__link:hover,
+.md-header__link:focus {
+  color: var(--suite-header-fg);
+  background-color: var(--suite-header-hover-bg);
+}
+
+/* The home page (docs/index.md on tools/mkdocs/overrides/home.html): full-width sections, as on a product page. */
+.md-main__inner:has(> .home) {
+  max-width: none;
+  margin: 0;
+}
+
+/* Material hides the icon on a narrow screen behind the menu button; Home has no menu, so it keeps the icon. */
+.md-header:has(~ .md-container .home) .md-header__button.md-logo {
+  display: inline-block;
+}
+
+.md-typeset .home-hero .headerlink,
+.md-typeset .home-card .headerlink {
+  display: none;
+}
+
+.md-typeset.home__article {
+  margin: 0;
+}
+
+.home-section__inner {
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 3.2rem 0.8rem;
+}
+
+.md-typeset .home-section h2,
+.md-typeset .home-hero__lead,
+.md-typeset .home-hero__claim {
+  font-size: clamp(1.3rem, 4.2vw, 2.8rem);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin: 0 0 1.2rem;
+  color: inherit;
+}
+
+/* The hero: deepest purple to the suite's two colors, fading into the page; the pictures on top, the words below. */
+.home-hero__pictures {
+  background: linear-gradient(180deg, var(--suite-deep) 0%, var(--suite-primary) 55%, var(--suite-secondary) 80%,
+    transparent 97%);
+  padding-top: 4rem;
+}
+
+.home-hero__pictures p {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  width: 80vw;
+  max-width: 60rem;
+  margin: 0 auto;
+}
+
+.md-typeset .home-hero__board {
+  width: 66%;
+  filter: drop-shadow(0 1.5rem 2rem var(--suite-hero-shadow));
+}
+
+.md-typeset .home-hero__controller {
+  width: 34%;
+  margin-left: -4%;
+  filter: drop-shadow(0 1.5rem 2rem var(--suite-hero-shadow));
+}
+
+.home-hero__text {
+  width: fit-content;
+  max-width: 80vw;
+  margin: 0 auto;
+  padding: 1.6rem 0 3rem;
+}
+
+.md-typeset .home-hero__text {
+  color: var(--suite-hero-fg);
+}
+
+.md-typeset .home-hero__lead {
+  font-weight: 400;
+  margin: 0;
+}
+
+.md-typeset .home-hero__claim {
+  font-weight: 800;
+  margin: 0;
+}
+
+/* The suite's stage (the portal's STAGE): a pill and its note under the claim. */
+.md-typeset .home-hero__stage {
+  margin: 1rem 0 0;
+  font-size: 0.8rem;
+}
+
+.md-typeset .home-hero__stage strong {
+  background: var(--suite-stage-bg);
+  color: var(--suite-stage-fg);
+  border-radius: 6px;
+  padding: 0.1rem 0.5rem;
+  margin-right: 0.5rem;
+}
+
+/* Lots in the suite: a dark section with a grid of cards, the app names in white. */
+.home-section--dark {
+  background: var(--suite-section-bg);
+  color: var(--suite-section-fg);
+}
+
+.home-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 2rem 2.4rem;
+  margin: 2rem 0 2.4rem;
+}
+
+.md-typeset .home-card h4 {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0 0 0.4rem;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--suite-section-fg);
+}
+
+.md-typeset .home-card h4 .twemoji svg {
+  width: 1.2em;
+  max-height: none;
+  fill: var(--suite-soft);
+}
+
+.md-typeset .home-card p {
+  margin: 0;
+  color: var(--suite-mist);
+}
+
+.md-typeset .home-section--dark a:not(.md-button),
+.md-typeset .home-section--accent a:not(.md-button) {
+  color: var(--suite-section-fg);
+  font-weight: 600;
+}
+
+.md-typeset .home-section--dark a:not(.md-button):hover {
+  color: var(--suite-soft);
+}
+
+.md-typeset .home-section--dark .md-button,
+.md-typeset .home-section--accent .md-button {
+  color: var(--suite-section-button);
+  border-color: var(--suite-section-button);
+}
+
+.md-typeset .home-section--dark .md-button:hover,
+.md-typeset .home-section--accent .md-button:hover {
+  background-color: var(--suite-section-button);
+  border-color: var(--suite-section-button);
+  color: var(--suite-deep);
+}
+
+/* One portal for every app: words and a picture side by side, stacked on a narrow screen. */
+.home-split {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 2.4rem;
+  align-items: center;
+}
+
+.md-typeset .home-split__picture {
+  display: block;
+  width: 100%;
+}
+
+.home-split > p {
+  margin: 0;
+}
+
+@media screen and (max-width: 44.9375em) {
+  .home-split {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Get started: the suite's gradient, with a deep purple Download button. */
+.home-section--accent {
+  background: linear-gradient(135deg, var(--suite-primary), var(--suite-secondary));
+  color: var(--suite-section-fg);
+}
+
+.md-typeset .home-section--accent .md-button--primary {
+  background-color: var(--suite-deep);
+  border-color: var(--suite-deep);
+}
+
+.md-typeset .home-section--accent .md-button + .md-button {
+  margin-left: 0.6rem;
+}
+
+/* FAQ: questions and answers in one readable column. */
+.home-faq .home-section__inner {
+  max-width: 44rem;
+}
+
+.md-typeset .home-faq h2:not(:first-child) {
+  font-size: 1.6rem;
+  margin-top: 2.4rem;
+}
+
+.md-typeset .home-faq h3 {
+  font-size: 1rem;
+  font-weight: 800;
+  margin: 1.6rem 0 0.4rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--md-default-fg-color--lightest);
+}
+
+.md-typeset .home-faq h2 + h3 {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.md-typeset .home-faq p {
+  margin: 0;
+  color: var(--md-default-fg-color--light);
+}
+
+/* The home page's footer: the suite on the left, columns of links on the right. */
+.home-footer {
+  background: var(--suite-footer-bg);
+  color: var(--suite-footer-fg);
+}
+
+.home-footer__inner {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 2rem;
+  padding: 2.4rem 0.8rem;
+}
+
+.home-footer__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-weight: 800;
+  font-size: 0.9rem;
+  color: var(--suite-footer-fg);
+}
+
+.home-footer__columns {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(7rem, auto));
+  gap: 1.2rem 2.4rem;
+  font-size: 0.7rem;
+}
+
+.home-footer__columns h4 {
+  margin: 0 0 0.6rem;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--suite-soft);
+}
+
+.home-footer__columns a {
+  display: block;
+  margin-bottom: 0.4rem;
+  color: var(--suite-mist);
+}
+
+.home-footer__columns a:hover {
+  color: var(--suite-footer-fg);
+}
+
+@media screen and (max-width: 44.9375em) {
+  .home-footer__columns {
+    grid-template-columns: repeat(2, minmax(7rem, 1fr));
+  }
+}
+
+.home-footer .md-footer-meta {
+  background: var(--suite-footer-notice-bg);
+}
+
+/* Tooltips: what an icon or a link's title says, on hover (content.tooltips). A rounded box with an edge in the hover
+   color, as the apps' tooltips (owner, 28-10-2026); no tail. */
+.md-tooltip2__inner,
+.md-tooltip__inner {
+  border: 1px solid var(--md-accent-fg-color);
+  border-radius: var(--suite-radius-small);
+}
+.md-tooltip2::before {
+  display: none;
+}

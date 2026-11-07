@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""tools/ci_local.py: the jobs it reads from ci.yml and ci-nexus.yml (a matrix job once per entry, Nexus's jobs with
-nexus- before the name), the ${{ }} expressions it fills in, which jobs a name selects, and the requirement files
-that key a job's venv."""
+"""tools/ci_local.py: the jobs it reads from the suite, Console and Nexus workflows (a matrix job once per entry,
+Nexus's jobs with nexus- before the name), the ${{ }} expressions it fills in, which jobs a name selects, and the
+requirement files that key a job's venv."""
 
 from __future__ import annotations
 
@@ -18,6 +18,7 @@ import ci_local  # noqa: E402
 
 SUITE = Path(__file__).resolve().parents[2]
 CI = SUITE / ".github" / "workflows" / "ci.yml"
+CI_CONSOLE = SUITE / ".github" / "workflows" / "ci-bazzite-console.yml"
 CI_NEXUS = SUITE / ".github" / "workflows" / "ci-nexus.yml"
 # ci.yml's plan job runs python3 tools/ci_matrix.py, as in the container; Windows' python3 is the Store's stand-in
 PLAN_JOB = pytest.mark.skipif(sys.platform == "win32", reason="ci.yml's plan job runs python3, as in the container")
@@ -66,14 +67,15 @@ def test_a_matrix_from_a_plan_job_is_read_by_running_it(tmp_path):
 
 @PLAN_JOB
 def test_nexus_jobs_come_after_the_suites_with_their_prefix():
-    """ci-nexus.yml's jobs (core, tools, dev/, the repository's rules) run too, as nexus-<job>: both workflows have
-    a versions, pytest, shell and docs job."""
+    """ci-nexus.yml's jobs (core, tools, dev/, the repository's rules) run after both suite workflows."""
     nexus = {j.name: j for j in ci_local.load_jobs(CI_NEXUS, "nexus-")}
     assert {"nexus-versions", "nexus-shell", "nexus-docs", "nexus-pytest/core", "nexus-pytest/tools",
             "nexus-pytest/dev/nrt"} <= set(nexus)
     assert nexus["nexus-pytest/core"].matrix == {"dir": "core"} and all(j.runs_here for j in nexus.values())
     names = [j.name for j in ci_local.all_jobs(SUITE)]
-    assert names == [j.name for j in ci_local.load_jobs(CI)] + list(nexus) and len(set(names)) == len(names)
+    assert names == ([j.name for j in ci_local.load_jobs(CI)]
+                     + [j.name for j in ci_local.load_jobs(CI_CONSOLE, "console-")]
+                     + list(nexus)) and len(set(names)) == len(names)
 
 
 @PLAN_JOB

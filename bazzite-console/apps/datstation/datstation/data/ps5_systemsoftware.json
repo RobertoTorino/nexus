@@ -1,0 +1,518 @@
+[
+  {
+    "version": "System Software v26.06-14.10.00",
+    "releaseDate": "October 4, 2026",
+    "notes": [
+      "We’ve made some security fixes to the system software.",
+      "We’ve improved system software performance and stability."
+    ]
+  },
+  {
+    "version": "System Software v26.06-14.00.00",
+    "releaseDate": "September 17, 2026",
+    "notes": [
+      "We’ve turned on Enhance PSSR Image Quality as a default setting. When you update the system software, this setting automatically turns on.",
+      "When you enable this feature, enhanced PSSR is used even for games that support the previous version of PSSR, so you can enjoy a sharper and clearer visual experience.",
+      "You can now see who’s speaking while you’re in a voice chat.",
+      "To show the speaker indicator, go to the voice chat card in the control center. Select More > Display Who’s Speaking and turn on Display Names.",
+      "To choose where the speaker indicator appears on your screen, select Position.",
+      "We’ve added the Community Activity widget to your Welcome Hub. You can switch between the following views.",
+      "Trending Now displays ten multiplayer games or multiplayer modes that are surging in popularity. Look here for new game releases or games with major content updates.",
+      "Top 10 displays the ten most popular games in the last week for your country or region. Look here to see what games have a large community of players you can join.",
+      "We’ve changed the following features for PS5 consoles and PS5 Pro consoles in certain countries or regions.",
+      "If you go to Settings > Accessories > General > Advanced Settings and select Turn Off Bluetooth, your console does not enter rest mode and HDMI Device Link does not function.",
+      "The Turn Off Bluetooth function is for managing controller connections at esports venues and similar locations. Do not use this feature for any other purpose.",
+      "We’ve improved system software performance and stability."
+    ]
+  },
+  {
+    "version": "System Software v3.0-14.00.00 (Beta)",
+    "releaseDate": "August 6, 2026",
+    "notes": [
+      "We’ve turned on Enhance PSSR Image Quality as a default setting. When you update the system software, this setting automatically turns on.",
+      "When you enable this feature, enhanced PSSR is used even for games that support the previous version of PSSR so you can enjoy a sharper and clearer visual experience.",
+      "We’ve changed the following features for PS5 consoles and PS5 Pro consoles in certain countries or regions.",
+      "If you go to Settings > Accessories > General > Advance Settings and select Turn Off Bluetooth, you’re no longer able to put your console into rest mode.",
+      "Additionally, HDMI link is no longer supported when you select Turn Off Bluetooth.",
+      "The Turn Off Bluetooth function is for managing controller connections at esports venues and similar locations.",
+      "Do not use this feature for any other purpose.",
+      "We’ve improved system software performance and stability."
+    ]
+  },
+  {
+    "version": "System Software v26.05-13.60.00",
+    "releaseDate": "July 24, 2026",
+    "notes": [
+      "We’ve improved the messages and usability on some screens."
+    ]
+  },
+  {
+    "version": "System Software v26.04-13.42.00",
+    "releaseDate": "July 2, 2026",
+    "notes": [
+      "We’ve improved system software performance and stability."
+    ]
+  },
+  {
+    "version": "System Software v26.04-13.40.00",
+    "releaseDate": "June 5, 2026",
+    "notes": [
+      "We’ve improved system software performance and stability."
+    ]
+  },
+  {
+    "version": "System Software v26.03-13.20.00",
+    "releaseDate": "April 23, 2026",
+    "notes": [
+      "April 23/24, 2026. Added more emoji message reactions: messaging/usability improvements. Some sources list April 23, PSDevWiki lists April 24."
+    ]
+  },
+  {
+    "version": "System Software v26.02-13.00.00",
+    "releaseDate": "March 17, 2026",
+    "notes": [
+      "Enhanced PSSR on PS5 Pro: Unicode 17.0 emoji: Welcome Hub Showcase/Slideshow modes: performance/stability."
+    ]
+  },
+  {
+    "version": "System Software v26.01-12.70.00",
+    "releaseDate": "February 12, 2026",
+    "notes": [
+      "Performance/stability update."
+    ]
+  },
+  {
+    "version": "System Software v26.01-12.60.00",
+    "releaseDate": "January 28, 2026",
+    "notes": [
+      "Friends Activity widget jump-to-game: read receipts for messages: performance/stability."
+    ]
+  },
+  {
+    "version": "System Software v25.08-12.40.00",
+    "releaseDate": "December 3, 2025",
+    "notes": [
+      "Messages/usability and performance/stability improvements."
+    ]
+  },
+  {
+    "version": "System Software v25.07-12.20.00",
+    "releaseDate": "October 22, 2025",
+    "notes": [
+      "Console and DualSense serial numbers viewable in Settings: DualSense Edge stability: system improvements."
+    ]
+  },
+  {
+    "version": "System Software v25.06-12.02.00",
+    "releaseDate": "October 1, 2025",
+    "notes": [
+      "Security fixes."
+    ]
+  },
+  {
+    "version": "System Software v25.06-12.00.00",
+    "releaseDate": "September 17, 2025",
+    "notes": [
+      "Power Saver for supported PS5 games: DualSense multi-device pairing: controller device software updates."
+    ]
+  },
+  {
+    "version": "System Software v25.05-11.60.00",
+    "releaseDate": "July 15, 2025",
+    "notes": [
+      "Added missing public update: performance/stability update."
+    ]
+  },
+  {
+    "version": "System Software v25.04-11.40.00",
+    "releaseDate": "June 4, 2025",
+    "notes": [
+      "Performance/stability update: some reports associate this branch with PS5 Pro VRR/stability fixes."
+    ]
+  },
+  {
+    "version": "System Software v25.03-11.20.00",
+    "releaseDate": "April 24, 2025",
+    "notes": [
+      "Audio Focus accessibility feature: restored PlayStation 30th Anniversary appearance/sound designs: performance/stability."
+    ]
+  },
+  {
+    "version": "System Software v25.02-11.00.00",
+    "releaseDate": "March 25, 2025",
+    "notes": [
+      "Activity-card detail changes: Unicode 16.0 emoji: parental-control default changes: stability/usability."
+    ]
+  },
+  {
+    "version": "System Software v25.01-10.60.00",
+    "releaseDate": "January 23, 2025",
+    "notes": [
+      "Messages/usability and performance/stability improvements."
+    ]
+  },
+  {
+    "version": "System Software v24.08-10.40.00",
+    "releaseDate": "December 3, 2024",
+    "notes": [
+      "Improved PS5-to-PS5 data transfer stability, especially large captures: messages/usability."
+    ]
+  },
+  {
+    "version": "System Software v24.07-10.20.00",
+    "releaseDate": "October 23, 2024",
+    "notes": [
+      "Minor system/usability update."
+    ]
+  },
+  {
+    "version": "System Software v24.06-10.01.00",
+    "releaseDate": "September 21, 2024",
+    "notes": [
+      "Follow-up patch after 10.00: performance/stability."
+    ]
+  },
+  {
+    "version": "System Software v24.06-10.00.00",
+    "releaseDate": "September 12, 2024",
+    "notes": [
+      "Major update: Welcome Hub, personalized 3D audio profiles for headphones, and other UI/system improvements."
+    ]
+  },
+  {
+    "version": "System Software v24.05-09.60.00",
+    "releaseDate": "July 23, 2024",
+    "notes": [
+      "System/usability and stability update."
+    ]
+  },
+  {
+    "version": "System Software v24.04-09.40.00",
+    "releaseDate": "June 13, 2024",
+    "notes": [
+      "System/usability and stability update."
+    ]
+  },
+  {
+    "version": "System Software v24.03-09.20.00",
+    "releaseDate": "April 24, 2024",
+    "notes": [
+      "System/usability and stability update."
+    ]
+  },
+  {
+    "version": "System Software v24.02-09.05.00",
+    "releaseDate": "March 2024",
+    "notes": [
+      "Added special/unclear public availability: known build, but not clearly documented as a normal public update."
+    ]
+  },
+  {
+    "version": "System Software v24.02-09.00.00",
+    "releaseDate": "March 15, 2024",
+    "notes": [
+      "Major update: DualSense mic/speaker improvements, Share Screen interactions, PS5 power indicator brightness."
+    ]
+  },
+  {
+    "version": "System Software v24.01-08.60.00",
+    "releaseDate": "January 24, 2024",
+    "notes": [
+      "System/usability and stability update."
+    ]
+  },
+  {
+    "version": "System Software v23.02-08.40.00",
+    "releaseDate": "December 6, 2023",
+    "notes": [
+      "System/usability and stability update."
+    ]
+  },
+  {
+    "version": "System Software v23.02-08.20.02",
+    "releaseDate": "November 8, 2023",
+    "notes": [
+      "Added missing patch: auto-update patch branch after 8.20."
+    ]
+  },
+  {
+    "version": "System Software v23.02-08.20.00",
+    "releaseDate": "October 26, 2023",
+    "notes": [
+      "System/usability and stability update."
+    ]
+  },
+  {
+    "version": "System Software v23.02-08.00.00",
+    "releaseDate": "September 13, 2023",
+    "notes": [
+      "Major update: Dolby Atmos support, 8 TB M.2 SSD support, assist controller, beep mute/volume, Game Base and accessibility improvements."
+    ]
+  },
+  {
+    "version": "System Software v23.01-07.61.00",
+    "releaseDate": "August 10, 2023",
+    "notes": [
+      "System/stability update."
+    ]
+  },
+  {
+    "version": "System Software v23.01-07.60.00",
+    "releaseDate": "July 20, 2023",
+    "notes": [
+      "System/stability update."
+    ]
+  },
+  {
+    "version": "System Software v23.01-07.40.00",
+    "releaseDate": "June 7, 2023",
+    "notes": [
+      "System/stability update."
+    ]
+  },
+  {
+    "version": "System Software v23.01-07.20.00",
+    "releaseDate": "April 19, 2023",
+    "notes": [
+      "System/stability update."
+    ]
+  },
+  {
+    "version": "System Software v23.01-07.01.01",
+    "releaseDate": "March 29, 2023",
+    "notes": [
+      "Added missing patch: auto-update patch branch after 7.01."
+    ]
+  },
+  {
+    "version": "System Software v23.01-07.01.00",
+    "releaseDate": "March 14, 2023",
+    "notes": [
+      "System/stability update."
+    ]
+  },
+  {
+    "version": "System Software v23.01-07.00.00",
+    "releaseDate": "March 8, 2023",
+    "notes": [
+      "Major update: Discord voice chat, 1440p VRR, PS5-to-PS5 data transfer, game library/game hub improvements."
+    ]
+  },
+  {
+    "version": "System Software v22.02-06.50.00",
+    "releaseDate": "January 13, 2023",
+    "notes": [
+      "System/stability update."
+    ]
+  },
+  {
+    "version": "System Software v22.02-06.02.00",
+    "releaseDate": "October 12, 2022",
+    "notes": [
+      "System/stability update."
+    ]
+  },
+  {
+    "version": "System Software v22.02-06.00.01",
+    "releaseDate": "October 5, 2022",
+    "notes": [
+      "Follow-up patch after 6.00: auto-update branch."
+    ]
+  },
+  {
+    "version": "System Software v22.02-06.00.00",
+    "releaseDate": "September 7, 2022",
+    "notes": [
+      "Major update: 1440p HDMI output, custom gamelists, Game Base/Game Help improvements."
+    ]
+  },
+  {
+    "version": "System Software v22.01-05.50.00",
+    "releaseDate": "July 7, 2022",
+    "notes": [
+      "System/stability update."
+    ]
+  },
+  {
+    "version": "System Software v22.01-05.10.00",
+    "releaseDate": "May 12, 2022",
+    "notes": [
+      "System/stability update."
+    ]
+  },
+  {
+    "version": "System Software v22.01-05.02.00",
+    "releaseDate": "April 13, 2022",
+    "notes": [
+      "System/stability update."
+    ]
+  },
+  {
+    "version": "System Software v22.01-05.00.00",
+    "releaseDate": "March 23, 2022",
+    "notes": [
+      "Major update: Game Base and party updates, accessibility/voice features, and UI improvements."
+    ]
+  },
+  {
+    "version": "System Software v21.02-04.51.00",
+    "releaseDate": "March 8, 2022",
+    "notes": [
+      "System/stability update: PSDevWiki notes that based on build date it arguably should have been 22.01."
+    ]
+  },
+  {
+    "version": "System Software v21.02-04.50.00",
+    "releaseDate": "December 1, 2021",
+    "notes": [
+      "System/stability update."
+    ]
+  },
+  {
+    "version": "System Software v21.02-04.03.00",
+    "releaseDate": "October 20, 2021",
+    "notes": [
+      "System/stability update."
+    ]
+  },
+  {
+    "version": "System Software v21.02-04.02.00",
+    "releaseDate": "October 7, 2021",
+    "notes": [
+      "System/stability update."
+    ]
+  },
+  {
+    "version": "System Software v21.02-04.00.00",
+    "releaseDate": "September 15, 2021",
+    "notes": [
+      "Major update: M.2 SSD expansion support, 3D audio for TV speakers, Control Center customization, trophy UI changes."
+    ]
+  },
+  {
+    "version": "System Software v21.01-03.21.00",
+    "releaseDate": "July 8, 2021",
+    "notes": [
+      "System/stability update."
+    ]
+  },
+  {
+    "version": "System Software v21.01-03.20.00",
+    "releaseDate": "June 9, 2021",
+    "notes": [
+      "DualSense device software stability: screen reader, hidden PS4 games, and USB extended-storage copy stability fixes."
+    ]
+  },
+  {
+    "version": "System Software v21.01-03.10.00",
+    "releaseDate": "April 27, 2021",
+    "notes": [
+      "System/stability update."
+    ]
+  },
+  {
+    "version": "System Software v21.01-03.00.00",
+    "releaseDate": "April 14, 2021",
+    "notes": [
+      "First major post-launch update: USB extended-storage support for PS5 games, cross-gen Share Play, Game Base improvements."
+    ]
+  },
+  {
+    "version": "System Software v21.01-02.70.00",
+    "releaseDate": "February 19, 2021",
+    "notes": [
+      "Added special/manufacturing-only build: not a normal public update."
+    ]
+  },
+  {
+    "version": "System Software v20.02-02.50.00",
+    "releaseDate": "February 3, 2021",
+    "notes": [
+      "Share Factory Studio clip editing: fixed PS4 disc version installing unexpectedly after PS5 upgrade."
+    ]
+  },
+  {
+    "version": "System Software v20.02-02.30.00",
+    "releaseDate": "December 9, 2020",
+    "notes": [
+      "Data-transfer/download fixes, PS4 text input fixes, Wi-Fi router connection stability."
+    ]
+  },
+  {
+    "version": "System Software v20.02-02.26.00",
+    "releaseDate": "November 25, 2020",
+    "notes": [
+      "Fixed installed disc versions being deleted: front USB-A rest-mode controller charging fix."
+    ]
+  },
+  {
+    "version": "System Software v20.02-02.25.00",
+    "releaseDate": "November 17, 2020",
+    "notes": [
+      "Download queue/View Details issue fix: system performance."
+    ]
+  },
+  {
+    "version": "System Software v20.02-02.20.00",
+    "releaseDate": "November 12, 2020",
+    "notes": [
+      "Official release-day patch: review-console “second update”: system performance."
+    ]
+  },
+  {
+    "version": "System Software v20.02-02.10.00",
+    "releaseDate": "October 5, 2020",
+    "notes": [
+      "Built between October 5 and November 6, 2020. Added special/review-console build: not a normal public update."
+    ]
+  },
+  {
+    "version": "System Software v20.02-02.00.00",
+    "releaseDate": "December 22, 2020",
+    "notes": [
+      "Built October 5, 2020: released December 22, 2020 in known package records. Added special/launch-era build: UK launch-day physical PS5 / game-disc-related records, not a typical public update."
+    ]
+  },
+  {
+    "version": "System Software v20.01-01.14.00",
+    "releaseDate": "November 11, 2020",
+    "notes": [
+      "Added game-disc-only / dev/test package record: associated with titles such as Demon’s Souls and Spider-Man: Miles Morales."
+    ]
+  },
+  {
+    "version": "System Software v20.01-01.12.00",
+    "releaseDate": "November 11, 2020",
+    "notes": [
+      "Added game-disc-only CEX firmware: associated with Godfall."
+    ]
+  },
+  {
+    "version": "System Software v20.01-01.05.00",
+    "releaseDate": "June 11, 2020",
+    "notes": [
+      "Added TestKit/DevKit-only build: not retail public firmware."
+    ]
+  },
+  {
+    "version": "System Software v20.01-01.02.00",
+    "releaseDate": "August 4, 2020",
+    "notes": [
+      "Added launch-console firmware: found on some launch PS5 consoles."
+    ]
+  },
+  {
+    "version": "System Software v20.01-01.01.00",
+    "releaseDate": "July 14, 2020",
+    "notes": [
+      "Added launch-console firmware: found on some launch PS5 consoles."
+    ]
+  },
+  {
+    "version": "System Software v20.01-01.00.00",
+    "releaseDate": "May 21, 2020",
+    "notes": [
+      "Added earliest known retail launch-console firmware: not a public downloadable update."
+    ]
+  }
+]

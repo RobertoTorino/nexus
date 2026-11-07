@@ -1,0 +1,8 @@
+Changelog: 06-11-2026 22:49:44
+
+Fixed. Installing the port preserves the standalone file renamer and its data; release messages describe the pinned
+build without implying PS5 hardware validation.
+
+Changelog: 06-11-2026 22:39:30
+
+Added. Ported PPSSPP Manager for PSP games with console-suite launchers, settings, and Game Mode shortcuts.

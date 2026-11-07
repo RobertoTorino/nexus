@@ -14,16 +14,19 @@ folder (the root .gitignore leaves it out of `git add`); remove one with `Remove
 '\\?\C:\Projects\nexus\NUL'`.
 
 ```bash
-tools/ci-local.sh                                   # every job of both workflows as GitHub runs it (podman); --list shows them
+tools/ci-local.sh                                   # every job of the Linux suites and Nexus workflows (podman)
 tools/pre-push.sh                                   # CI's quick checks against origin/main (git's pre-push hook, tools/git-setup.sh once per checkout)
 ./test.sh                                           # every test suite of this system, offscreen
 python3 tools/check_versions.py                     # versions = VERSION, every suite
 python3 bc250-bazzite/tools/check_manifest.py --base origin/main  # the suite's apps.toml rules, the bump since the last portal release
+python3 bazzite-console/tools/check_manifest.py --base origin/main  # the suite's apps.toml rules and portal bump
 python3 tools/check_changelogs.py --base origin/main  # no CHANGELOG lost an entry since the last push
-find bc250-bazzite tools test.sh -name '*.sh' -print0 | xargs -0 -n1 bash -n
-find bc250-bazzite tools test.sh -name '*.sh' -print0 | xargs -0 shellcheck -x -S error
-shellcheck -x -S warning bc250-bazzite/portal/install.sh bc250-bazzite/apps/check/install.sh tools/*.sh \
-  bc250-bazzite/tools/*.sh bc250-bazzite/tools/installer-tests/*.sh test.sh bc250-bazzite/install.sh tools/hooks/pre-push
+find bc250-bazzite bazzite-console tools test.sh -name '*.sh' -print0 | xargs -0 -n1 bash -n
+find bc250-bazzite bazzite-console tools test.sh -name '*.sh' -print0 | xargs -0 shellcheck -x -S error
+shellcheck -x -S warning bc250-bazzite/portal/install.sh bc250-bazzite/apps/check/install.sh \
+  bazzite-console/portal/install.sh bazzite-console/apps/bazzite/install.sh bazzite-console/tools/check-release.sh \
+  tools/*.sh bc250-bazzite/tools/*.sh bc250-bazzite/tools/installer-tests/*.sh \
+  bazzite-console/tools/*.sh bazzite-console/tools/installer-tests/*.sh test.sh bc250-bazzite/install.sh tools/hooks/pre-push
 S=bc250-bazzite   # the shellcheck -S warning lists of ci.yml, every app's scripts under $S/apps/<name>/
 shellcheck -S warning $S/apps/cores/bc250-cores-bisect.sh $S/apps/cores/bc250-cores-unlock.sh \
   $S/apps/cores/install.sh $S/apps/cores/packaging/bazzite/*.sh
@@ -44,8 +47,11 @@ shellcheck -S warning $S/apps/ppsspp/install.sh $S/apps/ppsspp/bc250-ppsspp-run 
 shellcheck -S warning $S/apps/xenia/install.sh $S/apps/xenia/bc250-xenia-run
 shellcheck -S warning $S/apps/decky/install.sh $S/apps/ncgui/install.sh \
   $S/apps/datstation/install.sh
-for t in bc250-bazzite/tools/installer-tests/*.sh; do [ "${t##*/}" = shims.sh ] || bash "$t"; done   # every installer test
+for t in bc250-bazzite/tools/installer-tests/*.sh bazzite-console/tools/installer-tests/*.sh; do
+  [ "${t##*/}" = shims.sh ] || bash "$t"
+done
 mkdocs build --strict -f bc250-bazzite/mkdocs.yml   # the suite's wiki, from the venv
+mkdocs build --strict -f bazzite-console/mkdocs.yml # the Bazzite Console Suite's wiki
 mkdocs build --strict -f nexus/mkdocs.yml          # the Nexus page
 mkdocs build --strict -f windows-portable/mkdocs.yml   # the Windows Portable Suite's wiki
 ```

@@ -98,6 +98,12 @@ Tools for Windows 10/11 running on portable gaming devices, made for a small scr
 controller. [Its wiki](windows-portable-suite/).
 
 </div>
+<div class="home-card" markdown>
+#### :material-controller: Bazzite Console Suite
+
+Control your PlayStation 5 running Bazzite. [Its wiki](bazzite-console-suite/).
+
+</div>
 </div>
 
 </div>
@@ -113,6 +119,7 @@ Nexus index, GitHub's latest release, names the newest portal of each suite.
 [:material-download: Nexus index](https://github.com/RobertoTorino/nexus/releases/latest){ .md-button .md-button--primary }
 [BC250 Bazzite Suite](bc250-bazzite-suite/){ .md-button }
 [Windows Portable Suite](windows-portable-suite/){ .md-button }
+[Bazzite Console Suite](bazzite-console-suite/){ .md-button }
 </div>
 </section>
 

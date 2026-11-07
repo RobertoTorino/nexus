@@ -51,7 +51,8 @@ def test_a_suite_without_a_prefix_has_plain_portal_tags_and_release_yml(tmp_path
 def test_every_suite_on_the_nexus_release_has_its_job():
     nexus = (WORKFLOWS / "release-nexus.yml").read_text(encoding="utf-8")
     on = [folder for folder in nr.nexus_suites.suites(ROOT) if nr.on_nexus_release(ROOT, folder)]
-    assert [folder.name for folder in on] == ["bc250-bazzite", "windows-portable"]   # every suite, since stage 3
+    assert [folder.name for folder in on] == ["bazzite-console", "bc250-bazzite",
+                                               "windows-portable"]   # every suite, since stage 3
     for folder in on:
         job = re.search(rf"^  {re.escape(folder.name)}:\n(.*?)(?=^  \S|\Z)", nexus, re.M | re.S)
         assert job, f"release-nexus.yml has no job {folder.name}"

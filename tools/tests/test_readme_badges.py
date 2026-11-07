@@ -12,9 +12,10 @@ import subprocess
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-COLORS = {"bc250-bazzite": "8b4fd8", "windows-portable": "f5a524"}         # every other folder is Nexus's
+COLORS = {"bc250-bazzite": "8b4fd8", "bazzite-console": "8b4fd8", "windows-portable": "f5a524"}
 NEXUS = "17b6a7"
-WORKFLOWS = {"bc250-bazzite": "ci.yml", "windows-portable": "ci-windows-portable.yml"}
+WORKFLOWS = {"bc250-bazzite": "ci.yml", "bazzite-console": "ci-bazzite-console.yml",
+             "windows-portable": "ci-windows-portable.yml"}
 # The first line of a LICENSE file, and the SPDX identifiers it may stand for
 FAMILIES = {"GNU GENERAL PUBLIC LICENSE Version 3": ("GPL-3.0-only", "GPL-3.0-or-later"),
             "GNU AFFERO GENERAL PUBLIC LICENSE Version 3": ("AGPL-3.0-only", "AGPL-3.0-or-later"),

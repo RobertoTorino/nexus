@@ -76,8 +76,9 @@ def test_the_command_line():
     run = lambda *args: subprocess.run([sys.executable, str(TOOLS / "suites.py"), *args], capture_output=True,
                                        text=True)
     assert run().stdout.split() == [p.name for p in suites.suites()]
-    assert run("--default").stdout.strip() == "bc250-bazzite"
-    assert run("--system", "bazzite").stdout.split() == ["bc250-bazzite"]
+    assert run("--default").stdout.strip() == suites.suite().name == "bc250-bazzite"
+    assert run("--system", "bazzite").stdout.split() == [p.name for p in suites.suites()
+                                                          if suites.system(p) == "bazzite"]
     assert run("--tag", "portal-v1.0.0").stdout.split() == ["bc250-bazzite", "portal", "1.0.0"]
     result = run("--tag", "nothing")
     assert result.returncode == 1 and "not <app>-v<x.y.z>" in result.stderr

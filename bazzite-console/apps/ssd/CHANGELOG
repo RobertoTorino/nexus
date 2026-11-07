@@ -1,0 +1,3 @@
+Changelog: 06-11-2026 23:58:41
+
+Added. SSD Check for drives exposed to the Bazzite Console Suite through udisks, with an optional filesystem speed test.

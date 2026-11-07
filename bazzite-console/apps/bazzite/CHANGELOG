@@ -1,0 +1,7 @@
+Changelog: 06-11-2026 22:49:44
+
+Fixed. Clarified that the app bundle includes the shared bc250_core package.
+
+Changelog: 06-11-2026 11:26:52
+
+Added. Bazzite Test: the first version, written by tools/new_app.py from the architecture chapter.

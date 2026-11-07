@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Starts the PCSX2 that PCSX2 Manager installed, with the arguments given:
+#
+#   ps5-pcsx2-run -nogui -fullscreen -- /path/to/game.iso   a game alone, full screen (Game Mode)
+#   ps5-pcsx2-run -nogui -- /path/to/game.iso               a game alone, in a window
+#   ps5-pcsx2-run                                           PCSX2's own window, for its settings and the BIOS
+#
+# The Steam shortcuts run this, not the AppImage, so they keep working when the app brings another PCSX2.
+set -euo pipefail
+
+APPIMAGE="${XDG_DATA_HOME:-$HOME/.local/share}/ps5-pcsx2-manager/emulator/current/pcsx2.AppImage"
+
+if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
+    sed -n '3,9p' "$0" | sed 's/^# \{0,1\}//'
+    exit 0
+fi
+[ -x "$APPIMAGE" ] || {
+    echo "PCSX2 is not installed: open PCSX2 Manager and press Install." >&2
+    exit 1
+}
+# The AppImage mounts itself with its own FUSE library and the system's fusermount (part of Bazzite); without
+# fusermount, it unpacks itself to a temporary folder on every start instead.
+if ! command -v fusermount3 >/dev/null 2>&1 && ! command -v fusermount >/dev/null 2>&1; then
+    export APPIMAGE_EXTRACT_AND_RUN=1
+fi
+# A game started by Steam gets SDL told to ignore the controllers Steam handles, and Steam's virtual controller
+# (28DE:11FF) in their place: no motion sensors, and on the desktop it follows Steam's Desktop Configuration (mouse
+# and keys). As RPCS3 Manager and Console Link do: while a real controller is connected, PCSX2's SDL
+# input reads it and leaves Steam's virtual one out. Without a real one (a Steam Deck's own controls) Steam's
+# choice stands.
+INPUT_DEVICES="${PS5_INPUT_DEVICES:-/proc/bus/input/devices}"      # another file only in the tests
+real_controller() {
+    # A joystick (js handler) that is not one of Steam's (vendor 28DE).
+    awk '/^I:/ { vendor = ""; for (i = 1; i <= NF; i++) if ($i ~ /^Vendor=/) vendor = tolower(substr($i, 8)) }
+         /^H:/ && / js[0-9]/ && vendor != "28de" { found = 1 }
+         END { exit !found }' "$INPUT_DEVICES" 2>/dev/null
+}
+if [ -n "${SDL_GAMECONTROLLER_IGNORE_DEVICES:-}${SDL_GAMECONTROLLER_IGNORE_DEVICES_EXCEPT:-}" ] && real_controller; then
+    unset SDL_GAMECONTROLLER_IGNORE_DEVICES_EXCEPT
+    export SDL_GAMECONTROLLER_IGNORE_DEVICES=0x28DE/0x11FF
+fi
+# On a Wayland desktop PCSX2 (a Qt program) opens its windows through Wayland when it can, and Steam on the desktop
+# only sees windows that go through X11: no overlay (Shift+Tab, the PS button) over a game it started. A game Steam
+# starts there opens its windows through XWayland, as RPCS3 Manager does for RPCS3. Game Mode is X11 already.
+if [ -n "${SteamGameId:-}" ] && [ -n "${WAYLAND_DISPLAY:-}" ] && [ -n "${DISPLAY:-}" ] &&
+   [ -z "${QT_QPA_PLATFORM:-}" ]; then
+    export QT_QPA_PLATFORM=xcb
+fi
+# The game started goes to the app's log (the Log tab), in the app's own form, by its file's name and from where
+# (Steam sets SteamGameId); nothing else is known here. PCSX2 logs the rest of the run itself (the game, the
+# controllers, the play time), which the app reads into its log the next time it looks.
+LOG="${XDG_DATA_HOME:-$HOME/.local/share}/ps5-pcsx2-manager/ps5-pcsx2-manager.log"
+game=""
+for arg in "$@"; do game=$arg; done
+if [ -n "$game" ] && [ "${game#-}" = "$game" ]; then
+    from="from a terminal"
+    [ -n "${SteamGameId:-}" ] && from="from Steam"
+    if real_controller; then
+        pad="with a controller"
+    else
+        pad="without a controller"
+        # Said on the desktop too (a controller switched off by its idle timer; owner, 24-10-2026): the game is
+        # starting, so the window is not where the eyes are.
+        if [ -n "${SteamGameId:-}" ] && command -v notify-send >/dev/null 2>&1; then
+            notify-send -a "PCSX2 Manager" -i input-gaming "No controller connected" \
+                "Switch your controller on, or press its PS button to wake it. PCSX2 plays with the keyboard only until then." \
+                2>/dev/null || true
+        fi
+    fi
+    if [ -d "${LOG%/*}" ]; then
+        printf -v stamp '%(%d-%m-%Y %H:%M:%S)T' -1
+        printf '%s INFO Started %s %s, %s.\n' "$stamp" "${game##*/}" "$from" "$pad" >>"$LOG" 2>/dev/null || true
+    fi
+fi
+# A game that is no longer there (owner, 03-11-2026, from the Windows Portable Suite's managers): renamed, moved or
+# deleted after it was put in Steam, or on a drive that is not in. PCSX2 is not started; the app says so in a
+# window of its own (its package with the suite's Python, when the app is installed), and here, so Steam sees the
+# game end.
+if [ -n "${game:-}" ] && [ "${game#-}" = "$game" ] && [ ! -e "$game" ]; then
+    echo "This game is no longer there: $game. Open PCSX2 Manager, press Refresh and then Update Steam." >&2
+    APP_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/ps5-pcsx2-manager/app"
+    PYTHON="${XDG_DATA_HOME:-$HOME/.local/share}/bazzite-console-suite/venv/bin/python"
+    if [ -x "$PYTHON" ] && [ -d "$APP_DIR" ]; then
+        (cd "$APP_DIR" && exec "$PYTHON" -m pcsx2_manager --gone "$game") || true
+    fi
+    exit 1
+fi
+exec "$APPIMAGE" "$@"

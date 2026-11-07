@@ -1,0 +1,8 @@
+Changelog: 06-11-2026 22:49:44
+
+Fixed. The warning explains that the Decky service is system-wide, and release messages describe the pinned loader
+without implying PS5 hardware validation.
+
+Changelog: 06-11-2026 22:39:30
+
+Added. Ported Decky Loader Manager with console-suite identity and an explicit system-change warning.

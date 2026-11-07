@@ -39,6 +39,11 @@ Each design (a suite's, the Nexus page's) has its own; none is carried over to a
 - **Anything else is a deviation**, listed under Color families below with the app it is in. A new color is
   added to the family it belongs to, or it needs a reason here.
 
+### Bazzite Console Suite
+
+- **The identity** is Bazzite purple, as in the other Bazzite suite. Its wiki uses the same purple palette; its
+  suite and home-page images are placeholders until PlayStation 5 artwork is supplied.
+
 ### Windows Portable Suite
 
 - **The identity** (owner, 26-10-2026: direction D, B's amber on C's cards): a near-black window `#121214`, cards a
@@ -288,6 +293,53 @@ Background colors:
 ## The wiki
 
 `bc250-bazzite/docs/stylesheets/suite.css`, Material's slate scheme with the suite's purple.
+
+### Wiki
+
+Text colors:
+
+- `#ffffff` Header, hero, cards and footer text; table headings; the stage pill; buttons on the dark and accent sections.
+
+  ![Sample text in #ffffff](design/colors/text-ffffff.svg)
+
+- `#ffffffb3` Dimmed text on the main and the hover color: the search field's hint.
+
+  ![Sample text in #ffffffb3](design/colors/text-ffffffb3.svg)
+
+- `#a98bff` Suite soft: links in the dark scheme; hover on the dark section; footer column headings.
+
+  ![Sample text in #a98bff](design/colors/text-a98bff.svg)
+
+- `#c9bfee` Suite mist: card text and footer links.
+
+  ![Sample text in #c9bfee](design/colors/text-c9bfee.svg)
+
+- `#1e1340` Suite deep: a button's text on hover in the dark and accent sections.
+
+  ![Sample text in #1e1340](design/colors/text-1e1340.svg)
+
+Background colors:
+
+| Color | Hex | Used for |
+| --- | --- | --- |
+| ![#5835ce](design/colors/block-5835ce.svg) | `#5835ce` | Suite primary: Material's primary color, table headings, page icons, the hero and Get started gradients. |
+| ![#7a5ce0](design/colors/block-7a5ce0.svg) | `#7a5ce0` | Primary, light. |
+| ![#4426a8](design/colors/block-4426a8.svg) | `#4426a8` | Primary, dark. |
+| ![#8a2be2](design/colors/block-8a2be2.svg) | `#8a2be2` | Suite secondary: the accent (hover rings on linked images), the end of the gradients. |
+| ![#8a2be21a](design/colors/block-8a2be21a.svg) | `#8a2be21a` | The accent at 10 %. |
+| ![#1e1340](design/colors/block-1e1340.svg) | `#1e1340` | Suite deep: header and tabs, the hero's top, the Download button. |
+| ![#120c22](design/colors/block-120c22.svg) | `#120c22` | Suite ink: the dark section and the home page's footer. |
+| ![#120c2273](design/colors/block-120c2273.svg) | `#120c2273` | The shadow under the board and the controller at the top of the home page (45 %). |
+| ![#17141f](design/colors/block-17141f.svg) | `#17141f` | Page background (the dark scheme). |
+| ![#8b4fd8](design/colors/block-8b4fd8.svg) | `#8b4fd8` | The stage pill under the claim. |
+| ![#ffffff](design/colors/block-ffffff.svg) | `#ffffff` | Button background on hover in the dark and accent sections. |
+| ![#ffffff1f](design/colors/block-ffffff1f.svg) | `#ffffff1f` | Behind a link in the header under the pointer (12 %). |
+| ![#00000040](design/colors/block-00000040.svg) | `#00000040` | The shadow under a button under the pointer (25 %). |
+| ![#00000059](design/colors/block-00000059.svg) | `#00000059` | The strip with the notice at the bottom of the home page's footer (35 %). |
+
+## The Bazzite Console Suite
+
+`bazzite-console/docs/stylesheets/suite.css`: Material's slate scheme with the same Bazzite purple palette. Its suite and home-page images are placeholders.
 
 ### Wiki
 

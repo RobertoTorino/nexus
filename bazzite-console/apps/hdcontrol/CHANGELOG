@@ -1,0 +1,3 @@
+Changelog: 07-11-2026 00:03:37
+
+Added. Added USB HD Control as an optional utility for recognized DualSense and DualSense Edge controllers. The Bluetooth idle-off service is opt-in and limited to the user's session.

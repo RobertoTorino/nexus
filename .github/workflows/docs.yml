@@ -4,7 +4,8 @@ name: Manual
 # Builds the manual (MkDocs Material) from main and publishes it on GitHub Pages (Settings -> Pages -> Source:
 # GitHub Actions): the Nexus page (nexus/) at https://robertotorino.github.io/nexus/, the BC250 Bazzite Suite's
 # wiki (bc250-bazzite/docs/) at https://robertotorino.github.io/nexus/bc250-bazzite-suite/ and the Windows Portable
-# Suite's (windows-portable/docs/) at https://robertotorino.github.io/nexus/windows-portable-suite/.
+# Suite's (windows-portable/docs/) at https://robertotorino.github.io/nexus/windows-portable-suite/, and the Bazzite
+# Console Suite's (bazzite-console/docs/) at https://robertotorino.github.io/nexus/bazzite-console-suite/.
 
 on:
   push:
@@ -40,6 +41,7 @@ jobs:
       - run: mkdocs build --strict -f nexus/mkdocs.yml --site-dir "$PWD/site"   # first: a build empties its folder
       - run: mkdocs build --strict -f bc250-bazzite/mkdocs.yml --site-dir "$PWD/site/bc250-bazzite-suite"
       - run: mkdocs build --strict -f windows-portable/mkdocs.yml --site-dir "$PWD/site/windows-portable-suite"
+      - run: mkdocs build --strict -f bazzite-console/mkdocs.yml --site-dir "$PWD/site/bazzite-console-suite"
       - uses: actions/upload-pages-artifact@v5
         with:
           path: site

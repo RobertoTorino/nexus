@@ -293,6 +293,11 @@ Each design (a suite's, the Nexus page's) has its own; none is carried over to a
 - **Anything else is a deviation**, listed under Color families below with the app it is in. A new color is
   added to the family it belongs to, or it needs a reason here.
 
+### Bazzite Console Suite
+
+- **The identity** is Bazzite purple, as in the other Bazzite suite. Its wiki uses the same purple palette; its
+  suite and home-page images are placeholders until PlayStation 5 artwork is supplied.
+
 ### Windows Portable Suite
 
 - **The identity** (owner, 26-10-2026: direction D, B's amber on C's cards): a near-black window `#121214`, cards a
@@ -414,6 +419,7 @@ def families() -> str:
 # Each wiki's stylesheet and the listing of its colors: the two must name the same colors.
 STYLESHEETS = {
     f"{SUITE_DIR}/docs/stylesheets/suite.css": (WIKI_TEXT, WIKI_BLOCKS),
+    "bazzite-console/docs/stylesheets/suite.css": (WIKI_TEXT, WIKI_BLOCKS),
     "nexus/docs/stylesheets/nexus.css": (NEXUS_TEXT, NEXUS_BLOCKS),
     "windows-portable/docs/stylesheets/portable.css": (PORTABLE_WIKI_TEXT, PORTABLE_WIKI_BLOCKS),
 }
@@ -611,6 +617,9 @@ are not on core yet carry a copy). The theme is one choice for every app: Gunmet
     out.append(section("State colors", "The same in every theme: a state shows as a colored edge or dot on the "
                        "theme's surfaces.", STATE_TEXT, STATE_BLOCKS))
     out.append("## The wiki\n\n`bc250-bazzite/docs/stylesheets/suite.css`, Material's slate scheme with the suite's purple.\n")
+    out.append(section("Wiki", "", WIKI_TEXT, WIKI_BLOCKS))
+    out.append("## The Bazzite Console Suite\n\n`bazzite-console/docs/stylesheets/suite.css`: Material's slate scheme "
+               "with the same Bazzite purple palette. Its suite and home-page images are placeholders.\n")
     out.append(section("Wiki", "", WIKI_TEXT, WIKI_BLOCKS))
     out.append("## The Windows Portable Suite\n\n`core/bc250_core/portable.py`, the portable window: direction D "
                "(the owner's, 26-10-2026).\n")

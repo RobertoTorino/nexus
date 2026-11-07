@@ -1,0 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+PyQt6>=6.11,<7
+aiortc>=1.14,<2
+pygame-ce>=2.5,<3

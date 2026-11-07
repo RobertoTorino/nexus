@@ -1,0 +1,681 @@
+[
+  {
+    "version": "System Software Version 14.00",
+    "releaseDate": "September 16, 2026",
+    "notes": [
+      "We’ve improved system software performance and stability."
+    ]
+  },
+  {
+    "version": "System Software Version 13.52",
+    "releaseDate": "June 17, 2026",
+    "notes": [
+      "Added: We’ve made some security fixes to the system software."
+    ]
+  },
+  {
+    "version": "System Software Version 13.50",
+    "releaseDate": "March 17, 2026",
+    "notes": [
+      "Added: latest current update: improved messages/usability"
+    ]
+  },
+  {
+    "version": "System Software Version 13.04",
+    "releaseDate": "January 28, 2026",
+    "notes": [
+      "Security fixes"
+    ]
+  },
+  {
+    "version": "System Software Version 13.02",
+    "releaseDate": "October 1, 2025",
+    "notes": [
+      "Security fixes"
+    ]
+  },
+  {
+    "version": "System Software Version 13.00",
+    "releaseDate": "September 17, 2025",
+    "notes": [
+      "Improved messages/usability"
+    ]
+  },
+  {
+    "version": "System Software Version 12.52",
+    "releaseDate": "July 9, 2025",
+    "notes": [
+      "Security fixes"
+    ]
+  },
+  {
+    "version": "System Software Version 12.50",
+    "releaseDate": "March 25, 2025",
+    "notes": [
+      "Improved messages/usability"
+    ]
+  },
+  {
+    "version": "System Software Version 12.02",
+    "releaseDate": "January 30, 2025",
+    "notes": [
+      "Security fixes"
+    ]
+  },
+  {
+    "version": "System Software Version 12.00",
+    "releaseDate": "September 12, 2024",
+    "notes": [
+      "Improved messages/usability"
+    ]
+  },
+  {
+    "version": "System Software Version 11.52",
+    "releaseDate": "July 17, 2024",
+    "notes": [
+      "Improved messages/usability: security fixes"
+    ]
+  },
+  {
+    "version": "System Software Version 11.50",
+    "releaseDate": "March 13, 2024",
+    "notes": [
+      "Performance/stability and messages/usability improvements"
+    ]
+  },
+  {
+    "version": "System Software Version 11.02",
+    "releaseDate": "December 6, 2023",
+    "notes": [
+      "Added: security, performance/stability, and messages/usability"
+    ]
+  },
+  {
+    "version": "System Software Version 11.00",
+    "releaseDate": "September 13, 2023",
+    "notes": [
+      "Passwordless PS App sign-in: emoji reactions: usability improvements"
+    ]
+  },
+  {
+    "version": "System Software Version 10.71",
+    "releaseDate": "August 10, 2023",
+    "notes": [
+      "Added: system performance update"
+    ]
+  },
+  {
+    "version": "System Software Version 10.70",
+    "releaseDate": "July 20, 2023",
+    "notes": [
+      "Added: system performance update"
+    ]
+  },
+  {
+    "version": "System Software Version 10.50",
+    "releaseDate": "March 8, 2023",
+    "notes": [
+      "Authorized Apps setting: PS App friends online status: Unicode 15.0 emoji: cross-platform session indicators"
+    ]
+  },
+  {
+    "version": "System Software Version 10.01",
+    "releaseDate": "September 21, 2022",
+    "notes": [
+      "System performance update"
+    ]
+  },
+  {
+    "version": "System Software Version 10.00",
+    "releaseDate": "September 7, 2022",
+    "notes": [
+      "Normalized from 10.0: Internet Browser zoom changes: Remote Play keyboard improvements"
+    ]
+  },
+  {
+    "version": "System Software Version 9.60",
+    "releaseDate": "May 12, 2022",
+    "notes": [
+      "Added: system/stability type update"
+    ]
+  },
+  {
+    "version": "System Software Version 9.51",
+    "releaseDate": "April 13, 2022",
+    "notes": [
+      "Added: system/stability type update"
+    ]
+  },
+  {
+    "version": "System Software Version 9.50",
+    "releaseDate": "March 23, 2022",
+    "notes": [
+      "Party feature updates: Ukrainian language support"
+    ]
+  },
+  {
+    "version": "System Software Version 9.04",
+    "releaseDate": "February 19, 2022",
+    "notes": [
+      "Added: performance update: associated with Cyberpunk 2077 issue fixes"
+    ]
+  },
+  {
+    "version": "System Software Version 9.03",
+    "releaseDate": "December 1, 2021",
+    "notes": [
+      "System/stability type update"
+    ]
+  },
+  {
+    "version": "System Software Version 9.00",
+    "releaseDate": "September 15, 2021",
+    "notes": [
+      "PS5 trophies visible on PS4: parental controls/messages improvements: CMOS/CBOMB-related fix"
+    ]
+  },
+  {
+    "version": "System Software Version 8.52",
+    "releaseDate": "June 22, 2021",
+    "notes": [
+      "Added: system/stability type update"
+    ]
+  },
+  {
+    "version": "System Software Version 8.50",
+    "releaseDate": "April 14, 2021",
+    "notes": [
+      "PS4/PS5 cross-gen session improvements: request-to-join: Communities removed"
+    ]
+  },
+  {
+    "version": "System Software Version 8.03",
+    "releaseDate": "December 9, 2020",
+    "notes": [
+      "System/stability type update"
+    ]
+  },
+  {
+    "version": "System Software Version 8.01",
+    "releaseDate": "November 18, 2020",
+    "notes": [
+      "System/stability type update"
+    ]
+  },
+  {
+    "version": "System Software Version 8.00",
+    "releaseDate": "October 14, 2020",
+    "notes": [
+      "Party/Messages changes: new avatars: authenticator-app 2-step verification: parental control updates"
+    ]
+  },
+  {
+    "version": "System Software Version 7.55",
+    "releaseDate": "August 26, 2020",
+    "notes": [
+      "System/stability type update"
+    ]
+  },
+  {
+    "version": "System Software Version 7.51",
+    "releaseDate": "May 27, 2020",
+    "notes": [
+      "System/stability type update"
+    ]
+  },
+  {
+    "version": "System Software Version 7.50",
+    "releaseDate": "April 16, 2020",
+    "notes": [
+      "System/stability type update"
+    ]
+  },
+  {
+    "version": "System Software Version 7.02",
+    "releaseDate": "December 19, 2019",
+    "notes": [
+      "System/stability type update"
+    ]
+  },
+  {
+    "version": "System Software Version 7.01",
+    "releaseDate": "December 11, 2019",
+    "notes": [
+      "System/stability type update"
+    ]
+  },
+  {
+    "version": "System Software Version 7.00",
+    "releaseDate": "October 8, 2019",
+    "notes": [
+      "Added: Android Remote Play: party size increased from 8 to 16: chat transcription"
+    ]
+  },
+  {
+    "version": "System Software Version 6.72",
+    "releaseDate": "July 16, 2019",
+    "notes": [
+      "Added: system/stability type update"
+    ]
+  },
+  {
+    "version": "System Software Version 6.71",
+    "releaseDate": "June 4, 2019",
+    "notes": [
+      "System/stability type update"
+    ]
+  },
+  {
+    "version": "System Software Version 6.70",
+    "releaseDate": "May 30, 2019",
+    "notes": [
+      "System/stability type update"
+    ]
+  },
+  {
+    "version": "System Software Version 6.51",
+    "releaseDate": "March 28, 2019",
+    "notes": [
+      "Added: system/stability type update"
+    ]
+  },
+  {
+    "version": "System Software Version 6.50",
+    "releaseDate": "March 7, 2019",
+    "notes": [
+      "iOS Remote Play support: other minor improvements"
+    ]
+  },
+  {
+    "version": "System Software Version 6.20",
+    "releaseDate": "December 12, 2018",
+    "notes": [
+      "System/stability type update"
+    ]
+  },
+  {
+    "version": "System Software Version 6.02",
+    "releaseDate": "October 17, 2018",
+    "notes": [
+      "System/stability type update"
+    ]
+  },
+  {
+    "version": "System Software Version 6.00",
+    "releaseDate": "September 13, 2018",
+    "notes": [
+      "System/stability type update"
+    ]
+  },
+  {
+    "version": "System Software Version 5.56",
+    "releaseDate": "August 31, 2018",
+    "notes": [
+      "System/stability type update"
+    ]
+  },
+  {
+    "version": "System Software Version 5.55",
+    "releaseDate": "May 17, 2018",
+    "notes": [
+      "System/stability type update"
+    ]
+  },
+  {
+    "version": "System Software Version 5.53.1",
+    "releaseDate": "April 24, 2018",
+    "notes": [
+      "Added: small patch-style update"
+    ]
+  },
+  {
+    "version": "System Software Version 5.53",
+    "releaseDate": "April 12, 2018",
+    "notes": [
+      "System/stability type update"
+    ]
+  },
+  {
+    "version": "System Software Version 5.50",
+    "releaseDate": "March 8, 2018",
+    "notes": [
+      "Play Time Management: hide apps in Library: USB custom wallpapers: PS4 Pro supersampling: notification deletion"
+    ]
+  },
+  {
+    "version": "System Software Version 5.07",
+    "releaseDate": "2018",
+    "notes": [
+      "Added: uncommon/preinstalled-style version, not a normal public-history entry"
+    ]
+  },
+  {
+    "version": "System Software Version 5.05",
+    "releaseDate": "January 18, 2018",
+    "notes": [
+      "Added: system/stability type update"
+    ]
+  },
+  {
+    "version": "System Software Version 5.03",
+    "releaseDate": "December 14, 2017",
+    "notes": [
+      "System/stability type update"
+    ]
+  },
+  {
+    "version": "System Software Version 5.02",
+    "releaseDate": "2017",
+    "notes": [
+      "Added: system/stability type update"
+    ]
+  },
+  {
+    "version": "System Software Version 5.01",
+    "releaseDate": "October 24, 2017",
+    "notes": [
+      "System/stability type update"
+    ]
+  },
+  {
+    "version": "System Software Version 5.00",
+    "releaseDate": "October 3, 2017",
+    "notes": [
+      "Family on PSN: friend-list management: PS VR surround sound: Twitch 1080p/60fps on PS4 Pro: more languages"
+    ]
+  },
+  {
+    "version": "System Software Version 4.74",
+    "releaseDate": "September 14, 2017",
+    "notes": [
+      "System/stability type update"
+    ]
+  },
+  {
+    "version": "System Software Version 4.73",
+    "releaseDate": "August 2, 2017",
+    "notes": [
+      "Added: system/stability type update"
+    ]
+  },
+  {
+    "version": "System Software Version 4.72",
+    "releaseDate": "July 11, 2017",
+    "notes": [
+      "System/stability type update"
+    ]
+  },
+  {
+    "version": "System Software Version 4.71",
+    "releaseDate": "June 22, 2017",
+    "notes": [
+      "System/stability type update"
+    ]
+  },
+  {
+    "version": "System Software Version 4.70",
+    "releaseDate": "May 30, 2017",
+    "notes": [
+      "System/stability type update"
+    ]
+  },
+  {
+    "version": "System Software Version 4.55",
+    "releaseDate": "April 11, 2017",
+    "notes": [
+      "System/stability type update"
+    ]
+  },
+  {
+    "version": "System Software Version 4.50",
+    "releaseDate": "March 9, 2017",
+    "notes": [
+      "External USB storage for games/apps: custom wallpapers: refined Quick Menu: PS VR 3D Blu-ray support"
+    ]
+  },
+  {
+    "version": "System Software Version 4.07",
+    "releaseDate": "December 8, 2016",
+    "notes": [
+      "System/stability type update"
+    ]
+  },
+  {
+    "version": "System Software Version 4.06",
+    "releaseDate": "November 17, 2016",
+    "notes": [
+      "System/stability type update"
+    ]
+  },
+  {
+    "version": "System Software Version 4.05",
+    "releaseDate": "October 25, 2016",
+    "notes": [
+      "System/stability type update"
+    ]
+  },
+  {
+    "version": "System Software Version 4.01",
+    "releaseDate": "October 3, 2016",
+    "notes": [
+      "System/stability type update"
+    ]
+  },
+  {
+    "version": "System Software Version 4.00",
+    "releaseDate": "September 13, 2016",
+    "notes": [
+      "HDR support: folders: redesigned Quick Menu and Share Menu: UI improvements"
+    ]
+  },
+  {
+    "version": "System Software Version 3.70",
+    "releaseDate": "2016",
+    "notes": [
+      "Added: uncommon/limited documentation"
+    ]
+  },
+  {
+    "version": "System Software Version 3.55",
+    "releaseDate": "June 21, 2016",
+    "notes": [
+      "System/stability type update"
+    ]
+  },
+  {
+    "version": "System Software Version 3.50",
+    "releaseDate": "April 6, 2016",
+    "notes": [
+      "Remote Play on Windows/macOS: appear offline: scheduled events"
+    ]
+  },
+  {
+    "version": "System Software Version 3.15",
+    "releaseDate": "January 13, 2016",
+    "notes": [
+      "System/stability type update"
+    ]
+  },
+  {
+    "version": "System Software Version 3.11",
+    "releaseDate": "November 9, 2015",
+    "notes": [
+      "System/stability type update"
+    ]
+  },
+  {
+    "version": "System Software Version 3.10",
+    "releaseDate": "October 20, 2015",
+    "notes": [
+      "Follow verified accounts: message/sticker/profile improvements"
+    ]
+  },
+  {
+    "version": "System Software Version 3.00",
+    "releaseDate": "September 30, 2015",
+    "notes": [
+      "Events: Communities: YouTube broadcasting: Twitter video clips: PS Plus cloud storage increased to 10 GB"
+    ]
+  },
+  {
+    "version": "System Software Version 2.57",
+    "releaseDate": "July 22, 2015",
+    "notes": [
+      "System/stability type update"
+    ]
+  },
+  {
+    "version": "System Software Version 2.56",
+    "releaseDate": "2015",
+    "notes": [
+      "Added: system/stability type update"
+    ]
+  },
+  {
+    "version": "System Software Version 2.55",
+    "releaseDate": "July 1, 2015",
+    "notes": [
+      "System/stability type update"
+    ]
+  },
+  {
+    "version": "System Software Version 2.52",
+    "releaseDate": "2015",
+    "notes": [
+      "Added: system/stability type update"
+    ]
+  },
+  {
+    "version": "System Software Version 2.51",
+    "releaseDate": "April 21, 2015",
+    "notes": [
+      "System/stability type update"
+    ]
+  },
+  {
+    "version": "System Software Version 2.50",
+    "releaseDate": "March 26, 2015",
+    "notes": [
+      "Suspend/resume: backup/restore to USB: accessibility and social improvements"
+    ]
+  },
+  {
+    "version": "System Software Version 2.04",
+    "releaseDate": "February 17, 2015",
+    "notes": [
+      "System/stability type update"
+    ]
+  },
+  {
+    "version": "System Software Version 2.03",
+    "releaseDate": "December 3, 2014",
+    "notes": [
+      "System/stability type update"
+    ]
+  },
+  {
+    "version": "System Software Version 2.02",
+    "releaseDate": "November 11, 2014",
+    "notes": [
+      "Added: system/stability type update"
+    ]
+  },
+  {
+    "version": "System Software Version 2.01",
+    "releaseDate": "November 5, 2014",
+    "notes": [
+      "System/stability type update"
+    ]
+  },
+  {
+    "version": "System Software Version 2.00",
+    "releaseDate": "October 28, 2014",
+    "notes": [
+      "Share Play: YouTube upload: USB music player: themes/custom background color"
+    ]
+  },
+  {
+    "version": "System Software Version 1.76",
+    "releaseDate": "September 2, 2014",
+    "notes": [
+      "Added: minor stability update: some sources list the PUP file date as August 20"
+    ]
+  },
+  {
+    "version": "System Software Version 1.75",
+    "releaseDate": "July 29, 2014",
+    "notes": [
+      "Blu-ray 3D support: Blu-ray/DVD 1.5x playback audio improvements"
+    ]
+  },
+  {
+    "version": "System Software Version 1.74",
+    "releaseDate": "July 22, 2014",
+    "notes": [
+      "System/stability type update"
+    ]
+  },
+  {
+    "version": "System Software Version 1.72",
+    "releaseDate": "June 24, 2014",
+    "notes": [
+      "System/stability type update"
+    ]
+  },
+  {
+    "version": "System Software Version 1.71",
+    "releaseDate": "June 3, 2014",
+    "notes": [
+      "System/stability type update"
+    ]
+  },
+  {
+    "version": "System Software Version 1.70",
+    "releaseDate": "April 30, 2014",
+    "notes": [
+      "SHAREfactory: export captures to USB: HDCP toggle: Share and broadcast improvements"
+    ]
+  },
+  {
+    "version": "System Software Version 1.62",
+    "releaseDate": "March 18, 2014",
+    "notes": [
+      "Image quality improvements for some applications"
+    ]
+  },
+  {
+    "version": "System Software Version 1.61",
+    "releaseDate": "February 18, 2014",
+    "notes": [
+      "System/stability type update"
+    ]
+  },
+  {
+    "version": "System Software Version 1.60",
+    "releaseDate": "February 4, 2014",
+    "notes": [
+      "Wireless stereo headset support: PlayStation Camera microphone mute option"
+    ]
+  },
+  {
+    "version": "System Software Version 1.52",
+    "releaseDate": "December 11, 2013",
+    "notes": [
+      "System/stability type update"
+    ]
+  },
+  {
+    "version": "System Software Version 1.51",
+    "releaseDate": "November 20, 2013",
+    "notes": [
+      "System/stability type update"
+    ]
+  },
+  {
+    "version": "System Software Version 1.50",
+    "releaseDate": "November 13, 2013",
+    "notes": [
+      "November 13, 2013 download, November 15, 2013 launch. Day-one update: Remote Play, second screen, sharing, broadcasting, Blu-ray/DVD playback, Play as You Download"
+    ]
+  }
+]

@@ -26,6 +26,7 @@ dev/<name>/                   the Nexus development apps, run from the checkout:
 test.sh                       runs every test suite (core, tools, dev/, and the portal, tools and apps of each suite
                               made for the system it runs on: SYSTEM in the suite's folder)
 bc250-bazzite/                the BC250 Bazzite Suite
+bazzite-console/              the Bazzite Console Suite (PlayStation 5 hardware running Bazzite; ps5- tags)
 windows-portable/             the Windows Portable Suite (its tags start with wp-, TAG_PREFIX)
 nexus/                        the Nexus page
 DESIGN.md ICONS.md            every color and every icon, per suite and the Nexus page

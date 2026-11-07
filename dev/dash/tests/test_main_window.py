@@ -22,8 +22,10 @@ def test_the_icons_are_nexus_at_512_and_128_px():
 
 
 def test_the_checkout_has_the_suites_and_the_nexus_apps():
-    assert checkout.suites(CHECKOUT) == ["bc250-bazzite", "windows-portable"]
+    assert checkout.suites(CHECKOUT) == ["bazzite-console", "bc250-bazzite", "windows-portable"]
     assert checkout.suite_name(CHECKOUT, "bc250-bazzite") == "BC250 Bazzite Suite"
+    assert checkout.suite_name(CHECKOUT, "bazzite-console") == "Bazzite Console Suite"
+    assert checkout.suite_system(CHECKOUT, "bazzite-console") == "bazzite"
     assert checkout.suite_system(CHECKOUT, "windows-portable") == "windows"
     assert checkout.here(CHECKOUT, "bc250-bazzite", "linux") and not checkout.here(CHECKOUT, "bc250-bazzite", "win32")
     assert checkout.here(CHECKOUT, "windows-portable", "win32")
@@ -57,7 +59,7 @@ def test_a_windows_suite_greys_out_the_tours_and_the_choice_is_remembered(qapp):
     settings = QSettings(QSettings.Format.IniFormat, QSettings.Scope.UserScope, "test", "test")
     window = MainWindow(settings=settings, suite="bc250-bazzite")
 
-    window.suite_box.setCurrentIndex(1)
+    window.suite_box.setCurrentIndex(window.suite_box.findText("Windows Portable Suite"))
 
     assert window.suite == "windows-portable" and settings.value(SUITE_KEY) == "windows-portable"
     tiles = {window.tiles.item(i).text(): window.tiles.item(i) for i in range(window.tiles.count())}

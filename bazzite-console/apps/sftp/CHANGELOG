@@ -1,0 +1,3 @@
+Changelog: 06-11-2026 23:58:41
+
+Added. SFTP client and SSH server manager for the Bazzite Console Suite, with confirmation for server changes.

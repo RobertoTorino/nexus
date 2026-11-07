@@ -1,0 +1,174 @@
+[
+  {
+    "version": "System Software Version 7.3.0",
+    "releaseDate": "October 10, 2026",
+    "notes": [
+      "You can turn 3D audio on or off while playing a game. Go to Settings > System > 3D Audio.",
+      "We’ve updated the search experience. You can now:",
+      "See results in real time as you type.",
+      "Scan a QR code to continue your search in PlayStation Store on PlayStation App or in a web browser.",
+      "We’ve improved system software performance and stability.",
+      "We’ve improved the messages and usability on some screens."
+    ]
+  },
+  {
+    "version": "System Software Version 7.1.7",
+    "releaseDate": "September 25, 2026",
+    "notes": [
+      "This update introduces changes to how your PS Portal charges in order to support the long-term battery health of your device. After updating, your device will charge to 80% by default. You can change the charge limit at any time in Settings > System > Battery.",
+      "Selecting a charge limit over 80% might impact battery performance and overall stability, reducing long-term battery health.",
+      "Make sure to update your PlayStation Link device to the latest device software version to connect to PlayStation Portal.",
+      "To update your PlayStation Link device, connect it to a PS5 or PC using its PlayStation Link USB adapter.",
+      "We’ve improved system software performance and stability.",
+      "We’ve improved the messages and usability on some screens."
+    ]
+  },
+  {
+    "version": "System Software Version 7.0.2",
+    "releaseDate": "April 8, 2026",
+    "notes": [
+      "We’ve improved system software performance and stability.",
+      "We’ve improved the messages and usability on some screens."
+    ]
+  },
+  {
+    "version": "System Software Version 7.0.0",
+    "releaseDate": "March 18, 2026",
+    "notes": [
+      "We’ve added the following features to enhance your cloud streaming experience. You can now:",
+      "Cloud Streaming is available for PlayStation Plus Premium members. For more details, visit Cloud streaming for PS5 games on PlayStation Portal Remote Player.",
+      "You can now create an account and sign in to your PS Portal with one easy process by scanning a QR code with your mobile device.",
+      "1080p High Quality is now available as the maximum resolution. When using Cloud Streaming or Remote Play, open the quick menu, go to Max Resolution, and select 1080p High Quality.",
+      "You can check troubleshooting tips from the quick menu.",
+      "We’ve improved system software performance and stability.",
+      "We’ve improved the messages and usability on some screens."
+    ]
+  },
+  {
+    "version": "System Software Version 6.0.1",
+    "releaseDate": "November 21, 2025",
+    "notes": [
+      "We’ve improved system software performance and stability."
+    ]
+  },
+  {
+    "version": "System Software Version 6.0.0",
+    "releaseDate": "November 7, 2025",
+    "notes": [
+      "We’ve added the following features to enhance your cloud streaming experience. You can now:",
+      "Play select PS5 games you’ve added to your game library from PlayStation Store via Cloud Streaming.",
+      "Find cloud streaming games more easily with the search feature.",
+      "Make purchases while playing a streaming game.",
+      "Join a multiplayer session directly from a game invite in the quick menu while playing a streaming game.",
+      "Use accessibility features such as Text Size and Screen Reader while playing streaming games and on certain screens.",
+      "Go to Settings > Cloud Streaming > Accessibility Settings for Cloud Streaming.",
+      "View a player’s PlayStation profile.",
+      "Cloud Streaming is available for PlayStation Plus Premium members. For more details, visit Cloud Streaming on PS Portal.",
+      "The home screen has been redesigned to support smoother navigation.",
+      "You can now open the quick menu on most screens by pressing the PS Button.",
+      "3D audio is now available on PS Portal when using a headset. This feature works with games that support 3D audio during Remote Play or Cloud Streaming.",
+      "You can now send feedback about your Remote Play experience directly from PS Portal.",
+      "You can now check your network status during Remote Play or Cloud Streaming. In the quick menu, go to Troubleshoot > Show Network Status.",
+      "You can now set a passcode on your PS Portal. Go to Settings > System > Passcode.",
+      "We’ve improved system software performance and stability.",
+      "We’ve improved the messages and usability on some screens."
+    ]
+  },
+  {
+    "version": "System Software Version 5.1.0",
+    "releaseDate": "June 30, 2025",
+    "notes": [
+      "We’ve improved system software performance and stability.",
+      "We’ve improved the messages and usability on some screens."
+    ]
+  },
+  {
+    "version": "System Software Version 5.0.0",
+    "releaseDate": "April 10, 2025",
+    "notes": [
+      "We’ve added the following features to Cloud Streaming (Beta).",
+      "You can now:Sort games in the Game Catalog.",
+      "Take gameplay captures while streaming a game.",
+      ",Give feedback on your cloud streaming experience.",
+      "Wait your turn to play when the streaming server is full.",
+      "Receive a notification when your streaming game is about to close due to inactivity.",
+      "Restore the license from Troubleshoot in the quick menu.",
+      "We’ve added a sound effect for opening and closing the quick menu.",
+      "We’ve improved system software performance and stability.",
+      "We’ve improved the messages and usability on some screens."
+    ]
+  },
+  {
+    "version": "System Software Version 4.0.1",
+    "releaseDate": "December 14, 2024",
+    "notes": [
+      "We’ve improved system software performance and stability.",
+      "We’ve improved the messages and usability on some screens."
+    ]
+  },
+  {
+    "version": "System Software Version 4.0.0",
+    "releaseDate": "November 21, 2024",
+    "notes": [
+      "We’ve adjusted the volume level of the speaker.",
+      "To connect to public networks, make sure that the initial setup for your PS Portal is completed.",
+      "To comply with regulations for various countries and regions, PS Portal might not support connections to certain public networks, such as 5GHz networks.",
+      "You can now change settings for your PS Link devices on PS Portal. Connect your PS Link device to your PS Portal, and in the quick menu, select Settings > PS Link Device.",
+      "Cloud Streaming (Beta) is now available. PlayStation Plus Premium members can play select streaming games for PS5 from the Game Catalog. For more details, visit playstation.com/psportal-cgs-beta-device.",
+      "We’ve improved system software performance and stability.",
+      "We’ve improved the messages and usability on some screens."
+    ]
+  },
+  {
+    "version": "System Software Version 3.0.1",
+    "releaseDate": "July 25, 2024",
+    "notes": [
+      "We’ve improved system software performance and stability.",
+      "To connect to public networks, make sure that the initial setup for your PS Portal is completed.",
+      "To comply with regulations for various countries and regions, PS Portal might not support connections to certain public networks, such as 5GHz networks.",
+      "PS Portal can now connect to a wider range of public networks, including certain 5GHz networks."
+    ]
+  },
+  {
+    "version": "System Software Version 3.0.0",
+    "releaseDate": "June 20, 2024",
+    "notes": [
+      "PS Portal can now connect to public networks. If there’s a public network available in places such as hotels, cafes, and airports, you can connect your PS Portal to the Wi-Fi by entering the required information (such as ID, password, and room number) using your mobile phone or computer.",
+      "To connect to public networks, make sure that the initial setup for your PS Portal is completed.",
+      "To comply with regulations for various countries and regions, PS Portal might not support connections to certain public networks, such as 5GHz networks.",
+      "When you use the touchpad area on the screen during Remote Play, you’ll now see visual feedback.",
+      "Your PS Portal can now display the remaining battery level as a percentage on the status bar at the top right of the screen. Open the quick menu, go to Settings > System > Battery, and then turn on Show Battery Percentage.",
+      "We’ve improved system software performance and stability.",
+      "We’ve improved the messages and usability on some screens."
+    ]
+  },
+  {
+    "version": "System Software Version 2.06",
+    "releaseDate": "April 2, 2024",
+    "notes": [
+      "We’ve improved system software performance and stability."
+    ]
+  },
+  {
+    "version": "System Software Version 2.05",
+    "releaseDate": "December 12, 2023",
+    "notes": [
+      "We’ve improved system software performance and stability.",
+      "We’ve improved the messages and usability on some screens."
+    ]
+  },
+  {
+    "version": "System Software Version 2.01",
+    "releaseDate": "December 1, 2023",
+    "notes": [
+      "This system software update improves system performance."
+    ]
+  },
+  {
+    "version": "System Software Version 2.00",
+    "releaseDate": "November 15, 2023",
+    "notes": [
+      "Initial firmware update"
+    ]
+  }
+]

@@ -1,0 +1,76 @@
+# The suite's category icons are copied to their apps and portal by tools/sync_icons.py.
+
+[bazzite]
+category = "sustainable"
+icons = ["apps/bazzite/images/bazzite-test"]
+tile = "portal/images/apps/bazzite.webp"
+
+[rpcs3]
+category = "gaming"
+icons = ["apps/rpcs3/images/ps5-rpcs3-manager"]
+tile = "portal/images/apps/rpcs3.webp"
+
+[consoles]
+category = "gaming"
+icons = ["apps/consoles/images/ps5-console-link"]
+tile = "portal/images/apps/consoles.webp"
+
+[clb]
+category = "gaming"
+icons = ["apps/clb/images/ps5-console-linkb"]
+tile = "portal/images/apps/clb.webp"
+
+[shadps4]
+category = "gaming"
+icons = ["apps/shadps4/images/ps5-shadps4-manager"]
+tile = "portal/images/apps/shadps4.webp"
+
+[decky]
+category = "gaming"
+icons = ["apps/decky/images/ps5-decky-manager"]
+tile = "portal/images/apps/decky.webp"
+
+[datstation]
+category = "gaming"
+icons = ["apps/datstation/images/ps5-datstation"]
+tile = "portal/images/apps/datstation.webp"
+
+[ppsspp]
+category = "gaming"
+icons = ["apps/ppsspp/images/ps5-ppsspp-manager"]
+tile = "portal/images/apps/ppsspp.webp"
+
+[pcsx2]
+category = "gaming"
+icons = ["apps/pcsx2/images/ps5-pcsx2-manager"]
+tile = "portal/images/apps/pcsx2.webp"
+
+[vita3k]
+category = "gaming"
+icons = ["apps/vita3k/images/ps5-vita3k-manager"]
+tile = "portal/images/apps/vita3k.webp"
+
+[xenia]
+category = "gaming"
+icons = ["apps/xenia/images/ps5-xenia-manager"]
+tile = "portal/images/apps/xenia.webp"
+
+[sftp]
+category = "utilities"
+icons = ["apps/sftp/images/ps5-sftp-tools"]
+tile = "portal/images/apps/sftp.webp"
+
+[hdcam]
+category = "utilities"
+icons = ["apps/hdcam/images/ps5-usb-hdcam"]
+tile = "portal/images/apps/hdcam.webp"
+
+[hdcontrol]
+category = "utilities"
+icons = ["apps/hdcontrol/images/ps5-usb-hdcontrol"]
+tile = "portal/images/apps/hdcontrol.webp"
+
+[ssd]
+category = "utilities"
+icons = ["apps/ssd/images/ps5-ssd-check"]
+tile = "portal/images/apps/ssd.webp"

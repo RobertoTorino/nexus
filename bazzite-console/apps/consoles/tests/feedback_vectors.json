@@ -1,0 +1,77 @@
+{
+"state": [
+  {"state": {"buttons": 0, "l2": 0, "r2": 0, "left_x": 0, "left_y": 0, "right_x": 0, "right_y": 0, "touches": [[-1, 0, 0], [-1, 0, 0]], "gyro": [0, 0, 0], "accel": [0, 1, 0], "orient": [0, 0, 0, 1]}, "v9": "a0ff7fff7fff7fff7f9999ff7ffef7ef1f0000000000000000", "v12": "a0ff7fff7fff7fff7f9999ff7ffef7ef1f0000000000000000000001"},
+  {"state": {"buttons": 0, "l2": 0, "r2": 0, "left_x": -32768, "left_y": 32767, "right_x": 1234, "right_y": -4321, "touches": [[-1, 0, 0], [-1, 0, 0]], "gyro": [0, 0, 0], "accel": [0, 1, 0], "orient": [0, 0, 0, 1]}, "v9": "a0ff7fff7fff7fff7f9999ff7ffef7ef1f80007fff04d2ef1f", "v12": "a0ff7fff7fff7fff7f9999ff7ffef7ef1f80007fff04d2ef1f000001"},
+  {"state": {"buttons": 0, "l2": 0, "r2": 0, "left_x": 0, "left_y": 0, "right_x": 0, "right_y": 0, "touches": [[-1, 0, 0], [-1, 0, 0]], "gyro": [1.5, -29.75, 29.8999996], "accel": [-0.25, 1, 4.99900007], "orient": [0.5, -0.5, 0.5, 0.5]}, "v9": "a06586110191ff99799999f8ff50429b360000000000000000", "v12": "a06586110191ff99799999f8ff50429b360000000000000000000001"},
+  {"state": {"buttons": 0, "l2": 0, "r2": 0, "left_x": 100, "left_y": -100, "right_x": 0, "right_y": 0, "touches": [[-1, 0, 0], [-1, 0, 0]], "gyro": [0, 0, 0], "accel": [0, 1, 0], "orient": [-0.800000012, 0.200000003, 0.100000001, 0.556776404]}, "v9": "a0ff7fff7fff7fff7f9999ff7f393a12390064ff9c00000000", "v12": "a0ff7fff7fff7fff7f9999ff7f393a12390064ff9c00000000000001"},
+  {"state": {"buttons": 0, "l2": 0, "r2": 0, "left_x": 0, "left_y": 0, "right_x": 0, "right_y": 0, "touches": [[-1, 0, 0], [-1, 0, 0]], "gyro": [-30, 0, 0], "accel": [4.9000001, 1, -5], "orient": [0.100000001, 0.300000012, -0.899999976, 0.300000012]}, "v9": "a00000ff7fff7f6ffd999900001db9762d0000000000000000", "v12": "a00000ff7fff7f6ffd999900001db9762d0000000000000000000001"}
+],
+"button_events": [
+  {"button": 1, "value": 255, "event": "8088ff"},
+  {"button": 1, "value": 0, "event": "808800"},
+  {"button": 2, "value": 255, "event": "8089ff"},
+  {"button": 2, "value": 0, "event": "808900"},
+  {"button": 4, "value": 255, "event": "808aff"},
+  {"button": 4, "value": 0, "event": "808a00"},
+  {"button": 8, "value": 255, "event": "808bff"},
+  {"button": 8, "value": 0, "event": "808b00"},
+  {"button": 16, "value": 255, "event": "8082ff"},
+  {"button": 16, "value": 0, "event": "808200"},
+  {"button": 32, "value": 255, "event": "8083ff"},
+  {"button": 32, "value": 0, "event": "808300"},
+  {"button": 64, "value": 255, "event": "8080ff"},
+  {"button": 64, "value": 0, "event": "808000"},
+  {"button": 128, "value": 255, "event": "8081ff"},
+  {"button": 128, "value": 0, "event": "808100"},
+  {"button": 256, "value": 255, "event": "8084ff"},
+  {"button": 256, "value": 0, "event": "808400"},
+  {"button": 512, "value": 255, "event": "8085ff"},
+  {"button": 512, "value": 0, "event": "808500"},
+  {"button": 1024, "value": 255, "event": "80af"},
+  {"button": 1024, "value": 0, "event": "808f"},
+  {"button": 2048, "value": 255, "event": "80b0"},
+  {"button": 2048, "value": 0, "event": "8090"},
+  {"button": 4096, "value": 255, "event": "80ac"},
+  {"button": 4096, "value": 0, "event": "808c"},
+  {"button": 8192, "value": 255, "event": "80ad"},
+  {"button": 8192, "value": 0, "event": "808d"},
+  {"button": 16384, "value": 255, "event": "80b1"},
+  {"button": 16384, "value": 0, "event": "8091"},
+  {"button": 32768, "value": 255, "event": "80ae"},
+  {"button": 32768, "value": 0, "event": "808e"},
+  {"button": 65536, "value": 255, "event": "8086ff"},
+  {"button": 65536, "value": 0, "event": "808600"},
+  {"button": 65536, "value": 128, "event": "808680"},
+  {"button": 131072, "value": 255, "event": "8087ff"},
+  {"button": 131072, "value": 0, "event": "808700"},
+  {"button": 131072, "value": 128, "event": "808780"}
+],
+"touch_events": [
+  {"down": true, "id": 0, "x": 0, "y": 0, "event": "d000000000"},
+  {"down": false, "id": 1, "x": 1919, "y": 941, "event": "c00177f3ad"},
+  {"down": true, "id": 127, "x": 960, "y": 471, "event": "d07f3c01d7"},
+  {"down": true, "id": 200, "x": 291, "y": 700, "event": "d0481232bc"}
+],
+"history": [
+  {"state": {"buttons": 1, "l2": 0, "r2": 0, "left_x": 0, "left_y": 0, "right_x": 0, "right_y": 0, "touches": [[-1, 0, 0], [-1, 0, 0]], "gyro": [0, 0, 0], "accel": [0, 1, 0], "orient": [0, 0, 0, 1]}, "packets": [{"event_count": 1, "payload": "8088ff"}]},
+  {"state": {"buttons": 0, "l2": 0, "r2": 0, "left_x": 0, "left_y": 0, "right_x": 0, "right_y": 0, "touches": [[-1, 0, 0], [-1, 0, 0]], "gyro": [0, 0, 0], "accel": [0, 1, 0], "orient": [0, 0, 0, 1]}, "packets": [{"event_count": 2, "payload": "8088008088ff"}]},
+  {"state": {"buttons": 320, "l2": 0, "r2": 0, "left_x": 0, "left_y": 0, "right_x": 0, "right_y": 0, "touches": [[-1, 0, 0], [-1, 0, 0]], "gyro": [0, 0, 0], "accel": [0, 1, 0], "orient": [0, 0, 0, 1]}, "packets": [{"event_count": 3, "payload": "8080ff8088008088ff"}, {"event_count": 4, "payload": "8084ff8080ff8088008088ff"}]},
+  {"state": {"buttons": 320, "l2": 64, "r2": 0, "left_x": 0, "left_y": 0, "right_x": 0, "right_y": 0, "touches": [[-1, 0, 0], [-1, 0, 0]], "gyro": [0, 0, 0], "accel": [0, 1, 0], "orient": [0, 0, 0, 1]}, "packets": [{"event_count": 5, "payload": "8086408084ff8080ff8088008088ff"}]},
+  {"state": {"buttons": 320, "l2": 255, "r2": 16, "left_x": 0, "left_y": 0, "right_x": 0, "right_y": 0, "touches": [[-1, 0, 0], [-1, 0, 0]], "gyro": [0, 0, 0], "accel": [0, 1, 0], "orient": [0, 0, 0, 1]}, "packets": [{"event_count": 6, "payload": "8086ff8086408084ff8080ff8088008088ff"}, {"event_count": 7, "payload": "8087108086ff8086408084ff8080ff8088008088ff"}]},
+  {"state": {"buttons": 16384, "l2": 255, "r2": 16, "left_x": 0, "left_y": 0, "right_x": 0, "right_y": 0, "touches": [[-1, 0, 0], [-1, 0, 0]], "gyro": [0, 0, 0], "accel": [0, 1, 0], "orient": [0, 0, 0, 1]}, "packets": [{"event_count": 8, "payload": "8080008087108086ff8086408084ff8080ff8088008088ff"}, {"event_count": 9, "payload": "8084008080008087108086ff8086408084ff8080ff8088008088ff"}, {"event_count": 9, "payload": "80b18084008080008087108086ff8086408084ff8080ff808800"}]},
+  {"state": {"buttons": 16384, "l2": 255, "r2": 16, "left_x": 0, "left_y": 0, "right_x": 0, "right_y": 0, "touches": [[0, 100, 200], [-1, 0, 0]], "gyro": [0, 0, 0], "accel": [0, 1, 0], "orient": [0, 0, 0, 1]}, "packets": [{"event_count": 9, "payload": "d0000640c880b18084008080008087108086ff8086408084ff8080ff"}]},
+  {"state": {"buttons": 16384, "l2": 255, "r2": 16, "left_x": 0, "left_y": 0, "right_x": 0, "right_y": 0, "touches": [[0, 300, 400], [-1, 0, 0]], "gyro": [0, 0, 0], "accel": [0, 1, 0], "orient": [0, 0, 0, 1]}, "packets": [{"event_count": 9, "payload": "d00012c190d0000640c880b18084008080008087108086ff8086408084ff"}]},
+  {"state": {"buttons": 0, "l2": 255, "r2": 16, "left_x": 0, "left_y": 0, "right_x": 0, "right_y": 0, "touches": [[-1, 300, 400], [-1, 0, 0]], "gyro": [0, 0, 0], "accel": [0, 1, 0], "orient": [0, 0, 0, 1]}, "packets": [{"event_count": 9, "payload": "8091d00012c190d0000640c880b18084008080008087108086ff808640"}, {"event_count": 9, "payload": "c00012c1908091d00012c190d0000640c880b18084008080008087108086ff"}]},
+  {"state": {"buttons": 36868, "l2": 0, "r2": 0, "left_x": 0, "left_y": 0, "right_x": 0, "right_y": 0, "touches": [[-1, 300, 400], [-1, 0, 0]], "gyro": [0, 0, 0], "accel": [0, 1, 0], "orient": [0, 0, 0, 1]}, "packets": [{"event_count": 9, "payload": "808affc00012c1908091d00012c190d0000640c880b1808400808000808710"}, {"event_count": 9, "payload": "80ac808affc00012c1908091d00012c190d0000640c880b1808400808000"}, {"event_count": 9, "payload": "80ae80ac808affc00012c1908091d00012c190d0000640c880b1808400"}, {"event_count": 9, "payload": "80860080ae80ac808affc00012c1908091d00012c190d0000640c880b1"}, {"event_count": 9, "payload": "80870080860080ae80ac808affc00012c1908091d00012c190d0000640c8"}]},
+  {"state": {"buttons": 0, "l2": 0, "r2": 0, "left_x": 0, "left_y": 0, "right_x": 0, "right_y": 0, "touches": [[-1, 300, 400], [-1, 0, 0]], "gyro": [0, 0, 0], "accel": [0, 1, 0], "orient": [0, 0, 0, 1]}, "packets": [{"event_count": 9, "payload": "808a0080870080860080ae80ac808affc00012c1908091d00012c190"}, {"event_count": 9, "payload": "808c808a0080870080860080ae80ac808affc00012c1908091"}, {"event_count": 9, "payload": "808e808c808a0080870080860080ae80ac808affc00012c190"}]}
+],
+"packets": {
+"handshake_key": "303132333435363738393a3b3c3d3e3f", "secret": "a0a7aeb5bc838a91989fe6edf4fbc2c9d0d7de252c333a01080f161d646b7279",
+"cases": [
+  {"history": false, "version": 9, "seq_num": 0, "key_pos": 0, "state": 0, "plain": "060000010000000000000000a0ff7fff7fff7fff7f9999ff7ffef7ef1f0000000000000000", "packet": "0600000100000000a8dc68e8554b47564aa80b69a740b8616c8b18f026a13da2484e76e8d7"},
+  {"history": false, "version": 12, "seq_num": 1, "key_pos": 28, "state": 2, "plain": "060001010000000000000000a06586110191ff99799999f8ff50429b360000000000000000000001", "packet": "060001010000001c766432b924c223e20265a7fa4dcba328ae0a5afc42200dd512954b2df2019ca0"},
+  {"history": false, "version": 9, "seq_num": 65535, "key_pos": 4886718345, "state": 3, "plain": "06ffff010000000000000000a0ff7fff7fff7fff7f9999ff7f393a12390064ff9c00000000", "packet": "06ffff01234567898765569210758611dcd37f790a756e8c9ddfcf66a7f36891c4b6d3210c"},
+  {"history": true, "version": 12, "seq_num": 7, "key_pos": 8192, "state": 0, "plain": "010007020000000000000000d0031f42588089ff", "packet": "01000702000020006ee89108e50459113a6436a8"},
+  {"history": true, "version": 9, "seq_num": 8, "key_pos": 64, "state": 0, "plain": "010008020000000000000000d0031f4258808900", "packet": "01000802000000409ceda935934a93ec16f0d3e0"}
+]}
+}

@@ -45,6 +45,13 @@ def suites_here(root: Path = CHECKOUT, suffix: str | None = None) -> list[str]:
                   if p.is_dir() and (p / "portal" / "apps.toml").is_file() and discover_tests(tests_dir(p), suffix))
 
 
+def default_suite(root: Path, suites: list[str]) -> str | None:
+    unprefixed = [name for name in suites
+                  if not (root / name / "TAG_PREFIX").is_file()
+                  or not (root / name / "TAG_PREFIX").read_text(encoding="utf-8").strip()]
+    return unprefixed[0] if len(unprefixed) == 1 else suites[0] if suites else None
+
+
 class MainWindow(QMainWindow):
     def __init__(self, root: Path = CHECKOUT, settings: QSettings | None = None, suite: str | None = None):
         """*settings* keeps the chosen suite (None: this session only); *suite* opens that suite (a folder name)."""
@@ -56,7 +63,7 @@ class MainWindow(QMainWindow):
         self.suites = suites_here(root)
         remembered = str(settings.value(SUITE_KEY, "")) if settings is not None else ""
         self.suite = suite if suite in self.suites else remembered if remembered in self.suites else \
-            self.suites[0] if self.suites else None
+            default_suite(root, self.suites)
         self.runner: InstallerTestRunner | None = None
         self._items: dict[str, tuple[QListWidgetItem, str, QCheckBox, QLabel]] = {}
 

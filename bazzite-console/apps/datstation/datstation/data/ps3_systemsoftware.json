@@ -1,0 +1,599 @@
+[
+  {
+    "version": "System Software Version 4.93",
+    "releaseDate": "March 18, 2026",
+    "notes": [
+      "System performance update",
+      "also keeps Blu-ray player encryption key current."
+    ]
+  },
+  {
+    "version": "System Software Version 4.92",
+    "releaseDate": "March 5, 2025",
+    "notes": [
+      "System performance update",
+      "likely maintenance/security/Blu-ray key renewal."
+    ]
+  },
+  {
+    "version": "System Software Version 4.91",
+    "releaseDate": "February 27, 2024",
+    "notes": [
+      "System performance update."
+    ]
+  },
+  {
+    "version": "System Software Version 4.90",
+    "releaseDate": "February 28, 2023",
+    "notes": [
+      "System performance update."
+    ]
+  },
+  {
+    "version": "System Software Version 4.89",
+    "releaseDate": "May 10, 2022",
+    "notes": [
+      "PSN sign-in now requires a device password",
+      "account creation and some account-management features removed from PS3."
+    ]
+  },
+  {
+    "version": "System Software Version 4.88",
+    "releaseDate": "June 1, 2021",
+    "notes": [
+      "System performance update."
+    ]
+  },
+  {
+    "version": "System Software Version 4.87",
+    "releaseDate": "December 3, 2020",
+    "notes": [
+      "System performance / maintenance update."
+    ]
+  },
+  {
+    "version": "System Software Version 4.86",
+    "releaseDate": "March 31, 2020",
+    "notes": [
+      "System performance / maintenance update."
+    ]
+  },
+  {
+    "version": "System Software Version 4.84",
+    "releaseDate": "February 14, 2019",
+    "notes": [
+      "System performance / stability update."
+    ]
+  },
+  {
+    "version": "System Software Version 4.83",
+    "releaseDate": "October 11, 2018",
+    "notes": [
+      "System performance / stability update."
+    ]
+  },
+  {
+    "version": "System Software Version 4.82",
+    "releaseDate": "November 13, 2017",
+    "notes": [
+      "System performance / stability update."
+    ]
+  },
+  {
+    "version": "System Software Version 4.81",
+    "releaseDate": "November 1, 2016",
+    "notes": [
+      "System performance / stability update."
+    ]
+  },
+  {
+    "version": "System Software Version 4.80",
+    "releaseDate": "April 20, 2016",
+    "notes": [
+      "System performance / stability update."
+    ]
+  },
+  {
+    "version": "System Software Version 4.60",
+    "releaseDate": "June 24, 2014",
+    "notes": [
+      "Improved system stability during PS3 software use."
+    ]
+  },
+  {
+    "version": "System Software Version 4.55",
+    "releaseDate": "February 6, 2014",
+    "notes": [
+      "Stability update",
+      "part of the 4.50/4.53/4.55 group."
+    ]
+  },
+  {
+    "version": "System Software Version 4.53",
+    "releaseDate": "December 4, 2013",
+    "notes": [
+      "Added trophy privacy controls, automatic system/content download improvements, and Blu-ray/DVD closed-caption support."
+    ]
+  },
+  {
+    "version": "System Software Version 4.50",
+    "releaseDate": "October 2, 2013",
+    "notes": [
+      "Added trophy privacy controls, automatic update/download features, closed-caption settings, and PSN naming changes."
+    ]
+  },
+  {
+    "version": "System Software Version 4.46",
+    "releaseDate": "June 27, 2013",
+    "notes": [
+      "Replaced problematic 4.45",
+      "added trophy notification setting and improved stability."
+    ]
+  },
+  {
+    "version": "System Software Version 4.41",
+    "releaseDate": "April 25, 2013",
+    "notes": [
+      "Added closed captions under Video Settings",
+      "headset support for PS2 Classics",
+      "stability improvements."
+    ]
+  },
+  {
+    "version": "System Software Version 4.40",
+    "releaseDate": "March 21, 2013",
+    "notes": [
+      "Added closed captions",
+      "improved headset support for PS2 Classics",
+      "stability improvements."
+    ]
+  },
+  {
+    "version": "System Software Version 4.31",
+    "releaseDate": "October 30, 2012",
+    "notes": [
+      "Fixed freezes seen in some PS3 games."
+    ]
+  },
+  {
+    "version": "System Software Version 4.30",
+    "releaseDate": "October 24, 2012",
+    "notes": [
+      "Redesigned Trophy Collection",
+      "PS Vita trophies shown on PS3",
+      "Life with PlayStation no longer auto-starts."
+    ]
+  },
+  {
+    "version": "System Software Version 4.25",
+    "releaseDate": "September 12, 2012",
+    "notes": [
+      "Increased PlayStation Plus online save storage to 1 GB / 1000 saves",
+      "system software improved."
+    ]
+  },
+  {
+    "version": "System Software Version 4.21",
+    "releaseDate": "July 5, 2012",
+    "notes": [
+      "System software improvement",
+      "timezone updates",
+      "renewed AACS Blu-ray encryption key."
+    ]
+  },
+  {
+    "version": "System Software Version 4.20",
+    "releaseDate": "June 25, 2012",
+    "notes": [
+      "Added separate auto-off settings, multiple save-data copy/delete, wireless headset sidetone adjustment, timezone updates, and AACS renewal."
+    ]
+  },
+  {
+    "version": "System Software Version 4.10",
+    "releaseDate": "February 8, 2012",
+    "notes": [
+      "Improved Internet Browser",
+      "added automatic date/time setting",
+      "renamed account terminology to Sony Entertainment Network account."
+    ]
+  },
+  {
+    "version": "System Software Version 4.00",
+    "releaseDate": "November 29, 2011",
+    "notes": [
+      "Added PS Vita compatibility: content copy, Vita backup, Vita system update support",
+      "added Vita utility, BDMV upscaling, new languages, privacy settings."
+    ]
+  },
+  {
+    "version": "System Software Version 3.73",
+    "releaseDate": "October 18, 2011",
+    "notes": [
+      "Improved playback quality for some PS3 software."
+    ]
+  },
+  {
+    "version": "System Software Version 3.72",
+    "releaseDate": "September 20, 2011",
+    "notes": [
+      "Improved playback quality for some PS3 software."
+    ]
+  },
+  {
+    "version": "System Software Version 3.70",
+    "releaseDate": "August 9, 2011",
+    "notes": [
+      "Added MPO 3D photo support, PlayStation Store “Recommend,” Blu-ray 3D BD-J support, DTS-HD for Blu-ray 3D, and PS Plus automatic trophy sync."
+    ]
+  },
+  {
+    "version": "System Software Version 3.65",
+    "releaseDate": "June 7, 2011",
+    "notes": [
+      "Improved stability",
+      "renamed minis save-data utility to minis/PSP and added PSP save backup support."
+    ]
+  },
+  {
+    "version": "System Software Version 3.61",
+    "releaseDate": "May 15, 2011",
+    "notes": [
+      "Required PSN password change after the 2011 PlayStation Network outage."
+    ]
+  },
+  {
+    "version": "System Software Version 3.60",
+    "releaseDate": "March 9, 2011",
+    "notes": [
+      "Added PlayStation Plus online storage for saved data",
+      "added controller auto-off time options."
+    ]
+  },
+  {
+    "version": "System Software Version 3.56",
+    "releaseDate": "January 26, 2011",
+    "notes": [
+      "Security patch."
+    ]
+  },
+  {
+    "version": "System Software Version 3.55",
+    "releaseDate": "December 7, 2010",
+    "notes": [
+      "Security patch."
+    ]
+  },
+  {
+    "version": "System Software Version 3.50",
+    "releaseDate": "September 21, 2010",
+    "notes": [
+      "Added Blu-ray 3D disc playback",
+      "added grief reports for messages",
+      "added Facebook access controls for supported games."
+    ]
+  },
+  {
+    "version": "System Software Version 3.42",
+    "releaseDate": "September 6, 2010",
+    "notes": [
+      "Security patch for system software vulnerabilities."
+    ]
+  },
+  {
+    "version": "System Software Version 3.41",
+    "releaseDate": "July 26, 2010",
+    "notes": [
+      "Added recommended products on PlayStation Store product pages."
+    ]
+  },
+  {
+    "version": "System Software Version 3.40",
+    "releaseDate": "June 28, 2010",
+    "notes": [
+      "Added PlayStation Plus support, Photo Gallery PSN area, Video Editor & Uploader, Deep Color HDMI option, automatic downloads, and trophy-level display on friend profiles."
+    ]
+  },
+  {
+    "version": "System Software Version 3.30",
+    "releaseDate": "April 22, 2010",
+    "notes": [
+      "Added stereoscopic 3D game support, trophy sorting, hidden trophy naming, and additional BD audio output options."
+    ]
+  },
+  {
+    "version": "System Software Version 3.21",
+    "releaseDate": "April 1, 2010",
+    "notes": [
+      "Removed “Install Other OS” and “Default System”",
+      "added MP4 security patch and PS1 playback quality improvements."
+    ]
+  },
+  {
+    "version": "System Software Version 3.15",
+    "releaseDate": "December 8, 2009",
+    "notes": [
+      "Added Data Transfer Utility",
+      "added support for playing some PSP minis on PS3."
+    ]
+  },
+  {
+    "version": "System Software Version 3.10",
+    "releaseDate": "November 19, 2009",
+    "notes": [
+      "Added photo grid view, Facebook sharing for trophies/Store purchases, profile background color option, and video fast-forward/rewind with right stick."
+    ]
+  },
+  {
+    "version": "System Software Version 3.01",
+    "releaseDate": "September 15, 2009",
+    "notes": [
+      "Stability update for some PS3 software."
+    ]
+  },
+  {
+    "version": "System Software Version 3.00",
+    "releaseDate": "September 1, 2009",
+    "notes": [
+      "Added “What’s New,” direct Store content under Game/Video, audio multi-output, deeper folder browsing, copy text on on-screen keyboard, browser screenshot/print, and friend message history."
+    ]
+  },
+  {
+    "version": "System Software Version 2.80",
+    "releaseDate": "June 24, 2009",
+    "notes": [
+      "Improved playback quality for some PS3 software."
+    ]
+  },
+  {
+    "version": "System Software Version 2.76",
+    "releaseDate": "May 15, 2009",
+    "notes": [
+      "Improved playback quality for some PS3 software",
+      "part of 2.70–2.76 feature group."
+    ]
+  },
+  {
+    "version": "System Software Version 2.70",
+    "releaseDate": "April 2, 2009",
+    "notes": [
+      "Added text chat, in-game text chat, larger message attachments, Dynamic Normalizer, browser copy/paste, Internet Search for games, and Video Store backup/restore improvements."
+    ]
+  },
+  {
+    "version": "System Software Version 2.60",
+    "releaseDate": "January 21, 2009",
+    "notes": [
+      "Added Photo Gallery, DivX 3.11 playback, and PlayStation Store access without a PSN account."
+    ]
+  },
+  {
+    "version": "System Software Version 2.53",
+    "releaseDate": "November 26, 2008",
+    "notes": [
+      "Added Internet Browser full-screen support for Adobe Flash Player."
+    ]
+  },
+  {
+    "version": "System Software Version 2.52",
+    "releaseDate": "November 4, 2008",
+    "notes": [
+      "Improved playback quality",
+      "fixed some text-entry issues with on-screen/USB/Bluetooth keyboards."
+    ]
+  },
+  {
+    "version": "System Software Version 2.50",
+    "releaseDate": "October 14, 2008",
+    "notes": [
+      "Added Flash Player 9 support, Trophy sync option, PSN/Store redesign changes, last sign-in info for friends, and in-game network-status display."
+    ]
+  },
+  {
+    "version": "System Software Version 2.43",
+    "releaseDate": "September 16, 2008",
+    "notes": [
+      "Japan-focused update for PlayStation Store video rental content",
+      "optional if already on 2.42."
+    ]
+  },
+  {
+    "version": "System Software Version 2.42",
+    "releaseDate": "July 30, 2008",
+    "notes": [
+      "Improved playability of some PS3 and PlayStation-format software."
+    ]
+  },
+  {
+    "version": "System Software Version 2.41",
+    "releaseDate": "July 8, 2008",
+    "notes": [
+      "Replaced withdrawn 2.40 and fixed update/startup problems reported by some users."
+    ]
+  },
+  {
+    "version": "System Software Version 2.40",
+    "releaseDate": "July 2, 2008",
+    "notes": [
+      "Major update: in-game XMB, Trophies, XMB clock, shutdown from XMB, controller reassignment/vibration options",
+      "withdrawn the same day due to startup problems for some users."
+    ]
+  },
+  {
+    "version": "System Software Version 2.36",
+    "releaseDate": "June 17, 2008",
+    "notes": [
+      "Improved stability during use of some PlayStation-format software."
+    ]
+  },
+  {
+    "version": "System Software Version 2.35",
+    "releaseDate": "May 15, 2008",
+    "notes": [
+      "Improved stability during use of some PS3 software."
+    ]
+  },
+  {
+    "version": "System Software Version 2.30",
+    "releaseDate": "April 10, 2008",
+    "notes": [
+      "Redesigned PlayStation Store."
+    ]
+  },
+  {
+    "version": "System Software Version 2.20",
+    "releaseDate": "March 25, 2008",
+    "notes": [
+      "Added Blu-ray Disc Profile 2.0 / BD-Live support, Resume Play, PSP Remote Play enhancements, and better browser/video features."
+    ]
+  },
+  {
+    "version": "System Software Version 2.17",
+    "releaseDate": "March 13, 2008",
+    "notes": [
+      "Stability / playback-quality update."
+    ]
+  },
+  {
+    "version": "System Software Version 2.10",
+    "releaseDate": "December 18, 2007",
+    "notes": [
+      "Added DivX and VC-1/WMV playback, Blu-ray Profile 1.1, BD Data Utility, voice changer, and Bitmapping Type 3."
+    ]
+  },
+  {
+    "version": "System Software Version 2.01",
+    "releaseDate": "November 20, 2007",
+    "notes": [
+      "Stability fixes for PS3 software, Internet Browser, Information Board, PS2 upscaling, and Remote Start behavior."
+    ]
+  },
+  {
+    "version": "System Software Version 2.00",
+    "releaseDate": "November 8, 2007",
+    "notes": [
+      "Major XMB update: themes, playlists, Information Board, PSN category, Remote Start, DualShock 3 vibration option, progressive Store downloads, Trend Micro browser security, and PlayStation Eye chat support."
+    ]
+  },
+  {
+    "version": "System Software Version 1.93",
+    "releaseDate": "September 13, 2007",
+    "notes": [
+      "Stability / network-play update."
+    ]
+  },
+  {
+    "version": "System Software Version 1.92",
+    "releaseDate": "September 4, 2007",
+    "notes": [
+      "Improved playability/status for some PS3 and PlayStation/PS2 titles."
+    ]
+  },
+  {
+    "version": "System Software Version 1.90",
+    "releaseDate": "July 24, 2007",
+    "notes": [
+      "Added XMB wallpaper support, eject disc option, output 24 Hz for Blu-ray/DVD, AVC High Profile playback improvements, and game sorting changes."
+    ]
+  },
+  {
+    "version": "System Software Version 1.82",
+    "releaseDate": "June 28, 2007",
+    "notes": [
+      "Added AVC High Profile / H.264 MPEG-4 video playback",
+      "changed playability status for some PS1/PS2 titles."
+    ]
+  },
+  {
+    "version": "System Software Version 1.81",
+    "releaseDate": "June 15, 2007",
+    "notes": [
+      "Improved RGB Full Range setting method and improved network stability for some PS2 online games."
+    ]
+  },
+  {
+    "version": "System Software Version 1.80",
+    "releaseDate": "May 24, 2007",
+    "notes": [
+      "Major media update: DVD/PS1/PS2 upscaling, DLNA media server, USB printer support, Internet Remote Play, BD 1080p/24 Hz, RGB Full Range, Super-White, x.v.Color, and save-data memory-card copy features."
+    ]
+  },
+  {
+    "version": "System Software Version 1.70",
+    "releaseDate": "April 19, 2007",
+    "notes": [
+      "Added PlayStation-format software downloads/playback, PS1 save sharing with PSP, and force-feedback support for some PS2 accessories."
+    ]
+  },
+  {
+    "version": "System Software Version 1.60",
+    "releaseDate": "March 22, 2007",
+    "notes": [
+      "Added Folding@home, background downloading, Remote Play via access point, BD-RE playback, HDMI auto-detect, more languages, WMA/ATRAC options, AVCHD/Motion JPEG playback, and full-size on-screen keyboard."
+    ]
+  },
+  {
+    "version": "System Software Version 1.55",
+    "releaseDate": "March ? 2017",
+    "notes": [
+      "Poorly documented retail firmware",
+      "release date not clearly verified."
+    ]
+  },
+  {
+    "version": "System Software Version 1.54",
+    "releaseDate": "February 28, 2007",
+    "notes": [
+      "Added USB Video Class camera support for video chat and screen mode option for video chat."
+    ]
+  },
+  {
+    "version": "System Software Version 1.51",
+    "releaseDate": "February 2, 2007",
+    "notes": [
+      "Expanded support for PS3-format software titles."
+    ]
+  },
+  {
+    "version": "System Software Version 1.50",
+    "releaseDate": "January 24, 2007",
+    "notes": [
+      "Added custom user icons from Photo, key tone setting, backup-data deletion, more AOSS security methods, revised PSN sign-in/password options, and Korean text entry."
+    ]
+  },
+  {
+    "version": "System Software Version 1.32",
+    "releaseDate": "December 18–21, 2006",
+    "notes": [
+      "Updated online gaming functionality."
+    ]
+  },
+  {
+    "version": "System Software Version 1.31",
+    "releaseDate": "December 12–18, 2006",
+    "notes": [
+      "Added support for PS2 titles that install to the hard disk",
+      "changed compatibility for some PS1/PS2 titles and USB devices."
+    ]
+  },
+  {
+    "version": "System Software Version 1.30",
+    "releaseDate": "December 6, 2006",
+    "notes": [
+      "Added BD remote registration, HDMI BD/DVD output format, Backup Utility, hard-disk formatting choices, and video output selection changes."
+    ]
+  },
+  {
+    "version": "System Software Version 1.11",
+    "releaseDate": "November 28, 2006",
+    "notes": [
+      "Added Account Management and revised some PlayStation Network features."
+    ]
+  },
+  {
+    "version": "System Software Version 1.10",
+    "releaseDate": "November 11, 2006",
+    "notes": [
+      "Added PlayStation Network services, Store downloads, online manuals, browser downloads, Chinese browser character display, ATRAC/WMA-related settings, audio CD output frequency, and various PS1/PS2 compatibility changes."
+    ]
+  }
+]

@@ -46,7 +46,7 @@ name: Release
 
 on:
   push:
-    tags: ["*-v[0-9]*.[0-9]*.[0-9]*", "!wp-*"]   # wp-: the Windows Portable Suite's, release-windows-portable.yml
+    tags: ["*-v[0-9]*.[0-9]*.[0-9]*", "!wp-*", "!ps5-*"]   # prefixed suite tags have their own release workflow
   workflow_call:
     inputs:
       commit:

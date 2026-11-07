@@ -1,0 +1,237 @@
+#!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-3.0-or-later
+"""CI check for portal/apps.toml, the apps a portal release pins (owner decision 4, proposal §7.2):
+
+    python3 tools/check_manifest.py [--base REF] [--require-tags]
+
+* The manifest parses and lists exactly the portal apps under apps/. An app folder with a ``.standalone`` marker
+  (an app outside the portal, such as one with a ``.checkout-only`` marker, which runs from the checkout and is never
+  released) must not be listed. Every app has a category (its tab in the portal); the parser accepts none, and the
+  Development tab's, only to read the manifests of earlier portal releases. No [checkout.<name>] tables: the
+  portal lists only released apps (owner, 27-10-2026).
+* Every app marked changes_board has a board_change text (what it touches, what stays, what it never touches, how
+  it is undone), and its wiki chapter, docs/apps/<key>.md, opens with that text word for word in a box right after
+  its title (``!!! warning "Changes the board"``); an app not so marked has no board_change (owner, 03-11-2026).
+* Every pinned tag exists. Without --require-tags a tag that does not exist yet is accepted when its version equals
+  the app's VERSION: the release that is about to be tagged. The portal release workflow passes --require-tags.
+* With --base REF (the previous commit, or the PR base): when apps.toml differs from the last portal release (the
+  newest ps5-portal-v<x.y.z> tag; REF while there is no portal tag yet), portal/VERSION must have been bumped from that
+  release at least as much as the largest app bump it pins: an app patch release needs at least a portal patch
+  release, an app minor release at least a portal minor release, and so on. An added, removed or withdrawn app
+  needs at least a minor bump (a withdrawn one is removed from the boards); any other change to apps.toml (a new
+  checksum, other commands) at least a patch bump. The comparison is with the release, not the push: a portal
+  version that is not tagged yet may still change what it pins (the apps' checksums come once GitHub has built
+  them), without a bump for every push."""
+
+from __future__ import annotations
+
+import argparse
+import importlib.util
+import re
+import subprocess
+import sys
+import tomllib
+from pathlib import Path
+
+SUITE = Path(__file__).resolve().parent.parent      # the suite: bazzite-console/
+MANIFEST = "portal/apps.toml"
+STANDALONE_MARKER = ".standalone"
+LEVELS = {0: "none", 1: "patch", 2: "minor", 3: "major"}
+_PORTAL_TAG = re.compile(r"^ps5-portal-v(\d+\.\d+\.\d+)$")
+
+
+def _manifest_module():
+    spec = importlib.util.spec_from_file_location(
+        "bazzite_console_manifest", SUITE / "portal" / "bazzite_console_portal" / "manifest.py")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module             # dataclasses look their module up while the class is built
+    spec.loader.exec_module(module)
+    return module
+
+
+manifest = _manifest_module()
+
+
+def bump_level(old: str, new: str) -> int:
+    """3 major, 2 minor, 1 patch, 0 unchanged; negative when *new* is lower."""
+    a, b = manifest.version_tuple(old), manifest.version_tuple(new)
+    if b == a:
+        return 0
+    if b < a:
+        return -1
+    for level, (x, y) in zip((3, 2, 1), zip(a, b)):
+        if y != x:
+            return level
+    return 0
+
+
+def git(*args: str) -> str | None:
+    result = subprocess.run(["git", *args], cwd=SUITE, capture_output=True, text=True)
+    return result.stdout if result.returncode == 0 else None
+
+
+def tag_exists(tag: str) -> bool:
+    return git("rev-parse", "-q", "--verify", f"refs/tags/{tag}") is not None
+
+
+def check_entries(entries, require_tags: bool) -> list[str]:
+    errors = []
+    apps = {
+        p.name for p in (SUITE / "apps").iterdir()
+        if p.is_dir() and not (p / STANDALONE_MARKER).is_file()
+    }
+    listed = {e.key for e in entries}
+    errors += [f"apps/{name} is not in {MANIFEST}" for name in sorted(apps - listed)]
+    errors += [f"{MANIFEST} lists {name}, which has no apps/{name}" for name in sorted(listed - apps)]
+    errors += [f"[apps.{e.key}] needs a category: one of {', '.join(manifest.CATEGORIES)}"
+               for e in entries if e.category not in manifest.CATEGORIES]
+    for entry in entries:
+        if entry.key not in apps or tag_exists(entry.tag):
+            continue
+        version_file = SUITE / "apps" / entry.key / "VERSION"
+        current = version_file.read_text(encoding="utf-8").strip() if version_file.is_file() else "?"
+        if require_tags:
+            errors.append(f"{entry.tag} does not exist: release it before the portal")
+        elif entry.version != current:
+            errors.append(f"{entry.tag} does not exist and is not the next release either "
+                          f"(apps/{entry.key}/VERSION is {current})")
+    return errors
+
+
+BOARD_BOX = '!!! warning "Changes the board"'
+_TITLE = re.compile(r"^# .+$", re.M)
+
+
+def wiki_board_box(text: str) -> str | None:
+    """The text of the "Changes the board" box that opens a wiki chapter: the block right after its title (# ...),
+    with its lines joined; None when the chapter does not open with one."""
+    match = _TITLE.search(text)
+    if not match:
+        return None
+    lines = iter(text[match.end():].split("\n"))
+    for line in lines:
+        if line.strip():
+            break
+    else:
+        return None
+    if line.strip() != BOARD_BOX:
+        return None
+    body = []
+    for line in lines:
+        if not line.strip():
+            break
+        body.append(line.strip())
+    return " ".join(" ".join(body).split())
+
+
+def check_board_changes(entries) -> list[str]:
+    """Every app that changes the board says what it changes, in apps.toml and at the top of its wiki chapter."""
+    errors = []
+    for entry in entries:
+        if not entry.changes_board:
+            if entry.board_change:
+                errors.append(f"[apps.{entry.key}] has a board_change but changes_board is false")
+            continue
+        if not entry.board_change:
+            errors.append(f"[apps.{entry.key}] changes the board: it needs a board_change text")
+            continue
+        chapter = SUITE / "docs" / "apps" / f"{entry.key}.md"
+        box = wiki_board_box(chapter.read_text(encoding="utf-8")) if chapter.is_file() else None
+        if box is None:
+            errors.append(f"docs/apps/{entry.key}.md must open with a {BOARD_BOX} box right after its title")
+        elif box != entry.board_change:
+            errors.append(f"docs/apps/{entry.key}.md: the \"Changes the board\" box differs from "
+                          f"[apps.{entry.key}] board_change")
+    return errors
+
+
+def check_no_checkout_tables(text: str) -> list[str]:
+    """The portal lists only released apps: no [checkout.<name>] tables (they were the Development tab's)."""
+    tables = tomllib.loads(text).get("checkout", {})
+    return [f"{MANIFEST} [checkout.{key}]: the portal lists only released apps; start it from the checkout instead"
+            for key in (tables if isinstance(tables, dict) else {})]
+
+
+def latest_portal_tag(tags) -> str:
+    """The newest ps5-portal-v<x.y.z> among *tags* by version; "" when there is none."""
+    found = [(manifest.version_tuple(m.group(1)), tag) for tag in tags if (m := _PORTAL_TAG.match(tag))]
+    return max(found)[1] if found else ""
+
+
+def reference(base: str) -> tuple[str, str | None, str]:
+    """What apps.toml and portal/VERSION are compared with: the last portal release (its tag), since a portal
+    version that is not tagged yet may still change what it pins; *base* while there is no portal tag. Returns
+    (ref, that apps.toml or None when the ref has none, that portal version)."""
+    tag = latest_portal_tag((git("tag", "--list", "ps5-portal-v*") or "").split())
+    ref = tag or base
+    version = tag[len("ps5-portal-v"):] if tag else \
+        (git("show", f"{ref}:{SUITE.name}/portal/VERSION") or "0.0.0").strip()
+    return ref, git("show", f"{ref}:{SUITE.name}/{MANIFEST}"), version
+
+
+def check_bump(base: str) -> list[str]:
+    ref, old_text, old_portal = reference(base)
+    if old_text is None:
+        return []                               # new file, or a base this clone does not have
+    return bump_errors(old_text, (SUITE / MANIFEST).read_text(encoding="utf-8"), old_portal,
+                       (SUITE / "portal" / "VERSION").read_text(encoding="utf-8").strip(), since=ref)
+
+
+def required_bump(old_text: str, new_text: str) -> tuple[int, str]:
+    """The smallest portal bump (LEVELS) the change from *old_text* to *new_text* needs, and why; -1 when an app
+    moves back to an older release."""
+    if old_text == new_text:
+        return 0, ""
+    old = {e.key: e for e in manifest.parse(old_text)}
+    new = {e.key: e for e in manifest.parse(new_text)}
+    need, why = 1, "apps.toml changed"
+    for key in sorted(set(old) | set(new)):
+        if key not in old or key not in new:
+            if need < 2:
+                need, why = 2, f"{key} was {'added' if key in new else 'removed'}"
+            continue
+        if new[key].withdrawn != old[key].withdrawn and need < 2:
+            need, why = 2, f"{key} was {'withdrawn' if new[key].withdrawn else 'no longer withdrawn'}"
+        level = bump_level(old[key].version, new[key].version)
+        if level < 0:
+            return -1, f"{key} moves back from {old[key].tag} to {new[key].tag}"
+        if level > need:
+            need, why = level, f"{key} {old[key].version} -> {new[key].version}"
+    return need, why
+
+
+def bump_errors(old_text: str, new_text: str, old_portal: str, new_portal: str, since: str = "") -> list[str]:
+    need, why = required_bump(old_text, new_text)
+    if need == 0:
+        return []
+    if need < 0:
+        return [why]
+    got = bump_level(old_portal, new_portal)
+    if got < need:
+        return [f"{MANIFEST} changed{f' since {since}' if since else ''} ({why}): portal/VERSION needs at least a "
+                f"{LEVELS[need]} bump, but goes {old_portal} -> {new_portal}"]
+    return []
+
+
+def main(argv: list[str]) -> int:
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--base", help="git ref to compare apps.toml and portal/VERSION with while there is no "
+                                       "portal tag (the previous commit, or the PR base)")
+    parser.add_argument("--require-tags", action="store_true", help="every pinned tag must exist (portal release)")
+    args = parser.parse_args(argv)
+    try:
+        entries = manifest.load(SUITE / MANIFEST)
+    except (OSError, manifest.ManifestError) as exc:
+        print(exc, file=sys.stderr)
+        return 1
+    errors = (check_entries(entries, args.require_tags) + check_board_changes(entries)
+              + check_no_checkout_tables((SUITE / MANIFEST).read_text(encoding="utf-8")))
+    if args.base and set(args.base) != {"0"}:   # GitHub sends 000… for a new branch
+        errors += check_bump(args.base)
+    for error in errors:
+        print(error, file=sys.stderr)
+    return 1 if errors else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

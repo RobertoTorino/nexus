@@ -72,12 +72,14 @@ def suites(root: Path = CHECKOUT) -> list[str]:
 
 
 def suite_dir(root: Path, suite: str | None = None) -> Path:
-    """The folder of the suite *suite* in the checkout *root* (its portal, apps, docs and tools), or of the first
-    suite when none is named; *root* itself when it is laid out as a suite (the repositories the tests make)."""
+    """The folder of the named suite, or the default suite from tools/suites.py; *root* itself when it is laid out
+    as a suite (the repositories the tests make)."""
     if suite:
         return root / suite
-    names = suites(root)
-    return root / names[0] if names else root
+    try:
+        return nexus_suites.suite(root=root)
+    except LookupError:
+        return root
 
 
 # The manifest's parser and the pin tool are a suite's (its portal reads its manifest): the first suite's serve

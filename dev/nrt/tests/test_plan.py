@@ -1510,8 +1510,8 @@ def test_the_root_copy_of_apps_toml_follows_the_suites(repo, tmp_path):
 
 
 def nexus_layout(repo: Path, tmp_path: Path, *names: str) -> Path:
-    """The fixture's repository laid out as Nexus is: core and .git at the root, the suite (and a copy of it under
-    each of *names*) in a folder of its own."""
+    """The fixture's repository laid out as Nexus is: core and .git at the root, the suite and prefixed copies of
+    it under *names* in folders of their own."""
     nexus = tmp_path / "nexus"
     for name in (SUITE_DIR, *names):
         shutil.copytree(repo, nexus / name)
@@ -1524,6 +1524,7 @@ def nexus_layout(repo: Path, tmp_path: Path, *names: str) -> Path:
                     file.chmod(0o600)
             shutil.rmtree(nexus / name / ".git")
             shutil.rmtree(nexus / name / "core")
+            (nexus / name / "TAG_PREFIX").write_text("zz-\n", encoding="utf-8")
     sh(nexus, "add", "-A")
     sh(nexus, "commit", "-q", "-m", "move")
     return nexus
@@ -1531,7 +1532,7 @@ def nexus_layout(repo: Path, tmp_path: Path, *names: str) -> Path:
 
 def test_the_suites_of_a_checkout(repo, tmp_path):
     """Every folder with portal/apps.toml is a suite (tools/suites.py); the per-suite functions take one by name
-    and default to the first. The fixture, laid out as a suite itself, is its own one suite."""
+    and default to the one without a tag prefix. The fixture, laid out as a suite itself, is its own one suite."""
     assert rp.suites(repo) == [] and rp.suite_dir(repo) == repo
     assert rp.check_script(repo) == rp.CHECK_SCRIPT == "tools/check-release.sh"
     assert rp.manifest_checks(repo) == [rp.MANIFEST_CHECK] == ["tools/check_manifest.py"]

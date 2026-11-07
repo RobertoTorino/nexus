@@ -1,0 +1,7 @@
+Changelog: 06-11-2026 22:49:44
+
+Fixed. The app uses a Console Suite-specific native module and no longer removes or migrates another suite's data.
+
+Changelog: 06-11-2026 22:39:30
+
+Added. Ported Console Link and its native streaming core with console-suite launchers, settings, and release tags.

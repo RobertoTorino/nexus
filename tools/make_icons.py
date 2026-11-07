@@ -115,6 +115,46 @@ WINDOWS_PORTABLE_ICON = [
      "The icon on an app's tile in the portal: Windows Portable Test's is the suite's drawing, written by this tool; "
      "another app's is a copy of its own icon."),
 ]
+BAZZITE_CONSOLE_ICON = [
+    ("bazzite-console/icons/bazzite-console-128.png", "`icons/bazzite-console-<size>.png` (1024, 512, 256 and 128 px)",
+     "The suite's PlayStation 5 artwork, the source for its portal and wiki icons."),
+    ("bazzite-console/portal/images/bazzite-console-suite.webp",
+     "`portal/images/bazzite-console-suite.webp` (512 px)",
+     "The portal header, window icon and release in Nexus Release Tool."),
+    ("bazzite-console/portal/images/bazzite-console-suite-1024.webp",
+     "`portal/images/bazzite-console-suite-1024.webp`",
+     "The portal's intro."),
+    ("bazzite-console/portal/images/bazzite-console-suite-128.png",
+     "`portal/images/bazzite-console-suite-128.png`",
+     "The portal's menu entry and Desktop icon."),
+    ("bazzite-console/portal/images/apps/portal.webp", "`portal/images/apps/portal.webp` (128 px)",
+     "The portal's own tile."),
+    ("bazzite-console/docs/images/wiki-icon.png", "`docs/images/wiki-icon.png` (256 px)",
+     "The wiki favicon."),
+    ("bazzite-console/docs/images/wiki-icon.webp", "`docs/images/wiki-icon.webp`",
+     "The wiki header and home-page footer."),
+]
+BAZZITE_CONSOLE_COPIES = [
+    ("bazzite-console/icons/bazzite-console-512.png", "bazzite-console/portal/images/bazzite-console-suite.webp"),
+    ("bazzite-console/icons/bazzite-console-1024.png",
+     "bazzite-console/portal/images/bazzite-console-suite-1024.webp"),
+    ("bazzite-console/icons/bazzite-console-128.png",
+     "bazzite-console/portal/images/bazzite-console-suite-128.png"),
+    ("bazzite-console/icons/bazzite-console-256.png", "bazzite-console/docs/images/wiki-icon.png"),
+    ("bazzite-console/icons/bazzite-console-256.png", "bazzite-console/docs/images/wiki-icon.webp"),
+    ("bazzite-console/icons/bazzite-console-128.png",
+     "bazzite-console/portal/images/apps/portal.webp"),
+]
+BAZZITE_CONSOLE_CATEGORIES = ["gaming", "graphics", "sustainable", "utilities"]
+BAZZITE_CONSOLE_CATEGORY_APPS = {
+    "utilities": "SFTP Tools (`sftp`), USB HD Cam (`hdcam`), USB HD Control (`hdcontrol`) and SSD Check (`ssd`)"
+}
+BAZZITE_CONSOLE_HOME = [
+    ("bazzite-console/docs/images/home/console.webp", "`docs/images/home/console.webp`",
+     "The PlayStation 5 console on the wiki home page."),
+    ("bazzite-console/docs/images/home/controller.webp", "`docs/images/home/controller.webp`",
+     "The game controller on the wiki home page."),
+]
 WINDOWS_PORTABLE_COPIES = [
     ("windows-portable/icons/windows-portable-512.png", "windows-portable/apps/test/images/windows-portable-test.webp"),
     ("windows-portable/icons/windows-portable-128.png",
@@ -206,9 +246,11 @@ def windows_portable_app_copies(root: Path = ROOT) -> tuple[list[tuple[str, str]
 def nexus_copies(root: Path = ROOT) -> list[Path]:
     """Writes the Nexus apps' icon copies and the Nexus page's favicon from the Nexus drawings (NEXUS_COPIES) and
     Windows Portable Test's and the Windows portal's from the suite's (WINDOWS_PORTABLE_COPIES), lossless, so a
-    copy's pixels are the drawing's (tests compare them); and the Nexus page's logo and hero (NEXUS_PAGE_COPIES),
-    lossy; and every Windows Portable Suite app's category icon (windows_portable_icons()). The paths written."""
-    return write_copies(root, NEXUS_COPIES + WINDOWS_PORTABLE_COPIES, NEXUS_PAGE_COPIES) + windows_portable_icons(root)
+    copy's pixels are the drawing's (tests compare them); the Bazzite Console Suite's icon copies
+    (BAZZITE_CONSOLE_COPIES); and the Nexus page's logo and hero (NEXUS_PAGE_COPIES), lossy; and every Windows
+    Portable Suite app's category icon (windows_portable_icons()). The paths written."""
+    return (write_copies(root, NEXUS_COPIES + WINDOWS_PORTABLE_COPIES, NEXUS_PAGE_COPIES)
+            + write_copies(root, BAZZITE_CONSOLE_COPIES, []) + windows_portable_icons(root))
 
 
 def windows_portable_icons(root: Path = ROOT) -> list[Path]:
@@ -263,7 +305,7 @@ NEXUS_MATERIAL = [
     ("view-grid", "Home: the card \"A suite\"."),
     ("application", "Home: the card \"An app\"."),
     ("chip", "Home: the card \"BC250 Bazzite Suite\"."),
-    ("controller", "Home: the card \"Windows Portable Suite\"."),
+    ("controller", "Home: the cards \"Bazzite Console Suite\" and \"Windows Portable Suite\"."),
     ("download", "Home: the Nexus index button."),
 ]
 
@@ -358,6 +400,32 @@ def build(root: Path = ROOT) -> str:
                                         for name, use in MATERIAL))
     out += ["### Symbols in text", "", "Characters of the font, used as icons in labels and buttons.", ""]
     out += table("Symbol,App,Used for", SYMBOLS)
+    out += ["## Bazzite Console Suite", "", "### Suite artwork", ""]
+    out += table("Icon,File,Used for", ((img(path), file, use) for path, file, use in BAZZITE_CONSOLE_ICON))
+    out += ["### Category artwork", "",
+            "Each category has its own PlayStation 5 artwork. `tools/sync_icons.py` writes the copies used by the apps "
+            "and portal.", ""]
+    out += table("Icon,File,Used for", (
+        (img(f"bazzite-console/icons/{category}/{category}-128.png", 48),
+         f"`icons/{category}/`",
+         f"The {category.title()} category: {BAZZITE_CONSOLE_CATEGORY_APPS[category]}."
+         if category in BAZZITE_CONSOLE_CATEGORY_APPS else f"The {category.title()} category.")
+        for category in BAZZITE_CONSOLE_CATEGORIES
+    ))
+    out += ["### Bazzite Test icons", "",
+            "Bazzite Test uses the Sustainable category icon, as selected in `icons/categories.toml`.", ""]
+    out += table("Icon,File,Used for", (
+        (img("bazzite-console/icons/sustainable/sustainable-128.png", 48),
+         "`icons/sustainable/`", "The Sustainable category."),
+        (img("bazzite-console/apps/bazzite/images/bazzite-test.webp", 48),
+         "`apps/bazzite/images/bazzite-test.webp`", "Bazzite Test's window, tray and wiki icon."),
+        (img("bazzite-console/portal/images/apps/bazzite.webp", 48),
+         "`portal/images/apps/bazzite.webp`", "The Bazzite Test tile and wiki table icon."),
+        (img("bazzite-console/portal/images/categories/sustainable.webp", 48),
+         "`portal/images/categories/sustainable.webp`", "The app's category tile."),
+    ))
+    out += ["### Wiki home images", ""]
+    out += table("Image,File,Used for", ((img(path, 96), file, use) for path, file, use in BAZZITE_CONSOLE_HOME))
     out += ["## Windows Portable Suite", "", "### The suite's icon", ""]
     out += table("Icon,File,Used for", ((img(path), file, use) for path, file, use in WINDOWS_PORTABLE_ICON))
     by_category: dict[str, list[str]] = {}

@@ -56,19 +56,33 @@ suites = _load("nexus_suites", ROOT / "tools" / "suites.py")
 stage_app = _load("bc250_stage_app", ROOT / "tools" / "stage_app.py")
 SUITE = stage_app.SUITE                     # the default suite; main() takes the tag's (tools/suites.py)
 MANIFEST = SUITE / "portal" / "apps.toml"
-manifest = _load("bc250_manifest", SUITE / "portal" / "bc250_portal" / "manifest.py")
+
+
+def portal_package(suite: Path = SUITE) -> Path:
+    packages = [path for path in (suite / "portal").iterdir()
+                if path.is_dir() and (path / "__init__.py").is_file()]
+    if len(packages) != 1:
+        raise SystemExit(f"{suite.name}/portal must have one Python package")
+    return packages[0]
+
+
+def load_manifest(suite: Path):
+    return _load("suite_manifest", portal_package(suite) / "manifest.py")
+
+
+manifest = load_manifest(SUITE)
 
 
 def select(suite: Path) -> None:
     """Work on *suite* (its manifest and portal) instead of the default one."""
     global SUITE, MANIFEST, manifest
     SUITE, MANIFEST = suite, suite / "portal" / "apps.toml"
-    manifest = _load("bc250_manifest", suite / "portal" / "bc250_portal" / "manifest.py")
+    manifest = load_manifest(suite)
 
 
 def portal_stage() -> tuple[str, str]:
-    """The portal's STAGE and STAGE_NOTE (portal/bc250_portal/__init__.py), read without importing the portal."""
-    text = (SUITE / "portal" / "bc250_portal" / "__init__.py").read_text(encoding="utf-8")
+    """The portal's STAGE and STAGE_NOTE, read without importing the portal."""
+    text = (portal_package() / "__init__.py").read_text(encoding="utf-8")
     found = [re.search(rf'^{name} = "(.*)"$', text, re.M) for name in ("STAGE", "STAGE_NOTE")]
     return found[0][1] if found[0] else "", found[1][1] if found[1] else ""
 
@@ -76,7 +90,7 @@ def portal_stage() -> tuple[str, str]:
 def release_title(app: str, version: str) -> str:
     """The GitHub release's title: the suite's name (the portal's APP_NAME), then the app's name in apps.toml, so a
     release names what it is among every suite's releases ("BC250 Bazzite Suite: Xenia Manager 0.11.0")."""
-    text = (SUITE / "portal" / "bc250_portal" / "__init__.py").read_text(encoding="utf-8")
+    text = (portal_package() / "__init__.py").read_text(encoding="utf-8")
     found = re.search(r'^APP_NAME = "(.*)"$', text, re.M)
     suite_name = found[1] if found else SUITE.name
     name = "Portal" if app == "portal" else next((e.name for e in manifest.load(MANIFEST) if e.key == app), app)
@@ -139,9 +153,9 @@ def latest_changes(changelog: Path) -> str:
     return "\n".join(lines[starts[0]:end]).strip()
 
 
-def bundle_bazzite_test(stage_dir: Path, bundle: Path) -> str:
-    """Verify the pinned check release in *bundle* and unpack it into stage_dir/bundled/. Returns its tag."""
-    entry = next(e for e in manifest.load(MANIFEST) if e.key == "check")
+def bundle_required_app(stage_dir: Path, bundle: Path) -> str:
+    """Verify the first required app release in *bundle* and unpack it into stage_dir/bundled/. Returns its tag."""
+    entry = next(e for e in manifest.load(MANIFEST) if e.required)
     archive = bundle / entry.asset
     if not archive.is_file():
         raise SystemExit(f"--bundle {bundle} has no {entry.asset} (the tag apps.toml pins)")
@@ -208,8 +222,8 @@ def build(tag: str, out: Path, bundle: Path | None = None) -> Path:
                            stdout=subprocess.DEVNULL, env=dict(os.environ, SOURCE_DATE_EPOCH=str(epoch)))
         if app == "portal":
             if bundle is None:
-                raise SystemExit("a portal release needs --bundle with the pinned check release")
-            bundled = bundle_bazzite_test(stage_dir, bundle)
+                raise SystemExit("a portal release needs --bundle with its required app release")
+            bundled = bundle_required_app(stage_dir, bundle)
             pins = "\n".join(f"- `{e.tag}`" for e in manifest.load(MANIFEST))
             notes += ["This portal release installs and pins these app releases:", "", pins, "",
                       f"`{bundled}` is included and installed with the portal.", ""]

@@ -39,7 +39,8 @@ ROOT = Path(__file__).resolve().parent.parent
 CATEGORIES = ("sustainable", "graphics", "gaming", "utilities")   # the portal's, when it has none
 DESKTOP_CATEGORIES = {"sustainable": "System;", "graphics": "Game;Graphics;", "gaming": "Game;",
                       "utilities": "Utility;"}
-TEMPLATES = {"bc250_portal": "bazzite", "portable_portal": "windows"}  # the suite's portal package names its template
+TEMPLATES = {"bc250_portal": "bazzite", "bazzite_console_portal": "bazzite",
+             "portable_portal": "windows"}  # the suite's portal package names its template
 _NAME = re.compile(r"^[a-z][a-z0-9-]*$")
 _PREFIXES = ("BC-250 ", "BC250 ", "Bazzite ")
 
@@ -162,7 +163,7 @@ ROOT = Path(__file__).resolve().parent.parent
 LOGO_PATH = ROOT / "images" / f"{APP_ID}.webp"
 
 # Settings in ~/.config/@APP_ID@/@APP_ID@.ini
-INFO = AppInfo(app_id=APP_ID, name=APP_NAME, version=__version__, logo=LOGO_PATH, tag_prefix="@NAME@-v",
+INFO = AppInfo(app_id=APP_ID, name=APP_NAME, version=__version__, logo=LOGO_PATH, tag_prefix="@TAG@-v",
                settings_ini=True)
 
 __all__ = ["APP_ID", "APP_NAME", "INFO", "LOGO_PATH", "ROOT", "__version__"]
@@ -583,7 +584,7 @@ REQUIREMENTS_DEV = "# SPDX-License-Identifier: GPL-3.0-or-later\n-r requirements
 MANIFEST_ENTRY = '''[apps.@NAME@]
 name = "@APP_NAME@"
 summary = "@SUMMARY@"
-tag = "@NAME@-v0.1.0"
+tag = "@TAG@-v0.1.0"
 sha256 = ""
 required = false
 changes_board = false

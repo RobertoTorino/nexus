@@ -1,0 +1,2048 @@
+{
+    "series": [
+        {
+            "id": "COH",
+            "name": "COH_Series",
+            "entries": [
+                {
+                    "version": "System Software Version v1.50",
+                    "release_date": "2003",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "COH-H30000",
+                    "color": "METAL",
+                    "notes": [
+                        "Namco COH arcade systems hardware revision entry."
+                    ]
+                },
+                {
+                    "version": "System Software Version v1.60",
+                    "release_date": "2003",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "COH-H31000",
+                    "color": "METAL",
+                    "notes": [
+                        "Namco COH arcade systems hardware revision entry."
+                    ]
+                },
+                {
+                    "version": "System Software Version v1.60",
+                    "release_date": "2003",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "COH-H31100",
+                    "color": "METAL",
+                    "notes": [
+                        "Namco COH arcade systems hardware revision entry."
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "DESR",
+            "name": "DESR_Series",
+            "entries": [
+                {
+                    "version": "System Software Version v1.70",
+                    "release_date": "2003–2004",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "DESR-5000",
+                    "color": "WHITE",
+                    "notes": [
+                        "DESR PSX DVR platform integration firmware base."
+                    ]
+                },
+                {
+                    "version": "System Software Version v1.60",
+                    "release_date": "2003–2004",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "DESR-5100",
+                    "color": "WHITE",
+                    "notes": [
+                        "DESR PSX DVR platform integration firmware base."
+                    ]
+                },
+                {
+                    "version": "System Software Version v1.60",
+                    "release_date": "2003–2004",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "DESR-5100S",
+                    "color": "SATIN_SILVER",
+                    "notes": [
+                        "DESR PSX DVR platform integration firmware base."
+                    ]
+                },
+                {
+                    "version": "System Software Version v1.70",
+                    "release_date": "2003–2004",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "DESR-5500",
+                    "color": "WHITE",
+                    "notes": [
+                        "DESR PSX DVR platform integration firmware base."
+                    ]
+                },
+                {
+                    "version": "System Software Version v1.60",
+                    "release_date": "2003–2004",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "DESR-5700",
+                    "color": "WHITE",
+                    "notes": [
+                        "DESR PSX DVR platform integration firmware base."
+                    ]
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2003–2004",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "DESR-7000",
+                    "color": "WHITE",
+                    "notes": [
+                        "DESR PSX DVR platform integration firmware base."
+                    ]
+                },
+                {
+                    "version": "System Software Version v1.60",
+                    "release_date": "2003–2004",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "DESR-7100",
+                    "color": "WHITE",
+                    "notes": [
+                        "DESR PSX DVR platform integration firmware base."
+                    ]
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2003–2004",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "DESR-7500",
+                    "color": "WHITE",
+                    "notes": [
+                        "DESR PSX DVR platform integration firmware base."
+                    ]
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2003–2004",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "DESR-7700",
+                    "color": "WHITE",
+                    "notes": [
+                        "DESR PSX DVR platform integration firmware base."
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "DTL",
+            "name": "DTL_Series",
+            "entries": [
+                {
+                    "version": "System Software Version v1.00",
+                    "release_date": "2000–2001",
+                    "region": "Global Region",
+                    "region_code": "GLOBAL",
+                    "model": "DTL-H10000",
+                    "color": "BLACK",
+                    "notes": [
+                        "Early model DEX featuring external PC Card expansion slot interface, PCMCIA."
+                    ]
+                },
+                {
+                    "version": "System Software Version v1.00",
+                    "release_date": "2000–2001",
+                    "region": "Global Region",
+                    "region_code": "GLOBAL",
+                    "model": "DTL-H10100",
+                    "color": "BLACK",
+                    "notes": ["DEX model"]
+                },
+                {
+                    "version": "System Software Version v1.50",
+                    "release_date": "2001–2003",
+                    "region": "Global Region",
+                    "region_code": "GLOBAL",
+                    "model": "DTL-H30000",
+                    "color": "BLACK",
+                    "notes": ["DEX model"]
+                },
+                {
+                    "version": "System Software Version v1.50",
+                    "release_date": "2001–2003",
+                    "region": "USA",
+                    "region_code": "NTSC-U",
+                    "model": "DTL-H30001",
+                    "color": "BLACK",
+                    "notes": ["DEX model"]
+                },
+                {
+                    "version": "System Software Version v1.50",
+                    "release_date": "2001–2003",
+                    "region": "Global Region",
+                    "region_code": "GLOBAL",
+                    "model": "DTL-H30002",
+                    "color": "BLACK",
+                    "notes": ["DEX model"]
+                },
+                {
+                    "version": "System Software Version v1.50",
+                    "release_date": "2001–2003",
+                    "region": "Global Region",
+                    "region_code": "GLOBAL",
+                    "model": "DTL-H30005",
+                    "color": "BLACK",
+                    "notes": ["DEX model"]
+                },
+                {
+                    "version": "System Software Version v1.50",
+                    "release_date": "2001–2003",
+                    "region": "Global Region",
+                    "region_code": "GLOBAL",
+                    "model": "DTL-H30100",
+                    "color": "BLACK",
+                    "notes": ["DEX model"]
+                },
+                {
+                    "version": "System Software Version v1.50",
+                    "release_date": "2001–2003",
+                    "region": "Global Region",
+                    "region_code": "GLOBAL",
+                    "model": "DTL-H30101",
+                    "color": "BLACK",
+                    "notes": ["DEX model"]
+                },
+                {
+                    "version": "System Software Version v1.50",
+                    "release_date": "2001–2003",
+                    "region": "Global Region",
+                    "region_code": "GLOBAL",
+                    "model": "DTL-H30102",
+                    "color": "BLACK",
+                    "notes": ["DEX model"]
+                },
+                {
+                    "version": "System Software Version v1.50",
+                    "release_date": "2001–2003",
+                    "region": "Global Region",
+                    "region_code": "GLOBAL",
+                    "model": "DTL-H30105",
+                    "color": "BLACK",
+                    "notes": ["DEX model"]
+                },
+                {
+                    "version": "System Software Version v1.70",
+                    "release_date": "2003–2004",
+                    "region": "Global Region",
+                    "region_code": "GLOBAL",
+                    "model": "DTL-H50000",
+                    "color": "BLACK",
+                    "notes": ["DEX model"]
+                },
+                {
+                    "version": "System Software Version v1.70",
+                    "release_date": "2003–2004",
+                    "region": "USA",
+                    "region_code": "NTSC-U",
+                    "model": "DTL-H50001",
+                    "color": "BLACK",
+                    "notes": ["DEX model"]
+                },
+                {
+                    "version": "System Software Version v1.70",
+                    "release_date": "2003–2004",
+                    "region": "Global Region",
+                    "region_code": "GLOBAL",
+                    "model": "DTL-H50002",
+                    "color": "BLACK",
+                    "notes": ["DEX model"]
+                },
+                {
+                    "version": "System Software Version v1.70",
+                    "release_date": "2003–2004",
+                    "region": "Global Region",
+                    "region_code": "GLOBAL",
+                    "model": "DTL-H50009",
+                    "color": "SATIN_SILVER",
+                    "notes": ["DEX model"]
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "Global Region",
+                    "region_code": "GLOBAL",
+                    "model": "DTL-H70002",
+                    "color": "BLACK",
+                    "notes": ["DEX model"]
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2006",
+                    "region": "USA",
+                    "region_code": "NTSC-U",
+                    "model": "DTL-H70011S",
+                    "color": "BLACK",
+                    "notes": ["DEX model"]
+                },
+                {
+                    "version": "System Software Version v1.70",
+                    "release_date": "2003–2004",
+                    "region": "Global Region",
+                    "region_code": "GLOBAL",
+                    "model": "DTL-H75000A",
+                    "color": "BLACK",
+                    "notes": ["DEX model"]
+                },
+                {
+                    "version": "System Software Version v2.20",
+                    "release_date": "2007–2008",
+                    "region": "Global Region",
+                    "region_code": "GLOBAL",
+                    "model": "DTL-H90000A",
+                    "color": "BLACK",
+                    "notes": ["DEX model"]
+                }
+            ]
+        },
+        {
+            "id": "PX",
+            "name": "PX_Series",
+            "entries": [
+                {
+                    "version": "System Software Version v1.60",
+                    "release_date": "2010",
+                    "region": "USA",
+                    "region_code": "NTSC-U",
+                    "model": "PX300-1",
+                    "color": "BLACK",
+                    "notes": [
+                        "Sony BRAVIA KDL-22PX300 television built-in PS2 hardware module."
+                    ]
+                },
+                {
+                    "version": "System Software Version v1.60",
+                    "release_date": "2010",
+                    "region": "Australia/Oceania",
+                    "region_code": "PAL",
+                    "model": "PX300-2",
+                    "color": "BLACK",
+                    "notes": [
+                        "Sony BRAVIA KDL-22PX300 television built-in PS2 hardware module."
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "SCPH10000_",
+            "name": "SCPH-10000_Series",
+            "entries": [
+                {
+                    "version": "System Software Version v1.00",
+                    "release_date": "2000–2001",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-10000",
+                    "color": "BLACK",
+                    "notes": [
+                        "First release. Early model featuring external PC Card expansion slot interface, PCMCIA."
+                    ]
+                },
+                {
+                    "version": "System Software Version v1.00",
+                    "release_date": "2000–2001",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-10000",
+                    "color": "BLACK",
+                    "notes": [
+                        "Early model featuring external PC Card expansion slot interface, PCMCIA."
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "SCPH15000",
+            "name": "SCPH-15000_Series",
+            "entries": [
+                {
+                    "version": "System Software Version v1.01",
+                    "release_date": "2000–2001",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-15000",
+                    "color": "BLACK",
+                    "notes": [
+                        "Early model featuring external PC Card expansion slot interface, PCMCIA."
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "SCPH18000",
+            "name": "SCPH-18000_Series",
+            "entries": [
+                {
+                    "version": "System Software Version v1.01",
+                    "release_date": "2000–2001",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-18000",
+                    "color": "BLACK",
+                    "notes": [
+                        "Added built-in DVD playback."
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "SCPH30000",
+            "name": "SCPH-30000_Series",
+            "entries": [
+                {
+                    "version": "System Software Version v1.50",
+                    "release_date": "2001–2003",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-30000",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.50",
+                    "release_date": "2001–2003",
+                    "region": "USA",
+                    "region_code": "NTSC-U",
+                    "model": "SCPH-30001",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.50",
+                    "release_date": "2001–2003",
+                    "region": "Australia/Oceania",
+                    "region_code": "PAL",
+                    "model": "SCPH-30002",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.50",
+                    "release_date": "2001–2003",
+                    "region": "United Kingdom",
+                    "region_code": "PAL",
+                    "model": "SCPH-30003",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.50",
+                    "release_date": "2001–2003",
+                    "region": "Europe",
+                    "region_code": "PAL",
+                    "model": "SCPH-30004",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.50",
+                    "release_date": "2001–2003",
+                    "region": "Korea",
+                    "region_code": "NTSC-K",
+                    "model": "SCPH-30005",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.50",
+                    "release_date": "2001–2003",
+                    "region": "Hong Kong/Singapore",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-30006",
+                    "color": "BLACK",
+                    "notes": []
+                }
+            ]
+        },
+        {
+            "id": "SCPH35000",
+            "name": "SCPH-35000_Series",
+            "entries": [
+                {
+                    "version": "System Software Version v1.50",
+                    "release_date": "2001–2003",
+                    "region": "Taiwan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-30007",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.50",
+                    "release_date": "2001–2003",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-35000",
+                    "color": "BLACK",
+                    "notes": [
+                        "Gran Turismo special edition package pairing variant."
+                    ]
+                },
+                {
+                    "version": "System Software Version v1.50",
+                    "release_date": "2001–2003",
+                    "region": "USA",
+                    "region_code": "NTSC-U",
+                    "model": "SCPH-35001",
+                    "color": "BLACK",
+                    "notes": [
+                        "Gran Turismo special edition package pairing variant."
+                    ]
+                },
+                {
+                    "version": "System Software Version v1.50",
+                    "release_date": "2001–2003",
+                    "region": "Australia/Oceania",
+                    "region_code": "PAL",
+                    "model": "SCPH-35002",
+                    "color": "BLACK",
+                    "notes": [
+                        "Gran Turismo special edition package pairing variant."
+                    ]
+                },
+                {
+                    "version": "System Software Version v1.50",
+                    "release_date": "2001–2003",
+                    "region": "United Kingdom",
+                    "region_code": "PAL",
+                    "model": "SCPH-35003",
+                    "color": "BLACK",
+                    "notes": [
+                        "Gran Turismo special edition package pairing variant."
+                    ]
+                },
+                {
+                    "version": "System Software Version v1.50",
+                    "release_date": "2001–2003",
+                    "region": "Europe",
+                    "region_code": "PAL",
+                    "model": "SCPH-35004",
+                    "color": "BLACK",
+                    "notes": [
+                        "Gran Turismo special edition package pairing variant."
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "SCPH37000",
+            "name": "SCPH-37000_Series",
+            "entries": [
+                {
+                    "version": "System Software Version v1.50",
+                    "release_date": "2001–2003",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-37000",
+                    "color": "ZEN_BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.50",
+                    "release_date": "2001–2003",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-37000",
+                    "color": "OCEAN_BLUE",
+                    "notes": []
+                }
+            ]
+        },
+        {
+            "id": "SCPH39000",
+            "name": "SCPH-39000_Series",
+            "entries": [
+                {
+                    "version": "System Software Version v1.60",
+                    "release_date": "2001–2003",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-39000",
+                    "color": "AQUA_BLUE",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.60",
+                    "release_date": "2001–2003",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-39000",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.60",
+                    "release_date": "2001–2003",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-39000",
+                    "color": "SATIN_SILVER",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.60",
+                    "release_date": "2001–2003",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-39000",
+                    "color": "PINK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.60",
+                    "release_date": "2001–2003",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-39000",
+                    "color": "BLUE",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.60",
+                    "release_date": "2001–2003",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-39000",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.60",
+                    "release_date": "2001–2003",
+                    "region": "USA",
+                    "region_code": "NTSC-U",
+                    "model": "SCPH-39001",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.60",
+                    "release_date": "2001–2003",
+                    "region": "USA",
+                    "region_code": "NTSC-U",
+                    "model": "SCPH-39001",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.60",
+                    "release_date": "2001–2003",
+                    "region": "Australia/Oceania",
+                    "region_code": "PAL",
+                    "model": "SCPH-39002",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.60",
+                    "release_date": "2001–2003",
+                    "region": "United Kingdom",
+                    "region_code": "PAL",
+                    "model": "SCPH-39003",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.60",
+                    "release_date": "2001–2003",
+                    "region": "Europe",
+                    "region_code": "PAL",
+                    "model": "SCPH-39004",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.60",
+                    "release_date": "2001–2003",
+                    "region": "Korea",
+                    "region_code": "NTSC-K",
+                    "model": "SCPH-39005",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.60",
+                    "release_date": "2001–2003",
+                    "region": "Hong Kong/Singapore",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-39006",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.60",
+                    "release_date": "2001–2003",
+                    "region": "Taiwan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-39007",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.60",
+                    "release_date": "2001–2003",
+                    "region": "Russia",
+                    "region_code": "PAL",
+                    "model": "SCPH-39008",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.20",
+                    "release_date": "2007–2008",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-39010",
+                    "color": "BLACK",
+                    "notes": []
+                }
+            ]
+        },
+        {
+            "id": "SCPH50000",
+            "name": "SCPH-50000_Series",
+            "entries": [
+                {
+                    "version": "System Software Version v1.70",
+                    "release_date": "2003–2004",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-50000",
+                    "color": "WHITE",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.70",
+                    "release_date": "2003–2004",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-50000",
+                    "color": "MIDNIGHT_BLUE",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.70",
+                    "release_date": "2003–2004",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-50000",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.70",
+                    "release_date": "2003–2004",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-50000",
+                    "color": "WHITE",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.70",
+                    "release_date": "2003–2004",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-50000",
+                    "color": "PINK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.70",
+                    "release_date": "2003–2004",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-50000",
+                    "color": "SATIN_SILVER",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.70",
+                    "release_date": "2003–2004",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-50000",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.70",
+                    "release_date": "2003–2004",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-50000",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.70",
+                    "release_date": "2003–2004",
+                    "region": "USA",
+                    "region_code": "NTSC-U",
+                    "model": "SCPH-50001",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.70",
+                    "release_date": "2003–2004",
+                    "region": "USA",
+                    "region_code": "NTSC-U",
+                    "model": "SCPH-50001",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.70",
+                    "release_date": "2003–2004",
+                    "region": "Australia/Oceania",
+                    "region_code": "PAL",
+                    "model": "SCPH-50002",
+                    "color": "SATIN_SILVER",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.70",
+                    "release_date": "2003–2004",
+                    "region": "Australia/Oceania",
+                    "region_code": "PAL",
+                    "model": "SCPH-50002",
+                    "color": "SATIN_SILVER",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.70",
+                    "release_date": "2003–2004",
+                    "region": "Australia/Oceania",
+                    "region_code": "PAL",
+                    "model": "SCPH-50002",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.70",
+                    "release_date": "2003–2004",
+                    "region": "Europe",
+                    "region_code": "PAL",
+                    "model": "SCPH-50003",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.70",
+                    "release_date": "2003–2004",
+                    "region": "United Kingdom",
+                    "region_code": "PAL",
+                    "model": "SCPH-50003",
+                    "color": "AQUA_BLUE",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.70",
+                    "release_date": "2003–2004",
+                    "region": "United Kingdom",
+                    "region_code": "PAL",
+                    "model": "SCPH-50003",
+                    "color": "SATIN_SILVER",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.70",
+                    "release_date": "2003–2004",
+                    "region": "United Kingdom",
+                    "region_code": "PAL",
+                    "model": "SCPH-50003",
+                    "color": "SATIN_SILVER",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.70",
+                    "release_date": "2003–2004",
+                    "region": "United Kingdom",
+                    "region_code": "PAL",
+                    "model": "SCPH-50003",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.70",
+                    "release_date": "2003–2004",
+                    "region": "Europe",
+                    "region_code": "PAL",
+                    "model": "SCPH-50004",
+                    "color": "AQUA_BLUE",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.70",
+                    "release_date": "2003–2004",
+                    "region": "Europe",
+                    "region_code": "PAL",
+                    "model": "SCPH-50004",
+                    "color": "SATIN_SILVER",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.70",
+                    "release_date": "2003–2004",
+                    "region": "Europe",
+                    "region_code": "PAL",
+                    "model": "SCPH-50004",
+                    "color": "SATIN_SILVER",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.70",
+                    "release_date": "2003–2004",
+                    "region": "Europe",
+                    "region_code": "PAL",
+                    "model": "SCPH-50004",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.70",
+                    "release_date": "2003–2004",
+                    "region": "Korea",
+                    "region_code": "NTSC-K",
+                    "model": "SCPH-50005",
+                    "color": "AQUA_BLUE",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.70",
+                    "release_date": "2003–2004",
+                    "region": "Korea",
+                    "region_code": "NTSC-K",
+                    "model": "SCPH-50005",
+                    "color": "SATIN_SILVER",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.70",
+                    "release_date": "2003–2004",
+                    "region": "Korea",
+                    "region_code": "NTSC-K",
+                    "model": "SCPH-50005",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.70",
+                    "release_date": "2003–2004",
+                    "region": "Hong Kong/Singapore",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-50006",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.70",
+                    "release_date": "2003–2004",
+                    "region": "Taiwan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-50007",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.70",
+                    "release_date": "2003–2004",
+                    "region": "Russia",
+                    "region_code": "PAL",
+                    "model": "SCPH-50008",
+                    "color": "SATIN_SILVER",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.70",
+                    "release_date": "2003–2004",
+                    "region": "Russia",
+                    "region_code": "PAL",
+                    "model": "SCPH-50008",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.70",
+                    "release_date": "2003–2004",
+                    "region": "China",
+                    "region_code": "NTSC-C",
+                    "model": "SCPH-50009",
+                    "color": "SATIN_SILVER",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.70",
+                    "release_date": "2003–2004",
+                    "region": "China",
+                    "region_code": "NTSC-C",
+                    "model": "SCPH-50009",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.60",
+                    "release_date": "2000–2004",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-50010",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.60",
+                    "release_date": "2000–2004",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-50011",
+                    "color": "BLACK",
+                    "notes": []
+                }
+            ]
+        },
+        {
+            "id": "SCPH55000",
+            "name": "SCPH-55000_Series",
+            "entries": [
+                {
+                    "version": "System Software Version v1.70",
+                    "release_date": "2003–2004",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-55000",
+                    "color": "WHITE",
+                    "notes": [
+                        "Gran Turismo special edition package pairing variant."
+                    ]
+                },
+                {
+                    "version": "System Software Version v1.70",
+                    "release_date": "2003–2004",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-55000",
+                    "color": "GOLD",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.70",
+                    "release_date": "2003–2004",
+                    "region": "Korea",
+                    "region_code": "NTSC-K",
+                    "model": "SCPH-55005",
+                    "color": "WHITE",
+                    "notes": [
+                        "Gran Turismo special edition package pairing variant."
+                    ]
+                },
+                {
+                    "version": "System Software Version v1.70",
+                    "release_date": "2003–2004",
+                    "region": "Hong Kong/Singapore",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-55006",
+                    "color": "WHITE",
+                    "notes": [
+                        "Gran Turismo special edition package pairing variant."
+                    ]
+                },
+                {
+                    "version": "System Software Version v1.70",
+                    "release_date": "2003–2004",
+                    "region": "Taiwan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-55007",
+                    "color": "WHITE",
+                    "notes": [
+                        "Gran Turismo special edition package pairing variant."
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "SCPH70000",
+            "name": "SCPH-70000_Series",
+            "entries": [
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "China",
+                    "region_code": "NTSC-C / PAL",
+                    "model": "SCPH-70000",
+                    "color": "BLACK",
+                    "notes": [
+                        "Released for Chinese-market consoles."
+                    ]
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-70000",
+                    "color": "WHITE",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-70000",
+                    "color": "BLACK",
+                    "notes": [
+                        "Gran Turismo special edition package pairing variant."
+                    ]
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-70000",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "USA",
+                    "region_code": "NTSC-U",
+                    "model": "SCPH-70001",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "Australia/Oceania",
+                    "region_code": "PAL",
+                    "model": "SCPH-70002",
+                    "color": "SATIN_SILVER",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "Australia/Oceania",
+                    "region_code": "PAL",
+                    "model": "SCPH-70002",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "United Kingdom",
+                    "region_code": "PAL",
+                    "model": "SCPH-70003",
+                    "color": "SATIN_SILVER",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "United Kingdom",
+                    "region_code": "PAL",
+                    "model": "SCPH-70003",
+                    "color": "SATIN_SILVER",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "United Kingdom",
+                    "region_code": "PAL",
+                    "model": "SCPH-70003",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "Europe",
+                    "region_code": "PAL",
+                    "model": "SCPH-70004",
+                    "color": "BLACK",
+                    "notes": [
+                        "For the slim model."
+                    ]
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "Europe",
+                    "region_code": "PAL",
+                    "model": "SCPH-70004",
+                    "color": "SATIN_SILVER",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "Europe",
+                    "region_code": "PAL",
+                    "model": "SCPH-70004",
+                    "color": "SATIN_SILVER",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "Europe",
+                    "region_code": "PAL",
+                    "model": "SCPH-70004",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "Korea",
+                    "region_code": "NTSC-K",
+                    "model": "SCPH-70005",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "Hong Kong/Singapore",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-70006",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "Taiwan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-70007",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "Russia",
+                    "region_code": "PAL",
+                    "model": "SCPH-70008",
+                    "color": "SATIN_SILVER",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "Russia",
+                    "region_code": "PAL",
+                    "model": "SCPH-70008",
+                    "color": "SATIN_SILVER",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "Russia",
+                    "region_code": "PAL",
+                    "model": "SCPH-70008",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.60",
+                    "release_date": "2000–2004",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-70010",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.60",
+                    "release_date": "2000–2004",
+                    "region": "USA",
+                    "region_code": "NTSC-U",
+                    "model": "SCPH-70011",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.60",
+                    "release_date": "2000–2004",
+                    "region": "Australia/Oceania",
+                    "region_code": "PAL",
+                    "model": "SCPH-70012",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "USA",
+                    "region_code": "NTSC-U",
+                    "model": "SCPH-70120",
+                    "color": "BLACK",
+                    "notes": [
+                        "Faster boot time. Revised BIOS architecture."
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "SCPH75000",
+            "name": "SCPH-75000_Series",
+            "entries": [
+                {
+                    "version": "System Software Version v1.70",
+                    "release_date": "2003–2004",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-75000",
+                    "color": "WHITE",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.70",
+                    "release_date": "2003–2004",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-75000",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.70",
+                    "release_date": "2003–2004",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-75000",
+                    "color": "SATIN_SILVER",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.70",
+                    "release_date": "2003–2004",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-75000",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "USA",
+                    "region_code": "NTSC-U",
+                    "model": "SCPH-75001",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "Australia/Oceania",
+                    "region_code": "PAL",
+                    "model": "SCPH-75002",
+                    "color": "SATIN_SILVER",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "Australia/Oceania",
+                    "region_code": "PAL",
+                    "model": "SCPH-75002",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "United Kingdom",
+                    "region_code": "PAL",
+                    "model": "SCPH-75003",
+                    "color": "SATIN_SILVER",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "United Kingdom",
+                    "region_code": "PAL",
+                    "model": "SCPH-75003",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "Europe",
+                    "region_code": "PAL",
+                    "model": "SCPH-75004",
+                    "color": "SATIN_SILVER",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "Europe",
+                    "region_code": "PAL",
+                    "model": "SCPH-75004",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "Korea",
+                    "region_code": "NTSC-K",
+                    "model": "SCPH-75005",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "Hong Kong/Singapore",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-75006",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "Taiwan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-75007",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "Russia",
+                    "region_code": "PAL",
+                    "model": "SCPH-75008",
+                    "color": "SATIN_SILVER",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "Russia",
+                    "region_code": "PAL",
+                    "model": "SCPH-75008",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.60",
+                    "release_date": "2004–2007",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-75100",
+                    "color": "BLACK",
+                    "notes": []
+                }
+            ]
+        },
+        {
+            "id": "SCPH77000",
+            "name": "SCPH-77000_Series",
+            "entries": [
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-77000",
+                    "color": "WHITE",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-77000",
+                    "color": "PINK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-77000",
+                    "color": "SATIN_SILVER",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-77000",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "USA",
+                    "region_code": "NTSC-U",
+                    "model": "SCPH-77001",
+                    "color": "SATIN_SILVER",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "USA",
+                    "region_code": "NTSC-U",
+                    "model": "SCPH-77001",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "Australia/Oceania",
+                    "region_code": "PAL",
+                    "model": "SCPH-77002",
+                    "color": "PINK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "Australia/Oceania",
+                    "region_code": "PAL",
+                    "model": "SCPH-77002",
+                    "color": "SATIN_SILVER",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "Australia/Oceania",
+                    "region_code": "PAL",
+                    "model": "SCPH-77002",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "United Kingdom",
+                    "region_code": "PAL",
+                    "model": "SCPH-77003",
+                    "color": "PINK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "United Kingdom",
+                    "region_code": "PAL",
+                    "model": "SCPH-77003",
+                    "color": "SATIN_SILVER",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "United Kingdom",
+                    "region_code": "PAL",
+                    "model": "SCPH-77003",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "Europe",
+                    "region_code": "PAL",
+                    "model": "SCPH-77004",
+                    "color": "PINK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "Europe",
+                    "region_code": "PAL",
+                    "model": "SCPH-77004",
+                    "color": "SATIN_SILVER",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "Europe",
+                    "region_code": "PAL",
+                    "model": "SCPH-77004",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "Korea",
+                    "region_code": "NTSC-K",
+                    "model": "SCPH-77005",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "Hong Kong/Singapore",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-77006",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "Taiwan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-77007",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "Russia",
+                    "region_code": "PAL",
+                    "model": "SCPH-77008",
+                    "color": "PINK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "Russia",
+                    "region_code": "PAL",
+                    "model": "SCPH-77008",
+                    "color": "SATIN_SILVER",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "Russia",
+                    "region_code": "PAL",
+                    "model": "SCPH-77008",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.60",
+                    "release_date": "2004–2007",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-77100",
+                    "color": "SATIN_SILVER",
+                    "notes": []
+                }
+            ]
+        },
+        {
+            "id": "SCPH79000",
+            "name": "SCPH-79000_Series",
+            "entries": [
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-79000",
+                    "color": "WHITE",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-79000",
+                    "color": "SATIN_SILVER",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-79000",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "USA",
+                    "region_code": "NTSC-U",
+                    "model": "SCPH-79001",
+                    "color": "WHITE",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "USA",
+                    "region_code": "NTSC-U",
+                    "model": "SCPH-79001",
+                    "color": "SATIN_SILVER",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "USA",
+                    "region_code": "NTSC-U",
+                    "model": "SCPH-79001",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "Australia/Oceania",
+                    "region_code": "PAL",
+                    "model": "SCPH-79002",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "United Kingdom",
+                    "region_code": "PAL",
+                    "model": "SCPH-79003",
+                    "color": "SATIN_SILVER",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "United Kingdom",
+                    "region_code": "PAL",
+                    "model": "SCPH-79003",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "Europe",
+                    "region_code": "PAL",
+                    "model": "SCPH-79004",
+                    "color": "SATIN_SILVER",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "Europe",
+                    "region_code": "PAL",
+                    "model": "SCPH-79004",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "Hong Kong/Singapore",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-79006",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.00",
+                    "release_date": "2004–2007",
+                    "region": "Russia",
+                    "region_code": "PAL",
+                    "model": "SCPH-79008",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v1.60",
+                    "release_date": "2004–2007",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-79100",
+                    "color": "BLACK",
+                    "notes": []
+                }
+            ]
+        },
+        {
+            "id": "SCPH90000",
+            "name": "SCPH-90000_Series",
+            "entries": [
+                {
+                    "version": "System Software Version v2.20",
+                    "release_date": "2007–2008",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-90000",
+                    "color": "CINNABAR_RED",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.20",
+                    "release_date": "2007–2008",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-90000",
+                    "color": "WHITE",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.20",
+                    "release_date": "2007–2008",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-90000",
+                    "color": "SATIN_SILVER",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.20",
+                    "release_date": "2007–2008",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-90000",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.20",
+                    "release_date": "2007–2008",
+                    "region": "USA",
+                    "region_code": "NTSC-U",
+                    "model": "SCPH-90001",
+                    "color": "SATIN_SILVER",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.20",
+                    "release_date": "2007–2008",
+                    "region": "USA",
+                    "region_code": "NTSC-U",
+                    "model": "SCPH-90001",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.20",
+                    "release_date": "2007–2008",
+                    "region": "Australia/Oceania",
+                    "region_code": "PAL",
+                    "model": "SCPH-90002",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.20",
+                    "release_date": "2007–2008",
+                    "region": "United Kingdom",
+                    "region_code": "PAL",
+                    "model": "SCPH-90003",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.20",
+                    "release_date": "2007–2008",
+                    "region": "Europe",
+                    "region_code": "PAL",
+                    "model": "SCPH-90004",
+                    "color": "SATIN_SILVER",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.20",
+                    "release_date": "2007–2008",
+                    "region": "Europe",
+                    "region_code": "PAL",
+                    "model": "SCPH-90004",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.20",
+                    "release_date": "2007–2008",
+                    "region": "Korea",
+                    "region_code": "NTSC-K",
+                    "model": "SCPH-90005",
+                    "color": "CINNABAR_RED",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.20",
+                    "release_date": "2007–2008",
+                    "region": "Korea",
+                    "region_code": "NTSC-K",
+                    "model": "SCPH-90005",
+                    "color": "WHITE",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.20",
+                    "release_date": "2007–2008",
+                    "region": "Korea",
+                    "region_code": "NTSC-K",
+                    "model": "SCPH-90005",
+                    "color": "SATIN_SILVER",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.20",
+                    "release_date": "2007–2008",
+                    "region": "Korea",
+                    "region_code": "NTSC-K",
+                    "model": "SCPH-90005",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.20",
+                    "release_date": "2007–2008",
+                    "region": "Hong Kong/Singapore",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-90006",
+                    "color": "CINNABAR_RED",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.20",
+                    "release_date": "2007–2008",
+                    "region": "Hong Kong/Singapore",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-90006",
+                    "color": "WHITE",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.20",
+                    "release_date": "2007–2008",
+                    "region": "Hong Kong/Singapore",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-90006",
+                    "color": "SATIN_SILVER",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.20",
+                    "release_date": "2007–2008",
+                    "region": "Hong Kong/Singapore",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-90006",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.20",
+                    "release_date": "2007–2008",
+                    "region": "Taiwan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-90007",
+                    "color": "CINNABAR_RED",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.20",
+                    "release_date": "2007–2008",
+                    "region": "Taiwan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-90007",
+                    "color": "WHITE",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.20",
+                    "release_date": "2007–2008",
+                    "region": "Taiwan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-90007",
+                    "color": "SATIN_SILVER",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.20",
+                    "release_date": "2007–2008",
+                    "region": "Taiwan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-90007",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.20",
+                    "release_date": "2007–2008",
+                    "region": "Russia",
+                    "region_code": "PAL",
+                    "model": "SCPH-90008",
+                    "color": "SATIN_SILVER",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.20",
+                    "release_date": "2007–2008",
+                    "region": "Russia",
+                    "region_code": "PAL",
+                    "model": "SCPH-90008",
+                    "color": "BLACK",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.20",
+                    "release_date": "2007–2008",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-90100",
+                    "color": "CINNABAR_RED",
+                    "notes": []
+                },
+                {
+                    "version": "System Software Version v2.20",
+                    "release_date": "2007–2008",
+                    "region": "Japan",
+                    "region_code": "NTSC-J",
+                    "model": "SCPH-90100",
+                    "color": "BLACK",
+                    "notes": []
+                }
+            ]
+        }
+    ]
+}
