@@ -1058,11 +1058,8 @@ def test_the_screen_row_moves_the_portal_to_the_next_screen(world, qapp, monkeyp
     window.on_action("menu")
     assert not window.suite_pane.screen_row.isVisible()             # one screen
     here = window.screen()
-
-    class Other:
-        def name(self):
-            return "Mi TV"
-    other = Other()
+    other = OtherScreen()
+    monkeypatch.setattr(portable.platform, "built_in_screens", lambda: [(here.geometry().x(), here.geometry().y())])
     monkeypatch.setattr(mw.QGuiApplication, "screens", staticmethod(lambda: [here, other]))
     moves = []
     monkeypatch.setattr(window, "move_to", moves.append)

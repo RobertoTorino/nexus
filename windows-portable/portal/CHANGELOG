@@ -1,3 +1,9 @@
+Changelog: 07-11-2026 13:40:16
+
+Fixed. The test of the Screen row's move to a second screen passed only on a device with a built-in screen: its
+fake second screen had no position, which core's own_screen() reads when Windows reports no built-in screen, as on
+GitHub's runners. It now fakes the second screen and the built-in one as the other screen tests do.
+
 Changelog: 07-11-2026 11:35:01
 
 Breaking. The Settings page's Screen row says PC screen (the handheld's own) or Other screen (a TV or a monitor,
