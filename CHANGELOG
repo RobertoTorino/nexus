@@ -1,3 +1,7 @@
+Changelog: 07-11-2026 22:04:25
+
+Release 2.1.0. Brings portal-v16.0.0.
+
 Changelog: 07-11-2026 21:42:29
 
 Fixed. tools/ci-local.sh runs only the workflows the push starts on GitHub: those whose push paths match a file that

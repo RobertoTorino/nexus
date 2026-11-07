@@ -1,3 +1,7 @@
+Changelog: 07-11-2026 22:04:25
+
+Release 16.0.0.
+
 Changelog: 07-11-2026 19:13:44
 
 Breaking. The Dependency Checker is no longer an app of the suite (owner, 07-11-2026): it is Nexus Deps, a Nexus
