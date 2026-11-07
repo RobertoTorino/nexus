@@ -62,7 +62,7 @@ To uninstall, run the installer of the portal you have with `--uninstall`, from 
 ## Updates
 
 The portal updates itself and its apps: a newer portal shows as **Suite x.y.z available** at the top, and as a banner
-on the line of the tabs, **UPDATE AVAILABLE, PRESS Y TO UPDATE**. Press **Y** on the tiles or on the Settings page (or
+on the line of the tabs, **UPDATE: PRESS Y**. Press **Y** on the tiles or on the Settings page (or
 tap the banner). The portal downloads the release, closes, installs it and starts again. A release built again under the same version is offered too: the installer keeps the checksum of the
 zip it installed from, when the zip is beside the unpacked folder, as the commands above leave it. See
 [Portal](portal.md#the-settings-page).

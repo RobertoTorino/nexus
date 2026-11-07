@@ -1,3 +1,7 @@
+Changelog: 07-11-2026 19:12:18
+
+Added. Four buttons on the line of the tabs start Steam (its library in Big Picture, as RT), the XBOX app, Armoury Crate and Command Center: a tap, or the d-pad up from the top row of tiles and A (A Start in the row at the bottom). Windows starts them by their application ID, as the Start menu does; one that is not on the device says so. The portal can be dragged by its top (the name or the clock) to the other screen, with a finger or the mouse: let go, it moves to the screen it was let go on or dragged toward, as LT moves it. While a newer portal is out, the banner reads UPDATE: PRESS Y (DOWNLOADING… while it downloads) and takes the place of Installed x/y, so the line fits at 1280 x 720.
+
 Changelog: 07-11-2026 17:15:29
 
 Release 10.1.0. Pins wp-test-v5.1.0, wp-pcsx2-v8.1.0, wp-ppsspp-v6.1.0, wp-rpcs3-v5.1.0, wp-shadps4-v6.1.0, wp-vita3k-v6.1.0, wp-xenia-v6.1.0, wp-rplay-v1.1.0, wp-hdcam-v1.1.0, wp-bios-v1.1.0, wp-sftp-v1.1.0, wp-smart-v1.1.0, wp-support-v1.1.0, wp-datstat-v1.1.0, wp-upscale-v1.1.0, wp-hdcontrol-v1.1.0, wp-ssd-v1.1.0.

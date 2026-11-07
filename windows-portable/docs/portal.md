@@ -17,7 +17,8 @@ The apps are tiles under tabs: one tab per category that has apps (Sustainable, 
 rows of four tiles each. A tab with more than eight apps has more pages: **Page 1 of 2** under the tiles says which
 one shows. Move past the last tile on the right to the next page, or past the first on the left back; a tap on
 **Page 1 of 2** turns to the next page, and from the last back to the first. At the right of the tabs, **Installed
-12/20** says how many of the suite's apps are on this device, of all the portal lists. A tile shows the app's icon, its name
+12/20** says how many of the suite's apps are on this device, of all the portal lists (while a newer portal is out, the
+update banner takes its place). A tile shows the app's icon, its name
 and its state:
 
 | State | Meaning |
@@ -39,6 +40,7 @@ The strip under the tiles shows the focused app: its name, its versions and what
 | Y | Update the portal while a newer one is out (**Y Update suite**); otherwise update or reinstall the app, when the row at the bottom offers it |
 | X | The app's details |
 | ☰ (Menu) | The Settings page, with the settings; on it, what the settings do |
+| D-pad up from the top row | The buttons beside the tabs: Steam, XBOX, Armoury Crate, Command Center (**A Start**) |
 | LT | The portal to the next screen, with a second screen attached |
 | RT | Steam's library, in Big Picture mode, when Steam is installed |
 | R3 (the right stick pressed) | Windows' touch keyboard, shown or hidden; the row at the bottom shows **R3** with a keyboard symbol (⌨) |
@@ -53,7 +55,15 @@ Escape goes back.
 On the Settings page the setting with the focus has the amber edge; the d-pad stays on the page, and **B** goes back to
 the tiles.
 
-## Steam
+## Steam, XBOX, Armoury Crate and Command Center
+
+Beside the tabs are four buttons that start the device's own programs: **Steam** (its library in Big Picture mode, as
+**RT** opens it, below), **XBOX** (the XBOX app), **Armoury Crate** and **Command Center** (ASUS's, on the ROG Ally and
+the ROG XBOX Ally; Armoury Crate on an ASUS laptop too). Tap one, or press up on the top row of tiles and then **A**;
+the row at the bottom says **A Start** while one has the focus, and down goes back to the tiles. A program that is not
+on the device says so on the line under the app.
+
+### RT Steam
 
 **RT Steam**, in the row at the bottom of every page, opens Steam's library in Big Picture mode, where the games the
 game managers put in Steam are played. A Steam that does not run is started first and opens its library once it has
@@ -75,7 +85,7 @@ The portal looks for a newer portal when it starts, every hour while it runs, an
 game or an app once its last look is a quarter of an hour old. A look that fails (offline for a moment) keeps the
 update it found before.
 
-While a newer portal is out, an amber banner on the line of the tabs says **UPDATE AVAILABLE, PRESS Y TO UPDATE**, on
+While a newer portal is out, an amber banner on the line of the tabs says **UPDATE: PRESS Y**, on
 the tiles and on the Settings page. **Y**, or a tap on the banner, updates the portal first, since the new portal brings
 the apps' new releases; the row at the bottom says **Y Update suite**. While the portal downloads, the banner counts the
 megabytes. Once the portal is up to date the banner is gone, and **Y** updates an app again. When the portal finds the
@@ -266,7 +276,10 @@ were last moved to, **PC screen** (the handheld's own, as Windows reports it bui
 other one, whatever its make), while there is one, otherwise on Windows' main display. To move one to the other screen, use
 the Settings page's **Screen** row or **LT** (the row at the bottom shows **LT Screen** then), or press **Win +
 Shift + Left** (or **Right**) with its window in front, which works for every app of the suite; the row at the bottom
-shows those keys at its left, after a symbol of two screens with an arrow between them. The window cannot be dragged: it is full screen, without a title bar. On a screen
+shows those keys at its left, after a symbol of two screens with an arrow between them. The portal can also be dragged
+there: drag its top (the name or the clock) toward the other screen, with a finger or the mouse, and let go. It is
+full screen without a title bar, so it does not follow the finger; once let go, it moves to the screen it was let go on,
+or the one in the direction of the drag. A short drag does nothing. The suite's other apps cannot be dragged. On a screen
 of another size the app starts again there, sized for that screen, in a second or two; a download or an install
 finishes first, and the portal says it will move once that is done.
 

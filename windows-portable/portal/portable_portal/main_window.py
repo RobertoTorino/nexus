@@ -5,7 +5,9 @@ the focused app and its pills (A Install or Open, Y Update), a banner on the tab
 the Settings page (the portal's own update and the settings), B back, View to exit (core's buttons, owner 29-10-2026), RT
 Steam's library where Steam is installed (owner, 30-10-2026: out of the game managers, into the portal). An install downloads the app's release in the
 background, checks it and runs its install.ps1 in a PowerShell window; the portal waits for that window's exit
-status. Direction D's portal screen (the owner's, 26-10-2026)."""
+status. Beside the tabs, buttons that start Steam, the XBOX app, Armoury Crate and Command Center; the top dragged
+toward another screen moves the portal there (owner, 07-11-2026). Direction D's portal screen (the owner's,
+26-10-2026)."""
 
 from __future__ import annotations
 
@@ -21,7 +23,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass, replace
 from pathlib import Path, PurePath
 
-from PyQt6.QtCore import QEvent, QObject, QSettings, Qt, QTimer, pyqtSignal
+from PyQt6.QtCore import QEvent, QObject, QPoint, QSettings, Qt, QTimer, pyqtSignal
 from PyQt6.QtGui import QGuiApplication, QPixmap
 from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QStackedWidget, QSystemTrayIcon, QVBoxLayout, QWidget
 
@@ -32,13 +34,14 @@ from bc250_core.portable import AMBER, DIM, KEYBOARD, MENU, VIEW, Card, Legend, 
 from bc250_core.updates import UpdateChecker
 
 from . import ACTION_SOUND, APP_ICONS, APP_ID, APP_NAME, INTRO_SOUND, SUITE, __version__, operating_mode
-from . import weather
+from . import launchers, weather
 from .clock import ZONE_NAMES, read as read_clock, save as save_clock
 from .intro import INTRO_MS, Intro, play
 from .manifest import CATEGORIES, AppEntry
 from .portal_update import PortalUpdate, short
 from .sources import Records, SourceError, Sources, downloaded, fetch_release, is_installed
-from .widgets import AppPane, Count, DetailsPane, ModePane, PageMarker, PlacePane, SuitePane, Tabs, UpdateBanner
+from .widgets import (AppPane, Count, DetailsPane, LaunchButton, ModePane, PageMarker, PlacePane, SuitePane, Tabs,
+                      UpdateBanner)
 
 STATUS_MS = 2_000               # the header: the CPU and GPU live (owner, 30-10-2026), the battery and the time
 EXIT_QUESTION = "Do you really want to exit the portal?"
@@ -59,6 +62,8 @@ SOUND_MS = 2_000                # how often the portal reads where Windows plays
 NOTICE_MS = 8_000               # how long a Windows notification shows
 STEAM_MISSING = "Steam is not installed on this device: install it from store.steampowered.com, then RT opens it."
 ONE_SCREEN = "There is one screen: attach a TV or a monitor, then LT moves the portal to it."
+DRAG_PX = 120                   # a drag of the portal's top this far (or let go on another screen) moves it
+NOT_HERE = "{name} is not on this device."
 DISPLAY_SWITCH = Path(os.environ.get("SystemRoot") or r"C:\Windows") / "System32" / "DisplaySwitch.exe"   # Win + P
 NO_WINDOW = 0x08000000          # CREATE_NO_WINDOW
 # Windows' display setup as Win + P names it (owner, 07-11-2026): what each row says once it is set
@@ -95,10 +100,28 @@ def switch_display(mode: str) -> None:
     """Windows' display setup as Win + P sets it, with DisplaySwitch.exe: /external (the second screen only),
     /internal (the handheld's only), /clone, /extend. OSError when it does not start."""
     subprocess.Popen([str(DISPLAY_SWITCH), mode], creationflags=NO_WINDOW if sys.platform == "win32" else 0)
+
+
+def drag_target(here, screens: Sequence, end: QPoint, delta: QPoint):
+    """The screen a drag of the portal's top moves it to (owner, 07-11-2026): the one it was let go on (the mouse),
+    else the one farthest ahead in the drag's direction (a finger stays on the handheld's screen); None without
+    another screen."""
+    others = [screen for screen in screens if screen is not here]
+    if not others:
+        return None
+    dropped = next((screen for screen in others if screen.geometry().contains(end)), None)
+    if dropped is not None:
+        return dropped
+    center = here.geometry().center() if here is not None else end - delta
+
+    def ahead(screen) -> int:
+        way = screen.geometry().center() - center
+        return way.x() * delta.x() + way.y() * delta.y()
+    return max(others, key=ahead)
 # With a second screen, the legend's left end (owner, 31-10-2026: "Switch monitor: [] + Shift + < or >", with icons)
 SCREEN_KEYS = (portable.SCREEN_ICON, (portable.WINDOWS_KEY, "+", "Shift", "+", "←", "→"))   # two screens drawn
 TURBO_COLOR = "#ff1f1f"         # the Turbo letter in the header: a hard red, extra bold (owner, 31-10-2026)
-BANNER = "UPDATE AVAILABLE, PRESS Y TO UPDATE"      # on the tabs' line (owner, 01-11-2026)
+BANNER = "UPDATE: PRESS Y"      # on the tabs' line (owner, 01-11-2026; shorter beside the buttons, 07-11-2026)
 INTRO_BANNER = "PORTAL UPDATE AVAILABLE"            # on the intro, when the check answers in time
 WAIT_UPDATE = "The portal's update starts once the download or install has finished."
 WALLPAPER_KEY = "look/wallpaper"  # where portal 1.6.0 kept the wallpaper switch: now the suite's (core, suite.ini)
@@ -198,7 +221,9 @@ class MainWindow(PortableWindow):
                  weather_fetch: weather.Fetch | None = None, startup: Path | None = None,
                  shortcut: Callable[..., None] = make_shortcut, booted: Callable[[], float] | None = None,
                  sound_kind: Callable[[], str | None] = sound_output.default_kind,
-                 notify: Callable[[str], None] | None = None):
+                 notify: Callable[[str], None] | None = None,
+                 find_app: Callable[[launchers.Launcher], str | None] = launchers.find,
+                 start_app_id: Callable[[str], None] = launchers.start):
         """*build*: the sha256 of the zip this portal was installed from (build.sha256), "" when not known, None
         from a checkout: a new build of the same version is offered when its sha256 differs. *intro_ms*: how long
         the intro plays when the window starts (0: none). *wallpaper*: the picture behind the page, darkened (None:
@@ -212,7 +237,8 @@ class MainWindow(PortableWindow):
         STARTUP_LINK goes (default the Start menu's); *shortcut*: writes a .lnk (core's make_shortcut); *booted*: when
         Windows started, as time.time() counts (default boot_time). *sound_kind*: the kind of Windows' default sound
         output (core's sound_output.default_kind); *notify*: shows a line as a Windows notification (default
-        windows_notice; tests pass a fake)."""
+        windows_notice; tests pass a fake). *find_app*: the application ID a button on the tabs' line starts, None when
+        its program is not here (launchers.find); *start_app_id*: starts it (launchers.start)."""
         old = QSettings()                              # portal 1.6.0 kept the switch in portal.ini: the suite's now
         if old.contains(WALLPAPER_KEY) and portable.look_settings(SUITE).value(portable.LOOK_KEY) is None:
             portable.set_wallpaper_on(SUITE, str(old.value(WALLPAPER_KEY)).lower() != "false")
@@ -222,6 +248,8 @@ class MainWindow(PortableWindow):
         self.log = applog.logger(APP_ID)
         self.entries, self.sources, self.records = entries, sources, records
         self.steam_here, self.open_steam = steam_here, open_steam
+        self.find_app, self.start_app_id = find_app, start_app_id
+        self.drag_from: QPoint | None = None            # where a drag of the portal's top began (global)
         self.startup = startup if startup is not None else start_menu() / "Startup"
         self.shortcut, self.booted = shortcut, booted or boot_time
         self.sound_back()                               # before the intro, which plays it
@@ -264,13 +292,22 @@ class MainWindow(PortableWindow):
         page.setContentsMargins(*self.margins())
         self.header = PortableHeader(APP_NAME, __version__)
         page.addWidget(self.header)
+        self.header.setCursor(Qt.CursorShape.OpenHandCursor)     # dragged to another screen (mouseReleaseEvent)
         page.addSpacing(px(10))
         self.tabs = Tabs([(key, name) for key, name in CATEGORIES.items()
                           if any(entry.category == key for entry in entries)])
         tabs_line = QHBoxLayout()
         tabs_line.setContentsMargins(0, 0, 0, 0)
         tabs_line.addWidget(self.tabs, 1)
-        self.count = Count()                            # how many apps are installed, of all (owner, 07-11-2026)
+        self.launch_buttons: dict[str, LaunchButton] = {}   # beside the categories (owner, 07-11-2026)
+        for launcher in launchers.LAUNCHERS:
+            button = LaunchButton(launcher.key, launcher.name)
+            button.activated.connect(lambda key=launcher.key: self.launch_action(key))
+            self.launch_buttons[launcher.key] = button
+            tabs_line.addWidget(button, 0, Qt.AlignmentFlag.AlignVCenter)
+            tabs_line.addSpacing(px(8))
+        tabs_line.addSpacing(px(8))
+        self.count = Count()                           # how many apps are installed, of all (owner, 07-11-2026)
         tabs_line.addWidget(self.count, 0, Qt.AlignmentFlag.AlignVCenter)
         tabs_line.addSpacing(px(16))
         self.banner = UpdateBanner()                    # while a newer portal is out
@@ -846,12 +883,24 @@ class MainWindow(PortableWindow):
     def move_focus(self, direction: str) -> QWidget | None:
         """The d-pad as everywhere, and past the tiles' left or right edge to the tab's previous or next page."""
         before = QGuiApplication.focusObject()
-        moved = super().move_focus(direction)
+        # The tabs' line is up from the tiles, never beside them: left and right on a tile stay on the tiles (and turn
+        # the page past their edge)
+        self.across_tiles = isinstance(before, Card) and direction in ("left", "right")
+        try:
+            moved = super().move_focus(direction)
+        finally:
+            self.across_tiles = False
         if moved is before and direction in ("left", "right") and self.stack.currentWidget() is self.apps_page:
             tile = next((i for i, (key, card) in enumerate(self.page_tiles()) if card is before), None)
             if tile is not None and self.turn_page(1 if direction == "right" else -1, tile // COLUMNS):
                 return QGuiApplication.focusObject()
         return moved
+
+    def focusables(self) -> list[QWidget]:
+        found = super().focusables()
+        if getattr(self, "across_tiles", False):
+            found = [widget for widget in found if not isinstance(widget, LaunchButton)]
+        return found
 
     def page_tiles(self) -> list[tuple[str, Card]]:
         """The tiles of the page that shows, in order."""
@@ -900,6 +949,8 @@ class MainWindow(PortableWindow):
         keys = SCREEN_KEYS if screens and not self.close_asked else None
         if self.close_asked:
             self.legend.set_items(EXIT_ANSWERS)
+        elif isinstance(self.focusWidget(), LaunchButton):   # a button on the tabs' line: A starts its program
+            self.legend.set_items([("A", "Start"), (MENU, "Settings"), *triggers, *self.common_items()], keys)
         elif self.stack.currentWidget() is self.apps_page:
             pane = self.app_pane
             other = "Update suite" if self.update_available() else pane.other      # the portal first
@@ -937,6 +988,66 @@ class MainWindow(PortableWindow):
             self.say(self.current_key, "Opening Steam…")
             self.log.info("Opening Steam.")
         self.refresh()
+
+    def launch_action(self, key: str) -> None:
+        """A button on the tabs' line (owner, 07-11-2026): Steam as RT opens it, the XBOX app, Armoury Crate or Command
+        Center as the Start menu starts them; one that is not on this device says so on the line under the app."""
+        if key == launchers.STEAM:
+            self.steam_action()
+            return
+        launcher = launchers.BY_KEY[key]
+        app_id = self.find_app(launcher)
+        if app_id is None:
+            self.say(self.current_key, NOT_HERE.format(name=launcher.name))
+            self.refresh()
+            return
+        try:
+            self.start_app_id(app_id)
+        except OSError as exc:
+            self.say(self.current_key, f"{launcher.name} could not be started: {exc.strerror or exc}")
+            self.log.error(f"Starting {launcher.name} ({app_id}) failed: {exc}")
+        else:
+            self.say(self.current_key, f"Starting {launcher.name}…")
+            self.log.info(f"Starting {launcher.name} ({app_id}).")
+        self.refresh()
+
+    # A drag of the portal's top (owner, 07-11-2026: "drag the window to the other screen"): the window fills its
+    # screen, so it is not moved under the finger; let go, it moves to the screen it was dragged to, as LT moves it
+
+    def mousePressEvent(self, event) -> None:  # noqa: N802 (Qt override)
+        if (event.button() == Qt.MouseButton.LeftButton and self.intro is None
+                and self.header.geometry().contains(event.position().toPoint())):
+            self.drag_from = event.globalPosition().toPoint()
+            self.header.setCursor(Qt.CursorShape.ClosedHandCursor)
+            event.accept()
+            return
+        super().mousePressEvent(event)
+
+    def mouseReleaseEvent(self, event) -> None:  # noqa: N802 (Qt override)
+        start, self.drag_from = self.drag_from, None
+        if start is None or event.button() != Qt.MouseButton.LeftButton:
+            super().mouseReleaseEvent(event)
+            return
+        self.header.setCursor(Qt.CursorShape.OpenHandCursor)
+        event.accept()
+        self.dragged(start, event.globalPosition().toPoint())
+
+    def dragged(self, start: QPoint, end: QPoint) -> None:
+        """The top dragged from *start* to *end* (global): less than DRAG_PX on the same screen is a tap and does
+        nothing; else the portal moves to the screen it was let go on or dragged toward (drag_target), once nothing is
+        being installed, or the line under the app says there is one screen."""
+        delta = end - start
+        here = self.screen()
+        on_here = here is None or here.geometry().contains(end)
+        if on_here and max(abs(delta.x()), abs(delta.y())) < px(DRAG_PX):
+            return
+        target = drag_target(here, QGuiApplication.screens(), end, delta)
+        if target is None:
+            self.say(self.current_key, ONE_SCREEN)
+            self.refresh()
+            return
+        self.log.info(f"Dragged to the screen {portable.screen_label(target)}.")
+        self.move_to(target)
 
     def exit_app(self) -> None:
         """View: the portal asks first, then closes on a second View (owner, 05-11-2026: every time, not only while
@@ -1270,12 +1381,14 @@ class MainWindow(PortableWindow):
 
     def show_banner(self) -> None:
         """The banner on the tabs' line: while a newer portal is out, on the tiles and the Settings page, where Y
-        updates it (Y removes an app on Details); while it downloads, how far it is; else none (owner, 01-11-2026)."""
+        updates it (Y removes an app on Details); while it downloads, how far it is; else none (owner, 01-11-2026).
+        The installed count gives it its room meanwhile, beside the buttons (owner, 07-11-2026)."""
         portal_job = self.job is not None and self.job[0].key == ""
-        text = (f"DOWNLOADING THE UPDATE…{self.downloaded_text()}" if portal_job
+        text = (f"DOWNLOADING…{self.downloaded_text()}" if portal_job
                 else BANNER if self.update_available() else "")
         self.banner.setText(text)
         self.banner.setVisible(bool(text) and self.stack.currentWidget() in (self.apps_page, self.suite_pane))
+        self.count.setVisible(not self.banner.isVisibleTo(self))   # its room is the banner's (owner, 07-11-2026)
 
     def portal_update_action(self) -> None:
         """Y on the tiles, or a tap on the banner, while a newer portal is out: its download and install; while an

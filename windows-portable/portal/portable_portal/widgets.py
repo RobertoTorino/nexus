@@ -10,7 +10,7 @@ from collections.abc import Sequence
 
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QFont
-from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QLineEdit, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QLineEdit, QSizePolicy, QVBoxLayout, QWidget
 
 from bc250_core.portable import (AMBER, BODY, DIM, LEGEND, ON_AMBER, PICTURE_RULES, RADIUS, RAISED, TEXT, VEIL_MAX,
                                  VEIL_STEP, InfoPill, Pane, Row, Tabs, font, px, text_label)
@@ -75,7 +75,8 @@ class UpdateBanner(QLabel):
 
 
 class Count(QLabel):
-    """On the tabs' line: how many of the suite's apps are installed, of all it lists, "12/20" (owner, 07-11-2026)."""
+    """On the tabs' line: how many of the suite's apps are installed, of all it lists, "12/20" (owner, 07-11-2026);
+    hidden while the update banner takes its room."""
 
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
@@ -84,6 +85,18 @@ class Count(QLabel):
 
     def set_count(self, installed: int, listed: int) -> None:
         self.setText(f"Installed {installed}/{listed}")
+
+
+class LaunchButton(Row):
+    """A button on the tabs' line that starts a program of the device's (owner, 07-11-2026: Steam, XBOX, Armoury
+    Crate and Command Center beside the categories): drawn as a row, the focus with the amber edge; the d-pad reaches
+    it up from the tiles, A or a tap starts it (activated)."""
+
+    def __init__(self, key: str, name: str, parent: QWidget | None = None):
+        super().__init__(name, parent)
+        self.key = key
+        self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
 
 
 class PageMarker(QLabel):
@@ -281,6 +294,11 @@ class SuitePane(Pane):
         parts.append("XBOX mode ↔ Desktop: Windows' switch between XBOX mode and the desktop (Win + F11), either way. "
                      "Coming back to XBOX mode after the desktop, Windows may ask whether to restart for better "
                      "performance: its own question, answered with the controller.")
+        parts.append("The buttons beside the categories start Steam (its library in Big Picture), the XBOX app, "
+                     "Armoury Crate and its Command Center: a tap, or the d-pad up from the tiles and A. One that is "
+                     "not on this device says so.")
+        parts.append("With a second screen in Extend, drag the portal by its top (the name or the clock) toward the "
+                     "other screen, with a finger or the mouse, and it moves there, as LT does.")
         parts += ["Every setting is kept for the next start.",
                   "The buttons at the bottom: A changes the setting with the focus. Y looks for a newer portal on "
                   "GitHub (Check again), or downloads and installs it (Update to x.y.z). RT starts Steam's library in "
@@ -434,4 +452,4 @@ class ModePane(Pane):
         self.status.setVisible(bool(status))
 
 
-__all__ = ["AppPane", "DetailsPane", "ModePane", "SuitePane", "Tabs", "TEXT", "UpdateBanner"]
+__all__ = ["AppPane", "DetailsPane", "LaunchButton", "ModePane", "SuitePane", "Tabs", "TEXT", "UpdateBanner"]

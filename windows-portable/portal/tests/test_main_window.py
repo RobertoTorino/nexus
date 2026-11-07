@@ -132,6 +132,7 @@ def world(qapp, tmp_path, monkeypatch):
     w.displays = []                                     # what Windows' display setup was set to
     w.sound = "speakers"                                # where Windows plays the sound, as the window reads it
     w.notices = []                                      # the Windows notifications shown
+    w.started = []                                      # the programs the tabs' line started, by application ID
 
     def make(portal_check=None, **kwargs):
         pad = FakePad()
@@ -148,6 +149,8 @@ def world(qapp, tmp_path, monkeypatch):
         kwargs.setdefault("xbox_mode", lambda: w.displays.append("Win + F11"))   # nor its XBOX mode
         kwargs.setdefault("sound_kind", lambda: w.sound)    # never this machine's own sound outputs
         kwargs.setdefault("notify", w.notices.append)       # nor its notifications
+        kwargs.setdefault("find_app", lambda launcher: launcher.app_ids()[0])   # every program here, none started
+        kwargs.setdefault("start_app_id", w.started.append)
         window = mw.MainWindow(w.entries, w.sources, w.records, portal_check=portal_check,
                                gamepad=Gamepad(source_factory=lambda: pad), battery=lambda: (82, False),
                                launch=w.launched.append, terminal=w.terminal, exit_dir=tmp_path / "exit", **kwargs)
@@ -522,7 +525,7 @@ def test_the_banner_offers_the_portals_update_on_the_tiles(world, qapp, monkeypa
     world.records.set("test", "wp-test-v0.0.9")         # an app update waits too: the portal goes first
     window = world.make(portal_check=lambda: world.update, exe=r"C:\portal\Windows-Portable-Suite.exe")
     assert wait_for(qapp, lambda: window.update is not None)
-    assert window.banner.isVisible() and window.banner.text() == "UPDATE AVAILABLE, PRESS Y TO UPDATE"
+    assert window.banner.isVisible() and window.banner.text() == "UPDATE: PRESS Y" and not window.count.isVisible()
     assert ("Y", "Update suite") in window.legend.items
     window.on_action("x")
     assert window.stack.currentWidget() is window.details_pane and not window.banner.isVisible()
@@ -540,6 +543,7 @@ def test_the_banner_offers_the_portals_update_on_the_tiles(world, qapp, monkeypa
     window.update = PortalUpdate(ReleaseInfo(version=mw.__version__, tag=f"wp-portal-v{mw.__version__}"))
     window.refresh()
     assert not window.banner.isVisible() and ("Y", "Update") in window.legend.items      # the app's own again
+    assert window.count.isVisible()
 
 
 def test_the_screens_as_windows_names_them(world, qapp, monkeypatch, tmp_path):
@@ -1306,3 +1310,105 @@ def test_a_search_without_a_connection_says_so(world, qapp, monkeypatch):
     window.on_action("accept")
     assert wait_for(qapp, lambda: "could not be reached" in window.place_pane.status.text())
     assert window.place_pane.field.text() == "Amsterdam" and window.place is None
+
+
+def test_the_tabs_line_starts_steam_xbox_armoury_crate_and_command_center(world, qapp, monkeypatch):
+    """Owner, 07-11-2026: buttons on the categories' line start Steam, XBOX, Armoury Crate and Command Center, by a tap
+    or the d-pad up from the tiles and A (A Start in the legend); one that is not on the device says so."""
+    opened = []
+    window = world.make(steam_here=lambda: True, open_steam=opened.append)
+    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
+    buttons = window.launch_buttons
+    assert [b.label.text() for b in buttons.values()] == ["Steam", "XBOX", "Armoury Crate", "Command Center"]
+    tabs_line = window.tabs.geometry()
+    for button in buttons.values():
+        assert button.isVisible() and abs(button.geometry().center().y() - tabs_line.center().y()) <= 2
+    buttons["xbox"].activated.emit()                                # a tap
+    assert world.started == ["Microsoft.GamingApp_8wekyb3d8bbwe!Microsoft.Xbox.App"]
+    assert window.app_pane.status.text() == "Starting XBOX…"
+    buttons["steam"].activated.emit()                               # as RT
+    assert opened == [steam.OPEN_URL]
+    window.on_action("up")                                          # from the first tile up to the line
+    assert isinstance(window.focusWidget(), mw.LaunchButton) and ("A", "Start") in window.legend.items
+    buttons["command"].setFocus()
+    window.on_action("accept")
+    assert world.started[-1] == "B9ECED6F.ASUSCommandCenter_qmba6cd70vzyy!App"
+    window.on_action("down")                                        # back down to the tiles
+    assert isinstance(window.focusWidget(), portable.Card)
+
+    def fails(app_id):
+        raise OSError("Explorer did not start")
+    window = world.make(find_app=lambda launcher: None, start_app_id=fails)
+    window.launch_buttons["armoury"].activated.emit()
+    assert window.app_pane.status.text() == "Armoury Crate is not on this device."
+    window = world.make(start_app_id=fails)
+    window.launch_buttons["armoury"].activated.emit()
+    assert window.app_pane.status.text() == "Armoury Crate could not be started: Explorer did not start"
+
+
+def test_the_launchers_find_the_first_package_there(tmp_path):
+    from portable_portal import launchers
+    armoury = launchers.BY_KEY["armoury"]
+    assert launchers.find(armoury, tmp_path) is None
+    (tmp_path / "Packages" / "B9ECED6F.ArmouryCrate_qmba6cd70vzyy").mkdir(parents=True)     # an ASUS laptop's
+    assert launchers.find(armoury, tmp_path) == "B9ECED6F.ArmouryCrate_qmba6cd70vzyy!App"
+    (tmp_path / "Packages" / "B9ECED6F.ArmouryCrateSE_qmba6cd70vzyy").mkdir()                # the Ally's first
+    assert launchers.find(armoury, tmp_path) == "B9ECED6F.ArmouryCrateSE_qmba6cd70vzyy!App"
+
+
+def test_the_tabs_line_fits_with_the_update_banner(world, qapp):
+    """The categories, the four buttons, the count and the update banner on one line at 1280 x 720."""
+    window = world.make(portal_check=lambda: world.update)
+    assert wait_for(qapp, lambda: window.banner.isVisible())
+    qapp.processEvents()
+    right = window.width() - window.margins()[2]
+    assert window.banner.geometry().right() <= right
+    labels = list(window.tabs.labels.values())
+    assert labels[-1].mapTo(window, labels[-1].rect().topRight()).x() < window.launch_buttons["steam"].x()
+    for button in window.launch_buttons.values():
+        assert button.width() >= button.sizeHint().width()
+
+
+def test_dragging_the_top_moves_the_portal_to_the_other_screen(world, qapp, monkeypatch):
+    """Owner, 07-11-2026: the portal dragged by its top to the other screen moves there, as LT does: let go on it (the
+    mouse), or dragged toward it (a finger); a short drag is a tap, and with one screen the line says so."""
+    from PyQt6.QtCore import QPoint, QPointF, Qt
+    from PyQt6.QtGui import QMouseEvent
+    window = world.make()
+    moves = []
+    monkeypatch.setattr(window, "move_to", moves.append)
+    here = window.screen()
+    origin = window.header.mapToGlobal(window.header.rect().center())
+
+    def drag(by):
+        local = QPointF(window.header.geometry().center())
+        for kind, offset in ((QMouseEvent.Type.MouseButtonPress, QPoint()), (QMouseEvent.Type.MouseButtonRelease, by)):
+            event = QMouseEvent(kind, local + QPointF(offset), QPointF(origin + offset), Qt.MouseButton.LeftButton,
+                                Qt.MouseButton.LeftButton, Qt.KeyboardModifier.NoModifier)
+            (window.mousePressEvent if kind == QMouseEvent.Type.MouseButtonPress else window.mouseReleaseEvent)(event)
+
+    drag(QPoint(400, 0))                                            # one screen
+    assert moves == [] and window.message == mw.ONE_SCREEN
+    other = OtherScreen()                                           # at x 5000, to the right
+    monkeypatch.setattr(mw.QGuiApplication, "screens", staticmethod(lambda: [here, other]))
+    drag(QPoint(30, 0))                                             # a tap
+    assert moves == []
+    drag(QPoint(-400, 0))                                           # the other way: still the only other screen
+    drag(QPoint(5000 - origin.x() + 100, 0))                        # let go on it
+    assert moves == [other, other]
+    left = LeftScreen()
+    monkeypatch.setattr(mw.QGuiApplication, "screens", staticmethod(lambda: [here, other, left]))
+    drag(QPoint(-400, 0))
+    drag(QPoint(400, 0))
+    assert moves[2:] == [left, other]
+    press = QMouseEvent(QMouseEvent.Type.MouseButtonPress, QPointF(window.width() / 2, window.height() - 20),
+                        QPointF(origin), Qt.MouseButton.LeftButton, Qt.MouseButton.LeftButton,
+                        Qt.KeyboardModifier.NoModifier)
+    window.mousePressEvent(press)                                   # below the top: no drag
+    assert window.drag_from is None
+
+
+class LeftScreen(OtherScreen):
+    def geometry(self):
+        from PyQt6.QtCore import QRect
+        return QRect(-3000, 0, 1920, 1080)
