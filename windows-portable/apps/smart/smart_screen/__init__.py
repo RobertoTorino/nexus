@@ -7,7 +7,7 @@ APP_NAME = "Smart Screen"
 APP_ID = "windows-portable-smart"
 EXE_NAME = "Smart-Screen"   # the program's file name in a release
 SUITE = "windows-portable-suite"
-__version__ = "0.7.0"
+__version__ = "0.7.1"
 
 from pathlib import Path
 

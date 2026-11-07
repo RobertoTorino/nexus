@@ -5,7 +5,7 @@ APP_NAME = "SSD Check"
 APP_ID = "windows-portable-ssd"
 EXE_NAME = "SSD-Check"   # the program's file name in a release
 SUITE = "windows-portable-suite"
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 from pathlib import Path
 

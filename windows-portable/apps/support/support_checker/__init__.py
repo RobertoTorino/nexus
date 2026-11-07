@@ -5,7 +5,7 @@ APP_NAME = "Support Checker"
 APP_ID = "windows-portable-support"
 EXE_NAME = "Support-Checker"   # the program's file name in a release
 SUITE = "windows-portable-suite"
-__version__ = "0.3.0"
+__version__ = "0.3.1"
 
 from pathlib import Path
 

@@ -1,3 +1,7 @@
+Changelog: 07-11-2026 01:32:25
+
+Release 7.0.0.
+
 Changelog: 07-11-2026 00:56:48
 
 Breaking. X removes PCSX2 on the PCSX2 pane, as X removes the emulator in every emulator manager (owner, 07-11-2026):
