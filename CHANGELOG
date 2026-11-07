@@ -1,3 +1,8 @@
+Changelog: 07-11-2026 21:03:46
+
+Fixed. ICONS.md lists the Bazzite Console Suite's Media category artwork; tools/make_icons.py had left it
+out, which failed tools/tests/test_make_icons.py.
+
 Changelog: 07-11-2026 20:44:09
 
 Added. The Nexus page has an Apps and features chapter (owner, 07-11-2026: one short matrix to cross-reference the

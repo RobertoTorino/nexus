@@ -145,9 +145,11 @@ BAZZITE_CONSOLE_COPIES = [
     ("bazzite-console/icons/bazzite-console-128.png",
      "bazzite-console/portal/images/apps/portal.webp"),
 ]
-BAZZITE_CONSOLE_CATEGORIES = ["gaming", "graphics", "sustainable", "utilities"]
+BAZZITE_CONSOLE_CATEGORIES = ["gaming", "graphics", "media", "sustainable", "utilities"]
 BAZZITE_CONSOLE_CATEGORY_APPS = {
-    "utilities": "SFTP Tools (`sftp`), USB HD Cam (`hdcam`), USB HD Control (`hdcontrol`) and SSD Check (`ssd`)"
+    "media": "the portal's launcher cards for YouTube, Twitch, X, Instagram, Discord, TikTok, WhatsApp, Netflix, "
+             "Spotify and Stremio",
+    "utilities": "SFTP Tools (`sftp`), USB HD Cam (`hdcam`), USB HD Control (`hdcontrol`) and SSD Check (`ssd`)",
 }
 BAZZITE_CONSOLE_HOME = [
     ("bazzite-console/docs/images/home/console.webp", "`docs/images/home/console.webp`",

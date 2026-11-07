@@ -44,8 +44,10 @@ How to install and use the suite: [the wiki](https://robertotorino.github.io/nex
 
 GPL-3.0-or-later, see [LICENSE](LICENSE).
 
+## Media trademarks
+
+The X (formerly Twitter), Instagram, Discord, TikTok, WhatsApp, Netflix and Spotify names and marks belong to their respective owners. The Simple Icons artwork used for the portal's Media launcher cards is dedicated under [CC0 1.0](https://github.com/simple-icons/simple-icons/blob/develop/LICENSE.md); that dedication does not grant trademark rights. The names and marks identify third-party services only and do not imply affiliation with or endorsement by their owners.
+
 ## Disclaimer
 
 Nexus and its suites are independent community projects, not affiliated with or endorsed by AMD, ASRock, the Bazzite / Universal Blue project, Sony, Microsoft, Valve, or the makers of the emulators and the other programs the apps work with. BC-250 is AMD's product name and Bazzite the Universal Blue project's. PlayStation, PS4, PS5, PS3, PS2, PSP, PS Vita, PSN, DualSense and Remote Play are Sony's; XBOX, XBOX 360, XBOX Cloud Gaming, Game Pass and Windows are Microsoft's; Steam, Steam Deck and Big Picture are Valve's; the names of the emulators (shadPS4, RPCS3, PPSSPP, PCSX2, Vita3K, Xenia) and of Decky Loader, HelixSR and DirectMesh belong to their owners. The suites use them only to say what their apps work with.
-
-The X (formerly Twitter), Instagram, Discord, TikTok, WhatsApp, Netflix and Spotify names and marks belong to their respective owners. The Simple Icons artwork used for these launcher cards is dedicated under [CC0 1.0](https://github.com/simple-icons/simple-icons/blob/develop/LICENSE.md); that dedication does not grant trademark rights. The names and marks identify third-party services only and do not imply affiliation with or endorsement by their owners.

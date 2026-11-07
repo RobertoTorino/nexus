@@ -1,3 +1,8 @@
+Changelog: 07-11-2026 21:03:46
+
+Fixed. The README's Media trademark note is a section of its own, Media trademarks, so its Disclaimer is
+the text every wiki and README shares, word for word (tools/tests/test_disclaimer.py).
+
 Changelog: 07-11-2026 13:09:52
 
 Added. A PS5 Bazzite research decision table covering candidate improvements, integration routes, readiness and risks.

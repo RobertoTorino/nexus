@@ -142,6 +142,7 @@ Each category has its own PlayStation 5 artwork. `tools/sync_icons.py` writes th
 | --- | --- | --- |
 | <img src="bazzite-console/icons/gaming/gaming-128.png" width="48" alt=""> | `icons/gaming/` | The Gaming category. |
 | <img src="bazzite-console/icons/graphics/graphics-128.png" width="48" alt=""> | `icons/graphics/` | The Graphics category. |
+| <img src="bazzite-console/icons/media/media-128.png" width="48" alt=""> | `icons/media/` | The Media category: the portal's launcher cards for YouTube, Twitch, X, Instagram, Discord, TikTok, WhatsApp, Netflix, Spotify and Stremio. |
 | <img src="bazzite-console/icons/sustainable/sustainable-128.png" width="48" alt=""> | `icons/sustainable/` | The Sustainable category. |
 | <img src="bazzite-console/icons/utilities/utilities-128.png" width="48" alt=""> | `icons/utilities/` | The Utilities category: SFTP Tools (`sftp`), USB HD Cam (`hdcam`), USB HD Control (`hdcontrol`) and SSD Check (`ssd`). |
 
