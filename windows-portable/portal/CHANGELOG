@@ -1,3 +1,15 @@
+Changelog: 07-11-2026 16:08:37
+
+Release 10.1.0.
+
+Changelog: 07-11-2026 15:57:37
+
+Added. The portal says every change of where Windows plays the sound in a Windows notification (owner,
+07-11-2026: on every change, seen whatever is in front), Sound plays on: PC speakers, Other screen or
+headphones, read every two seconds through core's sound_output by the kind of output, never its name. The
+notification comes from the portal's icon in the taskbar's corner, which goes again once it has shown. The
+wiki's Sound on a TV says so.
+
 Changelog: 07-11-2026 15:01:28
 
 Fixed. The tests of the portal's own update offered release 9.9.9 as the newer portal, which it no longer was from

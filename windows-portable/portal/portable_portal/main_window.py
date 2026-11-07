@@ -23,9 +23,9 @@ from pathlib import Path, PurePath
 
 from PyQt6.QtCore import QEvent, QObject, QSettings, Qt, QTimer, pyqtSignal
 from PyQt6.QtGui import QGuiApplication, QPixmap
-from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QStackedWidget, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QStackedWidget, QSystemTrayIcon, QVBoxLayout, QWidget
 
-from bc250_core import applog, chip, portable, power, steam
+from bc250_core import applog, chip, portable, power, sound_output, steam
 from bc250_core.gamepad import Gamepad
 from bc250_core.platform import expand, launch_in_terminal, make_shortcut, private, start_menu
 from bc250_core.portable import AMBER, DIM, KEYBOARD, MENU, VIEW, Card, Legend, PortableHeader, PortableWindow, px
@@ -55,6 +55,8 @@ TILE_W, TILE_H, GAP = 293, 176, 14      # the mock-up's tiles: two rows of four
 COLUMNS, PER_PAGE = 4, 8          # a tab's page of tiles; a tab with more apps has more pages
 TAB_KEY = "window/tab"          # the settings: the tab shown last
 SOUND_OFF_KEY = "look/sound_off"   # the suite's: when Sound was switched off (time.time()), on again after a restart
+SOUND_MS = 2_000                # how often the portal reads where Windows plays the sound (5 ms a read on the Ally X)
+NOTICE_MS = 8_000               # how long a Windows notification shows
 STEAM_MISSING = "Steam is not installed on this device: install it from store.steampowered.com, then RT opens it."
 ONE_SCREEN = "There is one screen: attach a TV or a monitor, then LT moves the portal to it."
 DISPLAY_SWITCH = Path(os.environ.get("SystemRoot") or r"C:\Windows") / "System32" / "DisplaySwitch.exe"   # Win + P
@@ -194,7 +196,9 @@ class MainWindow(PortableWindow):
                  display: Callable[[str], None] = switch_display,
                  xbox_mode: Callable[[], None] = press_win_f11,
                  weather_fetch: weather.Fetch | None = None, startup: Path | None = None,
-                 shortcut: Callable[..., None] = make_shortcut, booted: Callable[[], float] | None = None):
+                 shortcut: Callable[..., None] = make_shortcut, booted: Callable[[], float] | None = None,
+                 sound_kind: Callable[[], str | None] = sound_output.default_kind,
+                 notify: Callable[[str], None] | None = None):
         """*build*: the sha256 of the zip this portal was installed from (build.sha256), "" when not known, None
         from a checkout: a new build of the same version is offered when its sha256 differs. *intro_ms*: how long
         the intro plays when the window starts (0: none). *wallpaper*: the picture behind the page, darkened (None:
@@ -206,7 +210,9 @@ class MainWindow(PortableWindow):
         (press_win_f11). *weather_fetch*: reads Open-Meteo (url -> decoded JSON) for the Location page and the weather
         at the top (weather.fetch_json); None: no lookups (the tests). *startup*: the user's Startup folder, where
         STARTUP_LINK goes (default the Start menu's); *shortcut*: writes a .lnk (core's make_shortcut); *booted*: when
-        Windows started, as time.time() counts (default boot_time)."""
+        Windows started, as time.time() counts (default boot_time). *sound_kind*: the kind of Windows' default sound
+        output (core's sound_output.default_kind); *notify*: shows a line as a Windows notification (default
+        windows_notice; tests pass a fake)."""
         old = QSettings()                              # portal 1.6.0 kept the switch in portal.ini: the suite's now
         if old.contains(WALLPAPER_KEY) and portable.look_settings(SUITE).value(portable.LOOK_KEY) is None:
             portable.set_wallpaper_on(SUITE, str(old.value(WALLPAPER_KEY)).lower() != "false")
@@ -360,6 +366,21 @@ class MainWindow(PortableWindow):
         self.status_timer = QTimer(self)
         self.status_timer.setInterval(STATUS_MS)
         self.status_timer.timeout.connect(self.update_status)
+        # Where Windows plays the sound, said on every change (owner, 07-11-2026: a TV switched to another input kept
+        # it, and it moved to the handheld only when the screen turned off): by kind, never a device's name
+        self.sound_kind = sound_kind
+        self.notify = notify or self.windows_notice
+        self.sound_where: str | None = None
+        self.sound_read = False                         # read once: a change after that is said
+        self.sound_failed = False                       # Core Audio did not answer: logged once
+        self.tray: QSystemTrayIcon | None = None
+        self.tray_timer = QTimer(self)                  # the icon goes once the last notification has shown
+        self.tray_timer.setSingleShot(True)
+        self.tray_timer.setInterval(NOTICE_MS)
+        self.tray_timer.timeout.connect(self.hide_tray)
+        self.sound_timer = QTimer(self)
+        self.sound_timer.setInterval(SOUND_MS)
+        self.sound_timer.timeout.connect(self.watch_sound)
         # The clock and the weather at the top, as the Settings page sets them (owner, 06-11-2026)
         self.clock = read_clock(SUITE)
         self.place = weather.place(SUITE)
@@ -400,6 +421,8 @@ class MainWindow(PortableWindow):
             self.show_tab(self.tabs.current)
         self.check_portal()
         self.recheck_timer.start()
+        self.watch_sound()
+        self.sound_timer.start()
         self.startup_done()
         if self.intro is not None:
             self.intro.begin()
@@ -605,6 +628,42 @@ class MainWindow(PortableWindow):
         settings.remove(SOUND_OFF_KEY)
         settings.sync()
         self.log.info("Sound on again: it was switched off before Windows started.")
+
+    def watch_sound(self) -> None:
+        """Where Windows plays the sound, read every SOUND_MS: a change is said in a Windows notification, seen
+        whatever is in front (owner, 07-11-2026: on every change), and logged. The first read only notes it."""
+        try:
+            kind = self.sound_kind()
+        except OSError as exc:
+            if not self.sound_failed:
+                self.sound_failed = True
+                self.log.warning(f"Where Windows plays the sound is not known: {exc}")
+            return
+        self.sound_failed = False
+        if self.sound_read and kind == self.sound_where:
+            return
+        changed, self.sound_where, self.sound_read = self.sound_read, kind, True
+        line = (f"Sound plays on: {sound_output.label(kind)}" if kind is not None
+                else "Windows has no sound output now.")
+        self.log.info(line)
+        if changed:
+            self.notify(line)
+
+    def windows_notice(self, line: str) -> None:
+        """*line* as a Windows notification from the portal's icon in the taskbar's corner, which goes again once
+        the notification has shown."""
+        if not QSystemTrayIcon.isSystemTrayAvailable():
+            return
+        if self.tray is None:
+            self.tray = QSystemTrayIcon(self.windowIcon(), self)
+            self.tray.setToolTip(APP_NAME)
+        self.tray.show()
+        self.tray.showMessage(APP_NAME, line, QSystemTrayIcon.MessageIcon.Information, NOTICE_MS)
+        self.tray_timer.start()
+
+    def hide_tray(self) -> None:
+        if self.tray is not None:
+            self.tray.hide()
 
     def resizeEvent(self, event) -> None:  # noqa: N802 (Qt override)
         super().resizeEvent(event)
@@ -1423,6 +1482,9 @@ class MainWindow(PortableWindow):
         self.recheck_timer.stop()
         self.progress_timer.stop()
         self.status_timer.stop()
+        self.sound_timer.stop()
+        self.tray_timer.stop()
+        self.hide_tray()
         if self.sensors is not None:
             self.sensors.close()
             self.sensors = None

@@ -130,6 +130,8 @@ def world(qapp, tmp_path, monkeypatch):
     w.windows = []
     w.played = []                                       # what the window's player was given: never a real sound
     w.displays = []                                     # what Windows' display setup was set to
+    w.sound = "speakers"                                # where Windows plays the sound, as the window reads it
+    w.notices = []                                      # the Windows notifications shown
 
     def make(portal_check=None, **kwargs):
         pad = FakePad()
@@ -144,6 +146,8 @@ def world(qapp, tmp_path, monkeypatch):
         kwargs.setdefault("player", w.played.append)
         kwargs.setdefault("display", w.displays.append)     # never this machine's own display setup
         kwargs.setdefault("xbox_mode", lambda: w.displays.append("Win + F11"))   # nor its XBOX mode
+        kwargs.setdefault("sound_kind", lambda: w.sound)    # never this machine's own sound outputs
+        kwargs.setdefault("notify", w.notices.append)       # nor its notifications
         window = mw.MainWindow(w.entries, w.sources, w.records, portal_check=portal_check,
                                gamepad=Gamepad(source_factory=lambda: pad), battery=lambda: (82, False),
                                launch=w.launched.append, terminal=w.terminal, exit_dir=tmp_path / "exit", **kwargs)
@@ -1000,6 +1004,35 @@ def test_the_sound_is_on_again_after_windows_restarts(world, qapp):
     window.toggle_sound()
     window.toggle_sound()                                             # Off and On again: no time left behind
     assert portable.look_settings(mw.SUITE).value(mw.SOUND_OFF_KEY) is None
+
+
+def test_a_change_of_where_windows_plays_the_sound_is_said(world, qapp):
+    """Every change of Windows' default sound output is said in a Windows notification (owner, 07-11-2026: a TV
+    switched to another input kept the sound; it moved to the handheld only when its screen turned off), by kind,
+    never a device's name; the first read only notes it, and Core Audio without an answer changes nothing."""
+    world.sound = "screen"
+    window = world.make()
+    window.watch_sound()                                              # the portal starts: nothing to say
+    window.watch_sound()
+    assert world.notices == []
+    world.sound = "speakers"                                          # the handheld's screen turned off
+    window.watch_sound()
+    window.watch_sound()
+    assert world.notices == ["Sound plays on: PC speakers"]
+    world.sound = "screen"                                            # woken: the TV has the sound again
+    window.watch_sound()
+    world.sound = None
+    window.watch_sound()
+    assert world.notices[1:] == ["Sound plays on: Other screen", "Windows has no sound output now."]
+
+    def no_answer():
+        raise OSError("Core Audio does not answer")
+    window.sound_kind = no_answer
+    window.watch_sound()
+    window.watch_sound()
+    assert len(world.notices) == 3 and window.sound_where is None
+    window.close()
+    assert not window.sound_timer.isActive() and not window.tray_timer.isActive()
 
 
 def test_the_suite_page_switches_the_sound(world, qapp, monkeypatch):

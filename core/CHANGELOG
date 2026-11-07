@@ -1,3 +1,9 @@
+Changelog: 07-11-2026 15:57:37
+
+Added. sound_output.py: where Windows plays the sound, the kind of its default sound output (PC speakers, Other
+screen for a TV's or a monitor's HDMI or DisplayPort, headphones), read from Core Audio's form factor with
+ctypes, never a device's name (owner, 07-11-2026: hardware changes). About 5 ms a read on the ROG XBOX Ally X.
+
 Changelog: 07-11-2026 14:30:37
 
 Version 3.0.0.

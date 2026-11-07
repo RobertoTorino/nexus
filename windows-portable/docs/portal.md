@@ -198,7 +198,16 @@ This is how it went on a ROG XBOX Ally X with a TV, YouTube playing, Windows' so
 | Wake the handheld's screen | The TV's output is back and is the default again. | Nothing again. |
 
 The same happens after a restart: with the TV on and the cable in, even on another input, Windows starts with the
-TV as its sound output. The suite does not choose where the sound plays; to hear it on the handheld:
+TV as its sound output.
+
+While the portal runs, it says every change of where Windows plays the sound in a Windows notification, seen
+whatever is in front: **Sound plays on: PC speakers** (the handheld's own, or other speakers), **Other screen** (a
+TV's or a monitor's HDMI or DisplayPort) or **headphones**. It goes by the kind of output Windows reports, never a
+device's name. The moment the TV switches to another input cannot be said, as Windows does not see it. Windows holds
+notifications back while **Do not disturb** is on, which it can switch on by itself during a game or a full-screen
+app.
+
+The portal does not choose where the sound plays; to hear it on the handheld:
 
 - Choose the handheld's speakers in Windows' **Settings > System > Sound**, and the TV there when you watch on it.
 - Look in the TV's settings for an option that turns an HDMI port off when it is not selected (often under energy
