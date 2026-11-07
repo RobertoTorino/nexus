@@ -174,6 +174,19 @@ def test_a_plain_tag_is_the_bazzite_suites():
     assert br.suites.of_tag(BT_TAG)[0] == br.SUITE == br.suites.ROOT / "bc250-bazzite"
 
 
+def test_a_selected_suite_names_its_own_releases():
+    """The title and the portal's stage come from the selected suite's portal, not the default suite's (ps5-*
+    releases of 07-11-2026 were titled "BC250 Bazzite Suite: ...")."""
+    default = br.SUITE
+    try:
+        br.select(br.suites.ROOT / "bazzite-console")
+        assert br.release_title("portal", "0.1.1") == "Bazzite Console Suite: Portal 0.1.1"
+        assert br.portal_package().parent == br.suites.ROOT / "bazzite-console" / "portal"
+    finally:
+        br.select(default)
+    assert br.release_title("portal", "1.0.0") == "BC250 Bazzite Suite: Portal 1.0.0"
+
+
 def test_portal_needs_and_verifies_bundle(bt_release, pinned, tmp_path):
     with pytest.raises(SystemExit, match="needs --bundle"):
         br.build(PORTAL_TAG, tmp_path / "a")

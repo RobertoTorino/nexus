@@ -1,3 +1,12 @@
+Changelog: 07-11-2026 23:31:14
+
+Fixed. The Nexus index is made again after each Release Bazzite Console Suite run that succeeded, as after Release
+and Release Windows Portable: the index listed the Bazzite Console Suite as "No release yet" after its first release.
+
+Fixed. tools/build_release.py names a release after the suite it builds: the title and the portal's stage came from
+the BC250 Bazzite Suite's portal whatever the suite, so the Bazzite Console Suite's releases were titled "BC250
+Bazzite Suite: ...".
+
 Changelog: 07-11-2026 22:39:59
 
 Release 2.2.0. Brings ps5-portal-v0.1.1.

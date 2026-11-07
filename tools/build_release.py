@@ -58,7 +58,8 @@ SUITE = stage_app.SUITE                     # the default suite; main() takes th
 MANIFEST = SUITE / "portal" / "apps.toml"
 
 
-def portal_package(suite: Path = SUITE) -> Path:
+def portal_package(suite: Path | None = None) -> Path:
+    suite = suite or SUITE                  # the selected suite, not the default one bound when this was defined
     packages = [path for path in (suite / "portal").iterdir()
                 if path.is_dir() and (path / "__init__.py").is_file()]
     if len(packages) != 1:
