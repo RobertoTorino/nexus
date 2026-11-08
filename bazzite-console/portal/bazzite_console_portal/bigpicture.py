@@ -255,6 +255,7 @@ class BigTile(QAbstractButton):
         self._shown: tuple[int, float, int] | None = None   # what the scaled copy was made for: side, ratio, picture
         self._scaled = QPixmap()
         self.scale = 1.0
+        self.icon_scale = 1.0
         self.marker = ""                    # "update": a red dot on the icon; "reinstall": the red circular arrow
         self.setFixedSize(self.sizeHint())
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
@@ -335,7 +336,10 @@ class BigTile(QAbstractButton):
         side = round(ICON_PX * s)
         icon = QRect((width - side) // 2, round(18 * s), side, side)
         if not self.pixmap.isNull():
-            painter.drawPixmap(icon.topLeft(), self._picture(side))
+            picture_side = round(side * self.icon_scale)
+            picture = QRect(icon.x() + (side - picture_side) // 2, icon.y() + (side - picture_side) // 2,
+                            picture_side, picture_side)
+            painter.drawPixmap(picture.topLeft(), self._picture(picture_side))
         dot = round(28 * s)
         painter.setPen(QPen(QColor("#1b1b1b"), 3))
         painter.setBrush(QColor(RED))
@@ -721,6 +725,8 @@ class BigPicture(Backdrop):
                 tile = BigTile(item.key)
                 tile.navigate.connect(self.navigate)
                 if isinstance(item, CardEntry):
+                    if item.category == "media":
+                        tile.icon_scale = 0.5
                     tile.clicked.connect(lambda _=False, k=item.key: self.open_requested.emit(self.cards[k]))
                     tile.set_look(item.name, QPixmap(str(CARD_ICONS / item.icon)),
                                   f"{item.flatpak_name} required", muted(), "")

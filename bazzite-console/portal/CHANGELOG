@@ -1,3 +1,7 @@
+Changelog: 08-11-2026 03:21:46
+
+Fixed. Media launcher card icons are half their previous width and height, centered in their existing tile space.
+
 Changelog: 07-11-2026 22:39:59
 
 Release 0.1.1.

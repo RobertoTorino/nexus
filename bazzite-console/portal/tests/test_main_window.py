@@ -5,8 +5,12 @@ from __future__ import annotations
 
 import pytest
 
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QColor, QPixmap
+
 from bazzite_console_portal import APP_NAME, CARDS, MANIFEST
 from bazzite_console_portal import desktop_icons
+from bazzite_console_portal.bigpicture import ICON_PX
 from bazzite_console_portal.main_window import MainWindow
 from bazzite_console_portal.manifest import load, load_cards
 from bazzite_console_portal.sources import Records, Sources
@@ -36,6 +40,35 @@ def test_portal_shows_required_app(window):
     assert window.big.tiles["stremio"].status == "Stremio required"
     assert window.big.tiles["netflix"].status == "Brave Browser required"
     assert window.big.tiles["spotify"].status == "Spotify required"
+
+
+@pytest.mark.parametrize("scale", [1.0, 0.68])
+def test_media_card_icons_are_half_size_and_centered(window, scale):
+    cards = load_cards(CARDS)
+    assert all(window.big.tiles[card.key].icon_scale == 0.5 for card in cards if card.category == "media")
+    for key, factor in (("youtube", 0.5), ("bazzite", 1.0)):
+        tile = window.big.tiles[key]
+        assert tile.icon_scale == factor
+        tile.setParent(None)
+        tile.set_scale(scale)
+        pixmap = QPixmap(32, 32)
+        pixmap.fill(QColor("#00ff00"))
+        tile.set_look("", pixmap, "", "", "")
+        image = QPixmap(tile.size())
+        image.fill(Qt.GlobalColor.transparent)
+        tile.render(image)
+        image = image.toImage()
+        pixels = [(x, y) for y in range(image.height()) for x in range(image.width())
+                  if image.pixelColor(x, y) == QColor("#00ff00")]
+        side = round(ICON_PX * scale)
+        picture_side = round(side * factor)
+        left = (tile.width() - side) // 2 + (side - picture_side) // 2
+        top = round(18 * scale) + (side - picture_side) // 2
+        assert len(pixels) == picture_side * picture_side
+        assert min(x for x, _ in pixels) == left
+        assert max(x for x, _ in pixels) == left + picture_side - 1
+        assert min(y for _, y in pixels) == top
+        assert max(y for _, y in pixels) == top + picture_side - 1
 
 
 def test_youtube_card_launches_fullscreen_in_brave(window, monkeypatch):
