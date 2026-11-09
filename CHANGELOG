@@ -1,3 +1,10 @@
+Changelog: 09-11-2026 17:09:08
+
+Fixed. The Windows Portable Suite's portal tour records again (windows-portable/tools/portal_tour.py): it still
+passed the portal's xbox_local, gone with the Settings page's XBOX menu row, and stopped before the first frame. Its
+Settings page now names XBOX mode or the desktop where it named the XBOX menu. It also prints the wiki's paths and the
+video's path again when its output is not a console (record-tour.sh from PowerShell): they were lost on its exit.
+
 Changelog: 09-11-2026 14:43:37
 
 Release 3.1.0. Brings wp-bios-v1.1.1, wp-datstat-v1.1.1, wp-hdcam-v1.1.1, wp-hdcontrol-v1.1.1, wp-pcsx2-v8.1.1, wp-portal-v10.4.0, wp-ppsspp-v6.1.1, wp-rpcs3-v5.1.1, wp-rplay-v1.1.1, wp-sftp-v1.1.1, wp-shadps4-v6.1.1, wp-smart-v1.1.1, wp-ssd-v1.1.1, wp-support-v1.1.1, wp-test-v5.1.1, wp-upscale-v1.1.1, wp-vita3k-v6.2.0, wp-xenia-v6.2.0.

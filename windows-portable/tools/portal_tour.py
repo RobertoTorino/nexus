@@ -104,7 +104,7 @@ class Tour(Recorder):
                                gamepad=Gamepad(source_factory=no_controller), battery=lambda: (82, False),
                                launch=lambda argv: None, terminal=lambda *args, **kwargs: None,
                                exit_dir=home / "exit", intro_ms=INTRO_MS, steam_here=lambda: True,
-                               open_steam=lambda url: None, xbox_local=home / "no-xbox",
+                               open_steam=lambda url: None,
                                chip_parts=lambda: ["CPU 12% 48°", "GPU 7% 47°"], modes=lambda: None)
         window.setWindowTitle(INFO.display_name)
         window.intro.player = lambda wav: None     # the intro's sound: not here
@@ -177,7 +177,7 @@ class Tour(Recorder):
         self.hold(3)
 
         self.say("Menu opens the Settings page: the wallpaper, its transparency, the sound; on the handheld also the "
-                 "XBOX menu, the operating mode and the screen.")
+                 "operating mode, XBOX mode or the desktop, and the screen.")
         self.click(lambda: w.show_suite())
         self.hold(3.5)
         self.move(self.at(w.suite_pane.wallpaper, 0.3, 0.5), 0.6)
@@ -311,6 +311,7 @@ if __name__ == "__main__":
     # The video is written and the temporary home removed when main() returns. os._exit skips the interpreter's
     # shutdown, where Python destroys the Qt objects in no fixed order: that crashed now and then (exit code 139)
     # after a video was complete.
-    sys.stdout.flush()
+    code = main()
+    sys.stdout.flush()                             # os._exit drops what is still buffered: the paths printed
     sys.stderr.flush()
-    os._exit(main())
+    os._exit(code)
