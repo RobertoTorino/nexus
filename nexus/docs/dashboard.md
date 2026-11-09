@@ -187,7 +187,7 @@ starts it on its own, and the dashboard's tile does the same.
 Before you record, have:
 
 - **The checkout's venv** with `requirements-dev.txt` installed: it brings the OBS WebSocket client (`obsws-python`)
-  and, for Linux, the desktop portal's client (`dbus-next`).
+  and, for Linux, the desktop portal's client (`dbus-fast`).
 - **OBS Studio 30 or newer**, running, which has WebSocket 5.3 built in: the recorder sets the recordings folder
   through it. On Bazzite the flatpak `com.obsproject.Studio` (or an `obs` on the PATH); on Windows
   `winget install OBSProject.OBSStudio`. **Open OBS** starts it.

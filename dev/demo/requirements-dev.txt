@@ -2,6 +2,6 @@
 # The app runs in the checkout's dev venv (requirements-dev.txt in the root), so it has no requirements.txt.
 PyQt6>=6.11,<7
 obsws-python>=1.8,<2            # OBS's WebSocket server: start and stop the recording
-dbus-next>=0.2.3,<1             # the desktop portal's global shortcut (shortcut_service.py)
+dbus-fast>=5,<6; sys_platform == "linux"  # the desktop portal's global shortcut (shortcut_service.py, Linux only)
 pytest>=8
 pillow>=12,<13                  # tests read the icons' pixels

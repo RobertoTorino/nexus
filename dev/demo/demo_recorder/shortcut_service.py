@@ -8,10 +8,10 @@ import json
 import sys
 import uuid
 
-from dbus_next.aio.message_bus import MessageBus
-from dbus_next.constants import MessageType
-from dbus_next.message import Message
-from dbus_next.signature import Variant
+from dbus_fast.aio.message_bus import MessageBus
+from dbus_fast.constants import MessageType
+from dbus_fast.message import Message
+from dbus_fast.signature import Variant
 
 PORTAL = "org.freedesktop.portal.Desktop"
 PORTAL_PATH = "/org/freedesktop/portal/desktop"

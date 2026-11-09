@@ -1,3 +1,10 @@
+Changelog: 10-11-2026 00:39:40
+
+Fixed. The global shortcut (Ctrl+Alt+F12) talks to the desktop portal through dbus-fast instead of dbus-next, which
+is no longer maintained and does not load on Python 3.15 (it needs typing.no_type_check_decorator, which 3.15
+removed): on Bazzite with Python 3.15 the shortcut failed and the shortcut service's test stopped ./test.sh. dbus-fast
+is installed on Linux only, where the service runs, and the test skips on Windows.
+
 Changelog: 04-11-2026 21:04:25
 
 Version 0.2.0.

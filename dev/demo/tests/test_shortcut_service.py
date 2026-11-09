@@ -1,8 +1,12 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 import asyncio
 
-from dbus_next.message import Message
-from dbus_next.signature import Variant
+import pytest
+
+pytest.importorskip("dbus_fast", reason="the desktop portal's client, Linux only")
+
+from dbus_fast.message import Message  # noqa: E402
+from dbus_fast.signature import Variant  # noqa: E402
 
 from demo_recorder import shortcut_service
 
