@@ -1,3 +1,7 @@
+Changelog: 10-11-2026 00:19:00
+
+Release 2.0.0.
+
 Changelog: 07-11-2026 19:13:44
 
 Fixed. The note on a missing kernel build tree no longer sends you to the Dependency Checker, which is no app of
