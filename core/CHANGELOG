@@ -1,3 +1,7 @@
+Changelog: 09-11-2026 14:43:34
+
+Version 3.1.1.
+
 Changelog: 07-11-2026 20:31:02
 
 Fixed. bc250_core.egg-info is out of the repository: pip writes it when it installs core from the checkout, and the

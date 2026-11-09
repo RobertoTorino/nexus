@@ -1,3 +1,7 @@
+Changelog: 09-11-2026 14:43:34
+
+Release 6.2.0.
+
 Changelog: 09-11-2026 13:17:00
 
 Added. The app installs Xenia Canary build cf206a3 (09-11-2026; was 838850f), the newest build: emulator.py pins its
