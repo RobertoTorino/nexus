@@ -1,3 +1,7 @@
+Changelog: 09-11-2026 12:45:14
+
+Release 3.0.0. Brings ps5-portal-v0.1.3.
+
 Changelog: 09-11-2026 11:40:07
 
 Breaking. tools/dev-updates.sh and its hourly nexus-dev-updates timer are gone (owner, 09-11-2026): Nexus Deps
