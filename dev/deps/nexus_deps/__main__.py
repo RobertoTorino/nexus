@@ -1,10 +1,12 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Entry point: python -m nexus_deps [--suite NAME] [--fix | --remind] (run.sh starts it with the checkout's dev venv).
 
---fix opens the window and offers Fix as soon as the check is done (the weekly notification's Fix… button).
---remind shows no window: it checks the suite's dependencies and reads Bazzite's update state and, when something
-needs the user, says so in a desktop notification with buttons to open the app or fix what is missing. The weekly
-systemd user timer that install.sh writes runs it."""
+--fix opens the window and offers Fix as soon as the check is done (the hourly notification's Fix… button).
+--sync-upstreams writes catalogs/upstreams.json again from the apps' pins (upstreams.py), after a pin moved.
+--remind shows no window: it checks the suite's dependencies, reads Bazzite's update state, looks for the machine's
+updates (Flatpaks, Homebrew, Rust, the development venv) and the apps' upstreams (emulators, PlayStation firmware:
+once per new version) and, when something needs the user, says so in a desktop notification with buttons to open the
+app or fix what is missing or newer. The hourly systemd user timer that install.sh writes runs it."""
 
 from __future__ import annotations
 
@@ -18,17 +20,20 @@ from . import APP_ID, APP_NAME, DEFAULT_SUITE, INFO, LOGO_PATH, ROOT, __version_
 from .bazzite import read_state
 from .dependencies import DependencyCatalogError, DependencyCheckError, check_all, load_apps, load_catalog, load_tools
 from .fixes import notify, reminder_text
+from .system import read_sources
+from .upstreams import read as read_upstreams, unnotified
 
 
 def remind(suite: str) -> int:
-    """The weekly check: a notification when something needs the user; a click on a button opens the app."""
+    """The hourly check: a notification when something needs the user; a click on a button opens the app."""
     path = catalog(suite)
     try:
         result = check_all(load_catalog(path), load_tools(path), load_apps(path), INFO.user_agent)
     except (DependencyCatalogError, DependencyCheckError, OSError) as exc:
         print(f"{APP_NAME}: the dependency check failed: {exc}", file=sys.stderr)
         result = None
-    note = reminder_text(read_state(), result)
+    sources = read_sources() + unnotified(read_upstreams("notified"))
+    note = reminder_text(read_state(), result, sources=sources)
     if not note.text:
         return 0
     print(note.text)
@@ -48,10 +53,16 @@ def main() -> int:
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument("--fix", action="store_true", help="offer Fix as soon as the check is done")
     mode.add_argument("--remind", action="store_true", help="no window: a desktop notification when something "
-                                                            "needs you (the weekly timer runs this)")
+                                                            "needs you (the hourly timer runs this)")
+    mode.add_argument("--sync-upstreams", action="store_true", help="no window: bring catalogs/upstreams.json in "
+                                                                    "line with the apps' pins (after a moved pin)")
     args, qt_args = parser.parse_known_args()
     if args.remind:
         return remind(args.suite)
+    if args.sync_upstreams:
+        from .upstreams import write
+        print(f"{APP_NAME}: upstreams.json " + ("updated." if write() else "was in sync."))
+        return 0
 
     from bc250_core.app import create_app, exec_app
     from bc250_core.nexus import NEXUS

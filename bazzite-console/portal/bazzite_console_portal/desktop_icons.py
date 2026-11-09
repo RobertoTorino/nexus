@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The apps' icons on the Desktop, which the user switches on or off in the portal (the "Icons on Desktop" pill).
 
-Every app's installer writes an app menu entry, ~/.local/share/applications/bazzite-*.desktop, and
-by default the same file on the Desktop. The portal starts every app, so the Desktop icons are optional: switched off, the portal removes
-the Desktop copies of the suite's menu entries; switched on, it copies every installed app's menu entry there. Only
-files named like a suite menu entry are touched, and never the portal's own icon. The menu entries always stay: the
-app menu, KDE's search and Steam's "Add a Non-Steam Game" list find the apps through them."""
+Every app's installer writes an app menu entry and by default the same file on the Desktop. The portal starts every
+app, so the Desktop icons are optional: switched off, the portal removes the Desktop copies of the suite's menu
+entries; switched on, it copies every installed app's menu entry there. Only known suite app entries are touched,
+never the portal's own icon. The menu entries always stay: the app menu, KDE's search and Steam's
+"Add a Non-Steam Game" list find the apps through them."""
 
 from __future__ import annotations
 
@@ -15,8 +15,23 @@ from pathlib import Path
 
 from bc250_core.platform import data_home
 
-PORTAL = "bazzite-console-suite.desktop"
-PATTERN = "bazzite-*.desktop"
+APP_LAUNCHERS = frozenset(f"{app_id}.desktop" for app_id in (
+    "bazzite-test",
+    "ps5-console-link",
+    "ps5-console-linkb",
+    "ps5-datstation",
+    "ps5-decky-manager",
+    "ps5-pcsx2-manager",
+    "ps5-ppsspp-manager",
+    "ps5-rpcs3-manager",
+    "ps5-sftp-tools",
+    "ps5-shadps4-manager",
+    "ps5-ssd-check",
+    "ps5-usb-hdcam",
+    "ps5-usb-hdcontrol",
+    "ps5-vita3k-manager",
+    "ps5-xenia-manager",
+))
 
 
 def desktop_dir() -> Path:
@@ -39,8 +54,7 @@ def launchers(menu: Path) -> list[Path]:
     """The installed apps' menu entries, the portal's own left out."""
     if not menu.is_dir():
         return []
-    found = set(menu.glob(PATTERN))
-    return sorted(p for p in found if p.name != PORTAL and p.is_file())
+    return sorted(path for name in APP_LAUNCHERS if (path := menu / name).is_file())
 
 
 def on_desktop(desktop: Path, menu: Path) -> list[Path]:

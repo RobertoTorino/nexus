@@ -1,3 +1,40 @@
+Changelog: 09-11-2026 12:26:22
+
+Added. Emulators and firmware (owner, 09-11-2026: we also check the app dependencies we use, emulators, and
+PlayStation firmware for systems and peripherals; the list a separate JSON file kept in sync): a card for each
+emulator the suites' apps pin (RPCS3, PCSX2, PPSSPP, Vita3K, Xenia Canary, shadPS4) and Decky Loader, with GitHub's
+latest release, an installed one behind the app's pin, and a newer one than the pin (it comes with a release of
+the app); and for Sony's DualSense firmware and PS4 system software (a new version since the last look), and the
+PS5 and the PlayStation Portal (checked on the device: the card says where). None is installed from here; each says
+how to handle it. The list is nexus_deps/catalogs/upstreams.json, its pins, repositories, names and launchers read
+from the apps' code and their portal's apps.toml: run.sh --sync-upstreams writes them, and its test fails while it
+is stale or misses an app. The reminder names each piece of news once.
+
+Changelog: 09-11-2026 12:26:22
+
+Added. Every update says what Update does and how to handle it (owner, 09-11-2026), behind an i beside the card's
+name; what needs care is on the card: a new major version (marked on its row), an image used after a restart. A
+Bazzite image of a new Fedora release has no Update but By hand, with the steps (its release notes, ujust update, a
+restart, what the new Python leaves without packages, how to roll back). The header's box is Updates.
+
+Changelog: 09-11-2026 11:40:07
+
+Added. Every update of the machine (owner, 09-11-2026: the hourly notification named updates the window did not
+show; Nexus Deps picks up everything system wide): under System, a card per source shows what is newer, installed
+and new version: Bazzite's image (rpm-ostree upgrade --check), the Flatpaks, Homebrew's formulae and casks, the Rust
+toolchain and the checkout's development venv (.venv-linux, within what requirements-dev.txt allows; what it holds
+back is listed, not updated). A card's Update installs that source's updates after showing the command and asking
+(rpm-ostree upgrade, flatpak update, brew upgrade, rustup update, pip); Fix takes them with the rest, and --fix
+asks once both checks are done. A System updates box in the header counts them, and the notification names the
+sources with updates. The venv card says when the venv runs a newer Python than it was made with (a Bazzite
+image with a new python3 leaves it without its packages) and lists the missing ones.
+
+Changelog: 09-11-2026 11:40:07
+
+Breaking. install.sh removes the development machine's hourly nexus-dev-updates timer (tools/dev-updates.sh, gone):
+Nexus Deps' reminder takes its place, and runs every hour instead of every Monday (owner, 09-11-2026), as the
+removed timer did. A notification nobody answers ends after 50 minutes, before the next hour's.
+
 Changelog: 07-11-2026 19:13:44
 
 Breaking. The BC250 Bazzite Suite's Dependency Checker (apps/package, package_checker) is Nexus Deps (dev/deps,

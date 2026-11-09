@@ -106,7 +106,9 @@ appearing in the portal.
   Bazzite package is in scope only where one of our apps uses it (Nexus Deps lists it then); its updates and
   security fixes are Bazzite's. Our own code, and the Python packages in our apps' environments, are ours. One
   exception (owner, 15-10-2026): Nexus Deps shows Bazzite's update state (the running image, an update waiting for
-  a reboot, uupd's last run) and reminds weekly when one waits; it only reads it, and updating stays Bazzite's.
+  a reboot, uupd's last run). Since 09-11-2026 (owner) it shows every update of the machine (Bazzite's image,
+  Flatpaks, Homebrew, Rust, the development venv), installs them with a card's Update after it asks, and reminds
+  hourly; uupd still installs them nightly by itself.
   Its Fix (owner, 07-11-2026) installs what an installed app needs and lacks, after it lists the commands and asks:
   Python packages with pip, a missing tool with Homebrew, else layered with rpm-ostree (active after a restart,
   which it advises and never does).

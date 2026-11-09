@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The Nexus Deps window: Bazzite's update state (bazzite.py) on top, then the Python packages and the external
-tools, with Fix (fixes.py) for what is missing or must be updated. In Nexus's design (create_app(theme=NEXUS)): the
-colors come from the theme the widgets draw with, not the suite's."""
+"""The Nexus Deps window: Bazzite's update state (bazzite.py) and the machine's updates (system.py) on top, then the
+Python packages and the external tools, with Fix (fixes.py) for what is missing, outdated or newer. In Nexus's
+design (create_app(theme=NEXUS)): the colors come from the theme the widgets draw with, not the suite's."""
 
 from __future__ import annotations
 
@@ -31,6 +31,8 @@ from .dependencies import (
     tool_need,
 )
 from .fixes import RESTART, Plan, Step, plan as fix_plan
+from .system import Source, Update, read_sources, steps as system_steps, summary as system_summary
+from .upstreams import read as read_upstreams
 
 
 # The apps' manuals: each suite's wiki
@@ -368,6 +370,93 @@ class BazziteCard(QFrame):
         self.text.setText(text)
 
 
+def update_row(update: Update) -> str:
+    """"node 26.13.0_1 → 26.13.0_2"; a package pip would add: "pytest 9.2.0 (missing)"."""
+    if not update.current:
+        return f"{update.name} {update.latest}" + (" (missing)" if update.latest else "")
+    return f"{update.name} {update.current} → {update.latest}" + (" (major)" if update.major else "")
+
+
+class SystemCard(QFrame):
+    """One source of the machine's updates (system.py): what is newer, what the requirements hold back, and Update,
+    which runs the source's step after the same question as Fix."""
+
+    SHOWN = 12                              # rows listed; the rest by name
+
+    def __init__(self, source: Source, update: Callable[[Step], None], parent: QWidget | None = None):
+        super().__init__(parent)
+        self.source = source
+        self.setObjectName("dependencyCard")
+        self.setStyleSheet(CARD_STYLE)
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(14, 10, 14, 10)
+        title_row = QHBoxLayout()
+        title = QLabel(source.name)
+        title.setStyleSheet(header_font() + "font-size:16px; font-weight:700;")
+        title_row.addWidget(title)
+        self.info = InfoButton(source.about, f"{source.name}: what Update does and how to handle it")
+        self.info.setVisible(bool(source.about))
+        title_row.addWidget(self.info)
+        title_row.addStretch(1)
+        self.status = StatusPill()
+        title_row.addWidget(self.status)
+        self.update_button = QPushButton("Update")
+        self.update_button.setAccessibleName(f"Update {source.name}")
+        title_row.addWidget(self.update_button)
+        layout.addLayout(title_row)
+        self.text = QLabel()
+        self.text.setWordWrap(True)
+        self.text.setTextFormat(Qt.TextFormat.RichText)
+        self.text.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        layout.addWidget(self.text)
+        self.held = hint_label("")
+        layout.addWidget(self.held)
+        self.note = QLabel()
+        self.note.setWordWrap(True)
+        self.note.setStyleSheet(f"color:{ORANGE};")
+        layout.addWidget(self.note)
+
+        step = source.step if not source.error else None
+        self.update_button.setVisible(step is not None)
+        if step is not None:
+            self.update_button.setToolTip(f"Runs, after asking: {' '.join(step.command)}")
+            self.update_button.clicked.connect(lambda _checked=False: update(step))
+        if not source.checked:
+            self.status.set_status("On the device", "neutral", "Nothing a program can ask: the i says where to look.")
+        elif source.error:
+            self.status.set_status("Check failed", "bad", source.error)
+            self.text.setText(escape(f"Could not be checked: {source.error}"))
+        elif source.manual:
+            self.status.set_status("By hand", "warn", "Not installed from here: the i beside the name says how.")
+            rows = "".join(f"<li>{escape(update_row(item))}</li>" for item in source.updates)
+            self.text.setText(f"<ul style='margin:0;'>{rows}</ul>" + (escape(source.detail) if source.detail else ""))
+        elif source.updates:
+            count = len(source.updates)
+            self.status.set_status(f"{count} update{'s' if count != 1 else ''}", "warn",
+                                   "Update installs them" + (" (used after a restart)" if step and step.restart
+                                                             else ""))
+            rows = "".join(f"<li>{escape(update_row(item))}</li>" for item in source.updates[:self.SHOWN])
+            rest = source.updates[self.SHOWN:]
+            more = (f"<p style='margin:0;'>And {len(rest)} more: "
+                    f"{escape(_names(item.name for item in rest))}.</p>") if rest else ""
+            self.text.setText(f"<ul style='margin:0;'>{rows}</ul>{more}")
+        elif source.known:
+            # Sony's latest versions, not the device's own: no news since the last look, nothing more is known
+            self.status.set_status("Nothing new", "neutral", "No new version since the last look; the device's own "
+                                   "version: the i says where to see it.")
+            self.text.setText(escape(source.detail))
+        else:
+            self.status.set_status("Up to date", "ok")
+            self.text.setText(escape(source.detail or "Nothing newer."))
+        if not source.checked:
+            self.text.setText(escape(source.detail))
+        self.held.setText(f"Held back by requirements-dev.txt: {_names(update_row(item) for item in source.held)}."
+                          if source.held else "")
+        self.held.setVisible(bool(source.held))
+        self.note.setText(source.note)
+        self.note.setVisible(bool(source.note))
+
+
 def _set_box_colour(box: MetricBox, colour: str) -> None:
     box.set_colour(colour)
 
@@ -404,7 +493,7 @@ def confirm_text(plan: Plan) -> str:
                    for step in plan.steps)
     text = f"<p>Fix runs these commands, one after the other:</p><ul>{rows}</ul>"
     if plan.restart:
-        text += ("<p>rpm-ostree changes the Bazzite image: the tools are there after a restart, which "
+        text += ("<p>rpm-ostree changes the Bazzite image: what it installs is there after a restart, which "
                  f"{escape(APP_NAME)} never does by itself (<code>{RESTART}</code>). rpm-ostree may ask for your "
                  "password.</p>")
     if plan.manual:
@@ -492,7 +581,7 @@ class FixDialog(QDialog):
         else:
             text = f"<span style='color:{GREEN}; font-weight:700;'>Done.</span>"
         if any(step.restart for step in self.done):
-            text += (f" Restart to use what rpm-ostree layered: <code>{RESTART}</code>. "
+            text += (f" Restart to use what rpm-ostree installed: <code>{RESTART}</code>. "
                      f"{escape(APP_NAME)} does not restart by itself.")
         self.status.setText(text)
 
@@ -513,24 +602,32 @@ class DependencyWindow(QMainWindow):
         parent: QWidget | None = None,
         check: Callable[[], CheckResult] | None = None,
         bazzite: Callable[[], BazziteState] | None = None,
+        system: Callable[[], tuple[Source, ...]] | None = None,
         suite: str = DEFAULT_SUITE,
         offer_fix: bool = False,
         ask: Callable[[str], bool] | None = None,
     ):
-        """*check* and *bazzite* read the packages and tools, and Bazzite's state, *ask* puts Fix's question (tests
-        pass their own). *offer_fix* offers Fix once the first check is done (--fix)."""
+        """*check*, *bazzite* and *system* read the packages and tools, Bazzite's state and the machine's updates,
+        *ask* puts Fix's question (tests pass their own). *offer_fix* offers Fix once the first check is done
+        (--fix)."""
         super().__init__(parent)
-        self.resize(880, 720)
+        self.resize(960, 760)
         self.suite = suite
         self.offer_fix = offer_fix
         self._ask = ask or self._ask_user
         self.plan = Plan()
+        self.suite_plan = Plan()                # the packages' and tools' part of the plan
+        self.sources: tuple[Source, ...] = ()   # the machine's updates, whose steps make the rest
         self.fix_dialog: FixDialog | None = None
         self.worker = UpdateChecker(self)
         self.worker.finished.connect(self._checked)
         self.bazzite_worker = UpdateChecker(self)
         self.bazzite_worker.finished.connect(self._bazzite_read)
         self._bazzite = bazzite or read_state
+        self.system_worker = UpdateChecker(self)
+        self.system_worker.finished.connect(self._system_read)
+        self._system = system or (lambda: read_sources() + read_upstreams("seen"))
+        self.system_cards: dict[str, SystemCard] = {}
         self.apps = apps
         self._check = check or (lambda: check_all(dependencies, tools, apps, INFO.user_agent))
         self.cards: dict[str, DependencyCard] = {}
@@ -546,8 +643,9 @@ class DependencyWindow(QMainWindow):
         self.box_needs_update = MetricBox("Needs update", GREY)
         self.box_updates = MetricBox("Updates on PyPI", GREY)
         self.box_cves = MetricBox("Known CVEs", GREY)
-        for box in (self.box_packages, self.box_tools, self.box_missing, self.box_needs_update, self.box_updates,
-                    self.box_cves):
+        self.box_system = MetricBox("Updates", GREY)
+        for box in (self.box_system, self.box_packages, self.box_tools, self.box_missing, self.box_needs_update,
+                    self.box_updates, self.box_cves):
             header.add_second(box, 1)
         # An icon-only button the size of the boxes beside it
         self.check_button = QPushButton()
@@ -555,8 +653,8 @@ class DependencyWindow(QMainWindow):
             "view-refresh", self.style().standardIcon(QStyle.StandardPixmap.SP_BrowserReload)), 32))
         self.check_button.setIconSize(QSize(32, 32))
         self.check_button.setAccessibleName("Check again")
-        self.check_button.setToolTip("Check again: Bazzite's update state, the apps, their packages and tools, and "
-                                     "ask PyPI")
+        self.check_button.setToolTip("Check again: Bazzite's update state, the machine's updates, the apps, their "
+                                     "packages and tools, and ask PyPI")
         self.check_button.setMinimumWidth(120)
         self.check_button.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
         box_style = (surface_style(selector="QPushButton", theme=current_theme())     # a box like those beside it
@@ -572,20 +670,25 @@ class DependencyWindow(QMainWindow):
         self.fix_button.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
         self.fix_button.setStyleSheet(box_style + "QPushButton { font-size:16px; font-weight:700; }")
         self.fix_button.setEnabled(False)
-        self.fix_button.clicked.connect(self.fix)
+        self.fix_button.clicked.connect(lambda _checked=False: self.fix())
         header.add_second(self.fix_button, 1)
         root.addLayout(header)
         about = QHBoxLayout()
-        about.addWidget(hint_label(f"The {escape(SUITE_NAMES.get(self.suite, self.suite))}'s apps on this machine."), 1)
+        suite_name = escape(SUITE_NAMES.get(self.suite, self.suite))
+        about.addWidget(hint_label(f"This machine's updates and the {suite_name}'s apps on it."), 1)
         about.addWidget(InfoButton(
+            "<b>System</b> shows Bazzite's update state and what is newer on this machine: Bazzite's image, the "
+            "Flatpaks, Homebrew's formulae and casks, the Rust toolchain and the checkout's development venv (within "
+            "what requirements-dev.txt allows). <b>Update</b> on a card installs that source's updates; Bazzite's "
+            "updater does it every night too. "
             "Each app's Python packages are checked in the environment that app runs in, compared with PyPI and "
             "looked up in OSV.dev for known vulnerabilities (CVE). External tools are checked for availability. "
             "<b>Fix</b> installs what is missing or must be updated: Python packages with pip into the app's own "
             "environment, a missing tool an installed app needs with Homebrew, else layered into the Bazzite image "
-            f"with rpm-ostree (there after a restart, <code>{RESTART}</code>, which this app never does by itself). "
-            "It shows every command first and asks. Optional tools are left out; each app's manual says how to "
-            "install them. Bazzite's own updates are shown on top; Bazzite installs them itself. Click the "
-            "information button beside a name for what it is.", "What Nexus Deps checks and fixes"))
+            "with rpm-ostree, and the machine's updates (a new image and layered tools are there after a restart, "
+            f"<code>{RESTART}</code>, which this app never does by itself). It shows every command first and asks. "
+            "Optional tools are left out; each app's manual says how to install them. Click the information button "
+            "beside a name for what it is.", "What Nexus Deps checks and fixes"))
         root.addLayout(about)
 
         content = QWidget()
@@ -597,6 +700,19 @@ class DependencyWindow(QMainWindow):
         cards_layout.addWidget(system_heading)
         self.bazzite_card = BazziteCard()
         cards_layout.addWidget(self.bazzite_card)
+        self.system_layout = QVBoxLayout()
+        self.system_layout.setSpacing(10)
+        self.system_waiting = hint_label("Looking for updates: Bazzite's image, the Flatpaks, Homebrew, Rust and the "
+                                         "development venv…")
+        self.system_layout.addWidget(self.system_waiting)
+        cards_layout.addLayout(self.system_layout)
+        self.apps_heading = QLabel("Emulators and firmware")
+        self.apps_heading.setStyleSheet(header_font() + "font-size:18px; font-weight:700;")
+        self.apps_heading.hide()                # shown when the check has cards for it
+        cards_layout.addWidget(self.apps_heading)
+        self.apps_layout = QVBoxLayout()
+        self.apps_layout.setSpacing(10)
+        cards_layout.addLayout(self.apps_layout)
         packages_heading = QLabel("Python packages")
         packages_heading.setStyleSheet(header_font() + "font-size:18px; font-weight:700;")
         cards_layout.addWidget(packages_heading)
@@ -627,25 +743,68 @@ class DependencyWindow(QMainWindow):
     def check_updates(self) -> None:
         if not self.bazzite_worker.running:
             self.bazzite_worker.start(self._bazzite)
+        if not self.system_worker.running:
+            self.system_waiting.setVisible(True)
+            self.system_worker.start(self._system)
+        self.check_button.setEnabled(False)
         if self.worker.running:
             return
-        self.check_button.setEnabled(False)
         self.result_label.setText("Checking the apps, PyPI and external tools…")
         self.worker.start(self._check)
+
+    @property
+    def checking(self) -> bool:
+        return self.worker.running or self.system_worker.running
+
+    def _check_done(self) -> None:
+        """Once the packages and the machine's updates are both read: Check again is back, and --fix asks."""
+        if self.checking:
+            return
+        self.check_button.setEnabled(True)
+        if self.offer_fix:
+            self.offer_fix = False                  # once: the notification's Fix… button
+            if self.plan:
+                self.fix()
 
     def _bazzite_read(self, result: object) -> None:
         self.bazzite_card.show_state(result if isinstance(result, BazziteState) else
                                      BazziteState(error="Bazzite's update state could not be read."))
 
+    def _system_read(self, result: object) -> None:
+        sources = result if isinstance(result, tuple) and all(isinstance(item, Source) for item in result) else (
+            Source("system", "This machine", error="The machine's updates could not be read."),)
+        self.sources = sources
+        self.system_waiting.setVisible(False)
+        for card in self.system_cards.values():
+            card.setParent(None)
+            card.deleteLater()
+        self.system_cards = {}
+        for source in sources:
+            card = SystemCard(source, self.update_source)
+            self.system_cards[source.key] = card
+            (self.apps_layout if source.group == "apps" else self.system_layout).addWidget(card)
+        self.apps_heading.setVisible(any(source.group == "apps" for source in sources))
+        count = sum(len(source.updates) for source in sources if source.outdated)
+        failed = [source.name for source in sources if source.error]
+        tip = system_summary(sources) or "Nothing newer on this machine."
+        if failed:
+            tip += f" Could not be checked: {_names(failed)}."
+        self.box_system.set_value(str(count) if count or not failed else "?", tip)
+        _set_box_colour(self.box_system, ORANGE if count else GREY if failed else GREEN)
+        self._update_plan()
+        self._check_done()
+
     def _checked(self, result: object) -> None:
-        self.check_button.setEnabled(True)
         if (not isinstance(result, CheckResult)
                 or not all(isinstance(item, DependencyStatus) for item in result.packages)
                 or not all(isinstance(item, ToolStatus) for item in result.tools)):
             self.result_label.setText("The dependency check returned an invalid result.")
-            self._set_plan(Plan())
+            self.suite_plan = Plan()
+            self._update_plan()
+            self._check_done()
             return
-        self._set_plan(fix_plan(result))
+        self.suite_plan = fix_plan(result)
+        self._update_plan()
         for item in result.packages:
             card = self.cards.get(item.dependency.name)
             if card is not None:
@@ -701,12 +860,13 @@ class DependencyWindow(QMainWindow):
             lines.append(f"<span style='color:{GREEN};'>Every package and tool the installed apps use is "
                          "there.</span>")
         self.result_label.setText(" ".join(lines))
-        if self.offer_fix:
-            self.offer_fix = False                  # once: the notification's Fix… button
-            if self.plan:
-                self.fix()
+        self._check_done()
 
     # --- Fix ---------------------------------------------------------------------------------------------------
+
+    def _update_plan(self) -> None:
+        """Fix's plan: the packages' and tools' steps, then the machine's updates."""
+        self._set_plan(Plan(self.suite_plan.steps + system_steps(self.sources), self.suite_plan.manual))
 
     def _set_plan(self, plan: Plan) -> None:
         self.plan = plan
@@ -729,12 +889,17 @@ class DependencyWindow(QMainWindow):
         box.setDefaultButton(QMessageBox.StandardButton.No)
         return box.exec() == QMessageBox.StandardButton.Yes
 
-    def fix(self) -> None:
-        """Ask with every command listed, run them in a dialog, then check again."""
-        if not self.plan or self.fixing or not self._ask(confirm_text(self.plan)):
+    def update_source(self, step: Step) -> None:
+        """A system card's Update: that source's step alone, asked and run as Fix does."""
+        self.fix(Plan((step,)))
+
+    def fix(self, plan: Plan | None = None) -> None:
+        """Ask with every command listed, run them in a dialog, then check again. *plan*: one card's Update."""
+        plan = plan or self.plan
+        if not plan or self.fixing or not self._ask(confirm_text(plan)):
             return
         self.fix_button.setEnabled(False)
-        self.fix_dialog = FixDialog(self.plan, self)
+        self.fix_dialog = FixDialog(plan, self)
         self.fix_dialog.finished.connect(lambda _code: self.check_updates())
         self.fix_dialog.open()
         self.fix_dialog.start()

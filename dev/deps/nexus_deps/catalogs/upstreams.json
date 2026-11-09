@@ -1,0 +1,354 @@
+{
+  "about": "The programs and firmware the suites' apps use, and where Nexus Deps learns of their updates (nexus_deps/upstreams.py). Hand-written: id, name, what, compare, url, targets, how, and per app its suite, app, module and constants. Synced from the apps' code and their portal's apps.toml by `dev/deps/run.sh --sync-upstreams` (tests/test_upstreams.py fails while it is stale): repo, pin, version, home, version_file, name and launcher.",
+  "github": [
+    {
+      "id": "rpcs3",
+      "name": "RPCS3",
+      "what": "the PlayStation 3 emulator",
+      "compare": "version",
+      "apps": [
+        {
+          "suite": "bc250-bazzite",
+          "app": "rpcs3",
+          "module": "rpcs3_manager/emulator.py",
+          "constants": {
+            "repo": "REPO",
+            "pin": "LANDMARK",
+            "version": "VERSION"
+          },
+          "repo": "RPCS3/rpcs3",
+          "pin": "0.0.43",
+          "version": "0.0.43-20395",
+          "home": "~/.local/share/bc250-rpcs3-manager/emulator",
+          "name": "RPCS3 Manager",
+          "launcher": "~/.local/bin/bc250-rpcs3-manager"
+        },
+        {
+          "suite": "bazzite-console",
+          "app": "rpcs3",
+          "module": "rpcs3_manager/emulator.py",
+          "constants": {
+            "repo": "REPO",
+            "pin": "LANDMARK",
+            "version": "VERSION"
+          },
+          "repo": "RPCS3/rpcs3",
+          "pin": "0.0.43",
+          "version": "0.0.43-20395",
+          "home": "~/.local/share/ps5-rpcs3-manager/emulator",
+          "name": "RPCS3 Manager",
+          "launcher": "~/.local/bin/ps5-rpcs3-manager"
+        }
+      ]
+    },
+    {
+      "id": "pcsx2",
+      "name": "PCSX2",
+      "what": "the PlayStation 2 emulator",
+      "compare": "version",
+      "apps": [
+        {
+          "suite": "bc250-bazzite",
+          "app": "pcsx2",
+          "module": "pcsx2_manager/emulator.py",
+          "constants": {
+            "repo": "REPO",
+            "pin": "VERSION",
+            "version": "VERSION"
+          },
+          "repo": "PCSX2/pcsx2",
+          "pin": "2.8.2",
+          "version": "2.8.2",
+          "home": "~/.local/share/bc250-pcsx2-manager/emulator",
+          "name": "PCSX2 Manager",
+          "launcher": "~/.local/bin/bc250-pcsx2-manager"
+        },
+        {
+          "suite": "bazzite-console",
+          "app": "pcsx2",
+          "module": "pcsx2_manager/emulator.py",
+          "constants": {
+            "repo": "REPO",
+            "pin": "VERSION",
+            "version": "VERSION"
+          },
+          "repo": "PCSX2/pcsx2",
+          "pin": "2.8.2",
+          "version": "2.8.2",
+          "home": "~/.local/share/ps5-pcsx2-manager/emulator",
+          "name": "PCSX2 Manager",
+          "launcher": "~/.local/bin/ps5-pcsx2-manager"
+        }
+      ]
+    },
+    {
+      "id": "ppsspp",
+      "name": "PPSSPP",
+      "what": "the PSP emulator",
+      "compare": "version",
+      "apps": [
+        {
+          "suite": "bc250-bazzite",
+          "app": "ppsspp",
+          "module": "ppsspp_manager/emulator.py",
+          "constants": {
+            "repo": "REPO",
+            "pin": "VERSION",
+            "version": "VERSION"
+          },
+          "repo": "hrydgard/ppsspp",
+          "pin": "1.20.4",
+          "version": "1.20.4",
+          "home": "~/.local/share/bc250-ppsspp-manager/emulator",
+          "name": "PPSSPP Manager",
+          "launcher": "~/.local/bin/bc250-ppsspp-manager"
+        },
+        {
+          "suite": "bazzite-console",
+          "app": "ppsspp",
+          "module": "ppsspp_manager/emulator.py",
+          "constants": {
+            "repo": "REPO",
+            "pin": "VERSION",
+            "version": "VERSION"
+          },
+          "repo": "hrydgard/ppsspp",
+          "pin": "1.20.4",
+          "version": "1.20.4",
+          "home": "~/.local/share/ps5-ppsspp-manager/emulator",
+          "name": "PPSSPP Manager",
+          "launcher": "~/.local/bin/ps5-ppsspp-manager"
+        }
+      ]
+    },
+    {
+      "id": "vita3k",
+      "name": "Vita3K",
+      "what": "the PlayStation Vita emulator; its builds are numbered",
+      "compare": "build",
+      "apps": [
+        {
+          "suite": "bc250-bazzite",
+          "app": "vita3k",
+          "module": "vita3k_manager/emulator.py",
+          "constants": {
+            "repo": "BUILDS",
+            "pin": "BUILD",
+            "version": "VERSION"
+          },
+          "repo": "Vita3K/Vita3K-builds",
+          "pin": "4269",
+          "version": "4269",
+          "home": "~/.local/share/bc250-vita3k-manager/emulator",
+          "name": "Vita3K Manager",
+          "launcher": "~/.local/bin/bc250-vita3k-manager"
+        },
+        {
+          "suite": "bazzite-console",
+          "app": "vita3k",
+          "module": "vita3k_manager/emulator.py",
+          "constants": {
+            "repo": "BUILDS",
+            "pin": "BUILD",
+            "version": "VERSION"
+          },
+          "repo": "Vita3K/Vita3K-builds",
+          "pin": "4269",
+          "version": "4269",
+          "home": "~/.local/share/ps5-vita3k-manager/emulator",
+          "name": "Vita3K Manager",
+          "launcher": "~/.local/bin/ps5-vita3k-manager"
+        }
+      ]
+    },
+    {
+      "id": "xenia",
+      "name": "Xenia Canary",
+      "what": "the Xbox 360 emulator; its builds are named after a commit, a later one is newer",
+      "compare": "published",
+      "apps": [
+        {
+          "suite": "bc250-bazzite",
+          "app": "xenia",
+          "module": "xenia_manager/emulator.py",
+          "constants": {
+            "repo": "REPO",
+            "pin": "PUBLISHED",
+            "version": "VERSION"
+          },
+          "repo": "xenia-canary/xenia-canary",
+          "pin": "2026-11-04T16:38:00Z",
+          "version": "838850f",
+          "home": "~/.local/share/bc250-xenia-manager/emulator",
+          "name": "Xenia Manager",
+          "launcher": "~/.local/bin/bc250-xenia-manager"
+        },
+        {
+          "suite": "bazzite-console",
+          "app": "xenia",
+          "module": "xenia_manager/emulator.py",
+          "constants": {
+            "repo": "REPO",
+            "pin": "PUBLISHED",
+            "version": "VERSION"
+          },
+          "repo": "xenia-canary/xenia-canary",
+          "pin": "2026-11-04T16:38:00Z",
+          "version": "838850f",
+          "home": "~/.local/share/ps5-xenia-manager/emulator",
+          "name": "Xenia Manager",
+          "launcher": "~/.local/bin/ps5-xenia-manager"
+        }
+      ]
+    },
+    {
+      "id": "shadps4",
+      "name": "shadPS4",
+      "what": "the PlayStation 4 emulator",
+      "compare": "version",
+      "apps": [
+        {
+          "suite": "bc250-bazzite",
+          "app": "shadps4",
+          "module": "shadps4_manager/emulator.py",
+          "constants": {
+            "repo": "REPO",
+            "pin": "VERSION",
+            "version": "VERSION"
+          },
+          "repo": "shadps4-emu/shadPS4",
+          "pin": "0.21.0",
+          "version": "0.21.0",
+          "home": "~/.local/share/bc250-shadps4-manager/emulator",
+          "name": "shadPS4 Manager",
+          "launcher": "~/.local/bin/bc250-shadps4-manager"
+        },
+        {
+          "suite": "bazzite-console",
+          "app": "shadps4",
+          "module": "shadps4_manager/emulator.py",
+          "constants": {
+            "repo": "REPO",
+            "pin": "VERSION",
+            "version": "VERSION"
+          },
+          "repo": "shadps4-emu/shadPS4",
+          "pin": "0.21.0",
+          "version": "0.21.0",
+          "home": "~/.local/share/ps5-shadps4-manager/emulator",
+          "name": "shadPS4 Manager",
+          "launcher": "~/.local/bin/ps5-shadps4-manager"
+        }
+      ]
+    },
+    {
+      "id": "decky",
+      "name": "Decky Loader",
+      "what": "the plugin loader for Steam's Game Mode; it can update itself, so it may be newer than the pin",
+      "compare": "version",
+      "apps": [
+        {
+          "suite": "bc250-bazzite",
+          "app": "decky",
+          "module": "decky_manager/loader.py",
+          "constants": {
+            "repo": "REPO",
+            "pin": "VERSION",
+            "version": "VERSION"
+          },
+          "repo": "SteamDeckHomebrew/decky-loader",
+          "pin": "3.3.1",
+          "version": "3.3.1",
+          "version_file": "~/homebrew/services/.loader.version",
+          "name": "Decky Loader Manager",
+          "launcher": "~/.local/bin/bc250-decky-manager"
+        },
+        {
+          "suite": "bazzite-console",
+          "app": "decky",
+          "module": "decky_manager/loader.py",
+          "constants": {
+            "repo": "REPO",
+            "pin": "VERSION",
+            "version": "VERSION"
+          },
+          "repo": "SteamDeckHomebrew/decky-loader",
+          "pin": "3.3.1",
+          "version": "3.3.1",
+          "version_file": "~/homebrew/services/.loader.version",
+          "name": "Decky Loader Manager",
+          "launcher": "~/.local/bin/ps5-decky-manager"
+        }
+      ]
+    }
+  ],
+  "sony": [
+    {
+      "id": "dualsense",
+      "name": "DualSense firmware",
+      "what": "the firmware of the DualSense and DualSense Edge controllers",
+      "kind": "controllers",
+      "url": "https://fwupdater.dl.playstation.net/fwupdater/info.json",
+      "targets": {
+        "0x0004": "DualSense",
+        "0x000B": "DualSense",
+        "0x000E": "DualSense",
+        "0x0044": "DualSense Edge"
+      },
+      "apps": [
+        {
+          "suite": "bc250-bazzite",
+          "app": "hdcontrol",
+          "name": "USB HD Control",
+          "launcher": "~/.local/bin/bc250-usb-hdcontrol"
+        },
+        {
+          "suite": "bazzite-console",
+          "app": "hdcontrol",
+          "name": "USB HD Control",
+          "launcher": "~/.local/bin/ps5-usb-hdcontrol"
+        }
+      ],
+      "how": "Connect the controller with a USB cable and open {apps}: it reads the controller's firmware, compares it with Sony's and updates it (the Edge's profiles are backed up first). Bluetooth is not enough for an update."
+    },
+    {
+      "id": "ps4",
+      "name": "PS4 system software",
+      "what": "the PlayStation 4's system software, from Sony's update list",
+      "kind": "ps4-updatelist",
+      "url": "http://fus01.ps4.update.playstation.net/update/ps4/list/us/ps4-updatelist.xml",
+      "apps": [
+        {
+          "suite": "bc250-bazzite",
+          "app": "consoles",
+          "name": "Console Link",
+          "launcher": "~/.local/bin/bc250-console-link"
+        }
+      ],
+      "how": "Update on the console: Settings, System Software Update. Remote Play with {apps} may need the console's newest system software."
+    },
+    {
+      "id": "ps5",
+      "name": "PS5 system software",
+      "what": "the PlayStation 5's system software",
+      "kind": "on-device",
+      "apps": [
+        {
+          "suite": "bc250-bazzite",
+          "app": "consoles",
+          "name": "Console Link",
+          "launcher": "~/.local/bin/bc250-console-link"
+        }
+      ],
+      "how": "Sony publishes no update list a program can read safely. The console says when an update is out: Settings, System, System Software, System Software Update and Settings. Remote Play with {apps} may need the newest one."
+    },
+    {
+      "id": "psportal",
+      "name": "PlayStation Portal",
+      "what": "the PlayStation Portal remote player's system software",
+      "kind": "on-device",
+      "apps": [],
+      "how": "Sony publishes no update list for it. The Portal updates itself when it is online: Settings, System Software, System Software Update. Its latest version is listed at playstation.com."
+    }
+  ]
+}

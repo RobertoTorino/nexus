@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""What Fix does about a check (owner, 07-11-2026: a tool to fix missing dependencies), and the weekly reminder.
+"""What Fix does about a check (owner, 07-11-2026: a tool to fix missing dependencies), and the hourly reminder.
 
 plan() turns a CheckResult into steps, each one command the window shows before it runs anything:
   * pip: a Python package that is missing, at a version an app does not accept, or that must be updated (an app
@@ -9,10 +9,12 @@ plan() turns a CheckResult into steps, each one command the window shows before 
   * rpm-ostree: a missing tool Homebrew lacks, layered as the Fedora package (the catalog's rpm). It changes the
     Bazzite image and is active after a restart; the app says so and gives the command, it never restarts.
 A tool with neither (ujust, Steam, a suite app's own) is left to the app's manual. Optional tools are not part of
-Fix: the apps work without them.
+Fix: the apps work without them. The machine's own updates (system.py: Bazzite's image, the Flatpaks, Homebrew,
+Rust, the development venv) bring a step each; the window adds them to this plan.
 
-reminder_text() is the weekly notification (--remind, from the systemd user timer install.sh writes): Bazzite's
-update state and what is missing or outdated. notify() shows it with buttons and says which one was clicked."""
+reminder_text() is the hourly notification (--remind, from the systemd user timer install.sh writes): Bazzite's
+update state, the machine's updates and what is missing or outdated. notify() shows it with buttons and says which
+one was clicked."""
 
 from __future__ import annotations
 
@@ -21,20 +23,24 @@ import subprocess
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from .bazzite import BazziteState, reminder
 from .dependencies import CheckResult, DependencyStatus, EnvironmentVersion, release, tool_need
+
+if TYPE_CHECKING:
+    from .system import Source
 
 Run = Callable[..., subprocess.CompletedProcess]
 Which = Callable[[str], "str | None"]
 
 RESTART = "systemctl reboot"
-NOTIFY_WAIT = 3600                       # a notification nobody answers lets the timer's service end after this
+NOTIFY_WAIT = 3000                       # a notification nobody answers lets the service end before the next hour
 
 
 @dataclass(frozen=True)
 class Step:
-    kind: str                            # "pip", "brew" or "rpm-ostree"
+    kind: str                            # "pip", "brew", "rpm-ostree", "flatpak" or "rustup"
     title: str                           # what it does, for the confirmation and the log
     command: tuple[str, ...]
     restart: bool = False                # active only after a restart (rpm-ostree)
@@ -126,13 +132,24 @@ class Reminder:
     actions: dict[str, str] = field(default_factory=dict)    # the notification's buttons: key -> label
 
 
-def reminder_text(state: BazziteState, result: CheckResult | None, which: Which = shutil.which) -> Reminder:
-    """The weekly notification: Bazzite's update state and the dependencies; "" when nothing needs the user."""
+def system_lines(sources: tuple[Source, ...]) -> list[str]:
+    """The machine's updates in the notification: which sources have them, how many, and what to know beside."""
+    outdated = ", ".join(f"{source.name} ({len(source.updates)})" for source in sources if source.outdated)
+    lines = [f"Updates: {outdated}."] if outdated else []
+    lines.extend(source.note for source in sources if source.note)
+    return lines
+
+
+def reminder_text(state: BazziteState, result: CheckResult | None, which: Which = shutil.which,
+                  sources: tuple[Source, ...] = ()) -> Reminder:
+    """The hourly notification: Bazzite's update state, the machine's updates (*sources*) and the dependencies; ""
+    when nothing needs the user."""
     lines = [line for line in (reminder(state),) if line]
-    fixable = False
+    lines.extend(system_lines(sources))
+    fixable = any(source.outdated and source.step for source in sources)
     if result is not None:
         lines.extend(problems(result))
-        fixable = bool(plan(result, which))
+        fixable = fixable or bool(plan(result, which))
     if not lines:
         return Reminder()
     actions = {"fix": "Fix…"} if fixable else {}

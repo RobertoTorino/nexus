@@ -39,7 +39,7 @@ Each for one tool or one kind of work; without it that tool does not run, or its
 | Rust (rustup with cargo and clippy), maturin, nasm, the libva headers | Console Link's native core, only to run `cargo test` or `maturin build` on the machine itself; the container of `tools/ci-local.sh` has them all | rustup from rustup.rs, `brew install nasm`, maturin with pip in the venv | `winget install Rustlang.Rustup`; the decoder builds on Linux only |
 | PyInstaller and Pillow | `tools/build_windows_exe.py`, the Windows executable of Bazzite SFTP | not used | in `.venv-windows/`, `pip install pyinstaller pillow` |
 | OBS Studio, with its WebSocket server on | Nexus Demo Recorder (`dev/demo/`) | flatpak `com.obsproject.Studio`, or `obs` | `winget install OBSProject.OBSStudio` |
-| notify-send | `tools/dev-updates.sh --notify` (below) | comes with Bazzite | not used |
+| notify-send | Nexus Deps' hourly reminder (below) | comes with Bazzite | not used |
 | WinDbg (with `cdb.exe`) | a native crash of a Windows app (exception 0xc0000409 and the like, nothing in the app's log): `cdb` attached to the program writes a dump and every thread's stack when it crashes | not used | `winget install Microsoft.WinDbg`; `cdb.exe` is in its package's `amd64` folder |
 | setools (`sesearch`, `seinfo`) | reading the SELinux policy on the board: which label a file needs (BC-250 USB Wi-Fi's modules, for example) | in a distrobox, see below | not used |
 
@@ -84,29 +84,27 @@ Bazzite keeps itself current: its updater (`uupd.timer`) runs every day at 04:00
 machine was off, and updates the image, the Flatpaks and Homebrew's packages. `ujust update` runs the same now; a
 new image is used after a reboot. The venv is pip's and the Rust toolchain rustup's; nothing updates them for you.
 
-`tools/dev-updates.sh` looks at every source at once and says what has a newer version: Bazzite's image, the
-Flatpaks, Homebrew's packages (`gh`, shellcheck, fakeroot, node, nasm, ...), the Rust toolchain and the packages
-of `.venv-linux`. It only looks; with each source it says how it gets installed. `--install` makes a user timer
-of it that runs every hour and shows a desktop notification when something is new, so an update never comes as a
-surprise:
+[Nexus Deps](dashboard.md#deps) looks at every source at once and shows what has a newer version: Bazzite's
+image, the Flatpaks, Homebrew's formulae and casks (`gh`, shellcheck, fakeroot, node, nasm, ...), the Rust
+toolchain and the packages of `.venv-linux`, each on a card of its own under System. **Update** on a card installs
+that source's updates after it shows the command and asks; **Fix** takes them with the rest. Its hourly reminder
+(`dev/deps/install.sh`) shows a desktop notification when something is newer, with a button to fix it:
 
 ```bash
-tools/dev-updates.sh              # what is outdated, per source; exit 10 when something is
-tools/dev-updates.sh --install    # nexus-dev-updates.timer: every hour, a notification when something is new
-tools/dev-updates.sh --uninstall  # removes the timer
-systemctl --user list-timers nexus-dev-updates.timer
+dev/deps/run.sh                  # the window: every source, with Update per card
+dev/deps/run.sh --remind         # no window: the notification now, when something is newer
 ```
 
 The venv's packages are upgraded within what `requirements-dev.txt` allows (it keeps MkDocs below 2 and Pillow
-below 13 on purpose): `.venv-linux/bin/python -m pip install -U <package>`, or the whole venv again with
-`-r requirements-dev.txt --upgrade`. The toolchain: `rustup update`.
+below 13 on purpose): the card lists what that holds back without updating it. The venv's `python` links to
+Bazzite's `/usr/bin/python3`, so a Bazzite image with a newer Python leaves the venv without its packages; the card
+says so, and Update installs `requirements-dev.txt` for the new Python.
 
 On Windows, `winget upgrade` lists every program with a newer version and `winget upgrade --all` installs them;
 the venv is `.venv-windows\Scripts\python.exe -m pip list --outdated`.
 
-[Nexus Deps](dashboard.md#deps) has a weekly reminder of its own: Bazzite's update state and the suite's
-dependencies on the machine it is installed on, with a button to fix what is missing. The timer above is for the
-development tools.
+Installing Nexus Deps removes the hourly `nexus-dev-updates.timer` an earlier `tools/dev-updates.sh` made: the
+reminder above takes its place.
 
 ## Git identity and signing
 

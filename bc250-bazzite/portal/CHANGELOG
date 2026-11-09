@@ -1,3 +1,15 @@
+Changelog: 09-11-2026 12:26:22
+
+Fixed. The wiki's Development chapter says that a moved emulator or Decky pin also needs dev/deps/run.sh
+--sync-upstreams (Nexus Deps' list of the programs the apps use; CI Nexus fails until it is), and its Privacy
+chapter that Nexus Deps asks GitHub for the emulators' latest releases and Sony for its firmware lists.
+
+Changelog: 09-11-2026 11:58:23
+
+Fixed. The wiki's Privacy chapter says what Nexus Deps asks now that it shows every update of the machine (owner,
+09-11-2026): rpm-ostree, Flatpak, Homebrew, rustup and pip talk to their own servers, and its reminder is hourly.
+tools/installer-tests/deps.sh checks the hourly timer and that install.sh removes the old nexus-dev-updates timer.
+
 Changelog: 07-11-2026 22:04:25
 
 Release 16.0.0.

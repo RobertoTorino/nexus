@@ -3,9 +3,10 @@
 of Bazzite's updater (uupd, a nightly systemd timer that updates the image, Flatpaks, Homebrew and distroboxes).
 
 Updating is Bazzite's: the suite answers for its own apps, and shows this so a waiting update is not missed (owner's
-decision, 15-10-2026). Nothing here needs root or the network: `rpm-ostree status --json` lists the deployments, the
+decision, 15-10-2026); what is newer than the machine has, and installing it sooner, is system.py's (owner,
+09-11-2026). Nothing here needs root or the network: `rpm-ostree status --json` lists the deployments, the
 first one being what the next boot starts, and `systemctl show` tells when the timer last fired and how the service
-ended. reminder() is Bazzite's part of the weekly desktop notification (fixes.reminder_text(), `--remind`, from a
+ended. reminder() is Bazzite's part of the hourly desktop notification (fixes.reminder_text(), `--remind`, from a
 systemd user timer install.sh writes): it says something only when something needs the user."""
 
 from __future__ import annotations
@@ -138,12 +139,13 @@ def describe(state: BazziteState) -> tuple[str, str]:
             kind = "warn"
         if state.updater_stale():
             text += f" That is more than {STALE_DAYS - 1} days ago: it normally runs every night."
-    text += " It updates the image, Flatpaks, Homebrew and distroboxes by itself; this app only reads its state."
+    text += (" It updates the image, Flatpaks, Homebrew and distroboxes by itself; the cards below show what is newer "
+             "now, and Update installs it sooner.")
     return kind, text
 
 
 def reminder(state: BazziteState, now: datetime.datetime | None = None) -> str:
-    """The weekly notification's text, or "" when nothing needs the user."""
+    """The hourly notification's text, or "" when nothing needs the user."""
     if state.error or state.running is None:
         return ""
     lines = []

@@ -1,18 +1,19 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
-# Installs Nexus Deps for the current user: a launcher, an app menu entry, a Desktop icon and the weekly reminder,
+# Installs Nexus Deps for the current user: a launcher, an app menu entry, a Desktop icon and the hourly reminder,
 # all starting run.sh in this checkout (Linux). Nothing is copied: the app runs from the checkout it lives in, so it
 # always runs the checkout's own code. It is not part of a portal's releases. Moving the checkout needs install.sh
 # again.
 #
-#   ./install.sh                         # launcher, app menu entry, Desktop icon and the weekly reminder
+#   ./install.sh                         # launcher, app menu entry, Desktop icon and the hourly reminder
 #   ./install.sh --no-desktop-shortcut   # the same without the Desktop icon
 #   ./install.sh --uninstall             # remove them; the checkout and the settings stay
 #   ./install.sh --uninstall --purge     # also remove the settings; the checkout stays
 #
-#  * ~/.config/systemd/user/nexus-deps-reminder.service and .timer: every Monday Nexus Deps checks the suite's
-#    dependencies and Bazzite's update state, and shows a desktop notification when something needs you, with
-#    buttons to open it or to fix what is missing (it asks before it changes anything).
+#  * ~/.config/systemd/user/nexus-deps-reminder.service and .timer: every hour Nexus Deps checks the suite's
+#    dependencies, Bazzite's update state and the machine's updates (Flatpaks, Homebrew, Rust, the dev venv), and
+#    shows a desktop notification when something needs you, with buttons to open it or to fix what is missing or
+#    newer (it asks before it changes anything).
 set -euo pipefail
 APP=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)
 REPO=$(cd "$APP/../.." && pwd -P)          # the repository: the venvs
@@ -40,7 +41,7 @@ for arg in "$@"; do
         --no-desktop-shortcut) shortcut=false ;;
         --uninstall) uninstall=true ;;
         --purge) purge=true ;;
-        -h|--help) sed -n '3,15p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+        -h|--help) sed -n '3,16p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
         *) die "Unknown option: $arg (use --help)." ;;
     esac
 done
@@ -56,7 +57,7 @@ remove_timer() {
 }
 
 if $uninstall; then
-    info "Removing the weekly reminder"
+    info "Removing the hourly reminder"
     remove_timer "$REMINDER"
     info "Removing the launcher, the menu entry and the Desktop icon"
     rm -f "$LAUNCHER" "$MENU_ENTRY" "$DESKTOP_ICON"
@@ -89,6 +90,12 @@ done
 if [ -e "$UNIT_DIR/bc250-bazzite-update-reminder.timer" ]; then
     info "Removing the Dependency Checker's weekly timer (bc250-bazzite-update-reminder): this app's takes its place"
     remove_timer bc250-bazzite-update-reminder
+fi
+# The development machine's hourly look for newer versions (tools/dev-updates.sh, until 09-11-2026): this app shows
+# every update of the machine now, and its reminder says so.
+if [ -e "$UNIT_DIR/nexus-dev-updates.timer" ]; then
+    info "Removing the hourly nexus-dev-updates timer: this app's reminder takes its place"
+    remove_timer nexus-dev-updates
 fi
 
 info "Creating the launcher $LAUNCHER"
@@ -129,10 +136,10 @@ elif ! $shortcut; then
     rm -f "$DESKTOP_ICON"
 fi
 
-info "Adding the weekly reminder ($REMINDER.timer, Mondays)"
+info "Adding the hourly reminder ($REMINDER.timer)"
 mkdir -p "$UNIT_DIR"
 cat >"$UNIT_DIR/$REMINDER.service" <<EOF
-# Written by $APP_NAME's install.sh: a desktop notification when a dependency or a Bazzite update needs you.
+# Written by $APP_NAME's install.sh: a desktop notification when a dependency or an update of the machine needs you.
 [Unit]
 Description=$APP_NAME: is something missing, outdated or waiting?
 
@@ -143,12 +150,12 @@ EOF
 cat >"$UNIT_DIR/$REMINDER.timer" <<EOF
 # Written by $APP_NAME's install.sh; --uninstall removes it.
 [Unit]
-Description=$APP_NAME: weekly look at the suite's dependencies and Bazzite's update state
+Description=$APP_NAME: hourly look at the suite's dependencies and the machine's updates
 
 [Timer]
-OnCalendar=Mon *-*-* 10:00
+OnCalendar=hourly
 Persistent=true
-RandomizedDelaySec=15min
+RandomizedDelaySec=5min
 
 [Install]
 WantedBy=timers.target

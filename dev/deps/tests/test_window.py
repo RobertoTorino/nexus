@@ -29,12 +29,13 @@ def _wait_for(predicate, ms=3000):
     return predicate()
 
 
-def _window(result: CheckResult, bazzite=None, **kwargs) -> DependencyWindow:
-    """The window on *result*; Bazzite's state from *bazzite*, else none (the board's own is never read here). Fix's
-    question is answered No unless a test passes its own *ask*."""
+def _window(result: CheckResult, bazzite=None, system=(), **kwargs) -> DependencyWindow:
+    """The window on *result*; Bazzite's state from *bazzite*, else none, and the machine's updates from *system* (the
+    board's own are never read here). Fix's question is answered No unless a test passes its own *ask*."""
     kwargs.setdefault("ask", lambda text: False)
     window = DependencyWindow(load_catalog(CATALOG), load_tools(CATALOG), load_apps(CATALOG), check=lambda: result,
-                              bazzite=bazzite or (lambda: BazziteState(error="Not read in a test.")), **kwargs)
+                              bazzite=bazzite or (lambda: BazziteState(error="Not read in a test.")),
+                              system=lambda: tuple(system), **kwargs)
     assert _wait_for(lambda: window.check_button.isEnabled())
     return window
 
@@ -303,3 +304,95 @@ def test_the_fix_dialog_runs_the_steps_and_stops_at_a_failure(qapp):
     assert _wait_for(lambda: dialog.buttons.isEnabled())
     assert "Done." in dialog.status.text() and "systemctl reboot" in dialog.status.text()
     dialog.close()
+
+
+def _sources():
+    from nexus_deps.system import Source, Update
+    brew = Source("brew", "Homebrew", tuple(Update(f"formula{n}", "1.0", "1.1") for n in range(14)),
+                  step=Step("brew", "14 Homebrew update(s)", ("sh", "-c", "true")))
+    venv = Source("venv", "Python venv (.venv-linux)", (Update("paramiko", "", "5.1.0"),),
+                  (Update("mkdocs", "1.6.1", "2.0.1"),), step=Step("pip", "1 package(s)", ("sh", "-c", "true")),
+                  note="The venv was made with Python 3.14 and runs Python 3.15 now.")
+    return (Source("flatpak", "Flatpak"), brew, Source("rust", "Rust", error="offline"), venv)
+
+
+def test_the_machines_updates_have_a_card_each(qapp):
+    """Every update system wide is shown (09-11-2026: the hourly notice named updates the window did not)."""
+    window = _window(CheckResult([], [], frozenset()), system=_sources())
+    try:
+        cards = window.system_cards
+        assert list(cards) == ["flatpak", "brew", "rust", "venv"] and not window.system_waiting.isVisible()
+        assert cards["flatpak"].status.text() == "Up to date" and cards["flatpak"].update_button.isHidden()
+        brew = cards["brew"]
+        assert brew.status.text() == "14 updates" and not brew.update_button.isHidden()
+        assert "formula0 1.0 → 1.1" in brew.text.text() and "And 2 more: formula12, formula13." in brew.text.text()
+        assert cards["rust"].status.text() == "Check failed" and cards["rust"].update_button.isHidden()
+        venv = cards["venv"]
+        assert "paramiko 5.1.0 (missing)" in venv.text.text()
+        assert venv.held.text() == "Held back by requirements-dev.txt: mkdocs 1.6.1 → 2.0.1 (major)."
+        assert "Python 3.15" in venv.note.text()
+        assert window.box_system.value.text() == "15" and "Homebrew (14)" in window.box_system.toolTip()
+        # Fix takes the machine's updates too; it is on with nothing else to fix
+        assert window.fix_button.isEnabled() and [step.kind for step in window.plan.steps] == ["brew", "pip"]
+    finally:
+        window.close()
+
+
+def test_a_cards_update_asks_for_its_own_step_alone(qapp):
+    asked: list[str] = []
+    window = _window(CheckResult([], [], frozenset()), system=_sources(), ask=lambda text: asked.append(text) or False)
+    try:
+        window.system_cards["brew"].update_button.click()
+        assert len(asked) == 1 and "14 Homebrew update(s)" in asked[0] and "1 package(s)" not in asked[0]
+        assert window.fix_dialog is None
+    finally:
+        window.close()
+
+
+def test_fix_offered_for_the_machines_updates_alone(qapp):
+    """--fix from a notification about Homebrew alone: the question comes once both checks are done."""
+    asked: list[str] = []
+    window = _window(CheckResult([], [], frozenset()), system=_sources(), offer_fix=True,
+                     ask=lambda text: asked.append(text) or False)
+    try:
+        assert len(asked) == 1 and "14 Homebrew update(s)" in asked[0]
+    finally:
+        window.close()
+
+
+def test_an_image_of_a_new_fedora_release_is_by_hand(qapp):
+    """A system-wide change has no Update: the card says why, and its i gives the steps."""
+    from nexus_deps.system import Source, Update
+    image = Source("image", "Bazzite image", (Update("Bazzite", "44.20261012.1", "45.20261105.0"),),
+                   note="Bazzite 45.20261105.0 moves from Fedora 44 to Fedora 45.", about="<ol><li>ujust update</li></ol>")
+    window = _window(CheckResult([], [], frozenset()), system=(image,))
+    try:
+        card = window.system_cards["image"]
+        assert card.status.text() == "By hand" and card.update_button.isHidden()
+        assert "(major)" in card.text.text() and "Fedora 44 to Fedora 45" in card.note.text()
+        assert not card.info.isHidden() and "ujust update" in card.info.text_
+        assert not window.fix_button.isEnabled()                    # nothing Fix may run
+    finally:
+        window.close()
+
+
+def test_the_emulators_and_firmware_have_a_section_of_their_own(qapp):
+    from nexus_deps.system import Source, Update
+    vita = Source("upstream-vita3k", "Vita3K", (Update("Vita3K on GitHub", "4269", "4283"),), group="apps",
+                  note="it comes with a release of the app", about="<p>release work</p>")
+    pads = Source("upstream-dualsense", "DualSense firmware", group="apps", detail="Latest: DualSense Edge 0x0217.",
+                  known=(("DualSense Edge (0x0044)", "0x0217"),), about="<p>USB cable</p>")
+    portal = Source("upstream-psportal", "PlayStation Portal", group="apps", checked=False, detail="On the device.",
+                    about="<p>Settings</p>")
+    window = _window(CheckResult([], [], frozenset()), system=(Source("flatpak", "Flatpak"), vita, pads, portal))
+    try:
+        assert not window.apps_heading.isHidden()
+        assert window.apps_layout.indexOf(window.system_cards["upstream-vita3k"]) == 0
+        assert window.system_layout.indexOf(window.system_cards["flatpak"]) >= 0
+        card = window.system_cards["upstream-vita3k"]
+        assert card.status.text() == "By hand" and card.update_button.isHidden()
+        assert window.system_cards["upstream-dualsense"].status.text() == "Nothing new"
+        assert window.system_cards["upstream-psportal"].status.text() == "On the device"
+        assert not window.fix_button.isEnabled()                    # nothing here is installed by a click
+    finally:
+        window.close()

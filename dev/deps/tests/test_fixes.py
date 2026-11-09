@@ -11,7 +11,8 @@ from nexus_deps.bazzite import BazziteState, Deployment
 from nexus_deps.dependencies import (
     CheckResult, DependencyStatus, EnvironmentVersion, ToolStatus, Vulnerability, load_catalog, load_tools,
 )
-from nexus_deps.fixes import Plan, notify, plan, problems, reminder_text, requirement
+from nexus_deps.fixes import Plan, Step, notify, plan, problems, reminder_text, requirement
+from nexus_deps.system import Source, Update
 
 VENV = "/home/u/.local/share/bc250-bazzite-suite/venv"
 OWN = "/home/u/.local/share/bc250-sftp-tools/venv"
@@ -134,6 +135,7 @@ def test_remind_opens_the_app_on_a_click(monkeypatch):
                            datetime.datetime.now().astimezone())
     monkeypatch.setattr(entry, "check_all", lambda *args: result())
     monkeypatch.setattr(entry, "read_state", lambda: waiting)
+    monkeypatch.setattr(entry, "read_sources", lambda: ())
     monkeypatch.setattr(entry, "notify", lambda title, text, icon, actions: "open")
     monkeypatch.setattr(entry.subprocess, "Popen", lambda argv, **kw: started.append(argv))
     monkeypatch.setattr("sys.argv", ["nexus_deps", "--remind"])
@@ -147,3 +149,17 @@ def test_remind_opens_the_app_on_a_click(monkeypatch):
 
 def test_an_empty_plan_is_false():
     assert not Plan() and not Plan(manual=("Steam",))
+
+
+def test_the_machines_updates_alone_make_a_notification_with_fix():
+    """The hourly timer's sources are Nexus Deps' since 09-11-2026: Homebrew's updates alone are worth a word."""
+    quiet = BazziteState(Deployment("44.1", 1, True, False), None, "", datetime.datetime.now().astimezone())
+    brew = Source("brew", "Homebrew", (Update("node", "26.13.0_1", "26.13.0_2"), Update("lz4", "1.10.0", "1.11.0")),
+                  step=Step("brew", "2 Homebrew update(s)", ("brew", "upgrade")))
+    current = Source("flatpak", "Flatpak")
+    note = reminder_text(quiet, result(), which_all, (brew, current))
+    assert note.text == "Updates: Homebrew (2)." and list(note.actions) == ["fix", "open"]
+    failed = Source("rust", "Rust", error="offline")
+    assert reminder_text(quiet, result(), which_all, (current, failed)).text == ""
+    venv = Source("venv", "Python venv (.venv-linux)", note="The venv was made with Python 3.14 and runs 3.15 now.")
+    assert reminder_text(quiet, result(), which_all, (venv,)).text == venv.note

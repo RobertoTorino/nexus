@@ -34,8 +34,12 @@ to), and downloads the firmware when you update a controller.
 
 **PyPI and OSV.dev**: [Nexus Deps](https://robertotorino.github.io/nexus/dashboard/#deps), a Nexus app run from a checkout of the repository, sends the names
 and versions of the Python packages in the apps' environments, to learn whether newer ones or known vulnerabilities
-exist. Its Bazzite card and weekly reminder read Bazzite's update state on the board itself and send nothing. Installing an
-app downloads its Python packages from PyPI.
+exist. Its Bazzite card reads Bazzite's update state on the board itself and sends nothing. Its cards of the
+machine's updates, and its hourly reminder, ask each source's own tool what is newer (rpm-ostree, Flatpak, Homebrew,
+rustup and pip), which talk to their own servers as they do when you run them yourself; its cards of the emulators
+and the PlayStation firmware ask GitHub for each emulator's latest release and Sony for its firmware lists, and send
+nothing about the board. Installing an app downloads
+its Python packages from PyPI.
 
 **Only when you ask for it:**
 

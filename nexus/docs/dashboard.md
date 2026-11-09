@@ -259,7 +259,8 @@ and the dashboard's tile does the same.
 
 **Nexus Deps** (`dev/deps/`) lists the Python packages and external tools of a suite's apps installed on this
 machine, which apps and features use them, and what is missing or must be updated; **Fix** installs that. On top,
-it shows whether a Bazzite update waits for you. It was the BC250 Bazzite Suite's Dependency Checker until
+it shows whether a Bazzite update waits for you and every update the machine has: Bazzite's image, the Flatpaks,
+Homebrew, Rust and the development venv. It was the BC250 Bazzite Suite's Dependency Checker until
 07-11-2026; it now runs from the checkout, like every Nexus app, and checks the BC250 Bazzite Suite (its catalog
 is `dev/deps/nexus_deps/catalogs/bc250-bazzite.toml`; `--suite` picks another suite once it has one). The
 dashboard's tile opens it on the suite chosen in the header.
@@ -267,21 +268,65 @@ dashboard's tile opens it on the suite chosen in the header.
 ```bash
 dev/deps/run.sh                             # open it
 dev/deps/run.sh --fix                       # open it and offer Fix as soon as the check is done
-dev/deps/run.sh --remind                    # no window: the weekly check once, from a terminal
-dev/deps/install.sh                         # app menu entry, Desktop icon and the weekly reminder
+dev/deps/run.sh --remind                    # no window: the hourly check once, from a terminal
+dev/deps/run.sh --sync-upstreams            # the list of emulators and firmware in line with the apps' pins again
+dev/deps/install.sh                         # app menu entry, Desktop icon and the hourly reminder
 dev/deps/install.sh --no-desktop-shortcut   # the same without the Desktop icon
 dev/deps/install.sh --uninstall             # remove them and the reminder; --purge also the settings
 ```
 
 Installing it removes an installed Dependency Checker of the suite (its copy, launcher, menu entry, Desktop icon
-and its weekly timer, `bc250-bazzite-update-reminder.timer`): Nexus Deps takes its place.
+and its weekly timer, `bc250-bazzite-update-reminder.timer`) and the development machine's hourly
+`nexus-dev-updates.timer`: Nexus Deps takes their place.
 
 **Bazzite**, the first card, shows the Bazzite image the machine runs (its version and build date), whether a newer
 one is installed and waits for a reboot, and when Bazzite's updater last ran. That updater, `uupd`, runs every
 night by itself and updates the image, Flatpaks, Homebrew and distroboxes; a new image takes effect at the next
 boot, so an update can wait unnoticed for days. The card turns to **Reboot to update** then. It also warns when
 the updater failed on its last run or has not run for over a week. This card only reads (from `rpm-ostree status`
-and `systemctl`, without root or the network); installing Bazzite's updates stays Bazzite's.
+and `systemctl`, without root or the network).
+
+**The machine's updates** follow, a card per source the machine has, each with what is newer (installed → new):
+
+| Card | Asked with | Update runs |
+|---|---|---|
+| Bazzite image | `rpm-ostree upgrade --check` | `rpm-ostree upgrade`: the new image is used after a restart |
+| Flatpak | `flatpak remote-ls --updates` | `flatpak update -y --noninteractive` |
+| Homebrew | `brew update`, then `brew outdated` (formulae and casks) | `brew upgrade` |
+| Rust | `rustup check` (the toolchains and rustup) | `rustup update` |
+| Python venv (.venv-linux) | `pip list --outdated` and a dry run of `requirements-dev.txt` | `pip install --upgrade` of the outdated packages within `requirements-dev.txt` |
+
+**Update** on a card asks with its command and runs it in a window with its output; **Fix** runs every card's with
+the packages' and tools' fixes. A source whose tool is missing has no card; one that could not be checked (offline)
+says why. The venv card lists the packages `requirements-dev.txt` holds back (MkDocs below 2, say), which no
+Update installs, and the packages missing from the venv: its `python` links to Bazzite's `/usr/bin/python3`, so a
+Bazzite image with a newer Python leaves the venv without its packages, and the card says so. Bazzite's updater
+still installs the image, the Flatpaks and Homebrew's packages every night by itself; Update only does it sooner.
+**Updates** in the header counts them, with the emulators' and the firmware's below.
+
+The **i** beside each card's name says what its Update does and how to handle what goes wrong (going back to the
+version before, keeping one package where it is). What needs care is said on the card itself, in orange: a new
+**major** version (marked on its row: it can change how a tool behaves), a Bazzite image that is used after a
+restart, a venv left on an older Python. An update that should not be installed by a click has no Update and shows
+**By hand**: a Bazzite image of a new Fedora release (44 → 45, say) changes the kernel, Mesa and the system's
+Python at once, so its i gives the steps instead: read its release notes, `ujust update` in a terminal, restart,
+open Nexus Deps again for what the new Python left without packages, and how to roll back.
+
+**Emulators and firmware** follow, the programs and firmware the suites' apps use, each on a card with the latest
+version and an i that says how to handle it. None of them is installed from here:
+
+| Card | Asked | What an update means |
+|---|---|---|
+| RPCS3, PCSX2, PPSSPP, Vita3K, Xenia Canary, shadPS4, Decky Loader | GitHub's latest release | Each app installs the build it was tested with (its pin). **Installed** behind the pin: open the app and use its Install. **On GitHub**, newer than the pin: it comes with a release of the app, after a test on a board. |
+| DualSense firmware (and the Edge's) | Sony's firmware list | A new version since the last look: connect the controller with a USB cable and update it in USB HD Control. |
+| PS4 system software | Sony's PS4 update list | A new version since the last look: update on the console. |
+| PS5 system software, PlayStation Portal | nothing a program can read | **On the device**: the i says where the device shows its updates. |
+
+An app installed without its emulator so far is no update; the card says so. Sony's versions are news once: the
+first look learns them, a later one shows what changed. The list is `dev/deps/nexus_deps/catalogs/upstreams.json`:
+which program each app uses and how its versions compare, written by hand, with the pins, repositories, names and
+launchers read from the apps' code and their portal's `apps.toml`. After a pin moves, `dev/deps/run.sh
+--sync-upstreams` brings it in line; CI Nexus fails until it is, and so does a new emulator app it does not list.
 
 **Python packages** are checked where each app runs: Nexus Deps finds every installed app by its launcher and
 reads the package versions in that app's Python environment (the suite's shared one, or the app's own). A card
@@ -312,17 +357,19 @@ shows their output and stops at the first that fails, then the check runs again.
   layered into the Bazzite image with `rpm-ostree install`, which may ask for your password. A layered package is
   there after a restart: the window says so and gives the command (`systemctl reboot`); Nexus Deps never restarts
   by itself.
+- The machine's updates: each card's **Update** command (above), after the packages and the tools.
 - Optional tools are left out: the apps work without them. A tool neither Homebrew nor Fedora has (`ujust`, Steam,
   a tool an app brings itself) is left to the app's chapter, which says how to get it.
 
 The catalog says how each tool is installed: `brew` (the Homebrew formula) and `rpm` (the Fedora package).
 
-### The weekly reminder
+### The hourly reminder
 
-Every Monday at about 10:00 (or at the next login, when the machine was off then) Nexus Deps runs its check
+Every hour (or at the next login, when the machine was off then) Nexus Deps runs its check
 without a window and, when something needs you, says so in a desktop notification: a Bazzite update waiting for a
-reboot, Bazzite's updater failing or not running, Python packages missing or to update, tools an installed app
-needs. **Fix…** opens the window and asks to fix it, the same question as the button; **Open Nexus Deps** opens the
+reboot, Bazzite's updater failing or not running, the machine's updates (per source, with how many), a venv left
+on an older Python, the emulators and firmware with news (each piece of news once), Python packages missing or to
+update, tools an installed app needs. **Fix…** opens the window and asks to fix it, the same question as the button; **Open Nexus Deps** opens the
 window. When all is well it says nothing. It is a systemd user timer, `nexus-deps-reminder.timer`, that
 `install.sh` adds and `--uninstall` removes; `systemctl --user disable --now nexus-deps-reminder.timer` switches it
 off.

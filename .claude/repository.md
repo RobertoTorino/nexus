@@ -52,7 +52,7 @@ The root keeps what is Nexus's:
   checkout: the pre-push hook and `merge_changelog.py`, git's merge driver for the CHANGELOGs, which merges two
   machines' new entries by entry; owner, 01-11-2026), `fix-modes.sh`, `dev_versions.py` (the dev/ apps' versions),
   `backlog.py`, `nexus_index.py` (GitHub's Latest release: the Nexus index, every suite's newest portal),
-  `dev-updates.sh`, `dev-backup.sh`), `features.py` (the Nexus page's Apps and features chapter from
+  `dev-backup.sh`), `features.py` (the Nexus page's Apps and features chapter from
   `nexus/features.toml`: every app of every suite and its features, a mark per suite; its test fails while an app
   is in no family or the chapter is stale), `new_app.py` (a new app of a suite from the architecture chapter, listed
   everywhere the suite lists its apps, with the checks run on it), the design and icon catalogs (`make_design.py`, `make_icons.py`, `apply_design.py`),
@@ -76,7 +76,8 @@ The root keeps what is Nexus's:
   `dev/sounds/` is **Nexus Sound Lab** (short sound effects for the suites' windows, such as the tick when the
   controller moves the focus, made from sliders and saved as WAV; owner, 03-11-2026); `dev/deps/` is **Nexus Deps**
   (a suite's Python packages and tools on this machine, Fix for what is missing or outdated with pip, Homebrew or
-  rpm-ostree, Bazzite's update state and a weekly reminder; its catalog per suite in
+  rpm-ostree, Bazzite's update state, every update of the machine with Update per source, and an hourly
+  reminder; its catalog per suite in
   `nexus_deps/catalogs/<suite>.toml`; the BC250 suite's Dependency Checker, `apps/package`, until 07-11-2026). A
   suite's own scripts (its manifest, pins, board checks, tours, installer tests) stay in its `tools/`: the
   dashboard runs them there.

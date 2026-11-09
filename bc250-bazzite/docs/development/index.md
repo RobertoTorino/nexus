@@ -119,7 +119,9 @@ gh issue close <number> --comment "Decky pinned at v3.3.0."    # close one, sayi
 ```
 
 The run fails only when an upstream could not be checked. A moved pin means a new version of the app is due, with
-the new pin tried on the board first.
+the new pin tried on the board first. It also moves Nexus Deps' list of the programs the apps use: run
+`dev/deps/run.sh --sync-upstreams` from the repository's root, else CI Nexus fails
+([Nexus Deps](https://robertotorino.github.io/nexus/dashboard/#deps)).
 
 The shadPS4 Manager installs one shadPS4 release, pinned in `bc250-bazzite/apps/shadps4/shadps4_manager/emulator.py`
 (`VERSION`, `TAG`, `ASSET`, `SHA256`). The same tool checks it: a newer stable release, with the Linux zip and the

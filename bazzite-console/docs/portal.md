@@ -14,6 +14,8 @@ each required Flatpak before opening its card. Netflix playback also requires Wi
 Press **☰** or the controller's **Start** button to open Settings. There you can choose whether app icons appear on
 the Desktop, turn sounds on or off, change the suite theme, choose a wallpaper, set the clock's format and time
 zone, choose a weather location, and adjust controller touchpad speed. The date and time stay visible in the header.
+With **Icons on Desktop** off, the portal removes suite app shortcuts at startup and after an installation. The
+portal's own shortcut and the apps' menu entries stay in place.
 
 Use the controller's directional controls to move between tiles, **A** to open or install, **B** to go back, **X**
 for a tile's menu, and the shoulder buttons to change categories. Keyboard arrows, Enter, Escape and the mouse work
