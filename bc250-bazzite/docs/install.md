@@ -23,3 +23,10 @@ from the clone, so keep it where it is. `./install.sh --uninstall` removes it ag
 installed app.
 
 What each app does: [The apps](apps/index.md).
+
+## After a Bazzite update to a new Python
+
+The apps run in Python venvs in your home folder. When a Bazzite update brings a new version of Python, a venv made
+by the old one no longer finds its packages, and the portal and the apps stop starting. Run `./install.sh` again
+where you installed from (the release folder or the clone): it makes the venv again. Then reinstall from the portal
+any app that still does not start (Reinstall in its tile's menu).

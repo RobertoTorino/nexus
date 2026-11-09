@@ -75,8 +75,12 @@ cp -R "$SRC_DIR/gpu_governor" "$SRC_DIR/images" "$APP_DIR/"
 cp "$SRC_DIR/requirements.txt" "$SRC_DIR/LICENSE" "$SRC_DIR/README.md" "$APP_DIR/" 2>/dev/null || true
 find "$APP_DIR" -name '__pycache__' -type d -prune -exec rm -rf {} +
 
-if [[ ! -x "$VENV_DIR/bin/python" ]]; then
+# A venv made by an older Python has no site-packages for the one that runs it now (a Bazzite update moves
+# /usr/bin/python3 to the next version, and the venv's python links to it): make it again.
+VENV_FITS='import os, sysconfig; raise SystemExit(not os.path.isdir(sysconfig.get_path("purelib")))'
+if [[ ! -x "$VENV_DIR/bin/python" ]] || ! "$VENV_DIR/bin/python" -c "$VENV_FITS" 2>/dev/null; then
     say "Creating the virtual environment"
+    rm -rf "${VENV_DIR:?}"
     python3 -m venv "$VENV_DIR"
 fi
 say "Installing PyQt6 into the virtual environment (this takes a moment the first time)"

@@ -1,3 +1,9 @@
+Changelog: 10-11-2026 00:27:26
+
+Fixed. The wiki's Install chapter says what to do when the apps stop starting after a Bazzite update
+to a new Python: run the portal's install.sh again, then reinstall from the portal any app that still does
+not start.
+
 Changelog: 07-11-2026 21:03:46
 
 Fixed. The README's Media trademark note is a section of its own, Media trademarks, so its Disclaimer is

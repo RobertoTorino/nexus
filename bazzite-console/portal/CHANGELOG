@@ -1,3 +1,9 @@
+Changelog: 10-11-2026 00:27:26
+
+Fixed. install.sh makes the shared Python venv again when an older Python made it. After a Bazzite update moves
+/usr/bin/python3 to a new version, the venv no longer finds its packages (PyQt6, pip): the portal did not start, and
+running install.sh again stopped at pip.
+
 Changelog: 09-11-2026 12:45:14
 
 Release 0.1.3.

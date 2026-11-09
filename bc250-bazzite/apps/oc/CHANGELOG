@@ -1,3 +1,9 @@
+Changelog: 10-11-2026 00:27:26
+
+Fixed. install.sh makes the app's Python venv again when an older Python made it. After a Bazzite update moves
+/usr/bin/python3 to a new version, the venv no longer finds its packages (PyQt6, pip): the app did not start, and
+running install.sh again stopped at pip.
+
 Changelog: 05-11-2026 18:44:37
 
 Release 0.3.3.

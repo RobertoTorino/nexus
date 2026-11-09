@@ -96,7 +96,10 @@ if [ "$CORE_SRC" != "$SRC/bc250_core" ]; then         # from the checkout: bundl
 fi
 
 # --- 2. The venv with PyQt6 ------------------------------------------------------------------------
-if [ ! -x "$VENV/bin/python" ] || ! "$VENV/bin/python" -c 'import sys' 2>/dev/null; then
+# A venv made by an older Python has no site-packages for the one that runs it now (a Bazzite update moves
+# /usr/bin/python3 to the next version, and the venv's python links to it): make it again.
+VENV_FITS='import os, sysconfig; raise SystemExit(not os.path.isdir(sysconfig.get_path("purelib")))'
+if [ ! -x "$VENV/bin/python" ] || ! "$VENV/bin/python" -c "$VENV_FITS" 2>/dev/null; then
     info "Creating the venv in $VENV"
     rm -rf "$VENV"
     python3 -m venv "$VENV"
