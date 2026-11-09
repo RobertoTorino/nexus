@@ -241,6 +241,73 @@ noted where each item stood). Each entry says where it is in the code and what t
      300-500 rewritten, the Deploy, Games and Settings pages, help, the wiki chapter, 400-600 lines of tests; a
      Breaking entry. Only the board shows: the HLX build under Proton (memory, time), HLX's speed and picture on RDNA 2
      against 2.0, HelixSR Scaler offering DLSS in FSR-only games, a game's FSR frame generation with HLX in place.
+
+2. **Our own Bazzite image, with everything the board needs on it**: next (owner, 10-11-2026: resume in a new
+   chat; the owner creates the repository first). A new board or drive then needs no setup of the system: the
+   packages, kernel arguments and services are on it from the first start, Bluetooth input pairing by itself
+   included (a system with only a Bluetooth keyboard and mouse cannot be used before something pairs them).
+
+   **Resume here (10-11-2026 00:02, for a new chat).** Decided by the owner (09/10-11-2026):
+   - Its own repository, `github.com/RobertoTorino/bazzite-nexus` (the owner creates it, and commits and pushes as
+     here); its workflows live in its own `.github/`. Claude writes the files in the owner's clone.
+   - The image `ghcr.io/robertotorino/bazzite-nexus`, tag `stable` (following `bazzite:stable`) and a dated tag per
+     build; rebuilt on a schedule from the latest `bazzite:stable`, signed with cosign.
+   - An unattended ISO to flash on a USB stick and install from (bootc-image-builder with a kickstart), built on
+     the board with podman, not published (it holds the user's password hash; about 8 GB, over GitHub's 2 GB per
+     release file). It installs only onto an empty or a named disk, never wipes a working system by itself. The
+     board must boot the stick without a keyboard (an empty drive falls through to USB; else set USB first once).
+   - Updates: the ISO only installs; the system then follows `bazzite-nexus:stable` from GHCR, so Bazzite's
+     updates arrive through the scheduled build, a few hours late. A failed build holds the board on the last good
+     image; the previous deployment stays in the boot menu. The cosign key is kept for good (installed systems
+     check against it).
+   - The portal: in the image as its released installer, run once at first login (it keeps updating itself).
+   - Where each part of the development machine's setup goes: **image**: the COPR and layered packages, the
+     kernel arguments (bootc `kargs.d`), the check tools as Fedora packages instead of Homebrew (shellcheck,
+     fakeroot, nodejs, gh, ImageMagick, actionlint, nasm; VS Code from Microsoft's RPM repository), the Bluetooth
+     pairing at startup and the controller batteries in the Bluetooth icon (two system services the owner keeps
+     outside this repository now; their D-Bus library as Fedora's `python3-dbus-fast`), vkpeak and memtest_vulkan
+     (licenses to check), the time zone Europe/Amsterdam; **first start**: the Flatpaks (Flatpak's `preinstall.d`);
+     **first login**: rustup, the checkout clone, the venv, Nexus Deps, Claude Code, VS Code's extensions,
+     speedtest (Ookla's license likely forbids a public image), the portal; **by hand**: the backup archive (SSH
+     keys, git identity) and the sign-ins (`gh auth login`, Claude Code). Nothing personal or secret in the image.
+   - First step in the new chat: the Containerfile, build script and workflow from `image-template`, the image
+     rebased on the board and tested; then the first-login step; then the ISO.
+
+   The analysis (09-11-2026, nothing built). Feasible: Universal Blue's `image-template` builds an image `FROM
+   ghcr.io/ublue-os/bazzite:stable` (what the board runs now, Fedora 45) with a Containerfile and a build script,
+   on GitHub Actions on a schedule, signed with cosign and pushed to GHCR; a board moves to it with one
+   `rpm-ostree rebase` and back the same way (the old deployment stays bootable).
+   - Into the image: today's layered packages (`rpm-ostree status`: cyan-skillfish-governor-smu from filippor's
+     COPR, fio, git, glmark2, radeontop, rasdaemon, rocminfo, stress, umr, vkmark; nvme-cli, stress-ng and
+     vulkan-tools come with Bazzite), the four kernel arguments (`bootc` kargs.d: `ttm.pages_limit=3014656 mitigations=off
+     bluetooth.disable_ertm=1 zswap.enabled=0`), system services with their files under `/usr`, udev rules, `/etc`
+     defaults.
+   - The portal (owner, 09-11-2026: the image contains the portal), the BC250 suite's, so a new board starts with it
+     and installs the apps from its tiles. The portal installs into the user's home and updates itself there, and
+     the apps it installs are per user, so a copy under `/usr` (read-only) would fight its own update. The way that
+     keeps its behavior: the image carries the portal's released installer and a first-login step (a user unit or a
+     `ujust` recipe) that runs it once for the user; the release it takes is the one the owner published. To decide:
+     that, or the portal under `/usr` with its update turned off in the image (the image's rebuild bringing new
+     portal releases instead).
+   - Not into the image: what is per user or secret. Flatpaks, Homebrew, the checkout, the venv, the suite's apps
+     and their user units, sign-ins and keys: a first-start script (or a `ujust` recipe in the image) can do the
+     non-secret part; keys and sign-ins stay in the backup archive. The image is public on GHCR: nothing personal in
+     it.
+   - Installing still needs input: Bazzite's installer asks for language, disk and user. Fully hands-off needs our
+     own ISO as well (the template's disk-image workflow, bootc-image-builder, with a kickstart answering the
+     installer); without it: install stock Bazzite, rebase once, which needs a keyboard once.
+   - Lead time, roughly: the image with packages, kernel arguments and services, rebased and tested on the board,
+     2-3 days; the first-start script for Flatpaks, Homebrew, checkout and venv, 2-3 days; our own unattended ISO,
+     2-4 days more (each try is an install). Then upkeep: a broken build stops the board's updates until fixed,
+     usually at a Fedora major release (a COPR package not yet built for it, as `cyan-skillfish-governor-smu`) or a
+     Bazzite change under a package.
+   - Preconditions: a repository for it (its own, or a folder here; its workflow lives in the root `.github/` either
+     way) and its place in the suites' rules; a cosign key pair, the private key as a repository secret; GHCR
+     publishing allowed for the account; the choice of base (`bazzite` KDE, stable) and of what goes in; a spare
+     drive or a board to try on (a rebase is undone by booting the previous deployment, an ISO install is not);
+     the BC250 suite's apps that change the system (Persistent ACPI, Fan Control, Governor Manager, Memory Manager,
+     the Wi-Fi driver) checked one by one: whether what they install belongs in the image or stays theirs.
+
 ### Windows
 
 1. **The second screen is gray in XBOX mode**: Windows' own behavior (found on the Ally, 05-11-2026: XBOX mode runs
