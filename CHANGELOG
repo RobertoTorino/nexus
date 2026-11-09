@@ -1,3 +1,7 @@
+Changelog: 09-11-2026 18:02:18
+
+Release 3.1.1.
+
 Changelog: 09-11-2026 17:09:08
 
 Fixed. The Windows Portable Suite's portal tour records again (windows-portable/tools/portal_tour.py): it still
