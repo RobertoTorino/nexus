@@ -29,6 +29,12 @@
   --wps-header-hover-fg: #f5a524;         /* A link in the header under the pointer */
 }
 
+/* Banner: the notice above the header of every page (tools/mkdocs/overrides/main.html). */
+:root {
+  --wps-banner-bg: #f5a524;               /* Banner background, the amber */
+  --wps-banner-fg: #141414;               /* Banner text */
+}
+
 /* Material's main color. */
 [data-md-color-primary="custom"] {
   --md-primary-fg-color: var(--wps-raised);      /* Buttons and Material's highlights */
@@ -508,4 +514,20 @@
   .md-header__links {
     display: none;
   }
+}
+
+/* The banner above the header: Material's announce bar, in the amber. */
+.md-banner {
+  background-color: var(--wps-banner-bg);
+  color: var(--wps-banner-fg);
+}
+
+.md-banner__inner {
+  margin: 0.5rem auto;
+  font-size: 0.75rem;
+  text-align: center;
+}
+
+.md-banner strong {
+  font-weight: 800;
 }

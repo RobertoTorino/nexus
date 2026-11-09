@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Xenia's profiles (owner's roadmap, 04-11-2026: saves need a profile, and Xenia makes one only in its own window):
-found, read and created the way builds e6cd2e4 and 838850f do it (src/xenia/kernel/xam/profile_manager.cc,
+found, read and created the way builds e6cd2e4 to cf206a3 do it (src/xenia/kernel/xam/profile_manager.cc,
 ProfileManager: FindProfiles, LoadAccount, CreateProfile, UpdateConfig; 838850f moved the HMAC, RC4 and key 0x19
 into xboxkrnl_crypt.cc, unchanged), so a game starts with the profile signed in and its saves
 go to it.

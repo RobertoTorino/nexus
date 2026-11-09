@@ -51,7 +51,8 @@ OWNED = (("boot-apps-full-screen", "true", "games full screen"),
 # Vita3K's window settings (its Qt frontend's QSettings, an .ini in portable\gui-configs) the app owns: (section, key,
 # value, what it is, for the log). confirmExitApp off (owner, 05-11-2026): a close of its game or main window asked
 # "Do you really want to exit?" with No as its default, so View, LB and RB held (core's play) waited out the grace
-# and ended Vita3K by force (the owner's Ally, Lumines, build 4186; the same in 4269's game_window.cpp, main_window.cpp)
+# and ended Vita3K by force (the owner's Ally, Lumines, build 4186; the same in 4269's and 4282's game_window.cpp,
+# main_window.cpp)
 GUI_SETTINGS = Path("gui-configs") / "CurrentSettings.ini"
 GUI_OWNED = (("MainWindow", "confirmExitApp", "false", "its exit question off"),)
 CONTENT = (("app", "game"), ("patch", "update"), ("addcont", "extra content"))   # ux0's folders, what each holds

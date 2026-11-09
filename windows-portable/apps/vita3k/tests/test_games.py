@@ -5,6 +5,7 @@ cannot be read."""
 
 from __future__ import annotations
 
+import struct
 from pathlib import Path
 
 from conftest import make_game, make_sfo
@@ -16,6 +17,23 @@ def test_read_sfo():
     sfo = read_sfo(make_sfo({"APP_VER": "01.05", "ATTRIBUTE": 32768, "TITLE": "Gravity Rush"}))
     assert sfo == {"APP_VER": "01.05", "ATTRIBUTE": 32768, "TITLE": "Gravity Rush"}
     assert read_sfo(b"") == {} and read_sfo(b"\0PSF" + b"\xff" * 30) == {} and read_sfo(b"not one at all, no") == {}
+
+
+def understated(sfo: bytes, field: int, length: int) -> bytes:
+    """*sfo* with the length of its *field*-th entry (0 first) set to *length*: what some games' param.sfo say."""
+    at = 20 + 16 * field + 4
+    return sfo[:at] + struct.pack("<I", length) + sfo[at + 4:]
+
+
+def test_a_text_whose_length_is_understated_is_read_whole():
+    """Vita3K 4282 installs a game whose param.sfo gives a text a shorter length than it has (its terminator still in
+    the entry's room); the title is read to that terminator, never into the next entry's data or past the table."""
+    sfo = make_sfo({"APP_VER": "01.05", "TITLE": "Gravity Rush Remastered", "TITLE_ID": "PCSA00011"})
+    assert read_sfo(understated(sfo, 1, 4)) == {"APP_VER": "01.05", "TITLE": "Gravity Rush Remastered",
+                                                "TITLE_ID": "PCSA00011"}
+    assert read_sfo(understated(sfo, 2, 1))["TITLE_ID"] == "PCSA00011"   # the last entry: up to the table's end
+    full = make_sfo({"TITLE": "Four", "TITLE_ID": "PCSA00011"}).replace(b"Four\0\0\0\0", b"FourFour")
+    assert read_sfo(understated(full, 0, 2))["TITLE"] == "FourFour"     # no null in its room: not into TITLE_ID
 
 
 def test_a_game_as_vita3k_shows_it(tmp_path):

@@ -64,7 +64,7 @@ firmware Vita3K has, how many games are installed in it and the folder. When Vit
 the one this app brings, a row says so. Vita3K's own window is never opened: the firmware and your games are given to
 Vita3K from here.
 
-- **A Install** (also **A** on the Vita3K card) downloads Vita3K build 4269 for Windows from Vita3K's builds on GitHub
+- **A Install** (also **A** on the Vita3K card) downloads Vita3K build 4282 for Windows from Vita3K's builds on GitHub
   (25 MB), checks it against the checksum this version of the app was tested with, and unpacks it. The page counts the
   megabytes while it downloads. Nothing is downloaded before you press A.
 - **X Remove Vita3K** removes Vita3K's program. Press it twice: the first press only changes the entry to **Press

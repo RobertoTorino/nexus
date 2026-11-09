@@ -1,3 +1,9 @@
+Changelog: 09-11-2026 13:59:20
+
+Fixed. The release carries SDL 3.4.20 (was 3.4.18, binaries.toml), a bugfix release of SDL: among its fixes,
+Nintendo Switch controllers that failed for missing stick and IMU calibration, and the Flydigi Vader 5 Pro's
+reports stopping while its Space Station service runs. The zip holds the same files as before.
+
 Changelog: 07-11-2026 17:15:28
 
 Release 1.1.0.

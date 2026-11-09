@@ -3,7 +3,8 @@
 ID>, with eboot.bin (the program) and sce_sys\\param.sfo (its title, title ID PCSB00245 and version), as build 4186
 lists them (app::scan_apps). Vita3K starts one by that folder's name (-r PCSB00245). Updates and DLC are not games to
 start: Vita3K installs them in ux0\\patch and ux0\\addcont. The reading is the BC250 suite's Vita3K Manager's (its
-games.py), unchanged but for a game's pictures that cannot be read (Game.picture).
+games.py), but for a game's pictures that cannot be read (Game.picture) and a text whose length is understated
+(read_sfo, as build 4282 reads it).
 
 param.sfo is the PSF format of the PlayStation consoles: a 20-byte header ("\\0PSF", version, start of the key
 table, start of the data table, number of entries), then 16 bytes per entry (key offset u16, format u16, length
@@ -47,11 +48,19 @@ def read_sfo(data: bytes) -> dict[str, str | int]:
         return {}
     try:
         _version, keys, values, count = struct.unpack_from("<4I", data, 4)
+        table = len(data) - values
+        offsets = sorted(struct.unpack_from("<I", data, 20 + 16 * n + 12)[0] for n in range(count))
         found: dict[str, str | int] = {}
         for n in range(count):
-            key_at, kind, length, _room, value_at = struct.unpack_from("<HHIII", data, 20 + 16 * n)
+            key_at, kind, length, room, value_at = struct.unpack_from("<HHIII", data, 20 + 16 * n)
             start = keys + key_at
             name = data[start:data.index(b"\0", start)].decode("utf-8", "replace")
+            if kind == TEXT:
+                # Some param.sfo files understate a text's length: its terminator is still within the entry's room,
+                # before the next entry's data, so the text is read to there and cut at its first null (as Vita3K
+                # reads it since build 4282, packages/src/sfo.cpp; 4269 refused such a file).
+                following = min((at for at in offsets if at > value_at), default=table)
+                length = min(room, table - value_at, following - value_at)
             raw = data[values + value_at:values + value_at + length]
             if kind == NUMBER:
                 found[name] = struct.unpack("<I", raw[:4])[0]

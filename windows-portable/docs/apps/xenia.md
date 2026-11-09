@@ -53,7 +53,7 @@ with the A button.** until it is installed, then **Installed.** and **Remove wit
 The pane shows the Xenia build that is installed, the one this version of the app installs, the profile Xenia signs
 in, how many games were found and the folder. When Xenia Canary has published a newer build than the one this app brings, a row says so.
 
-- **A Install** (also **A** on the Xenia card) downloads Xenia Canary build 838850f for Windows from Xenia Canary's
+- **A Install** (also **A** on the Xenia card) downloads Xenia Canary build cf206a3 for Windows from Xenia Canary's
   release on GitHub (4 MB), checks it against the checksum this version of the app was tested with, and unpacks it.
   The page counts the megabytes while it downloads. Nothing is downloaded before you press A.
 - **X Remove Xenia** removes Xenia's program. Press it twice: the first press only changes the entry to **Press
@@ -223,8 +223,9 @@ seconds before it is ended. On a device without Steam the app starts a game the 
 earlier version, which starts `xenia_canary.exe` itself, shows **(Update Steam)** on its game: **Y Update Steam** writes
 it again.
 
-Every Monday the suite checks that the file Xenia Manager downloads is still the one it was tested with; Xenia
-Canary's newer builds, out almost every day, are not reported there, the Xenia pane shows the newest.
+Every Monday the suite checks that the file Xenia Manager downloads is still the one it was tested with, and whether
+Xenia Canary has published a newer build, which a new version of the app can bring once it is tried; the Xenia pane
+shows the newest too.
 
 ## Install it on its own
 

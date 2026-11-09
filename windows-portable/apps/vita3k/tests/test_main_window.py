@@ -152,7 +152,7 @@ def test_nothing_is_installed_before_a(qapp, tmp_path):
     window = make(qapp, tmp_path / "emulator", install=lambda *a, **k: calls.append(True))
     assert calls == [] and window.vita3k_card.hasFocus()
     rows = dict(window.rows())
-    assert rows["Installed"] == "not installed" and rows["This app installs"] == "build 4269 (0.2.1)"
+    assert rows["Installed"] == "not installed" and rows["This app installs"] == "build 4282 (0.2.1)"
     assert rows["Firmware"] == "no system software and no font package" and rows["Games"] == "0"
     window.on_action("x")                                       # X Remove: says why, nothing happens
     assert "nothing to remove" in window.status.text() and calls == []

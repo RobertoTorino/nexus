@@ -1,3 +1,10 @@
+Changelog: 09-11-2026 13:15:22
+
+Added. The Windows Portable Suite's wiki shows a banner above the header of every page, Home too (owner,
+09-11-2026): development of the suite is on hold from 10 November 2026, and the portal and the released apps stay
+available as they are. It is Material's announce bar (windows-portable/tools/mkdocs/overrides/main.html), in the
+amber of the suite's design (docs/stylesheets/portable.css, the Banner variables).
+
 Changelog: 09-11-2026 12:45:14
 
 Release 3.0.0. Brings ps5-portal-v0.1.3.

@@ -1,3 +1,18 @@
+Changelog: 09-11-2026 13:59:20
+
+Fixed. A game whose param.sfo gives its title (or another text) a shorter length than it has shows its whole
+title in Your games: the text is read to its terminator within the entry's room, never into the next entry, as
+Vita3K reads it since build 4282, which installs such games (4269 refused them).
+
+Changelog: 09-11-2026 13:16:38
+
+Added. The app installs Vita3K build 4282 (was 4269), the newest build: emulator.py pins build 4282 (0.2.1, commit
+4b3addb3), the SHA-256 GitHub publishes for vita3k-4282-4b3addb3-windows-x86_64.7z (b97632bd…8dbc) and its size. The
+archive holds the same 136 files by name, only Vita3K.exe changed; what the app relies on in Vita3K's source (the
+command line, the portable folder, config.yml, the window settings with confirmExitApp, the firmware check, the game
+and library windows) is unchanged. Vita3K's library window shows when a game has an update and filters its list.
+The pin no longer follows the BC250 suite's, which stays on build 4269. The wiki says so.
+
 Changelog: 07-11-2026 17:15:28
 
 Release 6.1.0.

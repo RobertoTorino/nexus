@@ -128,7 +128,7 @@ def test_nothing_is_installed_before_a(qapp, tmp_path):
     calls = []
     window = make(qapp, tmp_path / "emulator", install=lambda *a, **k: calls.append(True))
     assert calls == [] and window.xenia_card.hasFocus()
-    assert dict(window.rows())["Installed"] == "not installed" and dict(window.rows())["This app installs"] == "838850f"
+    assert dict(window.rows())["Installed"] == "not installed" and dict(window.rows())["This app installs"] == "cf206a3"
     window.on_action("x")                                       # X Remove: says why, nothing happens
     assert "nothing to remove" in window.status.text() and calls == []
     window.close()

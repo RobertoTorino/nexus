@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The Vita3K the app installs (emulator.py), as RPCS3 Manager's is tested: the pin (the BC250 suite's build, its
+"""The Vita3K the app installs (emulator.py), as RPCS3 Manager's is tested: the pin (the build, its
 Windows archive), the download checked against the pin, the unpacking with Windows' tar (stood in for, and the real
 one where it is), the portable folder and the record, Remove keeping what Vita3K and the player made, the runtime
 check, the newest build on GitHub, Vita3K's installs (stood in for: the program is never started here) and the launch
@@ -51,17 +51,13 @@ def install(home: Path, data: bytes, **kwargs) -> str:
 
 
 def test_the_pin():
-    """The same build as the BC250 suite's Vita3K Manager pins, its Windows archive on Vita3K's builds repository."""
-    assert emulator.VERSION == emulator.TAG == "4269" and emulator.SEMVER == "0.2.1"
+    """The pinned build, its Windows archive on Vita3K's builds repository."""
+    assert emulator.VERSION == emulator.TAG == "4282" and emulator.SEMVER == "0.2.1"
     assert emulator.ASSET == f"vita3k-{emulator.VERSION}-{emulator.COMMIT[:8]}-windows-x86_64.7z"
-    assert emulator.URL == f"https://github.com/Vita3K/Vita3K-builds/releases/download/4269/{emulator.ASSET}"
+    assert emulator.URL == f"https://github.com/Vita3K/Vita3K-builds/releases/download/4282/{emulator.ASSET}"
     assert emulator.REPO == "Vita3K/Vita3K-builds" and emulator.CADENCE == "daily" and len(emulator.SHA256) == 64
-    assert emulator.SIZE == 24_561_566 and emulator.EXE == "Vita3K.exe" and emulator.PORTABLE == "portable"
+    assert emulator.SIZE == 24_580_241 and emulator.EXE == "Vita3K.exe" and emulator.PORTABLE == "portable"
     assert emulator.GAME_ARGS == ("-r",)
-    bc250 = Path(__file__).resolve().parents[4] / "bc250-bazzite" / "apps" / "vita3k" / "vita3k_manager" / "emulator.py"
-    if bc250.is_file():                                             # the same build as the BC250 suite's pin
-        text = bc250.read_text(encoding="utf-8")
-        assert f'COMMIT = "{emulator.COMMIT}"' in text and f"BUILD = {emulator.VERSION}" in text
 
 
 def test_install_makes_the_portable_folder_and_its_record(tmp_path):
@@ -161,7 +157,7 @@ def test_a_newer_build_on_github():
                             "published_at": "2026-10-29T15:15:42Z"}
     newer = emulator.newer_release(answer("4300"))
     assert (newer.version, newer.url, newer.published) == ("4300", "https://github.com/x/4300", "2026-10-29")
-    assert emulator.newer_release(answer("4269")) is None and emulator.newer_release(answer("4268")) is None
+    assert emulator.newer_release(answer("4282")) is None and emulator.newer_release(answer("4281")) is None
     assert emulator.newer_release(answer("continuous")) is None
 
     def offline(url):

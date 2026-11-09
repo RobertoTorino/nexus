@@ -1,19 +1,19 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The Xenia this version of the app installs: the Windows build of one Xenia Canary build on GitHub, pinned and
-checked against the SHA-256 this version of the app was tried with, the same build as the BC250 suite's Xenia Manager
-pins (838850f). Xenia has no stable releases: Xenia Canary publishes a build for almost every change, a release of
-xenia-canary/xenia-canary tagged with the commit it was built from. A newer Xenia comes with a new version of the app;
-the Xenia pane says when a newer build is out (newer_release: a tag is a commit, not a number, so "newer" is a release
-published after the pinned one), and so does the suite's weekly upstream check (windows-portable/tools/
-check_upstream.py, CADENCE: a build for almost every change, compared by PUBLISHED), with the pinned file.
+checked against the SHA-256 this version of the app was tried with (cf206a3). Xenia has no stable releases: Xenia
+Canary publishes a build for almost every change, a release of xenia-canary/xenia-canary tagged with the commit it was
+built from. A newer Xenia comes with a new version of the app; the Xenia pane says when a newer build is out
+(newer_release: a tag is a commit, not a number, so "newer" is a release published after the pinned one), and so does
+the suite's weekly upstream check (windows-portable/tools/check_upstream.py, CADENCE: a build for almost every change,
+compared by PUBLISHED), with the pinned file.
 
 It goes to %LOCALAPPDATA%\\windows-portable-suite\\windows-portable-xenia\\emulator\\, one folder: Xenia on Windows is
-portable by itself (app/xenia_main.cc in e6cd2e4: the portable cvar is true on Windows, so its storage root is the
-program's folder; elsewhere it is so only with a portable.txt beside the program). Beside xenia_canary.exe it keeps
-its settings (xenia-canary.config.toml), the content of your games and their saves (content\\), its caches and its log
-(xenia_canary.log). A newer Xenia is unpacked over the older one and what the player made stays; installed.json beside
-it records the version and the files the archive brought, and Remove deletes only those (install.ps1 --uninstall
---purge removes the whole folder).
+portable by itself (app/xenia_main.cc, unchanged up to cf206a3: the portable cvar is true on Windows, so its
+storage root is the program's folder; elsewhere it is so only with a portable.txt beside the program). Beside
+xenia_canary.exe it keeps its settings (xenia-canary.config.toml), the content of your games and their saves
+(content\\), its caches and its log (xenia_canary.log). A newer Xenia is unpacked over the older one and what the
+player made stays; installed.json beside it records the version and the files the archive brought, and Remove deletes
+only those (install.ps1 --uninstall --purge removes the whole folder).
 
 The archive is a .7z (xenia_canary.exe and its LICENSE), which Windows' own tar (C:\\Windows\\System32\\tar.exe, bsdtar
 built with liblzma on Windows 11) unpacks, as RPCS3 Manager's: no package for it. Xenia for Windows needs Microsoft's
@@ -38,15 +38,15 @@ from bc250_core.updates import Fetch, ReleaseInfo, github_fetch
 
 from . import APP_ID, SUITE, __version__
 
-VERSION = "838850f"                     # the build's tag: the commit it was built from, the BC250 suite's pin
+VERSION = "cf206a3"                     # the build's tag: the commit it was built from
 TAG = VERSION
-COMMIT = "838850fed8389bdb28dc38f89bcb73bb43db1494"
-PUBLISHED = "2026-11-04T16:38:00Z"      # when GitHub published it: a later release is a newer build
+COMMIT = "cf206a3bdc4ffdfb22dbcfda99f777ab8d286f1d"
+PUBLISHED = "2026-11-09T00:16:59Z"      # when GitHub published it: a later release is a newer build
 REPO = "xenia-canary/xenia-canary"
 CADENCE = "daily"                       # for the weekly upstream check: a build for almost every change
 ASSET = "xenia_canary_windows.7z"       # the same name in every build's release
-SHA256 = "555159b5058e250da639af6a70ec43c87c7b1fb68fc00193c4b91f4b52a60438"
-SIZE = 3_703_554                        # bytes
+SHA256 = "3e4d1cb73e0e74b20651822c0c75e88852da9909c4294d12447161f2a804ade8"
+SIZE = 3_726_879                        # bytes
 URL = f"https://github.com/{REPO}/releases/download/{TAG}/{ASSET}"
 RELEASE_PAGE = f"https://github.com/{REPO}/releases/tag/{TAG}"
 EXE = "xenia_canary.exe"
@@ -88,7 +88,7 @@ def program(home: Path) -> Path:
 
 
 def installed(home: Path) -> str:
-    """The installed build ("838850f"), "" when Xenia is not installed (or its program is gone)."""
+    """The installed build ("cf206a3"), "" when Xenia is not installed (or its program is gone)."""
     version = str(record(home).get("version") or "")
     return version if version and program(home).is_file() else ""
 
@@ -214,7 +214,7 @@ def runtime_missing(system32: Path | None = None) -> list[str]:
 
 
 def newer_release(fetch: Fetch | None = None) -> ReleaseInfo | None:
-    """Xenia's newest build when it was published after the one this app brings (the BC250 app's); None when it was
+    """Xenia's newest build when it was published after the one this app brings; None when it was
     not, or when GitHub cannot be asked (nothing to say then). The builds are tagged with a commit, which core's
     latest_release does not read as a version, so the app reads the release itself."""
     fetch = fetch or github_fetch(f"{APP_ID}/{__version__}")

@@ -1,3 +1,15 @@
+Changelog: 09-11-2026 13:17:00
+
+Added. The app installs Xenia Canary build cf206a3 (09-11-2026; was 838850f), the newest build: emulator.py pins its
+commit, release date, the SHA-256 GitHub publishes for xenia_canary_windows.7z (3e4d1cb7…ade8) and its size
+(3,726,879 bytes). The archive holds the same files (xenia_canary.exe, LICENSE, the same imports); what the app relies
+on in Xenia's source (the portable storage root, the launch options, the settings it writes, the profiles' Account
+file, its crypto and header, the profile signed in at start) is unchanged. Among the build's changes: Xenia no longer
+crashes on a path with letters outside the Windows code page, and its fast dot product is on by default, which Xenia
+sets once in a settings file written by an earlier build. The BC250 suite's Xenia Manager stays on 838850f, so the
+test of the pin no longer compares the two. The wiki's chapter names the build, and says that the weekly check reports
+a newer build.
+
 Changelog: 07-11-2026 17:15:28
 
 Release 6.1.0.

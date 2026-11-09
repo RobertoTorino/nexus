@@ -134,7 +134,7 @@ app is an optional tile. The wiki is at robertotorino.github.io/nexus/windows-po
   `keep.py`: a row each with its size, every row marked Delete at first, A turns one to Keep and back, X deletes the
   rows still marked Delete, B deletes nothing). The game managers use it for Remove game, for the packages a clean
   install leaves, and for PCSX2's Remove BIOS.
-- **Unsigned for now** (code signing and an MSIX for XBOX mode's home app are on hold, MIGRATION.md).
+- **Unsigned** (code signing and an MSIX for XBOX mode's home app were dropped, owner 04-11-2026, MIGRATION.md).
 
 ## How an app is built
 

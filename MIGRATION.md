@@ -5,6 +5,30 @@
 Working notes for moving the seven BC-250 tools into this suite. Not part of the manual or the READMEs, which
 describe only what exists.
 
+## The Windows Portable Suite on hold (owner, 09-11-2026: from 10-11-2026)
+
+**Development of the Windows Portable Suite is on hold from 10-11-2026** (owner, 09-11-2026: the last day with the
+ROG XBOX Ally X). The released apps and wp-portal-v10.3.0 stay as they are; no new features or releases until the
+owner takes it up again. The wiki carries a banner saying so on every page (`windows-portable/tools/mkdocs/overrides/main.html`,
+Material's announce bar; take it out when work resumes). The BC250 Bazzite Suite and Nexus go on.
+
+The last day (09-11-2026), in the working tree: the banner; the Upstream review's two moved pins, Vita3K build 4282
+(was 4269) and Xenia Canary cf206a3 (was 838850f), for the owner to try on the Ally and release today if wanted.
+Left as it stood when work stops:
+
+- The weekly workflows keep running (owner, 09-11-2026: the upstream check stays on): `upstream-windows-portable.yml`
+  reopens "Upstream review (Windows Portable Suite)" whenever an emulator moves, and CI runs on changes to core and
+  the Nexus tools.
+- Remote Play's SDL3 moved to 3.4.20 (owner, 09-11-2026: update; was 3.4.18, `apps/rplay/binaries.toml`; the same
+  files in the zip, its digest GitHub's, fetched by `build_release.py --binaries rplay`): a release of Remote Play,
+  a stream with a console to try it. The SDL3 pin is not in the upstream check.
+- Vita3K Manager reads a param.sfo text whose length is understated as Vita3K 4282 does (owner, 09-11-2026: fix it;
+  `games.read_sfo`). The BC250 suite's Vita3K Manager has the same reader and stays on 4269, which refuses such files:
+  it wants the same fix when it moves to 4282 or later, a change of its own.
+- The suite's one backlog item, the xbased manager, waits with it (looked at again today: still too fast to pin).
+- To take up again: the device test of the newest pins, the Upstream review's backlog of emulator builds, and every
+  item above that says "to try on the Ally" without a result.
+
 ## Resume here (05-11-2026 11:16, for a new chat): the roadmap, Windows and Bazzite/Windows
 
 The Bazzite items of the roadmap are done and released (portal-v15.0.0 and the apps of 05-11-2026).
@@ -2595,6 +2619,9 @@ behavior and dependencies. Decided (owner, 25-10-2026):
   sent nothing. Next (owner, 04-11-2026): a firmware update for the CAC-2504. Club3D publishes none for it (only for
   other models, such as the CAC-1087); its support is reached through its RMA email address. With new firmware, run
   the probe again. The alternatives were: a Samsung EE-PW700 or Kramer ADC-U31C/HF, or the Pulse-Eight adapter.
+  Tried on the Ally X (07-11-2026, Mi TV on input 1, physical address 1.0.0.0): a UGreen 9-in-1 USB-C Docking
+  Station's HDMI has a MegaChips converter too (OUI 00-60-AD, id `cHDMIb`, hw 0x01, fw 1.75, DPCD 1.2) and reports
+  no CEC tunneling (0x3000 = 0x00, 0x3001 = 0x00), so the probe sent nothing; DPCD 1.2 predates tunneling (DP 1.3).
 - **An original XBOX emulator manager on xbased (on hold, owner 03-11-2026: too new to pin).** xbased
   (`github.com/crazyriddler/xbased`, GPL-3.0-or-later by its README; GitHub detects its license as "Other", so read
   its LICENSE first) is the PC edition of hakuX (the Android/arm64 fork of xemu): it needs no BIOS, MCPX ROM or
@@ -2606,7 +2633,9 @@ behavior and dependencies. Decided (owner, 25-10-2026):
   03-11-2026 and had five releases (v1.0 to v1.0.4) that same day, 9 commits and 15 stars, with no compatibility
   list for the PC; the suite pins the newest stable release, which would mean an app release every few hours. To
   look at again: whether releases have slowed down, compatibility reports, what the 9 commits hold against hakuX's
-  history, and xemu (established, but needs the user's own BIOS dumps) as the alternative.
+  history, and xemu (established, but needs the user's own BIOS dumps) as the alternative. Looked at again
+  (09-11-2026): no slowdown, v1.0.89 by 09-11-2026 10:03 UTC, about fifteen releases a day since 07-11-2026, 187
+  stars, 97 open issues, the license still "NOASSERTION" on GitHub. Still on hold, with the suite (below at the top).
 
 The scan (25-10-2026), what each BC-250 app means for Windows:
 

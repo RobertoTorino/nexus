@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The Xenia the app installs (emulator.py), as Vita3K Manager's is tested: the pin (the BC250 suite's build, its
+"""The Xenia the app installs (emulator.py), as Vita3K Manager's is tested: the pin (the build, its
 Windows archive), the download checked against the pin, the unpacking with Windows' tar (stood in for, and the real
 one where it is), the record, Remove keeping what Xenia and the player made, the runtime check, the newest build on
 GitHub (by the time it was published: a tag is a commit) and the launch line Steam's shortcuts use. The real download
@@ -50,16 +50,12 @@ def install(home: Path, data: bytes, **kwargs) -> str:
 
 
 def test_the_pin():
-    """The same build as the BC250 suite's Xenia Manager pins, its Windows archive in the same release."""
-    assert emulator.VERSION == emulator.TAG == "838850f" and emulator.COMMIT.startswith(emulator.VERSION)
+    """Build cf206a3, its Windows archive in the same release."""
+    assert emulator.VERSION == emulator.TAG == "cf206a3" and emulator.COMMIT.startswith(emulator.VERSION)
     assert emulator.ASSET == "xenia_canary_windows.7z" and emulator.REPO == "xenia-canary/xenia-canary"
-    assert emulator.URL == f"https://github.com/xenia-canary/xenia-canary/releases/download/838850f/{emulator.ASSET}"
-    assert emulator.CADENCE == "daily" and len(emulator.SHA256) == 64 and emulator.SIZE == 3_703_554
+    assert emulator.URL == f"https://github.com/xenia-canary/xenia-canary/releases/download/cf206a3/{emulator.ASSET}"
+    assert emulator.CADENCE == "daily" and len(emulator.SHA256) == 64 and emulator.SIZE == 3_726_879
     assert emulator.EXE == "xenia_canary.exe" and emulator.GAME_ARGS == ("--fullscreen=true",)
-    bc250 = Path(__file__).resolve().parents[4] / "bc250-bazzite" / "apps" / "xenia" / "xenia_manager" / "emulator.py"
-    if bc250.is_file():                                             # the same build as the BC250 suite's pin
-        text = bc250.read_text(encoding="utf-8")
-        assert f'COMMIT = "{emulator.COMMIT}"' in text and f'PUBLISHED = "{emulator.PUBLISHED}"' in text
 
 
 def test_install_and_its_record(tmp_path):
@@ -154,6 +150,7 @@ def test_a_newer_build_on_github():
         return lambda url: {"tag_name": tag, "html_url": f"https://github.com/x/{tag}", "published_at": published}
     newer = emulator.newer_release(answer("9a1b2c3", "2026-11-20T18:08:48Z"))
     assert (newer.version, newer.url, newer.published) == ("9a1b2c3", "https://github.com/x/9a1b2c3", "2026-11-20")
+    assert emulator.newer_release(answer("cf206a3", "2026-11-09T00:16:59Z")) is None
     assert emulator.newer_release(answer("838850f", "2026-11-04T16:38:00Z")) is None
     assert emulator.newer_release(answer("f42147a", "2026-10-19T00:00:00Z")) is None
 

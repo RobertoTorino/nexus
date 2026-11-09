@@ -6,7 +6,7 @@
 
 # Xenia Manager
 
-Plays your XBOX 360 games on a Windows handheld with Xenia, the XBOX 360 emulator: Xenia Canary build 838850f for
+Plays your XBOX 360 games on a Windows handheld with Xenia, the XBOX 360 emulator: Xenia Canary build cf206a3 for
 Windows from Xenia Canary's own release, checked against the checksum this version of the app was tested with, for
 your own user; Xenia keeps its settings, your games' content and your saves beside its program, in the app's folder.
 You never choose a folder: the app offers Xenia's settings, finds the games you put in Games\XBOX360 (in your user
