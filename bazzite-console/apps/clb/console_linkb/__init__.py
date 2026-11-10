@@ -5,7 +5,7 @@ Greenlight and xal-node (MIT; see the README's License section)."""
 
 APP_NAME = "Console LinkB"
 APP_ID = "ps5-console-linkb"
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 from pathlib import Path
 

@@ -3,7 +3,7 @@
 
 APP_NAME = "SSD Check"
 APP_ID = "ps5-ssd-check"
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 from pathlib import Path
 

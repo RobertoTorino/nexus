@@ -1,3 +1,7 @@
+Changelog: 10-11-2026 01:18:31
+
+Release 0.1.1.
+
 Changelog: 10-11-2026 00:27:26
 
 Fixed. install.sh makes the app's Python venv again when an older Python made it. After a Bazzite update moves

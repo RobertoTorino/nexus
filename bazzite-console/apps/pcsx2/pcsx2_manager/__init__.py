@@ -4,7 +4,7 @@ games in the chosen folders and adds them to Steam, where a game is started."""
 
 APP_NAME = "PCSX2 Manager"
 APP_ID = "ps5-pcsx2-manager"
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 from pathlib import Path
 
