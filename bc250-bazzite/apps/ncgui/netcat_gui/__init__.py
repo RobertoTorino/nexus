@@ -5,7 +5,7 @@ NetcatGUI by Shinnok (Teodor Mircea Ionita), GPL-2.0."""
 
 APP_NAME = "Bazzite NetcatGUI"
 APP_ID = "bazzite-netcatgui"
-__version__ = "2.0.0"
+__version__ = "2.0.1"
 
 from pathlib import Path  # noqa: E402  (constants first, as the suite's apps do)
 

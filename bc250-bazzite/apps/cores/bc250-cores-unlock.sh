@@ -33,7 +33,7 @@
 set -u
 if (( BASH_VERSINFO[0] < 4 )); then echo "bash 4 or newer is needed." >&2; exit 1; fi
 
-VERSION="0.4.3"
+VERSION="0.4.4"
 SELF=$(readlink -f -- "$0")
 # --install copies the script here so the boot service never executes a user-owned file as root.
 INSTALL_BIN=/usr/local/sbin/bc250-cores-unlock.sh

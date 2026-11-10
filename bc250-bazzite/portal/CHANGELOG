@@ -1,3 +1,7 @@
+Changelog: 10-11-2026 02:13:33
+
+Release 17.0.1. Pins check-v2.0.1, gpu-v0.5.2, upscaler-v3.0.1, cores-v0.4.4, oc-v0.3.4, acpi-v0.4.4, overlay-v2.0.1, bios-v2.0.1, ace-v2.0.1, mesh-v2.0.1, vram-v2.0.1, fan-v2.0.1, wdriver-v2.0.1, cec-v2.0.1, sftp-v2.0.1, ips35-v2.0.1, hdcam-v2.0.1, hdcontrol-v2.0.1, ncgui-v2.0.1, rpcs3-v5.0.1, consoles-v3.0.1, clb-v2.0.1, shadps4-v5.0.1, decky-v2.0.1, datstation-v4.0.1, ppsspp-v3.0.1, pcsx2-v5.0.1, vita3k-v3.0.1, xenia-v3.0.1, ssd-v1.0.1.
+
 Changelog: 10-11-2026 00:27:26
 
 Fixed. install.sh makes the shared Python venv again when an older Python made it. After a Bazzite update moves
