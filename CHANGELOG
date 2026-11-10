@@ -1,3 +1,7 @@
+Changelog: 10-11-2026 01:03:08
+
+Release 3.2.1.
+
 Changelog: 10-11-2026 00:27:26
 
 Fixed. tools/new_app.py's install.sh makes the suite's shared venv again when an older Python made it,
