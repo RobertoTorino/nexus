@@ -1,3 +1,8 @@
+Changelog: 10-11-2026 01:35:17
+
+Fixed. The tools' tests read the pinned tags from portal/apps.toml instead of naming v0.1.0, so a release that
+moves a pin no longer fails CI Bazzite Console (test_check_manifest.py, test_suite_release.py).
+
 Changelog: 10-11-2026 00:27:26
 
 Fixed. The wiki's Install chapter says what to do when the apps stop starting after a Bazzite update

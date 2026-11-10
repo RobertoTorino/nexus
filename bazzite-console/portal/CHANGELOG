@@ -1,3 +1,8 @@
+Changelog: 10-11-2026 01:35:17
+
+Fixed. The tests read the pinned tags from apps.toml instead of naming v0.1.0, so a release that moves a pin no
+longer fails CI Bazzite Console (test_manifest.py, test_main_window.py).
+
 Changelog: 10-11-2026 01:18:31
 
 Release 0.1.4. Pins ps5-bazzite-v0.1.1, ps5-rpcs3-v0.1.1, ps5-consoles-v0.1.1, ps5-clb-v0.1.1, ps5-shadps4-v0.1.1, ps5-decky-v0.1.1, ps5-datstation-v0.1.1, ps5-ppsspp-v0.1.1, ps5-pcsx2-v0.1.1, ps5-vita3k-v0.1.1, ps5-xenia-v0.1.1, ps5-sftp-v0.1.1, ps5-hdcam-v0.1.1, ps5-hdcontrol-v0.1.1, ps5-ssd-v0.1.1.

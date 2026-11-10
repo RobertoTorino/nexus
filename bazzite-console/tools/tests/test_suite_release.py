@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import importlib.util
 import sys
+import tomllib
 from pathlib import Path
 
 SUITE = Path(__file__).resolve().parents[2]
@@ -25,23 +26,7 @@ def test_nexus_release_builds_unreleased_apps_and_a_draft_portal():
     text = (SUITE / "portal" / "apps.toml").read_text(encoding="utf-8")
     found = suite_release.plan(text, "0.1.0", released=lambda tag: tag == "ps5-old-v0.1.0")
     assert found == {
-        "apps": [
-            "ps5-bazzite-v0.1.0",
-            "ps5-rpcs3-v0.1.0",
-            "ps5-consoles-v0.1.0",
-            "ps5-clb-v0.1.0",
-            "ps5-shadps4-v0.1.0",
-            "ps5-decky-v0.1.0",
-            "ps5-datstation-v0.1.0",
-            "ps5-ppsspp-v0.1.0",
-            "ps5-pcsx2-v0.1.0",
-            "ps5-vita3k-v0.1.0",
-            "ps5-xenia-v0.1.0",
-            "ps5-sftp-v0.1.0",
-            "ps5-hdcam-v0.1.0",
-            "ps5-hdcontrol-v0.1.0",
-            "ps5-ssd-v0.1.0",
-        ],
+        "apps": [app["tag"] for app in tomllib.loads(text)["apps"].values()],   # the pins of the day, in order
         "portal": "ps5-portal-v0.1.0",
         "draft": True,
     }
@@ -49,10 +34,11 @@ def test_nexus_release_builds_unreleased_apps_and_a_draft_portal():
 
 def test_pin_changes_only_the_matching_apps_checksum():
     text = (SUITE / "portal" / "apps.toml").read_text(encoding="utf-8")
+    tag = tomllib.loads(text)["apps"]["bazzite"]["tag"]
     digest = "a" * 64
-    result = suite_release.pin(text, "ps5-bazzite-v0.1.0", digest)
+    result = suite_release.pin(text, tag, digest)
     assert f'sha256 = "{digest}"' in result
-    assert suite_release.pin(result, "ps5-bazzite-v0.1.0", "b" * 64).replace(
+    assert suite_release.pin(result, tag, "b" * 64).replace(
         'sha256 = "' + "b" * 64 + '"', 'sha256 = "' + digest + '"') == result
 
 

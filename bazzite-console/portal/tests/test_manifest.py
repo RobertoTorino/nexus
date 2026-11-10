@@ -16,13 +16,14 @@ def test_required_app_is_first_and_only_required():
     assert entries[0].name == "Bazzite Test"
     assert entries[0].required
     assert [entry.key for entry in entries if entry.required] == ["bazzite"]
-    assert entries[0].tag == "ps5-bazzite-v0.1.0"
+    assert entries[0].tag.startswith("ps5-bazzite-v")
 
 
 def test_invalid_tag_and_missing_required_app_are_rejected():
     text = (ROOT / "apps.toml").read_text(encoding="utf-8")
+    tag = load(ROOT / "apps.toml")[0].tag
     with pytest.raises(ManifestError, match="tag must be"):
-        parse(text.replace("ps5-bazzite-v0.1.0", "bazzite-v0.1.0"))
+        parse(text.replace(tag, tag.removeprefix("ps5-")))
     with pytest.raises(ManifestError, match="exactly one required"):
         parse(text.replace("required = true", "required = false"))
 

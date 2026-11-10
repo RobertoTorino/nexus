@@ -217,13 +217,14 @@ def test_clock_header_shows_date_and_time(window):
 
 def test_console_release_tags_are_pruned_by_app_key(tmp_path):
     source = Sources(tmp_path / "releases")
+    app = load(MANIFEST)[0]
     old = source.work / "ps5-bazzite-v0.0.9"
-    current = source.work / "ps5-bazzite-v0.1.0"
+    current = source.work / app.tag
     other = source.work / "ps5-other-v0.1.0"
     for folder in (old, current, other):
         folder.mkdir(parents=True)
 
-    source.prune(load(MANIFEST)[0])
+    source.prune(app)
 
     assert not old.exists()
     assert current.is_dir()
