@@ -31,9 +31,9 @@ Every app of every suite, and what each one does, side by side. A row is one app
 | [shadPS4 Manager](#shadps4-manager) | [shadPS4 Manager](https://robertotorino.github.io/nexus/bc250-bazzite-suite/apps/shadps4/) | [shadPS4 Manager](https://robertotorino.github.io/nexus/bazzite-console-suite/apps/shadps4/) | [shadPS4 Manager](https://robertotorino.github.io/nexus/windows-portable-suite/apps/shadps4/) |
 | [Vita3K Manager](#vita3k-manager) | [Vita3K Manager](https://robertotorino.github.io/nexus/bc250-bazzite-suite/apps/vita3k/) | [Vita3K Manager](https://robertotorino.github.io/nexus/bazzite-console-suite/apps/vita3k/) | [Vita3K Manager](https://robertotorino.github.io/nexus/windows-portable-suite/apps/vita3k/) |
 | [Xenia Manager](#xenia-manager) | [Xenia Manager](https://robertotorino.github.io/nexus/bc250-bazzite-suite/apps/xenia/) | [Xenia Manager](https://robertotorino.github.io/nexus/bazzite-console-suite/apps/xenia/) | [Xenia Manager](https://robertotorino.github.io/nexus/windows-portable-suite/apps/xenia/) |
-| [Decky Loader Manager](#decky-loader-manager) | [Decky Loader Manager](https://robertotorino.github.io/nexus/bc250-bazzite-suite/apps/decky/) | [Decky Loader Manager](https://robertotorino.github.io/nexus/bazzite-console-suite/apps/decky/) |  |
+| [Decky Loader Manager](#decky-loader-manager) |  | [Decky Loader Manager](https://robertotorino.github.io/nexus/bazzite-console-suite/apps/decky/) |  |
 | [PS Remote Play](#ps-remote-play) | [Console Link](https://robertotorino.github.io/nexus/bc250-bazzite-suite/apps/consoles/) | [Console Link](https://robertotorino.github.io/nexus/bazzite-console-suite/apps/consoles/) | [Remote Play](https://robertotorino.github.io/nexus/windows-portable-suite/apps/rplay/) |
-| [Console LinkB](#console-linkb) | [Console LinkB](https://robertotorino.github.io/nexus/bc250-bazzite-suite/apps/clb/) | [Console LinkB](https://robertotorino.github.io/nexus/bazzite-console-suite/apps/clb/) |  |
+| [XB Remote Play](#xb-remote-play) | [BC-250 XB Remote Play](https://robertotorino.github.io/nexus/bc250-bazzite-suite/apps/clb/) | [Console LinkB](https://robertotorino.github.io/nexus/bazzite-console-suite/apps/clb/) |  |
 | [DatStation](#datstation) | [Bazzite DatStation](https://robertotorino.github.io/nexus/bc250-bazzite-suite/apps/datstation/) | [Bazzite DatStation](https://robertotorino.github.io/nexus/bazzite-console-suite/apps/datstation/) | [DatStation](https://robertotorino.github.io/nexus/windows-portable-suite/apps/datstat/) |
 | **Utilities** | | | |
 | [SFTP Tools](#sftp-tools) | [Bazzite SFTP Tools](https://robertotorino.github.io/nexus/bc250-bazzite-suite/apps/sftp/) | [SFTP Tools](https://robertotorino.github.io/nexus/bazzite-console-suite/apps/sftp/) | [sFTP Tools](https://robertotorino.github.io/nexus/windows-portable-suite/apps/sftp/) |
@@ -45,8 +45,7 @@ Every app of every suite, and what each one does, side by side. A row is one app
 | [Support Checker](#support-checker) |  |  | [Support Checker](https://robertotorino.github.io/nexus/windows-portable-suite/apps/support/) |
 | [System Overlay](#system-overlay) | [System Overlay](https://robertotorino.github.io/nexus/bc250-bazzite-suite/apps/overlay/) |  |  |
 | [USB Wi-Fi](#usb-wi-fi) | [BC-250 USB Wi-Fi](https://robertotorino.github.io/nexus/bc250-bazzite-suite/apps/wdriver/) |  |  |
-| [HDMI CEC Manager](#hdmi-cec-manager) | [HDMI CEC Manager](https://robertotorino.github.io/nexus/bc250-bazzite-suite/apps/cec/) |  |  |
-| [NetcatGUI](#netcatgui) | [Bazzite NetcatGUI](https://robertotorino.github.io/nexus/bc250-bazzite-suite/apps/ncgui/) |  |  |
+| [BC-250 CEC Manager](#bc-250-cec-manager) | [BC-250 CEC Manager](https://robertotorino.github.io/nexus/bc250-bazzite-suite/apps/cec/) |  |  |
 
 ## Features
 
@@ -348,16 +347,16 @@ Every app of every suite, and what each one does, side by side. A row is one app
 
 | Feature | BC250 | Console | Portable |
 |---|:---:|:---:|:---:|
-| Install: a tested Decky release, checksum checked | ✓ | ✓ |  |
-| Install: update, or remove with or without plugins | ✓ | ✓ |  |
-| Install: says when a newer Decky release is out | ✓ | ✓ |  |
-| Install: finds a Decky installed by ujust or Decky's installer | ✓ | ✓ |  |
-| Service: shows whether Decky runs, restart it | ✓ | ✓ |  |
-| Service: Decky's log from the system journal | ✓ | ✓ |  |
-| Steam: switch Decky's remote debugging on or off | ✓ | ✓ |  |
-| Steam Deck plugins: link /home/deck for them | ✓ | ✓ |  |
-| Plugins: list with version, author and state | ✓ | ✓ |  |
-| Plugins: open the plugins folder | ✓ | ✓ |  |
+| Install: a tested Decky release, checksum checked |  | ✓ |  |
+| Install: update, or remove with or without plugins |  | ✓ |  |
+| Install: says when a newer Decky release is out |  | ✓ |  |
+| Install: finds a Decky installed by ujust or Decky's installer |  | ✓ |  |
+| Service: shows whether Decky runs, restart it |  | ✓ |  |
+| Service: Decky's log from the system journal |  | ✓ |  |
+| Steam: switch Decky's remote debugging on or off |  | ✓ |  |
+| Steam Deck plugins: link /home/deck for them |  | ✓ |  |
+| Plugins: list with version, author and state |  | ✓ |  |
+| Plugins: open the plugins folder |  | ✓ |  |
 
 ### PS Remote Play
 
@@ -376,7 +375,7 @@ Every app of every suite, and what each one does, side by side. A row is one app
 | Controller test: live buttons, drift, genuine or fake | ✓ | ✓ |  |
 | Privacy: personal details masked, shown on request | ✓ | ✓ | ✓ |
 
-### Console LinkB
+### XB Remote Play
 
 | Feature | BC250 | Console | Portable |
 |---|:---:|:---:|:---:|
@@ -533,7 +532,7 @@ Every app of every suite, and what each one does, side by side. A row is one app
 | Driver: update and remove | ✓ |  |  |
 | Wi-Fi adapters: check any stick's kernel support | ✓ |  |  |
 
-### HDMI CEC Manager
+### BC-250 CEC Manager
 
 | Feature | BC250 | Console | Portable |
 |---|:---:|:---:|:---:|
@@ -546,17 +545,3 @@ Every app of every suite, and what each one does, side by side. A row is one app
 | Boot: name the board, turn the TV on before login | ✓ |  |  |
 | Daemon: wake and sleep with the TV, remote as keys | ✓ |  |  |
 | Remote: map buttons to keys, show received keys | ✓ |  |  |
-
-### NetcatGUI
-
-| Feature | BC250 | Console | Portable |
-|---|:---:|:---:|:---:|
-| Tabs: connect or listen, TCP, UDP or TLS per tab | ✓ |  |  |
-| Connect: certificate check, reconnect automatically | ✓ |  |  |
-| Messages: history, newline, line ending, encoding | ✓ |  |  |
-| Templates: HTTP, SMTP, IMAP, Redis and more | ✓ |  |  |
-| Log: protocol highlighting, hex view, save, clear | ✓ |  |  |
-| Hex input: send raw bytes as hex digits | ✓ |  |  |
-| Pipes: save to file, send a file, pipe to another tab | ✓ |  |  |
-| Recording: save sent messages, replay with pauses | ✓ |  |  |
-| Terminal: nc-style arguments open a tab | ✓ |  |  |

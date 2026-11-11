@@ -31,10 +31,10 @@ category's icon (`icons/<category>/`, at 1024, 512, 256 and 128 px) to these pla
 
 | Icon | Category | Apps |
 | --- | --- | --- |
-| <img src="bc250-bazzite/icons/gaming/gaming-128.png" width="64" alt=""> | Gaming | RPCS3 Manager (`rpcs3`)<br>Console Link (`consoles`)<br>Console LinkB (`clb`)<br>shadPS4 Manager (`shadps4`)<br>Decky Loader Manager (`decky`)<br>Bazzite DatStation (`datstation`)<br>PPSSPP Manager (`ppsspp`)<br>PCSX2 Manager (`pcsx2`)<br>Xenia Manager (`xenia`)<br>Vita3K Manager (`vita3k`) |
+| <img src="bc250-bazzite/icons/gaming/gaming-128.png" width="64" alt=""> | Gaming | RPCS3 Manager (`rpcs3`)<br>Console Link (`consoles`)<br>BC-250 XB Remote Play (`clb`)<br>shadPS4 Manager (`shadps4`)<br>Bazzite DatStation (`datstation`)<br>PPSSPP Manager (`ppsspp`)<br>PCSX2 Manager (`pcsx2`)<br>Xenia Manager (`xenia`)<br>Vita3K Manager (`vita3k`) |
 | <img src="bc250-bazzite/icons/graphics/graphics-128.png" width="64" alt=""> | Graphics | BC-250 Upscaler Manager (`upscaler`)<br>BC-250 ACE Queues (`ace`)<br>BC-250 Mesh Shaders (`mesh`) |
 | <img src="bc250-bazzite/icons/sustainable/sustainable-128.png" width="64" alt=""> | Sustainable | BC-250 Bazzite Test (`check`)<br>BC-250 GPU Manager (`gpu`)<br>BC-250 CU Bisect (`compute`)<br>CU Unlock (the CU Bisect app's Unlock) (`cu-unlock`)<br>BC-250 Cores Bisect (`cores`)<br>Cores Unlock (the Cores Bisect app's Unlock) (`cores-unlock`)<br>BC-250 GPU OC Bisect (`oc`)<br>BC-250 Persistent ACPI (`acpi`)<br>BC-250 Memory Manager (`vram`)<br>BC-250 Fan Control (`fan`) |
-| <img src="bc250-bazzite/icons/utilities/utilities-128.png" width="64" alt=""> | Utilities | System Overlay (`overlay`)<br>BC-250 BIOS Reader (`bios`)<br>BC-250 USB Wi-Fi (`wdriver`)<br>HDMI CEC Manager (`cec`)<br>Bazzite SFTP Tools (`sftp`)<br>USB IPS3.5 (`ips35`)<br>USB HD Cam (`hdcam`)<br>USB HD Control (`hdcontrol`)<br>Bazzite NetcatGUI (`ncgui`)<br>SSD Check (`ssd`) |
+| <img src="bc250-bazzite/icons/utilities/utilities-128.png" width="64" alt=""> | Utilities | System Overlay (`overlay`)<br>BC-250 BIOS Reader (`bios`)<br>BC-250 USB Wi-Fi (`wdriver`)<br>BC-250 CEC Manager (`cec`)<br>Bazzite SFTP Tools (`sftp`)<br>USB IPS3.5 (`ips35`)<br>USB HD Cam (`hdcam`)<br>USB HD Control (`hdcontrol`)<br>SSD Check (`ssd`) |
 
 ### The portal's symbols
 
@@ -52,9 +52,6 @@ Drawn with QPainter in `portal/bc250_portal/glyphs.py`, in the theme's text colo
 
 | Icon | File | Used for |
 | --- | --- | --- |
-| <img src="bc250-bazzite/apps/ncgui/images/icons/connect.png" width="16" alt=""> | `apps/ncgui/images/icons/connect.png` | Bazzite NetcatGUI: Connect (the Silk icons of the original tool, CC-BY 2.5, Mark James). |
-| <img src="bc250-bazzite/apps/ncgui/images/icons/listen.png" width="16" alt=""> | `apps/ncgui/images/icons/listen.png` | Bazzite NetcatGUI: Listen. |
-| <img src="bc250-bazzite/apps/ncgui/images/icons/save.png" width="16" alt=""> | `apps/ncgui/images/icons/save.png` | Bazzite NetcatGUI: Save. |
 | <img src="bc250-bazzite/apps/pcsx2/pcsx2_manager/arrow-down.svg" width="16" alt=""> | `apps/<app>/<package>/arrow-down.svg` | The arrow of a choice box in PCSX2 Manager, RPCS3 Manager and shadPS4 Manager (a copy in each). |
 
 ### The desktop style's icons

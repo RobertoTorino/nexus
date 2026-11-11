@@ -56,9 +56,8 @@ By category, as the portal lists them.
 **Gaming**: apps for playing.
 
 - <img src="portal/images/apps/consoles.webp" width="20" height="20" alt=""/> **[Console Link](apps/consoles)**: Find, wake and register PS4 and PS5 consoles on the network, and start a Remote Play session.
-- <img src="portal/images/apps/clb.webp" width="20" height="20" alt=""/> **[Console LinkB](apps/clb)**: Stream your XBOX (Remote Play) or games from XBOX Cloud Gaming to the board, signed in with your Microsoft account.
+- <img src="portal/images/apps/clb.webp" width="20" height="20" alt=""/> **[BC-250 XB Remote Play](apps/clb)**: Stream your XBOX (Remote Play) or games from XBOX Cloud Gaming to the board, signed in with your Microsoft account.
 - <img src="portal/images/apps/shadps4.webp" width="20" height="20" alt=""/> **[shadPS4 Manager](apps/shadps4)**: PS4 games with the shadPS4 emulator: a tested shadPS4 release, your games found (or unpacked from .pkg files) and added to Game Mode.
-- <img src="portal/images/apps/decky.webp" width="20" height="20" alt=""/> **[Decky Loader Manager](apps/decky)**: Plugins in Game Mode with Decky Loader: a tested Decky release as a system service, its state and its plugins.
 - <img src="portal/images/apps/rpcs3.webp" width="20" height="20" alt=""/> **[RPCS3 Manager](apps/rpcs3)**: PS3 games with the RPCS3 emulator: a tested RPCS3 build, the firmware, your games found and added to Game Mode.
 - <img src="portal/images/apps/datstation.webp" width="20" height="20" alt=""/> **[Bazzite DatStation](apps/datstation)**: PlayStation quiz, console history, system versions, region codes, user guides and news, with your scores.
 - <img src="portal/images/apps/ppsspp.webp" width="20" height="20" alt=""/> **[PPSSPP Manager](apps/ppsspp)**: PSP games with the PPSSPP emulator: a tested PPSSPP release, your games found and added to Game Mode.
@@ -74,9 +73,8 @@ By category, as the portal lists them.
 - <img src="portal/images/apps/hdcontrol.webp" width="20" height="20" alt=""/> **[USB HD Control](apps/hdcontrol)**: the DualSense and DualSense Edge: battery, firmware updates from the official server over USB, and the Edge's profiles with a backup.
 - <img src="portal/images/apps/bios.webp" width="20" height="20" alt=""/> **[BC-250 BIOS Reader](apps/bios)**: The BIOS settings as the setup screen shows them, hidden menus included. Stock or modded BIOS. Read-only.
 - <img src="portal/images/apps/wdriver.webp" width="20" height="20" alt=""/> **[BC-250 USB Wi-Fi](apps/wdriver)**: The driver for AIC8800D80 USB Wi-Fi sticks: built for the running kernel, loaded at boot, rebuilt after a kernel update.
-- <img src="portal/images/apps/cec.webp" width="20" height="20" alt=""/> **[HDMI CEC Manager](apps/cec)**: Turn the TV on and off with the board, switch its input and use its remote, over HDMI-CEC.
+- <img src="portal/images/apps/cec.webp" width="20" height="20" alt=""/> **[BC-250 CEC Manager](apps/cec)**: Turn the TV on and off with the board, switch its input and use its remote, over HDMI-CEC.
 - <img src="portal/images/apps/sftp.webp" width="20" height="20" alt=""/> **[Bazzite SFTP Tools](apps/sftp)**: Move files between computers over SFTP, and manage the SSH server of a Bazzite host.
-- <img src="portal/images/apps/ncgui.webp" width="20" height="20" alt=""/> **[Bazzite NetcatGUI](apps/ncgui)**: A graphical netcat: connect to a host or listen on a port, TCP, UDP or TLS, one session per tab.
 - <img src="portal/images/apps/ssd.webp" width="20" height="20" alt=""/> **[SSD Check](apps/ssd)**: The health, power cycles and power-on hours of the board's SSDs.
 
 The tools for working on the suite are Nexus's, every suite's: they run from a checkout of the repository and are
@@ -87,9 +85,8 @@ How to install and use them: **[the manual](https://robertotorino.github.io/nexu
 
 ## License
 
-GPL-3.0-or-later ([LICENSE](../LICENSE)), except BC-250 Persistent ACPI, which is MIT, Console Link, which is
-AGPL-3.0 (its protocol code comes from chiaki-ng), and Bazzite NetcatGUI, which is GPL-2.0 (a port of NetcatGUI).
-Each app keeps its own `LICENSE`. The icons were made with generative AI tools and edited by hand in Photoshop, and the
+GPL-3.0-or-later ([LICENSE](../LICENSE)), except BC-250 Persistent ACPI, which is MIT, and Console Link, which
+is AGPL-3.0 (its protocol code comes from chiaki-ng). Each app keeps its own `LICENSE`. The icons were made with generative AI tools and edited by hand in Photoshop, and the
 music of the video tours with generative AI tools. The sounds were made without AI: the portal's intro sound by its own
 code, from arithmetic alone (`tools/make_portal_sounds.py`), and the portal's sound on a controller action and
 DatStation's quiz music by hand in Audacity. All are under the license of the folder they are in, like the code beside

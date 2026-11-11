@@ -40,12 +40,9 @@ def test_no_menu_or_desktop_folder(tmp_path):
 
 
 def test_the_apps_not_named_bc250_are_the_suites_too(tmp_path, desktop):
-    menu = menu_with(tmp_path, "media-tool.desktop", "bazzite-netcatgui.desktop", "bazzite-datstation.desktop",
-                     "bazzite-other.desktop")
-    assert desktop_icons.add(desktop, menu) == ["bazzite-datstation.desktop", "bazzite-netcatgui.desktop",
-                                                "media-tool.desktop"]
-    assert desktop_icons.remove(desktop, menu) == ["bazzite-datstation.desktop", "bazzite-netcatgui.desktop",
-                                                   "media-tool.desktop"]
+    menu = menu_with(tmp_path, "media-tool.desktop", "bazzite-datstation.desktop", "bazzite-other.desktop")
+    assert desktop_icons.add(desktop, menu) == ["bazzite-datstation.desktop", "media-tool.desktop"]
+    assert desktop_icons.remove(desktop, menu) == ["bazzite-datstation.desktop", "media-tool.desktop"]
     assert list(desktop.iterdir()) == []
 
 

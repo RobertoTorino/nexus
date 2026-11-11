@@ -33,9 +33,9 @@ def test_open_issues_without_pull_requests():
 
 def test_close_commands():
     assert issues.close_commands([12]) == [["gh", "issue", "close", "12", "--repo", issues.REPO]]
-    assert issues.close_commands([12, 14], " Decky pinned at v3.3.0, it's in step ", gh="/bin/gh") == [
-        ["/bin/gh", "issue", "close", "12", "--repo", issues.REPO, "--comment", "Decky pinned at v3.3.0, it's in step"],
-        ["/bin/gh", "issue", "close", "14", "--repo", issues.REPO, "--comment", "Decky pinned at v3.3.0, it's in step"]]
+    assert issues.close_commands([12, 14], " PPSSPP pinned at 1.20, it's in step ", gh="/bin/gh") == [
+        ["/bin/gh", "issue", "close", "12", "--repo", issues.REPO, "--comment", "PPSSPP pinned at 1.20, it's in step"],
+        ["/bin/gh", "issue", "close", "14", "--repo", issues.REPO, "--comment", "PPSSPP pinned at 1.20, it's in step"]]
 
 
 def test_the_dialog_lists_the_open_ones_and_ticks(qapp):

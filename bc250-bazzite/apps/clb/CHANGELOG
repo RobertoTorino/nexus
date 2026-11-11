@@ -1,3 +1,15 @@
+Changelog: 11-11-2026 19:38:54
+
+Fixed. Console LinkB is now called BC-250 XB Remote Play (owner, 11-11-2026): the window's header, the About text, the
+app menu and Desktop entry (its generic name XB Remote Play) and install.sh's messages. Only the shown name changed: the
+app ID, the launcher (bc250-console-linkb), the package, the settings and the name the app gives Microsoft's services
+when it connects stay as they were, so an update keeps everything installed and signed in.
+
+Changelog: 11-11-2026 19:26:21
+
+Fixed. The app has the Gaming category's new icon (owner, 11-11-2026): a red, see-through controller, on a
+transparent square; its images and the portal's tile show it. The app stays blue (#0A55B0, owner, 11-11-2026).
+
 Changelog: 10-11-2026 02:13:33
 
 Release 2.0.1.

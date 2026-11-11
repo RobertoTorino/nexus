@@ -54,10 +54,6 @@ GLYPHS = [
 ]
 
 APP_ICONS = [
-    ("bc250-bazzite/apps/ncgui/images/icons/connect.png", "`apps/ncgui/images/icons/connect.png`",
-     "Bazzite NetcatGUI: Connect (the Silk icons of the original tool, CC-BY 2.5, Mark James)."),
-    ("bc250-bazzite/apps/ncgui/images/icons/listen.png", "`apps/ncgui/images/icons/listen.png`", "Bazzite NetcatGUI: Listen."),
-    ("bc250-bazzite/apps/ncgui/images/icons/save.png", "`apps/ncgui/images/icons/save.png`", "Bazzite NetcatGUI: Save."),
     ("bc250-bazzite/apps/pcsx2/pcsx2_manager/arrow-down.svg", "`apps/<app>/<package>/arrow-down.svg`",
      "The arrow of a choice box in PCSX2 Manager, RPCS3 Manager and shadPS4 Manager (a copy in each)."),
 ]

@@ -248,22 +248,6 @@
       "compare": "version",
       "apps": [
         {
-          "suite": "bc250-bazzite",
-          "app": "decky",
-          "module": "decky_manager/loader.py",
-          "constants": {
-            "repo": "REPO",
-            "pin": "VERSION",
-            "version": "VERSION"
-          },
-          "repo": "SteamDeckHomebrew/decky-loader",
-          "pin": "3.3.1",
-          "version": "3.3.1",
-          "version_file": "~/homebrew/services/.loader.version",
-          "name": "Decky Loader Manager",
-          "launcher": "~/.local/bin/bc250-decky-manager"
-        },
-        {
           "suite": "bazzite-console",
           "app": "decky",
           "module": "decky_manager/loader.py",

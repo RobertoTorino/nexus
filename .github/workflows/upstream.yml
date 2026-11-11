@@ -2,8 +2,7 @@
 name: Upstream
 
 # Weekly: are the apps that pin or follow an upstream release still in step with it (bc250-bazzite/tools/check_upstream.py)? What
-# moved goes into the open "Upstream review" issue, so the owner sees it: for Decky Loader a newer release, a replaced
-# asset or a changed service unit, for shadPS4 a newer release (with its zip and SHA-256) or a replaced zip, for
+# moved goes into the open "Upstream review" issue, so the owner sees it: for shadPS4 a newer release (with its zip and SHA-256) or a replaced zip, for
 # HelixSR a release newer than the one the BC-250 Upscaler Manager was checked against or another fallback in its notes, for
 # PPSSPP, PCSX2, RPCS3 and DirectMesh a release newer than the pin, for Vita3K and Xenia a build newer than the one
 # their managers bring or a pinned AppImage gone or replaced, for the USB Wi-Fi driver a branch past its pinned commit

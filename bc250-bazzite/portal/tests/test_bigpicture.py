@@ -496,8 +496,8 @@ def test_the_settings_page_holds_the_settings(made, monkeypatch):
     key(window, Qt.Key.Key_Escape)
     assert not big.in_settings() and window.isVisible()
     window.toggle_settings()
-    window.show_app("ncgui")                                    # a notice's line: back to the tiles
-    assert not big.in_settings() and window.focusWidget() is big.tiles["ncgui"]
+    window.show_app("sftp")                                     # a notice's line: back to the tiles
+    assert not big.in_settings() and window.focusWidget() is big.tiles["sftp"]
 
 
 def test_the_arrow_keys_move_from_a_symbol_and_enter_presses_a_button(made):

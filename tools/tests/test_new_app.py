@@ -180,7 +180,7 @@ def checkout(tmp_path) -> Path:
 
 def test_defaults():
     assert na.default_package("BC-250 Fan Control") == "fan_control"
-    assert na.default_package("Bazzite NetcatGUI") == "netcatgui"
+    assert na.default_package("Bazzite DatStation") == "datstation"
     assert na.default_package("USB IPS3.5") == "usb_ips3_5"
     assert na.default_package("3D Thing") == "app_3d_thing"
     suite = na.read_suite(ROOT, SUITE)

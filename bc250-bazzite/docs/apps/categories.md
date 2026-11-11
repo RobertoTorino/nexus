@@ -24,8 +24,8 @@ The categories are also the [portal's](../portal.md) categories: an app's tile i
 |---|---|---|
 | ![](../assets/categories/sustainable.webp){ .app-icon } | **Sustainable** | The board itself: test it, tune it, unlock it, cool it, and keep it running well for a long time. Most of these apps change how the board runs. |
 | ![](../assets/categories/graphics.webp){ .app-icon } | **Graphics** | Graphics features for games: upscaling, async compute and mesh shaders on the board's GPU. |
-| ![](../assets/categories/gaming.webp){ .app-icon } | **Gaming** | Playing: emulators, Remote Play with your console, plugins in Game Mode, and PlayStation trivia. |
-| ![](../assets/categories/utilities.webp){ .app-icon } | **Utilities** | Handy tools around the board: an overlay, a USB stats screen, the PS5 HD Camera as a webcam, the DualSense's firmware, the BIOS settings, Wi-Fi, the TV over HDMI-CEC, file transfer and a graphical netcat. |
+| ![](../assets/categories/gaming.webp){ .app-icon } | **Gaming** | Playing: emulators, Remote Play with your console, and PlayStation trivia. |
+| ![](../assets/categories/utilities.webp){ .app-icon } | **Utilities** | Handy tools around the board: an overlay, a USB stats screen, the PS5 HD Camera as a webcam, the DualSense's firmware, the BIOS settings, Wi-Fi, the TV over HDMI-CEC and file transfer. |
 
 ## Apps by category
 
@@ -45,14 +45,13 @@ Every app with its icon and its category.
 | ![](../assets/apps/ace.webp){ .app-icon } [BC-250 ACE Queues](ace.md) | Graphics |
 | ![](../assets/apps/mesh.webp){ .app-icon } [BC-250 Mesh Shaders](mesh.md) | Graphics |
 | ![](../assets/apps/consoles.webp){ .app-icon } [Console Link](consoles.md) | Gaming |
-| ![](../assets/apps/clb.webp){ .app-icon } [Console LinkB](clb.md) | Gaming |
+| ![](../assets/apps/clb.webp){ .app-icon } [BC-250 XB Remote Play](clb.md) | Gaming |
 | ![](../assets/apps/shadps4.webp){ .app-icon } [shadPS4 Manager](shadps4.md) | Gaming |
 | ![](../assets/apps/rpcs3.webp){ .app-icon } [RPCS3 Manager](rpcs3.md) | Gaming |
 | ![](../assets/apps/ppsspp.webp){ .app-icon } [PPSSPP Manager](ppsspp.md) | Gaming |
 | ![](../assets/apps/pcsx2.webp){ .app-icon } [PCSX2 Manager](pcsx2.md) | Gaming |
 | ![](../assets/apps/vita3k.webp){ .app-icon } [Vita3K Manager](vita3k.md) | Gaming |
 | ![](../assets/apps/xenia.webp){ .app-icon } [Xenia Manager](xenia.md) | Gaming |
-| ![](../assets/apps/decky.webp){ .app-icon } [Decky Loader Manager](decky.md) | Gaming |
 | ![](../assets/apps/datstation.webp){ .app-icon } [Bazzite DatStation](datstation.md) | Gaming |
 | ![](../assets/apps/overlay.webp){ .app-icon } [System Overlay](overlay.md) | Utilities |
 | ![](../assets/apps/ips35.webp){ .app-icon } [USB IPS3.5](ips35.md) | Utilities |
@@ -60,7 +59,6 @@ Every app with its icon and its category.
 | ![](../assets/apps/hdcontrol.webp){ .app-icon } [USB HD Control](hdcontrol.md) | Utilities |
 | ![](../assets/apps/bios.webp){ .app-icon } [BC-250 BIOS Reader](bios.md) | Utilities |
 | ![](../assets/apps/wdriver.webp){ .app-icon } [BC-250 USB Wi-Fi](wdriver.md) | Utilities |
-| ![](../assets/apps/cec.webp){ .app-icon } [HDMI CEC Manager](cec.md) | Utilities |
+| ![](../assets/apps/cec.webp){ .app-icon } [BC-250 CEC Manager](cec.md) | Utilities |
 | ![](../assets/apps/sftp.webp){ .app-icon } [Bazzite SFTP Tools](sftp.md) | Utilities |
-| ![](../assets/apps/ncgui.webp){ .app-icon } [Bazzite NetcatGUI](ncgui.md) | Utilities |
 | ![](../assets/apps/ssd.webp){ .app-icon } [SSD Check](ssd.md) | Utilities |

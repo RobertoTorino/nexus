@@ -1,8 +1,8 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 
-![HDMI CEC Manager](../assets/cec/bc250-hdmi-cec.webp){ .app-logo }
+![BC-250 CEC Manager](../assets/cec/bc250-hdmi-cec.webp){ .app-logo }
 
-# HDMI CEC Manager
+# BC-250 CEC Manager
 
 HDMI-CEC lets the board and the TV talk over the HDMI cable. With it you can turn the TV on and off from the
 **AMD BC-250**, switch the TV to the board's input, set the volume, and use the TV remote on the board.

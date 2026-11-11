@@ -201,7 +201,7 @@ features = [
 
 [[family]]
 name = "Decky Loader Manager"
-apps = { bc250-bazzite = "decky", bazzite-console = "decky" }
+apps = { bazzite-console = "decky" }
 features = [
   { text = "Install: a tested Decky release, checksum checked" },
   { text = "Install: update, or remove with or without plugins" },
@@ -234,7 +234,7 @@ features = [
 ]
 
 [[family]]
-name = "Console LinkB"
+name = "XB Remote Play"
 apps = { bc250-bazzite = "clb", bazzite-console = "clb" }
 features = [
   { text = "Account: Microsoft sign-in with a code, stays signed in" },
@@ -542,7 +542,7 @@ features = [
 ]
 
 [[family]]
-name = "HDMI CEC Manager"
+name = "BC-250 CEC Manager"
 apps = { bc250-bazzite = "cec" }
 features = [
   { text = "TV: turn on, standby, switch to the board's input" },
@@ -556,17 +556,3 @@ features = [
   { text = "Remote: map buttons to keys, show received keys" },
 ]
 
-[[family]]
-name = "NetcatGUI"
-apps = { bc250-bazzite = "ncgui" }
-features = [
-  { text = "Tabs: connect or listen, TCP, UDP or TLS per tab" },
-  { text = "Connect: certificate check, reconnect automatically" },
-  { text = "Messages: history, newline, line ending, encoding" },
-  { text = "Templates: HTTP, SMTP, IMAP, Redis and more" },
-  { text = "Log: protocol highlighting, hex view, save, clear" },
-  { text = "Hex input: send raw bytes as hex digits" },
-  { text = "Pipes: save to file, send a file, pipe to another tab" },
-  { text = "Recording: save sent messages, replay with pauses" },
-  { text = "Terminal: nc-style arguments open a tab" },
-]

@@ -92,7 +92,7 @@ name = "BC-250 USB Wi-Fi"
 launchers = ["~/.local/bin/bc250-usb-wifi"]
 
 [app.cec]
-name = "HDMI CEC Manager"
+name = "BC-250 CEC Manager"
 launchers = ["~/.local/bin/bc250-hdmi-cec"]
 
 [app.sftp]
@@ -104,7 +104,7 @@ name = "Console Link"
 launchers = ["~/.local/bin/bc250-console-link"]
 
 [app.clb]
-name = "Console LinkB"
+name = "BC-250 XB Remote Play"
 launchers = ["~/.local/bin/bc250-console-linkb"]
 
 [app.shadps4]
@@ -130,14 +130,6 @@ launchers = ["~/.local/bin/bc250-vita3k-manager"]
 [app.xenia]
 name = "Xenia Manager"
 launchers = ["~/.local/bin/bc250-xenia-manager"]
-
-[app.decky]
-name = "Decky Loader Manager"
-launchers = ["~/.local/bin/bc250-decky-manager"]
-
-[app.ncgui]
-name = "Bazzite NetcatGUI"
-launchers = ["~/.local/bin/bazzite-netcatgui"]
 
 [app.datstation]
 name = "Bazzite DatStation"
@@ -215,12 +207,6 @@ usage = "Password prompt for installing and removing the patched driver."
 owner = "mesh"
 need = "required"
 usage = "Password prompt for installing and removing the DirectMesh driver."
-
-[[tool.source]]
-owner = "decky"
-need = "required"
-usage = "Password prompt for installing, removing and restarting Decky Loader's system service, and for the /home/deck link."
-anchor = "using-it"
 
 [[tool.source]]
 owner = "ips35"
@@ -677,12 +663,6 @@ need = "required"
 usage = "Install, remove and inspect the persistent core-unlock service."
 
 [[tool.source]]
-owner = "decky"
-need = "required"
-usage = "Install, start, restart and inspect Decky Loader's service, plugin_loader."
-anchor = "using-it"
-
-[[tool.source]]
 owner = "ace"
 need = "required"
 usage = "Manage the driver guard service."
@@ -734,12 +714,6 @@ usage = "Read and follow system and service logs."
 owner = "cores"
 need = "required"
 usage = "Check machine-check and kernel errors during testing."
-
-[[tool.source]]
-owner = "decky"
-need = "optional"
-usage = "Log shows Decky Loader's lines from the system journal."
-anchor = "using-it"
 
 [[tool.source]]
 owner = "compute"
@@ -1154,10 +1128,6 @@ owner = "xenia"
 specifier = ">=6.11,<7"
 
 [[dependency.source]]
-owner = "decky"
-specifier = ">=6.11,<7"
-
-[[dependency.source]]
 owner = "vram"
 specifier = ">=6.11,<7"
 
@@ -1186,10 +1156,6 @@ owner = "clb"
 specifier = ">=6.11,<7"
 
 [[dependency.source]]
-owner = "ncgui"
-specifier = ">=6.11,<7"
-
-[[dependency.source]]
 owner = "datstation"
 specifier = ">=6.11,<7"
 
@@ -1199,7 +1165,7 @@ specifier = ">=6.11,<7"
 
 [[dependency]]
 name = "pygame-ce"
-description = "A community-maintained game library for Python, built on SDL. The portal reads a game controller with it (the pad's buttons under SDL's common names), to move around Suite Big Picture Mode, and Console LinkB reads the controller of a stream with it and sends it the stream's rumble; neither opens a window or plays sound with it."
+description = "A community-maintained game library for Python, built on SDL. The portal reads a game controller with it (the pad's buttons under SDL's common names), to move around Suite Big Picture Mode, and BC-250 XB Remote Play reads the controller of a stream with it and sends it the stream's rumble; neither opens a window or plays sound with it."
 
 [[dependency.source]]
 owner = "portal"
@@ -1324,7 +1290,7 @@ specifier = ">=42,<51"
 
 [[dependency]]
 name = "aiortc"
-description = "WebRTC for Python, on asyncio. Console LinkB's streams from an XBOX or XBOX Cloud Gaming run on it: the connection, the H.264 video and Opus sound (decoded with PyAV, whose wheels include FFmpeg, which aiortc installs with it) and the data channels for the controller."
+description = "WebRTC for Python, on asyncio. BC-250 XB Remote Play's streams from an XBOX or XBOX Cloud Gaming run on it: the connection, the H.264 video and Opus sound (decoded with PyAV, whose wheels include FFmpeg, which aiortc installs with it) and the data channels for the controller."
 
 [[dependency.source]]
 owner = "clb"

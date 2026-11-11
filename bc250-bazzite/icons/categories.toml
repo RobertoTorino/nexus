@@ -119,11 +119,6 @@ category = "utilities"
 icons = ["apps/hdcontrol/images/bc250-usb-hdcontrol"]
 tile = "portal/images/apps/hdcontrol.webp"
 
-[ncgui]
-category = "utilities"
-icons = ["apps/ncgui/images/bazzite-netcatgui"]
-tile = "portal/images/apps/ncgui.webp"
-
 [rpcs3]
 category = "gaming"
 icons = ["apps/rpcs3/images/bc250-rpcs3-manager"]
@@ -143,11 +138,6 @@ tile = "portal/images/apps/clb.webp"
 category = "gaming"
 icons = ["apps/shadps4/images/bc250-shadps4-manager"]
 tile = "portal/images/apps/shadps4.webp"
-
-[decky]
-category = "gaming"
-icons = ["apps/decky/images/bc250-decky-manager"]
-tile = "portal/images/apps/decky.webp"
 
 [datstation]
 category = "gaming"

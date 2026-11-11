@@ -22,8 +22,8 @@ The servers see your IP address, as any website you open does.
 
 - The [portal](portal.md) downloads the apps you install from the suite's releases, and at start asks whether a
   newer portal release is out.
-- The shadPS4, RPCS3, PPSSPP, PCSX2 and Xenia Managers and the Decky Loader Manager ask for the
-  emulator's or Decky's newest release when their window opens, and download the release you install.
+- The shadPS4, RPCS3, PPSSPP, PCSX2 and Xenia Managers ask for the emulator's newest release when their
+  window opens, and download the release you install.
 - [BC-250 Upscaler Manager](apps/upscaler.md), [BC-250 Mesh Shaders](apps/mesh.md) and the
   [GPU Manager](apps/gpu.md) look for a newer release of what they install at start; each can be
   told not to in its settings.
@@ -46,7 +46,7 @@ its Python packages from PyPI.
 - [Console Link](apps/consoles.md#privacy) talks to your own consoles on your own network, and to PlayStation
   (PSN) only for **Find my account ID**; the sign-in happens in your browser. Its window masks your account ID,
   online ID and the consoles' addresses.
-- [Console LinkB](apps/clb.md#privacy) talks to Microsoft's XBOX services when you sign in, refresh, wake a
+- [BC-250 XB Remote Play](apps/clb.md#privacy) talks to Microsoft's XBOX services when you sign in, refresh, wake a
   console or stream; the sign-in happens in your browser. Its log masks the account's tokens, your gamertag, the
   consoles' IDs and network addresses.
 - [shadPS4 Manager](apps/shadps4.md#shadnet): shadPS4 signs in to the shadNet server you set, with the
@@ -78,7 +78,7 @@ the exact list. Nothing of it is uploaded. Uninstalling with `--purge` removes t
 Some of it can identify you: host and user names, serial numbers, MAC and IP addresses, account IDs. Where an app
 shows or saves such details, it masks them: [Bazzite Test](apps/check.md) masks them in saved logs (on by default,
 in **Settings › Privacy**), [Console Link](apps/consoles.md#privacy) in its window and log, and
-[Console LinkB](apps/clb.md#privacy) in its log. Where an app shows a path on its screen or writes one in its
+[BC-250 XB Remote Play](apps/clb.md#privacy) in its log. Where an app shows a path on its screen or writes one in its
 log, your home folder is written as `~`, so your user name is not in it. Before you share a log or a screenshot, for example in an issue,
 look it over for anything you would rather keep to yourself.
 

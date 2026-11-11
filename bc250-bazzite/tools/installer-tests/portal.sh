@@ -72,18 +72,18 @@ check "check results gone" "[ ! -e $T/log/bc250-bazzite-test ]"
 check "/opt empty" "[ -z \"\$(ls $T/opt)\" ]"
 
 echo "== 5. uninstall asks about each other app: cancel, then skip one and uninstall the others"
-# The others: overlay and bios as the portal installs them from the checkout, and ncgui, installed the same way.
-# Then bios and ncgui are dropped from the installed portal's manifest, as a newer portal drops an app: bios keeps
-# its record and release folder (the portal's), ncgui neither (found by its own installed copy under
+# The others: overlay and bios as the portal installs them from the checkout, and datstation, installed the same
+# way. Then bios and datstation are dropped from the installed portal's manifest, as a newer portal drops an app: bios
+# keeps its record and release folder (the portal's), datstation neither (found by its own installed copy under
 # ~/.local/share). Nexus Installer Tests (dev/itests, a Nexus app), installed from the checkout too, is not the
 # portal's (no Development tab, owner 27-10-2026): the portal's uninstall leaves it.
 bash "$SUITE/install.sh" > "$T/log5" 2>&1; logs+=("$T/log5")
-for app in overlay bios ncgui; do
+for app in overlay bios datstation; do
     /usr/bin/python3 "$NEXUS/tools/stage_app.py" "$app" "$D/bc250-bazzite-suite/portal/releases/local-$app" > /dev/null
     (cd "$D/bc250-bazzite-suite/portal/releases/local-$app" && bash install.sh) >> "$T/log5" 2>&1
 done
 bash "$NEXUS/dev/itests/install.sh" --no-desktop-shortcut >> "$T/log5" 2>&1
-rm -rf "$D/bc250-bazzite-suite/portal/releases/local-ncgui"
+rm -rf "$D/bc250-bazzite-suite/portal/releases/local-datstation"
 /usr/bin/python3 - "$D/bc250-bazzite-suite/portal/installed.json" "$T/opt/bc250-bazzite-suite/apps.toml" <<'PY'
 import json, re, sys
 from pathlib import Path
@@ -92,25 +92,25 @@ data.update({"overlay": "local", "bios": "local"})
 json.dump(data, open(sys.argv[1], "w"))
 manifest = Path(sys.argv[2])
 text = manifest.read_text(encoding="utf-8")
-for key in ("bios", "ncgui"):                     # dropped from this portal's manifest
+for key in ("bios", "datstation"):                # dropped from this portal's manifest
     text = re.sub(rf"^\[apps\.{key}\]\n(?:(?!^\[).*\n)*", "", text, flags=re.M)
 manifest.write_text(text, encoding="utf-8")
 PY
 installed() { [ -x "$HOME/.local/bin/$1" ]; }
-check "the apps are installed" "installed bc250-system-overlay && installed bc250-bios-reader && installed bazzite-netcatgui && installed nexus-installer-tests"
-check "two of them dropped from the installed manifest" "! grep -q 'apps.bios' $T/opt/bc250-bazzite-suite/apps.toml && ! grep -q 'apps.ncgui' $T/opt/bc250-bazzite-suite/apps.toml && grep -q 'apps.overlay' $T/opt/bc250-bazzite-suite/apps.toml"
+check "the apps are installed" "installed bc250-system-overlay && installed bc250-bios-reader && installed bazzite-datstation && installed nexus-installer-tests"
+check "two of them dropped from the installed manifest" "! grep -q 'apps.bios' $T/opt/bc250-bazzite-suite/apps.toml && ! grep -q 'apps.datstation' $T/opt/bc250-bazzite-suite/apps.toml && grep -q 'apps.overlay' $T/opt/bc250-bazzite-suite/apps.toml"
 mkdir -p "$D/bc250-bazzite-suite/portal/releases/overlay-v0.0.1"   # an older release it was updated from
 printf 'y\nc\n' | BC250_INTERACTIVE=1 bash "$SUITE/install.sh" --uninstall >> "$T/log5" 2>&1; rc=$?
 check "cancel: exit 1" "[ $rc -eq 1 ]"
-check "cancel: nothing removed" "installed bc250-system-overlay && installed bc250-bios-reader && installed bazzite-netcatgui && installed nexus-installer-tests && installed bc250-bazzite-suite && installed bc250-bazzite-test"
+check "cancel: nothing removed" "installed bc250-system-overlay && installed bc250-bios-reader && installed bazzite-datstation && installed nexus-installer-tests && installed bc250-bazzite-suite && installed bc250-bazzite-test"
 check "cancel: says so" "grep -q 'Canceled: nothing was uninstalled.' $T/log5"
 printf 'x\ns\ny\ny\n' | BC250_INTERACTIVE=1 bash "$SUITE/install.sh" --uninstall >> "$T/log5" 2>&1; rc=$?
 check "exit 0" "[ $rc -eq 0 ]"
-check "asked about overlay three times (the cancel run, an unknown answer), bios twice, ncgui once, Installer Tests never" "[ \$(grep -o 'Uninstall System Overlay?' $T/log5 | wc -l) -eq 3 ] && [ \$(grep -o 'Uninstall BC-250 BIOS Reader?' $T/log5 | wc -l) -eq 2 ] && [ \$(grep -o 'Uninstall Bazzite NetcatGUI?' $T/log5 | wc -l) -eq 1 ] && ! grep -q 'Uninstall Nexus Installer Tests?' $T/log5"
+check "asked about overlay three times (the cancel run, an unknown answer), bios twice, datstation once, Installer Tests never" "[ \$(grep -o 'Uninstall System Overlay?' $T/log5 | wc -l) -eq 3 ] && [ \$(grep -o 'Uninstall BC-250 BIOS Reader?' $T/log5 | wc -l) -eq 2 ] && [ \$(grep -o 'Uninstall Bazzite DatStation?' $T/log5 | wc -l) -eq 1 ] && ! grep -q 'Uninstall Nexus Installer Tests?' $T/log5"
 check "skipped app stays" "installed bc250-system-overlay && [ -d $D/bc250-bazzite-suite/portal/releases/local-overlay ]"
 check "chosen app gone" "! installed bc250-bios-reader && [ ! -e $D/bc250-bazzite-suite/portal/releases/local-bios ]"
 check "Installer Tests stays: the checkout's, not the portal's" "installed nexus-installer-tests"
-check "dropped app without a record gone" "! installed bazzite-netcatgui && [ ! -e $D/bazzite-netcatgui/app ]"
+check "dropped app without a record gone" "! installed bazzite-datstation && [ ! -e $D/bazzite-datstation/app ]"
 check "record drops the chosen app" "! grep -q bios $D/bc250-bazzite-suite/portal/installed.json && grep -q overlay $D/bc250-bazzite-suite/portal/installed.json"
 check "record and folder of check gone" "! grep -q check $D/bc250-bazzite-suite/portal/installed.json && [ ! -e $D/bc250-bazzite-suite/portal/releases/local-check ]"
 check "older release of the skipped app gone" "[ ! -e $D/bc250-bazzite-suite/portal/releases/overlay-v0.0.1 ]"

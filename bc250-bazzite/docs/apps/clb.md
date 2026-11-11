@@ -1,11 +1,11 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 
-![Console LinkB](../assets/clb/bc250-console-linkb.webp){ .app-logo }
+![BC-250 XB Remote Play](../assets/clb/bc250-console-linkb.webp){ .app-logo }
 
-# Console LinkB
+# BC-250 XB Remote Play
 
-Console LinkB brings XBOX games to the **AMD BC-250**. Sign in with your Microsoft account, and the app lists your
-XBOX consoles and the games of XBOX Cloud Gaming you may play. Stream your own XBOX to the board (Microsoft calls
+BC-250 XB Remote Play brings XBOX games to the **AMD BC-250**. Sign in with your Microsoft account, and the app lists
+your XBOX consoles and the games of XBOX Cloud Gaming you may play. Stream your own XBOX to the board (Microsoft calls
 this Remote Play), or play a game from the cloud.
 
 The app does not change how the board runs. It talks to Microsoft's XBOX services only when you sign in, refresh,

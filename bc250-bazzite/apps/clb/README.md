@@ -4,12 +4,12 @@
 [![CI](https://github.com/RobertoTorino/nexus/actions/workflows/ci.yml/badge.svg)](https://github.com/RobertoTorino/nexus/actions/workflows/ci.yml)
 [![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
 
-# Console LinkB
+# BC-250 XB Remote Play
 
-Console LinkB streams XBOX games to the **AMD BC-250** on **Bazzite**: sign in with your Microsoft account, wake your
-XBOX and play it on the board (Remote Play), or play games from XBOX Cloud Gaming.
+BC-250 XB Remote Play streams XBOX games to the **AMD BC-250** on **Bazzite**: sign in with your Microsoft account, wake
+your XBOX and play it on the board (Remote Play), or play games from XBOX Cloud Gaming.
 
-How to install and use it: [Console LinkB in the manual](https://robertotorino.github.io/nexus/bc250-bazzite-suite/apps/clb/).
+How to install and use it: [BC-250 XB Remote Play in the manual](https://robertotorino.github.io/nexus/bc250-bazzite-suite/apps/clb/).
 
 ## Disclaimer
 

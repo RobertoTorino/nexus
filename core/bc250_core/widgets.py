@@ -445,7 +445,7 @@ class RoundedToolTip(QObject):
         tip = cls(app)
         app.installEventFilter(tip)
         # Off again when the app quits: the filter sees every event, also those of widgets and sockets that are
-        # destroyed after the event loop has ended, when Python is tearing down (Bazzite NetcatGUI crashed at
+        # destroyed after the event loop has ended, when Python is tearing down (an app with sockets crashed at
         # exit on them, 15-10-2026).
         app.aboutToQuit.connect(lambda: app.removeEventFilter(tip))
         cls._instance = tip

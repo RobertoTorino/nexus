@@ -111,7 +111,7 @@ def test_about_popup_describes_the_purpose(qapp):
     _dependencies, tools = _catalog()
     apps = load_apps(CATALOG)
     text = about_text(tools["cec-ctl"], apps)
-    assert "HDMI-CEC" in text and "HDMI CEC Manager" in text and "(required)" in text
+    assert "HDMI-CEC" in text and "BC-250 CEC Manager" in text and "(required)" in text
     assert "Needs root." in about_text(tools["umr"], apps)
     window = _window(CheckResult([], [], frozenset()))
     try:

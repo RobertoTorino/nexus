@@ -17,7 +17,7 @@ from bc250_core.platform import data_home
 
 PORTAL = "bc250-bazzite-suite.desktop"
 PATTERN = "bc250-*.desktop"
-OTHERS = ("media-tool.desktop", "bazzite-netcatgui.desktop", "bazzite-datstation.desktop")  # apps not bc250-*
+OTHERS = ("media-tool.desktop", "bazzite-datstation.desktop")  # apps not bc250-*
 
 
 def desktop_dir() -> Path:

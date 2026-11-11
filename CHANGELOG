@@ -1,3 +1,31 @@
+Changelog: 11-11-2026 19:38:54
+
+Fixed. The BC250 Bazzite Suite's Console LinkB (bc250-bazzite/apps/clb) is now called BC-250 XB Remote Play (owner,
+11-11-2026), in the app, its installer, the portal's manifest (and the root portal/apps.toml copy), the suite's wiki,
+README and CLAUDE.md, Nexus Deps' catalog, ICONS.md, DESIGN.md (tools/make_design.py) and the Nexus page's Apps and
+features chapter, whose family is now XB Remote Play (nexus/features.toml, rebuilt with tools/features.py). The app ID,
+launcher, package and settings keep bc250-console-linkb. The Bazzite Console Suite's Console LinkB keeps its name.
+
+Changelog: 11-11-2026 19:33:59
+
+Fixed. HDMI CEC Manager (bc250-bazzite/apps/cec) is now called BC-250 CEC Manager (owner, 11-11-2026), in the app, its
+installer, the portal's manifest (and the root portal/apps.toml copy), the suite's wiki and README, BC-250 Bazzite
+Test's HDMI-CEC tests, Nexus Deps' catalog, ICONS.md and the Nexus page's Apps and features chapter
+(nexus/features.toml, rebuilt with tools/features.py). The app ID, launcher, package and settings keep bc250-hdmi-cec.
+
+Changelog: 11-11-2026 19:04:21
+
+Breaking. Decky Loader Manager (bc250-bazzite/apps/decky) and Bazzite NetcatGUI (bc250-bazzite/apps/ncgui) are gone
+from the BC250 Bazzite Suite (owner, 11-11-2026): the apps, their manifest entries, wiki chapters, installer tests,
+tile pictures and category icons, and every mention in the suite's wiki, READMEs and rules (see the portal's
+CHANGELOG). The weekly upstream check (bc250-bazzite/tools/check_upstream.py, the Upstream workflow) no longer
+checks Decky Loader. NetcatGUI's colors are gone from DESIGN.md and its toolbar icons from ICONS.md; the Nexus
+page's Apps and features chapter lists Decky Loader Manager for the Bazzite Console Suite only, and NetcatGUI no
+more. CONTRIBUTING.md no longer names a GPL-2.0-only app. The Bazzite Console Suite's own Decky Loader Manager is
+unchanged. The tests that used NetcatGUI as an example take DatStation or SFTP Tools
+(tools/tests/test_build_release.py, test_new_app.py, the portal's tests, portal_tour.py's installed apps), and a
+comment in core's widgets.py no longer names it.
+
 Changelog: 10-11-2026 02:13:34
 
 Release 3.4.0. Brings ace-v2.0.1, acpi-v0.4.4, bios-v2.0.1, cec-v2.0.1, check-v2.0.1, clb-v2.0.1, consoles-v3.0.1, cores-v0.4.4, datstation-v4.0.1, decky-v2.0.1, fan-v2.0.1, gpu-v0.5.2, hdcam-v2.0.1, hdcontrol-v2.0.1, ips35-v2.0.1, mesh-v2.0.1, ncgui-v2.0.1, oc-v0.3.4, overlay-v2.0.1, pcsx2-v5.0.1, portal-v17.0.1, ppsspp-v3.0.1, rpcs3-v5.0.1, sftp-v2.0.1, shadps4-v5.0.1, ssd-v1.0.1, upscaler-v3.0.1, vita3k-v3.0.1, vram-v2.0.1, wdriver-v2.0.1, xenia-v3.0.1.

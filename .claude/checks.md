@@ -46,8 +46,7 @@ shellcheck -S warning $S/apps/ppsspp/install.sh $S/apps/ppsspp/bc250-ppsspp-run 
   $S/apps/pcsx2/install.sh $S/apps/pcsx2/bc250-pcsx2-run $S/apps/vita3k/install.sh \
   $S/apps/vita3k/bc250-vita3k-run
 shellcheck -S warning $S/apps/xenia/install.sh $S/apps/xenia/bc250-xenia-run
-shellcheck -S warning $S/apps/decky/install.sh $S/apps/ncgui/install.sh \
-  $S/apps/datstation/install.sh
+shellcheck -S warning $S/apps/datstation/install.sh
 for t in bc250-bazzite/tools/installer-tests/*.sh bazzite-console/tools/installer-tests/*.sh; do
   [ "${t##*/}" = shims.sh ] || bash "$t"
 done

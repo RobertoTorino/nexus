@@ -290,7 +290,7 @@ Each design (a suite's, the Nexus page's) has its own; none is carried over to a
   poorly as text on the dark views. The log in the check app uses them; a second tint of a hue is a deviation.
 - **Brand and hardware colors stay what they are:** PlayStation blue and the face-button colors in the PlayStation
   apps, the light bar's and the color wheel's pure colors in HD Control, a game's own artwork, the gaming blue
-  `#0a55b0` of the gaming category's icon in the emulator managers.
+  `#0a55b0` of the gaming apps in the emulator managers (blue, though their icon is red since 11-11-2026).
 - **Anything else is a deviation**, listed under Color families below with the app it is in. A new color is
   added to the family it belongs to, or it needs a reason here.
 
@@ -343,8 +343,7 @@ FAMILIES = [
         ("#a00000", "family", "Active red under the pointer."),
         ("#e57373", "tint", "Red text on a dark surface: the check app's findings, log, in-game checks, history and "
                             "scores; the error labels of ACPI, CU Unlock and Cores Unlock; SFTP Tools' password "
-                            "requirements not met; NetcatGUI's error lines."),
-        ("#d04545", "brand", "NetcatGUI's red tab (its own palette, below)."),
+                            "requirements not met."),
         ("#e8505b", "brand", "PlayStation's circle: HD Control's circle button, DatStation's circle symbol."),
         ("#ff2020", "hardware", "The light bar's red; `#ff0000` the color wheel's."),
     ]),
@@ -353,7 +352,6 @@ FAMILIES = [
         ("#fdd835", "family", "Running."),
         ("#ffb74d", "tint", "Orange text on a dark surface: the check app's warnings, log, in-game checks and middle "
                             "scores; SFTP Tools' password warning."),
-        ("#e08a1e", "brand", "NetcatGUI's orange tab (its own palette, below)."),
         ("#ffd166", "brand", "DatStation's PS News symbol."),
         ("#ffd700", "brand", "DatStation's gold: trophies and stars; `#c0c0c0` silver, `#cd7f32` bronze."),
         ("#ffff00", "hardware", "The color wheel's yellow."),
@@ -361,22 +359,19 @@ FAMILIES = [
     ("Green", [
         ("#2e7d32", "family", "Ok: passed, valid, unlocked, a pressed controller button; a right answer."),
         ("#81c784", "tint", "Green text on a dark surface: the check app's log success, in-game ok, a better result "
-                            "in its history and full scores; SFTP Tools' password requirements met; NetcatGUI's "
-                            "success lines."),
-        ("#2e9e5b", "brand", "NetcatGUI's green tab (its own palette, below)."),
+                            "in its history and full scores; SFTP Tools' password requirements met."),
         ("#3dbf9c", "brand", "PlayStation's triangle: HD Control's triangle button, DatStation's triangle symbol."),
         ("#10d040", "hardware", "The light bar's green; `#00ff00` the color wheel's."),
     ]),
     ("Blue", [
         ("#1565c0", "family", "Info; the check app's GPU score box; HDMI CEC's adapter box."),
         ("#64b5f6", "tint", "Blue text on a dark surface: the check app's info and hint findings."),
-        ("#0a55b0", "brand", "Gaming blue, the gaming icon's: the emulator managers' primary button, with `#2a6cc4` "
+        ("#0a55b0", "brand", "Gaming blue, the gaming apps': the emulator managers' primary button, with `#2a6cc4` "
                              "under the pointer and `#08448d` pressed; `#5b93da` their links."),
         ("#003791", "brand", "PlayStation blue (DatStation), `#0072ce` light, `#1a85e0` under the pointer, "
                              "`#00589f` pressed; `#4da3ef` its links."),
         ("#6f9fe8", "brand", "PlayStation's cross: HD Control's cross button, DatStation's cross symbol (the square "
                              "is `#e48fc0` in both)."),
-        ("#3c7dd9", "brand", "NetcatGUI's header names and blue tab (its own palette, below)."),
         ("#1f3e9c", "brand", "BIOS Reader's bar and selection, with `#0b2a8a` and `#10205a`: a classic BIOS screen."),
         ("#0050ff", "hardware", "The light bar's blue (the default); `#0000ff` the color wheel's."),
     ]),
@@ -386,12 +381,9 @@ FAMILIES = [
         ("#ce93d8", "tint", "Purple text on a dark surface: the check app's log hints, Show in log link, in-game "
                             "accent and the overlay's frame rate and border."),
         ("#8b4fd8", "family", "The stage pill under the claim on the wiki's home page."),
-        ("#8e5bd0", "brand", "NetcatGUI's purple tab (its own palette, below)."),
         ("#a020f0", "hardware", "The light bar's purple; `#ff00ff` the color wheel's magenta."),
     ]),
     ("Palettes of their own", [
-        ("#d04545", "brand", "NetcatGUI's tabs: red, orange `#e08a1e`, green `#2e9e5b`, blue `#3c7dd9`, purple "
-                             "`#8e5bd0`, gray `#8a8f98`: the tab colors of the tool it ports, a user's choice per tab."),
         ("#8a5a2e", "brand", "Upscaler's copper and teal `#0e6f75` boxes, cyan `#26a9b0` outlines: the icon's colors."),
         ("#ad1457", "brand", "The check app's System overview: cores, threads `#00796b`, upload `#3949ab`, NVMe "
                              "`#6d4c41`, packages `#5e35b1`, BIOS `#00838f`, a seventh series `#5d4037`: a chart's "
@@ -426,12 +418,13 @@ STYLESHEETS = {
 }
 
 GAMING_TEXT = [
-    ("#5b93da", "Links on a dark window (Console Link, Console LinkB, Decky, PCSX2, PPSSPP, RPCS3, shadPS4, Vita3K, "
-                "Xenia; HD Control's lit parts)."),
+    ("#5b93da", "Links on a dark window (Console Link, Console LinkB, XB Remote Play, Decky, PCSX2, PPSSPP, RPCS3, "
+                "shadPS4, Vita3K, Xenia; HD Control's lit parts)."),
     ("#ffffff", "Text on the blue primary button and on the shortcut artwork."),
 ]
 GAMING_BLOCKS = [
-    ("#0a55b0", "Gaming blue: the primary button, hover borders; the blue of the gaming apps' icon."),
+    ("#0a55b0", "Gaming blue: the primary button, hover borders; the gaming apps' color (their icon is red since "
+                "11-11-2026)."),
     ("#2a6cc4", "Gaming blue on hover."),
     ("#08448d", "Gaming blue while pressed."),
     ("#0a55b01a", "Blue tint (10 %): hover, every other table row."),
@@ -528,11 +521,8 @@ OTHER_TEXT = [
     ("#b8b8c8", "System Overlay: the names of the values."),
     ("#dddddd", "Console Link's stream view."),
     ("#ffb74d", "SFTP: the password warning."),
-    ("#e57373", "SFTP: password requirements not met; NetcatGUI: error lines in the session."),
-    ("#81c784", "SFTP: password requirements met; NetcatGUI: success lines in the session."),
-    ("#d2691e", "NetcatGUI: HTTP and status replies."),
-    ("#3c7dd9", "NetcatGUI: header names."),
-    ("#8a8f98", "NetcatGUI: byte counts."),
+    ("#e57373", "SFTP: password requirements not met."),
+    ("#81c784", "SFTP: password requirements met."),
     ("#ffffff", "BIOS Reader: tabs, crumbs, the legend and the selection."),
     ("#0b2a8a", "BIOS Reader: the screen's text."),
     ("#10205a", "BIOS Reader: subtitles."),
@@ -563,12 +553,6 @@ OTHER_BLOCKS = [
     ("#00ffff", "Color wheel: cyan."),
     ("#0000ff", "Color wheel: blue."),
     ("#ff00ff", "Color wheel: magenta."),
-    ("#d04545", "NetcatGUI tab: red."),
-    ("#e08a1e", "NetcatGUI tab: orange."),
-    ("#2e9e5b", "NetcatGUI tab: green."),
-    ("#3c7dd9", "NetcatGUI tab: blue."),
-    ("#8e5bd0", "NetcatGUI tab: purple."),
-    ("#8a8f98", "NetcatGUI tab: gray."),
     ("#04060c", "Portal: the intro's backdrop."),
     ("#1b1b1b", "Portal: the outline of the update badge on a tile."),
     ("#808080", "Portal: a category tab on hover (16 %)."),
@@ -635,8 +619,8 @@ are not on core yet carry a copy). The theme is one choice for every app: Gunmet
                        "page's colors as a theme for core's widgets, set with `create_app(theme=NEXUS)`; its "
                        "states are the apps' state family.", NEXUS_APP_TEXT, NEXUS_APP_BLOCKS))
     out.append("## The apps' own colors\n\nOn top of the theme, in the apps' `style.py` or where they are used.\n")
-    out.append(section("Gaming apps", "Console Link, Console LinkB, Decky, HD Control, PCSX2, PPSSPP, RPCS3, "
-                       "shadPS4, Vita3K and Xenia.", GAMING_TEXT, GAMING_BLOCKS))
+    out.append(section("Gaming apps", "Console Link, Console LinkB, XB Remote Play, Decky, HD Control, PCSX2, PPSSPP, "
+                       "RPCS3, shadPS4, Vita3K and Xenia.", GAMING_TEXT, GAMING_BLOCKS))
     out.append(section("DatStation", "", DAT_TEXT, DAT_BLOCKS))
     out.append(section("Upscaler", "", UPSCALER_TEXT, UPSCALER_BLOCKS))
     out.append(section("BC-250 Bazzite Test (check)", "", CHECK_TEXT, CHECK_BLOCKS))

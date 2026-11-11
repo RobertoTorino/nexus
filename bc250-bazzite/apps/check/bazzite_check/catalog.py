@@ -96,7 +96,7 @@ CATEGORIES: list[Category] = [
                 "The CEC adapter of the DisplayPort output (only when the DP-to-HDMI converter tunnels CEC), whether "
                 "the TV answers, and Bazzite's CEC mode. Whether the board can turn the TV on and off."),
         TestDef("52", "HDMI-CEC Services",
-                "Whether the services behind the TV control run: Valve's CEC daemon (cecd), HDMI CEC Manager's "
+                "Whether the services behind the TV control run: Valve's CEC daemon (cecd), BC-250 CEC Manager's "
                 "background and boot services when installed, and Bazzite's dGPU CEC services when enabled."),
         TestDef("29", "Display Session", "Identifies the display manager, session type and compositor."),
     ]),

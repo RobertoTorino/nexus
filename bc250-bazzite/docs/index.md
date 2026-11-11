@@ -63,10 +63,9 @@ beside the system Mesa.
 <div class="home-card" markdown>
 #### :material-television: Living room
 
-[HDMI CEC Manager](apps/cec.md) turns the TV on and off with the board, [SFTP Tools](apps/sftp.md) moves files
-between computers, [USB HD Cam](apps/hdcam.md) makes the PS5 HD Camera a webcam,
-[USB HD Control](apps/hdcontrol.md) updates the DualSense's firmware, and
-[Decky Loader Manager](apps/decky.md) adds plugins to Game Mode.
+[BC-250 CEC Manager](apps/cec.md) turns the TV on and off with the board, [SFTP Tools](apps/sftp.md) moves files
+between computers, [USB HD Cam](apps/hdcam.md) makes the PS5 HD Camera a webcam, and
+[USB HD Control](apps/hdcontrol.md) updates the DualSense's firmware.
 </div>
 </div>
 
@@ -157,9 +156,8 @@ use **Security → Report a vulnerability** instead, as the [security policy](SE
 
 ## License
 
-GPL-3.0-or-later, except BC-250 Persistent ACPI, which is MIT, Console Link, which is AGPL-3.0 (its
-protocol code comes from chiaki-ng), and Bazzite NetcatGUI, which is GPL-2.0 (a port of NetcatGUI). Each app has
-its own `LICENSE`. The icons were made with generative AI tools and edited by hand in Photoshop, and the music of
+GPL-3.0-or-later, except BC-250 Persistent ACPI, which is MIT, and Console Link, which is AGPL-3.0 (its
+protocol code comes from chiaki-ng). Each app has its own `LICENSE`. The icons were made with generative AI tools and edited by hand in Photoshop, and the music of
 the video tours with generative AI tools. The sounds were made without AI: the portal's intro sound by its own code, from
 arithmetic alone, and the portal's sound on a controller action and DatStation's quiz music by hand in Audacity. All are
 under the license of the app or tool they come with, like its code.

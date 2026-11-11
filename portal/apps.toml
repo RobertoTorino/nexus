@@ -310,7 +310,7 @@ detect = ["~/.local/bin/bc250-usb-wifi"]
 launch = [["Open", "~/.local/bin/bc250-usb-wifi"]]
 
 [apps.cec]
-name = "HDMI CEC Manager"
+name = "BC-250 CEC Manager"
 short = "HDMI-CEC"
 summary = "Turn the TV on and off with the board, switch its input and use its remote, over HDMI-CEC."
 tag = "cec-v2.0.1"
@@ -376,20 +376,6 @@ uninstall = ["bash install.sh --uninstall"]
 detect = ["~/.local/bin/bc250-usb-hdcontrol"]
 launch = [["Open", "~/.local/bin/bc250-usb-hdcontrol"]]
 
-[apps.ncgui]
-name = "Bazzite NetcatGUI"
-short = "NetcatGUI"
-summary = "A graphical netcat: connect to a host or listen on a port, TCP, UDP or TLS, one session per tab."
-tag = "ncgui-v2.0.1"
-sha256 = "cce9667d30f0ae5851d3336def6f729fc00fe4963fe8d14d2134878ec87d2053"
-required = false
-changes_board = false
-category = "utilities"
-install = ["bash install.sh"]
-uninstall = ["bash install.sh --uninstall"]
-detect = ["~/.local/bin/bazzite-netcatgui"]
-launch = [["Open", "~/.local/bin/bazzite-netcatgui"]]
-
 [apps.rpcs3]
 name = "RPCS3 Manager"
 summary = "PS3 games with the RPCS3 emulator: a tested RPCS3 build, the firmware, your games found and added to Game Mode."
@@ -418,8 +404,8 @@ detect = ["~/.local/bin/bc250-console-link"]
 launch = [["Open", "~/.local/bin/bc250-console-link"]]
 
 [apps.clb]
-name = "Console LinkB"
-short = "Console LinkB"
+name = "BC-250 XB Remote Play"
+short = "XB Remote Play"
 summary = "Stream your XBOX (Remote Play) or games from XBOX Cloud Gaming to the board, signed in with your Microsoft account."
 tag = "clb-v2.0.1"
 sha256 = "48c979260b6c59855a50e297859e26d08437025a618077ef3c43920fed9613bd"
@@ -443,19 +429,6 @@ install = ["bash install.sh"]
 uninstall = ["bash install.sh --uninstall"]
 detect = ["~/.local/bin/bc250-shadps4-manager"]
 launch = [["Open", "~/.local/bin/bc250-shadps4-manager"]]
-
-[apps.decky]
-name = "Decky Loader Manager"
-summary = "Plugins in Game Mode with Decky Loader: a tested Decky release as a system service, its state and its plugins."
-tag = "decky-v2.0.1"
-sha256 = "43c8bf110f9abd4aa17cd5a6b977c73a4d97d05b8b3654cec830a0c8e744db47"
-required = false
-changes_board = false
-category = "gaming"
-install = ["bash install.sh"]
-uninstall = ["bash install.sh --uninstall"]
-detect = ["~/.local/bin/bc250-decky-manager"]
-launch = [["Open", "~/.local/bin/bc250-decky-manager"]]
 
 [apps.datstation]
 name = "Bazzite DatStation"

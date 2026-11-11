@@ -102,12 +102,8 @@ portal: [The releases on GitHub](https://robertotorino.github.io/nexus/releases/
 
 ### Upstream releases an app pins or follows
 
-Decky Loader Manager installs one Decky Loader release, pinned in
-`bc250-bazzite/apps/decky/decky_manager/loader.py` (`VERSION`, `TAG`, `SHA256`), and writes Decky's service unit
-itself (`unit_text()`). `bc250-bazzite/tools/check_upstream.py` compares both with Decky's repository: a newer stable release, the
-SHA-256 GitHub publishes for the pinned binary, and Decky's `plugin_loader-release.service` at the pinned tag and on
-`main` (Decky's own updater installs `main`'s). It exits with 0 when they match, 1 when Decky moved and 2 when it
-could not check. The Upstream workflow (`.github/workflows/upstream.yml`) runs it every Monday and can be started by
+`bc250-bazzite/tools/check_upstream.py` compares what the apps pin or follow with their upstreams, each described
+below. It exits with 0 when every one is in step, 1 when one moved and 2 when one could not be checked. The Upstream workflow (`.github/workflows/upstream.yml`) runs it every Monday and can be started by
 hand. What moved goes into the open **Upstream review** issue (a new one when none is open, else its list is
 updated with a comment), which notifies everyone who watches the repository. The workflow never closes it: close
 it once every item on it is handled on `main`, else next Monday's run opens it again. **Close issues** in [Nexus
@@ -115,7 +111,7 @@ Dashboard](https://robertotorino.github.io/nexus/dashboard/#close-issues) does i
 
 ```bash
 gh issue list                                                  # the open issues, with their numbers
-gh issue close <number> --comment "Decky pinned at v3.3.0."    # close one, saying how it was handled
+gh issue close <number> --comment "PPSSPP pinned at 1.20."     # close one, saying how it was handled
 ```
 
 The run fails only when an upstream could not be checked. A moved pin means a new version of the app is due, with
@@ -124,7 +120,7 @@ the new pin tried on the board first. It also moves Nexus Deps' list of the prog
 ([Nexus Deps](https://robertotorino.github.io/nexus/dashboard/#deps)).
 
 The shadPS4 Manager installs one shadPS4 release, pinned in `bc250-bazzite/apps/shadps4/shadps4_manager/emulator.py`
-(`VERSION`, `TAG`, `ASSET`, `SHA256`). The same tool checks it: a newer stable release, with the Linux zip and the
+(`VERSION`, `TAG`, `ASSET`, `SHA256`). The tool checks it: a newer stable release, with the Linux zip and the
 SHA-256 GitHub publishes for it that a new pin needs, and the SHA-256 of the pinned zip. A new shadPS4 can change
 what the app relies on (its `config.json`, the shadNet protocol), so a new pin also needs a look at what changed.
 
@@ -208,7 +204,7 @@ the tool reads the version from Ookla's Homebrew formula.
 
 ```bash
 python3 bc250-bazzite/tools/check_upstream.py            # all of them
-python3 bc250-bazzite/tools/check_upstream.py helixsr    # one: decky, shadps4, helixsr, ppsspp, pcsx2, rpcs3, directmesh,
+python3 bc250-bazzite/tools/check_upstream.py helixsr    # one: shadps4, helixsr, ppsspp, pcsx2, rpcs3, directmesh,
                                                           # vita3k, xenia, wdriver, mesa, ffmpeg, hdcam or speedtest
 ```
 

@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The app's look, as the other gaming apps (owner, 20-10-2026): one blue, #0A55B0, the blue of the gaming apps' icon,
+"""The app's look, as the other gaming apps (owner, 20-10-2026): one blue, #0A55B0, the gaming apps' blue,
 the shadPS4 Manager's style on core's widgets. The style sheet goes on the main window, so everything in it (its
 dialogs too) takes the blue and the rest of the suite keeps its theme."""
 

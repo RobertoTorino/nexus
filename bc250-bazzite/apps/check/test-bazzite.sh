@@ -3564,7 +3564,7 @@ echo
 fi  # TEST 50
 if want 51; then
 log_result "[TEST 51] HDMI-CEC Test"
-log_result "Whether the board can control the TV over HDMI: on and off, its input and its remote (HDMI CEC Manager)"
+log_result "Whether the board can control the TV over HDMI: on and off, its input and its remote (BC-250 CEC Manager)"
 CEC_DEVS=$(ls /dev/cec* 2>/dev/null)
 if [ -z "$CEC_DEVS" ]; then
     log_result "INFO: No CEC adapter (/dev/cec*). On the BC-250 amdgpu adds one for a DisplayPort output only when the"
@@ -3586,7 +3586,7 @@ else
             log_result "NOTE: The adapter sees no display: the TV is off or its EDID was not read. CEC needs both."
         elif [ -z "$CEC_LA" ]; then
             log_result "NOTE: Nothing has configured the adapter yet (no logical address), so the TV was not asked."
-            log_result "HINT: HDMI CEC Manager configures it with its first message, Valve's CEC daemon when it starts."
+            log_result "HINT: BC-250 CEC Manager configures it with its first message, Valve's CEC daemon when it starts."
         # cec-ctl exits 0 either way; a "Tx, ..." status line without "Tx, OK" means the transmit failed.
         elif CEC_POLL=$(cec-ctl -d "$CEC_DEV" -s --poll --to 0 2>&1) && grep -q 'Sequence:' <<<"$CEC_POLL" &&
              ! grep -qE '^[[:space:]]*Tx, ([^O]|O[^K])' <<<"$CEC_POLL"; then
@@ -3607,14 +3607,14 @@ else
             CEC_MODE_NOW="disabled"
         fi
         log_result "INFO: Bazzite CEC mode: $CEC_MODE_NOW. The automatic part (TV on and off with the board, the"
-        log_result "INFO: remote as a keyboard) is Valve's CEC daemon: ujust cec-mode native, or HDMI CEC Manager."
+        log_result "INFO: remote as a keyboard) is Valve's CEC daemon: ujust cec-mode native, or BC-250 CEC Manager."
     fi
 fi
 echo
 fi  # TEST 51
 if want 52; then
 log_result "[TEST 52] HDMI-CEC Services Test"
-log_result "Whether the services behind the TV control run: Valve's CEC daemon and those of HDMI CEC Manager"
+log_result "Whether the services behind the TV control run: Valve's CEC daemon and those of BC-250 CEC Manager"
 CEC_HOME=$(getent passwd "$GAME_USER" 2>/dev/null | cut -d: -f6)
 CEC_ADAPTER=$(ls /dev/cec* 2>/dev/null | head -1)
 # The user services' state comes from the desktop user's systemd; without a session the answer is empty.
@@ -3639,7 +3639,7 @@ else
         log_result "SUCCESS: cecd.service runs for $GAME_USER: TV on and off with sleep and wake, and the remote as a keyboard, as its settings say."
     elif [ "$CEC_ENABLED" = false ]; then
         log_result "INFO: cecd.service is not enabled (Bazzite's CEC mode is not native): nothing turns the TV on and off with the board."
-        log_result "HINT: ujust cec-mode native, or Use Valve's CEC daemon... in HDMI CEC Manager."
+        log_result "HINT: ujust cec-mode native, or Use Valve's CEC daemon... in BC-250 CEC Manager."
     elif [ -z "$CEC_STATE" ]; then
         cec_no_session cecd.service
     elif [ -z "$CEC_ADAPTER" ]; then
@@ -3651,11 +3651,11 @@ else
     fi
 fi
 
-# HDMI CEC Manager's background service: only installed while "Restart the picture" or "Pause videos and music" is on.
+# BC-250 CEC Manager's background service: only installed while "Restart the picture" or "Pause videos and music" is on.
 CEC_WATCH="bc250-hdmi-cec-watch.service"
 CEC_WATCH_FILE="$CEC_HOME/.config/systemd/user/$CEC_WATCH"
 if [ -z "$CEC_HOME" ] || [ ! -f "$CEC_WATCH_FILE" ]; then
-    log_result "INFO: $CEC_WATCH is not installed: HDMI CEC Manager adds it for Restart the picture or Pause videos and music."
+    log_result "INFO: $CEC_WATCH is not installed: BC-250 CEC Manager adds it for Restart the picture or Pause videos and music."
 else
     CEC_JOBS_TEXT=""
     grep -q -- '--restart-picture' "$CEC_WATCH_FILE" && CEC_JOBS_TEXT="restart the picture"
@@ -3673,15 +3673,15 @@ else
     fi
 fi
 
-# HDMI CEC Manager's boot service: a system service that udev starts once per boot when a CEC adapter appears.
+# BC-250 CEC Manager's boot service: a system service that udev starts once per boot when a CEC adapter appears.
 CEC_BOOT="bc250-hdmi-cec-boot.service"
 if [ ! -f "/etc/systemd/system/$CEC_BOOT" ]; then
-    log_result "INFO: $CEC_BOOT is not installed: HDMI CEC Manager adds it for At boot (the board's name, and the TV on, before login)."
+    log_result "INFO: $CEC_BOOT is not installed: BC-250 CEC Manager adds it for At boot (the board's name, and the TV on, before login)."
 else
     CEC_STATE=$(systemctl is-active "$CEC_BOOT" 2>/dev/null)
     if [ ! -f /etc/udev/rules.d/99-bc250-hdmi-cec-boot.rules ]; then
         log_result "WARNING: $CEC_BOOT is installed without its udev rule (99-bc250-hdmi-cec-boot.rules), so nothing starts it."
-        log_result "HINT: In HDMI CEC Manager, switch At boot off and on again (or press Update there)."
+        log_result "HINT: In BC-250 CEC Manager, switch At boot off and on again (or press Update there)."
         WARN_FOUND=true
     elif [ "$CEC_STATE" = active ]; then
         log_result "SUCCESS: $CEC_BOOT ran at this boot. What it did: journalctl -b -u bc250-hdmi-cec-boot"

@@ -58,7 +58,7 @@ def test_summary_and_details():
     assert many.summary() == "updates 4 apps, adds New One"
     assert "BC-250 New One: new, 0.1.0" in many.details()
     assert pu.PortalUpdate(RELEASE, []).summary() == pu.PortalUpdate(RELEASE).summary() == ""
-    tiled = pu.PortalUpdate(RELEASE, [pu.AppChange("HDMI CEC Manager", "", "0.1.0", "HDMI-CEC")])
+    tiled = pu.PortalUpdate(RELEASE, [pu.AppChange("BC-250 CEC Manager", "", "0.1.0", "HDMI-CEC")])
     assert tiled.summary() == "adds HDMI-CEC"
 
 

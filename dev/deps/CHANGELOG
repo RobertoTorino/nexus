@@ -1,3 +1,17 @@
+Changelog: 11-11-2026 19:38:54
+
+Fixed. The BC250 Bazzite Suite's catalog calls Console LinkB by its new name, BC-250 XB Remote Play (owner, 11-11-2026).
+
+Changelog: 11-11-2026 19:33:59
+
+Fixed. The BC250 Bazzite Suite's catalog calls HDMI CEC Manager by its new name, BC-250 CEC Manager (owner, 11-11-2026).
+
+Changelog: 11-11-2026 19:04:21
+
+Breaking. The BC250 Bazzite Suite's catalog no longer lists Decky Loader Manager and Bazzite NetcatGUI, which left
+the suite (owner, 11-11-2026), nor their tools and packages; upstreams.json lists Decky Loader for the Bazzite
+Console Suite's Decky Loader Manager only.
+
 Changelog: 09-11-2026 12:26:22
 
 Added. Emulators and firmware (owner, 09-11-2026: we also check the app dependencies we use, emulators, and

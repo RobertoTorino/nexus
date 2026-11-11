@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The app's look: one blue, #0A55B0, the blue of the app's icon (owner, 16-10-2026), on core's widgets. The style
+"""The app's look: one blue, #0A55B0, the gaming apps' blue (owner, 16-10-2026), on core's widgets. The style
 sheet goes on the main window, so everything in it takes the blue and the rest of the suite keeps core's purple.
 The tabs are the size of the pills above them, the chosen one filled blue, and the choice boxes (the Settings
 tab's) are flat, outlined like the buttons, on no background of their own (owner, 24-10-2026, for PCSX2 Manager,

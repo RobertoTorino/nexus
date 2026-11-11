@@ -49,8 +49,7 @@ bc250-bazzite/apps/<name>/
 
 - The **package** sits directly in `bc250-bazzite/apps/<name>/`, never in a wrapper folder such as `bc250-bazzite/apps/<name>/<name>/<package>`.
   `<name>` is a short name for the app and the package is the app's name without its BC-250 or Bazzite prefix, as
-  a Python identifier: `bc250-bazzite/apps/ace/ace_queues/` for BC-250 ACE Queues, `bc250-bazzite/apps/ncgui/netcat_gui/` for Bazzite
-  NetcatGUI, `bc250-bazzite/apps/datstation/datstation/` for Bazzite DatStation (the two names may be the same word), `bc250-bazzite/apps/check/bazzite_check/`
+  a Python identifier: `bc250-bazzite/apps/ace/ace_queues/` for BC-250 ACE Queues, `bc250-bazzite/apps/datstation/datstation/` for Bazzite DatStation (the two names may be the same word), `bc250-bazzite/apps/check/bazzite_check/`
   for BC-250 Bazzite Test (a short name chosen apart from the app's, so that no folder is called test). Apps
   from before this convention still have a `bc250_<something>` or `bazzite_<something>` package;
   they move to it one at a time.
@@ -108,7 +107,7 @@ def main() -> int:
 An app that opens what it is given on the command line (a file from its menu entry's `%f`, a host and port) hands
 those arguments to the open window instead of losing them: `instance.already_running(INFO.app_id, args)` sends them
 along, and `instance.serve(INFO.app_id, window, on_args=...)` gives them to the running window, which opens them as
-it would at start-up (the shadPS4 Manager opens the package in Extract PKG, Bazzite NetcatGUI opens the tab).
+it would at start-up (the shadPS4 Manager opens the package in Extract PKG).
 
 `--version` prints the app's version and the core it runs on.
 

@@ -362,6 +362,22 @@ own tuning apps.
      demanding moment, about 60 s at each step of the resolution ladder. Open choices: which suite first, the frame
      rate source on Windows, how far, the target (60 or 30 fps, temperature and power limits), WindowManager.
 
+## Decky Loader Manager and Bazzite NetcatGUI out of the BC250 suite (11-11-2026, in the working tree for the owner to commit)
+
+The owner: decky and ncgui removed from the BC250 Bazzite Suite completely, every reference with them (11-11-2026).
+Gone: `apps/decky`, `apps/ncgui`, their `[apps.*]` entries in both apps.toml, wiki chapters and nav entries,
+installer tests, tile pictures, `icons/categories.toml` entries, `RENAMED` keys, NetcatGUI's Desktop icon name, its
+colors (DESIGN.md) and toolbar icons (ICONS.md), the Decky check of `tools/check_upstream.py` (and of the Upstream
+workflow), their parts of Nexus Deps' BC250 catalog and upstreams.json, and of the Nexus page's Apps and features.
+Kept: the Bazzite Console Suite's own Decky Loader Manager (its suite stands apart), so the shared disclaimer, the
+Gaming apps' design and Nexus Deps' Decky card stay; CHANGELOG entries and this file's history. The GitHub releases
+`decky-v*` and `ncgui-v*` stay.
+
+- **Open (owner):** the portal's major bump (apps removed: Breaking; `check_manifest.py` asks for it) and Nexus
+  Deps' version, and the releases of the Gaming apps for their new icon (11-11-2026). The weekly upstream check of
+  Decky Loader is dropped (owner, 11-11-2026): the Bazzite Console Suite's Decky Loader Manager gets none; Nexus Deps
+  still shows Decky's newer releases.
+
 ## Nexus Deps: the Dependency Checker moved to Nexus, with Fix (07-11-2026, in the working tree for the owner to commit)
 
 The owner: the Dependency Checker out of the suite's Utilities and into Nexus Dashboard, renamed Nexus Deps, with a
@@ -3800,6 +3816,11 @@ app IDs, launchers, packages, settings folders, and the files hdmi-cec writes ke
 moves. The Steam shortcut tags take the new names (owner, 14-10-2026): shadps4-manager brings an old shortcut up to
 date with Update Game Mode, console-link with Update in Game Mode. An app's identifiers move (with an old-ID
 fallback, as console-link's `OLD_APP_ID`) only when it is ported, together with its hardware code paths.
+HDMI CEC Manager is called BC-250 CEC Manager since 11-11-2026 (owner's decision); only its shown name changed, its
+ID, launcher and package keep `bc250-hdmi-cec` and `hdmi_cec`.
+Console LinkB in the BC250 suite is called BC-250 XB Remote Play since 11-11-2026 (owner's decision); only its shown
+name changed (its ID, launcher, package and the calling-app-name it gives Microsoft's services stay), and the Bazzite
+Console Suite's Console LinkB keeps its name.
 
 Media licenses (owner's decision, 22-10-2026): the icons (a generative AI base, edited by hand in Photoshop) and the sounds (none with AI: the portals' intro sound is made by code, the portals' blob.wav and DatStation's
 sea_breeze.ogg the owner made by hand in Audacity, owner 06-11-2026 and 07-11-2026; the video tours' music is generative

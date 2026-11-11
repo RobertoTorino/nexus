@@ -2,16 +2,9 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Upstream check: are the apps that pin an upstream release still in step with it?
 
-    python3 tools/check_upstream.py [--report FILE] [decky] [shadps4] [helixsr] [ppsspp] [pcsx2] [rpcs3]
-                                    [directmesh] [vita3k] [xenia] [wdriver] [mesa] [ffmpeg] [hdcam] [speedtest]
+    python3 tools/check_upstream.py [--report FILE] [shadps4] [helixsr] [ppsspp] [pcsx2] [rpcs3] [directmesh]
+                                    [vita3k] [xenia] [wdriver] [mesa] [ffmpeg] [hdcam] [speedtest]
                                     # all when none is named
-
-Decky Loader Manager pins one Decky release (apps/decky/decky_manager/loader.py: VERSION, TAG, SHA256)
-and writes Decky's release unit itself (loader.unit_text()). This compares them with Decky's GitHub repository:
- * the latest stable release: newer than the pin means a new version of the app, tried on the board first;
- * the pinned release's PluginLoader: the SHA-256 GitHub publishes for it must still be the pinned one;
- * dist/plugin_loader-release.service at the pinned tag and on main: Decky's own updater installs main's, so a change
-   there reaches boards that update Decky from its settings, without a new Decky release.
 
 The shadPS4 Manager pins one shadPS4 release (apps/shadps4/shadps4_manager/emulator.py: VERSION, TAG,
 ASSET, SHA256), read here without importing the app:
@@ -93,7 +86,6 @@ from pathlib import Path
 from types import ModuleType
 
 SUITE = Path(__file__).resolve().parent.parent
-LOADER = SUITE / "apps" / "decky" / "decky_manager" / "loader.py"
 EMULATOR = SUITE / "apps" / "shadps4" / "shadps4_manager" / "emulator.py"
 ACQUIRE = SUITE / "apps" / "upscaler" / "upscaler" / "acquire.py"
 PPSSPP = SUITE / "apps" / "ppsspp" / "ppsspp_manager" / "emulator.py"
@@ -123,8 +115,6 @@ HELIXSR_REPO = "lonewolf0622/HelixSR"
 # How the release notes name the fallback: "use [HelixSR 1.8.1](...)", earlier "use HelixSR 1.4.3".
 FALLBACK_RE = re.compile(r"use \[?HelixSR v?(\d+\.\d+\.\d+)")
 API = "https://api.github.com/repos/{repo}"
-RAW = "https://raw.githubusercontent.com/{repo}/{ref}/dist/plugin_loader-release.service"
-TEMPLATE = Path("${HOMEBREW_FOLDER}")       # unit_text() with this folder gives Decky's file as it is in its repository
 TIMEOUT = 30
 
 Fetch = Callable[[str], bytes]
@@ -151,8 +141,8 @@ def fetch(url: str) -> bytes:
         raise CheckError(f"{url}: {getattr(error, 'reason', error)}") from error
 
 
-def load_loader(path: Path = LOADER, name: str = "decky_loader_pin") -> ModuleType:
-    """loader.py on its own: it needs only the standard library (it runs as root that way). builder.py too."""
+def load_loader(path: Path, name: str) -> ModuleType:
+    """A module on its own that needs only the standard library: builder.py."""
     spec = importlib.util.spec_from_file_location(name, path)
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module             # its dataclasses look their module up there
@@ -207,8 +197,8 @@ def _version(tag: str) -> tuple[int, ...]:
 @dataclass
 class Report:
     pinned: str
-    name: str = "Decky Loader"
-    short: str = "Decky"
+    name: str
+    short: str
     held: str = "pinned"                        # HelixSR: "known", the newest release the app was checked against
     newest: str = "latest stable"               # what *latest* is: the daily builds' "newest build", the branch heads
     latest: str = ""
@@ -219,42 +209,6 @@ class Report:
         head = (f"{self.name}: {self.held} {self.pinned}, {self.newest} {self.latest or 'unknown'}. "
                 + ("In step." if not self.drift else f"{self.short} moved:"))
         return "\n".join([head] + [f"  - {line}" for line in self.drift] + [f"  ok {line}" for line in self.fine])
-
-
-def check(loader: ModuleType, get: Fetch = fetch) -> Report:
-    repo, tag = loader.REPO, loader.TAG
-    report = Report(tag)
-    api = API.format(repo=repo)
-
-    latest = json.loads(get(f"{api}/releases/latest"))
-    report.latest = str(latest.get("tag_name", ""))
-    if _version(report.latest) > _version(tag):
-        report.drift.append(f"{report.latest} is out ({str(latest.get('published_at', ''))[:10]}): a new version of "
-                            f"Decky Loader Manager pins it, after it is tried on the board. "
-                            f"{latest.get('html_url', '')}")
-    else:
-        report.fine.append(f"no stable release newer than {tag}")
-
-    pinned = json.loads(get(f"{api}/releases/tags/{tag}"))
-    assets = {a.get("name"): a for a in pinned.get("assets", [])}
-    digest = str(assets.get(loader.ASSET, {}).get("digest") or "")
-    if loader.ASSET not in assets:
-        report.drift.append(f"{tag} has no {loader.ASSET} any more.")
-    elif digest != f"sha256:{loader.SHA256}":
-        report.drift.append(f"{tag}'s {loader.ASSET} is published with {digest or 'no SHA-256'}, not the pinned "
-                            f"sha256:{loader.SHA256}: the asset was replaced.")
-    else:
-        report.fine.append(f"{tag}'s {loader.ASSET} is still the pinned file")
-
-    ours = loader.unit_text(TEMPLATE)
-    for ref, why in ((tag, "the pinned release's"), ("main", "main's (Decky's updater installs it)")):
-        theirs = get(RAW.format(repo=repo, ref=ref)).decode("utf-8", "replace")
-        if theirs.strip() != ours.strip():
-            report.drift.append(f"{why} plugin_loader-release.service differs from loader.unit_text(): "
-                                f"{RAW.format(repo=repo, ref=ref)}")
-        else:
-            report.fine.append(f"{why} service unit matches loader.unit_text()")
-    return report
 
 
 def check_shadps4(pin: Pin, get: Fetch = fetch) -> Report:
@@ -682,8 +636,7 @@ def check_speedtest(version: str, get: Fetch = fetch) -> Report:
     return report
 
 
-CHECKS = {"decky": ("Decky Loader", lambda: check(load_loader())),
-          "shadps4": ("shadPS4", lambda: check_shadps4(load_shadps4_pin())),
+CHECKS = {"shadps4": ("shadPS4", lambda: check_shadps4(load_shadps4_pin())),
           "helixsr": ("HelixSR", lambda: check_helixsr(load_helixsr_pin())),
           "ppsspp": ("PPSSPP", lambda: check_release(load_release("ppsspp"))),
           "pcsx2": ("PCSX2", lambda: check_release(load_release("pcsx2"))),

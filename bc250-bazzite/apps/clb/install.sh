@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
-# Installs Console LinkB as a desktop app, from a clone or the extracted release tarball:
+# Installs BC-250 XB Remote Play as a desktop app, from a clone or the extracted release tarball:
 #
 #   ./install.sh                         # install or update
 #   ./install.sh --no-desktop-shortcut   # app menu entry only, no icon on the Desktop
@@ -17,7 +17,7 @@
 set -euo pipefail
 
 APP_ID="bc250-console-linkb"
-APP_NAME="Console LinkB"
+APP_NAME="BC-250 XB Remote Play"
 DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}"
 CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}"
 APP_DIR="$DATA_DIR/$APP_ID/app"
@@ -124,7 +124,7 @@ DESKTOP_FILE_CONTENT="[Desktop Entry]
 Type=Application
 Version=1.0
 Name=$APP_NAME
-GenericName=Console LinkB
+GenericName=XB Remote Play
 Comment=Stream your XBOX or XBOX Cloud Gaming to the BC-250
 Exec=$LAUNCHER
 Icon=$APP_DIR/images/$APP_ID-128.png

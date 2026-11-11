@@ -105,7 +105,7 @@ class IssuesDialog(QDialog):
         self.list.itemDoubleClicked.connect(
             lambda item: QDesktopServices.openUrl(QUrl(item.data(Qt.ItemDataRole.UserRole + 1))))
         self.comment = QLineEdit()
-        self.comment.setPlaceholderText("Comment on each (optional), e.g. Decky pinned at v3.3.0")
+        self.comment.setPlaceholderText("Comment on each (optional), e.g. PPSSPP pinned at 1.20")
         self.run_button = accent_button("Run", "Close the ticked issues with gh issue close; it needs a gh login "
                                                "(gh auth login)")
         self.run_button.clicked.connect(self.accept)

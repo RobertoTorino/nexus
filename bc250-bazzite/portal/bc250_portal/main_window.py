@@ -143,10 +143,9 @@ LAUNCH_ICON_FILES = {("compute", "Unlock"): "cu-unlock", ("cores", "Unlock"): "c
 CATEGORY_HINTS = {
     "sustainable": "The board itself: test it, tune it, unlock it, cool it, and keep it running well for a long time.",
     "graphics": "Graphics features for games: upscaling, async compute and mesh shaders on the board's GPU.",
-    "gaming": "Playing: emulators, Remote Play with your console, plugins in Game Mode, and PlayStation trivia.",
+    "gaming": "Playing: emulators, Remote Play with your console, and PlayStation trivia.",
     "utilities": "Handy tools around the board: an overlay, a USB stats screen, the PS5 HD Camera as a webcam, the "
-                 "DualSense's firmware, the BIOS settings, Wi-Fi, the TV over HDMI-CEC, file transfer and a graphical "
-                 "netcat.",
+                 "DualSense's firmware, the BIOS settings, Wi-Fi, the TV over HDMI-CEC and file transfer.",
 }
 
 BOARD_WARNING = (

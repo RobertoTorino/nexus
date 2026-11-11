@@ -1,9 +1,9 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Console LinkB for the BC-250: signs in with a Microsoft account, lists the XBOX consoles on it and the games of
+"""BC-250 XB Remote Play: signs in with a Microsoft account, lists the XBOX consoles on it and the games of
 XBOX Cloud Gaming, wakes a console and streams it or a cloud game to the board. The protocol code is ported from
 Greenlight and xal-node (MIT; see the README's License section)."""
 
-APP_NAME = "Console LinkB"
+APP_NAME = "BC-250 XB Remote Play"
 APP_ID = "bc250-console-linkb"
 __version__ = "2.0.1"
 

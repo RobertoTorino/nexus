@@ -2,7 +2,7 @@
 """HDMI-CEC for the BC-250: the board's CEC adapter, the TV on the other end, buttons to turn the TV on or off and
 switch it to the board, and the automatic behavior of Valve's CEC daemon (cecd) that Bazzite ships."""
 
-APP_NAME = "HDMI CEC Manager"
+APP_NAME = "BC-250 CEC Manager"
 APP_ID = "bc250-hdmi-cec"
 __version__ = "2.0.1"
 

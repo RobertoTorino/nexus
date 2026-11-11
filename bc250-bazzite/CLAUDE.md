@@ -17,19 +17,17 @@ did not change when the suite moved into `bc250-bazzite/` (26-10-2026): nothing 
 and always listed first; every other listed app is an optional tile. Standalone apps may live under `apps/` without
 appearing in the portal.
 
-- `apps/<name>/`: check, gpu, upscaler, compute, cores, oc, acpi,
-  overlay, ips35, hdcam, hdcontrol, bios, ace, mesh, vram, fan, wdriver, cec, sftp, consoles, clb, shadps4, rpcs3,
-  ppsspp, pcsx2, vita3k, xenia, decky, ncgui, datstation, ssd. Each has its
-  own VERSION, CHANGELOG, LICENSE (acpi is MIT; consoles is AGPL-3.0, its protocol code ported from
-  chiaki-ng: those files AGPL-3.0-only, its own AGPL-3.0-or-later; ncgui is GPL-2.0-only, a port of NetcatGUI; clb
-  (Console LinkB, XBOX) is GPL-3.0-or-later with protocol code ported from Greenlight and xal-node, MIT, whose notice
-  its README keeps; the rest GPL-3.0-or-later), .gitignore. Every app
+- `apps/<name>/`: check, gpu, upscaler, compute, cores, oc, acpi, overlay, ips35, hdcam, hdcontrol, bios, ace, mesh,
+  vram, fan, wdriver, cec, sftp, consoles, clb, shadps4, rpcs3, ppsspp, pcsx2, vita3k, xenia, datstation, ssd. Each has
+  its own VERSION, CHANGELOG, LICENSE (acpi is MIT; consoles is AGPL-3.0, its protocol code ported from chiaki-ng: those
+  files AGPL-3.0-only, its own AGPL-3.0-or-later; clb (BC-250 XB Remote Play, XBOX) is GPL-3.0-or-later with protocol
+  code ported from Greenlight and xal-node, MIT, whose notice its README keeps; the rest GPL-3.0-or-later),
+  .gitignore. Every app
   has a `category` in `portal/apps.toml`, the same as its icon's in `icons/categories.toml` (sustainable, graphics,
   gaming, utilities): the portal, one fullscreen view for the keyboard, the mouse and a controller (owner,
   01-11-2026: Suite Desktop Mode is gone), shows a category strip with the notice of updates beside it and check
-  as the first tile on Sustainable (owner, 20-10-2026). There is no Development category
-  (owner, 27-10-2026): the portal lists only released apps, and Bazzite NetcatGUI is on Utilities. The tools for
-  working on the suite are Nexus's (owner, 02-11-2026), in `../dev/`, each with `.checkout-only`: they run from the checkout, are never released and are in no portal. Nexus Dashboard
+  as the first tile on Sustainable (owner, 20-10-2026). There is no Development category (owner, 27-10-2026): the
+  portal lists only released apps. The tools for working on the suite are Nexus's (owner, 02-11-2026), in `../dev/`, each with `.checkout-only`: they run from the checkout, are never released and are in no portal. Nexus Dashboard
   (`../dev/dash/`) opens them all: Nexus Release Tool (the release front end), Nexus Installer Tests (this suite's
   `tools/installer-tests/*.sh` one at a time; it was BC-250 Installer Tests in `tools/installer-tests/gui`), Nexus
   Demo Recorder (a portal installation recorded with OBS; it was the OBS part of Media Tool, `apps/mtool`, which is
@@ -85,7 +83,7 @@ appearing in the portal.
 - **Consistent architecture.** Every app is built the same way, so one that works is the pattern for the next:
   - Layout: `apps/<name>/` holds its Python package(s) directly (`<package>/__main__.py`, no wrapper folder),
     `<name>` a short name and `<package>` the app's name without its BC-250 or Bazzite prefix
-    (`apps/ace/ace_queues/`, `apps/ncgui/netcat_gui/`; owner, 17-10-2026, the apps move to it one at a time,
+    (`apps/ace/ace_queues/`, `apps/datstation/datstation/`; owner, 17-10-2026, the apps move to it one at a time,
     MIGRATION.md says which did; a renamed app's old key goes in `RENAMED` in the portal's manifest.py),
     `images/`, `tests/`, `install.sh` and the four files; data the package reads (a catalog, tables) sits in
     the package or beside it in the app folder. `../tools/tests/test_layout.py` checks the layout of every suite.
@@ -136,10 +134,10 @@ Tests (`../dev/itests/`) lists the scripts in that folder by itself.
 
 ## Releases
 
-Everything about releases is the owner's (the root's CLAUDE.md). Decky Loader is pinned in decky (`loader.py`);
-`tools/check_upstream.py`, weekly in `../.github/workflows/upstream.yml`, says when Decky moved past the pin (a new
-release, a replaced asset, a changed service unit). Moving the pin is code Claude may prepare (with its CHANGELOG
-entry); the board test and the decky release are the owner's, and the handover says so.
+Everything about releases is the owner's (the root's CLAUDE.md). `tools/check_upstream.py`, weekly in
+`../.github/workflows/upstream.yml`, says when an upstream an app pins (an emulator, HelixSR, DirectMesh, the USB
+Wi-Fi driver, Mesa, FFmpeg) moved past the pin. Moving a pin is code Claude may prepare (with its CHANGELOG entry);
+the board test and the app's release are the owner's, and the handover says so.
 
 The manual (`docs/`, built with MkDocs) is called **the wiki** in user-facing text: the header link and the Home
 page's footer say Wiki.

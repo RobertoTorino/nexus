@@ -36,7 +36,7 @@ Each design (a suite's, the Nexus page's) has its own; none is carried over to a
   poorly as text on the dark views. The log in the check app uses them; a second tint of a hue is a deviation.
 - **Brand and hardware colors stay what they are:** PlayStation blue and the face-button colors in the PlayStation
   apps, the light bar's and the color wheel's pure colors in HD Control, a game's own artwork, the gaming blue
-  `#0a55b0` of the gaming category's icon in the emulator managers.
+  `#0a55b0` of the gaming apps in the emulator managers (blue, though their icon is red since 11-11-2026).
 - **Anything else is a deviation**, listed under Color families below with the app it is in. A new color is
   added to the family it belongs to, or it needs a reason here.
 
@@ -90,8 +90,7 @@ Every tint of each hue in the BC250 Bazzite Suite, and why it is there. *The fam
 | ![#b71c1c](design/colors/block-b71c1c.svg) | `#b71c1c` | the family | A red button pressed or under the pointer (the bisect apps, Clean up logs). |
 | ![#8b0000](design/colors/block-8b0000.svg) | `#8b0000` | the family | Active red: the GPU Governor's active button (a toggled-on state, not an error). |
 | ![#a00000](design/colors/block-a00000.svg) | `#a00000` | the family | Active red under the pointer. |
-| ![#e57373](design/colors/block-e57373.svg) | `#e57373` | text tint | Red text on a dark surface: the check app's findings, log, in-game checks, history and scores; the error labels of ACPI, CU Unlock and Cores Unlock; SFTP Tools' password requirements not met; NetcatGUI's error lines. |
-| ![#d04545](design/colors/block-d04545.svg) | `#d04545` | brand or icon | NetcatGUI's red tab (its own palette, below). |
+| ![#e57373](design/colors/block-e57373.svg) | `#e57373` | text tint | Red text on a dark surface: the check app's findings, log, in-game checks, history and scores; the error labels of ACPI, CU Unlock and Cores Unlock; SFTP Tools' password requirements not met. |
 | ![#e8505b](design/colors/block-e8505b.svg) | `#e8505b` | brand or icon | PlayStation's circle: HD Control's circle button, DatStation's circle symbol. |
 | ![#ff2020](design/colors/block-ff2020.svg) | `#ff2020` | hardware | The light bar's red; `#ff0000` the color wheel's. |
 
@@ -102,7 +101,6 @@ Every tint of each hue in the BC250 Bazzite Suite, and why it is there. *The fam
 | ![#ef6c00](design/colors/block-ef6c00.svg) | `#ef6c00` | the family | Warn. |
 | ![#fdd835](design/colors/block-fdd835.svg) | `#fdd835` | the family | Running. |
 | ![#ffb74d](design/colors/block-ffb74d.svg) | `#ffb74d` | text tint | Orange text on a dark surface: the check app's warnings, log, in-game checks and middle scores; SFTP Tools' password warning. |
-| ![#e08a1e](design/colors/block-e08a1e.svg) | `#e08a1e` | brand or icon | NetcatGUI's orange tab (its own palette, below). |
 | ![#ffd166](design/colors/block-ffd166.svg) | `#ffd166` | brand or icon | DatStation's PS News symbol. |
 | ![#ffd700](design/colors/block-ffd700.svg) | `#ffd700` | brand or icon | DatStation's gold: trophies and stars; `#c0c0c0` silver, `#cd7f32` bronze. |
 | ![#ffff00](design/colors/block-ffff00.svg) | `#ffff00` | hardware | The color wheel's yellow. |
@@ -112,8 +110,7 @@ Every tint of each hue in the BC250 Bazzite Suite, and why it is there. *The fam
 | Color | Hex | Kind | Where and why |
 | --- | --- | --- | --- |
 | ![#2e7d32](design/colors/block-2e7d32.svg) | `#2e7d32` | the family | Ok: passed, valid, unlocked, a pressed controller button; a right answer. |
-| ![#81c784](design/colors/block-81c784.svg) | `#81c784` | text tint | Green text on a dark surface: the check app's log success, in-game ok, a better result in its history and full scores; SFTP Tools' password requirements met; NetcatGUI's success lines. |
-| ![#2e9e5b](design/colors/block-2e9e5b.svg) | `#2e9e5b` | brand or icon | NetcatGUI's green tab (its own palette, below). |
+| ![#81c784](design/colors/block-81c784.svg) | `#81c784` | text tint | Green text on a dark surface: the check app's log success, in-game ok, a better result in its history and full scores; SFTP Tools' password requirements met. |
 | ![#3dbf9c](design/colors/block-3dbf9c.svg) | `#3dbf9c` | brand or icon | PlayStation's triangle: HD Control's triangle button, DatStation's triangle symbol. |
 | ![#10d040](design/colors/block-10d040.svg) | `#10d040` | hardware | The light bar's green; `#00ff00` the color wheel's. |
 
@@ -123,10 +120,9 @@ Every tint of each hue in the BC250 Bazzite Suite, and why it is there. *The fam
 | --- | --- | --- | --- |
 | ![#1565c0](design/colors/block-1565c0.svg) | `#1565c0` | the family | Info; the check app's GPU score box; HDMI CEC's adapter box. |
 | ![#64b5f6](design/colors/block-64b5f6.svg) | `#64b5f6` | text tint | Blue text on a dark surface: the check app's info and hint findings. |
-| ![#0a55b0](design/colors/block-0a55b0.svg) | `#0a55b0` | brand or icon | Gaming blue, the gaming icon's: the emulator managers' primary button, with `#2a6cc4` under the pointer and `#08448d` pressed; `#5b93da` their links. |
+| ![#0a55b0](design/colors/block-0a55b0.svg) | `#0a55b0` | brand or icon | Gaming blue, the gaming apps': the emulator managers' primary button, with `#2a6cc4` under the pointer and `#08448d` pressed; `#5b93da` their links. |
 | ![#003791](design/colors/block-003791.svg) | `#003791` | brand or icon | PlayStation blue (DatStation), `#0072ce` light, `#1a85e0` under the pointer, `#00589f` pressed; `#4da3ef` its links. |
 | ![#6f9fe8](design/colors/block-6f9fe8.svg) | `#6f9fe8` | brand or icon | PlayStation's cross: HD Control's cross button, DatStation's cross symbol (the square is `#e48fc0` in both). |
-| ![#3c7dd9](design/colors/block-3c7dd9.svg) | `#3c7dd9` | brand or icon | NetcatGUI's header names and blue tab (its own palette, below). |
 | ![#1f3e9c](design/colors/block-1f3e9c.svg) | `#1f3e9c` | brand or icon | BIOS Reader's bar and selection, with `#0b2a8a` and `#10205a`: a classic BIOS screen. |
 | ![#0050ff](design/colors/block-0050ff.svg) | `#0050ff` | hardware | The light bar's blue (the default); `#0000ff` the color wheel's. |
 
@@ -138,14 +134,12 @@ Every tint of each hue in the BC250 Bazzite Suite, and why it is there. *The fam
 | ![#5835ce](design/colors/block-5835ce.svg) | `#5835ce` | the family | The wiki's purple, with `#8a2be2`: the suite's identity on the web. |
 | ![#ce93d8](design/colors/block-ce93d8.svg) | `#ce93d8` | text tint | Purple text on a dark surface: the check app's log hints, Show in log link, in-game accent and the overlay's frame rate and border. |
 | ![#8b4fd8](design/colors/block-8b4fd8.svg) | `#8b4fd8` | the family | The stage pill under the claim on the wiki's home page. |
-| ![#8e5bd0](design/colors/block-8e5bd0.svg) | `#8e5bd0` | brand or icon | NetcatGUI's purple tab (its own palette, below). |
 | ![#a020f0](design/colors/block-a020f0.svg) | `#a020f0` | hardware | The light bar's purple; `#ff00ff` the color wheel's magenta. |
 
 ### Palettes of their own
 
 | Color | Hex | Kind | Where and why |
 | --- | --- | --- | --- |
-| ![#d04545](design/colors/block-d04545.svg) | `#d04545` | brand or icon | NetcatGUI's tabs: red, orange `#e08a1e`, green `#2e9e5b`, blue `#3c7dd9`, purple `#8e5bd0`, gray `#8a8f98`: the tab colors of the tool it ports, a user's choice per tab. |
 | ![#8a5a2e](design/colors/block-8a5a2e.svg) | `#8a5a2e` | brand or icon | Upscaler's copper and teal `#0e6f75` boxes, cyan `#26a9b0` outlines: the icon's colors. |
 | ![#ad1457](design/colors/block-ad1457.svg) | `#ad1457` | brand or icon | The check app's System overview: cores, threads `#00796b`, upload `#3949ab`, NVMe `#6d4c41`, packages `#5e35b1`, BIOS `#00838f`, a seventh series `#5d4037`: a chart's series, each told apart from the others. |
 
@@ -534,11 +528,11 @@ On top of the theme, in the apps' `style.py` or where they are used.
 
 ### Gaming apps
 
-Console Link, Console LinkB, Decky, HD Control, PCSX2, PPSSPP, RPCS3, shadPS4, Vita3K and Xenia.
+Console Link, Console LinkB, XB Remote Play, Decky, HD Control, PCSX2, PPSSPP, RPCS3, shadPS4, Vita3K and Xenia.
 
 Text colors:
 
-- `#5b93da` Links on a dark window (Console Link, Console LinkB, Decky, PCSX2, PPSSPP, RPCS3, shadPS4, Vita3K, Xenia; HD Control's lit parts).
+- `#5b93da` Links on a dark window (Console Link, Console LinkB, XB Remote Play, Decky, PCSX2, PPSSPP, RPCS3, shadPS4, Vita3K, Xenia; HD Control's lit parts).
 
   ![Sample text in #5b93da](design/colors/text-5b93da.svg)
 
@@ -550,7 +544,7 @@ Background colors:
 
 | Color | Hex | Used for |
 | --- | --- | --- |
-| ![#0a55b0](design/colors/block-0a55b0.svg) | `#0a55b0` | Gaming blue: the primary button, hover borders; the blue of the gaming apps' icon. |
+| ![#0a55b0](design/colors/block-0a55b0.svg) | `#0a55b0` | Gaming blue: the primary button, hover borders; the gaming apps' color (their icon is red since 11-11-2026). |
 | ![#2a6cc4](design/colors/block-2a6cc4.svg) | `#2a6cc4` | Gaming blue on hover. |
 | ![#08448d](design/colors/block-08448d.svg) | `#08448d` | Gaming blue while pressed. |
 | ![#0a55b01a](design/colors/block-0a55b01a.svg) | `#0a55b01a` | Blue tint (10 %): hover, every other table row. |
@@ -762,25 +756,13 @@ Text colors:
 
   ![Sample text in #ffb74d](design/colors/text-ffb74d.svg)
 
-- `#e57373` SFTP: password requirements not met; NetcatGUI: error lines in the session.
+- `#e57373` SFTP: password requirements not met.
 
   ![Sample text in #e57373](design/colors/text-e57373.svg)
 
-- `#81c784` SFTP: password requirements met; NetcatGUI: success lines in the session.
+- `#81c784` SFTP: password requirements met.
 
   ![Sample text in #81c784](design/colors/text-81c784.svg)
-
-- `#d2691e` NetcatGUI: HTTP and status replies.
-
-  ![Sample text in #d2691e](design/colors/text-d2691e.svg)
-
-- `#3c7dd9` NetcatGUI: header names.
-
-  ![Sample text in #3c7dd9](design/colors/text-3c7dd9.svg)
-
-- `#8a8f98` NetcatGUI: byte counts.
-
-  ![Sample text in #8a8f98](design/colors/text-8a8f98.svg)
 
 - `#ffffff` BIOS Reader: tabs, crumbs, the legend and the selection.
 
@@ -832,12 +814,6 @@ Background colors:
 | ![#00ffff](design/colors/block-00ffff.svg) | `#00ffff` | Color wheel: cyan. |
 | ![#0000ff](design/colors/block-0000ff.svg) | `#0000ff` | Color wheel: blue. |
 | ![#ff00ff](design/colors/block-ff00ff.svg) | `#ff00ff` | Color wheel: magenta. |
-| ![#d04545](design/colors/block-d04545.svg) | `#d04545` | NetcatGUI tab: red. |
-| ![#e08a1e](design/colors/block-e08a1e.svg) | `#e08a1e` | NetcatGUI tab: orange. |
-| ![#2e9e5b](design/colors/block-2e9e5b.svg) | `#2e9e5b` | NetcatGUI tab: green. |
-| ![#3c7dd9](design/colors/block-3c7dd9.svg) | `#3c7dd9` | NetcatGUI tab: blue. |
-| ![#8e5bd0](design/colors/block-8e5bd0.svg) | `#8e5bd0` | NetcatGUI tab: purple. |
-| ![#8a8f98](design/colors/block-8a8f98.svg) | `#8a8f98` | NetcatGUI tab: gray. |
 | ![#04060c](design/colors/block-04060c.svg) | `#04060c` | Portal: the intro's backdrop. |
 | ![#1b1b1b](design/colors/block-1b1b1b.svg) | `#1b1b1b` | Portal: the outline of the update badge on a tile. |
 | ![#808080](design/colors/block-808080.svg) | `#808080` | Portal: a category tab on hover (16 %). |

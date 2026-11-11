@@ -17,10 +17,10 @@ CATEGORIES = {"sustainable": "Sustainable", "graphics": "Graphics", "gaming": "G
 # have no tab here; tools/check_manifest.py refuses it in the current manifest.
 LEGACY_CATEGORIES = ("development",)
 # Apps renamed in the suite (old key: new key), for the record of a copy installed under the old key.
-RENAMED = {"ace-queues": "ace", "bazzite-netcatgui": "ncgui", "bazzite-datstation": "datstation",
+RENAMED = {"ace-queues": "ace", "bazzite-datstation": "datstation",
            "bazzite-test": "check", "bios-reader": "bios",
            "console-link": "consoles", "cores-bisect": "cores", "cu-bisect": "compute",
-           "decky-manager": "decky", "fan-control": "fan",
+           "fan-control": "fan",
            "governor": "gpu", "gpu-oc-bisect": "oc",
            "hdmi-cec": "cec", "memory-manager": "vram",
            "mesh-shaders": "mesh", "pcsx2-manager": "pcsx2",

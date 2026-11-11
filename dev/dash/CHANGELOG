@@ -1,3 +1,8 @@
+Changelog: 11-11-2026 19:04:21
+
+Fixed. The example in Close issues' comment field names a PPSSPP pin, not Decky's: the Upstream review issue no
+longer lists Decky Loader.
+
 Changelog: 07-11-2026 19:13:44
 
 Added. Nexus Deps' tile (dev/deps, owner 07-11-2026): it starts with the chosen suite (--suite) and is off for a

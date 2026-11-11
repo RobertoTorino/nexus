@@ -1,2 +1,0 @@
-# SPDX-License-Identifier: GPL-2.0-only
-PyQt6>=6.11,<7

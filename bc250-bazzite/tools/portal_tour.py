@@ -37,7 +37,7 @@ sys.path.insert(0, str(ROOT / "tools"))             # tour_frames.py, the Nexus 
 import tour_frames  # noqa: E402
 from tour_frames import SCALE, Recorder  # noqa: E402
 
-INSTALLED = ("check", "gpu", "upscaler", "shadps4", "rpcs3", "cec", "ncgui")
+INSTALLED = ("check", "gpu", "upscaler", "shadps4", "rpcs3", "cec", "sftp")
 BEHIND = "shadps4"                                  # installed from an older release: the red dot and the notice
 MUSIC = tour_frames.MUSIC_DIR / "the_quiet_engine_remix_3min.mp3"
 FADE = 2.0                                          # the music fades out over the video's last seconds

@@ -25,7 +25,7 @@ pin_spec.loader.exec_module(pin_app)
 
 BT_TAG = f"check-v{(br.SUITE / 'apps' / 'check' / 'VERSION').read_text().strip()}"
 PORTAL_TAG = f"portal-v{(br.SUITE / 'portal' / 'VERSION').read_text().strip()}"
-NCGUI_TAG = f"ncgui-v{(br.SUITE / 'apps' / 'ncgui' / 'VERSION').read_text().strip()}"     # an app with no .standalone
+DAT_TAG = f"datstation-v{(br.SUITE / 'apps' / 'datstation' / 'VERSION').read_text().strip()}"   # an app with no .standalone
 
 
 @pytest.fixture(autouse=True)
@@ -118,15 +118,15 @@ def test_version_must_match(tmp_path):
 
 
 def test_an_apps_release_has_the_standard_layout_and_omits_suite_marker(tmp_path):
-    """Bazzite NetcatGUI (the Media Tool until 02-11-2026, which left the suite): an app with no .standalone."""
-    br.build(NCGUI_TAG, tmp_path)
-    names = members(tmp_path / f"{NCGUI_TAG}.tar.gz")
+    """Bazzite DatStation: an app with no .standalone."""
+    br.build(DAT_TAG, tmp_path)
+    names = members(tmp_path / f"{DAT_TAG}.tar.gz")
 
-    assert f"{NCGUI_TAG}/install.sh" in names
-    assert f"{NCGUI_TAG}/netcat_gui/__main__.py" in names
-    assert f"{NCGUI_TAG}/images/bazzite-netcatgui.webp" in names
-    assert f"{NCGUI_TAG}/install" not in names
-    assert f"{NCGUI_TAG}/.standalone" not in names
+    assert f"{DAT_TAG}/install.sh" in names
+    assert f"{DAT_TAG}/datstation/__main__.py" in names
+    assert f"{DAT_TAG}/images/bazzite-datstation.webp" in names
+    assert f"{DAT_TAG}/install" not in names
+    assert f"{DAT_TAG}/.standalone" not in names
     assert not any("/tests/" in name for name in names)
 
 
