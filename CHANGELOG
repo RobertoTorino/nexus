@@ -1,3 +1,7 @@
+Changelog: 11-11-2026 20:05:08
+
+Release 4.0.0. Brings ace-v2.0.2, bios-v2.0.2, cec-v2.0.2, check-v2.0.2, clb-v2.0.2, consoles-v3.0.2, datstation-v4.0.2, fan-v2.0.2, hdcam-v2.0.2, hdcontrol-v2.0.2, ips35-v2.0.2, mesh-v2.0.2, overlay-v2.0.2, pcsx2-v5.0.2, portal-v18.0.0, ppsspp-v3.0.2, rpcs3-v5.0.2, sftp-v2.0.2, shadps4-v5.0.2, ssd-v1.0.2, upscaler-v3.0.2, vita3k-v3.0.2, vram-v2.0.2, wdriver-v2.0.2, xenia-v3.0.2.
+
 Changelog: 11-11-2026 19:38:54
 
 Fixed. The BC250 Bazzite Suite's Console LinkB (bc250-bazzite/apps/clb) is now called BC-250 XB Remote Play (owner,

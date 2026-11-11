@@ -5,7 +5,7 @@ you apply one, and only after a reboot."""
 
 APP_NAME = "BC-250 Memory Manager"
 APP_ID = "bc250-memory-manager"
-__version__ = "2.0.1"
+__version__ = "2.0.2"
 
 from pathlib import Path
 

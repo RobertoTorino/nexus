@@ -4,7 +4,7 @@ temperatures."""
 
 APP_NAME = "System Overlay"
 APP_ID = "bc250-system-overlay"
-__version__ = "2.0.1"
+__version__ = "2.0.2"
 
 from pathlib import Path
 
