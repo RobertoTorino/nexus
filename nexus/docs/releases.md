@@ -252,8 +252,9 @@ login (`gh auth login`): it then reads them every 10 seconds while a run goes. W
 so the 60 requests an hour stay for the **GitHub** pill.
 
 **GitHub status** beside it says whether GitHub itself works, as [githubstatus.com](https://www.githubstatus.com/)
-reports it: a green dot while every part of GitHub is up, a red dot while the page reports a problem (an incident,
-or a part such as Actions or Pages degraded or down). A build that waits in *queued* for long is often such a
+reports it: a green dot while every part of GitHub is up, a red dot while the page reports a problem (an open incident,
+also one GitHub is still monitoring after the page says All Systems Operational again, or a part such as Actions
+or Pages degraded or down). A build that waits in *queued* for long is often such a
 problem. Hover for the incident and the parts affected; click to open the status page. It looks every 5 minutes,
 and **Refresh** looks at once.
 

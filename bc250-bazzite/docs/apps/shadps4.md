@@ -50,7 +50,8 @@ stands, short, with more in their tooltips, and then come three tabs: **Your gam
   firmware in `~/Games/PS4/Modules`: the app copies them into shadPS4's module folder by itself, when the window
   opens and on **Refresh**, only what is new or changed.
 - **Game folders**: where the app looks for games, `~/Games/PS4` and a removable drive's `Games/PS4`, each game
-  in a folder of its own (the paths and how many games were found are in the tooltip). The app makes them
+  in a folder of its own (the paths and how many games were found are in the tooltip; the **i** beside them says
+  what goes there). The app makes them
   shadPS4's own game folders too, so shadPS4's window lists the games. A game may sit up to five folders deep.
   A package file (`.pkg`) put in one of them waits under **Your games** to be unpacked: see
   [Packages](#packages). **Install** opens [Extract PKG](#extract-pkg) for a package anywhere else.

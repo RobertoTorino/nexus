@@ -1,3 +1,9 @@
+Changelog: 11-11-2026 22:44:17
+
+Fixed. The Game folders line shows the folders by name (owner, 11-11-2026); what goes in them is behind an info
+symbol beside it: drop your games in ~/Games/PS4, each in a folder of its own, a package shows up under Your games
+and can be unpacked there, and a USB drive or an SD card with a Games/PS4 folder is also checked.
+
 Changelog: 11-11-2026 20:05:07
 
 Release 5.0.2.

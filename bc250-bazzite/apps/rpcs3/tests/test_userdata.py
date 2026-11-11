@@ -230,6 +230,20 @@ def test_what_rpcs3s_log_says_of_an_install(tmp_path):
     assert userdata.rpcs3_log().name == "RPCS3.log" and userdata.rpcs3_log().parent.name == "rpcs3"
 
 
+def test_what_rpcs3s_log_says_of_a_firmware_install(tmp_path):
+    """The lines HandlePupInstallation writes, from a headless --installfw (owner, 11-11-2026)."""
+    done = """·! 0:00:00.1 GUI: Reinstalling firmware: old=4.92, new=4.93
+·S 0:00:01.2 GUI: Extracted PUP file to /tmp/x
+·S 0:00:09.8 GUI: Successfully installed PS3 firmware version 4.93.
+"""
+    assert userdata.firmware_report(done) == ("4.93", "")
+    failed = "·E 0:00:00.1 GUI: Error while installing firmware: Out of disk space. ('/x', needed: 5 bytes)\n"
+    assert userdata.firmware_report(failed) == ("", "Out of disk space. ('/x', needed: 5 bytes)")
+    assert userdata.read_firmware_report(tmp_path / "none") == ("", "")
+    (tmp_path / "RPCS3.log").write_text(done, encoding="utf-8")
+    assert userdata.read_firmware_report(tmp_path / "RPCS3.log") == ("4.93", "")
+
+
 def test_whether_rpcs3_runs(tmp_path):
     """RPCS3's process is rpcs3, or AppRun.wrapped running rpcs3 (the AppImage's link); a zombie does not count."""
     proc = tmp_path / "proc"

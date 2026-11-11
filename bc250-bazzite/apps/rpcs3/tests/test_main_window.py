@@ -137,14 +137,16 @@ def test_installed_with_firmware_and_games(qapp, folders):
     window = _window(folders)
     assert window.pill.text() == "No firmware"
     assert window.rpcs3_button.isEnabled()
-    assert "playstation.com" in window.firmware_state.text()
-    assert ">PlayStation's firmware page</a>" in window.firmware_state.text()
-    assert "Games/PS3/Firmware" in window.firmware_state.text()
+    # The state alone, what to do behind the info symbol (owner, 11-11-2026).
+    assert window.firmware_state.text() == "No firmware detected"
+    assert "playstation.com" in window.firmware_info.text_
+    assert ">PlayStation's firmware page</a>" in window.firmware_info.text_
+    assert "Download PS3UPDAT.PUP" in window.firmware_info.text_ and "Games/PS3/Firmware" in window.firmware_info.text_
     _firmware(folders["rpcs3_home"])
     window.refresh()
     assert window.pill.text() == "Ready"
-    # The state lines are the version alone (owner, 24-10-2026), the rest in the tips.
-    assert window.firmware_state.text() == "<b>4.92</b>"
+    # The state lines are short (owner, 11-11-2026), the rest in the tips.
+    assert window.firmware_state.text() == "Firmware 4.92 is installed."
     assert window.firmware_state.toolTip().startswith("PS3 firmware 4.92 in RPCS3's firmware folder: ")
     assert str(folders["rpcs3_home"] / "dev_flash") in window.firmware_state.toolTip()     # the path as the tip
     assert window.emulator_box.value.text() == emulator.LANDMARK
@@ -155,7 +157,7 @@ def test_installed_with_firmware_and_games(qapp, folders):
     assert window.pkg_state.toolTip().startswith(
         f"1 game(s) installed in RPCS3's games folder: {folders['rpcs3_home'] / 'dev_hdd0' / 'game'}\n")
     assert "Install takes the folder with your .pkg files" in window.pkg_state.toolTip()
-    assert "Games/PS3</b>: put your disc games there" in window.disc_state.text()
+    assert window.disc_state.text().endswith("Games/PS3</b>") and "1 disc game(s) found" in window.disc_state.toolTip()
     assert window.games_box.value.text() == "2" and window.steam_box.value.text() == "0"
     assert not window.install_pill.isEnabled() and window.remove_pill.isEnabled() and window.package_pill.isEnabled()
     head = window.table.horizontalHeader().model()
@@ -443,8 +445,10 @@ def test_the_apps_own_game_folders(qapp, folders, tmp_path, monkeypatch):
     assert (tmp_path / "Games" / "PS3" / "Firmware").is_dir()                  # made for the PUP
     assert [window.table.item(r, 1).text() for r in range(3)] == ["One", "Three", "Two"]
     text = window.disc_state.text()
-    assert "<b>~/Games/PS3</b>" in text and "<b>~/sd/Games/PS3</b>" in text and "2 disc game(s) found" in text
-    assert str(tmp_path) not in text and window.disc_state.toolTip() == "~/Games/PS3\n~/sd/Games/PS3"
+    assert text == "<b>~/Games/PS3</b>, <b>~/sd/Games/PS3</b>"                 # what goes there: the info symbol
+    assert window.disc_state.toolTip() == "~/Games/PS3\n~/sd/Games/PS3\n2 disc game(s) found."
+    assert window.disc_info.text_.startswith("Drop your games in ~/Games/PS3, each in a folder of its own")
+    assert "Games/PS3 folder is also checked" in window.disc_info.text_ and str(tmp_path) not in window.disc_info.text_
     assert "folders" not in window.settings.DEFAULTS and "forget:" not in text
     window.close()
 
@@ -468,18 +472,22 @@ def test_the_firmware_is_taken_from_the_apps_folder(qapp, folders, tmp_path, mon
     deadline = time.monotonic() + 10
     while not log.exists() and time.monotonic() < deadline:
         time.sleep(0.01)
-    assert log.read_text().strip() == f"--installfw {pup}"
+    assert log.read_text().strip() == f"--headless --installfw {pup}"
     assert window.settings.get("firmware_given") == library.file_key(pup)
     assert "PS3 firmware 4.92 found in ~/Games/PS3/Firmware: given to RPCS3." in window.output.toPlainText()
-    assert "in its own window" in window.running.text()
+    _wait(window, qapp)
     log.unlink()
-    window.firmware_watch.stop()
     window.refresh()
     assert not log.exists()                                                     # the same file: not given again
     _firmware(folders["rpcs3_home"])
     pup.write_bytes(_pup("4.92") + b"x")                                        # changed, but 4.92 is installed
     window.refresh()
     assert not log.exists() and window.settings.get("firmware_given") == library.file_key(pup)
+    pup.write_bytes(_pup("4.91"))                                               # older: nothing asks, not given
+    window.refresh()
+    assert not log.exists() and window.settings.get("firmware_given") == library.file_key(pup)
+    assert "PS3 firmware 4.91 in ~/Games/PS3/Firmware is older than the installed 4.92: not given to RPCS3." \
+        in window.output.toPlainText()
     window.close()
 
 
@@ -508,26 +516,35 @@ def test_install_runs_off_the_window(qapp, folders, monkeypatch):
     window.close()
 
 
-def test_the_firmware_installed_through_rpcs3(qapp, folders, tmp_path):
+def test_the_firmware_installed_through_rpcs3_without_its_window(qapp, folders, tmp_path):
+    """--headless --installfw (owner, 11-11-2026: RPCS3's window and its Success! box should not come up), as the
+    window's job; the result from RPCS3's log, as its HandlePupInstallation writes it."""
     _install(folders["home"])
-    log = tmp_path / "args"
-    folders["run"].write_text(f'#!/bin/sh\necho "$@" > "{log}"\n')
+    args, rpcs3_log = tmp_path / "args", tmp_path / "cache" / "rpcs3" / "RPCS3.log"
+    rpcs3_log.parent.mkdir(parents=True)
+    version = folders["rpcs3_home"] / "dev_flash" / "vsh" / "etc" / "version.txt"
+    folders["run"].write_text(f"""#!/bin/sh
+echo "$@" > "{args}"
+case "$3" in
+  *good*) mkdir -p "{version.parent}" && printf 'release:04.9200:\\n' > "{version}"
+          printf '·S 0:00:01.0 GUI: Successfully installed PS3 firmware version 4.92.\\n' > "{rpcs3_log}" ;;
+  *) printf '·E 0:00:00.1 GUI: Error while installing firmware: TAR contents are invalid.\\n' > "{rpcs3_log}" ;;
+esac
+""")
     folders["run"].chmod(0o755)
-    window = _window(folders)
-    pup = tmp_path / "PS3UPDAT.PUP"
-    window.install_firmware(pup)
-    deadline = time.monotonic() + 10
-    while not log.exists() and time.monotonic() < deadline:
-        time.sleep(0.01)
-    assert log.read_text().strip() == f"--installfw {pup}"
-    assert window.firmware_watch.isActive() and "in its own window" in window.running.text()
-    assert "in its own window" in window.output.toPlainText()                   # logged too
-    window._watch_firmware()
-    assert window.firmware_watch.isActive() and window.firmware == ""         # not there yet
-    _firmware(folders["rpcs3_home"])
-    window._watch_firmware()
-    assert not window.firmware_watch.isActive() and window.firmware == "4.92"
-    assert window.running.text() == "PS3 firmware 4.92 is installed."
+    window = _window(folders, rpcs3_log=rpcs3_log)
+    bad = tmp_path / "bad" / "PS3UPDAT.PUP"
+    window.install_firmware(bad)
+    assert "without its window" in window.running.text()
+    _wait(window, qapp)
+    assert args.read_text().strip() == f"--headless --installfw {bad}"
+    assert window.running.text().startswith("RPCS3 did not install PS3UPDAT.PUP: TAR contents are invalid.")
+    assert window.firmware == ""
+    good = tmp_path / "good" / "PS3UPDAT.PUP"
+    window.install_firmware(good)
+    _wait(window, qapp)
+    assert window.firmware == "4.92" and window.running.text() == "PS3 firmware 4.92 is installed."
+    assert window.firmware_state.text() == "Firmware 4.92 is installed."
     window.close()
 
 

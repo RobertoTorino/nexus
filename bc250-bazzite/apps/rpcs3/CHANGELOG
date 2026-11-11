@@ -1,3 +1,15 @@
+Changelog: 11-11-2026 22:44:17
+
+Fixed. The firmware dropped in ~/Games/PS3/Firmware is installed without RPCS3's window (owner, 11-11-2026: RPCS3's
+window and its Success! box came up): RPCS3 runs with --headless --installfw as the window's job, as the packages do,
+and the result is read from RPCS3's log ("PS3 firmware 4.93 is installed.", or RPCS3's error). Without its window
+RPCS3 no longer asks before it installs an older firmware, so the app does not give it one older than the
+installed version and says so in the log.
+
+Fixed. The Firmware and Disc games lines are short (owner, 11-11-2026): "No firmware detected" or "Firmware 4.93 is
+installed.", and the game folders by name, with the disc games' count in the tooltip. What to do is behind an info
+symbol beside each: where to download PS3UPDAT.PUP and where to drop it, and where to drop your games.
+
 Changelog: 11-11-2026 20:05:07
 
 Release 5.0.2.

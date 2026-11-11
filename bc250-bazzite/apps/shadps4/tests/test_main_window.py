@@ -354,7 +354,10 @@ def test_the_apps_own_game_folders(qapp, folders, tmp_path, monkeypatch):
     saved = json.loads(config_path.read_text())
     assert userdata.game_folders(saved) == window.folders and saved["GPU"] == {"present_mode": "Fifo"}
     text = window.folders_state.text()
-    assert "<b>~/Games/PS4</b>" in text and "<b>~/sd/Games/PS4</b>" in text and "forget:" not in text
+    assert text == "<b>~/Games/PS4</b>, <b>~/sd/Games/PS4</b>"                 # what goes there: the info symbol
+    info = window.folders_info.text_
+    assert info.startswith("Drop your games in ~/Games/PS4, each in a folder of its own") and str(tmp_path) not in info
+    assert "A package (.pkg) shows up under Your games and can be unpacked there." in info
     assert str(tmp_path) not in text and window.folders_state.toolTip().startswith("~/Games/PS4\n~/sd/Games/PS4\n3 game(s)")
     for name in ("add_folder", "forget_folder", "install_modules"):
         assert not hasattr(window, name), name

@@ -1,3 +1,10 @@
+Changelog: 11-11-2026 22:19:14
+
+Fixed. GitHub status showed Up while an incident was still open (owner, 11-11-2026: the CI runs had waited in
+queued for 45 minutes while GitHub worked through the Actions backlog). githubstatus.com puts its indicator back to
+All Systems Operational once an incident is being monitored, and the pill went by that indicator alone; an open
+incident now counts as a problem by itself, and the tooltip names each incident with its stage (monitoring).
+
 Changelog: 07-11-2026 17:08:25
 
 Fixed. With the portal's version raised in a commit after its release was published, the steps showed the release

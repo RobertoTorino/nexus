@@ -11,10 +11,10 @@ the cover for each game first (core's covers).
 
 The app has no Play button: a game is started from Steam. While RPCS3 is installed and not running, the window
 keeps what the app owns in RPCS3's files (userdata.py): its welcome dialog and update check off, player 1 on the
-first controller. RPCS3's own window is opened for what RPCS3 does only there: the firmware (--installfw) and
-RPCS3's settings (RPCS3 settings, under the games). The packages RPCS3 installs without its window (--headless
---installpkg, one run per file, the window's job meanwhile; owner, 24-10-2026), and the result is read from
-RPCS3's log. The window also reads the volume Bazzite remembers for RPCS3 and says when it is muted (found on
+first controller. RPCS3's own window is opened only for RPCS3's settings (RPCS3 settings, under the games). The
+packages RPCS3 installs without its window (--headless --installpkg, one run per file, the window's job meanwhile;
+owner, 24-10-2026), and the firmware too (--headless --installfw; owner, 11-11-2026: RPCS3's window and its
+Success! box came up when the firmware was dropped in its folder); the result is read from RPCS3's log. The window also reads the volume Bazzite remembers for RPCS3 and says when it is muted (found on
 the board). What the window says it also writes to the app's log (core's applog), shown in the Log tab."""
 
 from __future__ import annotations
@@ -38,7 +38,7 @@ from bc250_core.keep_dialog import KeepDialog
 from bc250_core.platform import bin_home, private, xdg_open
 from bc250_core.settings import SettingsStore
 from bc250_core.updates import ReleaseInfo, UpdateChecker
-from bc250_core.widgets import AppHeader, MetricBox, StatusText, Terminal, WrappedLabel, hint_label
+from bc250_core.widgets import AppHeader, InfoButton, MetricBox, StatusText, Terminal, WrappedLabel, hint_label
 
 from . import APP_ID, APP_NAME, INFO, LOGO_PATH, ROOT, __version__, controllers, emulator, library, shortcuts, style, userdata
 from .games import Game, installed, scan
@@ -46,8 +46,6 @@ from . import settings_page
 from .settings_page import SettingsPage
 
 MANUAL_URL = f"{SUITE_MANUAL_URL}apps/rpcs3/"
-WATCH_MS = 2000
-WATCH_LIMIT = 300                       # checks, so 10 minutes: RPCS3's own window installs the firmware
 STEAM_TIP = "Add the ticked games to Steam and take out the others; Steam closes for it and starts again"
 NO_SFB = "PS3_DISC.SFB is missing or damaged in this disc game's folder: RPCS3 does not start it without"
 RUNNING = "RPCS3 is running: close it first, it writes its own settings over the change when it closes."
@@ -96,6 +94,25 @@ def install_message(report: userdata.InstallReport, new_games: int, new_licenses
 
 
 RUNNING_REMOVE = "RPCS3 is running: close it first, then remove the game."
+
+
+def _with_info(state: QLabel, info: InfoButton) -> QWidget:
+    """A state line with its info symbol right after it, at the top of its first line. The line is short, so it
+    keeps to one line: wrapped, it took the narrowest width beside the symbol."""
+    state.setWordWrap(False)
+    row = QWidget()
+    layout = QHBoxLayout(row)
+    layout.setContentsMargins(0, 0, 0, 0)
+    layout.setSpacing(6)
+    layout.addWidget(state)
+    layout.addWidget(info, 0, Qt.AlignmentFlag.AlignTop)
+    layout.addStretch(1)
+    return row
+
+
+def _version_key(version: str) -> tuple[int, ...]:
+    """A firmware version for comparing ("4.92" < "4.93"); the parts that are no number count as 0."""
+    return tuple(int(part) if part.isdigit() else 0 for part in version.split("."))
 
 
 class RpcsSettings(SettingsStore):
@@ -157,11 +174,6 @@ class MainWindow(QMainWindow):
         self.newer: ReleaseInfo | None = None           # RPCS3's newest landmark, when newer than the pinned one
         self.release_check = UpdateChecker(self)        # apart from the worker: it runs while the window opens
         self.release_check.finished.connect(self._release_found)
-        self.firmware_watch = QTimer(self)              # while RPCS3 installs the firmware in its own window
-        self.firmware_watch.setInterval(WATCH_MS)
-        self.firmware_watch.timeout.connect(self._watch_firmware)
-        self._firmware_checks = 0
-        self._firmware_before = ""
         self.settings = RpcsSettings(INFO, self)
         self.worker = UpdateChecker(self)            # one job at a time off the GUI thread: a download, an
         #                                              install of packages or Steam
@@ -238,13 +250,18 @@ class MainWindow(QMainWindow):
         self.emulator_state, self.firmware_state, self.disc_state, self.pkg_state = (self._state_label()
                                                                                      for _ in range(4))
         self.disc_state.setOpenExternalLinks(False)     # a folder's name is a link that takes it out
+        # The firmware's state and the game folders by name, what to do behind the info symbol (owner, 11-11-2026).
+        self.firmware_info = InfoButton("", "About the firmware")
+        self.disc_info = InfoButton("", "About the game folders")
+        infos = {id(self.firmware_state): self.firmware_info, id(self.disc_state): self.disc_info}
         for row, (name, state) in enumerate((("RPCS3", self.emulator_state), ("Firmware", self.firmware_state),
                                              ("Disc games", self.disc_state), ("PKG games", self.pkg_state))):
             label = QLabel(name)
             label.setStyleSheet("font-weight:700;")
             label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
             grid.addWidget(label, row, 0)
-            grid.addWidget(state, row, 1)
+            info = infos.get(id(state))
+            grid.addWidget(_with_info(state, info) if info else state, row, 1)
 
         self.table = QTableWidget(0, 6)
         self.table.setHorizontalHeaderLabels(["In Steam", "Game title", "Id", "Version", "Folder", "Screen setting"])
@@ -502,25 +519,23 @@ class MainWindow(QMainWindow):
         self.emulator_state.setOpenExternalLinks(True)
 
         page = style.link(self, userdata.FIRMWARE_PAGE, "PlayStation's firmware page")
-        if self.firmware:
-            self.firmware_state.setText(f"<b>{escape(self.firmware)}</b>")
-        else:
-            self.firmware_state.setText("No firmware yet. RPCS3 needs the PS3's firmware to start any game: download "
-                                        f"PS3UPDAT.PUP from {page} and put it in "
-                                        f"<b>{escape(private(library.firmware_home(self.user_home)))}</b>: the app "
-                                        "gives it to RPCS3, which installs it in its own window.")
+        self.firmware_state.setText(f"Firmware {escape(self.firmware)} is installed." if self.firmware
+                                    else "No firmware detected")
+        self.firmware_info.set_text(f"Download PS3UPDAT.PUP from {page} and drop it in "
+                                    f"<b>{escape(private(library.firmware_home(self.user_home)))}</b>: the app "
+                                    "installs it. RPCS3 needs the PS3's firmware to start any game.")
         self.firmware_state.setToolTip(f"PS3 firmware {self.firmware or 'none'} in RPCS3's firmware folder: "
                                        f"{self.dev_flash}")
-        self.firmware_state.setOpenExternalLinks(True)
 
         discs = [g for g in self.games if g.disc]
         pkgs = [g for g in self.games if not g.disc]
         # The app's own folders (owner, 03-11-2026): the home folder's, and a removable drive's when it has one.
         where = ", ".join(f"<b>{escape(private(f))}</b>" for f in self.folders)
-        self.disc_state.setText(f"{where}: put your disc games there, each in a folder of its own (with PS3_GAME and "
-                                "PS3_DISC.SFB). A USB drive or an SD card with a Games/PS3 folder on it is looked in "
-                                f"too. {len(discs)} disc game(s) found.")
-        self.disc_state.setToolTip("\n".join(private(f) for f in self.folders))
+        self.disc_state.setText(where)
+        self.disc_state.setToolTip("\n".join(private(f) for f in self.folders) + f"\n{len(discs)} disc game(s) found.")
+        self.disc_info.set_text(f"Drop your games in {escape(private(self.user_home / library.GAMES_HOME))}, each in a "
+                                "folder of its own (with PS3_GAME and PS3_DISC.SFB). A USB drive or an SD card with a "
+                                "Games/PS3 folder is also checked for content.")
         # RPCS3's games folder by its path within RPCS3's own folder (dev_hdd0/game/; the whole path when it is
         # elsewhere) while a game is installed in it, "—" while none is (owner, 24-10-2026); the count and what
         # Install takes in the tip.
@@ -704,7 +719,7 @@ class MainWindow(QMainWindow):
         it does not run: a file whose version (read from the PUP) is installed already is left alone, and so is the
         file given last as it is (its name, size and time in the settings), so a file RPCS3 refused is not given
         again until it changes. The file stays."""
-        if not self.version or self.rpcs3_running() or self.worker.running or self.firmware_watch.isActive():
+        if not self.version or self.rpcs3_running() or self.worker.running:
             return
         pup = library.firmware_file(self.user_home)
         if pup is None:
@@ -716,32 +731,38 @@ class MainWindow(QMainWindow):
         if version and self.firmware and version.lstrip("0") == self.firmware.lstrip("0"):
             self.settings.set("firmware_given", key)        # installed already: left alone
             return
+        if version and self.firmware and _version_key(version) < _version_key(self.firmware):
+            # RPCS3's window asked before it installed an older firmware; without its window nothing asks.
+            self.settings.set("firmware_given", key)
+            self.note(f"PS3 firmware {version} in {private(library.firmware_home(self.user_home))} is older than the "
+                      f"installed {self.firmware}: not given to RPCS3.")
+            return
         self.settings.set("firmware_given", key)
         self.note(f"PS3 firmware {version or pup.name} found in {private(library.firmware_home(self.user_home))}: "
                   "given to RPCS3.")
         self.install_firmware(pup)
 
     def install_firmware(self, pup: Path) -> None:
-        """Through RPCS3 itself (--installfw): it shows its progress in its own window. The state follows when the
-        firmware's version changes."""
-        self.prepare_rpcs3()                    # RPCS3's window opens: its welcome dialog off first
-        command = self.rpcs3_command("--installfw", str(pup))
-        if not QProcess.startDetached(command[0], command[1:])[0]:
-            self.say(f"RPCS3 could not be started: {command[0]} did not run.", ok=False)
-            return
-        self.say(f"RPCS3 installs {pup.name} in its own window. Close RPCS3 when it is done.")
-        self._firmware_before = self.firmware
-        self._firmware_checks = 0
-        self.firmware_watch.start()
+        """Through RPCS3 itself, without its window (--headless --installfw; owner, 11-11-2026), as the window's job:
+        RPCS3 then asks nothing and shows no Success! box. Its exit code says nothing of the outcome, so the result is
+        read from RPCS3's log, and the firmware's version from its folder."""
+        self.prepare_rpcs3()
+        command = self.rpcs3_command("--headless", "--installfw", str(pup))
+        dev_flash, log_path, name = self.dev_flash, self.rpcs3_log, pup.name
 
-    def _watch_firmware(self) -> None:
-        self._firmware_checks += 1
-        now = userdata.firmware_version(self.dev_flash)
-        if now and now != self._firmware_before:
-            self.firmware_watch.stop()
-            self._job_done((True, f"PS3 firmware {now} is installed."))
-        elif self._firmware_checks >= WATCH_LIMIT:
-            self.firmware_watch.stop()
+        def job() -> tuple[bool, str]:
+            try:
+                subprocess.run(command, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                               stderr=subprocess.DEVNULL, check=False)
+            except OSError as error:
+                return False, f"RPCS3 could not be started: {error}"
+            installed, error = userdata.read_firmware_report(log_path)
+            now = userdata.firmware_version(dev_flash)
+            if installed and now:
+                return True, f"PS3 firmware {now} is installed."
+            detail = error or "see RPCS3's log"
+            return False, f"RPCS3 did not install {name}: {detail} ({private(log_path)})."
+        self._start(f"RPCS3 installs the PS3 firmware from {name}, without its window…", job)
 
     def on_install_packages(self) -> None:
         folder = QFileDialog.getExistingDirectory(self, window_title("Install packages from a folder"),
@@ -938,7 +959,6 @@ class MainWindow(QMainWindow):
             return
         self.worker.stop()
         self.release_check.stop()
-        self.firmware_watch.stop()
         self.controller_timer.stop()
         self.settings_page.unmuting.stop()
         self.settings.set_window_state("geometry", self.saveGeometry())

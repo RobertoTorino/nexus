@@ -556,6 +556,8 @@ _INVALID = re.compile(r"GUI: Cannot install invalid package: '(?P<path>.*)'$")
 _COPIED = re.compile(r"GUI: Successfully copied (?:rap|edat) file: (?P<name>.*)$")
 _NOT_COPIED = re.compile(r"GUI: Could not copy (?:rap|edat) file: (?P<name>.*)$")
 _NO_FILES = "GUI: PKG: Could not find any files in dir:"
+_FIRMWARE_INSTALLED = re.compile(r"GUI: Successfully installed PS3 firmware version (?P<version>.+?)\.?$")
+_FIRMWARE_ERROR = re.compile(r"GUI: Error while (?:installing|extracting) firmware: (?P<error>.*)$")
 
 
 def rpcs3_cache() -> Path:
@@ -612,6 +614,27 @@ def install_report(text: str) -> InstallReport:
         elif _NO_FILES in line:
             report.no_files = True
     return report
+
+
+def firmware_report(text: str) -> tuple[str, str]:
+    """What one RPCS3 run says of a firmware install (gui_log in main_window::HandlePupInstallation): the version
+    it installed ("" when none) and its error ("" when none)."""
+    installed = error = ""
+    for line in text.splitlines():
+        line = line.rstrip()
+        if (found := _FIRMWARE_INSTALLED.search(line)) is not None:
+            installed = found["version"]
+        elif (found := _FIRMWARE_ERROR.search(line)) is not None:
+            error = found["error"]
+    return installed, error
+
+
+def read_firmware_report(path: Path | None = None) -> tuple[str, str]:
+    """The firmware report from RPCS3's log file (its last run); ("", "") when there is none."""
+    try:
+        return firmware_report((path or rpcs3_log()).read_text(encoding="utf-8", errors="replace"))
+    except OSError:
+        return "", ""
 
 
 def read_install_report(path: Path | None = None) -> InstallReport:

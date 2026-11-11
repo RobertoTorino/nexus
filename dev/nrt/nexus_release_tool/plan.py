@@ -1543,15 +1543,17 @@ STATUS_URL = STATUS_PAGE + "api/v2/summary.json"
 
 @dataclass(frozen=True)
 class GitHubStatus:
-    """What githubstatus.com reports: up when every part of GitHub works as it should."""
+    """What githubstatus.com reports: up when every part of GitHub works as it should and no incident is open. The
+    page's indicator goes back to "none" while an incident is still being monitored (11-11-2026: Actions' backlog
+    still queued, the page said All Systems Operational), so an open incident counts as a problem by itself."""
     indicator: str                      # "none", "minor", "major", "critical" (Statuspage's)
     description: str                    # "All Systems Operational", "Partially Degraded Service"
     affected: tuple[str, ...] = ()      # "Actions: degraded performance"
-    incidents: tuple[str, ...] = ()     # the names of the open incidents
+    incidents: tuple[str, ...] = ()     # the open incidents: their names, with their stage ("monitoring")
 
     @property
     def up(self) -> bool:
-        return self.indicator == "none"
+        return self.indicator == "none" and not self.incidents
 
 
 def parse_github_status(data: object) -> GitHubStatus:
@@ -1559,7 +1561,8 @@ def parse_github_status(data: object) -> GitHubStatus:
     status = data.get("status") if isinstance(data.get("status"), dict) else {}
     affected = tuple(f"{c.get('name')}: {str(c.get('status')).replace('_', ' ')}" for c in data.get("components") or []
                      if isinstance(c, dict) and c.get("status") not in (None, "operational"))
-    incidents = tuple(str(i.get("name")) for i in data.get("incidents") or [] if isinstance(i, dict) and i.get("name"))
+    incidents = tuple(str(i.get("name")) + (f" ({i.get('status')})" if i.get("status") else "")
+                      for i in data.get("incidents") or [] if isinstance(i, dict) and i.get("name"))
     return GitHubStatus(str(status.get("indicator") or ""), str(status.get("description") or ""), affected, incidents)
 
 

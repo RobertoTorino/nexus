@@ -1,3 +1,11 @@
+Changelog: 11-11-2026 22:49:16
+
+Added. The owner's new sustainable icon (11-11-2026), a redrawn circuit board, replaces the old one in the BC250
+Bazzite Suite: the owner's four PNGs (1024, 512, 256 and 128 px), converted by tools/sync_icons.py to
+bc250-bazzite/icons/sustainable/ (WebP at 1024, 512 and 256 px, the 128 px one PNG), which wrote the copies of the
+ten sustainable apps, their portal tiles and the portal's sustainable category tile. The Bazzite Console Suite's
+sustainable icon is its own and did not change.
+
 Changelog: 11-11-2026 21:04:02
 
 Fixed. The BC250 Bazzite Suite's Console Link (bc250-bazzite/apps/consoles) is now called BC-250 PS Remote Play

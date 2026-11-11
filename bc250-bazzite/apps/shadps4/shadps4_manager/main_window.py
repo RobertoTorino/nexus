@@ -45,7 +45,7 @@ from bc250_core.platform import bin_home, private, xdg_open
 from bc250_core.theme import GREEN, RED
 from bc250_core.settings import SettingsStore
 from bc250_core.updates import ReleaseInfo, UpdateChecker
-from bc250_core.widgets import AppHeader, MetricBox, StatusText, Terminal, WrappedLabel, hint_label
+from bc250_core.widgets import AppHeader, InfoButton, MetricBox, StatusText, Terminal, WrappedLabel, hint_label
 
 from . import (APP_ID, APP_NAME, INFO, LOGO_PATH, ROOT, __version__, controllers, emulator, extract, library,
                settings_page, shadnet, shortcuts, style, userdata)
@@ -80,6 +80,20 @@ def _stamp(path: Path) -> str:
     except OSError:
         return ""
     return f"{path}|{info.st_size}|{info.st_mtime_ns}"
+
+
+def _with_info(state: QLabel, info: InfoButton) -> QWidget:
+    """A state line with its info symbol right after it, at the top of its first line. The line is short, so it
+    keeps to one line: wrapped, it took the narrowest width beside the symbol."""
+    state.setWordWrap(False)
+    row = QWidget()
+    layout = QHBoxLayout(row)
+    layout.setContentsMargins(0, 0, 0, 0)
+    layout.setSpacing(6)
+    layout.addWidget(state)
+    layout.addWidget(info, 0, Qt.AlignmentFlag.AlignTop)
+    layout.addStretch(1)
+    return row
 
 
 class ShadSettings(SettingsStore):
@@ -232,6 +246,8 @@ class MainWindow(QMainWindow):
         self.emulator_state, self.modules_state, self.folders_state, self.shadnet_state = (self._state_label()
                                                                                            for _ in range(4))
         self.folders_state.setOpenExternalLinks(False)  # a folder's name is a link that takes it out
+        # The game folders by name, what goes in them behind the info symbol (owner, 11-11-2026).
+        self.folders_info = InfoButton("", "About the game folders")
         for row, (name, state) in enumerate((("shadPS4", self.emulator_state),
                                              ("Sys modules", self.modules_state),
                                              ("Game folders", self.folders_state), ("shadNet", self.shadnet_state))):
@@ -239,7 +255,7 @@ class MainWindow(QMainWindow):
             label.setStyleSheet("font-weight:700;")
             label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
             grid.addWidget(label, row, 0)
-            grid.addWidget(state, row, 1)
+            grid.addWidget(_with_info(state, self.folders_info) if state is self.folders_state else state, row, 1)
 
         self.table = QTableWidget(0, 5)
         self.table.setHorizontalHeaderLabels(["In Steam", "Game title", "Id", "Version", "Folder"])
@@ -507,9 +523,11 @@ class MainWindow(QMainWindow):
 
         # The app's own folders (owner, 03-11-2026): the home folder's, and a removable drive's when it has one.
         where = ", ".join(f"<b>{escape(private(f))}</b>" for f in self.folders)
-        self.folders_state.setText(f"{where}: put your games there, each in a folder of its own (with eboot.bin); "
-                                   "a package (.pkg) put there waits under Your games for Unpack. A USB drive or an "
-                                   "SD card with a Games/PS4 folder on it is looked in too.")
+        self.folders_state.setText(where)
+        self.folders_info.set_text(f"Drop your games in {escape(private(self.user_home / library.GAMES_HOME))}, each "
+                                   "in a folder of its own (with eboot.bin). A package (.pkg) shows up under Your "
+                                   "games and can be unpacked there. A USB drive or an SD card with a Games/PS4 "
+                                   "folder is also checked for content.")
         self.folders_state.setToolTip("\n".join(private(f) for f in self.folders)
                                       + f"\n{len(self.games)} game(s) found, up to {MAX_DEPTH} folders deep.")
         self._show_shadnet()

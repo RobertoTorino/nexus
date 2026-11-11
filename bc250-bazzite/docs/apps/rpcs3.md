@@ -8,8 +8,8 @@ Plays **PS3 games** on the **AMD BC-250** with [RPCS3](https://rpcs3.net), an op
 installs the RPCS3 build it was tried with, takes the PS3's firmware, finds your games and adds them to Steam, so a
 game starts straight away, on the desktop or from Steam's **Big Picture Mode** (Game Mode on a handheld). The app
 has no Play button: a game is started from Steam. The app sets RPCS3 up for that: its welcome dialog and its own
-update check off, player 1 on your controller, each game's screen. RPCS3's own window is opened for what RPCS3 does
-only there: the firmware and the packages, which RPCS3 installs itself, and [RPCS3's settings](#rpcs3s-settings).
+update check off, player 1 on your controller, each game's screen. RPCS3 installs the firmware and the packages
+itself, without opening its window; its own window opens only for [RPCS3's settings](#rpcs3s-settings).
 
 Whether a game runs, and how well, is up to RPCS3. Its [compatibility list](https://rpcs3.net/compatibility) shows
 what others found.
@@ -49,13 +49,16 @@ each stands, short, with more in their tooltips, and then come three tabs: **You
   RPCS3 from GitHub (about 80 MB): the build this version of the app was tried with, checked against its checksum
   before it is installed. **Uninstall** takes it out again; RPCS3's own folder, with the firmware, your saves,
   settings and installed games, stays.
-- **Firmware**: which version of the PS3's firmware RPCS3 has (the folder's path is in the tooltip). Put the
-  `PS3UPDAT.PUP` you downloaded in `~/Games/PS3/Firmware`: once RPCS3 is installed, the app gives it to RPCS3 by
-  itself, when the window opens and on **Refresh**, and RPCS3 installs it in its own window. Close that window
-  when it is done; the line shows the new version. A file whose version RPCS3 has already is left alone, and so
-  is a file RPCS3 refused, until it changes. The file stays in the folder.
-- **Disc games**: where the app looks for disc games, `~/Games/PS3` and a removable drive's `Games/PS3`, each
-  game in a folder of its own. Games in subfolders are found too, up to five folders deep.
+- **Firmware**: *No firmware detected*, or *Firmware 4.93 is installed.* with the version RPCS3 has (the folder's
+  path is in the tooltip; the **i** beside it says where the firmware comes from). Put the `PS3UPDAT.PUP` you
+  downloaded in `~/Games/PS3/Firmware`: once RPCS3 is installed, the app gives it to RPCS3 by itself, when the
+  window opens and on **Refresh**, and RPCS3 installs it without opening its window. The line under the tabs says
+  when it is done, and the Firmware line shows the new version. A file whose version RPCS3 has already is left
+  alone, and so is a file RPCS3 refused, until it changes. An older firmware than the one installed is not given
+  to RPCS3. The file stays in the folder.
+- **Disc games**: where the app looks for disc games, `~/Games/PS3` and a removable drive's `Games/PS3` (the count
+  is in the tooltip; the **i** beside it says what goes there), each game in a folder of its own. Games in
+  subfolders are found too, up to five folders deep.
 - **PKG games**: RPCS3's games folder, `dev_hdd0/game/` within RPCS3's own folder, while a game is installed in
   it, or **—** while none is (the whole path and the count are in the tooltip). **Install** asks for the folder
   with your `.pkg` files and has RPCS3 install them without opening its window: the `.rap` (or `.edat`) license of
@@ -205,6 +208,7 @@ keep working when a newer version of the app brings a newer RPCS3.
 bc250-rpcs3-run --no-gui --fullscreen "/path/to/PS3_GAME/USRDIR/EBOOT.BIN"   # a game alone, full screen
 bc250-rpcs3-run --no-gui "/path/to/PS3_GAME/USRDIR/EBOOT.BIN"                # a game alone, in a window
 bc250-rpcs3-run --installfw "/path/to/PS3UPDAT.PUP"                          # install the firmware
+bc250-rpcs3-run --headless --installfw "/path/to/PS3UPDAT.PUP"               # the same without RPCS3's window (the app's way)
 bc250-rpcs3-run --installpkg "/path/to/folder"                               # install the .pkg (and .rap) files in a folder
 bc250-rpcs3-run --headless --installpkg "/path/to/file.pkg"                  # the same without RPCS3's window (the app's way)
 bc250-rpcs3-run                                                              # RPCS3's own window

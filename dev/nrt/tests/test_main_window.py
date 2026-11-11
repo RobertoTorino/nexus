@@ -206,6 +206,12 @@ SUMMARY_DOWN = {   # githubstatus.com's summary.json during the incident of 19-1
                    {"name": "Pages", "status": "major_outage"}],
     "incidents": [{"name": "Degraded availability for GitHub Actions, GitHub Pages and Webhooks"}],
 }
+SUMMARY_MONITORING = {   # 11-11-2026: the indicator back to "none" while the incident is monitored, Actions' backlog
+    "status": {"indicator": "none", "description": "All Systems Operational"},   # still queued
+    "components": [{"name": "Actions", "status": "operational"}],
+    "incidents": [{"name": "Impact across multiple GitHub products including Actions, Pages, and Copilot products.",
+                   "status": "monitoring", "impact": "critical"}],
+}
 SUMMARY_UP = {"status": {"indicator": "none", "description": "All Systems Operational"},
               "components": [{"name": "Actions", "status": "operational"}], "incidents": []}
 
@@ -219,6 +225,8 @@ def test_github_status_is_read_from_the_status_page(monkeypatch):
     assert down.affected == ("Actions: degraded performance", "Pages: major outage")
     assert down.incidents == ("Degraded availability for GitHub Actions, GitHub Pages and Webhooks",)
     assert rp.parse_github_status(SUMMARY_UP).up
+    monitoring = rp.parse_github_status(SUMMARY_MONITORING)                  # an open incident is a problem
+    assert not monitoring.up and monitoring.incidents[0].endswith("Copilot products. (monitoring)")
     assert not rp.parse_github_status("not json").up                 # an odd answer is never "up"
     asked = []
 
