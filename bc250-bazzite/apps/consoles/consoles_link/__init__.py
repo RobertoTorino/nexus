@@ -9,7 +9,7 @@ steam_env.settle()                      # before Qt loads: started by Steam, the
 
 APP_NAME = "BC-250 PS Remote Play"
 APP_ID = "bc250-console-link"
-__version__ = "3.0.2"
+__version__ = "3.0.3"
 
 from pathlib import Path
 
