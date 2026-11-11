@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: AGPL-3.0-or-later
-# Installs Console Link as a desktop app, from a clone or the extracted release tarball:
+# Installs BC-250 PS Remote Play as a desktop app, from a clone or the extracted release tarball:
 #
 #   ./install.sh                         # install or update
 #   ./install.sh --no-desktop-shortcut   # app menu entry only, no icon on the Desktop
@@ -19,7 +19,7 @@
 set -euo pipefail
 
 APP_ID="bc250-console-link"
-APP_NAME="Console Link"
+APP_NAME="BC-250 PS Remote Play"
 DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}"
 CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}"
 APP_DIR="$DATA_DIR/$APP_ID/app"
@@ -173,7 +173,7 @@ DESKTOP_FILE_CONTENT="[Desktop Entry]
 Type=Application
 Version=1.0
 Name=$APP_NAME
-GenericName=Console Link
+GenericName=PS Remote Play
 Comment=Find, wake and register PS4 and PS5 consoles for Remote Play on the BC-250
 Exec=$LAUNCHER
 Icon=$APP_DIR/images/$APP_ID-128.png

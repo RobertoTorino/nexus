@@ -109,7 +109,7 @@ def test_the_direct_stream(qapp):
     ops = FakeOps(Outcome(True, "PS4-728 is on.", moved), Outcome(False, "The console ended the stream."))
     stream = direct.DirectStream(PS4, qapp, ops, full_screen=False)
     try:
-        assert stream.window.windowTitle() == "PS4-728 · Console Link"
+        assert stream.window.windowTitle() == "PS4-728 · BC-250 PS Remote Play"
         assert _until(qapp, lambda: stream.window.status.text().startswith("The console ended the stream."))
         assert ops.console.address == "192.168.1.40" and ops.stopped is False
         assert stream.window.status.text().endswith("Close this window to go back.")

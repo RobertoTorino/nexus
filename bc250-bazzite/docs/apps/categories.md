@@ -44,7 +44,7 @@ Every app with its icon and its category.
 | ![](../assets/apps/upscaler.webp){ .app-icon } [BC-250 Upscaler Manager](upscaler.md) | Graphics |
 | ![](../assets/apps/ace.webp){ .app-icon } [BC-250 ACE Queues](ace.md) | Graphics |
 | ![](../assets/apps/mesh.webp){ .app-icon } [BC-250 Mesh Shaders](mesh.md) | Graphics |
-| ![](../assets/apps/consoles.webp){ .app-icon } [Console Link](consoles.md) | Gaming |
+| ![](../assets/apps/consoles.webp){ .app-icon } [BC-250 PS Remote Play](consoles.md) | Gaming |
 | ![](../assets/apps/clb.webp){ .app-icon } [BC-250 XB Remote Play](clb.md) | Gaming |
 | ![](../assets/apps/shadps4.webp){ .app-icon } [shadPS4 Manager](shadps4.md) | Gaming |
 | ![](../assets/apps/rpcs3.webp){ .app-icon } [RPCS3 Manager](rpcs3.md) | Gaming |

@@ -58,7 +58,7 @@ beside the system Mesa.
 
 [shadPS4 Manager](apps/shadps4.md) plays PS4 games with the shadPS4 emulator,
 [RPCS3 Manager](apps/rpcs3.md) PS3 games with the RPCS3 emulator, and
-[Console Link](apps/consoles.md) finds, wakes and registers PS4 and PS5 consoles for Remote Play.
+[BC-250 PS Remote Play](apps/consoles.md) finds, wakes and registers PS4 and PS5 consoles for Remote Play.
 </div>
 <div class="home-card" markdown>
 #### :material-television: Living room
@@ -156,7 +156,7 @@ use **Security → Report a vulnerability** instead, as the [security policy](SE
 
 ## License
 
-GPL-3.0-or-later, except BC-250 Persistent ACPI, which is MIT, and Console Link, which is AGPL-3.0 (its
+GPL-3.0-or-later, except BC-250 Persistent ACPI, which is MIT, and BC-250 PS Remote Play, which is AGPL-3.0 (its
 protocol code comes from chiaki-ng). Each app has its own `LICENSE`. The icons were made with generative AI tools and edited by hand in Photoshop, and the music of
 the video tours with generative AI tools. The sounds were made without AI: the portal's intro sound by its own code, from
 arithmetic alone, and the portal's sound on a controller action and DatStation's quiz music by hand in Audacity. All are

@@ -1,8 +1,8 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 
-# Console Link: the stream's threads
+# PS Remote Play: the stream's threads
 
-How Console Link keeps picture, sound and controller in step during a stream, why Python's global
+How BC-250 PS Remote Play keeps picture, sound and controller in step during a stream, why Python's global
 interpreter lock (the GIL) matters for it, and how to measure it. For the app itself, see its
 [manual](../apps/consoles.md).
 

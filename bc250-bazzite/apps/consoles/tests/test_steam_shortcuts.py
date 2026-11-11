@@ -107,7 +107,7 @@ def test_the_job_closes_steam_for_it(qapp, tmp_path):
     steam = _steam(tmp_path)
     launcher = tmp_path / "bin" / "bc250-console-link"
     missing = jobs.steam_shortcut(PS4, steam, launcher=launcher, running=lambda: False)
-    assert not missing.ok and "install Console Link through the portal first" in missing.message
+    assert not missing.ok and "install BC-250 PS Remote Play through the portal first" in missing.message
     launcher.parent.mkdir()
     launcher.write_text("#!/bin/sh\n")
     commands, state = [], {"running": True}

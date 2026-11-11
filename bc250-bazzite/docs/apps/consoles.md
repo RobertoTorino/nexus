@@ -1,12 +1,12 @@
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 
-![Console Link](../assets/consoles/bc250-console-link.webp){ .app-logo }
+![BC-250 PS Remote Play](../assets/consoles/bc250-console-link.webp){ .app-logo }
 
-# Console Link
+# BC-250 PS Remote Play
 
-Console Link connects the **AMD BC-250** to a PS4 or PS5 on your network. The app finds the consoles, wakes them
-from rest mode, registers the board with them, and starts a session and its stream. The consoles' own name for
-this is Remote Play, and it has to be switched on there.
+BC-250 PS Remote Play connects the **AMD BC-250** to a PS4 or PS5 on your network. The app finds the consoles,
+wakes them from rest mode, registers the board with them, and starts a session and its stream. The consoles' own
+name for this is Remote Play, and it has to be switched on there.
 
 The app does not change how the board runs. It talks to a console, or to PSN for your account ID, only when you
 press a button. This version
@@ -168,7 +168,7 @@ the registered console.
 
 ## Wi-Fi or cable
 
-The stream does not need a cable. Measured on 17-10-2026 with Console Link 1.1.1 on a BC-250 and a PS4 Pro on the
+The stream does not need a cable. Measured on 17-10-2026 with the app's version 1.1.1 on a BC-250 and a PS4 Pro on the
 same home network: ten minutes of the same game (Lumines Remastered, intensive play) at 1080p, 60 frames per
 second and 15 Mbit/s asked for, once over Ethernet and once over a USB Wi-Fi 6 stick (AIC8800D80 on 5 GHz, 80
 MHz, a strong signal of -44 dBm), the controller on Bluetooth with the board both times:

@@ -11,7 +11,7 @@ Each app keeps its own `LICENSE`, and what you contribute to a folder is under t
 
 - GPL-3.0-or-later: the suite, the portal, `core/`, `tools/` and most apps.
 - MIT: BC-250 Persistent ACPI (`bc250-bazzite/apps/acpi`).
-- AGPL-3.0-or-later: Console Link (`bc250-bazzite/apps/consoles`), whose ported protocol code is AGPL-3.0-only.
+- AGPL-3.0-or-later: BC-250 PS Remote Play (`bc250-bazzite/apps/consoles`), whose ported protocol code is AGPL-3.0-only.
 
 Icons and sounds are under the license of the folder they are in, the same as the code. Contribute only what you may
 license that way: your own work, or work under a compatible license, with its source and license named in the pull

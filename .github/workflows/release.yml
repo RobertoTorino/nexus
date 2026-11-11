@@ -25,7 +25,7 @@ name: Release
 # requires every pinned tag to exist. Never GitHub's "Latest": that is the Nexus index (nexus-index.yml), which
 # points at every suite's newest portal.
 #
-# Console Link ships the wheel of its native core in the tarball (native/wheel, build_release.py checks it is
+# BC-250 PS Remote Play ships the wheel of its native core in the tarball (native/wheel, build_release.py checks it is
 # there): built here from the tag, with FFmpeg from its pinned sources (native/ffmpeg/build.sh), so installing
 # needs only pip.
 #

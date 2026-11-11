@@ -21,7 +21,7 @@ What `./test.sh`, `tools/pre-push.sh` (the pre-push hook) and `tools/ci-local.sh
 | Python 3.11 or newer (CI runs 3.12) | the venvs, every tool in `tools/` | comes with Bazzite (`python3`, without PyQt6) | python.org or `winget install Python.Python.3.12`, with the `py` launcher |
 | The development venv (`requirements-dev.txt`) | `./test.sh`, `mkdocs`, the tools; it brings pytest, PyQt6, MkDocs Material and Pillow | `.venv-linux/`, see [Development](development.md#set-up-and-test) | `.venv-windows/` |
 | Homebrew | installs the tools below on Bazzite | comes with Bazzite | not used |
-| podman (or docker) | `tools/ci-local.sh`: CI's jobs in a container, with Python 3.12, shellcheck, fakeroot, Rust and Console Link's build tools inside | comes with Bazzite | `winget install RedHat.Podman`; it runs in podman's machine, see [Development](development.md) |
+| podman (or docker) | `tools/ci-local.sh`: CI's jobs in a container, with Python 3.12, shellcheck, fakeroot, Rust and BC-250 PS Remote Play's build tools inside | comes with Bazzite | `winget install RedHat.Podman`; it runs in podman's machine, see [Development](development.md) |
 | shellcheck | the shell checks of CI | `brew install shellcheck` | `winget install koalaman.shellcheck` |
 | fakeroot | the installer tests (`bc250-bazzite/tools/installer-tests/`) | `brew install fakeroot` | Linux only |
 | zip, tar, sha256sum | `tools/build_release.py` | come with Bazzite | come with Git Bash |
@@ -36,7 +36,7 @@ Each for one tool or one kind of work; without it that tool does not run, or its
 | GitHub CLI (`gh`) | the runs and releases from a terminal, the Nexus Release Tool's sign-in | `brew install gh` | `winget install GitHub.cli` |
 | actionlint | a changed workflow in `.github/workflows/` checked before the push, with shellcheck on its `run:` steps: `actionlint` at the repository root | `brew install actionlint` | `winget install rhysd.actionlint` |
 | ffmpeg | the video tours (each suite's `tools/record-tour.sh` and `tools/record-app-tour.sh`, on its own system) | comes with Bazzite | `winget install Gyan.FFmpeg` |
-| Rust (rustup with cargo and clippy), maturin, nasm, the libva headers | Console Link's native core, only to run `cargo test` or `maturin build` on the machine itself; the container of `tools/ci-local.sh` has them all | rustup from rustup.rs, `brew install nasm`, maturin with pip in the venv | `winget install Rustlang.Rustup`; the decoder builds on Linux only |
+| Rust (rustup with cargo and clippy), maturin, nasm, the libva headers | BC-250 PS Remote Play's native core, only to run `cargo test` or `maturin build` on the machine itself; the container of `tools/ci-local.sh` has them all | rustup from rustup.rs, `brew install nasm`, maturin with pip in the venv | `winget install Rustlang.Rustup`; the decoder builds on Linux only |
 | PyInstaller and Pillow | `tools/build_windows_exe.py`, the Windows executable of Bazzite SFTP | not used | in `.venv-windows/`, `pip install pyinstaller pillow` |
 | OBS Studio, with its WebSocket server on | Nexus Demo Recorder (`dev/demo/`) | flatpak `com.obsproject.Studio`, or `obs` | `winget install OBSProject.OBSStudio` |
 | notify-send | Nexus Deps' hourly reminder (below) | comes with Bazzite | not used |

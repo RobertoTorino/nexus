@@ -22,7 +22,7 @@ ENGINE=$(command -v podman || command -v docker || true)
 CONTAINERFILE="$ROOT/tools/ci-local/Containerfile"
 IMAGE="localhost/bc250-ci-local:$(sha256sum "$CONTAINERFILE" | cut -c1-12)"
 CACHE="${XDG_CACHE_HOME:-$HOME/.cache}/bc250-ci-local"
-# Console Link's FFmpeg, built in the container like CI's (the host's links its newer libva): its own cache folder.
+# PS Remote Play's FFmpeg, built in the container like CI's (the host's links its newer libva): its own cache folder.
 FFMPEG="$CACHE/console-link-ffmpeg"
 mkdir -p "$CACHE" "$FFMPEG"
 

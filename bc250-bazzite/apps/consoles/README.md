@@ -4,12 +4,12 @@
 [![CI](https://github.com/RobertoTorino/nexus/actions/workflows/ci.yml/badge.svg)](https://github.com/RobertoTorino/nexus/actions/workflows/ci.yml)
 [![License: AGPL-3.0-or-later](https://img.shields.io/badge/license-AGPL--3.0--or--later-blue)](LICENSE)
 
-# Console Link
+# BC-250 PS Remote Play
 
-Console Link connects the **AMD BC-250** on **Bazzite** to your PS4 or PS5: find the consoles on your network, wake
-them from rest mode, register the board with them, and start a session and its stream.
+BC-250 PS Remote Play connects the **AMD BC-250** on **Bazzite** to your PS4 or PS5: find the consoles on your
+network, wake them from rest mode, register the board with them, and start a session and its stream.
 
-How to install and use it: [Console Link in the manual](https://robertotorino.github.io/nexus/bc250-bazzite-suite/apps/consoles/).
+How to install and use it: [BC-250 PS Remote Play in the manual](https://robertotorino.github.io/nexus/bc250-bazzite-suite/apps/consoles/).
 
 ## Disclaimer
 

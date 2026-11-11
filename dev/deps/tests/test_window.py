@@ -199,7 +199,7 @@ def test_needs_update_when_an_app_wants_newer_or_a_release_fixes_a_vulnerability
     try:
         crypto, paramiko = window.cards["cryptography"], window.cards["paramiko"]
         assert crypto.status.text() == "Needs update"
-        assert "Console Link needs >=42,<51, installed is 41.0.0." in crypto.status.toolTip()
+        assert "BC-250 PS Remote Play needs >=42,<51, installed is 41.0.0." in crypto.status.toolTip()
         assert paramiko.status.text() == "Needs update"
         assert "3.4.1 fixes known vulnerabilities in 3.4.0." in paramiko.status.toolTip()
         assert window.cards["aiortc"].status.text() == "Vulnerable"       # no release fixes it yet

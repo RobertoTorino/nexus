@@ -418,8 +418,8 @@ STYLESHEETS = {
 }
 
 GAMING_TEXT = [
-    ("#5b93da", "Links on a dark window (Console Link, Console LinkB, XB Remote Play, Decky, PCSX2, PPSSPP, RPCS3, "
-                "shadPS4, Vita3K, Xenia; HD Control's lit parts)."),
+    ("#5b93da", "Links on a dark window (PS Remote Play, Console Link, Console LinkB, XB Remote Play, Decky, PCSX2, "
+                "PPSSPP, RPCS3, shadPS4, Vita3K, Xenia; HD Control's lit parts)."),
     ("#ffffff", "Text on the blue primary button and on the shortcut artwork."),
 ]
 GAMING_BLOCKS = [
@@ -439,7 +439,7 @@ GAMING_BLOCKS = [
     ("#04080f", "PPSSPP shortcut artwork, bottom."),
     ("#3a2c0d", "Vita3K shortcut artwork, top."),
     ("#0f0b03", "Vita3K shortcut artwork, bottom."),
-    ("#000000", "Console Link's stream view."),
+    ("#000000", "PS Remote Play's and Console Link's stream view."),
 ]
 
 DAT_TEXT = [
@@ -519,7 +519,7 @@ OTHER_TEXT = [
     ("#888888", "Busy and hint labels in italics (ACPI, CU Bisect, CU Unlock, Cores Bisect, Cores Unlock)."),
     ("#ef6c00", "An incomplete ACPI override; a CU mask that needs checking."),
     ("#b8b8c8", "System Overlay: the names of the values."),
-    ("#dddddd", "Console Link's stream view."),
+    ("#dddddd", "PS Remote Play's and Console Link's stream view."),
     ("#ffb74d", "SFTP: the password warning."),
     ("#e57373", "SFTP: password requirements not met."),
     ("#81c784", "SFTP: password requirements met."),
@@ -619,8 +619,8 @@ are not on core yet carry a copy). The theme is one choice for every app: Gunmet
                        "page's colors as a theme for core's widgets, set with `create_app(theme=NEXUS)`; its "
                        "states are the apps' state family.", NEXUS_APP_TEXT, NEXUS_APP_BLOCKS))
     out.append("## The apps' own colors\n\nOn top of the theme, in the apps' `style.py` or where they are used.\n")
-    out.append(section("Gaming apps", "Console Link, Console LinkB, XB Remote Play, Decky, HD Control, PCSX2, PPSSPP, "
-                       "RPCS3, shadPS4, Vita3K and Xenia.", GAMING_TEXT, GAMING_BLOCKS))
+    out.append(section("Gaming apps", "PS Remote Play, Console Link, Console LinkB, XB Remote Play, Decky, HD Control, "
+                       "PCSX2, PPSSPP, RPCS3, shadPS4, Vita3K and Xenia.", GAMING_TEXT, GAMING_BLOCKS))
     out.append(section("DatStation", "", DAT_TEXT, DAT_BLOCKS))
     out.append(section("Upscaler", "", UPSCALER_TEXT, UPSCALER_BLOCKS))
     out.append(section("BC-250 Bazzite Test (check)", "", CHECK_TEXT, CHECK_BLOCKS))

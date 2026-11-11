@@ -109,7 +109,8 @@ def test_short_names_drop_the_suite_prefix(window):
     assert window.states["gpu"].title == "GPU Manager"
     assert "BC-250 GPU Manager" in window.states["gpu"].tooltip     # the full name on hover
     assert window.big.tiles["gpu"].toolTip() == window.states["gpu"].tooltip
-    assert window.states["cec"].title == "HDMI-CEC"                          # apps.toml's short
+    assert window.states["cec"].title == "CEC Manager"
+    assert window.states["datstation"].title == "DatStation"                 # apps.toml's short
 
 
 def test_a_tile_opens_only_an_installed_program(qapp, home, settings_dir, tmp_path, launched, monkeypatch):

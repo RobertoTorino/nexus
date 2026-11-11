@@ -109,7 +109,7 @@ jobs:
           QT_QPA_PLATFORM: offscreen
         run: python -X faulthandler -m pytest -v tests        # -v: a crash log names the test
 
-  # Console Link's native core (Rust, bc250-bazzite/apps/consoles/native): its own tests, clippy, and the Python module
+  # PS Remote Play's native core (Rust, bc250-bazzite/apps/consoles/native): its own tests, clippy, and the Python module
   # built into a wheel and tested from Python, all with the video decoder (FFmpeg from native/ffmpeg/build.sh, kept
   # in the cache until the script changes); clippy also without it, as a clone without FFmpeg builds it. Rust is
   # preinstalled on ubuntu-latest. The pytest job above skips tests/test_native.py, which needs the built module.

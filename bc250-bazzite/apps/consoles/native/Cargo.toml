@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
-# The native core of Console Link: the stream layer (Takion and its crypto) in Rust, for Python through PyO3.
+# The native core of BC-250 PS Remote Play: the stream layer (Takion and its crypto) in Rust, for Python through PyO3.
 # The protocol code builds and tests without Python (cargo test); maturin builds the Python module with the
 # "python" feature (pyproject.toml).
 [package]

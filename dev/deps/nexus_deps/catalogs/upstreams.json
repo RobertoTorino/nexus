@@ -305,7 +305,7 @@
         {
           "suite": "bc250-bazzite",
           "app": "consoles",
-          "name": "Console Link",
+          "name": "BC-250 PS Remote Play",
           "launcher": "~/.local/bin/bc250-console-link"
         }
       ],
@@ -320,7 +320,7 @@
         {
           "suite": "bc250-bazzite",
           "app": "consoles",
-          "name": "Console Link",
+          "name": "BC-250 PS Remote Play",
           "launcher": "~/.local/bin/bc250-console-link"
         }
       ],

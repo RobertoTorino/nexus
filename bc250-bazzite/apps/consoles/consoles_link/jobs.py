@@ -13,7 +13,7 @@ from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Callable
 
-from . import (LOGO_PATH, __version__, discovery, gamepad, history, privacy, psn, regist, senkusha, session,
+from . import (APP_NAME, LOGO_PATH, __version__, discovery, gamepad, history, privacy, psn, regist, senkusha, session,
                steam_settings, steam_shortcuts, stream, stream_options, stream_stats)
 from .consoles import RegisteredConsole
 from .httpmsg import ProtocolError
@@ -163,7 +163,7 @@ def _stats_header(console: RegisteredConsole, started: session.Session, connecti
     core = getattr(connection.core, "__version__", "?")
     online = len(os.sched_getaffinity(0)) if hasattr(os, "sched_getaffinity") else os.cpu_count()
     return [
-        f"Console Link {__version__}, native core {core}; started {time.strftime('%d-%m-%Y %H:%M:%S')}",
+        f"{APP_NAME} {__version__}, native core {core}; started {time.strftime('%d-%m-%Y %H:%M:%S')}",
         f"Console: {console.nickname or privacy.mask_address(console.address)} "
         f"({'PS5' if console.ps5 else started.info.server_type or 'PS4'})",
         f"Settings: {console.options.describe(console.ps5, started.info.server_type)}",
@@ -339,7 +339,7 @@ def steam_shortcut(console: RegisteredConsole, steam: Path, remove: bool = False
     was running."""
     launcher = launcher or Path(steam_shortcuts.LAUNCHER).expanduser()
     if not remove and not launcher.is_file():
-        return Outcome(False, f"The shortcut runs {launcher}, which is not there: install Console Link through "
+        return Outcome(False, f"The shortcut runs {launcher}, which is not there: install {APP_NAME} through "
                               "the portal first.")
     name = steam_shortcuts.shortcut_name(console)
     art = {} if remove else steam_shortcuts.draw_art(console, logo)

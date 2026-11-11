@@ -311,7 +311,6 @@ launch = [["Open", "~/.local/bin/bc250-usb-wifi"]]
 
 [apps.cec]
 name = "BC-250 CEC Manager"
-short = "HDMI-CEC"
 summary = "Turn the TV on and off with the board, switch its input and use its remote, over HDMI-CEC."
 tag = "cec-v2.0.2"
 sha256 = "ac6b1de6ed8b080c33fd56176650d97426c61786ca6467e49ec827ee5e6f5cfd"
@@ -390,8 +389,8 @@ detect = ["~/.local/bin/bc250-rpcs3-manager"]
 launch = [["Open", "~/.local/bin/bc250-rpcs3-manager"]]
 
 [apps.consoles]
-name = "Console Link"
-short = "Console Link"
+name = "BC-250 PS Remote Play"
+short = "PS Remote Play"
 summary = "Find, wake and register PS4 and PS5 consoles on the network, and start a Remote Play session."
 tag = "consoles-v3.0.2"
 sha256 = "9d93d9423c50eaa486744d6ff63e39b5cd78b256126508027794aad0cc652e0f"

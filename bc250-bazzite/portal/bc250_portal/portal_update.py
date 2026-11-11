@@ -32,7 +32,7 @@ class AppChange:
     name: str                           # "BC-250 Memory Manager"
     old: str                            # "0.1.0"; "" for an app the new portal adds
     new: str                            # "0.1.1"
-    short: str = ""                     # the name on its tile, when apps.toml sets one ("HDMI-CEC")
+    short: str = ""                     # the name on its tile, when apps.toml sets one ("DatStation")
     withdrawn: str = ""                 # why the new portal withdraws it (it removes the app from the board)
 
 

@@ -110,7 +110,7 @@ appearing in the portal.
   Its Fix (owner, 07-11-2026) installs what an installed app needs and lacks, after it lists the commands and asks:
   Python packages with pip, a missing tool with Homebrew, else layered with rpm-ostree (active after a restart,
   which it advises and never does).
-- **chiaki-ng is named only where licensing needs it:** Console Link's LICENSE, the License sections of its README
+- **chiaki-ng is named only where licensing needs it:** PS Remote Play's LICENSE, the License sections of its README
   and manual chapter, the suite's license overview (README, docs/index.md) and this file. Everywhere else (code,
   comments, tests, vectors, log messages, the manual, CHANGELOGs, MIGRATION.md) it is "the reference" (the reference
   implementation); user-facing text does not mention it at all.

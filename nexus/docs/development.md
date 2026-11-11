@@ -166,7 +166,7 @@ tools/ci-local.sh --list                     # the jobs; ci-nexus.yml's have nex
 
 It reads the jobs from the workflows themselves, a matrix from the folders as the plan job does, so a new app needs no change. The
 first run builds the image from `tools/ci-local/Containerfile` (Python 3.12 and the packages GitHub's runner has)
-and Console Link's FFmpeg; both are kept, with the venvs and the logs, in `~/.cache/bc250-ci-local`. It works on a
+and PS Remote Play's FFmpeg; both are kept, with the venvs and the logs, in `~/.cache/bc250-ci-local`. It works on a
 copy of the checkout with every change staged, as the commit will have it. Only the Windows job does not run here.
 Without job names it runs only the workflows GitHub starts for the push: those whose `paths` match a file that differs
 from `origin/main`, counting what is not committed yet. A push that changes only the Bazzite Console Suite runs

@@ -583,8 +583,8 @@ _CORE_PROBE = ("import os, bc250_console_link_core as core; print(os.path.dirnam
 
 
 def console_link_ffmpeg(tool: ExternalTool, pythons: list[Path]) -> ToolStatus:
-    """FFmpeg inside Console Link's native core: the core is asked, through the app's own python (the tool's
-    location), which FFmpeg it carries. Not found when the app or its core is not installed."""
+    """FFmpeg inside BC-250 PS Remote Play's native core: the core is asked, through the app's own python (the
+    tool's location), which FFmpeg it carries. Not found when the app or its core is not installed."""
     for python in pythons:
         try:
             result = subprocess.run([str(python), "-I", "-c", _CORE_PROBE], capture_output=True, text=True,

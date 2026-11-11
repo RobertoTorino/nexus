@@ -41,7 +41,7 @@ def test_only_pictures_a_page_names_are_converted(tmp_path):
     (tmp_path / "page.md").write_text("![](../assets/check/shot.png) ![](../assets/apps/gpu.webp)", encoding="utf-8")
     assert hooks.shown(str(tmp_path)) == {"assets/check/shot.png"}       # a PNG a page names; a WebP needs no copy
     wanted = hooks.shown(str(SUITE / "docs"))
-    assert not any("/steam/" in uri for uri in wanted)      # Console Link's Steam artwork is not on any page
+    assert not any("/steam/" in uri for uri in wanted)      # PS Remote Play's Steam artwork is not on any page
 
 
 def test_every_app_chapter_shows_its_icon():

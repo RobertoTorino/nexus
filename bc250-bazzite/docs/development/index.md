@@ -188,7 +188,7 @@ on it (`patch -p1 --dry-run` on the files the patch touches, fetched at that rel
 stops ACE Queues building once Bazzite ships that Mesa. A new Mesh Shaders pin needs DirectMesh's patch for the new
 release and the suite's patch moved to it.
 
-Console Link builds FFmpeg from one release (`FFMPEG_VERSION`, `FFMPEG_SHA256` in
+BC-250 PS Remote Play builds FFmpeg from one release (`FFMPEG_VERSION`, `FFMPEG_SHA256` in
 `bc250-bazzite/apps/consoles/native/ffmpeg/build.sh`) and takes libva's headers from one release where the system has
 none (`LIBVA_VERSION`, `LIBVA_SHA256`). The tool reads FFmpeg's release tags (`n<version>` on its GitHub mirror) and
 libva's latest release, and reports a newer FFmpeg on the pinned branch (its fixes), a newer FFmpeg branch (a bigger

@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
-"""Console Link for the BC-250: find the consoles on the network, wake them, register the board with one, and start
+"""BC-250 PS Remote Play: find the consoles on the network, wake them, register the board with one, and start
 and close a Remote Play session and its stream with it. The protocol code is ported from the reference implementation
 (AGPL-3.0; see the README's License section)."""
 
@@ -7,7 +7,7 @@ from . import steam_env
 
 steam_env.settle()                      # before Qt loads: started by Steam, the app leaves Steam's libraries
 
-APP_NAME = "Console Link"
+APP_NAME = "BC-250 PS Remote Play"
 APP_ID = "bc250-console-link"
 __version__ = "3.0.2"
 

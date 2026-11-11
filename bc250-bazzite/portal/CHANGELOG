@@ -1,3 +1,13 @@
+Changelog: 11-11-2026 21:28:56
+
+Release 18.0.1.
+
+Changelog: 11-11-2026 21:04:02
+
+Fixed. The manifest (apps.toml) lists Console Link by its new name, BC-250 PS Remote Play, with the short name PS
+Remote Play (owner, 11-11-2026); its ID (consoles), tag and launcher stay the same. BC-250 CEC Manager's tile no
+longer shows its old short name, HDMI-CEC, but CEC Manager (its name without the BC-250 prefix).
+
 Changelog: 11-11-2026 20:05:07
 
 Release 18.0.0. Pins check-v2.0.2, upscaler-v3.0.2, overlay-v2.0.2, bios-v2.0.2, ace-v2.0.2, mesh-v2.0.2, vram-v2.0.2, fan-v2.0.2, wdriver-v2.0.2, cec-v2.0.2, sftp-v2.0.2, ips35-v2.0.2, hdcam-v2.0.2, hdcontrol-v2.0.2, rpcs3-v5.0.2, consoles-v3.0.2, clb-v2.0.2, shadps4-v5.0.2, datstation-v4.0.2, ppsspp-v3.0.2, pcsx2-v5.0.2, vita3k-v3.0.2, xenia-v3.0.2, ssd-v1.0.2.

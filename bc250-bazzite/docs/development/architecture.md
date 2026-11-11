@@ -58,11 +58,11 @@ bc250-bazzite/apps/<name>/
 - An app with a shell script as its engine keeps that script in the app folder too
   (`bc250-bazzite/apps/cores-bisect/bc250-cores-bisect.sh`).
 - **No placeholder folders** for future work. Plans and status go in MIGRATION.md, not in the app or the manual.
-- **A native core** (only Console Link so far) is a Rust crate in `native/`, with PyO3 for Python. Its protocol
+- **A native core** (only BC-250 PS Remote Play so far) is a Rust crate in `native/`, with PyO3 for Python. Its protocol
   code builds and tests without Python (`cargo test`); maturin builds the Python module from `native/pyproject.toml`
   as a wheel for Python 3.10 and newer. Its version equals the app's VERSION (`tools/check_versions.py` reads
   `Cargo.toml` and `pyproject.toml`). Cargo's build output, `native/target/`, is never installed or staged. CI's
-  `native` job runs the Rust tests, clippy and the module's Python tests. Console Link's video decoder (cargo
+  `native` job runs the Rust tests, clippy and the module's Python tests. PS Remote Play's video decoder (cargo
   feature `decoder`) links FFmpeg statically, built by `native/ffmpeg/build.sh` from pinned sources; the release
   workflow builds the wheel with it into `native/wheel/`, which ships in the tarball (`tools/build_release.py`
   refuses the release without it), and `install.sh` installs that wheel, so users need no compiler.
@@ -214,7 +214,7 @@ Where the pictures come from depends on what the app has:
 
 | App | What the Steam card shows |
 |---|---|
-| Console Link | Drawn from the app's icon (`steam_art`), with the console's name and model |
+| BC-250 PS Remote Play | Drawn from the app's icon (`steam_art`), with the console's name and model |
 | PCSX2 Manager | Drawn from the app's icon (`steam_art`), with the game's title: a PS2 disc has no pictures |
 | Bazzite DatStation | Drawn from the app's icon (`steam_art`), with the app's name |
 | shadPS4 Manager | The game's own pictures (`icon0.png`, `pic1.png`), its icon as the logo |

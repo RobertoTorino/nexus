@@ -55,7 +55,7 @@ By category, as the portal lists them.
 
 **Gaming**: apps for playing.
 
-- <img src="portal/images/apps/consoles.webp" width="20" height="20" alt=""/> **[Console Link](apps/consoles)**: Find, wake and register PS4 and PS5 consoles on the network, and start a Remote Play session.
+- <img src="portal/images/apps/consoles.webp" width="20" height="20" alt=""/> **[BC-250 PS Remote Play](apps/consoles)**: Find, wake and register PS4 and PS5 consoles on the network, and start a Remote Play session.
 - <img src="portal/images/apps/clb.webp" width="20" height="20" alt=""/> **[BC-250 XB Remote Play](apps/clb)**: Stream your XBOX (Remote Play) or games from XBOX Cloud Gaming to the board, signed in with your Microsoft account.
 - <img src="portal/images/apps/shadps4.webp" width="20" height="20" alt=""/> **[shadPS4 Manager](apps/shadps4)**: PS4 games with the shadPS4 emulator: a tested shadPS4 release, your games found (or unpacked from .pkg files) and added to Game Mode.
 - <img src="portal/images/apps/rpcs3.webp" width="20" height="20" alt=""/> **[RPCS3 Manager](apps/rpcs3)**: PS3 games with the RPCS3 emulator: a tested RPCS3 build, the firmware, your games found and added to Game Mode.
@@ -85,7 +85,7 @@ How to install and use them: **[the manual](https://robertotorino.github.io/nexu
 
 ## License
 
-GPL-3.0-or-later ([LICENSE](../LICENSE)), except BC-250 Persistent ACPI, which is MIT, and Console Link, which
+GPL-3.0-or-later ([LICENSE](../LICENSE)), except BC-250 Persistent ACPI, which is MIT, and BC-250 PS Remote Play, which
 is AGPL-3.0 (its protocol code comes from chiaki-ng). Each app keeps its own `LICENSE`. The icons were made with generative AI tools and edited by hand in Photoshop, and the
 music of the video tours with generative AI tools. The sounds were made without AI: the portal's intro sound by its own
 code, from arithmetic alone (`tools/make_portal_sounds.py`), and the portal's sound on a controller action and

@@ -50,9 +50,10 @@ release candidate is none):
  * the ACE patch must apply to it (patch -p1 --dry-run on the files it touches, fetched at that release), as Bazzite
    moves to it and the app then builds for it.
 
-Console Link builds FFmpeg from one release and takes libva's headers from one (FFMPEG_VERSION, LIBVA_VERSION in
-apps/consoles/native/ffmpeg/build.sh). Against FFmpeg's release tags (n<version> on its GitHub mirror) and libva's
-latest release: a newer FFmpeg on the pinned branch (its fixes), a newer branch (a bigger move), a newer libva.
+BC-250 PS Remote Play builds FFmpeg from one release and takes libva's headers from one (FFMPEG_VERSION,
+LIBVA_VERSION in apps/consoles/native/ffmpeg/build.sh). Against FFmpeg's release tags (n<version> on its GitHub
+mirror) and libva's latest release: a newer FFmpeg on the pinned branch (its fixes), a newer branch (a bigger move),
+a newer libva.
 
 USB HD Cam downloads each camera's firmware from one commit of a GitHub repository (PINNED in
 apps/hdcam/usb_hdcam/firmware.py): the file there must still be the pinned one (SHA-256), and the file on the
@@ -516,11 +517,11 @@ def check_mesa(mesh: str, ace_patch: str, get: Fetch = fetch, applies: Applies =
 
 
 def check_ffmpeg(ffmpeg: str, libva: str, get: Fetch = fetch) -> Report:
-    """Console Link builds FFmpeg from one release (FFMPEG_VERSION, its tarball's SHA-256 and signature checked) and
-    takes libva's headers from one release where the system has none (LIBVA_VERSION). A newer FFmpeg on the pinned
-    branch (7.1.x) is its fixes, a newer branch a bigger move; a newer libva only its headers."""
-    report = Report(f"FFmpeg {ffmpeg}, libva {libva}", name="FFmpeg and libva (Console Link)", short="FFmpeg or libva",
-                    held="builds", newest="newest")
+    """BC-250 PS Remote Play builds FFmpeg from one release (FFMPEG_VERSION, its tarball's SHA-256 and signature
+    checked) and takes libva's headers from one release where the system has none (LIBVA_VERSION). A newer FFmpeg on
+    the pinned branch (7.1.x) is its fixes, a newer branch a bigger move; a newer libva only its headers."""
+    report = Report(f"FFmpeg {ffmpeg}, libva {libva}", name="FFmpeg and libva (PS Remote Play)",
+                    short="FFmpeg or libva", held="builds", newest="newest")
     refs = json.loads(get(f"{API.format(repo=FFMPEG_REPO)}/git/matching-refs/tags/n"))
     versions = {m.group(1) for m in (FFMPEG_TAG.fullmatch(str(r.get("ref", ""))) for r in refs) if m}
     if not versions:
@@ -533,17 +534,17 @@ def check_ffmpeg(ffmpeg: str, libva: str, get: Fetch = fetch) -> Report:
     where = "apps/consoles/native/ffmpeg/build.sh"
     if _version(on_branch) > _version(ffmpeg):
         report.drift.append(f"FFmpeg {on_branch} is out, on the pinned {'.'.join(branch)} branch: a new version of "
-                            f"Console Link could build it (FFMPEG_VERSION, FFMPEG_SHA256 in {where}), after the "
+                            f"PS Remote Play could build it (FFMPEG_VERSION, FFMPEG_SHA256 in {where}), after the "
                             f"stream is tried on the board. https://ffmpeg.org/download.html")
     if _version(newest)[:2] > _version(ffmpeg)[:2]:
-        report.drift.append(f"FFmpeg {newest} is a newer branch than {'.'.join(branch)}: moving Console Link to it "
+        report.drift.append(f"FFmpeg {newest} is a newer branch than {'.'.join(branch)}: moving PS Remote Play to it "
                             f"needs a look at the decoder calls its native core makes, and a try on the board.")
     if not report.drift:
         report.fine.append(f"no FFmpeg release newer than {ffmpeg}")
     if latest_libva and _version(latest_libva) > _version(libva):
-        report.drift.append(f"libva {latest_libva} is out: Console Link takes its headers from libva's sources where "
-                            f"the system has none (LIBVA_VERSION, LIBVA_SHA256 in {where}); the libraries stay the "
-                            f"system's. https://github.com/{LIBVA_REPO}/releases/tag/{latest_libva}")
+        report.drift.append(f"libva {latest_libva} is out: PS Remote Play takes its headers from libva's sources "
+                            f"where the system has none (LIBVA_VERSION, LIBVA_SHA256 in {where}); the libraries stay "
+                            f"the system's. https://github.com/{LIBVA_REPO}/releases/tag/{latest_libva}")
     else:
         report.fine.append(f"no libva release newer than {libva}")
     return report

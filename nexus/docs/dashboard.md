@@ -341,7 +341,7 @@ check could not run (no network) or no installed app has the package.
 also look. Each app says whether it needs the tool (required) or uses it when it is there (optional); the links
 open the app's chapter in the suite's wiki. Tools that do their work only as root are marked **Needs root.**; the
 apps run them through sudo or pkexec. Where a tool has two forms, one is enough (Ookla's `speedtest` or
-`speedtest-cli`). Console Link's FFmpeg, inside its native core, is asked for its version through the app's own
+`speedtest-cli`). PS Remote Play's FFmpeg, inside its native core, is asked for its version through the app's own
 Python.
 
 ### Fix

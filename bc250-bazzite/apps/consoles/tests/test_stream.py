@@ -499,7 +499,7 @@ def test_stream_job_runs_session_and_stream(console_factory, tmp_path):
     [stats] = (tmp_path / "streams").glob("stream-*.txt")
     text = stats.read_text()
     assert f"Statistics of this stream, a line per second: {stats}" in watched.log
-    assert text.startswith("# Console Link ") and "# Asked for: 1920x1080, 60 fps" in text
+    assert text.startswith("# BC-250 PS Remote Play ") and "# Asked for: 1920x1080, 60 fps" in text
     assert registered.address not in text
     assert any(" s | in " in line and "shown 0" in line and "controller " in line for line in text.splitlines())
 

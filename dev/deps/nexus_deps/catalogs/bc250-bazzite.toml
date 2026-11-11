@@ -9,7 +9,7 @@
 #                core has none: it is bundled with each app and runs in that app's environment.
 # [[tool]]       name, description (shown when the name is clicked), executables (any one of them will do) and/or
 #                locations, probe ("path": a library file; "flashrom-internal"; "console-link-ffmpeg": the FFmpeg
-#                in Console Link's native core, asked through the app's python), root (true: it does its work only as root, through sudo or pkexec), and per app
+#                in BC-250 PS Remote Play's native core, asked through the app's python), root (true: it does its work only as root, through sudo or pkexec), and per app
 #                a [[tool.source]] with need ("required" or "optional"), usage and an optional manual anchor.
 #                How Fix installs it, when it can: brew (a Homebrew formula, used first: no reboot) and rpm (the
 #                Fedora package, layered with rpm-ostree: active after a restart). Neither: the app's manual says how.
@@ -100,7 +100,7 @@ name = "Bazzite SFTP Tools"
 launchers = ["~/.local/bin/bc250-bazzite-sftp-tools"]
 
 [app.consoles]
-name = "Console Link"
+name = "BC-250 PS Remote Play"
 launchers = ["~/.local/bin/bc250-console-link"]
 
 [app.clb]
@@ -893,7 +893,7 @@ anchor = "what-you-need"
 
 [[tool]]
 name = "FFmpeg"
-description = "The audio and video codec library. Console Link carries its own inside the app's native core (decoders only, LGPL, built from pinned sources), so nothing is installed on the system for it; checked by asking the installed core which version it holds."
+description = "The audio and video codec library. BC-250 PS Remote Play carries its own inside the app's native core (decoders only, LGPL, built from pinned sources), so nothing is installed on the system for it; checked by asking the installed core which version it holds."
 executables = []
 locations = ["~/.local/share/bc250-console-link/venv/bin/python"]
 probe = "console-link-ffmpeg"
@@ -1278,7 +1278,7 @@ specifier = ">=5.0,<6"
 
 [[dependency]]
 name = "cryptography"
-description = "Cryptographic recipes and primitives for Python, on OpenSSL. Console Link encrypts registration and the control connection of a Remote Play session with its AES and HMAC; the shadPS4 Manager's Extract PKG decrypts packages with its AES-CBC and AES-XTS."
+description = "Cryptographic recipes and primitives for Python, on OpenSSL. BC-250 PS Remote Play encrypts registration and the control connection of a Remote Play session with its AES and HMAC; the shadPS4 Manager's Extract PKG decrypts packages with its AES-CBC and AES-XTS."
 
 [[dependency.source]]
 owner = "consoles"

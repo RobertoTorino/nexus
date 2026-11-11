@@ -528,11 +528,11 @@ On top of the theme, in the apps' `style.py` or where they are used.
 
 ### Gaming apps
 
-Console Link, Console LinkB, XB Remote Play, Decky, HD Control, PCSX2, PPSSPP, RPCS3, shadPS4, Vita3K and Xenia.
+PS Remote Play, Console Link, Console LinkB, XB Remote Play, Decky, HD Control, PCSX2, PPSSPP, RPCS3, shadPS4, Vita3K and Xenia.
 
 Text colors:
 
-- `#5b93da` Links on a dark window (Console Link, Console LinkB, XB Remote Play, Decky, PCSX2, PPSSPP, RPCS3, shadPS4, Vita3K, Xenia; HD Control's lit parts).
+- `#5b93da` Links on a dark window (PS Remote Play, Console Link, Console LinkB, XB Remote Play, Decky, PCSX2, PPSSPP, RPCS3, shadPS4, Vita3K, Xenia; HD Control's lit parts).
 
   ![Sample text in #5b93da](design/colors/text-5b93da.svg)
 
@@ -559,7 +559,7 @@ Background colors:
 | ![#04080f](design/colors/block-04080f.svg) | `#04080f` | PPSSPP shortcut artwork, bottom. |
 | ![#3a2c0d](design/colors/block-3a2c0d.svg) | `#3a2c0d` | Vita3K shortcut artwork, top. |
 | ![#0f0b03](design/colors/block-0f0b03.svg) | `#0f0b03` | Vita3K shortcut artwork, bottom. |
-| ![#000000](design/colors/block-000000.svg) | `#000000` | Console Link's stream view. |
+| ![#000000](design/colors/block-000000.svg) | `#000000` | PS Remote Play's and Console Link's stream view. |
 
 ### DatStation
 
@@ -748,7 +748,7 @@ Text colors:
 
   ![Sample text in #b8b8c8](design/colors/text-b8b8c8.svg)
 
-- `#dddddd` Console Link's stream view.
+- `#dddddd` PS Remote Play's and Console Link's stream view.
 
   ![Sample text in #dddddd](design/colors/text-dddddd.svg)
 

@@ -40,10 +40,10 @@ def test_compare_names_a_withdrawn_app():
     current = load(MANIFEST)
     new = [replace(e, withdrawn="Privacy: shows the account ID.") if e.key == "consoles" else e for e in current]
     changes = pu.compare(current, new)
-    assert [(c.name, c.withdrawn) for c in changes] == [("Console Link", "Privacy: shows the account ID.")]
+    assert [(c.name, c.withdrawn) for c in changes] == [("BC-250 PS Remote Play", "Privacy: shows the account ID.")]
     update = pu.PortalUpdate(RELEASE, changes)
-    assert update.summary() == "withdraws Console Link"
-    assert update.details() == ("Console Link: not available any more (Privacy: shows the account ID.); "
+    assert update.summary() == "withdraws PS Remote Play"
+    assert update.details() == ("BC-250 PS Remote Play: not available any more (Privacy: shows the account ID.); "
                                 "removed from the board")
     assert pu.compare(new, new) == []                       # withdrawn already: nothing new
 

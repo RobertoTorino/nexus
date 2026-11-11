@@ -96,7 +96,7 @@ Dependabot opens two kinds of pull request:
 - **Version updates**, from `.github/dependabot.yml`: once a week, one pull request for all the actions the
   workflows use (*ci: bump the actions group with 5 updates*).
 - **Security updates**, from the setting above: when a security advisory names a dependency anywhere in the
-  repository, whether or not `dependabot.yml` lists it, such as a Rust crate in Console Link's `native/` folder
+  repository, whether or not `dependabot.yml` lists it, such as a Rust crate in PS Remote Play's `native/` folder
   (*Bump pyo3 from 0.25.1 to 0.29.0 in /apps/console-link/native*).
 
 A pull request starts from `main` as it was that day. `main` moves on while it waits, but its checks still show the
