@@ -6,7 +6,7 @@ The Console Suite port has not been validated on PS5 hardware.
 
 APP_NAME = "USB HD Control"
 APP_ID = "ps5-usb-hdcontrol"
-__version__ = "0.1.1"
+__version__ = "0.2.0"
 
 from pathlib import Path
 

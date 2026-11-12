@@ -5,7 +5,7 @@ Mode."""
 
 APP_NAME = "shadPS4 Manager"
 APP_ID = "ps5-shadps4-manager"
-__version__ = "0.1.1"
+__version__ = "0.2.0"
 
 from pathlib import Path
 
