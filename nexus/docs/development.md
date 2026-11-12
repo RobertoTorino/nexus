@@ -18,6 +18,7 @@ core/bc250_core/              shared Python package, every suite's; bundled into
 tools/                        the Nexus tools: release and CI (build_release, stage_app, check_versions,
                               check_changelogs, tag-release.sh, release.sh, ci-local.sh, pre-push.sh, git-setup.sh,
                               merge_changelog, nexus_index), dev_versions (the dev/ apps' versions),
+                              check_prose (how the text reads),
                               new_app, features (the Apps and features chapter), the design and icon catalogs,
                               sync_icons (a suite's category icons), the tours, the design panel
 dev/<name>/                   the Nexus development apps, run from the checkout: dev/dash/ is Nexus Dashboard (the
@@ -135,6 +136,32 @@ mkdocs build --strict -f nexus/mkdocs.yml   # the Nexus page; -f <suite>/mkdocs.
 
 A suite is worked on and tested on its own system: `./test.sh` runs the `bazzite` suites on Linux and the `windows`
 suites on Windows, and core, tools and `dev/` on both.
+
+### How readable the text is
+
+`tools/check_prose.py` scores the text of the repository and lists the files that need work most, worst first. It
+reads the wikis, the READMEs and the text the apps show in their windows. The CHANGELOGs and MIGRATION.md stay out.
+
+```bash
+python3 tools/check_prose.py                      # every file, worst first
+python3 tools/check_prose.py --top 20             # only the worst 20
+python3 tools/check_prose.py bc250-bazzite/docs   # only these files or folders
+python3 tools/check_prose.py --details bc250-bazzite/docs/apps/fan.md   # every finding, with its line
+python3 tools/check_prose.py --base origin/main   # fails when a file reads worse than at that commit
+```
+
+The score is the number of findings per 1000 words. A finding is one of these:
+
+| Finding | What it is |
+|---|---|
+| long | A sentence of more than 30 words. |
+| semicolon | A semicolon that joins two sentences. |
+| colon | A colon after four words or more that carries the sentence on. A colon before a command does not count. |
+| parenthesis | A parenthesis with more than four words in it. |
+| word | A listed word: British spelling, or "manual" where the wiki is meant. |
+
+A low score does not make a text good. It only shows where sentences are dense. Files of under 100 words are
+listed last, because one finding there says little.
 
 ### CI on your own machine
 

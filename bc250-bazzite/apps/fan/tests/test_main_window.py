@@ -87,7 +87,7 @@ def test_turn_on_installs_with_the_limits(qapp, sys_root, paths, yes):
 def test_bad_limits_block_apply(qapp, sys_root, paths):
     w = window(qapp, sys_root, paths)
     w.warn_spin.setValue(92)
-    assert not w.apply_button.isEnabled() and "rise" in w.apply_button.toolTip()
+    assert not w.apply_button.isEnabled() and "higher than the one before" in w.apply_button.toolTip()
 
 
 def test_running_guard_and_its_events(qapp, sys_root, paths, yes):

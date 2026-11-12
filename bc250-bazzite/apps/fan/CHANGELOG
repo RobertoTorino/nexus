@@ -1,3 +1,12 @@
+Changelog: 12-11-2026 15:16:06
+
+Fixed. The window's texts, the guard's messages, the README and the wiki chapter are rewritten in short, plain
+sentences. They say what happens before how it is done, and one sentence carries one fact. The two long
+explanations in the window, of the guard and of the fan headers, are now behind an info symbol in their group, with
+one short line left under the guard's buttons. The question before the guard is turned on lists the three limits one
+per line. The link in the window says Wiki. Nothing the app or the guard does has changed. The tests that named the
+old wording name the new.
+
 Changelog: 12-11-2026 14:51:59
 
 Release 2.1.0.

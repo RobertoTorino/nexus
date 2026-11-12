@@ -191,7 +191,7 @@ def test_no_shutdown_when_it_cools_in_time(setup, sys_root):
     set_temps(sys_root, gpu=96)
     g.step()                                           # the hold starts again
     assert ["systemctl", "poweroff"] not in run.calls
-    assert "no shutdown" in g.events[-2]["text"]
+    assert "The shutdown is canceled" in g.events[-2]["text"]
 
 
 def test_a_broken_sensor_never_shuts_down(setup, sys_root):
@@ -310,7 +310,7 @@ def test_main_install_prints_an_answer(tmp_path, monkeypatch, capsys):
     assert json.loads(capsys.readouterr().out) == {"ok": True}
     assert guard.installed(guard.paths_from_env()) == guard.Limits(80, 85, 90, 5)
     assert guard.main(["install", "--warn", "99"]) == 1
-    assert "rise" in json.loads(capsys.readouterr().out)["error"]
+    assert "higher than the one before" in json.loads(capsys.readouterr().out)["error"]
 
 
 def test_command_and_answer():

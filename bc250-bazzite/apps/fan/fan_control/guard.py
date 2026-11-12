@@ -88,9 +88,9 @@ class Limits:
 
 def limits_problem(limits: Limits) -> str:
     if not 60 <= limits.warn_c < limits.cool_c < limits.shutdown_c <= 105:
-        return "The limits must rise from the warning to the shutdown, between 60 and 105 °C."
+        return "Each limit must be higher than the one before it, and all three between 60 and 105 °C."
     if not 3 <= limits.hold_s <= 60:
-        return "The shutdown waits between 3 and 60 seconds."
+        return "The time before a shutdown must be between 3 and 60 seconds."
     return ""
 
 
@@ -402,8 +402,7 @@ class Guard:
         if hottest is None:
             if not self.no_sensor:
                 self.no_sensor = True
-                self.event("No GPU or CPU temperature can be read; the guard waits for one and does nothing until "
-                           "then.", "warn")
+                self.event("No GPU or CPU temperature can be read. The guard does nothing until one can.", "warn")
         else:
             self.no_sensor = False
             self.check_limits(*hottest)
@@ -422,27 +421,30 @@ class Guard:
             self.event(f"The {name} is back at {celsius:.0f} °C.")
         if celsius >= lim.cool_c and not self.cooling:
             self.cooling = True
-            done = " and ".join(d for d in (self.fans_full(), self.performance_off()) if d) or "nothing to do"
-            self.event(f"The {name} is at {celsius:.0f} °C (cooling at {lim.cool_c} °C): {done}.", "bad",
+            done = " and ".join(d for d in (self.fans_full(), self.performance_off()) if d)
+            done = f"The guard set {done}." if done else "There was nothing for the guard to do."
+            self.event(f"The {name} is at {celsius:.0f} °C (cooling at {lim.cool_c} °C). {done}", "bad",
                        alert=True)
         elif self.cooling and celsius < rearm:
             self.cooling = False
             self.restore_fans()
-            self.event(f"The {name} is back at {celsius:.0f} °C: the fans are back as they were. Performance mode "
-                       "stays off until you turn it on.")
+            self.event(f"The {name} is back at {celsius:.0f} °C. The fans are back to how they were. Performance "
+                       "mode stays off until you switch it on.")
         if celsius >= lim.shutdown_c:
             if self.hot_since is None:
                 self.hot_since = now
-                self.event(f"The {name} is at {celsius:.0f} °C (shutdown at {lim.shutdown_c} °C): the board shuts "
+                self.event(f"The {name} is at {celsius:.0f} °C (shutdown at {lim.shutdown_c} °C). The board shuts "
                            f"down in {lim.hold_s} s unless it cools.", "bad", alert=True)
             elif now - self.hot_since >= lim.hold_s and not self.powering_off:
                 self.powering_off = True
                 self.event(f"The {name} stayed at or above {lim.shutdown_c} °C for {lim.hold_s} s "
-                           f"({celsius:.0f} °C now): shutting down to protect the board.", "bad", alert=True)
+                           f"and is at {celsius:.0f} °C now. The guard is shutting down to protect the board.",
+                           "bad", alert=True)
                 self.run(["systemctl", "poweroff"])
         elif self.hot_since is not None:
             self.hot_since = None
-            self.event(f"The {name} is below {lim.shutdown_c} °C again ({celsius:.0f} °C): no shutdown.")
+            self.event(f"The {name} is below {lim.shutdown_c} °C again, at {celsius:.0f} °C. The shutdown is "
+                           "canceled.")
 
     def fans_full(self) -> str:
         """Every channel to full speed; the old mode and value are kept to put back."""
@@ -495,7 +497,7 @@ class Guard:
             since = self.stopped_since.setdefault(fan.channel, now)
             if now - since >= FAN_STOP_S and fan.channel not in self.fan_warned:
                 self.fan_warned.add(fan.channel)
-                self.event(f"{fan.header} has stopped: it reads 0 RPM. Check the fan and its connector.", "bad",
+                self.event(f"{fan.header} has stopped and reads 0 RPM. Check the fan and its connector.", "bad",
                            alert=True)
 
     def level(self) -> str:
@@ -527,7 +529,7 @@ class Guard:
             raise SystemExit(0)
         signal.signal(signal.SIGTERM, stop)
         lim = self.limits
-        self.event(f"Guard on: warning at {lim.warn_c} °C, cooling at {lim.cool_c} °C, shutdown at "
+        self.event(f"The guard is on. It warns at {lim.warn_c} °C, cools at {lim.cool_c} °C and shuts down at "
                    f"{lim.shutdown_c} °C held for {lim.hold_s} s.")
         try:
             while True:

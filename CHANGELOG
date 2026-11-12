@@ -1,3 +1,11 @@
+Changelog: 12-11-2026 15:16:06
+
+Added. tools/check_prose.py scores how hard the repository's text is to read and lists the files that need work
+most, worst first. It reads the wikis, the READMEs and the text in the apps' windows, and counts long sentences,
+semicolons, colons that carry a sentence on, long parentheses and listed words (British spelling, "manual" for the
+wiki) per 1000 words. --details shows every finding with its line, and --base fails when a file reads worse than at
+a commit. No workflow runs it yet. The Nexus page's Development chapter describes it.
+
 Changelog: 12-11-2026 14:51:59
 
 Release 4.4.0. Brings ace-v2.1.0, acpi-v0.5.0, bios-v2.1.0, btpair-v0.2.0, cec-v2.1.0, check-v2.1.0, clb-v2.1.0, compute-v0.5.0, consoles-v3.1.0, cores-v0.5.0, datstation-v4.1.0, fan-v2.1.0, gpu-v0.6.0, hdcam-v2.1.0, hdcontrol-v2.1.0, ips35-v2.1.0, mesh-v2.1.0, oc-v0.4.0, overlay-v2.1.0, pcsx2-v5.1.0, portal-v20.0.0, ppsspp-v3.1.0, rpcs3-v5.1.0, sftp-v2.1.0, shadps4-v5.2.0, ssd-v1.1.0, upscaler-v3.1.0, vita3k-v3.1.0, vram-v2.1.0, wdriver-v2.1.0, xenia-v3.1.0.

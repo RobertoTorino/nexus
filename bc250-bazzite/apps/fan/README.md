@@ -6,13 +6,15 @@
 
 # BC-250 Fan Control
 
-Shows the temperatures and fans of the **AMD BC-250** on **Bazzite**, and runs a thermal guard: a system service
-that watches the GPU and the CPU, also when no app is open, and warns, turns the fans to full speed and performance
-mode off, and at a critical temperature shuts the board down cleanly.
+Shows the temperatures and fan speeds of the **AMD BC-250** on **Bazzite**. It can also turn on a thermal guard, a
+background service that protects the board from overheating. The guard keeps watching when no app is open. When the
+board gets too hot it warns you. If it gets hotter still, it runs the fans at full speed and switches performance
+mode off. As a last resort it shuts the board down cleanly.
 
-How to install and use it: [BC-250 Fan Control in the manual](https://robertotorino.github.io/nexus/bc250-bazzite-suite/apps/fan/).
+How to install and use it:
+[BC-250 Fan Control in the wiki](https://robertotorino.github.io/nexus/bc250-bazzite-suite/apps/fan/).
 
 ## License
 
-GPL-3.0-or-later, see [LICENSE](LICENSE). Where the fan headers are comes from
+GPL-3.0-or-later, see [LICENSE](LICENSE). The information on the fan headers comes from
 [mothenjoyer69/bc250-documentation](https://github.com/mothenjoyer69/bc250-documentation).

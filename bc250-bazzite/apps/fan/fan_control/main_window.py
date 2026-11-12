@@ -21,13 +21,33 @@ from bc250_core import SUITE_MANUAL_URL, window_title
 from bc250_core import __version__ as CORE_VERSION
 from bc250_core.settings import SettingsStore
 from bc250_core.theme import BLUE, ORANGE, RED, STATE_COLORS
-from bc250_core.widgets import AppHeader, MetricBox, StatusText, accent_button, hint_label
+from bc250_core.widgets import AppHeader, InfoButton, MetricBox, StatusText, accent_button, hint_label
 
 from . import APP_NAME, INFO, LOGO_PATH, __version__
 from . import guard, privileged
 
 MANUAL_URL = f"{SUITE_MANUAL_URL}apps/fan/"
 REFRESH_MS = 2000
+
+# Behind the info symbols (owner, 01-11-2026: no long lines of text in the window).
+GUARD_INFO = (
+    "The guard reads the GPU and the CPU temperature every 2 seconds and acts on the hotter of the two."
+    "<br><br><b>Warn at:</b> it sends a desktop notification."
+    "<br><b>Cool at:</b> it runs every fan at full speed and switches the GPU governor's performance mode off."
+    "<br><b>Shut down at:</b> it shuts the board down cleanly, but only when the temperature stays that high for "
+    "the time you set."
+    f"<br><br>At {guard.REARM_C} °C below the warning limit the fans go back to how they were. Performance mode "
+    "stays off until you switch it on again."
+    "<br><br>AMD publishes no limits for the BC-250. The defaults follow what is known from these boards: they "
+    "slow down from about 85 °C and become unstable between 90 and 95 °C. "
+    f"<a href='{MANUAL_URL}'>Wiki</a>")
+TURN_ON_TIP = "Turn the guard on with these limits. It keeps running after you close this window"
+FANS_INFO = (
+    "<b>CPU_FAN1</b> is the board's 4-pin fan header. The board reads the speed of a fan there and sets it."
+    "<br><br><b>J4003</b> reads the speed of four more fans and controls them, but gives them no power. A fan "
+    "there needs 12 V from the power supply."
+    "<br><br>A fan connected only to the power supply reports nothing. The guard cannot see it or change its speed."
+    "<br><br>With a Y splitter two fans share one header, and only one of them reports its speed.")
 
 
 class FanSettings(SettingsStore):
@@ -64,25 +84,28 @@ class MainWindow(QMainWindow):
             header.add_second(box)
 
         guarded = QGroupBox("Thermal guard")
-        self.warn_spin = self.spin(60, 104, " °C", "A desktop notification")
-        self.cool_spin = self.spin(61, 104, " °C", "Every fan to full speed, and the governor's performance mode off")
-        self.shutdown_spin = self.spin(62, 105, " °C", "A clean shutdown, when it stays this hot for the time on "
-                                                      "the right")
-        self.hold_spin = self.spin(3, 60, " s", "How long the temperature stays at the shutdown limit before the "
-                                                "board shuts down")
+        self.warn_spin = self.spin(60, 104, " °C", "At this temperature the guard sends a notification")
+        self.cool_spin = self.spin(61, 104, " °C", "At this temperature the guard runs every fan at full speed and "
+                                                  "switches performance mode off")
+        self.shutdown_spin = self.spin(62, 105, " °C", "At this temperature the guard shuts the board down, if it "
+                                                      "stays this hot for the time on the right")
+        self.hold_spin = self.spin(3, 60, " s", "How long the temperature must stay at the shutdown limit "
+                                                "before the guard shuts the board down")
         row = QHBoxLayout()
         for text, widget in (("Warn at", self.warn_spin), ("cool at", self.cool_spin),
                              ("shut down at", self.shutdown_spin), ("after", self.hold_spin)):
             row.addWidget(QLabel(text))
             row.addWidget(widget)
         row.addStretch(1)
-        self.apply_button = accent_button("Turn on…", "Install the guard as a system service with these limits")
+        self.guard_info = InfoButton(GUARD_INFO, "How the guard works")
+        row.addWidget(self.guard_info)
+        self.apply_button = accent_button("Turn on…", TURN_ON_TIP)
         self.apply_button.clicked.connect(self.apply)
         self.off_button = QPushButton("Turn off…")
-        self.off_button.setToolTip("Stop and remove the guard; the fans go back as they were")
+        self.off_button.setToolTip("Stop the guard and remove it. The fans go back to how they were")
         self.off_button.clicked.connect(self.turn_off)
         self.defaults_button = QPushButton("Defaults")
-        self.defaults_button.setToolTip("85, 90 and 95 °C, 10 s")
+        self.defaults_button.setToolTip("Put back 85, 90 and 95 °C and 10 seconds")
         self.defaults_button.clicked.connect(lambda: self.show_limits(guard.Limits()))
         buttons = QHBoxLayout()
         buttons.addStretch(1)
@@ -93,28 +116,21 @@ class MainWindow(QMainWindow):
         lay_guard.addLayout(row)
         lay_guard.addLayout(buttons)
         lay_guard.addWidget(self.guard_note)
-        lay_guard.addWidget(hint_label(
-            "The guard watches the hotter of the GPU (edge) and the CPU (Tctl) every 2 seconds, also with this window "
-            "closed and from boot. At the warning it sends a desktop notification. At the cooling limit it turns "
-            "every fan to full speed and the governor's performance mode off. When the temperature stays at the "
-            f"shutdown limit for the time set, it shuts the board down cleanly. {guard.REARM_C} °C below the warning "
-            "the fans go back as they were; performance mode stays off until you turn it on. AMD publishes no "
-            "limits for the BC-250; the defaults follow what boards are known to take: throttling from about 85 °C, "
-            f"instability from 90 to 95 °C. <a href='{MANUAL_URL}'>Manual</a>"))
+        lay_guard.addWidget(hint_label("The guard keeps watching while this window is closed, and starts again "
+                                       "with the board."))
 
         fans = QGroupBox("Fans")
         self.fans_label = QLabel()
         self.fans_label.setTextFormat(Qt.TextFormat.RichText)
         self.fans_label.setWordWrap(True)
         self.fans_note = hint_label("")
+        self.fans_info = InfoButton(FANS_INFO, "About the fan headers")
+        fans_row = QHBoxLayout()
+        fans_row.addWidget(self.fans_label, 1)
+        fans_row.addWidget(self.fans_info, 0, Qt.AlignmentFlag.AlignTop)
         lay_fans = QVBoxLayout(fans)
-        lay_fans.addWidget(self.fans_label)
+        lay_fans.addLayout(fans_row)
         lay_fans.addWidget(self.fans_note)
-        lay_fans.addWidget(hint_label(
-            "A fan on CPU_FAN1 is the one the board can drive and read. J4003 carries the speed signal and the "
-            "control of four more fans, without power: a fan there takes its 12 V from the power supply. A fan "
-            "powered straight from the power supply reports nothing, so the guard can neither see nor drive it. "
-            "With a Y splitter on one header, only one of the fans reports its speed."))
 
         events = QGroupBox("What the guard did")
         self.events_view = QPlainTextEdit()
@@ -188,18 +204,19 @@ class MainWindow(QMainWindow):
             self.fan_box.caption.setText("Fan")
         if not reading.fans:
             self.fans_label.setText("No fan controller found.")
-            self.fans_note.setText("The board's sensor chip (a Nuvoton NCT6686) needs the nct6687 driver, which "
-                                   "Bazzite ships. Bazzite Test (test 22) checks it and says how to load it.")
+            self.fans_note.setText("The fans are read through the nct6687 driver, which comes with Bazzite. "
+                                   "Test 22 of Bazzite Test checks that driver and tells you how to load it.")
             self.fans_note.setVisible(True)
             return
         rows = [f"<b>{escape(f.header)}</b>: {f.rpm} RPM, {escape(f.mode_text)}" for f in turning]
         silent = [f.header for f in reading.fans if not f.rpm]
         if silent:
-            rows.append(f"No speed from {escape(', '.join(silent))}: nothing connected there, or a fan without a "
-                        "speed signal.")
+            rows.append(f"No speed from {escape(', '.join(silent))}. Nothing is connected there, or the fan has "
+                        "no speed signal.")
         self.fans_label.setText("<br>".join(rows))
-        self.fans_note.setText("" if turning else "No fan reports a speed. A fan powered from the power supply runs "
-                                                  "on its own: watch the temperatures above.")
+        self.fans_note.setText("" if turning else "No fan reports a speed. A fan connected only to the power "
+                                                  "supply still runs, but the app cannot see it. Keep an eye "
+                                                  "on the temperatures above.")
         self.fans_note.setVisible(bool(self.fans_note.text()))
 
     def show_guard(self, reading: guard.Reading) -> None:
@@ -209,10 +226,10 @@ class MainWindow(QMainWindow):
             self.guard_box.set_value("Off")
             set_box_colour(self.guard_box, BLUE)
         elif self.state is None:
-            self.badge.set_status("Guard not running", "bad", "The guard is installed but does not run.")
+            self.badge.set_status("Guard not running", "bad", "The guard is turned on but is not running.")
             self.guard_box.set_value("Stopped")
             set_box_colour(self.guard_box, RED)
-            notes.append(f"The guard is installed but has not reported in {guard.STALE_S} s. See its log: "
+            notes.append(f"The guard is turned on but has not reported for {guard.STALE_S} seconds. Look in its log: "
                          f"<code>journalctl -u {guard.UNIT}</code>")
         else:
             level = self.state.get("level", "ok")
@@ -222,10 +239,10 @@ class MainWindow(QMainWindow):
             self.guard_box.set_value("On" if level == "ok" else text)
             set_box_colour(self.guard_box, STATE_COLORS[kind])
         if self.installed is not None and guard.outdated(self.paths):
-            notes.append("The guard was installed by another version of the app: press Apply to update it.")
+            notes.append("This guard comes from another version of the app. Press Apply to replace it with this "
+                         "version's.")
         if reading.hottest is None:
-            notes.append("No GPU or CPU temperature can be read on this system, so the guard would have nothing to "
-                         "watch.")
+            notes.append("This system reports no GPU or CPU temperature, so the guard would have nothing to watch.")
         self.guard_note.setText("<br>".join(notes))
         self.guard_note.setVisible(bool(notes))
         events = (self.state or {}).get("events", [])
@@ -242,8 +259,7 @@ class MainWindow(QMainWindow):
         changed = installed != self.limits() or guard.outdated(self.paths)
         self.apply_button.setText("Apply…" if installed else "Turn on…")
         self.apply_button.setEnabled(not problem and (installed is None or changed))
-        self.apply_button.setToolTip(problem or ("Update the guard with these limits" if installed else
-                                                 "Install the guard as a system service with these limits"))
+        self.apply_button.setToolTip(problem or ("Give the guard these limits" if installed else TURN_ON_TIP))
         self.off_button.setEnabled(installed is not None)
 
     # --- Actions ----------------------------------------------------------------------------------------------
@@ -253,11 +269,14 @@ class MainWindow(QMainWindow):
         title = "Update the guard" if self.installed else "Turn on the guard"
         answer = QMessageBox.question(
             self, window_title(title),
-            f"Run the thermal guard as a system service, from now on and at every boot?\n\n"
-            f"At {lim.warn_c} °C it warns. At {lim.cool_c} °C it turns every fan to full speed and performance mode "
-            f"off. At {lim.shutdown_c} °C held for {lim.hold_s} s it shuts the board down cleanly, to protect it. "
-            "Below that the fans stay as they are. You can turn it off here at any time.\n\n"
-            "It needs your password.")
+            ("Give the thermal guard these limits?" if self.installed else "Turn the thermal guard on?") + "\n\n"
+            "The guard runs in the background, also while this window is closed, and starts with the board.\n\n"
+            f"At {lim.warn_c} °C it warns you.\n"
+            f"At {lim.cool_c} °C it runs every fan at full speed and switches performance mode off.\n"
+            f"At {lim.shutdown_c} °C, held for {lim.hold_s} seconds, it shuts the board down cleanly to protect "
+            "it.\n\n"
+            f"Below {lim.cool_c} °C it leaves the fans alone. You can turn the guard off here at any time.\n\n"
+            "You will be asked for your password.")
         if answer != QMessageBox.StandardButton.Yes:
             return
         error = self.runner(["install", "--warn", str(lim.warn_c), "--cool", str(lim.cool_c),
@@ -270,8 +289,8 @@ class MainWindow(QMainWindow):
         title = "Turn off the guard"
         answer = QMessageBox.question(
             self, window_title(title),
-            "Stop and remove the thermal guard?\n\nNothing then watches the temperatures while this window is "
-            "closed; the fans follow the firmware's curve.\n\nIt needs your password.")
+            "Turn the thermal guard off?\n\nAfter that, nothing watches the temperatures while this window is "
+            "closed. The fans go back to how they were.\n\nYou will be asked for your password.")
         if answer != QMessageBox.StandardButton.Yes:
             return
         error = self.runner(["uninstall"])
