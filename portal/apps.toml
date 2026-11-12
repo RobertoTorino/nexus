@@ -266,8 +266,8 @@ launch = [["Open", "~/.local/bin/bc250-memory-manager"]]
 [apps.fan]
 name = "BC-250 Fan Control"
 summary = "A thermal guard that warns, cools and shuts down cleanly at a critical temperature, and the fans."
-tag = "fan-v2.1.0"
-sha256 = "95bc30e5cc5586f5284dc94d7048ef635cfcc375aeb712434f65a540e0b38c2d"
+tag = "fan-v2.1.1"
+sha256 = ""
 required = false
 changes_board = true
 board_change = """

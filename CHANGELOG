@@ -1,3 +1,7 @@
+Changelog: 12-11-2026 15:50:47
+
+Release 4.5.0. Brings fan-v2.1.1, portal-v20.0.1.
+
 Changelog: 12-11-2026 15:16:06
 
 Added. tools/check_prose.py scores how hard the repository's text is to read and lists the files that need work
