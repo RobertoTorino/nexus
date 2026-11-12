@@ -27,7 +27,8 @@ The header shows the **Xenia version**, **Your games** (the games found) and tho
 **Refresh** reads everything again. Beside the title stands the app's state. Under the introduction, which links
 to **Xenia's release notes** and to this wiki, a row of pills does the setting up, each with what it is for on top
 and what it does under it: **Xenia Install** and **Xenia Uninstall**. Two lines below the pills say where each
-stands, and then come three tabs: **Your games**, **Settings** and **Log**.
+stands, and then come three tabs: **Your games**, **Settings** and **Log**, and
+**Start game**, a tab that is a button.
 
 - **Xenia**: **Not installed.** or **Installed.**, with the button to use under it. The tooltip says which build
   is installed, or what Install takes, and when a newer build is out. **Install** downloads Xenia (about 18 MB)
@@ -35,8 +36,8 @@ stands, and then come three tabs: **Your games**, **Settings** and **Log**.
   is installed, the tooltip and the log say so, and **Install** puts the app's in. **Uninstall** takes it out
   again; Xenia's own folder, with its settings, saves and installed content, stays.
 - **Game folder**: where the app looks for games, `~/Games/XBOX360` and a removable drive's `Games/XBOX360` (see
-  [Where your games go](#where-your-games-go)); nothing is chosen or browsed to. A game may sit up to six folders
-  deep.
+  [Where your games go](#where-your-games-go)); nothing is chosen or browsed to. The **i** beside them says what
+  goes there. A game may sit up to six folders deep.
 
 ### Where your games go
 
@@ -66,8 +67,8 @@ size: the game's file or folder; for a Games on Demand or Arcade title in the co
 **Delete marked**; **Cancel** deletes nothing. Xenia's content folder, with the saves, stays. A game the app will not delete (one at the top of a
 drive, or in a folder that holds another game) is said so under the tabs: delete it by hand.
 
-**Xenia settings** opens Xenia's own window, with its other settings, profiles and installed content. The app has
-no Play button: a game is started from Steam.
+**Xenia settings** opens Xenia's own window, with its other settings, profiles and installed content. A game runs from Steam:
+[**Start game**](#start-game) starts the chosen one there.
 
 #### Steam
 
@@ -94,6 +95,13 @@ picture SteamGridDB does not have stays drawn. See [Covers from SteamGridDB](cov
 looked up and how to use pictures of your own.
 
 **Steam** in the line under the table is a link: it opens Steam's library (Steam starts when it does not run).
+
+#### Start game
+
+The last tab, **Start game**, is a button. Choose a game in the table and click it: the game starts through Steam,
+as its shortcut in Steam starts it, and Steam starts first when it does not run. The tab you were on stays open. A
+game that is not in Steam yet is not started: the line under the tabs says to tick it and press **Update Steam**
+first.
 
 ### Settings
 

@@ -1,3 +1,36 @@
+Changelog: 12-11-2026 14:37:22
+
+Release 20.0.0.
+
+Changelog: 12-11-2026 13:24:29
+
+Fixed. B right after the portal got the focus back does nothing for half a second (owner, 12-11-2026: B closes an
+app). The portal reads the controller too and has the focus the moment an app closes, so the press that closed the app
+would have closed the portal with it.
+
+Changelog: 12-11-2026 13:24:28
+
+Fixed. The line at the bottom no longer says "X / Menu key Menu" (owner, 12-11-2026): it read as the settings menu,
+and X is the button that opens on a PlayStation controller, where the tile's menu is on Square. ☰ Settings is the one
+menu the line names. The tile's menu is where it was: the Menu key, M, the left button of the controller's four, and a
+right click on a tile with nothing to update. The wiki says which button it is on each controller.
+
+Changelog: 12-11-2026 13:24:27
+
+Added. Two more shortcuts in the row of symbols (owner, 12-11-2026): Volume (a loudspeaker) opens the desktop's sound
+settings and Screen (a screen on its foot) its display settings: KDE Plasma's System Settings on kcm_pulseaudio and
+kcm_kscreen, else the module alone, else GNOME's Settings. Files now comes before Steam. The row has eleven symbols,
+drawn smaller where it would not fit beside the status (a 1280 px screen).
+
+Changelog: 12-11-2026 13:24:26
+
+Breaking. The status on the right of the symbols is three lines (owner, 12-11-2026): the CPU's and the GPU's load and
+temperature, the date and time, and the weather of the chosen place (its symbol, the place, the temperature and the
+sky, the rest in its tooltip). It was one line that broke in two where the row was too narrow, and the weather was a
+symbol with the place's name in the row of symbols: that symbol is gone from the row, and with it its menu there. The
+Weather pill on the Settings page chooses the place, updates the weather and turns it off, as before. Without a place
+the status is two lines. tools/portal_screenshot.py shows a fixed weather line in the wiki's picture.
+
 Changelog: 12-11-2026 11:38:59
 
 Release 19.0.0. Pins check-v2.0.4, gpu-v0.5.4, compute-v0.4.5, cores-v0.4.6, oc-v0.3.6, acpi-v0.4.6, overlay-v2.0.4, bios-v2.0.4, vram-v2.0.4, fan-v2.0.4, wdriver-v2.0.4, cec-v2.0.4, sftp-v2.0.4, ips35-v2.0.4, hdcam-v2.0.4, hdcontrol-v2.0.4, rpcs3-v5.0.4, consoles-v3.0.4, clb-v2.0.3, shadps4-v5.1.1, datstation-v4.0.3, ppsspp-v3.0.3, pcsx2-v5.0.3, vita3k-v3.0.3, xenia-v3.0.3, ssd-v1.0.4, btpair-v0.1.1.

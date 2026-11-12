@@ -8,6 +8,7 @@ import sys
 
 from bc250_core import __version__ as CORE_VERSION, instance
 from bc250_core.app import create_app, exec_app
+from bc250_core import exit_keys
 
 from . import APP_NAME, INFO, __version__
 from .autostart import MINIMIZED_FLAG
@@ -22,6 +23,7 @@ def main() -> int:
     args, qt_args = parser.parse_known_args()
 
     app = create_app(INFO, qt_args)
+    exit_keys.install(app)                  # Escape and a controller's B close the window
     # One instance: the screen has one port, and a second launch brings the running window to the front.
     if instance.already_running(INFO.app_id):
         return 0

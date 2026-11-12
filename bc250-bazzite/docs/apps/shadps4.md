@@ -37,7 +37,8 @@ links to **shadPS4's release notes** and to this wiki, a row of four pills does 
 for on top and what it does under it: **shadPS4 Install** and **shadPS4 Uninstall**, **Games Install** and
 **shadNet Account**. Your games and the system modules go into the app's own folder (see [Where your games
 go](#where-your-games-go)); nothing is chosen or browsed to for them. Four lines below the pills say where each
-stands, short, with more in their tooltips, and then come three tabs: **Your games**, **Settings** and **Log**.
+stands, short, with more in their tooltips, and then come three tabs: **Your games**, **Settings** and **Log**, and
+**Start game**, a tab that is a button.
 
 - **shadPS4**: **Not installed.** or **Installed.**, with the button to use under it; the version box in the header
   shows the version installed. When this version of the app brings another one, the tooltip and the log say so, and
@@ -137,6 +138,13 @@ SteamGridDB for each game instead; the background and the logo on the game's pag
 **Steam** in the line under the table is a link: it opens Steam's library (Steam starts when it does not run).
 **shadPS4 settings** beside it opens shadPS4's own window (Big Picture) for what the app does not set: the
 controller's buttons, a game's own settings and shadPS4's game list.
+
+#### Start game
+
+The last tab, **Start game**, is a button. Choose a game in the table and click it: the game starts through Steam,
+as its shortcut in Steam starts it, and Steam starts first when it does not run. The tab you were on stays open. A
+game that is not in Steam yet is not started: the line under the tabs says to tick it and press **Update Steam**
+first.
 
 #### Quit a game
 

@@ -85,8 +85,9 @@ def test_no_user_name_on_the_screen(qapp, folders, tmp_path, monkeypatch):
     the first step, and a message with a path in it."""
     monkeypatch.setenv("HOME", str(tmp_path))
     window = _window(folders)
-    assert "<b>~/ppsspp/PSP/GAME</b>" in window.folders_state.text()
-    assert str(tmp_path) not in window.folders_state.text()
+    assert window.folders_state.text() == "<b>~/Games/PSP</b>"
+    assert window.folders_state.toolTip() == "~/Games/PSP\n1 game(s) on PPSSPP's memory stick, ~/ppsspp/PSP/GAME."
+    assert str(tmp_path) not in window.folders_info.text_
     window._job_done((False, f"PPSSPP could not be installed: {tmp_path}/emulator is read-only"))
     assert window.running.text() == "PPSSPP could not be installed: ~/emulator is read-only"
     window.close()
@@ -134,7 +135,10 @@ def test_the_apps_own_game_folders(qapp, folders, tmp_path, monkeypatch):
     window = _window({**folders, "drives": lambda: [tmp_path / "sd", tmp_path / "stick", tmp_path / "gone"]})
     assert window.folders == [tmp_path / "Games" / "PSP", tmp_path / "sd" / "Games" / "PSP"]
     text = window.folders_state.text()
-    assert "<b>~/Games/PSP</b>" in text and "<b>~/sd/Games/PSP</b>" in text
+    assert text == "<b>~/Games/PSP</b>, <b>~/sd/Games/PSP</b>"                 # what goes there: the info symbol
+    assert window.folders_info.text_ == ("Drop your games in ~/Games/PSP, .ISO, .CSO or .CHD, folders with an "
+                                         "EBOOT.PBP. A USB drive or an SD card with a Games/PSP folder is also "
+                                         "checked for content.")
     assert str(tmp_path) not in text and "folders" not in window.settings.DEFAULTS
     window.close()
 
@@ -295,7 +299,8 @@ def test_the_blue_look(qapp, folders):
         assert sheet.rfind(f"border-left-color:{style.BLUE}") > sheet.rfind(OUTLINE) >= 0, pill.caption.text()
         assert style.HOVER_SHEEN in sheet and style.BLUE_TINT not in sheet
     assert "QTabBar::tab" in window.styleSheet() and "QComboBox" in window.styleSheet()
-    assert [window.tabs.tabText(i) for i in range(window.tabs.count())] == ["Your games", "Settings", "Log"]
+    assert [window.tabs.tabText(i) for i in range(window.tabs.count())] == ["Your games", "Settings", "Log",
+                                                                            "Start game"]
     window.close()
 
 
@@ -442,4 +447,39 @@ def test_the_settings_tab(qapp, folders):
     running[0] = True
     page.widgets["fps"].setChecked(True)
     assert "iShowStatusFlags" not in ini.read_text() and "PPSSPP is running" in page.status.text()
+    window.close()
+
+
+def test_start_game_starts_the_chosen_game_through_steam(qapp, folders, monkeypatch):
+    """The Start game tab (owner, 12-11-2026), a tab that is a button: a click starts the game chosen under Your
+    games through Steam, by its shortcut's number, and the open tab stays open. Without a chosen game, or with one
+    that is not in Steam yet, it says what to do first and starts nothing."""
+    _install(folders["home"])
+    monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: QMessageBox.StandardButton.Yes)
+    opened = []
+    window = _window(folders, open_url=lambda url: opened.append(url) or True)
+    tabs, start = window.tabs, window.start_tab.index
+    assert start == tabs.count() - 1 and tabs.tabText(start) == "Start game" and "Steam" in tabs.tabToolTip(start)
+    window.table.clearSelection()
+    tabs.tabBarClicked.emit(start)                                           # no game chosen
+    assert opened == [] and window.running.text().startswith("Choose a game under Your games first")
+    window.table.selectRow(0)
+    title = window.chosen().title
+    tabs.tabBarClicked.emit(start)                                           # chosen, but not in Steam yet
+    assert opened == [] and window.running.text() == (f"{title} is not in Steam yet: tick it and press Update Steam "
+                                                      "first.")
+    window.table.item(0, 0).setCheckState(Qt.CheckState.Checked)
+    window.on_update_steam()
+    _wait(window, qapp)
+    window.table.selectRow(0)
+    (name,) = shortcuts.in_steam(folders["steam_dir"]).values()
+    tabs.setCurrentIndex(1)
+    tabs.tabBarClicked.emit(start)                                           # a click on the tab
+    tabs.setCurrentIndex(start)                                              # as the click goes on to select it
+    assert opened == [steam.play_url(steam.appid(f'"{folders["run"]}"', name))]
+    assert opened[0].startswith("steam://rungameid/") and window.running.text() == f"Steam starts {title}."
+    assert tabs.currentIndex() == 1                                          # Settings is still open
+    window.open_url = lambda url: False
+    window.on_start_game()
+    assert window.running.text() == f"{title} could not be started: xdg-open is missing."
     window.close()

@@ -440,6 +440,16 @@ def _number(item: dict) -> int:
     return appid(str(field(item, "Exe")), str(field(item, "AppName")))
 
 
+def shortcut_number(steam: Path, ours: Match) -> int | None:
+    """The appid of the shortcut *ours* recognizes, as Steam's file has it for the first user with one (its 32
+    bits, for play_url()); from its program and name when the file names none. None when no user has the shortcut."""
+    for item in shortcuts(steam):
+        if ours(item):
+            number = field(item, "appid", None)
+            return (number if isinstance(number, int) else _number(item)) & 0xFFFFFFFF
+    return None
+
+
 def write_shortcuts(steam: Path, changes: Sequence[Change]) -> list[int]:
     """For every Steam user: the shortcuts in shortcuts.vdf and their artwork in grid/, each file written once.
     A shortcut renamed gets a new number, so the artwork under its old one goes. Steam must be closed. Returns the

@@ -8,11 +8,12 @@ Steam's files run off the GUI thread; nothing here needs root. The look is the a
 artwork… takes the suite's SteamGridDB API key, with which Update Steam looks up the pictures for each game first
 (core's covers).
 
-Everything about PCSX2 is done here (owner, 24-10-2026): the app never opens PCSX2's own window and has no Play
-button, a game is started from Steam. While PCSX2 is installed and not running, the window keeps PCSX2's settings
-at what the app owns (pcsx2_settings.py), so a game started from Steam goes straight into the game. What the
-window says it also writes to the app's log (core's applog), shown in the Log tab; PCSX2's last run (the game, the
-play time, the controller, from PCSX2's own log) goes there too, once, when the window next looks."""
+Everything about PCSX2 is done here (owner, 24-10-2026): the app never opens PCSX2's own window and a game runs from
+Steam: the last tab, Start game, starts the chosen one there (owner, 12-11-2026). While PCSX2 is installed and not
+running, the window keeps PCSX2's settings at what the app owns (pcsx2_settings.py), so a game started from Steam goes
+straight into the game. What the window says it also writes to the app's log (core's applog), shown in the Log tab;
+PCSX2's last run (the game, the play time, the controller, from PCSX2's own log) goes there too, once, when the window
+next looks."""
 
 from __future__ import annotations
 
@@ -30,11 +31,12 @@ from PyQt6.QtWidgets import (QAbstractItemView, QDialog, QComboBox, QGridLayout,
 from bc250_core import SUITE_MANUAL_URL, applog, covers, sound, steam, upstream, window_title
 from bc250_core import __version__ as CORE_VERSION
 from bc250_core import keep, renamed
+from bc250_core.action_tab import ActionTab
 from bc250_core.keep_dialog import KeepDialog
-from bc250_core.platform import bin_home, private
+from bc250_core.platform import bin_home, private, xdg_open
 from bc250_core.settings import SettingsStore
 from bc250_core.updates import ReleaseInfo, UpdateChecker
-from bc250_core.widgets import AppHeader, MetricBox, StatusText, Terminal, WrappedLabel, hint_label
+from bc250_core.widgets import AppHeader, InfoButton, MetricBox, StatusText, Terminal, WrappedLabel, hint_label
 
 from . import APP_ID, APP_NAME, INFO, LOGO_PATH, __version__, catalogue, controllers, emulator, library, memcards
 from . import pcsx2_settings
@@ -46,6 +48,7 @@ from .settings_page import SettingsPage
 
 MANUAL_URL = f"{SUITE_MANUAL_URL}apps/pcsx2/"
 STEAM_TIP = "Add the ticked games to Steam and take out the others; Steam closes for it and starts again"
+START_TIP = "Start the game chosen under Your games through Steam, as its shortcut in Steam does"
 KINDS = {"iso": "ISO", "chd": "CHD", "cso": "CSO", "zso": "ZSO", "gz": "GZ"}
 RUNNING = "PCSX2 is running: close it first, it would write its own settings over the change."
 STEAM, GAME, SERIAL, KIND, FILE, SCREEN = range(6)          # the table's columns (the screen last; owner)
@@ -63,6 +66,20 @@ class Pcsx2Settings(SettingsStore):
     DEFAULTS: dict = {"session_logged": ""}     # PCSX2's log as last written into the app's log (its time)
 
 
+def _with_info(state: QLabel, info: InfoButton) -> QWidget:
+    """A state line with its info symbol right after it, at the top of its first line. The line is short, so it
+    keeps to one line: wrapped, it took the narrowest width beside the symbol."""
+    state.setWordWrap(False)
+    row = QWidget()
+    layout = QHBoxLayout(row)
+    layout.setContentsMargins(0, 0, 0, 0)
+    layout.setSpacing(6)
+    layout.addWidget(state)
+    layout.addWidget(info, 0, Qt.AlignmentFlag.AlignTop)
+    layout.addStretch(1)
+    return row
+
+
 class MainWindow(QMainWindow):
     CONTROLLER_POLL = 3000                  # ms: how often the window looks for a controller
 
@@ -73,7 +90,8 @@ class MainWindow(QMainWindow):
                  covers_home: Path | None = None, covers_get: covers.Get = covers._get,
                  covers_key: Path | None = None, log_path: Path | None = None,
                  devices: Path = controllers.DEVICES, sound_state: Path | None = None,
-                 user_home: Path | None = None, drives: Callable[[], list[Path]] = library.removable_drives):
+                 user_home: Path | None = None, drives: Callable[[], list[Path]] = library.removable_drives,
+                 open_url=xdg_open):
         """*home*: where the app installs PCSX2; *pcsx2_home*: PCSX2's own folder; *steam_dir*: Steam's folder
         (None: looked up); *run*: the run wrapper the shortcuts start; *fetch*: the download; *steam_closed* and
         *steam_running*: closing Steam for a change and asking whether it runs; *newer_release*: asks GitHub for a
@@ -83,7 +101,7 @@ class MainWindow(QMainWindow):
         it (__main__ set it up); *devices*: the kernel's list of input devices, for the controller state;
         *sound_state*: WirePlumber's file with the volume the desktop remembers for PCSX2 (tests pass their own);
         *user_home*: the home folder with the app's own game folder, Games/PS2 (library.fixed); *drives*: the
-        removable drives looked at for one."""
+        removable drives looked at for one; *open_url*: opens a URL on the desktop (Start game's steam:// address)."""
         super().__init__()
         self.resize(980, 800)
         self.home = home or emulator.emulator_home()
@@ -93,6 +111,7 @@ class MainWindow(QMainWindow):
         self.fetch = fetch
         self.steam_closed = steam_closed
         self.steam_running = steam_running
+        self.open_url = open_url
         self.covers_home = covers_home or covers.covers_home(APP_ID)
         self.covers_get = covers_get
         self.covers_key = covers_key
@@ -185,13 +204,17 @@ class MainWindow(QMainWindow):
         grid.setHorizontalSpacing(14)
         grid.setVerticalSpacing(6)
         self.emulator_state, self.bios_state, self.folders_state = (self._state_label() for _ in range(3))
+        # The game folders by name, what goes in them behind the info symbol (owner, 12-11-2026).
+        self.folders_info = InfoButton("", "About the game folder")
+        self.bios_info = InfoButton("", "About the BIOS")
+        infos = {self.bios_state: self.bios_info, self.folders_state: self.folders_info}
         for row, (name, state) in enumerate((("PCSX2", self.emulator_state), ("BIOS", self.bios_state),
                                              ("Game folder", self.folders_state))):
             label = QLabel(name)
             label.setStyleSheet("font-weight:700;")
             label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
             grid.addWidget(label, row, 0)
-            grid.addWidget(state, row, 1)
+            grid.addWidget(_with_info(state, infos[state]) if state in infos else state, row, 1)
 
         self.table = QTableWidget(0, 6)
         self.table.setHorizontalHeaderLabels(["In Steam", "Game title", "Id", "Type", "File name",
@@ -252,6 +275,8 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(self.settings_page, "Settings")
         self.tabs.addTab(self.memcard_page, "Memory cards")
         self.tabs.addTab(log_page, "Log")
+        # Start game (owner, 12-11-2026): the last tab is a button, which starts the chosen game in Steam
+        self.start_tab = ActionTab(self.tabs, "Start game", START_TIP, self.on_start_game)
 
         self.running = WrappedLabel()
         self.running.setStyleSheet("font-weight:600;")
@@ -449,18 +474,22 @@ class MainWindow(QMainWindow):
             self.bios_state.setText(f"PCSX2 uses <b>{escape(used)}</b>"
                                     + (f"; also there: {escape(', '.join(others))}." if others else "."))
         else:
-            self.bios_state.setText("No BIOS yet. PCSX2 needs the PS2's BIOS to start any game: dump it from your "
-                                    f"own console ({page} says how), then put the .bin, with the files beside it, in "
-                                    f"<b>{escape(private(library.bios_home(self.user_home)))}</b>: the app copies it "
-                                    "into PCSX2.")
+            self.bios_state.setText("No BIOS found")
+        # What the BIOS is for and where it goes: the info symbol (owner, 12-11-2026)
+        self.bios_info.set_text("PCSX2 needs the PS2's BIOS to start any game: dump it from your own console "
+                                f"({page} says how), then put the .bin, with the files beside it, in "
+                                f"{escape(private(library.bios_home(self.user_home)))}: the app copies it into "
+                                "PCSX2.")
         self.bios_state.setToolTip(f"PCSX2's BIOS folder: {self.bios_dir}")
         self.bios_state.setOpenExternalLinks(True)
 
         # The app's own folders (owner, 03-11-2026): the home folder's, and a removable drive's when it has one.
         where = ", ".join(f"<b>{escape(private(f))}</b>" for f in self.folders)
-        self.folders_state.setText(f"{where}: put your games there (ISO, CHD, CSO, ZSO or GZ images, in folders too), "
-                                   f"and your BIOS dump in <b>{escape(private(library.bios_home(self.user_home)))}</b>. "
-                                   "A USB drive or an SD card with a Games/PS2 folder on it is looked in too.")
+        self.folders_state.setText(where)
+        self.folders_info.set_text(f"Drop your games in {escape(private(self.user_home / library.GAMES_HOME))}, .ISO, "
+                                   ".CHD, .CSO, .ZSO or .GZ. Drop your own BIOS in "
+                                   f"{escape(private(library.bios_home(self.user_home)))}. A USB drive or an SD card "
+                                   "with a Games/PS2 folder is also checked for content.")
         self.folders_state.setToolTip("\n".join(private(f) for f in self.folders))
         self.games_box.set_value(str(len(self.games)))
         found = {str(g.file) for g in self.games}
@@ -711,6 +740,26 @@ class MainWindow(QMainWindow):
                 text += f" Not deleted: {', '.join(failed)}."
             return not failed, text
         self._start(f"Deleting {title}…", job)
+
+    def on_start_game(self) -> None:
+        """The Start game tab (owner, 12-11-2026): the chosen game started through Steam, as its shortcut there
+        starts it (steam://rungameid/ with the shortcut's number; Steam starts first when it does not run)."""
+        game = self.chosen()
+        if game is None:
+            self.say("Choose a game under Your games first: Start game starts the chosen one in Steam.", ok=False)
+            return
+        if self.worker.running:
+            self.say("Wait until what runs now has finished, then start the game.", ok=False)
+            return
+        number = (steam.shortcut_number(self.steam_dir, shortcuts.for_game(game))
+                  if self.steam_dir is not None and str(game.file) in self.in_steam else None)
+        if number is None:
+            self.say(f"{game.title} is not in Steam yet: tick it and press Update Steam first.", ok=False)
+            return
+        if self.open_url(steam.play_url(number)):
+            self.say(f"Steam starts {game.title}.")
+        else:
+            self.say(f"{game.title} could not be started: xdg-open is missing.", ok=False)
 
     def on_update_steam(self) -> None:
         if self.steam_dir is None:

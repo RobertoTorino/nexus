@@ -1,3 +1,12 @@
+Changelog: 12-11-2026 13:24:26
+
+Added. Escape closes the window, as its close button does, and so does B on a controller (owner, 12-11-2026: inside
+the apps the B button and the Escape key exit the app, as they exit the portal): an open menu first, then a question
+or a dialog, then the window. A key the window takes for itself comes first, and a window that is busy still asks
+before it closes. B is read with pygame-ce from the suite's venv, only while the app has the focus and has had it for
+half a second, so the press that closed another app does not close this one too; without pygame-ce or a controller
+there is Escape alone. __main__ calls core's exit_keys's install().
+
 Changelog: 12-11-2026 11:38:58
 
 Release 0.1.1.

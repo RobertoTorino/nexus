@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The apps that are not on bc250_core yet carry copies of core's instance.py, upstream.py and theme.py: the copies
-must not drift. Only the SPDX line may differ (acpi is MIT)."""
+"""The apps that are not on bc250_core yet carry copies of core's instance.py, upstream.py, theme.py and exit_keys.py:
+the copies must not drift. Only the SPDX line may differ (acpi is MIT)."""
 
 from __future__ import annotations
 
@@ -15,6 +15,8 @@ UPSTREAM = SUITE / "core" / "bc250_core" / "upstream.py"
 UPSTREAM_COPIES = sorted(SUITE.glob("*/apps/*/*/upstream.py"))
 THEME = SUITE / "core" / "bc250_core" / "theme.py"
 THEME_COPIES = sorted(SUITE.glob("*/apps/*/*/theme.py"))
+EXIT_KEYS = SUITE / "core" / "bc250_core" / "exit_keys.py"
+EXIT_KEYS_COPIES = sorted(SUITE.glob("*/apps/*/*/exit_keys.py"))
 
 
 def body(path: Path) -> str:
@@ -29,6 +31,7 @@ def test_copies_exist():
             "cores_unlock", "oc_bisect", "locked_acpi"} <= packages
     assert {p.parent.name for p in UPSTREAM_COPIES} >= {"upscaler"}
     assert {p.parent.name for p in THEME_COPIES} == {p.parent.name for p in COPIES}
+    assert {p.parent.name for p in EXIT_KEYS_COPIES} == {p.parent.name for p in COPIES}
 
 
 @pytest.mark.parametrize("copy", [p for p in COPIES if p.parent.name != "gpu_governor"],
@@ -45,3 +48,8 @@ def test_upstream_copy_matches_core(copy):
 @pytest.mark.parametrize("copy", THEME_COPIES, ids=lambda p: str(p.relative_to(SUITE)))
 def test_theme_copy_matches_core(copy):
     assert body(copy) == body(THEME), f"{copy.relative_to(SUITE)} differs from core/bc250_core/theme.py"
+
+
+@pytest.mark.parametrize("copy", EXIT_KEYS_COPIES, ids=lambda p: str(p.relative_to(SUITE)))
+def test_exit_keys_copy_matches_core(copy):
+    assert body(copy) == body(EXIT_KEYS), f"{copy.relative_to(SUITE)} differs from core/bc250_core/exit_keys.py"

@@ -1,3 +1,11 @@
+Changelog: 12-11-2026 13:24:26
+
+Added. Escape closes the window, as its close button does (owner, 12-11-2026: inside the apps the Escape key exits the
+app, as it exits the portal): a key the window takes for itself comes first, a dialog and a menu keep their own
+Escape, and a window that is busy still asks before it closes. A controller's B does not close this app, as it does
+the others: the controller is the game's while it streams. The stream's window keeps every key for the game, Escape
+among them (exit_keys = False). __main__ calls core's exit_keys' install() with controller=False.
+
 Changelog: 12-11-2026 11:38:58
 
 Release 2.0.3.

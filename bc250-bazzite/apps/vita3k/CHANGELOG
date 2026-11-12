@@ -1,3 +1,35 @@
+Changelog: 12-11-2026 14:22:00
+
+Fixed. The Settings tab no longer opens with a line of explanation above its boxes (owner, 12-11-2026: no long lines of
+text in the window); the boxes start at the top. What the line said is in the wiki chapter's Settings section.
+
+Changelog: 12-11-2026 14:00:06
+
+Added. The Firmware line is the state alone (owner, 12-11-2026: as shadPS4 Manager's; no long lines of text in the
+window): Installed or Not installed, and under it System software, Font package and Preinstalled apps, each installed or
+not installed. Where the files go (~/Games/Vita/Firmware) and the links to download each are behind an info symbol
+beside it. The Games line became Game folder: it names ~/Games/Vita, and a removable drive's Games/Vita, with what goes
+there behind its own info symbol; how many games Vita3K has installed, and where, moved to the line's tooltip. The wiki
+chapter's Firmware and Game folder lines say so.
+
+Changelog: 12-11-2026 13:24:27
+
+Added. A tab Start game (owner, 12-11-2026: in the game apps a tab that starts the selected game in Steam): the last
+tab is a button (core's ActionTab). A click starts the game chosen under Your games through Steam, as its shortcut
+there does: the shortcut's number is read from Steam's file (core's steam.shortcut_number) and steam://rungameid/ is
+opened for it, so Steam starts first when it does not run. The tab that was open stays open, and the keyboard passes
+the tab by. Without a chosen game, or with one that is not in Steam yet, the line under the tabs says what to do first
+and nothing starts. The wiki chapter has a Start game section; "The app has no Play button" is gone from it.
+
+Changelog: 12-11-2026 13:24:26
+
+Added. Escape closes the window, as its close button does, and so does B on a controller (owner, 12-11-2026: inside
+the apps the B button and the Escape key exit the app, as they exit the portal): an open menu first, then a question
+or a dialog, then the window. A key the window takes for itself comes first, and a window that is busy still asks
+before it closes. B is read with pygame-ce from the suite's venv, only while the app has the focus and has had it for
+half a second, so the press that closed another app does not close this one too; without pygame-ce or a controller
+there is Escape alone. __main__ calls core's exit_keys's install().
+
 Changelog: 12-11-2026 11:38:59
 
 Release 3.0.3.

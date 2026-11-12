@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The header's shortcuts (owner, 12-11-2026): Steam, the file manager, YouTube, and the desktop's Bluetooth and
-network settings, each a symbol that starts a program outside the suite. What to start is found here, from what the
+"""The header's shortcuts (owner, 12-11-2026): the file manager, Steam, YouTube, and the desktop's Bluetooth,
+network, sound and display settings, each a symbol that starts a program outside the suite. What to start is found here, from what the
 machine has: Steam's own launcher, the desktop's file manager on the home folder (xdg-open, whichever desktop),
 YouTube fullscreen in Brave Browser's kiosk mode (its Flatpak, which must be installed), and the settings of KDE
 Plasma (System Settings, else the module alone) or of GNOME. A shortcut whose program is missing raises Missing
@@ -24,6 +24,12 @@ SETTINGS = {
     "network": (("systemsettings", ("kcm_networkmanagement",), "systemsettings"),
                 ("kcmshell6", ("kcm_networkmanagement",), "kcmshell6"),
                 ("gnome-control-center", ("network",), "org.gnome.Settings")),
+    "sound": (("systemsettings", ("kcm_pulseaudio",), "systemsettings"),
+              ("kcmshell6", ("kcm_pulseaudio",), "kcmshell6"),
+              ("gnome-control-center", ("sound",), "org.gnome.Settings")),
+    "display": (("systemsettings", ("kcm_kscreen",), "systemsettings"),
+                ("kcmshell6", ("kcm_kscreen",), "kcmshell6"),
+                ("gnome-control-center", ("display",), "org.gnome.Settings")),
 }
 
 # Looked up when called, so a test can replace them.
@@ -73,7 +79,7 @@ def youtube(run: Run | None = None) -> Start:
 
 
 def settings(page: str, which: Which | None = None) -> Start:
-    """The desktop's settings on *page*: "bluetooth" or "network"."""
+    """The desktop's settings on *page*: "bluetooth", "network", "sound" or "display"."""
     for program, arguments, app_id in SETTINGS[page]:
         if (which or shutil.which)(program) is not None:
             return Start([program, *arguments], (app_id,))
@@ -87,3 +93,11 @@ def bluetooth_settings() -> Start:
 
 def network_settings() -> Start:
     return settings("network")
+
+
+def sound_settings() -> Start:
+    return settings("sound")
+
+
+def display_settings() -> Start:
+    return settings("display")

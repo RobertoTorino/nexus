@@ -75,9 +75,11 @@ def main() -> int:
         return load_all(args.auto)
 
     from bc250_core.app import create_app, exec_app
+    from bc250_core import exit_keys
 
     from .main_window import MainWindow
     app = create_app(INFO, qt_args)
+    exit_keys.install(app)                  # Escape and a controller's B close the window
     if instance.already_running(INFO.app_id):
         return 0
     window = MainWindow()

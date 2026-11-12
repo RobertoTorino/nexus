@@ -8,6 +8,7 @@ import sys
 
 from bc250_core import __version__ as CORE_VERSION, applog, instance
 from bc250_core.app import create_app, exec_app
+from bc250_core import exit_keys
 
 from . import APP_ID, APP_NAME, INFO, __version__
 
@@ -24,6 +25,7 @@ def main() -> int:
         return gone.show_dialog(INFO, APP_NAME, Path(args.gone), qt_args)
 
     app = create_app(INFO, qt_args)
+    exit_keys.install(app)                  # Escape and a controller's B close the window
     if instance.already_running(INFO.app_id):
         return 0
     log_path = applog.setup(APP_ID, private=True)         # the user's folders as ~: no user name in the log

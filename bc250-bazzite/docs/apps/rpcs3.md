@@ -6,8 +6,8 @@
 
 Plays **PS3 games** on the **AMD BC-250** with [RPCS3](https://rpcs3.net), an open-source PS3 emulator. The app
 installs the RPCS3 build it was tried with, takes the PS3's firmware, finds your games and adds them to Steam, so a
-game starts straight away, on the desktop or from Steam's **Big Picture Mode** (Game Mode on a handheld). The app
-has no Play button: a game is started from Steam. The app sets RPCS3 up for that: its welcome dialog and its own
+game starts straight away, on the desktop or from Steam's **Big Picture Mode** (Game Mode on a handheld). A game runs from Steam:
+[**Start game**](#start-game) starts the chosen one there. The app sets RPCS3 up for that: its welcome dialog and its own
 update check off, player 1 on your controller, each game's screen. RPCS3 installs the firmware and the packages
 itself, without opening its window; its own window opens only for [RPCS3's settings](#rpcs3s-settings).
 
@@ -41,7 +41,8 @@ pills does the setting up, each with what it is for on top and what it does unde
 Uninstall** and **Games Install**. Your disc games and the firmware go into the app's own folder (see [Where your
 games go](#where-your-games-go)); nothing is chosen or browsed to for them. Four lines below the pills say where
 each stands, short, with more in their tooltips, and then come three tabs: **Your games**, **Settings** and
-**Log**.
+**Log**, and
+**Start game**, a tab that is a button.
 
 - **RPCS3**: **Not installed.** or **Installed.**, with the button to use under it; the version box in the header
   shows the version installed. The tooltip says which build is installed, or what Install takes; when this version of
@@ -151,6 +152,13 @@ SteamGridDB for each game instead; the background and the logo on the game's pag
 [Covers from SteamGridDB](covers.md) for the key, how a game is looked up and how to use a cover of your own.
 
 **Steam** in the line under the table is a link: it opens Steam's library (Steam starts when it does not run).
+
+#### Start game
+
+The last tab, **Start game**, is a button. Choose a game in the table and click it: the game starts through Steam,
+as its shortcut in Steam starts it, and Steam starts first when it does not run. The tab you were on stays open. A
+game that is not in Steam yet is not started: the line under the tabs says to tick it and press **Update Steam**
+first.
 
 ### Settings
 

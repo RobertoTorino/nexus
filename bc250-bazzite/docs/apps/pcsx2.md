@@ -8,8 +8,8 @@ Plays **PS2 games** on the **AMD BC-250** with [PCSX2](https://pcsx2.net), an op
 installs the PCSX2 release it was tried with and sets it up, takes your PS2 BIOS, finds your games and adds them to
 Steam, so a game starts straight away, on the desktop or from Steam's **Big Picture Mode** (Game Mode on a
 handheld). Everything about PCSX2 is done in the app: its [settings](#settings), the
-[memory cards](#memory-cards), each game's [screen](#screen). PCSX2's own window is never needed, and the app has
-no Play button: a game is started from Steam.
+[memory cards](#memory-cards), each game's [screen](#screen). PCSX2's own window is never needed, and a game runs from
+Steam: [**Start game**](#start-game) starts the chosen one there.
 
 Whether a game runs, and how well, is up to PCSX2. Its
 [compatibility list](https://pcsx2.net/compat) shows what others found.
@@ -39,7 +39,8 @@ Under the introduction, which links to **PCSX2's release notes** and to this wik
 setting up, each with what it is for on top and what it does under it: **PCSX2 Install**, **PCSX2 Uninstall** and
 **BIOS Uninstall**. Your games and your BIOS dump go into the app's own folder (see [Where your games
 go](#where-your-games-go)); nothing is chosen or browsed to. Three lines below the pills say where each stands,
-and then come four tabs: **Your games**, **Settings**, **Memory cards** and **Log**.
+and then come four tabs: **Your games**, **Settings**, **Memory cards** and **Log**, and
+**Start game**, a tab that is a button.
 
 - **PCSX2**: **Not installed.** or **Installed.**, with the button to use under it. The tooltip says which release
   is installed, or what Install takes; when this version of the app brings another release, the tooltip and the
@@ -47,13 +48,15 @@ and then come four tabs: **Your games**, **Settings**, **Memory cards** and **Lo
   stable release this version of the app was tried with, checked against its checksum before it is installed. The
   app then sets PCSX2 up; see [PCSX2's settings](#pcsx2s-settings). **Uninstall** takes it out again; PCSX2's own
   folder, with the BIOS, your memory cards and settings, stays.
-- **BIOS**: the BIOS PCSX2 uses, by name. Put your dump in `~/Games/PS2/BIOS`, with the files beside it under
+- **BIOS**: the BIOS PCSX2 uses, by name, or **No BIOS found**; the **i** beside it says what PCSX2 needs it for
+  and where it goes. Put your dump in `~/Games/PS2/BIOS`, with the files beside it under
   the same name (such as `.NVM` and `.MEC`; only the `.bin` is needed): the app copies it into PCSX2's `bios`
   folder by itself, when the window opens and on **Refresh**, and PCSX2 uses it. **Uninstall** takes a dump out
   of PCSX2's folder and out of `~/Games/PS2/BIOS` again, with those files, and PCSX2 uses another dump in the
   folder when there is one. PCSX2's folder is in the tooltip.
-- **Game folder**: where the app looks for games, `~/Games/PS2` and a removable drive's `Games/PS2`. Games in
-  subfolders are found too, up to five folders deep, so a folder per game is fine.
+- **Game folder**: where the app looks for games, `~/Games/PS2` and a removable drive's `Games/PS2`; the **i**
+  beside them says what goes there. Games in subfolders are found too, up to five folders deep, so a folder per
+  game is fine.
 
 ### Where your games go
 
@@ -143,6 +146,13 @@ With a SteamGridDB API key, entered under **Steam artwork…**, the app takes th
 SteamGridDB instead of drawing them: the cover, the wide picture, the banner and the logo. A picture SteamGridDB
 does not have stays drawn. The title the app looks up is the game's title in the list. See
 [Covers from SteamGridDB](covers.md) for the key, how a game is looked up and how to use a picture of your own.
+
+#### Start game
+
+The last tab, **Start game**, is a button. Choose a game in the table and click it: the game starts through Steam,
+as its shortcut in Steam starts it, and Steam starts first when it does not run. The tab you were on stays open. A
+game that is not in Steam yet is not started: the line under the tabs says to tick it and press **Update Steam**
+first.
 
 ### Settings
 

@@ -16,7 +16,7 @@ from PyQt6.QtWidgets import QApplication
 
 from . import APP_ID, APP_NAME, DISPLAY_NAME, WINDOW_ICON_PATH, __version__
 from .backends import BACKENDS, detect_backend
-from . import instance
+from . import exit_keys, instance
 from .main_window import MainWindow
 from .profiles import ProfileStore
 from .theme import apply_theme
@@ -45,6 +45,7 @@ def main() -> int:
         return 0
 
     app = QApplication([sys.argv[0], *qt_args])
+    exit_keys.install(app)                  # Escape and a controller's B close the window
     request = instance.PROFILE + args.profile if args.profile else instance.SHOW
     if instance.already_running(request):
         if args.profile:

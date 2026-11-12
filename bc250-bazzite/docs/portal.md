@@ -15,18 +15,18 @@ to skip it.
 **The header**: the suite's icon, as large as a tile's (click it to open this wiki), its name with the version and the **Beta** stage,
 a small **i** that says where the apps install from, and a line that says in a few words what the open category is
 for, with **☰ Settings** at the top right and, in the corner beside it, **✕ Exit**, which closes the portal. Under
-them, in a row that ends level with the icon's bottom, nine big symbols. Four act on the apps: **Refresh** (two
+them, in a row, eleven big symbols. Four act on the apps: **Refresh** (two
 circling arrows: look again at which apps are installed), **Sys info** (a chip), **Install All apps** (a grid of
-apps with an arrow down) and **Install All updates** (a circular arrow around an arrow down). Five are shortcuts
-to what is outside the suite: **Steam**, **Files** (a folder), **YouTube** (a screen with a play triangle),
-**Bluetooth** and **Network**. Each is described below. Hover a symbol to see what it does. The one with the focus
-is framed in silver, as a tile is; a symbol that has nothing to do is grayed out. When you have chosen a place on
-the Settings page, the weather follows the symbols: its symbol and the place's name. On a screen 1280 pixels wide
-the symbols are drawn smaller when the row would not fit otherwise. On the right of the symbols, how many apps are
-installed, and under it the status line: the CPU's and the GPU's load and temperature, then the date and the time,
-for example **CPU 12% 54°C | GPU 3% 61°C | Thursday 11/5/26 | 07:44 PM CEST**. When the line does not fit beside
-the symbols, the date and the time move to a second line under the loads. The line at the bottom says what the keys
-and the controller's buttons do.
+apps with an arrow down) and **Install All updates** (a circular arrow around an arrow down). Seven are shortcuts
+to what is outside the suite: **Files** (a folder), **Steam**, **YouTube** (a screen with a play triangle),
+**Bluetooth**, **Network**, **Volume** (a loudspeaker) and **Screen** (a screen on its foot). Each is described
+below. Hover a symbol to see what it does. The one with the focus is framed in silver, as a tile is; a symbol that
+has nothing to do is grayed out. On a screen 1280 pixels wide the symbols are drawn smaller when the row would not
+fit otherwise. On the right of the symbols, how many apps are installed, and under it the status, a line each: the
+CPU's and the GPU's load and temperature (**CPU 12% 54°C | GPU 3% 61°C**), the date and the time (**Thursday
+11/5/26 | 07:44 PM CEST**) and, when you have chosen a place on the Settings page, the weather there (**Amsterdam
+8°C Partly cloudy**, after its symbol). The line at the bottom says what the keys and the controller's buttons
+do.
 
 **Bazzite Test** is always installed with the portal; every other app is optional. Below the header is a strip
 with a name for each [category](apps/categories.md): Sustainable, Graphics, Gaming and Utilities, and beside it
@@ -46,7 +46,8 @@ mouse:
 - **Update** (a right click, or Y on the controller): installs the tile's update or reinstall at once; an app
   that changes the board asks first. While a newer portal is out, they update the portal instead (see
   **Updates** below). A right click on a tile with nothing to update opens its menu.
-- **The tile's menu** (the Menu key, or X on the controller) holds every action: **Open** (or the
+- **The tile's menu** (the Menu key or M; on the controller the left button of the four, X on an XBOX controller
+  and Square on a PlayStation one) holds every action: **Open** (or the
   app's two windows), **Install** (an arrow into a tray; **Update**, in red, when an update is waiting;
   **Reinstall** for an installed app, in red with a circular arrow when its version is unknown) and
   **Uninstall** (a bin). What cannot be done now is grayed out. Bazzite Test has no Uninstall: it is removed
@@ -75,7 +76,7 @@ on the keyboard, to change the category. The portal always opens on the first on
 | Arrow keys | D-pad or left stick | Point | Move the focus between the tiles, the symbols and the notices |
 | Enter | A | Click | Open the app, press a symbol, open a notice |
 | U | Y | Right click | Update: the portal while a newer one is out, else the tile's app (update or reinstall) |
-| Menu key, M | X | | The tile's menu: Open, Install, Update, Reinstall, Uninstall |
+| Menu key, M | X (Square on a PlayStation controller) | | The tile's menu: Open, Install, Update, Reinstall, Uninstall |
 | Page Up, Page Down (or Q, E) | LB, RB | Click a name | The category before and after |
 | S | ☰ (Start) | Click ☰ | The Settings page, and back from it |
 | K | R3 (the right stick pressed) | | Bazzite's on-screen keyboard (Plasma Keyboard), and away again; R3 works in a question or the file dialog too |
@@ -186,10 +187,12 @@ Nexus Release Tool, Nexus Installer Tests (the installer tests one at a time), N
   the button waits for it to end.
 - **Installed apps**, on the right of the symbols: how many of the portal's apps are installed, for example
   **12/27 installed**. An app that is not available any more is not counted.
-- **The status line**, under it: the CPU's load and temperature, the GPU's load and temperature, the day, the date
-  (month/day/year) and the time with its time zone, the loads read every two seconds and the time every second (not
-  while the portal is minimized). **Clock** on the Settings page sets how the time reads. When the line does not fit
-  beside the symbols, the date and the time go on a second line. The load is the share of the last two seconds.
+- **The status**, under it, in three lines. The first: the CPU's load and temperature and the GPU's load and
+  temperature, read every two seconds. The second: the day, the date (month/day/year) and the time with its time
+  zone, read every second; **Clock** on the Settings page sets how the time reads. The third, with a place chosen
+  under **Weather** on the Settings page: the weather's symbol, the place, the temperature and the sky; without a
+  place there are two lines. Nothing is read while the portal is minimized. The load is the share of the last two
+  seconds.
   The GPU's load comes from the kernel's load sensor where there is one; the BC-250's stock kernel has none, so the
   portal adds up the GPU time of your own programs (the games and the desktop among them), or reads GPU Governor's
   corrected metrics when it has set them up. What the system does not report is left out of the line.
@@ -206,15 +209,16 @@ Nexus Release Tool, Nexus Installer Tests (the installer tests one at a time), N
   list and the board warning, each installer in its own terminal, its badge showing which one of how many. It is
   disabled once every app of the category is installed. A portal installed for the first time fills a category with
   one click.
-- **Steam**, a symbol at the top: opens Steam, or brings its window to the front when it runs already.
 - **Files**, a symbol at the top: opens the desktop's file manager (Dolphin on Bazzite's KDE Plasma) on your home
   folder.
+- **Steam**, a symbol at the top: opens Steam, or brings its window to the front when it runs already.
 - **YouTube**, a symbol at the top: opens YouTube fullscreen in Brave Browser's kiosk mode; Alt+F4 closes it. Brave
   Browser must be installed as a Flatpak (`com.brave.Browser`, from Bazzite's software store or with
   `flatpak install flathub com.brave.Browser`); without it the portal says so and opens nothing.
-- **Bluetooth** and **Network**, two symbols at the top: open the desktop's Bluetooth settings (pair or remove a
-  controller, a headset) and its network settings (the connections, Wi-Fi). On KDE Plasma that is System Settings on
-  that page, on GNOME its Settings.
+- **Bluetooth**, **Network**, **Volume** and **Screen**, four symbols at the top: open the desktop's Bluetooth
+  settings (pair or remove a controller, a headset), its network settings (the connections, Wi-Fi), its sound
+  settings (the volume, the output and the input) and its display settings (the resolution, the refresh rate, the
+  scaling). On KDE Plasma that is System Settings on that page, on GNOME its Settings.
 - **✕ Exit**, the symbol in the top right corner: closes the portal, as B and Escape do. See **Exiting** above.
 - **☰ Settings**, the symbol at the top right, or the ☰ button on the controller (Start, Options on a PlayStation
   controller): the Settings page, in place of the category strip and the tiles, under the same header. It holds
@@ -249,15 +253,15 @@ Nexus Release Tool, Nexus Installer Tests (the installer tests one at a time), N
   removes it. The menu also lists the last 10 wallpapers you chose, newest first, under **Used before**: click one to
   use it again. The portal remembers only where each picture was (in `wallpapers.json` in the same folder), so one
   moved or deleted since shows as not found until it is back.
-- **Clock**, on the Settings page, showing **12 h** or **24 h**: how the time in the status line reads. Click it for
+- **Clock**, on the Settings page, showing **12 h** or **24 h**: how the time in the status reads. Click it for
   its menu: **12-hour clock (AM/PM)** or **24-hour clock**, **Seconds** on or off, and the time zone: **the board's
   own** (the system's, as at first), **CET** (Central European Time, CEST in summer) or **UTC**. The date follows
   the zone too. The portal remembers the choice.
-- **Weather**, on the Settings page, showing the place or **None**: the weather beside the symbols at the top, from
+- **Weather**, on the Settings page, showing the place or **None**: the weather in the status at the top, from
   [Open-Meteo](https://open-meteo.com/), free and without an account. Click it, then **Choose a place…**: type a
   city or town (R3 brings the on-screen keyboard), **Search**, pick the right one from the list and **Use this
-  place**. Its symbol (sun or moon, clouds, fog, rain, snow or thunder) and its name then show beside **Install all
-  updates**; hover over it for the sky, the temperature, the wind and the humidity, and click it for the same menu.
+  place**. Its symbol (sun or moon, clouds, fog, rain, snow or thunder), its name, the temperature and the sky then
+  show as the status' third line, under the date and the time; hover over it for the wind and the humidity too.
   The weather comes again every 30 minutes while the portal is not minimized, and **Update the weather now** asks at
   once. When Open-Meteo cannot be reached, the last weather stays and its tooltip says why. **No weather** removes
   it, and nothing goes to Open-Meteo any more. Until you choose a place nothing is sent; see

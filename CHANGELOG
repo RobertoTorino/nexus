@@ -1,3 +1,14 @@
+Changelog: 12-11-2026 13:24:26
+
+Added. The BC250 Bazzite Suite (owner, 12-11-2026). Its portal: Files before Steam, two more shortcuts (Volume and
+Screen), the status in three lines (the loads, the date and time, the weather) and a line at the bottom without "X /
+Menu key". Its apps: Escape and a controller's B close the window in all 30 (core's new exit_keys; not B in the two
+Remote Play apps, USB HD Control and System Overlay), and the six emulator managers have a tab Start game, which
+starts the chosen game through Steam (core's new action_tab and steam.shortcut_number).
+tools/tests/test_instance_copies.py also keeps the copies of exit_keys.py in the apps that are not on core equal to
+core's. The Nexus page's Development chapter lists the two new core modules; the suite's wiki has the rest (the
+portal, The apps, the six managers, Architecture and consistency). The other suites did not change.
+
 Changelog: 12-11-2026 11:38:59
 
 Release 4.3.0. Brings acpi-v0.4.6, bios-v2.0.4, btpair-v0.1.1, cec-v2.0.4, check-v2.0.4, clb-v2.0.3, compute-v0.4.5, consoles-v3.0.4, cores-v0.4.6, datstation-v4.0.3, fan-v2.0.4, gpu-v0.5.4, hdcam-v2.0.4, hdcontrol-v2.0.4, ips35-v2.0.4, oc-v0.3.6, overlay-v2.0.4, pcsx2-v5.0.3, portal-v19.0.0, ppsspp-v3.0.3, rpcs3-v5.0.4, sftp-v2.0.4, shadps4-v5.1.1, ssd-v1.0.4, vita3k-v3.0.3, vram-v2.0.4, wdriver-v2.0.4, xenia-v3.0.3.

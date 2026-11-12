@@ -19,7 +19,6 @@ from PyQt6.QtWidgets import (QCheckBox, QComboBox, QFormLayout, QGridLayout, QGr
 
 from bc250_core import sound
 from bc250_core.updates import UpdateChecker
-from bc250_core.widgets import hint_label
 
 from . import rpcs3_settings, userdata
 from .rpcs3_settings import CHOICE, PERCENT, SWITCH, Setting
@@ -99,10 +98,6 @@ class SettingsPage(QWidget):
 
         lay = QVBoxLayout(self)
         lay.setContentsMargins(0, 8, 0, 0)
-        lay.addWidget(hint_label("RPCS3's settings, written into RPCS3's own settings file the moment you change "
-                                 "one, while RPCS3 does not run. A game's own settings in RPCS3 come before these. "
-                                 "How a game fills the screen is set per game, in the Your games tab.",
-                                 follow_height=True))        # its lines count in the page's minimum
         lay.addLayout(grid)
         lay.addStretch(1)
         lay.addWidget(self.status)

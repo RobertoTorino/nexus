@@ -19,7 +19,6 @@ from PyQt6.QtWidgets import (QCheckBox, QComboBox, QFormLayout, QGridLayout, QGr
 
 from bc250_core import sound
 from bc250_core.updates import UpdateChecker
-from bc250_core.widgets import hint_label
 
 from . import shadps4_settings, userdata
 from .shadps4_settings import CHOICE, PERCENT, Setting
@@ -99,10 +98,6 @@ class SettingsPage(QWidget):
 
         lay = QVBoxLayout(self)
         lay.setContentsMargins(0, 8, 0, 0)
-        intro = hint_label("shadPS4's settings, written into its own settings file the moment you change one, "
-                           "while shadPS4 does not run.", follow_height=True)   # its lines count in the minimum
-        intro.setToolTip("A game's own settings in shadPS4 (made in shadPS4's own window) come before these.")
-        lay.addWidget(intro)
         lay.addLayout(grid)
         lay.addStretch(1)
         lay.addWidget(self.status)

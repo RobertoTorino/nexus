@@ -6,7 +6,8 @@
 
 It opens the portal's view offscreen on the apps.toml and the icons of this checkout, in a home folder of its
 own (nothing is installed or changed on this computer), with a fixed demo state: every app installed but two, one
-update (the notice and the red count on its category), a fixed status line and Sustainable open. Then it saves the
+update (the notice and the red count on its category), a fixed status (the loads, the clock and the weather of a
+place) and Sustainable open. Then it saves the
 window as WebP, by default over docs/images/home/portal.webp. The wiki's workflow runs it before every build, so the published
 picture always shows the portal as it is on main; run it by hand to see the same picture locally.
 
@@ -32,6 +33,7 @@ CATEGORY = "sustainable"        # the category that is open
 UPDATED = "gpu"                 # the app with an update
 NOT_INSTALLED = {"oc", "acpi"}  # gray on the open tab, as an app that is not installed looks
 LOADS, CLOCK = "CPU 12% 54°C | GPU 3% 61°C", "Thursday 11/5/26 | 07:44 PM CEST"   # not the runner's own
+PLACE, WEATHER, SKY = "Amsterdam", "8°C  Partly cloudy", "partly"     # the status' third line: nothing is asked
 WEBP_QUALITY = 85
 
 sys.path[:0] = [str(SUITE / "portal"), str(ROOT / "core")]
@@ -68,7 +70,7 @@ def render(home: Path):
     from PyQt6.QtGui import QImage
 
     from bc250_core.platform import expand
-    from bc250_portal import MANIFEST
+    from bc250_portal import MANIFEST, glyphs
     from bc250_portal import main_window as mw
     from bc250_portal.manifest import load
     from bc250_portal.sources import Records, Sources
@@ -87,6 +89,7 @@ def render(home: Path):
     window.big.bar.setCurrentIndex(window.big.categories.index(CATEGORY))
     window.status_timer.stop()
     window.big.set_status(LOADS, CLOCK)
+    window.big.set_weather(PLACE, WEATHER, glyphs.weather(SKY), True, "")
     window.resize(*SIZE)
     window.show()
     for _ in range(3):                                  # the layout, the reflow it starts, the start-up timers

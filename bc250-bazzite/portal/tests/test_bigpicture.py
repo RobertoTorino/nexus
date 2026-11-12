@@ -315,6 +315,26 @@ def test_no_mode_is_kept_and_nothing_switches(made):
     assert "F11" not in bigpicture.LEGEND and "mode" not in bigpicture.LEGEND.lower()
 
 
+def test_b_right_after_the_focus_came_back_is_the_press_that_closed_an_app(made, monkeypatch):
+    """B closes an app (owner, 12-11-2026), and the portal behind it gets the focus at once and reads the same
+    controller: that press must not close the portal too. Another button acts at once, and B after a moment."""
+    window, pad = made()
+    start(window)
+    monkeypatch.setattr(QApplication, "activeWindow", staticmethod(lambda: window))
+    now = [1000.0]
+    monkeypatch.setattr(mw.time, "monotonic", lambda: now[0])
+    window._focus_changed(Qt.ApplicationState.ApplicationActive)
+    now[0] += mw.BACK_GRACE_S / 2
+    category = window.big.bar.currentIndex()
+    pad.queue = [("button", "b", True), ("button", "b", False), ("button", "rightshoulder", True)]
+    window.gamepad.poll()
+    assert window.isVisible() and window.big.bar.currentIndex() != category
+    now[0] += mw.BACK_GRACE_S
+    pad.queue = [("button", "b", True), ("button", "b", False)]
+    window.gamepad.poll()
+    assert not window.isVisible()
+
+
 def test_escape_and_b_close_the_portal_but_skip_the_intro_first(made, monkeypatch):
     """Escape closes the portal (owner, 01-11-2026: "ESC does not close the board"), B too with nothing open, without
     a question (owner, 12-11-2026); while the intro plays, either skips it instead."""
@@ -373,12 +393,11 @@ def test_without_an_audio_output_the_pill_is_disabled_with_a_reason(made):
 def test_the_header_has_big_symbols_with_the_status_on_their_right(made):
     """Big symbols in place of the pills (owner, 05-11-2026): all the same square size, their row ending at the bottom
     of the suite's icon; ☰ at the top right, level with the title, and the close symbol in the corner beside it
-    (owner, 12-11-2026); on the right of the symbols the installed count over the status line. Scaled with the view
+    (owner, 12-11-2026); on the right of the symbols the installed count over the status. Scaled with the view
     on a handheld's screen."""
     window, _ = made()
-    symbols = window.header_buttons[:-1]                # the weather follows them, with a place chosen
-    assert len(symbols) == 9 and all(isinstance(s, bigpicture.SymbolButton) for s in symbols)
-    assert isinstance(window.header_buttons[-1], bigpicture.WeatherButton) and window.weather_button.isHidden()
+    symbols = window.header_buttons
+    assert len(symbols) == 11 and all(isinstance(s, bigpicture.SymbolButton) for s in symbols)
     window.show()
     window.resize(1920, 1080)
     QApplication.processEvents()
@@ -399,7 +418,11 @@ def test_the_header_has_big_symbols_with_the_status_on_their_right(made):
     window.resize(1280, 720)
     QApplication.processEvents()
     QApplication.processEvents()
-    assert big.scale < 1 and {s.width() for s in symbols} == {round(bigpicture.SYMBOL_PX * big.scale)}
+    # Scaled with the view, or smaller still where eleven symbols and the status would not fit 1280 px (the width
+    # of the status depends on the font), all the same size
+    sides = {s.width() for s in symbols}
+    assert big.scale < 1 and len(sides) == 1
+    assert bigpicture.SYMBOL_SMALLEST * bigpicture.SYMBOL_PX <= min(sides) <= round(bigpicture.SYMBOL_PX * big.scale)
     assert abs(bottom(symbols[0]) - bottom(big.logo)) <= 2                # scaled with the view, still aligned
 
 
@@ -722,8 +745,9 @@ def test_an_install_stays_in_the_view(made, monkeypatch):
 def test_the_legend_names_the_keys(made):
     window, _ = made()
     text = window.big.keys.text()
-    assert "A / Enter" in text and "Y / Right click  Update" in text and "X / Menu key" in text and "LB / RB" in text \
-        and "B / Esc" in text
+    assert "A / Enter" in text and "Y / Right click  Update" in text and "LB / RB" in text and "B / Esc" in text
+    # ☰ is the one menu it names (owner, 12-11-2026): X is the button that opens on a PlayStation controller
+    assert "☰  Settings" in text and "X /" not in text and "Menu key" not in text
     assert "font-size:24px" in window.big.keys.styleSheet()                   # readable from the couch
 
 
@@ -748,25 +772,29 @@ def test_the_view_scales_down_for_a_handheld_screen(made, height, small):
     assert window.big.columns["sustainable"] * tile.width() <= window.big.width()
     assert window.big.minimumSizeHint().width() <= 640 or window.big.minimumWidth() <= 640
     assert (window.big.logo.width() < bigpicture.LOGO_PX) is small
-    # The symbols and the status line (the clock under the loads when one line is too wide) fit in one row; with
-    # the shortcuts (owner, 12-11-2026) and the weather's place the symbols are drawn smaller for it on 1280 px.
+    # The symbols and the status (the loads, the clock and the weather, a line each) fit in one row; with the
+    # shortcuts (owner, 12-11-2026) the symbols are drawn smaller for it on 1280 px.
     big = window.big
     room = big.width() - 2 * big.outer.contentsMargins().left() - big.logo.width() - big.top.spacing()
     for place in ("", "Amsterdam", "Llanfairpwllgwyngyllgogerychwyrndrobwll"):
         window.status_timer.stop()
         big.set_status("CPU 100% 100°C | GPU 100% 100°C", "Wednesday 12/30/26 | 12:44:55 PM CEST")
-        window.weather_button.set_weather(place, glyphs.weather("cloudy"), True, "")
+        big.set_weather(place, "-12°C  Thunderstorm, hail" if place else "", glyphs.weather("cloudy"), True, "")
         big.fit_symbols()
         symbols = [s for s in window.header_buttons if not s.isHidden()]
-        assert len(symbols) == 9 + bool(place)
+        assert len(symbols) == 11
+        assert big.status.weather.isHidden() is (not place)                   # the third line only with a place
         row = (sum(s.width() for s in symbols) + len(symbols) * big.symbol_row.spacing()
                + big.status.minimumSizeHint().width())
         assert row <= room
         side = window.refresh_button.width()
         assert bigpicture.SYMBOL_SMALLEST * bigpicture.SYMBOL_PX <= side <= round(bigpicture.SYMBOL_PX * big.scale)
         assert {s.height() for s in symbols} == {side}                        # all the same size still
-        if not place:                                                         # a 1080 p screen has the room; a
-            assert (side == bigpicture.SYMBOL_PX) is (not small)             # place's name may take some of it
+    if not small:                       # a 1080 p screen has the room for an everyday status at the full size; the
+        big.set_status("CPU 12% 54°C | GPU 3% 61°C", "Thursday 11/5/26 | 07:44 PM CEST")    # longest lines may take
+        big.set_weather("Amsterdam", "8°C  Overcast", glyphs.weather("cloudy"), True, "")   # a little of it
+        big.fit_symbols()
+        assert window.refresh_button.width() == bigpicture.SYMBOL_PX
 
 
 def test_each_category_keeps_its_own_columns(made):

@@ -8,6 +8,7 @@ import sys
 
 from bc250_core import __version__ as CORE_VERSION, instance
 from bc250_core.app import create_app, exec_app
+from bc250_core import exit_keys
 
 from . import APP_NAME, INFO, __version__
 from .main_window import MainWindow
@@ -19,6 +20,7 @@ def main() -> int:
     _args, qt_args = parser.parse_known_args()
 
     app = create_app(INFO, qt_args)
+    exit_keys.install(app)                  # Escape and a controller's B close the window
     if instance.already_running(INFO.app_id):       # a second launch brings the open window to the front
         return 0
     window = MainWindow()

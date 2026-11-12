@@ -44,7 +44,9 @@ def test_youtube_needs_brave_browsers_flatpak():
 
 
 @pytest.mark.parametrize("page, kcm, panel", [("bluetooth", "kcm_bluetooth", "bluetooth"),
-                                              ("network", "kcm_networkmanagement", "network")])
+                                              ("network", "kcm_networkmanagement", "network"),
+                                              ("sound", "kcm_pulseaudio", "sound"),
+                                              ("display", "kcm_kscreen", "display")])
 def test_the_settings_of_the_desktop_that_is_there(page, kcm, panel):
     """KDE Plasma's System Settings, else the module alone, else GNOME's Settings (not only the owner's desktop)."""
     assert shortcuts.settings(page, has("systemsettings", "kcmshell6")).argv == ["systemsettings", kcm]

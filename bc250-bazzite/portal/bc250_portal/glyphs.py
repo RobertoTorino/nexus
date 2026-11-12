@@ -212,8 +212,36 @@ def network(color: str) -> QIcon:
     return _icon(color, draw, BIG)
 
 
+def volume(color: str) -> QIcon:
+    """A loudspeaker with two waves of sound: the volume."""
+    def draw(p: QPainter) -> None:
+        pen = p.pen()
+        pen.setWidthF(5)
+        p.setPen(pen)
+        p.setBrush(QColor(color))
+        p.drawPolygon(QPolygonF([QPointF(8, 25), QPointF(18, 25), QPointF(31, 14), QPointF(31, 50), QPointF(18, 39),
+                                 QPointF(8, 39)]))
+        p.setBrush(Qt.BrushStyle.NoBrush)
+        for r in (10, 21):
+            p.drawArc(QRectF(34 - r, 32 - r, 2 * r, 2 * r), -48 * 16, 96 * 16)
+    return _icon(color, draw, BIG)
+
+
+def screen(color: str) -> QIcon:
+    """A screen on its foot: the display."""
+    def draw(p: QPainter) -> None:
+        pen = p.pen()
+        pen.setWidthF(5)
+        p.setPen(pen)
+        p.drawRoundedRect(QRectF(7, 11, 50, 33), 5, 5)
+        _line(p, (32, 44), (32, 53))
+        _line(p, (21, 53), (43, 53))
+    return _icon(color, draw, BIG)
+
+
 # The weather beside the symbols (owner, 05-11-2026): a symbol for each kind of weather.py, a sun by day and a moon
-# by night where the sky shows.
+# by night where the sky shows. Since 12-11-2026 the weather is the status' third line, on the right: the symbol
+# stands before the place, the temperature and the sky.
 def _sun(p: QPainter, cx: float, cy: float, r: float) -> None:
     p.drawEllipse(QPointF(cx, cy), r, r)
     for step in range(8):

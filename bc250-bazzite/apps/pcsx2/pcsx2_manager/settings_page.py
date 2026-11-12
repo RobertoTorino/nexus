@@ -20,7 +20,6 @@ from PyQt6.QtWidgets import (QCheckBox, QComboBox, QFormLayout, QGridLayout, QGr
 
 from bc250_core import sound
 from bc250_core.updates import UpdateChecker
-from bc250_core.widgets import hint_label
 
 from . import memcards, pcsx2_settings
 from .pcsx2_settings import CHOICE, PERCENT, SWITCH, Setting
@@ -110,10 +109,6 @@ class SettingsPage(QWidget):
 
         lay = QVBoxLayout(self)
         lay.setContentsMargins(0, 8, 0, 0)
-        lay.addWidget(hint_label("PCSX2's settings, written into PCSX2's own settings file the moment you change "
-                                 "one, while PCSX2 does not run. A game's own settings in PCSX2 come before these. "
-                                 "How a game fills the screen is set per game, in the Your games tab.",
-                                 follow_height=True))        # its lines count in the page's minimum
         lay.addLayout(grid)
         lay.addStretch(1)
         lay.addWidget(self.status)

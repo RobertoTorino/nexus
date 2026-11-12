@@ -18,7 +18,7 @@ from .main_window import MainWindow
 from .style import set_link_colour
 from .theme import apply_theme
 from .widgets import RoundedToolTip
-from . import instance
+from . import exit_keys, instance
 
 
 def main() -> int:
@@ -35,6 +35,7 @@ def main() -> int:
     args, qt_args = parser.parse_known_args()
 
     app = QApplication([sys.argv[0], *qt_args])
+    exit_keys.install(app)                  # Escape and a controller's B close the window
     app.setApplicationName(APP_ID)
     app.setApplicationDisplayName(DISPLAY_NAME)
     app.setApplicationVersion(__version__)

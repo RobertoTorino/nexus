@@ -9,6 +9,7 @@ import sys
 
 from bc250_core import __version__ as CORE_VERSION, instance
 from bc250_core.app import create_app, exec_app
+from bc250_core import exit_keys
 
 from . import APP_NAME, INFO, __version__
 from .overlay import OverlayWindow
@@ -27,6 +28,8 @@ def main() -> int:
         os.environ.setdefault("QT_QPA_PLATFORM", "xcb")
 
     app = create_app(INFO, qt_args)
+    exit_keys.install(app, controller=False)    # Escape closes the window; not B:
+                                                # the controller is the game's under the overlay
     app.setQuitOnLastWindowClosed(True)
     # One instance: a second launch brings the running window to the front and exits.
     if instance.already_running(INFO.app_id):

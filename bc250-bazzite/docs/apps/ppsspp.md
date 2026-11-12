@@ -30,7 +30,8 @@ The header shows the **PPSSPP version**, **Your games** (the games found) and th
 **Refresh** reads everything again. Beside the title stands the app's state. Under the introduction, which links
 to **PPSSPP's release notes** and to this wiki, a row of three pills does the setting up, each with what it is for
 on top and what it does under it: **PPSSPP Install**, **PPSSPP Uninstall** and **Games Rename**. Two lines below
-the pills say where each stands, and then come three tabs: **Your games**, **Settings** and **Log**.
+the pills say where each stands, and then come three tabs: **Your games**, **Settings** and **Log**, and
+**Start game**, a tab that is a button.
 
 - **PPSSPP**: **Not installed.** or **Installed.**, with the button to use under it. The tooltip says which
   release is installed, or what Install takes, and when a newer PPSSPP is out. **Install** downloads PPSSPP from
@@ -38,8 +39,8 @@ the pills say where each stands, and then come three tabs: **Your games**, **Set
   installing it; when another release is installed, the tooltip and the log say so, and **Install** puts the app's
   in. **Uninstall** takes it out again; PPSSPP's own folder, with your saves and settings, stays.
 - **Game folder**: where the app looks for games, `~/Games/PSP` and a removable drive's `Games/PSP` (see [Where
-  your games go](#where-your-games-go)), and how many games are on PPSSPP's memory stick; nothing is chosen or
-  browsed to. A game may sit up to five folders deep.
+  your games go](#where-your-games-go)); nothing is chosen or browsed to. The **i** beside them says what goes
+  there, and the tooltip how many games are on PPSSPP's memory stick. A game may sit up to five folders deep.
 - **Games Rename** renames the ISO and CSO images after their `PARAM.SFO`: see [Renaming the
   files](#renaming-the-files).
 
@@ -69,7 +70,8 @@ size: the disc image, or a memory stick game's own folder, and its Steam shortcu
 drive, or in a folder that holds another game) is said so under the tabs: delete it by hand.
 
 **PPSSPP settings** opens PPSSPP's own window, with its other settings, its controller settings and its game list.
-The app has no Play button: a game is started from Steam.
+A game runs from Steam:
+[**Start game**](#start-game) starts the chosen one there.
 
 #### Steam
 
@@ -102,6 +104,13 @@ SteamGridDB for each game instead; the background and the logo on the game's pag
 [Covers from SteamGridDB](covers.md) for the key, how a game is looked up and how to use a cover of your own.
 
 **Steam** in the line under the table is a link: it opens Steam's library (Steam starts when it does not run).
+
+#### Start game
+
+The last tab, **Start game**, is a button. Choose a game in the table and click it: the game starts through Steam,
+as its shortcut in Steam starts it, and Steam starts first when it does not run. The tab you were on stays open. A
+game that is not in Steam yet is not started: the line under the tabs says to tick it and press **Update Steam**
+first.
 
 ### Settings
 

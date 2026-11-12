@@ -1,3 +1,22 @@
+Changelog: 12-11-2026 13:24:27
+
+Added. action_tab: ActionTab, the last tab of a QTabWidget as a button (owner, 12-11-2026: Start game in the BC250
+Bazzite Suite's game managers). A click on it acts and the open page stays open; reached with the keyboard it does
+nothing. steam.shortcut_number(): the appid of a shortcut as Steam's file has it for the first user with one (from its
+program and name when the file names none), for play_url(), which starts it.
+
+Changelog: 12-11-2026 13:24:26
+
+Added. exit_keys: Escape and a controller's B close an app's window, for an app that asks for it with install(app)
+(owner, 12-11-2026, for the BC250 Bazzite Suite's apps). Escape that nothing in the window took for itself closes the
+window through its closeEvent; the window's own keyPressEvent has the key first, a dialog and a menu keep Qt's Escape,
+and a window with the class attribute exit_keys = False keeps every key. B is read with pygame-ce (BackButton) and
+sent as Escape to what has the focus, only while the app has the focus and has had it for half a second: every app
+reads the same press, so the one that closes on it would take the app behind it along. SDL's dummy video driver is in
+the environment only while SDL starts, so a program the app starts later (Steam, an emulator) does not inherit it.
+install(app, controller=False) is Escape alone. The module is self-contained, so an app not on core carries a copy
+(tools/tests/test_instance_copies.py). Nothing changes for an app that does not call it.
+
 Changelog: 11-11-2026 20:05:07
 
 Version 3.1.2.

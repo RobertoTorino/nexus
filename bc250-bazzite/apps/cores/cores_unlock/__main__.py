@@ -13,7 +13,7 @@ from PyQt6.QtWidgets import QApplication, QMessageBox
 
 from . import APP_ID, APP_NAME, ROOT, WINDOW_ICON_PATH, __version__
 from .main_window import MainWindow
-from . import instance
+from . import exit_keys, instance
 from .theme import apply_theme
 
 DEFAULT_SCRIPT = ROOT / "bc250-cores-unlock.sh"
@@ -26,6 +26,7 @@ def main() -> int:
     args, qt_args = parser.parse_known_args()
 
     app = QApplication([sys.argv[0], *qt_args])
+    exit_keys.install(app)                  # Escape and a controller's B close the window
     app.setOrganizationName("bc250-cores-bisect")
     app.setApplicationName(APP_ID)
     app.setApplicationDisplayName(f"{APP_NAME} {__version__}")

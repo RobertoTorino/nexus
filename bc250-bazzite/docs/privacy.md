@@ -56,7 +56,7 @@ its Python packages from PyPI.
 - [Bazzite DatStation](apps/datstation.md#privacy) loads the PlayStation Blog's feed on its PS News page.
 - [BC-250 Bazzite Test](apps/check.md): its network test resolves and pings `google.com` and asks
   `www.example.com` for a page header; the optional speed test uses Ookla's servers and about 1 GB of data.
-- The [portal](portal.md) shows the weather beside its symbols only for a place you choose on its Settings page:
+- The [portal](portal.md) shows the weather in its status only for a place you choose on its Settings page:
   the name you search for, then that place's coordinates every 30 minutes while the portal is not minimized, go to
   Open-Meteo (`geocoding-api.open-meteo.com`, `api.open-meteo.com`), which needs no account.
 - [USB IPS3.5](apps/ips35.md#settings) shows the weather only for a place you choose: the name you search for,

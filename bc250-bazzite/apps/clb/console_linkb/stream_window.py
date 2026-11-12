@@ -70,6 +70,8 @@ def merge(pad: PadState | None, keys: frozenset[str]) -> PadState | None:
 
 
 class StreamWindow(QWidget):
+    exit_keys = False               # core's exit_keys: the keys are the game's while it streams, Escape too
+
     def __init__(self, stream: Stream, title: str, source_factory: Callable[[], object] = pads.PygameSource,
                  sound: bool = True, clock: Callable[[], float] = time.monotonic):
         super().__init__()

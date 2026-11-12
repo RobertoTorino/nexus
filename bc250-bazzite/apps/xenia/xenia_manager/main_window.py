@@ -7,9 +7,9 @@ changing Steam's files run off the GUI thread; nothing here needs root. The look
 Steam artwork… takes the suite's SteamGridDB API key, with which Update Steam looks up each game's pictures first
 (core's covers).
 
-The app has no Play button: a game is started from Steam. Xenia's own window (Xenia settings, under the games) stays
-for what the Settings tab does not set. What the window says it also writes to the app's log (core's applog), shown
-in the Log tab."""
+A game runs from Steam: the last tab, Start game, starts the chosen one there (owner, 12-11-2026). Xenia's own window
+(Xenia settings, under the games) stays for what the Settings tab does not set. What the window says it also writes to
+the app's log (core's applog), shown in the Log tab."""
 
 from __future__ import annotations
 
@@ -27,18 +27,20 @@ from PyQt6.QtWidgets import (QAbstractItemView, QDialog, QGridLayout, QHBoxLayou
 from bc250_core import SUITE_MANUAL_URL, applog, covers, steam, window_title
 from bc250_core import __version__ as CORE_VERSION
 from bc250_core import keep, renamed
+from bc250_core.action_tab import ActionTab
 from bc250_core.keep_dialog import KeepDialog
 from bc250_core.platform import bin_home, private, xdg_open
 from bc250_core.settings import SettingsStore
 from bc250_core.settings_page import SettingsPage
 from bc250_core.updates import ReleaseInfo, UpdateChecker
-from bc250_core.widgets import AppHeader, MetricBox, StatusText, Terminal, WrappedLabel, hint_label
+from bc250_core.widgets import AppHeader, InfoButton, MetricBox, StatusText, Terminal, WrappedLabel, hint_label
 
 from . import APP_ID, APP_NAME, INFO, LOGO_PATH, ROOT, __version__, emulator, library, shortcuts, style, xenia_settings
 from .games import Game, scan
 
 MANUAL_URL = f"{SUITE_MANUAL_URL}apps/xenia/"
 STEAM_TIP = "Add the ticked games to Steam and take out the others; Steam closes for it and starts again"
+START_TIP = "Start the game chosen under Your games through Steam, as its shortcut in Steam does"
 STEAM_URL = "steam://open/games"        # Steam's library; Steam starts when it does not run
 KINDS = {"iso": "ISO", "xex": "XEX", "zar": "ZAR", "god": "Games on Demand", "xbla": "Arcade"}
 STEAM, GAME, SERIAL, KIND, FILE = range(5)                  # the table's columns
@@ -47,13 +49,23 @@ GAMES, SETTINGS, LOG = range(3)                             # the tabs
 # advice are in its tip.
 NOT_INSTALLED = "Not installed.<br>Install it with the Install button."
 INSTALLED = "Installed.<br>Uninstall with the Uninstall button."
-SETTINGS_LEAD = ("Xenia's settings that matter for playing, written into Xenia's own settings file the moment you "
-                 "change one, while Xenia does not run. A game's own settings file in Xenia comes before these; "
-                 "everything else is in Xenia's own window (Xenia settings, under Your games).")
-
 
 class XeniaSettings(SettingsStore):
     DEFAULTS: dict = {}
+
+
+def _with_info(state: QLabel, info: InfoButton) -> QWidget:
+    """A state line with its info symbol right after it, at the top of its first line. The line is short, so it
+    keeps to one line: wrapped, it took the narrowest width beside the symbol."""
+    state.setWordWrap(False)
+    row = QWidget()
+    layout = QHBoxLayout(row)
+    layout.setContentsMargins(0, 0, 0, 0)
+    layout.setSpacing(6)
+    layout.addWidget(state)
+    layout.addWidget(info, 0, Qt.AlignmentFlag.AlignTop)
+    layout.addStretch(1)
+    return row
 
 
 class MainWindow(QMainWindow):
@@ -153,12 +165,14 @@ class MainWindow(QMainWindow):
         grid.setHorizontalSpacing(14)
         grid.setVerticalSpacing(6)
         self.emulator_state, self.folders_state = (self._state_label() for _ in range(2))
+        # The game folders by name, what goes in them behind the info symbol (owner, 12-11-2026).
+        self.folders_info = InfoButton("", "About the game folder")
         for row, (name, state) in enumerate((("Xenia", self.emulator_state), ("Game folder", self.folders_state))):
             label = QLabel(name)
             label.setStyleSheet("font-weight:700;")
             label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
             grid.addWidget(label, row, 0)
-            grid.addWidget(state, row, 1)
+            grid.addWidget(_with_info(state, self.folders_info) if state is self.folders_state else state, row, 1)
 
         self.table = QTableWidget(0, 5)
         self.table.setHorizontalHeaderLabels(["In Steam", "Game title", "Title ID", "Kind", "File"])
@@ -210,7 +224,7 @@ class MainWindow(QMainWindow):
                                           lambda: xenia_settings.read_settings(self.xenia_home),
                                           lambda setting, value: xenia_settings.write_setting(self.xenia_home, setting,
                                                                                               value),
-                                          self.xenia_running, SETTINGS_LEAD, self.log)
+                                          self.xenia_running, log=self.log)
         self.output = Terminal()
         self.output.setPlaceholderText("What the app did, with the time, appears here.")
         self.output.set_text(applog.tail(self.log_path))
@@ -224,6 +238,8 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(games_page, "Your games")
         self.tabs.addTab(self.settings_page, "Settings")
         self.tabs.addTab(log_page, "Log")
+        # Start game (owner, 12-11-2026): the last tab is a button, which starts the chosen game in Steam
+        self.start_tab = ActionTab(self.tabs, "Start game", START_TIP, self.on_start_game)
 
         self.running = WrappedLabel()
         self.running.setStyleSheet("font-weight:600;")
@@ -324,9 +340,10 @@ class MainWindow(QMainWindow):
 
         # The app's own folders (owner, 03-11-2026): the home folder's, and a removable drive's when it has one.
         where = ", ".join(f"<b>{escape(private(f))}</b>" for f in self.folders)
-        self.folders_state.setText(f"{where}: put your games there (ISO images, unpacked discs, .zar archives, Games "
-                                   "on Demand and Arcade packages; in folders too). A USB drive or an SD card with a "
-                                   "Games/XBOX360 folder on it is looked in too.")
+        self.folders_state.setText(where)
+        self.folders_info.set_text(f"Drop your games in {escape(private(self.user_home / library.GAMES_HOME))}, .ISO, "
+                                   "unpacked discs, .zar archives, Games on Demand and Arcade packages. A USB drive "
+                                   "or an SD card with a Games/XBOX360 folder is also checked for content.")
         self.folders_state.setToolTip("\n".join(private(f) for f in self.folders))
         self.games_box.set_value(str(len(self.games)))
         found = {str(g.file) for g in self.games}
@@ -501,6 +518,26 @@ class MainWindow(QMainWindow):
                 text += f" Not deleted: {', '.join(failed)}."
             return not failed, text
         self._start(f"Deleting {title}…", job)
+
+    def on_start_game(self) -> None:
+        """The Start game tab (owner, 12-11-2026): the chosen game started through Steam, as its shortcut there
+        starts it (steam://rungameid/ with the shortcut's number; Steam starts first when it does not run)."""
+        game = self.chosen()
+        if game is None:
+            self.say("Choose a game under Your games first: Start game starts the chosen one in Steam.", ok=False)
+            return
+        if self.worker.running:
+            self.say("Wait until what runs now has finished, then start the game.", ok=False)
+            return
+        number = (steam.shortcut_number(self.steam_dir, shortcuts.for_game(game))
+                  if self.steam_dir is not None and str(game.file) in self.in_steam else None)
+        if number is None:
+            self.say(f"{game.title} is not in Steam yet: tick it and press Update Steam first.", ok=False)
+            return
+        if self.open_url(steam.play_url(number)):
+            self.say(f"Steam starts {game.title}.")
+        else:
+            self.say(f"{game.title} could not be started: xdg-open is missing.", ok=False)
 
     def on_update_steam(self) -> None:
         if self.steam_dir is None:

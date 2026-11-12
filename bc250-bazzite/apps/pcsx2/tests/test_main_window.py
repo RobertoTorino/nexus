@@ -75,7 +75,7 @@ def test_before_installing(qapp, folders):
     window = _window(folders)
     assert window.pill.text() == "Not installed"
     # The state alone, in the words every manager uses (owner, 07-11-2026); what Install does in the tip.
-    assert window.emulator_state.text() == "Not installed.<br>Install it with the Install button." and "No BIOS" in window.bios_state.text()
+    assert window.emulator_state.text() == "Not installed.<br>Install it with the Install button." and window.bios_state.text() == "No BIOS found"
     assert f"Install downloads PCSX2 {emulator.VERSION}" in window.emulator_state.toolTip()
     assert window.install_pill.isEnabled() and not window.remove_pill.isEnabled()
     assert not window.bios_remove_pill.isEnabled()                               # no dump to remove
@@ -84,7 +84,7 @@ def test_before_installing(qapp, folders):
     for name in ("bios_pill", "folder_pill", "forget_pill"):
         assert not hasattr(window, name), name                               # gone (owner, 03-11-2026): fixed folders
     assert [window.tabs.tabText(i) for i in range(window.tabs.count())] == ["Your games", "Settings",
-                                                                             "Memory cards", "Log"]
+                                                                             "Memory cards", "Log", "Start game"]
     assert [b.caption.text() for b in window.header_pills[1:]] == ["PCSX2 version", "Your games",
                                                                     "Available in Steam", "Play time"]
     for name in ("play_button", "pcsx2_button", "memcards_button", "nightly_check", "refresh_button",
@@ -117,7 +117,7 @@ def test_installed_with_bios_and_games(qapp, folders, tmp_path):
     _install(folders["home"])
     window = _window(folders)
     assert window.pill.text() == "No BIOS" and not hasattr(window, "bios_box")       # the BIOS line says which
-    assert "pcsx2.net" in window.bios_state.text()
+    assert "pcsx2.net" in window.bios_info.text_ and window.bios_state.text() == "No BIOS found"
     make_bios(bios_dir(folders["pcsx2_home"]))
     window.refresh()
     assert window.pill.text() == "Ready"
@@ -203,7 +203,7 @@ def test_the_bios_is_taken_from_the_apps_folder(qapp, folders, tmp_path, monkeyp
     running = [True]
     window = _window(folders, pcsx2_running=lambda: running[0])
     assert not bios_dir(folders["pcsx2_home"]).exists() and window.pill.text() == "No BIOS"
-    assert "<b>~/Games/PS2/BIOS</b>" in window.bios_state.text()
+    assert "in ~/Games/PS2/BIOS: the app copies it into PCSX2." in window.bios_info.text_
     running[0] = False
     window.refresh()
     folder = bios_dir(folders["pcsx2_home"])
@@ -327,7 +327,10 @@ def test_the_apps_own_game_folders(qapp, folders, tmp_path, monkeypatch):
     assert [window.table.item(r, 1).text() for r in range(2)] == ["One", "Two"]
     assert window.games_box.value.text() == "2"
     text = window.folders_state.text()
-    assert "<b>~/Games/PS2</b>" in text and "<b>~/sd/Games/PS2</b>" in text and "<b>~/Games/PS2/BIOS</b>" in text
+    assert text == "<b>~/Games/PS2</b>, <b>~/sd/Games/PS2</b>"                 # what goes there: the info symbol
+    assert window.folders_info.text_ == ("Drop your games in ~/Games/PS2, .ISO, .CHD, .CSO, .ZSO or .GZ. Drop your "
+                                         "own BIOS in ~/Games/PS2/BIOS. A USB drive or an SD card with a Games/PS2 "
+                                         "folder is also checked for content.")
     assert str(tmp_path) not in text and window.folders_state.toolTip() == "~/Games/PS2\n~/sd/Games/PS2"
     assert "folders" not in window.settings.DEFAULTS
     window.close()
@@ -775,4 +778,39 @@ def test_remove_game_asks_what_to_keep(qapp, folders, monkeypatch, tmp_path):
     _wait(window, qapp)
     assert not target.exists() and window.running.text() == "Two: deleted Two.iso (the disc image)."
     assert "Two" not in [window.table.item(r, 1).text() for r in range(window.table.rowCount())]
+    window.close()
+
+
+def test_start_game_starts_the_chosen_game_through_steam(qapp, folders, monkeypatch):
+    """The Start game tab (owner, 12-11-2026), a tab that is a button: a click starts the game chosen under Your
+    games through Steam, by its shortcut's number, and the open tab stays open. Without a chosen game, or with one
+    that is not in Steam yet, it says what to do first and starts nothing."""
+    _install(folders["home"])
+    monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: QMessageBox.StandardButton.Yes)
+    opened = []
+    window = _window(folders, open_url=lambda url: opened.append(url) or True)
+    tabs, start = window.tabs, window.start_tab.index
+    assert start == tabs.count() - 1 and tabs.tabText(start) == "Start game" and "Steam" in tabs.tabToolTip(start)
+    window.table.clearSelection()
+    tabs.tabBarClicked.emit(start)                                           # no game chosen
+    assert opened == [] and window.running.text().startswith("Choose a game under Your games first")
+    window.table.selectRow(0)
+    title = window.chosen().title
+    tabs.tabBarClicked.emit(start)                                           # chosen, but not in Steam yet
+    assert opened == [] and window.running.text() == (f"{title} is not in Steam yet: tick it and press Update Steam "
+                                                      "first.")
+    window.table.item(0, 0).setCheckState(Qt.CheckState.Checked)
+    window.on_update_steam()
+    _wait(window, qapp)
+    window.table.selectRow(0)
+    (name,) = shortcuts.in_steam(folders["steam_dir"]).values()
+    tabs.setCurrentIndex(1)
+    tabs.tabBarClicked.emit(start)                                           # a click on the tab
+    tabs.setCurrentIndex(start)                                              # as the click goes on to select it
+    assert opened == [steam.play_url(steam.appid(f'"{folders["run"]}"', name))]
+    assert opened[0].startswith("steam://rungameid/") and window.running.text() == f"Steam starts {title}."
+    assert tabs.currentIndex() == 1                                          # Settings is still open
+    window.open_url = lambda url: False
+    window.on_start_game()
+    assert window.running.text() == f"{title} could not be started: xdg-open is missing."
     window.close()

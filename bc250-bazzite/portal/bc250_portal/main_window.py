@@ -5,12 +5,12 @@ icon (a click opens the wiki), spanning the name with the version and the stage,
 category is for, ☰ and the close symbol at the top right, and under them a row of big symbols (owner, 05-11-2026: in
 place of the pills): Refresh, Sys info (a small window with what the system reports about the board, sysinfo.py),
 Install all apps and Install all updates (the counts in their tooltips, the updates waiting on a red badge), then the
-shortcuts (owner, 12-11-2026; shortcuts.py): Steam, Files (the file manager), YouTube (in Brave Browser), and the
-desktop's Bluetooth and Network settings. On the right of the symbols
-how many apps are installed (installed / listed), and under it the CPU's and the GPU's load and temperature with the
-date and time (status.py: the loads every 2 s, the clock every second), the clock on a second line when one is too
-narrow. With a place chosen, the weather follows the symbols (weather.py, from Open-Meteo every 30 minutes): its
-symbol and the place's name. ☰ opens the Settings page (owner, 04-11-2026, as the Windows Portable Suite's portal;
+shortcuts (owner, 12-11-2026; shortcuts.py): Files (the file manager), Steam, YouTube (in Brave Browser), and the
+desktop's Bluetooth, Network, Volume (sound) and Screen (display) settings. On the right of the symbols
+how many apps are installed (installed / listed), and under it the status, a line each (owner, 12-11-2026): the
+CPU's and the GPU's load and temperature, the date and time (status.py: the loads every 2 s, the clock every
+second) and, with a place chosen, the weather (weather.py, from Open-Meteo every 30 minutes): its symbol, the
+place's name, the temperature and the sky. ☰ opens the Settings page (owner, 04-11-2026, as the Windows Portable Suite's portal;
 the ☰ button on the controller too, B back): the Desktop icons (Yes or No; a click switches), Sound, the theme (a
 click goes to the next one), the wallpaper, the clock (12 or 24 hours, the seconds, the board's time zone, CET or
 UTC), the weather's place and the touchpad's speed, each pill with a short line. Then a category strip (the category of the apps' icons, apps.toml) with the notice of updates beside it, and the tiles of
@@ -20,7 +20,7 @@ first category (owner, 20-10-2026). Everything is reached with the keyboard, the
 
 A tile: a click, Enter or A opens the app (an app with two windows asks which one), or offers to install one that is
 not installed. An app that runs already comes to the front (kwin.py), also from behind the portal. Its menu (the
-Menu key or X) holds every action: Open, Install (Update, Reinstall) and Uninstall. A right click or Y updates
+Menu key, M, or the left button of the controller's four, SDL's X) holds every action: Open, Install (Update, Reinstall) and Uninstall. A right click or Y updates
 (owner, 04-11-2026, as the Windows Portable Suite's portal): the portal itself while a newer one is out, else the
 app's update or reinstall; a right click on a tile with nothing to update opens its menu. Install, update and
 uninstall run the app's own installer in a terminal window (they may ask for the sudo password and print what they
@@ -94,7 +94,7 @@ from bc250_core.widgets import Pill
 
 from . import audio, desktop_icons, glyphs, keyboard, kwin, pointer, shortcuts, status, sysinfo, wallpaper
 from . import weather
-from .bigpicture import INTRO_BANNER, UPDATE_BANNER, BigPicture, HeaderPill, Intro, SymbolButton, WeatherButton
+from .bigpicture import INTRO_BANNER, UPDATE_BANNER, BigPicture, HeaderPill, Intro, SymbolButton
 from .gamepad import TOUCH_SPEED, Gamepad
 from .looks import VEIL
 from . import APP_ICONS, APP_ID, APP_NAME, INFO, STAGE, STAGE_NOTE, __version__
@@ -105,11 +105,17 @@ PROGRESS_MS = 500                       # how often a download's size is shown (
 # Asked only while a download or an install runs, with what exiting does to it; else the portal closes at once
 # (owner, 12-11-2026: no question on exit).
 EXIT_QUESTION = "Do you really want to exit the Portal?"
+# B counts once the portal has had the focus this long (owner, 12-11-2026: B closes an app): the portal reads the
+# controller too, and gets the focus back the moment the app closes, so the press that closed the app would close
+# the portal with it.
+BACK_GRACE_S = 0.5
 # The header's shortcuts (owner, 12-11-2026): what a message calls each one, and what finds its program.
-SHORTCUTS = {"steam": ("Steam", shortcuts.steam), "files": ("The file manager", shortcuts.files),
+SHORTCUTS = {"files": ("The file manager", shortcuts.files), "steam": ("Steam", shortcuts.steam),
              "youtube": ("YouTube", shortcuts.youtube),
              "bluetooth": ("The Bluetooth settings", shortcuts.bluetooth_settings),
-             "network": ("The network settings", shortcuts.network_settings)}
+             "network": ("The network settings", shortcuts.network_settings),
+             "sound": ("The sound settings", shortcuts.sound_settings),
+             "display": ("The display settings", shortcuts.display_settings)}
 # A key for each controller action that has none of its own, so a pad Steam turns into keys (its desktop layout) can
 # do all of them: map the buttons to these keys in Steam (owner, 05-11-2026).
 ACTION_KEYS = {Qt.Key.Key_U: "update", Qt.Key.Key_S: "settings", Qt.Key.Key_K: "keyboard", Qt.Key.Key_M: "menu"}
@@ -125,7 +131,7 @@ from .sources import (Records, SourceError, Sources, fetch_portal, installed_fro
                       local_version)
 
 POLL_MS = 1000
-STATUS_MS = 2000                # the status line on the right of the symbols: load and temperatures this often,
+STATUS_MS = 2000                # the status on the right of the symbols: load and temperatures this often,
 CLOCK_MS = 1000                 # the date and time this often (the seconds may show)
 WAIT_UPDATE = "The portal's update starts once the download or install that runs now has finished."
 VEIL_MAX = 90                   # the slider's end: the picture still shows; "No wallpaper" takes it away
@@ -144,7 +150,7 @@ SETTING_LINES = ("An icon on the Desktop for every installed app, or only the po
                  "The look of every app in the suite, from its next start.",
                  "A picture behind the portal, and how much of it shows through.",
                  "12 or 24 hours, the seconds, and the time zone of the clock.",
-                 "The weather where you are, beside the symbols, from Open-Meteo.",
+                 "The weather where you are, under the date and time, from Open-Meteo.",
                  "How fast a controller's touchpad moves the mouse pointer.")
 VALUE_PX = 300                  # a value in the Sys info window wraps beyond this width
 SYSINFO_OPACITY = 85            # % of the window color behind the Sys info text: what lies behind shows through
@@ -495,6 +501,8 @@ class MainWindow(QMainWindow):
         self.gamepad = gamepad or Gamepad(self)
         self.keyboard = keyboard.OnScreenKeyboard()                       # R3 (tests give it a fake bus)
         self.gamepad.action.connect(self._gamepad_action)
+        self.active_since = 0.0                         # when the portal last got the focus (BACK_GRACE_S)
+        QApplication.instance().applicationStateChanged.connect(self._focus_changed)
         self.mouse = mouse or pointer.VirtualMouse()                     # made at the first touch
         self.gamepad.pointer_moved.connect(self._pointer_moved)
         self.gamepad.pointer_pressed.connect(self._pointer_pressed)
@@ -557,8 +565,6 @@ class MainWindow(QMainWindow):
         self.apps_button.clicked.connect(self.install_missing)               # 01-11-2026)
         self.updates_button = SymbolButton(glyphs.install_updates)
         self.updates_button.clicked.connect(self.install_all)
-        self.weather_button = WeatherButton()           # beside Install all updates, with a place chosen
-        self.weather_button.clicked.connect(self._weather_menu)
         self.settings_button = SymbolButton(glyphs.menu, "Settings: Desktop icons, sound, theme, wallpaper, clock, "
                                             "weather and touchpad. The ☰ button on the controller opens them too.")
         self.settings_button.clicked.connect(self.toggle_settings)
@@ -566,14 +572,18 @@ class MainWindow(QMainWindow):
                                          "it too.")
         self.close_button.clicked.connect(self.exit_portal)
         # The shortcuts (owner, 12-11-2026): programs outside the suite, started from the header (shortcuts.py).
-        self.steam_button = SymbolButton(glyphs.steam, "Steam: open Steam.")
         self.files_button = SymbolButton(glyphs.folder, "Files: open the file manager on your home folder.")
+        self.steam_button = SymbolButton(glyphs.steam, "Steam: open Steam.")
         self.youtube_button = SymbolButton(glyphs.youtube, "YouTube: open YouTube fullscreen in Brave Browser, which "
                                            "must be installed as a Flatpak. Alt+F4 closes it.")
         self.bluetooth_button = SymbolButton(glyphs.bluetooth, "Bluetooth: open the desktop's Bluetooth settings.")
         self.network_button = SymbolButton(glyphs.network, "Network: open the desktop's network settings.")
-        self.shortcuts = {self.steam_button: "steam", self.files_button: "files", self.youtube_button: "youtube",
-                          self.bluetooth_button: "bluetooth", self.network_button: "network"}
+        self.volume_button = SymbolButton(glyphs.volume, "Volume: open the desktop's sound settings.")
+        self.screen_button = SymbolButton(glyphs.screen, "Screen: open the desktop's display settings.")
+        # In the row's order: Files before Steam (owner, 12-11-2026)
+        self.shortcuts = {self.files_button: "files", self.steam_button: "steam", self.youtube_button: "youtube",
+                          self.bluetooth_button: "bluetooth", self.network_button: "network",
+                          self.volume_button: "sound", self.screen_button: "display"}
         for button in self.shortcuts:
             button.clicked.connect(self._shortcut_clicked)      # a bound method: no lambda keeps self
         self.icons_box = TogglePill(
@@ -602,7 +612,7 @@ class MainWindow(QMainWindow):
         # the close symbol in the corner itself (owner, 12-11-2026).
         self.shortcut_buttons = list(self.shortcuts)
         self.header_buttons = [self.refresh_button, self.sysinfo_button, self.apps_button, self.updates_button,
-                               *self.shortcut_buttons, self.weather_button]
+                               *self.shortcut_buttons]
         self.big.place_symbols(self.header_buttons, [self.settings_button, self.close_button])
         self.status = status.Status()
         self.loads = self.status.loads()                # the first line at once, the load from the next sample
@@ -1057,7 +1067,7 @@ class MainWindow(QMainWindow):
         QCoreApplication.quit()
 
     def show_status(self) -> None:
-        """The status line on the right of the symbols: the clock every CLOCK_MS, the loads sampled every STATUS_MS;
+        """The status on the right of the symbols: the clock every CLOCK_MS, the loads sampled every STATUS_MS;
         none while the portal is minimized or hidden, so it costs nothing behind a game."""
         if self.isMinimized() or not self.isVisible():
             return
@@ -1243,7 +1253,7 @@ class MainWindow(QMainWindow):
                                  zone_key if zone_key in status.ZONES else style.zone)
 
     def _show_clock(self) -> None:
-        """The Clock pill and the status line in the clock's style."""
+        """The Clock pill and the status in the clock's style."""
         style = self.clock_style()
         zone = status.ZONES[style.zone]
         self.clock_pill.set_value(f"{style.hours} h", (
@@ -1290,7 +1300,7 @@ class MainWindow(QMainWindow):
         self._show_clock()
 
     def weather_menu(self) -> QMenu:
-        """The Weather pill's menu, and the weather symbol's: choose a place, the weather again now, or none."""
+        """The Weather pill's menu: choose a place, the weather again now, or none."""
         menu = QMenu(self)
         menu.addAction("Choose a place…").setData("choose")
         menu.addAction("Update the weather now").setData("update")
@@ -1301,8 +1311,7 @@ class MainWindow(QMainWindow):
         return menu
 
     def _weather_menu(self) -> None:
-        under = self.weather_pill if self.big.in_settings() else self.weather_button
-        self._show_menu(self.weather_menu(), under)
+        self._show_menu(self.weather_menu(), self.weather_pill)
 
     def _weather_action(self, action) -> None:
         what = action.data()
@@ -1357,31 +1366,31 @@ class MainWindow(QMainWindow):
         self._show_weather()
 
     def _show_weather(self) -> None:
-        """The Weather pill (the place, or None) and the weather symbol beside the symbols: the sky's symbol and the
-        place's name, the temperature and the sky in its tooltip; hidden without a place."""
+        """The Weather pill (the place, or None) and the status' third line: the sky's symbol, the place's name, the
+        temperature and the sky, the wind, the humidity and the time it came in its tooltip; no line without a
+        place."""
         place, now = self.place, self.weather
         name = place.name if place else ""
         self.weather_pill.set_value(name or "None",
-            (f"The weather at {place.label}, beside the symbols at the top. " if place else
+            (f"The weather at {place.label}, under the date and time at the top. " if place else
              "No weather: nothing is sent to Open-Meteo. ")
             + "Click to choose a place, to update the weather now, or for no weather.")
         if place is None:
-            self.weather_button.set_weather("", glyphs.weather("cloudy"), False, "")
-            self.big.fit_symbols()
+            self.big.set_weather("", "", None, False, "")
             return
         if now is not None:
+            sky = now.description or f"weather code {now.code}"
             wind = f", wind {now.wind_kmh:.0f} km/h" if now.wind_kmh is not None else ""
             humidity = f", humidity {now.humidity} %" if now.humidity is not None else ""
-            tip = (f"{place.label}: {now.description or 'weather code ' + str(now.code)}, {now.temperature:.0f}°C"
-                   f"{wind}{humidity}. From Open-Meteo at {self.weather_at}.")
-            glyph = glyphs.weather(now.symbol, now.is_day)
+            tip = f"{place.label}: {sky}, {now.temperature:.0f}°C{wind}{humidity}. From Open-Meteo at {self.weather_at}."
+            detail, glyph = f"{now.temperature:.0f}°C  {sky}", glyphs.weather(now.symbol, now.is_day)
         else:
             tip, glyph = f"{place.label}: the weather is on its way from Open-Meteo.", glyphs.weather("cloudy")
+            detail = ""
         if self.weather_error:
             tip += f"\n\n{self.weather_error} Asked again in {weather.INTERVAL_S // 60} minutes."
-        self.weather_button.set_weather(name, glyph, now is not None, tip + "\n\nClick to update it or to change "
-                                        "the place.")
-        self.big.fit_symbols()                          # the place's name takes room: the row may need smaller symbols
+        self.big.set_weather(name, detail, glyph, now is not None,
+                             tip + "\n\nThe Weather pill on the Settings page updates it or changes the place.")
 
     # ------------------------------------------------------------------------------------------- the touchpad
     def touch_speed(self) -> int:
@@ -1606,10 +1615,17 @@ class MainWindow(QMainWindow):
         menu.exec(tile.mapToGlobal(tile.rect().bottomLeft()))
         menu.deleteLater()
 
+    def _focus_changed(self, state) -> None:
+        if state == Qt.ApplicationState.ApplicationActive:
+            self.active_since = time.monotonic()
+
     def _gamepad_action(self, action: str) -> None:
         """What the controller does reaches the portal as the keys it would press: in a menu or a dialog the keys
-        Qt knows, in the view its own moves. Only while the portal's window has the focus."""
+        Qt knows, in the view its own moves. Only while the portal's window has the focus, and B only once it has
+        had it for a moment (BACK_GRACE_S)."""
         if QApplication.activeWindow() is None:
+            return
+        if action == "back" and time.monotonic() - self.active_since < BACK_GRACE_S:
             return
         if self.intro is not None:
             self.intro.skip()

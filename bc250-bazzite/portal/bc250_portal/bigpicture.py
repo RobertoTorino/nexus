@@ -2,8 +2,8 @@
 """The portal's view (owner, 01-11-2026: the one view; Suite Desktop Mode, the window of tabs, is gone), as Steam's
 Big Picture is for Steam: fullscreen, for a TV and a controller as much as for a desk. Large icons and type, the
 header with the suite's icon, its name, ☰ at the top right and a row of big symbols (owner, 05-11-2026: in place of
-the pills) with the board's load, temperatures, date and time on its right (on two lines when one is too narrow), the
-weather beside the symbols when a place is chosen, a category strip, and a focus that moves
+the pills) with the status on its right, a line each (owner, 12-11-2026): the board's load and temperatures, the date
+and time, and the weather when a place is chosen; a category strip, and a focus that moves
 with the arrow keys, a controller's d-pad or its stick (gamepad.py), with the mouse working as always. The Settings
 page (the ☰ symbol or the controller's ☰ button, owner 04-11-2026, as the Windows Portable Suite's portal) takes the
 place of the category strip and the tiles: the pills of the settings, each with a short line, under the same
@@ -37,7 +37,7 @@ PILL_ALPHA = 150                # a pill that is not active (no focus, no mouse)
 SYMBOL_PX = 84                  # a header symbol (owner, 05-11-2026): a square this large, its glyph GLYPH_PX
 GLYPH_PX = 56
 SYMBOL_SMALLEST = 0.5           # the row's symbols on a narrow screen: never smaller than this part of their size
-PLACE_W = 220                   # the weather's place name: at most this wide, else it ends in …
+PLACE_W = 220                   # the weather's place name in the status: at most this wide, else it ends in …
 GAP = 20
 MARGIN = 48
 FULL_HEIGHT = 1000             # a window this high or higher is drawn at full size, a lower one smaller
@@ -55,8 +55,10 @@ KEYS = {Qt.Key.Key_Up: "up", Qt.Key.Key_Down: "down", Qt.Key.Key_Left: "left", Q
 CATEGORY_KEYS = {Qt.Key.Key_PageUp: "previous", Qt.Key.Key_Q: "previous", Qt.Key.Key_PageDown: "next",
                  Qt.Key.Key_E: "next"}
 # Y and a right click update (owner, 04-11-2026, as the Windows Portable Suite's portal): the portal while a newer
-# one is out, else the focused app; X and the Menu key hold the app's menu.
-LEGEND = ("A / Enter  Open    Y / Right click  Update    X / Menu key  Menu    LB / RB  Category"
+# one is out, else the focused app. The app's menu (the Menu key, M, or the left button of the controller's four) is
+# not named here (owner, 12-11-2026): "X" is the bottom button on a PlayStation controller, which opens, and "Menu"
+# read as the settings; ☰ is the one menu the line names.
+LEGEND = ("A / Enter  Open    Y / Right click  Update    LB / RB  Category"
           "    ☰  Settings    R3  Keyboard    B / Esc  Close")
 SETTINGS_LEGEND = "A / Enter  Change    ☰ / B / Esc  Back"
 SETTINGS_HINT = "The portal's settings."         # the line under the title on the Settings page
@@ -107,61 +109,93 @@ class ElidedLabel(QLabel):
         painter.end()
 
 
-class StatusLine(QLabel):
-    """The status line: the loads and the clock on one line, "CPU 12% 54°C | GPU 3% 61°C | Thursday 11/5/26 |
-    07:44 PM CEST", or the clock on a second line under the loads when the room on the right of the symbols is too
-    narrow for one (owner, 05-11-2026: a second line rather than a cramped one)."""
+class StatusLine(QWidget):
+    """The status on the right of the symbols, a line each (owner, 12-11-2026: three lines, in place of one line that
+    broke in two where it was too narrow): the CPU's and the GPU's load and temperature, "CPU 12% 54°C | GPU 3%
+    61°C"; the date and time, "Thursday 11/5/26 | 07:44 PM CEST"; and, with a place chosen, the weather: its symbol,
+    the place's name (ending in … beyond PLACE_W), the temperature and the sky, muted until the first weather has
+    come, with the rest in its tooltip."""
 
     def __init__(self):
         super().__init__()
         self.parts = ("", "")
-        self.two = False
-        self.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        self.place = self.detail = ""
+        self.glyph = None                           # glyphs.weather(...): a color in, a QIcon out
+        self.known = False
+        self.scale = 1.0
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+        self.lines = QLabel()
+        self.lines.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        layout.addWidget(self.lines)
+        self.weather = QWidget()                    # hidden without a place: two lines then
+        row = self.weather_row = QHBoxLayout(self.weather)
+        row.setContentsMargins(0, 0, 0, 0)
+        row.addStretch(1)
+        self.symbol = QLabel()
+        row.addWidget(self.symbol)
+        self.sky = QLabel()
+        row.addWidget(self.sky)
+        layout.addWidget(self.weather)
+        self.weather.hide()
+        self.set_scale(1.0)
 
     def set_parts(self, loads: str, clock: str) -> None:
         if (loads, clock) == self.parts:
             return
         self.parts = (loads, clock)
-        self.updateGeometry()
-        self._fit()
+        self.lines.setText("\n".join(part for part in self.parts if part))
 
-    def one_line(self) -> str:
-        return " | ".join(part for part in self.parts if part)
+    def set_weather(self, place: str, detail: str, glyph, known: bool, tooltip: str) -> None:
+        """The third line: *place* and *detail* ("8°C  Overcast", "" before the first weather) after *glyph*; no
+        line without a place."""
+        self.place, self.detail, self.glyph, self.known = place, detail, glyph, known
+        self.weather.setToolTip(tooltip)
+        self.weather.setVisible(bool(place))
+        self._show_weather()
 
-    def _advance(self, text: str) -> int:
-        self.ensurePolished()                       # the style sheet's font size
-        return self.fontMetrics().horizontalAdvance(text) + 2 * self.margin() + 2
+    def weather_text(self) -> str:
+        width = round(PLACE_W * self.scale)
+        place = self._metrics().elidedText(self.place, Qt.TextElideMode.ElideRight, width)
+        return "  ".join(part for part in (place, self.detail) if part)
 
-    def sizeHint(self) -> QSize:  # noqa: N802 (Qt override)
-        lines = 2 if self.two else 1
-        return QSize(self._advance(self.one_line()), self.fontMetrics().lineSpacing() * lines + 2 * self.margin())
+    def text(self) -> str:
+        """The lines as they show, the weather's last."""
+        return "\n".join(line for line in (*self.parts, self.weather_text()) if line)
+
+    def _metrics(self) -> QFontMetrics:
+        self.lines.ensurePolished()                 # the style sheet's font size
+        return self.lines.fontMetrics()
+
+    def _show_weather(self) -> None:
+        theme = current_theme()
+        colour = theme.text if self.known else muted(theme)
+        self.sky.setText(self.weather_text())
+        self.sky.setStyleSheet(f"color:{colour};")
+        side = self._metrics().height()
+        if self.glyph is not None:
+            ratio = self.devicePixelRatioF()
+            pixmap = self.glyph(colour).pixmap(QSize(round(side * ratio), round(side * ratio)))
+            pixmap.setDevicePixelRatio(ratio)
+            self.symbol.setPixmap(pixmap)
+        self.symbol.setFixedSize(side, side)
+        self.symbol.setVisible(self.glyph is not None)
+
+    def set_scale(self, scale: float) -> None:
+        self.scale = scale
+        self.setStyleSheet(f"QLabel {{ font-size:{max(14, round(22 * scale))}px; font-weight:700; }}")
+        self.weather_row.setSpacing(round(8 * scale))
+        self._show_weather()
 
     def narrowest(self) -> int:
-        """The width the line needs at least, the clock under the loads, with room for a load that grows to three
-        figures: what the row of symbols leaves it (BigPicture.fit_symbols)."""
-        return max(self._advance(part) for part in self.parts) + self.fontMetrics().horizontalAdvance("00")
-
-    def minimumSizeHint(self) -> QSize:  # noqa: N802 (Qt override)
-        width = max(self._advance(part) for part in self.parts)
-        return QSize(width, self.fontMetrics().lineSpacing() * (2 if self.two else 1) + 2 * self.margin())
-
-    def _fit(self) -> None:
-        """One line when it fits the width the layout gave, else the clock under the loads."""
-        two = all(self.parts) and self.width() < self._advance(self.one_line())
-        self.setText("\n".join(self.parts) if two else self.one_line())
-        if two != self.two:
-            self.two = two
-            self.updateGeometry()
-
-    def resizeEvent(self, event) -> None:  # noqa: N802 (Qt override)
-        super().resizeEvent(event)
-        self._fit()
-
-    def changeEvent(self, event) -> None:  # noqa: N802 (Qt override)
-        super().changeEvent(event)
-        if event.type() == QEvent.Type.StyleChange:     # a new size of the type: measure again
-            self.updateGeometry()
-            self._fit()
+        """The width the status needs at least, with room for a load that grows to three figures: what the row of
+        symbols leaves it (BigPicture.fit_symbols)."""
+        metrics = self._metrics()
+        weather = (metrics.horizontalAdvance(self.weather_text()) + metrics.height() + self.weather_row.spacing()
+                   if self.place else 0)
+        return max(*(metrics.horizontalAdvance(part) for part in self.parts), weather) \
+            + metrics.horizontalAdvance("00") + 2
 
 
 class Logo(QLabel):
@@ -455,66 +489,6 @@ class SymbolButton(QAbstractButton):
         painter.end()
 
 
-class WeatherButton(SymbolButton):
-    """The weather beside the symbols (owner, 05-11-2026): its symbol and the place's name on its right; the
-    temperature and the sky in its tooltip. Muted until the first weather has come; hidden without a place."""
-
-    def __init__(self):
-        self.place = ""                         # before the button's size is taken, which shows it
-        self.room: int | None = None            # the name's width when the row leaves less than PLACE_W (fit_symbols)
-        self.known = False
-        super().__init__(glyphs.weather("cloudy"))
-        self.hide()
-
-    def set_weather(self, place: str, glyph, known: bool, tooltip: str) -> None:
-        self.place, self.known = place, known
-        self.glyph = glyph
-        self._icons.clear()
-        self.setToolTip(tooltip)
-        self.setVisible(bool(place))
-        self.setFixedSize(self.sizeHint())
-        self.update()
-
-    def _font(self) -> QFont:
-        font = QFont(self.font())
-        font.setPixelSize(max(14, round(22 * self.scale)))
-        font.setBold(True)
-        return font
-
-    def shown_place(self) -> str:
-        """The place's name, ending in … beyond PLACE_W: a long name never takes the status line's room."""
-        width = round(PLACE_W * self.scale)
-        return QFontMetrics(self._font()).elidedText(self.place, Qt.TextElideMode.ElideRight,
-                                                     width if self.room is None else min(width, self.room))
-
-    def sizeHint(self) -> QSize:  # noqa: N802 (Qt override)
-        side = round(SYMBOL_PX * self.scale)
-        text = QFontMetrics(self._font()).horizontalAdvance(self.shown_place()) if self.place else 0
-        return QSize(side + (text + round(18 * self.scale) if text else 0), side)
-
-    def paintEvent(self, event) -> None:  # noqa: N802 (Qt override)
-        s = self.scale
-        painter = QPainter(self)
-        painter.setRenderHints(QPainter.RenderHint.Antialiasing | QPainter.RenderHint.SmoothPixmapTransform
-                               | QPainter.RenderHint.TextAntialiasing)
-        focused = self.hasFocus()
-        if focused or self.underMouse():
-            fill = QColor(ACCENT)
-            fill.setAlpha(60 if focused else 28)
-            painter.setBrush(fill)
-            painter.setPen(QPen(QColor(OUTLINE), 3) if focused else Qt.PenStyle.NoPen)
-            painter.drawRoundedRect(QRectF(self.rect()).adjusted(2, 2, -2, -2), 16 * s, 16 * s)
-        theme = current_theme()
-        colour = theme.text if self.known else muted(theme)
-        side, square = round(GLYPH_PX * s), round(SYMBOL_PX * s)
-        self._icon(colour).paint(painter, QRect((square - side) // 2, (self.height() - side) // 2, side, side))
-        painter.setFont(self._font())
-        painter.setPen(QColor(colour))
-        painter.drawText(QRect(square, 0, self.width() - square - round(12 * s), self.height()),
-                         int(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter), self.shown_place())
-        painter.end()
-
-
 class NoticeButton(QToolButton):
     """A short colored line beside the category strip (the updates the portal found, the ones outside the suite); a
     click, Enter or A opens the list of them as a menu. Hidden while there is nothing to say."""
@@ -568,7 +542,7 @@ class UpdateBanner(QToolButton):
 
 class BigPicture(Backdrop):
     """The view: the header (the suite's icon, its name with the version and the stage, the line under it, ☰ at the
-    top right, the row of symbols with the installed count and the status line on its right), the category strip with the notices beside it, the tiles of the open category, and under them
+    top right, the row of symbols with the installed count and the status on its right), the category strip with the notices beside it, the tiles of the open category, and under them
     what the buttons do. It shows what the window knows of each app (sync); a tile opens its app by
     open_requested(entry) and asks for its menu by menu_requested(entry)."""
 
@@ -624,7 +598,7 @@ class BigPicture(Backdrop):
         words.addLayout(upper)
         words.addStretch(1)
         self.symbol_row = QHBoxLayout()              # the symbols, then on the right the installed count over the
-        self.symbol_row.addStretch(1)                # status line (owner, 05-11-2026)
+        self.symbol_row.addStretch(1)                # status (owner, 05-11-2026)
         readout = QVBoxLayout()
         readout.setSpacing(0)
         readout.addStretch(1)
@@ -640,7 +614,7 @@ class BigPicture(Backdrop):
         self.info.installEventFilter(self)
         self.symbols: list[SymbolButton] = []
         self.corner: list[SymbolButton] = []
-        self._fitted_status = 0                      # the status line's width the symbols were last fitted to
+        self._fitted_status = 0                      # the status' width the symbols were last fitted to
         outer.addLayout(top)
 
         strip = QHBoxLayout()
@@ -769,16 +743,24 @@ class BigPicture(Backdrop):
         self.set_scale(self.scale)
 
     def set_installed(self, text: str, tooltip: str = "") -> None:
-        """The small line over the status line: how many apps are installed."""
+        """The small line over the status: how many apps are installed."""
         self.installed.setText(text)
         self.installed.setToolTip(tooltip)
 
     def set_status(self, loads: str, clock: str = "") -> None:
-        """The line on the right of the symbols: the CPU's and the GPU's load and temperature, then the date and
-        time, on a second line when one does not fit. A line much wider or narrower than the one the symbols were
-        fitted to (another clock style) fits them again."""
+        """The status on the right of the symbols: the CPU's and the GPU's load and temperature, and under it the
+        date and time. A status much wider or narrower than the one the symbols were fitted to (another clock
+        style) fits them again."""
         self.status.set_parts(loads, clock)
-        if abs(self.status.narrowest() - self._fitted_status) > self.status.fontMetrics().horizontalAdvance("00"):
+        self._refit()
+
+    def set_weather(self, place: str, detail: str, glyph, known: bool, tooltip: str) -> None:
+        """The status' third line: the weather of *place*; none without a place."""
+        self.status.set_weather(place, detail, glyph, known, tooltip)
+        self._refit()
+
+    def _refit(self) -> None:
+        if abs(self.status.narrowest() - self._fitted_status) > self.status._metrics().horizontalAdvance("00"):
             self.fit_symbols()
 
     def place_settings(self, rows: list[tuple[HeaderPill, str]]) -> None:
@@ -899,7 +881,7 @@ class BigPicture(Backdrop):
                                  f" padding:{round(2 * s)}px {round(8 * s)}px;")
         self.hint.setStyleSheet(f"color:{muted()}; font-size:{max(13, round(18 * s))}px;")
         self.installed.setStyleSheet(f"color:{muted()}; font-size:{max(12, round(16 * s))}px; font-weight:600;")
-        self.status.setStyleSheet(f"font-size:{max(14, round(22 * s))}px; font-weight:700;")
+        self.status.set_scale(s)
         self.keys.setStyleSheet(f"color:{muted()}; font-size:{max(16, round(24 * s))}px; font-weight:700;")
         self.bar.setStyleSheet(
             f"QTabBar::tab {{ font-size:{max(15, round(24 * s))}px; font-weight:700;"
@@ -929,16 +911,13 @@ class BigPicture(Backdrop):
         self.reflow()
 
     def fit_symbols(self) -> None:
-        """The row's symbols at the view's scale, or smaller where they and the status line (the clock under the
-        loads) would not fit the window's width: the shortcuts and the weather's place on a handheld's 1280 px."""
+        """The row's symbols at the view's scale, or smaller where they and the status would not fit the window's
+        width: the shortcuts on a handheld's 1280 px."""
         shown = [symbol for symbol in self.symbols if not symbol.isHidden()]
         margins = self.outer.contentsMargins()
         self._fitted_status = self.status.narrowest()
         room = (self.width() - margins.left() - margins.right() - self.logo.width() - self.top.spacing()
                 - self._fitted_status - len(shown) * self.symbol_row.spacing())
-        weather = next((symbol for symbol in shown if isinstance(symbol, WeatherButton)), None)
-        if weather is not None:
-            weather.room = None
         scale = self.scale
         while True:
             for symbol in self.symbols:
@@ -947,9 +926,6 @@ class BigPicture(Backdrop):
             if scale <= SYMBOL_SMALLEST or over <= 0:
                 break
             scale = round(scale - 0.02, 2)
-        if over > 0 and weather is not None:        # the smallest symbols, and still too wide: a shorter name
-            name = QFontMetrics(weather._font()).horizontalAdvance(weather.shown_place())
-            weather.room = max(0, name - over)
         for symbol in self.symbols:
             symbol.set_scale(scale)
 

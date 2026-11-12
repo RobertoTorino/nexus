@@ -268,6 +268,24 @@ def test_a_shortcut_is_started_by_its_game_id(monkeypatch):
     assert ran == [["xdg-open", "steam://open/bigpicture"]]
 
 
+def test_the_number_of_a_shortcut_as_steams_file_has_it(tmp_path):
+    """What Start game hands to play_url() (owner, 12-11-2026): the shortcut's appid from Steam's own file, its 32
+    bits; from its program and name when the file names none; None for a game that has no shortcut."""
+    folder = _steam(tmp_path)
+    game = _game("Game", "-g one")
+    assert steam.shortcut_number(folder, game.ours) is None
+    assert steam.write_shortcuts(folder, [game]) == [game.number]
+    assert steam.shortcut_number(folder, game.ours) == game.number == steam.appid('"/bin/run"', "Game")
+    assert steam.shortcut_number(folder, lambda item: item.get("AppName") == "RetroArch") == -1234 & 0xFFFFFFFF
+    assert steam.shortcut_number(folder, lambda item: False) is None
+    path = folder / "userdata" / "1000" / "config" / "shortcuts.vdf"
+    values = steam.read_vdf(path.read_bytes())
+    for item in values["shortcuts"].values():
+        item.pop("appid")                                                     # a file without the numbers
+    path.write_bytes(steam.write_vdf(values))
+    assert steam.shortcut_number(folder, game.ours) == game.number
+
+
 def test_on_windows_a_steam_not_running_is_started_plainly_first(monkeypatch, tmp_path):
     """A steam:// address as Steam's first command never signed in (the owner's Ally, 30-10-2026): a Steam that does
     not run is started as a plain steam.exe, and the address follows once it is signed in; a running one gets it at

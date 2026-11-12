@@ -6,6 +6,14 @@ The portal installs, opens, updates and removes these apps. BC-250 Bazzite Test 
 other app is optional. They are listed by category, as the portal's tabs list them; what the icons stand for is in
 [App categories](categories.md).
 
+**Closing an app.** In every app's window **Escape** closes the window, as its close button does, and so does **B**
+on a controller (Circle on a PlayStation controller): first an open menu, then a question or a dialog, then the
+window itself. Where Escape already has a meaning in an app (back to the tiles in Bazzite DatStation, a level up in
+BC-250 BIOS Reader), that comes first. An app that is busy asks before it closes, as always. The controller's B
+needs the app to have the focus, and is left out where the controller belongs to something else: in the two Remote
+Play apps (a stream's window keeps all its keys too, Escape among them), in USB HD Control and in System Overlay. A
+controller Steam Input owns sends what its desktop layout says, by default Escape for B.
+
 **Sustainable**: the board itself: test it, tune it, unlock it, cool it, and keep it running well.
 
 | App | What it does |

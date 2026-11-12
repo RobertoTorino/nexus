@@ -161,6 +161,13 @@ page in a list) is silver: the theme's outline, `OUTLINE` in `theme.py` (`outlin
 silver on gunmetal and warm, a darker silver on the light silver theme. A `style.py` keeps its own color for
 fills and edges that are always there, and uses `OUTLINE` for those borders too.
 
+Escape and a controller's B close every app's window: `__main__.py` calls `exit_keys.install(app)` right after
+the application is made (core's `exit_keys`; an app not on core carries a copy, as of `theme.py`). A key the window
+or one of its widgets takes for itself comes first, so an app's own Escape (back from a page) keeps working, and
+the window closes through its `closeEvent`, which still asks what it asks. An app in which the controller belongs
+to something else installs it with `controller=False`; a window that must keep every key (a stream) sets the class
+attribute `exit_keys = False`.
+
 An app may have its own color, taken from its icon, in a `style.py` beside its window (the shadPS4 Manager's is
 the pattern): the main buttons, the table headers, the selection and the links take it, over the theme. White text
 on the color reads at 4.5:1 or more, links on a dark window use a lighter shade of it, and the color stays easy on
@@ -203,8 +210,8 @@ imports it, so each release runs on the core it was tested with. From a checkout
 checkout's core the same way. The shared venv holds only PyQt6 and pygame-ce (the portal's controller reader).
 
 Before you write a helper in an app, look in core. If two apps need the same code, move it into core and give it a
-test. Apps that are not on core yet keep a copy of core's `instance.py`; `tools/tests/test_instance_copies.py`
-keeps those copies equal to core's.
+test. Apps that are not on core yet keep a copy of core's `instance.py`, `theme.py` and `exit_keys.py`;
+`tools/tests/test_instance_copies.py` keeps those copies equal to core's.
 
 ## Steam shortcuts and their artwork
 
@@ -222,6 +229,10 @@ Where the pictures come from depends on what the app has:
 | Xenia Manager | Drawn from the app's icon (`steam_art`), with the game's title |
 | PPSSPP Manager | The game's own pictures (`ICON0.PNG`, `PIC1.PNG`), its icon as the logo |
 | Vita3K Manager | The game's own pictures (`icon0.png`, `pic0.png`), its icon as the logo |
+
+The emulator managers start a game through Steam too: their last tab, **Start game**, is core's `ActionTab` (a tab
+that acts on a click and leaves the open page open), which looks up the chosen game's shortcut in Steam's file
+(`steam.shortcut_number()`) and opens `steam.play_url()` for it.
 
 `steam_art.draw_icon_art()` is for an app with no pictures of its own: the background is near black in the icon's
 own color with a glow of it, the portrait and the wide picture show the icon with a title and a line under it, the

@@ -239,6 +239,8 @@ class StreamWindow(QWidget):
     """The stream's window: the view and a status line under it, and the sound. F11 or a double click toggle full
     screen, Escape leaves it, M mutes the sound. Closing the window calls on_close, which ends the stream."""
 
+    exit_keys = False               # core's exit_keys: Escape never ends a stream, it only leaves the full screen
+
     def __init__(self, title: str, on_close: Callable[[], None], parent: QWidget | None = None,
                  options: StreamOptions = StreamOptions()):
         super().__init__(parent, Qt.WindowType.Window)

@@ -61,9 +61,12 @@ def main() -> int:
         return idle.run()
 
     from bc250_core.app import create_app, exec_app
+    from bc250_core import exit_keys
 
     from .main_window import MainWindow
     app = create_app(INFO, qt_args)
+    exit_keys.install(app, controller=False)    # Escape closes the window; not B:
+                                                # the controller is what the app shows and tests
     if instance.already_running(INFO.app_id):
         return 0
     window = MainWindow()

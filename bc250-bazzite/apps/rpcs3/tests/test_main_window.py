@@ -102,7 +102,8 @@ def test_before_installing(qapp, folders):
     assert window.refresh_pill.isEnabled()
     assert not window.package_pill.isEnabled()
     assert [window.table.item(r, 1).text() for r in range(window.table.rowCount())] == ["One", "Two"]   # Games/PS3 and RPCS3's own
-    assert [window.tabs.tabText(i) for i in range(window.tabs.count())] == ["Your games", "Settings", "Log"]
+    assert [window.tabs.tabText(i) for i in range(window.tabs.count())] == ["Your games", "Settings", "Log",
+                                                                            "Start game"]
     assert [b.caption.text() for b in window.header_pills[1:]] == ["RPCS3 version", "Your games",
                                                                     "Available in Steam", "Play time"]
     for name in ("play_button", "firmware_box", "refresh_button", "install_button", "remove_button",
@@ -867,4 +868,39 @@ def test_remove_game_asks_what_to_keep(qapp, folders, monkeypatch, tmp_path):
     _wait(window, qapp)
     assert not target.exists() and window.running.text() == "One: deleted one (the disc game's folder)."
     assert "One" not in [window.table.item(r, 1).text() for r in range(window.table.rowCount())]
+    window.close()
+
+
+def test_start_game_starts_the_chosen_game_through_steam(qapp, folders, monkeypatch):
+    """The Start game tab (owner, 12-11-2026), a tab that is a button: a click starts the game chosen under Your
+    games through Steam, by its shortcut's number, and the open tab stays open. Without a chosen game, or with one
+    that is not in Steam yet, it says what to do first and starts nothing."""
+    _install(folders["home"])
+    monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: QMessageBox.StandardButton.Yes)
+    opened = []
+    window = _window(folders, open_url=lambda url: opened.append(url) or True)
+    tabs, start = window.tabs, window.start_tab.index
+    assert start == tabs.count() - 1 and tabs.tabText(start) == "Start game" and "Steam" in tabs.tabToolTip(start)
+    window.table.clearSelection()
+    tabs.tabBarClicked.emit(start)                                           # no game chosen
+    assert opened == [] and window.running.text().startswith("Choose a game under Your games first")
+    window.table.selectRow(0)
+    title = window.chosen().title
+    tabs.tabBarClicked.emit(start)                                           # chosen, but not in Steam yet
+    assert opened == [] and window.running.text() == (f"{title} is not in Steam yet: tick it and press Update Steam "
+                                                      "first.")
+    window.table.item(0, 0).setCheckState(Qt.CheckState.Checked)
+    window.on_update_steam()
+    _wait(window, qapp)
+    window.table.selectRow(0)
+    (name,) = shortcuts.in_steam(folders["steam_dir"]).values()
+    tabs.setCurrentIndex(1)
+    tabs.tabBarClicked.emit(start)                                           # a click on the tab
+    tabs.setCurrentIndex(start)                                              # as the click goes on to select it
+    assert opened == [steam.play_url(steam.appid(f'"{folders["run"]}"', name))]
+    assert opened[0].startswith("steam://rungameid/") and window.running.text() == f"Steam starts {title}."
+    assert tabs.currentIndex() == 1                                          # Settings is still open
+    window.open_url = lambda url: False
+    window.on_start_game()
+    assert window.running.text() == f"{title} could not be started: xdg-open is missing."
     window.close()

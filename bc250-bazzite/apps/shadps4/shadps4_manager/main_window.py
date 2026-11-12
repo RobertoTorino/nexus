@@ -10,11 +10,11 @@ own blue (style.py). Games Install (or a package dropped on the window, or given
 extractor (extract_dialog.py) on the game folders. Steam artwork… takes the suite's SteamGridDB API key, with which
 Update Steam looks up a cover for each game's portrait first (core's covers).
 
-The app has no Play button: a game is started from Steam. The window keeps what the app owns in shadPS4's files
-(userdata.py): the quit hotkeys. shadPS4's own window (Big Picture, shadPS4 settings under the games) stays for what
-the Settings tab does not set. The window also reads the volume Bazzite remembers for shadPS4 and says when it is
-muted (seen on the board). What the window says it also writes to the app's log (core's applog), shown in the Log
-tab.
+A game runs from Steam: the last tab, Start game, starts the chosen one there (owner, 12-11-2026). The window keeps what
+the app owns in shadPS4's files (userdata.py): the quit hotkeys. shadPS4's own window (Big Picture, shadPS4 settings
+under the games) stays for what the Settings tab does not set. The window also reads the volume Bazzite remembers for
+shadPS4 and says when it is muted (seen on the board). What the window says it also writes to the app's log (core's
+applog), shown in the Log tab.
 
 Packages (owner, 05-11-2026, as the Windows Portable Suite's shadPS4 Manager since 30-10-2026): a .pkg put in a game
 folder is a row of its own in Your games, "PKG" or "PKG update", until it is unpacked (extract.py). Unpack takes the
@@ -41,6 +41,7 @@ from PyQt6.QtWidgets import (QAbstractItemView, QDialog, QFileDialog, QGridLayou
 from bc250_core import SUITE_MANUAL_URL, applog, covers, sound, steam, window_title
 from bc250_core import __version__ as CORE_VERSION
 from bc250_core import keep, renamed
+from bc250_core.action_tab import ActionTab
 from bc250_core.keep_dialog import KeepDialog
 from bc250_core.platform import bin_home, private, xdg_open
 from bc250_core.theme import GREEN, RED
@@ -58,6 +59,7 @@ MANUAL_URL = f"{SUITE_MANUAL_URL}apps/shadps4/"
 FOLDER_TIMEOUT = 60
 SHADNET_WATCH_MS = 5000
 STEAM_TIP = "Add the ticked games to Steam and take out the others; Steam closes for it and starts again"
+START_TIP = "Start the game chosen under Your games through Steam, as its shortcut in Steam does"
 RUNNING = "shadPS4 is running: close it first, it writes its own settings over the change when it closes."
 STEAM_URL = "steam://open/games"        # Steam's library; Steam starts when it does not run
 STEAM, GAME, SERIAL, VERSION, FOLDER = range(5)             # the table's columns
@@ -331,6 +333,8 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(games_page, "Your games")
         self.tabs.addTab(self.settings_page, "Settings")
         self.tabs.addTab(log_page, "Log")
+        # Start game (owner, 12-11-2026): the last tab is a button, which starts the chosen game in Steam
+        self.start_tab = ActionTab(self.tabs, "Start game", START_TIP, self.on_start_game)
 
         self.running = WrappedLabel()
         self.running.setStyleSheet("font-weight:600;")
@@ -1014,6 +1018,26 @@ class MainWindow(QMainWindow):
         failed = keep.delete([path for item in keep.chosen(items) for path in item.paths])
         self.refresh()
         self.say(f"Packages deleted.{' Not deleted: ' + ', '.join(failed) + '.' if failed else ''}", not failed)
+
+    def on_start_game(self) -> None:
+        """The Start game tab (owner, 12-11-2026): the chosen game started through Steam, as its shortcut there
+        starts it (steam://rungameid/ with the shortcut's number; Steam starts first when it does not run)."""
+        game = self.chosen()
+        if game is None:
+            self.say("Choose a game under Your games first: Start game starts the chosen one in Steam.", ok=False)
+            return
+        if self.worker.running:
+            self.say("Wait until what runs now has finished, then start the game.", ok=False)
+            return
+        number = (steam.shortcut_number(self.steam_dir, shortcuts.for_game(game))
+                  if self.steam_dir is not None and str(game.eboot) in self.in_steam else None)
+        if number is None:
+            self.say(f"{game.title} is not in Steam yet: tick it and press Update Steam first.", ok=False)
+            return
+        if self.open_url(steam.play_url(number)):
+            self.say(f"Steam starts {game.title}.")
+        else:
+            self.say(f"{game.title} could not be started: xdg-open is missing.", ok=False)
 
     def on_update_steam(self) -> None:
         if self.steam_dir is None:

@@ -1,8 +1,9 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The weather beside the header's symbols (owner, 05-11-2026), from Open-Meteo (open-meteo.com: free, no account or
-key), as USB IPS3.5's screen has it. Nothing goes over the network until the user has chosen a place on the
-Settings page: the name they search for goes to the geocoding search, then the place's coordinates to the forecast,
-every INTERVAL_S while the portal shows. No Qt, so it is tested on its own; the window runs it off the GUI thread."""
+"""The weather in the header's status (owner, 05-11-2026; its third line since 12-11-2026), from Open-Meteo
+(open-meteo.com: free, no account or key), as USB IPS3.5's screen has it. Nothing goes over the network until the
+user has chosen a place on the Settings page: the name they search for goes to the geocoding search, then the
+place's coordinates to the forecast, every INTERVAL_S while the portal shows. No Qt, so it is tested on its own; the
+window runs it off the GUI thread."""
 
 from __future__ import annotations
 

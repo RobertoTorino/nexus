@@ -98,11 +98,16 @@ def test_vita3k_is_set_up_once_installed(qapp, folders):
 
 
 def test_no_user_name_on_the_screen(qapp, folders, tmp_path, monkeypatch):
-    """The user's folders show as ~ (owner, 03-11-2026: the privacy rule): Vita3K's storage on the games step, and
-    a message with a path in it."""
+    """The user's folders show as ~ (owner, 03-11-2026: the privacy rule): the game folder and Vita3K's storage on
+    the game folder's step, the firmware folder behind its info symbol, and a message with a path in it."""
     monkeypatch.setenv("HOME", str(tmp_path))
     window = _window(folders)
-    assert "<b>~/storage</b>" in window.games_state.text() and str(tmp_path) not in window.games_state.text()
+    assert window.folders_state.text() == "<b>~/Games/Vita</b>"                # what goes there: the info symbol
+    assert window.folders_info.text_ == ("Drop your games in ~/Games/Vita, .vpk, .zip, .pkg, zRIF license key, or "
+                                         "drop a game folder there.")
+    assert window.folders_state.toolTip() == "~/Games/Vita\n1 game(s) installed in Vita3K's storage, ~/storage."
+    assert window.firmware_info.text_.startswith("Drop your own firmware and font package in ~/Games/Vita/Firmware. ")
+    assert str(tmp_path) not in window.firmware_info.text_ + window.firmware_state.toolTip()
     window._job_done((False, f"Vita3K could not be installed: {tmp_path}/emulator is read-only"))
     assert window.running.text() == "Vita3K could not be installed: ~/emulator is read-only"
     window.close()
@@ -114,7 +119,9 @@ def test_before_installing(qapp, folders, tmp_path):
     # The state alone, in the words every manager uses (owner, 07-11-2026); what Install does in the tip.
     assert window.emulator_state.text() == "Not installed.<br>Install it with the Install button."
     assert f"Install downloads Vita3K build {emulator.VERSION}" in window.emulator_state.toolTip()
-    assert window.firmware_state.text().count("not installed") == 3
+    # The state of the firmware and of each part; where they come from: the info symbol (owner, 12-11-2026)
+    assert window.firmware_state.text() == ("Not installed<br>System software: not installed<br>Font package: not "
+                                            "installed<br>Preinstalled apps: not installed")
     assert window.install_pill.isEnabled() and not window.remove_pill.isEnabled()
     assert not window.game_pill.isEnabled() and not hasattr(window, "firmware_button")
     assert not window.vita3k_button.isEnabled()
@@ -127,17 +134,17 @@ def test_installed_with_firmware_and_games(qapp, folders, tmp_path):
     window = _window(folders)
     assert window.pill.text() == "No firmware" and window.firmware_box.value.text() == "—"
     assert window.game_pill.isEnabled()
-    text = window.firmware_state.text()
-    assert "playstation.com/en-us/support/hardware/psvita/system-software" in text and "(official page)" in text
-    assert "sd_8b5f60b56c3da8365b973dba570c53a5/PSP2UPDAT.PUP" in text and "(Sony's file)" in text
+    text = window.firmware_info.text_
+    assert "playstation.com/en-us/support/hardware/psvita/system-software" in text and "its official page" in text
+    assert "sd_8b5f60b56c3da8365b973dba570c53a5/PSP2UPDAT.PUP" in text and "http" not in window.firmware_state.text()
     install_firmware(tmp_path / "storage", fonts=False)
     window.refresh()
     assert window.pill.text() == "No firmware" and window.firmware_box.value.text() == "Partly"
     install_firmware(tmp_path / "storage")
     window.refresh()
     assert window.pill.text() == "Ready" and window.firmware_box.value.text() == "Ready"
-    assert "System software: installed<br>Font package: installed" in window.firmware_state.text()
-    assert "Preinstalled apps (optional): not installed" in window.firmware_state.text()
+    assert window.firmware_state.text() == ("Installed<br>System software: installed<br>Font package: installed<br>"
+                                            "Preinstalled apps: not installed")
     assert window.emulator_box.value.text() == "4269"
     assert window.games_box.value.text() == "1" and window.steam_box.value.text() == "0"
     assert window.emulator_state.text() == "Installed.<br>Uninstall with the Uninstall button."
@@ -159,8 +166,7 @@ def test_no_games_yet(qapp, folders, tmp_path):
     assert window.pill.text() == "No firmware"                                  # another storage: nothing there
     install_firmware(tmp_path / "empty")
     window.refresh()
-    assert window.pill.text() == "No games" and "None installed yet" in window.games_state.text()
-    assert ".pkg with its zRIF" in window.games_state.text()
+    assert window.pill.text() == "No games" and "0 game(s) installed" in window.folders_state.toolTip()
     window.close()
 
 
@@ -399,7 +405,8 @@ def test_the_blue_look(qapp, folders, monkeypatch):
         assert sheet.rfind(f"border-left-color:{style.BLUE}") > sheet.rfind(OUTLINE) >= 0, pill.caption.text()
         assert style.HOVER_SHEEN in sheet and style.BLUE_TINT not in sheet
     assert "QTabBar::tab" in window.styleSheet() and "QComboBox" in window.styleSheet()
-    assert [window.tabs.tabText(i) for i in range(window.tabs.count())] == ["Your games", "Settings", "Log"]
+    assert [window.tabs.tabText(i) for i in range(window.tabs.count())] == ["Your games", "Settings", "Log",
+                                                                            "Start game"]
     shown = []
     monkeypatch.setattr(QMenu, "popup", lambda menu, point, *a: shown.append(menu))
     window.game_pill.click()
@@ -531,4 +538,39 @@ def test_the_settings_tab(qapp, folders):
     running[0] = True
     page.widgets["stretch"].setChecked(True)
     assert "stretch_the_display_area: false" in path.read_text() and "Vita3K is running" in page.status.text()
+    window.close()
+
+
+def test_start_game_starts_the_chosen_game_through_steam(qapp, folders, monkeypatch):
+    """The Start game tab (owner, 12-11-2026), a tab that is a button: a click starts the game chosen under Your
+    games through Steam, by its shortcut's number, and the open tab stays open. Without a chosen game, or with one
+    that is not in Steam yet, it says what to do first and starts nothing."""
+    _install(folders["home"])
+    monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: QMessageBox.StandardButton.Yes)
+    opened = []
+    window = _window(folders, open_url=lambda url: opened.append(url) or True)
+    tabs, start = window.tabs, window.start_tab.index
+    assert start == tabs.count() - 1 and tabs.tabText(start) == "Start game" and "Steam" in tabs.tabToolTip(start)
+    window.table.clearSelection()
+    tabs.tabBarClicked.emit(start)                                           # no game chosen
+    assert opened == [] and window.running.text().startswith("Choose a game under Your games first")
+    window.table.selectRow(0)
+    title = window.chosen().title
+    tabs.tabBarClicked.emit(start)                                           # chosen, but not in Steam yet
+    assert opened == [] and window.running.text() == (f"{title} is not in Steam yet: tick it and press Update Steam "
+                                                      "first.")
+    window.table.item(0, 0).setCheckState(Qt.CheckState.Checked)
+    window.on_update_steam()
+    _wait(window, qapp)
+    window.table.selectRow(0)
+    (name,) = shortcuts.in_steam(folders["steam_dir"]).values()
+    tabs.setCurrentIndex(1)
+    tabs.tabBarClicked.emit(start)                                           # a click on the tab
+    tabs.setCurrentIndex(start)                                              # as the click goes on to select it
+    assert opened == [steam.play_url(steam.appid(f'"{folders["run"]}"', name))]
+    assert opened[0].startswith("steam://rungameid/") and window.running.text() == f"Steam starts {title}."
+    assert tabs.currentIndex() == 1                                          # Settings is still open
+    window.open_url = lambda url: False
+    window.on_start_game()
+    assert window.running.text() == f"{title} could not be started: xdg-open is missing."
     window.close()

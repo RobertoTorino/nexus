@@ -600,8 +600,9 @@ def test_the_desktops_close_asks_only_while_something_runs(window, monkeypatch):
 
 
 def test_a_shortcut_starts_its_program(window, monkeypatch):
-    """The header's shortcuts (owner, 12-11-2026): Steam, the file manager, YouTube in Brave Browser, and the
-    desktop's Bluetooth and network settings. One whose program is missing says what is needed and starts nothing."""
+    """The header's shortcuts (owner, 12-11-2026): the file manager, Steam, YouTube in Brave Browser, and the
+    desktop's Bluetooth, network, sound and display settings. One whose program is missing says what is needed and
+    starts nothing."""
     from bc250_portal import shortcuts
     started, raised, said = [], [], []
     window.launch = lambda argv: (started.append(argv), True)[1]
@@ -614,10 +615,11 @@ def test_a_shortcut_starts_its_program(window, monkeypatch):
                         lambda argv, **kw: shortcuts.subprocess.CompletedProcess(argv, flatpaks[0], "", ""))
     for button in window.shortcut_buttons:
         button.click()
-    assert started == [["steam"], ["xdg-open", str(Path.home())],
+    assert started == [["xdg-open", str(Path.home())], ["steam"],
                        ["flatpak", "run", "com.brave.Browser", "--kiosk", "https://www.youtube.com/"],
-                       ["systemsettings", "kcm_bluetooth"], ["systemsettings", "kcm_networkmanagement"]]
-    assert raised[0] == ("steam",) and len(raised) == 5 and said == []
+                       ["systemsettings", "kcm_bluetooth"], ["systemsettings", "kcm_networkmanagement"],
+                       ["systemsettings", "kcm_pulseaudio"], ["systemsettings", "kcm_kscreen"]]
+    assert raised[1] == ("steam",) and len(raised) == 7 and said == []
     started.clear()
     flatpaks[0] = 1                                             # Brave Browser is not installed
     window.youtube_button.click()
@@ -626,6 +628,9 @@ def test_a_shortcut_starts_its_program(window, monkeypatch):
     window.steam_button.click()
     window.bluetooth_button.click()
     assert started == [] and "Steam is not installed" in said[-2] and "Bluetooth settings" in said[-1]
+    window.volume_button.click()
+    window.screen_button.click()
+    assert started == [] and "sound settings" in said[-2] and "display settings" in said[-1]
     monkeypatch.setattr(shortcuts.shutil, "which", lambda name: f"/usr/bin/{name}")
     window.launch = lambda argv: False
     window.files_button.click()
@@ -1037,23 +1042,23 @@ def test_one_theme_for_every_app(window, home):
 def test_the_header_is_an_apps_header_with_symbols(window):
     """The suite's icon, spanning the name, ☰ and the close symbol at the top right and the row of big symbols
     (owner, 05-11-2026, in place of the pills): Refresh, Sys info, Install all apps and Install all updates, then the
-    shortcuts (owner, 12-11-2026): Steam, Files, YouTube, Bluetooth and Network, what each does in its tooltip, then
-    the weather (hidden without a place); on their right the installed count over the status line. The Desktop
+    shortcuts (owner, 12-11-2026): Files, Steam, YouTube, Bluetooth, Network, Volume and Screen, what each does in
+    its tooltip; on their right the installed count over the status. The Desktop
     icons, Sound, the theme, the wallpaper, the clock and the weather on the Settings page behind ☰ (owner,
     04-11-2026 and 05-11-2026)."""
     symbols = window.header_buttons
     listed = len(window.entries)
     sound = "Yes" if window.sounds.available() else "No"             # No on a machine without an audio output
     assert symbols == [window.refresh_button, window.sysinfo_button, window.apps_button, window.updates_button,
-                       window.steam_button, window.files_button, window.youtube_button, window.bluetooth_button,
-                       window.network_button, window.weather_button]
-    assert window.weather_button.isHidden()                             # no place chosen: no weather
-    symbols, corner = symbols[:-1], [window.settings_button, window.close_button]
+                       window.files_button, window.steam_button, window.youtube_button, window.bluetooth_button,
+                       window.network_button, window.volume_button, window.screen_button]
+    assert window.big.status.weather.isHidden()                         # no place chosen: no weather
+    corner = [window.settings_button, window.close_button]
     assert all(isinstance(s, mw.SymbolButton) for s in [*symbols, *corner])
     assert [s.toolTip().split(":")[0].split(".")[0] for s in [*symbols, *corner]] == [
-        "Refresh", "Sys info", "Install all apps", "Install all updates", "Steam", "Files", "YouTube", "Bluetooth",
-        "Network", "Settings", "Exit"]
-    assert [window.big.symbol_row.indexOf(s) for s in symbols] == list(range(9))
+        "Refresh", "Sys info", "Install all apps", "Install all updates", "Files", "Steam", "YouTube", "Bluetooth",
+        "Network", "Volume", "Screen", "Settings", "Exit"]
+    assert [window.big.symbol_row.indexOf(s) for s in symbols] == list(range(11))
     upper = window.big.upper                                            # the top right: ☰, then the close symbol
     assert [upper.indexOf(s) for s in corner] == [upper.count() - 2, upper.count() - 1]
     assert window.big.installed.text() == f"0/{listed} installed"
@@ -1362,26 +1367,38 @@ def test_the_clock_pill_sets_the_hours_the_seconds_and_the_zone(window):
     assert window.clock_style().zone == "local"
 
 
-def test_the_status_line_takes_a_second_line_when_one_is_too_narrow(qapp):
-    """The clock goes under the loads when the room on the right of the symbols is too narrow for one line (owner,
-    05-11-2026), and back on the same line when there is room again."""
-    from bc250_portal.bigpicture import StatusLine
+def test_the_status_is_three_lines(qapp):
+    """A line each (owner, 12-11-2026), whatever the room: the loads, the date and time, and the weather with a place
+    chosen (its symbol, the place, the temperature and the sky); two lines without a place."""
+    from bc250_portal import glyphs
+    from bc250_portal.bigpicture import PLACE_W, StatusLine
     status = StatusLine()
     status.show()
     status.set_parts("CPU 12% 54°C | GPU 3% 61°C", "Thursday 11/5/26 | 07:44:05 PM CEST")
-    status.resize(status.sizeHint())
-    assert status.text() == "CPU 12% 54°C | GPU 3% 61°C | Thursday 11/5/26 | 07:44:05 PM CEST" and not status.two
-    status.resize(status.minimumSizeHint().width(), 80)
-    assert status.text() == "CPU 12% 54°C | GPU 3% 61°C\nThursday 11/5/26 | 07:44:05 PM CEST" and status.two
-    assert status.minimumSizeHint().width() < status.sizeHint().width()
-    status.resize(status.sizeHint().width() + 40, 40)
-    assert not status.two and "\n" not in status.text()
+    status.resize(status.sizeHint().width() + 400, status.sizeHint().height())     # room for one line: still two
+    assert status.text() == "CPU 12% 54°C | GPU 3% 61°C\nThursday 11/5/26 | 07:44:05 PM CEST"
+    assert status.lines.text() == status.text() and status.weather.isHidden()
+    two = status.sizeHint().height()
+    status.set_weather("Amsterdam", "8°C  Overcast", glyphs.weather("cloudy"), True, "Amsterdam: Overcast, 8°C.")
+    assert status.text().splitlines()[2] == "Amsterdam  8°C  Overcast" == status.sky.text()
+    assert not status.weather.isHidden() and not status.symbol.pixmap().isNull()
+    assert status.weather.toolTip() == "Amsterdam: Overcast, 8°C." and status.sizeHint().height() > two
+    status.set_weather("Amsterdam", "", glyphs.weather("cloudy"), False, "")          # on its way: the place alone
+    assert status.sky.text() == "Amsterdam"
+    status.set_weather("Llanfairpwllgwyngyllgogerychwyrndrobwllllantysiliogogogoch", "8°C  Overcast",
+                       glyphs.weather("cloudy"), True, "")
+    place = status.sky.text().split("  ")[0]
+    assert place.endswith("…") and status.sky.fontMetrics().horizontalAdvance(place) <= PLACE_W
+    assert status.narrowest() >= status.sky.fontMetrics().horizontalAdvance(status.sky.text())
+    status.set_weather("", "", None, False, "")
+    assert status.weather.isHidden() and len(status.text().splitlines()) == 2
     status.close()
 
 
-def test_the_weather_shows_beside_the_symbols_once_a_place_is_chosen(qapp, home, settings_dir, tmp_path, launched):
-    """No place: no weather, nothing asked. A place: its weather from Open-Meteo, the symbol and the name beside
-    Install all updates; Open-Meteo down keeps the last weather and says why in the tooltip; No weather removes it."""
+def test_the_weather_shows_under_the_clock_once_a_place_is_chosen(qapp, home, settings_dir, tmp_path, launched):
+    """No place: no weather, nothing asked. A place: its weather from Open-Meteo as the status' third line (owner,
+    12-11-2026), the symbol, the name, the temperature and the sky; Open-Meteo down keeps the last weather and says
+    why in the tooltip; No weather removes it."""
     asked = []
 
     def fetch(url, params):
@@ -1392,22 +1409,24 @@ def test_the_weather_shows_beside_the_symbols_once_a_place_is_chosen(qapp, home,
     fetch.down = False
     w = mw.MainWindow(load(MANIFEST), FakeSources(tmp_path / "work"), Records(tmp_path / "installed.json"),
                       weather_fetch=fetch)
-    assert w.weather_button.isHidden() and w.weather_pill.value.text() == "None" and asked == []
+    line = w.big.status
+    assert line.weather.isHidden() and w.weather_pill.value.text() == "None" and asked == []
     w.set_place(mw.weather.Place("Amsterdam", "North Holland", "Netherlands", 52.37, 4.89))
     assert wait_for(lambda: w.weather is not None)
     assert asked == [mw.weather.FORECAST_URL] and w.weather_timer.isActive()
-    assert not w.weather_button.isHidden() and w.weather_button.place == "Amsterdam" and w.weather_button.known
-    assert "Overcast, 8°C" in w.weather_button.toolTip() and w.weather_pill.full_value == "Amsterdam"
+    assert not line.weather.isHidden() and line.sky.text() == "Amsterdam  8°C  Overcast" and line.known
+    assert "Overcast, 8°C" in line.weather.toolTip() and w.weather_pill.full_value == "Amsterdam"
     assert mw.weather.Place.from_json(w.settings.value(mw.PLACE_KEY)).name == "Amsterdam"
     fetch.down = True
     w.update_weather()
     assert wait_for(lambda: w.weather_error != "")
-    assert w.weather is not None and "unavailable for now" in w.weather_button.toolTip()
+    assert w.weather is not None and "unavailable for now" in line.weather.toolTip()
+    assert line.sky.text() == "Amsterdam  8°C  Overcast"                       # the last weather stays
     menu = w.weather_menu()
     assert [a.text() for a in menu.actions()] == ["Choose a place…", "Update the weather now", "No weather"]
     w._weather_action(menu.actions()[2])
     menu.deleteLater()
-    assert w.weather_button.isHidden() and not w.weather_timer.isActive() and w.settings.value(mw.PLACE_KEY) == ""
+    assert line.weather.isHidden() and not w.weather_timer.isActive() and w.settings.value(mw.PLACE_KEY) == ""
     w.close()
 
 

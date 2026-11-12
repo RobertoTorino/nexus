@@ -11,6 +11,7 @@ from PyQt6.QtWidgets import QMessageBox
 
 from bc250_core import __version__ as CORE_VERSION, instance
 from bc250_core.app import create_app, exec_app
+from bc250_core import exit_keys
 
 from . import APP_NAME, INFO, ROOT, __version__
 from .main_window import MainWindow
@@ -29,6 +30,7 @@ def main() -> int:
 
     # Names, Fusion style, rounded tooltips and the window icon, as before the move to bc250_core.
     app = create_app(INFO, qt_args)
+    exit_keys.install(app)                  # Escape and a controller's B close the window
 
     script = Path(args.script).resolve()
     if not script.is_file():

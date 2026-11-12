@@ -8,6 +8,7 @@ import sys
 
 from bc250_core import __version__ as CORE_VERSION, instance
 from bc250_core.app import create_app, exec_app
+from bc250_core import exit_keys
 from bc250_core.platform import config_home
 
 from . import APP_NAME, INFO, __version__
@@ -35,6 +36,8 @@ def main() -> int:
     from .consoles import migrate_old_config
     migrate_old_config(config_home(), INFO.app_id)      # before Qt opens the settings file
     app = create_app(INFO, qt_args)
+    exit_keys.install(app, controller=False)    # Escape closes the window; not B:
+                                                # the controller is the game's while it streams, and the controller test's
     if args.stream:
         from . import direct
         return direct.run(args.stream, app, players=players, simulated_loss=max(0.0, min(args.simulate_loss, 100.0)))

@@ -9,6 +9,7 @@ from pathlib import Path
 
 from bc250_core import __version__ as CORE_VERSION, instance
 from bc250_core.app import create_app, exec_app
+from bc250_core import exit_keys
 
 from . import APP_NAME, INFO, __version__
 
@@ -35,6 +36,7 @@ def main() -> int:
         return build_table(args.build_table, args.out)
 
     app = create_app(INFO, qt_args)
+    exit_keys.install(app)                  # Escape and a controller's B close the window
     if instance.already_running(INFO.app_id):
         return 0
     from .main_window import MainWindow

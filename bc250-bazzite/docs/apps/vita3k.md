@@ -40,21 +40,24 @@ The header shows the **Vita3K version** (its build number), the **Firmware** (Re
 the app's state. Under the introduction, which links to **Vita3K's release notes** and to this wiki, a row of three
 pills does the setting up, each with what it is for on top and what it does under it: **Vita3K Install**,
 **Vita3K Uninstall** and **Games Install**. Three lines below the pills say where each stands, and then come three
-tabs: **Your games**, **Settings** and **Log**.
+tabs: **Your games**, **Settings** and **Log**, and
+**Start game**, a tab that is a button.
 
 - **Vita3K**: **Not installed.** or **Installed.**, with the button to use under it. The tooltip says which build
   is installed, or what Install takes, and when a newer build is out. **Install** downloads Vita3K from GitHub
   (about 86 MB) and checks it against the checksum this version of the app was tried with before installing it;
   when another build is installed, the tooltip and the log say so, and **Install** puts the app's in.
   **Uninstall** takes it out again; Vita3K's own folders, with the firmware, your games, saves and settings, stay.
-- **Firmware**: which parts of the PS Vita's firmware Vita3K has: the system software, the font package and the
-  preinstalled apps. Put the `PSP2UPDAT.PUP` files you downloaded in `~/Games/Vita/Firmware` (each in a folder of
+- **Firmware**: **Installed** once Vita3K has the system software and the font package, **Not installed** until
+  then, and under it each part by name: the system software, the font package and the preinstalled apps (optional).
+  The **i** beside them says where the files go and links to where each is downloaded. Put the `PSP2UPDAT.PUP` files you downloaded in `~/Games/Vita/Firmware` (each in a folder of
   its own there if you like, since Sony names all three the same): once Vita3K is installed, the app gives them to
   Vita3K by itself, the largest first, one after the other, when the window opens and on **Refresh**; the line
   under the tabs then says which part each was. A file is given once as it is, also one Vita3K could not use; a
   file you replace is given again. The files stay in the folder.
-- **Games**: how many games Vita3K has installed. **Games Install** installs one of yours; its window opens in
-  `~/Games/Vita`, the app's own folder (also on a USB drive or an SD card with a `Games/Vita` folder on it):
+- **Game folder**: the app's own folder, `~/Games/Vita`, and a removable drive's `Games/Vita`; the **i** beside
+  them says what goes there, and the tooltip how many games Vita3K has installed. **Games Install** installs one
+  of yours; its window opens in that folder:
     - **From a file**: a `.vpk` or `.zip` is handed to Vita3K, which installs it and then starts it in its own
       window; a `.pkg` asks for the game's zRIF license key, and Vita3K installs it without a window.
     - **From a dumped folder**: Vita3K installs the folder's game and starts it in its own window.
@@ -71,8 +74,8 @@ size: the game in Vita3K's storage, and its update and extra content when they a
 **Delete marked**; **Cancel** deletes nothing. The saves stay. A game the app will not delete (one at the top of a
 drive, or in a folder that holds another game) is said so under the tabs: delete it by hand.
 
-**Vita3K settings** opens Vita3K's own window, with its other settings, its controls and its game list. The app
-has no Play button: a game is started from Steam.
+**Vita3K settings** opens Vita3K's own window, with its other settings, its controls and its game list. A game runs from Steam:
+[**Start game**](#start-game) starts the chosen one there.
 
 #### Game updates and extra content
 
@@ -109,6 +112,13 @@ SteamGridDB for each game instead; the background and the logo on the game's pag
 [Covers from SteamGridDB](covers.md) for the key, how a game is looked up and how to use a cover of your own.
 
 **Steam** in the line under the table is a link: it opens Steam's library (Steam starts when it does not run).
+
+#### Start game
+
+The last tab, **Start game**, is a button. Choose a game in the table and click it: the game starts through Steam,
+as its shortcut in Steam starts it, and Steam starts first when it does not run. The tab you were on stays open. A
+game that is not in Steam yet is not started: the line under the tabs says to tick it and press **Update Steam**
+first.
 
 ### Settings
 
