@@ -138,6 +138,80 @@ def menu(color: str) -> QIcon:
     return _icon(color, draw, BIG)
 
 
+def close(color: str) -> QIcon:
+    """A cross: the portal's exit."""
+    def draw(p: QPainter) -> None:
+        _line(p, (16, 16), (48, 48))
+        _line(p, (48, 16), (16, 48))
+    return _icon(color, draw, BIG)
+
+
+def steam(color: str) -> QIcon:
+    """Steam: a disc with a piston's rod cut out of it, a large ring at its head and a small one at its foot."""
+    def draw(p: QPainter) -> None:
+        p.setBrush(QColor(color))
+        p.setPen(Qt.PenStyle.NoPen)
+        p.drawEllipse(QPointF(32, 32), 27, 27)
+        p.setCompositionMode(QPainter.CompositionMode.CompositionMode_Clear)
+        cut = QPen(QColor(color), 4.5)
+        cut.setCapStyle(Qt.PenCapStyle.RoundCap)
+        p.setPen(cut)
+        p.setBrush(Qt.BrushStyle.NoBrush)
+        p.drawEllipse(QPointF(41, 25), 9.5, 9.5)            # the head: a ring
+        cut.setWidthF(9)
+        p.setPen(cut)
+        _line(p, (33, 33), (21, 41))                        # the rod
+        cut.setWidthF(4.5)
+        p.setPen(cut)
+        p.drawEllipse(QPointF(18, 42), 6, 6)                # the foot
+    return _icon(color, draw, BIG)
+
+
+def folder(color: str) -> QIcon:
+    """A folder: the file manager."""
+    def draw(p: QPainter) -> None:
+        pen = p.pen()
+        pen.setWidthF(5)
+        p.setPen(pen)
+        _line(p, (8, 14), (25, 14), (31, 22), (56, 22), (56, 50), (8, 50), (8, 14))
+    return _icon(color, draw, BIG)
+
+
+def youtube(color: str) -> QIcon:
+    """A screen with a play triangle."""
+    def draw(p: QPainter) -> None:
+        pen = p.pen()
+        pen.setWidthF(5)
+        p.setPen(pen)
+        p.drawRoundedRect(QRectF(7, 15, 50, 34), 11, 11)
+        p.setBrush(QColor(color))
+        pen.setWidthF(3)
+        p.setPen(pen)
+        p.drawPolygon(QPolygonF([QPointF(27, 24), QPointF(27, 40), QPointF(41, 32)]))
+    return _icon(color, draw, BIG)
+
+
+def bluetooth(color: str) -> QIcon:
+    """The Bluetooth rune."""
+    def draw(p: QPainter) -> None:
+        pen = p.pen()
+        pen.setWidthF(5)
+        p.setPen(pen)
+        _line(p, (19, 21), (43, 43), (31, 55), (31, 9), (43, 21), (19, 43))
+    return _icon(color, draw, BIG)
+
+
+def network(color: str) -> QIcon:
+    """Three arcs over a dot: the network."""
+    def draw(p: QPainter) -> None:
+        cx, cy = 32, 50
+        for r in (14, 26, 38):
+            p.drawArc(QRectF(cx - r, cy - r, 2 * r, 2 * r), 48 * 16, 84 * 16)
+        p.setBrush(QColor(color))
+        p.drawEllipse(QPointF(cx, cy), 2.5, 2.5)
+    return _icon(color, draw, BIG)
+
+
 # The weather beside the symbols (owner, 05-11-2026): a symbol for each kind of weather.py, a sun by day and a moon
 # by night where the sky shows.
 def _sun(p: QPainter, cx: float, cy: float, r: float) -> None:

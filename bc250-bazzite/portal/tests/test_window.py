@@ -553,37 +553,83 @@ def test_a_download_counts_its_megabytes(window, tmp_path):
     assert window.states["gpu"].busy == ""
 
 
-def test_every_exit_asks_first(window, monkeypatch):
-    """Escape (B) asks "Do you really want to exit the Portal?" (owner, 05-11-2026), No the default; a Yes closes.
-    While a download or an install runs, the question says what exiting does to it."""
+def test_the_exit_asks_nothing(window, monkeypatch):
+    """Escape (B) and the close symbol close the portal without a question (owner, 12-11-2026). Only while a download
+    or an install runs they ask, No the default, and say what exiting does to it."""
     closed, asked = [], []
     window.close = lambda: closed.append(1)
     answer = [QMessageBox.StandardButton.No]
     monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: (asked.append(a), answer[0])[1])
     window.escape()
-    assert closed == [] and asked[-1][2] == mw.EXIT_QUESTION
+    assert closed == [1] and asked == [] and window.exit_confirmed
+    window.close_button.click()
+    assert closed == [1, 1] and asked == []
+    window.big.show_settings(True)
+    window.escape()                                             # on the Settings page B goes back ...
+    assert closed == [1, 1] and not window.big.in_settings()
+    window.big.show_settings(True)
+    window.close_button.click()                                 # ... and the close symbol closes
+    assert closed == [1, 1, 1]
+    window.big.show_settings(False)
+    window._job = (entry_of(window, "gpu"), "install")
+    window.escape()
+    assert closed == [1, 1, 1] and asked[-1][2] == mw.EXIT_QUESTION + "\n\nThe download stops."
     assert asked[-1][3] == QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
     assert asked[-1][4] == QMessageBox.StandardButton.No
     answer[0] = YES
-    window.escape()
-    assert closed == [1] and window.exit_confirmed
-    window._job = (entry_of(window, "gpu"), "install")
-    window.escape()
-    assert asked[-1][2] == mw.EXIT_QUESTION + "\n\nThe download stops."
+    window.close_button.click()
+    assert closed == [1, 1, 1, 1] and len(asked) == 2
     window._job = None
 
 
-def test_the_desktops_close_asks_and_the_portals_own_does_not(window, monkeypatch):
+def test_the_desktops_close_asks_only_while_something_runs(window, monkeypatch):
     from PyQt6.QtGui import QCloseEvent
     asked = []
     monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: (asked.append(a), QMessageBox.StandardButton.No)[1])
+    window._job = (entry_of(window, "gpu"), "install")
     event = QCloseEvent()
     monkeypatch.setattr(event, "spontaneous", lambda: True)
     window.closeEvent(event)
     assert asked and not event.isAccepted()
     asked.clear()
-    window.close()                                              # a restart, or the test's own: no question
-    assert asked == []
+    window._job = None
+    event = QCloseEvent()
+    monkeypatch.setattr(event, "spontaneous", lambda: True)
+    window.closeEvent(event)                                    # Alt+F4 with nothing running: no question
+    assert asked == [] and event.isAccepted()
+
+
+def test_a_shortcut_starts_its_program(window, monkeypatch):
+    """The header's shortcuts (owner, 12-11-2026): Steam, the file manager, YouTube in Brave Browser, and the
+    desktop's Bluetooth and network settings. One whose program is missing says what is needed and starts nothing."""
+    from bc250_portal import shortcuts
+    started, raised, said = [], [], []
+    window.launch = lambda argv: (started.append(argv), True)[1]
+    monkeypatch.setattr(window.raiser, "bring_to_front", lambda ids, pids=(): raised.append(tuple(ids)))
+    monkeypatch.setattr(QMessageBox, "information", lambda *a, **k: said.append(a[2]))
+    monkeypatch.setattr(QMessageBox, "critical", lambda *a, **k: said.append(a[2]))
+    monkeypatch.setattr(shortcuts.shutil, "which", lambda name: f"/usr/bin/{name}")
+    flatpaks = [0]
+    monkeypatch.setattr(shortcuts.subprocess, "run",
+                        lambda argv, **kw: shortcuts.subprocess.CompletedProcess(argv, flatpaks[0], "", ""))
+    for button in window.shortcut_buttons:
+        button.click()
+    assert started == [["steam"], ["xdg-open", str(Path.home())],
+                       ["flatpak", "run", "com.brave.Browser", "--kiosk", "https://www.youtube.com/"],
+                       ["systemsettings", "kcm_bluetooth"], ["systemsettings", "kcm_networkmanagement"]]
+    assert raised[0] == ("steam",) and len(raised) == 5 and said == []
+    started.clear()
+    flatpaks[0] = 1                                             # Brave Browser is not installed
+    window.youtube_button.click()
+    assert started == [] and "Brave Browser is required" in said[-1]
+    monkeypatch.setattr(shortcuts.shutil, "which", lambda name: None)
+    window.steam_button.click()
+    window.bluetooth_button.click()
+    assert started == [] and "Steam is not installed" in said[-2] and "Bluetooth settings" in said[-1]
+    monkeypatch.setattr(shortcuts.shutil, "which", lambda name: f"/usr/bin/{name}")
+    window.launch = lambda argv: False
+    window.files_button.click()
+    assert "could not be started" in said[-1]
 
 
 def test_a_key_for_each_controller_action(window, monkeypatch):
@@ -989,23 +1035,27 @@ def test_one_theme_for_every_app(window, home):
 
 
 def test_the_header_is_an_apps_header_with_symbols(window):
-    """The suite's icon, spanning the name, ☰ at the top right and the row of big symbols (owner, 05-11-2026, in
-    place of the pills): Refresh, Sys info, Install all apps and Install all updates, what each does in its tooltip,
-    then the weather (hidden without a place); on their right the installed count over the status line. The Desktop
+    """The suite's icon, spanning the name, ☰ and the close symbol at the top right and the row of big symbols
+    (owner, 05-11-2026, in place of the pills): Refresh, Sys info, Install all apps and Install all updates, then the
+    shortcuts (owner, 12-11-2026): Steam, Files, YouTube, Bluetooth and Network, what each does in its tooltip, then
+    the weather (hidden without a place); on their right the installed count over the status line. The Desktop
     icons, Sound, the theme, the wallpaper, the clock and the weather on the Settings page behind ☰ (owner,
     04-11-2026 and 05-11-2026)."""
     symbols = window.header_buttons
     listed = len(window.entries)
     sound = "Yes" if window.sounds.available() else "No"             # No on a machine without an audio output
     assert symbols == [window.refresh_button, window.sysinfo_button, window.apps_button, window.updates_button,
-                       window.weather_button]
+                       window.steam_button, window.files_button, window.youtube_button, window.bluetooth_button,
+                       window.network_button, window.weather_button]
     assert window.weather_button.isHidden()                             # no place chosen: no weather
-    symbols = symbols[:4]
-    assert all(isinstance(s, mw.SymbolButton) for s in [*symbols, window.settings_button])
-    assert [s.toolTip().split(":")[0].split(".")[0] for s in [*symbols, window.settings_button]] == [
-        "Refresh", "Sys info", "Install all apps", "Install all updates", "Settings"]
-    assert [window.big.symbol_row.indexOf(s) for s in symbols] == [0, 1, 2, 3]
-    assert window.big.upper.indexOf(window.settings_button) == window.big.upper.count() - 1     # the top right
+    symbols, corner = symbols[:-1], [window.settings_button, window.close_button]
+    assert all(isinstance(s, mw.SymbolButton) for s in [*symbols, *corner])
+    assert [s.toolTip().split(":")[0].split(".")[0] for s in [*symbols, *corner]] == [
+        "Refresh", "Sys info", "Install all apps", "Install all updates", "Steam", "Files", "YouTube", "Bluetooth",
+        "Network", "Settings", "Exit"]
+    assert [window.big.symbol_row.indexOf(s) for s in symbols] == list(range(9))
+    upper = window.big.upper                                            # the top right: ☰, then the close symbol
+    assert [upper.indexOf(s) for s in corner] == [upper.count() - 2, upper.count() - 1]
     assert window.big.installed.text() == f"0/{listed} installed"
     assert " | " in window.big.status.text()
     assert [(p.value.text(), p.caption.text()) for p in window.setting_pills] == [

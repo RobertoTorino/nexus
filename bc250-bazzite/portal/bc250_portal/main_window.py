@@ -2,9 +2,11 @@
 """The portal window: one fullscreen view (bigpicture.py; owner, 01-11-2026: Suite Desktop Mode, the window of
 tabs, is gone), opened by a short animated intro with its own sound. The header, as an app's header: the suite's
 icon (a click opens the wiki), spanning the name with the version and the stage, a line that says what the open
-category is for, ☰ at the top right, and under them a row of big symbols (owner, 05-11-2026: in place of the pills):
-Refresh, Sys info (a small window with what the system reports about the board, sysinfo.py), Install all apps and
-Install all updates (the counts in their tooltips, the updates waiting on a red badge). On the right of the symbols
+category is for, ☰ and the close symbol at the top right, and under them a row of big symbols (owner, 05-11-2026: in
+place of the pills): Refresh, Sys info (a small window with what the system reports about the board, sysinfo.py),
+Install all apps and Install all updates (the counts in their tooltips, the updates waiting on a red badge), then the
+shortcuts (owner, 12-11-2026; shortcuts.py): Steam, Files (the file manager), YouTube (in Brave Browser), and the
+desktop's Bluetooth and Network settings. On the right of the symbols
 how many apps are installed (installed / listed), and under it the CPU's and the GPU's load and temperature with the
 date and time (status.py: the loads every 2 s, the clock every second), the clock on a second line when one is too
 narrow. With a place chosen, the weather follows the symbols (weather.py, from Open-Meteo every 30 minutes): its
@@ -90,7 +92,8 @@ from bc250_core.theme import BLUE, ORANGE, RED, THEMES, muted, save_theme_name, 
 from bc250_core.updates import ReleaseInfo, UpdateChecker, version_tuple
 from bc250_core.widgets import Pill
 
-from . import audio, desktop_icons, glyphs, keyboard, kwin, pointer, status, sysinfo, wallpaper, weather
+from . import audio, desktop_icons, glyphs, keyboard, kwin, pointer, shortcuts, status, sysinfo, wallpaper
+from . import weather
 from .bigpicture import INTRO_BANNER, UPDATE_BANNER, BigPicture, HeaderPill, Intro, SymbolButton, WeatherButton
 from .gamepad import TOUCH_SPEED, Gamepad
 from .looks import VEIL
@@ -99,7 +102,14 @@ from .manifest import CATEGORIES, AppEntry
 from .portal_update import PortalUpdate
 
 PROGRESS_MS = 500                       # how often a download's size is shown (a 90 MB release looked like a hang)
-EXIT_QUESTION = "Do you really want to exit the Portal?"     # every exit asks (owner, 05-11-2026)
+# Asked only while a download or an install runs, with what exiting does to it; else the portal closes at once
+# (owner, 12-11-2026: no question on exit).
+EXIT_QUESTION = "Do you really want to exit the Portal?"
+# The header's shortcuts (owner, 12-11-2026): what a message calls each one, and what finds its program.
+SHORTCUTS = {"steam": ("Steam", shortcuts.steam), "files": ("The file manager", shortcuts.files),
+             "youtube": ("YouTube", shortcuts.youtube),
+             "bluetooth": ("The Bluetooth settings", shortcuts.bluetooth_settings),
+             "network": ("The network settings", shortcuts.network_settings)}
 # A key for each controller action that has none of its own, so a pad Steam turns into keys (its desktop layout) can
 # do all of them: map the buttons to these keys in Steam (owner, 05-11-2026).
 ACTION_KEYS = {Qt.Key.Key_U: "update", Qt.Key.Key_S: "settings", Qt.Key.Key_K: "keyboard", Qt.Key.Key_M: "menu"}
@@ -461,7 +471,7 @@ class MainWindow(QMainWindow):
         self.records = records
         self.build = build
         self.pending: Pending | None = None
-        self.exit_confirmed = False                     # the exit question was answered Yes: close without asking
+        self.exit_confirmed = False                     # the exit was decided already: close without asking
         self.progress_timer = QTimer(self)              # while a release downloads: its size on the tile
         self.progress_timer.setInterval(PROGRESS_MS)
         self.progress_timer.timeout.connect(self.refresh)
@@ -552,6 +562,20 @@ class MainWindow(QMainWindow):
         self.settings_button = SymbolButton(glyphs.menu, "Settings: Desktop icons, sound, theme, wallpaper, clock, "
                                             "weather and touchpad. The ☰ button on the controller opens them too.")
         self.settings_button.clicked.connect(self.toggle_settings)
+        self.close_button = SymbolButton(glyphs.close, "Exit: close the portal. B on the controller and Escape close "
+                                         "it too.")
+        self.close_button.clicked.connect(self.exit_portal)
+        # The shortcuts (owner, 12-11-2026): programs outside the suite, started from the header (shortcuts.py).
+        self.steam_button = SymbolButton(glyphs.steam, "Steam: open Steam.")
+        self.files_button = SymbolButton(glyphs.folder, "Files: open the file manager on your home folder.")
+        self.youtube_button = SymbolButton(glyphs.youtube, "YouTube: open YouTube fullscreen in Brave Browser, which "
+                                           "must be installed as a Flatpak. Alt+F4 closes it.")
+        self.bluetooth_button = SymbolButton(glyphs.bluetooth, "Bluetooth: open the desktop's Bluetooth settings.")
+        self.network_button = SymbolButton(glyphs.network, "Network: open the desktop's network settings.")
+        self.shortcuts = {self.steam_button: "steam", self.files_button: "files", self.youtube_button: "youtube",
+                          self.bluetooth_button: "bluetooth", self.network_button: "network"}
+        for button in self.shortcuts:
+            button.clicked.connect(self._shortcut_clicked)      # a bound method: no lambda keeps self
         self.icons_box = TogglePill(
             "Icons on Desktop", "On: every installed app gets an icon on the Desktop. Off: only the portal's icon is "
             "there, and you start the apps from here. The apps stay in the app menu either way. Click to switch.",
@@ -574,10 +598,12 @@ class MainWindow(QMainWindow):
         self.touch_pill = HeaderPill("100 %", "Touchpad")
         self.touch_pill.clicked.connect(self._next_touch_speed)
         # The settings have a page of their own behind ☰ (owner, 04-11-2026, as the Windows Portable Suite's portal);
-        # what acts on the apps stays in the header, as big symbols (owner, 05-11-2026), ☰ at the top right.
+        # what acts on the apps stays in the header, as big symbols (owner, 05-11-2026), ☰ at the top right, and
+        # the close symbol in the corner itself (owner, 12-11-2026).
+        self.shortcut_buttons = list(self.shortcuts)
         self.header_buttons = [self.refresh_button, self.sysinfo_button, self.apps_button, self.updates_button,
-                               self.weather_button]
-        self.big.place_symbols(self.header_buttons, self.settings_button)
+                               *self.shortcut_buttons, self.weather_button]
+        self.big.place_symbols(self.header_buttons, [self.settings_button, self.close_button])
         self.status = status.Status()
         self.loads = self.status.loads()                # the first line at once, the load from the next sample
         self.loads_at = time.monotonic()
@@ -1341,6 +1367,7 @@ class MainWindow(QMainWindow):
             + "Click to choose a place, to update the weather now, or for no weather.")
         if place is None:
             self.weather_button.set_weather("", glyphs.weather("cloudy"), False, "")
+            self.big.fit_symbols()
             return
         if now is not None:
             wind = f", wind {now.wind_kmh:.0f} km/h" if now.wind_kmh is not None else ""
@@ -1354,6 +1381,7 @@ class MainWindow(QMainWindow):
             tip += f"\n\n{self.weather_error} Asked again in {weather.INTERVAL_S // 60} minutes."
         self.weather_button.set_weather(name, glyph, now is not None, tip + "\n\nClick to update it or to change "
                                         "the place.")
+        self.big.fit_symbols()                          # the place's name takes room: the row may need smaller symbols
 
     # ------------------------------------------------------------------------------------------- the touchpad
     def touch_speed(self) -> int:
@@ -1438,32 +1466,38 @@ class MainWindow(QMainWindow):
         self.big.show_settings(not self.big.in_settings())
 
     def escape(self) -> None:
-        """Escape, or B with nothing open: skip the intro while it plays, leave the Settings page, else ask whether
-        to exit and close the portal on a Yes."""
+        """Escape, or B with nothing open: skip the intro while it plays, leave the Settings page, else close the
+        portal."""
         if self.intro is not None:
             self.intro.skip()
         elif self.big.in_settings():
             self.big.show_settings(False)               # B on the Settings page goes back to the tiles
-        elif self.confirm_exit():
+        else:
+            self.exit_portal()
+
+    def exit_portal(self) -> None:
+        """The close symbol, and B or Escape with nothing open: the portal closes."""
+        if self.confirm_exit():
             self.exit_confirmed = True
             self.close()
 
     def confirm_exit(self) -> bool:
-        """Every exit asks first (owner, 05-11-2026), No the default, so a stray B and A keep the portal open. While a
-        download or an install runs, the question says what exiting does to it: the download stops, or the installer
-        finishes in its terminal, unrecorded."""
-        text = EXIT_QUESTION
-        if self.busy():
-            text += ("\n\nThe download stops." if self.downloading() else
-                     "\n\nThe installer finishes in its terminal window, but the portal does not record it.")
+        """The exit asks nothing (owner, 12-11-2026: the question on every exit, of 05-11-2026, is gone). Only while a
+        download or an install runs it asks, No the default, and says what exiting does to it: the download stops,
+        or the installer finishes in its terminal, unrecorded."""
+        if not self.busy():
+            return True
+        text = EXIT_QUESTION + ("\n\nThe download stops." if self.downloading() else
+                                "\n\nThe installer finishes in its terminal window, but the portal does not record it.")
         answer = QMessageBox.question(self, APP_NAME, text,
                                       QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                                       QMessageBox.StandardButton.No)
         return answer == QMessageBox.StandardButton.Yes
 
     def closeEvent(self, event) -> None:  # noqa: N802 (Qt override)
-        """The window closed by the desktop (its close button, Alt+F4) asks first, as Escape and B do through
-        escape(); a close of the portal's own (a restart) does not."""
+        """The window closed by the desktop (its close button, Alt+F4) closes as Escape, B and the close symbol do:
+        at once, or after the question while a download or an install runs; a close of the portal's own (a restart)
+        never asks."""
         if event.spontaneous() and not self.exit_confirmed and not self.confirm_exit():
             event.ignore()
             return
@@ -1836,6 +1870,23 @@ class MainWindow(QMainWindow):
             self.started[command] = process             # the app's own process: its launcher execs it
         own = self.started[command]
         self.raiser.bring_to_front([PurePath(argv[0]).name], [own.pid] if own.poll() is None else [])
+
+    def _shortcut_clicked(self) -> None:
+        self.open_shortcut(self.shortcuts[self.sender()])
+
+    def open_shortcut(self, which: str) -> None:
+        """A shortcut's symbol pressed: start its program, and bring its window to the front when it runs already
+        (kwin.py). One whose program is missing says what is needed."""
+        name, find = SHORTCUTS[which]
+        try:
+            start = find()
+        except shortcuts.Missing as exc:
+            QMessageBox.information(self, APP_NAME, str(exc))
+            return
+        if not self.launch(start.argv):
+            QMessageBox.critical(self, APP_NAME, f"{name} could not be started ({shlex.join(start.argv)}).")
+            return
+        self.raiser.bring_to_front(start.app_ids)
 
     def _close_window(self, event) -> None:
         if self.intro is not None:

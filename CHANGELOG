@@ -1,3 +1,14 @@
+Changelog: 12-11-2026 11:02:25
+
+Fixed. The BC250 Bazzite Suite has the owner's new icons (12-11-2026): the suite's own (the portal's and the wiki's,
+the purple circuit board redrawn) and those of the Gaming (a gray metal controller instead of the red one),
+Sustainable and Utilities categories (their circuit boards redrawn), from the owner's PNGs at 1024, 512, 256 and
+128 px. tools/sync_icons.py converted the category icons (WebP, the 128 px one PNG) and wrote the copies of the 27
+apps of those categories, their portal tiles and the three category tiles. The Gaming pictures are wider than high
+(1024 x 842 at the largest): each is centered on a transparent square of its width first, as the suite's icons must
+be square. The Graphics pictures the owner sent are the icon the suite already has, so it did not change. The other
+suites' icons are their own and did not change.
+
 Changelog: 12-11-2026 09:37:26
 
 Release 4.2.0. Brings bios-v2.0.3, btpair-v0.1.0, cec-v2.0.3, hdcam-v2.0.3, hdcontrol-v2.0.3, ips35-v2.0.3, overlay-v2.0.3, portal-v18.1.0, sftp-v2.0.3, shadps4-v5.1.0, ssd-v1.0.3, wdriver-v2.0.3.

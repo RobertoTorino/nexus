@@ -11,7 +11,7 @@ from PyQt6.QtCore import QEvent, QRect, Qt
 from PyQt6.QtGui import QColor, QKeyEvent
 from PyQt6.QtWidgets import QApplication, QMessageBox
 
-from bc250_portal import APP_NAME, MANIFEST, audio, bigpicture
+from bc250_portal import APP_NAME, MANIFEST, audio, bigpicture, glyphs
 from bc250_portal import main_window as mw
 from bc250_portal.gamepad import DEADZONE, FIRST_REPEAT, Gamepad, stick_direction
 from bc250_portal.manifest import load
@@ -316,8 +316,8 @@ def test_no_mode_is_kept_and_nothing_switches(made):
 
 
 def test_escape_and_b_close_the_portal_but_skip_the_intro_first(made, monkeypatch):
-    """Escape closes the portal (owner, 01-11-2026: "ESC does not close the board"), B too with nothing open, after a
-    Yes to the exit question (owner, 05-11-2026); while the intro plays, either skips it instead."""
+    """Escape closes the portal (owner, 01-11-2026: "ESC does not close the board"), B too with nothing open, without
+    a question (owner, 12-11-2026); while the intro plays, either skips it instead."""
     from PyQt6.QtGui import QShortcut
     asked = []
     monkeypatch.setattr(mw.QMessageBox, "question", lambda *a, **k: (asked.append(a[2]),
@@ -337,7 +337,7 @@ def test_escape_and_b_close_the_portal_but_skip_the_intro_first(made, monkeypatc
     monkeypatch.setattr(QApplication, "activeWindow", staticmethod(lambda: again))
     pad.queue = [("button", "b", True)]
     again.gamepad.poll()
-    assert not again.isVisible() and asked == [mw.EXIT_QUESTION, mw.EXIT_QUESTION]
+    assert not again.isVisible() and asked == []
 
 
 def test_sound_off_is_kept_and_silences_the_intro(made):
@@ -372,20 +372,24 @@ def test_without_an_audio_output_the_pill_is_disabled_with_a_reason(made):
 # ------------------------------------------------------------------------------------------------ the header
 def test_the_header_has_big_symbols_with_the_status_on_their_right(made):
     """Big symbols in place of the pills (owner, 05-11-2026): all the same square size, their row ending at the bottom
-    of the suite's icon; ☰ at the top right, level with the title; on the right of the symbols the installed count
-    over the status line. Scaled with the view on a handheld's screen."""
+    of the suite's icon; ☰ at the top right, level with the title, and the close symbol in the corner beside it
+    (owner, 12-11-2026); on the right of the symbols the installed count over the status line. Scaled with the view
+    on a handheld's screen."""
     window, _ = made()
-    symbols = window.header_buttons[:4]                 # the weather follows them, with a place chosen
-    assert len(symbols) == 4 and all(isinstance(s, bigpicture.SymbolButton) for s in symbols)
-    assert isinstance(window.header_buttons[4], bigpicture.WeatherButton) and window.weather_button.isHidden()
+    symbols = window.header_buttons[:-1]                # the weather follows them, with a place chosen
+    assert len(symbols) == 9 and all(isinstance(s, bigpicture.SymbolButton) for s in symbols)
+    assert isinstance(window.header_buttons[-1], bigpicture.WeatherButton) and window.weather_button.isHidden()
     window.show()
     window.resize(1920, 1080)
     QApplication.processEvents()
     QApplication.processEvents()
     big = window.big
-    corner = window.settings_button
-    assert {(s.width(), s.height()) for s in [*symbols, corner]} == {(bigpicture.SYMBOL_PX, bigpicture.SYMBOL_PX)}
+    corner, menu = window.close_button, window.settings_button
+    assert {(s.width(), s.height()) for s in [*symbols, menu, corner]} == {(bigpicture.SYMBOL_PX,
+                                                                            bigpicture.SYMBOL_PX)}
     at = lambda w: w.mapTo(big, w.rect().topLeft())  # noqa: E731
+    at_x, at_y = (lambda w: at(w).x()), (lambda w: at(w).y())
+    assert at_x(menu) + menu.width() <= at_x(corner) and at_y(menu) == at_y(corner)     # ☰, then the close symbol
     bottom = lambda w: w.mapTo(big, w.rect().bottomLeft()).y()  # noqa: E731
     assert abs(bottom(symbols[0]) - bottom(big.logo)) <= 2                # the row ends at the icon's bottom
     assert at(corner).y() <= at(big.title).y() + big.title.height()       # ☰ at the top ...
@@ -744,11 +748,25 @@ def test_the_view_scales_down_for_a_handheld_screen(made, height, small):
     assert window.big.columns["sustainable"] * tile.width() <= window.big.width()
     assert window.big.minimumSizeHint().width() <= 640 or window.big.minimumWidth() <= 640
     assert (window.big.logo.width() < bigpicture.LOGO_PX) is small
-    symbols = window.header_buttons
-    row = (sum(s.width() for s in symbols) + len(symbols) * window.big.symbol_row.spacing()
-           + window.big.status.sizeHint().width())
-    room = window.big.width() - 2 * window.big.outer.contentsMargins().left() - window.big.logo.width()
-    assert row <= room                                      # the symbols and the status line fit in one row
+    # The symbols and the status line (the clock under the loads when one line is too wide) fit in one row; with
+    # the shortcuts (owner, 12-11-2026) and the weather's place the symbols are drawn smaller for it on 1280 px.
+    big = window.big
+    room = big.width() - 2 * big.outer.contentsMargins().left() - big.logo.width() - big.top.spacing()
+    for place in ("", "Amsterdam", "Llanfairpwllgwyngyllgogerychwyrndrobwll"):
+        window.status_timer.stop()
+        big.set_status("CPU 100% 100°C | GPU 100% 100°C", "Wednesday 12/30/26 | 12:44:55 PM CEST")
+        window.weather_button.set_weather(place, glyphs.weather("cloudy"), True, "")
+        big.fit_symbols()
+        symbols = [s for s in window.header_buttons if not s.isHidden()]
+        assert len(symbols) == 9 + bool(place)
+        row = (sum(s.width() for s in symbols) + len(symbols) * big.symbol_row.spacing()
+               + big.status.minimumSizeHint().width())
+        assert row <= room
+        side = window.refresh_button.width()
+        assert bigpicture.SYMBOL_SMALLEST * bigpicture.SYMBOL_PX <= side <= round(bigpicture.SYMBOL_PX * big.scale)
+        assert {s.height() for s in symbols} == {side}                        # all the same size still
+        if not place:                                                         # a 1080 p screen has the room; a
+            assert (side == bigpicture.SYMBOL_PX) is (not small)             # place's name may take some of it
 
 
 def test_each_category_keeps_its_own_columns(made):

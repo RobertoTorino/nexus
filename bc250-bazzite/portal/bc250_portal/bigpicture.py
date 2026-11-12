@@ -36,6 +36,7 @@ PILL_RADIUS = 16
 PILL_ALPHA = 150                # a pill that is not active (no focus, no mouse) shows the wallpaper through it
 SYMBOL_PX = 84                  # a header symbol (owner, 05-11-2026): a square this large, its glyph GLYPH_PX
 GLYPH_PX = 56
+SYMBOL_SMALLEST = 0.5           # the row's symbols on a narrow screen: never smaller than this part of their size
 PLACE_W = 220                   # the weather's place name: at most this wide, else it ends in …
 GAP = 20
 MARGIN = 48
@@ -134,6 +135,11 @@ class StatusLine(QLabel):
     def sizeHint(self) -> QSize:  # noqa: N802 (Qt override)
         lines = 2 if self.two else 1
         return QSize(self._advance(self.one_line()), self.fontMetrics().lineSpacing() * lines + 2 * self.margin())
+
+    def narrowest(self) -> int:
+        """The width the line needs at least, the clock under the loads, with room for a load that grows to three
+        figures: what the row of symbols leaves it (BigPicture.fit_symbols)."""
+        return max(self._advance(part) for part in self.parts) + self.fontMetrics().horizontalAdvance("00")
 
     def minimumSizeHint(self) -> QSize:  # noqa: N802 (Qt override)
         width = max(self._advance(part) for part in self.parts)
@@ -455,6 +461,7 @@ class WeatherButton(SymbolButton):
 
     def __init__(self):
         self.place = ""                         # before the button's size is taken, which shows it
+        self.room: int | None = None            # the name's width when the row leaves less than PLACE_W (fit_symbols)
         self.known = False
         super().__init__(glyphs.weather("cloudy"))
         self.hide()
@@ -476,8 +483,9 @@ class WeatherButton(SymbolButton):
 
     def shown_place(self) -> str:
         """The place's name, ending in … beyond PLACE_W: a long name never takes the status line's room."""
+        width = round(PLACE_W * self.scale)
         return QFontMetrics(self._font()).elidedText(self.place, Qt.TextElideMode.ElideRight,
-                                                     round(PLACE_W * self.scale))
+                                                     width if self.room is None else min(width, self.room))
 
     def sizeHint(self) -> QSize:  # noqa: N802 (Qt override)
         side = round(SYMBOL_PX * self.scale)
@@ -631,7 +639,8 @@ class BigPicture(Backdrop):
         self.controls: list[QWidget] = [self.info]   # the header's widgets the focus can reach, the symbols among them
         self.info.installEventFilter(self)
         self.symbols: list[SymbolButton] = []
-        self.corner: SymbolButton | None = None
+        self.corner: list[SymbolButton] = []
+        self._fitted_status = 0                      # the status line's width the symbols were last fitted to
         outer.addLayout(top)
 
         strip = QHBoxLayout()
@@ -747,14 +756,15 @@ class BigPicture(Backdrop):
         self.title_row.insertWidget(self.title_row.count() - 1, widget, 0, Qt.AlignmentFlag.AlignVCenter)
         self.add_control(widget)
 
-    def place_symbols(self, symbols: list[SymbolButton], corner: SymbolButton) -> None:
-        """The window's symbols, in a row under the title, and *corner* (☰) at the top right; the focus reaches
-        them."""
+    def place_symbols(self, symbols: list[SymbolButton], corner: list[SymbolButton]) -> None:
+        """The window's symbols, in a row under the title, and those of *corner* (☰, then the close symbol in the
+        corner itself) at the top right; the focus reaches them."""
         for symbol in symbols:
             self.symbol_row.insertWidget(self.symbol_row.count() - 2, symbol)
             self.add_control(symbol)
-        self.upper.addWidget(corner, 0, Qt.AlignmentFlag.AlignTop)
-        self.add_control(corner)
+        for symbol in corner:
+            self.upper.addWidget(symbol, 0, Qt.AlignmentFlag.AlignTop)
+            self.add_control(symbol)
         self.symbols, self.corner = symbols, corner
         self.set_scale(self.scale)
 
@@ -765,8 +775,11 @@ class BigPicture(Backdrop):
 
     def set_status(self, loads: str, clock: str = "") -> None:
         """The line on the right of the symbols: the CPU's and the GPU's load and temperature, then the date and
-        time, on a second line when one does not fit."""
+        time, on a second line when one does not fit. A line much wider or narrower than the one the symbols were
+        fitted to (another clock style) fits them again."""
         self.status.set_parts(loads, clock)
+        if abs(self.status.narrowest() - self._fitted_status) > self.status.fontMetrics().horizontalAdvance("00"):
+            self.fit_symbols()
 
     def place_settings(self, rows: list[tuple[HeaderPill, str]]) -> None:
         """The Settings page's rows: a pill and its short line; the focus reaches the pills there."""
@@ -897,8 +910,9 @@ class BigPicture(Backdrop):
         self.settings_heading.setStyleSheet(self.bar.styleSheet())
         for button in (self.update_banner, self.notice, self.outside):
             button.set_scale(s)
-        for symbol in self.symbols + ([self.corner] if self.corner else []):
+        for symbol in self.corner:
             symbol.set_scale(s)
+        self.fit_symbols()
         for pill in self.setting_pills:
             pill.set_scale(s)
             pill.setFixedHeight(round(SETTING_H * s))
@@ -913,6 +927,31 @@ class BigPicture(Backdrop):
             tile.set_scale(s)
         self.columns.clear()
         self.reflow()
+
+    def fit_symbols(self) -> None:
+        """The row's symbols at the view's scale, or smaller where they and the status line (the clock under the
+        loads) would not fit the window's width: the shortcuts and the weather's place on a handheld's 1280 px."""
+        shown = [symbol for symbol in self.symbols if not symbol.isHidden()]
+        margins = self.outer.contentsMargins()
+        self._fitted_status = self.status.narrowest()
+        room = (self.width() - margins.left() - margins.right() - self.logo.width() - self.top.spacing()
+                - self._fitted_status - len(shown) * self.symbol_row.spacing())
+        weather = next((symbol for symbol in shown if isinstance(symbol, WeatherButton)), None)
+        if weather is not None:
+            weather.room = None
+        scale = self.scale
+        while True:
+            for symbol in self.symbols:
+                symbol.scale = scale
+            over = sum(symbol.sizeHint().width() for symbol in shown) - room
+            if scale <= SYMBOL_SMALLEST or over <= 0:
+                break
+            scale = round(scale - 0.02, 2)
+        if over > 0 and weather is not None:        # the smallest symbols, and still too wide: a shorter name
+            name = QFontMetrics(weather._font()).horizontalAdvance(weather.shown_place())
+            weather.room = max(0, name - over)
+        for symbol in self.symbols:
+            symbol.set_scale(scale)
 
     def reflow(self) -> None:
         page = self.current_page()
@@ -954,6 +993,7 @@ class BigPicture(Backdrop):
         if scale != self.scale:
             self.set_scale(scale)
         else:
+            self.fit_symbols()
             self.columns.clear()
             self.reflow()
 

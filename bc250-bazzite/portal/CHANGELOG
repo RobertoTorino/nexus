@@ -1,3 +1,35 @@
+Changelog: 12-11-2026 11:33:23
+
+Release 19.0.0.
+
+Changelog: 12-11-2026 11:25:54
+
+Added. Five shortcuts in the header's row of symbols (owner, 12-11-2026), after Install all updates: Steam (opens
+Steam, or brings its window to the front), Files (the desktop's file manager on the home folder), YouTube (YouTube
+fullscreen in Brave Browser's kiosk mode; Brave Browser must be installed as a Flatpak, and without it the portal
+says so), Bluetooth and Network (the desktop's Bluetooth and network settings: KDE Plasma's System Settings on that
+page, or GNOME's Settings). A shortcut whose program is missing says what is needed (bc250_portal/shortcuts.py). A
+close symbol sits in the top right corner, beside the Settings symbol: it closes the portal. On a screen 1280 pixels
+wide the row's symbols are drawn smaller when the symbols, the weather's place and the status line would not fit
+otherwise (BigPicture.fit_symbols). The wiki's Portal chapter describes the symbols.
+
+Changelog: 12-11-2026 11:25:53
+
+Breaking. The portal no longer asks "Do you really want to exit the Portal?" (owner, 12-11-2026; the question on
+every exit was of 05-11-2026): the close symbol in the top right corner, B and Escape close it at once, and so do
+the desktop's own close and Alt+F4. Only while a download or an install runs the question still comes, with what
+exiting does to it (the download stops, or the installer finishes without the portal recording it), No the default.
+
+Changelog: 12-11-2026 11:02:25
+
+Fixed. The suite's icon is redrawn again (owner, 12-11-2026), still the purple circuit board: the portal's header,
+intro, window icon, menu entry, Desktop icon and own tile (images/bc250-bazzite-suite.webp, -1024.webp, -128.png,
+images/apps/portal.webp) and the wiki's logo and favicon (docs/images/wiki-icon.webp, .png) show it. Three categories
+have new icons (owner, 12-11-2026; icons/gaming, icons/sustainable and icons/utilities, made with
+tools/sync_icons.py): Gaming a gray metal controller instead of the red one, Sustainable and Utilities their green
+and blue circuit boards, redrawn. The category tabs' pictures (images/categories/gaming.webp, sustainable.webp,
+utilities.webp) and the tiles of those categories' apps show them. Graphics keeps its icon.
+
 Changelog: 12-11-2026 09:37:25
 
 Release 18.1.0. Pins overlay-v2.0.3, bios-v2.0.3, wdriver-v2.0.3, cec-v2.0.3, sftp-v2.0.3, ips35-v2.0.3, hdcam-v2.0.3, hdcontrol-v2.0.3, shadps4-v5.1.0, ssd-v1.0.3.

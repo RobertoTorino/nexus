@@ -14,12 +14,15 @@ to skip it.
 
 **The header**: the suite's icon, as large as a tile's (click it to open this wiki), its name with the version and the **Beta** stage,
 a small **i** that says where the apps install from, and a line that says in a few words what the open category is
-for, with **☰ Settings** at the top right. Under them, in a row that ends level with the icon's bottom, four big
-symbols: **Refresh** (two circling arrows: look again at which apps are installed), **Sys info** (a chip),
-**Install All apps** (a grid of apps with an arrow down) and **Install All updates** (a circular arrow around an
-arrow down), each described below. Hover a symbol to see what it does. The one with the focus is framed in silver,
-as a tile is; a symbol that has nothing to do is grayed out. When you have chosen a place on the Settings page, the
-weather follows the symbols: its symbol and the place's name. On the right of the symbols, how many apps are
+for, with **☰ Settings** at the top right and, in the corner beside it, **✕ Exit**, which closes the portal. Under
+them, in a row that ends level with the icon's bottom, nine big symbols. Four act on the apps: **Refresh** (two
+circling arrows: look again at which apps are installed), **Sys info** (a chip), **Install All apps** (a grid of
+apps with an arrow down) and **Install All updates** (a circular arrow around an arrow down). Five are shortcuts
+to what is outside the suite: **Steam**, **Files** (a folder), **YouTube** (a screen with a play triangle),
+**Bluetooth** and **Network**. Each is described below. Hover a symbol to see what it does. The one with the focus
+is framed in silver, as a tile is; a symbol that has nothing to do is grayed out. When you have chosen a place on
+the Settings page, the weather follows the symbols: its symbol and the place's name. On a screen 1280 pixels wide
+the symbols are drawn smaller when the row would not fit otherwise. On the right of the symbols, how many apps are
 installed, and under it the status line: the CPU's and the GPU's load and temperature, then the date and the time,
 for example **CPU 12% 54°C | GPU 3% 61°C | Thursday 11/5/26 | 07:44 PM CEST**. When the line does not fit beside
 the symbols, the date and the time move to a second line under the loads. The line at the bottom says what the keys
@@ -76,13 +79,13 @@ on the keyboard, to change the category. The portal always opens on the first on
 | Page Up, Page Down (or Q, E) | LB, RB | Click a name | The category before and after |
 | S | ☰ (Start) | Click ☰ | The Settings page, and back from it |
 | K | R3 (the right stick pressed) | | Bazzite's on-screen keyboard (Plasma Keyboard), and away again; R3 works in a question or the file dialog too |
-| Escape | B | | Close a menu or a question; on the Settings page, go back to the apps; else exit the portal, after a question |
+| Escape | B | Click ✕ | Close a menu or a question; on the Settings page, go back to the apps; else exit the portal |
 
-**Exiting.** Escape, B, the window's close button and Alt+F4 all ask *Do you really want to exit the Portal?* first.
-**No** has the focus, so a stray press does not close the portal: move to **Yes** with the arrow keys, the d-pad or
-the stick, and press Enter or A. B or Escape answers No. While a download or an install runs, the question also says
-what exiting does to it: the download stops, or the installer finishes in its terminal window without the portal
-recording it.
+**Exiting.** The **✕** symbol in the top right corner closes the portal, and so do B and Escape with no menu,
+question or Settings page open. The portal closes at once, without a question. Only while a download or an install
+runs it asks *Do you really want to exit the Portal?* first, and says what exiting does to it: the download stops,
+or the installer finishes in its terminal window without the portal recording it. **No** has the focus there: move
+to **Yes** with the arrow keys, the d-pad or the stick, and press Enter or A; B or Escape answers No.
 
 **Questions.** In a question (Yes and No, Install and Cancel) the arrow keys, the d-pad and the stick move between
 the buttons, and Enter or A presses the one with the focus.
@@ -203,6 +206,16 @@ Nexus Release Tool, Nexus Installer Tests (the installer tests one at a time), N
   list and the board warning, each installer in its own terminal, its badge showing which one of how many. It is
   disabled once every app of the category is installed. A portal installed for the first time fills a category with
   one click.
+- **Steam**, a symbol at the top: opens Steam, or brings its window to the front when it runs already.
+- **Files**, a symbol at the top: opens the desktop's file manager (Dolphin on Bazzite's KDE Plasma) on your home
+  folder.
+- **YouTube**, a symbol at the top: opens YouTube fullscreen in Brave Browser's kiosk mode; Alt+F4 closes it. Brave
+  Browser must be installed as a Flatpak (`com.brave.Browser`, from Bazzite's software store or with
+  `flatpak install flathub com.brave.Browser`); without it the portal says so and opens nothing.
+- **Bluetooth** and **Network**, two symbols at the top: open the desktop's Bluetooth settings (pair or remove a
+  controller, a headset) and its network settings (the connections, Wi-Fi). On KDE Plasma that is System Settings on
+  that page, on GNOME its Settings.
+- **✕ Exit**, the symbol in the top right corner: closes the portal, as B and Escape do. See **Exiting** above.
 - **☰ Settings**, the symbol at the top right, or the ☰ button on the controller (Start, Options on a PlayStation
   controller): the Settings page, in place of the category strip and the tiles, under the same header. It holds
   the seven settings below, each a pill with a short line beside it; on a small screen the page scrolls, following
