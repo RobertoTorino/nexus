@@ -1,3 +1,11 @@
+Changelog: 12-11-2026 17:57:38
+
+Fixed. The suite has a new icon (owner, 12-11-2026): a silver PlayStation 5 with its controller in front, instead
+of the blue see-through console. The portal's header, intro, window icon, menu entry, Desktop icon and own tile show
+it (images/bazzite-console-suite.webp, -1024.webp, -128.png, images/apps/portal.webp). The tiles of the Gaming,
+Sustainable and Utilities apps have their categories' new icons (images/apps/, images/categories/): a gray metal
+controller, a green circuit board and a blue circuit board.
+
 Changelog: 10-11-2026 01:35:17
 
 Fixed. The tests read the pinned tags from apps.toml instead of naming v0.1.0, so a release that moves a pin no

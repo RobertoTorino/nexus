@@ -1,50 +1,9 @@
-Changelog: 10-11-2026 01:35:17
+Changelog: 12-11-2026 17:57:38
 
-Fixed. The tools' tests read the pinned tags from portal/apps.toml instead of naming v0.1.0, so a release that
-moves a pin no longer fails CI Bazzite Console (test_check_manifest.py, test_suite_release.py).
-
-Changelog: 10-11-2026 00:27:26
-
-Fixed. The wiki's Install chapter says what to do when the apps stop starting after a Bazzite update
-to a new Python: run the portal's install.sh again, then reinstall from the portal any app that still does
-not start.
-
-Changelog: 07-11-2026 21:03:46
-
-Fixed. The README's Media trademark note is a section of its own, Media trademarks, so its Disclaimer is
-the text every wiki and README shares, word for word (tools/tests/test_disclaimer.py).
-
-Changelog: 07-11-2026 13:09:52
-
-Added. A PS5 Bazzite research decision table covering candidate improvements, integration routes, readiness and risks.
-
-Changelog: 07-11-2026 12:36:42
-
-Added. The Media service trademarks and the CC0 license scope to the README and wiki disclaimers.
-
-Changelog: 07-11-2026 12:11:39
-
-Added. X (formerly Twitter), Instagram, Discord, TikTok, WhatsApp, Netflix and Spotify launcher cards to the Media
-category.
-
-Changelog: 07-11-2026 01:42:48
-
-Added. Twitch and Stremio are available as launcher cards in the Media category.
-
-Changelog: 07-11-2026 01:21:03
-
-Added. The Media category opens YouTube and Twitch fullscreen in Brave Browser; Brave Browser's Flatpak must be
-installed.
-
-Changelog: 06-11-2026 21:34:05
-
-Added. The Bazzite Console portal now browses apps by category, installs and updates them, and has controller
-navigation, a Settings page, and a live date and time header.
-
-Changelog: 06-11-2026 21:19:55
-
-Added. Suite-specific PlayStation 5 icons and category artwork, plus console and controller images on the wiki home page.
-
-Changelog: 06-11-2026 11:25:07
-
-Added. Bazzite Console Suite, its portal and Bazzite Test app structure for PlayStation 5 hardware running Bazzite.
+Fixed. The suite has the owner's new icons (12-11-2026): the suite's own (a silver PlayStation 5 with its controller
+in front, instead of the blue see-through console) and those of the Gaming (a gray metal controller with a blue
+light bar), Sustainable (a green circuit board) and Utilities (a blue circuit board) categories, from the owner's
+PNGs at 1024, 512, 256 and 128 px. tools/sync_icons.py converted the category icons (WebP, the 128 px one PNG) and
+wrote the copies of the 15 apps, their portal tiles and the three category tiles; tools/make_icons.py wrote the
+portal's copies of the suite's icon and the wiki's logo and favicon (docs/images/wiki-icon.webp, .png). The
+pictures on the wiki's home page (docs/images/home/) stay as they were, and so do the Graphics and Media icons.

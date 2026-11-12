@@ -21,11 +21,9 @@ _python/
 /windows-portable/site/
 .cache/
 /bc250-bazzite/.cache/
+
 # The design panel's mock while `mkdocs serve` runs (tools/mkdocs/design_panel.py)
 .design-mock.json
-
-# Planning notes, kept local
-/bc250-suite-proposal.md
 
 # OS and editor droppings (Linux/KDE, Windows, macOS)
 *~
@@ -37,6 +35,7 @@ ehthumbs.db
 desktop.ini
 $RECYCLE.BIN/
 .DS_Store
+
 # Windows' NUL device written as a real file by a Git Bash command meant for cmd (podman machine ssh's known-hosts
 # file): git cannot add it, "unable to index file 'NUL'" (06-11-2026)
 NUL
