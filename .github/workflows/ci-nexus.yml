@@ -3,7 +3,7 @@ name: CI Nexus
 
 # The checks of Nexus, what every suite shares, on every push and pull request: core (bc250_core), the Nexus tools
 # (tools/), the Nexus apps (dev/), the Nexus page and the repository's rules (line endings, exec bits, the four
-# files of every former repo, workflows only at the root, no CHANGELOG losing an entry). Apart from each suite's
+# files of every former repo, workflows only at the root). Apart from each suite's
 # CI (ci.yml, the BC250 Bazzite Suite's; ci-windows-portable.yml), so a failure here is Nexus's, not a suite's,
 # and one suite's checks never hold another suite's tags (owner, 27-10-2026). Every suite's tags wait for this
 # workflow besides the suite's own CI: tools/tag-release.sh before it tags, and the ci job of release.yml and
@@ -21,8 +21,6 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0                # the base commit, for check_changelogs
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"

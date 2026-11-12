@@ -159,8 +159,8 @@ def changed_files(base: str) -> list[str] | None:
 
 
 def expand(text: str, job: Job, base: str) -> str:
-    """The ${{ }} expressions the workflows use: matrix values, and the base commit of check_manifest and
-    check_changelogs (origin/main)."""
+    """The ${{ }} expressions the workflows use: matrix values, and the base commit of check_manifest
+    (origin/main)."""
     def value(m: re.Match) -> str:
         expr = m.group(1)
         if expr.startswith("matrix."):

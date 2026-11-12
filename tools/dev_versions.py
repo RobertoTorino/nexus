@@ -11,7 +11,7 @@ Dev app versions tile works with it.
     python3 tools/dev_versions.py dash 0.3.0 --notes "..."  # this version, with a note in its entry
 
 A version set and not pushed yet can be set again: the new one replaces it and its entry. A pushed entry is history
-and stays (tools/check_changelogs.py). Nothing is committed, tagged or released."""
+and stays. Nothing is committed, tagged or released."""
 
 from __future__ import annotations
 

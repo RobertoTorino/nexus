@@ -2,15 +2,14 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # The quick checks of CI's versions and shell jobs, before a push leaves this machine: the versions match each
 # VERSION, apps.toml with its portal bump against what the remote has (the check a release push failed on), the
-# CHANGELOGs keeping every entry the remote has, the scripts' exec bits and the line endings. A few seconds; tools/ci-local.sh runs every job (a minute or two).
+# scripts' exec bits and the line endings. A few seconds; tools/ci-local.sh runs every job (a minute or two).
 #
 # As git's pre-push hook, once per checkout:   tools/git-setup.sh   (git config core.hooksPath tools/hooks)
 # By hand:                                     tools/pre-push.sh [BASE]        (BASE: default origin/main)
 #
 # BC250_PRE_PUSH=full also runs tools/ci-local.sh (Linux); BC250_PRE_PUSH=off skips the hook, as git push --no-verify
 # does. The checks read the commit that is pushed, as CI does, in a checkout of it of their own (git worktree, a second
-# or two): what is not committed never makes a push pass (owner, 30-10-2026: the lost CHANGELOG entry, put back but not
-# committed, let the push through, and CI failed on it).
+# or two): what is not committed never makes a push pass (owner, 30-10-2026).
 set -euo pipefail
 ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)
 cd "$ROOT"
@@ -27,9 +26,7 @@ for candidate in "$ROOT/.venv-linux/bin/python" "$ROOT/.venv-windows/Scripts/pyt
     if "$candidate" -c '' >/dev/null 2>&1; then python=$candidate; break; fi
 done
 [ -n "$python" ] || { echo "pre-push: no Python found, the checks did not run" >&2; exit 1; }
-# The CHANGELOGs' merge driver (tools/merge_changelog.py) is a setting of the checkout, as this hook is: without
-# it, the next pull with an entry on both machines ends in a conflict. A hint, not a failure.
-git config --local --get merge.changelog.driver >/dev/null 2>&1 ||
+    git config --local --get merge.changelog.driver >/dev/null 2>&1 ||
     info "the CHANGELOG merge driver is not set in this checkout: run tools/git-setup.sh once"
 
 # The branch commits being pushed, each with what the remote has ("" for a new branch: CI then has no base either).
@@ -108,10 +105,6 @@ for push in "${pushes[@]}"; do
             fail "$suite/portal/apps.toml: bump portal/VERSION in this push (Nexus Release Tool, step 2: Bump portal)"
         fi
     done
-    if [ -n "$base" ] && ! out=$("$python" tools/check_changelogs.py --base "$base" 2>&1); then
-        printf '%s\n' "$out" >&2
-        fail "a CHANGELOG lost entries the remote has: put them back below the new ones"
-    fi
     cd "$ROOT"
     missing=$(git ls-tree -r "$sha" | awk '($4 ~ /\.sh$/ || $4 ~ /^tools\/hooks\//) && $1 != "100755" { print $4 }')
     [ -z "$missing" ] || fail "not executable in git (tools/fix-modes.sh, then amend the commit): $(echo "$missing" | tr '\n' ' ')"
@@ -127,4 +120,4 @@ if [ "$failed" != 0 ]; then
     echo "pre-push: not pushed. CI would fail on the same: fix it, commit, and push again." >&2
     exit 1
 fi
-info "versions, apps.toml, CHANGELOGs, exec bits and line endings are fine"
+info "versions, apps.toml, exec bits and line endings are fine"

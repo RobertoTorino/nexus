@@ -16,8 +16,8 @@ are written from the root of the repository.
 ```
 core/bc250_core/              shared Python package, every suite's; bundled into each app at release time (below)
 tools/                        the Nexus tools: release and CI (build_release, stage_app, check_versions,
-                              check_changelogs, tag-release.sh, release.sh, ci-local.sh, pre-push.sh, git-setup.sh,
-                              merge_changelog, nexus_index), dev_versions (the dev/ apps' versions),
+                              tag-release.sh, release.sh, ci-local.sh, pre-push.sh, git-setup.sh,
+                              nexus_index), dev_versions (the dev/ apps' versions),
                               check_prose (how the text reads),
                               new_app, features (the Apps and features chapter), the design and icon catalogs,
                               sync_icons (a suite's category icons), the tours, the design panel
@@ -212,27 +212,19 @@ podman machine ssh "su - user -c 'cd /mnt/c/Projects/nexus && bash tools/ci-loca
 ```
 
 `tools/pre-push.sh` runs CI's quick checks in a few seconds: the versions, each suite's `portal/apps.toml` with the
-portal bump it needs against what the remote has, the CHANGELOGs keeping every entry the remote has
-(`tools/check_changelogs.py`), the scripts' exec bits and the line endings. A suite's versions and manifest are
+portal bump it needs against what the remote has, the scripts' exec bits and the line endings. A suite's versions and manifest are
 checked only when the push changes that suite (its folder), so a failing check of the Windows Portable Suite never
 holds a push of the BC250 suite, and the other way round; core and `dev/` are checked on every push. The checks read
 the commit that is pushed, in a checkout of it of their own (a few seconds more), as CI does: a fix that is in the
 working tree but not committed never lets a push through. `tools/git-setup.sh`, once per checkout, makes it git's
-pre-push hook (`core.hooksPath`), and every `git push` runs it first:
+pre-push hook (`core.hooksPath`):
 
 ```bash
-tools/git-setup.sh                      # once per checkout: the hook and the CHANGELOGs' merge driver
+tools/git-setup.sh                      # once per checkout: the hook
 BC250_PRE_PUSH=full git push            # also every CI job (tools/ci-local.sh)
 ```
 
-The same script registers `tools/merge_changelog.py` as git's merge driver for every CHANGELOG (`.gitattributes`:
-`CHANGELOG merge=changelog`). Every CHANGELOG grows at the top, so an entry written on this machine and an entry a
-release wrote on the other one both sit above the same old entry, and git's line merge stops with a conflict at the
-pull that brings them together. The driver merges by entry instead: the other side's new entries go in above the
-entry they sat above there, and above this side's new entries that are older, so the new ones read newest first;
-an entry changed on one side is taken as changed, one removed is left out, and nothing that was there before moves.
-Only when both sides changed the same entry does git mark a conflict, as it always did. Git uses the driver in a
-pull with `--rebase`, a merge, a cherry-pick, and when an autostash or `git stash pop` comes back. The pre-push
+The pre-push
 hook says so when the driver is not set in a checkout. Nexus Release Tool's **git pull** runs `tools/git-setup.sh`
 first, so a checkout it pulls in is set up.
 

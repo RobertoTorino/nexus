@@ -3,10 +3,6 @@
 # must reach the board with LF, and nothing shows up as changed only because the checkout moved between systems.
 * text=auto eol=lf
 
-# Every CHANGELOG grows at the top, so two machines' new entries collide line by line: tools/merge_changelog.py
-# merges them by entry instead. tools/git-setup.sh registers the driver in the checkout.
-CHANGELOG           merge=changelog
-
 # Windows-only files keep CRLF (none yet; listed so a future one does the right thing).
 *.bat               text eol=crlf
 *.cmd               text eol=crlf

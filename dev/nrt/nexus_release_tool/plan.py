@@ -675,7 +675,7 @@ def add_changelog_entry(root: Path, unit: Unit, text: str, now: datetime.datetim
     """Puts "Changelog: <time>", a blank line and *text* on top of the unit's CHANGELOG. A release entry ("Release
     x.y.z.") replaces the newest entry when that is the same release already, so applying a release again (after a
     check stopped the commit) leaves one entry, with the latest notes (owner, 28-10-2026: "Release 1.3.0." twice).
-    Never one *base* (the last push) has: that is history, which check_changelogs.py keeps (owner, 29-10-2026: the
+    Never remove an entry from the CHANGELOG's history (owner, 29-10-2026: the
     portal release replaced the "Release 3.2.0. Pins ..." entry its app release had pushed, and the push failed)."""
     path = root / unit.path / "CHANGELOG"
     stamp = amsterdam_now(now).strftime("%d-%m-%Y %H:%M:%S")

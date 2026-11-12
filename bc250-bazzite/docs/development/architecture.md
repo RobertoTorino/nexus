@@ -412,5 +412,4 @@ for a package or tool beyond PyQt6, and the portal bump the new entry asks for.
 | Copies of `instance.py` equal core's | `tools/tests/test_instance_copies.py` |
 | Nexus Deps' catalog matches the requirements files, the portal's apps, and the tools the apps use | `dev/deps/tests/test_dependencies.py` |
 | `bc250-bazzite/portal/apps.toml` rules and version bumps | `bc250-bazzite/tools/check_manifest.py` |
-| A CHANGELOG keeps every entry it had at the last push | `tools/check_changelogs.py` |
 | The manual builds with no broken link | `mkdocs build --strict` |

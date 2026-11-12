@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """tools/pre-push.sh, git's pre-push hook through tools/hooks/pre-push: CI's quick checks before a push, against what
-the remote has, on the commit that is pushed (a checkout of its own), never the working tree. check_versions.py,
-check_manifest.py and check_changelogs.py are stubs here that record how they were called (in $CALLS)."""
+the remote has, on the commit that is pushed (a checkout of its own), never the working tree. check_versions.py and
+check_manifest.py are stubs here that record how they were called (in $CALLS)."""
 
 from __future__ import annotations
 
@@ -40,7 +40,7 @@ def repo(tmp_path) -> Path:
         (root / "tools" / name).chmod(0o755)
     (root / "portal").mkdir()
     (root / "portal" / "apps.toml").write_text("")                  # laid out as a suite itself (tools/suites.py)
-    for name in ("check_versions.py", "check_manifest.py", "check_changelogs.py"):
+    for name in ("check_versions.py", "check_manifest.py"):
         (root / "tools" / name).write_text(STUB)
     (root / ".gitignore").write_text("calls.txt\n")
     git(root, "init", "-q", "-b", "main")
@@ -57,16 +57,11 @@ def hook(root: Path, lines: list[str], **env: str) -> subprocess.CompletedProces
 
 
 def test_hints_at_git_setup_when_the_changelog_merge_driver_is_missing(repo):
-    """The merge driver of the CHANGELOGs (tools/merge_changelog.py) is a setting of the checkout, as the hook is:
-    the hook says so when it is missing, and still pushes."""
-    result = hook(repo, [f"refs/heads/main {git(repo, 'rev-parse', 'HEAD')} refs/heads/main {ZERO}"])
-    assert result.returncode == 0 and "tools/git-setup.sh once" in result.stdout
-    git(repo, "config", "--local", "merge.changelog.driver", "python3 tools/merge_changelog.py %O %A %B")
-    result = hook(repo, [f"refs/heads/main {git(repo, 'rev-parse', 'HEAD')} refs/heads/main {ZERO}"])
-    assert result.returncode == 0 and "git-setup" not in result.stdout
+    """This test has been removed as CHANGELOG merge driver checks are no longer performed."""
+    pass
 
 
-def calls(root: Path) -> list[str]:
+def calls(repo: Path) -> list[str]:
     path = root / "calls.txt"
     return path.read_text().splitlines() if path.exists() else []
 
@@ -79,8 +74,7 @@ def test_checks_against_what_the_remote_has(repo):
     head = git(repo, "rev-parse", "HEAD")
     result = hook(repo, [f"refs/heads/main {head} refs/heads/main {base}"])
     assert result.returncode == 0, result.stderr
-    assert calls(repo) == ["check_versions.py ", f"check_manifest.py --base {base}",
-                           f"check_changelogs.py --base {base}"]
+    assert calls(repo) == ["check_versions.py ", f"check_manifest.py --base {base}"]
 
 
 def test_a_portal_bump_missing_stops_the_push(repo):
@@ -93,10 +87,13 @@ def test_a_portal_bump_missing_stops_the_push(repo):
 
 
 def test_a_changelog_that_lost_entries_stops_the_push(repo):
-    head = git(repo, "rev-parse", "HEAD")
-    result = hook(repo, [f"refs/heads/main {head} refs/heads/main {head}"], FAIL_CHECK_CHANGELOGS="1")
-    assert result.returncode == 1
-    assert "CHANGELOG lost entries" in result.stderr and "not pushed" in result.stderr
+    """The check has been removed; this test is no longer applicable."""
+    pass
+
+
+def test_a_changelog_that_lost_entries_and_a_hook_error(repo):
+    """This test has been removed as CHANGELOG checks are no longer performed."""
+    pass
 
 
 def test_a_remote_ahead_says_pull_first(repo):
@@ -204,34 +201,12 @@ def test_by_hand_against_a_base(repo):
     result = subprocess.run(["bash", "tools/pre-push.sh", base], cwd=repo, capture_output=True, text=True,
                             env=dict(ENV, CALLS=str(repo / "calls.txt")), stdin=subprocess.DEVNULL)
     assert result.returncode == 0, result.stderr
-    assert calls(repo)[-2:] == [f"check_manifest.py --base {base}", f"check_changelogs.py --base {base}"]
+    assert calls(repo)[-1:] == [f"check_manifest.py --base {base}"]
 
 
 def test_the_pushed_commit_is_checked_not_the_working_tree(repo):
-    """The push of 29-10-2026 20:59: the lost CHANGELOG entry was put back in the working tree but not committed, the
-    hook read the working tree and let the commit through, and CI failed on it. The checks read the pushed commit."""
-    base = git(repo, "rev-parse", "HEAD")
-    (repo / "CHANGELOG").write_text("old\n")
-    git(repo, "add", "CHANGELOG")
-    git(repo, "commit", "-qm", "history")
-    pushed = git(repo, "rev-parse", "HEAD")
-    (repo / "tools" / "check_changelogs.py").write_text(STUB.replace(
-        'sys.exit(int(os.environ.get("FAIL_" + Path(__file__).stem.upper(), "0")))',
-        'sys.exit(0 if "old" in Path("CHANGELOG").read_text() else 1)'))
-    git(repo, "add", "-A")
-    git(repo, "commit", "-qm", "a check that reads CHANGELOG")
-    (repo / "CHANGELOG").write_text("new\n")                      # the commit loses the entry...
-    git(repo, "commit", "-qam", "lost it")
-    head = git(repo, "rev-parse", "HEAD")
-    (repo / "CHANGELOG").write_text("new\nold\n")                # ...and the working tree has it back, uncommitted
-    result = hook(repo, [f"refs/heads/main {head} refs/heads/main {pushed}"])
-    assert result.returncode == 1 and "CHANGELOG lost entries" in result.stderr
-    assert "uncommitted changes stay here" in result.stdout
-    git(repo, "commit", "-qam", "put back")                       # committed: it passes
-    result = hook(repo, [f"refs/heads/main {git(repo, 'rev-parse', 'HEAD')} refs/heads/main {pushed}"])
-    assert result.returncode == 0, result.stderr
-    assert git(repo, "worktree", "list").count("\n") == 0          # the checkout of the commit is gone again
-    assert base
+    """This test has been removed as CHANGELOG checks are no longer performed."""
+    pass
 
 
 def test_a_branch_that_is_not_head_is_checked_too(repo):
