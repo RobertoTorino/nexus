@@ -62,7 +62,7 @@ def test_hints_at_git_setup_when_the_changelog_merge_driver_is_missing(repo):
 
 
 def calls(repo: Path) -> list[str]:
-    path = root / "calls.txt"
+    path = repo / "calls.txt"
     return path.read_text().splitlines() if path.exists() else []
 
 
