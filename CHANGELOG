@@ -1,3 +1,7 @@
+Changelog: 12-11-2026 11:38:59
+
+Release 4.3.0. Brings acpi-v0.4.6, bios-v2.0.4, btpair-v0.1.1, cec-v2.0.4, check-v2.0.4, clb-v2.0.3, compute-v0.4.5, consoles-v3.0.4, cores-v0.4.6, datstation-v4.0.3, fan-v2.0.4, gpu-v0.5.4, hdcam-v2.0.4, hdcontrol-v2.0.4, ips35-v2.0.4, oc-v0.3.6, overlay-v2.0.4, pcsx2-v5.0.3, portal-v19.0.0, ppsspp-v3.0.3, rpcs3-v5.0.4, sftp-v2.0.4, shadps4-v5.1.1, ssd-v1.0.4, vita3k-v3.0.3, vram-v2.0.4, wdriver-v2.0.4, xenia-v3.0.3.
+
 Changelog: 12-11-2026 11:02:25
 
 Fixed. The BC250 Bazzite Suite has the owner's new icons (12-11-2026): the suite's own (the portal's and the wiki's,

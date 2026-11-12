@@ -4,7 +4,7 @@ games through it, finds the games Vita3K has installed and adds them to Steam fo
 
 APP_NAME = "Vita3K Manager"
 APP_ID = "bc250-vita3k-manager"
-__version__ = "3.0.2"
+__version__ = "3.0.3"
 
 from pathlib import Path
 

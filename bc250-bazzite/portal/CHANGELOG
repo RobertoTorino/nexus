@@ -1,3 +1,7 @@
+Changelog: 12-11-2026 11:38:59
+
+Release 19.0.0. Pins check-v2.0.4, gpu-v0.5.4, compute-v0.4.5, cores-v0.4.6, oc-v0.3.6, acpi-v0.4.6, overlay-v2.0.4, bios-v2.0.4, vram-v2.0.4, fan-v2.0.4, wdriver-v2.0.4, cec-v2.0.4, sftp-v2.0.4, ips35-v2.0.4, hdcam-v2.0.4, hdcontrol-v2.0.4, rpcs3-v5.0.4, consoles-v3.0.4, clb-v2.0.3, shadps4-v5.1.1, datstation-v4.0.3, ppsspp-v3.0.3, pcsx2-v5.0.3, vita3k-v3.0.3, xenia-v3.0.3, ssd-v1.0.4, btpair-v0.1.1.
+
 Changelog: 12-11-2026 11:33:23
 
 Release 19.0.0.
