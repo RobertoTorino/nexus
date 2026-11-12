@@ -22,13 +22,13 @@ games and packages are dropped there; library.fixed, an SD card's too), played f
 marks one for Steam, X plays one that is in Steam, through Steam (steam://rungameid), and on a device without Steam
 starts it in the app's play mode itself (owner, 30-10-2026: a fallback, as its shortcut would start it; core's play:
 View, LB and RB held quit any game), Y Update Steam makes Steam's shortcuts match the marks and brings a shortcut made
-before the play mode to it, RB Remove game shows the keep page of what would go (the game's folder, its update,
-patch and mods, its Steam shortcut). A package that waits there (extract.waiting: a game not unpacked, an update its
-game lacks) is a row of its own, PKG; A unpacks it, X Unpack all every one, the games first and each update beside
-its game (extract.place; extract.py, Extract PKG of the BC250 app), and the keep page then offers the packages
-unpacked whole for deletion. Nothing is deleted without the keep page (owner, 01-11-2026: before deleting anything,
-let the user decide what to keep; core's keep): every row marked Delete at first, A Keep or Delete, X deletes the
-marked ones, B goes back and deletes nothing. LB Steam artwork keeps the SteamGridDB key; Steam's library is the
+before the play mode to it, RB Remove game shows the keep page of what would go (the game's folder, its update, patch
+and mods, its Steam shortcut; on a package row, the package). A package that waits there (extract.waiting: a game not
+unpacked, an update its game lacks) is a row of its own, PKG; A unpacks it, X Unpack all every one, the games first and
+each update beside its game (extract.place; extract.py, Extract PKG of the BC250 app), and the keep page then offers the
+packages unpacked whole for deletion. Nothing is deleted without the keep page (owner, 01-11-2026: before deleting
+anything, let the user decide what to keep; core's keep): every row marked Delete at first, A Keep or Delete, X deletes
+the marked ones, B goes back and deletes nothing. LB Steam artwork keeps the SteamGridDB key; Steam's library is the
 portal's RT Steam (owner, 30-10-2026: Open Steam moved there).
 The Log pane: shadPS4's folder, the app's folders and the newest lines of the app's log; A (or a tap on the pane)
 shows the whole log in the pane.
@@ -531,7 +531,7 @@ class MainWindow(PortableWindow):
             focused = self.games_pane.list.focused()
             if focused.startswith("pkg:"):
                 items = [("A", "Unpack"), ("X", "Unpack all"), ("Y", "Update Steam"),
-                         ("LB", "Steam artwork"), ("LT", "Refresh")]
+                         ("LB", "Steam artwork"), ("RB", "Remove game"), ("LT", "Refresh")]
             else:
                 items = [("A", "Steam mark"), *([("X", "Play")] if focused else []), ("Y", "Update Steam"),
                          ("LB", "Steam artwork"), *([("RB", "Remove game")] if focused else []), ("LT", "Refresh")]
@@ -766,8 +766,11 @@ class MainWindow(PortableWindow):
         (owner, 01-11-2026: before deleting anything, the user decides what to keep; core's keep): the game's folder,
         its update, patch and mods beside it (library.removal) and its Steam shortcut, each a row marked Delete. Its
         saves and play time stay in shadPS4's folder and are never on the page; the package it came from is not
-        touched."""
+        touched. On a package row, the package (remove_package)."""
         key = self.games_pane.list.focused()
+        if key.startswith("pkg:"):
+            self.remove_package(key)
+            return
         game = next((g for g in self.games if str(g.eboot) == key), None)
         if game is None:
             return
@@ -790,6 +793,21 @@ class MainWindow(PortableWindow):
             items.append(keep.Item("steam", "Steam shortcut"))
         self.keep_game = game
         self.show_keep("Remove game", f"{game.title}: what goes?", items, "game")
+
+    def remove_package(self, key: str) -> None:
+        """RB on a package row (owner, 11-11-2026: a package that cannot be unpacked, a broken download, stayed a row
+        with no way out): the keep page with the .pkg file marked Delete; X deletes it and the row goes, B keeps it."""
+        package = next((p for p in self.waiting if f"pkg:{p.path}" == key), None)
+        if package is None:
+            return
+        if self.busy:
+            self.games_pane.status.setText(BUSY)
+            return
+        title = package.title or package.title_id or package.path.stem
+        self.keep_game = None
+        self.show_keep("Remove game", f"{title}: the package goes.",
+                       [keep.Item(f"path:{package.path}", f"{package.path.name} (the package)", (package.path,))],
+                       "packages")
 
     # The keep page (core's keep): what would be deleted, a row each, before anything is
 

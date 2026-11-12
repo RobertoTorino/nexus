@@ -160,7 +160,8 @@ You play the games from Steam; the app puts them there.
   shadPS4's folder and are never on the page. The app offers no game whose folder is one of the app's `Games\PS4`
   folders itself, a drive, or a folder holding another game: the status line says to delete it by hand.
 - A package that waits is a row of its own, **PKG** or **PKG update**: **A Unpack** and **X Unpack all**, see
-  [Packages](#packages).
+  [Packages](#packages). **RB Remove game** on it shows the keep page with the package: one that cannot be unpacked
+  (a download cut short) stays a row until it is deleted or replaced.
 
 ### Deciding what to keep
 

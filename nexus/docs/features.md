@@ -46,6 +46,7 @@ Every app of every suite, and what each one does, side by side. A row is one app
 | [System Overlay](#system-overlay) | [System Overlay](https://robertotorino.github.io/nexus/bc250-bazzite-suite/apps/overlay/) |  |  |
 | [USB Wi-Fi](#usb-wi-fi) | [BC-250 USB Wi-Fi](https://robertotorino.github.io/nexus/bc250-bazzite-suite/apps/wdriver/) |  |  |
 | [BC-250 CEC Manager](#bc-250-cec-manager) | [BC-250 CEC Manager](https://robertotorino.github.io/nexus/bc250-bazzite-suite/apps/cec/) |  |  |
+| [Bluetooth Pairing](#bluetooth-pairing) | [BC-250 Bluetooth Pairing](https://robertotorino.github.io/nexus/bc250-bazzite-suite/apps/btpair/) |  |  |
 
 ## Features
 
@@ -545,3 +546,12 @@ Every app of every suite, and what each one does, side by side. A row is one app
 | Boot: name the board, turn the TV on before login | ✓ |  |  |
 | Daemon: wake and sleep with the TV, remote as keys | ✓ |  |  |
 | Remote: map buttons to keys, show received keys | ✓ |  |  |
+
+### Bluetooth Pairing
+
+| Feature | BC250 | Console | Portable |
+|---|:---:|:---:|:---:|
+| Pairing: the listed keyboard, mouse and controllers paired after every boot, on the login screen | ✓ |  |  |
+| Pairing: a device that dropped its pairing paired again; other names never | ✓ |  |  |
+| Batteries: PlayStation controller batteries in the Bluetooth icon | ✓ |  |  |
+| Login: Bluetooth switched on at every login (Plasma) | ✓ |  |  |

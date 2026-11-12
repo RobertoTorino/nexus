@@ -1,0 +1,10 @@
+Changelog: 12-11-2026 00:14:40
+
+Added. BC-250 Bluetooth Pairing: the first version (owner, 12-11-2026), from the owner's own bt-autopair and
+bt-battery scripts. After every boot a system service searches for 5 minutes for the listed devices and pairs, trusts
+and connects the ones in pairing mode, on the login screen; one that refuses its old pairing twice is paired again,
+and other names are never paired. A second service shows PlayStation controller batteries in the Bluetooth icon. The
+window lists the devices (picked from those Bluetooth knows, found in a search, or typed), installs the services
+with your password (pkexec), searches again without a reboot, shows what the search after this boot did, and sets
+Plasma to switch Bluetooth on at every login: by default Plasma restores the state saved when the last session
+ended, which a reboot from a terminal saves as off.

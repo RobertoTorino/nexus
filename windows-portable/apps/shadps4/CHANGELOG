@@ -1,3 +1,9 @@
+Changelog: 11-11-2026 23:25:38
+
+Added. RB Remove game also works on a package row (PKG or PKG update): the keep page offers the .pkg file, X deletes it
+and its row, B keeps it. A package that cannot be unpacked, a download cut short, stayed a row before, with no way to
+take it out of the list from the app.
+
 Changelog: 09-11-2026 14:43:33
 
 Release 6.1.1.

@@ -93,6 +93,7 @@ nav:
       - Xenia Manager: apps/xenia.md
       - Bazzite DatStation: apps/datstation.md
       - SSD Check: apps/ssd.md
+      - BC-250 Bluetooth Pairing: apps/btpair.md
   - Development:
       - development/index.md
       - Architecture and consistency: development/architecture.md

@@ -956,6 +956,38 @@ def test_a_game_is_removed_from_steam_and_vita3k(qapp, tmp_path, monkeypatch):
     window.close()
 
 
+
+def test_rb_on_a_waiting_row_removes_its_file(qapp, tmp_path, monkeypatch):
+    """RB Remove game on a row that waits to be installed (owner, 11-11-2026: a file that cannot be installed stayed
+    a row with no way out): the keep page offers the file; B keeps it, X deletes it and the row goes."""
+    user = tmp_path / "me"
+    window = make(qapp, user_home=user)
+    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
+    broken = user / "Games" / "Vita" / "Broken.vpk"
+    broken.write_bytes(b"PK\x03\x04")                          # cut off: a broken download
+    window.games_card.setFocus()
+    window.on_action("accept")
+    window.refresh_games()
+    key = f"add:{broken}"
+    window.games_pane.list.pills[key].setFocus()
+    qapp.processEvents()
+    assert ("RB", "Remove game") in window.legend.items
+    window.on_action("next")                                    # RB: the keep page, nothing deleted yet
+    page = window.keep_pane
+    assert window.panes.currentWidget() is page and broken.exists()
+    assert [p.label.text().split("  ·  ")[:2] for p in page.list.pills.values()] == [
+        ["Delete", "Broken.vpk (the VPK file)"]]
+    window.on_action("back")                                    # B: nothing deleted
+    assert window.games_pane.status.text() == "Nothing was deleted." and broken.exists()
+    window.games_pane.list.pills[key].setFocus()
+    window.on_action("next")
+    window.on_action("x")                                       # X Delete marked
+    assert wait_for(qapp, lambda: not window.busy)
+    assert not broken.exists() and window.panes.currentWidget() is window.games_pane
+    assert window.games_pane.status.text() == "Deleted: Broken.vpk (the VPK file)."
+    assert key not in window.games_pane.list.pills
+    window.close()
+
 def test_a_shortcut_made_before_the_play_mode_asks_for_update_steam(qapp, tmp_path, monkeypatch):
     """A game whose shortcut still starts Vita3K itself (1.0.1's) says (Update Steam), and Y brings it to the play
     mode (owner, 30-10-2026: View, LB and RB held quit every game)."""

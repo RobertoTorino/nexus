@@ -1,3 +1,9 @@
+Changelog: 11-11-2026 23:25:38
+
+Added. RB Remove game also works on a row that waits to be installed (VPK, ZIP, PKG or Folder): the keep page offers its
+file or the dumped game's folder, X deletes it and its row, B keeps it. A file that cannot be installed, a download cut
+short, stayed a row before, with no way to take it out of the list from the app.
+
 Changelog: 09-11-2026 14:43:34
 
 Release 6.2.0.

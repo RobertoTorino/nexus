@@ -139,6 +139,10 @@ launchers = ["~/.local/bin/bazzite-datstation"]
 name = "SSD Check"
 launchers = ["~/.local/bin/bc250-ssd"]
 
+[app.btpair]
+name = "BC-250 Bluetooth Pairing"
+launchers = ["~/.local/bin/bc250-bluetooth-pairing"]
+
 [[tool]]
 name = "flashrom"
 rpm = "flashrom"
@@ -157,7 +161,7 @@ anchor = "reading-the-bios-flash-chip-optional"
 [[tool]]
 name = "bluetoothctl"
 rpm = "bluez"
-description = "BlueZ's command line for Bluetooth. USB HD Control uses it only to end a controller's Bluetooth connection: so that Linux takes its USB cable instead, or to switch it off."
+description = "BlueZ's command line for Bluetooth. USB HD Control uses it to end a controller's Bluetooth connection: so that Linux takes its USB cable instead, or to switch it off. Bluetooth Pairing searches for, pairs and connects the listed devices with it."
 executables = ["bluetoothctl"]
 
 [[tool.source]]
@@ -165,6 +169,11 @@ owner = "hdcontrol"
 need = "optional"
 usage = "Use the cable disconnects a controller that stayed on Bluetooth while plugged in; Turn Bluetooth off and the idle service switch a controller off."
 anchor = "on-the-cable-and-over-bluetooth"
+
+[[tool.source]]
+owner = "btpair"
+need = "required"
+usage = "The search after boot pairs, trusts and connects the listed devices; the window lists the devices Bluetooth knows and searches for nearby ones."
 
 [[tool]]
 name = "pkexec"
@@ -219,6 +228,11 @@ owner = "hdcam"
 need = "required"
 usage = "Password prompt for adding the udev rule that gives your user the camera's boot loader (Allow access)."
 anchor = "access-to-the-camera"
+
+[[tool.source]]
+owner = "btpair"
+need = "required"
+usage = "Password prompt for installing, changing and removing the search after boot and the battery service."
 
 [[tool]]
 name = "umr"
@@ -855,6 +869,44 @@ owner = "check"
 need = "optional"
 usage = "Read the CEC adapter for the HDMI-CEC check (test 51)."
 
+
+[[tool]]
+name = "dbus-python"
+rpm = "python3-dbus"
+description = "D-Bus for the system's own Python (part of Bazzite). Bluetooth Pairing's battery service runs on the system's Python as root and offers BlueZ the controllers' battery levels with it. Checked by its license file."
+executables = []
+locations = ["/usr/share/licenses/python3-dbus/COPYING"]
+probe = "path"
+
+[[tool.source]]
+owner = "btpair"
+need = "optional"
+usage = "The battery service: PlayStation controller batteries in the Bluetooth icon."
+
+[[tool]]
+name = "PyGObject"
+rpm = "python3-gobject-base"
+description = "GLib for the system's own Python (part of Bazzite): the event loop of Bluetooth Pairing's battery service. Checked by its license file."
+executables = []
+locations = ["/usr/share/licenses/python3-gobject-base/COPYING"]
+probe = "path"
+
+[[tool.source]]
+owner = "btpair"
+need = "optional"
+usage = "The battery service: PlayStation controller batteries in the Bluetooth icon."
+
+[[tool]]
+name = "kwriteconfig6"
+rpm = "kf6-kconfig"
+description = "Reads and writes KDE's settings files (with kreadconfig6). Bluetooth Pairing sets Plasma's Bluetooth to switch on at every login with it."
+executables = ["kwriteconfig6"]
+
+[[tool.source]]
+owner = "btpair"
+need = "optional"
+usage = "Bluetooth on at every login (Plasma only)."
+
 [[tool]]
 name = "cecd"
 description = "Valve's CEC daemon, Bazzite's native CEC mode: it turns the TV on and off with the board's sleep and passes the TV remote's buttons on as key presses."
@@ -1161,6 +1213,10 @@ specifier = ">=6.11,<7"
 
 [[dependency.source]]
 owner = "ssd"
+specifier = ">=6.11,<7"
+
+[[dependency.source]]
+owner = "btpair"
 specifier = ">=6.11,<7"
 
 [[dependency]]

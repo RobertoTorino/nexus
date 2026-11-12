@@ -900,6 +900,40 @@ def test_the_packages_in_games_ps4_are_unpacked_from_your_games(qapp, tmp_path, 
     window.close()
 
 
+
+def test_rb_on_a_package_row_removes_the_package(qapp, tmp_path, monkeypatch, built_pkg):
+    """RB Remove game on a PKG row (owner, 11-11-2026: a package that cannot be unpacked stayed a row with no way
+    out): the keep page offers the .pkg file; B keeps it, X deletes it and the row goes."""
+    home = tmp_path / "emulator"
+    ready(home)
+    user = tmp_path / "me"
+    window = make(qapp, home, user_home=user)
+    monkeypatch.setattr(window, "isActiveWindow", lambda: True)
+    broken = user / "Games" / "PS4" / "broken.pkg"
+    broken.write_bytes(built_pkg.path.read_bytes()[:-1])       # cut off, a broken download: cannot be unpacked
+    window.games_card.setFocus()
+    window.on_action("accept")
+    window.refresh_games()
+    key = f"pkg:{broken}"
+    window.games_pane.list.pills[key].setFocus()
+    qapp.processEvents()
+    assert ("RB", "Remove game") in window.legend.items
+    window.on_action("next")                                    # RB: the keep page, nothing deleted yet
+    page = window.keep_pane
+    assert window.panes.currentWidget() is page and broken.exists()
+    assert [p.label.text().split("  ·  ")[:2] for p in page.list.pills.values()] == [
+        ["Delete", "broken.pkg (the package)"]]
+    window.on_action("back")                                    # B: nothing deleted
+    assert window.games_pane.status.text() == "Nothing was deleted." and broken.exists()
+    window.games_pane.list.pills[key].setFocus()
+    window.on_action("next")
+    window.on_action("x")                                       # X Delete marked
+    assert wait_for(qapp, lambda: not window.busy)
+    assert not broken.exists() and window.panes.currentWidget() is window.games_pane
+    assert window.games_pane.status.text() == "broken.pkg (the package) deleted."
+    assert key not in window.games_pane.list.pills
+    window.close()
+
 def test_a_shortcut_made_before_the_play_mode_asks_for_update_steam(qapp, tmp_path, monkeypatch):
     """A game whose shortcut still starts shadPS4 itself (1.1.0's) says (Update Steam), and Y brings it to the play
     mode (owner, 30-10-2026: View, LB and RB held quit every game)."""

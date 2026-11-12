@@ -168,3 +168,8 @@ tile = "portal/images/apps/vita3k.webp"
 category = "utilities"
 icons = ["apps/ssd/images/bc250-ssd"]
 tile = "portal/images/apps/ssd.webp"
+
+[btpair]
+category = "utilities"
+icons = ["apps/btpair/images/bc250-bluetooth-pairing"]
+tile = "portal/images/apps/btpair.webp"

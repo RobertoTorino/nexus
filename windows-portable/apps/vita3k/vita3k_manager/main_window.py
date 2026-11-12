@@ -22,13 +22,13 @@ window opens and before each of Vita3K's installs, while Vita3K does not run.
 The Your games pane (panes.py, library.py): the games installed in Vita3K, played from Steam (owner, 29-10-2026); A
 marks one for Steam, X plays one that is in Steam, through Steam (steam://rungameid), and on a device without Steam
 starts Vita3K with it itself (owner, 30-10-2026: a fallback, as its shortcut would start it), Y Update Steam makes
-Steam's shortcuts match the marks, RB Remove game shows the keep page for a game; LB Steam artwork keeps the
-SteamGridDB key; Steam's library is the portal's RT Steam (owner, 30-10-2026: Open Steam moved there). A game put in
-the Games\\Vita folders and not installed yet (library.waiting: a .vpk, .zip or .pkg, or a dumped game's folder) is
-a row of its own: A installs it (a .pkg asks for its license key on a page of its own first: --pkg --zrif), X
-Install all installs every .vpk, .zip and folder one after the other; a folder stays. The Log pane: Vita3K's
-folder, the app's folder and the newest lines of the app's log; A (or a tap on the pane) shows the whole log in the
-pane.
+Steam's shortcuts match the marks, RB Remove game shows the keep page for a game (on a row that waits, its file or
+folder); LB Steam artwork keeps the SteamGridDB key; Steam's library is the portal's RT Steam (owner, 30-10-2026: Open
+Steam moved there). A game put in the Games\\Vita folders and not installed yet (library.waiting: a .vpk, .zip or .pkg,
+or a dumped game's folder) is a row of its own: A installs it (a .pkg asks for its license key on a page of its own
+first: --pkg --zrif), X Install all installs every .vpk, .zip and folder one after the other; a folder stays. The Log
+pane: Vita3K's folder, the app's folder and the newest lines of the app's log; A (or a tap on the pane) shows the whole
+log in the pane.
 
 Nothing is deleted before the user decides what to keep (owner, 01-11-2026; core's keep): the keep page lists what
 would go, a row each with its size and marked Delete at first; A turns a row to Keep and back, X deletes the rows
@@ -77,7 +77,7 @@ LOG_LINES = 12                  # the newest lines of the app's log in the Log p
 LOG_MAX = 2000                  # the lines of the log the whole view shows, the newest
 FIRMWARE_KEY = "firmware/installed"    # the firmware files given to Vita3K: path to size and time (library.stamp)
 KEPT_KEY = "games/kept"         # the installed files the user kept on the keep page: path to size and time
-REMOVE, INSTALLED = "remove", "installed"      # what the keep page is for
+REMOVE, INSTALLED, WAITING = "remove", "installed", "waiting"  # what the keep page is for
 NOTHING_MARKED = "Nothing is marked Delete: B goes back, and nothing is deleted."
 RUNNING = "Vita3K is open: close it first, it would write its own settings over the change."
 NOT_INSTALLED = "Install Vita3K first: the settings are in its folder."
@@ -539,7 +539,7 @@ class MainWindow(PortableWindow):
             focused = self.games_pane.list.focused()
             if focused.startswith("add:"):
                 items = [("A", "Install"), ("X", "Install all"), ("Y", "Update Steam"),
-                         ("LB", "Steam artwork"), ("LT", "Refresh")]
+                         ("LB", "Steam artwork"), ("RB", "Remove game"), ("LT", "Refresh")]
             else:
                 items = [("A", "Steam mark"), *([("X", "Play")] if focused else []), ("Y", "Update Steam"),
                          ("LB", "Steam artwork"), *([("RB", "Remove game")] if focused else []), ("LT", "Refresh")]
@@ -813,8 +813,12 @@ class MainWindow(PortableWindow):
         """RB on a game (owner, 30-10-2026: a game that no longer plays goes): the keep page with what of it would go
         (owner, 01-11-2026: before deleting anything, let the user decide what to keep): its folders in Vita3K's
         storage, its update and extra content each a row (library.removal_items), and its Steam shortcut when it is in
-        Steam. Its saves are never on the page."""
+        Steam. Its saves are never on the page. On a row that waits to be installed, its file or folder
+        (remove_waiting)."""
         key = self.games_pane.list.focused()
+        if key.startswith("add:"):
+            self.remove_waiting(key)
+            return
         game = next((g for g in self.games if g.name == key), None)
         if game is None:
             return
@@ -830,6 +834,21 @@ class MainWindow(PortableWindow):
             return
         self.keep_game = game
         self.show_keep(REMOVE, f"Remove {game.title}", library.removal_items(folders, key in self.in_steam))
+
+    def remove_waiting(self, key: str) -> None:
+        """RB on a row that waits to be installed (owner, 11-11-2026: a file that cannot be installed, a broken
+        download, stayed a row with no way out): the keep page with its file, or its dumped game's folder, marked
+        Delete; X deletes it and the row goes, B keeps it."""
+        item = next((w for w in self.waiting if f"add:{w.path}" == key), None)
+        if item is None:
+            return
+        if self.busy:
+            self.games_pane.status.setText(BUSY)
+            return
+        what = "the dumped game" if item.kind == "Folder" else f"the {item.kind} file"
+        self.keep_game = None
+        self.show_keep(WAITING, f"Remove {item.title or item.path.name}",
+                       [keep.Item(str(item.path), f"{item.path.name} ({what})", (item.path,))])
 
     # The keep page (core's keep; owner, 01-11-2026: before deleting anything, let the user decide what to keep)
 

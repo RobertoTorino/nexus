@@ -1,3 +1,9 @@
+Changelog: 11-11-2026 23:25:38
+
+Added. Remove game… also takes a package row (PKG or PKG update): the keep window offers the .pkg file, and Delete
+marked deletes it and its row. A package that cannot be unpacked, a download cut short that says PKG file size is
+different, stayed a row before, with no way to take it out of the list from the app.
+
 Changelog: 10-11-2026 01:18:31
 
 Release 0.1.1.

@@ -786,6 +786,37 @@ def test_remove_game_asks_what_to_keep(qapp, folders, monkeypatch, tmp_path):
     window.close()
 
 
+
+def test_remove_game_on_a_package_row_offers_the_package(qapp, folders, built_pkg, monkeypatch, tmp_path):
+    """Remove game… on a PKG row (owner, 11-11-2026: a package that cannot be unpacked stayed a row with no way
+    out): the keep window offers the .pkg file; Cancel keeps it, Delete marked deletes it and the row goes."""
+    from PyQt6.QtWidgets import QDialog
+    from bc250_core.keep_dialog import KeepDialog
+    games = tmp_path / "Games" / "PS4"
+    broken = games / "broken.pkg"
+    broken.write_bytes(built_pkg.path.read_bytes()[:-1])       # cut off, a broken download: cannot be unpacked
+    window = _window(folders)
+    row = len(window.games) + [p.path.name for p in window.waiting].index("broken.pkg")
+    window.table.selectRow(row)
+    assert window.chosen() is None and window.chosen_package().path == broken
+    window.on_unpack()
+    _wait(window, qapp)
+    assert "PKG file size is different" in window.running.text() and broken.exists()
+    window.table.selectRow(row)
+    assert window.remove_game_button.isEnabled()
+    seen = []
+    monkeypatch.setattr(KeepDialog, "exec", lambda self: (seen.append([i.label for i in self.items]),
+                                                          QDialog.DialogCode.Rejected)[1])
+    window.on_remove_game()
+    assert seen == [["broken.pkg (the package)"]] and broken.exists()
+    assert window.running.text() == "Nothing was deleted."
+    monkeypatch.setattr(KeepDialog, "exec", lambda self: QDialog.DialogCode.Accepted)
+    window.on_remove_game()
+    _wait(window, qapp)
+    assert not broken.exists() and window.running.text().endswith("deleted broken.pkg (the package).")
+    assert "broken.pkg" not in [p.path.name for p in window.waiting]
+    window.close()
+
 def test_packages_in_a_game_folder_wait_as_rows_and_unpack_all_takes_the_game_first(qapp, folders, built_pkg,
                                                                                     monkeypatch, tmp_path):
     """A .pkg put in a game folder (owner, 05-11-2026, as the Windows Portable Suite's): a row of its own, PKG or PKG

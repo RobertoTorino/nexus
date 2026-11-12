@@ -76,6 +76,7 @@ By category, as the portal lists them.
 - <img src="portal/images/apps/cec.webp" width="20" height="20" alt=""/> **[BC-250 CEC Manager](apps/cec)**: Turn the TV on and off with the board, switch its input and use its remote, over HDMI-CEC.
 - <img src="portal/images/apps/sftp.webp" width="20" height="20" alt=""/> **[Bazzite SFTP Tools](apps/sftp)**: Move files between computers over SFTP, and manage the SSH server of a Bazzite host.
 - <img src="portal/images/apps/ssd.webp" width="20" height="20" alt=""/> **[SSD Check](apps/ssd)**: The health, power cycles and power-on hours of the board's SSDs.
+- <img src="portal/images/apps/btpair.webp" width="20" height="20" alt=""/> **[BC-250 Bluetooth Pairing](apps/btpair)**: Pair your Bluetooth keyboard, mouse and controllers at boot, with no USB keyboard or mouse needed.
 
 The tools for working on the suite are Nexus's, every suite's: they run from a checkout of the repository and are
 not in the portal. **[Nexus Dashboard](../dev/dash)** opens them all: Nexus Release Tool, Nexus Installer Tests,

@@ -54,6 +54,7 @@ other app is optional. They are listed by category, as the portal's tabs list th
 | ![](../assets/apps/cec.webp){ .app-icon } [BC-250 CEC Manager](cec.md) | Turn the TV on and off with the board, switch its input and use its remote, over HDMI-CEC. |
 | ![](../assets/apps/sftp.webp){ .app-icon } [Bazzite SFTP Tools](sftp.md) | Move files between computers over SFTP, and manage the SSH server of a Bazzite host. |
 | ![](../assets/apps/ssd.webp){ .app-icon } [SSD Check](ssd.md) | The health, power cycles and power-on hours of the board's SSDs. |
+| ![](../assets/apps/btpair.webp){ .app-icon } [BC-250 Bluetooth Pairing](btpair.md) | Pair your Bluetooth keyboard, mouse and controllers at boot, with no USB keyboard or mouse needed. |
 
 The tools for working on the suite are Nexus's, run from a checkout of the repository and are not in the portal:
 [Nexus Dashboard](https://robertotorino.github.io/nexus/dashboard/) opens them all (Nexus Release Tool, Nexus

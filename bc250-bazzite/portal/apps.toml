@@ -507,3 +507,16 @@ install = ["bash install.sh"]
 uninstall = ["bash install.sh --uninstall"]
 detect = ["~/.local/bin/bc250-ssd"]
 launch = [["Open", "~/.local/bin/bc250-ssd"]]
+
+[apps.btpair]
+name = "BC-250 Bluetooth Pairing"
+summary = "Pair your Bluetooth keyboard, mouse and controllers at boot, with no USB keyboard or mouse needed."
+tag = "btpair-v0.1.0"
+sha256 = ""
+required = false
+changes_board = false
+category = "utilities"
+install = ["bash install.sh"]
+uninstall = ["bash install.sh --uninstall"]
+detect = ["~/.local/bin/bc250-bluetooth-pairing"]
+launch = [["Open", "~/.local/bin/bc250-bluetooth-pairing"]]

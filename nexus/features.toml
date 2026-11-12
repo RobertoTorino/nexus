@@ -556,3 +556,12 @@ features = [
   { text = "Remote: map buttons to keys, show received keys" },
 ]
 
+[[family]]
+name = "Bluetooth Pairing"
+apps = { bc250-bazzite = "btpair" }
+features = [
+  { text = "Pairing: the listed keyboard, mouse and controllers paired after every boot, on the login screen" },
+  { text = "Pairing: a device that dropped its pairing paired again; other names never" },
+  { text = "Batteries: PlayStation controller batteries in the Bluetooth icon" },
+  { text = "Login: Bluetooth switched on at every login (Plasma)" },
+]

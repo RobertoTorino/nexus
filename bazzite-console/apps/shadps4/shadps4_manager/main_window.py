@@ -20,7 +20,8 @@ Packages (owner, 05-11-2026, as the Windows Portable Suite's shadPS4 Manager sin
 folder is a row of its own in Your games, "PKG" or "PKG update", until it is unpacked (extract.py). Unpack takes the
 chosen one, Unpack all every one, the games first; each update goes beside its game and replaces an older one there.
 The packages unpacked whole are remembered (path, size and time), so they are no longer rows, and offered for
-deletion in the keep window: a package takes as much room as its game."""
+deletion in the keep window: a package takes as much room as its game. Remove game… on a package row offers the
+package itself (one that cannot be unpacked, a broken download, otherwise stays a row; owner, 11-11-2026)."""
 
 from __future__ import annotations
 
@@ -262,8 +263,9 @@ class MainWindow(QMainWindow):
                                     "controller's buttons, a game's own settings, its game list")
         self.shad_button.clicked.connect(self.on_open_shadps4)
         self.remove_game_button = QPushButton("Remove game…")
-        self.remove_game_button.setToolTip("Delete the chosen game from the disk: a window lists what would go, and "
-                                           "you untick what to keep; nothing is deleted before you confirm")
+        self.remove_game_button.setToolTip("Delete the chosen game or package from the disk: a window lists what "
+                                           "would go, and you untick what to keep; nothing is deleted before you "
+                                           "confirm")
         self.remove_game_button.clicked.connect(self.on_remove_game)
         self.covers_button = QPushButton("Steam artwork…")
         self.covers_button.setToolTip("The SteamGridDB API key, one for the whole suite: with it, Update Steam "
@@ -687,7 +689,7 @@ class MainWindow(QMainWindow):
         self.account_pill.setEnabled(idle)
         self.shad_button.setEnabled(idle and installed)
         self.covers_button.setEnabled(idle)
-        self.remove_game_button.setEnabled(idle and self.chosen() is not None)
+        self.remove_game_button.setEnabled(idle and (self.chosen() is not None or self.chosen_package() is not None))
         self.unpack_button.setVisible(bool(self.waiting))
         self.unpack_all_button.setVisible(bool(self.waiting))
         self.unpack_button.setEnabled(idle and self.chosen_package() is not None)
@@ -817,9 +819,12 @@ class MainWindow(QMainWindow):
         the user decide what to keep): a window lists what of the chosen game would go, a row each with its size,
         every row ticked; unticking keeps it, Delete marked deletes the rows still ticked (read-only files too) off
         the window's thread, its Steam shortcut through Steam, and Cancel deletes nothing. The saves, the play time and the package
-        stay."""
+        stay. On a package row, the package (remove_package)."""
         game = self.chosen()
         if game is None:
+            package = self.chosen_package()
+            if package is not None:
+                self.remove_package(package)
             return
         if self.shad_running():
             self.say(RUNNING_REMOVE, ok=False)
@@ -857,6 +862,24 @@ class MainWindow(QMainWindow):
         self._start(f"Deleting {title}…", job)
 
     # --- Packages ---------------------------------------------------------------------------------------------
+
+    def remove_package(self, package: extract.Package) -> None:
+        """Remove game… on a package row (owner, 11-11-2026: a package that cannot be unpacked, a broken download,
+        stayed a row with no way out): the keep window offers the .pkg file; Delete marked deletes it, and the row
+        goes with it. Cancel deletes nothing."""
+        title = package.title or package.title_id or package.path.stem
+        items = [keep.Item(f"path:{package.path}", f"{package.path.name} (the package)", (package.path,))]
+        if KeepDialog(f"Remove {title}", items, self).exec() != QDialog.DialogCode.Accepted or not keep.chosen(items):
+            self.say("Nothing was deleted.")
+            return
+        path = package.path
+
+        def job() -> tuple[bool, str]:
+            failed = keep.delete([path])
+            if failed:
+                return False, f"{title}: not deleted: {', '.join(failed)}."
+            return True, f"{title}: deleted {path.name} (the package)."
+        self._start(f"Deleting {path.name}…", job)
 
     def unpacked(self) -> dict[str, Path]:
         """Each game's folder by its title ID, a game without its update before one with it in it."""

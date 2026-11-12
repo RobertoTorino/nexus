@@ -62,3 +62,4 @@ Every app with its icon and its category.
 | ![](../assets/apps/cec.webp){ .app-icon } [BC-250 CEC Manager](cec.md) | Utilities |
 | ![](../assets/apps/sftp.webp){ .app-icon } [Bazzite SFTP Tools](sftp.md) | Utilities |
 | ![](../assets/apps/ssd.webp){ .app-icon } [SSD Check](ssd.md) | Utilities |
+| ![](../assets/apps/btpair.webp){ .app-icon } [BC-250 Bluetooth Pairing](btpair.md) | Utilities |

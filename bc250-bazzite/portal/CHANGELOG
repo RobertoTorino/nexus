@@ -1,3 +1,16 @@
+Changelog: 12-11-2026 01:04:28
+
+Release 18.1.0. Pins btpair-v0.1.0.
+
+Changelog: 12-11-2026 00:54:20
+
+Fixed. The suite has a redrawn icon (owner, 12-11-2026), still purple: the portal's header, intro, window
+icon, menu entry, Desktop icon and own tile (images/bc250-bazzite-suite.webp, -1024.webp, -128.png,
+images/apps/portal.webp) and the wiki's logo and favicon (docs/images/wiki-icon.webp, .png) show it. The Utilities
+category has a new icon (owner, 12-11-2026): a blue circuit board instead of the silver one (icons/utilities, made
+with tools/sync_icons.py). The Utilities tab's picture (images/categories/utilities.webp) and the tiles of the
+Utilities apps show it.
+
 Changelog: 11-11-2026 23:06:24
 
 Release 18.0.1. Pins check-v2.0.3, gpu-v0.5.3, compute-v0.4.4, cores-v0.4.5, oc-v0.3.5, acpi-v0.4.5, vram-v2.0.3, fan-v2.0.3, rpcs3-v5.0.3, consoles-v3.0.3, shadps4-v5.0.3.

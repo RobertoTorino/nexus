@@ -175,6 +175,8 @@ Hover over the row to see where it goes.
   and is not needed to play. Untick what you want to keep, then **Delete marked**; **Cancel** keeps them all. A
   package that was unpacked whole is no longer listed, kept or not; one with files that could not be written stays,
   with `extraction_errors.txt` naming them in its folder.
+- **Remove game…** on a package row deletes the package itself, after the same window: a package that cannot be
+  unpacked (a download cut short says **PKG file size is different**) stays a row until it is deleted or replaced.
 
 The same extractor works in the [Extract PKG](#extract-pkg) window, which also previews a package, salvages a damaged
 one, compares two extractions and renames a package to its content ID.

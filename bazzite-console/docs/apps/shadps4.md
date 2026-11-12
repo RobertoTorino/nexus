@@ -23,7 +23,9 @@ The launcher is `~/.local/bin/ps5-shadps4-manager`; the app runs on the suite's 
 ## Use it
 
 Install shadPS4, add folders containing your game files, and refresh the library. Use **Extract PKG** for a game or
-update package, then select a game to manage its Steam entry. shadPS4 is an experimental PS4 emulator; compatibility
+update package, then select a game to manage its Steam entry. **Remove game…** deletes the chosen game from the
+disk, or the chosen package (a **PKG** row) when it cannot be unpacked: a window lists what would go, and nothing is
+deleted before you press **Delete marked**. shadPS4 is an experimental PS4 emulator; compatibility
 and performance vary by game and are not guaranteed on PlayStation 5 hardware running Bazzite.
 
 Under the **shadPS4 Install** and **shadPS4 Uninstall** pills, the shadPS4 line says **Not installed.** or

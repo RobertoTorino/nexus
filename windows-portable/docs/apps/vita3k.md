@@ -113,6 +113,8 @@ with `sce_sys\param.sfo` in it).
   then **X Paste** puts it in the field (**R3 ⌨** opens or closes Windows' touch keyboard to type it) and
   **A Install** has Vita3K install the package, without its window. **B**
   goes back to Your games without installing. The key is used for this install and kept nowhere.
+- **RB Remove game** on a row that waits shows the [keep page](#deciding-what-to-keep) with its file, or the dumped
+  game's folder: one that cannot be installed (a download cut short) stays a row until it is deleted or replaced.
 
 Once a `.vpk`, `.zip` or `.pkg` is installed, Vita3K has the game in its storage, and the app asks what to do with
 the file: a page lists the files the install took in (see [Deciding what to keep](#deciding-what-to-keep)). A file
