@@ -47,8 +47,7 @@ The root keeps what is Nexus's:
   (`tools/stage_app.py`), so each app runs on the core it was tested with; the BC250 suite's shared venv
   `~/.local/share/bc250-bazzite-suite/venv` holds only PyQt6 and pygame-ce (the portal's controller reader).
   `nexus.py` in it is Nexus's design for the Nexus apps (the theme `NEXUS`, `create_app(theme=NEXUS)`).
-- `tools/`: the Nexus tools: release and CI (`stage_app.py`, `build_release.py`, `check_versions.py`,
-  `check_changelogs.py`, `tag-release.sh`, `release.sh`, `ci-local.sh`, `pre-push.sh`, `git-setup.sh` (once per
+- `tools/`: the Nexus tools: release and CI (`stage_app.py`, `build_release.py`, `check_versions.py`, `tag-release.sh`, `release.sh`, `ci-local.sh`, `pre-push.sh`, `git-setup.sh` (once per
   checkout: the pre-push hook and `merge_changelog.py`, git's merge driver for the CHANGELOGs, which merges two
   machines' new entries by entry; owner, 01-11-2026), `fix-modes.sh`, `dev_versions.py` (the dev/ apps' versions),
   `backlog.py`, `nexus_index.py` (GitHub's Latest release: the Nexus index, every suite's newest portal),

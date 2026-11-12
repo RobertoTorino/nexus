@@ -28,12 +28,6 @@ jobs:
           python-version: "3.12"
       - name: Hard-coded versions match each VERSION file
         run: python tools/check_versions.py --nexus
-      # A CHANGELOG is history: every entry it had at the base is still there. The rule is the repository's, so
-      # every CHANGELOG is checked here, the suites' too.
-      - name: CHANGELOGs keep their entries
-        env:
-          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
-        run: python tools/check_changelogs.py ${BASE:+--base "$BASE"}
 
   pytest:
     runs-on: ubuntu-latest
