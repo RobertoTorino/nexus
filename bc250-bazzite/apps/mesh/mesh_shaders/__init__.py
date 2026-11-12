@@ -4,7 +4,7 @@ Mesa, tests it and lets chosen games use it."""
 
 APP_NAME = "BC-250 Mesh Shaders"
 APP_ID = "bc250-mesh-shaders"
-__version__ = "2.0.2"
+__version__ = "2.1.0"
 
 from pathlib import Path
 

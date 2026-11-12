@@ -5,7 +5,7 @@ talks to it through its hidraw node, with the standard library only."""
 
 APP_NAME = "USB HD Control"
 APP_ID = "bc250-usb-hdcontrol"
-__version__ = "2.0.4"
+__version__ = "2.1.0"
 
 from pathlib import Path
 
