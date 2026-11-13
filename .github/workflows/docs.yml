@@ -48,7 +48,15 @@ jobs:
           QT_QPA_PLATFORM=offscreen python bc250-bazzite/tools/portal_screenshot.py
       - run: mkdocs build --strict -f nexus/mkdocs.yml --site-dir "$PWD/site"   # first: a build empties its folder
       - run: mkdocs build --strict -f bc250-bazzite/mkdocs.yml --site-dir "$PWD/site/bc250-bazzite-suite"
-      - run: mkdocs build --strict -f windows-portable/mkdocs.yml --site-dir "$PWD/site/windows-portable-suite"
+      # A suite in a repository of its own whose repository has no wiki yet (before its first push) is left out, with
+      # a warning, so the other wikis are still published.
+      - name: The Windows Portable Suite's wiki
+        run: |
+          if [ -f windows-portable/mkdocs.yml ]; then
+            mkdocs build --strict -f windows-portable/mkdocs.yml --site-dir "$PWD/site/windows-portable-suite"
+          else
+            echo "::warning::RobertoTorino/windows-portable has no mkdocs.yml: its wiki is not published by this run"
+          fi
       - uses: actions/upload-pages-artifact@v5
         with:
           path: site

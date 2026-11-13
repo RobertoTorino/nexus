@@ -1,3 +1,9 @@
+Changelog: 13-11-2026 19:39:50
+
+Fixed. `docs.yml` no longer fails when the Windows Portable Suite's repository has no wiki yet (Nexus pushed before
+the suite's first push, 13-11-2026: "windows-portable/mkdocs.yml: No such file or directory"): the run warns, leaves
+that wiki out and publishes the others.
+
 Changelog: 13-11-2026 19:38:30
 
 Release 6.0.0. Brings wp-bios-v1.1.1, wp-datstat-v1.1.1, wp-hdcam-v1.1.1, wp-hdcontrol-v1.1.1, wp-pcsx2-v8.1.1, wp-portal-v10.4.0, wp-ppsspp-v6.1.1, wp-rpcs3-v5.1.1, wp-rplay-v1.1.1, wp-sftp-v1.1.1, wp-shadps4-v6.1.1, wp-smart-v1.1.1, wp-ssd-v1.1.1, wp-support-v1.1.1, wp-test-v5.1.1, wp-upscale-v1.1.1, wp-vita3k-v6.2.0, wp-xenia-v6.2.0.
