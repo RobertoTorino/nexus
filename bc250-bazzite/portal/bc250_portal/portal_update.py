@@ -15,6 +15,7 @@ from pathlib import Path
 
 from bc250_core.updates import ReleaseInfo, latest_release
 
+from . import CHECKOUT_FILE
 from .manifest import AppEntry, ManifestError, parse
 from .sources import expected_sha256
 
@@ -98,8 +99,11 @@ def fetch_text(url: str, user_agent: str) -> str:
 
 def running_build(root: Path) -> str | None:
     """The sha256 of the tarball the running portal was installed from (build.sha256 beside its program): None from
-    a checkout (no build to compare), "" for an installed portal without the file (installed before it was written,
-    or from a folder without its tarball beside it), which a new build is offered to once."""
+    a checkout or installed from one (no build to compare: the release of its version is not offered, which would
+    replace the checkout's portal under test), "" for an installed portal without the file (installed before it
+    was written, or from a folder without its tarball beside it), which a new build is offered to once."""
+    if (root / CHECKOUT_FILE).is_file():
+        return None
     try:
         text = (root / BUILD_FILE).read_text(encoding="utf-8")
     except OSError:

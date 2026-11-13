@@ -172,7 +172,8 @@ Nexus Release Tool, Nexus Installer Tests (the installer tests one at a time), N
   own version is offered too (the tooltip says **a new build of this version**): the installer keeps the checksum
   of the tarball it installed from (`build.sha256` beside the program, when the tarball is next to the unpacked
   folder, as the install steps and the portal's own update leave it), and the portal compares it with the newest
-  release's. The download is kept in `~/.local/share/bc250-bazzite-suite/portal/portal-update/` until the next one.
+  release's. A portal installed from a checkout is not offered the release of its own version (it would replace
+  the checkout's portal); a newer version still is. The download is kept in `~/.local/share/bc250-bazzite-suite/portal/portal-update/` until the next one.
 - **Outside the suite**, in orange beside the red notice: a newer release of a program that an installed app
   installs in its newest version, so the app can install it now. Press it to list them, for example **Upscaler
   Manager (Graphics): HelixSR 1.9.3 is out**, with what to do in the app, and choose one to go to its tile; the

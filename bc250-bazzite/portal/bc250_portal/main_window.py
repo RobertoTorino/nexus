@@ -65,6 +65,7 @@ virtual mouse of pointer.py), as Steam Input does for the Steam Controller."""
 
 from __future__ import annotations
 
+import os
 import shlex
 import subprocess
 import time
@@ -1059,6 +1060,12 @@ class MainWindow(QMainWindow):
         if self.busy():
             return
         launcher = bin_home() / APP_ID
+        # The portal's own update replaced the folder this one was started in: a shell started there says it
+        # cannot read its current directory. The launcher's folder is still there.
+        try:
+            os.chdir(launcher.parent)
+        except OSError:
+            pass
         if not self.launch(["sh", "-c", 'sleep 1; exec "$0"', str(launcher)]):
             QMessageBox.warning(self, APP_NAME, f"The portal could not be started again ({launcher}). Close this "
                                 "window and start it from the app menu.")

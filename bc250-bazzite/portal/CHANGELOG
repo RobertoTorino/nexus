@@ -1,3 +1,11 @@
+Changelog: 13-11-2026 16:37:51
+
+Fixed. A portal installed from a checkout (./install.sh, the Nexus Release Tool's Test app updates) was offered the published release of its own version as "a new build of this version": it has no build.sha256, which counted as a build to replace once. Taking it replaced the checkout's portal with the release in the middle of the test, and the restart dropped --source release. A portal installed from a checkout (the suite-checkout file beside its program) now has no build to compare, as one that runs from the checkout; a newer version is still offered.
+
+Changelog: 13-11-2026 16:34:29
+
+Fixed. After the portal installed its own update, the restart printed "shell-init: error retrieving current directory: getcwd: cannot access parent directories" in the terminal the portal was started from: install.sh had replaced the folder the running portal was started in, and the restart's shell began there. The portal now moves to the launcher's folder before it starts itself again. The new portal started well before too; only the messages are gone.
+
 Changelog: 12-11-2026 15:50:47
 
 Release 20.0.1. Pins fan-v2.1.1.

@@ -1008,6 +1008,21 @@ def test_restart_into_a_portal_installed_meanwhile(qapp, home, settings_dir, tmp
     assert not w.isVisible()
 
 
+def test_restart_leaves_a_folder_that_is_gone(qapp, home, settings_dir, tmp_path, launched, monkeypatch):
+    """The portal's update replaces the folder the portal runs in: the restart's shell starts in one that exists."""
+    started_in = []
+    gone = tmp_path / "old"
+    gone.mkdir()
+    (home / ".local" / "bin").mkdir(parents=True, exist_ok=True)
+    monkeypatch.chdir(gone)
+    gone.rmdir()
+    w = mw.MainWindow(load(MANIFEST), FakeSources(tmp_path / "work"), Records(tmp_path / "installed.json"),
+                      installed=_installed(tmp_path, "99.0.0"),
+                      launch=lambda argv: (started_in.append(Path.cwd()), True)[1])
+    w.restart_portal()
+    assert started_in == [home / ".local" / "bin"]
+
+
 def test_restart_that_cannot_start(qapp, home, settings_dir, tmp_path, launched, monkeypatch):
     warned = []
     monkeypatch.setattr(QMessageBox, "warning", lambda *a, **k: warned.append(a[2]))

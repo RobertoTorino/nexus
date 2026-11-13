@@ -129,6 +129,9 @@ def test_check_reads_the_tarballs_sha256_and_the_running_build(tmp_path):
     assert pu.check("owner/repo", "portal-v", load(MANIFEST), "ua", release_of=lambda *a, **k: RELEASE,
                     read=no_sums).sha256 == ""
     assert pu.running_build(tmp_path) == ""                                   # no file: offered once
+    (tmp_path / "suite-checkout").write_text("/a/checkout\n", encoding="utf-8")
+    assert pu.running_build(tmp_path) is None                                 # installed from a checkout: never
+    (tmp_path / "suite-checkout").unlink()
     (tmp_path / pu.BUILD_FILE).write_text("C" * 64 + "  portal-v1.0.0.tar.gz\n")
     assert pu.running_build(tmp_path) == "c" * 64
     (tmp_path / pu.BUILD_FILE).write_text("not a checksum\n")
