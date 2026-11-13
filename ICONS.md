@@ -117,50 +117,6 @@ Characters of the font, used as icons in labels and buttons.
 | ● | Portal | Outside the suite. |
 | ✓ ✗ | Nexus Installer Tests | A test passed, failed. |
 
-## Bazzite Console Suite
-
-### Suite artwork
-
-| Icon | File | Used for |
-| --- | --- | --- |
-| <img src="bazzite-console/icons/bazzite-console-128.png" width="48" alt=""> | `icons/bazzite-console-<size>.png` (1024, 512, 256 and 128 px) | The suite's PlayStation 5 artwork, the source for its portal and wiki icons. |
-| <img src="bazzite-console/portal/images/bazzite-console-suite.webp" width="48" alt=""> | `portal/images/bazzite-console-suite.webp` (512 px) | The portal header, window icon and release in Nexus Release Tool. |
-| <img src="bazzite-console/portal/images/bazzite-console-suite-1024.webp" width="48" alt=""> | `portal/images/bazzite-console-suite-1024.webp` | The portal's intro. |
-| <img src="bazzite-console/portal/images/bazzite-console-suite-128.png" width="48" alt=""> | `portal/images/bazzite-console-suite-128.png` | The portal's menu entry and Desktop icon. |
-| <img src="bazzite-console/portal/images/apps/portal.webp" width="48" alt=""> | `portal/images/apps/portal.webp` (128 px) | The portal's own tile. |
-| <img src="bazzite-console/docs/images/wiki-icon.png" width="48" alt=""> | `docs/images/wiki-icon.png` (256 px) | The wiki favicon. |
-| <img src="bazzite-console/docs/images/wiki-icon.webp" width="48" alt=""> | `docs/images/wiki-icon.webp` | The wiki header and home-page footer. |
-
-### Category artwork
-
-Each category has its own PlayStation 5 artwork. `tools/sync_icons.py` writes the copies used by the apps and portal.
-
-| Icon | File | Used for |
-| --- | --- | --- |
-| <img src="bazzite-console/icons/gaming/gaming-128.png" width="48" alt=""> | `icons/gaming/` | The Gaming category. |
-| <img src="bazzite-console/icons/graphics/graphics-128.png" width="48" alt=""> | `icons/graphics/` | The Graphics category. |
-| <img src="bazzite-console/icons/media/media-128.png" width="48" alt=""> | `icons/media/` | The Media category: the portal's launcher cards for YouTube, Twitch, X, Instagram, Discord, TikTok, WhatsApp, Netflix, Spotify and Stremio. |
-| <img src="bazzite-console/icons/sustainable/sustainable-128.png" width="48" alt=""> | `icons/sustainable/` | The Sustainable category. |
-| <img src="bazzite-console/icons/utilities/utilities-128.png" width="48" alt=""> | `icons/utilities/` | The Utilities category: SFTP Tools (`sftp`), USB HD Cam (`hdcam`), USB HD Control (`hdcontrol`) and SSD Check (`ssd`). |
-
-### Bazzite Test icons
-
-Bazzite Test uses the Sustainable category icon, as selected in `icons/categories.toml`.
-
-| Icon | File | Used for |
-| --- | --- | --- |
-| <img src="bazzite-console/icons/sustainable/sustainable-128.png" width="48" alt=""> | `icons/sustainable/` | The Sustainable category. |
-| <img src="bazzite-console/apps/bazzite/images/bazzite-test.webp" width="48" alt=""> | `apps/bazzite/images/bazzite-test.webp` | Bazzite Test's window, tray and wiki icon. |
-| <img src="bazzite-console/portal/images/apps/bazzite.webp" width="48" alt=""> | `portal/images/apps/bazzite.webp` | The Bazzite Test tile and wiki table icon. |
-| <img src="bazzite-console/portal/images/categories/sustainable.webp" width="48" alt=""> | `portal/images/categories/sustainable.webp` | The app's category tile. |
-
-### Wiki home images
-
-| Image | File | Used for |
-| --- | --- | --- |
-| <img src="bazzite-console/docs/images/home/console.webp" width="96" alt=""> | `docs/images/home/console.webp` | The PlayStation 5 console on the wiki home page. |
-| <img src="bazzite-console/docs/images/home/controller.webp" width="96" alt=""> | `docs/images/home/controller.webp` | The game controller on the wiki home page. |
-
 ## Windows Portable Suite
 
 ### The suite's icon
@@ -222,5 +178,5 @@ Drawn by MkDocs Material in the page's colors.
 | <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/view-grid.svg" width="24" alt=""> | `material-view-grid` | Home: the card "A suite". |
 | <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/application.svg" width="24" alt=""> | `material-application` | Home: the card "An app". |
 | <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/chip.svg" width="24" alt=""> | `material-chip` | Home: the card "BC250 Bazzite Suite". |
-| <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/controller.svg" width="24" alt=""> | `material-controller` | Home: the cards "Bazzite Console Suite" and "Windows Portable Suite". |
+| <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/controller.svg" width="24" alt=""> | `material-controller` | Home: the card "Windows Portable Suite". |
 | <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/download.svg" width="24" alt=""> | `material-download` | Home: the Nexus index button. |

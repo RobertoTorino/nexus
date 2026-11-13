@@ -27,7 +27,6 @@ dev/<name>/                   the Nexus development apps, run from the checkout:
 test.sh                       runs every test suite (core, tools, dev/, and the portal, tools and apps of each suite
                               made for the system it runs on: SYSTEM in the suite's folder)
 bc250-bazzite/                the BC250 Bazzite Suite
-bazzite-console/              the Bazzite Console Suite (PlayStation 5 hardware running Bazzite; ps5- tags)
 windows-portable/             the Windows Portable Suite (its tags start with wp-, TAG_PREFIX)
 nexus/                        the Nexus page
 DESIGN.md ICONS.md            every color and every icon, per suite and the Nexus page
@@ -66,7 +65,7 @@ over with what the app does:
 
 The [Apps and features](features.md) chapter is written by `tools/features.py` from `nexus/features.toml`: every
 suite as a column, every app as a family that names its folder in each suite that has it (DatStation is
-`datstation` in the Bazzite suites and `datstat` in the Windows Portable Suite), and its features in a few words,
+`datstation` in the BC250 Bazzite Suite and `datstat` in the Windows Portable Suite), and its features in a few words,
 each marked with the suites that have it. The apps' names and categories come from each suite's `portal/apps.toml`.
 A change to what an app does changes its features in the same change; then write the chapter again:
 
@@ -182,8 +181,8 @@ and its `install.sh` are in CI at once.
 
 `./test.sh` runs every suite in one venv that holds everything, on whatever Python your system has. GitHub's CI runs
 each job on Python 3.12 with only that job's own requirements, so a test can pass here and still fail there: a
-Python 3.13 function, or a package only the full venv has. `tools/ci-local.sh` runs the jobs of `ci.yml`,
-`ci-bazzite-console.yml` and `ci-nexus.yml` the way GitHub does, in a container (podman, which Bazzite has, or
+Python 3.13 function, or a package only the full venv has. `tools/ci-local.sh` runs the jobs of `ci.yml`
+and `ci-nexus.yml` the way GitHub does, in a container (podman, which Bazzite has, or
 docker):
 
 ```bash
@@ -198,8 +197,8 @@ first run builds the image from `tools/ci-local/Containerfile` (Python 3.12 and 
 and PS Remote Play's FFmpeg; both are kept, with the venvs and the logs, in `~/.cache/bc250-ci-local`. It works on a
 copy of the checkout with every change staged, as the commit will have it. Only the Windows job does not run here.
 Without job names it runs only the workflows GitHub starts for the push: those whose `paths` match a file that differs
-from `origin/main`, counting what is not committed yet. A push that changes only the Bazzite Console Suite runs
-`ci-bazzite-console.yml` and `ci-nexus.yml`, not the BC250 suite's `ci.yml`, so one suite's checks never hold another
+from `origin/main`, counting what is not committed yet. A push that changes only the Windows Portable Suite runs
+`ci-nexus.yml`, not the BC250 suite's `ci.yml`, so one suite's checks never hold another
 suite's push. A change to `core/`, `tools/` or `dev/` starts every suite's CI, there as here.
 The push commands Nexus Release Tool shows run it first (`tools/ci-local.sh && git push`): no push when a job fails.
 

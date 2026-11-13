@@ -1,3 +1,9 @@
+Changelog: 13-11-2026 15:34:58
+
+Breaking. The Bazzite Console Suite left Nexus (owner, 13-11-2026), so upstreams.json no longer lists its apps and
+the Decky Loader card is gone: Decky Loader Manager was that suite's only. The code that read Decky's version file
+and its loader.py went with it; an upstream is an emulator pinned in an app's emulator.py.
+
 Changelog: 11-11-2026 21:04:02
 
 Fixed. The BC250 Bazzite Suite's catalog and upstreams.json call Console Link by its new name, BC-250 PS Remote

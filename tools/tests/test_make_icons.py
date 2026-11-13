@@ -34,11 +34,9 @@ def material_icons(folder: Path) -> set[str]:
 def test_every_material_icon_of_each_wiki_is_listed():
     """What the wiki's pages use is what its section lists, no more and no less."""
     assert material_icons(SUITE / make_icons.SUITE_DIR / "docs") == {name for name, _ in make_icons.MATERIAL}
-    assert material_icons(SUITE / "bazzite-console" / "docs") == set()
     assert material_icons(SUITE / "nexus" / "docs") == {name for name, _ in make_icons.NEXUS_MATERIAL}
     assert material_icons(SUITE / "windows-portable" / "docs") == {name for name, _ in make_icons.WINDOWS_PORTABLE_MATERIAL}
-    for config in (SUITE / make_icons.SUITE_DIR / "mkdocs.yml", SUITE / "bazzite-console" / "mkdocs.yml",
-                   SUITE / "nexus" / "mkdocs.yml",
+    for config in (SUITE / make_icons.SUITE_DIR / "mkdocs.yml", SUITE / "nexus" / "mkdocs.yml",
                    SUITE / "windows-portable" / "mkdocs.yml"):   # no placeholder logo from Material
         assert "material/" not in re.sub(r"#.*", "", config.read_text(encoding="utf-8"))
 
@@ -80,15 +78,5 @@ def test_the_nexus_page_shows_the_nexus_icon():
 
 def test_every_category_is_listed():
     text = make_icons.build()
-    for suite in (make_icons.SUITE_DIR, "bazzite-console"):
-        for category in (p.name for p in (SUITE / suite / "icons").iterdir() if p.is_dir()):
-            assert f"{suite}/icons/{category}/{category}-128.png" in text
-
-
-def test_bazzite_console_icon_copies_match_the_artwork():
-    from PIL import Image
-
-    for source, target in make_icons.BAZZITE_CONSOLE_COPIES:
-        with Image.open(SUITE / source) as original, Image.open(SUITE / target) as copy:
-            assert original.size == copy.size
-            assert original.convert("RGBA").tobytes() == copy.convert("RGBA").tobytes(), target
+    for category in (p.name for p in (SUITE / make_icons.SUITE_DIR / "icons").iterdir() if p.is_dir()):
+        assert f"{make_icons.SUITE_DIR}/icons/{category}/{category}-128.png" in text

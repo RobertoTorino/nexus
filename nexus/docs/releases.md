@@ -341,8 +341,7 @@ Every suite publishes its releases in the one repository, so each release's titl
 the portal's name and `apps.toml`: *BC250 Bazzite Suite: Portal 12.0.0*, *BC250 Bazzite Suite: Xenia Manager
 0.11.0*, *Windows Portable Suite: Windows Portable Test 0.1.1* (`build_release.py` of each suite writes it).
 
-A release is built and published by its suite's release workflow (**Release**, **Release Windows Portable**,
-**Release Bazzite Console Suite**):
+A release is built and published by its suite's release workflow (**Release**, **Release Windows Portable**):
 started by a tag pushed by hand, or called by **Release Nexus** for a Nexus release. A push to main starts every suite's CI, whatever suite it is for, and on the Actions
 page each run is titled with the push's commit message: after a push of *Release portal-v12.1.1*, **CI Windows
 Portable** shows as *Release portal-v12.1.1* too, but it only tests. Its steps **Build the release zip, not

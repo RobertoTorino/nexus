@@ -22,10 +22,9 @@ def test_the_icons_are_nexus_at_512_and_128_px():
 
 
 def test_the_checkout_has_the_suites_and_the_nexus_apps():
-    assert checkout.suites(CHECKOUT) == ["bazzite-console", "bc250-bazzite", "windows-portable"]
+    assert checkout.suites(CHECKOUT) == ["bc250-bazzite", "windows-portable"]
     assert checkout.suite_name(CHECKOUT, "bc250-bazzite") == "BC250 Bazzite Suite"
-    assert checkout.suite_name(CHECKOUT, "bazzite-console") == "Bazzite Console Suite"
-    assert checkout.suite_system(CHECKOUT, "bazzite-console") == "bazzite"
+    assert checkout.suite_system(CHECKOUT, "bc250-bazzite") == "bazzite"
     assert checkout.suite_system(CHECKOUT, "windows-portable") == "windows"
     assert checkout.here(CHECKOUT, "bc250-bazzite", "linux") and not checkout.here(CHECKOUT, "bc250-bazzite", "win32")
     assert checkout.here(CHECKOUT, "windows-portable", "win32")
@@ -82,11 +81,11 @@ def test_nexus_deps_is_off_for_a_suite_without_a_catalog(qapp):
     tiles = {window.tiles.item(i).text(): window.tiles.item(i) for i in range(window.tiles.count())}
     if sys.platform != "win32":
         assert tiles["Nexus Deps"].flags() & Qt.ItemFlag.ItemIsEnabled
-    window.suite_box.setCurrentIndex(window.suite_box.findText("Bazzite Console Suite"))
+    window.suite_box.setCurrentIndex(window.suite_box.findText("Windows Portable Suite"))
     tiles = {window.tiles.item(i).text(): window.tiles.item(i) for i in range(window.tiles.count())}
     assert not tiles["Nexus Deps"].flags() & Qt.ItemFlag.ItemIsEnabled
     if sys.platform != "win32":
-        assert "no catalog for bazzite-console" in tiles["Nexus Deps"].toolTip()
+        assert "no catalog for windows-portable" in tiles["Nexus Deps"].toolTip()
     window.close()
 
 

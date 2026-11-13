@@ -5,7 +5,7 @@ them, kept in sync with the apps (owner, 09-11-2026: a separate JSON file, kept 
 launchers are read from each app's code and its portal's apps.toml by sync() (`dev/deps/run.sh
 --sync-upstreams`), without importing the apps; tests/test_upstreams.py fails while the file is stale or misses an app.
 
-* github: an emulator or Decky Loader, which each app pins at a build tested on a board. Two kinds of update: the
+* github: an emulator, which each app pins at a build tested on a board. Two kinds of update: the
   installed one is not the pin (the app's Install puts the pin in place), or upstream has a newer release than the
   pin (it comes with a release of the app, after a test on a board: release work). Neither is installed from here.
 * sony: firmware Sony publishes a version list for (the DualSense controllers, the PS4), compared with what was seen
@@ -35,9 +35,8 @@ from .system import Source, Update
 CATALOG = CATALOGS / "upstreams.json"
 TIMEOUT = 15
 USER_AGENT = f"nexus-deps/{__version__}"
-SUITE_NAMES = {"bc250-bazzite": "BC250 Bazzite Suite", "bazzite-console": "Bazzite Console Suite"}
-DECKY_VERSION_FILE = "~/homebrew/services/.loader.version"     # Decky's own updater writes it too
-SYNCED = ("repo", "pin", "version", "home", "version_file", "name", "launcher")
+SUITE_NAMES = {"bc250-bazzite": "BC250 Bazzite Suite"}
+SYNCED = ("repo", "pin", "version", "home", "name", "launcher")
 
 Fetch = Callable[[str], object]          # a GitHub API URL -> its decoded JSON
 Get = Callable[[str], bytes]             # a URL -> its body
@@ -120,12 +119,7 @@ def sync(data: dict, checkout: Path = CHECKOUT) -> dict:
                     raise UpstreamError(f"{module.relative_to(checkout)} has no constant {constant}")
                 app[field] = str(values[constant])
             app_id = constants(module.parent / "__init__.py").get("APP_ID")
-            app.pop("home", None)
-            app.pop("version_file", None)
-            if module.name == "emulator.py":
-                app["home"] = f"~/.local/share/{app_id}/emulator"         # its emulator_home(): current -> <version>
-            else:
-                app["version_file"] = DECKY_VERSION_FILE
+            app["home"] = f"~/.local/share/{app_id}/emulator"             # its emulator_home(): current -> <version>
             # The synced fields after the hand-written ones, in one order
             for field in SYNCED:
                 if field in app:
@@ -134,11 +128,10 @@ def sync(data: dict, checkout: Path = CHECKOUT) -> dict:
 
 
 def apps_with_upstreams(checkout: Path = CHECKOUT) -> set[tuple[str, str]]:
-    """Every (suite, app) of the Linux suites with a pinned upstream: an emulator.py, or Decky's loader.py."""
+    """Every (suite, app) of the Linux suites with a pinned upstream: an emulator.py."""
     found = set()
     for suite in SUITE_NAMES:
-        for module in [*(checkout / suite / "apps").glob("*/*/emulator.py"),
-                       *(checkout / suite / "apps").glob("*/*/loader.py")]:
+        for module in (checkout / suite / "apps").glob("*/*/emulator.py"):
             if "REPO" in constants(module) and "VERSION" in constants(module):
                 found.add((suite, module.parents[1].name))
     return found
@@ -191,17 +184,12 @@ def newer(compare: str, latest: dict, pin: str) -> bool:
 
 
 def installed_version(app: dict, home: Path) -> str | None:
-    """The version of the app's upstream on this machine: the folder current links to, or Decky's version file.
+    """The version of the app's upstream on this machine: the folder current links to.
     None when the app is not installed (its launcher is missing); "" when the app is but the upstream is not."""
     if not (home / app["launcher"].removeprefix("~/")).exists():
         return None
-    if "home" in app:
-        current = home / app["home"].removeprefix("~/") / "current"
-        return os.path.basename(os.readlink(current)) if current.is_symlink() else ""
-    try:
-        return (home / app["version_file"].removeprefix("~/")).read_text(encoding="utf-8").strip().removeprefix("v")
-    except OSError:
-        return ""
+    current = home / app["home"].removeprefix("~/") / "current"
+    return os.path.basename(os.readlink(current)) if current.is_symlink() else ""
 
 
 def _app_label(app: dict) -> str:
@@ -227,8 +215,6 @@ def check_github(entry: dict, fetch: Fetch = _fetch, home: Path = Path.home()) -
         if not installed:
             without.append(app["name"])             # the app is there, the program not (yet): a choice, no update
             continue
-        if entry["id"] == "decky" and numbers(installed) > numbers(app["version"]):
-            continue                    # Decky updated itself past the pin: nothing to do
         updates.append(Update(f"{_app_label(app)}: installed", installed, app["version"]))
         notes.append(f"Open {app['name']} and use its Install: it puts its tested {name} in place.")
     late = [app for app in apps if newer(entry["compare"], latest, app["pin"])]
@@ -256,9 +242,6 @@ def _github_about(entry: dict, latest: dict) -> str:
             f"<p><b>Newer on GitHub</b>: it is not installed from here. A newer {name} comes with a release of the "
             "app, once it has been tried on a board (release work); until then the app keeps the tested one. "
             f"See <a href='{page}'>the release</a> for what changed.</p>")
-    if entry["id"] == "decky":
-        text += ("<p>Decky Loader can update itself from its settings in Game Mode; the app's Install asks for your "
-                 "password (it installs a system service), and Steam restarts.</p>")
     return text
 
 

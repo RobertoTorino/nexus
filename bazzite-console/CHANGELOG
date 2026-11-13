@@ -1,9 +1,0 @@
-Changelog: 12-11-2026 17:57:38
-
-Fixed. The suite has the owner's new icons (12-11-2026): the suite's own (a silver PlayStation 5 with its controller
-in front, instead of the blue see-through console) and those of the Gaming (a gray metal controller with a blue
-light bar), Sustainable (a green circuit board) and Utilities (a blue circuit board) categories, from the owner's
-PNGs at 1024, 512, 256 and 128 px. tools/sync_icons.py converted the category icons (WebP, the 128 px one PNG) and
-wrote the copies of the 15 apps, their portal tiles and the three category tiles; tools/make_icons.py wrote the
-portal's copies of the suite's icon and the wiki's logo and favicon (docs/images/wiki-icon.webp, .png). The
-pictures on the wiki's home page (docs/images/home/) stay as they were, and so do the Graphics and Media icons.

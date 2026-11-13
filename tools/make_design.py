@@ -294,11 +294,6 @@ Each design (a suite's, the Nexus page's) has its own; none is carried over to a
 - **Anything else is a deviation**, listed under Color families below with the app it is in. A new color is
   added to the family it belongs to, or it needs a reason here.
 
-### Bazzite Console Suite
-
-- **The identity** is Bazzite purple, as in the other Bazzite suite. Its wiki uses the same purple palette; its
-  suite and home-page images are placeholders until PlayStation 5 artwork is supplied.
-
 ### Windows Portable Suite
 
 - **The identity** (owner, 26-10-2026: direction D, B's amber on C's cards): a near-black window `#121214`, cards a
@@ -412,13 +407,12 @@ def families() -> str:
 # Each wiki's stylesheet and the listing of its colors: the two must name the same colors.
 STYLESHEETS = {
     f"{SUITE_DIR}/docs/stylesheets/suite.css": (WIKI_TEXT, WIKI_BLOCKS),
-    "bazzite-console/docs/stylesheets/suite.css": (WIKI_TEXT, WIKI_BLOCKS),
     "nexus/docs/stylesheets/nexus.css": (NEXUS_TEXT, NEXUS_BLOCKS),
     "windows-portable/docs/stylesheets/portable.css": (PORTABLE_WIKI_TEXT, PORTABLE_WIKI_BLOCKS),
 }
 
 GAMING_TEXT = [
-    ("#5b93da", "Links on a dark window (PS Remote Play, Console Link, Console LinkB, XB Remote Play, Decky, PCSX2, "
+    ("#5b93da", "Links on a dark window (PS Remote Play, XB Remote Play, PCSX2, "
                 "PPSSPP, RPCS3, shadPS4, Vita3K, Xenia; HD Control's lit parts)."),
     ("#ffffff", "Text on the blue primary button and on the shortcut artwork."),
 ]
@@ -439,7 +433,7 @@ GAMING_BLOCKS = [
     ("#04080f", "PPSSPP shortcut artwork, bottom."),
     ("#3a2c0d", "Vita3K shortcut artwork, top."),
     ("#0f0b03", "Vita3K shortcut artwork, bottom."),
-    ("#000000", "PS Remote Play's and Console Link's stream view."),
+    ("#000000", "PS Remote Play's stream view."),
 ]
 
 DAT_TEXT = [
@@ -519,7 +513,7 @@ OTHER_TEXT = [
     ("#888888", "Busy and hint labels in italics (ACPI, CU Bisect, CU Unlock, Cores Bisect, Cores Unlock)."),
     ("#ef6c00", "An incomplete ACPI override; a CU mask that needs checking."),
     ("#b8b8c8", "System Overlay: the names of the values."),
-    ("#dddddd", "PS Remote Play's and Console Link's stream view."),
+    ("#dddddd", "PS Remote Play's stream view."),
     ("#ffb74d", "SFTP: the password warning."),
     ("#e57373", "SFTP: password requirements not met."),
     ("#81c784", "SFTP: password requirements met."),
@@ -603,9 +597,6 @@ are not on core yet carry a copy). The theme is one choice for every app: Gunmet
                        "theme's surfaces.", STATE_TEXT, STATE_BLOCKS))
     out.append("## The wiki\n\n`bc250-bazzite/docs/stylesheets/suite.css`, Material's slate scheme with the suite's purple.\n")
     out.append(section("Wiki", "", WIKI_TEXT, WIKI_BLOCKS))
-    out.append("## The Bazzite Console Suite\n\n`bazzite-console/docs/stylesheets/suite.css`: Material's slate scheme "
-               "with the same Bazzite purple palette. Its suite and home-page images are placeholders.\n")
-    out.append(section("Wiki", "", WIKI_TEXT, WIKI_BLOCKS))
     out.append("## The Windows Portable Suite\n\n`core/bc250_core/portable.py`, the portable window: direction D "
                "(the owner's, 26-10-2026).\n")
     out.append(section("Portable window", "The apps of the Windows Portable Suite, sized for a handheld held in the "
@@ -619,7 +610,7 @@ are not on core yet carry a copy). The theme is one choice for every app: Gunmet
                        "page's colors as a theme for core's widgets, set with `create_app(theme=NEXUS)`; its "
                        "states are the apps' state family.", NEXUS_APP_TEXT, NEXUS_APP_BLOCKS))
     out.append("## The apps' own colors\n\nOn top of the theme, in the apps' `style.py` or where they are used.\n")
-    out.append(section("Gaming apps", "PS Remote Play, Console Link, Console LinkB, XB Remote Play, Decky, HD Control, "
+    out.append(section("Gaming apps", "PS Remote Play, XB Remote Play, HD Control, "
                        "PCSX2, PPSSPP, RPCS3, shadPS4, Vita3K and Xenia.", GAMING_TEXT, GAMING_BLOCKS))
     out.append(section("DatStation", "", DAT_TEXT, DAT_BLOCKS))
     out.append(section("Upscaler", "", UPSCALER_TEXT, UPSCALER_BLOCKS))

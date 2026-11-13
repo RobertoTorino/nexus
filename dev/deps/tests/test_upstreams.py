@@ -35,7 +35,7 @@ def test_the_catalog_is_in_sync_with_the_apps():
 def test_every_app_with_a_pinned_upstream_is_listed():
     listed = {(app["suite"], app["app"]) for item in catalog()["github"] for app in item["apps"]}
     assert listed == upstreams.apps_with_upstreams()
-    assert ("bc250-bazzite", "rpcs3") in listed and ("bazzite-console", "decky") in listed
+    assert ("bc250-bazzite", "rpcs3") in listed
 
 
 def test_the_constants_are_read_without_running_the_module(tmp_path):
@@ -64,14 +64,9 @@ def install(home: Path, app: dict, version: str | None):
     launcher.write_text("")
     if version is None:
         return
-    if "home" in app:
-        folder = home / app["home"].removeprefix("~/")
-        (folder / version).mkdir(parents=True)
-        (folder / "current").symlink_to(version)
-    else:
-        path = home / app["version_file"].removeprefix("~/")
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(f"v{version}\n")
+    folder = home / app["home"].removeprefix("~/")
+    (folder / version).mkdir(parents=True)
+    (folder / "current").symlink_to(version)
 
 
 def test_an_emulator_at_its_pin_with_nothing_newer(tmp_path):
@@ -102,14 +97,6 @@ def test_an_app_without_its_program_is_no_update(tmp_path):
     assert source.updates == () and "Installed without Xenia Canary so far: Xenia Manager." in source.detail
     later = upstreams.check_github(xenia, release("cf206a3", "2026-11-09T09:00:00Z"), tmp_path)
     assert later.updates[0].latest == "cf206a3"
-
-
-def test_decky_past_its_pin_updated_itself(tmp_path):
-    decky = entry("decky")
-    install(tmp_path, decky["apps"][0], "9.9.9")
-    source = upstreams.check_github(decky, release("v9.9.9"), tmp_path)
-    assert [update.name for update in source.updates] == ["Decky Loader on GitHub"]
-    assert "update itself" in source.about
 
 
 def test_github_offline(tmp_path):

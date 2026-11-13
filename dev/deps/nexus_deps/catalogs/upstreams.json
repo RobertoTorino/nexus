@@ -22,22 +22,6 @@
           "home": "~/.local/share/bc250-rpcs3-manager/emulator",
           "name": "RPCS3 Manager",
           "launcher": "~/.local/bin/bc250-rpcs3-manager"
-        },
-        {
-          "suite": "bazzite-console",
-          "app": "rpcs3",
-          "module": "rpcs3_manager/emulator.py",
-          "constants": {
-            "repo": "REPO",
-            "pin": "LANDMARK",
-            "version": "VERSION"
-          },
-          "repo": "RPCS3/rpcs3",
-          "pin": "0.0.43",
-          "version": "0.0.43-20395",
-          "home": "~/.local/share/ps5-rpcs3-manager/emulator",
-          "name": "RPCS3 Manager",
-          "launcher": "~/.local/bin/ps5-rpcs3-manager"
         }
       ]
     },
@@ -62,22 +46,6 @@
           "home": "~/.local/share/bc250-pcsx2-manager/emulator",
           "name": "PCSX2 Manager",
           "launcher": "~/.local/bin/bc250-pcsx2-manager"
-        },
-        {
-          "suite": "bazzite-console",
-          "app": "pcsx2",
-          "module": "pcsx2_manager/emulator.py",
-          "constants": {
-            "repo": "REPO",
-            "pin": "VERSION",
-            "version": "VERSION"
-          },
-          "repo": "PCSX2/pcsx2",
-          "pin": "2.8.2",
-          "version": "2.8.2",
-          "home": "~/.local/share/ps5-pcsx2-manager/emulator",
-          "name": "PCSX2 Manager",
-          "launcher": "~/.local/bin/ps5-pcsx2-manager"
         }
       ]
     },
@@ -102,22 +70,6 @@
           "home": "~/.local/share/bc250-ppsspp-manager/emulator",
           "name": "PPSSPP Manager",
           "launcher": "~/.local/bin/bc250-ppsspp-manager"
-        },
-        {
-          "suite": "bazzite-console",
-          "app": "ppsspp",
-          "module": "ppsspp_manager/emulator.py",
-          "constants": {
-            "repo": "REPO",
-            "pin": "VERSION",
-            "version": "VERSION"
-          },
-          "repo": "hrydgard/ppsspp",
-          "pin": "1.20.4",
-          "version": "1.20.4",
-          "home": "~/.local/share/ps5-ppsspp-manager/emulator",
-          "name": "PPSSPP Manager",
-          "launcher": "~/.local/bin/ps5-ppsspp-manager"
         }
       ]
     },
@@ -142,22 +94,6 @@
           "home": "~/.local/share/bc250-vita3k-manager/emulator",
           "name": "Vita3K Manager",
           "launcher": "~/.local/bin/bc250-vita3k-manager"
-        },
-        {
-          "suite": "bazzite-console",
-          "app": "vita3k",
-          "module": "vita3k_manager/emulator.py",
-          "constants": {
-            "repo": "BUILDS",
-            "pin": "BUILD",
-            "version": "VERSION"
-          },
-          "repo": "Vita3K/Vita3K-builds",
-          "pin": "4269",
-          "version": "4269",
-          "home": "~/.local/share/ps5-vita3k-manager/emulator",
-          "name": "Vita3K Manager",
-          "launcher": "~/.local/bin/ps5-vita3k-manager"
         }
       ]
     },
@@ -182,22 +118,6 @@
           "home": "~/.local/share/bc250-xenia-manager/emulator",
           "name": "Xenia Manager",
           "launcher": "~/.local/bin/bc250-xenia-manager"
-        },
-        {
-          "suite": "bazzite-console",
-          "app": "xenia",
-          "module": "xenia_manager/emulator.py",
-          "constants": {
-            "repo": "REPO",
-            "pin": "PUBLISHED",
-            "version": "VERSION"
-          },
-          "repo": "xenia-canary/xenia-canary",
-          "pin": "2026-11-04T16:38:00Z",
-          "version": "838850f",
-          "home": "~/.local/share/ps5-xenia-manager/emulator",
-          "name": "Xenia Manager",
-          "launcher": "~/.local/bin/ps5-xenia-manager"
         }
       ]
     },
@@ -222,46 +142,6 @@
           "home": "~/.local/share/bc250-shadps4-manager/emulator",
           "name": "shadPS4 Manager",
           "launcher": "~/.local/bin/bc250-shadps4-manager"
-        },
-        {
-          "suite": "bazzite-console",
-          "app": "shadps4",
-          "module": "shadps4_manager/emulator.py",
-          "constants": {
-            "repo": "REPO",
-            "pin": "VERSION",
-            "version": "VERSION"
-          },
-          "repo": "shadps4-emu/shadPS4",
-          "pin": "0.21.0",
-          "version": "0.21.0",
-          "home": "~/.local/share/ps5-shadps4-manager/emulator",
-          "name": "shadPS4 Manager",
-          "launcher": "~/.local/bin/ps5-shadps4-manager"
-        }
-      ]
-    },
-    {
-      "id": "decky",
-      "name": "Decky Loader",
-      "what": "the plugin loader for Steam's Game Mode; it can update itself, so it may be newer than the pin",
-      "compare": "version",
-      "apps": [
-        {
-          "suite": "bazzite-console",
-          "app": "decky",
-          "module": "decky_manager/loader.py",
-          "constants": {
-            "repo": "REPO",
-            "pin": "VERSION",
-            "version": "VERSION"
-          },
-          "repo": "SteamDeckHomebrew/decky-loader",
-          "pin": "3.3.1",
-          "version": "3.3.1",
-          "version_file": "~/homebrew/services/.loader.version",
-          "name": "Decky Loader Manager",
-          "launcher": "~/.local/bin/ps5-decky-manager"
         }
       ]
     }
@@ -285,12 +165,6 @@
           "app": "hdcontrol",
           "name": "USB HD Control",
           "launcher": "~/.local/bin/bc250-usb-hdcontrol"
-        },
-        {
-          "suite": "bazzite-console",
-          "app": "hdcontrol",
-          "name": "USB HD Control",
-          "launcher": "~/.local/bin/ps5-usb-hdcontrol"
         }
       ],
       "how": "Connect the controller with a USB cable and open {apps}: it reads the controller's firmware, compares it with Sony's and updates it (the Edge's profiles are backed up first). Bluetooth is not enough for an update."

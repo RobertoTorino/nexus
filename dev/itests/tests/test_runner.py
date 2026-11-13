@@ -38,8 +38,8 @@ def test_each_kind_of_script_has_its_runner(tmp_path: Path) -> None:
 
 
 def test_the_suites_with_tests_for_this_system_are_listed() -> None:
-    """The Bazzite suites have .sh tests (Linux), the Windows Portable Suite .ps1 tests (Windows)."""
-    assert suites_here(CHECKOUT, ".sh") == ["bazzite-console", "bc250-bazzite"]
+    """The Bazzite suite has .sh tests (Linux), the Windows Portable Suite .ps1 tests (Windows)."""
+    assert suites_here(CHECKOUT, ".sh") == ["bc250-bazzite"]
     assert suites_here(CHECKOUT, ".ps1") == ["windows-portable"]
     assert suite_tests_dir(BC250) == BC250 / "tools" / "installer-tests"
 
@@ -123,7 +123,7 @@ def test_runner_rejects_helpers_and_scripts_outside_the_tests_folder(tmp_path: P
 def checkout(tmp_path: Path) -> Path:
     """A checkout with two Bazzite suites and one Windows suite."""
     root = tmp_path / "nexus"
-    for suite, scripts in (("bazzite-console", ("check.sh",)),
+    for suite, scripts in (("another-bazzite", ("check.sh",)),
                            ("bc250-bazzite", ("fan.sh", "check.sh", "shims.sh")),
                            ("windows-portable", ("test.ps1", "bios.ps1"))):
         folder = root / suite / "tools" / "installer-tests"
@@ -131,7 +131,7 @@ def checkout(tmp_path: Path) -> Path:
         (root / suite / "portal").mkdir()
         (root / suite / "portal" / "apps.toml").write_text("", encoding="utf-8")
         if suite != "bc250-bazzite":
-            (root / suite / "TAG_PREFIX").write_text("ps5-" if suite == "bazzite-console" else "wp-",
+            (root / suite / "TAG_PREFIX").write_text("ab-" if suite == "another-bazzite" else "wp-",
                                                      encoding="utf-8")
         for name in scripts:
             (folder / name).write_text("exit 0\n", encoding="utf-8")
@@ -147,7 +147,7 @@ def test_window_lists_the_suites_tests_and_remembers_the_suite(checkout: Path) -
     if sys.platform == "win32":
         assert window.suites == ["windows-portable"] and list(window._items) == ["bios.ps1"]
     else:
-        assert window.suites == ["bazzite-console", "bc250-bazzite"] and window.suite == "bc250-bazzite"
+        assert window.suites == ["another-bazzite", "bc250-bazzite"] and window.suite == "bc250-bazzite"
         assert list(window._items) == ["check.sh", "fan.sh"]
     assert settings.value(SUITE_KEY) == window.suite
     assert all(

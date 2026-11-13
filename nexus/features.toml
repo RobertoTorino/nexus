@@ -17,11 +17,6 @@ name = "BC250 Bazzite Suite"
 short = "BC250"
 wiki = "https://robertotorino.github.io/nexus/bc250-bazzite-suite/"
 
-[suites.bazzite-console]
-name = "Bazzite Console Suite"
-short = "Console"
-wiki = "https://robertotorino.github.io/nexus/bazzite-console-suite/"
-
 [suites.windows-portable]
 name = "Windows Portable Suite"
 short = "Portable"
@@ -29,27 +24,26 @@ wiki = "https://robertotorino.github.io/nexus/windows-portable-suite/"
 
 [[family]]
 name = "Portal"
-apps = { bc250-bazzite = "portal", bazzite-console = "portal", windows-portable = "portal" }
+apps = { bc250-bazzite = "portal", windows-portable = "portal" }
 features = [
   { text = "Apps: tiles by category; install, open, update, remove" },
   { text = "Apps: checksum-checked installs from GitHub releases" },
-  { text = "Apps: install all missing apps or updates at once", in = ["bc250-bazzite", "bazzite-console"] },
+  { text = "Apps: install all missing apps or updates at once", in = ["bc250-bazzite"] },
   { text = "Updates: flag apps needing an update or reinstall" },
   { text = "Updates: update the portal itself from a banner" },
-  { text = "Updates: flag newer programs outside the suite", in = ["bc250-bazzite", "bazzite-console"] },
-  { text = "Media: open streaming sites and apps full screen", in = ["bazzite-console"] },
-  { text = "Sys info: show and copy the system's details", in = ["bc250-bazzite", "bazzite-console"] },
+  { text = "Updates: flag newer programs outside the suite", in = ["bc250-bazzite"] },
+  { text = "Sys info: show and copy the system's details", in = ["bc250-bazzite"] },
   { text = "Header: live CPU and GPU, date and time" },
   { text = "Settings: wallpaper, transparency and sound" },
   { text = "Settings: clock format, time zone and weather place" },
-  { text = "Settings: theme, Desktop icons and touchpad speed", in = ["bc250-bazzite", "bazzite-console"] },
+  { text = "Settings: theme, Desktop icons and touchpad speed", in = ["bc250-bazzite"] },
   { text = "Settings: performance mode, screens and XBOX mode", in = ["windows-portable"] },
   { text = "Steam: open its Big Picture library with RT", in = ["windows-portable"] },
 ]
 
 [[family]]
 name = "Test"
-apps = { bc250-bazzite = "check", bazzite-console = "bazzite", windows-portable = "test" }
+apps = { bc250-bazzite = "check", windows-portable = "test" }
 features = [
   { text = "System: show the OS version, read again on demand" },
   { text = "Hardware: list CPU, GPU, memory, storage, screen", in = ["bc250-bazzite", "windows-portable"] },
@@ -69,10 +63,10 @@ features = [
 
 [[family]]
 name = "PCSX2 Manager"
-apps = { bc250-bazzite = "pcsx2", bazzite-console = "pcsx2", windows-portable = "pcsx2" }
+apps = { bc250-bazzite = "pcsx2", windows-portable = "pcsx2" }
 features = [
   { text = "Install: a tested emulator release, checksum checked" },
-  { text = "Install: says when a newer emulator is out", in = ["bc250-bazzite", "bazzite-console"] },
+  { text = "Install: says when a newer emulator is out", in = ["bc250-bazzite"] },
   { text = "Setup: emulator ready to play, its own updates off" },
   { text = "BIOS: copied in from the app's folder, removable" },
   { text = "Games: found in the Games folder and on SD cards and USB drives" },
@@ -82,45 +76,45 @@ features = [
   { text = "Play: quit a game by holding View, LB and RB", in = ["windows-portable"] },
   { text = "Play: warns while the device runs hot", in = ["windows-portable"] },
   { text = "Controller: player 1 and 2, quit with Select + Start" },
-  { text = "Header: controller connected or not", in = ["bc250-bazzite", "bazzite-console"] },
-  { text = "Screen: per game original, widescreen or fill", in = ["bc250-bazzite", "bazzite-console"] },
+  { text = "Header: controller connected or not", in = ["bc250-bazzite"] },
+  { text = "Screen: per game original, widescreen or fill", in = ["bc250-bazzite"] },
   { text = "Settings: picture, game, sound, controller, on screen" },
-  { text = "Sound: shows and unmutes Bazzite's volume for it", in = ["bc250-bazzite", "bazzite-console"] },
+  { text = "Sound: shows and unmutes Bazzite's volume for it", in = ["bc250-bazzite"] },
   { text = "Memory cards: list cards and saves, make a new card" },
   { text = "Memory cards: copy a whole card", in = ["windows-portable"] },
-  { text = "Memory cards: import, export, copy, delete saves", in = ["bc250-bazzite", "bazzite-console"] },
-  { text = "Memory cards: slots, format, check, backups", in = ["bc250-bazzite", "bazzite-console"] },
+  { text = "Memory cards: import, export, copy, delete saves", in = ["bc250-bazzite"] },
+  { text = "Memory cards: slots, format, check, backups", in = ["bc250-bazzite"] },
   { text = "Play time: the time spent in your games" },
   { text = "Log: what the app did, and the emulator's last run" },
 ]
 
 [[family]]
 name = "PPSSPP Manager"
-apps = { bc250-bazzite = "ppsspp", bazzite-console = "ppsspp", windows-portable = "ppsspp" }
+apps = { bc250-bazzite = "ppsspp", windows-portable = "ppsspp" }
 features = [
   { text = "Install: a tested emulator release, checksum checked" },
-  { text = "Install: says when a newer emulator is out", in = ["bc250-bazzite", "bazzite-console"] },
+  { text = "Install: says when a newer emulator is out", in = ["bc250-bazzite"] },
   { text = "Setup: emulator ready to play, its own updates off" },
   { text = "Games: found in the Games folder and on SD cards and USB drives" },
   { text = "Games: disc images and memory stick games" },
   { text = "Games: remove a game, choosing what to keep" },
-  { text = "Games: rename ISO and CSO files after the game", in = ["bc250-bazzite", "bazzite-console"] },
+  { text = "Games: rename ISO and CSO files after the game", in = ["bc250-bazzite"] },
   { text = "Steam: add games, with SteamGridDB artwork" },
   { text = "Steam: follows a game renamed or moved" },
   { text = "Play: quit a game by holding View, LB and RB", in = ["windows-portable"] },
   { text = "Play: warns while the device runs hot", in = ["windows-portable"] },
   { text = "Settings: picture, game, sound, controller, on screen" },
   { text = "Settings: show the battery on screen", in = ["windows-portable"] },
-  { text = "Settings: open the emulator's own window", in = ["bc250-bazzite", "bazzite-console"] },
+  { text = "Settings: open the emulator's own window", in = ["bc250-bazzite"] },
   { text = "Log: what the app did" },
 ]
 
 [[family]]
 name = "RPCS3 Manager"
-apps = { bc250-bazzite = "rpcs3", bazzite-console = "rpcs3", windows-portable = "rpcs3" }
+apps = { bc250-bazzite = "rpcs3", windows-portable = "rpcs3" }
 features = [
   { text = "Install: a tested emulator release, checksum checked" },
-  { text = "Install: says when a newer emulator is out", in = ["bc250-bazzite", "bazzite-console"] },
+  { text = "Install: says when a newer emulator is out", in = ["bc250-bazzite"] },
   { text = "Setup: emulator ready to play, its own updates off" },
   { text = "Firmware: installed from the app's folder by itself" },
   { text = "Packages: install games, updates and licenses" },
@@ -132,25 +126,25 @@ features = [
   { text = "Play: quit a game by holding View, LB and RB", in = ["windows-portable"] },
   { text = "Play: warns while the device runs hot", in = ["windows-portable"] },
   { text = "Controller: player 1 set up on your controller" },
-  { text = "Header: controller connected or not", in = ["bc250-bazzite", "bazzite-console"] },
-  { text = "Screen: per game 16:9, 4:3 or fill", in = ["bc250-bazzite", "bazzite-console"] },
+  { text = "Header: controller connected or not", in = ["bc250-bazzite"] },
+  { text = "Screen: per game 16:9, 4:3 or fill", in = ["bc250-bazzite"] },
   { text = "Settings: picture, speed, sound, messages" },
-  { text = "Sound: shows and unmutes Bazzite's volume for it", in = ["bc250-bazzite", "bazzite-console"] },
-  { text = "Settings: open the emulator's own window", in = ["bc250-bazzite", "bazzite-console"] },
+  { text = "Sound: shows and unmutes Bazzite's volume for it", in = ["bc250-bazzite"] },
+  { text = "Settings: open the emulator's own window", in = ["bc250-bazzite"] },
   { text = "Play time: the time spent in your games" },
   { text = "Log: what the app did, firmware and package results" },
 ]
 
 [[family]]
 name = "shadPS4 Manager"
-apps = { bc250-bazzite = "shadps4", bazzite-console = "shadps4", windows-portable = "shadps4" }
+apps = { bc250-bazzite = "shadps4", windows-portable = "shadps4" }
 features = [
   { text = "Install: a tested emulator release, checksum checked" },
-  { text = "Install: says when a newer emulator is out", in = ["bc250-bazzite", "bazzite-console"] },
+  { text = "Install: says when a newer emulator is out", in = ["bc250-bazzite"] },
   { text = "System modules: copied into shadPS4 by themselves" },
   { text = "Games: found in the Games folder and on SD cards and USB drives" },
   { text = "Packages: unpack .pkg games and updates, keep or delete" },
-  { text = "Packages: preview, salvage, compare and rename", in = ["bc250-bazzite", "bazzite-console"] },
+  { text = "Packages: preview, salvage, compare and rename", in = ["bc250-bazzite"] },
   { text = "Games: remove a game with its update and mods" },
   { text = "Steam: add games, with SteamGridDB artwork" },
   { text = "Play: quit a game by holding View, LB and RB", in = ["windows-portable"] },
@@ -163,7 +157,7 @@ features = [
 
 [[family]]
 name = "Vita3K Manager"
-apps = { bc250-bazzite = "vita3k", bazzite-console = "vita3k", windows-portable = "vita3k" }
+apps = { bc250-bazzite = "vita3k", windows-portable = "vita3k" }
 features = [
   { text = "Install: a tested emulator release, checksum checked" },
   { text = "Install: says when a newer emulator is out" },
@@ -176,13 +170,13 @@ features = [
   { text = "Play: quit a game by holding View, LB and RB", in = ["windows-portable"] },
   { text = "Play: warns while the device runs hot", in = ["windows-portable"] },
   { text = "Settings: picture, speed, sound and system" },
-  { text = "Settings: open the emulator's own window", in = ["bc250-bazzite", "bazzite-console"] },
+  { text = "Settings: open the emulator's own window", in = ["bc250-bazzite"] },
   { text = "Log: what the app did" },
 ]
 
 [[family]]
 name = "Xenia Manager"
-apps = { bc250-bazzite = "xenia", bazzite-console = "xenia", windows-portable = "xenia" }
+apps = { bc250-bazzite = "xenia", windows-portable = "xenia" }
 features = [
   { text = "Install: a tested emulator release, checksum checked" },
   { text = "Install: says when a newer emulator is out" },
@@ -195,29 +189,13 @@ features = [
   { text = "Play: warns while the device runs hot", in = ["windows-portable"] },
   { text = "Profile: create one, signed in for every game", in = ["windows-portable"] },
   { text = "Settings: picture, speed, sound and console" },
-  { text = "Settings: open the emulator's own window", in = ["bc250-bazzite", "bazzite-console"] },
+  { text = "Settings: open the emulator's own window", in = ["bc250-bazzite"] },
   { text = "Log: what the app did" },
 ]
 
 [[family]]
-name = "Decky Loader Manager"
-apps = { bazzite-console = "decky" }
-features = [
-  { text = "Install: a tested Decky release, checksum checked" },
-  { text = "Install: update, or remove with or without plugins" },
-  { text = "Install: says when a newer Decky release is out" },
-  { text = "Install: finds a Decky installed by ujust or Decky's installer" },
-  { text = "Service: shows whether Decky runs, restart it" },
-  { text = "Service: Decky's log from the system journal" },
-  { text = "Steam: switch Decky's remote debugging on or off" },
-  { text = "Steam Deck plugins: link /home/deck for them" },
-  { text = "Plugins: list with version, author and state" },
-  { text = "Plugins: open the plugins folder" },
-]
-
-[[family]]
 name = "PS Remote Play"
-apps = { bc250-bazzite = "consoles", bazzite-console = "consoles", windows-portable = "rplay" }
+apps = { bc250-bazzite = "consoles", windows-portable = "rplay" }
 features = [
   { text = "Find: search the network or one address" },
   { text = "Register: PIN pairing, account ID via PSN sign-in" },
@@ -229,13 +207,13 @@ features = [
   { text = "Login passcode: saved per console" },
   { text = "History: games played and time, per console" },
   { text = "Steam: add a console as a game, streams on start" },
-  { text = "Controller test: live buttons, drift, genuine or fake", in = ["bc250-bazzite", "bazzite-console"] },
+  { text = "Controller test: live buttons, drift, genuine or fake", in = ["bc250-bazzite"] },
   { text = "Privacy: personal details masked, shown on request" },
 ]
 
 [[family]]
 name = "XB Remote Play"
-apps = { bc250-bazzite = "clb", bazzite-console = "clb" }
+apps = { bc250-bazzite = "clb" }
 features = [
   { text = "Account: Microsoft sign-in with a code, stays signed in" },
   { text = "Consoles: list with power state and remote play" },
@@ -250,7 +228,7 @@ features = [
 
 [[family]]
 name = "DatStation"
-apps = { bc250-bazzite = "datstation", bazzite-console = "datstation", windows-portable = "datstat" }
+apps = { bc250-bazzite = "datstation", windows-portable = "datstat" }
 features = [
   { text = "Quiz: PlayStation quiz against the clock, 12 categories" },
   { text = "Quiz: quick quiz, pause, skip, music on or off" },
@@ -265,41 +243,41 @@ features = [
 
 [[family]]
 name = "SFTP Tools"
-apps = { bc250-bazzite = "sftp", bazzite-console = "sftp", windows-portable = "sftp" }
+apps = { bc250-bazzite = "sftp", windows-portable = "sftp" }
 features = [
   { text = "Connection: password or key, host key check" },
   { text = "Connection: remembered servers, never a password" },
   { text = "Files: browse both sides, upload and download folders" },
   { text = "Files: delete on either side" },
-  { text = "Files: drag and drop to upload", in = ["bc250-bazzite", "bazzite-console"] },
+  { text = "Files: drag and drop to upload", in = ["bc250-bazzite"] },
   { text = "Transfers: queue with progress and speed" },
   { text = "Settings: speed limit, existing files, compression" },
   { text = "SSH server: start or stop sshd on the remote host" },
   { text = "SSH server: view sshd_config", in = ["windows-portable"] },
-  { text = "SSH server: edit and check sshd_config", in = ["bc250-bazzite", "bazzite-console"] },
-  { text = "SSH server: start or stop sshd on this computer", in = ["bc250-bazzite", "bazzite-console"] },
+  { text = "SSH server: edit and check sshd_config", in = ["bc250-bazzite"] },
+  { text = "SSH server: start or stop sshd on this computer", in = ["bc250-bazzite"] },
   { text = "Windows: a build for Windows PCs", in = ["bc250-bazzite"] },
 ]
 
 [[family]]
 name = "USB HD Cam"
-apps = { bc250-bazzite = "hdcam", bazzite-console = "hdcam", windows-portable = "hdcam" }
+apps = { bc250-bazzite = "hdcam", windows-portable = "hdcam" }
 features = [
   { text = "Firmware: pinned, checked download or your own file" },
   { text = "Camera: loads the firmware, a webcam for other apps" },
   { text = "Access: one-time permission for the boot loader" },
-  { text = "Firmware: loads by itself on plug-in and login", in = ["bc250-bazzite", "bazzite-console"] },
+  { text = "Firmware: loads by itself on plug-in and login", in = ["bc250-bazzite"] },
   { text = "Bandwidth: full or reduced USB bandwidth" },
   { text = "Picture: preview in every mode, side by side too" },
   { text = "Picture: keeps auto exposure for a bright picture" },
-  { text = "Picture settings: brightness, white balance, exposure", in = ["bc250-bazzite", "bazzite-console"] },
+  { text = "Picture settings: brightness, white balance, exposure", in = ["bc250-bazzite"] },
   { text = "Full screen: screenshot, record, zoom, black and white" },
-  { text = "PS4 Camera: firmware on Sony's adapter", in = ["bc250-bazzite", "bazzite-console"] },
+  { text = "PS4 Camera: firmware on Sony's adapter", in = ["bc250-bazzite"] },
 ]
 
 [[family]]
 name = "USB HD Control"
-apps = { bc250-bazzite = "hdcontrol", bazzite-console = "hdcontrol", windows-portable = "hdcontrol" }
+apps = { bc250-bazzite = "hdcontrol", windows-portable = "hdcontrol" }
 features = [
   { text = "Controller: model, connection, battery, report rate" },
   { text = "Controller: several controllers, one at a time" },
@@ -309,13 +287,13 @@ features = [
   { text = "Firmware: check Sony's server, update over USB" },
   { text = "Firmware: send a firmware file of your own" },
   { text = "Profiles: show, back up, create, edit, clear (Edge)" },
-  { text = "Bluetooth: turn a controller off", in = ["bc250-bazzite", "bazzite-console"] },
-  { text = "Bluetooth: switch off when unused", in = ["bc250-bazzite", "bazzite-console"] },
+  { text = "Bluetooth: turn a controller off", in = ["bc250-bazzite"] },
+  { text = "Bluetooth: switch off when unused", in = ["bc250-bazzite"] },
 ]
 
 [[family]]
 name = "SSD Check"
-apps = { bc250-bazzite = "ssd", bazzite-console = "ssd", windows-portable = "ssd" }
+apps = { bc250-bazzite = "ssd", windows-portable = "ssd" }
 features = [
   { text = "Health: wear, power cycles, power-on hours" },
   { text = "Health: problems the drive reports" },
@@ -324,8 +302,8 @@ features = [
   { text = "Speed: a 1 GB read and write test" },
   { text = "Drives: NVMe, SATA and USB, one at a time" },
   { text = "Drives: memory cards", in = ["windows-portable"] },
-  { text = "Firmware: fwupd says whether an update exists", in = ["bc250-bazzite", "bazzite-console"] },
-  { text = "Serial: hidden, shown on a click", in = ["bc250-bazzite", "bazzite-console"] },
+  { text = "Firmware: fwupd says whether an update exists", in = ["bc250-bazzite"] },
+  { text = "Serial: hidden, shown on a click", in = ["bc250-bazzite"] },
   { text = "Screenshot: save the window as a PNG" },
 ]
 

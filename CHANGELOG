@@ -1,3 +1,15 @@
+Changelog: 13-11-2026 15:34:58
+
+Breaking. The Bazzite Console Suite left Nexus (owner, 13-11-2026: back to one repository per suite). Its folder
+`bazzite-console/` and its workflows `ci-bazzite-console.yml` and `release-bazzite-console.yml` are removed. The
+shared workflows no longer name it: `docs.yml` builds no wiki for it, `release-nexus.yml` has no job for it,
+`nexus-index.yml` does not wait for its release workflow and `release.yml` no longer excludes `ps5-` tags.
+`tools/ci_local.py` runs `ci.yml` and `ci-nexus.yml`, `tools/make_icons.py` and `tools/make_design.py` list no
+console suite (ICONS.md and DESIGN.md written again), `tools/new_app.py` has no template for its portal, and
+`nexus/features.toml` with the Nexus page's Apps and features chapter has no Console column and no Decky Loader
+Manager. The Nexus page's home, Development, Releases and Dashboard chapters, the README and the instruction files
+follow. The tests of the tools, Nexus Dashboard and Nexus Installer Tests use the two suites that remain.
+
 Changelog: 12-11-2026 20:16:47
 
 Release 4.6.0. Brings ps5-bazzite-v0.2.0, ps5-clb-v0.2.0, ps5-consoles-v0.2.0, ps5-datstation-v0.2.0, ps5-decky-v0.2.0, ps5-hdcam-v0.2.0, ps5-hdcontrol-v0.2.0, ps5-pcsx2-v0.2.0, ps5-portal-v0.2.0, ps5-ppsspp-v0.2.0, ps5-rpcs3-v0.2.0, ps5-sftp-v0.2.0, ps5-shadps4-v0.2.0, ps5-ssd-v0.2.0, ps5-vita3k-v0.2.0, ps5-xenia-v0.2.0.

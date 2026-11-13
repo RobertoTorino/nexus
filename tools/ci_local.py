@@ -6,7 +6,7 @@ rules) as GitHub runs them, inside the container tools/ci-local.sh starts: Pytho
 pass in the suite's full venv on a newer Python can still fail in CI; this shows it before the push.
 
     tools/ci-local.sh [--list] [--all] [--workers N] [job[/matrix value] ...]
-    e.g.  tools/ci-local.sh pytest/bc250-bazzite/apps/gpu console-pytest/bazzite-console/apps/bazzite
+    e.g.  tools/ci-local.sh pytest/bc250-bazzite/apps/gpu nexus-pytest/tools
 
 Without job names it runs the workflows the push would start on GitHub: those whose push paths match a file that
 differs from origin/main (the commits not pushed yet and the changes not committed), so one suite's jobs never hold
@@ -15,7 +15,7 @@ names run those jobs, whatever changed.
 
 The jobs come from the workflows themselves, so a new app in the matrix or a new installer step is run without
 changing this; a matrix a plan job reads from the suite's folders (tools/ci_matrix.py, fromJSON(needs.plan.outputs.x))
-is read the same way here, by running that job's steps. Workflow-specific jobs use the prefixes console- and nexus-
+is read the same way here, by running that job's steps. ci-nexus.yml's jobs use the prefix nexus-
 for clarity.
 What cannot run here is reported, not hidden: a job for another system (windows-latest), apt-get steps (the image
 has those packages) and actions/cache (its folder is kept in ~/.cache/bc250-ci-local instead). The work happens on a
@@ -43,8 +43,7 @@ import yaml
 SRC = Path(os.environ.get("CI_LOCAL_SRC", "/src"))          # the checkout, read-only
 WORK = Path(os.environ.get("CI_LOCAL_WORK", "/tmp/ci-local-work"))   # the copy the jobs run in
 CACHE = Path(os.environ.get("CI_LOCAL_CACHE", "/cache"))     # venvs, pip's cache, logs: kept between runs
-WORKFLOWS = (("ci.yml", ""), ("ci-bazzite-console.yml", "console-"),
-             ("ci-nexus.yml", "nexus-"))     # each workflow run here, with the prefix of its job names
+WORKFLOWS = (("ci.yml", ""), ("ci-nexus.yml", "nexus-"))     # each workflow run here, with the prefix of its job names
 COPY_EXCLUDES = (".venv*", "target", "site", "__pycache__", ".pytest_cache", "dist", "node_modules")
 SHELL = ["bash", "--noprofile", "--norc", "-eo", "pipefail", "-c"]      # GitHub's shell for run steps on Linux
 EXPR = re.compile(r"\$\{\{\s*(.*?)\s*\}\}")

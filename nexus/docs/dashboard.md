@@ -317,7 +317,7 @@ version and an i that says how to handle it. None of them is installed from here
 
 | Card | Asked | What an update means |
 |---|---|---|
-| RPCS3, PCSX2, PPSSPP, Vita3K, Xenia Canary, shadPS4, Decky Loader | GitHub's latest release | Each app installs the build it was tested with (its pin). **Installed** behind the pin: open the app and use its Install. **On GitHub**, newer than the pin: it comes with a release of the app, after a test on a board. |
+| RPCS3, PCSX2, PPSSPP, Vita3K, Xenia Canary, shadPS4 | GitHub's latest release | Each app installs the build it was tested with (its pin). **Installed** behind the pin: open the app and use its Install. **On GitHub**, newer than the pin: it comes with a release of the app, after a test on a board. |
 | DualSense firmware (and the Edge's) | Sony's firmware list | A new version since the last look: connect the controller with a USB cable and update it in USB HD Control. |
 | PS4 system software | Sony's PS4 update list | A new version since the last look: update on the console. |
 | PS5 system software, PlayStation Portal | nothing a program can read | **On the device**: the i says where the device shows its updates. |

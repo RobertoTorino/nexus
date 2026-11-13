@@ -3,8 +3,8 @@ name: Nexus index
 
 # GitHub's "Latest" release is the Nexus index, tagged nexus-v<x.y.z> and titled Nexus v<x.y.z> after the root
 # VERSION, Nexus's own (owner, 28-10-2026): one section per suite with its newest portal (tools/nexus_index.py). A
-# repository has one Latest and Nexus holds several suites, so no suite's portal is it: release.yml,
-# release-windows-portable.yml and release-bazzite-console.yml publish every release with --latest=false. The index
+# repository has one Latest and Nexus holds several suites, so no suite's portal is it: release.yml and
+# release-windows-portable.yml publish every release with --latest=false. The index
 # is made again after each run of any of them that succeeded (a release by tags pushed by hand), after each release
 # published by someone (the Nexus
 # Release Tool publishes a suite's portal after the device test; the releases the workflows publish with their own
@@ -18,7 +18,7 @@ name: Nexus index
 
 on:
   workflow_run:
-    workflows: ["Release", "Release Windows Portable", "Release Bazzite Console Suite"]
+    workflows: ["Release", "Release Windows Portable"]
     types: [completed]
   release:
     types: [published]         # a portal published by the Nexus Release Tool, after the device test

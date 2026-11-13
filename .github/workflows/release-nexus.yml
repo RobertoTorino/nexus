@@ -89,16 +89,6 @@ jobs:
     with:
       commit: ${{ inputs.commit }}
 
-  bazzite-console:
-    needs: plan
-    if: contains(fromJSON(needs.plan.outputs.suites), 'bazzite-console')
-    permissions:
-      contents: write
-      actions: read
-    uses: ./.github/workflows/release-bazzite-console.yml
-    with:
-      commit: ${{ inputs.commit }}
-
   index:
     needs: plan
     if: needs.plan.outputs.suites == '[]'
