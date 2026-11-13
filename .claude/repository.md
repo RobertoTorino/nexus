@@ -14,8 +14,13 @@ redirect that installed portals update through). It is the umbrella over the sui
 own (owner, 26-10-2026), with what they share at the root. The **BC250 Bazzite Suite** (tools for the AMD BC-250 on
 Bazzite) is `bc250-bazzite/`; the BC250 suite's tag names (`<app>-v<x.y.z>`, `portal-v<x.y.z>`), app ids and wiki address did not
 change with the move. The **Windows Portable Suite** (Windows handhelds) is a repository of its own,
-`github.com/RobertoTorino/windows-portable` (owner, 13-11-2026: one repository per suite; the Bazzite Console Suite
-left first, to `bazzite-console`, with a copy of the tools). It keeps no copy of core or the tools: it is cloned into
+`github.com/RobertoTorino/windows-portable` (owner, 13-11-2026: one repository per suite). The **Bazzite Console
+Suite** (PlayStation 5 hardware on Bazzite, tags `ps5-`) is `github.com/RobertoTorino/bazzite-console`, set up the
+same way as `bazzite-console/`, with one difference: it carries a core of its own,
+`bazzite-console/core/bazzite_console_core` with `core/VERSION` (its folder names and addresses are in it), which
+`tools/suites.py` (`core_dir()`, `own_core()`), `tools/stage_app.py`, `tools/build_release.py` and
+`tools/check_versions.py` use for that suite instead of `core/bc250_core`. What follows about the Windows Portable
+Suite holds for both. It keeps no copy of core or the tools: it is cloned into
 this checkout as `windows-portable/` (in `.gitignore`), where the tools find it as any suite (`tools/suites.py`:
 `OWN_REPOSITORIES`, `own_repository()`, and `of_repository()` for the suites that are folders of Nexus's own
 repository). git in that folder is the suite's: `tools/tag-release.sh` tags it there and asks for its `ci.yml`

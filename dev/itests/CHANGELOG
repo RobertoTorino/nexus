@@ -1,3 +1,8 @@
+Changelog: 13-11-2026 20:18:54
+
+Fixed. The test of the suites in the checkout accepts the Bazzite Console Suite, a repository of its own, when it is
+cloned into the checkout as bazzite-console/. The app did not change.
+
 Changelog: 13-11-2026 19:25:50
 
 Version 0.2.1.

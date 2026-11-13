@@ -40,14 +40,21 @@ DESIGN.md ICONS.md            every color and every icon, per suite and the Nexu
 
 ### A suite in a repository of its own
 
-A suite can be a repository of its own and still use the Nexus tools, without a copy of them. The Windows Portable
-Suite is one: `github.com/RobertoTorino/windows-portable`. Clone it into the Nexus checkout, as the folder the
-tools know it by:
+A suite can be a repository of its own and still use the Nexus tools, without a copy of them. Two are: the Windows
+Portable Suite, `github.com/RobertoTorino/windows-portable`, and the Bazzite Console Suite,
+`github.com/RobertoTorino/bazzite-console`. Clone a suite into the Nexus checkout, as the folder the tools know it by:
 
 ```bash
 git clone https://github.com/RobertoTorino/nexus.git Nexus
 git clone https://github.com/RobertoTorino/windows-portable.git Nexus/windows-portable
+git clone https://github.com/RobertoTorino/bazzite-console.git Nexus/bazzite-console
 ```
+
+What follows names the Windows Portable Suite; it holds for the Bazzite Console Suite with its folder,
+`bazzite-console/`, and its tags, `ps5-`. That suite also carries a core of its own, in
+`bazzite-console/core/bazzite_console_core/` with `bazzite-console/core/VERSION`: `tools/stage_app.py` bundles that
+package into its apps instead of `bc250_core`, and `tools/check_versions.py --suite bazzite-console` checks its
+version. Its wiki is published at `robertotorino.github.io/nexus/bazzite-console-suite/`.
 
 From then on everything works as for a suite that is a folder of Nexus: `./test.sh` runs its tests on its system,
 the tools take `--suite windows-portable`, the dashboard lists it, and its apps find `core/` at the root. What is

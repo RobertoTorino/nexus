@@ -27,7 +27,9 @@ def test_the_icons_are_nexus_at_512_and_128_px():
 
 
 def test_the_checkout_has_the_suites_and_the_nexus_apps():
-    assert checkout.suites(CHECKOUT) == ["bc250-bazzite", *(["windows-portable"] if WINDOWS_HERE else [])]
+    here = [name for name in ("bazzite-console", "windows-portable")      # each a repository of its own, when cloned here
+            if (CHECKOUT / name / "portal" / "apps.toml").is_file()]
+    assert checkout.suites(CHECKOUT) == sorted(["bc250-bazzite", *here])
     assert checkout.suite_name(CHECKOUT, "bc250-bazzite") == "BC250 Bazzite Suite"
     assert checkout.suite_system(CHECKOUT, "bc250-bazzite") == "bazzite"
     assert checkout.here(CHECKOUT, "bc250-bazzite", "linux") and not checkout.here(CHECKOUT, "bc250-bazzite", "win32")

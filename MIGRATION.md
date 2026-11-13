@@ -33,8 +33,13 @@ The steps the owner agreed to (12-11-2026), in this order:
 The owner decided on 13-11-2026 to go back to one repository per suite, with the tooling kept in Nexus for every
 suite (a suite keeps its own tooling only where that is not possible). The steps, in the owner's order:
 
-1. **The Bazzite Console Suite, done 13-11-2026:** `github.com/RobertoTorino/bazzite-console`, with a copy of the
-   tools and of core of its own, made before this plan.
+1. **The Bazzite Console Suite, done 13-11-2026:** `github.com/RobertoTorino/bazzite-console`, first with a copy of
+   the tools, of the Nexus apps and of core, made before this plan. Brought in line the same day, in the working
+   trees: no copy of the tools or the Nexus apps, cloned into the Nexus checkout as `bazzite-console/`, its
+   workflows on `.github/actions/suite`. It keeps a core of its own (`core/bazzite_console_core`), which names its
+   own folders and addresses. **Moving its apps to Nexus's core is on hold** (owner's decision, not made,
+   13-11-2026): `bc250_core` names the BC250 suite's folders (`~/.config/bc250-bazzite-suite/`), so it first has to
+   take a suite's names from the app.
 2. **The Windows Portable Suite, done 13-11-2026 in the working trees:** `github.com/RobertoTorino/windows-portable`,
    without a copy of the tools. It is cloned into the Nexus checkout as `windows-portable/` and its workflows check
    Nexus out the same way (`.github/actions/suite`, the suite's `NEXUS_REF`). Its notes, with its hold, are in its

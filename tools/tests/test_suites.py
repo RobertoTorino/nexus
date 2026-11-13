@@ -106,3 +106,24 @@ def test_ci_local_leaves_those_suites_out_of_its_copy():
     assert set(ci_local.OWN_REPOSITORIES) == set(suites.OWN_REPOSITORIES)
     import make_design
     assert set(make_design.OWN_REPOSITORY) == set(suites.OWN_REPOSITORIES)
+
+
+def test_a_suite_with_a_core_of_its_own(tmp_path):
+    """A suite's apps bundle Nexus's core/bc250_core, or the suite's own <suite>/core/<package>/ (the Bazzite
+    Console Suite's bazzite_console_core): stage_app.py bundles that one, under its own name."""
+    import stage_app
+    for name in ("plain", "own"):
+        (tmp_path / name / "portal").mkdir(parents=True)
+        (tmp_path / name / "portal" / "apps.toml").write_text("", encoding="utf-8")
+        app = tmp_path / name / "apps" / "demo" / "demo"
+        app.mkdir(parents=True)
+        (app / "__init__.py").write_text(f"import {'own_core' if name == 'own' else 'bc250_core'}\n", encoding="utf-8")
+    for folder in (tmp_path / "core" / "bc250_core", tmp_path / "own" / "core" / "own_core"):
+        folder.mkdir(parents=True)
+        (folder / "__init__.py").write_text("", encoding="utf-8")
+    assert suites.core_dir(tmp_path / "plain") == tmp_path / "core" / "bc250_core" and not suites.own_core(tmp_path / "plain")
+    assert suites.core_dir(tmp_path / "own") == tmp_path / "own" / "core" / "own_core" and suites.own_core(tmp_path / "own")
+    staged = stage_app.stage("demo", tmp_path / "out-own", tmp_path / "own")
+    assert (staged / "own_core" / "__init__.py").is_file() and not (staged / "bc250_core").exists()
+    staged = stage_app.stage("demo", tmp_path / "out-plain", tmp_path / "plain")
+    assert (staged / "bc250_core" / "__init__.py").is_file() and not (staged / "own_core").exists()

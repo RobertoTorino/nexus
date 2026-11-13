@@ -39,7 +39,8 @@ def test_each_kind_of_script_has_its_runner(tmp_path: Path) -> None:
 
 def test_the_suites_with_tests_for_this_system_are_listed() -> None:
     """The Bazzite suite has .sh tests (Linux), the Windows Portable Suite .ps1 tests (Windows)."""
-    assert suites_here(CHECKOUT, ".sh") == ["bc250-bazzite"]
+    console = (CHECKOUT / "bazzite-console" / "portal" / "apps.toml").is_file()     # a repository of its own, too
+    assert suites_here(CHECKOUT, ".sh") == [*(["bazzite-console"] if console else []), "bc250-bazzite"]
     # the Windows Portable Suite is a repository of its own (owner, 13-11-2026): here only when cloned into the checkout
     here = (CHECKOUT / "windows-portable" / "portal" / "apps.toml").is_file()
     assert suites_here(CHECKOUT, ".ps1") == (["windows-portable"] if here else [])

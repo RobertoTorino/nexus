@@ -24,6 +24,7 @@ _python/
 # A suite in a repository of its own (owner, 13-11-2026), cloned into this checkout as its folder: the Nexus tools
 # find it there (tools/suites.py), git here leaves it alone
 /windows-portable/
+/bazzite-console/
 
 # The design panel's mock while `mkdocs serve` runs (tools/mkdocs/design_panel.py)
 .design-mock.json

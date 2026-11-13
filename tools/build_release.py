@@ -41,7 +41,8 @@ INDEX_URL = "https://github.com/RobertoTorino/nexus/releases/latest"
 _TAG = re.compile(r"^(?P<app>[a-z0-9-]+)-v(?P<version>\d+\.\d+\.\d+)$")
 # The app's folder for the wheel of its native core (Rust with FFmpeg inside), which release.yml builds before this
 # runs: users install it with pip and need no compiler. Its version is the app's.
-NATIVE_WHEELS = {"consoles": Path("native/wheel")}
+NATIVE_WHEELS = {"consoles": Path("native/wheel"),
+                 "remoteplay": Path("native/wheel")}     # the Bazzite Console Suite's Remote Play
 
 
 def _load(name: str, path: Path):
@@ -231,9 +232,10 @@ def build(tag: str, out: Path, bundle: Path | None = None) -> Path:
         if wheel is not None:
             notes += [f"Includes its native core as `{wheel}`, built for Linux x86-64 with FFmpeg linked in "
                       "(LGPL, from its own sources).", ""]
-        if (stage_dir / "bc250_core").is_dir():
-            core = (ROOT / "core" / "VERSION").read_text(encoding="utf-8").strip()
-            notes += [f"Bundles the suite core `bc250_core` {core}.", ""]
+        core_package = suites.core_dir(SUITE)           # Nexus's bc250_core, or the suite's own
+        if (stage_dir / core_package.name).is_dir():
+            core = (core_package.parent / "VERSION").read_text(encoding="utf-8").strip()
+            notes += [f"Bundles the suite core `{core_package.name}` {core}.", ""]
         archive = out / f"{tag}.tar.gz"
         write_tarball(stage_dir, tag, archive, epoch)
     digest = sha256_of(archive)

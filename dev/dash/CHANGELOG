@@ -1,3 +1,8 @@
+Changelog: 13-11-2026 20:18:54
+
+Fixed. The test of the suites in the checkout accepts the Bazzite Console Suite, a repository of its own, when it is
+cloned into the checkout as bazzite-console/. The app did not change.
+
 Changelog: 13-11-2026 19:01:22
 
 Fixed. The tests that use the Windows Portable Suite skip in a checkout without it: the suite is a repository of its

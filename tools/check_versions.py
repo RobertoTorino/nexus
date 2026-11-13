@@ -92,6 +92,8 @@ def main(argv: list[str] | None = None) -> int:
     units = [ROOT / "core", *sorted(p for p in (ROOT / "dev").glob("*") if p.is_dir())]   # the Nexus apps
     for suite in chosen:                        # each suite: its portal, apps and Installer Tests
         units += [suite / "portal", *sorted(p for p in (suite / "apps").iterdir() if p.is_dir())]
+        if suites.own_core(suite):              # a core of the suite's own, in <suite>/core/
+            units.append(suite / "core")
         if (suite / "tools" / "installer-tests" / "gui").is_dir():
             units.append(suite / "tools" / "installer-tests" / "gui")
     for unit in units:

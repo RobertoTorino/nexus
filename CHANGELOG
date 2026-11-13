@@ -1,3 +1,17 @@
+Changelog: 13-11-2026 20:18:54
+
+Added. The Bazzite Console Suite (github.com/RobertoTorino/bazzite-console) uses the Nexus tools as the Windows
+Portable Suite does: cloned into the Nexus checkout as `bazzite-console/` (in `.gitignore`, and in
+`tools/suites.py`'s `OWN_REPOSITORIES`), its workflows starting with `.github/actions/suite`. A suite may carry a core
+of its own, `<suite>/core/<package>/` with `<suite>/core/VERSION` (that suite's `bazzite_console_core`):
+`tools/suites.py` has `core_dir()` and `own_core()`, `tools/stage_app.py` bundles the suite's core under its own
+name, `tools/build_release.py` names it in the release notes and `tools/check_versions.py --suite` checks its
+version. `tools/build_release.py` takes the native wheel of that suite's Remote Play. `docs.yml` builds the suite's
+wiki at robertotorino.github.io/nexus/bazzite-console-suite/ once its repository is laid out for the Nexus checkout.
+`tools/features.py` asks no column of a suite in a repository of its own, and `tools/ci-local.sh` leaves the suite's
+folder out of its copy. The tests of the copies of core's modules compare only the apps on Nexus's core; the tests of
+Nexus Dashboard and Nexus Installer Tests accept the suite when it is in the checkout.
+
 Changelog: 13-11-2026 19:49:22
 
 Release 7.0.0. Brings the new suite windows-portable.

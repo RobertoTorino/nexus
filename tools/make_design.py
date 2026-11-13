@@ -407,7 +407,7 @@ def families() -> str:
 # Each wiki's stylesheet and the listing of its colors: the two must name the same colors.
 # A suite in a repository of its own (owner, 13-11-2026; tools/suites.py has the list) is in the checkout only when
 # cloned into it as its folder.
-OWN_REPOSITORY = ("windows-portable",)
+OWN_REPOSITORY = ("bazzite-console", "windows-portable")
 STYLESHEETS = {
     f"{SUITE_DIR}/docs/stylesheets/suite.css": (WIKI_TEXT, WIKI_BLOCKS),
     "nexus/docs/stylesheets/nexus.css": (NEXUS_TEXT, NEXUS_BLOCKS),
