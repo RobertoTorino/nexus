@@ -1,3 +1,7 @@
+Changelog: 13-11-2026 20:38:45
+
+Release 8.0.0. Brings the new suites bazzite-console, windows-portable.
+
 Changelog: 13-11-2026 20:18:54
 
 Added. The Bazzite Console Suite (github.com/RobertoTorino/bazzite-console) uses the Nexus tools as the Windows
