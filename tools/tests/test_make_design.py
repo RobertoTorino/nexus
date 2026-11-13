@@ -46,7 +46,11 @@ def test_unlisted_reports_both_directions(tmp_path):
     assert f"{make_design.SUITE_DIR}/docs/stylesheets/suite.css has #112233, which the listing lacks" in report
     assert "#abcdef" not in "\n".join(report) and "#5835ce" not in "\n".join(report)
     assert sum("no longer has" in line for line in report) == len(listed) - 1
-    assert make_design.unlisted(tmp_path / "nowhere") == [f"{p} is missing" for p in make_design.STYLESHEETS]
+    # a suite in a repository of its own is not in every checkout: its stylesheet is checked where the suite is
+    assert make_design.unlisted(tmp_path / "nowhere") == [f"{p} is missing" for p in make_design.STYLESHEETS
+                                                          if p.split("/")[0] not in make_design.OWN_REPOSITORY]
+    (tmp_path / "windows-portable").mkdir()
+    assert "windows-portable/docs/stylesheets/portable.css is missing" in make_design.unlisted(tmp_path)
 
 
 def test_check_lists_changed_and_unused_samples(tmp_path):

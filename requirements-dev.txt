@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-# Everything needed to run ./test.sh and build the docs, in one venv.
+# Everything needed to run ./test.sh and build the docs, in one venv. A suite in a repository of its own, cloned into
+# this checkout as its folder, lists what its tests need beyond this in its own requirements-dev.txt
+# (windows-portable/requirements-dev.txt), installed into the same venv.
 -r core/requirements-dev.txt
 -r tools/requirements-dev.txt
 -r bc250-bazzite/portal/requirements-dev.txt
@@ -13,8 +15,6 @@
 -r bc250-bazzite/apps/shadps4/requirements-dev.txt
 -r bc250-bazzite/apps/clb/requirements-dev.txt
 -r bc250-bazzite/apps/sftp/requirements-dev.txt     # paramiko: its tests import it
--r windows-portable/apps/sftp/requirements-dev.txt  # paramiko: its tests import it
--r windows-portable/apps/rplay/requirements-dev.txt # cryptography: its tests import it
 -r dev/nrt/requirements-dev.txt
 -r dev/dash/requirements-dev.txt
 -r dev/demo/requirements-dev.txt    # obsws-python and dbus-fast: the Demo Recorder and its tests

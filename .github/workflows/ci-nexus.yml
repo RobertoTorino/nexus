@@ -4,10 +4,10 @@ name: CI Nexus
 # The checks of Nexus, what every suite shares, on every push and pull request: core (bc250_core), the Nexus tools
 # (tools/), the Nexus apps (dev/), the Nexus page and the repository's rules (line endings, exec bits, the four
 # files of every former repo, workflows only at the root). Apart from each suite's
-# CI (ci.yml, the BC250 Bazzite Suite's; ci-windows-portable.yml), so a failure here is Nexus's, not a suite's,
-# and one suite's checks never hold another suite's tags (owner, 27-10-2026). Every suite's tags wait for this
-# workflow besides the suite's own CI: tools/tag-release.sh before it tags, and the ci job of release.yml and
-# release-windows-portable.yml (tools/ci_state.py --workflow ci-nexus.yml) before they build.
+# CI (ci.yml, the BC250 Bazzite Suite's; a suite in a repository of its own has its CI there), so a failure here
+# is Nexus's, not a suite's, and one suite's checks never hold another suite's tags (owner, 27-10-2026). Every
+# suite's tags wait for this workflow besides the suite's own CI: tools/tag-release.sh before it tags, and the ci
+# job of a suite's release workflow (tools/ci_state.py --workflow ci-nexus.yml) before it builds.
 # A tag starts no run of its own, and every job has a time limit, as in ci.yml.
 
 on:

@@ -5,6 +5,10 @@
     python3 tools/make_icons.py            # write ICONS.md and render the drawn icons to docs/design/icons/
     python3 tools/make_icons.py --check    # only say whether ICONS.md is up to date; exit 1 when it is not
 
+The Windows Portable Suite has a repository of its own (owner, 13-11-2026), cloned into this checkout as
+windows-portable/: its icons are listed in its own windows-portable/ICONS.md, written and checked here while the
+suite is in the checkout, and its icon copies are written then too. Without it, only Nexus's ICONS.md.
+
 Pictures are shown from their own files. The icons drawn in code (the portal's symbols, the desktop style's icons)
 are rendered with PyQt6 to PNGs in docs/design/icons/, on Gunmetal's window color. The listing is the data below:
 change it here and run the script, not ICONS.md itself. --check needs no Qt."""
@@ -160,6 +164,12 @@ PAGE_QUALITY = 90
 # each made from a picture of the owner's. Every app of the suite but the test app (which has the suite's drawing)
 # takes its category's: windows_portable_app_copies() names the copies from the portal's apps.toml.
 WINDOWS_PORTABLE = "windows-portable"
+
+
+def windows_portable_here(root: Path = ROOT) -> bool:
+    """Whether the Windows Portable Suite, a repository of its own, is in this checkout as its folder."""
+    return (root / WINDOWS_PORTABLE / "portal" / "apps.toml").is_file()
+
 WINDOWS_PORTABLE_CATEGORIES = {
     "gaming": "the owner's pictures of the handheld (29-10-2026), wide (2:1: 1024 x 512 down to 128 x 64): the tile and "
               "the wiki show them as they are, the window, program and Start-menu icons centered on a transparent "
@@ -204,6 +214,9 @@ def nexus_copies(root: Path = ROOT) -> list[Path]:
     Windows Portable Test's and the Windows portal's from the suite's (WINDOWS_PORTABLE_COPIES), lossless, so a
     copy's pixels are the drawing's (tests compare them); and the Nexus page's logo and hero (NEXUS_PAGE_COPIES),
     lossy; and every Windows Portable Suite app's category icon (windows_portable_icons()). The paths written."""
+    if not windows_portable_here(root):
+        return write_copies(root, NEXUS_COPIES, [pair for pair in NEXUS_PAGE_COPIES
+                                                 if not pair[1].startswith(f"{WINDOWS_PORTABLE}/")])
     return (write_copies(root, NEXUS_COPIES + WINDOWS_PORTABLE_COPIES, NEXUS_PAGE_COPIES)
             + windows_portable_icons(root))
 
@@ -324,7 +337,8 @@ def build(root: Path = ROOT) -> str:
            "The icons of the project, per suite, and where each is used. Pictures are shown from their own files; "
            "icons drawn\nin code are rendered to `bc250-bazzite/docs/design/icons/`. Written by `tools/make_icons.py`: "
            "change the listing\nthere and run it. The paths of the BC250 Bazzite Suite's section are relative to its "
-           "folder, `bc250-bazzite/`.", "",
+           "folder, `bc250-bazzite/`. The Windows\nPortable Suite's icons are listed in its own repository's "
+           "`ICONS.md`.", "",
            "## BC250 Bazzite Suite", "", "### The suite's icon", ""]
     out += table("Icon,File,Used for", ((img(path), file, use) for path, file, use in SUITE_ICON))
     out += ["### The category icons", "",
@@ -355,12 +369,26 @@ def build(root: Path = ROOT) -> str:
                                         for name, use in MATERIAL))
     out += ["### Symbols in text", "", "Characters of the font, used as icons in labels and buttons.", ""]
     out += table("Symbol,App,Used for", SYMBOLS)
-    out += ["## Windows Portable Suite", "", "### The suite's icon", ""]
+    out += ["## Nexus", "", "### The Nexus icon", ""]
+    out += table("Icon,File,Used for", ((img(path), file, use) for path, file, use in NEXUS_ICON))
+    out += ["### Material Design icons on the Nexus page", "", "Drawn by MkDocs Material in the page's colors.", ""]
+    out += table("Icon,Name,Used for", ((img(f"{MDI}/{name}.svg", 24), f"`material-{name}`", use)
+                                        for name, use in NEXUS_MATERIAL))
+    return "\n".join(out).rstrip("\n") + "\n"
+
+
+def build_windows_portable(root: Path = ROOT) -> str:
+    """The Windows Portable Suite's own ICONS.md (windows-portable/ICONS.md), its paths from the suite's folder."""
+    out = ["# Icons", "",
+           "The icons of the Windows Portable Suite, and where each is used. Written by the Nexus tools' "
+           "`make_icons.py`\n(`../tools/` in the Nexus checkout the suite is in): change the listing there and run "
+           "it. The paths are relative to\nthis repository's root.", "",
+           "## The suite's icon", ""]
     out += table("Icon,File,Used for", ((img(path), file, use) for path, file, use in WINDOWS_PORTABLE_ICON))
     by_category: dict[str, list[str]] = {}
     for key, name, category, _ in windows_portable_apps(root):
         by_category.setdefault(category, []).append(f"{name} (`{key}`)")
-    out += ["### The category icons", "",
+    out += ["## The category icons", "",
             "Every app but Windows Portable Test has the icon of its category: `windows-portable/icons/<category>/` "
             "at 1024, 512,\n256 and 128 px (PNG), copied by this tool from the portal's `apps.toml` to the app's "
             "`images/<app id>.webp` (512 px)\nand `-128.png`, its tile `portal/images/apps/<key>.webp` (256 px) and its "
@@ -371,15 +399,10 @@ def build(root: Path = ROOT) -> str:
         (img(f"{WINDOWS_PORTABLE}/icons/{category}/{category}-128.png", 64),
          f"{category.title()}: {source}", "<br>".join(by_category.get(category, [])))
         for category, source in sorted(WINDOWS_PORTABLE_CATEGORIES.items())))
-    out += ["### Material Design icons in the wiki", "", "Drawn by MkDocs Material in the wiki's colors.", ""]
+    out += ["## Material Design icons in the wiki", "", "Drawn by MkDocs Material in the wiki's colors.", ""]
     out += table("Icon,Name,Used for", ((img(f"{MDI}/{name}.svg", 24), f"`material-{name}`", use)
                                         for name, use in WINDOWS_PORTABLE_MATERIAL))
-    out += ["## Nexus", "", "### The Nexus icon", ""]
-    out += table("Icon,File,Used for", ((img(path), file, use) for path, file, use in NEXUS_ICON))
-    out += ["### Material Design icons on the Nexus page", "", "Drawn by MkDocs Material in the page's colors.", ""]
-    out += table("Icon,Name,Used for", ((img(f"{MDI}/{name}.svg", 24), f"`material-{name}`", use)
-                                        for name, use in NEXUS_MATERIAL))
-    return "\n".join(out).rstrip("\n") + "\n"
+    return "\n".join(out).rstrip("\n").replace(f"{WINDOWS_PORTABLE}/", "") + "\n"
 
 
 def render(root: Path = ROOT) -> list[Path]:
@@ -433,17 +456,21 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     if not args.check:
         nexus_copies()
-    text, path = build(), ROOT / "ICONS.md"
+    files = [("ICONS.md", build())]
+    if windows_portable_here():             # the suite's own listing, in its repository
+        files.append((f"{WINDOWS_PORTABLE}/ICONS.md", build_windows_portable()))
     if args.check:
-        current = path.read_text(encoding="utf-8") if path.is_file() else ""
-        if current != text:
-            print("ICONS.md is out of date: run python3 tools/make_icons.py")
-            return 1
-        print("ICONS.md is up to date")
-        return 0
+        stale = [name for name, text in files
+                 if not (ROOT / name).is_file() or (ROOT / name).read_text(encoding="utf-8") != text]
+        for name in stale:
+            print(f"{name} is out of date: run python3 tools/make_icons.py")
+        if not stale:
+            print(f"{' and '.join(name for name, _ in files)} {'are' if len(files) > 1 else 'is'} up to date")
+        return 1 if stale else 0
     render()
-    path.write_text(text, encoding="utf-8", newline="\n")
-    print(f"wrote ICONS.md and {len(GLYPHS) + len(STANDARD)} icons in {OUT}/")
+    for name, text in files:
+        (ROOT / name).write_text(text, encoding="utf-8", newline="\n")
+    print(f"wrote {' and '.join(name for name, _ in files)}, and {len(GLYPHS) + len(STANDARD)} icons in {OUT}/")
     return 0
 
 

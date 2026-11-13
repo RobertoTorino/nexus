@@ -50,10 +50,12 @@ for t in bc250-bazzite/tools/installer-tests/*.sh; do
 done
 mkdocs build --strict -f bc250-bazzite/mkdocs.yml   # the suite's wiki, from the venv
 mkdocs build --strict -f nexus/mkdocs.yml          # the Nexus page
-mkdocs build --strict -f windows-portable/mkdocs.yml   # the Windows Portable Suite's wiki
+mkdocs build --strict -f windows-portable/mkdocs.yml   # the Windows Portable Suite's wiki, when the suite is cloned here
 ```
 
-On Windows, for the Windows Portable Suite (its own CI, `ci-windows-portable.yml`), from PowerShell at the repo root:
+On Windows, for the Windows Portable Suite (a repository of its own, cloned into this checkout as
+`windows-portable/`; its CI is its own `ci.yml`), from PowerShell at the root of this checkout; `--base origin/main`
+is then the suite's `origin/main`:
 
 ```powershell
 .venv-windows\Scripts\python.exe tools\check_versions.py --suite windows-portable

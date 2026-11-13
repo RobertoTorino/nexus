@@ -111,3 +111,5 @@ def test_the_repositorys_chapter_is_current(capsys):
     """Every app of every suite is in nexus/features.toml, and nexus/docs/features.md was written from it: after a
     change, python3 tools/features.py."""
     assert features.main(["--check"]) == 0, capsys.readouterr().err
+    if features.absent():                   # a checkout of Nexus alone: nothing was checked, and it says so
+        assert "is not checked here" in capsys.readouterr().out

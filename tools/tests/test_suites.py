@@ -82,3 +82,27 @@ def test_the_command_line():
     assert run("--tag", "portal-v1.0.0").stdout.split() == ["bc250-bazzite", "portal", "1.0.0"]
     result = run("--tag", "nothing")
     assert result.returncode == 1 and "not <app>-v<x.y.z>" in result.stderr
+
+
+def test_a_suite_in_a_repository_of_its_own(tmp_path):
+    """A suite may be a repository of its own, cloned into the checkout as its folder (owner, 13-11-2026): the
+    tools find it as any suite, and it is not one of this repository's."""
+    for name in ("bc250-bazzite", "windows-portable"):
+        (tmp_path / name / "portal").mkdir(parents=True)
+        (tmp_path / name / "portal" / "apps.toml").write_text("", encoding="utf-8")
+    (tmp_path / "windows-portable" / "TAG_PREFIX").write_text("wp-\n", encoding="utf-8")
+    (tmp_path / "windows-portable" / ".git").mkdir()
+    assert [p.name for p in suites.suites(tmp_path)] == ["bc250-bazzite", "windows-portable"]
+    assert suites.own_repository(tmp_path / "windows-portable") and not suites.own_repository(tmp_path / "bc250-bazzite")
+    assert [p.name for p in suites.of_repository(tmp_path)] == ["bc250-bazzite"]
+    assert suites.of_tag("wp-portal-v0.1.0", tmp_path)[0] == tmp_path / "windows-portable"
+    assert "windows-portable" in suites.OWN_REPOSITORIES
+
+
+def test_ci_local_leaves_those_suites_out_of_its_copy():
+    """tools/ci-local.sh runs Nexus's workflows on a copy of the checkout: without the suites of another
+    repository, as GitHub's checkout of Nexus is. Its list is this one (ci_local.py runs in a container, alone)."""
+    import ci_local
+    assert set(ci_local.OWN_REPOSITORIES) == set(suites.OWN_REPOSITORIES)
+    import make_design
+    assert set(make_design.OWN_REPOSITORY) == set(suites.OWN_REPOSITORIES)

@@ -9,7 +9,7 @@ from bc250_core import AppInfo
 
 APP_NAME = "Nexus Deps"
 APP_ID = "nexus-deps"
-__version__ = "3.4.0"
+__version__ = "4.0.0"
 
 PACKAGE = Path(__file__).resolve().parent
 ROOT = PACKAGE.parent

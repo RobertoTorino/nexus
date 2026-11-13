@@ -28,10 +28,37 @@ The steps the owner agreed to (12-11-2026), in this order:
 5. **Handover per suite:** each suite its own change with its own CHANGELOG entries. The wikis and READMEs need no
    release; an app whose window text changes needs one, the owner's.
 
-## The Windows Portable Suite on hold (owner, 09-11-2026: from 10-11-2026)
+## One repository per suite (owner, 13-11-2026)
 
-**Development of the Windows Portable Suite is on hold from 10-11-2026** (owner, 09-11-2026: the last day with the
-ROG XBOX Ally X). The released apps and wp-portal-v10.3.0 stay as they are; no new features or releases until the
-owner takes it up again. The wiki carries a banner saying so on every page (`windows-portable/tools/mkdocs/overrides/main.html`,
-Material's announce bar; take it out when work resumes). The BC250 Bazzite Suite and Nexus go on.
+The owner decided on 13-11-2026 to go back to one repository per suite, with the tooling kept in Nexus for every
+suite (a suite keeps its own tooling only where that is not possible). The steps, in the owner's order:
+
+1. **The Bazzite Console Suite, done 13-11-2026:** `github.com/RobertoTorino/bazzite-console`, with a copy of the
+   tools and of core of its own, made before this plan.
+2. **The Windows Portable Suite, done 13-11-2026 in the working trees:** `github.com/RobertoTorino/windows-portable`,
+   without a copy of the tools. It is cloned into the Nexus checkout as `windows-portable/` and its workflows check
+   Nexus out the same way (`.github/actions/suite`, the suite's `NEXUS_REF`). Its notes, with its hold, are in its
+   own MIGRATION.md.
+3. **The BC250 Bazzite Suite, next:** `github.com/RobertoTorino/bc250-bazzite`, the same way. Then a test that
+   everything still works as intended.
+
+What step 2 left for step 3, because the BC250 suite needs it and the Windows Portable Suite, on hold, does not:
+
+- **The Nexus Release Tool releases only the suites of Nexus's own repository.** It commits, pushes and starts
+  `release-nexus.yml` in the Nexus checkout; a suite in a repository of its own is not listed. For such a suite it
+  has to commit and push in the suite's folder, start that repository's `release.yml` and read that repository's
+  runs and releases. Until then such a suite is released by hand: `tools/tag-release.sh` tags it in its repository,
+  and its `release.yml` takes the release commit (`gh workflow run release.yml -f commit=<sha>`).
+- **The pre-push hook checks only Nexus's repository** (`tools/git-setup.sh` sets it there; `tools/pre-push.sh`
+  reads the suites of the commit that is pushed). A suite in a repository of its own has no hook yet: its CI checks
+  the same.
+- **The Nexus release and the Nexus index** read one repository's releases (`tools/nexus_release.py`,
+  `tools/nexus_index.py`). The index keeps the Windows Portable Suite's section from the releases made in Nexus
+  before the move; releases made in a suite's own repository are not in it.
+- **The catalogs that list every suite** (DESIGN.md, the Nexus page's Apps and features chapter from
+  `nexus/features.toml`, the `SYMBOLS` of ICONS.md) still hold the Windows Portable Suite's rows. `tools/features.py
+  --check` checks nothing in a checkout without that suite and says so; the suite's CI runs it.
+- **`tools/ci-local.sh`** runs Nexus's and the BC250 suite's workflows; a suite's own workflows are not run locally.
+- **The root `requirements-dev.txt`** names the BC250 suite's folders; the Windows Portable Suite has its own
+  `windows-portable/requirements-dev.txt` for the same venv.
 

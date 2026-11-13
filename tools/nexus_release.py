@@ -52,7 +52,10 @@ def release_workflow(root: Path, folder: Path) -> Path:
 
 
 def on_nexus_release(root: Path, folder: Path) -> bool:
-    """Whether release-nexus.yml can call the suite's release workflow."""
+    """Whether release-nexus.yml can call the suite's release workflow: never a suite in a repository of its own
+    (owner, 13-11-2026), cloned into this checkout as its folder."""
+    if nexus_suites.own_repository(folder):
+        return False                        # a repository of its own: released there, by its own release.yml
     workflow = release_workflow(root, folder)
     return workflow.is_file() and "workflow_call:" in workflow.read_text(encoding="utf-8")
 

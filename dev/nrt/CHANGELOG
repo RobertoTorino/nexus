@@ -1,3 +1,15 @@
+Changelog: 13-11-2026 19:25:53
+
+Version 2.0.0.
+
+Changelog: 13-11-2026 19:01:22
+
+Fixed. The first column lists the suites of Nexus's own repository only. A suite in a repository of its own, cloned
+into the checkout as its folder (the Windows Portable Suite, owner 13-11-2026), is not listed: the commits, tags and
+releases the tool makes are Nexus's repository's, and that suite is released in its own. The tests build their
+sample Windows suite from copies of two of that suite's files in tests/fixtures/windows-suite/, and compare the
+copies with the suite's files while it is in the checkout.
+
 Changelog: 11-11-2026 22:19:14
 
 Fixed. GitHub status showed Up while an incident was still open (owner, 11-11-2026: the CI runs had waited in

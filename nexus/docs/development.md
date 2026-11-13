@@ -10,8 +10,10 @@ GitHub: [GitHub settings](github-settings.md). What a machine needs to work on i
 
 ## Layout
 
-The repository is Nexus: every suite in a folder of its own, with what they share at the root. Paths in the wikis
-are written from the root of the repository.
+The repository is Nexus: what the suites share at the root, and every suite in a folder of its own. A suite is
+either a folder of this repository (the BC250 Bazzite Suite) or a repository of its own that is cloned into the
+checkout as its folder (the Windows Portable Suite, [below](#a-suite-in-a-repository-of-its-own)). Paths in the wikis
+are written from the root of the Nexus checkout.
 
 ```
 core/bc250_core/              shared Python package, every suite's; bundled into each app at release time (below)
@@ -27,13 +29,62 @@ dev/<name>/                   the Nexus development apps, run from the checkout:
 test.sh                       runs every test suite (core, tools, dev/, and the portal, tools and apps of each suite
                               made for the system it runs on: SYSTEM in the suite's folder)
 bc250-bazzite/                the BC250 Bazzite Suite
-windows-portable/             the Windows Portable Suite (its tags start with wp-, TAG_PREFIX)
+windows-portable/             the Windows Portable Suite (its tags start with wp-, TAG_PREFIX): a repository of
+                              its own, cloned here; not in git here (.gitignore)
 nexus/                        the Nexus page
 DESIGN.md ICONS.md            every color and every icon, per suite and the Nexus page
-.github/workflows/            every workflow: ci-nexus.yml (Nexus's checks), ci.yml and release.yml (the BC250
-                              Bazzite Suite), each other suite's ci-<suite>.yml and release-<suite>.yml,
-                              nexus-index.yml, docs.yml (the wikis)
+.github/workflows/            the workflows: ci-nexus.yml (Nexus's checks), ci.yml and release.yml (the BC250
+                              Bazzite Suite), nexus-index.yml, docs.yml (the wikis)
+.github/actions/suite/        the action a suite in a repository of its own starts every job with
 ```
+
+### A suite in a repository of its own
+
+A suite can be a repository of its own and still use the Nexus tools, without a copy of them. The Windows Portable
+Suite is one: `github.com/RobertoTorino/windows-portable`. Clone it into the Nexus checkout, as the folder the
+tools know it by:
+
+```bash
+git clone https://github.com/RobertoTorino/nexus.git Nexus
+git clone https://github.com/RobertoTorino/windows-portable.git Nexus/windows-portable
+```
+
+From then on everything works as for a suite that is a folder of Nexus: `./test.sh` runs its tests on its system,
+the tools take `--suite windows-portable`, the dashboard lists it, and its apps find `core/` at the root. What is
+different is git:
+
+- The two are separate checkouts. `git` in `windows-portable/` is the suite's: its commits, its tags, its pushes.
+  `git` at the root is Nexus's and does not see the folder (`.gitignore` lists it). A change to a tool and to the
+  suite is two commits, one in each.
+- `tools/tag-release.sh wp-<app>-v<x.y.z>` tags the suite's repository and waits for the suite's own CI
+  (`tools/ci_state.py --repo windows-portable`).
+- Nexus Release Tool lists the suites of Nexus's own repository. A suite in a repository of its own is released
+  there, by its `release.yml`.
+- The suite's packages for the venv are in its own file: `pip install -r windows-portable/requirements-dev.txt`,
+  after the root's.
+
+The suite's workflows are in its repository. Every job starts with the action `.github/actions/suite` instead of
+`actions/checkout`:
+
+```yaml
+- uses: RobertoTorino/nexus/.github/actions/suite@main
+  with:
+    folder: windows-portable      # the suite's folder in the Nexus checkout
+    fetch-depth: 0                # optional: the suite's history and tags
+```
+
+It checks out Nexus, then the suite inside it as `windows-portable/`, so the job runs in the same layout as your
+checkout and its steps are written from the Nexus root. Which Nexus it takes is the suite's to say, in its
+`NEXUS_REF` file: `main` follows Nexus, a commit holds the suite on the Nexus it was tested with. The action's
+outputs `nexus-ref` and `nexus-commit` say what was checked out.
+
+A checkout of Nexus alone has no `windows-portable/`, and Nexus's CI runs that way. The tests of the tools and the
+Nexus apps that are about that suite skip there and say why; they run in the suite's CI, in its `nexus-tools` job.
+`tools/make_icons.py` writes that suite's icons to its own `windows-portable/ICONS.md`, and
+`tools/features.py --check` checks the Apps and features chapter only where every suite it lists is in the checkout.
+The suite's wiki is still built by Nexus's `docs.yml`, which checks the suite out the same way, and stays at its
+address under the Nexus page. A change to it is published by the next run of that workflow: a push to Nexus, the
+nightly run, or **Run workflow** on the Actions page.
 
 Every suite's folder is laid out the same way:
 
@@ -127,6 +178,9 @@ python3 -m venv .venv-linux && .venv-linux/bin/python -m pip install -r requirem
 # Windows (Git Bash)
 py -m venv .venv-windows && .venv-windows/Scripts/python.exe -m pip install -r requirements-dev.txt
 
+# with the Windows Portable Suite cloned into the checkout, its packages too:
+#   <the venv's python> -m pip install -r windows-portable/requirements-dev.txt
+
 ./test.sh                                   # every test suite of this system, offscreen; picks this OS's venv
 NEXUS_SYSTEM=bazzite ./test.sh              # the Bazzite suites' tests too, on another system
 python3 tools/check_versions.py             # hard-coded versions = VERSION
@@ -197,9 +251,9 @@ first run builds the image from `tools/ci-local/Containerfile` (Python 3.12 and 
 and PS Remote Play's FFmpeg; both are kept, with the venvs and the logs, in `~/.cache/bc250-ci-local`. It works on a
 copy of the checkout with every change staged, as the commit will have it. Only the Windows job does not run here.
 Without job names it runs only the workflows GitHub starts for the push: those whose `paths` match a file that differs
-from `origin/main`, counting what is not committed yet. A push that changes only the Windows Portable Suite runs
-`ci-nexus.yml`, not the BC250 suite's `ci.yml`, so one suite's checks never hold another
-suite's push. A change to `core/`, `tools/` or `dev/` starts every suite's CI, there as here.
+from `origin/main`, counting what is not committed yet. A push that changes only the Nexus page runs
+`ci-nexus.yml`, not the BC250 suite's `ci.yml`. A change to `core/`, `tools/` or `dev/` starts both, there as here.
+The workflows of a suite in a repository of its own are not run here.
 The push commands Nexus Release Tool shows run it first (`tools/ci-local.sh && git push`): no push when a job fails.
 
 On Windows it runs in podman's machine, a small Fedora in WSL that reaches the checkout under `/mnt/c`. Install
@@ -212,8 +266,9 @@ podman machine ssh "su - user -c 'cd /mnt/c/Projects/nexus && bash tools/ci-loca
 
 `tools/pre-push.sh` runs CI's quick checks in a few seconds: the versions, each suite's `portal/apps.toml` with the
 portal bump it needs against what the remote has, the scripts' exec bits and the line endings. A suite's versions and manifest are
-checked only when the push changes that suite (its folder), so a failing check of the Windows Portable Suite never
-holds a push of the BC250 suite, and the other way round; core and `dev/` are checked on every push. The checks read
+checked only when the push changes that suite (its folder), so a failing check of one suite never holds a push of
+another; core and `dev/` are checked on every push. The hook is Nexus's repository's: a suite in a repository of
+its own has none, and its CI runs the same checks. The checks read
 the commit that is pushed, in a checkout of it of their own (a few seconds more), as CI does: a fix that is in the
 working tree but not committed never lets a push through. `tools/git-setup.sh`, once per checkout, makes it git's
 pre-push hook (`core.hooksPath`):

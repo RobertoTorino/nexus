@@ -12,7 +12,9 @@ page's Apps and features chapter from it, nexus/docs/features.md: the apps per s
 The check fails when an app in a suite's portal/apps.toml is in no family (a new app adds its family:
 tools/new_app.py writes one), a family names an app or a suite that is not there, a feature names a suite its
 family is not in, or the chapter was not written again after a change (tools/tests/test_features.py runs it in CI).
-The names and categories come from each suite's portal/apps.toml, so a renamed app shows there by itself."""
+The names and categories come from each suite's portal/apps.toml, so a renamed app shows there by itself. A suite in
+a repository of its own (tools/suites.py: OWN_REPOSITORIES) must be in the checkout, cloned as its folder, for the
+chapter to be written; --check without it checks nothing and says so (Nexus's CI; the suite's CI checks it)."""
 
 from __future__ import annotations
 
@@ -52,6 +54,17 @@ class Family:
     features: list[tuple[str, list[str]]]   # (text, the suites that have it)
 
 
+ABSENT = "a repository of its own"      # in the error of a suite that is not in this checkout
+
+
+def absent(root: Path = ROOT) -> list[str]:
+    """The chapter's suites that are in a repository of their own and not in this checkout: without them the
+    chapter can neither be written nor checked (their apps' names and categories are in their apps.toml)."""
+    data = tomllib.loads((root / DATA).read_text(encoding="utf-8"))
+    found = {p.name for p in nexus_suites.suites(root)}
+    return [key for key in data.get("suites", {}) if key not in found and key in nexus_suites.OWN_REPOSITORIES]
+
+
 def load(root: Path = ROOT) -> tuple[list[Suite], list[Family], list[str]]:
     """The suites and the families of *root*'s nexus/features.toml, and what is wrong with them (empty: nothing)."""
     data = tomllib.loads((root / DATA).read_text(encoding="utf-8"))
@@ -63,6 +76,9 @@ def load(root: Path = ROOT) -> tuple[list[Suite], list[Family], list[str]]:
         if key in found:
             manifest = tomllib.loads((found[key] / "portal" / "apps.toml").read_text(encoding="utf-8"))
             suite.apps = manifest.get("apps", {})
+        elif key in nexus_suites.OWN_REPOSITORIES:
+            errors.append(f"[suites.{key}]: {key}/ is not in this checkout ({ABSENT}: clone "
+                          f"{nexus_suites.OWN_REPOSITORIES[key]} into it as {key}/)")
         else:
             errors.append(f"[suites.{key}]: there is no suite {key}/ with portal/apps.toml")
         columns.append(suite)
@@ -178,6 +194,10 @@ def main(argv: list[str] | None = None) -> int:
                                                              "chapter is not current")
     parser.add_argument("--root", type=Path, default=ROOT, help=argparse.SUPPRESS)
     args = parser.parse_args(argv)
+    if args.check and absent(args.root):    # a checkout of Nexus alone (its CI): checked where every suite is
+        print(f"{PAGE.as_posix()} is not checked here: {', '.join(absent(args.root))} is {ABSENT}, not in this "
+              "checkout")
+        return 0
     columns, families, errors = load(args.root)
     for error in errors:
         print(f"{DATA.as_posix()}: {error}", file=sys.stderr)

@@ -1,3 +1,28 @@
+Changelog: 13-11-2026 19:01:22
+
+Breaking. The Windows Portable Suite left Nexus for a repository of its own, github.com/RobertoTorino/windows-portable
+(owner, 13-11-2026: one repository per suite, the tooling kept in Nexus for every suite). Its folder
+`windows-portable/` is no longer in git here (`.gitignore` lists it), and its workflows `ci-windows-portable.yml`,
+`release-windows-portable.yml` and `upstream-windows-portable.yml` are removed: the suite has its own `ci.yml`,
+`release.yml` and `upstream.yml`. The suite keeps no copy of the tools. It is cloned into the Nexus checkout as
+`windows-portable/`, where every tool finds it as before, and its workflows start each job with the new action
+`.github/actions/suite`, which checks out Nexus at the commit the suite's `NEXUS_REF` names and the suite inside it.
+`tools/suites.py` names the suites in a repository of their own (`OWN_REPOSITORIES`, `own_repository()`,
+`of_repository()`). `tools/tag-release.sh` tags such a suite in its own repository and waits for its own `ci.yml`,
+and `tools/ci_state.py` takes `--repo DIR` for the checkout a commit is of. `tools/nexus_release.py` leaves such a
+suite off the Nexus release, and `release-nexus.yml` has no job for it. `release.yml` no longer excludes `wp-` tags.
+`docs.yml` and `nexus-index.yml` check the suite out as its folder, so its wiki keeps its address and the index its
+section; `docs.yml` also runs every night, for what the suite changed in its wiki. `tools/make_icons.py` writes the
+suite's icons to its own `windows-portable/ICONS.md` (ICONS.md here written again without them) and its icon copies
+only while the suite is in the checkout; `tools/make_design.py` checks the suite's stylesheet only then, and
+`tools/features.py --check` checks the Apps and features chapter only where every suite it lists is in the checkout,
+and says so. `tools/new_app.py` gives a Windows app's README the suite's own CI badge. `tools/ci-local.sh` leaves the
+suite's folder out of its copy of the checkout, as GitHub's checkout of Nexus has none. The root
+`requirements-dev.txt` no longer names the suite's folders: the suite has its own `requirements-dev.txt`. The tests
+of the tools, Nexus Dashboard, Nexus Installer Tests and the Nexus Release Tool that are about the suite skip in a
+checkout without it and run in the suite's CI. The README, the instruction files, MIGRATION.md (the plan, and what
+is left for the BC250 suite's step) and the Nexus page's Development, Releases and GitHub settings chapters follow.
+
 Changelog: 13-11-2026 16:53:54
 
 Release 5.1.0. Brings portal-v20.0.2.

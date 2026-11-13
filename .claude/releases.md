@@ -13,10 +13,11 @@ in the tool, when it changed, started by the owner with the Nexus Release Tool's
 (`.github/workflows/release-nexus.yml` calls that suite's own release workflow, which builds, publishes and pins; its
 portal ends as a draft the owner device-tests and publishes from the tool). Each suite is released on its own (owner,
 05-11-2026): Start passes the suite as the workflow's `suites` input, the run carries only that one, and a draft of one
-suite never holds up the other's release. A suite takes part once its
-release workflow has `workflow_call`: both suites do (the Windows Portable Suite's `release-windows-portable.yml`
-since 30-10-2026, the BC250 Bazzite Suite's `release.yml` since 04-11-2026, stage 3), so every suite releases with
-the same steps (owner, 04-11-2026). A tag pushed by hand still releases that one app or portal. The plan and its
+suite never holds up the other's release. A suite of this repository takes part once
+its release workflow has `workflow_call`: the BC250 Bazzite Suite's `release.yml` does (since 04-11-2026, stage 3).
+A suite in a repository of its own (the Windows Portable Suite, owner 13-11-2026) is not on the Nexus release and
+not in the Nexus Release Tool: it is released in its repository, by its own `release.yml` (started by hand with the
+release commit, or by a tag). A tag pushed by hand still releases that one app or portal. The plan and its
 stages are in MIGRATION.md.
 
 The owner does every step of a release; Claude does none of them, and doesn't offer to:

@@ -45,6 +45,9 @@ WORK = Path(os.environ.get("CI_LOCAL_WORK", "/tmp/ci-local-work"))   # the copy 
 CACHE = Path(os.environ.get("CI_LOCAL_CACHE", "/cache"))     # venvs, pip's cache, logs: kept between runs
 WORKFLOWS = (("ci.yml", ""), ("ci-nexus.yml", "nexus-"))     # each workflow run here, with the prefix of its job names
 COPY_EXCLUDES = (".venv*", "target", "site", "__pycache__", ".pytest_cache", "dist", "node_modules")
+# A suite in a repository of its own, cloned into the checkout as its folder (tools/suites.py: OWN_REPOSITORIES), is
+# not in the copy: GitHub's checkout of Nexus has none, and its workflows are not run here.
+OWN_REPOSITORIES = ("windows-portable",)
 SHELL = ["bash", "--noprofile", "--norc", "-eo", "pipefail", "-c"]      # GitHub's shell for run steps on Linux
 EXPR = re.compile(r"\$\{\{\s*(.*?)\s*\}\}")
 NEEDS = re.compile(r"^\$\{\{\s*fromJSON\(needs\.(\w[\w-]*)\.outputs\.(\w+)\)\s*\}\}$")   # a plan job's output
@@ -265,6 +268,7 @@ def prepare_copy() -> str:
     if WORK.exists():
         shutil.rmtree(WORK)
     excludes = [f"--exclude={pattern}" for pattern in COPY_EXCLUDES]
+    excludes += [f"--exclude=/{name}/" for name in OWN_REPOSITORIES]
     subprocess.run(["rsync", "-a", "--delete", *excludes, f"{SRC}/", f"{WORK}/"], check=True)
     subprocess.run(["git", "add", "-A"], cwd=WORK, check=True)
     base = subprocess.run(["git", "rev-parse", "origin/main"], cwd=WORK, capture_output=True, text=True)

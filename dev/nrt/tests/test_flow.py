@@ -45,7 +45,7 @@ def nexus(tmp_path) -> Path:
     write(wp / "apps/test/VERSION", "0.1.0\n")
     write(wp / "apps/test/CHANGELOG", "Changelog: 01-01-2026 00:00:00\n\nRelease 0.1.0.\n")
     write(wp / "apps/test/app.py", "print('hi')\n")
-    real = rp.CHECKOUT / "windows-portable"
+    real = Path(__file__).resolve().parent / "fixtures" / "windows-suite"     # the Windows Portable Suite's files
     for path in ("tools/check_manifest.py", "portal/portable_portal/manifest.py"):
         write(wp / path, (real / path).read_text(encoding="utf-8"))
     write(wp / "portal/apps.toml", APPS_TOML)

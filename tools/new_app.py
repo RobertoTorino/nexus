@@ -1282,7 +1282,7 @@ remove the download.
 W_README_MD = r'''<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 
 ![Status: Beta](https://img.shields.io/badge/status-Beta-f5a524)
-[![CI Windows Portable](https://github.com/RobertoTorino/nexus/actions/workflows/ci-windows-portable.yml/badge.svg)](https://github.com/RobertoTorino/nexus/actions/workflows/ci-windows-portable.yml)
+[![CI](https://github.com/RobertoTorino/windows-portable/actions/workflows/ci.yml/badge.svg)](https://github.com/RobertoTorino/windows-portable/actions/workflows/ci.yml)
 [![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
 
 # @APP_NAME@

@@ -45,11 +45,13 @@ def test_the_suite_passes():
 def test_one_suite_at_a_time(capsys):
     """Each suite's CI checks core, dev/ and its own folders: one suite never blocks another (owner, 27-10-2026)."""
     root = check_versions.ROOT
-    folders = 1 + len([p for p in (root / "dev").glob("*") if p.is_dir()]) + 1 + len(
-        [p for p in (root / "windows-portable" / "apps").iterdir() if p.is_dir()])   # core, dev/, its portal, its apps
-    assert check_versions.main(["--suite", "windows-portable"]) == 0
-    assert f"in {folders} folders" in capsys.readouterr().out
+    if (root / "windows-portable" / "portal" / "apps.toml").is_file():     # a repository of its own, when cloned here
+        folders = 1 + len([p for p in (root / "dev").glob("*") if p.is_dir()]) + 1 + len(
+            [p for p in (root / "windows-portable" / "apps").iterdir() if p.is_dir()])   # core, dev/, its portal, its apps
+        assert check_versions.main(["--suite", "windows-portable"]) == 0
+        assert f"in {folders} folders" in capsys.readouterr().out
     assert check_versions.main(["--suite", "no-such-suite"]) == 1
+    capsys.readouterr()
     # Nexus's CI (ci-nexus.yml): core and dev/ alone, no suite's folders
     nexus = 1 + len([p for p in (root / "dev").glob("*") if p.is_dir()])
     assert check_versions.main(["--nexus"]) == 0

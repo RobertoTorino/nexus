@@ -13,13 +13,23 @@ The repository is **Nexus**, `github.com/RobertoTorino/nexus` (branch `main`; un
 redirect that installed portals update through). It is the umbrella over the suites: every suite in a folder of its
 own (owner, 26-10-2026), with what they share at the root. The **BC250 Bazzite Suite** (tools for the AMD BC-250 on
 Bazzite) is `bc250-bazzite/`; the BC250 suite's tag names (`<app>-v<x.y.z>`, `portal-v<x.y.z>`), app ids and wiki address did not
-change with the move. The **Windows Portable Suite** (Windows handhelds) is `windows-portable/`: its apps are
-released as one zip per tag with a PyInstaller build and an `install.ps1` (`windows-portable/tools/build_release.py`,
-on Windows). **Each suite stands apart** (owner, 27-10-2026): a change to one suite never edits another suite's
+change with the move. The **Windows Portable Suite** (Windows handhelds) is a repository of its own,
+`github.com/RobertoTorino/windows-portable` (owner, 13-11-2026: one repository per suite; the Bazzite Console Suite
+left first, to `bazzite-console`, with a copy of the tools). It keeps no copy of core or the tools: it is cloned into
+this checkout as `windows-portable/` (in `.gitignore`), where the tools find it as any suite (`tools/suites.py`:
+`OWN_REPOSITORIES`, `own_repository()`, and `of_repository()` for the suites that are folders of Nexus's own
+repository). git in that folder is the suite's: `tools/tag-release.sh` tags it there and asks for its `ci.yml`
+(`tools/ci_state.py --repo`), and the Nexus Release Tool does not list it. Its workflows (`ci.yml`, `release.yml`,
+`upstream.yml`) are in its repository and start each job with `.github/actions/suite` (Nexus at the commit the
+suite's `NEXUS_REF` names, the suite inside it as `windows-portable/`). Nexus's `docs.yml` and `nexus-index.yml`
+check the suite out the same way: its wiki keeps its address under the Nexus page, and the index keeps its section.
+What is listed per suite and written by a tool goes where the suite is: `tools/make_icons.py` writes the suite's
+icons to `windows-portable/ICONS.md`, not the root's. A checkout of Nexus alone has no such folder: the tests about
+the suite skip there and run in the suite's CI (its `nexus-tools` job). **Each suite stands apart** (owner, 27-10-2026): a change to one suite never edits another suite's
 folder, its CI or its release workflow, and a change both suites want is two changes, one per suite, each with its
 own release. `ci-nexus.yml` is Nexus's (core, the Nexus tools, `dev/`, the Nexus page and the repository's rules);
-`ci.yml` and `release.yml` are the BC250 suite's; a suite with a tag prefix has its own `ci-<suite>.yml` and
-`release-<suite>.yml`. A suite's tags wait for its own CI and for `ci-nexus.yml`, never for another suite's
+`ci.yml` and `release.yml` are the BC250 suite's; a suite in a repository of its own has its `ci.yml` and
+`release.yml` there. A suite's tags wait for its own CI and for `ci-nexus.yml`, never for another suite's
 (`tools/tag-release.sh`, `tools/ci_state.py --workflow`; `tools/tests/test_layout.py` keeps them apart). The
 local gates do the same (owner, 28-10-2026): the pre-push hook and the Nexus Release Tool's Commit step run a suite's version
 and manifest checks only when the push or commit changes that suite, so one suite's failing check never holds

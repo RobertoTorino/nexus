@@ -99,7 +99,7 @@ def two_suites(tmp_path) -> Path:
     write(wp / "portal/VERSION", "0.1.0\n")
     write(wp / "apps/test/VERSION", "0.2.0\n")
     write(wp / "apps/test/CHANGELOG", "Changelog: 01-01-2026 00:00:00\n\nAdded. More.\n")
-    real = rp.CHECKOUT / "windows-portable"
+    real = Path(__file__).resolve().parent / "fixtures" / "windows-suite"     # the Windows Portable Suite's files
     for path in ("tools/check_manifest.py", "portal/portable_portal/manifest.py"):
         write(wp / path, (real / path).read_text(encoding="utf-8"))
     write(wp / "portal/apps.toml", '[apps.test]\nname = "T"\nsummary = "s"\ntag = "wp-test-v0.1.0"\nsha256 = ""\n'
@@ -1627,13 +1627,25 @@ def test_window_suite_column(repo, tmp_path):
     chosen.close()
 
 
+def test_the_windows_suites_fixtures_are_the_suites_files():
+    """tests/fixtures/windows-suite/ holds copies of two files of the Windows Portable Suite, a repository of its
+    own (owner, 13-11-2026): compared while the suite is cloned into the checkout as windows-portable/."""
+    real = rp.CHECKOUT / "windows-portable"
+    if not (real / "portal" / "apps.toml").is_file():
+        pytest.skip("the Windows Portable Suite, a repository of its own, is not in this checkout")
+    copies = Path(__file__).resolve().parent / "fixtures" / "windows-suite"
+    for path in ("tools/check_manifest.py", "portal/portable_portal/manifest.py"):
+        assert (copies / path).read_bytes() == (real / path).read_bytes(), f"copy {path} to tests/fixtures/ again"
+
+
 def test_the_suites_names_and_icons(tmp_path):
     """The first column's rows: each suite by its portal's name, with its portal's icon (both suites since the
     Windows portal got its images, 28-10-2026), or its own drawing while a portal has no images."""
     assert rp.suite_name(rp.CHECKOUT, "bc250-bazzite") == "BC250 Bazzite Suite"
-    assert rp.suite_name(rp.CHECKOUT, "windows-portable") == "Windows Portable Suite"
     assert rp.suite_icon(rp.CHECKOUT, "bc250-bazzite").name == "bc250-bazzite-suite.webp"
-    assert rp.suite_icon(rp.CHECKOUT, "windows-portable").name == "windows-portable-suite.webp"
+    if (rp.CHECKOUT / "windows-portable" / "portal" / "apps.toml").is_file():     # a repository of its own, cloned here
+        assert rp.suite_name(rp.CHECKOUT, "windows-portable") == "Windows Portable Suite"
+        assert rp.suite_icon(rp.CHECKOUT, "windows-portable").name == "windows-portable-suite.webp"
     bare = tmp_path / "windows-portable"
     (bare / "portal").mkdir(parents=True)
     (bare / "portal" / "apps.toml").write_text("")

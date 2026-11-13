@@ -52,7 +52,10 @@ def test_the_real_suites_match_their_workflows_and_the_layout_rule():
     what tools/tests/test_layout.py wants: every folder with tests/."""
     for folder in cm.nexus_suites.suites(ROOT):
         name = "ci.yml" if not cm.nexus_suites.tag_prefix(folder) else f"ci-{folder.name}.yml"
-        text = (ROOT / ".github" / "workflows" / name).read_text(encoding="utf-8")
+        workflows = ROOT / ".github" / "workflows"
+        if cm.nexus_suites.own_repository(folder):      # a repository of its own, cloned here: its own ci.yml
+            name, workflows = "ci.yml", folder / ".github" / "workflows"
+        text = (workflows / name).read_text(encoding="utf-8")
         assert f"tools/ci_matrix.py --suite {folder.name} pytest" in text, name
         assert "dir: ${{ fromJSON(needs.plan.outputs.dirs) }}" in text, name
         dirs = cm.pytest_dirs(folder)
@@ -69,6 +72,7 @@ def test_the_command_line(capsys):
     assert cm.main(["--suite", "bc250-bazzite", "pytest"]) == 0
     out = capsys.readouterr().out
     assert out.startswith("dirs=[") and "bc250-bazzite/portal" in json.loads(out.removeprefix("dirs="))
-    assert cm.main(["--suite", "windows-portable", "installers"]) == 0
-    assert json.loads(capsys.readouterr().out.removeprefix("apps="))[-1] == "portal"
+    if (ROOT / "windows-portable" / "portal" / "apps.toml").is_file():     # a repository of its own, when cloned here
+        assert cm.main(["--suite", "windows-portable", "installers"]) == 0
+        assert json.loads(capsys.readouterr().out.removeprefix("apps="))[-1] == "portal"
     assert cm.main(["--suite", "nowhere", "pytest"]) == 2 and "no suite" in capsys.readouterr().err

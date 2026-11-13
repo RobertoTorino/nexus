@@ -45,11 +45,13 @@ the settings.
 ## The Nexus release
 
 A Nexus release is the one release of the repository: Nexus's version with the suite ticked in the first column,
-when it changed since its last release. A suite takes part once its release workflow can be called by **Release
-Nexus** (`release-nexus.yml`): the Windows Portable Suite (`release-windows-portable.yml`) and the BC250 Bazzite
-Suite (`release.yml`) both are, so every suite is released with the same steps, those of the Nexus release tab.
-Each suite is released on its own: a release of the BC250 Bazzite Suite never builds the Windows Portable Suite's
-portal, and a Windows draft waiting for its device test on the handheld never holds up the board's next release.
+when it changed since its last release. A suite of this repository takes part once its release workflow can be called by
+**Release Nexus** (`release-nexus.yml`): the BC250 Bazzite Suite (`release.yml`) is. A suite in a repository of its
+own, the Windows Portable Suite, is not in this tool: it is released in its repository, by its own `release.yml`,
+started there with the release commit or by a tag
+([Development](development.md#a-suite-in-a-repository-of-its-own)).
+Each suite is released on its own: a release of one suite never builds another suite's portal, and a draft waiting
+for its device test never holds up another suite's next release.
 Start names the suite to Release Nexus, which carries only that one; its run's title says which ("Release Nexus:
 bc250-bazzite"). When core changed, it is released with the suite ticked; the other suite's apps that bundle it
 wait for that suite's own release. The
@@ -264,8 +266,7 @@ cache tokens, and each model; click to open [Claude's usage page](https://claude
 your plan's limits. Other computers and claude.ai are not counted. Without Claude Code the pill is not shown. It
 looks every 5 minutes, and **Refresh** looks at once.
 
-The releases step 2 waits for are followed from the same runs, those of the suite's release workflow (**Release**,
-**Release Windows Portable**). The **GitHub** column of the pin table says where each release to pin stands: *no
+The releases step 2 waits for are followed from the same runs, those of the suite's release workflow (**Release**). The **GitHub** column of the pin table says where each release to pin stands: *no
 run seen* (is the tag pushed?), *building…*, *ready* or *failed*; **Pin** waits
 for a release that is still building, or says that its workflow failed, instead of failing on a checksum that is
 not there yet. When the release of an app to pin is ready, a desktop notification says so (*ready to pin*), also
@@ -337,15 +338,14 @@ tests pin their own local builds instead of the published ones.
 
 ## The releases on GitHub
 
-Every suite publishes its releases in the one repository, so each release's title names its suite and app, from
+The releases made in this repository share its Releases page, so each release's title names its suite and app, from
 the portal's name and `apps.toml`: *BC250 Bazzite Suite: Portal 12.0.0*, *BC250 Bazzite Suite: Xenia Manager
-0.11.0*, *Windows Portable Suite: Windows Portable Test 0.1.1* (`build_release.py` of each suite writes it).
+0.11.0* (`build_release.py` of each suite writes it). The Windows Portable Suite's releases up to 13-11-2026 are
+here too; later ones are in its own repository.
 
-A release is built and published by its suite's release workflow (**Release**, **Release Windows Portable**):
-started by a tag pushed by hand, or called by **Release Nexus** for a Nexus release. A push to main starts every suite's CI, whatever suite it is for, and on the Actions
-page each run is titled with the push's commit message: after a push of *Release portal-v12.1.1*, **CI Windows
-Portable** shows as *Release portal-v12.1.1* too, but it only tests. Its steps **Build the release zip, not
-published** build a suite's zip on GitHub's test machine, so the next step can install it; nothing is uploaded.
+A release is built and published by its suite's release workflow (**Release**): started by a tag pushed by hand, or
+called by **Release Nexus** for a Nexus release. A push to main starts **CI Nexus** and, when it changes the suite
+or what its releases are built from, **CI**; on the Actions page each run is titled with the push's commit message.
 
 A release builds only a commit CI passed (`tools/ci_state.py`): the suite's own CI and Nexus's. A Nexus release's
 release commit is the exception that saves a second CI run on the same code: when it changes nothing but what a

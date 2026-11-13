@@ -1,3 +1,7 @@
+Changelog: 13-11-2026 19:25:47
+
+Version 4.0.0.
+
 Changelog: 13-11-2026 15:34:58
 
 Breaking. The Bazzite Console Suite left Nexus (owner, 13-11-2026), so upstreams.json no longer lists its apps and

@@ -1,3 +1,7 @@
+Changelog: 13-11-2026 19:25:42
+
+Version 0.2.1.
+
 Changelog: 10-11-2026 00:39:40
 
 Fixed. The global shortcut (Ctrl+Alt+F12) talks to the desktop portal through dbus-fast instead of dbus-next, which

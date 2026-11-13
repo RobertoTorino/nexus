@@ -67,8 +67,10 @@ nexus_suites = _load("suites")
 
 def suites(root: Path = CHECKOUT) -> list[str]:
     """The suites in the checkout *root*, by name: each folder directly under it with portal/apps.toml
-    (tools/suites.py); [] when *root* is laid out as a suite itself (the repositories the tests make)."""
-    return [p.name for p in nexus_suites.suites(root) if p != root]
+    (tools/suites.py); [] when *root* is laid out as a suite itself (the repositories the tests make). Not a suite
+    in a repository of its own, cloned into the checkout as its folder (owner, 13-11-2026): the commits, tags and
+    releases this tool makes are this repository's."""
+    return [p.name for p in nexus_suites.of_repository(root) if p != root]
 
 
 def suite_dir(root: Path, suite: str | None = None) -> Path:

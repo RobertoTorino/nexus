@@ -160,3 +160,41 @@ def test_a_tag_goes_to_its_suite_by_its_prefix(tmp_path):
     assert sorted(git(root, "tag").split()) == ["portal-v0.9.4", "wp-portal-v0.1.0"]
     result = tag(root, "xx-portal-v0.1.0")                           # no suite has that prefix, nor an app xx-portal
     assert result.returncode != 0 and "there is no bc250-bazzite/apps/xx-portal/VERSION" in result.stderr
+
+
+def test_a_suite_in_a_repository_of_its_own_is_tagged_there(tmp_path):
+    """Cloned into the checkout as its folder (owner, 13-11-2026): the tag is made in the suite's repository, on
+    its HEAD, pushed to its origin, and Nexus's repository gets none."""
+    nexus_origin, suite_origin, root = tmp_path / "nexus.git", tmp_path / "wp.git", tmp_path / "nexus"
+    for origin in (nexus_origin, suite_origin):
+        subprocess.run(["git", "init", "-q", "--bare", "-b", "main", str(origin)], check=True)
+    (root / "tools").mkdir(parents=True)
+    for name in ("tag-release.sh", "ci_state.py", "suites.py"):
+        shutil.copy(SCRIPT.with_name(name), root / "tools" / name)
+    (root / ".gitignore").write_text("/wp/\n")
+    suite = root / "wp"
+    for folder, version in (("portal", "1.0.0"), ("apps/test", "0.2.0")):
+        (suite / folder).mkdir(parents=True)
+        (suite / folder / "VERSION").write_text(version + "\n")
+    (suite / "portal" / "apps.toml").write_text("")
+    (suite / "TAG_PREFIX").write_text("wp-\n")
+    for repo, origin in ((root, nexus_origin), (suite, suite_origin)):
+        git(repo, "init", "-q", "-b", "main")
+        git(repo, "remote", "add", "origin", str(origin))
+        git(repo, "add", "-A")
+        git(repo, "commit", "-qm", "start")
+        git(repo, "push", "-q", "origin", "main")
+
+    (suite / "apps/test/VERSION").write_text("0.3.0\n")
+    result = tag(root, "wp-test-v0.3.0")
+    assert result.returncode != 0 and "not committed yet (HEAD has wp/apps/test/VERSION 0.2.0)" in result.stderr
+    git(suite, "commit", "-qam", "Release wp-test-v0.3.0")
+    result = tag(root, "wp-test-v0.3.0")
+    assert result.returncode != 0 and "HEAD of wp" in result.stderr and "git push first" in result.stderr
+    git(suite, "push", "-q", "origin", "main")
+    result = tag(root, "wp-test-v0.3.0")
+    assert result.returncode == 0, result.stderr
+    assert "(ci.yml)" in result.stdout and "ci-nexus.yml" not in result.stdout     # the suite's CI, in its repository
+    head = git(suite, "rev-parse", "HEAD").strip()
+    assert f"{head}\trefs/tags/wp-test-v0.3.0" in remote_tags(suite)
+    assert git(root, "tag") == "" and remote_tags(root) == ""

@@ -3,9 +3,15 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 from nexus_dashboard import CHECKOUT, icons
 
 SUITE = CHECKOUT / "bc250-bazzite"
+# The Windows Portable Suite is a repository of its own (owner, 13-11-2026), cloned into the checkout as its folder
+WINDOWS_HERE = (CHECKOUT / "windows-portable" / "portal" / "apps.toml").is_file()
+windows_suite = pytest.mark.skipif(not WINDOWS_HERE, reason="the Windows Portable Suite, a repository of its own, is "
+                                                            "not in this checkout")
 
 
 def _checkout(root: Path, suite: str = "suite") -> Path:
@@ -23,9 +29,11 @@ def test_a_suite_with_category_icons_is_told_apart(tmp_path):
     suite = _checkout(tmp_path)
     assert icons.has_category_icons(suite) and not icons.has_category_icons(tmp_path)
     assert icons.categories(suite) == ["gear", "leaf"]
-    assert icons.has_category_icons(SUITE) and icons.has_category_icons(CHECKOUT / "windows-portable")
-    assert not icons.png_icons(SUITE) and icons.png_icons(CHECKOUT / "windows-portable")      # its PNG icons
-    assert icons.icon_path(CHECKOUT / "windows-portable", "gaming", 512).name == "gaming-512.png"
+    assert icons.has_category_icons(SUITE) and not icons.png_icons(SUITE)
+    if WINDOWS_HERE:
+        assert icons.has_category_icons(CHECKOUT / "windows-portable")
+        assert icons.png_icons(CHECKOUT / "windows-portable")                                   # its PNG icons
+        assert icons.icon_path(CHECKOUT / "windows-portable", "gaming", 512).name == "gaming-512.png"
     assert icons.icon_path(SUITE, "gaming", 512).name == "gaming-512.webp"
 
 
@@ -109,6 +117,7 @@ def test_dialog_on_a_suite_without_category_icons_is_greyed_out(qapp, tmp_path):
     dialog.close()
 
 
+@windows_suite
 def test_dialog_on_the_windows_portable_suite_shows_its_png_icons(qapp):
     """Its icons are PNG at every size, the gaming ones wide (05-11-2026: Convert icons for that suite too)."""
     dialog = icons.IconsDialog(CHECKOUT, "windows-portable")

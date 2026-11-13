@@ -74,8 +74,8 @@ only a commit that its suite's CI passed.
 - **Require actions to be pinned to a full-length commit SHA:** off. The workflows refer to actions by version
   (`actions/checkout@v4`); this setting would fail every run until each `uses:` line names a commit hash.
 - **Workflow permissions:** **Read repository contents**. A workflow that needs more asks for it in its own
-  `permissions:` block (`release.yml` and `release-windows-portable.yml` write releases, `nexus-index.yml` the
-  Nexus index release, `docs.yml` publishes the wikis). In a Nexus release, `release-windows-portable.yml` also
+  `permissions:` block (`release.yml` writes releases, `nexus-index.yml` the
+  Nexus index release, `docs.yml` publishes the wikis). In a Nexus release, `release.yml` also
   pushes its *Pin ...* commit to main and makes the app tags with that token; the rulesets allow it as they are
   (no rule on new tags, main only guarded against deletion and force pushes).
 

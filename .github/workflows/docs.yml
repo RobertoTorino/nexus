@@ -4,11 +4,16 @@ name: Manual
 # Builds the manual (MkDocs Material) from main and publishes it on GitHub Pages (Settings -> Pages -> Source:
 # GitHub Actions): the Nexus page (nexus/) at https://robertotorino.github.io/nexus/, the BC250 Bazzite Suite's
 # wiki (bc250-bazzite/docs/) at https://robertotorino.github.io/nexus/bc250-bazzite-suite/ and the Windows Portable
-# Suite's (windows-portable/docs/) at https://robertotorino.github.io/nexus/windows-portable-suite/.
+# Suite's at https://robertotorino.github.io/nexus/windows-portable-suite/, the address it always had. That suite has
+# a repository of its own (owner, 13-11-2026), checked out here as windows-portable/, where its wiki finds the Nexus
+# tools' hooks; a change to its wiki is published by the next run here: a push to Nexus's main, the nightly run, or
+# Run workflow (gh workflow run docs.yml --repo RobertoTorino/nexus).
 
 on:
   push:
     branches: [main]
+  schedule:
+    - cron: "40 3 * * *"        # nightly, 03:40 UTC: what a suite in a repository of its own changed in its wiki
   workflow_dispatch:
 
 permissions:
@@ -25,6 +30,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+      - uses: actions/checkout@v7       # the Windows Portable Suite, as its folder in the Nexus checkout
+        with:
+          repository: RobertoTorino/windows-portable
+          path: windows-portable
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"

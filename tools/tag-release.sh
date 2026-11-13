@@ -3,9 +3,12 @@
 # Tags release commits and pushes the tags, but only when they can be built: HEAD must hold each tag's version
 # (the bump is committed), have no uncommitted changes in that folder, be pushed to origin/main, and have passed CI
 # on GitHub (tools/ci_state.py; it waits while CI still runs, up to an hour): the CI of the tag's suite, its
-# .github/workflows/ci-<suite>.yml when it has one (ci-windows-portable.yml), else ci.yml (the BC250 Bazzite
-# Suite's), so one suite's CI never holds another suite's tags (owner, 27-10-2026), and Nexus's ci-nexus.yml (core,
-# which every app bundles, the release tools and the repository's rules). A portal tag also needs every app
+# .github/workflows/ci-<suite>.yml when it has one, else ci.yml (the BC250 Bazzite Suite's), so one suite's CI
+# never holds another suite's tags (owner, 27-10-2026), and Nexus's ci-nexus.yml (core, which every app bundles, the
+# release tools and the repository's rules). A suite in a repository of its own (owner, 13-11-2026: cloned into
+# this checkout as its folder, with its own .git) is tagged there: HEAD, origin and the tag are that repository's,
+# the CI its ci.yml; Nexus's CI is then its release workflow's to wait for, on the Nexus commit its NEXUS_REF
+# names. A portal tag also needs every app
 # release HEAD's apps.toml pins: tagged on origin and pinned with its sha256 (step 2). A plain `git tag` tags
 # whatever HEAD is, also a commit from before the bump or one CI failed, which release.yml then refuses.
 #
@@ -25,37 +28,48 @@ for candidate in python3 py; do      # one that runs: Windows has a python3 that
 done
 [ -n "$python" ] || die "No Python found (python3, or py on Windows)."
 
-workflows=()                         # the CI each tag waits for, once each, then Nexus's
+tags=()                              # each tag with the checkout it is made in, "tag repo"
+checks=()                            # the CI each checkout waits for, once each: "repo workflow"
+need() { [[ " ${checks[*]-} " == *" $1|$2 "* ]] || checks+=("$1|$2"); }
 for tag in "$@"; do
-    # the tag's suite, by its prefix (tools/suites.py): bc250-bazzite's tags have none, windows-portable's wp-
+    # the tag's suite, by its prefix (tools/suites.py): bc250-bazzite's tags have none, another suite's its TAG_PREFIX
     read -r suite name version < <("$python" tools/suites.py --tag "$tag" | tr -d '\r') ||
         die "$tag is not <name>-v<x.y.z> of a suite (tools/suites.py --tag)."
-    workflow=ci.yml
-    [ "$suite" != . ] && [ -f ".github/workflows/ci-$suite.yml" ] && workflow=ci-$suite.yml
-    [[ " ${workflows[*]} " == *" $workflow "* ]] || workflows+=("$workflow")
-    [ "$suite" = . ] && suite="" || suite="$suite/"                                    # a prefix for its paths
-    if [ "$name" = portal ]; then dir=${suite}portal; else dir=${suite}apps/$name; fi
+    repo=.                           # the checkout that is tagged, and the suite's paths as its git names them
+    if [ "$suite" != . ] && [ -e "$suite/.git" ]; then
+        repo=$suite; inrepo=""       # a repository of its own: its ci.yml, and no Nexus CI on its commit
+        need "$repo" ci.yml
+    else
+        workflow=ci.yml
+        [ "$suite" != . ] && [ -f ".github/workflows/ci-$suite.yml" ] && workflow=ci-$suite.yml
+        need . "$workflow"
+        [ "$suite" = . ] && inrepo="" || inrepo="$suite/"
+    fi
+    [ "$suite" = . ] && suite="" || suite="$suite/"                                    # a prefix for its paths here
+    if [ "$name" = portal ]; then sub=portal; else sub=apps/$name; fi
+    dir=$suite$sub                   # from this folder
+    gdir=$inrepo$sub                 # as the checkout's git names it
     [ -f "$dir/VERSION" ] || die "$tag: there is no $dir/VERSION."
     # A new app is not in HEAD yet: git show fails, which pipefail would turn into a silent exit 128.
-    committed=$(git show "HEAD:$dir/VERSION" 2>/dev/null | tr -d '[:space:]') || committed=""
+    committed=$(git -C "$repo" show "HEAD:$gdir/VERSION" 2>/dev/null | tr -d '[:space:]') || committed=""
     if [ "$committed" != "$version" ]; then
         if [ "$(tr -d '[:space:]' <"$dir/VERSION")" = "$version" ]; then
             die "$tag: the bump to $version is not committed yet (HEAD has $dir/VERSION ${committed:-not at all}). Commit it, push, then run this again."
         fi
         die "$tag: HEAD has $dir/VERSION ${committed:-not at all}, not $version."
     fi
-    git diff --quiet HEAD -- "$dir" ||
+    git -C "$repo" diff --quiet HEAD -- "$gdir" ||
         die "$tag: $dir has changes that are not committed (git status $dir). Commit them first: the tag gets only what is committed."
-    git rev-parse -q --verify "refs/tags/$tag" >/dev/null &&
+    git -C "$repo" rev-parse -q --verify "refs/tags/$tag" >/dev/null &&
         die "$tag exists already. To move it: git tag -d $tag && git push origin :refs/tags/$tag (with the release-tag ruleset set to Disabled for a moment: it restricts deletions)"
-    if [ "$name" = portal ] && git cat-file -e "HEAD:${suite}portal/apps.toml" 2>/dev/null; then
+    if [ "$name" = portal ] && git -C "$repo" cat-file -e "HEAD:${inrepo}portal/apps.toml" 2>/dev/null; then
         # release.yml builds a portal only on app releases that exist, pinned with their checksum (step 2).
-        pins=$(git show "HEAD:${suite}portal/apps.toml" 2>/dev/null | "$python" -c '
+        pins=$(git -C "$repo" show "HEAD:${inrepo}portal/apps.toml" 2>/dev/null | "$python" -c '
 import sys, tomllib
 for key, app in tomllib.loads(sys.stdin.read()).get("apps", {}).items():
     print(app.get("tag", ""), app.get("sha256", "") or "-")') ||
             die "$tag: could not read ${suite}portal/apps.toml at HEAD."
-        remote=$(git ls-remote --tags origin) || die "Could not reach origin to check the pinned app releases."
+        remote=$(git -C "$repo" ls-remote --tags origin) || die "Could not reach origin to check the pinned app releases."
         while read -r pin sha; do
             [ -n "$pin" ] || continue
             awk -v ref="refs/tags/$pin" '$2 == ref { found = 1 } END { exit !found }' <<<"$remote" ||
@@ -64,21 +78,29 @@ for key, app in tomllib.loads(sys.stdin.read()).get("apps", {}).items():
                 die "$tag: apps.toml pins $pin without its sha256. Pin it when GitHub has built it (step 2: Pin), commit, push, then tag the portal."
         done <<<"$pins"
     fi
+    tags+=("$tag $repo")
 done
-workflows+=(ci-nexus.yml)
+[[ " ${checks[*]} " == *" .|"* ]] && need . ci-nexus.yml          # a tag made here: Nexus's CI too
 
-git fetch -q origin main || die "Could not reach origin to check that HEAD is pushed."
-git merge-base --is-ancestor HEAD origin/main ||
-    die "HEAD ($(git rev-parse --short HEAD)) is not on origin/main yet: git push first, then run this again."
-
-for workflow in "${workflows[@]}"; do
-    info "Checking that CI ($workflow) passed on $(git rev-parse --short HEAD) (waits while it runs, up to an hour)"
-    "$python" tools/ci_state.py --wait 60 --workflow "$workflow" "$(git rev-parse HEAD)" ||
-        die "CI has not passed on HEAD ($(git rev-parse --short HEAD), $workflow), so it gets no tag: fix what failed, commit and push, then run this again."
+checked=""
+for check in "${checks[@]}"; do
+    repo=${check%%|*}; workflow=${check#*|}
+    where=""; [ "$repo" = . ] || where=" of $repo"
+    if [[ " $checked " != *" $repo "* ]]; then
+        checked+=" $repo"
+        git -C "$repo" fetch -q origin main || die "Could not reach origin$where to check that HEAD is pushed."
+        git -C "$repo" merge-base --is-ancestor HEAD origin/main ||
+            die "HEAD$where ($(git -C "$repo" rev-parse --short HEAD)) is not on origin/main yet: git push first, then run this again."
+    fi
+    head=$(git -C "$repo" rev-parse HEAD)
+    info "Checking that CI ($workflow) passed on ${head:0:7}$where (waits while it runs, up to an hour)"
+    "$python" tools/ci_state.py --repo "$repo" --wait 60 --workflow "$workflow" "$head" ||
+        die "CI has not passed on HEAD$where (${head:0:7}, $workflow), so it gets no tag: fix what failed, commit and push, then run this again."
 done
 
-for tag in "$@"; do
-    git tag "$tag"
-    git push -q origin "$tag"
-    info "Tagged $(git rev-parse --short HEAD) as $tag and pushed it: its suite's release workflow builds it now."
+for entry in "${tags[@]}"; do
+    read -r tag repo <<<"$entry"
+    git -C "$repo" tag "$tag"
+    git -C "$repo" push -q origin "$tag"
+    info "Tagged $(git -C "$repo" rev-parse --short HEAD) as $tag and pushed it: its suite's release workflow builds it now."
 done

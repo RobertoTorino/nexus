@@ -9,6 +9,8 @@ import re
 import sys
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import make_icons  # noqa: E402
 
@@ -24,6 +26,28 @@ def test_every_picture_shown_is_in_the_checkout():
     sources = re.findall(r'<img src="([^"]+)"', make_icons.build())
     local = [s for s in sources if not s.startswith("https://")]
     assert local and not [s for s in local if not (SUITE / s).is_file()]
+    assert not [s for s in local if s.startswith("windows-portable/")]     # the suite's are in its own ICONS.md
+
+
+WINDOWS = SUITE / "windows-portable"
+windows_suite = pytest.mark.skipif(not make_icons.windows_portable_here(SUITE),
+                                   reason="the Windows Portable Suite, a repository of its own, is not in this checkout")
+
+
+@windows_suite
+def test_the_windows_portable_suites_icons_md_is_up_to_date():
+    """The suite's own listing, in its repository: written from here while the suite is in the checkout."""
+    text = make_icons.build_windows_portable()
+    assert (WINDOWS / "ICONS.md").read_text(encoding="utf-8") == text, "run python3 tools/make_icons.py"
+    local = [s for s in re.findall(r'<img src="([^"]+)"', text) if not s.startswith("https://")]
+    assert local and not [s for s in local if not (WINDOWS / s).is_file()]     # its paths are from its folder
+    assert "windows-portable/" not in text
+
+
+@windows_suite
+def test_every_material_icon_of_the_windows_portable_wiki_is_listed():
+    assert material_icons(WINDOWS / "docs") == {name for name, _ in make_icons.WINDOWS_PORTABLE_MATERIAL}
+    assert "material/" not in re.sub(r"#.*", "", (WINDOWS / "mkdocs.yml").read_text(encoding="utf-8"))
 
 
 def material_icons(folder: Path) -> set[str]:
@@ -35,9 +59,8 @@ def test_every_material_icon_of_each_wiki_is_listed():
     """What the wiki's pages use is what its section lists, no more and no less."""
     assert material_icons(SUITE / make_icons.SUITE_DIR / "docs") == {name for name, _ in make_icons.MATERIAL}
     assert material_icons(SUITE / "nexus" / "docs") == {name for name, _ in make_icons.NEXUS_MATERIAL}
-    assert material_icons(SUITE / "windows-portable" / "docs") == {name for name, _ in make_icons.WINDOWS_PORTABLE_MATERIAL}
-    for config in (SUITE / make_icons.SUITE_DIR / "mkdocs.yml", SUITE / "nexus" / "mkdocs.yml",
-                   SUITE / "windows-portable" / "mkdocs.yml"):   # no placeholder logo from Material
+    for config in (SUITE / make_icons.SUITE_DIR / "mkdocs.yml", SUITE / "nexus" / "mkdocs.yml"):
+        # no placeholder logo from Material
         assert "material/" not in re.sub(r"#.*", "", config.read_text(encoding="utf-8"))
 
 

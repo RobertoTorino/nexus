@@ -379,6 +379,8 @@ def windows_checkout(tmp_path) -> Path:
     """A repository with a Windows suite laid out as the Windows Portable Suite is: its portal package with the
     categories, TAG_PREFIX, the wiki's nav and home, the gaming category's icons, the suite's CI, and the real
     tools/make_icons.py, which copies the app's icons."""
+    if not (ROOT / WINDOWS / "icons" / "gaming").is_dir():
+        pytest.skip("the Windows Portable Suite, a repository of its own, is not in this checkout (its icons)")
     root = tmp_path / "nexus"
     suite = root / WINDOWS
     write(root / "core" / "bc250_core" / "__init__.py", "")

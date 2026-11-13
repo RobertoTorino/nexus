@@ -15,6 +15,11 @@ from PyQt6.QtGui import QColor
 from nexus_dashboard import CHECKOUT, local, main_window
 from nexus_dashboard.main_window import MainWindow
 
+# The Windows Portable Suite is a repository of its own (owner, 13-11-2026), cloned into the checkout as its folder
+WINDOWS_HERE = (CHECKOUT / "windows-portable" / "portal" / "apps.toml").is_file()
+windows_suite = pytest.mark.skipif(not WINDOWS_HERE, reason="the Windows Portable Suite, a repository of its own, is "
+                                                            "not in this checkout")
+
 
 def write(path: Path, text: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -122,13 +127,15 @@ def test_an_app_with_run_ps1_starts_with_it_on_windows(nexus):
     assert local.run_script(wiki, windows=True) is None                       # a wiki is mkdocs serve
 
 
+@windows_suite
 def test_this_checkouts_windows_apps_have_run_ps1():
     assert local.run_script(local.portal_target(CHECKOUT, "windows-portable"), windows=True) is not None
     assert all(local.run_script(t, windows=True) for t in local.launch_targets(CHECKOUT, "windows-portable"))
 
 def test_this_checkouts_portals():
     assert local.portal_target(CHECKOUT, "bc250-bazzite").module == "bc250_portal"
-    assert local.portal_target(CHECKOUT, "windows-portable").module == "portable_portal"
+    if WINDOWS_HERE:
+        assert local.portal_target(CHECKOUT, "windows-portable").module == "portable_portal"
 
 
 def test_docs_targets(nexus):

@@ -1,3 +1,12 @@
+Changelog: 13-11-2026 19:25:50
+
+Version 0.2.1.
+
+Changelog: 13-11-2026 19:01:22
+
+Fixed. The tests that use the Windows Portable Suite skip in a checkout without it: the suite is a repository of its
+own (owner, 13-11-2026), cloned into the checkout as windows-portable/. The app did not change.
+
 Changelog: 04-11-2026 21:04:28
 
 Version 0.2.0.

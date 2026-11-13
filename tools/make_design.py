@@ -405,6 +405,9 @@ def families() -> str:
 
 
 # Each wiki's stylesheet and the listing of its colors: the two must name the same colors.
+# A suite in a repository of its own (owner, 13-11-2026; tools/suites.py has the list) is in the checkout only when
+# cloned into it as its folder.
+OWN_REPOSITORY = ("windows-portable",)
 STYLESHEETS = {
     f"{SUITE_DIR}/docs/stylesheets/suite.css": (WIKI_TEXT, WIKI_BLOCKS),
     "nexus/docs/stylesheets/nexus.css": (NEXUS_TEXT, NEXUS_BLOCKS),
@@ -642,6 +645,8 @@ def unlisted(root: Path = ROOT) -> list[str]:
     for path, (text_rows, block_rows) in STYLESHEETS.items():
         sheet = root / path
         if not sheet.is_file():
+            if path.split("/")[0] in OWN_REPOSITORY and not (root / path.split("/")[0]).is_dir():
+                continue                    # that suite is not in this checkout: its listing is checked where it is
             out.append(f"{path} is missing")
             continue
         listed = {hex_.lower() for hex_, _ in text_rows + block_rows}

@@ -3,9 +3,9 @@ name: Nexus index
 
 # GitHub's "Latest" release is the Nexus index, tagged nexus-v<x.y.z> and titled Nexus v<x.y.z> after the root
 # VERSION, Nexus's own (owner, 28-10-2026): one section per suite with its newest portal (tools/nexus_index.py). A
-# repository has one Latest and Nexus holds several suites, so no suite's portal is it: release.yml and
-# release-windows-portable.yml publish every release with --latest=false. The index
-# is made again after each run of any of them that succeeded (a release by tags pushed by hand), after each release
+# repository has one Latest and Nexus holds several suites, so no suite's portal is it: release.yml
+# publishes every release with --latest=false. The index
+# is made again after each run of it that succeeded (a release by tags pushed by hand), after each release
 # published by someone (the Nexus
 # Release Tool publishes a suite's portal after the device test; the releases the workflows publish with their own
 # token start no workflow, so the index waits for the portal), and when release-nexus.yml calls it (a Nexus release
@@ -18,7 +18,7 @@ name: Nexus index
 
 on:
   workflow_run:
-    workflows: ["Release", "Release Windows Portable"]
+    workflows: ["Release"]
     types: [completed]
   release:
     types: [published]         # a portal published by the Nexus Release Tool, after the device test
@@ -41,6 +41,12 @@ jobs:
       GH_REPO: ${{ github.repository }}
     steps:
       - uses: actions/checkout@v7
+      # The Windows Portable Suite has a repository of its own (owner, 13-11-2026); its releases up to then are
+      # here, so the index keeps its section: the suite as its folder in the checkout, where tools/suites.py finds it.
+      - uses: actions/checkout@v7
+        with:
+          repository: RobertoTorino/windows-portable
+          path: windows-portable
 
       - name: The index
         run: python3 tools/nexus_index.py > "$RUNNER_TEMP/index.md"

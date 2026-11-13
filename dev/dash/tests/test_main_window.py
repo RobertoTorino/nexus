@@ -14,6 +14,11 @@ from PyQt6.QtGui import QImage
 from nexus_dashboard import APP_NAME, CHECKOUT, LOGO_PATH, checkout, main_window
 from nexus_dashboard.main_window import SUITE_KEY, MainWindow
 
+# The Windows Portable Suite is a repository of its own (owner, 13-11-2026), cloned into the checkout as its folder
+WINDOWS_HERE = (CHECKOUT / "windows-portable" / "portal" / "apps.toml").is_file()
+windows_suite = pytest.mark.skipif(not WINDOWS_HERE, reason="the Windows Portable Suite, a repository of its own, is "
+                                                            "not in this checkout")
+
 
 def test_the_icons_are_nexus_at_512_and_128_px():
     assert LOGO_PATH.name == "nexus-dashboard.webp"
@@ -22,12 +27,13 @@ def test_the_icons_are_nexus_at_512_and_128_px():
 
 
 def test_the_checkout_has_the_suites_and_the_nexus_apps():
-    assert checkout.suites(CHECKOUT) == ["bc250-bazzite", "windows-portable"]
+    assert checkout.suites(CHECKOUT) == ["bc250-bazzite", *(["windows-portable"] if WINDOWS_HERE else [])]
     assert checkout.suite_name(CHECKOUT, "bc250-bazzite") == "BC250 Bazzite Suite"
     assert checkout.suite_system(CHECKOUT, "bc250-bazzite") == "bazzite"
-    assert checkout.suite_system(CHECKOUT, "windows-portable") == "windows"
     assert checkout.here(CHECKOUT, "bc250-bazzite", "linux") and not checkout.here(CHECKOUT, "bc250-bazzite", "win32")
-    assert checkout.here(CHECKOUT, "windows-portable", "win32")
+    if WINDOWS_HERE:
+        assert checkout.suite_system(CHECKOUT, "windows-portable") == "windows"
+        assert checkout.here(CHECKOUT, "windows-portable", "win32")
     apps = checkout.dev_apps(CHECKOUT)
     assert [app.key for app in apps] == ["nrt", "demo", "deps", "itests", "sounds"]   # the release tool, then by name
     assert [app.name for app in apps] == ["Nexus Release Tool", "Nexus Demo Recorder", "Nexus Deps",
@@ -55,6 +61,7 @@ def test_the_window_lists_the_apps_then_the_suites_tools(qapp):
     window.close()
 
 
+@windows_suite
 def test_a_windows_suite_greys_out_the_tours_and_the_choice_is_remembered(qapp):
     settings = QSettings(QSettings.Format.IniFormat, QSettings.Scope.UserScope, "test", "test")
     window = MainWindow(settings=settings, suite="bc250-bazzite")
@@ -74,6 +81,7 @@ def test_a_windows_suite_greys_out_the_tours_and_the_choice_is_remembered(qapp):
     window.close()
 
 
+@windows_suite
 def test_nexus_deps_is_off_for_a_suite_without_a_catalog(qapp):
     """Nexus Deps checks a suite with a catalog of its own: the BC250 Bazzite Suite's so far (owner, 07-11-2026)."""
     settings = QSettings(QSettings.Format.IniFormat, QSettings.Scope.UserScope, "test", "test")

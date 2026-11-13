@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 name: Release
 
-# The releases of the BC250 Bazzite Suite, in one of two ways (owner, 04-11-2026: the same steps for every suite;
-# the Windows Portable Suite's release-windows-portable.yml is the model, stage 3 of the release redesign):
+# The releases of the BC250 Bazzite Suite, in one of two ways (owner, 04-11-2026: the same steps for every suite,
+# stage 3 of the release redesign):
 #
 # * A Nexus release (owner, 30-10-2026): release-nexus.yml calls this workflow with the release commit that the Nexus
 #   Release Tool pushed (the versions, the CHANGELOG entries, the new tags in apps.toml, portal/VERSION). One run
@@ -14,9 +14,8 @@ name: Release
 #   Started again, the run skips what is out already and makes the draft anew. The pin commit is pushed only while
 #   main is still the release commit, so no other commit gets into a portal tag.
 # * A tag pushed by hand, <app>-v<x.y.z> or portal-v<x.y.z> (check-v0.1.0, gpu-v0.4.0): that one release, published
-#   at once, as before the Nexus release. The tag's version must equal that app's VERSION. wp- tags are the Windows
-#   Portable Suite's (release-windows-portable.yml). A tag whose release is published already is left alone: the
-#   Nexus Release Tool's Publish makes the portal tag of a Nexus release that way, on the pin commit, which has no CI
+#   at once, as before the Nexus release. The tag's version must equal that app's VERSION. A tag whose
+#   release is published already is left alone: the Nexus Release Tool's Publish makes the portal tag of a Nexus release that way, on the pin commit, which has no CI
 #   run (a push with the workflow's token starts no workflow), so the run would only wait for CI in vain.
 #
 # The assets are <tag>.tar.gz, SHA256SUMS and the notes, all built by tools/build_release.py, so a local build has
@@ -46,7 +45,7 @@ name: Release
 
 on:
   push:
-    tags: ["*-v[0-9]*.[0-9]*.[0-9]*", "!wp-*"]   # prefixed suite tags have their own release workflow
+    tags: ["*-v[0-9]*.[0-9]*.[0-9]*"]
   workflow_call:
     inputs:
       commit:

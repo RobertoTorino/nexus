@@ -174,6 +174,13 @@ def test_a_plain_tag_is_the_bazzite_suites():
     assert br.suites.of_tag(BT_TAG)[0] == br.SUITE == br.suites.ROOT / "bc250-bazzite"
 
 
+WINDOWS_SUITE = Path(__file__).resolve().parents[2] / "windows-portable"
+# The Windows Portable Suite is a repository of its own (owner, 13-11-2026), cloned into the checkout as its folder
+windows_suite = pytest.mark.skipif(not (WINDOWS_SUITE / "portal" / "apps.toml").is_file(),
+                                   reason="the Windows Portable Suite, a repository of its own, is not in this checkout")
+
+
+@windows_suite
 def test_a_selected_suite_names_its_own_releases():
     """The title and the portal's stage come from the selected suite's portal, not the default suite's (a prefixed
     suite's releases of 07-11-2026 were titled "BC250 Bazzite Suite: ...")."""

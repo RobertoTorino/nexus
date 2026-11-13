@@ -206,7 +206,8 @@ def test_a_suite_of_png_icons_and_wide_ones(tmp_path, capsys):
 
 def test_the_real_suites_are_in_step():
     for name in ("bc250-bazzite", "windows-portable"):
-        assert sync_icons.main(["--check"], ROOT / name) == 0, name
+        if (ROOT / name / "portal" / "apps.toml").is_file():       # windows-portable: only when cloned here
+            assert sync_icons.main(["--check"], ROOT / name) == 0, name
 
 
 def test_check_lists_what_is_not_converted(tmp_path, capsys):

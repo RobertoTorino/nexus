@@ -1,0 +1,67 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+name: Suite in Nexus
+description: >-
+  Checks out Nexus and, inside it, the suite's repository as its folder, so a job of a suite's workflow works in the
+  layout the Nexus tools know: core/, tools/ and dev/ at the root, the suite in <folder>/.
+
+# A suite has a repository of its own (owner, 13-11-2026: one repository per suite) and keeps no copy of the Nexus
+# tools: every job of its workflows starts with this action instead of actions/checkout. The suite's NEXUS_REF file
+# names the Nexus commit it is tested and built with: a branch (main), a tag or a commit. After it, the workspace is
+# the Nexus checkout and <folder>/ the suite's, each a git checkout of its own: git in <folder>/ is the suite's.
+#
+#   - uses: RobertoTorino/nexus/.github/actions/suite@main
+#     with:
+#       folder: windows-portable
+
+inputs:
+  folder:
+    description: The suite's folder in the Nexus checkout (windows-portable)
+    required: true
+  ref:
+    description: The suite's commit, branch or tag (default, the one the workflow runs on)
+    required: false
+    default: ""
+  fetch-depth:
+    description: How many of the suite's commits to fetch (0, all of them and the tags)
+    required: false
+    default: "1"
+  nexus:
+    description: Nexus's repository
+    required: false
+    default: RobertoTorino/nexus
+
+outputs:
+  nexus-ref:
+    description: What the suite's NEXUS_REF names
+    value: ${{ steps.ref.outputs.ref }}
+  nexus-commit:
+    description: The Nexus commit that is checked out
+    value: ${{ steps.commit.outputs.commit }}
+
+runs:
+  using: composite
+  steps:
+    - name: The Nexus commit the suite names (NEXUS_REF)
+      id: ref
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        SUITE_REF: ${{ inputs.ref || github.sha }}
+      run: |
+        ref=$(gh api -H "Accept: application/vnd.github.raw" \
+          "repos/$GITHUB_REPOSITORY/contents/NEXUS_REF?ref=$SUITE_REF" | tr -d '[:space:]')
+        [ -n "$ref" ] || { echo "::error::NEXUS_REF of $GITHUB_REPOSITORY at $SUITE_REF is empty or missing"; exit 1; }
+        echo "ref=$ref" >> "$GITHUB_OUTPUT"
+    - uses: actions/checkout@v7
+      with:
+        repository: ${{ inputs.nexus }}
+        ref: ${{ steps.ref.outputs.ref }}
+    - uses: actions/checkout@v7
+      with:
+        path: ${{ inputs.folder }}
+        ref: ${{ inputs.ref }}
+        fetch-depth: ${{ inputs.fetch-depth }}
+    - name: The Nexus commit
+      id: commit
+      shell: bash
+      run: echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"

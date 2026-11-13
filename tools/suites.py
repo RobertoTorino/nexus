@@ -6,7 +6,8 @@ named with --suite. Without a name it is the one suite in the checkout or, with 
 prefix (bc250-bazzite: installed portals find its releases by those tags). Each suite names the system it is made for
 in <suite>/SYSTEM (bazzite or windows): ./test.sh runs the suites of the system it runs on. A suite's release tags
 are <prefix><app>-v<x.y.z>, the prefix in <suite>/TAG_PREFIX (windows-portable: wp-, so wp-portal-v0.1.0; none for
-bc250-bazzite), so the suites' tags never mix.
+bc250-bazzite), so the suites' tags never mix. A suite may be a repository of its own, cloned into this checkout as
+its folder (OWN_REPOSITORIES: windows-portable): the tools find it the same way, and git in its folder is its own.
 
     python3 tools/suites.py                       # the suite folders, one per line (relative to the root)
     python3 tools/suites.py --default             # the default suite, or an error when there is none
@@ -24,6 +25,10 @@ ROOT = Path(__file__).resolve().parent.parent
 MANIFEST = Path("portal") / "apps.toml"
 SYSTEMS = ("bazzite", "windows")          # what <suite>/SYSTEM may say
 TAG = re.compile(r"^(?P<app>[a-z0-9-]+)-v(?P<version>\d+\.\d+\.\d+)$")      # a tag without the suite's prefix
+# The suites in a repository of their own (owner, 13-11-2026: one repository per suite), by folder: such a suite is
+# cloned into this checkout as that folder (Nexus's .gitignore lists it), where suites() and every tool find it as
+# before; a checkout of Nexus alone, as Nexus's CI has, is without it. git in that folder is the suite's.
+OWN_REPOSITORIES = {"windows-portable": "RobertoTorino/windows-portable"}
 
 
 def suites(root: Path = ROOT) -> list[Path]:
@@ -31,6 +36,18 @@ def suites(root: Path = ROOT) -> list[Path]:
     the test repositories are) and holding none is the one suite."""
     found = sorted(p for p in root.iterdir() if p.is_dir() and (p / MANIFEST).is_file())
     return found or ([root] if (root / MANIFEST).is_file() else [])
+
+
+def own_repository(folder: Path) -> bool:
+    """Whether the suite in *folder* is a repository of its own, cloned into this checkout: its commits, tags and
+    CI are that repository's, not Nexus's."""
+    return (folder / ".git").exists()
+
+
+def of_repository(root: Path = ROOT) -> list[Path]:
+    """The suites that are folders of *root*'s own repository: suites() without those in a repository of their
+    own. What Nexus's workflows, its release and its listings hold."""
+    return [folder for folder in suites(root) if folder == root or not own_repository(folder)]
 
 
 def _read(path: Path) -> str:

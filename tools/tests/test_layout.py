@@ -122,13 +122,15 @@ def test_every_app_has_tests_and_ci_runs_them():
         assert (app / "tests").is_dir(), f"{app.name}: no tests/"
         assert (app / "requirements-dev.txt").is_file(), f"{app.name}: no requirements-dev.txt (CI installs it)"
     # ci-nexus.yml (core, tools, dev/) lists its matrix; ci.yml (the BC250 Bazzite Suite) and a suite's own
-    # ci-<suite>.yml read theirs from the suite's folders in a plan job (tools/ci_matrix.py, stage 2)
+    # ci-<suite>.yml read theirs from the suite's folders in a plan job (tools/ci_matrix.py, stage 2); a suite in a
+    # repository of its own (owner, 13-11-2026), cloned here as its folder, has its ci.yml there
     import importlib.util
     spec = importlib.util.spec_from_file_location("ci_matrix", SUITE / "tools" / "ci_matrix.py")
     ci_matrix = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(ci_matrix)
     listed = set()
-    for workflow in sorted((SUITE / ".github" / "workflows").glob("ci*.yml")):
+    own = [suite / ".github" / "workflows" / "ci.yml" for suite in _suites() if (suite / ".git").exists()]
+    for workflow in [*sorted((SUITE / ".github" / "workflows").glob("ci*.yml")), *own]:
         text = workflow.read_text(encoding="utf-8")
         if static := re.search(r"dir: \[([^\]]*)\]", text):
             listed |= {entry.strip() for entry in static.group(1).replace("\n", " ").split(",")}
@@ -156,6 +158,12 @@ def test_each_suite_has_its_own_ci_and_release_workflows():
     for folder in _suites():
         prefix = suites.tag_prefix(folder)
         if not prefix:
+            continue
+        if suites.own_repository(folder):   # a repository of its own (owner, 13-11-2026), cloned here: its workflows
+            for name in ("ci.yml", "release.yml"):      # are in it, and none here is the suite's
+                assert (folder / ".github" / "workflows" / name).is_file(), f"{folder.name} has no {name}"
+            assert f'tags: ["{prefix}*-v' in (folder / ".github" / "workflows" / "release.yml").read_text(encoding="utf-8")
+            assert not list(workflows.glob(f"*{folder.name}*")), f"a workflow of {folder.name} in Nexus"
             continue
         own = [workflows / f"ci-{folder.name}.yml", workflows / f"release-{folder.name}.yml"]
         for workflow in own:
@@ -188,4 +196,4 @@ def test_nexus_checks_have_a_workflow_of_their_own():
         assert not entries & (shared - {"core"}), f"{folder.name} runs Nexus's tests"   # core: a suite may run it too
     for release in sorted(workflows.glob("release*.yml")):
         assert "ci_state.py --workflow ci-nexus.yml" in release.read_text(encoding="utf-8"), release.name
-    assert "workflows+=(ci-nexus.yml)" in (SUITE / "tools" / "tag-release.sh").read_text(encoding="utf-8")
+    assert "need . ci-nexus.yml" in (SUITE / "tools" / "tag-release.sh").read_text(encoding="utf-8")
