@@ -1,3 +1,7 @@
+Changelog: 13-11-2026 19:49:22
+
+Release 7.0.0. Brings the new suite windows-portable.
+
 Changelog: 13-11-2026 19:39:50
 
 Fixed. `docs.yml` no longer fails when the Windows Portable Suite's repository has no wiki yet (Nexus pushed before
