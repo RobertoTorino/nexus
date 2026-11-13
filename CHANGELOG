@@ -1,3 +1,7 @@
+Changelog: 13-11-2026 19:38:30
+
+Release 6.0.0. Brings wp-bios-v1.1.1, wp-datstat-v1.1.1, wp-hdcam-v1.1.1, wp-hdcontrol-v1.1.1, wp-pcsx2-v8.1.1, wp-portal-v10.4.0, wp-ppsspp-v6.1.1, wp-rpcs3-v5.1.1, wp-rplay-v1.1.1, wp-sftp-v1.1.1, wp-shadps4-v6.1.1, wp-smart-v1.1.1, wp-ssd-v1.1.1, wp-support-v1.1.1, wp-test-v5.1.1, wp-upscale-v1.1.1, wp-vita3k-v6.2.0, wp-xenia-v6.2.0.
+
 Changelog: 13-11-2026 19:01:22
 
 Breaking. The Windows Portable Suite left Nexus for a repository of its own, github.com/RobertoTorino/windows-portable
