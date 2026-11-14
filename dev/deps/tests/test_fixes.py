@@ -136,6 +136,7 @@ def test_remind_opens_the_app_on_a_click(monkeypatch):
     monkeypatch.setattr(entry, "check_all", lambda *args: result())
     monkeypatch.setattr(entry, "read_state", lambda: waiting)
     monkeypatch.setattr(entry, "read_sources", lambda: ())
+    monkeypatch.setattr(entry, "read_upstreams", lambda section: ())         # GitHub is not asked from a test
     monkeypatch.setattr(entry, "notify", lambda title, text, icon, actions: "open")
     monkeypatch.setattr(entry.subprocess, "Popen", lambda argv, **kw: started.append(argv))
     monkeypatch.setattr("sys.argv", ["nexus_deps", "--remind"])

@@ -1079,7 +1079,8 @@ def test_the_header_is_an_apps_header_with_symbols(window):
     assert window.big.installed.text() == f"0/{listed} installed"
     assert " | " in window.big.status.text()
     assert [(p.value.text(), p.caption.text()) for p in window.setting_pills] == [
-        ("No", "Icons on Desktop"), (sound, "Sound"), ("Gunmetal", "Theme switcher"), ("None", "Wallpaper"),
+        ("No", "Icons on Desktop"), (sound, "Sound"), (sound, "Music"), ("Built-in", "Music track"),
+        ("Gunmetal", "Theme switcher"), ("None", "Wallpaper"),
         ("12 h", "Clock"), ("None", "Weather"), ("100 %", "Touchpad")]
     assert "verified by checksum" in window.source_text
 

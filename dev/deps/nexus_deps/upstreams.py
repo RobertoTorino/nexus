@@ -22,8 +22,12 @@ import copy
 import json
 import os
 import re
+import shutil
+import subprocess
 import sys
+import time
 import tomllib
+import urllib.error
 import urllib.request
 from collections.abc import Callable
 from html import escape
@@ -158,11 +162,54 @@ def _get(url: str) -> bytes:
         return response.read(4 * 1024 * 1024)
 
 
-def _fetch(url: str) -> object:
-    request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT,
-                                                   "Accept": "application/vnd.github+json"})
-    with urllib.request.urlopen(request, timeout=TIMEOUT) as response:
-        return json.loads(response.read(4 * 1024 * 1024))
+GH_FALLBACK = "/home/linuxbrew/.linuxbrew/bin/gh"       # Homebrew's gh, which a launcher's PATH lacks
+_token: str | None = None                               # found once per run; "" when there is none
+
+
+def github_token(run=subprocess.run) -> str:
+    """GITHUB_TOKEN or GH_TOKEN, else the token of a gh login (gh auth token); "" without one. With a token GitHub
+    allows 5,000 requests an hour instead of 60 for the whole address. It is only sent to GitHub's API and never
+    stored here."""
+    global _token
+    if _token is None:
+        token = os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN") or ""
+        gh = shutil.which("gh") or (GH_FALLBACK if os.access(GH_FALLBACK, os.X_OK) else "")
+        if not token and gh:
+            try:
+                out = run([gh, "auth", "token"], capture_output=True, text=True, timeout=10)
+                token = out.stdout.strip() if out.returncode == 0 else ""
+            except (OSError, subprocess.SubprocessError):
+                token = ""
+        _token = token
+    return _token
+
+
+def _fetch(url: str, opener=urllib.request.urlopen) -> object:
+    """GitHub's answer to an API request, signed in when the machine is (github_token). A refused token (401) is
+    asked again without it; the hourly limit says until when and how to get the larger one."""
+    headers = {"User-Agent": USER_AGENT, "Accept": "application/vnd.github+json"}
+    token = github_token() if url.startswith("https://api.github.com/") else ""
+    for signed in ([True, False] if token else [False]):
+        if signed:
+            headers["Authorization"] = f"Bearer {token}"
+        else:
+            headers.pop("Authorization", None)
+        try:
+            with opener(urllib.request.Request(url, headers=headers), timeout=TIMEOUT) as response:
+                return json.loads(response.read(4 * 1024 * 1024))
+        except urllib.error.HTTPError as exc:
+            if signed and exc.code == 401:
+                continue
+            if exc.code in (403, 429) and exc.headers.get("x-ratelimit-remaining") == "0":
+                try:
+                    until = time.strftime(" until %H:%M", time.localtime(int(exc.headers.get("x-ratelimit-reset"))))
+                except (TypeError, ValueError):
+                    until = ""
+                raise OSError(f"its hourly limit is used up{until}" + ("" if signed else
+                              ". Signed in with gh (gh auth login) it is 5,000 requests an hour instead of 60")
+                              ) from None
+            raise
+    raise OSError("no answer")              # not reached: the unsigned request returns or raises
 
 
 def numbers(version: str) -> tuple[int, ...]:

@@ -1,3 +1,8 @@
+Changelog: 13-11-2026 21:08:01
+
+Fixed. The test of the suites in the checkout no longer names the Bazzite Console Suite: that repository is standalone
+(owner, 13-11-2026) and is not cloned into the checkout. The app did not change.
+
 Changelog: 13-11-2026 20:18:54
 
 Fixed. The test of the suites in the checkout accepts the Bazzite Console Suite, a repository of its own, when it is

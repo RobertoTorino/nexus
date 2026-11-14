@@ -120,6 +120,11 @@
   font-weight: 700;
 }
 
+/* A category's header under Apps (Sustainable, Graphics, Gaming, Utilities). */
+.md-nav--primary .md-nav__item--section .md-nav__item--nested > label.md-nav__link {
+  font-weight: 700;
+}
+
 .md-typeset .admonition,
 .md-typeset details,
 .md-typeset .highlight,

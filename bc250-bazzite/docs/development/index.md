@@ -48,9 +48,14 @@ python bc250-bazzite/tools/portal_screenshot.py          # from the venv; --out 
 The video tours are made the same way, frame by frame from the real windows, offscreen, from a terminal as below
 or from [Nexus Dashboard](https://robertotorino.github.io/nexus/dashboard/#video-tours). `bc250-bazzite/tools/record-tour.sh`
 records the portal's tour, about two minutes, with music under it that fades out over the last two seconds
-(`tools/sounds/the_quiet_engine_remix_3min.mp3`, every suite's, made with generative AI tools; `--no-music` leaves it out).
+(`tools/sounds/the_quiet_engine_remix.ogg`, every suite's, made with generative AI tools; `--no-music` leaves it out).
 `bc250-bazzite/tools/record-tour.sh --wiki` also writes the copy on the [Portal Tour](../portal-tour.md) page,
-`bc250-bazzite/docs/videos/portal-tour.mp4` (1280 × 720, about 6 MB) and its poster: run it after a change to the portal's window.
+`bc250-bazzite/docs/videos/portal-tour.mp4` (1280 × 720, about 6 MB) and its poster, and a fingerprint of the portal it was recorded from
+(`bc250-bazzite/tools/portal-tour.stamp`: the portal's code and pictures, and the tour's script). The checks fail when
+the portal changed since, until the tour is recorded again with `--wiki`;
+`python3 bc250-bazzite/tools/portal_tour.py --check` says so from a terminal, and `--stamp` marks the video as current
+for a change that does not show in it. A change the wiki describes goes into its [Portal](../portal.md) page in the
+same change.
 The video itself goes to `~/Videos`, outside the repository, at 1920 × 1080. For YouTube, record it at 4K:
 `--size 2160p` renders the same tour at 3840 × 2160 (the window drawn at 240 % instead of 120 %, so the text stays
 crisp; about three minutes, around 35 MB) into `~/Videos/bc250-portal-tour-v<portal version>-2160p.mp4`.

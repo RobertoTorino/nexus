@@ -490,3 +490,20 @@ def test_a_windows_home_page_with_cards(windows_checkout):
 def test_a_windows_category_without_icons_is_refused(windows_checkout):
     with pytest.raises(SystemExit, match="has no icons yet"):
         na.main([WINDOWS, "tool", "A Tool", "--category", "utilities", "--no-check", "--root", str(windows_checkout)])
+
+
+def test_a_nav_by_category_gets_the_app_under_its_category_by_name():
+    """The BC250 wiki lists the apps by category, by name in each: a new app's line goes where its name belongs."""
+    nav = ("nav:\n  - Apps:\n      - apps/index.md\n      - Gaming:\n          - Alpha: apps/alpha.md\n"
+           "      - Utilities:\n          - Beta: apps/beta.md\n          - \"SSD: Check\": apps/ssd.md\n"
+           "  - Development:\n      - development/index.md\n")
+    added = na.insert_nav(nav, "Utilities", "Fan Two", "fan2", "mkdocs.yml")
+    assert ("          - Beta: apps/beta.md\n          - Fan Two: apps/fan2.md\n          - \"SSD: Check\": apps/ssd.md\n"
+            in added)
+    assert na.insert_nav(nav, "Utilities", "Zeta", "zeta", "mkdocs.yml").count(
+        "apps/ssd.md\n          - Zeta: apps/zeta.md\n  - Development:") == 1
+    assert "      - Gaming:\n          - Aaa: apps/aaa.md\n          - Alpha:" in na.insert_nav(
+        nav, "Gaming", "Aaa", "aaa", "mkdocs.yml")
+    # A category without a header in the nav: as before, the last of the Apps.
+    assert "apps/ssd.md\n      - Mesh: apps/mesh.md\n  - Development:" in na.insert_nav(
+        nav, "Graphics", "Mesh", "mesh", "mkdocs.yml")

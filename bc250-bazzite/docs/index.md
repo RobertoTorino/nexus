@@ -20,7 +20,7 @@ hide:
 
 <section class="home-section home-section--dark" markdown>
 <div class="home-section__inner" markdown>
-## Lots in the suite
+## What's in the suite?
 
 <div class="home-grid" markdown>
 <div class="home-card" markdown>
@@ -47,14 +47,14 @@ frequency scaling.
 unstable unlock, and [Memory Manager](apps/vram.md) sets the VRAM split.
 </div>
 <div class="home-card" markdown>
-#### :material-gamepad-variant: Gaming
+#### :material-expansion-card: Graphics
 
 [BC-250 Upscaler Manager](apps/upscaler.md) deploys an FSR 3.1 drop-in upscaler into games, and
 [ACE Queues](apps/ace.md) and [Mesh Shaders](apps/mesh.md) bring async compute and mesh shaders,
 beside the system Mesa.
 </div>
 <div class="home-card" markdown>
-#### :material-gamepad-variant: PlayStation
+#### :material-gamepad-variant: Gaming
 
 [shadPS4 Manager](apps/shadps4.md) plays PS4 games with the shadPS4 emulator,
 [RPCS3 Manager](apps/rpcs3.md) PS3 games with the RPCS3 emulator, and
@@ -76,7 +76,7 @@ between computers, [USB HD Cam](apps/hdcam.md) makes the PS5 HD Camera a webcam,
 <section class="home-section home-section--light" markdown>
 <div class="home-section__inner home-split" markdown>
 <div markdown>
-## One portal for every app
+## One dashboard for all the apps
 
 The portal installs, opens, updates and removes the apps, fullscreen, with the keyboard, the mouse or a
 controller. Each app is a tile: press it to open it, and its menu installs or uninstalls. A red dot shows an update.

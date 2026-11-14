@@ -23,9 +23,6 @@ and removes them, and each suite has its own wiki. The name, the structure and h
   on portable gaming devices, made for a small screen held in the hands, touch and a controller, in a repository of
   its own. Its [README](https://github.com/RobertoTorino/windows-portable#readme) says how to install the portal and
   lists the apps; [its wiki](https://robertotorino.github.io/nexus/windows-portable-suite/) is the manual.
-- **[Bazzite Console Suite](https://github.com/RobertoTorino/bazzite-console)**: tools for PlayStation 5 hardware
-  running Bazzite, in a repository of its own. Its [README](https://github.com/RobertoTorino/bazzite-console#readme)
-  lists the apps; [its wiki](https://robertotorino.github.io/nexus/bazzite-console-suite/) is the manual.
 
 ## The structure
 

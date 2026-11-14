@@ -290,7 +290,8 @@ Each design (a suite's, the Nexus page's) has its own; none is carried over to a
   poorly as text on the dark views. The log in the check app uses them; a second tint of a hue is a deviation.
 - **Brand and hardware colors stay what they are:** PlayStation blue and the face-button colors in the PlayStation
   apps, the light bar's and the color wheel's pure colors in HD Control, a game's own artwork, the gaming blue
-  `#0a55b0` of the gaming apps in the emulator managers (blue, though their icon is red since 11-11-2026).
+  `#0a55b0` of the gaming apps in the emulator managers (blue; their icon is a silver controller with a blue light
+  since 13-11-2026).
 - **Anything else is a deviation**, listed under Color families below with the app it is in. A new color is
   added to the family it belongs to, or it needs a reason here.
 
@@ -407,7 +408,7 @@ def families() -> str:
 # Each wiki's stylesheet and the listing of its colors: the two must name the same colors.
 # A suite in a repository of its own (owner, 13-11-2026; tools/suites.py has the list) is in the checkout only when
 # cloned into it as its folder.
-OWN_REPOSITORY = ("bazzite-console", "windows-portable")
+OWN_REPOSITORY = ("windows-portable",)
 STYLESHEETS = {
     f"{SUITE_DIR}/docs/stylesheets/suite.css": (WIKI_TEXT, WIKI_BLOCKS),
     "nexus/docs/stylesheets/nexus.css": (NEXUS_TEXT, NEXUS_BLOCKS),
@@ -420,8 +421,8 @@ GAMING_TEXT = [
     ("#ffffff", "Text on the blue primary button and on the shortcut artwork."),
 ]
 GAMING_BLOCKS = [
-    ("#0a55b0", "Gaming blue: the primary button, hover borders; the gaming apps' color (their icon is red since "
-                "11-11-2026)."),
+    ("#0a55b0", "Gaming blue: the primary button, hover borders; the gaming apps' color (their icon is a silver controller since "
+                "13-11-2026)."),
     ("#2a6cc4", "Gaming blue on hover."),
     ("#08448d", "Gaming blue while pressed."),
     ("#0a55b01a", "Blue tint (10 %): hover, every other table row."),

@@ -1,3 +1,14 @@
+Changelog: 14-11-2026 13:50:33
+
+Added. Starting Nexus Dashboard while it is open closes the open window and opens a new one, with the checkout's
+code as it is now. It brought the open window to the front. The open dashboard is asked to close; one that does not
+answer within 5 seconds is ended. Two starts at the same moment (a double-click) still give one window.
+
+Changelog: 13-11-2026 21:08:01
+
+Fixed. The test of the suites in the checkout no longer names the Bazzite Console Suite: that repository is standalone
+(owner, 13-11-2026) and is not cloned into the checkout. The app did not change.
+
 Changelog: 13-11-2026 20:18:54
 
 Fixed. The test of the suites in the checkout accepts the Bazzite Console Suite, a repository of its own, when it is

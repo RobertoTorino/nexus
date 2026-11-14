@@ -47,7 +47,7 @@ WORKFLOWS = (("ci.yml", ""), ("ci-nexus.yml", "nexus-"))     # each workflow run
 COPY_EXCLUDES = (".venv*", "target", "site", "__pycache__", ".pytest_cache", "dist", "node_modules")
 # A suite in a repository of its own, cloned into the checkout as its folder (tools/suites.py: OWN_REPOSITORIES), is
 # not in the copy: GitHub's checkout of Nexus has none, and its workflows are not run here.
-OWN_REPOSITORIES = ("bazzite-console", "windows-portable")
+OWN_REPOSITORIES = ("windows-portable",)
 SHELL = ["bash", "--noprofile", "--norc", "-eo", "pipefail", "-c"]      # GitHub's shell for run steps on Linux
 EXPR = re.compile(r"\$\{\{\s*(.*?)\s*\}\}")
 NEEDS = re.compile(r"^\$\{\{\s*fromJSON\(needs\.(\w[\w-]*)\.outputs\.(\w+)\)\s*\}\}$")   # a plan job's output

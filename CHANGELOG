@@ -1,3 +1,56 @@
+Changelog: 14-11-2026 15:41:37
+
+Added. A check that the BC250 Bazzite Suite's wiki's Portal Tour keeps up with its portal (owner, 14-11-2026). bc250-bazzite/tools/record-tour.sh --wiki
+writes bc250-bazzite/tools/portal-tour.stamp, a fingerprint of what the video shows (the portal's code and pictures and the tour's
+script; the portal's version is left out, so a release does not count). bc250-bazzite/tools/portal_tour.py --check says whether
+the portal changed since, and tools/tests runs it, so the checks fail until the tour is recorded again with --wiki;
+--stamp marks the video as current for a change that does not show in it. The message also reminds of the wiki's
+Portal page. The wiki's Development chapter has it.
+
+Changelog: 14-11-2026 15:00:58
+
+Breaking. tools/sounds/the_quiet_engine_remix_3min.mp3 is gone (owner, 14-11-2026): every suite's Portal Tour takes
+the new remix, tools/sounds/the_quiet_engine_remix.ogg. The Windows Portable Suite's tour does from that suite's
+change of the same day; an older commit of that suite cannot record its tour on this Nexus without --music.
+
+Changelog: 14-11-2026 14:56:41
+
+Added. The BC250 Bazzite Suite's Portal Tour has the new remix under it (owner, 14-11-2026):
+tools/sounds/the_quiet_engine_remix.ogg, three minutes long, in place of the_quiet_engine_remix_3min.mp3.
+bc250-bazzite/tools/portal_tour.py takes it by default (--music FILE for
+another); the app tours keep the_quiet_engine.mp3. The tour on the wiki's Portal Tour page is recorded again with it,
+and the wiki's Development chapter names the track.
+
+Changelog: 14-11-2026 14:22:59
+
+Fixed. The BC250 Bazzite Suite's Sustainable icon is the Bazzite Console Suite's silver circuit board (owner,
+14-11-2026), as its Gaming icon is that suite's since 13-11-2026: the Sustainable apps' and the portal's CHANGELOGs
+have it.
+
+Added. Nexus Dashboard takes the place of the one that is open when it is started again (its CHANGELOG); the
+Dashboard chapter of the Nexus page says so.
+
+Changelog: 14-11-2026 11:06:41
+
+Added. The BC250 Bazzite Suite's wiki lists the apps by category in its navigation, by name within each: a header per
+category under Apps (Sustainable, Graphics, Gaming, Utilities, the portal's order), open by default
+(`navigation.expand`), as the Bazzite Console Suite's wiki does. On its home page "Lots in the suite" is now "What's
+in the suite?", the Gaming card is Graphics and the PlayStation card is Gaming, and "One portal for every app" is "One
+dashboard for all the apps". `tools/new_app.py` puts a new app's line under its category's header, where its name
+belongs (`insert_nav`); a nav without such headers gets it as before. `bc250-bazzite/tools/tests/test_wiki_nav.py`
+checks the navigation against the portal's manifest.
+
+Changelog: 13-11-2026 21:08:01
+
+Breaking. The Bazzite Console Suite is standalone again and Nexus no longer knows it (owner, 13-11-2026: that
+repository is and stays standalone, with its own tooling; the entry of 13-11-2026 20:18:54 is undone). Gone: the
+suite's folder from `.gitignore` and from `tools/suites.py`'s `OWN_REPOSITORIES`, its wiki from `docs.yml`, the core
+of a suite's own (`core_dir()`, `own_core()`, and their use in `tools/stage_app.py`, `tools/build_release.py` and
+`tools/check_versions.py`), its Remote Play from the native wheels, and its mention in the README, the instruction
+files and the Nexus page's Development chapter. Its wiki is no longer published under the Nexus page: it is that
+repository's own. The BC250 Bazzite Suite's Gaming icon is that suite's silver controller since today (the gaming
+apps' and the portal's CHANGELOGs); DESIGN.md says so.
+
 Changelog: 13-11-2026 20:38:45
 
 Release 8.0.0. Brings the new suites bazzite-console, windows-portable.

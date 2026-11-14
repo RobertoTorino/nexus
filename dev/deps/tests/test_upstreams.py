@@ -159,3 +159,77 @@ def test_the_reminder_names_an_upstream_once(tmp_path):
     assert upstreams.unnotified((late, machine), state)[0].updates == late.updates
     again = upstreams.unnotified((late, machine), state)
     assert again[0].updates == () and again[0].note == "" and again[1] is machine     # the machine's: every time
+
+
+class _Answer:
+    def __init__(self, body: bytes):
+        self.body = body
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False
+
+    def read(self, _limit: int) -> bytes:
+        return self.body
+
+
+def _refused(code: int, headers: dict[str, str]):
+    import email.message
+    import urllib.error
+
+    message = email.message.Message()
+    for name, value in headers.items():
+        message[name] = value
+    return urllib.error.HTTPError("https://api.github.com/x", code, "rate limit exceeded", message, None)
+
+
+def test_github_is_asked_signed_in(monkeypatch):
+    """Without a sign-in GitHub allows 60 requests an hour for the whole address, which the checks of a morning
+    use up (owner, 14-11-2026: every card said "HTTP Error 403: rate limit exceeded")."""
+    import pytest
+
+    monkeypatch.setattr(upstreams, "_token", None)
+    monkeypatch.delenv("GITHUB_TOKEN", raising=False)
+    monkeypatch.setenv("GH_TOKEN", "t0ken")
+    asked = []
+
+    def opener(request, timeout):
+        asked.append(request.get_header("Authorization"))
+        if request.get_header("Authorization"):
+            raise _refused(401, {})                         # a token GitHub no longer takes: asked again without
+        return _Answer(b'{"tag_name": "v1"}')
+
+    assert upstreams._fetch("https://api.github.com/repos/a/b/releases/latest", opener) == {"tag_name": "v1"}
+    assert asked == ["Bearer t0ken", None]
+
+    def limited(request, timeout):
+        raise _refused(403, {"x-ratelimit-remaining": "0", "x-ratelimit-reset": "1800000000"})
+
+    monkeypatch.setattr(upstreams, "_token", "")
+    with pytest.raises(OSError, match=r"hourly limit is used up until \d\d:\d\d\. Signed in with gh"):
+        upstreams._fetch("https://api.github.com/repos/a/b/releases/latest", limited)
+    monkeypatch.setattr(upstreams, "_token", "t0ken")
+    with pytest.raises(OSError, match=r"hourly limit is used up until \d\d:\d\d$"):
+        upstreams._fetch("https://api.github.com/repos/a/b/releases/latest", limited)
+
+
+def test_the_token_is_gh_s_and_only_for_github(monkeypatch):
+    monkeypatch.setattr(upstreams, "_token", None)
+    monkeypatch.delenv("GITHUB_TOKEN", raising=False)
+    monkeypatch.delenv("GH_TOKEN", raising=False)
+    monkeypatch.setattr(upstreams.shutil, "which", lambda name: "/usr/bin/gh")
+
+    class Out:
+        returncode, stdout = 0, "gho_x\n"
+
+    assert upstreams.github_token(run=lambda *args, **kwargs: Out()) == "gho_x"
+    sent = []
+
+    def opener(request, timeout):
+        sent.append(request.get_header("Authorization"))
+        return _Answer(b"{}")
+
+    upstreams._fetch("https://example.org/list.json", opener)
+    assert sent == [None]

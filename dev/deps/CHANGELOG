@@ -1,3 +1,10 @@
+Changelog: 14-11-2026 00:36:00
+
+Fixed. The emulator cards no longer fail with "HTTP Error 403: rate limit exceeded". GitHub was asked without a
+sign-in, which allows 60 requests an hour for the whole address; the requests now carry the token of the machine's
+gh login (or GITHUB_TOKEN, GH_TOKEN), 5,000 an hour, and a token GitHub refuses is left out. When the limit is used
+up the card says until when, and how to sign in. The tests no longer ask GitHub or gh.
+
 Changelog: 13-11-2026 19:25:47
 
 Version 4.0.0.

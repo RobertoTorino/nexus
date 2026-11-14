@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The portal window: one fullscreen view (bigpicture.py; owner, 01-11-2026: Suite Desktop Mode, the window of
 tabs, is gone), opened by a short animated intro with its own sound. The header, as an app's header: the suite's
-icon (a click opens the wiki), spanning the name with the version and the stage, a line that says what the open
+icon (a click plays the Portal Tour), spanning the name with the version and the stage, a line that says what the open
 category is for, ☰ and the close symbol at the top right, and under them a row of big symbols (owner, 05-11-2026: in
 place of the pills): Refresh, Sys info (a small window with what the system reports about the board, sysinfo.py),
 Install all apps and Install all updates (the counts in their tooltips, the updates waiting on a red badge), then the
@@ -60,6 +60,11 @@ without an audio output the pill is disabled and the portal silent). Every actio
 05-11-2026), whatever it comes from: a controller SDL reads, a key (a controller Steam turns into keys too) or a
 click on something that acts (_input_sound, the window's filter over the whole application).
 
+Music (owner, 14-11-2026): a track plays quietly, over and over, while the portal is in front (music.py): the
+portal's own, or one the user chooses in the Music track pill. The Music pill switches it, apart from the Sound
+pill: either can be off while the other is on. It waits while the intro or the Portal Tour plays, while the portal
+is minimized and while another window has the focus (_music_wanted).
+
 The touchpad of a DualShock 4 or a DualSense moves the mouse pointer while the portal has the focus (gamepad.py, a
 virtual mouse of pointer.py), as Steam Input does for the Steam Controller."""
 
@@ -93,8 +98,8 @@ from bc250_core.theme import BLUE, ORANGE, RED, THEMES, muted, save_theme_name, 
 from bc250_core.updates import ReleaseInfo, UpdateChecker, version_tuple
 from bc250_core.widgets import Pill
 
-from . import audio, desktop_icons, glyphs, keyboard, kwin, pointer, shortcuts, status, sysinfo, wallpaper
-from . import weather
+from . import audio, desktop_icons, glyphs, keyboard, kwin, music, pointer, shortcuts, status, sysinfo, tour
+from . import wallpaper, weather
 from .bigpicture import INTRO_BANNER, UPDATE_BANNER, BigPicture, HeaderPill, Intro, SymbolButton
 from .gamepad import TOUCH_SPEED, Gamepad
 from .looks import VEIL
@@ -140,14 +145,17 @@ VEIL_STEP = 5
 VEIL_KEY = "portal/wallpaper_transparency"
 DESKTOP_ICONS_KEY = "portal/desktop_icons"
 SOUND_KEY = "portal/sound"
+MUSIC_KEY = "portal/music"
 CLOCK_KEYS = ("portal/clock_hours", "portal/clock_seconds", "portal/clock_zone")
 PLACE_KEY = "portal/weather_place"
 TOUCH_KEY = "portal/touchpad_speed"
 TOUCH_SPEEDS = (50, 75, 100, 125, 150)    # % of gamepad.TOUCH_SPEED: the Touchpad pill's steps, a click the next
-# The Settings page: a short line beside each pill (Icons on Desktop, Sound, the theme, the wallpaper, the clock, the
-# weather)
+# The Settings page: a short line beside each pill (Icons on Desktop, Sound, the music and its track, the theme, the
+# wallpaper, the clock, the weather)
 SETTING_LINES = ("An icon on the Desktop for every installed app, or only the portal's.",
                  "The intro's sound, and a short one for each action.",
+                 "Music that plays quietly while the portal is in front.",
+                 "The music's track: the portal's own, or one of yours.",
                  "The look of every app in the suite, from its next start.",
                  "A picture behind the portal, and how much of it shows through.",
                  "12 or 24 hours, the seconds, and the time zone of the clock.",
@@ -451,6 +459,9 @@ class PlaceDialog(QDialog):
         super().done(result)
 
 
+PORTAL_TOUR_URL = SUITE_MANUAL_URL + "portal-tour/"     # the wiki's Portal Tour page
+PORTAL_TOUR_VIDEO_URL = SUITE_MANUAL_URL + "videos/portal-tour.mp4"     # its video, which the portal plays itself
+
 
 class MainWindow(QMainWindow):
     def __init__(self, entries: list[AppEntry], sources: Sources, records: Records,
@@ -459,7 +470,7 @@ class MainWindow(QMainWindow):
                  installed: Path | None = None, launch: Callable[[list[str]], bool] | None = None,
                  sounds: audio.Sounds | None = None, gamepad: Gamepad | None = None, build: str | None = None,
                  weather_fetch: weather.Fetch | None = None, raiser: kwin.Raiser | None = None,
-                 mouse: pointer.VirtualMouse | None = None):
+                 mouse: pointer.VirtualMouse | None = None, music_player: music.Player | None = None):
         """*portal_check* returns the newest portal release (run once, off the GUI thread); None: no check. *build*
         is the sha256 of the tarball this portal was installed from (portal_update.running_build), "" when not
         known, None from a checkout: a release built again under this portal's own version is offered when it
@@ -499,6 +510,10 @@ class MainWindow(QMainWindow):
         self.settings = open_settings(INFO, self)
         self.sounds = sounds or audio.Sounds()
         self.sounds.enabled = self.settings.value(SOUND_KEY, True, type=bool)
+        self.music = music_player or music.Player()     # the background music, with a switch of its own
+        self.music_on = self.settings.value(MUSIC_KEY, True, type=bool)
+        self.music.set_track(music.track())
+        self.tour: tour.TourPlayer | None = None
         self.gamepad = gamepad or Gamepad(self)
         self.keyboard = keyboard.OnScreenKeyboard()                       # R3 (tests give it a fake bus)
         self.gamepad.action.connect(self._gamepad_action)
@@ -529,6 +544,7 @@ class MainWindow(QMainWindow):
         self.big.update_requested.connect(self._tile_update)
         self.big.update_banner.clicked.connect(self.portal_update_action)
         self.big.wiki_requested.connect(self.open_wiki)
+        self.big.tour_requested.connect(self.open_tour)
         self.big.bar.currentChanged.connect(self._category_changed)
         self.big.notice.clicked.connect(self._notice_menu)
         self.big.outside.clicked.connect(self._outside_menu)
@@ -566,7 +582,7 @@ class MainWindow(QMainWindow):
         self.apps_button.clicked.connect(self.install_missing)               # 01-11-2026)
         self.updates_button = SymbolButton(glyphs.install_updates)
         self.updates_button.clicked.connect(self.install_all)
-        self.settings_button = SymbolButton(glyphs.menu, "Settings: Desktop icons, sound, theme, wallpaper, clock, "
+        self.settings_button = SymbolButton(glyphs.menu, "Settings: Desktop icons, sound, music, theme, wallpaper, clock, "
                                             "weather and touchpad. The ☰ button on the controller opens them too.")
         self.settings_button.clicked.connect(self.toggle_settings)
         self.close_button = SymbolButton(glyphs.close, "Exit: close the portal. B on the controller and Escape close "
@@ -596,6 +612,12 @@ class MainWindow(QMainWindow):
                           "switch.")
         self.sound_box = TogglePill("Sound", self.sound_tip, self.sounds.enabled)
         self.sound_box.toggled.connect(self._set_sound)
+        self.music_tip = ("Music that plays quietly, over and over, while the portal is in front. It has its own "
+                          "switch, apart from Sound: either can be off while the other is on. Click to switch.")
+        self.music_box = TogglePill("Music", self.music_tip, self.music_on)
+        self.music_box.toggled.connect(self._set_music)
+        self.track_pill = HeaderPill("Built-in", "Music track")
+        self.track_pill.clicked.connect(self._track_menu)
         self.theme_pill = HeaderPill(THEMES[theme_name()].label, "Theme switcher",
                                      "The look of every app in the suite. Click for the next theme; each app takes "
                                      "it the next time it starts, the portal too.")
@@ -628,11 +650,12 @@ class MainWindow(QMainWindow):
         self.weather_timer.timeout.connect(self.update_weather)
         self.weather_job = UpdateChecker(self)
         self.weather_job.finished.connect(self._weather_came)
-        self.setting_pills = [self.icons_box, self.sound_box, self.theme_pill, self.wallpaper_pill, self.clock_pill,
-                              self.weather_pill, self.touch_pill]
+        self.setting_pills = [self.icons_box, self.sound_box, self.music_box, self.track_pill, self.theme_pill,
+                              self.wallpaper_pill, self.clock_pill, self.weather_pill, self.touch_pill]
         self.big.place_settings(list(zip(self.setting_pills, SETTING_LINES)))
 
         self._show_sound()
+        self._show_music()
         self._show_wallpaper()
         self._show_weather()
         self.update_weather()
@@ -1086,6 +1109,8 @@ class MainWindow(QMainWindow):
     def changeEvent(self, event) -> None:  # noqa: N802 (Qt override)
         if event.type() == QEvent.Type.WindowStateChange and not self.isMinimized() and self.weather_skipped:
             self.update_weather()                       # restored: the weather skipped while it was minimized
+        if event.type() == QEvent.Type.WindowStateChange:
+            self._sync_music()                          # minimized: the music waits
         if event.type() == QEvent.Type.ActivationChange and self.isActiveWindow():
             self.check_installed()                      # back from the terminal that installed a new portal
             self.show_notice(self.marked)               # back from an app that checked its program's newest
@@ -1093,8 +1118,18 @@ class MainWindow(QMainWindow):
 
     @staticmethod
     def open_wiki() -> None:
-        """The wiki's home page, from a click on the suite's icon."""
+        """The wiki's home page, from a click on the portal's name."""
         QDesktopServices.openUrl(QUrl(SUITE_MANUAL_URL))
+
+    def open_tour(self) -> None:
+        """The Portal Tour, played over the portal (tour.py), from a click on the suite's icon; its sound follows
+        the Sound setting, and the portal's music waits until it closes. When it cannot be played here, the wiki's
+        Portal Tour page opens in the browser."""
+        self.tour = tour.TourPlayer(PORTAL_TOUR_VIDEO_URL, self.sounds.enabled and self.sounds.available(), self)
+        self.tour.failed.connect(lambda _reason: QDesktopServices.openUrl(QUrl(PORTAL_TOUR_URL)))
+        self.tour.finished.connect(self._sync_music)
+        self.tour.start()
+        self._sync_music()
 
     # ----------------------------------------------------------------------------------------- actions
     def _confirm_board_change(self, entry: AppEntry, action: str) -> bool:
@@ -1455,10 +1490,86 @@ class MainWindow(QMainWindow):
             self.sounds.stop()
         self._show_sound()
 
+    # ------------------------------------------------------------------------------------------- music
+    def _music_wanted(self) -> bool:
+        """Whether the music plays now: switched on, the portal shown and in front, and neither the intro nor the
+        Portal Tour playing; never without an audio output."""
+        return (self.music_on and self.intro is None and self.isVisible() and not self.isMinimized()
+                and QApplication.applicationState() == Qt.ApplicationState.ApplicationActive
+                and not (self.tour is not None and self.tour.isVisible()) and self.sounds.available())
+
+    def _sync_music(self, *_args) -> None:
+        """Play the music or let it wait, as _music_wanted says."""
+        if self._music_wanted():
+            self.music.play()
+        else:
+            self.music.pause()
+
+    def _show_music(self) -> None:
+        """The Music pill: the user's choice, or No and disabled without an audio output; and the Music track pill:
+        Built-in for the portal's own track, Custom for the user's."""
+        available = self.sounds.available()
+        on = self.music_on and available
+        self.music_box.blockSignals(True)
+        self.music_box.setChecked(on)
+        self.music_box.blockSignals(False)
+        self.music_box.set_value("Yes" if on else "No", self.music_tip if available else audio.NO_OUTPUT)
+        self.music_box.setEnabled(available)
+        value, what = ("Custom", "Your own track. ") if music.current() is not None else \
+            ("Built-in", "The portal's own track. ")
+        self.track_pill.set_value(value, what + "Click to choose a track of your own, or the portal's again. "
+                                  + music.RULES)
+
+    def _set_music(self, on: bool) -> None:
+        self.music_on = on
+        self.settings.setValue(MUSIC_KEY, on)
+        self._show_music()
+        self._sync_music()
+
+    def _track_menu(self) -> None:
+        self.track_menu().exec(self.track_pill.mapToGlobal(self.track_pill.rect().bottomLeft()))
+
+    def track_menu(self) -> QMenu:
+        """The Music track pill's menu: choose a track, or the portal's own (ticked while it is the one)."""
+        menu = QMenu(self)
+        menu.addAction("Choose a track…", self.choose_track)
+        own = menu.addAction("The portal's track", self.remove_track)
+        own.setCheckable(True)
+        own.setChecked(music.current() is None)
+        own.setEnabled(not own.isChecked())
+        return menu
+
+    def choose_track(self) -> None:
+        file, _ = QFileDialog.getOpenFileName(self, "Choose a music track", str(Path.home()), music.FILTER)
+        if file:
+            self.apply_track(Path(file))
+
+    def apply_track(self, path: Path) -> None:
+        """*path* as the music's track, played from its start; a warning when it cannot be."""
+        try:
+            music.choose(path)
+        except ValueError as exc:
+            QMessageBox.warning(self, APP_NAME, f"This file cannot be the music's track:\n\n{exc}")
+            return
+        except OSError as exc:
+            QMessageBox.warning(self, APP_NAME, f"The track could not be saved:\n\n{exc}")
+            return
+        self._track_changed()
+
+    def remove_track(self) -> None:
+        music.remove()
+        self._track_changed()
+
+    def _track_changed(self) -> None:
+        self.music.set_track(music.track())
+        self._show_music()
+        self._sync_music()
+
     def start_up(self) -> None:
         """Once the window is shown: the intro over it, with its sound, and the controller; when the intro ends,
-        the focus is on the first tile."""
+        the focus is on the first tile, and the music starts."""
         self._show_sound()
+        self._show_music()
         self.gamepad.start()
         self.intro = Intro(self.big)
         self.intro.finished.connect(self._intro_done)
@@ -1468,6 +1579,7 @@ class MainWindow(QMainWindow):
 
     def _intro_done(self) -> None:
         self.intro = None
+        self._sync_music()
         self.big.focus_first()
 
     def toggle_keyboard(self) -> None:
@@ -1625,6 +1737,7 @@ class MainWindow(QMainWindow):
     def _focus_changed(self, state) -> None:
         if state == Qt.ApplicationState.ApplicationActive:
             self.active_since = time.monotonic()
+        self._sync_music()                              # behind a game or an app the music waits
 
     def _gamepad_action(self, action: str) -> None:
         """What the controller does reaches the portal as the keys it would press: in a menu or a dialog the keys
@@ -1925,6 +2038,7 @@ class MainWindow(QMainWindow):
         self.weather_timer.stop()
         self.weather_job.stop(2000)
         self.sounds.stop()
+        self.music.stop()
         self.worker.stop(2000)
         self.portal_checker.stop(2000)
         self.portal_fetcher.stop(2000)

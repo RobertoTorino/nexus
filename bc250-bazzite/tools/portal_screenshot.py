@@ -85,7 +85,8 @@ def render(home: Path):
         launcher.write_text("#!/bin/sh\n", encoding="utf-8")
         records.set(entry.key, f"{entry.key}-v{older(entry.version)}" if entry.key == UPDATED
                     else entry.tag or "local")
-    window = mw.MainWindow(entries, Sources(home / "work"), records, desktop=home / "Desktop", menu=home / "menu")
+    window = mw.MainWindow(entries, Sources(home / "work"), records, desktop=home / "Desktop", menu=home / "menu",
+                           music_player=mw.music.Silent())
     window.big.bar.setCurrentIndex(window.big.categories.index(CATEGORY))
     window.status_timer.stop()
     window.big.set_status(LOADS, CLOCK)

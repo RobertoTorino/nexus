@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """A video tour of the portal, for the wiki and YouTube: the real portal view from this checkout, driven by a
 script and rendered frame by frame into an MP4 (H.264, 1920 x 1080, 30 fps), with music under it that fades out over
-the last two seconds (the Nexus tools' sounds/the_quiet_engine_remix_3min.mp3, every suite's, made with generative AI
+the last two seconds (the Nexus tools' sounds/the_quiet_engine_remix.ogg, every suite's, made with generative AI
 tools).
 
     python3 tools/portal_tour.py [OUT.mp4] [--music FILE | --no-music] [--wiki] [--fps 30] [--size 1080p|1440p|2160p]
@@ -13,6 +13,12 @@ tools).
 --wiki also writes the copy on the wiki's Portal Tour page: docs/videos/portal-tour.mp4 (1280 x 720, smaller) and its
 poster, docs/images/portal/portal-tour-poster.webp (the title card).
 
+The wiki's video must keep up with the portal (owner, 14-11-2026). --wiki also writes tools/portal-tour.stamp: a
+fingerprint of what the video shows (the portal's code and pictures, and this script). --check says whether the
+portal changed since (exit 1 when it did), and tools/tests runs it, so CI fails until the tour is recorded again
+with --wiki. For a change that does not show in the video (a fix behind the window), --stamp writes the stamp
+without recording: look at the video first.
+
 It runs offscreen in a temporary home folder: a few apps "installed" (their detect paths and records), one of them
 behind its pinned release so the update notice shows, no network, and nothing from the machine it runs on (no user
 or host names, no checkout path), no sound from the portal and no controller. The pointer, the clicks and the
@@ -22,6 +28,7 @@ The frames are drawn by tools/tour_frames.py, which tools/app_tour.py uses too."
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import shutil
@@ -39,10 +46,12 @@ from tour_frames import SCALE, Recorder  # noqa: E402
 
 INSTALLED = ("check", "gpu", "upscaler", "shadps4", "rpcs3", "cec", "sftp")
 BEHIND = "shadps4"                                  # installed from an older release: the red dot and the notice
-MUSIC = tour_frames.MUSIC_DIR / "the_quiet_engine_remix_3min.mp3"
+MUSIC = tour_frames.MUSIC_DIR / "the_quiet_engine_remix.ogg"
 FADE = 2.0                                          # the music fades out over the video's last seconds
 WIKI_VIDEO = SUITE / "docs" / "videos" / "portal-tour.mp4"
 WIKI_POSTER = SUITE / "docs" / "images" / "portal" / "portal-tour-poster.webp"
+STAMP = SUITE / "tools" / "portal-tour.stamp"       # the fingerprint of the portal the wiki's video was recorded from
+SHOWN = (SUITE / "portal" / "bc250_portal", SUITE / "portal" / "images")    # what the video shows, with this script
 
 
 def prepare_home(home: Path) -> None:
@@ -56,7 +65,7 @@ class Tour(Recorder):
         from PyQt6.QtWidgets import QApplication
 
         from bc250_core.app import create_app
-        from bc250_portal import INFO, LOGO_PATH, MANIFEST, audio, state_dir
+        from bc250_portal import INFO, LOGO_PATH, MANIFEST, audio, music, state_dir
         from bc250_portal.gamepad import Gamepad
         from bc250_portal.manifest import load
         from bc250_portal.sources import Records, Sources
@@ -94,7 +103,7 @@ class Tour(Recorder):
         window = MainWindow(entries, Sources(state_dir() / "releases", checkout=None, download=None),
                             Records(state_dir() / "installed.json"), desktop=home / "Desktop",
                             menu=home / ".local/share/applications", sounds=Silent(),
-                            gamepad=Gamepad(source_factory=no_controller))
+                            gamepad=Gamepad(source_factory=no_controller), music_player=music.Silent())
         window.setWindowTitle(INFO.display_name)
         tour_frames.place(window)
         window.show()
@@ -121,7 +130,10 @@ class Tour(Recorder):
         self.say("One fullscreen view, for the keyboard, the mouse or a controller: its header, the suite's icon and name.")
         self.move(self.at(w.big.logo))
         self.hold(3)
-        self.say("A click on the icon opens the wiki in the browser: everything about each app.")
+        self.say("A click on the icon plays this tour, over the whole screen.")
+        self.hold(2.5)
+        self.move(self.at(w.big.title))
+        self.say("A click on the name opens the wiki: everything about each app.")
         self.hold(1.2)
         self.click()                                # only the ring: the tour opens no browser
         self.hold(0.8)
@@ -138,6 +150,7 @@ class Tour(Recorder):
         self.click(w.toggle_settings)
         self.hold(1.4)
         for pill, text in ((w.icons_box, "Icons on Desktop: one icon per app on the Desktop, or only the portal's."),
+                           (w.music_box, "Music: a quiet track while the portal is in front, its own or yours."),
                            (w.theme_pill, "The theme switcher: one look for every app in the suite."),
                            (w.wallpaper_pill, "And a wallpaper of your own behind the portal, seen through the pills.")):
             self.say(text)
@@ -348,6 +361,32 @@ def render_still(theme: str, out: Path) -> None:
         tour.frame().save(str(out))
 
 
+def fingerprint() -> str:
+    """A hash of what the video shows: the portal's code and pictures (SHOWN) and this script. The portal's version
+    is left out (a release changes only that line, and the video is recorded before it)."""
+    digest = hashlib.sha256()
+    files = [path for folder in SHOWN for path in folder.rglob("*")
+             if path.is_file() and "__pycache__" not in path.parts]
+    for path in sorted([*files, Path(__file__).resolve()]):
+        data = path.read_bytes()
+        if path.suffix == ".py":
+            data = b"\n".join(line for line in data.split(b"\n") if not line.startswith(b"__version__ = "))
+        digest.update(path.relative_to(SUITE).as_posix().encode() + b"\0" + hashlib.sha256(data).digest())
+    return digest.hexdigest()
+
+
+def stale() -> bool:
+    """Whether the portal changed since the wiki's video was recorded (or no stamp says when it was)."""
+    try:
+        return STAMP.read_text(encoding="utf-8").strip() != fingerprint()
+    except OSError:
+        return True
+
+
+def write_stamp() -> None:
+    STAMP.write_text(fingerprint() + "\n", encoding="utf-8", newline="\n")
+
+
 def wiki_copy(video: Path) -> int:
     """The wiki's copy of *video*: 1280 x 720 and about a third of the size, so the repository stays small, and the
     title card as its poster. ffmpeg's exit code."""
@@ -367,11 +406,29 @@ def main() -> int:
     parser.add_argument("--music", type=Path, default=MUSIC, help="the track under the video (default: the suite's)")
     parser.add_argument("--no-music", action="store_true", help="a video without sound")
     parser.add_argument("--wiki", action="store_true", help="also write the copy on the wiki's Portal Tour page")
+    parser.add_argument("--check", action="store_true",
+                        help="only say whether the portal changed since the wiki's video was recorded (exit 1)")
+    parser.add_argument("--stamp", action="store_true",
+                        help="mark the wiki's video as current without recording: the change does not show in it")
     parser.add_argument("--fps", type=int, default=30)
     parser.add_argument("--size", choices=tuple(tour_frames.SIZES), default="1080p",
                         help="the video's size: 1080p (the default), 1440p or 2160p (4K, for YouTube)")
     parser.add_argument("--still", nargs=2, metavar=("THEME", "PNG"), help=argparse.SUPPRESS)
     args = parser.parse_args()
+    if args.stamp:
+        write_stamp()
+        print(f"{STAMP.relative_to(SUITE).as_posix()}: the wiki's video is marked as current")
+        return 0
+    if args.check:
+        if stale():
+            print("The portal changed since the wiki's Portal Tour was recorded: record it again with\n"
+                  "  bc250-bazzite/tools/record-tour.sh --wiki\n"
+                  "or, when the change does not show in the video, python3 bc250-bazzite/tools/portal_tour.py --stamp\n"
+                  "When the change is one the wiki describes, its Portal page (bc250-bazzite/docs/portal.md) changes with it.",
+                  file=sys.stderr)
+            return 1
+        print("The wiki's Portal Tour is current.")
+        return 0
     tour_frames.set_size(args.size)
     if args.still:
         render_still(args.still[0], Path(args.still[1]))
@@ -398,6 +455,7 @@ def main() -> int:
     if code == 0 and args.wiki:
         code = wiki_copy(out)
         if code == 0:
+            write_stamp()
             print(WIKI_VIDEO.relative_to(SUITE).as_posix(), WIKI_POSTER.relative_to(SUITE).as_posix())
     print(out if code == 0 else f"ffmpeg failed ({code})")
     return code

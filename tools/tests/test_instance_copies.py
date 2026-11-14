@@ -9,22 +9,14 @@ from pathlib import Path
 import pytest
 
 SUITE = Path(__file__).resolve().parents[2]
-
-
-def copies(name: str) -> list[Path]:
-    """The apps' copies of core's *name*, in the suites on Nexus's core: a suite with a core of its own
-    (<suite>/core/, tools/suites.py: the Bazzite Console Suite) keeps its copies in step with that one."""
-    return sorted(p for p in SUITE.glob(f"*/apps/*/*/{name}") if not any((p.parents[3] / "core").glob("*/__init__.py")))
-
-
 CORE = SUITE / "core" / "bc250_core" / "instance.py"
-COPIES = copies("instance.py")
+COPIES = sorted(SUITE.glob("*/apps/*/*/instance.py"))
 UPSTREAM = SUITE / "core" / "bc250_core" / "upstream.py"
-UPSTREAM_COPIES = copies("upstream.py")
+UPSTREAM_COPIES = sorted(SUITE.glob("*/apps/*/*/upstream.py"))
 THEME = SUITE / "core" / "bc250_core" / "theme.py"
-THEME_COPIES = copies("theme.py")
+THEME_COPIES = sorted(SUITE.glob("*/apps/*/*/theme.py"))
 EXIT_KEYS = SUITE / "core" / "bc250_core" / "exit_keys.py"
-EXIT_KEYS_COPIES = copies("exit_keys.py")
+EXIT_KEYS_COPIES = sorted(SUITE.glob("*/apps/*/*/exit_keys.py"))
 
 
 def body(path: Path) -> str:

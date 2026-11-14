@@ -12,7 +12,7 @@ from bc250_core.nexus import NEXUS
 from bc250_core.platform import data_home
 from bc250_core.settings import open_settings
 
-from . import APP_ID, APP_NAME, INFO, __version__
+from . import APP_ID, APP_NAME, INFO, __version__, replace
 
 
 def main() -> int:
@@ -23,15 +23,17 @@ def main() -> int:
     args, qt_args = parser.parse_known_args()
 
     app = create_app(INFO, qt_args, theme=NEXUS)           # Nexus's design, not a suite's theme
-    # One instance: a second launch (a double-click on the Desktop icon) brings the running window to the front.
-    if instance.already_running(INFO.app_id):
+    # One instance, and the newest: a launch closes the open dashboard and takes its place. Two launches at the same
+    # moment (a double-click on the Desktop icon) still give one window: the second shows the first's.
+    if not replace.close_running(INFO.app_id) or instance.already_running(INFO.app_id):
         return 0
     if not (data_home() / "applications" / f"{APP_ID}.desktop").is_file():
         app.setDesktopFileName("")              # no menu entry: no desktop file name for Qt to look up
     from .main_window import MainWindow
     window = MainWindow(settings=open_settings(INFO), suite=args.suite)
     window.show()
-    server = instance.serve(INFO.app_id, window)  # noqa: F841 (kept alive while the app runs)
+    server = instance.serve(INFO.app_id, window)
+    replace.serve(server, window)
     return exec_app(app)
 
 

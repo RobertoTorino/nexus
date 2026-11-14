@@ -14,8 +14,8 @@ tasks need; the rest is in files it points to, read when the task calls for them
 - [.claude/releases.md](.claude/releases.md): what a release is, Nexus's version, the CHANGELOG kinds, and which
   steps are the owner's.
 - [bc250-bazzite/CLAUDE.md](bc250-bazzite/CLAUDE.md): the BC250 suite's own rules (the layout of its apps, the board,
-  the scope, the names not to use). The Windows Portable Suite's and the Bazzite Console Suite's are in their own
-  repositories (`windows-portable/CLAUDE.md`, `bazzite-console/CLAUDE.md` when cloned into this checkout). Status and plans: [MIGRATION.md](MIGRATION.md).
+  the scope, the names not to use). The Windows Portable Suite's are in its own repository
+  (`windows-portable/CLAUDE.md` when it is cloned into this checkout). Status and plans: [MIGRATION.md](MIGRATION.md).
 
 ## What this is
 
@@ -23,17 +23,15 @@ The repository is **Nexus**, `github.com/RobertoTorino/nexus` (branch `main`): t
 what they share at the root. The **BC250 Bazzite Suite** (the AMD BC-250 on Bazzite) is `bc250-bazzite/`.
 
 **One repository per suite** (owner, 13-11-2026): the suites leave Nexus one by one, and the tooling stays here,
-for every suite. The **Windows Portable Suite** (Windows handhelds) is `github.com/RobertoTorino/windows-portable` and
-the **Bazzite Console Suite** (PlayStation 5 hardware on Bazzite) `github.com/RobertoTorino/bazzite-console`. Neither
-keeps a copy of the tools: each is worked on **inside this checkout**, cloned as the folder `windows-portable/` or
-`bazzite-console/` (in Nexus's `.gitignore`), where every tool finds it (`--suite <folder>`, `./test.sh`,
-`tools/suites.py`: `OWN_REPOSITORIES`). They are separate git checkouts: git in such a folder is the suite's (its
-commits, tags and CI), git here is Nexus's, and a change to both is two commits, each in its repository. A suite's
-workflows are in its repository; each job starts with Nexus's action `.github/actions/suite`, which checks out Nexus
-at the commit the suite's `NEXUS_REF` names and the suite inside it. A checkout of Nexus alone (Nexus's CI) has
-neither folder: a tool or test that needs a suite says so or skips, and never fails for its absence. The Bazzite
-Console Suite carries a core of its own (`bazzite-console/core/bazzite_console_core`, which the tools bundle for it:
-`tools/suites.py`, `core_dir()`); every other suite is on `core/bc250_core`. A suite's
+for every suite. The **Bazzite Console Suite** is `github.com/RobertoTorino/bazzite-console`, with a copy of the
+tools of its own. The **Windows Portable Suite** (Windows handhelds) is `github.com/RobertoTorino/windows-portable`
+and keeps no copy: it is worked on **inside this checkout**, cloned as the folder `windows-portable/` (in Nexus's
+`.gitignore`), where every tool finds it as before (`--suite windows-portable`, `./test.sh`, `tools/suites.py`:
+`OWN_REPOSITORIES`). The two are separate git checkouts: git in `windows-portable/` is the suite's (its commits, tags
+and CI), git here is Nexus's, and a change to both is two commits, each in its repository. Its workflows are in its
+repository; each job starts with Nexus's action `.github/actions/suite`, which checks out Nexus at the commit the
+suite's `NEXUS_REF` names and the suite inside it. A checkout of Nexus alone (Nexus's CI) has no `windows-portable/`:
+a tool or test that needs the suite says so or skips, and never fails for its absence. A suite's
 `SYSTEM` file names the system it is made for and tested on, its release tags start with its `TAG_PREFIX` (`wp-`;
 the BC250 suite has none and is the tools' default suite, `tools/suites.py`), and its folder holds its
 `apps/<name>/`, its `portal/` with `apps.toml` (one pinned release per app), its wiki in `docs/`, its `icons/` and

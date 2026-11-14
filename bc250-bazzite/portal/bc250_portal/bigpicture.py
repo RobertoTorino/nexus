@@ -198,15 +198,27 @@ class StatusLine(QWidget):
             + metrics.horizontalAdvance("00") + 2
 
 
-class Logo(QLabel):
-    """The suite's icon in the header, drawn at the view's scale; a click opens the wiki."""
+class ClickLabel(QLabel):
+    """A label that says when it is clicked: the header's icon and the portal's name."""
 
     clicked = pyqtSignal()
+
+    def __init__(self, text: str = ""):
+        super().__init__(text)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+
+    def mouseReleaseEvent(self, event) -> None:  # noqa: N802 (Qt override)
+        if event.button() == Qt.MouseButton.LeftButton and self.rect().contains(event.position().toPoint()):
+            self.clicked.emit()
+        super().mouseReleaseEvent(event)
+
+
+class Logo(ClickLabel):
+    """The suite's icon in the header, drawn at the view's scale; a click plays the Portal Tour."""
 
     def __init__(self, path):
         super().__init__()
         self.picture = QPixmap(str(path))
-        self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.set_side(LOGO_PX)
 
     def set_side(self, side: int) -> None:
@@ -214,11 +226,6 @@ class Logo(QLabel):
         if not self.picture.isNull():
             self.setPixmap(self.picture.scaled(side, side, Qt.AspectRatioMode.KeepAspectRatio,
                                                Qt.TransformationMode.SmoothTransformation))
-
-    def mouseReleaseEvent(self, event) -> None:  # noqa: N802 (Qt override)
-        if event.button() == Qt.MouseButton.LeftButton and self.rect().contains(event.position().toPoint()):
-            self.clicked.emit()
-        super().mouseReleaseEvent(event)
 
 
 class HeaderPill(Pill):
@@ -549,7 +556,8 @@ class BigPicture(Backdrop):
     open_requested = pyqtSignal(object)         # an AppEntry
     menu_requested = pyqtSignal(object)         # an AppEntry
     update_requested = pyqtSignal(object)       # an AppEntry: a right click on its tile
-    wiki_requested = pyqtSignal()
+    wiki_requested = pyqtSignal()               # a click on the portal's name
+    tour_requested = pyqtSignal()               # a click on the suite's icon
 
     def __init__(self, entries, categories: dict[str, str], hints: dict[str, str], version: str = "",
                  stage: str = "", stage_note: str = ""):
@@ -569,8 +577,8 @@ class BigPicture(Backdrop):
         top = QHBoxLayout()
         self.top = top
         self.logo = Logo(LOGO_PATH)
-        self.logo.setToolTip("Open the wiki in the browser")
-        self.logo.clicked.connect(self.wiki_requested)
+        self.logo.setToolTip("Watch the Portal Tour")
+        self.logo.clicked.connect(self.tour_requested)
         top.addWidget(self.logo, 0, Qt.AlignmentFlag.AlignTop)
         words = self.words = QVBoxLayout()           # as high as the icon: the symbols' row ends at its bottom
         words.setSpacing(2)
@@ -578,7 +586,9 @@ class BigPicture(Backdrop):
         heading = QVBoxLayout()
         heading.setSpacing(2)
         title_row = self.title_row = QHBoxLayout()
-        self.title = QLabel(APP_NAME)
+        self.title = ClickLabel(APP_NAME)
+        self.title.setToolTip("Open the wiki in the browser")
+        self.title.clicked.connect(self.wiki_requested)
         title_row.addWidget(self.title)
         self.version = QLabel(f"v{version}" if version else "")
         title_row.addWidget(self.version, 0, Qt.AlignmentFlag.AlignBottom)

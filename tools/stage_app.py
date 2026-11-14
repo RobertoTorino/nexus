@@ -35,6 +35,7 @@ SUITE = suites.suite()                      # the default suite (tools/suites.py
 SKIP_DIRS = {"tests", "python", "_python", "__pycache__", ".pytest_cache", ".idea", ".venv",
              "target"}                          # cargo's build output (consoles/native)
 SKIP_FILES = {"requirements-dev.txt", ".gitignore", ".gitattributes", ".standalone"}
+_USES_CORE = re.compile(r"^\s*(from|import)\s+bc250_core\b", re.M)
 
 
 def _ignore(folder: str, names: list[str]) -> set[str]:
@@ -42,10 +43,8 @@ def _ignore(folder: str, names: list[str]) -> set[str]:
             if n in SKIP_DIRS or n in SKIP_FILES or n.endswith(".pyc") or n.startswith(".venv")}
 
 
-def uses_core(src: Path, package: str = "bc250_core") -> bool:
-    """Whether the app in *src* imports the core *package* (the suite's: core_dir())."""
-    uses = re.compile(rf"^\s*(from|import)\s+{re.escape(package)}\b", re.M)
-    return any(uses.search(p.read_text(encoding="utf-8", errors="replace")) for p in src.rglob("*.py")
+def uses_core(src: Path) -> bool:
+    return any(_USES_CORE.search(p.read_text(encoding="utf-8", errors="replace")) for p in src.rglob("*.py")
                if not (set(p.relative_to(src).parts) & SKIP_DIRS))
 
 
@@ -62,19 +61,17 @@ def manual_chapter(name: str, suite: Path = SUITE) -> Path | None:
 
 
 def core_dir(suite: Path = SUITE) -> Path:
-    """The core the suite's apps bundle: core/bc250_core at the root of the checkout, beside the suites, or the
-    suite's own (<suite>/core/<package>/; tools/suites.py)."""
-    return suites.core_dir(suite)
+    """core/bc250_core: at the root of the checkout, beside the suites."""
+    return suite.parent / "core" / "bc250_core"
 
 
 def stage(name: str, dest: Path, suite: Path = SUITE) -> Path:
-    """Copy app *name* of *suite* into *dest* (created; must not exist yet), bundle the suite's core (bc250_core)
-    when the app uses it and add the app's chapter of the manual as MANUAL.md."""
+    """Copy app *name* of *suite* into *dest* (created; must not exist yet), bundle bc250_core when the app uses
+    it and add the app's chapter of the manual as MANUAL.md."""
     src = source_dir(name, suite)
     shutil.copytree(src, dest, ignore=_ignore)
-    core = core_dir(suite)
-    if uses_core(src, core.name):
-        shutil.copytree(core, dest / core.name, ignore=_ignore)
+    if uses_core(src):
+        shutil.copytree(core_dir(suite), dest / "bc250_core", ignore=_ignore)
     chapter = manual_chapter(name, suite)
     if chapter is not None:
         shutil.copyfile(chapter, dest / "MANUAL.md")
@@ -96,8 +93,7 @@ def main(argv: list[str]) -> int:
         print(exc, file=sys.stderr)
         return 1
     stage(args.app, args.dest, suite)
-    core = core_dir(suite).name
-    print(f"staged {args.app} in {args.dest}" + (f" (with {core})" if (args.dest / core).is_dir() else ""))
+    print(f"staged {args.app} in {args.dest}" + (" (with bc250_core)" if (args.dest / "bc250_core").is_dir() else ""))
     return 0
 
 

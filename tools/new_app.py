@@ -1339,6 +1339,22 @@ def insert_before(text: str, marker: str, addition: str, where: str) -> str:
     return text[:at] + addition + text[at:]
 
 
+def insert_nav(text: str, category: str, title: str, name: str, where: str) -> str:
+    """The app's line in the wiki's nav: under its category's header ("      - Gaming:"), by name among that
+    category's apps, or, in a nav without such headers, as the last of the Apps (before Development)."""
+    header = f"\n      - {category}:\n"
+    at = text.find(header)
+    if at < 0:
+        return insert_before(text, "\n  - Development:\n", f"\n      - {title}: apps/{name}.md", where)
+    at += len(header)
+    key = title.strip('"').casefold()
+    while (end := text.find("\n", at)) >= 0 and text.startswith("          - ", at):
+        if text[at + len("          - "):end].rsplit(": ", 1)[0].strip('"').casefold() > key:
+            break
+        at = end + 1
+    return text[:at] + f"          - {title}: apps/{name}.md\n" + text[at:]
+
+
 def insert_after_table(text: str, heading: str, row: str, where: str) -> str:
     """*row* at the end of the first Markdown table after the paragraph that starts with *heading*."""
     at = text.find(heading)
@@ -1493,8 +1509,7 @@ def write_app(root: Path, suite: Suite, app: NewApp) -> list[Path]:
     # The wiki: the nav, the apps overview (its category's table), the categories table.
     config = suite.folder / "mkdocs.yml"
     title = f'"{app.app_name}"' if ":" in app.app_name else app.app_name
-    change(config, insert_before(config.read_text(encoding="utf-8"), "\n  - Development:\n",
-                                 f"\n      - {title}: apps/{app.name}.md", "mkdocs.yml"))
+    change(config, insert_nav(config.read_text(encoding="utf-8"), app.category_title, title, app.name, "mkdocs.yml"))
     index = suite.folder / "docs" / "apps" / "index.md"
     change(index, insert_after_table(index.read_text(encoding="utf-8"), f"**{app.category_title}**",
                                      fill(INDEX_ROW, app, suite), "docs/apps/index.md"))

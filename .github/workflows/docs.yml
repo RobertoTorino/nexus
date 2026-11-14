@@ -4,10 +4,9 @@ name: Manual
 # Builds the manual (MkDocs Material) from main and publishes it on GitHub Pages (Settings -> Pages -> Source:
 # GitHub Actions): the Nexus page (nexus/) at https://robertotorino.github.io/nexus/, the BC250 Bazzite Suite's
 # wiki (bc250-bazzite/docs/) at https://robertotorino.github.io/nexus/bc250-bazzite-suite/ and the Windows Portable
-# Suite's at https://robertotorino.github.io/nexus/windows-portable-suite/, the address it always had, and the Bazzite
-# Console Suite's at https://robertotorino.github.io/nexus/bazzite-console-suite/. Those suites have a repository of
-# their own (owner, 13-11-2026), checked out here as windows-portable/ and bazzite-console/, where their wikis find the
-# Nexus tools' hooks; a change to such a wiki is published by the next run here: a push to Nexus's main, the nightly run, or
+# Suite's at https://robertotorino.github.io/nexus/windows-portable-suite/, the address it always had. That suite has
+# a repository of its own (owner, 13-11-2026), checked out here as windows-portable/, where its wiki finds the Nexus
+# tools' hooks; a change to its wiki is published by the next run here: a push to Nexus's main, the nightly run, or
 # Run workflow (gh workflow run docs.yml --repo RobertoTorino/nexus).
 
 on:
@@ -35,10 +34,6 @@ jobs:
         with:
           repository: RobertoTorino/windows-portable
           path: windows-portable
-      - uses: actions/checkout@v7       # the Bazzite Console Suite, the same way
-        with:
-          repository: RobertoTorino/bazzite-console
-          path: bazzite-console
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
@@ -61,13 +56,6 @@ jobs:
             mkdocs build --strict -f windows-portable/mkdocs.yml --site-dir "$PWD/site/windows-portable-suite"
           else
             echo "::warning::RobertoTorino/windows-portable has no mkdocs.yml: its wiki is not published by this run"
-          fi
-      - name: The Bazzite Console Suite's wiki
-        run: |
-          if [ -f bazzite-console/mkdocs.yml ] && grep -q '\.\./tools/mkdocs/disclaimer.py' bazzite-console/mkdocs.yml; then
-            mkdocs build --strict -f bazzite-console/mkdocs.yml --site-dir "$PWD/site/bazzite-console-suite"
-          else
-            echo "::warning::RobertoTorino/bazzite-console is not laid out for the Nexus checkout yet: its wiki is not published by this run"
           fi
       - uses: actions/upload-pages-artifact@v5
         with:

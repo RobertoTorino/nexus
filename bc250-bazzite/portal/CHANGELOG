@@ -1,3 +1,35 @@
+Changelog: 14-11-2026 17:13:10
+
+Added. The portal plays background music (owner, 14-11-2026): a track that plays quietly, over and over, while the
+portal is in front. It is the owner's remix of DAT Station's Sea Breeze, made in Audacity. Two new pills on the
+Settings page: Music (Yes or No) switches it, apart from Sound, so either can be off while the other is on; Music
+track chooses a track of your own (an Ogg, Opus, MP3, FLAC, WAV or M4A file, kept as a copy in the portal's state
+folder) or the portal's again. The music waits while the intro or the Portal Tour plays, while the portal is
+minimized and while another window has the focus (a game, an app), and plays on from where it was. Without an audio
+output the portal plays none. The wiki's Portal page says so, and the Portal Tour is recorded again and shows the
+Music pill. The tools that draw the portal (tools/portal_tour.py, tools/portal_screenshot.py) play no music.
+
+Changelog: 14-11-2026 15:33:23
+
+Added. A click on the suite's icon in the header plays the Portal Tour over the whole screen, in the portal itself
+(owner, 14-11-2026): the wiki's video, played from the wiki, so the portal does not carry it. A or Space pauses it
+and plays on, B or Esc closes it, it closes by itself at its end, and its sound follows the Sound setting. Without a
+connection the wiki's Portal Tour page opens in the browser. A click on the portal's name opens the wiki. The icon
+opened the wiki, and the name did nothing. The Portal Tour is recorded again and shows both; the wiki's Portal and
+Portal Tour pages say so.
+
+Changelog: 14-11-2026 14:22:59
+
+Fixed. The Sustainable category has a new icon (owner, 14-11-2026): the Bazzite Console Suite's silver circuit board,
+instead of the green one (icons/sustainable, copied from that suite's and written with tools/sync_icons.py). The
+Sustainable tab's picture (images/categories/sustainable.webp) and the tiles of the Sustainable apps show it.
+
+Changelog: 13-11-2026 20:46:04
+
+Fixed. The Gaming category has a new icon (owner, 13-11-2026): the Bazzite Console Suite's silver controller with the
+blue light, instead of the gray metal one (icons/gaming, copied from that suite's and written with
+tools/sync_icons.py). The Gaming tab's picture (images/categories/gaming.webp) and the tiles of the Gaming apps show it.
+
 Changelog: 13-11-2026 16:53:54
 
 Release 20.0.2.

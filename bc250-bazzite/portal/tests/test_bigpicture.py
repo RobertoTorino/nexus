@@ -228,7 +228,7 @@ def test_the_view_is_the_window_with_the_suites_name_and_a_big_icon(made):
     assert window.big.title.text() == APP_NAME == "BC250 Bazzite Suite"
     assert window.big.version.text() == f"v{mw.__version__}"
     assert window.big.logo.width() == window.big.logo.height() == bigpicture.LOGO_PX == bigpicture.ICON_PX
-    assert "wiki" in window.big.logo.toolTip()
+    assert "Portal Tour" in window.big.logo.toolTip() and "wiki" in window.big.title.toolTip()
     import bc250_portal
     assert window.big.stage.text() == bc250_portal.STAGE
     assert window.big.stage.toolTip() == bc250_portal.STAGE_NOTE
@@ -236,13 +236,42 @@ def test_the_view_is_the_window_with_the_suites_name_and_a_big_icon(made):
     assert "verified by checksum" in window.big.info.text_ and mw.CORE_VERSION in window.big.info.text_
 
 
-def test_the_logo_opens_the_wiki(made, monkeypatch):
+class FakeTour:
+    """The tour player without Qt's multimedia: what it was asked to play, and its failed() by hand."""
+
+    made: list = []
+
+    def __init__(self, url, sound=True, parent=None):
+        self.url, self.sound, self.started, self.on_failed = url, sound, False, []
+        self.failed = type("Signal", (), {"connect": lambda _self, slot: self.on_failed.append(slot)})()
+        self.on_finished = []
+        self.finished = type("Signal", (), {"connect": lambda _self, slot: self.on_finished.append(slot)})()
+        FakeTour.made.append(self)
+
+    def start(self):
+        self.started = True
+
+    def isVisible(self):  # noqa: N802 (as the dialog)
+        return self.started
+
+
+def test_the_logo_plays_the_portal_tour_and_the_name_opens_the_wiki(made, monkeypatch):
+    """Owner, 14-11-2026: the icon plays the Portal Tour in the portal (the wiki's video), the name opens the wiki;
+    a tour that cannot be played opens the wiki's Portal Tour page in the browser."""
     from bc250_core import SUITE_MANUAL_URL
     window, _ = made()
     opened = []
+    FakeTour.made = []
     monkeypatch.setattr(mw.QDesktopServices, "openUrl", lambda url: opened.append(url.toString()))
+    monkeypatch.setattr(mw.tour, "TourPlayer", FakeTour)
     window.big.logo.clicked.emit()
-    assert opened == [SUITE_MANUAL_URL]
+    played = FakeTour.made[0]
+    assert played.started and played.url == SUITE_MANUAL_URL + "videos/portal-tour.mp4" and opened == []
+    assert played.on_finished == [window._sync_music]            # the music plays on when the tour closes
+    played.on_failed[0]("no connection")
+    assert opened == [SUITE_MANUAL_URL + "portal-tour/"]
+    window.big.title.clicked.emit()
+    assert opened[-1] == SUITE_MANUAL_URL
 
 
 # ----------------------------------------------------------------------------------------------- the intro
@@ -481,15 +510,17 @@ def test_the_focus_reaches_the_symbols_and_back_with_the_controller(made, monkey
 def test_the_settings_page_holds_the_settings(made, monkeypatch):
     """The Settings page behind ☰ (owner, 04-11-2026, as the Windows Portable Suite's portal): the ☰ pill or the
     controller's ☰ button shows it in place of the category strip and the tiles, under the same header; its pills
-    (Desktop icons, Sound, the theme, the wallpaper, the clock, the weather and the touchpad, owner 05-11-2026), each
+    (Desktop icons, Sound, the music and its track, the theme, the wallpaper, the clock, the weather and the touchpad,
+    owner 05-11-2026 and 14-11-2026), each
     with a short line, work as before; B, Escape or ☰ again go back to the tiles."""
     window, pad = made()
     start(window)
     window.resize(1500, 1000)
     QApplication.processEvents()
     big = window.big
-    assert window.setting_pills == [window.icons_box, window.sound_box, window.theme_pill, window.wallpaper_pill,
-                                    window.clock_pill, window.weather_pill, window.touch_pill]
+    assert window.setting_pills == [window.icons_box, window.sound_box, window.music_box, window.track_pill,
+                                    window.theme_pill, window.wallpaper_pill, window.clock_pill, window.weather_pill,
+                                    window.touch_pill]
     assert not any(p in window.header_buttons for p in window.setting_pills)
     assert all(big.settings_page.isAncestorOf(p) for p in window.setting_pills)
     assert [label.text() for label in big.setting_lines] == list(mw.SETTING_LINES)

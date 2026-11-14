@@ -28,8 +28,7 @@ TAG = re.compile(r"^(?P<app>[a-z0-9-]+)-v(?P<version>\d+\.\d+\.\d+)$")      # a 
 # The suites in a repository of their own (owner, 13-11-2026: one repository per suite), by folder: such a suite is
 # cloned into this checkout as that folder (Nexus's .gitignore lists it), where suites() and every tool find it as
 # before; a checkout of Nexus alone, as Nexus's CI has, is without it. git in that folder is the suite's.
-OWN_REPOSITORIES = {"bazzite-console": "RobertoTorino/bazzite-console",
-                    "windows-portable": "RobertoTorino/windows-portable"}
+OWN_REPOSITORIES = {"windows-portable": "RobertoTorino/windows-portable"}
 
 
 def suites(root: Path = ROOT) -> list[Path]:
@@ -49,21 +48,6 @@ def of_repository(root: Path = ROOT) -> list[Path]:
     """The suites that are folders of *root*'s own repository: suites() without those in a repository of their
     own. What Nexus's workflows, its release and its listings hold."""
     return [folder for folder in suites(root) if folder == root or not own_repository(folder)]
-
-
-def core_dir(folder: Path, root: Path | None = None) -> Path:
-    """The core package the apps of the suite in *folder* bundle: Nexus's core/bc250_core, at the root beside the
-    suites, or the suite's own (<suite>/core/<package>/, with <suite>/core/VERSION: the Bazzite Console Suite's
-    bazzite_console_core), which a suite carries instead while its apps are not on Nexus's."""
-    own = sorted(p.parent for p in (folder / "core").glob("*/__init__.py"))
-    if own and folder != (root or folder.parent):
-        return own[0]
-    return (root or folder.parent) / "core" / "bc250_core"
-
-
-def own_core(folder: Path, root: Path | None = None) -> bool:
-    """Whether the suite in *folder* carries a core of its own (core_dir())."""
-    return core_dir(folder, root).parent.parent == folder
 
 
 def _read(path: Path) -> str:

@@ -36,7 +36,8 @@ Each design (a suite's, the Nexus page's) has its own; none is carried over to a
   poorly as text on the dark views. The log in the check app uses them; a second tint of a hue is a deviation.
 - **Brand and hardware colors stay what they are:** PlayStation blue and the face-button colors in the PlayStation
   apps, the light bar's and the color wheel's pure colors in HD Control, a game's own artwork, the gaming blue
-  `#0a55b0` of the gaming apps in the emulator managers (blue, though their icon is red since 11-11-2026).
+  `#0a55b0` of the gaming apps in the emulator managers (blue; their icon is a silver controller with a blue light
+  since 13-11-2026).
 - **Anything else is a deviation**, listed under Color families below with the app it is in. A new color is
   added to the family it belongs to, or it needs a reason here.
 
@@ -492,7 +493,7 @@ Background colors:
 
 | Color | Hex | Used for |
 | --- | --- | --- |
-| ![#0a55b0](design/colors/block-0a55b0.svg) | `#0a55b0` | Gaming blue: the primary button, hover borders; the gaming apps' color (their icon is red since 11-11-2026). |
+| ![#0a55b0](design/colors/block-0a55b0.svg) | `#0a55b0` | Gaming blue: the primary button, hover borders; the gaming apps' color (their icon is a silver controller since 13-11-2026). |
 | ![#2a6cc4](design/colors/block-2a6cc4.svg) | `#2a6cc4` | Gaming blue on hover. |
 | ![#08448d](design/colors/block-08448d.svg) | `#08448d` | Gaming blue while pressed. |
 | ![#0a55b01a](design/colors/block-0a55b01a.svg) | `#0a55b01a` | Blue tint (10 %): hover, every other table row. |

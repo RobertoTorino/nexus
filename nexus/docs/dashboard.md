@@ -40,6 +40,10 @@ Run the installer as your own user, not as administrator. Then a double-click on
 Desktop, or its Start-menu entry, opens the dashboard without a console window. From Git Bash, `dev/dash/run.sh`
 opens it too.
 
+Opening the dashboard while it is already open closes the open window and opens a new one: the app runs from the
+checkout, so the new window has the code as it is now. An open dashboard that does not answer within 5 seconds is
+ended.
+
 ## The window
 
 The header: Nexus's icon (a click opens the Nexus page), the name and the version, and the **Suite** box: the suite the tours and the icons work
@@ -321,6 +325,9 @@ version and an i that says how to handle it. None of them is installed from here
 | DualSense firmware (and the Edge's) | Sony's firmware list | A new version since the last look: connect the controller with a USB cable and update it in USB HD Control. |
 | PS4 system software | Sony's PS4 update list | A new version since the last look: update on the console. |
 | PS5 system software, PlayStation Portal | nothing a program can read | **On the device**: the i says where the device shows its updates. |
+
+GitHub is asked with the GitHub CLI's login (`gh auth login`): without one it allows 60 requests an hour, and a card
+then says its hourly limit is used up, and until when.
 
 An app installed without its emulator so far is no update; the card says so. Sony's versions are news once: the
 first look learns them, a later one shows what changed. The list is `dev/deps/nexus_deps/catalogs/upstreams.json`:

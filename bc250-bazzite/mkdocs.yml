@@ -30,6 +30,7 @@ theme:
     accent: custom
   features:
     - navigation.sections
+    - navigation.expand        # the apps' categories under Apps are open
     - navigation.top
     - navigation.indexes
     - toc.follow
@@ -64,36 +65,40 @@ nav:
       - apps/index.md
       - App categories: apps/categories.md
       - Covers from SteamGridDB: apps/covers.md
-      - BC-250 Bazzite Test: apps/check.md
-      - BC-250 GPU Manager: apps/gpu.md
-      - BC-250 Upscaler Manager: apps/upscaler.md
-      - BC-250 CU Bisect: apps/compute.md
-      - BC-250 Cores Bisect: apps/cores.md
-      - BC-250 GPU OC Bisect: apps/oc.md
-      - BC-250 Persistent ACPI: apps/acpi.md
-      - System Overlay: apps/overlay.md
-      - USB IPS3.5: apps/ips35.md
-      - USB HD Cam: apps/hdcam.md
-      - USB HD Control: apps/hdcontrol.md
-      - BC-250 BIOS Reader: apps/bios.md
-      - BC-250 Memory Manager: apps/vram.md
-      - BC-250 Fan Control: apps/fan.md
-      - BC-250 USB Wi-Fi: apps/wdriver.md
-      - BC-250 ACE Queues: apps/ace.md
-      - BC-250 Mesh Shaders: apps/mesh.md
-      - BC-250 CEC Manager: apps/cec.md
-      - Bazzite SFTP Tools: apps/sftp.md
-      - BC-250 PS Remote Play: apps/consoles.md
-      - BC-250 XB Remote Play: apps/clb.md
-      - shadPS4 Manager: apps/shadps4.md
-      - RPCS3 Manager: apps/rpcs3.md
-      - PPSSPP Manager: apps/ppsspp.md
-      - PCSX2 Manager: apps/pcsx2.md
-      - Vita3K Manager: apps/vita3k.md
-      - Xenia Manager: apps/xenia.md
-      - Bazzite DatStation: apps/datstation.md
-      - SSD Check: apps/ssd.md
-      - BC-250 Bluetooth Pairing: apps/btpair.md
+      - Sustainable:
+          - BC-250 Bazzite Test: apps/check.md
+          - BC-250 Cores Bisect: apps/cores.md
+          - BC-250 CU Bisect: apps/compute.md
+          - BC-250 Fan Control: apps/fan.md
+          - BC-250 GPU Manager: apps/gpu.md
+          - BC-250 GPU OC Bisect: apps/oc.md
+          - BC-250 Memory Manager: apps/vram.md
+          - BC-250 Persistent ACPI: apps/acpi.md
+      - Graphics:
+          - BC-250 ACE Queues: apps/ace.md
+          - BC-250 Mesh Shaders: apps/mesh.md
+          - BC-250 Upscaler Manager: apps/upscaler.md
+      - Gaming:
+          - Bazzite DatStation: apps/datstation.md
+          - BC-250 PS Remote Play: apps/consoles.md
+          - BC-250 XB Remote Play: apps/clb.md
+          - PCSX2 Manager: apps/pcsx2.md
+          - PPSSPP Manager: apps/ppsspp.md
+          - RPCS3 Manager: apps/rpcs3.md
+          - shadPS4 Manager: apps/shadps4.md
+          - Vita3K Manager: apps/vita3k.md
+          - Xenia Manager: apps/xenia.md
+      - Utilities:
+          - Bazzite SFTP Tools: apps/sftp.md
+          - BC-250 BIOS Reader: apps/bios.md
+          - BC-250 Bluetooth Pairing: apps/btpair.md
+          - BC-250 CEC Manager: apps/cec.md
+          - BC-250 USB Wi-Fi: apps/wdriver.md
+          - SSD Check: apps/ssd.md
+          - System Overlay: apps/overlay.md
+          - USB HD Cam: apps/hdcam.md
+          - USB HD Control: apps/hdcontrol.md
+          - USB IPS3.5: apps/ips35.md
   - Development:
       - development/index.md
       - Architecture and consistency: development/architecture.md

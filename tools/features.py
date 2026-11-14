@@ -83,7 +83,7 @@ def load(root: Path = ROOT) -> tuple[list[Suite], list[Family], list[str]]:
             errors.append(f"[suites.{key}]: there is no suite {key}/ with portal/apps.toml")
         columns.append(suite)
     for key in found:
-        if key not in data.get("suites", {}) and key not in nexus_suites.OWN_REPOSITORIES:
+        if key not in data.get("suites", {}):
             errors.append(f"the suite {key}/ has no [suites.{key}] (its name, short name and wiki)")
     by_key = {suite.key: suite for suite in columns}
 

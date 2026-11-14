@@ -35,6 +35,13 @@ def settings_in_a_temp_folder(tmp_path):
 
 
 @pytest.fixture(autouse=True)
+def no_github_sign_in(monkeypatch):
+    """No test asks gh for the machine's token: a request is unsigned unless the test gives one."""
+    from nexus_deps import upstreams
+    monkeypatch.setattr(upstreams, "_token", "")
+
+
+@pytest.fixture(autouse=True)
 def no_tooltip_left():
     """The rounded tooltip lets go of the app after each test (create_app() is not called here)."""
     yield
