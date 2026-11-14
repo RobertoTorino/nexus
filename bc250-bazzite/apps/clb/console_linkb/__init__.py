@@ -5,7 +5,7 @@ Greenlight and xal-node (MIT; see the README's License section)."""
 
 APP_NAME = "BC-250 XB Remote Play"
 APP_ID = "bc250-console-linkb"
-__version__ = "2.1.0"
+__version__ = "2.1.1"
 
 from pathlib import Path
 

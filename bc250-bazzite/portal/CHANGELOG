@@ -1,3 +1,7 @@
+Changelog: 14-11-2026 18:50:09
+
+Release 20.1.0. Pins check-v2.1.1, gpu-v0.6.1, compute-v0.5.1, cores-v0.5.1, oc-v0.4.1, acpi-v0.5.1, vram-v2.1.1, fan-v2.1.2, rpcs3-v5.1.1, consoles-v3.1.1, clb-v2.1.1, shadps4-v5.2.1, datstation-v4.1.1, ppsspp-v3.1.1, pcsx2-v5.1.1, vita3k-v3.1.1, xenia-v3.1.1.
+
 Changelog: 14-11-2026 17:13:10
 
 Added. The portal plays background music (owner, 14-11-2026): a track that plays quietly, over and over, while the

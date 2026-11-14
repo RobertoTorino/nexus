@@ -4,7 +4,7 @@ and, at a critical temperature, shuts the board down cleanly. The board changes 
 
 APP_NAME = "BC-250 Fan Control"
 APP_ID = "bc250-fan-control"
-__version__ = "2.1.1"
+__version__ = "2.1.2"
 
 from pathlib import Path
 
