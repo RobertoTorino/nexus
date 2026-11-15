@@ -1,3 +1,8 @@
+Changelog: 15-11-2026 00:01:07
+
+Fixed. The help and comments name no BC250 suite folder (the suite has a repository of its own since 14-11-2026). The
+tests work on a small Bazzite suite of their own instead of the BC250 suite in the checkout.
+
 Changelog: 14-11-2026 13:50:33
 
 Added. Starting Nexus Dashboard while it is open closes the open window and opens a new one, with the checkout's

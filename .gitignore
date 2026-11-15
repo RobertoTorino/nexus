@@ -17,9 +17,7 @@ _python/
 # folder mkdocs is run from: anywhere, not only the root (29-10-2026: tools/.cache was committed)
 /site/
 /nexus/site/
-/bc250-bazzite/site/
 .cache/
-/bc250-bazzite/.cache/
 
 # A suite in a repository of its own (owner, 13-11-2026), cloned into this checkout as its folder: the Nexus tools
 # find it there (tools/suites.py), git here leaves it alone

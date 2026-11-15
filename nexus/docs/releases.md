@@ -11,13 +11,15 @@ version, and the ticked one is the suite the steps, the pins and the board tests
 that suite instead (the window opens on the one ticked last); the git buttons, the wikis and GitHub are the repository's whatever the suite. Each suite's tags start
 with its prefix: the Windows Portable Suite's are `wp-test-v0.1.0` and `wp-portal-v0.1.0`.
 
-What a release of the BC250 Bazzite Suite involves, step by step, is in its wiki:
-[apps.toml and releases](https://robertotorino.github.io/nexus/bc250-bazzite-suite/portal/#appstoml-and-releases).
+Nexus holds no suite of its own since the BC250 Bazzite Suite moved to a repository of its own (14-11-2026), with
+its own copy of this tool: in a checkout of Nexus the tool lists core and Nexus's own release, and says there is no
+portal to release. What a release of the BC250 Bazzite Suite involves, step by step, is in its wiki:
+[apps.toml and releases](https://robertotorino.github.io/bc250-bazzite/portal/#appstoml-and-releases).
 
 ## Start it
 
 From the repository's root, with the checkout's venv for the system (`.venv-linux` or `.venv-windows`, see
-[Development](https://robertotorino.github.io/nexus/bc250-bazzite-suite/development/)). Nothing is copied when you install it: the menu entry always starts the app of the
+[Development](development.md)). Nothing is copied when you install it: the menu entry always starts the app of the
 checkout you installed it from. After moving the checkout, install it again.
 
 On Linux:
@@ -46,14 +48,15 @@ the settings.
 
 A Nexus release is the one release of the repository: Nexus's version with the suite ticked in the first column,
 when it changed since its last release. A suite of this repository takes part once its release workflow can be called by
-**Release Nexus** (`release-nexus.yml`): the BC250 Bazzite Suite (`release.yml`) is. A suite in a repository of its
-own, the Windows Portable Suite, is not in this tool: it is released in its repository, by its own `release.yml`,
+**Release Nexus** (`release-nexus.yml`); none is now. A suite in a repository of its own is not in this tool here: the
+BC250 Bazzite Suite is released in its repository, with that repository's copy of this tool, and the Windows
+Portable Suite it is released in its repository, by its own `release.yml`,
 started there with the release commit or by a tag
 ([Development](development.md#a-suite-in-a-repository-of-its-own)).
 Each suite is released on its own: a release of one suite never builds another suite's portal, and a draft waiting
 for its device test never holds up another suite's next release.
 Start names the suite to Release Nexus, which carries only that one; its run's title says which ("Release Nexus:
-bc250-bazzite"). When core changed, it is released with the suite ticked; the other suite's apps that bundle it
+<suite>"). When core changed, it is released with the suite ticked; the other suite's apps that bundle it
 wait for that suite's own release. The
 numbered tabs after it are the release by hand, one tag at a time, for the odd single release outside a Nexus
 release.
@@ -148,7 +151,7 @@ re-released on its own, a withdrawal); a release of what changed is the Nexus re
   tag: a changed file in its folder (tests and `requirements-dev.txt` do not count), in the core it bundles, or in
   its manual chapter, committed or not. Hover it for the files. Step 2 says the same for the portal. Those apps are
   ticked when the window opens; untick what waits (**Tick what needs a release** ticks them all again) and enter the
-  versions. The version offered first follows [semantic versioning](https://robertotorino.github.io/nexus/bc250-bazzite-suite/development/architecture/#versions-changelogs-and-releases) from the CHANGELOG
+  versions. The version offered first follows [semantic versioning](https://robertotorino.github.io/bc250-bazzite/development/architecture/#versions-changelogs-and-releases) from the CHANGELOG
   entries since the last tag (`Breaking.` major, `Added.` minor, `Fixed.` patch); its tooltip says why. A version
   that was never tagged (the first release) can be released as it is. **Apply** writes `VERSION`, every copy `tools/check_versions.py` checks and a
   `Release x.y.z.` CHANGELOG entry with your notes, which become the release notes on GitHub. The release notes
@@ -156,10 +159,10 @@ re-released on its own, a withdrawal); a release of what changed is the Nexus re
   pins a tag of that app that was never released, the pin moves to the new version. When `apps.toml` changed since
   the last portal release, for that or another reason (an app added or removed), CI wants a portal bump in the same push:
   Apply makes it too (the lowest portal version CI accepts, with a CHANGELOG entry that lists the changed pins) and
-  says so; the portal release itself stays step 2. It runs `bc250-bazzite/tools/check_manifest.py`. Then commit and
+  says so; the portal release itself stays step 2. It runs `<suite>/tools/check_manifest.py`. Then commit and
   push with **Commit your changes** and **Push them** on the Nexus release tab (on Linux the push runs
   `tools/ci-local.sh` first and pushes only when CI's jobs pass), and **git tag** on this tab pushes the app tags
-  (steps 1 and 2 of [the suite's release steps](https://robertotorino.github.io/nexus/bc250-bazzite-suite/portal/#appstoml-and-releases)). **Apply** is the pill in the header beside
+  (steps 1 and 2 of [the suite's release steps](https://robertotorino.github.io/bc250-bazzite/portal/#appstoml-and-releases)). **Apply** is the pill in the header beside
   **Refresh** (*New app releases*); from another tab it opens step 1. Once applied, it is greyed out: what it
   wrote is on top of each CHANGELOG, and an app left unticked then is not ticked again. It works again when another
   app is to be released, or when you tick one.
@@ -169,7 +172,7 @@ re-released on its own, a withdrawal); a release of what changed is the Nexus re
   steps). The window shows the lowest portal version CI accepts against
   the last portal release (its tag; the last push, `origin/main`, while there is none), and offers the higher of that and what semantic versioning gives since the last
   portal tag (its CHANGELOG entries, and the apps added, removed or moved in `apps.toml`); **Bump** writes it, the portal's version on the first line and Nexus's on the second, with a CHANGELOG entry that lists the pinned app
-  releases, and runs `bc250-bazzite/tools/check_manifest.py` (step 4). Then commit, test on a BC-250 ([before its tag](https://robertotorino.github.io/nexus/bc250-bazzite-suite/portal/#testing-a-portal-release-before-its-tag)), and only then push
+  releases, and runs `<suite>/tools/check_manifest.py` (step 4). Then commit, test on a BC-250 ([before its tag](https://robertotorino.github.io/bc250-bazzite/portal/#testing-a-portal-release-before-its-tag)), and only then push
   and tag the portal (step 5: **git tag** beside Bump). The window lists these commands in that order in **Commands**. While step 1's releases are
   not tagged yet, Bump portal lists step 1's commands with the bump in them instead (amending the release commit
   when it is already made and not pushed), and the portal release follows once the apps are pinned. A suite made
@@ -183,10 +186,10 @@ re-released on its own, a withdrawal); a release of what changed is the Nexus re
   changes nothing and says so in a popup: the next steps are commit, test, push and tag.
 - **3. Retract app:** withdraws a release (see [Withdrawing a release](#withdrawing-a-release)).
   For a Windows suite, its commands test the withdrawal with `portal\run.ps1` on the handheld, as above.
-- **Test on this board** holds the tests of a release on a BC-250. **Test app updates** and **Test Portal
-  release** run the two [board tests](https://robertotorino.github.io/nexus/bc250-bazzite-suite/portal/#testing-a-portal-release-before-its-tag) in a terminal, with the suite's `bc250-bazzite/tools/check-release.sh`: the portal from the
+- **Test on this board** holds the tests of a release on the suite's device. **Test app updates** and **Test Portal
+  release** run the two [board tests](https://robertotorino.github.io/bc250-bazzite/portal/#testing-a-portal-release-before-its-tag) in a terminal, with the suite's `<suite>/tools/check-release.sh`: the portal from the
   checkout before the push, and the published portal release after GitHub has built it. **Test withdrawal** does
-  the first on a board with a withdrawn app installed. The tests run on the ticked suite's own system: the BC250
+  the first on a board with a withdrawn app installed. The tests run on the ticked suite's own system: a Bazzite
   suite's on Linux (the board). For a Windows suite they run on Windows (the handheld), with its
   `tools\check-release.ps1` in a PowerShell window: **Test app updates** and **Test withdrawal** start the portal
   from the checkout (`check-release.ps1 local`), **Test Portal release** downloads the published portal release,
@@ -204,8 +207,8 @@ re-released on its own, a withdrawal); a release of what changed is the Nexus re
   says so: a fine-grained token for this repository only is safer. Committing and pushing are the Nexus release
   tab's steps, also for a suite that releases by tags: **Commit your changes** stages every change and new file,
   sets the exec bits CI checks (`tools/fix-modes.sh`), runs `tools/check_versions.py` and `check_manifest.py` of the
-  suites the changes touch (`--suite bc250-bazzite` and `bc250-bazzite/tools/check_manifest.py` for a BC250 change;
-  `--nexus`, core and `dev/`, when no suite changes), and commits only when they pass: one suite's failing check
+  suites the changes touch (`--suite <suite>` and `<suite>/tools/check_manifest.py` for a change to a suite;
+  `--nexus`, core and `dev/`, when no suite changes, as in Nexus now), and commits only when they pass: one suite's failing check
   never holds another suite's commit, as its CI never holds another suite's tags. **Push them** brings in what
   GitHub has first and, on Linux, runs `tools/ci-local.sh` and pushes only when CI's jobs pass. A commit that must
   join the last one (Bump portal before step 1's push: `git commit --amend`) is among the commands the step offers
@@ -340,8 +343,9 @@ tests pin their own local builds instead of the published ones.
 
 The releases made in this repository share its Releases page, so each release's title names its suite and app, from
 the portal's name and `apps.toml`: *BC250 Bazzite Suite: Portal 12.0.0*, *BC250 Bazzite Suite: Xenia Manager
-0.11.0* (`build_release.py` of each suite writes it). The Windows Portable Suite's releases up to 13-11-2026 are
-here too; later ones are in its own repository.
+0.11.0* (`build_release.py` of each suite writes it). The BC250 Bazzite Suite's releases up to 14-11-2026 and the
+Windows Portable Suite's up to 13-11-2026 are here; later ones are in each suite's own repository, and the Nexus
+index says where.
 
 A release is built and published by its suite's release workflow (**Release**): started by a tag pushed by hand, or
 called by **Release Nexus** for a Nexus release. A push to main starts **CI Nexus** and, when it changes the suite

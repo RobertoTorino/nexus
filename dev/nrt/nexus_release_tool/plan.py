@@ -10,7 +10,7 @@ A release has two steps, because an app's checksum only exists once GitHub has b
    The version offered first follows semantic versioning from the CHANGELOG entries since the last tag: one that
    starts with Breaking. asks for a major release, Added. for a minor one, Fixed. for a patch.
    Commit, push, tag <app>-v<x.y.z>, push the tag: release.yml builds the tarball and SHA256SUMS.
-2. Pin and release Portal: pin each released app in portal/apps.toml (tag and sha256, as tools/pin_app.py), bump portal/VERSION at
+2. Pin and release Portal: pin each released app in portal/apps.toml (tag and sha256: pin_text()), bump portal/VERSION at
    least as much as tools/check_manifest.py asks, and a CHANGELOG entry listing the pins. Commit, test on a board
    (check-release.sh local), then push and tag portal-v<x.y.z>, and check the published release
    (check-release.sh release).
@@ -74,21 +74,55 @@ def suites(root: Path = CHECKOUT) -> list[str]:
 
 
 def suite_dir(root: Path, suite: str | None = None) -> Path:
-    """The folder of the named suite, or the default suite from tools/suites.py; *root* itself when it is laid out
-    as a suite (the repositories the tests make)."""
+    """The folder of the named suite, or the default suite of this repository (tools/suites.py: the one suite, or
+    the one whose tags have no prefix; never a suite in a repository of its own); *root* itself when it is laid out
+    as a suite (the repositories the tests make), or holds no suite of its own (Nexus since 14-11-2026)."""
     if suite:
         return root / suite
-    try:
-        return nexus_suites.suite(root=root)
-    except LookupError:
-        return root
+    own = [folder for folder in nexus_suites.of_repository(root) if folder != root]
+    plain = [folder for folder in own if not nexus_suites.tag_prefix(folder)]
+    return own[0] if len(own) == 1 else plain[0] if len(plain) == 1 else root
 
 
-# The manifest's parser and the pin tool are a suite's (its portal reads its manifest): the first suite's serve
-# every suite while the suites' portals read one kind of manifest.
-check_manifest = _load("check_manifest", suite_dir(CHECKOUT) / "tools")
-pin_app = _load("pin_app", suite_dir(CHECKOUT) / "tools")
+# The manifest's parser is a suite's (its portal reads its manifest): each suite's own tools/check_manifest.py,
+# loaded when a suite is released. check_manifest is the one for a suite without its own; None in a checkout
+# without a suite (the BC250 Bazzite Suite left Nexus for a repository of its own, 14-11-2026).
+check_manifest = None
 _manifest_tools: dict[Path, object] = {}
+REPO_URL = "https://github.com/RobertoTorino/nexus"      # this repository: its releases, runs and SHA256SUMS
+_PIN_TAG = re.compile(r"^(?P<app>[a-z0-9-]+)-v\d+\.\d+\.\d+$")
+
+
+def fetch_sha256_of(tag: str, asset: str = "") -> str:
+    """The checksum of the release's *asset* (default <tag>.tar.gz) in its SHA256SUMS on GitHub."""
+    asset = asset or f"{tag}.tar.gz"
+    url = f"{REPO_URL}/releases/download/{tag}/SHA256SUMS"
+    with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "nexus-release-tool"}),
+                                timeout=30) as response:
+        sums = response.read().decode("utf-8", "replace")
+    for line in sums.splitlines():
+        parts = line.split()
+        if len(parts) == 2 and parts[1].lstrip("*") == asset:
+            return parts[0].lower()
+    raise SystemExit(f"{url} does not list {asset}")
+
+
+def pin_text(text: str, app: str, tag: str, sha256: str) -> str:
+    """apps.toml with the tag and sha256 of [apps.<app>] replaced; comments and layout stay (a table without a
+    sha256 line, a new app before its first release, gets one after its tag line)."""
+    start = re.search(rf"^\[apps\.{re.escape(app)}\]\s*$", text, re.M)
+    if start is None:
+        raise SystemExit(f"apps.toml has no [apps.{app}]")
+    following = re.search(r"^\[", text[start.end():], re.M)
+    end = start.end() + following.start() if following else len(text)
+    block = text[start.end():end]
+    block, count = re.subn(r'^tag = ".*"$', f'tag = "{tag}"', block, count=1, flags=re.M)
+    if count != 1:
+        raise SystemExit(f"[apps.{app}] has no tag line")
+    block, count = re.subn(r'^sha256 = ".*"$', f'sha256 = "{sha256}"', block, count=1, flags=re.M)
+    if count != 1:
+        block = re.sub(r'^(tag = ".*"\n)', rf'\g<1>sha256 = "{sha256}"\n', block, count=1, flags=re.M)
+    return text[:start.end()] + block + text[end:]
 
 
 def tag_prefix(root: Path, suite: str | None = None) -> str:
@@ -98,11 +132,13 @@ def tag_prefix(root: Path, suite: str | None = None) -> str:
 
 
 def manifest_tools(root: Path, suite: str | None = None):
-    """The check_manifest module that reads the suite's apps.toml and counts its portal bumps: a suite with a tag
-    prefix has a manifest of its own (wp-<app>-v<x.y.z> tags, its own categories), read by its own
-    tools/check_manifest.py; the first suite's serves the suites without one."""
+    """The check_manifest module that reads the suite's apps.toml and counts its portal bumps: the suite's own
+    tools/check_manifest.py (a suite with a tag prefix has a manifest of its own: wp-<app>-v<x.y.z> tags, its own
+    categories); check_manifest for a suite without one. SystemExit when there is neither."""
     folder = suite_dir(root, suite) / "tools"
-    if not tag_prefix(root, suite) or not (folder / "check_manifest.py").is_file():
+    if not (folder / "check_manifest.py").is_file() or (check_manifest is not None and not tag_prefix(root, suite)):
+        if check_manifest is None:
+            raise SystemExit(f"{folder.parent.name} has no tools/check_manifest.py")
         return check_manifest
     key = folder.resolve()
     if key not in _manifest_tools:
@@ -154,7 +190,8 @@ def manifest_check(root: Path, suite: str | None = None) -> str:
 
 def manifest_checks(root: Path, only: list[str] | None = None) -> list[str]:
     """The suites' manifest checks, as the commit runs them: every suite's, or those in *only* (touched_suites())."""
-    return [manifest_check(root, suite) for suite in (suites(root) or [None]) if only is None or suite in only]
+    names = suites(root) or ([None] if (root / "portal" / "apps.toml").is_file() else [])   # none: no suite here
+    return [manifest_check(root, suite) for suite in names if only is None or suite in only]
 
 
 def touched_suites(root: Path, paths: list[str]) -> list[str] | None:
@@ -517,21 +554,26 @@ def bad_tags(root: Path, units: list[Unit]) -> list[str]:
 
 def load_units(root: Path = CHECKOUT, suite: str | None = None) -> list[Unit]:
     """Core, the suite's portal and its apps, each with its version, tags and pin (*suite*: a folder name from
-    suites(); None: the first suite)."""
+    suites(); None: the first suite). In a checkout without a suite (Nexus since 14-11-2026) core and the Nexus
+    release alone."""
     pins = {}
-    tools = manifest_tools(root, suite)
+    has_suite = manifest_path(root, suite).is_file()
     prefix = tag_prefix(root, suite)
     every_tag, new_files = all_tags(root), untracked(root)        # once, not per unit: see all_tags()
-    try:
-        for entry in tools.manifest.load(manifest_path(root, suite)):
-            pins[entry.key] = entry
-    except (OSError, tools.manifest.ManifestError):
-        pass
+    if has_suite:
+        tools = manifest_tools(root, suite)
+        try:
+            for entry in tools.manifest.load(manifest_path(root, suite)):
+                pins[entry.key] = entry
+        except (OSError, tools.manifest.ManifestError):
+            pass
     units = []
     folders = [("core", "core")] + ([(NEXUS, ".")] if (root / "VERSION").is_file() else [])
-    folders += [("portal", rel(root, "portal", suite=suite))]
-    folders += [(p.name, rel(root, "apps", p.name, suite=suite)) for p in sorted((suite_dir(root, suite) / "apps").iterdir())
-                if (p / "VERSION").is_file() and not (p / CHECKOUT_ONLY).is_file()]
+    if has_suite:
+        folders += [("portal", rel(root, "portal", suite=suite))]
+        folders += [(p.name, rel(root, "apps", p.name, suite=suite))
+                    for p in sorted((suite_dir(root, suite) / "apps").iterdir())
+                    if (p / "VERSION").is_file() and not (p / CHECKOUT_ONLY).is_file()]
     for key, path in folders:
         version = (root / path / "VERSION").read_text(encoding="utf-8").strip()
         tags = tags_of(root, key, prefix, every_tag) if key not in ("core", NEXUS) else []
@@ -594,7 +636,7 @@ def suite_releases(root: Path) -> list[str]:
     if not base:
         return []
     out = git(root, "diff", "--name-only", base, "--", ":(glob)**/apps/*/VERSION", ":(glob)**/portal/VERSION") or ""
-    new = [f"{NEW_SUITE}{p.name}" for p in nexus_suites.suites(root)
+    new = [f"{NEW_SUITE}{p.name}" for p in nexus_suites.of_repository(root)     # not one of another repository
            if p != root and git(root, "cat-file", "-e", f"{base}:{p.relative_to(root).as_posix()}/portal/apps.toml")
            is None]
     found = []
@@ -900,6 +942,8 @@ def portal_offer(root: Path, base: str, suite: str | None = None) -> tuple[str, 
     refused, and the bump was step 1's or step 2's): the portal version to write, why that one, and what changed
     in apps.toml. The version is step 2's suggestion (the portal's CHANGELOG entries count: a Breaking entry makes
     it major) or the least the check accepts, whichever is higher. None when no bump is needed."""
+    if not manifest_path(root, suite).is_file():
+        return None                         # no suite in this checkout: no portal to bump
     version = (suite_dir(root, suite) / "portal" / "VERSION").read_text(encoding="utf-8").strip()
     minimum, why = portal_minimum(root, base, version, suite)
     if not minimum or minimum == version:
@@ -941,7 +985,10 @@ def set_withdrawn(text: str, key: str, reason: str) -> str:
 
 
 def withdrawable(root: Path, units: list[Unit], suite: str | None = None) -> list[Unit]:
-    """The apps a portal pins that can be withdrawn: never the required one (Bazzite Test, always installed)."""
+    """The apps a portal pins that can be withdrawn: never the required one (Bazzite Test, always installed); none
+    in a checkout without a suite."""
+    if not manifest_path(root, suite).is_file():
+        return []
     required = {e.key for e in manifest_tools(root, suite).manifest.load(manifest_path(root, suite)) if e.required}
     return [u for u in units if u.kind == "app" and not u.standalone and u.pinned_tag and u.key not in required]
 
@@ -1024,7 +1071,7 @@ def applied(root: Path, unit: Unit) -> bool:
 
 def pin(root: Path, unit: Unit, sha256: str, suite: str | None = None) -> None:
     text = manifest_path(root, suite).read_text(encoding="utf-8")
-    write_manifest(root, pin_app.pin(text, unit.key, unit.tag, sha256.lower()), suite)
+    write_manifest(root, pin_text(text, unit.key, unit.tag, sha256.lower()), suite)
     unit.pinned_tag, unit.pinned_sha = unit.tag, sha256.lower()
 
 
@@ -1035,7 +1082,7 @@ def follow_unreleased_pin(root: Path, unit: Unit, suite: str | None = None) -> b
             or unit.pinned_tag in tags_of(root, unit.key, unit.prefix):
         return False
     text = manifest_path(root, suite).read_text(encoding="utf-8")
-    write_manifest(root, pin_app.pin(text, unit.key, unit.tag, ""), suite)
+    write_manifest(root, pin_text(text, unit.key, unit.tag, ""), suite)
     unit.pinned_tag, unit.pinned_sha = unit.tag, ""
     return True
 
@@ -1051,7 +1098,7 @@ def release_asset(tag: str, root: Path = CHECKOUT) -> str:
 
 
 def fetch_sha256(tag: str) -> str:
-    return pin_app.fetch_sha256(tag, release_asset(tag))
+    return fetch_sha256_of(tag, release_asset(tag))
 
 
 def changed_pins(root: Path, base: str, suite: str | None = None) -> list[str]:
@@ -1168,7 +1215,7 @@ class BuildRun:
 
 
 def repo_slug() -> str:
-    return pin_app.REPO_URL.removeprefix("https://github.com/")
+    return REPO_URL.removeprefix("https://github.com/")
 
 
 def parse_runs(data: object) -> list[BuildRun]:

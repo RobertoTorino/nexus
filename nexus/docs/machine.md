@@ -21,9 +21,9 @@ What `./test.sh`, `tools/pre-push.sh` (the pre-push hook) and `tools/ci-local.sh
 | Python 3.11 or newer (CI runs 3.12) | the venvs, every tool in `tools/` | comes with Bazzite (`python3`, without PyQt6) | python.org or `winget install Python.Python.3.12`, with the `py` launcher |
 | The development venv (`requirements-dev.txt`) | `./test.sh`, `mkdocs`, the tools; it brings pytest, PyQt6, MkDocs Material and Pillow | `.venv-linux/`, see [Development](development.md#set-up-and-test) | `.venv-windows/` |
 | Homebrew | installs the tools below on Bazzite | comes with Bazzite | not used |
-| podman (or docker) | `tools/ci-local.sh`: CI's jobs in a container, with Python 3.12, shellcheck, fakeroot, Rust and BC-250 PS Remote Play's build tools inside | comes with Bazzite | `winget install RedHat.Podman`; it runs in podman's machine, see [Development](development.md) |
+| podman (or docker) | `tools/ci-local.sh`: CI's jobs in a container, with Python 3.12, shellcheck and fakeroot inside | comes with Bazzite | `winget install RedHat.Podman`; it runs in podman's machine, see [Development](development.md) |
 | shellcheck | the shell checks of CI | `brew install shellcheck` | `winget install koalaman.shellcheck` |
-| fakeroot | the installer tests (`bc250-bazzite/tools/installer-tests/`) | `brew install fakeroot` | Linux only |
+| fakeroot | a suite's installer tests (`<suite>/tools/installer-tests/`), run from Nexus Installer Tests | `brew install fakeroot` | Linux only |
 | zip, tar, sha256sum | `tools/build_release.py` | come with Bazzite | come with Git Bash |
 
 ### Optional
@@ -35,9 +35,10 @@ Each for one tool or one kind of work; without it that tool does not run, or its
 | Node.js | the design panel's test (`tools/tests/test_design_panel.py`, skipped without it) | `brew install node` | `winget install OpenJS.NodeJS.LTS` |
 | GitHub CLI (`gh`) | the runs and releases from a terminal, the Nexus Release Tool's sign-in | `brew install gh` | `winget install GitHub.cli` |
 | actionlint | a changed workflow in `.github/workflows/` checked before the push, with shellcheck on its `run:` steps: `actionlint` at the repository root | `brew install actionlint` | `winget install rhysd.actionlint` |
+| GNU patch (`patch`) | the BC250 Bazzite Suite's upstream check (`tools/check_upstream.py` in its repository) tries the ACE Queues patch on Mesa's newest release with `patch -p1 --dry-run`; without it that test (`tools/tests/test_check_upstream.py`) skips | `brew install gpatch` | not used |
 | ffmpeg | the video tours (each suite's `tools/record-tour.sh` and `tools/record-app-tour.sh`, on its own system) | comes with Bazzite | `winget install Gyan.FFmpeg` |
-| Rust (rustup with cargo and clippy), maturin, nasm, the libva headers | BC-250 PS Remote Play's native core, only to run `cargo test` or `maturin build` on the machine itself; the container of `tools/ci-local.sh` has them all | rustup from rustup.rs, `brew install nasm`, maturin with pip in the venv | `winget install Rustlang.Rustup`; the decoder builds on Linux only |
-| PyInstaller and Pillow | `tools/build_windows_exe.py`, the Windows executable of Bazzite SFTP | not used | in `.venv-windows/`, `pip install pyinstaller pillow` |
+| Rust (rustup with cargo and clippy), maturin, nasm, the libva headers | BC-250 PS Remote Play's native core (in the BC250 Bazzite Suite's repository), only to run `cargo test` or `maturin build` on the machine itself; the container of that repository's `tools/ci-local.sh` has them all | rustup from rustup.rs, `brew install nasm`, maturin with pip in the venv | `winget install Rustlang.Rustup`; the decoder builds on Linux only |
+| PyInstaller and Pillow | `tools/build_windows_exe.py`: the Windows Portable Suite's programs, and the BC250 Bazzite Suite's SFTP Tools in its own repository | not used | in `.venv-windows/`, `pip install pyinstaller pillow` |
 | OBS Studio, with its WebSocket server on | Nexus Demo Recorder (`dev/demo/`) | flatpak `com.obsproject.Studio`, or `obs` | `winget install OBSProject.OBSStudio` |
 | notify-send | Nexus Deps' hourly reminder (below) | comes with Bazzite | not used |
 | WinDbg (with `cdb.exe`) | a native crash of a Windows app (exception 0xc0000409 and the like, nothing in the app's log): `cdb` attached to the program writes a dump and every thread's stack when it crashes | not used | `winget install Microsoft.WinDbg`; `cdb.exe` is in its package's `amd64` folder |

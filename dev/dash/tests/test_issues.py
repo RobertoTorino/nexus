@@ -73,7 +73,7 @@ def test_the_tile_opens_the_dialog_and_closes_the_ticked(qapp, monkeypatch):
             return [12]
 
     monkeypatch.setattr(main_window, "IssuesDialog", Fake)
-    window = MainWindow(settings=None, suite="bc250-bazzite", issues_source=lambda: ISSUES)
+    window = MainWindow(settings=None, issues_source=lambda: ISSUES)
     window.close_issues = lambda numbers, comment: closed.append((numbers, comment))
     tile = next(window.tiles.item(i).data(Qt.ItemDataRole.UserRole) for i in range(window.tiles.count())
                 if window.tiles.item(i).text() == "Close issues")
@@ -95,7 +95,7 @@ def test_close_issues_runs_gh_for_each_in_turn(qapp, tmp_path, monkeypatch):
     gh.write_text('#!/bin/sh\necho "closed $3"\n[ "$3" != 7 ]\n', encoding="utf-8")
     gh.chmod(0o755)
     monkeypatch.setattr(main_window, "gh_program", lambda: str(gh))
-    window = MainWindow(settings=None, suite="bc250-bazzite")
+    window = MainWindow(settings=None)
     window.close_issues([12, 14], "")
     wait_for(window)
     out = window.output.toPlainText()
@@ -112,7 +112,7 @@ def test_close_issues_runs_gh_for_each_in_turn(qapp, tmp_path, monkeypatch):
 
 def test_close_issues_without_gh_closes_nothing(qapp, monkeypatch):
     monkeypatch.setattr(main_window, "gh_program", lambda: "")
-    window = MainWindow(settings=None, suite="bc250-bazzite")
+    window = MainWindow(settings=None)
     window.close_issues([12], "")
     assert "not installed; nothing was closed" in window.output.toPlainText() and window.closer is None
     window.close()
@@ -120,7 +120,7 @@ def test_close_issues_without_gh_closes_nothing(qapp, monkeypatch):
 
 def test_a_gh_that_does_not_start_is_said(qapp, tmp_path, monkeypatch):
     monkeypatch.setattr(main_window, "gh_program", lambda: str(Path(tmp_path / "missing-gh")))
-    window = MainWindow(settings=None, suite="bc250-bazzite")
+    window = MainWindow(settings=None)
     window.close_issues([12, 14], "")
     for _ in range(50):
         QApplication.processEvents()

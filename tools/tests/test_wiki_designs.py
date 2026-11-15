@@ -14,7 +14,7 @@ import pytest
 yaml = pytest.importorskip("yaml")
 
 SUITE = Path(__file__).resolve().parents[2]
-WIKIS = sorted(SUITE.glob("*/mkdocs.yml"))        # each wiki in its folder: bc250-bazzite/, nexus/
+WIKIS = sorted(SUITE.glob("*/mkdocs.yml"))        # each wiki in its folder: nexus/, windows-portable/ when cloned
 
 
 class Loader(yaml.SafeLoader):
@@ -34,8 +34,10 @@ def stylesheets(path: Path) -> list[Path]:
     return [(docs / sheet).resolve() for sheet in data.get("extra_css", [])]
 
 
-def test_there_is_more_than_one_wiki():
-    assert len(WIKIS) >= 2 and all(w.is_file() for w in WIKIS)
+def test_the_nexus_page_is_among_the_wikis():
+    """The Nexus page always; a suite's wiki when the suite is in the checkout (Nexus holds none of its own since the
+    BC250 Bazzite Suite moved to a repository of its own, 14-11-2026)."""
+    assert SUITE / "nexus" / "mkdocs.yml" in WIKIS and all(w.is_file() for w in WIKIS)
 
 
 @pytest.mark.parametrize("wiki", WIKIS, ids=lambda p: p.relative_to(SUITE).as_posix())

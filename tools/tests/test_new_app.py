@@ -14,8 +14,7 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
-SUITE = "bc250-bazzite"
-ICONS = ROOT / SUITE / "icons" / "utilities"
+SUITE = "bc250-bazzite"                     # a suite with the template of the BC250 Bazzite Suite's portal
 
 spec = importlib.util.spec_from_file_location("new_app", ROOT / "tools" / "new_app.py")
 na = importlib.util.module_from_spec(spec)
@@ -170,23 +169,24 @@ def checkout(tmp_path) -> Path:
     write(suite / "README.md", README)
     write(suite / "icons" / "categories.toml", "# the apps' icons\n")
     (suite / "icons" / "utilities").mkdir(parents=True)
+    from PIL import Image
     for size, kind in ((1024, "webp"), (512, "webp"), (256, "webp"), (128, "png")):   # real pictures: sync_icons reads them
-        shutil.copy(ICONS / f"utilities-{size}.{kind}", suite / "icons" / "utilities" / f"utilities-{size}.{kind}")
+        Image.new("RGBA", (size, size), "teal").save(suite / "icons" / "utilities" / f"utilities-{size}.{kind}")
     (suite / "tools" / "installer-tests").mkdir(parents=True)
     write(root / "dev" / "deps" / "nexus_deps" / "catalogs" / f"{suite.name}.toml", CATALOG)
     write(root / ".github" / "workflows" / "ci.yml", CI)
     return root
 
 
-def test_defaults():
+def test_defaults(checkout):
     assert na.default_package("BC-250 Fan Control") == "fan_control"
     assert na.default_package("Bazzite DatStation") == "datstation"
     assert na.default_package("USB IPS3.5") == "usb_ips3_5"
     assert na.default_package("3D Thing") == "app_3d_thing"
-    suite = na.read_suite(ROOT, SUITE)
+    suite = na.read_suite(checkout, SUITE)
     assert (suite.name, suite.app_id, suite.prefix, suite.core) == ("BC250 Bazzite Suite", "bc250-bazzite-suite",
                                                                    "bc250", "bc250_core")
-    assert suite.wiki == "https://robertotorino.github.io/nexus/bc250-bazzite-suite/"
+    assert suite.wiki == "https://example.invalid/nexus/bc250-bazzite-suite/"
     assert suite.categories == ("sustainable", "graphics", "gaming", "utilities")      # no Development tab
 
 
@@ -248,9 +248,10 @@ def test_writes_the_app_and_lists_it_everywhere(checkout, capsys):
     if shutil.which("bash"):
         subprocess.run(["bash", "-n", str(app / "install.sh"), str(test)], check=True)
     # The icons: copies of the category's, written by sync_icons.py; the tile too.
-    assert (app / "images" / "bc250-fan2.webp").read_bytes() == (ICONS / "utilities-512.webp").read_bytes()
-    assert (app / "images" / "bc250-fan2-128.png").read_bytes() == (ICONS / "utilities-128.png").read_bytes()
-    assert (suite / "portal" / "images" / "apps" / "fan2.webp").read_bytes() == (ICONS / "utilities-256.webp").read_bytes()
+    icons = suite / "icons" / "utilities"
+    assert (app / "images" / "bc250-fan2.webp").read_bytes() == (icons / "utilities-512.webp").read_bytes()
+    assert (app / "images" / "bc250-fan2-128.png").read_bytes() == (icons / "utilities-128.png").read_bytes()
+    assert (suite / "portal" / "images" / "apps" / "fan2.webp").read_bytes() == (icons / "utilities-256.webp").read_bytes()
     categories = (suite / "icons" / "categories.toml").read_text()
     assert '[fan2]\ncategory = "utilities"\nicons = ["apps/fan2/images/bc250-fan2"]\ntile = "portal/images/apps/fan2.webp"' in categories
     # The portal's manifest, at its end, and the root's copy with it.

@@ -6,7 +6,7 @@ from __future__ import annotations
 import datetime
 import subprocess
 
-from nexus_deps import CATALOG
+from conftest import CATALOG
 from nexus_deps.bazzite import BazziteState, Deployment
 from nexus_deps.dependencies import (
     CheckResult, DependencyStatus, EnvironmentVersion, ToolStatus, Vulnerability, load_catalog, load_tools,
@@ -142,7 +142,7 @@ def test_remind_opens_the_app_on_a_click(monkeypatch):
     monkeypatch.setattr("sys.argv", ["nexus_deps", "--remind"])
     assert entry.main() == 0
     assert len(started) == 1 and started[0][0].endswith("dev/deps/run.sh")
-    assert started[0][1:] == ["--suite", "bc250-bazzite"]
+    assert started[0][1:] == []                    # no suite catalog here: the machine's updates alone
     monkeypatch.setattr(entry, "notify", lambda *args: "fix")
     started.clear()
     assert entry.main() == 0 and started[0][-1] == "--fix"

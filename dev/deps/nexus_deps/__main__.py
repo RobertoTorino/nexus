@@ -24,11 +24,17 @@ from .system import read_sources
 from .upstreams import read as read_upstreams, unnotified
 
 
-def remind(suite: str) -> int:
+def _catalog(path):
+    """The dependencies, tools and apps of the catalog at *path*; none of them without a catalog."""
+    if path is None:
+        return [], [], {}
+    return load_catalog(path), load_tools(path), load_apps(path)
+
+
+def remind(suite: str | None) -> int:
     """The hourly check: a notification when something needs the user; a click on a button opens the app."""
-    path = catalog(suite)
     try:
-        result = check_all(load_catalog(path), load_tools(path), load_apps(path), INFO.user_agent)
+        result = check_all(*_catalog(catalog(suite)), INFO.user_agent)
     except (DependencyCatalogError, DependencyCheckError, OSError) as exc:
         print(f"{APP_NAME}: the dependency check failed: {exc}", file=sys.stderr)
         result = None
@@ -39,7 +45,7 @@ def remind(suite: str) -> int:
     print(note.text)
     answer = notify(APP_NAME, note.text, str(LOGO_PATH), note.actions)
     if answer in ("fix", "open"):
-        argv = [str(ROOT / "run.sh"), "--suite", suite, *(["--fix"] if answer == "fix" else [])]
+        argv = [str(ROOT / "run.sh"), *(["--suite", suite] if suite else []), *(["--fix"] if answer == "fix" else [])]
         subprocess.Popen(argv, start_new_session=True, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
                          stderr=subprocess.DEVNULL)
     return 0
@@ -49,7 +55,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(prog="nexus_deps", description=f"{APP_NAME} {__version__}")
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__} (core {CORE_VERSION})")
     parser.add_argument("--suite", metavar="NAME", default=DEFAULT_SUITE, choices=suites(),
-                        help=f"the suite whose apps to check (default {DEFAULT_SUITE})")
+                        help=f"the suite whose apps to check (default {DEFAULT_SUITE or 'none: the machine only'})")
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument("--fix", action="store_true", help="offer Fix as soon as the check is done")
     mode.add_argument("--remind", action="store_true", help="no window: a desktop notification when something "
@@ -70,11 +76,8 @@ def main() -> int:
     from PyQt6.QtWidgets import QMessageBox
 
     app = create_app(INFO, qt_args, theme=NEXUS)           # Nexus's design, not a suite's theme
-    path = catalog(args.suite)
     try:
-        apps = load_apps(path)
-        dependencies = load_catalog(path)
-        tools = load_tools(path)
+        dependencies, tools, apps = _catalog(catalog(args.suite))
     except DependencyCatalogError as exc:
         QMessageBox.critical(None, APP_NAME, f"The dependency catalog could not be read:\n\n{exc}")
         return 1

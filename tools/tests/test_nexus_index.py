@@ -70,23 +70,23 @@ def test_install_steps_are_the_code_block_of_the_install_section():
 
 
 def test_a_section_per_suite_with_its_portal_or_its_apps(tmp_path: Path):
-    make_suite(tmp_path, "bc250-bazzite", "BC250 Bazzite Suite", apps={"check": "BC-250 Bazzite Test"},
-               mkdocs="site_name: X\nsite_description: Tools for the AMD BC-250 running Bazzite\n"
-                      "site_url: https://robertotorino.github.io/nexus/bc250-bazzite-suite/\n")
+    make_suite(tmp_path, "a-suite", "A Suite", apps={"check": "Bazzite Test"},
+               mkdocs="site_name: X\nsite_description: Tools for a board running Bazzite\n"
+                      "site_url: https://robertotorino.github.io/a-suite/\n")
     make_suite(tmp_path, "windows-portable", "Windows Portable Suite", prefix="wp-", system="windows",
                apps={"test": "Windows Portable Test", "pcsx2": "Windows Portable PCSX2"})
     releases = [release("portal-v12.0.0", body=NOTES, assets=("portal-v12.0.0.tar.gz", "SHA256SUMS")),
                 release("portal-v11.0.0"), release("check-v0.18.0"), release("wp-test-v0.1.0"),
                 release("wp-test-v0.1.1"), release("nexus")]
     text = ni.body(releases, tmp_path)
-    assert text.index("## BC250 Bazzite Suite") < text.index("## Windows Portable Suite")
-    bc250 = text[text.index("## BC250"):text.index("## Windows")]
-    assert "Tools for the AMD BC-250 running Bazzite. [Wiki](https://robertotorino.github.io/nexus/" in bc250
-    assert "**[Portal 12.0.0](https://github.com/RobertoTorino/nexus/releases/tag/portal-v12.0.0)**" in bc250
-    assert f"[`portal-v12.0.0.tar.gz`]({DOWNLOAD}/portal-v12.0.0/portal-v12.0.0.tar.gz)" in bc250
-    assert f"[`SHA256SUMS`]({DOWNLOAD}/portal-v12.0.0/SHA256SUMS)" in bc250
-    assert "cd portal-v12.0.0 && ./install.sh\n```" in bc250 and "check-v0.18.0" not in bc250
-    windows = text[text.index("## Windows"):]
+    assert text.index("## A Suite") < text.index("## Windows Portable Suite")
+    first = text[text.index("## A Suite"):text.index("## Windows")]
+    assert "Tools for a board running Bazzite. [Wiki](https://robertotorino.github.io/a-suite/" in first
+    assert "**[Portal 12.0.0](https://github.com/RobertoTorino/nexus/releases/tag/portal-v12.0.0)**" in first
+    assert f"[`portal-v12.0.0.tar.gz`]({DOWNLOAD}/portal-v12.0.0/portal-v12.0.0.tar.gz)" in first
+    assert f"[`SHA256SUMS`]({DOWNLOAD}/portal-v12.0.0/SHA256SUMS)" in first
+    assert "cd portal-v12.0.0 && ./install.sh\n```" in first and "check-v0.18.0" not in first
+    windows = text[text.index("## Windows"):text.index("## BC250 Bazzite Suite")]
     assert "Tools for Windows 10/11 running on portable gaming devices." in windows and "No portal release yet." in windows
     test = "- [Windows Portable Test 0.1.1](https://github.com/RobertoTorino/nexus/releases/tag/wp-test-v0.1.1)"
     assert test in windows
@@ -107,7 +107,16 @@ def test_the_repository_has_a_section_per_suite():
         assert f"## {ni.suite_name(folder)}" in text
 
 
-def test_main_reads_a_saved_release_list(tmp_path: Path, capsys):
+def test_a_suite_with_a_repository_of_its_own_is_pointed_to(tmp_path: Path):
+    """The BC250 Bazzite Suite left Nexus with its releases (14-11-2026): the index says where they are."""
+    text = ni.body([release("portal-v20.1.2")], tmp_path)
+    assert "## BC250 Bazzite Suite" in text and "Portal 20.1.2" not in text
+    assert "[github.com/RobertoTorino/bc250-bazzite](https://github.com/RobertoTorino/bc250-bazzite/releases)" in text
+
+
+def test_main_reads_a_saved_release_list(tmp_path: Path, capsys, monkeypatch):
+    make_suite(tmp_path, "s", "Suite")
+    monkeypatch.setattr(ni.suites, "suites", lambda root=None: [tmp_path / "s"])
     saved = tmp_path / "releases.json"
     saved.write_text("\n".join(json.dumps(r) for r in [release("portal-v1.2.3")]), encoding="utf-8")
     assert ni.main(["--releases", str(saved)]) == 0

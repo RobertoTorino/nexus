@@ -1,123 +1,7 @@
 # Icons
 
-The icons of the project, per suite, and where each is used. Pictures are shown from their own files; icons drawn
-in code are rendered to `bc250-bazzite/docs/design/icons/`. Written by `tools/make_icons.py`: change the listing
-there and run it. The paths of the BC250 Bazzite Suite's section are relative to its folder, `bc250-bazzite/`. The Windows
-Portable Suite's icons are listed in its own repository's `ICONS.md`.
-
-## BC250 Bazzite Suite
-
-### The suite's icon
-
-| Icon | File | Used for |
-| --- | --- | --- |
-| <img src="bc250-bazzite/portal/images/bc250-bazzite-suite.webp" width="48" alt=""> | `portal/images/bc250-bazzite-suite.webp` (512 px) | The portal's header, as large as a tile's icon (a click opens the wiki), its window icon, and the portal's release in Nexus Release Tool. |
-| <img src="bc250-bazzite/portal/images/bc250-bazzite-suite-1024.webp" width="48" alt=""> | `portal/images/bc250-bazzite-suite-1024.webp` | The portal's intro. |
-| <img src="bc250-bazzite/portal/images/bc250-bazzite-suite-128.png" width="48" alt=""> | `portal/images/bc250-bazzite-suite-128.png` | The portal's menu entry and Desktop icon. |
-| <img src="bc250-bazzite/portal/images/apps/portal.webp" width="48" alt=""> | `portal/images/apps/portal.webp` (128 px) | The portal's own tile. |
-| <img src="bc250-bazzite/docs/images/wiki-icon.webp" width="48" alt=""> | `docs/images/wiki-icon.webp`, `.png` | The wiki's header logo, its home page's footer and its favicon. |
-
-### The category icons
-
-Every app has the icon of its category: `icons/categories.toml` assigns them, `tools/sync_icons.py` copies each
-category's icon (`icons/<category>/`, at 1024, 512, 256 and 128 px) to these places:
-
-- `apps/<app>/images/<icon>.webp` (512 px): the app's window header (96 px), its window and tray icon, and the
-  logo at the top of its chapter in the wiki.
-- `apps/<app>/images/<icon>-128.png`: the app's menu entry and Desktop icon.
-- `portal/images/apps/<key>.webp` (256 px): the app's icon in a tile's menu and in the notice, and in the wiki's app
-  tables.
-- `portal/images/categories/<category>.webp` (512 px): the app's tile in the portal, drawn large.
-- In the wiki, the category's own icon (256 px) in the table of categories.
-
-| Icon | Category | Apps |
-| --- | --- | --- |
-| <img src="bc250-bazzite/icons/gaming/gaming-128.png" width="64" alt=""> | Gaming | RPCS3 Manager (`rpcs3`)<br>BC-250 PS Remote Play (`consoles`)<br>BC-250 XB Remote Play (`clb`)<br>shadPS4 Manager (`shadps4`)<br>Bazzite DatStation (`datstation`)<br>PPSSPP Manager (`ppsspp`)<br>PCSX2 Manager (`pcsx2`)<br>Xenia Manager (`xenia`)<br>Vita3K Manager (`vita3k`) |
-| <img src="bc250-bazzite/icons/graphics/graphics-128.png" width="64" alt=""> | Graphics | BC-250 Upscaler Manager (`upscaler`)<br>BC-250 ACE Queues (`ace`)<br>BC-250 Mesh Shaders (`mesh`) |
-| <img src="bc250-bazzite/icons/sustainable/sustainable-128.png" width="64" alt=""> | Sustainable | BC-250 Bazzite Test (`check`)<br>BC-250 GPU Manager (`gpu`)<br>BC-250 CU Bisect (`compute`)<br>CU Unlock (the CU Bisect app's Unlock) (`cu-unlock`)<br>BC-250 Cores Bisect (`cores`)<br>Cores Unlock (the Cores Bisect app's Unlock) (`cores-unlock`)<br>BC-250 GPU OC Bisect (`oc`)<br>BC-250 Persistent ACPI (`acpi`)<br>BC-250 Memory Manager (`vram`)<br>BC-250 Fan Control (`fan`) |
-| <img src="bc250-bazzite/icons/utilities/utilities-128.png" width="64" alt=""> | Utilities | System Overlay (`overlay`)<br>BC-250 BIOS Reader (`bios`)<br>BC-250 USB Wi-Fi (`wdriver`)<br>BC-250 CEC Manager (`cec`)<br>Bazzite SFTP Tools (`sftp`)<br>USB IPS3.5 (`ips35`)<br>USB HD Cam (`hdcam`)<br>USB HD Control (`hdcontrol`)<br>SSD Check (`ssd`)<br>BC-250 Bluetooth Pairing (`btpair`) |
-
-### The portal's symbols
-
-Drawn with QPainter in `portal/bc250_portal/glyphs.py`, in the theme's text color (shown here on Gunmetal) or red.
-
-| Icon | Name | Used for |
-| --- | --- | --- |
-| <img src="bc250-bazzite/docs/design/icons/portal-install.png" width="48" alt=""> | Install | Install in a tile's menu: an arrow down into a tray. |
-| <img src="bc250-bazzite/docs/design/icons/portal-install-update.png" width="48" alt=""> | Install, update | The same entry, Update, in red when an update is waiting. |
-| <img src="bc250-bazzite/docs/design/icons/portal-reinstall.png" width="48" alt=""> | Reinstall | Reinstall in the menu of an app whose version the portal does not know (red), a circular arrow. |
-| <img src="bc250-bazzite/docs/design/icons/portal-reinstall-badge.png" width="48" alt=""> | Reinstall badge | On a tile in the portal: the app needs a reinstall. |
-| <img src="bc250-bazzite/docs/design/icons/portal-uninstall.png" width="48" alt=""> | Uninstall | Uninstall in a tile's menu: a waste bin. |
-
-### Icons in the apps
-
-| Icon | File | Used for |
-| --- | --- | --- |
-| <img src="bc250-bazzite/apps/pcsx2/pcsx2_manager/arrow-down.svg" width="16" alt=""> | `apps/<app>/<package>/arrow-down.svg` | The arrow of a choice box in PCSX2 Manager, RPCS3 Manager and shadPS4 Manager (a copy in each). |
-
-### The desktop style's icons
-
-Icons the apps take from the desktop's style or icon theme, so they look different on every desktop; shown here as
-Qt's Fusion style draws them.
-
-| Icon | Name | Used for |
-| --- | --- | --- |
-| <img src="bc250-bazzite/docs/design/icons/qt-warning.png" width="48" alt=""> | `SP_MessageBoxWarning` | BC-250 Bazzite Test: a warning in the results; the warning before a run. |
-| <img src="bc250-bazzite/docs/design/icons/qt-information.png" width="48" alt=""> | `SP_MessageBoxInformation` | BC-250 Bazzite Test: an info result. Nexus Deps: the About button. |
-| <img src="bc250-bazzite/docs/design/icons/qt-reload.png" width="48" alt=""> | `view-refresh`, else `SP_BrowserReload` | Nexus Deps: the Check button. |
-
-### Material Design icons in the wiki
-
-Drawn by MkDocs Material in the wiki's colors.
-
-| Icon | Name | Used for |
-| --- | --- | --- |
-| <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/stethoscope.svg" width="24" alt=""> | `material-stethoscope` | Home: the card "Diagnostics". |
-| <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/speedometer.svg" width="24" alt=""> | `material-speedometer` | Home: the card "Tuning". |
-| <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/lock-open-variant.svg" width="24" alt=""> | `material-lock-open-variant` | Home: the card "Unlocks". |
-| <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/expansion-card.svg" width="24" alt=""> | `material-expansion-card` | Home: the card "Graphics". |
-| <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/gamepad-variant.svg" width="24" alt=""> | `material-gamepad-variant` | Home: the card "Gaming". |
-| <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/television.svg" width="24" alt=""> | `material-television` | Home: the card "Living room". |
-| <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/download.svg" width="24" alt=""> | `material-download` | Home: the Download button. |
-| <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/tray-arrow-down.svg" width="24" alt=""> | `material-tray-arrow-down` | The page icon of Install. |
-| <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/eye-off-outline.svg" width="24" alt=""> | `material-eye-off-outline` | The page icon of Privacy. |
-| <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/shield-lock-outline.svg" width="24" alt=""> | `material-shield-lock-outline` | The page icon of Security. |
-
-### Symbols in text
-
-Characters of the font, used as icons in labels and buttons.
-
-| Symbol | App | Used for |
-| --- | --- | --- |
-| ✔ ⚠ | BC-250 Persistent ACPI | The state: installed, incomplete. |
-| ▶ | BC-250 BIOS Reader | The selected prompt. |
-| → ← ↑ ↓ | BC-250 BIOS Reader | The keys in the legend. |
-| ▶ ■ ◀ | BC-250 Bazzite Test | Run all tests, Stop, Back. |
-| ⚠ | BC-250 Bazzite Test | The integrity banner, a score's warnings. |
-| 💡 | BC-250 Bazzite Test | A hint in the findings. |
-| ✔ • ! ✖ | BC-250 Bazzite Test | In-game: the checks' ok, info, warning, error. |
-| ↓ ↑ | BC-250 Bazzite Test | Live status: download and upload. |
-| 🎮 | BC-250 Bazzite Test | Live status: the game that runs. |
-| ✕ | BC-250 Bazzite Test | The round close button (drawn, not a font glyph). |
-| ✖ ⚠ ● | BC-250 GPU Manager | Safe points: an error, a warning, a test that runs. |
-| ✓ ✗ | BC-250 PS Remote Play | The controller test's checks. |
-| △ ○ □ ◇ ◆ ★ | Bazzite DatStation | The front page's features: Quiz, History, Region Codes, User Guides, PS News, Scores & Trophies. |
-| ★ | Bazzite DatStation | Stars, a perfect round, trophies. |
-| ← | Bazzite DatStation | Back. |
-| ✓ ! | USB HD Cam | A check found or missing. |
-| ↑ ↓ › | sFTP Tools | Uploads and downloads on the Transfers card; a folder that A opens. |
-| ✓ ↓ ↑ | Smart Screen | A value on the screen; the network tile: download and upload. |
-| ✓ ! | USB HD Control | A check known or not. |
-| △ □ ✕ ○ | USB HD Control | The face buttons. |
-| ↓ ↑ | USB IPS3.5 | The network tile: download and upload. |
-| ↓ ↑ | System Overlay | Network: download and upload. |
-| ✓ ✗ | Nexus Deps | CVE: none found, found. |
-| ⚠ ✓ ✗ | Bazzite SFTP Tools | Password: a warning, requirements met, not met. |
-| ← ↑ ↓ | Bazzite SFTP Tools | Download; uploads and downloads in the transfer queue. |
-| ↑ ↓ | Nexus Release Tool | Earlier commands, in the command line's placeholder. |
-| ● | Every app on core | The dot of a status box (`bc250_core/widgets.py`). |
-| ● | Portal | Outside the suite. |
-| ✓ ✗ | Nexus Installer Tests | A test passed, failed. |
+The icons of Nexus, and where each is used. Written by `tools/make_icons.py`: change the listing there and run it.
+Each suite lists its own icons in its own repository's `ICONS.md`.
 
 ## Nexus
 
@@ -142,3 +26,14 @@ Drawn by MkDocs Material in the page's colors.
 | <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/chip.svg" width="24" alt=""> | `material-chip` | Home: the card "BC250 Bazzite Suite". |
 | <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/controller.svg" width="24" alt=""> | `material-controller` | Home: the card "Windows Portable Suite". |
 | <img src="https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/download.svg" width="24" alt=""> | `material-download` | Home: the Nexus index button. |
+
+### Symbols in text
+
+Characters of the font, used as icons in the Nexus apps' labels and buttons.
+
+| Symbol | App | Used for |
+| --- | --- | --- |
+| ✓ ✗ | Nexus Deps | CVE: none found, found. |
+| ↑ ↓ | Nexus Release Tool | Earlier commands, in the command line's placeholder. |
+| ● | Every app on core | The dot of a status box (`bc250_core/widgets.py`). |
+| ✓ ✗ | Nexus Installer Tests | A test passed, failed. |

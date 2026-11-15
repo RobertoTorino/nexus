@@ -47,20 +47,21 @@ for every suite:
 Run MkDocs' own server from the root of the repository, in the venv:
 
 ```bash
-mkdocs serve                        # the BC250 Bazzite Suite's wiki
-mkdocs serve -f nexus/mkdocs.yml    # the Nexus page
+mkdocs serve -f nexus/mkdocs.yml               # the Nexus page
+mkdocs serve -f windows-portable/mkdocs.yml    # the Windows Portable Suite's wiki, when it is cloned in
 ```
 
-Open the address it prints. Each time you save a page, a stylesheet or a template (`bc250-bazzite/tools/mkdocs/overrides/`,
-`nexus/overrides/`), the site is built again and the browser reloads.
+Open the address it prints. Each time you save a page, a stylesheet or a template (`nexus/overrides/`,
+`windows-portable/tools/mkdocs/overrides/`), the site is built again and the browser reloads. A suite in a repository of
+its own with its own tools (the BC250 Bazzite Suite) has the design panel in its own repository.
 
 Each wiki has a design of its own and shares no stylesheet, template or setting with another, so a change to one
 never reaches the others:
 
 | Wiki | Settings | Stylesheet | Templates |
 | --- | --- | --- | --- |
-| BC250 Bazzite Suite | `mkdocs.yml` | `bc250-bazzite/docs/stylesheets/suite.css` | `bc250-bazzite/tools/mkdocs/overrides/` |
 | Nexus | `nexus/mkdocs.yml` | `nexus/docs/stylesheets/nexus.css` | `nexus/overrides/` |
+| Windows Portable Suite | `windows-portable/mkdocs.yml` | `windows-portable/docs/stylesheets/portable.css` | `windows-portable/tools/mkdocs/overrides/` |
 
 Without a terminal: in [Nexus Dashboard](dashboard.md#test-local-apps) (`dev/dash`), under **Test local apps**, the
 last icons are the chosen suite's wiki and the Nexus page. A click serves that wiki and opens it with the design panel
@@ -97,7 +98,7 @@ mkdocs serve -f nexus/mkdocs.yml -a 0.0.0.0:8000
 
 Then open `http://<the computer's address>:8000` on each device. `ipconfig` (Windows) or `hostname -I` (Linux) shows
 the address. In Nexus Dashboard, tick **Wikis on the network** before clicking a wiki's icon: it serves the wiki that
-way, on a port of its own (8785 for the BC250 Bazzite Suite's wiki, 8786 for the Nexus page), and shows the
+way, on a port of its own (8785, 8786 and on, in the order of the wikis' folders), and shows the
 addresses for the other devices. Every device shows the live version, so you see a design in real browsers, on real
 screens and at real sizes at once.
 
@@ -122,13 +123,13 @@ Hover over a row to see where the stylesheet uses the variable. The groups, the 
 | --- | --- |
 | The suite's colors (Nexus's colors on the Nexus page) | The few colors the rest of the design is made from. A change here changes every place that uses the color. |
 | Corners | How round notes, code blocks, tables and pictures are. |
-| Header | The bar at the top: its background, the color of the name and the links in it, and a link under the pointer (on the BC250 Bazzite Suite's wiki a fill behind it, on the Nexus page the dimmed word). |
+| Header | The bar at the top: its background, the color of the name and the links in it, and a link under the pointer (on the Nexus page the dimmed word). |
 | Material's main color | Buttons and Material's highlights, and the text on them. |
 | Material's hover color | Links and buttons under the pointer. |
 | The page | The page background and the links in the text. |
 | Buttons | The shadow under a button under the pointer. |
 | Tables | The background and text of a table's headings. |
-| The home page | The words at the top, the dark sections (background, text, links and buttons) and, on the BC250 Bazzite Suite's wiki, the shadow under the pictures and the stage pill. |
+| The home page | The words at the top and the dark sections (background, text, links and buttons). |
 | The home page's footer | Its background, the name and a link under the pointer, and the strip with the notice. |
 | Fonts | The theme's fonts, set in `mkdocs.yml`. |
 
@@ -148,8 +149,8 @@ server cannot be reached; the changes then stay in that browser.
 **Copy CSS** copies the changed variables alone, under the rules that define them: a few lines, not a stylesheet.
 **Copy stylesheet** copies the whole stylesheet with the changes written in, in place: the file as it is, comments
 and all, only the values changed. Paste it over the stylesheet the panel's first line names:
-`nexus/docs/stylesheets/nexus.css` for the Nexus page, `bc250-bazzite/docs/stylesheets/suite.css` for the BC250 Bazzite Suite's
-wiki. (The changes alone, pasted at the end of the file, work too, as the last rule wins, but then a variable is set
+`nexus/docs/stylesheets/nexus.css` for the Nexus page, `windows-portable/docs/stylesheets/portable.css` for the
+Windows Portable Suite's wiki. (The changes alone, pasted at the end of the file, work too, as the last rule wins, but then a variable is set
 twice.) Over `http://` from another device the browser has no clipboard for it: the text below the buttons is then
 selected, to copy by hand.
 

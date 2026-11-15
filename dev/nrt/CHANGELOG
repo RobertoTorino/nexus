@@ -1,3 +1,14 @@
+Changelog: 15-11-2026 00:01:07
+
+Fixed. The tool opens in a checkout without a suite (Nexus since the BC250 Bazzite Suite moved to a repository of its
+own, 14-11-2026): it lists core and Nexus's own release, says there is no portal to pin or release, and its Commit
+step runs no manifest check. It reads a suite's apps.toml with that suite's own tools/check_manifest.py, loaded when
+the suite is released rather than at start, and pins with its own code (the BC250 suite's pin_app.py was what it
+used); it looks for checksums and runs in Nexus's repository. A suite of another repository cloned into the checkout
+(windows-portable/) no longer counts as a new suite of Nexus, which made Nexus 13.0.0 to 15.0.0 major releases
+"bringing the new suite windows-portable". The tests use a plain-tag suite's check_manifest.py from
+tests/fixtures/bc250-suite/.
+
 Changelog: 13-11-2026 19:25:53
 
 Version 2.0.0.

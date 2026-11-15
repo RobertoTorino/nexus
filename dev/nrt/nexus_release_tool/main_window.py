@@ -411,8 +411,17 @@ class PortalPage(QWidget):
                 self.pins.setItem(i, col, QTableWidgetItem(text))
             self.candidates.append((unit, tick))
             tick.toggled.connect(lambda _on: self.enable_pin())
-        portal = next(u for u in units if u.kind == "portal")
+        portal = next((u for u in units if u.kind == "portal"), None)
         self.portal_unit = portal
+        if portal is None:                      # no suite in this checkout (Nexus since 14-11-2026): no portal step
+            self.empty_note.setText("No suite in this checkout: nothing to pin and no portal to release.")
+            self.empty_note.setVisible(True)
+            self.portal_needs.setText("")
+            self.minimum.setText("")
+            self.portal_version.clear()
+            self.nexus_too.setVisible(False)
+            self.nexus_version.setVisible(False)
+            return
         # Nothing to pin never holds the portal back: what apps.toml pins now is what it releases.
         self.empty_note.setText("" if cands else
                                 "Nothing to pin: every app whose VERSION is tagged is already pinned with its checksum. "
@@ -554,7 +563,10 @@ class PortalPage(QWidget):
     def bump(self) -> None:
         root, suite = self.release_window.root, self.release_window.suite
         units = rp.load_units(root, suite)
-        portal = next(u for u in units if u.kind == "portal")
+        portal = next((u for u in units if u.kind == "portal"), None)
+        if portal is None:
+            self.output.set_text("No suite in this checkout: there is no portal to bump.")
+            return
         new = self.portal_version.currentText().strip()
         problem = rp.check_new_version(portal.version, new, portal.released)
         if problem:
@@ -1041,7 +1053,7 @@ class BuildIndicator(Pill):
         latest = rp.latest_push(self.runs)
         pick = next((r for r in latest if r.done and not r.passed and not rp.superseded(r, latest)), None) or \
             next((r for r in latest if not r.done), None)
-        return pick.url if pick else rp.ACTIONS_URL.format(repo_url=rp.pin_app.REPO_URL)
+        return pick.url if pick else rp.ACTIONS_URL.format(repo_url=rp.REPO_URL)
 
     def open(self) -> None:
         QDesktopServices.openUrl(QUrl(self.target()))
@@ -1561,7 +1573,9 @@ class ReleaseWindow(QMainWindow):
         return self.portal_page.base_edit.text().strip() or "origin/main"
 
     def portal_version(self) -> str:
-        return (rp.suite_dir(self.root, self.suite) / "portal" / "VERSION").read_text(encoding="utf-8").strip()
+        """portal/VERSION of the suite; "" in a checkout without a suite (Nexus since 14-11-2026)."""
+        path = rp.suite_dir(self.root, self.suite) / "portal" / "VERSION"
+        return path.read_text(encoding="utf-8").strip() if path.is_file() else ""
 
     def portal_tag(self, version: str = "") -> str:
         """The suite's portal tag of *version* (default: portal/VERSION): portal-v10.1.0, wp-portal-v0.1.0."""

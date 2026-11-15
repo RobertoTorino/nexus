@@ -1,90 +1,28 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Write ICONS.md: every icon of the suites, per suite, and where it is used:
+"""Write ICONS.md: every icon of Nexus, and where it is used, and the Nexus apps' icon copies:
 
-    python3 tools/make_icons.py            # write ICONS.md and render the drawn icons to docs/design/icons/
+    python3 tools/make_icons.py            # write ICONS.md and the icon copies
     python3 tools/make_icons.py --check    # only say whether ICONS.md is up to date; exit 1 when it is not
 
 The Windows Portable Suite has a repository of its own (owner, 13-11-2026), cloned into this checkout as
 windows-portable/: its icons are listed in its own windows-portable/ICONS.md, written and checked here while the
 suite is in the checkout, and its icon copies are written then too. Without it, only Nexus's ICONS.md.
 
-Pictures are shown from their own files. The icons drawn in code (the portal's symbols, the desktop style's icons)
-are rendered with PyQt6 to PNGs in docs/design/icons/, on Gunmetal's window color. The listing is the data below:
-change it here and run the script, not ICONS.md itself. --check needs no Qt."""
+The BC250 Bazzite Suite has a repository of its own with its own copy of this tool and its ICONS.md (14-11-2026).
+Pictures are shown from their own files. The listing is the data below: change it here and run the script, not
+ICONS.md itself."""
 
 from __future__ import annotations
 
 import argparse
-import os
 import re
 import sys
 import tomllib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-SUITE_DIR = "bc250-bazzite"                 # the BC250 Bazzite Suite's folder: its pictures are under it
-OUT = f"{SUITE_DIR}/docs/design/icons"
 MDI = "https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg"      # Material Design Icons, as MkDocs Material bundles them
-# The names of icons/categories.toml's entries the portal's manifest does not list: launches of an app, and the
-# suite's tool that runs from the checkout.
-LAUNCHES = {"cu-unlock": "CU Unlock (the CU Bisect app's Unlock)",
-            "cores-unlock": "Cores Unlock (the Cores Bisect app's Unlock)",
-            "installer-tests": "Nexus Installer Tests"}
-
-SUITE_ICON = [
-    ("bc250-bazzite/portal/images/bc250-bazzite-suite.webp", "`portal/images/bc250-bazzite-suite.webp` (512 px)",
-     "The portal's header, as large as a tile's icon (a click opens the wiki), its window icon, and the portal's release in Nexus "
-     "Release Tool."),
-    ("bc250-bazzite/portal/images/bc250-bazzite-suite-1024.webp", "`portal/images/bc250-bazzite-suite-1024.webp`",
-     "The portal's intro."),
-    ("bc250-bazzite/portal/images/bc250-bazzite-suite-128.png", "`portal/images/bc250-bazzite-suite-128.png`",
-     "The portal's menu entry and Desktop icon."),
-    ("bc250-bazzite/portal/images/apps/portal.webp", "`portal/images/apps/portal.webp` (128 px)", "The portal's own tile."),
-    ("bc250-bazzite/docs/images/wiki-icon.webp", "`docs/images/wiki-icon.webp`, `.png`",
-     "The wiki's header logo, its home page's footer and its favicon."),
-]
-
-# name, the glyph function, its color ("ink" is the theme's text, "red" the update red), a red circle behind it
-GLYPHS = [
-    ("portal-install", "install", "ink", False, "Install", "Install in a tile's menu: an arrow down into a tray."),
-    ("portal-install-update", "install", "red", False, "Install, update",
-     "The same entry, Update, in red when an update is waiting."),
-    ("portal-reinstall", "reinstall", "red", False, "Reinstall",
-     "Reinstall in the menu of an app whose version the portal does not know (red), a circular arrow."),
-    ("portal-reinstall-badge", "reinstall", "white", True, "Reinstall badge",
-     "On a tile in the portal: the app needs a reinstall."),
-    ("portal-uninstall", "uninstall", "ink", False, "Uninstall", "Uninstall in a tile's menu: a waste bin."),
-]
-
-APP_ICONS = [
-    ("bc250-bazzite/apps/pcsx2/pcsx2_manager/arrow-down.svg", "`apps/<app>/<package>/arrow-down.svg`",
-     "The arrow of a choice box in PCSX2 Manager, RPCS3 Manager and shadPS4 Manager (a copy in each)."),
-]
-
-# name, the standard pixmap, the icon theme's name tried first (or ""), the name shown
-STANDARD = [
-    ("qt-warning", "SP_MessageBoxWarning", "", "`SP_MessageBoxWarning`",
-     "BC-250 Bazzite Test: a warning in the results; the warning before a run."),
-    ("qt-information", "SP_MessageBoxInformation", "", "`SP_MessageBoxInformation`",
-     "BC-250 Bazzite Test: an info result. Nexus Deps: the About button."),
-    ("qt-reload", "SP_BrowserReload", "view-refresh", "`view-refresh`, else `SP_BrowserReload`",
-     "Nexus Deps: the Check button."),
-]
-
-MATERIAL = [
-    ("stethoscope", "Home: the card \"Diagnostics\"."),
-    ("speedometer", "Home: the card \"Tuning\"."),
-    ("lock-open-variant", "Home: the card \"Unlocks\"."),
-    ("expansion-card", "Home: the card \"Graphics\"."),
-    ("gamepad-variant", "Home: the card \"Gaming\"."),
-    ("television", "Home: the card \"Living room\"."),
-    ("download", "Home: the Download button."),
-    ("tray-arrow-down", "The page icon of Install."),
-    ("eye-off-outline", "The page icon of Privacy."),
-    ("shield-lock-outline", "The page icon of Security."),
-]
-
 WINDOWS_PORTABLE_ICON = [
     ("windows-portable/icons/windows-portable-256.png",
      "`windows-portable/icons/windows-portable-<size>.png` (1024, 512, 256 and 128 px)",
@@ -279,35 +217,9 @@ NEXUS_MATERIAL = [
 ]
 
 SYMBOLS = [
-    ("✔ ⚠", "BC-250 Persistent ACPI", "The state: installed, incomplete."),
-    ("▶", "BC-250 BIOS Reader", "The selected prompt."),
-    ("→ ← ↑ ↓", "BC-250 BIOS Reader", "The keys in the legend."),
-    ("▶ ■ ◀", "BC-250 Bazzite Test", "Run all tests, Stop, Back."),
-    ("⚠", "BC-250 Bazzite Test", "The integrity banner, a score's warnings."),
-    ("💡", "BC-250 Bazzite Test", "A hint in the findings."),
-    ("✔ • ! ✖", "BC-250 Bazzite Test", "In-game: the checks' ok, info, warning, error."),
-    ("↓ ↑", "BC-250 Bazzite Test", "Live status: download and upload."),
-    ("🎮", "BC-250 Bazzite Test", "Live status: the game that runs."),
-    ("✕", "BC-250 Bazzite Test", "The round close button (drawn, not a font glyph)."),
-    ("✖ ⚠ ●", "BC-250 GPU Manager", "Safe points: an error, a warning, a test that runs."),
-    ("✓ ✗", "BC-250 PS Remote Play", "The controller test's checks."),
-    ("△ ○ □ ◇ ◆ ★", "Bazzite DatStation", "The front page's features: Quiz, History, Region Codes, User Guides, "
-                                            "PS News, Scores & Trophies."),
-    ("★", "Bazzite DatStation", "Stars, a perfect round, trophies."),
-    ("←", "Bazzite DatStation", "Back."),
-    ("✓ !", "USB HD Cam", "A check found or missing."),
-    ("↑ ↓ ›", "sFTP Tools", "Uploads and downloads on the Transfers card; a folder that A opens."),
-    ("✓ ↓ ↑", "Smart Screen", "A value on the screen; the network tile: download and upload."),
-    ("✓ !", "USB HD Control", "A check known or not."),
-    ("△ □ ✕ ○", "USB HD Control", "The face buttons."),
-    ("↓ ↑", "USB IPS3.5", "The network tile: download and upload."),
-    ("↓ ↑", "System Overlay", "Network: download and upload."),
     ("✓ ✗", "Nexus Deps", "CVE: none found, found."),
-    ("⚠ ✓ ✗", "Bazzite SFTP Tools", "Password: a warning, requirements met, not met."),
-    ("← ↑ ↓", "Bazzite SFTP Tools", "Download; uploads and downloads in the transfer queue."),
     ("↑ ↓", "Nexus Release Tool", "Earlier commands, in the command line's placeholder."),
     ("●", "Every app on core", "The dot of a status box (`bc250_core/widgets.py`)."),
-    ("●", "Portal", "Outside the suite."),
     ("✓ ✗", "Nexus Installer Tests", "A test passed, failed."),
 ]
 
@@ -321,60 +233,19 @@ def table(header: str, rows) -> list[str]:
             *(f"| {' | '.join(row)} |" for row in rows), ""]
 
 
-def rendered(name: str) -> str:
-    return f"{OUT}/{name}.png"
-
 
 def build(root: Path = ROOT) -> str:
-    """ICONS.md's text, from the data above, the portal's manifest and icons/categories.toml."""
-    suite = root / SUITE_DIR
-    apps = tomllib.loads((suite / "portal" / "apps.toml").read_text(encoding="utf-8"))
-    names = {k: v["name"] for k, v in apps.get("apps", {}).items()} | LAUNCHES
-    by_category: dict[str, list[str]] = {}
-    for key, entry in tomllib.loads((suite / "icons" / "categories.toml").read_text(encoding="utf-8")).items():
-        by_category.setdefault(entry["category"], []).append(key)
-
+    """ICONS.md's text, from the data above."""
     out = ["# Icons", "",
-           "The icons of the project, per suite, and where each is used. Pictures are shown from their own files; "
-           "icons drawn\nin code are rendered to `bc250-bazzite/docs/design/icons/`. Written by `tools/make_icons.py`: "
-           "change the listing\nthere and run it. The paths of the BC250 Bazzite Suite's section are relative to its "
-           "folder, `bc250-bazzite/`. The Windows\nPortable Suite's icons are listed in its own repository's "
-           "`ICONS.md`.", "",
-           "## BC250 Bazzite Suite", "", "### The suite's icon", ""]
-    out += table("Icon,File,Used for", ((img(path), file, use) for path, file, use in SUITE_ICON))
-    out += ["### The category icons", "",
-            "Every app has the icon of its category: `icons/categories.toml` assigns them, `tools/sync_icons.py` "
-            "copies each\ncategory's icon (`icons/<category>/`, at 1024, 512, 256 and 128 px) to these places:", "",
-            "- `apps/<app>/images/<icon>.webp` (512 px): the app's window header (96 px), its window and tray icon, "
-            "and the\n  logo at the top of its chapter in the wiki.",
-            "- `apps/<app>/images/<icon>-128.png`: the app's menu entry and Desktop icon.",
-            "- `portal/images/apps/<key>.webp` (256 px): the app's icon in a tile's menu and in the notice, and in the "
-            "wiki's app\n  tables.",
-            "- `portal/images/categories/<category>.webp` (512 px): the app's tile in the portal, drawn large.",
-            "- In the wiki, the category's own icon (256 px) in the table of categories.", ""]
-    out += table("Icon,Category,Apps", (
-        (img(f"{SUITE_DIR}/icons/{category}/{category}-128.png", 64), category.title(),
-         "<br>".join(f"{names.get(k, k)} (`{k}`)" for k in keys)) for category, keys in sorted(by_category.items())))
-    out += ["### The portal's symbols", "",
-            "Drawn with QPainter in `portal/bc250_portal/glyphs.py`, in the theme's text color (shown here on "
-            "Gunmetal) or red.", ""]
-    out += table("Icon,Name,Used for", ((img(rendered(name)), title, use) for name, *_, title, use in GLYPHS))
-    out += ["### Icons in the apps", ""]
-    out += table("Icon,File,Used for", ((img(path, 16), file, use) for path, file, use in APP_ICONS))
-    out += ["### The desktop style's icons", "",
-            "Icons the apps take from the desktop's style or icon theme, so they look different on every desktop; "
-            "shown here as\nQt's Fusion style draws them.", ""]
-    out += table("Icon,Name,Used for", ((img(rendered(name)), shown, use) for name, _, _, shown, use in STANDARD))
-    out += ["### Material Design icons in the wiki", "", "Drawn by MkDocs Material in the wiki's colors.", ""]
-    out += table("Icon,Name,Used for", ((img(f"{MDI}/{name}.svg", 24), f"`material-{name}`", use)
-                                        for name, use in MATERIAL))
-    out += ["### Symbols in text", "", "Characters of the font, used as icons in labels and buttons.", ""]
-    out += table("Symbol,App,Used for", SYMBOLS)
-    out += ["## Nexus", "", "### The Nexus icon", ""]
+           "The icons of Nexus, and where each is used. Written by `tools/make_icons.py`: change the listing there and "
+           "run it.\nEach suite lists its own icons in its own repository's `ICONS.md`.", "",
+           "## Nexus", "", "### The Nexus icon", ""]
     out += table("Icon,File,Used for", ((img(path), file, use) for path, file, use in NEXUS_ICON))
     out += ["### Material Design icons on the Nexus page", "", "Drawn by MkDocs Material in the page's colors.", ""]
     out += table("Icon,Name,Used for", ((img(f"{MDI}/{name}.svg", 24), f"`material-{name}`", use)
                                         for name, use in NEXUS_MATERIAL))
+    out += ["### Symbols in text", "", "Characters of the font, used as icons in the Nexus apps' labels and buttons.", ""]
+    out += table("Symbol,App,Used for", SYMBOLS)
     return "\n".join(out).rstrip("\n") + "\n"
 
 
@@ -406,50 +277,6 @@ def build_windows_portable(root: Path = ROOT) -> str:
     return "\n".join(out).rstrip("\n").replace(f"{WINDOWS_PORTABLE}/", "") + "\n"
 
 
-def render(root: Path = ROOT) -> list[Path]:
-    """The drawn icons as PNGs in docs/design/icons/, each 48 px on a rounded square of Gunmetal's window color."""
-    os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
-    sys.path[:0] = [str(root / SUITE_DIR / "portal"), str(root / "core")]
-    from PyQt6.QtCore import QRectF, Qt
-    from PyQt6.QtGui import QColor, QIcon, QImage, QPainter
-    from PyQt6.QtWidgets import QApplication, QStyle
-
-    app = QApplication.instance() or QApplication([])
-    app.setStyle("Fusion")
-    from bc250_core.theme import RED, THEMES
-    from bc250_portal import glyphs
-
-    gunmetal = THEMES["gunmetal"]
-    colours = {"ink": gunmetal.text, "red": RED, "white": "white"}
-
-    def save(name: str, icon: QIcon, circle: str | None = None, size: int = 48) -> Path:
-        image = QImage(size, size, QImage.Format.Format_ARGB32)
-        image.fill(Qt.GlobalColor.transparent)
-        p = QPainter(image)
-        p.setRenderHint(QPainter.RenderHint.Antialiasing)
-        p.setPen(Qt.PenStyle.NoPen)
-        p.setBrush(QColor(gunmetal.window))
-        p.drawRoundedRect(QRectF(0, 0, size, size), 8, 8)
-        inset = 8
-        if circle:
-            p.setBrush(QColor(circle))
-            p.drawEllipse(QRectF(6, 6, size - 12, size - 12))
-            inset = 14
-        p.drawPixmap(inset, inset, icon.pixmap(size - 2 * inset, size - 2 * inset))
-        p.end()
-        path = root / rendered(name)
-        path.parent.mkdir(parents=True, exist_ok=True)
-        image.save(str(path))
-        return path
-
-    written = [save(name, getattr(glyphs, glyph)(colours[colour]), RED if circle else None)
-               for name, glyph, colour, circle, *_ in GLYPHS]
-    style = app.style()
-    for name, pixmap, theme_name, *_ in STANDARD:
-        icon = style.standardIcon(getattr(QStyle.StandardPixmap, pixmap))
-        written.append(save(name, QIcon.fromTheme(theme_name, icon) if theme_name else icon))
-    return written
-
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
@@ -468,10 +295,9 @@ def main(argv: list[str] | None = None) -> int:
         if not stale:
             print(f"{' and '.join(name for name, _ in files)} {'are' if len(files) > 1 else 'is'} up to date")
         return 1 if stale else 0
-    render()
     for name, text in files:
         (ROOT / name).write_text(text, encoding="utf-8", newline="\n")
-    print(f"wrote {' and '.join(name for name, _ in files)}, and {len(GLYPHS) + len(STANDARD)} icons in {OUT}/")
+    print(f"wrote {' and '.join(name for name, _ in files)}")
     return 0
 
 

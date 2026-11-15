@@ -35,10 +35,11 @@ from .system import Source, Update, read_sources, steps as system_steps, summary
 from .upstreams import read as read_upstreams
 
 
-# The apps' manuals: each suite's wiki
-DOCS = {"bc250-bazzite": "https://robertotorino.github.io/nexus/bc250-bazzite-suite/apps/{app}/"}
-DOCS_URL = DOCS[DEFAULT_SUITE]
-SUITE_NAMES = {"bc250-bazzite": "BC250 Bazzite Suite"}
+# The apps' manuals, each suite's wiki, and the suites' names, by the suite's catalog (none here since the BC250
+# Bazzite Suite left with its catalog for a repository of its own, 14-11-2026)
+DOCS: dict[str, str] = {}
+DOCS_URL = DOCS.get(DEFAULT_SUITE or "", "")
+SUITE_NAMES: dict[str, str] = {}
 CARD_STYLE = "QFrame#dependencyCard { border:1px solid palette(mid); border-radius:8px; }"
 NEEDS_ROOT = f"<span style='color:{ORANGE}; font-weight:700;'>Needs root.</span>"
 CVE_OK = f"<span style='color:{GREEN}; font-weight:700;'>✓ CVE</span>"
@@ -603,7 +604,7 @@ class DependencyWindow(QMainWindow):
         check: Callable[[], CheckResult] | None = None,
         bazzite: Callable[[], BazziteState] | None = None,
         system: Callable[[], tuple[Source, ...]] | None = None,
-        suite: str = DEFAULT_SUITE,
+        suite: str | None = DEFAULT_SUITE,
         offer_fix: bool = False,
         ask: Callable[[str], bool] | None = None,
     ):
@@ -674,8 +675,9 @@ class DependencyWindow(QMainWindow):
         header.add_second(self.fix_button, 1)
         root.addLayout(header)
         about = QHBoxLayout()
-        suite_name = escape(SUITE_NAMES.get(self.suite, self.suite))
-        about.addWidget(hint_label(f"This machine's updates and the {suite_name}'s apps on it."), 1)
+        suite_name = escape(SUITE_NAMES.get(self.suite, self.suite or ""))
+        about.addWidget(hint_label(f"This machine's updates and the {suite_name}'s apps on it." if suite_name
+                                   else "This machine's updates."), 1)
         about.addWidget(InfoButton(
             "<b>System</b> shows Bazzite's update state and what is newer on this machine: Bazzite's image, the "
             "Flatpaks, Homebrew's formulae and casks, the Rust toolchain and the checkout's development venv (within "

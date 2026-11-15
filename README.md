@@ -2,23 +2,23 @@
 
 ![Status: Beta](https://img.shields.io/badge/status-Beta-17b6a7)
 [![CI Nexus](https://github.com/RobertoTorino/nexus/actions/workflows/ci-nexus.yml/badge.svg)](https://github.com/RobertoTorino/nexus/actions/workflows/ci-nexus.yml)
-[![CI](https://github.com/RobertoTorino/nexus/actions/workflows/ci.yml/badge.svg)](https://github.com/RobertoTorino/nexus/actions/workflows/ci.yml)
 [![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
 
 # Nexus
 
-One home for the suites: the code they share and the tools that test and release them, with a suite in a folder of
-this repository or in a repository of its own. A suite is the apps for one operating system on one kind of device; its portal installs, opens, updates
-and removes them, and each suite has its own wiki. The name, the structure and how the suites relate:
+One home for the suites: the code they share and the tools that test and release them. A suite is the apps for one
+operating system on one kind of device, in a repository of its own; its portal installs, opens, updates and removes
+them, and each suite has its own wiki. The name, the structure and how the suites relate:
 **[the Nexus page](https://robertotorino.github.io/nexus/)**.
 
 ![alt text](nexus/images/nexus-256.png)
 
 ## The suites
 
-- **[BC250 Bazzite Suite](bc250-bazzite/)**: tools for the AMD BC-250 running Bazzite, in `bc250-bazzite/`. Its
-  [README](bc250-bazzite/README.md) says how to install the portal and lists the apps;
-  [its wiki](https://robertotorino.github.io/nexus/bc250-bazzite-suite/) is the manual.
+- **[BC250 Bazzite Suite](https://github.com/RobertoTorino/bc250-bazzite)**: tools for the AMD BC-250 running
+  Bazzite, in a repository of its own, with its own tools. Its
+  [README](https://github.com/RobertoTorino/bc250-bazzite#readme) says how to install the portal and lists the apps;
+  [its wiki](https://robertotorino.github.io/bc250-bazzite/) is the manual.
 - **[Windows Portable Suite](https://github.com/RobertoTorino/windows-portable)**: tools for Windows 10/11 running
   on portable gaming devices, made for a small screen held in the hands, touch and a controller, in a repository of
   its own. Its [README](https://github.com/RobertoTorino/windows-portable#readme) says how to install the portal and
@@ -26,12 +26,12 @@ and removes them, and each suite has its own wiki. The name, the structure and h
 
 ## The structure
 
-Every suite sits in a folder of its own, with its `apps/`, its `portal/` (the manifest of pinned releases and the
-installer), its wiki in `docs/`, its icons and its own tools. A suite in a repository of its own is cloned into a
-checkout of this one as that folder, and uses the same tools from there. The root holds what they share: `core/`, the Python
+Every suite has its `apps/`, its `portal/` (the manifest of pinned releases and the installer), its wiki in `docs/`,
+its icons and its own tools. The Windows Portable Suite is cloned into a checkout of this one as its folder,
+`windows-portable/`, and uses the tools here. This repository holds `core/`, the Python
 code bundled into every app at release time, `tools/`, the release and CI tools, `dev/`, the development apps of
 Nexus itself (Nexus Release Tool, the release front end, run from the checkout), `test.sh`, which runs every test
-suite, and `nexus/`, the Nexus page. Each suite's rules are in its folder's `CLAUDE.md`; the repository's are in the
+suite, and `nexus/`, the Nexus page. Each suite's rules are in its own `CLAUDE.md`; the repository's are in the
 root's.
 
 ## License

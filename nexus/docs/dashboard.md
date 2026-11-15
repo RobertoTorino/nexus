@@ -19,7 +19,7 @@ starts the app of the checkout you installed it from. After moving the checkout,
 On Linux:
 
 ```bash
-dev/dash/run.sh                             # open it; --suite bc250-bazzite opens it on that suite
+dev/dash/run.sh                             # open it; --suite windows-portable opens it on that suite
 dev/dash/install.sh                         # app menu entry and Desktop icon
 dev/dash/install.sh --no-desktop-shortcut   # app menu entry only
 dev/dash/install.sh --uninstall             # remove them; the checkout stays
@@ -57,7 +57,7 @@ own that keeps running when the dashboard closes; the suite goes along where the
 | Tile | What it opens |
 |---|---|
 | **Nexus Release Tool** | The release front end: a release's versions, CHANGELOG entries, pins and portal bump, and the board checks ([Releases](releases.md)). |
-| **Nexus Demo Recorder** | A portal installation recorded with OBS ([below](#demo-recorder)): the BC250 Bazzite Suite's on Linux, the Windows Portable Suite's on Windows. |
+| **Nexus Demo Recorder** | A portal installation recorded with OBS ([below](#demo-recorder)): a Bazzite suite's on Linux, the Windows Portable Suite's on Windows. |
 | **Nexus Deps** | A suite's Python packages and tools on this machine, what is missing or outdated, and Fix for it ([below](#deps)). Off for a suite without a catalog. |
 | **Nexus Installer Tests** | A suite's installer tests, one at a time ([below](#installer-tests)). |
 | **Nexus Sound Lab** | Short sound effects for the suites' windows, made from sliders ([below](#sound-lab)). |
@@ -86,10 +86,10 @@ started from the checkout it uses the scripts in the checkout. Each app writes i
 The apps keep running when you close the dashboard. The round **i** beside the title says the same.
 
 The last icons are the chosen suite's wiki and the Nexus page (another suite's wiki shows when that suite is
-chosen; each keeps its port): **BC250 Bazzite Suite wiki (local)** serves that wiki from the checkout with
-`mkdocs serve` (the development venv has MkDocs) and opens it in the browser at
-`http://127.0.0.1:8765/nexus/bc250-bazzite-suite/`, with its design panel open; **Nexus wiki (local)** does the same
-for the Nexus page, at port 8766, and **Windows Portable Suite wiki (local)** for that suite's wiki, at port 8767.
+chosen; each keeps its port): **Windows Portable Suite wiki (local)** serves that wiki from the checkout with
+`mkdocs serve` (the development venv has MkDocs) and opens it in the browser at its address under
+`http://127.0.0.1:<port>/`, with its design panel open; **Nexus wiki (local)** does the same for the Nexus page. The
+ports start at 8765, one per wiki in the order of their folders.
 Each rebuilds on every save; its log is `mkdocs-<wiki>-local.log` there. When one is already running, a click only
 opens the page again. The wikis, like the apps, keep running when you close the dashboard, which has no button that
 stops them. A wiki started before the checkout changed (after a pull, or a change to its `mkdocs.yml` or the design
@@ -141,19 +141,18 @@ same tour, drawn at twice the scale so the text stays crisp, about four times th
 in its name (1440p is the step between). A recording runs in the background; its output shows in the dialog,
 **Stop** ends it, and **Play** opens the video in your video player.
 
-- **Portal video tour** records the portal's tour, about two minutes: `bc250-portal-tour-v<portal version>.mp4`
+- **Portal video tour** records the portal's tour, about two minutes: `<prefix>portal-tour-v<portal version>.mp4`
   (`wp-portal-tour-...` for the Windows Portable Suite: its videos start with its tag prefix).
   Tick **Also write the copy on the wiki's Portal Tour page** to write the suite's `docs/videos/portal-tour.mp4` and
   its poster in the checkout too, for you to review and commit.
 - **Apps video tour** lists every app of the suite, each of the two programs of CU Bisect and Cores Bisect apart.
   Tick the apps (**All**, **None**), set the **Length** (40 seconds by default) and choose **Record**: each tour
-  takes a few seconds, `bc250-<app>-tour-v<version>.mp4` (`wp-...`). Double-click an app to play its video. What an app reads
+  takes a few seconds, `<prefix><app>-tour-v<version>.mp4` (`wp-...`). Double-click an app to play its video. What an app reads
   from the board is real, so watch a video before you publish it.
 
-The dialogs run the suite's `tools/record-tour.sh` and `tools/record-app-tour.sh` (the BC250 Bazzite Suite's;
-the Windows Portable Suite has its `tools/record-tour.sh`, run on the handheld from Git Bash, and its apps' tours
-through the Nexus app tour) with the checkout's development environment; they need ffmpeg. The same scripts run
-from a terminal: [the BC250 suite's Development chapter](bc250-bazzite-suite/development/) says how. The music
+The dialogs run the suite's `tools/record-tour.sh` and `tools/record-app-tour.sh` (the Windows Portable Suite has
+its `tools/record-tour.sh`, run on the handheld from Git Bash, and its apps' tours through the Nexus app tour) with
+the checkout's development environment; they need ffmpeg. The same scripts run from a terminal. The music
 under every tour is the Nexus tools' `tools/sounds/`, every suite's.
 
 ## Convert icons
@@ -163,7 +162,7 @@ Every app in a category of a suite shares the category's icon, kept in the suite
 image for a single size. They are scaled, saved under the category's names in the suite's format, and copied to
 every app of the category, the portal's tiles and the wiki. The suite's `icons/categories.toml` says how:
 
-- The BC250 Bazzite Suite: WebP, the 128 px icon PNG; images must be square.
+- A Bazzite suite: WebP, the 128 px icon PNG; images must be square.
 - The Windows Portable Suite: PNG at every size. Its Gaming pictures are twice as wide as high (1024 x 512 down to
   128 x 64), so an image for them must be 2:1; Utilities' are square. Which app is in which category is the
   portal's `apps.toml`, and the copies are written as `tools/make_icons.py` writes them: a wide picture centered on
@@ -177,8 +176,9 @@ checkout, for you to review and commit. A suite without `icons/categories.toml` 
 
 The **Nexus Demo Recorder** (`dev/demo/`) records a demo of a portal installation with OBS: a portal release
 extracted in Downloads (found by itself; **Find in Downloads** looks again, **Choose folder…** takes another, or a
-suite's folder in a checkout), or, without one, the BC250 Bazzite Suite in this checkout, whose `portal/install.sh`
-installs the released apps from the checkout's source. `dev/demo/run.sh` and `dev/demo/install.sh` start and
+suite's folder in a checkout), or, without one, a Bazzite suite in this checkout, whose `portal/install.sh`
+installs the released apps from the checkout's source (Nexus holds none since the BC250 Bazzite Suite moved to a
+repository of its own, with its own copy of the recorder). `dev/demo/run.sh` and `dev/demo/install.sh` start and
 install it on their own.
 
 On Windows it records the Windows Portable Suite's portal: a portal release (`wp-portal-v<x.y.z>.zip`) extracted in
@@ -199,7 +199,7 @@ Before you record, have:
   Capture of the screen the portal shows on) whose preview shows your desktop.
 - **OBS's WebSocket server on:** Tools, WebSocket Server Settings, **Enable WebSocket server**, with a password.
   Note the port (4455 unless you changed it) and the password for step 1.
-- **A portal release:** on Linux an extracted BC250 Bazzite Suite portal release in Downloads, or the suite in this
+- **A portal release:** on Linux an extracted portal release of a Bazzite suite in Downloads, or the suite in this
   checkout; on Windows an extracted Windows Portable Suite portal release (`wp-portal-v<x.y.z>.zip`) in Downloads.
   **Open the releases page** goes to them.
 - **A clean system for a fresh install:** the portal not installed, and the app you want to show not installed.
@@ -248,7 +248,7 @@ own decay, the silence before the sound, and the volume (its peak). The sound is
 each time a slider is let go, with **Play**, or when the focus moves between the buttons of **Try it** (Tab, the
 arrow keys or a controller's d-pad; A plays it again), the way a window plays it while you navigate. Once a slider
 has left the preset the box says Custom. **Save as WAV…** writes the sound as 16-bit mono at 44.1 kHz, for a
-suite's sounds folder (the BC250 portal's `portal/bc250_portal/sounds/`, where it plays a sound by its file name).
+suite's sounds folder (a portal's `portal/<package>/sounds/`, where it plays a sound by its file name).
 The last sound, the preset and the save folder are remembered.
 
 **Keep the audio link awake**, on by default, plays a silent loop while the window is open. Without it a short
@@ -265,9 +265,10 @@ and the dashboard's tile does the same.
 machine, which apps and features use them, and what is missing or must be updated; **Fix** installs that. On top,
 it shows whether a Bazzite update waits for you and every update the machine has: Bazzite's image, the Flatpaks,
 Homebrew, Rust and the development venv. It was the BC250 Bazzite Suite's Dependency Checker until
-07-11-2026; it now runs from the checkout, like every Nexus app, and checks the BC250 Bazzite Suite (its catalog
-is `dev/deps/nexus_deps/catalogs/bc250-bazzite.toml`; `--suite` picks another suite once it has one). The
-dashboard's tile opens it on the suite chosen in the header.
+07-11-2026; it runs from the checkout, like every Nexus app. A suite's apps are checked from its catalog,
+`dev/deps/nexus_deps/catalogs/<suite>.toml` (`--suite` picks it). Nexus has none since the BC250 Bazzite Suite
+moved to a repository of its own with its catalog (14-11-2026): here it checks the machine's updates alone, and the
+suite's own copy checks its apps. The dashboard's tile is off for a suite without a catalog.
 
 ```bash
 dev/deps/run.sh                             # open it
@@ -317,7 +318,9 @@ Python at once, so its i gives the steps instead: read its release notes, `ujust
 open Nexus Deps again for what the new Python left without packages, and how to roll back.
 
 **Emulators and firmware** follow, the programs and firmware the suites' apps use, each on a card with the latest
-version and an i that says how to handle it. None of them is installed from here:
+version and an i that says how to handle it. They are those of the suites in the checkout, so none in Nexus now:
+the BC250 Bazzite Suite's emulators and firmware are listed by its own copy of Nexus Deps. None of them is installed
+from here:
 
 | Card | Asked | What an update means |
 |---|---|---|

@@ -1,3 +1,9 @@
+Changelog: 15-11-2026 00:01:07
+
+Fixed. SUITE_MANUAL_URL names the BC250 Bazzite Suite's wiki at its new address,
+robertotorino.github.io/bc250-bazzite/ (the suite has a repository of its own since 14-11-2026). tests/test_parity.py
+is gone: it compared core's widgets with copies in the suite's apps, which are no longer in this repository.
+
 Changelog: 12-11-2026 14:51:59
 
 Version 3.2.0.

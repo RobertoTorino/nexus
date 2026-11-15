@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The suites of the repository: each a folder directly under the root with its portal's manifest,
-<suite>/portal/apps.toml (bc250-bazzite/, the BC250 Bazzite Suite). The Nexus tools work on one suite at a time,
-named with --suite. Without a name it is the one suite in the checkout or, with several, the one whose tags have no
-prefix (bc250-bazzite: installed portals find its releases by those tags). Each suite names the system it is made for
-in <suite>/SYSTEM (bazzite or windows): ./test.sh runs the suites of the system it runs on. A suite's release tags
-are <prefix><app>-v<x.y.z>, the prefix in <suite>/TAG_PREFIX (windows-portable: wp-, so wp-portal-v0.1.0; none for
-bc250-bazzite), so the suites' tags never mix. A suite may be a repository of its own, cloned into this checkout as
+<suite>/portal/apps.toml. The Nexus tools work on one suite at a time, named with --suite. Without a name it is the
+one suite in the checkout or, with several, the one whose tags have no prefix; a checkout may hold none (Nexus alone:
+the BC250 Bazzite Suite has a repository of its own with its own tools since 14-11-2026, and the Windows Portable
+Suite is here only when cloned in). Each suite names the system it is made for in <suite>/SYSTEM (bazzite or
+windows): ./test.sh runs the suites of the system it runs on. A suite's release tags are <prefix><app>-v<x.y.z>, the
+prefix in <suite>/TAG_PREFIX (windows-portable: wp-, so wp-portal-v0.1.0), so the suites' tags never mix. A suite may be a repository of its own, cloned into this checkout as
 its folder (OWN_REPOSITORIES: windows-portable): the tools find it the same way, and git in its folder is its own.
 
     python3 tools/suites.py                       # the suite folders, one per line (relative to the root)
@@ -102,8 +102,17 @@ def of_tag(tag: str, root: Path = ROOT) -> tuple[Path, str, str]:
     raise LookupError(f"{tag} is not <app>-v<x.y.z> of a suite here (a suite's tags start with its TAG_PREFIX)")
 
 
+def default(root: Path = ROOT) -> Path | None:
+    """suite() without a name, or None when the checkout holds no suite (Nexus alone, as its CI checks it out):
+    for the tools that pick a default when they are loaded and say so only when one is needed."""
+    try:
+        return suite(root=root)
+    except LookupError:
+        return None
+
+
 def add_argument(parser: argparse.ArgumentParser) -> None:
-    parser.add_argument("--suite", metavar="NAME", help="the suite's folder, such as bc250-bazzite (default: the "
+    parser.add_argument("--suite", metavar="NAME", help="the suite's folder, such as windows-portable (default: the "
                                                         "one suite in the checkout, or the one whose tags have no "
                                                         "prefix)")
 

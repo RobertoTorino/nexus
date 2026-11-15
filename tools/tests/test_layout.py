@@ -87,7 +87,7 @@ def test_installers_upgrade_the_python_packages():
                          *SUITE.glob("*/portal/install.sh")])
     calls = [(path, line) for path in installers for line in path.read_text(encoding="utf-8").splitlines()
              if re.search(r"\bpip\"? install\b.* -r ", line) and not line.lstrip().startswith("#")]
-    assert len(calls) >= 18
+    assert calls or not installers                  # every suite with an install.sh has one (Windows: install.ps1)
     assert [(path.relative_to(SUITE), line) for path, line in calls if "--upgrade -r" not in line] == []
 
 
@@ -101,18 +101,18 @@ def test_every_suite_names_its_system():
 
 
 def test_the_suites_tags_never_mix():
-    """One suite has plain tags (bc250-bazzite: installed portals find its releases by them); every other has a
-    TAG_PREFIX of its own, and no app of the plain suite starts with one, so a tag names one suite."""
+    """At most one suite has plain tags; every other has a TAG_PREFIX of its own, and no app of the plain suite starts
+    with one, so a tag names one suite."""
     import importlib.util
     spec = importlib.util.spec_from_file_location("nexus_suites", SUITE / "tools" / "suites.py")
     suites = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(suites)
     prefixes = [suites.tag_prefix(folder) for folder in _suites()]
-    assert prefixes.count("") == 1 and len(set(prefixes)) == len(prefixes), prefixes
+    assert prefixes.count("") <= 1 and len(set(prefixes)) == len(prefixes), prefixes
     for prefix in filter(None, prefixes):
         assert re.fullmatch(r"[a-z0-9]+-", prefix), f"TAG_PREFIX {prefix!r}: lowercase letters and digits, then -"
-    plain = next(folder for folder in _suites() if not suites.tag_prefix(folder))
-    for app in (plain / "apps").iterdir():
+    plain = next((folder for folder in _suites() if not suites.tag_prefix(folder)), None)
+    for app in (plain / "apps").iterdir() if plain else ():
         assert not any(app.name.startswith(prefix) for prefix in filter(None, prefixes)), app.name
 
 
@@ -121,8 +121,8 @@ def test_every_app_has_tests_and_ci_runs_them():
     for app in _apps():
         assert (app / "tests").is_dir(), f"{app.name}: no tests/"
         assert (app / "requirements-dev.txt").is_file(), f"{app.name}: no requirements-dev.txt (CI installs it)"
-    # ci-nexus.yml (core, tools, dev/) lists its matrix; ci.yml (the BC250 Bazzite Suite) and a suite's own
-    # ci-<suite>.yml read theirs from the suite's folders in a plan job (tools/ci_matrix.py, stage 2); a suite in a
+    # ci-nexus.yml (core, tools, dev/) lists its matrix; a suite's own ci-<suite>.yml reads it from the suite's
+    # folders in a plan job (tools/ci_matrix.py, stage 2); a suite in a
     # repository of its own (owner, 13-11-2026), cloned here as its folder, has its ci.yml there
     import importlib.util
     spec = importlib.util.spec_from_file_location("ci_matrix", SUITE / "tools" / "ci_matrix.py")
@@ -145,9 +145,8 @@ def test_every_app_has_tests_and_ci_runs_them():
 
 def test_each_suite_has_its_own_ci_and_release_workflows():
     """A change to one suite never touches another's checks or releases (owner, 27-10-2026). A suite with a tag
-    prefix has its own ci-<suite>.yml and release-<suite>.yml, which name no other suite's folder; ci.yml and
-    release.yml (Nexus and the plain-tag suite, bc250-bazzite) name no prefixed suite's folder, and release.yml leaves
-    the prefixed tags alone."""
+    prefix has its own ci-<suite>.yml and release-<suite>.yml, which name no other suite's folder; a suite in a
+    repository of its own has its ci.yml and release.yml there, and Nexus none of its."""
     import importlib.util
     spec = importlib.util.spec_from_file_location("nexus_suites", SUITE / "tools" / "suites.py")
     suites = importlib.util.module_from_spec(spec)
@@ -171,10 +170,7 @@ def test_each_suite_has_its_own_ci_and_release_workflows():
             text = workflow.read_text(encoding="utf-8")
             assert not [name for name in names if name != folder.name and f"{name}/" in text], workflow.name
         assert f'tags: ["{prefix}*-v' in own[1].read_text(encoding="utf-8")
-        for shared in ("ci.yml", "release.yml"):
-            assert f"{folder.name}/" not in (workflows / shared).read_text(encoding="utf-8"), shared
-        assert f'"!{prefix}*"' in (workflows / "release.yml").read_text(encoding="utf-8")
-    assert plain == ["bc250-bazzite"]
+    assert len(plain) <= 1, plain
 
 
 def test_nexus_checks_have_a_workflow_of_their_own():

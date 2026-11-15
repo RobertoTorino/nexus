@@ -13,27 +13,30 @@ tasks need; the rest is in files it points to, read when the task calls for them
   tooling they need.
 - [.claude/releases.md](.claude/releases.md): what a release is, Nexus's version, the CHANGELOG kinds, and which
   steps are the owner's.
-- [bc250-bazzite/CLAUDE.md](bc250-bazzite/CLAUDE.md): the BC250 suite's own rules (the layout of its apps, the board,
-  the scope, the names not to use). The Windows Portable Suite's are in its own repository
-  (`windows-portable/CLAUDE.md` when it is cloned into this checkout). Status and plans: [MIGRATION.md](MIGRATION.md).
+- Each suite's own rules are in its own repository's CLAUDE.md: the BC250 Bazzite Suite's in
+  `github.com/RobertoTorino/bc250-bazzite` (cloned beside this checkout, `~/Projects/bc250-bazzite`), the Windows
+  Portable Suite's in its repository (`windows-portable/CLAUDE.md` when it is cloned into this checkout). Status and
+  plans: [MIGRATION.md](MIGRATION.md).
 
 ## What this is
 
 The repository is **Nexus**, `github.com/RobertoTorino/nexus` (branch `main`): the umbrella over the suites, with
-what they share at the root. The **BC250 Bazzite Suite** (the AMD BC-250 on Bazzite) is `bc250-bazzite/`.
+what they share: core, the Nexus tools, the Nexus apps and the Nexus page. It holds no suite of its own.
 
 **One repository per suite** (owner, 13-11-2026): the suites leave Nexus one by one, and the tooling stays here,
 for every suite. The **Bazzite Console Suite** is `github.com/RobertoTorino/bazzite-console`, with a copy of the
-tools of its own. The **Windows Portable Suite** (Windows handhelds) is `github.com/RobertoTorino/windows-portable`
-and keeps no copy: it is worked on **inside this checkout**, cloned as the folder `windows-portable/` (in Nexus's
-`.gitignore`), where every tool finds it as before (`--suite windows-portable`, `./test.sh`, `tools/suites.py`:
+tools of its own. The **BC250 Bazzite Suite** (the AMD BC-250 on Bazzite) is `github.com/RobertoTorino/bc250-bazzite`
+since 14-11-2026, standalone in the same way: its own tools, core and dev apps, CI and releases, its wiki at
+robertotorino.github.io/bc250-bazzite/; Nexus knows nothing of it beyond links, and a change to it is made there.
+The **Windows Portable Suite** (Windows handhelds) is `github.com/RobertoTorino/windows-portable` and keeps no copy:
+it is worked on **inside this checkout**, cloned as the folder `windows-portable/` (in Nexus's `.gitignore`), where every tool finds it as before (`--suite windows-portable`, `./test.sh`, `tools/suites.py`:
 `OWN_REPOSITORIES`). The two are separate git checkouts: git in `windows-portable/` is the suite's (its commits, tags
 and CI), git here is Nexus's, and a change to both is two commits, each in its repository. Its workflows are in its
 repository; each job starts with Nexus's action `.github/actions/suite`, which checks out Nexus at the commit the
 suite's `NEXUS_REF` names and the suite inside it. A checkout of Nexus alone (Nexus's CI) has no `windows-portable/`:
 a tool or test that needs the suite says so or skips, and never fails for its absence. A suite's
 `SYSTEM` file names the system it is made for and tested on, its release tags start with its `TAG_PREFIX` (`wp-`;
-the BC250 suite has none and is the tools' default suite, `tools/suites.py`), and its folder holds its
+with one suite in the checkout it is the tools' default, `tools/suites.py`), and its folder holds its
 `apps/<name>/`, its `portal/` with `apps.toml` (one pinned release per app), its wiki in `docs/`, its `icons/` and
 its `tools/`. The root keeps what is Nexus's: `core/bc250_core/` (shared Python code, bundled per app at release
 time), `tools/` (the Nexus tools: release and CI, design and icons, tours; a tool that works on a suite takes
@@ -43,8 +46,8 @@ robertotorino.github.io/nexus/), `DESIGN.md`, `ICONS.md` and `test.sh`.
 
 **Each suite stands apart** (owner, 27-10-2026): a change to one suite never edits another suite's folder, its CI
 or its release workflow, and a change both suites want is two changes, one per suite, each with its own release.
-`ci-nexus.yml` is Nexus's (core, the Nexus tools, `dev/`, the Nexus page and the repository's rules); `ci.yml` and
-`release.yml` are the BC250 suite's; a suite in a repository of its own has its `ci.yml` and `release.yml` there.
+`ci-nexus.yml` is Nexus's (core, the Nexus tools, `dev/`, the Nexus page and the repository's rules); a suite in a
+repository of its own has its `ci.yml` and `release.yml` there.
 
 ## Rules from the owner
 

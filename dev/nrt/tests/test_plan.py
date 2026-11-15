@@ -399,11 +399,11 @@ def test_app_commands_amend_the_unpushed_release_commit():
 
 def test_git_button_commands():
     assert rp.add_command() == "git add -A && tools/fix-modes.sh && git status --short"
-    checks = " && ".join(f"python3 {check} --base origin/main" for check in rp.manifest_checks(rp.CHECKOUT))
+    checks = "".join(f" && python3 {check} --base origin/main" for check in rp.manifest_checks(rp.CHECKOUT))
     assert rp.commit_command("Release alpha-v0.2.0", "origin/main") == (
-        f"python3 {rp.VERSIONS_CHECK} && {checks} && "
+        f"python3 {rp.VERSIONS_CHECK}{checks} && "
         "git commit -m 'Release alpha-v0.2.0'")                       # the checks first, the commit only after
-    assert f"python3 {rp.manifest_check(rp.CHECKOUT)} --base origin/main" in checks    # the default suite's among them
+    assert rp.manifest_checks(rp.CHECKOUT) == []           # no suite of this repository here since 14-11-2026
     assert rp.commit_command("it's", "pushed", python="/v/python").endswith("git commit -m 'it'\"'\"'s'")
     assert rp.commit_command("", "pushed", amend=True).endswith(" && git commit --amend --no-edit")
     two = rp.commit_command("m", "pushed", manifests=["a/tools/check_manifest.py", "b/tools/check_manifest.py"])
@@ -1641,8 +1641,10 @@ def test_the_windows_suites_fixtures_are_the_suites_files():
 def test_the_suites_names_and_icons(tmp_path):
     """The first column's rows: each suite by its portal's name, with its portal's icon (both suites since the
     Windows portal got its images, 28-10-2026), or its own drawing while a portal has no images."""
-    assert rp.suite_name(rp.CHECKOUT, "bc250-bazzite") == "BC250 Bazzite Suite"
-    assert rp.suite_icon(rp.CHECKOUT, "bc250-bazzite").name == "bc250-bazzite-suite.webp"
+    named = tmp_path / "a-suite"
+    (named / "portal" / "pkg").mkdir(parents=True)
+    (named / "portal" / "pkg" / "__init__.py").write_text('APP_NAME = "A Suite"\n')
+    assert rp.suite_name(tmp_path, "a-suite") == "A Suite" and rp.suite_icon(tmp_path, "a-suite") is None
     if (rp.CHECKOUT / "windows-portable" / "portal" / "apps.toml").is_file():     # a repository of its own, cloned here
         assert rp.suite_name(rp.CHECKOUT, "windows-portable") == "Windows Portable Suite"
         assert rp.suite_icon(rp.CHECKOUT, "windows-portable").name == "windows-portable-suite.webp"

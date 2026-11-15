@@ -18,8 +18,8 @@ Start it from [Nexus Dashboard](../dash), or:
 | Open it | `dev/deps/run.sh` (`--fix` offers Fix at once, `--remind` is the hourly check) |
 | Menu entry, Desktop icon and hourly reminder | `dev/deps/install.sh` (`--no-desktop-shortcut`, `--uninstall`, `--uninstall --purge`) |
 
-Nothing is copied: the entry starts the app of the checkout you installed it from. It checks the BC250 Bazzite
-Suite, whose catalog is `nexus_deps/catalogs/bc250-bazzite.toml`.
+Nothing is copied: the entry starts the app of the checkout you installed it from. It checks the apps of a suite
+with a catalog in `nexus_deps/catalogs/<suite>.toml`; here none has one, so it checks the machine's updates.
 
 How to use it: [Nexus Dashboard on the Nexus page](https://robertotorino.github.io/nexus/dashboard/#deps).
 

@@ -15,8 +15,10 @@ PACKAGE = Path(__file__).resolve().parent
 ROOT = PACKAGE.parent
 CHECKOUT = ROOT.parents[1]                  # the repository (Nexus), dev/deps/ in it
 CATALOGS = PACKAGE / "catalogs"             # one catalog per suite: <suite folder>.toml
-DEFAULT_SUITE = "bc250-bazzite"             # the only suite with a catalog so far (owner, 07-11-2026)
-CATALOG = CATALOGS / f"{DEFAULT_SUITE}.toml"
+# The suite whose apps it checks by default: the first with a catalog. None here: the BC250 Bazzite Suite's catalog
+# left with the suite for its own repository (14-11-2026), and without one only the machine's updates are checked.
+DEFAULT_SUITE = min((path.stem for path in CATALOGS.glob("*.toml")), default=None)
+CATALOG = CATALOGS / f"{DEFAULT_SUITE}.toml" if DEFAULT_SUITE else None
 LOGO_PATH = ROOT / "images" / f"{APP_ID}.webp"
 
 # Settings in ~/.config/nexus-deps/nexus-deps.ini
@@ -28,8 +30,10 @@ def suites() -> list[str]:
     return sorted(path.stem for path in CATALOGS.glob("*.toml"))
 
 
-def catalog(suite: str = DEFAULT_SUITE) -> Path:
-    """The catalog of *suite* (a folder of the checkout, such as bc250-bazzite)."""
+def catalog(suite: str | None = DEFAULT_SUITE) -> Path | None:
+    """The catalog of *suite* (a folder of the checkout); None for no suite (only the machine's updates)."""
+    if suite is None:
+        return None
     if suite not in suites():
         raise ValueError(f"no catalog for {suite!r}: {', '.join(suites())}")
     return CATALOGS / f"{suite}.toml"

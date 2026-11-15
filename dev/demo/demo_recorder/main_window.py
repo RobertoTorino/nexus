@@ -58,9 +58,14 @@ from .workflow import (
 )
 
 RELEASES_URL = "https://github.com/RobertoTorino/nexus/releases"
-SUITE_IN_CHECKOUT = CHECKOUT / "bc250-bazzite"           # the suite whose portal install the demo records
+# The suite whose portal install the demo records from the checkout: its first Bazzite suite, None without one (Nexus
+# holds none since the BC250 Bazzite Suite moved to a repository of its own, 14-11-2026; a portal release in
+# Downloads is recorded all the same)
+SUITE_IN_CHECKOUT = next((p for p in sorted(CHECKOUT.iterdir()) if (p / "install.sh").is_file()
+                          and (p / "SYSTEM").is_file() and (p / "SYSTEM").read_text(encoding="utf-8").strip() == "bazzite"),
+                         None)
 ABOUT = ("The demo is a real portal installation recorded with OBS: a portal release extracted in Downloads (found by "
-         "itself), or the BC250 Bazzite Suite in this checkout, installed in a terminal while OBS records the screen, "
+         "itself), or a Bazzite suite in this checkout, installed in a terminal while OBS records the screen, "
          "then the portal opened and one optional app installed and shown.\n\n"
          "OBS needs a screen-capture source and its WebSocket server (Setup instructions). The portal and the "
          "chosen app must not be installed yet: the demo is a fresh install. While it records, this window hides; "
@@ -387,6 +392,8 @@ class MainWindow(QMainWindow):
             return
         if release is None:
             try:
+                if SUITE_IN_CHECKOUT is None:
+                    raise WorkflowError("no Bazzite suite in this checkout")
                 self._set_release(SUITE_IN_CHECKOUT)
             except WorkflowError:
                 self.release_status.setText(

@@ -64,6 +64,13 @@ def test_a_tag_names_its_suite(two):
             suites.of_tag(bad, two)
 
 
+def test_no_suite_is_no_default(tmp_path):
+    """A checkout without a suite (Nexus alone since 14-11-2026): suite() says so, default() is None."""
+    assert suites.suites(tmp_path) == [] and suites.default(tmp_path) is None
+    with pytest.raises(LookupError, match="no suite in"):
+        suites.suite(root=tmp_path)
+
+
 def test_one_suite_laid_out_as_the_root(tmp_path):
     """The tools' test repositories: the root is the suite."""
     (tmp_path / "portal").mkdir()
@@ -76,10 +83,11 @@ def test_the_command_line():
     run = lambda *args: subprocess.run([sys.executable, str(TOOLS / "suites.py"), *args], capture_output=True,
                                        text=True)
     assert run().stdout.split() == [p.name for p in suites.suites()]
-    assert run("--default").stdout.strip() == suites.suite().name == "bc250-bazzite"
+    default = suites.default()                 # Nexus holds no suite of its own since 14-11-2026: a cloned one or none
+    result = run("--default")
+    assert (result.stdout.strip(), result.returncode) == ((default.name, 0) if default else ("", 1))
     assert run("--system", "bazzite").stdout.split() == [p.name for p in suites.suites()
                                                           if suites.system(p) == "bazzite"]
-    assert run("--tag", "portal-v1.0.0").stdout.split() == ["bc250-bazzite", "portal", "1.0.0"]
     result = run("--tag", "nothing")
     assert result.returncode == 1 and "not <app>-v<x.y.z>" in result.stderr
 

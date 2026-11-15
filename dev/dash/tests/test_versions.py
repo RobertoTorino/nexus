@@ -55,7 +55,7 @@ def test_the_tile_opens_the_dialog(qapp, monkeypatch):
     opened = []
     monkeypatch.setattr(main_window, "VersionsDialog",
                         lambda root, parent, report: type("D", (), {"exec": lambda self: opened.append(root)})())
-    window = MainWindow(settings=None, suite="bc250-bazzite")
+    window = MainWindow(settings=None)
     tiles = {window.tiles.item(i).text(): window.tiles.item(i) for i in range(window.tiles.count())}
 
     window.click(tiles["Dev app versions"].data(Qt.ItemDataRole.UserRole))

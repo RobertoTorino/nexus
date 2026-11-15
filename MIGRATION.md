@@ -41,26 +41,30 @@ suite (a suite keeps its own tooling only where that is not possible). The steps
    without a copy of the tools. It is cloned into the Nexus checkout as `windows-portable/` and its workflows check
    Nexus out the same way (`.github/actions/suite`, the suite's `NEXUS_REF`). Its notes, with its hold, are in its
    own MIGRATION.md.
-3. **The BC250 Bazzite Suite, next:** `github.com/RobertoTorino/bc250-bazzite`, the same way. Then a test that
+3. **The BC250 Bazzite Suite, done 14-11-2026 in the working trees:** `github.com/RobertoTorino/bc250-bazzite`,
+   standalone like step 1, not coupled like step 2 (owner, 14-11-2026: "identical to bazzite-console"): its own
+   tooling, core and development apps, a plain copy without the git history, which stays here. The owner's choices
+   that day: a clean cut (installed portals of before keep looking for releases in Nexus; the boards install the
+   portal again from the new repository) and the new wiki address only (robertotorino.github.io/bc250-bazzite/, the
+   old one under the Nexus page is gone). Nexus knows nothing of it beyond the links on the Nexus page and the Nexus
+   index's pointer to its releases; its releases up to then stay on Nexus's Releases page. Then a test that
    everything still works as intended.
 
-What step 2 left for step 3, because the BC250 suite needs it and the Windows Portable Suite, on hold, does not:
+What step 2 left, for the Windows Portable Suite while it is on hold (the BC250 suite has its own tooling now, so
+none of it is needed for it):
 
-- **The Nexus Release Tool releases only the suites of Nexus's own repository.** It commits, pushes and starts
-  `release-nexus.yml` in the Nexus checkout; a suite in a repository of its own is not listed. For such a suite it
-  has to commit and push in the suite's folder, start that repository's `release.yml` and read that repository's
-  runs and releases. Until then such a suite is released by hand: `tools/tag-release.sh` tags it in its repository,
-  and its `release.yml` takes the release commit (`gh workflow run release.yml -f commit=<sha>`).
+- **The Nexus Release Tool releases only the suites of Nexus's own repository,** and there are none now: in Nexus it
+  lists core and Nexus's own release. For a suite in a repository of its own it would have to commit and push in the
+  suite's folder, start that repository's `release.yml` and read that repository's runs and releases. Until then
+  such a suite is released by hand: `tools/tag-release.sh` tags it in its repository, and its `release.yml` takes
+  the release commit (`gh workflow run release.yml -f commit=<sha>`).
 - **The pre-push hook checks only Nexus's repository** (`tools/git-setup.sh` sets it there; `tools/pre-push.sh`
   reads the suites of the commit that is pushed). A suite in a repository of its own has no hook yet: its CI checks
   the same.
 - **The Nexus release and the Nexus index** read one repository's releases (`tools/nexus_release.py`,
   `tools/nexus_index.py`). The index keeps the Windows Portable Suite's section from the releases made in Nexus
-  before the move; releases made in a suite's own repository are not in it.
+  before the move, and points to the BC250 Bazzite Suite's repository for its releases.
 - **The catalogs that list every suite** (DESIGN.md, the Nexus page's Apps and features chapter from
-  `nexus/features.toml`, the `SYMBOLS` of ICONS.md) still hold the Windows Portable Suite's rows. `tools/features.py
-  --check` checks nothing in a checkout without that suite and says so; the suite's CI runs it.
-- **`tools/ci-local.sh`** runs Nexus's and the BC250 suite's workflows; a suite's own workflows are not run locally.
-- **The root `requirements-dev.txt`** names the BC250 suite's folders; the Windows Portable Suite has its own
-  `windows-portable/requirements-dev.txt` for the same venv.
-
+  `nexus/features.toml`) hold the Windows Portable Suite's rows alone; the BC250 suite's left with it.
+  `tools/features.py --check` checks nothing in a checkout without that suite and says so; the suite's CI runs it.
+- **`tools/ci-local.sh`** runs Nexus's workflow alone; a suite's own workflows are not run locally.

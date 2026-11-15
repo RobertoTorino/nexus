@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""tools/ci_local.py: the jobs it reads from the suite, Console and Nexus workflows (a matrix job once per entry,
-Nexus's jobs with nexus- before the name), the ${{ }} expressions it fills in, which jobs a name selects, and the
-requirement files that key a job's venv."""
+"""tools/ci_local.py: the jobs it reads from Nexus's workflow (a matrix job once per entry, with nexus- before the
+name), the ${{ }} expressions it fills in, which jobs a name selects, and the requirement files that key a job's
+venv."""
 
 from __future__ import annotations
 
@@ -17,19 +17,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import ci_local  # noqa: E402
 
 SUITE = Path(__file__).resolve().parents[2]
-CI = SUITE / ".github" / "workflows" / "ci.yml"
 CI_NEXUS = SUITE / ".github" / "workflows" / "ci-nexus.yml"
-# ci.yml's plan job runs python3 tools/ci_matrix.py, as in the container; Windows' python3 is the Store's stand-in
-PLAN_JOB = pytest.mark.skipif(sys.platform == "win32", reason="ci.yml's plan job runs python3, as in the container")
-
-
-@PLAN_JOB
-def test_every_job_of_ci_yml_and_every_matrix_entry():
-    jobs = {j.name: j for j in ci_local.load_jobs(CI)}
-    assert {"versions", "native", "shell", "installers", "docs", "windows-exe"} <= set(jobs)
-    assert "pytest/bc250-bazzite/apps/gpu" in jobs and "pytest" not in jobs
-    assert jobs["pytest/bc250-bazzite/apps/gpu"].matrix == {"dir": "bc250-bazzite/apps/gpu"}
-    assert not jobs["windows-exe"].runs_here and jobs["shell"].runs_here
 
 
 def test_a_matrix_from_a_plan_job_is_read_by_running_it(tmp_path):
@@ -64,26 +52,23 @@ def test_a_matrix_from_a_plan_job_is_read_by_running_it(tmp_path):
     assert not list(tmp_path.glob(".ci-local*"))                   # nothing written into the checkout
 
 
-@PLAN_JOB
-def test_nexus_jobs_come_after_the_suites_with_their_prefix():
-    """ci-nexus.yml's jobs (core, tools, dev/, the repository's rules) run after the suite's workflow."""
+def test_nexus_jobs_have_their_prefix():
+    """ci-nexus.yml's jobs (core, tools, dev/, the repository's rules): the only workflow run here."""
     nexus = {j.name: j for j in ci_local.load_jobs(CI_NEXUS, "nexus-")}
     assert {"nexus-versions", "nexus-shell", "nexus-docs", "nexus-pytest/core", "nexus-pytest/tools",
             "nexus-pytest/dev/nrt"} <= set(nexus)
     assert nexus["nexus-pytest/core"].matrix == {"dir": "core"} and all(j.runs_here for j in nexus.values())
     names = [j.name for j in ci_local.all_jobs(SUITE)]
-    assert names == [j.name for j in ci_local.load_jobs(CI)] + list(nexus) and len(set(names)) == len(names)
+    assert names == list(nexus) and len(set(names)) == len(names)
 
 
-@PLAN_JOB
 def test_expressions_and_selection():
     jobs = ci_local.all_jobs(SUITE)
-    governor = next(j for j in jobs if j.name == "pytest/bc250-bazzite/apps/gpu")
-    assert ci_local.expand("cd ${{ matrix.dir }}", governor, "abc") == "cd bc250-bazzite/apps/gpu"
-    assert ci_local.expand("${{ github.event.pull_request.base.sha || github.event.before }}", governor, "abc") == "abc"
+    tools = next(j for j in jobs if j.name == "nexus-pytest/tools")
+    assert ci_local.expand("cd ${{ matrix.dir }}", tools, "abc") == "cd tools"
+    assert ci_local.expand("${{ github.event.pull_request.base.sha || github.event.before }}", tools, "abc") == "abc"
     assert [j.name for j in ci_local.selected(jobs, ["nexus-pytest/tools"])] == ["nexus-pytest/tools"]
-    assert [j.name for j in ci_local.selected(jobs, ["shell"])] == ["shell"]                  # not nexus-shell too
-    assert all(j.name.startswith("pytest/") for j in ci_local.selected(jobs, ["pytest"]))    # the suite's only
+    assert [j.name for j in ci_local.selected(jobs, ["nexus-shell"])] == ["nexus-shell"]
     assert [j.name for j in ci_local.selected(jobs, ["nexus-pytest"])] == [
         "nexus-pytest/core", "nexus-pytest/tools", "nexus-pytest/dev/dash", "nexus-pytest/dev/demo",
         "nexus-pytest/dev/deps", "nexus-pytest/dev/itests", "nexus-pytest/dev/nrt", "nexus-pytest/dev/sounds"]
@@ -103,7 +88,7 @@ def test_ci_runs_for_every_branch_push_and_no_tag():
     """A push to a branch runs CI, a tag does not (tag-release.sh tags only a commit CI passed). GitHub reads a push
     filter with only tags or tags-ignore as "no branch at all", which ran CI for no push."""
     import yaml
-    for workflow in (CI, CI_NEXUS):
+    for workflow in (CI_NEXUS,):
         spec = yaml.safe_load(workflow.read_text(encoding="utf-8"))
         push = spec.get("on", spec.get(True))["push"]                     # PyYAML reads the key on as True
         assert push.get("branches") == ["**"] and not {"branches-ignore", "tags", "tags-ignore"} & set(push)
@@ -111,15 +96,13 @@ def test_ci_runs_for_every_branch_push_and_no_tag():
 
 
 def test_only_the_workflows_a_push_starts():
-    """Without job names, the workflows GitHub starts for the push: a change to one suite runs that suite's CI and
-    Nexus's, never the other suite's (owner, 07-11-2026)."""
+    """Without job names, the workflows GitHub starts for the push: ci-nexus.yml has no paths filter, so every
+    push starts it."""
     names = lambda changed: [name for name, _ in ci_local.workflows(SUITE, changed)]   # noqa: E731
-    assert names(None) == [name for name, _ in ci_local.WORKFLOWS]
-    assert names(["bc250-bazzite/portal/apps.toml"]) == ["ci.yml", "ci-nexus.yml"]
-    assert names(["portal/apps.toml"]) == ["ci.yml", "ci-nexus.yml"]          # the root's copy is the BC250 suite's
-    assert names(["windows-portable/apps/bios/VERSION"]) == ["ci-nexus.yml"]
-    assert names(["core/bc250_core/app.py"]) == [name for name, _ in ci_local.WORKFLOWS]   # every suite bundles core
-    assert names([]) == ["ci-nexus.yml"]                                        # no paths filter: every push
-    assert ci_local.glob_match("bc250-bazzite/**", "bc250-bazzite/a/b.py")
-    assert not ci_local.glob_match("bc250-bazzite/**", "bc250-bazzite-x/a.py")
+    assert names(None) == [name for name, _ in ci_local.WORKFLOWS] == ["ci-nexus.yml"]
+    assert names(["core/bc250_core/app.py"]) == names([]) == ["ci-nexus.yml"]
+    workflow = SUITE / ".github" / "workflows" / "ci-nexus.yml"
+    assert ci_local.runs_for(workflow, [])
+    assert ci_local.glob_match("suite/**", "suite/a/b.py")
+    assert not ci_local.glob_match("suite/**", "suite-x/a.py")
     assert ci_local.glob_match("test.sh", "test.sh") and not ci_local.glob_match("test.sh", "tools/test.sh")

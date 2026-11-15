@@ -14,4 +14,4 @@
 
 ## How I tested it
 
-<!-- On a BC-250 board, another setup, or only with the tests. -->
+<!-- On Bazzite, on Windows, or only with the tests. -->

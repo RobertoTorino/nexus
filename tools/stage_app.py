@@ -31,7 +31,7 @@ def _load(name: str, path: Path):
 
 suites = _load("nexus_suites", Path(__file__).resolve().with_name("suites.py"))
 ROOT = suites.ROOT
-SUITE = suites.suite()                      # the default suite (tools/suites.py); main() takes --suite
+SUITE = suites.default()                    # the default suite (tools/suites.py), None without one; main() takes --suite
 SKIP_DIRS = {"tests", "python", "_python", "__pycache__", ".pytest_cache", ".idea", ".venv",
              "target"}                          # cargo's build output (consoles/native)
 SKIP_FILES = {"requirements-dev.txt", ".gitignore", ".gitattributes", ".standalone"}
@@ -48,24 +48,26 @@ def uses_core(src: Path) -> bool:
                if not (set(p.relative_to(src).parts) & SKIP_DIRS))
 
 
-def source_dir(name: str, suite: Path = SUITE) -> Path:
+def source_dir(name: str, suite: Path | None = SUITE) -> Path:
+    if suite is None:
+        raise SystemExit(f"no suite in {ROOT}: name one with --suite (tools/suites.py)")
     src = suite / "portal" if name == "portal" else suite / "apps" / name
     if not src.is_dir():
         raise SystemExit(f"no such app: {name} (looked in {src})")
     return src
 
 
-def manual_chapter(name: str, suite: Path = SUITE) -> Path | None:
+def manual_chapter(name: str, suite: Path | None = SUITE) -> Path | None:
     chapter = suite / "docs" / "apps" / f"{name}.md"
     return chapter if name != "portal" and chapter.is_file() else None
 
 
-def core_dir(suite: Path = SUITE) -> Path:
+def core_dir(suite: Path | None = SUITE) -> Path:
     """core/bc250_core: at the root of the checkout, beside the suites."""
-    return suite.parent / "core" / "bc250_core"
+    return (suite.parent if suite is not None else ROOT) / "core" / "bc250_core"
 
 
-def stage(name: str, dest: Path, suite: Path = SUITE) -> Path:
+def stage(name: str, dest: Path, suite: Path | None = SUITE) -> Path:
     """Copy app *name* of *suite* into *dest* (created; must not exist yet), bundle bc250_core when the app uses
     it and add the app's chapter of the manual as MANUAL.md."""
     src = source_dir(name, suite)

@@ -33,8 +33,10 @@ import stage_app  # noqa: E402
 
 SUITE = stage_app.SUITE
 
-# app key -> (package, name of the .exe)
-WINDOWS_APPS = {"sftp": ("sftp_tools", "BC250-SFTP-Tools")}
+# app key -> (package, name of the .exe) of the default suite's apps that ship one. None since the BC250 Bazzite Suite,
+# whose SFTP Tools did, has its own repository (14-11-2026); the Windows Portable Suite builds its programs with its
+# own tools/build_release.py on the functions here.
+WINDOWS_APPS: dict[str, tuple[str, str]] = {}
 
 
 def app_id(src: Path, package: str) -> str:
@@ -153,7 +155,7 @@ def notices_text(exe_name: str, dists: list[metadata.Distribution], others: list
 
 def build(app: str, out: Path) -> tuple[Path, Path]:
     if app not in WINDOWS_APPS:
-        raise SystemExit(f"{app} has no Windows build (known: {', '.join(sorted(WINDOWS_APPS))})")
+        raise SystemExit(f"{app} has no Windows build (known: {', '.join(sorted(WINDOWS_APPS)) or 'none'})")
     package, exe_name = WINDOWS_APPS[app]
     src = stage_app.source_dir(app)
     version = (src / "VERSION").read_text(encoding="utf-8").strip()

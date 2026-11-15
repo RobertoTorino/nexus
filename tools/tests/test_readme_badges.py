@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Every README's badges (owner, 28-10-2026: every README gets a beta, a workflow status and a license badge at the
-top): above its title, the Beta badge in its system's color (a design per system: the BC250 suite's purple, Nexus's
-teal; a suite in a repository of its own has its own badges), the CI workflow that tests its folder, and its license as
+top): above its title, the Beta badge in its system's color (a design per system: Nexus's teal; a suite in a
+repository of its own has its own badges), the CI workflow that tests its folder, and its license as
 its SPDX line and its LICENSE say."""
 
 from __future__ import annotations
@@ -12,9 +12,9 @@ import subprocess
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-COLORS = {"bc250-bazzite": "8b4fd8"}
+COLORS: dict[str, str] = {}                 # a suite folder's Beta color; the suites have repositories of their own
 NEXUS = "17b6a7"
-WORKFLOWS = {"bc250-bazzite": "ci.yml"}
+WORKFLOWS: dict[str, str] = {}              # a suite folder's CI workflow
 # The first line of a LICENSE file, and the SPDX identifiers it may stand for
 FAMILIES = {"GNU GENERAL PUBLIC LICENSE Version 3": ("GPL-3.0-only", "GPL-3.0-or-later"),
             "GNU AFFERO GENERAL PUBLIC LICENSE Version 3": ("AGPL-3.0-only", "AGPL-3.0-or-later"),
@@ -26,7 +26,8 @@ CI_BADGE = re.compile(r"^\[!\[[^\]]+\]\(https://github\.com/RobertoTorino/nexus/
 
 
 def readmes() -> list[str]:
-    return subprocess.run(["git", "ls-files", "*README.md"], cwd=ROOT, capture_output=True, text=True).stdout.split()
+    names = subprocess.run(["git", "ls-files", "*README.md"], cwd=ROOT, capture_output=True, text=True).stdout.split()
+    return [name for name in names if (ROOT / name).is_file()]          # not one deleted in the working tree
 
 
 def family(license_file: Path) -> tuple[str, ...]:
@@ -42,7 +43,7 @@ def license_of(folder: Path) -> Path:
 
 def test_every_readme_has_the_three_badges():
     names = readmes()
-    assert "README.md" in names and len(names) > 30
+    assert "README.md" in names and len(names) > 5
     for name in names:
         path = ROOT / name
         lines = path.read_text(encoding="utf-8").split("\n")
@@ -56,7 +57,7 @@ def test_every_readme_has_the_three_badges():
         assert workflows and all(workflows), f"{name}: a CI badge"
         for found in workflows:
             assert found[1] == found[2] and (ROOT / ".github" / "workflows" / found[1]).is_file(), name
-        wanted = {"README.md": {"ci-nexus.yml", "ci.yml"}}.get(
+        wanted = {"README.md": {"ci-nexus.yml"}}.get(
             name, {WORKFLOWS.get(system, "ci-nexus.yml")})
         assert {found[1] for found in workflows} == wanted, name
         badge = LICENSE_BADGE.match(badges[-1])

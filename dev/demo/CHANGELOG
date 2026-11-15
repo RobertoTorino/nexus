@@ -1,3 +1,9 @@
+Changelog: 15-11-2026 00:01:07
+
+Fixed. Without a portal release in Downloads the recorder takes a Bazzite suite in the checkout, whichever it is; in
+Nexus, which holds none since the BC250 Bazzite Suite moved to a repository of its own (14-11-2026), it asks for a
+portal release instead.
+
 Changelog: 13-11-2026 19:25:42
 
 Version 0.2.1.

@@ -39,7 +39,9 @@ from .system import Source, Update
 CATALOG = CATALOGS / "upstreams.json"
 TIMEOUT = 15
 USER_AGENT = f"nexus-deps/{__version__}"
-SUITE_NAMES = {"bc250-bazzite": "BC250 Bazzite Suite"}
+# The suites whose apps' upstreams it lists, by folder; none since the BC250 Bazzite Suite left with them for a
+# repository of its own (14-11-2026)
+SUITE_NAMES: dict[str, str] = {}
 SYNCED = ("repo", "pin", "version", "home", "name", "launcher")
 
 Fetch = Callable[[str], object]          # a GitHub API URL -> its decoded JSON

@@ -1,7 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """tools/make_icons.py: ICONS.md is what the script writes, every picture it shows is in the checkout, and the icons
-the wikis use are all listed: a Material icon on a page, and every file of the Nexus icon. Neither needs Qt: only
-rendering the drawn icons does."""
+the Nexus page uses are all listed: a Material icon on a page, and every file of the Nexus icon."""
 
 from __future__ import annotations
 
@@ -56,12 +55,10 @@ def material_icons(folder: Path) -> set[str]:
 
 
 def test_every_material_icon_of_each_wiki_is_listed():
-    """What the wiki's pages use is what its section lists, no more and no less."""
-    assert material_icons(SUITE / make_icons.SUITE_DIR / "docs") == {name for name, _ in make_icons.MATERIAL}
+    """What the Nexus page uses is what its section lists, no more and no less."""
     assert material_icons(SUITE / "nexus" / "docs") == {name for name, _ in make_icons.NEXUS_MATERIAL}
-    for config in (SUITE / make_icons.SUITE_DIR / "mkdocs.yml", SUITE / "nexus" / "mkdocs.yml"):
-        # no placeholder logo from Material
-        assert "material/" not in re.sub(r"#.*", "", config.read_text(encoding="utf-8"))
+    # no placeholder logo from Material
+    assert "material/" not in re.sub(r"#.*", "", (SUITE / "nexus" / "mkdocs.yml").read_text(encoding="utf-8"))
 
 
 def test_every_file_of_the_nexus_icon_is_listed():
@@ -97,9 +94,3 @@ def test_the_nexus_page_shows_the_nexus_icon():
     home = (SUITE / "nexus" / "overrides" / "home.html").read_text(encoding="utf-8")
     assert "logo: images/nexus.webp" in config and "favicon: images/nexus.png" in config
     assert "images/nexus.webp" in home
-
-
-def test_every_category_is_listed():
-    text = make_icons.build()
-    for category in (p.name for p in (SUITE / make_icons.SUITE_DIR / "icons").iterdir() if p.is_dir()):
-        assert f"{make_icons.SUITE_DIR}/icons/{category}/{category}-128.png" in text

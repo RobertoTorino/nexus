@@ -1,22 +1,20 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Runs the jobs of the Linux suites' CI workflows and ci-nexus.yml (Nexus's: core, the tools, dev/, the repository's
-rules) as GitHub runs them, inside the container tools/ci-local.sh starts: Python
-3.12, each job (and each entry of a matrix) in its own environment with only what that job installs. Tests that
-pass in the suite's full venv on a newer Python can still fail in CI; this shows it before the push.
+"""Runs the jobs of ci-nexus.yml (Nexus's CI: core, the tools, dev/, the repository's rules) as GitHub runs them,
+inside the container tools/ci-local.sh starts: Python 3.12, each job (and each entry of a matrix) in its own
+environment with only what that job installs. Tests that pass in the full venv on a newer Python can still fail in
+CI; this shows it before the push. The suites have repositories of their own, with their own CI.
 
     tools/ci-local.sh [--list] [--all] [--workers N] [job[/matrix value] ...]
-    e.g.  tools/ci-local.sh pytest/bc250-bazzite/apps/gpu nexus-pytest/tools
+    e.g.  tools/ci-local.sh nexus-pytest/tools nexus-shell
 
 Without job names it runs the workflows the push would start on GitHub: those whose push paths match a file that
-differs from origin/main (the commits not pushed yet and the changes not committed), so one suite's jobs never hold
-another suite's push (owner, 07-11-2026). --all runs every workflow; so does a checkout without origin/main. Job
-names run those jobs, whatever changed.
+differs from origin/main (the commits not pushed yet and the changes not committed). --all runs every workflow; so
+does a checkout without origin/main. Job names run those jobs, whatever changed.
 
 The jobs come from the workflows themselves, so a new app in the matrix or a new installer step is run without
-changing this; a matrix a plan job reads from the suite's folders (tools/ci_matrix.py, fromJSON(needs.plan.outputs.x))
-is read the same way here, by running that job's steps. ci-nexus.yml's jobs use the prefix nexus-
-for clarity.
+changing this; a matrix a plan job reads from the folders (tools/ci_matrix.py, fromJSON(needs.plan.outputs.x)) is
+read the same way here, by running that job's steps. ci-nexus.yml's jobs use the prefix nexus-.
 What cannot run here is reported, not hidden: a job for another system (windows-latest), apt-get steps (the image
 has those packages) and actions/cache (its folder is kept in ~/.cache/bc250-ci-local instead). The work happens on a
 copy of the checkout with every change staged, as a commit would have it; logs go to the cache folder."""
@@ -43,7 +41,7 @@ import yaml
 SRC = Path(os.environ.get("CI_LOCAL_SRC", "/src"))          # the checkout, read-only
 WORK = Path(os.environ.get("CI_LOCAL_WORK", "/tmp/ci-local-work"))   # the copy the jobs run in
 CACHE = Path(os.environ.get("CI_LOCAL_CACHE", "/cache"))     # venvs, pip's cache, logs: kept between runs
-WORKFLOWS = (("ci.yml", ""), ("ci-nexus.yml", "nexus-"))     # each workflow run here, with the prefix of its job names
+WORKFLOWS = (("ci-nexus.yml", "nexus-"),)                   # each workflow run here, with the prefix of its job names
 COPY_EXCLUDES = (".venv*", "target", "site", "__pycache__", ".pytest_cache", "dist", "node_modules")
 # A suite in a repository of its own, cloned into the checkout as its folder (tools/suites.py: OWN_REPOSITORIES), is
 # not in the copy: GitHub's checkout of Nexus has none, and its workflows are not run here.

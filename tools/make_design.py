@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Write DESIGN.md: every color of the suites, where it is defined and what it is for:
+"""Write DESIGN.md: every color of Nexus, core's themes and the Windows Portable Suite, where it is defined and
+what it is for:
 
     python3 tools/make_design.py            # write DESIGN.md and its samples in design/colors/
     python3 tools/make_design.py --check    # only list what is out of date; exit 1 when anything is
@@ -21,7 +22,6 @@ from pathlib import Path
 S = ("A nexus is like a hub, the center every part leads back to. Nexus is where the suites connect: one repository "
      "holding every suite, the code they share, and the rules they’re built by.")
 ROOT = Path(__file__).resolve().parent.parent
-SUITE_DIR = "bc250-bazzite"                 # the BC250 Bazzite Suite's folder
 COLORS = "design/colors"                       # beside DESIGN.md: every suite's and the Nexus page's (owner, 28-10-2026)
 DARK, LIGHT = "#22262a", "#eceef0"      # the backdrops: Gunmetal's and Silver's fields
 FILES: dict[str, str] = {}              # what build() writes: path in the checkout -> text
@@ -159,31 +159,6 @@ STATE_BLOCKS = [
     ("#1d4f91", "Steam artwork: the accent when an icon gives no bright color."),
 ]
 
-WIKI_TEXT = [
-    ("#ffffff", "Header, hero, cards and footer text; table headings; the stage pill; buttons on the dark and accent "
-                "sections."),
-    ("#ffffffb3", "Dimmed text on the main and the hover color: the search field's hint."),
-    ("#a98bff", "Suite soft: links in the dark scheme; hover on the dark section; footer column headings."),
-    ("#c9bfee", "Suite mist: card text and footer links."),
-    ("#1e1340", "Suite deep: a button's text on hover in the dark and accent sections."),
-]
-WIKI_BLOCKS = [
-    ("#5835ce", "Suite primary: Material's primary color, table headings, page icons, the hero and Get started "
-                "gradients."),
-    ("#7a5ce0", "Primary, light."),
-    ("#4426a8", "Primary, dark."),
-    ("#8a2be2", "Suite secondary: the accent (hover rings on linked images), the end of the gradients."),
-    ("#8a2be21a", "The accent at 10 %."),
-    ("#1e1340", "Suite deep: header and tabs, the hero's top, the Download button."),
-    ("#120c22", "Suite ink: the dark section and the home page's footer."),
-    ("#120c2273", "The shadow under the board and the controller at the top of the home page (45 %)."),
-    ("#17141f", "Page background (the dark scheme)."),
-    ("#8b4fd8", "The stage pill under the claim."),
-    ("#ffffff", "Button background on hover in the dark and accent sections."),
-    ("#ffffff1f", "Behind a link in the header under the pointer (12 %)."),
-    ("#00000040", "The shadow under a button under the pointer (25 %)."),
-    ("#00000059", "The strip with the notice at the bottom of the home page's footer (35 %)."),
-]
 
 NEXUS_TEXT = [
     ("#c0c0c0", "Silver: the header's links, table headings, the text, card titles, links and buttons of "
@@ -268,33 +243,6 @@ RULES = """## The rules
 A design is recognizable by a few colors used the same way everywhere, not by a palette of every color there is.
 Each design (a suite's, the Nexus page's) has its own; none is carried over to another.
 
-### BC250 Bazzite Suite
-
-- **The identity:** the purple of the board icon and the wiki (`#5835ce` with `#8a2be2`, the logo's `#6a1b9a`),
-  and the apps' Gunmetal theme, steel gray with the steel-blue accent `#7e97ad`. Inter, with heavy titles. Every
-  app has the icon of its category.
-- **One theme for every app** (Gunmetal, Silver or Warm, the user's choice), from `core/bc250_core/theme.py`: the
-  surfaces, text and accent below. Every border that shows under the mouse, with the focus or on what is chosen
-  is silver (owner, 05-11-2026), never the accent, and so is the thin border of every tooltip (owner, 07-11-2026). An
-  app adds no surface or text color of its own.
-- **One state family,** the same in every theme: green `#2e7d32` ok, orange `#ef6c00` warn, red `#c62828` bad,
-  blue `#1565c0` info, yellow `#fdd835` running, gray `#3a3f4b` neutral. A state is an edge or a dot on the theme's
-  surface; a header box or pill in the neutral state shows the blue as its edge (owner, 26-10-2026), never the
-  theme's dark edge color. The portal's pills are the exception (owner, 01-11-2026): rounded rectangles in a row
-  that ends level with the suite's icon, the theme's window color at 59 % so the wallpaper shows through, solid
-  and framed in the silver outline when active. A
-  red button is the red with `#b71c1c` pressed. Active red `#8b0000` (`#a00000` under the pointer) is a toggled-on
-  state, never an error.
-- **Text in a state color sits on a dark surface** in the next lighter tint of the same hue (Material's 300:
-  red `#e57373`, orange `#ffb74d`, green `#81c784`, blue `#64b5f6`, purple `#ce93d8`), because the state fills read
-  poorly as text on the dark views. The log in the check app uses them; a second tint of a hue is a deviation.
-- **Brand and hardware colors stay what they are:** PlayStation blue and the face-button colors in the PlayStation
-  apps, the light bar's and the color wheel's pure colors in HD Control, a game's own artwork, the gaming blue
-  `#0a55b0` of the gaming apps in the emulator managers (blue; their icon is a silver controller with a blue light
-  since 13-11-2026).
-- **Anything else is a deviation**, listed under Color families below with the app it is in. A new color is
-  added to the family it belongs to, or it needs a reason here.
-
 ### Windows Portable Suite
 
 - **The identity** (owner, 26-10-2026: direction D, B's amber on C's cards): a near-black window `#121214`, cards a
@@ -329,80 +277,7 @@ Each design (a suite's, the Nexus page's) has its own; none is carried over to a
   passes or fails there too.
 """
 
-# The hues of the BC250 Bazzite Suite: every tint in use, what it is and why. kind: family, tint, brand, hardware,
-# deviation. A deviation is a second color for a job the family already has a color for.
-FAMILIES = [
-    ("Red", [
-        ("#c62828", "family", "Bad: failed, an error, a problem; the red buttons."),
-        ("#b71c1c", "family", "A red button pressed or under the pointer (the bisect apps, Clean up logs)."),
-        ("#8b0000", "family", "Active red: the GPU Governor's active button (a toggled-on state, not an error)."),
-        ("#a00000", "family", "Active red under the pointer."),
-        ("#e57373", "tint", "Red text on a dark surface: the check app's findings, log, in-game checks, history and "
-                            "scores; the error labels of ACPI, CU Unlock and Cores Unlock; SFTP Tools' password "
-                            "requirements not met."),
-        ("#e8505b", "brand", "PlayStation's circle: HD Control's circle button, DatStation's circle symbol."),
-        ("#ff2020", "hardware", "The light bar's red; `#ff0000` the color wheel's."),
-    ]),
-    ("Orange and yellow", [
-        ("#ef6c00", "family", "Warn."),
-        ("#fdd835", "family", "Running."),
-        ("#ffb74d", "tint", "Orange text on a dark surface: the check app's warnings, log, in-game checks and middle "
-                            "scores; SFTP Tools' password warning."),
-        ("#ffd166", "brand", "DatStation's PS News symbol."),
-        ("#ffd700", "brand", "DatStation's gold: trophies and stars; `#c0c0c0` silver, `#cd7f32` bronze."),
-        ("#ffff00", "hardware", "The color wheel's yellow."),
-    ]),
-    ("Green", [
-        ("#2e7d32", "family", "Ok: passed, valid, unlocked, a pressed controller button; a right answer."),
-        ("#81c784", "tint", "Green text on a dark surface: the check app's log success, in-game ok, a better result "
-                            "in its history and full scores; SFTP Tools' password requirements met."),
-        ("#3dbf9c", "brand", "PlayStation's triangle: HD Control's triangle button, DatStation's triangle symbol."),
-        ("#10d040", "hardware", "The light bar's green; `#00ff00` the color wheel's."),
-    ]),
-    ("Blue", [
-        ("#1565c0", "family", "Info; the check app's GPU score box; HDMI CEC's adapter box."),
-        ("#64b5f6", "tint", "Blue text on a dark surface: the check app's info and hint findings."),
-        ("#0a55b0", "brand", "Gaming blue, the gaming apps': the emulator managers' primary button, with `#2a6cc4` "
-                             "under the pointer and `#08448d` pressed; `#5b93da` their links."),
-        ("#003791", "brand", "PlayStation blue (DatStation), `#0072ce` light, `#1a85e0` under the pointer, "
-                             "`#00589f` pressed; `#4da3ef` its links."),
-        ("#6f9fe8", "brand", "PlayStation's cross: HD Control's cross button, DatStation's cross symbol (the square "
-                             "is `#e48fc0` in both)."),
-        ("#1f3e9c", "brand", "BIOS Reader's bar and selection, with `#0b2a8a` and `#10205a`: a classic BIOS screen."),
-        ("#0050ff", "hardware", "The light bar's blue (the default); `#0000ff` the color wheel's."),
-    ]),
-    ("Purple", [
-        ("#6a1b9a", "family", "The logo's purple, the suite's own state color."),
-        ("#5835ce", "family", "The wiki's purple, with `#8a2be2`: the suite's identity on the web."),
-        ("#ce93d8", "tint", "Purple text on a dark surface: the check app's log hints, Show in log link, in-game "
-                            "accent and the overlay's frame rate and border."),
-        ("#8b4fd8", "family", "The stage pill under the claim on the wiki's home page."),
-        ("#a020f0", "hardware", "The light bar's purple; `#ff00ff` the color wheel's magenta."),
-    ]),
-    ("Palettes of their own", [
-        ("#8a5a2e", "brand", "Upscaler's copper and teal `#0e6f75` boxes, cyan `#26a9b0` outlines: the icon's colors."),
-        ("#ad1457", "brand", "The check app's System overview: cores, threads `#00796b`, upload `#3949ab`, NVMe "
-                             "`#6d4c41`, packages `#5e35b1`, BIOS `#00838f`, a seventh series `#5d4037`: a chart's "
-                             "series, each told apart from the others."),
-    ]),
-]
-KINDS = {"family": "the family", "tint": "text tint", "brand": "brand or icon", "hardware": "hardware",
-         "deviation": "deviation"}
 
-
-def families() -> str:
-    out = ["## Color families", "",
-           "Every tint of each hue in the BC250 Bazzite Suite, and why it is there. *The family* is the suite's "
-           "state color, *text tint* its lighter tint for text on a dark surface, *brand or icon* a color that "
-           "belongs to something else (PlayStation, a tool ported, an icon), *hardware* a color the device shows, "
-           "and *deviation* a second color for a job the family already has one for: there is none (the last were "
-           "unified 26-10-2026).", ""]
-    for hue, rows in FAMILIES:
-        out += [f"### {hue}", "", "| Color | Hex | Kind | Where and why |", "| --- | --- | --- | --- |"]
-        for hex_, kind, use in rows:
-            out.append(f"| ![{hex_}]({block_svg(hex_)}) | `{hex_}` | {KINDS[kind]} | {use} |")
-        out.append("")
-    return "\n".join(out)
 
 
 # Each wiki's stylesheet and the listing of its colors: the two must name the same colors.
@@ -410,162 +285,15 @@ def families() -> str:
 # cloned into it as its folder.
 OWN_REPOSITORY = ("windows-portable",)
 STYLESHEETS = {
-    f"{SUITE_DIR}/docs/stylesheets/suite.css": (WIKI_TEXT, WIKI_BLOCKS),
     "nexus/docs/stylesheets/nexus.css": (NEXUS_TEXT, NEXUS_BLOCKS),
     "windows-portable/docs/stylesheets/portable.css": (PORTABLE_WIKI_TEXT, PORTABLE_WIKI_BLOCKS),
 }
 
-GAMING_TEXT = [
-    ("#5b93da", "Links on a dark window (PS Remote Play, XB Remote Play, PCSX2, "
-                "PPSSPP, RPCS3, shadPS4, Vita3K, Xenia; HD Control's lit parts)."),
-    ("#ffffff", "Text on the blue primary button and on the shortcut artwork."),
-]
-GAMING_BLOCKS = [
-    ("#0a55b0", "Gaming blue: the primary button, hover borders; the gaming apps' color (their icon is a silver controller since "
-                "13-11-2026)."),
-    ("#2a6cc4", "Gaming blue on hover."),
-    ("#08448d", "Gaming blue while pressed."),
-    ("#0a55b01a", "Blue tint (10 %): hover, every other table row."),
-    ("#0a55b059", "Blue line (35 %): outlines, a pressed button."),
-    ("#80808080", "Disabled (50 % gray)."),
-    ("#5b93da", "HD Control: lit parts of the controller, the chosen card."),
-    ("#0b1d3a", "shadPS4 shortcut artwork, top of the gradient."),
-    ("#030810", "shadPS4 shortcut artwork, bottom."),
-    ("#16123a", "RPCS3 shortcut artwork, top."),
-    ("#05040f", "RPCS3 shortcut artwork, bottom."),
-    ("#0d2a4a", "PPSSPP shortcut artwork, top."),
-    ("#04080f", "PPSSPP shortcut artwork, bottom."),
-    ("#3a2c0d", "Vita3K shortcut artwork, top."),
-    ("#0f0b03", "Vita3K shortcut artwork, bottom."),
-    ("#000000", "PS Remote Play's stream view."),
-]
 
-DAT_TEXT = [
-    ("#4da3ef", "Links on a dark window."),
-    ("#0072ce", "Links on a light window."),
-    ("#3dbf9c", "Triangle: the Quiz symbol (the face-button colors, as HD Control draws them)."),
-    ("#e8505b", "Circle: the History symbol."),
-    ("#6f9fe8", "Cross: the System Version History symbol."),
-    ("#e48fc0", "Square: the Region Codes symbol."),
-    ("#ffd166", "The PS News symbol."),
-    ("#ffd700", "Gold: the Scores & Trophies symbol, a perfect quiz, gold stars."),
-    ("#c0c0c0", "Silver stars."),
-    ("#cd7f32", "Bronze stars."),
-    ("#2e7d32", "Right answers: the count and the feedback."),
-    ("#c62828", "Wrong answers: the count; little time left."),
-]
-DAT_BLOCKS = [
-    ("#003791", "PlayStation blue."),
-    ("#0072ce", "PlayStation light blue: hover borders."),
-    ("#1a85e0", "Blue on hover."),
-    ("#00589f", "Blue while pressed."),
-    ("#2e7d32", "A right answer's button."),
-    ("#c62828", "A wrong answer's button."),
-]
 
-UPSCALER_TEXT = [
-    ("#3fc8cf", "Links on a dark window."),
-    ("#0e6f75", "Links on a light window."),
-]
-UPSCALER_BLOCKS = [
-    ("#8a5a2e", "Copper: boxes, white text on them."),
-    ("#0e6f75", "Teal: boxes, white text on them."),
-    ("#26a9b0", "Cyan, the icon's: button outlines."),
-]
 
-CHECK_TEXT = [
-    ("#9aa0a6", "Muted: versions, hints, notes, baselines, the in-game and overlay labels."),
-    ("#e6e6e6", "Text in the results and history views, on idle buttons, the overlay's values."),
-    ("#e8e8e8", "Code blocks in the README view."),
-    ("#d0d0d0", "The log; a disabled Clean up logs button."),
-    ("#1a1a1a", "Text on the yellow running button."),
-    ("#222222", "Text on the system score boxes."),
-    ("#333333", "Labels on the graph's bars."),
-    ("#e57373", "Error findings; a worse result in the history; a low score; the log's errors; error labels (also in "
-                "ACPI, CU Unlock and Cores Unlock); the in-game error."),
-    ("#ffb74d", "Warning findings; a middle score; the log's warnings; the in-game warning."),
-    ("#64b5f6", "Info and hint findings."),
-    ("#81c784", "A better result in the history; the log's success; a full score; the in-game ok."),
-    ("#fdd835", "A score's warning: the running yellow."),
-    ("#ce93d8", "Log: hint; the Show in log link; the in-game accent; the overlay's frame rate and thin border."),
-    ("#90a4ae", "Log: note."),
-    ("#ffffff", "README table headings."),
-]
-CHECK_BLOCKS = [
-    ("#111418", "The log; the overlay's background (82 %)."),
-    ("#1e1f24", "The results and history views; code blocks in the README view."),
-    ("#14161c", "The results card and the score dialog."),
-    ("#2a2d36", "The empty part of a score ring."),
-    ("#2a2f37", "The log's border."),
-    ("#3a3f4a", "The borders of the preview, setup, checks and stat cards."),
-    ("#555555", "The screenshot's border."),
-    ("#888888", "README table borders."),
-    ("#3a3f4b", "Idle buttons; README table headings; Clean up logs, disabled."),
-    ("#b71c1c", "Clean up logs under the pointer and pressed."),
-    ("#f8fafc", "The system score boxes."),
-    ("#1565c0", "The GPU score box: the info blue."),
-    ("#ad1457", "System overview: cores."),
-    ("#00796b", "System overview: threads."),
-    ("#3949ab", "System overview: upload speed."),
-    ("#6d4c41", "System overview: NVMe."),
-    ("#5e35b1", "System overview: packages."),
-    ("#00838f", "System overview: BIOS; the graph's sixth series."),
-    ("#5d4037", "The graph's seventh series."),
-]
 
-OTHER_TEXT = [
-    ("#888888", "Busy and hint labels in italics (ACPI, CU Bisect, CU Unlock, Cores Bisect, Cores Unlock)."),
-    ("#ef6c00", "An incomplete ACPI override; a CU mask that needs checking."),
-    ("#b8b8c8", "System Overlay: the names of the values."),
-    ("#dddddd", "PS Remote Play's stream view."),
-    ("#ffb74d", "SFTP: the password warning."),
-    ("#e57373", "SFTP: password requirements not met."),
-    ("#81c784", "SFTP: password requirements met."),
-    ("#ffffff", "BIOS Reader: tabs, crumbs, the legend and the selection."),
-    ("#0b2a8a", "BIOS Reader: the screen's text."),
-    ("#10205a", "BIOS Reader: subtitles."),
-    ("#6e6e6e", "BIOS Reader: hidden items."),
-    ("#7d7d8c", "BIOS Reader: locked items."),
-    ("#2e7d32", "Installer Tests: passed."),
-]
-OTHER_BLOCKS = [
-    ("#1f3e9c", "BIOS Reader: the bar and the selection."),
-    ("#c6c6c6", "BIOS Reader: the screen."),
-    ("#1565c0", "HDMI-CEC: the adapter box."),
-    ("#000000", "HDMI-CEC: the display box; HD Control: the light bar off."),
-    ("#c62828", "SFTP: the errors button."),
-    ("#5f6368", "VRAM: firmware in the memory map."),
-    ("#00838f", "VRAM: zswap in the memory map."),
-    ("#3dbf9c", "HD Control: the triangle button."),
-    ("#e8505b", "HD Control: the circle button."),
-    ("#6f9fe8", "HD Control: the cross button."),
-    ("#e48fc0", "HD Control: the square button."),
-    ("#0050ff", "HD Control light bar: blue (the default)."),
-    ("#ff2020", "Light bar: red."),
-    ("#10d040", "Light bar: green."),
-    ("#a020f0", "Light bar: purple."),
-    ("#ffffff", "Light bar: white."),
-    ("#ff0000", "The light bar's color wheel: red."),
-    ("#ffff00", "Color wheel: yellow."),
-    ("#00ff00", "Color wheel: green."),
-    ("#00ffff", "Color wheel: cyan."),
-    ("#0000ff", "Color wheel: blue."),
-    ("#ff00ff", "Color wheel: magenta."),
-    ("#04060c", "Portal: the intro's backdrop."),
-    ("#1b1b1b", "Portal: the outline of the update badge on a tile."),
-    ("#808080", "Portal: a category tab on hover (16 %)."),
-]
 
-SCREENSHOT_TEXT = [
-    ("#fcfcfc", "Window, field, button and tooltip text."),
-    ("#a1a9b1", "Placeholders."),
-    ("#1d99f3", "Links."),
-]
-SCREENSHOT_BLOCKS = [
-    ("#202326", "Window."), ("#141618", "Fields and lists."), ("#1d1f22", "Every other row."),
-    ("#292c30", "Buttons and tooltips."), ("#3daee9", "Selection."), ("#43474d", "Mid."),
-    ("#33373b", "Midlight."), ("#101113", "Dark."), ("#3d4146", "Light."),
-]
 
 
 def section(title, intro, text_rows, block_rows):
@@ -582,25 +310,23 @@ def build() -> dict[str, str]:
     FILES.clear()
     out = ["""# Design
 
-The colors of the suite, where they are defined and what they are for. Text colors show a sample sentence in that
+The colors of Nexus, core's themes and the Windows Portable Suite, where they are defined and what they are for. Text colors show a sample sentence in that
 color; background colors (surfaces, fills, borders and lines) show a block. The samples are SVG files in
 `design/colors/`. A text sample sits on a dark or a light backdrop, whichever its color reads on; a color with
 an opacity (written `#rrggbbaa` here, `#aarrggbb` in the Qt code) shows over a checkerboard. The icons are in
 [ICONS.md](ICONS.md). Written by `tools/make_design.py`: change the listing there and run it.
 
-The rules say what makes each design recognizable; the color families say, for every tint of a hue, why it is
-there; the listings after them say where every color is used.
-""", RULES, families(), """## The apps
+The rules say what makes each design recognizable; the listings after them say where every color is used. The
+BC250 Bazzite Suite's design is in its own repository's DESIGN.md (it moved there on 14-11-2026).
+""", RULES, """## Core's themes
 
-The theme, the state colors and the style sheets are in `core/bc250_core/theme.py` (bundled per app; the apps that
-are not on core yet carry a copy). The theme is one choice for every app: Gunmetal, Silver or Warm.
+The theme, the state colors and the style sheets are in `core/bc250_core/theme.py` (bundled per app). The theme is
+one choice for every app on it: Gunmetal, Silver or Warm.
 """]
     for title, t, b in THEMES:
         out.append(section(title, "", t, b))
     out.append(section("State colors", "The same in every theme: a state shows as a colored edge or dot on the "
                        "theme's surfaces.", STATE_TEXT, STATE_BLOCKS))
-    out.append("## The wiki\n\n`bc250-bazzite/docs/stylesheets/suite.css`, Material's slate scheme with the suite's purple.\n")
-    out.append(section("Wiki", "", WIKI_TEXT, WIKI_BLOCKS))
     out.append("## The Windows Portable Suite\n\n`core/bc250_core/portable.py`, the portable window: direction D "
                "(the owner's, 26-10-2026).\n")
     out.append(section("Portable window", "The apps of the Windows Portable Suite, sized for a handheld held in the "
@@ -613,17 +339,6 @@ are not on core yet carry a copy). The theme is one choice for every app: Gunmet
     out.append(section("Nexus Release Tool", "The window of Nexus's app (`dev/nrt/nexus_release_tool/style.py`): the "
                        "page's colors as a theme for core's widgets, set with `create_app(theme=NEXUS)`; its "
                        "states are the apps' state family.", NEXUS_APP_TEXT, NEXUS_APP_BLOCKS))
-    out.append("## The apps' own colors\n\nOn top of the theme, in the apps' `style.py` or where they are used.\n")
-    out.append(section("Gaming apps", "PS Remote Play, XB Remote Play, HD Control, "
-                       "PCSX2, PPSSPP, RPCS3, shadPS4, Vita3K and Xenia.", GAMING_TEXT, GAMING_BLOCKS))
-    out.append(section("DatStation", "", DAT_TEXT, DAT_BLOCKS))
-    out.append(section("Upscaler", "", UPSCALER_TEXT, UPSCALER_BLOCKS))
-    out.append(section("BC-250 Bazzite Test (check)", "", CHECK_TEXT, CHECK_BLOCKS))
-    out.append(section("Other apps", "", OTHER_TEXT, OTHER_BLOCKS))
-    out.append("## Tools\n")
-    out.append(section("Portal screenshots", "`bc250-bazzite/tools/portal_screenshot.py` paints the portal in a fixed dark palette "
-                       "(Breeze Dark, as Bazzite's desktop shows the portal), so screenshots look the same on every "
-                       "machine.", SCREENSHOT_TEXT, SCREENSHOT_BLOCKS))
     FILES["DESIGN.md"] = "\n".join(out).rstrip("\n") + "\n"
     return dict(FILES)
 

@@ -14,9 +14,9 @@ in the tool, when it changed, started by the owner with the Nexus Release Tool's
 portal ends as a draft the owner device-tests and publishes from the tool). Each suite is released on its own (owner,
 05-11-2026): Start passes the suite as the workflow's `suites` input, the run carries only that one, and a draft of one
 suite never holds up the other's release. A suite of this repository takes part once
-its release workflow has `workflow_call`: the BC250 Bazzite Suite's `release.yml` does (since 04-11-2026, stage 3).
-A suite in a repository of its own (the Windows Portable Suite, owner 13-11-2026) is not on the Nexus release and
-not in the Nexus Release Tool: it is released in its repository, by its own `release.yml` (started by hand with the
+its release workflow has `workflow_call`; none does now. A suite in a repository of its own (the Windows Portable
+Suite, owner 13-11-2026; the BC250 Bazzite Suite, standalone with its own tools, 14-11-2026) is not on the Nexus
+release and not in this repository's Nexus Release Tool: it is released in its repository, by its own `release.yml` (started by hand with the
 release commit, or by a tag). A tag pushed by hand still releases that one app or portal. The plan and its
 stages are in MIGRATION.md.
 
@@ -24,21 +24,19 @@ The owner does every step of a release; Claude does none of them, and doesn't of
 
 - bumping a `VERSION` (and the copies `tools/check_versions.py` checks), or `portal/VERSION`;
 - tagging (`<app>-v<x.y.z>` or `portal-v<x.y.z>`, after the suite's prefix, with `tools/tag-release.sh`, which waits until CI passed on the
-  commit), which starts `.github/workflows/release.yml` (it, too, builds only a commit CI passed);
+  commit), which starts the suite's release workflow (it, too, builds only a commit CI passed);
 - building or publishing release assets (`tools/build_release.py`) and the GitHub releases themselves;
-- pinning a release in the suite's `portal/apps.toml` (`bc250-bazzite/tools/pin_app.py`, the `tag` and `sha256`
-  lines);
+- pinning a release in the suite's `portal/apps.toml` (the `tag` and `sha256` lines);
 - the release entries in the CHANGELOGs.
 
 `tools/nrt.sh` starts the owner's front end for the file edits of a release, Nexus Release Tool (`dev/nrt/`,
 a Nexus app with its suites' portals in its first column, the one to release ticked: `main_window.py` on
 `plan.py`; a suite's board checks are its own
-`tools/check-release.sh`, the BC250 suite's at `bc250-bazzite/tools/check-release.sh`; a Windows suite's
-`tools/check-release.ps1`, run on the handheld). Claude may change it and
+`tools/check-release.sh`; a Windows suite's `tools/check-release.ps1`, run on the handheld). In a checkout of Nexus
+alone it lists core and Nexus's own release. Claude may change it and
 its tests, but never uses it on the repository.
 
-Claude may change the release tools and their tests, and runs `bc250-bazzite/tools/installer-tests/release.sh` as a
-test (it works in a temp folder and publishes nothing). When finished work will need a release or a version bump, the
+Claude may change the release tools and their tests. When finished work will need a release or a version bump, the
 handover says which app and why; the owner decides the number.
 
 ## Versions

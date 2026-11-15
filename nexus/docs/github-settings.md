@@ -23,8 +23,8 @@ Also under **Settings → General**, in **Pull Requests**: tick **Automatically 
 The ⚙ next to **About** on the repository's front page, not in Settings.
 
 - **Website:** tick **Use your GitHub Pages website**, so the address of the Nexus page shows on the front page.
-- **Topics:** the keywords people search and browse by, such as `bazzite`, `bc250`, `amd`, `linux-gaming`,
-  `fedora-atomic`, `universal-blue` and `pyqt6`. Only topics that really describe the project.
+- **Topics:** the keywords people search and browse by, such as `bazzite`, `linux-gaming`, `fedora-atomic`,
+  `universal-blue` and `pyqt6`. Only topics that really describe the project.
 
 ## Rulesets
 
@@ -44,7 +44,7 @@ The ⚙ next to **About** on the repository's front page, not in Settings.
   are blocked too.
 - Bypass list: empty. To really move a tag, set the ruleset to Disabled for a moment.
 
-The pins in `bc250-bazzite/portal/apps.toml` name a tag and the sha256 of its asset, so a released tag must never move.
+The pins in a suite's `portal/apps.toml` name a tag and the sha256 of its asset, so a released tag must never move.
 
 **The main branch:** **New branch ruleset**.
 
@@ -83,8 +83,8 @@ only a commit that its suite's CI passed.
 
 **Settings → Advanced Security.**
 
-- **Private vulnerability reporting:** on. The [Security policy](https://robertotorino.github.io/nexus/bc250-bazzite-suite/SECURITY/) and the issue form's
-  "Security problem" link send people to it; with it off, that link fails.
+- **Private vulnerability reporting:** on. The contributing guide and the issue form's "Security problem" link send
+  people to it; with it off, that link fails.
 - **Dependabot alerts** and **Dependabot security updates:** on.
 - **Dependabot version updates:** set in `.github/dependabot.yml`. Once a week one pull request updates the
   actions the workflows use; nothing changes until it is merged.

@@ -128,7 +128,7 @@ def test_suite_picks_the_suite_and_one_without_category_icons_is_refused(tmp_pat
     """--suite names the suite as every Nexus tool does (tools/suites.py); the default is the checkout's default
     suite. A suite whose apps take no category icons has no icons/categories.toml."""
     root = tmp_path / "nexus"
-    suite = _suite(root / "bc250-bazzite")
+    suite = _suite(root / "bz")
     (suite / "portal").mkdir(exist_ok=True)
     (suite / "portal" / "apps.toml").write_text("", encoding="utf-8")
     other = root / "windows-portable"
@@ -136,10 +136,11 @@ def test_suite_picks_the_suite_and_one_without_category_icons_is_refused(tmp_pat
     (other / "portal" / "apps.toml").write_text("", encoding="utf-8")
     (other / "TAG_PREFIX").write_text("wp-\n", encoding="utf-8")
     monkeypatch.setattr(sync_icons.suites, "ROOT", root)
+    assert sync_icons.main(["--suite", "bz"]) == 0                 # its copies written
 
     assert sync_icons.main(["--check"]) == 0                       # the default suite: the one without a prefix
-    assert sync_icons.main(["--check", "--suite", "bc250-bazzite"]) == 0
-    with pytest.raises(SystemExit) as stop:                         # suites.suite() looks in the real checkout:
+    assert sync_icons.main(["--check", "--suite", "bz"]) == 0
+    with pytest.raises(SystemExit) as stop:                         # a suite folder named with --root:
         sync_icons.main(["--check", "--root", str(other)])          # this one by its folder
     assert stop.value.code == 2 and "no icons/categories.toml" in capsys.readouterr().err
     with pytest.raises(SystemExit) as stop:

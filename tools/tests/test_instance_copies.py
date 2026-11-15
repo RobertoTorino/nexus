@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The apps that are not on bc250_core yet carry copies of core's instance.py, upstream.py, theme.py and exit_keys.py:
-the copies must not drift. Only the SPDX line may differ (acpi is MIT)."""
+"""An app of a suite in this checkout that is not on bc250_core yet may carry copies of core's instance.py, upstream.py,
+theme.py and exit_keys.py: the copies must not drift. Only the SPDX line may differ. (The BC250 Bazzite Suite's apps,
+which had most of them, have a repository of their own since 14-11-2026, with its own check.)"""
 
 from __future__ import annotations
 
@@ -23,15 +24,6 @@ def body(path: Path) -> str:
     first, _, rest = path.read_text(encoding="utf-8").partition("\n")
     assert first.startswith("# SPDX-License-Identifier: "), path
     return rest
-
-
-def test_copies_exist():
-    packages = {p.parent.name for p in COPIES}
-    assert {"upscaler", "cu_bisect", "cu_unlock", "cores_bisect",
-            "cores_unlock", "oc_bisect", "locked_acpi"} <= packages
-    assert {p.parent.name for p in UPSTREAM_COPIES} >= {"upscaler"}
-    assert {p.parent.name for p in THEME_COPIES} == {p.parent.name for p in COPIES}
-    assert {p.parent.name for p in EXIT_KEYS_COPIES} == {p.parent.name for p in COPIES}
 
 
 @pytest.mark.parametrize("copy", [p for p in COPIES if p.parent.name != "gpu_governor"],

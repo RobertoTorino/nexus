@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""catalogs/upstreams.json in sync with the apps, and the cards of the emulators and of Sony's firmware from GitHub's
+"""upstreams.json's sync with the apps, and the cards of the emulators and of Sony's firmware from GitHub's
 and Sony's answers (as they were on 09-11-2026)."""
 
 from __future__ import annotations
@@ -8,7 +8,7 @@ import json
 from pathlib import Path
 
 from nexus_deps import upstreams
-from nexus_deps.upstreams import CATALOG
+from conftest import UPSTREAMS
 
 INFO = json.dumps({"ApplicationLatestVersion": "2.2.1.2", "FwUpdate0004LatestVersion": "0x0630",
                    "FwUpdate000BLatestVersion": "0x0630", "FwUpdate000ELatestVersion": "0x0641",
@@ -19,7 +19,7 @@ PS4 = (b'<?xml version="1.0" ?>\n<update_data_list>\n\t<region id="us">\n\t\t<sy
 
 
 def catalog():
-    return upstreams.load()
+    return upstreams.load(UPSTREAMS)
 
 
 def entry(key, data=None):
@@ -27,15 +27,13 @@ def entry(key, data=None):
     return next(item for item in [*data["github"], *data["sony"]] if item["id"] == key)
 
 
-def test_the_catalog_is_in_sync_with_the_apps():
-    """The pins, repos, names and launchers are the apps' own: dev/deps/run.sh --sync-upstreams fixes this."""
-    assert upstreams.dump(upstreams.sync(catalog())) == CATALOG.read_text(encoding="utf-8")
 
 
-def test_every_app_with_a_pinned_upstream_is_listed():
-    listed = {(app["suite"], app["app"]) for item in catalog()["github"] for app in item["apps"]}
-    assert listed == upstreams.apps_with_upstreams()
-    assert ("bc250-bazzite", "rpcs3") in listed
+def test_the_catalog_lists_no_suite_here():
+    """The upstreams of a suite's apps go with its catalog: none in Nexus since the BC250 Bazzite Suite left."""
+    data = upstreams.load()
+    assert data["github"] == data["sony"] == [] and upstreams.apps_with_upstreams() == set()
+    assert upstreams.dump(upstreams.sync(data)) == upstreams.CATALOG.read_text(encoding="utf-8")
 
 
 def test_the_constants_are_read_without_running_the_module(tmp_path):
@@ -45,12 +43,6 @@ def test_the_constants_are_read_without_running_the_module(tmp_path):
     values = upstreams.constants(module)
     assert values["VERSION"] == "0.0.43-20395" and values["NUMBER"] == "20395" and "ASSET" not in values
 
-
-def test_a_moved_pin_makes_the_catalog_stale(tmp_path):
-    data = catalog()
-    entry("pcsx2", data)["apps"][0]["pin"] = "2.8.1"
-    assert upstreams.sync(data) != data
-    assert entry("pcsx2", upstreams.sync(data))["apps"][0]["pin"] == entry("pcsx2")["apps"][0]["pin"]
 
 
 def release(tag, published="2026-11-09T10:00:00Z"):
@@ -78,7 +70,8 @@ def test_an_emulator_at_its_pin_with_nothing_newer(tmp_path):
     assert source.detail.startswith(f"Latest on GitHub: v{app['pin']}")
 
 
-def test_installed_behind_the_pin_and_upstream_past_it(tmp_path):
+def test_installed_behind_the_pin_and_upstream_past_it(tmp_path, monkeypatch):
+    monkeypatch.setattr(upstreams, "SUITE_NAMES", {"bc250-bazzite": "BC250 Bazzite Suite"})   # the suite's name
     vita = entry("vita3k")
     app = vita["apps"][0]
     install(tmp_path, app, "4200")

@@ -10,6 +10,10 @@ from pathlib import Path
 import pytest
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+# The catalogs the tests read: the BC250 Bazzite Suite's as they were when the suite left Nexus for a repository of
+# its own (14-11-2026), with its catalog and its apps' upstreams; Nexus Deps here has no suite catalog of its own.
+CATALOG = Path(__file__).resolve().parent / "fixtures" / "catalog.toml"
+UPSTREAMS = Path(__file__).resolve().parent / "fixtures" / "upstreams.json"
 APP = Path(__file__).resolve().parents[1]
 CORE = APP.parents[1] / "core"
 for path in (CORE, APP):

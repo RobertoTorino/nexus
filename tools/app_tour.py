@@ -246,8 +246,6 @@ class AppTour(Recorder):
 
     # --- the tour -------------------------------------------------------------------------------------------
     def run(self) -> None:
-        from bc250_core.appinfo import SUITE_MANUAL_URL
-
         title = self.card(self.name, ["A tour of the app", f"Version {self.version}"])
         self.overlay = title
         self.emit(title, round(2.5 * self.fps))
@@ -281,11 +279,21 @@ class AppTour(Recorder):
 
         self.say("")
         self.hold(0.5)
-        url = (SUITE_MANUAL_URL + chapter_of(self.key, self.name)).removeprefix("https://").rstrip("/")
+        url = (wiki_url() + chapter_of(self.key, self.name)).removeprefix("https://").rstrip("/")
         last = self.frame()
         end = self.card(self.name, ["Everything about the app is in the wiki:", url])
         self.fade(last, end, 0.8)
         self.emit(end, round(3.5 * self.fps))
+
+
+def wiki_url() -> str:
+    """The suite's wiki address: site_url of its mkdocs.yml (core's SUITE_MANUAL_URL without one)."""
+    path = tour_frames.SUITE / "mkdocs.yml"
+    found = re.search(r"^site_url:\s*(\S+)", path.read_text(encoding="utf-8"), re.M) if path.is_file() else None
+    if found:
+        return found[1].rstrip("/") + "/"
+    from bc250_core.appinfo import SUITE_MANUAL_URL
+    return SUITE_MANUAL_URL
 
 
 def chapter_of(key: str, name: str) -> str:

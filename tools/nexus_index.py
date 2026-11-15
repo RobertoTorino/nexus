@@ -29,6 +29,9 @@ RELEASES_URL = f"https://github.com/{REPO}/releases"
 # What a suite is for, while it has no wiki whose site_description says it (owner, 28-10-2026: the Windows suite's)
 SYSTEM_TEXTS = {"bazzite": "For Bazzite.", "windows": "Tools for Windows 10/11 running on portable gaming devices."}
 _VERSION = re.compile(r"^v(\d+)\.(\d+)\.(\d+)$")
+# The suites that moved to a repository of their own with their releases, by name: the index says where they are, as
+# their earlier releases here are not their newest (the BC250 Bazzite Suite, 14-11-2026).
+ELSEWHERE = {"BC250 Bazzite Suite": "https://github.com/RobertoTorino/bc250-bazzite"}
 
 
 def _load(name: str, path: Path):
@@ -43,7 +46,8 @@ suites = _load("nexus_suites", ROOT / "tools" / "suites.py")
 
 
 def suite_name(folder: Path) -> str:
-    """The portal's APP_NAME ("BC250 Bazzite Suite"), read without importing the portal; the folder's name without."""
+    """The portal's APP_NAME ("Windows Portable Suite"), read without importing the portal; the folder's name
+    without."""
     for init in sorted((folder / "portal").glob("*/__init__.py")):
         found = re.search(r'^APP_NAME = "(.*)"$', init.read_text(encoding="utf-8"), re.M)
         if found:
@@ -118,6 +122,9 @@ def body(releases: list[dict], root: Path = ROOT) -> str:
            "suite's apps for you and checks every download.", ""]
     for folder in suites.suites(root):
         out += section(folder, releases)
+    for name, url in ELSEWHERE.items():
+        out += [f"## {name}", "", f"A repository of its own: its releases are at [{url.removeprefix('https://')}]"
+                f"({url}/releases). The releases of it here are earlier ones.", ""]
     out += [f"Every release of every suite: [Releases]({RELEASES_URL}).", ""]
     return "\n".join(out)
 

@@ -19,7 +19,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(prog="installer_tests", description=f"{APP_NAME} {__version__}")
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__} (core {CORE_VERSION})")
     parser.add_argument("--suite", metavar="NAME", help="the suite to open with (a folder of the checkout, such "
-                                                        "as bc250-bazzite); default: the one chosen last")
+                                                        "as windows-portable); default: the one chosen last")
     args, qt_args = parser.parse_known_args()
 
     app = create_app(INFO, qt_args, theme=NEXUS)           # Nexus's design, not a suite's theme

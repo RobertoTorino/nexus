@@ -4,16 +4,17 @@
 
 How the repository is laid out, and how to work on it from Linux and Windows. What is a suite's own, how its apps
 are built and released, is in its wiki: the BC250 Bazzite Suite's
-[Development](https://robertotorino.github.io/nexus/bc250-bazzite-suite/development/). The repository's settings on
+[Development](https://robertotorino.github.io/bc250-bazzite/development/). The repository's settings on
 GitHub: [GitHub settings](github-settings.md). What a machine needs to work on it, on Bazzite or Windows:
 [The development machine](machine.md). How releases are made and published: [Releases](releases.md).
 
 ## Layout
 
-The repository is Nexus: what the suites share at the root, and every suite in a folder of its own. A suite is
-either a folder of this repository (the BC250 Bazzite Suite) or a repository of its own that is cloned into the
-checkout as its folder (the Windows Portable Suite, [below](#a-suite-in-a-repository-of-its-own)). Paths in the wikis
-are written from the root of the Nexus checkout.
+The repository is Nexus: the code and the tools the suites share, the Nexus apps and the Nexus page. Every suite is
+a repository of its own. The BC250 Bazzite Suite (`github.com/RobertoTorino/bc250-bazzite`, since 14-11-2026) stands
+on its own, with its own copy of the tools, core and the Nexus apps, and is worked on in its own checkout. The Windows
+Portable Suite is cloned into the Nexus checkout as its folder and uses the tools here
+([below](#a-suite-in-a-repository-of-its-own)).
 
 ```
 core/bc250_core/              shared Python package, every suite's; bundled into each app at release time (below)
@@ -28,13 +29,12 @@ dev/<name>/                   the Nexus development apps, run from the checkout:
                               dev/itests/ Nexus Installer Tests, dev/sounds/ Nexus Sound Lab
 test.sh                       runs every test suite (core, tools, dev/, and the portal, tools and apps of each suite
                               made for the system it runs on: SYSTEM in the suite's folder)
-bc250-bazzite/                the BC250 Bazzite Suite
 windows-portable/             the Windows Portable Suite (its tags start with wp-, TAG_PREFIX): a repository of
                               its own, cloned here; not in git here (.gitignore)
 nexus/                        the Nexus page
-DESIGN.md ICONS.md            every color and every icon, per suite and the Nexus page
-.github/workflows/            the workflows: ci-nexus.yml (Nexus's checks), ci.yml and release.yml (the BC250
-                              Bazzite Suite), nexus-index.yml, docs.yml (the wikis)
+DESIGN.md ICONS.md            the colors of core's themes, the Windows Portable Suite and the Nexus page; Nexus's icons
+.github/workflows/            the workflows: ci-nexus.yml (Nexus's checks), release-nexus.yml, nexus-index.yml,
+                              docs.yml (the Nexus page and the Windows Portable Suite's wiki), backlog.yml
 .github/actions/suite/        the action a suite in a repository of its own starts every job with
 ```
 
@@ -101,8 +101,8 @@ Every suite's folder is laid out the same way:
 
 A new app of a suite starts with `tools/new_app.py`: it writes the app from the suite's template and lists it
 wherever the suite lists its apps (the portal's `apps.toml`, the wiki, the installer test, CI), then runs the checks
-on it. Each suite has its template: the BC250 Bazzite Suite's (see its architecture chapter) and the Windows
-Portable Suite's, an app on the portable window with `install.ps1`, `run.ps1` and the installer test `<name>.ps1`,
+on it. Each suite has its template: a Bazzite suite's (the BC250 Bazzite Suite's, whose repository has its own copy
+of the tool; see its architecture chapter) and the Windows Portable Suite's, an app on the portable window with `install.ps1`, `run.ps1` and the installer test `<name>.ps1`,
 its icon its category's (`windows-portable/icons/<category>/`, copied by `tools/make_icons.py`; converted from a new
 picture by `tools/sync_icons.py --suite windows-portable`). On the suite's wiki
 home page the app gets a paragraph in its category's card (a new card when the category has none yet), to be written
@@ -115,8 +115,8 @@ over with what the app does:
 ### Apps and features
 
 The [Apps and features](features.md) chapter is written by `tools/features.py` from `nexus/features.toml`: every
-suite as a column, every app as a family that names its folder in each suite that has it (DatStation is
-`datstation` in the BC250 Bazzite Suite and `datstat` in the Windows Portable Suite), and its features in a few words,
+suite in the checkout as a column, every app as a family that names its folder in each suite that has it (DatStation
+is `datstat` in the Windows Portable Suite), and its features in a few words,
 each marked with the suites that have it. The apps' names and categories come from each suite's `portal/apps.toml`.
 A change to what an app does changes its features in the same change; then write the chapter again:
 
@@ -167,9 +167,6 @@ imports it, so each release runs on the core it was tested with.
 cd core && QT_QPA_PLATFORM=offscreen python -m pytest -q tests
 ```
 
-`tests/test_parity.py` renders core's widgets next to the copies in `bc250-bazzite/apps/gpu` and `bc250-bazzite/apps/upscaler` and requires
-identical pixels; a case is skipped once its app no longer has its own copy.
-
 ## Set up and test
 
 ```bash
@@ -198,8 +195,8 @@ reads the wikis, the READMEs and the text the apps show in their windows. The CH
 ```bash
 python3 tools/check_prose.py                      # every file, worst first
 python3 tools/check_prose.py --top 20             # only the worst 20
-python3 tools/check_prose.py bc250-bazzite/docs   # only these files or folders
-python3 tools/check_prose.py --details bc250-bazzite/docs/apps/fan.md   # every finding, with its line
+python3 tools/check_prose.py nexus/docs           # only these files or folders
+python3 tools/check_prose.py --details nexus/docs/releases.md   # every finding, with its line
 python3 tools/check_prose.py --base origin/main   # fails when a file reads worse than at that commit
 ```
 
@@ -220,40 +217,35 @@ listed last, because one finding there says little.
 
 GitHub runs `ci-nexus.yml` on every push: Nexus's checks (core, the Nexus tools, `dev/`, the Nexus page and the
 repository's rules: line endings, exec bits, the four files of every former repo, no CHANGELOG losing an entry). A
-suite's own CI (`ci.yml` for the BC250 Bazzite Suite, `ci-<suite>.yml` for the others) runs when the push changes
-that suite's folder or what its releases are built from (core, `tools/`, `dev/`), never for a push to another suite
-alone. A suite's release tags wait for its own CI and for Nexus's, never for another suite's, so one suite's failure
+suite's own CI runs in its own repository. A suite's release tags wait for its own CI and for Nexus's, never for another suite's, so one suite's failure
 never holds another's releases; a commit that has no run of the suite's CI (nothing of the suite changed) gets no
 tag: `tools/ci_state.py` says so within five minutes instead of waiting the hour.
 
 Each suite's CI reads its matrices from the suite's folders in a first job, `plan` (`tools/ci_matrix.py`): the
 pytest matrix is every folder with `tests/`, and the Windows Portable Suite's `installers` matrix every app and the
 portal, one job each, which installs the app from the checkout, builds its release zip as the release workflow does
-(never published) and installs it from that zip. The BC250 suite's installers job runs every
-`tools/installer-tests/*.sh` it finds. So a new app needs no edit to a workflow: its folder, its installer test
+(never published) and installs it from that zip. So a new app needs no edit to a workflow: its folder, its installer test
 and its `install.sh` are in CI at once.
 
 `./test.sh` runs every suite in one venv that holds everything, on whatever Python your system has. GitHub's CI runs
 each job on Python 3.12 with only that job's own requirements, so a test can pass here and still fail there: a
-Python 3.13 function, or a package only the full venv has. `tools/ci-local.sh` runs the jobs of `ci.yml`
-and `ci-nexus.yml` the way GitHub does, in a container (podman, which Bazzite has, or
-docker):
+Python 3.13 function, or a package only the full venv has. `tools/ci-local.sh` runs the jobs of `ci-nexus.yml` the
+way GitHub does, in a container (podman, which Bazzite has, or docker):
 
 ```bash
 tools/ci-local.sh                            # the workflows this push starts on GitHub, a minute or two once the image is built
 tools/ci-local.sh --all                      # every workflow, whatever changed
-tools/ci-local.sh shell nexus-pytest/tools   # some jobs; a matrix job by its value, pytest for all of the suite's
+tools/ci-local.sh nexus-shell nexus-pytest/tools   # some jobs; a matrix job by its value
 tools/ci-local.sh --list                     # the jobs; ci-nexus.yml's have nexus- before the name (nexus-shell)
 ```
 
 It reads the jobs from the workflows themselves, a matrix from the folders as the plan job does, so a new app needs no change. The
 first run builds the image from `tools/ci-local/Containerfile` (Python 3.12 and the packages GitHub's runner has)
-and PS Remote Play's FFmpeg; both are kept, with the venvs and the logs, in `~/.cache/bc250-ci-local`. It works on a
-copy of the checkout with every change staged, as the commit will have it. Only the Windows job does not run here.
+and is kept, with the venvs and the logs, in `~/.cache/bc250-ci-local`. It works on a copy of the checkout with
+every change staged, as the commit will have it.
 Without job names it runs only the workflows GitHub starts for the push: those whose `paths` match a file that differs
-from `origin/main`, counting what is not committed yet. A push that changes only the Nexus page runs
-`ci-nexus.yml`, not the BC250 suite's `ci.yml`. A change to `core/`, `tools/` or `dev/` starts both, there as here.
-The workflows of a suite in a repository of its own are not run here.
+from `origin/main`, counting what is not committed yet; `ci-nexus.yml` runs for every push. The workflows of a suite
+in a repository of its own are not run here.
 The push commands Nexus Release Tool shows run it first (`tools/ci-local.sh && git push`): no push when a job fails.
 
 On Windows it runs in podman's machine, a small Fedora in WSL that reaches the checkout under `/mnt/c`. Install

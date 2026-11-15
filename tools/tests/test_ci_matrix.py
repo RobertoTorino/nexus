@@ -69,10 +69,10 @@ def test_the_real_suites_match_their_workflows_and_the_layout_rule():
 
 
 def test_the_command_line(capsys):
-    assert cm.main(["--suite", "bc250-bazzite", "pytest"]) == 0
-    out = capsys.readouterr().out
-    assert out.startswith("dirs=[") and "bc250-bazzite/portal" in json.loads(out.removeprefix("dirs="))
     if (ROOT / "windows-portable" / "portal" / "apps.toml").is_file():     # a repository of its own, when cloned here
+        assert cm.main(["--suite", "windows-portable", "pytest"]) == 0
+        out = capsys.readouterr().out
+        assert out.startswith("dirs=[") and "windows-portable/portal" in json.loads(out.removeprefix("dirs="))
         assert cm.main(["--suite", "windows-portable", "installers"]) == 0
         assert json.loads(capsys.readouterr().out.removeprefix("apps="))[-1] == "portal"
     assert cm.main(["--suite", "nowhere", "pytest"]) == 2 and "no suite" in capsys.readouterr().err

@@ -89,7 +89,7 @@ def validate_release(folder: Path) -> tuple[Path, tuple[DemoApp, ...]]:
 
     raise WorkflowError(
         f"{selected} is not a portal release or suite checkout. Choose an extracted portal release folder, "
-        "or a suite's folder in a checkout of the repository (bc250-bazzite/)."
+        "or a suite's folder in a checkout of its repository."
     )
 
 

@@ -40,15 +40,27 @@ def test_window_starts_with_steps_and_no_unvalidated_release(qapp, monkeypatch, 
 
 
 def test_without_a_release_in_downloads_the_suite_in_the_checkout_is_used(qapp, monkeypatch, tmp_path):
-    """The real checkout's bc250-bazzite/: its portal/install.sh and portal/apps.toml, the optional apps of it."""
+    """A Bazzite suite's folder in the checkout: its portal/install.sh and portal/apps.toml, the optional apps of it.
+    Without one (Nexus holds none since 14-11-2026), the window asks for a release in Downloads."""
     monkeypatch.setattr(main_window, "obs_install_command", lambda: None)
     monkeypatch.setattr(main_window, "find_portal_release", lambda: None)
     monkeypatch.setattr(main_window, "downloads_dir", lambda: tmp_path / "Downloads")
     monkeypatch.setattr(main_window, "PORTAL_LAUNCHER", tmp_path / "not-installed")
+    monkeypatch.setattr(main_window, "SUITE_IN_CHECKOUT", None)
+    window = main_window.MainWindow()
+    assert window.release_dir is None and "No extracted portal release found" in window.release_status.text()
+    window.close()
 
+    suite = tmp_path / "suite"
+    (suite / "portal").mkdir(parents=True)
+    (suite / "install.sh").touch()
+    (suite / "portal" / "apps.toml").write_text("".join(
+        f'[apps.{key}]\nname = "{key}"\ndetect = ["~/{key}"]\nlaunch = [["Open", "~/{key}"]]\n\n'
+        for key in ("check", "gpu", "overlay", "fan", "cec", "sftp", "ssd")), encoding="utf-8")
+    monkeypatch.setattr(main_window, "SUITE_IN_CHECKOUT", suite)
     window = main_window.MainWindow()
 
-    assert window.release_dir == main_window.SUITE_IN_CHECKOUT == main_window.CHECKOUT / "bc250-bazzite"
+    assert window.release_dir == suite.resolve()
     assert "using the suite in this checkout" in window.release_status.text()
     assert window.app_choice.count() > 5 and window._selected_app().key == "overlay"
     window.close()

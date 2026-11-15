@@ -7,6 +7,8 @@ import pytest
 from PyQt6.QtCore import QPoint, Qt
 from PyQt6.QtWidgets import QApplication, QLabel, QWidget
 
+from test_plan import repo  # noqa: F401 (the fixture: a suite's checkout of its own)
+
 
 @pytest.fixture
 def window():
@@ -87,13 +89,16 @@ def test_the_header_is_a_row_of_pills(window):
     assert w.refresh_pill.minimumWidth() >= w.build.rate.sizeHint().width()
 
 
-def test_selection_is_a_teal_outline(window):
+def test_selection_is_a_teal_outline(repo):
     """A selected cell and the focused input field: a rounded outline in Nexus's teal on a transparent background,
-    not the desktop's solid highlight (rendered: the cell's middle keeps the table's own background)."""
+    not the desktop's solid highlight (rendered: the cell's middle keeps the table's own background). On a suite's
+    checkout (the test repository): Nexus's own has no suite since 14-11-2026, so its table has core and Nexus alone."""
     from PyQt6.QtGui import QColor
+    from nexus_release_tool.main_window import ReleaseWindow
     from nexus_release_tool.style import NEXUS
     ACCENT = NEXUS.accent
-    w, app = window
+    app = QApplication.instance() or QApplication([])
+    w = ReleaseWindow(repo, runs_source=None, launch=lambda line: None, notify=lambda s, b: True, status_source=None)
     w.show()
     table = w.apps_page.table
     table.setFocus()
@@ -101,7 +106,7 @@ def test_selection_is_a_teal_outline(window):
     app.processEvents()
     rect = table.visualRect(table.model().index(1, 1))
     image = table.viewport().grab().toImage()
-    blank = rect.right() - 8                                        # right of "ace": background only
+    blank = rect.right() - 8                                        # right of the app's key: background only
     inside = QColor(image.pixel(blank, rect.center().y()))
     other = QColor(image.pixel(blank, table.visualRect(table.model().index(0, 1)).center().y()))   # "core"
     edge = QColor(image.pixel(rect.center().x(), rect.top() + 1))
@@ -110,6 +115,7 @@ def test_selection_is_a_teal_outline(window):
     assert f"gridline-color:{NEXUS.edge};" in w.styleSheet()            # the tables' lines: the theme's thin edge
     assert f"QLineEdit:focus {{ background:transparent; border:2px solid {ACCENT}; border-radius:6px; }}" \
         in w.styleSheet()
+    w.close()
 
 
 def test_a_second_launch_opens_no_window(monkeypatch):
@@ -406,3 +412,13 @@ def test_the_portal_version_field_shows_a_whole_version(window):
     assert field.minimumWidth() == VERSION_FIELD_PX >= 120
     assert field.width() >= VERSION_FIELD_PX
     assert field.fontMetrics().horizontalAdvance("10.1.0") + 40 < field.width()     # the text and the arrow fit
+
+
+def test_a_checkout_without_a_suite_has_core_and_nexus_alone(window):
+    """Nexus holds no suite since the BC250 Bazzite Suite moved to a repository of its own (14-11-2026): the window
+    lists core and Nexus's own release, and step 2 says there is no portal to release."""
+    w, _app = window
+    table = w.apps_page.table
+    assert [table.item(row, 1).text() for row in range(table.rowCount())] == ["core", "nexus"]
+    assert "No suite in this checkout" in w.portal_page.empty_note.text()
+    assert w.portal_version() == ""

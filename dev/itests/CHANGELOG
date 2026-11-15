@@ -1,3 +1,8 @@
+Changelog: 15-11-2026 00:01:07
+
+Fixed. The help names no BC250 suite folder (the suite has a repository of its own since 14-11-2026). The tests work on
+a small suite of their own instead of the BC250 suite in the checkout.
+
 Changelog: 13-11-2026 21:08:01
 
 Fixed. The test of the suites in the checkout no longer names the Bazzite Console Suite: that repository is standalone

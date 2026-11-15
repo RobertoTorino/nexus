@@ -4,7 +4,7 @@
 
     python3 tools/build_release.py [--suite NAME] <app>-v<x.y.z> <out-dir> [--bundle DIR]
 
-The tag names its suite (tools/suites.py: a suite's TAG_PREFIX, none for bc250-bazzite); --suite overrides it. A
+The tag names its suite (tools/suites.py: a suite's TAG_PREFIX); --suite overrides it. A
 Windows suite's tags are refused: their release format (no install.sh) is not built here yet.
 
 <out-dir> gets <tag>.tar.gz (unpacks into <tag>/), SHA256SUMS, notes.md and title.txt (the release's title). The
@@ -54,8 +54,8 @@ def _load(name: str, path: Path):
 
 suites = _load("nexus_suites", ROOT / "tools" / "suites.py")
 stage_app = _load("bc250_stage_app", ROOT / "tools" / "stage_app.py")
-SUITE = stage_app.SUITE                     # the default suite; main() takes the tag's (tools/suites.py)
-MANIFEST = SUITE / "portal" / "apps.toml"
+SUITE = stage_app.SUITE                     # the default suite, None without one; main() takes the tag's
+MANIFEST = SUITE / "portal" / "apps.toml" if SUITE else None
 
 
 def portal_package(suite: Path | None = None) -> Path:
@@ -71,7 +71,7 @@ def load_manifest(suite: Path):
     return _load("suite_manifest", portal_package(suite) / "manifest.py")
 
 
-manifest = load_manifest(SUITE)
+manifest = load_manifest(SUITE) if SUITE else None
 
 
 def select(suite: Path) -> None:

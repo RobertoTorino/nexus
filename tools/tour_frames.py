@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""What the video tours share (bc250-bazzite/tools/portal_tour.py, tools/app_tour.py): a temporary home for an offscreen Qt, and
+"""What the video tours share (a suite's tools/portal_tour.py, tools/app_tour.py): a temporary home for an offscreen Qt, and
 Recorder, which renders a window frame by frame into an MP4 (H.264, 1920 x 1080 by default, no sound) with a pointer,
 clicks, captions and title cards drawn in, and add_music(), which lays a track under a finished video.
 
@@ -28,7 +28,7 @@ def _suites():
 
 
 suites = _suites()
-SUITE = suites.suite()                              # the default suite; set_suite() for another (--suite)
+SUITE = suites.default()                            # the default suite (None without one); set_suite() for another
 
 
 def set_scale(scale: float) -> None:

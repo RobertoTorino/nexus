@@ -3,7 +3,7 @@
 """The CI matrices of a suite, read from its folders (owner, 30-10-2026, stage 2 of the release redesign: a new app
 needs no workflow edit), for the plan job of the suite's CI workflow and for tools/ci_local.py:
 
-    python3 tools/ci_matrix.py --suite bc250-bazzite pytest           # dirs=<JSON list>: every folder with tests/
+    python3 tools/ci_matrix.py --suite windows-portable pytest        # dirs=<JSON list>: every folder with tests/
     python3 tools/ci_matrix.py --suite windows-portable installers    # apps=<JSON list>: every app, the portal last
 
 pytest lists the suite's folders that have tests/ (portal, tools, apps/<name>, ...), in alphabetical order; for a

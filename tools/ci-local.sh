@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
-# Runs the jobs of the Linux suites' workflows and ci-nexus.yml (Nexus's) here, as GitHub runs them (Python 3.12,
+# Runs the jobs of ci-nexus.yml (Nexus's CI) here, as GitHub runs them (Python 3.12,
 # each job with only its own requirements), in a container: tools/ci_local.py inside
 # tools/ci-local/Containerfile. Before a push or a release, so "passes here, fails in CI" shows up here first.
 #
 #   tools/ci-local.sh                                      # the workflows this push starts on GitHub (--all: every one)
-#   tools/ci-local.sh shell nexus-pytest/tools
+#   tools/ci-local.sh nexus-shell nexus-pytest/tools
 #                                                         # jobs by workflow-prefixed name
 #   tools/ci-local.sh --list                    # the jobs
 #
@@ -22,9 +22,7 @@ ENGINE=$(command -v podman || command -v docker || true)
 CONTAINERFILE="$ROOT/tools/ci-local/Containerfile"
 IMAGE="localhost/bc250-ci-local:$(sha256sum "$CONTAINERFILE" | cut -c1-12)"
 CACHE="${XDG_CACHE_HOME:-$HOME/.cache}/bc250-ci-local"
-# PS Remote Play's FFmpeg, built in the container like CI's (the host's links its newer libva): its own cache folder.
-FFMPEG="$CACHE/console-link-ffmpeg"
-mkdir -p "$CACHE" "$FFMPEG"
+mkdir -p "$CACHE"
 
 if ! "$ENGINE" image inspect "$IMAGE" >/dev/null 2>&1; then
     info "Building the CI image (once; a few minutes)"
@@ -35,11 +33,10 @@ if ! "$ENGINE" image inspect "$IMAGE" >/dev/null 2>&1; then
         xargs -r "$ENGINE" rmi -f >/dev/null 2>&1 || true
 fi
 
-# The jobs run as you, as on GitHub (the installers refuse root). FFmpeg's build names its own folder in its pkg-config
-# files, so it is always mounted at the same place: ~/.cache/bc250-console-link in the container's home.
+# The jobs run as you, as on GitHub.
 if [ "${ENGINE##*/}" = podman ]; then as_user=(--userns=keep-id); else as_user=(--user "$(id -u):$(id -g)"); fi
 exec "$ENGINE" run --rm --init "${as_user[@]}" \
     --tmpfs "$HOME:rw,mode=1777" -e HOME="$HOME" \
-    -v "$ROOT:/src:ro,z" -v "$CACHE:/cache:z" -v "$FFMPEG:$HOME/.cache/bc250-console-link:z" \
-    -e CI_LOCAL_HOST_LOGS="$CACHE/logs" -e CARGO_HOME=/cache/cargo \
+    -v "$ROOT:/src:ro,z" -v "$CACHE:/cache:z" \
+    -e CI_LOCAL_HOST_LOGS="$CACHE/logs" \
     "$IMAGE" python3 /src/tools/ci_local.py "$@"

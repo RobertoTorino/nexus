@@ -1,22 +1,22 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 name: Bug report
-description: Something in one of the apps doesn't work, or a value or test result looks wrong.
+description: Something in Nexus doesn't work: a Nexus app, a tool, core or the Nexus page.
 labels: [bug]
 body:
   - type: dropdown
-    id: app
+    id: part
     attributes:
-      label: App
+      label: Part
       options:
-        - portal
-        - check
-        - gpu
-        - upscaler
-        - compute
-        - cores
-        - oc
-        - acpi
-        - overlay
+        - Nexus Dashboard
+        - Nexus Release Tool
+        - Nexus Demo Recorder
+        - Nexus Deps
+        - Nexus Installer Tests
+        - Nexus Sound Lab
+        - a tool in tools/
+        - core (bc250_core)
+        - the Nexus page
     validations:
       required: true
   - type: textarea
@@ -29,44 +29,24 @@ body:
   - type: input
     id: version
     attributes:
-      label: App version
-      description: The app's About or Help page, or `--version`.
+      label: Version
+      description: The app's version in its window's header, or `--version`; for a tool, the commit of the checkout.
       placeholder: "0.1.0"
     validations:
       required: true
   - type: input
-    id: bazzite
+    id: system
     attributes:
-      label: Bazzite version
-      description: Run `rpm-ostree status` in a terminal and copy the Version line of the deployment marked ●.
+      label: System
+      description: Bazzite (`rpm-ostree status`, the Version line of the deployment marked ●) or Windows.
       placeholder: "42.20261001.0 (2026-10-01T04:43:45Z)"
-    validations:
-      required: true
-  - type: input
-    id: governor
-    attributes:
-      label: Governor version (gpu and oc)
-      description: Run `rpm -q cyan-skillfish-governor-smu` in a terminal.
-      placeholder: "cyan-skillfish-governor-smu-0.4.13-1.fc42.x86_64"
-  - type: dropdown
-    id: unlock
-    attributes:
-      label: Board configuration
-      options:
-        - Stock (24 CUs, 6 cores)
-        - CU unlock
-        - Core unlock
-        - CU and core unlock
-        - Don't know
     validations:
       required: true
   - type: textarea
     id: logs
     attributes:
-      label: Report, diagnostics or log
-      description: >-
-        check: Show Logs → the full report of the run. gpu: Service page → "Export diagnostics…".
-        Bisect apps: the results folder under ~/.local/share/. Drag the file here or paste the relevant part.
+      label: Output or log
+      description: What the app or tool printed. Drag the file here or paste the relevant part.
   - type: checkboxes
     id: privacy
     attributes:

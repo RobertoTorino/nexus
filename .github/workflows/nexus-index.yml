@@ -3,10 +3,9 @@ name: Nexus index
 
 # GitHub's "Latest" release is the Nexus index, tagged nexus-v<x.y.z> and titled Nexus v<x.y.z> after the root
 # VERSION, Nexus's own (owner, 28-10-2026): one section per suite with its newest portal (tools/nexus_index.py). A
-# repository has one Latest and Nexus holds several suites, so no suite's portal is it: release.yml
-# publishes every release with --latest=false. The index
-# is made again after each run of it that succeeded (a release by tags pushed by hand), after each release
-# published by someone (the Nexus
+# repository has one Latest and Nexus held several suites, so no suite's portal is it. The BC250 Bazzite Suite has
+# a repository of its own since 14-11-2026, with its releases; the index says where (tools/nexus_index.py). The index
+# is made again after each release published by someone (the Nexus
 # Release Tool publishes a suite's portal after the device test; the releases the workflows publish with their own
 # token start no workflow, so the index waits for the portal), and when release-nexus.yml calls it (a Nexus release
 # without a suite: Nexus's VERSION alone): every earlier index release (nexus-v*, and
@@ -17,9 +16,6 @@ name: Nexus index
 # tags ruleset excludes nexus-v* for that (the Nexus page, GitHub settings).
 
 on:
-  workflow_run:
-    workflows: ["Release"]
-    types: [completed]
   release:
     types: [published]         # a portal published by the Nexus Release Tool, after the device test
   workflow_call:               # release-nexus.yml: a Nexus release without a suite
@@ -30,7 +26,6 @@ permissions:
 
 jobs:
   index:
-    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     concurrency:
       group: nexus-index           # a release of many tags finishes many runs: one writes at a time, the last one wins
       cancel-in-progress: false     
@@ -59,7 +54,7 @@ jobs:
           tag="nexus-v$version"
           # Made anew, not edited: an edit keeps the release's date and its tag's commit, so a new release of a suite
           # would show under an old Latest. Every earlier index goes, so there is one: nexus-v<any version> and the
-          # nexus of before the version. GITHUB_SHA is main's newest commit (workflow_run runs on the default branch).
+          # nexus of before the version. GITHUB_SHA is the commit the event names.
           gh release list --limit 1000 --json tagName --jq '.[].tagName' |
             { grep -E '^nexus(-v[0-9]+\.[0-9]+\.[0-9]+)?$' || true; } |      # none (a first run): no failure
             while read -r old; do gh release delete "$old" --yes --cleanup-tag; done

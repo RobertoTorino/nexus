@@ -39,7 +39,7 @@ export QT_QPA_PLATFORM=offscreen
 export PYTHONDONTWRITEBYTECODE=1
 rc=0
 dirs=(core tools dev/*)
-for suite in */SYSTEM; do                           # each suite: bc250-bazzite/, windows-portable/
+for suite in */SYSTEM; do                           # each suite in the checkout: windows-portable/ when cloned
     suite=${suite%/SYSTEM}
     suite_system=$(tr -d '[:space:]' < "$suite/SYSTEM" 2>/dev/null || true)
     if [[ "$suite_system" != "$system" ]]; then

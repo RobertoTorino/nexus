@@ -87,8 +87,9 @@ each device gives results you can compare.
 <div class="home-card" markdown>
 #### :material-chip: BC250 Bazzite Suite
 
-Tools for the AMD BC-250 running Bazzite: diagnostics, tuning, unlocks, gaming and the living room.
-[Its wiki](bc250-bazzite-suite/).
+Tools for the AMD BC-250 running Bazzite: diagnostics, tuning, unlocks, gaming and the living room. In a repository
+of its own: [its wiki](https://robertotorino.github.io/bc250-bazzite/),
+[its repository](https://github.com/RobertoTorino/bc250-bazzite).
 
 </div>
 <div class="home-card" markdown>
@@ -110,10 +111,10 @@ Every app of the suites side by side, with what each one does in which suite: [A
 ## Get started
 
 Pick the suite for your device: its wiki says how to install its portal, which installs every app of the suite. The
-Nexus index, GitHub's latest release, names the newest portal of each suite.
+Nexus index, GitHub's latest release, names the newest portal of each suite, or where its releases are.
 
 [:material-download: Nexus index](https://github.com/RobertoTorino/nexus/releases/latest){ .md-button .md-button--primary }
-[BC250 Bazzite Suite](bc250-bazzite-suite/){ .md-button }
+[BC250 Bazzite Suite](https://robertotorino.github.io/bc250-bazzite/){ .md-button }
 [Windows Portable Suite](windows-portable-suite/){ .md-button }
 </div>
 </section>

@@ -132,8 +132,8 @@ def test_this_checkouts_windows_apps_have_run_ps1():
     assert local.run_script(local.portal_target(CHECKOUT, "windows-portable"), windows=True) is not None
     assert all(local.run_script(t, windows=True) for t in local.launch_targets(CHECKOUT, "windows-portable"))
 
-def test_this_checkouts_portals():
-    assert local.portal_target(CHECKOUT, "bc250-bazzite").module == "bc250_portal"
+def test_this_checkouts_portals(bazzite_checkout):
+    assert local.portal_target(bazzite_checkout, "bz").module == "bz_portal"
     if WINDOWS_HERE:
         assert local.portal_target(CHECKOUT, "windows-portable").module == "portable_portal"
 
@@ -313,9 +313,9 @@ def test_instance_running_sees_a_listening_app_and_does_not_disturb_it(qapp):
     assert not main_window.instance_running("nexus-dashboard-test-instance")
 
 
-def test_this_checkouts_suite_has_its_apps_and_wikis(qapp):
-    window = MainWindow(settings=None, suite="bc250-bazzite")
+def test_a_checkouts_suite_has_its_apps_and_wikis(qapp, bazzite_checkout):
+    window = MainWindow(bazzite_checkout, settings=None, suite="bz")
     labels = list(items(window))
-    assert labels[0].startswith("BC250 Bazzite Suite ")                        # the portal first
-    assert labels[-2:] == ["BC250 Bazzite Suite wiki (local)", "Nexus wiki (local)"]
+    assert labels[0].startswith("Bz Suite ")                                   # the portal first
+    assert labels[-2:] == ["Bz Suite wiki (local)", "Nexus wiki (local)"]
     window.close()

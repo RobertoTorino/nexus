@@ -10,7 +10,8 @@ from pathlib import Path
 
 import pytest
 
-from nexus_deps import CATALOG, LOGO_PATH
+from conftest import CATALOG
+from nexus_deps import CATALOGS, LOGO_PATH
 from nexus_deps.dependencies import (
     App, DependencyCatalogError, DependencyCheckError, DependencyStatus, EnvironmentVersion, ToolStatus,
     Vulnerability, check_dependencies, check_tools, environment_versions, find_executable, installed_environments,
@@ -18,7 +19,7 @@ from nexus_deps.dependencies import (
     tool_need,
 )
 
-SUITE = Path(__file__).resolve().parents[3] / "bc250-bazzite"   # the suite of the catalog
+CHECKOUT = Path(__file__).resolve().parents[3]
 PREFIX = "nexus_deps.dependencies"
 
 
@@ -83,42 +84,11 @@ def test_catalog_lists_python_and_external_dependencies():
 
 def test_app_has_the_standard_layout():
     """A Nexus app in dev/deps, its catalog per suite (owner, 07-11-2026: the suite's Dependency Checker moved here)."""
-    app = SUITE.parent / "dev" / "deps"
+    app = CHECKOUT / "dev" / "deps"
     assert (app / "nexus_deps" / "__main__.py").is_file() and (app / ".checkout-only").is_file()
-    assert CATALOG == app / "nexus_deps" / "catalogs" / "bc250-bazzite.toml"
-    assert not (SUITE / "apps" / "package").exists()
+    assert CATALOGS == app / "nexus_deps" / "catalogs" and (CATALOGS / "upstreams.json").is_file()
 
 
-def test_catalog_matches_all_runtime_requirement_manifests():
-    catalog = load_catalog(CATALOG)
-    declared = {
-        (dependency.name, source.owner, source.specifier)
-        for dependency in catalog
-        for source in dependency.sources
-    }
-    actual = _requirements(SUITE / "portal" / "requirements.txt", "portal")
-    core = tomllib.loads((SUITE.parent / "core" / "pyproject.toml").read_text(encoding="utf-8"))   # core: at the root
-    for requirement in core["project"]["dependencies"]:
-        match = re.fullmatch(r"([A-Za-z0-9_.-]+)(.*)", requirement)
-        assert match
-        actual.add((match.group(1), "core", match.group(2)))
-    for app in sorted((SUITE / "apps").iterdir()):
-        requirement_file = app / "requirements.txt"
-        if requirement_file.is_file():
-            actual.update(_requirements(requirement_file, app.name))
-    assert declared == actual
-
-
-def test_catalog_apps_match_the_portal_manifest():
-    """Names and launchers come from portal/apps.toml (name, detect), so an installed app is found."""
-    manifest = tomllib.loads((SUITE / "portal" / "apps.toml").read_text(encoding="utf-8"))["apps"]
-    apps = load_apps(CATALOG)
-    for key, entry in manifest.items():
-        assert apps[key].name == entry["name"], key
-        assert apps[key].launchers == tuple(entry["detect"]), key
-    assert set(apps) == set(manifest) | {"portal", "core"}
-    assert apps["core"].launchers == ()
-    assert "bc250-bazzite-suite" in apps["portal"].launchers[0]
 
 
 def test_every_tool_names_its_need_and_root():
@@ -145,16 +115,6 @@ def test_external_tool_catalog_covers_app_specific_tools():
     assert "cores" in {source.owner for source in tools["stress-ng"].sources}
     assert {"mangohud", "vainfo", "clinfo", "rocminfo", "ujust", "grub2-mkconfig"} <= set(tools)
 
-
-def test_catalog_tools_are_used_by_the_apps_that_list_them():
-    for tool in load_tools(CATALOG):
-        for source in tool.sources:
-            words = tool.executables or (tool.name,)
-            folder = SUITE / "apps" / source.owner
-            texts = (p.read_text(encoding="utf-8", errors="replace") for p in folder.rglob("*")
-                     if p.is_file() and p.suffix in ("", ".py", ".sh") and "tests" not in p.parts)
-            assert any(re.search(rf"\b{re.escape(word)}\b", text) for text in texts for word in words), \
-                f"{tool.name} is not used by {source.owner}"
 
 
 def test_unknown_owner_and_need_are_catalog_errors(tmp_path):

@@ -7,7 +7,6 @@ import pytest
 
 from nexus_dashboard import CHECKOUT, icons
 
-SUITE = CHECKOUT / "bc250-bazzite"
 # The Windows Portable Suite is a repository of its own (owner, 13-11-2026), cloned into the checkout as its folder
 WINDOWS_HERE = (CHECKOUT / "windows-portable" / "portal" / "apps.toml").is_file()
 windows_suite = pytest.mark.skipif(not WINDOWS_HERE, reason="the Windows Portable Suite, a repository of its own, is "
@@ -25,10 +24,11 @@ def _checkout(root: Path, suite: str = "suite") -> Path:
     return folder
 
 
-def test_a_suite_with_category_icons_is_told_apart(tmp_path):
+def test_a_suite_with_category_icons_is_told_apart(tmp_path, bazzite_checkout):
     suite = _checkout(tmp_path)
     assert icons.has_category_icons(suite) and not icons.has_category_icons(tmp_path)
     assert icons.categories(suite) == ["gear", "leaf"]
+    SUITE = bazzite_checkout / "bz"
     assert icons.has_category_icons(SUITE) and not icons.png_icons(SUITE)
     if WINDOWS_HERE:
         assert icons.has_category_icons(CHECKOUT / "windows-portable")
@@ -50,7 +50,8 @@ def test_whole_set_runs_first_then_each_size_in_order(tmp_path):
     assert icons.convert_commands(tmp_path, "suite", "leaf", None, {}) == []
 
 
-def test_icon_names_match_the_nexus_tool():
+def test_icon_names_match_the_nexus_tool(tmp_path):
+    SUITE = _checkout(tmp_path)
     sys.path.insert(0, str(CHECKOUT / "tools"))
     try:
         import sync_icons
@@ -128,25 +129,13 @@ def test_dialog_on_the_windows_portable_suite_shows_its_png_icons(qapp):
     dialog.close()
 
 
-def test_dialog_converts_real_images_in_a_copy_of_the_icons(qapp, tmp_path):
-    """The whole way, with the suite's own tool on a copy of its icons and the apps' copies."""
-    import shutil
-
-    root = tmp_path / "bc250-bazzite"                          # a suite laid out as the real one, by that name
-    shutil.copytree(SUITE / "icons", root / "icons")
-    (root / "portal").mkdir()
-    (root / "portal" / "apps.toml").write_text("", encoding="utf-8")
-    (tmp_path / "tools").mkdir()
-    for name in ("sync_icons.py", "suites.py"):                 # the Nexus tool and what it reads the suites with
-        shutil.copy(CHECKOUT / "tools" / name, tmp_path / "tools")
-    for copy in [p for p in (SUITE / "apps").glob("*/images/*") if p.suffix in (".png", ".webp")] + \
-            list((SUITE / "portal" / "images" / "apps").glob("*.webp")):
-        target = root / copy.relative_to(SUITE)
-        target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy(copy, target)
+def test_dialog_converts_real_images_in_a_copy_of_the_icons(qapp, tmp_path, bazzite_checkout):
+    """The whole way, with the Nexus tool on a suite's icons and the apps' copies."""
+    root = bazzite_checkout / "bz"
     from PIL import Image
     Image.new("RGBA", (300, 300), "blue").save(tmp_path / "blue.png")
-    dialog = icons.IconsDialog(tmp_path, "bc250-bazzite")
+    before = (root / "icons" / "gaming" / "gaming-512.webp").read_bytes()
+    dialog = icons.IconsDialog(bazzite_checkout, "bz")
     dialog.category.setCurrentText("gaming")
     dialog.sizes[256].setText(str(tmp_path / "blue.png"))
 
@@ -156,6 +145,5 @@ def test_dialog_converts_real_images_in_a_copy_of_the_icons(qapp, tmp_path):
         assert image.size == (256, 256) and image.format == "WEBP"
     assert (root / "portal" / "images" / "apps" / "rpcs3.webp").read_bytes() == \
         (root / "icons" / "gaming" / "gaming-256.webp").read_bytes()
-    assert (root / "icons" / "gaming" / "gaming-512.webp").read_bytes() == \
-        (SUITE / "icons" / "gaming" / "gaming-512.webp").read_bytes()
+    assert (root / "icons" / "gaming" / "gaming-512.webp").read_bytes() == before
     dialog.close()

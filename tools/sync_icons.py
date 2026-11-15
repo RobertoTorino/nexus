@@ -8,7 +8,7 @@ tools/suites.py says, and the paths below are the suite's):
     python3 tools/sync_icons.py --check                               # only list them; exit 1 when there are any
     python3 tools/sync_icons.py --category C --from IMAGE             # the category's four icons from one image
     python3 tools/sync_icons.py --category C --from IMAGE --size 512  # only the sizes named (--size again for more)
-    python3 tools/sync_icons.py --suite bc250-bazzite --check         # the suite by name
+    python3 tools/sync_icons.py --suite windows-portable --check      # the suite by name
 
 The portal also gets the 512 px icon of each category it lists apps in, portal/images/categories/<category>.webp, which
 its tiles are drawn from.
@@ -221,7 +221,7 @@ def main(argv: list[str], root: Path | None = None) -> int:
         root = args.root.resolve()
     if root is None:
         try:
-            root = suites.suite(args.suite)
+            root = suites.suite(args.suite, suites.ROOT)
         except LookupError as error:
             parser.error(str(error))
     if not (root / "icons" / "categories.toml").is_file():

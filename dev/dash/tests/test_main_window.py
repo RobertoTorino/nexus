@@ -16,8 +16,6 @@ from nexus_dashboard.main_window import SUITE_KEY, MainWindow
 
 # The Windows Portable Suite is a repository of its own (owner, 13-11-2026), cloned into the checkout as its folder
 WINDOWS_HERE = (CHECKOUT / "windows-portable" / "portal" / "apps.toml").is_file()
-windows_suite = pytest.mark.skipif(not WINDOWS_HERE, reason="the Windows Portable Suite, a repository of its own, is "
-                                                            "not in this checkout")
 
 
 def test_the_icons_are_nexus_at_512_and_128_px():
@@ -26,11 +24,12 @@ def test_the_icons_are_nexus_at_512_and_128_px():
     assert QImage(str(LOGO_PATH.with_name("nexus-dashboard-128.png"))).size().width() == 128
 
 
-def test_the_checkout_has_the_suites_and_the_nexus_apps():
-    assert checkout.suites(CHECKOUT) == ["bc250-bazzite", *(["windows-portable"] if WINDOWS_HERE else [])]
-    assert checkout.suite_name(CHECKOUT, "bc250-bazzite") == "BC250 Bazzite Suite"
-    assert checkout.suite_system(CHECKOUT, "bc250-bazzite") == "bazzite"
-    assert checkout.here(CHECKOUT, "bc250-bazzite", "linux") and not checkout.here(CHECKOUT, "bc250-bazzite", "win32")
+def test_the_checkout_has_the_suites_and_the_nexus_apps(bazzite_checkout):
+    assert checkout.suites(CHECKOUT) == (["windows-portable"] if WINDOWS_HERE else [])   # Nexus holds none of its own
+    assert checkout.suites(bazzite_checkout) == ["bz"]
+    assert checkout.suite_name(bazzite_checkout, "bz") == "Bz Suite"
+    assert checkout.suite_system(bazzite_checkout, "bz") == "bazzite"
+    assert checkout.here(bazzite_checkout, "bz", "linux") and not checkout.here(bazzite_checkout, "bz", "win32")
     if WINDOWS_HERE:
         assert checkout.suite_system(CHECKOUT, "windows-portable") == "windows"
         assert checkout.here(CHECKOUT, "windows-portable", "win32")
@@ -44,31 +43,37 @@ def test_the_checkout_has_the_suites_and_the_nexus_apps():
     assert apps[1].log.name == "demo.log"
 
 
-def test_the_window_lists_the_apps_then_the_suites_tools(qapp):
+def test_the_window_lists_the_apps_then_the_suites_tools(qapp, bazzite_checkout):
     settings = QSettings(QSettings.Format.IniFormat, QSettings.Scope.UserScope, "test", "test")
-    window = MainWindow(settings=settings, suite="bc250-bazzite")
+    window = MainWindow(bazzite_checkout, settings=settings, suite="bz")
 
     assert window.windowTitle() == APP_NAME
     names = [window.tiles.item(i).text() for i in range(window.tiles.count())]
     assert names == ["Nexus Release Tool", "Nexus Demo Recorder", "Nexus Deps", "Nexus Installer Tests",
                      "Nexus Sound Lab", "Portal video tour", "Apps video tour", "Convert icons", "Close issues", "Dev app versions"]
-    assert window.suite_box.currentText() == "BC250 Bazzite Suite" and settings.value(SUITE_KEY) is None
+    assert window.suite_box.currentText() == "Bz Suite" and settings.value(SUITE_KEY) is None
     enabled = [bool(window.tiles.item(i).flags() & Qt.ItemFlag.ItemIsEnabled) for i in range(window.tiles.count())]
+    # Nexus Deps: no catalog for the suite (Nexus has none since 14-11-2026), and no run.ps1 on Windows
     if sys.platform == "win32":
-        assert enabled == [True, True, False, True, True, False, False, True, True, True]   # Nexus Deps: no run.ps1
+        assert enabled == [True, True, False, True, True, False, False, True, True, True]
     else:
-        assert enabled == [True] * 10
+        assert enabled == [True, True, False, True, True, True, True, True, True, True]
     window.close()
 
 
-@windows_suite
-def test_a_windows_suite_greys_out_the_tours_and_the_choice_is_remembered(qapp):
+def test_a_windows_suite_greys_out_the_tours_and_the_choice_is_remembered(qapp, bazzite_checkout):
+    wp = bazzite_checkout / "wp"                        # a Windows suite beside bz/, as the Windows Portable Suite
+    for path, text in (("SYSTEM", "windows\n"), ("TAG_PREFIX", "wp-\n"), ("portal/apps.toml", ""),
+                       ("portal/wp_portal/__init__.py", 'APP_NAME = "Wp Suite"\n'),
+                       ("icons/categories.toml", '[icons]\nformat = "png"\n'), ("tools/record-tour.sh", "")):
+        (wp / path).parent.mkdir(parents=True, exist_ok=True)
+        (wp / path).write_text(text, encoding="utf-8")
     settings = QSettings(QSettings.Format.IniFormat, QSettings.Scope.UserScope, "test", "test")
-    window = MainWindow(settings=settings, suite="bc250-bazzite")
+    window = MainWindow(bazzite_checkout, settings=settings, suite="bz")
 
-    window.suite_box.setCurrentIndex(window.suite_box.findText("Windows Portable Suite"))
+    window.suite_box.setCurrentIndex(window.suite_box.findText("Wp Suite"))
 
-    assert window.suite == "windows-portable" and settings.value(SUITE_KEY) == "windows-portable"
+    assert window.suite == "wp" and settings.value(SUITE_KEY) == "wp"
     tiles = {window.tiles.item(i).text(): window.tiles.item(i) for i in range(window.tiles.count())}
     assert tiles["Convert icons"].flags() & Qt.ItemFlag.ItemIsEnabled         # its PNG icons, since 05-11-2026
     if sys.platform != "win32":
@@ -76,30 +81,33 @@ def test_a_windows_suite_greys_out_the_tours_and_the_choice_is_remembered(qapp):
         assert "not recorded on Linux" in tiles["Portal video tour"].toolTip()
     window.close()
 
-    window = MainWindow(settings=settings)               # the remembered suite
-    assert window.suite == "windows-portable"
+    window = MainWindow(bazzite_checkout, settings=settings)               # the remembered suite
+    assert window.suite == "wp"
     window.close()
 
 
-@windows_suite
-def test_nexus_deps_is_off_for_a_suite_without_a_catalog(qapp):
-    """Nexus Deps checks a suite with a catalog of its own: the BC250 Bazzite Suite's so far (owner, 07-11-2026)."""
-    settings = QSettings(QSettings.Format.IniFormat, QSettings.Scope.UserScope, "test", "test")
-    window = MainWindow(settings=settings, suite="bc250-bazzite")
-    tiles = {window.tiles.item(i).text(): window.tiles.item(i) for i in range(window.tiles.count())}
-    if sys.platform != "win32":
-        assert tiles["Nexus Deps"].flags() & Qt.ItemFlag.ItemIsEnabled
-    window.suite_box.setCurrentIndex(window.suite_box.findText("Windows Portable Suite"))
+def test_nexus_deps_is_off_for_a_suite_without_a_catalog(qapp, bazzite_checkout):
+    """Nexus Deps checks a suite with a catalog of its own (owner, 07-11-2026): none here since the BC250 Bazzite
+    Suite took its catalog to a repository of its own (14-11-2026). A catalog of the suite turns the tile on."""
+    window = MainWindow(bazzite_checkout, settings=None, suite="bz")
     tiles = {window.tiles.item(i).text(): window.tiles.item(i) for i in range(window.tiles.count())}
     assert not tiles["Nexus Deps"].flags() & Qt.ItemFlag.ItemIsEnabled
     if sys.platform != "win32":
-        assert "no catalog for windows-portable" in tiles["Nexus Deps"].toolTip()
+        assert "no catalog for bz" in tiles["Nexus Deps"].toolTip()
+    window.close()
+    (bazzite_checkout / "dev" / "deps" / "nexus_deps" / "catalogs" / "bz.toml").write_text("", encoding="utf-8")
+    window = MainWindow(bazzite_checkout, settings=None, suite="bz")
+    tiles = {window.tiles.item(i).text(): window.tiles.item(i) for i in range(window.tiles.count())}
+    if sys.platform != "win32":
+        assert tiles["Nexus Deps"].flags() & Qt.ItemFlag.ItemIsEnabled
     window.close()
 
 
-def test_a_click_on_an_app_starts_it_with_the_suite_and_says_so(qapp, tmp_path):
+def test_a_click_on_an_app_starts_it_with_the_suite_and_says_so(qapp, bazzite_checkout):
+    (bazzite_checkout / "dev" / "deps" / "nexus_deps" / "catalogs" / "bz.toml").write_text("", encoding="utf-8")
     started = []
-    window = MainWindow(settings=None, suite="bc250-bazzite", starter=lambda app, args: started.append((app.key, args)))
+    window = MainWindow(bazzite_checkout, settings=None, suite="bz",
+                        starter=lambda app, args: started.append((app.key, args)))
     tiles = {window.tiles.item(i).text(): window.tiles.item(i) for i in range(window.tiles.count())}
 
     window.click(tiles["Nexus Release Tool"].data(Qt.ItemDataRole.UserRole))
@@ -107,8 +115,8 @@ def test_a_click_on_an_app_starts_it_with_the_suite_and_says_so(qapp, tmp_path):
     window.click(tiles["Nexus Demo Recorder"].data(Qt.ItemDataRole.UserRole))
     window.click(tiles["Nexus Deps"].data(Qt.ItemDataRole.UserRole))
 
-    assert started == [("nrt", ("--suite", "bc250-bazzite")), ("itests", ("--suite", "bc250-bazzite")), ("demo", ()),
-                       ("deps", ("--suite", "bc250-bazzite"))]
+    assert started == [("nrt", ("--suite", "bz")), ("itests", ("--suite", "bz")), ("demo", ()),
+                       ("deps", ("--suite", "bz"))]
     assert "Nexus Release Tool" in window.output.toPlainText() and "started from" in window.output.toPlainText()
 
     def refuse(app, args):
@@ -119,21 +127,21 @@ def test_a_click_on_an_app_starts_it_with_the_suite_and_says_so(qapp, tmp_path):
     window.close()
 
 
-def test_a_click_on_a_tool_opens_its_dialog_on_the_suite(qapp, monkeypatch):
+def test_a_click_on_a_tool_opens_its_dialog_on_the_suite(qapp, monkeypatch, bazzite_checkout):
     opened = []
     for name in ("PortalTourDialog", "AppsTourDialog", "IconsDialog"):
         monkeypatch.setattr(main_window, name, lambda *args, _name=name: type(
             "Fake", (), {"exec": lambda self: opened.append((_name, args[:-1]))})())
-    window = MainWindow(settings=None, suite="bc250-bazzite")
+    window = MainWindow(bazzite_checkout, settings=None, suite="bz")
     tiles = {window.tiles.item(i).text(): window.tiles.item(i) for i in range(window.tiles.count())}
     for name in ("Portal video tour", "Apps video tour", "Convert icons"):
         tile = tiles[name].data(Qt.ItemDataRole.UserRole)
         tile.off = ""                                    # whatever the system: the dialogs are what is tested
         window.click(tile)
 
-    suite = CHECKOUT / "bc250-bazzite"
+    suite = bazzite_checkout / "bz"
     assert opened == [("PortalTourDialog", (suite, window.open_file)), ("AppsTourDialog", (suite, window.open_file)),
-                      ("IconsDialog", (CHECKOUT, "bc250-bazzite"))]
+                      ("IconsDialog", (bazzite_checkout, "bz"))]
     window.close()
 
 
@@ -194,7 +202,7 @@ def test_a_second_launch_opens_no_window(qapp, monkeypatch):
 def test_a_click_on_the_nexus_icon_opens_the_nexus_page(qapp, monkeypatch):
     opened = []
     monkeypatch.setattr(main_window, "open_url", opened.append)
-    window = MainWindow(settings=None, suite="bc250-bazzite")
+    window = MainWindow(settings=None)
 
     assert window.header.logo.cursor().shape() == Qt.CursorShape.PointingHandCursor
     window.header.logo.clicked.emit()

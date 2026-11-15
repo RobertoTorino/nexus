@@ -18,7 +18,13 @@ br = importlib.util.module_from_spec(spec)
 sys.modules[spec.name] = br
 spec.loader.exec_module(br)
 
-pin_spec = importlib.util.spec_from_file_location("pin_app", TOOLS.parent / "bc250-bazzite" / "tools" / "pin_app.py")
+# The release tarballs of a Bazzite suite in this checkout (its install.sh, Bazzite Test, its pin tool). Nexus holds
+# none since the BC250 Bazzite Suite moved to a repository of its own (14-11-2026), whose copy of this tool and of
+# these tests builds its releases; a checkout with such a suite runs them again.
+if br.SUITE is None or not (br.SUITE / "tools" / "pin_app.py").is_file() or br.suites.system(br.SUITE) == "windows":
+    pytest.skip("no Bazzite suite with its tools/pin_app.py in this checkout", allow_module_level=True)
+
+pin_spec = importlib.util.spec_from_file_location("pin_app", br.SUITE / "tools" / "pin_app.py")
 pin_app = importlib.util.module_from_spec(pin_spec)
 sys.modules[pin_spec.name] = pin_app
 pin_spec.loader.exec_module(pin_app)
@@ -171,7 +177,7 @@ def test_a_windows_suites_tag_is_refused(tmp_path, monkeypatch):
 
 
 def test_a_plain_tag_is_the_bazzite_suites():
-    assert br.suites.of_tag(BT_TAG)[0] == br.SUITE == br.suites.ROOT / "bc250-bazzite"
+    assert br.suites.of_tag(BT_TAG)[0] == br.SUITE
 
 
 WINDOWS_SUITE = Path(__file__).resolve().parents[2] / "windows-portable"

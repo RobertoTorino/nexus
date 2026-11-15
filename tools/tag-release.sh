@@ -32,7 +32,7 @@ tags=()                              # each tag with the checkout it is made in,
 checks=()                            # the CI each checkout waits for, once each: "repo workflow"
 need() { [[ " ${checks[*]-} " == *" $1|$2 "* ]] || checks+=("$1|$2"); }
 for tag in "$@"; do
-    # the tag's suite, by its prefix (tools/suites.py): bc250-bazzite's tags have none, another suite's its TAG_PREFIX
+    # the tag's suite, by its prefix (tools/suites.py): a suite's TAG_PREFIX, none for a suite of plain tags
     read -r suite name version < <("$python" tools/suites.py --tag "$tag" | tr -d '\r') ||
         die "$tag is not <name>-v<x.y.z> of a suite (tools/suites.py --tag)."
     repo=.                           # the checkout that is tagged, and the suite's paths as its git names them

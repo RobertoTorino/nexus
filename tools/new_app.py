@@ -1663,7 +1663,7 @@ def windows_checks(root: Path, suite: Suite, app: NewApp) -> list[tuple[str, boo
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0],
                                      formatter_class=argparse.RawDescriptionHelpFormatter, epilog=__doc__)
-    parser.add_argument("suite", help="the suite's folder, such as bc250-bazzite")
+    parser.add_argument("suite", help="the suite's folder, such as windows-portable")
     parser.add_argument("name", help="the app's key: its folder under apps/, its tag prefix (<name>-v), a short name")
     parser.add_argument("app_name", metavar="app-name", help='the name shown: "BC-250 Fan Control"')
     parser.add_argument("--id", dest="app_id", help="the app id (the launcher, the settings, the desktop file; "

@@ -1,3 +1,10 @@
+Changelog: 15-11-2026 00:01:07
+
+Breaking. The BC250 Bazzite Suite's dependency catalog (catalogs/bc250-bazzite.toml) and its apps' emulators and
+firmware (catalogs/upstreams.json) left with the suite for its own repository (14-11-2026), where its copy of Nexus
+Deps checks them. Without a suite catalog the app checks the machine's updates alone: Bazzite's state, the image,
+the Flatpaks, Homebrew, Rust and the development venv. The tests keep the last catalogs as fixtures.
+
 Changelog: 14-11-2026 00:36:00
 
 Fixed. The emulator cards no longer fail with "HTTP Error 403: rate limit exceeded". GitHub was asked without a

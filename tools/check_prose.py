@@ -3,7 +3,7 @@
 """Scores how hard the repository's text is to read, and lists the files that need work most:
 
     python3 tools/check_prose.py                      # every wiki, README and window text, worst first
-    python3 tools/check_prose.py bc250-bazzite/docs   # only what is under these files or folders
+    python3 tools/check_prose.py nexus/docs           # only what is under these files or folders
     python3 tools/check_prose.py --details FILE       # every finding in the file, with its line
     python3 tools/check_prose.py --base origin/main   # fails when a file scores worse than it did at that commit
 

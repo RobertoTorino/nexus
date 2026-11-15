@@ -101,7 +101,7 @@ def launch_targets(root: Path, suite: str | None = None) -> list[Launch]:
 
 
 def wiki_icon(folder: Path) -> Path | None:
-    """The icon of the wiki in *folder*: its suite's portal icon (bc250-bazzite/portal/images/bc250-bazzite-suite.webp),
+    """The icon of the wiki in *folder*: its suite's portal icon (<suite>/portal/images/<suite>-suite.webp),
     else its own drawing at 256 px (nexus/images/nexus-256.png); None without either."""
     for icon in (folder / "portal" / "images" / f"{folder.name}-suite.webp", folder / "images" / f"{folder.name}-256.png"):
         if icon.is_file():
@@ -146,7 +146,7 @@ def network_addresses() -> list[str]:
 
 def wiki_configs(root: Path) -> list[Path]:
     """Each wiki in the checkout: mkdocs.yml at the root (none since the suites moved into their folders), then one
-    in a folder directly below it (bc250-bazzite/, nexus/, and a new suite's), by folder name."""
+    in a folder directly below it (nexus/ and each suite's), by folder name."""
     return [p for p in (root / "mkdocs.yml", *sorted(root.glob("*/mkdocs.yml"))) if p.is_file()]
 
 

@@ -5,7 +5,7 @@ from __future__ import annotations
 from PyQt6.QtCore import QEventLoop, QTimer
 from PyQt6.QtWidgets import QLabel
 
-from nexus_deps import CATALOG
+from conftest import CATALOG
 from nexus_deps.bazzite import BazziteState, Deployment
 from nexus_deps.dependencies import (
     CheckResult, DependencyStatus, EnvironmentVersion, ToolStatus, Vulnerability, load_apps, load_catalog,

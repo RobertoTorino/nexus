@@ -18,7 +18,20 @@ from installer_tests.runner import InstallerTestRunner, command_for, discover_te
 from installer_tests.runner import tests_dir as suite_tests_dir     # not tests_dir: pytest would collect it
 
 INSTALLER = ROOT / "install.sh"
-BC250 = CHECKOUT / "bc250-bazzite"
+
+
+def bazzite_checkout(root: Path) -> Path:
+    """A checkout with one Bazzite suite, bz/, and its installer tests (Nexus holds no suite of its own since the
+    BC250 Bazzite Suite moved to a repository of its own, 14-11-2026)."""
+    suite = root / "bz"
+    (suite / "portal").mkdir(parents=True)
+    (suite / "portal" / "apps.toml").write_text("", encoding="utf-8")
+    (suite / "SYSTEM").write_text("bazzite\n", encoding="utf-8")
+    tests = suite / "tools" / "installer-tests"
+    tests.mkdir(parents=True)
+    for name in ("nrt.sh", "portal.sh", "shims.sh"):
+        (tests / name).write_text("#!/usr/bin/env bash\n", encoding="utf-8")
+    return root
 
 
 def test_discovery_excludes_the_helpers_and_takes_this_systems_kind(tmp_path: Path) -> None:
@@ -37,13 +50,15 @@ def test_each_kind_of_script_has_its_runner(tmp_path: Path) -> None:
                                                str(tmp_path / "a.ps1")]
 
 
-def test_the_suites_with_tests_for_this_system_are_listed() -> None:
-    """The Bazzite suite has .sh tests (Linux), the Windows Portable Suite .ps1 tests (Windows)."""
-    assert suites_here(CHECKOUT, ".sh") == ["bc250-bazzite"]
+def test_the_suites_with_tests_for_this_system_are_listed(tmp_path: Path) -> None:
+    """A Bazzite suite has .sh tests (Linux), the Windows Portable Suite .ps1 tests (Windows)."""
+    assert suites_here(CHECKOUT, ".sh") == []                  # Nexus holds no Bazzite suite since 14-11-2026
     # the Windows Portable Suite is a repository of its own (owner, 13-11-2026): here only when cloned into the checkout
     here = (CHECKOUT / "windows-portable" / "portal" / "apps.toml").is_file()
     assert suites_here(CHECKOUT, ".ps1") == (["windows-portable"] if here else [])
-    assert suite_tests_dir(BC250) == BC250 / "tools" / "installer-tests"
+    root = bazzite_checkout(tmp_path)
+    assert suites_here(root, ".sh") == ["bz"]
+    assert suite_tests_dir(root / "bz") == root / "bz" / "tools" / "installer-tests"
 
 
 def test_runner_adds_homebrew_fakeroot_directory_to_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -165,10 +180,10 @@ def test_window_lists_the_suites_tests_and_remembers_the_suite(checkout: Path) -
     window.close()
 
 
-def test_window_on_the_real_checkout_lists_the_suites_installer_tests() -> None:
-    window = MainWindow()
+def test_window_on_a_checkout_lists_the_suites_installer_tests(tmp_path: Path) -> None:
+    window = MainWindow(bazzite_checkout(tmp_path))
     if sys.platform != "win32":
-        assert window.suite == "bc250-bazzite" and "nrt.sh" in window._items and "shims.sh" not in window._items
+        assert window.suite == "bz" and "nrt.sh" in window._items and "shims.sh" not in window._items
     window.close()
 
 

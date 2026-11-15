@@ -1,11 +1,10 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""tools/build_windows_exe.py: what it hands PyInstaller, and that the release workflow builds every app it lists.
+"""tools/build_windows_exe.py: what it hands PyInstaller, the notices and the names it gives.
 PyInstaller itself is not run here: it only builds for the system it runs on, and the release job does that."""
 
 from __future__ import annotations
 
 import importlib.util
-import re
 from pathlib import Path
 
 import pytest
@@ -16,19 +15,14 @@ bwe = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(bwe)
 
 
-def test_every_windows_app_has_its_package_and_a_core_to_bundle():
-    for app, (package, exe_name) in bwe.WINDOWS_APPS.items():
-        src = SUITE / "bc250-bazzite" / "apps" / app
-        assert (src / package / "__main__.py").is_file()
-        assert bwe.stage_app.uses_core(src)
-        assert exe_name and (src / "images" / f"{bwe.app_id(src, package)}.webp").is_file()
-
-
-def test_asset_names_follow_app_id_and_version():
-    src = SUITE / "bc250-bazzite" / "apps" / "sftp"
-    version = (src / "VERSION").read_text(encoding="utf-8").strip()
-    assert bwe.app_id(src, "sftp_tools") == "bc250-bazzite-sftp-tools"
-    assert bwe.asset_name("bc250-bazzite-sftp-tools", version) == f"bc250-bazzite-sftp-tools-{version}-windows.zip"
+def test_asset_names_follow_app_id_and_version(tmp_path):
+    write = lambda path, text: (path.parent.mkdir(parents=True, exist_ok=True), path.write_text(text))
+    write(tmp_path / "sftp_tools" / "__init__.py", 'APP_ID = "some-sftp-tools"\n')
+    assert bwe.app_id(tmp_path, "sftp_tools") == "some-sftp-tools"
+    assert bwe.asset_name("some-sftp-tools", "1.2.3") == "some-sftp-tools-1.2.3-windows.zip"
+    with pytest.raises(SystemExit, match="no APP_ID"):
+        write(tmp_path / "other" / "__init__.py", "")
+        bwe.app_id(tmp_path, "other")
 
 
 def test_launcher_calls_the_packages_main():
@@ -55,19 +49,6 @@ def test_an_app_without_a_windows_build_is_refused(tmp_path):
     with pytest.raises(SystemExit, match="no Windows build"):
         bwe.build("gpu", tmp_path)
 
-
-def test_release_workflow_builds_and_uploads_each_windows_app():
-    """release.yml's windows job builds the executable of each tag the plan step lists as windows= (the tags of
-    WINDOWS_APPS among the run's releases: bc250-bazzite/tools/suite_release.py reads this list, so the workflow
-    names no app itself) and adds it to that release."""
-    workflow = (SUITE / ".github" / "workflows" / "release.yml").read_text(encoding="utf-8")
-    job = re.search(r"^  windows:\n(.*?)(?=^  \S|\Z)", workflow, re.M | re.S)
-    assert job and "runs-on: windows-latest" in job[1]
-    assert "needs.plan.outputs.windows != '[]'" in job[1]
-    assert "needs.plan.result == 'success'" in job[1]     # skipped plan (a published tag): no fromJSON('')
-    assert "tag: ${{ fromJSON(needs.plan.outputs.windows) }}" in job[1]
-    assert "tools/build_windows_exe.py" in job[1] and "gh release upload" in job[1]
-    assert "windows=" in (SUITE / "bc250-bazzite" / "tools" / "suite_release.py").read_text(encoding="utf-8")
 
 
 def _names(dists):

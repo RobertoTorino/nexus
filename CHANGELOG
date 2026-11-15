@@ -1,3 +1,28 @@
+Changelog: 15-11-2026 00:01:07
+
+Breaking. The BC250 Bazzite Suite left Nexus for a repository of its own, github.com/RobertoTorino/bc250-bazzite
+(owner, 14-11-2026: as the Bazzite Console Suite did), with its own copy of the tools, core and the Nexus apps, its
+own CI and releases, and its wiki at robertotorino.github.io/bc250-bazzite/; the old address under the Nexus page
+is gone. A clean cut: installed portals keep looking for releases here, and the boards install the portal again
+from the new repository. Its releases up to now stay on Nexus's Releases page. Gone from Nexus: bc250-bazzite/, the
+root's portal/apps.toml (the copy for portals installed before the suite's folder move), and the suite's workflows
+ci.yml, release.yml and upstream.yml; Release Nexus has no suite job left, docs.yml builds the Nexus page and the
+Windows Portable Suite's wiki, and nexus-index.yml no longer waits for the Release workflow. The Nexus index says
+where the BC250 suite's releases are (tools/nexus_index.py). tools/ci-local.sh runs ci-nexus.yml alone, in a
+smaller image. The tools work in a checkout without a suite and say so (tools/suites.py: default(); stage_app.py,
+build_release.py, tour_frames.py), and their tests use temporary suites or skip where they needed the BC250 suite
+(build_release's tarball tests). tools/build_windows_exe.py lists no app of its own (its functions serve the
+Windows Portable Suite). tools/app_tour.py takes the wiki's address from the suite's mkdocs.yml. ICONS.md and
+DESIGN.md hold Nexus's icons and the colors of core's themes, the Windows Portable Suite and the Nexus page; the
+BC250 suite's go with it. The Nexus page's Apps and features chapter has the Windows Portable Suite's column alone,
+and its Home, Releases, Development, Dashboard, Design, The development machine and GitHub settings chapters
+describe Nexus without the suite and link to its new wiki and repository. The issue form is Nexus's own, with a link
+to the BC250 suite's issues. README, CONTRIBUTING, CLAUDE.md, the .claude/ notes and MIGRATION.md say the same.
+
+Added. GNU patch is a tool of the development machine (`brew install gpatch`), listed under Optional in the Nexus
+page's The development machine chapter: the BC250 Bazzite Suite's upstream check dry-runs the ACE Queues patch on
+Mesa's newest release with it, and its test skips without it.
+
 Changelog: 14-11-2026 22:59:15
 
 Release 15.0.0. Brings the new suite windows-portable.
